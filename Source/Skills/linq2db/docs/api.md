@@ -269,8 +269,8 @@ Use `Search anchors` lines as the primary discovery surface, then verify exact s
 Missing from this compact section is not proof that an API or overload is absent. Search XML-doc before falling back to generic APIs.
 
 Generated from: `linq2db.xml`.
-XML members scanned: 4606. Included consumer LinqToDB members: 3536. API families: 2655.
-Excluded members: 954 `LinqToDB.Internal.*`; 116 external/non-LinqToDB.
+XML members scanned: 4627. Included consumer LinqToDB members: 3544. API families: 2663.
+Excluded members: 967 `LinqToDB.Internal.*`; 116 external/non-LinqToDB.
 Included members with AI-Tags: 745. Included members without summary: 127.
 
 ### LinqToDB.AnalyticFunctions.FunctionToken
@@ -828,6 +828,15 @@ Search anchors: AssociationAlias, Association, Alias, SQL, SELECT, FROM, LEFT, J
 | XML member | Summary | AI-Tags |
 |---|---|---|
 | `P:LinqToDB.Common.Configuration.Sql.AssociationAlias` | Format for association alias. Default value: `"a_{0}"`. In the following query ` var query = from child in db.Child select new { child.ChildID, child.Parent.Value1 }; ` for association `Parent` will be generated association `A_Parent` in resulting SQL. ` SELECT \[child\].\[ChildID\], \[a_Parent\].\[Value1\] FROM \[Child\] \[child\] LEFT JOIN \[Parent\] \[a_Parent\] ON (\[child\].\[ParentID\] = \[a_Parent\].\[ParentID\]) ` Set this value to `null` to disable special alias generation queries. |  |
+
+### LinqToDB.Common.Configuration.Sql.DefaultNullsPosition
+
+Kind: Property.
+Search anchors: DefaultNullsPosition, Default, Nulls, Position, NULL, ORDER.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `P:LinqToDB.Common.Configuration.Sql.DefaultNullsPosition` | Default position of `NULL` values in an `ORDER BY` clause for ordering keys that do not specify a `LinqToDB.Sql.NullsPosition` explicitly. Default value: `LinqToDB.Sql.NullsPosition.None`. |  |
 
 ### LinqToDB.Common.Configuration.Sql.EnableConstantExpressionInOrderBy
 
@@ -5465,6 +5474,15 @@ Search anchors: UseDB2, Use.
 | `M:LinqToDB.DataOptionsExtensions.UseDB2(LinqToDB.DataOptions,System.String,LinqToDB.DataProvider.DB2.DB2Version,System.Func{LinqToDB.DataProvider.DB2.DB2Options,LinqToDB.DataProvider.DB2.DB2Options})` | Configure DB2 connection. |  |
 | `M:LinqToDB.DataOptionsExtensions.UseDB2(LinqToDB.DataOptions,System.String,System.Func{LinqToDB.DataProvider.DB2.DB2Options,LinqToDB.DataProvider.DB2.DB2Options})` | Configure DB2 connection. |  |
 
+### LinqToDB.DataOptionsExtensions.UseDefaultNullsPosition
+
+Kind: Method.
+Search anchors: UseDefaultNullsPosition, Use, Default, Nulls, Position, NULL, ORDER.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `M:LinqToDB.DataOptionsExtensions.UseDefaultNullsPosition(LinqToDB.DataOptions,LinqToDB.Sql.NullsPosition)` | Default position of `NULL` values in an `ORDER BY` clause for ordering keys that do not specify a `LinqToDB.Sql.NullsPosition` explicitly. Default value: `LinqToDB.Sql.NullsPosition.None`. |  |
+
 ### LinqToDB.DataOptionsExtensions.UseDefaultRetryPolicyFactory
 
 Kind: Method.
@@ -6051,6 +6069,15 @@ Search anchors: WithDbTransaction, With, Transaction.
 | XML member | Summary | AI-Tags |
 |---|---|---|
 | `M:LinqToDB.DataOptionsExtensions.WithDbTransaction(LinqToDB.Data.ConnectionOptions,System.Data.Common.DbTransaction)` | Sets DbTransaction option. |  |
+
+### LinqToDB.DataOptionsExtensions.WithDefaultNullsPosition
+
+Kind: Method.
+Search anchors: WithDefaultNullsPosition, With, Default, Nulls, Position, NULL, ORDER.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `M:LinqToDB.DataOptionsExtensions.WithDefaultNullsPosition(LinqToDB.SqlOptions,LinqToDB.Sql.NullsPosition)` | Default position of `NULL` values in an `ORDER BY` clause for ordering keys that do not specify a `LinqToDB.Sql.NullsPosition` explicitly. Default value: `LinqToDB.Sql.NullsPosition.None`. |  |
 
 ### LinqToDB.DataOptionsExtensions.WithDisableQueryCache
 
@@ -17342,6 +17369,24 @@ Search anchors: OnTargetKey, Target, Key, Group=Merge, Execution=Deferred, Compo
 |---|---|---|
 | `M:LinqToDB.LinqExtensions.OnTargetKey``1(LinqToDB.Linq.IMergeableOn{``0,``0})` | Adds definition of matching of target and source records using primary key columns. | Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
+### LinqToDB.LinqExtensions.OrderBy
+
+Kind: Method.
+Search anchors: OrderBy, Order, NULL, NULLS, FIRST, LAST, SQL.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `M:LinqToDB.LinqExtensions.OrderBy``2(System.Linq.IQueryable{``0},System.Linq.Expressions.Expression{System.Func{``0,``1}},LinqToDB.Sql.NullsPosition)` | Sorts the elements of a sequence in ascending order, placing `NULL` values at the requested position. On providers without native `NULLS FIRST` / `NULLS LAST` support the position is emulated in generated SQL. |  |
+
+### LinqToDB.LinqExtensions.OrderByDescending
+
+Kind: Method.
+Search anchors: OrderByDescending, Order, Descending, NULL, NULLS, FIRST, LAST, SQL.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `M:LinqToDB.LinqExtensions.OrderByDescending``2(System.Linq.IQueryable{``0},System.Linq.Expressions.Expression{System.Func{``0,``1}},LinqToDB.Sql.NullsPosition)` | Sorts the elements of a sequence in descending order, placing `NULL` values at the requested position. On providers without native `NULLS FIRST` / `NULLS LAST` support the position is emulated in generated SQL. |  |
+
 ### LinqToDB.LinqExtensions.ProcessSourceQueryable
 
 Kind: Property.
@@ -17523,6 +17568,24 @@ Search anchors: Take, TAKE, Group=QueryDirectives, Execution=Deferred, Composabi
 | `M:LinqToDB.LinqExtensions.Take``1(System.Linq.IQueryable{``0},System.Int32,LinqToDB.TakeHints)` | Limits number of records, returned from query. Allows to specify TAKE clause hints. Using this method may cause runtime `LinqToDB.LinqToDBException` if take hints are not supported by database. | Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure; |
 | `M:LinqToDB.LinqExtensions.Take``1(System.Linq.IQueryable{``0},System.Linq.Expressions.Expression{System.Func{System.Int32}})` | Limits number of records, returned from query. | Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure; |
 | `M:LinqToDB.LinqExtensions.Take``1(System.Linq.IQueryable{``0},System.Linq.Expressions.Expression{System.Func{System.Int32}},LinqToDB.TakeHints)` | Limits number of records, returned from query. Allows to specify TAKE clause hints. Using this method may cause runtime `LinqToDB.LinqToDBException` if take hints are not supported by database. | Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure; |
+
+### LinqToDB.LinqExtensions.ThenBy
+
+Kind: Method.
+Search anchors: ThenBy, Then, NULL, NULLS, FIRST, LAST, SQL.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `M:LinqToDB.LinqExtensions.ThenBy``2(System.Linq.IOrderedQueryable{``0},System.Linq.Expressions.Expression{System.Func{``0,``1}},LinqToDB.Sql.NullsPosition)` | Performs a subsequent ascending ordering of a sorted sequence, placing `NULL` values at the requested position. On providers without native `NULLS FIRST` / `NULLS LAST` support the position is emulated in generated SQL. |  |
+
+### LinqToDB.LinqExtensions.ThenByDescending
+
+Kind: Method.
+Search anchors: ThenByDescending, Then, Descending, NULL, NULLS, FIRST, LAST, SQL.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `M:LinqToDB.LinqExtensions.ThenByDescending``2(System.Linq.IOrderedQueryable{``0},System.Linq.Expressions.Expression{System.Func{``0,``1}},LinqToDB.Sql.NullsPosition)` | Performs a subsequent descending ordering of a sorted sequence, placing `NULL` values at the requested position. On providers without native `NULLS FIRST` / `NULLS LAST` support the position is emulated in generated SQL. |  |
 
 ### LinqToDB.LinqExtensions.ThenLoad
 
@@ -24568,6 +24631,15 @@ Search anchors: Default.
 | XML member | Summary | AI-Tags |
 |---|---|---|
 | `P:LinqToDB.SqlOptions.Default` | Gets default `LinqToDB.SqlOptions` instance. |  |
+
+### LinqToDB.SqlOptions.DefaultNullsPosition
+
+Kind: Property.
+Search anchors: DefaultNullsPosition, Default, Nulls, Position, NULL, ORDER, NULLS, FIRST, LAST.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `P:LinqToDB.SqlOptions.DefaultNullsPosition` | Default position of `NULL` values in an `ORDER BY` clause for ordering keys that do not specify a `LinqToDB.Sql.NullsPosition` explicitly. When set to `LinqToDB.Sql.NullsPosition.First` or `LinqToDB.Sql.NullsPosition.Last`, it is applied to every such key (and emulated for providers without native `NULLS FIRST` / `NULLS LAST` support). A position specified explicitly on a key always takes precedence — including an explicit `LinqToDB.Sql.NullsPosition.None`, which opts that key out of the default and uses the provider's natural null ordering. Default value: `LinqToDB.Sql.NullsPosition.None` (use the provider's default null ordering). |  |
 
 ### LinqToDB.SqlOptions.EnableConstantExpressionInOrderBy
 
