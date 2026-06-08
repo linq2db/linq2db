@@ -1404,7 +1404,7 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 				// provider's Guid→string translator inserts between the two calls, e.g.
 				//   Lower(Cast(Lower(x) AS VarChar(36))) -> Cast(Lower(x) AS VarChar(36))   (Firebird)
 				//   Lower(«not-null»(Lower(x)))          -> «not-null»(Lower(x))            (Access)
-				if (function.Name == PseudoFunctions.TO_LOWER ? QueryHelper.IsLowerString(argument) : QueryHelper.IsUpperString(argument))
+				if (string.Equals(function.Name, PseudoFunctions.TO_LOWER, StringComparison.Ordinal) ? QueryHelper.IsLowerString(argument) : QueryHelper.IsUpperString(argument))
 				{
 					return argument;
 				}

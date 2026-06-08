@@ -29,27 +29,6 @@ namespace LinqToDB.Internal.Common
 			return array == null || array.Count == 0;
 		}
 
-		/// <summary>
-		/// Returns path to original directory with provided assembly.
-		/// </summary>
-		/// <param name="assembly">Assembly.</param>
-		/// <returns>Assembly directory path.</returns>
-		internal static string GetPath(this Assembly assembly)
-		{
-			return Path.GetDirectoryName(assembly.GetFileName())
-				?? throw new InvalidOperationException($"Cannot get path to {assembly.GetFileName()}");
-		}
-
-		/// <summary>
-		/// Returns original path to assembly file.
-		/// </summary>
-		/// <param name="assembly">Assembly.</param>
-		/// <returns>Assembly file path.</returns>
-		internal static string GetFileName(this Assembly assembly)
-		{
-			return assembly.Location;
-		}
-
 		private const string WhitespacePattern = /* lang=regex */ @"[\r\n\s]+";
 #if SUPPORTS_REGEX_GENERATORS
 		[GeneratedRegex(WhitespacePattern, RegexOptions.ExplicitCapture)]

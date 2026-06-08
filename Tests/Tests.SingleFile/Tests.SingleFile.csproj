@@ -25,4 +25,12 @@
 		<PackageReference Include="Microsoft.Data.Sqlite" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<!-- This standalone console smoke test isn't an NUnit/baseline test (it has no -->
+		<!-- reference to Tests.Base / BaselinesManager): it reports via stdout and the -->
+		<!-- process exit code. Drop the Tests-wide banned-symbols list so the ban on -->
+		<!-- System.Console (RS0030) doesn't apply here. -->
+		<AdditionalFiles Remove="..\BannedSymbols.txt" />
+	</ItemGroup>
+
 </Project>
