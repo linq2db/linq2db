@@ -52,6 +52,10 @@ Grep-and-compare. For each of the following "canonical rule" patterns, find ever
 
 This is not a full-text dedup — it's a fixed list of "rules that must live in one place". Update the list in this doc when a new cross-cutting rule appears. Proposed fix: creative — propose canonical location + pointer in the other file; user confirms.
 
+**Contradiction, not just divergence.** The check above catches the *same* rule worded differently. Also flag the harder case: two rules that **conflict** — one doc says "always X", another says "prefer not-X" in the same circumstance, or a rule and its cross-referenced detail doc have drifted to opposite guidance. A contradiction is more dangerous than a duplicate (the agent can't satisfy both) and won't surface as near-identical text, so a grep for shared phrasing misses it — compare the *guidance*, not the wording. Surface both locations and the conflict; **fixKind: creative** — the user decides which wins.
+
+**Boundary smell (info).** While scanning, flag a doc or `CLAUDE.md` section that reaches deep into a *neighboring* subsystem's internals it isn't about — e.g. the branching section restating SQL-AST invariants, or a skill doc embedding another skill's procedure. This usually means a rule landed in the wrong file; propose relocating it to the owning doc with a pointer left behind. Distinct from the duplicated / contradiction cases above — here the content may be correct but mis-placed. (Don't over-fire: a one-line pointer into another doc is the intended pattern, not a smell.)
+
 ## 2e. Retired-path check
 
 `Grep` the corpus for path-ish tokens (`Source/\S+`, `Tests/\S+`, `Build/\S+`, `Data/\S+`, `.claude/\S+`) and check each against `Glob`. Flag tokens that look like paths and don't resolve. Skip ones inside code fences that are illustrative examples (common pattern: `Source/LinqToDB/...` as a placeholder).

@@ -146,3 +146,11 @@ Indexers update entries via the `INDEX-PATCH` fence (see [`kb-protocol.md`](../a
 - Detected-issue taxonomy: [`kb-issue-categories.md`](kb-issue-categories.md)
 - Selection grammar (used by `/kb-issues`): [`kb-selection-grammar.md`](kb-selection-grammar.md)
 - Fenced agent protocol: [`../agents/_shared/kb-protocol.md`](../agents/_shared/kb-protocol.md)
+
+## Proposed enhancement: hybrid retrieval for `kb-ask` / `kb-research` (design note — not yet built)
+
+**Status: proposed, not implemented.** Today `/kb-ask` answers by handing `kb-research` a curated doc shortlist that the agent reads; retrieval is effectively keyword / `Grep` plus human-curated shortlists over the markdown corpus and the JSON indexes. That underperforms on the queries this KB sees most — exact-token lookups: issue / PR numbers, SQL-builder type names (`BasicSqlOptimizer`), capability-flag names (`IsCrossJoinSyntaxRequired`), member names — where a lexical hit and a semantic match diverge.
+
+The proposed shape (borrowed from production-RAG practice) is **hybrid retrieval**: run a lexical search (BM25 / full-text over the corpus) and a semantic search (embeddings over chunked docs) in parallel, fuse the two ranked lists with **Reciprocal Rank Fusion** (`score = Σ 1/(k + rankᵢ)`, k ≈ 60 — training-free, scale-agnostic, no score calibration needed between the two), then optionally re-rank the top ~20 candidates with a cross-encoder before they enter the answer context. Lexical covers exact tokens; semantic covers paraphrase.
+
+This is a **build, not a doc edit** — it needs an embedding store, a chunking pass over `architecture/` / `conventions/` / `areas/` / the GH indexes, and changes to how `kb-research` is fed. Open questions to settle before committing: where embeddings live (the KB is checked-in markdown; an embedding index is a new artifact — gitignored under `.build/.claude/kb-*`, or a committed binary), which embedding + reranker models, and whether the corpus is even large enough to beat the current shortlist + grep approach. **Measure first:** on a small corpus, grep + good shortlists can win, and an agent working a local-disk repo tends to de-prioritize RAG/MCP retrieval tooling anyway. Treat this section as the spec to evaluate, not an approved change.
