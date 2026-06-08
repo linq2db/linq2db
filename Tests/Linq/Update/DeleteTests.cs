@@ -169,6 +169,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[ActiveIssue(5597, Configuration = TestProvName.AllYdb)]
 		[Test]
 		public void DeleteMany2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
