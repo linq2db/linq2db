@@ -319,7 +319,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe.Translation
 				return builder.Build(translationContext, methodCall, isExpression: translationFlags.HasFlag(TranslationFlags.Expression));
 			}
 
-			// {value} IS NULL OR REPLACE(REPLACE(... 24 whitespace codepoints ..., '')) = ''
+			// {value} IS NULL OR REPLACE(REPLACE(... 25 whitespace codepoints ..., '')) = ''
 			// SqlCe has no native multi-char trim or regex replace, so each Unicode whitespace
 			// codepoint is stripped via a chained REPLACE.
 			public override ISqlExpression? TranslateIsNullOrWhiteSpace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value)
