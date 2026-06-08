@@ -431,6 +431,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void ContainsSubqueryTest([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
