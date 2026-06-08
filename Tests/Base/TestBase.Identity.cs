@@ -114,7 +114,7 @@ CREATE COLUMN TABLE ""Person"" (
 						// default schema for this table changes to temp on windows (sqlite bug?)
 						sql = new[] { $"UPDATE main.sqlite_sequence SET seq = {lastValue} WHERE name = 'Person'" };
 						break;
-					case string prov when prov.IsAnyOf(ProviderName.Ydb):
+					case string prov when prov.IsAnyOf(TestProvName.AllYdb):
 						sql = new[] { $"ALTER SEQUENCE `/local/Person/_serial_column_PersonID` RESTART WITH {lastValue + 1}" };
 						break;
 					default:
@@ -259,7 +259,7 @@ CREATE COLUMN TABLE ""AllTypes""
 						// default schema for this table changes to temp on windows (sqlite bug?)
 						sql = new[] { $"UPDATE main.sqlite_sequence SET seq = {lastValue} WHERE name = 'AllTypes'" };
 						break;
-					case string prov when prov.IsAnyOf(ProviderName.Ydb):
+					case string prov when prov.IsAnyOf(TestProvName.AllYdb):
 						sql = new[] { $"ALTER SEQUENCE `/local/AllTypes/_serial_column_ID` RESTART WITH {lastValue + 1}" };
 						break;
 					default:

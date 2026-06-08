@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -22,7 +22,7 @@ namespace Tests.DataProvider
 		sealed class YdbDataSourcesAttribute : IncludeDataSourcesAttribute
 		{
 			public YdbDataSourcesAttribute()
-				: base(ProviderName.Ydb)
+				: base(TestProvName.AllYdb)
 			{
 			}
 		}

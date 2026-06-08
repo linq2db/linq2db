@@ -73,7 +73,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(5599, Configurations = [ProviderName.SqlCe, ProviderName.Ydb], Details = "Final aliases break by-name mapping for raw SQL")]
+		[ActiveIssue(5599, Configurations = [ProviderName.SqlCe, TestProvName.AllYdb], Details = "Final aliases break by-name mapping for raw SQL")]
 		[Test]
 		public void ToSqlQuery_SimpleQuery([DataSources] string context)
 		{
@@ -100,7 +100,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(5599, Configurations = [ProviderName.SqlCe, ProviderName.Ydb], Details = "Final aliases break by-name mapping for raw SQL")]
+		[ActiveIssue(5599, Configurations = [ProviderName.SqlCe, TestProvName.AllYdb], Details = "Final aliases break by-name mapping for raw SQL")]
 		[Test]
 		public void ToSqlQuery_WithParameters([DataSources] string context, [Values] bool inlineParameters)
 		{
@@ -134,7 +134,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(5599, Configurations = [ProviderName.SqlCe, ProviderName.Ydb], Details = "Final aliases break by-name mapping for raw SQL")]
+		[ActiveIssue(5599, Configurations = [ProviderName.SqlCe, TestProvName.AllYdb], Details = "Final aliases break by-name mapping for raw SQL")]
 		[Test]
 		public void ToSqlQuery_WithParametersDeduplication([DataSources] string context, [Values] bool inlineParameters)
 		{
@@ -171,7 +171,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(5599, Configurations = [ProviderName.SqlCe, ProviderName.Ydb], Details = "Final aliases break by-name mapping for raw SQL")]
+		[ActiveIssue(5599, Configurations = [ProviderName.SqlCe, TestProvName.AllYdb], Details = "Final aliases break by-name mapping for raw SQL")]
 		[Test]
 		public void ToSqlQuery_WithNullableParameters([DataSources] string context)
 		{

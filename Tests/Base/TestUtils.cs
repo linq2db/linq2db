@@ -85,7 +85,7 @@ namespace Tests
 
 		/// <summary>
 		/// Returns schema name for provided connection.
-		/// Returns UNUSED_SCHEMA if fully-qualified table name doesn't support a schema, or <c>null</c> when the
+		/// Returns UNUSED_SCHEMA if fully-qualified table name doesn't support a schema, or <see langword="null"/> when the
 		/// provider has a schema/namespace concept but the table lives in the default (root) schema.
 		/// </summary>
 		public static string? GetSchemaName(IDataContext db, string context)
@@ -93,7 +93,7 @@ namespace Tests
 			switch (context)
 			{
 				// YDB test tables live at the database root (no sub-directory) => null means default/no schema
-				case string when context.IsAnyOf(ProviderName.Ydb)          :
+				case string when context.IsAnyOf(TestProvName.AllYdb)       :
 					return null;
 				case string when context.IsAnyOf(TestProvName.AllInformix)  :
 				case string when context.IsAnyOf(TestProvName.AllOracle)    :
@@ -152,7 +152,7 @@ namespace Tests
 		{
 			return context switch
 			{
-				string when context.IsAnyOf(ProviderName.Ydb)            => "local",
+				string when context.IsAnyOf(TestProvName.AllYdb)         => "local",
 				string when context.IsAnyOf(TestProvName.AllSQLite)      => "main",
 				string when context.IsAnyOf(TestProvName.AllDuckDB)      => db.Select(() => DbName()),
 				// Access adds extension automatically to database name, but if there are

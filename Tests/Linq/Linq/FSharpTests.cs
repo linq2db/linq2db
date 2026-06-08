@@ -246,7 +246,7 @@ namespace Tests.Linq
 			FSharp.Issue4132.Issue4132Test1(db);
 		}
 
-		[ActiveIssue(5598, Configuration = ProviderName.Ydb, Details = "F# {record with ...} update emits every column (incl. the PK) instead of only the changed one; YDB rejects assigning a PK column in SET")]
+		[ActiveIssue(5598, Configuration = TestProvName.AllYdb, Details = "F# {record with ...} update emits every column (incl. the PK) instead of only the changed one; YDB rejects assigning a PK column in SET")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4132")]
 		public void Issue4132Test2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
