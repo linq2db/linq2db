@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 
 using LinqToDB.Common;
+using LinqToDB.DataProvider;
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 using LinqToDB.Interceptors;
@@ -1581,24 +1582,17 @@ namespace LinqToDB.Data
 		{
 			foreach (var parameter in parameters)
 			{
-				var p          = dataConnection.CurrentCommand!.CreateParameter();
-				var dbDataType = parameter.DbDataType;
-				var value      = parameter.Value;
-
-				if (dbDataType.DataType == DataType.Undefined && value != null)
-					dbDataType = dbDataType.WithDataType(dataConnection.MappingSchema.GetDataType(value.GetType()).Type.DataType);
-
-				if (parameter.Direction != null) p.Direction =       parameter.Direction.Value;
-				if (parameter.Size      != null) p.Size      =       parameter.Size     .Value;
-				if (parameter.Precision != null) p.Precision = (byte)parameter.Precision.Value;
-				if (parameter.Scale     != null) p.Scale     = (byte)parameter.Scale    .Value;
-
 				// we don't normalize parameter names here as they are passed from user code and it is user's responsibility
 				// to pass correct names. And we cannot add normalization as it will be breaking change for existing users
-				dataConnection.DataProvider.SetParameter(dataConnection, p, parameter.Name!, dbDataType, value);
+				var p = dataConnection.DataProvider.CreateParameter(
+					dataConnection,
+					dataConnection.CurrentCommand!,
+					new DataProviderParameterContext(parameter.Name!, parameter.DbDataType, parameter.Value, parameter.Direction));
+
 				// some providers (e.g. managed sybase provider) could change parameter name
 				// which breaks parameters rebind logic
 				parameter.Name = p.ParameterName;
+
 				dataConnection.CurrentCommand!.Parameters.Add(p);
 			}
 		}

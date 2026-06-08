@@ -8,6 +8,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.DataProvider;
 using LinqToDB.Internal;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider;
@@ -322,23 +323,12 @@ namespace LinqToDB.Data
 
 			static DbParameter CreateParameter(DataConnection dataConnection, DbCommand command, SqlParameter parameter, SqlParameterValue parmValue)
 			{
-				var p          = command.CreateParameter();
-				var dbDataType = parmValue.DbDataType;
 				var paramValue = parameter.CorrectParameterValue(parmValue.ProviderValue);
+				var p          = dataConnection.DataProvider.CreateParameter(
+					dataConnection,
+					command,
+					new DataProviderParameterContext(parameter.Name!, parmValue.DbDataType, paramValue));
 
-				if (dbDataType.DataType == DataType.Undefined)
-				{
-					var newDataType = dbDataType.SystemType != typeof(object)
-							? dataConnection.MappingSchema.GetDbDataType(dbDataType.SystemType).DataType
-							: DataType.Undefined;
-
-					if (newDataType == DataType.Undefined && paramValue != null)
-						newDataType = dataConnection.MappingSchema.GetDbDataType(paramValue.GetType()).DataType;
-
-					dbDataType = dbDataType.WithDataType(newDataType);
-				}
-
-				dataConnection.DataProvider.SetParameter(dataConnection, p, parameter.Name!, dbDataType, paramValue);
 				// some providers (e.g. managed sybase provider) could change parameter name
 				// which breaks parameters rebind logic
 				parameter.Name = p.ParameterName;

@@ -356,6 +356,19 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			}
 		}
 
+		protected override DbDataType InferParameterDataType(DataConnection dataConnection, DbDataType dbDataType, object? paramValue)
+		{
+			if (dbDataType.DataType == DataType.Undefined &&
+			    paramValue is string value                &&
+			    dataConnection.Options.FindOrDefault(OracleOptions.Default).MaxStringParameterLength is { } maxStringParameterLength &&
+			    value.Length >= maxStringParameterLength)
+			{
+				return dbDataType.WithDataType(DataType.NText);
+			}
+
+			return base.InferParameterDataType(dataConnection, dbDataType, paramValue);
+		}
+
 		#region BulkCopy
 
 		public override BulkCopyRowsCopied BulkCopy<T>(DataOptions options, ITable<T> table, IEnumerable<T> source)
