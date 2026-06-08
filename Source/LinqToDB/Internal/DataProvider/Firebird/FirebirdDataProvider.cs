@@ -9,6 +9,7 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider.Firebird;
 using LinqToDB.Internal.DataProvider.Firebird.Translation;
 using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
@@ -32,6 +33,8 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			SqlProviderFlags.IsIdentityParameterRequired       = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
+			SqlProviderFlags.IsNullsOrderingSupported          = true;
+			SqlProviderFlags.DefaultNullsOrdering              = NullsDefaultOrdering.Smallest; // Firebird 2.0+ sorts NULL as the smallest value
 			SqlProviderFlags.IsUnionAllOrderBySupported        = true;
 			SqlProviderFlags.IsDistinctSetOperationsSupported  = false;
 			SqlProviderFlags.IsUpdateFromSupported             = false;

@@ -380,32 +380,39 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 			return timePart;
 		}
 
+		/// <summary>
+		/// Builds the Firebird <c>Cast(Lower(UUID_TO_CHAR({0})) as VarChar(36))</c> shape for a Guid → string conversion.
+		/// Shared by the <c>Guid.ToString()</c> member translator and the <c>cast(guid as string)</c> path in
+		/// <see cref="FirebirdSqlExpressionConvertVisitor"/> so both emit identical SQL.
+		/// </summary>
+		/// <remarks>
+		/// Firebird's native <c>UUID_TO_CHAR</c> returns <c>CHAR(36)</c> — a fixed-width type that pads shorter
+		/// values with trailing spaces. The inner function is typed as <c>CHAR(36)</c> to match that database
+		/// semantic; the outer CAST then forces the result to <c>VARCHAR(36)</c> so a composing
+		/// <c>COALESCE(..., '')</c> doesn't promote the whole expression to <c>CHAR(36)</c> and pad the
+		/// empty-string branch to 36 spaces. Without the explicit CHAR typing on the inner function the optimizer
+		/// (see <c>SqlExpressionOptimizerVisitor.VisitSqlCastExpression</c>) would treat the CAST as a no-op and
+		/// elide it. Matches PostgreSQL / Sybase / SqlServer / MySql / SqlCe / SapHana Guid translators which all
+		/// converge on a <c>VARCHAR(36)</c> result.
+		/// </remarks>
+		public static ISqlExpression TranslateGuidToString(ISqlExpression guidExpr, ISqlExpressionFactory factory)
+		{
+			var stringDataType = factory.GetDbDataType(typeof(string));
+			var charType       = stringDataType.WithDataType(DataType.Char).WithLength(36);
+			var varCharType    = stringDataType.WithDataType(DataType.VarChar).WithLength(36);
+
+			var toChar  = factory.Function(charType, "UUID_TO_CHAR", guidExpr);
+			var toLower = factory.ToLower(toChar);
+			var cast    = factory.Cast(toLower, varCharType);
+
+			return cast;
+		}
+
 		protected class GuidMemberTranslator : GuidMemberTranslatorBase
 		{
 			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
 			{
-				// Cast(Lower(UUID_TO_CHAR({0})) as VarChar(36))
-				//
-				// Firebird's native UUID_TO_CHAR returns CHAR(36) — a fixed-width type that pads
-				// shorter values with trailing spaces. The inner SqlFunction is typed as CHAR(36)
-				// to match that database semantic; the outer CAST then forces the result to
-				// VARCHAR(36) so a composing `COALESCE(..., '')` doesn't promote the whole
-				// expression to CHAR(36) and pad the empty-string branch to 36 spaces. Without
-				// the explicit CHAR typing on the inner function the optimizer (see
-				// `SqlExpressionOptimizerVisitor.VisitSqlCastExpression`) would treat the CAST
-				// as a no-op and elide it. Matches PostgreSQL / Sybase / SqlServer / MySql /
-				// SqlCe / SapHana Guid translators which all converge on a VARCHAR(36) result.
-
-				var factory        = translationContext.ExpressionFactory;
-				var stringDataType = factory.GetDbDataType(typeof(string));
-				var charType       = stringDataType.WithDataType(DataType.Char).WithLength(36);
-				var varCharType    = stringDataType.WithDataType(DataType.VarChar).WithLength(36);
-
-				var toChar  = factory.Function(charType, "UUID_TO_CHAR", guidExpr);
-				var toLower = factory.ToLower(toChar);
-				var cast    = factory.Cast(toLower, varCharType);
-
-				return cast;
+				return TranslateGuidToString(guidExpr, translationContext.ExpressionFactory);
 			}
 		}
 

@@ -150,6 +150,52 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		{
 		}
 
+		// Expression-shaped nodes may be shared across query scopes; visit them in Transform
+		// mode so a changed child produces a fresh instance instead of mutating the shared
+		// child slot in place and corrupting sibling scopes (see #5125 / PR #5556).
+		//
+		// Container-shaped nodes (statements, SelectQuery, clauses, table sources, etc.)
+		// stay in Modify so the corrector's own side effects — AddColumn / AddField on
+		// subquery clauses during the walk — remain visible to the eight existing callers
+		// that ignore the visitor's return value. Transform on a clause with a mutable list
+		// (Columns, OrderBy.Items, ...) would copy the list before the side-effect mutation
+		// reaches it and drop the appended entries.
+		public override VisitMode GetVisitMode(IQueryElement element) => element.ElementType switch
+		{
+			// raw templates
+			QueryElementType.SqlExpression            or
+			QueryElementType.SqlFragment              or
+			// functions
+			QueryElementType.SqlFunction              or
+			QueryElementType.SqlExtendedFunction      or
+			// structured expressions
+			QueryElementType.SqlBinaryExpression      or
+			QueryElementType.SqlUnaryExpression       or
+			QueryElementType.SqlNullabilityExpression or
+			QueryElementType.SqlCase                  or
+			QueryElementType.SqlCoalesce              or
+			QueryElementType.SqlCast                  or
+			QueryElementType.SqlCondition             or
+			QueryElementType.SqlConcat                or
+			QueryElementType.CompareTo                or
+			QueryElementType.SqlRow                   or
+			// predicates / search conditions
+			QueryElementType.SearchCondition          or
+			QueryElementType.NotPredicate             or
+			QueryElementType.ExprPredicate            or
+			QueryElementType.ExprExprPredicate        or
+			QueryElementType.LikePredicate            or
+			QueryElementType.SearchStringPredicate    or
+			QueryElementType.BetweenPredicate         or
+			QueryElementType.IsNullPredicate          or
+			QueryElementType.IsDistinctPredicate      or
+			QueryElementType.IsTruePredicate          or
+			QueryElementType.InSubQueryPredicate      or
+			QueryElementType.InListPredicate          or
+			QueryElementType.ExistsPredicate          => VisitMode.Transform,
+			_                                         => base.GetVisitMode(element),
+		};
+
 		public override void Cleanup()
 		{
 			_parentQueryNesting = null;

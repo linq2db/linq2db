@@ -451,6 +451,17 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 
 	#endregion
 
+	#region Issue 5547
+
+	public sealed class Issue5547CustomerShare
+	{
+		public int              Id         { get; set; }
+		public int              CustomerId { get; set; }
+		public Issue5355Customer Customer  { get; set; } = null!;
+	}
+
+	#endregion
+
 	#region Issue 5388
 
 	public class Issue5388Task

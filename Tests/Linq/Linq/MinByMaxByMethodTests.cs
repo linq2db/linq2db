@@ -19,7 +19,7 @@ namespace Tests.Linq
 		[Table]
 		public class TestTable
 		{
-			[Column] public int  Id { get; set; }
+			[PrimaryKey] public int  Id { get; set; }
 			[Column] public int  TestId { get; set; }
 			[Column] public int? NTestId { get; set; }
 		}
@@ -27,7 +27,7 @@ namespace Tests.Linq
 		[Table]
 		public class MainTable
 		{
-			[Column] public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 			[Column] public string? Name { get; set; }
 
 			[Association(ThisKey = nameof(Id), OtherKey = nameof(ChildTable.ParentId))]
@@ -37,7 +37,7 @@ namespace Tests.Linq
 		[Table]
 		public class ChildTable
 		{
-			[Column] public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 			[Column] public int ParentId { get; set; }
 			[Column] public int Value { get; set; }
 			[Column] public string? Name { get; set; }
