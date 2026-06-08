@@ -252,6 +252,10 @@ namespace Tests
 		public const string AllDuckDB = ProviderName.DuckDB;
 		#endregion
 
+		#region YDB
+		public const string AllYdb = ProviderName.Ydb;
+		#endregion
+
 		/// <summary>
 		/// Fake provider, which doesn't execute any real queries. Could be used for tests, that shouldn't be affected
 		/// by real database access.
