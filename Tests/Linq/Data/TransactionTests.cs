@@ -310,8 +310,8 @@ namespace Tests.Data
 		{
 			var connectionString = GetConnectionString(context);
 
-			await using var db = GetDataConnection(context);
-			await using var tr = await db.BeginTransactionAsync();
+			using var db = GetDataConnection(context);
+			using var tr = db.BeginTransaction();
 
 			_ = context switch
 			{

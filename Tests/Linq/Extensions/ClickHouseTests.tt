@@ -32,13 +32,22 @@ namespace Tests.Extensions
 	GenerateJoinHint("GlobalAnti",  "GLOBAL LEFT ANTI");
 	GenerateJoinHint("GlobalAny",   "GLOBAL LEFT ANY");
 	GenerateJoinHint("GlobalAll",   "GLOBAL LEFT ALL");
+
+	GenerateJoinHint("AllOuter",    "LEFT OUTER", true);
+	GenerateJoinHint("AllSemi",     "LEFT SEMI",  true);
+	GenerateJoinHint("AllAnti",     "LEFT ANTI",  true);
+	GenerateJoinHint("AllAny",      "LEFT ANY",   true);
+	GenerateJoinHint("AllAsOf",     "LEFT ASOF",  true);
 #>
 	}
 }
 <#+
-void GenerateJoinHint(string test, string hint)
+void GenerateJoinHint(string test, string hint, bool obsolete = false)
 {
 #>
+<#+ if (obsolete) { #>
+#pragma warning disable CS0618 // Type or member is obsolete
+<#+ } #>
 		[Test]
 		public void Join<#= test #>HintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
 		{
@@ -54,6 +63,9 @@ void GenerateJoinHint(string test, string hint)
 
 			Assert.That(LastQuery, Contains.Substring($"<#= hint #> JOIN"));
 		}
+<#+ if (obsolete) { #>
+#pragma warning restore CS0618 // Type or member is obsolete
+<#+ } #>
 
 <#+
 }

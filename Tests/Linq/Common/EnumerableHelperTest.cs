@@ -19,7 +19,7 @@ namespace Tests.Common
 			var enumerables = EnumerableHelper.Batch(countTo10, 3);
 			var finalList   = new List<List<int>>();
 
-			foreach (var enumerable2 in enumerables)
+			foreach (var enumerable2 in enumerables) 
 			{
 				finalList.Add(enumerable2.ToList());
 			}
@@ -83,9 +83,9 @@ namespace Tests.Common
 			}
 		}
 
-#pragma warning disable CS1998, IDE0390 // Async method lacks 'await' operators and will run synchronously
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 		private async IAsyncEnumerable<int> AsyncEnumerableRange(int count)
-#pragma warning restore CS1998, IDE0390 // Async method lacks 'await' operators and will run synchronously
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 		{
 			for (var i = 0; i < count; i++)
 			{

@@ -538,7 +538,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				}
 				else if (h.StartsWith(ClickHouseHints.Join.All, StringComparison.Ordinal) && !string.Equals(h, ClickHouseHints.Join.All, StringComparison.Ordinal))
 				{
-					// TODO: remove this branch after obsolete All* join hint APIs are removed.
+					// Keep legacy "ALL <strictness>" values working for already compiled callers and explicit hint strings.
 					StringBuilder
 						.Append(ClickHouseHints.Join.All)
 						.Append(' ');

@@ -189,5 +189,95 @@ namespace Tests.Extensions
 			Assert.That(LastQuery, Contains.Substring($"GLOBAL LEFT ALL JOIN"));
 		}
 
+#pragma warning disable CS0618 // Type or member is obsolete
+		[Test]
+		public void JoinAllOuterHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from c in db.Child
+				join p in db.Parent.AsClickHouse().JoinAllOuterHint() on c.ParentID equals p.ParentID into g
+				from p in g.DefaultIfEmpty()
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"LEFT OUTER JOIN"));
+		}
+#pragma warning restore CS0618 // Type or member is obsolete
+
+#pragma warning disable CS0618 // Type or member is obsolete
+		[Test]
+		public void JoinAllSemiHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from c in db.Child
+				join p in db.Parent.AsClickHouse().JoinAllSemiHint() on c.ParentID equals p.ParentID into g
+				from p in g.DefaultIfEmpty()
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"LEFT SEMI JOIN"));
+		}
+#pragma warning restore CS0618 // Type or member is obsolete
+
+#pragma warning disable CS0618 // Type or member is obsolete
+		[Test]
+		public void JoinAllAntiHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from c in db.Child
+				join p in db.Parent.AsClickHouse().JoinAllAntiHint() on c.ParentID equals p.ParentID into g
+				from p in g.DefaultIfEmpty()
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"LEFT ANTI JOIN"));
+		}
+#pragma warning restore CS0618 // Type or member is obsolete
+
+#pragma warning disable CS0618 // Type or member is obsolete
+		[Test]
+		public void JoinAllAnyHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from c in db.Child
+				join p in db.Parent.AsClickHouse().JoinAllAnyHint() on c.ParentID equals p.ParentID into g
+				from p in g.DefaultIfEmpty()
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"LEFT ANY JOIN"));
+		}
+#pragma warning restore CS0618 // Type or member is obsolete
+
+#pragma warning disable CS0618 // Type or member is obsolete
+		[Test]
+		public void JoinAllAsOfHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from c in db.Child
+				join p in db.Parent.AsClickHouse().JoinAllAsOfHint() on c.ParentID equals p.ParentID into g
+				from p in g.DefaultIfEmpty()
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"LEFT ASOF JOIN"));
+		}
+#pragma warning restore CS0618 // Type or member is obsolete
+
 	}
 }
