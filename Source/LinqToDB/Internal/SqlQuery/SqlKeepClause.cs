@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.SqlQuery;
@@ -51,6 +52,42 @@ namespace LinqToDB.Internal.SqlQuery
 				hash.Add(item.GetElementHashCode());
 
 			return hash.ToHashCode();
+		}
+
+		protected bool Equals(SqlKeepClause other)
+		{
+			if (Type != other.Type || OrderBy.Count != other.OrderBy.Count)
+				return false;
+
+			// SqlWindowOrderItem has no structural Equals; its GetElementHashCode is the structural
+			// fingerprint (expression + direction + nulls), and is what the parent SqlExtendedFunction
+			// hash already keys on — so comparing it keeps Equals consistent with GetElementHashCode.
+			for (var i = 0; i < OrderBy.Count; i++)
+			{
+				if (OrderBy[i].GetElementHashCode() != other.OrderBy[i].GetElementHashCode())
+					return false;
+			}
+
+			return true;
+		}
+
+		public override bool Equals([NotNullWhen(true)] object? obj)
+		{
+			if (obj is null)
+				return false;
+
+			if (ReferenceEquals(this, obj))
+				return true;
+
+			if (obj.GetType() != GetType())
+				return false;
+
+			return Equals((SqlKeepClause)obj);
+		}
+
+		public override int GetHashCode()
+		{
+			return GetElementHashCode();
 		}
 
 		[DebuggerStepThrough]

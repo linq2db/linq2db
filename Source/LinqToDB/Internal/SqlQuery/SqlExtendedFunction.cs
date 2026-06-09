@@ -276,6 +276,12 @@ namespace LinqToDB.Internal.SqlQuery
 			if (FrameClause != null && !FrameClause.Equals(otherFunction.FrameClause))
 				return false;
 
+			if (!CheckNulls(KeepClause, otherFunction.KeepClause))
+				return false;
+
+			if (KeepClause != null && !KeepClause.Equals(otherFunction.KeepClause))
+				return false;
+
 			if (!CheckNulls(Filter, otherFunction.Filter))
 				return false;
 

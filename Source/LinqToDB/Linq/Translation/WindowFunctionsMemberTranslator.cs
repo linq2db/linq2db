@@ -167,8 +167,8 @@ namespace LinqToDB.Linq.Translation
 			public required SqlFrameClause.FrameExclusionKind FrameExclusion { get; set; }
 			public required SqlKeepClause.KeepType?           KeepType       { get; set; }
 			public required OrderByInformation[]?             KeepOrderBy    { get; set; }
-			public          Sql.Nulls                        NullTreatment  { get; set; }
-			public          Sql.From                         FromPosition   { get; set; }
+			public          Sql.Nulls                         NullTreatment  { get; set; }
+			public          Sql.From                          FromPosition   { get; set; }
 		}
 
 		static bool TryParseOrderByMethod(MethodCallExpression mc, ref List<OrderByInformation>? list, out Expression? next)
