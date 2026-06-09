@@ -2021,11 +2021,8 @@ namespace Tests.Linq
 
 			if (!context.IsRemote() && db is DataConnection dc)
 			{
-				var sql = dc.LastQuery!;
-				Assert.That(
-					Regex.IsMatch(sql, @"FinishedOn[^,\r\n]*-[^,\r\n]*StartedOn", RegexOptions.IgnoreCase),
-						Is.False,
-					"DateTime subtraction must not appear verbatim in SQL — the expression should be translated server-side by the provider");
+				Regex.IsMatch(dc.LastQuery!, @"FinishedOn[^,]*-[^,]*StartedOn", RegexOptions.IgnoreCase)
+					.ShouldBeFalse("DateTime subtraction must not appear in SQL — it is evaluated client-side in .NET");
 			}
 		}
 
@@ -2053,11 +2050,8 @@ namespace Tests.Linq
 
 			if (!context.IsRemote() && db is DataConnection dc)
 			{
-				var sql = dc.LastQuery!;
-				Assert.That(
-					Regex.IsMatch(sql, @"FinishedOn[^,\r\n]*-[^,\r\n]*StartedOn", RegexOptions.IgnoreCase),
-						Is.True,
-					"DateTime subtraction must appear in SQL — Sql.AsSql forces server-side evaluation");
+				Regex.IsMatch(dc.LastQuery!, @"FinishedOn[^,]*-[^,]*StartedOn", RegexOptions.IgnoreCase)
+					.ShouldBeTrue("DateTime subtraction must appear in SQL — Sql.AsSql forces server-side evaluation");
 			}
 		}
 	}
