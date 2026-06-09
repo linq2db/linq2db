@@ -2043,5 +2043,53 @@ namespace Tests.Linq
 
 			_ = query.ToArray();
 		}
+
+		// Short name: Oracle 11 caps identifiers at 30 chars.
+		[Table("NullableDtOffsetSub")]
+		sealed class NullableDateTimeOffsetSubtractionTable
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+
+			[Column(DataType = DataType.DateTimeOffset, CanBeNull = false)]
+			public DateTimeOffset StartedOn { get; set; }
+
+			[Column(DataType = DataType.DateTimeOffset, CanBeNull = true)]
+			public DateTimeOffset? FinishedOn { get; set; }
+
+			public static readonly NullableDateTimeOffsetSubtractionTable[] Data =
+			[
+				new() { Id = 1, StartedOn = TestData.DateTimeOffset, FinishedOn = TestData.DateTimeOffset.AddHours(2) },
+				new() { Id = 2, StartedOn = TestData.DateTimeOffset, FinishedOn = null },
+			];
+		}
+
+		[Test]
+		public void NullableDateTimeOffsetSubtractionProjectionTest([DataSources(TestProvName.AllAccess, TestProvName.AllFirebird, TestProvName.AllSQLite, TestProvName.AllSqlServer2005, ProviderName.DB2, TestProvName.AllInformix, TestProvName.AllSapHana, TestProvName.AllSybase, TestProvName.AllMySqlData, ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(NullableDateTimeOffsetSubtractionTable.Data);
+
+			var result =
+				(
+					from t in tb
+					orderby t.Id
+					select new
+					{
+						Time = t.FinishedOn - t.StartedOn,
+					})
+				.ToArray();
+
+			result.Length.ShouldBe(2);
+			result[0].Time.ShouldNotBeNull();
+			result[0].Time!.Value.TotalHours.ShouldBeInRange(1.9, 2.1);
+			result[1].Time.ShouldBeNull();
+
+			if (!context.IsRemote() && db is DataConnection dc)
+			{
+				Regex.IsMatch(dc.LastQuery!, @"FinishedOn[^,]*-[^,]*StartedOn", RegexOptions.IgnoreCase)
+					.ShouldBeFalse("DateTimeOffset subtraction must not appear in SQL — it is evaluated client-side in .NET");
+			}
+		}
 	}
 }
