@@ -236,10 +236,6 @@ to the NuGet package directory (e.g. via MCP filesystem tools or the NuGet globa
 | `skills/linq2db/docs/configuration.md` | DataOptions patterns: connection setup, logging, retry, interceptors, member translators |
 | `skills/linq2db/docs/custom-sql.md` | Custom SQL translation: `[Sql.Expression]`, `[Sql.Function]`, `[ExpressionMethod]`, provider-specific overloads |
 
-For IntelliSense-only agents (no filesystem access): the XML documentation class
-`LinqToDB.LinqToDBArchitecture` (namespace `LinqToDB`) contains the architecture overview
-and is reachable via any symbol lookup.
-
 Online copies may exist on the repository `master` branch, but they can describe a different version.
 For installed-package API decisions, agents should use the bundled files above unless package-local
 files are unavailable or the user explicitly asks about latest/mainline behavior.

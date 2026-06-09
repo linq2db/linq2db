@@ -30,7 +30,7 @@ Optional defaults element for an API surface:
 
 Generated docs normalize those XML attributes to the canonical display format:
 
-`AI-Tags: Key1=Value1; Key2=Value2; ...;`
+`AI metadata: Key1=Value1; Key2=Value2; ...;`
 
 Example:
 
@@ -123,6 +123,7 @@ Compound values (comma-separated) are allowed when a single operation has primar
 - `Data` - directly modifies stored data (bulk copy, non-query DML execution)
 - `QueryResult` - determines the result set structure (scalar, typed sequence, raw reader)
 - `ExecutionContext` - affects connection or transaction state
+- `ConnectionConfiguration` - affects connection/provider configuration used to create execution contexts
 - `Configuration` - affects configuration state (mapping schema, data options)
 - `SchemaResult` - returns database schema information (tables, columns, procedures)
 - `GeneratedSql` - returns generated SQL command text and parameters without executing the command
@@ -134,6 +135,8 @@ Comma-separated when a call spans multiple stages.
 - `ExpressionTree` - the LINQ Expression Tree analysis and transformation stage
 - `SqlAST` - the SQL AST construction stage (internal SQL query model, before text generation)
 - `SqlText` - the SQL text generation and execution stage
+- `Connection` - connection/provider setup stage
+- `Execution` - command execution stage
 - `BulkInsert` - the native bulk insert pipeline (bypasses LINQ translation entirely)
 
 Common combinations:

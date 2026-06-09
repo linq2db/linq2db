@@ -136,7 +136,6 @@ Other Notes
 
 ## See also
 
-- `LinqToDB.LinqToDBArchitecture` - architecture overview (XML documentation class, namespace `LinqToDB`).
 - [`docs/architecture.md`](architecture.md) - extended architectural model.
 - [`docs/ai-tags.md`](ai-tags.md) - machine-readable metadata specification.
 - [`docs/agent-antipatterns.md`](agent-antipatterns.md) - common mistakes and how to avoid them.

@@ -8,6 +8,8 @@ These files are not shipped in the linq2db NuGet package and are not the source 
 `Source/Knowledge/linq2db-expert` is a generated or assembled upload format for the linq2db Expert Custom GPT.
 It is versioned in the repository so maintainers can review exactly what was uploaded, but it remains
 a derived artifact.
+Review source skill docs, XML-doc comments, and generator changes first; numbered Expert markdown
+files should only be reviewed for deterministic regeneration and upload-shape regressions.
 
 ## Directory Map
 
@@ -61,6 +63,12 @@ Regenerate it from repository sources using:
 
 ```powershell
 .\.agents\Build-LinqToDBExpert.ps1 -NoBuild -OutputRoot Source\Knowledge\linq2db-expert
+```
+
+When XML documentation changed, use the freshly generated package XML-doc explicitly:
+
+```powershell
+.\.agents\Build-LinqToDBExpert.ps1 -NoBuild -XmlDocPath .build\bin\LinqToDB\Release\net10.0\linq2db.xml -OutputRoot Source\Knowledge\linq2db-expert
 ```
 
 Use `Source/Knowledge/linq2db-expert/custom-gpt-instructions.md` as the source for the Custom GPT

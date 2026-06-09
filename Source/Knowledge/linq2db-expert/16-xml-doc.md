@@ -3948,7 +3948,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `MaxDegreeOfParallelism`: Implemented only by ClickHouse.Driver provider. Defines number of connections, used for parallel insert in mode.
   - `WithoutSession`: Implemented only by ClickHouse.Driver provider. When set, provider-specific bulk copy will use session-less connection even if called over connection with session. Note that session-less connections cannot be used with session-bound functionality like temporary tables.
   - `ConflictAction`: Specifies the action to take when conflicts occur during bulk copy operation. See for more details on supported databases and compatibility.
-- AI-Tags: Group=Configuration; Affects=Configuration; Pipeline=BulkInsert; Provider=ProviderDefined;
+- AI metadata: Group=Configuration; Affects=Configuration; Pipeline=BulkInsert; Provider=ProviderDefined;
 
 ## LinqToDB.Data.CommandInfo.Constructor
 
@@ -4001,7 +4001,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Method
 - Summary: Executes command and returns number of affected records.
 - Returns: Number of records, affected by command execution.
-- AI-Tags: Execution=Immediate; Composability=Terminal; Affects=Data;
+- AI metadata: Execution=Immediate; Composability=Terminal; Affects=Data;
 
 ## LinqToDB.Data.CommandInfo.Execute<T>
 
@@ -4011,7 +4011,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Type parameters:
   - `T`: Resulting value type.
 - Returns: Resulting value.
-- AI-Tags: Execution=Immediate; Composability=Terminal; Affects=QueryResult;
+- AI metadata: Execution=Immediate; Composability=Terminal; Affects=QueryResult;
 
 ## LinqToDB.Data.CommandInfo.ExecuteAsync
 
@@ -4085,7 +4085,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Summary: Executes command and returns data reader instance.
 - Remarks: The command executes immediately; use the returned to iterate rows manually. Dispose the reader when done.
 - Returns: Data reader object.
-- AI-Tags: Execution=Immediate; Composability=Terminal; Affects=QueryResult;
+- AI metadata: Execution=Immediate; Composability=Terminal; Affects=QueryResult;
 
 ## LinqToDB.Data.CommandInfo.ExecuteReaderAsync
 
@@ -4121,7 +4121,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Type parameters:
   - `T`: Result record type.
 - Returns: Returns collection of query result records.
-- AI-Tags: Execution=Immediate; Composability=Terminal; Affects=QueryResult;
+- AI metadata: Execution=Immediate; Composability=Terminal; Affects=QueryResult;
 
 ## LinqToDB.Data.CommandInfo.Query<T>
 
@@ -4396,7 +4396,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `DataProviderFactory`: Gets factory to use with instance.
   - `ConnectionInterceptor`: Connection interceptor to support connection configuration before or right after connection opened.
   - `OnEntityDescriptorCreated`: Action, called on entity descriptor creation. Allows descriptor modification. When not specified, application-wide callback called.
-- AI-Tags: Group=Configuration; Affects=ConnectionConfiguration; Pipeline=Connection,Execution; Provider=ProviderDefined;
+- AI metadata: Group=Configuration; Affects=ConnectionConfiguration; Pipeline=Connection,Execution; Provider=ProviderDefined;
 
 ## LinqToDB.Data.DataConnection.Constructor
 
@@ -4736,7 +4736,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Method
 - Summary: Starts new transaction for current connection with default isolation level. If connection already has transaction, it will throw .
 - Returns: Database transaction object.
-- AI-Tags: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.Data.DataConnection.BeginTransaction
 
@@ -4746,7 +4746,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Parameters:
   - `isolationLevel`: Transaction isolation level.
 - Returns: Database transaction object.
-- AI-Tags: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.Data.DataConnection.BeginTransactionAsync
 
@@ -4757,7 +4757,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `isolationLevel`: Transaction isolation level.
   - `cancellationToken`: Asynchronous operation cancellation token.
 - Returns: Database transaction object.
-- AI-Tags: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.Data.DataConnection.BeginTransactionAsync
 
@@ -4767,7 +4767,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Parameters:
   - `cancellationToken`: Asynchronous operation cancellation token.
 - Returns: Database transaction object.
-- AI-Tags: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.Data.DataConnection.ClearObjectReaderCache
 
@@ -4793,7 +4793,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.Data.DataConnection.CommitTransaction`
 - Kind: Method
 - Summary: Commits transaction (if any), associated with connection.
-- AI-Tags: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.Data.DataConnection.CommitTransactionAsync
 
@@ -4803,7 +4803,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Parameters:
   - `cancellationToken`: Asynchronous operation cancellation token.
 - Returns: Asynchronous operation completion task.
-- AI-Tags: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.Data.DataConnection.Dispose
 
@@ -4829,7 +4829,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.Data.DataConnection.DisposeTransaction`
 - Kind: Method
 - Summary: Disposes transaction (if any), associated with connection.
-- AI-Tags: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.Data.DataConnection.DisposeTransactionAsync
 
@@ -4837,7 +4837,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Method
 - Summary: Dispose started (if any) transaction, associated with connection. If underlying provider doesn't support asynchronous disposal, it will be performed synchronously.
 - Returns: Asynchronous operation completion task.
-- AI-Tags: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.Data.DataConnection.EnsureConnectionAsync
 
@@ -4969,7 +4969,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.Data.DataConnection.RollbackTransaction`
 - Kind: Method
 - Summary: Rollbacks transaction (if any), associated with connection.
-- AI-Tags: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.Data.DataConnection.RollbackTransactionAsync
 
@@ -4979,7 +4979,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Parameters:
   - `cancellationToken`: Asynchronous operation cancellation token.
 - Returns: Asynchronous operation completion task.
-- AI-Tags: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.Data.DataConnection.SetConnectionString
 
@@ -5083,7 +5083,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `options`: Operation options.
   - `source`: Records to insert.
 - Returns: Bulk insert operation status.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=Data; Pipeline=BulkInsert;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=Data; Pipeline=BulkInsert;
 
 ## LinqToDB.Data.DataContextExtensions.BulkCopy<T>
 
@@ -5176,7 +5176,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: Records to insert.
   - `cancellationToken`: Asynchronous operation cancellation token.
 - Returns: Task with bulk insert operation status.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=Data; Pipeline=BulkInsert;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=Data; Pipeline=BulkInsert;
 
 ## LinqToDB.Data.DataContextExtensions.BulkCopyAsync<T>
 
@@ -6952,7 +6952,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `dataContext`: Database connection.
   - `commandText`: Command text.
 - Returns: Database command wrapper.
-- AI-Tags: Group=RawSQL; Execution=Deferred; Composability=Composable; Affects=CommandBuilder; Pipeline=SqlText;
+- AI metadata: Group=RawSQL; Execution=Deferred; Composability=Composable; Affects=CommandBuilder; Pipeline=SqlText;
 
 ## LinqToDB.Data.DataReaderWrapper.Constructor
 
@@ -7459,7 +7459,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Method
 - Summary: Starts new transaction for current context with default isolation level. If connection already has transaction, it will throw .
 - Returns: Database transaction object.
-- AI-Tags: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataContext.BeginTransaction
 
@@ -7469,7 +7469,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Parameters:
   - `level`: Transaction isolation level.
 - Returns: Database transaction object.
-- AI-Tags: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataContext.BeginTransactionAsync
 
@@ -7480,7 +7480,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `level`: Transaction isolation level.
   - `cancellationToken`: Asynchronous operation cancellation token.
 - Returns: Database transaction object.
-- AI-Tags: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataContext.BeginTransactionAsync
 
@@ -7490,7 +7490,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Parameters:
   - `cancellationToken`: Asynchronous operation cancellation token.
 - Returns: Database transaction object.
-- AI-Tags: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataContext.CreateDataConnection
 
@@ -7574,7 +7574,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `CommandTimeout`: The command timeout in seconds, or if none has been set. Negative timeout value means that default timeout will be used. 0 timeout value corresponds to infinite timeout. By default, timeout is not set and default value for current provider used.
   - `Interceptors`: Gets Interceptors to use with instance.
   - `MemberTranslators`: Gets custom member translators used during expression translation.
-- AI-Tags: Group=Configuration; Affects=Configuration; Pipeline=ExpressionTree,SqlAST,SqlText,Execution; Provider=ProviderDefined;
+- AI metadata: Group=Configuration; Affects=Configuration; Pipeline=ExpressionTree,SqlAST,SqlText,Execution; Provider=ProviderDefined;
 
 ## LinqToDB.DataContextTransaction.Constructor
 
@@ -7669,7 +7669,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `dataContext`: Data connection context.
   - `query`: The query expression to be compiled.
 - Returns: A generic delegate that represents the compiled query.
-- AI-Tags: Group=Helpers; Execution=Deferred; Composability=Terminal; Affects=QueryCompilation; Provider=ProviderAgnostic;
+- AI metadata: Group=Helpers; Execution=Deferred; Composability=Terminal; Affects=QueryCompilation; Provider=ProviderAgnostic;
 
 ## LinqToDB.DataExtensions.Compile<T1,T2,T3>
 
@@ -7685,7 +7685,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `dataContext`: Data connection context.
   - `query`: The query expression to be compiled.
 - Returns: A generic delegate that represents the compiled query.
-- AI-Tags: Group=Helpers; Execution=Deferred; Composability=Terminal; Affects=QueryCompilation; Provider=ProviderAgnostic;
+- AI metadata: Group=Helpers; Execution=Deferred; Composability=Terminal; Affects=QueryCompilation; Provider=ProviderAgnostic;
 
 ## LinqToDB.DataExtensions.Compile<T1,T2,T3,T4>
 
@@ -7702,7 +7702,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `dataContext`: Data connection context.
   - `query`: The query expression to be compiled.
 - Returns: A generic delegate that represents the compiled query.
-- AI-Tags: Group=Helpers; Execution=Deferred; Composability=Terminal; Affects=QueryCompilation; Provider=ProviderAgnostic;
+- AI metadata: Group=Helpers; Execution=Deferred; Composability=Terminal; Affects=QueryCompilation; Provider=ProviderAgnostic;
 
 ## LinqToDB.DataExtensions.Compile<T1,T2,T3,T4,T5>
 
@@ -7720,7 +7720,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `dataContext`: Data connection context.
   - `query`: The query expression to be compiled.
 - Returns: A generic delegate that represents the compiled query.
-- AI-Tags: Group=Helpers; Execution=Deferred; Composability=Terminal; Affects=QueryCompilation; Provider=ProviderAgnostic;
+- AI metadata: Group=Helpers; Execution=Deferred; Composability=Terminal; Affects=QueryCompilation; Provider=ProviderAgnostic;
 
 ## LinqToDB.DataExtensions.CreateTable<T>
 
@@ -7734,7 +7734,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `dataContext`: Database connection context.
   - `tableOptions`: Create table options.
 - Returns: Created table as queryable source.
-- AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=DdlStatement,QueryRoot; Pipeline=SqlAST,SqlText;
+- AI metadata: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=DdlStatement,QueryRoot; Pipeline=SqlAST,SqlText;
 
 ## LinqToDB.DataExtensions.CreateTable<T>
 
@@ -7755,7 +7755,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `serverName`: Optional linked server name. See method for support information per provider.
   - `tableOptions`: Table options. See enum for support information per provider.
 - Returns: Created table as queryable source.
-- AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=DdlStatement,QueryRoot; Pipeline=SqlAST,SqlText;
+- AI metadata: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=DdlStatement,QueryRoot; Pipeline=SqlAST,SqlText;
 
 ## LinqToDB.DataExtensions.CreateTableAsync<T>
 
@@ -7770,7 +7770,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `tableOptions`: Create table options.
   - `token`: Optional asynchronous operation cancellation token.
 - Returns: Created table as queryable source.
-- AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=DdlStatement,QueryRoot; Pipeline=SqlAST,SqlText;
+- AI metadata: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=DdlStatement,QueryRoot; Pipeline=SqlAST,SqlText;
 
 ## LinqToDB.DataExtensions.CreateTableAsync<T>
 
@@ -7792,7 +7792,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `tableOptions`: Table options. See enum for support information per provider.
   - `token`: Optional asynchronous operation cancellation token.
 - Returns: Created table as queryable source.
-- AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=DdlStatement,QueryRoot; Pipeline=SqlAST,SqlText;
+- AI metadata: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=DdlStatement,QueryRoot; Pipeline=SqlAST,SqlText;
 
 ## LinqToDB.DataExtensions.CreateTempTable<T>
 
@@ -8265,7 +8265,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `serverName`: Optional linked server name. See method for support information per provider.
   - `tableOptions`: Table options. See enum for support information per provider.
 - Returns: Number of affected records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
 
 ## LinqToDB.DataExtensions.DeleteAsync<T>
 
@@ -8285,7 +8285,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `tableOptions`: Table options. See enum for support information per provider.
   - `token`: Optional asynchronous operation cancellation token.
 - Returns: Number of affected records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
 
 ## LinqToDB.DataExtensions.DropTable<T>
 
@@ -8303,7 +8303,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `throwExceptionIfNotExists`: Controls what happens when the target table does not exist. — the missing-table error propagates to the caller. — provider-specific "table not found" errors are swallowed; all other errors (permission, syntax, etc.) still propagate. (default) — suppression is derived from on , falling back to the mapping's default table options.
   - `serverName`: Optional linked server name. See method for support information per provider.
   - `tableOptions`: Table options. See enum for support information per provider.
-- AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=DdlStatement; Pipeline=SqlAST,SqlText;
+- AI metadata: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=DdlStatement; Pipeline=SqlAST,SqlText;
 
 ## LinqToDB.DataExtensions.DropTable<T>
 
@@ -8321,7 +8321,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `throwExceptionIfNotExists`: Controls what happens when the target table does not exist. — the missing-table error propagates to the caller. — provider-specific "table not found" errors are swallowed; all other errors (permission, syntax, etc.) still propagate. (default) — suppression is derived from on , falling back to the mapping's default table options.
   - `serverName`: Optional linked server name. See method for support information per provider.
   - `tableOptions`: Table options. See enum for support information per provider.
-- AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=DdlStatement; Pipeline=SqlAST,SqlText;
+- AI metadata: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=DdlStatement; Pipeline=SqlAST,SqlText;
 
 ## LinqToDB.DataExtensions.DropTableAsync<T>
 
@@ -8341,7 +8341,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `tableOptions`: Table options. See enum for support information per provider.
   - `token`: Optional asynchronous operation cancellation token.
 - Returns: Asynchronous operation completion task.
-- AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=DdlStatement; Pipeline=SqlAST,SqlText;
+- AI metadata: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=DdlStatement; Pipeline=SqlAST,SqlText;
 
 ## LinqToDB.DataExtensions.DropTableAsync<T>
 
@@ -8361,7 +8361,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `tableOptions`: Table options. See enum for support information per provider.
   - `token`: Optional asynchronous operation cancellation token.
 - Returns: Asynchronous operation completion task.
-- AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=DdlStatement; Pipeline=SqlAST,SqlText;
+- AI metadata: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=DdlStatement; Pipeline=SqlAST,SqlText;
 
 ## LinqToDB.DataExtensions.FromSql<T>
 
@@ -8376,7 +8376,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `sql`: The raw SQL query
   - `parameters`: The values to be assigned to parameters.
 - Returns: An representing the raw SQL query.
-- AI-Tags: Group=Helpers; Execution=Deferred; Composability=Composable; Affects=QueryRoot;
+- AI metadata: Group=Helpers; Execution=Deferred; Composability=Composable; Affects=QueryRoot;
 
 ## LinqToDB.DataExtensions.FromSql<T>
 
@@ -8390,7 +8390,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `dataContext`: Database connection context.
   - `sql`: The interpolated string representing a SQL query.
 - Returns: An representing the raw SQL query.
-- AI-Tags: Group=Helpers; Execution=Deferred; Composability=Composable; Affects=QueryRoot;
+- AI metadata: Group=Helpers; Execution=Deferred; Composability=Composable; Affects=QueryRoot;
 
 ## LinqToDB.DataExtensions.FromSqlScalar<T>
 
@@ -8404,7 +8404,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `dataContext`: Database connection context.
   - `sql`: The interpolated string representing a SQL query.
 - Returns: An representing the raw SQL query.
-- AI-Tags: Group=Helpers; Execution=Deferred; Composability=Composable; Affects=QueryRoot;
+- AI metadata: Group=Helpers; Execution=Deferred; Composability=Composable; Affects=QueryRoot;
 
 ## LinqToDB.DataExtensions.GetCte<T>
 
@@ -8419,7 +8419,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `cteBody`: Recursive query body.
   - `cteTableName`: Common table expression name.
 - Returns: Common table expression.
-- AI-Tags: Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
+- AI metadata: Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
 
 ## LinqToDB.DataExtensions.GetCte<T>
 
@@ -8434,7 +8434,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `cteBody`: Recursive query body.
   - `cteTableName`: Common table expression name.
 - Returns: Common table expression.
-- AI-Tags: Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
+- AI metadata: Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
 
 ## LinqToDB.DataExtensions.GetTable<T>
 
@@ -8450,7 +8450,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `methodInfo`: Method, decorated with expression attribute, based on .
   - `parameters`: Parameters for method.
 - Returns: Queryable source.
-- AI-Tags: Group=Helpers; Execution=Deferred; Composability=Composable; Affects=QueryRoot;
+- AI metadata: Group=Helpers; Execution=Deferred; Composability=Composable; Affects=QueryRoot;
 
 ## LinqToDB.DataExtensions.GetTable<T>
 
@@ -8463,7 +8463,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Parameters:
   - `dataContext`: Data connection context.
 - Returns: Queryable source.
-- AI-Tags: Group=Helpers; Execution=Deferred; Composability=Composable; Affects=QueryRoot;
+- AI metadata: Group=Helpers; Execution=Deferred; Composability=Composable; Affects=QueryRoot;
 
 ## LinqToDB.DataExtensions.Insert<T>
 
@@ -8483,7 +8483,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `serverName`: Optional linked server name. See method for support information per provider.
   - `tableOptions`: Table options. See enum for support information per provider.
 - Returns: Number of affected records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
 
 ## LinqToDB.DataExtensions.Insert<T>
 
@@ -8502,7 +8502,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `serverName`: Optional linked server name. See method for support information per provider.
   - `tableOptions`: Table options. See enum for support information per provider.
 - Returns: Number of affected records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
 
 ## LinqToDB.DataExtensions.InsertAsync<T>
 
@@ -8523,7 +8523,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `tableOptions`: Table options. See enum for support information per provider.
   - `token`: Optional asynchronous operation cancellation token.
 - Returns: Number of affected records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
 
 ## LinqToDB.DataExtensions.InsertAsync<T>
 
@@ -8543,7 +8543,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `tableOptions`: Table options. See enum for support information per provider.
   - `token`: Optional asynchronous operation cancellation token.
 - Returns: Number of affected records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
 
 ## LinqToDB.DataExtensions.InsertOrReplace<T>
 
@@ -8563,7 +8563,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `serverName`: Optional linked server name. See method for support information per provider.
   - `tableOptions`: Table options. See enum for support information per provider.
 - Returns: Number of affected records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
 
 ## LinqToDB.DataExtensions.InsertOrReplace<T>
 
@@ -8582,7 +8582,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `serverName`: Optional linked server name. See method for support information per provider.
   - `tableOptions`: Table options. See enum for support information per provider.
 - Returns: Number of affected records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
 
 ## LinqToDB.DataExtensions.InsertOrReplaceAsync<T>
 
@@ -8603,7 +8603,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `tableOptions`: Table options. See enum for support information per provider.
   - `token`: Optional asynchronous operation cancellation token.
 - Returns: Number of affected records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
 
 ## LinqToDB.DataExtensions.InsertOrReplaceAsync<T>
 
@@ -8623,7 +8623,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `tableOptions`: Table options. See enum for support information per provider.
   - `token`: Optional asynchronous operation cancellation token.
 - Returns: Number of affected records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
 
 ## LinqToDB.DataExtensions.InsertWithDecimalIdentity<T>
 
@@ -8643,7 +8643,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `serverName`: Optional linked server name. See method for support information per provider.
   - `tableOptions`: Table options. See enum for support information per provider.
 - Returns: Inserted record's identity value.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
 
 ## LinqToDB.DataExtensions.InsertWithDecimalIdentity<T>
 
@@ -8662,7 +8662,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `serverName`: Optional linked server name. See method for support information per provider.
   - `tableOptions`: Table options. See enum for support information per provider.
 - Returns: Inserted record's identity value.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
 
 ## LinqToDB.DataExtensions.InsertWithDecimalIdentityAsync<T>
 
@@ -8701,7 +8701,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `tableOptions`: Table options. See enum for support information per provider.
   - `token`: Optional asynchronous operation cancellation token.
 - Returns: Inserted record's identity value.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
 
 ## LinqToDB.DataExtensions.InsertWithIdentity<T>
 
@@ -8721,7 +8721,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `serverName`: Optional linked server name. See method for support information per provider.
   - `tableOptions`: Table options. See enum for support information per provider.
 - Returns: Inserted record's identity value.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
 
 ## LinqToDB.DataExtensions.InsertWithIdentity<T>
 
@@ -8740,7 +8740,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `serverName`: Optional linked server name. See method for support information per provider.
   - `tableOptions`: Table options. See enum for support information per provider.
 - Returns: Inserted record's identity value.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
 
 ## LinqToDB.DataExtensions.InsertWithIdentityAsync<T>
 
@@ -8779,7 +8779,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `tableOptions`: Table options. See enum for support information per provider.
   - `token`: Optional asynchronous operation cancellation token.
 - Returns: Inserted record's identity value.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
 
 ## LinqToDB.DataExtensions.InsertWithInt32Identity<T>
 
@@ -8799,7 +8799,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `serverName`: Optional linked server name. See method for support information per provider.
   - `tableOptions`: Table options. See enum for support information per provider.
 - Returns: Inserted record's identity value.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
 
 ## LinqToDB.DataExtensions.InsertWithInt32Identity<T>
 
@@ -8818,7 +8818,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `serverName`: Optional linked server name. See method for support information per provider.
   - `tableOptions`: Table options. See enum for support information per provider.
 - Returns: Inserted record's identity value.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
 
 ## LinqToDB.DataExtensions.InsertWithInt32IdentityAsync<T>
 
@@ -8857,7 +8857,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `tableOptions`: Table options. See enum for support information per provider.
   - `token`: Optional asynchronous operation cancellation token.
 - Returns: Inserted record's identity value.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
 
 ## LinqToDB.DataExtensions.InsertWithInt64Identity<T>
 
@@ -8877,7 +8877,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `serverName`: Optional linked server name. See method for support information per provider.
   - `tableOptions`: Table options. See enum for support information per provider.
 - Returns: Inserted record's identity value.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
 
 ## LinqToDB.DataExtensions.InsertWithInt64Identity<T>
 
@@ -8896,7 +8896,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `serverName`: Optional linked server name. See method for support information per provider.
   - `tableOptions`: Table options. See enum for support information per provider.
 - Returns: Inserted record's identity value.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
 
 ## LinqToDB.DataExtensions.InsertWithInt64IdentityAsync<T>
 
@@ -8935,7 +8935,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `tableOptions`: Table options. See enum for support information per provider.
   - `token`: Optional asynchronous operation cancellation token.
 - Returns: Inserted record's identity value.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
 
 ## LinqToDB.DataExtensions.IntoTempTable<T>
 
@@ -9045,7 +9045,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Parameters:
   - `expression`: The query expression to create.
 - Returns: An representing the query.
-- AI-Tags: Group=Helpers; Execution=Deferred; Composability=Composable; Affects=QueryRoot;
+- AI metadata: Group=Helpers; Execution=Deferred; Composability=Composable; Affects=QueryRoot;
 
 ## LinqToDB.DataExtensions.SelectQuery<T>
 
@@ -9059,7 +9059,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `dataContext`: Database connection context.
   - `selector`: Value selection expression.
 - Returns: An representing single record.
-- AI-Tags: Group=Helpers; Execution=Deferred; Composability=Composable; Affects=QueryRoot;
+- AI metadata: Group=Helpers; Execution=Deferred; Composability=Composable; Affects=QueryRoot;
 
 ## LinqToDB.DataExtensions.TableFromExpression<T>
 
@@ -9072,7 +9072,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Parameters:
   - `expression`: The query expression to create.
 - Returns: An representing the query.
-- AI-Tags: Group=Helpers; Execution=Deferred; Composability=Composable; Affects=QueryRoot;
+- AI metadata: Group=Helpers; Execution=Deferred; Composability=Composable; Affects=QueryRoot;
 
 ## LinqToDB.DataExtensions.Update<T>
 
@@ -9092,7 +9092,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `serverName`: Optional linked server name. See method for support information per provider.
   - `tableOptions`: Table options. See enum for support information per provider.
 - Returns: Number of affected records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
 
 ## LinqToDB.DataExtensions.Update<T>
 
@@ -9111,7 +9111,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `serverName`: Optional linked server name. See method for support information per provider.
   - `tableOptions`: Table options. See enum for support information per provider.
 - Returns: Number of affected records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
 
 ## LinqToDB.DataExtensions.UpdateAsync<T>
 
@@ -9132,7 +9132,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `tableOptions`: Table options. See enum for support information per provider.
   - `token`: Optional asynchronous operation cancellation token.
 - Returns: Number of affected records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
 
 ## LinqToDB.DataExtensions.UpdateAsync<T>
 
@@ -9152,7 +9152,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `tableOptions`: Table options. See enum for support information per provider.
   - `token`: Optional asynchronous operation cancellation token.
 - Returns: Number of affected records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
 
 ## LinqToDB.DataExtensions.UseBulkCopyOptions
 
@@ -10722,14 +10722,14 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: Query source.
   - `hint`: SQL text, added as a database specific hint to generated query.
 - Returns: Query source with join hints.
-- AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Access.AccessHints.WithOwnerAccessOption<T>
 
 - XML member: `M:LinqToDB.DataProvider.Access.AccessHints.WithOwnerAccessOption``1(LinqToDB.DataProvider.Access.IAccessSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Access WITH OWNERACCESS OPTION subquery hint.
-- AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Access.AccessOptions.Constructor
 
@@ -10778,14 +10778,14 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.FinalHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds FINAL modifier to FROM Clause of this table source. For all tables already present in the current query scope, use FinalInScopeHint on IClickHouseSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.FinalInScopeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.FinalInScopeHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds FINAL modifier to FROM Clause of all tables already present in the query scope this method is applied to. Tables added later by outer query composition are not affected.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.FinalInScopeHint<T>
 
@@ -10796,217 +10796,217 @@ Generated directly from the current package XML documentation. Use XML member id
   - `TSource`: 
 - Parameters:
   - `table`: 
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllAntiHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllAntiHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a ClickHouse ALL ANTI join hint.
-- AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllAntiHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllAntiHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a ClickHouse ALL ANTI join hint.
-- AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllAnyHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllAnyHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a ClickHouse ALL ANY join hint.
-- AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllAnyHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllAnyHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a ClickHouse ALL ANY join hint.
-- AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllAsOfHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllAsOfHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a ClickHouse ALL ASOF join hint.
-- AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllAsOfHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllAsOfHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a ClickHouse ALL ASOF join hint.
-- AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a ClickHouse ALL join hint.
-- AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a ClickHouse ALL join hint.
-- AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllOuterHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllOuterHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a ClickHouse ALL OUTER join hint.
-- AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllOuterHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllOuterHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a ClickHouse ALL OUTER join hint.
-- AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllSemiHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllSemiHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a ClickHouse ALL SEMI join hint.
-- AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllSemiHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllSemiHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a ClickHouse ALL SEMI join hint.
-- AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAntiHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAntiHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a ClickHouse ANTI join hint.
-- AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAntiHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAntiHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a ClickHouse ANTI join hint.
-- AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAnyHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAnyHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a ClickHouse ANY join hint.
-- AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAnyHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAnyHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a ClickHouse ANY join hint.
-- AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAsOfHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAsOfHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a ClickHouse ASOF join hint.
-- AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAsOfHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAsOfHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a ClickHouse ASOF join hint.
-- AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinGlobalAntiHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinGlobalAntiHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a ClickHouse GLOBAL ANTI join hint.
-- AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinGlobalAntiHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinGlobalAntiHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a ClickHouse GLOBAL ANTI join hint.
-- AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinGlobalAnyHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinGlobalAnyHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a ClickHouse GLOBAL ANY join hint.
-- AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinGlobalAnyHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinGlobalAnyHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a ClickHouse GLOBAL ANY join hint.
-- AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinGlobalAsOfHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinGlobalAsOfHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a ClickHouse GLOBAL ASOF join hint.
-- AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinGlobalAsOfHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinGlobalAsOfHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a ClickHouse GLOBAL ASOF join hint.
-- AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinGlobalHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinGlobalHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a ClickHouse GLOBAL join hint.
-- AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinGlobalHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinGlobalHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a ClickHouse GLOBAL join hint.
-- AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinGlobalOuterHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinGlobalOuterHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a ClickHouse GLOBAL OUTER join hint.
-- AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinGlobalOuterHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinGlobalOuterHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a ClickHouse GLOBAL OUTER join hint.
-- AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinGlobalSemiHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinGlobalSemiHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a ClickHouse GLOBAL SEMI join hint.
-- AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinGlobalSemiHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinGlobalSemiHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a ClickHouse GLOBAL SEMI join hint.
-- AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinHint<T>
 
@@ -11037,28 +11037,28 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinOuterHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a ClickHouse OUTER join hint.
-- AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinOuterHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinOuterHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a ClickHouse OUTER join hint.
-- AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinSemiHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinSemiHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a ClickHouse SEMI join hint.
-- AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinSemiHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinSemiHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a ClickHouse SEMI join hint.
-- AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.QueryHint<T>
 
@@ -11079,7 +11079,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Method
 - Summary: Adds a ClickHouse SETTINGS clause using provider-specific setting text.
 - Remarks: ClickHouse exposes a large and evolving set of query-level settings through the SETTINGS clause. LinqToDB intentionally exposes SettingsHint as the general settings API instead of providing typed helpers for every ClickHouse setting. Use typed ClickHouse hint helpers when they exist for a concrete SQL feature; use this method for ClickHouse settings that do not have a dedicated typed helper. The hintParameters argument can include Sql.TableAlias, Sql.TableName, or Sql.TableSpec values for table sources marked with TableID. This lets settings that refer to tables use the exact identifiers emitted by the SQL builder.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.SubQueryHint<T>
 
@@ -11295,665 +11295,665 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.BatchedKeyAccessHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},LinqToDB.Sql.SqlID[])`
 - Kind: Method
 - Summary: Adds a MySQL BKA query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.BatchedKeyAccessHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.BatchedKeyAccessHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a MySQL BKA table hint. For all tables already present in the current query scope, use BatchedKeyAccessInScopeHint on IMySqlSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.BatchedKeyAccessInScopeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.BatchedKeyAccessInScopeHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a MySQL BKA table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.BkaHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.BkaHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},LinqToDB.Sql.SqlID[])`
 - Kind: Method
 - Summary: Adds a MySQL BKA query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.BkaHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.BkaHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a MySQL BKA table hint. For all tables already present in the current query scope, use BkaInScopeHint on IMySqlSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.BkaInScopeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.BkaInScopeHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a MySQL BKA table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.BlockNestedLoopHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.BlockNestedLoopHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},LinqToDB.Sql.SqlID[])`
 - Kind: Method
 - Summary: Adds a MySQL BNL query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.BlockNestedLoopHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.BlockNestedLoopHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a MySQL BNL table hint. For all tables already present in the current query scope, use BlockNestedLoopInScopeHint on IMySqlSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.BlockNestedLoopInScopeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.BlockNestedLoopInScopeHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a MySQL BNL table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.BnlHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.BnlHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},LinqToDB.Sql.SqlID[])`
 - Kind: Method
 - Summary: Adds a MySQL BNL query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.BnlHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.BnlHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a MySQL BNL table hint. For all tables already present in the current query scope, use BnlInScopeHint on IMySqlSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.BnlInScopeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.BnlInScopeHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a MySQL BNL table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.DerivedConditionPushDownHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.DerivedConditionPushDownHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},LinqToDB.Sql.SqlID[])`
 - Kind: Method
 - Summary: Adds a MySQL DERIVED_CONDITION_PUSHDOWN query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.DerivedConditionPushDownHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.DerivedConditionPushDownHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a MySQL DERIVED_CONDITION_PUSHDOWN table hint. For all tables already present in the current query scope, use DerivedConditionPushDownInScopeHint on IMySqlSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.DerivedConditionPushDownInScopeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.DerivedConditionPushDownInScopeHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a MySQL DERIVED_CONDITION_PUSHDOWN table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.ForceIndexForGroupByHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.ForceIndexForGroupByHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a MySQL FORCE INDEX FOR GROUP BY index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.ForceIndexForJoinHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.ForceIndexForJoinHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a MySQL FORCE INDEX FOR JOIN index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.ForceIndexForOrderByHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.ForceIndexForOrderByHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a MySQL FORCE INDEX FOR ORDER BY index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.ForceIndexHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.ForceIndexHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a MySQL FORCE INDEX index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.ForceKeyForGroupByHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.ForceKeyForGroupByHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a MySQL FORCE KEY FOR GROUP BY index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.ForceKeyForJoinHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.ForceKeyForJoinHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a MySQL FORCE KEY FOR JOIN index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.ForceKeyForOrderByHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.ForceKeyForOrderByHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a MySQL FORCE KEY FOR ORDER BY index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.ForceKeyHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.ForceKeyHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a MySQL FORCE KEY index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.ForShareHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.ForShareHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},LinqToDB.Sql.SqlID[])`
 - Kind: Method
 - Summary: Adds a MySQL FOR SHARE subquery hint.
-- AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.ForShareNoWaitHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.ForShareNoWaitHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},LinqToDB.Sql.SqlID[])`
 - Kind: Method
 - Summary: Adds a MySQL FOR SHARE NOWAIT subquery hint.
-- AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.ForShareSkipLockedHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.ForShareSkipLockedHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},LinqToDB.Sql.SqlID[])`
 - Kind: Method
 - Summary: Adds a MySQL FOR SHARE SKIP LOCKED subquery hint.
-- AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.ForUpdateHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.ForUpdateHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},LinqToDB.Sql.SqlID[])`
 - Kind: Method
 - Summary: Adds a MySQL FOR UPDATE subquery hint.
-- AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.ForUpdateNoWaitHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.ForUpdateNoWaitHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},LinqToDB.Sql.SqlID[])`
 - Kind: Method
 - Summary: Adds a MySQL FOR UPDATE NOWAIT subquery hint.
-- AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.ForUpdateSkipLockedHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.ForUpdateSkipLockedHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},LinqToDB.Sql.SqlID[])`
 - Kind: Method
 - Summary: Adds a MySQL FOR UPDATE SKIP LOCKED subquery hint.
-- AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.GroupIndexHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.GroupIndexHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a MySQL GROUP_INDEX index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.HashJoinHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.HashJoinHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},LinqToDB.Sql.SqlID[])`
 - Kind: Method
 - Summary: Adds a MySQL HASH_JOIN query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.HashJoinHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.HashJoinHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a MySQL HASH_JOIN table hint. For all tables already present in the current query scope, use HashJoinInScopeHint on IMySqlSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.HashJoinInScopeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.HashJoinInScopeHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a MySQL HASH_JOIN table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.IgnoreIndexForGroupByHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.IgnoreIndexForGroupByHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a MySQL IGNORE INDEX FOR GROUP BY index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.IgnoreIndexForJoinHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.IgnoreIndexForJoinHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a MySQL IGNORE INDEX FOR JOIN index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.IgnoreIndexForOrderByHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.IgnoreIndexForOrderByHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a MySQL IGNORE INDEX FOR ORDER BY index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.IgnoreIndexHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.IgnoreIndexHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a MySQL IGNORE INDEX index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.IgnoreKeyForGroupByHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.IgnoreKeyForGroupByHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a MySQL IGNORE KEY FOR GROUP BY index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.IgnoreKeyForJoinHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.IgnoreKeyForJoinHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a MySQL IGNORE KEY FOR JOIN index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.IgnoreKeyForOrderByHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.IgnoreKeyForOrderByHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a MySQL IGNORE KEY FOR ORDER BY index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.IgnoreKeyHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.IgnoreKeyHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a MySQL IGNORE KEY index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.IndexHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.IndexHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a MySQL INDEX index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.IndexMergeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.IndexMergeHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a MySQL INDEX_MERGE index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.JoinFixedOrderHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.JoinFixedOrderHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},LinqToDB.Sql.SqlID[])`
 - Kind: Method
 - Summary: Adds a MySQL JOIN_FIXED_ORDER query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.JoinFixedOrderHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.JoinFixedOrderHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a MySQL JOIN_FIXED_ORDER table hint. For all tables already present in the current query scope, use JoinFixedOrderInScopeHint on IMySqlSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.JoinFixedOrderInScopeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.JoinFixedOrderInScopeHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a MySQL JOIN_FIXED_ORDER table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.JoinIndexHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.JoinIndexHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a MySQL JOIN_INDEX index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.JoinOrderHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.JoinOrderHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},LinqToDB.Sql.SqlID[])`
 - Kind: Method
 - Summary: Adds a MySQL JOIN_ORDER query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.JoinOrderHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.JoinOrderHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a MySQL JOIN_ORDER table hint. For all tables already present in the current query scope, use JoinOrderInScopeHint on IMySqlSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.JoinOrderInScopeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.JoinOrderInScopeHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a MySQL JOIN_ORDER table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.JoinPrefixHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.JoinPrefixHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},LinqToDB.Sql.SqlID[])`
 - Kind: Method
 - Summary: Adds a MySQL JOIN_PREFIX query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.JoinPrefixHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.JoinPrefixHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a MySQL JOIN_PREFIX table hint. For all tables already present in the current query scope, use JoinPrefixInScopeHint on IMySqlSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.JoinPrefixInScopeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.JoinPrefixInScopeHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a MySQL JOIN_PREFIX table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.JoinSuffixHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.JoinSuffixHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},LinqToDB.Sql.SqlID[])`
 - Kind: Method
 - Summary: Adds a MySQL JOIN_SUFFIX query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.JoinSuffixHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.JoinSuffixHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a MySQL JOIN_SUFFIX table hint. For all tables already present in the current query scope, use JoinSuffixInScopeHint on IMySqlSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.JoinSuffixInScopeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.JoinSuffixInScopeHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a MySQL JOIN_SUFFIX table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.LockInShareModeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.LockInShareModeHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a MySQL subquery hint.
-- AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.MaxExecutionTimeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.MaxExecutionTimeHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},System.Int32)`
 - Kind: Method
 - Summary: Adds a MySQL MAX_EXECUTION_TIME(...) query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.MergeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.MergeHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},LinqToDB.Sql.SqlID[])`
 - Kind: Method
 - Summary: Adds a MySQL MERGE query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.MergeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.MergeHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a MySQL MERGE table hint. For all tables already present in the current query scope, use MergeInScopeHint on IMySqlSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.MergeInScopeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.MergeInScopeHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a MySQL MERGE table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.MrrHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.MrrHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a MySQL MRR index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.NoBatchedKeyAccessHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.NoBatchedKeyAccessHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},LinqToDB.Sql.SqlID[])`
 - Kind: Method
 - Summary: Adds a MySQL NO_BKA query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.NoBatchedKeyAccessHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.NoBatchedKeyAccessHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a MySQL NO_BKA table hint. For all tables already present in the current query scope, use NoBatchedKeyAccessInScopeHint on IMySqlSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.NoBatchedKeyAccessInScopeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.NoBatchedKeyAccessInScopeHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a MySQL NO_BKA table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.NoBkaHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.NoBkaHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},LinqToDB.Sql.SqlID[])`
 - Kind: Method
 - Summary: Adds a MySQL NO_BKA query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.NoBkaHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.NoBkaHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a MySQL NO_BKA table hint. For all tables already present in the current query scope, use NoBkaInScopeHint on IMySqlSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.NoBkaInScopeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.NoBkaInScopeHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a MySQL NO_BKA table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.NoBlockNestedLoopHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.NoBlockNestedLoopHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},LinqToDB.Sql.SqlID[])`
 - Kind: Method
 - Summary: Adds a MySQL NO_BNL query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.NoBlockNestedLoopHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.NoBlockNestedLoopHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a MySQL NO_BNL table hint. For all tables already present in the current query scope, use NoBlockNestedLoopInScopeHint on IMySqlSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.NoBlockNestedLoopInScopeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.NoBlockNestedLoopInScopeHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a MySQL NO_BNL table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.NoBnlHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.NoBnlHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},LinqToDB.Sql.SqlID[])`
 - Kind: Method
 - Summary: Adds a MySQL NO_BNL query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.NoBnlHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.NoBnlHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a MySQL NO_BNL table hint. For all tables already present in the current query scope, use NoBnlInScopeHint on IMySqlSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.NoBnlInScopeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.NoBnlInScopeHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a MySQL NO_BNL table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.NoDerivedConditionPushDownHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.NoDerivedConditionPushDownHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},LinqToDB.Sql.SqlID[])`
 - Kind: Method
 - Summary: Adds a MySQL NO_DERIVED_CONDITION_PUSHDOWN query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.NoDerivedConditionPushDownHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.NoDerivedConditionPushDownHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a MySQL NO_DERIVED_CONDITION_PUSHDOWN table hint. For all tables already present in the current query scope, use NoDerivedConditionPushDownInScopeHint on IMySqlSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.NoDerivedConditionPushDownInScopeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.NoDerivedConditionPushDownInScopeHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a MySQL NO_DERIVED_CONDITION_PUSHDOWN table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.NoGroupIndexHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.NoGroupIndexHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a MySQL NO_GROUP_INDEX index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.NoHashJoinHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.NoHashJoinHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},LinqToDB.Sql.SqlID[])`
 - Kind: Method
 - Summary: Adds a MySQL NO_HASH_JOIN query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.NoHashJoinHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.NoHashJoinHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a MySQL NO_HASH_JOIN table hint. For all tables already present in the current query scope, use NoHashJoinInScopeHint on IMySqlSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.NoHashJoinInScopeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.NoHashJoinInScopeHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a MySQL NO_HASH_JOIN table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.NoIcpHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.NoIcpHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a MySQL NO_ICP index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.NoIndexHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.NoIndexHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a MySQL NO_INDEX index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.NoIndexMergeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.NoIndexMergeHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a MySQL NO_INDEX_MERGE index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.NoJoinIndexHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.NoJoinIndexHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a MySQL NO_JOIN_INDEX index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.NoMergeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.NoMergeHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},LinqToDB.Sql.SqlID[])`
 - Kind: Method
 - Summary: Adds a MySQL NO_MERGE query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.NoMergeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.NoMergeHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a MySQL NO_MERGE table hint. For all tables already present in the current query scope, use NoMergeInScopeHint on IMySqlSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.NoMergeInScopeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.NoMergeInScopeHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a MySQL NO_MERGE table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.NoMrrHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.NoMrrHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a MySQL NO_MRR index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.NoOrderIndexHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.NoOrderIndexHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a MySQL NO_ORDER_INDEX index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.NoRangeOptimizationHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.NoRangeOptimizationHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a MySQL NO_RANGE_OPTIMIZATION index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.NoSemiJoinHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.NoSemiJoinHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a MySQL NO_SEMIJOIN query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.NoSemiJoinHintWithQueryBlock<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.NoSemiJoinHintWithQueryBlock``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a MySQL NO_SEMIJOIN join hint.
-- AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.NoSkipScanHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.NoSkipScanHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a MySQL NO_SKIP_SCAN index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.OrderIndexHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.OrderIndexHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a MySQL ORDER_INDEX index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.QueryBlockHint<T1,T2>
 
@@ -11968,7 +11968,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `hint`: SQL text, added to join in generated query.
   - `hintParameters`: Table hint parameters.
 - Returns: Table-like query source with table hints.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.QueryHint<T>
 
@@ -11981,7 +11981,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: Query source.
   - `hint`: SQL text, added as a database specific hint to generated query.
 - Returns: Query source with hints.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.QueryHint<T1,T2>
 
@@ -11996,7 +11996,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `hint`: SQL text, added as a database specific hint to generated query.
   - `hintParameter`: Hint parameter.
 - Returns: Query source with hints.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.QueryHint<T1,T2>
 
@@ -12011,42 +12011,42 @@ Generated directly from the current package XML documentation. Use XML member id
   - `hint`: SQL text, added as a database specific hint to generated query.
   - `hintParameters`: Table hint parameters.
 - Returns: Table-like query source with hints.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.ResourceGroupHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.ResourceGroupHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},System.String)`
 - Kind: Method
 - Summary: Adds a MySQL RESOURCE_GROUP query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.SemiJoinHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.SemiJoinHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a MySQL SEMIJOIN query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.SemiJoinHintWithQueryBlock<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.SemiJoinHintWithQueryBlock``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a MySQL SEMIJOIN join hint.
-- AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.SetVarHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.SetVarHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},System.String)`
 - Kind: Method
 - Summary: Adds a MySQL SET_VAR query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.SkipScanHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.SkipScanHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a MySQL SKIP_SCAN index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.SubQueryHint<T>
 
@@ -12059,7 +12059,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: Query source.
   - `hint`: SQL text, added as a database specific hint to generated query.
 - Returns: Query source with hints.
-- AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.SubQueryHint<T1,T2>
 
@@ -12074,7 +12074,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `hint`: SQL text, added as a database specific hint to generated query.
   - `hintParameter`: Hint parameter.
 - Returns: Query source with hints.
-- AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.SubQueryHint<T1,T2>
 
@@ -12089,7 +12089,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `hint`: SQL text, added as a database specific hint to generated query.
   - `hintParameters`: Table hint parameters.
 - Returns: Table-like query source with hints.
-- AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.SubQueryTableHint<T>
 
@@ -12104,7 +12104,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `hint`: MySQL row-locking hint, e.g. FOR UPDATE or FOR SHARE.
   - `tableIDs`: Optional table identifiers for the OF clause.
 - Returns: Query source with subquery hint.
-- AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.SubQueryTableHint<T>
 
@@ -12120,7 +12120,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `hint2`: NOWAIT | SKIP LOCKED
   - `tableIDs`: Optional table identifiers for the OF clause.
 - Returns: Query source with subquery hint.
-- AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.SubQueryTableHint<T>
 
@@ -12135,7 +12135,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `hint`: MySQL row-locking hint, e.g. FOR UPDATE or FOR SHARE.
   - `tableIDs`: Optional table identifiers for the OF clause.
 - Returns: Table-like query source with subquery hint.
-- AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.SubQueryTableHint<T>
 
@@ -12151,7 +12151,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `hint2`: NOWAIT | SKIP LOCKED
   - `tableIDs`: Optional table identifiers for the OF clause.
 - Returns: Table-like query source with subquery hint.
-- AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.TableHint<T>
 
@@ -12164,7 +12164,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `table`: Table-like query source.
   - `hint`: SQL text, added as a database specific hint to generated query.
 - Returns: Table-like query source with table hints.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.TableHint<T1,T2>
 
@@ -12179,7 +12179,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `hint`: SQL text, added as a database specific hint to generated query.
   - `hintParameter`: Table hint parameter.
 - Returns: Table-like query source with table hints.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.TableHint<T1,T2>
 
@@ -12194,7 +12194,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `hint`: SQL text, added as a database specific hint to generated query.
   - `hintParameters`: Table hint parameters.
 - Returns: Table-like query source with table hints.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.TableIndexHint<T>
 
@@ -12207,7 +12207,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `table`: Table-like query source.
   - `hint`: SQL text, added as a database specific hint to generated query.
 - Returns: Table-like query source with index hints.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.TableIndexHint<T1,T2>
 
@@ -12222,7 +12222,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `hint`: SQL text, added as a database specific hint to generated query.
   - `hintParameter`: Table hint parameter.
 - Returns: Table-like query source with index hints.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.TableIndexHint<T1,T2>
 
@@ -12237,7 +12237,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `hint`: SQL text, added as a database specific hint to generated query.
   - `hintParameters`: Table hint parameters.
 - Returns: Table-like query source with index hints.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.TablesInScopeHint<T>
 
@@ -12251,7 +12251,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `hint`: SQL text, added as a database specific hint to generated query.
   - `hintParameters`: Table hint parameters.
 - Returns: Query source with table hints.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.TablesInScopeHint<T>
 
@@ -12264,7 +12264,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: Query source.
   - `hint`: SQL text, added as a database specific hint to generated query.
 - Returns: Query source with table hints.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.TablesInScopeHint<T1,T2>
 
@@ -12279,63 +12279,63 @@ Generated directly from the current package XML documentation. Use XML member id
   - `hint`: SQL text, added as a database specific hint to generated query.
   - `hintParameter`: Table hint parameter.
 - Returns: Query source with table hints.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.UseIndexForGroupByHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.UseIndexForGroupByHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a MySQL USE INDEX FOR GROUP BY index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.UseIndexForJoinHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.UseIndexForJoinHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a MySQL USE INDEX FOR JOIN index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.UseIndexForOrderByHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.UseIndexForOrderByHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a MySQL USE INDEX FOR ORDER BY index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.UseIndexHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.UseIndexHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a MySQL USE INDEX index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.UseKeyForGroupByHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.UseKeyForGroupByHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a MySQL USE KEY FOR GROUP BY index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.UseKeyForJoinHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.UseKeyForJoinHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a MySQL USE KEY FOR JOIN index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.UseKeyForOrderByHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.UseKeyForOrderByHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a MySQL USE KEY FOR ORDER BY index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlHints.UseKeyHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.MySql.MySqlHints.UseKeyHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a MySQL USE KEY index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.MySql.MySqlOptions.Constructor
 
@@ -12349,714 +12349,714 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.AllRowsHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle ALL_ROWS query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.AppendHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.AppendHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle APPEND query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.AppendValuesHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.AppendValuesHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle APPEND_VALUES query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.CacheHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.CacheHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle CACHE table hint. For all tables already present in the current query scope, use CacheInScopeHint on IOracleSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.CacheInScopeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.CacheInScopeHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle CACHE table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.ClusterHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.ClusterHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle CLUSTER table hint. For all tables already present in the current query scope, use ClusterInScopeHint on IOracleSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.ClusteringHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.ClusteringHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle CLUSTERING query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.ClusterInScopeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.ClusterInScopeHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle CLUSTER table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.ContainersHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.ContainersHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0},System.String)`
 - Kind: Method
 - Summary: Adds an Oracle query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.CursorSharingExactHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.CursorSharingExactHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle CURSOR_SHARING_EXACT query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.DisableParallelDmlHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.DisableParallelDmlHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle DISABLE_PARALLEL_DML query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.DrivingSiteHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.DrivingSiteHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle DRIVING_SITE table hint. For all tables already present in the current query scope, use DrivingSiteInScopeHint on IOracleSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.DrivingSiteInScopeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.DrivingSiteInScopeHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle DRIVING_SITE table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.DynamicSamplingHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.DynamicSamplingHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0},System.Int32)`
 - Kind: Method
 - Summary: Adds an Oracle table hint.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.EnableParallelDmlHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.EnableParallelDmlHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle ENABLE_PARALLEL_DML query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.FactHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.FactHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle FACT table hint. For all tables already present in the current query scope, use FactInScopeHint on IOracleSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.FactInScopeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.FactInScopeHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle FACT table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.FirstRowsHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.FirstRowsHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0},System.Int32)`
 - Kind: Method
 - Summary: Adds an Oracle FIRST_ROWS(...) query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.FreshMaterializedViewHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.FreshMaterializedViewHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle FRESH_MV query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.FreshMVHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.FreshMVHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle FRESH_MV query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.FullHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.FullHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle FULL table hint. For all tables already present in the current query scope, use FullInScopeHint on IOracleSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.FullInScopeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.FullInScopeHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle FULL table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.GroupingHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.GroupingHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle GROUPING query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.HashHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.HashHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle HASH table hint. For all tables already present in the current query scope, use HashInScopeHint on IOracleSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.HashInScopeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.HashInScopeHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle HASH table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.IndexAscHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.IndexAscHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds an Oracle INDEX_ASC index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.IndexCombineHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.IndexCombineHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds an Oracle INDEX_COMBINE index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.IndexDescHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.IndexDescHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds an Oracle INDEX_DESC index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.IndexFastFullScanHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.IndexFastFullScanHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds an Oracle INDEX_FFS index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.IndexFFSHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.IndexFFSHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds an Oracle INDEX_FFS index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.IndexHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.IndexHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds an Oracle INDEX index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.IndexJoinHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.IndexJoinHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds an Oracle INDEX_JOIN index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.IndexSkipScanAscHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.IndexSkipScanAscHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds an Oracle INDEX_SS_ASC index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.IndexSkipScanDescHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.IndexSkipScanDescHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds an Oracle INDEX_SS_DESC index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.IndexSkipScanHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.IndexSkipScanHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds an Oracle INDEX_SS index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.IndexSSAscHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.IndexSSAscHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds an Oracle INDEX_SS_ASC index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.IndexSSDescHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.IndexSSDescHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds an Oracle INDEX_SS_DESC index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.IndexSSHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.IndexSSHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds an Oracle INDEX_SS index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.InMemoryHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.InMemoryHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle NMEMORY table hint. For all tables already present in the current query scope, use InMemoryInScopeHint on IOracleSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.InMemoryInScopeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.InMemoryInScopeHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle NMEMORY table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.InMemoryPruningHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.InMemoryPruningHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle INMEMORY_PRUNING table hint. For all tables already present in the current query scope, use InMemoryPruningInScopeHint on IOracleSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.InMemoryPruningInScopeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.InMemoryPruningInScopeHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle INMEMORY_PRUNING table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.LeadingHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.LeadingHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0},LinqToDB.Sql.SqlID[])`
 - Kind: Method
 - Summary: Adds an Oracle LEADING query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.MergeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.MergeHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0},System.String)`
 - Kind: Method
 - Summary: Adds an Oracle MERGE query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.MergeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.MergeHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle MERGE query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.MergeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.MergeHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle MERGE table hint. For all tables already present in the current query scope, use MergeInScopeHint on IOracleSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.MergeInScopeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.MergeInScopeHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle MERGE table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.ModelMinAnalysisHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.ModelMinAnalysisHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle MODEL_MIN_ANALYSIS query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.MonitorHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.MonitorHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle MONITOR query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NativeFullOuterJoinHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NativeFullOuterJoinHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle NATIVE_FULL_OUTER_JOIN query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoAppendHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoAppendHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle NOAPPEND query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoCacheHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoCacheHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle NOCACHE table hint. For all tables already present in the current query scope, use NoCacheInScopeHint on IOracleSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoCacheInScopeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoCacheInScopeHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle NOCACHE table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoClusteringHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoClusteringHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle NO_CLUSTERING query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoExpandHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoExpandHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0},System.String)`
 - Kind: Method
 - Summary: Adds an Oracle NO_EXPAND query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoExpandHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoExpandHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle NO_EXPAND query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoFactHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoFactHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle NO_FACT table hint. For all tables already present in the current query scope, use NoFactInScopeHint on IOracleSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoFactInScopeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoFactInScopeHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle NO_FACT table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoIndexFastFullScanHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoIndexFastFullScanHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds an Oracle NO_INDEX_FFS index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoIndexFFSHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoIndexFFSHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds an Oracle NO_INDEX_FFS index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoIndexHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoIndexHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds an Oracle NO_INDEX index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoIndexSkipScanHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoIndexSkipScanHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds an Oracle NO_INDEX_SS index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoIndexSSHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoIndexSSHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds an Oracle NO_INDEX_SS index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoInMemoryHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoInMemoryHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle NO_INMEMORY table hint. For all tables already present in the current query scope, use NoInMemoryInScopeHint on IOracleSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoInMemoryInScopeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoInMemoryInScopeHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle NO_INMEMORY table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoInMemoryPruningHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoInMemoryPruningHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle NO_INMEMORY_PRUNING table hint. For all tables already present in the current query scope, use NoInMemoryPruningInScopeHint on IOracleSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoInMemoryPruningInScopeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoInMemoryPruningInScopeHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle NO_INMEMORY_PRUNING table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoMergeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoMergeHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0},System.String)`
 - Kind: Method
 - Summary: Adds an Oracle NO_MERGE query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoMergeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoMergeHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle NO_MERGE query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoMergeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoMergeHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle NO_MERGE table hint. For all tables already present in the current query scope, use NoMergeInScopeHint on IOracleSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoMergeInScopeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoMergeInScopeHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle NO_MERGE table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoMonitorHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoMonitorHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle NO_MONITOR query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoNativeFullOuterJoinHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoNativeFullOuterJoinHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle NO_NATIVE_FULL_OUTER_JOIN query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoParallelHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoParallelHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle NO_PARALLEL table hint. For all tables already present in the current query scope, use NoParallelInScopeHint on IOracleSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoParallelIndexHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoParallelIndexHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0},System.Object[])`
 - Kind: Method
 - Summary: Adds an Oracle index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoParallelInScopeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoParallelInScopeHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle NO_PARALLEL table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoPQConcurrentUnionHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoPQConcurrentUnionHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0},System.String)`
 - Kind: Method
 - Summary: Adds an Oracle NO_PQ_CONCURRENT_UNION query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoPQConcurrentUnionHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoPQConcurrentUnionHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle NO_PQ_CONCURRENT_UNION query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoPQSkewHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoPQSkewHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle NO_PQ_SKEW table hint. For all tables already present in the current query scope, use NoPQSkewInScopeHint on IOracleSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoPQSkewInScopeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoPQSkewInScopeHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle NO_PQ_SKEW table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoPushPredicateHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoPushPredicateHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0},System.String)`
 - Kind: Method
 - Summary: Adds an Oracle PUSH_PRED query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoPushPredicateHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoPushPredicateHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle PUSH_PRED query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoPushPredicateHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoPushPredicateHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle PUSH_PRED table hint. For all tables already present in the current query scope, use NoPushPredicateInScopeHint on IOracleSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoPushPredicateInScopeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoPushPredicateInScopeHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle PUSH_PRED table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoPushSubQueriesHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoPushSubQueriesHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0},System.String)`
 - Kind: Method
 - Summary: Adds an Oracle NO_PUSH_SUBQ query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoPxJoinFilterHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoPxJoinFilterHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle NO_PX_JOIN_FILTER table hint. For all tables already present in the current query scope, use NoPxJoinFilterInScopeHint on IOracleSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoPxJoinFilterInScopeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoPxJoinFilterInScopeHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle NO_PX_JOIN_FILTER table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoQueryTransformationHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoQueryTransformationHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle NO_QUERY_TRANSFORMATION query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoRewriteHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoRewriteHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0},System.String)`
 - Kind: Method
 - Summary: Adds an Oracle NO_REWRITE query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoRewriteHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoRewriteHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle NO_REWRITE query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoStarTransformationHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoStarTransformationHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0},System.String)`
 - Kind: Method
 - Summary: Adds an Oracle NO_STAR_TRANSFORMATION query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoStarTransformationHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoStarTransformationHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle NO_STAR_TRANSFORMATION query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoUnnestHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoUnnestHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0},System.String)`
 - Kind: Method
 - Summary: Adds an Oracle NO_UNNEST query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoUnnestHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoUnnestHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle NO_UNNEST query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoUseBandHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoUseBandHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0},LinqToDB.Sql.SqlID[])`
 - Kind: Method
 - Summary: Adds an Oracle NO_USE_BAND query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoUseCubeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoUseCubeHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0},LinqToDB.Sql.SqlID[])`
 - Kind: Method
 - Summary: Adds an Oracle NO_USE_CUBE query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoUseHashHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoUseHashHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0},LinqToDB.Sql.SqlID[])`
 - Kind: Method
 - Summary: Adds an Oracle NO_USE_HASH query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoUseMergeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoUseMergeHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0},LinqToDB.Sql.SqlID[])`
 - Kind: Method
 - Summary: Adds an Oracle NO_USE_MERGE query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoUseNestedLoopHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoUseNestedLoopHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0},LinqToDB.Sql.SqlID[])`
 - Kind: Method
 - Summary: Adds an Oracle NO_USE_NL query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoUseNLHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoUseNLHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0},LinqToDB.Sql.SqlID[])`
 - Kind: Method
 - Summary: Adds an Oracle NO_USE_NL query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoXmlIndexRewriteHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoXmlIndexRewriteHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle NO_XMLINDEX_REWRITE query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.NoXmlQueryRewriteHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.NoXmlQueryRewriteHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle NO_XML_QUERY_REWRITE query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.OptParamHint<T>
 
@@ -13064,182 +13064,182 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Method
 - Summary: Adds an Oracle OPT_PARAM query hint.
 - Remarks: Oracle defines the optimizer parameter names and values accepted by OPT_PARAM. LinqToDB exposes OptParamHint as the provider-specific family API for that Oracle hint instead of enumerating every possible optimizer parameter value.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.OrderedHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.OrderedHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle ORDERED query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.ParallelAutoHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.ParallelAutoHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.ParallelDefaultHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.ParallelDefaultHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.ParallelDefaultHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.ParallelDefaultHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle table hint.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.ParallelHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.ParallelHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0},System.Int32)`
 - Kind: Method
 - Summary: Adds an Oracle query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.ParallelHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.ParallelHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle PARALLEL query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.ParallelHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.ParallelHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0},System.Int32)`
 - Kind: Method
 - Summary: Adds an Oracle table hint.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.ParallelIndexHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.ParallelIndexHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0},System.Object[])`
 - Kind: Method
 - Summary: Adds an Oracle index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.ParallelManualHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.ParallelManualHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.PQConcurrentUnionHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.PQConcurrentUnionHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0},System.String)`
 - Kind: Method
 - Summary: Adds an Oracle PQ_CONCURRENT_UNION query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.PQConcurrentUnionHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.PQConcurrentUnionHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle PQ_CONCURRENT_UNION query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.PQDistributeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.PQDistributeHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0},System.String,System.String)`
 - Kind: Method
 - Summary: Adds an Oracle table hint.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.PQFilterHashHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.PQFilterHashHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle PQ_FILTER(HASH) query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.PQFilterNoneHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.PQFilterNoneHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle PQ_FILTER(NONE) query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.PQFilterRandomHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.PQFilterRandomHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle PQ_FILTER(RANDOM) query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.PQFilterSerialHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.PQFilterSerialHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle PQ_FILTER(SERIAL) query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.PQSkewHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.PQSkewHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle PQ_SKEW table hint. For all tables already present in the current query scope, use PQSkewInScopeHint on IOracleSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.PQSkewInScopeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.PQSkewInScopeHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle PQ_SKEW table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.PushPredicateHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.PushPredicateHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0},System.String)`
 - Kind: Method
 - Summary: Adds an Oracle PUSH_PRED query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.PushPredicateHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.PushPredicateHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle PUSH_PRED query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.PushPredicateHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.PushPredicateHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle PUSH_PRED table hint. For all tables already present in the current query scope, use PushPredicateInScopeHint on IOracleSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.PushPredicateInScopeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.PushPredicateInScopeHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle PUSH_PRED table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.PushSubQueriesHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.PushSubQueriesHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0},System.String)`
 - Kind: Method
 - Summary: Adds an Oracle PUSH_SUBQ query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.PxJoinFilterHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.PxJoinFilterHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle PX_JOIN_FILTER table hint. For all tables already present in the current query scope, use PxJoinFilterInScopeHint on IOracleSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.PxJoinFilterInScopeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.PxJoinFilterInScopeHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle PX_JOIN_FILTER table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.QueryHint<T>
 
@@ -13252,7 +13252,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: Query source.
   - `hint`: SQL text, added as a database specific hint to generated query.
 - Returns: Query source with join hints.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.QueryHint<T1,T2>
 
@@ -13267,7 +13267,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `hint`: SQL text, added as a database specific hint to generated query.
   - `hintParameter`: Hint parameter.
 - Returns: Query source with join hints.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.QueryHint<T1,T2>
 
@@ -13282,35 +13282,35 @@ Generated directly from the current package XML documentation. Use XML member id
   - `hint`: SQL text, added as a database specific hint to generated query.
   - `hintParameters`: Table hint parameters.
 - Returns: Table-like query source with table hints.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.RewriteHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.RewriteHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0},System.String)`
 - Kind: Method
 - Summary: Adds an Oracle REWRITE query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.RewriteHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.RewriteHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle REWRITE query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.StarTransformationHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.StarTransformationHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0},System.String)`
 - Kind: Method
 - Summary: Adds an Oracle STAR_TRANSFORMATION query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.StarTransformationHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.StarTransformationHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle STAR_TRANSFORMATION query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.TableHint<T>
 
@@ -13323,7 +13323,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `table`: Table-like query source.
   - `hint`: SQL text, added as a database specific hint to generated query.
 - Returns: Table-like query source with table hints.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.TableHint<T1,T2>
 
@@ -13338,7 +13338,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `hint`: SQL text, added as a database specific hint to generated query.
   - `hintParameter`: Table hint parameter.
 - Returns: Table-like query source with table hints.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.TableHint<T1,T2>
 
@@ -13353,7 +13353,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `hint`: SQL text, added as a database specific hint to generated query.
   - `hintParameters`: Table hint parameters.
 - Returns: Table-like query source with table hints.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.TablesInScopeHint<T>
 
@@ -13367,7 +13367,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `hint`: SQL text, added as a database specific hint to generated query.
   - `hintParameters`: Table hint parameters.
 - Returns: Query source with join hints.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.TablesInScopeHint<T>
 
@@ -13380,7 +13380,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: Query source.
   - `hint`: SQL text, added as a database specific hint to generated query.
 - Returns: Query source with join hints.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.TablesInScopeHint<T1,T2>
 
@@ -13395,91 +13395,91 @@ Generated directly from the current package XML documentation. Use XML member id
   - `hint`: SQL text, added as a database specific hint to generated query.
   - `hintParameter`: Table hint parameter.
 - Returns: Query source with join hints.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.UnnestHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.UnnestHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0},System.String)`
 - Kind: Method
 - Summary: Adds an Oracle UNNEST query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.UnnestHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.UnnestHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle UNNEST query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.UseBandHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.UseBandHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0},LinqToDB.Sql.SqlID[])`
 - Kind: Method
 - Summary: Adds an Oracle USE_BAND query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.UseConcatHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.UseConcatHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0},System.String)`
 - Kind: Method
 - Summary: Adds an Oracle USE_CONCAT query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.UseConcatHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.UseConcatHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds an Oracle USE_CONCAT query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.UseCubeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.UseCubeHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0},LinqToDB.Sql.SqlID[])`
 - Kind: Method
 - Summary: Adds an Oracle USE_CUBE query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.UseHashHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.UseHashHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0},LinqToDB.Sql.SqlID[])`
 - Kind: Method
 - Summary: Adds an Oracle USE_HASH query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.UseMergeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.UseMergeHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0},LinqToDB.Sql.SqlID[])`
 - Kind: Method
 - Summary: Adds an Oracle USE_MERGE query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.UseNestedLoopHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.UseNestedLoopHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0},LinqToDB.Sql.SqlID[])`
 - Kind: Method
 - Summary: Adds an Oracle USE_NL query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.UseNestedLoopWithIndexHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.UseNestedLoopWithIndexHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds an Oracle USE_NL_WITH_INDEX index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.UseNLHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.UseNLHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0},LinqToDB.Sql.SqlID[])`
 - Kind: Method
 - Summary: Adds an Oracle USE_NL query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.UseNLWithIndexHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.UseNLWithIndexHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds an Oracle USE_NL_WITH_INDEX index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleOptions.Constructor
 
@@ -13495,84 +13495,84 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.DataProvider.PostgreSQL.PostgreSQLHints.ForKeyShareHint``1(LinqToDB.DataProvider.PostgreSQL.IPostgreSQLSpecificQueryable{``0},LinqToDB.Sql.SqlID[])`
 - Kind: Method
 - Summary: Adds a PostgreSQL FOR KEY SHARE subquery hint.
-- AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.PostgreSQL.PostgreSQLHints.ForKeyShareNoWaitHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.PostgreSQL.PostgreSQLHints.ForKeyShareNoWaitHint``1(LinqToDB.DataProvider.PostgreSQL.IPostgreSQLSpecificQueryable{``0},LinqToDB.Sql.SqlID[])`
 - Kind: Method
 - Summary: Adds a PostgreSQL FOR KEY SHARE NOWAIT subquery hint.
-- AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.PostgreSQL.PostgreSQLHints.ForKeyShareSkipLockedHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.PostgreSQL.PostgreSQLHints.ForKeyShareSkipLockedHint``1(LinqToDB.DataProvider.PostgreSQL.IPostgreSQLSpecificQueryable{``0},LinqToDB.Sql.SqlID[])`
 - Kind: Method
 - Summary: Adds a PostgreSQL FOR KEY SHARE SKIP LOCKED subquery hint.
-- AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.PostgreSQL.PostgreSQLHints.ForNoKeyUpdateHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.PostgreSQL.PostgreSQLHints.ForNoKeyUpdateHint``1(LinqToDB.DataProvider.PostgreSQL.IPostgreSQLSpecificQueryable{``0},LinqToDB.Sql.SqlID[])`
 - Kind: Method
 - Summary: Adds a PostgreSQL FOR NO KEY UPDATE subquery hint.
-- AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.PostgreSQL.PostgreSQLHints.ForNoKeyUpdateNoWaitHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.PostgreSQL.PostgreSQLHints.ForNoKeyUpdateNoWaitHint``1(LinqToDB.DataProvider.PostgreSQL.IPostgreSQLSpecificQueryable{``0},LinqToDB.Sql.SqlID[])`
 - Kind: Method
 - Summary: Adds a PostgreSQL FOR NO KEY UPDATE NOWAIT subquery hint.
-- AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.PostgreSQL.PostgreSQLHints.ForNoKeyUpdateSkipLockedHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.PostgreSQL.PostgreSQLHints.ForNoKeyUpdateSkipLockedHint``1(LinqToDB.DataProvider.PostgreSQL.IPostgreSQLSpecificQueryable{``0},LinqToDB.Sql.SqlID[])`
 - Kind: Method
 - Summary: Adds a PostgreSQL FOR NO KEY UPDATE SKIP LOCKED subquery hint.
-- AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.PostgreSQL.PostgreSQLHints.ForShareHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.PostgreSQL.PostgreSQLHints.ForShareHint``1(LinqToDB.DataProvider.PostgreSQL.IPostgreSQLSpecificQueryable{``0},LinqToDB.Sql.SqlID[])`
 - Kind: Method
 - Summary: Adds a PostgreSQL FOR SHARE subquery hint.
-- AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.PostgreSQL.PostgreSQLHints.ForShareNoWaitHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.PostgreSQL.PostgreSQLHints.ForShareNoWaitHint``1(LinqToDB.DataProvider.PostgreSQL.IPostgreSQLSpecificQueryable{``0},LinqToDB.Sql.SqlID[])`
 - Kind: Method
 - Summary: Adds a PostgreSQL FOR SHARE NOWAIT subquery hint.
-- AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.PostgreSQL.PostgreSQLHints.ForShareSkipLockedHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.PostgreSQL.PostgreSQLHints.ForShareSkipLockedHint``1(LinqToDB.DataProvider.PostgreSQL.IPostgreSQLSpecificQueryable{``0},LinqToDB.Sql.SqlID[])`
 - Kind: Method
 - Summary: Adds a PostgreSQL FOR SHARE SKIP LOCKED subquery hint.
-- AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.PostgreSQL.PostgreSQLHints.ForUpdateHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.PostgreSQL.PostgreSQLHints.ForUpdateHint``1(LinqToDB.DataProvider.PostgreSQL.IPostgreSQLSpecificQueryable{``0},LinqToDB.Sql.SqlID[])`
 - Kind: Method
 - Summary: Adds a PostgreSQL FOR UPDATE subquery hint.
-- AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.PostgreSQL.PostgreSQLHints.ForUpdateNoWaitHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.PostgreSQL.PostgreSQLHints.ForUpdateNoWaitHint``1(LinqToDB.DataProvider.PostgreSQL.IPostgreSQLSpecificQueryable{``0},LinqToDB.Sql.SqlID[])`
 - Kind: Method
 - Summary: Adds a PostgreSQL FOR UPDATE NOWAIT subquery hint.
-- AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.PostgreSQL.PostgreSQLHints.ForUpdateSkipLockedHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.PostgreSQL.PostgreSQLHints.ForUpdateSkipLockedHint``1(LinqToDB.DataProvider.PostgreSQL.IPostgreSQLSpecificQueryable{``0},LinqToDB.Sql.SqlID[])`
 - Kind: Method
 - Summary: Adds a PostgreSQL FOR UPDATE SKIP LOCKED subquery hint.
-- AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.PostgreSQL.PostgreSQLHints.SubQueryTableHint<T>
 
@@ -13587,7 +13587,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `hint`: PostgreSQL row-locking hint, e.g. FOR UPDATE or FOR SHARE.
   - `tableIDs`: Optional table identifiers for the OF clause.
 - Returns: Query source with subquery hint.
-- AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.PostgreSQL.PostgreSQLHints.SubQueryTableHint<T>
 
@@ -13603,7 +13603,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `hint2`: NOWAIT | SKIP LOCKED
   - `tableIDs`: Optional table identifiers for the OF clause.
 - Returns: Query source with subquery hint.
-- AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.PostgreSQL.PostgreSQLOptions.Constructor
 
@@ -13632,7 +13632,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `table`: Table-like query source.
   - `hint`: SQL text, added as a database specific hint to generated query.
 - Returns: Table-like query source with table hints.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlCe.SqlCeHints.TableHint<T1,T2>
 
@@ -13647,7 +13647,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `hint`: SQL text, added as a database specific hint to generated query.
   - `hintParameter`: Table hint parameter.
 - Returns: Table-like query source with table hints.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlCe.SqlCeHints.TableHint<T1,T2>
 
@@ -13662,7 +13662,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `hint`: SQL text, added as a database specific hint to generated query.
   - `hintParameters`: Table hint parameters.
 - Returns: Table-like query source with table hints.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlCe.SqlCeHints.TablesInScopeHint<T>
 
@@ -13676,7 +13676,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `hint`: SQL text, added as a database specific hint to generated query.
   - `hintParameters`: Table hint parameters.
 - Returns: Query source with join hints.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlCe.SqlCeHints.TablesInScopeHint<T>
 
@@ -13689,7 +13689,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: Query source.
   - `hint`: SQL text, added as a database specific hint to generated query.
 - Returns: Query source with join hints.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlCe.SqlCeHints.TablesInScopeHint<T1,T2>
 
@@ -13704,119 +13704,119 @@ Generated directly from the current package XML documentation. Use XML member id
   - `hint`: SQL text, added as a database specific hint to generated query.
   - `hintParameter`: Table hint parameter.
 - Returns: Query source with join hints.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlCe.SqlCeHints.WithHoldLock<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlCe.SqlCeHints.WithHoldLock``1(LinqToDB.DataProvider.SqlCe.ISqlCeSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a SQL CE HOLDLOCK table hint. For all tables already present in the current query scope, use WithHoldLockInScope on ISqlCeSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlCe.SqlCeHints.WithHoldLockInScope<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlCe.SqlCeHints.WithHoldLockInScope``1(LinqToDB.DataProvider.SqlCe.ISqlCeSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL CE HOLDLOCK table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlCe.SqlCeHints.WithIndex<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlCe.SqlCeHints.WithIndex``1(LinqToDB.DataProvider.SqlCe.ISqlCeSpecificTable{``0},System.String)`
 - Kind: Method
 - Summary: Adds a SQL CE index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlCe.SqlCeHints.WithIndex<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlCe.SqlCeHints.WithIndex``1(LinqToDB.DataProvider.SqlCe.ISqlCeSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a SQL CE index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlCe.SqlCeHints.WithNoLock<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlCe.SqlCeHints.WithNoLock``1(LinqToDB.DataProvider.SqlCe.ISqlCeSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a SQL CE NOLOCK table hint. For all tables already present in the current query scope, use WithNoLockInScope on ISqlCeSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlCe.SqlCeHints.WithNoLockInScope<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlCe.SqlCeHints.WithNoLockInScope``1(LinqToDB.DataProvider.SqlCe.ISqlCeSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL CE NOLOCK table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlCe.SqlCeHints.WithPagLock<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlCe.SqlCeHints.WithPagLock``1(LinqToDB.DataProvider.SqlCe.ISqlCeSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a SQL CE PAGLOCK table hint. For all tables already present in the current query scope, use WithPagLockInScope on ISqlCeSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlCe.SqlCeHints.WithPagLockInScope<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlCe.SqlCeHints.WithPagLockInScope``1(LinqToDB.DataProvider.SqlCe.ISqlCeSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL CE PAGLOCK table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlCe.SqlCeHints.WithRowLock<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlCe.SqlCeHints.WithRowLock``1(LinqToDB.DataProvider.SqlCe.ISqlCeSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a SQL CE ROWLOCK table hint. For all tables already present in the current query scope, use WithRowLockInScope on ISqlCeSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlCe.SqlCeHints.WithRowLockInScope<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlCe.SqlCeHints.WithRowLockInScope``1(LinqToDB.DataProvider.SqlCe.ISqlCeSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL CE ROWLOCK table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlCe.SqlCeHints.WithTabLock<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlCe.SqlCeHints.WithTabLock``1(LinqToDB.DataProvider.SqlCe.ISqlCeSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a SQL CE TABLOCK table hint. For all tables already present in the current query scope, use WithTabLockInScope on ISqlCeSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlCe.SqlCeHints.WithTabLockInScope<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlCe.SqlCeHints.WithTabLockInScope``1(LinqToDB.DataProvider.SqlCe.ISqlCeSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL CE TABLOCK table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlCe.SqlCeHints.WithUpdLock<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlCe.SqlCeHints.WithUpdLock``1(LinqToDB.DataProvider.SqlCe.ISqlCeSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a SQL CE UPDLOCK table hint. For all tables already present in the current query scope, use WithUpdLockInScope on ISqlCeSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlCe.SqlCeHints.WithUpdLockInScope<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlCe.SqlCeHints.WithUpdLockInScope``1(LinqToDB.DataProvider.SqlCe.ISqlCeSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL CE UPDLOCK table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlCe.SqlCeHints.WithXLock<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlCe.SqlCeHints.WithXLock``1(LinqToDB.DataProvider.SqlCe.ISqlCeSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a SQL CE XLOCK table hint. For all tables already present in the current query scope, use WithXLockInScope on ISqlCeSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlCe.SqlCeHints.WithXLockInScope<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlCe.SqlCeHints.WithXLockInScope``1(LinqToDB.DataProvider.SqlCe.ISqlCeSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL CE XLOCK table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlCe.SqlCeOptions.Constructor
 
@@ -14482,21 +14482,21 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.DataProvider.SQLite.SQLiteHints.IndexedByHint``1(LinqToDB.DataProvider.SQLite.ISQLiteSpecificTable{``0},System.String)`
 - Kind: Method
 - Summary: Adds a SQLite index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SQLite.SQLiteHints.NotIndexedHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.SQLite.SQLiteHints.NotIndexedHint``1(LinqToDB.DataProvider.SQLite.ISQLiteSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a SQLite table hint.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SQLite.SQLiteHints.TableHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.SQLite.SQLiteHints.TableHint``1(LinqToDB.DataProvider.SQLite.ISQLiteSpecificTable{``0},System.String)`
 - Kind: Method
 - Summary: Adds a SQLite table hint.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SQLite.SQLiteOptions.Constructor
 
@@ -17550,14 +17550,14 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.JoinHashHint``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server HASH join hint.
-- AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.JoinHashHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.JoinHashHint``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server HASH join hint.
-- AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.JoinHint<T>
 
@@ -17570,7 +17570,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: Query source.
   - `hint`: SQL text, added as a database specific hint to generated query.
 - Returns: Query source with join hints.
-- AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.JoinHint<T>
 
@@ -17583,245 +17583,245 @@ Generated directly from the current package XML documentation. Use XML member id
   - `table`: Table-like query source.
   - `hint`: SQL text, added as a database specific hint to generated query.
 - Returns: Query source with join hints.
-- AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.JoinLoopHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.JoinLoopHint``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server LOOP join hint.
-- AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.JoinLoopHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.JoinLoopHint``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server LOOP join hint.
-- AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.JoinMergeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.JoinMergeHint``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server MERGE join hint.
-- AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.JoinMergeHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.JoinMergeHint``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server MERGE join hint.
-- AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.JoinRemoteHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.JoinRemoteHint``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server REMOTE join hint.
-- AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.JoinRemoteHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.JoinRemoteHint``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server REMOTE join hint.
-- AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionConcatUnion<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionConcatUnion``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server CONCAT UNION query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionDisableExternalPushDown<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionDisableExternalPushDown``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server DISABLE EXTERNALPUSHDOWN query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionDisableScaleOutExecution<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionDisableScaleOutExecution``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server DISABLE SCALEOUTEXECUTION query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionExpandViews<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionExpandViews``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server EXPAND VIEWS query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionFast<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionFast``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0},System.Int32)`
 - Kind: Method
 - Summary: Adds a SQL Server FAST query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionForceExternalPushDown<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionForceExternalPushDown``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server FORCE EXTERNALPUSHDOWN query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionForceOrder<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionForceOrder``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server FORCE ORDER query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionForceScaleOutExecution<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionForceScaleOutExecution``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server FORCE SCALEOUTEXECUTION query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionHashGroup<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionHashGroup``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server HASH GROUP query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionHashJoin<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionHashJoin``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server HASH JOIN query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionHashUnion<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionHashUnion``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server HASH UNION query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionIgnoreNonClusteredColumnStoreIndex<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionIgnoreNonClusteredColumnStoreIndex``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server IGNORE_NONCLUSTERED_COLUMNSTORE_INDEX query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionKeepFixedPlan<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionKeepFixedPlan``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server KEEPFIXED PLAN query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionKeepPlan<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionKeepPlan``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server KEEP PLAN query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionLoopJoin<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionLoopJoin``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server LOOP JOIN query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionMaxDop<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionMaxDop``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0},System.Int32)`
 - Kind: Method
 - Summary: Adds a SQL Server MAXDOP query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionMaxGrantPercent<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionMaxGrantPercent``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0},System.Int32)`
 - Kind: Method
 - Summary: Adds a SQL Server MAX_GRANT_PERCENT query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionMaxRecursion<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionMaxRecursion``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0},System.Int32)`
 - Kind: Method
 - Summary: Adds a SQL Server MAXRECURSION query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionMergeJoin<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionMergeJoin``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server MERGE JOIN query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionMergeUnion<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionMergeUnion``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server MERGE UNION query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionMinGrantPercent<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionMinGrantPercent``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0},System.Int32)`
 - Kind: Method
 - Summary: Adds a SQL Server MIN_GRANT_PERCENT query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionNoPerformanceSpool<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionNoPerformanceSpool``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server NO_PERFORMANCE_SPOOL query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionOptimizeFor<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionOptimizeFor``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a SQL Server OPTIMIZE FOR query option.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionOptimizeForUnknown<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionOptimizeForUnknown``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server OPTIMIZE FOR UNKNOWN query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionOrderGroup<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionOrderGroup``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server ORDER GROUP query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionQueryTraceOn<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionQueryTraceOn``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0},System.Int32)`
 - Kind: Method
 - Summary: Adds a SQL Server QUERYTRACEON query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionRecompile<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionRecompile``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server RECOMPILE query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionRobustPlan<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionRobustPlan``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server ROBUST PLAN query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionTableHint<T>
 
@@ -17829,7 +17829,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Method
 - Summary: Adds a SQL Server TABLE HINT query option for a table identified by TableID.
 - Remarks: Use TableID on the table source and pass the matching Sql.SqlID value so LinqToDB can resolve the exact SQL table alias generated for the query. The values argument contains SQL Server table hint names; choose those names from SQL Server documentation or existing application requirements.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionUseHint<T>
 
@@ -17837,7 +17837,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Method
 - Summary: Adds a SQL Server USE HINT query option.
 - Remarks: SQL Server defines a large and version-dependent set of USE HINT names. LinqToDB intentionally exposes OptionUseHint as the provider-specific family API instead of providing typed helpers for every SQL Server USE HINT value. Use typed SQL Server option helpers when they exist for a concrete SQL feature; use this method for SQL Server USE HINT values that do not have a dedicated typed helper.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.QueryHint<T>
 
@@ -17850,7 +17850,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: Query source.
   - `hint`: SQL text, added as a database specific hint to generated query.
 - Returns: Query source with join hints.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.QueryHint<T1,T2>
 
@@ -17865,7 +17865,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `hint`: SQL text, added as a database specific hint to generated query.
   - `hintParameter`: Hint parameter.
 - Returns: Query source with join hints.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.QueryHint<T1,T2>
 
@@ -17880,7 +17880,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `hint`: SQL text, added as a database specific hint to generated query.
   - `hintParameters`: Table hint parameters.
 - Returns: Table-like query source with table hints.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.QueryHint2008Plus<T>
 
@@ -17893,7 +17893,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: Query source.
   - `hint`: SQL text, added as a database specific hint to generated query.
 - Returns: Query source with join hints.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.QueryHint2012Plus<T>
 
@@ -17906,7 +17906,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: Query source.
   - `hint`: SQL text, added as a database specific hint to generated query.
 - Returns: Query source with join hints.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.QueryHint2016Plus<T>
 
@@ -17919,7 +17919,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: Query source.
   - `hint`: SQL text, added as a database specific hint to generated query.
 - Returns: Query source with join hints.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.QueryHint2019Plus<T>
 
@@ -17932,7 +17932,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: Query source.
   - `hint`: SQL text, added as a database specific hint to generated query.
 - Returns: Query source with join hints.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.TableHint<T>
 
@@ -17945,7 +17945,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `table`: Table-like query source.
   - `hint`: SQL text, added as a database specific hint to generated query.
 - Returns: Table-like query source with table hints.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.TableHint<T1,T2>
 
@@ -17960,7 +17960,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `hint`: SQL text, added as a database specific hint to generated query.
   - `hintParameter`: Table hint parameter.
 - Returns: Table-like query source with table hints.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.TableHint<T1,T2>
 
@@ -17975,14 +17975,14 @@ Generated directly from the current package XML documentation. Use XML member id
   - `hint`: SQL text, added as a database specific hint to generated query.
   - `hintParameters`: Table hint parameters.
 - Returns: Table-like query source with table hints.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.TableHint2012Plus<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.TableHint2012Plus``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0},System.String)`
 - Kind: Method
 - Summary: Adds a SQL Server table hint.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.TablesInScopeHint<T>
 
@@ -17996,7 +17996,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `hint`: SQL text, added as a database specific hint to generated query.
   - `hintParameters`: Table hint parameters.
 - Returns: Query source with join hints.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.TablesInScopeHint<T>
 
@@ -18009,7 +18009,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: Query source.
   - `hint`: SQL text, added as a database specific hint to generated query.
 - Returns: Query source with join hints.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.TablesInScopeHint<T1,T2>
 
@@ -18024,7 +18024,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `hint`: SQL text, added as a database specific hint to generated query.
   - `hintParameter`: Table hint parameter.
 - Returns: Query source with join hints.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.TablesInScopeHint2012Plus<T>
 
@@ -18037,7 +18037,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: Query source.
   - `hint`: SQL text, added as a database specific hint to generated query.
 - Returns: Query source with join hints.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.TablesInScopeHint2014Plus<T>
 
@@ -18050,7 +18050,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: Query source.
   - `hint`: SQL text, added as a database specific hint to generated query.
 - Returns: Query source with join hints.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.TemporalTableAll<T>
 
@@ -18112,280 +18112,280 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithForceScan``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server FORCESCAN table hint. For all tables already present in the current query scope, use WithForceScanInScope on ISqlServerSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.WithForceScanInScope<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithForceScanInScope``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server FORCESCAN table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.WithForceSeek<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithForceSeek``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0},System.String,System.Linq.Expressions.Expression{System.Func{``0,System.Object}}[])`
 - Kind: Method
 - Summary: Adds a SQL Server table hint. For all tables already present in the current query scope, use WithForceSeekInScope on ISqlServerSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.WithForceSeek<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithForceSeek``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server FORCESEEK table hint. For all tables already present in the current query scope, use WithForceSeekInScope on ISqlServerSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.WithForceSeekInScope<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithForceSeekInScope``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server FORCESEEK table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.WithHoldLock<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithHoldLock``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server HOLDLOCK table hint. For all tables already present in the current query scope, use WithHoldLockInScope on ISqlServerSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.WithHoldLockInScope<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithHoldLockInScope``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server HOLDLOCK table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.WithIndex<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithIndex``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0},System.String)`
 - Kind: Method
 - Summary: Adds a SQL Server index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.WithIndex<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithIndex``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a SQL Server index hint.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.WithNoLock<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithNoLock``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server NOLOCK table hint. For all tables already present in the current query scope, use WithNoLockInScope on ISqlServerSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.WithNoLockInScope<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithNoLockInScope``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server NOLOCK table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.WithNoWait<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithNoWait``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server NOWAIT table hint. For all tables already present in the current query scope, use WithNoWaitInScope on ISqlServerSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.WithNoWaitInScope<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithNoWaitInScope``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server NOWAIT table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.WithPagLock<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithPagLock``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server PAGLOCK table hint. For all tables already present in the current query scope, use WithPagLockInScope on ISqlServerSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.WithPagLockInScope<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithPagLockInScope``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server PAGLOCK table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.WithReadCommitted<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithReadCommitted``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server READCOMMITTED table hint. For all tables already present in the current query scope, use WithReadCommittedInScope on ISqlServerSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.WithReadCommittedInScope<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithReadCommittedInScope``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server READCOMMITTED table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.WithReadCommittedLock<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithReadCommittedLock``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server READCOMMITTEDLOCK table hint. For all tables already present in the current query scope, use WithReadCommittedLockInScope on ISqlServerSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.WithReadCommittedLockInScope<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithReadCommittedLockInScope``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server READCOMMITTEDLOCK table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.WithReadPast<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithReadPast``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server READPAST table hint. For all tables already present in the current query scope, use WithReadPastInScope on ISqlServerSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.WithReadPastInScope<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithReadPastInScope``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server READPAST table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.WithReadUncommitted<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithReadUncommitted``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server READUNCOMMITTED table hint. For all tables already present in the current query scope, use WithReadUncommittedInScope on ISqlServerSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.WithReadUncommittedInScope<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithReadUncommittedInScope``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server READUNCOMMITTED table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.WithRepeatableRead<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithRepeatableRead``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server REPEATABLEREAD table hint. For all tables already present in the current query scope, use WithRepeatableReadInScope on ISqlServerSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.WithRepeatableReadInScope<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithRepeatableReadInScope``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server REPEATABLEREAD table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.WithRowLock<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithRowLock``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server ROWLOCK table hint. For all tables already present in the current query scope, use WithRowLockInScope on ISqlServerSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.WithRowLockInScope<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithRowLockInScope``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server ROWLOCK table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.WithSerializable<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithSerializable``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server SERIALIZABLE table hint. For all tables already present in the current query scope, use WithSerializableInScope on ISqlServerSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.WithSerializableInScope<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithSerializableInScope``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server SERIALIZABLE table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.WithSnapshot<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithSnapshot``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server SNAPSHOT table hint. For all tables already present in the current query scope, use WithSnapshotInScope on ISqlServerSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.WithSnapshotInScope<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithSnapshotInScope``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server SNAPSHOT table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.WithSpatialWindowMaxCells<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithSpatialWindowMaxCells``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0},System.Int32)`
 - Kind: Method
 - Summary: Adds a SQL Server table hint.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.WithTabLock<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithTabLock``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server TABLOCK table hint. For all tables already present in the current query scope, use WithTabLockInScope on ISqlServerSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.WithTabLockInScope<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithTabLockInScope``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server TABLOCK table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.WithTabLockX<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithTabLockX``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server TABLOCKX table hint. For all tables already present in the current query scope, use WithTabLockXInScope on ISqlServerSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.WithTabLockXInScope<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithTabLockXInScope``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server TABLOCKX table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.WithUpdLock<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithUpdLock``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server UPDLOCK table hint. For all tables already present in the current query scope, use WithUpdLockInScope on ISqlServerSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.WithUpdLockInScope<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithUpdLockInScope``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server UPDLOCK table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.WithXLock<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithXLock``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server XLOCK table hint. For all tables already present in the current query scope, use WithXLockInScope on ISqlServerSpecificQueryable<TSource>.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.WithXLockInScope<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithXLockInScope``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0})`
 - Kind: Method
 - Summary: Adds a SQL Server XLOCK table hint to tables in the current query scope.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerOptions.Constructor
 
@@ -18461,42 +18461,42 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.DataProvider.Ydb.YdbHints.DistinctHint``1(LinqToDB.DataProvider.Ydb.IYdbSpecificQueryable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a YDB distinct query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Ydb.YdbHints.DistinctHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Ydb.YdbHints.DistinctHint``1(System.Linq.IQueryable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a YDB distinct query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Ydb.YdbHints.QueryHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Ydb.YdbHints.QueryHint``1(LinqToDB.DataProvider.Ydb.IYdbSpecificQueryable{``0},System.String,System.String[])`
 - Kind: Method
 - Summary: Generic query-hint injector for YDB/YQL.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Ydb.YdbHints.QueryHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Ydb.YdbHints.QueryHint``1(System.Linq.IQueryable{``0},System.String,System.String[])`
 - Kind: Method
 - Summary: Adds a YDB query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Ydb.YdbHints.UniqueHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Ydb.YdbHints.UniqueHint``1(LinqToDB.DataProvider.Ydb.IYdbSpecificQueryable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a YDB unique query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Ydb.YdbHints.UniqueHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Ydb.YdbHints.UniqueHint``1(System.Linq.IQueryable{``0},System.String[])`
 - Kind: Method
 - Summary: Adds a YDB unique query hint.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Ydb.YdbOptions.Constructor
 
@@ -22928,7 +22928,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Method
 - Summary: Executes aggregate expression against source query.
 - Remarks: Execution is immediate and the method is terminal.
-- AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=QueryResult;
+- AI metadata: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=QueryResult;
 
 ## LinqToDB.LinqExtensions.AggregateExecuteAsync<T1,T2>
 
@@ -22936,7 +22936,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Method
 - Summary: Executes aggregate expression against source query asynchronously.
 - Remarks: Execution is immediate and the method is terminal.
-- AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=QueryResult;
+- AI metadata: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=QueryResult;
 
 ## LinqToDB.LinqExtensions.AsCte<T>
 
@@ -22962,7 +22962,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: Source query.
   - `name`: Common table expression name.
 - Returns: Common table expression.
-- AI-Tags: Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
+- AI metadata: Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
 
 ## LinqToDB.LinqExtensions.AsCte<T>
 
@@ -22975,7 +22975,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Parameters:
   - `source`: Source query.
 - Returns: Common table expression.
-- AI-Tags: Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
+- AI metadata: Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
 
 ## LinqToDB.LinqExtensions.AsQueryable<T>
 
@@ -23002,7 +23002,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: A sequence to convert.
   - `dataContext`: Database connection context.
 - Returns: An that represents the input sequence.
-- AI-Tags: Group=Helpers; Execution=Deferred; Composability=Composable; Affects=QueryRoot;
+- AI metadata: Group=Helpers; Execution=Deferred; Composability=Composable; Affects=QueryRoot;
 
 ## LinqToDB.LinqExtensions.AsSubQuery<T>
 
@@ -23016,7 +23016,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: Source data query.
   - `queryName`: Query name.
 - Returns: Query converted into sub-query.
-- AI-Tags: Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
+- AI metadata: Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
 
 ## LinqToDB.LinqExtensions.AsSubQuery<T>
 
@@ -23029,7 +23029,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Parameters:
   - `source`: Source data query.
 - Returns: Query converted into sub-query.
-- AI-Tags: Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
+- AI metadata: Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
 
 ## LinqToDB.LinqExtensions.AsSubQuery<T1,T2>
 
@@ -23067,7 +23067,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Parameters:
   - `source`: Source query.
 - Returns: An updatable query.
-- AI-Tags: Group=DML; Execution=Deferred; Composability=Composable; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Deferred; Composability=Composable; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.AsValueInsertable<T>
 
@@ -23080,7 +23080,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Parameters:
   - `source`: Target table.
 - Returns: Insertable source query.
-- AI-Tags: Group=DML; Execution=Deferred; Composability=Composable; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Deferred; Composability=Composable; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.CrossJoin<T1,T2,T3>
 
@@ -23109,7 +23109,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `table`: Table-like query source.
   - `name`: Database name.
 - Returns: Table-like query source with the overridden database name.
-- AI-Tags: Group=Configuration; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Configuration; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.Delete<T>
 
@@ -23135,7 +23135,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Parameters:
   - `source`: Query that returns records to delete.
 - Returns: Number of deleted records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.DeleteAsync<T>
 
@@ -23176,7 +23176,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Parameters:
   - `merge`: Merge command builder interface.
 - Returns: Returns new merge command builder with new operation.
-- AI-Tags: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.DeleteWhenMatchedAnd<T1,T2>
 
@@ -23191,7 +23191,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `merge`: Merge command builder interface.
   - `searchCondition`: Operation execution condition over target and source records.
 - Returns: Returns new merge command builder with new operation.
-- AI-Tags: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.DeleteWhenNotMatchedBySource<T1,T2>
 
@@ -23205,7 +23205,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Parameters:
   - `merge`: Merge command builder interface.
 - Returns: Returns new merge command builder with new operation.
-- AI-Tags: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.DeleteWhenNotMatchedBySourceAnd<T1,T2>
 
@@ -23220,7 +23220,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `merge`: Merge command builder interface.
   - `searchCondition`: Operation execution condition over target record.
 - Returns: Returns new merge command builder with new operation.
-- AI-Tags: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.DeleteWithOutput<T>
 
@@ -23233,7 +23233,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Parameters:
   - `source`: Source query, that returns data for delete operation.
 - Returns: Enumeration of records.
-- AI-Tags: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.DeleteWithOutput<T1,T2>
 
@@ -23248,7 +23248,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: Source query, that returns data for delete operation.
   - `outputExpression`: Output record constructor expression. Expression supports only record new expression with field initializers.
 - Returns: Enumeration of records.
-- AI-Tags: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.DeleteWithOutputAsync<T>
 
@@ -23318,7 +23318,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `outputTable`: Output table.
   - `outputExpression`: Output record constructor expression. Expression supports only record new expression with field initializers.
 - Returns: Number of affected records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.DeleteWithOutputInto<T1,T2>
 
@@ -23333,7 +23333,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: Source query, that returns data for delete operation.
   - `outputTable`: Output table.
 - Returns: Number of affected records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.DeleteWithOutputIntoAsync<T1,T2>
 
@@ -23378,7 +23378,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Parameters:
   - `grouping`: Source data query.
 - Returns: Query with suppressed grouping guard.
-- AI-Tags: Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
+- AI metadata: Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
 
 ## LinqToDB.LinqExtensions.Drop<T>
 
@@ -23392,7 +23392,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `target`: Dropped table.
   - `throwExceptionIfNotExists`: If , any exception during drop operation will be silently catched and 0 returned. This behavior is not correct and will be fixed in future to mask only missing table exceptions. Tracked by issue. Default value: .
 - Returns: Number of affected records. Usually -1 as it is not data modification operation.
-- AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=DdlStatement; Pipeline=SqlAST,SqlText;
+- AI metadata: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=DdlStatement; Pipeline=SqlAST,SqlText;
 
 ## LinqToDB.LinqExtensions.DropAsync<T>
 
@@ -23407,7 +23407,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `throwExceptionIfNotExists`: If , any exception during drop operation will be silently catched and 0 returned. This behavior is not correct and will be fixed in future to mask only missing table exceptions. Tracked by issue. Default value: .
   - `token`: Optional asynchronous operation cancellation token.
 - Returns: Number of affected records. Usually -1 as it is not data modification operation.
-- AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=DdlStatement; Pipeline=SqlAST,SqlText;
+- AI metadata: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=DdlStatement; Pipeline=SqlAST,SqlText;
 
 ## LinqToDB.LinqExtensions.ElementAt<T>
 
@@ -23421,7 +23421,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: Source query.
   - `index`: Expression that defines index of record to select.
 - Returns: Record at specified position.
-- AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=QueryResult;
+- AI metadata: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=QueryResult;
 
 ## LinqToDB.LinqExtensions.ElementAtAsync<T>
 
@@ -23436,7 +23436,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `index`: Expression that defines index of record to select.
   - `token`: Optional asynchronous operation cancellation token.
 - Returns: Record at specified position.
-- AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=QueryResult;
+- AI metadata: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=QueryResult;
 
 ## LinqToDB.LinqExtensions.ElementAtOrDefault<T>
 
@@ -23450,7 +23450,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: Source query.
   - `index`: Expression that defines index of record to select.
 - Returns: Record at specified position or default value, if source query doesn't have record with such index.
-- AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=QueryResult;
+- AI metadata: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=QueryResult;
 
 ## LinqToDB.LinqExtensions.ElementAtOrDefaultAsync<T>
 
@@ -23465,7 +23465,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `index`: Expression that defines index of record to select.
   - `token`: Optional asynchronous operation cancellation token.
 - Returns: Record at specified position or default value, if source query doesn't have record with such index.
-- AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=QueryResult;
+- AI metadata: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=QueryResult;
 
 ## LinqToDB.LinqExtensions.ExceptAll<T>
 
@@ -23479,7 +23479,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source1`: An whose elements that are not also in will be returned.
   - `source2`: An whose elements that also occur in the first sequence will not appear in the returned sequence.
 - Returns: An that contains the set difference of the two sequences.
-- AI-Tags: Group=Helpers; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
+- AI metadata: Group=Helpers; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
 
 ## LinqToDB.LinqExtensions.FullJoin<T>
 
@@ -23532,7 +23532,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: Source data query.
   - `keySelector`: A function to specify which fields are unique.
 - Returns: Query converted into sub-query.
-- AI-Tags: Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
+- AI metadata: Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
 
 ## LinqToDB.LinqExtensions.Having<T>
 
@@ -23546,7 +23546,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: Source query to filter.
   - `predicate`: Filtering expression.
 - Returns: Filtered query.
-- AI-Tags: Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
+- AI metadata: Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
 
 ## LinqToDB.LinqExtensions.IgnoreFilters<T>
 
@@ -23560,7 +23560,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: Source query.
   - `entityTypes`: Optional types with which filters should be disabled.
 - Returns: Query with disabled filters.
-- AI-Tags: Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
+- AI metadata: Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
 
 ## LinqToDB.LinqExtensions.IndexHint<T>
 
@@ -23574,7 +23574,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `table`: Table-like query source.
   - `hint`: SQL text, added as a database specific hint to the generated query.
 - Returns: Table-like query source with index hints.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.IndexHint<T1,T2>
 
@@ -23590,7 +23590,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `hint`: SQL text, added as a database specific hint to the generated query.
   - `hintParameter`: Table hint parameter.
 - Returns: Table-like query source with index hints.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.IndexHint<T1,T2>
 
@@ -23606,7 +23606,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `hint`: SQL text, added as a database specific hint to the generated query.
   - `hintParameters`: Table hint parameters.
 - Returns: Table-like query source with index hints.
-- AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.InlineParameters<T>
 
@@ -23619,7 +23619,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Parameters:
   - `source`: Source data query.
 - Returns: Query with inlined parameters.
-- AI-Tags: Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
+- AI metadata: Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
 
 ## LinqToDB.LinqExtensions.InnerJoin<T>
 
@@ -23661,7 +23661,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `target`: Target table.
   - `setter`: Insert expression. Expression supports only target table record new expression with field initializers.
 - Returns: Number of affected records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.Insert<T>
 
@@ -23674,7 +23674,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Parameters:
   - `source`: Insert query.
 - Returns: Number of affected records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.Insert<T1,T2>
 
@@ -23702,7 +23702,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `target`: Target table.
   - `setter`: Inserted record constructor expression. Expression supports only target table record new expression with field initializers.
 - Returns: Number of affected records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.InsertAsync<T>
 
@@ -23773,7 +23773,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `onDuplicateKeyUpdateSetter`: Updated record constructor expression. Expression supports only target table record new expression with field initializers. Accepts updated record as parameter.
   - `keySelector`: Key fields selector to specify what fields and values must be used as key fields for selection between insert and update operations. Expression supports only target table record new expression with field initializers for each key field. Assigned key field value will be used as key value by operation type selector.
 - Returns: Number of affected records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
 
 ## LinqToDB.LinqExtensions.InsertOrUpdate<T>
 
@@ -23788,7 +23788,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `insertSetter`: Inserted record constructor expression. Expression supports only target table record new expression with field initializers.
   - `onDuplicateKeyUpdateSetter`: Updated record constructor expression. Expression supports only target table record new expression with field initializers. Accepts updated record as parameter.
 - Returns: Number of affected records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
 
 ## LinqToDB.LinqExtensions.InsertOrUpdateAsync<T>
 
@@ -23805,7 +23805,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `keySelector`: Key fields selector to specify what fields and values must be used as key fields for selection between insert and update operations. Expression supports only target table record new expression with field initializers for each key field. Assigned key field value will be used as key value by operation type selector.
   - `token`: Optional asynchronous operation cancellation token.
 - Returns: Number of affected records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
 
 ## LinqToDB.LinqExtensions.InsertOrUpdateAsync<T>
 
@@ -23821,7 +23821,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `onDuplicateKeyUpdateSetter`: Updated record constructor expression. Expression supports only target table record new expression with field initializers. Accepts updated record as parameter.
   - `token`: Optional asynchronous operation cancellation token.
 - Returns: Number of affected records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
 
 ## LinqToDB.LinqExtensions.InsertWhenNotMatched<T>
 
@@ -23834,7 +23834,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Parameters:
   - `merge`: Merge command builder interface.
 - Returns: Returns new merge command builder with new operation.
-- AI-Tags: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.InsertWhenNotMatched<T1,T2>
 
@@ -23849,7 +23849,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `merge`: Merge command builder interface.
   - `setter`: Create record expression using source record. Expression should be a call to target record constructor with field/properties initializers to be recognized by API.
 - Returns: Returns new merge command builder with new operation.
-- AI-Tags: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.InsertWhenNotMatchedAnd<T>
 
@@ -23863,7 +23863,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `merge`: Merge command builder interface.
   - `searchCondition`: Operation execution condition over source record.
 - Returns: Returns new merge command builder with new operation.
-- AI-Tags: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.InsertWhenNotMatchedAnd<T1,T2>
 
@@ -23879,7 +23879,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `searchCondition`: Operation execution condition over source record.
   - `setter`: Create record expression using source record. Expression should be a call to target record constructor with field/properties initializers to be recognized by API.
 - Returns: Returns new merge command builder with new operation.
-- AI-Tags: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.InsertWithDecimalIdentity<T>
 
@@ -23995,7 +23995,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `target`: Target table.
   - `setter`: Insert expression. Expression supports only target table record new expression with field initializers.
 - Returns: Inserted record's identity value.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.InsertWithIdentity<T>
 
@@ -24008,7 +24008,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Parameters:
   - `source`: Insert query.
 - Returns: Inserted record's identity value.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.InsertWithIdentity<T1,T2>
 
@@ -24036,7 +24036,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `target`: Target table.
   - `setter`: Inserted record constructor expression. Expression supports only target table record new expression with field initializers.
 - Returns: Last inserted record's identity value.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.InsertWithIdentityAsync<T>
 
@@ -24307,7 +24307,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `target`: Target table.
   - `obj`: Object with data to insert.
 - Returns: Inserted record.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.InsertWithOutput<T>
 
@@ -24321,7 +24321,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `target`: Target table.
   - `setter`: Insert expression. Expression supports only target table record new expression with field initializers.
 - Returns: Inserted record.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.InsertWithOutput<T>
 
@@ -24334,7 +24334,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Parameters:
   - `source`: Insert query.
 - Returns: Inserted record.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.InsertWithOutput<T1,T2>
 
@@ -24350,7 +24350,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `setter`: Insert expression. Expression supports only target table record new expression with field initializers.
   - `outputExpression`: Output record constructor expression. Expression supports only record new expression with field initializers.
 - Returns: Inserted record.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.InsertWithOutput<T1,T2>
 
@@ -24364,7 +24364,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Parameters:
   - `source`: Insert query.
 - Returns: Inserted record.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.InsertWithOutput<T1,T2>
 
@@ -24379,7 +24379,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: Insert query.
   - `outputExpression`: Output record constructor expression. Expression supports only record new expression with field initializers.
 - Returns: Inserted record.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.InsertWithOutput<T1,T2>
 
@@ -24395,7 +24395,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `target`: Target table.
   - `setter`: Inserted record constructor expression. Expression supports only target table record new expression with field initializers.
 - Returns: Enumeration of records.
-- AI-Tags: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.InsertWithOutput<T1,T2,T3>
 
@@ -24413,7 +24413,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `setter`: Inserted record constructor expression. Expression supports only target table record new expression with field initializers.
   - `outputExpression`: Output record constructor expression. Expression supports only record new expression with field initializers.
 - Returns: Enumeration of records.
-- AI-Tags: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.InsertWithOutputAsync<T>
 
@@ -24428,7 +24428,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `obj`: Object with data to insert.
   - `token`: Optional asynchronous operation cancellation token.
 - Returns: Inserted record.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.InsertWithOutputAsync<T>
 
@@ -24443,7 +24443,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `setter`: Insert expression. Expression supports only target table record new expression with field initializers.
   - `token`: Optional asynchronous operation cancellation token.
 - Returns: Inserted record.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.InsertWithOutputAsync<T>
 
@@ -24457,7 +24457,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: Insert query.
   - `token`: Optional asynchronous operation cancellation token.
 - Returns: Inserted record.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.InsertWithOutputAsync<T1,T2>
 
@@ -24474,7 +24474,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `outputExpression`: Output record constructor expression. Expression supports only record new expression with field initializers.
   - `token`: Optional asynchronous operation cancellation token.
 - Returns: Inserted record.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.InsertWithOutputAsync<T1,T2>
 
@@ -24489,7 +24489,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: Insert query.
   - `token`: Optional asynchronous operation cancellation token.
 - Returns: Inserted record.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.InsertWithOutputAsync<T1,T2>
 
@@ -24505,7 +24505,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `outputExpression`: Output record constructor expression. Expression supports only record new expression with field initializers.
   - `token`: Optional asynchronous operation cancellation token.
 - Returns: Inserted record.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.InsertWithOutputAsync<T1,T2>
 
@@ -24522,7 +24522,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `setter`: Inserted record constructor expression. Expression supports only target table record new expression with field initializers.
   - `token`: Optional asynchronous operation cancellation token.
 - Returns: Array of records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.InsertWithOutputAsync<T1,T2>
 
@@ -24538,7 +24538,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `target`: Target table.
   - `setter`: Inserted record constructor expression. Expression supports only target table record new expression with field initializers.
 - Returns: Async sequence of records returned by output.
-- AI-Tags: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.InsertWithOutputAsync<T1,T2,T3>
 
@@ -24557,7 +24557,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `outputExpression`: Output record constructor expression. Expression supports only record new expression with field initializers.
   - `token`: Optional asynchronous operation cancellation token.
 - Returns: Array of records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.InsertWithOutputAsync<T1,T2,T3>
 
@@ -24575,7 +24575,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `setter`: Inserted record constructor expression. Expression supports only target table record new expression with field initializers.
   - `outputExpression`: Output record constructor expression. Expression supports only record new expression with field initializers.
 - Returns: Async sequence of records returned by output.
-- AI-Tags: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.InsertWithOutputInto<T>
 
@@ -24590,7 +24590,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `setter`: Insert expression. Expression supports only target table record new expression with field initializers.
   - `outputTable`: Output table.
 - Returns: Number of affected records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.InsertWithOutputInto<T1,T2>
 
@@ -24607,7 +24607,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `outputTable`: Output table.
   - `outputExpression`: Output record constructor expression. Expression supports only record new expression with field initializers.
 - Returns: Number of affected records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.InsertWithOutputInto<T1,T2>
 
@@ -24622,7 +24622,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: Insert query.
   - `outputTable`: Output table.
 - Returns: Number of affected records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.InsertWithOutputInto<T1,T2>
 
@@ -24639,7 +24639,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `setter`: Inserted record constructor expression. Expression supports only target table record new expression with field initializers.
   - `outputTable`: Output table.
 - Returns: Number of affected records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.InsertWithOutputInto<T1,T2,T3>
 
@@ -24658,7 +24658,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `outputTable`: Output table.
   - `outputExpression`: Output record constructor expression. Expression supports only record new expression with field initializers.
 - Returns: Number of affected records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.InsertWithOutputIntoAsync<T>
 
@@ -24674,7 +24674,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `outputTable`: Output table.
   - `token`: Optional asynchronous operation cancellation token.
 - Returns: Number of affected records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.InsertWithOutputIntoAsync<T1,T2>
 
@@ -24692,7 +24692,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `outputExpression`: Output record constructor expression. Expression supports only record new expression with field initializers.
   - `token`: Optional asynchronous operation cancellation token.
 - Returns: Number of affected records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.InsertWithOutputIntoAsync<T1,T2>
 
@@ -24708,7 +24708,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `outputTable`: Output table.
   - `token`: Optional asynchronous operation cancellation token.
 - Returns: Number of affected records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.InsertWithOutputIntoAsync<T1,T2>
 
@@ -24726,7 +24726,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `outputTable`: Output table.
   - `token`: Optional asynchronous operation cancellation token.
 - Returns: Number of affected records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.InsertWithOutputIntoAsync<T1,T2,T3>
 
@@ -24746,7 +24746,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `outputExpression`: Output record constructor expression. Expression supports only record new expression with field initializers.
   - `token`: Optional asynchronous operation cancellation token.
 - Returns: Number of affected records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.IntersectAll<T>
 
@@ -24760,7 +24760,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source1`: A sequence whose elements that also appear in are returned.
   - `source2`: A sequence whose elements that also appear in the first sequence are returned.
 - Returns: A sequence that contains the set intersection of the two sequences.
-- AI-Tags: Group=Helpers; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
+- AI metadata: Group=Helpers; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
 
 ## LinqToDB.LinqExtensions.Into<T>
 
@@ -24774,7 +24774,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `dataContext`: Database connection context.
   - `target`: Target table.
 - Returns: Insertable source query.
-- AI-Tags: Group=DML; Execution=Deferred; Composability=Composable; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Deferred; Composability=Composable; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.Into<T1,T2>
 
@@ -24802,7 +24802,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `joinType`: Type of join.
   - `predicate`: Join predicate.
 - Returns: Right operand.
-- AI-Tags: Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
+- AI metadata: Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
 
 ## LinqToDB.LinqExtensions.Join<T1,T2,T3>
 
@@ -24821,7 +24821,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `predicate`: Join predicate.
   - `resultSelector`: A function to create a result element from two matching elements.
 - Returns: Right operand.
-- AI-Tags: Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
+- AI metadata: Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
 
 ## LinqToDB.LinqExtensions.JoinHint<T>
 
@@ -24835,7 +24835,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: Query source.
   - `hint`: SQL text, added as a database specific hint to the generated query.
 - Returns: Query source with join hints.
-- AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.LeftJoin<T>
 
@@ -24893,7 +24893,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: The source query.
   - `selector`: A lambda expression representing navigation property to be included (t => t.Property1).
 - Returns: Returns new query with related data included.
-- AI-Tags: Group=NavigationLoading; Execution=Deferred; Composability=Composable; Affects=JoinGraph; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=NavigationLoading; Execution=Deferred; Composability=Composable; Affects=JoinGraph; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.LoadWith<T1,T2>
 
@@ -24922,7 +24922,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `table`: Table-like query source.
   - `selector`: Association selection expression.
 - Returns: Table-like query source.
-- AI-Tags: Group=NavigationLoading; Execution=Deferred; Composability=Composable; Affects=JoinGraph; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=NavigationLoading; Execution=Deferred; Composability=Composable; Affects=JoinGraph; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.Merge<T>
 
@@ -24936,7 +24936,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `target`: Target table.
   - `hint`: Database-specific merge hint.
 - Returns: Returns merge command builder, that contains only target.
-- AI-Tags: Group=Merge; HintType=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Merge; HintType=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.Merge<T>
 
@@ -24949,7 +24949,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Parameters:
   - `target`: Target table.
 - Returns: Returns merge command builder, that contains only target.
-- AI-Tags: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.Merge<T>
 
@@ -24962,7 +24962,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Parameters:
   - `target`: Target query.
 - Returns: Returns merge command builder, that contains only target.
-- AI-Tags: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.Merge<T1,T2>
 
@@ -24976,7 +24976,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Parameters:
   - `merge`: Merge command definition.
 - Returns: Returns number of target table records, affected by merge command.
-- AI-Tags: Group=Merge; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Merge; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.MergeAsync<T1,T2>
 
@@ -24991,7 +24991,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `merge`: Merge command definition.
   - `token`: Asynchronous operation cancellation token.
 - Returns: Returns number of target table records, affected by merge command.
-- AI-Tags: Group=Merge; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Merge; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.MergeInto<T1,T2>
 
@@ -25007,7 +25007,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `target`: Target table.
   - `hint`: Database-specific merge hint.
 - Returns: Returns merge command builder with source and target set.
-- AI-Tags: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.MergeInto<T1,T2>
 
@@ -25022,7 +25022,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: Source data query.
   - `target`: Target table.
 - Returns: Returns merge command builder with source and target set.
-- AI-Tags: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.MergeInto<T1,T2>
 
@@ -25037,7 +25037,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: Source data query.
   - `target`: Target query. If the query is not a table or a CTE, it will be converted into a CTE as the merge target.
 - Returns: Returns merge command builder with source and target set.
-- AI-Tags: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.MergeWithOutput<T1,T2,T3>
 
@@ -25053,7 +25053,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `merge`: Merge command definition.
   - `outputExpression`: Output record constructor expression. Parameters passed are as follows: string merge action, old, new, source. Expression supports only record new expression with field initializers.
 - Returns: Sequence of records returned by output.
-- AI-Tags: Group=Merge; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Merge; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.MergeWithOutput<T1,T2,T3>
 
@@ -25069,7 +25069,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `merge`: Merge command definition.
   - `outputExpression`: Output record constructor expression. Parameters passed are as follows: string merge action, old, new. Expression supports only record new expression with field initializers.
 - Returns: Sequence of records returned by output.
-- AI-Tags: Group=Merge; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Merge; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.MergeWithOutputAsync<T1,T2,T3>
 
@@ -25085,7 +25085,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `merge`: Merge command definition.
   - `outputExpression`: Output record constructor expression. Parameters passed are as follows: string merge action, old, new, source. Expression supports only record new expression with field initializers.
 - Returns: Async sequence of records returned by output.
-- AI-Tags: Group=Merge; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Merge; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.MergeWithOutputAsync<T1,T2,T3>
 
@@ -25101,7 +25101,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `merge`: Merge command definition.
   - `outputExpression`: Output record constructor expression. Parameters passed are as follows: string merge action, old, new. Expression supports only record new expression with field initializers.
 - Returns: Async sequence of records returned by output.
-- AI-Tags: Group=Merge; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Merge; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.MergeWithOutputInto<T1,T2,T3>
 
@@ -25118,7 +25118,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `outputTable`: Table which should handle output result.
   - `outputExpression`: Output record constructor expression. Parameters passed are as follows: string merge action, old, new, source. Expression supports only record new expression with field initializers.
 - Returns: Returns number of target table records, affected by merge command.
-- AI-Tags: Group=Merge; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Merge; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.MergeWithOutputInto<T1,T2,T3>
 
@@ -25135,7 +25135,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `outputTable`: Table which should handle output result.
   - `outputExpression`: Output record constructor expression. Parameters passed are as follows: string merge action, old, new. Expression supports only record new expression with field initializers.
 - Returns: Returns number of target table records, affected by merge command.
-- AI-Tags: Group=Merge; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Merge; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.MergeWithOutputIntoAsync<T1,T2,T3>
 
@@ -25153,7 +25153,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `outputExpression`: Output record constructor expression. Parameters passed are as follows: string merge action, old, new, source. Expression supports only record new expression with field initializers.
   - `token`: Optional asynchronous operation cancellation token.
 - Returns: Returns number of target table records, affected by merge command.
-- AI-Tags: Group=Merge; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Merge; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.MergeWithOutputIntoAsync<T1,T2,T3>
 
@@ -25171,7 +25171,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `outputExpression`: Output record constructor expression. Parameters passed are as follows: string merge action, old, new. Expression supports only record new expression with field initializers.
   - `token`: Optional asynchronous operation cancellation token.
 - Returns: Returns number of target table records, affected by merge command.
-- AI-Tags: Group=Merge; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Merge; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.On<T1,T2>
 
@@ -25186,7 +25186,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `merge`: Merge command builder.
   - `matchCondition`: Rule to match/join target and source records.
 - Returns: Returns merge command builder with source, target and match (ON) set.
-- AI-Tags: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.On<T1,T2,T3>
 
@@ -25203,7 +25203,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `targetKey`: Target record match key definition.
   - `sourceKey`: Source record match key definition.
 - Returns: Returns merge command builder with source, target and match (ON) set.
-- AI-Tags: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.OnTargetKey<T>
 
@@ -25216,7 +25216,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Parameters:
   - `merge`: Merge command builder.
 - Returns: Returns merge command builder with source, target and match (ON) set.
-- AI-Tags: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.OrderBy<T1,T2>
 
@@ -25258,7 +25258,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: Query source.
   - `hint`: SQL text, added as a database specific hint to the generated query.
 - Returns: Query source with hints.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.QueryHint<T1,T2>
 
@@ -25274,7 +25274,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `hint`: SQL text, added as a database specific hint to the generated query.
   - `hintParameter`: Hint parameter.
 - Returns: Query source with hints.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.QueryHint<T1,T2>
 
@@ -25290,7 +25290,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `hint`: SQL text, added as a database specific hint to the generated query.
   - `hintParameters`: Table hint parameters.
 - Returns: Query source with hints.
-- AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.QueryName<T>
 
@@ -25304,7 +25304,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: Source data query.
   - `queryName`: Query name.
 - Returns: Query converted into sub-query.
-- AI-Tags: Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
+- AI metadata: Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
 
 ## LinqToDB.LinqExtensions.QueryName<T1,T2>
 
@@ -25330,7 +25330,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Parameters:
   - `source`: Source query.
 - Returns: Unsorted query.
-- AI-Tags: Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
+- AI metadata: Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
 
 ## LinqToDB.LinqExtensions.RightJoin<T>
 
@@ -25372,7 +25372,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `table`: Table-like query source.
   - `name`: Owner or schema name.
 - Returns: Table-like query source with the overridden owner/schema name.
-- AI-Tags: Group=Configuration; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Configuration; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.Select<T>
 
@@ -25386,7 +25386,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `dataContext`: Database connection context.
   - `selector`: Value selection expression.
 - Returns: Requested value.
-- AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=QueryResult;
+- AI metadata: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=QueryResult;
 
 ## LinqToDB.LinqExtensions.SelectAsync<T>
 
@@ -25401,7 +25401,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `selector`: Value selection expression.
   - `token`: Optional asynchronous operation cancellation token.
 - Returns: Requested value.
-- AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=QueryResult;
+- AI metadata: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=QueryResult;
 
 ## LinqToDB.LinqExtensions.ServerName<T>
 
@@ -25415,7 +25415,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `table`: Table-like query source.
   - `name`: Linked server name.
 - Returns: Table-like query source with the overridden linked server name.
-- AI-Tags: Group=Configuration; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Configuration; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.Set<T>
 
@@ -25457,7 +25457,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `extract`: Column selector.
   - `value`: Value assigned to the selected column.
 - Returns: An query.
-- AI-Tags: Group=DML; Execution=Deferred; Composability=Composable; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Deferred; Composability=Composable; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.Set<T1,T2>
 
@@ -25473,7 +25473,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `extract`: Column selector.
   - `update`: Value expression that produces the new column value. The parameter is the updated record.
 - Returns: An query.
-- AI-Tags: Group=DML; Execution=Deferred; Composability=Composable; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Deferred; Composability=Composable; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.Set<T1,T2>
 
@@ -25489,7 +25489,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `extract`: Column selector.
   - `update`: Value expression that produces the new column value without referencing the updated record.
 - Returns: An query.
-- AI-Tags: Group=DML; Execution=Deferred; Composability=Composable; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Deferred; Composability=Composable; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.Set<T1,T2>
 
@@ -25505,7 +25505,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `extract`: Column selector.
   - `value`: Value assigned to the selected column.
 - Returns: An query.
-- AI-Tags: Group=DML; Execution=Deferred; Composability=Composable; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Deferred; Composability=Composable; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.Set<T1,T2>
 
@@ -25521,7 +25521,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `extract`: Column selector.
   - `update`: Value expression that produces the new column value. The parameter is the updated record.
 - Returns: An query.
-- AI-Tags: Group=DML; Execution=Deferred; Composability=Composable; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Deferred; Composability=Composable; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.Set<T1,T2>
 
@@ -25537,7 +25537,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `extract`: Column selector.
   - `update`: Value expression that produces the new column value without referencing the updated record.
 - Returns: An query.
-- AI-Tags: Group=DML; Execution=Deferred; Composability=Composable; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Deferred; Composability=Composable; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.Skip<T>
 
@@ -25551,7 +25551,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: Source query.
   - `count`: Expression that defines number of records to skip.
 - Returns: Query without skipped records.
-- AI-Tags: Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
+- AI metadata: Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
 
 ## LinqToDB.LinqExtensions.SubQueryHint<T>
 
@@ -25565,7 +25565,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: Query source.
   - `hint`: SQL text, added as a database specific hint to the generated query.
 - Returns: Query source with hints.
-- AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.SubQueryHint<T1,T2>
 
@@ -25581,7 +25581,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `hint`: SQL text, added as a database specific hint to the generated query.
   - `hintParameter`: Hint parameter.
 - Returns: Query source with hints.
-- AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.SubQueryHint<T1,T2>
 
@@ -25597,7 +25597,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `hint`: SQL text, added as a database specific hint to the generated query.
   - `hintParameters`: Table hint parameters.
 - Returns: Query source with hints.
-- AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.TableHint<T>
 
@@ -25611,7 +25611,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `table`: Table-like query source.
   - `hint`: SQL text, added as a database specific hint to the generated query.
 - Returns: Table-like query source with table hints.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.TableHint<T1,T2>
 
@@ -25627,7 +25627,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `hint`: SQL text, added as a database specific hint to the generated query.
   - `hintParameter`: Table hint parameter.
 - Returns: Table-like query source with table hints.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.TableHint<T1,T2>
 
@@ -25643,7 +25643,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `hint`: SQL text, added as a database specific hint to the generated query.
   - `hintParameters`: Table hint parameters.
 - Returns: Table-like query source with table hints.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.TableID<T>
 
@@ -25657,7 +25657,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `table`: Table-like query source.
   - `id`: Logical table source identifier used later by , , or .
 - Returns: Table-like query source with the assigned table identifier.
-- AI-Tags: Group=Configuration; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Configuration; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.TableName<T>
 
@@ -25671,7 +25671,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `table`: Table-like query source.
   - `name`: Table or view name.
 - Returns: Table-like query source with the overridden table name.
-- AI-Tags: Group=Configuration; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Configuration; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.TablesInScopeHint<T>
 
@@ -25686,7 +25686,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `hint`: SQL text, added as a database specific hint to the generated query.
   - `hintParameters`: Table hint parameters.
 - Returns: Query source with table hints.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.TablesInScopeHint<T>
 
@@ -25700,7 +25700,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: Query source.
   - `hint`: SQL text, added as a database specific hint to the generated query.
 - Returns: Query source with table hints.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.TablesInScopeHint<T1,T2>
 
@@ -25716,7 +25716,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `hint`: SQL text, added as a database specific hint to the generated query.
   - `hintParameter`: Table hint parameter.
 - Returns: Query source with table hints.
-- AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.TagQuery<T>
 
@@ -25730,7 +25730,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `table`: Table-like query source.
   - `tagValue`: Tag text to be added as comment before generated query.
 - Returns: Table-like query source with tag.
-- AI-Tags: Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
+- AI metadata: Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
 
 ## LinqToDB.LinqExtensions.TagQuery<T>
 
@@ -25744,7 +25744,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: Source data query.
   - `tagValue`: Tag text to be added as comment before generated query.
 - Returns: Query with tag.
-- AI-Tags: Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
+- AI metadata: Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
 
 ## LinqToDB.LinqExtensions.Take<T>
 
@@ -25759,7 +25759,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `count`: SQL TAKE parameter value.
   - `hints`: hints for SQL TAKE clause.
 - Returns: Query with limit applied.
-- AI-Tags: Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
+- AI metadata: Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
 
 ## LinqToDB.LinqExtensions.Take<T>
 
@@ -25774,7 +25774,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `count`: Expression that defines SQL TAKE parameter value.
   - `hints`: hints for SQL TAKE clause.
 - Returns: Query with limit applied.
-- AI-Tags: Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
+- AI metadata: Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
 
 ## LinqToDB.LinqExtensions.Take<T>
 
@@ -25788,7 +25788,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: Source query.
   - `count`: Expression that defines number of records to select.
 - Returns: Query with limit applied.
-- AI-Tags: Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
+- AI metadata: Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
 
 ## LinqToDB.LinqExtensions.ThenBy<T1,T2>
 
@@ -25925,7 +25925,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: Source query.
   - `keySelector`: Sort expression selector.
 - Returns: Sorted query.
-- AI-Tags: Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
+- AI metadata: Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
 
 ## LinqToDB.LinqExtensions.ThenOrByDescending<T1,T2>
 
@@ -25940,7 +25940,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: Source query.
   - `keySelector`: Sort expression selector.
 - Returns: Sorted query.
-- AI-Tags: Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
+- AI metadata: Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
 
 ## LinqToDB.LinqExtensions.ToSqlQuery<T>
 
@@ -25948,7 +25948,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Method
 - Summary: Convert Linq To DB query to SQL command with parameters.
 - Remarks: Execution is immediate and the method is terminal.
-- AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=GeneratedSql;
+- AI metadata: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=GeneratedSql;
 
 ## LinqToDB.LinqExtensions.ToSqlQuery<T>
 
@@ -25956,7 +25956,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Method
 - Summary: Convert Linq To DB query to SQL command with parameters.
 - Remarks: Execution is immediate and the method is terminal.
-- AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=GeneratedSql;
+- AI metadata: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=GeneratedSql;
 
 ## LinqToDB.LinqExtensions.ToSqlQuery<T>
 
@@ -25964,7 +25964,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Method
 - Summary: Convert Linq To DB query to SQL command with parameters.
 - Remarks: Eager load queries currently return only SQL for main query. Execution is immediate and the method is terminal.
-- AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=GeneratedSql;
+- AI metadata: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=GeneratedSql;
 
 ## LinqToDB.LinqExtensions.ToSqlQuery<T>
 
@@ -25972,7 +25972,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Method
 - Summary: Convert Linq To DB query to SQL command with parameters.
 - Remarks: Eager load queries currently return only SQL for main query. Execution is immediate and the method is terminal.
-- AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=GeneratedSql;
+- AI metadata: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=GeneratedSql;
 
 ## LinqToDB.LinqExtensions.ToSqlQuery<T>
 
@@ -25980,7 +25980,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Method
 - Summary: Convert Linq To DB query to SQL command with parameters.
 - Remarks: Eager load queries currently return only SQL for main query. Execution is immediate and the method is terminal.
-- AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=GeneratedSql;
+- AI metadata: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=GeneratedSql;
 
 ## LinqToDB.LinqExtensions.ToSqlQuery<T1,T2>
 
@@ -25988,7 +25988,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Method
 - Summary: Convert Linq To DB query to SQL command with parameters.
 - Remarks: Eager load queries currently return only SQL for main query. Execution is immediate and the method is terminal.
-- AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=GeneratedSql;
+- AI metadata: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=GeneratedSql;
 
 ## LinqToDB.LinqExtensions.ToSqlQuery<T1,T2>
 
@@ -25996,7 +25996,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Method
 - Summary: Convert Linq To DB query to SQL command with parameters.
 - Remarks: Execution is immediate and the method is terminal.
-- AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=GeneratedSql;
+- AI metadata: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=GeneratedSql;
 
 ## LinqToDB.LinqExtensions.Truncate<T>
 
@@ -26010,7 +26010,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `target`: Truncated table.
   - `resetIdentity`: Performs reset identity column.
 - Returns: Number of affected records. Usually -1 as it is not data modification operation.
-- AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=DdlStatement; Pipeline=SqlAST,SqlText;
+- AI metadata: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=DdlStatement; Pipeline=SqlAST,SqlText;
 
 ## LinqToDB.LinqExtensions.TruncateAsync<T>
 
@@ -26025,7 +26025,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `resetIdentity`: Performs reset identity column.
   - `token`: Optional asynchronous operation cancellation token.
 - Returns: Number of affected records. Usually -1 as it is not data modification operation.
-- AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=DdlStatement; Pipeline=SqlAST,SqlText;
+- AI metadata: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=DdlStatement; Pipeline=SqlAST,SqlText;
 
 ## LinqToDB.LinqExtensions.UnionAll<T>
 
@@ -26039,7 +26039,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source1`: The first sequence to concatenate.
   - `source2`: The sequence to concatenate to the first sequence.
 - Returns: An that contains the concatenated elements of the two input sequences.
-- AI-Tags: Group=Helpers; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
+- AI metadata: Group=Helpers; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
 
 ## LinqToDB.LinqExtensions.Update<T>
 
@@ -26064,7 +26064,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: Source data query.
   - `setter`: Update expression. Uses updated record as parameter. Expression supports only target table record new expression with field initializers.
 - Returns: Number of updated records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.Update<T>
 
@@ -26172,7 +26172,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Parameters:
   - `merge`: Merge command builder interface.
 - Returns: Returns new merge command builder with new operation.
-- AI-Tags: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.UpdateWhenMatched<T1,T2>
 
@@ -26187,7 +26187,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `merge`: Merge command builder interface.
   - `setter`: Update record expression using target and source records. Expression should be a call to target record constructor with field/properties initializers to be recognized by API.
 - Returns: Returns new merge command builder with new operation.
-- AI-Tags: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.UpdateWhenMatchedAnd<T>
 
@@ -26201,7 +26201,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `merge`: Merge command builder interface.
   - `searchCondition`: Operation execution condition over target and source records.
 - Returns: Returns new merge command builder with new operation.
-- AI-Tags: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.UpdateWhenMatchedAnd<T1,T2>
 
@@ -26217,7 +26217,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `searchCondition`: Operation execution condition over target and source records.
   - `setter`: Update record expression using target and source records. Expression should be a call to target record constructor with field/properties initializers to be recognized by API.
 - Returns: Returns new merge command builder with new operation.
-- AI-Tags: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.UpdateWhenMatchedAndThenDelete<T>
 
@@ -26232,7 +26232,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `searchCondition`: Update execution condition over target and source records.
   - `deleteCondition`: Delete execution condition over updated target and source records.
 - Returns: Returns new merge command builder with new operation.
-- AI-Tags: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.UpdateWhenMatchedAndThenDelete<T1,T2>
 
@@ -26249,7 +26249,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `setter`: Update record expression using target and source records. Expression should be a call to target record constructor with field/properties initializers to be recognized by API.
   - `deleteCondition`: Delete execution condition over updated target and source records.
 - Returns: Returns new merge command builder with new operation.
-- AI-Tags: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.UpdateWhenMatchedThenDelete<T>
 
@@ -26263,7 +26263,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `merge`: Merge command builder interface.
   - `deleteCondition`: Delete execution condition over updated target and source records.
 - Returns: Returns new merge command builder with new operation.
-- AI-Tags: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.UpdateWhenMatchedThenDelete<T1,T2>
 
@@ -26279,7 +26279,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `setter`: Update record expression using target and source records. Expression should be a call to target record constructor with field/properties initializers to be recognized by API.
   - `deleteCondition`: Delete execution condition over updated target and source records.
 - Returns: Returns new merge command builder with new operation.
-- AI-Tags: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.UpdateWhenNotMatchedBySource<T1,T2>
 
@@ -26294,7 +26294,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `merge`: Merge command builder interface.
   - `setter`: Update record expression using target record. Expression should be a call to target record constructor with field/properties initializers to be recognized by API.
 - Returns: Returns new merge command builder with new operation.
-- AI-Tags: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.UpdateWhenNotMatchedBySourceAnd<T1,T2>
 
@@ -26310,7 +26310,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `searchCondition`: Operation execution condition over target record.
   - `setter`: Update record expression using target record. Expression should be a call to target record constructor with field/properties initializers to be recognized by API.
 - Returns: Returns new merge command builder with new operation.
-- AI-Tags: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.UpdateWithOutput<T>
 
@@ -26323,7 +26323,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Parameters:
   - `source`: A configured updatable query.
 - Returns: A query that yields rows for affected records.
-- AI-Tags: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.UpdateWithOutput<T>
 
@@ -26337,7 +26337,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: A query that identifies records to update.
   - `setter`: Update setter expression. The parameter is the updated record. The expression must be a record constructor (or object initializer) with member initializers.
 - Returns: A query that yields rows for affected records.
-- AI-Tags: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.UpdateWithOutput<T1,T2>
 
@@ -26352,7 +26352,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: A configured updatable query.
   - `outputExpression`: Output projection expression. Parameters: ( deleted, inserted). The expression must be a record constructor (or object initializer) with member initializers.
 - Returns: A query that yields projected output rows.
-- AI-Tags: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.UpdateWithOutput<T1,T2>
 
@@ -26368,7 +26368,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `target`: Target table.
   - `setter`: Update setter expression. The parameter is a record. The expression must be a record constructor (or object initializer) with member initializers.
 - Returns: A query that yields rows for affected records.
-- AI-Tags: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.UpdateWithOutput<T1,T2>
 
@@ -26384,7 +26384,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `setter`: Update setter expression. The parameter is the updated record. The expression must be a record constructor (or object initializer) with member initializers.
   - `outputExpression`: Output projection expression. Parameters: ( deleted, inserted). The expression must be a record constructor (or object initializer) with member initializers.
 - Returns: A query that yields projected output rows.
-- AI-Tags: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.UpdateWithOutput<T1,T2>
 
@@ -26400,7 +26400,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `target`: Target selection expression. Provider translates it to a target table reference (or a table expression) for the UPDATE statement.
   - `setter`: Update setter expression. The parameter is a record. The expression must be a record constructor (or object initializer) with member initializers.
 - Returns: A query that yields rows for affected records.
-- AI-Tags: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.UpdateWithOutput<T1,T2,T3>
 
@@ -26418,7 +26418,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `setter`: Update setter expression. The parameter is a record. The expression must be a record constructor (or object initializer) with member initializers.
   - `outputExpression`: Output projection expression. Parameters: ( source, deleted, inserted). The expression must be a record constructor (or object initializer) with member initializers.
 - Returns: A query that yields projected output rows.
-- AI-Tags: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.UpdateWithOutput<T1,T2,T3>
 
@@ -26436,7 +26436,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `setter`: Update setter expression. The parameter is a record. The expression must be a record constructor (or object initializer) with member initializers.
   - `outputExpression`: Output projection expression. Parameters: ( source, deleted, inserted). The expression must be a record constructor (or object initializer) with member initializers.
 - Returns: A query that yields projected output rows.
-- AI-Tags: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.UpdateWithOutputAsync<T>
 
@@ -26456,7 +26456,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Parameters:
   - `source`: A configured updatable query.
 - Returns: An async sequence that yields rows for affected records.
-- AI-Tags: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.UpdateWithOutputAsync<T>
 
@@ -26477,7 +26477,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: A query that identifies records to update.
   - `setter`: Update setter expression. The parameter is the updated record. The expression must be a record constructor (or object initializer) with member initializers.
 - Returns: An async sequence that yields rows for affected records.
-- AI-Tags: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.UpdateWithOutputAsync<T1,T2>
 
@@ -26499,7 +26499,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: A configured updatable query.
   - `outputExpression`: Output projection expression. Parameters: ( deleted, inserted). The expression must be a record constructor (or object initializer) with member initializers.
 - Returns: An async sequence that yields projected output rows.
-- AI-Tags: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.UpdateWithOutputAsync<T1,T2>
 
@@ -26522,7 +26522,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `target`: Target table.
   - `setter`: Update setter expression. The parameter is a record. The expression must be a record constructor (or object initializer) with member initializers.
 - Returns: An async sequence that yields rows for affected records.
-- AI-Tags: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.UpdateWithOutputAsync<T1,T2>
 
@@ -26545,7 +26545,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `setter`: Update setter expression. The parameter is the updated record. The expression must be a record constructor (or object initializer) with member initializers.
   - `outputExpression`: Output projection expression. Parameters: ( deleted, inserted). The expression must be a record constructor (or object initializer) with member initializers.
 - Returns: Async sequence of projected output rows.
-- AI-Tags: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.UpdateWithOutputAsync<T1,T2>
 
@@ -26568,7 +26568,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `target`: Target selection expression. Provider translates it to a target table reference (or a table expression) for the UPDATE statement.
   - `setter`: Update setter expression. The parameter is a record. The expression must be a record constructor (or object initializer) with member initializers.
 - Returns: An async sequence that yields rows for affected records.
-- AI-Tags: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.UpdateWithOutputAsync<T1,T2,T3>
 
@@ -26593,7 +26593,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `setter`: Update setter expression. The parameter is a record. The expression must be a record constructor (or object initializer) with member initializers.
   - `outputExpression`: Output projection expression. Parameters: ( source, deleted, inserted). The expression must be a record constructor (or object initializer) with member initializers.
 - Returns: Async sequence of projected output rows.
-- AI-Tags: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.UpdateWithOutputAsync<T1,T2,T3>
 
@@ -26618,7 +26618,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `setter`: Update setter expression. The parameter is a record. The expression must be a record constructor (or object initializer) with member initializers.
   - `outputExpression`: Output projection expression. Parameters: ( source, deleted, inserted). The expression must be a record constructor (or object initializer) with member initializers.
 - Returns: Async sequence of projected output rows.
-- AI-Tags: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.UpdateWithOutputInto<T>
 
@@ -26632,7 +26632,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: A configured updatable query.
   - `outputTable`: Table that receives output rows.
 - Returns: The number of affected records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.UpdateWithOutputInto<T>
 
@@ -26647,7 +26647,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `setter`: Update setter expression. The parameter is the updated record. The expression must be a record constructor (or object initializer) with member initializers.
   - `outputTable`: Table that receives output rows.
 - Returns: The number of affected records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.UpdateWithOutputInto<T1,T2>
 
@@ -26663,7 +26663,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `outputExpression`: Output projection expression. Parameters: ( deleted, inserted). The expression must be a record constructor (or object initializer) with member initializers.
   - `outputTable`: Table that receives output rows.
 - Returns: The number of affected records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.UpdateWithOutputInto<T1,T2>
 
@@ -26680,7 +26680,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `setter`: Update setter expression. The parameter is a record. The expression must be a record constructor (or object initializer) with member initializers.
   - `outputTable`: Table that receives output rows.
 - Returns: The number of affected target records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.UpdateWithOutputInto<T1,T2>
 
@@ -26697,7 +26697,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `outputExpression`: Output projection expression. Parameters: ( deleted, inserted). The expression must be a record constructor (or object initializer) with member initializers.
   - `outputTable`: Table that receives output rows.
 - Returns: The number of affected records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.UpdateWithOutputInto<T1,T2>
 
@@ -26714,7 +26714,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `setter`: Update setter expression. The parameter is a record. The expression must be a record constructor (or object initializer) with member initializers.
   - `outputTable`: Table that receives output rows.
 - Returns: The number of affected target records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.UpdateWithOutputInto<T1,T2,T3>
 
@@ -26733,7 +26733,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `outputTable`: Table that receives output rows.
   - `outputExpression`: Output projection expression. Parameters: ( source, deleted, inserted). The expression must be a record constructor (or object initializer) with member initializers.
 - Returns: The number of affected target records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.UpdateWithOutputInto<T1,T2,T3>
 
@@ -26752,7 +26752,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `outputTable`: Table that receives output rows.
   - `outputExpression`: Output projection expression. Parameters: ( source, deleted, inserted). The expression must be a record constructor (or object initializer) with member initializers.
 - Returns: The number of affected target records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.UpdateWithOutputIntoAsync<T>
 
@@ -26767,7 +26767,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `outputTable`: Table that receives output rows.
   - `token`: Optional asynchronous operation cancellation token.
 - Returns: A task that completes with the number of affected records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.UpdateWithOutputIntoAsync<T>
 
@@ -26783,7 +26783,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `outputTable`: Table that receives output rows.
   - `token`: Optional asynchronous operation cancellation token.
 - Returns: A task that completes with the number of affected records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.UpdateWithOutputIntoAsync<T1,T2>
 
@@ -26800,7 +26800,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `outputTable`: Table that receives output rows.
   - `token`: Optional asynchronous operation cancellation token.
 - Returns: A task that completes with the number of affected records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.UpdateWithOutputIntoAsync<T1,T2>
 
@@ -26818,7 +26818,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `outputTable`: Table that receives output rows.
   - `token`: Optional asynchronous operation cancellation token.
 - Returns: A task that completes with the number of affected target records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.UpdateWithOutputIntoAsync<T1,T2>
 
@@ -26836,7 +26836,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `outputTable`: Table that receives output rows.
   - `token`: Optional asynchronous operation cancellation token.
 - Returns: A task that completes with the number of affected records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.UpdateWithOutputIntoAsync<T1,T2>
 
@@ -26854,7 +26854,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `outputTable`: Table that receives output rows.
   - `token`: Optional asynchronous operation cancellation token.
 - Returns: A task that completes with the number of affected target records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.UpdateWithOutputIntoAsync<T1,T2,T3>
 
@@ -26874,7 +26874,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `outputExpression`: Output projection expression. Parameters: ( source, deleted, inserted). The expression must be a record constructor (or object initializer) with member initializers.
   - `token`: Optional asynchronous operation cancellation token.
 - Returns: A task that completes with the number of affected target records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.UpdateWithOutputIntoAsync<T1,T2,T3>
 
@@ -26894,7 +26894,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `outputExpression`: Output projection expression. Parameters: ( source, deleted, inserted). The expression must be a record constructor (or object initializer) with member initializers.
   - `token`: Optional asynchronous operation cancellation token.
 - Returns: A task that completes with the number of affected target records.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.Using<T1,T2>
 
@@ -26909,7 +26909,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `merge`: Merge command builder.
   - `source`: Source data collection.
 - Returns: Returns merge command builder with source and target set.
-- AI-Tags: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.Using<T1,T2>
 
@@ -26924,7 +26924,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `merge`: Merge command builder.
   - `source`: Source data query.
 - Returns: Returns merge command builder with source and target set.
-- AI-Tags: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.UsingTarget<T>
 
@@ -26937,7 +26937,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Parameters:
   - `merge`: Merge command builder.
 - Returns: Returns merge command builder with source and target set.
-- AI-Tags: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.Value<T1,T2>
 
@@ -26953,7 +26953,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `field`: Setter field selector expression.
   - `value`: Setter field value.
 - Returns: Insert query.
-- AI-Tags: Group=DML; Execution=Deferred; Composability=Composable; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Deferred; Composability=Composable; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.Value<T1,T2>
 
@@ -26969,7 +26969,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `field`: Setter field selector expression.
   - `value`: Setter field value expression.
 - Returns: Insert query.
-- AI-Tags: Group=DML; Execution=Deferred; Composability=Composable; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Deferred; Composability=Composable; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.Value<T1,T2>
 
@@ -26985,7 +26985,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `field`: Setter field selector expression.
   - `value`: Setter field value.
 - Returns: Insert query.
-- AI-Tags: Group=DML; Execution=Deferred; Composability=Composable; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Deferred; Composability=Composable; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.Value<T1,T2>
 
@@ -27001,7 +27001,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `field`: Setter field selector expression.
   - `value`: Setter field value expression.
 - Returns: Insert query.
-- AI-Tags: Group=DML; Execution=Deferred; Composability=Composable; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Deferred; Composability=Composable; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.Value<T1,T2,T3>
 
@@ -27060,7 +27060,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `table`: Table-like query source.
   - `hint`: SQL text, added as a database specific hint to the generated query.
 - Returns: Table-like query source with table hints.
-- AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqExtensions.WithTableExpression<T>
 
@@ -27074,7 +27074,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `table`: Table-like query source.
   - `expression`: SQL template to use instead of the table name. Template supports two placeholders: - {0}: original table name;- {1}: table alias.
 - Returns: Table-like query source with the overridden table source expression.
-- AI-Tags: Group=Configuration; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Configuration; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqOptions.Constructor
 
@@ -29599,7 +29599,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `dataConnection`: Data connection to use to read schema from.
   - `options`: Schema read configuration options.
 - Returns: Returns database schema information.
-- AI-Tags: Group=Schema; Execution=Immediate; Composability=Terminal; Affects=SchemaResult; Pipeline=SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Schema; Execution=Immediate; Composability=Terminal; Affects=SchemaResult; Pipeline=SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.ServerSideOnlyException.Constructor
 
@@ -35641,7 +35641,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `MaxDegreeOfParallelism`: Implemented only by ClickHouse.Driver provider. Defines number of connections, used for parallel insert in mode.
   - `WithoutSession`: Implemented only by ClickHouse.Driver provider. When set, provider-specific bulk copy will use session-less connection even if called over connection with session. Note that session-less connections cannot be used with session-bound functionality like temporary tables.
   - `ConflictAction`: Specifies the action to take when conflicts occur during bulk copy operation. See for more details on supported databases and compatibility.
-- AI-Tags: Group=Configuration; Affects=Configuration; Pipeline=BulkInsert; Provider=ProviderDefined;
+- AI metadata: Group=Configuration; Affects=Configuration; Pipeline=BulkInsert; Provider=ProviderDefined;
 
 ## LinqToDB.Data.BulkCopyType
 
@@ -35655,7 +35655,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Type
 - Summary: Fluent builder for a raw SQL command; the terminal execution step in the chain.
 - Remarks: Obtain an instance by calling (or its overloads accepting parameters). Configure , , , and on the returned instance, then call one of the terminal execution methods: Read rows — Query<T>() / QueryAsync<T>(): execute the command and return results as a lazily-materialized sequence. Non-query / DML — Execute() / ExecuteAsync(): execute the command immediately and return the number of rows affected. Scalar — Execute<T>() / ExecuteAsync<T>(): execute immediately and return a single value. Raw reader — ExecuteReader() / ExecuteReaderAsync(): execute immediately and return a for manual row access. Stored-procedure variants (QueryProc, ExecuteProc, etc.) set to before executing. No LINQ translation occurs; the caller provides SQL text and parameters directly.
-- AI-Tags: Group=RawSQL; Provider=ProviderDefined;
+- AI metadata: Group=RawSQL; Provider=ProviderDefined;
 
 ## LinqToDB.Data.ConflictAction
 
@@ -35682,7 +35682,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `DataProviderFactory`: Gets factory to use with instance.
   - `ConnectionInterceptor`: Connection interceptor to support connection configuration before or right after connection opened.
   - `OnEntityDescriptorCreated`: Action, called on entity descriptor creation. Allows descriptor modification. When not specified, application-wide callback called.
-- AI-Tags: Group=Configuration; Affects=ConnectionConfiguration; Pipeline=Connection,Execution; Provider=ProviderDefined;
+- AI metadata: Group=Configuration; Affects=ConnectionConfiguration; Pipeline=Connection,Execution; Provider=ProviderDefined;
 
 ## LinqToDB.Data.DataConnection
 
@@ -35690,7 +35690,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Type
 - Summary: Primary implementation for direct database access.
 - Remarks: AI/LLM agents using this NuGet package should first read package-local skills/linq2db/SKILL.md, README.md, and skills/linq2db/docs/api.md; use skills/linq2db/docs/*.md for task-specific guidance before proposing code. represents a configured execution context: provider + mapping + options + database connection. Use when you want a single connection open for the lifetime of the context and direct access to database features. Connection lifetime: The underlying connection is opened on first command execution and remains open until this instance is disposed. The typical usage pattern is short-lived contexts: create → execute queries/commands → dispose (typically with deterministic disposal scope). Dispose the instance to close the connection and release resources. Execution model: LINQ queries are translated from Expression Tree into an internal SQL AST, then into provider-specific SQL text, and executed when enumerated or explicitly materialized. This type does not introduce implicit change tracking or unit-of-work semantics; data modification occurs only via explicit DML APIs. Performance guidance: Construct once and reuse it to create context instances. Reusing stable options enables internal caching and reduces initialization overhead. A common practice is to define a typed context by deriving from and exposing properties for mapped entities. class MyDataConnection : DataConnection { private static readonly DataOptions _options = new DataOptions() .UseSqlServer("connection string"); public MyDataConnection() : base(_options) {} public ITable<MyEntity> MyEntities => GetTable<MyEntity>(); } TransactionScope interaction: When using TransactionScope, the ambient transaction is enlisted when the underlying is physically opened. opens its connection lazily on first command execution, so always create the TransactionScopebefore executing any queries or commands on this instance. If the connection is already open, it will not automatically re-enlist in a new scope. Use for explicit, scope-independent transaction control. See skills/linq2db/docs/agent-antipatterns.md for examples.
-- AI-Tags: Group=Connection; Affects=ExecutionContext; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Connection; Affects=ExecutionContext; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.Data.DataConnectionTransaction
 
@@ -35704,7 +35704,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Type
 - Summary: Extension methods for raw SQL command execution and bulk data operations on .
 - Remarks: This class provides two distinct API surfaces: Raw SQL commands — returns a fluent builder. Chain Query, Execute, ExecuteReader, or their Async variants on the builder to execute raw SQL directly. No LINQ expression-tree translation or SQL AST construction occurs; the caller provides the SQL text. Bulk insert (BulkCopy) — BulkCopy / BulkCopyAsync overloads perform high-throughput data inserts using the most efficient path available for the configured provider (native bulk API or multi-row INSERT fallback). Execution is immediate and does not use the LINQ translation pipeline. Behavior is controlled by .
-- AI-Tags: Groups=RawSQL,DML; Provider=ProviderDefined;
+- AI metadata: Groups=RawSQL,DML; Provider=ProviderDefined;
 
 ## LinqToDB.Data.DataReaderWrapper
 
@@ -35777,7 +35777,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Type
 - Summary: implementation with non-persistent (per-operation) connection management.
 - Remarks: represents a configured execution context: provider + mapping + options + database connection. Use when you want per-operation connection management or a context structure familiar from earlier LINQ-to-database APIs. Connection lifetime: Unlike , the underlying connection may be opened and closed per query or command execution. Connection retention is controlled by the KeepConnectionAlive setting. Execution model: LINQ queries are translated from Expression Tree into an internal SQL AST, then into provider-specific SQL text, and executed when enumerated or explicitly materialized. This type does not introduce implicit change tracking or unit-of-work semantics; data modification occurs only via explicit DML APIs. Dispose the context to release provider resources and connections.
-- AI-Tags: Group=Connection; Affects=ExecutionContext; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Connection; Affects=ExecutionContext; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataContextOptions
 
@@ -35789,7 +35789,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `CommandTimeout`: The command timeout in seconds, or if none has been set. Negative timeout value means that default timeout will be used. 0 timeout value corresponds to infinite timeout. By default, timeout is not set and default value for current provider used.
   - `Interceptors`: Gets Interceptors to use with instance.
   - `MemberTranslators`: Gets custom member translators used during expression translation.
-- AI-Tags: Group=Configuration; Affects=Configuration; Pipeline=ExpressionTree,SqlAST,SqlText,Execution; Provider=ProviderDefined;
+- AI metadata: Group=Configuration; Affects=Configuration; Pipeline=ExpressionTree,SqlAST,SqlText,Execution; Provider=ProviderDefined;
 
 ## LinqToDB.DataContextTransaction
 
@@ -35810,7 +35810,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Type
 - Summary: Composable options graph that configures LinqToDB translation, execution, and materialization behavior.
 - Remarks: AI/LLM agents using this NuGet package should first read package-local skills/linq2db/SKILL.md, README.md, and skills/linq2db/docs/api.md; use skills/linq2db/docs/*.md for task-specific guidance before proposing code. is a structured container of option groups (e.g., LINQ, SQL, connection, retry policy, bulk copy, context behavior) that together define how queries and commands are processed. Use to define reusable configuration presets for creating or instances. Configure options using extension methods that return a new instance; treat instances as immutable values. Options do not open connections or execute commands. Options participate in the full processing pipeline: Expression Tree → SQL AST → SQL text → execution → materialization. Individual option groups may influence different stages of this pipeline. Provider-specific and user-defined option groups are supported. These options become part of the translation and execution contract of the resulting instance. Recommended approach: define a small number of stable presets (per provider or environment) and create short-lived contexts (typically ) from them. Performance guidance: Constructing and composing options may trigger initialization work. For optimal performance, create once and reuse it when creating context instances. static readonly DataOptions Options = new DataOptions(/*...*/); using var db = new DataConnection(Options); // preferred using var db2 = new DataConnection(new DataOptions(/*...*/)); // avoid rebuilding options per usage Temporary per-context overrides: To temporarily change options on an existing data context without constructing a new instance, use or . These return an that fully restores the previous options and internal context state when disposed. using var _ = db.UseOptions(o => o.UseCommandTimeout(30)); // override is active here // disposing _ restores previous options and context state Returns when the resulting options are identical to the current options (no state change needed).
-- AI-Tags: Group=Configuration; Affects=Configuration; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Configuration; Affects=Configuration; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataOptions<T>
 
@@ -36216,7 +36216,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Type
 - Summary: Query translation and execution context abstraction.
 - Remarks: defines the minimal contract required to translate LINQ Expression Tree queries into an internal SQL AST and execute them against a data source. Use when you need a minimal abstraction for translating and executing LINQ queries across local or remote providers. The execution target may be a direct database provider (local execution) or a remote execution endpoint. In remote mode, the translated SQL AST (and parameters) is transferred for SQL text generation and execution on the remote side. Implementations may own connection-related resources; callers must dispose the context to release them. This interface represents a translation/execution boundary (Expression Tree → SQL AST → SQL text → execution → materialization) and does not define implicit change tracking or unit-of-work semantics.
-- AI-Tags: Group=Connection; Affects=ExecutionContext; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Connection; Affects=ExecutionContext; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.IExtensionsAdapter
 
@@ -37178,7 +37178,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Type
 - Summary: LINQ extension methods that define LinqToDB query translation directives, SQL semantics, and command execution APIs.
 - Remarks: AI/LLM agents using this NuGet package should first read package-local skills/linq2db/SKILL.md, README.md, and skills/linq2db/docs/api.md; use skills/linq2db/docs/*.md for task-specific guidance before proposing code. is the primary extension surface for LinqToDB queryables (for example, and ). API groups:Query translation directives: methods that annotate a query or its nodes to influence SQL semantics without forcing immediate execution. These directives are represented in the SQL AST and emitted into SQL text according to provider rules. Navigation loading directives (LoadWith): methods that control association loading and join graph construction (for example, eager loading via navigation paths). These directives affect SQL semantics but do not trigger execution. Data modification APIs (DML): methods that translate to INSERT, UPDATE, or DELETE statements and execute immediately or on enumeration depending on the specific API. Merge APIs: methods that define conditional data modification semantics (INSERT/UPDATE/DELETE branches) represented as a single SQL MERGE statement when supported by the provider. Query and table hints: methods that attach provider-specific hints to queries or tables (for example, WITH (NOLOCK), index hints, join hints). Hint syntax and applicability are provider-defined. Table configuration directives: methods that assign per-query table identifiers or other configuration that influences how a table source is represented in SQL text. Table and query helpers: methods that build or adapt / instances, or provide utility operations used by the translation and DML APIs. Provider contract: availability, supported syntax, and exact SQL semantics are defined by the configured provider. When an API is not supported, behavior is provider-defined.
-- AI-Tags: Groups=QueryDirectives,NavigationLoading,DML,Merge,Hints,Configuration,Helpers; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Groups=QueryDirectives,NavigationLoading,DML,Merge,Hints,Configuration,Helpers; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqOptions
 
@@ -37200,76 +37200,6 @@ Generated directly from the current package XML documentation. Use XML member id
   - `ParameterizeTakeSkip`: Enables Take/Skip parameterization. Default value: .
   - `EnableContextSchemaEdit`: If , user could add new mappings to context mapping schemas (). Otherwise, will be generated on locked mapping schema edit attempt. It is not recommended to enable this option as it has performance implications. Proper approach is to create single instance once, configure mappings for it and use this instance for all context instances. Default value: .
   - `PreferExistsForScalar`: If , EXISTS operator will be generated instead of IN operator for scalar values. SELECT Value FROM MyEntity e WHERE EXISTS(SELECT * FROM MyEntity2 e2 WHERE e2.Value = e.Value) vs SELECT Value FROM MyEntity e WHERE Value IN (SELECT Value FROM MyEntity2 e2) Default value: .
-
-## LinqToDB.LinqToDBArchitecture
-
-- XML member: `T:LinqToDB.LinqToDBArchitecture`
-- Kind: Type
-- Summary: High-level architectural principles and mental model of LinqToDB. This type exists for documentation purposes only. Not intended for application code.
-- Remarks: Authoritative source for the installed package version For AI agents and development tools, the XML documentation attached to the installed assembly and the markdown files bundled into the NuGet package are the authoritative sources for this package version. Start with skills/linq2db/SKILL.md, then follow task references under skills/linq2db/docs/. Repository and website copies can be useful for browsing, but they may describe a different version. Prefer the installed package contents whenever they are available. Core IdentityLinqToDB is a deterministic LINQ-to-SQL translator. The same LINQ expression under the same configuration produces the same SQL intent (semantically equivalent SQL). How to think about LinqToDB: When writing a LINQ query, think in terms of SQL intent and structure. Every LINQ construct should correspond to a SQL construct. If a LINQ expression has no clear SQL representation, it must be rewritten or explicitly mapped. LINQ queries are captured as Expression Trees and translated to SQL. Generated SQL is executed by a selected database provider. Query behavior is explicit and configuration-driven. Translation Pipeline Query processing follows a deterministic translation pipeline: Expression Tree -> SQL AST -> SQL text -> Execution. Each stage is deterministic under the same configuration. SQL generation is provider-defined. Different database providers may emit different SQL text while preserving equivalent SQL semantics. What LinqToDB does not provide implicitly:No change tracking or identity map.No hidden runtime entity services.No automatic server/client query splitting or client-side execution of non-translatable query logic.No implicit navigation loading. If an expression cannot be translated to SQL, it must be rewritten, mapped explicitly, or executed after materialization. Machine-Readable Documentation Some XML documentation comments include compact machine-readable metadata in the form: AI-Tags metadata is written as semicolon-separated key-value pairs. These tags describe execution semantics, composability, logical API grouping, and provider-related behavior. They are intended for tooling and AI agents and do not affect runtime behavior. Primary entry points: , , , , . Related documentation The following files are included in the NuGet package and are version-aligned with this release. Package-local copies are authoritative for the installed version. For IntelliSense-only agents without filesystem access, the GitHub URLs below provide an online copy, but they point to the master branch and may not match the version of this package. skills/linq2db/SKILL.md - canonical entry point for AI agents; explains package-first documentation rules and navigation.skills/linq2db/docs/architecture.md - architectural model and translation pipeline.skills/linq2db/docs/ai-tags.md - specification of AI-Tags format and semantics.skills/linq2db/docs/agent-antipatterns.md - common incorrect usage patterns with corrected examples.skills/linq2db/docs/provider-capabilities.md - SQL feature support matrix per provider.skills/linq2db/docs/provider-setup.md - provider configuration reference (ProviderName constants, UseXxx methods, NuGet packages).
-
-## LinqToDB.LinqToDBArchitecture.AdvancedSqlFeatures
-
-- XML member: `T:LinqToDB.LinqToDBArchitecture.AdvancedSqlFeatures`
-- Kind: Type
-- Summary: Advanced SQL features.
-- Remarks: LinqToDB provides access to advanced SQL constructs beyond basic CRUD-style queries. These features operate at the SQL level and participate directly in query translation. Merge API enables set-based INSERT/UPDATE/DELETE operations using database-native MERGE semantics (where supported). Temporary tables allow explicit creation and usage of provider-supported temporary storage within a session. BulkCopy provides efficient bulk data insertion using provider-specific optimized mechanisms. LoadWith modifies the query structure to include associated data during SQL generation. It affects generated joins and projections, but does not introduce automatic state tracking or lazy loading. Window functions expose SQL windowing capabilities (e.g., OVER, PARTITION BY, ORDER BY) through LINQ APIs, enabling advanced analytical queries. Availability and SQL structure of these features depend on provider capabilities. All advanced constructs are explicit and translation-driven.
-
-## LinqToDB.LinqToDBArchitecture.AntiPatterns
-
-- XML member: `T:LinqToDB.LinqToDBArchitecture.AntiPatterns`
-- Kind: Type
-- Summary: Common anti-patterns and incorrect assumptions.
-- Remarks: Operational anti-patterns:Creating per connection or per request is a serious performance anti-pattern. maintains internal expression caches; a new instance per connection bypasses these caches and causes cumulative performance degradation. Configure once at application startup and reuse via . Expecting a new to participate in another connection's transaction is incorrect. Each holds its own physical connection. BeginTransaction() starts a transaction on that specific connection only. A separately created opens a different physical connection with no knowledge of the first connection's transaction. Consolidate related work into a single instance. Sharing or across threads is not supported. These types are not thread-safe. Create a new instance per operation or request. Using non-translatable methods that reference query data causes a translation exception. LinqToDB does not implement implicit client-side evaluation for expressions that depend on query data (e.g., column values). Independent subexpressions that do not reference query data may be evaluated client-side and passed as SQL parameters. For expressions that depend on query data: materialize first via .ToList() / .AsEnumerable(), then apply in-memory logic; or map the method to a SQL construct. Incorrect assumptions (EF Core / full ORM mental model): There is no implicit change tracking or identity map in the core library. There is no deferred persistence model and no SaveChanges(). Use Insert, Update, Delete, BulkCopy, or the Merge API. Queries do not automatically split between server and client execution. Navigation properties do not trigger automatic loading. Use LoadWith for explicit eager loading of associations. SQL generated for one provider is not guaranteed to be portable to another provider without explicit provider-aware constructs. Unmapped .NET methods that depend on query data cannot be translated. Extended anti-pattern documentation with code examples: skills/linq2db/docs/agent-antipatterns.md (included in NuGet package).
-
-## LinqToDB.LinqToDBArchitecture.ConfigurationModel
-
-- XML member: `T:LinqToDB.LinqToDBArchitecture.ConfigurationModel`
-- Kind: Type
-- Summary: Configuration model: connections, providers, and options.
-- Remarks: Core idea: configuration is explicit and is provided via / (base: ). represents a configured execution context: connection + provider + mapping + options. is a composable configuration object used to construct a . Options can be applied globally (application defaults) or per connection, depending on how is constructed and reused. What configuration affects: Provider and SQL dialect (what SQL is generated and how). Mapping behavior (type conversions, column mapping, associations). Query translation and execution behavior (provider capabilities and option flags). Query-level configuration (Options): Some behaviors can be configured per query (for example, translation/execution switches). Temporary option overrides can be applied within a logical scope using , and are automatically restored when the scope ends. Query options are part of the translation/execution contract: they influence generated SQL and/or execution strategy, not object materialization semantics. Recommended approach: keep a small number of well-defined presets (e.g., per provider/environment) and create instances from them.
-
-## LinqToDB.LinqToDBArchitecture.DataModificationAPI
-
-- XML member: `T:LinqToDB.LinqToDBArchitecture.DataModificationAPI`
-- Kind: Type
-- Summary: Data modification API (CRUD operations).
-- Remarks: In addition to standard LINQ query operators (primarily oriented around SELECT), LinqToDB provides a full set of explicit data modification APIs. Insert operations for adding records. Update operations for modifying records, including set-based updates. Delete operations for removing records. Extended operations (e.g., output-returning variants) are available where supported by the provider. Data modification operations translate directly to SQL statements and execute immediately. LinqToDB does not implement a unit-of-work or deferred persistence model. There is no SaveChanges() method. Application code explicitly invokes modification operations when changes are required.
-
-## LinqToDB.LinqToDBArchitecture.ExtensionModel
-
-- XML member: `T:LinqToDB.LinqToDBArchitecture.ExtensionModel`
-- Kind: Type
-- Summary: Method translation and extension model.
-- Remarks: LinqToDB translates supported .NET methods and properties into SQL. Translation is explicit and provider-aware. Built-in translation: Hundreds of standard .NET methods and properties are translated out of the box — including operations, Math, DateTime/DateOnly/TimeSpan, numeric conversions, and common BCL operators. Custom mapping is only needed for application-specific methods. The static class provides an additional library of SQL-specific functions not available in the BCL — string manipulation (CharIndex, Left/Right, Stuff, PadLeft/PadRight), math functions, type conversions, datetime construction, and more — each with provider-specific implementations where SQL dialects differ. Translation behavior may differ per provider depending on SQL dialect and feature availability. Custom method mapping: Application code may define custom method and property mappings that translate to SQL. The same .NET member may translate differently for different providers. Unmapped methods that depend on query data cannot be translated. Method translation is part of the query translation contract. It defines how expression tree nodes are represented in SQL, not how .NET code is executed at runtime.
-
-## LinqToDB.LinqToDBArchitecture.Interceptors
-
-- XML member: `T:LinqToDB.LinqToDBArchitecture.Interceptors`
-- Kind: Type
-- Summary: Interceptors and cross-cutting behavior.
-- Remarks: Interceptors provide explicit extension points for modifying or observing query translation and execution behavior. Interceptors can participate in query processing, command generation, or execution stages. Typical use cases include logging, metrics collection, auditing, command rewriting, filtering, or policy enforcement. Interceptors operate on the translation/execution pipeline, not on a built-in runtime entity management model. The core LinqToDB library does not provide automatic state tracking, identity management, or implicit persistence services. Such behaviors can be implemented explicitly using interceptors or external extensions. Lightweight identity and entity management utilities are available in separate packages (e.g., LinqToDB.Tools), and are not part of the core translation engine.
-
-## LinqToDB.LinqToDBArchitecture.MappingModel
-
-- XML member: `T:LinqToDB.LinqToDBArchitecture.MappingModel`
-- Kind: Type
-- Summary: Mapping model and associations.
-- Remarks: Mapping in LinqToDB defines how .NET types and members correspond to database objects and SQL constructs. Mapping model: Mapping can be defined via attributes or via . Mapping can also be configured dynamically using Fluent Mapping via and related builder APIs. Mapping determines table names, column names, keys, type conversions, and value transformations. Mapping affects SQL translation, not runtime object behavior. Fluent mapping provides an explicit, runtime-configurable alternative to attribute-based mapping. It affects SQL translation behavior, not runtime entity state management. Type conversions and custom mappings are part of the translation contract: they define how expressions are represented in SQL and how values are materialized. Associations: Associations describe relational links between mapped entities. Associations participate in query translation and are expressed as SQL joins or related SQL constructs. Associations do not introduce automatic state tracking, identity management, or hidden loading behavior. Query structure determines how associations are translated. Explicit query composition defines the resulting SQL.
-
-## LinqToDB.LinqToDBArchitecture.ProviderModel
-
-- XML member: `T:LinqToDB.LinqToDBArchitecture.ProviderModel`
-- Kind: Type
-- Summary: Provider model and provider-aware translation.
-- Remarks: LinqToDB generates SQL according to the configured database provider. Each provider defines its SQL dialect, capabilities, and translation rules. The same LINQ query may produce different SQL depending on the selected provider. The translator attempts to generate SQL that is idiomatic and efficient for the configured provider. SQL portability is not guaranteed; behavior is provider-aware by design. Controlling provider-specific behavior: Provider-specific query APIs (e.g., AsSqlServer(), AsOracle()) allow explicitly introducing provider-specific constructs within a LINQ query. Provider-specific fragments may coexist in a single LINQ expression. During translation, only fragments relevant to the configured provider are applied. Method and property mappings can be defined per provider (for example, via attributes such as [Function] or [Property]), allowing the same .NET member to translate differently depending on the provider. These provider-specific mappings are part of the same provider-aware translation mechanism. Provider-aware behavior is explicit and configuration-driven; translation uses the configured provider.
-
-## LinqToDB.LinqToDBArchitecture.TranslationModel
-
-- XML member: `T:LinqToDB.LinqToDBArchitecture.TranslationModel`
-- Kind: Type
-- Summary: Execution and query translation model.
-- Remarks: Conceptual pipeline: A LINQ query is constructed over or other queryable sources. The LINQ Expression Tree is captured and analyzed. Sub-expressions that can be evaluated on the client without referencing query data may be computed and supplied as SQL parameters. The remaining expression is translated into an internal SQL Abstract Syntax Tree (SQL AST). Provider-specific rules transform the SQL AST according to dialect and capabilities. Final SQL text and parameters are generated from the SQL AST and executed. Results are materialized into objects without state tracking. Query execution occurs only when the query is enumerated or explicitly materialized. Translation rules: Only SQL-representable constructs are translated. .NET methods are translatable only if built-in or explicitly mapped. Expressions that do not depend on query data may be evaluated locally and passed to SQL as parameters. Expressions that depend on query data (e.g., table columns) must be translatable to SQL. Translation behavior depends on the selected provider. Examples: var x = 1; // Fully evaluable on client before translation: // RunClientMethod(x * 2) is computed locally and passed as a SQL parameter. // Resulting SQL structure: // WHERE t.Field1 = @p where t.Field1 == RunClientMethod(x * 2) // Requires SQL mapping (depends on column value) where t.Field1 == RunClientMethod(t.Field2) Remote execution: LinqToDB supports remote query execution (e.g., WCF, gRPC, SignalR, HTTP). In remote mode, the query is translated locally into SQL AST first, then the SQL AST (and parameters) is transferred to the remote side where provider-specific SQL text generation and execution occur.
 
 ## LinqToDB.LinqToDBException
 
@@ -37663,7 +37593,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Type
 - Summary: Database schema provider.
 - Remarks: Retrieves structural metadata about the database: tables, views, columns, foreign keys, stored procedures, and other schema objects. Obtain an implementation via 's GetSchemaProvider() method. Transaction note: call outside of an active transaction. Several providers (MySQL, SQL Server, Sybase, DB2) do not support or behave incorrectly when schema queries are issued inside a transaction.
-- AI-Tags: Group=Schema; Execution=Immediate; Composability=Terminal; Affects=SchemaResult; Pipeline=SqlText; Provider=ProviderDefined;
+- AI metadata: Group=Schema; Execution=Immediate; Composability=Terminal; Affects=SchemaResult; Pipeline=SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.SchemaProvider.LoadTableData
 
@@ -37823,7 +37753,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Remarks: issues CREATE TABLE when constructed and DROP TABLE when disposed, using the mapping defined for . This instance manages the table lifecycle (create/drop) using the supplied at construction. Visibility and sharing of the underlying table are determined by the database provider and configured , and it may be accessible from other data contexts or connections depending on those settings. The "temporary" in the name describes the lifecycle, not the table kind: is a table that exists temporarily, not necessarily a database-native temporary table. The two concepts are independent: Lifecycle guarantee — the constructor creates the table; / attempts to drop it in a -equivalent block, so the drop runs even on exception when a / await using scope is used. Table kind — controlled by . The record itself defaults its TableOptions value to , and APIs that construct and use an instance of without overriding that value (for example, DataExtensions.CreateTempTable(...)) will therefore create a database-native temporary table where the provider supports it (e.g., #name in SQL Server, session-scoped tables in other engines). By contrast, the default constructor passes default(TableOptions) (i.e., ) into . does not request provider-specific defaults; it means that the operation doesn't override the mapped table options. Unless mapping sets temporary options or the provider infers temporary semantics from the table name, this creates a regular table. To request a regular (permanent-kind) table while still keeping the drop-on-dispose lifecycle guarantee, pass and use a non-temporary physical table name; some providers also infer temporary-table semantics from naming conventions. To force a database-native temporary table regardless of mapping/provider defaults, pass (or an explicit instance with that value set). Construction patterns:Empty table - constructor with no items; populate later using or .From - initial records loaded via BulkCopy ( / ).From - initial records loaded via INSERT INTO ... SELECT ( / ).Async - use the static CreateAsync overloads to avoid blocking on creation or initial data load. After construction the instance implements and can be used directly as a LINQ query source, joined against other tables, or passed to DML extension methods. Lifetime: Use deterministic disposal ( / ) to ensure the backing table is dropped even on exception. Both and perform the drop unconditionally.
 - Type parameters:
   - `T`: Table record mapping class.
-- AI-Tags: Group=DML; Execution=Immediate; Composability=Composable; Affects=DdlStatement,Data; Pipeline=SqlAST,SqlText; Provider=ProviderDefined;
+- AI metadata: Group=DML; Execution=Immediate; Composability=Composable; Affects=DdlStatement,Data; Pipeline=SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.UpdateColumnFilter<T>
 

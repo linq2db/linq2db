@@ -289,7 +289,7 @@ not exist and before using generic string-based fallbacks. Use raw XML-doc only 
 extract is inconclusive or exact member details are required.
 
 For lifetime-sensitive types, search `docs/api.md` first and inspect raw XML-doc when available.
-`LinqToDBArchitecture` (namespace `LinqToDB`), `DataOptions`, `DataConnection`, `DataContext`,
+`docs/architecture.md`, `DataOptions`, `DataConnection`, `DataContext`,
 `MappingSchema`, and provider `UseXxx` methods contain lifetime and caching constraints not fully
 enumerated in topic markdown.
 For provider-specific features, inspect the provider-specific generated API entries and raw
@@ -509,7 +509,6 @@ This is the primary diagnostic tool for translation issues, unexpected query sha
 
 ## See also
 
-- `LinqToDB.LinqToDBArchitecture` - architecture overview (XML documentation class, namespace `LinqToDB`).
 - [`docs/architecture.md`](05-architecture.md) - extended architectural model.
 - [`docs/ai-tags.md`](06-agent-antipatterns-and-ai-tags.md) - machine-readable metadata specification.
 - [`docs/provider-capabilities.md`](07-provider-configuration.md) - SQL feature support matrix per provider.
@@ -548,7 +547,7 @@ Optional defaults element for an API surface:
 
 Generated docs normalize those XML attributes to the canonical display format:
 
-`AI-Tags: Key1=Value1; Key2=Value2; ...;`
+`AI metadata: Key1=Value1; Key2=Value2; ...;`
 
 Example:
 
@@ -641,6 +640,7 @@ Compound values (comma-separated) are allowed when a single operation has primar
 - `Data` - directly modifies stored data (bulk copy, non-query DML execution)
 - `QueryResult` - determines the result set structure (scalar, typed sequence, raw reader)
 - `ExecutionContext` - affects connection or transaction state
+- `ConnectionConfiguration` - affects connection/provider configuration used to create execution contexts
 - `Configuration` - affects configuration state (mapping schema, data options)
 - `SchemaResult` - returns database schema information (tables, columns, procedures)
 - `GeneratedSql` - returns generated SQL command text and parameters without executing the command
@@ -652,6 +652,8 @@ Comma-separated when a call spans multiple stages.
 - `ExpressionTree` - the LINQ Expression Tree analysis and transformation stage
 - `SqlAST` - the SQL AST construction stage (internal SQL query model, before text generation)
 - `SqlText` - the SQL text generation and execution stage
+- `Connection` - connection/provider setup stage
+- `Execution` - command execution stage
 - `BulkInsert` - the native bulk insert pipeline (bypasses LINQ translation entirely)
 
 Common combinations:

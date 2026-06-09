@@ -162,6 +162,56 @@ function GetAiTagDisplayName([string] $name) {
 	}
 }
 
+function GetAllowedAiTagValues([string] $name) {
+	switch ($name) {
+		'group'         { return @('QueryDirectives', 'NavigationLoading', 'Hints', 'DML', 'Merge', 'Helpers', 'Configuration', 'Connection', 'RawSQL', 'Schema') }
+		'groups'        { return @('QueryDirectives', 'NavigationLoading', 'Hints', 'DML', 'Merge', 'Helpers', 'Configuration', 'Connection', 'RawSQL', 'Schema') }
+		'execution'     { return @('Deferred', 'Immediate') }
+		'composability' { return @('Composable', 'Terminal') }
+		'affects'       { return @('DmlStatement', 'DdlStatement', 'QueryRoot', 'QueryStructure', 'QueryCompilation', 'JoinGraph', 'SqlSemantics', 'CommandBuilder', 'Data', 'QueryResult', 'ExecutionContext', 'ConnectionConfiguration', 'Configuration', 'SchemaResult', 'GeneratedSql') }
+		'pipeline'      { return @('ExpressionTree', 'SqlAST', 'SqlText', 'Connection', 'Execution', 'BulkInsert') }
+		'provider'      { return @('ProviderDefined', 'ProviderAgnostic') }
+		'hint-type'     { return @('Table', 'TablesInScope', 'Index', 'Join', 'SubQuery', 'Query', 'Merge', 'TableName') }
+		default         { return $null }
+	}
+}
+
+function ValidateAiTagElement($node, [string] $memberId) {
+	if ($node -eq $null) {
+		return
+	}
+
+	if ($node.Attributes.Count -eq 0) {
+		throw ("{0}: <{1}> must declare at least one attribute." -f $memberId, $node.Name)
+	}
+
+	foreach ($attribute in $node.Attributes) {
+		$name    = $attribute.Name
+		$value   = $attribute.Value.Trim()
+		$allowed = GetAllowedAiTagValues $name
+
+		if ($allowed -eq $null) {
+			throw ("{0}: unknown <{1}> attribute '{2}'." -f $memberId, $node.Name, $name)
+		}
+
+		if ([string]::IsNullOrWhiteSpace($value)) {
+			throw ("{0}: <{1}> attribute '{2}' must not be empty." -f $memberId, $node.Name, $name)
+		}
+
+		$values = if ($name -in @('groups', 'affects', 'pipeline')) { $value.Split(',') } else { @($value) }
+		foreach ($raw in $values) {
+			$item = $raw.Trim()
+			if ([string]::IsNullOrWhiteSpace($item)) {
+				throw ("{0}: <{1}> attribute '{2}' contains an empty value." -f $memberId, $node.Name, $name)
+			}
+
+			if ($allowed -notcontains $item) {
+				throw ("{0}: invalid <{1}> attribute '{2}' value '{3}'." -f $memberId, $node.Name, $name, $item)
+			}
+		}
+	}
+}
+
 function FormatAiTagElement($node) {
 	if ($node -eq $null -or $node.Attributes.Count -eq 0) {
 		return ''
@@ -302,6 +352,15 @@ foreach ($member in $xml.doc.members.member) {
 	$xmlMemberCount++
 	$id = [string] $member.name
 
+	$tagsInsideRemarks = @($member.SelectNodes('remarks//ai-tags | remarks//ai-tags-defaults'))
+	if ($tagsInsideRemarks.Count -gt 0) {
+		throw ("{0}: <ai-tags /> and <ai-tags-defaults /> must be sibling XML-doc elements, not children of <remarks>." -f $id)
+	}
+
+	foreach ($tagNode in @($member.SelectNodes('ai-tags | ai-tags-defaults'))) {
+		ValidateAiTagElement $tagNode $id
+	}
+
 	if ($id -notmatch '^[A-Z]:LinqToDB\.') {
 		$externalExcluded++
 		continue
@@ -375,7 +434,7 @@ foreach ($group in $groups) {
 		$lines.Add('')
 		$lines.Add('AI metadata:')
 		$lines.Add('')
-		$lines.Add('| XML member | AI-Tags |')
+		$lines.Add('| XML member | AI metadata |')
 		$lines.Add('|---|---|')
 
 		foreach ($entry in $metadataEntries) {

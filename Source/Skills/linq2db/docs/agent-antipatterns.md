@@ -287,7 +287,7 @@ not exist and before using generic string-based fallbacks. Use raw XML-doc only 
 extract is inconclusive or exact member details are required.
 
 For lifetime-sensitive types, search `docs/api.md` first and inspect raw XML-doc when available.
-`LinqToDBArchitecture` (namespace `LinqToDB`), `DataOptions`, `DataConnection`, `DataContext`,
+`docs/architecture.md`, `DataOptions`, `DataConnection`, `DataContext`,
 `MappingSchema`, and provider `UseXxx` methods contain lifetime and caching constraints not fully
 enumerated in topic markdown.
 For provider-specific features, inspect the provider-specific generated API entries and raw
@@ -507,7 +507,6 @@ This is the primary diagnostic tool for translation issues, unexpected query sha
 
 ## See also
 
-- `LinqToDB.LinqToDBArchitecture` - architecture overview (XML documentation class, namespace `LinqToDB`).
 - [`docs/architecture.md`](architecture.md) - extended architectural model.
 - [`docs/ai-tags.md`](ai-tags.md) - machine-readable metadata specification.
 - [`docs/provider-capabilities.md`](provider-capabilities.md) - SQL feature support matrix per provider.

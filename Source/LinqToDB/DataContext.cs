@@ -60,7 +60,6 @@ namespace LinqToDB
 	/// </para>
 	/// </remarks>
 	/// <ai-tags group="Connection" affects="ExecutionContext" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
-	/// <seealso cref="LinqToDBArchitecture"/>
 	[PublicAPI]
 	public partial class DataContext : IDataContext, IInfrastructure<IServiceProvider>
 	{

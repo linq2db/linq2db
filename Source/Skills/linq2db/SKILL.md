@@ -189,7 +189,7 @@ are fallback paths unless the guide explicitly says otherwise.
 
 Types where raw XML-doc is often useful when `docs/api.md` is not enough:
 
-- `LinqToDB.LinqToDBArchitecture` - architecture overview and cross-references; start here
+- `docs/architecture.md` - architecture overview, translation pipeline, and cross-references
 - `DataOptions` - MUST be created once per application and shared; DO NOT recreate per operation or per request
 - `DataConnection` - connection lifecycle, session semantics, when to use vs `DataContext`
 - `DataContext` - per-command connection, `TransactionScope` auto-enlist behaviour

@@ -105,6 +105,56 @@ function Get-AiTagDisplayName([string] $Name) {
 	}
 }
 
+function Get-AllowedAiTagValues([string] $Name) {
+	switch ($Name) {
+		'group'         { return @('QueryDirectives', 'NavigationLoading', 'Hints', 'DML', 'Merge', 'Helpers', 'Configuration', 'Connection', 'RawSQL', 'Schema') }
+		'groups'        { return @('QueryDirectives', 'NavigationLoading', 'Hints', 'DML', 'Merge', 'Helpers', 'Configuration', 'Connection', 'RawSQL', 'Schema') }
+		'execution'     { return @('Deferred', 'Immediate') }
+		'composability' { return @('Composable', 'Terminal') }
+		'affects'       { return @('DmlStatement', 'DdlStatement', 'QueryRoot', 'QueryStructure', 'QueryCompilation', 'JoinGraph', 'SqlSemantics', 'CommandBuilder', 'Data', 'QueryResult', 'ExecutionContext', 'ConnectionConfiguration', 'Configuration', 'SchemaResult', 'GeneratedSql') }
+		'pipeline'      { return @('ExpressionTree', 'SqlAST', 'SqlText', 'Connection', 'Execution', 'BulkInsert') }
+		'provider'      { return @('ProviderDefined', 'ProviderAgnostic') }
+		'hint-type'     { return @('Table', 'TablesInScope', 'Index', 'Join', 'SubQuery', 'Query', 'Merge', 'TableName') }
+		default         { return $null }
+	}
+}
+
+function Assert-AiTagElement($Node, [string] $MemberId) {
+	if ($null -eq $Node) {
+		return
+	}
+
+	if ($Node.Attributes.Count -eq 0) {
+		throw ("{0}: <{1}> must declare at least one attribute." -f $MemberId, $Node.Name)
+	}
+
+	foreach ($attribute in $Node.Attributes) {
+		$name = $attribute.Name
+		$value = $attribute.Value.Trim()
+		$allowed = Get-AllowedAiTagValues $name
+
+		if ($null -eq $allowed) {
+			throw ("{0}: unknown <{1}> attribute '{2}'." -f $MemberId, $Node.Name, $name)
+		}
+
+		if ([string]::IsNullOrWhiteSpace($value)) {
+			throw ("{0}: <{1}> attribute '{2}' must not be empty." -f $MemberId, $Node.Name, $name)
+		}
+
+		$values = if ($name -in @('groups', 'affects', 'pipeline')) { $value.Split(',') } else { @($value) }
+		foreach ($raw in $values) {
+			$item = $raw.Trim()
+			if ([string]::IsNullOrWhiteSpace($item)) {
+				throw ("{0}: <{1}> attribute '{2}' contains an empty value." -f $MemberId, $Node.Name, $name)
+			}
+
+			if ($allowed -notcontains $item) {
+				throw ("{0}: invalid <{1}> attribute '{2}' value '{3}'." -f $MemberId, $Node.Name, $name, $item)
+			}
+		}
+	}
+}
+
 function Format-AiTagElement($Node) {
 	if ($null -eq $Node -or $Node.Attributes.Count -eq 0) {
 		return ''
@@ -370,6 +420,16 @@ function New-XmlDocMarkdown([string] $Path) {
 
 	foreach ($member in $members) {
 		$id = [string]$member.name
+
+		$tagsInsideRemarks = @($member.SelectNodes('remarks//ai-tags | remarks//ai-tags-defaults'))
+		if ($tagsInsideRemarks.Count -gt 0) {
+			throw ("{0}: <ai-tags /> and <ai-tags-defaults /> must be sibling XML-doc elements, not children of <remarks>." -f $id)
+		}
+
+		foreach ($tagNode in @($member.SelectNodes('ai-tags | ai-tags-defaults'))) {
+			Assert-AiTagElement $tagNode $id
+		}
+
 		$lines.Add(('## {0}' -f (Get-DisplayName $id)))
 		$lines.Add('')
 		$lines.Add(('- XML member: `{0}`' -f $id))
@@ -408,7 +468,7 @@ function New-XmlDocMarkdown([string] $Path) {
 
 		$tags = Extract-AiTags $member
 		if ($tags) {
-			$lines.Add(('- AI-Tags: {0}' -f $tags))
+			$lines.Add(('- AI metadata: {0}' -f $tags))
 		}
 
 		$lines.Add('')

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-08T20:30:00",
+  "generated_at": "2026-06-09T01:11:02",
   "prompt_source": ".agents/knowledge-pack-maintenance.md",
   "source_root": "Source/Skills/linq2db",
   "xml_source": ".build/bin/LinqToDB/Release/net10.0/linq2db.xml",
@@ -22,7 +22,7 @@
     "15-interceptors.md",
     "16-xml-doc.md"
   ],
-  "xml_member_count": 4514,
+  "xml_member_count": 4504,
   "included_docs": [
     "../../LinqToDB/README.md",
     "docs/agent-antipatterns.md",

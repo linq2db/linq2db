@@ -97,7 +97,6 @@ namespace LinqToDB
 	///
 	/// </remarks>
 	/// <ai-tags group="DML" execution="Immediate" composability="Composable" affects="DdlStatement,Data" pipeline="SqlAST,SqlText" provider="ProviderDefined" />
-	/// <seealso cref="LinqToDBArchitecture"/>
 	[PublicAPI]
 	public class TempTable<T> : ITable<T>, ITableMutable<T>, IDisposable, IAsyncDisposable
 		where T : notnull
