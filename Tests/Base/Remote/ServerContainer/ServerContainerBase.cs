@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
@@ -62,6 +62,12 @@ namespace Tests.Remote.ServerContainer
 			return _connectionFactory(configuration, mappingSchema);
 		}
 
+		// Probe-then-reuse has a TOCTTOU window: another process can claim the probed port
+		// between GetFreePort() and the actual bind inside StartHost. Retry with a freshly
+		// probed port a few times before giving up. 3 attempts is arbitrary: enough to absorb
+		// the rare race without masking a genuine, repeatable start failure.
+		private const int MaxStartAttempts = 3;
+
 		private HostEntry OpenHost()
 		{
 			var slot = GetSlotKey();
@@ -74,12 +80,28 @@ namespace Tests.Remote.ServerContainer
 				if (_openHosts.TryGetValue(slot, out existing))
 					return existing;
 
-				var port  = GetFreePort();
-				var entry = new HostEntry(StartHost(port, InvokeConnectionFactory), port);
+				var entry = StartHostWithRetry();
 
 				_openHosts[slot] = entry;
 
 				return entry;
+			}
+		}
+
+		private HostEntry StartHostWithRetry()
+		{
+			for (var attempt = 1; ; attempt++)
+			{
+				var port = GetFreePort();
+
+				try
+				{
+					return new HostEntry(StartHost(port, InvokeConnectionFactory), port);
+				}
+				catch (Exception) when (attempt < MaxStartAttempts)
+				{
+					// Probed port was taken between probe and bind; retry with a fresh one.
+				}
 			}
 		}
 
