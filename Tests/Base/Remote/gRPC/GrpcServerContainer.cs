@@ -1,23 +1,14 @@
-﻿#if !NETFRAMEWORK
+#if !NETFRAMEWORK
 using System;
-using System.Collections.Concurrent;
-using System.Diagnostics;
-using System.Security.Authentication;
-using System.Threading;
 
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
-using LinqToDB.Remote;
-using LinqToDB.Remote.Grpc;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-
-using NUnit.Framework;
 
 using ProtoBuf.Grpc.Server;
 
@@ -26,86 +17,38 @@ using Tests.Model.Remote.Grpc;
 
 namespace Tests.Remote.ServerContainer
 {
-	public class GrpcServerContainer : IServerContainer
+	internal sealed class GrpcServerContainer : ServerContainerBase<TestGrpcLinqService>
 	{
-		private const int Port = 22654;
+		private static string GetServiceUrl(int port) => $"https://localhost:{port}";
 
-		private readonly Lock _syncRoot = new ();
-
-		//useful for async tests
-		public bool KeepSamePortBetweenThreads { get; set; } = true;
-
-		private ConcurrentDictionary<int, TestGrpcLinqService> _openHosts = new();
-
-		private static string GetServiceUrl(int port)
+		protected override TestGrpcLinqService StartHost(int port, Func<string?, MappingSchema?, DataConnection> connectionFactory)
 		{
-			return $"https://localhost:{port}";
-		}
+			var service = new TestGrpcLinqService(
+				new TestLinqService((c, ms) => connectionFactory(c, ms))
+				{
+					AllowUpdates    = true,
+					RemoteClientTag = "Grpc",
+				});
 
-		private Func<string?, MappingSchema?, DataConnection> _connectionFactory = null!;
+			Startup.GrpcLinqService = service;
 
-		ITestDataContext IServerContainer.CreateContext(Func<ITestLinqService,DataOptions, DataOptions> optionBuilder, Func<string?, MappingSchema?, DataConnection> connectionFactory)
-		{
-			_connectionFactory = connectionFactory;
-			var service = OpenHost();
-
-			var url = GetServiceUrl(GetPort());
-
-			var dx = new TestGrpcDataContext(url, o => optionBuilder(service, o));
-
-			return dx;
-		}
-
-		private TestGrpcLinqService OpenHost()
-		{
-			var port = GetPort();
-
-			if (_openHosts.TryGetValue(port, out var service))
-				return service;
-
-			lock (_syncRoot)
-			{
-				if (_openHosts.TryGetValue(port, out service))
-					return service;
-
-				service = new TestGrpcLinqService(
-					new TestLinqService((c, ms) => _connectionFactory(c, ms))
-					{
-						AllowUpdates     = true,
-						RemoteClientTag = "Grpc",
-					});
-
-				Startup.GrpcLinqService = service;
-
-				var hb = Host.CreateDefaultBuilder();
-				var host = hb.ConfigureWebHostDefaults(
+			var host = Host.CreateDefaultBuilder().ConfigureWebHostDefaults(
 				webBuilder =>
 				{
 					webBuilder.UseStartup<Startup>();
-
-					var url = GetServiceUrl(port);
-					webBuilder.UseUrls(url);
+					webBuilder.UseUrls(GetServiceUrl(port));
 				}).Build();
 
-				host.Start();
-
-				_openHosts[port] = service;
-			}
+			host.Start();
 
 			TestExternals.Log("gRCP host opened");
 
 			return service;
 		}
 
-		//Environment.CurrentManagedThreadId need for a parallel test like DataConnectionTests.MultipleConnectionsTest
-		public int GetPort()
+		protected override ITestDataContext CreateClientContext(TestGrpcLinqService service, int port, Func<ITestLinqService, DataOptions, DataOptions> optionBuilder)
 		{
-			if(KeepSamePortBetweenThreads)
-			{
-				return Port;
-			}
-
-			return Port + (Environment.CurrentManagedThreadId % 1000) + TestExternals.RunID;
+			return new TestGrpcDataContext(GetServiceUrl(port), o => optionBuilder(service, o));
 		}
 
 		public class Startup

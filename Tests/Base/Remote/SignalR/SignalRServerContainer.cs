@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Threading;
+using System;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -22,89 +20,49 @@ using Microsoft.AspNetCore;
 
 namespace Tests.Remote.ServerContainer
 {
-	public class SignalRServerContainer : IServerContainer
+	internal sealed class SignalRServerContainer : ServerContainerBase<ITestLinqService>
 	{
 		private const string HUB_PATH = "/remote/linq2db";
-		private const int Port = 22656;
-
-		private readonly Lock _syncRoot = new ();
-
-		//useful for async tests
-		public bool KeepSamePortBetweenThreads { get; set; } = true;
-
-		private ConcurrentDictionary<int, ITestLinqService> _openHosts = new();
 
 		private static string GetServiceUrl(int port) => $"http://localhost:{port}";
 
-		private Func<string?, MappingSchema?, DataConnection> _connectionFactory = null!;
-
-		ITestDataContext IServerContainer.CreateContext(Func<ITestLinqService,DataOptions, DataOptions> optionBuilder, Func<string?, MappingSchema?, DataConnection> connectionFactory)
+		protected override ITestLinqService StartHost(int port, Func<string?, MappingSchema?, DataConnection> connectionFactory)
 		{
-			_connectionFactory = connectionFactory;
-			var service = OpenHost();
-
-			var url = GetServiceUrl(GetPort());
-
-			var hubConnection = new HubConnectionBuilder().WithUrl(url + HUB_PATH).Build();
-			hubConnection.StartAsync().GetAwaiter().GetResult();
-			var dx = new TestSignalRDataContext(hubConnection, o => optionBuilder(service, o));
-
-			return dx;
-		}
-
-		private ITestLinqService OpenHost()
-		{
-			var port = GetPort();
-
-			if (_openHosts.TryGetValue(port, out var service))
-				return service;
-
-			lock (_syncRoot)
+			var service = new TestLinqService((c, ms) => connectionFactory(c, ms))
 			{
-				if (_openHosts.TryGetValue(port, out service))
-					return service;
+				AllowUpdates    = true,
+				RemoteClientTag = "SignalR",
+			};
 
-				service = new TestLinqService((c, ms) => _connectionFactory(c, ms))
-				{
-					AllowUpdates    = true,
-					RemoteClientTag = "SignalR",
-				};
-
-				Startup.Service = (TestLinqService)service;
+			Startup.Service = service;
 
 #if NETFRAMEWORK
-				var host = WebHost.CreateDefaultBuilder().UseUrls(GetServiceUrl(port)).UseStartup<Startup>().Build();
+			var host = WebHost.CreateDefaultBuilder().UseUrls(GetServiceUrl(port)).UseStartup<Startup>().Build();
 #else
-				var builder = Host.CreateDefaultBuilder();
+			var builder = Host.CreateDefaultBuilder();
 
-				var host = builder.ConfigureWebHostDefaults(
-					webBuilder =>
-					{
-						webBuilder
-							.UseStartup<Startup>()
-							.UseUrls(GetServiceUrl(port));
-					}).Build();
+			var host = builder.ConfigureWebHostDefaults(
+				webBuilder =>
+				{
+					webBuilder
+						.UseStartup<Startup>()
+						.UseUrls(GetServiceUrl(port));
+				}).Build();
 #endif
 
-				host.Start();
-
-				_openHosts[port] = service;
-			}
+			host.Start();
 
 			TestExternals.Log("SignalR host opened");
 
 			return service;
 		}
 
-		//Environment.CurrentManagedThreadId need for a parallel test like DataConnectionTests.MultipleConnectionsTest
-		private int GetPort()
+		protected override ITestDataContext CreateClientContext(ITestLinqService service, int port, Func<ITestLinqService, DataOptions, DataOptions> optionBuilder)
 		{
-			if(KeepSamePortBetweenThreads)
-			{
-				return Port;
-			}
+			var hubConnection = new HubConnectionBuilder().WithUrl(GetServiceUrl(port) + HUB_PATH).Build();
+			hubConnection.StartAsync().GetAwaiter().GetResult();
 
-			return Port + (Environment.CurrentManagedThreadId % 1000) + TestExternals.RunID;
+			return new TestSignalRDataContext(hubConnection, o => optionBuilder(service, o));
 		}
 
 		private sealed class Startup
