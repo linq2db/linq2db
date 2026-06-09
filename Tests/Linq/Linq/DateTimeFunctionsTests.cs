@@ -2026,33 +2026,22 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Details = "Sql.AsSql forces server-side evaluation of a bare DateTime subtraction, which has no portable SQL representation; the value is always computed client-side and server-side support is not planned.")]
+		[ThrowsCannotBeConverted]
 		[Test]
-		public void NullableDateTimeSubtractionProjectionSqlTest([DataSources] string context)
+		public void NullableDateTimeSubtractionProjectionSqlTest([DataSources(TestProvName.AllAccessOdbc, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(NullableDateTimeSubtractionTable.Data);
 
-			var result =
-				(
-					from t in tb
-					orderby t.Id
-					select new
-					{
-						Time = Sql.AsSql(t.FinishedOn - t.StartedOn),
-					})
-				.ToArray();
+			var query =
+				from t in tb
+				orderby t.Id
+				select new
+				{
+					Time = Sql.AsSql(t.FinishedOn - t.StartedOn),
+				};
 
-			result.Length.ShouldBe(2);
-			result[0].Time.ShouldNotBeNull();
-			result[0].Time!.Value.TotalHours.ShouldBeInRange(1.9, 2.1);
-			result[1].Time.ShouldBeNull();
-
-			if (!context.IsRemote() && db is DataConnection dc)
-			{
-				Regex.IsMatch(dc.LastQuery!, @"FinishedOn[^,]*-[^,]*StartedOn", RegexOptions.IgnoreCase)
-					.ShouldBeTrue("DateTime subtraction must appear in SQL — Sql.AsSql forces server-side evaluation");
-			}
+			_ = query.ToArray();
 		}
 	}
 }

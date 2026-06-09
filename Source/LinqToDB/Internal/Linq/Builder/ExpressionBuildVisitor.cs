@@ -2804,6 +2804,9 @@ namespace LinqToDB.Internal.Linq.Builder
 					return Visit(translatedMember);
 			}
 
+			if (_buildPurpose is BuildPurpose.Table)
+				return node;
+
 			if (BuildContext == null || _buildPurpose is not (BuildPurpose.Sql or BuildPurpose.Expression))
 				return base.VisitBinary(node);
 
