@@ -227,9 +227,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// Adds <c>FINAL</c> modifier to FROM Clause of this table source.
 		/// For all tables already present in the current query scope, use <c>FinalInScopeHint</c> on <c>IClickHouseSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Table" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.ClickHouse, nameof(FinalHintImpl))]
 		public static IClickHouseSpecificTable<TSource> FinalHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
@@ -249,9 +247,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <typeparam name="TSource"></typeparam>
 		/// <param name="table"></param>
 		/// <returns></returns>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Table" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.ClickHouse, nameof(FinalInScopeHintImpl2))]
 		public static IClickHouseSpecificTable<TSource> FinalInScopeHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
@@ -268,9 +264,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// Adds <c>FINAL</c> modifier to FROM Clause of all tables already present in the query scope
 		/// this method is applied to. Tables added later by outer query composition are not affected.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="TablesInScope" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.ClickHouse, nameof(FinalInScopeHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> FinalInScopeHint<TSource>(this IClickHouseSpecificQueryable<TSource> table)
 			where TSource : notnull
@@ -298,8 +292,8 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// that refer to tables use the exact identifiers emitted by the SQL builder.
 		/// </para>
 		///
-		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.ClickHouse, nameof(SettingsHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> SettingsHint<TSource>(this IClickHouseSpecificQueryable<TSource> query, string hintFormat, params object?[] hintParameters)
 			where TSource : notnull

@@ -32,10 +32,8 @@ namespace LinqToDB
 	///
 	/// Extension methods in this type are composable configuration operations that return a new <see cref="DataOptions"/> instance.
 	/// They do not execute database commands.
-	/// <para>
-	/// AI-Tags-Defaults: Group=Configuration; Execution=Immediate; Composability=Composable; Affects=Configuration; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-	/// </para>
 	/// </remarks>
+	/// <ai-tags-defaults group="Configuration" execution="Immediate" composability="Composable" affects="Configuration" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 	[PublicAPI]
 	public static partial class DataOptionsExtensions
 	{

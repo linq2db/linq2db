@@ -37,10 +37,8 @@ namespace LinqToDB
 		/// Execution is deferred until enumeration and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
-		/// <para>
-		/// AI-Tags: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="DML" execution="Deferred" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		public static IEnumerable<TSource> DeleteWithOutput<TSource>(this IQueryable<TSource> source)
 		{
 			ArgumentNullException.ThrowIfNull(source);
@@ -133,10 +131,8 @@ namespace LinqToDB
 		/// Execution is deferred until enumeration and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
-		/// <para>
-		/// AI-Tags: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="DML" execution="Deferred" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[Pure]
 		public static IEnumerable<TOutput> DeleteWithOutput<TSource,TOutput>(
 			this IQueryable<TSource>           source,
@@ -239,10 +235,8 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
-		/// <para>
-		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		public static int DeleteWithOutputInto<TSource,TOutput>(
 			this IQueryable<TSource> source,
 			ITable<TOutput>          outputTable)
@@ -315,10 +309,8 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
-		/// <para>
-		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		public static int DeleteWithOutputInto<TSource,TOutput>(
 			this IQueryable<TSource>          source,
 			ITable<TOutput>                   outputTable,
@@ -394,10 +386,8 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
-		/// <para>
-		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		public static int Delete<T>(this IQueryable<T> source)
 		{
 			ArgumentNullException.ThrowIfNull(source);

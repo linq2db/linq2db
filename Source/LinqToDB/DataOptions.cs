@@ -89,10 +89,8 @@ namespace LinqToDB
 	/// Returns <see langword="null"/> when the resulting options are identical to the current options
 	/// (no state change needed).
 	/// </para>
-	/// <para>
-	/// AI-Tags: Group=Configuration; Affects=Configuration; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-	/// </para>
 	/// </remarks>
+	/// <ai-tags group="Configuration" affects="Configuration" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 	public sealed class DataOptions : OptionsContainer<DataOptions>, IConfigurationID, IEquatable<DataOptions>, ICloneable
 	{
 		public DataOptions()

@@ -31,8 +31,8 @@ Intended for developers and AI agents generating code against LinqToDB.
 | Navigation properties or lazy loading not working | #6 - EF Core assumptions |
 | `SaveChanges()` not found or not needed | #6 - EF Core assumptions |
 | Data committed outside `TransactionScope` | #7 - TransactionScope ordering |
-| Code written before XML-doc API discovery | #8 - Skipping XML-doc |
-| Hint implemented with `Sql.Expression`, raw SQL, or interceptor before checking provider hint APIs | #8 - Skipping XML-doc |
+| Code written before generated API discovery when exact API shape matters | #8 - Skipping API discovery |
+| Hint implemented with `Sql.Expression`, raw SQL, or interceptor before checking provider hint APIs | #8 - Skipping API discovery |
 | `InsertOrReplace` / `InsertOrReplaceAsync` throws `LinqToDBException` | #9 - InsertOrReplace + Identity PK |
 | Column schema differs across providers or is unexpectedly wide | #10 - Unconstrained column types |
 | Temporary table populated from existing rows by creating an empty table and calling `BulkCopy` | #11 - Wrong temp-table overload |
@@ -262,40 +262,42 @@ tx.Commit();
 
 ---
 
-## 8. Generating code without inspecting symbol XML-doc
+## 8. Generating code without package API discovery
 
 **Anti-pattern:**
-Reading markdown docs and then generating code without inspecting the XML documentation
-of the specific LinqToDB types being used.
+Reading conceptual markdown docs and then generating code without checking `docs/api.md` or, when
+needed, raw XML-doc for the specific LinqToDB APIs being used.
 
 **Consequence:**
-XML documentation for LinqToDB public APIs contains exact current-version member names,
-signatures, overloads, parameters, return types, remarks, and AI-Tags for members that have XML
-comments. For key types (`DataOptions`, `DataConnection`, `MappingSchema`, provider `UseXxx`
-methods) it also contains explicit lifetime rules, usage constraints, and performance-critical
-requirements that markdown docs summarise but do not fully enumerate.
-Skipping XML-doc inspection can produce code that compiles but uses a lower-level fallback instead
-of an existing typed API, for example using `TableHint("...")`, `QueryHint("...")`, or
+`docs/api.md` is generated from the version-matched XML documentation and contains searchable API
+families, summaries, search anchors, and generated AI metadata. Raw XML-doc remains the primary
+reference for exact signatures, overloads, parameters, return types, remarks, and custom AI
+metadata when the generated extract is not detailed enough.
+
+Skipping package API discovery can produce code that compiles but uses a lower-level fallback
+instead of an existing typed API, for example using `TableHint("...")`, `QueryHint("...")`, or
 `Sql.Expression` when a provider-specific typed hint helper exists. It can also produce code that
-violates lifetime rules - for example, recreating
-`DataOptions` per operation instead of sharing a single instance.
+violates lifetime rules, for example recreating `DataOptions` per operation instead of sharing a
+single instance.
 
 **Correct pattern:**
 Markdown documentation is sufficient for orientation, but it is not the complete public API
-surface. If an API is not mentioned in markdown, search XML-doc before concluding it does not
-exist and before using generic string-based fallbacks.
-For lifetime-sensitive types, inspect XML-doc when available.
-Start with `LinqToDBArchitecture` (namespace `LinqToDB`) for cross-references,
-then inspect `DataOptions`, `DataConnection`, `DataContext`, `MappingSchema`,
-and provider `UseXxx` methods - these contain lifetime and caching constraints
-not fully enumerated in markdown.
-For provider-specific features, inspect the provider-specific XML-doc surface before recommending
-generic APIs such as `QueryHint`, `TableHint`, `Sql.Expression`, or raw SQL.
+surface. If an API is not mentioned in markdown, search `docs/api.md` before concluding it does
+not exist and before using generic string-based fallbacks. Use raw XML-doc only when the generated
+extract is inconclusive or exact member details are required.
+
+For lifetime-sensitive types, search `docs/api.md` first and inspect raw XML-doc when available.
+`LinqToDBArchitecture` (namespace `LinqToDB`), `DataOptions`, `DataConnection`, `DataContext`,
+`MappingSchema`, and provider `UseXxx` methods contain lifetime and caching constraints not fully
+enumerated in topic markdown.
+For provider-specific features, inspect the provider-specific generated API entries and raw
+XML-doc when needed before recommending generic APIs such as `QueryHint`, `TableHint`,
+`Sql.Expression`, or raw SQL.
 For hints, search `docs/hints-api-map.md` before recommending generic raw hint APIs or custom SQL.
 For table hints that should apply to several tables or a whole query scope, search typed
 `*InScope*` provider helpers before recommending generic `TablesInScopeHint(...)`.
 Do not synthesize scope helper names by string concatenation; use the verified provider helper from
-`docs/hints-api-map.md` and XML-doc.
+`docs/hints-api-map.md`, `docs/api.md`, and XML-doc when needed.
 Apply scope helpers to the composed query/subquery that already contains the target tables; applying
 a `TablesInScope` helper to only the first table before adding joins will not cover later joined
 tables.

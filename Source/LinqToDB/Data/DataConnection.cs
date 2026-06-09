@@ -104,10 +104,8 @@ namespace LinqToDB.Data
 	/// See <c>skills/linq2db/docs/agent-antipatterns.md</c> for examples.
 	/// </para>
 	///
-	/// <para>
-	/// AI-Tags: Group=Connection; Affects=ExecutionContext; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-	/// </para>
 	/// </remarks>
+	/// <ai-tags group="Connection" affects="ExecutionContext" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 	/// <seealso cref="LinqToDBArchitecture"/>
 	[PublicAPI]
 	public partial class DataConnection : IDataContext, IInfrastructure<IServiceProvider>
@@ -1573,9 +1571,7 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <returns>Database transaction object.</returns>
 		/// <exception cref="InvalidOperationException">Thrown when connection already has a transaction.</exception>
-		/// <remarks>
-		/// AI-Tags: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Connection" execution="Immediate" composability="Terminal" pipeline="SqlText" provider="ProviderDefined" />
 		public virtual DataConnectionTransaction BeginTransaction()
 		{
 			CheckAndThrowOnDisposed();
@@ -1617,9 +1613,7 @@ namespace LinqToDB.Data
 		/// <param name="isolationLevel">Transaction isolation level.</param>
 		/// <returns>Database transaction object.</returns>
 		/// <exception cref="InvalidOperationException">Thrown when connection already has a transaction.</exception>
-		/// <remarks>
-		/// AI-Tags: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Connection" execution="Immediate" composability="Terminal" pipeline="SqlText" provider="ProviderDefined" />
 		public virtual DataConnectionTransaction BeginTransaction(IsolationLevel isolationLevel)
 		{
 			CheckAndThrowOnDisposed();
@@ -1657,9 +1651,7 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Commits transaction (if any), associated with connection.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Connection" execution="Immediate" composability="Terminal" pipeline="SqlText" provider="ProviderDefined" />
 		public virtual void CommitTransaction()
 		{
 			CheckAndThrowOnDisposed();
@@ -1692,9 +1684,7 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Rollbacks transaction (if any), associated with connection.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Connection" execution="Immediate" composability="Terminal" pipeline="SqlText" provider="ProviderDefined" />
 		public virtual void RollbackTransaction()
 		{
 			CheckAndThrowOnDisposed();
@@ -1727,9 +1717,7 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Disposes transaction (if any), associated with connection.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Connection" execution="Immediate" composability="Terminal" pipeline="SqlText" provider="ProviderDefined" />
 		public virtual void DisposeTransaction()
 		{
 			CheckAndThrowOnDisposed();

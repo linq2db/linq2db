@@ -14,9 +14,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// Adds a MySQL <c>JOIN_FIXED_ORDER</c> table hint.
 		/// For all tables already present in the current query scope, use <c>JoinFixedOrderInScopeHint</c> on <c>IMySqlSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Table" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(JoinFixedOrderTableHintImpl))]
 		public static IMySqlSpecificTable<TSource> JoinFixedOrderHint<TSource>(this IMySqlSpecificTable<TSource> table)
 			where TSource : notnull
@@ -32,9 +30,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>JOIN_FIXED_ORDER</c> table hint to tables in the current query scope.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="TablesInScope" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(JoinFixedOrderInScopeHintImpl))]
 		public static IMySqlSpecificQueryable<TSource> JoinFixedOrderInScopeHint<TSource>(this IMySqlSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -50,9 +46,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>JOIN_FIXED_ORDER</c> query hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(JoinFixedOrderHintImpl4))]
 		public static IMySqlSpecificQueryable<TSource> JoinFixedOrderHint<TSource>(this IMySqlSpecificQueryable<TSource> query, params Sql.SqlID[] tableIDs)
 			where TSource : notnull
@@ -69,9 +63,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// Adds a MySQL <c>JOIN_ORDER</c> table hint.
 		/// For all tables already present in the current query scope, use <c>JoinOrderInScopeHint</c> on <c>IMySqlSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Table" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(JoinOrderTableHintImpl))]
 		public static IMySqlSpecificTable<TSource> JoinOrderHint<TSource>(this IMySqlSpecificTable<TSource> table)
 			where TSource : notnull
@@ -87,9 +79,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>JOIN_ORDER</c> table hint to tables in the current query scope.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="TablesInScope" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(JoinOrderInScopeHintImpl))]
 		public static IMySqlSpecificQueryable<TSource> JoinOrderInScopeHint<TSource>(this IMySqlSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -105,9 +95,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>JOIN_ORDER</c> query hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(JoinOrderHintImpl4))]
 		public static IMySqlSpecificQueryable<TSource> JoinOrderHint<TSource>(this IMySqlSpecificQueryable<TSource> query, params Sql.SqlID[] tableIDs)
 			where TSource : notnull
@@ -124,9 +112,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// Adds a MySQL <c>JOIN_PREFIX</c> table hint.
 		/// For all tables already present in the current query scope, use <c>JoinPrefixInScopeHint</c> on <c>IMySqlSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Table" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(JoinPrefixTableHintImpl))]
 		public static IMySqlSpecificTable<TSource> JoinPrefixHint<TSource>(this IMySqlSpecificTable<TSource> table)
 			where TSource : notnull
@@ -142,9 +128,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>JOIN_PREFIX</c> table hint to tables in the current query scope.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="TablesInScope" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(JoinPrefixInScopeHintImpl))]
 		public static IMySqlSpecificQueryable<TSource> JoinPrefixInScopeHint<TSource>(this IMySqlSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -160,9 +144,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>JOIN_PREFIX</c> query hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(JoinPrefixHintImpl4))]
 		public static IMySqlSpecificQueryable<TSource> JoinPrefixHint<TSource>(this IMySqlSpecificQueryable<TSource> query, params Sql.SqlID[] tableIDs)
 			where TSource : notnull
@@ -179,9 +161,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// Adds a MySQL <c>JOIN_SUFFIX</c> table hint.
 		/// For all tables already present in the current query scope, use <c>JoinSuffixInScopeHint</c> on <c>IMySqlSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Table" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(JoinSuffixTableHintImpl))]
 		public static IMySqlSpecificTable<TSource> JoinSuffixHint<TSource>(this IMySqlSpecificTable<TSource> table)
 			where TSource : notnull
@@ -197,9 +177,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>JOIN_SUFFIX</c> table hint to tables in the current query scope.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="TablesInScope" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(JoinSuffixInScopeHintImpl))]
 		public static IMySqlSpecificQueryable<TSource> JoinSuffixInScopeHint<TSource>(this IMySqlSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -215,9 +193,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>JOIN_SUFFIX</c> query hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(JoinSuffixHintImpl4))]
 		public static IMySqlSpecificQueryable<TSource> JoinSuffixHint<TSource>(this IMySqlSpecificQueryable<TSource> query, params Sql.SqlID[] tableIDs)
 			where TSource : notnull
@@ -234,9 +210,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// Adds a MySQL <c>BKA</c> table hint.
 		/// For all tables already present in the current query scope, use <c>BkaInScopeHint</c> on <c>IMySqlSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Table" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(BkaTableHintImpl))]
 		public static IMySqlSpecificTable<TSource> BkaHint<TSource>(this IMySqlSpecificTable<TSource> table)
 			where TSource : notnull
@@ -252,9 +226,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>BKA</c> table hint to tables in the current query scope.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="TablesInScope" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(BkaInScopeHintImpl))]
 		public static IMySqlSpecificQueryable<TSource> BkaInScopeHint<TSource>(this IMySqlSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -270,9 +242,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>BKA</c> query hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(BkaHintImpl4))]
 		public static IMySqlSpecificQueryable<TSource> BkaHint<TSource>(this IMySqlSpecificQueryable<TSource> query, params Sql.SqlID[] tableIDs)
 			where TSource : notnull
@@ -289,9 +259,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// Adds a MySQL <c>BKA</c> table hint.
 		/// For all tables already present in the current query scope, use <c>BatchedKeyAccessInScopeHint</c> on <c>IMySqlSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Table" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(BatchedKeyAccessTableHintImpl))]
 		public static IMySqlSpecificTable<TSource> BatchedKeyAccessHint<TSource>(this IMySqlSpecificTable<TSource> table)
 			where TSource : notnull
@@ -307,9 +275,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>BKA</c> table hint to tables in the current query scope.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="TablesInScope" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(BatchedKeyAccessInScopeHintImpl))]
 		public static IMySqlSpecificQueryable<TSource> BatchedKeyAccessInScopeHint<TSource>(this IMySqlSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -325,9 +291,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>BKA</c> query hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(BatchedKeyAccessHintImpl4))]
 		public static IMySqlSpecificQueryable<TSource> BatchedKeyAccessHint<TSource>(this IMySqlSpecificQueryable<TSource> query, params Sql.SqlID[] tableIDs)
 			where TSource : notnull
@@ -344,9 +308,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// Adds a MySQL <c>NO_BKA</c> table hint.
 		/// For all tables already present in the current query scope, use <c>NoBkaInScopeHint</c> on <c>IMySqlSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Table" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(NoBkaTableHintImpl))]
 		public static IMySqlSpecificTable<TSource> NoBkaHint<TSource>(this IMySqlSpecificTable<TSource> table)
 			where TSource : notnull
@@ -362,9 +324,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>NO_BKA</c> table hint to tables in the current query scope.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="TablesInScope" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(NoBkaInScopeHintImpl))]
 		public static IMySqlSpecificQueryable<TSource> NoBkaInScopeHint<TSource>(this IMySqlSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -380,9 +340,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>NO_BKA</c> query hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(NoBkaHintImpl4))]
 		public static IMySqlSpecificQueryable<TSource> NoBkaHint<TSource>(this IMySqlSpecificQueryable<TSource> query, params Sql.SqlID[] tableIDs)
 			where TSource : notnull
@@ -399,9 +357,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// Adds a MySQL <c>NO_BKA</c> table hint.
 		/// For all tables already present in the current query scope, use <c>NoBatchedKeyAccessInScopeHint</c> on <c>IMySqlSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Table" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(NoBatchedKeyAccessTableHintImpl))]
 		public static IMySqlSpecificTable<TSource> NoBatchedKeyAccessHint<TSource>(this IMySqlSpecificTable<TSource> table)
 			where TSource : notnull
@@ -417,9 +373,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>NO_BKA</c> table hint to tables in the current query scope.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="TablesInScope" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(NoBatchedKeyAccessInScopeHintImpl))]
 		public static IMySqlSpecificQueryable<TSource> NoBatchedKeyAccessInScopeHint<TSource>(this IMySqlSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -435,9 +389,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>NO_BKA</c> query hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(NoBatchedKeyAccessHintImpl4))]
 		public static IMySqlSpecificQueryable<TSource> NoBatchedKeyAccessHint<TSource>(this IMySqlSpecificQueryable<TSource> query, params Sql.SqlID[] tableIDs)
 			where TSource : notnull
@@ -454,9 +406,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// Adds a MySQL <c>BNL</c> table hint.
 		/// For all tables already present in the current query scope, use <c>BnlInScopeHint</c> on <c>IMySqlSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Table" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(BnlTableHintImpl))]
 		public static IMySqlSpecificTable<TSource> BnlHint<TSource>(this IMySqlSpecificTable<TSource> table)
 			where TSource : notnull
@@ -472,9 +422,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>BNL</c> table hint to tables in the current query scope.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="TablesInScope" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(BnlInScopeHintImpl))]
 		public static IMySqlSpecificQueryable<TSource> BnlInScopeHint<TSource>(this IMySqlSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -490,9 +438,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>BNL</c> query hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(BnlHintImpl4))]
 		public static IMySqlSpecificQueryable<TSource> BnlHint<TSource>(this IMySqlSpecificQueryable<TSource> query, params Sql.SqlID[] tableIDs)
 			where TSource : notnull
@@ -509,9 +455,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// Adds a MySQL <c>BNL</c> table hint.
 		/// For all tables already present in the current query scope, use <c>BlockNestedLoopInScopeHint</c> on <c>IMySqlSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Table" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(BlockNestedLoopTableHintImpl))]
 		public static IMySqlSpecificTable<TSource> BlockNestedLoopHint<TSource>(this IMySqlSpecificTable<TSource> table)
 			where TSource : notnull
@@ -527,9 +471,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>BNL</c> table hint to tables in the current query scope.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="TablesInScope" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(BlockNestedLoopInScopeHintImpl))]
 		public static IMySqlSpecificQueryable<TSource> BlockNestedLoopInScopeHint<TSource>(this IMySqlSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -545,9 +487,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>BNL</c> query hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(BlockNestedLoopHintImpl4))]
 		public static IMySqlSpecificQueryable<TSource> BlockNestedLoopHint<TSource>(this IMySqlSpecificQueryable<TSource> query, params Sql.SqlID[] tableIDs)
 			where TSource : notnull
@@ -564,9 +504,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// Adds a MySQL <c>NO_BNL</c> table hint.
 		/// For all tables already present in the current query scope, use <c>NoBnlInScopeHint</c> on <c>IMySqlSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Table" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(NoBnlTableHintImpl))]
 		public static IMySqlSpecificTable<TSource> NoBnlHint<TSource>(this IMySqlSpecificTable<TSource> table)
 			where TSource : notnull
@@ -582,9 +520,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>NO_BNL</c> table hint to tables in the current query scope.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="TablesInScope" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(NoBnlInScopeHintImpl))]
 		public static IMySqlSpecificQueryable<TSource> NoBnlInScopeHint<TSource>(this IMySqlSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -600,9 +536,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>NO_BNL</c> query hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(NoBnlHintImpl4))]
 		public static IMySqlSpecificQueryable<TSource> NoBnlHint<TSource>(this IMySqlSpecificQueryable<TSource> query, params Sql.SqlID[] tableIDs)
 			where TSource : notnull
@@ -619,9 +553,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// Adds a MySQL <c>NO_BNL</c> table hint.
 		/// For all tables already present in the current query scope, use <c>NoBlockNestedLoopInScopeHint</c> on <c>IMySqlSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Table" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(NoBlockNestedLoopTableHintImpl))]
 		public static IMySqlSpecificTable<TSource> NoBlockNestedLoopHint<TSource>(this IMySqlSpecificTable<TSource> table)
 			where TSource : notnull
@@ -637,9 +569,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>NO_BNL</c> table hint to tables in the current query scope.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="TablesInScope" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(NoBlockNestedLoopInScopeHintImpl))]
 		public static IMySqlSpecificQueryable<TSource> NoBlockNestedLoopInScopeHint<TSource>(this IMySqlSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -655,9 +585,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>NO_BNL</c> query hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(NoBlockNestedLoopHintImpl4))]
 		public static IMySqlSpecificQueryable<TSource> NoBlockNestedLoopHint<TSource>(this IMySqlSpecificQueryable<TSource> query, params Sql.SqlID[] tableIDs)
 			where TSource : notnull
@@ -674,9 +602,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// Adds a MySQL <c>DERIVED_CONDITION_PUSHDOWN</c> table hint.
 		/// For all tables already present in the current query scope, use <c>DerivedConditionPushDownInScopeHint</c> on <c>IMySqlSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Table" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(DerivedConditionPushDownTableHintImpl))]
 		public static IMySqlSpecificTable<TSource> DerivedConditionPushDownHint<TSource>(this IMySqlSpecificTable<TSource> table)
 			where TSource : notnull
@@ -692,9 +618,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>DERIVED_CONDITION_PUSHDOWN</c> table hint to tables in the current query scope.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="TablesInScope" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(DerivedConditionPushDownInScopeHintImpl))]
 		public static IMySqlSpecificQueryable<TSource> DerivedConditionPushDownInScopeHint<TSource>(this IMySqlSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -710,9 +634,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>DERIVED_CONDITION_PUSHDOWN</c> query hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(DerivedConditionPushDownHintImpl4))]
 		public static IMySqlSpecificQueryable<TSource> DerivedConditionPushDownHint<TSource>(this IMySqlSpecificQueryable<TSource> query, params Sql.SqlID[] tableIDs)
 			where TSource : notnull
@@ -729,9 +651,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// Adds a MySQL <c>NO_DERIVED_CONDITION_PUSHDOWN</c> table hint.
 		/// For all tables already present in the current query scope, use <c>NoDerivedConditionPushDownInScopeHint</c> on <c>IMySqlSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Table" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(NoDerivedConditionPushDownTableHintImpl))]
 		public static IMySqlSpecificTable<TSource> NoDerivedConditionPushDownHint<TSource>(this IMySqlSpecificTable<TSource> table)
 			where TSource : notnull
@@ -747,9 +667,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>NO_DERIVED_CONDITION_PUSHDOWN</c> table hint to tables in the current query scope.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="TablesInScope" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(NoDerivedConditionPushDownInScopeHintImpl))]
 		public static IMySqlSpecificQueryable<TSource> NoDerivedConditionPushDownInScopeHint<TSource>(this IMySqlSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -765,9 +683,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>NO_DERIVED_CONDITION_PUSHDOWN</c> query hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(NoDerivedConditionPushDownHintImpl4))]
 		public static IMySqlSpecificQueryable<TSource> NoDerivedConditionPushDownHint<TSource>(this IMySqlSpecificQueryable<TSource> query, params Sql.SqlID[] tableIDs)
 			where TSource : notnull
@@ -784,9 +700,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// Adds a MySQL <c>HASH_JOIN</c> table hint.
 		/// For all tables already present in the current query scope, use <c>HashJoinInScopeHint</c> on <c>IMySqlSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Table" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(HashJoinTableHintImpl))]
 		public static IMySqlSpecificTable<TSource> HashJoinHint<TSource>(this IMySqlSpecificTable<TSource> table)
 			where TSource : notnull
@@ -802,9 +716,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>HASH_JOIN</c> table hint to tables in the current query scope.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="TablesInScope" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(HashJoinInScopeHintImpl))]
 		public static IMySqlSpecificQueryable<TSource> HashJoinInScopeHint<TSource>(this IMySqlSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -820,9 +732,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>HASH_JOIN</c> query hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(HashJoinHintImpl4))]
 		public static IMySqlSpecificQueryable<TSource> HashJoinHint<TSource>(this IMySqlSpecificQueryable<TSource> query, params Sql.SqlID[] tableIDs)
 			where TSource : notnull
@@ -839,9 +749,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// Adds a MySQL <c>NO_HASH_JOIN</c> table hint.
 		/// For all tables already present in the current query scope, use <c>NoHashJoinInScopeHint</c> on <c>IMySqlSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Table" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(NoHashJoinTableHintImpl))]
 		public static IMySqlSpecificTable<TSource> NoHashJoinHint<TSource>(this IMySqlSpecificTable<TSource> table)
 			where TSource : notnull
@@ -857,9 +765,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>NO_HASH_JOIN</c> table hint to tables in the current query scope.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="TablesInScope" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(NoHashJoinInScopeHintImpl))]
 		public static IMySqlSpecificQueryable<TSource> NoHashJoinInScopeHint<TSource>(this IMySqlSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -875,9 +781,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>NO_HASH_JOIN</c> query hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(NoHashJoinHintImpl4))]
 		public static IMySqlSpecificQueryable<TSource> NoHashJoinHint<TSource>(this IMySqlSpecificQueryable<TSource> query, params Sql.SqlID[] tableIDs)
 			where TSource : notnull
@@ -894,9 +798,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// Adds a MySQL <c>MERGE</c> table hint.
 		/// For all tables already present in the current query scope, use <c>MergeInScopeHint</c> on <c>IMySqlSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Table" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(MergeTableHintImpl))]
 		public static IMySqlSpecificTable<TSource> MergeHint<TSource>(this IMySqlSpecificTable<TSource> table)
 			where TSource : notnull
@@ -912,9 +814,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>MERGE</c> table hint to tables in the current query scope.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="TablesInScope" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(MergeInScopeHintImpl))]
 		public static IMySqlSpecificQueryable<TSource> MergeInScopeHint<TSource>(this IMySqlSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -930,9 +830,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>MERGE</c> query hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(MergeHintImpl4))]
 		public static IMySqlSpecificQueryable<TSource> MergeHint<TSource>(this IMySqlSpecificQueryable<TSource> query, params Sql.SqlID[] tableIDs)
 			where TSource : notnull
@@ -949,9 +847,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// Adds a MySQL <c>NO_MERGE</c> table hint.
 		/// For all tables already present in the current query scope, use <c>NoMergeInScopeHint</c> on <c>IMySqlSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Table" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(NoMergeTableHintImpl))]
 		public static IMySqlSpecificTable<TSource> NoMergeHint<TSource>(this IMySqlSpecificTable<TSource> table)
 			where TSource : notnull
@@ -967,9 +863,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>NO_MERGE</c> table hint to tables in the current query scope.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="TablesInScope" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(NoMergeInScopeHintImpl))]
 		public static IMySqlSpecificQueryable<TSource> NoMergeInScopeHint<TSource>(this IMySqlSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -985,9 +879,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>NO_MERGE</c> query hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(NoMergeHintImpl4))]
 		public static IMySqlSpecificQueryable<TSource> NoMergeHint<TSource>(this IMySqlSpecificQueryable<TSource> query, params Sql.SqlID[] tableIDs)
 			where TSource : notnull
@@ -1003,9 +895,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>GROUP_INDEX</c> index hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Index" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(GroupIndexIndexHintImpl))]
 		public static IMySqlSpecificTable<TSource> GroupIndexHint<TSource>(this IMySqlSpecificTable<TSource> table, params string[] indexNames)
 			where TSource : notnull
@@ -1021,9 +911,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>NO_GROUP_INDEX</c> index hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Index" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(NoGroupIndexIndexHintImpl))]
 		public static IMySqlSpecificTable<TSource> NoGroupIndexHint<TSource>(this IMySqlSpecificTable<TSource> table, params string[] indexNames)
 			where TSource : notnull
@@ -1039,9 +927,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>INDEX</c> index hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Index" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(IndexIndexHintImpl))]
 		public static IMySqlSpecificTable<TSource> IndexHint<TSource>(this IMySqlSpecificTable<TSource> table, params string[] indexNames)
 			where TSource : notnull
@@ -1057,9 +943,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>NO_INDEX</c> index hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Index" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(NoIndexIndexHintImpl))]
 		public static IMySqlSpecificTable<TSource> NoIndexHint<TSource>(this IMySqlSpecificTable<TSource> table, params string[] indexNames)
 			where TSource : notnull
@@ -1075,9 +959,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>INDEX_MERGE</c> index hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Index" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(IndexMergeIndexHintImpl))]
 		public static IMySqlSpecificTable<TSource> IndexMergeHint<TSource>(this IMySqlSpecificTable<TSource> table, params string[] indexNames)
 			where TSource : notnull
@@ -1093,9 +975,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>NO_INDEX_MERGE</c> index hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Index" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(NoIndexMergeIndexHintImpl))]
 		public static IMySqlSpecificTable<TSource> NoIndexMergeHint<TSource>(this IMySqlSpecificTable<TSource> table, params string[] indexNames)
 			where TSource : notnull
@@ -1111,9 +991,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>JOIN_INDEX</c> index hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Index" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(JoinIndexIndexHintImpl))]
 		public static IMySqlSpecificTable<TSource> JoinIndexHint<TSource>(this IMySqlSpecificTable<TSource> table, params string[] indexNames)
 			where TSource : notnull
@@ -1129,9 +1007,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>NO_JOIN_INDEX</c> index hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Index" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(NoJoinIndexIndexHintImpl))]
 		public static IMySqlSpecificTable<TSource> NoJoinIndexHint<TSource>(this IMySqlSpecificTable<TSource> table, params string[] indexNames)
 			where TSource : notnull
@@ -1147,9 +1023,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>MRR</c> index hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Index" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(MrrIndexHintImpl))]
 		public static IMySqlSpecificTable<TSource> MrrHint<TSource>(this IMySqlSpecificTable<TSource> table, params string[] indexNames)
 			where TSource : notnull
@@ -1165,9 +1039,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>NO_MRR</c> index hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Index" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(NoMrrIndexHintImpl))]
 		public static IMySqlSpecificTable<TSource> NoMrrHint<TSource>(this IMySqlSpecificTable<TSource> table, params string[] indexNames)
 			where TSource : notnull
@@ -1183,9 +1055,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>NO_ICP</c> index hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Index" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(NoIcpIndexHintImpl))]
 		public static IMySqlSpecificTable<TSource> NoIcpHint<TSource>(this IMySqlSpecificTable<TSource> table, params string[] indexNames)
 			where TSource : notnull
@@ -1201,9 +1071,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>NO_RANGE_OPTIMIZATION</c> index hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Index" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(NoRangeOptimizationIndexHintImpl))]
 		public static IMySqlSpecificTable<TSource> NoRangeOptimizationHint<TSource>(this IMySqlSpecificTable<TSource> table, params string[] indexNames)
 			where TSource : notnull
@@ -1219,9 +1087,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>ORDER_INDEX</c> index hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Index" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(OrderIndexIndexHintImpl))]
 		public static IMySqlSpecificTable<TSource> OrderIndexHint<TSource>(this IMySqlSpecificTable<TSource> table, params string[] indexNames)
 			where TSource : notnull
@@ -1237,9 +1103,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>NO_ORDER_INDEX</c> index hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Index" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(NoOrderIndexIndexHintImpl))]
 		public static IMySqlSpecificTable<TSource> NoOrderIndexHint<TSource>(this IMySqlSpecificTable<TSource> table, params string[] indexNames)
 			where TSource : notnull
@@ -1255,9 +1119,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>SKIP_SCAN</c> index hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Index" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(SkipScanIndexHintImpl))]
 		public static IMySqlSpecificTable<TSource> SkipScanHint<TSource>(this IMySqlSpecificTable<TSource> table, params string[] indexNames)
 			where TSource : notnull
@@ -1273,9 +1135,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>NO_SKIP_SCAN</c> index hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Index" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(NoSkipScanIndexHintImpl))]
 		public static IMySqlSpecificTable<TSource> NoSkipScanHint<TSource>(this IMySqlSpecificTable<TSource> table, params string[] indexNames)
 			where TSource : notnull
@@ -1291,9 +1151,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>SEMIJOIN</c> query hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(SemiJoinHintImpl5))]
 		public static IMySqlSpecificQueryable<TSource> SemiJoinHint<TSource>(this IMySqlSpecificQueryable<TSource> query, params string[] values)
 			where TSource : notnull
@@ -1309,9 +1167,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>NO_SEMIJOIN</c> query hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(NoSemiJoinHintImpl5))]
 		public static IMySqlSpecificQueryable<TSource> NoSemiJoinHint<TSource>(this IMySqlSpecificQueryable<TSource> query, params string[] values)
 			where TSource : notnull
@@ -1327,9 +1183,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>MAX_EXECUTION_TIME(...)</c> query hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(MaxExecutionTimeHintImpl2))]
 		public static IMySqlSpecificQueryable<TSource> MaxExecutionTimeHint<TSource>(this IMySqlSpecificQueryable<TSource> query, int value)
 			where TSource : notnull
@@ -1345,9 +1199,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>SET_VAR</c> query hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(SetVarHintImpl3))]
 		public static IMySqlSpecificQueryable<TSource> SetVarHint<TSource>(this IMySqlSpecificQueryable<TSource> query, string value)
 			where TSource : notnull
@@ -1363,9 +1215,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>RESOURCE_GROUP</c> query hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(ResourceGroupHintImpl3))]
 		public static IMySqlSpecificQueryable<TSource> ResourceGroupHint<TSource>(this IMySqlSpecificQueryable<TSource> query, string value)
 			where TSource : notnull
@@ -1381,9 +1231,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>USE INDEX</c> index hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Index" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(UseIndexIndexHintImpl))]
 		public static IMySqlSpecificTable<TSource> UseIndexHint<TSource>(this IMySqlSpecificTable<TSource> table, params string[] indexNames)
 			where TSource : notnull
@@ -1399,9 +1247,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>USE INDEX FOR JOIN</c> index hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Index" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(UseIndexForJoinIndexHintImpl))]
 		public static IMySqlSpecificTable<TSource> UseIndexForJoinHint<TSource>(this IMySqlSpecificTable<TSource> table, params string[] indexNames)
 			where TSource : notnull
@@ -1417,9 +1263,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>USE INDEX FOR ORDER BY</c> index hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Index" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(UseIndexForOrderByIndexHintImpl))]
 		public static IMySqlSpecificTable<TSource> UseIndexForOrderByHint<TSource>(this IMySqlSpecificTable<TSource> table, params string[] indexNames)
 			where TSource : notnull
@@ -1435,9 +1279,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>USE INDEX FOR GROUP BY</c> index hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Index" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(UseIndexForGroupByIndexHintImpl))]
 		public static IMySqlSpecificTable<TSource> UseIndexForGroupByHint<TSource>(this IMySqlSpecificTable<TSource> table, params string[] indexNames)
 			where TSource : notnull
@@ -1453,9 +1295,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>USE KEY</c> index hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Index" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(UseKeyIndexHintImpl))]
 		public static IMySqlSpecificTable<TSource> UseKeyHint<TSource>(this IMySqlSpecificTable<TSource> table, params string[] indexNames)
 			where TSource : notnull
@@ -1471,9 +1311,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>USE KEY FOR JOIN</c> index hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Index" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(UseKeyForJoinIndexHintImpl))]
 		public static IMySqlSpecificTable<TSource> UseKeyForJoinHint<TSource>(this IMySqlSpecificTable<TSource> table, params string[] indexNames)
 			where TSource : notnull
@@ -1489,9 +1327,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>USE KEY FOR ORDER BY</c> index hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Index" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(UseKeyForOrderByIndexHintImpl))]
 		public static IMySqlSpecificTable<TSource> UseKeyForOrderByHint<TSource>(this IMySqlSpecificTable<TSource> table, params string[] indexNames)
 			where TSource : notnull
@@ -1507,9 +1343,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>USE KEY FOR GROUP BY</c> index hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Index" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(UseKeyForGroupByIndexHintImpl))]
 		public static IMySqlSpecificTable<TSource> UseKeyForGroupByHint<TSource>(this IMySqlSpecificTable<TSource> table, params string[] indexNames)
 			where TSource : notnull
@@ -1525,9 +1359,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>IGNORE INDEX</c> index hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Index" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(IgnoreIndexIndexHintImpl))]
 		public static IMySqlSpecificTable<TSource> IgnoreIndexHint<TSource>(this IMySqlSpecificTable<TSource> table, params string[] indexNames)
 			where TSource : notnull
@@ -1543,9 +1375,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>IGNORE INDEX FOR JOIN</c> index hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Index" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(IgnoreIndexForJoinIndexHintImpl))]
 		public static IMySqlSpecificTable<TSource> IgnoreIndexForJoinHint<TSource>(this IMySqlSpecificTable<TSource> table, params string[] indexNames)
 			where TSource : notnull
@@ -1561,9 +1391,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>IGNORE INDEX FOR ORDER BY</c> index hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Index" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(IgnoreIndexForOrderByIndexHintImpl))]
 		public static IMySqlSpecificTable<TSource> IgnoreIndexForOrderByHint<TSource>(this IMySqlSpecificTable<TSource> table, params string[] indexNames)
 			where TSource : notnull
@@ -1579,9 +1407,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>IGNORE INDEX FOR GROUP BY</c> index hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Index" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(IgnoreIndexForGroupByIndexHintImpl))]
 		public static IMySqlSpecificTable<TSource> IgnoreIndexForGroupByHint<TSource>(this IMySqlSpecificTable<TSource> table, params string[] indexNames)
 			where TSource : notnull
@@ -1597,9 +1423,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>IGNORE KEY</c> index hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Index" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(IgnoreKeyIndexHintImpl))]
 		public static IMySqlSpecificTable<TSource> IgnoreKeyHint<TSource>(this IMySqlSpecificTable<TSource> table, params string[] indexNames)
 			where TSource : notnull
@@ -1615,9 +1439,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>IGNORE KEY FOR JOIN</c> index hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Index" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(IgnoreKeyForJoinIndexHintImpl))]
 		public static IMySqlSpecificTable<TSource> IgnoreKeyForJoinHint<TSource>(this IMySqlSpecificTable<TSource> table, params string[] indexNames)
 			where TSource : notnull
@@ -1633,9 +1455,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>IGNORE KEY FOR ORDER BY</c> index hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Index" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(IgnoreKeyForOrderByIndexHintImpl))]
 		public static IMySqlSpecificTable<TSource> IgnoreKeyForOrderByHint<TSource>(this IMySqlSpecificTable<TSource> table, params string[] indexNames)
 			where TSource : notnull
@@ -1651,9 +1471,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>IGNORE KEY FOR GROUP BY</c> index hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Index" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(IgnoreKeyForGroupByIndexHintImpl))]
 		public static IMySqlSpecificTable<TSource> IgnoreKeyForGroupByHint<TSource>(this IMySqlSpecificTable<TSource> table, params string[] indexNames)
 			where TSource : notnull
@@ -1669,9 +1487,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>FORCE INDEX</c> index hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Index" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(ForceIndexIndexHintImpl))]
 		public static IMySqlSpecificTable<TSource> ForceIndexHint<TSource>(this IMySqlSpecificTable<TSource> table, params string[] indexNames)
 			where TSource : notnull
@@ -1687,9 +1503,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>FORCE INDEX FOR JOIN</c> index hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Index" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(ForceIndexForJoinIndexHintImpl))]
 		public static IMySqlSpecificTable<TSource> ForceIndexForJoinHint<TSource>(this IMySqlSpecificTable<TSource> table, params string[] indexNames)
 			where TSource : notnull
@@ -1705,9 +1519,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>FORCE INDEX FOR ORDER BY</c> index hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Index" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(ForceIndexForOrderByIndexHintImpl))]
 		public static IMySqlSpecificTable<TSource> ForceIndexForOrderByHint<TSource>(this IMySqlSpecificTable<TSource> table, params string[] indexNames)
 			where TSource : notnull
@@ -1723,9 +1535,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>FORCE INDEX FOR GROUP BY</c> index hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Index" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(ForceIndexForGroupByIndexHintImpl))]
 		public static IMySqlSpecificTable<TSource> ForceIndexForGroupByHint<TSource>(this IMySqlSpecificTable<TSource> table, params string[] indexNames)
 			where TSource : notnull
@@ -1741,9 +1551,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>FORCE KEY</c> index hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Index" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(ForceKeyIndexHintImpl))]
 		public static IMySqlSpecificTable<TSource> ForceKeyHint<TSource>(this IMySqlSpecificTable<TSource> table, params string[] indexNames)
 			where TSource : notnull
@@ -1759,9 +1567,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>FORCE KEY FOR JOIN</c> index hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Index" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(ForceKeyForJoinIndexHintImpl))]
 		public static IMySqlSpecificTable<TSource> ForceKeyForJoinHint<TSource>(this IMySqlSpecificTable<TSource> table, params string[] indexNames)
 			where TSource : notnull
@@ -1777,9 +1583,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>FORCE KEY FOR ORDER BY</c> index hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Index" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(ForceKeyForOrderByIndexHintImpl))]
 		public static IMySqlSpecificTable<TSource> ForceKeyForOrderByHint<TSource>(this IMySqlSpecificTable<TSource> table, params string[] indexNames)
 			where TSource : notnull
@@ -1795,9 +1599,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>FORCE KEY FOR GROUP BY</c> index hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Index" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.MySql, nameof(ForceKeyForGroupByIndexHintImpl))]
 		public static IMySqlSpecificTable<TSource> ForceKeyForGroupByHint<TSource>(this IMySqlSpecificTable<TSource> table, params string[] indexNames)
 			where TSource : notnull
@@ -1813,9 +1615,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>FOR UPDATE</c> subquery hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="SubQuery" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(ForUpdateHintImpl))]
 		public static IMySqlSpecificQueryable<TSource> ForUpdateHint<TSource>(
 			this IMySqlSpecificQueryable<TSource> query,
@@ -1833,9 +1633,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>FOR UPDATE NOWAIT</c> subquery hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="SubQuery" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(ForUpdateNoWaitHintImpl))]
 		public static IMySqlSpecificQueryable<TSource> ForUpdateNoWaitHint<TSource>(
 			this IMySqlSpecificQueryable<TSource> query,
@@ -1853,9 +1651,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>FOR UPDATE SKIP LOCKED</c> subquery hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="SubQuery" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(ForUpdateSkipLockedHintImpl))]
 		public static IMySqlSpecificQueryable<TSource> ForUpdateSkipLockedHint<TSource>(
 			this IMySqlSpecificQueryable<TSource> query,
@@ -1873,9 +1669,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>FOR SHARE</c> subquery hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="SubQuery" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(ForShareHintImpl))]
 		public static IMySqlSpecificQueryable<TSource> ForShareHint<TSource>(
 			this IMySqlSpecificQueryable<TSource> query,
@@ -1893,9 +1687,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>FOR SHARE NOWAIT</c> subquery hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="SubQuery" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(ForShareNoWaitHintImpl))]
 		public static IMySqlSpecificQueryable<TSource> ForShareNoWaitHint<TSource>(
 			this IMySqlSpecificQueryable<TSource> query,
@@ -1913,9 +1705,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Adds a MySQL <c>FOR SHARE SKIP LOCKED</c> subquery hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="SubQuery" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(ForShareSkipLockedHintImpl))]
 		public static IMySqlSpecificQueryable<TSource> ForShareSkipLockedHint<TSource>(
 			this IMySqlSpecificQueryable<TSource> query,

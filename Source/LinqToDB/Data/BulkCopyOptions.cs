@@ -151,10 +151,8 @@ namespace LinqToDB.Data
 	/// are only honoured for <see cref="BulkCopyType.ProviderSpecific"/> mode on supporting providers.
 	/// See individual parameter documentation for provider support details.
 	/// </para>
-	/// <para>
-	/// AI-Tags: Group=Configuration; Affects=Configuration; Pipeline=BulkInsert; Provider=ProviderDefined;
-	/// </para>
 	/// </remarks>
+	/// <ai-tags group="Configuration" affects="Configuration" pipeline="BulkInsert" provider="ProviderDefined" />
 	public sealed record BulkCopyOptions
 	(
 		int?                        MaxBatchSize           = default,

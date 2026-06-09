@@ -95,10 +95,8 @@ namespace LinqToDB
 	/// perform the drop unconditionally.
 	/// </para>
 	///
-	/// <para>
-	/// AI-Tags: Group=DML; Execution=Immediate; Composability=Composable; Affects=DdlStatement,Data; Pipeline=SqlAST,SqlText; Provider=ProviderDefined;
-	/// </para>
 	/// </remarks>
+	/// <ai-tags group="DML" execution="Immediate" composability="Composable" affects="DdlStatement,Data" pipeline="SqlAST,SqlText" provider="ProviderDefined" />
 	/// <seealso cref="LinqToDBArchitecture"/>
 	[PublicAPI]
 	public class TempTable<T> : ITable<T>, ITableMutable<T>, IDisposable, IAsyncDisposable

@@ -33,9 +33,7 @@ namespace LinqToDB.DataProvider.Ydb
 		/// <summary>
 		/// Adds a YDB query hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.Ydb, Sql.QueryExtensionScope.SubQueryHint, typeof(YdbQueryHintExtensionBuilder))]
 		[Sql.QueryExtension(null,             Sql.QueryExtensionScope.None,         typeof(NoneExtensionBuilder))]
@@ -59,9 +57,7 @@ namespace LinqToDB.DataProvider.Ydb
 		/// <summary>
 		/// Generic query-hint injector for YDB/YQL.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.Ydb, Sql.QueryExtensionScope.SubQueryHint, typeof(YdbQueryHintExtensionBuilder))]
 		[Sql.QueryExtension(null,             Sql.QueryExtensionScope.None,         typeof(NoneExtensionBuilder))]

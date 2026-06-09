@@ -32,9 +32,7 @@ void GenerateQuery(string hint, string hint2, string sqlHint = null)
 		/// <summary>
 		/// Adds a PostgreSQL <c><#= sqlHint ?? (hint2?.Length == 0 ? hint : hint + " " + hint2) #></c> subquery hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="SubQuery" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(<#= hint #><#= hint2 #>HintImpl))]
 		public static IPostgreSQLSpecificQueryable<TSource> <#= hint #><#= hint2 #>Hint<TSource>(
 			this IPostgreSQLSpecificQueryable<TSource> query,

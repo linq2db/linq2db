@@ -61,14 +61,14 @@ pack.
    - omitting repository-local maintenance files from the upload set.
 3. Do not rewrite text inside inline code spans or fenced code blocks.
 4. Do not invent examples, API names, overloads, provider capabilities, or fallback policies.
-5. Do not summarize away `Stop` blocks, `You are here if you need to` blocks, `AI-Tags`,
+5. Do not summarize away `Stop` blocks, `You are here if you need to` blocks, `AI metadata`,
    XML member ids, or generated API extract rows.
    Preserve `Search anchors:` lines in generated API extract files. They are the primary retrieval
    surface for agents; XML member ids are exact lookup keys after a candidate is found.
 6. Keep more specific source files before broader files when concatenation is unavoidable, but treat
    that order as preserving the package documentation model, not as a separate knowledge-pack rule.
 7. Preserve negative lookup rules. If source docs say that an API absence claim requires exact map
-   lookup plus `docs/api.md` / XML-doc lookup, the converted pack must keep that rule visible near
+   lookup plus generated API lookup and raw XML-doc confirmation when needed, the converted pack must keep that rule visible near
    the corresponding workflow.
 8. Preserve answer-grounding rules. If source docs require provider-specific hint answers to name
    the found typed helper and receiver before showing code or fallbacks, keep that rule visible in
@@ -171,7 +171,7 @@ After preparing the knowledge pack:
 8. Verify that generic fallback APIs do not appear earlier than typed/provider-specific lookup
    guidance in the same converted bundle.
 9. Verify that negative hint lookup rules still require exact provider + SQL term lookup in the map
-   and `docs/api.md` / XML-doc lookup before claiming a typed helper is absent.
+   and generated API lookup plus raw XML-doc confirmation when needed before claiming a typed helper is absent.
 10. Verify that provider-specific hint rules require the provider marker method (`AsSqlServer()`,
     `AsOracle()`, etc.) before typed helpers, allow chaining several same-provider helpers after one
     marker, and require another marker before switching providers.
@@ -257,7 +257,7 @@ Expected result:
 - generated API extract preserves `Search anchors` and the workflow tells agents to search them
   before XML member ids;
 - provider-specific hint canaries are present in the map, generated API extract, and XML-doc extract;
-- negative lookup guardrails require exact map and API/XML-doc lookup before absence claims;
+- negative lookup guardrails require exact map and generated API lookup and raw XML-doc confirmation before absence claims;
 - provider marker rules require `AsXxx()` before typed helpers, allow same-provider helper chaining,
   and require another marker before switching providers;
 - answer-grounding rules require naming the provider marker, found typed helper, and receiver before

@@ -13,9 +13,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>OUTER</c> join hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(JoinOuterHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinOuterHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -32,9 +30,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>OUTER</c> join hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(JoinOuterTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinOuterHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
@@ -51,9 +47,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>SEMI</c> join hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(JoinSemiHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinSemiHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -70,9 +64,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>SEMI</c> join hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(JoinSemiTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinSemiHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
@@ -89,9 +81,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>ANTI</c> join hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(JoinAntiHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinAntiHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -108,9 +98,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>ANTI</c> join hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(JoinAntiTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinAntiHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
@@ -127,9 +115,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>ANY</c> join hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(JoinAnyHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinAnyHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -146,9 +132,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>ANY</c> join hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(JoinAnyTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinAnyHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
@@ -165,9 +149,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>ASOF</c> join hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(JoinAsOfHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinAsOfHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -184,9 +166,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>ASOF</c> join hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(JoinAsOfTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinAsOfHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
@@ -203,9 +183,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>GLOBAL</c> join hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(JoinGlobalHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinGlobalHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -222,9 +200,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>GLOBAL</c> join hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(JoinGlobalTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinGlobalHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
@@ -241,9 +217,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>GLOBAL OUTER</c> join hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(JoinGlobalOuterHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinGlobalOuterHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -260,9 +234,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>GLOBAL OUTER</c> join hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(JoinGlobalOuterTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinGlobalOuterHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
@@ -279,9 +251,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>GLOBAL SEMI</c> join hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(JoinGlobalSemiHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinGlobalSemiHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -298,9 +268,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>GLOBAL SEMI</c> join hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(JoinGlobalSemiTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinGlobalSemiHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
@@ -317,9 +285,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>GLOBAL ANTI</c> join hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(JoinGlobalAntiHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinGlobalAntiHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -336,9 +302,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>GLOBAL ANTI</c> join hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(JoinGlobalAntiTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinGlobalAntiHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
@@ -355,9 +319,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>GLOBAL ANY</c> join hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(JoinGlobalAnyHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinGlobalAnyHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -374,9 +336,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>GLOBAL ANY</c> join hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(JoinGlobalAnyTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinGlobalAnyHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
@@ -393,9 +353,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>GLOBAL ASOF</c> join hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(JoinGlobalAsOfHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinGlobalAsOfHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -412,9 +370,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>GLOBAL ASOF</c> join hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(JoinGlobalAsOfTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinGlobalAsOfHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
@@ -431,9 +387,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>ALL</c> join hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(JoinAllHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinAllHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -450,9 +404,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>ALL</c> join hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(JoinAllTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinAllHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
@@ -469,9 +421,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>ALL OUTER</c> join hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(JoinAllOuterHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinAllOuterHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -488,9 +438,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>ALL OUTER</c> join hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(JoinAllOuterTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinAllOuterHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
@@ -507,9 +455,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>ALL SEMI</c> join hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(JoinAllSemiHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinAllSemiHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -526,9 +472,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>ALL SEMI</c> join hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(JoinAllSemiTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinAllSemiHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
@@ -545,9 +489,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>ALL ANTI</c> join hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(JoinAllAntiHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinAllAntiHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -564,9 +506,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>ALL ANTI</c> join hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(JoinAllAntiTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinAllAntiHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
@@ -583,9 +523,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>ALL ANY</c> join hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(JoinAllAnyHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinAllAnyHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -602,9 +540,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>ALL ANY</c> join hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(JoinAllAnyTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinAllAnyHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
@@ -621,9 +557,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>ALL ASOF</c> join hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(JoinAllAsOfHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinAllAsOfHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -640,9 +574,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>ALL ASOF</c> join hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(JoinAllAsOfTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinAllAsOfHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull

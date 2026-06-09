@@ -19,10 +19,8 @@ namespace LinqToDB.SchemaProvider
 	/// Several providers (MySQL, SQL Server, Sybase, DB2) do not support or behave incorrectly
 	/// when schema queries are issued inside a transaction.
 	/// </para>
-	/// <para>
-	/// AI-Tags: Group=Schema; Execution=Immediate; Composability=Terminal; Affects=SchemaResult; Pipeline=SqlText; Provider=ProviderDefined;
-	/// </para>
 	/// </remarks>
+	/// <ai-tags group="Schema" execution="Immediate" composability="Terminal" affects="SchemaResult" pipeline="SqlText" provider="ProviderDefined" />
 	public interface ISchemaProvider
 	{
 		/// <summary>
@@ -39,10 +37,8 @@ namespace LinqToDB.SchemaProvider
 		/// - Microsoft SQL Server;
 		/// - Sybase;
 		/// - DB2.
-		/// <para>
-		/// AI-Tags: Group=Schema; Execution=Immediate; Composability=Terminal; Affects=SchemaResult; Pipeline=SqlText; Provider=ProviderDefined;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="Schema" execution="Immediate" composability="Terminal" affects="SchemaResult" pipeline="SqlText" provider="ProviderDefined" />
 		DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions? options = null);
 	}
 }

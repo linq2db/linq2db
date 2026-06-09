@@ -34,11 +34,10 @@ namespace LinqToDB
 	/// </para>
 	///
 	/// Common metadata defaults for this API surface:
-	/// <para>
-	/// AI-Tags-Defaults: Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-	/// </para>
-	/// Method-level <c>AI-Tags</c> should specify only behavior-specific fields and override defaults only when needed.
+	/// method-level <c>ai-tags</c> elements should specify only behavior-specific fields and override
+	/// defaults only when needed.
 	/// </remarks>
+	/// <ai-tags-defaults pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 	[PublicAPI]
 	public static partial class DataExtensions
 	{
@@ -53,10 +52,8 @@ namespace LinqToDB
 		/// <remarks>
 		/// Use to obtain a query root for a mapped table or view. Execution is deferred until enumeration
 		/// or explicit materialization.
-		/// <para>
-		/// AI-Tags: Group=Helpers; Execution=Deferred; Composability=Composable; Affects=QueryRoot;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="Helpers" execution="Deferred" composability="Composable" affects="QueryRoot" />
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> GetTable<T>(this IDataContext dataContext)
@@ -80,10 +77,8 @@ namespace LinqToDB
 		/// <remarks>
 		/// Use to create a query root for a table-valued function or a custom table expression.
 		/// Execution is deferred until enumeration or explicit materialization.
-		/// <para>
-		/// AI-Tags: Group=Helpers; Execution=Deferred; Composability=Composable; Affects=QueryRoot;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="Helpers" execution="Deferred" composability="Composable" affects="QueryRoot" />
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> GetTable<T>(
@@ -140,10 +135,8 @@ namespace LinqToDB
 		/// <typeparam name="TResult">Query result type.</typeparam>
 		/// <remarks>
 		/// Produces a reusable delegate for query execution with stable expression structure.
-		/// <para>
-		/// AI-Tags: Group=Helpers; Execution=Deferred; Composability=Terminal; Affects=QueryCompilation; Provider=ProviderAgnostic;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="Helpers" execution="Deferred" composability="Terminal" affects="QueryCompilation" provider="ProviderAgnostic" />
 		public static Func<TDc,TResult> Compile<TDc,TResult>(
 			this IDataContext             dataContext,
 			Expression<Func<TDc,TResult>> query)
@@ -168,10 +161,8 @@ namespace LinqToDB
 		/// <typeparam name="TResult">Query result type.</typeparam>
 		/// <remarks>
 		/// Produces a reusable delegate for query execution with stable expression structure.
-		/// <para>
-		/// AI-Tags: Group=Helpers; Execution=Deferred; Composability=Terminal; Affects=QueryCompilation; Provider=ProviderAgnostic;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="Helpers" execution="Deferred" composability="Terminal" affects="QueryCompilation" provider="ProviderAgnostic" />
 		public static Func<TDc,TArg1,TResult> Compile<TDc,TArg1, TResult>(
 			this IDataContext dataContext,
 			Expression<Func<TDc,TArg1,TResult>> query)
@@ -197,10 +188,8 @@ namespace LinqToDB
 		/// <typeparam name="TResult">Query result type.</typeparam>
 		/// <remarks>
 		/// Produces a reusable delegate for query execution with stable expression structure.
-		/// <para>
-		/// AI-Tags: Group=Helpers; Execution=Deferred; Composability=Terminal; Affects=QueryCompilation; Provider=ProviderAgnostic;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="Helpers" execution="Deferred" composability="Terminal" affects="QueryCompilation" provider="ProviderAgnostic" />
 		public static Func<TDc,TArg1,TArg2,TResult> Compile<TDc,TArg1,TArg2,TResult>(
 			this IDataContext dataContext,
 			Expression<Func<TDc,TArg1,TArg2,TResult>> query)
@@ -227,10 +216,8 @@ namespace LinqToDB
 		/// <typeparam name="TResult">Query result type.</typeparam>
 		/// <remarks>
 		/// Produces a reusable delegate for query execution with stable expression structure.
-		/// <para>
-		/// AI-Tags: Group=Helpers; Execution=Deferred; Composability=Terminal; Affects=QueryCompilation; Provider=ProviderAgnostic;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="Helpers" execution="Deferred" composability="Terminal" affects="QueryCompilation" provider="ProviderAgnostic" />
 		public static Func<TDc,TArg1,TArg2,TArg3,TResult> Compile<TDc,TArg1,TArg2,TArg3,TResult>(
 			this IDataContext dataContext,
 			Expression<Func<TDc,TArg1,TArg2,TArg3,TResult>> query)
@@ -260,10 +247,8 @@ namespace LinqToDB
 		/// <returns>Number of affected records.</returns>
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
-		/// <para>
-		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static int Insert<T>(this IDataContext dataContext, T obj,
 			string? tableName = default, string? databaseName = default, string? schemaName = default, string? serverName = default, TableOptions tableOptions = default)
 			where T : notnull
@@ -286,10 +271,8 @@ namespace LinqToDB
 		/// <returns>Number of affected records.</returns>
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
-		/// <para>
-		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static int Insert<T>(this IDataContext dataContext, T obj, InsertColumnFilter<T>? columnFilter,
 			string? tableName = default, string? databaseName = default, string? schemaName = default, string? serverName = default, TableOptions tableOptions = default)
 			where T : notnull
@@ -314,10 +297,8 @@ namespace LinqToDB
 		/// <returns>Number of affected records.</returns>
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
-		/// <para>
-		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static Task<int> InsertAsync<T>(
 			this IDataContext dataContext,
 			T                 obj,
@@ -348,10 +329,8 @@ namespace LinqToDB
 		/// <returns>Number of affected records.</returns>
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
-		/// <para>
-		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static Task<int> InsertAsync<T>(
 			this IDataContext dataContext,
 			T obj,
@@ -392,10 +371,8 @@ namespace LinqToDB
 		/// If the entity has an identity column, calling this method throws <see cref="LinqToDBException"/> at query build time.
 		/// For upsert with identity keys, generate the key value application-side and remove <see cref="IdentityAttribute"/> from the entity.
 		/// </para>
-		/// <para>
-		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static int InsertOrReplace<T>(this IDataContext dataContext, T obj,
 			string?      tableName    = default,
 			string?      databaseName = default,
@@ -428,10 +405,8 @@ namespace LinqToDB
 		/// If the entity has an identity column, calling this method throws <see cref="LinqToDBException"/> at query build time.
 		/// For upsert with identity keys, generate the key value application-side and remove <see cref="IdentityAttribute"/> from the entity.
 		/// </para>
-		/// <para>
-		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static int InsertOrReplace<T>(this IDataContext dataContext, T obj,
 			InsertOrUpdateColumnFilter<T>? columnFilter,
 			string?      tableName    = default,
@@ -466,10 +441,8 @@ namespace LinqToDB
 		/// If the entity has an identity column, calling this method throws <see cref="LinqToDBException"/> at query build time.
 		/// For upsert with identity keys, generate the key value application-side and remove <see cref="IdentityAttribute"/> from the entity.
 		/// </para>
-		/// <para>
-		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static Task<int> InsertOrReplaceAsync<T>(
 			this IDataContext dataContext,
 			T                 obj,
@@ -506,10 +479,8 @@ namespace LinqToDB
 		/// If the entity has an identity column, calling this method throws <see cref="LinqToDBException"/> at query build time.
 		/// For upsert with identity keys, generate the key value application-side and remove <see cref="IdentityAttribute"/> from the entity.
 		/// </para>
-		/// <para>
-		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static Task<int> InsertOrReplaceAsync<T>(
 			this IDataContext              dataContext,
 			T                              obj,
@@ -545,10 +516,8 @@ namespace LinqToDB
 		/// <returns>Inserted record's identity value.</returns>
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
-		/// <para>
-		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static object InsertWithIdentity<T>(
 			this IDataContext dataContext,
 			T             obj,
@@ -578,10 +547,8 @@ namespace LinqToDB
 		/// <returns>Inserted record's identity value.</returns>
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
-		/// <para>
-		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static object InsertWithIdentity<T>(
 			this IDataContext      dataContext,
 			T                      obj,
@@ -612,10 +579,8 @@ namespace LinqToDB
 		/// <returns>Inserted record's identity value.</returns>
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
-		/// <para>
-		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static int InsertWithInt32Identity<T>(
 			this IDataContext dataContext,
 			T                 obj,
@@ -645,10 +610,8 @@ namespace LinqToDB
 		/// <returns>Inserted record's identity value.</returns>
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
-		/// <para>
-		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static int InsertWithInt32Identity<T>(
 			this IDataContext      dataContext,
 			T                      obj,
@@ -679,10 +642,8 @@ namespace LinqToDB
 		/// <returns>Inserted record's identity value.</returns>
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
-		/// <para>
-		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static long InsertWithInt64Identity<T>(
 			this IDataContext dataContext,
 			T                 obj,
@@ -712,10 +673,8 @@ namespace LinqToDB
 		/// <returns>Inserted record's identity value.</returns>
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
-		/// <para>
-		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static long InsertWithInt64Identity<T>(
 			this IDataContext      dataContext,
 			T                      obj,
@@ -746,10 +705,8 @@ namespace LinqToDB
 		/// <returns>Inserted record's identity value.</returns>
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
-		/// <para>
-		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static decimal InsertWithDecimalIdentity<T>(
 			this IDataContext dataContext,
 			T                 obj,
@@ -779,10 +736,8 @@ namespace LinqToDB
 		/// <returns>Inserted record's identity value.</returns>
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
-		/// <para>
-		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static decimal InsertWithDecimalIdentity<T>(
 			this IDataContext      dataContext,
 			T                      obj,
@@ -814,10 +769,8 @@ namespace LinqToDB
 		/// <returns>Inserted record's identity value.</returns>
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
-		/// <para>
-		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static Task<object> InsertWithIdentityAsync<T>(
 			this IDataContext dataContext,
 			T                 obj,
@@ -879,10 +832,8 @@ namespace LinqToDB
 		/// <returns>Inserted record's identity value.</returns>
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
-		/// <para>
-		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static Task<int> InsertWithInt32IdentityAsync<T>(
 			this IDataContext dataContext,
 			T                 obj,
@@ -948,10 +899,8 @@ namespace LinqToDB
 		/// <returns>Inserted record's identity value.</returns>
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
-		/// <para>
-		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static Task<long> InsertWithInt64IdentityAsync<T>(
 			this IDataContext dataContext,
 			T                 obj,
@@ -1018,10 +967,8 @@ namespace LinqToDB
 		/// <returns>Inserted record's identity value.</returns>
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
-		/// <para>
-		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static Task<decimal> InsertWithDecimalIdentityAsync<T>(
 			this IDataContext dataContext,
 			T                 obj,
@@ -1091,10 +1038,8 @@ namespace LinqToDB
 		/// <returns>Number of affected records.</returns>
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
-		/// <para>
-		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static int Update<T>(
 			this IDataContext dataContext,
 			T                 obj,
@@ -1124,10 +1069,8 @@ namespace LinqToDB
 		/// <returns>Number of affected records.</returns>
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
-		/// <para>
-		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static int Update<T>(
 			this IDataContext      dataContext,
 			T                      obj,
@@ -1159,10 +1102,8 @@ namespace LinqToDB
 		/// <returns>Number of affected records.</returns>
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
-		/// <para>
-		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static Task<int> UpdateAsync<T>(
 			this IDataContext dataContext,
 			T                 obj,
@@ -1194,10 +1135,8 @@ namespace LinqToDB
 		/// <returns>Number of affected records.</returns>
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
-		/// <para>
-		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static Task<int> UpdateAsync<T>(
 			this IDataContext      dataContext,
 			T                      obj,
@@ -1233,10 +1172,8 @@ namespace LinqToDB
 		/// <returns>Number of affected records.</returns>
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
-		/// <para>
-		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static int Delete<T>(
 			this IDataContext dataContext,
 			T                 obj,
@@ -1267,10 +1204,8 @@ namespace LinqToDB
 		/// <returns>Number of affected records.</returns>
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
-		/// <para>
-		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static Task<int> DeleteAsync<T>(
 			this IDataContext dataContext,
 			T                 obj,
@@ -1313,10 +1248,8 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// The schema command is executed first, then an <see cref="ITable{T}"/> query root is returned for further LINQ queries.
-		/// <para>
-		/// AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=DdlStatement,QueryRoot; Pipeline=SqlAST,SqlText;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="Helpers" execution="Immediate" composability="Terminal" affects="DdlStatement,QueryRoot" pipeline="SqlAST,SqlText" />
 		public static ITable<T> CreateTable<T>(
 			this IDataContext dataContext,
 			string?           tableName       = default,
@@ -1355,10 +1288,8 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// The schema command is executed first, then an <see cref="ITable{T}"/> query root is returned for further LINQ queries.
-		/// <para>
-		/// AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=DdlStatement,QueryRoot; Pipeline=SqlAST,SqlText;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="Helpers" execution="Immediate" composability="Terminal" affects="DdlStatement,QueryRoot" pipeline="SqlAST,SqlText" />
 		public static ITable<T> CreateTable<T>(this IDataContext dataContext, CreateTableOptions tableOptions)
 			where T: notnull
 		{
@@ -1390,10 +1321,8 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// The schema command is executed first, then an <see cref="ITable{T}"/> query root is returned for further LINQ queries.
-		/// <para>
-		/// AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=DdlStatement,QueryRoot; Pipeline=SqlAST,SqlText;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="Helpers" execution="Immediate" composability="Terminal" affects="DdlStatement,QueryRoot" pipeline="SqlAST,SqlText" />
 		public static Task<ITable<T>> CreateTableAsync<T>(
 			this IDataContext dataContext,
 			string?           tableName       = default,
@@ -1435,10 +1364,8 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// The schema command is executed first, then an <see cref="ITable{T}"/> query root is returned for further LINQ queries.
-		/// <para>
-		/// AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=DdlStatement,QueryRoot; Pipeline=SqlAST,SqlText;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="Helpers" execution="Immediate" composability="Terminal" affects="DdlStatement,QueryRoot" pipeline="SqlAST,SqlText" />
 		public static Task<ITable<T>> CreateTableAsync<T>(this IDataContext dataContext, CreateTableOptions tableOptions, CancellationToken token = default)
 			where T : notnull
 		{
@@ -1468,10 +1395,8 @@ namespace LinqToDB
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
-		/// <para>
-		/// AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=DdlStatement; Pipeline=SqlAST,SqlText;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="Helpers" execution="Immediate" composability="Terminal" affects="DdlStatement" pipeline="SqlAST,SqlText" />
 		public static void DropTable<T>(
 			this IDataContext dataContext,
 			string?           tableName                 = default,
@@ -1511,10 +1436,8 @@ namespace LinqToDB
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
-		/// <para>
-		/// AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=DdlStatement; Pipeline=SqlAST,SqlText;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="Helpers" execution="Immediate" composability="Terminal" affects="DdlStatement" pipeline="SqlAST,SqlText" />
 		public static void DropTable<T>(
 			this ITable<T> table,
 			string?        tableName                 = default,
@@ -1557,10 +1480,8 @@ namespace LinqToDB
 		/// <returns>Asynchronous operation completion task.</returns>
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
-		/// <para>
-		/// AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=DdlStatement; Pipeline=SqlAST,SqlText;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="Helpers" execution="Immediate" composability="Terminal" affects="DdlStatement" pipeline="SqlAST,SqlText" />
 		public static Task DropTableAsync<T>(
 			this IDataContext dataContext,
 			string?           tableName                 = default,
@@ -1604,10 +1525,8 @@ namespace LinqToDB
 		/// <returns>Asynchronous operation completion task.</returns>
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
-		/// <para>
-		/// AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=DdlStatement; Pipeline=SqlAST,SqlText;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="Helpers" execution="Immediate" composability="Terminal" affects="DdlStatement" pipeline="SqlAST,SqlText" />
 		public static Task DropTableAsync<T>(
 			this ITable<T>    table,
 			string?           tableName                 = default,
@@ -1646,10 +1565,8 @@ namespace LinqToDB
 		/// <returns>Common table expression.</returns>
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
-		/// <para>
-		/// AI-Tags: Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="QueryDirectives" execution="Deferred" composability="Composable" affects="QueryStructure" />
 		public static IQueryable<T> GetCte<T>(
 			                this IDataContext                 dataContext,
 			[InstantHandle] Func<IQueryable<T>,IQueryable<T>> cteBody,
@@ -1716,10 +1633,8 @@ namespace LinqToDB
 		/// <returns>Common table expression.</returns>
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
-		/// <para>
-		/// AI-Tags: Group=QueryDirectives; Execution=Deferred; Composability=Composable; Affects=QueryStructure;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="QueryDirectives" execution="Deferred" composability="Composable" affects="QueryStructure" />
 		public static IQueryable<T> GetCte<T>(
 			                this IDataContext                 dataContext,
 			                string?                           cteTableName,
@@ -1774,10 +1689,8 @@ namespace LinqToDB
 		/// <para>
 		/// Execution is deferred and the method is composable.
 		/// </para>
-		/// <para>
-		/// AI-Tags: Group=Helpers; Execution=Deferred; Composability=Composable; Affects=QueryRoot;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="Helpers" execution="Deferred" composability="Composable" affects="QueryRoot" />
 		/// <returns> An <see cref="IQueryable{T}" /> representing the raw SQL query. </returns>
 		[StringFormatMethod("sql")]
 		public static IQueryable<TEntity> FromSql<TEntity>(
@@ -1832,10 +1745,8 @@ namespace LinqToDB
 		/// <para>
 		/// Execution is deferred and the method is composable.
 		/// </para>
-		/// <para>
-		/// AI-Tags: Group=Helpers; Execution=Deferred; Composability=Composable; Affects=QueryRoot;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="Helpers" execution="Deferred" composability="Composable" affects="QueryRoot" />
 		/// <returns> An <see cref="IQueryable{T}" /> representing the raw SQL query. </returns>
 		[StringFormatMethod("sql")]
 		public static IQueryable<TEntity> FromSqlScalar<TEntity>(
@@ -1889,10 +1800,8 @@ namespace LinqToDB
 		/// <para>
 		/// Execution is deferred and the method is composable.
 		/// </para>
-		/// <para>
-		/// AI-Tags: Group=Helpers; Execution=Deferred; Composability=Composable; Affects=QueryRoot;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="Helpers" execution="Deferred" composability="Composable" affects="QueryRoot" />
 		/// <returns> An <see cref="IQueryable{T}" /> representing the raw SQL query. </returns>
 		[StringFormatMethod("sql")]
 		public static IQueryable<TEntity> FromSql<TEntity>(
@@ -1932,10 +1841,8 @@ namespace LinqToDB
 		/// <remarks>
 		///     Method works for most supported database engines, except databases which do not support <code>SELECT Value</code> without FROM statement.<para />
 		///     For Oracle it will be translated to <code>SELECT Value FROM SYS.DUAL</code>
-		/// <para>
-		/// AI-Tags: Group=Helpers; Execution=Deferred; Composability=Composable; Affects=QueryRoot;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="Helpers" execution="Deferred" composability="Composable" affects="QueryRoot" />
 		/// <example>
 		/// Complex record:
 		/// <code>
@@ -1970,10 +1877,8 @@ namespace LinqToDB
 		/// <returns>An <see cref="ITable{T}" /> representing the query.</returns>
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
-		/// <para>
-		/// AI-Tags: Group=Helpers; Execution=Deferred; Composability=Composable; Affects=QueryRoot;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="Helpers" execution="Deferred" composability="Composable" affects="QueryRoot" />
 		public static ITable<TResult> TableFromExpression<TResult>(
 			this IDataContext                 dataContext,
 			Expression<Func<ITable<TResult>>> expression)
@@ -2003,10 +1908,8 @@ namespace LinqToDB
 		/// <returns>An <see cref="IQueryable{T}" /> representing the query.</returns>
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
-		/// <para>
-		/// AI-Tags: Group=Helpers; Execution=Deferred; Composability=Composable; Affects=QueryRoot;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="Helpers" execution="Deferred" composability="Composable" affects="QueryRoot" />
 		public static IQueryable<TResult> QueryFromExpression<TResult>(
 			this IDataContext                     dataContext,
 			Expression<Func<IQueryable<TResult>>> expression)

@@ -67,7 +67,7 @@ Passing means the agent:
 - q: Can I use a temporary table created from one `DataConnection` on another connection?
 - q: How do I create a temporary table with anonymous row types and explicit string length?
 - q: How do I write a recursive CTE with linq2db?
-- q: How should an agent decide whether a CTE scenario is documented or needs XML-doc lookup?
+- q: How should an agent decide whether a CTE scenario is documented or needs raw XML-doc confirmation?
 
 ## Hints
 

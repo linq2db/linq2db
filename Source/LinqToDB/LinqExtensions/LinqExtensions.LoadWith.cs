@@ -69,10 +69,8 @@ namespace LinqToDB
 		///   - ThenLoad(..., loadFunc)        -&gt; S1
 		///   - Materialization / Enumeration  -&gt; execute
 		/// </code>
-		/// <para>
-		/// AI-Tags: Group=NavigationLoading; Execution=Deferred; Composability=Composable; Affects=JoinGraph; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="NavigationLoading" execution="Deferred" composability="Composable" affects="JoinGraph" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> LoadWithAsTable<T>(
@@ -192,10 +190,8 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
 		/// The navigation loading directive affects SQL semantics and is emitted according to provider rules.
-		/// <para>
-		/// AI-Tags: Group=NavigationLoading; Execution=Deferred; Composability=Composable; Affects=JoinGraph; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="NavigationLoading" execution="Deferred" composability="Composable" affects="JoinGraph" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[LinqTunnel]
 		[Pure]
 		public static ILoadWithQueryable<TEntity,TProperty> LoadWith<TEntity,TProperty>(

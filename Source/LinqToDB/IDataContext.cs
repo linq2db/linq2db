@@ -45,10 +45,8 @@ namespace LinqToDB
 	/// (Expression Tree → SQL AST → SQL text → execution → materialization)
 	/// and does not define implicit change tracking or unit-of-work semantics.
 	/// </para>
-	/// <para>
-	/// AI-Tags: Group=Connection; Affects=ExecutionContext; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-	/// </para>
 	/// </remarks>
+	/// <ai-tags group="Connection" affects="ExecutionContext" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 	[PublicAPI]
 	public interface IDataContext : IConfigurationID, IDisposable, IAsyncDisposable
 	{

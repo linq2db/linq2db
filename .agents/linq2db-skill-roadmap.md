@@ -19,11 +19,11 @@ derived artifacts when needed.
 | Done | Area | Target doc | Priority | Status | Notes |
 |---|---|---|---|---|---|
 | [x] | Agent entry point | `Source/Skills/linq2db/SKILL.md` | Critical | Done | Mandatory package entry point for agents. |
-| [x] | Agent skill entry point | `Source/Skills/linq2db/SKILL.md` | Critical | Done | Compatibility entry point for agent skill systems; routes to `SKILL.md`, task guides, and XML-doc API discovery. |
-| [x] | API discovery | `Source/Skills/linq2db/docs/api.md` | Critical | Done | General rules for finding exact API members in XML-doc before using generic fallbacks. |
+| [x] | Agent skill entry point | `Source/Skills/linq2db/SKILL.md` | Critical | Done | Compatibility entry point for agent skill systems; routes to `SKILL.md`, task guides, generated API discovery, and raw XML-doc confirmation when needed. |
+| [x] | API discovery | `Source/Skills/linq2db/docs/api.md` | Critical | Done | General rules for finding exact API members through the generated API index and raw XML-doc confirmation when needed. |
 | [x] | Architecture overview | `Source/Skills/linq2db/docs/architecture.md` | Critical | Done | Core reference; already linked from `SKILL.md`. |
 | [x] | Agent anti-patterns | `Source/Skills/linq2db/docs/agent-antipatterns.md` | Critical | Done | Quick symptom index and wrong/correct examples. |
-| [ ] | AI-Tags governance | `Source/Skills/linq2db/docs/ai-tags.md` | High | Partial | Tag vocabulary exists, including hint `HintType`; validator is not planned yet. |
+| [ ] | AI metadata governance | `Source/Skills/linq2db/docs/ai-tags.md` | High | Partial | Tag vocabulary exists, including hint `HintType`; validator is not planned yet. |
 | [x] | Mapping | `Source/Skills/linq2db/docs/mapping.md` | High | Done | Conventions, attributes, fluent mapping, `MappingSchema`, DDL metadata, `DataType`, `DbType`, conversions, associations. |
 | [ ] | Mapping `Configuration` selector | `Source/Skills/linq2db/docs/mapping-configuration.md` | High | Planned | Attribute/fluent metadata selected by mapping schema configuration names; underused provider- or environment-specific mapping mechanism. |
 | [ ] | Configuration and `DataOptions` | `Source/Skills/linq2db/docs/configuration.md` | High | Existing / needs audit | Includes `UseOptions`; verify coverage against current `DataOptions` APIs later. |
@@ -44,7 +44,7 @@ derived artifacts when needed.
 | [ ] | Translatable methods | `Source/Skills/linq2db/docs/translatable-methods.md` | Medium | Existing / needs audit | String, Math, DateTime translation guidance. |
 | [ ] | Custom SQL mapping | `Source/Skills/linq2db/docs/custom-sql.md` | High | Existing / needs audit | SQL function/expression mapping. |
 | [ ] | Interceptors | `Source/Skills/linq2db/docs/interceptors.md` | Medium | Existing / needs audit | Callback choice and registration. |
-| [x] | Hints | `Source/Skills/linq2db/docs/hints.md` | High | Done | General raw-text hints, provider-specific `AsXxx()` typed hint APIs, unsupported provider gaps, safe multi-provider branches, merge hints, generated provider hint `AI-Tags` via T4, handwritten provider hint `AI-Tags` in XML docs. |
+| [x] | Hints | `Source/Skills/linq2db/docs/hints.md` | High | Done | General raw-text hints, provider-specific `AsXxx()` typed hint APIs, unsupported provider gaps, safe multi-provider branches, merge hints, generated provider hint `<ai-tags />` via T4 and handwritten provider hint `<ai-tags />` in XML docs. |
 | [x] | Provider hints API map | `Source/Skills/linq2db/docs/hints-api-map.md` | High | Done | Reverse lookup from concrete provider SQL hint text to typed provider-specific helper APIs, generated from XML-doc-shaped source comments. |
 | [x] | Provider hint gaps | `Source/Skills/linq2db/docs/hints.md` | Medium | Done | DB2 optimization guidelines, Firebird `PLAN`, Informix directives, SAP HANA `WITH HINT`, and Sybase dialect hints are documented as unsupported/gap areas; implementation is out of scope. |
 | [ ] | Query composition basics | `Source/Skills/linq2db/docs/query-basics.md` | High | Planned | Deferred execution, `IQueryable`, materialization, client/server boundary. |

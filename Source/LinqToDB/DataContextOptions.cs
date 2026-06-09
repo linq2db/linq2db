@@ -19,10 +19,8 @@ namespace LinqToDB
 	/// Use <see cref="DataOptions"/> and <c>Use...</c> extension methods to compose stable reusable
 	/// configuration. Use <see cref="IDataContext.UseOptions"/> only for scoped temporary overrides
 	/// on an existing context instance.
-	/// <para>
-	/// AI-Tags: Group=Configuration; Affects=Configuration; Pipeline=ExpressionTree,SqlAST,SqlText,Execution; Provider=ProviderDefined;
-	/// </para>
 	/// </remarks>
+	/// <ai-tags group="Configuration" affects="Configuration" pipeline="ExpressionTree,SqlAST,SqlText,Execution" provider="ProviderDefined" />
 	/// <param name="CommandTimeout">
 	/// The command timeout in seconds, or <see langword="null"/> if none has been set.
 	/// Negative timeout value means that default timeout will be used.

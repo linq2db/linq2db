@@ -33,8 +33,8 @@ Intended for developers and AI agents generating code against LinqToDB.
 | Navigation properties or lazy loading not working | #6 - EF Core assumptions |
 | `SaveChanges()` not found or not needed | #6 - EF Core assumptions |
 | Data committed outside `TransactionScope` | #7 - TransactionScope ordering |
-| Code written before XML-doc API discovery | #8 - Skipping XML-doc |
-| Hint implemented with `Sql.Expression`, raw SQL, or interceptor before checking provider hint APIs | #8 - Skipping XML-doc |
+| Code written before generated API discovery when exact API shape matters | #8 - Skipping API discovery |
+| Hint implemented with `Sql.Expression`, raw SQL, or interceptor before checking provider hint APIs | #8 - Skipping API discovery |
 | `InsertOrReplace` / `InsertOrReplaceAsync` throws `LinqToDBException` | #9 - InsertOrReplace + Identity PK |
 | Column schema differs across providers or is unexpectedly wide | #10 - Unconstrained column types |
 | Temporary table populated from existing rows by creating an empty table and calling `BulkCopy` | #11 - Wrong temp-table overload |
@@ -264,40 +264,42 @@ tx.Commit();
 
 ---
 
-## 8. Generating code without inspecting symbol XML-doc
+## 8. Generating code without package API discovery
 
 **Anti-pattern:**
-Reading markdown docs and then generating code without inspecting the XML documentation
-of the specific LinqToDB types being used.
+Reading conceptual markdown docs and then generating code without checking `docs/api.md` or, when
+needed, raw XML-doc for the specific LinqToDB APIs being used.
 
 **Consequence:**
-XML documentation for LinqToDB public APIs contains exact current-version member names,
-signatures, overloads, parameters, return types, remarks, and AI-Tags for members that have XML
-comments. For key types (`DataOptions`, `DataConnection`, `MappingSchema`, provider `UseXxx`
-methods) it also contains explicit lifetime rules, usage constraints, and performance-critical
-requirements that markdown docs summarise but do not fully enumerate.
-Skipping XML-doc inspection can produce code that compiles but uses a lower-level fallback instead
-of an existing typed API, for example using `TableHint("...")`, `QueryHint("...")`, or
+`docs/api.md` is generated from the version-matched XML documentation and contains searchable API
+families, summaries, search anchors, and generated AI metadata. Raw XML-doc remains the primary
+reference for exact signatures, overloads, parameters, return types, remarks, and custom AI
+metadata when the generated extract is not detailed enough.
+
+Skipping package API discovery can produce code that compiles but uses a lower-level fallback
+instead of an existing typed API, for example using `TableHint("...")`, `QueryHint("...")`, or
 `Sql.Expression` when a provider-specific typed hint helper exists. It can also produce code that
-violates lifetime rules - for example, recreating
-`DataOptions` per operation instead of sharing a single instance.
+violates lifetime rules, for example recreating `DataOptions` per operation instead of sharing a
+single instance.
 
 **Correct pattern:**
 Markdown documentation is sufficient for orientation, but it is not the complete public API
-surface. If an API is not mentioned in markdown, search XML-doc before concluding it does not
-exist and before using generic string-based fallbacks.
-For lifetime-sensitive types, inspect XML-doc when available.
-Start with `LinqToDBArchitecture` (namespace `LinqToDB`) for cross-references,
-then inspect `DataOptions`, `DataConnection`, `DataContext`, `MappingSchema`,
-and provider `UseXxx` methods - these contain lifetime and caching constraints
-not fully enumerated in markdown.
-For provider-specific features, inspect the provider-specific XML-doc surface before recommending
-generic APIs such as `QueryHint`, `TableHint`, `Sql.Expression`, or raw SQL.
+surface. If an API is not mentioned in markdown, search `docs/api.md` before concluding it does
+not exist and before using generic string-based fallbacks. Use raw XML-doc only when the generated
+extract is inconclusive or exact member details are required.
+
+For lifetime-sensitive types, search `docs/api.md` first and inspect raw XML-doc when available.
+`LinqToDBArchitecture` (namespace `LinqToDB`), `DataOptions`, `DataConnection`, `DataContext`,
+`MappingSchema`, and provider `UseXxx` methods contain lifetime and caching constraints not fully
+enumerated in topic markdown.
+For provider-specific features, inspect the provider-specific generated API entries and raw
+XML-doc when needed before recommending generic APIs such as `QueryHint`, `TableHint`,
+`Sql.Expression`, or raw SQL.
 For hints, search `docs/hints-api-map.md` before recommending generic raw hint APIs or custom SQL.
 For table hints that should apply to several tables or a whole query scope, search typed
 `*InScope*` provider helpers before recommending generic `TablesInScopeHint(...)`.
 Do not synthesize scope helper names by string concatenation; use the verified provider helper from
-`docs/hints-api-map.md` and XML-doc.
+`docs/hints-api-map.md`, `docs/api.md`, and XML-doc when needed.
 Apply scope helpers to the composed query/subquery that already contains the target tables; applying
 a `TablesInScope` helper to only the first table before adding joins will not cover later joined
 tables.
@@ -517,11 +519,13 @@ This is the primary diagnostic tool for translation issues, unexpected query sha
 # AI Tags for API Documentation
 
 > You are here if you need to:
-> - add or update `AI-Tags` metadata on a new or modified public API
-> - verify that a key or value in an existing `AI-Tags` comment is valid
-> - understand the canonical vocabulary for `AI-Tags` keys and values
+> - add or update `<ai-tags />` metadata on a new or modified public API
+> - verify that a key or value in existing AI metadata is valid
+> - understand the canonical vocabulary for generated `AI-Tags` keys and values
 
-`AI-Tags` are compact metadata annotations embedded in XML documentation (`<remarks>`) for public APIs.
+`AI-Tags` are compact generated metadata annotations for public APIs.
+In source XML documentation they are authored as custom XML-doc elements, not as prose in
+`<remarks>`.
 
 They are intended for:
 - LLM/agent tooling,
@@ -530,38 +534,55 @@ They are intended for:
 
 ## Canonical format
 
-Use a single-line key-value list:
+Use a custom XML-doc element next to `<summary>` / `<remarks>`, not inside `<remarks>`:
+
+```xml
+<ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
+```
+
+Optional defaults element for an API surface:
+
+```xml
+<ai-tags-defaults pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+```
+
+Generated docs normalize those XML attributes to the canonical display format:
 
 `AI-Tags: Key1=Value1; Key2=Value2; ...;`
 
-Optional defaults line for an API surface:
-
-`AI-Tags-Defaults: Key1=Value1; Key2=Value2; ...;`
-
 Example:
 
-`AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;`
+```xml
+<ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+```
 
 Multi-group example (for aggregate docs like namespace/class overviews):
 
-`AI-Tags: Groups=QueryDirectives,NavigationLoading,DML,Merge,Helpers; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;`
+```xml
+<ai-tags groups="QueryDirectives,NavigationLoading,DML,Merge,Helpers" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+```
 
 Defaults example (applies to member tags in the same documented API surface unless overridden):
 
-`AI-Tags-Defaults: Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;`
+```xml
+<ai-tags-defaults pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+```
 
 ## Standard keys
 
-- `Group` - primary API category for a single API member.
-- `Groups` - comma-separated API categories for aggregate documentation that covers multiple categories.
-- `Execution` - when execution happens.
-- `Composability` - whether API returns a composable query structure or is terminal.
-- `Affects` - main semantic artifact affected by the call.
-- `Pipeline` - affected translation/execution stages.
-- `Provider` - provider dependency level.
-- `HintType` - hint scope/type for hint-bearing APIs.
+| XML attribute | Generated key | Meaning |
+|---|---|---|
+| `group` | `Group` | Primary API category for a single API member. |
+| `groups` | `Groups` | Comma-separated API categories for aggregate documentation that covers multiple categories. |
+| `execution` | `Execution` | When execution happens. |
+| `composability` | `Composability` | Whether API returns a composable query structure or is terminal. |
+| `affects` | `Affects` | Main semantic artifact affected by the call. |
+| `pipeline` | `Pipeline` | Affected translation/execution stages. |
+| `provider` | `Provider` | Provider dependency level. |
+| `hint-type` | `HintType` | Hint scope/type for hint-bearing APIs. |
 
-`AI-Tags-Defaults` uses the same keys and controlled values as `AI-Tags`.
+`<ai-tags-defaults />` uses the same keys and controlled values as `<ai-tags />`.
+Generated docs display both as `AI-Tags` / defaults metadata.
 
 ## Controlled values (current baseline)
 
@@ -640,15 +661,15 @@ Common combinations:
 
 ## Authoring rules
 
-1. Keep one `AI-Tags` block per API member.
+1. Keep one `<ai-tags />` element per API member.
 2. Use `Group` for single-category tagging.
 3. Use `Groups` only when documentation intentionally spans multiple categories; encode values as a comma-separated list with no extra spaces.
 4. Keep vocabulary stable; avoid introducing synonyms.
 5. Prefer extending controlled values in this document before using new values in code.
 6. If API semantics are multi-modal (e.g., provider-dependent execution structure), encode the dominant behavior and explain details in regular XML remarks.
 7. Keep tags behavior-focused (execution/composability/semantic impact), not implementation-detail-focused.
-8. Use `AI-Tags-Defaults` only for API surface-level defaults (for example class-level extension API docs), not for per-member semantics.
-9. Treat `Pipeline=ExpressionTree,SqlAST,SqlText` as the default LinqToDB pipeline; prefer declaring it once in `AI-Tags-Defaults` for a surface and omit per-member repeats unless a member differs.
+8. Use `<ai-tags-defaults />` only for API surface-level defaults (for example class-level extension API docs), not for per-member semantics.
+9. Treat `Pipeline=ExpressionTree,SqlAST,SqlText` as the default LinqToDB pipeline; prefer declaring it once in `<ai-tags-defaults />` for a surface and omit per-member repeats unless a member differs.
 10. For raw SQL APIs (e.g., `SetCommand`/`CommandInfo`) use `Pipeline=SqlText` - there is no Expression Tree or SQL AST stage; the caller provides SQL text directly.
 11. For `BulkCopy` use `Pipeline=BulkInsert` - the data transfer does not go through the LINQ translation pipeline at all.
 12. `Affects` values name the primary artifact altered or produced by the API, not an internal processing phase.
@@ -657,13 +678,13 @@ Common combinations:
 
 ## Defaults merge rules
 
-When both `AI-Tags-Defaults` and member-level `AI-Tags` exist:
+When both `<ai-tags-defaults />` and member-level `<ai-tags />` exist:
 
-1. Start from `AI-Tags-Defaults`.
-2. Apply member-level `AI-Tags` on top.
+1. Start from `<ai-tags-defaults />`.
+2. Apply member-level `<ai-tags />` on top.
 3. For the same key, member-level value replaces the default value.
-4. Keys absent in member-level `AI-Tags` are inherited from defaults.
-5. If no defaults are present, member-level `AI-Tags` are used as-is.
+4. Keys absent in member-level `<ai-tags />` are inherited from defaults.
+5. If no defaults are present, member-level `<ai-tags />` are used as-is.
 
 ## Scope guidance
 
@@ -675,4 +696,6 @@ Prioritize tagging for:
 
 ## Notes
 
-`AI-Tags` complement XML documentation; they do not replace human-readable API docs.
+`<ai-tags />` complements XML documentation; it does not replace human-readable API docs.
+Keep `<summary>` and `<remarks>` readable for humans. Generated `docs/api.md` exposes these
+elements as `AI metadata` / `AI-Tags` for agent retrieval.

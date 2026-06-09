@@ -25,7 +25,7 @@ set instead of enumerating every possible setting or hint value.
 It is not a conceptual guide and not a substitute for XML-doc. For exact signatures, overloads, remarks, and package-version truth, inspect `lib/<TFM>/linq2db.xml`.
 
 Use this map to go from SQL/database wording to LinqToDB API. Search both `SQL hint` and `Search aliases`; aliases cover common user wording such as `MAX RECURSION` for `MAXRECURSION`, `NO LOCK` for `NOLOCK`, or underscore-separated hint names written with spaces.
-If the required SQL hint is absent here, search XML-doc before falling back to generic APIs; absence from this map alone is not proof that the API does not exist.
+If the required SQL hint is absent here, search `docs/api.md` and raw XML-doc when needed before falling back to generic APIs; absence from this map alone is not proof that the API does not exist.
 
 Negative lookup rule: do not say "this map has no typed helper" from memory, semantic retrieval, or a partial provider summary. First perform an exact lookup in this map for both the provider heading and the SQL/database term from the request, then search `docs/api.md` / `lib/<TFM>/linq2db.xml` for the provider `*Hints` type. A negative answer about typed hint API existence is valid only after both checks fail.
 
@@ -530,7 +530,7 @@ concrete map hit.
 
 ## Maintenance
 
-- Keep this map aligned with XML-doc, especially `<c>...</c>` SQL hint text and `AI-Tags: Group=Hints; HintType=...`.
+- Keep this map aligned with XML-doc, especially `<c>...</c>` SQL hint text and generated AI metadata such as `Group=Hints; HintType=...`.
 - For generated provider hint files, update the `.tt` template first and regenerate/check in the matching `.generated.cs` file.
 - For handwritten provider hint files, update XML comments directly and then refresh this map.
 - Do not add examples for only one tested hint as proof that the entire provider surface works. The map is an API discovery aid, not a behavioral test suite.

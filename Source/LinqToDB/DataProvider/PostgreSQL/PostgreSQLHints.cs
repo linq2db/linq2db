@@ -80,10 +80,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		/// The <c>tableIDs</c> values are created with <c>Sql.TableAlias</c>, <c>Sql.TableName</c>, or
 		/// <c>Sql.TableSpec</c> for table sources marked with <c>TableID</c>. They resolve to the
 		/// generated SQL identifiers for the selected table sources.
-		/// <para>
-		/// AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="SubQuery" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.PostgreSQL, Sql.QueryExtensionScope.SubQueryHint, typeof(SubQueryTableHintExtensionBuilder))]
 		[Sql.QueryExtension(null,                    Sql.QueryExtensionScope.None,         typeof(NoneExtensionBuilder))]
@@ -117,10 +115,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		/// The <c>tableIDs</c> values are created with <c>Sql.TableAlias</c>, <c>Sql.TableName</c>, or
 		/// <c>Sql.TableSpec</c> for table sources marked with <c>TableID</c>. They resolve to the
 		/// generated SQL identifiers for the selected table sources.
-		/// <para>
-		/// AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="SubQuery" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.PostgreSQL, Sql.QueryExtensionScope.SubQueryHint, typeof(SubQueryTableHintExtensionBuilder))]
 		[Sql.QueryExtension(null,                    Sql.QueryExtensionScope.None,         typeof(NoneExtensionBuilder))]

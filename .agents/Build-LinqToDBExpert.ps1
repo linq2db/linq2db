@@ -91,7 +91,57 @@ function Get-DisplayName([string] $Id) {
 	return $body
 }
 
+function Get-AiTagDisplayName([string] $Name) {
+	switch ($Name) {
+		'group'         { return 'Group' }
+		'groups'        { return 'Groups' }
+		'execution'     { return 'Execution' }
+		'composability' { return 'Composability' }
+		'affects'       { return 'Affects' }
+		'pipeline'      { return 'Pipeline' }
+		'provider'      { return 'Provider' }
+		'hint-type'     { return 'HintType' }
+		default         { return $Name }
+	}
+}
+
+function Format-AiTagElement($Node) {
+	if ($null -eq $Node -or $Node.Attributes.Count -eq 0) {
+		return ''
+	}
+
+	$order = @('group', 'groups', 'hint-type', 'execution', 'composability', 'affects', 'pipeline', 'provider')
+	$parts = New-Object System.Collections.Generic.List[string]
+	$used = New-Object System.Collections.Generic.HashSet[string]
+
+	foreach ($name in $order) {
+		$attribute = $Node.Attributes[$name]
+		if ($attribute -and -not [string]::IsNullOrWhiteSpace($attribute.Value)) {
+			[void]$parts.Add(('{0}={1}' -f (Get-AiTagDisplayName $name), $attribute.Value.Trim()))
+			[void]$used.Add($name)
+		}
+	}
+
+	foreach ($attribute in $Node.Attributes) {
+		if (-not $used.Contains($attribute.Name) -and -not [string]::IsNullOrWhiteSpace($attribute.Value)) {
+			[void]$parts.Add(('{0}={1}' -f (Get-AiTagDisplayName $attribute.Name), $attribute.Value.Trim()))
+		}
+	}
+
+	if ($parts.Count -eq 0) {
+		return ''
+	}
+
+	return (($parts -join '; ') + ';')
+}
+
 function Extract-AiTags($Member) {
+	$tagNode = $Member.SelectSingleNode('ai-tags')
+	$tags = Format-AiTagElement $tagNode
+	if ($tags) {
+		return Clean-Text $tags
+	}
+
 	$text = ''
 
 	$remarksNode = $Member.SelectSingleNode('remarks')
@@ -109,7 +159,6 @@ function Extract-AiTags($Member) {
 
 	return Clean-Text $match.Groups[1].Value
 }
-
 function Get-XmlChildText($Node, [string] $Name) {
 	$child = $Node.SelectSingleNode($Name)
 	if ($child) {

@@ -123,9 +123,7 @@ void GenerateTable(string hint, string sqlHint = null)
 		/// Adds an Oracle <c><#= sqlHint ?? hint #></c> table hint.
 		/// For all tables already present in the current query scope, use <c><#= hint #>InScopeHint</c> on <c>IOracleSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Table" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.Oracle, nameof(<#= hint #>TableHintImpl))]
 		public static IOracleSpecificTable<TSource> <#= hint #>Hint<TSource>(this IOracleSpecificTable<TSource> table)
 			where TSource : notnull
@@ -141,9 +139,7 @@ void GenerateTable(string hint, string sqlHint = null)
 		/// <summary>
 		/// Adds an Oracle <c><#= sqlHint ?? hint #></c> table hint to tables in the current query scope.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="TablesInScope" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.Oracle, nameof(<#= hint #>InScopeHintImpl))]
 		public static IOracleSpecificQueryable<TSource> <#= hint #>InScopeHint<TSource>(this IOracleSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -165,9 +161,7 @@ void GenerateIndex(string hint, string sqlHint = null)
 		/// <summary>
 		/// Adds an Oracle <c><#= sqlHint ?? hint #></c> index hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Index" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(ProviderName.Oracle, nameof(<#= hint #>IndexHintImpl))]
 		public static IOracleSpecificTable<TSource> <#= hint #>Hint<TSource>(this IOracleSpecificTable<TSource> table, params string[] indexNames)
 			where TSource : notnull
@@ -189,9 +183,7 @@ void GenerateQuery(string hint, string sqlHint = null)
 		/// <summary>
 		/// Adds an Oracle <c><#= sqlHint ?? hint #></c> query hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(<#= hint #>HintImpl))]
 		public static IOracleSpecificQueryable<TSource> <#= hint #>Hint<TSource>(this IOracleSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -213,9 +205,7 @@ void GenerateQuery2(string hint, string sqlHint = null)
 		/// <summary>
 		/// Adds an Oracle <c><#= sqlHint ?? hint #></c> query hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(<#= hint #>HintImpl2))]
 		public static IOracleSpecificQueryable<TSource> <#= hint #>Hint<TSource>(this IOracleSpecificQueryable<TSource> query, int value)
 			where TSource : notnull
@@ -237,9 +227,7 @@ void GenerateQuery3(string hint, string sqlHint = null)
 		/// <summary>
 		/// Adds an Oracle <c><#= sqlHint ?? hint #></c> query hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(<#= hint #>HintImpl3))]
 		public static IOracleSpecificQueryable<TSource> <#= hint #>Hint<TSource>(this IOracleSpecificQueryable<TSource> query, string queryBlock)
 			where TSource : notnull
@@ -261,9 +249,7 @@ void GenerateQuery4(string hint, string sqlHint = null)
 		/// <summary>
 		/// Adds an Oracle <c><#= sqlHint ?? hint #></c> query hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(<#= hint #>HintImpl4))]
 		public static IOracleSpecificQueryable<TSource> <#= hint #>Hint<TSource>(this IOracleSpecificQueryable<TSource> query, params Sql.SqlID[] tableIDs)
 			where TSource : notnull

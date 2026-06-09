@@ -4,10 +4,11 @@
 
 > Before using this guide:
 > - apply global rules from [`SKILL.md`](01-skill.md);
-> - for exact API names/signatures, verify against [`docs/api.md`](04-api-discovery-and-extract.md) and `lib/<TFM>/linq2db.xml`.
+> - for exact API names/signatures, search [`docs/api.md`](04-api-discovery-and-extract.md) first, then use
+>   `lib/<TFM>/linq2db.xml` when the generated extract is not detailed enough.
 
 This file records which LinqToDB topics have package-local AI guidance and which topics still
-require direct API/XML-doc lookup.
+require generated API index lookup or raw XML-doc confirmation.
 
 ## Covered Topics
 
@@ -44,7 +45,8 @@ These areas are not yet covered by a dedicated AI guide or are covered only indi
 
 If a topic is not covered by markdown guidance, do not infer LinqToDB API shape or behavior from
 memory. Search `docs/api.md` by task terms, member names, provider names, receiver types, and
-AI-Tags, then verify exact members in `lib/<TFM>/linq2db.xml`.
+AI metadata. Use `lib/<TFM>/linq2db.xml` as the version-matched primary reference only when the
+generated extract is inconclusive or exact signature/remarks detail is required.
 
 Do not use `LinqToDB.Internal.*` APIs in application code while investigating uncovered topics.
 They are implementation details even when visible as public members.

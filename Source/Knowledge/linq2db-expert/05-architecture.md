@@ -186,22 +186,26 @@ Mapping configuration and metadata.
 Sql
 Helper API for SQL constructs.
 
-> **For AI agents:** XML documentation attached to each of the types listed above is the
-> authoritative source for their usage rules, lifetime constraints, and thread-safety guarantees.
-> Markdown docs provide orientation; XML-doc provides per-symbol rules.
-> Inspect XML-doc before generating code that uses any of these types.
+> **For AI agents:** Markdown docs provide orientation and scenario rules. `docs/api.md` is the
+> generated search index for public APIs. Raw XML-doc is the version-matched primary reference for
+> exact signatures, overloads, remarks, usage rules, lifetime constraints, and thread-safety details
+> when the generated extract is not detailed enough.
 
 ---
 
 # Machine-Readable Documentation (AI-Tags)
 
-Some XML documentation comments contain compact machine-readable metadata.
+Some XML documentation comments contain compact machine-readable metadata in custom XML-doc
+elements.
 
 Format:
 
-AI-Tags: Key=Value; Key2=Value2; ...
+```xml
+<ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" />
+```
 
-Keys are separated by semicolons; multiple values within a single key are comma-separated (e.g. `Affects=DdlStatement,Data`).
+Generated docs render these attributes as `AI-Tags` metadata. Multiple values within a single key
+are comma-separated (e.g. `affects="DdlStatement,Data"`).
 
 These tags describe:
 
@@ -211,7 +215,7 @@ These tags describe:
 * SQL semantics affected
 * provider behavior
 
-AI-Tags are intended for tooling and AI agents.
+AI metadata is intended for tooling and AI agents.
 
 They do not affect runtime behavior.
 
@@ -226,7 +230,7 @@ docs/ai-tags.md
 The following files are included in the NuGet package:
 
 docs/ai-tags.md
-Specification of AI-Tags format and semantics.
+Specification of `<ai-tags />` format and generated AI metadata semantics.
 
 docs/architecture.md
 This document.

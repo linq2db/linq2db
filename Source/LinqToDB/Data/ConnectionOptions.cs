@@ -21,10 +21,8 @@ namespace LinqToDB.Data
 	/// options are changed on an existing context through <see cref="IDataContext.UseOptions"/>, only
 	/// context-reapplicable connection settings can be changed; connection string, provider, and
 	/// similar creation-time settings are not reconfigured on an already-created context.
-	/// <para>
-	/// AI-Tags: Group=Configuration; Affects=ConnectionConfiguration; Pipeline=Connection,Execution; Provider=ProviderDefined;
-	/// </para>
 	/// </remarks>
+	/// <ai-tags group="Configuration" affects="ConnectionConfiguration" pipeline="Connection,Execution" provider="ProviderDefined" />
 	/// <param name="ConfigurationString">
 	/// Gets configuration string name to use with <see cref="DataConnection"/> instance.
 	/// </param>

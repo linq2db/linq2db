@@ -211,7 +211,7 @@ See [Bulk Copy](https://linq2db.github.io/articles/sql/Bulk-Copy.html) for optio
 
 ## For AI/LLM agents
 
-See `skills/linq2db/SKILL.md` for mandatory pre-coding steps, XML-doc inspection rules,
+See `skills/linq2db/SKILL.md` for mandatory pre-coding steps, generated API/XML-doc reference rules,
 provider runtime dependency checks, and a quick violation reference.
 
 This package bundles machine-readable documentation inside the NuGet package.
@@ -223,7 +223,7 @@ to the NuGet package directory (e.g. via MCP filesystem tools or the NuGet globa
 | `skills/linq2db/SKILL.md` | Canonical AI entry point for this package version |
 | `skills/linq2db/docs/architecture.md` | Architecture overview, translation pipeline, execution model, entry points |
 | `skills/linq2db/docs/coverage.md` | Covered and not-yet-covered package-local AI documentation areas |
-| `skills/linq2db/docs/ai-tags.md` | AI-Tags metadata format - controlled vocabulary for API behavior annotations |
+| `skills/linq2db/docs/ai-tags.md` | `<ai-tags />` metadata format - controlled vocabulary for generated API behavior annotations |
 | `skills/linq2db/docs/agent-antipatterns.md` | Operational anti-patterns with `// WRONG` / `// CORRECT` code examples |
 | `skills/linq2db/docs/provider-capabilities.md` | SQL feature support matrix per provider (MERGE, CTE, bulk copy, OUTPUT, etc.) |
 | `skills/linq2db/docs/provider-setup.md` | Provider configuration reference (ProviderName constants, UseXxx methods, NuGet packages) |

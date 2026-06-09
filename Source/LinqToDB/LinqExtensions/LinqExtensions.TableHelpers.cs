@@ -42,10 +42,8 @@ namespace LinqToDB
 		/// The identifier affects SQL semantics and is emitted into SQL text according to provider rules when
 		/// resolved through <c>Sql.SqlID</c>.
 		/// </para>
-		/// <para>
-		/// AI-Tags: Group=Configuration; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="Configuration" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> TableID<T>(this ITable<T> table, [SqlQueryDependent] string? id)
@@ -67,10 +65,8 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
 		/// The name affects SQL semantics and is emitted into SQL text according to provider rules.
-		/// <para>
-		/// AI-Tags: Group=Configuration; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="Configuration" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> TableName<T>(this ITable<T> table, [SqlQueryDependent] string name)
@@ -103,10 +99,8 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The name affects SQL semantics and is emitted into SQL text according to provider rules.
 		/// </para>
-		/// <para>
-		/// AI-Tags: Group=Configuration; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="Configuration" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> DatabaseName<T>(this ITable<T> table, [SqlQueryDependent] string? name)
@@ -132,10 +126,8 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The name affects SQL semantics and is emitted into SQL text according to provider rules.
 		/// </para>
-		/// <para>
-		/// AI-Tags: Group=Configuration; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="Configuration" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> ServerName<T>(this ITable<T> table, [SqlQueryDependent] string? name)
@@ -161,10 +153,8 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The name affects SQL semantics and is emitted into SQL text according to provider rules.
 		/// </para>
-		/// <para>
-		/// AI-Tags: Group=Configuration; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="Configuration" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> SchemaName<T>(this ITable<T> table, [SqlQueryDependent] string? name)
@@ -194,10 +184,8 @@ namespace LinqToDB
 		/// </code>
 		/// Execution is deferred and the method is composable.
 		/// The template affects SQL semantics and is emitted into SQL text according to provider rules.
-		/// <para>
-		/// AI-Tags: Group=Configuration; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="Configuration" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> WithTableExpression<T>(this ITable<T> table, [SqlQueryDependent] string expression)

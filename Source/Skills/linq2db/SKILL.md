@@ -7,7 +7,9 @@
 This package includes a package-local AI agent skill:
 - `SKILL.md` is the canonical AI entry point.
 - `docs/*.md` contains task-specific skill references.
-- `docs/api.md` and `lib/<TFM>/linq2db.xml` provide exact API discovery.
+- `docs/api.md` provides API discovery and generated AI metadata extracted from XML-doc.
+- `lib/<TFM>/linq2db.xml` is the version-matched primary reference for exact API facts when
+  the generated extract or markdown guidance is not enough.
 
 Navigation:
 - [Core reference](#core-reference) - **required** before writing any code; re-read for non-trivial tasks
@@ -25,7 +27,7 @@ These files define global rules that apply to every operation. Keep them in mind
 |---|---|
 | `docs/architecture.md` | Translation pipeline, entry points, connection model |
 | `docs/agent-antipatterns.md` | Common mistakes with WRONG/CORRECT code examples; quick symptom index at the top |
-| `docs/coverage.md` | Covered and not-yet-covered AI documentation areas; use it to decide when XML-doc lookup is required |
+| `docs/coverage.md` | Covered and not-yet-covered AI documentation areas; use it to decide when generated API lookup or raw XML-doc confirmation is required |
 
 ---
 
@@ -57,19 +59,20 @@ See `docs/provider-setup.md` for the complete list including version requirement
 **Check the project file** (`.csproj`) for the required driver package before writing any code.
 If it is missing, add it - do not assume it will be present at runtime.
 
-### 2 - Inspect XML-doc for lifetime-sensitive types
+### 2 - Use XML-doc as exact API reference when needed
 
 Markdown documentation is sufficient for most code generation scenarios.
-For lifetime-sensitive types, inspect XML-doc when available -
-it contains constraints that markdown summarises but does not fully enumerate.
+For exact public API facts, use `docs/api.md` first as a generated search index. Inspect raw
+XML-doc only when the generated extract or markdown guidance does not contain enough detail.
 
 The XML documentation file ships with the package assembly:
 `lib/<TFM>/linq2db.xml`
-Use it directly - do not search online or in source repositories.
+Use it for version-matched signatures, overloads, parameter documentation, return types, remarks,
+and custom AI metadata. Do not read it sequentially.
 
-### 3 - Use XML-doc for exact API discovery
+### 3 - Use generated API discovery before raw XML-doc
 
-Do not invent APIs, overloads, options, XML-doc remarks, AI-Tags, provider flags, or provider
+Do not invent APIs, overloads, options, XML-doc remarks, AI metadata, provider flags, or provider
 capabilities. Also do not assume an API is missing just because markdown docs do not mention it.
 
 Do not use `LinqToDB.Internal.*` APIs in application code. They are implementation details even
@@ -101,14 +104,16 @@ configuration, and DML/query extensions:
 3. Use `docs/api.md` as the curated API discovery extract when available. Do not read it
    sequentially; it is a search index. Search its
    `Search anchors:` lines first by task words, provider names, SQL keywords, likely member names,
-   receiver scope, and AI-Tags.
-4. Use headings, summaries, and AI-Tags to confirm likely candidates.
+   receiver scope, and AI metadata.
+4. Use headings, summaries, and AI metadata to confirm likely candidates.
 5. When `docs/api.md` has a candidate entry, copy the `XML member` id from its table row and search
    `lib/<TFM>/linq2db.xml` by that exact id for exact public API names, signatures, overloads,
-   parameters, return types, remarks, and AI-Tags.
-6. Treat XML-doc as the complete current-version public API surface for members that have XML
-   comments.
-7. Do not conclude that an API is unavailable until XML-doc has been searched.
+   parameters, return types, remarks, and AI metadata when those details are not clear from the
+   generated extract.
+6. Treat XML-doc as the version-matched primary reference for exact API facts on members that have
+   XML comments, but use it through `docs/api.md` whenever possible.
+7. Do not conclude that an API is unavailable until `docs/api.md` has been searched and raw
+   XML-doc has been searched when the generated extract is inconclusive.
    A compact `docs/api.md` extract entry groups overload families; a missing overload in that
    extract is not proof that the overload is absent.
 8. Prefer typed or provider-specific APIs found in XML-doc over generic string-based APIs.
@@ -138,24 +143,26 @@ For SQL hint questions, use this mandatory lookup order before answering:
 7. Use common name shapes only to guide search: `<Base>Hint` -> `<Base>InScopeHint` and
    `With<Base>` -> `With<Base>InScope`. Do not invent unverified scope-helper names by string
    concatenation; verify the exact API in the map and XML-doc.
-8. Search the provider `*Hints` XML-doc members by SQL hint text, candidate helper names,
-   receiver types, and `AI-Tags: Group=Hints`.
+8. Search the provider `*Hints` API entries by SQL hint text, candidate helper names,
+   receiver types, and AI metadata such as `Group=Hints`.
 9. Prefer typed/provider-specific helpers found in the map or XML-doc.
 10. Recommend generic hint APIs (`QueryHint`, `TableHint`, `TablesInScopeHint`, etc.) only after
-   map and XML-doc lookup fail to find a typed helper for the installed package version.
+   map, generated API lookup, and raw XML-doc confirmation fail to find a typed helper for the
+   installed package version.
 11. Recommend `Sql.Expression`, raw SQL, or interceptors only after both typed and generic hint APIs
    do not cover the requested case.
 
 When answering a concrete provider-specific hint question, ground the answer in the API lookup
 result. If a typed helper is found, name the required provider marker, the typed helper, and its
-receiver before showing fallback APIs. If no typed helper is found, say that the exact map and XML-doc lookup did not find one before
+receiver before showing fallback APIs. If no typed helper is found, say that the exact map and
+generated API lookup and raw XML-doc confirmation did not find one before
 recommending `QueryHint`, `TableHint`, `TablesInScopeHint`, `Sql.Expression`, raw SQL, or
 interceptors.
 
 Do not answer a provider-specific hint question from the generic hints model alone.
 Do not claim that `docs/hints-api-map.md` lacks a typed helper unless you searched it by exact
-provider and exact SQL/database term, then searched `docs/api.md` and XML-doc for the provider
-`*Hints` type, SQL term, likely helper fragments, and `AI-Tags: Group=Hints`.
+provider and exact SQL/database term, then searched `docs/api.md` and raw XML-doc, when needed, for the provider
+`*Hints` type, SQL term, likely helper fragments, and AI metadata such as `Group=Hints`.
 Do not skip this lookup because the database feature is a table modifier, lock clause, query
 directive, or provider-specific SQL extension rather than a classic optimizer hint.
 
@@ -180,7 +187,7 @@ When a guide lists several possible implementation paths, the order is meaningfu
 the most specific package-version path first. Generic APIs, custom SQL, raw SQL, and interceptors
 are fallback paths unless the guide explicitly says otherwise.
 
-Types that require XML-doc inspection:
+Types where raw XML-doc is often useful when `docs/api.md` is not enough:
 
 - `LinqToDB.LinqToDBArchitecture` - architecture overview and cross-references; start here
 - `DataOptions` - MUST be created once per application and shared; DO NOT recreate per operation or per request
@@ -245,14 +252,14 @@ They may not match this package version. Always use the bundled files below:
 | `docs/crud/crud.md` | All CRUD operations - SELECT, INSERT, UPDATE, DELETE, upsert, bulk copy, MERGE; routes to the right guide |
 | `docs/query-cte.md` | CTEs, recursive queries - when `.AsCte()` or `db.GetCte<T>()` is needed |
 | `docs/query-temp-tables.md` | Temporary tables - `TempTable<T>`, `CreateTempTable`, `TableOptions`; requires `DataConnection` |
-| `docs/hints.md` | Query, table, index, join, subquery, provider-specific, and MERGE hints; before proposing raw SQL, `Sql.Expression`, or interceptors for a hint, check this guide, `docs/hints-api-map.md`, and the provider `*Hints` XML-doc members |
-| `docs/hints-api-map.md` | Reverse lookup from concrete provider SQL hint text to typed provider-specific helper APIs; use it as a search aid, then verify signatures in XML-doc |
+| `docs/hints.md` | Query, table, index, join, subquery, provider-specific, and MERGE hints; before proposing raw SQL, `Sql.Expression`, or interceptors for a hint, check this guide, `docs/hints-api-map.md`, and generated provider `*Hints` API entries |
+| `docs/hints-api-map.md` | Reverse lookup from concrete provider SQL hint text to typed provider-specific helper APIs; use it as a search aid, then verify signatures in `docs/api.md` or raw XML-doc when needed |
 | `docs/translatable-methods.md` | `String` / `Math` / `DateTime` methods in LINQ queries |
 | `docs/provider-capabilities.md` | MERGE, CTE, bulk copy, OUTPUT/RETURNING - check provider support first |
 | `docs/custom-sql.md` | Mapping custom methods to SQL expressions |
 | `docs/interceptors.md` | Choosing and registering interceptors; callback timing and supported use cases |
 | `docs/configuration.md` | Logging, retry, interceptors, `DataOptions` builder |
-| `docs/coverage.md` | Coverage status for package-local AI guides; if a topic is not covered, search `docs/api.md` and XML-doc |
+| `docs/coverage.md` | Coverage status for package-local AI guides; if a topic is not covered, search `docs/api.md` and raw XML-doc when needed |
 
 > For any non-trivial code, transaction handling, lifetime issues, or unexpected exceptions - consult `docs/agent-antipatterns.md` (quick symptom index at the top) and `docs/architecture.md`.
 
@@ -263,13 +270,13 @@ Full WRONG/CORRECT code examples are in `docs/agent-antipatterns.md`.
 | Violation | Consequence |
 |---|---|
 | `SKILL.md` not read before task-specific docs | Task-specific guidance interpreted without global rules; likely lifetime, namespace, or schema violations |
-| `DataOptions` recreated per operation | Correctness violation; prohibited by XML-doc for `DataOptions` |
+| `DataOptions` recreated per operation | Correctness violation; prohibited by package docs and `DataOptions` XML-doc |
 | `MappingSchema` recreated per connection | Destroys internal caches; severe performance degradation under load |
 | Provider driver package missing | Compiles; fails at runtime with assembly-not-found error |
 | `DataConnection` opened before `TransactionScope` created | Transaction not applied; data committed outside scope |
 | GitHub / online docs used as primary source | Version mismatch risk; bundled docs are the authoritative version-matched source |
-| API assumed missing because it is not in markdown | XML-doc is the current-version public API surface for documented members; search it before using generic fallbacks |
-| XML-doc not inspected for lifetime-sensitive types | Lifetime and usage rules silently violated |
+| API assumed missing because it is not in markdown | `docs/api.md` and raw XML-doc are the version-matched API reference; search them before using generic fallbacks |
+| Raw XML-doc not checked when generated docs are inconclusive | Exact signature, overload, lifetime, or remarks detail can be missed |
 | `InsertOrReplace` / `InsertOrReplaceAsync` used with `[Identity]` PK | `LinqToDBException` at query build time - upsert requires a caller-supplied PK value; identity columns have none |
 | `string` / `decimal` column without explicit `Length` / `Precision` / `Scale` | Provider fills in implicit defaults that differ across databases; schema becomes non-portable |
 | Self-chosen `Length` / `Precision` / `Scale` with no `TODO` comment | Assumption is invisible; cannot distinguish confirmed values from guesses - treat as incomplete |

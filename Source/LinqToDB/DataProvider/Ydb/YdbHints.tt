@@ -25,9 +25,7 @@ namespace LinqToDB.DataProvider.Ydb
 		/// <summary>
 		/// Adds a YDB <c><#= sqlHint ?? name #></c> query hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(<#= name #>HintImpl))]
 		public static IYdbSpecificQueryable<TSource> <#= name #>Hint<TSource>(
 			this IYdbSpecificQueryable<TSource> query,
@@ -46,9 +44,7 @@ namespace LinqToDB.DataProvider.Ydb
 		/// <summary>
 		/// Adds a YDB <c><#= sqlHint ?? name #></c> query hint.
 		/// </summary>
-		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
-		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(<#= name #>HintQImpl))]
 		public static IYdbSpecificQueryable<TSource> <#= name #>Hint<TSource>(
 			this IQueryable<TSource> query,

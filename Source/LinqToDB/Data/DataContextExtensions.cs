@@ -42,13 +42,9 @@ namespace LinqToDB.Data
 	///     </description>
 	///   </item>
 	/// </list>
-	/// <para>
-	/// AI-Tags: Groups=RawSQL,DML; Provider=ProviderDefined;
-	/// </para>
-	/// <para>
-	/// AI-Tags-Defaults: Provider=ProviderDefined;
-	/// </para>
 	/// </remarks>
+	/// <ai-tags groups="RawSQL,DML" provider="ProviderDefined" />
+	/// <ai-tags-defaults provider="ProviderDefined" />
 	[PublicAPI]
 	public static class DataContextExtensions
 	{
@@ -64,10 +60,8 @@ namespace LinqToDB.Data
 		/// Entry point for the raw SQL fluent builder pattern. Chain <c>Query</c>, <c>Execute</c>,
 		/// or <c>ExecuteReader</c> (and their <c>Async</c> variants) on the returned <see cref="CommandInfo"/>
 		/// to materialize results or run DML.
-		/// <para>
-		/// AI-Tags: Group=RawSQL; Execution=Deferred; Composability=Composable; Affects=CommandBuilder; Pipeline=SqlText;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="RawSQL" execution="Deferred" composability="Composable" affects="CommandBuilder" pipeline="SqlText" />
 		public static CommandInfo SetCommand(this IDataContext dataContext, string commandText)
 		{
 			return new CommandInfo(dataContext, commandText);
@@ -2428,10 +2422,8 @@ namespace LinqToDB.Data
 		/// Uses the most efficient insert path available for the configured provider
 		/// (native bulk API or multi-row INSERT fallback, controlled by <see cref="BulkCopyOptions.BulkCopyType"/>).
 		/// Execution is immediate; does not use the LINQ translation pipeline.
-		/// <para>
-		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=Data; Pipeline=BulkInsert;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="Data" pipeline="BulkInsert" />
 		public static BulkCopyRowsCopied BulkCopy<T>(this IDataContext dataContext, BulkCopyOptions options, IEnumerable<T> source)
 			where T : class
 		{
@@ -2590,10 +2582,8 @@ namespace LinqToDB.Data
 		/// <remarks>
 		/// Async variant of <see cref="BulkCopy{T}(IDataContext, BulkCopyOptions, IEnumerable{T})"/>.
 		/// Uses the most efficient insert path available for the configured provider.
-		/// <para>
-		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=Data; Pipeline=BulkInsert;
-		/// </para>
 		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="Data" pipeline="BulkInsert" />
 		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this IDataContext dataContext, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken = default)
 			where T : class
 		{
