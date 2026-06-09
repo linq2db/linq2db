@@ -1978,7 +1978,8 @@ namespace Tests.Linq
 			Assert.That(result[0].Output, Is.EqualTo(TestData.TimeOfDay.Hours));
 		}
 
-		[Table]
+		// Short name: Oracle 11 (30) and Firebird <= 3 (31) cap identifier length; the 32-char class name overflows both.
+		[Table("NullableDateTimeSub")]
 		sealed class NullableDateTimeSubtractionTable
 		{
 			[PrimaryKey]
@@ -1998,7 +1999,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NullableDateTimeSubtractionProjectionTest([DataSources] string context)
+		public void NullableDateTimeSubtractionProjectionTest([DataSources(TestProvName.AllAccessOdbc, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(NullableDateTimeSubtractionTable.Data);
