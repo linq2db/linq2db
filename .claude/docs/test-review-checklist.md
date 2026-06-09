@@ -57,6 +57,10 @@ A `[TestFixture]` attribute on the same partial class declared in two files runs
 
 A test of an `Async` method that doesn't `await` the call (or doesn't return `Task` / `ValueTask`) exercises the synchronous fallback, not the async path. When the PR fixes an async-specific issue, confirm the test actually awaits.
 
+### Inline per-provider gating where a FeatureSource attribute fits
+
+When tests gate provider support *inline* — repeated `[DataSources(false, ProviderName.X, …)]` / `[ExcludeDataSources(...)]` skip-lists, or `context.IsAnyOf(...)` branches — scattered across many tests for the **same** feature, check whether `Tests/Base/Attributes/FeatureSources/` already has (or warrants) a feature-based context-source attribute for it: `SupportsAnalyticFunctionsContextAttribute` (window / analytic functions), `MergeDataContextSourceAttribute`, `CteContextSourceAttribute`, `RecursiveCteContextSourceAttribute`, `AllJoinsSourceAttribute`, and peers. Repeating the provider skip-list per test is the trap — it drifts as providers gain support, and it buries which providers genuinely lack the feature behind boilerplate. Flag `MIN` and point at the matching feature-source attribute; when none fits, suggest introducing one alongside the existing family rather than inlining the gate. (Surfaced on PR #5468 — window-function tests inline-gated providers instead of using a feature-source attribute, despite `SupportsAnalyticFunctionsContextAttribute` already existing.)
+
 ---
 
 Apply this checklist whenever rule 6 of `code-reviewer.md` fires — i.e. on any test file added or modified by the PR. Findings from this checklist go in the regular `findings[]` stream with severity per the per-item guidance (most are MAJ when the test fails to exercise its named purpose, MIN otherwise).
