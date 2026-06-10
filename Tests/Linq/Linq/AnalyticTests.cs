@@ -490,7 +490,7 @@ namespace Tests.Linq
 			if (context.IsAnyOf(TestProvName.AllOracle))
 				Assert.That(db.LastQuery, Does.Contain("(ORDER BY p.\"Value1\", c_1.\"ChildID\" DESC, p.\"ParentID\")"));
 			else if (context.IsAnyOf(TestProvName.AllClickHouse, TestProvName.AllDuckDB))
-				Assert.That(db.LastQuery, Does.Contain("ROW_NUMBER() OVER(ORDER BY p.Value1, c_1.ChildID DESC, p.ParentID)"));
+				Assert.That(db.LastQuery, Does.Contain("ROW_NUMBER() OVER (ORDER BY p.Value1, c_1.ChildID DESC, p.ParentID)"));
 			else
 				Assert.Fail("Missing assertion");
 		}
@@ -2091,5 +2091,22 @@ namespace Tests.Linq
 			documentCombinedJson.ToArray();
 		}
 		#endregion
+
+		[Test]
+		public void LegacyAnalytic_DefaultNullsPosition_AppliedToOrderBy(
+			[IncludeDataSources(false, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataConnection(context, o => o.UseDefaultNullsPosition(Sql.NullsPosition.First));
+
+			// A legacy Sql.Ext analytic chain (converted to the new Sql.Window pipeline) must pick up the
+			// configured DefaultNullsPosition for its ORDER BY, just like a plain query OrderBy would.
+			var q =
+				from p in db.Parent
+				select Sql.Ext.Sum(p.Value1!.Value).Over().OrderBy(p.Value1).ToValue();
+
+			q.ToArray();
+
+			Assert.That(db.LastQuery, Does.Contain("NULLS FIRST"));
+		}
 	}
 }

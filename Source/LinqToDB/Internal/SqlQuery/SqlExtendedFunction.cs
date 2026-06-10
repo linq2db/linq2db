@@ -26,7 +26,8 @@ namespace LinqToDB.Internal.SqlQuery
 			bool                              canBeAffectedByOrderBy      = false,
 			SqlKeepClause?                    keepClause                  = null,
 			Sql.Nulls                         nullTreatment               = Sql.Nulls.None,
-			Sql.From                          fromPosition                = Sql.From.None)
+			Sql.From                          fromPosition                = Sql.From.None,
+			bool                              isWindowFunction            = false)
 		{
 			Type                        = dbDataType;
 			FunctionName                = functionName;
@@ -44,6 +45,7 @@ namespace LinqToDB.Internal.SqlQuery
 			KeepClause                  = keepClause;
 			NullTreatment               = nullTreatment;
 			FromPosition                = fromPosition;
+			_isWindowFunction           = isWindowFunction;
 		}
 
 		public DbDataType                Type                        { get; }
@@ -98,7 +100,8 @@ namespace LinqToDB.Internal.SqlQuery
 				CanBeAffectedByOrderBy,
 				keepClause: KeepClause,
 				nullTreatment: NullTreatment,
-				fromPosition: FromPosition);
+				fromPosition: FromPosition,
+				isWindowFunction: IsWindowFunction);
 		}
 
 		public SqlExtendedFunction WithFunctionName(string functionName)
@@ -119,7 +122,8 @@ namespace LinqToDB.Internal.SqlQuery
 				CanBeAffectedByOrderBy,
 				keepClause: KeepClause,
 				nullTreatment: NullTreatment,
-				fromPosition: FromPosition);
+				fromPosition: FromPosition,
+				isWindowFunction: IsWindowFunction);
 		}
 
 		public SqlExtendedFunction WithArguments(IEnumerable<SqlFunctionArgument> arguments, bool[] argumentsNullability)
@@ -140,7 +144,8 @@ namespace LinqToDB.Internal.SqlQuery
 				CanBeAffectedByOrderBy,
 				keepClause: KeepClause,
 				nullTreatment: NullTreatment,
-				fromPosition: FromPosition);
+				fromPosition: FromPosition,
+				isWindowFunction: IsWindowFunction);
 		}
 
 		public SqlExtendedFunction WithPartitionBy(IEnumerable<ISqlExpression>? partitionBy)
@@ -161,7 +166,8 @@ namespace LinqToDB.Internal.SqlQuery
 				CanBeAffectedByOrderBy,
 				keepClause: KeepClause,
 				nullTreatment: NullTreatment,
-				fromPosition: FromPosition);
+				fromPosition: FromPosition,
+				isWindowFunction: IsWindowFunction);
 		}
 
 		public SqlExtendedFunction WithOrderBy(IEnumerable<SqlWindowOrderItem>? orderBy)
@@ -182,7 +188,8 @@ namespace LinqToDB.Internal.SqlQuery
 				CanBeAffectedByOrderBy,
 				keepClause: KeepClause,
 				nullTreatment: NullTreatment,
-				fromPosition: FromPosition);
+				fromPosition: FromPosition,
+				isWindowFunction: IsWindowFunction);
 		}
 
 		public SqlExtendedFunction WithFrameClause(SqlFrameClause? frameClause)
@@ -203,7 +210,8 @@ namespace LinqToDB.Internal.SqlQuery
 				CanBeAffectedByOrderBy,
 				keepClause: KeepClause,
 				nullTreatment: NullTreatment,
-				fromPosition: FromPosition);
+				fromPosition: FromPosition,
+				isWindowFunction: IsWindowFunction);
 		}
 
 		public SqlExtendedFunction WithFilter(SqlSearchCondition? filter)
@@ -224,7 +232,8 @@ namespace LinqToDB.Internal.SqlQuery
 				CanBeAffectedByOrderBy,
 				keepClause: KeepClause,
 				nullTreatment: NullTreatment,
-				fromPosition: FromPosition);
+				fromPosition: FromPosition,
+				isWindowFunction: IsWindowFunction);
 		}
 
 		public SqlExtendedFunction WithWithinGroup(IEnumerable<SqlWindowOrderItem>? withinGroup)
@@ -245,7 +254,8 @@ namespace LinqToDB.Internal.SqlQuery
 				CanBeAffectedByOrderBy,
 				keepClause: KeepClause,
 				nullTreatment: NullTreatment,
-				fromPosition: FromPosition);
+				fromPosition: FromPosition,
+				isWindowFunction: IsWindowFunction);
 		}
 
 		static bool CheckNulls(object? expr1, object? expr2)
@@ -383,7 +393,12 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public override QueryElementType ElementType => QueryElementType.SqlExtendedFunction;
 
-		public bool IsWindowFunction => OrderBy?.Count > 0 || PartitionBy?.Count > 0 || FrameClause != null || KeepClause != null;
+		// Stored marker: set when the function originates from an explicit OVER/window context (e.g. legacy
+		// Sql.Ext.*().Over() or Sql.Window.*). Lets an empty window (no PARTITION/ORDER/frame) still emit OVER (),
+		// which the clause-derived check below can't detect.
+		readonly bool _isWindowFunction;
+
+		public bool IsWindowFunction => _isWindowFunction || OrderBy?.Count > 0 || PartitionBy?.Count > 0 || FrameClause != null || KeepClause != null;
 
 		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{

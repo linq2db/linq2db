@@ -343,7 +343,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			bool canBeAffectedByOrderBy = false,
 			SqlKeepClause? keepClause = null,
 			Sql.Nulls nullTreatment = Sql.Nulls.None,
-			Sql.From fromPosition = Sql.From.None
+			Sql.From fromPosition = Sql.From.None,
+			bool isWindowFunction = false
 		)
 		{
 			return new SqlExtendedFunction(dataType, functionName, arguments, argumentsNullability,
@@ -358,7 +359,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				canBeAffectedByOrderBy: canBeAffectedByOrderBy,
 				keepClause: keepClause,
 				nullTreatment: nullTreatment,
-				fromPosition: fromPosition);
+				fromPosition: fromPosition,
+				isWindowFunction: isWindowFunction);
 		}
 
 		#region String functions

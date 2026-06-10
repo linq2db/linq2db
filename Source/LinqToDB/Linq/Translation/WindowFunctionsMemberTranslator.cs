@@ -334,6 +334,23 @@ namespace LinqToDB.Linq.Translation
 
 						case nameof(WindowFunctionBuilder.IUseWindow<>.UseWindow):
 						{
+							// Function-level modifiers (IgnoreNulls/RespectNulls, FromFirst/FromLast) are chained BEFORE
+							// UseWindow and live on mc.Object — apply them here, otherwise switching buildBody to the
+							// referenced window definition below would silently drop them.
+							var preChain    = mc.Object;
+							var keepWalking = true;
+							while (keepWalking && preChain is MethodCallExpression preMc)
+							{
+								switch (preMc.Method.Name)
+								{
+									case nameof(WindowFunctionBuilder.INullTreatmentPart<>.IgnoreNulls):  nullTreatment = Sql.Nulls.Ignore;  preChain = preMc.Object; break;
+									case nameof(WindowFunctionBuilder.INullTreatmentPart<>.RespectNulls): nullTreatment = Sql.Nulls.Respect; preChain = preMc.Object; break;
+									case nameof(WindowFunctionBuilder.IFromPart<>.FromFirst):             fromPosition  = Sql.From.First;    preChain = preMc.Object; break;
+									case nameof(WindowFunctionBuilder.IFromPart<>.FromLast):              fromPosition  = Sql.From.Last;     preChain = preMc.Object; break;
+									default:                                                              keepWalking   = false;             break;
+								}
+							}
+
 							buildBody = mc.Arguments[0];
 							var expanded = translationContext.Translate(buildBody, TranslationFlags.Expand);
 							if (expanded is MethodCallExpression { Method.Name: nameof(WindowFunctionBuilder.DefineWindow) } mce)
@@ -735,13 +752,14 @@ namespace LinqToDB.Linq.Translation
 			var function = translationContext.ExpressionFactory.Function(dbDataType, functionName,
 				arguments.ToArray(),
 				arguments.Select(a => true).ToArray(),
-				partitionBy   : partitionBy,
-				orderBy       : orderItems,
-				filter        : filter,
-				frameClause   : frame,
-				keepClause    : keepClause,
-				nullTreatment : information.NullTreatment,
-				fromPosition  : information.FromPosition
+				partitionBy     : partitionBy,
+				orderBy         : orderItems,
+				filter          : filter,
+				frameClause     : frame,
+				keepClause      : keepClause,
+				nullTreatment   : information.NullTreatment,
+				fromPosition    : information.FromPosition,
+				isWindowFunction: true
 			);
 
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, function, methodCall);
@@ -1211,12 +1229,13 @@ namespace LinqToDB.Linq.Translation
 			var function = translationContext.ExpressionFactory.Function(dbDataType, functionName,
 				arguments.ToArray(),
 				arguments.Select(a => true).ToArray(),
-				partitionBy   : partitionBy,
-				orderBy       : orderItems,
-				filter        : filter,
-				frameClause   : frame,
-				nullTreatment : information.NullTreatment,
-				fromPosition  : information.FromPosition
+				partitionBy     : partitionBy,
+				orderBy         : orderItems,
+				filter          : filter,
+				frameClause     : frame,
+				nullTreatment   : information.NullTreatment,
+				fromPosition    : information.FromPosition,
+				isWindowFunction: true
 			);
 
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, function, methodCall);

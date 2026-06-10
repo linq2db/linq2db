@@ -21,6 +21,16 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		public record OrderByInformation(Expression Expr, bool IsDescending, Sql.NullsPosition Nulls);
 
 		static readonly MethodInfo _toValueMethodInfo           = MemberHelper.MethodOfGeneric<Sql.IAggregateFunction<string, string>>((f) => f.ToValue());
+
+		// The analytic chain's ToValue() is a non-generic method declared on the generic type
+		// AnalyticFunctions.IReadyToFunction<TR>, so IsSameGenericMethod (which compares closed
+		// MethodInfos for non-generic methods) can't match it across TR instantiations. Match
+		// structurally on the declaring type's generic definition instead.
+		static bool IsAnalyticToValue(MethodCallExpression mc)
+			=> string.Equals(mc.Method.Name, nameof(AnalyticFunctions.IReadyToFunction<>.ToValue), StringComparison.Ordinal)
+				&& mc.Method.DeclaringType is { IsGenericType: true } dt
+				&& dt.GetGenericTypeDefinition() == typeof(AnalyticFunctions.IReadyToFunction<>);
+
 		static readonly MethodInfo _stringAggregateMethodInfoE  = MemberHelper.MethodOfGeneric<IEnumerable<string>>(e => e.StringAggregate(" "));
 		static readonly MethodInfo _stringAggregateMethodInfoES = MemberHelper.MethodOfGeneric<IEnumerable<string>>(e => e.StringAggregate(" ", x => x));
 		static readonly MethodInfo _stringAggregateMethodInfoQ  = MemberHelper.MethodOfGeneric<IQueryable<string>>(e => e.StringAggregate(" "));
@@ -57,7 +67,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 					return MakeNullSafeStringTrimCall(mc, _stringTrimEndCharArrayMethodInfo);
 				}
 
-				if (mc.IsSameGenericMethod(_toValueMethodInfo))
+				if (mc.IsSameGenericMethod(_toValueMethodInfo) || IsAnalyticToValue(mc))
 				{
 					var result = TryConvertAnalyticFunction(mc, context) ?? TryConvertStringAggregate(mc);
 					if (result != null)
@@ -239,6 +249,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			Expression? functionArg3     = null;
 			int         functionArgCount = 0;
 			bool        isKeepFirst      = false;
+			bool        sawOver          = false;
+			Sql.Nulls   functionNulls    = Sql.Nulls.None;
 
 			List<(Expression expr, bool descending, Sql.NullsPosition nulls)>? keepOrderByList = null;
 
@@ -273,7 +285,14 @@ namespace LinqToDB.Internal.DataProvider.Translation
 						var pType = parameters[i].ParameterType;
 						if (typeof(Sql.ISqlExtension).IsAssignableFrom(pType))
 							continue;
-						if (pType == typeof(Sql.AggregateModifier) || pType == typeof(Sql.Nulls) || pType == typeof(Sql.NullsPosition) || pType == typeof(Sql.From))
+						// Capture the value/offset functions' NULL-treatment modifier (FirstValue/LastValue/Lead/Lag/NthValue)
+						// so it can be re-applied as .IgnoreNulls() on the converted call; it is not a positional argument.
+						if (pType == typeof(Sql.Nulls))
+						{
+							functionNulls = (Sql.Nulls)mc.Arguments[i].EvaluateExpression()!;
+							continue;
+						}
+						if (pType == typeof(Sql.AggregateModifier) || pType == typeof(Sql.NullsPosition) || pType == typeof(Sql.From))
 							continue;
 
 						switch (functionArgCount)
@@ -299,6 +318,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				switch (methodName)
 				{
 					case "Over":
+						sawOver = true;
 						current = mc.Object ?? mc.Arguments[0];
 						continue;
 
@@ -357,6 +377,11 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (functionName == null)
 				return null;
 
+			// Without an explicit .Over() the chain is a plain aggregate (e.g. Sql.Ext.Sum(x).ToValue() -> SUM(x)),
+			// not a window function. Leave those on the legacy pipeline so they don't get an erroneous OVER () clause.
+			if (!sawOver)
+				return null;
+
 			var partitionBy = partitionByList.ToArray();
 			var orderBy     = orderByList.ToArray();
 
@@ -374,7 +399,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				};
 			}
 
-			return functionName switch
+			var converted = functionName switch
 			{
 				nameof(AnalyticFunctions.RowNumber)   => WindowFunctionHelpers.BuildRowNumber(partitionBy, orderBy),
 				nameof(AnalyticFunctions.Rank)        => WindowFunctionHelpers.BuildRank(partitionBy, orderBy),
@@ -393,15 +418,23 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 				// LongCount intentionally falls through to the legacy pipeline: Sql.Window has no LongCount equivalent.
 
-				nameof(AnalyticFunctions.Lead) when functionArg1 != null => WindowFunctionHelpers.BuildLead(functionArg1, functionArg2, functionArg3, partitionBy, orderBy),
-				nameof(AnalyticFunctions.Lag)  when functionArg1 != null => WindowFunctionHelpers.BuildLag(functionArg1, functionArg2, functionArg3, partitionBy, orderBy),
+				nameof(AnalyticFunctions.Lead) when functionArg1 != null => WindowFunctionHelpers.BuildLead(functionArg1, functionArg2, functionArg3, functionNulls, partitionBy, orderBy),
+				nameof(AnalyticFunctions.Lag)  when functionArg1 != null => WindowFunctionHelpers.BuildLag(functionArg1, functionArg2, functionArg3, functionNulls, partitionBy, orderBy),
 
-				nameof(AnalyticFunctions.FirstValue) when functionArg1 != null                       => WindowFunctionHelpers.BuildFirstValue(functionArg1, partitionBy, orderBy),
-				nameof(AnalyticFunctions.LastValue)  when functionArg1 != null                       => WindowFunctionHelpers.BuildLastValue(functionArg1, partitionBy, orderBy),
-				nameof(AnalyticFunctions.NthValue)   when functionArg1 != null && functionArg2 != null => WindowFunctionHelpers.BuildNthValue(functionArg1, functionArg2, partitionBy, orderBy),
+				nameof(AnalyticFunctions.FirstValue) when functionArg1 != null                       => WindowFunctionHelpers.BuildFirstValue(functionArg1, functionNulls, partitionBy, orderBy),
+				nameof(AnalyticFunctions.LastValue)  when functionArg1 != null                       => WindowFunctionHelpers.BuildLastValue(functionArg1, functionNulls, partitionBy, orderBy),
+				nameof(AnalyticFunctions.NthValue)   when functionArg1 != null && functionArg2 != null => WindowFunctionHelpers.BuildNthValue(functionArg1, functionArg2, functionNulls, partitionBy, orderBy),
 
 				_ => null, // Unsupported function — fall through to old pipeline
 			};
+
+			// The Sql.Window.* functions have fixed CLR return types (e.g. RowNumber/Rank -> long, NTile -> int)
+			// that can differ from the legacy chain's ToValue() type parameter (TR). Reconcile so the rewritten
+			// node slots into the original expression (anonymous-type ctors, casts, etc.) without a type clash.
+			if (converted != null && converted.Type != toValueCall.Type)
+				converted = Expression.Convert(converted, toValueCall.Type);
+
+			return converted;
 		}
 
 		protected bool BuildFunctionsChain(Expression expr, List<MethodCallExpression> chain, [NotNullWhen(true)] out MethodCallExpression? foundMethod, params MethodInfo[] stopMethods)

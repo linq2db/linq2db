@@ -127,45 +127,66 @@ namespace LinqToDB.Internal.Expressions
 		/// Finds the concrete overload of a non-generic window function (Sum, Avg, Min, Max)
 		/// matching the argument type.
 		/// </summary>
-		static MethodInfo FindConcreteOverload(MethodInfo sampleMethod, Type argumentType)
+		static MethodInfo? FindConcreteOverload(MethodInfo sampleMethod, Type argumentType)
 		{
 			if (sampleMethod.GetParameters()[1].ParameterType == argumentType)
 				return sampleMethod;
 
+			// Returns null when no Sql.Window overload matches the value type — callers fall back to the legacy pipeline.
 			return sampleMethod.DeclaringType!.GetMethods()
-				.First(m => string.Equals(m.Name, sampleMethod.Name, StringComparison.Ordinal)
+				.FirstOrDefault(m => string.Equals(m.Name, sampleMethod.Name, StringComparison.Ordinal)
 					&& m.GetParameters().Length == sampleMethod.GetParameters().Length
 					&& m.GetParameters()[1].ParameterType == argumentType);
 		}
 
-		static Expression BuildWindowFunctionWithGenericArg(MethodInfo genericMethod, Expression argument, Expression windowDefinition, Type windowInterfaceType)
+		// Builds `f => [f.IgnoreNulls()].UseWindow(windowDefinition)`. Legacy IGNORE NULLS maps to the builder's
+		// IgnoreNulls(); RESPECT/None is the SQL default and emits nothing. builderType must expose INullTreatmentPart
+		// (e.g. IValueFinal/ILeadLagFinal/INthValueFinal) when nullTreatment may be Ignore.
+		static LambdaExpression BuildUseWindowLambda(Type builderType, Expression windowDefinition, Sql.Nulls nullTreatment)
 		{
-			var method          = genericMethod.MakeGenericMethod(argument.Type);
+			var windowParam = Expression.Parameter(builderType, "f");
+			Expression body = windowParam;
+
+			if (nullTreatment == Sql.Nulls.Ignore)
+			{
+				var ignoreMethod = FindMethodInfo(body.Type, nameof(WindowFunctionBuilder.INullTreatmentPart<>.IgnoreNulls), 0);
+				body = Expression.Call(body, ignoreMethod);
+			}
+
+			var useWindowMethod = FindMethodInfo(body.Type, nameof(WindowFunctionBuilder.IUseWindow<>.UseWindow), 1);
+			body = Expression.Call(body, useWindowMethod, windowDefinition);
+			return Expression.Lambda(body, windowParam);
+		}
+
+		static Expression BuildWindowFunctionWithGenericArg(MethodInfo genericMethod, Expression argument, Expression windowDefinition, Type windowInterfaceType, Sql.Nulls nullTreatment)
+		{
+			var method       = genericMethod.MakeGenericMethod(argument.Type);
+			var windowLambda = BuildUseWindowLambda(windowInterfaceType, windowDefinition, nullTreatment);
+			return Expression.Call(method, Expression.Constant(Sql.Window), argument, windowLambda);
+		}
+
+		static Expression? BuildWindowFunctionWithConcreteArg(MethodInfo sampleMethod, Expression argument, Expression windowDefinition, Type windowInterfaceType)
+		{
+			var method = FindConcreteOverload(sampleMethod, argument.Type);
+			if (method == null)
+				return null; // no matching Sql.Window overload for this value type (e.g. Average<TR>(object? expr)) — fall back to the legacy pipeline
+
 			var windowParam     = Expression.Parameter(windowInterfaceType, "f");
 			var useWindowMethod = FindMethodInfo(windowParam.Type, nameof(WindowFunctionBuilder.IUseWindow<>.UseWindow), 1);
 			var windowLambda    = Expression.Lambda(Expression.Call(windowParam, useWindowMethod, windowDefinition), windowParam);
 			return Expression.Call(method, Expression.Constant(Sql.Window), argument, windowLambda);
 		}
 
-		static Expression BuildWindowFunctionWithConcreteArg(MethodInfo sampleMethod, Expression argument, Expression windowDefinition, Type windowInterfaceType)
-		{
-			var method          = FindConcreteOverload(sampleMethod, argument.Type);
-			var windowParam     = Expression.Parameter(windowInterfaceType, "f");
-			var useWindowMethod = FindMethodInfo(windowParam.Type, nameof(WindowFunctionBuilder.IUseWindow<>.UseWindow), 1);
-			var windowLambda    = Expression.Lambda(Expression.Call(windowParam, useWindowMethod, windowDefinition), windowParam);
-			return Expression.Call(method, Expression.Constant(Sql.Window), argument, windowLambda);
-		}
-
-		public static Expression BuildSum(Expression argument, Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy)
+		public static Expression? BuildSum(Expression argument, Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy)
 			=> BuildWindowFunctionWithConcreteArg(SumMethodInfo, argument, BuildWindowDefinition(partitionBy, orderBy), typeof(WindowFunctionBuilder.IAggregateFinal));
 
-		public static Expression BuildAverage(Expression argument, Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy)
+		public static Expression? BuildAverage(Expression argument, Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy)
 			=> BuildWindowFunctionWithConcreteArg(AvgMethodInfo, argument, BuildWindowDefinition(partitionBy, orderBy), typeof(WindowFunctionBuilder.IAggregateFinal));
 
-		public static Expression BuildMin(Expression argument, Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy)
+		public static Expression? BuildMin(Expression argument, Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy)
 			=> BuildWindowFunctionWithConcreteArg(MinMethodInfo, argument, BuildWindowDefinition(partitionBy, orderBy), typeof(WindowFunctionBuilder.IAggregateFinal));
 
-		public static Expression BuildMax(Expression argument, Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy)
+		public static Expression? BuildMax(Expression argument, Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy)
 			=> BuildWindowFunctionWithConcreteArg(MaxMethodInfo, argument, BuildWindowDefinition(partitionBy, orderBy), typeof(WindowFunctionBuilder.IAggregateFinal));
 
 		public static Expression BuildCount(Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy)
@@ -183,12 +204,10 @@ namespace LinqToDB.Internal.Expressions
 				windowDefinition, argumentObject);
 		}
 
-		public static Expression BuildLead(Expression argument, Expression? offset, Expression? defaultValue, Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy)
+		public static Expression BuildLead(Expression argument, Expression? offset, Expression? defaultValue, Sql.Nulls nullTreatment, Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy)
 		{
 			var windowDefinition = BuildWindowDefinition(partitionBy, orderBy);
-			var windowParam     = Expression.Parameter(typeof(WindowFunctionBuilder.IOPartitionROrderFinal), "f");
-			var useWindowMethod = FindMethodInfo(windowParam.Type, nameof(WindowFunctionBuilder.IUseWindow<>.UseWindow), 1);
-			var windowLambda    = Expression.Lambda(Expression.Call(windowParam, useWindowMethod, windowDefinition), windowParam);
+			var windowLambda     = BuildUseWindowLambda(typeof(WindowFunctionBuilder.ILeadLagFinal), windowDefinition, nullTreatment);
 
 			if (offset != null && defaultValue != null)
 			{
@@ -208,12 +227,10 @@ namespace LinqToDB.Internal.Expressions
 			}
 		}
 
-		public static Expression BuildLag(Expression argument, Expression? offset, Expression? defaultValue, Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy)
+		public static Expression BuildLag(Expression argument, Expression? offset, Expression? defaultValue, Sql.Nulls nullTreatment, Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy)
 		{
 			var windowDefinition = BuildWindowDefinition(partitionBy, orderBy);
-			var windowParam     = Expression.Parameter(typeof(WindowFunctionBuilder.IOPartitionROrderFinal), "f");
-			var useWindowMethod = FindMethodInfo(windowParam.Type, nameof(WindowFunctionBuilder.IUseWindow<>.UseWindow), 1);
-			var windowLambda    = Expression.Lambda(Expression.Call(windowParam, useWindowMethod, windowDefinition), windowParam);
+			var windowLambda     = BuildUseWindowLambda(typeof(WindowFunctionBuilder.ILeadLagFinal), windowDefinition, nullTreatment);
 
 			if (offset != null && defaultValue != null)
 			{
@@ -233,30 +250,31 @@ namespace LinqToDB.Internal.Expressions
 			}
 		}
 
-		public static Expression BuildFirstValue(Expression argument, Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy)
-			=> BuildWindowFunctionWithGenericArg(_firstValueMethodInfo, argument, BuildWindowDefinition(partitionBy, orderBy), typeof(WindowFunctionBuilder.IOPartitionOOrderOFrameWithWindowFinal));
+		public static Expression BuildFirstValue(Expression argument, Sql.Nulls nullTreatment, Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy)
+			=> BuildWindowFunctionWithGenericArg(_firstValueMethodInfo, argument, BuildWindowDefinition(partitionBy, orderBy), typeof(WindowFunctionBuilder.IValueFinal), nullTreatment);
 
-		public static Expression BuildLastValue(Expression argument, Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy)
-			=> BuildWindowFunctionWithGenericArg(_lastValueMethodInfo, argument, BuildWindowDefinition(partitionBy, orderBy), typeof(WindowFunctionBuilder.IOPartitionOOrderOFrameWithWindowFinal));
+		public static Expression BuildLastValue(Expression argument, Sql.Nulls nullTreatment, Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy)
+			=> BuildWindowFunctionWithGenericArg(_lastValueMethodInfo, argument, BuildWindowDefinition(partitionBy, orderBy), typeof(WindowFunctionBuilder.IValueFinal), nullTreatment);
 
-		public static Expression BuildNthValue(Expression argument, Expression nArg, Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy)
+		public static Expression BuildNthValue(Expression argument, Expression nArg, Sql.Nulls nullTreatment, Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy)
 		{
 			var windowDefinition = BuildWindowDefinition(partitionBy, orderBy);
-			var method          = _nthValueMethodInfo.MakeGenericMethod(argument.Type);
-			var windowParam     = Expression.Parameter(typeof(WindowFunctionBuilder.IOPartitionOOrderOFrameWithWindowFinal), "f");
-			var useWindowMethod = FindMethodInfo(windowParam.Type, nameof(WindowFunctionBuilder.IUseWindow<>.UseWindow), 1);
-			var windowLambda    = Expression.Lambda(Expression.Call(windowParam, useWindowMethod, windowDefinition), windowParam);
+			var method           = _nthValueMethodInfo.MakeGenericMethod(argument.Type);
+			var windowLambda     = BuildUseWindowLambda(typeof(WindowFunctionBuilder.INthValueFinal), windowDefinition, nullTreatment);
 			return Expression.Call(method, Expression.Constant(Sql.Window), argument, nArg, windowLambda);
 		}
 
 		/// <summary>
 		/// Builds an aggregate window function with KEEP (DENSE_RANK FIRST/LAST) clause.
 		/// </summary>
-		public static Expression BuildAggregateWithKeep(
+		public static Expression? BuildAggregateWithKeep(
 			MethodInfo sampleMethod, Expression argument, bool isKeepFirst,
 			Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] keepOrderBy)
 		{
 			var method      = FindConcreteOverload(sampleMethod, argument.Type);
+			if (method == null)
+				return null; // no matching Sql.Window overload for this value type — fall back to the legacy pipeline
+
 			var windowParam = Expression.Parameter(typeof(WindowFunctionBuilder.IAggregateFinal), "f");
 
 			// Build: f.KeepFirst() or f.KeepLast()
