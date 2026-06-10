@@ -262,6 +262,16 @@ namespace LinqToDB.Internal.DataProvider.Sybase.Translation
 
 				return builder.Build(translationContext, methodCall, isExpression: translationFlags.HasFlag(TranslationFlags.Expression));
 			}
+
+			// {value} IS NULL OR {value} NOT LIKE '%[^WHITESPACES]%'
+			public override ISqlExpression? TranslateIsNullOrWhiteSpace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value)
+			{
+				var factory   = translationContext.ExpressionFactory;
+				var pattern   = factory.Value(factory.GetDbDataType(typeof(string)), $"%[^{WHITESPACES}]%");
+				var predicate = factory.LikePredicate(value, true, pattern);
+
+				return WrapIsNullOrWhiteSpaceResult(translationContext, value, predicate);
+			}
 		}
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)

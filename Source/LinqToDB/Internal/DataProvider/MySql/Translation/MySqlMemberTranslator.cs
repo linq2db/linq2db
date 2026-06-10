@@ -360,6 +360,16 @@ namespace LinqToDB.Internal.DataProvider.MySql.Translation
 
 				return builder.Build(translationContext, methodCall, isExpression: translationFlags.HasFlag(TranslationFlags.Expression));
 			}
+
+			// {value} IS NULL OR {value} NOT RLIKE '[^WHITESPACES]'
+			public override ISqlExpression? TranslateIsNullOrWhiteSpace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value)
+			{
+				var factory   = translationContext.ExpressionFactory;
+				var pattern   = factory.Value(factory.GetDbDataType(typeof(string)), $"[^{WHITESPACES}]");
+				var predicate = factory.LikePredicate(value, isNot: true, pattern, escape: null, functionName: "RLIKE");
+
+				return WrapIsNullOrWhiteSpaceResult(translationContext, value, predicate);
+			}
 		}
 
 		protected class GuidMemberTranslator : GuidMemberTranslatorBase

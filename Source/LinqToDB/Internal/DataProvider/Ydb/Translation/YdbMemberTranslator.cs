@@ -396,6 +396,20 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 
 				return builder.Build(translationContext, methodCall, isExpression: translationFlags.HasFlag(TranslationFlags.Expression));
 			}
+
+			// {value} IS NULL OR LENGTH(Unicode::Strip({value})) = 0
+			public override ISqlExpression? TranslateIsNullOrWhiteSpace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value)
+			{
+				var factory    = translationContext.ExpressionFactory;
+				var stringType = factory.GetDbDataType(value);
+				var intType    = factory.GetDbDataType(typeof(int));
+
+				var stripped  = factory.Function(stringType, "Unicode::Strip", ParametersNullabilityType.IfAnyParameterNullable, value);
+				var lenFn     = factory.Length(stripped);
+				var predicate = factory.Equal(lenFn, factory.Value(intType, 0));
+
+				return WrapIsNullOrWhiteSpaceResult(translationContext, value, predicate);
+			}
 		}
 
 		protected class SqlTypesTranslation : SqlTypesTranslationDefault
