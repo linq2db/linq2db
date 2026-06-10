@@ -415,6 +415,13 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.DataProvider.Translation.CombinedMemberConverter.Convert(System.Linq.Expressions.Expression,System.Boolean@)</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.TranslateSqlCurrentTimestamp(LinqToDB.Linq.Translation.ITranslationContext,System.Linq.Expressions.MemberExpression,LinqToDB.Linq.Translation.TranslationFlags)</Target>
     <Left>lib/net10.0/linq2db.dll</Left>
     <Right>lib/net10.0/linq2db.dll</Right>
@@ -437,6 +444,20 @@
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.TranslateSqlGetDate(LinqToDB.Linq.Translation.ITranslationContext,LinqToDB.Linq.Translation.TranslationFlags)</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.DataProvider.Translation.IMemberConverter.Convert(System.Linq.Expressions.Expression,System.Boolean@)</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.DataProvider.Translation.LegacyMemberConverterBase.Convert(System.Linq.Expressions.Expression,System.Boolean@)</Target>
     <Left>lib/net10.0/linq2db.dll</Left>
     <Right>lib/net10.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
@@ -1024,6 +1045,13 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.DataProvider.Translation.CombinedMemberConverter.Convert(System.Linq.Expressions.Expression,System.Boolean@)</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.TranslateSqlCurrentTimestamp(LinqToDB.Linq.Translation.ITranslationContext,System.Linq.Expressions.MemberExpression,LinqToDB.Linq.Translation.TranslationFlags)</Target>
     <Left>lib/net462/linq2db.dll</Left>
     <Right>lib/net462/linq2db.dll</Right>
@@ -1046,6 +1074,20 @@
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.TranslateSqlGetDate(LinqToDB.Linq.Translation.ITranslationContext,LinqToDB.Linq.Translation.TranslationFlags)</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.DataProvider.Translation.IMemberConverter.Convert(System.Linq.Expressions.Expression,System.Boolean@)</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.DataProvider.Translation.LegacyMemberConverterBase.Convert(System.Linq.Expressions.Expression,System.Boolean@)</Target>
     <Left>lib/net462/linq2db.dll</Left>
     <Right>lib/net462/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
@@ -1633,6 +1675,13 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.DataProvider.Translation.CombinedMemberConverter.Convert(System.Linq.Expressions.Expression,System.Boolean@)</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.TranslateSqlCurrentTimestamp(LinqToDB.Linq.Translation.ITranslationContext,System.Linq.Expressions.MemberExpression,LinqToDB.Linq.Translation.TranslationFlags)</Target>
     <Left>lib/net8.0/linq2db.dll</Left>
     <Right>lib/net8.0/linq2db.dll</Right>
@@ -1655,6 +1704,20 @@
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.TranslateSqlGetDate(LinqToDB.Linq.Translation.ITranslationContext,LinqToDB.Linq.Translation.TranslationFlags)</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.DataProvider.Translation.IMemberConverter.Convert(System.Linq.Expressions.Expression,System.Boolean@)</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.DataProvider.Translation.LegacyMemberConverterBase.Convert(System.Linq.Expressions.Expression,System.Boolean@)</Target>
     <Left>lib/net8.0/linq2db.dll</Left>
     <Right>lib/net8.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
@@ -2242,6 +2305,13 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.DataProvider.Translation.CombinedMemberConverter.Convert(System.Linq.Expressions.Expression,System.Boolean@)</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.TranslateSqlCurrentTimestamp(LinqToDB.Linq.Translation.ITranslationContext,System.Linq.Expressions.MemberExpression,LinqToDB.Linq.Translation.TranslationFlags)</Target>
     <Left>lib/net9.0/linq2db.dll</Left>
     <Right>lib/net9.0/linq2db.dll</Right>
@@ -2264,6 +2334,20 @@
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.TranslateSqlGetDate(LinqToDB.Linq.Translation.ITranslationContext,LinqToDB.Linq.Translation.TranslationFlags)</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.DataProvider.Translation.IMemberConverter.Convert(System.Linq.Expressions.Expression,System.Boolean@)</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.DataProvider.Translation.LegacyMemberConverterBase.Convert(System.Linq.Expressions.Expression,System.Boolean@)</Target>
     <Left>lib/net9.0/linq2db.dll</Left>
     <Right>lib/net9.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
@@ -2863,6 +2947,13 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.DataProvider.Translation.CombinedMemberConverter.Convert(System.Linq.Expressions.Expression,System.Boolean@)</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.TranslateSqlCurrentTimestamp(LinqToDB.Linq.Translation.ITranslationContext,System.Linq.Expressions.MemberExpression,LinqToDB.Linq.Translation.TranslationFlags)</Target>
     <Left>lib/netstandard2.0/linq2db.dll</Left>
     <Right>lib/netstandard2.0/linq2db.dll</Right>
@@ -2885,6 +2976,20 @@
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.TranslateSqlGetDate(LinqToDB.Linq.Translation.ITranslationContext,LinqToDB.Linq.Translation.TranslationFlags)</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.DataProvider.Translation.IMemberConverter.Convert(System.Linq.Expressions.Expression,System.Boolean@)</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.DataProvider.Translation.LegacyMemberConverterBase.Convert(System.Linq.Expressions.Expression,System.Boolean@)</Target>
     <Left>lib/netstandard2.0/linq2db.dll</Left>
     <Right>lib/netstandard2.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
@@ -3381,6 +3486,13 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0006</DiagnosticId>
+    <Target>M:LinqToDB.Internal.DataProvider.Translation.IMemberConverter.Convert(System.Linq.Expressions.Expression,LinqToDB.Internal.DataProvider.Translation.IConvertContext,System.Boolean@)</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0006</DiagnosticId>
     <Target>M:LinqToDB.Internal.SqlQuery.IQueryElement.Accept(LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor)</Target>
     <Left>lib/net10.0/linq2db.dll</Left>
     <Right>lib/net10.0/linq2db.dll</Right>
@@ -3391,6 +3503,13 @@
     <Target>P:LinqToDB.Internal.Linq.IExpressionQuery.DebugView</Target>
     <Left>lib/net10.0/linq2db.dll</Left>
     <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0006</DiagnosticId>
+    <Target>M:LinqToDB.Internal.DataProvider.Translation.IMemberConverter.Convert(System.Linq.Expressions.Expression,LinqToDB.Internal.DataProvider.Translation.IConvertContext,System.Boolean@)</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
   </Suppression>
   <Suppression>
@@ -3409,6 +3528,13 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0006</DiagnosticId>
+    <Target>M:LinqToDB.Internal.DataProvider.Translation.IMemberConverter.Convert(System.Linq.Expressions.Expression,LinqToDB.Internal.DataProvider.Translation.IConvertContext,System.Boolean@)</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0006</DiagnosticId>
     <Target>M:LinqToDB.Internal.SqlQuery.IQueryElement.Accept(LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor)</Target>
     <Left>lib/net8.0/linq2db.dll</Left>
     <Right>lib/net8.0/linq2db.dll</Right>
@@ -3423,6 +3549,13 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0006</DiagnosticId>
+    <Target>M:LinqToDB.Internal.DataProvider.Translation.IMemberConverter.Convert(System.Linq.Expressions.Expression,LinqToDB.Internal.DataProvider.Translation.IConvertContext,System.Boolean@)</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0006</DiagnosticId>
     <Target>M:LinqToDB.Internal.SqlQuery.IQueryElement.Accept(LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor)</Target>
     <Left>lib/net9.0/linq2db.dll</Left>
     <Right>lib/net9.0/linq2db.dll</Right>
@@ -3433,6 +3566,13 @@
     <Target>P:LinqToDB.Internal.Linq.IExpressionQuery.DebugView</Target>
     <Left>lib/net9.0/linq2db.dll</Left>
     <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0006</DiagnosticId>
+    <Target>M:LinqToDB.Internal.DataProvider.Translation.IMemberConverter.Convert(System.Linq.Expressions.Expression,LinqToDB.Internal.DataProvider.Translation.IConvertContext,System.Boolean@)</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
   </Suppression>
   <Suppression>

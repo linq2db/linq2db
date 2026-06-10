@@ -292,6 +292,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 							functionNulls = (Sql.Nulls)mc.Arguments[i].EvaluateExpression()!;
 							continue;
 						}
+
 						if (pType == typeof(Sql.AggregateModifier) || pType == typeof(Sql.NullsPosition) || pType == typeof(Sql.From))
 							continue;
 
