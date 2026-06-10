@@ -1,5 +1,9 @@
 # Copilot Pull Request Review Rules
 
+## General Guidelines
+- Preserve the user's manual code changes and do not overwrite or revert them.
+- When optimizing reader logic, avoid per-read dictionary lookups in hot paths. For hot-path reader logic in this repository, avoid dictionaries entirely; prefer a self-rewriting lambda/delegate where `ReadSqlServerDecimal` calls the current implementation and the implementation can replace itself after the first overflow.
+
 ## Formatting rules
 
 When performing a code review, **ignore minor or intentional formatting differences**, including:
