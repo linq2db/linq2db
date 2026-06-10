@@ -34,7 +34,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		static readonly MethodInfo _stringTrimStartCharArrayMethodInfo = MemberHelper.MethodOf<string>(s => s.TrimStart((char[])null!));
 		static readonly MethodInfo _stringTrimEndCharArrayMethodInfo   = MemberHelper.MethodOf<string>(s => s.TrimEnd  ((char[])null!));
 
-		public Expression Convert(Expression expression, out bool handled)
+		public Expression Convert(Expression expression, IConvertContext context, out bool handled)
 		{
 			if (expression.NodeType == ExpressionType.Call)
 			{
@@ -59,7 +59,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 				if (mc.IsSameGenericMethod(_toValueMethodInfo))
 				{
-					var result = TryConvertAnalyticFunction(mc) ?? TryConvertStringAggregate(mc);
+					var result = TryConvertAnalyticFunction(mc, context) ?? TryConvertStringAggregate(mc);
 					if (result != null)
 					{
 						handled = true;
@@ -226,7 +226,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		/// to the new Sql.Window.* API.
 		/// Returns null if the chain is not an analytic function chain.
 		/// </summary>
-		Expression? TryConvertAnalyticFunction(MethodCallExpression toValueCall)
+		Expression? TryConvertAnalyticFunction(MethodCallExpression toValueCall, IConvertContext context)
 		{
 			// Walk the chain from .ToValue() backwards, collecting window clauses.
 			// If we never find a root function on AnalyticFunctions, return null.
@@ -336,8 +336,10 @@ namespace LinqToDB.Internal.DataProvider.Translation
 						var argIdx  = mc.Method.IsStatic ? 1 : 0;
 						if (argIdx < mc.Arguments.Count)
 						{
-							// Legacy analytic ORDER BY does not carry a NULLS position.
-							orderByList.Insert(0, (mc.Arguments[argIdx], isDesc, Sql.NullsPosition.None));
+							// Legacy analytic ORDER BY doesn't specify a NULLS position; resolve the configured default
+							// so it matches a plain query OrderBy (explicit NULLS-positioning chain methods bail to
+							// the legacy pipeline via the default arm below).
+							orderByList.Insert(0, (mc.Arguments[argIdx], isDesc, context.DataOptions.SqlOptions.DefaultNullsPosition));
 						}
 
 						current = mc.Object ?? (mc.Arguments.Count > 0 ? mc.Arguments[0] : null);
@@ -345,9 +347,10 @@ namespace LinqToDB.Internal.DataProvider.Translation
 					}
 
 					default:
-						// Frame spec or other chain method — skip for now
-						current = mc.Object ?? (mc.Arguments.Count > 0 ? mc.Arguments[0] : null);
-						continue;
+						// An unrecognized analytic chain method (ROWS/RANGE/GROUPS frame, NULLS positioning, etc.)
+						// can't be represented by this conversion. Bail so the call falls back to the legacy Sql.Ext
+						// pipeline (which renders those clauses) instead of silently dropping them.
+						return null;
 				}
 			}
 

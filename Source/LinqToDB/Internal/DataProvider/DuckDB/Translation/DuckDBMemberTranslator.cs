@@ -24,6 +24,10 @@ namespace LinqToDB.Internal.DataProvider.DuckDB.Translation
 			// parentheses, after the last argument). It does not support NTH_VALUE FROM FIRST/LAST.
 			protected override bool IsLeadLagNullTreatmentSupported => true;
 			protected override bool IsValueNullTreatmentSupported   => true;
+			// DuckDB natively supports FILTER (WHERE ...) on aggregate window functions and NULLS FIRST/LAST
+			// in OVER(ORDER BY ...), so emit them directly rather than emulating via CASE WHEN.
+			protected override bool IsWindowFilterSupported         => true;
+			protected override bool IsNullsOrderSupported           => true;
 		}
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
