@@ -237,6 +237,8 @@ Remove-Item -Recurse -Force <repo-root>/.build/bin <repo-root>/.build/obj
 
 Don't try to outwait a transient disk-space failure or ignore it as "the build mostly succeeded" — compilation may have passed but the dll-copy step's failure leaves the test project unrunnable until the disk has headroom.
 
+**`MSBUILD : error MSB4166: Child node "<n>" exited prematurely`** part-way through a long `dotnet test` run — distinct from the clean `MSB3021/MSB3027` above. `dotnet test` builds before running, and that build's MSBuild child node crashes (disk / memory pressure on a near-full box), aborting the whole run mid-suite: a full YDB run truncated at ~3.3 k of ~7.9 k tests this way, twice. Fix: build the test project once on its own, then run with `dotnet test … --no-build` so the test run spawns no MSBuild child nodes (it also won't re-lock the just-built DLL, and is faster). A full suite that kept truncating then completed cleanly (7904 tests) under `--no-build`.
+
 ## Bisecting across SDK upgrades
 
 When checking out historic commits to bisect a regression or to confirm "after which PR did the test start passing", the historic code may compile cleanly on the SDK it was written against but trip newer compiler warnings on the current SDK. Combined with `TreatWarningsAsErrors=true` (the default in `Directory.Build.props`), these warnings become build-blocking errors and the test never runs.
