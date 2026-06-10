@@ -12,20 +12,36 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 	// scalar / set-operand position are both parse/type errors. This visitor walks a finalized query and
 	// rewrites single-column, non-correlated scalar subqueries into a YQL-legal form:
 	// - `subquery = x` / `subquery <> x`  ->  `x [NOT] IN (SELECT <col> FROM $cte)`
-	// - a scalar subquery in an IN/EXISTS/set operand  ->  a trivial `SELECT <col> FROM $cte` over a named CTE
-	// - a scalar subquery in any other column/predicate position  ->  the bare `$cte` named-query reference
+	// - a scalar subquery in an IN/EXISTS operand  ->  a trivial `SELECT <col> FROM $cte` over a named CTE
+	// - a scalar subquery in any other column / predicate / scalar-expression position  ->  the bare `$cte` reference
 	//
-	// The rewrite is position-dependent, so it keys on the parent element (tracked across the recursion) rather
-	// than the node alone. It runs in the finalize phase, bottom-up, offloading each subquery the moment it is
-	// reached - so no second pass over rewritten nodes is needed.
+	// The shape depends only on the position the subquery occupies. Rather than carry the parent element across the
+	// recursion, we keep a single position flag: each element classifies the position it imposes on its children
+	// (ClassifyChildren) the moment we descend into them, and the rewrite reads the position its parent imposed. It
+	// runs in the finalize phase, bottom-up, offloading each subquery the moment it is reached - so no second pass
+	// over rewritten nodes is needed.
 	sealed class YdbScalarSubQueryToCteVisitor : QueryElementVisitor
 	{
 		internal static readonly ObjectPool<YdbScalarSubQueryToCteVisitor> Pool
 			= new(() => new YdbScalarSubQueryToCteVisitor(), v => v.Cleanup(), 100);
 
+		// Position a subquery occupies relative to the rewrite, imposed by its parent (see ClassifyChildren).
+		enum Position
+		{
+			// A column / predicate / scalar-expression position -> a single-column subquery becomes a bare `$cte`
+			// reference.
+			Scalar,
+			// An IN/EXISTS operand -> wrapped into a trivial `SELECT <col> FROM $cte` (these slots are hard-cast to
+			// SelectQuery by the core visitors and cannot take a bare CTE-table reference).
+			Wrapped,
+			// A table source, the statement root, an equality-comparison operand (handled by the IN rewrite at the
+			// comparison node), or any other non-expression slot -> left as-is, not turned into a `$cte` reference.
+			Excluded,
+		}
+
 		SqlStatementWithQueryBase _statement     = default!;
 		MappingSchema             _mappingSchema = default!;
-		IQueryElement?            _parent;
+		Position                  _position;
 
 		public YdbScalarSubQueryToCteVisitor() : base(VisitMode.Modify)
 		{
@@ -36,7 +52,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		{
 			_statement     = statement;
 			_mappingSchema = mappingSchema;
-			_parent        = null;
+			_position      = Position.Excluded;
 
 			return (T)Visit(element)!;
 		}
@@ -45,7 +61,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		{
 			_statement     = default!;
 			_mappingSchema = default!;
-			_parent        = null;
+			_position      = Position.Excluded;
 
 			base.Cleanup();
 		}
@@ -56,16 +72,27 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			if (element == null)
 				return null;
 
-			var parent = _parent;
+			var position = _position;             // position my parent imposed on me
 
-			_parent     = element;
+			_position   = ClassifyChildren(element); // position I impose on my children
 			var visited = base.Visit(element)!;
-			_parent     = parent;
+			_position   = position;               // restore for my siblings
 
-			return Rewrite(visited, parent);
+			return Rewrite(visited, position);
 		}
 
-		IQueryElement Rewrite(IQueryElement element, IQueryElement? parent)
+		// The position a parent element imposes on the children it is about to visit. Mirrors the legal-shape rules:
+		// only a column / predicate / scalar-expression / update-set slot hosts an inline scalar subquery (Scalar);
+		// IN/EXISTS operands need the wrapped form; everything else (table source, set operator, ORDER BY / GROUP BY
+		// item, statement root, equality-comparison operand) leaves the subquery untouched.
+		static Position ClassifyChildren(IQueryElement parent) =>
+			parent is (SqlSelectClause or ISqlPredicate or SqlExpressionBase or SqlSetExpression)
+				and not ISqlTableSource
+				and not SqlPredicate.ExprExpr { Operator: SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual }
+				? parent is SqlPredicate.InSubQuery or SqlPredicate.Exists ? Position.Wrapped : Position.Scalar
+				: Position.Excluded;
+
+		IQueryElement Rewrite(IQueryElement element, Position position)
 		{
 			if (element is SqlPredicate.ExprExpr { Operator: SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual } cmp
 				&& TryRewriteScalarComparisonToIn(cmp) is { } inPredicate)
@@ -73,30 +100,20 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				return inPredicate;
 			}
 
-			if (element is SelectQuery { Select.Columns: [var column] } subQuery
+			if (position != Position.Excluded
+				&& element is SelectQuery { Select.Columns: [var column] } subQuery
 				&& !QueryHelper.IsDependsOnOuterSources(subQuery))
 			{
 				if (column.SystemType == null)
 					throw new InvalidOperationException();
 
-				// in a column / predicate / scalar-expression / set-expression position, but not a table source
-				// and not an equality operand (those become IN above and keep the operand intact)
-				if (parent is (SqlSelectClause or ISqlPredicate or SqlExpressionBase or SqlSetExpression)
-					and not ISqlTableSource
-					and not SqlPredicate.ExprExpr { Operator: SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual })
-				{
-					// IN / EXISTS / set-operator operands are strongly-typed SelectQuery and cannot take a bare
-					// CTE-table reference (the core visitors hard-cast them to SelectQuery), so wrap the CTE into a
-					// trivial `SELECT <col> FROM $cte`. Other scalar positions keep the bare CTE reference, which
-					// renders as the `$cte` named-query variable.
-					if (parent is SqlPredicate.InSubQuery or SqlPredicate.Exists or SqlSetOperator)
-						return WrapScalarSubQueryAsCte(subQuery);
+				if (position == Position.Wrapped)
+					return WrapScalarSubQueryAsCte(subQuery);
 
-					var cte = new CteClause(subQuery, column.SystemType, false, null);
-					(_statement.With ??= new()).Clauses.Add(cte);
+				var cte = new CteClause(subQuery, column.SystemType, false, null);
+				(_statement.With ??= new()).Clauses.Add(cte);
 
-					return new SqlCteTable(cte, column.SystemType);
-				}
+				return new SqlCteTable(cte, column.SystemType);
 			}
 
 			return element;
