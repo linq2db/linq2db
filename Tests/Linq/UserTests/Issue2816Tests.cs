@@ -39,6 +39,7 @@ namespace Tests.UserTests
 			0x200A,
 			0x2028,
 			0x2029,
+			0x202F,
 			0x205F,
 			0x3000,
 		};
