@@ -53,17 +53,22 @@ namespace LinqToDB
 			TThenPart OrderByDesc(object? orderBy, Sql.NullsPosition nulls);
 		}
 
+		/// <summary>Terminal for ordered-set aggregates (PERCENTILE_CONT/DISC): optionally adds <c>FILTER (WHERE ...)</c> or completes the definition.</summary>
+		public interface IOrderedSetFilter<out TValue> : IFilterPart<IDefinedFunction<TValue>>, IDefinedFunction<TValue>
+		{
+		}
+
 		/// <summary>Provides ORDER BY for ordered-set aggregate functions (e.g. PERCENTILE_CONT) that require exactly one ordering column.</summary>
 		public interface IOnlyOrderByPart
 		{
 			/// <summary>Specifies the single ORDER BY column for the WITHIN GROUP clause.</summary>
-			IDefinedFunction<TValue> OrderBy<TValue>(TValue     orderBy);
+			IOrderedSetFilter<TValue> OrderBy<TValue>(TValue     orderBy);
 			/// <summary>Specifies the single ORDER BY column with NULLS position for the WITHIN GROUP clause.</summary>
-			IDefinedFunction<TValue> OrderBy<TValue>(TValue     orderBy, Sql.NullsPosition nulls);
+			IOrderedSetFilter<TValue> OrderBy<TValue>(TValue     orderBy, Sql.NullsPosition nulls);
 			/// <summary>Specifies the single ORDER BY column (descending) for the WITHIN GROUP clause.</summary>
-			IDefinedFunction<TValue> OrderByDesc<TValue>(TValue orderBy);
+			IOrderedSetFilter<TValue> OrderByDesc<TValue>(TValue orderBy);
 			/// <summary>Specifies the single ORDER BY column (descending) with NULLS position for the WITHIN GROUP clause.</summary>
-			IDefinedFunction<TValue> OrderByDesc<TValue>(TValue orderBy, Sql.NullsPosition nulls);
+			IOrderedSetFilter<TValue> OrderByDesc<TValue>(TValue orderBy, Sql.NullsPosition nulls);
 		}
 
 		/// <summary>Provides ORDER BY for ordered-set aggregate functions (e.g. PERCENTILE_DISC) that allow multiple ordering columns.</summary>
@@ -79,8 +84,8 @@ namespace LinqToDB
 			IMultipleThenByPart<TValue> OrderByDesc<TValue>(TValue orderBy, Sql.NullsPosition nulls);
 		}
 
-		/// <summary>Provides additional ORDER BY columns after the first one in ordered-set aggregates.</summary>
-		public interface IMultipleThenByPart<out TValue> : IDefinedFunction<TValue>
+		/// <summary>Provides additional ORDER BY columns after the first one in ordered-set aggregates, plus an optional <c>FILTER (WHERE ...)</c>.</summary>
+		public interface IMultipleThenByPart<out TValue> : IDefinedFunction<TValue>, IFilterPart<IDefinedFunction<TValue>>
 		{
 			/// <summary>Adds an additional ORDER BY column.</summary>
 			IMultipleThenByPart<TValue> ThenBy(object?     orderBy);

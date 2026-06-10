@@ -42,6 +42,9 @@ namespace LinqToDB.Linq.Translation
 		protected virtual bool IsNthValueFromSupported         => false;
 		// DISTINCT in a window aggregate (SUM(DISTINCT x) OVER ...) is unsupported by most databases.
 		protected virtual bool IsAggregateDistinctSupported    => false;
+		// FILTER (WHERE ...) on ordered-set aggregates (PERCENTILE_CONT/DISC WITHIN GROUP). Unlike the OVER-clause
+		// FILTER it cannot be CASE-WHEN-emulated (it filters the input set), so it is gated separately. PostgreSQL only.
+		protected virtual bool IsOrderedSetFilterSupported     => false;
 
 		public WindowFunctionsMemberTranslator()
 		{
@@ -596,6 +599,21 @@ namespace LinqToDB.Linq.Translation
 			DbDataType                             dbDataType,
 			string                                 functionName,
 			Action<List<SqlFunctionArgument>, bool>? adjustArguments = null)
+			=> TranslateWindowFunctionCore(
+				translationContext, methodCall,
+				argumentIndex == null ? null : [methodCall.Arguments[argumentIndex.Value]],
+				windowArgument, dbDataType, functionName, adjustArguments);
+
+		// Shared implementation for single- and multi-argument window functions (was ~120 duplicated lines
+		// across TranslateWindowFunction / TranslateWindowFunctionMultiArg).
+		Expression TranslateWindowFunctionCore(
+			ITranslationContext                      translationContext,
+			MethodCallExpression                     methodCall,
+			Expression[]?                            functionArguments,
+			int                                      windowArgument,
+			DbDataType                               dbDataType,
+			string                                   functionName,
+			Action<List<SqlFunctionArgument>, bool>? adjustArguments)
 		{
 			if (!IsWindowFunctionsSupported)
 				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
@@ -606,7 +624,7 @@ namespace LinqToDB.Linq.Translation
 			if (!CollectWindowFunctionInformation(
 				    translationContext,
 				    methodCall.Type,
-				    argumentIndex == null ? null : [methodCall.Arguments[argumentIndex.Value]],
+				    functionArguments,
 				    methodCall.Arguments[windowArgument].UnwrapLambda().Body,
 				    out var information,
 				    out var error))
@@ -690,6 +708,14 @@ namespace LinqToDB.Linq.Translation
 
 				if (start == null || end == null)
 					throw new InvalidOperationException("Expected both start and end boundaries");
+
+				// A RANGE/GROUPS frame with a value offset is defined relative to the single ORDER BY key's value,
+				// so the SQL standard requires exactly one ORDER BY expression. Fail at translate time rather than
+				// sending SQL the database will reject.
+				if (frameType is SqlFrameClause.FrameTypeKind.Range or SqlFrameClause.FrameTypeKind.Groups
+					&& (start.BoundaryType == SqlFrameBoundary.FrameBoundaryType.Offset || end.BoundaryType == SqlFrameBoundary.FrameBoundaryType.Offset)
+					&& (orderItems == null || orderItems.Count != 1))
+					return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_FrameRangeGroupsOrderBy, methodCall.Type);
 
 				ISqlExpression? startOffset = null;
 				ISqlExpression? endOffset   = null;
@@ -931,6 +957,32 @@ namespace LinqToDB.Linq.Translation
 							}
 						}
 
+						SqlSearchCondition? filter = null;
+						if (wfInfo.Filter != null)
+						{
+							// FILTER (WHERE ...) on an ordered-set aggregate filters the input set, so it cannot be
+							// CASE-WHEN-emulated like the OVER-clause FILTER — gate it on a dedicated capability.
+							if (!IsOrderedSetFilterSupported)
+							{
+								composer.SetError(translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_OrderedSetFilter, methodCall.Type));
+								return;
+							}
+
+							if (!composer.AggregationContext.TranslateExpression(wfInfo.Filter, out var filterSql, out var filterError))
+							{
+								composer.SetError(filterError);
+								return;
+							}
+
+							if (filterSql is not SqlSearchCondition filterSc)
+							{
+								composer.SetError(translationContext.CreateErrorExpression(methodCall.Arguments[2], "Expected a boolean FILTER predicate", methodCall.Type));
+								return;
+							}
+
+							filter = filterSc;
+						}
+
 						var functionType = translationContext.GetDbDataType(withinGroupOrder[0].Expression);
 
 						var windowFunction = translationContext.ExpressionFactory.Function(
@@ -940,6 +992,7 @@ namespace LinqToDB.Linq.Translation
 							[true],
 							withinGroup : withinGroupOrder,
 							partitionBy : partitionBy,
+							filter      : filter,
 							isAggregate : true
 						);
 
@@ -1096,149 +1149,11 @@ namespace LinqToDB.Linq.Translation
 			DbDataType           dbDataType,
 			string               functionName)
 		{
-			if (!IsWindowFunctionsSupported)
-				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
-
 			var functionArgs = new Expression[argumentIndexes.Length];
 			for (var i = 0; i < argumentIndexes.Length; i++)
 				functionArgs[i] = methodCall.Arguments[argumentIndexes[i]];
 
-			if (!CollectWindowFunctionInformation(
-				    translationContext,
-				    methodCall.Type,
-				    functionArgs,
-				    methodCall.Arguments[windowArgument].UnwrapLambda().Body,
-				    out var information,
-				    out var error))
-				return error;
-
-			var                       arguments   = new List<SqlFunctionArgument>();
-			List<ISqlExpression>?     partitionBy = null;
-			List<SqlWindowOrderItem>? orderItems  = null;
-			SqlSearchCondition?       filter      = null;
-			SqlFrameClause?           frame       = null;
-
-			if (information.Arguments != null)
-			{
-				foreach (var argument in information.Arguments)
-				{
-					var translated = translationContext.Translate(argument.Expr);
-					if (translated is not SqlPlaceholderExpression placeholder)
-						return SqlErrorExpression.EnsureError(translated, methodCall.Type);
-					arguments.Add(new SqlFunctionArgument(placeholder.Sql, argument.Modifier));
-				}
-			}
-
-			if (information.PartitionBy != null)
-			{
-				partitionBy = new();
-				if (!TranslatePartitionBy(translationContext, methodCall.Type, information.PartitionBy, partitionBy, out var partitionError))
-					return partitionError;
-			}
-
-			if (information.OrderBy != null)
-			{
-				orderItems = new();
-				if (!TranslateOrderItems(translationContext, methodCall.Type, information.OrderBy, orderItems, out var orderError))
-					return orderError;
-			}
-
-			if (information.Filter != null)
-			{
-				var translated = translationContext.Translate(information.Filter);
-				if (translated is not SqlPlaceholderExpression placeholder || placeholder.Sql is not SqlSearchCondition sc)
-					return SqlErrorExpression.EnsureError(translated, methodCall.Type);
-
-				if (IsWindowFilterSupported)
-				{
-					filter = sc;
-				}
-				else
-				{
-					// Emulate FILTER (WHERE cond) with CASE WHEN cond THEN arg ELSE NULL END
-					var factory = translationContext.ExpressionFactory;
-					for (var i = 0; i < arguments.Count; i++)
-					{
-						var arg      = arguments[i];
-						var argType  = QueryHelper.GetDbDataTypeWithoutSchema(arg.Expression);
-						var caseExpr = factory.Condition(sc, arg.Expression, factory.Null(argType));
-						arguments[i] = new SqlFunctionArgument(caseExpr, arg.Modifier);
-					}
-				}
-			}
-
-			if (information.FrameType != null)
-			{
-				var frameType = information.FrameType.Value;
-
-				if (frameType == SqlFrameClause.FrameTypeKind.Rows && !IsFrameRowsSupported)
-					return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_FrameRows, methodCall.Type);
-
-				if (frameType == SqlFrameClause.FrameTypeKind.Range && !IsFrameRangeSupported)
-					return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_FrameRange, methodCall.Type);
-
-				if (frameType == SqlFrameClause.FrameTypeKind.Groups && !IsFrameGroupsSupported)
-					return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_FrameGroups, methodCall.Type);
-
-				if (information.FrameExclusion != SqlFrameClause.FrameExclusionKind.None && !IsFrameExclusionSupported)
-					return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_FrameExclude, methodCall.Type);
-
-				var start = information.Start;
-				var end   = information.End;
-
-				if (start == null || end == null)
-					throw new InvalidOperationException("Expected both start and end boundaries");
-
-				ISqlExpression? startOffset = null;
-				ISqlExpression? endOffset   = null;
-
-				if (start.Offset != null)
-				{
-					var translated = translationContext.Translate(start.Offset);
-					if (translated is not SqlPlaceholderExpression placeholder)
-						return SqlErrorExpression.EnsureError(translated, methodCall.Type);
-					startOffset = placeholder.Sql;
-				}
-
-				if (end.Offset != null)
-				{
-					var translated = translationContext.Translate(end.Offset);
-					if (translated is not SqlPlaceholderExpression placeholder)
-						return SqlErrorExpression.EnsureError(translated, methodCall.Type);
-					endOffset = placeholder.Sql;
-				}
-
-				var startBoundary = new SqlFrameBoundary(start.IsPreceding, start.BoundaryType, startOffset);
-				var endBoundary   = new SqlFrameBoundary(end.IsPreceding, end.BoundaryType, endOffset);
-				frame = new SqlFrameClause(frameType, startBoundary, endBoundary, information.FrameExclusion);
-			}
-
-			if (information.NullTreatment == Sql.Nulls.Ignore)
-			{
-				var nullTreatmentSupported = functionName is "LEAD" or "LAG"
-					? IsLeadLagNullTreatmentSupported
-					: IsValueNullTreatmentSupported;
-
-				if (!nullTreatmentSupported)
-					return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NullTreatment, methodCall.Type);
-			}
-
-			if (information.FromPosition == Sql.From.Last && !IsNthValueFromSupported)
-				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NthValueFrom, methodCall.Type);
-
-			var function = translationContext.ExpressionFactory.Function(dbDataType, functionName,
-				arguments.ToArray(),
-				arguments.Select(a => true).ToArray(),
-				partitionBy     : partitionBy,
-				orderBy         : orderItems,
-				filter          : filter,
-				frameClause     : frame,
-				nullTreatment   : information.NullTreatment,
-				fromPosition    : information.FromPosition,
-				isWindowFunction: true
-			);
-
-			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, function, methodCall);
+			return TranslateWindowFunctionCore(translationContext, methodCall, functionArgs, windowArgument, dbDataType, functionName, null);
 		}
 	}
 }

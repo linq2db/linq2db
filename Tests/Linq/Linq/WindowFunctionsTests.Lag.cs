@@ -52,6 +52,7 @@ namespace Tests.Linq
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_LeadLag)]
+		// MariaDB excluded (DataSources is an exclude list): it does not support the LAG default-value (3rd) argument.
 		public void LagWithOffsetAndDefault([DataSources(TestProvName.AllMariaDB)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();

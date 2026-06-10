@@ -46,6 +46,35 @@ namespace Tests.Linq
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, TestProvName.AllClickHouse, TestProvName.AllSqlServer2012Plus, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllSQLite, TestProvName.AllFirebird3Plus, TestProvName.AllDB2, TestProvName.AllSapHana, TestProvName.AllInformix, ProviderName.Ydb, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentileCont)]
+		// PERCENTILE_CONT works on Oracle/DuckDB, but FILTER on an ordered-set aggregate is PostgreSQL-only.
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllOracle, TestProvName.AllDuckDB, ErrorMessage = ErrorHelper.Error_WindowFunction_OrderedSetFilter)]
+		public void PercentileContFilter([DataSources] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var query =
+				from t in table
+				group t by t.CategoryId into g
+				select new
+				{
+					CategoryId = g.Key,
+					Median     = g.PercentileCont(0.5, (e, f) => f.OrderBy(e.DecimalValue).Filter(e.IntValue > 0)),
+				};
+
+			var sql = query.ToSqlQuery().Sql;
+
+			sql.ShouldContain("PERCENTILE_CONT", Exactly.Once());
+			sql.ShouldContain("FILTER",          Exactly.Once());
+
+			query.ToList();
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, TestProvName.AllClickHouse, TestProvName.AllSqlServer2012Plus, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllSQLite, TestProvName.AllFirebird3Plus, TestProvName.AllDB2, TestProvName.AllSapHana, TestProvName.AllInformix, ProviderName.Ydb, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentileCont)]
 		public void PercentileContGroupingProjection([DataSources] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();

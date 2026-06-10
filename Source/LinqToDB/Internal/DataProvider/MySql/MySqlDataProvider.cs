@@ -17,8 +17,8 @@ using LinqToDB.SchemaProvider;
 namespace LinqToDB.Internal.DataProvider.MySql
 {
 #pragma warning disable MA0048 // File name must match type name
-	sealed class MySql57DataProviderMySqlData()        : MySqlDataProvider(ProviderName.MySql57MySqlData,        MySqlVersion.MySql57,   MySqlProvider.MySqlData     ) { protected override IMemberTranslator CreateMemberTranslator() => new MySql57MemberTranslator(); }
-	sealed class MySql57DataProviderMySqlConnector()   : MySqlDataProvider(ProviderName.MySql57MySqlConnector,   MySqlVersion.MySql57,   MySqlProvider.MySqlConnector) { protected override IMemberTranslator CreateMemberTranslator() => new MySql57MemberTranslator(); }
+	sealed class MySql57DataProviderMySqlData()        : MySqlDataProvider(ProviderName.MySql57MySqlData,        MySqlVersion.MySql57,   MySqlProvider.MySqlData     ) { }
+	sealed class MySql57DataProviderMySqlConnector()   : MySqlDataProvider(ProviderName.MySql57MySqlConnector,   MySqlVersion.MySql57,   MySqlProvider.MySqlConnector) { }
 	sealed class MySql80DataProviderMySqlData()        : MySqlDataProvider(ProviderName.MySql80MySqlData,        MySqlVersion.MySql80,   MySqlProvider.MySqlData     ) { }
 	sealed class MySql80DataProviderMySqlConnector()   : MySqlDataProvider(ProviderName.MySql80MySqlConnector,   MySqlVersion.MySql80,   MySqlProvider.MySqlConnector) { }
 	sealed class MariaDB10DataProviderMySqlData()      : MySqlDataProvider(ProviderName.MariaDB10MySqlData,      MySqlVersion.MariaDB10, MySqlProvider.MySqlData     ) { }
@@ -102,6 +102,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			return Version switch
 			{
 				MySqlVersion.MySql80 or MySqlVersion.MariaDB10 => new MySql80MemberTranslator(),
+				MySqlVersion.MySql57                           => new MySql57MemberTranslator(),
 				_                                              => new MySqlMemberTranslator(),
 			};
 		}
