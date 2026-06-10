@@ -218,7 +218,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			// always operates on an IEnumerable-shaped sequence (see EnsureEnumerableType), so it takes
 			// the Enumerable branch — the shape AggregateExecute translates to SQL.
 			queryExpr = BuildExpressionUtils.EnsureEnumerableType(queryExpr);
-			return WindowFunctionHelpers.ApplyOrderBy(queryExpr, order.Select(o => ((LambdaExpression)o.Expr, o.IsDescending)));
+			return WindowFunctionHelpers.ApplyOrderBy(queryExpr, order.Select(o => ((LambdaExpression)o.Expr, o.IsDescending, o.Nulls)));
 		}
 
 		/// <summary>
@@ -231,7 +231,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			// Walk the chain from .ToValue() backwards, collecting window clauses.
 			// If we never find a root function on AnalyticFunctions, return null.
 			var partitionByList = new List<Expression>();
-			var orderByList     = new List<(Expression expr, bool descending)>();
+			var orderByList     = new List<(Expression expr, bool descending, Sql.NullsPosition nulls)>();
 
 			string?     functionName     = null;
 			Expression? functionArg1     = null;
@@ -240,7 +240,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			int         functionArgCount = 0;
 			bool        isKeepFirst      = false;
 
-			List<(Expression expr, bool descending)>? keepOrderByList = null;
+			List<(Expression expr, bool descending, Sql.NullsPosition nulls)>? keepOrderByList = null;
 
 			var current = toValueCall.Object ?? (toValueCall.Arguments.Count > 0 ? toValueCall.Arguments[0] : null);
 
@@ -336,7 +336,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 						var argIdx  = mc.Method.IsStatic ? 1 : 0;
 						if (argIdx < mc.Arguments.Count)
 						{
-							orderByList.Insert(0, (mc.Arguments[argIdx], isDesc));
+							// Legacy analytic ORDER BY does not carry a NULLS position.
+							orderByList.Insert(0, (mc.Arguments[argIdx], isDesc, Sql.NullsPosition.None));
 						}
 
 						current = mc.Object ?? (mc.Arguments.Count > 0 ? mc.Arguments[0] : null);

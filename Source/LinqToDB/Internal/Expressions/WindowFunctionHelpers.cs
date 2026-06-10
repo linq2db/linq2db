@@ -15,7 +15,7 @@ namespace LinqToDB.Internal.Expressions
 {
 	public static class WindowFunctionHelpers
 	{
-		public static Expression BuildWindowDefinition(Expression[] partitionBy, (Expression expr, bool descending)[] orderBy)
+		public static Expression BuildWindowDefinition(Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy)
 		{
 			var windowParam = Expression.Parameter(typeof(WindowFunctionBuilder.IWindowBuilder), "w");
 
@@ -36,7 +36,7 @@ namespace LinqToDB.Internal.Expressions
 			{
 				for (var index = 0; index < orderBy.Length; index++)
 				{
-					var (expr, descending) = orderBy[index];
+					var (expr, descending, nulls) = orderBy[index];
 
 					string method;
 
@@ -48,9 +48,16 @@ namespace LinqToDB.Internal.Expressions
                         (false, _) => nameof(WindowFunctionBuilder.IThenOrderPart<>.ThenBy),
                     };
 
-					var methodInfo = FindMethodInfo(windowBody.Type, method, 1);
-
-					windowBody = Expression.Call(windowBody, methodInfo, ExpressionHelpers.EnsureObject(expr));
+					if (nulls != Sql.NullsPosition.None)
+					{
+						var methodInfo = FindMethodInfo(windowBody.Type, method, 2);
+						windowBody = Expression.Call(windowBody, methodInfo, ExpressionHelpers.EnsureObject(expr), Expression.Constant(nulls));
+					}
+					else
+					{
+						var methodInfo = FindMethodInfo(windowBody.Type, method, 1);
+						windowBody = Expression.Call(windowBody, methodInfo, ExpressionHelpers.EnsureObject(expr));
+					}
 				}
 			}
 
@@ -61,7 +68,7 @@ namespace LinqToDB.Internal.Expressions
 			return defineCall;
 		}
 
-		public static Expression BuildRowNumber(Expression[] partitionBy, (Expression expr, bool descending)[] orderBy)
+		public static Expression BuildRowNumber(Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy)
 		{
 			var windowDefinition = BuildWindowDefinition(partitionBy, orderBy);
 			var rowNumberCall    = ExpressionHelpers.MakeCall((WindowFunctionBuilder.IDefinedWindow w) => Sql.Window.RowNumber(f => f.UseWindow(w)), windowDefinition);
@@ -69,31 +76,31 @@ namespace LinqToDB.Internal.Expressions
 			return rowNumberCall;
 		}
 
-		public static Expression BuildRank(Expression[] partitionBy, (Expression expr, bool descending)[] orderBy)
+		public static Expression BuildRank(Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy)
 		{
 			var windowDefinition = BuildWindowDefinition(partitionBy, orderBy);
 			return ExpressionHelpers.MakeCall((WindowFunctionBuilder.IDefinedWindow w) => Sql.Window.Rank(f => f.UseWindow(w)), windowDefinition);
 		}
 
-		public static Expression BuildDenseRank(Expression[] partitionBy, (Expression expr, bool descending)[] orderBy)
+		public static Expression BuildDenseRank(Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy)
 		{
 			var windowDefinition = BuildWindowDefinition(partitionBy, orderBy);
 			return ExpressionHelpers.MakeCall((WindowFunctionBuilder.IDefinedWindow w) => Sql.Window.DenseRank(f => f.UseWindow(w)), windowDefinition);
 		}
 
-		public static Expression BuildPercentRank(Expression[] partitionBy, (Expression expr, bool descending)[] orderBy)
+		public static Expression BuildPercentRank(Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy)
 		{
 			var windowDefinition = BuildWindowDefinition(partitionBy, orderBy);
 			return ExpressionHelpers.MakeCall((WindowFunctionBuilder.IDefinedWindow w) => Sql.Window.PercentRank(f => f.UseWindow(w)), windowDefinition);
 		}
 
-		public static Expression BuildCumeDist(Expression[] partitionBy, (Expression expr, bool descending)[] orderBy)
+		public static Expression BuildCumeDist(Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy)
 		{
 			var windowDefinition = BuildWindowDefinition(partitionBy, orderBy);
 			return ExpressionHelpers.MakeCall((WindowFunctionBuilder.IDefinedWindow w) => Sql.Window.CumeDist(f => f.UseWindow(w)), windowDefinition);
 		}
 
-		public static Expression BuildNTile(Expression nTileArg, Expression[] partitionBy, (Expression expr, bool descending)[] orderBy)
+		public static Expression BuildNTile(Expression nTileArg, Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy)
 		{
 			var windowDefinition = BuildWindowDefinition(partitionBy, orderBy);
 			return ExpressionHelpers.MakeCall((int n, WindowFunctionBuilder.IDefinedWindow w) => Sql.Window.NTile(n, f => f.UseWindow(w)), nTileArg, windowDefinition);
@@ -149,25 +156,25 @@ namespace LinqToDB.Internal.Expressions
 			return Expression.Call(method, Expression.Constant(Sql.Window), argument, windowLambda);
 		}
 
-		public static Expression BuildSum(Expression argument, Expression[] partitionBy, (Expression expr, bool descending)[] orderBy)
+		public static Expression BuildSum(Expression argument, Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy)
 			=> BuildWindowFunctionWithConcreteArg(SumMethodInfo, argument, BuildWindowDefinition(partitionBy, orderBy), typeof(WindowFunctionBuilder.IAggregateFinal));
 
-		public static Expression BuildAverage(Expression argument, Expression[] partitionBy, (Expression expr, bool descending)[] orderBy)
+		public static Expression BuildAverage(Expression argument, Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy)
 			=> BuildWindowFunctionWithConcreteArg(AvgMethodInfo, argument, BuildWindowDefinition(partitionBy, orderBy), typeof(WindowFunctionBuilder.IAggregateFinal));
 
-		public static Expression BuildMin(Expression argument, Expression[] partitionBy, (Expression expr, bool descending)[] orderBy)
+		public static Expression BuildMin(Expression argument, Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy)
 			=> BuildWindowFunctionWithConcreteArg(MinMethodInfo, argument, BuildWindowDefinition(partitionBy, orderBy), typeof(WindowFunctionBuilder.IAggregateFinal));
 
-		public static Expression BuildMax(Expression argument, Expression[] partitionBy, (Expression expr, bool descending)[] orderBy)
+		public static Expression BuildMax(Expression argument, Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy)
 			=> BuildWindowFunctionWithConcreteArg(MaxMethodInfo, argument, BuildWindowDefinition(partitionBy, orderBy), typeof(WindowFunctionBuilder.IAggregateFinal));
 
-		public static Expression BuildCount(Expression[] partitionBy, (Expression expr, bool descending)[] orderBy)
+		public static Expression BuildCount(Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy)
 		{
 			var windowDefinition = BuildWindowDefinition(partitionBy, orderBy);
 			return ExpressionHelpers.MakeCall((WindowFunctionBuilder.IDefinedWindow w) => Sql.Window.Count(f => f.UseWindow(w)), windowDefinition);
 		}
 
-		public static Expression BuildCount(Expression argument, Expression[] partitionBy, (Expression expr, bool descending)[] orderBy)
+		public static Expression BuildCount(Expression argument, Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy)
 		{
 			var windowDefinition = BuildWindowDefinition(partitionBy, orderBy);
 			var argumentObject   = argument.Type.IsValueType ? Expression.Convert(argument, typeof(object)) : argument;
@@ -176,7 +183,7 @@ namespace LinqToDB.Internal.Expressions
 				windowDefinition, argumentObject);
 		}
 
-		public static Expression BuildLead(Expression argument, Expression? offset, Expression? defaultValue, Expression[] partitionBy, (Expression expr, bool descending)[] orderBy)
+		public static Expression BuildLead(Expression argument, Expression? offset, Expression? defaultValue, Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy)
 		{
 			var windowDefinition = BuildWindowDefinition(partitionBy, orderBy);
 			var windowParam     = Expression.Parameter(typeof(WindowFunctionBuilder.IOPartitionROrderFinal), "f");
@@ -201,7 +208,7 @@ namespace LinqToDB.Internal.Expressions
 			}
 		}
 
-		public static Expression BuildLag(Expression argument, Expression? offset, Expression? defaultValue, Expression[] partitionBy, (Expression expr, bool descending)[] orderBy)
+		public static Expression BuildLag(Expression argument, Expression? offset, Expression? defaultValue, Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy)
 		{
 			var windowDefinition = BuildWindowDefinition(partitionBy, orderBy);
 			var windowParam     = Expression.Parameter(typeof(WindowFunctionBuilder.IOPartitionROrderFinal), "f");
@@ -226,13 +233,13 @@ namespace LinqToDB.Internal.Expressions
 			}
 		}
 
-		public static Expression BuildFirstValue(Expression argument, Expression[] partitionBy, (Expression expr, bool descending)[] orderBy)
+		public static Expression BuildFirstValue(Expression argument, Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy)
 			=> BuildWindowFunctionWithGenericArg(_firstValueMethodInfo, argument, BuildWindowDefinition(partitionBy, orderBy), typeof(WindowFunctionBuilder.IOPartitionOOrderOFrameWithWindowFinal));
 
-		public static Expression BuildLastValue(Expression argument, Expression[] partitionBy, (Expression expr, bool descending)[] orderBy)
+		public static Expression BuildLastValue(Expression argument, Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy)
 			=> BuildWindowFunctionWithGenericArg(_lastValueMethodInfo, argument, BuildWindowDefinition(partitionBy, orderBy), typeof(WindowFunctionBuilder.IOPartitionOOrderOFrameWithWindowFinal));
 
-		public static Expression BuildNthValue(Expression argument, Expression nArg, Expression[] partitionBy, (Expression expr, bool descending)[] orderBy)
+		public static Expression BuildNthValue(Expression argument, Expression nArg, Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy)
 		{
 			var windowDefinition = BuildWindowDefinition(partitionBy, orderBy);
 			var method          = _nthValueMethodInfo.MakeGenericMethod(argument.Type);
@@ -247,7 +254,7 @@ namespace LinqToDB.Internal.Expressions
 		/// </summary>
 		public static Expression BuildAggregateWithKeep(
 			MethodInfo sampleMethod, Expression argument, bool isKeepFirst,
-			Expression[] partitionBy, (Expression expr, bool descending)[] keepOrderBy)
+			Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] keepOrderBy)
 		{
 			var method      = FindConcreteOverload(sampleMethod, argument.Type);
 			var windowParam = Expression.Parameter(typeof(WindowFunctionBuilder.IAggregateFinal), "f");
@@ -262,7 +269,8 @@ namespace LinqToDB.Internal.Expressions
 			// Build: .OrderBy(expr)[.ThenBy(expr)]
 			for (var i = 0; i < keepOrderBy.Length; i++)
 			{
-				var (expr, descending) = keepOrderBy[i];
+				// KEEP (DENSE_RANK FIRST/LAST) ORDER BY does not carry a NULLS position in the legacy conversion.
+				var (expr, descending, _) = keepOrderBy[i];
 				var orderMethodName = (descending, i) switch
 				{
 					(true, 0)  => nameof(WindowFunctionBuilder.IOrderByPart<>.OrderByDesc),
@@ -288,43 +296,70 @@ namespace LinqToDB.Internal.Expressions
 			return Expression.Call(method, Expression.Constant(Sql.Window), argument, windowLambda);
 		}
 
-		public static (LambdaExpression lambda, bool isDescending)[] ExtractOrderByPart(Expression query, out Expression nonOrderedPart)
+		// A null nulls element means the ordering key did not specify a NULLS position (plain BCL OrderBy);
+		// a non-null value (including Sql.NullsPosition.None) means it was specified explicitly. Consumers use
+		// this to tell "use the configured default" apart from "explicitly opt out of the default".
+		public static (LambdaExpression lambda, bool isDescending, Sql.NullsPosition? nulls)[] ExtractOrderByPart(Expression query, out Expression nonOrderedPart)
 		{
-			var orderBy = new List<(LambdaExpression lambda, bool isDescending)>();
+			var orderBy = new List<(LambdaExpression lambda, bool isDescending, Sql.NullsPosition? nulls)>();
 
 			var current = query;
 			while (current.NodeType == ExpressionType.Call)
 			{
 				var mc = (MethodCallExpression)current;
-				if (typeof(Queryable) == mc.Method.DeclaringType || typeof(Enumerable) == mc.Method.DeclaringType)
+
+				var supported = true;
+
+				// Only the 2-argument key-selector overloads are extractable. The 3-argument BCL comparer overloads
+				// (OrderBy(keySelector, IComparer<TKey>)) must not be treated as the 2-argument form here — that would
+				// silently drop the comparer. Leaving them unsupported stops extraction, so they flow to OrderByBuilder,
+				// which rejects them (a custom comparer has no SQL equivalent).
+				if ((typeof(Queryable) == mc.Method.DeclaringType || typeof(Enumerable) == mc.Method.DeclaringType)
+					&& mc.Arguments.Count == 2)
 				{
-					var supported = true;
 					switch (mc.Method.Name)
 					{
 						case nameof(Enumerable.OrderBy):
 						case nameof(Enumerable.ThenBy):
-						{
-							orderBy.Add((mc.Arguments[1].UnwrapLambda(), false));
+							orderBy.Add((mc.Arguments[1].UnwrapLambda(), false, null));
 							break;
-						}
 						case nameof(Enumerable.OrderByDescending):
 						case nameof(Enumerable.ThenByDescending):
-						{
-							orderBy.Add((mc.Arguments[1].UnwrapLambda(), true));
+							orderBy.Add((mc.Arguments[1].UnwrapLambda(), true, null));
 							break;
-						}
 						default:
 							supported = false;
 							break;
 					}
-
-					if (!supported)
-						break;
-
-					current = mc.Arguments[0];
+				}
+				// linq2db OrderBy/ThenBy overloads that carry an explicit Sql.NullsPosition.
+				else if (typeof(LinqExtensions) == mc.Method.DeclaringType
+					&& mc.Arguments.Count == 3
+					&& mc.Method.GetParameters()[2].ParameterType == typeof(Sql.NullsPosition))
+				{
+					var nulls = (Sql.NullsPosition)mc.Arguments[2].EvaluateExpression()!;
+					switch (mc.Method.Name)
+					{
+						case nameof(LinqExtensions.OrderBy):
+						case nameof(LinqExtensions.ThenBy):
+							orderBy.Add((mc.Arguments[1].UnwrapLambda(), false, nulls));
+							break;
+						case nameof(LinqExtensions.OrderByDescending):
+						case nameof(LinqExtensions.ThenByDescending):
+							orderBy.Add((mc.Arguments[1].UnwrapLambda(), true, nulls));
+							break;
+						default:
+							supported = false;
+							break;
+					}
 				}
 				else
+					supported = false;
+
+				if (!supported)
 					break;
+
+				current = mc.Arguments[0];
 			}
 
 			nonOrderedPart = current;
@@ -333,21 +368,31 @@ namespace LinqToDB.Internal.Expressions
 			return orderBy.ToArray();
 		}
 
-		public static Expression ApplyOrderBy(Expression queryExpr, IEnumerable<(LambdaExpression lambda, bool isDescending)> order)
+		public static Expression ApplyOrderBy(Expression queryExpr, IEnumerable<(LambdaExpression lambda, bool isDescending, Sql.NullsPosition nulls)> order)
 		{
 			var isFirst = true;
-			foreach (var (lambda, isDescending) in order)
+			foreach (var (lambda, isDescending, nulls) in order)
 			{
-				var methodName =
-					isFirst ? isDescending ? nameof(Queryable.OrderByDescending) : nameof(Queryable.OrderBy)
-					: isDescending ? nameof(Queryable.ThenByDescending) : nameof(Queryable.ThenBy);
+				var isQueryable = typeof(IQueryable<>).IsSameOrParentOf(queryExpr.Type);
 
-				if (typeof(IQueryable<>).IsSameOrParentOf(queryExpr.Type))
+				// The incoming position is already resolved (the caller applied any configured default), so always
+				// re-emit via the linq2db NULLS-aware overload on the queryable path — including Sql.NullsPosition.None
+				// — so OrderByBuilder treats it as explicit and does not re-apply the default a second time.
+				if (isQueryable)
 				{
-					queryExpr = Expression.Call(typeof(Queryable), methodName, [lambda.Parameters[0].Type, lambda.Body.Type], queryExpr, Expression.Quote(lambda));
+					var methodName =
+						isFirst ? isDescending ? nameof(LinqExtensions.OrderByDescending) : nameof(LinqExtensions.OrderBy)
+						: isDescending ? nameof(LinqExtensions.ThenByDescending) : nameof(LinqExtensions.ThenBy);
+
+					queryExpr = Expression.Call(typeof(LinqExtensions), methodName, [lambda.Parameters[0].Type, lambda.Body.Type], queryExpr, Expression.Quote(lambda), Expression.Constant(nulls));
 				}
 				else
 				{
+					// In-memory (IEnumerable) ordering has no NULLS-aware overload; the position is not meaningful here.
+					var methodName =
+						isFirst ? isDescending ? nameof(Enumerable.OrderByDescending) : nameof(Enumerable.OrderBy)
+						: isDescending ? nameof(Enumerable.ThenByDescending) : nameof(Enumerable.ThenBy);
+
 					queryExpr = Expression.Call(typeof(Enumerable), methodName, [lambda.Parameters[0].Type, lambda.Body.Type], queryExpr, lambda);
 				}
 

@@ -1436,6 +1436,28 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ProviderName.SqlCe, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_RowNumber)]
+		public void SelectWithIndexerOrderByNulls(
+			[DataSources] string context,
+			[Values(Sql.NullsPosition.First, Sql.NullsPosition.Last)] Sql.NullsPosition nulls,
+			[Values] bool descending)
+		{
+			using var db = GetDataContext(context);
+
+			// Indexed Select lowers ordering into ROW_NUMBER(); the requested NULLS position must reach the OVER clause.
+			var ordered = descending
+				? db.Person.OrderByDescending(p => p.MiddleName, nulls)
+				: db.Person.OrderBy          (p => p.MiddleName, nulls);
+
+			var query = ordered
+				.ThenBy(p => p.ID)
+				.Select((p, idx) => new { p.ID, Index = idx })
+				.Where(x => x.Index >= 0);
+
+			AssertQuery(query);
+		}
+
 		public class Table1788
 		{
 			[PrimaryKey]

@@ -243,29 +243,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB.Translation
 									}
 								}
 
-								ISqlExpression? suffix = null;
-								if (info.OrderBySql.Length > 0)
-								{
-									using var sb = Pools.StringBuilder.Allocate();
-
-									var args = info.OrderBySql.Select(o => o.expr).ToArray();
-
-									sb.Value.Append("ORDER BY ");
-									for (int i = 0; i < info.OrderBySql.Length; i++)
-									{
-										if (i > 0) sb.Value.Append(", ");
-										sb.Value.Append('{').Append(i).Append('}');
-										if (info.OrderBySql[i].desc) sb.Value.Append(" DESC");
-
-										if (!info.IsNullFiltered)
-										{
-											sb.Value.Append(" NULLS ");
-											sb.Value.Append(info.OrderBySql[i].nulls is Sql.NullsPosition.First or Sql.NullsPosition.None ? "FIRST" : "LAST");
-										}
-									}
-
-									suffix = factory.Fragment(sb.Value.ToString(), args);
-								}
+								var suffix = BuildAggregateNullsOrderBy(factory, info.OrderBySql, info.IsNullFiltered, NullsDefaultOrdering.AlwaysLast);
 
 								SqlSearchCondition? filterCondition = null;
 

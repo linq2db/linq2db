@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
@@ -356,7 +357,31 @@ namespace LinqToDB.Internal.DataProvider.DB2.Translation
 
 								var aggregateModifier = info.IsDistinct ? Sql.AggregateModifier.Distinct : Sql.AggregateModifier.None;
 
-								var withinGroup = info.OrderBySql.Length > 0 ? info.OrderBySql.Select(o => new SqlWindowOrderItem(o.expr, o.desc, o.nulls)) : null;
+								List<SqlWindowOrderItem>? withinGroup = null;
+								if (info.OrderBySql.Length > 0)
+								{
+									withinGroup = new List<SqlWindowOrderItem>(info.OrderBySql.Length);
+									foreach (var (expr, desc, nulls) in info.OrderBySql)
+									{
+										// DB2 LUW supports NULLS FIRST/LAST in a plain ORDER BY but rejects it inside LISTAGG's
+										// WITHIN GROUP (ORDER BY ...) with SQL0109N. Emulate it with a leading CASE sort key (null
+										// rows sorted first or last via 0/1) and drop the unsupported NULLS token from the real key —
+										// unless the requested position already matches DB2's natural order (NULL is the largest value).
+										if (nulls != Sql.NullsPosition.None
+											&& !QueryHelper.MatchesNaturalNullsPosition(NullsDefaultOrdering.Largest, nulls, desc))
+										{
+											var nullsKey = factory.Fragment(
+												nulls == Sql.NullsPosition.Last
+													? "CASE WHEN {0} IS NULL THEN 1 ELSE 0 END"
+													: "CASE WHEN {0} IS NULL THEN 0 ELSE 1 END",
+												expr);
+
+											withinGroup.Add(new SqlWindowOrderItem(nullsKey, false, Sql.NullsPosition.None));
+										}
+
+										withinGroup.Add(new SqlWindowOrderItem(expr, desc, Sql.NullsPosition.None));
+									}
+								}
 
 								var fn = factory.Function(valueType, "LISTAGG",
 									[new SqlFunctionArgument(value, modifier : aggregateModifier), new SqlFunctionArgument(separator)],

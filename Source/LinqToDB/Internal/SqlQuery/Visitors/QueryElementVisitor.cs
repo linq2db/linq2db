@@ -1554,7 +1554,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					var e = (ISqlExpression)Visit(element.Expression);
 
 					if (ShouldReplace(element) || !ReferenceEquals(element.Expression, e))
-						return NotifyReplaced(new SqlOrderByItem(e, element.IsDescending, element.IsPositioned), element);
+						return NotifyReplaced(new SqlOrderByItem(e, element.IsDescending, element.IsPositioned, element.NullsPosition), element);
 
 					break;
 				}

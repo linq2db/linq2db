@@ -388,17 +388,18 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 								bool IsDesc(int i) => orderItems[i].desc;
 
 								bool firstIsStringDesc       = orderItems.Length > 0 && IsString(0) && IsDesc(0);
-								bool anyStringAfterFirst     = Enumerable.Range(1, Math.Max(0, orderItems.Length - 1)).Any(IsString);
 								bool anyStringDescAfterFirst = Enumerable.Range(1, Math.Max(0, orderItems.Length - 1)).Any(i => IsString(i) && IsDesc(i));
 
 								// Rules:
-								//  - allow: numeric/date ASC/DESC anywhere (DESC via inversion)
+								//  - allow: numeric/date ASC/DESC anywhere (DESC via key inversion)
 								//  - allow: string ASC anywhere (bytewise)
-								//  - allow: string DESC only if it is the FIRST key AND there are NO other string keys after it
+								//  - allow: string DESC only as the SINGLE ORDER key (emulated via whole-array reverse). The reverse
+								//    would also flip the direction and NULLS placement of any subsequent keys, so a leading string DESC
+								//    combined with any other key cannot be emulated correctly -> fallback.
 								//  - otherwise => unsupported -> fallback
 								bool unsupported =
 									anyStringDescAfterFirst ||
-									(firstIsStringDesc && anyStringAfterFirst);
+									(firstIsStringDesc && orderItems.Length > 1);
 
 								if (unsupported)
 								{
@@ -425,12 +426,24 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 								var tuplesArr = MakeGroupArray(tupleExpr);
 
 								// ---- Build key selector: (t) -> (k1_nullsKey, k1_key, k2_nullsKey, k2_key, ...)
-								// Nulls policy: ASC => NULLS FIRST; DESC => NULLS LAST
-								ISqlExpression MakeNullsKey(ISqlExpression t_i, bool desc)
+								// Nulls policy: honor an explicit Sql.NullsPosition; otherwise default ASC => NULLS FIRST, DESC => NULLS LAST.
+								// When the whole array is reversed afterwards (single string DESC key), invert so the requested
+								// placement survives the reverse.
+								ISqlExpression MakeNullsKey(ISqlExpression t_i, bool desc, Sql.NullsPosition nulls, bool willReverse)
 								{
-									return desc
-										? f.Fragment("if(isNull({0}), 1, 0)", t_i)  // DESC: nulls last
-										: f.Fragment("if(isNull({0}), 0, 1)", t_i); // ASC : nulls first
+									var nullsLast = nulls switch
+									{
+										Sql.NullsPosition.Last  => true,
+										Sql.NullsPosition.First => false,
+										_                       => desc,
+									};
+
+									if (willReverse)
+										nullsLast = !nullsLast;
+
+									return nullsLast
+										? f.Fragment("if(isNull({0}), 1, 0)", t_i)  // nulls last
+										: f.Fragment("if(isNull({0}), 0, 1)", t_i); // nulls first
 								}
 
 								// Numeric: DESC via Negate; ASC as-is
@@ -485,7 +498,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 									var desc  = orderItems[i].desc;
 
 									// 1) nulls policy key
-									keyElems.Add(MakeNullsKey(t_i, desc));
+									keyElems.Add(MakeNullsKey(t_i, desc, orderItems[i].nulls, willReverse: firstIsStringDesc));
 
 									// 2) transformed key (direction encoded)
 									var keyEl = TransformKey(t_i, srcT, desc, isFirstKey: i == 0);

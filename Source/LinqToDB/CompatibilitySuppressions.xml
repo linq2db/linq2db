@@ -541,6 +541,34 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.Expressions.WindowFunctionHelpers.ApplyOrderBy(System.Linq.Expressions.Expression,System.Collections.Generic.IEnumerable{System.ValueTuple{System.Linq.Expressions.LambdaExpression,System.Boolean}})</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.Expressions.WindowFunctionHelpers.BuildRowNumber(System.Linq.Expressions.Expression[],System.ValueTuple{System.Linq.Expressions.Expression,System.Boolean}[])</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.Expressions.WindowFunctionHelpers.BuildWindowDefinition(System.Linq.Expressions.Expression[],System.ValueTuple{System.Linq.Expressions.Expression,System.Boolean}[])</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.Expressions.WindowFunctionHelpers.ExtractOrderByPart(System.Linq.Expressions.Expression,System.Linq.Expressions.Expression@)</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.Extensions.ReflectionExtensions.GetPublicInstanceMembersEx(System.Type)</Target>
     <Left>lib/net10.0/linq2db.dll</Left>
     <Right>lib/net10.0/linq2db.dll</Right>
@@ -1122,6 +1150,34 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.Expressions.WindowFunctionHelpers.ApplyOrderBy(System.Linq.Expressions.Expression,System.Collections.Generic.IEnumerable{System.ValueTuple{System.Linq.Expressions.LambdaExpression,System.Boolean}})</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.Expressions.WindowFunctionHelpers.BuildRowNumber(System.Linq.Expressions.Expression[],System.ValueTuple{System.Linq.Expressions.Expression,System.Boolean}[])</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.Expressions.WindowFunctionHelpers.BuildWindowDefinition(System.Linq.Expressions.Expression[],System.ValueTuple{System.Linq.Expressions.Expression,System.Boolean}[])</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.Expressions.WindowFunctionHelpers.ExtractOrderByPart(System.Linq.Expressions.Expression,System.Linq.Expressions.Expression@)</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.Extensions.ReflectionExtensions.GetPublicInstanceMembersEx(System.Type)</Target>
     <Left>lib/net462/linq2db.dll</Left>
     <Right>lib/net462/linq2db.dll</Right>
@@ -1703,6 +1759,34 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.Expressions.WindowFunctionHelpers.ApplyOrderBy(System.Linq.Expressions.Expression,System.Collections.Generic.IEnumerable{System.ValueTuple{System.Linq.Expressions.LambdaExpression,System.Boolean}})</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.Expressions.WindowFunctionHelpers.BuildRowNumber(System.Linq.Expressions.Expression[],System.ValueTuple{System.Linq.Expressions.Expression,System.Boolean}[])</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.Expressions.WindowFunctionHelpers.BuildWindowDefinition(System.Linq.Expressions.Expression[],System.ValueTuple{System.Linq.Expressions.Expression,System.Boolean}[])</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.Expressions.WindowFunctionHelpers.ExtractOrderByPart(System.Linq.Expressions.Expression,System.Linq.Expressions.Expression@)</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.Extensions.ReflectionExtensions.GetPublicInstanceMembersEx(System.Type)</Target>
     <Left>lib/net8.0/linq2db.dll</Left>
     <Right>lib/net8.0/linq2db.dll</Right>
@@ -2278,6 +2362,34 @@
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.Expressions.ExpressionVisitorBase.VisitSqlValidateExpression(LinqToDB.Internal.Expressions.SqlValidateExpression)</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.Expressions.WindowFunctionHelpers.ApplyOrderBy(System.Linq.Expressions.Expression,System.Collections.Generic.IEnumerable{System.ValueTuple{System.Linq.Expressions.LambdaExpression,System.Boolean}})</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.Expressions.WindowFunctionHelpers.BuildRowNumber(System.Linq.Expressions.Expression[],System.ValueTuple{System.Linq.Expressions.Expression,System.Boolean}[])</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.Expressions.WindowFunctionHelpers.BuildWindowDefinition(System.Linq.Expressions.Expression[],System.ValueTuple{System.Linq.Expressions.Expression,System.Boolean}[])</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.Expressions.WindowFunctionHelpers.ExtractOrderByPart(System.Linq.Expressions.Expression,System.Linq.Expressions.Expression@)</Target>
     <Left>lib/net9.0/linq2db.dll</Left>
     <Right>lib/net9.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
@@ -2871,6 +2983,34 @@
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.Expressions.ExpressionVisitorBase.VisitSqlValidateExpression(LinqToDB.Internal.Expressions.SqlValidateExpression)</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.Expressions.WindowFunctionHelpers.ApplyOrderBy(System.Linq.Expressions.Expression,System.Collections.Generic.IEnumerable{System.ValueTuple{System.Linq.Expressions.LambdaExpression,System.Boolean}})</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.Expressions.WindowFunctionHelpers.BuildRowNumber(System.Linq.Expressions.Expression[],System.ValueTuple{System.Linq.Expressions.Expression,System.Boolean}[])</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.Expressions.WindowFunctionHelpers.BuildWindowDefinition(System.Linq.Expressions.Expression[],System.ValueTuple{System.Linq.Expressions.Expression,System.Boolean}[])</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.Expressions.WindowFunctionHelpers.ExtractOrderByPart(System.Linq.Expressions.Expression,System.Linq.Expressions.Expression@)</Target>
     <Left>lib/netstandard2.0/linq2db.dll</Left>
     <Right>lib/netstandard2.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
