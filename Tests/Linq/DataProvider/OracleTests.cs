@@ -446,9 +446,11 @@ namespace Tests.DataProvider
 
 			conn.Execute($"INSERT INTO {tableName} (\"Id\", \"NClob\") VALUES (1, TO_NCLOB(:p))", DataParameter.NText("p", value));
 			conn.Execute($"INSERT INTO {tableName} (\"Id\", \"NClob\") VALUES (2, TO_NCLOB(:p))", new DataParameter { Name = "p", DbType = "NClob", Value = value });
+			conn.Execute($"INSERT INTO {tableName} (\"Id\", \"NClob\") VALUES (3, :p)",           new DataParameter { Name = "p", Value = value });
 
 			Assert.That(conn.Execute<int>($"SELECT LENGTH(\"NClob\") FROM {tableName} WHERE \"Id\" = 1"), Is.EqualTo(value.Length));
 			Assert.That(conn.Execute<int>($"SELECT LENGTH(\"NClob\") FROM {tableName} WHERE \"Id\" = 2"), Is.EqualTo(value.Length));
+			Assert.That(conn.Execute<int>($"SELECT LENGTH(\"NClob\") FROM {tableName} WHERE \"Id\" = 3"), Is.EqualTo(value.Length));
 		}
 
 		[Test, Ignore("TODO: needs to implement providing parameter type in LINQ expressions")]
