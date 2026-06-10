@@ -3823,7 +3823,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				if (ReferenceEquals(element, _predicate))
 					return base.Visit(element);
 
-				if (element is ISqlExpression sqlExpr and not SqlSearchCondition)
+				// SelectQuery is an ISqlExpression too (e.g. the operand of an IN/EXISTS subquery), but it must not be
+				// hoisted into a column - recurse into it so only the inner-only leaves get corrected.
+				if (element is ISqlExpression sqlExpr and not SqlSearchCondition and not SelectQuery)
 				{
 					if (QueryHelper.IsDependsOnSources(sqlExpr, _currentSources) && !QueryHelper.IsDependsOnOuterSources(sqlExpr, currentSources: _currentSources))
 					{
