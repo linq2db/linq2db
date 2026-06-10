@@ -109,6 +109,18 @@ A test that compiles and goes green is not yet a regression guard — it has to 
 
 Before reporting a test written, state in one line **which input makes it go red** and confirm it would have failed against the pre-fix code. If you can't name that input, it isn't a guard yet. Mutation-score tooling is out of scope; the red→green demonstration required by `agent-rules.md` → *Before coding a fix or feature* is the bar.
 
+## Proposed: property-based / invariant testing for the SQL pipeline (not yet wired in)
+
+The current suite is example-based: a human (or AI) names specific inputs and asserts specific outputs. **Property-based testing** inverts that — you state an *invariant* that must hold for *all* inputs, and a generator throws hundreds of randomized cases at it to find the one that breaks it. It's the automated form of "name the input that makes it go red" above: instead of guessing the edge case, you let the generator find it. This is **a proposal, not built** — recorded here so the idea isn't lost and so a future effort starts from a candidate list rather than a blank page. linq2db's SQL-generating core is unusually well-suited to it because several pipeline invariants are exact, deterministic, and provider-independent:
+
+- **AST clone round-trip** — for any SQL AST node, `clone(node)` must be `Equals` to `node` *and* hash equal. Directly exercises the equality/hash/clone fan-out `code-reviewer` rule 1 polices by hand; a generator over node shapes would surface a dropped field automatically.
+- **Visitor identity** — running an identity `QueryElementVisitor` over a tree returns a structurally-equal tree (no field silently neutralized to `None` / `null` / `0` — the same drop class rule 1's "new field propagation" sub-bullet watches for).
+- **LinqService serialization round-trip** — `deserialize(serialize(tree))` must equal `tree` for any tree. The remote path's correctness is exactly this property; today it's only spot-checked per construct.
+- **Optimizer idempotence** — optimizing an already-optimized tree is a fixed point (`optimize(optimize(x)) == optimize(x)`). This is the very invariant whose violation produces the infinite-recursion hangs in *Diagnosing hung test runs* below — a property test would catch a non-idempotent rewrite before it ships.
+- **Type-mapping symmetry** — `DataType` ↔ provider `DbType` / CLR-type mapping conversions round-trip where the mapping is defined as bijective.
+
+Framework note: there is **no property-testing dependency in the repo today**. Options if pursued: a generator library (CsCheck — minimal-dependency, .NET-native shrinking; or FsCheck), or hand-rolled randomized generators feeding ordinary NUnit `[Test]` methods with a logged seed for reproduction. Start with **one** invariant (AST clone round-trip is the highest-leverage and needs no DB) as a proof-of-concept before committing to a framework — the package choice and the shrinking/seed-reproduction story are the real decisions, and they belong to whoever scopes the effort, not to a doc.
+
 ## Cross-provider gotchas for new tests
 
 ### YDB requires a primary key on every table
