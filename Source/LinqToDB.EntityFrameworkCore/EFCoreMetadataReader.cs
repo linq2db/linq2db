@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
@@ -34,6 +35,8 @@ using LinqToDB.SqlQuery;
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Mapping;
 using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Reflection;
+using LinqToDB.EntityFrameworkCore.Internal;
 
 using static LinqToDB.DataProvider.SqlServer.SqlFn;
 
@@ -42,7 +45,7 @@ namespace LinqToDB.EntityFrameworkCore
 	/// <summary>
 	/// LINQ To DB metadata reader for EF.Core model.
 	/// </summary>
-	internal sealed class EFCoreMetadataReader : IMetadataReader
+	internal sealed partial class EFCoreMetadataReader : IMetadataReader
 	{
 #if !EF31
 		// renamed in 8.0.0
@@ -60,6 +63,9 @@ namespace LinqToDB.EntityFrameworkCore
 		private readonly IMigrationsAnnotationProvider?                               _annotationProvider;
 #endif
 		private readonly ConcurrentDictionary<MemberInfo, Sql.ExpressionAttribute?>   _calculatedExtensions = new();
+#if !EF31
+		private readonly ConcurrentDictionary<Type, ManyToManyJoinInfo?>             _manyToManyJoins      = new();
+#endif
 #if !EF31
 		private readonly IDiagnosticsLogger<DbLoggerCategory.Query>?                  _logger;
 #endif
@@ -95,6 +101,16 @@ namespace LinqToDB.EntityFrameworkCore
 		public MappingAttribute[] GetAttributes(Type type)
 		{
 			List<MappingAttribute>? result = null;
+
+#if !EF31
+			// Many-to-many join table marker: emit the EF join table mapping.
+			var joinInfo = ResolveManyToManyJoin(type);
+			if (joinInfo != null)
+			{
+				var joinStoreId = GetStoreObjectIdentifier(joinInfo.JoinEntityType);
+				return [new TableAttribute() { Schema = joinStoreId?.Schema, Name = joinStoreId?.Name }];
+			}
+#endif
 
 			var et = _model?.FindEntityType(type);
 			if (et != null)
@@ -259,6 +275,21 @@ namespace LinqToDB.EntityFrameworkCore
 		{
 			if (typeof(Expression).IsSameOrParentOf(type))
 				return [];
+
+#if !EF31
+			// Many-to-many join table marker: expose foreign key columns as dynamic columns.
+			var markerJoinInfo = ResolveManyToManyJoin(type);
+			if (markerJoinInfo != null)
+			{
+				if (memberInfo is DynamicColumnInfo)
+				{
+					var ca = BuildJoinColumnAttribute(markerJoinInfo, memberInfo.Name);
+					return ca != null ? [ca] : [];
+				}
+
+				return [];
+			}
+#endif
 
 			List<MappingAttribute>? result = null;
 			var hasColumn = false;
@@ -455,6 +486,23 @@ namespace LinqToDB.EntityFrameworkCore
 						}
 					}
 				}
+
+#if !EF31
+				// AssociationAttribute for many-to-many (skip) navigations.
+				// EF represents these via a hidden join entity, so we build a query expression
+				// that joins through it (see BuildManyToManyQueryExpression).
+				foreach (var skipNavigation in et.GetSkipNavigations())
+				{
+					if (CompareProperty(skipNavigation.PropertyInfo, memberInfo))
+					{
+						(result ??= new()).Add(new AssociationAttribute()
+						{
+							QueryExpression = BuildManyToManyQueryExpression(et, skipNavigation),
+							CanBeNull       = true,
+						});
+					}
+				}
+#endif
 			}
 
 			if (!hasColumn)
@@ -554,7 +602,7 @@ namespace LinqToDB.EntityFrameworkCore
 			}
 
 #if !EF31 && !EF8
-			private static readonly ConstructorInfo _ctor = typeof(SqlTransparentExpression).GetConstructor([typeof(ExceptExpression), typeof(RelationalTypeMapping)])
+			private static readonly ConstructorInfo _ctor = typeof(SqlTransparentExpression).GetConstructor([typeof(ConstantExpression), typeof(RelationalTypeMapping)])
 				?? throw new InvalidOperationException();
 
 			private static readonly MethodInfo _constantExpressionFactoryMethod = typeof(Expression).GetMethod(nameof(Constant), [typeof(object), typeof(Type)])
@@ -577,7 +625,7 @@ namespace LinqToDB.EntityFrameworkCore
 				return ReferenceEquals(this, other);
 			}
 
-			public override bool Equals(object? obj)
+			public override bool Equals([NotNullWhen(true)] object? obj)
 			{
 				if (obj is null) return false;
 				if (ReferenceEquals(this, obj)) return true;
@@ -890,6 +938,22 @@ namespace LinqToDB.EntityFrameworkCore
 
 		public MemberInfo[] GetDynamicColumns(Type type)
 		{
+#if !EF31
+			var joinInfo = ResolveManyToManyJoin(type);
+			if (joinInfo != null)
+			{
+				var columns = new List<MemberInfo>();
+
+				foreach (var p in joinInfo.ThisForeignKey.Properties)
+					columns.Add(new DynamicColumnInfo(type, p.ClrType, p.Name));
+
+				foreach (var p in joinInfo.OtherForeignKey.Properties)
+					columns.Add(new DynamicColumnInfo(type, p.ClrType, p.Name));
+
+				return columns.ToArray();
+			}
+#endif
+
 			return [];
 		}
 

@@ -64,6 +64,33 @@ public class TestsInitialization
 
 			return IntPtr.Zero;
 		});
+
+		// DB2/Informix on Linux load their native client (libdb2.so) from the clidriver that
+		// Build/Azure/scripts/db2.provider.sh extracts next to the test binaries. CI exports
+		// LD_LIBRARY_PATH=clidriver/lib, but that env var doesn't reliably propagate to the
+		// testhost subprocess, so the native load intermittently fails. Resolve libdb2.so
+		// explicitly from the known clidriver path. See https://github.com/linq2db/linq2db/issues/5538
+		if (OperatingSystem.IsLinux())
+		{
+			IntPtr db2Handle = default;
+			System.Runtime.InteropServices.NativeLibrary.SetDllImportResolver(typeof(IBM.Data.Db2.DB2Connection).Assembly, (module, assembly, searchPath) =>
+			{
+				if (module == "libdb2.so")
+				{
+					if (db2Handle == default)
+					{
+						var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "clidriver", "lib", "libdb2.so");
+						if (File.Exists(path))
+							db2Handle = System.Runtime.InteropServices.NativeLibrary.Load(path);
+					}
+
+					if (db2Handle != default)
+						return db2Handle;
+				}
+
+				return IntPtr.Zero;
+			});
+		}
 #else
 		// force load of SDS runtime first as there is no SetDllImportResolver API
 		using (var _ = new System.Data.SQLite.SQLiteConnection("", false))

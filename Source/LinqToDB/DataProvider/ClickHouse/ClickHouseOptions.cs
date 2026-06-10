@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 using LinqToDB.Data;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider;
@@ -37,7 +39,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 		#region IEquatable implementation
 
-		public bool Equals(ClickHouseOptions? other)
+		public bool Equals([NotNullWhen(true)] ClickHouseOptions? other)
 		{
 			if (ReferenceEquals(null, other)) return false;
 			if (ReferenceEquals(this, other)) return true;

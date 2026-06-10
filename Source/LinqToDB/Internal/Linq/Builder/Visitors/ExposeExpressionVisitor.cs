@@ -29,7 +29,6 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 		IMemberConverter                  _memberConverter     = default!;
 		ExpressionTreeOptimizationContext _optimizationContext = default!;
 		object?[]?                        _parameterValues;
-		bool                              _includeConvert;
 		bool                              _optimizeConditions;
 		bool                              _compactBinary;
 		bool                              _isSingleConvert;
@@ -43,13 +42,11 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 			ExpressionTreeOptimizationContext           optimizationContext,
 			object?[]?                                  parameterValues,
 			Expression                                  expression,
-			bool                                        includeConvert,
 			bool                                        optimizeConditions,
 			bool                                        compactBinary,
 			bool                                        isSingleConvert)
 		{
 			_dataContext         = dataContext;
-			_includeConvert      = includeConvert;
 			_optimizationContext = optimizationContext;
 			_parameterValues     = parameterValues;
 			_optimizeConditions  = optimizeConditions;
@@ -63,7 +60,6 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 		public override void Cleanup()
 		{
 			_dataContext         = default!;
-			_includeConvert      = default;
 			_memberConverter     = default!;
 			_optimizationContext = default!;
 			_optimizeConditions  = default;
@@ -141,13 +137,10 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 				return convertedQuery;
 			}
 
-			if (_includeConvert)
+			var newNode = ConvertMethod(node);
+			if (newNode != null)
 			{
-				var newNode = ConvertMethod(node);
-				if (newNode != null)
-				{
-					return Visit(newNode);
-				}
+				return Visit(newNode);
 			}
 
 			var dependentParameters = SqlQueryDependentAttributeHelper.GetQueryDependentAttributes(node.Method);
@@ -472,17 +465,27 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 		{
 			if (_optimizeConditions)
 			{
-				var test    = Visit(node.Test);
-				var ifTrue  = Visit(node.IfTrue);
-				var ifFalse = Visit(node.IfFalse);
+				// Evaluate Test first and short-circuit to the chosen branch when it resolves
+				// to a literal bool. This preserves C# ?: short-circuit semantics through expose:
+				// the un-taken branch never gets visited, so closure-only subexpressions like
+				// `null!.Length > 50` (which would NRE under eager evaluation) are skipped.
+				var test = Visit(node.Test);
 
 				if (IsCompilable(test))
 				{
 					if (EvaluateExpression(test) is bool testValue)
 					{
-						return Visit(testValue ? ifTrue : ifFalse);
+						return Visit(testValue ? node.IfTrue : node.IfFalse);
 					}
 				}
+
+				if (IsCompilable(node))
+				{
+					return node.Update(test, node.IfTrue, node.IfFalse);
+				}
+
+				var ifTrue  = Visit(node.IfTrue);
+				var ifFalse = Visit(node.IfFalse);
 
 				return node.Update(test, ifTrue, ifFalse);
 			}
@@ -579,12 +582,9 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 				return convertedQuery;
 			}
 
-			if (_includeConvert)
-			{
-				var converted = ConvertMemberAccess(node);
-				if (converted != null)
-					return Visit(converted);
-			}
+			var memberMapping = ConvertMemberAccess(node);
+			if (memberMapping != null)
+				return Visit(memberMapping);
 
 			if (typeof(IDataContext).IsSameOrParentOf(node.Type))
 			{
@@ -837,13 +837,10 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 				}
 			}
 
-			if (_includeConvert)
+			var convertedBinary = ConvertBinary(node);
+			if (convertedBinary != null)
 			{
-				var converted = ConvertBinary(node);
-				if (converted != null)
-				{
-					return Visit(converted);
-				}
+				return Visit(convertedBinary);
 			}
 
 			if (_compactBinary)
@@ -867,12 +864,9 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 
 		protected override Expression VisitNew(NewExpression node)
 		{
-			if (_includeConvert)
-			{
-				var newNode = ConvertNew(node);
-				if (newNode != null)
-					return Visit(newNode);
-			}
+			var newNode = ConvertNew(node);
+			if (newNode != null)
+				return Visit(newNode);
 
 			return base.VisitNew(node);
 		}

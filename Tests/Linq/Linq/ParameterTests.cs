@@ -204,8 +204,7 @@ namespace Tests.Linq
 
 		// Excluded providers inline such parameter or miss mappings/don't infer facets
 		[Test]
-		[YdbMemberNotFound]
-		public void ExposeSqlDecimalParameter([DataSources(false, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllPostgreSQL, TestProvName.AllOracle, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
+		public void ExposeSqlDecimalParameter([DataSources(false, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllPostgreSQL, TestProvName.AllOracle, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllClickHouse, ProviderName.Ydb)] string context)
 		{
 			using var db = GetDataContext(context);
 			var p   = 123.456m;
@@ -218,8 +217,7 @@ namespace Tests.Linq
 
 		// Excluded providers inline such parameter or miss mappings
 		[Test]
-		[YdbMemberNotFound]
-		public void ExposeSqlBinaryParameter([DataSources(false, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllDB2, TestProvName.AllSapHana, TestProvName.AllPostgreSQL, TestProvName.AllOracle, TestProvName.AllInformix, TestProvName.AllFirebird, TestProvName.AllClickHouse)] string context)
+		public void ExposeSqlBinaryParameter([DataSources(false, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllDB2, TestProvName.AllSapHana, TestProvName.AllPostgreSQL, TestProvName.AllOracle, TestProvName.AllInformix, TestProvName.AllFirebird, TestProvName.AllClickHouse, ProviderName.Ydb)] string context)
 		{
 			using var db = GetDataContext(context);
 			var p   = new byte[] { 0, 1, 2 };

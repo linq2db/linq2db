@@ -1,18 +1,38 @@
-<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+<Project Sdk="Microsoft.NET.Sdk">
 
+	<!--
+		Packaging-only project for the linq2db.LINQPad NuGet driver.
+
+		The driver assembly itself is a WPF component built by the sibling
+		`LinqToDB.LINQPad.csproj` against `net8.0-windows7.0`. This project does NOT
+		recompile it; it only assembles the NuGet, dropping that assembly into the
+		platform-neutral `lib/net8.0/` folder and declaring a plain `net8.0`
+		dependency group.
+
+		Why net8.0 (not net8.0-windows7.0): LINQPad installs drivers from NuGet, and
+		on macOS/Linux NuGet rejects a `net8.0-windows7.0`-only package ("No
+		compatible assemblies found", issue #5497). Packing under `net8.0` restores
+		the pre-#5279 (<= 6.1.0) layout that LINQPad on every OS can install. A plain
+		net8.0 project can't `UseWPF`, hence the split: compile in the sibling
+		project, pack here.
+	-->
 	<PropertyGroup>
 		<RootNamespace>LinqToDB.LINQPad</RootNamespace>
 		<AssemblyName>linq2db.LINQPad</AssemblyName>
+		<PackageId>linq2db.LINQPad</PackageId>
+
+		<!-- override the repo-wide multi-TFM default; this is a single-TFM packaging project -->
+		<TargetFrameworks>net8.0</TargetFrameworks>
 
 		<GenerateDocumentationFile>false</GenerateDocumentationFile>
-		<TargetFrameworks>net8.0-windows7.0</TargetFrameworks>
-		<UseWPF>true</UseWPF>
+
+		<!-- compile nothing of our own and ship no build output: the packaged
+		     assembly comes from LinqToDB.LINQPad.csproj (see target below) -->
+		<EnableDefaultItems>false</EnableDefaultItems>
+		<IncludeBuildOutput>false</IncludeBuildOutput>
+		<IncludeSymbols>false</IncludeSymbols>
 
 		<DefineConstants>WITH_ISERIES;$(DefineConstants)</DefineConstants>
-
-		<!--disable DB2 provider arch warnings-->
-		<MSBuildWarningsAsMessages>MSB3270</MSBuildWarningsAsMessages>
-		<SignAssembly>False</SignAssembly>
 	</PropertyGroup>
 
 	<PropertyGroup Label="Nuget">
@@ -26,18 +46,14 @@
 	</PropertyGroup>
 
 	<ItemGroup Label="Nuget">
-		<None Include="readme.md" Pack="true" PackagePath="readme.md" />
+		<None Include="README.md" Pack="true" PackagePath="readme.md" />
 
-		<None Include="Nuget/Connection.png" Pack="true" PackagePath="lib/net8.0-windows7.0/Connection.png" />
-		<None Include="Nuget/FailedConnection.png" Pack="true" PackagePath="lib/net8.0-windows7.0/FailedConnection.png" />
+		<None Include="Nuget/Connection.png" Pack="true" PackagePath="lib/net8.0/Connection.png" />
+		<None Include="Nuget/FailedConnection.png" Pack="true" PackagePath="lib/net8.0/FailedConnection.png" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<!-- Embedded WPF resource consumed by AboutModel via pack URI; mirrors LinqToDB.LINQPad.csproj. -->
-		<Resource Include="..\..\NuGet\icon.png" Link="Resources\Logo.png" />
-	</ItemGroup>
-
-	<ItemGroup>
+		<!-- dependencies surfaced in the package's net8.0 dependency group -->
 		<ProjectReference Include="..\LinqToDB.Scaffold\LinqToDB.Scaffold.csproj" />
 
 		<PackageReference Include="LINQPad.Reference" />
@@ -60,45 +76,27 @@
 		<PackageReference Include="System.Data.OleDb" />
 		<PackageReference Include="System.Data.SQLite" />
 		<PackageReference Include="DuckDB.NET.Data.Full" />
+
+		<!-- build-ordering only: build the WPF driver assembly, but don't link it
+		     (its net8.0-windows7.0 TFM is intentionally incompatible with this net8.0 project) -->
+		<ProjectReference Include="LinqToDB.LINQPad.csproj"
+		                  ReferenceOutputAssembly="false"
+		                  SkipGetTargetFrameworkProperties="true"
+		                  SetTargetFramework="TargetFramework=net8.0-windows7.0"
+		                  AdditionalProperties="GenerateLpxArtifacts=false" />
 	</ItemGroup>
 
-	<ItemGroup>
-		<Page Update="UI\Settings\DynamicConnectionTab.xaml">
-			<XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
-			<SubType>Designer</SubType>
-		</Page>
-		<Page Update="UI\Settings\LinqToDBTab.xaml">
-			<XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
-			<SubType>Designer</SubType>
-		</Page>
-		<Page Update="UI\Settings\SchemaTab.xaml">
-			<XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
-			<SubType>Designer</SubType>
-		</Page>
-		<Page Update="UI\Settings\ScaffoldTab.xaml">
-			<XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
-			<SubType>Designer</SubType>
-		</Page>
-		<Page Update="UI\Settings\UniqueStringListControl.xaml">
-			<XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
-			<SubType>Designer</SubType>
-		</Page>
-		<Page Update="UI\Settings\SharedConnectionOptions.xaml">
-			<XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
-			<SubType>Designer</SubType>
-		</Page>
-		<Page Update="UI\Settings\StaticConnectionTab.xaml">
-			<XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
-			<SubType>Designer</SubType>
-		</Page>
-		<Page Update="UI\Settings\AboutTab.xaml">
-			<XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
-			<SubType>Designer</SubType>
-		</Page>
-		<Page Update="UI\Settings\SettingsDialog.xaml">
-			<XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
-		</Page>
-	</ItemGroup>
+	<!-- Pull the net8.0-windows7.0 driver assembly into the platform-neutral lib/net8.0 folder. -->
+	<Target Name="_AddLinqPadDriverToPackage" BeforeTargets="_GetPackageFiles">
+		<MSBuild Projects="LinqToDB.LINQPad.csproj"
+		         Targets="GetTargetPath"
+		         Properties="TargetFramework=net8.0-windows7.0;Configuration=$(Configuration);GenerateLpxArtifacts=false">
+			<Output TaskParameter="TargetOutputs" ItemName="_LinqPadDriverAssembly" />
+		</MSBuild>
+		<ItemGroup>
+			<None Include="@(_LinqPadDriverAssembly)" Pack="true" PackagePath="lib/net8.0/" />
+		</ItemGroup>
+	</Target>
 
 	<Import Project="$(MSBuildThisFileDirectory)\..\..\SQLite.Runtime.props" />
 </Project>
