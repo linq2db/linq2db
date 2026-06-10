@@ -327,7 +327,7 @@ namespace LinqToDB.Data
 				var p          = dataConnection.DataProvider.CreateParameter(
 					dataConnection,
 					command,
-					new DataProviderParameterContext(parameter.Name!, parmValue.DbDataType, paramValue));
+					new DataProviderParameterContext(parameter.Name!, parmValue.DbDataType, paramValue, isDbDataTypeExplicit: parmValue.IsDbDataTypeExplicit));
 
 				// some providers (e.g. managed sybase provider) could change parameter name
 				// which breaks parameters rebind logic

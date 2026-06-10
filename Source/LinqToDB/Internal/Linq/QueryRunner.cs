@@ -333,12 +333,14 @@ namespace LinqToDB.Internal.Linq
 					}
 				}
 
+				var isDbDataTypeExplicit = dbDataType != null;
+
 				if (dbDataType != null)
 					dbDataType = accessor.SqlParameter.Type.WithSetValues(dbDataType.Value);
 				else
 					dbDataType = accessor.SqlParameter.Type;
 
-				parameterValues.AddValue(accessor.SqlParameter, providerValue, clientValue, dbDataType.Value);
+				parameterValues.AddValue(accessor.SqlParameter, providerValue, clientValue, dbDataType.Value, isDbDataTypeExplicit);
 			}
 		}
 
