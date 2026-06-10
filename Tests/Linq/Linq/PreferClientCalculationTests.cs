@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 
 using LinqToDB;
@@ -46,11 +46,11 @@ namespace Tests.Linq
 				from e in table
 				select new { e.Id, Calc = e.Value1 + 12345 };
 
+			AssertQuery(query);
+
 			// Client calculation preferred => every projected column is a raw field; otherwise "Value1 + 12345"
 			// is pushed down as a computed SqlBinaryExpression column.
 			query.GetSelectQuery().Select.Columns.All(c => c.Expression is SqlField).ShouldBe(preferClient);
-
-			AssertQuery(query);
 		}
 
 		[Test]
@@ -68,6 +68,8 @@ namespace Tests.Linq
 					Score  = e.Id > 1 ? e.Value1 + e.Value2 : e.Value1 - e.Value2,
 				};
 
+			AssertQuery(query);
+
 			var selectQuery = query.GetSelectQuery();
 
 			// Client calculation preferred => the nested ternary and the branch arithmetic stay client-side, so no
@@ -75,8 +77,6 @@ namespace Tests.Linq
 			// become CASE columns.
 			(selectQuery.Find(e => e is SqlConditionExpression or SqlCaseExpression) == null).ShouldBe(preferClient);
 			selectQuery.Select.Columns.All(c => c.Expression is SqlField).ShouldBe(preferClient);
-
-			AssertQuery(query);
 		}
 
 		[Test]
@@ -89,11 +89,11 @@ namespace Tests.Linq
 				from e in table
 				select -e.Value1;
 
+			AssertQuery(query);
+
 			// The projected column is the raw field when client calculation is preferred, or a computed
 			// (negation) expression otherwise.
 			query.GetSelectQuery().Select.Columns.All(c => c.Expression is SqlField).ShouldBe(preferClient);
-
-			AssertQuery(query);
 		}
 
 		[Test]
@@ -106,10 +106,10 @@ namespace Tests.Linq
 				from e in table
 				select PreferServer(e.Value1);
 
+			AssertQuery(query);
+
 			// PreferServerSide = true keeps the function in SQL even when client calculation is preferred.
 			(query.GetSelectQuery().Find(e => e is SqlFunction { Name: "ABS" }) != null).ShouldBeTrue();
-
-			AssertQuery(query);
 		}
 
 		[Test]
@@ -122,10 +122,10 @@ namespace Tests.Linq
 				from e in table
 				select PreferClient(e.Value1);
 
+			AssertQuery(query);
+
 			// PreferServerSide = false: the function moves client-side when client calculation is preferred.
 			(query.GetSelectQuery().Find(e => e is SqlFunction { Name: "ABS" }) == null).ShouldBe(preferClient);
-
-			AssertQuery(query);
 		}
 
 		[Test]
@@ -138,14 +138,14 @@ namespace Tests.Linq
 				from e in table
 				select e.Value1 + PreferServer(e.Value2);
 
+			AssertQuery(query);
+
 			var selectQuery = query.GetSelectQuery();
 
 			// The server-preferring leaf (ABS) stays in SQL regardless of the option...
 			(selectQuery.Find(e => e is SqlFunction { Name: "ABS" }) != null).ShouldBeTrue();
 			// ...while the surrounding "+" is pushed down only when client calculation is NOT preferred.
 			(selectQuery.Find(e => e is SqlBinaryExpression) != null).ShouldBe(!preferClient);
-
-			AssertQuery(query);
 		}
 
 		[Test]
@@ -158,10 +158,10 @@ namespace Tests.Linq
 				(from e in table select new { C = e.Value1 + 7777 })
 				.Concat(from e in table select new { C = e.Value2 + 7777 });
 
+			AssertQuery(query);
+
 			// Set projections require column alignment, so the arithmetic stays in SQL even with the option on.
 			(query.GetSelectQuery().Find(e => e is SqlBinaryExpression) != null).ShouldBeTrue();
-
-			AssertQuery(query);
 		}
 
 		[Test]
