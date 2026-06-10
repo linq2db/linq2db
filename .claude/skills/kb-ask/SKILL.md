@@ -17,6 +17,7 @@ User-triggered Q&A over the knowledge base. The skill builds a doc shortlist, ha
 
 - Any KB-grounded question: "How does X work?", "Why is Y this way?", "What's the convention for Z?", "What's tracked in the GH wiki about provider P?"
 - Inside other skills (e.g. `/fix-issue` step 1, `/review-pr` scope confirmation): callers can spawn `kb-research` directly with the same contract; `/kb-ask` is just the user-facing entry point.
+- **Mid-task, by the main agent — not only on user request.** The main agent should reach for the KB during its own work (bug investigation, feature / area orientation, "why is it this way" questions) by running `/kb-ask` or spawning `kb-research` directly, per [`../../docs/agent-rules.md`](../../docs/agent-rules.md) → *Consult the knowledge base before investigating, designing, or orienting* — not waiting for the user to type `/kb-ask`.
 
 The skill is **not** for:
 - Live source-code questions where the KB is stale ("what does file X line 42 do right now?"). Use `Read` directly.

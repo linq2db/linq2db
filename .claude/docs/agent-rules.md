@@ -87,6 +87,7 @@ Before reporting a task as infeasible ("can't bisect", "can't build", "runtime t
 - `Glob` under `.claude/scripts/` for helper scripts wrapping multi-step sequences
 - `UserDataProviders.json` (root) and the sibling clone at `c:\GitHub\linq2db\UserDataProviders.json` for connection strings
 - Existing skills (`/test`, `/test-providers`) for workflow coverage
+- `/kb-ask` or `areas/<AREA>/` for prior context on the subsystem (known issues, decisions, patterns) before declaring something unknown or infeasible — see *Consult the knowledge base* above
 
 When the capability exists but the runtime cost is real, surface the cost and let the user decide.
 
@@ -106,9 +107,18 @@ When a change involves whitespace or control characters (NEL `U+0085`, NBSP `U+0
 
 Before writing any user-facing or review summary of a PR — release-notes draft, `/review-pr` change summary, changelog entry — **read the actual code diff** (`gh pr diff <n> --patch`, or `diff-reader.ps1`), not the PR body alone. linq2db PR descriptions are frequently written against an early plan; the merged code diverges from or omits what the body claims. Reconcile the description against the code; when they disagree, **the code wins**. Watch for: scope narrower than the body claims, an approach changed by later commits / review feedback, and changes the body doesn't mention at all.
 
+### Consult the knowledge base before investigating, designing, or orienting
+
+When `.claude/knowledge-base/` is present, it's the curated synthesis over issues, PRs, git history, and per-area code patterns — cheaper than re-deriving the same context from raw `gh` / `git` / source. Reach for it **first** for "why is it this way" / past-decision questions, bug investigation (a known issue or prior fix may already be recorded), and feature / area orientation. Two ways in:
+
+- `/kb-ask <question>` — KB-grounded Q&A with citations (spawns `kb-research`).
+- Read directly — `areas/<AREA>/{INDEX,issues,decisions,patterns,tech-debt}.md` for a subsystem, `architecture/*.md` for the pipeline, `history/decisions/<slug>.md` for ADR-equivalent records, `glossary.md` for terms (area codes in [`kb-areas.md`](kb-areas.md)).
+
+It's **orientation, not current-code truth.** Every file carries `last_verified` / `confidence` frontmatter; for "what does this code do *right now*" questions, or when the relevant files are stale / low-confidence, read source — code wins (the same boundary [`kb-ask`](../skills/kb-ask/SKILL.md) → *When to run* draws). Skip silently when the KB isn't built; don't run `/kb-build` mid-task unless the user asks. This pairs with the task-flow rules below — *Before coding a fix or feature*, *Investigating & fixing bugs*, and *Capability self-assessment* each point back here.
+
 ### Before coding a fix or feature
 
-Before proposing code changes for a bug fix or new feature, enumerate existing tests that already exercise the affected path and surface them to the user. Grep `Tests/` for the target code's keywords (SQL builder type, translator method, provider class); shortlist `<Fixture>.<Test>` entries with a one-line purpose each; flag what the new work adds on top. Do this before writing code and before invoking `test-writer`. When there's no obvious affected code path yet (greenfield feature, vague bug report), say so and ask the user to narrow the target first.
+Before proposing code changes for a bug fix or new feature, enumerate existing tests that already exercise the affected path and surface them to the user. Grep `Tests/` for the target code's keywords (SQL builder type, translator method, provider class); shortlist `<Fixture>.<Test>` entries with a one-line purpose each; flag what the new work adds on top. Do this before writing code and before invoking `test-writer`. Check the KB for the affected area in the same pass — `areas/<AREA>/{patterns,decisions,issues}.md` or `/kb-ask` — since a prior decision, known issue, or idiomatic pattern may already shape the fix (see *Consult the knowledge base* above). When there's no obvious affected code path yet (greenfield feature, vague bug report), say so and ask the user to narrow the target first.
 
 **Once the user has chosen "fix" over "gate", keep digging to the root.** Gating / `[ActiveIssue]` / provider-exclusion is a fallback, not a recurring offer. After the user has explicitly asked to fix a failure rather than gate it, don't resurface "shall I just gate it?" every time the investigation gets deep or multi-layered — drive to the actual root cause (instrument, reproduce minimally, follow the user's debugging hints) and return to gating only if you can *demonstrate* the fix is infeasible or genuinely out of scope. Repeatedly proposing the gate after a fix was requested reads as giving up.
 
@@ -122,6 +132,7 @@ Before calling a code change "done" — and before proposing to commit / push �
 
 Situational rules — full detail and the war-stories behind each live in [`bug-investigation.md`](bug-investigation.md). Read it when one fires:
 
+- **Start with the KB.** Before reproducing from scratch, check the area's `areas/<AREA>/issues.md` / `tech-debt.md` and `detected-issues/` (via `/kb-issues` / `/kb-ask`) — the symptom may already be a recorded issue or carry a prior fix / decision. Orientation only; confirm against current source before acting (see *Consult the knowledge base* above).
 - **"Fix or disable" cleanup issues** (analyzer-rule / lint-debt batches like #5532) — don't open with a disable-everything plan; attempt the genuine fix rule-by-rule and reach disable/suppress only after *demonstrating* the fix is infeasible. Disable is the fallback, not the lead. Analyzer mechanics: [`analyzer-rules.md`](analyzer-rules.md).
 - **"Regression after switching package X→Y"** — verify the named package actually contains the relevant code before blaming the swap; many linq2db packages (`linq2db.Extensions`, `linq2db.AspNet`) are DI/logging satellites, so the real variable is usually a core version change that rode along.
 - **Reproducing a reported regression** — confirm HEAD actually contains the attributed PR/commit first (`git merge-base --is-ancestor <sha> HEAD`); a long-lived branch can predate the bug and you'll chase a ghost.

@@ -35,6 +35,10 @@ Core query pipeline, directory layout, and companion projects are documented in 
 
 Design invariants that define what linq2db *is* as a library — public-API contract, cross-cutting internals, SQL AST namespace placement, intentional column-aligned formatting — live in [.claude/docs/code-design.md](.claude/docs/code-design.md). Read it before changing anything under `Source/LinqToDB/` that touches namespaces, public types, or AST nodes.
 
+## Knowledge base
+
+A curated knowledge base may exist under `.claude/knowledge-base/` (built by `/kb-build`). When present, consult it for architecture / history / area-pattern / past-decision questions and for bug-investigation context — via `/kb-ask <question>` or by reading the area / architecture files directly. It's an orientation layer, not current-code truth; see [.claude/docs/agent-rules.md](.claude/docs/agent-rules.md) → *Consult the knowledge base*.
+
 ## Code conventions
 
 - Tabs for C#/VB; spaces for F#, YAML, shell, markdown.
