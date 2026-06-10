@@ -78,6 +78,11 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 			using var visitor = YdbScalarSubQueryToCteVisitor.Pool.Allocate();
 
+			// UPDATE SET values are subqueries too; process Update.Items so they move to CTEs, and first so the
+			// structurally-identical SELECT-column copies dedup into the same CTE.
+			if (statement is SqlUpdateStatement update)
+				update.Update = visitor.Value.Convert(withStatement, mappingSchema, update.Update);
+
 			if (statement.SelectQuery != null && statement.QueryType != QueryType.Merge)
 				statement.SelectQuery = visitor.Value.Convert(withStatement, mappingSchema, statement.SelectQuery);
 

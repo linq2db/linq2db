@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
 using LinqToDB.Internal.Common;
@@ -19,7 +20,8 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 	// recursion, we keep a single position flag: each element classifies the position it imposes on its children
 	// (ClassifyChildren) the moment we descend into them, and the rewrite reads the position its parent imposed. It
 	// runs in the finalize phase, bottom-up, offloading each subquery the moment it is reached - so no second pass
-	// over rewritten nodes is needed.
+	// over rewritten nodes is needed. Structurally-identical subqueries reuse a single CTE (so a subquery duplicated
+	// across clauses - e.g. a SELECT-column copy plus the rendered INSERT/UPDATE item - collapses to one named query).
 	sealed class YdbScalarSubQueryToCteVisitor : QueryElementVisitor
 	{
 		internal static readonly ObjectPool<YdbScalarSubQueryToCteVisitor> Pool
@@ -42,6 +44,9 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		SqlStatementWithQueryBase _statement     = default!;
 		MappingSchema             _mappingSchema = default!;
 		Position                  _position;
+		// One CTE per structurally-identical scalar subquery (keyed by deep equality), shared across the per-statement
+		// Convert calls so duplicated subqueries collapse to a single named query.
+		Dictionary<ISqlExpression, CteClause>? _scalarCtes;
 
 		public YdbScalarSubQueryToCteVisitor() : base(VisitMode.Modify)
 		{
@@ -53,6 +58,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			_statement     = statement;
 			_mappingSchema = mappingSchema;
 			_position      = Position.Excluded;
+			_scalarCtes  ??= new(ISqlExpressionEqualityComparer.Instance);
 
 			return (T)Visit(element)!;
 		}
@@ -62,6 +68,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			_statement     = default!;
 			_mappingSchema = default!;
 			_position      = Position.Excluded;
+			_scalarCtes    = null;
 
 			base.Cleanup();
 		}
@@ -110,13 +117,24 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				if (position == Position.Wrapped)
 					return WrapScalarSubQueryAsCte(subQuery);
 
-				var cte = new CteClause(subQuery, column.SystemType, false, null);
-				(_statement.With ??= new()).Clauses.Add(cte);
-
-				return new SqlCteTable(cte, column.SystemType);
+				return new SqlCteTable(GetOrAddScalarCte(subQuery, column.SystemType), column.SystemType);
 			}
 
 			return element;
+		}
+
+		// Returns the CTE for a single-column scalar subquery, reusing an existing structurally-identical one so a
+		// subquery duplicated across clauses maps to a single named query.
+		CteClause GetOrAddScalarCte(SelectQuery subQuery, Type systemType)
+		{
+			if (!_scalarCtes!.TryGetValue(subQuery, out var cte))
+			{
+				cte = new CteClause(subQuery, systemType, false, null);
+				(_statement.With ??= new()).Clauses.Add(cte);
+				_scalarCtes[subQuery] = cte;
+			}
+
+			return cte;
 		}
 
 		// `subquery = x` / `subquery <> x` for a single-column, non-correlated subquery -> `x [NOT] IN (subquery)`.

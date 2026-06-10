@@ -305,15 +305,6 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 		protected override void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias, ref bool addAlias)
 		{
-			// In an UPDATE SET clause a subquery value is hoisted into a named scalar expression
-			// (see BuildUpdateClause); emit the reference to it instead of the inline subquery.
-			if (_hoistedUpdateSetValues != null && _hoistedUpdateSetValues.TryGetValue(expr, out var hoistedName))
-			{
-				BuildObjectName(StringBuilder, new(hoistedName), ConvertType.NameToCteName, true, TableOptions.NotSet);
-				addAlias = false;
-				return;
-			}
-
 			BuildExpression(expr, _buildTableName, true, alias, ref addAlias, true);
 			addAlias = true;
 		}
@@ -387,52 +378,6 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		{
 			if (!statement.IsUpdate)
 				base.BuildFromClause(statement, selectQuery);
-		}
-
-		// YQL rejects a subquery (SELECT ... FROM ...) as an UPDATE SET value
-		// ("missing '::'" / "mismatched input 'FROM'") but accepts a scalar named expression:
-		//   $set_value1 = (SELECT ...); UPDATE t SET col = $set_value1
-		// Hoist each subquery SET value into a named scalar expression emitted before UPDATE and
-		// reference it from the SET clause (BuildColumnExpression). Maps the (converted) subquery
-		// expression to its generated name.
-		private Dictionary<ISqlExpression, string>? _hoistedUpdateSetValues;
-
-		protected override void BuildUpdateClause(SqlStatement statement, SelectQuery selectQuery, SqlUpdateClause updateClause)
-		{
-			Dictionary<ISqlExpression, string>? hoisted = null;
-
-			for (var i = 0; i < updateClause.Items.Count; i++)
-			{
-				if (ConvertElement(updateClause.Items[i]).Expression is not SelectQuery subQuery)
-					continue;
-
-				if (hoisted?.ContainsKey(subQuery) == true)
-					continue;
-
-				hoisted ??= new();
-
-				var name = OptimizationContext.NormalizeParameterName(string.Create(CultureInfo.InvariantCulture, $"set_value{i + 1}"))!;
-
-				BuildObjectName(StringBuilder, new(name), ConvertType.NameToCteName, true, TableOptions.NotSet);
-				StringBuilder.Append(" = ");
-
-				Indent++;
-				var addAlias = false;
-				BuildColumnExpression(selectQuery, subQuery, null, ref addAlias);
-				StringBuilder.AppendLine(";");
-				Indent--;
-
-				hoisted.Add(subQuery, name);
-			}
-
-			if (hoisted != null)
-				StringBuilder.AppendLine();
-
-			_hoistedUpdateSetValues = hoisted;
-
-			base.BuildUpdateClause(statement, selectQuery, updateClause);
-
-			_hoistedUpdateSetValues = null;
 		}
 
 		protected override string? GetProviderTypeName(IDataContext dataContext, DbParameter parameter)
