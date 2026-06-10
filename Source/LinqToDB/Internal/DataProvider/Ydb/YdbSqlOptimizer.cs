@@ -76,11 +76,13 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 			var cteCount = withStatement.With?.Clauses.Count ?? 0;
 
+			using var visitor = YdbScalarSubQueryToCteVisitor.Pool.Allocate();
+
 			if (statement.SelectQuery != null && statement.QueryType != QueryType.Merge)
-				statement.SelectQuery = new YdbScalarSubQueryToCteVisitor(withStatement, mappingSchema).Convert(statement.SelectQuery);
+				statement.SelectQuery = visitor.Value.Convert(withStatement, mappingSchema, statement.SelectQuery);
 
 			if (statement is SqlInsertStatement insert)
-				insert.Insert = new YdbScalarSubQueryToCteVisitor(withStatement, mappingSchema).Convert(insert.Insert);
+				insert.Insert = visitor.Value.Convert(withStatement, mappingSchema, insert.Insert);
 
 			return withStatement.With?.Clauses.Count > cteCount;
 		}

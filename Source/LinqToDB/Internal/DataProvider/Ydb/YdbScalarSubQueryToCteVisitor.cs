@@ -1,5 +1,7 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.Mapping;
@@ -13,31 +15,57 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 	// - a scalar subquery in an IN/EXISTS/set operand  ->  a trivial `SELECT <col> FROM $cte` over a named CTE
 	// - a scalar subquery in any other column/predicate position  ->  the bare `$cte` named-query reference
 	//
-	// It runs in the finalize phase (after the statement is otherwise complete), in Transform mode, mirroring
-	// the standalone Convert pass it replaces. Using a dedicated visitor keeps the per-node context check on the
-	// semantic ParentElement rather than a raw two-frame Stack peek.
-	sealed class YdbScalarSubQueryToCteVisitor : SqlQueryConvertVisitorBase
+	// The rewrite is position-dependent, so it keys on the parent element (tracked across the recursion) rather
+	// than the node alone. It runs in the finalize phase, bottom-up, offloading each subquery the moment it is
+	// reached - so no second pass over rewritten nodes is needed.
+	sealed class YdbScalarSubQueryToCteVisitor : QueryElementVisitor
 	{
-		readonly SqlStatementWithQueryBase _statement;
-		readonly MappingSchema             _mappingSchema;
+		internal static readonly ObjectPool<YdbScalarSubQueryToCteVisitor> Pool
+			= new(() => new YdbScalarSubQueryToCteVisitor(), v => v.Cleanup(), 100);
 
-		public YdbScalarSubQueryToCteVisitor(SqlStatementWithQueryBase statement, MappingSchema mappingSchema)
-			: base(allowMutation: false, transformationInfo: null)
+		SqlStatementWithQueryBase _statement     = default!;
+		MappingSchema             _mappingSchema = default!;
+		IQueryElement?            _parent;
+
+		public YdbScalarSubQueryToCteVisitor() : base(VisitMode.Modify)
+		{
+		}
+
+		public T Convert<T>(SqlStatementWithQueryBase statement, MappingSchema mappingSchema, T element)
+			where T : class, IQueryElement
 		{
 			_statement     = statement;
 			_mappingSchema = mappingSchema;
-			WithStack      = true;
+			_parent        = null;
+
+			return (T)Visit(element)!;
 		}
 
-		public T Convert<T>(T element)
-			where T : class, IQueryElement
+		public override void Cleanup()
 		{
-			Stack?.Clear();
+			_statement     = default!;
+			_mappingSchema = default!;
+			_parent        = null;
 
-			return (T)PerformConvert(element);
+			base.Cleanup();
 		}
 
-		public override IQueryElement ConvertElement(IQueryElement element)
+		[return: NotNullIfNotNull(nameof(element))]
+		public override IQueryElement? Visit(IQueryElement? element)
+		{
+			if (element == null)
+				return null;
+
+			var parent = _parent;
+
+			_parent     = element;
+			var visited = base.Visit(element)!;
+			_parent     = parent;
+
+			return Rewrite(visited, parent);
+		}
+
+		IQueryElement Rewrite(IQueryElement element, IQueryElement? parent)
 		{
 			if (element is SqlPredicate.ExprExpr { Operator: SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual } cmp
 				&& TryRewriteScalarComparisonToIn(cmp) is { } inPredicate)
@@ -51,17 +79,32 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				if (column.SystemType == null)
 					throw new InvalidOperationException();
 
-				if (TryOffloadScalarSubQuery(subQuery, column.SystemType) is { } offloaded)
-					return offloaded;
+				// in a column / predicate / scalar-expression / set-expression position, but not a table source
+				// and not an equality operand (those become IN above and keep the operand intact)
+				if (parent is (SqlSelectClause or ISqlPredicate or SqlExpressionBase or SqlSetExpression)
+					and not ISqlTableSource
+					and not SqlPredicate.ExprExpr { Operator: SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual })
+				{
+					// IN / EXISTS / set-operator operands are strongly-typed SelectQuery and cannot take a bare
+					// CTE-table reference (the core visitors hard-cast them to SelectQuery), so wrap the CTE into a
+					// trivial `SELECT <col> FROM $cte`. Other scalar positions keep the bare CTE reference, which
+					// renders as the `$cte` named-query variable.
+					if (parent is SqlPredicate.InSubQuery or SqlPredicate.Exists or SqlSetOperator)
+						return WrapScalarSubQueryAsCte(subQuery);
+
+					var cte = new CteClause(subQuery, column.SystemType, false, null);
+					(_statement.With ??= new()).Clauses.Add(cte);
+
+					return new SqlCteTable(cte, column.SystemType);
+				}
 			}
 
 			return element;
 		}
 
 		// `subquery = x` / `subquery <> x` for a single-column, non-correlated subquery -> `x [NOT] IN (subquery)`.
-		// The IN-operand handling below offloads the subquery to a single named CTE - no extra
-		// `SELECT <col> FROM $cte` wrapping layer. ExprExpr operands are intentionally left intact by the scalar
-		// SelectQuery branch so they reach this rewrite first.
+		// The subquery is an IN operand, so it is offloaded right away (WrapScalarSubQueryAsCte) instead of being
+		// left for a second pass.
 		SqlPredicate.InSubQuery? TryRewriteScalarComparisonToIn(SqlPredicate.ExprExpr cmp)
 		{
 			SelectQuery?    sub   = null;
@@ -81,33 +124,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			}
 
 			if (sub != null && sub.Select.Columns[0].SystemType != null)
-				return new SqlPredicate.InSubQuery(value!, cmp.Operator == SqlPredicate.Operator.NotEqual, sub, false);
-
-			return null;
-		}
-
-		// A single-column, non-correlated scalar subquery in a column/predicate position. The parent element
-		// selects the legal YQL shape:
-		// - IN / EXISTS / set-operator operands are strongly-typed SelectQuery and cannot take a bare CTE-table
-		//   reference (the core visitors hard-cast them to SelectQuery), so wrap the CTE into a trivial
-		//   `SELECT <col> FROM $cte`.
-		// - other scalar positions keep the bare CTE reference, which renders as the `$cte` named-query variable.
-		// equality/inequality comparisons are handled by TryRewriteScalarComparisonToIn above; leave their operand
-		// intact here. Other comparison operators (>, <, ...) still take the bare CTE reference.
-		IQueryElement? TryOffloadScalarSubQuery(SelectQuery subQuery, Type systemType)
-		{
-			if (ParentElement is (SqlSelectClause or ISqlPredicate or SqlExpressionBase or SqlSetExpression)
-				and not ISqlTableSource
-				and not SqlPredicate.ExprExpr { Operator: SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual })
-			{
-				if (ParentElement is SqlPredicate.InSubQuery or SqlPredicate.Exists or SqlSetOperator)
-					return WrapScalarSubQueryAsCte(subQuery);
-
-				var cte = new CteClause(subQuery, systemType, false, null);
-				(_statement.With ??= new()).Clauses.Add(cte);
-
-				return new SqlCteTable(cte, systemType);
-			}
+				return new SqlPredicate.InSubQuery(value!, cmp.Operator == SqlPredicate.Operator.NotEqual, WrapScalarSubQueryAsCte(sub), false);
 
 			return null;
 		}
