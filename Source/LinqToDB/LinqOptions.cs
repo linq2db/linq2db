@@ -153,6 +153,15 @@ namespace LinqToDB
 	/// </code>
 	/// Default value: <see langword="false"/>.
 	/// </param>
+	/// <param name="PreferClientCalculation">
+	/// When enabled, computed expressions in the final projection (arithmetic, conditionals, unary operations, and
+	/// mapped members/methods that do not prefer server-side evaluation) are calculated on the client during
+	/// materialization instead of being translated into additional SQL columns. Real database columns,
+	/// already-built subqueries, and expressions that prefer or require server-side evaluation (for example,
+	/// members or methods mapped with <see cref="Sql.ExpressionAttribute.PreferServerSide"/> or
+	/// <see cref="Sql.ExpressionAttribute.ServerSideOnly"/>) are still translated to SQL.
+	/// Default value: <see langword="false"/>.
+	/// </param>
 	public sealed record LinqOptions
 	(
 		// TODO: Remove in v7
@@ -175,7 +184,8 @@ namespace LinqToDB
 		bool         KeepDistinctOrdered     = true,
 		bool         ParameterizeTakeSkip    = true,
 		bool         EnableContextSchemaEdit = false,
-		bool         PreferExistsForScalar   = default
+		bool         PreferExistsForScalar   = default,
+		bool         PreferClientCalculation = default
 		// If you add another parameter here, don't forget to update
 		// LinqOptions copy constructor and IConfigurationID.ConfigurationID.
 	)
@@ -199,6 +209,7 @@ namespace LinqToDB
 			ParameterizeTakeSkip    = original.ParameterizeTakeSkip;
 			EnableContextSchemaEdit = original.EnableContextSchemaEdit;
 			PreferExistsForScalar   = original.PreferExistsForScalar;
+			PreferClientCalculation = original.PreferClientCalculation;
 		}
 
 		int? _configurationID;
@@ -222,6 +233,7 @@ namespace LinqToDB
 						.Add(ParameterizeTakeSkip)
 						.Add(EnableContextSchemaEdit)
 						.Add(PreferExistsForScalar)
+						.Add(PreferClientCalculation)
 						.CreateID();
 				}
 

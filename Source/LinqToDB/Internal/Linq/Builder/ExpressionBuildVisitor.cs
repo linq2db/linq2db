@@ -867,14 +867,17 @@ namespace LinqToDB.Internal.Linq.Builder
 					return translatedExposed;
 				}
 
-				if (TranslateMember(BuildContext, node, out var translatedMember))
+				if (!PreferClientCalculation(node))
 				{
-					return Visit(translatedMember);
-				}
+					if (TranslateMember(BuildContext, node, out var translatedMember))
+					{
+						return Visit(translatedMember);
+					}
 
-				if (HandleExtension(BuildContext, node, out translatedMember))
-				{
-					return Visit(translatedMember);
+					if (HandleExtension(BuildContext, node, out translatedMember))
+					{
+						return Visit(translatedMember);
+					}
 				}
 
 				if (HandleValue(node, out var translated))
@@ -1490,7 +1493,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					return error.WithType(node.Type);
 			}
 
-			if (BuildContext != null && _buildPurpose is BuildPurpose.Sql or BuildPurpose.Expression)
+			if (BuildContext != null && _buildPurpose is BuildPurpose.Sql or BuildPurpose.Expression && !PreferClientCalculation(node))
 			{
 				result = HandleMember(node, context);
 				if (result != null)
@@ -2112,9 +2115,25 @@ namespace LinqToDB.Internal.Linq.Builder
 			return result;
 		}
 
+		/// <summary>
+		/// When <see cref="LinqOptions.PreferClientCalculation"/> is enabled, computed expressions in the final
+		/// projection are left client-side instead of being forced into SQL columns. Anything that prefers or
+		/// requires server-side evaluation (per <c>Builder.PreferServerSide</c>) and set projections
+		/// (<see cref="BuildFlags.ForSetProjection"/>) still go to SQL.
+		/// </summary>
+		bool PreferClientCalculation(Expression node)
+		{
+			return _buildPurpose is BuildPurpose.Expression
+				&& !_buildFlags.HasFlag(BuildFlags.ForSetProjection)
+				&& BuildContext != null
+				&& DataOptions.LinqOptions.PreferClientCalculation
+				&& !Builder.PreferServerSide(node, false);
+		}
+
 		bool TryConvertToSql(Expression node, out Expression translated)
 		{
-			if (_preferClientSide && !_buildFlags.HasFlag(BuildFlags.ForSetProjection))
+			if ((_preferClientSide && !_buildFlags.HasFlag(BuildFlags.ForSetProjection))
+				|| PreferClientCalculation(node))
 			{
 				translated = node;
 				return false;
@@ -2153,6 +2172,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		protected override Expression VisitUnary(UnaryExpression node)
 		{
+			if (PreferClientCalculation(node))
+				return base.VisitUnary(node);
+
 			if (node.Method != null && IsSqlOrExpression() && BuildContext != null)
 			{
 				if (TranslateMember(BuildContext, node, out var translatedMember))
@@ -2795,7 +2817,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		protected override Expression VisitBinary(BinaryExpression node)
 		{
-			if (node.Method != null && IsSqlOrExpression() && BuildContext != null)
+			if (node.Method != null && IsSqlOrExpression() && BuildContext != null && !PreferClientCalculation(node))
 			{
 				if (TranslateMember(BuildContext, node, out var translatedMember))
 					return Visit(translatedMember);
