@@ -146,7 +146,9 @@ namespace Tests.DataProvider
 			using var db = GetDataConnection(context);
 			using var table = db.CreateLocalTable<SimpleEntity>();
 
-			var now = DateTime.UtcNow;
+			// Fixed instead of DateTime.UtcNow: the value is inlined into the INSERT (YDB renders date types as
+			// literals), so a moving "now" drifts the baseline on every run.
+			var now = TestData.DateTimeUtc;
 
 			var entity = new SimpleEntity
 			{
