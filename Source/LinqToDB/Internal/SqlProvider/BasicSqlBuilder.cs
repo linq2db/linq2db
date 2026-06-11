@@ -3370,10 +3370,10 @@ namespace LinqToDB.Internal.SqlProvider
 			=> WindowNullsPlacement.AfterClose;
 
 		/// <summary>
-		/// When <c>true</c> for the given function, that value window function defaults to IGNORE NULLS on this
-		/// provider, so an explicit <c>RESPECT NULLS</c> token must be emitted for null-respecting behavior (e.g.
+		/// When <see langword="true"/> for the given function, that value window function defaults to IGNORE NULLS on
+		/// this provider, so an explicit <c>RESPECT NULLS</c> token must be emitted for null-respecting behavior (e.g.
 		/// ClickHouse FIRST_VALUE/LAST_VALUE/NTH_VALUE). Most providers default to RESPECT NULLS, so the token is
-		/// omitted; functions that reject the token (e.g. ClickHouse LEAD/LAG) must return <c>false</c>.
+		/// omitted; functions that reject the token (e.g. ClickHouse LEAD/LAG) must return <see langword="false"/>.
 		/// </summary>
 		protected virtual bool WindowFunctionRespectNullsRequired(SqlExtendedFunction extendedFunction) => false;
 
