@@ -765,6 +765,20 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.LinqOptions.#ctor(System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,LinqToDB.CompareNulls,System.Boolean,System.Boolean,System.Nullable{System.TimeSpan},System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean)</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.LinqOptions.Deconstruct(System.Boolean@,System.Boolean@,System.Boolean@,System.Boolean@,System.Boolean@,System.Boolean@,LinqToDB.CompareNulls@,System.Boolean@,System.Boolean@,System.Nullable{System.TimeSpan}@,System.Boolean@,System.Boolean@,System.Boolean@,System.Boolean@,System.Boolean@)</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.SqlQuery.SqlExtendedFunction.#ctor(LinqToDB.DbDataType,System.String,System.Collections.Generic.IEnumerable{LinqToDB.SqlQuery.SqlFunctionArgument},System.Boolean[],System.Nullable{System.Boolean},System.Collections.Generic.IEnumerable{LinqToDB.SqlQuery.SqlWindowOrderItem},System.Collections.Generic.IEnumerable{LinqToDB.Internal.SqlQuery.ISqlExpression},System.Collections.Generic.IEnumerable{LinqToDB.SqlQuery.SqlWindowOrderItem},LinqToDB.Internal.SqlQuery.SqlSearchCondition,LinqToDB.SqlQuery.SqlFrameClause,System.Boolean,System.Boolean)</Target>
     <Left>lib/net10.0/linq2db.dll</Left>
     <Right>lib/net10.0/linq2db.dll</Right>
@@ -1318,6 +1332,20 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.LinqOptions.#ctor(System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,LinqToDB.CompareNulls,System.Boolean,System.Boolean,System.Nullable{System.TimeSpan},System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean)</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.LinqOptions.Deconstruct(System.Boolean@,System.Boolean@,System.Boolean@,System.Boolean@,System.Boolean@,System.Boolean@,LinqToDB.CompareNulls@,System.Boolean@,System.Boolean@,System.Nullable{System.TimeSpan}@,System.Boolean@,System.Boolean@,System.Boolean@,System.Boolean@,System.Boolean@)</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.SqlQuery.SqlExtendedFunction.#ctor(LinqToDB.DbDataType,System.String,System.Collections.Generic.IEnumerable{LinqToDB.SqlQuery.SqlFunctionArgument},System.Boolean[],System.Nullable{System.Boolean},System.Collections.Generic.IEnumerable{LinqToDB.SqlQuery.SqlWindowOrderItem},System.Collections.Generic.IEnumerable{LinqToDB.Internal.SqlQuery.ISqlExpression},System.Collections.Generic.IEnumerable{LinqToDB.SqlQuery.SqlWindowOrderItem},LinqToDB.Internal.SqlQuery.SqlSearchCondition,LinqToDB.SqlQuery.SqlFrameClause,System.Boolean,System.Boolean)</Target>
     <Left>lib/net462/linq2db.dll</Left>
     <Right>lib/net462/linq2db.dll</Right>
@@ -1871,6 +1899,20 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.LinqOptions.#ctor(System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,LinqToDB.CompareNulls,System.Boolean,System.Boolean,System.Nullable{System.TimeSpan},System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean)</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.LinqOptions.Deconstruct(System.Boolean@,System.Boolean@,System.Boolean@,System.Boolean@,System.Boolean@,System.Boolean@,LinqToDB.CompareNulls@,System.Boolean@,System.Boolean@,System.Nullable{System.TimeSpan}@,System.Boolean@,System.Boolean@,System.Boolean@,System.Boolean@,System.Boolean@)</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.SqlQuery.SqlExtendedFunction.#ctor(LinqToDB.DbDataType,System.String,System.Collections.Generic.IEnumerable{LinqToDB.SqlQuery.SqlFunctionArgument},System.Boolean[],System.Nullable{System.Boolean},System.Collections.Generic.IEnumerable{LinqToDB.SqlQuery.SqlWindowOrderItem},System.Collections.Generic.IEnumerable{LinqToDB.Internal.SqlQuery.ISqlExpression},System.Collections.Generic.IEnumerable{LinqToDB.SqlQuery.SqlWindowOrderItem},LinqToDB.Internal.SqlQuery.SqlSearchCondition,LinqToDB.SqlQuery.SqlFrameClause,System.Boolean,System.Boolean)</Target>
     <Left>lib/net8.0/linq2db.dll</Left>
     <Right>lib/net8.0/linq2db.dll</Right>
@@ -2418,6 +2460,20 @@
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Linq.Translation.BuildAggregationFunctionResult.set_Validator(System.Func{System.Linq.Expressions.Expression,System.Linq.Expressions.Expression})</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.LinqOptions.#ctor(System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,LinqToDB.CompareNulls,System.Boolean,System.Boolean,System.Nullable{System.TimeSpan},System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean)</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.LinqOptions.Deconstruct(System.Boolean@,System.Boolean@,System.Boolean@,System.Boolean@,System.Boolean@,System.Boolean@,LinqToDB.CompareNulls@,System.Boolean@,System.Boolean@,System.Nullable{System.TimeSpan}@,System.Boolean@,System.Boolean@,System.Boolean@,System.Boolean@,System.Boolean@)</Target>
     <Left>lib/net9.0/linq2db.dll</Left>
     <Right>lib/net9.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
@@ -2983,6 +3039,20 @@
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Linq.Translation.BuildAggregationFunctionResult.set_Validator(System.Func{System.Linq.Expressions.Expression,System.Linq.Expressions.Expression})</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.LinqOptions.#ctor(System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,LinqToDB.CompareNulls,System.Boolean,System.Boolean,System.Nullable{System.TimeSpan},System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean)</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.LinqOptions.Deconstruct(System.Boolean@,System.Boolean@,System.Boolean@,System.Boolean@,System.Boolean@,System.Boolean@,LinqToDB.CompareNulls@,System.Boolean@,System.Boolean@,System.Nullable{System.TimeSpan}@,System.Boolean@,System.Boolean@,System.Boolean@,System.Boolean@,System.Boolean@)</Target>
     <Left>lib/netstandard2.0/linq2db.dll</Left>
     <Right>lib/netstandard2.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
