@@ -557,9 +557,16 @@ namespace LinqToDB.Linq.Translation
 					return false;
 				}
 
-				if (orderItem.Nulls != Sql.NullsPosition.None && !IsNullsOrderSupported)
+				// Emulate NULLS FIRST/LAST only when (a) a position is requested, (b) the provider lacks native
+				// window NULLS ordering, and (c) the key can actually be null. Skipping the CASE key for a
+				// non-nullable key (e.g. a PK) avoids an IIF(<nonnull> IS NULL, …) that the optimizer folds to a bare
+				// constant — invalid as a window ORDER BY key on SQL Server. NullabilityContext.NonQuery reflects the
+				// expression's intrinsic nullability (the query nullability context is not available at translation time).
+				if (orderItem.Nulls != Sql.NullsPosition.None
+					&& !IsNullsOrderSupported
+					&& sql.CanBeNullable(NullabilityContext.NonQuery))
 				{
-					// Emulate NULLS FIRST/LAST with: ORDER BY CASE WHEN expr IS NULL THEN 0/1 ELSE 1/0 END, expr
+					// ORDER BY CASE WHEN expr IS NULL THEN 0/1 ELSE 1/0 END, expr
 					var nullFirst   = orderItem.Nulls == Sql.NullsPosition.First;
 					var isNull      = new SqlSearchCondition().Add(new SqlPredicate.IsNull(sql, false));
 					var nullSortVal = new SqlConditionExpression(isNull,
