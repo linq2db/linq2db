@@ -1,7 +1,5 @@
 ﻿#if !NETFRAMEWORK
 using System;
-using System.Collections.Concurrent;
-using System.Threading;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -18,82 +16,40 @@ using Tests.Model.Remote.HttpContext;
 
 namespace Tests.Remote.ServerContainer
 {
-	public class HttpServerContainer : IServerContainer
+	internal sealed class HttpServerContainer : ServerContainerBase<ITestLinqService>
 	{
-		private const int Port = 22655;
-
-		private readonly Lock _syncRoot = new ();
-
-		//useful for async tests
-		public bool KeepSamePortBetweenThreads { get; set; } = true;
-
-		private ConcurrentDictionary<int, ITestLinqService> _openHosts = new();
-
 		private static string GetServiceUrl(int port) => $"http://localhost:{port}";
 
-		private Func<string?, MappingSchema?, DataConnection> _connectionFactory = null!;
-
-		ITestDataContext IServerContainer.CreateContext(Func<ITestLinqService,DataOptions, DataOptions> optionBuilder, Func<string?, MappingSchema?, DataConnection> connectionFactory)
+		protected override ITestLinqService StartHost(int port, Func<string?, MappingSchema?, DataConnection> connectionFactory)
 		{
-			_connectionFactory = connectionFactory;
-			var service = OpenHost();
-
-			var url = GetServiceUrl(GetPort());
-
-			var dx = new TestHttpContextDataContext(new Uri(url), o => optionBuilder(service, o));
-
-			return dx;
-		}
-
-		private ITestLinqService OpenHost()
-		{
-			var port = GetPort();
-
-			if (_openHosts.TryGetValue(port, out var service))
-				return service;
-
-			lock (_syncRoot)
+			var service = new TestLinqService((c, ms) => connectionFactory(c, ms))
 			{
-				if (_openHosts.TryGetValue(port, out service))
-					return service;
+				AllowUpdates    = true,
+				RemoteClientTag = "HttpClient",
+			};
 
-				service = new TestLinqService((c, ms) => _connectionFactory(c, ms))
+			Startup.Service = service;
+
+			var builder = Host.CreateDefaultBuilder();
+
+			var host = builder.ConfigureWebHostDefaults(
+				webBuilder =>
 				{
-					AllowUpdates     = true,
-					RemoteClientTag = "HttpClient",
-				};
+					webBuilder
+						.UseStartup<Startup>()
+						.UseUrls(GetServiceUrl(port));
+				}).Build();
 
-				Startup.Service = (TestLinqService)service;
-
-				var builder = Host.CreateDefaultBuilder();
-
-				var host = builder.ConfigureWebHostDefaults(
-					webBuilder =>
-					{
-						webBuilder
-							.UseStartup<Startup>()
-							.UseUrls(GetServiceUrl(port));
-					}).Build();
-
-				host.Start();
-
-				_openHosts[port] = service;
-			}
+			host.Start();
 
 			TestExternals.Log("Http host opened");
 
 			return service;
 		}
 
-		//Environment.CurrentManagedThreadId need for a parallel test like DataConnectionTests.MultipleConnectionsTest
-		private int GetPort()
+		protected override ITestDataContext CreateClientContext(ITestLinqService service, int port, Func<ITestLinqService, DataOptions, DataOptions> optionBuilder)
 		{
-			if(KeepSamePortBetweenThreads)
-			{
-				return Port;
-			}
-
-			return Port + (Environment.CurrentManagedThreadId % 1000) + TestExternals.RunID;
+			return new TestHttpContextDataContext(new Uri(GetServiceUrl(port)), o => optionBuilder(service, o));
 		}
 
 		private sealed class Startup
@@ -113,7 +69,7 @@ namespace Tests.Remote.ServerContainer
 			public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
 			{
 				app.UsePathBase("/remote/linq2db");
-				
+
 				app.UseRouting();
 
 				app.UseEndpoints(endpoints =>
