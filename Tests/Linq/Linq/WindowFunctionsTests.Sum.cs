@@ -75,14 +75,14 @@ namespace Tests.Linq
 				_ = query.ToList();
 		}
 
-		// DISTINCT in a window aggregate is unsupported by the target databases — gated with a descriptive error.
+		// DISTINCT in a window aggregate is supported by Oracle, ClickHouse and DuckDB; on the providers below it is
+		// rejected and gated with a descriptive error.
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_AggregateWindowFunctions)]
 		[ThrowsForProvider(typeof(LinqToDBException),
 			TestProvName.AllSqlServer2012Plus, TestProvName.AllPostgreSQL, TestProvName.AllMySql8Plus, TestProvName.AllSQLite,
-			TestProvName.AllClickHouse, TestProvName.AllFirebird3Plus, TestProvName.AllSapHana, TestProvName.AllOracle,
-			TestProvName.AllDB2, TestProvName.AllInformix, TestProvName.AllDuckDB,
+			TestProvName.AllFirebird3Plus, TestProvName.AllSapHana, TestProvName.AllDB2, TestProvName.AllInformix,
 			ErrorMessage = ErrorHelper.Error_WindowFunction_AggregateDistinct)]
 		public void SumDistinct([DataSources] string context)
 		{

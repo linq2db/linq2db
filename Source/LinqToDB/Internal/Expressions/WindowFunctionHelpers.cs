@@ -123,6 +123,27 @@ namespace LinqToDB.Internal.Expressions
 		internal static readonly MethodInfo MinMethodInfo = MemberHelper.MethodOf(() => Sql.Window.Min(0, f => f.OrderBy(1)));
 		internal static readonly MethodInfo MaxMethodInfo = MemberHelper.MethodOf(() => Sql.Window.Max(0, f => f.OrderBy(1)));
 
+		static readonly MethodInfo _countArgMethodInfo = MemberHelper.MethodOf(() => Sql.Window.Count((object?)0, f => f.OrderBy(1)));
+
+		// Builds `f => [f.Distinct()].UseWindow(windowDefinition)`. Legacy AggregateModifier.Distinct maps to the
+		// builder's Distinct(); AggregateModifier.All is the SQL default and emits nothing (MAX(ALL x) == MAX(x)).
+		// builderType must expose IDistinctPart (IAggregateFinal) when modifier may be Distinct.
+		static LambdaExpression BuildAggregateUseWindowLambda(Type builderType, Expression windowDefinition, Sql.AggregateModifier modifier)
+		{
+			var windowParam = Expression.Parameter(builderType, "f");
+			Expression body = windowParam;
+
+			if (modifier == Sql.AggregateModifier.Distinct)
+			{
+				var distinctMethod = FindMethodInfo(body.Type, nameof(WindowFunctionBuilder.IDistinctPart<>.Distinct), 0);
+				body = Expression.Call(body, distinctMethod);
+			}
+
+			var useWindowMethod = FindMethodInfo(body.Type, nameof(WindowFunctionBuilder.IUseWindow<>.UseWindow), 1);
+			body = Expression.Call(body, useWindowMethod, windowDefinition);
+			return Expression.Lambda(body, windowParam);
+		}
+
 		/// <summary>
 		/// Finds the concrete overload of a non-generic window function (Sum, Avg, Min, Max)
 		/// matching the argument type.
@@ -165,29 +186,27 @@ namespace LinqToDB.Internal.Expressions
 			return Expression.Call(method, Expression.Constant(Sql.Window), argument, windowLambda);
 		}
 
-		static Expression? BuildWindowFunctionWithConcreteArg(MethodInfo sampleMethod, Expression argument, Expression windowDefinition, Type windowInterfaceType)
+		static Expression? BuildWindowFunctionWithConcreteArg(MethodInfo sampleMethod, Expression argument, Expression windowDefinition, Type windowInterfaceType, Sql.AggregateModifier modifier)
 		{
 			var method = FindConcreteOverload(sampleMethod, argument.Type);
 			if (method == null)
 				return null; // no matching Sql.Window overload for this value type (e.g. Average<TR>(object? expr)) — fall back to the legacy pipeline
 
-			var windowParam     = Expression.Parameter(windowInterfaceType, "f");
-			var useWindowMethod = FindMethodInfo(windowParam.Type, nameof(WindowFunctionBuilder.IUseWindow<>.UseWindow), 1);
-			var windowLambda    = Expression.Lambda(Expression.Call(windowParam, useWindowMethod, windowDefinition), windowParam);
+			var windowLambda = BuildAggregateUseWindowLambda(windowInterfaceType, windowDefinition, modifier);
 			return Expression.Call(method, Expression.Constant(Sql.Window), argument, windowLambda);
 		}
 
-		public static Expression? BuildSum(Expression argument, Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy)
-			=> BuildWindowFunctionWithConcreteArg(SumMethodInfo, argument, BuildWindowDefinition(partitionBy, orderBy), typeof(WindowFunctionBuilder.IAggregateFinal));
+		public static Expression? BuildSum(Expression argument, Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy, Sql.AggregateModifier modifier = Sql.AggregateModifier.None)
+			=> BuildWindowFunctionWithConcreteArg(SumMethodInfo, argument, BuildWindowDefinition(partitionBy, orderBy), typeof(WindowFunctionBuilder.IAggregateFinal), modifier);
 
-		public static Expression? BuildAverage(Expression argument, Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy)
-			=> BuildWindowFunctionWithConcreteArg(AvgMethodInfo, argument, BuildWindowDefinition(partitionBy, orderBy), typeof(WindowFunctionBuilder.IAggregateFinal));
+		public static Expression? BuildAverage(Expression argument, Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy, Sql.AggregateModifier modifier = Sql.AggregateModifier.None)
+			=> BuildWindowFunctionWithConcreteArg(AvgMethodInfo, argument, BuildWindowDefinition(partitionBy, orderBy), typeof(WindowFunctionBuilder.IAggregateFinal), modifier);
 
-		public static Expression? BuildMin(Expression argument, Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy)
-			=> BuildWindowFunctionWithConcreteArg(MinMethodInfo, argument, BuildWindowDefinition(partitionBy, orderBy), typeof(WindowFunctionBuilder.IAggregateFinal));
+		public static Expression? BuildMin(Expression argument, Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy, Sql.AggregateModifier modifier = Sql.AggregateModifier.None)
+			=> BuildWindowFunctionWithConcreteArg(MinMethodInfo, argument, BuildWindowDefinition(partitionBy, orderBy), typeof(WindowFunctionBuilder.IAggregateFinal), modifier);
 
-		public static Expression? BuildMax(Expression argument, Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy)
-			=> BuildWindowFunctionWithConcreteArg(MaxMethodInfo, argument, BuildWindowDefinition(partitionBy, orderBy), typeof(WindowFunctionBuilder.IAggregateFinal));
+		public static Expression? BuildMax(Expression argument, Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy, Sql.AggregateModifier modifier = Sql.AggregateModifier.None)
+			=> BuildWindowFunctionWithConcreteArg(MaxMethodInfo, argument, BuildWindowDefinition(partitionBy, orderBy), typeof(WindowFunctionBuilder.IAggregateFinal), modifier);
 
 		public static Expression BuildCount(Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy)
 		{
@@ -195,13 +214,12 @@ namespace LinqToDB.Internal.Expressions
 			return ExpressionHelpers.MakeCall((WindowFunctionBuilder.IDefinedWindow w) => Sql.Window.Count(f => f.UseWindow(w)), windowDefinition);
 		}
 
-		public static Expression BuildCount(Expression argument, Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy)
+		public static Expression BuildCount(Expression argument, Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy, Sql.AggregateModifier modifier = Sql.AggregateModifier.None)
 		{
 			var windowDefinition = BuildWindowDefinition(partitionBy, orderBy);
 			var argumentObject   = argument.Type.IsValueType ? Expression.Convert(argument, typeof(object)) : argument;
-			return ExpressionHelpers.MakeCall(
-				(WindowFunctionBuilder.IDefinedWindow w, object? a) => Sql.Window.Count(a, f => f.UseWindow(w)),
-				windowDefinition, argumentObject);
+			var windowLambda     = BuildAggregateUseWindowLambda(typeof(WindowFunctionBuilder.IAggregateFinal), windowDefinition, modifier);
+			return Expression.Call(_countArgMethodInfo, Expression.Constant(Sql.Window), argumentObject, windowLambda);
 		}
 
 		public static Expression BuildLead(Expression argument, Expression? offset, Expression? defaultValue, Sql.Nulls nullTreatment, Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy)

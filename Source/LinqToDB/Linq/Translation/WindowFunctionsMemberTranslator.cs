@@ -189,7 +189,10 @@ namespace LinqToDB.Linq.Translation
 
 					list ??= new();
 
-					var argument = mc.Arguments[0];
+					// Strip the object-cast the builder's OrderBy(object?) overload introduces (EnsureObject in the
+					// legacy converter, or the compiler's boxing on a direct call). A bare column survives either way,
+					// but a wrapped scalar subquery — e.g. OrderBy(db.Select(() => "x")) — only translates unwrapped.
+					var argument = mc.Arguments[0].UnwrapConvertToObject();
 					var nulls    = mc.Arguments.Count == 2
 						? (Sql.NullsPosition)mc.Arguments[1].EvaluateExpression()!
 						: Sql.NullsPosition.None;
@@ -337,15 +340,16 @@ namespace LinqToDB.Linq.Translation
 
 						case nameof(WindowFunctionBuilder.IUseWindow<>.UseWindow):
 						{
-							// Function-level modifiers (IgnoreNulls/RespectNulls, FromFirst/FromLast) are chained BEFORE
-							// UseWindow and live on mc.Object — apply them here, otherwise switching buildBody to the
-							// referenced window definition below would silently drop them.
+							// Function-level modifiers (Distinct, IgnoreNulls/RespectNulls, FromFirst/FromLast) are chained
+							// BEFORE UseWindow and live on mc.Object — apply them here, otherwise switching buildBody to
+							// the referenced window definition below would silently drop them.
 							var preChain    = mc.Object;
 							var keepWalking = true;
 							while (keepWalking && preChain is MethodCallExpression preMc)
 							{
 								switch (preMc.Method.Name)
 								{
+									case nameof(WindowFunctionBuilder.IDistinctPart<>.Distinct):          aggregateModifier = Sql.AggregateModifier.Distinct; preChain = preMc.Object; break;
 									case nameof(WindowFunctionBuilder.INullTreatmentPart<>.IgnoreNulls):  nullTreatment = Sql.Nulls.Ignore;  preChain = preMc.Object; break;
 									case nameof(WindowFunctionBuilder.INullTreatmentPart<>.RespectNulls): nullTreatment = Sql.Nulls.Respect; preChain = preMc.Object; break;
 									case nameof(WindowFunctionBuilder.IFromPart<>.FromFirst):             fromPosition  = Sql.From.First;    preChain = preMc.Object; break;

@@ -28,6 +28,8 @@ namespace LinqToDB.Internal.DataProvider.DuckDB.Translation
 			// in OVER(ORDER BY ...), so emit them directly rather than emulating via CASE WHEN.
 			protected override bool IsWindowFilterSupported         => true;
 			protected override bool IsNullsOrderSupported           => true;
+			// DuckDB supports DISTINCT in window aggregates: e.g. SUM(DISTINCT x) OVER (...).
+			protected override bool IsAggregateDistinctSupported    => true;
 		}
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)

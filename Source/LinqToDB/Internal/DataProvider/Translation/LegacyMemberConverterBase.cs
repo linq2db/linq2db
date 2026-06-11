@@ -251,6 +251,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			bool        isKeepFirst      = false;
 			bool        sawOver          = false;
 			Sql.Nulls   functionNulls    = Sql.Nulls.None;
+			Sql.AggregateModifier functionModifier = Sql.AggregateModifier.None;
 
 			List<(Expression expr, bool descending, Sql.NullsPosition nulls)>? keepOrderByList = null;
 
@@ -293,7 +294,15 @@ namespace LinqToDB.Internal.DataProvider.Translation
 							continue;
 						}
 
-						if (pType == typeof(Sql.AggregateModifier) || pType == typeof(Sql.NullsPosition) || pType == typeof(Sql.From))
+						// Capture the aggregate modifier. DISTINCT is reproduced via the new builder's .Distinct();
+						// ALL is the SQL default and is dropped (MAX(ALL x) == MAX(x)).
+						if (pType == typeof(Sql.AggregateModifier))
+						{
+							functionModifier = (Sql.AggregateModifier)mc.Arguments[i].EvaluateExpression()!;
+							continue;
+						}
+
+						if (pType == typeof(Sql.NullsPosition) || pType == typeof(Sql.From))
 							continue;
 
 						switch (functionArgCount)
@@ -409,13 +418,13 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				nameof(AnalyticFunctions.CumeDist)    => WindowFunctionHelpers.BuildCumeDist(partitionBy, orderBy),
 				nameof(AnalyticFunctions.NTile)       => functionArg1 != null ? WindowFunctionHelpers.BuildNTile(functionArg1, partitionBy, orderBy) : null,
 
-				nameof(AnalyticFunctions.Sum)     when functionArg1 != null => WindowFunctionHelpers.BuildSum(functionArg1, partitionBy, orderBy),
-				nameof(AnalyticFunctions.Average) when functionArg1 != null => WindowFunctionHelpers.BuildAverage(functionArg1, partitionBy, orderBy),
-				nameof(AnalyticFunctions.Min)     when functionArg1 != null => WindowFunctionHelpers.BuildMin(functionArg1, partitionBy, orderBy),
-				nameof(AnalyticFunctions.Max)     when functionArg1 != null => WindowFunctionHelpers.BuildMax(functionArg1, partitionBy, orderBy),
+				nameof(AnalyticFunctions.Sum)     when functionArg1 != null => WindowFunctionHelpers.BuildSum(functionArg1, partitionBy, orderBy, functionModifier),
+				nameof(AnalyticFunctions.Average) when functionArg1 != null => WindowFunctionHelpers.BuildAverage(functionArg1, partitionBy, orderBy, functionModifier),
+				nameof(AnalyticFunctions.Min)     when functionArg1 != null => WindowFunctionHelpers.BuildMin(functionArg1, partitionBy, orderBy, functionModifier),
+				nameof(AnalyticFunctions.Max)     when functionArg1 != null => WindowFunctionHelpers.BuildMax(functionArg1, partitionBy, orderBy, functionModifier),
 
 				nameof(AnalyticFunctions.Count) when functionArgCount == 0 => WindowFunctionHelpers.BuildCount(partitionBy, orderBy),
-				nameof(AnalyticFunctions.Count) when functionArg1 != null  => WindowFunctionHelpers.BuildCount(functionArg1, partitionBy, orderBy),
+				nameof(AnalyticFunctions.Count) when functionArg1 != null  => WindowFunctionHelpers.BuildCount(functionArg1, partitionBy, orderBy, functionModifier),
 
 				// LongCount intentionally falls through to the legacy pipeline: Sql.Window has no LongCount equivalent.
 

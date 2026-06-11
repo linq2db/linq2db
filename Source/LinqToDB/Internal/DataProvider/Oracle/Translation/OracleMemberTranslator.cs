@@ -485,6 +485,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 			protected override bool IsLeadLagNullTreatmentSupported => true;
 			protected override bool IsValueNullTreatmentSupported   => true;
 			protected override bool IsNthValueFromSupported         => true;
+			protected override bool IsAggregateDistinctSupported    => true;
 		}
 
 		protected class Oracle11WindowFunctionsMemberTranslator : OracleWindowFunctionsMemberTranslator
