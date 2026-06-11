@@ -160,9 +160,11 @@ namespace LinqToDB.Internal.Expressions
 					&& m.GetParameters()[1].ParameterType == argumentType);
 		}
 
-		// Builds `f => [f.IgnoreNulls()].UseWindow(windowDefinition)`. Legacy IGNORE NULLS maps to the builder's
-		// IgnoreNulls(); RESPECT/None is the SQL default and emits nothing. builderType must expose INullTreatmentPart
-		// (e.g. IValueFinal/ILeadLagFinal/INthValueFinal) when nullTreatment may be Ignore.
+		// Builds `f => [f.IgnoreNulls()|f.RespectNulls()].UseWindow(windowDefinition)`. Legacy IGNORE/RESPECT NULLS
+		// map to the builder's IgnoreNulls()/RespectNulls(); only None emits nothing. RESPECT must be carried through
+		// explicitly — some providers (e.g. ClickHouse) do not default FIRST_VALUE/LAST_VALUE to RESPECT NULLS, and
+		// the per-provider emission still drops the token where it is the natural default. builderType must expose
+		// INullTreatmentPart (e.g. IValueFinal/ILeadLagFinal/INthValueFinal) when nullTreatment may be set.
 		static LambdaExpression BuildUseWindowLambda(Type builderType, Expression windowDefinition, Sql.Nulls nullTreatment)
 		{
 			var windowParam = Expression.Parameter(builderType, "f");
@@ -172,6 +174,11 @@ namespace LinqToDB.Internal.Expressions
 			{
 				var ignoreMethod = FindMethodInfo(body.Type, nameof(WindowFunctionBuilder.INullTreatmentPart<>.IgnoreNulls), 0);
 				body = Expression.Call(body, ignoreMethod);
+			}
+			else if (nullTreatment == Sql.Nulls.Respect)
+			{
+				var respectMethod = FindMethodInfo(body.Type, nameof(WindowFunctionBuilder.INullTreatmentPart<>.RespectNulls), 0);
+				body = Expression.Call(body, respectMethod);
 			}
 
 			var useWindowMethod = FindMethodInfo(body.Type, nameof(WindowFunctionBuilder.IUseWindow<>.UseWindow), 1);

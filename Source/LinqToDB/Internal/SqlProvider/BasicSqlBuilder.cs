@@ -3369,10 +3369,23 @@ namespace LinqToDB.Internal.SqlProvider
 		protected virtual WindowNullsPlacement GetWindowNullsPlacement(SqlExtendedFunction extendedFunction)
 			=> WindowNullsPlacement.AfterClose;
 
+		/// <summary>
+		/// When <c>true</c> for the given function, that value window function defaults to IGNORE NULLS on this
+		/// provider, so an explicit <c>RESPECT NULLS</c> token must be emitted for null-respecting behavior (e.g.
+		/// ClickHouse FIRST_VALUE/LAST_VALUE/NTH_VALUE). Most providers default to RESPECT NULLS, so the token is
+		/// omitted; functions that reject the token (e.g. ClickHouse LEAD/LAG) must return <c>false</c>.
+		/// </summary>
+		protected virtual bool WindowFunctionRespectNullsRequired(SqlExtendedFunction extendedFunction) => false;
+
 		protected virtual void BuildSqlExtendedFunction(SqlExtendedFunction extendedFunction)
 		{
-			var nullsPlacement   = GetWindowNullsPlacement(extendedFunction);
-			var emitIgnoreNulls  = extendedFunction.NullTreatment == Sql.Nulls.Ignore;
+			var nullsPlacement = GetWindowNullsPlacement(extendedFunction);
+			var nullsToken     = extendedFunction.NullTreatment switch
+			{
+				Sql.Nulls.Ignore                                                        => "IGNORE NULLS",
+				Sql.Nulls.Respect when WindowFunctionRespectNullsRequired(extendedFunction) => "RESPECT NULLS",
+				_                                                                       => null,
+			};
 
 			StringBuilder.Append(extendedFunction.FunctionName);
 			StringBuilder.Append('(');
@@ -3409,14 +3422,14 @@ namespace LinqToDB.Internal.SqlProvider
 						BuildExpression(argument.Suffix);
 					}
 
-					// IGNORE NULLS emitted inside the parentheses after the last argument: as a keyword (DuckDB)
+					// NULLS treatment emitted inside the parentheses after the last argument: as a keyword (DuckDB)
 					// or as a quoted string argument (DB2).
-					if (emitIgnoreNulls && i == extendedFunction.Arguments.Count - 1)
+					if (nullsToken != null && i == extendedFunction.Arguments.Count - 1)
 					{
 						if (nullsPlacement == WindowNullsPlacement.AfterLastArgument)
-							StringBuilder.Append(" IGNORE NULLS");
+							StringBuilder.Append(' ').Append(nullsToken);
 						else if (nullsPlacement == WindowNullsPlacement.StringArgument)
-							StringBuilder.Append(", 'IGNORE NULLS'");
+							StringBuilder.Append(", '").Append(nullsToken).Append('\'');
 					}
 				}
 			}
@@ -3424,12 +3437,13 @@ namespace LinqToDB.Internal.SqlProvider
 			StringBuilder.Append(')');
 
 			// Function-level modifiers for value/offset functions: FUNC(args) [FROM FIRST|LAST] [IGNORE|RESPECT NULLS].
-			// FROM FIRST and RESPECT NULLS are SQL defaults and are not emitted.
+			// FROM FIRST is the SQL default and is not emitted. RESPECT NULLS is emitted only where the provider
+			// needs it explicitly (WindowFunctionsRespectNullsRequired); elsewhere it is the default and omitted.
 			if (extendedFunction.FromPosition == Sql.From.Last)
 				StringBuilder.Append(" FROM LAST");
 
-			if (emitIgnoreNulls && nullsPlacement == WindowNullsPlacement.AfterClose)
-				StringBuilder.Append(" IGNORE NULLS");
+			if (nullsToken != null && nullsPlacement == WindowNullsPlacement.AfterClose)
+				StringBuilder.Append(' ').Append(nullsToken);
 
 			if (extendedFunction.WithinGroup?.Count > 0)
 			{
