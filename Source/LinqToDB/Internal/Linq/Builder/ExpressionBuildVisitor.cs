@@ -867,7 +867,10 @@ namespace LinqToDB.Internal.Linq.Builder
 					return translatedExposed;
 				}
 
-				if (!PreferClientCalculation(node))
+				// Honor PreferClientCalculation only for a mapped function whose attribute does not declare a NULL-propagating
+				// result (e.g. Sql.ToNullable is IfAnyParameterNullable) — pulling such a function client-side would turn a
+				// SQL NULL into a .NET default. Structural LINQ methods (aggregates) carry no attribute and translate as usual.
+				if (!PreferClientCalculation(node) || !MappedFunctionAllowsClientCalculation(node.Method))
 				{
 					if (TranslateMember(BuildContext, node, out var translatedMember))
 					{
@@ -1493,7 +1496,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					return error.WithType(node.Type);
 			}
 
-			if (BuildContext != null && _buildPurpose is BuildPurpose.Sql or BuildPurpose.Expression && !PreferClientCalculation(node))
+			if (BuildContext != null && _buildPurpose is BuildPurpose.Sql or BuildPurpose.Expression)
 			{
 				result = HandleMember(node, context);
 				if (result != null)
@@ -2127,7 +2130,18 @@ namespace LinqToDB.Internal.Linq.Builder
 				&& !_buildFlags.HasFlag(BuildFlags.ForSetProjection)
 				&& BuildContext != null
 				&& DataOptions.LinqOptions.PreferClientCalculation
-				&& !Builder.PreferServerSide(node, false);
+				&& !Builder.PreferServerSide(node, false)
+				&& !Builder.IsServerSideOnly(node);
+		}
+
+		/// <summary>
+		/// A method may be pulled client-side (under <see cref="LinqOptions.PreferClientCalculation"/>) only when it is a
+		/// mapped function — i.e. it carries an <see cref="Sql.ExpressionAttribute"/>. Structural LINQ methods (e.g.
+		/// aggregates) have no attribute and must keep translating to SQL.
+		/// </summary>
+		bool MappedFunctionAllowsClientCalculation(MethodInfo method)
+		{
+			return method.GetExpressionAttribute(MappingSchema) != null;
 		}
 
 		bool TryConvertToSql(Expression node, out Expression translated)

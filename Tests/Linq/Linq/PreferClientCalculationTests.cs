@@ -30,11 +30,15 @@ namespace Tests.Linq
 			];
 		}
 
-		// Two functions mapped to SQL ABS (which has a client implementation via Math.Abs) to exercise the
-		// PreferServerSide gate precisely: PreferServer stays server-side even when client calculation is
-		// preferred; PreferClient is allowed to move client-side.
+		// Mapped SQL functions (ABS). Under the arithmetic-core scope a method call always translates to SQL,
+		// even when client calculation is preferred — regardless of the PreferServerSide flag.
 		[Sql.Function("ABS", PreferServerSide = true )] static int PreferServer(int value) => Math.Abs(value);
 		[Sql.Function("ABS", PreferServerSide = false)] static int PreferClient(int value) => Math.Abs(value);
+		[Sql.Function("ABS", ServerSideOnly   = true )] static int ServerOnly  (int value) => throw new InvalidOperationException();
+
+		// No SQL mapping — forces client-side evaluation, used to exercise the Sql.ToNullable translator's
+		// "argument can't be turned into SQL" fall-through (it returns null and the call stays client-side).
+		static int ClientOnlyDouble(int value) => value * 2;
 
 		[Test]
 		public void BinaryArithmeticProjection([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
@@ -113,7 +117,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ClientSideAllowedFunctionFollowsOption([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		public void NonServerPreferredFunctionMovesClientSide([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
 		{
 			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
 			using var table = db.CreateLocalTable(ClientCalcEntity.Seed);
@@ -126,6 +130,76 @@ namespace Tests.Linq
 
 			// PreferServerSide = false: the function moves client-side when client calculation is preferred.
 			(query.GetSelectQuery().Find(e => e is SqlFunction { Name: "ABS" }) == null).ShouldBe(preferClient);
+		}
+
+		[Test]
+		public void ToNullableOverMissingLeftJoinReturnsNull([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(ClientCalcEntity.Seed);
+
+			// The left join never matches, so every joined row is absent and Sql.ToNullable(<joined column>) must be NULL.
+			// Regression: ToNullable is a server-side nullability widener and must stay server-side even when client
+			// calculation is preferred — otherwise the missing-row NULL collapses to default(int) at the client read
+			// and surfaces as 0 instead of null. The generated SQL is identical either way (it selects the raw column),
+			// so this can only be caught on the materialized value, not the SQL AST.
+			var query =
+				from e in table
+				from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+				select new { e.Id, Joined = Sql.ToNullable(j.Value1) };
+
+			var results = query.ToArray();
+
+			results.Length.ShouldBe(ClientCalcEntity.Seed.Length);
+			results.ShouldAllBe(r => r.Joined == null);
+		}
+
+		[Test]
+		public void ToNullableOverNonSqlArgumentEvaluatesClientSide([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(ClientCalcEntity.Seed);
+
+			// ClientOnlyDouble has no SQL mapping, so ToNullable's argument can't be converted to SQL. The translator
+			// must decline (return null) and let the whole expression evaluate client-side — it must not error, and
+			// must still produce the correctly-widened value. (Without the fall-through this query would fail to build.)
+			var query =
+				from e in table
+				select new { e.Id, Doubled = Sql.ToNullable(ClientOnlyDouble(e.Value1)) };
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void GroupByAggregateStaysServerSide([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(ClientCalcEntity.Seed);
+
+			var query =
+				from e in table
+				group e by e.Name into g
+				select new { g.Key, Sum = g.Sum(x => x.Value1) };
+
+			// Grouping key + aggregate must stay server-side even with the option on (otherwise the GroupBy guard trips).
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void ServerSideOnlyInsideConditionalStaysInSql([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(ClientCalcEntity.Seed);
+
+			var query =
+				from e in table
+				select e.Id > 1 ? ServerOnly(e.Value1) : e.Value2;
+
+			// A server-side-only API inside a conditional must stay in SQL even when client calculation is
+			// preferred (the IsServerSideOnly gate) — otherwise it would be illegally evaluated on the client.
+			query.GetSelectQuery().Find(e => e is SqlFunction { Name: "ABS" }).ShouldNotBeNull();
+
+			_ = query.ToArray(); // must not throw
 		}
 
 		[Test]

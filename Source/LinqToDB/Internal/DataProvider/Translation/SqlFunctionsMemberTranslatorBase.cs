@@ -12,6 +12,21 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			Registration.RegisterMethod<int, int, int?>((value,          compareTo) => Sql.NullIf(value, compareTo), TranslateNullifMethod, isGenericTypeMatch: true);
 			Registration.RegisterMethod<int?, int?, int?>((value,        compareTo) => Sql.NullIf(value, compareTo), TranslateNullifMethod, isGenericTypeMatch: true);
 			Registration.RegisterMethod<object, object, object?>((value, compareTo) => Sql.NullIf(value, compareTo), TranslateNullifMethod, isGenericTypeMatch: true);
+
+			Registration.RegisterMethod<int, int?>(value => Sql.ToNullable(value), TranslateToNullableMethod, isGenericTypeMatch: true);
+		}
+
+		Expression? TranslateToNullableMethod(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			// If the argument can't be turned into SQL it's a client-side value — decline (return null) so it is
+			// evaluated client-side, where Sql.ToNullable is a safe widen (there is no SQL NULL to lose).
+			if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[0], out var valueExpr))
+				return null;
+
+			// Sql.ToNullable<T>(T) is a pure nullability widener: identical SQL, result type T?. Building the
+			// placeholder from the original call (type T?) makes the value read as nullable, so a SQL NULL is
+			// preserved instead of collapsing to default(T) on the client.
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, valueExpr, methodCall);
 		}
 
 		Expression? TranslateNullifMethod(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
