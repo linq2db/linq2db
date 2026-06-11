@@ -898,6 +898,13 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.TranslateOrderItems(LinqToDB.Linq.Translation.ISqlExpressionTranslator,System.Type,System.Collections.Generic.IEnumerable{LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.OrderByInformation},System.Collections.Generic.List{LinqToDB.SqlQuery.SqlWindowOrderItem},LinqToDB.Internal.Expressions.SqlErrorExpression@)</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.TranslatePercentileContOld(LinqToDB.Linq.Translation.ITranslationContext,System.Linq.Expressions.MethodCallExpression,LinqToDB.Linq.Translation.TranslationFlags)</Target>
     <Left>lib/net10.0/linq2db.dll</Left>
     <Right>lib/net10.0/linq2db.dll</Right>
@@ -1528,6 +1535,13 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.TranslateOrderItems(LinqToDB.Linq.Translation.ISqlExpressionTranslator,System.Type,System.Collections.Generic.IEnumerable{LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.OrderByInformation},System.Collections.Generic.List{LinqToDB.SqlQuery.SqlWindowOrderItem},LinqToDB.Internal.Expressions.SqlErrorExpression@)</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.TranslatePercentileContOld(LinqToDB.Linq.Translation.ITranslationContext,System.Linq.Expressions.MethodCallExpression,LinqToDB.Linq.Translation.TranslationFlags)</Target>
     <Left>lib/net462/linq2db.dll</Left>
     <Right>lib/net462/linq2db.dll</Right>
@@ -2158,6 +2172,13 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.TranslateOrderItems(LinqToDB.Linq.Translation.ISqlExpressionTranslator,System.Type,System.Collections.Generic.IEnumerable{LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.OrderByInformation},System.Collections.Generic.List{LinqToDB.SqlQuery.SqlWindowOrderItem},LinqToDB.Internal.Expressions.SqlErrorExpression@)</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.TranslatePercentileContOld(LinqToDB.Linq.Translation.ITranslationContext,System.Linq.Expressions.MethodCallExpression,LinqToDB.Linq.Translation.TranslationFlags)</Target>
     <Left>lib/net8.0/linq2db.dll</Left>
     <Right>lib/net8.0/linq2db.dll</Right>
@@ -2782,6 +2803,13 @@
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.TransformPercentileCont(LinqToDB.Linq.Translation.ITranslationContext,System.Linq.Expressions.MethodCallExpression,LinqToDB.Linq.Translation.TranslationFlags)</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.TranslateOrderItems(LinqToDB.Linq.Translation.ISqlExpressionTranslator,System.Type,System.Collections.Generic.IEnumerable{LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.OrderByInformation},System.Collections.Generic.List{LinqToDB.SqlQuery.SqlWindowOrderItem},LinqToDB.Internal.Expressions.SqlErrorExpression@)</Target>
     <Left>lib/net9.0/linq2db.dll</Left>
     <Right>lib/net9.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
@@ -3430,6 +3458,13 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.TranslateOrderItems(LinqToDB.Linq.Translation.ISqlExpressionTranslator,System.Type,System.Collections.Generic.IEnumerable{LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.OrderByInformation},System.Collections.Generic.List{LinqToDB.SqlQuery.SqlWindowOrderItem},LinqToDB.Internal.Expressions.SqlErrorExpression@)</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.TranslatePercentileContOld(LinqToDB.Linq.Translation.ITranslationContext,System.Linq.Expressions.MethodCallExpression,LinqToDB.Linq.Translation.TranslationFlags)</Target>
     <Left>lib/netstandard2.0/linq2db.dll</Left>
     <Right>lib/netstandard2.0/linq2db.dll</Right>
@@ -3507,6 +3542,13 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0006</DiagnosticId>
+    <Target>P:LinqToDB.Linq.Translation.ITranslationContext.ProviderFlags</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0006</DiagnosticId>
     <Target>M:LinqToDB.Internal.DataProvider.Translation.IMemberConverter.Convert(System.Linq.Expressions.Expression,LinqToDB.Internal.DataProvider.Translation.IConvertContext,System.Boolean@)</Target>
     <Left>lib/net462/linq2db.dll</Left>
     <Right>lib/net462/linq2db.dll</Right>
@@ -3528,6 +3570,13 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0006</DiagnosticId>
+    <Target>P:LinqToDB.Linq.Translation.ITranslationContext.ProviderFlags</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0006</DiagnosticId>
     <Target>M:LinqToDB.Internal.DataProvider.Translation.IMemberConverter.Convert(System.Linq.Expressions.Expression,LinqToDB.Internal.DataProvider.Translation.IConvertContext,System.Boolean@)</Target>
     <Left>lib/net8.0/linq2db.dll</Left>
     <Right>lib/net8.0/linq2db.dll</Right>
@@ -3543,6 +3592,13 @@
   <Suppression>
     <DiagnosticId>CP0006</DiagnosticId>
     <Target>P:LinqToDB.Internal.Linq.IExpressionQuery.DebugView</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0006</DiagnosticId>
+    <Target>P:LinqToDB.Linq.Translation.ITranslationContext.ProviderFlags</Target>
     <Left>lib/net8.0/linq2db.dll</Left>
     <Right>lib/net8.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
@@ -3564,6 +3620,13 @@
   <Suppression>
     <DiagnosticId>CP0006</DiagnosticId>
     <Target>P:LinqToDB.Internal.Linq.IExpressionQuery.DebugView</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0006</DiagnosticId>
+    <Target>P:LinqToDB.Linq.Translation.ITranslationContext.ProviderFlags</Target>
     <Left>lib/net9.0/linq2db.dll</Left>
     <Right>lib/net9.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
@@ -3585,6 +3648,13 @@
   <Suppression>
     <DiagnosticId>CP0006</DiagnosticId>
     <Target>P:LinqToDB.Internal.Linq.IExpressionQuery.DebugView</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0006</DiagnosticId>
+    <Target>P:LinqToDB.Linq.Translation.ITranslationContext.ProviderFlags</Target>
     <Left>lib/netstandard2.0/linq2db.dll</Left>
     <Right>lib/netstandard2.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>

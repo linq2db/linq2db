@@ -546,7 +546,7 @@ namespace LinqToDB.Linq.Translation
 			return true;
 		}
 
-		protected bool TranslateOrderItems(ISqlExpressionTranslator translator, Type errorType, IEnumerable<OrderByInformation> orderBy, List<SqlWindowOrderItem> orderItems, [NotNullWhen(false)] out SqlErrorExpression? error)
+		protected bool TranslateOrderItems(ISqlExpressionTranslator translator, NullsDefaultOrdering defaultNullsOrdering, Type errorType, IEnumerable<OrderByInformation> orderBy, List<SqlWindowOrderItem> orderItems, [NotNullWhen(false)] out SqlErrorExpression? error)
 		{
 			error = null;
 			foreach (var orderItem in orderBy)
@@ -557,24 +557,34 @@ namespace LinqToDB.Linq.Translation
 					return false;
 				}
 
-				// Emulate NULLS FIRST/LAST only when (a) a position is requested, (b) the provider lacks native
-				// window NULLS ordering, and (c) the key can actually be null. Skipping the CASE key for a
-				// non-nullable key (e.g. a PK) avoids an IIF(<nonnull> IS NULL, …) that the optimizer folds to a bare
-				// constant — invalid as a window ORDER BY key on SQL Server. NullabilityContext.NonQuery reflects the
-				// expression's intrinsic nullability (the query nullability context is not available at translation time).
-				if (orderItem.Nulls != Sql.NullsPosition.None
-					&& !IsNullsOrderSupported
-					&& sql.CanBeNullable(NullabilityContext.NonQuery))
+				// On a provider without native window NULLS ordering, decide whether a CASE emulation key is needed.
+				// It is unnecessary — and for a non-nullable key folds to a bare constant (invalid as a window ORDER BY
+				// key on SQL Server) — when the key can't be null, or when the requested position already matches the
+				// provider's natural NULL placement. NullabilityContext.NonQuery reflects the expression's intrinsic
+				// nullability (the query nullability context is not available at translation time).
+				if (orderItem.Nulls != Sql.NullsPosition.None && !IsNullsOrderSupported)
 				{
-					// ORDER BY CASE WHEN expr IS NULL THEN 0/1 ELSE 1/0 END, expr
-					var nullFirst   = orderItem.Nulls == Sql.NullsPosition.First;
-					var isNull      = new SqlSearchCondition().Add(new SqlPredicate.IsNull(sql, false));
-					var nullSortVal = new SqlConditionExpression(isNull,
-						new SqlValue(nullFirst ? 0 : 1),
-						new SqlValue(nullFirst ? 1 : 0));
+					var needsEmulation =
+						sql.CanBeNullable(NullabilityContext.NonQuery)
+						&& !QueryHelper.MatchesNaturalNullsPosition(defaultNullsOrdering, orderItem.Nulls, orderItem.IsDescending);
 
-					orderItems.Add(new SqlWindowOrderItem(nullSortVal, false, Sql.NullsPosition.None));
-					orderItems.Add(new SqlWindowOrderItem(sql, orderItem.IsDescending, Sql.NullsPosition.None));
+					if (needsEmulation)
+					{
+						// ORDER BY CASE WHEN expr IS NULL THEN 0/1 ELSE 1/0 END, expr
+						var nullFirst   = orderItem.Nulls == Sql.NullsPosition.First;
+						var isNull      = new SqlSearchCondition().Add(new SqlPredicate.IsNull(sql, false));
+						var nullSortVal = new SqlConditionExpression(isNull,
+							new SqlValue(nullFirst ? 0 : 1),
+							new SqlValue(nullFirst ? 1 : 0));
+
+						orderItems.Add(new SqlWindowOrderItem(nullSortVal, false, Sql.NullsPosition.None));
+						orderItems.Add(new SqlWindowOrderItem(sql, orderItem.IsDescending, Sql.NullsPosition.None));
+					}
+					else
+					{
+						// Natural ordering already yields the requested position (or the key can't be null) — drop it.
+						orderItems.Add(new SqlWindowOrderItem(sql, orderItem.IsDescending, Sql.NullsPosition.None));
+					}
 				}
 				else
 				{
@@ -670,7 +680,7 @@ namespace LinqToDB.Linq.Translation
 			if (information.OrderBy != null)
 			{
 				orderItems ??= new();
-				if (!TranslateOrderItems(translationContext, methodCall.Type, information.OrderBy, orderItems, out var orderError))
+				if (!TranslateOrderItems(translationContext, translationContext.ProviderFlags.DefaultNullsOrdering, methodCall.Type, information.OrderBy, orderItems, out var orderError))
 					return orderError;
 			}
 
@@ -762,7 +772,7 @@ namespace LinqToDB.Linq.Translation
 				if (information.KeepOrderBy != null)
 				{
 					var keepOrderItems = new List<SqlWindowOrderItem>();
-					if (!TranslateOrderItems(translationContext, methodCall.Type, information.KeepOrderBy, keepOrderItems, out var keepOrderError))
+					if (!TranslateOrderItems(translationContext, translationContext.ProviderFlags.DefaultNullsOrdering, methodCall.Type, information.KeepOrderBy, keepOrderItems, out var keepOrderError))
 						return keepOrderError;
 
 					keepClause = new SqlKeepClause(information.KeepType.Value, keepOrderItems);
@@ -951,7 +961,7 @@ namespace LinqToDB.Linq.Translation
 						}
 
 						List<SqlWindowOrderItem> withinGroupOrder = new();
-						if (!TranslateOrderItems(composer.AggregationContext, methodCall.Type, wfInfo.OrderBy, withinGroupOrder, out var orderError))
+						if (!TranslateOrderItems(composer.AggregationContext, translationContext.ProviderFlags.DefaultNullsOrdering, methodCall.Type, wfInfo.OrderBy, withinGroupOrder, out var orderError))
 						{
 							composer.SetError(orderError);
 							return;

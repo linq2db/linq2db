@@ -24,8 +24,9 @@ namespace LinqToDB.Linq.Translation
 
 		Expression Translate(Expression expression, TranslationFlags translationFlags = TranslationFlags.Sql);
 
-		MappingSchema MappingSchema { get; }
-		DataOptions   DataOptions   { get; }
+		MappingSchema            MappingSchema { get; }
+		DataOptions              DataOptions   { get; }
+		TranslationProviderFlags ProviderFlags { get; }
 
 		ISqlExpressionFactory ExpressionFactory { get; }
 

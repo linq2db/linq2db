@@ -418,7 +418,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 									}
 								}
 
-								var suffix = BuildAggregateNullsOrderBy(factory, info.OrderBySql, info.IsNullFiltered, NullsDefaultOrdering.Largest);
+								var suffix = BuildAggregateNullsOrderBy(factory, info.OrderBySql, info.IsNullFiltered, translationContext.ProviderFlags.DefaultNullsOrdering);
 
 								SqlSearchCondition? filterCondition = null;
 

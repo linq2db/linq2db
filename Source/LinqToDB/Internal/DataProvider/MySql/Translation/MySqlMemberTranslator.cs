@@ -320,7 +320,7 @@ namespace LinqToDB.Internal.DataProvider.MySql.Translation
 										// NULLS LAST  => "(expr IS NULL)"     (non-null = 0 sorts first, null = 1 sorts last)
 										// NULLS FIRST => "(expr IS NOT NULL)"  (null = 0 sorts first)
 										if (info.OrderBySql[i].nulls != Sql.NullsPosition.None
-											&& !QueryHelper.MatchesNaturalNullsPosition(NullsDefaultOrdering.Smallest, info.OrderBySql[i].nulls, info.OrderBySql[i].desc))
+											&& !QueryHelper.MatchesNaturalNullsPosition(translationContext.ProviderFlags.DefaultNullsOrdering, info.OrderBySql[i].nulls, info.OrderBySql[i].desc))
 										{
 											sb.Value.Append('(').Append('{').Append(i).Append('}')
 												.Append(info.OrderBySql[i].nulls == Sql.NullsPosition.Last ? " IS NULL" : " IS NOT NULL")

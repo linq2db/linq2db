@@ -67,6 +67,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public MappingSchema MappingSchema => BuildContext?.MappingSchema ?? Builder.MappingSchema;
 		public DataOptions DataOptions => Builder.DataOptions;
+		public TranslationProviderFlags ProviderFlags => Builder.TranslationProviderFlags;
 
 		ContextRefExpression? FoundRoot { get; set; }
 
@@ -5171,6 +5172,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public MappingSchema MappingSchema => CurrentContext?.MappingSchema ?? throw new InvalidOperationException();
 			public DataOptions   DataOptions   => Builder.DataOptions;
+
+			public TranslationProviderFlags ProviderFlags => Builder.TranslationProviderFlags;
 
 			public SelectQuery CurrentSelectQuery => CurrentContext?.SelectQuery ?? throw new InvalidOperationException();
 

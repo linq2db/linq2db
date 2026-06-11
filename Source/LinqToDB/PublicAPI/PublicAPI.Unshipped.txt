@@ -56,3 +56,10 @@ override LinqToDB.Internal.SqlQuery.SqlKeepClause.ElementType.get -> LinqToDB.In
 override LinqToDB.Internal.SqlQuery.SqlKeepClause.GetElementHashCode() -> int
 override LinqToDB.Internal.SqlQuery.SqlKeepClause.ToString(LinqToDB.Internal.SqlQuery.QueryElementTextWriter! writer) -> LinqToDB.Internal.SqlQuery.QueryElementTextWriter!
 virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlKeepClause(LinqToDB.Internal.SqlQuery.SqlKeepClause! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
+LinqToDB.Linq.Translation.ITranslationContext.ProviderFlags.get -> LinqToDB.Linq.Translation.TranslationProviderFlags!
+LinqToDB.Linq.Translation.TranslationProviderFlags
+LinqToDB.Linq.Translation.TranslationProviderFlags.DefaultNullsOrdering.get -> LinqToDB.Internal.SqlQuery.NullsDefaultOrdering
+LinqToDB.Linq.Translation.TranslationProviderFlags.IsNullsOrderingSupported.get -> bool
+LinqToDB.Linq.Translation.TranslationProviderFlags.TranslationProviderFlags(LinqToDB.Internal.SqlQuery.NullsDefaultOrdering defaultNullsOrdering, bool isNullsOrderingSupported) -> void
+LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.TranslateOrderItems(LinqToDB.Linq.Translation.ISqlExpressionTranslator! translator, LinqToDB.Internal.SqlQuery.NullsDefaultOrdering defaultNullsOrdering, System.Type! errorType, System.Collections.Generic.IEnumerable<LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.OrderByInformation!>! orderBy, System.Collections.Generic.List<LinqToDB.SqlQuery.SqlWindowOrderItem!>! orderItems, out LinqToDB.Internal.Expressions.SqlErrorExpression? error) -> bool
+*REMOVED*LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.TranslateOrderItems(LinqToDB.Linq.Translation.ISqlExpressionTranslator! translator, System.Type! errorType, System.Collections.Generic.IEnumerable<LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.OrderByInformation!>! orderBy, System.Collections.Generic.List<LinqToDB.SqlQuery.SqlWindowOrderItem!>! orderItems, out LinqToDB.Internal.Expressions.SqlErrorExpression? error) -> bool

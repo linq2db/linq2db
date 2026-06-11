@@ -249,7 +249,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB.Translation
 									}
 								}
 
-								var suffix = BuildAggregateNullsOrderBy(factory, info.OrderBySql, info.IsNullFiltered, NullsDefaultOrdering.AlwaysLast);
+								var suffix = BuildAggregateNullsOrderBy(factory, info.OrderBySql, info.IsNullFiltered, translationContext.ProviderFlags.DefaultNullsOrdering);
 
 								SqlSearchCondition? filterCondition = null;
 

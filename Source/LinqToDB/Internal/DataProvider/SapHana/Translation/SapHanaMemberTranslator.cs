@@ -359,7 +359,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana.Translation
 								if (!info.IsNullFiltered && nullValuesAsEmptyString)
 									value = factory.Coalesce(value, factory.Value(valueType, string.Empty));
 
-								var suffix = BuildAggregateNullsOrderBy(factory, info.OrderBySql, info.IsNullFiltered, NullsDefaultOrdering.Smallest);
+								var suffix = BuildAggregateNullsOrderBy(factory, info.OrderBySql, info.IsNullFiltered, translationContext.ProviderFlags.DefaultNullsOrdering);
 
 								if (info is { FilterCondition.IsTrue: false })
 								{

@@ -368,7 +368,7 @@ namespace LinqToDB.Internal.DataProvider.DB2.Translation
 										// rows sorted first or last via 0/1) and drop the unsupported NULLS token from the real key —
 										// unless the requested position already matches DB2's natural order (NULL is the largest value).
 										if (nulls != Sql.NullsPosition.None
-											&& !QueryHelper.MatchesNaturalNullsPosition(NullsDefaultOrdering.Largest, nulls, desc))
+											&& !QueryHelper.MatchesNaturalNullsPosition(translationContext.ProviderFlags.DefaultNullsOrdering, nulls, desc))
 										{
 											var nullsKey = factory.Fragment(
 												nulls == Sql.NullsPosition.Last

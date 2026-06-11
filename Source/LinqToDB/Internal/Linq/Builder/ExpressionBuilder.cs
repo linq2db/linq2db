@@ -117,6 +117,13 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public MappingSchema MappingSchema => DataContext.MappingSchema;
 
+		TranslationProviderFlags? _translationProviderFlags;
+		// Cached per query so member translators don't allocate a TranslationProviderFlags on each ProviderFlags access.
+		public TranslationProviderFlags TranslationProviderFlags =>
+			_translationProviderFlags ??= new TranslationProviderFlags(
+				DataContext.SqlProviderFlags.DefaultNullsOrdering,
+				DataContext.SqlProviderFlags.IsNullsOrderingSupported);
+
 		#endregion
 
 		#region Builder SQL
