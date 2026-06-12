@@ -72,7 +72,7 @@ A run is **long** when any of: project is `Tests/Linq/Tests.csproj` (especially 
 
 For a long run:
 
-1. **Auto-enable the progress heartbeat** — invoke `/test-progress on` (don't merely suggest it), then tell the user it's on and that you'll report progress as it runs. (For short runs, leave the trace as-is.)
+1. **Auto-enable the progress heartbeat** — invoke `/test-progress on` (don't merely suggest it), then tell the user it's on and that you'll report progress as it runs.
 2. **Run it in the background so progress is readable** — invoke `test-runner` with `run_in_background: true`. The test process writes the heartbeat to `.build/.claude/test-progress.<tfm>.<pid>.json` regardless of who launched it; running the agent in the background is what frees you to poll it instead of blocking with nothing to show.
 3. **Poll and surface progress** — between turns, read the heartbeat with `pwsh -NoProfile -File .claude/scripts/test-status.ps1` (or `Read` the JSON) and give the user a one-line update (completed/total, current test, failures so far). You can do this any time the user asks "how's it going?" — you don't have to wait for the run to finish. Don't busy-poll; check when prompted or at natural intervals.
 4. When the background `test-runner` completes, continue with the baselines diff (3.4) and the final report (3.5) as usual.

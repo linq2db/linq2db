@@ -11,7 +11,7 @@ Toggle and inspect the live progress heartbeat written by the test assembly duri
 
 The reporter is **opt-in**: it writes nothing unless `LINQ2DB_TEST_PROGRESS` is set to a truthy value in the process running `dotnet test`. This skill flips that variable in `.claude/settings.local.json` → `env`, which Claude Code injects into every Bash-tool subprocess (and their children, e.g. the NUnit test host). The `dotnet test` command itself is unchanged, so the existing `Bash(dotnet test *)` allowlist still matches (no new permission prompts).
 
-**On = `"1"`, off = `"0"` (not key-removal).** Claude Code applies an added or *changed* env value to the running session immediately (verified), but does **not** un-apply a *removed* key until restart. So `off` sets the value to `"0"` — a present-but-falsy value the reporter treats as disabled — which propagates right away. Removing the key would leave the trace silently on for the rest of the session.
+**On = `"1"`, off = `"0"` (not key-removal).** Claude Code applies an added or *changed* env value to the running session immediately, but does **not** un-apply a *removed* key until restart. So `off` sets `"0"` — a present-but-falsy value the reporter treats as disabled — which takes effect right away; removing the key would leave the trace silently on until restart.
 
 Scope: this affects test runs **Claude** launches via the Bash tool. A run the user starts in their **own** terminal won't inherit it — they set `LINQ2DB_TEST_PROGRESS=1` there themselves (see `testing.md`).
 
@@ -35,7 +35,7 @@ Scope: this affects test runs **Claude** launches via the Bash tool. A run the u
 ### `off` / `disable`
 
 1. `Read` `.claude/settings.local.json`.
-2. Set `env.LINQ2DB_TEST_PROGRESS` to `"0"` (add the `env` object / key if missing). **Do not remove the key** — a removed key isn't un-applied until restart, but a changed value propagates immediately. If it's already `"0"` (or any falsy value), report "already disabled" and stop.
+2. Set `env.LINQ2DB_TEST_PROGRESS` to `"0"` (add the `env` object / key if missing) — **not** key-removal (see *How it works*). If it's already `"0"` or another falsy value, report "already disabled" and stop.
 3. Confirm to the user: trace disabled, effective for the next run. Existing `.build/.claude/test-progress.*.json` files are left as-is (gitignored scratch).
 
 ### `status` (default)
