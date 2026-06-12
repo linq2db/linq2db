@@ -45,6 +45,10 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 		{
 			protected override bool IsFrameRowsSupported  => true;
 			protected override bool IsFrameRangeSupported => true;
+			// PERCENT_RANK, CUME_DIST and NTILE are supported from Firebird 4.
+			protected override bool IsPercentRankSupported => true;
+			protected override bool IsCumeDistSupported    => true;
+			protected override bool IsNTileSupported       => true;
 		}
 	}
 }
