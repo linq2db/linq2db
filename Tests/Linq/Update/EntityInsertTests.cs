@@ -201,5 +201,45 @@ namespace Tests.xUpdate
 			rows[1].Version.ShouldBe(21);
 			rows[1].CreatedBy.ShouldBe("u2");
 		}
+
+		#region Nested complex-column setters
+
+		sealed class EntityInsertNestedName
+		{
+			public string? First { get; set; }
+			public string? Last  { get; set; }
+		}
+
+		[Table("EntityInsertNestedTest")]
+		[Column("First", "Name.First")]
+		[Column("Last",  "Name.Last")]
+		sealed class EntityInsertNestedRow
+		{
+			[PrimaryKey] public int                    Id   { get; set; }
+			             public EntityInsertNestedName Name { get; set; } = null!;
+		}
+
+		// Unsupported: EntitySetterBuilder builds the setter as Expression.Bind(cd.MemberInfo, …) on a
+		// SqlGenericConstructorExpression, which can't bind a nested leaf member on the root type
+		// ("Property 'First' is not defined for type 'EntityInsertNestedRow'"). Needs nested member-init
+		// grouping or a switch to the envelope shape used by the native Upsert path. The single-item
+		// Upsert path already handles nested columns (UpsertTests.Single_Set_NestedColumn).
+		[ActiveIssue("Entity Insert/Update + bulk Upsert .Set does not support nested complex-column member paths (EntitySetterBuilder MemberInit binding)")]
+		[Test]
+		public void Insert_NestedColumn([IncludeDataSources(ProviderName.SQLiteMS)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _  = db.CreateLocalTable<EntityInsertNestedRow>();
+
+			db.GetTable<EntityInsertNestedRow>().Insert(
+				new EntityInsertNestedRow { Id = 1, Name = new EntityInsertNestedName { First = "ins-first", Last = "seed-last" } },
+				b => b.Set(x => x.Name.First, () => "set-first"));
+
+			var row = db.GetTable<EntityInsertNestedRow>().Single();
+			row.Name.First.ShouldBe("set-first");
+			row.Name.Last .ShouldBe("seed-last");
+		}
+
+		#endregion
 	}
 }
