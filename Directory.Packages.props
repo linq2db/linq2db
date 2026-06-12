@@ -162,6 +162,7 @@
 		<PackageVersion Include="Microsoft.AspNetCore.OData"                            Version="9.4.1"                        />
 		<PackageVersion Include="MiniProfiler.Shared"                                   Version="4.5.4"                        />
 		<PackageVersion Include="MiniProfiler.Minimal"                                  Version="4.5.4"                        />
+		<PackageVersion Include="Newtonsoft.Json"                                       Version="13.0.3"                       />
 		<PackageVersion Include="NodaTime"                                              Version="3.3.2"                        />
 		<PackageVersion Include="protobuf-net.Grpc.AspNetCore"                          Version="1.2.2"                        />
 		<PackageVersion Include="System.Linq.Dynamic.Core"                              Version="1.7.2"                        />
@@ -230,7 +231,6 @@
 			https://github.com/advisories/GHSA-x5qj-9vmx-7g6g;
 			https://github.com/advisories/GHSA-xhfc-gr8f-ffwc" />
 
-		<PackageVersion Include="Newtonsoft.Json"                                       Version="13.0.1"                       />
 		<PackageVersion Include="Microsoft.AspNetCore.Server.Kestrel.Core"              Version="$(AspNetCoreLegacyVersion)"   Condition="'$(TargetFramework)'=='net462'" />
 		<PackageVersion Include="Microsoft.Bcl.Memory"                                  Version="$(Net9Latest)"                Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))" />
 		<PackageVersion Include="Microsoft.Bcl.Memory"                                  Version="$(Net10Latest)"               Condition="'$(TargetFramework)'=='net10.0'" />
