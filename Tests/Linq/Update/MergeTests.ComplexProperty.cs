@@ -1,4 +1,4 @@
-using System.Linq;
+﻿using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -268,6 +268,59 @@ namespace Tests.xUpdate
 				Assert.That(dogs,            Has.Count.EqualTo(1));
 				Assert.That(dogs[0].Id,      Is.EqualTo(1));
 				Assert.That(dogs[0].DogName, Is.EqualTo("Rex"));
+			}
+		}
+
+		// OnTargetKey() builds its primary-key match condition through the same GetMemberAccessExpression
+		// helper, so a primary key mapped via a nested member path ([Column(MemberName = "Key.Value", IsPrimaryKey = true)])
+		// must dot-walk both sides of the ON condition (t.Key.Value = s.Key.Value). Before the MergeBuilder.On.cs
+		// fix this threw "Member 'Value' is not defined in 't'" because the leaf member was looked up on the entity root.
+
+		[Table("NestedKeyTarget")]
+		[Column("Id", MemberName = "Key.Value", IsPrimaryKey = true)]
+		public sealed class NestedKeyTarget
+		{
+			public NestedKey Key { get; set; } = new();
+
+			[Column("Code", Length = 50)]
+			public string? Code { get; set; }
+		}
+
+		public sealed class NestedKey
+		{
+			public int Value { get; set; }
+		}
+
+		[Test]
+		public void ComplexProperty_NestedPrimaryKey_OnTargetKey([MergeDataContextSource] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<NestedKeyTarget>();
+
+			db.Insert(new NestedKeyTarget { Key = new NestedKey { Value = 1 }, Code = "first"   });
+			db.Insert(new NestedKeyTarget { Key = new NestedKey { Value = 2 }, Code = "skipped" });
+
+			var source = new[]
+			{
+				new NestedKeyTarget { Key = new NestedKey { Value = 1 }, Code = "first-updated" },
+			};
+
+			var rows = table.Merge()
+				.Using(source)
+				.OnTargetKey()
+				.UpdateWhenMatched()
+				.Merge();
+
+			var result = table.OrderBy(r => r.Key.Value).ToList();
+
+			using (Assert.EnterMultipleScope())
+			{
+				AssertRowCount(1, rows, context);
+				Assert.That(result,              Has.Count.EqualTo(2));
+				Assert.That(result[0].Key.Value, Is.EqualTo(1));
+				Assert.That(result[0].Code,      Is.EqualTo("first-updated"));
+				Assert.That(result[1].Key.Value, Is.EqualTo(2));
+				Assert.That(result[1].Code,      Is.EqualTo("skipped"));
 			}
 		}
 	}
