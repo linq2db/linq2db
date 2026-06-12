@@ -2805,6 +2805,9 @@ namespace LinqToDB.Internal.Linq.Builder
 					return Visit(translatedMember);
 			}
 
+			if (_buildPurpose is BuildPurpose.Table)
+				return node;
+
 			if (BuildContext == null || _buildPurpose is not (BuildPurpose.Sql or BuildPurpose.Expression))
 				return base.VisitBinary(node);
 
@@ -3127,6 +3130,22 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var left  = node.Left;
 			var right = node.Right;
+
+			// DateTime/DateTimeOffset subtraction yields a TimeSpan duration with no portable SQL
+			// representation, so evaluate it client-side (preserves full .NET tick precision). The
+			// (a - b).TotalDays/TotalHours/... forms are rewritten to Sql.DateDiff earlier, in
+			// ExposeExpressionVisitor.ConvertMemberAccess, so only the bare-duration projection reaches here.
+			if (node.NodeType is ExpressionType.Subtract or ExpressionType.SubtractChecked)
+			{
+				var leftType  = node.Left.Type.UnwrapNullableType();
+				var rightType = node.Right.Type.UnwrapNullableType();
+				if ((leftType  == typeof(DateTime) || leftType  == typeof(DateTimeOffset))
+					&& (rightType == typeof(DateTime) || rightType == typeof(DateTimeOffset)))
+				{
+					translated = base.VisitBinary(node);
+					return true;
+				}
+			}
 
 			var shouldCheckColumn = node.Left.Type.UnwrapNullableType() == node.Right.Type.UnwrapNullableType();
 
