@@ -158,9 +158,9 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, TestProvName.AllSqlServer2012Plus, TestProvName.AllInformix, ProviderName.Firebird3, ProviderName.Firebird4, ErrorMessage = ErrorHelper.Error_WindowFunction_NthValue)]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, ErrorMessage = ErrorHelper.Error_WindowFunction_FrameRows)]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, TestProvName.AllMySql80, TestProvName.AllMariaDB, ProviderName.Firebird5, TestProvName.AllDB2, ProviderName.Ydb, TestProvName.AllOracle, ErrorMessage = ErrorHelper.Error_WindowFunction_FrameExclude)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, TestProvName.AllSqlServer2012Plus, TestProvName.AllInformix, ErrorMessage = ErrorHelper.Error_WindowFunction_NthValue)]
+		[ThrowsForProvider(typeof(LinqToDBException), ProviderName.Firebird3, TestProvName.AllSapHana, ErrorMessage = ErrorHelper.Error_WindowFunction_FrameRows)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, TestProvName.AllMySql80, TestProvName.AllMariaDB, ProviderName.Firebird4, ProviderName.Firebird5, TestProvName.AllDB2, ProviderName.Ydb, TestProvName.AllOracle, ErrorMessage = ErrorHelper.Error_WindowFunction_FrameExclude)]
 		public void ValueFunctionWithFrameExclude([DataSources] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();

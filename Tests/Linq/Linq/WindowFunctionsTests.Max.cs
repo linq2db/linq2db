@@ -79,9 +79,8 @@ namespace Tests.Linq
 		// rejected and gated with a descriptive error.
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_AggregateWindowFunctions)]
 		[ThrowsForProvider(typeof(LinqToDBException),
-			TestProvName.AllSqlServer2012Plus, TestProvName.AllPostgreSQL, TestProvName.AllMySql8Plus, TestProvName.AllSQLite,
+			TestProvName.AllSqlServer, TestProvName.AllPostgreSQL, TestProvName.AllMySql8Plus, TestProvName.AllSQLite,
 			TestProvName.AllFirebird3Plus, TestProvName.AllSapHana, TestProvName.AllDB2, TestProvName.AllInformix,
 			ErrorMessage = ErrorHelper.Error_WindowFunction_AggregateDistinct)]
 		public void MaxDistinct([DataSources] string context)
