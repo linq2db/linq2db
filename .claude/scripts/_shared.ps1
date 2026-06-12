@@ -325,6 +325,13 @@ function Get-DiffFingerprint {
         if ($marker -ne '+' -and $marker -ne '-') { continue }
         if ($line.StartsWith('--- ') -or $line.StartsWith('+++ ')) { continue }
         $content = $line.Substring(1)
+        # Strip a leading UTF-8 BOM (U+FEFF). It prefixes line 1 of every
+        # baseline file, and `\s` does not match U+FEFF, so without this the
+        # comment-line drop below misses the BOM-prefixed header on line 1 —
+        # leaking the per-provider `-- <Provider> <Config>` text into the
+        # fingerprint and fragmenting otherwise-identical new-file (A-status)
+        # cohorts into one pattern per provider.
+        if ($content.Length -gt 0 -and $content[0] -eq [char]0xFEFF) { $content = $content.Substring(1) }
         # Drop SQL comment lines — baselines use `--` only for the
         # per-provider `-- <Provider> <Config>` header (carries no signal).
         if ($content -match '^\s*--') { continue }
