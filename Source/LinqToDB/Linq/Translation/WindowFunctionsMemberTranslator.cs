@@ -669,9 +669,6 @@ namespace LinqToDB.Linq.Translation
 			if (!IsWindowFunctionsSupported)
 				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
 
-			if (!IsAggregateWindowFunctionsSupported && functionName is "SUM" or "AVG" or "MIN" or "MAX" or "COUNT")
-				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_AggregateWindowFunctions, methodCall.Type);
-
 			if (!CollectWindowFunctionInformation(
 				    translationContext,
 				    methodCall.Type,
@@ -680,6 +677,14 @@ namespace LinqToDB.Linq.Translation
 				    out var information,
 				    out var error))
 				return error;
+
+			// Aggregate window functions: providers that don't fully support them (pre-2012 SQL Server) still allow
+			// the bare OVER () / OVER (PARTITION BY ...) forms — only ORDER BY / frames inside OVER for an aggregate
+			// need 2012+. Reject just the ordered/framed case so COUNT(*) OVER () / SUM(x) OVER (PARTITION BY ...) work.
+			if (!IsAggregateWindowFunctionsSupported
+				&& functionName is "SUM" or "AVG" or "MIN" or "MAX" or "COUNT"
+				&& (information.OrderBy != null || information.FrameType != null))
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_AggregateWindowFunctions, methodCall.Type);
 
 			var                       arguments   = new List<SqlFunctionArgument>();
 			List<ISqlExpression>?     partitionBy = null;

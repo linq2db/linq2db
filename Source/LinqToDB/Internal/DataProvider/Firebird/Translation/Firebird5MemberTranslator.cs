@@ -91,7 +91,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 			protected override bool IsPercentRankSupported => true;
 			protected override bool IsCumeDistSupported    => true;
 			protected override bool IsNTileSupported       => true;
-			protected override bool IsNthValueSupported    => true;
+			// IsNthValueSupported is enabled from Firebird 3 (see FirebirdWindowFunctionsMemberTranslator).
 		}
 
 		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()

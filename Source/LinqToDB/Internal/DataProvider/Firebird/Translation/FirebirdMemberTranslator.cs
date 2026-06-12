@@ -427,7 +427,8 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 			protected override bool IsPercentRankSupported    => false;
 			protected override bool IsCumeDistSupported       => false;
 			protected override bool IsNTileSupported          => false;
-			protected override bool IsNthValueSupported       => false;
+			// NTH_VALUE (incl. FROM FIRST/LAST + IGNORE/RESPECT NULLS) is supported from Firebird 3.
+			protected override bool IsNthValueSupported       => true;
 			protected override bool IsFrameRowsSupported      => false;
 			protected override bool IsFrameRangeSupported     => false;
 			protected override bool IsFrameGroupsSupported    => false;
