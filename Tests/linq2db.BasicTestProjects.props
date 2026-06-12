@@ -1,7 +1,14 @@
 <Project>
+	<PropertyGroup>
+		<!-- Run tests on Microsoft.Testing.Platform via the NUnit MTP runner instead of VSTest. -->
+		<OutputType>Exe</OutputType>
+		<EnableNUnitRunner>true</EnableNUnitRunner>
+	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="NUnit3TestAdapter" />
-		<PackageReference Include="Microsoft.NET.Test.Sdk" />
+		<PackageReference Include="Microsoft.Testing.Platform.MSBuild" />
+		<PackageReference Include="Microsoft.Testing.Extensions.TrxReport" />
+		<PackageReference Include="Microsoft.Testing.Extensions.HangDump" />
 		<PackageReference Include="Shouldly" />
 	</ItemGroup>
 </Project>

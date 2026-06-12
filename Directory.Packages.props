@@ -151,7 +151,9 @@
 
 	<ItemGroup Label="Testing">
 		<PackageVersion Include="Shouldly"                                              Version="4.3.0"                        />
-		<PackageVersion Include="Microsoft.NET.Test.Sdk"                                Version="18.5.1"                       />
+		<PackageVersion Include="Microsoft.Testing.Platform.MSBuild"                    Version="2.2.3"                        />
+		<PackageVersion Include="Microsoft.Testing.Extensions.TrxReport"                Version="2.2.3"                        />
+		<PackageVersion Include="Microsoft.Testing.Extensions.HangDump"                 Version="2.2.3"                        />
 		<PackageVersion Include="NUnit"                                                 Version="4.6.0"                        />
 		<PackageVersion Include="NUnit.Analyzers"                                       Version="4.13.0"                       />
 		<PackageVersion Include="NUnit3TestAdapter"                                     Version="6.2.0"                        />

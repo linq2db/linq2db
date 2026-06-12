@@ -131,6 +131,11 @@ jobs:
                 if %errorlevel% neq 0 exit
                 copy DataProviders.json testing\%%f\efcore\%%a
                 if %errorlevel% neq 0 exit
+                REM ship .runsettings next to each test app: MTP does not auto-discover it, NUnit honors it via --settings (AssemblySelectLimit)
+                copy .runsettings testing\%%f\main\%%a
+                if %errorlevel% neq 0 exit
+                copy .runsettings testing\%%f\efcore\%%a
+                if %errorlevel% neq 0 exit
             )
         )
 

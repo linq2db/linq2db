@@ -26,20 +26,4 @@
 		<PackageReference Include="Microsoft.Bcl.Memory" />
 	</ItemGroup>
 
-	<!--https://github.com/microsoft/vstest/issues/15297-->
-	<Target Name="Save_PublishDir" BeforeTargets="CopyTraceDataCollectorArtifacts">
-		<CreateProperty Value="$(PublishDir)">
-			<Output TaskParameter="Value" PropertyName="PublishDir_Backup"/>
-		</CreateProperty>
-		<CreateProperty Value="$(PublishDir)\_ignore\">
-			<Output TaskParameter="Value" PropertyName="PublishDir"/>
-		</CreateProperty>
-	</Target>
-	<Target Name="Restore_PublishDir" AfterTargets="CopyTraceDataCollectorArtifacts">
-		<RemoveDir Directories="$(PublishDir)" />
-		<CreateProperty Value="$(PublishDir_Backup)">
-			<Output TaskParameter="Value" PropertyName="PublishDir"/>
-		</CreateProperty>
-	</Target>
-	
 </Project>
