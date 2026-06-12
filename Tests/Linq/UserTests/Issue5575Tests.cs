@@ -17,36 +17,45 @@ namespace Tests.UserTests
 			[Column]     public int Value { get; set; }
 		}
 
-		sealed class Counts
+		// A nullable member that is left unbound (never assigned) in one projection and then
+		// consumed through Nullable<T>.HasValue in a later projection. Building used to throw
+		// "InvalidOperationException: Called when root is not initialized." — see #5575.
+		sealed class StatEntity
 		{
-			public int Id    { get; set; }
-			public int Count { get; set; }
+			public int  Id        { get; set; }
+			public int? LeadCount { get; set; }
 		}
 
-		// Canonical repro from https://github.com/linq2db/linq2db/issues/5575
-		// (does not currently reproduce on master across SQLite / SQL Server — see PR notes).
+		// Reported shape: HasValue inside a conditional projection.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5575")]
 		public void ConditionalNullableHasValue([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(new[] { new SomeTable { Id = 1, Value = 4 } });
 
-			var counts = new[] { new Counts { Id = 1, Count = 5 } };
-
-			var query =
-				from t in tb
-				from c in counts.AsQueryable()
-								.Where(c => c.Id == t.Id)
-								.DefaultIfEmpty()
-				select new
+			var query = tb
+				.Select(c => new StatEntity { Id = c.Id }) // LeadCount left unbound
+				.Select(s => new
 				{
-					t.Id,
-					Rate = ((int?)c.Count).HasValue
-						? (decimal?)(((int?)c.Count).Value / (decimal)t.Value * 100)
-						: null
-				};
+					s.Id,
+					Rate = s.LeadCount.HasValue ? (decimal?)1m : null
+				});
 
-			query.ToList();
+			AssertQuery(query);
+		}
+
+		// Minimal trigger: HasValue on the unbound member, without a conditional.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5575")]
+		public void UnboundNullableHasValue([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(new[] { new SomeTable { Id = 1, Value = 4 } });
+
+			var query = tb
+				.Select(c => new StatEntity { Id = c.Id }) // LeadCount left unbound
+				.Select(s => new { s.Id, Has = s.LeadCount.HasValue });
+
+			AssertQuery(query);
 		}
 	}
 }
