@@ -561,6 +561,25 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 
 				return builder.Build(translationContext, methodCall, isExpression: translationFlags.HasFlag(TranslationFlags.Expression));
 			}
+
+			// empty(replaceRegexpAll(coalesce({value}, ''), '<WHITESPACES_REGEX>', ''))
+			// coalesce handles null inline; no separate IS NULL OR branch needed.
+			public override ISqlExpression? TranslateIsNullOrWhiteSpace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value)
+			{
+				var factory     = translationContext.ExpressionFactory;
+				var valueType   = factory.GetDbDataType(value);
+				var literalType = factory.GetDbDataType(typeof(string));
+				var boolType    = factory.GetDbDataType(typeof(bool));
+				var empty       = factory.Value(literalType, string.Empty);
+
+				var coalesced  = factory.Coalesce(value, empty);
+				var replaced   = factory.Function(valueType, "replaceRegexpAll", coalesced, factory.Value(literalType, WHITESPACES_REGEX), empty);
+				var emptyCheck = factory.Function(boolType, "empty", replaced);
+
+				var predicate  = factory.ExprPredicate(emptyCheck);
+
+				return factory.SearchCondition(isOr: false).Add(predicate);
+			}
 		}
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)

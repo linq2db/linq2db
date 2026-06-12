@@ -536,13 +536,12 @@ namespace LinqToDB.Linq
 			{ M(() => "".ToLower    ()        ), N(() => L<string?,string?>                (obj => Sql.Lower(obj))) },
 			{ M(() => "".ToUpper    ()        ), N(() => L<string?,string?>                (obj => Sql.Upper(obj))) },
 #pragma warning restore CA1304, CA1311, MA0011 // use CultureInfo
-			{ M(() => "".CompareTo  ("")      ), N(() => L<string,string,int>              ((obj,p0) => ConvertToCaseCompareTo(obj, p0)!.Value)) },
+			{ M(() => "".CompareTo  ("")      ), N(() => L<string,string,int>              ((obj,p0) => ConvertToCaseCompareToImpl(obj, p0)!.Value)) },
 #pragma warning disable MA0107 // object.ToString is bad, m'kay?
-			{ M(() => "".CompareTo  (1)       ), N(() => L<string,object,int>              ((obj,p0) => ConvertToCaseCompareTo(obj, p0.ToString())!.Value)) },
+			{ M(() => "".CompareTo  (1)       ), N(() => L<string,object,int>              ((obj,p0) => ConvertToCaseCompareToImpl(obj, p0.ToString())!.Value)) },
 #pragma warning restore MA0107 // object.ToString is bad, m'kay?
 
 			{ M(() => string.IsNullOrEmpty ("")    ),                                         N(() => L<string,bool>                                   (p0                 => p0 == null || p0.Length == 0)) },
-			{ M(() => string.IsNullOrWhiteSpace("")),                                         N(() => L<string,bool>                                   (p0                 => Sql.IsNullOrWhiteSpace(p0))) },
 			{ M(() => string.CompareOrdinal("","")),                                          N(() => L<string,string,int>                             ((s1,s2)            => s1.CompareTo(s2))) },
 			{ M(() => string.CompareOrdinal("",0,"",0,0)),                                    N(() => L<string,int,string,int,int,int>                 ((s1,i1,s2,i2,l)    => s1.Substring(i1, l).CompareTo(s2.Substring(i2, l)))) },
 #pragma warning disable CA1304, CA1309, CA1310, CA1311, CA1862, MA0011 // use CultureInfo
@@ -1078,6 +1077,18 @@ namespace LinqToDB.Linq
 		public static int? ConvertToCaseCompareTo(string? str, string? value)
 		{
 			return str == null || value == null ? (int?)null : StringComparer.Ordinal.Compare(str, value);
+		}
+
+		// Faithful local-evaluation equivalent of the string.Compare/CompareTo member mappings:
+		// StringComparer.Ordinal.Compare sorts null before any string and returns a non-null int whose
+		// sign (negative / zero / positive) matches the SQL lowering of SqlCompareToExpression
+		// (CompareNulls.LikeClr). Only the sign is contractual — the magnitude is unspecified, as with the
+		// BCL compare APIs. Referenced by the member mappings instead of the obsolete public
+		// ConvertToCaseCompareTo, whose null-returning behavior must stay frozen for external callers.
+		[Sql.Extension(builderType: typeof(ConvertToCaseCompareToBuilder))]
+		static int? ConvertToCaseCompareToImpl(string? str, string? value)
+		{
+			return StringComparer.Ordinal.Compare(str, value);
 		}
 
 		// Access, DB2, Firebird, Informix, MySql, Oracle, PostgreSQL, SQLite

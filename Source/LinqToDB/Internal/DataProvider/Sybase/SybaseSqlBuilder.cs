@@ -36,9 +36,17 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 				.AppendLine("SELECT @@IDENTITY");
 		}
 
+		// Sybase ASE 15.7+ supports ANSI `||` for string concatenation alongside Transact-SQL `+`;
+		// emit `||` for consistency with the other ANSI-`||` providers. Both operators behave
+		// identically under the ASE default — neither propagates NULL, and both need an explicit
+		// convert() for non-character operands — so the PreserveNull CASE-WHEN wrap below stays, and
+		// ConcatRequiresExplicitStringCast remains inherited-`true`. SQL-shape change only.
+		// https://infocenter.sybase.com/help/topic/com.sybase.infocenter.dc32300.1600/doc/html/san1390612110949.html
+		protected override ConcatBuildStyle ConcatStyle => ConcatBuildStyle.Pipes;
+
 		protected override void BuildSqlConcatExpression(SqlConcatExpression element)
 		{
-			// Sybase ASE plain `+` does NOT propagate NULL — `'A' + NULL` returns `'A'`,
+			// Sybase ASE `||` (like `+`) does NOT propagate NULL — `'A' || NULL` returns `'A'`,
 			// not NULL. For `Sql.Concat` (PreserveNull = true) we need strict any-null →
 			// null semantics. Emit `CASE WHEN <any operand IS NULL> THEN NULL ELSE chain
 			// END` at SQL output time so the AST stays a plain `SqlConcatExpression` and

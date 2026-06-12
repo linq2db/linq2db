@@ -164,8 +164,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			}
 			else if (cast.SystemType.ToUnderlying() == typeof(string) && cast.Expression.SystemType?.ToUnderlying() == typeof(Guid))
 			{
-				// TODO: think how to use FirebirdMemberTranslator.GuidMemberTranslator.TranslateGuildToString instead of code duplication here
-				return PseudoFunctions.MakeToLower(new SqlFunction(QueryHelper.GetDbDataType(cast, MappingSchema), "UUID_TO_CHAR", cast.Expression), MappingSchema);
+				return Translation.FirebirdMemberTranslator.TranslateGuidToString(cast.Expression, Factory);
 			}
 			else if (cast.SystemType.ToUnderlying() == typeof(Guid) && cast.Expression.SystemType?.ToUnderlying() == typeof(string))
 			{
