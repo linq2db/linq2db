@@ -1586,5 +1586,94 @@ namespace Tests.Linq
 		}
 
 		#endregion
+
+		#region Concurrency — shared cached query must not share per-execution key state
+
+		// Regression for MAJ001: KeyedQueryKeysHolder used to be build-time state baked into the
+		// cached query, so concurrent executions of the same cached query clobbered each other's
+		// key sets — producing empty or cross-loaded child collections. Keys are now isolated per
+		// execution via the preamble-results array, so this must stay green under concurrency.
+		// Scoped to providers whose CreateLocalTable tables are visible across connections.
+		[Test]
+		public async Task KeyedQuery_ConcurrentExecutions_DoNotShareKeyState(
+			[IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllPostgreSQL)] string context)
+		{
+			var (companies, departments, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			// Warm the query cache once so every worker hits the same cached Query<T> (the shared holder).
+			RunKeyed(db, 3);
+
+			const int workers            = 8;
+			const int iterationsPerWorker = 12;
+
+			var failures = new System.Collections.Concurrent.ConcurrentQueue<string>();
+
+			var tasks = Enumerable.Range(0, workers).Select(w => Task.Run(() =>
+			{
+				for (var it = 0; it < iterationsPerWorker; it++)
+				{
+					// Vary the filter so concurrent executions extract different key sets.
+					var maxId = (w + it) % 3 + 1;
+
+					try
+					{
+						using var ldb = GetDataContext(context);
+
+						var rows = RunKeyed(ldb, maxId);
+
+						var gotDeptIds = rows.SelectMany(r => r.Departments).Select(d => d.Id).OrderBy(id => id).ToList();
+						var expDeptIds = departments.Where(d => d.CompanyId <= maxId).Select(d => d.Id).OrderBy(id => id).ToList();
+
+						if (!gotDeptIds.SequenceEqual(expDeptIds))
+							failures.Enqueue($"maxId={maxId}: expected depts [{string.Join(",", expDeptIds)}], got [{string.Join(",", gotDeptIds)}]");
+
+						foreach (var r in rows)
+							foreach (var d in r.Departments)
+								if (d.CompanyId != r.Id)
+									failures.Enqueue($"maxId={maxId}: company {r.Id} got foreign dept {d.Id} (CompanyId={d.CompanyId})");
+					}
+					catch (Exception ex)
+					{
+						failures.Enqueue($"maxId={maxId}: {ex.GetType().Name}: {ex.Message}");
+					}
+				}
+			})).ToArray();
+
+			await Task.WhenAll(tasks);
+
+			failures.ShouldBeEmpty();
+		}
+
+		// Company → Departments eager load under the KeyedQuery strategy, resolved by type so it can
+		// run on any context (the shared tables are created once by the caller).
+		static List<CompanyWithDepartments> RunKeyed(IDataContext db, int maxId)
+		{
+			var query =
+				from c in db.GetTable<Company>()
+				where c.Id <= maxId
+				orderby c.Id
+				select new CompanyWithDepartments
+				{
+					Id          = c.Id,
+					Departments = db.GetTable<Department>()
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.ToList(),
+				};
+
+			return query.AsKeyedQuery().ToList();
+		}
+
+		sealed class CompanyWithDepartments
+		{
+			public int              Id          { get; set; }
+			public List<Department> Departments { get; set; } = null!;
+		}
+
+		#endregion
 	}
 }

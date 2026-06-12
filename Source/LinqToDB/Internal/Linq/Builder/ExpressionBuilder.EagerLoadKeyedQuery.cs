@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -23,8 +24,8 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// <summary>Marker interface for KeyedQueryKeysPreamble, used during buffer setup.</summary>
 		interface IKeyedQueryKeysPreamble
 		{
-			/// <summary>Extract distinct keys from the buffer and populate the holder.</summary>
-			void SetKeysFromBuffer(IList buffer);
+			/// <summary>Extract distinct keys from the buffer into the per-execution holder, keyed by the given execution's results array.</summary>
+			void SetKeysFromBuffer(object execution, IList buffer);
 
 			/// <summary>Index of the corresponding KeyedQueryChildPreamble in the preambles list.</summary>
 			int ChildPreambleIndex { get; set; }
@@ -654,11 +655,36 @@ namespace LinqToDB.Internal.Linq.Builder
 		}
 
 		/// <summary>
-		/// Thread-safe holder for KeyedQuery local key collections.
+		/// Per-execution store for KeyedQuery local key collections, keyed by the
+		/// <see cref="IQueryExpressions"/> container created fresh for each top-level query execution
+		/// and threaded uniformly through every nested preamble / child / buffer query. This isolates
+		/// concurrent executions of the same cached query — each writes and reads its own key set under
+		/// its own container — so callers sharing the cached query cannot clobber each other's keys.
 		/// </summary>
 		sealed class KeyedQueryKeysHolder<TKey>
 		{
-			public TKey[]? Keys { get; set; }
+			readonly ConditionalWeakTable<object, TKey[]> _perExecution = new();
+
+			public void SetKeys(object? execution, TKey[] keys)
+			{
+				if (execution == null)
+					return;
+
+				_perExecution.Remove(execution);
+				_perExecution.Add(execution, keys);
+			}
+
+			// execution is null only if the keys accessor is evaluated without a live IQueryExpressions
+			// (e.g. during SQL-text generation); the value is unused there, so return null — exactly as
+			// the previous nullable field did.
+			public TKey[]? GetKeys(object? execution)
+				=> execution != null && _perExecution.TryGetValue(execution, out var keys) ? keys : null;
+
+			public void ClearKeys(object? execution)
+			{
+				if (execution != null)
+					_perExecution.Remove(execution);
+			}
 		}
 
 		static readonly MethodInfo _buildKeyedQueryKeysSourceMethodInfo =
@@ -669,7 +695,10 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			var holder     = new KeyedQueryKeysHolder<TKey>();
 			var holderExpr = Expression.Constant(holder);
-			var keysExpr   = Expression.Property(holderExpr, nameof(KeyedQueryKeysHolder<>.Keys));
+			// Source the keys per-execution from the IQueryExpressions container (threaded uniformly to
+			// every nested / child / buffer query), NOT a build-time-shared field — see KeyedQueryKeysHolder.
+			var getKeys    = typeof(KeyedQueryKeysHolder<TKey>).GetMethod(nameof(KeyedQueryKeysHolder<TKey>.GetKeys))!;
+			var keysExpr   = Expression.Call(holderExpr, getKeys, QueryExpressionContainerParam);
 
 			return (holder, keysExpr);
 		}
@@ -765,7 +794,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
 			{
 				var keys = _query.GetResultEnumerable(dataContext, expressions, preambles, preambles).ToArray();
-				_holder.Keys = keys;
+				_holder.SetKeys(expressions, keys);
 				return keys;
 			}
 
@@ -773,11 +802,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				var keys = await _query.GetResultEnumerable(dataContext, expressions, preambles, preambles)
 					.ToArrayAsync(cancellationToken).ConfigureAwait(false);
-				_holder.Keys = keys;
+				_holder.SetKeys(expressions, keys);
 				return keys;
 			}
 
-			public void SetKeysFromBuffer(IList buffer)
+			public void SetKeysFromBuffer(object execution, IList buffer)
 			{
 				if (BufferKeyExtractor == null)
 				{
@@ -790,7 +819,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				foreach (var row in buffer)
 					keySet.Add(BufferKeyExtractor(row));
 
-				_holder.Keys = keySet.ToArray();
+				_holder.SetKeys(execution, keySet.ToArray());
 			}
 
 			public override void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values)
@@ -816,12 +845,13 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
 			{
+				var keys = _holder.GetKeys(expressions);
 				try
 				{
 					var result = new PreambleResult<TKey, T>();
 
 					// Skip child query when there are no parent keys — no rows to load.
-					if (_holder.Keys is not { Length: > 0 })
+					if (keys is not { Length: > 0 })
 						return result;
 
 					foreach (var e in _query.GetResultEnumerable(dataContext, expressions, preambles, preambles))
@@ -833,18 +863,19 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 				finally
 				{
-					_holder.Keys = null;
+					_holder.ClearKeys(expressions);
 				}
 			}
 
 			public override async Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object[]? preambles, CancellationToken cancellationToken)
 			{
+				var keys = _holder.GetKeys(expressions);
 				try
 				{
 					var result = new PreambleResult<TKey, T>();
 
 					// Skip child query when there are no parent keys — no rows to load.
-					if (_holder.Keys is not { Length: > 0 })
+					if (keys is not { Length: > 0 })
 						return result;
 
 					await foreach (var e in _query.GetResultEnumerable(dataContext, expressions, preambles, preambles)
@@ -858,7 +889,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 				finally
 				{
-					_holder.Keys = null;
+					_holder.ClearKeys(expressions);
 				}
 			}
 
@@ -1265,7 +1296,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				var buffer = _bufferQuery.GetResultEnumerable(dataContext, expressions, parameters, preambles).ToList();
 				var ilist  = (IList)buffer;
 				foreach (var kp in _keysPreambles)
-					kp.SetKeysFromBuffer(ilist);
+					kp.SetKeysFromBuffer(expressions, ilist);
 				return buffer;
 			}
 
@@ -1276,7 +1307,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					.ToListAsync(cancellationToken).ConfigureAwait(false);
 				var ilist = (IList)buffer;
 				foreach (var kp in _keysPreambles)
-					kp.SetKeysFromBuffer(ilist);
+					kp.SetKeysFromBuffer(expressions, ilist);
 				return buffer;
 			}
 
