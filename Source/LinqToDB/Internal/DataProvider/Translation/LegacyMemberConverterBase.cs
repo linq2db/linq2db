@@ -257,6 +257,86 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 			var current = toValueCall.Object ?? (toValueCall.Arguments.Count > 0 ? toValueCall.Arguments[0] : null);
 
+			// --- Window frame pre-pass ---
+			// A legacy ROWS/RANGE frame, when present, sits at the front of the chain (between .ToValue() and the
+			// OrderBy/function). It is built from property getters (Rows/Range/Between/UnboundedPreceding/CurrentRow/
+			// And/UnboundedFollowing) plus the ValuePreceding/ValueFollowing methods. Consume it here into a
+			// WindowFrameSpec, then let the loop below walk the OrderBy/PartitionBy/Over/function chain unchanged. The
+			// new builder only has the BETWEEN form, so a single-boundary legacy frame (e.g. ROWS UNBOUNDED PRECEDING)
+			// normalises to "BETWEEN <boundary> AND CURRENT ROW" — the equivalent SQL.
+			var         frameSeen        = false;
+			var         frameIsRange     = false;
+			string?     frameStartMember = null;
+			Expression? frameStartValue  = null;
+			string?     frameEndMember   = null;
+			Expression? frameEndValue    = null;
+
+			static Type? FrameInterface(Type? declaringType)
+			{
+				var open = declaringType is { IsGenericType: true } ? declaringType.GetGenericTypeDefinition() : declaringType;
+				return open == typeof(AnalyticFunctions.IOrderedReadyToWindowing<>)
+					|| open == typeof(AnalyticFunctions.IBoundaryExpected<>)
+					|| open == typeof(AnalyticFunctions.IBetweenStartExpected<>)
+					|| open == typeof(AnalyticFunctions.IAndExpected<>)
+					|| open == typeof(AnalyticFunctions.ISecondBoundaryExpected<>)
+						? open
+						: null;
+			}
+
+			// Maps a legacy boundary member name to the new IBoundaryPart<> member name (UNBOUNDED PRECEDING/FOLLOWING
+			// both collapse to the positional Unbounded; the *Value* members carry the offset expression).
+			static (string member, Expression? value) MapLegacyBoundary(string legacyName, Expression? value) => legacyName switch
+			{
+				nameof(AnalyticFunctions.IBoundaryExpected<>.UnboundedPreceding)       => ("Unbounded",      null),
+				nameof(AnalyticFunctions.ISecondBoundaryExpected<>.UnboundedFollowing) => ("Unbounded",      null),
+				nameof(AnalyticFunctions.IBoundaryExpected<>.CurrentRow)               => ("CurrentRow",     null),
+				nameof(AnalyticFunctions.IBoundaryExpected<>.ValuePreceding)           => ("ValuePreceding", value),
+				nameof(AnalyticFunctions.ISecondBoundaryExpected<>.ValueFollowing)     => ("ValueFollowing", value),
+				_                                                                         => throw new InvalidOperationException($"Unexpected window frame boundary '{legacyName}'."),
+			};
+
+			while (current != null)
+			{
+				Type?       frameDecl = null;
+				string      memberName;
+				Expression? boundaryValue = null;
+				Expression? receiver;
+
+				if (current is MemberExpression frameMember && (frameDecl = FrameInterface(frameMember.Member.DeclaringType)) != null)
+				{
+					memberName = frameMember.Member.Name;
+					receiver   = frameMember.Expression;
+				}
+				else if (current is MethodCallExpression frameMethod
+					&& frameMethod.Method.Name is nameof(AnalyticFunctions.IBoundaryExpected<>.ValuePreceding) or nameof(AnalyticFunctions.ISecondBoundaryExpected<>.ValueFollowing)
+					&& (frameDecl = FrameInterface(frameMethod.Method.DeclaringType)) != null)
+				{
+					memberName    = frameMethod.Method.Name;
+					boundaryValue = frameMethod.Arguments.Count > 0 ? frameMethod.Arguments[^1] : null;
+					receiver      = frameMethod.Object;
+				}
+				else
+					break;
+
+				if (frameDecl == typeof(AnalyticFunctions.IOrderedReadyToWindowing<>))
+				{
+					if (memberName is not (nameof(AnalyticFunctions.IOrderedReadyToWindowing<>.Rows) or nameof(AnalyticFunctions.IOrderedReadyToWindowing<>.Range)))
+						break; // ThenBy etc. — not a frame node; hand back to the main loop
+
+					frameIsRange = string.Equals(memberName, nameof(AnalyticFunctions.IOrderedReadyToWindowing<>.Range), StringComparison.Ordinal);
+				}
+				else if (frameDecl == typeof(AnalyticFunctions.ISecondBoundaryExpected<>))
+					(frameEndMember, frameEndValue) = MapLegacyBoundary(memberName, boundaryValue);
+				else if (frameDecl == typeof(AnalyticFunctions.IBetweenStartExpected<>))
+					(frameStartMember, frameStartValue) = MapLegacyBoundary(memberName, boundaryValue);
+				else if (frameDecl == typeof(AnalyticFunctions.IBoundaryExpected<>) && !string.Equals(memberName, nameof(AnalyticFunctions.IBoundaryExpected<>.Between), StringComparison.Ordinal))
+					(frameStartMember, frameStartValue) = MapLegacyBoundary(memberName, boundaryValue); // single-boundary form -> start
+				// IAndExpected.And and IBoundaryExpected.Between are markers — nothing to capture.
+
+				frameSeen = true;
+				current   = receiver;
+			}
+
 			while (current is MethodCallExpression mc)
 			{
 				var declaringType = mc.Method.DeclaringType;
@@ -305,11 +385,19 @@ namespace LinqToDB.Internal.DataProvider.Translation
 						if (pType == typeof(Sql.NullsPosition) || pType == typeof(Sql.From))
 							continue;
 
+						var capturedArg = mc.Arguments[i];
+
+						// Legacy object?-typed parameters (Average/StdDev/Covar/Regr/...) box the real expression as
+						// Convert(x, object). Unwrap that boxing so the converted call matches a typed/generic Sql.Window
+						// overload (e.g. Average(int?)) instead of seeing `object` (which has no concrete overload).
+						while (capturedArg is UnaryExpression { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked } conv && conv.Type == typeof(object))
+							capturedArg = conv.Operand;
+
 						switch (functionArgCount)
 						{
-							case 0: functionArg1 = mc.Arguments[i]; break;
-							case 1: functionArg2 = mc.Arguments[i]; break;
-							case 2: functionArg3 = mc.Arguments[i]; break;
+							case 0: functionArg1 = capturedArg; break;
+							case 1: functionArg2 = capturedArg; break;
+							case 2: functionArg3 = capturedArg; break;
 						}
 
 						functionArgCount++;
@@ -409,6 +497,32 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				};
 			}
 
+			WindowFunctionHelpers.WindowFrameSpec? frame = null;
+			if (frameSeen)
+			{
+				// A frame needs a start boundary, and the new pipeline frames only aggregate and value functions
+				// (ranking / LEAD / LAG cannot carry a frame) — otherwise fall back to the legacy pipeline.
+				if (frameStartMember == null
+					|| functionName is not (
+						nameof(AnalyticFunctions.Sum)        or nameof(AnalyticFunctions.Average)    or nameof(AnalyticFunctions.Min) or
+						nameof(AnalyticFunctions.Max)        or nameof(AnalyticFunctions.Count)      or nameof(AnalyticFunctions.LongCount)  or
+						nameof(AnalyticFunctions.FirstValue) or
+						nameof(AnalyticFunctions.LastValue)  or nameof(AnalyticFunctions.NthValue)   or
+						nameof(AnalyticFunctions.StdDev)     or nameof(AnalyticFunctions.StdDevPop)  or nameof(AnalyticFunctions.StdDevSamp) or
+						nameof(AnalyticFunctions.Variance)   or nameof(AnalyticFunctions.VarPop)     or nameof(AnalyticFunctions.VarSamp)    or
+						nameof(AnalyticFunctions.CovarPop)   or nameof(AnalyticFunctions.CovarSamp)  or nameof(AnalyticFunctions.Corr)       or
+						nameof(AnalyticFunctions.RegrSlope)  or nameof(AnalyticFunctions.RegrIntercept) or nameof(AnalyticFunctions.RegrCount) or
+						nameof(AnalyticFunctions.RegrR2)     or nameof(AnalyticFunctions.RegrAvgX)   or nameof(AnalyticFunctions.RegrAvgY)   or
+						nameof(AnalyticFunctions.RegrSXX)    or nameof(AnalyticFunctions.RegrSYY)    or nameof(AnalyticFunctions.RegrSXY)))
+				{
+					return null;
+				}
+
+				frameEndMember ??= "CurrentRow"; // single-boundary legacy form -> BETWEEN <boundary> AND CURRENT ROW
+
+				frame = new WindowFunctionHelpers.WindowFrameSpec(frameIsRange, frameStartMember, frameStartValue, frameEndMember, frameEndValue);
+			}
+
 			var converted = functionName switch
 			{
 				nameof(AnalyticFunctions.RowNumber)   => WindowFunctionHelpers.BuildRowNumber(partitionBy, orderBy),
@@ -418,34 +532,91 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				nameof(AnalyticFunctions.CumeDist)    => WindowFunctionHelpers.BuildCumeDist(partitionBy, orderBy),
 				nameof(AnalyticFunctions.NTile)       => functionArg1 != null ? WindowFunctionHelpers.BuildNTile(functionArg1, partitionBy, orderBy) : null,
 
-				nameof(AnalyticFunctions.Sum)     when functionArg1 != null => WindowFunctionHelpers.BuildSum(functionArg1, partitionBy, orderBy, functionModifier),
-				nameof(AnalyticFunctions.Average) when functionArg1 != null => WindowFunctionHelpers.BuildAverage(functionArg1, partitionBy, orderBy, functionModifier),
-				nameof(AnalyticFunctions.Min)     when functionArg1 != null => WindowFunctionHelpers.BuildMin(functionArg1, partitionBy, orderBy, functionModifier),
-				nameof(AnalyticFunctions.Max)     when functionArg1 != null => WindowFunctionHelpers.BuildMax(functionArg1, partitionBy, orderBy, functionModifier),
+				nameof(AnalyticFunctions.Sum)     when functionArg1 != null => WindowFunctionHelpers.BuildSum(functionArg1, partitionBy, orderBy, functionModifier, frame),
+				nameof(AnalyticFunctions.Average) when functionArg1 != null => WindowFunctionHelpers.BuildAverage(functionArg1, partitionBy, orderBy, functionModifier, frame),
+				nameof(AnalyticFunctions.Min)     when functionArg1 != null => WindowFunctionHelpers.BuildMin(functionArg1, partitionBy, orderBy, functionModifier, frame),
+				nameof(AnalyticFunctions.Max)     when functionArg1 != null => WindowFunctionHelpers.BuildMax(functionArg1, partitionBy, orderBy, functionModifier, frame),
 
-				nameof(AnalyticFunctions.Count) when functionArgCount == 0 => WindowFunctionHelpers.BuildCount(partitionBy, orderBy),
-				nameof(AnalyticFunctions.Count) when functionArg1 != null  => WindowFunctionHelpers.BuildCount(functionArg1, partitionBy, orderBy, functionModifier),
+				nameof(AnalyticFunctions.StdDev)     when functionArg1 != null => WindowFunctionHelpers.BuildStdDev(functionArg1, partitionBy, orderBy, functionModifier, frame),
+				nameof(AnalyticFunctions.StdDevPop)  when functionArg1 != null => WindowFunctionHelpers.BuildStdDevPop(functionArg1, partitionBy, orderBy, functionModifier, frame),
+				nameof(AnalyticFunctions.StdDevSamp) when functionArg1 != null => WindowFunctionHelpers.BuildStdDevSamp(functionArg1, partitionBy, orderBy, functionModifier, frame),
+				nameof(AnalyticFunctions.Variance)   when functionArg1 != null => WindowFunctionHelpers.BuildVariance(functionArg1, partitionBy, orderBy, functionModifier, frame),
+				nameof(AnalyticFunctions.VarPop)     when functionArg1 != null => WindowFunctionHelpers.BuildVarPop(functionArg1, partitionBy, orderBy, functionModifier, frame),
+				nameof(AnalyticFunctions.VarSamp)    when functionArg1 != null => WindowFunctionHelpers.BuildVarSamp(functionArg1, partitionBy, orderBy, functionModifier, frame),
 
-				// LongCount intentionally falls through to the legacy pipeline: Sql.Window has no LongCount equivalent.
+				nameof(AnalyticFunctions.CovarPop)      when functionArg1 != null && functionArg2 != null => WindowFunctionHelpers.BuildCovarPop(functionArg1, functionArg2, partitionBy, orderBy, frame),
+				nameof(AnalyticFunctions.CovarSamp)     when functionArg1 != null && functionArg2 != null => WindowFunctionHelpers.BuildCovarSamp(functionArg1, functionArg2, partitionBy, orderBy, frame),
+				nameof(AnalyticFunctions.Corr)          when functionArg1 != null && functionArg2 != null => WindowFunctionHelpers.BuildCorr(functionArg1, functionArg2, partitionBy, orderBy, frame),
+				nameof(AnalyticFunctions.RegrSlope)     when functionArg1 != null && functionArg2 != null => WindowFunctionHelpers.BuildRegrSlope(functionArg1, functionArg2, partitionBy, orderBy, frame),
+				nameof(AnalyticFunctions.RegrIntercept) when functionArg1 != null && functionArg2 != null => WindowFunctionHelpers.BuildRegrIntercept(functionArg1, functionArg2, partitionBy, orderBy, frame),
+				nameof(AnalyticFunctions.RegrCount)     when functionArg1 != null && functionArg2 != null => WindowFunctionHelpers.BuildRegrCount(functionArg1, functionArg2, partitionBy, orderBy, frame),
+				nameof(AnalyticFunctions.RegrR2)        when functionArg1 != null && functionArg2 != null => WindowFunctionHelpers.BuildRegrR2(functionArg1, functionArg2, partitionBy, orderBy, frame),
+				nameof(AnalyticFunctions.RegrAvgX)      when functionArg1 != null && functionArg2 != null => WindowFunctionHelpers.BuildRegrAvgX(functionArg1, functionArg2, partitionBy, orderBy, frame),
+				nameof(AnalyticFunctions.RegrAvgY)      when functionArg1 != null && functionArg2 != null => WindowFunctionHelpers.BuildRegrAvgY(functionArg1, functionArg2, partitionBy, orderBy, frame),
+				nameof(AnalyticFunctions.RegrSXX)       when functionArg1 != null && functionArg2 != null => WindowFunctionHelpers.BuildRegrSXX(functionArg1, functionArg2, partitionBy, orderBy, frame),
+				nameof(AnalyticFunctions.RegrSYY)       when functionArg1 != null && functionArg2 != null => WindowFunctionHelpers.BuildRegrSYY(functionArg1, functionArg2, partitionBy, orderBy, frame),
+				nameof(AnalyticFunctions.RegrSXY)       when functionArg1 != null && functionArg2 != null => WindowFunctionHelpers.BuildRegrSXY(functionArg1, functionArg2, partitionBy, orderBy, frame),
+
+				nameof(AnalyticFunctions.Count) when functionArgCount == 0 => WindowFunctionHelpers.BuildCount(partitionBy, orderBy, frame),
+				nameof(AnalyticFunctions.Count) when functionArg1 != null  => WindowFunctionHelpers.BuildCount(functionArg1, partitionBy, orderBy, functionModifier, frame),
+
+				nameof(AnalyticFunctions.LongCount) when functionArgCount == 0 => WindowFunctionHelpers.BuildLongCount(partitionBy, orderBy, frame),
+				nameof(AnalyticFunctions.LongCount) when functionArg1 != null  => WindowFunctionHelpers.BuildLongCount(functionArg1, partitionBy, orderBy, functionModifier, frame),
 
 				nameof(AnalyticFunctions.Lead) when functionArg1 != null => WindowFunctionHelpers.BuildLead(functionArg1, functionArg2, functionArg3, functionNulls, partitionBy, orderBy),
 				nameof(AnalyticFunctions.Lag)  when functionArg1 != null => WindowFunctionHelpers.BuildLag(functionArg1, functionArg2, functionArg3, functionNulls, partitionBy, orderBy),
 
-				nameof(AnalyticFunctions.FirstValue) when functionArg1 != null                       => WindowFunctionHelpers.BuildFirstValue(functionArg1, functionNulls, partitionBy, orderBy),
-				nameof(AnalyticFunctions.LastValue)  when functionArg1 != null                       => WindowFunctionHelpers.BuildLastValue(functionArg1, functionNulls, partitionBy, orderBy),
-				nameof(AnalyticFunctions.NthValue)   when functionArg1 != null && functionArg2 != null => WindowFunctionHelpers.BuildNthValue(functionArg1, functionArg2, functionNulls, partitionBy, orderBy),
+				nameof(AnalyticFunctions.FirstValue) when functionArg1 != null                       => WindowFunctionHelpers.BuildFirstValue(functionArg1, functionNulls, partitionBy, orderBy, frame),
+				nameof(AnalyticFunctions.LastValue)  when functionArg1 != null                       => WindowFunctionHelpers.BuildLastValue(functionArg1, functionNulls, partitionBy, orderBy, frame),
+				nameof(AnalyticFunctions.NthValue)   when functionArg1 != null && functionArg2 != null => WindowFunctionHelpers.BuildNthValue(functionArg1, functionArg2, functionNulls, partitionBy, orderBy, frame),
 
 				_ => null, // Unsupported function — fall through to old pipeline
 			};
 
-			// The Sql.Window.* functions have fixed CLR return types (e.g. RowNumber/Rank -> long, NTile -> int)
-			// that can differ from the legacy chain's ToValue() type parameter (TR). Reconcile so the rewritten
-			// node slots into the original expression (anonymous-type ctors, casts, etc.) without a type clash.
+			// The Sql.Window.* functions have fixed CLR return types (e.g. RowNumber/Rank -> long, NTile -> int,
+			// the statistical aggregates -> double?) that can differ from the legacy chain's ToValue() type
+			// parameter (TR). Reconcile so the rewritten node slots into the original expression without a type clash.
 			if (converted != null && converted.Type != toValueCall.Type)
-				converted = Expression.Convert(converted, toValueCall.Type);
+			{
+				var sourceUnderlying = Nullable.GetUnderlyingType(converted.Type);
+				var targetUnderlying = Nullable.GetUnderlyingType(toValueCall.Type) ?? toValueCall.Type;
+
+				if (converted.Type == typeof(double?) && targetUnderlying == typeof(decimal))
+				{
+					// double? -> decimal / decimal?. A non-finite double (NaN/Infinity — e.g. CORR over a single-row
+					// partition) has NO decimal representation and a direct cast throws. Map non-finite values to NULL,
+					// reproducing how the legacy provider column reader materialised a non-finite float into a decimal
+					// slot; then narrow to the requested slot (coalescing to 0m only for the non-nullable decimal).
+					var asDecimal = Expression.Call(FiniteOrNullMethod, converted);
+					converted = toValueCall.Type == typeof(decimal)
+						? Expression.Coalesce(asDecimal, Expression.Default(typeof(decimal)))
+						: asDecimal;
+				}
+				else if (sourceUnderlying != null && toValueCall.Type.IsValueType && Nullable.GetUnderlyingType(toValueCall.Type) == null)
+				{
+					// Nullable<S> -> non-nullable value type T (e.g. the statistical aggregates return double? but the
+					// legacy ToValue<T>() slot is double/int/float). A plain Convert unwraps via .Value and throws when
+					// the DB returns NULL. Coalesce the NULL to default(S) first — matching how the legacy column reader
+					// materialised a NULL value-type column — then perform the numeric S -> T conversion.
+					var nonNull = Expression.Coalesce(converted, Expression.Default(sourceUnderlying));
+					converted = sourceUnderlying == toValueCall.Type ? nonNull : Expression.Convert(nonNull, toValueCall.Type);
+				}
+				else
+				{
+					converted = Expression.Convert(converted, toValueCall.Type);
+				}
+			}
 
 			return converted;
 		}
+
+		static readonly MethodInfo FiniteOrNullMethod = typeof(LegacyMemberConverterBase).GetMethod(nameof(FiniteOrNull), BindingFlags.Static | BindingFlags.NonPublic)!;
+
+		// double/float NaN or Infinity has no decimal representation (a direct cast throws). Returns null for a
+		// non-finite input so the converted analytic value materialises into a decimal slot the way the legacy
+		// provider column reader did. Used by the return-type reconciliation in TryConvertAnalyticFunction.
+		static decimal? FiniteOrNull(double? value)
+			=> value is double v && !double.IsNaN(v) && !double.IsInfinity(v) ? (decimal)v : null;
 
 		protected bool BuildFunctionsChain(Expression expr, List<MethodCallExpression> chain, [NotNullWhen(true)] out MethodCallExpression? foundMethod, params MethodInfo[] stopMethods)
 		{

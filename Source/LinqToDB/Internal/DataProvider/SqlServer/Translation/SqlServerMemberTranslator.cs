@@ -324,6 +324,8 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 			protected override bool IsFrameExclusionSupported  => false;
 			protected override bool IsPercentileContSupported  => false;
 			protected override bool IsPercentileDiscSupported  => false;
+			// SQL Server spells sample standard deviation STDEV, not STDDEV.
+			protected override string StdDevFunctionName       => "STDEV";
 		}
 
 		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()

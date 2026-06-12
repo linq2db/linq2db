@@ -968,6 +968,26 @@ namespace LinqToDB
 		public static int Count(this Sql.IWindowFunction window, object? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Count));
 
+		/// <summary>
+		/// Generates SQL <c>COUNT(*)</c> window function returning a 64-bit count. Use the <c>LongCount(expr, ...)</c> overload for <c>COUNT(expr)</c>.
+		/// </summary>
+		/// <remarks>
+		/// <para><b>Syntax:</b> <c>Sql.Window.LongCount(f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
+		/// <para>Identical SQL to <see cref="Count(Sql.IWindowFunction, Func{IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction})"/> (<c>COUNT(*)</c>), returning <see cref="long"/>.</para>
+		/// </remarks>
+		public static long LongCount(this Sql.IWindowFunction window, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(LongCount));
+
+		/// <summary>
+		/// Generates SQL <c>COUNT(expr)</c> window function returning a 64-bit count. Use <c>.Distinct()</c> for <c>COUNT(DISTINCT expr)</c>.
+		/// </summary>
+		/// <remarks>
+		/// <para><b>Syntax:</b> <c>Sql.Window.LongCount(expr, f =&gt; f.[Distinct()][.Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
+		/// <para>Identical SQL to <see cref="Count(Sql.IWindowFunction, object?, Func{IAggregateFinal, IDefinedFunction})"/> (<c>COUNT(expr)</c>), returning <see cref="long"/>.</para>
+		/// </remarks>
+		public static long LongCount(this Sql.IWindowFunction window, object? argument, Func<IAggregateFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(LongCount));
+
 		#endregion Count
 
 		#region Sum
@@ -2563,6 +2583,219 @@ namespace LinqToDB
 			=> throw new ServerSideOnlyException(nameof(Max));
 
 		#endregion Max
+
+		#region StdDev/Variance
+
+		/// <summary>
+		/// Generates the SQL <c>STDDEV()</c> window function (<c>STDEV()</c> on SQL Server) — the sample standard deviation of values within the window.
+		/// </summary>
+		/// <remarks>
+		/// <para><b>Syntax:</b> <c>Sql.Window.StdDev(expr, f =&gt; f.[Distinct()][.Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
+		/// <para>Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.</para>
+		/// <para><b>C# usage:</b></para>
+		/// <code>
+		/// Sql.Window.StdDev(t.Value, f =&gt; f.PartitionBy(t.Dept).OrderBy(t.Date))
+		/// </code>
+		/// <para><b>Generated SQL (Oracle):</b></para>
+		/// <code>
+		/// STDDEV(t.Value) OVER (PARTITION BY t.Dept ORDER BY t.Date)
+		/// </code>
+		/// </remarks>
+		public static double? StdDev<T>(this Sql.IWindowFunction window, T argument, Func<IAggregateFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(StdDev));
+
+		/// <summary>
+		/// Generates the SQL <c>STDDEV_POP()</c> window function — the population standard deviation of values within the window.
+		/// </summary>
+		/// <remarks>
+		/// <para><b>Syntax:</b> <c>Sql.Window.StdDevPop(expr, f =&gt; f.[Distinct()][.Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
+		/// <para>Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.</para>
+		/// <para><b>Generated SQL:</b> <c>STDDEV_POP(expr) OVER (...)</c></para>
+		/// </remarks>
+		public static double? StdDevPop<T>(this Sql.IWindowFunction window, T argument, Func<IAggregateFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(StdDevPop));
+
+		/// <summary>
+		/// Generates the SQL <c>STDDEV_SAMP()</c> window function — the sample standard deviation of values within the window.
+		/// </summary>
+		/// <remarks>
+		/// <para><b>Syntax:</b> <c>Sql.Window.StdDevSamp(expr, f =&gt; f.[Distinct()][.Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
+		/// <para>Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.</para>
+		/// <para><b>Generated SQL:</b> <c>STDDEV_SAMP(expr) OVER (...)</c></para>
+		/// </remarks>
+		public static double? StdDevSamp<T>(this Sql.IWindowFunction window, T argument, Func<IAggregateFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(StdDevSamp));
+
+		/// <summary>
+		/// Generates the SQL <c>VARIANCE()</c> window function — the sample variance of values within the window.
+		/// </summary>
+		/// <remarks>
+		/// <para><b>Syntax:</b> <c>Sql.Window.Variance(expr, f =&gt; f.[Distinct()][.Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
+		/// <para>Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.</para>
+		/// <para><b>Generated SQL:</b> <c>VARIANCE(expr) OVER (...)</c></para>
+		/// </remarks>
+		public static double? Variance<T>(this Sql.IWindowFunction window, T argument, Func<IAggregateFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(Variance));
+
+		/// <summary>
+		/// Generates the SQL <c>VAR_POP()</c> window function — the population variance of values within the window.
+		/// </summary>
+		/// <remarks>
+		/// <para><b>Syntax:</b> <c>Sql.Window.VarPop(expr, f =&gt; f.[Distinct()][.Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
+		/// <para>Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.</para>
+		/// <para><b>Generated SQL:</b> <c>VAR_POP(expr) OVER (...)</c></para>
+		/// </remarks>
+		public static double? VarPop<T>(this Sql.IWindowFunction window, T argument, Func<IAggregateFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(VarPop));
+
+		/// <summary>
+		/// Generates the SQL <c>VAR_SAMP()</c> window function — the sample variance of values within the window.
+		/// </summary>
+		/// <remarks>
+		/// <para><b>Syntax:</b> <c>Sql.Window.VarSamp(expr, f =&gt; f.[Distinct()][.Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
+		/// <para>Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.</para>
+		/// <para><b>Generated SQL:</b> <c>VAR_SAMP(expr) OVER (...)</c></para>
+		/// </remarks>
+		public static double? VarSamp<T>(this Sql.IWindowFunction window, T argument, Func<IAggregateFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(VarSamp));
+
+		#endregion StdDev/Variance
+
+		#region Covar/Corr/Regr
+
+		/// <summary>
+		/// Generates the SQL <c>COVAR_POP()</c> window function — the population covariance of the two value pairs within the window.
+		/// </summary>
+		/// <remarks>
+		/// <para><b>Syntax:</b> <c>Sql.Window.CovarPop(expr1, expr2, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
+		/// <para>Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.</para>
+		/// <para><b>Generated SQL:</b> <c>COVAR_POP(expr1, expr2) OVER (...)</c></para>
+		/// </remarks>
+		public static double? CovarPop<T1, T2>(this Sql.IWindowFunction window, T1 argument1, T2 argument2, Func<IAggregateFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(CovarPop));
+
+		/// <summary>
+		/// Generates the SQL <c>COVAR_SAMP()</c> window function — the sample covariance of the two value pairs within the window.
+		/// </summary>
+		/// <remarks>
+		/// <para><b>Syntax:</b> <c>Sql.Window.CovarSamp(expr1, expr2, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
+		/// <para>Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.</para>
+		/// <para><b>Generated SQL:</b> <c>COVAR_SAMP(expr1, expr2) OVER (...)</c></para>
+		/// </remarks>
+		public static double? CovarSamp<T1, T2>(this Sql.IWindowFunction window, T1 argument1, T2 argument2, Func<IAggregateFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(CovarSamp));
+
+		/// <summary>
+		/// Generates the SQL <c>CORR()</c> window function — the correlation coefficient of the two value pairs within the window.
+		/// </summary>
+		/// <remarks>
+		/// <para><b>Syntax:</b> <c>Sql.Window.Corr(expr1, expr2, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
+		/// <para>Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.</para>
+		/// <para><b>Generated SQL:</b> <c>CORR(expr1, expr2) OVER (...)</c></para>
+		/// </remarks>
+		public static double? Corr<T1, T2>(this Sql.IWindowFunction window, T1 argument1, T2 argument2, Func<IAggregateFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(Corr));
+
+		/// <summary>
+		/// Generates the SQL <c>REGR_SLOPE()</c> window function — the slope of the least-squares-fit linear equation of (<paramref name="argument1"/>, <paramref name="argument2"/>) pairs.
+		/// </summary>
+		/// <remarks>
+		/// <para><b>Syntax:</b> <c>Sql.Window.RegrSlope(y, x, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
+		/// <para>Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.</para>
+		/// <para><b>Generated SQL:</b> <c>REGR_SLOPE(y, x) OVER (...)</c></para>
+		/// </remarks>
+		public static double? RegrSlope<T1, T2>(this Sql.IWindowFunction window, T1 argument1, T2 argument2, Func<IAggregateFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(RegrSlope));
+
+		/// <summary>
+		/// Generates the SQL <c>REGR_INTERCEPT()</c> window function — the y-intercept of the least-squares-fit linear equation of (<paramref name="argument1"/>, <paramref name="argument2"/>) pairs.
+		/// </summary>
+		/// <remarks>
+		/// <para><b>Syntax:</b> <c>Sql.Window.RegrIntercept(y, x, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
+		/// <para>Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.</para>
+		/// <para><b>Generated SQL:</b> <c>REGR_INTERCEPT(y, x) OVER (...)</c></para>
+		/// </remarks>
+		public static double? RegrIntercept<T1, T2>(this Sql.IWindowFunction window, T1 argument1, T2 argument2, Func<IAggregateFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(RegrIntercept));
+
+		/// <summary>
+		/// Generates the SQL <c>REGR_COUNT()</c> window function — the number of non-null (<paramref name="argument1"/>, <paramref name="argument2"/>) pairs within the window.
+		/// </summary>
+		/// <remarks>
+		/// <para><b>Syntax:</b> <c>Sql.Window.RegrCount(y, x, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
+		/// <para>Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.</para>
+		/// <para><b>Generated SQL:</b> <c>REGR_COUNT(y, x) OVER (...)</c></para>
+		/// </remarks>
+		public static long? RegrCount<T1, T2>(this Sql.IWindowFunction window, T1 argument1, T2 argument2, Func<IAggregateFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(RegrCount));
+
+		/// <summary>
+		/// Generates the SQL <c>REGR_R2()</c> window function — the coefficient of determination (R²) of the regression of (<paramref name="argument1"/>, <paramref name="argument2"/>) pairs.
+		/// </summary>
+		/// <remarks>
+		/// <para><b>Syntax:</b> <c>Sql.Window.RegrR2(y, x, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
+		/// <para>Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.</para>
+		/// <para><b>Generated SQL:</b> <c>REGR_R2(y, x) OVER (...)</c></para>
+		/// </remarks>
+		public static double? RegrR2<T1, T2>(this Sql.IWindowFunction window, T1 argument1, T2 argument2, Func<IAggregateFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(RegrR2));
+
+		/// <summary>
+		/// Generates the SQL <c>REGR_AVGX()</c> window function — the average of the independent variable (<paramref name="argument2"/>) over non-null pairs.
+		/// </summary>
+		/// <remarks>
+		/// <para><b>Syntax:</b> <c>Sql.Window.RegrAvgX(y, x, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
+		/// <para>Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.</para>
+		/// <para><b>Generated SQL:</b> <c>REGR_AVGX(y, x) OVER (...)</c></para>
+		/// </remarks>
+		public static double? RegrAvgX<T1, T2>(this Sql.IWindowFunction window, T1 argument1, T2 argument2, Func<IAggregateFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(RegrAvgX));
+
+		/// <summary>
+		/// Generates the SQL <c>REGR_AVGY()</c> window function — the average of the dependent variable (<paramref name="argument1"/>) over non-null pairs.
+		/// </summary>
+		/// <remarks>
+		/// <para><b>Syntax:</b> <c>Sql.Window.RegrAvgY(y, x, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
+		/// <para>Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.</para>
+		/// <para><b>Generated SQL:</b> <c>REGR_AVGY(y, x) OVER (...)</c></para>
+		/// </remarks>
+		public static double? RegrAvgY<T1, T2>(this Sql.IWindowFunction window, T1 argument1, T2 argument2, Func<IAggregateFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(RegrAvgY));
+
+		/// <summary>
+		/// Generates the SQL <c>REGR_SXX()</c> window function — the sum of squares of the independent variable (<paramref name="argument2"/>) over non-null pairs.
+		/// </summary>
+		/// <remarks>
+		/// <para><b>Syntax:</b> <c>Sql.Window.RegrSXX(y, x, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
+		/// <para>Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.</para>
+		/// <para><b>Generated SQL:</b> <c>REGR_SXX(y, x) OVER (...)</c></para>
+		/// </remarks>
+		public static double? RegrSXX<T1, T2>(this Sql.IWindowFunction window, T1 argument1, T2 argument2, Func<IAggregateFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(RegrSXX));
+
+		/// <summary>
+		/// Generates the SQL <c>REGR_SYY()</c> window function — the sum of squares of the dependent variable (<paramref name="argument1"/>) over non-null pairs.
+		/// </summary>
+		/// <remarks>
+		/// <para><b>Syntax:</b> <c>Sql.Window.RegrSYY(y, x, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
+		/// <para>Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.</para>
+		/// <para><b>Generated SQL:</b> <c>REGR_SYY(y, x) OVER (...)</c></para>
+		/// </remarks>
+		public static double? RegrSYY<T1, T2>(this Sql.IWindowFunction window, T1 argument1, T2 argument2, Func<IAggregateFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(RegrSYY));
+
+		/// <summary>
+		/// Generates the SQL <c>REGR_SXY()</c> window function — the sum of products of the independent and dependent variables over non-null pairs.
+		/// </summary>
+		/// <remarks>
+		/// <para><b>Syntax:</b> <c>Sql.Window.RegrSXY(y, x, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
+		/// <para>Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.</para>
+		/// <para><b>Generated SQL:</b> <c>REGR_SXY(y, x) OVER (...)</c></para>
+		/// </remarks>
+		public static double? RegrSXY<T1, T2>(this Sql.IWindowFunction window, T1 argument1, T2 argument2, Func<IAggregateFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(RegrSXY));
+
+		#endregion Covar/Corr/Regr
 
 		#region PercentileCont
 

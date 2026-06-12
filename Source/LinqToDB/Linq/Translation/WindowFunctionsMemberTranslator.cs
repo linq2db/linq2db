@@ -64,6 +64,10 @@ namespace LinqToDB.Linq.Translation
 			Registration.RegisterMethod(() => Sql.Window.Count(f => f.OrderBy(1)), TranslateCount);
 			Registration.RegisterMethod(() => Sql.Window.Count(1, f => f.OrderBy(1)), TranslateCount);
 
+			// LongCount is COUNT returning long — same SQL, reuse TranslateCount (it derives the type from methodCall.Type).
+			Registration.RegisterMethod(() => Sql.Window.LongCount(f => f.OrderBy(1)), TranslateCount);
+			Registration.RegisterMethod(() => Sql.Window.LongCount(1, f => f.OrderBy(1)), TranslateCount);
+
 			Registration.RegisterMethod(() => Sql.Window.Lead(1,    f => f.OrderBy(1)), TranslateLead, isGenericTypeMatch: true);
 			Registration.RegisterMethod(() => Sql.Window.Lead(1, 1, f => f.OrderBy(1)), TranslateLead, isGenericTypeMatch: true);
 			Registration.RegisterMethod(() => Sql.Window.Lead(1, 1, 1, f => f.OrderBy(1)), TranslateLead, isGenericTypeMatch: true);
@@ -80,6 +84,7 @@ namespace LinqToDB.Linq.Translation
 			RegisterAvg();
 			RegisterMin();
 			RegisterMax();
+			RegisterStatistical();
 		}
 
 		void RegisterSum()
@@ -152,6 +157,31 @@ namespace LinqToDB.Linq.Translation
 			Registration.RegisterMethod(() => Sql.Window.Max((short?)1,     f => f.OrderBy(1)), TranslateMax);
 			Registration.RegisterMethod(() => Sql.Window.Max((byte)1,       f => f.OrderBy(1)), TranslateMax);
 			Registration.RegisterMethod(() => Sql.Window.Max((byte?)1,      f => f.OrderBy(1)), TranslateMax);
+		}
+
+		void RegisterStatistical()
+		{
+			// Statistical aggregates always return double? regardless of argument type, so a single generic
+			// registration each (isGenericTypeMatch) covers every T — no per-type overloads needed.
+			Registration.RegisterMethod(() => Sql.Window.StdDev(1.0,     f => f.OrderBy(1)), TranslateStdDev,     isGenericTypeMatch: true);
+			Registration.RegisterMethod(() => Sql.Window.StdDevPop(1.0,  f => f.OrderBy(1)), TranslateStdDevPop,  isGenericTypeMatch: true);
+			Registration.RegisterMethod(() => Sql.Window.StdDevSamp(1.0, f => f.OrderBy(1)), TranslateStdDevSamp, isGenericTypeMatch: true);
+			Registration.RegisterMethod(() => Sql.Window.Variance(1.0,   f => f.OrderBy(1)), TranslateVariance,   isGenericTypeMatch: true);
+			Registration.RegisterMethod(() => Sql.Window.VarPop(1.0,     f => f.OrderBy(1)), TranslateVarPop,     isGenericTypeMatch: true);
+			Registration.RegisterMethod(() => Sql.Window.VarSamp(1.0,    f => f.OrderBy(1)), TranslateVarSamp,    isGenericTypeMatch: true);
+
+			Registration.RegisterMethod(() => Sql.Window.CovarPop(1.0, 1.0,      f => f.OrderBy(1)), TranslateCovarPop,      isGenericTypeMatch: true);
+			Registration.RegisterMethod(() => Sql.Window.CovarSamp(1.0, 1.0,     f => f.OrderBy(1)), TranslateCovarSamp,     isGenericTypeMatch: true);
+			Registration.RegisterMethod(() => Sql.Window.Corr(1.0, 1.0,          f => f.OrderBy(1)), TranslateCorr,          isGenericTypeMatch: true);
+			Registration.RegisterMethod(() => Sql.Window.RegrSlope(1.0, 1.0,     f => f.OrderBy(1)), TranslateRegrSlope,     isGenericTypeMatch: true);
+			Registration.RegisterMethod(() => Sql.Window.RegrIntercept(1.0, 1.0, f => f.OrderBy(1)), TranslateRegrIntercept, isGenericTypeMatch: true);
+			Registration.RegisterMethod(() => Sql.Window.RegrCount(1.0, 1.0,     f => f.OrderBy(1)), TranslateRegrCount,     isGenericTypeMatch: true);
+			Registration.RegisterMethod(() => Sql.Window.RegrR2(1.0, 1.0,        f => f.OrderBy(1)), TranslateRegrR2,        isGenericTypeMatch: true);
+			Registration.RegisterMethod(() => Sql.Window.RegrAvgX(1.0, 1.0,      f => f.OrderBy(1)), TranslateRegrAvgX,      isGenericTypeMatch: true);
+			Registration.RegisterMethod(() => Sql.Window.RegrAvgY(1.0, 1.0,      f => f.OrderBy(1)), TranslateRegrAvgY,      isGenericTypeMatch: true);
+			Registration.RegisterMethod(() => Sql.Window.RegrSXX(1.0, 1.0,       f => f.OrderBy(1)), TranslateRegrSXX,       isGenericTypeMatch: true);
+			Registration.RegisterMethod(() => Sql.Window.RegrSYY(1.0, 1.0,       f => f.OrderBy(1)), TranslateRegrSYY,       isGenericTypeMatch: true);
+			Registration.RegisterMethod(() => Sql.Window.RegrSXY(1.0, 1.0,       f => f.OrderBy(1)), TranslateRegrSXY,       isGenericTypeMatch: true);
 		}
 
 		public record ArgumentInformation(Expression Expr, Sql.AggregateModifier Modifier);
@@ -1053,6 +1083,98 @@ namespace LinqToDB.Linq.Translation
 			var dbDataType = translationContext.ExpressionFactory.GetDbDataType(methodCall.Type);
 
 			return TranslateWindowFunction(translationContext, methodCall, 1, 2, dbDataType, "MAX");
+		}
+
+		// Sample standard deviation. STDDEV on Oracle/DuckDB/PostgreSQL; STDEV on SQL Server / Sybase. Override per provider.
+		protected virtual string StdDevFunctionName => "STDDEV";
+
+		public virtual Expression? TranslateStdDev(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			var dbDataType = translationContext.ExpressionFactory.GetDbDataType(methodCall.Type);
+
+			return TranslateWindowFunction(translationContext, methodCall, 1, 2, dbDataType, StdDevFunctionName);
+		}
+
+		public virtual Expression? TranslateStdDevPop(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			var dbDataType = translationContext.ExpressionFactory.GetDbDataType(methodCall.Type);
+
+			return TranslateWindowFunction(translationContext, methodCall, 1, 2, dbDataType, "STDDEV_POP");
+		}
+
+		public virtual Expression? TranslateStdDevSamp(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			var dbDataType = translationContext.ExpressionFactory.GetDbDataType(methodCall.Type);
+
+			return TranslateWindowFunction(translationContext, methodCall, 1, 2, dbDataType, "STDDEV_SAMP");
+		}
+
+		public virtual Expression? TranslateVariance(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			var dbDataType = translationContext.ExpressionFactory.GetDbDataType(methodCall.Type);
+
+			return TranslateWindowFunction(translationContext, methodCall, 1, 2, dbDataType, "VARIANCE");
+		}
+
+		public virtual Expression? TranslateVarPop(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			var dbDataType = translationContext.ExpressionFactory.GetDbDataType(methodCall.Type);
+
+			return TranslateWindowFunction(translationContext, methodCall, 1, 2, dbDataType, "VAR_POP");
+		}
+
+		public virtual Expression? TranslateVarSamp(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			var dbDataType = translationContext.ExpressionFactory.GetDbDataType(methodCall.Type);
+
+			return TranslateWindowFunction(translationContext, methodCall, 1, 2, dbDataType, "VAR_SAMP");
+		}
+
+		// Two-value-argument statistical aggregates (COVAR_POP(x, y) etc.). The window-builder lambda is the 4th
+		// argument (this, expr1, expr2, func), and TranslateWindowFunctionCore already loops over the argument array.
+		public virtual Expression? TranslateCovarPop(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+			=> TranslateBivariate(translationContext, methodCall, "COVAR_POP");
+
+		public virtual Expression? TranslateCovarSamp(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+			=> TranslateBivariate(translationContext, methodCall, "COVAR_SAMP");
+
+		public virtual Expression? TranslateCorr(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+			=> TranslateBivariate(translationContext, methodCall, "CORR");
+
+		public virtual Expression? TranslateRegrSlope(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+			=> TranslateBivariate(translationContext, methodCall, "REGR_SLOPE");
+
+		public virtual Expression? TranslateRegrIntercept(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+			=> TranslateBivariate(translationContext, methodCall, "REGR_INTERCEPT");
+
+		public virtual Expression? TranslateRegrCount(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+			=> TranslateBivariate(translationContext, methodCall, "REGR_COUNT");
+
+		public virtual Expression? TranslateRegrR2(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+			=> TranslateBivariate(translationContext, methodCall, "REGR_R2");
+
+		public virtual Expression? TranslateRegrAvgX(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+			=> TranslateBivariate(translationContext, methodCall, "REGR_AVGX");
+
+		public virtual Expression? TranslateRegrAvgY(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+			=> TranslateBivariate(translationContext, methodCall, "REGR_AVGY");
+
+		public virtual Expression? TranslateRegrSXX(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+			=> TranslateBivariate(translationContext, methodCall, "REGR_SXX");
+
+		public virtual Expression? TranslateRegrSYY(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+			=> TranslateBivariate(translationContext, methodCall, "REGR_SYY");
+
+		public virtual Expression? TranslateRegrSXY(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+			=> TranslateBivariate(translationContext, methodCall, "REGR_SXY");
+
+		// Shared dispatch for the two-value-argument statistical aggregates: the window-builder lambda is the 4th
+		// argument (this, expr1, expr2, func); TranslateWindowFunctionCore emits both arguments.
+		Expression? TranslateBivariate(ITranslationContext translationContext, MethodCallExpression methodCall, string functionName)
+		{
+			var dbDataType = translationContext.ExpressionFactory.GetDbDataType(methodCall.Type);
+
+			return TranslateWindowFunctionCore(translationContext, methodCall, [methodCall.Arguments[1], methodCall.Arguments[2]], 3, dbDataType, functionName, null);
 		}
 
 		public virtual Expression? TranslateCount(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
