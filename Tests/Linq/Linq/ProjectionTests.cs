@@ -192,5 +192,33 @@ namespace Tests.Linq
 				Assert.That(result[0].x.id, Is.Null);
 			}
 		}
+
+		[Table]
+		sealed class StringTestTable
+		{
+			[PrimaryKey] public int     ID   { get; set; }
+			[Column]     public string? Data { get; set; }
+		}
+
+		[Test(Description = "Complex client-side string expression in Insert projection should not throw NRE")]
+		public void ComplexStringProjectionTest([DataSources] string context)
+		{
+			using var db  = GetDataContext(context);
+			using var tmp = db.CreateLocalTable([new StringTestTable { ID = 1, Data = null }]);
+
+			string? data = null;
+
+			var affected = tmp.Insert(() => new StringTestTable
+			{
+				ID   = 2,
+				Data = string.IsNullOrWhiteSpace(data) ? data : data!.Length > 50 ? data.Substring(0, 50) : data
+			});
+
+			if (context.SupportsRowcount())
+				Assert.That(affected, Is.EqualTo(1));
+
+			var row = tmp.Single(t => t.ID == 2);
+			Assert.That(row.Data, Is.Null);
+		}
 	}
 }
