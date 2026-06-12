@@ -107,6 +107,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 					t.type = 'view'            AS IsView
 				FROM pragma_table_list() t
 				WHERE t.type IN ('table', 'view'){GenerateTableFilter("t")}
+				ORDER BY t.schema, t.name
 			").ToList();
 		}
 
@@ -183,6 +184,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 					t.name   AS TableName
 				FROM pragma_table_list() t
 				WHERE t.type IN ('view'){GenerateTableFilter("t")}
+				ORDER BY t.schema, t.name
 			").ToList();
 
 			if (views.Count > 0)
