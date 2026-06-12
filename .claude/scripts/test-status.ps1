@@ -62,7 +62,6 @@ if ($Raw) {
 }
 
 function Format-Duration([double] $seconds) {
-	if ($null -eq $seconds) { return 'n/a' }
 	$ts = [TimeSpan]::FromSeconds($seconds)
 	if ($ts.TotalHours -ge 1) { return ('{0}h{1:00}m' -f [int]$ts.TotalHours, $ts.Minutes) }
 	if ($ts.TotalMinutes -ge 1) { return ('{0}m{1:00}s' -f [int]$ts.TotalMinutes, $ts.Seconds) }
