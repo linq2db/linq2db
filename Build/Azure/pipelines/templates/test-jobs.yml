@@ -153,7 +153,8 @@ jobs:
             script_local: ${{ test_config.script_win_local }}
             psscript_local: ${{ test_config.psscript_win_local }}
             pre_test_win_local: ${{ test_config.pre_test_win_local }}
-            post_test_win_local: ${{ test_config.post_test_win_local }}            netfx: ${{ test_config.enable_fw_netfx }}
+            post_test_win_local: ${{ test_config.post_test_win_local }}
+            netfx: ${{ test_config.enable_fw_netfx }}
             net80: ${{ test_config.enable_fw_net80 }}
             net90: ${{ test_config.enable_fw_net90 }}
             net100: ${{ test_config.enable_fw_net100 }}
@@ -187,7 +188,8 @@ jobs:
             title: ${{ test_config.title }}
             config: ${{ test_config.config_linux }}
             script_global: ${{ test_config.script_linux_global }}
-            script_local: ${{ test_config.script_linux_local }}            net80: ${{ test_config.enable_fw_net80 }}
+            script_local: ${{ test_config.script_linux_local }}
+            net80: ${{ test_config.enable_fw_net80 }}
             net90: ${{ test_config.enable_fw_net90 }}
             net100: ${{ test_config.enable_fw_net100 }}
             retry: ${{ test_config.retry }}
@@ -220,7 +222,8 @@ jobs:
             config: ${{ test_config.config_macos }}
             script_global: ${{ test_config.script_macos_global }}
             script_local: ${{ test_config.script_macos_local }}
-            docker: ${{ test_config.install_docker_macos }}            net80: ${{ test_config.enable_fw_net80 }}
+            docker: ${{ test_config.install_docker_macos }}
+            net80: ${{ test_config.enable_fw_net80 }}
             net90: ${{ test_config.enable_fw_net90 }}
             net100: ${{ test_config.enable_fw_net100 }}
             retry: ${{ test_config.retry }}

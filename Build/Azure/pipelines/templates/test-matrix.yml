@@ -127,7 +127,8 @@ jobs:
           enable_fw_net80: true
           enable_fw_net90: true
           enable_fw_net100: true
-          x86: true          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
+          x86: true
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]'))) }}:
             enabled: false
@@ -144,7 +145,8 @@ jobs:
           enable_fw_net90: true
           enable_fw_net100: true
           x86: true
-          retry: true # x86 provider also could crash with AV as x64, but less often, so we can just restart it          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
+          retry: true # x86 provider also could crash with AV as x64, but less often, so we can just restart it
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]'))) }}:
             enabled: false
@@ -159,7 +161,8 @@ jobs:
           enable_fw_netfx: true
           enable_fw_net80: true
           enable_fw_net90: true
-          enable_fw_net100: true          retry: true # x64 provider could crash with AV
+          enable_fw_net100: true
+          retry: true # x64 provider could crash with AV
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]'))) }}:
