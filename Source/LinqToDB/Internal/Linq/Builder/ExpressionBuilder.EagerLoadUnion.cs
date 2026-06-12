@@ -1801,7 +1801,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (_nestedProcessingOrder != null)
 				{
 					var carriers = new List<TCarrier>();
-					var enumerator = _query.GetResultEnumerable(dataContext, expressions, parameters, preambles)
+					await using var enumerator = _query.GetResultEnumerable(dataContext, expressions, parameters, preambles)
 						.GetAsyncEnumerator(cancellationToken);
 					while (await enumerator.MoveNextAsync().ConfigureAwait(false))
 						carriers.Add(enumerator.Current);
@@ -1833,7 +1833,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 				else
 				{
-					var enumerator = _query.GetResultEnumerable(dataContext, expressions, parameters, preambles)
+					await using var enumerator = _query.GetResultEnumerable(dataContext, expressions, parameters, preambles)
 						.GetAsyncEnumerator(cancellationToken);
 
 					while (await enumerator.MoveNextAsync().ConfigureAwait(false))

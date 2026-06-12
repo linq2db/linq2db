@@ -184,7 +184,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				var result = new PreambleResult<TKey, T>();
 
-				var enumerator = query.GetResultEnumerable(dataContext, expressions, preambles, preambles)
+				await using var enumerator = query.GetResultEnumerable(dataContext, expressions, preambles, preambles)
 					.GetAsyncEnumerator(cancellationToken);
 
 				while (await enumerator.MoveNextAsync().ConfigureAwait(false))

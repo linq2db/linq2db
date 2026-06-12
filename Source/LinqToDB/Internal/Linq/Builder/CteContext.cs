@@ -202,7 +202,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (cteField == null)
 			{
-				var alias    = TableLikeHelpers.GenerateColumnAlias(path ?? placeholder.Path, placeholder.Sql);
+				var alias    = TableLikeHelpers.GenerateColumnAlias(path ?? placeholder.Path, placeholder.Sql) ?? "field";
 				var dataType = QueryHelper.GetDbDataType(placeholder.Sql, MappingSchema);
 
 				if (recursiveField != null)
