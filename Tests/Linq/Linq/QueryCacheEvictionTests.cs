@@ -1,6 +1,5 @@
 #if BUGCHECK
 using System;
-using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
@@ -248,7 +247,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ChainHash_DifferentSourcesGoToDifferentBuckets()
+		public void DifferentResultTypes_GoToDifferentBuckets()
 		{
 			using var db = NewContext();
 
@@ -257,7 +256,6 @@ namespace Tests.Linq
 				IdleTimeoutOverride = TimeSpan.FromHours(1),
 			};
 
-			// Real LINQ chains so the chain-hash walk visits actual MethodInfo + MemberInfo.
 			IQueryExpressions exprA = new RuntimeExpressionsContainer(
 				((IQueryable<TableA>)db.GetTable<TableA>().Where(x => x.Id == 1)).Expression);
 			IQueryExpressions exprB = new RuntimeExpressionsContainer(
@@ -268,6 +266,34 @@ namespace Tests.Linq
 
 			cache.BucketCount.ShouldBe(2,
 				"different ResultType (TableA vs TableB) should produce different bucket keys");
+		}
+
+		[Test]
+		public void ChainHash_DifferentSourcesGoToDifferentBuckets()
+		{
+			using var db = NewContext();
+
+			var cache = new QueryCache
+			{
+				IdleTimeoutOverride = TimeSpan.FromHours(1),
+			};
+
+			// Same ResultType (int), same ContextType / ConfigurationID / QueryFlags — the
+			// only thing varying between the two adds is the source chain (TableA vs TableB).
+			// The chain-hash walk visits the distinct MethodInfo / MemberInfo of each chain,
+			// so this isolates chain-hash partitioning: if ComputeChainHash collapsed both
+			// chains to the same value the two entries would share a bucket and this would
+			// fail with BucketCount == 1.
+			IQueryExpressions exprA = new RuntimeExpressionsContainer(
+				((IQueryable<int>)db.GetTable<TableA>().Where(x => x.Id == 1).Select(x => x.Id)).Expression);
+			IQueryExpressions exprB = new RuntimeExpressionsContainer(
+				((IQueryable<int>)db.GetTable<TableB>().Where(x => x.Id == 1).Select(x => x.Id)).Expression);
+
+			cache.TryAdd(typeof(int), db, new Query<int>(db), exprA, QueryFlags.None);
+			cache.TryAdd(typeof(int), db, new Query<int>(db), exprB, QueryFlags.None);
+
+			cache.BucketCount.ShouldBe(2,
+				"identical ResultType but different source chains should hash to different buckets");
 		}
 
 		[Test]

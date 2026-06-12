@@ -349,8 +349,8 @@ namespace LinqToDB.Internal.Linq
 			{
 				var entry = entries[i];
 
-				if (entry.QueryFlags != queryFlags)
-					continue;
+				// No QueryFlags filter here: QueryFlags is part of the bucket key (CacheKey.Flags),
+				// so every entry in this bucket was added with the same flags by construction.
 
 				// Reuse the timestamp captured at the top of TryFind for the pre-Compare expiry
 				// check — it's tens of ns stale at most, far below the idle-timeout granularity,
@@ -439,8 +439,9 @@ namespace LinqToDB.Internal.Linq
 						if (IsExpired(existing, now))
 							continue;
 
-						if (existing.QueryFlags == queryFlags
-							&& existing.Query.Compare(dataContext, expressions, out _))
+						// No QueryFlags check: flags are pinned by the bucket key, so every
+						// surviving entry already shares this add's QueryFlags.
+						if (existing.Query.Compare(dataContext, expressions, out _))
 						{
 							duplicate = existing;
 						}
