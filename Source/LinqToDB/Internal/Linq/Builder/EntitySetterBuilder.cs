@@ -4,6 +4,9 @@ using System.Linq.Expressions;
 
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Mapping;
+using LinqToDB.Internal.Reflection;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.Linq.Builder
@@ -18,6 +21,23 @@ namespace LinqToDB.Internal.Linq.Builder
 	/// </summary>
 	static class EntitySetterBuilder
 	{
+		/// <summary>
+		/// Build the column-access expression for <paramref name="cd"/> from <paramref name="instance"/>
+		/// in a SET / value context. Flat and nested columns resolve to a null-check-free member chain
+		/// via <see cref="ColumnDescriptorExtensions.GetMemberAccessExpression"/>; dynamic columns resolve
+		/// to <c>Sql.Property&lt;T&gt;(instance, name)</c> — the raw dynamic-column getter throws
+		/// "Dynamic column getter is not to be called" and isn't SQL-convertible, whereas the
+		/// <c>Sql.Property</c> shape both converts and structurally matches a user
+		/// <c>.Set(x =&gt; Sql.Property&lt;T&gt;(x, name), …)</c> selector after canonicalisation.
+		/// </summary>
+		public static Expression ColumnAccess(ColumnDescriptor cd, Expression instance)
+		{
+			if (cd.MemberInfo.IsDynamicColumnProperty)
+				return Expression.Call(Methods.LinqToDB.SqlExt.Property.MakeGenericMethod(cd.MemberType), instance, Expression.Constant(cd.MemberName));
+
+			return cd.GetMemberAccessExpression(instance);
+		}
+
 		/// <summary>
 		/// Build <c>s =&gt; new T { Col1 = v1, Col2 = v2, ... }</c>. Whole-object defaults from the
 		/// source row, with user <c>Set</c> overrides overlaid and <c>Ignore</c>d /

@@ -650,9 +650,11 @@ namespace Tests.xUpdate
 
 		// #3721: set a dynamic / Sql.Property (non-POCO) column through the fluent Upsert .Set — covering
 		// both the INSERT (unmatched) and UPDATE (matched) branches.
-		// Currently fails: the Upsert builder reuses the UpdateBuilder setter pipeline, which does not
-		// support dynamic (Sql.Property) target setters — see MergeTests.DynamicColumns.cs ("dynamic
-		// properties for target setters not supported for now"). Gated until #3721 is implemented.
+		// Dynamic-column field resolution + override matching now work (ColumnAccess emits
+		// Sql.Property), but extracting the column *value* as a parameter from the entity instance
+		// still hits DynamicColumnInfo.DummyGetter (real values live in the DynamicColumnsStore, not
+		// the property getter) — the documented "dynamic target setters not supported" root. Needs
+		// store-based value extraction. Gated until #3721 is fully implemented.
 		[ActiveIssue(3721)]
 		[Test]
 		public void Single_Set_DynamicColumn([IncludeDataSources(ProviderName.SQLiteMS)] string context)
@@ -697,11 +699,7 @@ namespace Tests.xUpdate
 		}
 
 		// Sets a nested complex-column member (Name.First) through the fluent Upsert .Set, across the
-		// INSERT (unmatched) and UPDATE (matched) branches. The UpsertBuilder comment claims to handle
-		// nested accessor paths the same as flat columns, but currently the .Set field selector resolves
-		// the path against the root type ("Property 'First' is not defined for type 'UpsertNestedRow'").
-		// Gated until nested complex-column setters are supported in the Upsert/entity builder.
-		[ActiveIssue("Upsert/entity .Set does not support nested complex-column member paths (e.g. x => x.Name.First)")]
+		// INSERT (unmatched) and UPDATE (matched) branches.
 		[Test]
 		public void Single_Set_NestedColumn([IncludeDataSources(ProviderName.SQLiteMS)] string context)
 		{

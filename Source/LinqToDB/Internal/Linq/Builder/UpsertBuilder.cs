@@ -115,11 +115,13 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			foreach (var cd in entityDescriptor.Columns)
 			{
-				// Canonical lookup key for this column — the full accessor path from the
-				// shared entity parameter (handles nested columns like e.Name.FirstName the
-				// same way). Matches the shape produced by Canonicalise(fieldLambda) for user
-				// .Set/.Ignore field selectors.
-				var canonicalField = cd.MemberAccessor.GetGetterExpression(entityParameter);
+				// Canonical lookup key for this column — must match the shape produced by
+				// Canonicalise(fieldLambda) (a null-check-free member chain, or an Sql.Property
+				// call for dynamic columns) for user .Set/.Ignore field selectors. ColumnAccess
+				// resolves flat/nested via GetMemberAccessExpression and dynamic via Sql.Property;
+				// GetGetterExpression would instead wrap nested access in a null-check block and
+				// emit the raw dynamic getter, neither of which matches the user selector.
+				var canonicalField = EntitySetterBuilder.ColumnAccess(cd, entityParameter);
 
 				if (EntitySetterBuilder.IsIgnored(canonicalField, cfg.RootIgnore) || EntitySetterBuilder.IsIgnored(canonicalField, cfg.InsertIgnore))
 					goto UpdateSide;
@@ -127,12 +129,12 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (cd.SkipOnInsert)
 					goto UpdateSide;
 
-				var fieldExpr = Expression.MakeMemberAccess(contextRef, cd.MemberInfo);
+				var fieldExpr = EntitySetterBuilder.ColumnAccess(cd, contextRef);
 				var insertOverride = EntitySetterBuilder.FindOverride(canonicalField, cfg.InsertSet)
 				                  ?? EntitySetterBuilder.FindOverride(canonicalField, cfg.RootSet);
 				var valueExpr = insertOverride != null
 					? EntitySetterBuilder.InstantiateSetter(insertOverride, contextRef, itemConst)
-					: cd.MemberAccessor.GetGetterExpression(itemConst);
+					: EntitySetterBuilder.ColumnAccess(cd, itemConst);
 
 				insertEnvelopes.Add(new UpdateBuilder.SetExpressionEnvelope(fieldExpr, valueExpr, forceParameter: false));
 
@@ -152,13 +154,13 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (cd.SkipOnUpdate)
 					continue;
 
-				var updFieldExpr = Expression.MakeMemberAccess(contextRef, cd.MemberInfo);
+				var updFieldExpr = EntitySetterBuilder.ColumnAccess(cd, contextRef);
 
 				var updateOverride = EntitySetterBuilder.FindOverride(canonicalField, cfg.UpdateSet)
 				                  ?? EntitySetterBuilder.FindOverride(canonicalField, cfg.RootSet);
 				var updValueExpr = updateOverride != null
 					? EntitySetterBuilder.InstantiateSetter(updateOverride, contextRef, itemConst)
-					: cd.MemberAccessor.GetGetterExpression(itemConst);
+					: EntitySetterBuilder.ColumnAccess(cd, itemConst);
 
 				updateEnvelopes.Add(new UpdateBuilder.SetExpressionEnvelope(updFieldExpr, updValueExpr, forceParameter: false));
 			}
