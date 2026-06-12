@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -609,6 +610,123 @@ namespace Tests.xUpdate
 				new UpsertRow { Id = 1, Name = "x", Version = 1 },
 				u => u.Match((t, s) => t.Id == s.Id).Update(v => v.DoNothing()).Update(v => v.Set(x => x.Name, s => s.Name)));
 			act.ShouldThrow<LinqToDBException>();
+		}
+
+		#endregion
+
+		#region #3721 — dynamic / Sql.Property columns via .Set
+
+		// Dynamic-column store mapped onto the physical UpsertDynamicTest table; the "Name" column is
+		// declared as a dynamic (non-POCO) property and is reachable only through Sql.Property.
+		[Table("UpsertDynamicTest")]
+		sealed class UpsertDynamicStore
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[DynamicColumnsStore] public Dictionary<string, object> Values { get; set; } = new();
+		}
+
+		// Fixed-schema twin (same table name) used to materialise the physical table via CreateLocalTable.
+		[Table("UpsertDynamicTest")]
+		sealed class UpsertDynamicFullTable
+		{
+			[Column] public int     Id   { get; set; }
+			[Column] public string? Name { get; set; }
+		}
+
+		static MappingSchema ConfigureUpsertDynamicSchema()
+		{
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<UpsertDynamicStore>()
+					.HasPrimaryKey(e => e.Id)
+					.DynamicColumnsStore(e => e.Values)
+					.Property(x => Sql.Property<string?>(x, "Name"))
+				.Build();
+
+			return ms;
+		}
+
+		// #3721: set a dynamic / Sql.Property (non-POCO) column through the fluent Upsert .Set — covering
+		// both the INSERT (unmatched) and UPDATE (matched) branches.
+		// Currently fails: the Upsert builder reuses the UpdateBuilder setter pipeline, which does not
+		// support dynamic (Sql.Property) target setters — see MergeTests.DynamicColumns.cs ("dynamic
+		// properties for target setters not supported for now"). Gated until #3721 is implemented.
+		[ActiveIssue(3721)]
+		[Test]
+		public void Single_Set_DynamicColumn([IncludeDataSources(ProviderName.SQLiteMS)] string context)
+		{
+			using var db = GetDataContext(context, ConfigureUpsertDynamicSchema());
+			using var _  = db.CreateLocalTable<UpsertDynamicFullTable>();
+
+			var table = db.GetTable<UpsertDynamicStore>();
+
+			// INSERT branch — dynamic "Name" supplied via Sql.Property.
+			table.Upsert(
+				new UpsertDynamicStore { Id = 1 },
+				u => u.Set(x => Sql.Property<string?>(x, "Name"), () => "dyn-insert"));
+
+			table.Single(r => r.Id == 1).Values["Name"].ShouldBe("dyn-insert");
+
+			// UPDATE branch — same PK, new dynamic value.
+			table.Upsert(
+				new UpsertDynamicStore { Id = 1 },
+				u => u.Set(x => Sql.Property<string?>(x, "Name"), () => "dyn-update"));
+
+			table.Single(r => r.Id == 1).Values["Name"].ShouldBe("dyn-update");
+		}
+
+		#endregion
+
+		#region Nested complex-column setters
+
+		sealed class UpsertNestedName
+		{
+			public string? First { get; set; }
+			public string? Last  { get; set; }
+		}
+
+		[Table("UpsertNestedTest")]
+		[Column("First", "Name.First")]
+		[Column("Last",  "Name.Last")]
+		sealed class UpsertNestedRow
+		{
+			[PrimaryKey] public int             Id   { get; set; }
+			             public UpsertNestedName Name { get; set; } = null!;
+		}
+
+		// Sets a nested complex-column member (Name.First) through the fluent Upsert .Set, across the
+		// INSERT (unmatched) and UPDATE (matched) branches. The UpsertBuilder comment claims to handle
+		// nested accessor paths the same as flat columns, but currently the .Set field selector resolves
+		// the path against the root type ("Property 'First' is not defined for type 'UpsertNestedRow'").
+		// Gated until nested complex-column setters are supported in the Upsert/entity builder.
+		[ActiveIssue("Upsert/entity .Set does not support nested complex-column member paths (e.g. x => x.Name.First)")]
+		[Test]
+		public void Single_Set_NestedColumn([IncludeDataSources(ProviderName.SQLiteMS)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _  = db.CreateLocalTable<UpsertNestedRow>();
+
+			var table = db.GetTable<UpsertNestedRow>();
+
+			// INSERT branch — Name.Last from item, Name.First overridden via .Set.
+			table.Upsert(
+				new UpsertNestedRow { Id = 1, Name = new UpsertNestedName { First = "ins-first", Last = "seed-last" } },
+				u => u.Set(x => x.Name.First, () => "set-first"));
+
+			var inserted = table.Single(r => r.Id == 1);
+			inserted.Name.First.ShouldBe("set-first");
+			inserted.Name.Last .ShouldBe("seed-last");
+
+			// UPDATE branch — same PK, new nested value via .Set.
+			table.Upsert(
+				new UpsertNestedRow { Id = 1, Name = new UpsertNestedName { First = "ins-first", Last = "upd-last" } },
+				u => u.Set(x => x.Name.First, () => "upd-first"));
+
+			var updated = table.Single(r => r.Id == 1);
+			updated.Name.First.ShouldBe("upd-first");
+			updated.Name.Last .ShouldBe("upd-last");
 		}
 
 		#endregion
