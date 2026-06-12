@@ -859,7 +859,7 @@ namespace Tests.Linq
 		public void EnumMapInsertFromSelectWithParam1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (new Cleaner(db))
+			using (new Cleaner(db, 2))
 			{
 				db.GetTable<RawTable>().Insert(() => new RawTable
 				{
@@ -869,18 +869,20 @@ namespace Tests.Linq
 
 				var param = TestEnum1.Value1;
 
+				// insert a distinct row (RID + 1) rather than a duplicate of the source PK: YDB enforces
+				// the LinqDataTypes primary key, so re-inserting RID would conflict.
 				var result = db.GetTable<TestTable1>()
 					.Where(r => r.Id == RID && r.TestField == TestEnum1.Value2)
 					.Select(r => new TestTable1
 					{
-						Id = r.Id,
+						Id = r.Id + 1,
 						TestField = param
 					})
 					.Insert(db.GetTable<TestTable1>(), r => r);
 
 				if (context.SupportsRowcount())
 					Assert.That(result, Is.EqualTo(1));
-				Assert.That(db.GetTable<RawTable>().Where(r => r.Id == RID && r.TestField == VAL1).Count(), Is.EqualTo(1));
+				Assert.That(db.GetTable<RawTable>().Where(r => r.Id == RID + 1 && r.TestField == VAL1).Count(), Is.EqualTo(1));
 			}
 		}
 
@@ -888,7 +890,7 @@ namespace Tests.Linq
 		public void EnumMapInsertFromSelectWithParam2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (new Cleaner(db))
+			using (new Cleaner(db, 2))
 			{
 				db.GetTable<RawTable>().Insert(() => new RawTable
 				{
@@ -898,18 +900,20 @@ namespace Tests.Linq
 
 				var param = TestEnum21.Value1;
 
+				// insert a distinct row (RID + 1) rather than a duplicate of the source PK: YDB enforces
+				// the LinqDataTypes primary key, so re-inserting RID would conflict.
 				var result = db.GetTable<TestTable2>()
 					.Where(r => r.Id == RID && r.TestField == TestEnum21.Value2)
 					.Select(r => new TestTable2
 					{
-						Id = r.Id,
+						Id = r.Id + 1,
 						TestField = param
 					})
 					.Insert(db.GetTable<TestTable2>(), r => r);
 
 				if (context.SupportsRowcount())
 					Assert.That(result, Is.EqualTo(1));
-				Assert.That(db.GetTable<RawTable>().Where(r => r.Id == RID && r.TestField == VAL1).Count(), Is.EqualTo(1));
+				Assert.That(db.GetTable<RawTable>().Where(r => r.Id == RID + 1 && r.TestField == VAL1).Count(), Is.EqualTo(1));
 			}
 		}
 
@@ -917,7 +921,7 @@ namespace Tests.Linq
 		public void EnumMapInsertFromSelectWithParam3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (new Cleaner(db))
+			using (new Cleaner(db, 2))
 			{
 				db.GetTable<RawTable>().Insert(() => new RawTable
 				{
@@ -927,18 +931,20 @@ namespace Tests.Linq
 
 				var param = TestEnum1.Value1;
 
+				// insert a distinct row (RID + 1) rather than a duplicate of the source PK: YDB enforces
+				// the LinqDataTypes primary key, so re-inserting RID would conflict.
 				var result = db.GetTable<NullableTestTable1>()
 					.Where(r => r.Id == RID && r.TestField == TestEnum1.Value2)
 					.Select(r => new NullableTestTable1
 					{
-						Id = r.Id,
+						Id = r.Id + 1,
 						TestField = param
 					})
 					.Insert(db.GetTable<NullableTestTable1>(), r => r);
 
 				if (context.SupportsRowcount())
 					Assert.That(result, Is.EqualTo(1));
-				Assert.That(db.GetTable<RawTable>().Where(r => r.Id == RID && r.TestField == VAL1).Count(), Is.EqualTo(1));
+				Assert.That(db.GetTable<RawTable>().Where(r => r.Id == RID + 1 && r.TestField == VAL1).Count(), Is.EqualTo(1));
 			}
 		}
 
@@ -946,7 +952,7 @@ namespace Tests.Linq
 		public void EnumMapInsertFromSelectWithParam4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (new Cleaner(db))
+			using (new Cleaner(db, 2))
 			{
 				db.GetTable<RawTable>().Insert(() => new RawTable
 				{
@@ -956,18 +962,20 @@ namespace Tests.Linq
 
 				var param = TestEnum21.Value1;
 
+				// insert a distinct row (RID + 1) rather than a duplicate of the source PK: YDB enforces
+				// the LinqDataTypes primary key, so re-inserting RID would conflict.
 				var result = db.GetTable<NullableTestTable2>()
 					.Where(r => r.Id == RID && r.TestField == TestEnum21.Value2)
 					.Select(r => new NullableTestTable2
 					{
-						Id = r.Id,
+						Id = r.Id + 1,
 						TestField = param
 					})
 					.Insert(db.GetTable<NullableTestTable2>(), r => r);
 
 				if (context.SupportsRowcount())
 					Assert.That(result, Is.EqualTo(1));
-				Assert.That(db.GetTable<RawTable>().Where(r => r.Id == RID && r.TestField == VAL1).Count(), Is.EqualTo(1));
+				Assert.That(db.GetTable<RawTable>().Where(r => r.Id == RID + 1 && r.TestField == VAL1).Count(), Is.EqualTo(1));
 			}
 		}
 
@@ -1232,19 +1240,20 @@ namespace Tests.Linq
 			Value2 = 0x2
 		}
 
-		[Table("LinqDataTypes", IsColumnAttributeRequired = false)]
+		[Table]
 		sealed class TestTable5
 		{
-			public int      ID;
-			public TestFlag IntValue;
+			[PrimaryKey] public int      ID;
+			[Column]     public TestFlag IntValue;
 		}
 
 		[Test]
 		public void TestFlagEnum([DataSources(TestProvName.AllAccess)] string context)
 		{
-			using var db = GetDataContext(context);
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<TestTable5>();
 			var result =
-					from t in db.GetTable<TestTable5>()
+					from t in table
 					where (t.IntValue & TestFlag.Value1) != 0
 					select t;
 

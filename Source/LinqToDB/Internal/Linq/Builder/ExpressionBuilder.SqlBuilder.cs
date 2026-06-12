@@ -236,7 +236,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			using var visitor = _exposeVisitorPool.Allocate();
 
-			var result = visitor.Value.ExposeExpression(DataContext, _optimizationContext, ParameterValues, expression, includeConvert : true, optimizeConditions : false, compactBinary : false, isSingleConvert: true);
+			var result = visitor.Value.ExposeExpression(DataContext, _optimizationContext, ParameterValues, expression, optimizeConditions : false, compactBinary : false, isSingleConvert: true);
 
 			return result;
 		}
