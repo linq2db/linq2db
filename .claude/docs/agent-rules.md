@@ -171,6 +171,16 @@ CI's `build` check builds every TFM and otherwise fails with `CS1061 … are you
 
 When the API is genuinely missing on an older TFM, **prefer enabling the matching `Meziantou.Polyfill` entry** in the `<Polyfill>` opt-in list in `Directory.Build.props` over reworking the call — keep the idiomatic BCL form. The polyfill is TFM-conditional (newer TFMs use the real method), and the supported-polyfill ID list is linked in the props header. Reworking the call (`new HashSet<T>(seq, cmp)` instead of `seq.ToHashSet(cmp)`, etc.) is the fallback when no polyfill exists.
 
+### Analyzers are Release-only — build Release before push when a change can trip one
+
+Roslyn analyzers, banned-API checks, and Meziantou (`MA*`) rules run **only in Release** (`Testing`/`Debug` fast-iteration skips them). So a `dotnet build -c Testing` / `/test` run can be fully green while CI's Release `build` leg fails. Before pushing a change that can plausibly trip an analyzer — new/changed public API, `Equals`/`GetHashCode`, nullable annotations (`[NotNullWhen]` etc.), banned-API-adjacent calls — do one local Release build first:
+
+```
+dotnet build Source/LinqToDB/LinqToDB.csproj -c Release -f net10.0
+```
+
+(net10.0 alone is enough to surface the diagnostic — analyzers are TFM-independent.) Otherwise CI fails on e.g. `MA0186` (Equals parameter missing `[NotNullWhen(true)]`) after a green local run, costing a red CI cycle. Sibling concern to *TFM API availability* above — both are cases where the fast `Testing` config hides a failure the full CI build catches.
+
 ### MSBuild property override precedence
 
 When overriding `RunAnalyzersDuringBuild` / `EnforceCodeStyleInBuild` / `TreatWarningsAsErrors` against `linq2db` source consumed as a submodule (`linq2db.docs` docfx) or project reference, env vars **don't** beat conditional `<PropertyGroup>` reassignments in `Directory.Build.props` — only command-line `-p:` global properties (or docfx's `metadata[].properties`) do. Full pattern + docfx specifics in [`msbuild-override.md`](msbuild-override.md).
