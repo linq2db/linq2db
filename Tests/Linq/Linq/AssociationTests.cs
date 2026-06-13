@@ -1835,7 +1835,8 @@ namespace Tests.Linq
 
 		#endregion
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/2022")]
+		// mutates the global Configuration.Sql.AssociationAlias
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2022"), NonParallelizable]
 		public void TestAssociationAliasEscaping([DataSources(false)] string context)
 		{
 			var old = LinqToDB.Common.Configuration.Sql.AssociationAlias;
