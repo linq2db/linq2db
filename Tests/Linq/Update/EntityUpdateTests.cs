@@ -297,5 +297,45 @@ namespace Tests.xUpdate
 		}
 
 		#endregion
+
+		#region Nested complex-column setters
+
+		sealed class EntityUpdateNestedName
+		{
+			public string? First { get; set; }
+			public string? Last  { get; set; }
+		}
+
+		[Table("EntityUpdateNestedTest")]
+		[Column("First", "Name.First")]
+		[Column("Last",  "Name.Last")]
+		sealed class EntityUpdateNestedRow
+		{
+			[PrimaryKey] public int                    Id   { get; set; }
+			             public EntityUpdateNestedName Name { get; set; } = null!;
+		}
+
+		// Nested complex-column .Set on entity Update (match by PK). Name.First comes from .Set;
+		// Name.Last is auto-derived from the item. EntitySetterBuilder groups nested columns into a
+		// MemberMemberBinding so the leaf binds on its own sub-object type, not (invalidly) on the root.
+		[Test]
+		public void Update_NestedColumn([IncludeDataSources(ProviderName.SQLiteMS)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[]
+			{
+				new EntityUpdateNestedRow { Id = 1, Name = new EntityUpdateNestedName { First = "old-first", Last = "old-last" } }
+			});
+
+			table.Update(
+				new EntityUpdateNestedRow { Id = 1, Name = new EntityUpdateNestedName { First = "ignored", Last = "upd-last" } },
+				b => b.Set(x => x.Name.First, () => "upd-first"));
+
+			var row = table.Single();
+			row.Name.First.ShouldBe("upd-first");
+			row.Name.Last .ShouldBe("upd-last");
+		}
+
+		#endregion
 	}
 }

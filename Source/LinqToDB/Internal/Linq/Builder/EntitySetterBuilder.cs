@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB.Expressions;
@@ -40,8 +41,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			IReadOnlyList<(Expression Field, LambdaExpression Value)>             setOverrides,
 			IReadOnlyList<Expression>                                             ignoreList)
 		{
-			var sParm    = Expression.Parameter(entityType, "s");
-			var bindings = new List<MemberBinding>();
+			var sParm = Expression.Parameter(entityType, "s");
+			var items = new List<(string[] Path, ColumnDescriptor Cd, Expression Value)>();
 
 			foreach (var cd in entityDescriptor.Columns)
 			{
@@ -58,14 +59,18 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				var @override = FindOverride(canonicalField, setOverrides);
 
+				// Auto-derived value reads the column off the source row. GetMemberAccessExpression gives a
+				// null-check-free member chain (flat: s.Col; nested: s.Sub.Field) that converts to SQL —
+				// MemberAccessor.GetGetterExpression would wrap nested access in a null-check block that
+				// can't. Matches the native Upsert path (UpsertBuilder).
 				var value = @override != null
 					? InstantiateSetter(@override, sParm, sParm) // no target context for INSERT
-					: cd.MemberAccessor.GetGetterExpression(sParm);
+					: cd.GetMemberAccessExpression(sParm);
 
-				bindings.Add(Expression.Bind(cd.MemberInfo, value));
+				items.Add((SplitMemberPath(cd.MemberName), cd, value));
 			}
 
-			Expression body = new SqlGenericConstructorExpression(entityType, bindings.AsReadOnly());
+			Expression body = new SqlGenericConstructorExpression(entityType, BuildBindings(entityType, items, 0).AsReadOnly());
 			return Expression.Lambda(body, sParm);
 		}
 
@@ -88,9 +93,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			IReadOnlyList<Expression>                                             ignoreList,
 			HashSet<Expression>?                                                  matchColumns = null)
 		{
-			var tParm    = Expression.Parameter(entityType, "t");
-			var sParm    = Expression.Parameter(entityType, "s");
-			var bindings = new List<MemberBinding>();
+			var tParm = Expression.Parameter(entityType, "t");
+			var sParm = Expression.Parameter(entityType, "s");
+			var items = new List<(string[] Path, ColumnDescriptor Cd, Expression Value)>();
 
 			foreach (var cd in entityDescriptor.Columns)
 			{
@@ -111,15 +116,54 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				var @override = FindOverride(canonicalField, setOverrides);
 
+				// See BuildInsertSetter: null-check-free member chain so nested auto-derived values convert to SQL.
 				var value = @override != null
 					? InstantiateSetter(@override, tParm, sParm)
-					: cd.MemberAccessor.GetGetterExpression(sParm);
+					: cd.GetMemberAccessExpression(sParm);
 
-				bindings.Add(Expression.Bind(cd.MemberInfo, value));
+				items.Add((SplitMemberPath(cd.MemberName), cd, value));
 			}
 
-			Expression body = new SqlGenericConstructorExpression(entityType, bindings.AsReadOnly());
+			Expression body = new SqlGenericConstructorExpression(entityType, BuildBindings(entityType, items, 0).AsReadOnly());
 			return Expression.Lambda(body, tParm, sParm);
+		}
+
+		/// <summary>
+		/// Member-name path split on '.', dropping empty segments so a storage-style leading-dot
+		/// <c>MemberName</c> (e.g. <c>".Building"</c>) collapses to a single root-level segment — the
+		/// flat behaviour it had before nested grouping.
+		/// </summary>
+		static string[] SplitMemberPath(string memberName)
+			=> memberName.Split(new[] { '.' }, StringSplitOptions.RemoveEmptyEntries);
+
+		/// <summary>
+		/// Build the member-binding list for a <see cref="SqlGenericConstructorExpression"/> from the
+		/// collected (column-path, value) items, grouping nested complex columns
+		/// (<c>[Column("Db", "Sub.Field")]</c>) into <see cref="MemberMemberBinding"/>s so the leaf is
+		/// bound on its own sub-object type rather than (invalidly) on the entity root. A flat column
+		/// becomes a <see cref="MemberAssignment"/>; columns sharing a prefix segment recurse one level
+		/// deeper. <see cref="SqlGenericConstructorExpression"/> turns a <see cref="MemberMemberBinding"/>
+		/// into a nested constructor (no <c>Expression.New</c> on the sub-object), and
+		/// <c>UpdateBuilder.ParseSet</c> recurses through the nested constructor to map each leaf to its column.
+		/// </summary>
+		static List<MemberBinding> BuildBindings(Type type, List<(string[] Path, ColumnDescriptor Cd, Expression Value)> items, int depth)
+		{
+			var bindings = new List<MemberBinding>();
+
+			foreach (var grp in items.GroupBy(i => i.Path[depth]))
+			{
+				foreach (var item in grp.Where(i => i.Path.Length == depth + 1))
+					bindings.Add(Expression.Bind(item.Cd.MemberInfo, item.Value));
+
+				var deeper = grp.Where(i => i.Path.Length > depth + 1).ToList();
+				if (deeper.Count > 0)
+				{
+					var complexMember = ((MemberExpression)ExpressionHelper.PropertyOrField(Expression.Parameter(type), grp.Key)).Member;
+					bindings.Add(Expression.MemberBind(complexMember, BuildBindings(complexMember.GetMemberType(), deeper, depth + 1)));
+				}
+			}
+
+			return bindings;
 		}
 
 		/// <summary>True if <paramref name="canonicalField"/> appears in <paramref name="list"/> by structural equality.</summary>

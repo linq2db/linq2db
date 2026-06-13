@@ -220,12 +220,9 @@ namespace Tests.xUpdate
 			             public EntityInsertNestedName Name { get; set; } = null!;
 		}
 
-		// Unsupported: EntitySetterBuilder builds the setter as Expression.Bind(cd.MemberInfo, …) on a
-		// SqlGenericConstructorExpression, which can't bind a nested leaf member on the root type
-		// ("Property 'First' is not defined for type 'EntityInsertNestedRow'"). Needs nested member-init
-		// grouping or a switch to the envelope shape used by the native Upsert path. The single-item
-		// Upsert path already handles nested columns (UpsertTests.Single_Set_NestedColumn).
-		[ActiveIssue("Entity Insert/Update + bulk Upsert .Set does not support nested complex-column member paths (EntitySetterBuilder MemberInit binding)")]
+		// Nested complex-column .Set on entity Insert. EntitySetterBuilder groups nested columns into a
+		// MemberMemberBinding so the leaf binds on its own sub-object type (Name.First on Name), not
+		// (invalidly) on the entity root. Name.First comes from .Set; Name.Last is auto-derived from the item.
 		[Test]
 		public void Insert_NestedColumn([IncludeDataSources(ProviderName.SQLiteMS)] string context)
 		{
