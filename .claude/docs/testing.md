@@ -23,6 +23,38 @@ dotnet test Tests/Tests.Playground/Tests.Playground.csproj --filter "FullyQualif
 
 Reach for the full `Tests/Linq/Tests.csproj` only when the test target spans many files that would require a wide playground link, or when running a broad filter (e.g. an entire test class).
 
+## Monitoring a long run
+
+A full suite run takes 1–2 hours. To watch progress without scraping console output, the test assembly can write a small JSON heartbeat (updated ~once/sec, immediately on each failure) that you can `Read` at any time. It's **opt-in** via the `LINQ2DB_TEST_PROGRESS` environment variable; the reporter is a no-op when unset, so default runs are unaffected.
+
+**For test runs Claude launches** (via `/test`, `test-runner`, or ad-hoc Bash), toggle it with the **`/test-progress`** skill — it sets `LINQ2DB_TEST_PROGRESS` session-wide through `.claude/settings.local.json` → `env`, which Claude Code injects into every Bash subprocess. Effect is immediate for the next run, and the `dotnet test` command is unchanged (no permission re-prompt):
+
+```
+/test-progress on        # enable the heartbeat
+/test-progress           # status + latest heartbeat
+/test-progress off       # disable
+```
+
+**For runs in your own terminal**, set the variable yourself before launching:
+
+```bash
+# PowerShell
+$env:LINQ2DB_TEST_PROGRESS = '1'; dotnet test Tests/Linq/Tests.csproj -f net10.0 --filter "..."
+# bash
+LINQ2DB_TEST_PROGRESS=1 dotnet test Tests/Linq/Tests.csproj -f net10.0 --filter "..."
+```
+
+The file lands at `.build/.claude/test-progress.<tfm>.<pid>.json` (one per TFM/process). Set the variable to a directory or a `*.json` path to override the location. Fields: `done`, `total`, `completed`, `passed`, `failed`, `skipped`, `currentTest`, `elapsedSec`, `testsPerSec`, `etaSec`, and `recentFailures[]`.
+
+Read it directly, or run the summary helper:
+
+```bash
+pwsh -NoProfile -File .claude/scripts/test-status.ps1          # newest run, one-line summary
+pwsh -NoProfile -File .claude/scripts/test-status.ps1 -Raw     # dump the raw JSON
+```
+
+**Caveat:** under a `--filter`, `total` reflects the *discovered* (pre-filter) test count, so it over-counts and `etaSec` is unreliable; `total`/`etaSec` are exact only for full, unfiltered runs (the case this is built for). `completed` and `currentTest` are always accurate.
+
 ## Test Database Configuration
 
 Tests run against multiple database providers. Configuration comes from `UserDataProviders.json` (gitignored, user-specific). To get started:
