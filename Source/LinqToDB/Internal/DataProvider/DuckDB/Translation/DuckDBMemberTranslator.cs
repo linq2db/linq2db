@@ -30,6 +30,8 @@ namespace LinqToDB.Internal.DataProvider.DuckDB.Translation
 			protected override bool IsNullsOrderSupported           => true;
 			// DuckDB supports DISTINCT in window aggregates: e.g. SUM(DISTINCT x) OVER (...).
 			protected override bool IsAggregateDistinctSupported    => true;
+			// DuckDB supports FILTER (WHERE ...) on ordered-set aggregates (PERCENTILE_CONT/DISC WITHIN GROUP).
+			protected override bool IsOrderedSetFilterSupported     => true;
 		}
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)

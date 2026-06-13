@@ -488,22 +488,9 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 			protected override bool IsAggregateDistinctSupported    => true;
 		}
 
-		protected class Oracle11WindowFunctionsMemberTranslator : OracleWindowFunctionsMemberTranslator
-		{
-			protected override bool IsPercentileDiscSupported => false;
-		}
-
 		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()
 		{
 			return new OracleWindowFunctionsMemberTranslator();
-		}
-
-		public class Oracle11MemberTranslator : OracleMemberTranslator
-		{
-			protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()
-			{
-				return new Oracle11WindowFunctionsMemberTranslator();
-			}
 		}
 	}
 }

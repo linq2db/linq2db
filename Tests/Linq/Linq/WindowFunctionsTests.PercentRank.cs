@@ -11,7 +11,7 @@ namespace Tests.Linq
 	{
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, TestProvName.AllClickHouse, ProviderName.Firebird3, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentRank)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ProviderName.Firebird3, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentRank)]
 		public void PercentRankWithMultiplePartitions([DataSources] string context)
 		{
 			using var db    = GetDataContext(context);
@@ -35,7 +35,7 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, TestProvName.AllClickHouse, ProviderName.Firebird3, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentRank)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ProviderName.Firebird3, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentRank)]
 		public void PercentRankWithMultiplePartitionsWithDefineWindow([DataSources] string context)
 		{
 			using var db    = GetDataContext(context);
@@ -68,7 +68,7 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, TestProvName.AllClickHouse, ProviderName.Firebird3, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentRank)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ProviderName.Firebird3, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentRank)]
 		public void PercentRankWithNulls([DataSources] string context)
 		{
 			using var db    = GetDataContext(context);
@@ -88,7 +88,7 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, TestProvName.AllClickHouse, ProviderName.Firebird3, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentRank)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ProviderName.Firebird3, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentRank)]
 		public void PercentRankWithoutPartition([DataSources] string context)
 		{
 			using var db    = GetDataContext(context);

@@ -604,8 +604,6 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 		protected class ClickHouseWindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
 		{
 			protected override bool IsCumeDistSupported          => false;
-			protected override bool IsPercentRankSupported       => false;
-			protected override bool IsNTileSupported             => false;
 			protected override bool IsFrameGroupsSupported       => false;
 			protected override bool IsFrameExclusionSupported    => false;
 			protected override bool IsPercentileContSupported    => false;
