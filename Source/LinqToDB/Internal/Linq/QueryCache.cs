@@ -411,7 +411,9 @@ namespace LinqToDB.Internal.Linq
 			while (true)
 			{
 				var version = Volatile.Read(ref _version);
-				var bucket  = _cache.GetOrAdd(key, _ => new Bucket(version));
+				// static lambda + factory-argument overload: passing `version` as state avoids the
+				// per-call closure + delegate allocation a capturing lambda would incur on every add.
+				var bucket  = _cache.GetOrAdd(key, static (_, v) => new Bucket(v), version);
 
 				var added = false;
 
