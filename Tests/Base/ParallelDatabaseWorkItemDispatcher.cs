@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
@@ -17,7 +17,7 @@ namespace Tests
 	// swaps in after assembly OneTimeSetUp, leaving NUnit's composite / completion / shift
 	// machinery to the original dispatcher and routing only leaf provider cases to our own
 	// per-provider lanes. See nunit/nunit#3122 for the original discussion.
-	internal sealed class ParallelDatabaseWorkItemDispatcher : IWorkItemDispatcher
+	public sealed class ParallelDatabaseWorkItemDispatcher : IWorkItemDispatcher
 	{
 		// Non-provider work (assembly / namespace / fixture composites and any provider-less
 		// tests) is forwarded here so NUnit's normal execution machinery stays intact.
@@ -28,6 +28,12 @@ namespace Tests
 		// lane takes the write lock (which waits for every provider lane to go idle).
 		readonly ReaderWriterLockSlim _gate = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
 
+		// Only one remote (LinqService) test runs at a time across all lanes. They share one
+		// in-process server whose worker threads resolve the originating test through a single
+		// register (CustomTestContext._remote, unreachable by the test's AsyncLocal), so
+		// concurrent remote tests on different providers would corrupt each other's capture.
+		readonly object _remoteGate = new object();
+
 		readonly object                          _lanesLock    = new object();
 		readonly Dictionary<string, SerialLane>  _providerLanes = new Dictionary<string, SerialLane>(StringComparer.OrdinalIgnoreCase);
 		readonly SerialLane                      _exclusiveLane;
@@ -35,7 +41,7 @@ namespace Tests
 		public ParallelDatabaseWorkItemDispatcher(IWorkItemDispatcher original)
 		{
 			_original      = original;
-			_exclusiveLane = new SerialLane("exclusive", _gate, exclusive: true);
+			_exclusiveLane = new SerialLane("exclusive", _gate, _remoteGate, exclusive: true);
 		}
 
 		public int LevelOfParallelism => _original.LevelOfParallelism;
@@ -70,7 +76,7 @@ namespace Tests
 
 			// Parallel: route DB leaf cases by provider; everything else (composites,
 			// provider-less tests) goes to the original dispatcher.
-			var (context, _) = NUnitUtils.GetContext(work.Test);
+			var (context, isRemote) = NUnitUtils.GetContext(work.Test);
 
 			if (context == null)
 			{
@@ -78,7 +84,7 @@ namespace Tests
 				return;
 			}
 
-			GetProviderLane(context).Enqueue(work);
+			GetProviderLane(context).Enqueue(work, isRemote);
 		}
 
 		public void CancelRun(bool force)
@@ -100,7 +106,7 @@ namespace Tests
 			{
 				if (!_providerLanes.TryGetValue(context, out var lane))
 				{
-					lane = new SerialLane(context, _gate, exclusive: false);
+					lane = new SerialLane(context, _gate, _remoteGate, exclusive: false);
 					_providerLanes.Add(context, lane);
 				}
 
@@ -110,17 +116,20 @@ namespace Tests
 
 		// A single dedicated thread that executes its queued work items one at a time. Items
 		// run under the shared read/write gate: provider lanes (read) run concurrently with
-		// each other, the exclusive lane (write) runs alone.
+		// each other, the exclusive lane (write) runs alone. Remote (LinqService) items on a
+		// provider lane additionally take the remote gate so only one runs globally at a time.
 		sealed class SerialLane
 		{
-			readonly BlockingCollection<WorkItem> _queue = new BlockingCollection<WorkItem>();
-			readonly ReaderWriterLockSlim         _gate;
-			readonly bool                         _exclusive;
+			readonly BlockingCollection<(WorkItem work, bool isRemote)> _queue = new BlockingCollection<(WorkItem, bool)>();
+			readonly ReaderWriterLockSlim                              _gate;
+			readonly object                                            _remoteGate;
+			readonly bool                                              _exclusive;
 
-			public SerialLane(string name, ReaderWriterLockSlim gate, bool exclusive)
+			public SerialLane(string name, ReaderWriterLockSlim gate, object remoteGate, bool exclusive)
 			{
-				_gate      = gate;
-				_exclusive = exclusive;
+				_gate       = gate;
+				_remoteGate = remoteGate;
+				_exclusive  = exclusive;
 
 				var thread = new Thread(Run)
 				{
@@ -131,14 +140,20 @@ namespace Tests
 				thread.Start();
 			}
 
-			public void Enqueue(WorkItem work) => _queue.Add(work);
+			public void Enqueue(WorkItem work, bool isRemote = false) => _queue.Add((work, isRemote));
 
 			public void Complete() => _queue.CompleteAdding();
 
 			void Run()
 			{
-				foreach (var work in _queue.GetConsumingEnumerable())
+				foreach (var (work, isRemote) in _queue.GetConsumingEnumerable())
 				{
+					// Serialize remote tests globally before taking the per-run gate, so a lane
+					// waiting for its turn at a remote test doesn't pin a read lock meanwhile.
+					var holdsRemoteGate = !_exclusive && isRemote;
+					if (holdsRemoteGate)
+						Monitor.Enter(_remoteGate);
+
 					if (_exclusive)
 						_gate.EnterWriteLock();
 					else
@@ -157,6 +172,9 @@ namespace Tests
 							_gate.ExitWriteLock();
 						else
 							_gate.ExitReadLock();
+
+						if (holdsRemoteGate)
+							Monitor.Exit(_remoteGate);
 					}
 				}
 			}

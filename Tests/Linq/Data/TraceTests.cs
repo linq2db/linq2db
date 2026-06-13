@@ -19,7 +19,9 @@ using Tests.Model;
 
 namespace Tests.Data
 {
-	[TestFixture]
+	// reassigns the global DataConnection.WriteTraceLine sink, so it must run with no other
+	// test executing concurrently (see ParallelDatabaseWorkItemDispatcher exclusive lane)
+	[TestFixture, NonParallelizable]
 	public class TraceTests : TestBase
 	{
 		private TraceLevel                           OriginalTraceLevel { get; set; }
