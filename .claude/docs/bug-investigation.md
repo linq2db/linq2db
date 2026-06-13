@@ -31,7 +31,7 @@ The `/enable-disabled-test` skill drives this end to end; this section is the ra
 When a closed issue's `[ActiveIssue]`-gated regression test is being enabled, do **not** trust the close-comment attribution alone (e.g. *"fixed by #X and #Y"*). Bisect to identify the PR that actually flipped the test from fail to pass, and cite that PR in the enable-PR's body. Reporter comments often cite *issues* that share the symptom, not the *PR* that fixed the specific test scenario — the load-bearing fix may be a different PR that landed earlier or later and addressed a broader code path. Concretely:
 
 1. Verify the cited PRs exist (close-comment numbers may be issues, not PRs) and resolve issue→PR via `gh api repos/<o>/<r>/issues/<n>/timeline --jq '.[] | select(.event == "cross-referenced") | .source'` or the GraphQL form in [`pr-resolver.md`](pr-resolver.md).
-2. In a worktree (`git worktree add ../<repo>.bisect-<issue> --detach <ref>`), bisect with the test's `[ActiveIssue]` removed locally — typically `git switch --detach <ref>` → edit out the attribute → `dotnet test ... --filter <name> -c Debug` → record pass/fail → repeat.
+2. In a worktree (`git worktree add ../<repo>.bisect-<issue> --detach <ref>`), bisect with the test's `[ActiveIssue]` removed locally — typically `git switch --detach <ref>` → edit out the attribute → `dotnet test --project ... --filter <name> -c Debug` → record pass/fail → repeat.
 3. Bound the range first (head/master = pass, last release before close = fail), then halve. Each step is a few seconds of build + test.
 4. The PR whose merge commit transitions fail → pass is the citation. Mention any reporter-cited related PRs as context, not as the cause.
 

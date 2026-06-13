@@ -39,7 +39,7 @@ The agent never writes to `UserDataProviders.json` and does not back it up — t
    - **Explicit**: `[{project: "Tests/.../Tests.EntityFrameworkCore.EF10.csproj", tfm: "net10.0", providers: ["SqlServer.2016.MS"]}, ...]`
    - **Shorthand**: `{efMatrix: true, providers: [...]}` — expands to all four EFCore projects (EF3/EF8/EF9/EF10) with the matching TFMs (net462 / net8.0 / net9.0 / net10.0). Or `{mainTests: true, providers: [...]}` — defaults to `Tests/Tests.Playground/Tests.Playground.csproj` at `net10.0`. Add `tfm: "<...>"` and/or `project: "Tests/Linq/Tests.csproj"` explicitly to override the fast-path default.
 3. **`config`** — default `"Debug"`. Testing guidance in `testing.md` warns against `Release` (slow, analyzers); don't override without a specific reason.
-4. **`verbosity`** — default `"normal"`. Set `"detailed"` when the caller needs SQL-dump diagnostics from `TestContext.Out.WriteLine` (translates to `--logger "console;verbosity=detailed"`).
+4. **`verbosity`** — default `"normal"`. Set `"detailed"` when the caller needs SQL-dump diagnostics from `TestContext.Out.WriteLine`. Tests run on Microsoft.Testing.Platform (MTP), which captures the test app's console output by default; surface it with `-p:TestingPlatformCaptureOutput=false` (the VSTest `--logger "console;verbosity=detailed"` no longer applies).
 5. **`repoRoot`** — optional absolute path to the repo root the run targets. Default: the current working directory (primary clone). Set it when the change under test lives in a **git worktree** — then `UserDataProviders.json` resolution (pre-condition step 1) and the `dotnet test` project path both use `<repoRoot>` instead of cwd, so the worktree's code is what gets built and run. Your own cwd is unchanged; only path construction shifts.
 
 ## TFM / project mapping
@@ -69,13 +69,15 @@ Use `Tests/Linq/Tests.csproj` only when the caller explicitly asks (`project: "T
 For each target, issue one `dotnet test` invocation:
 
 ```
-dotnet test <project> --filter "<testPattern>" -c <config>
+dotnet test --project <project> --filter "<testPattern>" -c <config> --settings <repoRoot>/.runsettings
 ```
 
 Notes:
-- When `repoRoot` is set, `<project>` is the **absolute** path `<repoRoot>/<project>` so the build targets the worktree (e.g. `<repoRoot>/Tests/Tests.Playground/Tests.Playground.csproj`). `dotnet test` doesn't use cwd for an absolute project path, and its output lands under `<repoRoot>/.build/bin`.
+- **`--project` is required.** The repo's `global.json` selects the Microsoft.Testing.Platform runner, where the bare `dotnet test <project>` form is rejected (`Specifying a project for 'dotnet test' should be via '--project'`). The test projects build as MTP executables.
+- **Pass `--settings <repoRoot>/.runsettings`.** MTP does not auto-discover `.runsettings`; NUnit bridges it via `--settings`, and it carries `AssemblySelectLimit` (without it a filter selecting >~2000 tests can fall back to running the whole assembly).
+- When `repoRoot` is set, `<project>` is the **absolute** path `<repoRoot>/<project>` so the build targets the worktree (e.g. `<repoRoot>/Tests/Tests.Playground/Tests.Playground.csproj`), and `--settings` uses `<repoRoot>/.runsettings`. Output lands under `<repoRoot>/.build/bin`.
 - The four EFCore projects each have a single TFM, so `-f <tfm>` is redundant for them. Include `-f <tfm>` only for `Tests/Linq/Tests.csproj` (multi-TFM).
-- `--logger "console;verbosity=detailed"` when `verbosity: "detailed"`.
+- `-p:TestingPlatformCaptureOutput=false` when `verbosity: "detailed"` (shows the test app's console / SQL-dump output).
 - Don't pipe output to `head`/`tail` — read the whole log. Per `testing.md`: NUnit and `dotnet test` interleave relevant info across the log; setup exceptions can come well before the assertion, and stack traces may be truncated if you skim.
 
 ## Output format
@@ -105,7 +107,7 @@ Return a single fenced JSON block — nothing else before or after it.
     }
   ],
   "callLog": [
-    { "command": "dotnet test Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF10.csproj --filter \"FullyQualifiedName~InsertWithIdentity_Sequence\" -c Debug", "reason": "EF10 run" }
+    { "command": "dotnet test --project Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF10.csproj --filter \"FullyQualifiedName~InsertWithIdentity_Sequence\" -c Debug --settings .runsettings", "reason": "EF10 run" }
   ]
 }
 ```
@@ -114,7 +116,7 @@ Target `status` values:
 
 - `"passed"` — non-zero tests ran and all passed.
 - `"failed"` — at least one test failed. Populate `failures[]` with `{test, message, stackTop?}`.
-- `"none_matched"` — `dotnet test` reported `No test matches the given testcase filter`. Common for EF3 when all target tests are `#if !NETFRAMEWORK`; report in `note` and keep going.
+- `"none_matched"` — the run reported zero tests (MTP: `Zero tests ran`, exit code 8; or VSTest's `No test matches the given testcase filter`). Common for EF3 when all target tests are `#if !NETFRAMEWORK`; report in `note` and keep going.
 - `"error"` — the run itself failed (build error, connection error, crash). Populate `error` with a short message.
 
 Top-level `status`:

@@ -58,7 +58,7 @@ Per the agent-rules guardrail, don't trust the close-comment attribution. Bisect
 4. **Loop.** For each candidate commit:
    - `git -C <worktree> switch --detach <sha>`
    - Edit out `[ActiveIssue]` on the target test method (`Edit` only — do not commit in the worktree)
-   - `dotnet test <project> --filter "FullyQualifiedName~CreateData.CreateDatabase|FullyQualifiedName~<TestClass>.<TestMethod>" -c Debug -p:TreatWarningsAsErrors=false -p:NoWarn=CS9336` — the `TreatWarningsAsErrors=false` + `NoWarn` flags are needed when bisecting across SDK upgrades (see [`windows-gotchas.md`](../../docs/windows-gotchas.md) → *Bisecting across SDK upgrades*); extend `NoWarn` with extra IDs as historic-code warnings surface.
+   - `dotnet test --project <project> --filter "FullyQualifiedName~CreateData.CreateDatabase|FullyQualifiedName~<TestClass>.<TestMethod>" -c Debug --settings .runsettings -p:TreatWarningsAsErrors=false -p:NoWarn=CS9336` — the `TreatWarningsAsErrors=false` + `NoWarn` flags are needed when bisecting across SDK upgrades (see [`windows-gotchas.md`](../../docs/windows-gotchas.md) → *Bisecting across SDK upgrades*); extend `NoWarn` with extra IDs as historic-code warnings surface.
    - Record pass/fail. Reset `git checkout -- <test-file>` before the next switch.
 5. **Halve** the range each step. Typically 4–7 iterations covers ≤ 100 commits.
 6. **Identify the transition.** The PR whose merge commit flips fail → pass is the citation. Confirm via `gh pr view <n> --repo linq2db/linq2db --json number,title,milestone,mergedAt,files`.

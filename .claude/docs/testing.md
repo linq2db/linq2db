@@ -1,15 +1,17 @@
 # Running Tests
 
-Tests use **NUnit3** with **Shouldly** assertions (not NUnit Assert). Test targets: `net462`, `net8.0`, `net9.0`, `net10.0`. **Always use Debug configuration and prefer `net10.0`** — Release enables Roslyn analyzers and is much slower to build. The full test suite takes ~1 hour or more; avoid running it unless necessary.
+Tests use **NUnit3** with **Shouldly** assertions (not NUnit Assert), running on **Microsoft.Testing.Platform** (MTP) — selected via `global.json` — not VSTest. Test targets: `net462`, `net8.0`, `net9.0`, `net10.0`. **Always use Debug configuration and prefer `net10.0`** — Release enables Roslyn analyzers and is much slower to build. The full test suite takes ~1 hour or more; avoid running it unless necessary.
 
 **Don't prepend a `dotnet build`.** `dotnet test` builds the project automatically if binaries are stale; a standalone `dotnet build` right before `dotnet test` only adds waiting time. If a test run fails with compile errors, fix them and re-run `dotnet test` directly.
 
+Under MTP, `dotnet test` takes the project via `--project` (a solution/filter via `--solution`) — the bare `dotnet test <project>` form is rejected. Always pass `--settings .runsettings` so NUnit honors `AssemblySelectLimit`; otherwise a broad `--filter` can fall back to running the whole assembly.
+
 ```bash
-# Run a single test class or method via dotnet test
-dotnet test Tests/Linq/Tests.csproj --filter "FullyQualifiedName~ClassName.MethodName" -f net10.0
+# Run a single test class or method
+dotnet test --project Tests/Linq/Tests.csproj --filter "FullyQualifiedName~ClassName.MethodName" -f net10.0 --settings .runsettings
 
 # Run tests with the lightweight playground solution (faster load)
-dotnet test linq2db.playground.slnf
+dotnet test --solution linq2db.playground.slnf --settings .runsettings
 ```
 
 **Default to `Tests.Playground` for any iterative test run** — fresh tests, fix-verification on existing tests, ad-hoc repro. The full `Tests/Linq/Tests.csproj` build is ~3+ minutes; the playground project is ~30s. Two distinct shapes:
@@ -18,7 +20,7 @@ dotnet test linq2db.playground.slnf
 2. **Iterating on a real test in `Tests/Linq/`** — add `<Compile Include="..\Linq\<sub>\<File>.cs" Link="<File>.cs" />` to `Tests/Tests.Playground/Tests.Playground.csproj`. The link is local scratch and must **not** be committed (same rule). Use this shape when iterating on a test that already lives in `Tests/Linq/` (e.g. a regression test you just wrote alongside a fix) without paying the cost of the full `Tests/Linq/Tests.csproj` multi-TFM build.
 
 ```bash
-dotnet test Tests/Tests.Playground/Tests.Playground.csproj --filter "FullyQualifiedName~ClassName.MethodName" -f net10.0
+dotnet test --project Tests/Tests.Playground/Tests.Playground.csproj --filter "FullyQualifiedName~ClassName.MethodName" -f net10.0 --settings .runsettings
 ```
 
 Reach for the full `Tests/Linq/Tests.csproj` only when the test target spans many files that would require a wide playground link, or when running a broad filter (e.g. an entire test class).
@@ -67,7 +69,7 @@ When the user asks to run tests against a provider family without naming the exa
 **Always include `CreateDatabase` in your `--filter`.** Prepend `FullyQualifiedName~CreateData.CreateDatabase|` to any filter you construct — the test is idempotent, re-running it is cheap, and it removes the "empty database" failure mode entirely.
 
 ```bash
-dotnet test Tests/Linq/Tests.csproj -f net10.0 --filter "FullyQualifiedName~CreateData.CreateDatabase|FullyQualifiedName~FirebirdTests.DropTableTest"
+dotnet test --project Tests/Linq/Tests.csproj -f net10.0 --filter "FullyQualifiedName~CreateData.CreateDatabase|FullyQualifiedName~FirebirdTests.DropTableTest" --settings .runsettings
 ```
 
 If your test modifies data, revert changes to avoid side effects in downstream tests.
@@ -193,17 +195,17 @@ For a full-suite run (tens of minutes — e.g. all of one provider across the di
 
 ## Diagnosing hung test runs
 
-A `dotnet test` that has been running **>30 s with zero test-output lines** AND a live `testhost.exe` process at **>1 GB resident memory** is almost certainly in an infinite-recursion loop — typically a visitor that hands its own output back to itself (`Visit(Optimize(converted))` re-entering its own `VisitXxx` with a structurally-equivalent element). Confirm via `tasklist /FI "IMAGENAME eq testhost.exe"` (or `Get-Process testhost`); a normal test run keeps testhost well under 500 MB.
+A `dotnet test` that has been running **>30 s with zero test-output lines** AND a live MTP **test-app process** (named after the test assembly — `linq2db.Tests*` — or `dotnet` when it hosts the test dll) at **>1 GB resident memory** is almost certainly in an infinite-recursion loop — typically a visitor that hands its own output back to itself (`Visit(Optimize(converted))` re-entering its own `VisitXxx` with a structurally-equivalent element). Confirm via `Get-Process linq2db.Tests*,dotnet` (under VSTest this was `testhost.exe`); a normal test run keeps it well under 500 MB.
 
 Recovery and triage:
 
-1. `Get-Process testhost,dotnet -ErrorAction SilentlyContinue | Where-Object { $_.ProcessName -eq 'testhost' } | Stop-Process -Force` — kill the runaway. The background `dotnet test` wrapper will exit shortly after.
+1. `Get-Process linq2db.Tests*,dotnet -ErrorAction SilentlyContinue | Where-Object { $_.WorkingSet64 -gt 1GB } | Stop-Process -Force` — kill the runaway (filter by memory so unrelated `dotnet` processes aren't touched). The background `dotnet test` wrapper will exit shortly after.
 2. Re-read the captured output. The recursion's terminal exception is usually `System.InsufficientExecutionStackException: Too many stack hops (> N). Recursion cannot safely continue.`, thrown from `LinqToDB.Internal.Common.StackGuard.RunOnEmptyStack` — that's linq2db's internal stack-overflow guard re-throwing after the runtime ran out of fresh-thread hops. The top of the truncated stack names the offending visitor method.
 3. The fix is virtually always idempotence: the visitor's transformation must produce a fixed point (a re-entry on the transformed element returns it unchanged) — check whether the rewrite wraps an operand in a shape the next visit pass will fail to recognize as already-wrapped, and add a structural guard.
 
 ## LinqService "address already in use" (port 22654)
 
-Remote (`*.LinqService`) test configs spin up an in-process HTTP host on a **fixed port** (`22654`). When many `.LinqService` configs fail at *startup* with `System.IO.IOException : Failed to bind to address https://127.0.0.1:22654: address already in use` while the **non-remote configs of the same tests pass**, it is **not** a code regression — a leaked `testhost` from an earlier run is still holding the port. The failure is at host bind, before any query executes, so an entity-construction / SQL change cannot cause it.
+Remote (`*.LinqService`) test configs spin up an in-process HTTP host on a **fixed port** (`22654`). When many `.LinqService` configs fail at *startup* with `System.IO.IOException : Failed to bind to address https://127.0.0.1:22654: address already in use` while the **non-remote configs of the same tests pass**, it is **not** a code regression — a leaked test-app process from an earlier run is still holding the port. The failure is at host bind, before any query executes, so an entity-construction / SQL change cannot cause it.
 
 Find and stop the orphaned listener:
 

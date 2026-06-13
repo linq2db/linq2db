@@ -248,7 +248,7 @@ Observed in this repo with `CS9336: The pattern is redundant` when bisecting com
 Pass both flags to escape:
 
 ```
-dotnet test ... -p:TreatWarningsAsErrors=false -p:NoWarn=CS9336
+dotnet test --project ... -p:TreatWarningsAsErrors=false -p:NoWarn=CS9336
 ```
 
 `TreatWarningsAsErrors=false` is the broad escape; `NoWarn=<id>` silences the specific code so the rest of the warning-as-error policy still surfaces real new issues during the bisect. Add additional IDs as needed when later iterations of the bisect hit different historic-code warnings.
