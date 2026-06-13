@@ -103,7 +103,7 @@ jobs:
         if %errorlevel% neq 0 exit
     
         FOR %%f IN (net8.0 net9.0 net10.0) DO (
-            dotnet publish Tests/Linq/Tests.csproj -f %%f -c $(test_configuration) -a x86 /p:DB2STUB=True -o .build/publish/Tests/$(test_configuration)/%%f_x86
+            dotnet publish Tests/Linq/Tests.csproj -f %%f -c $(test_configuration) -a x86 /p:X86STUBS=True -o .build/publish/Tests/$(test_configuration)/%%f_x86
             if %errorlevel% neq 0 exit
         )
 

@@ -39,8 +39,8 @@
 
 	<!-- Sap.Data.Hana.Net.v8.0 is x64-only; referencing it in an x86 build makes the test
 	     assembly fail to load on x86 (ReflectionTypeLoadException -> NUnit discovers 0 tests).
-	     Skip it on x86 (DB2STUB) and use the HANASTUBS stub types instead, mirroring DB2. -->
-	<ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0')) and '$(DB2STUB)' != 'True'">
+	     Skip it on x86 (X86STUBS) and use the HANASTUBS stub types instead, mirroring DB2. -->
+	<ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0')) and '$(X86STUBS)' != 'True'">
 		<Reference Include="Sap.Data.Hana.Net.v8.0">
 			<HintPath>..\..\Redist\SapHana\v8.0\Sap.Data.Hana.Net.v8.0.dll</HintPath>
 		</Reference>
