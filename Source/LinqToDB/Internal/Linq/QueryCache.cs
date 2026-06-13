@@ -139,7 +139,7 @@ namespace LinqToDB.Internal.Linq
 					&& ContextType     == other.ContextType;
 			}
 
-			public override bool Equals(object? obj) => obj is CacheKey other && Equals(other);
+			public override bool Equals([NotNullWhen(true)] object? obj) => obj is CacheKey other && Equals(other);
 			public override int  GetHashCode()       => _hash;
 		}
 
