@@ -137,12 +137,16 @@ namespace LinqToDB.Internal.Linq.Builder
 				// branches (SAP HANA UPSERT … WITH PRIMARY KEY) cannot honor divergent Insert/Update
 				// SET expressions — and the legacy InsertOrUpdate(insertSetter, updateSetter, ...)
 				// API allows the user to specify completely different SET shapes for the two branches.
-				// Detect divergence and fall back to UPDATE→INSERT emulation in that case.
-				var needsAlignedBranchesEmulation =
+				// The same native form also matches on the table PRIMARY KEY only, so a caller-supplied
+				// non-PK key selector (the 3-arg InsertOrUpdate(…, keySelector)) would be silently
+				// ignored. In either case fall back to the UPDATE→INSERT emulation, which honors both
+				// the per-branch SET shapes and the requested match key.
+				var needsEmulation =
 					flags.IsInsertOrUpdateRequiresAlignedBranches
-					&& UpsertBuilder.HasDivergentInsertOrUpdateBranches(InsertOrUpdateStatement);
+					&& (UpsertBuilder.HasDivergentInsertOrUpdateBranches(InsertOrUpdateStatement)
+						|| UpsertBuilder.MatchKeysDivergeFromPrimaryKey(InsertOrUpdateStatement));
 
-				if (flags.IsInsertOrUpdateSupported && !needsAlignedBranchesEmulation)
+				if (flags.IsInsertOrUpdateSupported && !needsEmulation)
 					QueryRunner.SetNonQueryQuery(query);
 				else
 					QueryRunner.MakeAlternativeInsertOrUpdate(Builder.DataContext.MappingSchema, query);

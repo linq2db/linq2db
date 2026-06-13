@@ -687,6 +687,32 @@ namespace LinqToDB.Internal.Linq.Builder
 			return false;
 		}
 
+		// True when the statement's match keys (Update.Keys) are not exactly the target table's
+		// primary key. SAP HANA's native UPSERT … WITH PRIMARY KEY always matches on the table PK
+		// and silently ignores a caller-supplied non-PK key (the legacy InsertOrUpdate keySelector),
+		// so such cases must fall back to the UPDATE→INSERT emulation that honors the requested key.
+		// PK-keyed calls (the common case) return false and keep the native single-statement path.
+		internal static bool MatchKeysDivergeFromPrimaryKey(SqlInsertOrUpdateStatement stmt)
+		{
+			var pk = stmt.Insert.Into?.GetKeys(false);
+			if (pk == null || pk.Count == 0)
+				return false;
+
+			var cmp    = ISqlExpressionEqualityComparer.Instance;
+			var pkCols = new HashSet<ISqlExpression>(pk, cmp);
+
+			if (stmt.Update.Keys.Count != pkCols.Count)
+				return true;
+
+			foreach (var k in stmt.Update.Keys)
+			{
+				if (!pkCols.Contains(k.Column))
+					return true;
+			}
+
+			return false;
+		}
+
 		#region UpsertContext
 
 		sealed class UpsertContext : BuildContextBase
