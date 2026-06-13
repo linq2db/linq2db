@@ -5005,10 +5005,12 @@ namespace LinqToDB.Internal.Linq.Builder
 			using var snapshot = _gettingSubquery == 0 && Builder.ValidateSubqueries ? CreateSnapshot() : null;
 
 			++_gettingSubquery;
-			// reset flags to avoid affecting subquery building with flags that are only relevant for current level
-			using var saveFlags   = UsingBuildFlags(BuildFlags.None);
+			// reset flags + ambient column descriptor: both are current-level state (the descriptor is e.g. a
+			// projection member being built) and must not leak into subquery building (issue #5576)
+			using var saveFlags      = UsingBuildFlags(BuildFlags.None);
+			using var saveDescriptor = UsingColumnDescriptor(null);
 
-			var       buildResult = Builder.TryBuildSequence(info);
+			var       buildResult    = Builder.TryBuildSequence(info);
 			--_gettingSubquery;
 
 			if (expr is ContextRefExpression contextRef && ReferenceEquals(contextRef.BuildContext, buildResult.BuildContext))
