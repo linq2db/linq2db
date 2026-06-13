@@ -182,6 +182,7 @@ public class TestsInitialization
 		if (TestExecutionContext.CurrentContext.Dispatcher is ParallelWorkItemDispatcher original)
 		{
 			TestExecutionContext.CurrentContext.Dispatcher = new ParallelDatabaseWorkItemDispatcher(original);
+			TestBase.ParallelExecutionEnabled = true;
 			TestContext.Progress.WriteLine($"[parallel] installed ParallelDatabaseWorkItemDispatcher (workers={original.LevelOfParallelism})");
 		}
 		else

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -20,6 +21,23 @@ namespace Tests
 		const int TRACES_LIMIT = 50000;
 
 		protected static string? LastQuery { get; set; }
+
+		// Set when the parallel dispatcher is installed (TestsInitialization). Gates the
+		// per-provider database-readiness wait below, so serial / filtered runs are unaffected.
+		public static bool ParallelExecutionEnabled;
+
+		// Under parallel execution a provider's tests wait until its CreateDatabase has populated
+		// the schema. CreateDatabase runs off the provider lane (see ParallelDatabaseWorkItemDispatcher),
+		// so this never deadlocks the lane. Keyed by the bare provider context (remote suffix stripped).
+		static readonly ConcurrentDictionary<string, ManualResetEventSlim> _databaseReady =
+			new ConcurrentDictionary<string, ManualResetEventSlim>(StringComparer.OrdinalIgnoreCase);
+
+		static ManualResetEventSlim DatabaseReadyGate(string provider)
+			=> _databaseReady.GetOrAdd(provider, static _ => new ManualResetEventSlim(false));
+
+		// Signalled by CreateDatabase once a provider's schema exists (called even on failure so
+		// waiters don't hang).
+		public static void MarkDatabaseReady(string provider) => DatabaseReadyGate(provider).Set();
 
 		static TestBase()
 		{
@@ -129,10 +147,16 @@ namespace Tests
 		[SetUp]
 		public virtual void OnBeforeTest()
 		{
-			var (provider, isRemote) = NUnitUtils.GetContext(TestExecutionContext.CurrentContext.CurrentTest);
+			var test = TestExecutionContext.CurrentContext.CurrentTest;
+			var (provider, isRemote) = NUnitUtils.GetContext(test);
 
 			// establish a fresh per-test context before anything in setup/test can log
 			CustomTestContext.Begin(isRemote);
+
+			// Under parallel execution, wait until this provider's database has been created
+			// (CreateDatabase runs off-lane and signals readiness). Serial / filtered runs skip this.
+			if (ParallelExecutionEnabled && provider != null && !NUnitUtils.IsCreateDatabase(test))
+				DatabaseReadyGate(provider).Wait(TimeSpan.FromMinutes(2));
 
 			// SequentialAccess-enabled provider setup
 			if (provider?.IsAnyOf(TestProvName.AllSqlServerSequentialAccess) == true)
@@ -144,10 +168,17 @@ namespace Tests
 		[TearDown]
 		public virtual void OnAfterTest()
 		{
+			var test = TestExecutionContext.CurrentContext.CurrentTest;
+			var (provider, isRemote) = NUnitUtils.GetContext(test);
+
+			// release any tests waiting on this provider's database: signalled after CreateDatabase
+			// runs (here, not inside the try, so a failed CreateDatabase still unblocks waiters)
+			if (provider != null && NUnitUtils.IsCreateDatabase(test))
+				MarkDatabaseReady(provider);
+
 			try
 			{
 				// SequentialAccess-enabled provider cleanup
-				var (provider, isRemote) = NUnitUtils.GetContext(TestExecutionContext.CurrentContext.CurrentTest);
 				if (provider?.IsAnyOf(TestProvName.AllSqlServerSequentialAccess) == true)
 				{
 					Configuration.OptimizeForSequentialAccess = false;

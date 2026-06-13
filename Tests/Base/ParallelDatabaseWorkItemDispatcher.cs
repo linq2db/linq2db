@@ -78,7 +78,10 @@ namespace Tests
 			// provider-less tests) goes to the original dispatcher.
 			var (context, isRemote) = NUnitUtils.GetContext(work.Test);
 
-			if (context == null)
+			// CreateDatabase must run off the provider lane (on the original dispatcher's
+			// independent worker) so a provider's other tests can wait on its completion latch
+			// without deadlocking the single-thread lane.
+			if (context == null || NUnitUtils.IsCreateDatabase(work.Test))
 			{
 				_original.Dispatch(work);
 				return;
