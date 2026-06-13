@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -221,5 +222,82 @@ namespace Tests.xUpdate
 			rows[1].Name   .ShouldBe("new2");
 			rows[1].Version.ShouldBe(2 + 10);
 		}
+
+		#region #3721 — dynamic / Sql.Property columns
+
+		// Dynamic-column store mapped onto the physical EntityUpdateDynamicTest table; the "Name" column
+		// is a dynamic (non-POCO) property reachable only through Sql.Property.
+		[Table("EntityUpdateDynamicTest")]
+		sealed class EntityUpdateDynamicStore
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[DynamicColumnsStore] public Dictionary<string, object> Values { get; set; } = new();
+		}
+
+		// Fixed-schema twin (same table name) used to materialise + seed the physical table.
+		[Table("EntityUpdateDynamicTest")]
+		sealed class EntityUpdateDynamicFullTable
+		{
+			[Column] public int     Id   { get; set; }
+			[Column] public string? Name { get; set; }
+		}
+
+		static MappingSchema ConfigureEntityUpdateDynamicSchema()
+		{
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<EntityUpdateDynamicStore>()
+					.HasPrimaryKey(e => e.Id)
+					.DynamicColumnsStore(e => e.Values)
+					.Property(x => Sql.Property<string?>(x, "Name"))
+				.Build();
+
+			return ms;
+		}
+
+		// #3721: update a dynamic / Sql.Property (non-POCO) column value through the entity-builder
+		// Update .Set — match is by primary key. Same root as EntityInsertTests.Insert_Set_DynamicColumn:
+		// BuildUpdateSetter matches the override key via GetGetterExpression (store-getter block), which
+		// doesn't equal the user's Sql.Property selector, so the override is missed and the value falls
+		// back to the non-parameterisable store-getter block. Gated.
+		[ActiveIssue(3721)]
+		[Test]
+		public void Update_Set_DynamicColumn([IncludeDataSources(ProviderName.SQLiteMS)] string context)
+		{
+			using var db    = GetDataContext(context, ConfigureEntityUpdateDynamicSchema());
+			using var table = db.CreateLocalTable(new[] { new EntityUpdateDynamicFullTable { Id = 1, Name = "seed" } });
+
+			var store = db.GetTable<EntityUpdateDynamicStore>();
+
+			store.Update(
+				new EntityUpdateDynamicStore { Id = 1 },
+				b => b.Set(x => Sql.Property<string?>(x, "Name"), () => "dyn-update"));
+
+			store.Single(r => r.Id == 1).Values["Name"].ShouldBe("dyn-update");
+		}
+
+		// #3721: auto-derive a dynamic column value straight from the in-memory item's store dictionary
+		// (no .Set override) — exercises store-based value extraction. Same non-parameterisable
+		// store-getter-block root as the Insert auto-derive case. Gated.
+		[ActiveIssue(3721)]
+		[Test]
+		public void Update_AutoDerive_DynamicColumn([IncludeDataSources(ProviderName.SQLiteMS)] string context)
+		{
+			using var db    = GetDataContext(context, ConfigureEntityUpdateDynamicSchema());
+			using var table = db.CreateLocalTable(new[] { new EntityUpdateDynamicFullTable { Id = 1, Name = "seed" } });
+
+			var store = db.GetTable<EntityUpdateDynamicStore>();
+
+			var item = new EntityUpdateDynamicStore { Id = 1 };
+			item.Values["Name"] = "auto-update";
+
+			store.Update(item, b => b);
+
+			store.Single(r => r.Id == 1).Values["Name"].ShouldBe("auto-update");
+		}
+
+		#endregion
 	}
 }

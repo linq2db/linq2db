@@ -649,12 +649,12 @@ namespace Tests.xUpdate
 		}
 
 		// #3721: set a dynamic / Sql.Property (non-POCO) column through the fluent Upsert .Set — covering
-		// both the INSERT (unmatched) and UPDATE (matched) branches.
-		// Dynamic-column field resolution + override matching now work (ColumnAccess emits
-		// Sql.Property), but extracting the column *value* as a parameter from the entity instance
-		// still hits DynamicColumnInfo.DummyGetter (real values live in the DynamicColumnsStore, not
-		// the property getter) — the documented "dynamic target setters not supported" root. Needs
-		// store-based value extraction. Gated until #3721 is fully implemented.
+		// both the INSERT (unmatched) and UPDATE (matched) branches. The dynamic *field* now resolves
+		// via Sql.Property (ColumnDescriptor.GetMemberAccessExpression), but the in-memory column *value*
+		// still fails to build ("The LINQ expression could not be converted to SQL" at
+		// UpdateBuilder.InitializeSetExpressions): the .Set override isn't applied to the dynamic column
+		// and the value falls back to a non-parameterisable store-getter form. Gated; needs in-memory
+		// dynamic-value parameterisation (shared with the entity Insert/Update cases).
 		[ActiveIssue(3721)]
 		[Test]
 		public void Single_Set_DynamicColumn([IncludeDataSources(ProviderName.SQLiteMS)] string context)

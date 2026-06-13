@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -238,6 +239,88 @@ namespace Tests.xUpdate
 			var row = db.GetTable<EntityInsertNestedRow>().Single();
 			row.Name.First.ShouldBe("set-first");
 			row.Name.Last .ShouldBe("seed-last");
+		}
+
+		#endregion
+
+		#region #3721 — dynamic / Sql.Property columns
+
+		// Dynamic-column store mapped onto the physical EntityInsertDynamicTest table; the "Name" column
+		// is a dynamic (non-POCO) property reachable only through Sql.Property.
+		[Table("EntityInsertDynamicTest")]
+		sealed class EntityInsertDynamicStore
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[DynamicColumnsStore] public Dictionary<string, object> Values { get; set; } = new();
+		}
+
+		// Fixed-schema twin (same table name) used to materialise the physical table via CreateLocalTable.
+		[Table("EntityInsertDynamicTest")]
+		sealed class EntityInsertDynamicFullTable
+		{
+			[Column] public int     Id   { get; set; }
+			[Column] public string? Name { get; set; }
+		}
+
+		static MappingSchema ConfigureEntityInsertDynamicSchema()
+		{
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<EntityInsertDynamicStore>()
+					.HasPrimaryKey(e => e.Id)
+					.DynamicColumnsStore(e => e.Values)
+					.Property(x => Sql.Property<string?>(x, "Name"))
+				.Build();
+
+			return ms;
+		}
+
+		// #3721: insert a dynamic / Sql.Property (non-POCO) column value through the entity-builder
+		// Insert .Set. The dynamic *field* now resolves via Sql.Property (ColumnDescriptor.GetMemberAccessExpression),
+		// but the in-memory column *value* doesn't yet flow: BuildInsertSetter computes the override
+		// match key with MemberAccessor.GetGetterExpression (the [DynamicColumnsStore] getter block),
+		// which is structurally unequal to the user's Sql.Property selector, so the .Set override is
+		// missed and the column falls back to the store-getter block as its value — which then fails
+		// "The LINQ expression could not be converted to SQL" (not force-parameterisable). Gated;
+		// needs the entity-API setter to (1) match the override via GetMemberAccessExpression and
+		// (2) parameterise the in-memory dynamic value.
+		[ActiveIssue(3721)]
+		[Test]
+		public void Insert_Set_DynamicColumn([IncludeDataSources(ProviderName.SQLiteMS)] string context)
+		{
+			using var db = GetDataContext(context, ConfigureEntityInsertDynamicSchema());
+			using var _  = db.CreateLocalTable<EntityInsertDynamicFullTable>();
+
+			var table = db.GetTable<EntityInsertDynamicStore>();
+
+			table.Insert(
+				new EntityInsertDynamicStore { Id = 1 },
+				b => b.Set(x => Sql.Property<string?>(x, "Name"), () => "dyn-insert"));
+
+			table.Single(r => r.Id == 1).Values["Name"].ShouldBe("dyn-insert");
+		}
+
+		// #3721: auto-derive a dynamic column value straight from the in-memory item's store dictionary
+		// (no .Set override) — exercises store-based value extraction. The setter value is the
+		// [DynamicColumnsStore] getter block, which can't be translated to SQL and isn't
+		// force-parameterisable as-is. Gated; needs in-memory dynamic-value parameterisation.
+		[ActiveIssue(3721)]
+		[Test]
+		public void Insert_AutoDerive_DynamicColumn([IncludeDataSources(ProviderName.SQLiteMS)] string context)
+		{
+			using var db = GetDataContext(context, ConfigureEntityInsertDynamicSchema());
+			using var _  = db.CreateLocalTable<EntityInsertDynamicFullTable>();
+
+			var table = db.GetTable<EntityInsertDynamicStore>();
+
+			var item = new EntityInsertDynamicStore { Id = 1 };
+			item.Values["Name"] = "auto-name";
+
+			table.Insert(item, b => b);
+
+			table.Single(r => r.Id == 1).Values["Name"].ShouldBe("auto-name");
 		}
 
 		#endregion
