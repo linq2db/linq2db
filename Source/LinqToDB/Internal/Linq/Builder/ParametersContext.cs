@@ -127,6 +127,13 @@ namespace LinqToDB.Internal.Linq.Builder
 			parameterName ??= "p";
 
 			var mappingSchema = context?.MappingSchema ?? MappingSchema;
+
+			// A dynamic ([DynamicColumnsStore]) column read compiles to the throwing dummy getter when the
+			// parameter value is extracted from an in-memory entity (e.g. the entity Insert/Update/Upsert
+			// auto-derive path). Rewrite such member accesses to the column's store-aware getter so the
+			// value is read from the store dictionary instead.
+			expr = ReplaceDynamicColumnGetters(expr, mappingSchema);
+
 			var entry       = PrepareParameterCacheEntry(mappingSchema, expr, parameterName, columnDescriptor, doNotCheckCompatibility, buildParameterType);
 
 			if (entry is null)
@@ -173,6 +180,31 @@ namespace LinqToDB.Internal.Linq.Builder
 			_parametersById[finalParameterId] = sqlParameter;
 
 			return sqlParameter;
+		}
+
+		// Rewrites every dynamic-column ([DynamicColumnsStore]) member access in a parameter-value
+		// expression to the column's store-aware getter (reads the store dictionary on the instance),
+		// because a plain dynamic-column member access compiles to DynamicColumnInfo's throwing dummy
+		// getter. The Find guard keeps the common (no dynamic column) case to a single cheap traversal.
+		static Expression ReplaceDynamicColumnGetters(Expression expr, MappingSchema mappingSchema)
+		{
+			if (expr.Find(static e => e is MemberExpression { Expression: not null } m && m.Member.IsDynamicColumnProperty) == null)
+				return expr;
+
+			return expr.Transform(mappingSchema, static (ms, e) =>
+			{
+				if (e is MemberExpression { Expression: { } inst } me && me.Member.IsDynamicColumnProperty)
+				{
+					var ed = ms.GetEntityDescriptor(inst.Type);
+					foreach (var c in ed.Columns)
+					{
+						if (c.MemberInfo.IsDynamicColumnProperty && c.MemberName == me.Member.Name)
+							return c.MemberAccessor.GetGetterExpression(inst);
+					}
+				}
+
+				return e;
+			});
 		}
 
 		ParameterCacheEntry? PrepareParameterCacheEntry(MappingSchema mappingSchema, Expression paramExpression, string parameterName, ColumnDescriptor? columnDescriptor, bool doNotCheckCompatibility, BuildParameterType buildParameterType)

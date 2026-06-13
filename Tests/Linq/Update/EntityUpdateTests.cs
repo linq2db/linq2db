@@ -277,9 +277,8 @@ namespace Tests.xUpdate
 		}
 
 		// #3721: auto-derive a dynamic column value straight from the in-memory item's store dictionary
-		// (no .Set override) — exercises store-based value extraction. Same non-parameterisable
-		// store-getter-block root as the Insert auto-derive case. Gated.
-		[ActiveIssue(3721)]
+		// (no .Set override). The DynamicColumnInfo member-access parameter accessor is rewritten to the
+		// store-aware getter by ParametersContext.BuildParameter. See Insert_AutoDerive_DynamicColumn.
 		[Test]
 		public void Update_AutoDerive_DynamicColumn([IncludeDataSources(ProviderName.SQLiteMS)] string context)
 		{
