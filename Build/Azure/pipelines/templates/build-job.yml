@@ -84,7 +84,9 @@ jobs:
             if %errorlevel% neq 0 exit
             )
 
-        dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF3.csproj -f net462 -c $(test_configuration) -o .build/publish/EFTests/$(test_configuration)/net462_x64
+        REM -a x64: net462 is AnyCPU and runs as x64; without an explicit RID the SQLitePCLRaw net4x
+        REM native target ships only the x86 e_sqlite3, which the x64 EF test process cannot load.
+        dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF3.csproj -f net462 -c $(test_configuration) -a x64 -o .build/publish/EFTests/$(test_configuration)/net462_x64
         if %errorlevel% neq 0 exit
 
         dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF8.csproj -f net8.0 -c $(test_configuration) -o .build/publish/EFTests/$(test_configuration)/net8.0_x64
