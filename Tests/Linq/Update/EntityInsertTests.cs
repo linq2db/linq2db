@@ -278,15 +278,10 @@ namespace Tests.xUpdate
 		}
 
 		// #3721: insert a dynamic / Sql.Property (non-POCO) column value through the entity-builder
-		// Insert .Set. The dynamic *field* now resolves via Sql.Property (ColumnDescriptor.GetMemberAccessExpression),
-		// but the in-memory column *value* doesn't yet flow: BuildInsertSetter computes the override
-		// match key with MemberAccessor.GetGetterExpression (the [DynamicColumnsStore] getter block),
-		// which is structurally unequal to the user's Sql.Property selector, so the .Set override is
-		// missed and the column falls back to the store-getter block as its value — which then fails
-		// "The LINQ expression could not be converted to SQL" (not force-parameterisable). Gated;
-		// needs the entity-API setter to (1) match the override via GetMemberAccessExpression and
-		// (2) parameterise the in-memory dynamic value.
-		[ActiveIssue(3721)]
+		// Insert .Set. The dynamic field resolves via Sql.Property (ColumnDescriptor.GetMemberAccessExpression),
+		// and the .Set override now matches because BuildInsertSetter keys the override on the same
+		// GetMemberAccessExpression form; the user-supplied value (() => "dyn-insert") is a client
+		// constant that parameterises normally.
 		[Test]
 		public void Insert_Set_DynamicColumn([IncludeDataSources(ProviderName.SQLiteMS)] string context)
 		{

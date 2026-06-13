@@ -627,11 +627,13 @@ namespace Tests.xUpdate
 		}
 
 		// Fixed-schema twin (same table name) used to materialise the physical table via CreateLocalTable.
+		// Id is the primary key so the physical table carries the PK constraint the upsert's
+		// ON CONFLICT ([Id]) requires (the dynamic store entity maps Id as the PK via fluent config).
 		[Table("UpsertDynamicTest")]
 		sealed class UpsertDynamicFullTable
 		{
-			[Column] public int     Id   { get; set; }
-			[Column] public string? Name { get; set; }
+			[PrimaryKey] public int     Id   { get; set; }
+			[Column]     public string? Name { get; set; }
 		}
 
 		static MappingSchema ConfigureUpsertDynamicSchema()
@@ -649,13 +651,9 @@ namespace Tests.xUpdate
 		}
 
 		// #3721: set a dynamic / Sql.Property (non-POCO) column through the fluent Upsert .Set — covering
-		// both the INSERT (unmatched) and UPDATE (matched) branches. The dynamic *field* now resolves
-		// via Sql.Property (ColumnDescriptor.GetMemberAccessExpression), but the in-memory column *value*
-		// still fails to build ("The LINQ expression could not be converted to SQL" at
-		// UpdateBuilder.InitializeSetExpressions): the .Set override isn't applied to the dynamic column
-		// and the value falls back to a non-parameterisable store-getter form. Gated; needs in-memory
-		// dynamic-value parameterisation (shared with the entity Insert/Update cases).
-		[ActiveIssue(3721)]
+		// both the INSERT (unmatched) and UPDATE (matched) branches. The dynamic field resolves via
+		// GetMemberAccessExpression (a DynamicColumnInfo member access, matching the exposed user
+		// selector) and the .Set override is applied with the user-supplied client value.
 		[Test]
 		public void Single_Set_DynamicColumn([IncludeDataSources(ProviderName.SQLiteMS)] string context)
 		{

@@ -258,11 +258,9 @@ namespace Tests.xUpdate
 		}
 
 		// #3721: update a dynamic / Sql.Property (non-POCO) column value through the entity-builder
-		// Update .Set — match is by primary key. Same root as EntityInsertTests.Insert_Set_DynamicColumn:
-		// BuildUpdateSetter matches the override key via GetGetterExpression (store-getter block), which
-		// doesn't equal the user's Sql.Property selector, so the override is missed and the value falls
-		// back to the non-parameterisable store-getter block. Gated.
-		[ActiveIssue(3721)]
+		// Update .Set — match is by primary key. The .Set override now matches because BuildUpdateSetter
+		// keys it on GetMemberAccessExpression (same Sql.Property form as the user selector); the value
+		// (() => "dyn-update") is a client constant that parameterises normally.
 		[Test]
 		public void Update_Set_DynamicColumn([IncludeDataSources(ProviderName.SQLiteMS)] string context)
 		{

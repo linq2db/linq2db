@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Mapping;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.Linq.Builder
@@ -46,7 +47,12 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				if (cd.SkipOnInsert) continue;
 
-				var canonicalField = cd.MemberAccessor.GetGetterExpression(entityParameter);
+				// Match key for .Set/.Ignore overrides — must equal EntityBuilderParser.Canonicalise
+				// (fieldLambda.GetBody(entityParameter)). GetMemberAccessExpression produces the same
+				// null-check-free member chain for nested columns and the same Sql.Property node for
+				// dynamic columns; MemberAccessor.GetGetterExpression would instead emit a null-check
+				// block / the store getter, which never matches the user selector.
+				var canonicalField = cd.GetMemberAccessExpression(entityParameter);
 				if (IsIgnored(canonicalField, ignoreList))
 					continue;
 
@@ -91,7 +97,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (cd.IsPrimaryKey) continue;
 				if (cd.SkipOnUpdate) continue;
 
-				var canonicalField = cd.MemberAccessor.GetGetterExpression(entityParameter);
+				// See BuildInsertSetter: match key must equal the user selector's Canonicalise form.
+				var canonicalField = cd.GetMemberAccessExpression(entityParameter);
 
 				// Match columns appear in the ON clause — including them in UPDATE SET is
 				// forbidden by Oracle (ORA-38104) and pointless elsewhere. Skip unless the

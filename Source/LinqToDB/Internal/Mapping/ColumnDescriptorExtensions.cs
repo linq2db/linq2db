@@ -36,16 +36,21 @@ namespace LinqToDB.Internal.Mapping
 		/// </exception>
 		public static Expression GetMemberAccessExpression(this ColumnDescriptor descriptor, Expression instance)
 		{
-			// Dynamic columns have no real CLR member to walk to — emit Sql.Property<T>(instance, name)
-			// directly. This is what GetMemberGetter would produce for a DynamicColumnInfo, but doing it
-			// up-front keeps the resolution independent of the GetMemberEx round-trip below (which only
-			// preserves the DynamicColumnInfo when instance.Type is the entity root) and correct for
-			// cross-type sources (e.g. a MERGE source row whose type differs from the target).
+			// Dynamic columns have no real CLR member to walk to. When the instance is the entity root,
+			// emit a member access against the DynamicColumnInfo: that is exactly the shape the expose
+			// pipeline rewrites a user `Sql.Property<T>(x, name)` selector into, so the result compares
+			// structurally equal to a canonicalised user selector (needed for .Set/.Ignore override
+			// matching), and the table builder resolves the dynamic member to its column. When the
+			// instance type differs from the entity root (e.g. a MERGE source row of another type),
+			// Expression.MakeMemberAccess would throw, so fall back to Sql.Property<T>(instance, name) —
+			// the form GetMemberGetter produces — which carries no declaring-type constraint.
 			if (descriptor.MemberInfo.IsDynamicColumnProperty)
-				return Expression.Call(
-					Methods.LinqToDB.SqlExt.Property.MakeGenericMethod(descriptor.MemberType),
-					instance,
-					Expression.Constant(descriptor.MemberName));
+				return instance.Type == descriptor.MemberAccessor.TypeAccessor.Type
+					? Expression.MakeMemberAccess(instance, descriptor.MemberInfo)
+					: Expression.Call(
+						Methods.LinqToDB.SqlExt.Property.MakeGenericMethod(descriptor.MemberType),
+						instance,
+						Expression.Constant(descriptor.MemberName));
 
 			// IsComplex is true only for nested member paths and dynamic columns. Gating on it (rather than
 			// MemberName.Contains('.')) keeps explicit-interface members — whose CLR name itself contains
