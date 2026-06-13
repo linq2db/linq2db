@@ -258,6 +258,10 @@ Baselines regenerate in place during the test run. To see "before vs after" you 
 1. **Regenerate locally**: check out `master` (or the PR base), run the relevant tests to populate baselines at `BaselinesPath`, then switch back and re-run — diff is between the two generations.
 2. **Use the remote baselines repo**: clone `https://github.com/linq2db/linq2db.baselines.git` to `../linq2db.baselines` (or fetch into the existing sibling) and compare `BaselinesPath/<Provider>/…` against `../linq2db.baselines/<Provider>/…` directly. No pre-change test run needed; this is the authoritative "before" for branches based on `master`.
 
+### Unexpected "changed" baselines on a broad run — confirm with a deterministic re-run
+
+A large-suite run against a stale local `BaselinesPath` can report many `changed` baselines — including tests outside your filter and unrelated to your change. That's usually the local `.bls` catching up to current branch code (the cache lagged behind commits made since it was last populated), **not** your change's effect. Before attributing the churn to your work: re-snapshot and re-run the *same* set — a deterministic second run that diffs to ~0 `changed` confirms the first run was cache catch-up. Small focused runs hide this because their few baselines already matched the cache, so the drift only surfaces the first time you run a big suite locally. Corollary: a change that only alters a runtime *value accessor* (e.g. the source a parameter's value is read from) is SQL-text-neutral and cannot move a baseline; if it appears to, suspect stale-cache drift first.
+
 ## Known flaky baselines
 
 Tests whose SQL baselines are known to reorder / churn without a real code change. Surfacing reorders here in a PR's baselines diff is **not** a finding — the PR didn't cause it, and flagging it wastes reviewer attention. Mention in passing at most when the diff otherwise runs clean.
