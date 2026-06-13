@@ -35,7 +35,7 @@ Bad triggers (don't invoke even if tempted):
 - Generic end-of-turn reflection — there's rarely enough signal in a single-topic turn.
 - Immediately after another session-reflect run — the sources overlap and the same findings will surface.
 
-## Six candidate buckets
+## Seven candidate buckets
 
 Every finding gets routed to exactly one bucket plus a destination (project `.claude/` or user-level auto-memory). Severity here is about **how confident** we are that the signal is real, not about urgency.
 
@@ -47,6 +47,7 @@ Every finding gets routed to exactly one bucket plus a destination (project `.cl
 | **skill** | `.claude/skills/<name>/SKILL.md` | A user-triggered workflow that appeared in this session (either done manually or ad-hoc) and is likely to recur. Must be user-invoked (the `/command` shape), not a behind-the-scenes agent. | strong / medium / weak |
 | **agent** | `.claude/agents/<name>.md` | A specialized read-or-write task delegated to a subagent during this session (or that *should* have been delegated). Typically created when a task's tool profile is narrower than the main agent's. | strong / medium / weak |
 | **permission** | instruction edit (`agent-rules.md`) OR script creation / extension (`.claude/scripts/`) OR allowlist (defer to `/fewer-permission-prompts`). Pick per **Diagnosing permission prompts** below. | Bash patterns that triggered permission prompts this session. Analyze root cause per prompt — don't just aggregate. | strong / medium / weak |
+| **dead-end** | auto-memory (`project` type); or `.claude/knowledge-base/areas/<AREA>/tech-debt.md` if KB-tracked | An approach tried and abandoned this session — a disproven hypothesis, a reverted refactor, an API / tool / dialect path that doesn't fit the case. Body uses **Tried:** / **Failed because:** / **Don't re-attempt:**. Consumed via `agent-rules.md` → *Investigating & fixing bugs* → **Check recorded dead-ends before re-attempting**. | strong / medium / weak |
 
 ### Strong vs medium vs weak
 
@@ -68,6 +69,7 @@ This is the hardest judgment call in the skill — a bad routing pollutes one sy
 | Personal quirks of this user's workflow that aren't universally right | auto-memory (`feedback` type) |
 | External resources (issue tracker, Slack, dashboards) | auto-memory (`reference` type) |
 | Current-project state (in-progress initiatives, deadlines) | auto-memory (`project` type) |
+| Approaches tried and abandoned (dead-ends) | auto-memory (`project` type), body `**Tried:** / **Failed because:** / **Don't re-attempt:**` |
 
 When a finding could plausibly go either way (e.g. "user prefers X over Y" — is that personal or project consensus?), ask the user explicitly during the per-finding confirmation step.
 
@@ -99,6 +101,7 @@ Build an internal index of session signals:
 - **Permission prompts** — tool calls you issued that required user approval. Include command prefix + whether an allowlist entry would have avoided it.
 - **Delegated vs inline work** — tasks you handled in the main thread that would have fit a subagent's profile better.
 - **User-triggered workflows** — you noticed the user repeat the same shape of request 2+ times; that's a skill candidate.
+- **Dead-ends** — approaches you tried this session and then abandoned: a hypothesis the evidence disproved, a refactor you reverted, a tool / API / fetch / dialect path that doesn't work for the case. Record *what was tried*, *why it failed*, and *what not to re-attempt*. These are the highest-value captures — they stop the next session paying again for a lesson already learned.
 
 Read the transcript forward once, keeping this index in memory. For a 50+ turn conversation, note structure: which early turns set up the goal, which middle turns drove correction, which late turns produced confirmed approaches. Corrections that came *before* confirmations matter more than corrections the user later walked back.
 
@@ -111,7 +114,7 @@ Emit a finding record:
 ```json
 {
   "id": "<bucket>-<short-slug>",
-  "bucket": "feedback|doc|script|skill|agent|permission",
+  "bucket": "feedback|doc|script|skill|agent|permission|dead-end",
   "destination": "<file path relative to repo root, or `memory:<file>`>",
   "severity": "strong|medium|weak",
   "signal": "<the transcript evidence — quote the user or cite the turn>",
