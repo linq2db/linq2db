@@ -163,15 +163,11 @@ namespace LinqToDB.Internal.Linq
 
 		// One cached query inside a Bucket. Carries the cached Query plus the
 		// per-entry state the hit / sweep / trim paths consume.
-		[DebuggerDisplay("HitsPerHour={HitsPerHour} HitsSinceSweep={HitsSinceSweep} Flags={QueryFlags}")]
+		[DebuggerDisplay("HitsPerHour={HitsPerHour} HitsSinceSweep={HitsSinceSweep}")]
 		sealed class Entry
 		{
 			// The cached query.
 			public Query      Query      = null!;
-
-			// Cached copy of the bucket-key QueryFlags so the inner TryFind loop can
-			// filter without re-deriving the value from the data context.
-			public QueryFlags QueryFlags;
 
 			// Stopwatch.GetTimestamp() of the last RecordAccess that ran the
 			// heavyweight deadline-extension path. Sampling-aware — not every hit
@@ -278,7 +274,11 @@ namespace LinqToDB.Internal.Linq
 			_cache.Clear();
 			_misses.Clear();
 
-			// Invalidate any bucket that raced with the clear and was created during the window above.
+			// A TryAdd that read the post-first-bump version can commit a bucket after _cache.Clear()
+			// but before this second bump. This bump stamps the cache version past that bucket's, so it
+			// fails the version guard in TryFind/TryAdd (treated as a miss and reaped) — invisible, i.e.
+			// the clear is honored. Such a bucket is still counted by ReconcileEntryCount below until it
+			// is reaped, so the entry count may be transiently high; RemoveBucketFromCache corrects it.
 			Interlocked.Increment(ref _version);
 
 			// Reconcile the counter against the live state. A racing TryAdd may have created
@@ -476,7 +476,6 @@ namespace LinqToDB.Internal.Linq
 					survivors.Add(new Entry
 					{
 						Query            = query,
-						QueryFlags       = queryFlags,
 						LastAccessTicks  = now,
 						LastSweepTicks   = now,
 						BaseTimeoutTicks = baseTimeoutTicks,
