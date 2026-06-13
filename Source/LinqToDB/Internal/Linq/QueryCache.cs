@@ -591,6 +591,14 @@ namespace LinqToDB.Internal.Linq
 			if (Interlocked.CompareExchange(ref _sweepRunning, 1, 0) != 0)
 				return;
 
+			// Advance _lastSweepTicks *before* enqueuing, not after. The queued worker resets
+			// _sweepRunning when it finishes, and on a hot thread pool it can run to completion
+			// before this method returns. If the timestamp were advanced after the enqueue, that
+			// window would let a concurrent MaybeSweepGlobal observe a stale _lastSweepTicks plus
+			// an already-freed _sweepRunning and schedule a redundant sweep. Setting it here keeps
+			// the debounce timestamp current before the worker can free the flag. The only cost is
+			// that a failed/throwing enqueue (OOM, shutdown) leaves the timestamp advanced, skipping
+			// at most one sweep interval — benign, and far cheaper than the redundant-sweep race.
 			Interlocked.Exchange(ref _lastSweepTicks, now);
 
 			var queued = false;
