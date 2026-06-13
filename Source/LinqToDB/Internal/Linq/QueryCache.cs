@@ -651,8 +651,13 @@ namespace LinqToDB.Internal.Linq
 						continue;
 					}
 
-					var now       = Stopwatch.GetTimestamp();
-					var survivors = new List<Entry>(current.Length);
+					var now = Stopwatch.GetTimestamp();
+
+					// Lazily allocated only once the first expired entry is found. The hit-rate /
+					// deadline updates below run on every entry regardless, but in the steady-state
+					// case (nothing expired) the bucket is left untouched with zero allocation —
+					// avoiding a discarded List per surviving bucket on every sweep.
+					List<Entry>? survivors = null;
 
 					for (var i = 0; i < current.Length; i++)
 					{
@@ -662,12 +667,22 @@ namespace LinqToDB.Internal.Linq
 						ExtendDeadlineFromLastAccess(entry, now, includePendingHits: false);
 
 						if (IsExpired(entry, now))
-							continue;
+						{
+							// Back-fill the entries kept so far, then drop this one.
+							if (survivors == null)
+							{
+								survivors = new List<Entry>(current.Length);
+								for (var j = 0; j < i; j++)
+									survivors.Add(current[j]);
+							}
 
-						survivors.Add(entry);
+							continue;
+						}
+
+						survivors?.Add(entry);
 					}
 
-					if (survivors.Count == current.Length)
+					if (survivors == null)
 						continue;
 
 					if (survivors.Count == 0)
