@@ -2,6 +2,7 @@ parameters:
   with_nugets: false
   with_examples: false
   with_tests: false
+  with_singlefile_smoke: false
   with_analyzers: false
   with_api_analyzers: false
   with_release: false
@@ -47,6 +48,22 @@ jobs:
       arguments: '--configuration Debug'
     displayName: Build Examples (verify)
     condition: and(succeeded(), ${{ parameters.with_examples }})
+
+  # PublishSingleFile smoke test — regression guard for linq2db/linq2db#5488.
+  # Provider detectors must not rely on Assembly.Location / File.Exists heuristics
+  # that silently misbehave in a single-file bundle. The Tests.SingleFile binary
+  # references Microsoft.Data.Sqlite only, opens a connection, runs a query, and
+  # exits 0 on success; any detection/load regression surfaces here.
+  - task: CmdLine@2
+    inputs:
+      script: |
+        ECHO ON
+        dotnet publish Tests/Tests.SingleFile/Tests.SingleFile.csproj -c Release -f net10.0 -r win-x64 --self-contained true -p:PublishSingleFile=true -o .build/publish/singlefile
+        if %errorlevel% neq 0 exit /b %errorlevel%
+        .build\publish\singlefile\linq2db.Tests.SingleFile.exe
+        if %errorlevel% neq 0 exit /b %errorlevel%
+    displayName: PublishSingleFile Smoke Test
+    condition: and(succeeded(), ${{ parameters.with_singlefile_smoke }})
 
   - task: DotNetCoreCLI@2
     inputs:
