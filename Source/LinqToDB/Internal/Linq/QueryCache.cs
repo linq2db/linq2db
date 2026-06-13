@@ -710,8 +710,13 @@ namespace LinqToDB.Internal.Linq
 			if (overage <= 0)
 				return;
 
-			var version    = Volatile.Read(ref _version);
-			var candidates = new List<TrimCandidate>();
+			var version = Volatile.Read(ref _version);
+
+			// overage > 0 only means the approximate _entryCount exceeds the cap; it does not
+			// guarantee any live candidate exists, because _entryCount can count entries in
+			// stale/removed buckets that the loop below skips. Allocate the list lazily so the
+			// "counter drift, no live candidates" case costs nothing.
+			List<TrimCandidate>? candidates = null;
 
 			foreach (var pair in _cache)
 			{
@@ -723,10 +728,10 @@ namespace LinqToDB.Internal.Linq
 				var entries = Volatile.Read(ref bucket.Entries);
 
 				for (var i = 0; i < entries.Length; i++)
-					candidates.Add(new TrimCandidate(pair.Key, bucket, entries[i]));
+					(candidates ??= new List<TrimCandidate>()).Add(new TrimCandidate(pair.Key, bucket, entries[i]));
 			}
 
-			if (candidates.Count == 0)
+			if (candidates == null)
 				return;
 
 			candidates.Sort(static (left, right) =>
