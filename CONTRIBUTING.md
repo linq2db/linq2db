@@ -98,7 +98,7 @@ Because we target different TFMs, we use:
 
 ## Run tests
 
-NUnit3 is used as unit-testing framework. Most of tests are run for all supported databases and written in same pattern:
+NUnit3 is used as the unit-testing framework, running on [Microsoft.Testing.Platform](https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-intro) (MTP) rather than VSTest. The test projects build as executables, so you run them directly (e.g. `linq2db.Tests.exe --filter ...`); `dotnet test` also works. Most of tests are run for all supported databases and written in same pattern:
 
 ```cs
 // TestBase - base class for all our tests
