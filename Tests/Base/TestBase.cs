@@ -129,8 +129,12 @@ namespace Tests
 		[SetUp]
 		public virtual void OnBeforeTest()
 		{
+			var (provider, isRemote) = NUnitUtils.GetContext(TestExecutionContext.CurrentContext.CurrentTest);
+
+			// establish a fresh per-test context before anything in setup/test can log
+			CustomTestContext.Begin(isRemote);
+
 			// SequentialAccess-enabled provider setup
-			var (provider, _) = NUnitUtils.GetContext(TestExecutionContext.CurrentContext.CurrentTest);
 			if (provider?.IsAnyOf(TestProvName.AllSqlServerSequentialAccess) == true)
 			{
 				Configuration.OptimizeForSequentialAccess = true;

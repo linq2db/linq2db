@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Threading;
 
 namespace Tests
 {
@@ -10,25 +11,46 @@ namespace Tests
 		public static string BASELINE_DISABLED = "key-baseline-disabled";
 		public static string TRACE_DISABLED    = "key-trace-disabled";
 
-		// because we don't use parallel test run, we just use single global context instance
-		// it allows us to access context from other threads, started by tests and from linqservice server
-		private static readonly CustomTestContext _context = new CustomTestContext();
+		// Per-test context for the local/direct execution path. Established in [SetUp]
+		// (TestBase.OnBeforeTest); flows to the test body, [TearDown] and any threads/tasks
+		// the test spawns, so parallel tests on different providers stay isolated.
+		private static readonly AsyncLocal<CustomTestContext?> _current = new();
+
+		// The LinqService test server executes queries on its own thread-pool threads
+		// (ConfigureAwait(false)), so the originating test's AsyncLocal does not flow there.
+		// Remote (LinqService) test variants are serialized, so exactly one is active at a
+		// time and this server-visible register is unambiguous.
+		private static volatile CustomTestContext? _remote;
+
+		// Fallback for writes that happen outside any test (assembly init, stray logging).
+		private static readonly CustomTestContext _shared = new CustomTestContext();
 
 		private readonly ConcurrentDictionary<string, object?> _state = new ConcurrentDictionary<string, object?>();
 
+		// Establish a fresh per-test context. Call from [SetUp]. For remote (LinqService)
+		// tests, also publish it to the server-visible register.
+		public static void Begin(bool isRemote)
+		{
+			var ctx = new CustomTestContext();
+			_current.Value = ctx;
+			if (isRemote)
+				_remote = ctx;
+		}
+
 		public static CustomTestContext Get()
 		{
-			return _context;
+			return _current.Value ?? _remote ?? _shared;
 		}
 
 		public static void Release()
 		{
-			_context.Reset();
-		}
+			var ctx = _current.Value;
+			_current.Value = null;
 
-		private void Reset()
-		{
-			_state.Clear();
+			// only the remote test that published the register clears it; a concurrent
+			// direct test must not wipe an in-flight remote test's context
+			if (ctx != null && ReferenceEquals(_remote, ctx))
+				_remote = null;
 		}
 
 		public TValue Get<TValue>(string name)
