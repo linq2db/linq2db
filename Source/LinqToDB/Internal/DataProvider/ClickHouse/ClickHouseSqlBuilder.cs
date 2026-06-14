@@ -190,6 +190,134 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 		#endregion
 
+		#region Inline values (VALUES table function)
+
+		/// <summary>
+		/// ClickHouse-specific override: emits the native <c>VALUES('col1 Type1, col2 Type2, …', (v1a, v1b), …)</c>
+		/// table function instead of the <c>SELECT … UNION ALL …</c> fallback produced by
+		/// <see cref="BasicSqlBuilder.BuildValuesAsSelectsUnion"/>. ClickHouse doesn't accept the
+		/// SQL-standard <c>(VALUES (a,b), (c,d)) AS t(c1, c2)</c> form, so
+		/// <see cref="BasicSqlBuilder.IsValuesSyntaxSupported"/> stays <see langword="false"/>;
+		/// this override bypasses both flag branches entirely. Row values are emitted as literals —
+		/// <c>BuildParameter</c> still hard-throws on this provider, so callers using
+		/// <c>AsQueryable(..., b =&gt; b.Parameterize())</c> continue to fail (the table function
+		/// itself doesn't accept query parameters inside row tuples by ClickHouse spec).
+		/// </summary>
+		protected override void BuildSqlValuesTable(SqlValuesTable valuesTable, string alias, out bool aliasBuilt)
+		{
+			valuesTable = ConvertElement(valuesTable);
+
+			var rows = valuesTable.BuildRows(OptimizationContext.EvaluationContext);
+
+			if (rows.Count == 0)
+			{
+				// Defer to the standard empty-values handling — VALUES('schema') with no row tuples
+				// is not a valid ClickHouse statement.
+				StringBuilder.Append(OpenParens);
+				BuildEmptyValues(valuesTable);
+				StringBuilder.Append(')');
+				aliasBuilt = false;
+				return;
+			}
+
+			// Layout mirrors BasicSqlBuilder.BuildValues: schema on its own indented line, rows wrap
+			// at ~50 chars to keep the rendered SQL readable for large row counts.
+			StringBuilder.AppendLine("VALUES(");
+			++Indent;
+
+			AppendIndent();
+			BuildClickHouseValuesSchema(valuesTable);
+
+			var currentRowLength = 0;
+			for (var i = 0; i < rows.Count; i++)
+			{
+				StringBuilder.Append(Comma);
+
+				if (currentRowLength is 0 or > 50)
+				{
+					StringBuilder.AppendLine();
+					AppendIndent();
+					currentRowLength = 0;
+				}
+				else
+				{
+					StringBuilder.Append(' ');
+				}
+
+				var rowStart = StringBuilder.Length;
+				BuildClickHouseValuesRow(rows[i]);
+				currentRowLength += StringBuilder.Length - rowStart;
+			}
+
+			--Indent;
+			StringBuilder.AppendLine();
+			AppendIndent();
+			StringBuilder.Append(')');
+
+			// The caller emits the table alias next via the standard alias path — we don't need
+			// the SQL-standard (… ) AS t(c1,c2) column-list form because the schema string above
+			// already names the columns.
+			aliasBuilt = false;
+		}
+
+		void BuildClickHouseValuesSchema(SqlValuesTable valuesTable)
+		{
+			StringBuilder.Append('\'');
+
+			var first = true;
+			foreach (var field in valuesTable.Fields)
+			{
+				if (!first)
+					StringBuilder.Append(", ");
+				first = false;
+
+				// PhysicalName is emitted bare when it matches the ClickHouse identifier grammar
+				// (^[_A-Za-z][_A-Za-z0-9]*$); otherwise backtick-quoted with internal backticks
+				// doubled. Apostrophes never appear in ClickHouse identifiers per spec, so the
+				// surrounding single-quoted schema string doesn't conflict with the inner
+				// backticks. Matches the builder's standard EscapeIdentifier convention.
+				if (IsValidIdentifier(field.PhysicalName))
+					StringBuilder.Append(field.PhysicalName);
+				else
+					EscapeIdentifier(StringBuilder, field.PhysicalName);
+
+				StringBuilder.Append(' ');
+				// Force Nullable(T) for every column. SqlField.CanBeNull doesn't always reflect that
+				// .NET-side source rows may contain null (a `string` field has CanBeNull = false but
+				// the materialised IEnumerable<T> can still hold null entries). The legacy
+				// SELECT…UNION ALL fallback accepted nulls because ClickHouse infers per-row column
+				// types from the data; the VALUES table function instead enforces the schema string
+				// strictly. Always Nullable matches that historical leniency. Cost: 10 chars per
+				// column declaration; benefit: query never fails with TYPE_MISMATCH on null cells.
+				BuildTypeName(StringBuilder, field.Type, nullable: true);
+			}
+
+			StringBuilder.Append('\'');
+		}
+
+		void BuildClickHouseValuesRow(List<ISqlExpression> row)
+		{
+			StringBuilder.Append('(');
+
+			if (row.Count == 0)
+			{
+				StringBuilder.Append("NULL");
+			}
+			else
+			{
+				for (var i = 0; i < row.Count; i++)
+				{
+					if (i > 0)
+						StringBuilder.Append(InlineComma);
+					BuildExpression(row[i]);
+				}
+			}
+
+			StringBuilder.Append(')');
+		}
+
+		#endregion
+
 		#region Tables DDL
 
 		protected override void BuildEndCreateTableStatement(SqlCreateTableStatement createTable)

@@ -159,6 +159,11 @@ namespace LinqToDB.Data
 
 			private sealed record CommandWithParameters(string Command, IReadOnlyList<SqlParameter> SqlParameters);
 
+			// What we cache in IQueryContext.Context. Only populated for non-parameter-dependent
+			// statements (their SQL is stable across executions); parameter-dependent statements
+			// rebuild SQL on every GetCommand call.
+			private sealed record CachedPreparedQuery(CommandWithParameters[] Commands);
+
 			private sealed record PreparedQuery(CommandWithParameters[] Commands, SqlStatement Statement, IReadOnlyCollection<string>? QueryHints);
 
 			private sealed record ExecutionPreparedQuery(PreparedQuery PreparedQuery, DbParameter[]?[] CommandsParameters);
@@ -169,15 +174,16 @@ namespace LinqToDB.Data
 				DataConnection            dataConnection,
 				IQueryContext             context,
 				IReadOnlyParameterValues? parameterValues,
-				bool                      forGetSqlText)
+				bool                      forGetSqlText,
+				QueryExecutionContext?    execContext  = null)
 			{
-				var preparedQuery      = GetCommand(dataConnection, context, parameterValues, forGetSqlText);
+				var preparedQuery      = GetCommand(dataConnection, context, parameterValues, forGetSqlText, execContext: execContext);
 				var commandsParameters = GetParameters(dataConnection, preparedQuery, parameterValues);
 				var executionQuery     = new ExecutionPreparedQuery(preparedQuery, commandsParameters);
 				return executionQuery;
 			}
 
-			static PreparedQuery GetCommand(DataConnection dataConnection, IQueryContext query, IReadOnlyParameterValues? parameterValues, bool forGetSqlText, int startIndent = 0)
+			static PreparedQuery GetCommand(DataConnection dataConnection, IQueryContext query, IReadOnlyParameterValues? parameterValues, bool forGetSqlText, int startIndent = 0, QueryExecutionContext? execContext = null)
 			{
 				bool aquiredLock = false;
 				try
@@ -187,9 +193,9 @@ namespace LinqToDB.Data
 					var statement = query.Statement;
 					var options   = query.DataOptions ?? dataConnection.Options;
 
-					if (query.Context is CommandWithParameters[] context)
+					if (query.Context is CachedPreparedQuery cached)
 					{
-						return new PreparedQuery(context, statement, dataConnection.GetNextCommandHints(!forGetSqlText));
+						return new PreparedQuery(cached.Commands, statement, dataConnection.GetNextCommandHints(!forGetSqlText));
 					}
 
 					var continuousRun = query.IsContinuousRun;
@@ -246,7 +252,12 @@ namespace LinqToDB.Data
 						factory,
 						dataConnection.DataProvider.SqlProviderFlags.IsParameterOrderDependent,
 						isAlreadyOptimizedAndConverted : optimizeAndConvertAll,
-						parametersNormalizerFactory : dataConnection.DataProvider.GetQueryParameterNormalizer);
+						parametersNormalizerFactory : dataConnection.DataProvider.GetQueryParameterNormalizer)
+					{
+						// The SQL builder reads this to find the per-temp-table decision the
+						// matching init-query's Setup made (use temp table vs. inline VALUES).
+						ExecutionContext = execContext,
+					};
 
 					if (optimizeAndConvertAll)
 					{
@@ -273,7 +284,7 @@ namespace LinqToDB.Data
 
 					if (optimizeAndConvertAll)
 					{
-						query.Context = commands;
+						query.Context = new CachedPreparedQuery(commands);
 
 						// clear aliases, they are not needed after SQL generation.
 						//
@@ -348,7 +359,7 @@ namespace LinqToDB.Data
 
 			protected override void SetQuery(IReadOnlyParameterValues parameterValues, bool forGetSqlText)
 			{
-				_executionQuery = CreateExecutionQuery(_dataConnection, Query.Queries[QueryNumber], parameterValues, forGetSqlText);
+				_executionQuery = CreateExecutionQuery(_dataConnection, Query.Queries[QueryNumber], parameterValues, forGetSqlText, execContext: ExecutionContext);
 			}
 
 			void SetCommand()

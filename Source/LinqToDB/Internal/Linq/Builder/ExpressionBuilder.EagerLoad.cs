@@ -495,14 +495,14 @@ namespace LinqToDB.Internal.Linq.Builder
 				_query = query;
 			}
 
-			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
+			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles, QueryExecutionContext? execContext)
 			{
-				return _query.GetResultEnumerable(dataContext, expressions, preambles, preambles).ToList();
+				return _query.GetResultEnumerable(dataContext, expressions, preambles, preambles, execContext).ToList();
 			}
 
-			public override async Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object[]? preambles, CancellationToken cancellationToken)
+			public override async Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object[]? preambles, QueryExecutionContext? execContext, CancellationToken cancellationToken)
 			{
-				return await _query.GetResultEnumerable(dataContext, expressions, preambles, preambles).ToListAsync(cancellationToken).ConfigureAwait(false);
+				return await _query.GetResultEnumerable(dataContext, expressions, preambles, preambles, execContext).ToListAsync(cancellationToken).ConfigureAwait(false);
 			}
 
 			public override void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values)
@@ -524,10 +524,10 @@ namespace LinqToDB.Internal.Linq.Builder
 				_query = query;
 			}
 
-			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
+			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles, QueryExecutionContext? execContext)
 			{
 				var result = new PreambleResult<TKey, T>();
-				foreach (var e in _query.GetResultEnumerable(dataContext, expressions, preambles, preambles))
+				foreach (var e in _query.GetResultEnumerable(dataContext, expressions, preambles, preambles, execContext))
 				{
 					result.Add(e.Key, e.Detail);
 				}
@@ -536,11 +536,12 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			public override async Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object[]? preambles,
+				QueryExecutionContext?                                   execContext,
 				CancellationToken                                        cancellationToken)
 			{
 				var result = new PreambleResult<TKey, T>();
 
-				var enumerator = _query.GetResultEnumerable(dataContext, expressions, preambles, preambles)
+				var enumerator = _query.GetResultEnumerable(dataContext, expressions, preambles, preambles, execContext)
 					.GetAsyncEnumerator(cancellationToken);
 
 				while (await enumerator.MoveNextAsync().ConfigureAwait(false))

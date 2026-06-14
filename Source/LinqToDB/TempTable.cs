@@ -12,6 +12,7 @@ using JetBrains.Annotations;
 using LinqToDB.Data;
 using LinqToDB.Internal.Async;
 using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Infrastructure;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Mapping;
 
@@ -76,6 +77,8 @@ namespace LinqToDB
 			ArgumentNullException.ThrowIfNull(db);
 
 			_table = db.CreateTable<T>(createOptions ?? CreateTableOptions.Default);
+
+			RegisterWithDisposableTracker(db);
 		}
 
 		/// <summary>
@@ -156,6 +159,8 @@ namespace LinqToDB
 
 				throw;
 			}
+
+			RegisterWithDisposableTracker(db);
 		}
 
 		/// <summary>
@@ -271,6 +276,8 @@ namespace LinqToDB
 
 				throw;
 			}
+
+			RegisterWithDisposableTracker(db);
 		}
 
 		/// <summary>
@@ -305,6 +312,8 @@ namespace LinqToDB
 		{
 			_table           = table ?? throw new ArgumentNullException(nameof(table));
 			_tableDescriptor = tableDescriptor;
+
+			RegisterWithDisposableTracker(table.DataContext);
 		}
 
 		/// <summary>
@@ -838,6 +847,7 @@ namespace LinqToDB
 
 		public virtual void Dispose()
 		{
+			UnregisterFromDisposableTracker();
 			try
 			{
 				_table.DropTable(throwExceptionIfNotExists: false);
@@ -853,6 +863,7 @@ namespace LinqToDB
 
 		public virtual ValueTask DisposeAsync()
 		{
+			UnregisterFromDisposableTracker();
 			try
 			{
 				return new ValueTask(_table.DropTableAsync(throwExceptionIfNotExists: false));
@@ -864,6 +875,21 @@ namespace LinqToDB
 				if (_tableDescriptor != null)
 					_table.DataContext.SetMappingSchema(_tableDescriptor.PrevMappingSchema);
 			}
+		}
+
+		// Auto-register with the data context's IDisposableTracker so a forgotten Dispose() still
+		// drops the temp table when the context closes. Manual Dispose() unregisters first to avoid
+		// holding a reference (and a no-op second drop) at close time.
+		void RegisterWithDisposableTracker(IDataContext dataContext)
+		{
+			if (dataContext is IInfrastructure<IDisposableTracker> infra)
+				infra.Instance.Register(this);
+		}
+
+		void UnregisterFromDisposableTracker()
+		{
+			if (_table.DataContext is IInfrastructure<IDisposableTracker> infra)
+				infra.Instance.Unregister(this);
 		}
 	}
 }

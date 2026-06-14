@@ -25,7 +25,7 @@ namespace LinqToDB
 	/// Implements abstraction over non-persistent database connection that could be released after query or transaction execution.
 	/// </summary>
 	[PublicAPI]
-	public partial class DataContext : IDataContext, IInfrastructure<IServiceProvider>
+	public partial class DataContext : IDataContext, IInfrastructure<IServiceProvider>, IInfrastructure<IDisposableTracker>
 	{
 		bool _disposed;
 
@@ -508,6 +508,11 @@ namespace LinqToDB
 		/// </summary>
 		protected virtual void Dispose(bool disposing)
 		{
+			// Drain tracked disposables (temp tables) BEFORE Close so DROP runs while the underlying
+			// DataConnection is still live. Soft Close() does NOT drain — see DataConnection.Dispose
+			// for the rationale (close-then-reuse patterns must keep user-owned temp tables intact).
+			_disposableTracker?.DisposeAll();
+
 			((IDataContext)this).Close();
 
 			_disposed = true;
@@ -523,10 +528,36 @@ namespace LinqToDB
 		/// </summary>
 		protected virtual async ValueTask DisposeAsync(bool disposing)
 		{
+			// See Dispose(bool) for why drain happens here and not in CloseAsync.
+			if (_disposableTracker != null)
+				await _disposableTracker.DisposeAllAsync().ConfigureAwait(false);
+
 			await ((IDataContext)this).CloseAsync().ConfigureAwait(false);
 
 			_disposed = true;
 		}
+
+		#region IInfrastructure<IDisposableTracker>
+
+		// DataContext recycles its underlying DataConnection between operations (ReleaseQuery), so
+		// any session-scoped temp table is bound to the lifetime of its current underlying
+		// connection — it can't reliably span recycles. We track for the safety-net drain on
+		// Dispose but do not pin the connection: pinning would block legitimate close-after-use
+		// patterns (e.g. BulkCopy with CloseAfterUse on a CreateLocalTable result). Callers who
+		// need DisposeWithConnection-style reuse across executions should use DataConnection
+		// directly.
+		DisposableTracker? _disposableTracker;
+
+		IDisposableTracker IInfrastructure<IDisposableTracker>.Instance
+		{
+			get
+			{
+				AssertDisposed();
+				return _disposableTracker ??= new DisposableTracker();
+			}
+		}
+
+		#endregion
 
 		void IDataContext.Close()
 		{
@@ -651,7 +682,7 @@ namespace LinqToDB
 			return new QueryRunner(this, ((IDataContext)GetDataConnection()).GetQueryRunner(query, parametersContext, queryNumber, expressions, parameters, preambles));
 		}
 
-		sealed class QueryRunner : IQueryRunner
+		sealed class QueryRunner : IQueryRunner, IExecutionContextAwareRunner
 		{
 			public QueryRunner(DataContext dataContext, IQueryRunner queryRunner)
 			{
@@ -661,6 +692,16 @@ namespace LinqToDB
 
 			DataContext? _dataContext;
 			DataConnection.QueryRunner? _queryRunner;
+
+			QueryExecutionContext? IExecutionContextAwareRunner.ExecutionContext
+			{
+				get => _queryRunner?.ExecutionContext;
+				set
+				{
+					if (_queryRunner != null)
+						_queryRunner.ExecutionContext = value;
+				}
+			}
 
 			public void Dispose()
 			{

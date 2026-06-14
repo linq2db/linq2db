@@ -564,6 +564,94 @@ namespace LinqToDB.Internal.SqlProvider
 			if (predicate.Values.Count == 0)
 				return SqlPredicate.MakeBool(predicate.IsNot);
 
+			// UseTempTablesForContains: pick between the temp-table sub-query and the flat-IN
+			// form. The init-query Setup records the per-execute decision keyed by
+			// SqlValuesTable.TempTableName; the ToSqlQuery diagnostic path falls back to
+			// the parameter's count vs Threshold.
+			if (predicate.TempTableSubQuery is { } companion
+				&& companion.From.Tables.Count > 0
+				&& companion.From.Tables[0].Source is SqlValuesTable { TempTableSpec.Threshold: { } threshold, TempTableName: { } tempTableName })
+			{
+				bool useTempTable;
+
+				if (OptimizationContext.ExecutionContext is { } execContext
+					&& execContext.TryGetTempTableDecision(tempTableName, out var tempTableDecision))
+				{
+					useTempTable = tempTableDecision.Kind == QueryExecutionContext.TempTableDecisionKind.UseTempTable;
+				}
+				else if (predicate.Values is [SqlParameter pr])
+				{
+					var pv = pr.GetParameterValue(EvaluationContext.ParameterValues).ProviderValue;
+					if (pv is IEnumerable items and not string)
+					{
+						var count = items is ICollection coll ? coll.Count : items.Cast<object?>().Count();
+						useTempTable = count > threshold;
+					}
+					else
+					{
+						useTempTable = false;
+					}
+				}
+				else
+				{
+					useTempTable = false;
+				}
+
+				if (useTempTable)
+				{
+					// Multi-column path: emit EXISTS (SELECT 1 FROM <temp> t WHERE
+					// t.<col0> = outer.<col0> AND …) using the entity's own column names.
+					// Portable across SQLite, SqlServer, PostgreSQL, MySQL — multi-column
+					// IN (subquery) isn't (most providers don't accept row constructors).
+					// Delegate to ConvertToExists by wrapping the outer columns in a
+					// SqlRowExpression: ConvertToExists's existing SqlRowExpression branch
+					// builds the per-column equality WHERE + Exists wrap we need.
+					if (predicate.Expr1 is SqlObjectExpression objExpr)
+					{
+						var rowValues = new ISqlExpression[objExpr.InfoParameters.Length];
+						for (var i = 0; i < rowValues.Length; i++)
+							rowValues[i] = objExpr.InfoParameters[i].Sql;
+
+						var rowExpr     = new SqlRowExpression(rowValues);
+						var rowInSubQry = new SqlPredicate.InSubQuery(rowExpr, predicate.IsNot, companion, doNotConvert: false);
+
+						return ConvertToExists(rowInSubQry);
+					}
+
+					// Scalar path: emit IN (SELECT item FROM <temp>) — preserves LikeClr null
+					// semantics via the OR col IS NULL / AND col IS NOT NULL wrap (mirrors
+					// BuildInListPredicate's hasNull branch).
+					var inSubQuery = new SqlPredicate.InSubQuery(predicate.Expr1, predicate.IsNot, companion, doNotConvert: false);
+
+					if (predicate.WithNull != null
+						&& predicate.Values is [SqlParameter pr]
+						&& predicate.Expr1.ShouldCheckForNull(NullabilityContext))
+					{
+						var pv = pr.GetParameterValue(EvaluationContext.ParameterValues).ProviderValue;
+						if (pv is IEnumerable items and not string)
+						{
+							var hasNull = false;
+							foreach (var item in items)
+							{
+								if (item == null) { hasNull = true; break; }
+							}
+
+							if (hasNull)
+							{
+								var sc = new SqlSearchCondition(isOr: !predicate.IsNot);
+								sc.Add(inSubQuery);
+								sc.AddIsNull(predicate.Expr1, predicate.IsNot);
+								return sc;
+							}
+						}
+					}
+
+					return inSubQuery;
+				}
+
+				return new SqlPredicate.InList(predicate.Expr1, predicate.WithNull, predicate.IsNot, predicate.Values);
+			}
+
 			if (predicate.Values is [SqlParameter parameter])
 			{
 				var paramValue = parameter.GetParameterValue(EvaluationContext.ParameterValues);

@@ -198,7 +198,15 @@ namespace LinqToDB.Internal.Linq
 			var db    = (IDataContext)parameters[0];
 			var query = GetInfo(db, parameters);
 
-			return (T)query.GetElement(db, query.CompiledExpressions!, parameters, preambles)!;
+			// Init-queries (temp-table run-step Setup) must run BEFORE GetElement so the SQL
+			// builder can resolve the UseTempTable / UseInlineValues decision via execContext.
+			// Without this, AsQueryable.UseTempTable / UseTempTablesForContains within a
+			// compiled query would emit SQL referencing a temp table that was never created.
+			using var execContext = new QueryExecutionContext();
+
+			query.InitQueries(db, query.CompiledExpressions!, parameters, execContext);
+
+			return (T)query.GetElement(db, query.CompiledExpressions!, parameters, preambles, execContext)!;
 		}
 
 		public async Task<T> ExecuteAsync(object[] parameters, object[] preambles)
@@ -206,7 +214,14 @@ namespace LinqToDB.Internal.Linq
 			var db    = (IDataContext)parameters[0];
 			var query = GetInfo(db, parameters);
 
-			return (T)(await query.GetElementAsync(db, query.CompiledExpressions!, parameters, preambles, default).ConfigureAwait(false))!;
+			// See Execute() for rationale — init-queries must precede GetElement so temp-table
+			// Setup runs before SQL emission consults the per-execute decision.
+			var execContext = new QueryExecutionContext();
+			await using var _ec = execContext.ConfigureAwait(false);
+
+			await query.InitQueriesAsync(db, query.CompiledExpressions!, parameters, execContext, default).ConfigureAwait(false);
+
+			return (T)(await query.GetElementAsync(db, query.CompiledExpressions!, parameters, preambles, execContext, default).ConfigureAwait(false))!;
 		}
 	}
 }

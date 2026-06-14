@@ -51,6 +51,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		#region Init
 
 		readonly          Query                             _query;
+
 		internal readonly IMemberTranslator                 _memberTranslator;
 		readonly          ExpressionTreeOptimizationContext _optimizationContext;
 		readonly          ParametersContext                 _parametersContext;
@@ -116,6 +117,26 @@ namespace LinqToDB.Internal.Linq.Builder
 		public static readonly ParameterExpression RowCounterParam               = Expression.Parameter(typeof(int),          "counter");
 
 		public MappingSchema MappingSchema => DataContext.MappingSchema;
+
+		// Self-join temp-table name sharing for AsQueryable(..., c => c.UseTempTable(...)). When the
+		// same IQueryable is used multiple times in one query, each `from … in q` triggers a fresh
+		// EnumerableBuilder.BuildConfigured → new EnumerableContext → new SqlValuesTable instance.
+		// To share a single CREATE/INSERT/DROP cycle across siblings, name allocation is centralized
+		// here at build time, keyed by the LINQ-level source expression. The SQL builder reads the
+		// stamped name without mutating the AST.
+		Dictionary<Expression, string>? _tempTableNamesBySource;
+
+		internal string GetOrAssignTempTableName(Expression sourceExpression)
+		{
+			_tempTableNamesBySource ??= new(ExpressionEqualityComparer.Instance);
+
+			if (_tempTableNamesBySource.TryGetValue(sourceExpression, out var name))
+				return name;
+
+			name = string.Concat("T_", Guid.NewGuid().ToString("N").AsSpan(0, 12));
+			_tempTableNamesBySource.Add(sourceExpression, name);
+			return name;
+		}
 
 		#endregion
 

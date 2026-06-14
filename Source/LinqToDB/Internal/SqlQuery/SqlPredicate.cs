@@ -1060,9 +1060,37 @@ namespace LinqToDB.Internal.SqlQuery
 
 			public List<ISqlExpression> Values { get; private set; } = new();
 
+			/// <summary>
+			/// Sub-query wrapping a <see cref="SqlValuesTable"/> with <c>TempTableSpec</c> /
+			/// <c>TempTableName</c> stamped — single-column <c>SELECT item FROM &lt;values&gt;</c>
+			/// for scalar Contains, or multi-column <c>SELECT &lt;pk0&gt;, &lt;pk1&gt;, …</c> for
+			/// entity / composite-PK Contains. Present when the <c>UseTempTablesForContains</c>
+			/// gate fires. <c>SqlExpressionConvertVisitor</c> either rewrites the predicate (as
+			/// <c>InSubQuery(TempTableSubQuery)</c> for the scalar shape, or as
+			/// <c>EXISTS(TempTableSubQuery)</c> over per-column equality for the multi-column
+			/// shape) when the per-execute run-step decision says <c>UseTempTable</c>, or strips
+			/// the companion to emit the regular flat IN / OR-AND form.
+			/// </summary>
+			internal SelectQuery? TempTableSubQuery { get; private set; }
+
 			public void Modify(ISqlExpression expr1)
 			{
 				Expr1  = expr1;
+			}
+
+			internal void ModifyTempTableSubQuery(SelectQuery? tempTableSubQuery)
+			{
+				TempTableSubQuery = tempTableSubQuery;
+			}
+
+			/// <summary>
+			/// Constructs an <see cref="InList"/> carrying a temp-table sub-query companion.
+			/// </summary>
+			internal static InList CreateWithTempTableCandidate(ISqlExpression exp1, bool? withNull, bool isNot, ISqlExpression value, SelectQuery tempTableSubQuery)
+			{
+				var inList = new InList(exp1, withNull, isNot, value);
+				inList.TempTableSubQuery = tempTableSubQuery;
+				return inList;
 			}
 
 			public override int GetElementHashCode()
@@ -1076,6 +1104,9 @@ namespace LinqToDB.Internal.SqlQuery
 				foreach (var value in Values)
 					hash.Add(value.GetElementHashCode());
 
+				if (TempTableSubQuery != null)
+					hash.Add(TempTableSubQuery.GetElementHashCode());
+
 				return hash.ToHashCode();
 			}
 
@@ -1085,6 +1116,19 @@ namespace LinqToDB.Internal.SqlQuery
 					|| WithNull != expr.WithNull
 					|| Values.Count != expr.Values.Count
 					|| !base.Equals(other, comparer))
+					return false;
+
+				// Structural comparison on the temp-table companion to match GetElementHashCode's
+				// structural-hash treatment. ReferenceEquals would diverge from the hash whenever
+				// two predicates carry equivalent-but-distinct SelectQuery instances (e.g. after
+				// a visitor pass clones the sub-query); structural Equals on the SelectQuery itself
+				// matches the sibling InSubQuery pattern (see Equals at line 980).
+				var thisSub  = TempTableSubQuery;
+				var otherSub = expr.TempTableSubQuery;
+				if ((thisSub is null) != (otherSub is null))
+					return false;
+
+				if (thisSub is not null && !thisSub.Equals(otherSub!, comparer))
 					return false;
 
 				for (var i = 0; i < Values.Count; i++)
@@ -1107,7 +1151,10 @@ namespace LinqToDB.Internal.SqlQuery
 
 			public override ISqlPredicate Invert(NullabilityContext nullability)
 			{
-				return new InList(Expr1, !WithNull, !IsNot, Values);
+				var inverted = new InList(Expr1, !WithNull, !IsNot, Values);
+				if (TempTableSubQuery != null)
+					inverted.ModifyTempTableSubQuery(TempTableSubQuery);
+				return inverted;
 			}
 
 			public override QueryElementType ElementType => QueryElementType.InListPredicate;

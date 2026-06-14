@@ -85,6 +85,10 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			SqlProviderFlags.IsInsertOrUpdateWithPredicateSupported = Version > SqlServerVersion.v2005;
 			SqlProviderFlags.IsUpsertWithMergeLoweringSupported     = Version > SqlServerVersion.v2005;
 
+			// AsQueryable.UseTempTable — SQL Server's #temp tables are session-scoped, created
+			// in tempdb, and require no DDL privilege on the user database.
+			SqlProviderFlags.IsRuntimeTempTableCreationSupported = true;
+
 			SetCharField("char", (r, i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("nchar", (r, i) => r.GetString(i).TrimEnd(' '));
 			SetCharFieldToType<char>("char", DataTools.GetCharExpression);

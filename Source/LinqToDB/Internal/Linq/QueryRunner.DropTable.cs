@@ -29,7 +29,7 @@ namespace LinqToDB.Internal.Linq
 
 				try
 				{
-					query.GetElement(dataContext, EmptyQueryExpressions, null, null);
+					query.GetElement(dataContext, EmptyQueryExpressions, null, null, null);
 				}
 				catch (Exception ex) when (suppress && IsTableNotFound(dataContext, ex))
 				{
@@ -53,7 +53,7 @@ namespace LinqToDB.Internal.Linq
 
 					try
 					{
-						await query.GetElementAsync(dataContext, EmptyQueryExpressions, null, null, token).ConfigureAwait(false);
+						await query.GetElementAsync(dataContext, EmptyQueryExpressions, null, null, null, token).ConfigureAwait(false);
 					}
 					catch (Exception ex) when (suppress && IsTableNotFound(dataContext, ex))
 					{

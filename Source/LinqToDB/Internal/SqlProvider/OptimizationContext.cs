@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
 using LinqToDB.Internal.DataProvider;
+using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.Linq.Translation;
@@ -111,6 +112,15 @@ namespace LinqToDB.Internal.SqlProvider
 
 			return param;
 		}
+
+		/// <summary>
+		/// Per-execute shared context attached by the caller before SQL emission. The SQL builder
+		/// reads it when emitting <see cref="SqlValuesTable"/> to find the decision the matching
+		/// <see cref="CreateTempTableForValuesRunStep{T}"/> made at Setup time (use the temp table
+		/// vs. fall back to inline VALUES). May be <see langword="null"/> when SQL is being built
+		/// outside an execute (e.g. <c>ToSqlQuery</c> for diagnostics).
+		/// </summary>
+		internal QueryExecutionContext? ExecutionContext { get; set; }
 
 		public void ClearParameters()
 		{

@@ -10,11 +10,16 @@ namespace LinqToDB.Internal.Linq.Builder
 	/// </summary>
 	sealed class EnumerableParameterizationConfig
 	{
-		public EnumerableParameterizationConfig(bool defaultForceParameter, ParameterExpression? parameter, IReadOnlyList<MemberExpression>? excepted)
+		public EnumerableParameterizationConfig(
+			bool                             defaultForceParameter,
+			ParameterExpression?             parameter,
+			IReadOnlyList<MemberExpression>? excepted,
+			TempTableSpec?                   tempTableSpec = null)
 		{
 			DefaultForceParameter = defaultForceParameter;
 			Parameter             = parameter;
 			Excepted              = excepted;
+			TempTableSpec         = tempTableSpec;
 		}
 
 		/// <summary>
@@ -31,6 +36,13 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// Member access expressions (rooted at <see cref="Parameter"/>) whose mode flips relative to the default.
 		/// </summary>
 		public IReadOnlyList<MemberExpression>? Excepted { get; }
+
+		/// <summary>
+		/// Per-call temp-table configuration captured from the chain's <c>UseTempTable(...)</c> /
+		/// <c>UseTempTable(b =&gt; ...)</c> calls. <see langword="null"/> means the user didn't chain
+		/// any temp-table config; the DataOptions default (if any) still applies at AST stamp time.
+		/// </summary>
+		public TempTableSpec? TempTableSpec { get; }
 
 		public bool ShouldForceParameter(Expression accessExpression)
 		{

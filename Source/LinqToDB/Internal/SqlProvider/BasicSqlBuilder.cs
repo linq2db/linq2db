@@ -17,6 +17,7 @@ using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Infrastructure;
+using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
@@ -1987,7 +1988,65 @@ namespace LinqToDB.Internal.SqlProvider
 		protected virtual void BuildSqlValuesTable(SqlValuesTable valuesTable, string alias, out bool aliasBuilt)
 		{
 			valuesTable = ConvertElement(valuesTable);
+
+			// UseTempTable: consult the per-execute QueryExecutionContext for the matching
+			// init-query's Setup-time decision. EnumerableBuilder stamped the TempTableName and
+			// registered the init-query at build time; the init-query ran in
+			// ExpressionQuery.InitQueries before StartLoadTransaction and either created the
+			// temp table (recording UseTempTable) or stashed the materialized rows for inline
+			// VALUES emission (recording UseInlineValues with the rows). When the execContext is
+			// absent (e.g. ToSqlQuery for diagnostics) the threshold check falls back to the
+			// just-materialized BuildRows count — this shows the temp-table reference that the
+			// query WOULD emit at execute time, not what the SQL builder could actually run
+			// without Setup. Execute paths that miss execContext entirely (CompiledQuery's
+			// generated delegate, ForEachUntilAsync) produce SQL referencing a non-existent
+			// table; those are tracked as separate limitations rather than papered over here.
+			if (valuesTable.TempTableSpec is { Threshold: { } threshold } && valuesTable.TempTableName is { } tempTableName)
+			{
+				IReadOnlyList<List<ISqlExpression>>? inlineRows = null;
+
+				if (OptimizationContext.ExecutionContext is { } execContext
+					&& execContext.TryGetTempTableDecision(tempTableName, out var decision))
+				{
+					if (decision.Kind == QueryExecutionContext.TempTableDecisionKind.UseTempTable)
+					{
+						BuildObjectName(StringBuilder, new(tempTableName), ConvertType.NameToQueryTable, true, TableOptions.IsTemporary);
+						aliasBuilt = false;
+						return;
+					}
+
+					// Derive rows lazily from the source items captured at Setup time — avoids
+					// allocating a List<List<ISqlExpression>> in Setup just to discard it on the
+					// temp-table path.
+					if (decision.SourceItems != null)
+						inlineRows = SqlValuesTable.BuildRowsFromSource(valuesTable.ValueBuilders, decision.SourceItems);
+				}
+
+				inlineRows ??= valuesTable.BuildRows(OptimizationContext.EvaluationContext);
+
+				if (inlineRows.Count > threshold)
+				{
+					BuildObjectName(StringBuilder, new(tempTableName), ConvertType.NameToQueryTable, true, TableOptions.IsTemporary);
+					aliasBuilt = false;
+					return;
+				}
+
+				EmitInlineValues(valuesTable, inlineRows, out aliasBuilt);
+				if (aliasBuilt)
+					BuildSqlValuesAlias(valuesTable, alias);
+				return;
+			}
+
 			var rows = valuesTable.BuildRows(OptimizationContext.EvaluationContext);
+
+			EmitInlineValues(valuesTable, rows, out aliasBuilt);
+
+			if (aliasBuilt)
+				BuildSqlValuesAlias(valuesTable, alias);
+		}
+
+		void EmitInlineValues(SqlValuesTable valuesTable, IReadOnlyList<List<ISqlExpression>>? rows, out bool aliasBuilt)
+		{
 			if (rows?.Count > 0)
 			{
 				StringBuilder.Append(OpenParens);
@@ -2009,10 +2068,6 @@ namespace LinqToDB.Internal.SqlProvider
 				throw new LinqToDBException($"{Name} doesn't support values with empty source");
 
 			aliasBuilt = IsValuesSyntaxSupported;
-			if (aliasBuilt)
-			{
-				BuildSqlValuesAlias(valuesTable, alias);
-			}
 		}
 
 		private void BuildSqlValuesAlias(SqlValuesTable valuesTable, string alias)

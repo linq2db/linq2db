@@ -682,6 +682,33 @@ namespace LinqToDB.Internal.SqlProvider
 		[DataMember(Order = 70), DefaultValue(NullsDefaultOrdering.Unknown)]
 		public NullsDefaultOrdering DefaultNullsOrdering { get; set; }
 
+		/// <summary>
+		/// Provider supports session-scoped temporary tables that can be created, populated, and dropped
+		/// at execute time without elevated DDL permissions and without disturbing the current transaction.
+		/// Gates the <c>AsQueryable(..., c =&gt; c.UseTempTable(threshold))</c> optimization: when the
+		/// flag is <see langword="false"/>, the temp-table opt-in is silently ignored at build time and
+		/// the chain falls through to the regular inline-VALUES rendering — so the query still runs on
+		/// providers like Oracle (where <c>GLOBAL TEMPORARY TABLE</c> requires upfront DDL and
+		/// CREATE TABLE privilege), just without the threshold-based switch.
+		/// Default (set by <see cref="DataProviderBase"/>): <see langword="false"/>; per-provider
+		/// opt-in based on actual session-temp behaviour.
+		/// </summary>
+		[DataMember(Order = 75), DefaultValue(false)]
+		public bool IsRuntimeTempTableCreationSupported { get; set; }
+
+		/// <summary>
+		/// Provider can render an inline-rows source — either via native <c>VALUES (…)</c> syntax or via
+		/// the <c>SELECT … UNION ALL SELECT …</c> fallback (with <see cref="BasicSqlBuilder.FakeTable"/>
+		/// appended when required). Gates <see cref="LinqToDB.LinqExtensions.AsQueryable{T}(System.Collections.Generic.IEnumerable{T}, IDataContext)"/>
+		/// and its configured-overload sibling: when <see langword="false"/>, the translator rejects the
+		/// sequence at build time with a clear <see cref="LinqToDBException"/> instead of letting the
+		/// provider reject the generated SQL at execute time. Access opts out (no <c>FakeTable</c>, every
+		/// SELECT requires <c>FROM</c>, so the UNION-ALL fallback is also unrunnable).
+		/// Default (set by <see cref="DataProviderBase"/>): <see langword="true"/>.
+		/// </summary>
+		[DataMember(Order = 76), DefaultValue(true)]
+		public bool IsInlineRowsSourceSupported { get; set; } = true;
+
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
 			return AcceptsTakeAsParameter || (AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null);
@@ -779,6 +806,8 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsInsertOrUpdateRequiresAlignedBranches              .GetHashCode()
 				^ IsNullsOrderingSupported                             .GetHashCode()
 				^ DefaultNullsOrdering                                 .GetHashCode()
+				^ IsRuntimeTempTableCreationSupported                  .GetHashCode()
+				^ IsInlineRowsSourceSupported                          .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => StringComparer.Ordinal.GetHashCode(flag) ^ hash);
 	}
 
@@ -858,6 +887,8 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsInsertOrUpdateRequiresAlignedBranches               == other.IsInsertOrUpdateRequiresAlignedBranches
 				&& IsNullsOrderingSupported                              == other.IsNullsOrderingSupported
 				&& DefaultNullsOrdering                                  == other.DefaultNullsOrdering
+				&& IsRuntimeTempTableCreationSupported                   == other.IsRuntimeTempTableCreationSupported
+				&& IsInlineRowsSourceSupported                           == other.IsInlineRowsSourceSupported
 				&& CustomFlags.SetEquals(other.CustomFlags);
 		}
 		#endregion

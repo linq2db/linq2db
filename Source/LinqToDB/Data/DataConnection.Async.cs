@@ -387,6 +387,10 @@ namespace LinqToDB.Data
 		/// <returns>Asynchronous operation completion task.</returns>
 		public async ValueTask DisposeAsync()
 		{
+			// See Dispose() for why drain happens here and not in CloseAsync.
+			if (_disposableTracker != null)
+				await _disposableTracker.DisposeAllAsync().ConfigureAwait(false);
+
 			await CloseAsync().ConfigureAwait(false);
 
 			Disposed = true;

@@ -34,6 +34,7 @@ namespace LinqToDB
 			DataContextOptions = options.DataContextOptions;
 			BulkCopyOptions    = options.BulkCopyOptions;
 			SqlOptions         = options.SqlOptions;
+			TempTableOptions   = options.TempTableOptions;
 		}
 
 		protected override DataOptions Clone()
@@ -57,6 +58,7 @@ namespace LinqToDB
 				SqlOptions         so  => ReferenceEquals(SqlOptions,         so)  ? this : new(this) { SqlOptions         = so  },
 				BulkCopyOptions    bco => ReferenceEquals(BulkCopyOptions,    bco) ? this : new(this) { BulkCopyOptions    = bco },
 				RetryPolicyOptions rp  => ReferenceEquals(RetryPolicyOptions, rp)  ? this : new(this) { RetryPolicyOptions = rp  },
+				TempTableOptions   tto => ReferenceEquals(TempTableOptions,   tto) ? this : new(this) { TempTableOptions   = tto },
 				_                      => base.WithOptions(options),
 			};
 		}
@@ -67,6 +69,7 @@ namespace LinqToDB
 		public DataContextOptions DataContextOptions { get => field ??= DataContextOptions.Default; private set; }
 		public BulkCopyOptions    BulkCopyOptions    { get => field ??= BulkCopyOptions.   Default; private set; }
 		public SqlOptions         SqlOptions         { get => field ??= SqlOptions.        Default; private set; }
+		public TempTableOptions   TempTableOptions   { get => field ??= TempTableOptions.  Default; private set; }
 
 		public override IEnumerable<IOptionSet> OptionSets
 		{
@@ -76,6 +79,7 @@ namespace LinqToDB
 				yield return RetryPolicyOptions;
 				yield return ConnectionOptions;
 				yield return SqlOptions;
+				yield return TempTableOptions;
 
 				if (DataContextOptions != null)
 					yield return DataContextOptions;
@@ -100,6 +104,7 @@ namespace LinqToDB
 			if (type == typeof(DataContextOptions)) return (TSet?)(IOptionSet?)DataContextOptions;
 			if (type == typeof(BulkCopyOptions))    return (TSet?)(IOptionSet?)BulkCopyOptions;
 			if (type == typeof(SqlOptions))         return (TSet?)(IOptionSet?)SqlOptions;
+			if (type == typeof(TempTableOptions))   return (TSet?)(IOptionSet?)TempTableOptions;
 
 			return base.Find<TSet>();
 		}
@@ -240,6 +245,7 @@ namespace LinqToDB
 						.Add(DataContextOptions)
 						.Add(BulkCopyOptions)
 						.Add(SqlOptions)
+						.Add(TempTableOptions)
 						.AddRange(base.OptionSets)
 						.CreateID();
 				}

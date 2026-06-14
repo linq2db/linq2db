@@ -6,6 +6,7 @@ using System.Data.Common;
 using System.Diagnostics;
 using System.Globalization;
 using System.Threading;
+using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
@@ -29,7 +30,7 @@ namespace LinqToDB.Data
 	/// or attached to existing connection or transaction.
 	/// </summary>
 	[PublicAPI]
-	public partial class DataConnection : IDataContext, IInfrastructure<IServiceProvider>
+	public partial class DataConnection : IDataContext, IInfrastructure<IServiceProvider>, IInfrastructure<IDisposableTracker>
 	{
 		#region .ctor
 
@@ -885,6 +886,21 @@ namespace LinqToDB.Data
 				throw;
 			}
 		}
+
+		#region IInfrastructure<IDisposableTracker>
+
+		DisposableTracker? _disposableTracker;
+
+		IDisposableTracker IInfrastructure<IDisposableTracker>.Instance
+		{
+			get
+			{
+				CheckAndThrowOnDisposed();
+				return _disposableTracker ??= new DisposableTracker();
+			}
+		}
+
+		#endregion
 
 		/// <summary>
 		/// Closes and dispose associated underlying database transaction/connection.
@@ -1800,6 +1816,13 @@ namespace LinqToDB.Data
 		/// </summary>
 		public void Dispose()
 		{
+			// Drain tracked disposables (e.g. temp tables) BEFORE Close so the DROP commands run
+			// while the connection is still alive. Soft Close() does NOT drain — see Close vs
+			// Dispose semantics: Close releases the connection but leaves the DC reusable, so
+			// dropping user-owned temp tables there would break close-then-reuse patterns
+			// (CloseAfterUse + later BulkCopy on a CreateLocalTable result, etc.).
+			_disposableTracker?.DisposeAll();
+
 			Close();
 
 			Disposed = true;
