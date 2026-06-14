@@ -1675,5 +1675,189 @@ namespace Tests.Linq
 		}
 
 		#endregion
+
+		#region AsSeparateQuery — explicit Default strategy override
+
+		/// <summary>
+		/// Returns <see langword="true"/> when the provider supports Common Table Expressions.
+		/// Non-CTE providers fall back from CteUnion to KeyedQuery.
+		/// </summary>
+		static bool IsCteSupported(string context)
+			=> !context.IsAnyOf(TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllMySql57);
+
+		// MAJ001: IQueryable<T> overload — global KeyedQuery overridden to Default per root marker.
+		[Test]
+		public void AsSeparateQuery_IQueryable_OverridesGlobalKeyedQuery(
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		{
+			var (companies, departments, employees, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.KeyedQuery });
+
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+			using var tEmp = db.CreateLocalTable(employees);
+
+			// AsSeparateQuery() on the root query overrides the global KeyedQuery default
+			var query =
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					c.Name,
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							d.Name,
+							Employees = tEmp
+								.Where(e => e.DepartmentId == d.Id)
+								.OrderBy(e => e.Id)
+								.ToList(),
+						})
+						.ToList(),
+				};
+
+			var result = query
+				.AsSeparateQuery()
+				.ToList();
+
+			var expected = companies
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					c.Id,
+					c.Name,
+					Departments = departments
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							d.Name,
+							Employees = employees
+								.Where(e => e.DepartmentId == d.Id)
+								.OrderBy(e => e.Id)
+								.ToList(),
+						})
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+		}
+
+		// MAJ001: IEnumerable<T> overload — global KeyedQuery overridden to Default on an inline child collection.
+		[Test]
+		public void AsSeparateQuery_IEnumerable_OverridesGlobalKeyedQuery(
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		{
+			var (companies, departments, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.KeyedQuery });
+
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			// AsSeparateQuery() on the inline child collection overrides the global KeyedQuery default
+			var query =
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					c.Name,
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.AsSeparateQuery()
+						.ToList(),
+				};
+
+			var result = query.ToList();
+
+			var expected = companies
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					c.Id,
+					c.Name,
+					Departments = departments
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+		}
+
+		// MIN001: per-call AsUnionQuery() marker wins over global DefaultEagerLoadingStrategy = Default.
+		// Verified via query count: Default produces N+1 separate queries; CteUnion collapses 2 same-level
+		// child collections into a single UNION ALL query (counter == 1 on CTE providers).
+		[Test]
+		public void AsUnionQuery_OverridesGlobalDefault_QueryCountDistinguishesStrategy(
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllFirebirdLess3)] string context)
+		{
+			var (_, departments, employees, contractors, _) = GenerateHierarchy();
+
+			// Scope to one company's departments so the parent row count is predictable
+			var rootDepts = departments.Where(d => d.CompanyId == 1).ToArray();
+
+			using var db   = GetDataContext(context);
+			// Global default is Default (N+1 separate queries); AsUnionQuery() must override it
+			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.Default });
+
+			var counter = new SelectQueryCounter();
+			if (!context.IsRemote()) db.AddInterceptor(counter);
+
+			using var tDep = db.CreateLocalTable(rootDepts);
+			using var tEmp = db.CreateLocalTable(employees);
+			using var tCtr = db.CreateLocalTable(contractors);
+
+			if (!context.IsRemote()) counter.Count = 0;
+
+			// Two same-level child collections: CteUnion collapses them into 1 query (vs 3 under KeyedQuery
+			// fallback, or N+1 per child under Default).  Single-child queries fall back to KeyedQuery even
+			// under CteUnion, so 2 children are required to observe the UNION ALL single-query path.
+			var query =
+				from d in tDep
+				orderby d.Id
+				select new
+				{
+					d.Id,
+					d.Name,
+					Employees   = tEmp.Where(e => e.DepartmentId == d.Id).OrderBy(e => e.Id).ToList(),
+					Contractors = tCtr.Where(c => c.DepartmentId == d.Id).OrderBy(c => c.Id).ToList(),
+				};
+
+			var result = query
+				.AsUnionQuery()
+				.ToList();
+
+			var expected = rootDepts
+				.OrderBy(d => d.Id)
+				.Select(d => new
+				{
+					d.Id,
+					d.Name,
+					Employees   = employees.Where(e => e.DepartmentId == d.Id).OrderBy(e => e.Id).ToList(),
+					Contractors = contractors.Where(c => c.DepartmentId == d.Id).OrderBy(c => c.Id).ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+
+			// CteUnion (marker won): 1 UNION ALL query loads both child collections.
+			// Non-CTE providers fall back to KeyedQuery: 1 buffer preamble + 2 child queries = 3.
+			if (!context.IsRemote()) counter.Count.ShouldBe(!IsCteSupported(context) ? 3 : 1);
+		}
+
+		#endregion
 	}
 }

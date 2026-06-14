@@ -771,6 +771,7 @@ namespace LinqToDB
 		/// Requires the target database to support Common Table Expressions; falls back to
 		/// <see cref="AsKeyedQuery{T}(IQueryable{T})"/> when CTEs are unavailable.
 		/// </para>
+		/// <para>An explicit per-query marker takes precedence over the <see cref="LinqOptions.DefaultEagerLoadingStrategy"/> global default.</para>
 		/// </summary>
 		/// <example>
 		/// <code>
@@ -806,6 +807,7 @@ namespace LinqToDB
 		/// Works both inside a <c>Select</c> projection and directly in a <see cref="LoadWith{TEntity,TProperty}(IQueryable{TEntity}, System.Linq.Expressions.Expression{System.Func{TEntity,TProperty}})"/> selector.
 		/// Consider <see cref="AsKeyedQuery{T}(IQueryable{T})"/> instead when the parent entity has many columns.
 		/// </para>
+		/// <para>An explicit per-query marker takes precedence over the <see cref="LinqOptions.DefaultEagerLoadingStrategy"/> global default.</para>
 		/// </summary>
 		/// <example>
 		/// <code>
@@ -848,6 +850,7 @@ namespace LinqToDB
 		/// automatically falls back to the Default eager loading for that specific child.
 		/// Other children in the same query continue using KeyedQuery.
 		/// </para>
+		/// <para>An explicit per-query marker takes precedence over the <see cref="LinqOptions.DefaultEagerLoadingStrategy"/> global default.</para>
 		/// </summary>
 		/// <example>
 		/// <code>
