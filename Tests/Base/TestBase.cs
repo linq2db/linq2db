@@ -20,7 +20,13 @@ namespace Tests
 	{
 		const int TRACES_LIMIT = 50000;
 
-		protected static string? LastQuery { get; set; }
+		// Per-test (stored in CustomTestContext) so parallel tests don't clobber each other's
+		// last-executed-query; the trace sink writes it and tests read it back on their own thread.
+		protected static string? LastQuery
+		{
+			get => CustomTestContext.Get().Get<string?>(CustomTestContext.LASTQUERY);
+			set => CustomTestContext.Get().Set(CustomTestContext.LASTQUERY, value);
+		}
 
 		// Set when the parallel dispatcher is installed (TestsInitialization). Gates the
 		// per-provider database-readiness wait below, so serial / filtered runs are unaffected.

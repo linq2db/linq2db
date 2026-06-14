@@ -10,6 +10,7 @@ namespace Tests
 		public static string LIMITED           = "key-limited";
 		public static string BASELINE_DISABLED = "key-baseline-disabled";
 		public static string TRACE_DISABLED    = "key-trace-disabled";
+		public static string LASTQUERY         = "key-lastquery";
 
 		// Per-test context for the local/direct execution path. Established in [SetUp]
 		// (TestBase.OnBeforeTest); flows to the test body, [TearDown] and any threads/tasks
