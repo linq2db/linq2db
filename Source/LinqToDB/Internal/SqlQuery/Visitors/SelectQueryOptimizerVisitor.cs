@@ -1904,7 +1904,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 				if (containsWindowFunction)
 				{
-					if (subQuery.Select.HasModifier || subQuery.HasSetOperators || (parentQuery.HasWhere && subQuery.HasWhere) || subQuery.HasGroupBy)
+					if (subQuery.Select.HasModifier || subQuery.HasSetOperators || (parentQuery.HasWhere && subQuery.HasWhere)
+							|| (subQuery.HasGroupBy && parentQuery is not { Select.HasModifier: false, HasWhere: false, HasGroupBy: false, HasHaving: false, From.Tables: [{ Joins.Count: 0 }] }))
 					{
 						// not allowed to break window
 						return false;
