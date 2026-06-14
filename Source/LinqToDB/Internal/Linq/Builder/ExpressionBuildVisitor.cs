@@ -868,9 +868,10 @@ namespace LinqToDB.Internal.Linq.Builder
 					return translatedExposed;
 				}
 
-				// Honor PreferClientCalculation only for a mapped function whose attribute does not declare a NULL-propagating
-				// result (e.g. Sql.ToNullable is IfAnyParameterNullable) — pulling such a function client-side would turn a
-				// SQL NULL into a .NET default. Structural LINQ methods (aggregates) carry no attribute and translate as usual.
+				// Honor PreferClientCalculation only for a mapped function that carries an [Expression] attribute
+				// (MappedFunctionAllowsClientCalculation). Functions like Sql.ToNullable deliberately carry no attribute and
+				// are translated server-side by SqlFunctionsMemberTranslatorBase, so they fail the check and keep translating;
+				// structural LINQ methods (aggregates) likewise have no attribute and translate as usual.
 				if (!PreferClientCalculation(node) || !MappedFunctionAllowsClientCalculation(node.Method))
 				{
 					if (TranslateMember(BuildContext, node, out var translatedMember))

@@ -1,5 +1,6 @@
 ﻿using System.Linq.Expressions;
 
+using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 
@@ -18,15 +19,13 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		Expression? TranslateToNullableMethod(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
-			// If the argument can't be turned into SQL it's a client-side value — decline (return null) so it is
-			// evaluated client-side, where Sql.ToNullable is a safe widen (there is no SQL NULL to lose).
-			if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[0], out var valueExpr))
+			// Sql.ToNullable<T>(T) is a pure nullability widener: reuse the argument's placeholder re-typed to T?
+			// (MakeNullable) so a SQL NULL is preserved instead of collapsing to default(T). If the argument isn't SQL
+			// (a client-side value), decline so it evaluates client-side.
+			if (translationContext.Translate(methodCall.Arguments[0], translationFlags) is not SqlPlaceholderExpression placeholder)
 				return null;
 
-			// Sql.ToNullable<T>(T) is a pure nullability widener: identical SQL, result type T?. Building the
-			// placeholder from the original call (type T?) makes the value read as nullable, so a SQL NULL is
-			// preserved instead of collapsing to default(T) on the client.
-			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, valueExpr, methodCall);
+			return placeholder.MakeNullable();
 		}
 
 		Expression? TranslateNullifMethod(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)

@@ -30,8 +30,9 @@ namespace Tests.Linq
 			];
 		}
 
-		// Mapped SQL functions (ABS). Under the arithmetic-core scope a method call always translates to SQL,
-		// even when client calculation is preferred — regardless of the PreferServerSide flag.
+		// Mapped SQL functions (ABS). PreferServerSide controls whether the function stays server-side:
+		// PreferServerSide = true keeps it in SQL even when client calculation is preferred; PreferServerSide = false
+		// lets it move client-side when client calculation is preferred.
 		[Sql.Function("ABS", PreferServerSide = true )] static int PreferServer(int value) => Math.Abs(value);
 		[Sql.Function("ABS", PreferServerSide = false)] static int PreferClient(int value) => Math.Abs(value);
 		[Sql.Function("ABS", ServerSideOnly   = true )] static int ServerOnly  (int value) => throw new InvalidOperationException();
