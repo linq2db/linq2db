@@ -34,6 +34,14 @@ namespace Tests
 		// concurrent remote tests on different providers would corrupt each other's capture.
 		readonly object _remoteGate = new object();
 
+		// True (per-thread) while a thread already holds the gate (read or write). A work item
+		// can synchronously dispatch follow-up items on the same thread - a NonParallel fixture
+		// running its inline Direct children, or any leaf whose completion triggers its parent's
+		// OneTimeTearDown - and this flag lets those nested dispatches skip re-entering the
+		// non-recursive gate (which would throw LockRecursionException).
+		[ThreadStatic]
+		static bool _gateHeld;
+
 		readonly object                          _lanesLock    = new object();
 		readonly Dictionary<string, SerialLane>  _providerLanes = new Dictionary<string, SerialLane>(StringComparer.OrdinalIgnoreCase);
 		readonly SerialLane                      _exclusiveLane;
@@ -58,36 +66,67 @@ namespace Tests
 		{
 			var strategy = work.ExecutionStrategy;
 
-			// Items NUnit runs inline (provider-less leaf cases when not parallelized,
-			// grouping suites, [SingleThreaded] content) execute on the calling thread,
-			// mirroring ParallelWorkItemDispatcher.
-			if (work.Context.IsSingleThreaded || strategy == ParallelExecutionStrategy.Direct)
+			// Composites (assembly / namespace / fixture suites) run no test body of their own;
+			// they only dispatch children, which come back to us individually. A NonParallel
+			// composite (a [NonParallelizable] fixture) must run on the exclusive lane so its
+			// inline Direct children execute under the write lock; every other composite goes to
+			// the original dispatcher, which keeps NUnit's completion / shift machinery intact.
+			if (work is CompositeWorkItem)
 			{
-				work.Execute();
+				if (strategy == ParallelExecutionStrategy.NonParallel)
+					_exclusiveLane.Enqueue(work);
+				else
+					_original.Dispatch(work);
+
 				return;
 			}
 
-			// [NonParallelizable] work must run with no provider lane active.
+			// Leaf (SimpleWorkItem): every test body runs through the gate, so [NonParallelizable]
+			// work is exclusive against all other running test bodies (not just provider lanes).
 			if (strategy == ParallelExecutionStrategy.NonParallel)
 			{
 				_exclusiveLane.Enqueue(work);
 				return;
 			}
 
-			// Parallel: route DB leaf cases by provider; everything else (composites,
-			// provider-less tests) goes to the original dispatcher.
 			var (context, isRemote) = NUnitUtils.GetContext(work.Test);
 
-			// CreateDatabase must run off the provider lane (on the original dispatcher's
-			// independent worker) so a provider's other tests can wait on its completion latch
-			// without deadlocking the single-thread lane.
-			if (context == null || NUnitUtils.IsCreateDatabase(work.Test))
+			// Provider leaf cases go to the provider lane, except CreateDatabase, which must stay
+			// off the lane so a provider's other tests can wait on its readiness latch without
+			// deadlocking the single-thread lane.
+			if (context != null && !NUnitUtils.IsCreateDatabase(work.Test))
 			{
-				_original.Dispatch(work);
+				GetProviderLane(context).Enqueue(work, isRemote);
 				return;
 			}
 
-			GetProviderLane(context).Enqueue(work, isRemote);
+			// Provider-less leaf, CreateDatabase, Direct / SingleThreaded content: run on the
+			// calling thread under the read gate so it is excluded by the exclusive lane.
+			RunGated(work);
+		}
+
+		// Runs a leaf body under the read gate on the current thread, unless we are already inside
+		// the exclusive write lock (a NonParallel fixture's inline children), in which case the
+		// body is already covered and re-entering the non-recursive gate would throw.
+		void RunGated(WorkItem work)
+		{
+			if (_gateHeld)
+			{
+				work.Execute();
+				return;
+			}
+
+			_gate.EnterReadLock();
+			_gateHeld = true;
+			try
+			{
+				work.Execute();
+			}
+			finally
+			{
+				_gateHeld = false;
+				_gate.ExitReadLock();
+			}
 		}
 
 		public void CancelRun(bool force)
@@ -162,6 +201,8 @@ namespace Tests
 					else
 						_gate.EnterReadLock();
 
+					_gateHeld = true;
+
 					try
 					{
 						// WorkItem.Execute() runs the item synchronously to completion and
@@ -171,6 +212,8 @@ namespace Tests
 					}
 					finally
 					{
+						_gateHeld = false;
+
 						if (_exclusive)
 							_gate.ExitWriteLock();
 						else
