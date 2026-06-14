@@ -80,7 +80,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		public virtual void OnBeforeTest()
 		{
 			// establish a fresh per-test context; EF tests never use the remote (LinqService) path
-			CustomTestContext.Begin(false);
+			CustomTestContext.Begin(false, null);
 		}
 
 		[TearDown]

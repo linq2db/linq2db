@@ -157,7 +157,7 @@ namespace Tests
 			var (provider, isRemote) = NUnitUtils.GetContext(test);
 
 			// establish a fresh per-test context before anything in setup/test can log
-			CustomTestContext.Begin(isRemote);
+			CustomTestContext.Begin(isRemote, provider);
 
 			// Under parallel execution, wait until this provider's database has been created
 			// (CreateDatabase runs off-lane and signals readiness). Serial / filtered runs skip this.
