@@ -15,6 +15,11 @@ namespace LinqToDB.Internal.DataProvider.Translation
 {
 	public class StringMemberTranslatorBase : MemberTranslatorBase
 	{
+		// Per Unicode v13 — every White_Space codepoint
+		protected const string WHITESPACES       = "\x09\x0A\x0B\x0C\x0D\x20\x85\xA0\x1680\x2000\x2001\x2002\x2003\x2004\x2005\x2006\x2007\x2008\x2009\x200A\x2028\x2029\x202F\x205F\x3000";
+		protected const string ASCII_WHITESPACES = "\x09\x0A\x0B\x0C\x0D\x20\x85\xA0";
+		protected const string WHITESPACES_REGEX = "\x09|\x0A|\x0B|\x0C|\x0D|\x20|\x85|\xA0|\x1680|\x2000|\x2001|\x2002|\x2003|\x2004|\x2005|\x2006|\x2007|\x2008|\x2009|\x200A|\x2028|\x2029|\x202F|\x205F|\x3000";
+
 		public StringMemberTranslatorBase()
 		{
 			Registration.RegisterMethod(() => Sql.Like(null, null), TranslateLike);
@@ -42,6 +47,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			Registration.RegisterMethod(() => "".TrimEnd  (),    TranslateStringTrimEnd);
 			Registration.RegisterMethod(() => "".TrimEnd  (' '), TranslateStringTrimEnd);
 #endif
+
+			Registration.RegisterMethod(() => string.IsNullOrWhiteSpace(null), TranslateStringIsNullOrWhiteSpace);
 
 			Registration.RegisterMethod(() => string.Join(string.Empty, Enumerable.Empty<string?>()),  TranslateStringJoin);
 			Registration.RegisterMethod(() => string.Join(string.Empty, Array.Empty<string?>()),       TranslateStringJoin);
@@ -356,6 +363,28 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		Expression? TranslateStringTrimEnd(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
 			return TranslateStringTrim(translationContext, methodCall, translationFlags, isStart: false);
+		}
+
+		Expression? TranslateStringIsNullOrWhiteSpace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			if (translationFlags.HasFlag(TranslationFlags.Expression) && translationContext.CanBeEvaluatedOnClient(methodCall))
+				return null;
+
+			using var disposable = translationContext.UsingTypeFromExpression(methodCall.Arguments[0]);
+
+			if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[0], out var translatedValue))
+			{
+				if (translationFlags.HasFlag(TranslationFlags.Expression))
+					return null;
+
+				return translationContext.CreateErrorExpression(methodCall.Arguments[0], type: methodCall.Type);
+			}
+
+			var resultSql = TranslateIsNullOrWhiteSpace(translationContext, methodCall, translationFlags, translatedValue);
+			if (resultSql == null)
+				return null;
+
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, resultSql, methodCall);
 		}
 
 		Expression? TranslateStringTrim(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool isStart)
@@ -859,6 +888,51 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			}
 		}
 
+		/// <summary>
+		/// Builds the <c>ORDER BY …</c> suffix fragment for an aggregate (e.g. <c>STRING_AGG</c>) that renders native
+		/// <c>NULLS FIRST</c>/<c>NULLS LAST</c>. The <c>NULLS</c> token is omitted when the aggregate is null-filtered, or
+		/// when the requested position already equals the provider's natural null ordering (<paramref name="naturalOrdering"/>)
+		/// for the item's direction — the provider default then yields the same placement. An unspecified position
+		/// (<see cref="Sql.NullsPosition.None"/>) is pinned to <c>FIRST</c> for cross-provider / in-memory consistency.
+		/// Returns <see langword="null"/> when there is no ordering. Shared by the PostgreSQL / SAP HANA / DuckDB translators.
+		/// </summary>
+		protected static ISqlExpression? BuildAggregateNullsOrderBy(
+			ISqlExpressionFactory                                                    factory,
+			IReadOnlyList<(ISqlExpression expr, bool desc, Sql.NullsPosition nulls)> orderBy,
+			bool                                                                     isNullFiltered,
+			NullsDefaultOrdering                                                     naturalOrdering)
+		{
+			if (orderBy.Count == 0)
+				return null;
+
+			using var sb   = Pools.StringBuilder.Allocate();
+			var       args = new ISqlExpression[orderBy.Count];
+
+			sb.Value.Append("ORDER BY ");
+			for (var i = 0; i < orderBy.Count; i++)
+			{
+				var (expr, desc, nulls) = orderBy[i];
+				args[i] = expr;
+
+				if (i > 0)
+					sb.Value.Append(", ");
+				sb.Value.Append('{').Append(i).Append('}');
+				if (desc)
+					sb.Value.Append(" DESC");
+
+				// Skip the NULLS token when null-filtered, or when the request already matches the provider's
+				// natural placement for this direction (MatchesNaturalNullsPosition is false for None, so an
+				// unspecified position still emits the pinned FIRST below).
+				if (!isNullFiltered && !QueryHelper.MatchesNaturalNullsPosition(naturalOrdering, nulls, desc))
+				{
+					sb.Value.Append(" NULLS ");
+					sb.Value.Append(nulls is Sql.NullsPosition.First or Sql.NullsPosition.None ? "FIRST" : "LAST");
+				}
+			}
+
+			return factory.Fragment(sb.Value.ToString(), args);
+		}
+
 		public virtual ISqlExpression? TranslateReplace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression oldValue, ISqlExpression newValue)
 		{
 			var factory = translationContext.ExpressionFactory;
@@ -942,6 +1016,38 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				return factory.Function(valueType, "RTRIM", value);
 
 			return factory.Function(valueType, "RTRIM", value, trimChars);
+		}
+
+		public virtual ISqlExpression? TranslateIsNullOrWhiteSpace(
+			ITranslationContext  translationContext,
+			MethodCallExpression methodCall,
+			TranslationFlags     translationFlags,
+			ISqlExpression       value)
+		{
+			var factory     = translationContext.ExpressionFactory;
+			var valueType   = factory.GetDbDataType(value);
+			var literalType = factory.GetDbDataType(typeof(string));
+
+			var trimmed   = factory.Function(valueType, "LTRIM", value, factory.Value(literalType, WHITESPACES));
+			var predicate = factory.Equal(trimmed, factory.Value(literalType, string.Empty));
+
+			return WrapIsNullOrWhiteSpaceResult(translationContext, value, predicate);
+		}
+
+		/// <summary>
+		/// Wraps an <c>IsNullOrWhiteSpace</c>-shape predicate with an <c>IS NULL OR …</c> branch.
+		/// Per-provider <see cref="TranslateIsNullOrWhiteSpace"/> overrides build the
+		/// empty-after-trim predicate in provider-specific syntax and call this helper to attach
+		/// the null check. The IS NULL branch is emitted unconditionally — SQL optimizers fold
+		/// it away when the value is provably non-nullable.
+		/// </summary>
+		protected ISqlExpression WrapIsNullOrWhiteSpaceResult(ITranslationContext translationContext, ISqlExpression value, ISqlPredicate predicate)
+		{
+			var factory = translationContext.ExpressionFactory;
+
+			return factory.SearchCondition(isOr: true)
+				.Add(factory.IsNull(value))
+				.Add(predicate);
 		}
 	}
 }

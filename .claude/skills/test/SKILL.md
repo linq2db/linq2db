@@ -68,6 +68,17 @@ Resolve `{project, tfm}` for each run:
 - **EFCore test** — expand to all four projects (EF3/EF8/EF9/EF10). Use `{efMatrix: true, providers: [...]}` shorthand on the agent.
 - **Explicit filter → specific test** — read the test's attributes to infer `[DataSources]` family and EFCore-vs-main. When the filter matches tests across both main and EFCore projects (rare but possible), ask the user to pick.
 
+#### 3.1a Long runs — auto-trace + background monitor
+
+A run is **long** when any of: project is `Tests/Linq/Tests.csproj` (especially across multiple TFMs); the EF matrix runs against more than one provider; the filter is broad (a whole class, a `CreateDatabase`-only full-init pass, or no narrowing filter); or the user said "full" / "all" / "the whole suite". A single-method or Playground run is **short** — skip this subsection and run it synchronously per 3.3.
+
+For a long run:
+
+1. **Auto-enable the progress heartbeat** — invoke `/test-progress on` (don't merely suggest it), then tell the user it's on and that you'll report progress as it runs.
+2. **Run it in the background so progress is readable** — invoke `test-runner` with `run_in_background: true`. The test process writes the heartbeat to `.build/.claude/test-progress.<tfm>.<pid>.json` regardless of who launched it; running the agent in the background is what frees you to poll it instead of blocking with nothing to show.
+3. **Poll and surface progress** — between turns, read the heartbeat with `pwsh -NoProfile -File .claude/scripts/test-status.ps1` (or `Read` the JSON) and give the user a one-line update (completed/total, current test, failures so far). You can do this any time the user asks "how's it going?" — you don't have to wait for the run to finish. Don't busy-poll; check when prompted or at natural intervals.
+4. When the background `test-runner` completes, continue with the baselines diff (3.4) and the final report (3.5) as usual.
+
 #### 3.2 Resolve target providers
 
 Provider state is owned by `/test-providers` and read by `test-runner` from `UserDataProviders.json`. `/test` does **not** propose providers, edit the file, or pre-validate that the requested set is enabled — that's the user's job ahead of running `/test`.
@@ -87,6 +98,8 @@ Call `test-runner` with:
 - `config` — `"Debug"` unless the user asked for Release.
 - `verbosity` — `"normal"`; flip to `"detailed"` when the user needs SQL-dump output from `TestContext.Out.WriteLine`.
 
+For a **short** run, invoke `test-runner` synchronously. For a **long** run, invoke it with `run_in_background: true` and monitor the heartbeat per 3.1a.
+
 `test-runner` is read-only on `UserDataProviders.json` — there is no `userProvidersConsent` or `restoreOnCompletion` input, and no provider edits happen as a side effect of the run. If the agent reports `status: "blocked"` with a missing-provider message, relay it to the user with a one-liner: "Run `/test-providers <provider>` to enable it, then re-run `/test`."
 
 #### 3.4 Baselines diff (when baselines are written)
@@ -105,6 +118,8 @@ Relay the agent's per-target summary:
 - One row per target: `<project> (<tfm>) — passed/failed/none_matched · N passed, M failed, K skipped`
 - For `failed` targets, include the first failure's message + top stack frame.
 - For `none_matched` targets, cite the agent's `note` (usually a `#if !NETFRAMEWORK` guard).
+
+For a long run you already enabled the trace and monitored it via the heartbeat (3.1a); the final report still comes from the agent's structured summary, with the heartbeat's failure list as a cross-check.
 
 If any failure looks like an env problem (connection refused, "Provider X not enabled" block, missing schema), point at `/test-providers` for the fix — do not investigate or auto-repair from here. Otherwise just relay the agent's output verbatim.
 

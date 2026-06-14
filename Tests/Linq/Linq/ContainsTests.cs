@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -428,6 +428,26 @@ namespace Tests.Linq
 			var res = db.Person.Where(p => ids == null || ids.Contains(p.ID) || !ids.Any()).Count();
 
 			Assert.That(res, Is.EqualTo(expected));
+		}
+
+		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
+		public void ContainsSubqueryTest([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from a in db.Parent
+				from t in
+					from t in db.Child
+					where db.GrandChild
+						.Where(c => c.ChildID == t.ChildID)
+						.Select(c => c.ParentID)
+						.Contains(a.ParentID)
+					select t
+				select a.ParentID;
+
+			AssertQuery(query);
 		}
 	}
 }

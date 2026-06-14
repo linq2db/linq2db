@@ -29,7 +29,7 @@ namespace Tests
 		public string  ExpectedException { get; }
 		public string? ErrorMessage      { get; set; }
 
-		public void ApplyToTest(Test test)
+		public virtual void ApplyToTest(Test test)
 		{
 			// Add a property to the test to indicate that it expects an exception
 			test.Properties.Add("ThrowsWhen", this);

@@ -1,0 +1,8 @@
+<Project>
+	<Import Project="$(MSBuildThisFileDirectory)\..\Directory.Build.props" />
+
+	<PropertyGroup>
+		<!-- Suppress MSB3270: NuGet.dll is built as x64 but referencing projects target AnyCPU (MSIL) -->
+		<ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
+	</PropertyGroup>
+</Project>

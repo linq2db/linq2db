@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 using LinqToDB.Data;
 using LinqToDB.Internal.Common;
@@ -47,7 +48,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		#region IEquatable implementation
 
-		public bool Equals(OracleOptions? other)
+		public bool Equals([NotNullWhen(true)] OracleOptions? other)
 		{
 			if (ReferenceEquals(null, other)) return false;
 			if (ReferenceEquals(this, other)) return true;

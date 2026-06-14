@@ -12,6 +12,7 @@ using LinqToDB.DataProvider.Ydb;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider.Ydb.Translation;
 using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
@@ -31,6 +32,8 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			SqlProviderFlags.IsSubQueryOrderBySupported       = true;
 			SqlProviderFlags.IsUnionAllOrderBySupported       = true;
 			SqlProviderFlags.IsDistinctSetOperationsSupported = false;
+			// NULLS ordering is emulated (IsNullsOrderingSupported left unset); NULL sorts as the smallest value.
+			SqlProviderFlags.DefaultNullsOrdering             = NullsDefaultOrdering.Smallest;
 			// only Serializable supported
 			SqlProviderFlags.DefaultMultiQueryIsolationLevel   = IsolationLevel.Serializable;
 			SqlProviderFlags.RowConstructorSupport             = RowFeature.Equality | RowFeature.Comparisons | RowFeature.Between | RowFeature.In | RowFeature.UpdateLiteral;
@@ -49,7 +52,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			SqlProviderFlags.IsNestedJoinsSupported           = false;
 			SqlProviderFlags.IsCrossJoinSyntaxRequired        = true;
 
-			SqlProviderFlags.IsSupportedSimpleCorrelatedSubqueries = true;
+			SqlProviderFlags.IsSupportedSimpleCorrelatedSubqueries = false;
 			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel    = 0;
 
 			SetProviderField<byte[]>  (YdbProviderAdapter.GetBytes,        Adapter.DataReaderType);
