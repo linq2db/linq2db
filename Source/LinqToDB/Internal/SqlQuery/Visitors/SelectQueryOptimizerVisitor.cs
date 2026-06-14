@@ -1118,7 +1118,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				foreach (var item in subQuery.OrderBy.Items)
 				{
-					mainQuery.OrderBy.Expr(item.Expression, item.IsDescending, item.IsPositioned);
+					mainQuery.OrderBy.Expr(item.Expression, item.IsDescending, item.IsPositioned, item.NullsPosition);
 				}
 			}
 		}
@@ -1256,7 +1256,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						}
 					}
 
-					var orderItems = orderByItems.Select(o => new SqlWindowOrderItem(o.Expression, o.IsDescending, Sql.NullsPosition.None));
+					var orderItems = orderByItems.Select(o => new SqlWindowOrderItem(o.Expression, o.IsDescending, o.NullsPosition));
 
 					var longType = _mappingSchema.GetDbDataType(typeof(long));
 					rnExpression = new SqlExtendedFunction(longType, "ROW_NUMBER", [], [], partitionBy: partitionBy, orderBy: orderItems);
@@ -3797,7 +3797,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				if (ReferenceEquals(element, _predicate))
 					return base.Visit(element);
 
-				if (element is ISqlExpression sqlExpr and not SqlSearchCondition)
+				// SelectQuery is an ISqlExpression too (e.g. the operand of an IN/EXISTS subquery), but it must not be
+				// hoisted into a column - recurse into it so only the inner-only leaves get corrected.
+				if (element is ISqlExpression sqlExpr and not SqlSearchCondition and not SelectQuery)
 				{
 					if (QueryHelper.IsDependsOnSources(sqlExpr, _currentSources) && !QueryHelper.IsDependsOnOuterSources(sqlExpr, currentSources: _currentSources))
 					{

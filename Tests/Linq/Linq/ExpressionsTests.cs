@@ -72,7 +72,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class MappingTestClass
 		{
-			[Column] public int       Id    { get; set; }
+			[PrimaryKey] public int   Id    { get; set; }
 			[Column] public int       Value { get; set; }
 			[Column] public FlagsEnum Flags { get; set; }
 		}
@@ -570,9 +570,9 @@ namespace Tests.Linq
 			var _ = db.Child.LeftJoin(db.Parent, c => c.ParentID, p => p.ParentID).ToList();
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
-		public void LeftJoinTest2([DataSources(TestProvName.AllClickHouse)] string context)
+		public void LeftJoinTest2([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			var _ = (

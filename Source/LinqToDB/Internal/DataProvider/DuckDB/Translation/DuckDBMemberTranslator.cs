@@ -165,26 +165,33 @@ namespace LinqToDB.Internal.DataProvider.DuckDB.Translation
 				var factory = translationContext.ExpressionFactory;
 				var dbDataType = factory.GetDbDataType(typeof(DateTime));
 
-				return factory.NotNullExpression(dbDataType, "CURRENT_TIMESTAMP");
+				// Use the now() function form rather than the CURRENT_TIMESTAMP keyword: DuckDB's
+				// ON CONFLICT ... DO UPDATE SET binder parses the bare keyword as a column reference
+				// (Binder Error: ... does not have a column named "CURRENT_TIMESTAMP"). now() is the
+				// DuckDB-equivalent (TIMESTAMP WITH TIME ZONE) and binds correctly in every context.
+				return factory.Function(dbDataType, "now");
 			}
 
 			protected override ISqlExpression? TranslateNow(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
 				var factory = translationContext.ExpressionFactory;
 				var dbDataType = factory.GetDbDataType(typeof(DateTime));
-				return factory.NotNullExpression(dbDataType, "LOCALTIMESTAMP");
+				// current_localtimestamp() function form, not the bare LOCALTIMESTAMP keyword: the keyword
+				// is parsed as a column reference inside ON CONFLICT ... DO UPDATE SET. Returns a plain
+				// TIMESTAMP (local time, no time zone), matching the LOCALTIMESTAMP keyword's semantics.
+				return factory.Function(dbDataType, "current_localtimestamp");
 			}
 
 			protected override ISqlExpression? TranslateZonedNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
 			{
 				var factory = translationContext.ExpressionFactory;
-				return factory.NotNullExpression(dbDataType, "CURRENT_TIMESTAMP");
+				return factory.Function(dbDataType, "now");
 			}
 
 			protected override ISqlExpression? TranslateZonedUtcNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
 			{
 				var factory = translationContext.ExpressionFactory;
-				return factory.NotNullExpression(dbDataType, "CURRENT_TIMESTAMP AT TIME ZONE 'UTC'");
+				return factory.NotNullExpression(dbDataType, "{0} AT TIME ZONE 'UTC'", factory.Function(dbDataType, "now"));
 			}
 		}
 
@@ -234,29 +241,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB.Translation
 									}
 								}
 
-								ISqlExpression? suffix = null;
-								if (info.OrderBySql.Length > 0)
-								{
-									using var sb = Pools.StringBuilder.Allocate();
-
-									var args = info.OrderBySql.Select(o => o.expr).ToArray();
-
-									sb.Value.Append("ORDER BY ");
-									for (int i = 0; i < info.OrderBySql.Length; i++)
-									{
-										if (i > 0) sb.Value.Append(", ");
-										sb.Value.Append('{').Append(i).Append('}');
-										if (info.OrderBySql[i].desc) sb.Value.Append(" DESC");
-
-										if (!info.IsNullFiltered)
-										{
-											sb.Value.Append(" NULLS ");
-											sb.Value.Append(info.OrderBySql[i].nulls is Sql.NullsPosition.First or Sql.NullsPosition.None ? "FIRST" : "LAST");
-										}
-									}
-
-									suffix = factory.Fragment(sb.Value.ToString(), args);
-								}
+								var suffix = BuildAggregateNullsOrderBy(factory, info.OrderBySql, info.IsNullFiltered, NullsDefaultOrdering.AlwaysLast);
 
 								SqlSearchCondition? filterCondition = null;
 

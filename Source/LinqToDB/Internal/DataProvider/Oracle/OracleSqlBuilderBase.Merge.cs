@@ -21,6 +21,10 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 		// dual table owner
 		protected override string FakeTableSchema => "sys";
 
+		// Oracle accepts only `WHEN MATCHED THEN UPDATE SET ... WHERE cond`, not
+		// `WHEN MATCHED AND cond THEN UPDATE SET ...`.
+		protected override bool IsUpsertUpdateWhereAfterSet => true;
+
 		protected override void BuildMergeInto(NullabilityContext nullability, SqlMergeStatement merge)
 		{
 			StringBuilder.Append("MERGE");

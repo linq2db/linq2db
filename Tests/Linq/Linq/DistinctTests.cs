@@ -142,6 +142,25 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void DistinctOrderByNulls(
+			[DataSources] string context,
+			[Values(Sql.NullsPosition.First, Sql.NullsPosition.Last)] Sql.NullsPosition nulls,
+			[Values] bool descending)
+		{
+			using var db = GetDataContext(context);
+
+			// DISTINCT + NULLS: the emulation CASE key must stay valid under DISTINCT (sub-query wrapping where
+			// the database requires ORDER BY items to appear in the select list).
+			var distinct = db.Parent.Select(p => p.Value1).Distinct();
+
+			var ordered = descending
+				? distinct.OrderByDescending(x => x, nulls)
+				: distinct.OrderBy          (x => x, nulls);
+
+			AssertQuery(ordered.Take(3));
+		}
+
+		[Test]
 		public void DistinctOrderByExpression([DataSources] string context)
 		{
 			using var db = GetDataContext(context);

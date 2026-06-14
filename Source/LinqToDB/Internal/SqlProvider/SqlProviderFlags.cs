@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.Serialization;
 
@@ -594,6 +595,93 @@ namespace LinqToDB.Internal.SqlProvider
 		[DataMember(Order = 68), DefaultValue(true)]
 		public bool IsSubqueryJoinOnOuterReferenceSupported { get; set; } = true;
 
+		/// <summary>
+		/// Indicates that the provider's native <c>InsertOrUpdate</c> emission can honor an additional
+		/// predicate applied to the UPDATE branch (used by <c>Upsert(...).Update(v =&gt; v.When(...))</c>).
+		/// When <see langword="false"/>, Upsert with a <c>.When</c> predicate is routed through the
+		/// alternative 3-query <c>SELECT → UPDATE → INSERT</c> orchestration instead of the native path.
+		/// <para>
+		/// Set to <see langword="false"/> for engines whose single-statement insert-or-update shape
+		/// cannot carry an UPDATE-branch predicate:
+		/// <list type="bullet">
+		///   <item>MySQL / MariaDB — <c>INSERT ... ON DUPLICATE KEY UPDATE</c> has no WHERE clause.</item>
+		///   <item>SAP Sybase ASE — emulated via <c>IF @@ROWCOUNT = 0 INSERT</c>, no UPDATE-branch predicate.</item>
+		///   <item>SQL Server 2005 — pre-MERGE; emulated via <c>IF @@ROWCOUNT = 0 INSERT</c>.</item>
+		/// </list>
+		/// </para>
+		/// Default (set by <see cref="DataProviderBase"/>): <see langword="true"/>.
+		/// </summary>
+		[DataMember(Order = 71), DefaultValue(true)]
+		public bool IsInsertOrUpdateWithPredicateSupported { get; set; } = true;
+
+		/// <summary>
+		/// Indicates that the provider supports the synthesized two-branch <c>MERGE</c> shape linq2db
+		/// emits when <c>Upsert(...)</c> cannot be lowered to the native InsertOrUpdate path — i.e. for
+		/// bulk sources, non-PK match, conditional <c>Insert(i =&gt; i.When(...))</c>, or
+		/// <c>SkipInsert()</c> / <c>SkipUpdate()</c>. When <see langword="false"/> and the Upsert
+		/// configuration requires MERGE lowering, <see cref="LinqToDBException"/> is thrown with a
+		/// descriptive message.
+		/// <para>
+		/// Set to <see langword="false"/> for SAP HANA — its <c>MERGE</c> dialect lacks the
+		/// <c>WHEN NOT MATCHED THEN INSERT</c> branch that the ANSI shape requires.
+		/// </para>
+		/// Default (set by <see cref="DataProviderBase"/>): <see langword="true"/>.
+		/// </summary>
+		[DataMember(Order = 72), DefaultValue(true)]
+		public bool IsUpsertWithMergeLoweringSupported { get; set; } = true;
+
+		/// <summary>
+		/// Indicates that the provider's MERGE dialect supports predicates on the <c>WHEN MATCHED</c>
+		/// and <c>WHEN NOT MATCHED</c> clauses (either as <c>WHEN MATCHED AND &lt;cond&gt;</c> or
+		/// <c>WHEN MATCHED THEN UPDATE SET … WHERE &lt;cond&gt;</c>). When <see langword="false"/> and
+		/// an Upsert configuration with <c>Insert(i =&gt; i.When(...))</c> or
+		/// <c>Update(v =&gt; v.When(...))</c> is routed through MERGE lowering,
+		/// <see cref="LinqToDBException"/> is thrown with a descriptive message.
+		/// <para>
+		/// Set to <see langword="false"/> for Firebird 2.5 — its MERGE predates Firebird 3 which added
+		/// <c>WHEN [NOT] MATCHED [AND &lt;cond&gt;]</c> syntax, and it has no <c>UPDATE … WHERE</c>
+		/// form inside MERGE either.
+		/// </para>
+		/// Default (set by <see cref="DataProviderBase"/>): <see langword="true"/>.
+		/// </summary>
+		[DataMember(Order = 73), DefaultValue(true)]
+		public bool IsUpsertMergeWithPredicateSupported { get; set; } = true;
+
+		/// <summary>
+		/// Indicates that the provider's native single-statement <c>InsertOrUpdate</c> shape applies one
+		/// value-list to both the INSERT and UPDATE branches and cannot honor per-branch <c>SET</c>
+		/// divergence. When <see langword="true"/> and the Upsert configuration produces different
+		/// expressions for the same column on the INSERT vs UPDATE branch (typically via
+		/// <c>Insert(i =&gt; …)</c> / <c>Update(v =&gt; …)</c> per-branch overrides, or per-branch
+		/// <c>Ignore</c>), the runtime transparently falls back to the alternative
+		/// <c>UPDATE → INSERT</c> emulation so the per-branch divergence is preserved.
+		/// <para>
+		/// Set to <see langword="true"/> for SAP HANA — its <c>UPSERT … WITH PRIMARY KEY</c> statement
+		/// uses one VALUES list for both branches.
+		/// </para>
+		/// Default (set by <see cref="DataProviderBase"/>): <see langword="false"/>.
+		/// </summary>
+		[DataMember(Order = 74), DefaultValue(false)]
+		public bool IsInsertOrUpdateRequiresAlignedBranches { get; set; }
+
+		/// <summary>
+		/// Provider renders <c>NULLS FIRST</c> / <c>NULLS LAST</c> natively in <c>ORDER BY</c> (and window
+		/// <c>OVER(ORDER BY …)</c>). When <see langword="false"/> (the default), <see cref="Sql.NullsPosition"/>
+		/// is emulated via a <c>CASE WHEN &lt;expr&gt; IS NULL THEN …</c> sort key.
+		/// </summary>
+		[DataMember(Order = 69), DefaultValue(false)]
+		public bool IsNullsOrderingSupported { get; set; }
+
+		/// <summary>
+		/// The provider's natural placement of <c>NULL</c> values in an <c>ORDER BY</c> (the placement used when no
+		/// <c>NULLS FIRST</c>/<c>NULLS LAST</c> is specified). <see cref="NullsDefaultOrdering.Unknown"/> (the default)
+		/// means it is unknown, so a requested <see cref="Sql.NullsPosition"/> is always honored (emulated or rendered)
+		/// and never elided. When set, a requested position that already equals the natural placement for the item's
+		/// direction is dropped, avoiding a redundant emulation sort key or <c>NULLS</c> token.
+		/// </summary>
+		[DataMember(Order = 70), DefaultValue(NullsDefaultOrdering.Unknown)]
+		public NullsDefaultOrdering DefaultNullsOrdering { get; set; }
+
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
 			return AcceptsTakeAsParameter || (AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null);
@@ -685,10 +773,16 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsSimpleCoalesceSupported                            .GetHashCode()
 				^ IsSubqueryExpressionInsidePredicateSupported         .GetHashCode()
 				^ IsSubqueryJoinOnOuterReferenceSupported              .GetHashCode()
+				^ IsInsertOrUpdateWithPredicateSupported               .GetHashCode()
+				^ IsUpsertWithMergeLoweringSupported                   .GetHashCode()
+				^ IsUpsertMergeWithPredicateSupported                  .GetHashCode()
+				^ IsInsertOrUpdateRequiresAlignedBranches              .GetHashCode()
+				^ IsNullsOrderingSupported                             .GetHashCode()
+				^ DefaultNullsOrdering                                 .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => StringComparer.Ordinal.GetHashCode(flag) ^ hash);
 	}
 
-		public override bool Equals(object? obj)
+		public override bool Equals([NotNullWhen(true)] object? obj)
 		{
 			return obj is SqlProviderFlags other
 				&& IsParameterOrderDependent                             == other.IsParameterOrderDependent
@@ -758,6 +852,12 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsSubqueryExpressionInsidePredicateSupported          == other.IsSubqueryExpressionInsidePredicateSupported
 				&& IsSubqueryJoinOnOuterReferenceSupported               == other.IsSubqueryJoinOnOuterReferenceSupported
 				&& IsTakeWithInAllAnySomeSubquerySupported               == other.IsTakeWithInAllAnySomeSubquerySupported
+				&& IsInsertOrUpdateWithPredicateSupported                == other.IsInsertOrUpdateWithPredicateSupported
+				&& IsUpsertWithMergeLoweringSupported                    == other.IsUpsertWithMergeLoweringSupported
+				&& IsUpsertMergeWithPredicateSupported                   == other.IsUpsertMergeWithPredicateSupported
+				&& IsInsertOrUpdateRequiresAlignedBranches               == other.IsInsertOrUpdateRequiresAlignedBranches
+				&& IsNullsOrderingSupported                              == other.IsNullsOrderingSupported
+				&& DefaultNullsOrdering                                  == other.DefaultNullsOrdering
 				&& CustomFlags.SetEquals(other.CustomFlags);
 		}
 		#endregion
