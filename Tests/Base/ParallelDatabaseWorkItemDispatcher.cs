@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 
+using NUnit.Framework;
 using NUnit.Framework.Internal;
 using NUnit.Framework.Internal.Execution;
 
@@ -64,28 +65,31 @@ namespace Tests
 
 		public void Dispatch(WorkItem work)
 		{
-			var strategy = work.ExecutionStrategy;
-
-			// Composites (assembly / namespace / fixture suites) run no test body of their own;
-			// they only dispatch children, which come back to us individually. A NonParallel
-			// composite (a [NonParallelizable] fixture) must run on the exclusive lane so its
-			// inline Direct children execute under the write lock; every other composite goes to
-			// the original dispatcher, which keeps NUnit's completion / shift machinery intact.
-			if (work is CompositeWorkItem)
+			// Already inside the exclusive write lock (a [NonParallelizable] suite's subtree):
+			// run the whole subtree inline on this thread so every descendant - including provider
+			// leaves - stays under the write lock instead of escaping to a provider/read lane.
+			if (_gateHeld)
 			{
-				if (strategy == ParallelExecutionStrategy.NonParallel)
-					_exclusiveLane.Enqueue(work);
-				else
-					_original.Dispatch(work);
-
+				work.Execute();
 				return;
 			}
 
-			// Leaf (SimpleWorkItem): every test body runs through the gate, so [NonParallelizable]
-			// work is exclusive against all other running test bodies (not just provider lanes).
-			if (strategy == ParallelExecutionStrategy.NonParallel)
+			// [NonParallelizable] work runs on the globally-exclusive lane. Detected via the
+			// ParallelScope.None property rather than ExecutionStrategy: a method-level mark
+			// yields strategy Direct (the work item's TypeInfo is null, so NUnit returns Direct
+			// before testing the None flag), yet the suite still carries the None scope.
+			if (IsNonParallel(work))
 			{
 				_exclusiveLane.Enqueue(work);
+				return;
+			}
+
+			// Composites (assembly / namespace / fixture suites) run no test body of their own;
+			// they only dispatch children (which come back to us individually), so they go to the
+			// original dispatcher, keeping NUnit's completion / shift machinery intact.
+			if (work is CompositeWorkItem)
+			{
+				_original.Dispatch(work);
 				return;
 			}
 
@@ -103,6 +107,18 @@ namespace Tests
 			// Provider-less leaf, CreateDatabase, Direct / SingleThreaded content: run on the
 			// calling thread under the read gate so it is excluded by the exclusive lane.
 			RunGated(work);
+		}
+
+		// True for [NonParallelizable] work. Checked via the ParallelScope.None property because a
+		// method-level mark produces ExecutionStrategy.Direct (the work item's TypeInfo is null,
+		// short-circuiting NUnit's strategy computation before the None flag is examined).
+		static bool IsNonParallel(WorkItem work)
+		{
+			if (work.ExecutionStrategy == ParallelExecutionStrategy.NonParallel)
+				return true;
+
+			return work.Test.Properties.Get(PropertyNames.ParallelScope) is ParallelScope scope
+				&& (scope & ParallelScope.None) != 0;
 		}
 
 		// Runs a leaf body under the read gate on the current thread, unless we are already inside
