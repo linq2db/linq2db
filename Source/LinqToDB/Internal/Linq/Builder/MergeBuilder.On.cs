@@ -1,9 +1,8 @@
-﻿using System;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using System.Reflection;
 
 using LinqToDB.Internal.Expressions;
-using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Mapping;
 
 using static LinqToDB.Internal.Reflection.Methods.LinqToDB.Merge;
 
@@ -74,13 +73,9 @@ namespace LinqToDB.Internal.Linq.Builder
 						if (!column.IsPrimaryKey)
 							continue;
 
-						var member = targetLambdaType.GetMemberEx(column.MemberInfo);
-						if (member == null)
-							throw new InvalidOperationException($"Member '{column.MemberInfo.Name}' is not defined in '{pTarget.Name}'");
-
 						var expr = Expression.Equal(
-							Expression.MakeMemberAccess(pTarget, member),
-							Expression.MakeMemberAccess(pSource, member));
+							column.GetMemberAccessExpression(pTarget),
+							column.GetMemberAccessExpression(pSource));
 						ex = ex != null ? Expression.AndAlso(ex, expr) : expr;
 					}
 

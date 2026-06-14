@@ -72,6 +72,7 @@ dotnet test <project> --filter "<testPattern>" -c <config>
 ```
 
 Notes:
+- **Live progress heartbeat.** When `LINQ2DB_TEST_PROGRESS` is set, the test assembly writes a JSON heartbeat to `.build/.claude/test-progress.<tfm>.<pid>.json` during the run (see [Tests/Base/TestProgressReporter.cs](../../Tests/Base/TestProgressReporter.cs)). Don't set it inline — it's toggled session-wide by the `/test-progress` skill, so the plain `dotnet test` form above is correct whether the trace is on or off.
 - The four EFCore projects each have a single TFM, so `-f <tfm>` is redundant for them. Include `-f <tfm>` only for `Tests/Linq/Tests.csproj` (multi-TFM).
 - `--logger "console;verbosity=detailed"` when `verbosity: "detailed"`.
 - Don't pipe output to `head`/`tail` — read the whole log. Per `testing.md`: NUnit and `dotnet test` interleave relevant info across the log; setup exceptions can come well before the assertion, and stack traces may be truncated if you skim.
