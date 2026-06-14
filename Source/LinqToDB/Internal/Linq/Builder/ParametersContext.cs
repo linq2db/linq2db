@@ -198,7 +198,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					var ed = ms.GetEntityDescriptor(inst.Type);
 					foreach (var c in ed.Columns)
 					{
-						if (c.MemberInfo.IsDynamicColumnProperty && c.MemberName == me.Member.Name)
+						if (c.MemberInfo.IsDynamicColumnProperty && string.Equals(c.MemberName, me.Member.Name, StringComparison.Ordinal))
 							return c.MemberAccessor.GetGetterExpression(inst);
 					}
 				}

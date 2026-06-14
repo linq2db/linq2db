@@ -128,13 +128,15 @@ namespace LinqToDB.Internal.Linq.Builder
 			return Expression.Lambda(body, tParm, sParm);
 		}
 
+		static readonly char[] _pathSeparators = ['.'];
+
 		/// <summary>
 		/// Member-name path split on '.', dropping empty segments so a storage-style leading-dot
 		/// <c>MemberName</c> (e.g. <c>".Building"</c>) collapses to a single root-level segment — the
 		/// flat behaviour it had before nested grouping.
 		/// </summary>
 		static string[] SplitMemberPath(string memberName)
-			=> memberName.Split(new[] { '.' }, StringSplitOptions.RemoveEmptyEntries);
+			=> memberName.Split(_pathSeparators, StringSplitOptions.RemoveEmptyEntries);
 
 		/// <summary>
 		/// Build the member-binding list for a <see cref="SqlGenericConstructorExpression"/> from the
@@ -152,8 +154,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			foreach (var grp in items.GroupBy(i => i.Path[depth]))
 			{
-				foreach (var item in grp.Where(i => i.Path.Length == depth + 1))
-					bindings.Add(Expression.Bind(item.Cd.MemberInfo, item.Value));
+				foreach (var (_, cd, value) in grp.Where(i => i.Path.Length == depth + 1))
+					bindings.Add(Expression.Bind(cd.MemberInfo, value));
 
 				var deeper = grp.Where(i => i.Path.Length > depth + 1).ToList();
 				if (deeper.Count > 0)
