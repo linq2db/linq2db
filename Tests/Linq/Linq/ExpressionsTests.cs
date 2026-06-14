@@ -1116,7 +1116,7 @@ namespace Tests.Linq
 
 		#region Regression: query comparison
 		[YdbCteAsSource]
-		[Test(Description = "Tests regression introduced in 3.5.2")]
+		[Test(Description = "Tests regression introduced in 3.5.2"), NonParallelizable]
 		public void ComparisonTest1([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context, [Values(1, 2)] int iteration)
 		{
 			using var db = GetDataContext(context);

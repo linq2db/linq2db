@@ -44,7 +44,7 @@ namespace Tests.UserTests
 			_ = result.ToSqlQuery().Sql;
 		}
 
-		[Test]
+		[Test, NonParallelizable]
 		public void TestLinqToDBComplexQueryCache([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -85,7 +85,7 @@ namespace Tests.UserTests
 			result1.GetCacheMissCount().ShouldBe(cacheMiss);
 		}
 
-		[Test]
+		[Test, NonParallelizable]
 		public void TestLinqToDBComplexQueryCacheWithExposing([DataSources] string context)
 		{
 			using var db = GetDataContext(context);

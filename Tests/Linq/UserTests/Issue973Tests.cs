@@ -112,7 +112,7 @@ namespace Tests.UserTests
 				GetParents(db, values2));
 		}
 
-		[Test]
+		[Test, NonParallelizable]
 		public void TestCache([DataSources] string context)
 		{
 			using var db = GetDataContext(context);

@@ -51,7 +51,7 @@ namespace Tests.Linq
 				(from p in db.Parent select new Parent { ParentID = p.Value1 ?? p.ParentID % 2, Value1 = p.Value1 }).Distinct());
 		}
 
-		[Test]
+		[Test, NonParallelizable]
 		public void Distinct5([DataSources] string context, [Values(2, 3)] int id, [Values(0, 1)] int iteration)
 		{
 			using var db = GetDataContext(context);
@@ -69,7 +69,7 @@ namespace Tests.Linq
 			query2.GetCacheMissCount().ShouldBe(cacheMissCount);
 		}
 
-		[Test]
+		[Test, NonParallelizable]
 		public void Distinct6([DataSources] string context, [Values(2, 3)] int id, [Values(0, 1)] int iteration)
 		{
 			using var db = GetDataContext(context);

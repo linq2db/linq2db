@@ -234,7 +234,7 @@ namespace Tests.Linq
 		}
 
 		[ActiveIssue]
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266"), NonParallelizable]
 		public void TestExtensionCollectionParameterSameQuery([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -271,7 +271,7 @@ namespace Tests.Linq
 		}
 
 		[ActiveIssue]
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266"), NonParallelizable]
 		public void TestExtensionCollectionParameterEqualQuery([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -357,7 +357,7 @@ namespace Tests.Linq
 		[Sql.Extension("{field} IN (select * from {values})", IsPredicate = true, ServerSideOnly = true)]
 		private static bool InExtStruct<T>([ExprParameter] T field, [ExprParameter] IntArrayStruct values) where T : struct, IEquatable<int> => throw new NotImplementedException();
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266"), NonParallelizable]
 		public void Issue4266Test_Class([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var ms = new MappingSchema();
@@ -396,7 +396,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266"), NonParallelizable]
 		public void Issue4266Test_Struct([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var ms = new MappingSchema();

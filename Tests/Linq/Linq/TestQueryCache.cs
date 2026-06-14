@@ -164,7 +164,7 @@ namespace Tests.Linq
 			return ms;
 		}
 
-		[Test]
+		[Test, NonParallelizable]
 		public void TestSqlQueryDepended([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);

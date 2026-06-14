@@ -16,7 +16,7 @@ namespace Tests.Linq
 	[TestFixture]
 	public partial class EnumerableSourceTests : TestBase
 	{
-		[Test]
+		[Test, NonParallelizable]
 		public void ApplyJoinArray(
 			[IncludeDataSources(
 				TestProvName.AllSqlServer2008Plus,
@@ -53,7 +53,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
+		[Test, NonParallelizable]
 		public void InnerJoinArray(
 			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
 		{
@@ -79,7 +79,7 @@ namespace Tests.Linq
 			AreEqual(expected, result);
 		}
 
-		[Test]
+		[Test, NonParallelizable]
 		public void InnerJoinArray2(
 			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
 		{
@@ -105,7 +105,7 @@ namespace Tests.Linq
 			AreEqual(expected, result);
 		}
 
-		[Test]
+		[Test, NonParallelizable]
 		public void InnerJoinArray3(
 			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
 		{
@@ -138,7 +138,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
+		[Test, NonParallelizable]
 		public void InnerJoinArray4(
 			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
 		{
@@ -172,7 +172,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
+		[Test, NonParallelizable]
 		public void InnerJoinArray5(
 			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
 		{
@@ -202,7 +202,7 @@ namespace Tests.Linq
 			AreEqual(expected, result);
 		}
 
-		[Test]
+		[Test, NonParallelizable]
 		public void InnerJoinArray6(
 			[DataSources(TestProvName.AllAccess, TestProvName.AllPostgreSQL9)] string context, [Values(1, 2)] int iteration)
 		{
@@ -227,7 +227,7 @@ namespace Tests.Linq
 			AreEqual(expected, result);
 		}
 
-		[Test]
+		[Test, NonParallelizable]
 		public void InnerJoinArray6Postgres([IncludeDataSources(TestProvName.AllPostgreSQL9, TestProvName.AllClickHouse)] string context, [Values(1, 2)] int iteration)
 		{
 			using var db = GetDataContext(context);
@@ -251,7 +251,7 @@ namespace Tests.Linq
 			AreEqual(expected, result);
 		}
 
-		[Test]
+		[Test, NonParallelizable]
 		public void ApplyJoinAnonymousClassArray(
 			[IncludeDataSources(
 				TestProvName.AllSqlServer2008Plus,
@@ -288,7 +288,7 @@ namespace Tests.Linq
 			AreEqual(expected, result);
 		}
 
-		[Test]
+		[Test, NonParallelizable]
 		public void ApplyJoinAnonymousClassArray2(
 			[IncludeDataSources(
 				TestProvName.AllSqlServer2008Plus,
@@ -325,7 +325,7 @@ namespace Tests.Linq
 			AreEqual(expected, result);
 		}
 
-		[Test]
+		[Test, NonParallelizable]
 		public void ApplyJoinClassArray(
 			[IncludeDataSources(
 				TestProvName.AllSqlServer2008Plus,
@@ -362,7 +362,7 @@ namespace Tests.Linq
 			AreEqual(expected, result);
 		}
 
-		[Test]
+		[Test, NonParallelizable]
 		public void OuterApplyJoinClassArray(
 			[IncludeDataSources(
 				TestProvName.AllSqlServer2008Plus,
@@ -400,7 +400,7 @@ namespace Tests.Linq
 			AreEqual(expected, result);
 		}
 
-		[Test]
+		[Test, NonParallelizable]
 		public void InnerJoinClassArray(
 			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
 		{
@@ -427,7 +427,7 @@ namespace Tests.Linq
 			AreEqual(expected, result);
 		}
 
-		[Test]
+		[Test, NonParallelizable]
 		public void InnerJoinAnonymousClassRecords(
 			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
 		{
@@ -454,7 +454,7 @@ namespace Tests.Linq
 			AreEqual(expected, result);
 		}
 
-		[Test]
+		[Test, NonParallelizable]
 		public void InnerJoinClassRecords(
 			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
 		{
@@ -484,7 +484,7 @@ namespace Tests.Linq
 			AreEqual(expected, result);
 		}
 
-		[Test]
+		[Test, NonParallelizable]
 		public void InnerJoinClassRecordsCache(
 			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context,
 			[Values(1, 2)] int iteration)
@@ -528,7 +528,7 @@ namespace Tests.Linq
 			result2.Count.ShouldNotBe(result1.Count);
 		}
 
-		[Test]
+		[Test, NonParallelizable]
 		public void Projection(
 			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context,
 			[Values(1, 2)] int iteration)
@@ -548,7 +548,7 @@ namespace Tests.Linq
 				db.Person.GetCacheMissCount().ShouldBe(cacheMiss);
 		}
 
-		[Test]
+		[Test, NonParallelizable]
 		public void NestingProperties(
 			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context,
 			[Values(1, 2)]                                                                    int    iteration)
@@ -636,7 +636,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
+		[Test, NonParallelizable]
 		public void InsertTest([DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
 		{
 			using var db = GetDataContext(context);
@@ -666,7 +666,7 @@ namespace Tests.Linq
 				table.GetCacheMissCount().ShouldBe(cacheMiss);
 		}
 
-		[Test]
+		[Test, NonParallelizable]
 		public void UpdateTest(
 			[DataSources(
 				TestProvName.AllAccess,
@@ -708,7 +708,7 @@ namespace Tests.Linq
 		}
 
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
-		[Test]
+		[Test, NonParallelizable]
 		public void DeleteTest(
 			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllSybase, TestProvName.AllInformix, TestProvName.AllClickHouse)] string context,
 			[Values(1, 2)] int iteration)
@@ -740,7 +740,7 @@ namespace Tests.Linq
 				table.GetCacheMissCount().ShouldBe(cacheMiss);
 		}
 
-		[Test]
+		[Test, NonParallelizable]
 		public void CTETest([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(1, 2)] int iteration)
 		{
 			var records = new TableToInsert[]
@@ -766,7 +766,7 @@ namespace Tests.Linq
 				table.GetCacheMissCount().ShouldBe(cacheMiss);
 		}
 
-		[Test]
+		[Test, NonParallelizable]
 		public void EmptyValues([DataSources(TestProvName.AllClickHouse, TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllSybase, TestProvName.AllSybase, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
 		{
 			var records = Array.Empty<TableToInsert>();
@@ -805,7 +805,7 @@ namespace Tests.Linq
 		}
 
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
-		[Test]
+		[Test, NonParallelizable]
 		public void SubQuery([DataSources(TestProvName.AllClickHouse, TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllSybase, TestProvName.AllSybase, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
 		{
 			var records = new TableToInsert[]
@@ -831,7 +831,7 @@ namespace Tests.Linq
 				table.GetCacheMissCount().ShouldBe(cacheMiss);
 		}
 
-		[Test]
+		[Test, NonParallelizable]
 		public void EmptySubQuery([DataSources(TestProvName.AllClickHouse, TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllSybase, TestProvName.AllSybase, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
 		{
 			var records = Array.Empty<TableToInsert>();
@@ -852,7 +852,7 @@ namespace Tests.Linq
 		}
 
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
-		[Test]
+		[Test, NonParallelizable]
 		public void StringSubQuery(
 			[DataSources(
 				TestProvName.AllAccess,

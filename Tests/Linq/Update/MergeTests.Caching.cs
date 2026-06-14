@@ -11,7 +11,7 @@ namespace Tests.xUpdate
 	// tests for empty enumerable source
 	public partial class MergeTests
 	{
-		[Test]
+		[Test, NonParallelizable]
 		public void EnumerableSourceQueryCaching([MergeDataContextSource] string context)
 		{
 			using (var db = GetDataContext(context))

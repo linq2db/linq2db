@@ -1008,7 +1008,7 @@ namespace Tests.xUpdate
 			Assert.That(db.LastQuery!.Count(_ => _ == GetParameterToken(context)), Is.EqualTo(6));
 		}
 
-		[Test]
+		[Test, NonParallelizable]
 		public void MergeSubquery([MergeDataContextSource(false, TestProvName.AllOracle, TestProvName.AllFirebird, TestProvName.AllSybase)] string context, [Values(1, 2)] int iteration)
 		{
 			using var db  = GetDataContext(context);

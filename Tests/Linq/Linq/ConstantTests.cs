@@ -140,7 +140,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[Test]
+		[Test, NonParallelizable]
 		public void static_readonly_access_readonly_members ([DataSources] string context)
 		{
 			using var db    = GetDataContext(context);
@@ -166,7 +166,7 @@ namespace Tests.Linq
 		}
 
 #if SUPPORTS_READONLY
-		[Test]
+		[Test, NonParallelizable]
 		public void static_readonly_field_readonly_struct([DataSources] string context)
 		{
 			using var db    = GetDataContext(context);
@@ -191,7 +191,7 @@ namespace Tests.Linq
 			query2.GetCacheMissCount().ShouldBe(cacheMissCount);
 		}
 
-		[Test]
+		[Test, NonParallelizable]
 		public void static_field_readonly_struct([DataSources] string context)
 		{
 			using var db    = GetDataContext(context);
@@ -217,7 +217,7 @@ namespace Tests.Linq
 		}
 #endif
 
-		[Test]
+		[Test, NonParallelizable]
 		public void static_field_readonly_members([DataSources] string context)
 		{
 			using var db    = GetDataContext(context);
@@ -242,7 +242,7 @@ namespace Tests.Linq
 			query2.GetCacheMissCount().ShouldBe(cacheMissCount);
 		}
 
-		[Test]
+		[Test, NonParallelizable]
 		public void instance_readonly_members([DataSources] string context)
 		{
 			using var db    = GetDataContext(context);

@@ -227,7 +227,7 @@ namespace Tests.Linq
 			Assert.That(projection, Is.EqualTo(expected));
 		}
 
-		[Test]
+		[Test, NonParallelizable]
 		public void TestParameters([DataSources(ProviderName.DB2, TestProvName.AllSapHana)] string context, [Values(1, 2)] int iteration, [Values(14, 15)] int endId)
 		{
 			using var db = GetDataContext(context);
@@ -490,7 +490,7 @@ namespace Tests.Linq
 			public string Value { get; set; } = default!;
 		}
 
-		[Test]
+		[Test, NonParallelizable]
 		public void TestSplitStringParametrized(
 			[IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)]
 			string context, [Values(1, 2)] int iteration)
@@ -518,7 +518,7 @@ namespace Tests.Linq
 			query.GetSelectQuery().HasQueryParameter().ShouldBeTrue();
 		}
 
-		[Test]
+		[Test, NonParallelizable]
 		public void TestSplitStringParametrizedExplicitParameter(
 			[IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)]
 			string context, [Values(1, 2)] int iteration)
