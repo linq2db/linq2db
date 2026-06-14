@@ -98,10 +98,11 @@ PRs merged by the user (not the agent) have no draft comment and no wiki entry. 
 
 Applied only to **newly generated** content (the tool-owned in-progress version section); never rewrite existing released sections.
 
-- Component as `#### <Component>` (h4; LinqToDB first; others alphabetical; `LinqToDB CLI` last).
+- Component as `#### <Component>` (h4). **Ordering: all project (linq2db package) areas first, then database/provider areas alphabetically.** `LinqToDB` core first → other `LinqToDB *` packages → `LinqToDB CLI` → then DB/provider areas (Access, ClickHouse, Oracle, SQLite, Sybase ASE, …) alphabetically. Encoded in `release-notes-draft.ps1` `Get-ComponentRank` (project = 0/100/300, db = 1000).
+- **Component names must match how older releases name them — don't invent.** Established project-area headers: `LinqToDB`, `LinqToDB for EntityFramework` (NOT `LinqToDB.EntityFrameworkCore`), `LinqToDB LINQPad Driver` (NOT `LinqToDB.LINQPad`), `LinqToDB CLI`, `LinqToDB F# Support`. Before naming any component, grep the older `### Release` sections of `Releases-and-Roadmap.md` for the precedent.
 - Within a component, change-type sub-groups as `##### <type>` (h5 — visibly smaller than the component) in order **⚠ Breaking changes**, **Added**, **Improved**, **Fixed** (then Changed/Removed/Other). Breaking floats to the top.
 - Bullets: `- <description> ([#<pr>](<url>))`, sorted by PR number within a group.
-- Deep dives: `#### <heading>` (h4 spotlight) preceded by a `<!-- rn:deepdive:#<pr> -->` anchor, after the component groups.
+- Deep dives: `#### <heading>` (h4 spotlight) preceded by a `<!-- rn:deepdive:#<pr> -->` anchor, after the component groups. **The feature's summary bullet links to its deep-dive** with `See [details](#<heading-slug>) below.` appended to the bullet text (older-release convention, e.g. `See [details](#clickhouse) below`). The slug is the GitHub heading slug — lowercase, drop everything but `[a-z0-9 -]`, spaces→hyphens, consecutive separators **not** collapsed (`"NULLS FIRST / LAST ordering"` → `#nulls-first--last-ordering`); `release-notes-draft.ps1` `Build-VersionSection` emits it via `Get-GitHubAnchor`. **Wiki-only** — the anchor resolves on that page, so do **not** add the link to the PR draft comment. Verify after push: `curl -sL <wiki-url> | grep 'href="#<slug>"'`.
 - **Crediting external contributors:** use the contributor's **name** as the profile link text when it's known (e.g. `Thanks to [Tim Haasdyk](https://github.com/myieye)`), falling back to the `@handle` only when no name is available. The name comes from the PR/commit author (`gh pr view --json author` `.name`, or the commit `From:` line).
 
 ## Milestone consistency (companion)

@@ -281,15 +281,20 @@ function Resolve-MilestonePRs {
 
 # -- wiki section regeneration -----------------------------------------------
 
-$ComponentOrderHead = @('LinqToDB')        # always first
-$ComponentOrderTail = @('LinqToDB CLI','linq2db.cli')  # always last
 $ChangeTypeOrder = @('Breaking','Added','Improved','Fixed','Changed','Removed','Other')
 
+# Component grouping order: all project (linq2db package) areas sort before any
+# database / provider area. Within each band components sort alphabetically.
+#   0   = LinqToDB core (always first)
+#   100 = other linq2db packages (EntityFrameworkCore, LINQPad, ...)
+#   300 = linq2db CLI (last project area)
+#   1000= database / provider areas (Access, ClickHouse, Oracle, SQLite, ...)
 function Get-ComponentRank {
     param([string]$Name)
-    for ($i = 0; $i -lt $ComponentOrderHead.Count; $i++) { if ($Name -ieq $ComponentOrderHead[$i]) { return $i } }
-    for ($i = 0; $i -lt $ComponentOrderTail.Count; $i++) { if ($Name -ieq $ComponentOrderTail[$i]) { return 9000 + $i } }
-    return 1000  # middle: sorted alphabetically among themselves
+    if ($Name -ieq 'LinqToDB') { return 0 }
+    if ($Name -ieq 'LinqToDB CLI' -or $Name -ieq 'linq2db.cli') { return 300 }
+    if ($Name -imatch '^(LinqToDB|linq2db)') { return 100 }
+    return 1000
 }
 
 function Get-ChangeTypeRank {
@@ -298,12 +303,29 @@ function Get-ChangeTypeRank {
     return $ChangeTypeOrder.Count
 }
 
+# GitHub-wiki heading slug (matches github-slugger): lowercase, drop everything
+# that isn't a letter / digit / space / hyphen, then spaces -> hyphens (consecutive
+# separators are NOT collapsed, e.g. "A / B" -> "a--b").
+function Get-GitHubAnchor {
+    param([string]$Heading)
+    $s = ([string]$Heading).ToLowerInvariant()
+    $s = [regex]::Replace($s, '[^\p{L}\p{Nd} -]', '')
+    return ($s -replace ' ', '-')
+}
+
 # Build the markdown for a version section from prBullets + deepDives.
 function Build-VersionSection {
     param([string]$Ver, $PrBullets, $DeepDives)
     $lines = [System.Collections.Generic.List[string]]::new()
     [void]$lines.Add("### Release $Ver")
     [void]$lines.Add('')
+
+    # map PR -> deep-dive anchor, so a bullet whose PR has a deep-dive gets a
+    # "See [details](#anchor) below" link (matches the older-release convention).
+    $deepDiveAnchorByPr = @{}
+    foreach ($d in @($DeepDives)) {
+        $deepDiveAnchorByPr[[int]$d.pr] = (Get-GitHubAnchor $d.heading)
+    }
 
     # group bullets by component, then change type
     $byComp = @{}
@@ -329,6 +351,9 @@ function Build-VersionSection {
             foreach ($b in $bullets) {
                 $ref = if ($b.url) { "[#$($b.pr)]($($b.url))" } else { "#$($b.pr)" }
                 $txt = ([string]$b.text).Trim()
+                if ($deepDiveAnchorByPr.ContainsKey([int]$b.pr)) {
+                    $txt = $txt.TrimEnd() + " See [details](#$($deepDiveAnchorByPr[[int]$b.pr])) below."
+                }
                 [void]$lines.Add("- $txt ($ref)")
             }
             [void]$lines.Add('')
