@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 using LinqToDB.Internal.Cache;
 using LinqToDB.Internal.Infrastructure;
+using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
@@ -141,7 +142,15 @@ namespace LinqToDB.Internal.Linq
 
 				// Set the query.
 				//
-				if (ei.SqlProviderFlags.IsInsertOrUpdateSupported)
+				// Providers whose native single-statement upsert applies one VALUES list to both branches
+				// (SAP HANA UPSERT … WITH PRIMARY KEY) cannot honor divergent Insert/Update column sets,
+				// which InsertOrReplace produces routinely for entities with SkipOnInsert / SkipOnUpdate
+				// column metadata. Detect divergence and fall back to the UPDATE→INSERT emulation in that case.
+				var needsAlignedBranchesEmulation =
+					ei.SqlProviderFlags.IsInsertOrUpdateRequiresAlignedBranches
+					&& UpsertBuilder.HasDivergentInsertOrUpdateBranches(insertOrUpdateStatement);
+
+				if (ei.SqlProviderFlags.IsInsertOrUpdateSupported && !needsAlignedBranchesEmulation)
 					SetNonQueryQuery(ei);
 				else
 					MakeAlternativeInsertOrUpdate(dataContext.MappingSchema, ei);
@@ -275,7 +284,43 @@ namespace LinqToDB.Internal.Linq
 			foreach (var key in keys)
 				wsc.AddEqual(key.Column, key.Expression!, CompareNulls.LikeSql);
 
-			// TODO! looks not working solution
+			// Special case: Upsert.Update.When on a provider that supports neither MERGE nor ON CONFLICT.
+			// The classic UPDATE-then-IF-ROWCOUNT-ZERO-INSERT shape can't tell "update rejected by predicate"
+			// apart from "row missing" — falling through to INSERT would violate the unique key. We route
+			// through a 3-query orchestration: existence-check → conditional UPDATE (with keys AND when) → INSERT.
+			if (firstStatement.Update.Items.Count > 0 && firstStatement.UpdateWhere is { Predicates.Count: > 0 })
+			{
+				// Q0: SELECT 1 WHERE keys (existence, keys only — no When).
+				var existsSelect = firstStatement.SelectQuery.Clone();
+				existsSelect.Select.Columns.Clear();
+				existsSelect.Select.Columns.Add(new SqlColumn(existsSelect, new SqlExpression(mappingSchema.GetDbDataType(typeof(int)), "1")));
+				query.Queries[0].Statement = new SqlSelectStatement(existsSelect);
+
+				// Q1: UPDATE WHERE keys AND when.
+				var updateSelect = firstStatement.SelectQuery; // already has keys in WHERE
+				foreach (var predicate in firstStatement.UpdateWhere.Predicates)
+					updateSelect.Where.EnsureConjunction().Predicates.Add(predicate);
+
+				query.Queries.Add(new QueryInfo
+				{
+					Statement          = new SqlUpdateStatement(updateSelect)
+					{
+						Update             = firstStatement.Update,
+						Tag                = firstStatement.Tag,
+						SqlQueryExtensions = firstStatement.SqlQueryExtensions,
+					},
+				});
+
+				// Q2 is already set up above (insertStatement at Queries[1] — but we need Q2 to be INSERT).
+				// Reorder: Queries[0]=existsSelect, Queries[1]=UPDATE (just added), Queries[2]=INSERT.
+				// Currently Queries = [existsSelect, INSERT, UPDATE]. Swap Queries[1] and Queries[2].
+				(query.Queries[1], query.Queries[2]) = (query.Queries[2], query.Queries[1]);
+
+				query.IsFinalized = false;
+				SetIfExistsUpdateElseInsert(query);
+				return;
+			}
+
 			if (firstStatement.Update.Items.Count > 0)
 			{
 				query.Queries[0].Statement = new SqlUpdateStatement(firstStatement.SelectQuery)
@@ -284,7 +329,7 @@ namespace LinqToDB.Internal.Linq
 					Tag                = firstStatement.Tag,
 					SqlQueryExtensions = firstStatement.SqlQueryExtensions,
 				};
-				query.IsFinalized = false; 
+				query.IsFinalized = false;
 				SetNonQueryQuery2(query);
 			}
 			else

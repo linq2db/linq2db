@@ -636,9 +636,9 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
-		public void GroupJoinAny1([DataSources(TestProvName.AllClickHouse)] string context)
+		public void GroupJoinAny1([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -650,9 +650,9 @@ namespace Tests.Linq
 				select new { p.ParentID, n = t.Any() });
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
-		public void GroupJoinAny2([DataSources(TestProvName.AllClickHouse)] string context)
+		public void GroupJoinAny2([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -664,9 +664,9 @@ namespace Tests.Linq
 				select new { p.ParentID, n = t.Select(t1 => t1.ChildID > 0).Any() });
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
-		public void GroupJoinAny3([DataSources(TestProvName.AllClickHouse)] string context)
+		public void GroupJoinAny3([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -678,9 +678,9 @@ namespace Tests.Linq
 				select new { p.ParentID, n = c.Any() });
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
-		public void GroupJoinAny4([DataSources(TestProvName.AllClickHouse)] string context)
+		public void GroupJoinAny4([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -690,9 +690,9 @@ namespace Tests.Linq
 				select new { p.ParentID, n = (from c in db.Child where p.ParentID == c.ParentID select c).Any() });
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
-		public void GroupJoinAny5([DataSources(TestProvName.AllClickHouse)] string context)
+		public void GroupJoinAny5([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(

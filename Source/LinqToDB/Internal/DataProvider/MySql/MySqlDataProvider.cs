@@ -9,6 +9,7 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider.MySql;
 using LinqToDB.Internal.DataProvider.MySql.Translation;
 using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
@@ -59,6 +60,18 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 			SqlProviderFlags.IsUpdateTakeSupported = true;
 			SqlProviderFlags.IsTakeWithInAllAnySomeSubquerySupported = false;
+
+			// MySQL/MariaDB emit InsertOrUpdate as INSERT ... ON DUPLICATE KEY UPDATE, which
+			// has no WHERE clause on the UPDATE branch. Route Upsert.Update.When through
+			// the alternative UPDATE→INSERT emulation instead.
+			SqlProviderFlags.IsInsertOrUpdateWithPredicateSupported  = false;
+
+			// MySQL / MariaDB have no MERGE statement. Upsert configurations that require MERGE
+			// lowering (bulk source, non-PK match, Insert.When, SkipInsert/SkipUpdate) surface
+			// a descriptive error via Error_Upsert_MergeLowering_NotSupported.
+			SqlProviderFlags.IsUpsertWithMergeLoweringSupported      = false;
+			// MySQL/MariaDB sort NULL as the smallest value (ascending => NULLS FIRST, descending => NULLS LAST).
+			SqlProviderFlags.DefaultNullsOrdering = NullsDefaultOrdering.Smallest;
 
 			_sqlOptimizer = new MySqlSqlOptimizer(SqlProviderFlags);
 

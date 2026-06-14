@@ -9,6 +9,7 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider.Firebird;
 using LinqToDB.Internal.DataProvider.Firebird.Translation;
 using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
@@ -32,6 +33,8 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			SqlProviderFlags.IsIdentityParameterRequired       = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
+			SqlProviderFlags.IsNullsOrderingSupported          = true;
+			SqlProviderFlags.DefaultNullsOrdering              = NullsDefaultOrdering.Smallest; // Firebird 2.0+ sorts NULL as the smallest value
 			SqlProviderFlags.IsUnionAllOrderBySupported        = true;
 			SqlProviderFlags.IsDistinctSetOperationsSupported  = false;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
@@ -50,6 +53,14 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			SqlProviderFlags.IsUpdateTakeSupported     = true;
 			SqlProviderFlags.IsUpdateSkipTakeSupported = true;
 			SqlProviderFlags.IsDistinctFromSupported   = true;
+
+			// Firebird 2.5 MERGE has no WHEN MATCHED [AND <cond>] form (added in Firebird 3),
+			// and no UPDATE SET ... WHERE form either. For single-item Upsert.Update.When we must
+			// route through the 3-query alt-path (SetIfExistsUpdateElseInsert); for Upsert
+			// configurations that require MERGE lowering with a predicate we surface a descriptive
+			// Error_Upsert_MergeWithPredicate_NotSupported instead of emitting invalid SQL.
+			SqlProviderFlags.IsInsertOrUpdateWithPredicateSupported = Version > FirebirdVersion.v25;
+			SqlProviderFlags.IsUpsertMergeWithPredicateSupported    = Version > FirebirdVersion.v25;
 
 			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel = 2;
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 
 using LinqToDB.Internal.Common;
@@ -40,7 +41,7 @@ namespace LinqToDB.Internal.Expressions
 		public override ExpressionType NodeType => ExpressionType.Extension;
 		public override Type           Type     => ContextType;
 
-		public bool Equals(SqlQueryRootExpression? other)
+		public bool Equals([NotNullWhen(true)] SqlQueryRootExpression? other)
 		{
 			if (ReferenceEquals(null, other))
 			{
@@ -57,7 +58,7 @@ namespace LinqToDB.Internal.Expressions
 			       && ContextType == other.ContextType;
 		}
 
-		public override bool Equals(object? obj)
+		public override bool Equals([NotNullWhen(true)] object? obj)
 		{
 			if (ReferenceEquals(null, obj))
 			{

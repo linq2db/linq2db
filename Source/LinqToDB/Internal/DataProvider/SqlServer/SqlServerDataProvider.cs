@@ -18,6 +18,7 @@ using LinqToDB.Internal.DataProvider.SqlServer.Translation;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
@@ -75,6 +76,15 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			SqlProviderFlags.IsUpdateTakeSupported              = true;
 			SqlProviderFlags.IsDistinctFromSupported            = Version >= SqlServerVersion.v2022;
 			SqlProviderFlags.SupportsBooleanType                = false;
+			SqlProviderFlags.DefaultNullsOrdering               = NullsDefaultOrdering.Smallest; // SQL Server sorts NULL as the smallest value
+
+			// SqlServer 2005 emits InsertOrUpdate as UPDATE + IF @@ROWCOUNT=0 INSERT (single statement);
+			// it can't carry an extra predicate on the UPDATE branch. 2008+ go through MERGE which can.
+			// SqlServer 2005 also predates MERGE (introduced in 2008), so synthesized MERGE lowering
+			// for bulk/SkipInsert/InsertWhen/non-PK-match Upsert isn't an option.
+			SqlProviderFlags.IsInsertOrUpdateWithPredicateSupported = Version > SqlServerVersion.v2005;
+			SqlProviderFlags.IsUpsertWithMergeLoweringSupported     = Version > SqlServerVersion.v2005;
+
 			// AsQueryable.UseTempTable — SQL Server's #temp tables are session-scoped, created
 			// in tempdb, and require no DDL privilege on the user database.
 			SqlProviderFlags.IsRuntimeTempTableCreationSupported = true;

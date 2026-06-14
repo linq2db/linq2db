@@ -29,6 +29,38 @@
 
 		public const string Error_WindowFunctionsInSearchCondition = "Window functions cannot be used in search condition.";
 
+		public const string Error_Upsert_MergeLowering_NotSupported =
+			"Upsert configuration requires MERGE lowering (bulk source, non-PK match, conditional Insert, or SkipInsert), "
+			+ "but the current provider does not support the two-branch MERGE shape. "
+			+ "Reshape the Upsert call to a single-entity PK match without SkipInsert / Insert.When, "
+			+ "or target a MERGE-capable provider.";
+
+		public const string Error_Upsert_MergeWithPredicate_NotSupported =
+			"Upsert configuration attaches a predicate to an Insert.When / Update.When branch routed through MERGE lowering, "
+			+ "but the current provider's MERGE dialect has no WHEN [NOT] MATCHED AND <cond> or UPDATE … WHERE <cond> form. "
+			+ "Remove the .When predicate, or target a provider that supports conditional MERGE branches.";
+
+		public const string Error_Internal_UpdateInsertEmitter_CannotEmitUpdatePredicate =
+			"Internal error: BuildInsertOrUpdateQueryAsUpdateInsert cannot emit an UPDATE predicate. "
+			+ "Providers with IsInsertOrUpdateWithPredicateSupported=false must route Upsert.Update.When "
+			+ "through SetIfExistsUpdateElseInsert (3-query orchestration).";
+
+		public const string Error_Upsert_SkipInsert_With_Insert =
+			"Upsert configuration is contradictory: SkipInsert() cannot be combined with Insert(...).";
+
+		public const string Error_Upsert_SkipUpdate_With_Update =
+			"Upsert configuration is contradictory: SkipUpdate() cannot be combined with Update(...).";
+
+		public const string Error_Upsert_InsertBranch_DoNothing_With_Ops =
+			"Insert branch configuration is contradictory: DoNothing() cannot be combined with Set/Ignore/When.";
+
+		public const string Error_Upsert_UpdateBranch_DoNothing_With_Ops =
+			"Update branch configuration is contradictory: DoNothing() cannot be combined with Set/Ignore/When.";
+
+		public const string Error_Upsert_EmulationDisallowed =
+			"Upsert cannot be expressed natively for this provider / configuration and would fall back to an emulated UPDATE+INSERT sequence. "
+			+ "LinqOptions.UpsertEmulationPolicy is set to Throw — change the provider, adjust the Upsert configuration, or set it to Allow to permit emulation.";
+
 		public const string Error_GroupGuard =
 							"""
 							You should explicitly specify selected fields for server-side GroupBy() call or add AsEnumerable() call before GroupBy() to perform client-side grouping.

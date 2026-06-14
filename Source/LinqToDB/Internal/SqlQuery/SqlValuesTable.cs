@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 
 using LinqToDB.Internal.SqlQuery.Visitors;
@@ -292,7 +293,7 @@ namespace LinqToDB.Internal.SqlQuery
 		#endregion
 
 		#region IEquatable
-		public override bool Equals(ISqlExpression? other) => throw new NotSupportedException();
+		public override bool Equals([NotNullWhen(true)] ISqlExpression? other) => throw new NotSupportedException();
 		#endregion
 
 		public void Modify(ISqlExpression? source)

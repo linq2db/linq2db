@@ -36,7 +36,6 @@ parameters:
 # GENERAL PROPERTIES
 # - name    (string, required)            : name of test matrix entry (unique, no spaces/dots)
 # - title   (string, required)            : test run name, added to display name for testrun
-# - extra   (string, optional)            : specify additional dotnet test arguments, e.g. "--arch x86"
 # - x86     (true/false string, optional) : windows-only, install dotnet sdk x86
 # - enabled (true/false string, required) : enables/disables test matrix entry completely for current run
 # - retry   (true/false string, optional) : specify that test run should retry on failue, use only for unstable runs like access and oracle
@@ -129,7 +128,6 @@ jobs:
           enable_fw_net90: true
           enable_fw_net100: true
           x86: true
-          extra: --arch x86
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]'))) }}:
@@ -148,7 +146,6 @@ jobs:
           enable_fw_net100: true
           x86: true
           retry: true # x86 provider also could crash with AV as x64, but less often, so we can just restart it
-          extra: --arch x86
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]'))) }}:
@@ -165,7 +162,6 @@ jobs:
           enable_fw_net80: true
           enable_fw_net90: true
           enable_fw_net100: true
-          extra: --arch x64
           retry: true # x64 provider could crash with AV
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
             enabled: true
@@ -806,7 +802,6 @@ jobs:
           enable_fw_net80: true
           enable_fw_net90: true
           enable_fw_net100: true
-          retry: true # 26/1/2024: temporary: some issues with debian image
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[db2.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[db2.all]'))) }}:
@@ -829,7 +824,6 @@ jobs:
           enable_fw_net80: true
           enable_fw_net90: true
           enable_fw_net100: true
-          retry: true # 26/1/2024: temporary: some issues with debian image
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[informix.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[informix.all]'))) }}:
@@ -911,7 +905,7 @@ jobs:
           enable_fw_net90: true
           enable_fw_net100: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[clickhouse.all]')) }}:
-            enabled: false
+            enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[clickhouse.all]'))) }}:
             enabled: false
 

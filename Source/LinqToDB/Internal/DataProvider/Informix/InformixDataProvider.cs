@@ -10,6 +10,7 @@ using LinqToDB.DataProvider.Informix;
 using LinqToDB.Internal.DataProvider.Informix.Translation;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
@@ -28,9 +29,14 @@ namespace LinqToDB.Internal.DataProvider.Informix
 		{
             SqlProviderFlags.IsSubQueryOrderBySupported        = false;
             SqlProviderFlags.IsUnionAllOrderBySupported        = true;
+            SqlProviderFlags.DefaultNullsOrdering              = NullsDefaultOrdering.Smallest; // Informix sorts NULL as the smallest value
 			SqlProviderFlags.IsParameterOrderDependent         = !Adapter.IsIDSProvider;
 			SqlProviderFlags.IsSubQueryTakeSupported           = false;
 			SqlProviderFlags.IsInsertOrUpdateSupported         = false;
+			// Informix MERGE has no WHEN [NOT] MATCHED AND <cond> clause and no UPDATE … WHERE inside
+			// MERGE — surface a descriptive Error_Upsert_MergeWithPredicate_NotSupported when an Upsert
+			// configuration routes Insert.When / Update.When through MERGE lowering.
+			SqlProviderFlags.IsUpsertMergeWithPredicateSupported = false;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
 			SqlProviderFlags.RowConstructorSupport             = RowFeature.Equality | RowFeature.In;

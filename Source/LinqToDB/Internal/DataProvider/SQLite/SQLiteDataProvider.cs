@@ -11,6 +11,7 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider.SQLite;
 using LinqToDB.Internal.DataProvider.SQLite.Translation;
 using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
@@ -43,6 +44,9 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			SqlProviderFlags.IsSkipSupportedIfTake             = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
+			// SQLite renders NULLS FIRST/LAST natively since 3.30 (2019); all currently shipped builds are newer.
+			SqlProviderFlags.IsNullsOrderingSupported          = true;
+			SqlProviderFlags.DefaultNullsOrdering              = NullsDefaultOrdering.Smallest; // SQLite sorts NULL as the smallest value
 			SqlProviderFlags.IsUnionAllOrderBySupported        = true;
 			SqlProviderFlags.IsDistinctFromSupported           = true; // since 3.39.0
 			SqlProviderFlags.SupportsPredicatesComparison      = true;
@@ -62,6 +66,10 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			//SqlProviderFlags.IsUpdateSkipTakeSupported = Provider == SQLiteProvider.System;
 
 			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel = null;
+
+			// SQLite has no MERGE statement. Upsert configurations that require MERGE lowering
+			// surface a descriptive error via Error_Upsert_MergeLowering_NotSupported.
+			SqlProviderFlags.IsUpsertWithMergeLoweringSupported = false;
 
 			// 3.15.0
 			SqlProviderFlags.RowConstructorSupport = RowFeature.Equality        | RowFeature.Comparisons | RowFeature.UpdateLiteral |

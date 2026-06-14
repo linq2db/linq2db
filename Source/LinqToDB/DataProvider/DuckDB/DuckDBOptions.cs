@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 using LinqToDB.Data;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider;
@@ -30,7 +32,7 @@ namespace LinqToDB.DataProvider.DuckDB
 
 		#region IEquatable implementation
 
-		public bool Equals(DuckDBOptions? other)
+		public bool Equals([NotNullWhen(true)] DuckDBOptions? other)
 		{
 			if (ReferenceEquals(null, other)) return false;
 			if (ReferenceEquals(this, other)) return true;

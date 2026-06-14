@@ -444,7 +444,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			using var visitor = _exposeVisitorPool.Allocate();
 
-			var result = visitor.Value.ExposeExpression(dataContext, optimizationContext, parameterValues, expression, false, optimizeConditions, compactBinary, isSingleConvert: false);
+			var result = visitor.Value.ExposeExpression(dataContext, optimizationContext, parameterValues, expression, optimizeConditions, compactBinary, isSingleConvert: false);
 
 			return result;
 		}

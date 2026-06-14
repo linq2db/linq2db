@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 using LinqToDB.Data;
 using LinqToDB.Internal.Common;
@@ -40,7 +41,7 @@ namespace LinqToDB.DataProvider.Informix
 
 		#region IEquatable implementation
 
-		public bool Equals(InformixOptions? other)
+		public bool Equals([NotNullWhen(true)] InformixOptions? other)
 		{
 			if (ReferenceEquals(null, other)) return false;
 			if (ReferenceEquals(this, other)) return true;
