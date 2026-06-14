@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Text;
+using System.Threading;
 
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
@@ -16,7 +17,7 @@ namespace Tests
 	/// without scraping console output.
 	/// <para>
 	/// Opt-in: the reporter is a no-op unless the <c>LINQ2DB_TEST_PROGRESS</c> environment variable is set. When set
-	/// to a flag value (<c>1</c>/<c>true</c>/<c>on</c>/<c>yes</c>) the file is written to
+	/// to a flag value (<c>1/true/on/yes</c>) the file is written to
 	/// <c>&lt;repoRoot&gt;/.build/.claude/test-progress.&lt;tfm&gt;.&lt;pid&gt;.json</c>; when set to a directory or
 	/// <c>*.json</c> path that path is used instead.
 	/// </para>
@@ -49,7 +50,9 @@ namespace Tests
 		const int MaxRecentFailures = 20;
 		const int WriteThrottleMs   = 1000;  // at most ~1 file write/sec for the common (passing) case
 
-		static readonly object                              _sync     = new();
+		static readonly char[] _pathSeparators = ['/', '\\'];
+
+		static readonly Lock                                _sync     = new();
 		static readonly Stopwatch                           _clock    = new();
 		static readonly List<(string Test, string Message)> _failures = new();
 
@@ -162,7 +165,11 @@ namespace Tests
 
 			try
 			{
+#if NET462
 				_pid        = Process.GetCurrentProcess().Id;
+#else
+				_pid        = Environment.ProcessId;
+#endif
 				_file       = ResolvePath(env!.Trim());
 				_startedUtc = DateTime.UtcNow;
 
@@ -192,7 +199,7 @@ namespace Tests
 					return Path.Combine(env, fileName);
 
 				if (env.EndsWith(".json", StringComparison.OrdinalIgnoreCase)
-					|| env.IndexOf('/') >= 0 || env.IndexOf('\\') >= 0)
+					|| env.IndexOfAny(_pathSeparators) >= 0)
 					return env;
 			}
 
