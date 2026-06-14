@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Expressions;
-using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Mapping;
 using LinqToDB.Internal.SqlQuery;
 
 using static LinqToDB.Internal.Reflection.Methods.LinqToDB.Merge;
@@ -57,14 +56,11 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					foreach (var field in sqlTable.Fields.Where(f => f.IsUpdatable).Except(keys))
 					{
-						var sourceMemberInfo = sourceRef.Type.GetMemberEx(field.ColumnDescriptor.MemberInfo);
-						if (sourceMemberInfo is null)
-							throw new InvalidOperationException($"Member '{field.ColumnDescriptor.MemberInfo}' not found in type '{sourceRef.Type}'.");
+						var sourceExpression = field.ColumnDescriptor.GetMemberAccessExpression(sourceRef);
+						var targetExpression = field.ColumnDescriptor.GetMemberAccessExpression(targetRef);
 
-						var sourceExpression = ExpressionExtensions.GetMemberGetter(sourceMemberInfo, sourceRef);
-						var targetExpression = ExpressionExtensions.GetMemberGetter(field.ColumnDescriptor.MemberInfo, targetRef);
-						var tgtExpr          = builder.ConvertToSql(mergeContext.TargetContext, targetExpression);
-						var srcExpr          = builder.ConvertToSql(mergeContext.SourceContext, sourceExpression);
+						var tgtExpr = builder.ConvertToSql(mergeContext.TargetContext, targetExpression);
+						var srcExpr = builder.ConvertToSql(mergeContext.SourceContext, sourceExpression);
 
 						operation.Items.Add(new SqlSetExpression(tgtExpr, srcExpr));
 					}

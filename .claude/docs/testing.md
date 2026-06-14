@@ -1,15 +1,17 @@
 # Running Tests
 
-Tests use **NUnit3** with **Shouldly** assertions (not NUnit Assert). Test targets: `net462`, `net8.0`, `net9.0`, `net10.0`. **Always use Debug configuration and prefer `net10.0`** — Release enables Roslyn analyzers and is much slower to build. The full test suite takes ~1 hour or more; avoid running it unless necessary.
+Tests use **NUnit3** with **Shouldly** assertions (not NUnit Assert), running on **Microsoft.Testing.Platform** (MTP) — selected via `global.json` — not VSTest. Test targets: `net462`, `net8.0`, `net9.0`, `net10.0`. **Always use Debug configuration and prefer `net10.0`** — Release enables Roslyn analyzers and is much slower to build. The full test suite takes ~1 hour or more; avoid running it unless necessary.
 
 **Don't prepend a `dotnet build`.** `dotnet test` builds the project automatically if binaries are stale; a standalone `dotnet build` right before `dotnet test` only adds waiting time. If a test run fails with compile errors, fix them and re-run `dotnet test` directly.
 
+Under MTP, `dotnet test` takes the project via `--project` (a solution/filter via `--solution`) — the bare `dotnet test <project>` form is rejected. Always pass `--settings .runsettings` so NUnit honors `AssemblySelectLimit`; otherwise a broad `--filter` can fall back to running the whole assembly.
+
 ```bash
-# Run a single test class or method via dotnet test
-dotnet test Tests/Linq/Tests.csproj --filter "FullyQualifiedName~ClassName.MethodName" -f net10.0
+# Run a single test class or method
+dotnet test --project Tests/Linq/Tests.csproj --filter "FullyQualifiedName~ClassName.MethodName" -f net10.0 --settings .runsettings
 
 # Run tests with the lightweight playground solution (faster load)
-dotnet test linq2db.playground.slnf
+dotnet test --solution linq2db.playground.slnf --settings .runsettings
 ```
 
 **Default to `Tests.Playground` for any iterative test run** — fresh tests, fix-verification on existing tests, ad-hoc repro. The full `Tests/Linq/Tests.csproj` build is ~3+ minutes; the playground project is ~30s. Two distinct shapes:
@@ -18,10 +20,42 @@ dotnet test linq2db.playground.slnf
 2. **Iterating on a real test in `Tests/Linq/`** — add `<Compile Include="..\Linq\<sub>\<File>.cs" Link="<File>.cs" />` to `Tests/Tests.Playground/Tests.Playground.csproj`. The link is local scratch and must **not** be committed (same rule). Use this shape when iterating on a test that already lives in `Tests/Linq/` (e.g. a regression test you just wrote alongside a fix) without paying the cost of the full `Tests/Linq/Tests.csproj` multi-TFM build.
 
 ```bash
-dotnet test Tests/Tests.Playground/Tests.Playground.csproj --filter "FullyQualifiedName~ClassName.MethodName" -f net10.0
+dotnet test --project Tests/Tests.Playground/Tests.Playground.csproj --filter "FullyQualifiedName~ClassName.MethodName" -f net10.0 --settings .runsettings
 ```
 
 Reach for the full `Tests/Linq/Tests.csproj` only when the test target spans many files that would require a wide playground link, or when running a broad filter (e.g. an entire test class).
+
+## Monitoring a long run
+
+A full suite run takes 1–2 hours. To watch progress without scraping console output, the test assembly can write a small JSON heartbeat (updated ~once/sec, immediately on each failure) that you can `Read` at any time. It's **opt-in** via the `LINQ2DB_TEST_PROGRESS` environment variable; the reporter is a no-op when unset, so default runs are unaffected.
+
+**For test runs Claude launches** (via `/test`, `test-runner`, or ad-hoc Bash), toggle it with the **`/test-progress`** skill — it sets `LINQ2DB_TEST_PROGRESS` session-wide through `.claude/settings.local.json` → `env`, which Claude Code injects into every Bash subprocess. Effect is immediate for the next run, and the `dotnet test` command is unchanged (no permission re-prompt):
+
+```
+/test-progress on        # enable the heartbeat
+/test-progress           # status + latest heartbeat
+/test-progress off       # disable
+```
+
+**For runs in your own terminal**, set the variable yourself before launching:
+
+```bash
+# PowerShell
+$env:LINQ2DB_TEST_PROGRESS = '1'; dotnet test --project Tests/Linq/Tests.csproj -f net10.0 --filter "..."
+# bash
+LINQ2DB_TEST_PROGRESS=1 dotnet test --project Tests/Linq/Tests.csproj -f net10.0 --filter "..."
+```
+
+The file lands at `.build/.claude/test-progress.<tfm>.<pid>.json` (one per TFM/process). Set the variable to a directory or a `*.json` path to override the location. Fields: `done`, `total`, `completed`, `passed`, `failed`, `skipped`, `currentTest`, `elapsedSec`, `testsPerSec`, `etaSec`, and `recentFailures[]`.
+
+Read it directly, or run the summary helper:
+
+```bash
+pwsh -NoProfile -File .claude/scripts/test-status.ps1          # newest run, one-line summary
+pwsh -NoProfile -File .claude/scripts/test-status.ps1 -Raw     # dump the raw JSON
+```
+
+**Caveat:** under a `--filter`, `total` reflects the *discovered* (pre-filter) test count, so it over-counts and `etaSec` is unreliable; `total`/`etaSec` are exact only for full, unfiltered runs (the case this is built for). `completed` and `currentTest` are always accurate.
 
 ## Test Database Configuration
 
@@ -61,7 +95,7 @@ When the user asks to run tests against a provider family without naming the exa
 **Always include `CreateDatabase` in your `--filter`.** Prepend `FullyQualifiedName~CreateData.CreateDatabase|` to any filter you construct — the test is idempotent, re-running it is cheap, and it removes the "empty database" failure mode entirely.
 
 ```bash
-dotnet test Tests/Linq/Tests.csproj -f net10.0 --filter "FullyQualifiedName~CreateData.CreateDatabase|FullyQualifiedName~FirebirdTests.DropTableTest"
+dotnet test --project Tests/Linq/Tests.csproj -f net10.0 --filter "FullyQualifiedName~CreateData.CreateDatabase|FullyQualifiedName~FirebirdTests.DropTableTest" --settings .runsettings
 ```
 
 If your test modifies data, revert changes to avoid side effects in downstream tests.
