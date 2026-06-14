@@ -8,6 +8,12 @@
 		<IsPackable>false</IsPackable>
 	</PropertyGroup>
 
+	<!-- Mirror BUGCHECK from LinqToDB.csproj so test files can compile against
+	     #if BUGCHECK-gated test hooks on referenced assemblies. -->
+	<PropertyGroup Condition="'$(Configuration)'=='Debug' OR '$(Configuration)'=='Testing' OR '$(Configuration)'=='Azure'">
+		<DefineConstants>BUGCHECK;$(DefineConstants)</DefineConstants>
+	</PropertyGroup>
+
 	<PropertyGroup Condition=" '$(Configuration)' == 'Azure' ">
 		<DefineConstants>$(DefineConstants);AZURE</DefineConstants>
 		<DebugSymbols>false</DebugSymbols>
