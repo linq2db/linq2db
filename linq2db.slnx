@@ -97,6 +97,7 @@
     <File Path=".claude/scripts/kb-fetch-wiki.ps1" />
     <File Path=".claude/scripts/kb-search.ps1" />
     <File Path=".claude/scripts/kb-state.ps1" />
+    <File Path=".claude/scripts/linqpad-local-push.ps1" />
     <File Path=".claude/scripts/milestone-consistency.ps1" />
     <File Path=".claude/scripts/post-pr-review.ps1" />
     <File Path=".claude/scripts/post-pr-thread-replies.ps1" />
@@ -112,6 +113,7 @@
     <File Path=".claude/scripts/release-state.ps1" />
     <File Path=".claude/scripts/release-test-cli-scaffold.ps1" />
     <File Path=".claude/scripts/snap-baselines.ps1" />
+    <File Path=".claude/scripts/test-status.ps1" />
     <File Path=".claude/scripts/verify-lines.ps1" />
     <File Path=".claude/scripts/wait-for-review.ps1" />
   </Folder>
@@ -198,6 +200,9 @@
   </Folder>
   <Folder Name="/.claude/skills/test/">
     <File Path=".claude/skills/test/SKILL.md" />
+  </Folder>
+  <Folder Name="/.claude/skills/test-progress/">
+    <File Path=".claude/skills/test-progress/SKILL.md" />
   </Folder>
   <Folder Name="/.claude/skills/test-providers/">
     <File Path=".claude/skills/test-providers/SKILL.md" />
