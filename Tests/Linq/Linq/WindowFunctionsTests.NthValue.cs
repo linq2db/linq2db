@@ -106,6 +106,7 @@ namespace Tests.Linq
 		[ThrowsForProvider(typeof(LinqToDBException),
 			TestProvName.AllPostgreSQL, TestProvName.AllMySql8Plus, TestProvName.AllSQLite, TestProvName.AllClickHouse,
 			TestProvName.AllSapHana, TestProvName.AllDuckDB,
+			ProviderName.Ydb,
 			ErrorMessage = ErrorHelper.Error_WindowFunction_NthValueFrom)]
 		public void NthValueFromLast([DataSources] string context)
 		{

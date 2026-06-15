@@ -52,6 +52,7 @@ namespace Tests.Linq
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_LeadLag)]
+		[ThrowsForProvider(typeof(LinqToDBException), ProviderName.Ydb, ErrorMessage = ErrorHelper.Error_WindowFunction_LeadLagDefault)]
 		// MariaDB excluded (DataSources is an exclude list): it does not support the LEAD default-value (3rd) argument.
 		public void LeadWithOffsetAndDefault([DataSources(TestProvName.AllMariaDB)] string context)
 		{
@@ -120,6 +121,7 @@ namespace Tests.Linq
 			TestProvName.AllPostgreSQL, TestProvName.AllMySql8Plus, TestProvName.AllSQLite, TestProvName.AllClickHouse,
 			TestProvName.AllFirebird3Plus, TestProvName.AllSapHana,
 			TestProvName.AllSqlServer2012, TestProvName.AllSqlServer2014, TestProvName.AllSqlServer2016, TestProvName.AllSqlServer2017, TestProvName.AllSqlServer2019,
+			ProviderName.Ydb,
 			ErrorMessage = ErrorHelper.Error_WindowFunction_NullTreatment)]
 		public void LeadIgnoreNulls([DataSources] string context)
 		{

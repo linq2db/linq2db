@@ -12,6 +12,7 @@ namespace Tests.Linq
 	{
 		public class WindowFunctionTestEntity
 		{
+			[PrimaryKey]
 			public int       Id                    { get; set; }
 			public string?   Name                  { get; set; }
 			public int       CategoryId            { get; set; }

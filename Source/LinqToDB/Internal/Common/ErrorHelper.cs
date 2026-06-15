@@ -44,6 +44,7 @@
 		public const string Error_WindowFunction_Keep                       = "KEEP clause is not supported by current provider.";
 		public const string Error_WindowFunction_NullTreatment              = "IGNORE NULLS is not supported by current provider.";
 		public const string Error_WindowFunction_NthValueFrom               = "NTH_VALUE FROM LAST is not supported by current provider.";
+		public const string Error_WindowFunction_LeadLagDefault             = "Default value argument for LEAD/LAG is not supported by current provider.";
 		public const string Error_WindowFunction_AggregateWindowFunctions   = "Aggregate window functions are not supported by current provider.";
 		public const string Error_WindowFunction_AggregateDistinct          = "DISTINCT is not supported in window aggregate functions by current provider.";
 		public const string Error_WindowFunction_NotSupported               = "Window functions are not supported by current provider.";

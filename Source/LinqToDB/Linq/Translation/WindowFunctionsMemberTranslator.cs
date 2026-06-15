@@ -22,6 +22,7 @@ namespace LinqToDB.Linq.Translation
 		protected virtual bool IsNTileSupported           => true;
 		protected virtual bool IsNthValueSupported        => true;
 		protected virtual bool IsLeadLagSupported         => true;
+		protected virtual bool IsLeadLagDefaultSupported  => true;
 		protected virtual bool IsFirstLastValueSupported  => true;
 		protected virtual bool IsPercentileContSupported           => true;
 		protected virtual bool IsPercentileDiscSupported           => true;
@@ -1214,6 +1215,9 @@ namespace LinqToDB.Linq.Translation
 				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
 			if (!IsLeadLagSupported)
 				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_LeadLag, methodCall.Type);
+			// The default-value argument (LEAD/LAG with value, offset and default) is rejected by some engines (e.g. YDB).
+			if (!IsLeadLagDefaultSupported && methodCall.Arguments.Count == 5)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_LeadLagDefault, methodCall.Type);
 
 			var dbDataType = translationContext.ExpressionFactory.GetDbDataType(methodCall.Type);
 
@@ -1238,6 +1242,9 @@ namespace LinqToDB.Linq.Translation
 				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
 			if (!IsLeadLagSupported)
 				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_LeadLag, methodCall.Type);
+			// The default-value argument (LEAD/LAG with value, offset and default) is rejected by some engines (e.g. YDB).
+			if (!IsLeadLagDefaultSupported && methodCall.Arguments.Count == 5)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_LeadLagDefault, methodCall.Type);
 
 			var dbDataType = translationContext.ExpressionFactory.GetDbDataType(methodCall.Type);
 
