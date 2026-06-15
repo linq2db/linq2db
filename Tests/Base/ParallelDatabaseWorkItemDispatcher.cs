@@ -206,6 +206,18 @@ namespace Tests
 			{
 				foreach (var (work, isRemote) in _queue.GetConsumingEnumerable())
 				{
+					// Exclusive ([NonParallelizable]) provider tests must wait for their provider's
+					// CreateDatabase BEFORE acquiring the write lock. CreateDatabase runs under the
+					// read lock; waiting for it while holding the write lock deadlocks until the
+					// readiness wait times out, and the test then runs against an unseeded database
+					// (manifests as "Invalid object name" / empty-table assertion failures).
+					if (_exclusive)
+					{
+						var (context, _) = NUnitUtils.GetContext(work.Test);
+						if (context != null && !NUnitUtils.IsCreateDatabase(work.Test))
+							TestBase.AwaitDatabaseReady(context);
+					}
+
 					// Serialize remote tests globally before taking the per-run gate, so a lane
 					// waiting for its turn at a remote test doesn't pin a read lock meanwhile.
 					var holdsRemoteGate = !_exclusive && isRemote;
