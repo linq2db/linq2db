@@ -12,7 +12,7 @@ namespace Tests
 		//                           runs it, so only YDB is expected to throw.
 		public ThrowsRequiresCorrelatedSubqueryAttribute(bool simple = false)
 			: base(typeof(LinqToDBException),
-			simple ? new[] { ProviderName.Ydb } : new[] { ProviderName.Ydb, TestProvName.AllClickHouse })
+			simple ? new[] { TestProvName.AllYdb } : new[] { TestProvName.AllYdb, TestProvName.AllClickHouse })
 		{
 			ErrorMessage = ErrorHelper.Error_Correlated_Subqueries;
 		}

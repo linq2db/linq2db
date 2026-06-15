@@ -112,7 +112,7 @@ namespace Tests.xUpdate
 			if (database != TestUtils.NO_DATABASE_NAME)
 				Assert.That(sql, Does.Contain(database));
 
-			if (schema != TestUtils.NO_SCHEMA_NAME)
+			if (!string.IsNullOrEmpty(schema) && schema != TestUtils.NO_SCHEMA_NAME)
 				Assert.That(sql, Does.Contain(schema));
 		}
 

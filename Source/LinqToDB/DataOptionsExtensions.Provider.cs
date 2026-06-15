@@ -16,6 +16,7 @@ using LinqToDB.DataProvider.SQLite;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.DataProvider.DuckDB;
 using LinqToDB.DataProvider.Sybase;
+using LinqToDB.DataProvider.Ydb;
 
 // ReSharper disable once CheckNamespace
 namespace LinqToDB
@@ -1014,6 +1015,41 @@ namespace LinqToDB
 			     Func<DuckDBOptions, DuckDBOptions>? optionSetter = null)
 		{
 			return options.UseConnectionString(connectionString).UseDuckDB(optionSetter);
+		}
+
+		#endregion
+
+		#region UseYdb
+
+		/// <summary>
+		/// Configure YDB connection.
+		/// </summary>
+		/// <param name="options">Instance of <see cref="DataOptions"/>.</param>
+		/// <param name="optionSetter">Optional <see cref="YdbOptions"/> configuration callback.</param>
+		/// <returns>New options instance with applied changes.</returns>
+		[Pure]
+		public static DataOptions UseYdb(
+			this DataOptions                   options,
+			     Func<YdbOptions, YdbOptions>? optionSetter = null)
+		{
+			options = options.UseDataProvider(YdbTools.GetDataProvider());
+			return optionSetter != null ? options.WithOptions(optionSetter) : options;
+		}
+
+		/// <summary>
+		/// Configure YDB connection.
+		/// </summary>
+		/// <param name="options">Instance of <see cref="DataOptions"/>.</param>
+		/// <param name="connectionString">YDB connection string.</param>
+		/// <param name="optionSetter">Optional <see cref="YdbOptions"/> configuration callback.</param>
+		/// <returns>New options instance with applied changes.</returns>
+		[Pure]
+		public static DataOptions UseYdb(
+			this DataOptions                   options,
+			     string                        connectionString,
+			     Func<YdbOptions, YdbOptions>? optionSetter = null)
+		{
+			return options.UseConnectionString(connectionString).UseYdb(optionSetter);
 		}
 
 		#endregion

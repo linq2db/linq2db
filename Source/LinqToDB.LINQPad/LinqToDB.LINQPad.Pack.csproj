@@ -76,6 +76,7 @@
 		<PackageReference Include="System.Data.OleDb" />
 		<PackageReference Include="System.Data.SQLite" />
 		<PackageReference Include="DuckDB.NET.Data.Full" />
+		<PackageReference Include="Ydb.Sdk" />
 
 		<!-- build-ordering only: build the WPF driver assembly, but don't link it
 		     (its net8.0-windows7.0 TFM is intentionally incompatible with this net8.0 project) -->
