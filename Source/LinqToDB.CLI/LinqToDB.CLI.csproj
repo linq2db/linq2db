@@ -71,6 +71,7 @@
 		<PackageReference Include="ClickHouse.Driver" />
 		<PackageReference Include="Octonica.ClickHouseClient" />
 		<PackageReference Include="DuckDB.NET.Data.Full" />
+		<PackageReference Include="Ydb.Sdk" />
 
 		<AdditionalFiles Include="PublicAPI.*.txt" />
 	</ItemGroup>

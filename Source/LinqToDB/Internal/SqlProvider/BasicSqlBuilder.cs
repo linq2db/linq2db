@@ -107,6 +107,18 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected virtual bool CanSkipRootAliases(SqlStatement statement) => true;
 
+		/// <summary>
+		/// Placement of the optional <c>WHERE &lt;predicate&gt;</c> that guards the UPDATE branch of
+		/// an <c>InsertOrUpdate</c>-as-MERGE rendering:
+		/// <list type="bullet">
+		///   <item><see langword="false" /> (default, SQL Server / PostgreSQL 15+) — emits
+		///     <c>WHEN MATCHED AND &lt;predicate&gt; THEN UPDATE SET …</c>.</item>
+		///   <item><see langword="true" /> (Oracle) — emits
+		///     <c>WHEN MATCHED THEN UPDATE SET … WHERE &lt;predicate&gt;</c>.</item>
+		/// </list>
+		/// </summary>
+		protected virtual bool IsUpsertUpdateWhereAfterSet => false;
+
 		#endregion
 
 		#region CommandCount
@@ -1218,6 +1230,16 @@ namespace LinqToDB.Internal.SqlProvider
 				Indent--;
 
 				StringBuilder.AppendLine();
+
+				if (insertOrUpdate.UpdateWhere is { Predicates.Count: > 0 })
+				{
+					AppendIndent().AppendLine("WHERE");
+					Indent++;
+					AppendIndent();
+					BuildSearchCondition(Precedence.Unknown, insertOrUpdate.UpdateWhere, wrapCondition: true);
+					Indent--;
+					StringBuilder.AppendLine();
+				}
 			}
 			else
 			{
@@ -1300,11 +1322,34 @@ namespace LinqToDB.Internal.SqlProvider
 
 			if (insertOrUpdate.Update.Items.Count > 0)
 			{
-				AppendIndent().AppendLine("WHEN MATCHED THEN");
+				var hasUpdateWhere = insertOrUpdate.UpdateWhere is { Predicates.Count: > 0 };
+
+				AppendIndent();
+
+				if (hasUpdateWhere && !IsUpsertUpdateWhereAfterSet)
+				{
+					// SQL Server / PG 15+ style: WHEN MATCHED AND <cond> THEN UPDATE SET ...
+					StringBuilder.Append("WHEN MATCHED AND ");
+					BuildSearchCondition(Precedence.Unknown, insertOrUpdate.UpdateWhere!, wrapCondition: false);
+					StringBuilder.AppendLine(" THEN");
+				}
+				else
+				{
+					StringBuilder.AppendLine("WHEN MATCHED THEN");
+				}
 
 				Indent++;
 				AppendIndent().AppendLine("UPDATE ");
 				BuildUpdateSet(insertOrUpdate.SelectQuery, insertOrUpdate.Update);
+
+				if (hasUpdateWhere && IsUpsertUpdateWhereAfterSet)
+				{
+					// Oracle / DB2 / Firebird style: WHEN MATCHED THEN UPDATE SET ... WHERE <cond>
+					AppendIndent().Append("WHERE ");
+					BuildSearchCondition(Precedence.Unknown, insertOrUpdate.UpdateWhere!, wrapCondition: false);
+					StringBuilder.AppendLine();
+				}
+
 				Indent--;
 			}
 
@@ -1322,6 +1367,15 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected void BuildInsertOrUpdateQueryAsUpdateInsert(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
+			// This emitter's UPDATE-then-IF-ROWCOUNT=0-INSERT shape cannot honor an UPDATE predicate:
+			// AND-ing the predicate into the UPDATE's WHERE would conflate "predicate rejected the match"
+			// with "row missing" and incorrectly trigger the INSERT branch (duplicate-key violation).
+			// Callers routing through Upsert.Update.When on such providers must use the 3-query
+			// SetIfExistsUpdateElseInsert orchestration instead. If this invariant is ever broken,
+			// fail loudly rather than silently drop the user's predicate.
+			if (insertOrUpdate.UpdateWhere is { Predicates.Count: > 0 })
+				throw new LinqToDBException(ErrorHelper.Error_Internal_UpdateInsertEmitter_CannotEmitUpdatePredicate);
+
 			BuildTag(insertOrUpdate);
 
 			var buildUpdate = insertOrUpdate.Update.Items.Count > 0;
@@ -1899,7 +1953,7 @@ namespace LinqToDB.Internal.SqlProvider
 					if (appendParentheses)
 						AppendIndent().Append(')');
 
-					if (rawSqlTable.IsScalar && alias != null && SupportsColumnAliasesInSource && buildAlias != false)
+					if (rawSqlTable.IsScalar && alias != null && SupportsColumnAliasesInScalarSource && buildAlias != false)
 					{
 						StringBuilder.Append(' ');
 						BuildObjectName(StringBuilder, new(alias), ConvertType.NameToQueryFieldAlias, true, TableOptions.NotSet);
@@ -1933,15 +1987,16 @@ namespace LinqToDB.Internal.SqlProvider
 		protected virtual void BuildSqlValuesTable(SqlValuesTable valuesTable, string alias, out bool aliasBuilt)
 		{
 			valuesTable = ConvertElement(valuesTable);
-			var rows = valuesTable.BuildRows(OptimizationContext.EvaluationContext);
-			if (rows?.Count > 0)
+			var rows    = valuesTable.BuildRows(OptimizationContext.EvaluationContext);
+			var isEmpty = !(rows?.Count > 0);
+			if (!isEmpty)
 			{
 				StringBuilder.Append(OpenParens);
 
 				if (IsValuesSyntaxSupported)
-					BuildValues(valuesTable, rows);
+					BuildValues(valuesTable, rows!);
 				else
-					BuildValuesAsSelectsUnion(valuesTable.Fields, valuesTable, rows);
+					BuildValuesAsSelectsUnion(valuesTable.Fields, valuesTable, rows!);
 
 				StringBuilder.Append(')');
 			}
@@ -1957,18 +2012,20 @@ namespace LinqToDB.Internal.SqlProvider
 			aliasBuilt = IsValuesSyntaxSupported;
 			if (aliasBuilt)
 			{
-				BuildSqlValuesAlias(valuesTable, alias);
+				// The empty source renders as a scalar SELECT (... WHERE 1 = 0) whose columns are already
+				// named, so its derived column list follows the scalar-source rule, not the VALUES rule.
+				BuildSqlValuesAlias(valuesTable, alias, isEmpty ? SupportsColumnAliasesInScalarSource : SupportsColumnAliasesInSource);
 			}
 		}
 
-		private void BuildSqlValuesAlias(SqlValuesTable valuesTable, string alias)
+		private void BuildSqlValuesAlias(SqlValuesTable valuesTable, string alias, bool supportsColumnAliases)
 		{
 			valuesTable = ConvertElement(valuesTable);
 			StringBuilder.Append(' ');
 
 			BuildObjectName(StringBuilder, new(alias), ConvertType.NameToQueryFieldAlias, true, TableOptions.NotSet);
 
-			if (SupportsColumnAliasesInSource)
+			if (supportsColumnAliases)
 			{
 				StringBuilder.Append(OpenParens);
 
@@ -2002,14 +2059,24 @@ namespace LinqToDB.Internal.SqlProvider
 				Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
 			}
 
+			BuildEmptyValuesFrom();
+
+			StringBuilder
+				.Append(" WHERE 1 = 0");
+		}
+
+		/// <summary>
+		/// Appends the optional FROM clause for an empty-values source (a <c>SELECT ... WHERE 1 = 0</c>).
+		/// Defaults to the provider's <see cref="FakeTable"/>; providers that reject a WHERE without a FROM
+		/// and have no DUAL-like table override this to supply a one-row dummy source.
+		/// </summary>
+		protected virtual void BuildEmptyValuesFrom()
+		{
 			if (FakeTable != null)
 			{
 				StringBuilder.Append(" FROM ");
 				BuildFakeTableName();
 			}
-
-			StringBuilder
-				.Append(" WHERE 1 = 0");
 		}
 
 		protected void BuildTableName(SqlTableSource ts, bool buildName, bool buildAlias)

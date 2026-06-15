@@ -190,6 +190,7 @@ namespace Tests.Linq
 
 		// NonParallelizable: mutates the process-global Expressions registry from the test body (init-only/not thread-safe) — would corrupt concurrent readers. Future: register once at init.
 		[Test, NonParallelizable]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void MapMember1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			Expressions.MapMember<Parent,int>(p => Count1(p), p => p.Children.Count(c => c.ChildID > 0));
@@ -202,6 +203,7 @@ namespace Tests.Linq
 
 		// NonParallelizable: mutates the process-global Expressions registry from the test body (init-only/not thread-safe) — would corrupt concurrent readers. Future: register once at init.
 		[Test, NonParallelizable]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void MapMember2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			Expressions.MapMember<Parent,int,int>((p,id) => Count2(p, id), (p, id) => p.Children.Count(c => c.ChildID > id));
@@ -214,6 +216,7 @@ namespace Tests.Linq
 
 		// NonParallelizable: mutates the process-global Expressions registry from the test body (init-only/not thread-safe) — would corrupt concurrent readers. Future: register once at init.
 		[Test, NonParallelizable]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void MapMember3([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			Expressions.MapMember<Parent,int,int>((p,id) => Count3(p, id), (p, id) => p.Children.Count(c => c.ChildID > id) + 2);
@@ -1119,7 +1122,6 @@ namespace Tests.Linq
 		#endregion
 
 		#region Regression: query comparison
-		[YdbCteAsSource]
 		[Test(Description = "Tests regression introduced in 3.5.2"), NonParallelizable]
 		public void ComparisonTest1([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context, [Values(1, 2)] int iteration)
 		{
@@ -1140,7 +1142,6 @@ namespace Tests.Linq
 				db.Patient.GetCacheMissCount().ShouldBe(cacheMiss);
 		}
 
-		[YdbCteAsSource]
 		[Test(Description = "Tests regression introduced in 3.5.2")]
 		public void ComparisonTest2([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{

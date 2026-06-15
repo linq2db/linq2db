@@ -62,7 +62,7 @@
 
 	<!--some magic to not include x64 reference to IBM.Data.DB2.Core in x86 builds, as it fails x86 tests-->
 	<Choose>
-		<When Condition=" $(DB2STUB) != 'True' ">
+		<When Condition=" $(X86STUBS) != 'True' ">
 			<ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">
 				<!--PackageReference + Reference beelongs to same nuget-->
 				<PackageReference Include="IBM.Data.DB.Provider" GeneratePathProperty="true" />

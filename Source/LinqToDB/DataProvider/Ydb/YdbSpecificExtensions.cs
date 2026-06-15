@@ -10,8 +10,17 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.Ydb
 {
+	/// <summary>
+	/// Provides YDB-specific extension methods.
+	/// </summary>
 	public static class YdbSpecificExtensions
 	{
+		/// <summary>
+		/// Marks the table as a YDB-specific table, enabling YDB table/query extension methods on it.
+		/// </summary>
+		/// <typeparam name="TSource">Table record type.</typeparam>
+		/// <param name="table">Table-like query source.</param>
+		/// <returns>YDB-specific table source.</returns>
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]
 		public static IYdbSpecificTable<TSource> AsYdb<TSource>(this ITable<TSource> table)
@@ -27,6 +36,12 @@ namespace LinqToDB.DataProvider.Ydb
 			return new YdbSpecificTable<TSource>(wrapped);
 		}
 
+		/// <summary>
+		/// Marks the query as a YDB-specific query, enabling YDB query extension methods on it.
+		/// </summary>
+		/// <typeparam name="TSource">Query record type.</typeparam>
+		/// <param name="source">Query source.</param>
+		/// <returns>YDB-specific query source.</returns>
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]
 		public static IYdbSpecificQueryable<TSource> AsYdb<TSource>(this IQueryable<TSource> source)

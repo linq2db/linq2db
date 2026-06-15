@@ -194,7 +194,7 @@ namespace Tests
 			TestProvName.AllMySql,
 			TestProvName.AllSapHana,
 			TestProvName.AllClickHouse,
-			ProviderName.Ydb,
+			TestProvName.AllYdb,
 			TestProvName.AllDuckDB,
 		}.SplitAll()).ToList();
 

@@ -1275,7 +1275,7 @@ namespace Tests.Data
 		public void MARS_Supported(
 			[DataSources(false,
 				TestProvName.AllMySql,
-				ProviderName.Ydb,
+				TestProvName.AllYdb,
 				ProviderName.ClickHouseMySql,
 				// depends on connection pool size
 				ProviderName.ClickHouseDriver,
@@ -1305,7 +1305,7 @@ namespace Tests.Data
 		public void MARS_Unsupported(
 			[IncludeDataSources(false,
 				TestProvName.AllMySql,
-				ProviderName.Ydb,
+				TestProvName.AllYdb,
 				ProviderName.ClickHouseMySql,
 				ProviderName.ClickHouseOctonica,
 				TestProvName.AllPostgreSQL)] string context)
@@ -1360,7 +1360,7 @@ namespace Tests.Data
 		public async Task MARS_SupportedAsync(
 			[DataSources(false,
 				TestProvName.AllMySql,
-				ProviderName.Ydb,
+				TestProvName.AllYdb,
 				ProviderName.ClickHouseMySql,
 				// depends on connection pool size
 				ProviderName.ClickHouseDriver,
@@ -1390,7 +1390,7 @@ namespace Tests.Data
 		public async Task MARS_UnsupportedAsync(
 			[IncludeDataSources(false,
 				TestProvName.AllMySql,
-				ProviderName.Ydb,
+				TestProvName.AllYdb,
 				TestProvName.AllPostgreSQL,
 				ProviderName.ClickHouseMySql,
 				ProviderName.ClickHouseOctonica)] string context)

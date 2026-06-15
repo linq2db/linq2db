@@ -42,4 +42,5 @@
 	RunCliTool("ClickHouseMySql", "ClickHouse.MySql"   , "Cli.NoMetadata.ClickHouse.MySql"   , Path.Combine(targetDir, "ClickHouse.MySql")   , mode, extraOptions: extraOptions);
 	RunCliTool("ClickHouseHttp" , "ClickHouse.Driver"  , "Cli.NoMetadata.ClickHouse.Driver"  , Path.Combine(targetDir, "ClickHouse.Driver")  , mode, extraOptions: extraOptions);
 	RunCliTool("ClickHouseTcp"  , "ClickHouse.Octonica", "Cli.NoMetadata.ClickHouse.Octonica", Path.Combine(targetDir, "ClickHouse.Octonica"), mode, extraOptions: extraOptions);
+	RunCliTool("Ydb"            , "YDB"                , "Cli.NoMetadata.Ydb"                , Path.Combine(targetDir, "Ydb")                , mode, extraOptions: extraOptions);
 #>
