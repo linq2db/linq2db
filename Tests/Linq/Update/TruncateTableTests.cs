@@ -41,7 +41,8 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TruncateIdentityTest([DataSources(TestProvName.AllInformix, TestProvName.AllSapHana)]
+		// YDB cannot reset a SERIAL sequence on TRUNCATE (only column/table recreation resets it).
+		public void TruncateIdentityTest([DataSources(TestProvName.AllInformix, TestProvName.AllSapHana, TestProvName.AllYdb)]
 			string context)
 		{
 			using var db = GetDataContext(context);

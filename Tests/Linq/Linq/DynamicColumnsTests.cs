@@ -594,7 +594,7 @@ namespace Tests.Linq
 		[Test]
 		public void Issue3158([DataSources(TestProvName.AllClickHouse)] string context)
 		{
-			using var db = GetDataContext(context);
+			using var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context));
 			Assert.DoesNotThrow(() =>
 			{
 				(from p in db.GetTable<PersonWithoutDynamicStore>()
