@@ -492,7 +492,8 @@ namespace Tests.DataProvider
 			public int Id;
 		}
 
-		[Test]
+		// NonParallelizable: creates/drops a hardcoded shared "TestDatabase.sqlite" used by both SQLite providers; their lanes run concurrently and collide on the file. Future: per-provider filename.
+		[Test, NonParallelizable]
 		public void CreateDatabase([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			try

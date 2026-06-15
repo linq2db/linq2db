@@ -14,6 +14,14 @@ namespace Tests
 	{
 		internal const int MaxPersonID = 4;
 
+		// Guards lazy init of the shared in-memory Parent/Child model below. Those getters publish
+		// their backing field before fully populating element associations (.Children/.GrandChildren)
+		// to break a circular Parent<->Child init dependency; under [Parallelizable] one fixture instance
+		// is shared across concurrent cases, so a second case could otherwise observe a half-built model
+		// (null .Children -> NRE). A plain Monitor lock is re-entrant (unlike System.Threading.Lock), so
+		// same-thread cyclic calls re-enter freely while a concurrent case blocks until init completes.
+		readonly object _modelSync = new object();
+
 		protected List<LinqDataTypes> GetTypes(string context)
 		{
 			return DataCache<LinqDataTypes>.Get(context);
@@ -103,22 +111,25 @@ namespace Tests
 		{
 			get
 			{
-				if (_parent == null)
-					using (new DisableLogging())
-					using (new DisableBaseline("Default Database"))
-					using (var db = new TestDataConnection())
-					{
-						_parent = db.Parent.ToList();
-						db.Close();
-
-						foreach (var p in _parent)
+				lock (_modelSync)
+				{
+					if (_parent == null)
+						using (new DisableLogging())
+						using (new DisableBaseline("Default Database"))
+						using (var db = new TestDataConnection())
 						{
-							p.ParentTest = p;
-							p.Children = Child.Where(c => c.ParentID == p.ParentID).ToList();
-							p.GrandChildren = GrandChild.Where(c => c.ParentID == p.ParentID).ToList();
-							p.Types = Types.FirstOrDefault(t => t.ID == p.ParentID);
+							_parent = db.Parent.ToList();
+							db.Close();
+
+							foreach (var p in _parent)
+							{
+								p.ParentTest = p;
+								p.Children = Child.Where(c => c.ParentID == p.ParentID).ToList();
+								p.GrandChildren = GrandChild.Where(c => c.ParentID == p.ParentID).ToList();
+								p.Types = Types.FirstOrDefault(t => t.ID == p.ParentID);
+							}
 						}
-					}
+				}
 
 				return _parent;
 			}
@@ -143,12 +154,15 @@ namespace Tests
 		{
 			get
 			{
-				if (_parent5 == null)
+				lock (_modelSync)
 				{
-					_parent5 = Parent.Select(p => new Parent5 { ParentID = p.ParentID, Value1 = p.Value1 }).ToList();
+					if (_parent5 == null)
+					{
+						_parent5 = Parent.Select(p => new Parent5 { ParentID = p.ParentID, Value1 = p.Value1 }).ToList();
 
-					foreach (var p in _parent5)
-						p.Children = _parent5.Where(c => c.Value1 == p.ParentID).ToList();
+						foreach (var p in _parent5)
+							p.Children = _parent5.Where(c => c.Value1 == p.ParentID).ToList();
+					}
 				}
 
 				return _parent5;
@@ -160,23 +174,26 @@ namespace Tests
 		{
 			get
 			{
-				if (_child == null)
-					using (new DisableLogging())
-					using (new DisableBaseline("Default Database"))
-					using (var db = new TestDataConnection())
-					{
-						db.Child.Delete(c => c.ParentID >= 1000);
-						_child = db.Child.ToList();
-						db.Close();
-
-						foreach (var ch in _child)
+				lock (_modelSync)
+				{
+					if (_child == null)
+						using (new DisableLogging())
+						using (new DisableBaseline("Default Database"))
+						using (var db = new TestDataConnection())
 						{
-							ch.Parent = Parent.Single(p => p.ParentID == ch.ParentID);
-							ch.Parent1 = Parent1.Single(p => p.ParentID == ch.ParentID);
-							ch.ParentID2 = new Parent3 { ParentID2 = ch.Parent.ParentID, Value1 = ch.Parent.Value1 };
-							ch.GrandChildren = GrandChild.Where(c => c.ParentID == ch.ParentID && c.ChildID == ch.ChildID).ToList();
+							db.Child.Delete(c => c.ParentID >= 1000);
+							_child = db.Child.ToList();
+							db.Close();
+
+							foreach (var ch in _child)
+							{
+								ch.Parent = Parent.Single(p => p.ParentID == ch.ParentID);
+								ch.Parent1 = Parent1.Single(p => p.ParentID == ch.ParentID);
+								ch.ParentID2 = new Parent3 { ParentID2 = ch.Parent.ParentID, Value1 = ch.Parent.Value1 };
+								ch.GrandChildren = GrandChild.Where(c => c.ParentID == ch.ParentID && c.ChildID == ch.ChildID).ToList();
+							}
 						}
-					}
+				}
 
 				foreach (var item in _child)
 					yield return item;
@@ -188,17 +205,20 @@ namespace Tests
 		{
 			get
 			{
-				if (_grandChild == null)
-					using (new DisableLogging())
-					using (new DisableBaseline("Default Database"))
-					using (var db = new TestDataConnection())
-					{
-						_grandChild = db.GrandChild.ToList();
-						db.Close();
+				lock (_modelSync)
+				{
+					if (_grandChild == null)
+						using (new DisableLogging())
+						using (new DisableBaseline("Default Database"))
+						using (var db = new TestDataConnection())
+						{
+							_grandChild = db.GrandChild.ToList();
+							db.Close();
 
-						foreach (var ch in _grandChild)
-							ch.Child = Child.Single(c => c.ParentID == ch.ParentID && c.ChildID == ch.ChildID);
-					}
+							foreach (var ch in _grandChild)
+								ch.Child = Child.Single(c => c.ParentID == ch.ParentID && c.ChildID == ch.ChildID);
+						}
+				}
 
 				return _grandChild;
 			}
@@ -209,19 +229,22 @@ namespace Tests
 		{
 			get
 			{
-				if (_grandChild1 == null)
-					using (new DisableLogging())
-					using (new DisableBaseline("Default Database"))
-					using (var db = new TestDataConnection())
-					{
-						_grandChild1 = db.GrandChild1.ToList();
-
-						foreach (var ch in _grandChild1)
+				lock (_modelSync)
+				{
+					if (_grandChild1 == null)
+						using (new DisableLogging())
+						using (new DisableBaseline("Default Database"))
+						using (var db = new TestDataConnection())
 						{
-							ch.Parent = Parent1.Single(p => p.ParentID == ch.ParentID);
-							ch.Child = Child.Single(c => c.ParentID == ch.ParentID && c.ChildID == ch.ChildID);
+							_grandChild1 = db.GrandChild1.ToList();
+
+							foreach (var ch in _grandChild1)
+							{
+								ch.Parent = Parent1.Single(p => p.ParentID == ch.ParentID);
+								ch.Child = Child.Single(c => c.ParentID == ch.ParentID && c.ChildID == ch.ChildID);
+							}
 						}
-					}
+				}
 
 				return _grandChild1;
 			}

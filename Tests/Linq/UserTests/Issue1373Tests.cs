@@ -59,7 +59,8 @@ namespace Tests.UserTests
 			public CustomFieldType? Field1 { get; set; }
 		}
 
-		[Test]
+		// NonParallelizable: clears the global query cache (Query.ClearCaches) mid-run, which would perturb concurrent cache-counter tests.
+		[Test, NonParallelizable]
 		public void Test1([DataSources] string context)
 		{
 			Query.ClearCaches();
@@ -91,7 +92,8 @@ namespace Tests.UserTests
 			AssertDb(db);
 		}
 
-		[Test]
+		// NonParallelizable: clears the global query cache (Query.ClearCaches) mid-run, which would perturb concurrent cache-counter tests.
+		[Test, NonParallelizable]
 		public void Test2([DataSources] string context)
 		{
 			Query.ClearCaches();
@@ -126,7 +128,8 @@ namespace Tests.UserTests
 			AssertDb(db);
 		}
 
-		[Test]
+		// NonParallelizable: clears the global query cache (Query.ClearCaches) mid-run, which would perturb concurrent cache-counter tests.
+		[Test, NonParallelizable]
 		public void Test3([DataSources] string context)
 		{
 			Query.ClearCaches();

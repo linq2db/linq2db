@@ -370,7 +370,8 @@ namespace Tests.Linq
 
 		int Issue4508Test_Id;
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4508")]
+		// NonParallelizable: a counter (Issue4508Test_Id) incremented in the query-filter lambda drives result counts; concurrent cache activity changes the evaluation count. Cache-counter category.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4508"), NonParallelizable]
 		public void Issue4508Test([DataSources] string context)
 		{
 			Test(context);

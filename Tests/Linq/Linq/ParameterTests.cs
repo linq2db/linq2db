@@ -1283,7 +1283,8 @@ namespace Tests.Linq
 		private int _cnt3;
 		private int _param;
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/3450")]
+		// NonParallelizable: counts query compilations (expects 1) and clears the global query cache; concurrent cache activity inflates the count. Cache-counter category.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3450"), NonParallelizable]
 		[YdbCteAsSource]
 		public void TestIQueryableParameterEvaluation([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -1430,7 +1431,8 @@ namespace Tests.Linq
 			return db.Person.Where(p => paramCopy + 1 != p.ID);
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/3450")]
+		// NonParallelizable: uses shared _cnt/_param instance fields and depends on query-cache state; concurrent cases corrupt results. Cache-counter category.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3450"), NonParallelizable]
 		[YdbCteAsSource]
 		public void TestIQueryableParameterEvaluationCaching([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -1599,7 +1601,8 @@ namespace Tests.Linq
 			return db.Person.Where(p => paramCopy + 1 != p.ID);
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/3450")]
+		// NonParallelizable: counts query compilations (expects 1); concurrent cache activity inflates the count. Cache-counter category.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3450"), NonParallelizable]
 		public void TestSimpleParameterEvaluation([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

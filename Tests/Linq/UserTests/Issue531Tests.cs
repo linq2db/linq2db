@@ -53,7 +53,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test]
+		// NonParallelizable: mutates the shared MappingSchema.Default from the test body — would corrupt concurrent readers. Future: use a local MappingSchema instead of Default.
+		[Test, NonParallelizable]
 		public void Test([NorthwindDataContext] string context)
 		{
 			MappingSchema.Default.SetConverter<List<string>?, string?>((obj) =>

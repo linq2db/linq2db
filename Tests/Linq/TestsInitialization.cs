@@ -176,6 +176,15 @@ public class TestsInitialization
 		//custom initialization logic
 		CustomizationSupport.Init();
 
+		// Pre-warm fixtures that register into a process-global, init-only/not-thread-safe registry
+		// (the Expressions map) from a *static constructor*. Under parallel execution that static ctor
+		// would otherwise fire lazily on a worker thread at first fixture access, racing concurrent
+		// registry readers (e.g. ExpressionsTests.AssociationMethodExpression -> ArgumentNullException).
+		// Running them here on the serial init thread leaves the registry stable before fan-out.
+		// Test-body registrations are handled separately via [NonParallelizable]. Future: hoist these to init.
+		System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(Tests.Linq.ExpressionsTests).TypeHandle);
+		System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(Tests.UserTests.Issue2468Tests).TypeHandle);
+
 		// Parallelize tests across database providers: route each provider's tests to a
 		// dedicated lane so the same database is never hit concurrently. Only swap when
 		// NUnit is actually running in parallel; a serial run keeps the original dispatcher.
