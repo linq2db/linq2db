@@ -100,7 +100,7 @@ namespace LinqToDB.Internal.SqlProvider
 		public virtual bool WrapJoinCondition => false;
 
 		/// <summary>
-		/// <see langword="true" /> if provider requires <c>OVER()</c> clause to be present in window function <c>WITHIN GROUP</c>.
+		/// <see langword="true" /> if provider requires <c>OVER ()</c> clause to be present in window function <c>WITHIN GROUP</c>.
 		/// Currently only SQL Server
 		/// </summary>
 		protected virtual bool IsOverRequiredWithinGroup => false;
@@ -3540,7 +3540,7 @@ namespace LinqToDB.Internal.SqlProvider
 			    extendedFunction.FrameClause        != null ||
 			    (extendedFunction.WithinGroup?.Count > 0 && IsOverRequiredWithinGroup && extendedFunction.IsWindowFunction))
 			{
-				StringBuilder.Append(" OVER(");
+				StringBuilder.Append(" OVER (");
 				if (extendedFunction.PartitionBy?.Count > 0)
 				{
 					StringBuilder.Append("PARTITION BY ");
@@ -3653,7 +3653,7 @@ namespace LinqToDB.Internal.SqlProvider
 						&& orderItem.Expression.CanBeNullable(NullabilityContext)
 						&& !QueryHelper.MatchesNaturalNullsPosition(SqlProviderFlags.DefaultNullsOrdering, orderItem.NullsPosition, orderItem.IsDescending);
 
-					// Emulate NULLS positioning inside OVER(...)/WITHIN GROUP for providers without native support
+					// Emulate NULLS positioning inside OVER (...)/WITHIN GROUP for providers without native support
 					// by prepending a CASE sort key. OVER ordering has no select-list constraint, so this is safe here.
 					if (hasNulls && !SqlProviderFlags.IsNullsOrderingSupported)
 					{

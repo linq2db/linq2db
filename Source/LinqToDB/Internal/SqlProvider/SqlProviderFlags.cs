@@ -666,7 +666,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		/// <summary>
 		/// Provider renders <c>NULLS FIRST</c> / <c>NULLS LAST</c> natively in <c>ORDER BY</c> (and window
-		/// <c>OVER(ORDER BY …)</c>). When <see langword="false"/> (the default), <see cref="Sql.NullsPosition"/>
+		/// <c>OVER (ORDER BY …)</c>). When <see langword="false"/> (the default), <see cref="Sql.NullsPosition"/>
 		/// is emulated via a <c>CASE WHEN &lt;expr&gt; IS NULL THEN …</c> sort key.
 		/// </summary>
 		[DataMember(Order = 69), DefaultValue(false)]

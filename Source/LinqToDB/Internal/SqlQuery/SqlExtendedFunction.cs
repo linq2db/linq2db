@@ -444,7 +444,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 			if (PartitionBy is { Count: > 0 } || OrderBy is { Count: > 0 } || FrameClause != null)
 			{
-				writer.Append(" OVER(");
+				writer.Append(" OVER (");
 
 				if (PartitionBy != null && PartitionBy.Count > 0)
 				{

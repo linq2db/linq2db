@@ -490,7 +490,7 @@ namespace Tests.Linq
 			if (context.IsAnyOf(TestProvName.AllOracle))
 				Assert.That(db.LastQuery, Does.Contain("(ORDER BY p.\"Value1\", c_1.\"ChildID\" DESC, p.\"ParentID\")"));
 			else if (context.IsAnyOf(TestProvName.AllClickHouse, TestProvName.AllDuckDB))
-				Assert.That(db.LastQuery, Does.Contain("ROW_NUMBER() OVER(ORDER BY p.Value1, c_1.ChildID DESC, p.ParentID)"));
+				Assert.That(db.LastQuery, Does.Contain("ROW_NUMBER() OVER (ORDER BY p.Value1, c_1.ChildID DESC, p.ParentID)"));
 			else
 				Assert.Fail("Missing assertion");
 		}
