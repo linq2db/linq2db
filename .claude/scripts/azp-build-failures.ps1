@@ -105,28 +105,33 @@ $tasks = foreach ($t in $failedTasks) {
         continue
     }
 
-    # Parse `Failed <TestName>(...) [Nms]` + next `Error Message:` line(s).
+    # Parse failures in both runner formats:
+    #   VSTest adapter : "<ts>  Failed <Test>(...) [123 ms]"  then an "Error Message:" header
+    #   MS.Testing.Pf  : "<ts> failed <Test>(...) (1m 23s 456ms)" (ANSI-colored) then the message
+    #                     on the immediately-following lines (no "Error Message:" header)
     $lines = Get-Content -LiteralPath $logPath
     $failures = @()
     for ($i = 0; $i -lt $lines.Count -and $failures.Count -lt $MaxFailuresPerTask; $i++) {
-        $line = $lines[$i]
-        $m = [regex]::Match($line, '^\s*\S+\s+Failed\s+(?<test>\S.*?)\s+\[\d+(\.\d+)?\s*m?s\]\s*$')
+        # MTP colorizes output - strip ANSI SGR codes before matching.
+        $clean = [regex]::Replace($lines[$i], "\x1b\[[0-9;]*m", "")
+
+        $m = [regex]::Match($clean, '^\s*\S+\s+Failed\s+(?<test>\S.*?)\s+\[\d+(\.\d+)?\s*m?s\]\s*$')
+        if (-not $m.Success) {
+            $m = [regex]::Match($clean, '^\s*\S+\s+failed\s+(?<test>\S.*?)\s+\([\dhms\s\.]+\)\s*$')
+        }
         if (-not $m.Success) { continue }
 
         $testName = $m.Groups['test'].Value.Trim()
         $errMessage = $null
 
-        # Scan up to next ~5 lines for "Error Message:" header, then take the
-        # next non-empty line as the headline error.
-        for ($j = $i + 1; $j -lt [Math]::Min($i + 6, $lines.Count); $j++) {
-            if ($lines[$j] -match 'Error Message:\s*$') {
-                for ($k = $j + 1; $k -lt [Math]::Min($j + 3, $lines.Count); $k++) {
-                    $candidate = $lines[$k] -replace '^\s*\S+Z\s+', ''
-                    $candidate = $candidate.Trim()
-                    if ($candidate) { $errMessage = $candidate; break }
-                }
-                break
-            }
+        # Headline error: skip the optional "Error Message:" header (VSTest) and take the
+        # first non-empty following line (works for MTP, which has no header).
+        for ($j = $i + 1; $j -lt [Math]::Min($i + 8, $lines.Count); $j++) {
+            $candidate = ([regex]::Replace($lines[$j], "\x1b\[[0-9;]*m", "") -replace '^\s*\S+Z\s+', '').Trim()
+            if (-not $candidate)                     { continue }
+            if ($candidate -match '^Error Message:$') { continue }
+            $errMessage = $candidate
+            break
         }
 
         $failures += [pscustomobject]@{
