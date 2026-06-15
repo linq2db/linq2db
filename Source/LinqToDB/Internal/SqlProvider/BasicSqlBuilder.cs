@@ -3473,7 +3473,7 @@ namespace LinqToDB.Internal.SqlProvider
 			    extendedFunction.FrameClause        != null ||
 			    (extendedFunction.WithinGroup?.Count > 0 && IsOverRequiredWithinGroup && extendedFunction.IsWindowFunction))
 			{
-				StringBuilder.Append(" OVER (");
+				StringBuilder.Append(" OVER(");
 				if (extendedFunction.PartitionBy?.Count > 0)
 				{
 					StringBuilder.Append("PARTITION BY ");
