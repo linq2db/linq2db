@@ -33,8 +33,9 @@ namespace Tests.UserTests
 		[Table]
 		sealed class Campaign
 		{
-			[Column] public Guid Guid { get; set; }
-			[Column] public int  Sold { get; set; }
+			// PrimaryKey: YDB rejects keyless tables; Guid is unique per row, so it doesn't affect the bug under test.
+			[PrimaryKey] public Guid Guid { get; set; }
+			[Column]     public int  Sold { get; set; }
 		}
 
 		// Multi-member class. Must be a class — an unmapped struct is treated as scalar (separate path).

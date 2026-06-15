@@ -34,6 +34,7 @@ internal static class DatabaseProviders
 		}
 
 		Register(providers, providersByName, new DuckDBProvider    ());
+		Register(providers, providersByName, new YdbProvider       ());
 #else
 		Register(providers, providersByName, new InformixProvider  ());
 		Register(providers, providersByName, new DB2Provider       ());

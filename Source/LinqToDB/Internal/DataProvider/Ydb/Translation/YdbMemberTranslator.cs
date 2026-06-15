@@ -1,10 +1,11 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 using LinqToDB.Internal.DataProvider.Translation;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 using LinqToDB.SqlQuery;
@@ -20,24 +21,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 
 		protected override IMemberTranslator CreateGuidMemberTranslator() => new GuidMemberTranslator();
 
-		protected override IMemberTranslator CreateSqlTypesTranslator() => new SqlTypesTranslation();
-
 		protected override IMemberTranslator CreateMathMemberTranslator() => new MathMemberTranslator();
-
-		//ConvertToString
-		//ProcessSqlConvert
-		//TranslateConvertToBoolean/ProcessConvertToBoolean
-		//ProcessGetValueOrDefault
-
-		// TODO: we cannot use this implementation as it will generate same UUID for all invocations within single query
-		//protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
-		//{
-		//	var factory  = translationContext.ExpressionFactory;
-
-		//	var timePart = factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "RandomUuid", factory.Value(1));
-
-		//	return timePart;
-		//}
 
 		protected class GuidMemberTranslator : GuidMemberTranslatorBase
 		{
@@ -66,6 +50,16 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 					? factory.Function(valueTypeString, "String::LeftPad", value, padding, paddingChar)
 					: factory.Function(valueTypeString, "String::LeftPad", value, padding)
 					, valueTypeString, isMandatory: true);
+			}
+
+			public override ISqlExpression? TranslateLength(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression value)
+			{
+				var factory = translationContext.ExpressionFactory;
+				var intType = factory.GetDbDataType(typeof(int));
+
+				// YQL Length() returns the BYTE length of a Utf8 string; Unicode::GetLength returns the
+				// character count (matching C# string.Length). It returns Uint32, so cast to Int32.
+				return factory.Cast(factory.Function(intType, "Unicode::GetLength", value), intType, isMandatory: true);
 			}
 
 			public override ISqlExpression? TranslateReplace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression oldValue, ISqlExpression newValue)
@@ -391,7 +385,9 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 					param = factory.Function(arrayDataType, "ListNotNull", param);
 
 					var function = factory.Function(valueType, "ListConcat", param, separator);
-					return function;
+
+					// ListConcat of an empty list (all values NULL) returns NULL, but ConcatStrings must yield "".
+					return factory.Coalesce(function, factory.Value(string.Empty));
 				});
 
 				return builder.Build(translationContext, methodCall, isExpression: translationFlags.HasFlag(TranslationFlags.Expression));
@@ -404,42 +400,15 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				var stringType = factory.GetDbDataType(value);
 				var intType    = factory.GetDbDataType(typeof(int));
 
-				var stripped  = factory.Function(stringType, "Unicode::Strip", ParametersNullabilityType.IfAnyParameterNullable, value);
-				var lenFn     = factory.Length(stripped);
-				var predicate = factory.Equal(lenFn, factory.Value(intType, 0));
+				// Unicode::Strip does not treat U+0085 (NEL) as whitespace, but .NET's char.IsWhiteSpace does,
+				// so normalize it to a space before stripping.
+				var normalized = factory.Function(stringType, "Unicode::ReplaceAll", ParametersNullabilityType.IfAnyParameterNullable, value, factory.Value(stringType, "\u0085"), factory.Value(stringType, " "));
+				var stripped   = factory.Function(stringType, "Unicode::Strip", ParametersNullabilityType.IfAnyParameterNullable, normalized);
+				var lenFn      = factory.Length(stripped);
+				var predicate  = factory.Equal(lenFn, factory.Value(intType, 0));
 
 				return WrapIsNullOrWhiteSpaceResult(translationContext, value, predicate);
 			}
-		}
-
-		protected class SqlTypesTranslation : SqlTypesTranslationDefault
-		{
-			protected override Expression? ConvertBit(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
-			{
-				//return base.ConvertBit(translationContext, memberExpression, translationFlags);
-				throw new NotSupportedException("55");
-			}
-#if SUPPORTS_DATEONLY
-
-			protected override Expression? ConvertDateOnly(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
-			{
-				//return base.ConvertDateOnly(translationContext, memberExpression, translationFlags);
-				throw new NotSupportedException("52");
-			}
-#endif
-
-		//	// YDB stores DateTime with microsecond precision in the Timestamp type
-		//	protected override Expression? ConvertDateTime(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
-		//		=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.Timestamp));
-
-		//	protected override Expression? ConvertDateTime2(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
-		//		=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.Timestamp));
-
-		//	protected override Expression? ConvertSmallDateTime(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
-		//		=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.Timestamp));
-
-		//	protected override Expression? ConvertDateTimeOffset(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
-		//		=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.Timestamp));
 		}
 
 		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
@@ -447,18 +416,6 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 			protected override ISqlExpression? TranslateDateTimeOffsetDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 			{
 				return TranslateDateTimeDatePart(translationContext, translationFlag, dateTimeExpression, datepart);
-			}
-
-			protected override ISqlExpression? TranslateDateTimeOffsetTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
-			{
-				//return base.TranslateDateTimeOffsetTruncationToDate(translationContext, dateExpression, translationFlags);
-				throw new NotSupportedException("10");
-			}
-
-			protected override ISqlExpression? TranslateDateTimeOffsetTruncationToTime(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
-			{
-				//return base.TranslateDateTimeOffsetTruncationToTime(translationContext, dateExpression, translationFlags);
-				throw new NotSupportedException("09");
 			}
 
 			protected override ISqlExpression? TranslateDateTimeTruncationToTime(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
@@ -541,11 +498,6 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				return baseExpr;
 			}
 
-			//	protected override ISqlExpression? TranslateDateTimeOffsetDatePart(
-			//			ITranslationContext translationContext, TranslationFlags translationFlag,
-			//			ISqlExpression dateTimeExpression, Sql.DateParts datepart)
-			//		=> TranslateDateTimeDatePart(translationContext, translationFlag, dateTimeExpression, datepart);
-
 			protected override ISqlExpression? TranslateDateTimeDateAdd(
 					ITranslationContext translationContext, TranslationFlags translationFlag,
 					ISqlExpression dateTimeExpression, ISqlExpression increment, Sql.DateParts datepart)
@@ -564,13 +516,20 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 						_                     => throw new InvalidOperationException(),
 					};
 
-					var shiftArg = increment;
+					// ShiftYears/ShiftMonths require a non-optional Int32 second argument; the increment may be
+					// a nullable / narrower integer column. CAST(x AS Int32?) widens it and Unwrap() coerces
+					// the optional to Int32 (a plain factory cast is dropped for safe widenings and isn't
+					// Unwrap-wrapped for a nullable source).
+					var shiftArg = f.Expression(intType, "Unwrap(CAST({0} AS Int32?))", increment);
 
 					if (datepart == Sql.DateParts.Quarter)
-						shiftArg = f.Multiply(intType, increment, 3);
+						shiftArg = f.Multiply(intType, shiftArg, 3);
 
-					var shifted      = f.Function(f.GetDbDataType(dateTimeExpression), shiftFn, dateTimeExpression, shiftArg);
-					var makeDateTime = f.Function(dateType, "DateTime::MakeDatetime", shifted);
+					// DateTime::ShiftYears/ShiftMonths operate on a split datetime (Resource<TM>), not a raw
+					// Timestamp — split first, shift, then re-assemble: MakeTimestamp(ShiftX(Split(x), n)).
+					var split        = f.Function(dateType, "DateTime::Split", dateTimeExpression);
+					var shifted      = f.Function(dateType, shiftFn, split, shiftArg);
+					var makeDateTime = f.Function(dateType, "DateTime::MakeTimestamp", shifted);
 
 					return makeDateTime;
 				}
@@ -589,10 +548,23 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				if (intervalFn == null)
 					return null;
 
+				// The IntervalFrom* UDFs take an integer arg (Int32 — Int64 for milliseconds). The .NET
+				// Add*(double) / Sql.DateAdd signature types a *floating* increment that must be converted to
+				// that width; an already-integer increment is passed through (YQL widens it to the UDF param).
+				// We cast ONLY the floating case on purpose: a no-op/widening SqlCastExpression survives the
+				// optimizer only via IsMandatory, but IsMandatory is lost across the remote LinqService
+				// serialization boundary — so an integer→integer cast is pruned only on the remote side and
+				// diverges direct/remote baselines. A floating→integer cast is a real narrowing and survives
+				// both paths; the YDB builder's BuildSqlCastExpression adds Unwrap() for a non-null source.
+				var isMs    = datepart == Sql.DateParts.Millisecond;
+				var incType = f.GetDbDataType(isMs ? typeof(long) : typeof(int));
+				var sysType = f.GetDbDataType(increment).SystemType.UnwrappedNullableType;
+
+				if (sysType == typeof(double) || sysType == typeof(float))
+					increment = f.Cast(increment, incType, isMandatory: true);
+
 				if (datepart == Sql.DateParts.Week)
-				{
-					increment = f.Multiply(f.GetDbDataType(increment), increment, 7);
-				}
+					increment = f.Multiply(incType, increment, 7);
 
 				var interval = f.Function(
 						f.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Interval),
@@ -602,42 +574,113 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				return f.Add(dateType, dateTimeExpression, interval);
 			}
 
-			//	protected override ISqlExpression? TranslateDateTimeTruncationToDate(
-			//			ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
-			//	{
-			//		var f        = translationContext.ExpressionFactory;
-			//		var resType  = f.GetDbDataType(typeof(DateTime)).WithDataType(DataType.Date);
-			//		var startDay = f.Function(f.GetDbDataType(dateExpression), "DateTime::StartOfDay", dateExpression);
-			//		return f.Function(resType, "DateTime::MakeDate", startDay);
-			//	}
+			protected override ISqlExpression? TranslateMakeDateTime(
+				ITranslationContext translationContext,
+				DbDataType          resulType,
+				ISqlExpression      year,
+				ISqlExpression      month,
+				ISqlExpression      day,
+				ISqlExpression?     hour,
+				ISqlExpression?     minute,
+				ISqlExpression?     second,
+				ISqlExpression?     millisecond)
+			{
+				var f          = translationContext.ExpressionFactory;
+				var stringType = f.GetDbDataType(typeof(string));
+				var intType    = f.GetDbDataType(typeof(int));
 
-			//	protected override ISqlExpression? TranslateDateTimeOffsetTruncationToDate(
-			//			ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
-			//		=> TranslateDateTimeTruncationToDate(translationContext, dateExpression, translationFlags);
+				// YQL has no make-timestamp-from-parts builtin, so build the conventional
+				// 'yyyy-MM-dd HH:mm:ss[.fff]' (date-only 'yyyy-MM-dd') string and CAST it; YdbSqlExpressionConvertVisitor
+				// turns the string->Datetime/Timestamp cast into the ISO ParseIso8601 form (single place that
+				// owns the format). Components are zero-padded via Substring(CAST(100 + x AS String), 1, 2)
+				// (year is always four digits in YDB's 1970..2105 range); the Substring also keeps the
+				// expression out of client-side constant folding, so an all-constant new DateTime(...) stays in
+				// SQL. millisecond is supplied by the 7-arg new DateTime(...) constructor (TranslateDateTimeConstructor)
+				// and emitted as the '.fff' fraction so a Timestamp result keeps sub-second precision.
+				ISqlExpression Str(ISqlExpression e)  => f.Cast(e, stringType);
+				ISqlExpression Pad2(ISqlExpression e) => f.Function(stringType, "Unicode::Substring", f.Cast(f.Add(intType, e, f.Value(intType, 100)),  stringType), f.Value(intType, 1), f.Value(intType, 2));
+				ISqlExpression Pad3(ISqlExpression e) => f.Function(stringType, "Unicode::Substring", f.Cast(f.Add(intType, e, f.Value(intType, 1000)), stringType), f.Value(intType, 1), f.Value(intType, 3));
+				ISqlExpression Sep(string v)          => f.Value(stringType, v);
+
+				var isDateOnly = resulType.DataType == DataType.Date;
+#if SUPPORTS_DATEONLY
+				isDateOnly = isDateOnly || resulType.SystemType.UnwrappedNullableType == typeof(DateOnly);
+#endif
+
+				var pieces = new List<ISqlExpression>
+				{
+					Str(year),   Sep("-"),
+					Pad2(month), Sep("-"),
+					Pad2(day),
+				};
+
+				if (!isDateOnly)
+				{
+					pieces.Add(Sep(" "));
+					pieces.Add(Pad2(hour   ?? f.Value(intType, 0))); pieces.Add(Sep(":"));
+					pieces.Add(Pad2(minute ?? f.Value(intType, 0))); pieces.Add(Sep(":"));
+					pieces.Add(Pad2(second ?? f.Value(intType, 0)));
+
+					if (millisecond != null)
+					{
+						pieces.Add(Sep("."));
+						pieces.Add(Pad3(millisecond));
+					}
+				}
+
+				return f.Cast(f.Concat(pieces.ToArray()), resulType);
+			}
+
+			protected override ISqlExpression? TranslateDateTimeTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
+			{
+				var f        = translationContext.ExpressionFactory;
+				var dateType = f.GetDbDataType(dateExpression);
+
+				// .Date drops the time-of-day, keeping a DateTime at midnight. Use the function chain
+				// Split -> StartOfDay -> MakeTimestamp (as the ShiftYears path does) rather than a
+				// CAST(Timestamp AS Date AS Timestamp) round-trip: that round-trip is collapsible to the
+				// original value, and since SqlCastExpression.IsMandatory is lost across the remote
+				// LinqService boundary the collapse fires only on the remote side (skipping truncation).
+				var split   = f.Function(dateType, "DateTime::Split", dateExpression);
+				var startOf = f.Function(dateType, "DateTime::StartOfDay", split);
+
+				return f.Function(dateType, "DateTime::MakeTimestamp", startOf);
+			}
 		}
 
 		protected class MathMemberTranslator : MathMemberTranslatorBase
 		{
 			protected override ISqlExpression? TranslateMaxMethod(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression xValue, ISqlExpression yValue)
-			{
-				var factory = translationContext.ExpressionFactory;
-
-				var valueType = factory.GetDbDataType(xValue);
-
-				var result = factory.Function(valueType, "MAX_OF", xValue, yValue);
-
-				return result;
-			}
+				=> TranslateMinMax(translationContext, "MAX_OF", xValue, yValue);
 
 			protected override ISqlExpression? TranslateMinMethod(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression xValue, ISqlExpression yValue)
+				=> TranslateMinMax(translationContext, "MIN_OF", xValue, yValue);
+
+			// YQL MIN_OF/MAX_OF require both arguments to have the same type — in particular two Decimals
+			// must share precision/scale. Widen both to a common type that can hold either operand
+			// (max integer digits, max scale) rather than forcing one onto the other's type.
+			static ISqlExpression TranslateMinMax(ITranslationContext translationContext, string function, ISqlExpression xValue, ISqlExpression yValue)
 			{
 				var factory = translationContext.ExpressionFactory;
+				var xType   = factory.GetDbDataType(xValue);
+				var yType   = factory.GetDbDataType(yValue);
 
-				var valueType = factory.GetDbDataType(xValue);
+				if (xType.EqualsDbOnly(yType))
+					return factory.Function(xType, function, xValue, yValue);
 
-				var result = factory.Function(valueType, "MIN_OF", xValue, yValue);
+				static bool IsDecimal(DbDataType t) => t.DataType == DataType.Decimal || t.SystemType.UnwrappedNullableType == typeof(decimal);
 
-				return result;
+				// Two Decimals: widen to a type holding both. Other (same-CLR) mismatch: align onto the first.
+				var common = IsDecimal(xType) && IsDecimal(yType)
+					? YdbMappingSchema.GetCommonDecimalType(xType, yType)
+					: xType;
+
+				if (!xType.EqualsDbOnly(common))
+					xValue = factory.Cast(xValue, common);
+				if (!yType.EqualsDbOnly(common))
+					yValue = factory.Cast(yValue, common);
+
+				return factory.Function(common, function, xValue, yValue);
 			}
 
 			protected override ISqlExpression? TranslatePow(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression xValue, ISqlExpression yValue)
@@ -670,72 +713,72 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				return result;
 			}
 
+			// YQL has no top-level ROUND builtin, and CAST(<Double> AS Decimal) is rejected. Strategy:
+			// scale the value by 10^p in its OWN type first (exact for Decimal, so the rounding boundary
+			// — a half-integer — becomes exactly representable in Double), round to an integer in Double,
+			// cast back (Double->Decimal becomes a string round-trip via YdbSqlExpressionConvertVisitor),
+			// then unscale by /10^p. Rounding the scaled-then-cast value avoids the float-midpoint errors
+			// that a direct CAST(decimal AS Double) would introduce.
+			//   - to-even        : Math::NearbyInt(s, Math::RoundToNearest())
+			//   - away-from-zero : Math::Round is half-toward-+inf, so round the magnitude and reapply sign
+
 			protected override ISqlExpression? TranslateRoundToEven(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
+				=> RoundScaled(translationContext, value, precision,
+					(f, dt, s) => f.Function(dt, "Math::NearbyInt", s, f.Fragment("Math::RoundToNearest()")));
+
+			protected override ISqlExpression? TranslateRoundAwayFromZero(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
+				=> RoundScaled(translationContext, value, precision, static (f, dt, s) =>
+				{
+					// Math::Round rounds half toward +inf, so it equals away-from-zero only for s >= 0.
+					// away(s) = (s >= 0) ? Math::Round(s) : -Math::Round(-s)
+					var pos  = f.Function(dt, "Math::Round", s);
+					var neg  = f.Negate(dt, f.Function(dt, "Math::Round", f.Negate(dt, s)));
+					var cond = f.SearchCondition().AddGreaterOrEqual(s, f.Value(dt, 0.0), CompareNulls.LikeSql);
+
+					return f.Condition(cond, pos, neg);
+				});
+
+			static ISqlExpression RoundScaled(
+				ITranslationContext                                                         translationContext,
+				ISqlExpression                                                              value,
+				ISqlExpression?                                                             precision,
+				Func<ISqlExpressionFactory, DbDataType, ISqlExpression, ISqlExpression>     roundToInt)
 			{
-				if (precision != null)
-					return base.TranslateRoundToEven(translationContext, methodCall, value, precision);
+				var factory    = translationContext.ExpressionFactory;
+				var valueType  = factory.GetDbDataType(value);
+				var doubleType = factory.GetDbDataType(typeof(double));
+				var isDecimal  = valueType.SystemType.UnwrappedNullableType == typeof(decimal);
 
-				var factory = translationContext.ExpressionFactory;
+				var hasPrecision = precision is not (null or SqlValue { Value: 0 } or SqlValue { Value: 0L });
 
-				var valueType = factory.GetDbDataType(value);
+				// scale by 10^p in the value's own type (exact for Decimal)
+				var scaled = hasPrecision ? factory.Multiply(valueType, value, Pow10(factory, valueType, precision!)) : value;
 
-				var result = factory.Function(valueType, "Math::NearbyInt", value, factory.Fragment("Math::RoundToNearest()"));
+				// round to an integer in Double — the scaled rounding boundary is exactly representable
+				var rounded = roundToInt(factory, doubleType, factory.Cast(scaled, doubleType));
 
-				return result;
+				// back to the value's type (Double->Decimal becomes the string round-trip)
+				var back = isDecimal || !valueType.EqualsDbOnly(doubleType) ? factory.Cast(rounded, valueType) : rounded;
+
+				return hasPrecision ? factory.Div(valueType, back, Pow10(factory, valueType, precision!)) : back;
 			}
 
-		//	/// <summary>
-		//	/// Banker's rounding: In YQL, ROUND(value, precision?) already performs to-even rounding for Decimal types.
-		//	/// </summary>
-		//	protected override ISqlExpression? TranslateRoundToEven(
-		//		ITranslationContext translationContext,
-		//		MethodCallExpression methodCall,
-		//		ISqlExpression value,
-		//		ISqlExpression? precision)
-		//	{
-		//		var factory   = translationContext.ExpressionFactory;
-		//		var valueType = factory.GetDbDataType(value);
+			// 10^precision rendered in the requested type (decimal or double).
+			static ISqlExpression Pow10(ISqlExpressionFactory factory, DbDataType type, ISqlExpression precision)
+			{
+				var isDecimal = type.SystemType.UnwrappedNullableType == typeof(decimal);
 
-		//		return precision != null
-		//			? factory.Function(valueType, "ROUND", value, precision)
-		//			: factory.Function(valueType, "ROUND", value);
-		//	}
-
-		//	/// <summary>
-		//	/// Away-from-zero rounding: In YQL, ROUND(value, precision?) for Numeric types already uses away-from-zero rounding.
-		//	/// </summary>
-		//	protected override ISqlExpression? TranslateRoundAwayFromZero(
-		//		ITranslationContext translationContext,
-		//		MethodCallExpression methodCall,
-		//		ISqlExpression value,
-		//		ISqlExpression? precision)
-		//	{
-		//		var factory   = translationContext.ExpressionFactory;
-		//		var valueType = factory.GetDbDataType(value);
-
-		//		return precision != null
-		//			? factory.Function(valueType, "ROUND", value, precision)
-		//			: factory.Function(valueType, "ROUND", value);
-		//	}
-
-		//	/// <summary>
-		//	/// Exponentiation using the built-in POWER(a, b) function.
-		//	/// </summary>
-		//	protected override ISqlExpression? TranslatePow(
-		//		ITranslationContext translationContext,
-		//		MethodCallExpression methodCall,
-		//		ISqlExpression xValue,
-		//		ISqlExpression yValue)
-		//	{
-		//		var factory = translationContext.ExpressionFactory;
-		//		var xType   = factory.GetDbDataType(xValue);
-		//		var yType   = factory.GetDbDataType(yValue);
-
-		//		if (!xType.EqualsDbOnly(yType))
-		//			yValue = factory.Cast(yValue, xType);
-
-		//		return factory.Function(xType, "POWER", xValue, yValue);
-		//	}
+				return precision switch
+				{
+					SqlValue { Value: int p }   => factory.Value(type, isDecimal ? (object)(decimal)Math.Pow(10, p)  : Math.Pow(10, p)),
+					SqlValue { Value: long pl }  => factory.Value(type, isDecimal ? (object)(decimal)Math.Pow(10, pl) : Math.Pow(10, pl)),
+					_                           => factory.Cast(
+						factory.Function(factory.GetDbDataType(typeof(double)), "Math::Pow",
+							factory.Value(factory.GetDbDataType(typeof(double)), 10.0),
+							factory.Cast(precision, factory.GetDbDataType(typeof(double)))),
+						type),
+				};
+			}
 		}
 
 		protected class YdbWindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator

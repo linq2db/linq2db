@@ -91,13 +91,13 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				return null;
 
 			// Mapping of status codes to jitter type — same as in the YDB SDK:
-			//  - BadSession/SessionBusy         -> 0ms
-			//  - Aborted/Undetermined           -> FullJitter (fast)
-			//  - Unavailable/ClientTransport*   -> EqualJitter (fast)
-			//  - Overloaded/ClientTransportRes* -> EqualJitter (slow)
+			//  - BadSession/SessionBusy/SessionExpired -> 0ms
+			//  - Aborted/Undetermined                  -> FullJitter (fast)
+			//  - Unavailable/ClientTransport*          -> EqualJitter (fast)
+			//  - Overloaded/ClientTransportRes*        -> EqualJitter (slow)
 			return code switch
 			{
-				"BadSession" or "SessionBusy"
+				"BadSession" or "SessionBusy" or "SessionExpired"
 					=> TimeSpan.Zero,
 
 				"Aborted" or "Undetermined"

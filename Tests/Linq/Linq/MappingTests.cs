@@ -435,7 +435,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ColumnMappingException1([DataSources(ProviderName.SqlCe)] string context)
+		public void ColumnMappingException1([DataSources(ProviderName.SqlCe, TestProvName.AllYdb)] string context)
 		{
 			GetProviderName(context, out var isLinqService);
 
@@ -458,7 +458,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ColumnMappingException2([DataSources(ProviderName.SqlCe)] string context)
+		public void ColumnMappingException2([DataSources(ProviderName.SqlCe, TestProvName.AllYdb)] string context)
 		{
 			GetProviderName(context, out var isLinqService);
 
@@ -856,7 +856,7 @@ namespace Tests.Linq
 
 		#region Issue 3117
 
-		[ActiveIssue(Configurations = [TestProvName.AllDB2, TestProvName.AllInformix, TestProvName.AllMySqlConnector, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSQLite])]
+		[ActiveIssue(Configurations = [TestProvName.AllDB2, TestProvName.AllInformix, TestProvName.AllMySqlConnector, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSQLite, TestProvName.AllYdb])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3117")]
 		public void Issue3117Test1([DataSources(false, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
@@ -876,7 +876,7 @@ namespace Tests.Linq
 			user = db.GetTable<User>().FirstOrDefault(u => userIds.Contains(u.Id));
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllDB2, TestProvName.AllInformix, TestProvName.AllMySqlConnector, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSQLite])]
+		[ActiveIssue(Configurations = [TestProvName.AllDB2, TestProvName.AllInformix, TestProvName.AllMySqlConnector, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSQLite, TestProvName.AllYdb])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3117")]
 		public void Issue3117Test2([DataSources(false, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{

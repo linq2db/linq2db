@@ -61,7 +61,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 			statement = base.Finalize(mappingSchema, statement, dataOptions);
 
-			if (MoveScalarSubQueriesToCte(statement))
+			if (MoveScalarSubQueriesToCte(statement, mappingSchema))
 				FinalizeCte(statement);
 
 			statement.VisitAll(ReplaceTableAll);
@@ -69,49 +69,27 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			return statement;
 		}
 
-		private bool MoveScalarSubQueriesToCte(SqlStatement statement)
+		private bool MoveScalarSubQueriesToCte(SqlStatement statement, MappingSchema mappingSchema)
 		{
 			if (statement is not SqlStatementWithQueryBase withStatement)
 				return false;
 
 			var cteCount = withStatement.With?.Clauses.Count ?? 0;
 
+			using var visitor = YdbScalarSubQueryToCteVisitor.Pool.Allocate();
+
+			// UPDATE SET values are subqueries too; process Update.Items so they move to CTEs, and first so the
+			// structurally-identical SELECT-column copies dedup into the same CTE.
+			if (statement is SqlUpdateStatement update)
+				update.Update = visitor.Value.Convert(withStatement, mappingSchema, update.Update);
+
 			if (statement.SelectQuery != null && statement.QueryType != QueryType.Merge)
-				statement.SelectQuery = ConvertToCte(statement.SelectQuery, withStatement);
+				statement.SelectQuery = visitor.Value.Convert(withStatement, mappingSchema, statement.SelectQuery);
 
 			if (statement is SqlInsertStatement insert)
-				insert.Insert = ConvertToCte(insert.Insert, withStatement);
+				insert.Insert = visitor.Value.Convert(withStatement, mappingSchema, insert.Insert);
 
 			return withStatement.With?.Clauses.Count > cteCount;
-
-			static T ConvertToCte<T>(T statement, SqlStatementWithQueryBase withStatement)
-				where T: class, IQueryElement
-			{
-				return statement.Convert(withStatement, static (visitor, elem) =>
-				{
-					if (elem is SelectQuery { Select.Columns: [var column] } subQuery
-						&& !QueryHelper.IsDependsOnOuterSources(subQuery))
-					{
-						if (column.SystemType == null)
-							throw new InvalidOperationException();
-
-						if (visitor.Stack?.Count > 1
-							// in column or predicate
-							&& visitor.Stack[^2] is not ISqlTableSource
-							&& visitor.Stack[^2] is SqlSelectClause
-								or ISqlPredicate
-								or SqlExpressionBase
-								or SqlSetExpression)
-						{
-							var cte = new CteClause(subQuery, column.SystemType, false, null);
-							(visitor.Context.With ??= new()).Clauses.Add(cte);
-							return new SqlCteTable(cte, column.SystemType);
-						}
-					}
-
-					return elem;
-				}, true);
-			}
 		}
 
 		static void SetQueryParameter(IQueryElement element)
