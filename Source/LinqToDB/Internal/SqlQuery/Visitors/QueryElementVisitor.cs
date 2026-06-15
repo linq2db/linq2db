@@ -1084,6 +1084,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					Visit(element.SelectQuery);
 					Visit(element.Insert);
 					Visit(element.Update);
+					Visit(element.UpdateWhere);
 
 					VisitElements(element.SqlQueryExtensions, VisitMode.ReadOnly);
 
@@ -1096,6 +1097,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					element.SelectQuery = (SelectQuery?)Visit(element.SelectQuery);
 					element.Insert      = (SqlInsertClause)Visit(element.Insert);
 					element.Update      = (SqlUpdateClause)Visit(element.Update);
+					element.UpdateWhere = (SqlSearchCondition?)Visit(element.UpdateWhere);
 
 					VisitElements(element.SqlQueryExtensions, VisitMode.Modify);
 
@@ -1108,6 +1110,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					var selectQuery = (SelectQuery?)Visit(element.SelectQuery);
 					var insert      = (SqlInsertClause)Visit(element.Insert);
 					var update      = (SqlUpdateClause)Visit(element.Update);
+					var updateWhere = (SqlSearchCondition?)Visit(element.UpdateWhere);
 					var ext         = VisitElements(element.SqlQueryExtensions, VisitMode.Transform);
 
 					if (ShouldReplace(element)                             ||
@@ -1116,6 +1119,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					    !ReferenceEquals(element.With, with)               ||
 					    !ReferenceEquals(element.Insert, insert)           ||
 					    !ReferenceEquals(element.Update, update)           ||
+					    !ReferenceEquals(element.UpdateWhere, updateWhere) ||
 					    element.SqlQueryExtensions != ext)
 					{
 						return NotifyReplaced(new SqlInsertOrUpdateStatement(selectQuery)
@@ -1124,6 +1128,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 							With               = with,
 							Insert             = insert,
 							Update             = update,
+							UpdateWhere        = updateWhere,
 							SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList(),
 						}, element);
 					}
