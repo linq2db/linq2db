@@ -17,6 +17,7 @@ using LinqToDB.Internal.Conversion;
 using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Mapping;
 using LinqToDB.Internal.Reflection;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
@@ -2811,6 +2812,9 @@ namespace LinqToDB.Internal.Linq.Builder
 					return Visit(translatedMember);
 			}
 
+			if (_buildPurpose is BuildPurpose.Table)
+				return node;
+
 			if (BuildContext == null || _buildPurpose is not (BuildPurpose.Sql or BuildPurpose.Expression))
 				return base.VisitBinary(node);
 
@@ -3133,6 +3137,22 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var left  = node.Left;
 			var right = node.Right;
+
+			// DateTime/DateTimeOffset subtraction yields a TimeSpan duration with no portable SQL
+			// representation, so evaluate it client-side (preserves full .NET tick precision). The
+			// (a - b).TotalDays/TotalHours/... forms are rewritten to Sql.DateDiff earlier, in
+			// ExposeExpressionVisitor.ConvertMemberAccess, so only the bare-duration projection reaches here.
+			if (node.NodeType is ExpressionType.Subtract or ExpressionType.SubtractChecked)
+			{
+				var leftType  = node.Left.Type.UnwrapNullableType();
+				var rightType = node.Right.Type.UnwrapNullableType();
+				if ((leftType  == typeof(DateTime) || leftType  == typeof(DateTimeOffset))
+					&& (rightType == typeof(DateTime) || rightType == typeof(DateTimeOffset)))
+				{
+					translated = base.VisitBinary(node);
+					return true;
+				}
+			}
 
 			var shouldCheckColumn = node.Left.Type.UnwrapNullableType() == node.Right.Type.UnwrapNullableType();
 
@@ -4933,9 +4953,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (obj.Type != ttype)
 					obj = Expression.Convert(expression.Expression, ttype);
 
-				var memberInfo = ttype.GetMemberEx(field.ColumnDescriptor.MemberInfo) ?? throw new InvalidOperationException();
-
-				var left = Expression.MakeMemberAccess(obj, memberInfo);
+				var left = field.ColumnDescriptor.GetMemberAccessExpression(obj);
 				var code = m.m.Code;
 
 				if (code == null)
@@ -5004,10 +5022,12 @@ namespace LinqToDB.Internal.Linq.Builder
 			using var snapshot = _gettingSubquery == 0 && Builder.ValidateSubqueries ? CreateSnapshot() : null;
 
 			++_gettingSubquery;
-			// reset flags to avoid affecting subquery building with flags that are only relevant for current level
-			using var saveFlags   = UsingBuildFlags(BuildFlags.None);
+			// reset flags + ambient column descriptor: both are current-level state (the descriptor is e.g. a
+			// projection member being built) and must not leak into subquery building (issue #5576)
+			using var saveFlags      = UsingBuildFlags(BuildFlags.None);
+			using var saveDescriptor = UsingColumnDescriptor(null);
 
-			var       buildResult = Builder.TryBuildSequence(info);
+			var       buildResult    = Builder.TryBuildSequence(info);
 			--_gettingSubquery;
 
 			if (expr is ContextRefExpression contextRef && ReferenceEquals(contextRef.BuildContext, buildResult.BuildContext))

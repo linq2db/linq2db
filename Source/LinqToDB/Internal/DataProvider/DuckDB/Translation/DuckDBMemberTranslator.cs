@@ -165,26 +165,33 @@ namespace LinqToDB.Internal.DataProvider.DuckDB.Translation
 				var factory = translationContext.ExpressionFactory;
 				var dbDataType = factory.GetDbDataType(typeof(DateTime));
 
-				return factory.NotNullExpression(dbDataType, "CURRENT_TIMESTAMP");
+				// Use the now() function form rather than the CURRENT_TIMESTAMP keyword: DuckDB's
+				// ON CONFLICT ... DO UPDATE SET binder parses the bare keyword as a column reference
+				// (Binder Error: ... does not have a column named "CURRENT_TIMESTAMP"). now() is the
+				// DuckDB-equivalent (TIMESTAMP WITH TIME ZONE) and binds correctly in every context.
+				return factory.Function(dbDataType, "now");
 			}
 
 			protected override ISqlExpression? TranslateNow(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
 				var factory = translationContext.ExpressionFactory;
 				var dbDataType = factory.GetDbDataType(typeof(DateTime));
-				return factory.NotNullExpression(dbDataType, "LOCALTIMESTAMP");
+				// current_localtimestamp() function form, not the bare LOCALTIMESTAMP keyword: the keyword
+				// is parsed as a column reference inside ON CONFLICT ... DO UPDATE SET. Returns a plain
+				// TIMESTAMP (local time, no time zone), matching the LOCALTIMESTAMP keyword's semantics.
+				return factory.Function(dbDataType, "current_localtimestamp");
 			}
 
 			protected override ISqlExpression? TranslateZonedNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
 			{
 				var factory = translationContext.ExpressionFactory;
-				return factory.NotNullExpression(dbDataType, "CURRENT_TIMESTAMP");
+				return factory.Function(dbDataType, "now");
 			}
 
 			protected override ISqlExpression? TranslateZonedUtcNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
 			{
 				var factory = translationContext.ExpressionFactory;
-				return factory.NotNullExpression(dbDataType, "CURRENT_TIMESTAMP AT TIME ZONE 'UTC'");
+				return factory.NotNullExpression(dbDataType, "{0} AT TIME ZONE 'UTC'", factory.Function(dbDataType, "now"));
 			}
 		}
 

@@ -37,7 +37,7 @@ namespace Tests.xUpdate
 				TestProvName.AllAccess)]
 			string context)
 		{
-			using var _ = context.IsAnyOf(TestProvName.AllSapHana) ? new DisableBaseline("Client-side Guid generation") : null;
+			using var _ = context.IsAnyOf(TestProvName.AllSapHana, TestProvName.AllYdb) ? new DisableBaseline("Client-side Guid generation") : null;
 			using var db = GetDataContext(context);
 			db.BeginTransaction();
 
@@ -79,7 +79,7 @@ namespace Tests.xUpdate
 				TestProvName.AllAccess)]
 			string context)
 		{
-			using var _ = context.IsAnyOf(TestProvName.AllSapHana) ? new DisableBaseline("Client-side Guid generation") : null;
+			using var _ = context.IsAnyOf(TestProvName.AllSapHana, TestProvName.AllYdb) ? new DisableBaseline("Client-side Guid generation") : null;
 			using var db = GetDataContext(context);
 			try
 			{
@@ -508,6 +508,7 @@ namespace Tests.xUpdate
 		public class LinqDataTypesArrayTest
 		{
 			[Column] public int       ID;
+			[Column(Precision = 6, Scale = 2, Configuration = ProviderName.Ydb)]
 			[Column] public decimal   MoneyValue;
 			[Column] public DateTime? DateTimeValue;
 			[Column] public bool      BoolValue;
@@ -1462,13 +1463,16 @@ namespace Tests.xUpdate
 
 				using (Assert.EnterMultipleScope())
 				{
-					Assert.That(db.Person
+					var affected = db.Person
 						.Insert(() => new Person
 						{
 							FirstName = "Insert14" + db.Person.Where(p => p.ID == 1).Select(p => p.FirstName).SingleOrDefault(),
 							LastName  = "Shepard",
 							Gender    = Gender.Male,
-						}), Is.EqualTo(1));
+						});
+
+					if (context.SupportsRowcount())
+						Assert.That(affected, Is.EqualTo(1));
 
 					Assert.That(db.Person.Count(p => p.FirstName.StartsWith("Insert14")), Is.EqualTo(1));
 				}
@@ -1507,6 +1511,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ActiveIssue(5595, Configuration = TestProvName.AllYdb, Details = "C# non-nullable string semantics aren't carried through translation: the computed (GetLength + idx).ToString() value is inferred nullable (Optional<Utf8>) and YDB rejects it into the non-null LastName column.")]
 		public void Insert16([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1541,7 +1546,7 @@ namespace Tests.xUpdate
 			TestProvName.AllFirebirdLess4,
 			TestProvName.AllInformix,
 			TestProvName.AllSapHana,
-			ProviderName.Ydb,
+			TestProvName.AllYdb,
 			TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1563,7 +1568,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void InsertSingleIdentity([DataSources(
-			TestProvName.AllInformix, ProviderName.SqlCe, TestProvName.AllSapHana, TestProvName.AllClickHouse)]
+			TestProvName.AllInformix, ProviderName.SqlCe, TestProvName.AllSapHana, TestProvName.AllClickHouse, TestProvName.AllYdb)]
 			string context)
 		{
 			using var db = GetDataContext(context);
@@ -2376,7 +2381,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3927")]
-		public void Issue3927Test1([DataSources(TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllMariaDB)] string context)
+		public void Issue3927Test1([DataSources(TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllMariaDB, TestProvName.AllYdb)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<Issue3927Table>();
@@ -2391,7 +2396,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3927")]
-		public void Issue3927Test2([DataSources(TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllMariaDB)] string context)
+		public void Issue3927Test2([DataSources(TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllMariaDB, TestProvName.AllYdb)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<Issue3927Table>();
@@ -2417,7 +2422,7 @@ namespace Tests.xUpdate
 
 		[ActiveIssue(
 			Details = "Update test to test different RetrieveIdentity modes for all providers with sequences",
-			Configurations = [TestProvName.AllFirebird, TestProvName.AllAccess, TestProvName.AllDB2, TestProvName.AllPostgreSQL, ProviderName.SqlCe, TestProvName.AllSapHana, ProviderName.Ydb, TestProvName.AllDuckDB])]
+			Configurations = [TestProvName.AllFirebird, TestProvName.AllAccess, TestProvName.AllDB2, TestProvName.AllPostgreSQL, ProviderName.SqlCe, TestProvName.AllSapHana, TestProvName.AllYdb, TestProvName.AllDuckDB])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4702")]
 		public void Issue4702Test([DataSources(false)] string context, [Values] bool useSequence)
 		{

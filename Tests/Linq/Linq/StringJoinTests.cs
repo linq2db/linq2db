@@ -189,7 +189,7 @@ namespace Tests.Linq
 
 		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
-		public void JoinWithGroupingOrdered([DataSources(ProviderName.Ydb, TestProvName.AllSqlServer2016Plus, TestProvName.AllOracle)] string context)
+		public void JoinWithGroupingOrdered([DataSources(TestProvName.AllYdb, TestProvName.AllSqlServer2016Plus, TestProvName.AllOracle)] string context)
 		{
 			var       data  = SampleClass.GenerateDataNotUniqueId();
 			using var db    = GetDataContext(context);
@@ -443,6 +443,13 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(data);
 
+			// YDB: the remote (LinqService) path renders the mandatory same-type CAST(Unicode::GetLength(...) AS Int32)
+			// as bare Unicode::GetLength(...), while direct access emits Unwrap(CAST(... AS Int32)). The result is
+			// identical; the cast node is dropped before the server-side builder only on the remote path. To investigate.
+			using var _ = context.IsAnyOf(TestProvName.AllYdb)
+				? new DisableBaseline("https://github.com/linq2db/linq2db/issues/5169 - YDB remote/direct CAST(Unicode::GetLength AS Int32) elision divergence (result-neutral)")
+				: null;
+
 			var query =
 				from t in table
 				select Sql.AsSql(string.Join(", ", new[] { t.NullableValue, t.NotNullableValue, t.VarcharValue, t.NVarcharValue }.Where(x => x != null).Where(x => x!.Contains("A"))));
@@ -471,7 +478,7 @@ namespace Tests.Linq
 
 		[ThrowsCannotBeConverted(TestProvName.AllAccess, TestProvName.AllSqlServer2016Minus, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase)]
 		[Test]
-		public void StringJoinAssociationSubqueryUpdate1([DataSources(ProviderName.Ydb, TestProvName.AllClickHouse, TestProvName.AllMySql57)] string context)
+		public void StringJoinAssociationSubqueryUpdate1([DataSources(TestProvName.AllYdb, TestProvName.AllClickHouse, TestProvName.AllMySql57)] string context)
 		{
 			var       data  = SampleClass.GenerateDataUniqueId();
 			using var db    = GetDataContext(context);
@@ -496,7 +503,7 @@ namespace Tests.Linq
 
 		[ThrowsCannotBeConverted(TestProvName.AllAccess, TestProvName.AllSqlServer2016Minus, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase)]
 		[Test]
-		public void StringJoinAssociationSubqueryUpdate2([DataSources(ProviderName.Ydb, TestProvName.AllClickHouse, TestProvName.AllMySql57)] string context)
+		public void StringJoinAssociationSubqueryUpdate2([DataSources(TestProvName.AllYdb, TestProvName.AllClickHouse, TestProvName.AllMySql57)] string context)
 		{
 			var       data  = SampleClass.GenerateDataUniqueId();
 			using var db    = GetDataContext(context);

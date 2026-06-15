@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
@@ -153,11 +153,20 @@ namespace LinqToDB
 	/// </code>
 	/// Default value: <see langword="false"/>.
 	/// </param>
+	/// <param name="UpsertEmulationPolicy">
+	/// Controls what happens when an <c>Upsert</c> cannot be expressed as a native single-statement upsert
+	/// or <c>MERGE</c> for the target provider and would fall back to an emulated multi-statement
+	/// <c>SELECT → UPDATE → INSERT</c> sequence (the three statements run as independent commands — wrap the
+	/// call in a transaction if atomicity is required).
+	/// <list type="bullet">
+	///   <item><see cref="UpsertEmulationPolicy.Allow"/> (default) — perform the emulated fallback.</item>
+	///   <item><see cref="UpsertEmulationPolicy.Throw"/> — reject it with <see cref="LinqToDBException"/> at build time.</item>
+	/// </list>
+	/// </param>
 	/// <param name="DefaultEagerLoadingStrategy">
 	/// Specifies the default <see cref="EagerLoadingStrategy"/> used for all LoadWith/ThenLoad eager-loading
 	/// operations when no per-association strategy is set via <c>WithEagerLoadingStrategy</c>.
 	/// Default value: <see cref="EagerLoadingStrategy.Default"/>.
-	/// </param>
 	public sealed record LinqOptions
 	(
 		// TODO: Remove in v7
@@ -181,6 +190,7 @@ namespace LinqToDB
 		bool                  ParameterizeTakeSkip           = true,
 		bool                  EnableContextSchemaEdit        = false,
 		bool                  PreferExistsForScalar          = default,
+		UpsertEmulationPolicy UpsertEmulationPolicy          = UpsertEmulationPolicy.Allow,
 		EagerLoadingStrategy  DefaultEagerLoadingStrategy    = EagerLoadingStrategy.Default
 		// If you add another parameter here, don't forget to update
 		// LinqOptions copy constructor and IConfigurationID.ConfigurationID.
@@ -191,94 +201,85 @@ namespace LinqToDB
 		{
 		}
 
-		// Binary-compatibility overload preserving the v6 15-parameter signature
-		// (primary constructor gained DefaultEagerLoadingStrategy as a new positional
-		// parameter). Kept without default values so the old IL signature remains
-		// callable from assemblies compiled against previous versions.
-		[EditorBrowsable(EditorBrowsableState.Never)]
-		public LinqOptions(
-			bool         PreloadGroups,
-			bool         IgnoreEmptyUpdate,
-			bool         GenerateExpressionTest,
-			bool         TraceMapperExpression,
-			bool         ConcatenateOrderBy,
-			bool         OptimizeJoins,
-			CompareNulls CompareNulls,
-			bool         GuardGrouping,
-			bool         DisableQueryCache,
-			TimeSpan?    CacheSlidingExpiration,
-			bool         PreferApply,
-			bool         KeepDistinctOrdered,
-			bool         ParameterizeTakeSkip,
-			bool         EnableContextSchemaEdit,
-			bool         PreferExistsForScalar)
-			: this(PreloadGroups, IgnoreEmptyUpdate, GenerateExpressionTest, TraceMapperExpression,
-				ConcatenateOrderBy, OptimizeJoins, CompareNulls, GuardGrouping, DisableQueryCache,
-				CacheSlidingExpiration, PreferApply, KeepDistinctOrdered, ParameterizeTakeSkip,
-				EnableContextSchemaEdit, PreferExistsForScalar, EagerLoadingStrategy.Default)
-		{
-		}
-
-		// Binary-compatibility overload preserving the v6 15-parameter Deconstruct signature.
-		// Records auto-generate Deconstruct from the primary constructor, so adding a new
-		// positional parameter above would otherwise drop the old IL signature.
-		[EditorBrowsable(EditorBrowsableState.Never)]
-		public void Deconstruct(
-			out bool         PreloadGroups,
-			out bool         IgnoreEmptyUpdate,
-			out bool         GenerateExpressionTest,
-			out bool         TraceMapperExpression,
-			out bool         ConcatenateOrderBy,
-			out bool         OptimizeJoins,
-			out CompareNulls CompareNulls,
-			out bool         GuardGrouping,
-			out bool         DisableQueryCache,
-			out TimeSpan?    CacheSlidingExpiration,
-			out bool         PreferApply,
-			out bool         KeepDistinctOrdered,
-			out bool         ParameterizeTakeSkip,
-			out bool         EnableContextSchemaEdit,
-			out bool         PreferExistsForScalar)
-		{
-#pragma warning disable CS0618 // obsolete-member access (preserved for binary compatibility)
-			PreloadGroups           = this.PreloadGroups;
-			IgnoreEmptyUpdate       = this.IgnoreEmptyUpdate;
-			GenerateExpressionTest  = this.GenerateExpressionTest;
-			TraceMapperExpression   = this.TraceMapperExpression;
-			ConcatenateOrderBy      = this.ConcatenateOrderBy;
-			OptimizeJoins           = this.OptimizeJoins;
-			CompareNulls            = this.CompareNulls;
-			GuardGrouping           = this.GuardGrouping;
-			DisableQueryCache       = this.DisableQueryCache;
-			CacheSlidingExpiration  = this.CacheSlidingExpiration;
-			PreferApply             = this.PreferApply;
-			KeepDistinctOrdered     = this.KeepDistinctOrdered;
-			ParameterizeTakeSkip    = this.ParameterizeTakeSkip;
-			EnableContextSchemaEdit = this.EnableContextSchemaEdit;
-			PreferExistsForScalar   = this.PreferExistsForScalar;
-#pragma warning restore CS0618
-		}
-
 		LinqOptions(LinqOptions original)
 		{
-#pragma warning disable CS0618 // obsolete-member access — copy preserves the source's value through `with { ... }`
-			PreloadGroups                = original.PreloadGroups;
-			IgnoreEmptyUpdate            = original.IgnoreEmptyUpdate;
-			GenerateExpressionTest       = original.GenerateExpressionTest;
-			TraceMapperExpression        = original.TraceMapperExpression;
-			ConcatenateOrderBy           = original.ConcatenateOrderBy;
-			OptimizeJoins                = original.OptimizeJoins;
-			CompareNulls                 = original.CompareNulls;
-			GuardGrouping                = original.GuardGrouping;
-			DisableQueryCache            = original.DisableQueryCache;
-			CacheSlidingExpiration       = original.CacheSlidingExpiration;
-			PreferApply                  = original.PreferApply;
-			KeepDistinctOrdered          = original.KeepDistinctOrdered;
-			ParameterizeTakeSkip         = original.ParameterizeTakeSkip;
-			EnableContextSchemaEdit      = original.EnableContextSchemaEdit;
-			PreferExistsForScalar        = original.PreferExistsForScalar;
-			DefaultEagerLoadingStrategy  = original.DefaultEagerLoadingStrategy;
-#pragma warning restore CS0618
+			IgnoreEmptyUpdate       = original.IgnoreEmptyUpdate;
+			GenerateExpressionTest  = original.GenerateExpressionTest;
+			TraceMapperExpression   = original.TraceMapperExpression;
+			ConcatenateOrderBy      = original.ConcatenateOrderBy;
+			OptimizeJoins           = original.OptimizeJoins;
+			CompareNulls            = original.CompareNulls;
+			GuardGrouping           = original.GuardGrouping;
+			DisableQueryCache       = original.DisableQueryCache;
+			CacheSlidingExpiration  = original.CacheSlidingExpiration;
+			ParameterizeTakeSkip    = original.ParameterizeTakeSkip;
+			EnableContextSchemaEdit = original.EnableContextSchemaEdit;
+			PreferExistsForScalar   = original.PreferExistsForScalar;
+			UpsertEmulationPolicy   = original.UpsertEmulationPolicy;
+			DefaultEagerLoadingStrategy = original.DefaultEagerLoadingStrategy;
+		}
+
+		/// <summary>
+		/// Binary-compatibility overload of the record's positional constructor — mirrors the
+		/// public ctor signature as it was before <see cref="UpsertEmulationPolicy"/> and DefaultEagerLoadingStrategy were added,
+		/// so assemblies compiled against the previous linq2db release continue to load.
+		/// </summary>
+		// TODO: remove in v7 (binary-compat shim — drop together with the matching Deconstruct overload).
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		public LinqOptions(
+			bool         preloadGroups,
+			bool         ignoreEmptyUpdate,
+			bool         generateExpressionTest,
+			bool         traceMapperExpression,
+			bool         concatenateOrderBy,
+			bool         optimizeJoins,
+			CompareNulls compareNulls,
+			bool         guardGrouping,
+			bool         disableQueryCache,
+			TimeSpan?    cacheSlidingExpiration,
+			bool         preferApply,
+			bool         keepDistinctOrdered,
+			bool         parameterizeTakeSkip,
+			bool         enableContextSchemaEdit,
+			bool         preferExistsForScalar)
+			: this(
+				preloadGroups, ignoreEmptyUpdate, generateExpressionTest, traceMapperExpression,
+				concatenateOrderBy, optimizeJoins, compareNulls, guardGrouping, disableQueryCache,
+				cacheSlidingExpiration, preferApply, keepDistinctOrdered, parameterizeTakeSkip,
+				enableContextSchemaEdit, preferExistsForScalar,
+				UpsertEmulationPolicy: default)
+		{
+		}
+
+		/// <summary>
+		/// Binary-compatibility overload of the record's <c>Deconstruct</c> — mirrors the
+		/// method signature as it was before <see cref="UpsertEmulationPolicy"/> and DefaultEagerLoadingStrategy were added.
+		/// </summary>
+		// TODO: remove in v7 (binary-compat shim — drop together with the matching constructor overload).
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		public void Deconstruct(
+			out bool         preloadGroups,
+			out bool         ignoreEmptyUpdate,
+			out bool         generateExpressionTest,
+			out bool         traceMapperExpression,
+			out bool         concatenateOrderBy,
+			out bool         optimizeJoins,
+			out CompareNulls compareNulls,
+			out bool         guardGrouping,
+			out bool         disableQueryCache,
+			out TimeSpan?    cacheSlidingExpiration,
+			out bool         preferApply,
+			out bool         keepDistinctOrdered,
+			out bool         parameterizeTakeSkip,
+			out bool         enableContextSchemaEdit,
+			out bool         preferExistsForScalar)
+		{
+			Deconstruct(
+				out preloadGroups, out ignoreEmptyUpdate, out generateExpressionTest, out traceMapperExpression,
+				out concatenateOrderBy, out optimizeJoins, out compareNulls, out guardGrouping, out disableQueryCache,
+				out cacheSlidingExpiration, out preferApply, out keepDistinctOrdered, out parameterizeTakeSkip,
+				out enableContextSchemaEdit, out preferExistsForScalar,
+				out _, out _);
 		}
 
 		int? _configurationID;
@@ -302,6 +303,7 @@ namespace LinqToDB
 						.Add(ParameterizeTakeSkip)
 						.Add(EnableContextSchemaEdit)
 						.Add(PreferExistsForScalar)
+						.Add((int)UpsertEmulationPolicy)
 						.Add((int)DefaultEagerLoadingStrategy)
 						.CreateID();
 				}
