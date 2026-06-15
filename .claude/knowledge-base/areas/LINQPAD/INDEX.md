@@ -3,15 +3,15 @@ area: LINQPAD
 kind: area-index
 sources: [code]
 confidence: high
-last_verified: 2026-06-01
-last_verified_sha: 2e67bafc9bfc8ae8ba573b93bde8671d9920c95d
+last_verified: 2026-06-15
+last_verified_sha: b3340aa9ded15ffc626983fd202e6399daa081ca
 coverage_tier_1: 15/15
 coverage_tier_2: 45/48
 ---
 
 # LINQPAD
 
-LINQPad driver for linq2db. Exposes two driver modes (dynamic and static) to LINQPad 5/6/7 via the `LINQPad.Extensibility.DataContext` SDK. TFMs: `net472` (LINQPad 5) and `net8.0-windows7.0` (LINQPad 6/7). Assembly name: `linq2db.LINQPad`. Packing into `.lpx` (net472) / `.lpx6` (net8.0-windows) bundles is triggered by MSBuild `PostBuild` targets that call `NuGet/Pack.cmd`.
+LINQPad driver for linq2db. Exposes two driver modes (dynamic and static) to LINQPad 5/6/7 via the `LINQPad.Extensibility.DataContext` SDK. TFMs: `net472` (LINQPad 5) and `net8.0-windows7.0` (LINQPad 6/7). Assembly name: `linq2db.LINQPad`. Packing into `.lpx` (net472) / `.lpx6` (net8.0-windows) bundles is triggered by MSBuild `PostBuild` targets that call `NuGet/Pack.cmd`. NuGet packaging is handled by the dedicated sibling `LinqToDB.LINQPad.Pack.csproj` (see Subsystems -- Build / Packaging below).
 
 ## Subsystems
 
@@ -61,9 +61,18 @@ Dialog hosted as `SettingsDialog` (XAML `Window`). `DataContext` is `SettingsMod
 
 **`AboutModel`** (`UI/Model/AboutModel.cs`): singleton (`Instance` property). Reads the driver version at runtime via `typeof(AboutModel).Assembly.GetName().Version` (three-part) -- no hardcoded version string. Constructs `Logo` from a `pack://` URI pointing to `Resources/Logo.png` embedded in the assembly; guards against `UriParser` initialization order with an `Application()` constructor call when `"pack"` is not yet a known scheme. Exposes `Project` (display string), `Copyright` (from `AssemblyCopyrightAttribute`), `RepositoryUri`, and `ReportsUri`. Bound by `AboutTab.xaml` (`UI/Settings/AboutTab.xaml`).
 
+**`DynamicConnectionTab`** (`UI/Settings/DynamicConnectionTab.xaml`): `UserControl` with design-time `DataContext` of type `DynamicConnectionModel`. Renders: Database Type `ComboBox` (bound `Databases`/`Database`), Provider `ComboBox` (bound `Providers`/`Provider`, visibility-gated), provider-path `TextBox` + Select button (visibility-gated), connection string `TextBox` (multiline, with `{pm:name}` tooltip), secondary connection string panel (MS Access only, visibility-gated), Encrypt connection strings `CheckBox`, and command timeout `TextBox` (via `CommandTimeoutConverter`).
+
 ### Compat (`Compat/`)
 
 `IReadOnlySet<T>`, `ReadOnlyHashSet<T>`, `ReadOnlySetExtensions` -- polyfills guarded with `#if NETFRAMEWORK`. On net8.0-windows the BCL's native `IReadOnlySet<T>` is used.
+
+### Build / Packaging
+
+Two project files govern the area:
+
+- **`LinqToDB.LINQPad.csproj`** (`Microsoft.NET.Sdk.WindowsDesktop`): the WPF driver assembly, TFMs `net472` + `net8.0-windows7.0`. `UseWPF=true`, `IsPackable=false`. `.lpx`/`.lpx6` generation gated by `GenerateLpxArtifacts` property (default `true`); set to `false` from the Pack project to avoid coupling `dotnet pack` to 7-Zip / `Pack.cmd`. `<Page Update>` items for all nine XAML files (including `AboutTab.xaml`, `DynamicConnectionTab.xaml`) are declared here.
+- **`LinqToDB.LINQPad.Pack.csproj`** (`Microsoft.NET.Sdk`): packaging-only, single TFM `net8.0`. Does NOT recompile the driver. References `LinqToDB.LINQPad.csproj` with `ReferenceOutputAssembly=false` for build ordering, then pulls the `net8.0-windows7.0` driver assembly into `lib/net8.0/` via the `_AddLinqPadDriverToPackage` MSBuild target (calls `GetTargetPath` on the sibling). Motivation: LINQPad on macOS/Linux rejected a `net8.0-windows7.0`-only package ("No compatible assemblies found", issue #5497); packing under plain `net8.0` restores the pre-#5279 layout. `EnableDefaultItems=false`, `IncludeBuildOutput=false`. `<Description>` (line 40) still lists 14 databases and omits DuckDB -- known issue.
 
 ## Key types
 
@@ -109,7 +118,7 @@ Dialog hosted as `SettingsDialog` (XAML `Window`). `DataContext` is `SettingsMod
 - All [PROV-*](../PROV-SQLSERVER/INDEX.md) -- each `IDatabaseProvider` impl delegates to `DataConnection.GetDataProvider` or `<X>Tools.GetDataProvider`.
 - `LINQPad.Reference` NuGet -- `DynamicDataContextDriver`, etc.
 - `Microsoft.CodeAnalysis.CSharp` NuGet -- Roslyn compilation.
-- `DuckDB.NET.Data.Full` NuGet -- used by `DuckDBProvider.GetProviderFactory` (net8.0-windows only); present in both `LinqToDB.LINQPad.csproj` and `LinqToDB.LINQPad.Pack.csproj`.
+- `DuckDB.NET.Data.Full` NuGet -- used by `DuckDBProvider.GetProviderFactory` (net8.0-windows only); present in both `LinqToDB.LINQPad.csproj` (non-net472 ItemGroup) and `LinqToDB.LINQPad.Pack.csproj`.
 
 **Inbound:** standalone driver project; nothing inside `Source/LinqToDB/` depends on this area.
 
@@ -123,7 +132,7 @@ Dialog hosted as `SettingsDialog` (XAML `Window`). `DataContext` is `SettingsMod
 - `WITH_ISERIES` conditional: iSeries support compiled in by default but the nuspec packaging step is manual.
 - IBM DB2 on net472 requires a PostBuild trick.
 - `DuckDBProvider.GetLastSchemaUpdate` always returns `null` -- schema change detection not implemented for DuckDB.
-- DuckDB is absent from `LinqToDB.LINQPad.Pack.csproj` `<Description>` string (line 20) -- still lists only 14 named databases despite DuckDB being a registered provider.
+- `LinqToDB.LINQPad.Pack.csproj` `<Description>` (line 40) still lists 14 named databases and omits DuckDB despite DuckDB being a registered provider.
 
 ## See also
 
@@ -146,5 +155,11 @@ Dialog hosted as `SettingsDialog` (XAML `Window`). `DataContext` is `SettingsMod
 - `Source/LinqToDB.LINQPad/UI/Model/AboutModel.cs` -- no behavioral change; reads version at runtime from `Assembly.GetName().Version`; constructs `pack://` logo URI with initialization-order guard; exposes `RepositoryUri` / `ReportsUri`. Surfaced in delta as packaging churn; `AboutModel` entry added to Key types and WPF UI subsection.
 - `Source/LinqToDB.LINQPad/UI/Settings/AboutTab.xaml` -- pure XAML layout bound to `AboutModel`; `<Page Update>` entry added to `LinqToDB.LINQPad.Pack.csproj` in this delta. No content change.
 - `Source/LinqToDB.LINQPad/LinqToDB.LINQPad.Pack.csproj` -- `DuckDB.NET.Data.Full` confirmed present (line 62); `AboutTab.xaml` added to `<Page Update>` block (lines 94-97); `<Description>` still omits DuckDB (known-issue bullet cites line 20).
+
+
+**Read (this run -- delta, sha b3340aa9):**
+- `Source/LinqToDB.LINQPad/LinqToDB.LINQPad.Pack.csproj` -- now a packaging-only project (`Microsoft.NET.Sdk`, single TFM `net8.0`, `EnableDefaultItems=false`, `IncludeBuildOutput=false`); driver assembly pulled into `lib/net8.0/` via `_AddLinqPadDriverToPackage` MSBuild target; split motivated by macOS/Linux NuGet compatibility issue #5497 (pre-#5279 layout restored). `<Description>` (line 40) still omits DuckDB. `DuckDB.NET.Data.Full` PackageReference present (line 78).
+- `Source/LinqToDB.LINQPad/LinqToDB.LINQPad.csproj` -- SDK changed to `Microsoft.NET.Sdk.WindowsDesktop`; `IsPackable=false` added; `GenerateLpxArtifacts` property gate added for PostBuild `.lpx`/`.lpx6` targets; `<Page Update>` block for all nine XAML files (including `AboutTab.xaml`, `DynamicConnectionTab.xaml`) declared here; `DuckDB.NET.Data.Full` in non-net472 `<ItemGroup>` (line 68).
+- `Source/LinqToDB.LINQPad/UI/Settings/DynamicConnectionTab.xaml` -- `UserControl`, design-time `DataContext` `DynamicConnectionModel`; renders Database Type / Provider combo boxes, provider path TextBox + Select button, connection string TextBox (multiline, `{pm:name}` tooltip), secondary connection string panel (MS Access, visibility-gated), Encrypt checkBox, command timeout TextBox (`CommandTimeoutConverter`). No structural change; surfaced for first-time explicit coverage.
 
 </details>

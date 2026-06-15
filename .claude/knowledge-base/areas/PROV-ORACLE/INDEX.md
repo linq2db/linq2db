@@ -3,8 +3,8 @@ area: PROV-ORACLE
 kind: area-index
 sources: [code]
 confidence: high
-last_verified: 2026-06-01
-last_verified_sha: 2e67bafc9bfc8ae8ba573b93bde8671d9920c95d
+last_verified: 2026-06-14
+last_verified_sha: b3340aa9ded15ffc626983fd202e6399daa081ca
 coverage_tier_1: 12/12
 coverage_tier_2: 20/20
 ---
@@ -108,9 +108,11 @@ SqlExpressionConvertVisitor
 ```
 
 **`OracleSqlExpressionConvertVisitor`** (`OracleSqlExpressionConvertVisitor.cs`):
-- `ConvertExprExprPredicate` -- rewrites comparisons to empty string `""` as `IS NULL` / `IS NOT NULL` since Oracle treats `''` as NULL (`OracleSqlExpressionConvertVisitor.cs:29-108`).
+- `ConvertExprExprPredicate` -- rewrites comparisons to empty string `""` as `IS NULL` / `IS NOT NULL` since Oracle treats `''` as NULL. Handles the full operator set: `Equal`/`NotEqual`/`Less`/`Greater`/`LessOrEqual`/`GreaterOrEqual`/`NotLess`/`NotGreater` -- `Equal` and `LessOrEqual` and `NotGreater` map to `IS NULL`; `NotEqual`, `Greater`, and `NotLess` map to `IS NOT NULL`; `GreaterOrEqual` emits always-true `1=1`; `Less` emits always-false `1=0`. Local static helpers `CompareToEmptyString` and `InvertDirection` implement the operator mapping (`OracleSqlExpressionConvertVisitor.cs:29-108`).
 - `ConvertSqlBinaryExpression` -- maps `%` -> `MOD`, `&` -> `BITAND`, `|` -> `a + b - BITAND(a,b)`, `^` -> XOR equivalent, `+` on strings -> `||`.
 - `ConvertSqlUnaryExpression` -- bitwise NOT -> `-1 - expr`.
+- `ConvertSqlExpression` -- rewrites `To_Number(To_Char(... 'FF'))` millisecond fragments by lower-casing the `To_Number` prefix and dividing by 1000 (`OracleSqlExpressionConvertVisitor.cs:144-149`).
+- `ConvertSqlFunction` -- maps `CharIndex(p0, p1)` -> `InStr(p1, p0)` and `CharIndex(p0, p1, p2)` -> `InStr(p1, p0, p2)` (`OracleSqlExpressionConvertVisitor.cs:151-169`).
 - `ConvertConversion` -- date/time cast routing: `Trunc(x,'DD')` for date, `TO_DATE`, `TO_TIMESTAMP`, `TO_TIMESTAMP_TZ`, `To_Char` with format masks.
 - `ConvertCoalesce` / `ConvertSqlCondition` / `ConvertSqlCaseExpression` / `VisitSqlValuesTable` -- fix mixed CHAR/NCHAR charsets via `FixCharset` (wraps with `To_NChar` or `CAST ... AS NCHAR`).
 - **`ConcatRequiresExplicitStringCast`** -- returns `false`; Oracle's `||` auto-coerces non-string operands so explicit `CAST` wraps are not needed (`OracleSqlExpressionConvertVisitor.cs:183`). Added by PR #5504.
@@ -132,6 +134,8 @@ Two normalizers extend `UniqueParametersNormalizer` (from [INTERNAL-API](../INTE
 Oracle 11g limits unquoted identifiers to 30 characters. Oracle 12.2+ raised the limit to 128 characters. `Oracle11ParametersNormalizer.MaxLength` overrides to 30.
 
 `OracleDataProvider.GetQueryParameterNormalizer` always returns `Oracle11ParametersNormalizer` (`OracleDataProvider.cs:193-200`). A TODO comment acknowledges that `Oracle122ParametersNormalizer` cannot yet be enabled because the version enum has no `v122` value -- see issue [#4219](https://github.com/linq2db/linq2db/issues/4219).
+
+`OracleDataProvider.CreateIdentifierService` returns `IdentifierServiceSimple(Version <= OracleVersion.v11 ? 30 : 128)` (`OracleDataProvider.cs:116-119`). This is the version-aware identifier-length service used for DDL identifier validation, distinct from the query-parameter normalizer path above.
 
 Both normalizers also check `ReservedWords.IsReserved(name, ProviderName.Oracle)` to avoid collisions.
 
@@ -163,6 +167,10 @@ Known limitation: ODP.NET bulk copy fails when any column name requires quoting.
 - `decimal` -> `Number(28, 10)` default.
 - `string` default -> `VarChar(255)`.
 - Mixed char/nchar charset disambiguation via `HasInconsistentCharset` / `FixCharset` (`OracleExtensions.cs:11-43`).
+
+On runtimes supporting `SUPPORTS_COMPOSITE_FORMAT` (net8+), format strings for DateTime/DateTimeOffset literals are cached as `CompositeFormat` instances for reduced allocation (`OracleMappingSchema.cs:19-62`).
+
+`OracleMappingSchema` also exposes `OracleRemoteMappingSchema` (private inner class) and the static `GetRemoteMappingSchema(Type)` helper (`OracleMappingSchema.cs:270-289`) used to retrieve the remote-execution mapping schema by concrete subclass type -- required by the LinqService remoting path.
 
 ### Schema provider
 
@@ -202,6 +210,7 @@ Known limitation: ODP.NET bulk copy fails when any column name requires quoting.
 - **`TranslateStringJoin`** -- emits LISTAGG aggregate or plain concat depending on `withoutSeparator` parameter (`OracleMemberTranslator.cs:357-463`). Reworked by PR #5504:
   - `withoutSeparator=true` (i.e. `string.Concat` / no separator): calls `ConfigureConcat`, which emits a plain `SqlConcatExpression` (rendered as `v1 || v2 || ...` via `ConcatStyle.Pipes`). Avoids `ConfigureConcatWsEmulation`'s `Coalesce(v,'')` wrapping, which is a no-op on Oracle (`''` = NULL) and causes ORA-12704 charset mismatches.
   - `withoutSeparator=false` (i.e. `string.Join` with separator): calls `ConfigureConcatWsEmulation` with `wrapByCoalesce: false` and a `SUBSTR(valuesExpr, LENGTH(separator)+1)` lambda to strip the separator prefix. The LISTAGG-based aggregate path (DISTINCT modifier, filter-condition CASE, NVARCHAR->VARCHAR cast, `WITHIN GROUP (ORDER BY value)`) is used for aggregation contexts. The `IsWithinGroupRequired` property (virtual, `true` by default) controls whether `WITHIN GROUP` is always appended.
+- **`TranslateIsNullOrWhiteSpace`** -- emits `LTRIM(value, 'WHITESPACES') IS NULL` (single predicate, no `value IS NULL` disjunct needed because Oracle's empty-string-as-NULL identity means a fully-whitespace `LTRIM` result is already NULL) (`OracleMemberTranslator.cs:466-476`). Uses `ParametersNullabilityType.Nullable` on the `LTRIM` call.
 - `String.Join` -> `LISTAGG(value, separator) WITHIN GROUP (ORDER BY value)` aggregate. Handles `DISTINCT` modifier, filter conditions (via CASE for non-GROUP BY contexts), NVARCHAR->VARCHAR cast (LISTAGG does not accept NVARCHAR) (`OracleMemberTranslator.cs:330-401`).
 
 **`TranslateNewGuidMethod`** (on `OracleMemberTranslator` directly): `Guid.NewGuid()` -> `Sys_Guid()` (non-pure function) (`OracleMemberTranslator.cs:279-284`).
@@ -267,7 +276,7 @@ Oracle 12c+ supports `GENERATED ALWAYS AS IDENTITY`. The schema provider reads `
 
 ### Empty string = NULL
 
-Oracle treats `''` as NULL. `OracleSqlExpressionConvertVisitor.ConvertExprExprPredicate` rewrites any `= ''` or `<> ''` comparison to `IS NULL` / `IS NOT NULL`. `Oracle11SqlOptimizer.IsParameterDependedElement` marks text-type parameters as query-plan-dependent when comparing to empty-string values.
+Oracle treats `''` as NULL. `OracleSqlExpressionConvertVisitor.ConvertExprExprPredicate` rewrites any comparison against `''` to the appropriate null-handling form for the full comparison operator set: `= ''` -> `IS NULL`; `<> ''` -> `IS NOT NULL`; `> ''` -> `IS NOT NULL`; `<= ''` -> `IS NULL`; `>= ''` -> always-true `1=1`; `< ''` -> always-false `1=0`. `Oracle11SqlOptimizer.IsParameterDependedElement` marks text-type parameters as query-plan-dependent when comparing to empty-string values.
 
 ### String concatenation (`SqlConcatExpression`)
 
@@ -353,7 +362,7 @@ Oracle raises errors when mixing CHAR/VARCHAR2 and NCHAR/NVARCHAR2 in set operat
 | `Source/LinqToDB/Internal/DataProvider/Oracle/OracleSqlExpressionConvertVisitor.cs` | Read -- empty-string/bitwise/cast/concat rewrites |
 | `Source/LinqToDB/Internal/DataProvider/Oracle/OracleSchemaProvider.cs` | Read (partial -- first 300 lines) |
 | `Source/LinqToDB/Internal/DataProvider/Oracle/OracleExtensions.cs` | Read -- charset helpers |
-| `Source/LinqToDB/Internal/DataProvider/Oracle/Translation/OracleMemberTranslator.cs` | Read (full -- multiple delta runs; all sub-translators inspected including TrimStart/TrimEnd and reworked TranslateStringJoin) |
+| `Source/LinqToDB/Internal/DataProvider/Oracle/Translation/OracleMemberTranslator.cs` | Read (full -- multiple delta runs; all sub-translators inspected including TrimStart/TrimEnd, reworked TranslateStringJoin, and TranslateIsNullOrWhiteSpace) |
 | `Source/LinqToDB/Internal/DataProvider/Oracle/OracleSpecificQueryable.cs` | Read -- sealed impl |
 | `Source/LinqToDB/Internal/DataProvider/Oracle/OracleSpecificTable.cs` | Read -- sealed impl |
 
@@ -363,7 +372,7 @@ Oracle raises errors when mixing CHAR/VARCHAR2 and NCHAR/NVARCHAR2 in set operat
 
 ## Known issues / debt
 
-1. **`Oracle11ParametersNormalizer` always used regardless of version.** `OracleDataProvider.GetQueryParameterNormalizer` hardcodes `Oracle11ParametersNormalizer` (30-char limit). `Oracle122ParametersNormalizer` exists but is never activated. See issue [#4219](https://github.com/linq2db/linq2db/issues/4219) and TODO at `OracleDataProvider.cs:195`.
+1. **`Oracle11ParametersNormalizer` always used regardless of version.** `OracleDataProvider.GetQueryParameterNormalizer` hardcodes `Oracle11ParametersNormalizer` (30-char limit). `Oracle122ParametersNormalizer` exists but is never activated. See issue [#4219](https://github.com/linq2db/linq2db/issues/4219) and TODO at `OracleDataProvider.cs:195`. Note: `CreateIdentifierService` (added this delta) IS version-aware, using 30 for v11 and 128 for v12+ -- the gap is specifically in the query-parameter normalizer path.
 
 2. **`SupportsBooleanType = false` awaiting Oracle 23ai retest.** `OracleDataProvider.cs:52` has a TODO -- Oracle 23ai introduced a native `BOOLEAN` type; the flag has not been updated.
 
@@ -407,5 +416,14 @@ Read (this run -- delta, sha 2e67bafc9):
 - `Source/LinqToDB/Internal/DataProvider/Oracle/OracleSqlBuilderBase.cs` -- `ConcatStyle` property added returning `ConcatBuildStyle.Pipes` (PR #5504); rest of file unchanged from prior build-time read.
 - `Source/LinqToDB/Internal/DataProvider/Oracle/OracleSqlExpressionConvertVisitor.cs` -- two new members added by PR #5504: `ConcatRequiresExplicitStringCast` returns `false` (Oracle `||` auto-coerces), and `ConvertConcat` skips the base `Coalesce(x,'')` wrap to avoid no-op semantics and ORA-12704 charset mismatches on NVARCHAR operands.
 - `Source/LinqToDB/Internal/DataProvider/Oracle/Translation/OracleMemberTranslator.cs` -- `OracleStringMemberTranslator` gained `TranslateTrimStart` / `TranslateTrimEnd` overrides (PR #5515, `ParametersNullabilityType.Nullable` because LTRIM/RTRIM can produce empty = NULL on Oracle) and `TranslateStringJoin` was reworked (PR #5504): `withoutSeparator=true` routes through `ConfigureConcat` (plain `||` emission); `withoutSeparator=false` routes through `ConfigureConcatWsEmulation` with `wrapByCoalesce: false` and a `SUBSTR`-based separator-strip lambda.
+
+Read (this run -- delta, sha b3340aa9):
+- `Source/LinqToDB/DataProvider/Oracle/OracleOptions.cs` -- no substantive changes; `BulkCopyType`, `AlternativeBulkCopy`, `DontEscapeLowercaseIdentifiers` parameters unchanged.
+- `Source/LinqToDB/Internal/DataProvider/Oracle/Oracle11SqlOptimizer.cs` -- no substantive changes; content matches prior documentation.
+- `Source/LinqToDB/Internal/DataProvider/Oracle/OracleDataProvider.cs` -- added `CreateIdentifierService()` override returning `IdentifierServiceSimple(Version <= OracleVersion.v11 ? 30 : 128)` at line 116-119; this is the version-aware identifier-length service (distinct from `GetQueryParameterNormalizer` which still hardcodes 30-char limit).
+- `Source/LinqToDB/Internal/DataProvider/Oracle/OracleMappingSchema.cs` -- added `#if SUPPORTS_COMPOSITE_FORMAT` blocks caching format strings as `CompositeFormat` instances for net8+ performance; added `OracleRemoteMappingSchema` inner class and `GetRemoteMappingSchema(Type)` static helper for LinqService remoting path.
+- `Source/LinqToDB/Internal/DataProvider/Oracle/OracleProviderDetector.cs` -- added explicit version-string detection for Oracle 18, 19, and 21 (all mapped to `OracleVersion.v12`) at lines 52-54.
+- `Source/LinqToDB/Internal/DataProvider/Oracle/OracleSqlExpressionConvertVisitor.cs` -- expanded `ConvertExprExprPredicate` to handle the full operator set against empty string (not just Equal/NotEqual); added `ConvertSqlExpression` override for `To_Number(To_Char(... 'FF'))` millisecond fragment normalization; added `ConvertSqlFunction` override mapping `CharIndex` to Oracle `InStr`.
+- `Source/LinqToDB/Internal/DataProvider/Oracle/Translation/OracleMemberTranslator.cs` -- added `TranslateIsNullOrWhiteSpace` override to `OracleStringMemberTranslator` emitting `LTRIM(value, 'WHITESPACES') IS NULL`.
 
 </details>

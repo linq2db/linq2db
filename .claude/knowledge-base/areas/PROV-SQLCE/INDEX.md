@@ -3,8 +3,8 @@ area: PROV-SQLCE
 kind: area-index
 sources: [code]
 confidence: high
-last_verified: 2026-06-01
-last_verified_sha: 2e67bafc9bfc8ae8ba573b93bde8671d9920c95d
+last_verified: 2026-06-15
+last_verified_sha: b3340aa9ded15ffc626983fd202e6399daa081ca
 coverage_tier_1: 11/11
 coverage_tier_2: 10/10
 ---
@@ -26,7 +26,7 @@ SQL Server Compact Edition (SQL CE 4.0) is a single-version, single-driver, file
 | `SqlCeSchemaProvider` | `Internal/DataProvider/SqlCe/SqlCeSchemaProvider.cs` | `SchemaProviderBase` override; queries `INFORMATION_SCHEMA` views directly via `GetSchema()` and raw SQL; no stored-proc introspection |
 | `SqlCeDmlService` | `Internal/DataProvider/SqlCe/SqlCeDmlService.cs` | `DmlServiceBase` override; detects `DB_E_NOTABLE` (0x80040E37) for table-not-found via HResult or message fallback |
 | `SqlCeSqlExpressionConvertVisitor` | `Internal/DataProvider/SqlCe/SqlCeSqlExpressionConvertVisitor.cs` | `SqlExpressionConvertVisitor` override; handles `%` modulo cast, `LEN` LENGTH workaround, case-sensitive string predicates via `Convert(VARBINARY,...)`, datetime conversions |
-| `SqlCeMemberTranslator` | `Internal/DataProvider/SqlCe/Translation/SqlCeMemberTranslator.cs` | `ProviderMemberTranslatorDefault` override; assembles date/math/string/guid/aggregate sub-translators; includes `Now`/`ServerNow`/`ZonedNow` and date-truncation overrides (PR #5467, #5517) |
+| `SqlCeMemberTranslator` | `Internal/DataProvider/SqlCe/Translation/SqlCeMemberTranslator.cs` | `ProviderMemberTranslatorDefault` override; assembles date/math/string/guid/aggregate sub-translators; includes `Now`/`ServerNow`/`ZonedNow` and date-truncation overrides (PR #5467, #5517); `NewID()` non-pure function; `IsNullOrWhiteSpace` chained-REPLACE emulation |
 | `SqlCeTools` | `DataProvider/SqlCe/SqlCeTools.cs` | Public static entry point; `GetDataProvider()`, `CreateDataConnection()`, `CreateDatabase()` (via `SqlCeEngine`), `DropDatabase()`, provider detection |
 | `SqlCeOptions` | `DataProvider/SqlCe/SqlCeOptions.cs` | `DataProviderOptions<SqlCeOptions>` record; `BulkCopyType` (default `MultipleRows`), `InlineFunctionParameters` (SQL CE 3.0 workaround) |
 | `SqlCeHints` | `DataProvider/SqlCe/SqlCeHints.cs` + `.generated.cs` | Table hints: `HoldLock`, `NoLock`, `PagLock`, `RowLock`, `TabLock`, `UpdLock`, `XLock`, `Index`; `WithIndex()` for named index hints |
@@ -115,9 +115,10 @@ In `SqlCeDataProvider.BulkCopy` (`SqlCeDataProvider.cs:163-198`), if `BulkCopyTy
 `SqlCeMemberTranslator` composes specialized sub-translators:
 - **Date**: `DateFunctionsTranslator` -- `DATEPART(...)`, `DATEADD(...)`, `MakeDateTime` via string concatenation + `CAST`, date truncation via `CONVERT(nvarchar(10), x, 101)`, `GetDate()`. No `DateTimeOffset` support (errors on use).
 - **Math**: `SqlCeMathMemberTranslator` -- `Round` always passes explicit `0` precision when none given (CE requires explicit scale for ROUND).
-- **String**: `SqlCeStringMemberTranslator` -- `LPAD` via `REPLICATE + concatenation`; `String.Join` via `CONCAT_WS` emulation with `SUBSTRING` trim; `TrimStart`/`TrimEnd` whitespace-only (custom trim chars return `null`); `string.Concat` via `ConfigureConcat(wrapByCoalesce: true)`.
+- **String**: `SqlCeStringMemberTranslator` -- `LPAD` via `REPLICATE + concatenation`; `String.Join` via `CONCAT_WS` emulation with `SUBSTRING` trim; `TrimStart`/`TrimEnd` whitespace-only (custom trim chars return `null`); `string.Concat` via `ConfigureConcat(wrapByCoalesce: true)`; `IsNullOrWhiteSpace` via chained `REPLACE` over 25 Unicode whitespace codepoints (`SqlCeMemberTranslator.cs:325-338`).
 - **Guid**: `GuidMemberTranslator` -- `ToString()` -> `LOWER(CAST(x AS char(36)))`.
 - **Aggregate**: `SqlCeAggregateFunctionsMemberTranslator` -- `IsCountDistinctSupported = false`, `IsAggregationDistinctSupported = false`.
+- **`NewGuid`**: overridden at `SqlCeMemberTranslator` level (`SqlCeMemberTranslator.cs:342-348`) -- emits `NewID()` as a non-pure function (`NonPureFunction`).
 
 **Delta -- PR #5467 (`d779808a2`):** `DateFunctionsTranslator` now overrides three `Now`-family methods:
 - `TranslateNow` (`SqlCeMemberTranslator.cs:232-237`): emits `GetDate()` with `ParametersNullabilityType.NotNullable`. Previously, `Now` translation fell through to the base class default (`CURRENT_TIMESTAMP`).
@@ -145,6 +146,7 @@ Set in `SqlCeDataProvider` constructor (`SqlCeDataProvider.cs:31-39`):
 | `SupportsBooleanType` | `false` | No BIT column in boolean context |
 | `IsWindowFunctionsSupported` | `false` | No OVER() |
 | `IsOrderByAggregateFunctionSupported` | `false` | No ORDER BY in aggregate |
+| `DefaultNullsOrdering` | `Smallest` | NULL sorts as the smallest value (`SqlCeDataProvider.cs:39`) |
 | `TableOptions` | `None` | No temp tables, no IF NOT EXISTS |
 
 ## Files (Tier 1 / Tier 2)
@@ -196,6 +198,7 @@ Set in `SqlCeDataProvider` constructor (`SqlCeDataProvider.cs:31-39`):
 - **`DateTimeOffset` offset silently discarded in two places**: `SetParameter` (`SqlCeDataProvider.cs:87`) and mapping schema (`SqlCeMappingSchema.cs:56`).
 - **Dual date-truncation paths**: `DateTime.Date` truncation is implemented in both `SqlCeSqlExpressionConvertVisitor` and `DateFunctionsTranslator.TranslateDateTimeTruncationToDate` (PR #5517).
 - **`TrimStart`/`TrimEnd` with custom chars unsupported**: `SqlCeStringMemberTranslator` returns `null` when `trimChars != null` (PR #5515); no fallback emulation.
+- **`IsNullOrWhiteSpace` uses 25-step REPLACE chain**: CE has no regex or multi-char trim; each Unicode whitespace codepoint is stripped individually (`SqlCeMemberTranslator.cs:325-338`); generates a long SQL expression.
 
 ## See also
 
@@ -214,5 +217,10 @@ Read (prior runs):
 Read (this run -- delta sha `2e67bafc9`):
 - `SqlCeSqlExpressionConvertVisitor.cs` -- `LENGTH` handler migrated from hand-built AST nodes to `Factory.Concat`/`Factory.Function`/`Factory.Sub` (IExpressionFactory API); no behavioral change
 - `SqlCeMemberTranslator.cs` -- PR #5515: `TranslateTrimStart`/`TranslateTrimEnd` added, reject custom trimChars; PR #5504: `TranslateStringJoin` `withoutSeparator` branch routes to `ConfigureConcat(wrapByCoalesce: true)`
+
+Read (this run -- delta sha `b3340aa9`):
+- `SqlCeOptions.cs` -- no changes from prior documentation; `BulkCopyType`/`InlineFunctionParameters` fields, `Equals`/`GetHashCode` via `ConfigurationID`, confirmed current
+- `SqlCeDataProvider.cs` -- added `DefaultNullsOrdering = NullsDefaultOrdering.Smallest` flag at line 39 (NULL sorts as smallest); not previously documented in flags table
+- `SqlCeMemberTranslator.cs` -- added `TranslateIsNullOrWhiteSpace` override in `SqlCeStringMemberTranslator` (lines 325-338): chains REPLACE calls over 25 Unicode whitespace codepoints; added `TranslateNewGuidMethod` override at `SqlCeMemberTranslator` level (lines 342-348): emits `NewID()` as `NonPureFunction`
 
 </details>

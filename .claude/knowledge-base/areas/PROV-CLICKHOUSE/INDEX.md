@@ -3,8 +3,8 @@ area: PROV-CLICKHOUSE
 kind: area-index
 sources: [code]
 confidence: high
-last_verified: 2026-06-01
-last_verified_sha: 2e67bafc9bfc8ae8ba573b93bde8671d9920c95d
+last_verified: 2026-06-14
+last_verified_sha: b3340aa9ded15ffc626983fd202e6399daa081ca
 coverage_tier_1: 10/10
 coverage_tier_2: 13/13
 ---
@@ -172,7 +172,7 @@ Extends `ProviderMemberTranslatorDefault` with:
 - **Date functions** -- `toYear`, `toQuarter`, `toMonth`, `toDayOfYear`, `toDayOfMonth`, `toISOWeek`, `toHour`, `toMinute`, `toSecond`, `toDayOfWeek` (+1 for ISO weekday), `toUnixTimestamp64Milli % 1000` for milliseconds. Date arithmetic via `addYears/Months/Quarters/Weeks/Days/Hours/Minutes/Seconds`; millisecond `addDays` converts through `toUnixTimestamp64Nano` / `fromUnixTimestamp64Nano` (`ClickHouseMemberTranslator.cs:110`).
 - **`MakeDateTime`** -- maps to `makeDateTime(y,m,d,H,M,S)` or `makeDateTime64(...)` with milliseconds.
 - **Truncation to date** -- `TranslateDateTimeTruncationToDate` and `TranslateDateTimeOffsetTruncationToDate` both cast to `DataType.Date32` (`ClickHouseMemberTranslator.cs:170-179`). The `DateTimeOffset` override is a separate method but produces an identical `Date32` cast (PR #5517 was the context for this path).
-- **Truncation to time** -- complex expression: `toInt64((toUnixTimestamp64Nano(toDateTime64(t, 7)) - toUnixTimestamp64Nano(toDateTime64(toDate32(t), 7))) / 100)` yielding TimeSpan ticks (`ClickHouseMemberTranslator.cs:183`).
+- **Truncation to time** -- complex expression: `toInt64((toUnixTimestamp64Nano(toDateTime64(t, 7)) - toUnixTimestamp64Nano(toDateTime64(toDate32(t), 7))) / 100)` yielding TimeSpan ticks (`ClickHouseMemberTranslator.cs:183`). Both `TranslateDateTimeTruncationToTime` and `TranslateDateTimeOffsetTruncationToTime` delegate to the shared `CommonTruncationToTime` static helper (`ClickHouseMemberTranslator.cs:209-217`).
 - **`now()` translation** (PR #5467):
   - `TranslateNow` -- emits `now()` with no arguments and `ParametersNullabilityType.NotNullable` (`ClickHouseMemberTranslator.cs:227`). Used for `Sql.GetDate()` / `DateTime.Now`.
   - `TranslateServerNow` -- delegates directly to `TranslateNow` (i.e. emits `now()`), with an inline comment explaining that `CURRENT_TIMESTAMP` is a ClickHouse alias for `now()` but triggers parser bugs in some CH versions (`ClickHouseMemberTranslator.cs:219`). This avoids the base class default of emitting `CURRENT_TIMESTAMP`.
@@ -183,6 +183,7 @@ Extends `ProviderMemberTranslatorDefault` with:
 - **Strings** -- `lowerUTF8`, `upperUTF8`, `lengthUTF8`.
   - **`TrimStart` / `TrimEnd`** (PR #5515): `TranslateTrimStart` emits `trimLeft(value)` when no trim characters are specified, or `trim(LEADING {chars} FROM {value})` when trim characters are given. `TranslateTrimEnd` emits `trimRight(value)` or `trim(TRAILING {chars} FROM {value})` (`ClickHouseMemberTranslator.cs:278-297`).
   - **`string.Join`** (PR #5504): `TranslateStringJoin` signature extended with `bool withoutSeparator`. When `withoutSeparator` is `true`, the aggregate is configured with `HasSequenceIndex(0)` (no separator argument from the caller) and an empty-string constant is used as the separator in `arrayStringConcat`. When `false`, the existing `HasSequenceIndex(1).TranslateArguments(0)` path applies (separator at index 0 in arguments) (`ClickHouseMemberTranslator.cs:300-328`).
+  - **`string.IsNullOrWhiteSpace`** -- `TranslateIsNullOrWhiteSpace` emits `empty(replaceRegexpAll(coalesce({value}, ''), '<WHITESPACES_REGEX>', ''))`. The `coalesce` handles NULL inline so no separate `IS NULL OR` branch is needed (`ClickHouseMemberTranslator.cs:563`).
 - **Guid** -- `generateUUIDv4()` for `Guid.NewGuid()`; `Guid.ToString()` -> `lower(toString(uuid))`.
 - **SqlTypes** -- `Money`/`SmallMoney` -> `Decimal128`; `DateTime2`/`DateTimeOffset` -> `DateTime64`.
 
@@ -202,7 +203,7 @@ Extends `ProviderMemberTranslatorDefault` with:
 | `ClickHouseProviderDetector` | `Internal/.../ClickHouseProviderDetector.cs` | Auto-detection by name/file probe |
 | `ClickHouseBulkCopy` | `Internal/.../ClickHouseBulkCopy.cs` | Three ProviderSpecific paths + multi-row fallback |
 | `ClickHouseSchemaProvider` | `Internal/.../ClickHouseSchemaProvider.cs` | Schema via `system.tables` / `system.columns` |
-| `ClickHouseMemberTranslator` | `Internal/.../Translation/ClickHouseMemberTranslator.cs` | LINQ member -> SQL function mapping; TrimStart/TrimEnd (PR #5515); string.Join withoutSeparator (PR #5504) |
+| `ClickHouseMemberTranslator` | `Internal/.../Translation/ClickHouseMemberTranslator.cs` | LINQ member -> SQL function mapping; TrimStart/TrimEnd (PR #5515); string.Join withoutSeparator (PR #5504); IsNullOrWhiteSpace via replaceRegexpAll |
 | `ClickHouseTools` | `DataProvider/ClickHouse/ClickHouseTools.cs` | Public registration API |
 | `ClickHouseOptions` | `DataProvider/ClickHouse/ClickHouseOptions.cs` | Provider options record |
 | `ClickHouseProvider` (enum) | `DataProvider/ClickHouse/ClickHouseProvider.cs` | Client selector |
@@ -236,7 +237,7 @@ Extends `ProviderMemberTranslatorDefault` with:
 | File | Notes |
 |---|---|
 | `Internal/DataProvider/ClickHouse/ClickHouseSqlExpressionConvertVisitor.cs` | Bitwise/decimal/LIKE/cast/aggregate rewrites; string concat rewrite removed (PR #5504) |
-| `Internal/DataProvider/ClickHouse/Translation/ClickHouseMemberTranslator.cs` | Date, math, string, Guid LINQ member translations; TrimStart/TrimEnd added (PR #5515); string.Join withoutSeparator (PR #5504) |
+| `Internal/DataProvider/ClickHouse/Translation/ClickHouseMemberTranslator.cs` | Date, math, string, Guid LINQ member translations; TrimStart/TrimEnd added (PR #5515); string.Join withoutSeparator (PR #5504); IsNullOrWhiteSpace via replaceRegexpAll |
 | `Internal/DataProvider/ClickHouse/ClickHouseSchemaProvider.cs` | system.tables / system.columns queries |
 | `Internal/DataProvider/ClickHouse/ClickHouseSpecificQueryable.cs` | Thin wrapper implementing `IClickHouseSpecificQueryable<T>` |
 | `Internal/DataProvider/ClickHouse/ClickHouseSpecificTable.cs` | Thin wrapper implementing `IClickHouseSpecificTable<T>` |
@@ -307,5 +308,11 @@ Read (this run -- delta):
 Read (this delta run -- sha 4a478ff14):
 - `ClickHouseSqlBuilder.cs` -- PR #5449: `BuildTableExtensions` uses `" "` prefix separator; fixes missing space before table hint token
 - `ClickHouseMemberTranslator.cs` -- PR #5467: explicit `TranslateNow`/`TranslateServerNow`/`TranslateUtcNow`/`TranslateZonedNow`/`TranslateZonedUtcNow` overrides; PR #5517: `TranslateDateTimeTruncationToDate` + `TranslateDateTimeOffsetTruncationToDate` both cast to `DataType.Date32`
+
+Read (this delta run -- sha b3340aa9):
+- `Source/LinqToDB/DataProvider/ClickHouse/ClickHouseOptions.cs` -- no functional changes; matches existing documentation
+- `Source/LinqToDB/Internal/DataProvider/ClickHouse/ClickHouseDataProvider.cs` -- confirmed `IsSupportedSimpleCorrelatedSubqueries = true` and `SupportsPredicatesComparison = true` flags present; no new functional additions beyond prior documentation
+- `Source/LinqToDB/Internal/DataProvider/ClickHouse/ClickHouseProviderDetector.cs` -- no changes; string-matching and assembly-probe detection logic matches existing documentation
+- `Source/LinqToDB/Internal/DataProvider/ClickHouse/Translation/ClickHouseMemberTranslator.cs` -- added `TranslateIsNullOrWhiteSpace` (emits `empty(replaceRegexpAll(coalesce(v,''), regex, ''))`); confirmed `TranslateDateTimeOffsetTruncationToTime` delegates to `CommonTruncationToTime` shared helper
 
 </details>

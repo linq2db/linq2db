@@ -3,8 +3,8 @@ area: PROV-SQLITE
 kind: area-index
 sources: [code]
 confidence: high
-last_verified: 2026-06-01
-last_verified_sha: 2e67bafc9bfc8ae8ba573b93bde8671d9920c95d
+last_verified: 2026-06-14
+last_verified_sha: b3340aa9ded15ffc626983fd202e6399daa081ca
 coverage_tier_1: 10/10
 coverage_tier_2: 10/10
 ---
@@ -119,7 +119,7 @@ Limits: `MaxParameters = 998` (SQLite limit is 999; one subtracted for potential
 
 ### Schema provider
 
-`SQLiteSchemaProvider` (`Internal/DataProvider/SQLite/SQLiteSchemaProvider.cs`) extends `SchemaProviderBase` ([INTERNAL-API](../INTERNAL-API/INDEX.md)). All metadata is obtained through `pragma_table_list()`, `pragma_table_info()`, `pragma_foreign_key_list()`, and `pragma_index_list()` table-valued functions -- no `information_schema`, no `sys.*` tables.
+`SQLiteSchemaProvider` (`Internal/DataProvider/SQLite/SQLiteSchemaProvider.cs`) extends `SchemaProviderBase` ([INTERNAL-API](../INTERNAL-API/INDEX.md)). The class is declared `partial` to support `[GeneratedRegex]` source-generation of `TypeExtractRegex()` when `SUPPORTS_REGEX_GENERATORS` is defined (`SQLiteSchemaProvider.cs:17`, `SQLiteSchemaProvider.cs:280-285`). All metadata is obtained through `pragma_table_list()`, `pragma_table_info()`, `pragma_foreign_key_list()`, and `pragma_index_list()` table-valued functions -- no `information_schema`, no `sys.*` tables.
 
 Key behaviours:
 
@@ -127,7 +127,7 @@ Key behaviours:
 - **Columns / identity detection**: identity is inferred from the combination of: single-column PK, column type `INTEGER`, absence of `PRIMARY KEY DESC` in DDL, plus either `AUTOINCREMENT` keyword or absence of `WITHOUT ROWID` (`SQLiteSchemaProvider.cs:155-160`). Length/precision/scale are extracted from the type name string because SQLite has no runtime type system (`SQLiteSchemaProvider.cs:166-170`).
 - **Views**: `pragma_table_info` on views returns unreliable type information, so the provider falls back to executing `SELECT * FROM view` with `CommandBehavior.SchemaOnly` and reading the schema table (`SQLiteSchemaProvider.cs:188-225`).
 - **Foreign keys**: joins `pragma_foreign_key_list` with `pragma_table_info` to resolve the "to" column when not explicitly stated (`SQLiteSchemaProvider.cs:231-251`).
-- **Type inference**: `InferTypeInformation` strips facets from type names, looks up in `_typeMappings` (40+ entries), then falls back to `GetTypeByAffinity` which implements the five SQLite affinity rules (`SQLiteSchemaProvider.cs:288-380`). Unknown types map to `DataType.Variant` / `object` to avoid reader errors (`SQLiteSchemaProvider.cs:345`, `SQLiteSchemaProvider.cs:379`).
+- **Type inference**: `InferTypeInformation` strips facets from type names, looks up in `_typeMappings` (40+ entries), then falls back to `GetTypeByAffinity` which implements the five SQLite affinity rules (`SQLiteSchemaProvider.cs:288-380`). Affinity rule 5 (NUMERIC catch-all) intentionally maps to `DataType.Variant` / `object` rather than `DataType.Decimal` / `decimal` to avoid provider mapping errors on unknown types (`SQLiteSchemaProvider.cs:381`). Unknown/null type names also map to `object` (`SQLiteSchemaProvider.cs:345`).
 - `GetDataType` is not supported and throws `NotSupportedException` (`SQLiteSchemaProvider.cs:258-261`).
 
 ### Member translator
@@ -173,7 +173,7 @@ Both are applied via `ISQLiteSpecificTable<TSource>.TableHint(hint)` using `Sql.
 | `SQLiteProviderAdapter` | `Internal/DataProvider/SQLite/SQLiteProviderAdapter.cs` | Dynamic assembly load; connection factory |
 | `SQLiteProviderDetector` | `Internal/DataProvider/SQLite/SQLiteProviderDetector.cs` | Auto-detect System vs Microsoft |
 | `SQLiteBulkCopy` | `Internal/DataProvider/SQLite/SQLiteBulkCopy.cs` | Multi-row INSERT only |
-| `SQLiteSchemaProvider` | `Internal/DataProvider/SQLite/SQLiteSchemaProvider.cs` | `pragma_*` based schema discovery |
+| `SQLiteSchemaProvider` | `Internal/DataProvider/SQLite/SQLiteSchemaProvider.cs` | `pragma_*` based schema discovery; partial class for source-generated regex |
 | `SQLiteMemberTranslator` | `Internal/DataProvider/SQLite/Translation/SQLiteMemberTranslator.cs` | Date/string/Guid function translation |
 | `SQLiteTools` | `DataProvider/SQLite/SQLiteTools.cs` | Public entry: `GetDataProvider`, `CreateDataConnection`, file DB utilities |
 | `SQLiteOptions` | `DataProvider/SQLite/SQLiteOptions.cs` | `BulkCopyType`, `AlwaysCheckDbNull` options |
@@ -211,11 +211,14 @@ All function wrappers use `[ExpressionMethod]` and `Sql.Expr<T>` for server-side
 |---|---|---|
 | `IsSkipSupported` | `false` | `SQLiteDataProvider.cs:42` |
 | `IsSkipSupportedIfTake` | `true` | `SQLiteDataProvider.cs:43` |
+| `IsSubQueryOrderBySupported` | `true` | `SQLiteDataProvider.cs:46` |
 | `IsCommonTableExpressionsSupported` | `true` | `SQLiteDataProvider.cs:44` |
-| `IsUnionAllOrderBySupported` | `true` | `SQLiteDataProvider.cs:46` |
-| `IsDistinctFromSupported` | `true` (3.39.0+) | `SQLiteDataProvider.cs:47` |
-| `SupportsPredicatesComparison` | `true` | `SQLiteDataProvider.cs:48` |
-| `DefaultMultiQueryIsolationLevel` | `Serializable` | `SQLiteDataProvider.cs:49` |
+| `IsNullsOrderingSupported` | `true` | `SQLiteDataProvider.cs:47` |
+| `DefaultNullsOrdering` | `Smallest` (NULL sorts as smallest value) | `SQLiteDataProvider.cs:48-49` |
+| `IsUnionAllOrderBySupported` | `true` | `SQLiteDataProvider.cs:50` |
+| `IsDistinctFromSupported` | `true` (3.39.0+) | `SQLiteDataProvider.cs:51` |
+| `SupportsPredicatesComparison` | `true` | `SQLiteDataProvider.cs:52` |
+| `DefaultMultiQueryIsolationLevel` | `Serializable` | `SQLiteDataProvider.cs:53` |
 | `RowConstructorSupport` | Equality, Comparisons, UpdateLiteral, CompareToSelect, Between, Update | `SQLiteDataProvider.cs:64-65` |
 | `SupportedCorrelatedSubqueriesLevel` | `null` (unlimited) | `SQLiteDataProvider.cs:61` |
 
@@ -240,7 +243,7 @@ All function wrappers use `[ExpressionMethod]` and `Sql.Expr<T>` for server-side
 
 | File | Purpose |
 |---|---|
-| `Internal/DataProvider/SQLite/SQLiteSchemaProvider.cs` | `pragma_*` schema discovery |
+| `Internal/DataProvider/SQLite/SQLiteSchemaProvider.cs` | `pragma_*` schema discovery; partial class for source-generated regex |
 | `Internal/DataProvider/SQLite/SQLiteSqlExpressionConvertVisitor.cs` | Expression rewrites (XOR, LIKE, datetime) |
 | `Internal/DataProvider/SQLite/Translation/SQLiteMemberTranslator.cs` | Date/string/Guid member translation |
 | `Internal/DataProvider/SQLite/SQLiteSpecificTable.cs` | `ISQLiteSpecificTable` impl |
@@ -289,5 +292,12 @@ Read (this run -- delta sha 2e67bafc9):
 - `SQLiteSqlBuilder.cs` -- Added `ConcatStyle => ConcatBuildStyle.Pipes` (line 34, PR #5504): builder now declares `||` as native concat operator; `BasicSqlBuilder` emits `SqlConcatExpression` nodes as `||` directly, superseding the visitor-level `+` -> `||` binary rewrite.
 - `SQLiteSqlExpressionConvertVisitor.cs` -- Added `ConcatRequiresExplicitStringCast => false` (line 17, PR #5504); removed the `"+"` string-concat case from `ConvertSqlBinaryExpression` -- only XOR (`"^"`) remains. Rest of the file (LIKE, datetime comparison, CAST-of-Guid, WrapDateTime) unchanged.
 - `SQLiteMemberTranslator.cs` -- `TranslateStringJoin` gains `withoutSeparator` parameter (line 283, PR #5504): when true, calls `ConfigureConcat(builder, wrapByCoalesce: true)` emitting `||`-joined concat without separator; when false, keeps existing `ConfigureConcatWsEmulation` / `GROUP_CONCAT` + `SUBSTR` path. `TrimStart`/`TrimEnd` (PR #5515) inherited from `StringMemberTranslatorBase` -- no SQLite-specific override needed.
+
+
+Read (this run -- delta sha b3340aa9):
+- `SQLiteOptions.cs` -- No structural change; record shape unchanged (BulkCopyType, AlwaysCheckDbNull), IEquatable wired via ConfigurationID.
+- `SQLiteDataProvider.cs` -- Added IsSubQueryOrderBySupported = true (line 46), IsNullsOrderingSupported = true (line 47), DefaultNullsOrdering = NullsDefaultOrdering.Smallest (line 49). SqlProviderFlags table updated accordingly.
+- `SQLiteProviderDetector.cs` -- No structural change; detection logic unchanged.
+- `SQLiteSchemaProvider.cs` -- Class is now partial (line 17) to support [GeneratedRegex] source-generation of TypeExtractRegex() under SUPPORTS_REGEX_GENERATORS (lines 280-285). Affinity rule 5 catch-all explicitly maps to object/Variant (not decimal/Numeric) per inline comment to avoid provider mapping errors on unknown types (line 381).
 
 </details>

@@ -3,8 +3,8 @@ area: PROV-POSTGRES
 kind: area-index
 sources: [code]
 confidence: medium
-last_verified: 2026-06-01
-last_verified_sha: 2e67bafc9bfc8ae8ba573b93bde8671d9920c95d
+last_verified: 2026-06-14
+last_verified_sha: b3340aa9ded15ffc626983fd202e6399daa081ca
 coverage_tier_1: 11/11
 coverage_tier_2: 16/16
 ---
@@ -296,6 +296,13 @@ Selected via `CreateMemberTranslator` in `PostgreSQLDataProvider`: `>= v13` -> `
 - Tier 2 (16/16 read this run)
 - Tier 3 (1 file -- counted, not read)
 
+### Delta reads (this run -- delta)
+
+Changed files verified against current SHA b3340aa9ded15ffc626983fd202e6399daa081ca:
+
+- Source/LinqToDB/DataProvider/PostgreSQL/PostgreSQLOptions.cs -- read in full; PostgreSQLOptions sealed record confirmed: three parameters (BulkCopyType, NormalizeTimestampData, IdentifierQuoteMode), copy constructor, CreateID includes both non-bulk fields. No structural change vs. existing INDEX.md documentation.
+- Source/LinqToDB/Internal/DataProvider/PostgreSQL/PostgreSQLDataProvider.cs -- read in full; constructor flags, NormalizeTimeStamp, SetParameter, SetParameterType, GetNativeType (lines 434--588) all confirmed. float(N) copy-paste bug at lines 547--549 still present (both precision branches return real). CreateMemberTranslator at lines 91--98 confirmed. No structural change vs. existing INDEX.md documentation.
+- Source/LinqToDB/Internal/DataProvider/PostgreSQL/Translation/PostgreSQLMemberTranslator.cs -- read in full; DateFunctionsTranslator, MathMemberTranslator, StringMemberTranslator, GuidMemberTranslator, PostgreSQLAggregateFunctionsMemberTranslator, SqlTypesTranslation inner classes all confirmed. TranslateStringJoin withoutSeparator logic at lines 375--447 confirmed. No structural change vs. existing INDEX.md documentation.
 ### Delta reads (this run)
 
 Changed files verified against current SHA `2e67bafc9bfc8ae8ba573b93bde8671d9920c95d` (PR #5504, PR #5515):

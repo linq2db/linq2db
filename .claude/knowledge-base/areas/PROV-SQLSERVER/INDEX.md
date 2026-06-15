@@ -3,8 +3,8 @@ area: PROV-SQLSERVER
 kind: area-index
 sources: [code]
 confidence: high
-last_verified: 2026-06-01
-last_verified_sha: 2e67bafc9bfc8ae8ba573b93bde8671d9920c95d
+last_verified: 2026-06-15
+last_verified_sha: b3340aa9ded15ffc626983fd202e6399daa081ca
 coverage_tier_1: 11/11
 coverage_tier_2: 47/47
 ---
@@ -38,14 +38,13 @@ SQL Server provider for linq2db. Covers two ADO.NET client packages (`System.Dat
 `SqlServerOptions` (`Source/LinqToDB/DataProvider/SqlServer/SqlServerOptions.cs:19`) -- sealed record extending `DataProviderOptions<SqlServerOptions>`:
 - `BulkCopyType` -- default `ProviderSpecific`.
 - `GenerateScopeIdentity` -- when `true` (default), identity retrieval uses `SCOPE_IDENTITY()`; when `false` or when the identity field is a GUID, falls back to an `OUTPUT [INSERTED].<field> INTO @varTable` pattern (`SqlServerSqlBuilder.cs:43--116`).
-
 ### Provider detector
 
 `SqlServerProviderDetector` (`Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerProviderDetector.cs:17`) extends [`ProviderDetectorBase<SqlServerProvider,SqlServerVersion>`](../INTERNAL-API/INDEX.md). Behaviour:
 
 - Holds 18 `Lazy<IDataProvider>` singletons -- one per (version x client-package) combination (`Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerProviderDetector.cs:22--40`).
-- `DetectProvider(ConnectionOptions)` matches provider-name strings containing `"SqlServer"` or `".SqlClient"`, then reads version from the config string if present, else calls `DetectServerVersion`.
-- `DetectServerVersion(DbConnection, DbTransaction?)` -- executes `SELECT compatibility_level FROM sys.databases WHERE name = db_name()` and maps levels: >=170->v2025, >=160->v2022, >=150->v2019, >=140->v2017, >=130->v2016, >=120->v2014, >=110->v2012, >=100->v2008, >=90->v2005 (`Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerProviderDetector.cs:151--193`).
+- `DetectProvider(ConnectionOptions)` matches provider-name strings containing `SqlServer` or `.SqlClient`, then reads version from the config string if present, else calls `DetectServerVersion`.
+- `DetectServerVersion(DbConnection, DbTransaction?)` -- executes `SELECT compatibility_level FROM sys.databases WHERE name = db_name()` and maps levels: >=170->v2025, >=160->v2022, >=150->v2019, >=140->v2017, >=130->v2016, >=120->v2014, >=110->v2012, >=100->v2008, >=90->v2005. When `compatibility_level` falls below 90 (matches none of the above), a secondary fallback uses the server major version number: 9->v2005, 10->v2008, 11->v2012, 12->v2014, 13->v2016, 14->v2017, 15->v2019, 16->v2022, _->v2025 (`Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerProviderDetector.cs:151--193`).
 - Default version when detection fails: `v2012`.
 - `DetectProvider(options, provider)` -- prefers `Microsoft.Data.SqlClient` if `Microsoft.Data.SqlClient.dll` is found next to the assembly (`Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerProviderDetector.cs:200--218`).
 
@@ -59,8 +58,7 @@ SQL Server provider for linq2db. Covers two ADO.NET client packages (`System.Dat
 - For `MicrosoftDataSqlClient` only: loads `SqlJson` (`DataType.Json`), `SqlVector<float>` (`DataType.Vector32`), and `SqlVector<Half>` (`DataType.Vector16`, net8+ only) from the `Microsoft.Data.SqlTypes` namespace; builds `MappingSchema`-registered value-to-SQL converters and round-trip converters for each type (`Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerProviderAdapter.cs:328--563`).
 - `VectorDbType` hard-codes `(SqlDbType)36` (no named constant in the public API yet).
 - `JsonDbType` hard-codes `(SqlDbType)35`.
-- New in this delta: `SqlServer2005BulkCopyUnsupported` property (`Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerProviderAdapter.cs:154--156`) -- returns `true` when provider is `MicrosoftDataSqlClient` and the loaded assembly's major version is >= 7 (i.e. Microsoft.Data.SqlClient 7.0+, which dropped BulkCopy support for SQL Server 2005 targets). Callers use this to fall back to `MultipleRowsCopy` for v2005 targets.
-
+- New in this delta: `SqlServer2005BulkCopyUnsupported` property (`Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerProviderAdapter.cs:154--156`) -- returns `true` when provider is `MicrosoftDataSqlClient` and the loaded assembly major version is >= 7 (i.e. Microsoft.Data.SqlClient 7.0+, which dropped BulkCopy support for SQL Server 2005 targets). Callers use this to fall back to `MultipleRowsCopy` for v2005 targets.
 ### Core data provider
 
 `SqlServerDataProvider` (`Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerDataProvider.cs:52`) -- `abstract`, extends [`DynamicDataProviderBase<SqlServerProviderAdapter>`](../INTERNAL-API/INDEX.md). 18 concrete `sealed` subclasses are in the same file, one per (version x client-package). Constructor responsibilities:
@@ -83,7 +81,6 @@ SQL Server provider for linq2db. Covers two ADO.NET client packages (`System.Dat
 `SqlServerMappingSchema` (`Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerMappingSchema.cs`) -- `sealed LockedMappingSchema`. Defines literal-generation for all SQL Server date/time types: `TIME(p)`, `DATE`, `SMALLDATETIME`, `DATETIME`, `DATETIME2(p)`, `DATETIMEOFFSET(p)`. Uses `TIMEFROMPARTS`, `DATEFROMPARTS`, `DATETIMEFROMPARTS`, `DATETIME2FROMPARTS`, `DATETIMEOFFSETFROMPARTS` factory functions. Provides `ConvertDateTimeOffsetToString` and `ConvertTimeSpanToString` used by `SqlServerDataProvider.SetParameter`. 18 nested mapping-schema subclasses (one per version x provider combination) extend it, layering version-specific rules (e.g., `SqlServer2005MappingSchema` maps `DATE` -> `DateTime`; `SqlServer2025MappingSchema` adds VECTOR literal builders).
 
 New in this delta (`SqlServer2025MappingSchema`): adds `ConvertStringToSql2025` -- a variant of the base string-literal emitter that uses `||` (ANSI concat) instead of `+` as the fragment joiner, matching the SQL Server 2025 `||` operator (`Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerMappingSchema.cs:317--325`). The 2025 schema's `SetValueToSqlConverter(typeof(string), ...)` calls this variant, so string literals emitted by the 2025 mapping schema join continuation fragments with `||`. Also adds `float[]` and `Half[]` (net8+) scalar type registrations with `BuildVectorLiteral` / `BuildHalfVectorLiteral` helpers that emit `CAST('[f1, f2, ...]' AS VECTOR(n, float32|float16))` syntax (`Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerMappingSchema.cs:769--865`).
-
 ### SQL builder hierarchy
 
 `SqlServerSqlBuilder` (`Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerSqlBuilder.cs:19`) -- `public abstract`, extends [`BasicSqlBuilder<SqlServerOptions>`](../SQL-PROVIDER/INDEX.md). Key SQL-Server-specific overrides:
@@ -111,12 +108,11 @@ New in this delta (`SqlServer2025MappingSchema`): adds `ConvertStringToSql2025` 
 | v2017 | `SqlServer2017SqlBuilder` | No diff (inherits v2016) |
 | v2019 | `SqlServer2019SqlBuilder` | No diff (inherits v2017) |
 | v2022 | `SqlServer2022SqlBuilder` | Native `IS [NOT] DISTINCT FROM` predicate |
-| v2025 | `SqlServer2025SqlBuilder` | JSON->`JSON` (native type); `ConcatStyle = ConcatBuildStyle.Pipes` (emits `\|\|` for string concat instead of `+`); inherits v2022 |
+| v2025 | `SqlServer2025SqlBuilder` | JSON->`JSON` (native type); `ConcatStyle = ConcatBuildStyle.Pipes` (emits `||` for string concat instead of `+`); inherits v2022 |
 
 `SqlServer2025SqlBuilder` override detail: `ConcatStyle` returns `ConcatBuildStyle.Pipes` (`Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServer2025SqlBuilder.cs:29`), enabling the ANSI `||` concatenation operator introduced in SQL Server 2025 (strict null propagation, auto-coerce). `BuildDataTypeFromDataType` maps `DataType.Json` to the literal `JSON` keyword for v2025 (`Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServer2025SqlBuilder.cs:33--39`).
 
 Partial class files `SqlServer2008SqlBuilder.Merge.cs` and `SqlServer2012SqlBuilder.Merge.cs` provide MERGE builder overrides (`BuildMergeInto`, `BuildMergeOperationDeleteBySource`, `BuildMergeOperationUpdateBySource`, `BuildMergeTerminator`) for their respective versions.
-
 ### Per-version optimizer matrix
 
 | Version | Optimizer class | Pagination strategy |
@@ -151,7 +147,6 @@ All optimizer versions route through `SqlServerSqlOptimizer.CorrectSqlServerUpda
 `SqlServer2025SqlExpressionConvertVisitor` -- new class (added in this delta). Extends `SqlServer2012SqlExpressionConvertVisitor`. Overrides `ConcatRequiresExplicitStringCast` to return `false` (`Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServer2025SqlExpressionConvertVisitor.cs:15`): SQL Server 2025's `||` operator auto-coerces non-string operands, so explicit `CAST` on concat arguments is not needed.
 
 Chain: v2005 removes `TIME` cast (unsupported); v2008 re-enables it; v2012 adds `TRY_CONVERT` pseudo-function -> native `TRY_CONVERT(type, expr)`; v2025 skips explicit-string-cast on concat. v2022 optimizer sets `SupportsDistinctAsExistsIntersect = (_sqlServerVersion < v2022)`.
-
 ### Member translator hierarchy
 
 The translator chain follows the version-order inheritance: `SqlServerMemberTranslator` (base) <- `SqlServer2005MemberTranslator` <- `SqlServer2008MemberTranslator` <- `SqlServer2012MemberTranslator` <- `SqlServer2016MemberTranslator` <- `SqlServer2017MemberTranslator` <- `SqlServer2022MemberTranslator`.
@@ -181,7 +176,6 @@ New in this delta -- `SqlServer2017MemberTranslator.TranslateStringJoin` `withou
 New in this delta -- `SqlServer2022MemberTranslator` adds `SqlServer2022StringMemberTranslator` (PR #5515): overrides `TranslateTrimStart` and `TranslateTrimEnd`. When `trimChars == null`, falls back to the base (LTRIM/RTRIM without arguments). When `trimChars` is provided, emits `LTRIM(value, trimChars)` / `RTRIM(value, trimChars)` using the SQL Server 2022 two-argument forms (`Source/LinqToDB/Internal/DataProvider/SqlServer/Translation/SqlServer2022MemberTranslator.cs:44--65`). Pre-2022 (base `SqlServerStringMemberTranslator`) returns `null` for any `trimChars != null` call.
 
 The `preserveDbType=true` flag on the 2008 `DATE` cast (PR #5517) prevents the SQL generator from re-applying the column's original `DbType` over the `CAST(x AS DATE)` result -- without it, `DateTime.Date` on a `DateTime2` column would emit `CAST(x AS DATE)` but then have the `DATE` type overridden back to `DateTime2` by the column's metadata.
-
 ### Bulk copy
 
 `SqlServerBulkCopy` (`Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerBulkCopy.cs:16`) extends [`BasicBulkCopy`](../INTERNAL-API/INDEX.md):
@@ -195,7 +189,7 @@ The `preserveDbType=true` flag on the 2008 `DATE` cast (PR #5517) prevents the S
 ### Schema provider
 
 `SqlServerSchemaProvider` (`Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerSchemaProvider.cs`) extends [`SchemaProviderBase`](../INTERNAL-API/INDEX.md):
-- `InitProvider` detects Azure (via `@@version` containing `"Azure"`) and reads `CompatibilityLevel`.
+- `InitProvider` detects Azure (via `@@version` containing `Azure`) and reads `CompatibilityLevel`.
 - `GetTables` uses two different SQL branches: Azure (no `sys.extended_properties`) vs on-prem (with description from `INFORMATION_SCHEMA.TABLES` + `sys.extended_properties`). Filters temporal history tables when `CompatibilityLevel >= 130` and `IgnoreSystemHistoryTables`.
 - Additional overrides for columns, foreign keys, procedures, etc. (body not fully read; pattern follows `SchemaProviderBase` contract).
 
@@ -230,20 +224,19 @@ The `preserveDbType=true` flag on the 2008 `DATE` cast (PR #5517) prevents the S
 `SqlServerTransientExceptionDetector` (`Source/LinqToDB/DataProvider/SqlServer/SqlServerTransientExceptionDetector.cs:17`) -- static, registration-based. `RegisterExceptionType` is called by `SqlServerProviderAdapter.CreateAdapter` to bind `SqlException`->error-number extractor. `ShouldRetryOn` matches ~22 known transient SQL error codes. `IsHandled` returns the error numbers for additional classification.
 
 `SqlServerRetryPolicy` (`Source/LinqToDB/DataProvider/SqlServer/SqlServerRetryPolicy.cs:13`) -- extends `RetryPolicyBase` (exponential backoff). `ShouldRetryOn` calls `SqlServerTransientExceptionDetector.ShouldRetryOn`; memory-optimized errors (41301--41839) use a shorter delay (`GetNextDelay` returns `TotalSeconds` not `TotalMilliseconds`).
-
 ## Key types
 
 | Type | File | Role |
 |---|---|---|
 | `SqlServerDataProvider` | `Internal/DataProvider/SqlServer/SqlServerDataProvider.cs` | Abstract base; 18 concrete subclasses per version x provider |
 | `SqlServerSqlBuilder` | `Internal/DataProvider/SqlServer/SqlServerSqlBuilder.cs` | Abstract SQL builder base; handles OUTPUT, IDENTITY, temp tables, hints |
-| `SqlServer2025SqlBuilder` | `Internal/DataProvider/SqlServer/SqlServer2025SqlBuilder.cs` | v2025 builder; `ConcatBuildStyle.Pipes` (`\|\|`), JSON->native type |
+| `SqlServer2025SqlBuilder` | `Internal/DataProvider/SqlServer/SqlServer2025SqlBuilder.cs` | v2025 builder; `ConcatBuildStyle.Pipes` (`||`), JSON->native type |
 | `SqlServerSqlOptimizer` | `Internal/DataProvider/SqlServer/SqlServerSqlOptimizer.cs` | Optimizer base; `CorrectSqlServerUpdate` handles UPDATE alias pattern |
 | `SqlServer2025SqlOptimizer` | `Internal/DataProvider/SqlServer/SqlServer2025SqlOptimizer.cs` | v2025 optimizer; wires `SqlServer2025SqlExpressionConvertVisitor` |
-| `SqlServer2025SqlExpressionConvertVisitor` | `Internal/DataProvider/SqlServer/SqlServer2025SqlExpressionConvertVisitor.cs` | Skips explicit-string-cast on concat (2025 `\|\|` auto-coerces) |
+| `SqlServer2025SqlExpressionConvertVisitor` | `Internal/DataProvider/SqlServer/SqlServer2025SqlExpressionConvertVisitor.cs` | Skips explicit-string-cast on concat (2025 `||` auto-coerces) |
 | `SqlServerSystem2025SqlOptimizer` | `Internal/DataProvider/SqlServer/SqlServerSystem2025SqlOptimizer.cs` | System.Data.SqlClient v2025; inlines `float[]`/`Half[]` as literals |
 | `SqlServerProviderAdapter` | `Internal/DataProvider/SqlServer/SqlServerProviderAdapter.cs` | Dynamic ADO.NET bridge; loads SqlClient, BulkCopy, JSON/Vector types; `SqlServer2005BulkCopyUnsupported` for MC 7.0+ |
-| `SqlServerProviderDetector` | `Internal/DataProvider/SqlServer/SqlServerProviderDetector.cs` | Provider auto-detection; version detection via `compatibility_level` |
+| `SqlServerProviderDetector` | `Internal/DataProvider/SqlServer/SqlServerProviderDetector.cs` | Provider auto-detection; version detection via `compatibility_level`; major-version fallback |
 | `SqlServerMappingSchema` | `Internal/DataProvider/SqlServer/SqlServerMappingSchema.cs` | Literal generation for all SQL Server date/time + v2025 vector/string types |
 | `SqlServerBulkCopy` | `Internal/DataProvider/SqlServer/SqlServerBulkCopy.cs` | BulkCopy via `SqlBulkCopy`; MC7.0+ v2005 fallback; `float[]`/`Half[]` inline |
 | `SqlServerSchemaProvider` | `Internal/DataProvider/SqlServer/SqlServerSchemaProvider.cs` | Schema discovery; Azure vs on-prem branches |
@@ -260,7 +253,6 @@ The `preserveDbType=true` flag on the 2008 `DATE` cast (PR #5517) prevents the S
 | `SqlServer2008MemberTranslator` | `Internal/DataProvider/SqlServer/Translation/SqlServer2008MemberTranslator.cs` | DATE truncation via CAST; SYSUTCDATETIME(); ZonedUtcNow via CAST |
 | `SqlServer2016MemberTranslator` | `Internal/DataProvider/SqlServer/Translation/SqlServer2016MemberTranslator.cs` | ZonedUtcNow via `SYSDATETIMEOFFSET() AT TIME ZONE 'UTC'` |
 | `SqlServer2022MemberTranslator` | `Internal/DataProvider/SqlServer/Translation/SqlServer2022MemberTranslator.cs` | GREATEST/LEAST; LTRIM/RTRIM with explicit trim chars (PR #5515) |
-
 ## Files (Tier 1 / Tier 2)
 
 **Tier 1** (11 files, all visited):
@@ -302,11 +294,11 @@ The `preserveDbType=true` flag on the 2008 `DATE` cast (PR #5517) prevents the S
 ## Known issues / debt
 
 - `SqlServer2014SqlOptimizer` constructor erroneously passes `SqlServerVersion.v2016` instead of `v2014` to its `base` call (`Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServer2014SqlOptimizer.cs:8`). Functionally harmless (the version field is used only for visitor creation and v2014/v2016 visitors are the same), but misleading.
-- `GetConnectionInfo("IsMarsEnabled")` is marked `[Obsolete]` for removal in v7 (`Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerDataProvider.cs:302`). The `_marsFlags` cache still exists.
+- `GetConnectionInfo(IsMarsEnabled)` is marked `[Obsolete]` for removal in v7 (`Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerDataProvider.cs:302`). The `_marsFlags` cache still exists.
 - `SqlConnectionStringBuilder` wrapper is `[Obsolete]` for removal in v7 (`Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerProviderAdapter.cs:193`).
-- TODO comment at `SqlServer2025SqlBuilder` VECTOR reader (`Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerDataProvider.cs:150`): "review implementation after SqlClient adds support for this type".
+- TODO comment at `SqlServer2025SqlBuilder` VECTOR reader (`Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerDataProvider.cs:150`): review implementation after SqlClient adds support for this type.
 - TODO comment for `SqlHalfVectorType` (`Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerProviderAdapter.cs:188--190`): implementation may need adjustment when `SqlClient` adds official `float16` vector support.
-- The inheritance chain for builders (2005->2008->2012->2014->2016->2017->2019->2022->2025) causes near-duplicate MERGE logic in both `SqlServer2008SqlBuilder.Merge.cs` and `SqlServer2012SqlBuilder.Merge.cs`. The `SqlServer2012SqlBuilder.Merge.cs` itself notes: "TODO: both 2008 and 2012 builders inherit from same base class which leads to duplicate builder logic" (`Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServer2012SqlBuilder.Merge.cs:8`).
+- The inheritance chain for builders (2005->2008->2012->2014->2016->2017->2019->2022->2025) causes near-duplicate MERGE logic in both `SqlServer2008SqlBuilder.Merge.cs` and `SqlServer2012SqlBuilder.Merge.cs`. The `SqlServer2012SqlBuilder.Merge.cs` itself notes: TODO: both 2008 and 2012 builders inherit from same base class which leads to duplicate builder logic (`Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServer2012SqlBuilder.Merge.cs:8`).
 - `SqlFn` covers many T-SQL functions with the older `[Sql.Expression]` pattern; new functions (STRING_AGG, GREATEST, LEAST, DATETRUNC) are now added via member translators, creating two parallel extension points.
 - `SqlServer2025SqlExpressionConvertVisitor` and `SqlServer2025SqlOptimizer` were added as new files (this delta) but were previously not explicitly present -- prior to this delta, v2025+Microsoft directly used `SqlServer2022SqlOptimizer`. The new classes are minimal but provide the correct extension point for future 2025-specific expression transformations.
 
@@ -321,7 +313,6 @@ The `preserveDbType=true` flag on the 2008 `DATE` cast (PR #5517) prevents the S
 
 - `SqlConcatExpression` AST node and `ConcatBuildStyle` enum live in the SQL-PROVIDER area; the v2025 `Pipes` style is the first SQL Server dialect to use non-`+` concat.
 - `StringMemberTranslatorBase.ConfigureConcat` / `ConfigureConcatWsEmulation` (base-class helpers) control the `withoutSeparator` branching used in all `TranslateStringJoin` overrides.
-
 <details><summary>Coverage</summary>
 
 - Tier 1 (visited / total): 11 / 11
@@ -341,17 +332,25 @@ Read (this run -- delta, prior):
 - Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerBulkCopy.cs (delta around _convertToParameter for Half[])
 
 Read (this run -- delta):
-- Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServer2025SqlBuilder.cs -- new class; `ConcatBuildStyle.Pipes`, JSON->JSON type, inherits v2022
-- Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServer2025SqlExpressionConvertVisitor.cs -- new class; `ConcatRequiresExplicitStringCast = false` for 2025 `||` auto-coerce
-- Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServer2025SqlOptimizer.cs -- new class; wires `SqlServer2025SqlExpressionConvertVisitor`
-- Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerBulkCopy.cs -- `RequiresMultipleRowsFallback` for MC 7.0+ v2005 BulkCopy drop; `_convertToParameter` gated on `UseParameters`
-- Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerDataProvider.cs -- vector reader registered for both `byte[]` and `SqlVectorType` field types; optimizer switch updated for v2025 split
-- Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerMappingSchema.cs -- `ConvertStringToSql2025` with `||` joiner; `SqlServer2025MappingSchema` registers `float[]`/`Half[]` with `BuildVectorLiteral`
-- Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerProviderAdapter.cs -- `SqlServer2005BulkCopyUnsupported` property for MC 7.0+ detection
-- Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerSqlExpressionConvertVisitor.cs -- `ConvertConcat` override casting NText/Text operands before lowering
-- Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerSystem2025SqlOptimizer.cs -- now extends `SqlServer2025SqlOptimizer` (was `SqlServer2022SqlOptimizer`)
-- Source/LinqToDB/Internal/DataProvider/SqlServer/Translation/SqlServer2017MemberTranslator.cs -- `withoutSeparator` path uses `HasSequenceIndex(0)`, empty-string separator in STRING_AGG
-- Source/LinqToDB/Internal/DataProvider/SqlServer/Translation/SqlServer2022MemberTranslator.cs -- `SqlServer2022StringMemberTranslator` adds `LTRIM`/`RTRIM` with trim-chars (PR #5515)
-- Source/LinqToDB/Internal/DataProvider/SqlServer/Translation/SqlServerMemberTranslator.cs -- `SqlServerStringMemberTranslator`: `TrimStart`/`TrimEnd` returns null for trimChars!=null; `TranslateStringJoin` `withoutSeparator` branching corrected
+- Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServer2025SqlBuilder.cs -- new class; ConcatBuildStyle.Pipes, JSON->JSON type, inherits v2022
+- Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServer2025SqlExpressionConvertVisitor.cs -- new class; ConcatRequiresExplicitStringCast = false for 2025 || auto-coerce
+- Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServer2025SqlOptimizer.cs -- new class; wires SqlServer2025SqlExpressionConvertVisitor
+- Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerBulkCopy.cs -- RequiresMultipleRowsFallback for MC 7.0+ v2005 BulkCopy drop; _convertToParameter gated on UseParameters
+- Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerDataProvider.cs -- vector reader registered for both byte[] and SqlVectorType field types; optimizer switch updated for v2025 split
+- Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerMappingSchema.cs -- ConvertStringToSql2025 with || joiner; SqlServer2025MappingSchema registers float[]/Half[] with BuildVectorLiteral
+- Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerProviderAdapter.cs -- SqlServer2005BulkCopyUnsupported property for MC 7.0+ detection
+- Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerSqlExpressionConvertVisitor.cs -- ConvertConcat override casting NText/Text operands before lowering
+- Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerSystem2025SqlOptimizer.cs -- now extends SqlServer2025SqlOptimizer (was SqlServer2022SqlOptimizer)
+- Source/LinqToDB/Internal/DataProvider/SqlServer/Translation/SqlServer2017MemberTranslator.cs -- withoutSeparator path uses HasSequenceIndex(0), empty-string separator in STRING_AGG
+- Source/LinqToDB/Internal/DataProvider/SqlServer/Translation/SqlServer2022MemberTranslator.cs -- SqlServer2022StringMemberTranslator adds LTRIM/RTRIM with trim-chars (PR #5515)
+- Source/LinqToDB/Internal/DataProvider/SqlServer/Translation/SqlServerMemberTranslator.cs -- SqlServerStringMemberTranslator: TrimStart/TrimEnd returns null for trimChars!=null; TranslateStringJoin withoutSeparator branching corrected
+
+Read (this run -- delta):
+- Source/LinqToDB/DataProvider/SqlServer/SqlServerOptions.cs -- unchanged; BulkCopyType default ProviderSpecific, GenerateScopeIdentity default true, no new members
+- Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerDataProvider.cs -- confirmed: CreateMemberTranslator switch (>=v2022 through v2005); optimizer switch includes v2025+MDC->SqlServer2025SqlOptimizer, v2025+SDC->SqlServerSystem2025SqlOptimizer; MappingSchemaInstance.Get has 18 switch arms; SetParameter handles DataType.Json, Vector32, Vector16
+- Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerMappingSchema.cs -- confirmed: ConvertStringToSql2025 at line 317 uses || joiner; ConvertStringToSql at line 306 uses + joiner
+- Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerProviderDetector.cs -- confirmed: 18 lazy singletons (9 SDC + 9 MDC, including v2025); DetectServerVersion secondary fallback: when compatibility_level < 90, maps major version number (9->v2005 .. 16->v2022, _->v2025)
+- Source/LinqToDB/Internal/DataProvider/SqlServer/Translation/SqlServer2017MemberTranslator.cs -- confirmed: withoutSeparator=true branch calls c.HasSequenceIndex(0), withoutSeparator=false calls c.HasSequenceIndex(1).TranslateArguments(0); separator uses factory.Value(valueType, string.Empty) when withoutSeparator
+- Source/LinqToDB/Internal/DataProvider/SqlServer/Translation/SqlServerMemberTranslator.cs -- confirmed: SqlServerStringMemberTranslator.TranslateStringJoin branches on withoutSeparator; TranslateTrimStart/TranslateTrimEnd return null when trimChars != null
 
 </details>

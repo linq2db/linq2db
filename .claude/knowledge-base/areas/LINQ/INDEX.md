@@ -3,8 +3,8 @@ area: LINQ
 kind: area-index
 sources: [code]
 confidence: high
-last_verified: 2026-04-27
-last_verified_sha: a198cb803e80ae740cfc6afc7687536e78cd6cf2
+last_verified: 2026-06-14
+last_verified_sha: b3340aa9ded15ffc626983fd202e6399daa081ca
 coverage_tier_1: 5/5
 coverage_tier_2: 46/46
 ---
@@ -200,5 +200,10 @@ yield return / Task<T>
 - Tier 2: 46/46 — every `Source/LinqToDB/Internal/Linq/*.cs` file outside `Builder/` was read; the seven `QueryRunner.<op>.cs` partials (`CreateTable`, `Delete`, `Insert`, `InsertOrReplace`, `InsertWithIdentity`, `Update`, `DropTable`) were sampled to header + first ~50 lines as they all share the same shape: build an `SqlTable` + `Sql<Op>Statement` + `Query<int>` (or `Query<object>` for `InsertWithIdentity`), wire `SetNonQueryQuery` / `SetNonQueryQuery2` / `SetQueryQuery2`, and cache via `MemoryCache<IStructuralEquatable, Query<int>>`.
 - Tier 3: not applicable (the area has no `bin/` / generated content under `Internal/Linq/`).
 - Excluded: `Source/LinqToDB/Internal/Linq/Builder/**` belongs to the EXPR-TRANS area per the area registry.
+
+
+Read (this run -- delta):
+- `Source/LinqToDB/Internal/Linq/AccessorMember.cs` -- no structural change; confirmed `GetHashCode` uses `HashCode.Combine(MemberInfo, Arguments)` with structural per-element equality on `Arguments`; description updated in Tier 2 list for precision.
+- `Source/LinqToDB/Internal/Linq/ReflectionHelper.cs` -- two new inner classes added: `SqlGenericConstructor` (exposes `Assignments` `PropertyInfo` for `SqlGenericConstructorExpression`) and `SqlGenericConstructorAssignment` (exposes `Expression` `PropertyInfo` for `SqlGenericConstructorExpression.Assignment`); Tier 2 description updated to enumerate all nested classes including the new linq2db-specific ones.
 
 </details>

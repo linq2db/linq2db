@@ -3,8 +3,8 @@ area: PROV-FIREBIRD
 kind: area-index
 sources: [code]
 confidence: high
-last_verified: 2026-06-01
-last_verified_sha: 2e67bafc9bfc8ae8ba573b93bde8671d9920c95d
+last_verified: 2026-06-14
+last_verified_sha: b3340aa9ded15ffc626983fd202e6399daa081ca
 coverage_tier_1: 11/11
 coverage_tier_2: 12/12
 ---
@@ -183,7 +183,7 @@ SqlExpressionConvertVisitor
 - `%` -> `Mod(...)`.
 - String `+` binary expression -> `||` (via `ConvertSqlBinaryExpression`; predates `SqlConcatExpression`; the two paths coexist -- binary-expression rewriting handles legacy paths, `ConcatStyle` handles new `SqlConcatExpression` nodes).
 - `ConvertSearchStringPredicate`: maps StartsWith -> `STARTING WITH`; Contains (case-insensitive) -> `CONTAINING`; EndsWith / Contains (case-sensitive) -> via LIKE with `CAST(... AS BLOB)` to force case-sensitivity.
-- `ConvertConversion`: bool cast -> SearchCondition (`<> 0`); Guid->string -> `lower(UUID_TO_CHAR(...))`; string->Guid -> `CHAR_TO_UUID(...)`; Decimal normalization (`18, 10` defaults).
+- `ConvertConversion`: bool cast -> SearchCondition (`<> 0`); Guid->string -> delegates to `FirebirdMemberTranslator.TranslateGuidToString(cast.Expression, Factory)` (static shared helper; `FirebirdSqlExpressionConvertVisitor.cs:167`); string->Guid -> `CHAR_TO_UUID(...)`; Decimal normalization (`18, 10` defaults).
 - `VisitExprPredicate`: non-boolean `SqlParameter` in predicate position -> `p = TRUE`.
 - `ConvertSqlFunction`: `LENGTH` -> `CHAR_LENGTH`.
 - `WrapColumnExpression`: wraps numeric value types (uint, long, ulong, float, double, decimal) in CAST when appearing in column position.
@@ -208,7 +208,8 @@ ProviderMemberTranslatorDefault
 - `TranslateDateTimeTruncationToDate`: `CAST(... AS DATE)` with `forceCast: true` (`FirebirdMemberTranslator.cs:237-243`).
 - String JOIN -> `LIST(value, separator)` aggregate function.
 - `Guid.NewGuid()` -> `Gen_Uuid()`.
-- `Guid.ToString()` -> `CAST(lower(UUID_TO_CHAR({0})) AS VARCHAR(36))` -- inner `UUID_TO_CHAR` is typed `CHAR(36)` so the optimizer does not elide the outer `CAST` to `VARCHAR(36)` (`FirebirdMemberTranslator.cs:389-399`). Updated in this delta to be explicit about the two-step type annotation.
+- `Guid.ToString()` -> delegates to `TranslateGuidToString` static method (see below).
+- `TranslateGuidToString` (public static, `FirebirdMemberTranslator.cs:398-409`): shared by `GuidMemberTranslator.TranslateGuildToString` and `FirebirdSqlExpressionConvertVisitor.ConvertConversion`. Emits `CAST(lower(UUID_TO_CHAR({0})) AS VARCHAR(36))`. Inner `UUID_TO_CHAR` is typed as `CHAR(36)` so the optimizer does not elide the outer CAST to `VARCHAR(36)`. Without explicit CHAR typing the optimizer treats the CAST as a no-op. (Prior duplication between `GuidMemberTranslator` and `ConvertConversion` resolved by this extraction.)
 
 ### FirebirdStringMemberTranslator (nested in FirebirdMemberTranslator)
 
@@ -321,7 +322,7 @@ LockedMappingSchema("Firebird") -- FirebirdMappingSchema (base, shared)
 ## Known issues / debt
 
 1. `FirebirdSqlOptimizer.cs:8-9` -- TODO: implement recursive CTE outer-join optimization. Firebird disallows a recursive CTE reference in an outer join (`A recursive reference cannot participate in an outer join`); the optimizer falls back to CROSS JOIN which fails for some test cases (`Issue3360_TypeByOtherQuery_AllProviders`).
-2. `FirebirdSqlExpressionConvertVisitor.cs:166` -- code duplication comment: `GuidMemberTranslator.TranslateGuildToString` logic (`UUID_TO_CHAR` + `lower`) is duplicated in `ConvertConversion` (Guid->string cast path). Marked with `// TODO`.
+2. ~~`FirebirdSqlExpressionConvertVisitor.cs:166` -- code duplication: `GuidMemberTranslator.TranslateGuildToString` logic duplicated in `ConvertConversion`.~~ **RESOLVED** -- `ConvertConversion` now calls `FirebirdMemberTranslator.TranslateGuidToString` (public static helper); duplication eliminated.
 3. `FirebirdSqlBuilder.cs:277` -- TODO: "We should avoid such tricks, proper TypeMapping required" in `BuildParameter` where `DataType.Undefined` is resolved via `MappingSchema.GetDataType`.
 4. `FirebirdSqlBuilder.cs:297` -- TODO: "temporary guard against cast to unknown type (Variant)" in `BuildParameter`.
 5. `FirebirdBulkCopy.cs:55` -- `KeepIdentity = true` always throws; there is no workaround short of manually disabling triggers, which the error message instructs the user to do.
@@ -355,9 +356,9 @@ LockedMappingSchema("Firebird") -- FirebirdMappingSchema (base, shared)
 | `Internal/DataProvider/Firebird/Firebird4SqlBuilder.cs` | LATERAL/APPLY joins; BINARY/VARBINARY/GUID type overrides |
 | `Internal/DataProvider/Firebird/Firebird3SqlOptimizer.cs` | Delegates to `Firebird3SqlExpressionConvertVisitor` |
 | `Internal/DataProvider/Firebird/FirebirdSqlBuilder.Merge.cs` | MERGE source type inference; VALUES not supported; FB5 `NOT MATCHED BY SOURCE` ops |
-| `Internal/DataProvider/Firebird/FirebirdSqlExpressionConvertVisitor.cs` | Bitwise ops, string ops, CONTAINING/STARTING WITH, Guid conversions, CAST normalization; `ConcatRequiresExplicitStringCast=false` (PR #5504) |
+| `Internal/DataProvider/Firebird/FirebirdSqlExpressionConvertVisitor.cs` | Bitwise ops, string ops, CONTAINING/STARTING WITH, Guid conversions delegated to `FirebirdMemberTranslator.TranslateGuidToString`, CAST normalization; `ConcatRequiresExplicitStringCast=false` (PR #5504) |
 | `Internal/DataProvider/Firebird/Firebird3SqlExpressionConvertVisitor.cs` | v3 BOOLEAN-aware bool predicate handling |
-| `Internal/DataProvider/Firebird/Translation/FirebirdMemberTranslator.cs` | Date/string/Guid member translations; `LIST` aggregate; `Gen_Uuid`; `DateAdd` non-parameter constraint; `TranslateNow` returns null; `TrimStart`/`TrimEnd` (PR #5515); `TranslateStringJoin` withoutSeparator (PR #5504) |
+| `Internal/DataProvider/Firebird/Translation/FirebirdMemberTranslator.cs` | Date/string/Guid member translations; `LIST` aggregate; `Gen_Uuid`; `DateAdd` non-parameter constraint; `TranslateNow` returns null; `TrimStart`/`TrimEnd` (PR #5515); `TranslateStringJoin` withoutSeparator (PR #5504); `TranslateGuidToString` public static (Guid->string deduplication) |
 | `Internal/DataProvider/Firebird/Translation/Firebird4MemberTranslator.cs` | v4 Now/UtcNow/ZonedUtcNow translations via `CURRENT_TIMESTAMP AT TIME ZONE 'UTC'` [added PR #5467] |
 | `Internal/DataProvider/Firebird/Translation/Firebird5MemberTranslator.cs` | Native `QUARTER` extract; `LIST DISTINCT` support; extends `Firebird4MemberTranslator` |
 | `Internal/DataProvider/Firebird/FirebirdSchemaProvider.cs` | Schema via ADO.NET GetSchema + direct RDB$ queries; `CreateTypeName` type-code mapping |
@@ -402,5 +403,11 @@ Read (this run -- delta):
 - `Source/LinqToDB/Internal/DataProvider/Firebird/FirebirdSqlBuilder.cs` -- `ConcatStyle => ConcatBuildStyle.Pipes` added (PR #5504); no other structural changes
 - `Source/LinqToDB/Internal/DataProvider/Firebird/FirebirdSqlExpressionConvertVisitor.cs` -- `ConcatRequiresExplicitStringCast = false` added (PR #5504); no other structural changes
 - `Source/LinqToDB/Internal/DataProvider/Firebird/Translation/FirebirdMemberTranslator.cs` -- `TranslateTrimStart`/`TranslateTrimEnd` added to `FirebirdStringMemberTranslator` (PR #5515; null when trimChars supplied, `TRIM(LEADING/TRAILING FROM {0})` otherwise); `TranslateStringJoin` extended with `withoutSeparator` parameter (PR #5504; `ConfigureConcat` path for no-separator, `SUBSTRING` post-process for separator emulation); `GuidMemberTranslator.TranslateGuildToString` now explicitly types inner `UUID_TO_CHAR` as `CHAR(36)` to prevent optimizer elision of the outer `CAST` to `VARCHAR(36)`
+
+Read (this run -- delta):
+- `Source/LinqToDB/DataProvider/Firebird/FirebirdOptions.cs` -- no structural change; `BulkCopyType`, `IdentifierQuoteMode`, `IsLiteralEncodingSupported` fields unchanged
+- `Source/LinqToDB/Internal/DataProvider/Firebird/FirebirdDataProvider.cs` -- no structural change; dispatcher methods and SqlProviderFlags unchanged from prior index
+- `Source/LinqToDB/Internal/DataProvider/Firebird/FirebirdSqlExpressionConvertVisitor.cs` -- `ConvertConversion` Guid->string path now calls `FirebirdMemberTranslator.TranslateGuidToString` static method (was inline duplication); resolves prior Known issue #2
+- `Source/LinqToDB/Internal/DataProvider/Firebird/Translation/FirebirdMemberTranslator.cs` -- `TranslateGuidToString` promoted to `public static` method with XML doc; `GuidMemberTranslator.TranslateGuildToString` delegates to it; prior Guid->string duplication eliminated
 
 </details>

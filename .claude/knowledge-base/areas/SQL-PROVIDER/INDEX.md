@@ -3,8 +3,8 @@ area: SQL-PROVIDER
 kind: area-index
 sources: [code]
 confidence: high
-last_verified: 2026-06-01
-last_verified_sha: 2e67bafc9bfc8ae8ba573b93bde8671d9920c95d
+last_verified: 2026-06-14
+last_verified_sha: b3340aa9ded15ffc626983fd202e6399daa081ca
 coverage_tier_1: 4/4
 coverage_tier_2: 47/47
 ---
@@ -26,7 +26,7 @@ The two anchor abstractions are `ISqlBuilder` (turns a `SqlStatement` into provi
 - **`BasicSqlBuilder`** (`Source/LinqToDB/Internal/SqlProvider/BasicSqlBuilder.cs:26`) -- abstract default implementation, ~4650 lines, partial across `BasicSqlBuilder.cs` and `BasicSqlBuilder.Merge.cs`. Walks the AST clause-by-clause via the `Step` enum (`BasicSqlBuilder.cs:4048`). Statement dispatch happens in `BuildSqlImpl` (`BasicSqlBuilder.cs:367`) -- a switch over `Statement.QueryType` calls `BuildSelectQuery`, `BuildDeleteQuery`, `BuildUpdateQuery`, `BuildInsertQuery`, `BuildInsertOrUpdateQuery`, `BuildCreateTableStatement`, etc. Critical hook properties: `OpenParens`, `Comma`, `InlineComma`, `IsRecursiveCteKeywordRequired`, `IsCteColumnListSupported`, `SupportsMaterializedCteHint`, `WrapJoinCondition`, `IsNestedJoinSupported`, `CteFirst`, `IsOverRequiredWithinGroup`. Hooks for sub-clauses to override: `BuildSelectClause`, `BuildColumns`, `BuildFromClause`, etc. plus `protected abstract ISqlBuilder CreateSqlBuilder()` -- every provider overrides this to spawn a fresh same-typed builder for sub-queries.
 
   **Delta (PR #5504):** `BasicSqlBuilder` gains the concat-emission subsystem:
-  - `ConcatBuildStyle` enum (`BasicSqlBuilder.cs:3874`) -- three values: `Plus` (`a + b`; SQL Server pre-2025, SqlCe, Sybase ASE, Access), `Pipes` (`a || b`; ANSI standard -- PostgreSQL, Oracle, SQLite, DB2, Firebird, Informix, SAP HANA, DuckDB, SQL Server 2025+), `Function` (`CONCAT(a, b, c)`; MySQL, ClickHouse).
+  - `ConcatBuildStyle` enum (`BasicSqlBuilder.cs:3874`) -- three values: `Plus` (`a + b`; SQL Server pre-2025, SqlCe, Access), `Pipes` (`a || b`; ANSI standard -- PostgreSQL, Oracle, SQLite, DB2, Firebird, Informix, SAP HANA, DuckDB, Sybase ASE, SQL Server 2025+), `Function` (`CONCAT(a, b, c)`; MySQL, ClickHouse).
   - `protected virtual ConcatBuildStyle ConcatStyle` (`BasicSqlBuilder.cs:3888`) -- defaults to `Plus`. Provider subclasses override to select their style.
   - `protected virtual string ConcatFunctionName` (`BasicSqlBuilder.cs:3894`) -- defaults to `"CONCAT"`; overridable for case-sensitive dialects (e.g. ClickHouse `concat`).
   - `protected virtual void BuildSqlConcatExpression(SqlConcatExpression element)` (`BasicSqlBuilder.cs:3896`) -- the primary emission hook; dispatches on `ConcatStyle` to either `BuildSqlConcatOperatorChain` (for `Plus`/`Pipes`) or `BuildSqlConcatFunctionCall` (for `Function`). Override this only when none of the three styles fits.
@@ -34,22 +34,25 @@ The two anchor abstractions are `ISqlBuilder` (turns a `SqlStatement` into provi
 
 - **`BasicSqlBuilder<T>`** (`Source/LinqToDB/Internal/SqlProvider/BasicSqlBuilder{T}.cs:8`) -- typed-options facade. `T : DataProviderOptions<T>, IOptionSet, new()`.
 
-- **`BasicSqlOptimizer`** (`Source/LinqToDB/Internal/SqlProvider/BasicSqlOptimizer.cs:21`) -- abstract default optimizer, ~2260 lines. The `Finalize` pipeline (line 51) runs in fixed order: `FixEmptySelect` -> `FinalizeCte` -> `OptimizeQueries` -> conditional `JoinsOptimizer.Optimize` -> `FinalizeInsert` -> `FinalizeSelect` -> `FixSetOperationValues` -> `FinalizeStatement` (provider hook). The `Alternative Builders` region (line 820) holds reusable rewrite helpers (`GetAlternativeDelete`, `RemoveUpdateTableIfPossible`, `NeedsEnvelopingForUpdate`, `ReplaceTakeSkipWithRowNumber`).
+- **`BasicSqlOptimizer`** (`Source/LinqToDB/Internal/SqlProvider/BasicSqlOptimizer.cs:21`) -- abstract default optimizer, ~2260 lines. The `Finalize` pipeline (line 51) runs in fixed order: `FixEmptySelect` -> `FinalizeCte` -> `SqlNullsOrderingLoweringVisitor.LowerNullsOrdering` (when `!IsNullsOrderingSupported`) -> `OptimizeQueries` -> conditional `JoinsOptimizer.Optimize` -> `FinalizeInsert` -> `FinalizeSelect` -> `FixSetOperationValues` -> `FinalizeStatement` (provider hook). The `Alternative Builders` region (line 820) holds reusable rewrite helpers (`GetAlternativeDelete`, `RemoveUpdateTableIfPossible`, `NeedsEnvelopingForUpdate`, `ReplaceTakeSkipWithRowNumber`).
 
-- **`SqlProviderFlags`** (`Source/LinqToDB/Internal/SqlProvider/SqlProviderFlags.cs:19`) -- `[DataContract]`, ~70 mutable bool/enum fields. `[DataMember(Order = N)]` is mandatory because remoting (gRPC/WCF/HTTP) round-trips this object. The `CustomFlags` set is a string-keyed escape hatch.
+- **`SqlProviderFlags`** (`Source/LinqToDB/Internal/SqlProvider/SqlProviderFlags.cs:19`) -- `[DataContract]`, ~72 mutable bool/enum fields. `[DataMember(Order = N)]` is mandatory because remoting (gRPC/WCF/HTTP) round-trips this object. The `CustomFlags` set is a string-keyed escape hatch.
+
+  **Delta (NULLS ordering flags):** Two new `[DataMember]` fields: `IsNullsOrderingSupported` (Order=69, bool, default false, `SqlProviderFlags.cs:604`) -- native NULLS FIRST/NULLS LAST vs CASE emulation; and `DefaultNullsOrdering` (Order=70, NullsDefaultOrdering, default Unknown, `SqlProviderFlags.cs:614`) -- natural null placement in ORDER BY. ABI-additive: old payloads deserialize with safe defaults.
 
 - **`OptimizationContext`** (`Source/LinqToDB/Internal/SqlProvider/OptimizationContext.cs:13`) -- bag passed from LINQ pipeline into SQL builder. Carries `EvaluationContext`, `DataOptions`, `SqlProviderFlags`, `MappingSchema`, the two visitor instances, a `Factory` (`ISqlExpressionFactory`), parameter-dedup map, `SuggestDynamicParameter` cache. The two `OptimizeAndConvert*` methods drive the two-phase optimize-then-convert pipeline.
 
 - **`SqlExpressionOptimizerVisitor`** -- provider-agnostic shape-preserving rewrites. ~2185 lines.
 
-  **Delta (PR #5502):** `VisitSqlCoalesceExpression` (`SqlExpressionOptimizerVisitor.cs:1403`) gains early-termination logic: when a mid-chain expression is provably non-nullable (i.e. `!expr.CanBeNullable(_nullabilityContext)` and the expression is not the last in the chain), the coalesce chain is truncated at that point. This eliminates redundant trailing alternatives after a non-nullable aggregate (e.g. `COUNT(*)`/`SUM(non-null)` scalar subquery) -- the optimizer now strips the unreachable fallback rather than emitting a spurious `COALESCE(..., 0)`.
+  **Delta (PR #5502):** `VisitSqlCoalesceExpression` (`SqlExpressionOptimizerVisitor.cs:1416`) gains two rewrites in one pass: (1) **Nested coalesce flattening** -- when an operand is itself a `SqlCoalesceExpression` (possibly in `SqlNullabilityExpression`), its children are inlined, eliminating `COALESCE(COALESCE(a,b),c)` -> `COALESCE(a,b,c)` shapes. (2) **Early-termination** -- when a mid-chain expression is provably non-nullable and not the last, the chain is truncated. Eliminates spurious `COALESCE(agg_subquery, 0)` patterns.
 
 - **`SqlExpressionConvertVisitor`** -- provider-specific `IQueryElement` transforms. ~2105 lines.
 
   **Delta (PR #5504):** Gains the concat-lowering subsystem:
-  - `protected virtual bool ConcatRequiresExplicitStringCast` (`SqlExpressionConvertVisitor.cs:1259`) -- when `true` (default), wraps every non-string operand in an explicit `CAST(... AS VARCHAR(N))` before the concat chain. Needed for `+` providers (SQL Server pre-2025, SqlCe, Access) where SQL data-type precedence would otherwise coerce string operands to the non-string type. `||` and `CONCAT(...)` providers override this to `false`.
+  - `protected virtual bool ConcatRequiresExplicitStringCast` (`SqlExpressionConvertVisitor.cs:1259`) -- when `true` (default), wraps every non-string operand in an explicit `CAST(... AS VARCHAR(N))` before the concat chain. Needed for `+` providers (SQL Server pre-2025, SqlCe, Access) where SQL data-type precedence would otherwise coerce string operands to the non-string type. `||` and `CONCAT(...)` providers override this to `false`. **Sybase ASE exception** (`SqlExpressionConvertVisitor.cs:1289`): Sybase ASE emits `||` but keeps `ConcatRequiresExplicitStringCast = true` because ASE requires explicit `convert()` for non-character operands.
   - `public virtual ISqlExpression ConvertConcat(SqlConcatExpression element)` (`SqlExpressionConvertVisitor.cs:1261`) -- the per-element lowering called from `VisitSqlConcatExpression`. Pipeline: (1) single-operand identity pass; (2) `FlattenNestedConcat` -- flattens same-`PreserveNull`-semantic nested `SqlConcatExpression` children (addresses the `string + string + string` arrives as `Concat(Concat(a,b),c)` pattern from `TranslateBinaryStringConcat`); (3) per-operand cast-to-string when `ConcatRequiresExplicitStringCast`; (4) per-nullable-operand `Coalesce(item, '')` wrap when `!element.PreserveNull` (null-as-empty semantic). Idempotence is guarded by `IsConcatCoalesceWrap` which detects four shape variants the optimizer can produce from the same logical wrap.
   - `VisitSqlConcatExpression` (`SqlExpressionConvertVisitor.cs:1170`) -- override that calls `ConvertConcat` and re-enters `Visit` on any replacement.
+  - `RemoveNullValues(SqlCoalesceExpression element)` (`SqlExpressionConvertVisitor.cs:1247`, protected) -- strips NULL-literal operands before `ConvertCoalesce` folds. Prevents Informix `Nvl(x, NULL)` / Access `IIF(x IS NULL, NULL, x)` artifacts (issue #5531).
 
 - **`JoinsOptimizer`** -- sealed; runs only when `LinqOptions.OptimizeJoins` is on. Two passes: `RemoveUnusedLeftJoins`, `RemoveDuplicateJoins`. Static `UnnestJoins` flattens nested JOINs.
 
@@ -98,9 +101,11 @@ Visited under `Sql/` (28/28): `Sql.cs`, `Sql.ExpressionAttribute.cs`, `Sql.Exten
 4. **CTE emission** -- `BuildWithClause` (`BasicSqlBuilder.cs:670`). Reads `IsRecursiveCteKeywordRequired`, `IsCteColumnListSupported`, `SupportsMaterializedCteHint`, `CteFirst`. The `Materialized` annotation pathway lets PostgreSQL 12+, SQLite 3.35+, ClickHouse 26.3+ emit `AS MATERIALIZED` / `AS NOT MATERIALIZED`.
 5. **MERGE emission** -- split into `BasicSqlBuilder.Merge.cs` (504 lines). `BuildMergeStatement` (`BasicSqlBuilder.Merge.cs:48`) drives `BuildMergeInto` -> `BuildMergeSource` -> `BuildMergeOn` -> per-operation `BuildMergeOperation` -> `BuildOutputSubclause` -> `BuildMergeTerminator`. Hooks `IsValuesSyntaxSupported`, `IsEmptyValuesSourceSupported`, `FakeTable`, `FakeTableSchema`, `RequiresConstantColumnAliases`, `SupportsColumnAliasesInSource` accommodate dialects without `VALUES (...)` source syntax.
 6. **String-concat emission** (delta: PR #5504) -- `BuildSqlConcatExpression` (`BasicSqlBuilder.cs:3896`) lowers `SqlConcatExpression` AST nodes to dialect SQL. Three built-in strategies via `ConcatBuildStyle`: `Plus` (`a + b + c`), `Pipes` (`a || b || c`), `Function` (`CONCAT(a, b, c)`). Provider subclasses set `ConcatStyle` and optionally `ConcatFunctionName`; override `BuildSqlConcatExpression` only for non-standard shapes. Pre-emission operand normalization (cast to string, null-as-empty coalesce wrap) is done by `SqlExpressionConvertVisitor.ConvertConcat` in the convert phase -- the builder receives an already-normalized operand list.
-7. **Statement-level optimization** -- `BasicSqlOptimizer.Finalize`. Drives `SelectQueryOptimizerVisitor`, then optionally `JoinsOptimizer`, then per-verb finalization, then per-provider `FinalizeStatement`. NULL/parameter casting across UNION arms uses `RequiresCastingParametersForSetOperations` / `RequiresCastingNullValueForSetOperations`. `SqlRowExpandVisitor` expands `SqlRowExpression` columns before emission.
+7. **Statement-level optimization** -- `BasicSqlOptimizer.Finalize`. Drives `SqlNullsOrderingLoweringVisitor` (new -- when `!IsNullsOrderingSupported`), then `SelectQueryOptimizerVisitor`, then optionally `JoinsOptimizer`, then per-verb finalization, then per-provider `FinalizeStatement`. NULL/parameter casting across UNION arms uses `RequiresCastingParametersForSetOperations` / `RequiresCastingNullValueForSetOperations`. `SqlRowExpandVisitor` expands `SqlRowExpression` columns before emission.
 8. **Two-phase visitor pipeline** -- `OptimizationContext.OptimizeAndConvert<T>` (`OptimizationContext.cs:131`) runs `SqlExpressionOptimizerVisitor.Optimize` (algebraic simplification) followed by `SqlExpressionConvertVisitor.Convert` (dialect-specific translation).
-9. **COALESCE chain simplification** (delta: PR #5502) -- `SqlExpressionOptimizerVisitor.VisitSqlCoalesceExpression` (`SqlExpressionOptimizerVisitor.cs:1403`) now short-circuits COALESCE chains when a non-nullable mid-chain expression is detected: it truncates the list at that expression (discarding all subsequent alternatives as unreachable) and re-enters `Visit` on the shortened chain. This eliminates spurious `COALESCE(agg_subquery, 0)` patterns where the aggregate subquery is already provably non-null.
+9. **COALESCE chain simplification** (delta: PR #5502) -- `SqlExpressionOptimizerVisitor.VisitSqlCoalesceExpression` (`SqlExpressionOptimizerVisitor.cs:1416`) performs two rewrites in one pass: (1) nested coalesce flattening (inlines `SqlCoalesceExpression` children into the outer list); (2) early-termination on a provably non-nullable mid-chain expression. `SqlExpressionConvertVisitor.RemoveNullValues` (`SqlExpressionConvertVisitor.cs:1247`) strips NULL-literal operands before provider-specific folding, preventing Informix/Access artifacts (issue #5531).
+10. **NULLS ordering lowering** (delta -- this run) -- `SqlNullsOrderingLoweringVisitor` (`BasicSqlOptimizer.cs:62`) translates `NULLS FIRST`/`NULLS LAST` ORDER BY clauses into `CASE WHEN <expr> IS NULL THEN 0/1 END` sort keys for providers with `!IsNullsOrderingSupported`. Runs before `OptimizeQueries` so downstream rewrites treat CASE expressions as ordinary derived order expressions. Controlled by `IsNullsOrderingSupported` and `DefaultNullsOrdering` on `SqlProviderFlags`.
+
 10. **Update-path rewrite helpers** -- `BasicCorrectUpdate` and `RemoveUpdateTableIfPossible` handle the gap between `UPDATE` semantics across providers.
 11. **Public `Sql.*` extension surface** -- `Source/LinqToDB/Sql/`. Every server-side call lands here as `[Expression]`/`[Function]`/`[Extension]`-decorated method.
 12. **Hint/extension builders** -- `HintExtensionBuilder` and three siblings convert a `SqlQueryExtension` AST node back into the textual form the provider wants. Resolves `Sql.SqlID` placeholders through `ISqlBuilder.BuildSqlID`.
@@ -113,7 +118,7 @@ Visited under `Sql/` (28/28): `Sql.cs`, `Sql.ExpressionAttribute.cs`, `Sql.Exten
 
 **Outputs.** A `StringBuilder` of dialect-specific SQL plus `OptimizationContext._actualParameters` (the deduplicated `SqlParameter` list).
 
-**Provider extension points.** Each `<Provider>SqlBuilder` extends `BasicSqlBuilder<TOptions>` and overrides ~5-40 virtuals. Each `<Provider>SqlOptimizer` extends `BasicSqlOptimizer`. For concat, providers override `ConcatStyle` (and optionally `ConcatFunctionName`, `ConcatRequiresExplicitStringCast`).
+**Provider extension points.** Each `<Provider>SqlBuilder` extends `BasicSqlBuilder<TOptions>` and overrides ~5-40 virtuals. Each `<Provider>SqlOptimizer` extends `BasicSqlOptimizer`. For concat, providers override `ConcatStyle` (and optionally `ConcatFunctionName`, `ConcatRequiresExplicitStringCast`). For NULLS ordering, providers set `IsNullsOrderingSupported` and `DefaultNullsOrdering` on `SqlProviderFlags`.
 
 **`Sql.*` consumption.** `Sql.<method>` calls in user LINQ queries are picked up by [EXPR-TRANS](../EXPR-TRANS/INDEX.md). `Sql.CurrentTimestampUtc` and `Sql.CurrentTzTimestamp` are dispatched through `DateFunctionsTranslatorBase` registration hooks (`DateFunctionsTranslatorBase.cs:63-74`).
 
@@ -141,6 +146,8 @@ Pointers only:
 - **`Sql.CurrentTimestampUtc` has no attribute decoration.** Unlike `Sql.CurrentTimestamp` (`[ServerSideOnly]`) and `Sql.CurrentTzTimestamp` (five provider `[Function]`/`[Property]` attributes), `Sql.CurrentTimestampUtc` carries no `[Function]`, `[Property]`, or `[ServerSideOnly]` attribute (`Sql.cs:1184`). Translation depends entirely on `DateFunctionsTranslatorBase.TranslateUtcNow` being overridden by the provider. Providers without that override silently evaluate client-side -- no compile-time or runtime warning. New debt from PR #5467.
 - **`Sql.CurrentTzTimestamp` has no mapping for MySQL, SQLite, DB2, Firebird, SAP HANA, Informix, Sybase, Access, SQL CE.** Queries using `Sql.CurrentTzTimestamp` on those providers evaluate client-side without any warning.
 - **`ConcatBuildStyle.Plus` is the default `ConcatStyle`** but most modern providers use `Pipes` or `Function`. Providers that do not explicitly override `ConcatStyle` silently emit `+`-style concat. (Deliberate default: the base class cannot assume `||` support.)
+- ** ABI additive change.** The two new  fields (, ) are additive but any serialized payload from an older build will deserialize without them (defaults: /).
+- ** is  for all providers by default.** Providers that do not set this flag emit CASE emulation sort keys even when ORDER BY direction already matches the natural null placement -- harmless but verbose.
 
 ## See also
 
@@ -159,7 +166,8 @@ Pointers only:
 - Two-phase visitor pipeline: `OptimizationContext.OptimizeAndConvert*` (`Source/LinqToDB/Internal/SqlProvider/OptimizationContext.cs:122-145`).
 - Concat enum + hooks: `ConcatBuildStyle` (`BasicSqlBuilder.cs:3874`), `ConcatStyle` (`BasicSqlBuilder.cs:3888`), `ConcatFunctionName` (`BasicSqlBuilder.cs:3894`), `BuildSqlConcatExpression` (`BasicSqlBuilder.cs:3896`).
 - Concat lowering in convert phase: `ConvertConcat` (`SqlExpressionConvertVisitor.cs:1261`), `ConcatRequiresExplicitStringCast` (`SqlExpressionConvertVisitor.cs:1259`).
-- COALESCE chain shortcut: `VisitSqlCoalesceExpression` (`SqlExpressionOptimizerVisitor.cs:1403`), early-termination at line 1426.
+- NULLS ordering lowering: `SqlNullsOrderingLoweringVisitor` invoked at `BasicSqlOptimizer.cs:62`; flags `IsNullsOrderingSupported` (`SqlProviderFlags.cs:604`), `DefaultNullsOrdering` (`SqlProviderFlags.cs:614`).
+- COALESCE chain rewrites: `VisitSqlCoalesceExpression` (`SqlExpressionOptimizerVisitor.cs:1416`), nested-flattening + early-termination in one loop; `RemoveNullValues` (`SqlExpressionConvertVisitor.cs:1247`), NULL-literal stripping before provider fold.
 - Public `Sql.*` static partial: `Source/LinqToDB/Sql/Sql.cs:27`.
 - Attribute hierarchy root: `Source/LinqToDB/Sql/Sql.ExpressionAttribute.cs:32`.
 - `Sql.CurrentTimestampUtc` (no-attribute, translator-driven): `Source/LinqToDB/Sql/Sql.cs:1184`.
@@ -187,4 +195,13 @@ Read (this run -- delta, SHA 2e67bafc9):
 - `Source/LinqToDB/Sql/Sql.Expressions.cs` (full, 574 lines): PR #5526 -- `Sql.Expr<T>(RawSqlString, params object[])` at line 567 has no `[SqlQueryDependentParams]` on `parameters`; `[SqlQueryDependentParams]` is absent from entire file; codebase-wide search confirms zero remaining uses.
 - `Source/LinqToDB/Sql/Sql.cs` (lines 1-100): no new public API beyond prior delta run.
 
+
+Read (this run -- delta, SHA b3340aa9):
+-  (lines 1-100, 3850-3970):  doc updated to include Sybase ASE.
+-  (lines 1-150):  gains  at line 61-62.
+-  (lines 1-100, 1155-1300):  extracted at line 1247; Sybase ASE exception at line 1289.
+-  (lines 1-100, 1395-1465): nested COALESCE flattening at lines 1429-1437; early-termination at line 1439.
+-  (full): two new  fields Order=69/70; / updated.
+-  (full): no changes.
+-  (lines 1-100, 1170-1190): no new public API.
 </details>

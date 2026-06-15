@@ -3,8 +3,8 @@ area: PROV-SAPHANA
 kind: area-index
 sources: [code]
 confidence: high
-last_verified: 2026-06-01
-last_verified_sha: 2e67bafc9bfc8ae8ba573b93bde8671d9920c95d
+last_verified: 2026-06-14
+last_verified_sha: b3340aa9ded15ffc626983fd202e6399daa081ca
 coverage_tier_1: 11/11
 coverage_tier_2: 9/9
 ---
@@ -37,11 +37,16 @@ Set in `SapHanaDataProvider` constructor (`SapHanaDataProvider.cs:34`):
 | Flag | Value | Reason |
 |---|---|---|
 | `IsSubQueryOrderBySupported` | `false` | not supported |
+| `IsUnionAllOrderBySupported` | `true` | |
 | `IsCorrelatedSubQueryTakeSupported` | `false` | engine returns `more than one row` instead of truncating |
 | `IsInsertOrUpdateSupported` | `false` | no native UPSERT |
 | `IsUpdateFromSupported` | `false` | no `UPDATE ... FROM` |
 | `IsApplyJoinSupported` | `true` | LATERAL supported |
+| `IsCrossApplyJoinSupportsCondition` | `true` | INNER JOIN LATERAL supports ON condition |
+| `IsOuterApplyJoinSupportsCondition` | `true` | LEFT JOIN LATERAL supports ON condition |
 | `IsCommonTableExpressionsSupported` | `true` | |
+| `IsNullsOrderingSupported` | `true` | HANA supports NULLS FIRST/LAST |
+| `DefaultNullsOrdering` | `NullsDefaultOrdering.Smallest` | HANA sorts NULL as the smallest value |
 | `SupportsBooleanType` | `false` | BOOLEAN is not a storable type |
 | `IsParameterOrderDependent` | `true` | |
 
@@ -58,6 +63,7 @@ Set in `SapHanaDataProvider` constructor (`SapHanaDataProvider.cs:34`):
 | `ExecuteScope` | none | `InvariantCultureRegion` (`SapHanaDataProvider.cs:274`) |
 | `GetQueryParameterNormalizer` | base (named params) | `NoopQueryParametersNormalizer` |
 | `DateOnly` conversion | -> `DateTime` (`SapHanaDataProvider.cs:98`) | not needed |
+| `TimeSpan` reader | `GetTimeSpanMethod` provider field (`SapHanaDataProvider.cs:59`) | n/a for ODBC |
 | `DECIMAL` without scale | -> `DecFloat` | same |
 
 ODBC adapter wraps `OdbcProviderAdapter` rather than native HANA types (`SapHanaProviderAdapter.cs:86`).
@@ -131,7 +137,7 @@ Parameter type mappings (`SapHanaDataProvider.SetParameterType`):
 
 `SapHanaMemberTranslator` (`Translation/SapHanaMemberTranslator.cs`) extends `ProviderMemberTranslatorDefault`:
 
-- **Date parts**: `Year`/`Month`/`Day` -> `Year()`/`Month()`/`DayOfMonth()`; `DayOfYear` -> `DayOfYear()`; `Quarter` -> floor-based arithmetic on `Month()`; `WeekDay` -> `Mod(Weekday()+1, 7)+1`; `Millisecond` -> `Cast(To_NVarchar(x, 'FF3') as int)`.
+- **Date parts**: `Year`/`Month`/`Day` -> `Year()`/`Month()`/`DayOfMonth()`; `DayOfYear` -> `DayOfYear()`; `Week` -> `Week()`; `Quarter` -> floor-based arithmetic on `Month()`; `WeekDay` -> `Mod(Weekday()+1, 7)+1`; `Millisecond` -> `Cast(To_NVarchar(x, 'FF3') as int)`.
 - **DateAdd**: `Add_Years`, `Add_Months`, `Add_Days`, `Add_Seconds` (hours/minutes/ms scaled accordingly).
 - **MakeDateTime**: builds `To_Timestamp(...)` over a `factory.Concat(...)` call -- uses the `SqlConcatExpression`-based factory helper (PR #5504) rather than explicit `||` operator chaining (`SapHanaMemberTranslator.cs:230`).
 - **Truncate to date**: `To_Date(expr)` via `TranslateDateTimeTruncationToDate`; return type uses `factory.GetDbDataType(dateExpression)` to preserve the column's `DbType` (PR #5517 -- fixes incorrect cast when the column carries an explicit `DbType`).
@@ -302,4 +308,10 @@ Read (this run -- delta, sha 2e67bafc9):
 - `SapHanaSqlExpressionConvertVisitor.cs` -- PR #5504: removed `+`-on-string -> `||` binary-expression branch; `ConcatRequiresExplicitStringCast` property now explicitly `false`; `WrapColumnExpression` now wraps via `SqlCastExpression(isMandatory: true)` instead of prior cast form.
 - `SapHanaMemberTranslator.cs` -- PR #5504: `TranslateStringJoin` `withoutSeparator` path now calls `ConfigureConcat(builder, wrapByCoalesce: true)` (delegates string.Concat to the standard concat pipeline) rather than emitting `STRING_AGG` with empty-string separator; `TranslateMakeDateTime` uses `factory.Concat(...)` (SqlConcatExpression factory helper). PR #5515: no `TrimStart`/`TrimEnd` overrides in this file -- those land in the base class `StringMemberTranslatorBase`.
 
+
+Read (this run -- delta, sha b3340aa9):
+- `SapHanaDataProvider.cs` -- new flags: `IsCrossApplyJoinSupportsCondition = true`, `IsOuterApplyJoinSupportsCondition = true`, `IsNullsOrderingSupported = true`, `DefaultNullsOrdering = NullsDefaultOrdering.Smallest` (HANA sorts NULL as smallest), `IsUnionAllOrderBySupported = true`; `GetTimeSpanMethod` provider field registered on native reader (`SapHanaDataProvider.cs:59`); `MappingSchemaInstance` uses C# 13 `field` keyword lazy initializers.
+- `SapHanaOptions.cs` -- no functional changes; `BulkCopyType.MultipleRows` default unchanged.
+- `SapHanaProviderDetector.cs` -- no functional changes vs prior index; detection order unchanged.
+- `SapHanaMemberTranslator.cs` -- no functional changes vs prior run; `Week` date part (`Week()` function) confirmed present (`SapHanaMemberTranslator.cs:94`); `ConvertDateTimeOffset` -> `Timestamp` confirmed.
 </details>

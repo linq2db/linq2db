@@ -3,35 +3,39 @@ area: PROV-SQLSERVER
 kind: issues
 sources: [gh-issues, gh-prs, gh-discussions]
 confidence: high
-last_verified: 2026-05-08
-last_verified_sha: d52a4ed0e83317cc11b2ef3d41ddf4ba70acf415
+last_verified: 2026-06-15
+last_verified_sha: b3340aa9ded15ffc626983fd202e6399daa081ca
 ---
 
 # PROV-SQLSERVER — GitHub themes
 
 ## Open themes
 
-- **server** — 7 open issues share this keyword. Sample: #2777, #3314, #4588, #4598, #4138, #4658, #1916.
+- **Schema generation / scaffolding** -- Two open requests (#4195, #449) surface scaffolding limitations: Azure SQL Edge lacks CLR support (required by ASSEMBLYPROPERTY enum), and table-valued functions (UDFs) require manual T4 template work. Sample: #4195, #449.
+- **SQL Server-specific optimizations** -- #3314 requests ISNULL() optimization; ISNULL calculates parameters only once, while COALESCE expands to CASE and risks double evaluation on complex subqueries.
+- **String concatenation (Sql.Concat)** -- #1916 requests native SQL.Concat() function mapping to SQL Server's CONCAT() (available since 2012); currently translates to string concatenation operator or CASE-based COALESCE.
+- **Bulk copy enhancements** -- #1178 suggests BulkCopy API improvements for performance use cases.
 
 ## Resolved themes
 
-- No clustered themes among closed issues (insufficient volume).
+- **Fabric Datawarehouse scaffolding** -- #4536 resolved: ASSEMBLYPROPERTY exclusion in schema enumeration unblocks Microsoft Fabric datawarehouse scaffold.
 
 ## Active discussions
 
-- [[SQL Server] Create a temp table with IGNORE_DUP_KEY = ON](https://github.com/linq2db/linq2db/discussions/4953) — [Q&A] I would like to create a temp table and ignore all duplicate entries. In SQL Server it is possible by running:
+No active discussions for PROV-SQLSERVER.
 
 ## Stats
 
-- Open issues: 16
-- Closed issues: 175
-- Open PRs: 1
-- Total PRs: 89
-- Discussions: 17
-- Last fetched: 2026-05-08
+- Open issues: 5
+- Closed issues: 1
+- Open PRs: 0
+- Total PRs: 0
+- Discussions: 0
+- Last fetched: 2026-06-15
 
 <details><summary>Coverage</summary>
 
-- Index entries scanned: 297 (191 issues + 89 PRs + 17 discussions)
-- Themes extracted: 0
+- Index entries scanned: 6 (6 issues + 0 PRs + 0 discussions)
+- Themes extracted: 4 open + 1 resolved
+
 </details>

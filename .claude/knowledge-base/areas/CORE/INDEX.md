@@ -3,8 +3,8 @@ area: CORE
 kind: area-index
 sources: [code]
 confidence: high
-last_verified: 2026-06-01
-last_verified_sha: 2e67bafc9bfc8ae8ba573b93bde8671d9920c95d
+last_verified: 2026-06-14
+last_verified_sha: b3340aa9ded15ffc626983fd202e6399daa081ca
 coverage_tier_1: 6/6
 coverage_tier_2: 57/58
 ---
@@ -20,7 +20,7 @@ CORE owns the **top-level public-API surface** of the `linq2db` assembly -- the 
 - `IDataContext` -- the central context abstraction, exposing the SQL-builder factory, `MappingSchema`, `DataReaderType`, query hints, options, and the `GetQueryRunner` execution hook (`Source/LinqToDB/IDataContext.cs:22`).
 - `DataContext` -- non-persistent context that opens an internal `DataConnection` lazily and disposes it after each query unless `KeepConnectionAlive` is set (`Source/LinqToDB/DataContext.cs:28`, lifecycle at `:391`, `:437`).
 - `DataConnection` -- persistent connection; holds the `DbConnection` for the lifetime of the object and is the actual ADO.NET execution site (`Source/LinqToDB/Data/DataConnection.cs:32`). Lives in the `LinqToDB.Data` namespace and is documented in [DATA](../DATA/INDEX.md), but cross-listed here because it implements `IDataContext`.
-- `DataOptions` -- immutable, sealed configuration record. Composes per-concern option sets: `LinqOptions`, `RetryPolicyOptions`, `ConnectionOptions`, `DataContextOptions`, `BulkCopyOptions`, `SqlOptions`. Implements `OptionsContainer<DataOptions>` with `WithOptions` for fluent overrides (`Source/LinqToDB/DataOptions.cs:17`, `:49`, `:90`).
+- `DataOptions` -- immutable, sealed configuration record. Composes per-concern option sets: `LinqOptions`, `RetryPolicyOptions`, `ConnectionOptions`, `DataContextOptions`, `BulkCopyOptions`, `SqlOptions`. Implements `OptionsContainer<DataOptions>` with `WithOptions` for fluent overrides (`Source/LinqToDB/DataOptions.cs:17`, `:49`, `:90`). `Reapply` methods dispatch to `IReapplicable<T>` on each sub-option set or fall back to `Default` when `previousOptions` was non-null (`Source/LinqToDB/DataOptions.cs:118--147`).
 - `DataExtensions` -- partial static class hosting the public extension surface on `IDataContext`: `GetTable<T>`, table-function dispatch, `Insert`/`Update`/`Delete` overloads (`Source/LinqToDB/DataExtensions.cs:29`, `:41`).
 - `DataExtensions` (TempTable partial) -- `CreateTempTable<T>` / `CreateTempTableAsync<T>` and `IntoTempTable<T>` / `IntoTempTableAsync<T>` families; delegate to `TempTable<T>` ctors or `TempTable<T>.CreateAsync`. The `setTable` overloads call `GetTempTableDescriptor`, which temporarily pushes a new `MappingSchema` and returns a `TempTableDescriptor` carrying the old schema for rollback.
 - `ITable<T>` -- `IExpressionQuery<T>`-derived handle from `dataContext.GetTable<T>()`; carries server/database/schema/table identity (`Source/LinqToDB/ITable{T}.cs:12`).
@@ -28,9 +28,9 @@ CORE owns the **top-level public-API surface** of the `linq2db` assembly -- the 
 - `TempTableDescriptor` -- sealed record `(EntityDescriptor EntityDescriptor, MappingSchema PrevMappingSchema)` (`Source/LinqToDB/TempTableDescriptor.cs:5`).
 - `CompiledQuery` -- caches a compiled `LambdaExpression` into a `Func<object?[], object?[]?, object?>`; lazy lock-protected init (`Source/LinqToDB/CompiledQuery.cs:25`, `:36`).
 - `ProviderName` -- string-constant catalog of every provider/dialect identifier (`Source/LinqToDB/ProviderName.cs:23`). As of PR #5451 includes `DuckDB = "DuckDB"` (`:341`). The file-level TODO at `:18` notes provider-specific entries are scheduled for obsolescence in v6; `ProviderName` is intended for dialect names only going forward.
-- `DataType`, `DbDataType`, `TableOptions`, `SqlJoinType`, `MergeOperationType`, `TakeHints` -- public enums/structs. `DbDataType` is a value struct `(SystemType, DataType, DbType, Length, Precision, Scale)` with fluent `WithXxx` copies (`Source/LinqToDB/DbDataType.cs:15`). `SqlJoinType` exposes Inner/Left/Right/Full. `TakeHints` is `[Flags]` supporting `Percent`/`WithTies`. `DataType` carries an `Array` flag bit and composite `Vector32`/`Vector16`; `[Flags]` is noted with `// ??? TODO: remove Flags in v7` (`Source/LinqToDB/DataType.cs:11`).
+- `DataType`, `DbDataType`, `TableOptions`, `SqlJoinType`, `MergeOperationType`, `TakeHints` -- public enums/structs. `DbDataType` is a value struct `(SystemType, DataType, DbType, Length, Precision, Scale)` with fluent `WithXxx` copies (`Source/LinqToDB/DbDataType.cs:15`). Added `EqualsDbOnly(DbDataType other)` method that compares all fields except `SystemType` -- used when only DB-side type attributes are relevant (`Source/LinqToDB/DbDataType.cs:119--126`). `SqlJoinType` exposes Inner/Left/Right/Full. `TakeHints` is `[Flags]` supporting `Percent`/`WithTies`. `DataType` carries an `Array` flag bit and composite `Vector32`/`Vector16`; `[Flags]` is noted with `// ??? TODO: remove Flags in v7` (`Source/LinqToDB/DataType.cs:11`).
 - `CompareNulls` -- enum: `LikeClr`, `LikeSql`, `LikeSqlExceptParameters` (`Source/LinqToDB/CompareNulls.cs:4`).
-- `LinqOptions`, `SqlOptions`, `DataContextOptions` -- option records composing into `DataOptions`. `DataContextOptions` carries `CommandTimeout`, `Interceptors`, `MemberTranslators`; `IApplicable<DataConnection>`/`<DataContext>`/`<RemoteDataContextBase>` (`Source/LinqToDB/DataContextOptions.cs:22`). `SqlOptions` provides `EnableConstantExpressionInOrderBy` and `GenerateFinalAliases` (`Source/LinqToDB/SqlOptions.cs:42`).
+- `LinqOptions`, `SqlOptions`, `DataContextOptions` -- option records composing into `DataOptions`. `DataContextOptions` carries `CommandTimeout`, `Interceptors`, `MemberTranslators`; now implements both `IApplicable<T>` and `IReapplicable<T>` for `DataConnection`, `DataContext`, and `RemoteDataContextBase` (`Source/LinqToDB/DataContextOptions.cs:33--106`). `SqlOptions` provides `EnableConstantExpressionInOrderBy`, `GenerateFinalAliases`, and `DefaultNullsPosition` (`Source/LinqToDB/SqlOptions.cs:44--71`). `LinqOptions` carries `PreloadGroups`, `PreferApply`, and `KeepDistinctOrdered` as `[Obsolete]` no-op parameters (not included in `ConfigurationID` or copy constructor) (`Source/LinqToDB/LinqOptions.cs:158--201`).
 - `DataOptions<T>` -- typed wrapper for DI registration, keyed by context type `T` (`Source/LinqToDB/DataOptions{T}.cs:7`). Marked `// TODO: move to linq2db.Extensions?`.
 - `LinqToDBException`, `ServerSideOnlyException` -- the two public exception types. `LinqToDBException` zero-arg/single-`Exception` ctors are `[Obsolete]`/`EditorBrowsable(Never)` (`Source/LinqToDB/LinqToDBException.cs:20`). `ServerSideOnlyException` is thrown by server-side-only `Sql.*` members called outside a query context (`Source/LinqToDB/ServerSideOnlyException.cs:14`).
 - `RawSqlString` -- readonly struct with implicit conversion from `string` and (no-op) from `FormattableString`, used to distinguish overloads of `DataExtensions.FromSql<T>` (`Source/LinqToDB/RawSqlString.cs:11`).
@@ -74,7 +74,7 @@ All `Configuration/` types are TFM-gated: the five `System.Configuration`-based 
 
 ## DataOptionsExtensions
 
-Split across two files. The main file covers `LinqOptions`, `SqlOptions`, `ConnectionOptions`, `DataContextOptions`, `BulkCopyOptions`, and helpers (`UseConnectionString`, `UseProvider`, `UseInterceptor`, etc.). The provider file (`DataOptionsExtensions.Provider.cs`) contains `Use<Database>` overloads for every supported provider, two overloads for single-dialect providers and four for multi-dialect. Provider overloads delegate to `<Provider>Tools.ProviderDetector.CreateOptions(...)` then apply the `optionSetter`. DuckDB is single-dialect (two overloads), delegating to `DuckDBTools.GetDataProvider()` directly (no `ProviderDetector`) (`Source/LinqToDB/DataOptionsExtensions.Provider.cs:999`).
+Split across two files. The main file covers `LinqOptions`, `SqlOptions`, `ConnectionOptions`, `DataContextOptions`, `BulkCopyOptions`, and helpers (`UseConnectionString`, `UseProvider`, `UseInterceptor`, etc.). The provider file (`DataOptionsExtensions.Provider.cs`) contains `Use<Database>` overloads for every supported provider, two overloads for single-dialect providers and four for multi-dialect. Provider overloads delegate to `<Provider>Tools.ProviderDetector.CreateOptions(...)` then apply the `optionSetter`. DuckDB is single-dialect (two overloads), delegating to `DuckDBTools.GetDataProvider()` directly (no `ProviderDetector`) (`Source/LinqToDB/DataOptionsExtensions.Provider.cs:999`). Added `WithDefaultNullsPosition(this SqlOptions, Sql.NullsPosition)` and `UseDefaultNullsPosition(this DataOptions, Sql.NullsPosition)` extension methods (`Source/LinqToDB/DataOptionsExtensions.cs:1965`, `:2024`).
 
 ## Files (Tier 1 / Tier 2)
 
@@ -119,12 +119,13 @@ Split across two files. The main file covers `LinqOptions`, `SqlOptions`, `Conne
 - **`TempTable<T>` lifecycle contract.** Construction creates the physical table; population is wrapped in try/catch with drop-on-failure; `Dispose`/`DisposeAsync` always `DropTable(throwExceptionIfNotExists: false)` then restores `MappingSchema`.
 - **`AsQueryable` expression-tree configuration pattern.** `AsQueryable<T>(source, dataContext, configure)` (PR #5495) takes `configure` as `Expression<Func<IAsQueryableBuilder<T>, IAsQueryableExceptBuilder<T>>>`; the lambda is captured as a tree, interpreted at build time by `Methods.LinqToDB.AsQueryableConfigured`.
 - **`ExtensionBuilderExtensions` concat/arithmetic split.** PR #5504 enforced a hard separation: numeric arithmetic (`Add`/`Sub`/`Mul`/`Div`/`Inc`/`Dec` -> `SqlBinaryExpression`) vs string concatenation (`Concat` -> `SqlConcatExpression`). `Add(builder, left, right, type)` throws `InvalidOperationException` when `type == typeof(string)` (`:24--25`). The three `Concat` overloads delegate to `new SqlConcatExpression(preserveNull, ...)` with `preserveNull = true` unless explicitly `false` (`:46--77`).
+- **`IReapplicable<T>` on sub-option records.** `DataContextOptions` implements both `IApplicable<T>` and `IReapplicable<T>` for all three context types; `DataOptions.Reapply` dispatches through `IReapplicable<T>` and falls back to `DataContextOptions.Default` when previous was non-null but new record does not implement the interface (`Source/LinqToDB/DataOptions.cs:118--147`).
 
 ## Known issues / debt
 
 - `DataOptions<T>` has `// TODO: move to linq2db.Extensions?` (`Source/LinqToDB/DataOptions{T}.cs:7`).
 - `CreateTempTableOptions` forbids new parameters (`Source/LinqToDB/CreateTempTableOptions.cs:7`).
-- Multiple `DataOptionsExtensions.cs` APIs are `[Obsolete]` + no-op (e.g. `WithPreloadGroups`) pending v7 cleanup.
+- Multiple `DataOptionsExtensions.cs` APIs are `[Obsolete]` + no-op (e.g. `WithPreloadGroups`, `WithPreferApply`, `WithKeepDistinctOrdered`) pending v7 cleanup.
 - `DataType` carries `[Flags]` with `// ??? TODO: remove Flags in v7` (`Source/LinqToDB/DataType.cs:11`).
 - `ProviderName` has `// TODO: v6: obsolete/remove all provider-specific entries` (`Source/LinqToDB/ProviderName.cs:18`).
 - DI-0743: 18 public extension methods on `ExtensionBuilderExtensions` (the arithmetic/parameter helpers) lack `<summary>` XML docs; the three `Concat` overloads do carry docs.
@@ -150,6 +151,13 @@ Split across two files. The main file covers `LinqOptions`, `SqlOptions`, `Conne
   - Read (this run -- delta, sha 2e67bafc9):
     - Source/LinqToDB/ExtensionBuilderExtensions.cs -- PR #5504 added `Concat(builder, x, y)`, `Concat(builder, params ISqlExpression[])`, `Concat(builder, bool preserveNull, params ISqlExpression[])` producing `SqlConcatExpression(preserveNull, ...)`; `Add(builder, left, right, type)` now throws when `type == typeof(string)` to prevent accidental `SqlBinaryExpression` for string concat.
     - Source/LinqToDB/CompatibilitySuppressions.xml -- regenerated for release; header probe only (generated file, content not detailed per indexer policy).
+  - Read (this run -- delta, sha b3340aa9):
+    - Source/LinqToDB/SqlOptions.cs -- added `DefaultNullsPosition` property (`Sql.NullsPosition`, default `None`); included in `ConfigurationID` computation and copy constructor; `WithDefaultNullsPosition` extension added in DataOptionsExtensions.
+    - Source/LinqToDB/DataOptionsExtensions.cs -- added `WithDefaultNullsPosition(this SqlOptions, Sql.NullsPosition)` (~line 1965) and `UseDefaultNullsPosition(this DataOptions, Sql.NullsPosition)` (~line 2024) extension methods.
+    - Source/LinqToDB/DataContextOptions.cs -- now implements `IReapplicable<DataConnection>`, `IReapplicable<DataContext>`, `IReapplicable<RemoteDataContextBase>` in addition to the existing `IApplicable<T>` variants; each `IReapplicable.Apply` short-circuits when `ConfigurationID` matches prior object.
+    - Source/LinqToDB/DataOptions.cs -- `Reapply(DataConnection/DataContext/RemoteDataContextBase, DataOptions)` now dispatches through `IReapplicable<T>` on `DataContextOptions`; falls back to `DataContextOptions.Default` when previous options was non-null but the new record does not implement the interface.
+    - Source/LinqToDB/DbDataType.cs -- added `EqualsDbOnly(DbDataType other)` method comparing `DataType`, `Length`, `Precision`, `Scale`, and `DbType` fields only, excluding `SystemType`; used when only DB-side type attributes are relevant.
+    - Source/LinqToDB/LinqOptions.cs -- `PreloadGroups`, `PreferApply`, and `KeepDistinctOrdered` parameters are now `[Obsolete]` no-ops; they are excluded from the copy constructor and `ConfigurationID` computation (only non-obsolete fields hashed).
   - Skipped: 1 -- declaration-only file fully captured by the head probe
 - Tier 3 (skipped, logged): 0
 </details>

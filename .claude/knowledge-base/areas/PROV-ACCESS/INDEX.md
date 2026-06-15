@@ -3,8 +3,8 @@ area: PROV-ACCESS
 kind: area-index
 sources: [code]
 confidence: high
-last_verified: 2026-06-01
-last_verified_sha: 2e67bafc9bfc8ae8ba573b93bde8671d9920c95d
+last_verified: 2026-06-14
+last_verified_sha: b3340aa9ded15ffc626983fd202e6399daa081ca
 coverage_tier_1: 11/11
 coverage_tier_2: 16/16
 ---
@@ -55,7 +55,7 @@ All four are `sealed` primary-constructor classes in `AccessDataProvider.cs:22-2
 | `AccessOleDbSqlBuilder` | `...AccessOleDbSqlBuilder.cs` | Concrete OLE DB builder; passes through to base, adds `GetProviderTypeName` via OLE DB type enum |
 | `AccessODBCSqlBuilder` | `...AccessODBCSqlBuilder.cs` | Concrete ODBC builder; overrides `Convert` to emit `?` placeholders; forces GUID values to parameters |
 | `AccessSqlOptimizer` | `...AccessSqlOptimizer.cs` | Statement rewriter: multi-table query correction, inner-join normalization, EXISTS/IN rewrite, parameter wrapping |
-| `AccessSqlExpressionConvertVisitor` | `...AccessSqlExpressionConvertVisitor.cs` | Expression-level rewrites: function names, COALESCE->IIF chain, LIKE escaping, bitwise ops, type casts |
+| `AccessSqlExpressionConvertVisitor` | `...AccessSqlExpressionConvertVisitor.cs` | Expression-level rewrites: function names, COALESCE->IIF chain, LIKE escaping, bitwise ops, type casts; `SupportsNullIf = false` |
 | `AccessMappingSchema` | `...AccessMappingSchema.cs` | Type mappings; date literals as `#yyyy-MM-dd#`; string concatenation via `+`; decimal/float as `AnsiString`; string->numeric and string->bool parsers scoped to `ConversionType.FromDatabase` |
 | `AccessProviderAdapter` | `...AccessProviderAdapter.cs` | Thin wrapper unifying OleDb/ODBC adapter instances; exposes `GetOleDbSchemaTable` for schema introspection |
 | `AccessProviderDetector` | `...AccessProviderDetector.cs` | Auto-detect from connection string tokens, `ProviderName`, config string, or fallback to file probing |
@@ -64,12 +64,12 @@ All four are `sealed` primary-constructor classes in `AccessDataProvider.cs:22-2
 | `AccessSchemaProviderBase` | `...AccessSchemaProviderBase.cs` | Shared data-type mapping, database-name from file path, `GetSystemType` text-length->char specialization |
 | `AccessOleDbSchemaProvider` | `...AccessOleDbSchemaProvider.cs` | OLE DB schema: uses `GetOleDbSchemaTable` for FKs, separate connection workaround for provider bug; procedures from `GetSchema("Procedures")` |
 | `AccessODBCSchemaProvider` | `...AccessODBCSchemaProvider.cs` | ODBC schema: no FKs (runtime bug), no PKs (runtime bug); views merged with tables via `TABLE_TYPE` |
-| `AccessMemberTranslator` | `...Translation/AccessMemberTranslator.cs` | ACE/base translator; date functions (`DatePart`/`DateAdd`/`DateSerial`/`Now`), math (`Round`/`Int`/`^`), string (`Mid`, `String`, `InStr`, whitespace-only `TrimStart`/`TrimEnd`), GUID (`CStr`+`Mid`+`LCase`) |
+| `AccessMemberTranslator` | `...Translation/AccessMemberTranslator.cs` | ACE/base translator; date functions (`DatePart`/`DateAdd`/`DateSerial`/`Now`), math (`Round`/`Int`/`^`), string (`Mid`, `String`, `InStr`, whitespace-only `TrimStart`/`TrimEnd`, `IsNullOrWhiteSpace`), GUID (`IIF` null-guard + `CStr`+`Mid`+`LCase`) |
 | `AccessJetMemberTranslator` | `...Translation/AccessJetMemberTranslator.cs` | JET override; `TranslateReplace` returns `null` (JET has no `REPLACE` function) |
 
 ## SqlProviderFlags highlights
 
-Set in `AccessDataProvider.cs:36-62`:
+Set in `AccessDataProvider.cs:37-64`:
 
 - `IsParameterOrderDependent = true` -- forced for both drivers (OLE DB has complex-query parameter order bugs; `AccessDataProvider.cs:47-50`).
 - `IsSkipSupported = false`, `IsSubQuerySkipSupported = false` -- no `OFFSET` in Access.
@@ -82,6 +82,16 @@ Set in `AccessDataProvider.cs:36-62`:
 - `IsAccessBuggyLeftJoinConstantNullability = true` -- provider-specific flag for a known Access LEFT JOIN NULL propagation bug.
 - `IsSimpleCoalesceSupported = false` -- COALESCE is rewritten to `IIF(x IS NULL, ...)` chains in `AccessSqlExpressionConvertVisitor`.
 - `IsSubqueryExpressionInsidePredicateSupported = false`, `IsSubqueryJoinOnOuterReferenceSupported = false`.
+- `IsSubQueryOrderBySupported = false` -- subquery ORDER BY not permitted.
+- `IsUnionAllOrderBySupported = true`.
+- `DefaultNullsOrdering = NullsDefaultOrdering.Smallest` -- Access sorts NULL as the smallest value. `AccessDataProvider.cs:39`.
+- `IsDistinctSetOperationsSupported = false`.
+- `IsOrderByAggregateSubquerySupported = false`.
+- `DefaultMultiQueryIsolationLevel = IsolationLevel.Unspecified`.
+- `SupportsPredicatesComparison = true`.
+- `IsUpdateFromSupported = false`.
+- `AcceptsTakeAsParameter = false`.
+- `IsSupportsJoinWithoutCondition = false`.
 
 ## SQL dialect specifics
 
@@ -96,7 +106,7 @@ Square brackets `[name]` for all identifiers (fields, tables, aliases, databases
 `#yyyy-MM-dd#` for date-only values; `#yyyy-MM-dd HH:mm:ss#` for datetime. `AccessMappingSchema.cs:15-30`. Sub-second precision not representable as literals -- `AccessSqlBuilderBase.cs:278-297` forces such values to parameters.
 
 ### Conditional expressions
-`CASE` is absent; `SqlCaseExpression` is converted to `ConvertCaseToConditions` chains (reduces to nested `IIF`). `AccessSqlBuilderBase.cs:120-128`. `SqlConditionExpression` -> `IIF(cond, t, f)`.
+`CASE` is absent; `SqlCaseExpression` is converted to `ConvertCaseToConditions` chains (reduces to nested `IIF`). `AccessSqlBuilderBase.cs:120-128`. `SqlConditionExpression` -> `IIF(cond, t, f)`. `SupportsNullIf = false` override in `AccessSqlExpressionConvertVisitor` prevents NULLIF emission. `AccessSqlExpressionConvertVisitor.cs:23`.
 
 ### NULL column typization
 `IIF(False, <typed-default>, NULL)` for NULL literals in SELECT, ensuring UNION column type resolution. `AccessSqlBuilderBase.cs:71-95`.
@@ -130,6 +140,9 @@ SQL comments stripped entirely -- `BuildSqlComment` returns without appending. `
 
 ### Type casts (`ConvertConversion`)
 `CStr`, `CBool`, `CDate`, `DateValue`, `TimeValue` -- all wrapped in `IIF(x IS NOT NULL, CFunc(x), NULL)` to preserve nullability. `AccessSqlExpressionConvertVisitor.cs:189-222`.
+
+### COALESCE -> IIF rewrite
+`ConvertCoalesce` in `AccessSqlExpressionConvertVisitor` first calls `RemoveNullValues` to strip NULL-literal operands before folding to nested `IIF` chains -- prevents `Coalesce(x, NULL)` from generating `IIF(x IS NULL, NULL, x)` (issue #5531). `AccessSqlExpressionConvertVisitor.cs:132-164`.
 
 ### LIKE escaping
 Access LIKE metacharacters: `_`, `?`, `*`, `%`, `#`, `-`, `!`. Escape via bracket notation `[c]`. No `ESCAPE` clause support. `AccessSqlExpressionConvertVisitor.cs:17-44`.
@@ -228,10 +241,11 @@ This is not a multi-statement splitter -- Access commands execute one statement 
 - **LPad**: `String(n, char) + value`. `AccessMemberTranslator.cs:352-367`.
 - **Join**: `Mid`-based concat-with-separator emulation via `AggregateFunctionBuilder` + `ConfigureConcatWsEmulation`. `AccessMemberTranslator.cs:369-384`.
 - **TrimStart / TrimEnd (whitespace-only)**: delegates to `StringMemberTranslatorBase`; returns `null` when a `trimChars` argument is present (custom char-set trim is unsupported). `AccessMemberTranslator.cs:352-366`. Added in PR #5515.
+- **IsNullOrWhiteSpace**: `{value} IS NULL OR LTRIM({value}) = ''` -- uses Access `LTRIM` (space-only trim; full Unicode whitespace handling is not available without REPLACE chains). `AccessMemberTranslator.cs:412-421`.
 
 ### GUID
 
-- **ToString()**: `LCase(Mid(CStr(g), 2, 36))`. `AccessMemberTranslator.cs:389-403`.
+- **ToString()**: `IIF(IsNull(g), NULL, LCase(Mid(CStr(g), 2, 36)))`. Explicit null-guard via `IIF` because Access `CStr(NULL)` throws Invalid use of Null at the ODBC layer rather than propagating NULL. Jet/ACE SQL `IIF` short-circuits (only evaluates the selected branch), so the false branch `CStr(g)` is skipped when `g IS NULL`. `AccessMemberTranslator.cs:426-449`.
 
 ### Aggregates
 
@@ -299,12 +313,12 @@ This is not a multi-statement splitter -- Access commands execute one statement 
 |---|---|
 | `Internal/DataProvider/Access/AccessOleDbSqlBuilder.cs` | OLE DB concrete builder |
 | `Internal/DataProvider/Access/AccessODBCSqlBuilder.cs` | ODBC concrete builder; `?` parameters; GUID->parameter |
-| `Internal/DataProvider/Access/AccessSqlExpressionConvertVisitor.cs` | Expression rewrites (functions, LIKE, COALESCE, casts, bitwise) |
+| `Internal/DataProvider/Access/AccessSqlExpressionConvertVisitor.cs` | Expression rewrites (functions, LIKE, COALESCE->IIF with NULL-strip, casts, bitwise); `SupportsNullIf = false` |
 | `Internal/DataProvider/Access/AccessDmlService.cs` | Table-not-found exception detection |
 | `Internal/DataProvider/Access/AccessSchemaProviderBase.cs` | Shared schema provider base; data-type map |
 | `Internal/DataProvider/Access/AccessOleDbSchemaProvider.cs` | OLE DB schema introspection |
 | `Internal/DataProvider/Access/AccessODBCSchemaProvider.cs` | ODBC schema introspection |
-| `Internal/DataProvider/Access/Translation/AccessMemberTranslator.cs` | ACE/base member translations; whitespace-only TrimStart/TrimEnd (PR #5515) |
+| `Internal/DataProvider/Access/Translation/AccessMemberTranslator.cs` | ACE/base member translations; whitespace-only TrimStart/TrimEnd (PR #5515); IsNullOrWhiteSpace via LTRIM; GUID null-guard IIF |
 | `Internal/DataProvider/Access/Translation/AccessJetMemberTranslator.cs` | JET override (no REPLACE) |
 | `Internal/DataProvider/Access/AccessSpecificQueryable.cs` | Internal implementation of `IAccessSpecificQueryable<T>` |
 | `Internal/DataProvider/Access/AccessSpecificTable.cs` | Internal implementation of `IAccessSpecificTable<T>` |
@@ -328,5 +342,12 @@ Read (prior run -- delta sha 4a478ff14):
 Read (this run -- delta sha 2e67bafc9):
 - `AccessMappingSchema.cs` -- PR #5520 / issue #5519: four `SetConvertExpression` string-parser converters (`decimal.Parse`, `float.Parse`, `double.Parse`, `v == "-1"`) now carry `conversionType: ConversionType.FromDatabase`; added explanatory comment block (lines 44-53) documenting the write-side parameter-prep hazard that motivated the change; pragma block extended to include `RS0030` for the banned `Parse` overloads.
 - `Translation/AccessMemberTranslator.cs` -- PR #5515: `AccessStringMemberTranslator` gained `TranslateTrimStart` and `TranslateTrimEnd` overrides (lines 352-366); both return `null` when `trimChars != null` (custom char-set trim unsupported on Access); whitespace-only trim delegates to `StringMemberTranslatorBase`. No other structural changes.
+
+Read (this run -- delta sha b3340aa9):
+- `AccessOptions.cs` -- no structural changes; same single `BulkCopyType` property and `DataProviderOptions<AccessOptions>` base.
+- `AccessDataProvider.cs` -- additional `SqlProviderFlags` now documented: `IsSubQueryOrderBySupported = false`, `IsUnionAllOrderBySupported = true`, `DefaultNullsOrdering = NullsDefaultOrdering.Smallest`, `IsDistinctSetOperationsSupported = false`, `IsOrderByAggregateSubquerySupported = false`, `CalculateSupportedCorrelatedLevelWithAggregateQueries = true`, `DefaultMultiQueryIsolationLevel = IsolationLevel.Unspecified`, `SupportsPredicatesComparison = true`, `IsUpdateFromSupported = false`, `AcceptsTakeAsParameter = false`, `IsSupportsJoinWithoutCondition = false`; all added to SqlProviderFlags section.
+- `AccessProviderDetector.cs` -- no structural changes; detection logic unchanged.
+- `AccessSqlExpressionConvertVisitor.cs` -- `SupportsNullIf = false` override added (prevents NULLIF emission); `ConvertCoalesce` now calls `RemoveNullValues` before IIF folding (issue #5531 fix, prevents `Coalesce(x, NULL)` -> `IIF(x IS NULL, NULL, x)` no-op round-trip); `ConvertSearchStringPredicate` uses `SqlSearchCondition` with `canBeUnknown: null`; `ConvertConversion` uses `ParametersNullabilityType.NotNullable` for type-cast function calls.
+- `Translation/AccessMemberTranslator.cs` -- `GuidMemberTranslator.TranslateGuildToString` now wraps result in explicit `IIF(IsNull(g), NULL, LCase(Mid(CStr(g), 2, 36)))` null-guard (Access `CStr(NULL)` throws at ODBC layer; Jet/ACE SQL IIF short-circuits so false branch is skipped when predicate is true); `AccessStringMemberTranslator.TranslateIsNullOrWhiteSpace` added (emits `{v} IS NULL OR LTRIM({v}) = ''` using Access space-only LTRIM); `TranslateDateTimeTruncationToTime` delegates to `TimeValue(expr)` (confirms existing INDEX.md claim).
 
 </details>

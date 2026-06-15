@@ -3,25 +3,35 @@ area: LINQPAD
 kind: issues
 sources: [gh-issues, gh-prs, gh-discussions]
 confidence: low
-last_verified: 2026-05-08
-last_verified_sha: d52a4ed0e83317cc11b2ef3d41ddf4ba70acf415
+last_verified: 2026-06-15
+last_verified_sha: b3340aa9ded15ffc626983fd202e6399daa081ca
 ---
 
-# LINQPAD — GitHub themes
+# LINQPAD -- GitHub themes
 
-## No related issues
+## Open themes
 
-This area has no GitHub issues, PRs, or discussions classified to it as of 2026-05-08. Items affecting this area may be tagged GLOBAL or routed to adjacent areas. See [github/issues-index.json](../../github/issues-index.json) for the full corpus.
+- **LINQPad driver cross-platform support** -- Fix NuGet packaging to enable installation on macOS/Linux (#5571).
+
+## Resolved themes
+
+No resolved themes recorded.
+
+## Active discussions
+
+No active discussions in this area.
+
 ## Stats
 
 - Open issues: 0
 - Closed issues: 0
-- Open PRs: 0
-- Total PRs: 0
+- Open PRs: 1
+- Total PRs: 1
 - Discussions: 0
-- Last fetched: 2026-05-08
+- Last fetched: 2026-06-15
 
 <details><summary>Coverage</summary>
 
-- Index entries scanned: 0 (0 issues + 0 PRs + 0 discussions)
+- Index entries scanned: 1 (0 issues + 1 PR + 0 discussions)
+- Themes extracted: 1
 </details>

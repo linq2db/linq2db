@@ -3,11 +3,11 @@ area: PROV-DB2
 kind: issues
 sources: [gh-issues, gh-prs, gh-discussions]
 confidence: medium
-last_verified: 2026-05-08
-last_verified_sha: d52a4ed0e83317cc11b2ef3d41ddf4ba70acf415
+last_verified: 2026-06-15
+last_verified_sha: b3340aa9ded15ffc626983fd202e6399daa081ca
 ---
 
-# PROV-DB2 — GitHub themes
+# PROV-DB2 -- GitHub themes
 
 ## Open themes
 
@@ -15,7 +15,7 @@ last_verified_sha: d52a4ed0e83317cc11b2ef3d41ddf4ba70acf415
 
 ## Resolved themes
 
-- No clustered themes among closed issues (insufficient volume).
+- **DB2/Informix native client loading on Linux/macOS** -- #5563 stabilized the transient failures in CI where the native `libdb2.so` shared library failed to load due to `LD_LIBRARY_PATH` not reliably propagating to the testhost subprocess. Added an explicit native-library resolver in `Tests/Linq/TestsInitialization.cs` to pre-load the driver before any DB2 ADO.NET calls.
 
 ## Active discussions
 
@@ -28,10 +28,10 @@ last_verified_sha: d52a4ed0e83317cc11b2ef3d41ddf4ba70acf415
 - Open PRs: 0
 - Total PRs: 21
 - Discussions: 2
-- Last fetched: 2026-05-08
+- Last fetched: 2026-06-15
 
 <details><summary>Coverage</summary>
 
 - Index entries scanned: 46 (23 issues + 21 PRs + 2 discussions)
-- Themes extracted: 0
+- Themes extracted: 1
 </details>

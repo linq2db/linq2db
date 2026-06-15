@@ -3,10 +3,10 @@ area: TESTS-EFCORE
 kind: area-index
 sources: [code]
 confidence: medium
-last_verified: 2026-06-01
-last_verified_sha: 2e67bafc9bfc8ae8ba573b93bde8671d9920c95d
+last_verified: 2026-06-15
+last_verified_sha: b3340aa9ded15ffc626983fd202e6399daa081ca
 coverage_tier_1: 0/0
-coverage_tier_2: 135/172
+coverage_tier_2: 157/194
 ---
 
 # TESTS-EFCORE
@@ -28,6 +28,8 @@ The shared `Tests.EntityFrameworkCore.props` (`Tests/EntityFrameworkCore/Tests.E
 - Package references: `Microsoft.EntityFrameworkCore.InMemory`, `Microsoft.EntityFrameworkCore.Sqlite`, `Microsoft.EntityFrameworkCore.SqlServer`, `Pomelo.EntityFrameworkCore.MySql`, `Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime`, `Microsoft.Extensions.Logging.Console`
 
 `#if EF8`-gated source file: `Tests/FSharpTests.cs` -- active only from EF8 onwards.
+
+`AssemblyInfo.TestProgress.cs` -- applies `[assembly: TestProgressReporter]` to all EF csproj variants; opt-in live progress heartbeat for long runs, enabled by the `LINQ2DB_TEST_PROGRESS` environment variable.
 
 ## Subsystems
 
@@ -56,12 +58,13 @@ EFCore-specific provider-selection attributes and test utilities.
 
 ### Test fixtures (`Tests/EntityFrameworkCore/Tests/`)
 
-14 fixtures. All inherit `ContextTestBase<T>` or `NorthwindContextTestBase`:
+15 fixtures. All inherit `ContextTestBase<T>` or `NorthwindContextTestBase`:
 
 | Fixture | Base context | Key coverage |
 |---|---|---|
 | `ToolsTests` | `NorthwindContextTestBase` | Core bridge API: `ToLinqToDB()`, `CreateLinqToDBConnection()`, `Include`/`ThenInclude`, change tracker, `TagWith`, temporal tables, `FromSqlRaw/Interpolated`, `SetUpdate`, DML, async methods |
-| `IssueTests` | `ContextTestBase<IssueContextBase>` | Regression tests for EFCore-specific GitHub issues (numbered: Issue73, 117, 321, 340, 4624...5547 etc.) |
+| `IssueTests` | `ContextTestBase<IssueContextBase>` | Regression tests for EFCore-specific GitHub issues (numbered: Issue73, 117, 321, 340, 4624...5585 etc.) |
+| `ManyToManyTests` | `ContextTestBase<ManyToManyContextBase>` | M:N translation coverage across 8 structural variants: implicit single-key, explicit with payload, composite-key, self-referencing, two distinct pairs between same entities, two implicit pairs (unsupported -- expects error), field-mapped key, shadow key; `#if !NETFRAMEWORK` |
 | `SqlTransparentExpressionTests` | none (`TestFixture` direct) | Standalone regression: verifies `SqlTransparentExpression` cctor does not throw `TypeInitializationException` (PR #5546); uses reflection to forcibly run the class constructor via `RuntimeHelpers.RunClassConstructor` |
 | `InterceptorTests` | `NorthwindContextTestBase` | Tests all 5 interceptor surfaces: `ICommandInterceptor`, `IConnectionInterceptor`, `IDataContextInterceptor`, `IEntityServiceInterceptor`, dual EF+linq2db combo interceptor, plus `UseEfCoreRegisteredInterceptorsIfPossible` glue |
 | `ForMappingTests` | `ContextTestBase<ForMappingContextBase>` | `EFCoreMetadataReader` mapping: identity detection, skip-on-insert/update, type mapping, bulk-copy, `MERGE`, `BulkCopyType.*`, `SkipModesTable`, `UIntTable` |
@@ -104,13 +107,14 @@ Six model subdirectories, each scoped to specific test scenarios:
 |---|---|---|
 | `Northwind/` | Full Northwind schema (`Category`, `Customer`, `Order`, `OrderDetail`, `Product`, `Employee`, `Territory`, ...); `NorthwindContextBase` with `QueryFilter` + `ISoftDelete` support | `NorthwindContextTestBase` descendants |
 | `Northwind/SQLServer/`, `/Pomelo/`, `/PostgreSQL/` | Per-provider `NorthwindContext` subclass + EF Fluent API mapping classes | Provider dispatch in `NorthwindContextTestBase` |
-| `IssueModel/` | `IssueContextBase` + per-issue entity classes (Issue73, 117, 321, 4624...5547); per-provider context subclasses under `SQLServer/`, `SQLite/`, `PostgreSQL/`, `Pomelo/` | `IssueTests` |
+| `IssueModel/` | `IssueContextBase` + per-issue entity classes (Issue73, 117, 321, 4624...5585); per-provider context subclasses under `SQLServer/`, `SQLite/`, `PostgreSQL/`, `Pomelo/` | `IssueTests` |
 | `ForMapping/` | `ForMappingContextBase` with identity/no-identity, `UIntTable`, `StringTypes`, `TypesTable`, `WithInheritance`, `SkipModesTable`, `WithDuplicateProperties`; per-provider subclasses | `ForMappingTests` |
 | `Inheritance/` | `InheritanceContext` with `Blog/RssBlog` + `ShadowBlog/ShadowRssBlog` discriminator hierarchies | `InheritanceTests` |
 | `NpgSqlEntities/` | `NpgSqlEntitiesContext`, `EntityWithArrays`, `EntityWithXmin`, `Event` (range type), `EventView`, `TimeStampEntity` | `NpgSqlTests` |
 | `Shared/` | `IdTestContext`, `Entity`, `Item`, `Detail`, `SubDetail`, strongly-typed `Id<T,U>` + `IdValueConverter`, `ModelBuilderExtensions` | `IdTests` |
 | `ValueConversion/` | `ConvertorContext`, `SubDivision`, `Id<T,U>`, `IEntity<T>`, `IdValueConverterSelector`, `IdValueConverter<T,U>` | `ConvertorTests` |
 | `JsonConverter/` | `JsonConvertContext`, `EventScheduleItem`, `CrashEnum`, `LocalizedString` | `JsonConvertTests` |
+| `ManyToMany/` | `ManyToManyContextBase` + per-provider subclasses (`Pomelo/`, `PostgreSQL/`, `SQLServer/`, `SQLite/`); all M:N entity + join-table classes (`MmStudent`, `MmCourse`, `MmOrder`, `MmProduct`, `MmOrderProduct`, `MmProject`, `MmMember`, `MmProjectMember`, `MmPerson`, `MmFriendship`, `MmUser`, `MmTeam`, `MmMembership`, `MmLeadership`, `MmDoc`, `MmLabel`, `MmAccount`, `MmRole`, `MmArticle`, `MmTag`); `#if !NETFRAMEWORK` | `ManyToManyTests` |
 
 #### Models/Northwind -- entity detail
 
@@ -176,7 +180,7 @@ Per-provider `ForMappingContext` subclasses (`Npgsql/`, `Pomelo/`, `SQLite/`, `S
 
 #### Models/IssueModel -- entity detail
 
-`IssueContextBase` (`Tests/EntityFrameworkCore/Models/IssueModel/IssueContextBase.cs`) holds `DbSet<>` registrations for all tracked issue entities and configures them in `OnModelCreating`. As of sha `2e67bafc`:
+`IssueContextBase` (`Tests/EntityFrameworkCore/Models/IssueModel/IssueContextBase.cs`) holds `DbSet<>` registrations for all tracked issue entities and configures them in `OnModelCreating`. Current state (sha `b3340aa9`):
 
 - `Issue73Entity` (self-referential tree: `Id`, `ParentId?`, `Name`, `Childs`); seeds two rows via `HasData`.
 - `Patent`/`PatentAssessment` (1:1 with `DeleteBehavior.Restrict`).
@@ -206,12 +210,30 @@ Per-provider `ForMappingContext` subclasses (`Npgsql/`, `Pomelo/`, `SQLite/`, `S
 - `Issue5355Customer` -- extends `Issue5355CustomerBase : IIssue5355Profile`; `Name string`; FK to `Issue5355LicenseProfile`; seeds three customers via `HasData`.
 - `Issue5388Task` -- `Id int`, `IsArchived bool`; `IsArchived` stored as `smallint` via `HasConversion<short>()`. No `DbSet<>` -- registered model-only via `modelBuilder.Entity<Issue5388Task>()`.
 - `Issue5547CustomerShare` -- `Id int`, `CustomerId int`, FK to `Issue5355Customer`; seeds three rows (one per customer) via `HasData`. Added in this delta -- used by `Issue5547_ContainsThroughQueryableShapes` to exercise transparent-identifier navigation paths through `Select(s => s.Customer)`.
+- `Issue5585Customer` / `Issue5585CustomerShare` / `Issue5585User` -- `#if !NETFRAMEWORK`; three-entity M:N cluster: `Customer` 1:N `CustomerShare`, `CustomerShare` M:N `User` (via implicit join configured with `UsingEntity`); seeds 2 customers, 3 shares, 2 users; used by `Issue5585_ManyToManyDirectAny` and `Issue5585_ManyToManyNestedAny` in `IssueTests`.
 - `BulkCopyIdentityTable` -- `Id int`, `Value int`; not registered in `IssueContextBase` model at all -- accessed via `db.GetTable<BulkCopyIdentityTable>()` through the linq2db bridge.
 
 Per-provider `IssueContext` subclasses:
 - `SQLite/IssueContext` and `Pomelo/IssueContext` -- extend `IssueContextBase`, override `Issue4640Table.Items` to `HasColumnType("text")`.
 - `PostgreSQL/IssueEntities.cs` -- provider-specific entity classes: `PostgreTable` (with `NpgsqlTsVector SearchVector`), `Issue155Table` (`int[] Linked`, `[NotMapped] int[] LinkedFrom`), `Issue4641Table`, `Issue4643Table` (`DayOfWeek[]? Value`), `Issue4667Table` (`Dictionary<string,string> Headers`).
 - `SQLServer/IssueEntities.cs` -- `Issue129Table` (`Id`, `Key` both private-set), `Issue4816Table` (`ValueVarChar?`, `ValueNVarChar?` both private-set).
+
+#### Models/ManyToMany -- entity and context detail
+
+`ManyToManyContextBase` (`Tests/EntityFrameworkCore/Models/ManyToMany/ManyToManyContextBase.cs`) -- `#if !NETFRAMEWORK`; abstract `DbContext` with 16 `DbSet`s across 8 M:N structural scenarios. `OnModelCreating` configures all 8 scenarios with `HasData` seeds. Per-provider subclasses (`Pomelo/`, `PostgreSQL/`, `SQLServer/`, `SQLite/`) are trivial primary-constructor subclasses that forward `DbContextOptions`.
+
+The 8 M:N scenarios and their entity sets:
+
+| Scenario | Entities / join type | Key structural feature |
+|---|---|---|
+| 1. Implicit single-key | `MmStudent` M:N `MmCourse` (implicit, no join entity) | EF auto-creates shadow join table |
+| 2. Explicit with payload | `MmOrder` M:N `MmProduct` via `MmOrderProduct` (has `Qty`) | `UsingEntity<MmOrderProduct>` |
+| 3. Composite-key | `MmProject {OrgId, Code}` M:N `MmMember` via `MmProjectMember` | Composite FK `{OrgId, Code}` on join entity |
+| 4. Self-referencing | `MmPerson` M:N `MmPerson` (Friends / FriendsOf) via `MmFriendship` | Self-ref with two discriminated nav collections |
+| 5. Two distinct pairs | `MmUser` M:N `MmTeam` via both `MmMembership` (Teams) and `MmLeadership` (LedTeams) | Same entity pair, two separate join tables |
+| 6. Two implicit pairs (unsupported) | `MmDoc` M:N `MmLabel` (Primary + Secondary) | Expected to throw "implicit many-to-many" error in linq2db |
+| 7. Field-mapped key | `MmAccount` (private `AccountId` field, renamed `account_id_col`) M:N `MmRole` | EF field-mapped key; no CLR property |
+| 8. Shadow key | `MmArticle` M:N `MmTag` (shadow `TagId`, renamed `tag_id_col`) | EF shadow property key; no CLR member |
 
 #### Models/NpgSqlEntities -- entity detail
 
@@ -268,7 +290,7 @@ Parallel to `Models/Shared` but for `ConvertorTests`; key difference is `IdValue
 | `EFIncludeDataSourcesAttribute` | `Tests/EntityFrameworkCore/Utilities/EFIncludeDataSourcesAttribute.cs` | NUnit parameter source: intersection of listed + EF-capable providers |
 | `TestContextTracker` | `Tests/EntityFrameworkCore/ContextTestBase.cs` | Static `Dictionary<connectionString, Type>` -- DB-init idempotency guard |
 | `NorthwindContextBase` | `Tests/EntityFrameworkCore/Models/Northwind/NorthwindContext.cs` | `DbContext` with full Northwind `DbSet`s, `QueryFilter` on `Product`, `ISoftDelete` global filter |
-| `IssueContextBase` | `Tests/EntityFrameworkCore/Models/IssueModel/IssueContextBase.cs` | `DbContext` for regression tests; holds ~34 `DbSet`s across all tracked issues |
+| `IssueContextBase` | `Tests/EntityFrameworkCore/Models/IssueModel/IssueContextBase.cs` | `DbContext` for regression tests; holds ~37 `DbSet`s across all tracked issues |
 | `TestInterceptor` | `Tests/EntityFrameworkCore/Interceptors/TestInterceptor.cs` | Base class for all test interceptors; `HasInterceptorBeenInvoked` + `ResetInvocations()` |
 | `TestEfCoreAndLinqToDBComboInterceptor` | `Tests/EntityFrameworkCore/Interceptors/TestEfCoreAndLinqToDBComboInterceptor.cs` | Implements both linq2db `ICommandInterceptor` and EF `IDbCommandInterceptor` |
 | `LinqToDBContextOptionsBuilderExtensions` | `Tests/EntityFrameworkCore/Interceptors/Extensions/...cs` | `UseEfCoreRegisteredInterceptorsIfPossible()` -- bridges EF interceptors into linq2db |
@@ -278,7 +300,10 @@ Parallel to `Models/Shared` but for `ConvertorTests`; key difference is `IdValue
 | `NorthwindData` | `Tests/EntityFrameworkCore/Models/Northwind/NorthwindData.cs` | DB seeder + in-memory `IAsyncQueryProvider` wrapper; `ShadowStateAccessRewriter` rewrites EF shadow-property expressions |
 | `Issue5355LicenseProfile` / `Issue5355Customer` | `Tests/EntityFrameworkCore/Models/IssueModel/IssueEntities.cs` | Issue #5355 entities: `IIssue5355Profile` interface + abstract base + sealed derived |
 | `Issue5547CustomerShare` | `Tests/EntityFrameworkCore/Models/IssueModel/IssueEntities.cs` | Issue #5547: FK-nav entity used to exercise transparent-identifier `Select(s => s.Customer)` paths through `FilterIssue5355License` |
+| `Issue5585Customer` / `Issue5585CustomerShare` / `Issue5585User` | `Tests/EntityFrameworkCore/Models/IssueModel/IssueEntities.cs` | Issue #5585: three-entity M:N cluster (`Customer` 1:N `Share` M:N `User`); `#if !NETFRAMEWORK` |
 | `Issue5388Task` | `Tests/EntityFrameworkCore/Models/IssueModel/IssueEntities.cs` | Issue #5388: `bool IsArchived` stored as `smallint` via `HasConversion<short>()` |
+| `ManyToManyContextBase` | `Tests/EntityFrameworkCore/Models/ManyToMany/ManyToManyContextBase.cs` | `DbContext` for M:N tests; 8 structural M:N scenarios; `#if !NETFRAMEWORK` |
+| `ManyToManyTests` | `Tests/EntityFrameworkCore/Tests/ManyToManyTests.cs` | M:N translation test fixture; ~30 tests covering all 8 scenarios; `#if !NETFRAMEWORK` |
 | `BulkCopyIdentityTable` | `Tests/EntityFrameworkCore/Models/IssueModel/IssueEntities.cs` | BulkCopy identity sequence test table; not a `DbSet<>` in `IssueContextBase` |
 | `FilterIssue5355License<T>` | `Tests/EntityFrameworkCore/Tests/IssueTests.cs` | Static extension on `IQueryable<T> where T : IIssue5355Profile`; applies `licenseFilter.Contains(x.Profile.License)` predicate |
 | `SqlTransparentExpressionTests` | `Tests/EntityFrameworkCore/Tests/SqlTransparentExpressionTests.cs` | Standalone fixture: forces `SqlTransparentExpression` cctor via `RuntimeHelpers.RunClassConstructor`; guards against `TypeInitializationException` regression (PR #5546) |
@@ -504,7 +529,7 @@ There are no declared Tier-1 files for this area (row says `(none)`). See AUDIT-
 - Nothing depends on TESTS-EFCORE; it is a leaf test assembly.
 
 **Outbound:**
-- **EFCORE** -- the primary production dependency. Every test fixture exercises `LinqToDBForEFTools`, `LinqToDBForEFToolsImplDefault`, `EFCoreMetadataReader`, `TransformExpressionVisitor`, `LinqToDBForEFToolsDataConnection`, `LinqToDBOptionsExtension`. `SqlTransparentExpressionTests` directly reflects into `EFCoreMetadataReader` to exercise the `SqlTransparentExpression` nested type's cctor.
+- **EFCORE** -- the primary production dependency. Every test fixture exercises `LinqToDBForEFTools`, `LinqToDBForEFToolsImplDefault`, `EFCoreMetadataReader`, `TransformExpressionVisitor`, `LinqToDBForEFToolsDataConnection`, `LinqToDBOptionsExtension`. `SqlTransparentExpressionTests` directly reflects into `EFCoreMetadataReader` to exercise the `SqlTransparentExpression` nested type's cctor. `ManyToManyTests` exercises the M:N many-to-many join table translation path in `EFCoreMetadataReader`.
 - **TESTS-INFRA** -- `ContextTestBase<T>` extends `TestBase`; `EFDataSourcesAttribute` / `EFIncludeDataSourcesAttribute` extend `DataSourcesBaseAttribute`; `TestConfiguration.EFProviders` is defined in `Tests/Base/TestConfiguration.cs`.
 - **PROV-SQLSERVER** -- used by `ToolsTests.TestFunctions`, `TestCommandTimeout`, `TestCreateTempTable`, temporal-table tests; SQL Server NorthwindContext; `JsonConvertTests` (AllSqlServer only); SQL Server Fluent maps use `IsTemporal()`. Also used by `BulkCopy_Sequence_AsIdentity`.
 - **PROV-SQLITE** -- used by `SQLiteTests`; default EF provider in many `[EFDataSources]` tests.
@@ -527,6 +552,8 @@ There are no declared Tier-1 files for this area (row says `(none)`). See AUDIT-
 - `Models/Shared/IdValueConverter.cs` and `Models/ValueConversion/IdValueConverterSelector.cs` are near-duplicate implementations of the strongly-typed ID pattern (differing only in the `IHasId` vs `IEntity` interface constraint and the `+-1` test offset in `IdValueConverter<TEntity>`). No shared abstraction exists.
 - `Models/ForMapping/Pomelo/ForMappingContext.cs` gates `UseMySqlIdentityColumn()` on `#if !NET10_0` with an inline comment but no `[ActiveIssue]` link, making the exclusion reason opaque in test output.
 - `Issue5388Task` has no `DbSet<>` in `IssueContextBase` -- it is model-only (registered only via `modelBuilder.Entity<Issue5388Task>()`); test access is via `db.GetTable<Issue5388Task>()` through the linq2db bridge after EF `SaveChanges`. This asymmetry (EF writes, linq2db reads) is intentional to verify constant-value-conversion parity.
+- `ManyToManyTests` scenario 6 (`MultipleImplicitPair_Throws`) deliberately tests unsupported behavior (two implicit M:N relationships between the same entity pair) and expects an exception containing "implicit many-to-many". This documents an intentional current limitation: the linq2db bridge cannot disambiguate multiple EF-auto-created shadow join tables for the same entity pair.
+- `Issue5585` M:N entities and `ManyToMany` test infrastructure are both `#if !NETFRAMEWORK` -- there is no coverage of M:N translation on EF3 (net462).
 - `BulkCopyIdentityTable` is not registered in `IssueContextBase` model at all -- test calls `ctx.BulkCopy(...)` directly via the EFCore extension bridge, then reads back via `db.GetTable<BulkCopyIdentityTable>()`. The table schema must be created externally or via a migration; behavior on providers that auto-create via `EnsureCreated` is untested for this entity.
 - `SqlTransparentExpressionTests.TypeInitializerDoesNotThrow` uses `RuntimeHelpers.RunClassConstructor` to force the cctor -- if `SqlTransparentExpression` is ever moved out of `EFCoreMetadataReader` or renamed, the test silently passes (both `Assert.That(reader, Is.Not.Null, ...)` and `Assert.That(nested, Is.Not.Null, ...)` would fire first, but the test would still pass if the type is renamed and the null checks are not updated).
 
@@ -540,7 +567,7 @@ There are no declared Tier-1 files for this area (row says `(none)`). See AUDIT-
 <details><summary>Coverage</summary>
 
 - Tier 1 (visited / total): 0 / 0 -- no Tier-1 anchors declared; see AUDIT-NOTE for proposed anchors
-- Tier 2 (visited / total): 135 / 172 (78.5%)
+- Tier 2 (visited / total): 157 / 194 (80.9%)
 - Tier 3 (skipped, logged): 4 (the 4 csproj files -- counted, not read as .cs)
 
 Read (run 1):
@@ -579,4 +606,16 @@ Read (this run -- delta at sha 2e67bafc):
 - `Models/IssueModel/IssueEntities.cs` (re-read: added `Issue5547CustomerShare` sealed class with `Id`, `CustomerId`, `Customer Issue5355Customer` nav)
 - `Tests/IssueTests.cs` (re-read: added `Issue5547_ContainsThroughQueryableShapes` parameterized by 5-value `Issue5547QueryableShape` enum; exercises transparent-identifier navigation through `FilterIssue5355License`)
 - `Tests/SqlTransparentExpressionTests.cs` (new file: `TypeInitializerDoesNotThrow` -- reflects `EFCoreMetadataReader.SqlTransparentExpression` nested type; forces cctor via `RuntimeHelpers.RunClassConstructor`; guards PR #5546 regression)
+Read (this run -- delta at sha b3340aa9):
+- `AssemblyInfo.TestProgress.cs` (new: `[assembly: TestProgressReporter]` for all EF csproj assemblies; opt-in live progress heartbeat)
+- `Models/IssueModel/IssueContextBase.cs` (re-read: added `DbSet<Issue5585Customer/Share/User>` `#if !NETFRAMEWORK`; `OnModelCreating` for all three with M:N `UsingEntity` and `HasData` seeds)
+- `Models/IssueModel/IssueEntities.cs` (re-read: added `Issue5585CustomerBase`, `Issue5585Customer`, `Issue5585CustomerShare`, `Issue5585User` in `#region Issue 5585`)
+- `Models/ManyToMany/ManyToManyContextBase.cs` (new: 16 DbSets, 8 M:N scenario configs, `#if !NETFRAMEWORK`)
+- `Models/ManyToMany/ManyToManyEntities.cs` (new: 20+ entity and join-table classes for all 8 scenarios, `#if !NETFRAMEWORK`)
+- `Models/ManyToMany/Pomelo/ManyToManyContext.cs` (new: trivial Pomelo subcontext)
+- `Models/ManyToMany/PostgreSQL/ManyToManyContext.cs` (new: trivial PostgreSQL subcontext)
+- `Models/ManyToMany/SQLServer/ManyToManyContext.cs` (new: trivial SQL Server subcontext)
+- `Models/ManyToMany/SQLite/ManyToManyContext.cs` (new: trivial SQLite subcontext)
+- `Tests/IssueTests.cs` (re-read: added `Issue5585_ManyToManyDirectAny`, `Issue5585_ManyToManyNestedAny`, both `#if !NETFRAMEWORK`)
+- `Tests/ManyToManyTests.cs` (new: `ManyToManyTests` fixture with ~30 tests across 8 M:N scenarios, `#if !NETFRAMEWORK`)
 </details>

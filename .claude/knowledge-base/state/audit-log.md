@@ -2249,3 +2249,35 @@ Heuristic H1 (remove, replace) fired on many routine small removals; those were 
 - Curator format fixup by caller: em-dash->'--', restored envelope/ARTIFACT markers, standardized frontmatter; applied clean (0 gate failures).
 - Still deferred: ~19 low-volume affected areas (1-3 new items each) -- regenerate on demand via targeted github-themes.
 
+## 2026-06-14T21:51:29Z — agent audit notes
+- area: PROV-FIREBIRD
+reason: Delta resolved Known-issue #2 (Guid->string duplication). ConvertConversion now delegates to FirebirdMemberTranslator.TranslateGuidToString (public static). Updated Known-issue #2 entry to RESOLVED; no claim regression.
+
+## 2026-06-15T04:12:44Z — kb-refresh full sweep (workflow)
+- code: 33 areas delta-indexed; arch ok=33 noop=0 fail=0; detect applied=3 cursorAdvanced=false
+- audit: 5 sampled, 0 demoted
+
+## 2026-06-15T08:20:56Z — agent audit notes
+- BLOCKED: kb-refresh github-themes step for area METADATA failed
+
+Reason: Required input index files not found
+- github/issues-index.json (missing)
+- github/prs-index.json (missing)
+- github/discussions-index.json (missing)
+
+The github-themes mode requires these indexes to be populated by earlier kb-refresh steps (github-indexes mode for issues, prs, discussions). The fetched GitHub data was not provided to this invocation.
+
+Expected inputs for github-themes mode:
+- Pre-populated .claude/knowledge-base/github/issues-index.json
+- Pre-populated .claude/knowledge-base/github/prs-index.json
+- Pre-populated .claude/knowledge-base/github/discussions-index.json
+- Existing .claude/knowledge-base/areas/METADATA/issues.md (for structure preservation)
+
+Current state:
+- Existing issues.md found: yes (last updated 2026-05-08)
+- Index file sources: none available
+- Area METADATA definition: present in kb-areas.md
+- Last verified timestamp: 2026-05-08
+
+Action required: Ensure kb-fetch-github.ps1 / parent skill has provided fetched JSON data before invoking this agent, or run github-indexes mode first to populate the indexes from GitHub.
+

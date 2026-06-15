@@ -3,8 +3,8 @@ area: EXPR
 kind: area-index
 sources: [code]
 confidence: high
-last_verified: 2026-05-11
-last_verified_sha: 4a478ff148cfc4aa21e7b23b91f5a8c2f3b407b7
+last_verified: 2026-06-14
+last_verified_sha: b3340aa9ded15ffc626983fd202e6399daa081ca
 coverage_tier_1: 5/5
 coverage_tier_2: 10/10
 ---
@@ -14,7 +14,7 @@ coverage_tier_2: 10/10
 The EXPR area is the **public-surface helper layer** that sits between user code and the [EXPR-TRANS](../EXPR-TRANS/INDEX.md) translator. Two distinct responsibilities live here:
 
 1. **`System.Linq.Expressions` plumbing** -- pooled visitors, member-info extraction, attribute-cache. Consumed by EXPR-TRANS, [SQL-PROVIDER](../SQL-PROVIDER/INDEX.md), [MAPPING](../MAPPING/INDEX.md), and SQL-AST builders.
-2. **The `LinqExtensions` partial-class group** -- every `IQueryable<T>` / `ITable<T>` extension method that adds something LINQ doesn't have (`Insert`/`Update`/`Delete`/`Merge`/`LoadWith`/CTE/hints/tagging). Each method follows a strict marshalling pattern: it builds a `MethodCallExpression` referencing itself and hands the tree off to the LINQ provider for translation.
+2. **The `LinqExtensions` partial-class group** -- every `IQueryable<T>` / `ITable<T>` extension method that adds something LINQ does not have (`Insert`/`Update`/`Delete`/`Merge`/`LoadWith`/CTE/hints/tagging). Each method follows a strict marshalling pattern: it builds a `MethodCallExpression` referencing itself and hands the tree off to the LINQ provider for translation.
 
 EXPR adds no SQL semantics on its own. Methods here are *thin* -- argument validation, expression construction, dispatch into `Internal.Linq` execution. The actual translation lives in [EXPR-TRANS](../EXPR-TRANS/INDEX.md) `MethodCallBuilder` plus per-method builders.
 
@@ -22,7 +22,7 @@ EXPR adds no SQL semantics on its own. Methods here are *thin* -- argument valid
 
 - `LinqExtensions` -- the `[PublicAPI]` static partial class in namespace `LinqToDB`, split across ten files. Every public extension method is here. The class is the canonical entry point for non-IQueryable LINQ-style operations.
 - `ExpressionExtensions` -- `Visit`/`Find`/`Transform`/`Replace`/`GetBody` helpers. All variants come in TContext-generic and non-generic flavours; both rent a pooled visitor from `LinqToDB.Internal.Expressions.ExpressionVisitors` to avoid allocation per traversal.
-- `MemberHelper` -- extracts `MemberInfo`/`MethodInfo`/`ConstructorInfo` from `Expression<Func<...>>` lambdas. The `MethodOf`/`MemberOf`/`PropertyOf`/`ConstructorOf`/`MethodOfGeneric` family are how the rest of the codebase obtains `MethodInfo` references without resorting to string-typed reflection. `MemberInfoWithType` struct bundles a `MemberInfo` with the declaring type.
+- `MemberHelper` -- extracts `MemberInfo`/`MethodInfo`/`ConstructorInfo` from `Expression<Func<...>>` lambdas. The `MethodOf`/`MemberOf`/`PropertyOf`/`ConstructorOf`/`MethodOfGeneric` family are how the rest of the codebase obtains `MethodInfo` references without resorting to string-typed reflection. `MemberOf` has a two-type-parameter overload `MemberOf<T, TMember>(Expression<Func<T,TMember>>)` in addition to the `object?`-return form. `MemberInfoWithType` struct bundles a `MemberInfo` with the declaring type and implements `IEquatable<MemberInfoWithType>` via `HashCode.Combine(Type, MemberInfo)`.
 - `IExpressionEvaluator` -- two-method interface (`CanBeEvaluated`/`Evaluate`) that EXPR-TRANS injects to evaluate compile-time-knowable subtrees during translation.
 - `ICteBuilder` -- fluent CTE configuration handed to the `AsCte(source, cteBuilder)` callback. `HasName(string?)` is the only built-in setter; everything else (e.g. `IsMaterialized`) is an extension over this interface in `CteBuilderExtensions`.
 - `IAsQueryableBuilder<TElement>` / `IAsQueryableExceptBuilder<TElement>` -- fluent parameterization-configuration interfaces introduced by PR #5495. Used only in the `AsQueryable(source, dataContext, configure)` overload. `Parameterize()` and `Inline()` set per-column policy; `Except(selectors...)` subtracts named columns from the policy.
@@ -37,7 +37,7 @@ The three files form a closed surface: `IExpressionEvaluator` declares the contr
 - **Pooled visitors.** Every `Visit`/`Find`/`Transform` call rents from a `Pool` and returns it via `using var`. The visitor implementations live in [EXPR-TRANS](../EXPR-TRANS/INDEX.md) -- EXPR exposes only the entrypoints.
 - **`TContext`-generic overloads.** Every visitor entrypoint has both a non-generic and a generic `Func<TContext, Expression, ...>` form taking a `static` lambda.
 
-`GetMemberInfoWithType` handles unusual cases: `Sql.Property<T>(obj, "Name")` where the second argument is a string literal, anonymous-type `new { ... }` constructors, `Array.Length`, and dynamic columns.
+`GetMemberInfoWithType` handles unusual cases: `Sql.Property<T>(obj, "Name")` where the second argument is a string literal, anonymous-type `new { ... }` constructors, `Array.Length`, and dynamic columns. The implementation uses a `switch` on `expr.UnwrapUnary()` with a pattern arm for `IsSqlPropertyMethod`; unary/binary operator methods are extracted before the switch by checking `UnaryExpression.Method` / `BinaryExpression.Method` directly.
 
 ### Public LINQ extensions (`Source/LinqToDB/LinqExtensions/`)
 
@@ -50,8 +50,8 @@ All ten files are partials of one class, `LinqToDB.LinqExtensions`. The split is
 
 The partials decompose as:
 
-- `LinqExtensions.cs` -- root partial: `Select`/`Take`/`Skip`/`ElementAt`/`Having`/`ThenOrBy`/`Join`/`InnerJoin`/`LeftJoin`/`RightJoin`/`FullJoin`/`CrossJoin`/`AsCte`/`AsSubQuery`/`QueryName`/`InlineParameters`/`HasUniqueKey`/`UnionAll`/`ExceptAll`/`IntersectAll`/`IgnoreFilters`/`TagQuery`/`ToSqlQuery`/`InsertOrUpdate`/`Drop`/`Truncate`/`AggregateExecute`. Also hosts the `ProcessSourceQueryable` and `ExtensionsAdapter` static properties. The `AsQueryable<TElement>(IEnumerable<TElement>, IDataContext)` two-parameter overload lives here (`:1097`).
-- `LinqExtensions.AsQueryable.cs` -- single overload: `AsQueryable<TElement>(IEnumerable<TElement>, IDataContext, Expression<Func<IAsQueryableBuilder<TElement>, IAsQueryableExceptBuilder<TElement>>>)` (`AsQueryable.cs:41`). Renders the source as a multi-row `VALUES` clause where each cell is a SQL parameter or inlined SQL literal according to the `configure` chain. The three-arg form always constructs a new `ExpressionQueryImpl<TElement>` (bypasses the `ProcessSourceQueryable` hook that the two-arg form applies). Introduced by PR #5495.
+- `LinqExtensions.cs` -- root partial: `Select`/`SelectAsync`/`Take`/`Skip`/`ElementAt`/`ElementAtOrDefault`/`Having`/`ThenOrBy`/`ThenOrByDescending`/`OrderBy(nulls)`/`OrderByDescending(nulls)`/`ThenBy(nulls)`/`ThenByDescending(nulls)`/`RemoveOrderBy`/`Join`/`InnerJoin`/`LeftJoin`/`RightJoin`/`FullJoin`/`CrossJoin`/`AsCte `/`AsCteInternal`/`AsQueryable`/`AsSubQuery`/`QueryName`/`InlineParameters`/`DisableGuard`/`HasUniqueKey`/`UnionAll`/`ExceptAll`/`IntersectAll`/`IgnoreFilters`/`GenerateTestString`/`TagQuery`/`ToSqlQuery`/`InsertOrUpdate`/`Drop`/`Truncate`/`AggregateExecute`/`AggregateExecuteAsync`. The `OrderBy`/`OrderByDescending`/`ThenBy`/`ThenByDescending` overloads that accept `Sql.NullsPosition` (:728, :758, :788, :818) emit `NULLS FIRST`/`NULLS LAST`; providers without native support emulate the position in generated SQL. `RemoveOrderBy` (:844) strips existing ORDER BY from a query. `DisableGuard` (:1432) suppresses the grouping guard for a specific `IGrouping<TKey,TElement>` query. `AggregateExecuteAsync` (:1775) is the async variant of `AggregateExecute` returning `Task<TResult>`. Also hosts the `ProcessSourceQueryable` and `ExtensionsAdapter` static properties. The `AsQueryable<TElement>(IEnumerable<TElement>, IDataContext)` two-parameter overload lives here (:1222).
+- `LinqExtensions.AsQueryable.cs` -- single overload: `AsQueryable<TElement>(IEnumerable<TElement>, IDataContext, Expression<Func<IAsQueryableBuilder<TElement>, IAsQueryableExceptBuilder<TElement>>>)` (`AsQueryable.cs:41`). Renders the source as a multi-row `VALUE` clause where each cell is a SQL parameter or inlined SQL literal according to the `configure` chain. The three-arg form always constructs a new `ExpressionQueryImpl<TElement>` (bypasses the `ProcessSourceQueryable` hook that the two-arg form applies). Introduced by PR #5495.
 - `LinqExtensions.Insert.cs` -- the entire `Insert`/`InsertWithOutput`/`InsertWithIdentity`/`InsertWithInt32Identity`/`Decimal`/`Int64Identity` matrix; nested `ValueInsertable<T>` and `SelectInsertable<T,TT>` classes.
 - `LinqExtensions.Update.cs` -- `Update`/`UpdateAsync`/`UpdateWithOutput`/`UpdateWithOutputInto`/`Set`/`AsUpdatable` family. Internal `Updatable<T>` class.
 - `LinqExtensions.Delete.cs` -- `Delete`/`DeleteAsync`/`DeleteWithOutput`/`DeleteWithOutputInto` only.
@@ -63,7 +63,7 @@ The partials decompose as:
 
 ### Attribute-cache layer (`Source/LinqToDB/Extensions/`)
 
-`AttributesExtensions` is one file but load-bearing. The repo bans `MemberInfo.GetCustomAttribute(s)` via `Build/BannedSymbols.txt`; every attribute lookup in the codebase routes through `GetAttributes<T>(provider, inherit)`. The cache is two-tier: an outer `_inheritAttributes`/`_noInheritAttributes` keyed by `ICustomAttributeProvider`, plus per-`T` generic `InheritAttributeCache<T>`/`NoInheritAttributeCache<T>` to memoize the type-filter step. The inherit-true path has a workaround for [dotnet/runtime#30219](https://github.com/dotnet/runtime/issues/30219).
+`AttributesExtensions` is one file but load-bearing. The repo bans `MemberInfo.GetCustomAttribute(s)` via `Build/BannedSymbols.txt`; every attribute lookup in the codebase routes through `GetAttributes<T>(provider, inherit)`. The cache is two-tier: an outer `_inheritAttributes`/`_noInheritAttributes` keyed by `ICustomAttributeProvider`, plus per-`` generic `InheritAttributeCache<T>`/`NoInheritAttributeCache<T>` to memoize the type-filter step. The inherit-true path has a workaround for [dotnet/runtime#30219](https://github.com/dotnet/runtime/issues/30219).
 
 ## Files (Tier 1 / Tier 2)
 
@@ -71,8 +71,43 @@ The partials decompose as:
 |---|---|---|
 | 1 | `Source/LinqToDB/Expressions/IExpressionEvaluator.cs` | EvaluatesExpression contract; consumed by EXPR-TRANS |
 | 1 | `Source/LinqToDB/Expressions/ExpressionExtensions.cs` | Pooled-visitor entrypoints |
-| 1 | `Source/LinqToDB/Expressions/MemberHelper.cs` | `MemberOf`/`MethodOf` lambda-extraction; `MemberInfoWithType` |
-| 1 | `Source/LinqToDB/LinqExtensions/LinqExtensions.cs` | Root partial: scalar-select, paging, joins, CTE, set ops |
+| 1 | `Source/LinqToDB/Expressions/MemberHelper.cs` | `MemberOf`/`MethodOf` lambda-extraction; `MemberInfoWithType` (IEquatable) |
+| 1 | `Source/LinqToDB/LinqExtensions/LinqExtensions.cs` | Root partial: scalar-select, paging, nulls-position ordering, joins, CTE, set ops, DisableGuard, AggregateExecuteAsync |
+| 1 | `Source/LinqToDB/LinqExtensions/ICteBuilder.cs` | Fluent CTE-builder contract |
+| 2 | `Source/LinqToDB/Extensions/AttributesExtensions.cs` | Process-wide cached `Get/HasAttribute(s)<T>` extensions |
+| 2 | `Source/LinqToDB/LinqExtensions/CteBuilderExtensions.cs` | `ICteBuilder.IsMaterialized` |
+| 2 | `Source/LinqToDB/LinqExtensions/LinqExtensions.AsQueryable.cs` | Three-arg `AsQueryable` overload with per-column parameterization control; PR #5495 |
+| 2 | `Source/LinqToDB/LinqExtensions/LinqExtensions.Hints.cs` | `TableHint`/`IndexHint`/`JoinHint`/`SubQueryHint`/`QueryHint` partial |
+| 2 | `Source/LinqToDB/LinqExtensions/LinqExtensions.Delete.cs` | `Delete`/`DeleteWithOutput`/`DeleteWithOutputInto` partial |
+| 2 | `Source/LinqToDB/LinqExtensions/LinqExtensions.Insert.cs` | `Insert`/`InsertWithIdentity`/`InsertWithOutput*`/`Into` partial |
+| 2 | `Source/LinqToDB/LinqExtensions/LinqExtensions.Merge.cs` | `Merge`/`MergeInto`/`Using`/`On` partial |
+| 2 | `Source/LinqToDB/LinqExtensions/LinqExtensions.Update.cs` | `Update`/`UpdateWithOutput*`/`Set`/`AsUpdatable` partial |
+| 2 | `Source/LinqToDB/LinqExtensions/LinqExtensions.LoadWith.cs` | `LoadWith`/`ThenLoad`/`LoadWithAsTable` partial |
+| 2 | `Source/LinqToDB/LinqExtensions/LinqExtensions.TableHelpers.cs` | `TableID`/`TableName`/`DatabaseName`/`ServerName`/`SchemaName`/`WithTableExpression` partial |
+
+- `LinqExtensions.cs` -- root partial: `Select`/`SelectAsync`/`Take`/`Skip`/`ElementAt`/`ElementAtOrDefault`/`Having`/`ThenOrBy`/`ThenOrByDescending`/`OrderBy(nulls)`/`OrderByDescending(nulls)`/`ThenBy(nulls)`/`ThenByDescending(nulls)`/`RemoveOrderBy`/`Join`/`InnerJoin`/`LeftJoin`/`RightJoin`/`FullJoin`/`CrossJoin`/`AsCte `/`AsCteInternal`/`AsQueryable`/`AsSubQuery`/`QueryName`/`InlineParameters`/`DisableGuard`/`HasUniqueKey`/`UnionAll`/`ExceptAll`/`IntersectAll`/`IgnoreFilters`/`GenerateTestString`/`TagQuery`/`ToSqlQuery`/`InsertOrUpdate`/`Drop`/`Truncate`/`AggregateExecute`/`AggregateExecuteAsync`. The `OrderBy`/`OrderByDescending`/`ThenBy`/`ThenByDescending` overloads that accept `Sql.NullsPosition` (:728, :758, :788, :818) emit `NULLS FIRST`/`NULLS LAST`; providers without native support emulate the position in generated SQL. `RemoveOrderBy` (:844) strips existing ORDER BY from a query. `DisableGuard` (:1432) suppresses the grouping guard for a specific `IGrouping<TKey,TElement>` query. `AggregateExecuteAsync` (:1775) is the async variant of `AggregateExecute` returning `Task<TResult>`. Also hosts the `ProcessSourceQueryable` and `ExtensionsAdapter` static properties. The `AsQueryable<TElement>(IEnumerable<TElement>, IDataContext)` two-parameter overload lives here (:1222).
+- `LinqExtensions.AsQueryable.cs` -- single overload: `AsQueryable<TElement>(IEnumerable<TElement>, IDataContext, Expression<Func<IAsQueryableBuilder<TElement>, IAsQueryableExceptBuilder<TElement>>>)` (`AsQueryable.cs:41`). Renders the source as a multi-row `VALUE` clause where each cell is a SQL parameter or inlined SQL literal according to the `configure` chain. The three-arg form always constructs a new `ExpressionQueryImpl<TElement>` (bypasses the `ProcessSourceQueryable` hook that the two-arg form applies). Introduced by PR #5495.
+- `LinqExtensions.Insert.cs` -- the entire `Insert`/`InsertWithOutput`/`InsertWithIdentity`/`InsertWithInt32Identity`/`Decimal`/`Int64Identity` matrix; nested `ValueInsertable<T>` and `SelectInsertable<T,TT>` classes.
+- `LinqExtensions.Update.cs` -- `Update`/`UpdateAsync`/`UpdateWithOutput`/`UpdateWithOutputInto`/`Set`/`AsUpdatable` family. Internal `Updatable<T>` class.
+- `LinqExtensions.Delete.cs` -- `Delete`/`DeleteAsync`/`DeleteWithOutput`/`DeleteWithOutputInto` only.
+- `LinqExtensions.Merge.cs` -- the merge-builder fluent API. Internal `MergeQuery<TTarget,TSource>` implements every step interface on the same wrapped `IQueryable<TTarget>` -- interface narrowing is purely compile-time.
+- `LinqExtensions.LoadWith.cs` -- `LoadWithAsTable`, `LoadWith<TEntity,TProperty>` (4 overloads), `ThenLoad<TEntity,TPrev,TProperty>` (4 overloads). The `LoadWithQueryableBase<TEntity>` and `LoadWithQueryable<TEntity,TProperty>` private classes wrap an `IExpressionQuery<TEntity>`.
+- `LinqExtensions.Hints.cs` -- `With`/`TableHint`/`TablesInScopeHint`/`IndexHint`/`JoinHint`/`SubQueryHint`/`QueryHint`. Each hint carries `[Sql.QueryExtension]` attributes that route per-provider extension builders.
+- `LinqExtensions.TableHelpers.cs` -- `TableID`/`TableName`/`DatabaseName`/`ServerName`/`SchemaName`/`WithTableExpression`. All except `WithTableExpression` go through `((ITableMutable<T>)table).Change*Name(name)`.
+- `CteBuilderExtensions.cs` -- extension methods on `ICteBuilder`. Currently only `IsMaterialized(bool)`; the doc-comment lists the supported provider matrix (PostgreSQL 12+, SQLite 3.35+, ClickHouse 26.3+).
+
+### Attribute-cache layer (`Source/LinqToDB/Extensions/`)
+
+`AttributesExtensions` is one file but load-bearing. The repo bans `MemberInfo.GetCustomAttribute(s)` via `Build/BannedSymbols.txt`; every attribute lookup in the codebase routes through `GetAttributes<T>(provider, inherit)`. The cache is two-tier: an outer `_inheritAttributes`/`_noInheritAttributes` keyed by `ICustomAttributeProvider`, plus per-`` generic `InheritAttributeCache<T>`/`NoInheritAttributeCache<T>` to memoize the type-filter step. The inherit-true path has a workaround for [dotnet/runtime#30219](https://github.com/dotnet/runtime/issues/30219).
+
+## Files (Tier 1 / Tier 2)
+
+| Tier | File | Role |
+|---|---|---|
+| 1 | `Source/LinqToDB/Expressions/IExpressionEvaluator.cs` | EvaluatesExpression contract; consumed by EXPR-TRANS |
+| 1 | `Source/LinqToDB/Expressions/ExpressionExtensions.cs` | Pooled-visitor entrypoints |
+| 1 | `Source/LinqToDB/Expressions/MemberHelper.cs` | `MemberOf`/`MethodOf` lambda-extraction; `MemberInfoWithType` (IEquatable) |
+| 1 | `Source/LinqToDB/LinqExtensions/LinqExtensions.cs` | Root partial: scalar-select, paging, nulls-position ordering, joins, CTE, set ops, DisableGuard, AggregateExecuteAsync |
 | 1 | `Source/LinqToDB/LinqExtensions/ICteBuilder.cs` | Fluent CTE-builder contract |
 | 2 | `Source/LinqToDB/Extensions/AttributesExtensions.cs` | Process-wide cached `Get/HasAttribute(s)<T>` extensions |
 | 2 | `Source/LinqToDB/LinqExtensions/CteBuilderExtensions.cs` | `ICteBuilder.IsMaterialized` |
@@ -112,7 +147,7 @@ The partials decompose as:
 - **v7 cleanup -- async `WithOutput` overloads.** Every `*WithOutputAsync(..., CancellationToken)` returning `ValueTask<T[]>` is `[Obsolete("Use overload with IAsyncEnumerable return type. API will be removed in version 7")]`.
 - **v7 cleanup -- `Update<TSource,TTarget>(IQueryable, ITable, setter)`** -- obsoleted.
 - **`InsertOrUpdate` cache-key drift suppressed via deferred materialization for CTE builder**, but not for `InsertOrUpdate` itself.
-- **`LinqExtensions.cs:1110` -- `ProcessSourceQueryable` invocation in the two-arg `AsQueryable<TElement>`** -- the static `Func<IQueryable, IQueryable>?` hook applies *only* to the `IEnumerable->IQueryable` shortcut path when source is already `IQueryable<TElement>`; new `ExpressionQueryImpl<TElement>` instances bypass it. The three-arg parameterization overload (`LinqExtensions.AsQueryable.cs:41`) always constructs `ExpressionQueryImpl<TElement>` directly and therefore also bypasses this hook.
+- **`LinqExtensions.cs:1222` -- `ProcessSourceQueryable` invocation in the two-arg `AsQueryable<TElement>`** -- the static `Func<IQueryable, IQueryable>?` hook applies *only* to the `IEnumerable->IQueryable` shortcut path when source is already `IQueryable<TElement>`; new `ExpressionQueryImpl<TElement>` instances bypass it. The three-arg parameterization overload (`LinqExtensions.AsQueryable.cs:41`) always constructs `ExpressionQueryImpl<TElement>` directly and therefore also bypasses this hook.
 - **`IAsQueryableBuilder<TElement>` / `IAsQueryableExceptBuilder<TElement>` declaration location not in this area** -- the fluent configuration interfaces referenced by `LinqExtensions.AsQueryable.cs:44` are defined outside `LinqExtensions/`; the translator-side `MethodCallBuilder` for this overload (in EXPR-TRANS) is the primary consumer of the parameterization policy.
 
 ## Pointers
@@ -123,6 +158,7 @@ The partials decompose as:
 - **`Internals.GetDataContext`** -- the only supported way to extract an `IDataContext` from an arbitrary `IQueryable`.
 - **CTE annotation flow** -- `AsCte(source, Action<ICteBuilder>)` -> `CteBuilderImpl` -> `CteAnnotationsContainer` -> consumed during SQL emission.
 - **`AsQueryable` parameterization flow** -- `AsQueryable(source, dc, configure)` -> `ExpressionQueryImpl<TElement>` -> EXPR-TRANS `MethodCallBuilder` for this overload -> emits `VALUES(...)` clause with per-cell parameter/inline policy. PR #5495.
+- **`NullsPosition` ordering** -- `OrderBy`/`OrderByDescending`/`ThenBy`/`ThenByDescending` overloads with `Sql.NullsPosition` emit `NULLS FIRST`/`NULLS LAST`; providers without native support emulate the ordering in generated SQL via the per-provider SQL builder.
 
 ## See also
 
@@ -154,5 +190,9 @@ The partials decompose as:
 - `Source/LinqToDB/LinqExtensions/LinqExtensions.AsQueryable.cs` -- full read (62 lines) [this run, delta sha 4a478ff1; PR #5495]
 
 **Tier 3 (counted, not read):** none in scope.
+
+**Read (this run -- delta):**
+- `Source/LinqToDB/Expressions/MemberHelper.cs` (sha b3340aa9) -- `MemberInfoWithType` now documents `IEquatable<MemberInfoWithType>` via `HashCode.Combine(Type, MemberInfo)`; `MemberOf<T,TMember>` two-type-parameter overload present; `MethodOfGeneric` has 4-arg `T1,T2,T3,T4` form; `GetMemberInfoWithType` uses `IsSqlPropertyMethod` switch arm.
+- `Source/LinqToDB/LinqExtensions/LinqExtensions.cs` (sha b3340aa9) -- root partial documents `OrderBy`/`OrderByDescending`/`ThenBy`/`ThenByDescending` overloads accepting `Sql.NullsPosition` (:728, :758, :788, :818); `RemoveOrderBy` (:844); `DisableGuard` (:1432); `AggregateExecuteAsync` (:1775); `SelectAsync` async scalar-select variant; `AsQueryable` two-arg overload at :1222 (prior note cited :1097/1110 -- updated to current line numbers).
 
 </details>

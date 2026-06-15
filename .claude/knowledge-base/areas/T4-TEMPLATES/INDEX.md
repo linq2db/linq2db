@@ -3,8 +3,8 @@ area: T4-TEMPLATES
 kind: area-index
 sources: [code]
 confidence: high
-last_verified: 2026-05-04
-last_verified_sha: d8650bb481e953a6c8a2238016bbc1994f3e0d9e
+last_verified: 2026-06-15
+last_verified_sha: b3340aa9ded15ffc626983fd202e6399daa081ca
 coverage_tier_1: 4/4
 coverage_tier_2: 11/11
 ---
@@ -131,6 +131,8 @@ The `T4Model.ttinclude`'s concrete partial classes (`Table`, `Column`, `ForeignK
 
 `NuGet/t4models/linq2db.t4models.csproj` packs this folder's `.ttinclude` files as NuGet content (`contentFiles\any\any\LinqToDB.Templates\` and `content\LinqToDB.Templates\`). The `tools\` folder in the NuGet package carries pre-built provider DLLs (`linq2db.dll`, `linq2db.Scaffold.dll`, all provider clients) so the T4 host can resolve them without a full project build. The `$(LinqToDBT4SharedTools)` MSBuild property in the `<#@ assembly #>` directives resolves to this `tools\` path at template-expansion time.
 
+`NuGet/NuGet.csproj` is the build-support project that resolves and stages all provider client DLLs into `$(TargetDir)` so they can be bundled into the `tools\` folder. It targets `net462` / `x64` and references: `MySqlConnector`, `ClickHouse.Driver`, `AdoNetCore.AseClient`, `Humanizer.Core`, `FirebirdSql.Data.FirebirdClient`, `Oracle.ManagedDataAccess`, `Npgsql`, `System.Data.SQLite`, `Microsoft.Data.SqlClient`, `IBM.Data.DB.Provider`, plus Redist-sourced `System.Data.SqlServerCe` and `Sap.Data.Hana.v4.5`. Redist HintPaths use `$(MSBuildThisFileDirectory)..` (not `$(SolutionDir)`) so the project resolves correctly in single-project packs as well as full-solution builds (PR #5565). `NuGet/Directory.Build.props` sets `ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch=None` to suppress MSB3270 (x64 NuGet.dll referenced by AnyCPU projects) (PR #5580).
+
 ## Known issues / debt
 
 - `MultipleFiles.ttinclude` depends on `EnvDTE`, which is Visual Studio-only. It does not work under Rider's T4 host or MSBuild-driven T4. No Rider-compatible alternative is provided.
@@ -144,6 +146,7 @@ The `T4Model.ttinclude`'s concrete partial classes (`Table`, `Column`, `ForeignK
 - [SCAFFOLD area](../SCAFFOLD/INDEX.md) — modern CLI scaffold flow; `ModelGeneration/` subdirectory is the shared runtime that T4 templates also use.
 - [architecture/overview.md](../../architecture/overview.md) — overall pipeline; T4 is the legacy design-time scaffold entry point.
 - `NuGet/t4models/linq2db.t4models.csproj` — packaging definition.
+- `NuGet/NuGet.csproj` -- build-support project that stages provider DLLs for the T4 tools folder.
 - `Tests/Tests.T4.Nugets/` — integration tests for the NuGet content layout.
 - [linq2db T4 Models docs](https://linq2db.github.io/articles/T4.htm) — external consumer reference (mirrored in `README.md`).
 
@@ -157,4 +160,7 @@ Read (this run): `EditableObject.ttinclude` (read in full — hooks `EditableObj
 
 Tier 3: none.
 
+Read (this run -- delta):
+- `NuGet/NuGet.csproj`: build-support project staging provider client DLLs for the T4 tools folder; Redist HintPaths fixed from `$(SolutionDir)` to `$(MSBuildThisFileDirectory)..` (PR #5565) enabling single-project packs; provider set includes `ClickHouse.Driver`.
+- `NuGet/Directory.Build.props`: new file (PR #5580); suppresses MSB3270 architecture-mismatch warning (`ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch=None`) for the x64 NuGet.csproj build.
 </details>

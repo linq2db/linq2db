@@ -3,27 +3,27 @@ area: EXPR-TRANS
 kind: issues
 sources: [gh-issues, gh-prs, gh-discussions]
 confidence: high
-last_verified: 2026-06-01
-last_verified_sha: 2e67bafc9bfc8ae8ba573b93bde8671d9920c95d
+last_verified: 2026-06-15
+last_verified_sha: b3340aa9ded15ffc626983fd202e6399daa081ca
 ---
 
 # EXPR-TRANS -- GitHub themes
 
 ## Open themes
 
-- **Window functions & analytic queries** -- 6 open issues share support for window functions in GROUP BY, null conditions inside windows, and analytic syntax. Sample: #3127, #5123, #5015.
-- **Type translation & conversion** -- 5 open issues covering SumAsync with BigInteger, DateTime handling in filters, type property resolution, and implicit conversions. Sample: #4040, #3993, #4199.
-- **Computed properties & materialization** -- 4 open issues on selective column loading, composite property selection, entity service interceptors, and dynamic column mapping. Sample: #4568, #4365, #4992.
-- **Query cache & performance** -- 3 open issues on cache size limits, compiled query async issues, and extension method caching. Sample: #3009, #3266, #4266.
-- **Async query operators** -- 3 open issues: LastOrDefaultAsync for IOrderedQueryable, SumAsync overloads, async compiled updates. Sample: #4019, #4040.
-- **String & SQL functions** -- 2 open issues: LISTAGG/StringAggregate extensions, TRANSLATE function, CONTAINS in multi-column scenarios. Sample: #4224.
-- **Subquery & correlation handling** -- 2 open issues on dynamic filter combination with OR/subqueries and null conditions in window frames. Sample: #5015, #5123.
+- **Member/Method translation refactoring** -- Migration of expression methods from the legacy `Sql.Extension` + expose-mapping system into the member-translator pipeline (`StringMemberTranslatorBase` and related). #5613 (Migrate string.CompareTo), #5577 (expand member/method mappings), #5541 / #5578 (ExpressionMethodAttribute.IsColumn handling). Six PRs landed; remaining translation consolidation (binary/unary from #3994) in #5212.
+- **Projection computation & client-side evaluation** -- #5604 (PreferClientCalculation option) addresses the v6 behavior change that forces projection expressions through server-side SQL translation; allows opting back to v5's client-side evaluation for computed columns. Open for review.
+- **Nullable type handling in subqueries & correlated contexts** -- #5586 (Nullable<T>.HasValue over unbound members), #5582 (null-safe IN/NOT IN emulation on providers without correlated-subquery support). Fixes for null propagation in complex query shapes.
+- **Type translation & casting** -- #5605 (SqlServer decimal overflow fallback via SqlDecimal), #5466 (DateTimeOffset.DateTime as cast), #5581 (nullable DateTime subtraction). Ongoing coverage for edge cases in CLR↔SQL type bridging.
+- **Window Functions API** -- #5468 (new Sql.Window fluent API for window functions) replaces the older `Sql.Ext().Over().ToValue()` pattern; includes legacy converter. Open for review.
 
 ## Resolved themes
 
-- **JSON column auto-serialization** -- #1661 (json serialization with objects) merged into core mapping infrastructure.
-- **Implicit transaction handling** -- #4053 resolved through explicit transaction management refinements.
-- **Compiled query with updates** -- #3266 addressed with async compiled query infrastructure improvements.
+- **String method translation consolidation** -- #5613 (string.CompareTo), #5544 (string.IsNullOrWhiteSpace), #5504 (string.Concat, string.TrimStart/End) — all moved from legacy `Sql.Extension` into the member-translator pipeline with per-provider overrides.
+- **Expression optimization post-AST refactor** -- #5570 (collapse nested case-conversion wraps in Guid→string translation), #5567 (restore IS NULL pushdown through SqlConcatExpression), #5566 (skip bogus IS NULL guards on non-null Sybase concat operands), #5569 (migrate Sybase concatenation to ANSI ||). All post-#5504 string-concat AST refactor.
+- **Correlated subquery detection & validation** -- #5574 (reject unsupported correlated subqueries in expression position on ClickHouse/YDB), #5558 (fix InvalidCastException in APPLY→JOIN conversion with correlated Contains). Fixes for providers with limited or no correlated-subquery support.
+- **Binary/unary operator translation** -- #5212 (merge binary/unary translation fixes from #3994); #5573 (Meziantou analyzer rules).
+- **Projection & materialization edge cases** -- #5587 (spurious [item] column on local-collection LEFT JOIN with decimal projection), #5577 (expand member/method mappings during initial expose instead of at build time), #5581 (nullable DateTime subtraction in final projection).
 
 ## Active discussions
 
@@ -40,13 +40,13 @@ last_verified_sha: 2e67bafc9bfc8ae8ba573b93bde8671d9920c95d
 
 - Open issues: 36
 - Closed issues: 730
-- Open PRs: 13
-- Total PRs: 332
+- Open PRs: 8 (EXPR-TRANS focused)
+- Total PRs: 29 EXPR-TRANS (8 open, 21 merged)
 - Discussions: 68
-- Last fetched: 2026-06-01
+- Last fetched: 2026-06-15
 
 <details><summary>Coverage</summary>
 
-- Index entries scanned: 1166 (766 issues + 332 PRs + 68 discussions)
-- Themes extracted: 7 open, 3 resolved
+- Index entries scanned: 29 EXPR-TRANS PRs (since last theme refresh)
+- Themes extracted: 5 open, 5 resolved
 </details>

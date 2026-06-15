@@ -3,8 +3,8 @@ area: MAPPING
 kind: area-index
 sources: [code]
 confidence: high
-last_verified: 2026-06-01
-last_verified_sha: 2e67bafc9bfc8ae8ba573b93bde8671d9920c95d
+last_verified: 2026-06-14
+last_verified_sha: b3340aa9ded15ffc626983fd202e6399daa081ca
 coverage_tier_1: 3/3
 coverage_tier_2: 43/43
 ---
@@ -13,10 +13,12 @@ coverage_tier_2: 43/43
 
 `Source/LinqToDB/Mapping/**` is the metadata layer that turns a user POCO into the column/table/association descriptors consumed by [EXPR-TRANS](../EXPR-TRANS/INDEX.md) (translation), [LINQ](../LINQ/INDEX.md) (materialization), and [DATA](../DATA/INDEX.md) (parameter binding). Two entangled responsibilities live here:
 
-1. **Schema metadata.** `MappingSchema` is the per-context registry: type -> `EntityDescriptor` -> `ColumnDescriptor[]` + `AssociationDescriptor[]`, plus `InheritanceMapping`, dynamic-column accessors, query filters, fluent vs attribute-driven mapping. The attributes themselves (Column/Table/Association/PrimaryKey/Identity/MapValue/...) are also defined here -- they're the public surface that user code annotates POCOs with, and the `Mapping/Builder/`-flavored fluent equivalent (`FluentMappingBuilder` -> `EntityMappingBuilder<T>` -> `PropertyMappingBuilder<TEntity,TProperty>`) builds the same attribute objects via lambdas.
+1. **Schema metadata.** `MappingSchema` is the per-context registry: type -> `EntityDescriptor` -> `ColumnDescriptor[]` + `AssociationDescriptor[]`, plus `InheritanceMapping`, dynamic-column accessors, query filters, fluent vs attribute-driven mapping. The attributes themselves (Column/Table/Association/PrimaryKey/Identity/MapValue/...) are also defined here -- they are the public surface that user code annotates POCOs with, and the `Mapping/Builder/`-flavored fluent equivalent (`FluentMappingBuilder` -> `EntityMappingBuilder<T>` -> `PropertyMappingBuilder<TEntity,TProperty>`) builds the same attribute objects via lambdas.
 2. **Type-conversion graph.** `MappingSchema` also owns the value-conversion pipeline: a multi-layer `Schemas[]` stack of `MappingSchemaInfo` records each holding a converter dictionary keyed by `(DbDataType from, DbDataType to, ConversionType)`. `GetConvertExpression` / `GetConverter` / `SetConvertExpression` / `SetConverter` walk that stack with type-simplification fallback (Simplify drops DbType -> precision/scale -> length -> DataType). This subsumes both client-side enum/string conversions and the `T -> DataParameter` lambdas used at parameter binding time. `IValueConverter` (and the `ValueConverterAttribute` per-column override) sits on top as the user-facing convert-on-this-column knob.
 
 `MappingSchema` instances form a layered chain: a `MappingSchema(provider, baseSchemas)` snapshots its bases into `Schemas[]` (highest priority first), and lookups (`GetDataType`, `GetCanBeNull`, `GetConvertInfo`, `GetAttribute<T>`) walk that array. `MappingSchema.Default` is a `LockedMappingSchema` (defined in `Internal.Mapping`, out of this area) seeded with the built-in scalar types and the `ValueToSqlConverter` defaults. `CombineSchemas(ms1, ms2)` is the shared cache key the rest of the library uses to fold a connection-level schema into a provider-level schema without leaking N^2 instances.
+
+`MappingSchema` implements `IEquatable<MappingSchema>`; equality is based on `ConfigurationID` (`MappingSchema.cs:1941-1963`). `ValueToSqlConverter` similarly implements `IEquatable<ValueToSqlConverter>` (`ValueToSqlConverter.cs:331-351`).
 
 ## Key types
 
@@ -29,7 +31,7 @@ coverage_tier_2: 43/43
 | `InheritanceMapping` | Discriminator value -> concrete `Type` + reference to discriminator `ColumnDescriptor` | `InheritanceMapping.cs` |
 | `MappingAttribute` (abstract) | Base class for every mapping attribute; carries `Configuration` (provider name filter) and `GetObjectID()` (mapping-schema config-id contributor) | `MappingAttribute.cs` |
 | `FluentMappingBuilder` / `EntityMappingBuilder<T>` / `PropertyMappingBuilder<T,P>` | Lambda-driven attribute synthesis; `Build()` registers a `FluentMetadataReader` (in `Internal.Mapping`) on the schema | `FluentMappingBuilder.cs`, `EntityMappingBuilder.cs`, `PropertyMappingBuilder.cs` |
-| `ValueToSqlConverter` | Per-type `Action<StringBuilder, SqlDataType, DataOptions, object>` table for inlining literals into SQL (used by SQL-PROVIDER builders for constants/scalars) | `ValueToSqlConverter.cs` |
+| `ValueToSqlConverter` | Per-type `Action<StringBuilder, DbDataType, DataOptions, object>` table for inlining literals into SQL (used by SQL-PROVIDER builders for constants/scalars); implements `IEquatable<ValueToSqlConverter>` | `ValueToSqlConverter.cs` |
 | `IValueConverter` / `ValueConverter<TModel,TProvider>` / `ValueConverterFunc<,>` | User-defined per-column conversion lambdas, opt-in via `ValueConverterAttribute` | `IValueConverter.cs`, `ValueConverter.cs`, `ValueConverterFunc.cs`, `ValueConverterAttribute.cs` |
 | `IEntityChangeDescriptor` / `IColumnChangeDescriptor` | Mutation surfaces handed to `EntityDescriptorCreatedCallback` so users (and EF interop) can rewrite descriptors after construction | `IEntityChangeDescriptor.cs`, `IColumnChangeDescriptor.cs` |
 | `MapValue` / `MapValueAttribute` | Enum value <-> database value bidirectional mapping; multiple per field allowed | `MapValue.cs`, `MapValueAttribute.cs` |
@@ -63,20 +65,22 @@ None matched (no generated/build artifacts under `Source/LinqToDB/Mapping/`).
 
 ### 1. `MappingSchema` registry + `Schemas[]` stack
 
-Constructed via `new MappingSchema(string? configuration, params MappingSchema[]? schemas)` (`MappingSchema.cs:119`). The constructor flattens the bases into a deduped `MappingSchemaInfo[] Schemas` array (`MappingSchema.cs:158-181`); `Schemas[0]` is the schema's own writable layer, the rest are read-only ancestors. Every "get" method (`GetDefaultValue`, `GetCanBeNull`, `GetDataType`, `GetMapValues`, `GetAttribute<T>`, `GetConvertInfo`) walks the array front-to-back; every "set" method writes into `Schemas[0]` under `_syncRoot` and calls `ResetID()` so the cached `ConfigurationID` is recomputed (`MappingSchema.cs:1390-1403`). `CombineSchemas(ms1, ms2)` (`MappingSchema.cs:52-66`) memoises the (locked, locked) -> combined schema, which is how the connection-level schema fuses with the provider's locked schema without exploding allocations across queries.
+Constructed via `new MappingSchema(string? configuration, params MappingSchema[]? schemas)` (`MappingSchema.cs:119`). The constructor flattens the bases into a deduped `MappingSchemaInfo[] Schemas` array (`MappingSchema.cs:158-183`); `Schemas[0]` is the schema own writable layer, the rest are read-only ancestors. The single-base fast path uses a C# 14 list pattern (`case [var ms]:`) and array spread (`.. ms.Schemas`) (`MappingSchema.cs:141-156`). Every get method (`GetDefaultValue`, `GetCanBeNull`, `GetDataType`, `GetMapValues`, `GetAttribute<T>`, `GetConvertInfo`) walks the array front-to-back; every set method writes into `Schemas[0]` under `_syncRoot` (a `System.Threading.Lock`, net9+, `MappingSchema.cs:190`) and calls `ResetID()` so the cached `ConfigurationID` is recomputed (`MappingSchema.cs:1391-1403`). `CombineSchemas(ms1, ms2)` (`MappingSchema.cs:52-66`) memoises the (locked, locked) -> combined schema, which is how the connection-level schema fuses with the provider locked schema without exploding allocations across queries.
+
+`ConfigurationList` and `ColumnNameComparer` both use the C# 14 `field` keyword for lazy initialisation of the backing field (`MappingSchema.cs:1411`, `MappingSchema.cs:1808`).
 
 `MappingSchema.Default` is a singleton `LockedMappingSchema` (`Internal.Mapping`, out of this area) initialised in the nested `DefaultMappingSchema` ctor (`MappingSchema.cs:1446-1492`): it seeds the scalar-type table (`AddScalarType(typeof(string), DataType.NVarChar)`, etc.), registers `DBNull -> object?` and `DateTime -> string` converters, and primes `ValueToSqlConverter`. Provider-specific schemas (e.g. `SqlServerMappingSchema`) extend `LockedMappingSchema` and chain off `Default`.
 
 ### 2. `EntityDescriptor` construction
 
-`EntityDescriptor.Init` (`EntityDescriptor.cs:164-297`) is the single hot path that produces an entity's column/association set:
+`EntityDescriptor.Init` (`EntityDescriptor.cs:164-297`) is the single hot path that produces an entity column/association set:
 
 1. Reads `[Table]` from the schema -> seeds `Name = SqlObjectName(name, server, database, schema)`, `TableOptions`, `IsColumnAttributeRequired`.
 2. Reads `[QueryFilter]` for a soft-delete-style ambient filter (`QueryFilterLambda` / `QueryFilterFunc`).
 3. `InitializeDynamicColumnsAccessors` (`EntityDescriptor.cs:488-665`) inspects `[DynamicColumnsStore]` / `[DynamicColumnAccessor]` and synthesises three lambdas -- getter, setter, and a storage-initializer that lazily news the `Dictionary<string,object>` on first write. These are persisted on `EntityDescriptor` so the LINQ side can compile them into materializers.
 4. Iterates `TypeAccessor.Members` (concat with `MappingSchema.GetDynamicColumns(ObjectType)`):
-   - `[Association]` -> constructs `AssociationDescriptor` from the attribute's keys / predicate / query / storage / setter.
-   - `[Column]` -> for each `ColumnAttribute` with distinct `MemberName`, either constructs a `ColumnDescriptor` directly or queues a class-level redirect (the `attrs` list, used when `MemberName` resolves a nested path like `"Residence.Street"`). See `SetColumn` (`EntityDescriptor.cs:299-328`).
+   - `[Association]` -> constructs `AssociationDescriptor` from the attribute keys / predicate / query / storage / setter.
+   - `[Column]` -> for each `ColumnAttribute` with distinct `MemberName`, either constructs a `ColumnDescriptor` directly or queues a class-level redirect (the `attrs` list, used when `MemberName` resolves a nested path like "Residence.Street"). See `SetColumn` (`EntityDescriptor.cs:299-328`).
    - No column attribute, but `MappingSchema.IsScalarType(member.Type)` is true OR the member has `[Identity]` / `[PrimaryKey]` -> still creates a `ColumnDescriptor` (implicit-mapping path; suppressed by `IsColumnAttributeRequired`).
    - `[ColumnAlias]` -> registered in `_aliases`.
    - `[ExpressionMethod(IsColumn = true)]` -> tracked in `CalculatedMembers`.
@@ -87,30 +91,38 @@ Constructed via `new MappingSchema(string? configuration, params MappingSchema[]
 
 ### 3. `ColumnDescriptor` construction + lambda compilation
 
-Constructor (`ColumnDescriptor.cs:32-148`) resolves column metadata from three sources in priority order: explicit `ColumnAttribute` properties, the schema's `GetDataType(MemberType)` / `GetUnderlyingDataType`, then per-member fallbacks (`[DataType]`, `[Nullable]`, nullability annotations, `[PrimaryKey]`, `[Sequence]`, `[ValueConverter]`, `[Skip*]`).
+Constructor (`ColumnDescriptor.cs:32-148`) resolves column metadata from three sources in priority order: explicit `ColumnAttribute` properties, the schema `GetDataType(MemberType)` / `GetUnderlyingDataType`, then per-member fallbacks (`[DataType]`, `[Nullable]`, nullability annotations, `[PrimaryKey]`, `[Sequence]`, `[ValueConverter]`, `[Skip*]`).
 
 Lazily-compiled lambda factories (`ColumnDescriptor.cs:507-802`):
 
-- `GetOriginalValueLambda()` -- `obj => obj.Member`, the "raw" extractor without conversion.
-- `GetDbParamLambda()` -- full pipeline: extractor -> discriminator-default substitution -> `ApplyConversions(getterExpr, dbDataType, includingEnum: true)`. The `static ApplyConversions` (`ColumnDescriptor.cs:661-760`) is the canonical "CLR value -> provider value" pipeline (type-prep converter -> user `IValueConverter` -> registered `T -> DataParameter` lambda, with enum->underlying fallback). Reused by EXPR-TRANS for inline expression rewrites.
+- `GetOriginalValueLambda()` -- `obj => obj.Member`, the raw extractor without conversion.
+- `GetDbParamLambda()` -- full pipeline: extractor -> discriminator-default substitution -> `ApplyConversions(getterExpr, dbDataType, includingEnum: true)`. The `static ApplyConversions` (`ColumnDescriptor.cs:661-760`) is the canonical CLR value -> provider value pipeline (type-prep converter -> user `IValueConverter` -> registered `T -> DataParameter` lambda, with enum->underlying fallback). Reused by EXPR-TRANS for inline expression rewrites.
 - `GetDbValueLambda()` -- same but unwraps `DataParameter.Value`.
 - `GetProviderValue(object)` -- compiles `GetDbValueLambda` into a `Func<object,object>`, cached in `_getter`.
 
 ### 4. Type-conversion graph (`GetConverter` / `SetConvertExpression`)
 
-`GetConverter(DbDataType from, DbDataType to, bool create, ConversionType conversionType)` (`MappingSchema.cs:894-1024`) walks `Schemas[]`, simplifying both endpoints via `Simplify` (drop `DbType` -> drop `Precision/Scale` -> drop `Length` -> drop `DataType`) on misses, then nullable-unwrap fallbacks, then defers to `ConvertInfo.Default.Create`.
+`GetConverter(DbDataType from, DbDataType to, bool create, ConversionType conversionType)` (`MappingSchema.cs:895-1025`) walks `Schemas[]` via the inner local function `TryFindExistingConversion` (`MappingSchema.cs:1003-1024`), simplifying both endpoints via `Simplify` (drop `DbType` -> drop `Precision/Scale` -> drop `Length` -> drop `DataType`) on misses, then nullable-unwrap fallbacks, then defers to `ConvertInfo.Default.Create`.
 
 `SetConvertExpression(fromType, toType, expr, addNullCheck)` (`MappingSchema.cs:565-589`) wraps with `AddNullCheck` when set and `to != DataParameter`, then `SetNullableConversion` derives a `T? -> DataParameter` companion on demand.
 
 `ConversionType` splits the converter table into `Common` / `ToDatabase` / `FromDatabase`; lookups try the requested band then fall through to `Common`.
 
+Two additional helper methods on `MappingSchema` support expression-level conversion:
+- `GenerateSafeConvert(Type fromType, Type type)` (`MappingSchema.cs:780-813`) -- builds a null-safe conversion lambda for use in materializers.
+- `GenerateConvertedValueExpression(object? value, Type type)` (`MappingSchema.cs:815-829`) -- produces a constant-or-converted `Expression` for a given runtime value.
+
 ### 5. `ValueToSqlConverter` -- literal inlining
 
-`ValueToSqlConverter` holds `Action<StringBuilder, DbDataType, DataOptions, object>` per type; SQL-PROVIDER builders use it to inline constants. `SetDefaults` registers int/float/decimal/string/Guid/DateTime/`SqlByte`/`SqlInt32` converters. Provider overrides cascade via `BaseConverters`.
+`ValueToSqlConverter` holds `Action<StringBuilder, DbDataType, DataOptions, object>` per type; SQL-PROVIDER builders use it to inline constants. `SetDefaults` (`ValueToSqlConverter.cs:41-77`) registers: `bool`, `char`, all signed/unsigned integer types (`sbyte`..`ulong`), `float`, `double`, `decimal`, `DateTime`, `string`, `Guid`, the full `SqlTypes` suite (`SqlBoolean`, `SqlByte`, `SqlInt16`, `SqlInt32`, `SqlInt64`, `SqlSingle`, `SqlDouble`, `SqlDecimal`, `SqlMoney`, `SqlDateTime`, `SqlString`, `SqlChars`, `SqlGuid`), and `DateOnly` (under `SUPPORTS_DATEONLY`). Provider overrides cascade via `BaseConverters`.
+
+Dispatch in `TryConvertImpl` (`ValueToSqlConverter.cs:188-239`) is fast-path: for primitive types (`TypeCode.Boolean`..`TypeCode.String`) cached per-type delegate fields (`_booleanConverter`, `_int32Converter`, etc.) are used without a dictionary lookup. `SetConverter(Type, ConverterType?)` accepts `null` to remove an existing converter (`ValueToSqlConverter.cs:254-289`).
+
+`CanConvert(DbDataType, DataOptions, object?)` (`ValueToSqlConverter.cs:183-186`) provides a check-only path without writing to a `StringBuilder`.
 
 ### 6. Fluent builder
 
-`FluentMappingBuilder` accumulates `Type -> List<MappingAttribute>` and `MemberInfo -> List<MappingAttribute>`; `Build()` packages them into a `FluentMetadataReader` pushed onto the schema's reader chain via `MappingSchema.AddMetadataReader`. `EntityMappingBuilder<TEntity>` / `PropertyMappingBuilder<TEntity,TProperty>` synthesise attribute objects from member-accessor expressions. `EntityMappingBuilder.SetAttribute` (`EntityMappingBuilder.cs:638-686`) is the merge operation.
+`FluentMappingBuilder` accumulates `Type -> List<MappingAttribute>` and `MemberInfo -> List<MappingAttribute>`; `Build()` packages them into a `FluentMetadataReader` pushed onto the schema reader chain via `MappingSchema.AddMetadataReader`. `EntityMappingBuilder<TEntity>` / `PropertyMappingBuilder<TEntity,TProperty>` synthesise attribute objects from member-accessor expressions. `EntityMappingBuilder.SetAttribute` (`EntityMappingBuilder.cs:638-686`) is the merge operation.
 
 ## Interactions
 
@@ -143,7 +155,7 @@ Lazily-compiled lambda factories (`ColumnDescriptor.cs:507-802`):
 
 - **`ColumnAliasAttribute` admits cycles** (`ColumnAliasAttribute.cs:5-12`). Alias-to-alias chains can loop into stack overflow; null `MemberName` throws lazily in `EntityDescriptor.Init`. No cycle detection in `EntityDescriptor.this[memberName]`.
 - **`MappingSchema.GetMapValues` returns `null` for non-enum types** (`MappingSchema.cs:1766-1793`). `TODO: v7: make it throw for non-enum type`. Several call sites defensively `null!`-suppress.
-- **`EntityDescriptor.Init` mutation interleaving.** Member-level then type-level passes; `SetColumn`'s remove+re-add couples the passes.
+- **`EntityDescriptor.Init` mutation interleaving.** Member-level then type-level passes; `SetColumn` remove+re-add couples the passes.
 - **`ConfigurationID` recomputation cost.** `ResetID` clears `_configurationID`; the next read re-hashes every layer (O(layers)).
 - **`SetDefaultValue` enum branch lazily mutates `Schemas[0]` from inside `GetDefaultValue`** (`MappingSchema.cs:243-274`); same pattern in `GetCanBeNull` (`:300-331`).
 - **`SqlQueryDependentParamsAttribute` is deprecated** (`SqlQueryDependentParamsAttribute.cs:27`). Marked `[Obsolete]` in PR #5526; scheduled for removal in v7. Its `ExpressionsEqual<TContext>` / `SplitExpression` overrides are unsafe when the parameter expression captures outer-scope transparent identifiers in multi-level eager-loaded projections (issue #5154). The default structural cache-compare path now covers the intended use cases.
@@ -160,7 +172,7 @@ Lazily-compiled lambda factories (`ColumnDescriptor.cs:507-802`):
 
 - New mapping attribute? Inherit `MappingAttribute`, override `GetObjectID()` (deterministic across runs), apply `[AttributeUsage(..., AllowMultiple = true)]` if multiple-per-target makes sense, pick up the `Configuration` filter pattern (`PrimaryKeyAttribute.cs:48-51`).
 - Adding a built-in conversion? Extend the `DefaultMappingSchema` ctor (`MappingSchema.cs:1446-1492`) with `SetConverter<TFrom,TTo>(...)`; `SetNullableConversion` derives the `T? -> DataParameter` companion.
-- Adding a per-column knob? Add a property to `ColumnAttribute`, an accessor on `ColumnDescriptor`, read it during the ctor -- the `Has*()` pattern distinguishes "user set this" from "type default".
+- Adding a per-column knob? Add a property to `ColumnAttribute`, an accessor on `ColumnDescriptor`, read it during the ctor -- the Has*() pattern distinguishes user-set from type-default.
 - Wrong DataType / nullability? Walk the precedence in `ColumnDescriptor` ctor; for nullability `[Column].CanBeNull` -> `[Nullable]` -> NRT analysis -> `IsIdentity` -> schema `GetCanBeNull` (`ColumnDescriptor.cs:150-166`).
 - Touching `EntityDescriptor.Init`? The two-pass member-then-type ordering is load-bearing.
 
@@ -172,7 +184,11 @@ Tier 2: 43/43 visited. Two files read partially (repetitive registration code): 
 
 Tier 3: 0/0.
 
-Read (this run -- delta):
+Read (prior run -- delta):
 - `Source/LinqToDB/Mapping/SqlQueryDependentParamsAttribute.cs` -- `[Obsolete]` annotation added at class level (`:27`) with message scheduling removal in v7 and pointing to issue #5154; XML `<remarks>` documenting the deprecation reason (unsafe transparent-identifier capture in multi-level eager-loaded projections). No logic changes -- `ExpressionsEqual<TContext>` / `SplitExpression` overrides unchanged.
+
+Read (this run -- delta):
+- `Source/LinqToDB/Mapping/MappingSchema.cs` -- `MappingSchema` now implements `IEquatable<MappingSchema>` (equality by `ConfigurationID`, `MappingSchema.cs:1941-1963`); `_syncRoot` field changed from `object` to `System.Threading.Lock` (net9+, `:190`); `ConfigurationList` and `ColumnNameComparer` use C# 14 `field` keyword for lazy init (`:1411`, `:1808`); constructor single-base fast-path uses list pattern + array spread (`:141-156`); `GetConverter` inner lookup extracted to local function `TryFindExistingConversion` (`:1003-1024`); public helpers `GenerateSafeConvert` (`:780-813`) and `GenerateConvertedValueExpression` (`:815-829`) confirmed present.
+- `Source/LinqToDB/Mapping/ValueToSqlConverter.cs` -- `ValueToSqlConverter` now implements `IEquatable<ValueToSqlConverter>` (`:331-351`); `SetDefaults` covers the full primitive + SqlTypes suite including `bool`/`char`/all numerics/`SqlBoolean`..`SqlGuid`/`DateOnly` (`:41-77`), broader than prior description; `SetConverter` accepts `null` to remove a converter (`:254-289`); `CanConvert(DbDataType, DataOptions, object?)` check-only overload added (`:183-186`); `TryConvertImpl` dispatches primitives via cached per-type delegate fields for zero-dictionary-lookup fast path (`:200-224`).
 
 </details>

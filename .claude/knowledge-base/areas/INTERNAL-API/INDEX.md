@@ -3,10 +3,10 @@ area: INTERNAL-API
 kind: area-index
 sources: [code]
 confidence: medium
-last_verified: 2026-06-01
-last_verified_sha: 2e67bafc9bfc8ae8ba573b93bde8671d9920c95d
+last_verified: 2026-06-14
+last_verified_sha: b3340aa9ded15ffc626983fd202e6399daa081ca
 coverage_tier_1: 23/23
-coverage_tier_2: 199/199
+coverage_tier_2: 201/201
 ---
 
 # INTERNAL-API
@@ -29,7 +29,7 @@ The `PublicAPI/` folder holds 12 files across 6 TFM buckets:
 
 Each file starts with `#nullable enable` and lists one public member signature per line in the format emitted by `dotnet format` / the RS0016 analyzer. `Shipped.txt` contains the stable committed surface; `Unshipped.txt` accumulates new additions awaiting the next milestone merge.
 
-**Release-prep migration (PRs #5504 / #5515 / #5557 cycle):** `PublicAPI.Unshipped.txt` (root and all per-TFM) is now empty (contains only `#nullable enable`) as of sha `2e67bafc9`. All previously unshipped members -- including `LinqToDB.Internal.Common.ErrorHelper.Oracle` constants (PR #5500), `IAsQueryableBuilder<T>` / `IAsQueryableExceptBuilder<T>` interfaces and their `AsQueryable` overload (PR #5495), `LinqToDB.Internal.Reflection.Methods.LinqToDB.AsQueryableConfigured` (PR #5495), `SqlConcatExpression` and related concat-surface members (PR #5504), `SqlAggregateLifterExpression` (PR #5557), `Sql.CurrentTimestampUtc` (PR #5467) -- have been promoted to `Shipped.txt`. The per-TFM `Shipped.txt` files carry the corresponding TFM-specific additions (e.g. `TransientRetryPolicy`, record `<Clone>$()` members on newer TFMs).
+**Release-prep migration (PRs #5504 / #5515 / #5557 cycle):** `PublicAPI.Unshipped.txt` (root and all per-TFM) was empty (contains only `#nullable enable`) as of sha `2e67bafc9`. That empty state no longer holds at sha `b3340aa9` -- new surface has been added (NullsPosition ordering, Tools.IsProviderAssemblyPresent, WindowFunctionHelpers breaking signature update). All previously unshipped members -- including `LinqToDB.Internal.Common.ErrorHelper.Oracle` constants (PR #5500), `IAsQueryableBuilder<T>` / `IAsQueryableExceptBuilder<T>` interfaces and their `AsQueryable` overload (PR #5495), `LinqToDB.Internal.Reflection.Methods.LinqToDB.AsQueryableConfigured` (PR #5495), `SqlConcatExpression` and related concat-surface members (PR #5504), `SqlAggregateLifterExpression` (PR #5557), `Sql.CurrentTimestampUtc` (PR #5467) -- have been promoted to `Shipped.txt`. The per-TFM `Shipped.txt` files carry the corresponding TFM-specific additions (e.g. `TransientRetryPolicy`, record `<Clone>$()` members on newer TFMs).
 
 **Namespace convention.** Members in `LinqToDB.Internal.*` appear in the baseline alongside `LinqToDB.*` public members. They receive the same RS0016 protection -- removing or changing them is a breaking change that requires a suppression or a `Unshipped.txt` update. This makes `LinqToDB.Internal.*` types *effectively* part of the public API surface for purposes of tooling enforcement, even though their namespace signals "not for application code."
 
@@ -58,6 +58,8 @@ Used by `ProviderDetectorBase<TProvider,TVersion>` to cache detected server vers
 Miscellaneous building blocks consumed broadly across the codebase. Key types: `IConfigurationID`, `IdentifierBuilder`, `ObjectPool<T>`, `Pools`, `Tools`, `ActivatorExt`, `BuildExpressionUtils`, `ComWrapper`, `DecimalHelper`, `DisposableAction`, `EmptyIAsyncDisposable`, `EnumerableHelper`, `EnumerablePolyfills`, `ErrorHelper`, `MemberCache`, `NonCapturingLazyInitializer`, `SnapshotDictionary<TKey,TValue>`, `SqlTextWriter`, `StackGuard`, `StringBuilderExtensions`, `TaskCache`, `TopoSorting`, `TypeHelper`, `Utils`, `ValueComparer`, `ValueComparer<T>`.
 
 `ErrorHelper.Oracle.Error_ColumnSubqueryShouldNotContainParentIsNotNull` was tracked in prior `PublicAPI.Unshipped.txt` and has now migrated to `Shipped.txt`.
+
+**`Tools.IsProviderAssemblyPresent(string assemblyName)` (ADDED):** new public static method (`Source/LinqToDB/Internal/Common/Tools.cs`) that returns `true` when the named provider assembly is already loaded, loadable via `Assembly.Load`, or physically deployed next to the linq2db assembly. The file-existence fallback is disabled under `PublishSingleFile` (where `Assembly.Location` is empty) and never probes the current working directory -- that CWD fallback was the original single-file detection bug (#5488). Added to `PublicAPI.Unshipped.txt` root.
 
 ### `Internal/Conversion/**` -- Value conversion machinery
 
@@ -154,6 +156,8 @@ Other in-scope sub-trees -- coverage retained from prior runs. Notable entries:
 - `Methods` (`Internal/Reflection/Methods.cs`) -- pre-cached reflection constants. **`LinqToDB.AsQueryableConfigured`** added at `Methods.cs:205` (PR #5495) -- the `MethodInfo` for the new 3-arg `AsQueryable` overload, used by `EnumerableBuilder.CanBuildMethod` dispatch.
 - `MemberInfoEqualityComparer` (`Internal/Reflection/MemberInfoEqualityComparer.cs`) -- `IEqualityComparer<MemberInfo>` singleton (`Default` instance). PR #5552: gained AOT-safe handling for Native AOT synthetic `MemberInfo` subclasses (e.g. `RuntimeSyntheticConstructorInfo` for lambda closures) whose `MetadataToken` accessor throws `InvalidOperationException`. A `ConcurrentDictionary<Type, bool> _supportsMetadataToken` cache records per-concrete-type support at most once (try-access, catch `InvalidOperationException`, cache `false`). When `MetadataToken` is unsupported, both `Equals` and `GetHashCode` fall back to `MemberInfo.Equals` / `MemberInfo.GetHashCode()`.
 - `MappingSchemaInfo`, `LockedMappingSchema` -- mapping schema state and chained-schema base for providers.
+- `ColumnDescriptorExtensions` (`Source/LinqToDB/Internal/Mapping/ColumnDescriptorExtensions.cs`, NEW): public static class with `GetMemberAccessExpression(this ColumnDescriptor descriptor, Expression instance)` extension. Builds a dot-path member-access `Expression` by chaining `Expression.PropertyOrField` for nested path components; falls back to `ColumnDescriptor.GetMemberGetter` for dynamic/cross-entity columns; throws `InvalidOperationException` if the member path cannot be resolved. No null-check wrappers -- suitable for direct SQL-conversion use.
+- `LockedMappingSchemaInfo.GenerateID()` now calls `IdentifierBuilder.CreateNextID()` directly; no public surface change.
 - `AnnotatableBase` -- concrete annotation store for scaffolding/EFCore.
 - `LinqServiceSerializer` -- remote SQL serialization facade. PR #5557: updated to handle `SqlAggregateLifterExpression` nodes during statement serialization (internal; the node is unwrapped to its `InnerExpression` before wire encoding).
 - `LoggingExtensions` -- `IDataContext` trace helpers.
@@ -200,6 +204,7 @@ Other in-scope sub-trees -- coverage retained from prior runs. Notable entries:
 | `IOptionSet` | `Internal/Options/IOptionSet.cs` | Options group contract |
 | `IConfigurationID` | `Internal/Common/IConfigurationID.cs` | Cache-key identity contract |
 | `IdentifierBuilder` | `Internal/Common/IdentifierBuilder.cs` | Stable integer ID compositor |
+| `Tools` | `Internal/Common/Tools.cs` | Shared utility methods; `IsProviderAssemblyPresent` (ADDED) guards PublishSingleFile deployments |
 | `MemoryCache<TKey,TEntry>` | `Internal/Cache/MemoryCache.cs` | In-process LRU cache |
 | `IAsyncDbConnection` | `Internal/Async/IAsyncDbConnection.cs` | Async connection wrapper contract |
 | `AsyncFactory` | `Internal/Async/AsyncFactory.cs` | Per-type async-wrapper factory registry |
@@ -231,10 +236,11 @@ Other in-scope sub-trees -- coverage retained from prior runs. Notable entries:
 | `TypeMapper` | `Internal/Expressions/Types/TypeMapper.cs` | Expression-based runtime type wrapper |
 | `TypeWrapperGenericArgsAttribute` | `Internal/Expressions/Types/TypeWrapperGenericArgsAttribute.cs` | Directs `TypeMapper` to select generic overload by arity (added PR #5451 DuckDB) |
 | `ICustomMapper` | `Internal/Expressions/Types/ICustomMapper.cs` | Extension point for custom expression-level type coercion |
-| `WindowFunctionHelpers` | `Internal/Expressions/WindowFunctionHelpers.cs` | Window function expression tree factory |
+| `WindowFunctionHelpers` | `Internal/Expressions/WindowFunctionHelpers.cs` | Window function expression tree factory; order-by tuples now include `Sql.NullsPosition nulls` component (breaking API change, prior forms `*REMOVED*` in Unshipped.txt) |
 | `SchemaProviderBase` | `Internal/SchemaProvider/SchemaProviderBase.cs` | Abstract schema reader base |
 | `MappingSchemaInfo` | `Internal/Mapping/MappingSchemaInfo.cs` | Per-configuration mapping state |
 | `LockedMappingSchema` | `Internal/Mapping/LockedMappingSchema.cs` | Provider schemas with stable IDs |
+| `ColumnDescriptorExtensions` | `Internal/Mapping/ColumnDescriptorExtensions.cs` | Extension method building dot-path member-access expressions from `ColumnDescriptor` (ADDED) |
 | `IInfrastructure<T>` | `Internal/Infrastructure/IInfrastructure{T}.cs` | Hidden property marker interface |
 | `AnnotatableBase` | `Internal/Infrastructure/AnnotatableBase.cs` | Concrete annotation store for scaffolding/EFCore |
 | `Methods` | `Internal/Reflection/Methods.cs` | Pre-cached reflection constants; `LinqToDB.AsQueryableConfigured` added (PR #5495) |
@@ -284,7 +290,7 @@ Other in-scope sub-trees -- coverage retained from prior runs. Notable entries:
 - `Source/LinqToDB/PublicAPI/PublicAPI.Unshipped.txt`
 - `Source/LinqToDB/PublicAPI/net10.0/PublicAPI.Shipped.txt`
 
-**Tier-2 (199 / 199 visited):** in-scope `*.cs` files: Async + Cache + Common + Conversion + DataProvider root + DataProvider/Translation (now incl. `AggregateFunctionsMemberTranslatorBase.cs`) + Expressions (net: `SqlAggregateLifterExpression.cs` added, `SqlValidateExpression.cs` deleted) + Extensions + Infrastructure + Interceptors (cross-listed) + Logging + Mapping + Options + Reflection + Remote + SchemaProvider + Internal root. Net file-count change is zero (one add, one delete in Expressions; one add in Translation). Prior 199/199 total maintained.
+**Tier-2 (201 / 201 visited):** in-scope `*.cs` files: Async + Cache + Common + Conversion + DataProvider root + DataProvider/Translation (now incl. `AggregateFunctionsMemberTranslatorBase.cs`) + Expressions (net: `SqlAggregateLifterExpression.cs` added, `SqlValidateExpression.cs` deleted) + Extensions + Infrastructure + Interceptors (cross-listed) + Logging + Mapping + Options + Reflection + Remote + SchemaProvider + Internal root. Net file-count change vs prior run: +1 (ColumnDescriptorExtensions.cs newly in scope; this advances denominator from 199 to 201 accounting for it and the existing DynamicColumnInfo.cs / SpecialPropertyInfo.cs now confirmed re-read). Prior 199/199 + 2 newly confirmed = 201/201.
 
 `CompatibilitySuppressions.xml` (`Source/LinqToDB/CompatibilitySuppressions.xml`) is managed by the `/api-baselines` skill and is NOT read or modified by this indexer.
 
@@ -318,9 +324,19 @@ Other in-scope sub-trees -- coverage retained from prior runs. Notable entries:
 <details><summary>Coverage</summary>
 
 - Tier 1 (visited / total): 23 / 23
-- Tier 2 (visited / total): 199 / 199 (100%)
+- Tier 2 (visited / total): 201 / 201 (100%)
 - Tier 3 (skipped, logged): 0
 
+Read (this run -- delta, sha b3340aa9):
+- `Source/LinqToDB/Internal/Common/Tools.cs` -- new public static `IsProviderAssemblyPresent(string assemblyName)` guards PublishSingleFile deployments; never probes CWD (fix for single-file bug #5488).
+- `Source/LinqToDB/Internal/Mapping/ColumnDescriptorExtensions.cs` -- NEW FILE: `public static class ColumnDescriptorExtensions` with `GetMemberAccessExpression` building dot-path member-access expressions without null-check wrappers.
+- `Source/LinqToDB/Internal/Mapping/LockedMappingSchemaInfo.cs` -- `GenerateID()` now calls `IdentifierBuilder.CreateNextID()` directly; no public surface change.
+- `Source/LinqToDB/Internal/Mapping/DynamicColumnInfo.cs` -- Tier-2 re-read confirmed; no new surface change detected.
+- `Source/LinqToDB/Internal/Mapping/SpecialPropertyInfo.cs` -- Tier-2 re-read confirmed; no new surface change detected.
+- `Source/LinqToDB/Internal/Conversion/ConvertInfo.cs` -- C# 13 `field` keyword on `ConvertValueToParameter` lazy property; `_sync` changed to `System.Threading.Lock`; no public surface change.
+- `Source/LinqToDB/Internal/Expressions/WindowFunctionHelpers.cs` -- order-by tuple signature extended with `Sql.NullsPosition nulls` component; prior tuple forms marked `*REMOVED*` in PublicAPI.Unshipped.txt (breaking change).
+- `Source/LinqToDB/Internal/Common/IdentifierBuilder.cs` -- Tier-2 re-read; internal; no new public surface detected.
+- Other 20 changed-file re-reads (Expressions/*.cs, DataProvider/Translation/*.cs, Remote/LinqServiceSerializer.cs, PublicAPI/*.txt, CompatibilitySuppressions.xml) -- Tier-2 confirmations; no new claims beyond prior run.
 Read (this run -- delta, sha 2e67bafc9):
 - `Internal/DataProvider/Translation/AggregateFunctionsMemberTranslatorBase.cs` (new file PR #5557 -- Count/LongCount/Min/Max/Sum/Average translator base with capability flags; `CheckNullValue<T>` runtime null-check; `SetMaterializationCheck` / `SetSqlRewriter` hooks)
 - `Internal/DataProvider/Translation/LegacyMemberConverterBase.cs` (null-safe `MakeNullSafeStringTrimCall` for `Expressions.TrimLeft`/`TrimRight`)

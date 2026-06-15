@@ -3,10 +3,10 @@ area: CLAUDE-INFRA
 kind: area-index
 sources: [code]
 confidence: high
-last_verified: 2026-06-01
-last_verified_sha: 2e67bafc9bfc8ae8ba573b93bde8671d9920c95d
-coverage_tier_1: 32/32
-coverage_tier_2: 80/80
+last_verified: 2026-06-15
+last_verified_sha: b3340aa9ded15ffc626983fd202e6399daa081ca
+coverage_tier_1: 33/33
+coverage_tier_2: 81/81
 ---
 
 # CLAUDE-INFRA
@@ -37,7 +37,7 @@ The corpus is instruction-only: skills, agents, and scripts are the "code"; docs
 
 `CLAUDE.md` defines: what linq2db is, build commands (full/core/Release/Testing configs), solution structure, architecture and code-design pointers, code conventions (tabs, C# 14, nullable, no warnings, XML doc), versioning layout in `Directory.Build.props`, and branch conventions (`master`/`release`/`issue/<n>-<slug>`/`feature/<n>-<slug>`).
 
-`agent-rules.md` is auto-imported and defines the operational ruleset: branch creation workflow, Bash command rules (no `&&`/`;`/control-flow), dedicated-tool mandates (`Grep`/`Read`/`Glob`/`Edit` over raw CLI), pipe-avoidance discipline, permission-friendly Bash patterns table, Windows Git Bash MSYS gotchas (leading-slash path-mangling, `--body @-` trap, UTF-8 encoding for non-ASCII), batching/user-interaction rules (ask-ask-do-all), PowerShell Core script pattern for complex multi-step operations, temp-file placement (`.build/.claude/`), git commit / push / PR rules (never auto-commit/-push, always draft PR), Docker container scope (start/stop/create only), GitHub content-editing guardrails (never edit others' content), GitHub wording discipline (terse, no fluff), and agent guardrails (no unrelated reformatting, no silent cross-cutting reshaping, document arbitrary values, never hand-edit `CompatibilitySuppressions.xml`).
+`agent-rules.md` is auto-imported and defines the operational ruleset: branch creation workflow, Bash command rules (no `&&`/`;`/control-flow), dedicated-tool mandates (`Grep`/`Read`/`Glob`/`Edit` over raw CLI), pipe-avoidance discipline, permission-friendly Bash patterns table, Windows Git Bash MSYS gotchas (leading-slash path-mangling, `--body @-` trap, UTF-8 encoding for non-ASCII), batching/user-interaction rules (ask-ask-do-all), PowerShell Core script pattern for complex multi-step operations, temp-file placement (`.build/.claude/`), git commit / push / PR rules (never auto-commit/-push, always draft PR), Docker container scope (start/stop/create only), GitHub content-authoring guardrails (no edits to others content), GitHub wording discipline (terse, no fluff), and agent guardrails (no unrelated reformatting, no silent cross-cutting reshaping, document arbitrary values, never hand-edit `CompatibilitySuppressions.xml`).
 
 ### Skills (`.claude/skills/*/SKILL.md`)
 
@@ -61,8 +61,9 @@ Each skill occupies its own folder; every folder currently contains only `SKILL.
 - `/merge-duplicates` -- consolidates duplicate issues: posts consolidation comment on canonical, adds labels, posts closing comments, closes dupes with `state_reason=duplicate`; closes last to ensure no rollback needed.
 
 **Test workflow:**
-- `/test` -- write + run orchestrator; delegates writing to `test-writer`, running to `test-runner`; handles baselines diff via `snap-baselines.ps1`/`diff-baselines.ps1`.
+- `/test` -- write + run orchestrator; delegates writing to `test-writer`, running to `test-runner`; handles baselines diff via `snap-baselines.ps1`/`diff-baselines.ps1`; auto-enables the `LINQ2DB_TEST_PROGRESS` heartbeat and runs `test-runner` in the background for long runs (step 3.1a).
 - `/test-providers` -- env management: enables/disables providers in `UserDataProviders.json` per TFM bucket, manages Docker containers; owns all writes to `UserDataProviders.json`; supports Set/add/remove/stop/reset modes with family-rule normalization and sticky entries (`TestNoopProvider`).
+- `/test-progress` -- toggles the `LINQ2DB_TEST_PROGRESS` env variable in `settings.local.json` session-wide (`on`/`off`/`status`); enables the JSON heartbeat written by `Tests/Base/TestProgressReporter.cs`; the summary helper `test-status.ps1` reads the heartbeat file and prints a one-line progress report.
 
 **Release workflow:**
 - `/release` -- top-level release orchestrator; coordinates the full release sequence across sub-skills and external repos.
@@ -104,7 +105,7 @@ Each agent definition carries `name`, `description`, `tools`, and `model` frontm
 
 **Test agents:**
 - `test-writer` -- `tools: Read, Grep, Glob, Edit, Write, Bash`; `model: sonnet`. Writes one test at a time; fixture lookup rules (Issue->IssueTests.cs->feature fixture->disambiguate); handles `playgroundLink` flag for `Tests.Playground.csproj` linkage; returns structured JSON.
-- `test-runner` -- `tools: Read, Grep, Bash`; `model: haiku`. Executes `dotnet test`; reads `UserDataProviders.json` read-only; validates providers enabled before running; returns structured JSON with per-target pass/fail.
+- `test-runner` -- `tools: Read, Grep, Bash`; `model: haiku`. Executes `dotnet test`; reads `UserDataProviders.json` read-only; validates providers enabled before running; returns structured JSON with per-target pass/fail. Accepts `repoRoot` for worktree-aware path construction. When `LINQ2DB_TEST_PROGRESS` is set session-wide, the test assembly writes a JSON heartbeat to `.build/.claude/test-progress.<tfm>.<pid>.json` during the run; the agent does not set the variable itself (toggled by `/test-progress`), and passes `--settings <repoRoot>/.runsettings` for MTP runner compatibility. Detailed verbosity uses `-p:TestingPlatformCaptureOutput=false` (VSTest `--logger console` no longer applies under MTP).
 
 ### Reference docs (`.claude/docs/*.md`)
 
@@ -114,7 +115,7 @@ Each agent definition carries `name`, `description`, `tools`, and `model` frontm
 | `agent-guardrails.md` | Extended guardrail catalog: surface trade-offs, build configs, arbitrary-value documentation, BOM after Write, default-to-script, provider/codebase claim verification |
 | `architecture.md` | Core query pipeline, directory layout, companion projects |
 | `code-design.md` | Design invariants: public-API contract, cross-cutting internals, SQL AST namespace placement, column-aligned formatting |
-| `testing.md` | Test runner, config, framework patterns, "read the full log" rule, database initialization |
+| `testing.md` | Test runner, config, framework patterns, "read the full log" rule, database initialization, `LINQ2DB_TEST_PROGRESS` heartbeat monitoring, BUGCHECK-gated tests, diagnosing hung runs (infinite-recursion detection), LinqService port-in-use cleanup, cross-provider gotchas (YDB PK, SupportsRowcount, IsPredicate, column nullability, query-cache HIT/MISS idioms), property-based testing proposal, baselines (vacuous substring assertions, `.sql.other` files, known flaky baselines), long full-suite run pattern |
 | `test-review-checklist.md` | Checklist for reviewing test code changes: correctness, coverage, naming, assertions |
 | `ci-tests.md` | Azure Pipelines CI trigger syntax (`/azp run test-all`, narrow per-DB triggers) |
 | `claude-setup.md` | `.claude/` layout, settings precedence, skill discovery, when to run which skill |
@@ -193,6 +194,7 @@ All scripts follow the manifest-in / JSON-out contract: read one JSON from stdin
 **Test scripts:**
 - `snap-baselines.ps1` -- pre-run snapshot of `BaselinesPath` file hashes for `/test` baselines diff.
 - `diff-baselines.ps1` -- post-run diff against pre-run snapshot; surfaces added/changed/removed baseline files.
+- `test-status.ps1` -- reads the `LINQ2DB_TEST_PROGRESS` heartbeat JSON (`.build/.claude/test-progress.<tfm>.<pid>.json`); prints a one-line progress summary (`[RUNNING/DONE <tfm>] completed/total (%) | pass/fail/skip | rate | elapsed | eta | currentTest`) or raw JSON with `-Raw`. Used by `/test-progress` status action and recommended during long runs.
 
 **Analyzer scripts:**
 - `analyzer-profile-build.ps1` -- runs an instrumented Roslyn analyzer profiling build.
@@ -224,7 +226,7 @@ A user-level hook `~/.claude-my/hooks/check-bash-chain.js` (not in this repo) en
 
 ## Files (Tier 1 / Tier 2)
 
-### Tier 1 (32 files)
+### Tier 1 (33 files)
 
 | File | Role |
 |---|---|
@@ -251,6 +253,7 @@ A user-level hook `~/.claude-my/hooks/check-bash-chain.js` (not in this repo) en
 | `.claude/skills/merge-duplicates/SKILL.md` | Duplicate issue consolidation |
 | `.claude/skills/test/SKILL.md` | Test write+run orchestrator |
 | `.claude/skills/test-providers/SKILL.md` | Test env management |
+| `.claude/skills/test-progress/SKILL.md` | Test run heartbeat toggle |
 | `.claude/skills/api-baselines/SKILL.md` | API baseline refresh |
 | `.claude/skills/version-bump/SKILL.md` | Version bump |
 | `.claude/skills/update-slnx/SKILL.md` | Solution file sync |
@@ -261,7 +264,7 @@ A user-level hook `~/.claude-my/hooks/check-bash-chain.js` (not in this repo) en
 | `.claude/skills/copilot-loop/SKILL.md` | Copilot-review response loop |
 | `.claude/skills/enable-disabled-test/SKILL.md` | Enable ActiveIssue-gated test workflow |
 
-### Tier 2 (80 files)
+### Tier 2 (81 files)
 
 | File | Role |
 |---|---|
@@ -270,7 +273,7 @@ A user-level hook `~/.claude-my/hooks/check-bash-chain.js` (not in this repo) en
 | `.claude/docs/agent-guardrails.md` | Extended guardrails catalog |
 | `.claude/docs/architecture.md` | Core query pipeline reference |
 | `.claude/docs/code-design.md` | Design invariants reference |
-| `.claude/docs/testing.md` | Test conventions reference |
+| `.claude/docs/testing.md` | Test conventions reference (expanded: heartbeat monitoring, BUGCHECK tests, hung-run diagnosis, cross-provider gotchas, property-based testing proposal, baselines guidance) |
 | `.claude/docs/test-review-checklist.md` | Test code review checklist |
 | `.claude/docs/ci-tests.md` | CI trigger reference |
 | `.claude/docs/claude-setup.md` | Claude Code setup reference |
@@ -327,6 +330,7 @@ A user-level hook `~/.claude-my/hooks/check-bash-chain.js` (not in this repo) en
 | `.claude/scripts/pr-body-edit.ps1` | PR body encoding-safe editor |
 | `.claude/scripts/snap-baselines.ps1` | Pre-run baseline snapshot |
 | `.claude/scripts/diff-baselines.ps1` | Post-run baseline diff |
+| `.claude/scripts/test-status.ps1` | Test-progress heartbeat summary reader |
 | `.claude/scripts/azp-run.ps1` | AZP CI trigger comment poster |
 | `.claude/scripts/azp-build-failures.ps1` | AZP build failure summarizer |
 | `.claude/scripts/wait-for-review.ps1` | PR review completion poller |
@@ -371,7 +375,7 @@ A user-level hook `~/.claude-my/hooks/check-bash-chain.js` (not in this repo) en
 
 1. **`BannedSymbols.txt` path mismatch.** `CLAUDE.md` states the banned API list is at `Build/BannedSymbols.txt`. The actual file is at `Source/BannedSymbols.txt` (and `Tests/BannedSymbols.txt`). This also affects the `BUILD` area row in `kb-areas.md` which pins `BannedSymbols.txt` as a Tier-1 file -- the path pattern `Build/**` will not match `Source/BannedSymbols.txt`.
 2. **`claude-setup.md` is stale.** The file's "Current skills" list omits all skills added since it was last updated. The doc functions as a quick-reference so the gap is informational rather than operational -- agents read individual SKILL.md files -- but a future `/audit-claude` run will flag this as a retired-content issue.
-3. **User-level hook not in this corpus.** The `check-bash-chain.js` PreToolUse hook that enforces the no-compound-Bash rule is referenced in CLAUDE.md's system context but lives at the user level (`~/.claude-my/hooks/`), not under `.claude/hooks/`. Any new team member must install it manually; it is not discoverable from this corpus.
+3. **User-level hook not in this corpus.** The `check-bash-chain.js` PreToolUse hook that enforces the no-compound-Bash rule is referenced in CLAUDE.md system context but lives at the user level (`~/.claude-my/hooks/`), not under `.claude/hooks/`. Any new team member must install it manually; it is not discoverable from this corpus.
 4. **`audit-claude` refactor-candidate threshold.** Several SKILL.md files exceed 250 lines: `review-pr/SKILL.md`, `verify-review/SKILL.md`, `test-providers/SKILL.md`, `fix-issue/SKILL.md`. Much of the shared procedure is already factored into `.claude/docs/review-orchestration.md` and `pr-context-prep.md`; the remaining bulk in `test-providers/SKILL.md` has no shared-doc counterpart yet.
 5. **`settings.local.json` not committed.** Hooks are wired via `settings.local.json` (gitignored). The hook scripts themselves are committed but their wiring is not, so new contributors see no hooks until they configure `settings.local.json` themselves. `claude-setup.md` acknowledges this by design.
 6. **Release subdoc subdirectory not previously indexed.** `.claude/docs/release/` contains 7 files added as part of the release workflow expansion; they are now included in the Tier-2 file list above.
@@ -385,11 +389,11 @@ A user-level hook `~/.claude-my/hooks/check-bash-chain.js` (not in this repo) en
 
 <details><summary>Coverage</summary>
 
-- Tier 1 (visited / total): 32 / 32
-- Tier 2 (visited / total): 80 / 80 (100%)
+- Tier 1 (visited / total): 33 / 33
+- Tier 2 (visited / total): 81 / 81 (100%)
 - Tier 3 (skipped, logged): 0
 
-Read (this run -- delta):
+Read (this run -- prior delta):
 - `.claude/skills/chores/SKILL.md` -- new `/chores` maintenance dashboard skill; routes to per-chore skills based on staleness signals.
 - `.claude/docs/audit-claude-checks.md` -- new doc factoring out per-check rules from `/audit-claude` SKILL.md.
 - `.claude/docs/script-authoring.md` -- new doc: script contract, why scripts beat Bash chains, input-shape options.
@@ -397,6 +401,13 @@ Read (this run -- delta):
 - `.claude/scripts/post-pr-thread-replies.ps1` -- new script: bulk PR thread reply + resolve via REST+GraphQL.
 - `.claude/scripts/edit-gh-comment.ps1` -- new script: PATCH comment body with JSON-wrapper construction + byte-compare verify.
 - On-disk enumeration via Glob: confirmed 32 Tier-1 + 80 Tier-2 files now present vs 28/42 in prior INDEX.md.
+
+Read (this run -- delta):
+- `.claude/agents/test-runner.md` -- added `repoRoot` input for worktree-aware path construction; `LINQ2DB_TEST_PROGRESS` heartbeat note (toggled externally by `/test-progress`, not the agent); `-p:TestingPlatformCaptureOutput=false` for detailed verbosity replacing VSTest `--logger` form; `--project` required note under MTP; `--settings` required for `AssemblySelectLimit`.
+- `.claude/docs/testing.md` -- expanded significantly: new "Monitoring a long run" section (`LINQ2DB_TEST_PROGRESS`, `/test-progress` skill, `test-status.ps1`); "BUGCHECK-gated tests" section (Debug/Testing config only, `#if BUGCHECK` symbol); "Diagnosing hung test runs" (infinite-recursion via `StackGuard.RunOnEmptyStack`, memory >1 GB signal, idempotence fix); "LinqService address already in use" (port 22654 cleanup); cross-provider gotchas expanded (YDB PK, `SupportsRowcount`, `IsPredicate = true`, column nullability vs NRT, query cache HIT/MISS idioms); property-based testing proposal (AST clone round-trip, visitor identity, LinqService serialization, optimizer idempotence, type-mapping symmetry); baselines guidance (vacuous substring assertions, `.sql.other` failure indicator, flaky pre-existing Oracle entries); "Running a long full suite" (build first then `--no-build` in background, avoid delegating to `test-runner` subagent for long runs).
+- `.claude/scripts/test-status.ps1` -- new script: reads heartbeat JSON from `.build/.claude/test-progress.<tfm>.<pid>.json`; emits one-line progress summary with state, progress, pass/fail/skip, rate, elapsed, ETA, current test, recent failures; `-Raw` flag for raw JSON dump; retry loop for in-flight writes.
+- `.claude/skills/test-progress/SKILL.md` -- new skill `/test-progress`: toggles `LINQ2DB_TEST_PROGRESS` in `settings.local.json` env block; `on`/`off` (sets `"0"`, does not remove key)/`status` actions; invokes `test-status.ps1` for status; scope limited to Claude-launched runs.
+- `.claude/skills/test/SKILL.md` -- added step 3.1a "Long runs -- auto-trace + background monitor": auto-invokes `/test-progress on`, runs `test-runner` with `run_in_background: true`, polls heartbeat mid-run; updated step 3.3 to pass `repoRoot` for worktrees; added worktree `repoRoot` threading from args clause.
 
 NOTE (indexer): the on-disk `.claude/` tree is the `infra/claude-curation` branch (ahead of `origin/master`); this INDEX reflects that current on-disk state, which is the correct representation for the KB living on this branch. `last_verified_sha` is stamped to the `origin/master` refresh anchor.
 </details>

@@ -3746,19 +3746,6 @@
     "body_excerpt": "uses DataConnection + UseMySql (MySqlConnector), runs a multi-from LINQ query over GetTable<Tcldm002>()/GetTable<Tclbm001>() with trace enabled, observes a transaction being started for a read-only query."
   },
   {
-    "id": 5488,
-    "title": "Is PublishSingleFile supported for linq2db?",
-    "category": "Q&A",
-    "state": "open",
-    "area": "GLOBAL",
-    "labels": [],
-    "user": "embix",
-    "updated_at": "2026-04-24T13:40:17Z",
-    "url": "https://github.com/linq2db/linq2db/discussions/5488",
-    "summary": "[Q&A] PublishSingleFile self-contained deployments fail with assembly loading errors for provider adapters like MySql.Data.",
-    "body_excerpt": "single-file self-contained publish throws System.Reflection.TargetInvocationException -> InvalidOperationException \"Cannot load assembly MySql.Data\" at LinqToDB.DataProvider.MySql.MySqlProviderAdapter."
-  },
-  {
     "id": 5554,
     "title": "Relation between different types of mapping",
     "category": "Q&A",
@@ -3766,9 +3753,28 @@
     "area": "MAPPING",
     "labels": [],
     "user": "SicJG",
-    "updated_at": "2026-05-29T20:46:26Z",
+    "created_at": "2026-05-25T16:02:27Z",
+    "updated_at": "2026-06-02T07:07:14Z",
     "url": "https://github.com/linq2db/linq2db/discussions/5554",
-    "summary": "[Q&A] User asks how different mapping approaches (attribute-based, fluent, SetConverter) relate for primitive-wrapper value types.",
-    "body_excerpt": "codebase has many primitive-wrapper value types; asks how the various mapping approaches relate; uses MappingSchema.SetConverter<T,int> / SetConverter<byte,T> to register conversions for IPrimitiveWrapper types."
+    "answered": true,
+    "summary": "[Q&A] How different mapping types relate, with examples of custom converters via SetConverter and MappingSchema configuration",
+    "body_excerpt": "Linq2db has many different \"types\" of somehow related mapping approaches.\nFor example\nOur company has a pretty old codebase that has a lot of defined wrappers over primitive values.\nFor each Primitive there is a bunch of configured convertion methods\npublic static void RegisterLinq2DbConvertersForInt32Wrapper<T>(LinqToDB.Mapping.MappingSchema ms)\n        where T : struct, IPrimitiveWrapper<T, int>\n    {\n        ms.SetConverter<T, int>(x => x.RawValue);\n        ms.SetConverter<byte, T>(x => T.Cre…",
+    "linked_files": []
+  },
+  {
+    "id": 5488,
+    "title": "Is PublishSingleFile supported for linq2db?",
+    "category": "Q&A",
+    "state": "closed",
+    "area": "GLOBAL",
+    "labels": [],
+    "user": "embix",
+    "created_at": "2026-04-24T13:40:17Z",
+    "updated_at": "2026-06-11T18:01:16Z",
+    "url": "https://github.com/linq2db/linq2db/discussions/5488",
+    "answered": false,
+    "summary": "[Q&A] Single-file publishing fails with assembly loading error for MySql.Data",
+    "body_excerpt": "Is PublishSingleFile supported for linq2db? Because I tried using a single-file self-contained build for an application that otherwise would be a whole lot of dlls and folders. However, when triggering the linq2db related operations of the app, I get an exception:\nSystem.Reflection.TargetInvocationException: Exception has been thrown by the target of an invocation.\n ---> System.InvalidOperationException: Cannot load assembly MySql.Data\n   at LinqToDB.DataProvider.MySql.MySqlProviderAdapter.MySql…",
+    "linked_files": []
   }
 ]
