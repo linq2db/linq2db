@@ -74,6 +74,9 @@ namespace Tests.xUpdate
 			if (context.IsAnyOf(TestProvName.AllOracleNative) && copyType == BulkCopyType.ProviderSpecific)
 				Assert.Inconclusive("Oracle BulkCopy doesn't support identity triggers");
 
+			if (context.IsAnyOf(TestProvName.AllYdb) && keepIdentity != true && copyType is BulkCopyType.ProviderSpecific or BulkCopyType.Default)
+				Assert.Inconclusive("YDB bulk copy is a key-based upsert: it requires all key columns and cannot server-generate identity");
+
 			// don't use transactions as some providers will fallback to non-provider-specific implementation then
 			using var db = GetDataConnection(context);
 			var lastId = db.InsertWithInt32Identity(new TestTable2());
@@ -155,6 +158,9 @@ namespace Tests.xUpdate
 		{
 			if ((context == ProviderName.Sybase) && copyType == BulkCopyType.ProviderSpecific && keepIdentity != true)
 				Assert.Inconclusive("Sybase native bulk copy doesn't support identity insert (despite documentation)");
+
+			if (context.IsAnyOf(TestProvName.AllYdb) && keepIdentity != true && copyType is BulkCopyType.ProviderSpecific or BulkCopyType.Default)
+				Assert.Inconclusive("YDB bulk copy is a key-based upsert: it requires all key columns and cannot server-generate identity");
 
 			ResetAllTypesIdentity(context);
 
@@ -1160,7 +1166,7 @@ namespace Tests.xUpdate
 			[Column(SkipOnInsert = true)] public int? Id { get; set; }
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllSybase, TestProvName.AllDuckDB])]
+		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllSybase, TestProvName.AllDuckDB, TestProvName.AllYdb])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4615")]
 		public void BulkCopyAutoOnly([DataSources(false)] string context, [Values] BulkCopyType copyType)
 		{
@@ -1180,7 +1186,7 @@ namespace Tests.xUpdate
 			Assert.That(item.Id, Is.EqualTo(1));
 		}
 
-		[ActiveIssue(Configurations = [ProviderName.Ydb, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllSybase, TestProvName.AllDuckDB])]
+		[ActiveIssue(Configurations = [TestProvName.AllYdb, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllSybase, TestProvName.AllDuckDB])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4615")]
 		public void BulkCopySkipOnly([DataSources(false)] string context, [Values] BulkCopyType copyType)
 		{

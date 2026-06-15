@@ -1023,10 +1023,12 @@ namespace Tests.Linq
 
 			tableName = QuoteTableName(tableName, context);
 
-			var sql            = $"SELECT 1 AS \"value\" FROM {tableName}";
+			// YDB uses backtick identifier quoting; ANSI double-quote is read as a string literal there.
+			var alias          = context.IsAnyOf(TestProvName.AllYdb) ? "`value`" : "\"value\"";
+			var sql            = $"SELECT 1 AS {alias} FROM {tableName}";
 			var formattableSql = FormattableStringFactory.Create(sql);
 
-			var query = 
+			var query =
 				from p in db.Person
 				from s in db.FromSqlScalar<int>(formattableSql)
 					.Where(s => s == p.ID)
@@ -1045,7 +1047,8 @@ namespace Tests.Linq
 			TestProvName.AllSQLite,
 			TestProvName.AllClickHouse,
 			TestProvName.AllSapHana,
-			TestProvName.AllOracle
+			TestProvName.AllOracle,
+			TestProvName.AllYdb
 			)] string context)
 		{
 			using var db = GetDataContext(context);

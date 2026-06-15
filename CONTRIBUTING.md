@@ -76,12 +76,12 @@ You can use solution to build and run tests. Also you can build whole solution o
 * `.\Build.cmd` - builds all the projects in the solution for Debug, Release and Azure configurations
 * `.\Compile.cmd` - builds LinqToDB project for Debug and Release configurations
 * `.\Clean.cmd` - cleanups solution projects for Debug, Release and Azure configurations
-* `.\Test.cmd` - builds and runs tests with `Debug` configuration for all supported TFMs and produce HTML report. Parameters supported to change build configuration, logger type and executed TFMs
+* `.\Test.cmd` - builds and runs tests with `Debug` configuration for all supported TFMs and produces a `trx` report. Parameters supported to change build configuration and executed TFMs, plus extra arguments forwarded to the test runner
 
-Example of running `Release` build tests for `net9.0` only with `trx` as output:
+Example of running `Release` build tests for `net9.0` only:
 
 ```cmd
-test.cmd Release 0 0 1 0 trx
+test.cmd Release 0 0 1 0
 ```
 
 ### Different platforms support
@@ -98,7 +98,7 @@ Because we target different TFMs, we use:
 
 ## Run tests
 
-NUnit3 is used as unit-testing framework. Most of tests are run for all supported databases and written in same pattern:
+NUnit3 is used as the unit-testing framework, running on [Microsoft.Testing.Platform](https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-intro) (MTP) rather than VSTest. The test projects build as executables, so you run them directly (e.g. `linq2db.Tests.exe --filter ...`); `dotnet test` also works. Most of tests are run for all supported databases and written in same pattern:
 
 ```cs
 // TestBase - base class for all our tests

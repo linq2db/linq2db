@@ -525,13 +525,22 @@ namespace LinqToDB
 					_ => throw new InvalidOperationException($"Unexpected datepart: {part}"),
 				};
 
+				var longType     = builder.Mapping.GetDbDataType(typeof(long));
+				var intervalType = builder.Mapping.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Interval);
+
+				// endDate - startDate yields a YQL Interval; CAST(... AS Int64) converts it to its integer
+				// microsecond count, which integer-divides by the per-unit microseconds. Dividing the raw
+				// Interval would keep it an Interval (not the scalar count linq2db's DateDiff expects). The
+				// subtraction must be typed Interval (not Int64) so the cast isn't pruned as a no-op long→long.
+				var microseconds = new SqlCastExpression(
+					new SqlBinaryExpression(intervalType, endDate, "-", startDate),
+					longType,
+					null,
+					isMandatory: true);
+
 				builder.ResultExpression = new SqlBinaryExpression(
-					builder.Mapping.GetDbDataType(typeof(long)),
-					new SqlBinaryExpression(
-						builder.Mapping.GetDbDataType(typeof(int)),
-						startDate,
-						"-",
-						endDate),
+					longType,
+					microseconds,
 					"/",
 					new SqlValue(divisor));
 			}
