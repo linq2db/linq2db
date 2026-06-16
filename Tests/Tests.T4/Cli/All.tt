@@ -53,6 +53,7 @@
 	RunCliTool("ClickHouseMySql", "ClickHouse.MySql"   , "Cli.All.ClickHouse.MySql"   , Path.Combine(targetDir, "ClickHouse.MySql")   , mode, extraOptions: extraOptions);
 	RunCliTool("ClickHouseHttp" , "ClickHouse.Driver"  , "Cli.All.ClickHouse.Driver"  , Path.Combine(targetDir, "ClickHouse.Driver")  , mode, extraOptions: extraOptions);
 	RunCliTool("ClickHouseTcp"  , "ClickHouse.Octonica", "Cli.All.ClickHouse.Octonica", Path.Combine(targetDir, "ClickHouse.Octonica"), mode, extraOptions: extraOptions);
+	RunCliTool("Ydb"            , "YDB"                , "Cli.All.Ydb"                , Path.Combine(targetDir, "Ydb")                , mode, extraOptions: extraOptions);
 	RunCliTool("SQLServer"      , "SqlServer.Azure"    , "Cli.All.SqlServer.Azure"    , Path.Combine(targetDir, "Azure")              , mode, extraOptions: extraOptions);
 	RunCliTool("SQLServer"      , "SqlServer.Azure.MI" , "Cli.All.SqlServer.Azure.MI" , Path.Combine(targetDir, "AzureMI")            , mode, extraOptions: extraOptions);
 #>

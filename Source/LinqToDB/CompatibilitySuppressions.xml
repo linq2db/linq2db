@@ -10,6 +10,13 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0001</DiagnosticId>
+    <Target>T:LinqToDB.Internal.DataProvider.Ydb.Translation.YdbMemberTranslator.SqlTypesTranslation</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0001</DiagnosticId>
     <Target>T:LinqToDB.Internal.Expressions.SqlValidateExpression</Target>
     <Left>lib/net10.0/linq2db.dll</Left>
     <Right>lib/net10.0/linq2db.dll</Right>
@@ -52,6 +59,13 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0001</DiagnosticId>
+    <Target>T:LinqToDB.Internal.DataProvider.Ydb.Translation.YdbMemberTranslator.SqlTypesTranslation</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0001</DiagnosticId>
     <Target>T:LinqToDB.Internal.Expressions.SqlValidateExpression</Target>
     <Left>lib/net462/linq2db.dll</Left>
     <Right>lib/net462/linq2db.dll</Right>
@@ -94,6 +108,13 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0001</DiagnosticId>
+    <Target>T:LinqToDB.Internal.DataProvider.Ydb.Translation.YdbMemberTranslator.SqlTypesTranslation</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0001</DiagnosticId>
     <Target>T:LinqToDB.Internal.Expressions.SqlValidateExpression</Target>
     <Left>lib/net8.0/linq2db.dll</Left>
     <Right>lib/net8.0/linq2db.dll</Right>
@@ -130,6 +151,13 @@
   <Suppression>
     <DiagnosticId>CP0001</DiagnosticId>
     <Target>T:LinqToDB.Internal.DataProvider.SqlServer.Translation.SqlServer2005MemberTranslator.DateFunctionsTranslator2005</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0001</DiagnosticId>
+    <Target>T:LinqToDB.Internal.DataProvider.Ydb.Translation.YdbMemberTranslator.SqlTypesTranslation</Target>
     <Left>lib/net9.0/linq2db.dll</Left>
     <Right>lib/net9.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
@@ -184,6 +212,13 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0001</DiagnosticId>
+    <Target>T:LinqToDB.Internal.DataProvider.Ydb.Translation.YdbMemberTranslator.SqlTypesTranslation</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0001</DiagnosticId>
     <Target>T:LinqToDB.Internal.Expressions.SqlValidateExpression</Target>
     <Left>lib/netstandard2.0/linq2db.dll</Left>
     <Right>lib/netstandard2.0/linq2db.dll</Right>
@@ -268,6 +303,13 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.DataProvider.Ydb.YdbTools.GetDataProvider</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.Common.TypeHelper.EnumTypeRemapping(System.Type,System.Type,System.Type[])</Target>
     <Left>lib/net10.0/linq2db.dll</Left>
     <Right>lib/net10.0/linq2db.dll</Right>
@@ -835,6 +877,13 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.DataProvider.Ydb.YdbTools.GetDataProvider</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.Common.TypeHelper.EnumTypeRemapping(System.Type,System.Type,System.Type[])</Target>
     <Left>lib/net462/linq2db.dll</Left>
     <Right>lib/net462/linq2db.dll</Right>
@@ -1402,6 +1451,13 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.DataProvider.Ydb.YdbTools.GetDataProvider</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.Common.TypeHelper.EnumTypeRemapping(System.Type,System.Type,System.Type[])</Target>
     <Left>lib/net8.0/linq2db.dll</Left>
     <Right>lib/net8.0/linq2db.dll</Right>
@@ -1963,6 +2019,13 @@
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Data.BulkCopyOptions.Deconstruct(System.Nullable{System.Int32}@,System.Nullable{System.Int32}@,LinqToDB.Data.BulkCopyType@,System.Nullable{System.Boolean}@,System.Nullable{System.Boolean}@,System.Nullable{System.Boolean}@,System.Nullable{System.Boolean}@,System.Nullable{System.Boolean}@,System.Nullable{System.Boolean}@,System.String@,System.String@,System.String@,System.String@,LinqToDB.TableOptions@,System.Int32@,System.Action{LinqToDB.Data.BulkCopyRowsCopied}@,System.Boolean@,System.Nullable{System.Int32}@,System.Nullable{System.Int32}@,System.Boolean@)</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.DataProvider.Ydb.YdbTools.GetDataProvider</Target>
     <Left>lib/net9.0/linq2db.dll</Left>
     <Right>lib/net9.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
@@ -2542,6 +2605,13 @@
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Data.BulkCopyOptions.Deconstruct(System.Nullable{System.Int32}@,System.Nullable{System.Int32}@,LinqToDB.Data.BulkCopyType@,System.Nullable{System.Boolean}@,System.Nullable{System.Boolean}@,System.Nullable{System.Boolean}@,System.Nullable{System.Boolean}@,System.Nullable{System.Boolean}@,System.Nullable{System.Boolean}@,System.String@,System.String@,System.String@,System.String@,LinqToDB.TableOptions@,System.Int32@,System.Action{LinqToDB.Data.BulkCopyRowsCopied}@,System.Boolean@,System.Nullable{System.Int32}@,System.Nullable{System.Int32}@,System.Boolean@)</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.DataProvider.Ydb.YdbTools.GetDataProvider</Target>
     <Left>lib/netstandard2.0/linq2db.dll</Left>
     <Right>lib/netstandard2.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>

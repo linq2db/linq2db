@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
@@ -162,6 +162,16 @@ namespace LinqToDB
 	/// <see cref="Sql.ExpressionAttribute.ServerSideOnly"/>) are still translated to SQL.
 	/// Default value: <see langword="false"/>.
 	/// </param>
+	/// <param name="UpsertEmulationPolicy">
+	/// Controls what happens when an <c>Upsert</c> cannot be expressed as a native single-statement upsert
+	/// or <c>MERGE</c> for the target provider and would fall back to an emulated multi-statement
+	/// <c>SELECT → UPDATE → INSERT</c> sequence (the three statements run as independent commands — wrap the
+	/// call in a transaction if atomicity is required).
+	/// <list type="bullet">
+	///   <item><see cref="UpsertEmulationPolicy.Allow"/> (default) — perform the emulated fallback.</item>
+	///   <item><see cref="UpsertEmulationPolicy.Throw"/> — reject it with <see cref="LinqToDBException"/> at build time.</item>
+	/// </list>
+	/// </param>
 	public sealed record LinqOptions
 	(
 		// TODO: Remove in v7
@@ -185,7 +195,8 @@ namespace LinqToDB
 		bool         ParameterizeTakeSkip    = true,
 		bool         EnableContextSchemaEdit = false,
 		bool         PreferExistsForScalar   = default,
-		bool         PreferClientCalculation = default
+		bool         PreferClientCalculation = default,
+		UpsertEmulationPolicy UpsertEmulationPolicy = UpsertEmulationPolicy.Allow
 		// If you add another parameter here, don't forget to update
 		// LinqOptions copy constructor and IConfigurationID.ConfigurationID.
 	)
@@ -210,6 +221,70 @@ namespace LinqToDB
 			EnableContextSchemaEdit = original.EnableContextSchemaEdit;
 			PreferExistsForScalar   = original.PreferExistsForScalar;
 			PreferClientCalculation = original.PreferClientCalculation;
+			UpsertEmulationPolicy   = original.UpsertEmulationPolicy;
+		}
+
+		/// <summary>
+		/// Binary-compatibility overload of the record's positional constructor — mirrors the
+		/// public ctor signature as it was before <see cref="UpsertEmulationPolicy"/> was added,
+		/// so assemblies compiled against the previous linq2db release continue to load.
+		/// </summary>
+		// TODO: remove in v7 (binary-compat shim — drop together with the matching Deconstruct overload).
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		public LinqOptions(
+			bool         preloadGroups,
+			bool         ignoreEmptyUpdate,
+			bool         generateExpressionTest,
+			bool         traceMapperExpression,
+			bool         concatenateOrderBy,
+			bool         optimizeJoins,
+			CompareNulls compareNulls,
+			bool         guardGrouping,
+			bool         disableQueryCache,
+			TimeSpan?    cacheSlidingExpiration,
+			bool         preferApply,
+			bool         keepDistinctOrdered,
+			bool         parameterizeTakeSkip,
+			bool         enableContextSchemaEdit,
+			bool         preferExistsForScalar)
+			: this(
+				preloadGroups, ignoreEmptyUpdate, generateExpressionTest, traceMapperExpression,
+				concatenateOrderBy, optimizeJoins, compareNulls, guardGrouping, disableQueryCache,
+				cacheSlidingExpiration, preferApply, keepDistinctOrdered, parameterizeTakeSkip,
+				enableContextSchemaEdit, preferExistsForScalar,
+				PreferClientCalculation: default, UpsertEmulationPolicy: default)
+		{
+		}
+
+		/// <summary>
+		/// Binary-compatibility overload of the record's <c>Deconstruct</c> — mirrors the
+		/// method signature as it was before <see cref="UpsertEmulationPolicy"/> was added.
+		/// </summary>
+		// TODO: remove in v7 (binary-compat shim — drop together with the matching constructor overload).
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		public void Deconstruct(
+			out bool         preloadGroups,
+			out bool         ignoreEmptyUpdate,
+			out bool         generateExpressionTest,
+			out bool         traceMapperExpression,
+			out bool         concatenateOrderBy,
+			out bool         optimizeJoins,
+			out CompareNulls compareNulls,
+			out bool         guardGrouping,
+			out bool         disableQueryCache,
+			out TimeSpan?    cacheSlidingExpiration,
+			out bool         preferApply,
+			out bool         keepDistinctOrdered,
+			out bool         parameterizeTakeSkip,
+			out bool         enableContextSchemaEdit,
+			out bool         preferExistsForScalar)
+		{
+			Deconstruct(
+				out preloadGroups, out ignoreEmptyUpdate, out generateExpressionTest, out traceMapperExpression,
+				out concatenateOrderBy, out optimizeJoins, out compareNulls, out guardGrouping, out disableQueryCache,
+				out cacheSlidingExpiration, out preferApply, out keepDistinctOrdered, out parameterizeTakeSkip,
+				out enableContextSchemaEdit, out preferExistsForScalar,
+				out _, out _);
 		}
 
 		int? _configurationID;
@@ -234,6 +309,7 @@ namespace LinqToDB
 						.Add(EnableContextSchemaEdit)
 						.Add(PreferExistsForScalar)
 						.Add(PreferClientCalculation)
+						.Add((int)UpsertEmulationPolicy)
 						.CreateID();
 				}
 

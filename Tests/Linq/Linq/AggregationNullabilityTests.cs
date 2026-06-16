@@ -84,7 +84,7 @@ namespace Tests.Linq
 		// Reproduces the shape from #5404: outer arithmetic minus a subquery aggregate.
 		// Empty inner must yield outer anchor unchanged (Sum semantics: empty -> 0).
 		[Test]
-		public void DecimalSumSubqueryArithmeticEmpty([DataSources(TestProvName.AllClickHouse, ProviderName.Ydb)] string context)
+		public void DecimalSumSubqueryArithmeticEmpty([DataSources(TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var outer = db.CreateLocalTable(Outer.Data);
@@ -99,7 +99,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DecimalSumSubqueryArithmeticNonEmpty([DataSources(TestProvName.AllClickHouse, ProviderName.Ydb)] string context)
+		public void DecimalSumSubqueryArithmeticNonEmpty([DataSources(TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var outer = db.CreateLocalTable(Outer.Data);
@@ -118,7 +118,7 @@ namespace Tests.Linq
 		#region Sum overloads — non-nullable in subquery (must wrap with COALESCE)
 
 		[Test]
-		public void SumIntSubqueryEmpty([DataSources(TestProvName.AllClickHouse, ProviderName.Ydb)] string context)
+		public void SumIntSubqueryEmpty([DataSources(TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var outer = db.CreateLocalTable(Outer.Data);
@@ -133,7 +133,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SumLongSubqueryEmpty([DataSources(TestProvName.AllClickHouse, ProviderName.Ydb)] string context)
+		public void SumLongSubqueryEmpty([DataSources(TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var outer = db.CreateLocalTable(Outer.Data);
@@ -148,7 +148,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SumFloatSubqueryEmpty([DataSources(TestProvName.AllClickHouse, ProviderName.Ydb)] string context)
+		public void SumFloatSubqueryEmpty([DataSources(TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var outer = db.CreateLocalTable(Outer.Data);
@@ -163,7 +163,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SumDoubleSubqueryEmpty([DataSources(TestProvName.AllClickHouse, ProviderName.Ydb)] string context)
+		public void SumDoubleSubqueryEmpty([DataSources(TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var outer = db.CreateLocalTable(Outer.Data);
@@ -178,7 +178,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SumDecimalSubqueryEmpty([DataSources(TestProvName.AllClickHouse, ProviderName.Ydb)] string context)
+		public void SumDecimalSubqueryEmpty([DataSources(TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var outer = db.CreateLocalTable(Outer.Data);
@@ -197,7 +197,7 @@ namespace Tests.Linq
 		#region Sum overloads — nullable in subquery (must NOT wrap with COALESCE)
 
 		[Test]
-		public void SumNullableIntSubqueryEmpty_NoCoalesce([DataSources(TestProvName.AllClickHouse, ProviderName.Ydb)] string context)
+		public void SumNullableIntSubqueryEmpty_NoCoalesce([DataSources(TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var outer = db.CreateLocalTable(Outer.Data);
@@ -214,7 +214,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SumNullableDecimalSubqueryEmpty_NoCoalesce([DataSources(TestProvName.AllClickHouse, ProviderName.Ydb)] string context)
+		public void SumNullableDecimalSubqueryEmpty_NoCoalesce([DataSources(TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var outer = db.CreateLocalTable(Outer.Data);
@@ -237,7 +237,7 @@ namespace Tests.Linq
 		// InvalidOperationException for those, and silently substituting a default would
 		// contradict both LINQ semantics and the existing Tests.Exceptions.AggregationTests.
 		[Test]
-		public void MinIntSubqueryNonEmpty([DataSources(TestProvName.AllClickHouse, ProviderName.Ydb)] string context)
+		public void MinIntSubqueryNonEmpty([DataSources(TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var outer = db.CreateLocalTable(Outer.Data);
@@ -253,7 +253,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MaxIntSubqueryNonEmpty([DataSources(TestProvName.AllClickHouse, ProviderName.Ydb)] string context)
+		public void MaxIntSubqueryNonEmpty([DataSources(TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var outer = db.CreateLocalTable(Outer.Data);
@@ -269,7 +269,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AverageIntSubqueryNonEmpty([DataSources(TestProvName.AllClickHouse, ProviderName.Ydb)] string context)
+		public void AverageIntSubqueryNonEmpty([DataSources(TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var outer = db.CreateLocalTable(Outer.Data);
@@ -287,7 +287,7 @@ namespace Tests.Linq
 		// Empty Max in projection-as-aggregate must throw via the runtime validator
 		// (matches Enumerable.Max contract and Tests.Exceptions.AggregationTests.NonNullableMax2).
 		[Test]
-		public void MaxIntSubqueryEmpty_Throws([DataSources(TestProvName.AllClickHouse, ProviderName.Ydb)] string context)
+		public void MaxIntSubqueryEmpty_Throws([DataSources(TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var outer = db.CreateLocalTable(Outer.Data);
