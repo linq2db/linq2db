@@ -151,6 +151,7 @@
 
 	<ItemGroup Label="Testing">
 		<PackageVersion Include="Shouldly"                                              Version="4.3.0"                        />
+		<PackageVersion Include="Microsoft.Testing.Platform"                            Version="2.2.3"                        />
 		<PackageVersion Include="Microsoft.Testing.Platform.MSBuild"                    Version="2.2.3"                        />
 		<PackageVersion Include="Microsoft.Testing.Extensions.TrxReport"                Version="2.2.3"                        />
 		<PackageVersion Include="Microsoft.Testing.Extensions.HangDump"                 Version="2.2.3"                        />

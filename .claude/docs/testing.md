@@ -27,28 +27,17 @@ Reach for the full `Tests/Linq/Tests.csproj` only when the test target spans man
 
 ## Monitoring a long run
 
-A full suite run takes 1–2 hours. To watch progress without scraping console output, the test assembly can write a small JSON heartbeat (updated ~once/sec, immediately on each failure) that you can `Read` at any time. It's **opt-in** via the `LINQ2DB_TEST_PROGRESS` environment variable; the reporter is a no-op when unset, so default runs are unaffected.
+A full suite run takes 1–2 hours. To watch progress without scraping console output, the test assembly writes a small JSON heartbeat (updated ~once/sec, immediately on each failure) that you can `Read` at any time. It's **opt-in** via the `--test-progress` command-line option; the reporter is a no-op when the option is absent, so default runs are unaffected.
 
-**For test runs Claude launches** (via `/test`, `test-runner`, or ad-hoc Bash), toggle it with the **`/test-progress`** skill — it sets `LINQ2DB_TEST_PROGRESS` session-wide through `.claude/settings.local.json` → `env`, which Claude Code injects into every Bash subprocess. Effect is immediate for the next run, and the `dotnet test` command is unchanged (no permission re-prompt):
-
-```
-/test-progress on        # enable the heartbeat
-/test-progress           # status + latest heartbeat
-/test-progress off       # disable
-```
-
-**For runs in your own terminal**, set the variable yourself before launching:
+**Always pass `--test-progress` when launching a run** — via `test-runner`, `/test`, or ad-hoc — so progress is observable. It's a normal CLI option (no env var, no session-wide toggle):
 
 ```bash
-# PowerShell
-$env:LINQ2DB_TEST_PROGRESS = '1'; dotnet test --project Tests/Linq/Tests.csproj -f net10.0 --filter "..."
-# bash
-LINQ2DB_TEST_PROGRESS=1 dotnet test --project Tests/Linq/Tests.csproj -f net10.0 --filter "..."
+dotnet test --project Tests/Linq/Tests.csproj -f net10.0 --settings .runsettings --filter "..." --provider SQLite.MS --test-progress
 ```
 
-The file lands at `.build/.claude/test-progress.<tfm>.<pid>.json` (one per TFM/process). Set the variable to a directory or a `*.json` path to override the location. Fields: `done`, `total`, `completed`, `passed`, `failed`, `skipped`, `currentTest`, `elapsedSec`, `testsPerSec`, `etaSec`, and `recentFailures[]`.
+A bare `--test-progress` writes to `.build/.claude/test-progress.<tfm>.<pid>.json` (one per TFM/process); pass `--test-progress <dir|*.json>` to redirect it. Fields: `done`, `total`, `completed`, `passed`, `failed`, `skipped`, `currentTest`, `elapsedSec`, `testsPerSec`, `etaSec`, and `recentFailures[]`.
 
-Read it directly, or run the summary helper:
+Read the heartbeat directly, or with the summary helper (the `/test-progress` skill reports the latest run):
 
 ```bash
 pwsh -NoProfile -File .claude/scripts/test-status.ps1          # newest run, one-line summary
@@ -87,6 +76,35 @@ When the user asks to run tests against a provider family without naming the exa
 - **SAP HANA** → both `SapHana.Native` and `SapHana.Odbc`.
 
 **Access Jet requires x86.** If the user does request `Access.*.Jet.*`, the test process must run under x86 (32-bit). When running x86, **do not** enable any other provider alongside Jet — other providers may be x64-only (native drivers) or architecture-agnostic but untested on x86, so a mixed x86 run risks failures unrelated to the Jet work.
+
+## Scoping a run to specific providers (`--provider`)
+
+The test executables accept a `--provider` command-line option that runs exactly the named provider(s), **replacing** the providers configured in `UserDataProviders.json`. It is repeatable and accepts comma- or space-separated values:
+
+```bash
+dotnet test --project Tests/Linq/Tests.csproj -f net10.0 --settings .runsettings --filter "FullyQualifiedName~CreateData.CreateDatabase|FullyQualifiedName~MyTest" --provider PostgreSQL.18 --test-progress
+```
+
+`--provider` replaces the active main-test provider set (`TestConfiguration.UserProviders`) with exactly the names given, so **any provider with a connection string defined in `DataProviders.json` / `UserDataProviders.json` runs without editing the enabled-providers list** — it need not be enabled. (EF Core test runs instead intersect their curated `EFProviders` list, so `--provider` can only narrow EF runs to supported providers, never add an unsupported one.) Connection strings still come from those files; a `--provider` name with no connection logs a warning and fails to connect. An absent option leaves behavior unchanged (the providers enabled in `UserDataProviders.json` run).
+
+### Running providers in parallel
+
+Each provider config maps to a distinct database, so runs scoped to **distinct** providers don't collide and can run concurrently. Two cautions, both from the standing single-session rule:
+
+- **One distinct provider (= one database) per parallel run.** The same provider on two concurrent runs — including the *same* provider across two TFMs — hits the same database and corrupts state. The parallel unit is the database, not the process.
+- **Build once, and don't let the runs build concurrently.** Two `dotnet test` invocations on the same project race to write and lock the shared `linq2db.Tests.dll` (fails with `MSB3027`). Build once, then launch each run as the **test executable directly** — it never builds, and each process writes its own per-PID heartbeat:
+
+```bash
+dotnet build Tests/Linq/Tests.csproj -c Debug -f net10.0
+```
+```bash
+.build/bin/Tests/Debug/net10.0/linq2db.Tests.exe --provider PostgreSQL.18 --test-progress --filter "FullyQualifiedName~CreateData.CreateDatabase|FullyQualifiedName~MyTest"
+```
+```bash
+.build/bin/Tests/Debug/net10.0/linq2db.Tests.exe --provider MySql.8.0 --test-progress --filter "FullyQualifiedName~CreateData.CreateDatabase|FullyQualifiedName~MyTest"
+```
+
+Each process writes its own `.build/.claude/test-progress.<tfm>.<pid>.json`; poll them with `/test-progress` or `test-status.ps1`. The runner's native filter flag is `--filter` (the same `FullyQualifiedName~` syntax), confirmed via `--help`.
 
 ## Database initialization
 

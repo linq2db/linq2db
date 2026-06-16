@@ -66,16 +66,15 @@ Resolve `{project, tfm}` for each run:
 - **EFCore test** — expand to all four projects (EF3/EF8/EF9/EF10). Use `{efMatrix: true, providers: [...]}` shorthand on the agent.
 - **Explicit filter → specific test** — read the test's attributes to infer `[DataSources]` family and EFCore-vs-main. When the filter matches tests across both main and EFCore projects (rare but possible), ask the user to pick.
 
-#### 3.1a Long runs — auto-trace + background monitor
+#### 3.1a Long runs — background monitor
 
 A run is **long** when any of: project is `Tests/Linq/Tests.csproj` (especially across multiple TFMs); the EF matrix runs against more than one provider; the filter is broad (a whole class, a `CreateDatabase`-only full-init pass, or no narrowing filter); or the user said "full" / "all" / "the whole suite". A single-method or Playground run is **short** — skip this subsection and run it synchronously per 3.3.
 
 For a long run:
 
-1. **Auto-enable the progress heartbeat** — invoke `/test-progress on` (don't merely suggest it), then tell the user it's on and that you'll report progress as it runs.
-2. **Run it in the background so progress is readable** — invoke `test-runner` with `run_in_background: true`. The test process writes the heartbeat to `.build/.claude/test-progress.<tfm>.<pid>.json` regardless of who launched it; running the agent in the background is what frees you to poll it instead of blocking with nothing to show.
-3. **Poll and surface progress** — between turns, read the heartbeat with `pwsh -NoProfile -File .claude/scripts/test-status.ps1` (or `Read` the JSON) and give the user a one-line update (completed/total, current test, failures so far). You can do this any time the user asks "how's it going?" — you don't have to wait for the run to finish. Don't busy-poll; check when prompted or at natural intervals.
-4. When the background `test-runner` completes, continue with the baselines diff (3.4) and the final report (3.5) as usual.
+1. **Run it in the background so progress is readable** — invoke `test-runner` with `run_in_background: true`. The test process always writes the heartbeat to `.build/.claude/test-progress.<tfm>.<pid>.json` (`test-runner` passes `--test-progress`); running the agent in the background is what frees you to poll it instead of blocking with nothing to show.
+2. **Poll and surface progress** — between turns, read the heartbeat with `pwsh -NoProfile -File .claude/scripts/test-status.ps1` (or `Read` the JSON) and give the user a one-line update (completed/total, current test, failures so far). You can do this any time the user asks "how's it going?" — you don't have to wait for the run to finish. Don't busy-poll; check when prompted or at natural intervals.
+3. When the background `test-runner` completes, continue with the baselines diff (3.4) and the final report (3.5) as usual.
 
 #### 3.2 Resolve target providers
 
@@ -83,7 +82,7 @@ Provider state is owned by `/test-providers` and read by `test-runner` from `Use
 
 Determine the provider list to pass to `test-runner` per target:
 
-- **User named providers in `/test` args** (e.g. `/test run Issue5177Test on PostgreSQL.18, SQLite.MS`) — pass that list through verbatim. If a named provider isn't currently enabled in the matching TFM bucket, `test-runner` will abort with a "Provider X not enabled" message pointing at `/test-providers`; relay that as-is.
+- **User named providers in `/test` args** (e.g. `/test run Issue5177Test on PostgreSQL.18, SQLite.MS`) — pass that list through verbatim; `test-runner` runs exactly those via `--provider` (they need not be enabled in `UserDataProviders.json`, only have a connection string). If a named provider has no connection defined, `test-runner` aborts with a "no connection string defined" message pointing at `/test-providers`; relay that as-is.
 - **No providers in args** — `Read` the relevant TFM bucket of `UserDataProviders.json` once, list the currently enabled providers, and ask the user to confirm or narrow before passing the set through. Do **not** silently default to "every enabled provider" — most users want a small subset for a single-test run.
 
 If the test was just authored by the write flow, the test-writer's `dataSources` output is a hint about scope, not a provider list — still pass the user's explicit choice (or confirmed read-back) to `test-runner`.
@@ -98,7 +97,7 @@ Call `test-runner` with:
 
 For a **short** run, invoke `test-runner` synchronously. For a **long** run, invoke it with `run_in_background: true` and monitor the heartbeat per 3.1a.
 
-`test-runner` is read-only on `UserDataProviders.json` — there is no `userProvidersConsent` or `restoreOnCompletion` input, and no provider edits happen as a side effect of the run. If the agent reports `status: "blocked"` with a missing-provider message, relay it to the user with a one-liner: "Run `/test-providers <provider>` to enable it, then re-run `/test`."
+`test-runner` is read-only on `UserDataProviders.json` — there is no `userProvidersConsent` or `restoreOnCompletion` input, and no provider edits happen as a side effect of the run. If the agent reports `status: "blocked"` (e.g. a provider with no connection string defined), relay it to the user with a one-liner: "Run `/test-providers <provider>` to add its connection, then re-run `/test`."
 
 #### 3.4 Baselines diff (when baselines are written)
 
@@ -139,6 +138,6 @@ If containers were started during the session via `/test-providers`, remind the 
 - Do not edit `UserDataProviders.json` or invoke `docker` commands from `/test`. Env changes route through `/test-providers` exclusively. If the run needs a different provider set or a stopped container started, tell the user — don't fix it.
 - Do not run tests in `Release` config by default — analyzers + banned-API checks are slow and rarely what the user wants for a single-test run.
 - Do not edit source files yourself. Writing is `test-writer`'s job; running is `test-runner`'s job. The skill only orchestrates and relays.
-- Do not run targets in parallel. The agents won't anyway (sequential is built into `test-runner`), but do not try to fan out multiple agent invocations with overlapping target sets either.
+- Do not run targets in parallel from `/test`. The agents won't anyway (sequential is built into `test-runner`), and don't fan out multiple agent invocations with overlapping target sets. Deliberately parallel runs are possible but only **one distinct provider (= one database) per run**, and only as a manual workflow — see `.claude/docs/testing.md` → **Running providers in parallel** (build once, then run the test exe directly with `--provider`).
 - Do not suppress or skim the agent's output. If the agent reports a failure, relay the verbatim error message; don't paraphrase.
 - Do not pre-validate the env state before invoking `test-runner`. Trust the user; let the agent's own provider-check abort surface any mismatch. Auto-fix attempts here defeat the boundary.
