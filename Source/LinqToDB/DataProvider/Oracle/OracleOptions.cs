@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 
@@ -23,8 +24,9 @@ namespace LinqToDB.DataProvider.Oracle
 	/// This flag is added for backward compatibility and not recommended for use with new applications.
 	/// </param>
 	/// <param name="MaxStringParameterLength">
-	/// Maximum string parameter length for regular string parameters. Values with length greater than or equal to this limit
-	/// are bound as NCLOB when parameter type is not specified. Set to <see langword="null"/> to disable automatic NCLOB inference.
+	/// Maximum string parameter length for regular string parameters, aligned with Oracle MAX_STRING_SIZE semantics.
+	/// Undefined string parameters with length greater than or equal to this value are bound as NCLOB.
+	/// Set to <see langword="null"/> to disable automatic NCLOB inference.
 	/// See Oracle documentation for VARCHAR2 limits:
 	/// <see href="https://docs.oracle.com/en/database/oracle/oracle-database/23/sqlrf/Data-Types.html"/>.
 	/// Default value: 4000.
