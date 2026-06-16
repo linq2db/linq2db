@@ -845,27 +845,17 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (_buildPurpose is BuildPurpose.AggregationRoot or BuildPurpose.AssociationRoot)
 					return node;
 
-				// Give MemberTranslator the first shot at boolean-returning calls so user-registered
-				// translators (issue #5347, e.g. custom Contains) win over the built-in predicate
-				// path below. Gated on `node.Type == typeof(bool)` to scope this to predicates only
-				// — running it for arbitrary method calls short-circuits ConvertSingleExpression in
-				// the IsSqlOrExpression block below, which is needed to unwrap wrappers like
-				// `Sql.ConvertTo<string>.From(...)` before per-type translators dispatch (otherwise
-				// e.g. SQLite Guid->string falls back to a generic CAST and the predicate matches
-				// nothing).
-				if (node.Type == typeof(bool) && BuildContext != null && TranslateMember(BuildContext, node, out var translatedMember))
-					return Visit(translatedMember);
-
-				// Built-in predicate translation as fallback. Must run in every build purpose that
-				// reaches this branch (not just Sql/Expression) — otherwise predicates inside
-				// generic helpers, MergeInto subqueries and EF.Core query filters survive into SQL
-				// generation untranslated and produce `WHERE NULL`.
-				if (node.Type == typeof(bool))
-				{
-					var translatedPredicate = ConvertPredicateMethod(node);
-					if (!IsSame(translatedPredicate, node))
-						return Visit(translatedPredicate);
-				}
+				// Predicate translation for boolean method calls. TryConvertPredicate gives a
+				// user-registered MemberTranslator (issue #5347) the first shot — so a custom
+				// Contains/Equals/etc. wins over the built-in predicate path — then falls back to
+				// the built-in translation. Must run in every build purpose that reaches this branch
+				// (not just Sql/Expression) or predicates inside generic helpers, MergeInto
+				// subqueries and EF.Core query filters survive untranslated and produce `WHERE NULL`.
+				// Gated on `node.Type == typeof(bool)` so it doesn't pre-empt the
+				// ConvertSingleExpression wrapper-unwrap (e.g. `Sql.ConvertTo<string>.From(...)`) in
+				// the IsSqlOrExpression block below.
+				if (node.Type == typeof(bool) && TryConvertPredicate(node, out var translatedPredicate))
+					return Visit(translatedPredicate);
 
 				if (HandleSubquery(node, out var translated))
 					return Visit(translated);
@@ -902,12 +892,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (HandleStringFormat(node, out var translatedFormat))
 					return Visit(translatedFormat);
 
-				if (node.Type == typeof(bool))
-				{
-					var translatedPredicate = ConvertPredicateMethod(node);
-					if (!IsSame(translatedPredicate, node))
-						return Visit(translatedPredicate);
-				}
+				if (node.Type == typeof(bool) && TryConvertPredicate(node, out var translatedPredicate))
+					return Visit(translatedPredicate);
 			}
 
 			if (HandleSqlRelated(node, out var translatedSqlRelated))
@@ -3429,8 +3415,17 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		#endregion
 
-		Expression ConvertPredicateMethod(MethodCallExpression node)
+		bool TryConvertPredicate(MethodCallExpression node, out Expression result)
 		{
+			// Give a user-registered MemberTranslator the first shot (issue #5347) so a custom
+			// translation (e.g. Contains on a string <-> jsonb column) wins over the built-in
+			// predicate translation below.
+			if (BuildContext != null && TranslateMember(BuildContext, node, out var translatedMember))
+			{
+				result = translatedMember;
+				return true;
+			}
+
 			ISqlExpression? IsCaseSensitive(MethodCallExpression mc)
 			{
 				if (mc.Arguments.Count <= 1)
@@ -3468,7 +3463,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			ISqlPredicate? predicate = null;
 
 			if (node is { Method.Name: "Equals", Object: { }, Arguments.Count: 1 })
-				return ConvertCompareExpression(ExpressionType.Equal, node.Object, node.Arguments[0]);
+			{
+				result = ConvertCompareExpression(ExpressionType.Equal, node.Object, node.Arguments[0]);
+				return !IsSame(result, node);
+			}
 
 			using (UsingBuildFlags((_buildFlags | BuildFlags.ForKeys) & ~BuildFlags.ForMemberRoot))
 			{
@@ -3542,10 +3540,12 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (predicate != null)
 			{
 				var condition = new SqlSearchCondition(false).Add(predicate);
-				return CreatePlaceholder(condition, node);
+				result = CreatePlaceholder(condition, node);
+				return true;
 			}
 
-			return node;
+			result = node;
+			return false;
 		}
 
 		public TExpression UpdateNesting<TExpression>(TExpression expression)
