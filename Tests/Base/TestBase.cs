@@ -161,8 +161,19 @@ namespace Tests
 
 			// Under parallel execution, wait until this provider's database has been created
 			// (CreateDatabase runs off-lane and signals readiness). Serial / filtered runs skip this.
-			if (ParallelExecutionEnabled && provider != null && !NUnitUtils.IsCreateDatabase(test))
-				DatabaseReadyGate(provider).Wait(TimeSpan.FromMinutes(2));
+			if (ParallelExecutionEnabled && provider != null)
+			{
+				var isCreateDb = NUnitUtils.IsCreateDatabase(test);
+
+				if (isCreateDb)
+					ParallelDiag.Log($"createdb-start provider={provider} test={test.Name}");
+				else
+				{
+					var sw       = System.Diagnostics.Stopwatch.StartNew();
+					var signaled = DatabaseReadyGate(provider).Wait(TimeSpan.FromMinutes(2));
+					ParallelDiag.Log($"latch provider={provider} test={test.Name} signaled={signaled} waitedMs={sw.ElapsedMilliseconds}");
+				}
+			}
 
 			// SequentialAccess-enabled provider setup
 			if (provider?.IsAnyOf(TestProvName.AllSqlServerSequentialAccess) == true)
@@ -180,7 +191,11 @@ namespace Tests
 			// release any tests waiting on this provider's database: signalled after CreateDatabase
 			// runs (here, not inside the try, so a failed CreateDatabase still unblocks waiters)
 			if (provider != null && NUnitUtils.IsCreateDatabase(test))
+			{
+				var r = TestContext.CurrentContext.Result;
+				ParallelDiag.Log($"createdb-end provider={provider} test={test.Name} outcome={r.Outcome.Status} fails={r.FailCount}");
 				MarkDatabaseReady(provider);
+			}
 
 			try
 			{

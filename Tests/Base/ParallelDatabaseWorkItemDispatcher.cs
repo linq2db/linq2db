@@ -80,6 +80,7 @@ namespace Tests
 			// before testing the None flag), yet the suite still carries the None scope.
 			if (IsNonParallel(work))
 			{
+				ParallelDiag.Log($"dispatch->exclusive test={work.Test.Name}");
 				_exclusiveLane.Enqueue(work);
 				return;
 			}
@@ -106,6 +107,9 @@ namespace Tests
 
 			// Provider-less leaf, CreateDatabase, Direct / SingleThreaded content: run on the
 			// calling thread under the read gate so it is excluded by the exclusive lane.
+			if (context != null && NUnitUtils.IsCreateDatabase(work.Test))
+				ParallelDiag.Log($"dispatch->rungated CREATEDB provider={context} test={work.Test.Name}");
+
 			RunGated(work);
 		}
 
@@ -219,6 +223,10 @@ namespace Tests
 
 					_gateHeld = true;
 
+					var _diagSw = _exclusive ? System.Diagnostics.Stopwatch.StartNew() : null;
+					if (_exclusive)
+						ParallelDiag.Log($"exclusive-writelock-acquired test={work.Test.Name}");
+
 					try
 					{
 						// WorkItem.Execute() runs the item synchronously to completion and
@@ -228,6 +236,9 @@ namespace Tests
 					}
 					finally
 					{
+						if (_diagSw != null)
+							ParallelDiag.Log($"exclusive-writelock-released test={work.Test.Name} heldMs={_diagSw.ElapsedMilliseconds}");
+
 						_gateHeld = false;
 
 						if (_exclusive)

@@ -219,6 +219,8 @@ public class TestsInitialization
 	[OneTimeTearDown]
 	public void TestAssemblyTeardown()
 	{
+		ParallelDiag.Dump();
+
 		if (_doMetrics)
 		{
 			var str = ActivityStatistics.GetReport();
