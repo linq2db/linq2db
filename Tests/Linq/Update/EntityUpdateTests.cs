@@ -126,8 +126,9 @@ namespace Tests.xUpdate
 			table.Single().Name.ShouldBe("async");
 		}
 
+		// YDB excluded: it rejects keyless tables outright (CreateLocalTable fails before the Update under test runs).
 		[Test]
-		public void NoPrimaryKey_Throws([DataSources] string context)
+		public void NoPrimaryKey_Throws([DataSources(TestProvName.AllYdb)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(new[] { new EntityRowNoPk { Id = 1, Name = "x" } });

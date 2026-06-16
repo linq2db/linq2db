@@ -10,7 +10,7 @@ namespace Tests.UserTests
 	public class Issue0082Tests : TestBase
 	{
 		[Test]
-		public void Test1([DataSources(TestProvName.AllClickHouse, ProviderName.Ydb)] string context)
+		public void Test1([DataSources(TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
 		{
 			using var db = GetDataContext(context);
 			var resultQuery =
