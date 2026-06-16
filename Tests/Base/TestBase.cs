@@ -45,12 +45,6 @@ namespace Tests
 		// waiters don't hang).
 		public static void MarkDatabaseReady(string provider) => DatabaseReadyGate(provider).Set();
 
-		// Bounded wait for a provider's CreateDatabase to finish. Used by OnBeforeTest and, for
-		// [NonParallelizable] provider tests, by the exclusive lane *before* it takes the write lock:
-		// waiting under the write lock would block CreateDatabase (which needs the read lock) until
-		// this times out, running the test against an unseeded database.
-		internal static void AwaitDatabaseReady(string provider) => DatabaseReadyGate(provider).Wait(TimeSpan.FromMinutes(2));
-
 		static TestBase()
 		{
 			AppDomain.CurrentDomain.UnhandledException += CurrentDomainOnUnhandledException;
@@ -168,7 +162,7 @@ namespace Tests
 			// Under parallel execution, wait until this provider's database has been created
 			// (CreateDatabase runs off-lane and signals readiness). Serial / filtered runs skip this.
 			if (ParallelExecutionEnabled && provider != null && !NUnitUtils.IsCreateDatabase(test))
-				AwaitDatabaseReady(provider);
+				DatabaseReadyGate(provider).Wait(TimeSpan.FromMinutes(2));
 
 			// SequentialAccess-enabled provider setup
 			if (provider?.IsAnyOf(TestProvName.AllSqlServerSequentialAccess) == true)
