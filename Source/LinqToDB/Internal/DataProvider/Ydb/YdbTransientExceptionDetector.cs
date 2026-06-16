@@ -104,7 +104,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				// using its own backoff strategy.
 				// (We use string names of enum members to avoid direct dependency on YDB SDK enums.)
 				return isTransient || code is
-					"BadSession" or "SessionBusy" or
+					"BadSession" or "SessionBusy" or "SessionExpired" or
 					"Aborted" or "Undetermined" or
 					"Unavailable" or "ClientTransportUnknown" or "ClientTransportUnavailable" or
 					"Overloaded" or "ClientTransportResourceExhausted";

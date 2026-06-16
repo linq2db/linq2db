@@ -146,6 +146,8 @@ Manifest:
 
 After this returns, every pass reads the cache from disk via `Read` / `Grep` and skips its own initial `diff-reader.ps1` call — record this expectation in each pass's briefing as **"diff cache pre-populated at `writeDir`; do not call diff-reader.ps1 unless a needed file is missing"**.
 
+**Include the briefings' supporting-context files in the prep manifest.** The `files` list must cover not just the files each pass will review, but every changed file the pass briefings name as supporting context — and, when the PR adds query-level API markers or options, their predictable public-surface companions (`LinqExtensions/*.cs`, `Internal/Reflection/Methods.cs`, options / `TranslationModifier`-style types). They are cheap to cache up front; discovering mid-review that one is missing costs a second manifest + `diff-reader.ps1` round-trip (PR #5450 review, 2026-06-12).
+
 For single-pass runs (count ≤ 5), skip this step — the single `code-reviewer` populates the cache itself per the agent's existing flow.
 
 ### 6. Spawn the subagents in parallel

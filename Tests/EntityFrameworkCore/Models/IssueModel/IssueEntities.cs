@@ -462,6 +462,36 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 
 	#endregion
 
+	#region Issue 5585
+
+	public abstract class Issue5585CustomerBase
+	{
+		public int Id { get; set; }
+		public ICollection<Issue5585CustomerShare> CustomerShares { get; set; } = null!;
+	}
+
+	public sealed class Issue5585Customer : Issue5585CustomerBase
+	{
+		public string Name { get; set; } = null!;
+	}
+
+	public sealed class Issue5585CustomerShare
+	{
+		public int Id { get; set; }
+		public int CustomerId { get; set; }
+		public Issue5585Customer Customer { get; set; } = null!;
+		public ICollection<Issue5585User> Users { get; set; } = null!;
+	}
+
+	public sealed class Issue5585User
+	{
+		public int Id { get; set; }
+		public string Email { get; set; } = null!;
+		public ICollection<Issue5585CustomerShare> CustomerShares { get; set; } = null!;
+	}
+
+	#endregion
+
 	#region Issue 5388
 
 	public class Issue5388Task

@@ -45,6 +45,7 @@ Those pipelines used to run tests only for specific databases manually by team m
 - `/azp run test-sqlserver-2019` - SQL Server 2019 tests
 - `/azp run test-sqlserver-2022` - SQL Server 2022 tests
 - `/azp run test-sybase` - SAP/SYBASE ASE tests
+- `/azp run test-ydb` - YDB tests
 - `/azp run test-metrics` - SQL Server 2022 tests with metrics
 
 ## Test Matrix
@@ -121,6 +122,7 @@ Legend:
 |ClickHouse (latest)<br>[Octonica.ClickHouseClient](https://www.nuget.org/packages/Octonica.ClickHouseClient/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |ClickHouse (latest)<br>[ClickHouse.Driver](https://www.nuget.org/packages/ClickHouse.Driver/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |ClickHouse (latest)<br>[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|YDB (latest)<br>[Ydb.Sdk](https://www.nuget.org/packages/Ydb.Sdk/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 
 ### Notes
 
@@ -220,3 +222,4 @@ Legend:
 |`ProviderName.ClickHouseOctonica`|ClickHouse using `Octonica.ClickHouseClient` provider||
 |`ProviderName.ClickHouseDriver`|ClickHouse using `ClickHouse.Driver` provider||
 |`ProviderName.ClickHouseMySql`|ClickHouse using `MySqlConnector` provider||
+|`ProviderName.Ydb`|YDB using `Ydb.Sdk` provider||

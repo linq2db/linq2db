@@ -1671,14 +1671,14 @@ namespace LinqToDB.Internal.SqlQuery
 		}
 
 		/// <summary>
-		/// Returns <c>true</c> when <paramref name="expr"/> is already a lower-cased string, i.e. the result of a
+		/// Returns <see langword="true"/> when <paramref name="expr"/> is already a lower-cased string, i.e. the result of a
 		/// <see cref="PseudoFunctions.TO_LOWER"/> call. Looks through case-preserving wrappers (nullability
 		/// annotations and string casts) that a translator may insert around the conversion.
 		/// </summary>
 		internal static bool IsLowerString(ISqlExpression expr) => IsCaseConversion(expr, PseudoFunctions.TO_LOWER);
 
 		/// <summary>
-		/// Returns <c>true</c> when <paramref name="expr"/> is already an upper-cased string, i.e. the result of a
+		/// Returns <see langword="true"/> when <paramref name="expr"/> is already an upper-cased string, i.e. the result of a
 		/// <see cref="PseudoFunctions.TO_UPPER"/> call. Looks through case-preserving wrappers (nullability
 		/// annotations and string casts) that a translator may insert around the conversion.
 		/// </summary>
@@ -1699,7 +1699,7 @@ namespace LinqToDB.Internal.SqlQuery
 						expr = cast.Expression;
 						break;
 					case SqlFunction { Parameters.Length: 1 } func:
-						return func.Name == caseFunctionName;
+						return string.Equals(func.Name, caseFunctionName, StringComparison.Ordinal);
 					default:
 						return false;
 				}

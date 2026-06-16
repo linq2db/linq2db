@@ -884,6 +884,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5193")]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void IncorrectNesting_Workaround([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
