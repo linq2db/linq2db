@@ -209,6 +209,17 @@ namespace LinqToDB
 		}
 
 		/// <summary>
+		/// When <see langword="true"/>, an implicit eager load (a collection projected in a <c>Select</c> without an
+		/// explicit <c>LoadWith</c>/<c>ThenLoad</c> or <c>AsEagerLoad*</c> marker) throws <see cref="LinqToDBException"/>
+		/// at build time. Default: <see langword="false"/>.
+		/// </summary>
+		[Pure]
+		public static LinqOptions WithDisableImplicitEagerLoading(this LinqOptions options, bool disableImplicitEagerLoading)
+		{
+			return options with { DisableImplicitEagerLoading = disableImplicitEagerLoading };
+		}
+
+		/// <summary>
 		/// Used to disable LINQ expressions caching for queries.
 		/// This cache reduces time, required for query parsing but have several side-effects:
 		/// <para />
@@ -481,6 +492,17 @@ namespace LinqToDB
 		public static DataOptions UseGuardGrouping(this DataOptions options, bool guardGrouping)
 		{
 			return options.WithOptions<LinqOptions>(o => o with { GuardGrouping = guardGrouping });
+		}
+
+		/// <summary>
+		/// When <see langword="true"/>, an implicit eager load (a collection projected in a <c>Select</c> without an
+		/// explicit <c>LoadWith</c>/<c>ThenLoad</c> or <c>AsEagerLoad*</c> marker) throws <see cref="LinqToDBException"/>
+		/// at build time. Default: <see langword="false"/>.
+		/// </summary>
+		[Pure]
+		public static DataOptions UseDisableImplicitEagerLoading(this DataOptions options, bool disableImplicitEagerLoading)
+		{
+			return options.WithOptions<LinqOptions>(o => o with { DisableImplicitEagerLoading = disableImplicitEagerLoading });
 		}
 
 		/// <summary>

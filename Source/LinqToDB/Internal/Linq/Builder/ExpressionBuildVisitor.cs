@@ -2421,6 +2421,13 @@ namespace LinqToDB.Internal.Linq.Builder
 				};
 			}
 
+			if (node.MarkerType == MarkerType.ExplicitEagerLoad)
+			{
+				// Preserve the marker around the built eager-load (and visit the inner so the collection
+				// reaches HandleSubquery) — ImplicitEagerLoadGuardVisitor reads it during eager-load processing.
+				return node.Update(Visit(node.InnerExpression));
+			}
+
 			// MarkerType.AggregationFallback or MarkerType.None
 			return node;
 		}

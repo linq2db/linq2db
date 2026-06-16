@@ -168,6 +168,12 @@ namespace LinqToDB
 	/// operations when no per-association strategy is set via <c>WithEagerLoadingStrategy</c>.
 	/// Default value: <see cref="EagerLoadingStrategy.Default"/>.
 	/// </param>
+	/// <param name="DisableImplicitEagerLoading">
+	/// When <see langword="true"/>, a query that triggers an implicit eager load — a collection
+	/// projected in a <c>Select</c> without an explicit <c>LoadWith</c>/<c>ThenLoad</c> or an
+	/// <c>AsEagerLoad*</c> marker — throws <see cref="LinqToDBException"/> at build time.
+	/// Default value: <see langword="false"/>.
+	/// </param>
 	public sealed record LinqOptions
 	(
 		// TODO: Remove in v7
@@ -192,7 +198,8 @@ namespace LinqToDB
 		bool                  EnableContextSchemaEdit        = false,
 		bool                  PreferExistsForScalar          = default,
 		UpsertEmulationPolicy UpsertEmulationPolicy          = UpsertEmulationPolicy.Allow,
-		EagerLoadingStrategy  DefaultEagerLoadingStrategy    = EagerLoadingStrategy.Default
+		EagerLoadingStrategy  DefaultEagerLoadingStrategy    = EagerLoadingStrategy.Default,
+		bool                  DisableImplicitEagerLoading    = false
 		// If you add another parameter here, don't forget to update
 		// LinqOptions copy constructor and IConfigurationID.ConfigurationID.
 	)
@@ -218,6 +225,7 @@ namespace LinqToDB
 			PreferExistsForScalar   = original.PreferExistsForScalar;
 			UpsertEmulationPolicy   = original.UpsertEmulationPolicy;
 			DefaultEagerLoadingStrategy = original.DefaultEagerLoadingStrategy;
+			DisableImplicitEagerLoading = original.DisableImplicitEagerLoading;
 		}
 
 		/// <summary>
@@ -280,7 +288,7 @@ namespace LinqToDB
 				out concatenateOrderBy, out optimizeJoins, out compareNulls, out guardGrouping, out disableQueryCache,
 				out cacheSlidingExpiration, out preferApply, out keepDistinctOrdered, out parameterizeTakeSkip,
 				out enableContextSchemaEdit, out preferExistsForScalar,
-				out _, out _);
+				out _, out _, out _);
 		}
 
 		int? _configurationID;
@@ -306,6 +314,7 @@ namespace LinqToDB
 						.Add(PreferExistsForScalar)
 						.Add((int)UpsertEmulationPolicy)
 						.Add((int)DefaultEagerLoadingStrategy)
+						.Add(DisableImplicitEagerLoading)
 						.CreateID();
 				}
 

@@ -169,6 +169,13 @@ namespace LinqToDB.Internal.Linq.Builder
 		}
 
 		/// <summary>
+		/// Set while eager-load processing recursively builds a preamble sub-query, so the nested
+		/// <see cref="FinalizeProjection{T}"/> calls skip the <c>DisableImplicitEagerLoading</c> guard —
+		/// those loads were already validated on the top-level query.
+		/// </summary>
+		bool _inEagerLoadProcessing;
+
+		/// <summary>
 		/// Finalizes the query projection: resolves constructors, processes eager loads, and applies the
 		/// strategy-determined finalizer (e.g. <c>ToColumns</c> for Default/KeyedQuery, identity for CteUnion).
 		/// </summary>
@@ -183,15 +190,36 @@ namespace LinqToDB.Internal.Linq.Builder
 				return expression;
 
 			var postProcessed  = FinalizeConstructors(context, expression);
-			var correctedEager = CompleteEagerLoadingExpressions(postProcessed, context, queryParameter, ref preambles, previousKeys, out var finalizer);
 
-			if (SequenceHelper.HasError(correctedEager))
-				return correctedEager;
+			if (DataContext.Options.LinqOptions.DisableImplicitEagerLoading && !_inEagerLoadProcessing && context.TranslationModifier.EagerLoadingStrategy == null)
+			{
+				// Strict mode: reject implicit collection eager loads (those not explicitly marked via LoadWith/ThenLoad).
+				// A per-query AsEagerLoad* marker sets a strategy on the context modifier and opts the whole query in.
+				// Guarded only for the top-level user query — the recursive preamble sub-query builds that
+				// eager-load processing performs (below) re-build already-authorized loads (e.g. a LoadWith
+				// load-function's nested collection) and would otherwise re-trip the guard without marker context.
+				new ImplicitEagerLoadGuardVisitor().Visit(postProcessed);
+			}
 
-			if (!ExpressionEqualityComparer.Instance.Equals(correctedEager, postProcessed))
-				postProcessed = FinalizeConstructors(context, correctedEager);
+			var savedInEagerLoadProcessing = _inEagerLoadProcessing;
+			_inEagerLoadProcessing = true;
 
-			return finalizer(postProcessed);
+			try
+			{
+				var correctedEager = CompleteEagerLoadingExpressions(postProcessed, context, queryParameter, ref preambles, previousKeys, out var finalizer);
+
+				if (SequenceHelper.HasError(correctedEager))
+					return correctedEager;
+
+				if (!ExpressionEqualityComparer.Instance.Equals(correctedEager, postProcessed))
+					postProcessed = FinalizeConstructors(context, correctedEager);
+
+				return finalizer(postProcessed);
+			}
+			finally
+			{
+				_inEagerLoadProcessing = savedInEagerLoadProcessing;
+			}
 		}
 
 		public sealed class ParentInfo

@@ -68,6 +68,10 @@
 							NOTE! By disabling this guard you accept Eager Loading for grouping query.
 							""";
 
+		public const string Error_ImplicitEagerLoadingDisabled =
+			"Implicit eager loading is disabled (LinqOptions.DisableImplicitEagerLoading = true): a collection was projected without an explicit eager-load request. "
+			+ "Use LoadWith()/ThenLoad(), or AsEagerLoadUnionQuery()/AsEagerLoadKeyedQuery()/AsEagerLoadSeparateQuery(), to request it explicitly — or set DisableImplicitEagerLoading = false to allow implicit eager loading.";
+
 		public static class Oracle
 		{
 			public const string Error_ColumnSubqueryShouldNotContainParentIsNotNull = "Column expression should not contain parent's IS NOT NULL condition.";
