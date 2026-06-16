@@ -1088,6 +1088,7 @@ namespace Tests.Linq
 			public Child? Child    { get; set; }
 		}
 
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
 		[Test, NonParallelizable]
 		public void TestConditionalProjectionOptimization(
 			[IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context,

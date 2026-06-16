@@ -126,6 +126,7 @@ namespace Tests.Linq
 			public bool IsSoftDeleteFilterEnabled { get; set; } = true;
 		}
 
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
 		[Test, NonParallelizable]
 		public void EntityFilterTests([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
@@ -180,6 +181,7 @@ namespace Tests.Linq
 			Assert.That(currentMissCount, Is.EqualTo(query.GetCacheMissCount()), () => "Caching is wrong.");
 		}
 
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
 		[Test, NonParallelizable]
 		public void EntityFilterTestsCache([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values(1, 2, 3)] int iteration, [Values] bool filtered)
 		{
@@ -210,6 +212,7 @@ namespace Tests.Linq
 				}
 			}
 
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
 		[Test, NonParallelizable]
 		public void AssociationToFilteredEntity([IncludeDataSources(false, ProviderName.SQLiteMS, TestProvName.AllClickHouse)] string context)
 		{
@@ -237,6 +240,7 @@ namespace Tests.Linq
 			}
 		}
 
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
 		[Test, NonParallelizable]
 		public void AssociationToFilteredEntityFunc([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
@@ -280,6 +284,7 @@ namespace Tests.Linq
 			return query;
 		}
 
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
 		[Test, NonParallelizable]
 		public void AssociationToFilteredEntityMethod([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{

@@ -44,6 +44,7 @@ namespace Tests.Linq
 			CheckTakeSkipParams(dc, false, additional);
 		}
 
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
 		[Test, NonParallelizable]
 		public void Take1([DataSources] string context, [Values] bool withParameters)
 		{
@@ -65,6 +66,7 @@ namespace Tests.Linq
 			Assert.That(db.Child.GetCacheMissCount(), Is.EqualTo(currentCacheMissCount));
 		}
 
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
 		[Test, NonParallelizable]
 		public async Task Take1Async([DataSources] string context, [Values] bool withParameters)
 		{
@@ -220,6 +222,7 @@ namespace Tests.Linq
 			CheckTakeGlobalParams(db);
 		}
 
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
 		[Test, NonParallelizable]
 		public void Skip1([DataSources] string context, [Values] bool withParameters)
 		{
@@ -646,6 +649,7 @@ namespace Tests.Linq
 			CheckTakeSkipParameterized(db);
 		}
 
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
 		[Test, NonParallelizable]
 		public void ElementAtDefault5([DataSources] string context, [Values(2,3)] int idx, [Values] bool withParameters)
 		{
@@ -1112,6 +1116,7 @@ namespace Tests.Linq
 			}
 		}
 
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
 		[Test, NonParallelizable]
 		public void MultipleSkip2([DataSources] string context, [Values] bool withParameters)
 		{
@@ -1345,6 +1350,7 @@ namespace Tests.Linq
 			CheckTakeGlobalParams(db);
 		}
 
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
 		[Test, NonParallelizable]
 		public void SkipTakeCaching([DataSources] string context, [Values(1, 2)] int skip, [Values(1, 2)] int take)
 		{

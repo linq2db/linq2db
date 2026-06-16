@@ -1008,6 +1008,7 @@ namespace Tests.xUpdate
 			Assert.That(db.LastQuery!.Count(_ => _ == GetParameterToken(context)), Is.EqualTo(6));
 		}
 
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
 		[Test, NonParallelizable]
 		public void MergeSubquery([MergeDataContextSource(false, TestProvName.AllOracle, TestProvName.AllFirebird, TestProvName.AllSybase)] string context, [Values(1, 2)] int iteration)
 		{

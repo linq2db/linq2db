@@ -112,6 +112,7 @@ namespace Tests.UserTests
 				GetParents(db, values2));
 		}
 
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
 		[Test, NonParallelizable]
 		public void TestCache([DataSources] string context)
 		{

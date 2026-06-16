@@ -227,6 +227,7 @@ namespace Tests.Linq
 			Assert.That(projection, Is.EqualTo(expected));
 		}
 
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
 		[Test, NonParallelizable]
 		public void TestParameters([DataSources(ProviderName.DB2, TestProvName.AllSapHana)] string context, [Values(1, 2)] int iteration, [Values(14, 15)] int endId)
 		{
@@ -490,6 +491,7 @@ namespace Tests.Linq
 			public string Value { get; set; } = default!;
 		}
 
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
 		[Test, NonParallelizable]
 		public void TestSplitStringParametrized(
 			[IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)]
@@ -518,6 +520,7 @@ namespace Tests.Linq
 			query.GetSelectQuery().HasQueryParameter().ShouldBeTrue();
 		}
 
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
 		[Test, NonParallelizable]
 		public void TestSplitStringParametrizedExplicitParameter(
 			[IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)]

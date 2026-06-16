@@ -11,6 +11,7 @@ namespace Tests.xUpdate
 	// tests for empty enumerable source
 	public partial class MergeTests
 	{
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
 		[Test, NonParallelizable]
 		public void EnumerableSourceQueryCaching([MergeDataContextSource] string context)
 		{

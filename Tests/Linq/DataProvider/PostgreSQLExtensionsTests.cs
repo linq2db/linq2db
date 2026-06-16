@@ -52,6 +52,7 @@ namespace Tests.DataProvider
 			}
 		}
 
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
 		[Test, NonParallelizable]
 		public void Unnest([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context, [Values(1, 2)] int iteration)
 		{

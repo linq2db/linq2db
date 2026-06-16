@@ -116,6 +116,7 @@ namespace Tests.Linq
 			sql.ShouldNotContain("'Data 7778'");
 		}
 
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
 		[Test, NonParallelizable]
 		public void AsQueryable_Parameterize_CacheStable_AcrossDataChanges(
 			[DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
@@ -141,6 +142,7 @@ namespace Tests.Linq
 			secondList[1].Id.ShouldBe(101);
 		}
 
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
 		[Test, NonParallelizable]
 		public void AsQueryable_Parameterize_CacheHit_AcrossIterations(
 			[DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context,
@@ -161,6 +163,7 @@ namespace Tests.Linq
 				query.GetCacheMissCount().ShouldBe(cacheMiss);
 		}
 
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
 		[Test, NonParallelizable]
 		public void AsQueryable_Inline_CacheHit_AcrossIterations(
 			[DataSources(TestProvName.AllAccess)] string context,
@@ -182,6 +185,7 @@ namespace Tests.Linq
 				query.GetCacheMissCount().ShouldBe(cacheMiss);
 		}
 
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
 		[Test, NonParallelizable]
 		public void AsQueryable_Parameterize_ExceptId_CacheHit_AcrossIterations(
 			[DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context,
@@ -265,6 +269,7 @@ namespace Tests.Linq
 			act.ShouldThrow<LinqToDBException>().Message.ShouldContain("AsQueryable configure");
 		}
 
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
 		[Test, NonParallelizable]
 		public void AsQueryable_JoinPerson_CacheHit_AcrossIterations(
 			[DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context,
@@ -288,6 +293,7 @@ namespace Tests.Linq
 				query.GetCacheMissCount().ShouldBe(cacheMiss);
 		}
 
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
 		[Test, NonParallelizable]
 		public void AsQueryable_CrossApply_CacheHit_AcrossIterations(
 			[IncludeDataSources(
