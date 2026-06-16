@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Threading;
 
 using NUnit.Framework.Internal;
 
@@ -25,7 +26,7 @@ namespace Tests
 
 		// guards _baselines, _context and the baseline file writes against concurrent
 		// access when tests run in parallel across providers
-		static readonly object _sync = new object();
+		static readonly Lock _sync = new();
 
 		internal static void Write(string baselinesPath, string baseline, bool isRemote, string? providerSuffix)
 		{

@@ -20,7 +20,7 @@ namespace Tests
 		// is shared across concurrent cases, so a second case could otherwise observe a half-built model
 		// (null .Children -> NRE). A plain Monitor lock is re-entrant (unlike System.Threading.Lock), so
 		// same-thread cyclic calls re-enter freely while a concurrent case blocks until init completes.
-		readonly object _modelSync = new object();
+		readonly Lock _modelSync = new();
 
 		protected List<LinqDataTypes> GetTypes(string context)
 		{

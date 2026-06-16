@@ -64,6 +64,21 @@ namespace Tests
 		// the provider being executed.
 		public static void SetServerProvider(string? provider) => _serverProvider.Value = provider;
 
+		// Per-provider database-readiness gate. CreateDatabase signals it once a provider's schema
+		// exists; the provider's other tests wait on it under parallel execution. Kept here (the
+		// test-context infrastructure home) rather than as static state spread across TestBase.
+		private static readonly ConcurrentDictionary<string, ManualResetEventSlim> _databaseReady =
+			new ConcurrentDictionary<string, ManualResetEventSlim>(StringComparer.OrdinalIgnoreCase);
+
+		static ManualResetEventSlim DatabaseReadyGate(string provider)
+			=> _databaseReady.GetOrAdd(provider, static _ => new ManualResetEventSlim(false));
+
+		// Signalled by CreateDatabase (called even on failure so waiters don't hang).
+		public static void MarkDatabaseReady(string provider) => DatabaseReadyGate(provider).Set();
+
+		// Bounded wait for a provider's CreateDatabase to finish; returns false on timeout.
+		public static bool AwaitDatabaseReady(string provider) => DatabaseReadyGate(provider).Wait(TimeSpan.FromMinutes(2));
+
 		public static CustomTestContext Get()
 		{
 			if (CurrentTestId is { } id && _byTest.TryGetValue(id, out var current))
