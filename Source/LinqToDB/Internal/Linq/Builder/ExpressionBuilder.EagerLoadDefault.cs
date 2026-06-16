@@ -148,12 +148,12 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
 			{
-				return query.GetResultEnumerable(dataContext, expressions, preambles, preambles).ToList();
+				return query.GetResultEnumerable(dataContext, expressions, parameters, preambles).ToList();
 			}
 
 			public override async Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object[]? preambles, CancellationToken cancellationToken)
 			{
-				return await query.GetResultEnumerable(dataContext, expressions, preambles, preambles).ToListAsync(cancellationToken).ConfigureAwait(false);
+				return await query.GetResultEnumerable(dataContext, expressions, parameters, preambles).ToListAsync(cancellationToken).ConfigureAwait(false);
 			}
 
 			public override void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values)
@@ -171,7 +171,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
 			{
 				var result = new PreambleResult<TKey, T>();
-				foreach (var e in query.GetResultEnumerable(dataContext, expressions, preambles, preambles))
+				foreach (var e in query.GetResultEnumerable(dataContext, expressions, parameters, preambles))
 				{
 					result.Add(e.Key, e.Detail);
 				}
@@ -184,13 +184,15 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				var result = new PreambleResult<TKey, T>();
 
-				await using var enumerator = query.GetResultEnumerable(dataContext, expressions, preambles, preambles)
+				var enumerator = query.GetResultEnumerable(dataContext, expressions, parameters, preambles)
 					.GetAsyncEnumerator(cancellationToken);
-
-				while (await enumerator.MoveNextAsync().ConfigureAwait(false))
+				await using (enumerator.ConfigureAwait(false))
 				{
-					var e = enumerator.Current;
-					result.Add(e.Key, e.Detail);
+					while (await enumerator.MoveNextAsync().ConfigureAwait(false))
+					{
+						var e = enumerator.Current;
+						result.Add(e.Key, e.Detail);
+					}
 				}
 
 				return result;

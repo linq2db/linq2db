@@ -195,7 +195,7 @@ namespace Tests.Linq
 			var query = tCo
 				.LoadWith(c => c.Departments)
 				.OrderBy(c => c.Id)
-				.AsUnionQuery();
+				.AsEagerLoadUnionQuery();
 
 			var result = query.ToList();
 
@@ -238,7 +238,7 @@ namespace Tests.Linq
 			);
 
 			var result = query
-				.AsUnionQuery()
+				.AsEagerLoadUnionQuery()
 				.ToList();
 
 			var expected = companies
@@ -286,7 +286,7 @@ namespace Tests.Linq
 			);
 
 			var result = query
-				.AsUnionQuery()
+				.AsEagerLoadUnionQuery()
 				.ToList();
 
 			var expected = companies
@@ -337,7 +337,7 @@ namespace Tests.Linq
 			);
 
 			var result = query
-				.AsUnionQuery()
+				.AsEagerLoadUnionQuery()
 				.ToList();
 
 			var expected = rootDepts
@@ -389,7 +389,7 @@ namespace Tests.Linq
 			);
 
 			var result = query
-				.AsUnionQuery()
+				.AsEagerLoadUnionQuery()
 				.ToList();
 
 			var expected = companies
@@ -448,7 +448,7 @@ namespace Tests.Linq
 			);
 
 			var result = query
-				.AsUnionQuery()
+				.AsEagerLoadUnionQuery()
 				.ToList();
 
 			var expected = companies
@@ -503,7 +503,7 @@ namespace Tests.Linq
 			);
 
 			var result = query
-				.AsUnionQuery()
+				.AsEagerLoadUnionQuery()
 				.ToList();
 
 			var expected = companies
@@ -554,7 +554,7 @@ namespace Tests.Linq
 			).Take(2);
 
 			var result = query
-				.AsUnionQuery()
+				.AsEagerLoadUnionQuery()
 				.ToList();
 
 			var expected = companies
@@ -616,7 +616,7 @@ namespace Tests.Linq
 			);
 
 			var result = query
-				.AsUnionQuery()
+				.AsEagerLoadUnionQuery()
 				.ToList();
 
 			// CteUnion: single UNION ALL query; non-CTE providers fall back to KeyedQuery (buffer + 2 child queries)
@@ -691,7 +691,7 @@ namespace Tests.Linq
 			);
 
 			var result = query
-				.AsUnionQuery()
+				.AsEagerLoadUnionQuery()
 				.ToList();
 
 			var expected = companies
@@ -762,7 +762,7 @@ namespace Tests.Linq
 			);
 
 			var result = query
-				.AsUnionQuery()
+				.AsEagerLoadUnionQuery()
 				.ToList();
 
 			var expected = companies
@@ -829,7 +829,7 @@ namespace Tests.Linq
 			);
 
 			var result = query
-				.AsUnionQuery()
+				.AsEagerLoadUnionQuery()
 				.ToList();
 
 			var expected = companies
@@ -899,7 +899,7 @@ namespace Tests.Linq
 			);
 
 			var result = query
-				.AsUnionQuery()
+				.AsEagerLoadUnionQuery()
 				.ToList();
 
 			var expected = companies
@@ -962,7 +962,7 @@ namespace Tests.Linq
 							.ToList(),
 					}
 				)
-				.AsUnionQuery()
+				.AsEagerLoadUnionQuery()
 				.FirstOrDefault();
 
 			result.ShouldNotBeNull();
@@ -1016,7 +1016,7 @@ namespace Tests.Linq
 							.ToList(),
 					}
 				)
-				.AsUnionQuery()
+				.AsEagerLoadUnionQuery()
 				.FirstOrDefault();
 
 			result.ShouldNotBeNull();
@@ -1063,7 +1063,7 @@ namespace Tests.Linq
 							.OrderBy(c => c.Id).ToList(),
 					}
 				)
-				.AsUnionQuery()
+				.AsEagerLoadUnionQuery()
 				.FirstOrDefault();
 
 			result.ShouldNotBeNull();
@@ -1118,7 +1118,7 @@ namespace Tests.Linq
 			);
 
 			var result = query
-				.AsUnionQuery()
+				.AsEagerLoadUnionQuery()
 				.ToList();
 
 			result.Count.ShouldBe(0);
@@ -1161,7 +1161,7 @@ namespace Tests.Linq
 			);
 
 			var result = query
-				.AsUnionQuery()
+				.AsEagerLoadUnionQuery()
 				.ToList();
 
 			result.Count.ShouldBe(0);
@@ -1198,7 +1198,7 @@ namespace Tests.Linq
 							.ToList(),
 					}
 				)
-				.AsUnionQuery()
+				.AsEagerLoadUnionQuery()
 				.FirstOrDefault();
 
 			result.ShouldBeNull();
@@ -1208,7 +1208,7 @@ namespace Tests.Linq
 
 		#endregion
 
-		#region Global DefaultEagerLoadingStrategy — no AsUnionQuery() needed
+		#region Global DefaultEagerLoadingStrategy — no AsEagerLoadUnionQuery() needed
 
 		[Test]
 		public void Select_GlobalUnion_InlineCollection(
@@ -1218,7 +1218,7 @@ namespace Tests.Linq
 
 			using var db   = GetDataContext(context);
 
-			// Enable CteUnion globally — no AsUnionQuery() calls needed
+			// Enable CteUnion globally — no AsEagerLoadUnionQuery() calls needed
 			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.CteUnion });
 
 			var counter = new SelectQueryCounter();
@@ -1396,7 +1396,7 @@ namespace Tests.Linq
 
 			if (!context.IsRemote()) counter.Count = 0;
 
-			// No AsUnionQuery() — global strategy applies
+			// No AsEagerLoadUnionQuery() — global strategy applies
 			var query = tCo
 				.LoadWith(c => c.Departments)
 				.OrderBy(c => c.Id);
@@ -1492,7 +1492,7 @@ namespace Tests.Linq
 			);
 
 			var result = query
-				.AsUnionQuery()
+				.AsEagerLoadUnionQuery()
 				.ToList();
 
 			var expected = departments
@@ -1536,7 +1536,7 @@ namespace Tests.Linq
 			);
 
 			var result = query
-				.AsUnionQuery()
+				.AsEagerLoadUnionQuery()
 				.ToList();
 
 			var expected = departments
@@ -1582,7 +1582,7 @@ namespace Tests.Linq
 			);
 
 			var result = query
-				.AsUnionQuery()
+				.AsEagerLoadUnionQuery()
 				.ToList();
 
 			var expected = departments
@@ -1630,7 +1630,7 @@ namespace Tests.Linq
 			);
 
 			var result = query
-				.AsUnionQuery()
+				.AsEagerLoadUnionQuery()
 				.ToList();
 
 			var expected = departments
@@ -1675,7 +1675,7 @@ namespace Tests.Linq
 			);
 
 			var result = query
-				.AsUnionQuery()
+				.AsEagerLoadUnionQuery()
 				.ToList();
 
 			var expected = departments
@@ -1721,7 +1721,7 @@ namespace Tests.Linq
 			);
 
 			var result = query
-				.AsUnionQuery()
+				.AsEagerLoadUnionQuery()
 				.ToList();
 
 			var expected = departments
@@ -1776,7 +1776,7 @@ namespace Tests.Linq
 			var cacheMiss = query.GetCacheMissCount();
 
 			var result = query
-				.AsUnionQuery()
+				.AsEagerLoadUnionQuery()
 				.ToList();
 
 			var expected = companies
@@ -1842,7 +1842,7 @@ namespace Tests.Linq
 			var cacheMiss = query.GetCacheMissCount();
 
 			var result = query
-				.AsUnionQuery()
+				.AsEagerLoadUnionQuery()
 				.ToList();
 
 			var expected = companies
@@ -1913,7 +1913,7 @@ namespace Tests.Linq
 			var cacheMiss = query.GetCacheMissCount();
 
 			var result = query
-				.AsUnionQuery()
+				.AsEagerLoadUnionQuery()
 				.ToList();
 
 			var expected = companies
@@ -1944,10 +1944,10 @@ namespace Tests.Linq
 
 		#endregion
 
-		#region Root-level AsUnionQuery applies to all child collections
+		#region Root-level AsEagerLoadUnionQuery applies to all child collections
 
 		[Test]
-		public void RootAsUnionQuery_SingleChild(
+		public void RootAsEagerLoadUnionQuery_SingleChild(
 			[DataSources(true, TestProvName.AllAccess, TestProvName.AllFirebirdLess3)] string context)
 		{
 			var (companies, departments, _, _, _, _) = GenerateHierarchy();
@@ -1956,7 +1956,7 @@ namespace Tests.Linq
 			using var tCo  = db.CreateLocalTable(companies);
 			using var tDep = db.CreateLocalTable(departments);
 
-			// AsUnionQuery on root — no AsUnionQuery on child collection
+			// AsEagerLoadUnionQuery on root — no AsEagerLoadUnionQuery on child collection
 			var query =
 				from c in tCo
 				orderby c.Id
@@ -1971,7 +1971,7 @@ namespace Tests.Linq
 				};
 
 			var result = query
-				.AsUnionQuery()
+				.AsEagerLoadUnionQuery()
 				.ToList();
 
 			var expected = companies
@@ -1991,7 +1991,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void RootAsUnionQuery_MultipleChildren(
+		public void RootAsEagerLoadUnionQuery_MultipleChildren(
 			[DataSources(true, TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllFirebirdLess3)] string context)
 		{
 			var (companies, departments, employees, _, _, _) = GenerateHierarchy();
@@ -2001,7 +2001,7 @@ namespace Tests.Linq
 			using var tDep = db.CreateLocalTable(departments);
 			using var tEmp = db.CreateLocalTable(employees);
 
-			// AsUnionQuery on root — strategy propagates to both child collections
+			// AsEagerLoadUnionQuery on root — strategy propagates to both child collections
 			var query =
 				from c in tCo
 				orderby c.Id
@@ -2020,7 +2020,7 @@ namespace Tests.Linq
 				};
 
 			var result = query
-				.AsUnionQuery()
+				.AsEagerLoadUnionQuery()
 				.ToList();
 
 			var expected = companies
@@ -2044,7 +2044,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void RootAsUnionQuery_NestedTwoLevel(
+		public void RootAsEagerLoadUnionQuery_NestedTwoLevel(
 			[DataSources(true, TestProvName.AllFirebirdLess3)] string context)
 		{
 			var (companies, departments, employees, _, _, _) = GenerateHierarchy();
@@ -2054,7 +2054,7 @@ namespace Tests.Linq
 			using var tDep = db.CreateLocalTable(departments);
 			using var tEmp = db.CreateLocalTable(employees);
 
-			// AsUnionQuery on root — propagates through nested levels
+			// AsEagerLoadUnionQuery on root — propagates through nested levels
 			var query =
 				from c in tCo
 				orderby c.Id
@@ -2078,7 +2078,7 @@ namespace Tests.Linq
 				};
 
 			var result = query
-				.AsUnionQuery()
+				.AsEagerLoadUnionQuery()
 				.ToList();
 
 			var expected = companies
@@ -2126,7 +2126,7 @@ namespace Tests.Linq
 				.OrderBy(c => c.Id);
 
 			var result = query
-				.AsUnionQuery()
+				.AsEagerLoadUnionQuery()
 				.ToList();
 
 			result.Count.ShouldBe(companies.Length);
@@ -2161,7 +2161,7 @@ namespace Tests.Linq
 				.OrderBy(c => c.Id);
 
 			var result = query
-				.AsUnionQuery()
+				.AsEagerLoadUnionQuery()
 				.ToList();
 
 			result.Count.ShouldBe(companies.Length);
@@ -2212,7 +2212,7 @@ namespace Tests.Linq
 			);
 
 			var result = query
-				.AsUnionQuery()
+				.AsEagerLoadUnionQuery()
 				.ToList();
 
 			var expected = companies
@@ -2265,7 +2265,7 @@ namespace Tests.Linq
 			);
 
 			var result = query
-				.AsUnionQuery()
+				.AsEagerLoadUnionQuery()
 				.ToList();
 
 			var expected = companies
@@ -2294,7 +2294,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Association_Union_RootAsUnionQueryWithNavigation([DataSources(true, TestProvName.AllAccess, TestProvName.AllFirebirdLess3)] string context)
+		public void Association_Union_RootAsEagerLoadUnionQueryWithNavigation([DataSources(true, TestProvName.AllAccess, TestProvName.AllFirebirdLess3)] string context)
 		{
 			var (companies, departments, employees, _, _, _) = GenerateHierarchy();
 
@@ -2303,7 +2303,7 @@ namespace Tests.Linq
 			using var tDep = db.CreateLocalTable(departments);
 			using var tEmp = db.CreateLocalTable(employees);
 
-			// Root-level AsUnionQuery with association navigation properties (no per-child AsUnionQuery)
+			// Root-level AsEagerLoadUnionQuery with association navigation properties (no per-child AsEagerLoadUnionQuery)
 			var query =
 				from c in tCo
 				orderby c.Id
@@ -2325,7 +2325,7 @@ namespace Tests.Linq
 				};
 
 			var result = query
-				.AsUnionQuery()
+				.AsEagerLoadUnionQuery()
 				.ToList();
 
 			var expected = companies
@@ -2395,7 +2395,7 @@ namespace Tests.Linq
 
 			var query  = query1
 				.Concat(query2)
-				.AsUnionQuery();
+				.AsEagerLoadUnionQuery();
 
 			var result = query.ToList();
 
@@ -2459,7 +2459,7 @@ namespace Tests.Linq
 
 			var query  = query1
 				.Concat(query2)
-				.AsUnionQuery();
+				.AsEagerLoadUnionQuery();
 
 			var result = query.ToList();
 
@@ -2534,7 +2534,7 @@ namespace Tests.Linq
 
 			var query  = query1.UnionAll(query2);
 			var result = query
-				.AsUnionQuery()
+				.AsEagerLoadUnionQuery()
 				.ToList();
 
 			var expected = companies
@@ -2621,7 +2621,7 @@ namespace Tests.Linq
 			);
 
 			var result = query
-				.AsUnionQuery()
+				.AsEagerLoadUnionQuery()
 				.ToList();
 
 			var expected = companies
@@ -2691,7 +2691,7 @@ namespace Tests.Linq
 			);
 
 			var result = query
-				.AsUnionQuery()
+				.AsEagerLoadUnionQuery()
 				.ToList();
 
 			var expected = companies
@@ -2747,7 +2747,7 @@ namespace Tests.Linq
 			);
 
 			var result = query
-				.AsUnionQuery()
+				.AsEagerLoadUnionQuery()
 				.ToList();
 
 			var expected = companies
@@ -2803,7 +2803,7 @@ namespace Tests.Linq
 				};
 
 			var result = query
-				.AsUnionQuery()
+				.AsEagerLoadUnionQuery()
 				.ToList();
 
 			var expected = companies
@@ -2868,7 +2868,7 @@ namespace Tests.Linq
 				};
 
 			var result = query
-				.AsUnionQuery()
+				.AsEagerLoadUnionQuery()
 				.ToList();
 
 			var expected = companies
@@ -2942,7 +2942,7 @@ namespace Tests.Linq
 				};
 
 			var result = query
-				.AsUnionQuery()
+				.AsEagerLoadUnionQuery()
 				.ToList();
 
 			var expected = companies
@@ -3009,7 +3009,7 @@ namespace Tests.Linq
 							}),
 				};
 
-			var act = () => query.AsUnionQuery().ToList();
+			var act = () => query.AsEagerLoadUnionQuery().ToList();
 			act.ShouldThrow<LinqToDBException>();
 		}
 
@@ -3045,7 +3045,7 @@ namespace Tests.Linq
 							}),
 				};
 
-			_ = query.AsUnionQuery().ToList();
+			_ = query.AsEagerLoadUnionQuery().ToList();
 		}
 
 		[Test]
@@ -3071,7 +3071,7 @@ namespace Tests.Linq
 				};
 
 			var result = query
-				.AsUnionQuery()
+				.AsEagerLoadUnionQuery()
 				.ToList();
 
 			var expected = companies
@@ -3168,7 +3168,7 @@ namespace Tests.Linq
 						B = tB.Where(b => b.ParentId == p.Id).OrderBy(b => b.Id).ToList(),
 					};
 
-				var result = query.AsUnionQuery().ToList();
+				var result = query.AsEagerLoadUnionQuery().ToList();
 
 				// CteUnion carrier exceeds MaxColumnCount → whole-strategy fallback to KeyedQuery:
 				// 1 main buffer query + 2 child preambles = 3 queries (vs. 1 for native CteUnion).
@@ -3253,7 +3253,7 @@ namespace Tests.Linq
 					B = tB.Where(b => b.DepartmentId == d.Id).OrderBy(b => b.Id).ToList(),
 				};
 
-			var result = query.AsUnionQuery().ToList();
+			var result = query.AsEagerLoadUnionQuery().ToList();
 
 			var expected = rootDepts
 				.OrderBy(d => d.Id)
@@ -3289,7 +3289,7 @@ namespace Tests.Linq
 			using var tDep = db.CreateLocalTable(departments);
 
 			// Pre-fix, CteUnion installed query.GetElement but never query.GetElementAsync,
-			// so awaiting FirstAsync against an AsUnionQuery() pipeline crashed on a null
+			// so awaiting FirstAsync against an AsEagerLoadUnionQuery() pipeline crashed on a null
 			// delegate. The SetElementSelection wiring now installs both.
 			var result = await (
 				from c in tCo
@@ -3303,7 +3303,7 @@ namespace Tests.Linq
 						.OrderBy(d => d.Id)
 						.ToList(),
 				}
-			).AsUnionQuery().FirstAsync();
+			).AsEagerLoadUnionQuery().FirstAsync();
 
 			var expectedFirst = companies.OrderBy(c => c.Id).First();
 			result.Id.ShouldBe(expectedFirst.Id);
@@ -3332,7 +3332,7 @@ namespace Tests.Linq
 						.OrderBy(d => d.Id)
 						.ToList(),
 				}
-			).AsUnionQuery().Single();
+			).AsEagerLoadUnionQuery().Single();
 
 			result.Id.ShouldBe(1);
 			result.Departments.Count.ShouldBe(departments.Count(d => d.CompanyId == 1));
@@ -3362,7 +3362,7 @@ namespace Tests.Linq
 						.OrderBy(d => d.Id)
 						.ToList(),
 				}
-			).AsUnionQuery();
+			).AsEagerLoadUnionQuery();
 
 			Assert.ThrowsAsync<InvalidOperationException>(async () => await query.SingleAsync());
 		}
@@ -3398,7 +3398,7 @@ namespace Tests.Linq
 					c.Name,
 					Departments = tDep.Where(d => d.CompanyId == c.Id).OrderBy(d => d.Id).ToList(),
 				}
-			).AsUnionQuery().ToList();
+			).AsEagerLoadUnionQuery().ToList();
 
 			result.Select(r => r.Id).ShouldBe(new[] { 2, 4, 1, 3 });
 		}
@@ -3427,7 +3427,7 @@ namespace Tests.Linq
 					c.Name,
 					Departments = tDep.Where(d => d.CompanyId == c.Id).OrderBy(d => d.Id).ToList(),
 				}
-			).AsUnionQuery().ToList();
+			).AsEagerLoadUnionQuery().ToList();
 
 			result.Select(r => r.Name).ShouldBe(new[] { "C", "B", "A" });
 		}
@@ -3437,7 +3437,7 @@ namespace Tests.Linq
 			[DataSources(true, TestProvName.AllAccess, TestProvName.AllFirebirdLess3)] string context)
 		{
 			// Constructed-root union: db.SelectQuery synthesises a single row whose fields are
-			// two eagerly-loaded collections. AsUnionQuery should activate CteUnion on a non-table
+			// two eagerly-loaded collections. AsEagerLoadUnionQuery should activate CteUnion on a non-table
 			// root and emit a single UNION ALL — not per-collection separate queries.
 			var (companies, departments, _, _, _, _) = GenerateHierarchy();
 
@@ -3458,7 +3458,7 @@ namespace Tests.Linq
 					Items1 = query1.ToList(),
 					Items2 = query2.ToList()
 				})
-				.AsUnionQuery()
+				.AsEagerLoadUnionQuery()
 				.First();
 
 			result.Items1.Count.ShouldBe(companies.Length);
@@ -3499,7 +3499,7 @@ namespace Tests.Linq
 					Items1 = query1.ToList(),
 					Items2 = query2.ToList()
 				})
-				.AsUnionQuery()
+				.AsEagerLoadUnionQuery()
 				.First();
 
 			result.Count.ShouldBe(companies.Length);
@@ -3543,7 +3543,7 @@ namespace Tests.Linq
 					Departments = tDep.Where(dd => dd.CompanyId == x.CompanyId).OrderBy(dd => dd.Id).ToList(),
 				};
 
-			var result = query.AsUnionQuery().ToList();
+			var result = query.AsEagerLoadUnionQuery().ToList();
 
 			// One parent per distinct CompanyId — not one per (CompanyId, Name) pair.
 			result.Count.ShouldBe(companies.Length);
@@ -3578,7 +3578,7 @@ namespace Tests.Linq
 					c.Name,
 					Departments = tDep.Where(d => d.CompanyId == c.Id).OrderBy(d => d.Id).ToList(),
 				}
-			).AsUnionQuery().ToList();
+			).AsEagerLoadUnionQuery().ToList();
 
 			result.Select(r => r.Name).ShouldBe(new[] { "A", "B", "C" });
 		}
@@ -3614,9 +3614,123 @@ namespace Tests.Linq
 						.OrderBy(d => d.Id)
 						.ToList(),
 				}
-			).AsUnionQuery().ToList();
+			).AsEagerLoadUnionQuery().ToList();
 
 			result.Select(r => r.Name).ShouldBe(new[] { "A", "B", "C" });
+		}
+
+		#endregion
+
+		#region IOrderedEnumerable child projection — PassThroughOrderedCollection adapter
+
+		// Child sub-query ends in OrderByDescending without a terminal .ToList(), so its CLR
+		// type is IOrderedEnumerable<Department>.  ExpressionBuilder.AdjustType wraps the
+		// materialized list in a PassThroughOrderedCollection<T> to satisfy that type contract.
+		// This test verifies that the wrapped sequence comes back in the SQL-driven order, not
+		// re-sorted in memory, and that the full result set matches in-memory expectations.
+		[Test]
+		public void Select_Union_ChildOrderedEnumerable_PreservesDescendingOrder(
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllFirebirdLess3)] string context)
+		{
+			var (companies, departments, _, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			// Depts projected as IOrderedEnumerable<Department> (OrderByDescending, no .ToList()).
+			var query = (
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					Depts = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.OrderByDescending(d => d.Id),
+				}
+			).AsEagerLoadUnionQuery();
+
+			var result = query.ToList();
+
+			var expected = companies
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					c.Id,
+					Depts = departments
+						.Where(d => d.CompanyId == c.Id)
+						.OrderByDescending(d => d.Id)
+						.AsEnumerable(),
+				})
+				.ToList();
+
+			result.Count.ShouldBe(expected.Count);
+
+			for (var i = 0; i < result.Count; i++)
+			{
+				result[i].Id.ShouldBe(expected[i].Id);
+
+				var resultDepts   = result[i].Depts.ToList();
+				var expectedDepts = expected[i].Depts.ToList();
+
+				AreEqual(expectedDepts, resultDepts, ComparerBuilder.GetEqualityComparer(expectedDepts));
+
+				// Verify that descending order is maintained in the materialized sequence.
+				resultDepts.Zip(resultDepts.Skip(1), (a, b) => a.Id >= b.Id).ShouldAllBe(v => v);
+			}
+		}
+
+		[Test]
+		public void Select_KeyedQuery_ChildOrderedEnumerable_PreservesDescendingOrder(
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		{
+			var (companies, departments, _, _, _, _) = GenerateHierarchy();
+
+			using var db  = GetDataContext(context);
+			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.KeyedQuery });
+
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			var query =
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					Depts = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.OrderByDescending(d => d.Id),
+				};
+
+			var result = query.ToList();
+
+			var expected = companies
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					c.Id,
+					Depts = departments
+						.Where(d => d.CompanyId == c.Id)
+						.OrderByDescending(d => d.Id)
+						.AsEnumerable(),
+				})
+				.ToList();
+
+			result.Count.ShouldBe(expected.Count);
+
+			for (var i = 0; i < result.Count; i++)
+			{
+				result[i].Id.ShouldBe(expected[i].Id);
+
+				var resultDepts   = result[i].Depts.ToList();
+				var expectedDepts = expected[i].Depts.ToList();
+
+				AreEqual(expectedDepts, resultDepts, ComparerBuilder.GetEqualityComparer(expectedDepts));
+
+				resultDepts.Zip(resultDepts.Skip(1), (a, b) => a.Id >= b.Id).ShouldAllBe(v => v);
+			}
 		}
 
 		#endregion

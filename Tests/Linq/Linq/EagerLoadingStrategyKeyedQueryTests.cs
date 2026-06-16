@@ -153,7 +153,7 @@ namespace Tests.Linq
 
 		#endregion
 
-		#region Global DefaultEagerLoadingStrategy — no AsKeyedQuery() needed
+		#region Global DefaultEagerLoadingStrategy — no AsEagerLoadKeyedQuery() needed
 
 		[Test]
 		public void Select_GlobalKeyedQuery_InlineCollection(
@@ -163,7 +163,7 @@ namespace Tests.Linq
 
 			using var db   = GetDataContext(context);
 
-			// Enable KeyedQuery globally — no AsKeyedQuery() calls needed
+			// Enable KeyedQuery globally — no AsEagerLoadKeyedQuery() calls needed
 			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.KeyedQuery });
 
 			var counter = new SelectQueryCounter();
@@ -341,7 +341,7 @@ namespace Tests.Linq
 
 			if (!context.IsRemote()) counter.Count = 0;
 
-			// No AsKeyedQuery() — global strategy applies
+			// No AsEagerLoadKeyedQuery() — global strategy applies
 			var query = tCo
 				.LoadWith(c => c.Departments)
 				.OrderBy(c => c.Id);
@@ -440,7 +440,7 @@ namespace Tests.Linq
 						})
 						.ToList(),
 				}
-			).AsKeyedQuery();
+			).AsEagerLoadKeyedQuery();
 
 			var result = query.ToList();
 
@@ -502,7 +502,7 @@ namespace Tests.Linq
 						})
 						.ToList(),
 				}
-			).AsKeyedQuery();
+			).AsEagerLoadKeyedQuery();
 
 			var result = query.ToList();
 
@@ -562,7 +562,7 @@ namespace Tests.Linq
 						})
 						.ToList(),
 				}
-			).AsKeyedQuery();
+			).AsEagerLoadKeyedQuery();
 
 			var result = query.ToList();
 
@@ -614,7 +614,7 @@ namespace Tests.Linq
 						.OrderBy(d => d.Id)
 						.ToList(),
 				}
-			).AsKeyedQuery();
+			).AsEagerLoadKeyedQuery();
 
 			var result = query.ToList();
 
@@ -670,7 +670,7 @@ namespace Tests.Linq
 						})
 						.ToList(),
 				}
-			).AsKeyedQuery();
+			).AsEagerLoadKeyedQuery();
 
 			var result = query.ToList();
 
@@ -717,7 +717,7 @@ namespace Tests.Linq
 						.OrderBy(d => d.Id)
 						.ToList(),
 				}
-			).AsKeyedQuery();
+			).AsEagerLoadKeyedQuery();
 
 			var result = query.ToList();
 
@@ -778,7 +778,7 @@ namespace Tests.Linq
 					Workers = cGroup.OrderBy(c => c.Id).Select(c => new { c.Id, c.Name }).ToList(),
 				};
 
-			var query  = query1.Concat(query2).AsKeyedQuery();
+			var query  = query1.Concat(query2).AsEagerLoadKeyedQuery();
 			var result = query.ToList();
 
 			var expected = departments
@@ -829,7 +829,7 @@ namespace Tests.Linq
 			var query = tCo
 				.LoadWith(c => c.Departments)
 				.OrderBy(c => c.Id)
-				.AsKeyedQuery();
+				.AsEagerLoadKeyedQuery();
 
 			var result = query.ToList();
 
@@ -867,7 +867,7 @@ namespace Tests.Linq
 				};
 
 			var result = query
-				.AsKeyedQuery()
+				.AsEagerLoadKeyedQuery()
 				.ToList();
 
 			var expected = companies
@@ -909,7 +909,7 @@ namespace Tests.Linq
 				};
 
 			var result = query
-				.AsKeyedQuery()
+				.AsEagerLoadKeyedQuery()
 				.ToList();
 
 			var expected = companies
@@ -952,7 +952,7 @@ namespace Tests.Linq
 				};
 
 			var result = query
-				.AsKeyedQuery()
+				.AsEagerLoadKeyedQuery()
 				.ToList();
 
 			var expected = rootDepts
@@ -1000,7 +1000,7 @@ namespace Tests.Linq
 				};
 
 			var result = query
-				.AsKeyedQuery()
+				.AsEagerLoadKeyedQuery()
 				.ToList();
 
 			var expected = companies
@@ -1051,7 +1051,7 @@ namespace Tests.Linq
 				};
 
 			var result = query
-				.AsKeyedQuery()
+				.AsEagerLoadKeyedQuery()
 				.ToList();
 
 			var expected = companies
@@ -1099,7 +1099,7 @@ namespace Tests.Linq
 				};
 
 			var result = query
-				.AsKeyedQuery()
+				.AsEagerLoadKeyedQuery()
 				.FirstOrDefault();
 
 			result.ShouldNotBeNull();
@@ -1132,7 +1132,7 @@ namespace Tests.Linq
 				};
 
 			var result = query
-				.AsKeyedQuery()
+				.AsEagerLoadKeyedQuery()
 				.ToList();
 
 			result.Count.ShouldBe(0);
@@ -1158,7 +1158,7 @@ namespace Tests.Linq
 				.OrderBy(c => c.Id);
 
 			var result = query
-				.AsKeyedQuery()
+				.AsEagerLoadKeyedQuery()
 				.ToList();
 
 			result.Count.ShouldBe(companies.Length);
@@ -1192,7 +1192,7 @@ namespace Tests.Linq
 				.OrderBy(c => c.Id);
 
 			var result = query
-				.AsKeyedQuery()
+				.AsEagerLoadKeyedQuery()
 				.ToList();
 
 			result.Count.ShouldBe(companies.Length);
@@ -1216,7 +1216,7 @@ namespace Tests.Linq
 		#region Tests ported from UnionTests — Root marker
 
 		[Test]
-		public void RootAsKeyedQuery_SingleChild(
+		public void RootAsEagerLoadKeyedQuery_SingleChild(
 			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
@@ -1226,7 +1226,7 @@ namespace Tests.Linq
 			using var tDep = db.CreateLocalTable(departments);
 
 			var query =
-				from c in tCo.AsKeyedQuery()
+				from c in tCo.AsEagerLoadKeyedQuery()
 				orderby c.Id
 				select new
 				{
@@ -1257,7 +1257,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void RootAsKeyedQuery_MultipleChildren(
+		public void RootAsEagerLoadKeyedQuery_MultipleChildren(
 			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (_, departments, employees, contractors, _) = GenerateHierarchy();
@@ -1270,7 +1270,7 @@ namespace Tests.Linq
 			using var tCtr = db.CreateLocalTable(contractors);
 
 			var query =
-				from d in tDep.AsKeyedQuery()
+				from d in tDep.AsEagerLoadKeyedQuery()
 				orderby d.Id
 				select new
 				{
@@ -1323,7 +1323,7 @@ namespace Tests.Linq
 				};
 
 			var result = query
-				.AsKeyedQuery()
+				.AsEagerLoadKeyedQuery()
 				.ToList();
 
 			var expected = companies
@@ -1381,7 +1381,7 @@ namespace Tests.Linq
 						.OrderBy(d => d.Id)
 						.ToList(),
 				}
-			).AsKeyedQuery().Single();
+			).AsEagerLoadKeyedQuery().Single();
 
 			result.Id.ShouldBe(1);
 			result.Departments.Count.ShouldBe(departments.Count(d => d.CompanyId == 1));
@@ -1410,7 +1410,7 @@ namespace Tests.Linq
 						.OrderBy(d => d.Id)
 						.ToList(),
 				}
-			).AsKeyedQuery();
+			).AsEagerLoadKeyedQuery();
 
 			var act = () => query.Single();
 			act.ShouldThrow<InvalidOperationException>();
@@ -1437,7 +1437,7 @@ namespace Tests.Linq
 						.OrderBy(d => d.Id)
 						.ToList(),
 				}
-			).AsKeyedQuery();
+			).AsEagerLoadKeyedQuery();
 
 			var act = () => query.SingleOrDefault();
 			act.ShouldThrow<InvalidOperationException>();
@@ -1464,7 +1464,7 @@ namespace Tests.Linq
 						.OrderBy(d => d.Id)
 						.ToList(),
 				}
-			).AsKeyedQuery();
+			).AsEagerLoadKeyedQuery();
 
 			Assert.ThrowsAsync<InvalidOperationException>(async () => await query.SingleAsync());
 		}
@@ -1491,7 +1491,7 @@ namespace Tests.Linq
 						.OrderBy(d => d.Id)
 						.ToList(),
 				}
-			).AsKeyedQuery().FirstAsync();
+			).AsEagerLoadKeyedQuery().FirstAsync();
 
 			var expectedFirst = companies.OrderBy(c => c.Id).First();
 			result.Id.ShouldBe(expectedFirst.Id);
@@ -1519,7 +1519,7 @@ namespace Tests.Linq
 			var query = tCo
 				.LoadWith(c => c.Departments.Where(d => d.CompanyId == c.Id && d.Id > c.Id))
 				.OrderBy(c => c.Id)
-				.AsKeyedQuery();
+				.AsEagerLoadKeyedQuery();
 
 			var result = query.ToList();
 
@@ -1574,7 +1574,7 @@ namespace Tests.Linq
 					Departments = tDep.Where(d => d.CompanyId == c.Id).OrderBy(d => d.Id).ToList(),
 				};
 
-			var result = query.AsKeyedQuery().ToList();
+			var result = query.AsEagerLoadKeyedQuery().ToList();
 
 			result.Count.ShouldBe(companies.Length);
 			for (int i = 0; i < result.Count; i++)
@@ -1665,7 +1665,7 @@ namespace Tests.Linq
 						.ToList(),
 				};
 
-			return query.AsKeyedQuery().ToList();
+			return query.AsEagerLoadKeyedQuery().ToList();
 		}
 
 		sealed class CompanyWithDepartments
@@ -1676,7 +1676,63 @@ namespace Tests.Linq
 
 		#endregion
 
-		#region AsSeparateQuery — explicit Default strategy override
+		#region Default strategy — runtime-parameter regression
+
+		// Regression: DetachedPreamble and Preamble<TKey,T> in ExpressionBuilder.EagerLoadDefault.cs
+		// used to call query.GetResultEnumerable(…, preambles, preambles) — passing preambles in both
+		// the parameters and preambles slots. Any captured local variable that feeds a SQL parameter on
+		// the detail query arrived as null (or empty) because the real parameters array was never forwarded.
+		// This test ensures that a captured local variable (minId) reaches the detail query correctly.
+		[Test]
+		public void Select_DefaultStrategy_RuntimeParameterReachesDetailQuery(
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		{
+			var (_, departments, employees, _, _) = GenerateHierarchy();
+
+			var rootDepts = departments.Where(d => d.CompanyId == 1).ToArray();
+
+			using var db   = GetDataContext(context);
+			using var tDep = db.CreateLocalTable(rootDepts);
+			using var tEmp = db.CreateLocalTable(employees);
+
+			int minId = 2;
+
+			var query =
+				from d in tDep
+				orderby d.Id
+				select new
+				{
+					d.Id,
+					d.Name,
+					Employees = tEmp
+						.Where(e => e.DepartmentId == d.Id && e.Id >= minId)
+						.OrderBy(e => e.Id)
+						.ToList(),
+				};
+
+			var result = query
+				.AsEagerLoadSeparateQuery()
+				.ToList();
+
+			var expected = rootDepts
+				.OrderBy(d => d.Id)
+				.Select(d => new
+				{
+					d.Id,
+					d.Name,
+					Employees = employees
+						.Where(e => e.DepartmentId == d.Id && e.Id >= minId)
+						.OrderBy(e => e.Id)
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+		}
+
+		#endregion
+
+		#region AsEagerLoadSeparateQuery — explicit Default strategy override
 
 		/// <summary>
 		/// Returns <see langword="true"/> when the provider supports Common Table Expressions.
@@ -1685,9 +1741,9 @@ namespace Tests.Linq
 		static bool IsCteSupported(string context)
 			=> !context.IsAnyOf(TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllMySql57);
 
-		// MAJ001: IQueryable<T> overload — global KeyedQuery overridden to Default per root marker.
+		// MAJ001: root marker — global KeyedQuery overridden to Default.
 		[Test]
-		public void AsSeparateQuery_IQueryable_OverridesGlobalKeyedQuery(
+		public void AsEagerLoadSeparateQuery_OverridesGlobalKeyedQuery(
 			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
@@ -1699,7 +1755,7 @@ namespace Tests.Linq
 			using var tDep = db.CreateLocalTable(departments);
 			using var tEmp = db.CreateLocalTable(employees);
 
-			// AsSeparateQuery() on the root query overrides the global KeyedQuery default
+			// AsEagerLoadSeparateQuery() on the root query overrides the global KeyedQuery default
 			var query =
 				from c in tCo
 				orderby c.Id
@@ -1723,7 +1779,7 @@ namespace Tests.Linq
 				};
 
 			var result = query
-				.AsSeparateQuery()
+				.AsEagerLoadSeparateQuery()
 				.ToList();
 
 			var expected = companies
@@ -1751,57 +1807,11 @@ namespace Tests.Linq
 			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 		}
 
-		// MAJ001: IEnumerable<T> overload — global KeyedQuery overridden to Default on an inline child collection.
-		[Test]
-		public void AsSeparateQuery_IEnumerable_OverridesGlobalKeyedQuery(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
-		{
-			var (companies, departments, _, _, _) = GenerateHierarchy();
-
-			using var db   = GetDataContext(context);
-			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.KeyedQuery });
-
-			using var tCo  = db.CreateLocalTable(companies);
-			using var tDep = db.CreateLocalTable(departments);
-
-			// AsSeparateQuery() on the inline child collection overrides the global KeyedQuery default
-			var query =
-				from c in tCo
-				orderby c.Id
-				select new
-				{
-					c.Id,
-					c.Name,
-					Departments = tDep
-						.Where(d => d.CompanyId == c.Id)
-						.OrderBy(d => d.Id)
-						.AsSeparateQuery()
-						.ToList(),
-				};
-
-			var result = query.ToList();
-
-			var expected = companies
-				.OrderBy(c => c.Id)
-				.Select(c => new
-				{
-					c.Id,
-					c.Name,
-					Departments = departments
-						.Where(d => d.CompanyId == c.Id)
-						.OrderBy(d => d.Id)
-						.ToList(),
-				})
-				.ToList();
-
-			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
-		}
-
-		// MIN001: per-call AsUnionQuery() marker wins over global DefaultEagerLoadingStrategy = Default.
+		// MIN001: per-call AsEagerLoadUnionQuery() marker wins over global DefaultEagerLoadingStrategy = Default.
 		// Verified via query count: Default produces N+1 separate queries; CteUnion collapses 2 same-level
 		// child collections into a single UNION ALL query (counter == 1 on CTE providers).
 		[Test]
-		public void AsUnionQuery_OverridesGlobalDefault_QueryCountDistinguishesStrategy(
+		public void AsEagerLoadUnionQuery_OverridesGlobalDefault_QueryCountDistinguishesStrategy(
 			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllFirebirdLess3)] string context)
 		{
 			var (_, departments, employees, contractors, _) = GenerateHierarchy();
@@ -1810,7 +1820,7 @@ namespace Tests.Linq
 			var rootDepts = departments.Where(d => d.CompanyId == 1).ToArray();
 
 			using var db   = GetDataContext(context);
-			// Global default is Default (N+1 separate queries); AsUnionQuery() must override it
+			// Global default is Default (N+1 separate queries); AsEagerLoadUnionQuery() must override it
 			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.Default });
 
 			var counter = new SelectQueryCounter();
@@ -1837,7 +1847,7 @@ namespace Tests.Linq
 				};
 
 			var result = query
-				.AsUnionQuery()
+				.AsEagerLoadUnionQuery()
 				.ToList();
 
 			var expected = rootDepts
@@ -1856,6 +1866,188 @@ namespace Tests.Linq
 			// CteUnion (marker won): 1 UNION ALL query loads both child collections.
 			// Non-CTE providers fall back to KeyedQuery: 1 buffer preamble + 2 child queries = 3.
 			if (!context.IsRemote()) counter.Count.ShouldBe(!IsCteSupported(context) ? 3 : 1);
+		}
+
+		#endregion
+
+		#region Composite primary key — KeyedQuery with a two-column PK
+
+		[Table]
+		sealed class CompositeParent
+		{
+			[Column, PrimaryKey(1)] public int     Region { get; set; }
+			[Column, PrimaryKey(2)] public int     Code   { get; set; }
+			[Column]                public string? Name   { get; set; }
+		}
+
+		[Table]
+		sealed class CompositeChild
+		{
+			[Column, PrimaryKey] public int     Id           { get; set; }
+			[Column]             public int     ParentRegion { get; set; }
+			[Column]             public int     ParentCode   { get; set; }
+			[Column]             public string? Value        { get; set; }
+		}
+
+		[Test]
+		public void Select_KeyedQuery_CompositeKey_ChildrenAttachedCorrectly(
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		{
+			var parents = new[]
+			{
+				new CompositeParent { Region = 1, Code = 10, Name = "P1_10" },
+				new CompositeParent { Region = 1, Code = 20, Name = "P1_20" },
+				new CompositeParent { Region = 2, Code = 10, Name = "P2_10" },
+			};
+
+			var children = new[]
+			{
+				new CompositeChild { Id = 1, ParentRegion = 1, ParentCode = 10, Value = "A" },
+				new CompositeChild { Id = 2, ParentRegion = 1, ParentCode = 10, Value = "B" },
+				new CompositeChild { Id = 3, ParentRegion = 1, ParentCode = 20, Value = "C" },
+				new CompositeChild { Id = 4, ParentRegion = 2, ParentCode = 10, Value = "D" },
+			};
+
+			using var db  = GetDataContext(context);
+			using var tP  = db.CreateLocalTable(parents);
+			using var tC  = db.CreateLocalTable(children);
+
+			var query =
+				from p in tP
+				orderby p.Region, p.Code
+				select new
+				{
+					p.Region,
+					p.Code,
+					p.Name,
+					Children = tC
+						.Where(c => c.ParentRegion == p.Region && c.ParentCode == p.Code)
+						.OrderBy(c => c.Id)
+						.ToList(),
+				};
+
+			var result = query
+				.AsEagerLoadKeyedQuery()
+				.ToList();
+
+			var expected = parents
+				.OrderBy(p => p.Region).ThenBy(p => p.Code)
+				.Select(p => new
+				{
+					p.Region,
+					p.Code,
+					p.Name,
+					Children = children
+						.Where(c => c.ParentRegion == p.Region && c.ParentCode == p.Code)
+						.OrderBy(c => c.Id)
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+		}
+
+		#endregion
+
+		#region Nullable FK key — orphan children must not attach to any parent
+
+		[Table]
+		sealed class NullableParent
+		{
+			[Column, PrimaryKey] public int     Id   { get; set; }
+			[Column]             public string? Name { get; set; }
+		}
+
+		[Table]
+		sealed class NullableChild
+		{
+			[Column, PrimaryKey] public int     Id       { get; set; }
+			[Column]             public int?    ParentId { get; set; }
+			[Column]             public string? Name     { get; set; }
+		}
+
+		[Test]
+		public void Select_KeyedQuery_NullableFK_OrphanChildrenNotAttachedToAnyParent(
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		{
+			var parents = new[]
+			{
+				new NullableParent { Id = 1, Name = "P1" },
+				new NullableParent { Id = 2, Name = "P2" },
+			};
+
+			var children = new[]
+			{
+				new NullableChild { Id = 10, ParentId = 1,    Name = "C1_P1"   },
+				new NullableChild { Id = 11, ParentId = 1,    Name = "C2_P1"   },
+				new NullableChild { Id = 20, ParentId = 2,    Name = "C1_P2"   },
+				new NullableChild { Id = 30, ParentId = null, Name = "Orphan1" },
+				new NullableChild { Id = 31, ParentId = null, Name = "Orphan2" },
+			};
+
+			using var db  = GetDataContext(context);
+			using var tP  = db.CreateLocalTable(parents);
+			using var tC  = db.CreateLocalTable(children);
+
+			// --- KeyedQuery strategy ---
+
+			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.KeyedQuery });
+
+			var queryKeyed =
+				from p in tP
+				orderby p.Id
+				select new
+				{
+					p.Id,
+					p.Name,
+					Children = tC
+						.Where(c => c.ParentId == p.Id)
+						.OrderBy(c => c.Id)
+						.ToList(),
+				};
+
+			var resultKeyed = queryKeyed.ToList();
+
+			var expectedKeyed = parents
+				.OrderBy(p => p.Id)
+				.Select(p => new
+				{
+					p.Id,
+					p.Name,
+					Children = children
+						.Where(c => c.ParentId == p.Id)
+						.OrderBy(c => c.Id)
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expectedKeyed, resultKeyed, ComparerBuilder.GetEqualityComparer(expectedKeyed));
+
+			// Orphan children (ParentId = null) must not appear under any parent.
+			resultKeyed.SelectMany(p => p.Children).Any(c => c.ParentId == null).ShouldBeFalse();
+
+			// --- CteUnion strategy (falls back to KeyedQuery on non-CTE providers) ---
+
+			var queryCteUnion =
+				from p in tP
+				orderby p.Id
+				select new
+				{
+					p.Id,
+					p.Name,
+					Children = tC
+						.Where(c => c.ParentId == p.Id)
+						.OrderBy(c => c.Id)
+						.ToList(),
+				};
+
+			var resultUnion = queryCteUnion
+				.AsEagerLoadUnionQuery()
+				.ToList();
+
+			AreEqual(expectedKeyed, resultUnion, ComparerBuilder.GetEqualityComparer(expectedKeyed));
+
+			resultUnion.SelectMany(p => p.Children).Any(c => c.ParentId == null).ShouldBeFalse();
 		}
 
 		#endregion

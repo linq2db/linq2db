@@ -5,23 +5,21 @@ using LinqToDB.Internal.Reflection;
 
 namespace LinqToDB.Internal.Linq.Builder
 {
-	[BuildsMethodCall(nameof(LinqExtensions.AsUnionQuery), nameof(LinqExtensions.AsSeparateQuery), nameof(LinqExtensions.AsKeyedQuery))]
+	[BuildsMethodCall(nameof(LinqExtensions.AsEagerLoadUnionQuery), nameof(LinqExtensions.AsEagerLoadSeparateQuery), nameof(LinqExtensions.AsEagerLoadKeyedQuery))]
 	sealed class AsEagerLoadingBuilder : MethodCallBuilder
 	{
 		public static bool CanBuildMethod(MethodCallExpression call)
-			=> call.IsSameGenericMethod(Methods.LinqToDB.AsUnionQueryEnumerable)
-			|| call.IsSameGenericMethod(Methods.LinqToDB.AsUnionQueryQueryable)
-			|| call.IsSameGenericMethod(Methods.LinqToDB.AsSeparateQueryEnumerable)
-			|| call.IsSameGenericMethod(Methods.LinqToDB.AsSeparateQueryQueryable)
-			|| call.IsSameGenericMethod(Methods.LinqToDB.AsKeyedQueryQueryable);
+			=> call.IsSameGenericMethod(Methods.LinqToDB.AsEagerLoadUnionQueryQueryable)
+			|| call.IsSameGenericMethod(Methods.LinqToDB.AsEagerLoadSeparateQueryQueryable)
+			|| call.IsSameGenericMethod(Methods.LinqToDB.AsEagerLoadKeyedQueryQueryable);
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var strategy = methodCall.Method.Name switch
 			{
-				nameof(LinqExtensions.AsUnionQuery)    => EagerLoadingStrategy.CteUnion,
-				nameof(LinqExtensions.AsSeparateQuery) => EagerLoadingStrategy.Default,
-				_                                      => EagerLoadingStrategy.KeyedQuery, // AsKeyedQuery
+				nameof(LinqExtensions.AsEagerLoadUnionQuery)    => EagerLoadingStrategy.CteUnion,
+				nameof(LinqExtensions.AsEagerLoadSeparateQuery) => EagerLoadingStrategy.Default,
+				_                                      => EagerLoadingStrategy.KeyedQuery, // AsEagerLoadKeyedQuery
 			};
 
 			var currentModifier = builder.GetTranslationModifier();

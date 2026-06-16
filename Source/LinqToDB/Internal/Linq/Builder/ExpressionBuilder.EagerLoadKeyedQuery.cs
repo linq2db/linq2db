@@ -697,7 +697,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var holderExpr = Expression.Constant(holder);
 			// Source the keys per-execution from the IQueryExpressions container (threaded uniformly to
 			// every nested / child / buffer query), NOT a build-time-shared field — see KeyedQueryKeysHolder.
-			var getKeys    = typeof(KeyedQueryKeysHolder<TKey>).GetMethod(nameof(KeyedQueryKeysHolder<TKey>.GetKeys))!;
+			var getKeys    = typeof(KeyedQueryKeysHolder<TKey>).GetMethod(nameof(KeyedQueryKeysHolder<>.GetKeys))!;
 			var keysExpr   = Expression.Call(holderExpr, getKeys, QueryExpressionContainerParam);
 
 			return (holder, keysExpr);
@@ -793,14 +793,14 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
 			{
-				var keys = _query.GetResultEnumerable(dataContext, expressions, preambles, preambles).ToArray();
+				var keys = _query.GetResultEnumerable(dataContext, expressions, parameters, preambles).ToArray();
 				_holder.SetKeys(expressions, keys);
 				return keys;
 			}
 
 			public override async Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object[]? preambles, CancellationToken cancellationToken)
 			{
-				var keys = await _query.GetResultEnumerable(dataContext, expressions, preambles, preambles)
+				var keys = await _query.GetResultEnumerable(dataContext, expressions, parameters, preambles)
 					.ToArrayAsync(cancellationToken).ConfigureAwait(false);
 				_holder.SetKeys(expressions, keys);
 				return keys;
@@ -854,7 +854,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (keys is not { Length: > 0 })
 						return result;
 
-					foreach (var e in _query.GetResultEnumerable(dataContext, expressions, preambles, preambles))
+					foreach (var e in _query.GetResultEnumerable(dataContext, expressions, parameters, preambles))
 					{
 						result.Add(e.Key, e.Detail);
 					}
@@ -878,7 +878,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (keys is not { Length: > 0 })
 						return result;
 
-					await foreach (var e in _query.GetResultEnumerable(dataContext, expressions, preambles, preambles)
+					await foreach (var e in _query.GetResultEnumerable(dataContext, expressions, parameters, preambles)
 						.WithCancellation(cancellationToken)
 						.ConfigureAwait(false))
 					{
@@ -1170,17 +1170,19 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			internal override Expression VisitSqlAdjustTypeExpression(SqlAdjustTypeExpression node)
 			{
-				// Visit the inner expression, then adjust type if needed
+				// Visit the inner expression, then re-apply the SAME type adjustment the node carries.
 				var inner = Visit(node.Expression);
 				if (inner.Type == node.Type)
 					return inner;
-				// Use soft type adjustment — don't convert incompatible types
-				if (node.Type.IsAssignableFrom(inner.Type))
-					return inner;
-				if (inner.Type.IsAssignableFrom(node.Type))
-					return Expression.Convert(inner, node.Type);
-				// Return inner as-is if types are incompatible
-				return inner;
+
+				// Reuse SqlAdjustTypeExpression's own coercion (node.Update -> AdjustType) so the
+				// adjustment reduces to the correct shape at compile time — e.g. an IOrderedEnumerable
+				// inner targeting an IOrderedQueryable member becomes AsQueryable(...) + Convert, exactly
+				// like the CteUnion reconstruction (which preserves the node via Transform and reduces it).
+				// The previous "soft adjust" dropped the adjustment for unrelated interface pairs
+				// (IOrderedEnumerable vs IOrderedQueryable), feeding a mistyped value into the enclosing
+				// New/MemberInit and throwing ArgumentException at Expression.New construction.
+				return node.Update(inner);
 			}
 
 			internal override Expression VisitContextRefExpression(ContextRefExpression node)

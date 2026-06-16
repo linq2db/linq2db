@@ -764,76 +764,70 @@ namespace LinqToDB
 		#region Eager-loading strategy marker methods
 
 		/// <summary>
-		/// Combines this collection sub-query with other same-level eager loads into a single
-		/// <c>CTE + UNION ALL</c> query, reducing the total number of round-trips to the database.
+		/// Combines the query's collection eager loads into a single <c>CTE + UNION ALL</c> query,
+		/// reducing the total number of round-trips to the database.
 		/// <para>
-		/// Works both inside a <c>Select</c> projection and directly in a <see cref="LoadWith{TEntity,TProperty}(IQueryable{TEntity}, System.Linq.Expressions.Expression{System.Func{TEntity,TProperty}})"/> selector.
-		/// Requires the target database to support Common Table Expressions; falls back to
-		/// <see cref="AsKeyedQuery{T}(IQueryable{T})"/> when CTEs are unavailable.
+		/// Applied to the root query; the strategy propagates to all contained child collections.
+		/// Requires the target database to support Common Table Expressions; when CTEs are unavailable
+		/// the whole-query eager-loading set falls back to <see cref="AsEagerLoadKeyedQuery{T}(IQueryable{T})"/>.
 		/// </para>
 		/// <para>An explicit per-query marker takes precedence over the <see cref="LinqOptions.DefaultEagerLoadingStrategy"/> global default.</para>
 		/// </summary>
 		/// <example>
 		/// <code>
-		/// // Select projection
-		/// from o in db.Orders
-		/// select new { Items = o.OrderItems.AsUnionQuery().ToList() }
+		/// // Root-level — applies to all children
+		/// (from o in db.Orders
+		///  select new { Items = o.OrderItems.ToList() }
+		/// ).AsEagerLoadUnionQuery().ToList()
 		///
-		/// // LoadWith selector
-		/// db.Orders.LoadWith(o => o.OrderItems.AsUnionQuery()).ToList()
+		/// // LoadWith
+		/// db.Orders.LoadWith(o => o.OrderItems).AsEagerLoadUnionQuery().ToList()
 		/// </code>
 		/// </example>
-		/// <typeparam name="T">Element type of the collection.</typeparam>
-		/// <param name="source">The collection sub-query to mark.</param>
+		/// <typeparam name="T">Element type of the root query.</typeparam>
+		/// <param name="source">The root query to mark.</param>
 		/// <returns><paramref name="source"/> unchanged at runtime (translation-time marker only).</returns>
-		[Pure]
-		public static IEnumerable<T> AsUnionQuery<T>(this IEnumerable<T> source) => source;
-
-		/// <inheritdoc cref="AsUnionQuery{T}(IEnumerable{T})"/>
 		[LinqTunnel]
 		[Pure]
-		public static IQueryable<T> AsUnionQuery<T>(this IQueryable<T> source)
+		public static IQueryable<T> AsEagerLoadUnionQuery<T>(this IQueryable<T> source)
 		{
 			ArgumentNullException.ThrowIfNull(source);
 			var currentSource = (IQueryable<T>)(LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source);
 			return currentSource.Provider.CreateQuery<T>(
-				Expression.Call(null, MethodHelper.GetMethodInfo(AsUnionQuery, source), currentSource.Expression));
+				Expression.Call(null, MethodHelper.GetMethodInfo(AsEagerLoadUnionQuery, source), currentSource.Expression));
 		}
 
 		/// <summary>
-		/// Loads this collection sub-query via its own dedicated pre-query (one query per association),
-		/// fetching the full parent entity on the parent side of the join.
+		/// Eager-loads each of the query's child collections via its own dedicated pre-query (one query
+		/// per association), fetching the full parent entity on the parent side of the join.
 		/// <para>
-		/// Works both inside a <c>Select</c> projection and directly in a <see cref="LoadWith{TEntity,TProperty}(IQueryable{TEntity}, System.Linq.Expressions.Expression{System.Func{TEntity,TProperty}})"/> selector.
-		/// Consider <see cref="AsKeyedQuery{T}(IQueryable{T})"/> instead when the parent entity has many columns.
+		/// Applied to the root query; the strategy propagates to all contained child collections.
+		/// Consider <see cref="AsEagerLoadKeyedQuery{T}(IQueryable{T})"/> instead when the parent entity has many columns.
 		/// </para>
 		/// <para>An explicit per-query marker takes precedence over the <see cref="LinqOptions.DefaultEagerLoadingStrategy"/> global default.</para>
 		/// </summary>
 		/// <example>
 		/// <code>
-		/// // Select projection
-		/// from o in db.Orders
-		/// select new { Items = o.OrderItems.AsSeparateQuery().ToList() }
+		/// // Root-level — applies to all children
+		/// (from o in db.Orders
+		///  select new { Items = o.OrderItems.ToList() }
+		/// ).AsEagerLoadSeparateQuery().ToList()
 		///
-		/// // LoadWith selector
-		/// db.Orders.LoadWith(o => o.OrderItems.AsSeparateQuery()).ToList()
+		/// // LoadWith
+		/// db.Orders.LoadWith(o => o.OrderItems).AsEagerLoadSeparateQuery().ToList()
 		/// </code>
 		/// </example>
-		/// <typeparam name="T">Element type of the collection.</typeparam>
-		/// <param name="source">The collection sub-query to mark.</param>
+		/// <typeparam name="T">Element type of the root query.</typeparam>
+		/// <param name="source">The root query to mark.</param>
 		/// <returns><paramref name="source"/> unchanged at runtime (translation-time marker only).</returns>
-		[Pure]
-		public static IEnumerable<T> AsSeparateQuery<T>(this IEnumerable<T> source) => source;
-
-		/// <inheritdoc cref="AsSeparateQuery{T}(IEnumerable{T})"/>
 		[LinqTunnel]
 		[Pure]
-		public static IQueryable<T> AsSeparateQuery<T>(this IQueryable<T> source)
+		public static IQueryable<T> AsEagerLoadSeparateQuery<T>(this IQueryable<T> source)
 		{
 			ArgumentNullException.ThrowIfNull(source);
 			var currentSource = (IQueryable<T>)(LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source);
 			return currentSource.Provider.CreateQuery<T>(
-				Expression.Call(null, MethodHelper.GetMethodInfo(AsSeparateQuery, source), currentSource.Expression));
+				Expression.Call(null, MethodHelper.GetMethodInfo(AsEagerLoadSeparateQuery, source), currentSource.Expression));
 		}
 
 		/// <summary>
@@ -845,10 +839,11 @@ namespace LinqToDB
 		/// Applied to the root query; the strategy propagates to all contained child collections.
 		/// </para>
 		/// <para>
-		/// <b>Fallback behavior:</b> When a child projection references non-key parent fields
-		/// (e.g., <c>CompanyName = c.Name</c> inside a child <c>Select</c>), the strategy
-		/// automatically falls back to the Default eager loading for that specific child.
-		/// Other children in the same query continue using KeyedQuery.
+		/// <b>Fallback behavior (whole-query):</b> if any eager-loaded child in the query cannot be
+		/// expressed with the KeyedQuery strategy — for example a child projection that references
+		/// non-key parent fields (<c>CompanyName = c.Name</c> inside a child <c>Select</c>) — the
+		/// entire eager-loading set for the query falls back to the Default strategy. Fallback is
+		/// per-query, not per-child.
 		/// </para>
 		/// <para>An explicit per-query marker takes precedence over the <see cref="LinqOptions.DefaultEagerLoadingStrategy"/> global default.</para>
 		/// </summary>
@@ -857,10 +852,10 @@ namespace LinqToDB
 		/// // Root-level — applies to all children
 		/// (from o in db.Orders
 		///  select new { Items = o.OrderItems.ToList() }
-		/// ).AsKeyedQuery().ToList()
+		/// ).AsEagerLoadKeyedQuery().ToList()
 		///
 		/// // LoadWith
-		/// db.Orders.LoadWith(o => o.OrderItems).AsKeyedQuery().ToList()
+		/// db.Orders.LoadWith(o => o.OrderItems).AsEagerLoadKeyedQuery().ToList()
 		/// </code>
 		/// </example>
 		/// <typeparam name="T">Element type of the collection.</typeparam>
@@ -868,12 +863,12 @@ namespace LinqToDB
 		/// <returns><paramref name="source"/> unchanged at runtime (translation-time marker only).</returns>
 		[LinqTunnel]
 		[Pure]
-		public static IQueryable<T> AsKeyedQuery<T>(this IQueryable<T> source)
+		public static IQueryable<T> AsEagerLoadKeyedQuery<T>(this IQueryable<T> source)
 		{
 			ArgumentNullException.ThrowIfNull(source);
 			var currentSource = (IQueryable<T>)(LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source);
 			return currentSource.Provider.CreateQuery<T>(
-				Expression.Call(null, MethodHelper.GetMethodInfo(AsKeyedQuery, source), currentSource.Expression));
+				Expression.Call(null, MethodHelper.GetMethodInfo(AsEagerLoadKeyedQuery, source), currentSource.Expression));
 		}
 
 		#endregion

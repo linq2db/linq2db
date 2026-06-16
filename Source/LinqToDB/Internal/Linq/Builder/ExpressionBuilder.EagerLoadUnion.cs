@@ -1801,10 +1801,13 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (_nestedProcessingOrder != null)
 				{
 					var carriers = new List<TCarrier>();
-					await using var enumerator = _query.GetResultEnumerable(dataContext, expressions, parameters, preambles)
+					var enumerator = _query.GetResultEnumerable(dataContext, expressions, parameters, preambles)
 						.GetAsyncEnumerator(cancellationToken);
-					while (await enumerator.MoveNextAsync().ConfigureAwait(false))
-						carriers.Add(enumerator.Current);
+					await using (enumerator.ConfigureAwait(false))
+					{
+						while (await enumerator.MoveNextAsync().ConfigureAwait(false))
+							carriers.Add(enumerator.Current);
+					}
 
 					foreach (var nestedSetId in _nestedProcessingOrder)
 					{
@@ -1833,18 +1836,20 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 				else
 				{
-					await using var enumerator = _query.GetResultEnumerable(dataContext, expressions, parameters, preambles)
+					var enumerator = _query.GetResultEnumerable(dataContext, expressions, parameters, preambles)
 						.GetAsyncEnumerator(cancellationToken);
-
-					while (await enumerator.MoveNextAsync().ConfigureAwait(false))
+					await using (enumerator.ConfigureAwait(false))
 					{
-						var carrier = enumerator.Current;
-						var setId   = _getSetId(carrier);
-						if (setId >= 0 && setId < _branchCount)
+						while (await enumerator.MoveNextAsync().ConfigureAwait(false))
 						{
-							var key    = _getKey(carrier);
-							var detail = _detailExtractors[setId](carrier, preambles);
-							((PreambleResult<TKey, object>)results[setId]!).Add(key, detail);
+							var carrier = enumerator.Current;
+							var setId   = _getSetId(carrier);
+							if (setId >= 0 && setId < _branchCount)
+							{
+								var key    = _getKey(carrier);
+								var detail = _detailExtractors[setId](carrier, preambles);
+								((PreambleResult<TKey, object>)results[setId]!).Add(key, detail);
+							}
 						}
 					}
 				}

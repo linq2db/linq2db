@@ -167,6 +167,7 @@ namespace LinqToDB
 	/// Specifies the default <see cref="EagerLoadingStrategy"/> used for all LoadWith/ThenLoad eager-loading
 	/// operations when no per-association strategy is set via <c>WithEagerLoadingStrategy</c>.
 	/// Default value: <see cref="EagerLoadingStrategy.Default"/>.
+	/// </param>
 	public sealed record LinqOptions
 	(
 		// TODO: Remove in v7
