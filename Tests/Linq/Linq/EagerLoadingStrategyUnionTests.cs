@@ -3276,6 +3276,112 @@ namespace Tests.Linq
 
 		#endregion
 
+		#region MATERIALIZED hint on multiply-referenced CTEs
+
+		sealed class SqlTextCapture : CommandInterceptor
+		{
+			readonly List<string> _captured = new();
+
+			public IReadOnlyList<string> Captured => _captured;
+
+			public override DbCommand CommandInitialized(CommandEventData eventData, DbCommand command)
+			{
+				_captured.Add(command.CommandText);
+				return command;
+			}
+		}
+
+		[Test]
+		public void Select_Union_MaterializesMultiplyReferencedCtes(
+			[IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			var (companies, departments, employees, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+			using var tEmp = db.CreateLocalTable(employees);
+
+			var capture = new SqlTextCapture();
+			db.AddInterceptor(capture);
+
+			var query = (
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					c.Name,
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							d.Name,
+							Employees = tEmp
+								.Where(e => e.DepartmentId == d.Id)
+								.OrderBy(e => e.Id)
+								.ToList(),
+						})
+						.ToList(),
+				}
+			);
+
+			var result = query
+				.AsEagerLoadUnionQuery()
+				.ToList();
+
+			// Verify the data is correct (same shape as Select_Union_NestedTwoLevel)
+			var expected = companies
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					c.Id,
+					c.Name,
+					Departments = departments
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							d.Name,
+							Employees = employees
+								.Where(e => e.DepartmentId == d.Id)
+								.OrderBy(e => e.Id)
+								.ToList(),
+						})
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+
+			// Locate the CteUnion preamble: the one command that contains a WITH … clause.
+			var withSql = capture.Captured.FirstOrDefault(s => s.Contains("WITH ", StringComparison.OrdinalIgnoreCase));
+			withSql.ShouldNotBeNull("expected a CTE (WITH …) query to have been issued");
+
+			// The main CTE and the Departments branch (which has the Employees child) are
+			// multiply-referenced and must be marked MATERIALIZED; the leaf Employees CTE is
+			// referenced only once and must not be.
+			var materializeCount = CountOccurrences(withSql, "MATERIALIZED");
+			materializeCount.ShouldBe(2,
+				$"expected exactly 2 MATERIALIZED occurrences (main CTE + Departments branch); actual SQL:\n{withSql}");
+
+			static int CountOccurrences(string text, string token)
+			{
+				int count = 0, pos = 0;
+				while ((pos = text.IndexOf(token, pos, StringComparison.OrdinalIgnoreCase)) >= 0)
+				{
+					count++;
+					pos += token.Length;
+				}
+				return count;
+			}
+		}
+
+		#endregion
+
 		#region Cardinality semantics — Single / FirstAsync / SingleAsync
 
 		[Test]

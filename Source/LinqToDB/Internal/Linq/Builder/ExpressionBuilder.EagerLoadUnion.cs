@@ -543,6 +543,22 @@ namespace LinqToDB.Internal.Linq.Builder
 				return null;
 			}
 
+			// Materialize CTEs that are referenced more than once so each is evaluated a single time:
+			// the main CTE (feeds every branch's SELECT DISTINCT key extraction AND the final UNION ALL)
+			// and any branch with nested children (referenced by the child's SELECT DISTINCT AND the final
+			// UNION ALL). Leaf branches are referenced once, so they stay inlinable. AS MATERIALIZED is a
+			// no-op on providers that do not recognize it (only PostgreSQL 12+, SQLite 3.35+, ClickHouse 26.3+).
+			// simplifiedBranches => branches do not reference the parent CTE (it is elided), nothing repeats.
+			static void MarkMaterialized(CteTableContext cteTableContext) =>
+				cteTableContext.CteContext.CteClause.Annotations.SetAnnotation(CteAnnotationNames.Materialized, true);
+
+			if (!simplifiedBranches)
+				MarkMaterialized(rootCteTableCtx);
+
+			foreach (var materializedBranch in branches)
+				if (materializedBranch.NestedEagerLoads is { Count: > 0 })
+					MarkMaterialized((CteTableContext)materializedBranch.DetailContext);
+
 			// SqlPlaceholderExpressions in allDependencies come from Concat/SetOperations.
 			// They reference the SetOperation's SQL fields directly.
 			// They are added to KDE keys and remapped to CTE later.
