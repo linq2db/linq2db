@@ -105,11 +105,22 @@ namespace Tests
 				return;
 			}
 
-			// Provider-less leaf, CreateDatabase, Direct / SingleThreaded content: run on the
-			// calling thread under the read gate so it is excluded by the exclusive lane.
+			// CreateDatabase runs UNGATED (no read lock). It seeds a provider's schema and the
+			// provider's other tests block on its readiness latch; running it under the read lock
+			// lets a long-held exclusive write lock (a slow [NonParallelizable] fixture running its
+			// whole subtree inline) starve it, deadlocking the latch -- the fixture's own provider
+			// tests wait 2 min for a CreateDatabase the write lock is blocking, then run unseeded.
+			// CreateDatabase is raw DDL against a single provider's database and touches none of the
+			// shared global state the exclusive lane guards, so running it concurrently is safe.
 			if (context != null && NUnitUtils.IsCreateDatabase(work.Test))
-				ParallelDiag.Log($"dispatch->rungated CREATEDB provider={context} test={work.Test.Name}");
+			{
+				ParallelDiag.Log($"dispatch->ungated CREATEDB provider={context} test={work.Test.Name}");
+				work.Execute();
+				return;
+			}
 
+			// Provider-less leaf, Direct / SingleThreaded content: run on the calling thread under
+			// the read gate so it is excluded by the exclusive lane.
 			RunGated(work);
 		}
 
