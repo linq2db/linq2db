@@ -209,14 +209,16 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// When <see langword="true"/>, an implicit eager load (a collection projected in a <c>Select</c> without an
-		/// explicit <c>LoadWith</c>/<c>ThenLoad</c> or <c>AsEagerLoad*</c> marker) throws <see cref="LinqToDBException"/>
-		/// at build time. Default: <see langword="false"/>.
+		/// When <see langword="true"/>, an implicit eager load (a collection projected in a <c>Select</c> without
+		/// being explicitly requested) throws <see cref="LinqToDBException"/> at build time. The guard is bypassed
+		/// by an explicit <c>LoadWith</c>/<c>ThenLoad</c> (that collection only) or a root
+		/// <c>WithUnionLoadStrategy</c>/<c>WithKeyedLoadStrategy</c>/<c>WithSeparateLoadStrategy</c> marker (whole
+		/// query); set to <see langword="false"/> to disable the guard. Default: <see langword="false"/>.
 		/// </summary>
 		[Pure]
-		public static LinqOptions WithDisableImplicitEagerLoading(this LinqOptions options, bool disableImplicitEagerLoading)
+		public static LinqOptions WithGuardImplicitEagerLoading(this LinqOptions options, bool guardImplicitEagerLoading)
 		{
-			return options with { DisableImplicitEagerLoading = disableImplicitEagerLoading };
+			return options with { GuardImplicitEagerLoading = guardImplicitEagerLoading };
 		}
 
 		/// <summary>
@@ -495,14 +497,16 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// When <see langword="true"/>, an implicit eager load (a collection projected in a <c>Select</c> without an
-		/// explicit <c>LoadWith</c>/<c>ThenLoad</c> or <c>AsEagerLoad*</c> marker) throws <see cref="LinqToDBException"/>
-		/// at build time. Default: <see langword="false"/>.
+		/// When <see langword="true"/>, an implicit eager load (a collection projected in a <c>Select</c> without
+		/// being explicitly requested) throws <see cref="LinqToDBException"/> at build time. The guard is bypassed
+		/// by an explicit <c>LoadWith</c>/<c>ThenLoad</c> (that collection only) or a root
+		/// <c>WithUnionLoadStrategy</c>/<c>WithKeyedLoadStrategy</c>/<c>WithSeparateLoadStrategy</c> marker (whole
+		/// query); set to <see langword="false"/> to disable the guard. Default: <see langword="false"/>.
 		/// </summary>
 		[Pure]
-		public static DataOptions UseDisableImplicitEagerLoading(this DataOptions options, bool disableImplicitEagerLoading)
+		public static DataOptions UseGuardImplicitEagerLoading(this DataOptions options, bool guardImplicitEagerLoading)
 		{
-			return options.WithOptions<LinqOptions>(o => o with { DisableImplicitEagerLoading = disableImplicitEagerLoading });
+			return options.WithOptions<LinqOptions>(o => o with { GuardImplicitEagerLoading = guardImplicitEagerLoading });
 		}
 
 		/// <summary>

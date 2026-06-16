@@ -68,9 +68,9 @@
 							NOTE! By disabling this guard you accept Eager Loading for grouping query.
 							""";
 
-		public const string Error_ImplicitEagerLoadingDisabled =
-			"Implicit eager loading is disabled (LinqOptions.DisableImplicitEagerLoading = true): a collection was projected without an explicit eager-load request. "
-			+ "Use LoadWith()/ThenLoad(), or AsEagerLoadUnionQuery()/AsEagerLoadKeyedQuery()/AsEagerLoadSeparateQuery(), to request it explicitly — or set DisableImplicitEagerLoading = false to allow implicit eager loading.";
+		public const string Error_ImplicitEagerLoadingNotAllowed =
+			"Implicit eager loading is not allowed (LinqOptions.GuardImplicitEagerLoading = true): a collection was projected without an explicit eager-load request. "
+			+ "To allow it, request the load explicitly with LoadWith()/ThenLoad(), or opt the whole query in with WithUnionLoadStrategy()/WithKeyedLoadStrategy()/WithSeparateLoadStrategy() — or set GuardImplicitEagerLoading = false to turn the guard off.";
 
 		public static class Oracle
 		{

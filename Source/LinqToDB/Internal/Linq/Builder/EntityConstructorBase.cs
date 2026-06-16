@@ -189,7 +189,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 						Expression expression = Expression.MakeMemberAccess(currentPath, currentMember);
 
-						if (DataOptions.LinqOptions.DisableImplicitEagerLoading)
+						if (DataOptions.LinqOptions.GuardImplicitEagerLoading)
 						{
 							// When implicit eager loading is disabled, tag explicit (LoadWith/ThenLoad) collection loads
 							// so ImplicitEagerLoadGuardVisitor lets them through; unmarked (implicit) projections throw.

@@ -153,7 +153,7 @@ namespace Tests.Linq
 
 		#endregion
 
-		#region Global DefaultEagerLoadingStrategy — no AsEagerLoadKeyedQuery() needed
+		#region Global DefaultEagerLoadingStrategy — no WithKeyedLoadStrategy() needed
 
 		[Test]
 		public void Select_GlobalKeyedQuery_InlineCollection(
@@ -163,7 +163,7 @@ namespace Tests.Linq
 
 			using var db   = GetDataContext(context);
 
-			// Enable KeyedQuery globally — no AsEagerLoadKeyedQuery() calls needed
+			// Enable KeyedQuery globally — no WithKeyedLoadStrategy() calls needed
 			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.KeyedQuery });
 
 			var counter = new SelectQueryCounter();
@@ -341,7 +341,7 @@ namespace Tests.Linq
 
 			if (!context.IsRemote()) counter.Count = 0;
 
-			// No AsEagerLoadKeyedQuery() — global strategy applies
+			// No WithKeyedLoadStrategy() — global strategy applies
 			var query = tCo
 				.LoadWith(c => c.Departments)
 				.OrderBy(c => c.Id);
@@ -440,7 +440,7 @@ namespace Tests.Linq
 						})
 						.ToList(),
 				}
-			).AsEagerLoadKeyedQuery();
+			).WithKeyedLoadStrategy();
 
 			var result = query.ToList();
 
@@ -502,7 +502,7 @@ namespace Tests.Linq
 						})
 						.ToList(),
 				}
-			).AsEagerLoadKeyedQuery();
+			).WithKeyedLoadStrategy();
 
 			var result = query.ToList();
 
@@ -562,7 +562,7 @@ namespace Tests.Linq
 						})
 						.ToList(),
 				}
-			).AsEagerLoadKeyedQuery();
+			).WithKeyedLoadStrategy();
 
 			var result = query.ToList();
 
@@ -614,7 +614,7 @@ namespace Tests.Linq
 						.OrderBy(d => d.Id)
 						.ToList(),
 				}
-			).AsEagerLoadKeyedQuery();
+			).WithKeyedLoadStrategy();
 
 			var result = query.ToList();
 
@@ -670,7 +670,7 @@ namespace Tests.Linq
 						})
 						.ToList(),
 				}
-			).AsEagerLoadKeyedQuery();
+			).WithKeyedLoadStrategy();
 
 			var result = query.ToList();
 
@@ -717,7 +717,7 @@ namespace Tests.Linq
 						.OrderBy(d => d.Id)
 						.ToList(),
 				}
-			).AsEagerLoadKeyedQuery();
+			).WithKeyedLoadStrategy();
 
 			var result = query.ToList();
 
@@ -778,7 +778,7 @@ namespace Tests.Linq
 					Workers = cGroup.OrderBy(c => c.Id).Select(c => new { c.Id, c.Name }).ToList(),
 				};
 
-			var query  = query1.Concat(query2).AsEagerLoadKeyedQuery();
+			var query  = query1.Concat(query2).WithKeyedLoadStrategy();
 			var result = query.ToList();
 
 			var expected = departments
@@ -829,7 +829,7 @@ namespace Tests.Linq
 			var query = tCo
 				.LoadWith(c => c.Departments)
 				.OrderBy(c => c.Id)
-				.AsEagerLoadKeyedQuery();
+				.WithKeyedLoadStrategy();
 
 			var result = query.ToList();
 
@@ -867,7 +867,7 @@ namespace Tests.Linq
 				};
 
 			var result = query
-				.AsEagerLoadKeyedQuery()
+				.WithKeyedLoadStrategy()
 				.ToList();
 
 			var expected = companies
@@ -909,7 +909,7 @@ namespace Tests.Linq
 				};
 
 			var result = query
-				.AsEagerLoadKeyedQuery()
+				.WithKeyedLoadStrategy()
 				.ToList();
 
 			var expected = companies
@@ -952,7 +952,7 @@ namespace Tests.Linq
 				};
 
 			var result = query
-				.AsEagerLoadKeyedQuery()
+				.WithKeyedLoadStrategy()
 				.ToList();
 
 			var expected = rootDepts
@@ -1000,7 +1000,7 @@ namespace Tests.Linq
 				};
 
 			var result = query
-				.AsEagerLoadKeyedQuery()
+				.WithKeyedLoadStrategy()
 				.ToList();
 
 			var expected = companies
@@ -1051,7 +1051,7 @@ namespace Tests.Linq
 				};
 
 			var result = query
-				.AsEagerLoadKeyedQuery()
+				.WithKeyedLoadStrategy()
 				.ToList();
 
 			var expected = companies
@@ -1099,7 +1099,7 @@ namespace Tests.Linq
 				};
 
 			var result = query
-				.AsEagerLoadKeyedQuery()
+				.WithKeyedLoadStrategy()
 				.FirstOrDefault();
 
 			result.ShouldNotBeNull();
@@ -1132,7 +1132,7 @@ namespace Tests.Linq
 				};
 
 			var result = query
-				.AsEagerLoadKeyedQuery()
+				.WithKeyedLoadStrategy()
 				.ToList();
 
 			result.Count.ShouldBe(0);
@@ -1158,7 +1158,7 @@ namespace Tests.Linq
 				.OrderBy(c => c.Id);
 
 			var result = query
-				.AsEagerLoadKeyedQuery()
+				.WithKeyedLoadStrategy()
 				.ToList();
 
 			result.Count.ShouldBe(companies.Length);
@@ -1192,7 +1192,7 @@ namespace Tests.Linq
 				.OrderBy(c => c.Id);
 
 			var result = query
-				.AsEagerLoadKeyedQuery()
+				.WithKeyedLoadStrategy()
 				.ToList();
 
 			result.Count.ShouldBe(companies.Length);
@@ -1216,7 +1216,7 @@ namespace Tests.Linq
 		#region Tests ported from UnionTests — Root marker
 
 		[Test]
-		public void RootAsEagerLoadKeyedQuery_SingleChild(
+		public void RootWithKeyedLoadStrategy_SingleChild(
 			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
@@ -1226,7 +1226,7 @@ namespace Tests.Linq
 			using var tDep = db.CreateLocalTable(departments);
 
 			var query =
-				from c in tCo.AsEagerLoadKeyedQuery()
+				from c in tCo.WithKeyedLoadStrategy()
 				orderby c.Id
 				select new
 				{
@@ -1257,7 +1257,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void RootAsEagerLoadKeyedQuery_MultipleChildren(
+		public void RootWithKeyedLoadStrategy_MultipleChildren(
 			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (_, departments, employees, contractors, _) = GenerateHierarchy();
@@ -1270,7 +1270,7 @@ namespace Tests.Linq
 			using var tCtr = db.CreateLocalTable(contractors);
 
 			var query =
-				from d in tDep.AsEagerLoadKeyedQuery()
+				from d in tDep.WithKeyedLoadStrategy()
 				orderby d.Id
 				select new
 				{
@@ -1323,7 +1323,7 @@ namespace Tests.Linq
 				};
 
 			var result = query
-				.AsEagerLoadKeyedQuery()
+				.WithKeyedLoadStrategy()
 				.ToList();
 
 			var expected = companies
@@ -1381,7 +1381,7 @@ namespace Tests.Linq
 						.OrderBy(d => d.Id)
 						.ToList(),
 				}
-			).AsEagerLoadKeyedQuery().Single();
+			).WithKeyedLoadStrategy().Single();
 
 			result.Id.ShouldBe(1);
 			result.Departments.Count.ShouldBe(departments.Count(d => d.CompanyId == 1));
@@ -1410,7 +1410,7 @@ namespace Tests.Linq
 						.OrderBy(d => d.Id)
 						.ToList(),
 				}
-			).AsEagerLoadKeyedQuery();
+			).WithKeyedLoadStrategy();
 
 			var act = () => query.Single();
 			act.ShouldThrow<InvalidOperationException>();
@@ -1437,7 +1437,7 @@ namespace Tests.Linq
 						.OrderBy(d => d.Id)
 						.ToList(),
 				}
-			).AsEagerLoadKeyedQuery();
+			).WithKeyedLoadStrategy();
 
 			var act = () => query.SingleOrDefault();
 			act.ShouldThrow<InvalidOperationException>();
@@ -1464,7 +1464,7 @@ namespace Tests.Linq
 						.OrderBy(d => d.Id)
 						.ToList(),
 				}
-			).AsEagerLoadKeyedQuery();
+			).WithKeyedLoadStrategy();
 
 			Assert.ThrowsAsync<InvalidOperationException>(async () => await query.SingleAsync());
 		}
@@ -1491,7 +1491,7 @@ namespace Tests.Linq
 						.OrderBy(d => d.Id)
 						.ToList(),
 				}
-			).AsEagerLoadKeyedQuery().FirstAsync();
+			).WithKeyedLoadStrategy().FirstAsync();
 
 			var expectedFirst = companies.OrderBy(c => c.Id).First();
 			result.Id.ShouldBe(expectedFirst.Id);
@@ -1519,7 +1519,7 @@ namespace Tests.Linq
 			var query = tCo
 				.LoadWith(c => c.Departments.Where(d => d.CompanyId == c.Id && d.Id > c.Id))
 				.OrderBy(c => c.Id)
-				.AsEagerLoadKeyedQuery();
+				.WithKeyedLoadStrategy();
 
 			var result = query.ToList();
 
@@ -1574,7 +1574,7 @@ namespace Tests.Linq
 					Departments = tDep.Where(d => d.CompanyId == c.Id).OrderBy(d => d.Id).ToList(),
 				};
 
-			var result = query.AsEagerLoadKeyedQuery().ToList();
+			var result = query.WithKeyedLoadStrategy().ToList();
 
 			result.Count.ShouldBe(companies.Length);
 			for (int i = 0; i < result.Count; i++)
@@ -1665,7 +1665,7 @@ namespace Tests.Linq
 						.ToList(),
 				};
 
-			return query.AsEagerLoadKeyedQuery().ToList();
+			return query.WithKeyedLoadStrategy().ToList();
 		}
 
 		sealed class CompanyWithDepartments
@@ -1711,7 +1711,7 @@ namespace Tests.Linq
 				};
 
 			var result = query
-				.AsEagerLoadSeparateQuery()
+				.WithSeparateLoadStrategy()
 				.ToList();
 
 			var expected = rootDepts
@@ -1732,7 +1732,7 @@ namespace Tests.Linq
 
 		#endregion
 
-		#region AsEagerLoadSeparateQuery — explicit Default strategy override
+		#region WithSeparateLoadStrategy — explicit Default strategy override
 
 		/// <summary>
 		/// Returns <see langword="true"/> when the provider supports Common Table Expressions.
@@ -1743,7 +1743,7 @@ namespace Tests.Linq
 
 		// MAJ001: root marker — global KeyedQuery overridden to Default.
 		[Test]
-		public void AsEagerLoadSeparateQuery_OverridesGlobalKeyedQuery(
+		public void WithSeparateLoadStrategy_OverridesGlobalKeyedQuery(
 			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
@@ -1755,7 +1755,7 @@ namespace Tests.Linq
 			using var tDep = db.CreateLocalTable(departments);
 			using var tEmp = db.CreateLocalTable(employees);
 
-			// AsEagerLoadSeparateQuery() on the root query overrides the global KeyedQuery default
+			// WithSeparateLoadStrategy() on the root query overrides the global KeyedQuery default
 			var query =
 				from c in tCo
 				orderby c.Id
@@ -1779,7 +1779,7 @@ namespace Tests.Linq
 				};
 
 			var result = query
-				.AsEagerLoadSeparateQuery()
+				.WithSeparateLoadStrategy()
 				.ToList();
 
 			var expected = companies
@@ -1807,11 +1807,11 @@ namespace Tests.Linq
 			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 		}
 
-		// MIN001: per-call AsEagerLoadUnionQuery() marker wins over global DefaultEagerLoadingStrategy = Default.
+		// MIN001: per-call WithUnionLoadStrategy() marker wins over global DefaultEagerLoadingStrategy = Default.
 		// Verified via query count: Default produces N+1 separate queries; CteUnion collapses 2 same-level
 		// child collections into a single UNION ALL query (counter == 1 on CTE providers).
 		[Test]
-		public void AsEagerLoadUnionQuery_OverridesGlobalDefault_QueryCountDistinguishesStrategy(
+		public void WithUnionLoadStrategy_OverridesGlobalDefault_QueryCountDistinguishesStrategy(
 			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllFirebirdLess3)] string context)
 		{
 			var (_, departments, employees, contractors, _) = GenerateHierarchy();
@@ -1820,7 +1820,7 @@ namespace Tests.Linq
 			var rootDepts = departments.Where(d => d.CompanyId == 1).ToArray();
 
 			using var db   = GetDataContext(context);
-			// Global default is Default (N+1 separate queries); AsEagerLoadUnionQuery() must override it
+			// Global default is Default (N+1 separate queries); WithUnionLoadStrategy() must override it
 			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.Default });
 
 			var counter = new SelectQueryCounter();
@@ -1847,7 +1847,7 @@ namespace Tests.Linq
 				};
 
 			var result = query
-				.AsEagerLoadUnionQuery()
+				.WithUnionLoadStrategy()
 				.ToList();
 
 			var expected = rootDepts
@@ -1927,7 +1927,7 @@ namespace Tests.Linq
 				};
 
 			var result = query
-				.AsEagerLoadKeyedQuery()
+				.WithKeyedLoadStrategy()
 				.ToList();
 
 			var expected = parents
@@ -2042,7 +2042,7 @@ namespace Tests.Linq
 				};
 
 			var resultUnion = queryCteUnion
-				.AsEagerLoadUnionQuery()
+				.WithUnionLoadStrategy()
 				.ToList();
 
 			AreEqual(expectedKeyed, resultUnion, ComparerBuilder.GetEqualityComparer(expectedKeyed));

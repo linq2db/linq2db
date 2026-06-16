@@ -168,11 +168,16 @@ namespace LinqToDB
 	/// operations when no per-association strategy is set via <c>WithEagerLoadingStrategy</c>.
 	/// Default value: <see cref="EagerLoadingStrategy.Default"/>.
 	/// </param>
-	/// <param name="DisableImplicitEagerLoading">
-	/// When <see langword="true"/>, a query that triggers an implicit eager load — a collection
-	/// projected in a <c>Select</c> without an explicit <c>LoadWith</c>/<c>ThenLoad</c> or an
-	/// <c>AsEagerLoad*</c> marker — throws <see cref="LinqToDBException"/> at build time.
-	/// Default value: <see langword="false"/>.
+	/// <param name="GuardImplicitEagerLoading">
+	/// When <see langword="true"/>, a query that triggers an implicit eager load — a collection projected
+	/// in a <c>Select</c> without being explicitly requested — throws <see cref="LinqToDBException"/> at
+	/// build time. Default value: <see langword="false"/>.
+	/// <para>
+	/// The guard is bypassed when the eager load is explicit: <c>LoadWith</c>/<c>ThenLoad</c> allows that
+	/// one collection (other unmarked collections in the same query still throw), while a root
+	/// <c>WithUnionLoadStrategy</c>/<c>WithKeyedLoadStrategy</c>/<c>WithSeparateLoadStrategy</c> marker opts
+	/// the whole query in. Set this option to <see langword="false"/> to disable the guard for all queries.
+	/// </para>
 	/// </param>
 	public sealed record LinqOptions
 	(
@@ -199,7 +204,7 @@ namespace LinqToDB
 		bool                  PreferExistsForScalar          = default,
 		UpsertEmulationPolicy UpsertEmulationPolicy          = UpsertEmulationPolicy.Allow,
 		EagerLoadingStrategy  DefaultEagerLoadingStrategy    = EagerLoadingStrategy.Default,
-		bool                  DisableImplicitEagerLoading    = false
+		bool                  GuardImplicitEagerLoading      = false
 		// If you add another parameter here, don't forget to update
 		// LinqOptions copy constructor and IConfigurationID.ConfigurationID.
 	)
@@ -225,7 +230,7 @@ namespace LinqToDB
 			PreferExistsForScalar   = original.PreferExistsForScalar;
 			UpsertEmulationPolicy   = original.UpsertEmulationPolicy;
 			DefaultEagerLoadingStrategy = original.DefaultEagerLoadingStrategy;
-			DisableImplicitEagerLoading = original.DisableImplicitEagerLoading;
+			GuardImplicitEagerLoading   = original.GuardImplicitEagerLoading;
 		}
 
 		/// <summary>
@@ -314,7 +319,7 @@ namespace LinqToDB
 						.Add(PreferExistsForScalar)
 						.Add((int)UpsertEmulationPolicy)
 						.Add((int)DefaultEagerLoadingStrategy)
-						.Add(DisableImplicitEagerLoading)
+						.Add(GuardImplicitEagerLoading)
 						.CreateID();
 				}
 

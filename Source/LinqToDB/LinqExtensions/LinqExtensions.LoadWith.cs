@@ -769,7 +769,7 @@ namespace LinqToDB
 		/// <para>
 		/// Applied to the root query; the strategy propagates to all contained child collections.
 		/// Requires the target database to support Common Table Expressions; when CTEs are unavailable
-		/// the whole-query eager-loading set falls back to <see cref="AsEagerLoadKeyedQuery{T}(IQueryable{T})"/>.
+		/// the whole-query eager-loading set falls back to <see cref="WithKeyedLoadStrategy{T}(IQueryable{T})"/>.
 		/// </para>
 		/// <para>An explicit per-query marker takes precedence over the <see cref="LinqOptions.DefaultEagerLoadingStrategy"/> global default.</para>
 		/// </summary>
@@ -778,10 +778,10 @@ namespace LinqToDB
 		/// // Root-level — applies to all children
 		/// (from o in db.Orders
 		///  select new { Items = o.OrderItems.ToList() }
-		/// ).AsEagerLoadUnionQuery().ToList()
+		/// ).WithUnionLoadStrategy().ToList()
 		///
 		/// // LoadWith
-		/// db.Orders.LoadWith(o => o.OrderItems).AsEagerLoadUnionQuery().ToList()
+		/// db.Orders.LoadWith(o => o.OrderItems).WithUnionLoadStrategy().ToList()
 		/// </code>
 		/// </example>
 		/// <typeparam name="T">Element type of the root query.</typeparam>
@@ -789,12 +789,12 @@ namespace LinqToDB
 		/// <returns><paramref name="source"/> unchanged at runtime (translation-time marker only).</returns>
 		[LinqTunnel]
 		[Pure]
-		public static IQueryable<T> AsEagerLoadUnionQuery<T>(this IQueryable<T> source)
+		public static IQueryable<T> WithUnionLoadStrategy<T>(this IQueryable<T> source)
 		{
 			ArgumentNullException.ThrowIfNull(source);
 			var currentSource = (IQueryable<T>)(LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source);
 			return currentSource.Provider.CreateQuery<T>(
-				Expression.Call(null, MethodHelper.GetMethodInfo(AsEagerLoadUnionQuery, source), currentSource.Expression));
+				Expression.Call(null, MethodHelper.GetMethodInfo(WithUnionLoadStrategy, source), currentSource.Expression));
 		}
 
 		/// <summary>
@@ -802,7 +802,7 @@ namespace LinqToDB
 		/// per association), fetching the full parent entity on the parent side of the join.
 		/// <para>
 		/// Applied to the root query; the strategy propagates to all contained child collections.
-		/// Consider <see cref="AsEagerLoadKeyedQuery{T}(IQueryable{T})"/> instead when the parent entity has many columns.
+		/// Consider <see cref="WithKeyedLoadStrategy{T}(IQueryable{T})"/> instead when the parent entity has many columns.
 		/// </para>
 		/// <para>An explicit per-query marker takes precedence over the <see cref="LinqOptions.DefaultEagerLoadingStrategy"/> global default.</para>
 		/// </summary>
@@ -811,10 +811,10 @@ namespace LinqToDB
 		/// // Root-level — applies to all children
 		/// (from o in db.Orders
 		///  select new { Items = o.OrderItems.ToList() }
-		/// ).AsEagerLoadSeparateQuery().ToList()
+		/// ).WithSeparateLoadStrategy().ToList()
 		///
 		/// // LoadWith
-		/// db.Orders.LoadWith(o => o.OrderItems).AsEagerLoadSeparateQuery().ToList()
+		/// db.Orders.LoadWith(o => o.OrderItems).WithSeparateLoadStrategy().ToList()
 		/// </code>
 		/// </example>
 		/// <typeparam name="T">Element type of the root query.</typeparam>
@@ -822,12 +822,12 @@ namespace LinqToDB
 		/// <returns><paramref name="source"/> unchanged at runtime (translation-time marker only).</returns>
 		[LinqTunnel]
 		[Pure]
-		public static IQueryable<T> AsEagerLoadSeparateQuery<T>(this IQueryable<T> source)
+		public static IQueryable<T> WithSeparateLoadStrategy<T>(this IQueryable<T> source)
 		{
 			ArgumentNullException.ThrowIfNull(source);
 			var currentSource = (IQueryable<T>)(LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source);
 			return currentSource.Provider.CreateQuery<T>(
-				Expression.Call(null, MethodHelper.GetMethodInfo(AsEagerLoadSeparateQuery, source), currentSource.Expression));
+				Expression.Call(null, MethodHelper.GetMethodInfo(WithSeparateLoadStrategy, source), currentSource.Expression));
 		}
 
 		/// <summary>
@@ -852,10 +852,10 @@ namespace LinqToDB
 		/// // Root-level — applies to all children
 		/// (from o in db.Orders
 		///  select new { Items = o.OrderItems.ToList() }
-		/// ).AsEagerLoadKeyedQuery().ToList()
+		/// ).WithKeyedLoadStrategy().ToList()
 		///
 		/// // LoadWith
-		/// db.Orders.LoadWith(o => o.OrderItems).AsEagerLoadKeyedQuery().ToList()
+		/// db.Orders.LoadWith(o => o.OrderItems).WithKeyedLoadStrategy().ToList()
 		/// </code>
 		/// </example>
 		/// <typeparam name="T">Element type of the collection.</typeparam>
@@ -863,12 +863,12 @@ namespace LinqToDB
 		/// <returns><paramref name="source"/> unchanged at runtime (translation-time marker only).</returns>
 		[LinqTunnel]
 		[Pure]
-		public static IQueryable<T> AsEagerLoadKeyedQuery<T>(this IQueryable<T> source)
+		public static IQueryable<T> WithKeyedLoadStrategy<T>(this IQueryable<T> source)
 		{
 			ArgumentNullException.ThrowIfNull(source);
 			var currentSource = (IQueryable<T>)(LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source);
 			return currentSource.Provider.CreateQuery<T>(
-				Expression.Call(null, MethodHelper.GetMethodInfo(AsEagerLoadKeyedQuery, source), currentSource.Expression));
+				Expression.Call(null, MethodHelper.GetMethodInfo(WithKeyedLoadStrategy, source), currentSource.Expression));
 		}
 
 		#endregion

@@ -185,9 +185,9 @@ namespace LinqToDB.Internal.Reflection
 			public static readonly MethodInfo LoadWithSingleFilter  = MemberHelper.MethodOfGeneric<IQueryable<LW1>>(q => q.LoadWith(e => e.Single2, eq => eq.Where(e => e.Value2 == 1)));
 			public static readonly MethodInfo LoadWithManyFilter    = MemberHelper.MethodOfGeneric<IQueryable<LW1>>(q => q.LoadWith(e => e.Many2,   eq => eq.Where(e => e.Value2 == 1)));
 
-			public static readonly MethodInfo AsEagerLoadUnionQueryQueryable     = MemberHelper.MethodOfGeneric<IQueryable<LW1>>(q => q.AsEagerLoadUnionQuery());
-			public static readonly MethodInfo AsEagerLoadSeparateQueryQueryable  = MemberHelper.MethodOfGeneric<IQueryable<LW1>>(q => q.AsEagerLoadSeparateQuery());
-			public static readonly MethodInfo AsEagerLoadKeyedQueryQueryable     = MemberHelper.MethodOfGeneric<IQueryable<LW1>>(q => q.AsEagerLoadKeyedQuery());
+			public static readonly MethodInfo WithUnionLoadStrategyQueryable     = MemberHelper.MethodOfGeneric<IQueryable<LW1>>(q => q.WithUnionLoadStrategy());
+			public static readonly MethodInfo WithSeparateLoadStrategyQueryable  = MemberHelper.MethodOfGeneric<IQueryable<LW1>>(q => q.WithSeparateLoadStrategy());
+			public static readonly MethodInfo WithKeyedLoadStrategyQueryable     = MemberHelper.MethodOfGeneric<IQueryable<LW1>>(q => q.WithKeyedLoadStrategy());
 
 			public static readonly MethodInfo ThenLoadFromSingle             = MemberHelper.MethodOfGeneric<IQueryable<LW1>>(q => q.LoadWith(e => e.Single2).ThenLoad(e => e.Single3));
 			public static readonly MethodInfo ThenLoadFromMany               = MemberHelper.MethodOfGeneric<IQueryable<LW1>>(q => q.LoadWith(e => e.Many2).ThenLoad(e => e.Single3));
