@@ -562,39 +562,5 @@ namespace LinqToDB.DataProvider.ClickHouse
 			return table => table.JoinHint(Join.Any);
 		}
 
-		/// <summary>
-		/// Adds the same ClickHouse join hint as <c>JoinAsOfHint</c>. This method is deprecated.
-		/// </summary>
-		[Obsolete("This API is deprecated and will be removed in future versions. Use JoinAsOfHint instead.")]
-		[ExpressionMethod(nameof(JoinAllAsOfHintImpl))]
-		public static IClickHouseSpecificQueryable<TSource> JoinAllAsOfHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
-			where TSource : notnull
-		{
-			return query.JoinHint(Join.AsOf);
-		}
-
-		static Expression<Func<IClickHouseSpecificQueryable<TSource>,IClickHouseSpecificQueryable<TSource>>> JoinAllAsOfHintImpl<TSource>()
-			where TSource : notnull
-		{
-			return query => query.JoinHint(Join.AsOf);
-		}
-
-		/// <summary>
-		/// Adds the same ClickHouse join hint as <c>JoinAsOfHint</c>. This method is deprecated.
-		/// </summary>
-		[Obsolete("This API is deprecated and will be removed in future versions. Use JoinAsOfHint instead.")]
-		[ExpressionMethod(nameof(JoinAllAsOfTableHintImpl))]
-		public static IClickHouseSpecificTable<TSource> JoinAllAsOfHint<TSource>(this IClickHouseSpecificTable<TSource> table)
-			where TSource : notnull
-		{
-			return table.JoinHint(Join.AsOf);
-		}
-
-		static Expression<Func<IClickHouseSpecificTable<TSource>,IClickHouseSpecificTable<TSource>>> JoinAllAsOfTableHintImpl<TSource>()
-			where TSource : notnull
-		{
-			return table => table.JoinHint(Join.AsOf);
-		}
-
 	}
 }

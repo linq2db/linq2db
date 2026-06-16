@@ -14,7 +14,7 @@ namespace Tests.Extensions
 	public partial class ClickHouseTests
 	{
 		[Test]
-		public void JoinOuterHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		public void LeftJoinOuterHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -28,9 +28,8 @@ namespace Tests.Extensions
 
 			Assert.That(LastQuery, Contains.Substring($"LEFT OUTER JOIN"));
 		}
-
 		[Test]
-		public void JoinSemiHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		public void LeftJoinSemiHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -44,9 +43,8 @@ namespace Tests.Extensions
 
 			Assert.That(LastQuery, Contains.Substring($"LEFT SEMI JOIN"));
 		}
-
 		[Test]
-		public void JoinAntiHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		public void LeftJoinAntiHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -60,9 +58,8 @@ namespace Tests.Extensions
 
 			Assert.That(LastQuery, Contains.Substring($"LEFT ANTI JOIN"));
 		}
-
 		[Test]
-		public void JoinAnyHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		public void LeftJoinAnyHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -76,9 +73,8 @@ namespace Tests.Extensions
 
 			Assert.That(LastQuery, Contains.Substring($"LEFT ANY JOIN"));
 		}
-
 		[Test]
-		public void JoinAllHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		public void LeftJoinAllHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -92,9 +88,8 @@ namespace Tests.Extensions
 
 			Assert.That(LastQuery, Contains.Substring($"LEFT ALL JOIN"));
 		}
-
 		[Test]
-		public void JoinGlobalHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		public void LeftJoinGlobalHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -108,9 +103,8 @@ namespace Tests.Extensions
 
 			Assert.That(LastQuery, Contains.Substring($"GLOBAL LEFT JOIN"));
 		}
-
 		[Test]
-		public void JoinGlobalOuterHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		public void LeftJoinGlobalOuterHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -124,9 +118,8 @@ namespace Tests.Extensions
 
 			Assert.That(LastQuery, Contains.Substring($"GLOBAL LEFT OUTER JOIN"));
 		}
-
 		[Test]
-		public void JoinGlobalSemiHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		public void LeftJoinGlobalSemiHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -140,9 +133,8 @@ namespace Tests.Extensions
 
 			Assert.That(LastQuery, Contains.Substring($"GLOBAL LEFT SEMI JOIN"));
 		}
-
 		[Test]
-		public void JoinGlobalAntiHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		public void LeftJoinGlobalAntiHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -156,9 +148,8 @@ namespace Tests.Extensions
 
 			Assert.That(LastQuery, Contains.Substring($"GLOBAL LEFT ANTI JOIN"));
 		}
-
 		[Test]
-		public void JoinGlobalAnyHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		public void LeftJoinGlobalAnyHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -172,9 +163,8 @@ namespace Tests.Extensions
 
 			Assert.That(LastQuery, Contains.Substring($"GLOBAL LEFT ANY JOIN"));
 		}
-
 		[Test]
-		public void JoinGlobalAllHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		public void LeftJoinGlobalAllHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -188,10 +178,9 @@ namespace Tests.Extensions
 
 			Assert.That(LastQuery, Contains.Substring($"GLOBAL LEFT ALL JOIN"));
 		}
-
 #pragma warning disable CS0618 // Type or member is obsolete
 		[Test]
-		public void JoinAllOuterHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		public void LeftJoinAllOuterHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -206,10 +195,9 @@ namespace Tests.Extensions
 			Assert.That(LastQuery, Contains.Substring($"LEFT OUTER JOIN"));
 		}
 #pragma warning restore CS0618 // Type or member is obsolete
-
 #pragma warning disable CS0618 // Type or member is obsolete
 		[Test]
-		public void JoinAllSemiHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		public void LeftJoinAllSemiHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -224,10 +212,9 @@ namespace Tests.Extensions
 			Assert.That(LastQuery, Contains.Substring($"LEFT SEMI JOIN"));
 		}
 #pragma warning restore CS0618 // Type or member is obsolete
-
 #pragma warning disable CS0618 // Type or member is obsolete
 		[Test]
-		public void JoinAllAntiHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		public void LeftJoinAllAntiHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -242,10 +229,9 @@ namespace Tests.Extensions
 			Assert.That(LastQuery, Contains.Substring($"LEFT ANTI JOIN"));
 		}
 #pragma warning restore CS0618 // Type or member is obsolete
-
 #pragma warning disable CS0618 // Type or member is obsolete
 		[Test]
-		public void JoinAllAnyHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		public void LeftJoinAllAnyHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -260,24 +246,80 @@ namespace Tests.Extensions
 			Assert.That(LastQuery, Contains.Substring($"LEFT ANY JOIN"));
 		}
 #pragma warning restore CS0618 // Type or member is obsolete
-
-#pragma warning disable CS0618 // Type or member is obsolete
 		[Test]
-		public void JoinAllAsOfHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		public void InnerJoinAnyHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
 			var q =
 				from c in db.Child
-				join p in db.Parent.AsClickHouse().JoinAllAsOfHint() on c.ParentID equals p.ParentID into g
-				from p in g.DefaultIfEmpty()
+				join p in db.Parent.AsClickHouse().JoinAnyHint() on c.ParentID equals p.ParentID
 				select p;
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"LEFT ASOF JOIN"));
+			Assert.That(LastQuery, Contains.Substring($"INNER ANY JOIN"));
 		}
-#pragma warning restore CS0618 // Type or member is obsolete
+
+		[Test]
+		public void InnerJoinAllHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from c in db.Child
+				join p in db.Parent.AsClickHouse().JoinAllHint() on c.ParentID equals p.ParentID
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"INNER ALL JOIN"));
+		}
+
+		[Test]
+		public void InnerJoinGlobalHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from c in db.Child
+				join p in db.Parent.AsClickHouse().JoinGlobalHint() on c.ParentID equals p.ParentID
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"GLOBAL INNER JOIN"));
+		}
+
+		[Test]
+		public void InnerJoinGlobalAnyHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from c in db.Child
+				join p in db.Parent.AsClickHouse().JoinGlobalAnyHint() on c.ParentID equals p.ParentID
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"GLOBAL INNER ANY JOIN"));
+		}
+
+		[Test]
+		public void InnerJoinGlobalAllHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from c in db.Child
+				join p in db.Parent.AsClickHouse().JoinGlobalAllHint() on c.ParentID equals p.ParentID
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"GLOBAL INNER ALL JOIN"));
+		}
 
 	}
 }

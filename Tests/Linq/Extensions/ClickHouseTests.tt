@@ -20,36 +20,41 @@ namespace Tests.Extensions
 	public partial class ClickHouseTests
 	{
 <#
-	GenerateJoinHint("Outer",       "LEFT OUTER");
-	GenerateJoinHint("Semi",        "LEFT SEMI");
-	GenerateJoinHint("Anti",        "LEFT ANTI");
-	GenerateJoinHint("Any",         "LEFT ANY");
-	GenerateJoinHint("All",         "LEFT ALL");
+	GenerateLeftJoinHint("Outer",       "LEFT OUTER");
+	GenerateLeftJoinHint("Semi",        "LEFT SEMI");
+	GenerateLeftJoinHint("Anti",        "LEFT ANTI");
+	GenerateLeftJoinHint("Any",         "LEFT ANY");
+	GenerateLeftJoinHint("All",         "LEFT ALL");
 
-	GenerateJoinHint("Global",      "GLOBAL LEFT");
-	GenerateJoinHint("GlobalOuter", "GLOBAL LEFT OUTER");
-	GenerateJoinHint("GlobalSemi",  "GLOBAL LEFT SEMI");
-	GenerateJoinHint("GlobalAnti",  "GLOBAL LEFT ANTI");
-	GenerateJoinHint("GlobalAny",   "GLOBAL LEFT ANY");
-	GenerateJoinHint("GlobalAll",   "GLOBAL LEFT ALL");
+	GenerateLeftJoinHint("Global",      "GLOBAL LEFT");
+	GenerateLeftJoinHint("GlobalOuter", "GLOBAL LEFT OUTER");
+	GenerateLeftJoinHint("GlobalSemi",  "GLOBAL LEFT SEMI");
+	GenerateLeftJoinHint("GlobalAnti",  "GLOBAL LEFT ANTI");
+	GenerateLeftJoinHint("GlobalAny",   "GLOBAL LEFT ANY");
+	GenerateLeftJoinHint("GlobalAll",   "GLOBAL LEFT ALL");
 
-	GenerateJoinHint("AllOuter",    "LEFT OUTER", true);
-	GenerateJoinHint("AllSemi",     "LEFT SEMI",  true);
-	GenerateJoinHint("AllAnti",     "LEFT ANTI",  true);
-	GenerateJoinHint("AllAny",      "LEFT ANY",   true);
-	GenerateJoinHint("AllAsOf",     "LEFT ASOF",  true);
+	GenerateLeftJoinHint("AllOuter",    "LEFT OUTER", true);
+	GenerateLeftJoinHint("AllSemi",     "LEFT SEMI",  true);
+	GenerateLeftJoinHint("AllAnti",     "LEFT ANTI",  true);
+	GenerateLeftJoinHint("AllAny",      "LEFT ANY",   true);
+
+	GenerateInnerJoinHint("Any",        "INNER ANY");
+	GenerateInnerJoinHint("All",        "INNER ALL");
+	GenerateInnerJoinHint("Global",     "GLOBAL INNER");
+	GenerateInnerJoinHint("GlobalAny",  "GLOBAL INNER ANY");
+	GenerateInnerJoinHint("GlobalAll",  "GLOBAL INNER ALL");
 #>
 	}
 }
 <#+
-void GenerateJoinHint(string test, string hint, bool obsolete = false)
+void GenerateLeftJoinHint(string test, string hint, bool obsolete = false)
 {
 #>
 <#+ if (obsolete) { #>
 #pragma warning disable CS0618 // Type or member is obsolete
 <#+ } #>
 		[Test]
-		public void Join<#= test #>HintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		public void LeftJoin<#= test #>HintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -66,6 +71,27 @@ void GenerateJoinHint(string test, string hint, bool obsolete = false)
 <#+ if (obsolete) { #>
 #pragma warning restore CS0618 // Type or member is obsolete
 <#+ } #>
+
+<#+
+}
+
+void GenerateInnerJoinHint(string test, string hint)
+{
+#>
+		[Test]
+		public void InnerJoin<#= test #>HintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from c in db.Child
+				join p in db.Parent.AsClickHouse().Join<#= test #>Hint() on c.ParentID equals p.ParentID
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"<#= hint #> JOIN"));
+		}
 
 <#+
 }
