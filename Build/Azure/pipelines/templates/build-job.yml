@@ -2,6 +2,7 @@ parameters:
   with_nugets: false
   with_examples: false
   with_tests: false
+  with_singlefile_smoke: false
   with_analyzers: false
   with_api_analyzers: false
   with_release: false
@@ -48,6 +49,22 @@ jobs:
     displayName: Build Examples (verify)
     condition: and(succeeded(), ${{ parameters.with_examples }})
 
+  # PublishSingleFile smoke test — regression guard for linq2db/linq2db#5488.
+  # Provider detectors must not rely on Assembly.Location / File.Exists heuristics
+  # that silently misbehave in a single-file bundle. The Tests.SingleFile binary
+  # references Microsoft.Data.Sqlite only, opens a connection, runs a query, and
+  # exits 0 on success; any detection/load regression surfaces here.
+  - task: CmdLine@2
+    inputs:
+      script: |
+        ECHO ON
+        dotnet publish Tests/Tests.SingleFile/Tests.SingleFile.csproj -c Release -f net10.0 -r win-x64 --self-contained true -p:PublishSingleFile=true -o .build/publish/singlefile
+        if %errorlevel% neq 0 exit /b %errorlevel%
+        .build\publish\singlefile\linq2db.Tests.SingleFile.exe
+        if %errorlevel% neq 0 exit /b %errorlevel%
+    displayName: PublishSingleFile Smoke Test
+    condition: and(succeeded(), ${{ parameters.with_singlefile_smoke }})
+
   - task: DotNetCoreCLI@2
     inputs:
       command: build
@@ -67,7 +84,9 @@ jobs:
             if %errorlevel% neq 0 exit
             )
 
-        dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF3.csproj -f net462 -c $(test_configuration) -o .build/publish/EFTests/$(test_configuration)/net462_x64
+        REM -a x64: net462 is AnyCPU and runs as x64; without an explicit RID the SQLitePCLRaw net4x
+        REM native target ships only the x86 e_sqlite3, which the x64 EF test process cannot load.
+        dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF3.csproj -f net462 -c $(test_configuration) -a x64 -o .build/publish/EFTests/$(test_configuration)/net462_x64
         if %errorlevel% neq 0 exit
 
         dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF8.csproj -f net8.0 -c $(test_configuration) -o .build/publish/EFTests/$(test_configuration)/net8.0_x64
@@ -84,7 +103,7 @@ jobs:
         if %errorlevel% neq 0 exit
     
         FOR %%f IN (net8.0 net9.0 net10.0) DO (
-            dotnet publish Tests/Linq/Tests.csproj -f %%f -c $(test_configuration) -a x86 /p:DB2STUB=True -o .build/publish/Tests/$(test_configuration)/%%f_x86
+            dotnet publish Tests/Linq/Tests.csproj -f %%f -c $(test_configuration) -a x86 /p:X86STUBS=True -o .build/publish/Tests/$(test_configuration)/%%f_x86
             if %errorlevel% neq 0 exit
         )
 
@@ -113,6 +132,11 @@ jobs:
                 copy DataProviders.json testing\%%f\main\%%a
                 if %errorlevel% neq 0 exit
                 copy DataProviders.json testing\%%f\efcore\%%a
+                if %errorlevel% neq 0 exit
+                REM ship .runsettings next to each test app: MTP does not auto-discover it, NUnit honors it via --settings (AssemblySelectLimit)
+                copy .runsettings testing\%%f\main\%%a
+                if %errorlevel% neq 0 exit
+                copy .runsettings testing\%%f\efcore\%%a
                 if %errorlevel% neq 0 exit
             )
         )

@@ -162,6 +162,16 @@ namespace LinqToDB
 	/// </code>
 	/// Default value: <see langword="false"/>.
 	/// </param>
+	/// <param name="UpsertEmulationPolicy">
+	/// Controls what happens when an <c>Upsert</c> cannot be expressed as a native single-statement upsert
+	/// or <c>MERGE</c> for the target provider and would fall back to an emulated multi-statement
+	/// <c>SELECT → UPDATE → INSERT</c> sequence (the three statements run as independent commands — wrap the
+	/// call in a transaction if atomicity is required).
+	/// <list type="bullet">
+	///   <item><see cref="UpsertEmulationPolicy.Allow"/> (default) — perform the emulated fallback.</item>
+	///   <item><see cref="UpsertEmulationPolicy.Throw"/> — reject it with <see cref="LinqToDBException"/> at build time.</item>
+	/// </list>
+	/// </param>
 	public sealed record LinqOptions
 	(
 		// TODO: Remove in v7
@@ -181,12 +191,13 @@ namespace LinqToDB
 		bool         PreferApply             = true,
 		// TODO: Remove in v7
 		[property: Obsolete("This API doesn't have effect anymore and will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
-		bool         KeepDistinctOrdered                  = true,
-		bool         ParameterizeTakeSkip                 = true,
-		bool         EnableContextSchemaEdit              = false,
-		bool         PreferExistsForScalar                = default,
-		bool         OptimizeDuplicateParameters          = false,
-		bool         OptimizeDuplicatePropertyParameters  = true
+		bool         KeepDistinctOrdered                 = true,
+		bool         ParameterizeTakeSkip                = true,
+		bool         EnableContextSchemaEdit             = false,
+		bool         PreferExistsForScalar               = default,
+		UpsertEmulationPolicy UpsertEmulationPolicy      = UpsertEmulationPolicy.Allow,
+		bool         OptimizeDuplicateParameters         = false,
+		bool         OptimizeDuplicatePropertyParameters = true
 		// If you add another parameter here, don't forget to update
 		// LinqOptions copy constructor and IConfigurationID.ConfigurationID.
 	)
@@ -196,7 +207,32 @@ namespace LinqToDB
 		{
 		}
 
-		// TODO: remove in v7 (added for v6 compatibility)
+		LinqOptions(LinqOptions original)
+		{
+			IgnoreEmptyUpdate                   = original.IgnoreEmptyUpdate;
+			GenerateExpressionTest              = original.GenerateExpressionTest;
+			TraceMapperExpression               = original.TraceMapperExpression;
+			ConcatenateOrderBy                  = original.ConcatenateOrderBy;
+			OptimizeJoins                       = original.OptimizeJoins;
+			CompareNulls                        = original.CompareNulls;
+			GuardGrouping                       = original.GuardGrouping;
+			DisableQueryCache                   = original.DisableQueryCache;
+			CacheSlidingExpiration              = original.CacheSlidingExpiration;
+			ParameterizeTakeSkip                = original.ParameterizeTakeSkip;
+			EnableContextSchemaEdit             = original.EnableContextSchemaEdit;
+			PreferExistsForScalar               = original.PreferExistsForScalar;
+			UpsertEmulationPolicy               = original.UpsertEmulationPolicy;
+			OptimizeDuplicateParameters         = original.OptimizeDuplicateParameters;
+			OptimizeDuplicatePropertyParameters = original.OptimizeDuplicatePropertyParameters;
+		}
+
+		/// <summary>
+		/// Binary-compatibility overload of the record's positional constructor — mirrors the
+		/// public ctor signature as it was before <see cref="UpsertEmulationPolicy"/> was added,
+		/// so assemblies compiled against the previous linq2db release continue to load.
+		/// </summary>
+		// TODO: remove in v7 (binary-compat shim — drop together with the matching Deconstruct overload).
+		[EditorBrowsable(EditorBrowsableState.Never)]
 		public LinqOptions(
 			bool         preloadGroups,
 			bool         ignoreEmptyUpdate,
@@ -229,27 +265,42 @@ namespace LinqToDB
 				parameterizeTakeSkip,
 				enableContextSchemaEdit,
 				preferExistsForScalar,
+				UpsertEmulationPolicy : UpsertEmulationPolicy.Allow,
 				OptimizeDuplicateParameters : false,
 				OptimizeDuplicatePropertyParameters : true)
 		{
+
 		}
 
-		LinqOptions(LinqOptions original)
+		/// <summary>
+		/// Binary-compatibility overload of the record's <c>Deconstruct</c> — mirrors the
+		/// method signature as it was before <see cref="UpsertEmulationPolicy"/> was added.
+		/// </summary>
+		// TODO: remove in v7 (binary-compat shim — drop together with the matching constructor overload).
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		public void Deconstruct(
+			out bool         preloadGroups,
+			out bool         ignoreEmptyUpdate,
+			out bool         generateExpressionTest,
+			out bool         traceMapperExpression,
+			out bool         concatenateOrderBy,
+			out bool         optimizeJoins,
+			out CompareNulls compareNulls,
+			out bool         guardGrouping,
+			out bool         disableQueryCache,
+			out TimeSpan?    cacheSlidingExpiration,
+			out bool         preferApply,
+			out bool         keepDistinctOrdered,
+			out bool         parameterizeTakeSkip,
+			out bool         enableContextSchemaEdit,
+			out bool         preferExistsForScalar)
 		{
-			IgnoreEmptyUpdate                   = original.IgnoreEmptyUpdate;
-			GenerateExpressionTest              = original.GenerateExpressionTest;
-			TraceMapperExpression               = original.TraceMapperExpression;
-			ConcatenateOrderBy                  = original.ConcatenateOrderBy;
-			OptimizeJoins                       = original.OptimizeJoins;
-			CompareNulls                        = original.CompareNulls;
-			GuardGrouping                       = original.GuardGrouping;
-			DisableQueryCache                   = original.DisableQueryCache;
-			CacheSlidingExpiration              = original.CacheSlidingExpiration;
-			ParameterizeTakeSkip                = original.ParameterizeTakeSkip;
-			EnableContextSchemaEdit             = original.EnableContextSchemaEdit;
-			PreferExistsForScalar               = original.PreferExistsForScalar;
-			OptimizeDuplicateParameters         = original.OptimizeDuplicateParameters;
-			OptimizeDuplicatePropertyParameters = original.OptimizeDuplicatePropertyParameters;
+			Deconstruct(
+				out preloadGroups, out ignoreEmptyUpdate, out generateExpressionTest, out traceMapperExpression,
+				out concatenateOrderBy, out optimizeJoins, out compareNulls, out guardGrouping, out disableQueryCache,
+				out cacheSlidingExpiration, out preferApply, out keepDistinctOrdered, out parameterizeTakeSkip,
+				out enableContextSchemaEdit, out preferExistsForScalar,
+				out _, out _, out _);
 		}
 
 		int? _configurationID;
@@ -273,6 +324,7 @@ namespace LinqToDB
 						.Add(ParameterizeTakeSkip)
 						.Add(EnableContextSchemaEdit)
 						.Add(PreferExistsForScalar)
+						.Add((int)UpsertEmulationPolicy)
 						.Add(OptimizeDuplicateParameters)
 						.Add(OptimizeDuplicatePropertyParameters)
 						.CreateID();
@@ -283,41 +335,6 @@ namespace LinqToDB
 		}
 
 		public TimeSpan CacheSlidingExpirationOrDefault => CacheSlidingExpiration ?? TimeSpan.FromHours(1);
-
-		// TODO: remove in v7 (added for v6 compatibility)
-		public void Deconstruct(
-			out bool         preloadGroups,
-			out bool         ignoreEmptyUpdate,
-			out bool         generateExpressionTest,
-			out bool         traceMapperExpression,
-			out bool         concatenateOrderBy,
-			out bool         optimizeJoins,
-			out CompareNulls compareNulls,
-			out bool         guardGrouping,
-			out bool         disableQueryCache,
-			out TimeSpan?    cacheSlidingExpiration,
-			out bool         preferApply,
-			out bool         keepDistinctOrdered,
-			out bool         parameterizeTakeSkip,
-			out bool         enableContextSchemaEdit,
-			out bool         preferExistsForScalar)
-		{
-			preloadGroups           = PreloadGroups;
-			ignoreEmptyUpdate       = IgnoreEmptyUpdate;
-			generateExpressionTest  = GenerateExpressionTest;
-			traceMapperExpression   = TraceMapperExpression;
-			concatenateOrderBy      = ConcatenateOrderBy;
-			optimizeJoins           = OptimizeJoins;
-			compareNulls            = CompareNulls;
-			guardGrouping           = GuardGrouping;
-			disableQueryCache       = DisableQueryCache;
-			cacheSlidingExpiration  = CacheSlidingExpiration;
-			preferApply             = PreferApply;
-			keepDistinctOrdered     = KeepDistinctOrdered;
-			parameterizeTakeSkip    = ParameterizeTakeSkip;
-			enableContextSchemaEdit = EnableContextSchemaEdit;
-			preferExistsForScalar   = PreferExistsForScalar;
-		}
 
 		#region Default Options
 

@@ -64,6 +64,7 @@ namespace LinqToDB.CommandLine
 				DatabaseType.ClickHouseHttp  => ProviderName.ClickHouseDriver,
 				DatabaseType.ClickHouseTcp   => ProviderName.ClickHouseOctonica,
 				DatabaseType.DuckDB          => ProviderName.DuckDB,
+				DatabaseType.Ydb             => ProviderName.Ydb,
 				_                            => throw new InvalidOperationException($"Unsupported provider: {providerName}"),
 			};
 
@@ -187,6 +188,7 @@ namespace LinqToDB.CommandLine
 				case ProviderName.ClickHouseOctonica:
 				case ProviderName.SqlServer         :
 				case ProviderName.DuckDB            :
+				case ProviderName.Ydb               :
 					break;
 				case ProviderName.SQLite            :
 					provider = ProviderName.SQLiteMS;

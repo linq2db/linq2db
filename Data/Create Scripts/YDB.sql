@@ -110,10 +110,10 @@ CREATE TABLE AllTypes
 	doubleDataType           Double,
 
 
-	ncharDataType            Bytes,
-	char20DataType           Bytes,
-	varcharDataType          Bytes,
-	charDataType             Bytes,
+	ncharDataType            Text,
+	char20DataType           Text,
+	varcharDataType          Text,
+	charDataType             Text,
 	bitDataType              Bool,
 
 	PRIMARY KEY (ID)
@@ -130,7 +130,7 @@ INSERT INTO AllTypes
 VALUES(1,
 		CAST(NULL AS Int32), CAST(NULL AS Int16),
 		CAST(NULL AS Float), CAST(NULL AS Double),
-		CAST(NULL AS Bytes), CAST(NULL AS Bytes), CAST(NULL AS Bytes), CAST(NULL AS Bytes));
+		CAST(NULL AS Text), CAST(NULL AS Text), CAST(NULL AS Text), CAST(NULL AS Text));
 GO
 INSERT INTO AllTypes
 (
@@ -147,8 +147,8 @@ GO
 CREATE TABLE CollatedTable
 (
 	Id              Int32 NOT NULL,
-	CaseSensitive   Bytes,
-	CaseInsensitive Bytes,
+	CaseSensitive   Text,
+	CaseInsensitive Text,
 	PRIMARY KEY (Id)
 );
 GO
@@ -163,10 +163,10 @@ CREATE TABLE TestMerge1
 
 	FieldInt64      Int64,
 	FieldBoolean    Bool,
-	FieldString     Bytes,
-	FieldNString    Bytes,
-	FieldChar       Bytes,
-	FieldNChar      Bytes,
+	FieldString     Text,
+	FieldNString    Text,
+	FieldChar       Text,
+	FieldNChar      Text,
 	FieldFloat      Float,
 	FieldDouble     Double,
 	FieldDateTime   Timestamp,
@@ -176,7 +176,7 @@ CREATE TABLE TestMerge1
 	FieldDecimal    Decimal(10, 0),
 	FieldDate       Date,
 	FieldTime       Int64,
-	FieldEnumString Bytes,
+	FieldEnumString Text,
 	FieldEnumNumber Int32,
 	PRIMARY KEY (Id)
 );
@@ -193,10 +193,10 @@ CREATE TABLE TestMerge2
 
 	FieldInt64      Int64,
 	FieldBoolean    Bool,
-	FieldString     Bytes,
-	FieldNString    Bytes,
-	FieldChar       Bytes,
-	FieldNChar      Bytes,
+	FieldString     Text,
+	FieldNString    Text,
+	FieldChar       Text,
+	FieldNChar      Text,
 	FieldFloat      Float,
 	FieldDouble     Double,
 	FieldDateTime   Timestamp,
@@ -206,7 +206,7 @@ CREATE TABLE TestMerge2
 	FieldDecimal    Decimal(10, 0),
 	FieldDate       Date,
 	FieldTime       Int64,
-	FieldEnumString Bytes,
+	FieldEnumString Text,
 	FieldEnumNumber Int32,
 	PRIMARY KEY (Id)
 );
