@@ -604,7 +604,8 @@ namespace Tests.Mapping
 			}
 		}
 
-		[Test]
+		// NonParallelizable: mutates the global static StaticGetterSetterExpressionMethods.InstanceValues dictionary (Clear/Add); concurrent cases collide.
+		[Test, NonParallelizable]
 		public void TestDynamicColumnStoreStaticExpressionAccessors([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			StaticGetterSetterExpressionMethods.InstanceValues.Clear();

@@ -460,7 +460,8 @@ namespace Tests.xUpdate
 
 		#region Query-cache parameterisation smoke tests
 
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void Single_QueryCache_Parameterises_ItemValues_NativePath([InsertOrUpdateDataSources] string context)
 		{
 			using var db    = GetDataContext(context);
