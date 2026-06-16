@@ -84,16 +84,22 @@ steps:
   condition: and(variables.title, variables.script_local, eq(variables.net80, 'true'), succeeded())
   displayName: Setup .NET 8 tests
 
-- script: dotnet test ./net8.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net8.0 -l trx $(extra) --blame-hang-timeout 5m
+- script: dotnet ./net8.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" --settings ./net8.0/main/x64/.runsettings --report-trx --report-trx-filename net8.0-main-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
   condition: and(variables.title, eq(variables.net80, 'true'), succeeded(), ne(variables.retry, 'true'), ${{ parameters.full_run }})
   displayName: 'Tests (.NET 8): $(title)'
 
-- script: dotnet test ./net8.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net8.0 -l trx $(extra) --blame-hang-timeout 5m
+- script: |
+    if [ -d baselines/.git ]; then
+      echo "Reset baselines working tree so a failed/retried attempt does not leak baselines into the commit"
+      git -C baselines reset --hard
+      git -C baselines clean -fdq
+    fi
+    dotnet ./net8.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" --settings ./net8.0/main/x64/.runsettings --report-trx --report-trx-filename net8.0-main-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
   condition: and(variables.title, eq(variables.net80, 'true'), succeeded(), eq(variables.retry, 'true'), ${{ parameters.full_run }})
   displayName: 'Tests (.NET 8): $(title)'
   retryCountOnTaskFailure: 2
 
-- script: dotnet test ./net8.0/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net8.0 -l trx $(extra) --blame-hang-timeout 5m
+- script: dotnet ./net8.0/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" --settings ./net8.0/efcore/x64/.runsettings --report-trx --report-trx-filename net8.0-efcore-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
   condition: and(variables.title, eq(variables.net80, 'true'), succeeded())
   displayName: 'EF.Core Tests (.NET 8): $(title)'
 
@@ -131,16 +137,22 @@ steps:
   condition: and(variables.title, variables.script_local, eq(variables.net90, 'true'), succeeded())
   displayName: Setup .NET 9 tests
 
-- script: dotnet test ./net9.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net9.0 -l trx $(extra) --blame-hang-timeout 5m
+- script: dotnet ./net9.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" --settings ./net9.0/main/x64/.runsettings --report-trx --report-trx-filename net9.0-main-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
   condition: and(variables.title, eq(variables.net90, 'true'), succeeded(), ne(variables.retry, 'true'), ${{ parameters.full_run }})
   displayName: 'Tests (.NET 9): $(title)'
 
-- script: dotnet test ./net9.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net9.0 -l trx $(extra) --blame-hang-timeout 5m
+- script: |
+    if [ -d baselines/.git ]; then
+      echo "Reset baselines working tree so a failed/retried attempt does not leak baselines into the commit"
+      git -C baselines reset --hard
+      git -C baselines clean -fdq
+    fi
+    dotnet ./net9.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" --settings ./net9.0/main/x64/.runsettings --report-trx --report-trx-filename net9.0-main-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
   condition: and(variables.title, eq(variables.net90, 'true'), succeeded(), eq(variables.retry, 'true'), ${{ parameters.full_run }})
   displayName: 'Tests (.NET 9): $(title)'
   retryCountOnTaskFailure: 2
 
-- script: dotnet test ./net9.0/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net9.0 -l trx $(extra) --blame-hang-timeout 5m
+- script: dotnet ./net9.0/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" --settings ./net9.0/efcore/x64/.runsettings --report-trx --report-trx-filename net9.0-efcore-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
   condition: and(variables.title, eq(variables.net90, 'true'), succeeded())
   displayName: 'EF.Core Tests (.NET 9): $(title)'
 
@@ -178,16 +190,22 @@ steps:
   condition: and(variables.title, variables.script_local, eq(variables.net100, 'true'), succeeded())
   displayName: Setup .NET 10 tests
 
-- script: dotnet test ./net10.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net10.0 -l trx $(extra) --blame-hang-timeout 5m
+- script: dotnet ./net10.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" --settings ./net10.0/main/x64/.runsettings --report-trx --report-trx-filename net10.0-main-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
   condition: and(variables.title, eq(variables.net100, 'true'), succeeded(), ne(variables.retry, 'true'))
   displayName: 'Tests (.NET 10): $(title)'
 
-- script: dotnet test ./net10.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net10.0 -l trx $(extra) --blame-hang-timeout 5m
+- script: |
+    if [ -d baselines/.git ]; then
+      echo "Reset baselines working tree so a failed/retried attempt does not leak baselines into the commit"
+      git -C baselines reset --hard
+      git -C baselines clean -fdq
+    fi
+    dotnet ./net10.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" --settings ./net10.0/main/x64/.runsettings --report-trx --report-trx-filename net10.0-main-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
   condition: and(variables.title, eq(variables.net100, 'true'), succeeded(), eq(variables.retry, 'true'))
   displayName: 'Tests (.NET 10): $(title)'
   retryCountOnTaskFailure: 2
 
-- script: dotnet test ./net10.0/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net10.0 -l trx $(extra) --blame-hang-timeout 5m
+- script: dotnet ./net10.0/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" --settings ./net10.0/efcore/x64/.runsettings --report-trx --report-trx-filename net10.0-efcore-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
   condition: and(variables.title, eq(variables.net100, 'true'), succeeded())
   displayName: 'EF.Core Tests (.NET 10): $(title)'
 

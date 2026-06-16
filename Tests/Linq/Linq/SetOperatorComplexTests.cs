@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
@@ -260,7 +261,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void ExceptInheritance([DataSources] string context)
 		{
 			using var db       = GetDataContext(context);
@@ -284,7 +285,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void IntersectInheritance([DataSources] string context)
 		{
 			using var db       = GetDataContext(context);
@@ -360,7 +361,11 @@ namespace Tests.Linq
 
 			var query = Combine(query1, query2, operation);
 
-			AssertQuery(query);
+			// YDB can't run the correlated subqueries these set operations require over eager-loaded details.
+			if (context.IsAnyOf(TestProvName.AllYdb) && operation is SetOperation.Except or SetOperation.ExceptAll or SetOperation.Intersect or SetOperation.IntersectAll)
+				Assert.That(() => query.ToList(), Throws.InstanceOf<LinqToDBException>().With.Message.Contains(ErrorHelper.Error_Correlated_Subqueries));
+			else
+				AssertQuery(query);
 		}
 
 		[Test]
@@ -393,7 +398,11 @@ namespace Tests.Linq
 
 			var query = Combine(query1, query2, operation);
 
-			AssertQuery(query);
+			// YDB can't run the correlated subqueries these set operations require over eager-loaded details.
+			if (context.IsAnyOf(TestProvName.AllYdb) && operation is SetOperation.Except or SetOperation.ExceptAll or SetOperation.Intersect or SetOperation.IntersectAll)
+				Assert.That(() => query.ToList(), Throws.InstanceOf<LinqToDBException>().With.Message.Contains(ErrorHelper.Error_Correlated_Subqueries));
+			else
+				AssertQuery(query);
 		}
 
 		[Test]
@@ -457,7 +466,11 @@ namespace Tests.Linq
 
 			var query = Combine(query1, query2, operation);
 
-			AssertQuery(query, new DictionaryEqualityComparer<string, string>());
+			// YDB can't run the correlated subqueries these set operations require over eager-loaded details.
+			if (context.IsAnyOf(TestProvName.AllYdb) && operation is SetOperation.Except or SetOperation.ExceptAll or SetOperation.Intersect or SetOperation.IntersectAll)
+				Assert.That(() => query.ToList(), Throws.InstanceOf<LinqToDBException>().With.Message.Contains(ErrorHelper.Error_Correlated_Subqueries));
+			else
+				AssertQuery(query, new DictionaryEqualityComparer<string, string>());
 		}
 
 		class ByBookTypeResult

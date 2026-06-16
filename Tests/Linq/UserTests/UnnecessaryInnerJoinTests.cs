@@ -30,9 +30,9 @@ namespace Tests.UserTests
 			public List<Table1> Field3 { get; set; } = null!;
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
-		public void Test([DataSources(TestProvName.AllClickHouse)] string context)
+		public void Test([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb1 = db.CreateLocalTable<Table1>();

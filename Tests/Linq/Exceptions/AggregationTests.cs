@@ -18,7 +18,7 @@ namespace Tests.Exceptions
 		}
 
 		[Test]
-		public void NonNullableMin2([DataSources(TestProvName.AllClickHouse, ProviderName.Ydb)] string context)
+		public void NonNullableMin2([DataSources(TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -41,7 +41,7 @@ namespace Tests.Exceptions
 		}
 
 		[Test]
-		public void NonNullableMax2([DataSources(TestProvName.AllClickHouse, ProviderName.Ydb)] string context)
+		public void NonNullableMax2([DataSources(TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
 		{
 			using var db = GetDataContext(context);
 

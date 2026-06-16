@@ -666,312 +666,6 @@ namespace LinqToDB
 			return str.Replace(oldValue.Value, newValue.Value);
 		}
 
-		#region IsNullOrWhiteSpace
-		// set of all White_Space characters per Unicode v13
-		const string WHITESPACES       = "\x09\x0A\x0B\x0C\x0D\x20\x85\xA0\x1680\x2000\x2001\x2002\x2003\x2004\x2005\x2006\x2007\x2008\x2009\x200A\x2028\x2029\x205F\x3000";
-		const string ASCII_WHITESPACES = "\x09\x0A\x0B\x0C\x0D\x20\x85\xA0";
-		const string WHITESPACES_REGEX = "\x09|\x0A|\x0B|\x0C|\x0D|\x20|\x85|\xA0|\x1680|\x2000|\x2001|\x2002|\x2003|\x2004|\x2005|\x2006|\x2007|\x2008|\x2009|\x200A|\x2028|\x2029|\x205F|\x3000";
-
-		/*
-		 * marked internal as we don't have plans now to expose it directly (used by string.IsNullOrWhiteSpace mapping)
-		 *
-		 * implementation tries to mimic .NET implementation of string.IsNullOrWhiteSpace (except null check part):
-		 * return true if string doesn't contain any symbols except White_Space codepoints from Unicode.
-		 *
-		 * Known limitations:
-		 * 1. [Access] we handle only following WS:
-		 * - 0x20 (SPACE)
-		 * - 0x1680 (OGHAM SPACE MARK)
-		 * - 0x205F (MEDIUM MATHEMATICAL SPACE)
-		 * - 0x3000 (IDEOGRAPHIC SPACE)
-		 * Proper implementation will be same as we use for SqlCe, but Replace function is not exposed to SQL by default
-		 * and requires sandbox mode: https://support.microsoft.com/en-us/office/turn-sandbox-mode-on-or-off-to-disable-macros-8cc7bad8-38c2-4a7a-a604-43e9a7bbc4fb
-		 * 2. [Informix} implementation use only ASCII whitespaces which probably will not work in some cases for WS outside of
-		 * ASCII range (currently works in our tests, but it could be that it depends on used encodings)
-		 */
-		[Extension(                  typeof(IsNullOrWhiteSpaceDefaultBuilder),                     IsPredicate = true)]
-		[Extension(PN.Oracle,        typeof(IsNullOrWhiteSpaceOracleBuilder),                      IsPredicate = true)]
-		[Extension(PN.Informix,      typeof(IsNullOrWhiteSpaceInformixBuilder),                    IsPredicate = true)]
-		[Extension(PN.SqlServer,     typeof(IsNullOrWhiteSpaceSqlServerBuilder),                   IsPredicate = true)]
-		[Extension(PN.SqlServer2017, typeof(IsNullOrWhiteSpaceSqlServer2017Builder),               IsPredicate = true)]
-		[Extension(PN.SqlServer2019, typeof(IsNullOrWhiteSpaceSqlServer2017Builder),               IsPredicate = true)]
-		[Extension(PN.SqlServer2022, typeof(IsNullOrWhiteSpaceSqlServer2017Builder),               IsPredicate = true)]
-		[Extension(PN.SqlServer2025, typeof(IsNullOrWhiteSpaceSqlServer2017Builder),               IsPredicate = true)]
-		[Extension(PN.Access,        typeof(IsNullOrWhiteSpaceAccessBuilder),                      IsPredicate = true)]
-		[Extension(PN.Sybase,        typeof(IsNullOrWhiteSpaceSybaseBuilder),                      IsPredicate = true)]
-		[Extension(PN.MySql,         typeof(IsNullOrWhiteSpaceMySqlBuilder),                       IsPredicate = true)]
-		[Extension(PN.Firebird,      typeof(IsNullOrWhiteSpaceFirebirdBuilder),                    IsPredicate = true)]
-		[Extension(PN.SqlCe,         typeof(IsNullOrWhiteSpaceSqlCeBuilder),                       IsPredicate = true)]
-		[Extension(PN.Ydb,           typeof(IsNullOrWhiteSpaceYdbBuilder),                         IsPredicate = true)]
-		[Expression(PN.ClickHouse, $"empty(replaceRegexpAll(coalesce({{0}}, ''), '{WHITESPACES_REGEX}', ''))", IsPredicate = true)]
-		internal static bool IsNullOrWhiteSpace(string? str) => string.IsNullOrWhiteSpace(str);
-
-		// {0} IS NULL OR LENGTH(Unicode::Strip({ 0})) == 0
-		internal sealed class IsNullOrWhiteSpaceYdbBuilder : IExtensionCallBuilder
-		{
-			void IExtensionCallBuilder.Build(ISqlExtensionBuilder builder)
-			{
-				var str = builder.GetExpression("str")!;
-
-				var predicate = new SqlPredicate.ExprExpr(
-					new SqlFunction(
-						builder.Mapping.GetDbDataType(typeof(int)),
-						"LENGTH",
-						ParametersNullabilityType.IfAnyParameterNullable,
-						new SqlFunction(
-							builder.Mapping.GetDbDataType(typeof(string)),
-							"Unicode::Strip",
-							ParametersNullabilityType.IfAnyParameterNullable,
-							str)),
-					SqlPredicate.Operator.Equal,
-					new SqlValue(0),
-					null);
-
-				var nullability = new NullabilityContext(builder.Query);
-				if (str.CanBeNullable(nullability))
-					builder.ResultExpression = new SqlSearchCondition(true, canBeUnknown: null,
-						new SqlPredicate.IsNull(str, false), predicate);
-				else
-					builder.ResultExpression = new SqlSearchCondition(false, canBeUnknown: null, predicate);
-			}
-		}
-
-		// str IS NULL OR REPLACE...(str, WHITEPACES, '') == ''
-		internal sealed class IsNullOrWhiteSpaceSqlCeBuilder : IExtensionCallBuilder
-		{
-			void IExtensionCallBuilder.Build(ISqlExtensionBuilder builder)
-			{
-				var str = builder.GetExpression("str")!;
-
-				var predicate = new SqlPredicate.ExprExpr(
-						new SqlExpression(
-							builder.Mapping.GetDbDataType(typeof(string)),
-							"REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE({0}, '\x09', ''), '\x0a', ''), '\x0b', ''), '\x0c', ''), '\x0d', ''), '\x20', ''), '\x85', ''), '\xa0', ''), '\x1680', ''), '\x2000', ''), '\x2001', ''), '\x2002', ''), '\x2003', ''), '\x2004', ''), '\x2005', ''), '\x2006', ''), '\x2007', ''), '\x2008', ''), '\x2009', ''), '\x200a', ''), '\x2028', ''), '\x2029', ''), '\x205f', ''), '\x3000', '')",
-							str),
-						SqlPredicate.Operator.Equal,
-						new SqlValue(typeof(string), string.Empty), unknownAsValue: null);
-
-				var nullability = new NullabilityContext(builder.Query);
-				if (str.CanBeNullable(nullability))
-					builder.ResultExpression = new SqlSearchCondition(true, canBeUnknown: null,
-						new SqlPredicate.IsNull(str, false),
-						predicate);
-				else
-					builder.ResultExpression = new SqlSearchCondition(false, canBeUnknown: null, predicate);
-			}
-		}
-
-		// str IS NULL OR NOT(str SIMILAR TO _utf8 x'%[^WHITESPACES_UTF8]%')
-		internal sealed class IsNullOrWhiteSpaceFirebirdBuilder : IExtensionCallBuilder
-		{
-			void IExtensionCallBuilder.Build(ISqlExtensionBuilder builder)
-			{
-				var str = builder.GetExpression("str")!;
-
-				const string whiteSpaces = $"%[^{WHITESPACES}]%";
-				var predicate = new SqlPredicate.Expr(
-					new SqlExpression(
-						builder.Mapping.GetDbDataType(typeof(bool)),
-						"{0} SIMILAR TO {1}",
-						Precedence.Comparison,
-						SqlFlags.IsPredicate,
-						ParametersNullabilityType.NotNullable,
-						str,
-						new SqlValue(typeof(string), whiteSpaces)))
-					.MakeNot();
-
-				var nullability = new NullabilityContext(builder.Query);
-				if (str.CanBeNullable(nullability))
-					builder.ResultExpression = new SqlSearchCondition(true, canBeUnknown: null,
-						new SqlPredicate.IsNull(str, false), predicate);
-				else
-					builder.ResultExpression = new SqlSearchCondition(false, canBeUnknown: null, predicate);
-			}
-		}
-
-		// str IS NULL OR NOT(str RLIKE '%[^WHITESPACES]%')
-		internal sealed class IsNullOrWhiteSpaceMySqlBuilder : IExtensionCallBuilder
-		{
-			void IExtensionCallBuilder.Build(ISqlExtensionBuilder builder)
-			{
-				var str = builder.GetExpression("str")!;
-
-				var whiteSpaces = $"[^{WHITESPACES}]";
-				var condition = new SqlPredicate.Expr(
-					new SqlExpression(
-						builder.Mapping.GetDbDataType(typeof(bool)),
-						"{0} RLIKE {1}",
-						Precedence.Comparison,
-						SqlFlags.IsPredicate,
-						ParametersNullabilityType.NotNullable,
-						str,
-						new SqlValue(typeof(string), whiteSpaces)))
-					.MakeNot();
-
-				var nullability = new NullabilityContext(builder.Query);
-				if (str.CanBeNullable(nullability))
-					builder.ResultExpression = new SqlSearchCondition(true, canBeUnknown: null,
-						new SqlPredicate.IsNull(str, false), condition);
-				else
-					builder.ResultExpression = new SqlSearchCondition(false, canBeUnknown: null, condition);
-			}
-		}
-
-		// str IS NULL OR str NOT LIKE '%[^WHITESPACES]%'
-		internal sealed class IsNullOrWhiteSpaceSybaseBuilder : IExtensionCallBuilder
-		{
-			void IExtensionCallBuilder.Build(ISqlExtensionBuilder builder)
-			{
-				var str = builder.GetExpression("str")!;
-
-				var whiteSpaces = $"%[^{WHITESPACES}]%";
-				var predicate = new SqlPredicate.Like(
-					str,
-					true,
-					new SqlValue(typeof(string), whiteSpaces),
-					null);
-
-				var nullability = new NullabilityContext(builder.Query);
-				if (str.CanBeNullable(nullability))
-					builder.ResultExpression = new SqlSearchCondition(true, canBeUnknown: null,
-						new SqlPredicate.IsNull(str, false), predicate);
-				else
-					builder.ResultExpression = new SqlSearchCondition(false, canBeUnknown: null, predicate);
-			}
-		}
-
-		// str IS NULL OR str NOT LIKE N'%[^WHITESPACES]%'
-		internal sealed class IsNullOrWhiteSpaceSqlServerBuilder : IExtensionCallBuilder
-		{
-			void IExtensionCallBuilder.Build(ISqlExtensionBuilder builder)
-			{
-				var str = builder.GetExpression("str")!;
-
-				var whiteSpaces = $"%[^{WHITESPACES}]%";
-				var predicate = new SqlPredicate.Like(
-					str,
-					true,
-					new SqlValue(new DbDataType(typeof(string), DataType.NVarChar), whiteSpaces),
-					null);
-
-				var nullability = new NullabilityContext(builder.Query);
-				if (str.CanBeNullable(nullability))
-					builder.ResultExpression = new SqlSearchCondition(true, canBeUnknown: null,
-						new SqlPredicate.IsNull(str, false),
-						predicate);
-				else
-					builder.ResultExpression = new SqlSearchCondition(false, canBeUnknown: null, predicate);
-			}
-		}
-
-		// str IS NULL OR LTRIM(str, '') = ''
-		internal sealed class IsNullOrWhiteSpaceAccessBuilder : IExtensionCallBuilder
-		{
-			void IExtensionCallBuilder.Build(ISqlExtensionBuilder builder)
-			{
-				var str = builder.GetExpression("str")!;
-
-				var predicate = new SqlPredicate.ExprExpr(
-						new SqlFunction(builder.Mapping.GetDbDataType(typeof(string)), "LTRIM", str),
-						SqlPredicate.Operator.Equal,
-						new SqlValue(typeof(string), string.Empty), unknownAsValue: null);
-
-				var nullability = new NullabilityContext(builder.Query);
-				if (str.CanBeNullable(nullability))
-					builder.ResultExpression = new SqlSearchCondition(true, canBeUnknown: null,
-						new SqlPredicate.IsNull(str, false),
-						predicate);
-				else
-					builder.ResultExpression = new SqlSearchCondition(false, canBeUnknown: null, predicate);
-			}
-		}
-
-		// str IS NULL OR TRIM(N'WHITESPACES FROM str) = ''
-		internal sealed class IsNullOrWhiteSpaceSqlServer2017Builder : IExtensionCallBuilder
-		{
-			void IExtensionCallBuilder.Build(ISqlExtensionBuilder builder)
-			{
-				var str = builder.GetExpression("str")!;
-
-				var predicate = new SqlPredicate.ExprExpr(
-						new SqlExpression(builder.Mapping.GetDbDataType(typeof(string)), "TRIM({1} FROM {0})", str, new SqlValue(new DbDataType(typeof(string), DataType.NVarChar), WHITESPACES)),
-						SqlPredicate.Operator.Equal,
-						new SqlValue(typeof(string), string.Empty), unknownAsValue: null);
-
-				var nullability = new NullabilityContext(builder.Query);
-				if (str.CanBeNullable(nullability))
-					builder.ResultExpression = new SqlSearchCondition(true, canBeUnknown: null,
-						new SqlPredicate.IsNull(str, false),
-						predicate);
-				else
-					builder.ResultExpression = new SqlSearchCondition(false, canBeUnknown: null, predicate);
-			}
-		}
-
-		// str IS NULL OR LTRIM(str, WHITESPACES) IS NULL
-		internal sealed class IsNullOrWhiteSpaceOracleBuilder : IExtensionCallBuilder
-		{
-			void IExtensionCallBuilder.Build(ISqlExtensionBuilder builder)
-			{
-				var str = builder.GetExpression("str")!;
-
-				var predicate = new SqlPredicate.IsNull(new SqlFunction(builder.Mapping.GetDbDataType(typeof(string)), "LTRIM", ParametersNullabilityType.Nullable, str, new SqlValue(typeof(string), WHITESPACES)), false);
-
-				var nullability = new NullabilityContext(builder.Query);
-				if (str.CanBeNullable(nullability))
-					builder.ResultExpression = new SqlSearchCondition(true, canBeUnknown: null,
-						new SqlPredicate.IsNull(str, false),
-						predicate);
-				else
-					builder.ResultExpression = new SqlSearchCondition(false, canBeUnknown: null, predicate);
-			}
-		}
-
-		// str IS NULL OR LTRIM(str, ASCII_WHITESPACES) = ''
-		internal sealed class IsNullOrWhiteSpaceInformixBuilder : IExtensionCallBuilder
-		{
-			void IExtensionCallBuilder.Build(ISqlExtensionBuilder builder)
-			{
-				var str = builder.GetExpression("str")!;
-
-				var predicate = new SqlPredicate.ExprExpr(
-						new SqlFunction(builder.Mapping.GetDbDataType(typeof(string)), "LTRIM", str, new SqlValue(typeof(string), ASCII_WHITESPACES)),
-						SqlPredicate.Operator.Equal,
-						new SqlValue(typeof(string), string.Empty), unknownAsValue: null);
-
-				var nullability = new NullabilityContext(builder.Query);
-				if (str.CanBeNullable(nullability))
-					builder.ResultExpression = new SqlSearchCondition(true, canBeUnknown: null,
-						new SqlPredicate.IsNull(str, false),
-						predicate);
-				else
-					builder.ResultExpression = new SqlSearchCondition(false, canBeUnknown: null, predicate);
-			}
-		}
-
-		// str IS NULL OR LTRIM(str, WHITESPACES) = ''
-		internal sealed class IsNullOrWhiteSpaceDefaultBuilder : IExtensionCallBuilder
-		{
-			void IExtensionCallBuilder.Build(ISqlExtensionBuilder builder)
-			{
-				var str = builder.GetExpression("str")!;
-
-				var predicate = new SqlPredicate.ExprExpr(
-						new SqlFunction(builder.Mapping.GetDbDataType(typeof(string)), "LTRIM", str, new SqlValue(typeof(string), WHITESPACES)),
-						SqlPredicate.Operator.Equal,
-						new SqlValue(typeof(string), string.Empty), unknownAsValue: null);
-
-				var nullability = new NullabilityContext(builder.Query);
-				if (str.CanBeNullable(nullability))
-					builder.ResultExpression = new SqlSearchCondition(true, canBeUnknown: null,
-						new SqlPredicate.IsNull(str, false),
-						predicate);
-				else
-					builder.ResultExpression = new SqlSearchCondition(false, canBeUnknown: null, predicate);
-			}
-		}
-		#endregion
-
 		[Function(PN.Ydb, "Unicode::Strip", IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static string? Trim(string? str)
@@ -1064,13 +758,14 @@ namespace LinqToDB
 		/// </para>
 		/// <para>
 		/// <b>SQL (server-side)</b>: non-string operands are made string-typed before
-		/// concatenation — on <c>+</c>-providers (SQL Server pre-2025, SqlCe, Sybase ASE,
-		/// Access) via explicit <c>CAST(... AS VARCHAR(N))</c>; on <c>||</c> / <c>CONCAT(...)</c>
-		/// providers the operator auto-coerces non-string operands. Per-operand null
-		/// handling follows the provider's native rules:
+		/// concatenation — on <c>+</c>-providers (SQL Server pre-2025, SqlCe, Access) and on
+		/// Sybase ASE (which emits <c>||</c> but still requires it) via explicit
+		/// <c>CAST(... AS VARCHAR(N))</c>; the other <c>||</c> / <c>CONCAT(...)</c> providers
+		/// auto-coerce non-string operands. Per-operand null handling follows the provider's
+		/// native rules:
 		/// </para>
 		/// <list type="bullet">
-		///   <item><description>SQL Server (default <c>CONCAT_NULL_YIELDS_NULL=ON</c>), MySQL, PostgreSQL, SQLite, Firebird, DB2, SAP HANA, SqlCe, Access, Informix, ClickHouse, DuckDB, YDB, Sybase ASE: any null operand makes the whole result <see langword="null"/>. (Sybase's native <c>+</c> does not propagate <see langword="null"/>; the translator wraps the chain in <c>CASE WHEN any-null THEN NULL ELSE chain END</c> to deliver the strict-null contract.)</description></item>
+		///   <item><description>SQL Server (default <c>CONCAT_NULL_YIELDS_NULL=ON</c>), MySQL, PostgreSQL, SQLite, Firebird, DB2, SAP HANA, SqlCe, Access, Informix, ClickHouse, DuckDB, YDB, Sybase ASE: any null operand makes the whole result <see langword="null"/>. (Sybase's native <c>||</c> does not propagate <see langword="null"/>; the translator wraps the chain in <c>CASE WHEN any-null THEN NULL ELSE chain END</c> to deliver the strict-null contract.)</description></item>
 		///   <item><description>Oracle: <c>''</c> is treated as <see langword="null"/>; <c>'A' || NULL</c> returns <c>'A'</c>. Only the all-null case yields <see langword="null"/>.</description></item>
 		/// </list>
 		/// <para>
@@ -1104,7 +799,7 @@ namespace LinqToDB
 		/// operator/function. Per-operand null handling follows the provider's native rules:
 		/// </para>
 		/// <list type="bullet">
-		///   <item><description>SQL Server (default <c>CONCAT_NULL_YIELDS_NULL=ON</c>), MySQL, PostgreSQL, SQLite, Firebird, DB2, SAP HANA, SqlCe, Access, Informix, ClickHouse, DuckDB, YDB, Sybase ASE: any null operand makes the whole result <see langword="null"/>. (Sybase's native <c>+</c> does not propagate <see langword="null"/>; the translator wraps the chain in <c>CASE WHEN any-null THEN NULL ELSE chain END</c> to deliver the strict-null contract.)</description></item>
+		///   <item><description>SQL Server (default <c>CONCAT_NULL_YIELDS_NULL=ON</c>), MySQL, PostgreSQL, SQLite, Firebird, DB2, SAP HANA, SqlCe, Access, Informix, ClickHouse, DuckDB, YDB, Sybase ASE: any null operand makes the whole result <see langword="null"/>. (Sybase's native <c>||</c> does not propagate <see langword="null"/>; the translator wraps the chain in <c>CASE WHEN any-null THEN NULL ELSE chain END</c> to deliver the strict-null contract.)</description></item>
 		///   <item><description>Oracle: <c>''</c> is treated as <see langword="null"/>; <c>'A' || NULL</c> returns <c>'A'</c>. Only the all-null case yields <see langword="null"/>.</description></item>
 		/// </list>
 		/// <para>
@@ -1295,17 +990,26 @@ namespace LinqToDB
 		[Function(PN.ClickHouse, "cosh", IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static double?  Cosh   (double?  value) => value == null ? null : Math.Cosh   (value.Value);
 
+		[Expression(PN.Ydb,        "Math::Cos({0}) / Math::Sin({0})", IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Multiplicative)]
 		[Expression(PN.ClickHouse, "1/tan({0})", IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Multiplicative)]
 		[Expression(PN.SQLite,     "1/TAN({0})", IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Multiplicative)]
 		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static double?  Cot    (double?  value) { return value == null ? null : (double?)Math.Cos(value.Value) / Math.Sin(value.Value); }
 
+		// YQL has no DEGREES; compute via Math::Pi(). Cast the argument to Double so it does not mix with the literal/Pi.
+		[Expression(PN.Ydb, "CAST({0} AS Double) * 180.0 / Math::Pi()", IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Multiplicative)]
 		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static decimal? Degrees(decimal? value) => value == null ? null : (value.Value * 180m / (decimal)Math.PI);
+		[Expression(PN.Ydb, "CAST({0} AS Double) * 180.0 / Math::Pi()", IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Multiplicative)]
 		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static double?  Degrees(double?  value) => value == null ? null : (value.Value * 180 / Math.PI);
+		[Expression(PN.Ydb, "CAST({0} AS Double) * 180.0 / Math::Pi()", IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Multiplicative)]
 		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static short?   Degrees(short?   value) { return value == null ? null : (short?)  (value.Value * 180 / Math.PI); }
+		[Expression(PN.Ydb, "CAST({0} AS Double) * 180.0 / Math::Pi()", IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Multiplicative)]
 		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static int?     Degrees(int?     value) { return value == null ? null : (int?)    (value.Value * 180 / Math.PI); }
+		[Expression(PN.Ydb, "CAST({0} AS Double) * 180.0 / Math::Pi()", IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Multiplicative)]
 		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static long?    Degrees(long?    value) { return value == null ? null : (long?)   (value.Value * 180 / Math.PI); }
 		[CLSCompliant(false)]
+		[Expression(PN.Ydb, "CAST({0} AS Double) * 180.0 / Math::Pi()", IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Multiplicative)]
 		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static sbyte?   Degrees(sbyte?   value) { return value == null ? null : (sbyte?)  (value.Value * 180 / Math.PI); }
+		[Expression(PN.Ydb, "CAST({0} AS Double) * 180.0 / Math::Pi()", IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Multiplicative)]
 		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static float?   Degrees(float?   value) { return value == null ? null : (float?)  (value.Value * 180 / Math.PI); }
 
 		[Function(PN.Ydb, "Math::Exp", IsNullable = IsNullableType.IfAnyParameterNullable)]

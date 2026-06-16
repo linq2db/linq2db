@@ -301,7 +301,7 @@ namespace Tests.OData.Microsoft
 
 		#region Issue 3757 Data
 		[Test]
-		public void Issue3757Test([DataSources(TestProvName.AllClickHouse, ProviderName.Ydb)] string context, [Values("", "?$filter=Children/any(c: contains(c/LS, 'de'))")] string queryString)
+		public void Issue3757Test([DataSources(TestProvName.AllClickHouse, TestProvName.AllYdb)] string context, [Values("", "?$filter=Children/any(c: contains(c/LS, 'de'))")] string queryString)
 		{
 			var modelBuilder = new ODataModelBuilder();
 

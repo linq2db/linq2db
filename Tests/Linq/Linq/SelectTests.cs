@@ -409,7 +409,7 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
-		public void Coalesce4([DataSources(ProviderName.Ydb, ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		public void Coalesce4([DataSources(TestProvName.AllYdb, ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -420,7 +420,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Coalesce5([DataSources(ProviderName.Ydb, ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		public void Coalesce5([DataSources(TestProvName.AllYdb, ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -1436,6 +1436,28 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ProviderName.SqlCe, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_RowNumber)]
+		public void SelectWithIndexerOrderByNulls(
+			[DataSources] string context,
+			[Values(Sql.NullsPosition.First, Sql.NullsPosition.Last)] Sql.NullsPosition nulls,
+			[Values] bool descending)
+		{
+			using var db = GetDataContext(context);
+
+			// Indexed Select lowers ordering into ROW_NUMBER(); the requested NULLS position must reach the OVER clause.
+			var ordered = descending
+				? db.Person.OrderByDescending(p => p.MiddleName, nulls)
+				: db.Person.OrderBy          (p => p.MiddleName, nulls);
+
+			var query = ordered
+				.ThenBy(p => p.ID)
+				.Select((p, idx) => new { p.ID, Index = idx })
+				.Where(x => x.Index >= 0);
+
+			AssertQuery(query);
+		}
+
 		public class Table1788
 		{
 			[PrimaryKey]
@@ -1901,6 +1923,8 @@ namespace Tests.Linq
 		public void Issue4520Test([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
+
+			using var _ = context.IsAnyOf(TestProvName.AllYdb) ? new DisableBaseline("https://github.com/linq2db/linq2db/issues/5169 - remote/direct derived-table alias numbering divergence") : null;
 
 			db.Types2
 				.Where(i => i.ID == 1)

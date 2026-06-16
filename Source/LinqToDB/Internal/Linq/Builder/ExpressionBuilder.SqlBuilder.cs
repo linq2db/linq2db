@@ -16,6 +16,7 @@ using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Expressions.ExpressionVisitors;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Interceptors;
+using LinqToDB.Internal.Mapping;
 using LinqToDB.Internal.Reflection;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Internal.SqlQuery.Visitors;
@@ -235,7 +236,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			using var visitor = _exposeVisitorPool.Allocate();
 
-			var result = visitor.Value.ExposeExpression(DataContext, _optimizationContext, ParameterValues, expression, includeConvert : true, optimizeConditions : false, compactBinary : false, isSingleConvert: true);
+			var result = visitor.Value.ExposeExpression(DataContext, _optimizationContext, ParameterValues, expression, optimizeConditions : false, compactBinary : false, isSingleConvert: true);
 
 			return result;
 		}
@@ -787,9 +788,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (obj.Type != ttype)
 					obj = Expression.Convert(expression.Expression, ttype);
 
-				var memberInfo = ttype.GetMemberEx(field.ColumnDescriptor.MemberInfo) ?? throw new InvalidOperationException();
-
-				var left = Expression.MakeMemberAccess(obj, memberInfo);
+				var left = field.ColumnDescriptor.GetMemberAccessExpression(obj);
 				var code = m.m.Code;
 
 				if (code == null)

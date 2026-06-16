@@ -72,7 +72,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class MappingTestClass
 		{
-			[Column] public int       Id    { get; set; }
+			[PrimaryKey] public int   Id    { get; set; }
 			[Column] public int       Value { get; set; }
 			[Column] public FlagsEnum Flags { get; set; }
 		}
@@ -189,6 +189,7 @@ namespace Tests.Linq
 		static int Count1(Parent p) { return p.Children.Count(c => c.ChildID > 0); }
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void MapMember1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			Expressions.MapMember<Parent,int>(p => Count1(p), p => p.Children.Count(c => c.ChildID > 0));
@@ -200,6 +201,7 @@ namespace Tests.Linq
 		static int Count2(Parent p, int id) { return p.Children.Count(c => c.ChildID > id); }
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void MapMember2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			Expressions.MapMember<Parent,int,int>((p,id) => Count2(p, id), (p, id) => p.Children.Count(c => c.ChildID > id));
@@ -211,6 +213,7 @@ namespace Tests.Linq
 		static int Count3(Parent p, int id) { return p.Children.Count(c => c.ChildID > id) + 2; }
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void MapMember3([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			Expressions.MapMember<Parent,int,int>((p,id) => Count3(p, id), (p, id) => p.Children.Count(c => c.ChildID > id) + 2);
@@ -570,9 +573,9 @@ namespace Tests.Linq
 			var _ = db.Child.LeftJoin(db.Parent, c => c.ParentID, p => p.ParentID).ToList();
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
-		public void LeftJoinTest2([DataSources(TestProvName.AllClickHouse)] string context)
+		public void LeftJoinTest2([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			var _ = (
@@ -1115,7 +1118,6 @@ namespace Tests.Linq
 		#endregion
 
 		#region Regression: query comparison
-		[YdbCteAsSource]
 		[Test(Description = "Tests regression introduced in 3.5.2")]
 		public void ComparisonTest1([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context, [Values(1, 2)] int iteration)
 		{
@@ -1136,7 +1138,6 @@ namespace Tests.Linq
 				db.Patient.GetCacheMissCount().ShouldBe(cacheMiss);
 		}
 
-		[YdbCteAsSource]
 		[Test(Description = "Tests regression introduced in 3.5.2")]
 		public void ComparisonTest2([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{

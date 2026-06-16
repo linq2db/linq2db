@@ -9,6 +9,7 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider.DB2;
 using LinqToDB.Internal.DataProvider.DB2.Translation;
 using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
@@ -32,6 +33,8 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			SqlProviderFlags.AcceptsTakeAsParameter                                = false;
 			SqlProviderFlags.AcceptsTakeAsParameterIfSkip                          = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported                     = true;
+			SqlProviderFlags.IsNullsOrderingSupported                              = true;
+			SqlProviderFlags.DefaultNullsOrdering                                  = NullsDefaultOrdering.Largest; // DB2 sorts NULL as the largest value
 			SqlProviderFlags.IsUpdateFromSupported                                 = false;
 			SqlProviderFlags.IsCrossJoinSupported                                  = false;
 			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel                    = 1;

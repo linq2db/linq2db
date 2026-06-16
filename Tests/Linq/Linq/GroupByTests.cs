@@ -1449,6 +1449,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void GroupByAggregate3([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -2668,7 +2669,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue3761Test1([DataSources(ProviderName.Ydb, TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSqlServer2005, TestProvName.AllSybase)] string context)
+		public void Issue3761Test1([DataSources(TestProvName.AllYdb, TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSqlServer2005, TestProvName.AllSybase)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable<Issue3761Table>();
@@ -2692,7 +2693,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue3761Test2([DataSources(ProviderName.Ydb, TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSqlServer2005)] string context)
+		public void Issue3761Test2([DataSources(TestProvName.AllYdb, TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSqlServer2005)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable<Issue3761Table>();

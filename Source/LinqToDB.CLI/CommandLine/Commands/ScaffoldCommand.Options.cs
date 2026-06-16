@@ -105,7 +105,8 @@ JSON file example:
 					new (false, false, nameof(DatabaseType.ClickHouseMySql), "ClickHouse (MySql interface)"                              ),
 					new (false, false, nameof(DatabaseType.ClickHouseHttp),  "ClickHouse (HTTP(S) interface)"                            ),
 					new (false, false, nameof(DatabaseType.ClickHouseTcp),   "ClickHouse (TCP/binary interface)"                         ),
-					new (false, false, nameof(DatabaseType.DuckDB),          "DuckDB"                                                    ));
+					new (false, false, nameof(DatabaseType.DuckDB),          "DuckDB"                                                    ),
+					new (false, false, nameof(DatabaseType.Ydb),             "YDB"                                                       ));
 
 			/// <summary>
 			/// Database provider location option.
@@ -1928,6 +1929,7 @@ string // also you can put aggregate function name as string directly to list
 			ClickHouseHttp,
 			ClickHouseTcp,
 			DuckDB,
+			Ydb,
 		}
 
 		public static CliCommand Instance { get; } = new ScaffoldCommand();
