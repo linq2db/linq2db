@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Threading;
+
+using NUnit.Framework.Internal;
 
 namespace Tests
 {
@@ -14,10 +15,14 @@ namespace Tests
 		public static string TRACE_DISABLED    = "key-trace-disabled";
 		public static string LASTQUERY         = "key-lastquery";
 
-		// Per-test context for the local/direct execution path. Established in [SetUp]
-		// (TestBase.OnBeforeTest); flows to the test body, [TearDown] and any threads/tasks
-		// the test spawns, so parallel tests on different providers stay isolated.
-		private static readonly AsyncLocal<CustomTestContext?> _current = new();
+		// Per-test context for the local/direct execution path, keyed by the NUnit test id.
+		// AsyncLocal is unreliable under NUnit's non-continuous async execution flow, so the
+		// context is resolved by the authoritative current-test id (available on the test's
+		// setup/body/teardown threads) rather than flowed through AsyncLocal.
+		private static readonly ConcurrentDictionary<string, CustomTestContext> _byTest =
+			new ConcurrentDictionary<string, CustomTestContext>(StringComparer.Ordinal);
+
+		static string? CurrentTestId => TestExecutionContext.CurrentContext?.CurrentTest?.Id;
 
 		// The LinqService test server executes queries on its own thread-pool threads where the
 		// test's AsyncLocal does not flow. Each remote (LinqService) test publishes its context
@@ -44,7 +49,9 @@ namespace Tests
 		public static void Begin(bool isRemote, string? provider)
 		{
 			var ctx = new CustomTestContext();
-			_current.Value = ctx;
+
+			if (CurrentTestId is { } id)
+				_byTest[id] = ctx;
 
 			if (isRemote && provider != null)
 			{
@@ -59,7 +66,7 @@ namespace Tests
 
 		public static CustomTestContext Get()
 		{
-			if (_current.Value is { } current)
+			if (CurrentTestId is { } id && _byTest.TryGetValue(id, out var current))
 				return current;
 
 			if (_serverProvider.Value is { } provider && _remoteByProvider.TryGetValue(provider, out var remote))
@@ -70,14 +77,13 @@ namespace Tests
 
 		public static void Release()
 		{
-			var ctx = _current.Value;
-			_current.Value = null;
+			CustomTestContext? ctx = null;
 
-			// only the remote test that published the register clears it (atomic key+value remove,
-			// so a newer test's entry for the same provider is never dropped)
+			if (CurrentTestId is { } id)
+				_byTest.TryRemove(id, out ctx);
+
 			if (ctx?._remoteProvider is { } provider)
-				((ICollection<KeyValuePair<string, CustomTestContext>>)_remoteByProvider)
-					.Remove(new KeyValuePair<string, CustomTestContext>(provider, ctx));
+				_remoteByProvider.TryRemove(provider, out _);
 		}
 
 		public TValue Get<TValue>(string name)
