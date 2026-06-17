@@ -58,7 +58,7 @@ namespace Tests.UserTests
 			Assert.That(item, Is.EqualTo(expected));
 		}
 
-		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = "CH 26.1.1 regression")]
+		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = "CH 26.1.1 regression, reported https://github.com/ClickHouse/ClickHouse/issues/96401")]
 		[Test]
 		public void TestCteInvalidMappingUnion([CteContextSource] string context)
 		{
