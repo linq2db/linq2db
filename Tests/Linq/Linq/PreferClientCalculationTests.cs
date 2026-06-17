@@ -17,10 +17,10 @@ namespace Tests.Linq
 		[Table]
 		sealed class ClientCalcEntity
 		{
-			[Column] public int     Id     { get; set; }
-			[Column] public int     Value1 { get; set; }
-			[Column] public int     Value2 { get; set; }
-			[Column] public string? Name   { get; set; }
+			[Column, PrimaryKey] public int     Id     { get; set; }
+			[Column]             public int     Value1 { get; set; }
+			[Column]             public int     Value2 { get; set; }
+			[Column]             public string? Name   { get; set; }
 
 			public static readonly ClientCalcEntity[] Seed =
 			[
