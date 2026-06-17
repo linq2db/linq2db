@@ -98,134 +98,98 @@ namespace Tests
 
 		#region Parent/Child Model
 
-		private   List<Parent>?      _parent;
-		protected IEnumerable<Parent> Parent
+		// The Parent/Parent1/Parent5/Child/GrandChild/GrandChild1 lists form one cross-referenced
+		// in-memory graph (Parent.Children -> Child.Parent -> ...). They used to be built piecemeal by
+		// each getter, publishing a half-built backing field before wiring associations to break the
+		// cycle - safe serially, racy once test cases of a shared fixture run concurrently (the parallel
+		// test execution work, #5614): a second case could observe a list whose elements aren't wired yet.
+		//
+		// Build the whole graph once in EnsureModel under a double-checked lock: the volatile _modelLoaded
+		// flag keeps the lock off the hot path (taken only until the graph is built), and the wiring reads
+		// the backing fields directly so it never re-enters the getters.
+		readonly Lock     _modelSync = new();
+		private  volatile bool _modelLoaded;
+
+		void EnsureModel()
 		{
-			get
+			if (_modelLoaded)
+				return;
+
+			lock (_modelSync)
 			{
-				if (_parent == null)
-					using (new DisableLogging())
-					using (new DisableBaseline("Default Database"))
-					using (var db = new TestDataConnection())
-					{
-						_parent = db.Parent.ToList();
-						db.Close();
+				if (_modelLoaded)
+					return;
 
-						foreach (var p in _parent)
-						{
-							p.ParentTest = p;
-							p.Children = Child.Where(c => c.ParentID == p.ParentID).ToList();
-							p.GrandChildren = GrandChild.Where(c => c.ParentID == p.ParentID).ToList();
-							p.Types = Types.FirstOrDefault(t => t.ID == p.ParentID);
-						}
-					}
+				using (new DisableLogging())
+				using (new DisableBaseline("Default Database"))
+				using (var db = new TestDataConnection())
+				{
+					db.Child.Delete(c => c.ParentID >= 1000);
 
-				return _parent;
+					_parent      = db.Parent     .ToList();
+					_child       = db.Child      .ToList();
+					_grandChild  = db.GrandChild .ToList();
+					_grandChild1 = db.GrandChild1.ToList();
+
+					db.Close();
+				}
+
+				_parent1 = _parent.Select(p => new Parent1 { ParentID = p.ParentID, Value1 = p.Value1 }).ToList();
+
+				foreach (var p in _parent)
+				{
+					p.ParentTest    = p;
+					p.Children      = _child     .Where(c => c.ParentID == p.ParentID).ToList();
+					p.GrandChildren = _grandChild.Where(c => c.ParentID == p.ParentID).ToList();
+					p.Types         = Types.FirstOrDefault(t => t.ID == p.ParentID);
+				}
+
+				foreach (var ch in _child)
+				{
+					ch.Parent        = _parent .Single(p => p.ParentID == ch.ParentID);
+					ch.Parent1       = _parent1.Single(p => p.ParentID == ch.ParentID);
+					ch.ParentID2     = new Parent3 { ParentID2 = ch.Parent.ParentID, Value1 = ch.Parent.Value1 };
+					ch.GrandChildren = _grandChild.Where(c => c.ParentID == ch.ParentID && c.ChildID == ch.ChildID).ToList();
+				}
+
+				foreach (var ch in _grandChild)
+					ch.Child = _child.Single(c => c.ParentID == ch.ParentID && c.ChildID == ch.ChildID);
+
+				foreach (var ch in _grandChild1)
+				{
+					ch.Parent = _parent1.Single(p => p.ParentID == ch.ParentID);
+					ch.Child  = _child  .Single(c => c.ParentID == ch.ParentID && c.ChildID == ch.ChildID);
+				}
+
+				_parent5 = _parent.Select(p => new Parent5 { ParentID = p.ParentID, Value1 = p.Value1 }).ToList();
+
+				foreach (var p in _parent5)
+					p.Children = _parent5.Where(c => c.Value1 == p.ParentID).ToList();
+
+				_modelLoaded = true;
 			}
 		}
+
+		private   List<Parent>?      _parent;
+		protected IEnumerable<Parent> Parent           { get { EnsureModel(); return _parent!;      } }
 
 		private   List<Parent1>?      _parent1;
-		protected IEnumerable<Parent1> Parent1
-		{
-			get
-			{
-				_parent1 ??= Parent.Select(p => new Parent1 { ParentID = p.ParentID, Value1 = p.Value1 }).ToList();
-
-				return _parent1;
-			}
-		}
+		protected IEnumerable<Parent1> Parent1         { get { EnsureModel(); return _parent1!;     } }
 
 		private   List<Parent4>? _parent4;
 		protected List<Parent4> Parent4 => _parent4 ??= Parent.Select(p => new Parent4 { ParentID = p.ParentID, Value1 = ConvertTo<TypeValue>.From(p.Value1) }).ToList();
 
 		private   List<Parent5>? _parent5;
-		protected List<Parent5> Parent5
-		{
-			get
-			{
-				if (_parent5 == null)
-				{
-					_parent5 = Parent.Select(p => new Parent5 { ParentID = p.ParentID, Value1 = p.Value1 }).ToList();
-
-					foreach (var p in _parent5)
-						p.Children = _parent5.Where(c => c.Value1 == p.ParentID).ToList();
-				}
-
-				return _parent5;
-			}
-		}
+		protected List<Parent5> Parent5                { get { EnsureModel(); return _parent5!;     } }
 
 		protected List<Child>?      _child;
-		protected IEnumerable<Child> Child
-		{
-			get
-			{
-				if (_child == null)
-					using (new DisableLogging())
-					using (new DisableBaseline("Default Database"))
-					using (var db = new TestDataConnection())
-					{
-						db.Child.Delete(c => c.ParentID >= 1000);
-						_child = db.Child.ToList();
-						db.Close();
-
-						foreach (var ch in _child)
-						{
-							ch.Parent = Parent.Single(p => p.ParentID == ch.ParentID);
-							ch.Parent1 = Parent1.Single(p => p.ParentID == ch.ParentID);
-							ch.ParentID2 = new Parent3 { ParentID2 = ch.Parent.ParentID, Value1 = ch.Parent.Value1 };
-							ch.GrandChildren = GrandChild.Where(c => c.ParentID == ch.ParentID && c.ChildID == ch.ChildID).ToList();
-						}
-					}
-
-				foreach (var item in _child)
-					yield return item;
-			}
-		}
+		protected IEnumerable<Child> Child             { get { EnsureModel(); return _child!;       } }
 
 		private   List<GrandChild>?      _grandChild;
-		protected IEnumerable<GrandChild> GrandChild
-		{
-			get
-			{
-				if (_grandChild == null)
-					using (new DisableLogging())
-					using (new DisableBaseline("Default Database"))
-					using (var db = new TestDataConnection())
-					{
-						_grandChild = db.GrandChild.ToList();
-						db.Close();
-
-						foreach (var ch in _grandChild)
-							ch.Child = Child.Single(c => c.ParentID == ch.ParentID && c.ChildID == ch.ChildID);
-					}
-
-				return _grandChild;
-			}
-		}
+		protected IEnumerable<GrandChild> GrandChild   { get { EnsureModel(); return _grandChild!;  } }
 
 		private   List<GrandChild1>?      _grandChild1;
-		protected IEnumerable<GrandChild1> GrandChild1
-		{
-			get
-			{
-				if (_grandChild1 == null)
-					using (new DisableLogging())
-					using (new DisableBaseline("Default Database"))
-					using (var db = new TestDataConnection())
-					{
-						_grandChild1 = db.GrandChild1.ToList();
-
-						foreach (var ch in _grandChild1)
-						{
-							ch.Parent = Parent1.Single(p => p.ParentID == ch.ParentID);
-							ch.Child = Child.Single(c => c.ParentID == ch.ParentID && c.ChildID == ch.ChildID);
-						}
-					}
-
-				return _grandChild1;
-			}
-		}
+		protected IEnumerable<GrandChild1> GrandChild1 { get { EnsureModel(); return _grandChild1!; } }
 		#endregion
 
 		#region Inheritance Parent/Child Model

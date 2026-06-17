@@ -2,7 +2,7 @@
 # test-status.ps1 — print a one-line summary of an in-progress (or finished) linq2db test run.
 #
 # Reads the JSON heartbeat written by Tests/Base/TestProgressReporter.cs when a run is launched with
-# the LINQ2DB_TEST_PROGRESS environment variable set. By default it picks the most recently updated
+# the --test-progress command-line option. By default it picks the most recently updated
 # .build/.claude/test-progress.*.json file (the active run); pass -Path to target a specific file.
 #
 # Usage:
@@ -23,7 +23,7 @@ $repoRoot = Resolve-Path (Join-Path $PSScriptRoot '..' '..')
 if (-not $Path) {
 	$dir = Join-Path $repoRoot '.build/.claude'
 	if (-not (Test-Path $dir)) {
-		Write-Output "No test-progress directory yet ($dir). Start a run with LINQ2DB_TEST_PROGRESS=1."
+		Write-Output "No test-progress directory yet ($dir). Start a run with --test-progress."
 		return
 	}
 
@@ -32,7 +32,7 @@ if (-not $Path) {
 		Select-Object -First 1
 
 	if (-not $latest) {
-		Write-Output "No test-progress.*.json found in $dir. Start a run with LINQ2DB_TEST_PROGRESS=1."
+		Write-Output "No test-progress.*.json found in $dir. Start a run with --test-progress."
 		return
 	}
 
