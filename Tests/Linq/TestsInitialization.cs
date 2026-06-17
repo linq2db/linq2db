@@ -12,13 +12,14 @@ using LinqToDB.Tools.Activity;
 using NUnit.Framework;
 using NUnit.Framework.Internal;
 using NUnit.Framework.Internal.Execution;
+using NUnit.ParallelByResource;
 
 using Oracle.ManagedDataAccess.Client;
 
 using Tests;
 
 // Mark every fixture/test parallelizable so NUnit assigns the Parallel execution strategy
-// and dispatches each case. The actual concurrency is governed by ParallelDatabaseWorkItemDispatcher
+// and dispatches each case. The actual concurrency is governed by ResourceLaneDispatcher
 // (installed in OneTimeSetUp): cases are routed to per-provider lanes so same-database tests
 // never overlap. Tests that mutate global state are excluded via [NonParallelizable].
 [assembly: Parallelizable(ParallelScope.All)]
@@ -179,11 +180,10 @@ public class TestsInitialization
 		// Parallelize tests across database providers: route each provider's tests to a
 		// dedicated lane so the same database is never hit concurrently. Only swap when
 		// NUnit is actually running in parallel; a serial run keeps the original dispatcher.
-		if (TestExecutionContext.CurrentContext.Dispatcher is ParallelWorkItemDispatcher original)
+		if (ResourceLaneDispatcherInstaller.TryInstall(new DatabaseLaneStrategy(), new DelegateParallelDiagnostics(ParallelDiag.Log), out var workers))
 		{
-			TestExecutionContext.CurrentContext.Dispatcher = new ParallelDatabaseWorkItemDispatcher(original);
 			TestBase.ParallelExecutionEnabled = true;
-			TestContext.Progress.WriteLine($"[parallel] installed ParallelDatabaseWorkItemDispatcher (workers={original.LevelOfParallelism})");
+			TestContext.Progress.WriteLine($"[parallel] installed ResourceLaneDispatcher (workers={workers})");
 		}
 		else
 		{

@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Threading;
 
 using NUnit.Framework.Internal;
+using NUnit.ParallelByResource;
 
 namespace Tests
 {
@@ -67,17 +68,13 @@ namespace Tests
 		// Per-provider database-readiness gate. CreateDatabase signals it once a provider's schema
 		// exists; the provider's other tests wait on it under parallel execution. Kept here (the
 		// test-context infrastructure home) rather than as static state spread across TestBase.
-		private static readonly ConcurrentDictionary<string, ManualResetEventSlim> _databaseReady =
-			new ConcurrentDictionary<string, ManualResetEventSlim>(StringComparer.OrdinalIgnoreCase);
-
-		static ManualResetEventSlim DatabaseReadyGate(string provider)
-			=> _databaseReady.GetOrAdd(provider, static _ => new ManualResetEventSlim(false));
+		private static readonly ResourceReadinessLatch _databaseReady = new ResourceReadinessLatch(StringComparer.OrdinalIgnoreCase);
 
 		// Signalled by CreateDatabase (called even on failure so waiters don't hang).
-		public static void MarkDatabaseReady(string provider) => DatabaseReadyGate(provider).Set();
+		public static void MarkDatabaseReady(string provider) => _databaseReady.MarkReady(provider);
 
 		// Bounded wait for a provider's CreateDatabase to finish; returns false on timeout.
-		public static bool AwaitDatabaseReady(string provider) => DatabaseReadyGate(provider).Wait(TimeSpan.FromMinutes(2));
+		public static bool AwaitDatabaseReady(string provider) => _databaseReady.WaitReady(provider, TimeSpan.FromMinutes(2));
 
 		public static CustomTestContext Get()
 		{
