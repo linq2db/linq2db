@@ -15,6 +15,9 @@
 		<PackageReference Include="NUnit" />
 		<PackageReference Include="NUnit.Analyzers" />
 		<PackageReference Include="Shouldly" />
+
+		<!-- MTP command-line option provider (provider / test-progress options) lives in this assembly. -->
+		<PackageReference Include="Microsoft.Testing.Platform" />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' != 'net462' ">
