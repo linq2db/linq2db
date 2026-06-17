@@ -24,6 +24,21 @@ namespace Tests
 		internal static string?         DefaultProvider      { get; }
 		internal static HashSet<string> SkipCategories       { get; }
 
+		// Provider names passed via the --provider command-line option (see TestCommandLine), or null when absent.
+		// For the main test set (UserProviders) they REPLACE the providers configured in UserDataProviders.json, so
+		// any provider with a defined connection string can run without editing the file. For EFProviders they
+		// INTERSECT the curated EF-Core-supported list instead (a provider with no EF context can't run EF tests,
+		// so replacing there would just break). Declared above Providers/EFProviders so its initializer runs before
+		// theirs: static field initializers run in textual order, ahead of the static constructor body.
+		static readonly HashSet<string>? ProviderOverride =
+			TestCommandLine.Providers.Count > 0
+				? new HashSet<string>(TestCommandLine.Providers, StringComparer.OrdinalIgnoreCase)
+				: null;
+
+		// EFProviders keeps the intersection of its curated list and --provider (never an unsupported provider).
+		static IEnumerable<string> ApplyEFProviderOverride(IEnumerable<string> providers) =>
+			ProviderOverride is null ? providers : providers.Where(ProviderOverride.Contains);
+
 		static TestConfiguration()
 		{
 			try
@@ -59,7 +74,21 @@ namespace Tests
 				testSettings.Connections ??= new();
 
 				DisableRemoteContext = testSettings.DisableRemoteContext == true;
-				UserProviders = new HashSet<string>(testSettings.Providers ?? [], StringComparer.OrdinalIgnoreCase);
+				// --provider, when supplied, REPLACES the providers from UserDataProviders.json (see ProviderOverride):
+				// any provider with a defined connection string can be run without editing the file.
+				UserProviders = ProviderOverride is not null
+					? new HashSet<string>(ProviderOverride, StringComparer.OrdinalIgnoreCase)
+					: new HashSet<string>(testSettings.Providers ?? [], StringComparer.OrdinalIgnoreCase);
+
+				if (ProviderOverride is not null)
+				{
+					TestContext.Out.WriteLine($"Provider override (--provider): {string.Join(", ", UserProviders)}");
+
+					foreach (var p in UserProviders)
+						if (!testSettings.Connections.Keys.Contains(p, StringComparer.OrdinalIgnoreCase))
+							TestContext.Out.WriteLine($"WARNING: --provider '{p}' has no connection string defined; it will fail to connect.");
+				}
+
 				SkipCategories = new HashSet<string>(testSettings.Skip ?? [], StringComparer.OrdinalIgnoreCase);
 
 				var logLevel   = testSettings.TraceLevel;
@@ -198,7 +227,7 @@ namespace Tests
 			TestProvName.AllDuckDB,
 		}.SplitAll()).ToList();
 
-		public static readonly IReadOnlyList<string> EFProviders = CustomizationSupport.Interceptor.GetSupportedProviders(new List<string>
+		public static readonly IReadOnlyList<string> EFProviders = ApplyEFProviderOverride(CustomizationSupport.Interceptor.GetSupportedProviders(new List<string>
 		{
 			ProviderName.SQLiteMS,
 			// latest tested ef.core doesn't support older versions, leading to too many failing tests to disable
@@ -228,6 +257,6 @@ namespace Tests
 			//TestProvName.AllMySql,
 			//TestProvName.AllSapHana,
 			//TestProvName.AllClickHouse
-		}.SplitAll()).ToList();
+		}.SplitAll())).ToList();
 	}
 }
