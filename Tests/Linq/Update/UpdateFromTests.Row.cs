@@ -254,7 +254,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5413")]
-		public void UpdateFromSubqueryRowShouldRemainSimple([IncludeDataSources(TestProvName.AllOracle12Plus)] string context)
+		public void UpdateFromSubqueryRowShouldRemainSimple1([IncludeDataSources(TestProvName.AllOracle12Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table1 = db.CreateLocalTable<NewEntities>();
@@ -270,6 +270,33 @@ namespace Tests.xUpdate
 						from n2 in table2.Where(n2 => n2.id == u1.id).DefaultIfEmpty().Take(1)
 						from n3 in table3.Where(n3 => Sql.ToNullable(n2.id) != null && u1.Value1 == n3.id && n3.RelatedValue3 == n2.Value3).DefaultIfEmpty().Take(1)
 						select Sql.Row(n3.RelatedValue1, n3.RelatedValue2 + n2.Value2))
+						.Single()
+				)
+				.Update();
+
+			LastQuery!.ShouldNotContain("EXISTS");
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5413")]
+		public void UpdateFromSubqueryRowShouldRemainSimple2([IncludeDataSources(TestProvName.AllOracle12Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table1 = db.CreateLocalTable<NewEntities>();
+			using var table2 = db.CreateLocalTable<UpdatedEntities>();
+			using var table3 = db.CreateLocalTable<UpdateRelation>();
+
+			// Optimizer transformation is sensitive to exact patterns,
+			// this is another test case for the same issues as previous test.
+
+			table1
+				.Set(
+					u1 => Sql.Row(u1.Value1, u1.Value2),
+					u1 => (
+						from n2 in table2
+						// Note: it's important that the join condition is not based on PK, it changes optimizer behavior
+						from n3 in table3.LeftJoin(n3 => n3.RelatedValue1 == n2.RelationId)
+						where n2.id == u1.id
+						select Sql.Row(n2.Value1, n3.RelatedValue2))
 						.Single()
 				)
 				.Update();
