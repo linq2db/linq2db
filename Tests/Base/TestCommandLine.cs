@@ -52,36 +52,58 @@ namespace Tests
 			TestProgress = GetSingle(args, TestProgressOption);
 		}
 
-		// All values that follow each "--<option>" token until the next "--" token, split on ','.
+		// All values for the option, split on ','. Accepts both the spaced form ("--<option> a b,c", values
+		// run until the next "--" token) and the inline form ("--<option>=a,b", value attached after '=').
 		static IReadOnlyList<string> GetValues(string[] args, string option)
 		{
 			var token  = "--" + option;
+			var prefix = token + "=";
 			var result = new List<string>();
 
 			for (var i = 0; i < args.Length; i++)
 			{
+				// Inline form: --<option>=a,b — the value is attached after '=' and is self-contained.
+				if (args[i].StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+				{
+					AddParts(result, args[i].Substring(prefix.Length));
+					continue;
+				}
+
 				if (!string.Equals(args[i], token, StringComparison.OrdinalIgnoreCase))
 					continue;
 
+				// Spaced form: --<option> a b — consume following tokens until the next "--" token.
 				for (var j = i + 1; j < args.Length && !args[j].StartsWith("--", StringComparison.Ordinal); j++)
-					foreach (var part in args[j].Split(','))
-						if (!string.IsNullOrWhiteSpace(part))
-							result.Add(part.Trim());
+					AddParts(result, args[j]);
 			}
 
 			return result;
+
+			static void AddParts(List<string> target, string value)
+			{
+				foreach (var part in value.Split(','))
+					if (!string.IsNullOrWhiteSpace(part))
+						target.Add(part.Trim());
+			}
 		}
 
-		// The first value following "--<option>", "" if the option is present without a value, null if absent.
+		// The option's value: the token after "--<option>", or the part after '=' in "--<option>=value";
+		// "" when the option is present without a value, null when absent.
 		static string? GetSingle(string[] args, string option)
 		{
-			var token = "--" + option;
+			var token  = "--" + option;
+			var prefix = token + "=";
 
 			for (var i = 0; i < args.Length; i++)
 			{
+				// Inline form: --<option>=value.
+				if (args[i].StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+					return args[i].Substring(prefix.Length);
+
 				if (!string.Equals(args[i], token, StringComparison.OrdinalIgnoreCase))
 					continue;
 
+				// Spaced form: --<option> [value].
 				return i + 1 < args.Length && !args[i + 1].StartsWith("--", StringComparison.Ordinal)
 					? args[i + 1]
 					: "";
