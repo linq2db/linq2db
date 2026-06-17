@@ -38,7 +38,7 @@ namespace Tests.UserTests
 				.Select(s => new
 				{
 					s.Id,
-					Rate = s.LeadCount.HasValue ? (decimal?)1m : null
+					Rate = s.LeadCount.HasValue ? (decimal?)(s.LeadCount.Value / 2m) : null
 				});
 
 			AssertQuery(query);
