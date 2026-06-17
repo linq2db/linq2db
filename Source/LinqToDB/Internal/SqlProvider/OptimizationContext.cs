@@ -74,7 +74,7 @@ namespace LinqToDB.Internal.SqlProvider
 			}
 			else
 			{
-				var newName = (_parametersNormalizer ??= _parametersNormalizerFactory()).Normalize(parameter.Name);
+				var newName = NormalizeParameterName(parameter.Name);
 
 				if (IsParameterOrderDependent || !string.Equals(newName, parameter.Name, StringComparison.Ordinal))
 				{
@@ -93,6 +93,15 @@ namespace LinqToDB.Internal.SqlProvider
 			}
 
 			return returnValue;
+		}
+
+		/// <summary>
+		/// Normalizes <paramref name="name"/> through the query parameters name normalizer, registers it
+		/// as used, and returns the resulting collision-free name.
+		/// </summary>
+		public string? NormalizeParameterName(string? name)
+		{
+			return (_parametersNormalizer ??= _parametersNormalizerFactory()).Normalize(name);
 		}
 
 		public SqlParameter SuggestDynamicParameter(DbDataType dbDataType, object? value)

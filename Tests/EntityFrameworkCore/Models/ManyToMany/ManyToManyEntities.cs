@@ -134,9 +134,9 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.ManyToMany
 	//    with a renamed column.
 	public class MmAccount
 	{
-#pragma warning disable CS0169, CS0649 // assigned by EF via the field-mapped "AccountId" key
+#pragma warning disable CS0169, CS0649, CA1823 // assigned by EF via the field-mapped "AccountId" key
 		private int                AccountId;
-#pragma warning restore CS0169, CS0649
+#pragma warning restore CS0169, CS0649, CA1823
 		public string              Name  { get; set; } = null!;
 		public ICollection<MmRole> Roles { get; set; } = null!;
 	}

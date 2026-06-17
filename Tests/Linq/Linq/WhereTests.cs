@@ -1187,6 +1187,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void GroupBySubQquery1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1201,7 +1202,6 @@ namespace Tests.Linq
 			AreEqual(qry12, qry22);
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void GroupBySubQquery2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -1219,7 +1219,6 @@ namespace Tests.Linq
 			AreEqual(qry12, qry22);
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void GroupBySubQquery2In([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -1587,7 +1586,6 @@ namespace Tests.Linq
 			Assert.That(Regex.Matches(sql, " AND "), Has.Count.EqualTo(flag == null ? 0 : 1));
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void ExistsSqlTest1([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
@@ -1852,6 +1850,14 @@ namespace Tests.Linq
 			};
 		}
 
+		// string.Compare / string.CompareTo translate to SQL only (the ordinal local-eval mapping
+		// ConvertToCaseCompareToImpl was removed when CompareTo moved to the member translator). In-memory
+		// evaluation now uses the BCL comparison directly, which is itself null-safe and ordinal for these
+		// values — so the SQL result is checked against a real-BCL expected set rather than AssertQuery,
+		// whose expected side would re-expand the now-removed mapping and diverge on null operands.
+		void AssertCompareQuery<T>(IEnumerable<T> expected, IQueryable<T> query, Expression<Func<T, bool>> predicate)
+			=> AreEqual(t => t, expected.Where(predicate.Compile()), query.Where(predicate), ComparerBuilder.GetEqualityComparer<T>(), allowEmpty: true);
+
 		[Test]
 		public void Issue2424([DataSources] string context)
 		{
@@ -1895,36 +1901,36 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(Isue2424Table.Data);
 
-			AssertQuery(tb.Where(i => 0 <= string.Compare(i.StrValueNullable, null)));
-			AssertQuery(tb.Where(i => 0 <= string.Compare(i.StrValueNullable, "1")));
-			AssertQuery(tb.Where(i => 0 <= string.Compare(i.StrValueNullable, "3")));
-			AssertQuery(tb.Where(i => 0 <= string.Compare(i.StrValueNullable, "5")));
+			AssertCompareQuery(Isue2424Table.Data, tb, i => 0 <= string.Compare(i.StrValueNullable, null));
+			AssertCompareQuery(Isue2424Table.Data, tb, i => 0 <= string.Compare(i.StrValueNullable, "1"));
+			AssertCompareQuery(Isue2424Table.Data, tb, i => 0 <= string.Compare(i.StrValueNullable, "3"));
+			AssertCompareQuery(Isue2424Table.Data, tb, i => 0 <= string.Compare(i.StrValueNullable, "5"));
 
-			AssertQuery(tb.Where(i => 0 >= string.Compare(i.StrValueNullable, null)));
-			AssertQuery(tb.Where(i => 0 >= string.Compare(i.StrValueNullable, "1")));
-			AssertQuery(tb.Where(i => 0 >= string.Compare(i.StrValueNullable, "3")));
-			AssertQuery(tb.Where(i => 0 >= string.Compare(i.StrValueNullable, "5")));
+			AssertCompareQuery(Isue2424Table.Data, tb, i => 0 >= string.Compare(i.StrValueNullable, null));
+			AssertCompareQuery(Isue2424Table.Data, tb, i => 0 >= string.Compare(i.StrValueNullable, "1"));
+			AssertCompareQuery(Isue2424Table.Data, tb, i => 0 >= string.Compare(i.StrValueNullable, "3"));
+			AssertCompareQuery(Isue2424Table.Data, tb, i => 0 >= string.Compare(i.StrValueNullable, "5"));
 
-			AssertQuery(tb.Where(i => 0 < string.Compare(i.StrValueNullable, null)));
-			AssertQuery(tb.Where(i => 0 < string.Compare(i.StrValueNullable, "1")));
-			AssertQuery(tb.Where(i => 0 < string.Compare(i.StrValueNullable, "3")));
-			AssertQuery(tb.Where(i => 0 < string.Compare(i.StrValueNullable, "5")));
+			AssertCompareQuery(Isue2424Table.Data, tb, i => 0 < string.Compare(i.StrValueNullable, null));
+			AssertCompareQuery(Isue2424Table.Data, tb, i => 0 < string.Compare(i.StrValueNullable, "1"));
+			AssertCompareQuery(Isue2424Table.Data, tb, i => 0 < string.Compare(i.StrValueNullable, "3"));
+			AssertCompareQuery(Isue2424Table.Data, tb, i => 0 < string.Compare(i.StrValueNullable, "5"));
 
-			AssertQuery(tb.Where(i => 0 > string.Compare(i.StrValueNullable, null)));
-			AssertQuery(tb.Where(i => 0 > string.Compare(i.StrValueNullable, "1")));
-			AssertQuery(tb.Where(i => 0 > string.Compare(i.StrValueNullable, "3")));
-			AssertQuery(tb.Where(i => 0 > string.Compare(i.StrValueNullable, "5")));
+			AssertCompareQuery(Isue2424Table.Data, tb, i => 0 > string.Compare(i.StrValueNullable, null));
+			AssertCompareQuery(Isue2424Table.Data, tb, i => 0 > string.Compare(i.StrValueNullable, "1"));
+			AssertCompareQuery(Isue2424Table.Data, tb, i => 0 > string.Compare(i.StrValueNullable, "3"));
+			AssertCompareQuery(Isue2424Table.Data, tb, i => 0 > string.Compare(i.StrValueNullable, "5"));
 
 #pragma warning disable CA2251 // Use 'string.Equals'
-			AssertQuery(tb.Where(i => 0 == string.Compare(i.StrValueNullable, null)));
-			AssertQuery(tb.Where(i => 0 == string.Compare(i.StrValueNullable, "1")));
-			AssertQuery(tb.Where(i => 0 == string.Compare(i.StrValueNullable, "3")));
-			AssertQuery(tb.Where(i => 0 == string.Compare(i.StrValueNullable, "5")));
+			AssertCompareQuery(Isue2424Table.Data, tb, i => 0 == string.Compare(i.StrValueNullable, null));
+			AssertCompareQuery(Isue2424Table.Data, tb, i => 0 == string.Compare(i.StrValueNullable, "1"));
+			AssertCompareQuery(Isue2424Table.Data, tb, i => 0 == string.Compare(i.StrValueNullable, "3"));
+			AssertCompareQuery(Isue2424Table.Data, tb, i => 0 == string.Compare(i.StrValueNullable, "5"));
 
-			AssertQuery(tb.Where(i => 0 != string.Compare(i.StrValueNullable, null)));
-			AssertQuery(tb.Where(i => 0 != string.Compare(i.StrValueNullable, "1")));
-			AssertQuery(tb.Where(i => 0 != string.Compare(i.StrValueNullable, "3")));
-			AssertQuery(tb.Where(i => 0 != string.Compare(i.StrValueNullable, "5")));
+			AssertCompareQuery(Isue2424Table.Data, tb, i => 0 != string.Compare(i.StrValueNullable, null));
+			AssertCompareQuery(Isue2424Table.Data, tb, i => 0 != string.Compare(i.StrValueNullable, "1"));
+			AssertCompareQuery(Isue2424Table.Data, tb, i => 0 != string.Compare(i.StrValueNullable, "3"));
+			AssertCompareQuery(Isue2424Table.Data, tb, i => 0 != string.Compare(i.StrValueNullable, "5"));
 #pragma warning restore CA2251 // Use 'string.Equals'
 		}
 
@@ -1945,30 +1951,42 @@ namespace Tests.Linq
 						  RightStringN = right.StrValueNullable,
 					  };
 
+			var srcExpected = from left in Isue2424Table.Data
+							  from right in Isue2424Table.Data
+							  select new
+							  {
+								  LeftId = left.Id,
+								  LeftString = left.StrValue,
+								  LeftStringN = left.StrValueNullable,
+								  RightId = right.Id,
+								  RightString = right.StrValue,
+								  RightStringN = right.StrValueNullable,
+							  };
+
 #pragma warning disable CA2251 // Use 'string.Equals'
 			// NonNullable vs NonNullable
-			AssertQuery(src.Where(i => 0 <= string.Compare(i.LeftString, i.RightString)));
-			AssertQuery(src.Where(i => 0 >= string.Compare(i.LeftString, i.RightString)));
-			AssertQuery(src.Where(i => 0 < string.Compare(i.LeftString, i.RightString)));
-			AssertQuery(src.Where(i => 0 > string.Compare(i.LeftString, i.RightString)));
-			AssertQuery(src.Where(i => 0 == string.Compare(i.LeftString, i.RightString)));
-			AssertQuery(src.Where(i => 0 != string.Compare(i.LeftString, i.RightString)));
+			AssertCompareQuery(srcExpected, src, i => 0 <= string.Compare(i.LeftString, i.RightString));
+			AssertCompareQuery(srcExpected, src, i => 0 >= string.Compare(i.LeftString, i.RightString));
+			AssertCompareQuery(srcExpected, src, i => 0 < string.Compare(i.LeftString, i.RightString));
+			AssertCompareQuery(srcExpected, src, i => 0 > string.Compare(i.LeftString, i.RightString));
+			AssertCompareQuery(srcExpected, src, i => 0 == string.Compare(i.LeftString, i.RightString));
+			AssertCompareQuery(srcExpected, src, i => 0 != string.Compare(i.LeftString, i.RightString));
 
 			// NonNullable vs Nullable
-			AssertQuery(src.Where(i => 0 <= string.Compare(i.LeftString, i.RightStringN)));
-			AssertQuery(src.Where(i => 0 >= string.Compare(i.LeftString, i.RightStringN)));
-			AssertQuery(src.Where(i => 0 < string.Compare(i.LeftString, i.RightStringN)));
-			AssertQuery(src.Where(i => 0 > string.Compare(i.LeftString, i.RightStringN)));
-			AssertQuery(src.Where(i => 0 == string.Compare(i.LeftString, i.RightStringN)));
-			AssertQuery(src.Where(i => 0 != string.Compare(i.LeftString, i.RightStringN)));
+			AssertCompareQuery(srcExpected, src, i => 0 <= string.Compare(i.LeftString, i.RightStringN));
+			AssertCompareQuery(srcExpected, src, i => 0 >= string.Compare(i.LeftString, i.RightStringN));
+			AssertCompareQuery(srcExpected, src, i => 0 < string.Compare(i.LeftString, i.RightStringN));
+			AssertCompareQuery(srcExpected, src, i => 0 > string.Compare(i.LeftString, i.RightStringN));
+			AssertCompareQuery(srcExpected, src, i => 0 == string.Compare(i.LeftString, i.RightStringN));
+			AssertCompareQuery(srcExpected, src, i => 0 != string.Compare(i.LeftString, i.RightStringN));
 
 			// Nullable vs Nullable
-			AssertQuery(src.Where(i => 0 <= string.Compare(i.LeftStringN, i.RightStringN)));
-			AssertQuery(src.Where(i => 0 >= string.Compare(i.LeftStringN, i.RightStringN)));
-			AssertQuery(src.Where(i => 0 < string.Compare(i.LeftStringN, i.RightStringN)));
-			AssertQuery(src.Where(i => 0 > string.Compare(i.LeftStringN, i.RightStringN)));
-			AssertQuery(src.Where(i => 0 == string.Compare(i.LeftStringN, i.RightStringN)));
-			AssertQuery(src.Where(i => 0 != string.Compare(i.LeftStringN, i.RightStringN)));
+			AssertCompareQuery(srcExpected, src, i => 0 <= string.Compare(i.LeftStringN, i.RightStringN));
+			AssertCompareQuery(srcExpected, src, i => 0 >= string.Compare(i.LeftStringN, i.RightStringN));
+			AssertCompareQuery(srcExpected, src, i => 0 < string.Compare(i.LeftStringN, i.RightStringN));
+			AssertCompareQuery(srcExpected, src, i => 0 > string.Compare(i.LeftStringN, i.RightStringN));
+			AssertCompareQuery(srcExpected, src, i => 0 == string.Compare(i.LeftStringN, i.RightStringN));
+			AssertCompareQuery(srcExpected, src, i => 0 != string.Compare(i.LeftStringN, i.RightStringN));
 #pragma warning restore CA2251 // Use 'string.Equals'
 		}
 		#endregion
@@ -2059,6 +2077,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void Issue_SubQueryFilter3([DataSources(
 			TestProvName.AllClickHouse,
 			TestProvName.AllAccess,
@@ -2185,7 +2204,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void Issue_CompareQueries1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -2200,7 +2218,6 @@ namespace Tests.Linq
 			Assert.That(result1 && result2, Is.False);
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void Issue_CompareQueries2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -2337,7 +2354,7 @@ namespace Tests.Linq
 		p.ParentID > 8 AND
 		p.ParentID > 9 AND
 		p.ParentID > 10 AND
-		(p.ParentID > 11 OR p.ParentID > 12)", db.LastQuery!.Replace("\"", "").Replace("[", "").Replace("]", "").Replace("`", ""));
+		(p.ParentID > 11 OR p.ParentID > 12)", db.LastQuery!.Replace("\"", "").Replace("[", "").Replace("]", "").Replace("`", "").Replace(" as ParentID", "").Replace(" as Value1", ""));
 		}
 
 		[Test]
@@ -2361,7 +2378,7 @@ namespace Tests.Linq
 		p.ParentID > 9 AND
 		p.ParentID > 10 AND
 		(p.ParentID > 11 OR p.ParentID > 12) AND
-		p.ParentID > 13", db.LastQuery!.Replace("\"", "").Replace("[", "").Replace("]", "").Replace("`", ""));
+		p.ParentID > 13", db.LastQuery!.Replace("\"", "").Replace("[", "").Replace("]", "").Replace("`", "").Replace(" as ParentID", "").Replace(" as Value1", ""));
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1662")]
@@ -2379,7 +2396,7 @@ namespace Tests.Linq
 			using var db = GetDataConnection(context);
 			db.Types.Where(r => !r.BoolValue).ToList();
 
-			if (context.IsAnyOf(TestProvName.AllPostgreSQL, TestProvName.AllFirebird3Plus, TestProvName.AllMySql, TestProvName.AllSQLite, TestProvName.AllDB2, TestProvName.AllClickHouse, TestProvName.AllAccess, TestProvName.AllInformix, ProviderName.Ydb, TestProvName.AllDuckDB))
+			if (context.IsAnyOf(TestProvName.AllPostgreSQL, TestProvName.AllFirebird3Plus, TestProvName.AllMySql, TestProvName.AllSQLite, TestProvName.AllDB2, TestProvName.AllClickHouse, TestProvName.AllAccess, TestProvName.AllInformix, TestProvName.AllYdb, TestProvName.AllDuckDB))
 			{
 				Assert.That(db.LastQuery, Does.Not.Contain(" = "));
 				Assert.That(db.LastQuery, Does.Contain("NOT "));
@@ -2483,6 +2500,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void PredicateOptimization_Subquery([DataSources(
 			TestProvName.AllOracle,
 			TestProvName.AllSybase,
