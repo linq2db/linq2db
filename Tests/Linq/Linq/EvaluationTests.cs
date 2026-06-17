@@ -12,8 +12,7 @@ namespace Tests.Linq
 	[TestFixture]
 	public class EvaluationTests : TestBase
 	{
-		// NonParallelizable: mutates the process-global Expressions registry from the test body (init-only/not thread-safe) — would corrupt concurrent readers. Future: register once at init.
-		[Test, NonParallelizable]
+		[Test]
 		public void Evaluate_RemappedTimeSpan([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
 			const string CONFIG = "EvaluationTests_Evaluate_RemappedTimeSpan";

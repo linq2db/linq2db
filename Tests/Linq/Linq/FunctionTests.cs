@@ -466,8 +466,7 @@ namespace Tests.Linq
 			Assert.That(db.LastQuery, Does.Contain("ORDER"));
 		}
 
-		// NonParallelizable: registers into the common Expressions map (read by every query) from the test body (init-only/not thread-safe). Future: register once at init.
-		[Test, NonParallelizable]
+		[Test]
 		public void CustomFunc([DataSources] string context)
 		{
 			Expressions.MapMember<Person>(p => p.FullName(), (Expression<Func<Person,string>>)(p => p.LastName + ", " + p.FirstName));

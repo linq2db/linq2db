@@ -188,8 +188,7 @@ namespace Tests.Linq
 
 		static int Count1(Parent p) { return p.Children.Count(c => c.ChildID > 0); }
 
-		// NonParallelizable: mutates the process-global Expressions registry from the test body (init-only/not thread-safe) — would corrupt concurrent readers. Future: register once at init.
-		[Test, NonParallelizable]
+		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void MapMember1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -201,8 +200,7 @@ namespace Tests.Linq
 
 		static int Count2(Parent p, int id) { return p.Children.Count(c => c.ChildID > id); }
 
-		// NonParallelizable: mutates the process-global Expressions registry from the test body (init-only/not thread-safe) — would corrupt concurrent readers. Future: register once at init.
-		[Test, NonParallelizable]
+		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void MapMember2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -214,8 +212,7 @@ namespace Tests.Linq
 
 		static int Count3(Parent p, int id) { return p.Children.Count(c => c.ChildID > id) + 2; }
 
-		// NonParallelizable: mutates the process-global Expressions registry from the test body (init-only/not thread-safe) — would corrupt concurrent readers. Future: register once at init.
-		[Test, NonParallelizable]
+		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void MapMember3([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
@@ -588,8 +585,7 @@ namespace Tests.Linq
 				).ToList();
 		}
 
-		// NonParallelizable: registers into the common Expressions map (read by every query) from the test body (init-only/not thread-safe). Future: register once at init.
-		[Test, NonParallelizable]
+		[Test]
 		public void ToLowerInvariantTest([DataSources] string context)
 		{
 			Expressions.MapMember((string s) => s.ToLowerInvariant(), s => s.ToLower());
