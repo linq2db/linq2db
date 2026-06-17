@@ -1598,6 +1598,9 @@ namespace Tests.Linq
 		public async Task KeyedQuery_ConcurrentExecutions_DoNotShareKeyState(
 			[IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllPostgreSQL)] string context)
 		{
+			using var d1 = new DisableBaseline("Multi-threading");
+			using var d2 = new DisableLogging();
+
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
 			using var db   = GetDataContext(context);
