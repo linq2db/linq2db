@@ -109,7 +109,7 @@ namespace Ydb.Sdk.Ado
 {
 	/// <summary>
 	/// Test double mimicking <c>Ydb.Sdk.Ado.YdbException</c>'s shape — the real type's
-	/// constructors are <c>internal</c>, so it can't be instantiated from tests.
+	/// constructors are <see langword="internal"/>, so it can't be instantiated from tests.
 	/// <see cref="LinqToDB.Internal.DataProvider.Ydb.YdbTransientExceptionDetector"/> binds by
 	/// full type name plus the <c>IsTransient</c>/<c>Code</c> members via reflection, so this
 	/// stand-in (same full name) drives it without a live connection.
