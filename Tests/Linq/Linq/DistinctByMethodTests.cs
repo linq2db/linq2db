@@ -152,6 +152,125 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 		}
+
+		[Test]
+		public void DistinctByEmitsDistinctOn([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllDuckDB)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(TestData.Seed());
+
+			var query = table
+				.OrderBy(t => t.Group)
+				.ThenBy(t => t.Date)
+				.DistinctBy(x => x.Group);
+
+			AssertQuery(query);
+
+			var sql = query.ToSqlQuery().Sql;
+			Assert.That(sql, Does.Contain("DISTINCT ON"));
+			Assert.That(sql, Does.Not.Contain("ROW_NUMBER"));
+		}
+
+		[Test]
+		public void DistinctByCompositeKeyEmitsDistinctOn([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllDuckDB)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(TestData.Seed());
+
+			var query = table
+				.OrderBy(t => t.Name)
+				.ThenByDescending(t => t.Date)
+				.DistinctBy(x => new { x.Id, x.Name });
+
+			AssertQuery(query);
+
+			Assert.That(query.ToSqlQuery().Sql, Does.Contain("DISTINCT ON"));
+		}
+
+		[Test]
+		public void DistinctByUsesRowNumberWhenDistinctOnUnsupported([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(TestData.Seed());
+
+			var query = table
+				.OrderBy(t => t.Group)
+				.ThenBy(t => t.Date)
+				.DistinctBy(x => x.Group);
+
+			AssertQuery(query);
+
+			var sql = query.ToSqlQuery().Sql;
+			Assert.That(sql, Does.Not.Contain("DISTINCT ON"));
+			Assert.That(sql, Does.Contain("ROW_NUMBER"));
+		}
+
+		[Test]
+		public void DistinctByThenTake([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllDuckDB)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(TestData.Seed());
+
+			// DISTINCT ON followed by an outer ORDER BY + LIMIT: the inner ON ordering must survive.
+			var query = table
+				.OrderBy(t => t.Group)
+				.ThenBy(t => t.Date)
+				.DistinctBy(x => x.Group)
+				.OrderBy(x => x.Group)
+				.Take(2);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void DistinctByThenWhere([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllDuckDB)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(TestData.Seed());
+
+			// A filter applied after DistinctBy must wrap the DISTINCT ON query as a subquery, not push into it.
+			var query = table
+				.OrderBy(t => t.Group)
+				.ThenBy(t => t.Date)
+				.DistinctBy(x => x.Group)
+				.Where(x => x.Amount > 100m);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void DistinctByInSubQuery([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllDuckDB)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(TestData.Seed());
+
+			// Forcing the DISTINCT ON result into a derived table must preserve its ORDER BY (the optimizer
+			// must not strip a DISTINCT ON query's ordering when it becomes a subquery).
+			var query = table
+				.OrderBy(t => t.Group)
+				.ThenBy(t => t.Date)
+				.DistinctBy(x => x.Group)
+				.AsSubQuery()
+				.Where(x => x.Amount > 100m);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void NestedDistinctBy([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllDuckDB)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(TestData.Seed());
+
+			// Two stacked DistinctBy stages: the inner DISTINCT ON must remain a nested derived table.
+			var query = table
+				.OrderBy(t => t.Date)
+				.DistinctBy(x => x.Group)
+				.OrderBy(x => x.Id)
+				.DistinctBy(x => x.Name);
+
+			AssertQuery(query);
+		}
 	}
 }
 

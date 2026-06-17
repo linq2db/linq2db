@@ -2046,6 +2046,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					Visit(element.TakeValue);
 					Visit(element.SkipValue);
 
+					if (element.DistinctOn != null)
+						foreach (var on in element.DistinctOn)
+							Visit(on);
+
 					foreach (var column in element.Columns)
 					{
 						VisitSqlColumnExpression(column, column.Expression);
@@ -2058,6 +2062,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					element.TakeValue = (ISqlExpression?)Visit(element.TakeValue);
 					element.SkipValue = (ISqlExpression?)Visit(element.SkipValue);
 
+					if (element.DistinctOn != null)
+						for (var i = 0; i < element.DistinctOn.Count; i++)
+							element.DistinctOn[i] = (ISqlExpression)Visit(element.DistinctOn[i]);
+
 					foreach (var column in element.Columns)
 					{
 						column.Expression = VisitSqlColumnExpression(column, column.Expression);
@@ -2069,6 +2077,19 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				{
 					var take = (ISqlExpression?)Visit(element.TakeValue);
 					var skip = (ISqlExpression?)Visit(element.SkipValue);
+
+					List<ISqlExpression>? newDistinctOn = null;
+					if (element.DistinctOn != null)
+					{
+						for (var i = 0; i < element.DistinctOn.Count; i++)
+						{
+							var on    = element.DistinctOn[i];
+							var newOn = (ISqlExpression)Visit(on);
+
+							if (!ReferenceEquals(on, newOn))
+								(newDistinctOn ??= new List<ISqlExpression>(element.DistinctOn))[i] = newOn;
+						}
+					}
 
 					ISqlExpression?[]? newExpressions = null;
 
@@ -2083,6 +2104,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 					if (ShouldReplace(element)                    ||
 						newExpressions != null                    ||
+						newDistinctOn  != null                    ||
 						!ReferenceEquals(element.TakeValue, take) ||
 						!ReferenceEquals(element.SkipValue, skip))
 					{
@@ -2095,7 +2117,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 							NotifyReplaced(newColumn, oldColumn);
 						}
 
-						return NotifyReplaced(new SqlSelectClause(element.IsDistinct, take, element.TakeHints, skip, newColumns) { OptimizeDistinct = element.OptimizeDistinct }, element);
+						// DistinctOn is a mutable list — give the new clause its own copy so later in-place visits don't alias the original
+						var distinctOn = newDistinctOn ?? (element.DistinctOn != null ? new List<ISqlExpression>(element.DistinctOn) : null);
+
+						return NotifyReplaced(new SqlSelectClause(element.IsDistinct, distinctOn, take, element.TakeHints, skip, newColumns) { OptimizeDistinct = element.OptimizeDistinct }, element);
 					}
 
 					break;
@@ -2167,7 +2192,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 					if (ReferenceEquals(sc, query.Select))
 					{
-						sc = new SqlSelectClause(query.Select.IsDistinct, query.Select.TakeValue,
+						sc = new SqlSelectClause(query.Select.IsDistinct,
+							query.Select.DistinctOn != null ? new List<ISqlExpression>(query.Select.DistinctOn) : null,
+							query.Select.TakeValue,
 							query.Select.TakeHints, query.Select.SkipValue,
 							query.Select.Columns.Select(c => new SqlColumn(nq, c.Expression, c.RawAlias)));
 
