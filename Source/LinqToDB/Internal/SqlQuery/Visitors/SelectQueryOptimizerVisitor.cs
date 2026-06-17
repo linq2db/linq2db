@@ -2337,6 +2337,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (subQuery.Select.Columns.Exists(c => QueryHelper.ContainsAggregationOrWindowFunction(c.Expression)))
 				return false;
 
+			// #5413: only flatten a subquery-expression apply when its source is a single table whose joins
+			// are each limited to one record - otherwise flattening could lose the apply one-row bound.
+			if (joinTable.IsSubqueryExpression && !(subQuery.From.Tables is [{ Joins: var joins }] && joins.TrueForAll(QueryHelper.IsLimitedToOneRecord)))
+				return false;
+
 			// Actual modification starts from this point
 			//
 
