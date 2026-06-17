@@ -55,6 +55,8 @@ Tests run against multiple database providers. Configuration comes from `UserDat
 
 After the file exists, `/test-providers` is the supported way to enable / disable providers per TFM bucket and to start the docker containers behind them. `/test` reads the resulting state but never edits it — see [`.claude/skills/test-providers/SKILL.md`](../skills/test-providers/SKILL.md).
 
+**For a single run, prefer `--provider` over editing the `Providers` array** — it runs exactly the named providers (any with a connection string defined) without touching the file; see *Scoping a run to specific providers* below. Editing `UserDataProviders.json` is for changing the **default** set (used when no `--provider` is passed), connection strings, and `BaselinesPath`.
+
 **Ask before editing `UserDataProviders.json`.** Before the **first** edit in a session, ask the user whether to stash/back up the current file. The file is gitignored and holds the user's connection strings + enabled-provider flags — an incorrect edit has no git history to recover from. Subsequent edits in the same session don't need to re-prompt.
 
 ### `Providers` is keyed by TFM
