@@ -527,15 +527,19 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// <summary>
 		/// Resolves the effective <see cref="EagerLoadingStrategy"/> from the build context and global options.
 		/// <see cref="EagerLoadingStrategy.CteUnion"/> is transparently remapped to
-		/// <see cref="EagerLoadingStrategy.KeyedQuery"/> when the current provider does not support CTEs.
+		/// <see cref="EagerLoadingStrategy.KeyedQuery"/> when the current provider does not support CTEs or window functions.
 		/// </summary>
 		EagerLoadingStrategy ResolveStrategy(IBuildContext buildContext)
 		{
 			var strategy = buildContext.TranslationModifier.EagerLoadingStrategy
 			            ?? DataContext.Options.LinqOptions.DefaultEagerLoadingStrategy;
 
-			if (strategy == EagerLoadingStrategy.CteUnion && !DataContext.SqlProviderFlags.IsCommonTableExpressionsSupported)
+			if (strategy == EagerLoadingStrategy.CteUnion
+				&& (!DataContext.SqlProviderFlags.IsCommonTableExpressionsSupported
+					|| !DataContext.SqlProviderFlags.IsWindowFunctionsSupported))
+			{
 				strategy = EagerLoadingStrategy.KeyedQuery;
+			}
 
 			return strategy;
 		}

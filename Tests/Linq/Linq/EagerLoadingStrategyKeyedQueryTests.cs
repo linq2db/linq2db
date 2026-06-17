@@ -2029,7 +2029,7 @@ namespace Tests.Linq
 			// Orphan children (ParentId = null) must not appear under any parent.
 			resultKeyed.SelectMany(p => p.Children).Any(c => c.ParentId == null).ShouldBeFalse();
 
-			// --- CteUnion strategy (falls back to KeyedQuery on non-CTE providers) ---
+			// --- CteUnion strategy (falls back to KeyedQuery when CTEs or window functions are unsupported) ---
 
 			var queryCteUnion =
 				from p in tP
