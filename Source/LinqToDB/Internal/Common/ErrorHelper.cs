@@ -69,8 +69,8 @@
 							""";
 
 		public const string Error_ImplicitEagerLoadingNotAllowed =
-			"Implicit eager loading is not allowed (LinqOptions.GuardImplicitEagerLoading = true): a collection was projected without an explicit eager-load request. "
-			+ "To allow it, request the load explicitly with LoadWith()/ThenLoad(), or opt the whole query in with WithUnionLoadStrategy()/WithKeyedLoadStrategy()/WithSeparateLoadStrategy() — or set GuardImplicitEagerLoading = false to turn the guard off.";
+			"Implicit eager loading is not allowed (LinqOptions.ImplicitCollectionLoading = Throw): a collection was projected without an explicit eager-load request. "
+			+ "To allow it, request the load explicitly with LoadWith()/ThenLoad(), or opt the whole query in with WithUnionLoadStrategy()/WithKeyedLoadStrategy()/WithSeparateLoadStrategy() — or set ImplicitCollectionLoading = Allow to turn the guard off.";
 
 		public static class Oracle
 		{

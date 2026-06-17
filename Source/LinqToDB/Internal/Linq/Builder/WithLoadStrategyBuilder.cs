@@ -23,6 +23,12 @@ namespace LinqToDB.Internal.Linq.Builder
 			};
 
 			var currentModifier = builder.GetTranslationModifier();
+
+			// Last-wins precedence: the outermost marker (built first) wins. A marker nested closer to the
+			// source must not override a strategy an outer marker already set, so skip the push in that case.
+			if (currentModifier.EagerLoadingStrategy != null)
+				return builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+
 			builder.PushTranslationModifier(currentModifier.WithEagerLoadingStrategy(strategy), true);
 			var sequence = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 			builder.PopTranslationModifier();

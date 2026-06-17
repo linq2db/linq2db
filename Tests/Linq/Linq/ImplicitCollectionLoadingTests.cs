@@ -13,13 +13,12 @@ using Tests.Model;
 namespace Tests.Linq
 {
 	[TestFixture]
-	public class GuardImplicitEagerLoadingTests : TestBase
+	public class ImplicitCollectionLoadingTests : TestBase
 	{
 		[Test]
 		public void Explicit_LoadWith_Allowed([IncludeDataSources(ProviderName.SQLiteMS)] string context)
 		{
-			using var db   = GetDataContext(context);
-			using var _opt = db.UseLinqOptions(o => o with { GuardImplicitEagerLoading = true });
+			using var db = GetDataContext(context, o => o.UseImplicitCollectionLoading(ImplicitCollectionLoading.Throw));
 
 			var result = db.Parent
 				.LoadWith(p => p.Children)
@@ -33,8 +32,7 @@ namespace Tests.Linq
 		[Test]
 		public void Implicit_Select_Collection_Throws([IncludeDataSources(ProviderName.SQLiteMS)] string context)
 		{
-			using var db   = GetDataContext(context);
-			using var _opt = db.UseLinqOptions(o => o with { GuardImplicitEagerLoading = true });
+			using var db = GetDataContext(context, o => o.UseImplicitCollectionLoading(ImplicitCollectionLoading.Throw));
 
 			var query = from p in db.Parent
 						select new { p.ParentID, p.Children };
@@ -57,8 +55,7 @@ namespace Tests.Linq
 		[Test]
 		public void Explicit_ThenLoad_Allowed([IncludeDataSources(ProviderName.SQLiteMS)] string context)
 		{
-			using var db   = GetDataContext(context);
-			using var _opt = db.UseLinqOptions(o => o with { GuardImplicitEagerLoading = true });
+			using var db = GetDataContext(context, o => o.UseImplicitCollectionLoading(ImplicitCollectionLoading.Throw));
 
 			var result = db.Parent
 				.LoadWith(p => p.Children)
@@ -77,8 +74,7 @@ namespace Tests.Linq
 		[Test]
 		public void Explicit_WithLoadStrategyMarkers_Allowed([IncludeDataSources(ProviderName.SQLiteMS)] string context)
 		{
-			using var db   = GetDataContext(context);
-			using var _opt = db.UseLinqOptions(o => o with { GuardImplicitEagerLoading = true });
+			using var db = GetDataContext(context, o => o.UseImplicitCollectionLoading(ImplicitCollectionLoading.Throw));
 
 			// Exactly the projection Implicit_Select_Collection_Throws rejects — adding a per-query
 			// With*LoadStrategy marker opts the whole query into eager loading, so the guard must be skipped.
@@ -107,8 +103,7 @@ namespace Tests.Linq
 		[Test]
 		public void Explicit_LoadWith_ComplexSelect_NestedCollection_Allowed([IncludeDataSources(ProviderName.SQLiteMS)] string context)
 		{
-			using var db   = GetDataContext(context);
-			using var _opt = db.UseLinqOptions(o => o with { GuardImplicitEagerLoading = true });
+			using var db = GetDataContext(context, o => o.UseImplicitCollectionLoading(ImplicitCollectionLoading.Throw));
 
 			// The load-function projects Children into new Child instances that include their GrandChildren
 			// association — a nested collection inside the load-function's Select.  The guard must not throw
@@ -134,14 +129,11 @@ namespace Tests.Linq
 		[Test]
 		public void GlobalDefaultStrategy_Plus_Option_StillThrows([IncludeDataSources(ProviderName.SQLiteMS)] string context)
 		{
-			using var db   = GetDataContext(context);
-			using var _opt = db.UseLinqOptions(o => o with
-			{
-				GuardImplicitEagerLoading      = true,
-				DefaultEagerLoadingStrategy    = EagerLoadingStrategy.CteUnion,
-			});
+			using var db = GetDataContext(context, o => o
+				.UseImplicitCollectionLoading(ImplicitCollectionLoading.Throw)
+				.UseDefaultEagerLoadingStrategy(EagerLoadingStrategy.CteUnion));
 
-			// GlobalDefaultStrategy alone does not satisfy GuardImplicitEagerLoading — an explicit
+			// GlobalDefaultStrategy alone does not satisfy ImplicitCollectionLoading = Throw — an explicit
 			// per-query marker (With*LoadStrategy) or LoadWith is still required.
 			var query = from p in db.Parent
 						select new { p.ParentID, p.Children };

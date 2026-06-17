@@ -1217,10 +1217,8 @@ namespace Tests.Linq
 		{
 			var (companies, departments, _, _, _, _) = GenerateHierarchy();
 
-			using var db   = GetDataContext(context);
-
 			// Enable CteUnion globally — no WithUnionLoadStrategy() calls needed
-			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.CteUnion });
+			using var db = GetDataContext(context, o => o.UseDefaultEagerLoadingStrategy(EagerLoadingStrategy.CteUnion));
 
 			var counter = new SelectQueryCounter();
 			if (!context.IsRemote()) db.AddInterceptor(counter);
@@ -1272,8 +1270,7 @@ namespace Tests.Linq
 			var (_, departments, employees, contractors, _, _) = GenerateHierarchy();
 			var rootDepts = departments.Where(d => d.CompanyId == 1).ToArray();
 
-			using var db   = GetDataContext(context);
-			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.CteUnion });
+			using var db = GetDataContext(context, o => o.UseDefaultEagerLoadingStrategy(EagerLoadingStrategy.CteUnion));
 
 			var counter = new SelectQueryCounter();
 			if (!context.IsRemote()) db.AddInterceptor(counter);
@@ -1323,8 +1320,7 @@ namespace Tests.Linq
 		{
 			var (companies, departments, employees, _, _, _) = GenerateHierarchy();
 
-			using var db   = GetDataContext(context);
-			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.CteUnion });
+			using var db = GetDataContext(context, o => o.UseDefaultEagerLoadingStrategy(EagerLoadingStrategy.CteUnion));
 
 			using var tCo  = db.CreateLocalTable(companies);
 			using var tDep = db.CreateLocalTable(departments);
@@ -1386,8 +1382,7 @@ namespace Tests.Linq
 		{
 			var (companies, departments, _, _, _, _) = GenerateHierarchy();
 
-			using var db   = GetDataContext(context);
-			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.CteUnion });
+			using var db = GetDataContext(context, o => o.UseDefaultEagerLoadingStrategy(EagerLoadingStrategy.CteUnion));
 
 			var counter = new SelectQueryCounter();
 			if (!context.IsRemote()) db.AddInterceptor(counter);
@@ -1423,8 +1418,7 @@ namespace Tests.Linq
 		{
 			var (companies, departments, _, _, _, _) = GenerateHierarchy();
 
-			using var db = GetDataContext(context);
-			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.CteUnion });
+			using var db = GetDataContext(context, o => o.UseDefaultEagerLoadingStrategy(EagerLoadingStrategy.CteUnion));
 
 			var counter = new SelectQueryCounter();
 			if (!context.IsRemote()) db.AddInterceptor(counter);
@@ -3797,8 +3791,7 @@ namespace Tests.Linq
 		{
 			var (companies, departments, _, _, _, _) = GenerateHierarchy();
 
-			using var db  = GetDataContext(context);
-			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.KeyedQuery });
+			using var db = GetDataContext(context, o => o.UseDefaultEagerLoadingStrategy(EagerLoadingStrategy.KeyedQuery));
 
 			using var tCo  = db.CreateLocalTable(companies);
 			using var tDep = db.CreateLocalTable(departments);

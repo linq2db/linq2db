@@ -6,7 +6,7 @@ using LinqToDB.Internal.Expressions;
 namespace LinqToDB.Internal.Linq.Builder
 {
 	/// <summary>
-	/// Read-only validation pass for the <c>GuardImplicitEagerLoading</c> option. Throws
+	/// Read-only validation pass for the <c>ImplicitCollectionLoading</c> option. Throws
 	/// <see cref="LinqToDBException"/> when a <see cref="SqlEagerLoadExpression"/> is reached that is not
 	/// inside a <see cref="MarkerType.ExplicitEagerLoad"/> marker subtree — i.e. an implicit collection
 	/// projection rather than an explicit <c>LoadWith</c>/<c>ThenLoad</c> load. Everything within a marker

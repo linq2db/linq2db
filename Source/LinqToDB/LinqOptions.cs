@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
@@ -165,46 +165,46 @@ namespace LinqToDB
 	/// </param>
 	/// <param name="DefaultEagerLoadingStrategy">
 	/// Specifies the default <see cref="EagerLoadingStrategy"/> used for all LoadWith/ThenLoad eager-loading
-	/// operations when no per-association strategy is set via <c>WithEagerLoadingStrategy</c>.
+	/// operations when no per-query strategy is set via <c>WithUnionLoadStrategy</c>, <c>WithKeyedLoadStrategy</c>, or <c>WithSeparateLoadStrategy</c>.
 	/// Default value: <see cref="EagerLoadingStrategy.Default"/>.
 	/// </param>
-	/// <param name="GuardImplicitEagerLoading">
-	/// When <see langword="true"/>, a query that triggers an implicit eager load — a collection projected
+	/// <param name="ImplicitCollectionLoading">
+	/// With <see cref="LinqToDB.ImplicitCollectionLoading.Throw"/>, a query that triggers an implicit eager load — a collection projected
 	/// in a <c>Select</c> without being explicitly requested — throws <see cref="LinqToDBException"/> at
-	/// build time. Default value: <see langword="false"/>.
+	/// build time; with <see cref="LinqToDB.ImplicitCollectionLoading.Allow"/> (the default) it is loaded as usual.
 	/// <para>
 	/// The guard is bypassed when the eager load is explicit: <c>LoadWith</c>/<c>ThenLoad</c> allows that
 	/// one collection (other unmarked collections in the same query still throw), while a root
 	/// <c>WithUnionLoadStrategy</c>/<c>WithKeyedLoadStrategy</c>/<c>WithSeparateLoadStrategy</c> marker opts
-	/// the whole query in. Set this option to <see langword="false"/> to disable the guard for all queries.
+	/// the whole query in.
 	/// </para>
 	/// </param>
 	public sealed record LinqOptions
 	(
 		// TODO: Remove in v7
 		[property: Obsolete("This API doesn't have effect anymore and will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
-		bool                  PreloadGroups                  = false,
-		bool                  IgnoreEmptyUpdate              = false,
-		bool                  GenerateExpressionTest         = false,
-		bool                  TraceMapperExpression          = false,
-		bool                  ConcatenateOrderBy             = false,
-		bool                  OptimizeJoins                  = true,
-		CompareNulls          CompareNulls                   = CompareNulls.LikeClr,
-		bool                  GuardGrouping                  = true,
-		bool                  DisableQueryCache              = false,
-		TimeSpan?             CacheSlidingExpiration         = default,
+		bool                      PreloadGroups               = false,
+		bool                      IgnoreEmptyUpdate           = false,
+		bool                      GenerateExpressionTest      = false,
+		bool                      TraceMapperExpression       = false,
+		bool                      ConcatenateOrderBy          = false,
+		bool                      OptimizeJoins               = true,
+		CompareNulls              CompareNulls                = CompareNulls.LikeClr,
+		bool                      GuardGrouping               = true,
+		bool                      DisableQueryCache           = false,
+		TimeSpan?                 CacheSlidingExpiration      = default,
 		// TODO: Remove in v7
 		[property: Obsolete("This API doesn't have effect anymore and will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
-		bool                  PreferApply                    = true,
+		bool                      PreferApply                 = true,
 		// TODO: Remove in v7
 		[property: Obsolete("This API doesn't have effect anymore and will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
-		bool                  KeepDistinctOrdered            = true,
-		bool                  ParameterizeTakeSkip           = true,
-		bool                  EnableContextSchemaEdit        = false,
-		bool                  PreferExistsForScalar          = default,
-		UpsertEmulationPolicy UpsertEmulationPolicy          = UpsertEmulationPolicy.Allow,
-		EagerLoadingStrategy  DefaultEagerLoadingStrategy    = EagerLoadingStrategy.Default,
-		bool                  GuardImplicitEagerLoading      = false
+		bool                      KeepDistinctOrdered         = true,
+		bool                      ParameterizeTakeSkip        = true,
+		bool                      EnableContextSchemaEdit     = false,
+		bool                      PreferExistsForScalar       = default,
+		UpsertEmulationPolicy     UpsertEmulationPolicy       = UpsertEmulationPolicy.Allow,
+		EagerLoadingStrategy      DefaultEagerLoadingStrategy = EagerLoadingStrategy.Default,
+		ImplicitCollectionLoading ImplicitCollectionLoading   = ImplicitCollectionLoading.Allow
 		// If you add another parameter here, don't forget to update
 		// LinqOptions copy constructor and IConfigurationID.ConfigurationID.
 	)
@@ -230,7 +230,7 @@ namespace LinqToDB
 			PreferExistsForScalar   = original.PreferExistsForScalar;
 			UpsertEmulationPolicy   = original.UpsertEmulationPolicy;
 			DefaultEagerLoadingStrategy = original.DefaultEagerLoadingStrategy;
-			GuardImplicitEagerLoading   = original.GuardImplicitEagerLoading;
+			ImplicitCollectionLoading   = original.ImplicitCollectionLoading;
 		}
 
 		/// <summary>
@@ -319,7 +319,7 @@ namespace LinqToDB
 						.Add(PreferExistsForScalar)
 						.Add((int)UpsertEmulationPolicy)
 						.Add((int)DefaultEagerLoadingStrategy)
-						.Add(GuardImplicitEagerLoading)
+						.Add((int)ImplicitCollectionLoading)
 						.CreateID();
 				}
 

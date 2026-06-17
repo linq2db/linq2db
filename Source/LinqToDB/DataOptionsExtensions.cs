@@ -209,16 +209,27 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// When <see langword="true"/>, an implicit eager load (a collection projected in a <c>Select</c> without
+		/// With <see cref="ImplicitCollectionLoading.Throw"/>, an implicit eager load (a collection projected in a <c>Select</c> without
 		/// being explicitly requested) throws <see cref="LinqToDBException"/> at build time. The guard is bypassed
 		/// by an explicit <c>LoadWith</c>/<c>ThenLoad</c> (that collection only) or a root
 		/// <c>WithUnionLoadStrategy</c>/<c>WithKeyedLoadStrategy</c>/<c>WithSeparateLoadStrategy</c> marker (whole
-		/// query); set to <see langword="false"/> to disable the guard. Default: <see langword="false"/>.
+		/// query). Default: <see cref="ImplicitCollectionLoading.Allow"/>.
 		/// </summary>
 		[Pure]
-		public static LinqOptions WithGuardImplicitEagerLoading(this LinqOptions options, bool guardImplicitEagerLoading)
+		public static LinqOptions WithImplicitCollectionLoading(this LinqOptions options, ImplicitCollectionLoading implicitCollectionLoading)
 		{
-			return options with { GuardImplicitEagerLoading = guardImplicitEagerLoading };
+			return options with { ImplicitCollectionLoading = implicitCollectionLoading };
+		}
+
+		/// <summary>
+		/// Sets the default <see cref="EagerLoadingStrategy"/> used for all LoadWith/ThenLoad eager-loading
+		/// operations when no per-query strategy is set via <c>WithUnionLoadStrategy</c>, <c>WithKeyedLoadStrategy</c>, or <c>WithSeparateLoadStrategy</c>.
+		/// Default: <see cref="EagerLoadingStrategy.Default"/>.
+		/// </summary>
+		[Pure]
+		public static LinqOptions WithDefaultEagerLoadingStrategy(this LinqOptions options, EagerLoadingStrategy eagerLoadingStrategy)
+		{
+			return options with { DefaultEagerLoadingStrategy = eagerLoadingStrategy };
 		}
 
 		/// <summary>
@@ -497,16 +508,27 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// When <see langword="true"/>, an implicit eager load (a collection projected in a <c>Select</c> without
+		/// With <see cref="ImplicitCollectionLoading.Throw"/>, an implicit eager load (a collection projected in a <c>Select</c> without
 		/// being explicitly requested) throws <see cref="LinqToDBException"/> at build time. The guard is bypassed
 		/// by an explicit <c>LoadWith</c>/<c>ThenLoad</c> (that collection only) or a root
 		/// <c>WithUnionLoadStrategy</c>/<c>WithKeyedLoadStrategy</c>/<c>WithSeparateLoadStrategy</c> marker (whole
-		/// query); set to <see langword="false"/> to disable the guard. Default: <see langword="false"/>.
+		/// query). Default: <see cref="ImplicitCollectionLoading.Allow"/>.
 		/// </summary>
 		[Pure]
-		public static DataOptions UseGuardImplicitEagerLoading(this DataOptions options, bool guardImplicitEagerLoading)
+		public static DataOptions UseImplicitCollectionLoading(this DataOptions options, ImplicitCollectionLoading implicitCollectionLoading)
 		{
-			return options.WithOptions<LinqOptions>(o => o with { GuardImplicitEagerLoading = guardImplicitEagerLoading });
+			return options.WithOptions<LinqOptions>(o => o with { ImplicitCollectionLoading = implicitCollectionLoading });
+		}
+
+		/// <summary>
+		/// Sets the default <see cref="EagerLoadingStrategy"/> used for all LoadWith/ThenLoad eager-loading
+		/// operations when no per-query strategy is set via <c>WithUnionLoadStrategy</c>, <c>WithKeyedLoadStrategy</c>, or <c>WithSeparateLoadStrategy</c>.
+		/// Default: <see cref="EagerLoadingStrategy.Default"/>.
+		/// </summary>
+		[Pure]
+		public static DataOptions UseDefaultEagerLoadingStrategy(this DataOptions options, EagerLoadingStrategy eagerLoadingStrategy)
+		{
+			return options.WithOptions<LinqOptions>(o => o with { DefaultEagerLoadingStrategy = eagerLoadingStrategy });
 		}
 
 		/// <summary>

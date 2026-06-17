@@ -170,7 +170,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		/// <summary>
 		/// Set while eager-load processing recursively builds a preamble sub-query, so the nested
-		/// <see cref="FinalizeProjection{T}"/> calls skip the <c>GuardImplicitEagerLoading</c> guard —
+		/// <see cref="FinalizeProjection{T}"/> calls skip the <c>ImplicitCollectionLoading</c> guard —
 		/// those loads were already validated on the top-level query.
 		/// </summary>
 		bool _inEagerLoadProcessing;
@@ -191,7 +191,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var postProcessed  = FinalizeConstructors(context, expression);
 
-			if (DataContext.Options.LinqOptions.GuardImplicitEagerLoading && !_inEagerLoadProcessing && context.TranslationModifier.EagerLoadingStrategy == null)
+			if (DataContext.Options.LinqOptions.ImplicitCollectionLoading == ImplicitCollectionLoading.Throw && !_inEagerLoadProcessing && context.TranslationModifier.EagerLoadingStrategy == null)
 			{
 				// Strict mode: reject implicit collection eager loads (those not explicitly marked via LoadWith/ThenLoad).
 				// A per-query With*LoadStrategy marker sets a strategy on the context modifier and opts the whole query in.

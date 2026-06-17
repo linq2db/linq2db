@@ -161,10 +161,8 @@ namespace Tests.Linq
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
-			using var db   = GetDataContext(context);
-
 			// Enable KeyedQuery globally — no WithKeyedLoadStrategy() calls needed
-			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.KeyedQuery });
+			using var db = GetDataContext(context, o => o.UseDefaultEagerLoadingStrategy(EagerLoadingStrategy.KeyedQuery));
 
 			var counter = new SelectQueryCounter();
 			if (!context.IsRemote()) db.AddInterceptor(counter);
@@ -216,8 +214,7 @@ namespace Tests.Linq
 			var (_, departments, employees, contractors, _) = GenerateHierarchy();
 			var rootDepts = departments.Where(d => d.CompanyId == 1).ToArray();
 
-			using var db   = GetDataContext(context);
-			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.KeyedQuery });
+			using var db = GetDataContext(context, o => o.UseDefaultEagerLoadingStrategy(EagerLoadingStrategy.KeyedQuery));
 
 			var counter = new SelectQueryCounter();
 			if (!context.IsRemote()) db.AddInterceptor(counter);
@@ -267,8 +264,7 @@ namespace Tests.Linq
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
-			using var db   = GetDataContext(context);
-			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.KeyedQuery });
+			using var db = GetDataContext(context, o => o.UseDefaultEagerLoadingStrategy(EagerLoadingStrategy.KeyedQuery));
 
 			using var tCo  = db.CreateLocalTable(companies);
 			using var tDep = db.CreateLocalTable(departments);
@@ -330,8 +326,7 @@ namespace Tests.Linq
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
-			using var db   = GetDataContext(context);
-			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.KeyedQuery });
+			using var db = GetDataContext(context, o => o.UseDefaultEagerLoadingStrategy(EagerLoadingStrategy.KeyedQuery));
 
 			var counter = new SelectQueryCounter();
 			if (!context.IsRemote()) db.AddInterceptor(counter);
@@ -367,8 +362,7 @@ namespace Tests.Linq
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
-			using var db = GetDataContext(context);
-			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.KeyedQuery });
+			using var db = GetDataContext(context, o => o.UseDefaultEagerLoadingStrategy(EagerLoadingStrategy.KeyedQuery));
 
 			var counter = new SelectQueryCounter();
 			if (!context.IsRemote()) db.AddInterceptor(counter);
@@ -1752,8 +1746,7 @@ namespace Tests.Linq
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
-			using var db   = GetDataContext(context);
-			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.KeyedQuery });
+			using var db = GetDataContext(context, o => o.UseDefaultEagerLoadingStrategy(EagerLoadingStrategy.KeyedQuery));
 
 			using var tCo  = db.CreateLocalTable(companies);
 			using var tDep = db.CreateLocalTable(departments);
@@ -1823,9 +1816,8 @@ namespace Tests.Linq
 			// Scope to one company's departments so the parent row count is predictable
 			var rootDepts = departments.Where(d => d.CompanyId == 1).ToArray();
 
-			using var db   = GetDataContext(context);
 			// Global default is Default (N+1 separate queries); WithUnionLoadStrategy() must override it
-			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.Default });
+			using var db = GetDataContext(context, o => o.UseDefaultEagerLoadingStrategy(EagerLoadingStrategy.Default));
 
 			var counter = new SelectQueryCounter();
 			if (!context.IsRemote()) db.AddInterceptor(counter);
@@ -1870,6 +1862,118 @@ namespace Tests.Linq
 			// CteUnion (marker won): 1 UNION ALL query loads both child collections.
 			// Non-CTE providers fall back to KeyedQuery: 1 buffer preamble + 2 child queries = 3.
 			if (!context.IsRemote()) counter.Count.ShouldBe(!IsCteSupported(context) ? 3 : 1);
+		}
+
+		// Last-marker-wins precedence: the OUTERMOST (last-applied) marker decides the strategy; inner markers
+		// are ignored. Outer WithUnionLoadStrategy() beats inner WithKeyedLoadStrategy(), so 2 same-level child
+		// collections collapse into one UNION ALL (count == 1 on SQLite, which supports CTE). The strategy is
+		// resolved at build time and is provider-independent, so one CTE provider validates the precedence.
+		[Test]
+		public void WithLoadStrategy_LastMarkerWins_OuterUnionOverInnerKeyed(
+			[IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			var (_, departments, employees, contractors, _) = GenerateHierarchy();
+
+			var rootDepts = departments.Where(d => d.CompanyId == 1).ToArray();
+
+			// Global default would be N+1 separate queries; the outer marker must override it to CteUnion.
+			using var db = GetDataContext(context, o => o.UseDefaultEagerLoadingStrategy(EagerLoadingStrategy.Default));
+
+			var counter = new SelectQueryCounter();
+			if (!context.IsRemote()) db.AddInterceptor(counter);
+
+			using var tDep = db.CreateLocalTable(rootDepts);
+			using var tEmp = db.CreateLocalTable(employees);
+			using var tCtr = db.CreateLocalTable(contractors);
+
+			if (!context.IsRemote()) counter.Count = 0;
+
+			var query =
+				from d in tDep
+				orderby d.Id
+				select new
+				{
+					d.Id,
+					d.Name,
+					Employees   = tEmp.Where(e => e.DepartmentId == d.Id).OrderBy(e => e.Id).ToList(),
+					Contractors = tCtr.Where(c => c.DepartmentId == d.Id).OrderBy(c => c.Id).ToList(),
+				};
+
+			var result = query
+				.WithKeyedLoadStrategy() // inner — ignored
+				.WithUnionLoadStrategy() // outer — wins
+				.ToList();
+
+			var expected = rootDepts
+				.OrderBy(d => d.Id)
+				.Select(d => new
+				{
+					d.Id,
+					d.Name,
+					Employees   = employees.Where(e => e.DepartmentId == d.Id).OrderBy(e => e.Id).ToList(),
+					Contractors = contractors.Where(c => c.DepartmentId == d.Id).OrderBy(c => c.Id).ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+
+			// Outer CteUnion won: a single UNION ALL query loads both child collections.
+			if (!context.IsRemote()) counter.Count.ShouldBe(1);
+		}
+
+		// Inverse order: outer WithKeyedLoadStrategy() beats inner WithUnionLoadStrategy(), so KeyedQuery runs
+		// (1 buffer preamble + 2 child queries = 3) even though SQLite supports CTE — proving the rule is
+		// "outermost wins", not "CteUnion always wins".
+		[Test]
+		public void WithLoadStrategy_LastMarkerWins_OuterKeyedOverInnerUnion(
+			[IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			var (_, departments, employees, contractors, _) = GenerateHierarchy();
+
+			var rootDepts = departments.Where(d => d.CompanyId == 1).ToArray();
+
+			using var db = GetDataContext(context, o => o.UseDefaultEagerLoadingStrategy(EagerLoadingStrategy.Default));
+
+			var counter = new SelectQueryCounter();
+			if (!context.IsRemote()) db.AddInterceptor(counter);
+
+			using var tDep = db.CreateLocalTable(rootDepts);
+			using var tEmp = db.CreateLocalTable(employees);
+			using var tCtr = db.CreateLocalTable(contractors);
+
+			if (!context.IsRemote()) counter.Count = 0;
+
+			var query =
+				from d in tDep
+				orderby d.Id
+				select new
+				{
+					d.Id,
+					d.Name,
+					Employees   = tEmp.Where(e => e.DepartmentId == d.Id).OrderBy(e => e.Id).ToList(),
+					Contractors = tCtr.Where(c => c.DepartmentId == d.Id).OrderBy(c => c.Id).ToList(),
+				};
+
+			var result = query
+				.WithUnionLoadStrategy() // inner — ignored
+				.WithKeyedLoadStrategy() // outer — wins
+				.ToList();
+
+			var expected = rootDepts
+				.OrderBy(d => d.Id)
+				.Select(d => new
+				{
+					d.Id,
+					d.Name,
+					Employees   = employees.Where(e => e.DepartmentId == d.Id).OrderBy(e => e.Id).ToList(),
+					Contractors = contractors.Where(c => c.DepartmentId == d.Id).OrderBy(c => c.Id).ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+
+			// Outer KeyedQuery won: 1 buffer preamble + 2 child queries = 3.
+			if (!context.IsRemote()) counter.Count.ShouldBe(3);
 		}
 
 		#endregion
@@ -1989,13 +2093,11 @@ namespace Tests.Linq
 				new NullableChild { Id = 31, ParentId = null, Name = "Orphan2" },
 			};
 
-			using var db  = GetDataContext(context);
+			using var db  = GetDataContext(context, o => o.UseDefaultEagerLoadingStrategy(EagerLoadingStrategy.KeyedQuery));
 			using var tP  = db.CreateLocalTable(parents);
 			using var tC  = db.CreateLocalTable(children);
 
 			// --- KeyedQuery strategy ---
-
-			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.KeyedQuery });
 
 			var queryKeyed =
 				from p in tP

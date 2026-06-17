@@ -771,7 +771,7 @@ namespace LinqToDB
 		/// Requires the target database to support Common Table Expressions; when CTEs are unavailable
 		/// the whole-query eager-loading set falls back to <see cref="WithKeyedLoadStrategy{T}(IQueryable{T})"/>.
 		/// </para>
-		/// <para>An explicit per-query marker takes precedence over the <see cref="LinqOptions.DefaultEagerLoadingStrategy"/> global default.</para>
+		/// <para>An explicit per-query marker takes precedence over the <see cref="LinqOptions.DefaultEagerLoadingStrategy"/> global default. When more than one marker is applied to the same query, the outermost (last-applied) marker wins and inner markers are ignored; e.g. <c>q.WithKeyedLoadStrategy().Where(...).WithUnionLoadStrategy()</c> uses <see cref="EagerLoadingStrategy.CteUnion"/>.</para>
 		/// </summary>
 		/// <example>
 		/// <code>
@@ -804,7 +804,7 @@ namespace LinqToDB
 		/// Applied to the root query; the strategy propagates to all contained child collections.
 		/// Consider <see cref="WithKeyedLoadStrategy{T}(IQueryable{T})"/> instead when the parent entity has many columns.
 		/// </para>
-		/// <para>An explicit per-query marker takes precedence over the <see cref="LinqOptions.DefaultEagerLoadingStrategy"/> global default.</para>
+		/// <para>An explicit per-query marker takes precedence over the <see cref="LinqOptions.DefaultEagerLoadingStrategy"/> global default. When more than one marker is applied to the same query, the outermost (last-applied) marker wins and inner markers are ignored; e.g. <c>q.WithKeyedLoadStrategy().Where(...).WithUnionLoadStrategy()</c> uses <see cref="EagerLoadingStrategy.CteUnion"/>.</para>
 		/// </summary>
 		/// <example>
 		/// <code>
@@ -845,7 +845,7 @@ namespace LinqToDB
 		/// entire eager-loading set for the query falls back to the Default strategy. Fallback is
 		/// per-query, not per-child.
 		/// </para>
-		/// <para>An explicit per-query marker takes precedence over the <see cref="LinqOptions.DefaultEagerLoadingStrategy"/> global default.</para>
+		/// <para>An explicit per-query marker takes precedence over the <see cref="LinqOptions.DefaultEagerLoadingStrategy"/> global default. When more than one marker is applied to the same query, the outermost (last-applied) marker wins and inner markers are ignored; e.g. <c>q.WithKeyedLoadStrategy().Where(...).WithUnionLoadStrategy()</c> uses <see cref="EagerLoadingStrategy.CteUnion"/>.</para>
 		/// </summary>
 		/// <example>
 		/// <code>
