@@ -97,5 +97,71 @@ namespace Tests.UserTests
 
 			query.ToList().ShouldBe(new[] { 3, 4 }, ignoreOrder: true);
 		}
+
+		// Same root cause, reached via a plain inner join with no WHERE on the joined table
+		// (so it isn't blocked as a set-operation barrier). Also threw before the fix.
+		[Test]
+		public void ConcatThenPlainInnerJoin([DataSources] string context)
+		{
+			using var db       = GetDataContext(context);
+			using var things   = db.CreateLocalTable(Thing.Data);
+			using var items    = db.CreateLocalTable(Item.Data);
+			using var entities = db.CreateLocalTable(Entity.Data);
+
+			var byItemId =
+				from t in things
+				from itm in items
+				where itm.ItemId == t.ItemId
+				select itm;
+
+			var byAltItemId =
+				from t in things
+				from itm in items
+				where itm.AltItemId == t.ItemId
+				select itm;
+
+			var query =
+				from itm in byItemId.Concat(byAltItemId)
+				join entity in entities on itm.EntityId equals entity.EntityId
+				select itm.ItemId;
+
+			AssertQuery(query);
+
+			query.ToList().ShouldBe(new[] { 1, 1, 2, 2, 3, 4 }, ignoreOrder: true);
+		}
+
+		// Two joins on top of the Concat — also threw before the fix.
+		[Test]
+		public void ConcatThenTwoJoins([DataSources] string context)
+		{
+			using var db       = GetDataContext(context);
+			using var things   = db.CreateLocalTable(Thing.Data);
+			using var items    = db.CreateLocalTable(Item.Data);
+			using var entities = db.CreateLocalTable(Entity.Data);
+
+			var byItemId =
+				from t in things
+				from itm in items
+				where itm.ItemId == t.ItemId
+				select itm;
+
+			var byAltItemId =
+				from t in things
+				from itm in items
+				where itm.AltItemId == t.ItemId
+				select itm;
+
+			var query =
+				from itm in byItemId.Concat(byAltItemId)
+				join applicable in entities.Where(entity => entity.Applicable)
+					on itm.EntityId equals applicable.EntityId
+				join other in entities
+					on itm.EntityId equals other.EntityId
+				select itm.ItemId;
+
+			AssertQuery(query);
+
+			query.ToList().ShouldBe(new[] { 3, 4 }, ignoreOrder: true);
+		}
 	}
 }
