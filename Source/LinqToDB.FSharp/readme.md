@@ -7,6 +7,9 @@ LINQ to DB F# Services provides support for F#-specific language features in Lin
 Supported features:
 
 - F# record types support in mappings and projections
+- Automatic mapping of F# `'T option` columns: `Some v` is stored as the value and `None` as `NULL`,
+  with no manual `MappingSchema` configuration. Value-typed options (e.g. `int option`) correctly
+  store `None` as `NULL` rather than the default value.
 
 More features planned for future releases.
 

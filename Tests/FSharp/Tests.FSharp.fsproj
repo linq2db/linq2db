@@ -22,6 +22,7 @@
 		<Compile Include="Issue4132.fs" />
 		<Compile Include="Issue1813.fs" />
 		<Compile Include="Issue5428.fs" />
+		<Compile Include="Issue4646.fs" />
 	</ItemGroup>
 
 	<ItemGroup>

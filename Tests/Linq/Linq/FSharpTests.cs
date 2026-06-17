@@ -102,8 +102,15 @@ namespace Tests.Linq
 			FSharp.WhereTest.LoadSinglesWithPatient(db);
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/195")]
 		public void LoadSingleWithOptions([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.WhereTest.LoadSingleWithOptions(db);
+		}
+
+		[Test(Description = "Explicit MappingSchema option-type registration still works alongside UseFSharp auto-mapping")]
+		public void LoadSingleWithExplicitOptionsMapping([DataSources] string context)
 		{
 			var ms = FSharp.MappingSchema.Initialize();
 
@@ -111,13 +118,11 @@ namespace Tests.Linq
 			FSharp.WhereTest.LoadSingleWithOptions(db);
 		}
 
-		[ActiveIssue]
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/195")]
-		public void BuiltInOptionsHandling([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4646")]
+		public void Issue4646_OptionRoundtrip([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-
-			FSharp.WhereTest.LoadSingleWithOptions(db);
+			FSharp.Issue4646.TestOptionRoundtrip(db);
 		}
 
 		[Test]
