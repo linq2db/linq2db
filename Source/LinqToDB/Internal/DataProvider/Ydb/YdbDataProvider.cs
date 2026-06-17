@@ -61,6 +61,10 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			SqlProviderFlags.IsSupportedSimpleCorrelatedSubqueries = false;
 			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel    = 0;
 
+			// YQL cannot parse a scalar subquery in column position (e.g. `(SELECT COUNT(*) FROM t)` as a column),
+			// so column subqueries must be lifted out into joins.
+			SqlProviderFlags.IsSubQueryColumnSupported             = false;
+
 			SetProviderField<byte[]>  (YdbProviderAdapter.GetBytes,        Adapter.DataReaderType);
 			SetProviderField<sbyte>   (YdbProviderAdapter.GetSByte,        Adapter.DataReaderType);
 			SetProviderField<ushort>  (YdbProviderAdapter.GetUInt16,       Adapter.DataReaderType);

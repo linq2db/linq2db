@@ -3108,6 +3108,29 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 							continue;
 						}
 
+						// A conditionless INNER JOIN renders as `JOIN ON 1=1`, which providers with
+						// IsSupportsJoinWithoutCondition == false reject. Where the provider supports CROSS
+						// JOIN, express it as one (the validator accepts CROSS). INNER ON 1=1 is always
+						// equivalent to CROSS; LEFT ON 1=1 only when the joined source is guaranteed non-empty
+						// (an aggregate without GROUP BY, e.g. a scalar COUNT carrier, yields exactly one row).
+						if (join.Condition.IsTrue && _providerFlags.IsCrossJoinSupported
+							&& (join.JoinType == JoinType.Inner
+								|| (join is { JoinType: JoinType.Left, Table.Source: SelectQuery { HasGroupBy: false } aggSrc } && QueryHelper.IsAggregationQuery(aggSrc))))
+						{
+							join.JoinType = JoinType.Cross;
+
+							if (join.Table.Joins.Count > 0)
+							{
+								// CROSS JOIN can't carry the joined subquery's own joins; lift them to the parent level
+								for (var ij = 0; ij < join.Table.Joins.Count; ij++)
+									table.Joins.Insert(index + ij + 1, join.Table.Joins[ij]);
+
+								join.Table.Joins.Clear();
+							}
+
+							isModified = true;
+						}
+
 						isModified = isModified || modified;
 					}
 				}

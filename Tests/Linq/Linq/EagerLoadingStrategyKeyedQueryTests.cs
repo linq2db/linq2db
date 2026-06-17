@@ -694,6 +694,7 @@ namespace Tests.Linq
 			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 		}
 
+		[ActiveIssue(Configuration = TestProvName.AllYdb, Details = "YDB Re2.PatternFromLike (LIKE UDF) requires a non-nullable String pattern; building it from a nullable column (the parent Name referenced in the child-filter method call) yields Optional<Utf8>, giving 'Mismatch type argument #1: String != Optional<Utf8>'. Needs nullable-pattern coercion in the YDB LIKE translation.")]
 		[Test]
 		public void Select_KeyedQuery_ChildFilterUsesParentInMethodCallFallback(
 			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)

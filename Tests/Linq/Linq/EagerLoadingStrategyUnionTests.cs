@@ -358,6 +358,7 @@ namespace Tests.Linq
 
 		#region 3-level flat: root loads 2 levels of children independently
 
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
 		public void Select_Union_ThreeLevelFlat(
 			[DataSources(true, TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllFirebirdLess3)] string context)
@@ -476,7 +477,7 @@ namespace Tests.Linq
 		#region Scalar aggregates alongside Union collections
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void Select_Union_ScalarAndCollection(
 			[DataSources(true, TestProvName.AllAccess, TestProvName.AllFirebirdLess3)] string context)
 		{
@@ -862,7 +863,7 @@ namespace Tests.Linq
 		#region Nested: scalar + collection mix at each level
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void Select_Union_NestedScalarAndCollection(
 			[DataSources(true, TestProvName.AllFirebirdLess3)] string context)
 		{
@@ -1876,6 +1877,7 @@ namespace Tests.Linq
 		}
 
 		// TODO: Handle Clickhouse correlated subquery in join expression
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
 		public void Cache_Union_MultipleAssociationsFilterChanged(
 			[DataSources(true, TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllFirebirdLess3)] string context,
@@ -1990,6 +1992,7 @@ namespace Tests.Linq
 			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 		}
 
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
 		public void RootWithUnionLoadStrategy_MultipleChildren(
 			[DataSources(true, TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllFirebirdLess3)] string context)
@@ -3656,6 +3659,7 @@ namespace Tests.Linq
 		}
 
 		[ThrowsCannotBeConverted([TestProvName.AllSybase])]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
 		public void Confirm_Union_PreservesRootOrderBy_OnlyForOuterScope(
 			[DataSources(true, TestProvName.AllAccess, TestProvName.AllFirebirdLess3, TestProvName.AllClickHouse)] string context)

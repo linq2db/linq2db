@@ -476,7 +476,8 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			const string LeakMessage =
 				"Unsupported subquery inside a client-side projection (e.g. ToDictionary/ToList value selector). " +
-				"Correlated sub-queries over outer rows are not supported in client-side materialization lambdas.";
+				"Correlated sub-queries over outer rows are not supported in client-side materialization lambdas. " +
+				ErrorHelper.Error_Correlated_Subqueries;
 
 			// Don't descend into eager-load wrappers — raw SqlQueryRootExpression inside them is expected
 			// (the sequence expression is the subquery being eager-loaded).
