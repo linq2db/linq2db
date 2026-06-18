@@ -16,6 +16,13 @@ type Methods() =
     /// <remarks>Adds support for F# record types and automatic mapping of F# <c>'T option</c> columns.</remarks>
     [<Extension>]
     static member UseFSharp(options : DataOptions) =
-        options
-            .UseInterceptor(FSharpEntityBindingInterceptor.Instance)
-            .UseAdditionalMappingSchema(optionMappingSchema)
+        let options = options.UseInterceptor(FSharpEntityBindingInterceptor.Instance)
+        // Combine the option schema as a *lower-priority* fallback so it never shadows the user's
+        // explicit mappings: auto 'T option support only fills in members the user hasn't mapped.
+        // (UseAdditionalMappingSchema would add it at higher priority, letting its embedded default
+        // attribute reader override fluent column metadata - e.g. dropping an explicit DataType.)
+        let combined =
+            match options.ConnectionOptions.MappingSchema with
+            | null     -> optionMappingSchema
+            | existing -> MappingSchema.CombineSchemas(existing, optionMappingSchema)
+        options.UseMappingSchema(combined)
