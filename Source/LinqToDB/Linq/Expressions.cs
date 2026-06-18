@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data.Linq;
@@ -66,8 +67,7 @@ namespace LinqToDB.Linq
 		{
 			memberInfoWithType = NormalizeMemeberInfo(memberInfoWithType);
 
-			if (!Members.TryGetValue(providerName, out var dic))
-				Members.Add(providerName, dic = new Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo>());
+			var dic = Members.GetOrAdd(providerName, static _ => new());
 
 			var expr = new LazyExpressionInfo();
 
@@ -85,8 +85,7 @@ namespace LinqToDB.Linq
 
 		public static void MapMember(string providerName, MemberInfo memberInfo, IExpressionInfo expressionInfo)
 		{
-			if (!Members.TryGetValue(providerName, out var dic))
-				Members.Add(providerName, dic = new Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo>());
+			var dic = Members.GetOrAdd(providerName, static _ => new());
 
 			dic[new MemberHelper.MemberInfoWithType(memberInfo.ReflectedType, memberInfo)] = expressionInfo;
 
@@ -147,7 +146,7 @@ namespace LinqToDB.Linq
 		/// <param name="leftType">Exact type of <see cref="BinaryExpression.Left"/> member.</param>
 		/// <param name="rightType">Exact type of  <see cref="BinaryExpression.Right"/> member.</param>
 		/// <param name="expression">Lambda expression which has to replace <see cref="BinaryExpression"/></param>
-		/// <remarks>Note that method is not thread safe and has to be used only in Application's initialization section.</remarks>
+		/// <remarks>Registration is thread-safe; for predictable results configure mappings during application initialization, before queries are executed.</remarks>
 		public static void MapBinary(
 			string           providerName,
 			ExpressionType   nodeType,
@@ -160,8 +159,7 @@ namespace LinqToDB.Linq
 			ArgumentNullException.ThrowIfNull(rightType);
 			ArgumentNullException.ThrowIfNull(expression);
 
-			if (!_binaries.Value.TryGetValue(providerName, out var dic))
-				_binaries.Value.Add(providerName, dic = []);
+			var dic = _binaries.Value.GetOrAdd(providerName, static _ => new());
 
 			var expr = new LazyExpressionInfo();
 
@@ -179,7 +177,7 @@ namespace LinqToDB.Linq
 		/// <param name="leftType">Exact type of <see cref="BinaryExpression.Left"/> member.</param>
 		/// <param name="rightType">Exact type of  <see cref="BinaryExpression.Right"/> member.</param>
 		/// <param name="expression">Lambda expression which has to replace <see cref="BinaryExpression"/>.</param>
-		/// <remarks>Note that method is not thread safe and has to be used only in Application's initialization section.</remarks>
+		/// <remarks>Registration is thread-safe; for predictable results configure mappings during application initialization, before queries are executed.</remarks>
 		public static void MapBinary(
 			ExpressionType   nodeType,
 			Type             leftType,
@@ -198,7 +196,7 @@ namespace LinqToDB.Linq
 		/// <param name="providerName">Name of database provider to use with this connection. <see cref="ProviderName"/> class for list of providers.</param>
 		/// <param name="binaryExpression">Expression which has to be replaced.</param>
 		/// <param name="expression">Lambda expression which has to replace <paramref name="binaryExpression"/>.</param>
-		/// <remarks>Note that method is not thread safe and has to be used only in Application's initialization section.</remarks>
+		/// <remarks>Registration is thread-safe; for predictable results configure mappings during application initialization, before queries are executed.</remarks>
 		public static void MapBinary<TLeft,TRight,TR>(
 			string                            providerName,
 			Expression<Func<TLeft,TRight,TR>> binaryExpression,
@@ -215,7 +213,7 @@ namespace LinqToDB.Linq
 		/// <typeparam name="TR">Result type of <paramref name="binaryExpression"/>.</typeparam>
 		/// <param name="binaryExpression">Expression which has to be replaced.</param>
 		/// <param name="expression">Lambda expression which has to replace <paramref name="binaryExpression"/>.</param>
-		/// <remarks>Note that method is not thread safe and has to be used only in Application's initialization section.</remarks>
+		/// <remarks>Registration is thread-safe; for predictable results configure mappings during application initialization, before queries are executed.</remarks>
 		public static void MapBinary<TLeft,TRight,TR>(
 			Expression<Func<TLeft,TRight,TR>> binaryExpression,
 			Expression<Func<TLeft,TRight,TR>> expression)
@@ -347,7 +345,7 @@ namespace LinqToDB.Linq
 							((LazyExpressionInfo)expr).SetExpression(L<string,string,bool,int>((s1,s2,b) => b ? string.CompareOrdinal(s1.ToUpper(), s2.ToUpper()) : string.CompareOrdinal(s1, s2)));
 #pragma warning restore CA1304, CA1311, MA0011 // use CultureInfo
 
-							Members[""].Add(memberKey, expr);
+							Members[""][memberKey] = expr;
 						}
 					}
 				}
@@ -398,7 +396,7 @@ namespace LinqToDB.Linq
 				return null;
 
 			IExpressionInfo? expr;
-			Dictionary<(ExpressionType,Type,Type),IExpressionInfo>? dic;
+			ConcurrentDictionary<(ExpressionType,Type,Type),IExpressionInfo>? dic;
 
 			var binaries = _binaries.Value;
 			var key      = (binaryExpression.NodeType, binaryExpression.Left.Type, binaryExpression.Right.Type);
@@ -478,7 +476,7 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		static Dictionary<string,Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo>> Members
+		static ConcurrentDictionary<string,ConcurrentDictionary<MemberHelper.MemberInfoWithType,IExpressionInfo>> Members
 		{
 			get
 			{
@@ -496,7 +494,7 @@ namespace LinqToDB.Linq
 
 		private static readonly Lock _memberSync = new();
 
-		static readonly Lazy<Dictionary<string,Dictionary<(ExpressionType,Type,Type),IExpressionInfo>>> _binaries = new(() => new(StringComparer.Ordinal));
+		static readonly Lazy<ConcurrentDictionary<string,ConcurrentDictionary<(ExpressionType,Type,Type),IExpressionInfo>>> _binaries = new(() => new(StringComparer.Ordinal));
 
 		#region Common
 
@@ -663,7 +661,7 @@ namespace LinqToDB.Linq
 		#endregion
 
 #pragma warning disable CS0618 // Type or member is obsolete
-		static Dictionary<string,Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo>> LoadMembers()
+		static ConcurrentDictionary<string,ConcurrentDictionary<MemberHelper.MemberInfoWithType,IExpressionInfo>> LoadMembers()
 		{
 			var members = new Dictionary<string, Dictionary<MemberHelper.MemberInfoWithType, IExpressionInfo>>(StringComparer.Ordinal)
 			{
@@ -991,7 +989,12 @@ namespace LinqToDB.Linq
 
 #endif
 
-			return members;
+			// Snapshot into ConcurrentDictionary (outer + inner) so registration via MapMember can run
+			// concurrently with - and alongside other registrations of - the lock-free ConvertMember reads.
+			return new ConcurrentDictionary<string, ConcurrentDictionary<MemberHelper.MemberInfoWithType, IExpressionInfo>>(
+				members.Select(static m => new KeyValuePair<string, ConcurrentDictionary<MemberHelper.MemberInfoWithType, IExpressionInfo>>(
+					m.Key, new ConcurrentDictionary<MemberHelper.MemberInfoWithType, IExpressionInfo>(m.Value))),
+				StringComparer.Ordinal);
 		}
 #pragma warning restore CS0618 // Type or member is obsolete
 
@@ -999,8 +1002,7 @@ namespace LinqToDB.Linq
 
 		public static void MapMember(string providerName, Type objectType, MemberInfo memberInfo, LambdaExpression expression)
 		{
-			if (!Members.TryGetValue(providerName, out var dic))
-				Members.Add(providerName, dic = new Dictionary<MemberHelper.MemberInfoWithType, IExpressionInfo>());
+			var dic = Members.GetOrAdd(providerName, static _ => new());
 
 			var expr = new LazyExpressionInfo();
 
@@ -1013,8 +1015,7 @@ namespace LinqToDB.Linq
 
 		public static void MapMember(string providerName, Type objectType, MemberInfo memberInfo, IExpressionInfo expressionInfo)
 		{
-			if (!Members.TryGetValue(providerName, out var dic))
-				Members.Add(providerName, dic = new Dictionary<MemberHelper.MemberInfoWithType, IExpressionInfo>());
+			var dic = Members.GetOrAdd(providerName, static _ => new());
 
 			dic[new MemberHelper.MemberInfoWithType(objectType, memberInfo)] = expressionInfo;
 
