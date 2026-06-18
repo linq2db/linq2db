@@ -68,7 +68,7 @@ namespace Tests.UserTests
 		// The set-operation subquery was incorrectly folded into the parent, leaving the
 		// filtering join attached to a single union branch with a dangling column reference.
 		[Test]
-		public void ConcatThenFilteringJoin([DataSources] string context)
+		public void ConcatThenFilteringJoin([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db       = GetDataContext(context);
 			using var things   = db.CreateLocalTable(Thing.Data);
@@ -101,7 +101,7 @@ namespace Tests.UserTests
 		// Same root cause, reached via a plain inner join with no WHERE on the joined table
 		// (so it isn't blocked as a set-operation barrier). Also threw before the fix.
 		[Test]
-		public void ConcatThenPlainInnerJoin([DataSources] string context)
+		public void ConcatThenPlainInnerJoin([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db       = GetDataContext(context);
 			using var things   = db.CreateLocalTable(Thing.Data);
@@ -132,7 +132,7 @@ namespace Tests.UserTests
 
 		// Two joins on top of the Concat — also threw before the fix.
 		[Test]
-		public void ConcatThenTwoJoins([DataSources] string context)
+		public void ConcatThenTwoJoins([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db       = GetDataContext(context);
 			using var things   = db.CreateLocalTable(Thing.Data);

@@ -2193,13 +2193,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				if (parentQuery.HasSetOperators)
 					return false;
 
-				// A set-operation subquery cannot be folded up when the parent carries joins
-				// or additional FROM tables: the parent's joins/conditions would only attach to
-				// the first union branch (and keep references to the now-removed subquery columns),
-				// silently dropping the filter from the other branches. See issue #5625.
-				if (tableSource.Joins.Count > 0)
-					return false;
-				if (parentQuery.From.Tables.Count > 1)
+				// A set-operation subquery can only be folded up into a trivial single-table
+				// parent: any join or extra FROM table would attach to the first union branch
+				// only (keeping a reference to the now-removed subquery column), silently
+				// dropping the filter from the other branches. See issue #5625.
+				if (!parentQuery.IsSingleTableQueryWithoutJoins)
 					return false;
 
 				if (parentQuery.Select.Columns.Count != subQuery.Select.Columns.Count)
