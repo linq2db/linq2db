@@ -483,5 +483,52 @@ namespace Tests.Linq
 
 			AssertQuery(result);
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5626")]
+		public void OrderByDistinctTakeOrdering([DataSources] string context)
+		{
+			var testData = GetTestData();
+
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
+
+			// OrderBy by an expression (not a literal Distinct output column) followed by Distinct().Take(...):
+			// the ORDER BY must survive because the Take observes which rows it keeps. With OrderData1 * 100 + Id
+			// descending the unique top-3 rows are Ids 600 (1100), 500 (900) and 400 (700) - dropping the ORDER BY
+			// makes the Take return arbitrary rows instead.
+			// Asserted against explicit values rather than AssertQuery: AssertQuery's in-memory baseline is derived
+			// from linq2db's own exposed expression, which drops the same ORDER BY and would mask the bug.
+			var result = table
+				.Concat(table)
+				.OrderByDescending(x => x.OrderData1 * 100 + x.Id)
+				.Distinct()
+				.Take(3)
+				.Select(x => x.Id)
+				.ToArray();
+
+			AreEqual(new[] { 600, 500, 400 }, result);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5626")]
+		public void OrderByGroupByTakeOrdering([DataSources] string context)
+		{
+			var testData = GetTestData();
+
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
+
+			// GROUP BY analog of the Distinct case: OrderBy by an expression built from the grouping keys, then
+			// GroupBy (with an aggregate so the GROUP BY survives) + Take. The ORDER BY must survive above the
+			// GROUP BY because the Take observes it. Distinct (OrderData1, OrderData2) pairs ordered descending by
+			// OrderData1 * 100 + OrderData2 give 505, 404, 303 as the top three.
+			var result = table
+				.OrderByDescending(x => x.OrderData1 * 100 + x.OrderData2)
+				.GroupBy(x => new { x.OrderData1, x.OrderData2 })
+				.Select(g => new { Key = g.Key.OrderData1 * 100 + g.Key.OrderData2, Count = g.Count() })
+				.Take(3)
+				.ToArray();
+
+			AreEqual(new[] { 505, 404, 303 }, result.Select(x => x.Key).ToArray());
+		}
 	}
 }
