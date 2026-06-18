@@ -148,7 +148,13 @@ namespace LinqToDB.Internal.SqlQuery
 		public override Type?  SystemType => ObjectType;
 		public override int    Precedence => LinqToDB.SqlQuery.Precedence.Unknown;
 
-		public override bool CanBeNullable(NullabilityContext nullability) => false;
+		// Nullability of the CTE when used as a scalar value (a single-column sub-query lifted into a CTE).
+		// Captured at construction, while the source sub-query is intact — re-deriving it lazily here reads the
+		// wrong value once the body has been finalized. Null (the default) means non-scalar use (a CTE table in
+		// FROM), where columns carry their own nullability via SqlCteTableField.
+		public bool? CanBeNull { get; set; }
+
+		public override bool CanBeNullable(NullabilityContext nullability) => CanBeNull ?? false;
 
 		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{

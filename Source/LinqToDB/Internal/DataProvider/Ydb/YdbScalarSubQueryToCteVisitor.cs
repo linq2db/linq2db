@@ -117,7 +117,14 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				if (position == Position.Wrapped)
 					return WrapScalarSubQueryAsCte(subQuery);
 
-				return new SqlCteTable(GetOrAddScalarCte(subQuery, column.SystemType), column.SystemType);
+				return new SqlCteTable(GetOrAddScalarCte(subQuery, column.SystemType), column.SystemType)
+				{
+					// The scalar reference is nullable iff the sub-query can yield no row (a SingleOrDefault scalar
+					// can be empty -> NULL; a guaranteed-single-row aggregate cannot). The nullability lives on the
+					// SelectQuery-as-value, not its projection column (which can be a non-nullable field); capture it
+					// here while the sub-query is intact (see SqlCteTable.CanBeNull).
+					CanBeNull = subQuery.CanBeNullable(NullabilityContext.GetContext(subQuery)),
+				};
 			}
 
 			return element;
