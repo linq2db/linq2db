@@ -68,6 +68,11 @@ type private FSharpRewriteVisitor() =
             | _ -> mc :> Expression
         | _ -> mc :> Expression
 
+    // Do not descend into non-reducible linq2db custom nodes: the BCL ExpressionVisitor would call
+    // VisitChildren on them and throw "must be reducible node". F# constructs we rewrite live in the raw
+    // standard-node tree, so leaving extension nodes untouched is safe.
+    override _.VisitExtension(node: Expression) : Expression = node
+
     override this.VisitBlock(node: BlockExpression) =
         // block items must be: N assignments to block variables + a result expression
         if node.Variables.Count > 0
@@ -121,5 +126,10 @@ type FSharpQueryExpressionInterceptor private () =
     static member Instance = _instance
 
     interface IQueryExpressionInterceptor with
-        member _.ProcessExpression(expression: Expression, _args: QueryExpressionArgs) : Expression =
-            FSharpRewriteVisitor().Visit expression |> nonNull
+        member _.ProcessExpression(expression: Expression, args: QueryExpressionArgs) : Expression =
+            // Only the raw, pre-expose query tree (standard nodes) - the post-expose tree carries
+            // linq2db custom nodes the F# constructs we handle never appear in.
+            if args.Kind = QueryExpressionArgs.ExpressionKind.Query then
+                FSharpRewriteVisitor().Visit expression |> nonNull
+            else
+                expression
