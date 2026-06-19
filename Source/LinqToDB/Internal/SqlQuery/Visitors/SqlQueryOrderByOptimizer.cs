@@ -142,27 +142,27 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 							if (canPopulateUpperLevel)
 							{
-								// Raw-template AST nodes (Sql.Expr / Sql.Fragment) may carry trailing direction
-								// modifiers in their template text (e.g. "{0} NULLS FIRST"). Wrapping them as a synthetic
-								// subquery column captured the modifier inside the column expression and emitted invalid
-								// SQL like `... END NULLS FIRST as c1`. Push such expressions directly to the parent ORDER
-								// BY so the modifier stays in the outer clause.
-								// When a DISTINCT or GROUP BY is involved we also push the expression as-is instead of
-								// materializing it as a column (#5626): the order has been validated to use only columns the
-								// DISTINCT projects / grouping keys, so adding a synthetic column would needlessly widen the
-								// DISTINCT key or the projection. The column-nesting corrector re-levels the references onto
-								// the existing output columns.
+								// Push the order up as-is (instead of materializing it as a synthetic column) when:
+								//  - it is a raw-template node (Sql.Expr / Sql.Fragment): wrapping it as a column would
+								//    capture trailing direction modifiers ("{0} NULLS FIRST") inside the column and emit
+								//    invalid SQL like `... END NULLS FIRST as c1`; or
+								//  - a DISTINCT / GROUP BY is involved and the order is a *computed* expression (not a plain
+								//    column/field) whose referenced columns the projection / grouping keys already produce
+								//    (#5626): materializing it would needlessly widen the DISTINCT key / projection with a
+								//    synthetic column. The nesting corrector re-levels it onto the existing output columns.
+								// A plain column/field stays on the AddColumn dedup path even under DISTINCT/GROUP BY - it
+								// resolves to an existing output column (no new column) and re-levels reliably through deep
+								// nesting, e.g. the master-key correlation order of eager-loading queries which the as-is
+								// path would otherwise drop.
+								var distinctOrGroupBy = parentSelectQuery.Select.IsDistinct || selectQuery.Select.IsDistinct || !parentSelectQuery.GroupBy.IsEmpty;
+
 								if (orderByItem.Expression is SqlExpression or SqlFragment
-									|| parentSelectQuery.Select.IsDistinct
-									|| selectQuery.Select.IsDistinct
-									|| !parentSelectQuery.GroupBy.IsEmpty)
+									|| (distinctOrGroupBy && orderByItem.Expression is not (SqlColumn or SqlField)))
 								{
 									parentSelectQuery.OrderBy.Items.Add(new SqlOrderByItem(orderByItem.Expression, orderByItem.IsDescending, orderByItem.IsPositioned, orderByItem.NullsPosition));
 								}
 								else
 								{
-									// Every other AST node (structured expressions, columns, fields, functions, case, etc.)
-									// keeps the AddColumn dedup path - their SQL output is always a valid scalar.
 									var column = selectQuery.Select.AddColumn(orderByItem.Expression);
 									parentSelectQuery.OrderBy.Items.Add(new SqlOrderByItem(column, orderByItem.IsDescending, orderByItem.IsPositioned, orderByItem.NullsPosition));
 								}
