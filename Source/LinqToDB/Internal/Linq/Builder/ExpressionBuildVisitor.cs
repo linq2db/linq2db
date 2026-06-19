@@ -1520,6 +1520,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				if (node.Member.IsNullableHasValueMember())
 				{
+					var saveRoot       = FoundRoot;
 					var translatedExpr = Visit(node.Expression);
 
 					if (translatedExpr is SqlPlaceholderExpression)
@@ -1527,6 +1528,13 @@ namespace LinqToDB.Internal.Linq.Builder
 						var hasValue = SequenceHelper.MakeNotNullCondition(translatedExpr);
 						return Visit(hasValue);
 					}
+
+					// The inner expression didn't resolve to SQL (e.g. an unbound projected member that folds
+					// to null). The Visit above cleared FoundRoot; restore it — as MakeWithCache does around its
+					// sub-translation — so the caller stays consistent with the root it captured. Without this,
+					// GetSqlCacheKey reads a null FoundRoot and throws "Called when root is not initialized.";
+					// with it, HasValue resolves to "false" downstream as for a null member. (#5575)
+					FoundRoot = saveRoot;
 				}
 
 				return null;
