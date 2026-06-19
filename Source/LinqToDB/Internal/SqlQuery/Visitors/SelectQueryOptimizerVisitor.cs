@@ -2631,25 +2631,26 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					{
 						if (
 							tableSource.Joins[index] is
-						{
-								JoinType: JoinType.Inner,
-								Table:
 							{
+								JoinType: JoinType.Inner or JoinType.Cross or JoinType.Left,
+								Condition.IsTrue: true,
+								Table:
+								{
 									Joins.Count: 0,
-									Source: SelectQuery { From.Tables.Count: 0 } joinQuery,
+									Source: SelectQuery { From.Tables.Count: 0, DoNotRemove: false, Where.SearchCondition.IsTrue: true } joinQuery,
 								},
 							} join
 						)
 						{
-								replaced = true;
+							replaced = true;
 
-								foreach (var c in joinQuery.Select.Columns)
-								{
-									NotifyReplaced(c.Expression, c);
-								}
+							foreach (var c in joinQuery.Select.Columns)
+							{
+								NotifyReplaced(c.Expression, c);
+							}
 
-								tableSource.Joins.RemoveAt(index);
-								--index;
+							tableSource.Joins.RemoveAt(index);
+							--index;
 						}
 					}
 				}
