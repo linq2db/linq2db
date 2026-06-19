@@ -14,6 +14,11 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue2468Tests : TestBase
 	{
+		// Register the enum ToString mappings under a dedicated configuration (not the global ""
+		// config) so they only apply to this test's MappingSchema and don't leak into the process-wide
+		// registry - which, under parallel execution, would perturb other fixtures' conversions.
+		const string CONFIG = "Issue2468Tests";
+
 		public enum StatusEnum
 		{
 			Unknown = 0,
@@ -92,14 +97,14 @@ namespace Tests.UserTests
 
 			var toStringMethod = type.GetMethods().First(m => m.Name == "ToString" && m.GetParameters().Length == 0);
 
-			Expressions.MapMember(type, toStringMethod, lambda);
+			Expressions.MapMember(CONFIG, type, toStringMethod, lambda);
 		}
 
 		static Issue2468Tests()
 		{
 			MapEnumToString<ColorEnum>();
 			MapEnumToString<CMYKEnum>();
-			Expressions.MapMember((StatusEnum v) => v.ToString(), v => MyExtensions.StatusEnumToString(v));
+			Expressions.MapMember(CONFIG, (StatusEnum v) => v.ToString(), v => MyExtensions.StatusEnumToString(v));
 		}
 
 		[Test]
@@ -108,7 +113,8 @@ namespace Tests.UserTests
 			string context)
 		{
 
-			using var db = (DataConnection)GetDataContext(context);
+			var ms = new MappingSchema(CONFIG);
+			using var db = (DataConnection)GetDataContext(context, ms);
 			using var itb = db.CreateLocalTable<InventoryResourceDTO>();
 			var dto1 = new InventoryResourceDTO
 			{

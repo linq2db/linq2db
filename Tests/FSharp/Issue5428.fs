@@ -12,6 +12,11 @@ open LinqToDB.DataProvider.PostgreSQL
 open LinqToDB.FSharp
 open Tests
 
+// Scope the DateInterval.Contains mapping to a dedicated configuration rather than the global ""
+// config, so it stays local to this test's MappingSchema and doesn't leak into the process-wide registry.
+[<Literal>]
+let CONFIG = "Issue5428"
+
 type Template =
     {
         [<Column("id")>]
@@ -36,7 +41,7 @@ let createDataOptions (connectionString: string) =
 
     let dataProvider = PostgreSQLTools.GetDataProvider(connectionString = connectionString)
 
-    let mappingSchema = MappingSchema()
+    let mappingSchema = MappingSchema(CONFIG)
     mappingSchema.AddScalarType(typeof<LocalDate>)
     mappingSchema.AddScalarType(typeof<DateInterval>)
 
@@ -49,7 +54,8 @@ let createDataOptions (connectionString: string) =
 let dateIntervalContains (d: DateInterval) (e: LocalDate) = d.Contains(e)
 
 LinqToDB.Linq.Expressions.MapMember<DateInterval, LocalDate, bool>(
-    (fun a b -> a.Contains b),
+    CONFIG,
+    (fun (a: DateInterval) (b: LocalDate) -> a.Contains b),
     dateIntervalContains
 )
 
