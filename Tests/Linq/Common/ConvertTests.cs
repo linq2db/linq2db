@@ -31,21 +31,28 @@ namespace Tests.Common
 
 		// NonParallelizable: mutates the process-global Common.Convert<TFrom,TTo> converter, which
 		// Sql.Convert / ConvertTo read across all tests - would corrupt concurrent conversion-sensitive
-		// tests under parallel execution. Restored at the end of the test.
+		// tests under parallel execution. Restored in a finally so a failed assertion can't leak it.
 		[Test, NonParallelizable]
 		public void SetExpression()
 		{
-			Convert<int,string>.Lambda = i => (i * 2).ToString();
+			try
+			{
+				Convert<int,string>.Lambda = i => (i * 2).ToString();
 
-			Assert.That(Convert<int,string>.From(2), Is.EqualTo("4"));
+				Assert.That(Convert<int,string>.From(2), Is.EqualTo("4"));
 
-			Convert<int,string>.Expression = i => (i * 3).ToString();
+				Convert<int,string>.Expression = i => (i * 3).ToString();
 
-			Assert.That(Convert<int,string>.From(3), Is.EqualTo("9"));
+				Assert.That(Convert<int,string>.From(3), Is.EqualTo("9"));
 
-			Convert<int,string>.Lambda = null;
+				Convert<int,string>.Lambda = null;
 
-			Assert.That(Convert<int,string>.From(1), Is.EqualTo("1"));
+				Assert.That(Convert<int,string>.From(1), Is.EqualTo("1"));
+			}
+			finally
+			{
+				Convert<int,string>.Lambda = null;
+			}
 		}
 
 		[Test]
@@ -150,18 +157,23 @@ namespace Tests.Common
 
 		// NonParallelizable: mutates the process-global Common.Convert<TFrom,TTo> converter, which
 		// Sql.Convert / ConvertTo read across all tests - would corrupt concurrent conversion-sensitive
-		// tests under parallel execution. Restored at the end of the test.
+		// tests under parallel execution. Restored in a finally so a failed assertion can't leak it.
 		[Test, NonParallelizable]
 		public void ToStringTest()
 		{
-			Convert<DateTime,string>.Expression = d => d.ToString(DateTimeFormatInfo.InvariantInfo);
-			using (Assert.EnterMultipleScope())
+			try
 			{
-				Assert.That(ConvertTo<string>.From(10), Is.EqualTo("10"));
-				Assert.That(ConvertTo<string>.From(new DateTime(2012, 1, 20, 16, 20, 30, 40, DateTimeKind.Utc)), Is.EqualTo("01/20/2012 16:20:30"));
+				Convert<DateTime,string>.Expression = d => d.ToString(DateTimeFormatInfo.InvariantInfo);
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(ConvertTo<string>.From(10), Is.EqualTo("10"));
+					Assert.That(ConvertTo<string>.From(new DateTime(2012, 1, 20, 16, 20, 30, 40, DateTimeKind.Utc)), Is.EqualTo("01/20/2012 16:20:30"));
+				}
 			}
-
-			Convert<DateTime,string>.Expression = null;
+			finally
+			{
+				Convert<DateTime,string>.Expression = null;
+			}
 		}
 
 		[Test]
