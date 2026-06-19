@@ -233,6 +233,11 @@
 			https://github.com/advisories/GHSA-5f2m-466j-3848;
 			https://github.com/advisories/GHSA-x5qj-9vmx-7g6g;
 			https://github.com/advisories/GHSA-xhfc-gr8f-ffwc" />
+		<!--
+			TODO: paste Genius meme here about MS
+			https://github.com/dotnet/efcore/issues/38257
+			-->
+		<NuGetAuditSuppress Include="https://github.com/advisories/GHSA-2m69-gcr7-jv3q" />
 
 		<!--
 		CVE-2025-6965 / GHSA-2m69-gcr7-jv3q: SQLite before 3.50.2. The transitive native package
