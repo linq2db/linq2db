@@ -39,6 +39,8 @@
 		<AspNetCoreLegacyVersion>2.3.10</AspNetCoreLegacyVersion>
 		<!--bundled version for OpenTelemetry packages-->
 		<OpenTelemetryVersion>1.15.3</OpenTelemetryVersion>
+		<!--bundled version for Microsoft.Testing.Platform / Extensions packages-->
+		<MicrosoftTestingVersion>2.2.3</MicrosoftTestingVersion>
 	</PropertyGroup>
 
 	<ItemGroup Label="Build: Analyzers and Tools">
@@ -151,9 +153,10 @@
 
 	<ItemGroup Label="Testing">
 		<PackageVersion Include="Shouldly"                                              Version="4.3.0"                        />
-		<PackageVersion Include="Microsoft.Testing.Platform.MSBuild"                    Version="2.2.3"                        />
-		<PackageVersion Include="Microsoft.Testing.Extensions.TrxReport"                Version="2.2.3"                        />
-		<PackageVersion Include="Microsoft.Testing.Extensions.HangDump"                 Version="2.2.3"                        />
+		<PackageVersion Include="Microsoft.Testing.Platform"                            Version="$(MicrosoftTestingVersion)"   />
+		<PackageVersion Include="Microsoft.Testing.Platform.MSBuild"                    Version="$(MicrosoftTestingVersion)"   />
+		<PackageVersion Include="Microsoft.Testing.Extensions.TrxReport"                Version="$(MicrosoftTestingVersion)"   />
+		<PackageVersion Include="Microsoft.Testing.Extensions.HangDump"                 Version="$(MicrosoftTestingVersion)"   />
 		<PackageVersion Include="NUnit"                                                 Version="4.6.0"                        />
 		<PackageVersion Include="NUnit.Analyzers"                                       Version="4.13.0"                       />
 		<PackageVersion Include="NUnit3TestAdapter"                                     Version="6.2.0"                        />
@@ -230,6 +233,13 @@
 			https://github.com/advisories/GHSA-5f2m-466j-3848;
 			https://github.com/advisories/GHSA-x5qj-9vmx-7g6g;
 			https://github.com/advisories/GHSA-xhfc-gr8f-ffwc" />
+
+		<!--
+		CVE-2025-6965 / GHSA-2m69-gcr7-jv3q: SQLite before 3.50.2. The transitive native package
+		SQLitePCLRaw.lib.e_sqlite3 (<= 2.1.11, via Microsoft.Data.Sqlite / Microsoft.EntityFrameworkCore.Sqlite)
+		has no patched release. Tests and LINQPad reference SourceGear.sqlite3 (>= 3.50.2) for a patched native binary.
+		-->
+		<NuGetAuditSuppress Include="https://github.com/advisories/GHSA-2m69-gcr7-jv3q" />
 
 		<PackageVersion Include="Microsoft.AspNetCore.Server.Kestrel.Core"              Version="$(AspNetCoreLegacyVersion)"   Condition="'$(TargetFramework)'=='net462'" />
 		<PackageVersion Include="Microsoft.Bcl.Memory"                                  Version="$(Net9Latest)"                Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))" />

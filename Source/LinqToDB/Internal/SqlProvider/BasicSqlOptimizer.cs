@@ -1652,7 +1652,15 @@ namespace LinqToDB.Internal.SqlProvider
 			var join = hostTs.Joins[joinIdx];
 
 			if (join.Condition.Predicates.Count > 0)
-				target.Where.ConcatSearchCondition(join.Condition);
+			{
+				// #5413: the ON may reference target's own projected columns - the apply projected the
+				// correlation key as a column, and the caller rewrites target's projection so that column
+				// is gone. Once the condition lives in target.Where those refs would dangle, so rebase any
+				// column owned by target to its underlying expression first (join is consumed: mutate in place).
+				var condition = join.Condition.Convert(target, allowMutation: true, (_, e) =>
+					e is SqlColumn c && ReferenceEquals(c.Parent, target) ? c.Expression : e);
+				target.Where.ConcatSearchCondition(condition);
+			}
 
 			hostTs.Joins.RemoveAt(joinIdx);
 		}
