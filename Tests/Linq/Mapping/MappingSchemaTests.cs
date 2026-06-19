@@ -88,7 +88,10 @@ namespace Tests.Mapping
 			}
 		}
 
-		[Test]
+		// NonParallelizable: mutates the process-global Common.Convert<TFrom,TTo> converter, which
+		// Sql.Convert / ConvertTo read across all tests - would corrupt concurrent conversion-sensitive
+		// tests under parallel execution. Restored at the end of the test.
+		[Test, NonParallelizable]
 		public void BaseSchema2()
 		{
 			var ms1 = new MappingSchema();
@@ -127,6 +130,11 @@ namespace Tests.Mapping
 					Assert.That(c2("20.01.2012 16:30:40"), Is.EqualTo(new DateTime(2012, 1, 20, 16, 30, 40)));
 				}
 			}
+
+			// Restore the process-global converters this test overrode; otherwise they leak to every
+			// later test (e.g. ConvertTests.ToSqlTime would resolve string->DateTime via DateTime.Parse).
+			Convert<DateTime,string>.Lambda     = null;
+			Convert<string,DateTime>.Expression = null;
 		}
 
 		[Test]

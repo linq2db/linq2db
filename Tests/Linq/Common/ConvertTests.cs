@@ -29,7 +29,10 @@ namespace Tests.Common
 			}
 		}
 
-		[Test]
+		// NonParallelizable: mutates the process-global Common.Convert<TFrom,TTo> converter, which
+		// Sql.Convert / ConvertTo read across all tests - would corrupt concurrent conversion-sensitive
+		// tests under parallel execution. Restored at the end of the test.
+		[Test, NonParallelizable]
 		public void SetExpression()
 		{
 			Convert<int,string>.Lambda = i => (i * 2).ToString();
@@ -145,7 +148,10 @@ namespace Tests.Common
 			}
 		}
 
-		[Test]
+		// NonParallelizable: mutates the process-global Common.Convert<TFrom,TTo> converter, which
+		// Sql.Convert / ConvertTo read across all tests - would corrupt concurrent conversion-sensitive
+		// tests under parallel execution. Restored at the end of the test.
+		[Test, NonParallelizable]
 		public void ToStringTest()
 		{
 			Convert<DateTime,string>.Expression = d => d.ToString(DateTimeFormatInfo.InvariantInfo);
