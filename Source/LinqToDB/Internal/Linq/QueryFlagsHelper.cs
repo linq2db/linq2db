@@ -1,7 +1,4 @@
-﻿using LinqToDB.Interceptors;
-using LinqToDB.Internal.Interceptors;
-
-namespace LinqToDB.Internal.Linq
+﻿namespace LinqToDB.Internal.Linq
 {
 	internal static class QueryFlagsHelper
 	{
@@ -12,9 +9,6 @@ namespace LinqToDB.Internal.Linq
 
 			if (dataContext.InlineParameters)
 				flags |= QueryFlags.InlineParameters;
-
-			if (dataContext is IInterceptable<IEntityServiceInterceptor> { Interceptor: { } })
-				flags |= QueryFlags.HasEntityServiceInterceptor;
 
 			return flags;
 		}

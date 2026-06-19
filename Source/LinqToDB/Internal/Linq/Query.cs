@@ -6,8 +6,10 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Interceptors;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Expressions.ExpressionVisitors;
+using LinqToDB.Internal.Interceptors;
 using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
@@ -34,33 +36,42 @@ namespace LinqToDB.Internal.Linq
 
 		protected internal Query(IDataContext dataContext)
 		{
-			MappingSchema    = dataContext.MappingSchema;
-			SqlOptimizer     = dataContext.GetSqlOptimizer(dataContext.Options);
-			SqlProviderFlags = dataContext.SqlProviderFlags;
-			DataOptions      = dataContext.Options;
+			ConfigurationID         = dataContext.ConfigurationID;
+			ContextType             = dataContext.GetType();
+			MappingSchema           = dataContext.MappingSchema;
+			SqlOptimizer            = dataContext.GetSqlOptimizer(dataContext.Options);
+			SqlProviderFlags        = dataContext.SqlProviderFlags;
+			DataOptions             = dataContext.Options;
+			InlineParameters        = dataContext.InlineParameters;
+			IsEntityServiceProvided = dataContext is IInterceptable<IEntityServiceInterceptor> { Interceptor: {} };
 		}
 
 		#endregion
 
 		#region Compare
 
-		// ConfigurationID, ContextType, InlineParameters and IsEntityServiceProvided are pinned
-		// by the QueryCache bucket key (ContextType + ConfigurationID + QueryFlags — the latter
-		// encodes InlineParameters and HasEntityServiceInterceptor), so every entry inside a
-		// bucket already matches them by construction. Compare only re-checks the expression.
+		internal readonly int              ConfigurationID;
+		internal readonly Type             ContextType;
 		internal readonly MappingSchema    MappingSchema;
+		internal readonly bool             InlineParameters;
 		internal readonly ISqlOptimizer    SqlOptimizer;
 		internal readonly SqlProviderFlags SqlProviderFlags;
 		internal readonly DataOptions      DataOptions;
+		internal readonly bool             IsEntityServiceProvided;
 
-		protected internal bool Compare(IDataContext dataContext, IQueryExpressions expressions, [NotNullWhen(true)] out IQueryExpressions? matchedQueryExpressions)
+		protected bool Compare(IDataContext dataContext, IQueryExpressions expressions, [NotNullWhen(true)] out IQueryExpressions? matchedQueryExpressions)
 		{
 			matchedQueryExpressions = null;
 
 			if (CompareInfo == null)
 				return false;
 
-			var result = CompareInfo.MainExpression.EqualsTo(expressions.MainExpression, dataContext);
+			var result =
+				ConfigurationID         == dataContext.ConfigurationID                                                  &&
+				InlineParameters        == dataContext.InlineParameters                                                 &&
+				ContextType             == dataContext.GetType()                                                        &&
+				IsEntityServiceProvided == dataContext is IInterceptable<IEntityServiceInterceptor> { Interceptor: {} } &&
+				CompareInfo.MainExpression.EqualsTo(expressions.MainExpression, dataContext);
 
 			if (!result)
 				return false;
