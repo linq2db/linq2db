@@ -123,7 +123,18 @@ namespace LinqToDB.Identity
 
 			var result = await Context.UpdateOptimisticAsync(role, cancellationToken).ConfigureAwait(false);
 
-			return result == 1 ? IdentityResult.Success : IdentityResult.Failed(ErrorDescriber.ConcurrencyFailure());
+			if (result != 1)
+				return IdentityResult.Failed(ErrorDescriber.ConcurrencyFailure());
+
+			// The optimistic update generated a new concurrency stamp server-side; refresh the in-memory entity
+			// so it stays usable for further operations (EF Core refreshes the tracked entity the same way).
+			role.ConcurrencyStamp = await Roles
+				.Where(r => r.Id.Equals(role.Id))
+				.Select(r => r.ConcurrencyStamp)
+				.FirstOrDefaultAsync(cancellationToken)
+				.ConfigureAwait(false);
+
+			return IdentityResult.Success;
 		}
 
 		/// <inheritdoc cref="DeleteAsync(TRole, CancellationToken)"/>

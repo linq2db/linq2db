@@ -74,6 +74,10 @@ namespace Tests.Identity
 			Assert.That(await store.GetEmailConfirmedAsync(u),        Is.True);
 			Assert.That(await store.GetTwoFactorEnabledAsync(u),      Is.True);
 			Assert.That(await store.GetSecurityStampAsync(u),         Is.EqualTo("STAMP-1"));
+
+			// the original instance is still usable for a further update (concurrency stamp refreshed)
+			await store.SetPhoneNumberAsync(user, "+15559999");
+			Assert.That((await store.UpdateAsync(user)).Succeeded, Is.True);
 		}
 
 		[Test]
@@ -227,14 +231,17 @@ namespace Tests.Identity
 			Assert.That((await store.UpdateAsync(byId)).Succeeded, Is.True);
 			Assert.That((await store.FindByNameAsync("ADMINISTRATOR"))?.Id, Is.EqualTo(role.Id));
 
+			// the same instance stays usable after an optimistic update (its concurrency stamp is refreshed)
+			await store.SetRoleNameAsync(byId, "admin2");
+			await store.SetNormalizedRoleNameAsync(byId, "ADMIN2");
+			Assert.That((await store.UpdateAsync(byId)).Succeeded, Is.True);
+
 			await store.AddClaimAsync(byId, new Claim("perm", "all"));
 			Assert.That((await store.GetClaimsAsync(byId)).Select(c => c.Value), Has.Member("all"));
 			await store.RemoveClaimAsync(byId, new Claim("perm", "all"));
 			Assert.That(await store.GetClaimsAsync(byId), Is.Empty);
 
-			// re-load before delete: the in-memory entity's concurrency stamp is stale after the optimistic update
-			var toDelete = await store.FindByIdAsync(role.Id);
-			Assert.That((await store.DeleteAsync(toDelete!)).Succeeded, Is.True);
+			Assert.That((await store.DeleteAsync(byId)).Succeeded, Is.True);
 			Assert.That(await store.FindByIdAsync(role.Id), Is.Null);
 		}
 
