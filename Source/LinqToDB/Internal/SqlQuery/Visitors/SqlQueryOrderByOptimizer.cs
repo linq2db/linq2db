@@ -242,12 +242,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		}
 
 		/// <summary>
-		/// Returns <see langword="true"/> when every column/field referenced by <paramref name="orderExpression"/>
-		/// is produced as an output column of the DISTINCT <paramref name="distinctQuery"/>. In that case the
-		/// expression is functionally determined by the DISTINCT projection, so it can be ordered above the
-		/// DISTINCT and exposed as an additional output column without changing which rows are kept.
+		/// Collects the <see cref="QueryElementType.Column"/> / <see cref="QueryElementType.SqlField"/> leaf
+		/// references of <paramref name="orderExpression"/> without descending into their definitions.
 		/// </summary>
-		static bool AllOrderColumnsProducedByDistinct(SelectQuery distinctQuery, ISqlExpression orderExpression)
+		static List<ISqlExpression> CollectReferencedColumns(ISqlExpression orderExpression)
 		{
 			var referenced = new List<ISqlExpression>();
 
@@ -261,6 +259,19 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 				return true;
 			});
+
+			return referenced;
+		}
+
+		/// <summary>
+		/// Returns <see langword="true"/> when every column/field referenced by <paramref name="orderExpression"/>
+		/// is produced as an output column of the DISTINCT <paramref name="distinctQuery"/>. In that case the
+		/// expression is functionally determined by the DISTINCT projection, so it can be ordered above the
+		/// DISTINCT and exposed as an additional output column without changing which rows are kept.
+		/// </summary>
+		static bool AllOrderColumnsProducedByDistinct(SelectQuery distinctQuery, ISqlExpression orderExpression)
+		{
+			var referenced = CollectReferencedColumns(orderExpression);
 
 			if (referenced.Count == 0)
 				return false;
@@ -290,18 +301,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (groupedQuery.GroupBy.GroupingType != GroupingType.Default)
 				return false;
 
-			var referenced = new List<ISqlExpression>();
-
-			orderExpression.VisitParentFirst(referenced, static (list, e) =>
-			{
-				if (e.ElementType is QueryElementType.Column or QueryElementType.SqlField)
-				{
-					list.Add((ISqlExpression)e);
-					return false; // leaf reference - don't descend into the column/field definition
-				}
-
-				return true;
-			});
+			var referenced = CollectReferencedColumns(orderExpression);
 
 			if (referenced.Count == 0)
 				return false;
