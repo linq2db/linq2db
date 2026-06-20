@@ -257,7 +257,14 @@ namespace Tests.Linq
 		public void Issue5598_UpdateSetsOnlyChangedColumn([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataConnection(context);
-			FSharp.Issue5598.UpdateSetsOnlyChangedColumn(db);
+			FSharp.Issue5598.UpdateSetsOnlyChangedColumn(db, true);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5598")]
+		public void Issue5598_UpdateSetsOnlyChangedColumnYdb([IncludeDataSources(false, TestProvName.AllYdb)] string context)
+		{
+			using var db = GetDataConnection(context);
+			FSharp.Issue5598.UpdateSetsOnlyChangedColumn(db, false);
 		}
 
 		[ActiveIssue]
