@@ -91,7 +91,8 @@ namespace LinqToDB.Identity
 	/// <typeparam name="TUserToken">The type representing a user token.</typeparam>
 	/// <typeparam name="TRoleClaim">The type representing a role claim.</typeparam>
 	public class UserStore<TUser, TRole, TContext, TKey, TUserClaim, TUserRole, TUserLogin, TUserToken, TRoleClaim> :
-		UserOnlyStore<TUser, TContext, TKey, TUserClaim, TUserLogin, TUserToken>
+		UserOnlyStore<TUser, TContext, TKey, TUserClaim, TUserLogin, TUserToken>,
+		IUserRoleStore<TUser>
 		where TUser      : IdentityUser<TKey>
 		where TRole      : IdentityRole<TKey>
 		where TContext   : IDataContext
@@ -135,6 +136,12 @@ namespace LinqToDB.Identity
 			};
 		}
 
+		// These IUserRoleStore methods deliberately mirror Microsoft's UserStoreBase signatures - the
+		// 'normalizedRoleName' parameter name and the optional CancellationToken - which also keeps the API
+		// source-compatible with the standalone linq2db.Identity package. MA0061 (default value) and CA1725
+		// (parameter name) fire only because the interface is implemented directly here rather than through an
+		// intermediate base (as EF Core does); the interface declares 'roleName' with no default.
+#pragma warning disable MA0061, CA1725
 		/// <summary>
 		/// Retrieves all users in the specified role.
 		/// </summary>
@@ -244,6 +251,7 @@ namespace LinqToDB.Identity
 
 			return q.AnyAsync(cancellationToken);
 		}
+#pragma warning restore MA0061, CA1725
 
 		/// <summary>
 		/// Return a role with the normalized name if it exists.

@@ -22,6 +22,9 @@ namespace LinqToDB.Identity
 		// see https://github.com/dotnet/aspnetcore/issues/7568
 		private const int KEYS_LENGTH       = 128;
 
+		// EF Core maps integral keys (int/long) as store-generated identity columns; string/Guid keys are client-assigned.
+		private static bool IsAutoIncrementKey<TKey>() => typeof(TKey) == typeof(int) || typeof(TKey) == typeof(long);
+
 		public static void SetupIdentityUserClaim<TKey, TUserClaim>(FluentMappingBuilder mappings)
 			where TKey       : IEquatable<TKey>
 			where TUserClaim : IdentityUserClaim<TKey>
@@ -105,10 +108,15 @@ namespace LinqToDB.Identity
 			where TKey  : IEquatable<TKey>
 			where TRole : IdentityRole<TKey>
 		{
-			mappings.Entity<TRole>().HasTableName("AspNetRoles")
+			var id = mappings.Entity<TRole>().HasTableName("AspNetRoles")
 				.Property(e => e.Id)
 					.IsPrimaryKey()
-					.IsNullable(false)
+					.IsNullable(false);
+
+			if (IsAutoIncrementKey<TKey>())
+				id = id.IsIdentity();
+
+			id
 				.Property(e => e.Name)
 					.HasLength(NAME_LENGTH)
 				.Property(e => e.NormalizedName)
@@ -134,10 +142,15 @@ namespace LinqToDB.Identity
 			where TKey  : IEquatable<TKey>
 			where TUser : IdentityUser<TKey>
 		{
-			mappings.Entity<TUser>().HasTableName("AspNetUsers")
+			var id = mappings.Entity<TUser>().HasTableName("AspNetUsers")
 				.Property(e => e.Id)
 					.IsPrimaryKey()
-					.IsNullable(false)
+					.IsNullable(false);
+
+			if (IsAutoIncrementKey<TKey>())
+				id = id.IsIdentity();
+
+			id
 				.Property(e => e.UserName)
 					.HasLength(NAME_LENGTH)
 				.Property(e => e.NormalizedUserName)
@@ -261,6 +274,8 @@ namespace LinqToDB.Identity
 					.IsNullable(false)
 				.Property(e => e.Data)
 					.HasConversionFunc(SerializePasskeyData, DeserializePasskeyData)
+					// the converter targets string; the column's DB type must be stated explicitly for DDL/schema.
+					.HasDataType(DataType.NVarChar)
 				;
 		}
 

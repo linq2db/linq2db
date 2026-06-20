@@ -340,6 +340,31 @@ namespace LinqToDB.Identity
 			return q.FirstOrDefaultAsync(cancellationToken);
 		}
 
+		/// <inheritdoc cref="SetTokenAsync(TUser, string, string, string, CancellationToken)"/>
+		public override async Task SetTokenAsync(TUser user, string loginProvider, string name, string? value, CancellationToken cancellationToken)
+		{
+			ThrowIfDisposed();
+
+			ArgumentNullException.ThrowIfNull(user);
+
+			// The base implementation mutates an existing token in memory and relies on change tracking;
+			// linq2db has none, so persist the update (or insert) explicitly.
+			var token = await FindTokenAsync(user, loginProvider, name, cancellationToken).ConfigureAwait(false);
+
+			if (token == null)
+			{
+				await Context.InsertAndSetIdentity(CreateUserToken(user, loginProvider, name, value), cancellationToken).ConfigureAwait(false);
+			}
+			else
+			{
+				await UserTokens
+					.Where(t => t.UserId.Equals(user.Id) && t.LoginProvider == loginProvider && t.Name == name)
+					.Set(t => t.Value, value)
+					.UpdateAsync(cancellationToken)
+					.ConfigureAwait(false);
+			}
+		}
+
 		/// <inheritdoc cref="RemoveTokenAsync(TUser, string, string, CancellationToken)"/>
 		public override async Task RemoveTokenAsync(TUser user, string loginProvider, string name, CancellationToken cancellationToken)
 		{
