@@ -40,7 +40,7 @@ namespace Tests.UserTests
 		}
 
 		[Sql.Extension("count_if({predicate})", IsAggregate = true, ServerSideOnly = true)]
-		public static long CountIf<TSource>(IEnumerable<TSource> src, [ExprParameter] Expression<Func<TSource, bool>> predicate)
+		private static long CountIf<TSource>(IEnumerable<TSource> src, [ExprParameter] Expression<Func<TSource, bool>> predicate)
 		{
 			throw new InvalidOperationException();
 		}
