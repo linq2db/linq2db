@@ -94,6 +94,11 @@ type internal FSharpOptionMetadataReader() =
                 let elementType = mt.GetGenericArguments().[0]
                 // The column's DB type is the element's DB type; derive it from the default schema so the
                 // option type (whose own DB type is undefined) maps to a concrete column type.
+                // Limitation: a metadata reader has no access to the connection/provider mapping schema, so
+                // this resolves against MappingSchema.Default only - provider-specific or user-custom DB-type
+                // overrides for the element type are not honored (e.g. 'string option' maps to NVarChar, not
+                // a provider's preferred VarChar). Set the column's DataType explicitly (attribute or fluent
+                // mapping) when a provider-faithful type is required.
                 let dbDataType  = MappingSchema.Default.GetDbDataType(elementType)
                 [|
                     DataTypeAttribute(dbDataType.DataType, DbType = dbDataType.DbType) :> MappingAttribute

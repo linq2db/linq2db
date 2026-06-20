@@ -9,7 +9,11 @@ Supported features:
 - F# record types support in mappings and projections
 - Automatic mapping of F# `'T option` columns: `Some v` is stored as the value and `None` as `NULL`,
   with no manual `MappingSchema` configuration. Value-typed options (e.g. `int option`) correctly
-  store `None` as `NULL` rather than the default value.
+  store `None` as `NULL` rather than the default value. The column's DB type is derived from the
+  element type against the default mapping schema, so provider-specific or user-custom DB-type
+  overrides for the element are not applied automatically (e.g. `string option` maps to `NVarChar`).
+  Set the column's `DataType` explicitly (attribute or fluent mapping) when a provider-faithful type
+  is required.
 
 More features planned for future releases.
 
