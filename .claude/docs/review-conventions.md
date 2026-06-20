@@ -28,6 +28,8 @@ Used by `/verify-review` (and by `/review-pr` when it finds prior reviews of its
 3. Per severity, compute `max(NNN)` across all matches.
 4. The floor for that severity in the next review is `max + 1`. If no prior matches for a severity, floor is `001`.
 
+**Field name (when computing from `pr-context.ps1` output).** Each entry in `reviews[]` / `reviewComments[]` carries the author login as a **flat `user`** field (the script flattens `user.login` → `user`). Filter with `$_.user -eq $currentUser` — **not** `author.login` or `user.login`, both of which are absent on these objects and silently match nothing, yielding floor `1` on every severity. That is a reproduced cause of ID collisions when re-reviewing a PR the current user already reviewed (surfaced on PR #5450: a fresh `/review-pr` reused `MIN001` / `NIT001` already spent by prior reviews). Also scan `reviewComments[].body`, not just review bodies — findings posted as line / file comments carry their IDs there, not in the review body.
+
 ### Checkbox semantics
 
 All notes and all body-section findings carry a GitHub task-list checkbox. Per-line and per-file comments do **not** carry a checkbox — the thread-resolved state plays that role.
