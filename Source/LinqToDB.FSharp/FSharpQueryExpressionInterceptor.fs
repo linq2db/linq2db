@@ -12,8 +12,10 @@ open LinqToDB.Internal.Reflection
 ///       { var x = expr1; new type(x, expr2) }  ->  new type(expr1, expr2)
 ///   * turns an F# record-copy update (`q.Update(p, fun r -> { r with Field = v })`) into the explicit
 ///     partial-update form `q.Where(p).Set(x => x.Field, x => v).Update()`, so only the changed columns
-///     are written. A ctor argument that is a self-copy `r.SameField` is dropped (collateral: a literal
-///     `{ r with Field = r.Field }` no-op is lost, which is acceptable).
+///     are written. A ctor argument that is a self-copy `r.SameField` is dropped; when *every* argument
+///     is a self-copy (a literal no-op such as `{ r with Field = r.Field }`), the change set is empty and
+///     the original full-record construction is left as-is, so that no-op input still emits an all-column
+///     UPDATE (PK included) - acceptable, since such input changes no column anyway.
 /// (Kept out of core so F# quirks live in the F# library.)
 type private FSharpRewriteVisitor() =
     inherit ExpressionVisitor()
