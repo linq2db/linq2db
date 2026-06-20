@@ -86,10 +86,7 @@
 		<PackageVersion Include="Microsoft.Extensions.Logging.Abstractions"             Version="$(Net8LatestForNuget)"        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))"  />
 		<PackageVersion Include="Microsoft.Extensions.Logging.Abstractions"             Version="$(Net9LatestForNuget)"        Condition="'$(TargetFramework)'=='net9.0'"  />
 		<PackageVersion Include="Microsoft.Extensions.Logging.Abstractions"             Version="$(Net10LatestForNuget)"       Condition="'$(TargetFramework)'=='net10.0'" />
-
-		<!-- Identity.Stores: 6.0.x is the last line with a netstandard2.0 asset (net462/netstandard2.0 legs); 8/9/10 are net8.0+ only and pinned to the lowest runtime floor -->
-		<PackageVersion Include="Microsoft.Extensions.Identity.Stores"                  Version="6.0.36"                       Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
-		<PackageVersion Include="Microsoft.Extensions.Identity.Stores"                  Version="$(Net8LatestForNuget)"        Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0')) and !$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))" />
+		<PackageVersion Include="Microsoft.Extensions.Identity.Stores"                  Version="$(Net8LatestForNuget)"        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))"  />
 		<PackageVersion Include="Microsoft.Extensions.Identity.Stores"                  Version="$(Net9LatestForNuget)"        Condition="'$(TargetFramework)'=='net9.0'"  />
 		<PackageVersion Include="Microsoft.Extensions.Identity.Stores"                  Version="$(Net10LatestForNuget)"       Condition="'$(TargetFramework)'=='net10.0'" />
 	</ItemGroup>
