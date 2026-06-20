@@ -177,5 +177,36 @@ namespace Tests.Identity
 			Assert.That((await users.AddToRoleAsync(found!, "manager")).Succeeded, Is.True);
 			Assert.That(await users.IsInRoleAsync(found!, "manager"), Is.True);
 		}
+
+		// Regression for LinqToDB.Identity#21: a UserManager over an int-keyed user works end to end, and the
+		// framework's string-typed FindByIdAsync resolves through the store's string->int key conversion.
+		[Test]
+		public async Task DependencyInjection_IntKeys_UserManagerRoundTrips([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var setup  = new IdentityDataConnection<IdentityUser<int>, IdentityRole<int>, int>(new DataOptions().UseConfiguration(context.StripRemote()));
+			using var schema = new KeyedSchema<IdentityUser<int>, IdentityRole<int>, int>(setup);
+
+			var services = new ServiceCollection();
+			services.AddLogging();
+			services.AddScoped(_ => new IdentityDataConnection<IdentityUser<int>, IdentityRole<int>, int>(new DataOptions().UseConfiguration(context.StripRemote())));
+			services
+				.AddIdentityCore<IdentityUser<int>>()
+				.AddRoles<IdentityRole<int>>()
+				.AddLinqToDBStores<IdentityDataConnection<IdentityUser<int>, IdentityRole<int>, int>>();
+
+			using var provider = services.BuildServiceProvider();
+			using var scope    = provider.CreateScope();
+			var users = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser<int>>>();
+
+			Assert.That((await users.CreateAsync(new IdentityUser<int> { UserName = "int-di" }, "P@ssw0rd1!")).Succeeded, Is.True);
+
+			var byName = await users.FindByNameAsync("int-di");
+			Assert.That(byName,     Is.Not.Null);
+			Assert.That(byName!.Id, Is.GreaterThan(0));
+
+			// UserManager.FindByIdAsync takes a string; the store converts it to the int key (issue #21).
+			var byId = await users.FindByIdAsync(byName.Id.ToString());
+			Assert.That(byId?.Id, Is.EqualTo(byName.Id));
+		}
 	}
 }

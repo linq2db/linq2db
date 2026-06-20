@@ -14,6 +14,26 @@ namespace Tests.Identity
 	[TestFixture]
 	public class IdentityStoreTests : IdentityTestData
 	{
+		// Regression for LinqToDB.Identity#15: default mappings must produce the canonical AspNet* table names,
+		// not the generic CLR type name (which used to leak as e.g. "IdentityUserClaim`1").
+		[Test]
+		public void DefaultMappingsUseAspNetTableNames([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var setup = GetSetup(context);
+			var ms = setup.MappingSchema;
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(ms.GetEntityDescriptor(typeof(IdentityUser)).Name.Name,              Is.EqualTo("AspNetUsers"));
+				Assert.That(ms.GetEntityDescriptor(typeof(IdentityRole)).Name.Name,              Is.EqualTo("AspNetRoles"));
+				Assert.That(ms.GetEntityDescriptor(typeof(IdentityUserClaim<string>)).Name.Name, Is.EqualTo("AspNetUserClaims"));
+				Assert.That(ms.GetEntityDescriptor(typeof(IdentityUserRole <string>)).Name.Name, Is.EqualTo("AspNetUserRoles"));
+				Assert.That(ms.GetEntityDescriptor(typeof(IdentityUserLogin<string>)).Name.Name, Is.EqualTo("AspNetUserLogins"));
+				Assert.That(ms.GetEntityDescriptor(typeof(IdentityUserToken<string>)).Name.Name, Is.EqualTo("AspNetUserTokens"));
+				Assert.That(ms.GetEntityDescriptor(typeof(IdentityRoleClaim<string>)).Name.Name, Is.EqualTo("AspNetRoleClaims"));
+			});
+		}
+
 		[Test]
 		public async Task UserCrud([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
