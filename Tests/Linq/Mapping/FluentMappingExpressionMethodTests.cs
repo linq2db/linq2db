@@ -195,6 +195,46 @@ namespace Tests.Mapping
 			Assert.That(row.Mid?.Leaf, Is.Not.Null);
 			Assert.That(row.Mid!.Leaf!.Upper, Is.EqualTo("ABC"));
 		}
+
+		sealed class MixedExpr
+		{
+			public int            Id        { get; set; }
+			public string?        TopSource { get; set; }
+			public string?        TopUpper  { get; set; }
+			public MixedExprPart? Part      { get; set; }
+		}
+
+		sealed class MixedExprPart
+		{
+			public string? Source { get; set; }
+			public string? Upper  { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4770")]
+		public void ExpressionMethodOnNestedAndNonNestedProperty([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var ms = new MappingSchema();
+			var fb = new FluentMappingBuilder(ms);
+
+			fb.Entity<MixedExpr>()
+				.Property(e => e.Id).IsPrimaryKey()
+				.Property(e => e.TopSource)
+				.Property(e => e.TopUpper).IsExpression(e => Sql.Upper(Sql.Property<string>(e, "TopSource")), true).IsColumn()
+				.Property(e => e.Part!.Source)
+				.Property(e => e.Part!.Upper).IsExpression(p => Sql.Upper(Sql.Property<string>(p, "Source")), true).IsColumn()
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var tb = db.CreateLocalTable<MixedExpr>();
+
+			db.Insert(new MixedExpr { Id = 1, TopSource = "abc", Part = new MixedExprPart { Source = "xyz" } });
+
+			var row = tb.Single();
+
+			Assert.That(row.TopUpper,    Is.EqualTo("ABC"));
+			Assert.That(row.Part,        Is.Not.Null);
+			Assert.That(row.Part!.Upper, Is.EqualTo("XYZ"));
+		}
 		#endregion
 	}
 }
