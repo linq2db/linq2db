@@ -23,5 +23,14 @@ namespace LinqToDB.Internal.Linq
 		/// query plan is sensitive to it.
 		/// </summary>
 		HasEntityServiceInterceptor = 0x08,
+
+		/// <summary>
+		/// Bit set when <see cref="LinqToDB.Common.Configuration.OptimizeForSequentialAccess"/> is
+		/// enabled. The compiled data-reader materialization reads columns in strict ordinal order
+		/// for sequential access, so a plan built with this optimization must not be reused by a
+		/// reader opened without <see cref="System.Data.CommandBehavior.SequentialAccess"/> (or
+		/// vice-versa) — otherwise column reads land out of order.
+		/// </summary>
+		OptimizeForSequentialAccess = 0x10,
 	}
 }
