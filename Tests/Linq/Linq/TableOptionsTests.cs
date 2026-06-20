@@ -174,7 +174,10 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
+		// NonParallelizable: creates a SQL Server GLOBAL temp table (##), which lives in the
+		// instance-wide tempdb; a concurrent session (e.g. the .MS variant in another lane on the
+		// same server) collides on the same object name.
+		[Test, NonParallelizable]
 		public void CreateTempIfNotExistsTest([IncludeDataSources(
 			false,
 			ProviderName.DB2,

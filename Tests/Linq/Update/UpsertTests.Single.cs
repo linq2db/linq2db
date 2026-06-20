@@ -486,7 +486,8 @@ namespace Tests.xUpdate
 			rows[1].Version.ShouldBe(20);
 		}
 
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		[ThrowsForProvider(typeof(LinqToDBException),
 			TestProvName.AllSapHana, TestProvName.AllSqlServer2005, TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus,
 			TestProvName.AllMySql, TestProvName.AllSqlCe, TestProvName.AllAccess,

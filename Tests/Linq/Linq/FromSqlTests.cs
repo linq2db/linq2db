@@ -785,7 +785,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact Query<T>.CacheMissCount); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void TestQueryCaching_ByParameter_Formatted2([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			// important: comment added to avoid use of cached query from other test
