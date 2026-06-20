@@ -16,6 +16,7 @@ namespace Tests.Identity
 	public class IdentityStoreTests : TestBase
 	{
 		// Creates the default AspNet* schema for the identity context and drops it on dispose.
+		// Schema (DDL) is always done over a direct connection - it can't go over the remote LinqService path.
 		sealed class Schema : System.IDisposable
 		{
 			readonly IdentityDataConnection _db;
@@ -50,8 +51,10 @@ namespace Tests.Identity
 			}
 		}
 
-		static IdentityDataConnection GetDb(string context)
-			=> new (new DataOptions().UseConfiguration(context));
+		// A direct connection (for DDL + as the source of the identity mapping schema, which both the
+		// direct and the LinqService client/server contexts need).
+		static IdentityDataConnection GetSetup(string context)
+			=> new (new DataOptions().UseConfiguration(context.StripRemote()));
 
 		static IdentityUser NewUser(string name)
 			=> new (name) { NormalizedUserName = name.ToUpperInvariant(), Email = name + "@test.com", NormalizedEmail = (name + "@test.com").ToUpperInvariant() };
@@ -60,12 +63,13 @@ namespace Tests.Identity
 			=> new (name) { NormalizedName = name.ToUpperInvariant() };
 
 		[Test]
-		public async Task UserCrud([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public async Task UserCrud([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-			using var db = GetDb(context);
-			using var schema = new Schema(db);
+			using var setup  = GetSetup(context);
+			using var schema = new Schema(setup);
+			using var ctx    = GetDataContext(context, setup.MappingSchema);
 
-			var store = new UserStore<IdentityUser>(db);
+			var store = new UserStore<IdentityUser>(ctx);
 			var user  = NewUser("alice");
 
 			Assert.That((await store.CreateAsync(user)).Succeeded, Is.True);
@@ -91,12 +95,13 @@ namespace Tests.Identity
 		}
 
 		[Test]
-		public async Task RoleCrud([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public async Task RoleCrud([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-			using var db = GetDb(context);
-			using var schema = new Schema(db);
+			using var setup  = GetSetup(context);
+			using var schema = new Schema(setup);
+			using var ctx    = GetDataContext(context, setup.MappingSchema);
 
-			var store = new RoleStore<IdentityRole>(db);
+			var store = new RoleStore<IdentityRole>(ctx);
 			var role  = NewRole("admin");
 
 			Assert.That((await store.CreateAsync(role)).Succeeded, Is.True);
@@ -110,13 +115,14 @@ namespace Tests.Identity
 		}
 
 		[Test]
-		public async Task UserRolesAndClaims([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public async Task UserRolesAndClaims([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-			using var db = GetDb(context);
-			using var schema = new Schema(db);
+			using var setup  = GetSetup(context);
+			using var schema = new Schema(setup);
+			using var ctx    = GetDataContext(context, setup.MappingSchema);
 
-			var users = new UserStore<IdentityUser>(db);
-			var roles = new RoleStore<IdentityRole>(db);
+			var users = new UserStore<IdentityUser>(ctx);
+			var roles = new RoleStore<IdentityRole>(ctx);
 
 			var user = NewUser("bob");
 			var role = NewRole("editor");
@@ -141,12 +147,13 @@ namespace Tests.Identity
 		}
 
 		[Test]
-		public async Task LoginsAndTokens([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public async Task LoginsAndTokens([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-			using var db = GetDb(context);
-			using var schema = new Schema(db);
+			using var setup  = GetSetup(context);
+			using var schema = new Schema(setup);
+			using var ctx    = GetDataContext(context, setup.MappingSchema);
 
-			var store = new UserStore<IdentityUser>(db);
+			var store = new UserStore<IdentityUser>(ctx);
 			var user  = NewUser("carol");
 			await store.CreateAsync(user);
 
