@@ -506,7 +506,7 @@ namespace Tests.Linq
 				.Select(x => x.Id)
 				.ToArray();
 
-			AreEqual(new[] { 600, 500, 400 }, result);
+			Assert.That(result, Is.EqualTo(new[] { 600, 500, 400 }));
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5626")]
@@ -528,7 +528,31 @@ namespace Tests.Linq
 				.Take(3)
 				.ToArray();
 
-			AreEqual(new[] { 505, 404, 303 }, result.Select(x => x.Key).ToArray());
+			Assert.That(result.Select(x => x.Key).ToArray(), Is.EqualTo(new[] { 505, 404, 303 }));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5626")]
+		public void OrderByGroupByTakeOrderingKeyNotProjected([DataSources] string context)
+		{
+			var testData = GetTestData();
+
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
+
+			// Variant of OrderByGroupByTakeOrdering where the ORDER BY expression (OrderData1 * 100 + OrderData2)
+			// is NOT present verbatim in the SELECT projection - only the OrderData1 grouping key is projected.
+			// This exercises the new grouping-key path (AllOrderColumnsAreGroupingKeys) unambiguously, since the
+			// pre-existing exact-column disjunct cannot match an order expression absent from the projection.
+			// Distinct (OrderData1, OrderData2) pairs ordered descending by OrderData1 * 100 + OrderData2 give
+			// (5,5)=505, (4,4)=404, (3,3)=303 as the top three, so the projected OrderData1 values are 5, 4, 3.
+			var result = table
+				.OrderByDescending(x => x.OrderData1 * 100 + x.OrderData2)
+				.GroupBy(x => new { x.OrderData1, x.OrderData2 })
+				.Select(g => g.Key.OrderData1)
+				.Take(3)
+				.ToArray();
+
+			Assert.That(result, Is.EqualTo(new[] { 5, 4, 3 }));
 		}
 	}
 }
