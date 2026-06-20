@@ -125,6 +125,15 @@ namespace Tests.Linq
 			FSharp.Issue4646.TestOptionRoundtrip(db);
 		}
 
+		[Test(Description = "Auto 'T option mapping must not override an explicit fluent DataType on an option column (#195 follow-up)")]
+		public void OptionMapping_ExplicitDataTypePreserved([DataSources] string context)
+		{
+			var ms = FSharp.OptionMappingPrecedence.BuildExplicitSchema();
+
+			using var db = GetDataContext(context, ms);
+			FSharp.OptionMappingPrecedence.VerifyExplicitDataTypePreserved(db);
+		}
+
 		[Test]
 		public void LoadSingleCLIMutable([DataSources] string context)
 		{
