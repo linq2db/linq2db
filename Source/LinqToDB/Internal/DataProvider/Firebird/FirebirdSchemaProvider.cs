@@ -11,6 +11,7 @@ using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Firebird;
 using LinqToDB.Internal.SchemaProvider;
+using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
 
 namespace LinqToDB.Internal.DataProvider.Firebird
@@ -24,99 +25,232 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			_provider = provider;
 		}
 
+		#region rdb$ system-table mappings
+
+		[Table("RDB$RELATIONS")]
+		sealed class RdbRelation
+		{
+			[Column("RDB$RELATION_NAME")] public string  RelationName { get; set; } = null!;
+			[Column("RDB$SYSTEM_FLAG")  ] public short?  SystemFlag   { get; set; }
+			[Column("RDB$RELATION_TYPE")] public short?  RelationType { get; set; }
+			[Column("RDB$OWNER_NAME")   ] public string? OwnerName    { get; set; }
+			[Column("RDB$DESCRIPTION")  ] public string? Description  { get; set; }
+			[Column("RDB$SCHEMA_NAME")  ] public string? SchemaName   { get; set; } // Firebird 6+
+		}
+
+		[Table("RDB$RELATION_FIELDS")]
+		sealed class RdbRelationField
+		{
+			[Column("RDB$RELATION_NAME")] public string  RelationName { get; set; } = null!;
+			[Column("RDB$FIELD_NAME")   ] public string  FieldName    { get; set; } = null!;
+			[Column("RDB$FIELD_SOURCE") ] public string  FieldSource  { get; set; } = null!;
+			[Column("RDB$FIELD_POSITION")] public short? FieldPosition { get; set; }
+			[Column("RDB$NULL_FLAG")    ] public short?  NullFlag     { get; set; }
+			[Column("RDB$DESCRIPTION")  ] public string? Description  { get; set; }
+			[Column("RDB$SCHEMA_NAME")  ] public string? SchemaName   { get; set; } // Firebird 6+
+		}
+
+		[Table("RDB$FIELDS")]
+		sealed class RdbField
+		{
+			[Column("RDB$FIELD_NAME")     ] public string FieldName       { get; set; } = null!;
+			[Column("RDB$FIELD_TYPE")     ] public short? FieldType       { get; set; }
+			[Column("RDB$FIELD_SUB_TYPE") ] public short? FieldSubType    { get; set; }
+			[Column("RDB$CHARACTER_LENGTH")] public short? CharacterLength { get; set; }
+			[Column("RDB$FIELD_PRECISION")] public short? FieldPrecision  { get; set; }
+			[Column("RDB$FIELD_SCALE")    ] public short? FieldScale      { get; set; }
+			[Column("RDB$COMPUTED_SOURCE")] public string? ComputedSource { get; set; }
+		}
+
+		[Table("RDB$RELATION_CONSTRAINTS")]
+		sealed class RdbRelationConstraint
+		{
+			[Column("RDB$CONSTRAINT_NAME")] public string  ConstraintName { get; set; } = null!;
+			[Column("RDB$CONSTRAINT_TYPE")] public string? ConstraintType { get; set; }
+			[Column("RDB$RELATION_NAME")  ] public string  RelationName   { get; set; } = null!;
+			[Column("RDB$INDEX_NAME")     ] public string? IndexName      { get; set; }
+			[Column("RDB$SCHEMA_NAME")    ] public string? SchemaName     { get; set; } // Firebird 6+
+		}
+
+		[Table("RDB$INDEX_SEGMENTS")]
+		sealed class RdbIndexSegment
+		{
+			[Column("RDB$INDEX_NAME")    ] public string IndexName     { get; set; } = null!;
+			[Column("RDB$FIELD_NAME")    ] public string FieldName     { get; set; } = null!;
+			[Column("RDB$FIELD_POSITION")] public short? FieldPosition { get; set; }
+		}
+
+		[Table("RDB$REF_CONSTRAINTS")]
+		sealed class RdbRefConstraint
+		{
+			[Column("RDB$CONSTRAINT_NAME")] public string  ConstraintName { get; set; } = null!;
+			[Column("RDB$CONST_NAME_UQ")  ] public string? ConstNameUq    { get; set; }
+		}
+
+		#endregion
+
 		protected override string GetDatabaseName(DataConnection dbConnection)
 		{
 			return Path.GetFileNameWithoutExtension(base.GetDatabaseName(dbConnection));
 		}
 
+		// Firebird 6 introduces SQL-standard schemas (RDB$SCHEMA_NAME); pre-FB6 has a flat namespace and
+		// reports the object owner as the schema (preserving the prior GetSchema-based behaviour).
+		bool SupportsSchemas => _provider.Version >= FirebirdVersion.v6;
+
+		// Correlation key shared by GetTables/GetColumns/GetPrimaryKeys/GetForeignKeys; the schema part is
+		// only meaningful on FB6 (null otherwise), matching the flat-namespace TableID used previously.
+		static string MakeTableID(string? schema, string name) => (schema ?? string.Empty) + ".." + name;
+
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var tables = dataConnection.OpenDbConnection().GetSchema("Tables");
+			var hasSchemas = SupportsSchemas;
 
-			return
-			(
-				from t in tables.AsEnumerable()
-				where !ConvertTo<bool>.From(t["IS_SYSTEM_TABLE"])
-				let catalog = t.Field<string>("TABLE_CATALOG")
-				let schema  = t.Field<string>("OWNER_NAME")
-				let name    = t.Field<string>("TABLE_NAME")
-				select new TableInfo()
+			var rows = dataConnection.GetTable<RdbRelation>()
+				.Where(r => r.SystemFlag == null || r.SystemFlag == 0)
+				.Select(r => new
 				{
-					TableID         = catalog + '.' + t.Field<string>("TABLE_SCHEMA") + '.' + name,
-					CatalogName     = catalog,
+					r.RelationName,
+					r.RelationType,
+					r.OwnerName,
+					r.Description,
+					SchemaName = hasSchemas ? r.SchemaName : null,
+				})
+				.ToList();
+
+			return rows.Select(r =>
+			{
+				var name   = r.RelationName.TrimEnd();
+				var schema = (hasSchemas ? r.SchemaName : r.OwnerName)?.TrimEnd();
+
+				return new TableInfo()
+				{
+					TableID         = MakeTableID(hasSchemas ? schema : null, name),
+					CatalogName     = null,
 					SchemaName      = schema,
 					TableName       = name,
-					IsDefaultSchema = string.Equals(schema, "SYSDBA", StringComparison.Ordinal),
-					IsView          = string.Equals(t.Field<string>("TABLE_TYPE"), "VIEW", StringComparison.Ordinal),
-					Description     = t.Field<string>("DESCRIPTION"),
-				}
-			).ToList();
+					IsDefaultSchema = string.Equals(schema, hasSchemas ? "PUBLIC" : "SYSDBA", StringComparison.Ordinal),
+					IsView          = r.RelationType == 1,
+					Description     = r.Description?.TrimEnd(),
+				};
+			}).ToList();
 		}
 
 		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			var pks = dataConnection.OpenDbConnection().GetSchema("PrimaryKeys");
+			var hasSchemas = SupportsSchemas;
 
-			return
-			(
-				from pk in pks.AsEnumerable()
-				select new PrimaryKeyInfo()
-				{
-					TableID        = pk.Field<string>("TABLE_CATALOG") + "." + pk.Field<string>("TABLE_SCHEMA") + "." + pk.Field<string>("TABLE_NAME"),
-					PrimaryKeyName = pk.Field<string>("PK_NAME")!,
-					ColumnName     = pk.Field<string>("COLUMN_NAME")!,
-					Ordinal        = ConvertTo<int>.From(pk["ORDINAL_POSITION"]),
-				}
-			).ToList();
+			var rows =
+				(
+					from rc in dataConnection.GetTable<RdbRelationConstraint>()
+					where rc.ConstraintType == "PRIMARY KEY"
+					join seg in dataConnection.GetTable<RdbIndexSegment>() on rc.IndexName equals seg.IndexName
+					select new
+					{
+						rc.RelationName,
+						rc.ConstraintName,
+						SchemaName = hasSchemas ? rc.SchemaName : null,
+						seg.FieldName,
+						seg.FieldPosition,
+					}
+				).ToList();
+
+			return rows.Select(r => new PrimaryKeyInfo()
+			{
+				TableID        = MakeTableID(r.SchemaName?.TrimEnd(), r.RelationName.TrimEnd()),
+				PrimaryKeyName = r.ConstraintName.TrimEnd(),
+				ColumnName     = r.FieldName.TrimEnd(),
+				Ordinal        = r.FieldPosition ?? 0,
+			}).ToList();
 		}
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var tcs  = dataConnection.OpenDbConnection().GetSchema("Columns");
+			var hasSchemas = SupportsSchemas;
 
-			return
-			(
-				from c in tcs.AsEnumerable()
-				let type      = c.Field<string>("COLUMN_DATA_TYPE")
-				let dt        = GetDataType(type, null, options)
-				let precision = Converter.ChangeTypeTo<int>(c["NUMERIC_PRECISION"])
-				select new ColumnInfo()
+			var rows =
+				(
+					from rf in dataConnection.GetTable<RdbRelationField>()
+					join f in dataConnection.GetTable<RdbField>() on rf.FieldSource equals f.FieldName
+					select new
+					{
+						rf.RelationName,
+						rf.FieldName,
+						rf.FieldPosition,
+						rf.NullFlag,
+						rf.Description,
+						SchemaName = hasSchemas ? rf.SchemaName : null,
+						f.FieldType,
+						f.FieldSubType,
+						f.CharacterLength,
+						f.FieldPrecision,
+						f.FieldScale,
+						f.ComputedSource,
+					}
+				).ToList();
+
+			return rows.Select(r =>
+			{
+				var typeName  = CreateTypeName(r.FieldType ?? 0, r.FieldSubType ?? 0, r.FieldScale ?? 0).ToLowerInvariant();
+				var dt        = GetDataType(typeName, null, options);
+				var precision = (int?)r.FieldPrecision;
+				var computed  = r.ComputedSource != null;
+
+				return new ColumnInfo()
 				{
-					TableID      = c.Field<string>("TABLE_CATALOG") + "." + c.Field<string>("TABLE_SCHEMA") + "." + c.Field<string>("TABLE_NAME"),
-					Name         = c.Field<string>("COLUMN_NAME")!,
+					TableID      = MakeTableID(r.SchemaName?.TrimEnd(), r.RelationName.TrimEnd()),
+					Name         = r.FieldName.TrimEnd(),
 					DataType     = dt?.TypeName,
-					IsNullable   = Converter.ChangeTypeTo<bool>(c["IS_NULLABLE"]),
-					Ordinal      = Converter.ChangeTypeTo<int> (c["ORDINAL_POSITION"]),
-					Length       = (type is not "char" and not "varchar") ? null : Converter.ChangeTypeTo<int>(c["COLUMN_SIZE"]),
-					Precision    = precision == 0 ? null : precision,
-					Scale        = (type is not "decimal" and not "numeric") ? null : Converter.ChangeTypeTo<int>(c["NUMERIC_SCALE"]),
+					IsNullable   = r.NullFlag != 1,
+					Ordinal      = r.FieldPosition ?? 0,
+					Length       = (typeName is "char" or "varchar") ? (int?)r.CharacterLength : null,
+					Precision    = precision is null or 0 ? null : precision,
+					Scale        = (typeName is "decimal" or "numeric") && r.FieldScale.HasValue ? Math.Abs((int)r.FieldScale.Value) : null,
 					IsIdentity   = false,
-					Description  = c.Field<string>("DESCRIPTION"),
-					SkipOnInsert = Converter.ChangeTypeTo<bool>(c["IS_READONLY"]),
-					SkipOnUpdate = Converter.ChangeTypeTo<bool>(c["IS_READONLY"]),
-				}
-			).ToList();
+					Description  = r.Description?.TrimEnd(),
+					SkipOnInsert = computed,
+					SkipOnUpdate = computed,
+				};
+			}).ToList();
 		}
 
 		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			var cols = dataConnection.OpenDbConnection().GetSchema("ForeignKeyColumns");
+			var hasSchemas = SupportsSchemas;
 
-			return
-			(
-				from c in cols.AsEnumerable()
-				select new ForeignKeyInfo()
-				{
-					Name         = c.Field<string>("CONSTRAINT_NAME")!,
-					ThisTableID  = c.Field<string>("TABLE_CATALOG") + "." + c.Field<string>("TABLE_SCHEMA") + "." + c.Field<string>("TABLE_NAME"),
-					ThisColumn   = c.Field<string>("COLUMN_NAME")!,
-					OtherTableID = c.Field<string>("REFERENCED_TABLE_CATALOG") + "." + c.Field<string>("REFERENCED_TABLE_SCHEMA") + "." + c.Field<string>("REFERENCED_TABLE_NAME"),
-					OtherColumn  = c.Field<string>("REFERENCED_COLUMN_NAME")!,
-					Ordinal      = Converter.ChangeTypeTo<int> (c["ORDINAL_POSITION"]),
-				}
-			).ToList();
+			var rows =
+				(
+					from rc in dataConnection.GetTable<RdbRelationConstraint>()
+					where rc.ConstraintType == "FOREIGN KEY"
+					join refc    in dataConnection.GetTable<RdbRefConstraint>()      on rc.ConstraintName equals refc.ConstraintName
+					join rcUq    in dataConnection.GetTable<RdbRelationConstraint>() on refc.ConstNameUq  equals rcUq.ConstraintName
+					join thisSeg in dataConnection.GetTable<RdbIndexSegment>()       on rc.IndexName       equals thisSeg.IndexName
+					join otherSeg in dataConnection.GetTable<RdbIndexSegment>()
+						on new { Index = rcUq.IndexName, thisSeg.FieldPosition } equals new { Index = otherSeg.IndexName, otherSeg.FieldPosition }
+					select new
+					{
+						rc.ConstraintName,
+						ThisRelation  = rc.RelationName,
+						ThisSchema    = hasSchemas ? rc.SchemaName   : null,
+						OtherRelation = rcUq.RelationName,
+						OtherSchema   = hasSchemas ? rcUq.SchemaName : null,
+						ThisColumn    = thisSeg.FieldName,
+						OtherColumn   = otherSeg.FieldName,
+						thisSeg.FieldPosition,
+					}
+				).ToList();
+
+			return rows.Select(r => new ForeignKeyInfo()
+			{
+				Name         = r.ConstraintName.TrimEnd(),
+				ThisTableID  = MakeTableID(r.ThisSchema?.TrimEnd(),  r.ThisRelation.TrimEnd()),
+				ThisColumn   = r.ThisColumn.TrimEnd(),
+				OtherTableID = MakeTableID(r.OtherSchema?.TrimEnd(), r.OtherRelation.TrimEnd()),
+				OtherColumn  = r.OtherColumn.TrimEnd(),
+				Ordinal      = r.FieldPosition ?? 0,
+			}).ToList();
 		}
 
 		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)
