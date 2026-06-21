@@ -19,9 +19,9 @@ namespace Tests.Identity
 		[Test]
 		public void NullArguments([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-			using var setup  = GetSetup(context);
-			using var schema = new Schema(setup);
-			using var ctx    = GetDataContext(context, setup.MappingSchema);
+			// no schema needed: every assertion throws during argument validation before touching the database.
+			using var setup = GetSetup(context);
+			using var ctx   = GetDataContext(context, setup.MappingSchema);
 
 			var users = new UserStore<IdentityUser>(ctx);
 			var roles = new RoleStore<IdentityRole>(ctx);
@@ -89,9 +89,9 @@ namespace Tests.Identity
 		[Test]
 		public void DisposedStore([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-			using var setup  = GetSetup(context);
-			using var schema = new Schema(setup);
-			using var ctx    = GetDataContext(context, setup.MappingSchema);
+			// no schema needed: the disposed-guard throws before any database access.
+			using var setup = GetSetup(context);
+			using var ctx   = GetDataContext(context, setup.MappingSchema);
 
 			var store = new UserStore<IdentityUser>(ctx);
 			store.Dispose();

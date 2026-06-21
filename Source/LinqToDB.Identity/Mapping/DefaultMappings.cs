@@ -257,7 +257,11 @@ namespace LinqToDB.Identity
 		}
 
 #if NET10_0_OR_GREATER
-		// WebAuthn credential ids are variable-length; the spec recommends supporting at least 1023 bytes.
+		// WebAuthn credential ids are variable-length (spec: no longer than 1023 bytes). 1024 matches EF Core's
+		// own AspNetUserPasskeys mapping (b.Property(p => p.CredentialId).HasMaxLength(1024)).
+		// Note: as a SQL Server clustered PK this exceeds the 900-byte index-key limit, so SQL Server warns at
+		// CREATE TABLE and rejects only an inserted key > 900 bytes - identical to EF Core, and real credential
+		// ids are well under 900 bytes.
 		private const int CREDENTIAL_ID_LENGTH = 1024;
 
 		public static void SetupIdentityUserPasskey<TKey>(FluentMappingBuilder mappings)
@@ -274,7 +278,10 @@ namespace LinqToDB.Identity
 					.IsNullable(false)
 				.Property(e => e.Data)
 					.HasConversionFunc(SerializePasskeyData, DeserializePasskeyData)
-					// the converter targets string; the column's DB type must be stated explicitly for DDL/schema.
+					// The converter targets string; the column's DB type must be stated explicitly for DDL/schema.
+					// Unbounded NVarChar -> nvarchar(max) on SQL Server, matching EF Core's ComplexProperty(Data).ToJson().
+					// Providers with a bounded NVARCHAR (e.g. Oracle NVARCHAR2, 4000 bytes) need a CLOB/NText override
+					// for large passkey JSON - a provider-specific follow-up (passkeys are .NET 10 only).
 					.HasDataType(DataType.NVarChar)
 				;
 		}

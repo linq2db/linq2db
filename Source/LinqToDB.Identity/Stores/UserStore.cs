@@ -182,7 +182,12 @@ namespace LinqToDB.Identity
 			var roleEntity = await FindRoleAsync(normalizedRoleName, cancellationToken).ConfigureAwait(false)
 				?? throw new InvalidOperationException(Resources.RoleNotFound(normalizedRoleName));
 
-			await Context.InsertAndSetIdentity(CreateUserRole(user, roleEntity), cancellationToken).ConfigureAwait(false);
+			// Upsert with SkipUpdate (insert-or-ignore): re-adding a role the user already has is an idempotent
+			// no-op rather than a primary-key violation on AspNetUserRoles (composite PK, no non-key columns).
+			// UserManager dedups one layer up, but this keeps direct store callers robust. Match defaults to the PK.
+			await Context.GetTable<TUserRole>()
+				.UpsertAsync(CreateUserRole(user, roleEntity), u => u.SkipUpdate(), cancellationToken)
+				.ConfigureAwait(false);
 		}
 
 		/// <summary>

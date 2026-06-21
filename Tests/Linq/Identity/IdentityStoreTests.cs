@@ -3,6 +3,8 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
+using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Identity;
 
 using Microsoft.AspNetCore.Identity;
@@ -196,8 +198,45 @@ namespace Tests.Identity
 			Assert.That(await users.GetRolesAsync(user),          Has.Member("editor"));
 			Assert.That((await users.GetUsersInRoleAsync("EDITOR")).Select(u => u.Id), Has.Member(user.Id));
 
+			// re-adding an existing role is an idempotent no-op (Upsert/SkipUpdate insert-or-ignore), not a PK violation
+			await users.AddToRoleAsync(user, "EDITOR");
+			Assert.That(await users.GetRolesAsync(user), Has.Exactly(1).EqualTo("editor"));
+
 			await users.RemoveFromRoleAsync(user, "EDITOR");
 			Assert.That(await users.IsInRoleAsync(user, "EDITOR"), Is.False);
+		}
+
+		[Test]
+		public async Task NavigationAssociations([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var setup  = GetSetup(context);
+			using var schema = new Schema(setup);
+			using var ctx    = GetDataContext(context, setup.MappingSchema);
+
+			var users = new UserStore<IdentityUser>(ctx);
+			var roles = new RoleStore<IdentityRole>(ctx);
+
+			var user = NewUser("nav");
+			var role = NewRole("nav-role");
+			await users.CreateAsync(user);
+			await roles.CreateAsync(role);
+			await users.AddToRoleAsync(user, "NAV-ROLE");
+			await users.AddClaimsAsync(user, new[] { new Claim("scope", "read") });
+			await users.AddLoginAsync(user, new UserLoginInfo("google", "key-1", "Google"));
+
+			// extension-method associations on the standard IdentityUser/IdentityRole types, expanded by linq2db inside the query
+			var roleIds   = await ctx.GetTable<IdentityUser>().Where(u => u.Id == user.Id).SelectMany(u => u.Roles ()).Select(r  => r.RoleId)       .ToListAsync();
+			var claims    = await ctx.GetTable<IdentityUser>().Where(u => u.Id == user.Id).SelectMany(u => u.Claims()).Select(c  => c.ClaimValue)   .ToListAsync();
+			var logins    = await ctx.GetTable<IdentityUser>().Where(u => u.Id == user.Id).SelectMany(u => u.Logins()).Select(l  => l.LoginProvider).ToListAsync();
+			var roleUsers = await ctx.GetTable<IdentityRole>().Where(r => r.Id == role.Id).SelectMany(r => r.Users ()).Select(ur => ur.UserId)      .ToListAsync();
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(roleIds,   Has.Member(role.Id));
+				Assert.That(claims,    Has.Member("read"));
+				Assert.That(logins,    Has.Member("google"));
+				Assert.That(roleUsers, Has.Member(user.Id));
+			});
 		}
 
 		[Test]

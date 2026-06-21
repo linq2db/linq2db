@@ -43,21 +43,7 @@ LinqToDB.Identity.IdentityDataContext<TUser, TRole, TKey>.IdentityDataContext(Li
 LinqToDB.Identity.IdentityDataContext<TUser>
 LinqToDB.Identity.IdentityDataContext<TUser>.IdentityDataContext() -> void
 LinqToDB.Identity.IdentityDataContext<TUser>.IdentityDataContext(LinqToDB.DataOptions! options) -> void
-LinqToDB.Identity.Model.IdentityRole<TKey, TUserRole, TRoleClaim>
-LinqToDB.Identity.Model.IdentityRole<TKey, TUserRole, TRoleClaim>.IdentityRole() -> void
-LinqToDB.Identity.Model.IdentityRole<TKey, TUserRole, TRoleClaim>.IdentityRole(string! roleName) -> void
-LinqToDB.Identity.Model.IdentityRole<TUserRole, TRoleClaim>
-LinqToDB.Identity.Model.IdentityRole<TUserRole, TRoleClaim>.IdentityRole() -> void
-LinqToDB.Identity.Model.IdentityRole<TUserRole, TRoleClaim>.IdentityRole(string! roleName) -> void
-LinqToDB.Identity.Model.IdentityUser
-LinqToDB.Identity.Model.IdentityUser.IdentityUser() -> void
-LinqToDB.Identity.Model.IdentityUser.IdentityUser(string! userName) -> void
-LinqToDB.Identity.Model.IdentityUser<TKey, TUserClaim, TUserRole, TUserLogin>
-LinqToDB.Identity.Model.IdentityUser<TKey, TUserClaim, TUserRole, TUserLogin>.IdentityUser() -> void
-LinqToDB.Identity.Model.IdentityUser<TKey, TUserClaim, TUserRole, TUserLogin>.IdentityUser(string! userName) -> void
-LinqToDB.Identity.Model.IdentityUser<TKey>
-LinqToDB.Identity.Model.IdentityUser<TKey>.IdentityUser() -> void
-LinqToDB.Identity.Model.IdentityUser<TKey>.IdentityUser(string! userName) -> void
+LinqToDB.Identity.IdentityNavigations
 LinqToDB.Identity.RoleStore<TRole, TContext, TKey, TUserRole, TRoleClaim>
 LinqToDB.Identity.RoleStore<TRole, TContext, TKey, TUserRole, TRoleClaim>.RoleStore(TContext context, Microsoft.AspNetCore.Identity.IdentityErrorDescriber? describer = null) -> void
 LinqToDB.Identity.RoleStore<TRole, TContext, TKey>
@@ -125,19 +111,14 @@ override LinqToDB.Identity.UserOnlyStore<TUser, TContext, TKey, TUserClaim, TUse
 override LinqToDB.Identity.UserOnlyStore<TUser, TContext, TKey, TUserClaim, TUserLogin, TUserToken>.SetTokenAsync(TUser! user, string! loginProvider, string! name, string? value, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 override LinqToDB.Identity.UserOnlyStore<TUser, TContext, TKey, TUserClaim, TUserLogin, TUserToken>.UpdateAsync(TUser! user, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Microsoft.AspNetCore.Identity.IdentityResult!>!
 override LinqToDB.Identity.UserOnlyStore<TUser, TContext, TKey, TUserClaim, TUserLogin, TUserToken>.Users.get -> System.Linq.IQueryable<TUser!>!
+static LinqToDB.Identity.IdentityNavigations.Claims<TKey>(this Microsoft.AspNetCore.Identity.IdentityRole<TKey>! role) -> System.Collections.Generic.IEnumerable<Microsoft.AspNetCore.Identity.IdentityRoleClaim<TKey>!>!
+static LinqToDB.Identity.IdentityNavigations.Claims<TKey>(this Microsoft.AspNetCore.Identity.IdentityUser<TKey>! user) -> System.Collections.Generic.IEnumerable<Microsoft.AspNetCore.Identity.IdentityUserClaim<TKey>!>!
+static LinqToDB.Identity.IdentityNavigations.Logins<TKey>(this Microsoft.AspNetCore.Identity.IdentityUser<TKey>! user) -> System.Collections.Generic.IEnumerable<Microsoft.AspNetCore.Identity.IdentityUserLogin<TKey>!>!
+static LinqToDB.Identity.IdentityNavigations.Roles<TKey>(this Microsoft.AspNetCore.Identity.IdentityUser<TKey>! user) -> System.Collections.Generic.IEnumerable<Microsoft.AspNetCore.Identity.IdentityUserRole<TKey>!>!
+static LinqToDB.Identity.IdentityNavigations.Users<TKey>(this Microsoft.AspNetCore.Identity.IdentityRole<TKey>! role) -> System.Collections.Generic.IEnumerable<Microsoft.AspNetCore.Identity.IdentityUserRole<TKey>!>!
 static Microsoft.Extensions.DependencyInjection.IdentityLinqToDBBuilderExtensions.AddLinqToDBStores<TContext>(this Microsoft.AspNetCore.Identity.IdentityBuilder! builder) -> Microsoft.AspNetCore.Identity.IdentityBuilder!
 virtual LinqToDB.Identity.IdentityDataConnection<TUser, TKey, TUserClaim, TUserLogin, TUserToken>.ConfigureMappings(LinqToDB.Mapping.MappingSchema! mappingSchema) -> void
 virtual LinqToDB.Identity.IdentityDataContext<TUser, TKey, TUserClaim, TUserLogin, TUserToken>.ConfigureMappings(LinqToDB.Mapping.MappingSchema! mappingSchema) -> void
-virtual LinqToDB.Identity.Model.IdentityRole<TKey, TUserRole, TRoleClaim>.Claims.get -> System.Collections.Generic.ICollection<TRoleClaim!>?
-virtual LinqToDB.Identity.Model.IdentityRole<TKey, TUserRole, TRoleClaim>.Claims.set -> void
-virtual LinqToDB.Identity.Model.IdentityRole<TKey, TUserRole, TRoleClaim>.Users.get -> System.Collections.Generic.ICollection<TUserRole!>?
-virtual LinqToDB.Identity.Model.IdentityRole<TKey, TUserRole, TRoleClaim>.Users.set -> void
-virtual LinqToDB.Identity.Model.IdentityUser<TKey, TUserClaim, TUserRole, TUserLogin>.Claims.get -> System.Collections.Generic.ICollection<TUserClaim>?
-virtual LinqToDB.Identity.Model.IdentityUser<TKey, TUserClaim, TUserRole, TUserLogin>.Claims.set -> void
-virtual LinqToDB.Identity.Model.IdentityUser<TKey, TUserClaim, TUserRole, TUserLogin>.Logins.get -> System.Collections.Generic.ICollection<TUserLogin>?
-virtual LinqToDB.Identity.Model.IdentityUser<TKey, TUserClaim, TUserRole, TUserLogin>.Logins.set -> void
-virtual LinqToDB.Identity.Model.IdentityUser<TKey, TUserClaim, TUserRole, TUserLogin>.Roles.get -> System.Collections.Generic.ICollection<TUserRole>?
-virtual LinqToDB.Identity.Model.IdentityUser<TKey, TUserClaim, TUserRole, TUserLogin>.Roles.set -> void
 virtual LinqToDB.Identity.RoleStore<TRole, TContext, TKey, TUserRole, TRoleClaim>.Context.get -> TContext
 virtual LinqToDB.Identity.RoleStore<TRole, TContext, TKey, TUserRole, TRoleClaim>.RoleClaims.get -> System.Linq.IQueryable<TRoleClaim!>!
 virtual LinqToDB.Identity.UserOnlyStore<TUser, TContext, TKey, TUserClaim, TUserLogin, TUserToken>.Context.get -> TContext
