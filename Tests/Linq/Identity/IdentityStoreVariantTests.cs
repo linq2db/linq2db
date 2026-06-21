@@ -90,6 +90,7 @@ namespace Tests.Identity
 			Assert.That((await store.DeleteAsync(user)).Succeeded, Is.True);
 		}
 
+		// Regression for LinqToDB.Identity#18: non-string key types (Guid here, int below) are supported.
 		[Test]
 		public async Task GuidKeys([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
@@ -139,6 +140,7 @@ namespace Tests.Identity
 			Assert.That((await users.DeleteAsync(user)).Succeeded, Is.True);
 		}
 
+		// Regression for LinqToDB.Identity#12: the stores resolve through DI (AddLinqToDBStores) and drive a UserManager.
 		[Test]
 		public async Task DependencyInjection_ResolvesStores_AndUserManagerRoundTrips([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{

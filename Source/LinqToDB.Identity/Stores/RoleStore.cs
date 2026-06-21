@@ -126,13 +126,20 @@ namespace LinqToDB.Identity
 			if (result != 1)
 				return IdentityResult.Failed(ErrorDescriber.ConcurrencyFailure());
 
-			// The optimistic update generated a new concurrency stamp server-side; refresh the in-memory entity
-			// so it stays usable for further operations (EF Core refreshes the tracked entity the same way).
-			role.ConcurrencyStamp = await Roles
+			// The optimistic update regenerated the concurrency stamp; refresh the in-memory entity so it stays
+			// usable for further operations (EF Core refreshes the tracked entity the same way). A null read-back
+			// means the row was deleted concurrently after the update - surface that as a concurrency failure
+			// rather than nulling out the stamp on an otherwise "successful" result.
+			var stamp = await Roles
 				.Where(r => r.Id.Equals(role.Id))
 				.Select(r => r.ConcurrencyStamp)
 				.FirstOrDefaultAsync(cancellationToken)
 				.ConfigureAwait(false);
+
+			if (stamp == null)
+				return IdentityResult.Failed(ErrorDescriber.ConcurrencyFailure());
+
+			role.ConcurrencyStamp = stamp;
 
 			return IdentityResult.Success;
 		}

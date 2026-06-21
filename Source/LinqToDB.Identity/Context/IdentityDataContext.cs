@@ -1,5 +1,5 @@
 using System;
-using System.Threading;
+using System.Collections.Concurrent;
 using LinqToDB.Mapping;
 using Microsoft.AspNetCore.Identity;
 
@@ -132,8 +132,10 @@ namespace LinqToDB.Identity
 		where TUserLogin : IdentityUserLogin<TKey>
 		where TUserToken : IdentityUserToken<TKey>
 	{
-		private static readonly Lock _syncRoot = new ();
-		private static MappingSchema?  _mappingSchema;
+		// Keyed by the most-derived type: role mappings are added by derived ConfigureMappings overrides whose
+		// role type arguments aren't part of this base type, so a single base-scoped cache would let two contexts
+		// that differ only in role types collide on one schema.
+		private static readonly ConcurrentDictionary<Type, MappingSchema> _mappingSchemas = new ();
 
 		/// <summary>
 		/// Constructor with options.
@@ -154,24 +156,12 @@ namespace LinqToDB.Identity
 		}
 
 		private MappingSchema GetMappingSchema()
-		{
-			if (_mappingSchema == null)
+			=> _mappingSchemas.GetOrAdd(GetType(), _ =>
 			{
-				lock (_syncRoot)
-				{
-					if (_mappingSchema == null)
-					{
-						var ms = new MappingSchema();
-
-						ConfigureMappings(ms);
-
-						_mappingSchema = ms;
-					}
-				}
-			}
-
-			return _mappingSchema;
-		}
+				var ms = new MappingSchema();
+				ConfigureMappings(ms);
+				return ms;
+			});
 
 		protected virtual void ConfigureMappings(MappingSchema mappingSchema)
 		{
