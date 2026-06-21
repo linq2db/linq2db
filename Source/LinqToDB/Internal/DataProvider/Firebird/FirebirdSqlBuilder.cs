@@ -310,7 +310,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 		}
 
 		/// <summary>
-		/// When <c>true</c>, CREATE/DROP TABLE and the inner CREATE/DROP GENERATOR/TRIGGER emit native
+		/// When <see langword="true"/>, CREATE/DROP TABLE and the inner CREATE/DROP GENERATOR/TRIGGER emit native
 		/// <c>IF [NOT] EXISTS</c> (Firebird 6+) instead of the legacy <c>rdb$</c> system-table probe.
 		/// Non-identity tables additionally skip the <c>EXECUTE BLOCK</c> wrapper altogether.
 		/// </summary>
