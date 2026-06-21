@@ -1098,7 +1098,9 @@ namespace LinqToDB.Internal.Linq.Builder
 				// with the corresponding carrier VT field access
 				var placeholderToSlot = new Dictionary<SqlPlaceholderExpression, int>(branch.Placeholders.Count);
 				for (int c = 0; c < branch.Placeholders.Count; c++)
+				{
 					placeholderToSlot[branch.Placeholders[c]] = slotMaps[b][c];
+				}
 
 				var reconstructed = branch.BuiltDetailExpr.Transform(
 					(placeholderToSlot, cp, pa, preambleIndex),
@@ -1436,13 +1438,17 @@ namespace LinqToDB.Internal.Linq.Builder
 					RunNestedCteUnionPasses<TKey, TCarrier>(carriers, childResults, setIdExtractor, keyExtractor, detailExtractors, nestedProcessingOrder0, preambleResults);
 
 					foreach (var carrier in carriers)
+					{
 						AddNonNestedCarrier<TKey, TCarrier>(carrier, childResults, setIdExtractor, keyExtractor, detailExtractors, branchCount0, nestedSetIds0, preambleResults);
+					}
 				}
 				else
 				{
 					// Single pass: no nested branches
 					foreach (var carrier in carriers)
+					{
 						AddNonNestedCarrier<TKey, TCarrier>(carrier, childResults, setIdExtractor, keyExtractor, detailExtractors, branchCount0, nestedSetIds0, preambleResults);
+					}
 				}
 
 				// Yield parent rows reconstructed with PreambleResults. When the parent contributes
@@ -1639,9 +1645,11 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			var buckets = new object?[branchCount];
 			for (int i = 0; i < branchCount; i++)
+			{
 				buckets[i] = nestedSetIds != null && nestedSetIds.Contains(i)
 					? new PreambleResult<object, object>(EqualityComparer<object>.Default)
 					: new PreambleResult<TKey, object>();
+			}
 			return buckets;
 		}
 
@@ -1744,13 +1752,17 @@ namespace LinqToDB.Internal.Linq.Builder
 					ExpressionBuilder.RunNestedCteUnionPasses<TKey, TCarrier>(carriers, results, _getSetId, _getKey, _detailExtractors, _nestedProcessingOrder, preambles);
 
 					foreach (var carrier in carriers)
+					{
 						ExpressionBuilder.AddNonNestedCarrier<TKey, TCarrier>(carrier, results, _getSetId, _getKey, _detailExtractors, _branchCount, nestedSetIds, preambles);
+					}
 				}
 				else
 				{
 					// Single pass: stream, no nested branches
 					foreach (var carrier in _query.GetResultEnumerable(dataContext, expressions, parameters, preambles))
+					{
 						ExpressionBuilder.AddNonNestedCarrier<TKey, TCarrier>(carrier, results, _getSetId, _getKey, _detailExtractors, _branchCount, nestedSetIds, preambles);
+					}
 				}
 
 				return results;
@@ -1776,13 +1788,17 @@ namespace LinqToDB.Internal.Linq.Builder
 					await using (enumerator.ConfigureAwait(false))
 					{
 						while (await enumerator.MoveNextAsync().ConfigureAwait(false))
+						{
 							carriers.Add(enumerator.Current);
+						}
 					}
 
 					ExpressionBuilder.RunNestedCteUnionPasses<TKey, TCarrier>(carriers, results, _getSetId, _getKey, _detailExtractors, _nestedProcessingOrder, preambles);
 
 					foreach (var carrier in carriers)
+					{
 						ExpressionBuilder.AddNonNestedCarrier<TKey, TCarrier>(carrier, results, _getSetId, _getKey, _detailExtractors, _branchCount, nestedSetIds, preambles);
+					}
 				}
 				else
 				{
@@ -1791,7 +1807,9 @@ namespace LinqToDB.Internal.Linq.Builder
 					await using (enumerator.ConfigureAwait(false))
 					{
 						while (await enumerator.MoveNextAsync().ConfigureAwait(false))
+						{
 							ExpressionBuilder.AddNonNestedCarrier<TKey, TCarrier>(enumerator.Current, results, _getSetId, _getKey, _detailExtractors, _branchCount, nestedSetIds, preambles);
+						}
 					}
 				}
 
