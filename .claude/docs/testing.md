@@ -25,6 +25,14 @@ dotnet test --project Tests/Tests.Playground/Tests.Playground.csproj --filter "F
 
 Reach for the full `Tests/Linq/Tests.csproj` only when the test target spans many files that would require a wide playground link, or when running a broad filter (e.g. an entire test class).
 
+**Targeted repro in a worktree — run the MTP exe directly.** `dotnet test --project <path>` can fall back to the legacy VSTest MSBuild target (error: `MSB1001: Unknown switch … --project … --target:VSTest`) when the new-`dotnet test` opt-in isn't resolved for that invocation — e.g. a relative `--project` pointing into a `git worktree` from another checkout's cwd. For a focused run, skip `dotnet test` and invoke the built test executable directly with MTP options:
+
+```bash
+.build/bin/Tests/Testing/net10.0/linq2db.Tests.exe --provider Firebird.5 --filter "FullyQualifiedName~CreateData.CreateDatabase|FullyQualifiedName~UpdateFromSubqueryRowFlattened"
+```
+
+The `--provider <Name>` flag (repeatable, comma- or space-separated) **replaces** the providers configured in `UserDataProviders.json` for that run — no file edit needed, as long as the provider's connection string is defined in the file. The harness locates `UserDataProviders.json` by walking up the directory tree from the assembly path, so a copy at the worktree root is picked up. Build the project first (`dotnet build <proj> -c Testing -f net10.0`) since you're bypassing `dotnet test`'s implicit build.
+
 **Verifying an `[ActiveIssue]` gate — filter by fixture, not test name.** A `--filter "Name~<Test>"` (or any filter that names the specific test) makes NUnit *explicitly select* it, which **forces `RunState.Explicit` / `[ActiveIssue]` tests to run** — so a freshly-gated test will appear to "still fail." To confirm a per-provider `[ActiveIssue(Configuration=…)]` gate actually skips, filter by the **fixture** (`FullyQualifiedName~<Fixture>`); the fixture filter respects the ActiveIssue category exclusion and the gated case drops out of the run count.
 
 **`[ActiveIssue]` is `AllowMultiple=false`.** You cannot stack two `[ActiveIssue]` attributes on one test. To add a provider to a test that already carries one (e.g. an existing Sybase gate), **extend the existing attribute's `Configurations`** and fold both providers' reasons into `Details` — don't add a second attribute. Single provider → `Configuration = TestProvName.AllX`; multiple → `Configurations = new[] { ProviderName.Sybase, TestProvName.AllYdb }`. (The `Configuration`/`Configurations` setters split on commas, so either form accepts grouped names.)
