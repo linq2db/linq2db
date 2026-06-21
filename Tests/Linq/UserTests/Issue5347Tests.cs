@@ -28,19 +28,28 @@ namespace Tests.UserTests
 			{
 				var factory = translationContext.ExpressionFactory;
 
-				if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[0], out var firstArg, out var firstArgError))
+				// For the instance string.Contains the haystack is the receiver (methodCall.Object) and
+				// the needle is Arguments[0]; Arguments[1] (when present) is the StringComparison.
+				if (methodCall.Object == null)
+					return null;
+
+				if (!translationContext.TranslateToSqlExpression(methodCall.Object, out var haystack, out var haystackError))
 				{
-					return firstArgError;
+					return haystackError;
 				}
 
-				if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[1], out var secondArg, out var secondArgError))
+				if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[0], out var needle, out var needleError))
 				{
-					return secondArgError;
+					return needleError;
 				}
+
+				// Cast jsonb -> text first, so the optional LOWER and the LIKE operate on text
+				// (LOWER(jsonb) doesn't exist on PostgreSQL).
+				var haystackText = factory.Cast(haystack, new DbDataType(typeof(string), DataType.Text));
 
 				if (methodCall.Arguments is
 				    [
-					    _, _, ConstantExpression
+					    _, ConstantExpression
 					    {
 						    Value: StringComparison
 						    and (
@@ -50,14 +59,12 @@ namespace Tests.UserTests
 					    }
 				    ])
 				{
-					firstArg  = factory.ToLower(firstArg);
-					secondArg = factory.ToLower(secondArg);
+					haystackText = factory.ToLower(haystackText);
+					needle       = factory.ToLower(needle);
 				}
 
-				var firstArgJsonbToTextCast = factory.Cast(firstArg, new DbDataType(typeof(string), DataType.Text));
-				var secondArgEscaped        = factory.Expression(new DbDataType(typeof(string)), "'%' || {0} || '%'", secondArg);
-
-				var predicate       = factory.LikePredicate(firstArgJsonbToTextCast, false, secondArgEscaped);
+				var needleEscaped   = factory.Expression(new DbDataType(typeof(string)), "'%' || {0} || '%'", needle);
+				var predicate       = factory.LikePredicate(haystackText, false, needleEscaped);
 				var searchCondition = factory.SearchCondition().Add(predicate);
 
 				return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, searchCondition, methodCall);
@@ -69,7 +76,7 @@ namespace Tests.UserTests
 		{
 			[PrimaryKey]
 			public int Id { get; set; }
-			[Column(DataType = DataType.Text)]
+			[Column(DataType = DataType.BinaryJson)]
 			public string Value { get; set; } = null!;
 		}
 
@@ -80,15 +87,19 @@ namespace Tests.UserTests
 
 			using var table = db.CreateLocalTable<TestClass>(new TestClass[]
 			{
-				new TestClass { Id = 1, Value = "test" },
-				new TestClass { Id = 2, Value = "EXAMPLE" },
-				new TestClass { Id = 3, Value = "sample" }
+				new TestClass { Id = 1, Value = "\"test\""    },
+				new TestClass { Id = 2, Value = "\"EXAMPLE\"" },
+				new TestClass { Id = 3, Value = "\"sample\""  }
 			});
 
 			var query = table.Where(t => t.Value.Contains("amp", StringComparison.OrdinalIgnoreCase));
 
-			// simple test that translator is used and produces expected SQL
-			query.ToSqlQuery().Sql.ShouldContain("||");
+			// The custom translator must win over the built-in predicate path (#5347): the built-in
+			// LIKE on the jsonb column fails with like_escape(jsonb, ...). Case-insensitive "amp"
+			// matches rows 2 (EXAMPLE) and 3 (sample).
+			var ids = query.OrderBy(t => t.Id).Select(t => t.Id).ToArray();
+
+			ids.ShouldBe(new[] { 2, 3 });
 		}
 	}
 }
