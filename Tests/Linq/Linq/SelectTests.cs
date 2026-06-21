@@ -1879,8 +1879,7 @@ namespace Tests.Linq
 			// System.Data.SqlClient
 			// Microsoft.Data.SqlClient
 			// SqlCe
-			using (new OptimizeForSequentialAccess(true))
-			using (var db = GetDataContext(context, interceptor: SequentialAccessCommandInterceptor.Instance, suppressSequentialAccess: true))
+			using (var db = GetDataContext(context, interceptor: SequentialAccessCommandInterceptor.Instance, suppressSequentialAccess: true, optimizeForSequentialAccess: true))
 			{
 				var q = db.Person
 					.Select(p => new
@@ -1901,9 +1900,8 @@ namespace Tests.Linq
 		public void SequentialAccessTest_Complex([DataSources] string context)
 		{
 			// fields read out-of-order, multiple times and with different types
-			using (new OptimizeForSequentialAccess(true))
 			// suppressSequentialAccess: true to avoid interceptor added twice
-			using (var db = GetDataContext(context, interceptor: SequentialAccessCommandInterceptor.Instance, suppressSequentialAccess: true))
+			using (var db = GetDataContext(context, interceptor: SequentialAccessCommandInterceptor.Instance, suppressSequentialAccess: true, optimizeForSequentialAccess: true))
 			{
 				using (Assert.EnterMultipleScope())
 				{

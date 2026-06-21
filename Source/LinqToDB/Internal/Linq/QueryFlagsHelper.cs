@@ -16,9 +16,6 @@ namespace LinqToDB.Internal.Linq
 			if (dataContext is IInterceptable<IEntityServiceInterceptor> { Interceptor: { } })
 				flags |= QueryFlags.HasEntityServiceInterceptor;
 
-			if (LinqToDB.Common.Configuration.OptimizeForSequentialAccess)
-				flags |= QueryFlags.OptimizeForSequentialAccess;
-
 			return flags;
 		}
 	}
