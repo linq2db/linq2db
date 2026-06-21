@@ -1,4 +1,6 @@
-﻿using LinqToDB;
+﻿using System.Threading.Tasks;
+
+using LinqToDB;
 using LinqToDB.Data;
 
 using NUnit.Framework;
@@ -265,6 +267,20 @@ namespace Tests.Linq
 		{
 			using var db = GetDataConnection(context);
 			FSharp.Issue5598.UpdateSetsOnlyChangedColumn(db, false);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5598")]
+		public async Task Issue5598_UpdateSetsOnlyChangedColumnAsync([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+			await FSharp.Issue5598.UpdateSetsOnlyChangedColumnAsync(db, true);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5598")]
+		public async Task Issue5598_UpdateSetsOnlyChangedColumnAsyncYdb([IncludeDataSources(false, TestProvName.AllYdb)] string context)
+		{
+			using var db = GetDataConnection(context);
+			await FSharp.Issue5598.UpdateSetsOnlyChangedColumnAsync(db, false);
 		}
 
 		[ActiveIssue]
