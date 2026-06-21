@@ -2546,11 +2546,6 @@ $function$
 		public void Issue4556Test_ByDataType([IncludeDataSources(TestProvName.AllPostgreSQL15Plus)] string context)
 		{
 			var builder = new NpgsqlDataSourceBuilder(GetConnectionString(context));
-			// Distinct Application Name => distinct connection string, so Npgsql gives this
-			// EnableDynamicJson data source its own instance instead of sharing/clashing with another
-			// test's data source for the same base connection string under parallel execution (otherwise
-			// surfaces as "VALUES types json and character varying cannot be matched").
-			builder.ConnectionStringBuilder.ApplicationName = nameof(Issue4556Test_ByDataType);
 			builder.EnableDynamicJson();
 			var dataSource = builder.Build();
 
@@ -2578,11 +2573,6 @@ $function$
 		public void Issue4556Test_ByDbType([IncludeDataSources(TestProvName.AllPostgreSQL15Plus)] string context)
 		{
 			var builder = new NpgsqlDataSourceBuilder(GetConnectionString(context));
-			// Distinct Application Name => distinct connection string, so Npgsql gives this
-			// EnableDynamicJson data source its own instance instead of sharing/clashing with another
-			// test's data source for the same base connection string under parallel execution (otherwise
-			// surfaces as "VALUES types json and character varying cannot be matched").
-			builder.ConnectionStringBuilder.ApplicationName = nameof(Issue4556Test_ByDbType);
 			builder.EnableDynamicJson();
 			var dataSource = builder.Build();
 
