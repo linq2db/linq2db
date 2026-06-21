@@ -469,9 +469,9 @@ namespace Tests.Linq
 		[Test]
 		public void CustomFunc([DataSources] string context)
 		{
-			Expressions.MapMember<Person>(p => p.FullName(), (Expression<Func<Person,string>>)(p => p.LastName + ", " + p.FirstName));
+			Expressions.MapMember<Person>(nameof(CustomFunc), p => p.FullName(), (Expression<Func<Person,string>>)(p => p.LastName + ", " + p.FirstName));
 
-			using var db = GetDataContext(context);
+			using var db = GetDataContext(context, new MappingSchema(nameof(CustomFunc)));
 			AreEqual(
 				from p in Person where p.FullName() == "Pupkin, John" select p.FullName(),
 				from p in db.Person where p.FullName() == "Pupkin, John" select p.FullName());
