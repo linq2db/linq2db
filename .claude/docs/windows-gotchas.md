@@ -225,7 +225,7 @@ When a large file is read and the `Read` tool **truncates** it (e.g. "showing li
 
 ## Iterative-build gotchas
 
-Two failure modes that surface only when running `dotnet build` (or `/test`, or `/release-verify`) more than once back-to-back in a session:
+Failure modes that surface when running `dotnet build` (or `/test`, or `/release-verify`) in a session:
 
 **`error: Access to the path '<dll>' is denied`** (typically `Microsoft.Build.Tasks.Git.dll` or another transient build dep). Root cause: VBCSCompiler / MSBuild server is holding the file from the previous build. Resolution: `dotnet build-server shutdown` (kills both servers cleanly), then re-run. The `analyzer-profile-build.ps1` script does this automatically; ad-hoc `dotnet build` invocations don't and must be done manually when the lock surfaces. Don't retry the build without the shutdown — it'll keep failing on the same file.
 
@@ -238,6 +238,8 @@ Remove-Item -Recurse -Force <repo-root>/.build/bin <repo-root>/.build/obj
 Don't try to outwait a transient disk-space failure or ignore it as "the build mostly succeeded" — compilation may have passed but the dll-copy step's failure leaves the test project unrunnable until the disk has headroom.
 
 **`MSBUILD : error MSB4166: Child node "<n>" exited prematurely`** part-way through a long `dotnet test` run — distinct from the clean `MSB3021/MSB3027` above. `dotnet test` builds before running, and that build's MSBuild child node crashes (disk / memory pressure on a near-full box), aborting the whole run mid-suite: a full YDB run truncated at ~3.3 k of ~7.9 k tests this way, twice. Fix: build the test project once on its own, then run with `dotnet test … --no-build` so the test run spawns no MSBuild child nodes (it also won't re-lock the just-built DLL, and is faster). A full suite that kept truncating then completed cleanly (7904 tests) under `--no-build`.
+
+**A backgrounded build piped to `tail`/`head` reports the pipe's exit code, not the build's.** `dotnet build … | tail -N` run via `run_in_background` surfaces a completion exit code of `0` (tail succeeded) even when the build FAILED — a red build reads as green. Don't trust the notification's exit code on a piped build; `Read` the output file and check for `Build FAILED` / `N Error(s)`. Better: don't pipe at all — let the full output persist and `Read` it (mirrors the "read the whole log, don't pipe to head/tail" rule for test runs in [`../agents/test-runner.md`](../agents/test-runner.md)). Observed verifying a PR's Release build: a failed build (6 `IDE0306` errors) reported `exit code 0` because the pipe's tail succeeded.
 
 ## Bisecting across SDK upgrades
 
