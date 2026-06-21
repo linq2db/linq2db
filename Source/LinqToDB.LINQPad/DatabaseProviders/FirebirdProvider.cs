@@ -15,6 +15,7 @@ internal sealed class FirebirdProvider : DatabaseProviderBase
 		new (ProviderName.Firebird3 , "Firebird 3"                        ),
 		new (ProviderName.Firebird4 , "Firebird 4"                        ),
 		new (ProviderName.Firebird5 , "Firebird 5"                        ),
+		new (ProviderName.Firebird6 , "Firebird 6"                        ),
 	];
 
 	public FirebirdProvider()
