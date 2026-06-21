@@ -2087,7 +2087,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 							var newOn = (ISqlExpression)Visit(on);
 
 							if (!ReferenceEquals(on, newOn))
-								(newDistinctOn ??= new List<ISqlExpression>(element.DistinctOn))[i] = newOn;
+								(newDistinctOn ??= [..element.DistinctOn])[i] = newOn;
 						}
 					}
 
@@ -2193,7 +2193,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					if (ReferenceEquals(sc, query.Select))
 					{
 						sc = new SqlSelectClause(query.Select.IsDistinct,
-							query.Select.DistinctOn != null ? new List<ISqlExpression>(query.Select.DistinctOn) : null,
+							query.Select.DistinctOn != null ? [..query.Select.DistinctOn] : null,
 							query.Select.TakeValue,
 							query.Select.TakeHints, query.Select.SkipValue,
 							query.Select.Columns.Select(c => new SqlColumn(nq, c.Expression, c.RawAlias)));

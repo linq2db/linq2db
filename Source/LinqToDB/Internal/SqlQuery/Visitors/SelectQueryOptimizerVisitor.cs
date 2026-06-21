@@ -1572,7 +1572,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				parentQuery.Select.OptimizeDistinct = parentQuery.Select.OptimizeDistinct || subQuery.Select.OptimizeDistinct;
 				parentQuery.Select.IsDistinct       = true;
 				// carry DISTINCT ON keys with the modifier so a flattened parent keeps the correct distinct semantics
-				if (subQuery.Select.DistinctOn != null)
+				if (subQuery.Select.IsDistinctOn)
 					parentQuery.Select.DistinctOn = subQuery.Select.DistinctOn;
 			}
 

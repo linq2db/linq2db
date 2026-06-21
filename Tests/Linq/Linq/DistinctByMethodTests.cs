@@ -220,6 +220,7 @@ namespace Tests.Linq
 				.Take(2);
 
 			AssertQuery(query);
+			Assert.That(query.ToSqlQuery().Sql, Does.Contain("DISTINCT ON"));
 		}
 
 		[Test]
@@ -236,6 +237,7 @@ namespace Tests.Linq
 				.Where(x => x.Amount > 100m);
 
 			AssertQuery(query);
+			Assert.That(query.ToSqlQuery().Sql, Does.Contain("DISTINCT ON"));
 		}
 
 		[Test]
@@ -254,6 +256,7 @@ namespace Tests.Linq
 				.Where(x => x.Amount > 100m);
 
 			AssertQuery(query);
+			Assert.That(query.ToSqlQuery().Sql, Does.Contain("DISTINCT ON"));
 		}
 
 		[Test]
@@ -270,6 +273,7 @@ namespace Tests.Linq
 				.DistinctBy(x => x.Name);
 
 			AssertQuery(query);
+			Assert.That(query.ToSqlQuery().Sql, Does.Contain("DISTINCT ON"));
 		}
 	}
 }

@@ -2479,7 +2479,7 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 							obj = new SqlSelectClause(isDistinct, takeValue, takeHints, skipValue, columns)
 							{
 								OptimizeDistinct = optimizeDistinct,
-								DistinctOn       = distinctOn == null ? null : new List<ISqlExpression>(distinctOn),
+								DistinctOn       = distinctOn == null ? null : [..distinctOn],
 							};
 
 							break;
