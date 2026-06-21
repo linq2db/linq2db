@@ -496,7 +496,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestFirstValueOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllDuckDB)] string context, [Values(Sql.Nulls.Ignore, Sql.Nulls.None)] Sql.Nulls nulls, [Values(1, 2)]int iteration)
+		public void TestFirstValueOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllDuckDB, TestProvName.AllPostgreSQL19Plus)] string context, [Values(Sql.Nulls.Ignore, Sql.Nulls.None)] Sql.Nulls nulls, [Values(1, 2)]int iteration)
 		{
 			using var db = GetDataContext(context);
 			var q =
@@ -519,7 +519,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestLastValueOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllDuckDB)] string context)
+		public void TestLastValueOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllDuckDB, TestProvName.AllPostgreSQL19Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			var q =
@@ -537,7 +537,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestLagOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllDuckDB)] string context)
+		public void TestLagOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllDuckDB, TestProvName.AllPostgreSQL19Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			var q =
@@ -554,7 +554,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestLeadOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllDuckDB)] string context)
+		public void TestLeadOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllDuckDB, TestProvName.AllPostgreSQL19Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			var q =
@@ -1373,7 +1373,8 @@ namespace Tests.Linq
 		[Test]
 		public void FirstLastValueIgnoreNulls([IncludeDataSources(
 			TestProvName.AllSqlServer2022Plus,
-			TestProvName.AllOracle, TestProvName.AllDuckDB)] string context)
+			TestProvName.AllOracle, TestProvName.AllDuckDB,
+			TestProvName.AllPostgreSQL19Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable(Position.TestData);
