@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Async;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Concurrency;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.Reflection;
@@ -265,5 +268,185 @@ namespace LinqToDB.Concurrency
 
 			return MakeConcurrentFilter(source, obj, objType, ed);
 		}
+
+		#region OUTPUT / RETURNING overloads
+
+		private static ColumnDescriptor[] GetOptimisticLockColumns(EntityDescriptor ed, Type objType)
+		{
+			return ed.Columns
+				.Where(c => ed.MappingSchema.GetAttribute<OptimisticLockPropertyBaseAttribute>(objType, c.MemberInfo) != null)
+				.ToArray();
+		}
+
+		private static void CopyColumns<T>(ColumnDescriptor[] columns, T from, T to)
+			where T : class
+		{
+			foreach (var cd in columns)
+				cd.MemberAccessor.SetValue(to, cd.MemberAccessor.GetValue(from));
+		}
+
+		private static async Task<List<TItem>> ToListAsync<TItem>(IAsyncEnumerable<TItem> source, CancellationToken cancellationToken)
+		{
+			var list = new List<TItem>();
+
+			await foreach (var item in source.WithCancellation(cancellationToken).ConfigureAwait(false))
+				list.Add(item);
+
+			return list;
+		}
+
+		private static int UpdateOptimisticWithRefreshCore<T>(IQueryable<T> source, IDataContext dc, T obj)
+			where T : class
+		{
+			var objType   = typeof(T);
+			var ed        = dc.MappingSchema.GetEntityDescriptor(objType, dc.Options.ConnectionOptions.OnEntityDescriptorCreated);
+			var updatable = MakeUpdateOptimistic(source, dc, obj);
+
+			if (ConcurrencyOutputSupport.IsUpdateOutputSupported(dc.ContextName))
+			{
+				// project only the inserted (post-update) row so the OLD pseudo-table isn't referenced —
+				// SQLite / PostgreSQL < 18 / Firebird < 5 expose new values only
+				var inserted = updatable.UpdateWithOutput((deleted, ins) => ins).ToList();
+
+				if (inserted.Count > 0)
+					CopyColumns(GetOptimisticLockColumns(ed, objType), inserted[0], obj);
+
+				return inserted.Count;
+			}
+
+			var count = updatable.Update();
+
+			if (count > 0)
+			{
+				var lockColumns = GetOptimisticLockColumns(ed, objType);
+
+				if (lockColumns.Length > 0)
+				{
+					var fresh = FilterByPrimaryKey(dc.GetTable<T>(), obj, ed).FirstOrDefault();
+
+					if (fresh != null)
+						CopyColumns(lockColumns, fresh, obj);
+				}
+			}
+
+			return count;
+		}
+
+		private static async Task<int> UpdateOptimisticWithRefreshCoreAsync<T>(IQueryable<T> source, IDataContext dc, T obj, CancellationToken cancellationToken)
+			where T : class
+		{
+			var objType   = typeof(T);
+			var ed        = dc.MappingSchema.GetEntityDescriptor(objType, dc.Options.ConnectionOptions.OnEntityDescriptorCreated);
+			var updatable = MakeUpdateOptimistic(source, dc, obj);
+
+			if (ConcurrencyOutputSupport.IsUpdateOutputSupported(dc.ContextName))
+			{
+				// project only the inserted (post-update) row so the OLD pseudo-table isn't referenced —
+				// SQLite / PostgreSQL < 18 / Firebird < 5 expose new values only
+				var inserted = await ToListAsync(updatable.UpdateWithOutputAsync((deleted, ins) => ins), cancellationToken).ConfigureAwait(false);
+
+				if (inserted.Count > 0)
+					CopyColumns(GetOptimisticLockColumns(ed, objType), inserted[0], obj);
+
+				return inserted.Count;
+			}
+
+			var count = await updatable.UpdateAsync(cancellationToken).ConfigureAwait(false);
+
+			if (count > 0)
+			{
+				var lockColumns = GetOptimisticLockColumns(ed, objType);
+
+				if (lockColumns.Length > 0)
+				{
+					var fresh = await FilterByPrimaryKey(dc.GetTable<T>(), obj, ed).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
+
+					if (fresh != null)
+						CopyColumns(lockColumns, fresh, obj);
+				}
+			}
+
+			return count;
+		}
+
+		/// <summary>
+		/// Performs record update using optimistic lock strategy and refreshes the optimistic-lock column(s) on
+		/// <paramref name="obj"/> with the regenerated value(s) read back from the same statement (via OUTPUT / RETURNING).
+		/// On providers without OUTPUT / RETURNING support the value is read back with a follow-up <c>SELECT</c> instead.
+		/// </summary>
+		/// <typeparam name="T">Entity type.</typeparam>
+		/// <param name="dc">Database context.</param>
+		/// <param name="obj">Entity instance to update. Receives the regenerated optimistic-lock value(s) on success.</param>
+		/// <returns>Number of updated records. <c>0</c> indicates a concurrency failure.</returns>
+		public static int UpdateOptimisticWithRefresh<T>(this IDataContext dc, T obj)
+			where T : class
+		{
+			ArgumentNullException.ThrowIfNull(dc);
+			ArgumentNullException.ThrowIfNull(obj);
+
+			return UpdateOptimisticWithRefreshCore(dc.GetTable<T>(), dc, obj);
+		}
+
+		/// <summary>
+		/// Performs record update using optimistic lock strategy asynchronously and refreshes the optimistic-lock column(s)
+		/// on <paramref name="obj"/> with the regenerated value(s) read back from the same statement (via OUTPUT / RETURNING).
+		/// On providers without OUTPUT / RETURNING support the value is read back with a follow-up <c>SELECT</c> instead.
+		/// </summary>
+		/// <typeparam name="T">Entity type.</typeparam>
+		/// <param name="dc">Database context.</param>
+		/// <param name="obj">Entity instance to update. Receives the regenerated optimistic-lock value(s) on success.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Number of updated records. <c>0</c> indicates a concurrency failure.</returns>
+		public static Task<int> UpdateOptimisticWithRefreshAsync<T>(this IDataContext dc, T obj, CancellationToken cancellationToken = default)
+			where T : class
+		{
+			ArgumentNullException.ThrowIfNull(dc);
+			ArgumentNullException.ThrowIfNull(obj);
+
+			return UpdateOptimisticWithRefreshCoreAsync(dc.GetTable<T>(), dc, obj, cancellationToken);
+		}
+
+		/// <summary>
+		/// Performs record update using optimistic lock strategy and refreshes the optimistic-lock column(s) on
+		/// <paramref name="obj"/> with the regenerated value(s) read back from the same statement (via OUTPUT / RETURNING).
+		/// On providers without OUTPUT / RETURNING support the value is read back with a follow-up <c>SELECT</c> instead.
+		/// </summary>
+		/// <typeparam name="T">Entity type.</typeparam>
+		/// <param name="source">Table source with optional filtering applied.</param>
+		/// <param name="obj">Entity instance to update. Receives the regenerated optimistic-lock value(s) on success.</param>
+		/// <returns>Number of updated records. <c>0</c> indicates a concurrency failure.</returns>
+		public static int UpdateOptimisticWithRefresh<T>(this IQueryable<T> source, T obj)
+			where T : class
+		{
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(obj);
+
+			var dc = Internals.GetDataContext(source) ?? throw new ArgumentException("Linq To DB query expected", nameof(source));
+
+			return UpdateOptimisticWithRefreshCore(source, dc, obj);
+		}
+
+		/// <summary>
+		/// Performs record update using optimistic lock strategy asynchronously and refreshes the optimistic-lock column(s)
+		/// on <paramref name="obj"/> with the regenerated value(s) read back from the same statement (via OUTPUT / RETURNING).
+		/// On providers without OUTPUT / RETURNING support the value is read back with a follow-up <c>SELECT</c> instead.
+		/// </summary>
+		/// <typeparam name="T">Entity type.</typeparam>
+		/// <param name="source">Table source with optional filtering applied.</param>
+		/// <param name="obj">Entity instance to update. Receives the regenerated optimistic-lock value(s) on success.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Number of updated records. <c>0</c> indicates a concurrency failure.</returns>
+		public static Task<int> UpdateOptimisticWithRefreshAsync<T>(this IQueryable<T> source, T obj, CancellationToken cancellationToken = default)
+			where T : class
+		{
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(obj);
+
+			var dc = Internals.GetDataContext(source) ?? throw new ArgumentException("Linq To DB query expected", nameof(source));
+
+			return UpdateOptimisticWithRefreshCoreAsync(source, dc, obj, cancellationToken);
+		}
+
+		#endregion
 	}
 }
