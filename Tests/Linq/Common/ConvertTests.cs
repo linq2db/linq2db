@@ -29,10 +29,7 @@ namespace Tests.Common
 			}
 		}
 
-		// NonParallelizable: mutates the process-global Common.Convert<TFrom,TTo> converter, which
-		// Sql.Convert / ConvertTo read across all tests - would corrupt concurrent conversion-sensitive
-		// tests under parallel execution. Restored in a finally so a failed assertion can't leak it.
-		[Test, NonParallelizable]
+		[Test]
 		public void SetExpression()
 		{
 			try
@@ -155,10 +152,7 @@ namespace Tests.Common
 			}
 		}
 
-		// NonParallelizable: mutates the process-global Common.Convert<TFrom,TTo> converter, which
-		// Sql.Convert / ConvertTo read across all tests - would corrupt concurrent conversion-sensitive
-		// tests under parallel execution. Restored in a finally so a failed assertion can't leak it.
-		[Test, NonParallelizable]
+		[Test]
 		public void ToStringTest()
 		{
 			try
