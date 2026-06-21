@@ -18,7 +18,7 @@ using Tests.Model;
 
 namespace Tests.Linq
 {
-	[TestFixture, NonParallelizable]
+	[TestFixture]
 	public class AnalyticTests : TestBase
 	{
 		[Test]
