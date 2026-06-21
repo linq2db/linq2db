@@ -134,6 +134,20 @@ namespace Tests.Linq
 			FSharp.OptionMappingPrecedence.VerifyExplicitDataTypePreserved(db);
 		}
 
+		[Test(Description = "Nullable<_> element option must not produce Nullable<Nullable<_>> (#195)")]
+		public void Option_NullableElementRoundtrip([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.OptionTypes.TestNullableElementOptionRoundtrip(db);
+		}
+
+		[Test(Description = "F# struct value-options ('T voption) are auto-mapped like reference options (#195)")]
+		public void Option_ValueOptionRoundtrip([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.OptionTypes.TestValueOptionRoundtrip(db);
+		}
+
 		[Test]
 		public void LoadSingleCLIMutable([DataSources] string context)
 		{

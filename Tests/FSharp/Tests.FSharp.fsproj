@@ -24,6 +24,7 @@
 		<Compile Include="Issue5428.fs" />
 		<Compile Include="Issue4646.fs" />
 		<Compile Include="OptionMappingPrecedence.fs" />
+		<Compile Include="OptionTypes.fs" />
 	</ItemGroup>
 
 	<ItemGroup>
