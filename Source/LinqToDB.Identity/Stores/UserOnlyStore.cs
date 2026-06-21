@@ -221,7 +221,7 @@ namespace LinqToDB.Identity
 		}
 
 		/// <inheritdoc cref="ReplaceClaimAsync(TUser, Claim, Claim, CancellationToken)"/>
-		public override async Task ReplaceClaimAsync(TUser user, Claim claim, Claim newClaim, CancellationToken cancellationToken = default)
+		public override Task ReplaceClaimAsync(TUser user, Claim claim, Claim newClaim, CancellationToken cancellationToken = default)
 		{
 			ThrowIfDisposed();
 
@@ -229,12 +229,11 @@ namespace LinqToDB.Identity
 			ArgumentNullException.ThrowIfNull(claim);
 			ArgumentNullException.ThrowIfNull(newClaim);
 
-			await UserClaims
+			return UserClaims
 				.Where(uc => uc.UserId.Equals(user.Id) && uc.ClaimValue == claim.Value && uc.ClaimType == claim.Type)
 				.Set(_ => _.ClaimValue, newClaim.Value)
 				.Set(_ => _.ClaimType, newClaim.Type)
-				.UpdateAsync(cancellationToken)
-				.ConfigureAwait(false);
+				.UpdateAsync(cancellationToken);
 		}
 
 		/// <inheritdoc cref="RemoveClaimsAsync(TUser, IEnumerable{Claim}, CancellationToken)"/>
@@ -290,15 +289,14 @@ namespace LinqToDB.Identity
 		}
 
 		/// <inheritdoc cref="RemoveLoginAsync(TUser, string, string, CancellationToken)"/>
-		public override async Task RemoveLoginAsync(TUser user, string loginProvider, string providerKey, CancellationToken cancellationToken = default)
+		public override Task RemoveLoginAsync(TUser user, string loginProvider, string providerKey, CancellationToken cancellationToken = default)
 		{
 			ThrowIfDisposed();
 
 			ArgumentNullException.ThrowIfNull(user);
 
-			await UserLogins
-				.DeleteAsync(userLogin => userLogin.UserId.Equals(user.Id) && userLogin.LoginProvider == loginProvider && userLogin.ProviderKey == providerKey, cancellationToken)
-				.ConfigureAwait(false);
+			return UserLogins
+				.DeleteAsync(userLogin => userLogin.UserId.Equals(user.Id) && userLogin.LoginProvider == loginProvider && userLogin.ProviderKey == providerKey, cancellationToken);
 		}
 
 		/// <inheritdoc cref="GetLoginsAsync(TUser, CancellationToken)"/>
@@ -377,15 +375,14 @@ namespace LinqToDB.Identity
 		}
 
 		/// <inheritdoc cref="RemoveTokenAsync(TUser, string, string, CancellationToken)"/>
-		public override async Task RemoveTokenAsync(TUser user, string loginProvider, string name, CancellationToken cancellationToken)
+		public override Task RemoveTokenAsync(TUser user, string loginProvider, string name, CancellationToken cancellationToken)
 		{
 			ThrowIfDisposed();
 
 			ArgumentNullException.ThrowIfNull(user);
 
-			await UserTokens
-				.DeleteAsync(_ => _.UserId.Equals(user.Id) && _.LoginProvider == loginProvider && _.Name == name, cancellationToken)
-				.ConfigureAwait(false);
+			return UserTokens
+				.DeleteAsync(_ => _.UserId.Equals(user.Id) && _.LoginProvider == loginProvider && _.Name == name, cancellationToken);
 		}
 
 		/// <inheritdoc cref="GetTokenAsync(TUser, string, string, CancellationToken)"/>

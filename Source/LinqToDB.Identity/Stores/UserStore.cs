@@ -192,7 +192,7 @@ namespace LinqToDB.Identity
 		/// <param name="normalizedRoleName">The role to remove.</param>
 		/// <param name="cancellationToken">The <see cref="CancellationToken"/> used to propagate notifications that the operation should be canceled.</param>
 		/// <returns>The <see cref="Task"/> that represents the asynchronous operation.</returns>
-		public virtual async Task RemoveFromRoleAsync(TUser user, string normalizedRoleName, CancellationToken cancellationToken = default)
+		public virtual Task RemoveFromRoleAsync(TUser user, string normalizedRoleName, CancellationToken cancellationToken = default)
 		{
 			ThrowIfDisposed();
 
@@ -205,7 +205,7 @@ namespace LinqToDB.Identity
 				where r.NormalizedName == normalizedRoleName && ur.UserId.Equals(user.Id)
 				select ur;
 
-			await q.DeleteAsync(cancellationToken).ConfigureAwait(false);
+			return q.DeleteAsync(cancellationToken);
 		}
 
 		/// <summary>

@@ -17,7 +17,7 @@ namespace Tests.Identity
 	public class IdentityStoreNegativeTests : IdentityTestData
 	{
 		[Test]
-		public async Task NullArguments([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void NullArguments([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using var setup  = GetSetup(context);
 			using var schema = new Schema(setup);
@@ -35,8 +35,6 @@ namespace Tests.Identity
 			Assert.ThrowsAsync<ArgumentNullException>(() => users.GetUsersForClaimAsync(null!));
 			Assert.ThrowsAsync<ArgumentNullException>(() => roles.CreateAsync(null!));
 			Assert.ThrowsAsync<ArgumentNullException>(() => roles.AddClaimAsync(NewRole("r"), null!));
-
-			await Task.CompletedTask;
 		}
 
 		[Test]
@@ -89,7 +87,7 @@ namespace Tests.Identity
 		}
 
 		[Test]
-		public async Task DisposedStore([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void DisposedStore([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using var setup  = GetSetup(context);
 			using var schema = new Schema(setup);
@@ -100,8 +98,6 @@ namespace Tests.Identity
 
 			Assert.ThrowsAsync<ObjectDisposedException>(() => store.CreateAsync(NewUser("zed")));
 			Assert.ThrowsAsync<ObjectDisposedException>(() => store.FindByIdAsync("any"));
-
-			await Task.CompletedTask;
 		}
 
 		[Test]
@@ -137,8 +133,6 @@ namespace Tests.Identity
 			Assert.DoesNotThrowAsync(() => store.RemoveLoginAsync(user, "missing", "missing"));
 			Assert.DoesNotThrowAsync(() => store.RemoveTokenAsync(user, "missing", "missing", default));
 			Assert.DoesNotThrowAsync(() => store.RemoveClaimsAsync(user, new[] { new Claim("none", "none") }));
-
-			await Task.CompletedTask;
 		}
 	}
 }

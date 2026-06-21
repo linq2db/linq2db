@@ -194,17 +194,16 @@ namespace LinqToDB.Identity
 		}
 
 		/// <inheritdoc cref="RemoveClaimAsync(TRole, Claim, CancellationToken)"/>
-		public override async Task RemoveClaimAsync(TRole role, Claim claim, CancellationToken cancellationToken = default)
+		public override Task RemoveClaimAsync(TRole role, Claim claim, CancellationToken cancellationToken = default)
 		{
 			ThrowIfDisposed();
 
 			ArgumentNullException.ThrowIfNull(role);
 			ArgumentNullException.ThrowIfNull(claim);
 
-			await RoleClaims
+			return RoleClaims
 				.Where(rc => rc.RoleId.Equals(role.Id) && rc.ClaimValue == claim.Value && rc.ClaimType == claim.Type)
-				.DeleteAsync(cancellationToken)
-				.ConfigureAwait(false);
+				.DeleteAsync(cancellationToken);
 		}
 	}
 }
