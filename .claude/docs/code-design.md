@@ -132,3 +132,7 @@ The library is `<Nullable>enable</Nullable>` and type-safe by design; lean into 
 ### Oversized files carry an agent-comprehension cost, not just a style one
 
 Very large source files (multi-thousand-line builders, optimizers, AST visitors) are harder for an agent to reason about correctly: comprehension and edit accuracy degrade as a single file grows, and a partial read invites the "looks done but missed a branch" failure. This is **not** a mandate to split existing files — the column-aligned, large-file house style is intentional and churn for its own sake is unwelcome (see **Column-aligned formatting is intentional**). It's a tie-breaker: when genuinely new, separable logic is added, prefer a new focused file / partial over growing an already-huge one; and when a fix inside a giant file needs the surrounding method understood, read the whole method, not a window. A heuristic, never a metric to enforce.
+
+### Read back only the columns you consume
+
+When reading values back from a modifying statement — `OUTPUT` / `RETURNING`, or a follow-up `SELECT` — project **only** the columns the caller will actually use, built from the target column set (`new T { col = src.col, … }`); don't select the whole row and then discard all but a few. Over-fetching is wasteful and obscures intent.
