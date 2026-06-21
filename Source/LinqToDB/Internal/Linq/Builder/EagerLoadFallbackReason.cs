@@ -31,5 +31,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		/// <summary>CteUnion: the batch succeeded for some eager loads but did not include this one (e.g. a branch with zero detail placeholders was skipped).</summary>
 		BatchCacheMiss,
+
+		/// <summary>CteUnion: a nested eager load's correlation columns could not be detected, so the nested branch CTE can't be built.</summary>
+		NestedCorrelationNotFound,
 	}
 }

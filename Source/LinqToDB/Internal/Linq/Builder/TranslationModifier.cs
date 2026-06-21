@@ -11,8 +11,8 @@ namespace LinqToDB.Internal.Linq.Builder
 		public static readonly TranslationModifier Default = new();
 
 		public TranslationModifier(
-			bool                 inlineParameters    = false,
-			Type[]?              ignoreQueryFilters  = null,
+			bool                  inlineParameters     = false,
+			Type[]?               ignoreQueryFilters   = null,
 			EagerLoadingStrategy? eagerLoadingStrategy = null)
 		{
 			InlineParameters      = inlineParameters;

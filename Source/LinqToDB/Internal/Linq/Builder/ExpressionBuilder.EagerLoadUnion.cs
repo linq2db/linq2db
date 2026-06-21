@@ -383,7 +383,10 @@ namespace LinqToDB.Internal.Linq.Builder
 						CollectDependencies(curCtx, nestedExpandedSeq, nestedDeps);
 
 						if (nestedDeps.Count == 0)
-							throw new LinqToDBException("CteUnion: Cannot determine nested correlation — no dependencies found.");
+						{
+							state.FallbackReason = EagerLoadFallbackReason.NestedCorrelationNotFound;
+							return null;
+						}
 
 						var nestedMainKeys = new Expression[nestedDeps.Count];
 						{
@@ -1076,6 +1079,70 @@ namespace LinqToDB.Internal.Linq.Builder
 			return results;
 		}
 
+		/// <summary>
+		/// Builds the per-branch detail extractors that reconstruct each child detail from a carrier
+		/// ValueTuple slot, resolving any nested preamble lookups. Shared by the preamble
+		/// (BuildCteUnionPreamble) and inline (SetupCteUnionQuery) execution modes.
+		/// </summary>
+		Func<TCarrier, object?[]?, object>[] BuildCteUnionDetailExtractors<TCarrier>(CteUnionBranch[] branches, int[][] slotMaps, int preambleIndex)
+		{
+			var detailExtractors = new Func<TCarrier, object?[]?, object>[branches.Length];
+
+			for (int b = 0; b < branches.Length; b++)
+			{
+				var branch = branches[b];
+				var cp     = Expression.Parameter(typeof(TCarrier), "vt");
+				var pa     = Expression.Parameter(typeof(object?[]), "pa");
+
+				// Reconstruct using builtDetailExpr: replace each SqlPlaceholderExpression
+				// with the corresponding carrier VT field access
+				var placeholderToSlot = new Dictionary<SqlPlaceholderExpression, int>(branch.Placeholders.Count);
+				for (int c = 0; c < branch.Placeholders.Count; c++)
+					placeholderToSlot[branch.Placeholders[c]] = slotMaps[b][c];
+
+				var reconstructed = branch.BuiltDetailExpr.Transform(
+					(placeholderToSlot, cp, pa, preambleIndex),
+					static (ctx, e) =>
+					{
+						if (e is SqlPlaceholderExpression spe && ctx.placeholderToSlot.TryGetValue(spe, out var slotIdx))
+						{
+							var access = AccessValueTupleField(ctx.cp, slotIdx);
+
+							if (access.Type != spe.ConvertType)
+								access = Expression.Convert(access, spe.ConvertType);
+
+							return access;
+						}
+
+						// Resolve NestedPreambleLookupExpression to a preambleResults array lookup
+						if (e is NestedPreambleLookupExpression nple)
+						{
+							return Expression.Convert(
+								Expression.ArrayIndex(
+									Expression.Convert(
+										Expression.ArrayIndex(ctx.pa, ExpressionInstances.Int32(ctx.preambleIndex)),
+										typeof(object?[])),
+									ExpressionInstances.Int32(nple.NestedSetId)),
+								nple.PreambleResultType);
+						}
+
+						return e;
+					});
+
+				// Finalize SqlGenericConstructorExpression nodes into compilable MemberInit/New
+				reconstructed = FinalizeConstructors(branch.DetailContext, reconstructed);
+				reconstructed = reconstructed.Transform(pa, static (ctx, e) => e == PreambleParam ? ctx : e);
+
+				if (reconstructed.Type != branch.DetailType)
+					reconstructed = Expression.Convert(reconstructed, branch.DetailType);
+
+				detailExtractors[b] = Expression.Lambda<Func<TCarrier, object?[]?, object>>(
+					Expression.Convert(reconstructed, typeof(object)), cp, pa).CompileExpression();
+			}
+
+			return detailExtractors;
+		}
+
 		static readonly MethodInfo _buildCteUnionPreambleMethodInfo =
 			typeof(ExpressionBuilder).GetMethod(nameof(BuildCteUnionPreamble), BindingFlags.Instance | BindingFlags.NonPublic)
 			?? throw new InvalidOperationException();
@@ -1095,7 +1162,14 @@ namespace LinqToDB.Internal.Linq.Builder
 			query.SetParametersAccessors(_parametersContext.CurrentSqlParameters.ToList());
 
 			if (!BuildQuery(query, combinedSequence, queryParameter, ref preambles!, []))
-				throw new LinqToDBException("Failed to build CteUnion combined query.");
+			{
+				// Surface the specific translation error per eager load instead of a generic throw, matching
+				// BuildPreambleQueryAttached / BuildKeyedQueryPreambleAttached so the real cause is reported.
+				var errorResult = new Dictionary<Expression, Expression>(branches.Length);
+				foreach (var branch in branches)
+					errorResult[branch.EagerLoad.SequenceExpression] = query.ErrorExpression!;
+				return errorResult;
+			}
 
 			// Build setId extractor
 			var carrierParam   = Expression.Parameter(typeof(TCarrier), "vt");
@@ -1109,60 +1183,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var keyExtractor = Expression.Lambda<Func<TCarrier, TKey>>(keyAccess, carrierParam).CompileExpression();
 
 			// Build detail extractors per branch — reconstruct detail from carrier VT slots
-			var detailExtractors = new Func<TCarrier, object?[]?, object>[branches.Length];
-
-			for (int b = 0; b < branches.Length; b++)
-			{
-				var branch = branches[b];
-				var cp     = Expression.Parameter(typeof(TCarrier), "vt");
-				var pa     = Expression.Parameter(typeof(object?[]), "pa");
-
-				// Reconstruct using builtDetailExpr: replace each SqlPlaceholderExpression
-				// with the corresponding carrier VT field access
-				var placeholderToSlot = new Dictionary<SqlPlaceholderExpression, int>(branch.Placeholders.Count);
-				for (int c = 0; c < branch.Placeholders.Count; c++)
-					placeholderToSlot[branch.Placeholders[c]] = slotMaps[b][c];
-
-				var preambleIdx = preambles.Count;
-				var reconstructed = branch.BuiltDetailExpr.Transform(
-					(placeholderToSlot, cp, pa, preambleIdx),
-					static (ctx, e) =>
-					{
-						if (e is SqlPlaceholderExpression spe && ctx.placeholderToSlot.TryGetValue(spe, out var slotIdx))
-						{
-							var access = AccessValueTupleField(ctx.cp, slotIdx);
-
-							if (access.Type != spe.ConvertType)
-								access = Expression.Convert(access, spe.ConvertType);
-
-							return access;
-						}
-
-						// Resolve NestedPreambleLookupExpression — mirrors SetupCteUnionQuery
-						if (e is NestedPreambleLookupExpression nple)
-						{
-							return Expression.Convert(
-								Expression.ArrayIndex(
-									Expression.Convert(
-										Expression.ArrayIndex(ctx.pa, ExpressionInstances.Int32(ctx.preambleIdx)),
-										typeof(object?[])),
-									ExpressionInstances.Int32(nple.NestedSetId)),
-								nple.PreambleResultType);
-						}
-
-						return e;
-					});
-
-				// Finalize SqlGenericConstructorExpression nodes into compilable MemberInit/New
-				reconstructed = FinalizeConstructors(branch.DetailContext, reconstructed);
-				reconstructed = reconstructed.Transform(pa, static (ctx, e) => e == PreambleParam ? ctx : e);
-
-				if (reconstructed.Type != branch.DetailType)
-					reconstructed = Expression.Convert(reconstructed, branch.DetailType);
-
-				detailExtractors[b] = Expression.Lambda<Func<TCarrier, object?[]?, object>>(
-					Expression.Convert(reconstructed, typeof(object)), cp, pa).CompileExpression();
-			}
+			var detailExtractors = BuildCteUnionDetailExtractors<TCarrier>(branches, slotMaps, preambles.Count);
 
 			// Create preamble — compute nested processing order (deepest first)
 			int[]? nestedProcessingOrder = null;
@@ -1326,62 +1347,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				keyAccess = Expression.Convert(keyAccess, typeof(TKey));
 			var keyExtractor = Expression.Lambda<Func<TCarrier, TKey>>(keyAccess, carrierParam).CompileExpression();
 
-			// 3. Build detail extractors per child branch.
-			// Extractors take (carrier, preambleResults) to support nested eager loads
-			// whose PreambleParam references are resolved at runtime.
-			var detailExtractors = new Func<TCarrier, object?[]?, object>[branches.Length];
-
-			for (int b = 0; b < branches.Length; b++)
-			{
-				var branch = branches[b];
-				var cp     = Expression.Parameter(typeof(TCarrier), "vt");
-				var pa     = Expression.Parameter(typeof(object?[]), "pa");
-
-				var placeholderToSlot = new Dictionary<SqlPlaceholderExpression, int>(branch.Placeholders.Count);
-				for (int c = 0; c < branch.Placeholders.Count; c++)
-					placeholderToSlot[branch.Placeholders[c]] = info.SlotMaps[b][c];
-
-				var preambleIdx = preambleStartIndex;
-				var reconstructed = branch.BuiltDetailExpr.Transform(
-					(placeholderToSlot, cp, pa, preambleIdx),
-					static (ctx, e) =>
-					{
-						if (e is SqlPlaceholderExpression spe && ctx.placeholderToSlot.TryGetValue(spe, out var slotIdx))
-						{
-							var access = AccessValueTupleField(ctx.cp, slotIdx);
-							if (access.Type != spe.ConvertType)
-								access = Expression.Convert(access, spe.ConvertType);
-							return access;
-						}
-
-						// Resolve NestedPreambleLookupExpression:
-						// Access: ((PreambleResult<TKey, object>)((object?[])pa[preambleIdx])[nestedSetId])
-						// pa = preambleResults array
-						// preambleResults[preambleIdx] = childResults (object?[])
-						// childResults[nestedSetId] = PreambleResult for that nested branch
-						if (e is NestedPreambleLookupExpression nple)
-						{
-							return Expression.Convert(
-								Expression.ArrayIndex(
-									Expression.Convert(
-										Expression.ArrayIndex(ctx.pa, ExpressionInstances.Int32(ctx.preambleIdx)),
-										typeof(object?[])),
-									ExpressionInstances.Int32(nple.NestedSetId)),
-								nple.PreambleResultType);
-						}
-
-						return e;
-					});
-
-				reconstructed = FinalizeConstructors(branch.DetailContext, reconstructed);
-				reconstructed = reconstructed.Transform(pa, static (ctx, e) => e == PreambleParam ? ctx : e);
-
-				if (reconstructed.Type != branch.DetailType)
-					reconstructed = Expression.Convert(reconstructed, branch.DetailType);
-
-				detailExtractors[b] = Expression.Lambda<Func<TCarrier, object?[]?, object>>(
-					Expression.Convert(reconstructed, typeof(object)), cp, pa).CompileExpression();
-			}
+						// 3. Build detail extractors per child branch (carrier slots -> detail; nested lookups resolved).
+			var detailExtractors = BuildCteUnionDetailExtractors<TCarrier>(branches, info.SlotMaps, preambleStartIndex);
 
 			// 4. Build parent row reconstruction: replace SqlPlaceholderExpressions in the main
 			//    expression with carrier slot access by positional matching.
@@ -1454,14 +1421,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			query.GetResultEnumerable = (db, expr, ps, preambleResults) =>
 			{
 				// Create PreambleResults for child branches
-				var childResults = new object?[branchCount0];
-				for (int i = 0; i < branchCount0; i++)
-				{
-					if (nestedSetIds0 != null && nestedSetIds0.Contains(i))
-						childResults[i] = new PreambleResult<object, object>(EqualityComparer<object>.Default);
-					else
-						childResults[i] = new PreambleResult<TKey, object>();
-				}
+				var childResults = CreateCteUnionBuckets<TKey>(branchCount0, nestedSetIds0);
 
 				// Store in the preambles array so PreambleResult.GetList calls work
 				if (preambleResults != null && preambleIdx0 < preambleResults.Length)
@@ -1472,46 +1432,17 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				if (nestedProcessingOrder0 != null)
 				{
-					// Multi-pass: process nested branches in reverse depth order (deepest first)
-					foreach (var nestedSetId in nestedProcessingOrder0)
-					{
-						foreach (var carrier in carriers)
-						{
-							var setId = setIdExtractor(carrier);
-							if (setId == nestedSetId)
-							{
-								var key    = (object)keyExtractor(carrier)!;
-								var detail = detailExtractors[setId](carrier, preambleResults);
-								((PreambleResult<object, object>)childResults[setId]!).Add(key, detail);
-							}
-						}
-					}
+					// Multi-pass: nested branches (deepest first), then non-nested
+					RunNestedCteUnionPasses<TKey, TCarrier>(carriers, childResults, setIdExtractor, keyExtractor, detailExtractors, nestedProcessingOrder0, preambleResults);
 
-					// Non-nested branches
 					foreach (var carrier in carriers)
-					{
-						var setId = setIdExtractor(carrier);
-						if (setId >= 0 && setId < branchCount0 && !nestedSetIds0!.Contains(setId))
-						{
-							var key    = keyExtractor(carrier);
-							var detail = detailExtractors[setId](carrier, preambleResults);
-							((PreambleResult<TKey, object>)childResults[setId]!).Add(key, detail);
-						}
-					}
+						AddNonNestedCarrier<TKey, TCarrier>(carrier, childResults, setIdExtractor, keyExtractor, detailExtractors, branchCount0, nestedSetIds0, preambleResults);
 				}
 				else
 				{
 					// Single pass: no nested branches
 					foreach (var carrier in carriers)
-					{
-						var setId = setIdExtractor(carrier);
-						if (setId >= 0 && setId < branchCount0)
-						{
-							var key    = keyExtractor(carrier);
-							var detail = detailExtractors[setId](carrier, preambleResults);
-							((PreambleResult<TKey, object>)childResults[setId]!).Add(key, detail);
-						}
-					}
+						AddNonNestedCarrier<TKey, TCarrier>(carrier, childResults, setIdExtractor, keyExtractor, detailExtractors, branchCount0, nestedSetIds0, preambleResults);
 				}
 
 				// Yield parent rows reconstructed with PreambleResults. When the parent contributes
@@ -1701,6 +1632,69 @@ namespace LinqToDB.Internal.Linq.Builder
 			public int                    NestedBranchIndex;
 		}
 
+		// Creates the per-branch PreambleResult bucket array for a CteUnion result set: nested branches
+		// use an object-keyed bucket, the rest a TKey-keyed one. Shared by the inline + preamble modes.
+		static object?[] CreateCteUnionBuckets<TKey>(int branchCount, HashSet<int>? nestedSetIds)
+			where TKey : notnull
+		{
+			var buckets = new object?[branchCount];
+			for (int i = 0; i < branchCount; i++)
+				buckets[i] = nestedSetIds != null && nestedSetIds.Contains(i)
+					? new PreambleResult<object, object>(EqualityComparer<object>.Default)
+					: new PreambleResult<TKey, object>();
+			return buckets;
+		}
+
+		// Multi-pass dispatch: buckets each carrier whose setId is a nested branch, processing nested
+		// branches deepest-first so their PreambleResults are populated before parent detail extractors
+		// look them up. Shared by the inline and preamble execution modes.
+		static void RunNestedCteUnionPasses<TKey, TCarrier>(
+			List<TCarrier>                       carriers,
+			object?[]                            buckets,
+			Func<TCarrier, int>                  getSetId,
+			Func<TCarrier, TKey>                 getKey,
+			Func<TCarrier, object?[]?, object>[] detailExtractors,
+			int[]                                nestedProcessingOrder,
+			object?[]?                           preambleResults)
+			where TKey : notnull
+		{
+			foreach (var nestedSetId in nestedProcessingOrder)
+			{
+				foreach (var carrier in carriers)
+				{
+					var setId = getSetId(carrier);
+					if (setId == nestedSetId)
+					{
+						var key    = (object)getKey(carrier)!;
+						var detail = detailExtractors[setId](carrier, preambleResults);
+						((PreambleResult<object, object>)buckets[setId]!).Add(key, detail);
+					}
+				}
+			}
+		}
+
+		// Dispatches a single carrier into its non-nested branch bucket. Serves both the single-pass
+		// loops (nestedSetIds null) and the non-nested sweep of the multi-pass path (nested excluded).
+		static void AddNonNestedCarrier<TKey, TCarrier>(
+			TCarrier                             carrier,
+			object?[]                            buckets,
+			Func<TCarrier, int>                  getSetId,
+			Func<TCarrier, TKey>                 getKey,
+			Func<TCarrier, object?[]?, object>[] detailExtractors,
+			int                                  branchCount,
+			HashSet<int>?                        nestedSetIds,
+			object?[]?                           preambleResults)
+			where TKey : notnull
+		{
+			var setId = getSetId(carrier);
+			if (setId >= 0 && setId < branchCount && (nestedSetIds == null || !nestedSetIds.Contains(setId)))
+			{
+				var key    = getKey(carrier);
+				var detail = detailExtractors[setId](carrier, preambleResults);
+				((PreambleResult<TKey, object>)buckets[setId]!).Add(key, detail);
+			}
+		}
+
 		sealed class CteUnionPreamble<TKey, TCarrier> : Preamble
 			where TKey : notnull
 		{
@@ -1734,13 +1728,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				var nestedSetIds = _nestedProcessingOrder != null ? new HashSet<int>(_nestedProcessingOrder) : null;
 
-				var results = new object?[_branchCount];
-				for (int i = 0; i < _branchCount; i++)
-				{
-					results[i] = nestedSetIds != null && nestedSetIds.Contains(i)
-						? new PreambleResult<object, object>(EqualityComparer<object>.Default)
-						: new PreambleResult<TKey, object>();
-				}
+				var results = ExpressionBuilder.CreateCteUnionBuckets<TKey>(_branchCount, nestedSetIds);
 
 				// Store results in preambles early so nested branch detail extractors
 				// can access them via preambles[_preambleIndex]
@@ -1749,48 +1737,20 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				if (_nestedProcessingOrder != null)
 				{
-					// Multi-pass: buffer all carriers, process nested branches in reverse depth
-					// order (deepest first), then non-nested. This ensures nested PreambleResults
-					// are populated before parent detail extractors try to look them up.
+					// Multi-pass: buffer all carriers, nested branches (deepest first), then non-nested,
+					// so nested PreambleResults are populated before parent extractors look them up.
 					var carriers = _query.GetResultEnumerable(dataContext, expressions, parameters, preambles).ToList();
 
-					foreach (var nestedSetId in _nestedProcessingOrder)
-					{
-						foreach (var carrier in carriers)
-						{
-							var setId = _getSetId(carrier);
-							if (setId == nestedSetId)
-							{
-								var key    = (object)_getKey(carrier)!;
-								var detail = _detailExtractors[setId](carrier, preambles);
-								((PreambleResult<object, object>)results[setId]!).Add(key, detail);
-							}
-						}
-					}
+					ExpressionBuilder.RunNestedCteUnionPasses<TKey, TCarrier>(carriers, results, _getSetId, _getKey, _detailExtractors, _nestedProcessingOrder, preambles);
 
 					foreach (var carrier in carriers)
-					{
-						var setId = _getSetId(carrier);
-						if (setId >= 0 && setId < _branchCount && !nestedSetIds!.Contains(setId))
-						{
-							var key    = _getKey(carrier);
-							var detail = _detailExtractors[setId](carrier, preambles);
-							((PreambleResult<TKey, object>)results[setId]!).Add(key, detail);
-						}
-					}
+						ExpressionBuilder.AddNonNestedCarrier<TKey, TCarrier>(carrier, results, _getSetId, _getKey, _detailExtractors, _branchCount, nestedSetIds, preambles);
 				}
 				else
 				{
+					// Single pass: stream, no nested branches
 					foreach (var carrier in _query.GetResultEnumerable(dataContext, expressions, parameters, preambles))
-					{
-						var setId = _getSetId(carrier);
-						if (setId >= 0 && setId < _branchCount)
-						{
-							var key    = _getKey(carrier);
-							var detail = _detailExtractors[setId](carrier, preambles);
-							((PreambleResult<TKey, object>)results[setId]!).Add(key, detail);
-						}
-					}
+						ExpressionBuilder.AddNonNestedCarrier<TKey, TCarrier>(carrier, results, _getSetId, _getKey, _detailExtractors, _branchCount, nestedSetIds, preambles);
 				}
 
 				return results;
@@ -1801,13 +1761,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				var nestedSetIds = _nestedProcessingOrder != null ? new HashSet<int>(_nestedProcessingOrder) : null;
 
-				var results = new object?[_branchCount];
-				for (int i = 0; i < _branchCount; i++)
-				{
-					results[i] = nestedSetIds != null && nestedSetIds.Contains(i)
-						? new PreambleResult<object, object>(EqualityComparer<object>.Default)
-						: new PreambleResult<TKey, object>();
-				}
+				var results = ExpressionBuilder.CreateCteUnionBuckets<TKey>(_branchCount, nestedSetIds);
 
 				// Store results in preambles early so nested branch detail extractors
 				// can access them via preambles[_preambleIndex]
@@ -1825,30 +1779,10 @@ namespace LinqToDB.Internal.Linq.Builder
 							carriers.Add(enumerator.Current);
 					}
 
-					foreach (var nestedSetId in _nestedProcessingOrder)
-					{
-						foreach (var carrier in carriers)
-						{
-							var setId = _getSetId(carrier);
-							if (setId == nestedSetId)
-							{
-								var key    = (object)_getKey(carrier)!;
-								var detail = _detailExtractors[setId](carrier, preambles);
-								((PreambleResult<object, object>)results[setId]!).Add(key, detail);
-							}
-						}
-					}
+					ExpressionBuilder.RunNestedCteUnionPasses<TKey, TCarrier>(carriers, results, _getSetId, _getKey, _detailExtractors, _nestedProcessingOrder, preambles);
 
 					foreach (var carrier in carriers)
-					{
-						var setId = _getSetId(carrier);
-						if (setId >= 0 && setId < _branchCount && !nestedSetIds!.Contains(setId))
-						{
-							var key    = _getKey(carrier);
-							var detail = _detailExtractors[setId](carrier, preambles);
-							((PreambleResult<TKey, object>)results[setId]!).Add(key, detail);
-						}
-					}
+						ExpressionBuilder.AddNonNestedCarrier<TKey, TCarrier>(carrier, results, _getSetId, _getKey, _detailExtractors, _branchCount, nestedSetIds, preambles);
 				}
 				else
 				{
@@ -1857,16 +1791,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					await using (enumerator.ConfigureAwait(false))
 					{
 						while (await enumerator.MoveNextAsync().ConfigureAwait(false))
-						{
-							var carrier = enumerator.Current;
-							var setId   = _getSetId(carrier);
-							if (setId >= 0 && setId < _branchCount)
-							{
-								var key    = _getKey(carrier);
-								var detail = _detailExtractors[setId](carrier, preambles);
-								((PreambleResult<TKey, object>)results[setId]!).Add(key, detail);
-							}
-						}
+							ExpressionBuilder.AddNonNestedCarrier<TKey, TCarrier>(enumerator.Current, results, _getSetId, _getKey, _detailExtractors, _branchCount, nestedSetIds, preambles);
 					}
 				}
 
