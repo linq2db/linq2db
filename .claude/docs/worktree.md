@@ -27,6 +27,16 @@ Editing the main repo's copy for a worktree-scoped run is the wrong place — it
 2. **Run** — `/test run <filter> worktree <abs-worktree-path>`: `/test` passes `repoRoot=<worktree>` to `test-runner`, which reads that `UserDataProviders.json` and runs `dotnet test --project <worktree>/<project>` so the worktree's code is built. Prepend `CreateData.CreateDatabase` to the filter only when the test needs the full schema — a self-contained `CreateLocalTable` test doesn't, which avoids rebuilding the target DB.
 3. **Scratch** — a `<Compile Include>` link added to the worktree's `Tests.Playground.csproj` for a fast Playground build, and the seeded `UserDataProviders.json`, are scratch: keep them out of any commit (stage with explicit pathspec; see [`agent-rules.md`](agent-rules.md) → *Git commit rules*).
 
+## Regenerating API baselines from a worktree
+
+`/api-baselines` has **no repo-root override** (unlike `/test`) — it deletes and regenerates `Source/**/CompatibilitySuppressions.xml` against the session's cwd, which is the *primary* clone. So when the API-surface change under review lives on a branch checked out in a worktree, invoking the skill regenerates the **wrong** clone's baselines (primary clone's branch, which lacks the change) and produces a meaningless or empty diff.
+
+Run the skill's underlying tool command in the worktree instead — it's the sanctioned action the skill wraps, not a hand-edit (which stays banned, per [`agent-rules.md`](agent-rules.md) → *Agent guardrails* → **Never hand-edit API baseline files**):
+
+1. From the worktree (`Set-Location <worktree>` so `global.json` resolves), run `dotnet pack <Source/Project>/<Project>.csproj -c Release -p:ApiCompatGenerateSuppressionFile=true` for each affected project. `ApiCompatGenerateSuppressionFile=true` overwrites the file with all current suppressions, so the git diff is the minimal delta for the change.
+2. Do the `LinqToDB.Internal.*` policy review by hand on the diff (the skill's value-add): any non-`Internal.*` suppression added is a public-contract break needing explicit user sign-off.
+3. A **clean** (empty) diff means the change isn't ApiCompat-flagged — no baseline update is needed. (Surfaced on #5639: a shipped public static field→property regen was a no-op — see auto-memory `project_apicompat_field_to_property_noop`.)
+
 ## Removing a worktree blocked by file locks
 
 `git worktree remove --force <path>` may fail with `error: failed to delete '<path>': Permission denied` when the worktree was recently built — VBCSCompiler / MSBuild server still holds file handles inside `.build/bin/` even though git's internal worktree registration was successfully dropped (`git worktree list` no longer shows it).
