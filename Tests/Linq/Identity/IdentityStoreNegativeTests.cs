@@ -17,7 +17,7 @@ namespace Tests.Identity
 	public class IdentityStoreNegativeTests : IdentityTestData
 	{
 		[Test]
-		public void NullArguments([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void NullArguments([DataSources] string context)
 		{
 			// no schema needed: every assertion throws during argument validation before touching the database.
 			using var setup = GetSetup(context);
@@ -38,7 +38,7 @@ namespace Tests.Identity
 		}
 
 		[Test]
-		public async Task RoleNameValidation([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public async Task RoleNameValidation([DataSources] string context)
 		{
 			using var setup  = GetSetup(context);
 			using var schema = new Schema(setup);
@@ -58,7 +58,7 @@ namespace Tests.Identity
 		}
 
 		[Test]
-		public async Task ConcurrencyFailure([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public async Task ConcurrencyFailure([DataSources] string context)
 		{
 			using var setup  = GetSetup(context);
 			using var schema = new Schema(setup);
@@ -87,7 +87,7 @@ namespace Tests.Identity
 		}
 
 		[Test]
-		public void DisposedStore([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void DisposedStore([DataSources] string context)
 		{
 			// no schema needed: the disposed-guard throws before any database access.
 			using var setup = GetSetup(context);
@@ -101,7 +101,7 @@ namespace Tests.Identity
 		}
 
 		[Test]
-		public async Task NotFoundReturnsNull([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public async Task NotFoundReturnsNull([DataSources] string context)
 		{
 			using var setup  = GetSetup(context);
 			using var schema = new Schema(setup);
@@ -119,7 +119,7 @@ namespace Tests.Identity
 		}
 
 		[Test]
-		public async Task IdempotentRemovals([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public async Task IdempotentRemovals([DataSources] string context)
 		{
 			using var setup  = GetSetup(context);
 			using var schema = new Schema(setup);

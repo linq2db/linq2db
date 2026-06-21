@@ -53,7 +53,7 @@ namespace Tests.Identity
 		}
 
 		[Test]
-		public async Task UserOnlyStore_NoRoles([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public async Task UserOnlyStore_NoRoles([DataSources] string context)
 		{
 			using var setup  = GetSetup(context);
 			using var schema = new Schema(setup);
@@ -74,7 +74,7 @@ namespace Tests.Identity
 		}
 
 		[Test]
-		public async Task IdentityDataContext_StoreOps([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public async Task IdentityDataContext_StoreOps([DataSources(false)] string context)
 		{
 			// DDL via a connection; store operations over the DataContext-based identity context (covers its
 			// AddMappingSchema ctor path). DataContext is a direct context, so this case is direct-only.
@@ -92,7 +92,7 @@ namespace Tests.Identity
 
 		// Regression for LinqToDB.Identity#18: non-string key types (Guid here, int below) are supported.
 		[Test]
-		public async Task GuidKeys([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public async Task GuidKeys([DataSources] string context)
 		{
 			using var setup  = new IdentityDataConnection<IdentityUser<Guid>, IdentityRole<Guid>, Guid>(new DataOptions().UseConfiguration(context.StripRemote()));
 			using var schema = new KeyedSchema<IdentityUser<Guid>, IdentityRole<Guid>, Guid>(setup);
@@ -115,7 +115,7 @@ namespace Tests.Identity
 		}
 
 		[Test]
-		public async Task IntKeys_IdentityGenerated([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public async Task IntKeys_IdentityGenerated([DataSources] string context)
 		{
 			using var setup  = new IdentityDataConnection<IdentityUser<int>, IdentityRole<int>, int>(new DataOptions().UseConfiguration(context.StripRemote()));
 			using var schema = new KeyedSchema<IdentityUser<int>, IdentityRole<int>, int>(setup);
@@ -142,7 +142,7 @@ namespace Tests.Identity
 
 		// Regression for LinqToDB.Identity#12: the stores resolve through DI (AddLinqToDBStores) and drive a UserManager.
 		[Test]
-		public async Task DependencyInjection_ResolvesStores_AndUserManagerRoundTrips([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public async Task DependencyInjection_ResolvesStores_AndUserManagerRoundTrips([DataSources(false)] string context)
 		{
 			// DI / UserManager is provider-independent — direct-only.
 			using var setup  = GetSetup(context);
@@ -183,7 +183,7 @@ namespace Tests.Identity
 		// Regression for LinqToDB.Identity#21: a UserManager over an int-keyed user works end to end, and the
 		// framework's string-typed FindByIdAsync resolves through the store's string->int key conversion.
 		[Test]
-		public async Task DependencyInjection_IntKeys_UserManagerRoundTrips([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public async Task DependencyInjection_IntKeys_UserManagerRoundTrips([DataSources(false)] string context)
 		{
 			using var setup  = new IdentityDataConnection<IdentityUser<int>, IdentityRole<int>, int>(new DataOptions().UseConfiguration(context.StripRemote()));
 			using var schema = new KeyedSchema<IdentityUser<int>, IdentityRole<int>, int>(setup);

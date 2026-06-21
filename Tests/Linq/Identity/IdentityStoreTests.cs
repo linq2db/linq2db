@@ -19,7 +19,7 @@ namespace Tests.Identity
 		// Regression for LinqToDB.Identity#15: default mappings must produce the canonical AspNet* table names,
 		// not the generic CLR type name (which used to leak as e.g. "IdentityUserClaim`1").
 		[Test]
-		public void DefaultMappingsUseAspNetTableNames([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void DefaultMappingsUseAspNetTableNames([DataSources(false)] string context)
 		{
 			using var setup = GetSetup(context);
 			var ms = setup.MappingSchema;
@@ -37,7 +37,7 @@ namespace Tests.Identity
 		}
 
 		[Test]
-		public async Task UserCrud([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public async Task UserCrud([DataSources] string context)
 		{
 			using var setup  = GetSetup(context);
 			using var schema = new Schema(setup);
@@ -69,7 +69,7 @@ namespace Tests.Identity
 		}
 
 		[Test]
-		public async Task UserProfileFields([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public async Task UserProfileFields([DataSources] string context)
 		{
 			using var setup  = GetSetup(context);
 			using var schema = new Schema(setup);
@@ -103,7 +103,7 @@ namespace Tests.Identity
 		}
 
 		[Test]
-		public async Task UserLockout([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public async Task UserLockout([DataSources] string context)
 		{
 			using var setup  = GetSetup(context);
 			using var schema = new Schema(setup);
@@ -132,7 +132,7 @@ namespace Tests.Identity
 		}
 
 		[Test]
-		public async Task AuthenticatorKeyAndRecoveryCodes([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public async Task AuthenticatorKeyAndRecoveryCodes([DataSources] string context)
 		{
 			using var setup  = GetSetup(context);
 			using var schema = new Schema(setup);
@@ -155,7 +155,7 @@ namespace Tests.Identity
 		}
 
 		[Test]
-		public async Task UserClaims([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public async Task UserClaims([DataSources] string context)
 		{
 			using var setup  = GetSetup(context);
 			using var schema = new Schema(setup);
@@ -179,7 +179,7 @@ namespace Tests.Identity
 		}
 
 		[Test]
-		public async Task UserRoles([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public async Task UserRoles([DataSources] string context)
 		{
 			using var setup  = GetSetup(context);
 			using var schema = new Schema(setup);
@@ -207,7 +207,7 @@ namespace Tests.Identity
 		}
 
 		[Test]
-		public async Task NavigationAssociations([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public async Task NavigationAssociations([DataSources] string context)
 		{
 			using var setup  = GetSetup(context);
 			using var schema = new Schema(setup);
@@ -240,7 +240,7 @@ namespace Tests.Identity
 		}
 
 		[Test]
-		public async Task LoginsAndTokens([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public async Task LoginsAndTokens([DataSources] string context)
 		{
 			using var setup  = GetSetup(context);
 			using var schema = new Schema(setup);
@@ -270,7 +270,7 @@ namespace Tests.Identity
 		}
 
 		[Test]
-		public async Task RoleCrudAndClaims([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public async Task RoleCrudAndClaims([DataSources] string context)
 		{
 			using var setup  = GetSetup(context);
 			using var schema = new Schema(setup);
@@ -306,7 +306,7 @@ namespace Tests.Identity
 
 #if NET10_0_OR_GREATER
 		[Test]
-		public async Task Passkeys([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public async Task Passkeys([DataSources] string context)
 		{
 			using var setup  = GetSetup(context);
 			using var schema = new Schema(setup);

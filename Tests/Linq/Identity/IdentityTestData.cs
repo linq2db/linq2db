@@ -13,6 +13,17 @@ namespace Tests.Identity
 	// and entity factories. DDL always runs on a direct connection - it can't go over the remote path.
 	public abstract class IdentityTestData : TestBase
 	{
+		// ASP.NET Core Identity entities carry non-deterministic values - GUID Ids (IdentityUser/IdentityRole default
+		// ctors), the security stamp, and the optimistic-concurrency stamp are all freshly generated per run. The SQL
+		// is structurally identical between the direct and remote (LinqService) paths; only those random parameter
+		// VALUES differ run-to-run, so the direct-vs-remote SQL baseline comparison can never match. These fixtures
+		// verify store behaviour, not SQL text - opt out of baseline capture (matches the DisableBaseline precedents).
+		public override void OnBeforeTest()
+		{
+			base.OnBeforeTest();
+			CustomTestContext.Get().Set(CustomTestContext.BASELINE_DISABLED, true);
+		}
+
 		// Creates the default string-key AspNet* schema and drops it on dispose. Drop-then-create is idempotent,
 		// covering a prior (possibly crashed) run that left tables in the reused database file.
 		protected sealed class Schema : IDisposable
