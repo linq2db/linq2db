@@ -1463,15 +1463,16 @@ namespace LinqToDB.Internal.SqlProvider
 
 					for (int i = 0; i < row.Values.Length; i++)
 					{
-						var rowValue = row.Values[i];
-						// Use the projected SqlColumn (not its unwrapped Expression) so the
-						// reference goes through updateSubquery's Select projection. Otherwise
-						// the subsequent OptimizeQueries pass sees the apply's projection as
-						// unused, eliminates the entire apply, and leaves the setters pointing
-						// at inner-table SqlField instances that no longer exist in the tree.
-						var updateValue = (ISqlExpression)updateSubquery.Select.Columns[i];
+						// Clone the subquery per column, projecting just that column, so each setter is
+						// its own correlated scalar subquery. A single shared subquery attached to the
+						// UPDATE FROM is removed by the optimizer as unused (its columns live in the SET,
+						// not the SELECT), which leaves the setters dangling on a dropped table.
+						var clonedSubquery = CloneQuery(updateSubquery, updateStatement.Update.Table, out _);
+						var keepColumn     = clonedSubquery.Select.Columns[i];
+						clonedSubquery.Select.Columns.Clear();
+						clonedSubquery.Select.Columns.Add(keepColumn);
 
-						var newUpdateItem = new SqlSetExpression(rowValue, updateValue);
+						var newUpdateItem = new SqlSetExpression(row.Values[i], clonedSubquery);
 						setters.Add(newUpdateItem);
 					}
 
