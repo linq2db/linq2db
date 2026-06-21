@@ -192,9 +192,9 @@ namespace Tests.Linq
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void MapMember1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
-			Expressions.MapMember<Parent,int>(p => Count1(p), p => p.Children.Count(c => c.ChildID > 0));
+			Expressions.MapMember<Parent,int>(nameof(MapMember1), p => Count1(p), p => p.Children.Count(c => c.ChildID > 0));
 
-			using var db = GetDataContext(context);
+			using var db = GetDataContext(context, new MappingSchema(nameof(MapMember1)));
 			AreEqual(Parent.Select(Count1), db.Parent.Select(p => Count1(p)));
 		}
 
@@ -204,9 +204,9 @@ namespace Tests.Linq
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void MapMember2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
-			Expressions.MapMember<Parent,int,int>((p,id) => Count2(p, id), (p, id) => p.Children.Count(c => c.ChildID > id));
+			Expressions.MapMember<Parent,int,int>(nameof(MapMember2), (p,id) => Count2(p, id), (p, id) => p.Children.Count(c => c.ChildID > id));
 
-			using var db = GetDataContext(context);
+			using var db = GetDataContext(context, new MappingSchema(nameof(MapMember2)));
 			AreEqual(Parent.Select(p => Count2(p, 1)), db.Parent.Select(p => Count2(p, 1)));
 		}
 
@@ -216,11 +216,11 @@ namespace Tests.Linq
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void MapMember3([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
-			Expressions.MapMember<Parent,int,int>((p,id) => Count3(p, id), (p, id) => p.Children.Count(c => c.ChildID > id) + 2);
+			Expressions.MapMember<Parent,int,int>(nameof(MapMember3), (p,id) => Count3(p, id), (p, id) => p.Children.Count(c => c.ChildID > id) + 2);
 
 			var n = 2;
 
-			using var db = GetDataContext(context);
+			using var db = GetDataContext(context, new MappingSchema(nameof(MapMember3)));
 			AreEqual(Parent.Select(p => Count3(p, n)), db.Parent.Select(p => Count3(p, n)));
 		}
 
@@ -588,9 +588,9 @@ namespace Tests.Linq
 		[Test]
 		public void ToLowerInvariantTest([DataSources] string context)
 		{
-			Expressions.MapMember((string s) => s.ToLowerInvariant(), s => s.ToLower());
+			Expressions.MapMember(nameof(ToLowerInvariantTest), (string s) => s.ToLowerInvariant(), s => s.ToLower());
 
-			using var db = GetDataContext(context);
+			using var db = GetDataContext(context, new MappingSchema(nameof(ToLowerInvariantTest)));
 			AreEqual(
 				   Doctor.Where(p => p.Taxonomy.ToLowerInvariant() == "psychiatry").Select(p => p.Taxonomy.ToLower()),
 				db.Doctor.Where(p => p.Taxonomy.ToLowerInvariant() == "psychiatry").Select(p => p.Taxonomy.ToLower()));
