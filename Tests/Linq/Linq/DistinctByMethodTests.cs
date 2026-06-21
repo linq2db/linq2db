@@ -184,7 +184,9 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 
-			Assert.That(query.ToSqlQuery().Sql, Does.Contain("DISTINCT ON"));
+			// Both composite-key columns must reach the ON list: a bare Does.Contain("DISTINCT ON") would still
+			// pass if one key column were dropped (DISTINCT ON (Id) instead of DISTINCT ON (Id, Name)).
+			Assert.That(query.ToSqlQuery().Sql, Does.Match(@"DISTINCT ON \([^)]*\bId\b[^)]*,[^)]*\bName\b[^)]*\)"));
 		}
 
 		[Test]
@@ -197,6 +199,26 @@ namespace Tests.Linq
 				.OrderBy(t => t.Group)
 				.ThenBy(t => t.Date)
 				.DistinctBy(x => x.Group);
+
+			AssertQuery(query);
+
+			var sql = query.ToSqlQuery().Sql;
+			Assert.That(sql, Does.Not.Contain("DISTINCT ON"));
+			Assert.That(sql, Does.Contain("ROW_NUMBER"));
+		}
+
+		[Test]
+		public void DistinctByConstantKeyFallsBackToRowNumber([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllDuckDB)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(TestData.Seed());
+
+			// A constant key collects to an empty ON list, which has no valid DISTINCT ON form — even on a
+			// DISTINCT-ON-capable provider it must fall back to the ROW_NUMBER emulation, not emit DISTINCT ON ().
+			var query = table
+				.OrderBy(t => t.Group)
+				.ThenBy(t => t.Date)
+				.DistinctBy(x => 1);
 
 			AssertQuery(query);
 
@@ -273,7 +295,9 @@ namespace Tests.Linq
 				.DistinctBy(x => x.Name);
 
 			AssertQuery(query);
-			Assert.That(query.ToSqlQuery().Sql, Does.Contain("DISTINCT ON"));
+			// Both stages must survive as separate DISTINCT ON queries: a bare Does.Contain would pass even if the
+			// optimizer collapsed the two nested DISTINCT ONs into one.
+			Assert.That(query.ToSqlQuery().Sql.Split("DISTINCT ON").Length - 1, Is.EqualTo(2));
 		}
 	}
 }
