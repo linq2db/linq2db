@@ -861,6 +861,28 @@ namespace Tests.DataProvider
 			Assert.That(sql, Does.Contain("\"Int128\"     INT128,"));
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5483")]
+		public void TestFb6NativeIfExists([IncludeDataSources(false, TestProvName.AllFirebird6Plus)] string context)
+		{
+			using var db = new TestDataConnection(context);
+
+			db.DropTable<TestDropTable>(throwExceptionIfNotExists: false);
+
+			db.CreateTable<TestDropTable>(tableOptions: TableOptions.CreateIfNotExists);
+			var createSql = db.LastQuery!;
+
+			db.DropTable<TestDropTable>(tableOptions: TableOptions.DropIfExists, throwExceptionIfNotExists: false);
+			var dropSql = db.LastQuery!;
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(createSql, Does.Contain("IF NOT EXISTS").IgnoreCase);
+				Assert.That(createSql, Does.Not.Contain("EXECUTE BLOCK").IgnoreCase);
+				Assert.That(dropSql,   Does.Contain("DROP TABLE IF EXISTS").IgnoreCase);
+				Assert.That(dropSql,   Does.Not.Contain("EXECUTE BLOCK").IgnoreCase);
+			}
+		}
+
 		[Test]
 		public void TestFb4TypesParametersAndLiterals(
 			[IncludeDataSources(false, TestProvName.AllFirebird4Plus)] string context,
