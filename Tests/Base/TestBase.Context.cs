@@ -52,15 +52,16 @@ namespace Tests
 
 		protected ITestDataContext GetDataContext(
 			string configuration,
-			MappingSchema? mappingSchema  = null,
-			bool testLinqService          = true,
-			IInterceptor? interceptor     = null,
-			bool suppressSequentialAccess = false,
-			RemoteTransport transport     = DefaultTransport)
+			MappingSchema? mappingSchema     = null,
+			bool testLinqService             = true,
+			IInterceptor? interceptor        = null,
+			bool suppressSequentialAccess    = false,
+			bool optimizeForSequentialAccess = false,
+			RemoteTransport transport        = DefaultTransport)
 		{
 			if (!configuration.IsRemote())
 			{
-				return GetDataConnection(configuration, mappingSchema, interceptor, suppressSequentialAccess: suppressSequentialAccess);
+				return GetDataConnection(configuration, mappingSchema, interceptor, suppressSequentialAccess: suppressSequentialAccess, optimizeForSequentialAccess: optimizeForSequentialAccess);
 			}
 
 			var str = configuration.StripRemote();
@@ -69,7 +70,11 @@ namespace Tests
 				GetRemoteContextOptionsBuilder(mappingSchema, str, opt => opt.UseFSharp()),
 				(conf, ms) =>
 				{
-					var dc = new DataConnection(conf);
+					var isSequentialAccess = optimizeForSequentialAccess || conf?.IsAnyOf(TestProvName.AllSqlServerSequentialAccess) == true;
+
+					var dc = isSequentialAccess && conf != null
+						? new DataConnection(new DataOptions().UseConfiguration(conf).UseOptimizeForSequentialAccess(true))
+						: new DataConnection(conf);
 
 					if (conf?.IsAnyOf(TestProvName.AllSqlServerSequentialAccess) == true)
 					{
@@ -156,6 +161,8 @@ namespace Tests
 				//if (!suppressSequentialAccess)
 				options = options.UseInterceptor(SequentialAccessCommandInterceptor.Instance);
 
+				options = options.UseOptimizeForSequentialAccess(true);
+
 				options = options.UseMappingSchema(options.ConnectionOptions.MappingSchema == null ? _sequentialAccessSchema : MappingSchema.CombineSchemas(options.ConnectionOptions.MappingSchema, _sequentialAccessSchema));
 			}
 
@@ -183,7 +190,8 @@ namespace Tests
 			MappingSchema? ms = null,
 			IInterceptor? interceptor = null,
 			IRetryPolicy? retryPolicy = null,
-			bool suppressSequentialAccess = false)
+			bool suppressSequentialAccess = false,
+			bool optimizeForSequentialAccess = false)
 		{
 			if (configuration.IsRemote())
 			{
@@ -206,6 +214,9 @@ namespace Tests
 
 				options = options.UseMappingSchema(ms == null ? _sequentialAccessSchema : MappingSchema.CombineSchemas(ms, _sequentialAccessSchema));
 			}
+
+			if (optimizeForSequentialAccess || configuration.IsAnyOf(TestProvName.AllSqlServerSequentialAccess))
+				options = options.UseOptimizeForSequentialAccess(true);
 
 			if (interceptor != null)
 				options = options.UseInterceptor(interceptor);
