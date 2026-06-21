@@ -14,6 +14,10 @@ The main flow for translating LINQ to SQL:
 
 5. **Data Access** (`Source/LinqToDB/Data/`) — `DataConnection` (holds connection open until dispose) and `DataContext` (opens/closes per query). `BulkCopy*` classes, `CommandInfo`, retry policies.
 
+### Async DML extension methods build the *sync* expression
+
+The async DML extensions (`UpdateAsync` / `InsertAsync` / `DeleteAsync` / … in `Source/LinqToDB/LinqExtensions/`) build their expression tree from the **synchronous** method infos — e.g. `UpdateAsync(predicate, setter)` (`LinqExtensions.Update.cs`) emits `Methods.LinqToDB.Update.UpdatePredicateSetter` (the sync info) and then calls `currentSource.ExecuteAsync<int>(expr, token)`. Async-ness is a property of the *execution*, not of the expression node. The `*Async` method infos (`UpdateSetterAsync` / `UpdatePredicateSetterAsync`, `Methods.cs`) are defined and exported in `PublicAPI.Shipped.txt` but are **not** used to build any expression. Consequence: a query-expression interceptor or translator that matches the sync `Update`/`Insert`/`Delete` infos already covers the async overloads — there is no separate async expression shape to handle. (This was a real reviewer trap on PR #5627: a finding claimed the async F# record-copy update path was unhandled, reasoning from the existence of the `*Async` infos without checking the call site.)
+
 ## Other Key Directories
 
 - `Source/LinqToDB/Mapping/` — Attribute-based and fluent mapping configuration (`[Table]`, `[Column]`, `FluentMappingBuilder`)

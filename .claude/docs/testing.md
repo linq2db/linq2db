@@ -141,6 +141,13 @@ public class MyTest : TestBase
 - **No `#region` blocks or banner comments in test methods.** Don't wrap added tests in a new `#region`, and don't introduce `//----` banner comment blocks. Keep explanatory comments as plain `//` lines **inside** the method body next to the code they describe — and don't relocate existing in-body comments out to the method/attribute level when making an unrelated edit.
 - **Mapping attributes live in the `LinqToDB` root namespace.** `ExpressionMethodAttribute` (and peers) are `LinqToDB.*`, not `LinqToDB.Mapping.*` — a test/playground file needs `using LinqToDB;` in addition to `using LinqToDB.Mapping;`, otherwise `[ExpressionMethod(...)]` fails with `CS0246`. (`ColumnAttribute`, `TableAttribute`, `InheritanceMappingAttribute` are in `LinqToDB.Mapping`.)
 
+## F# tests
+
+F# regression tests live in `Tests/FSharp/*.fs` (compiled into `Tests.FSharp.fsproj`) and are driven from C# fixtures in `Tests/Linq/Linq/FSharpTests.cs`.
+
+- **Call `nonNull` on nullable-returning members before instance methods.** The F# project has nullness enabled, so a member typed `string | null` (e.g. `DataConnection.LastQuery`) trips `FS3261` ("nullness warning … do not have compatible nullability") — a **warning-as-error** — the moment you call an instance method on it (`.Substring`, `.IndexOf`, …). Bind through the F# 9 `nonNull` helper first: `let sql = nonNull db.LastQuery`. Passing the raw value to an API that accepts `obj`/`object` (e.g. an NUnit `Assert.That(x, constraint)`) does **not** trip it — only instance-member access does. (`nonNull` is the established idiom — `FSharpQueryExpressionInterceptor.fs` uses it.) This is F#-compiler-specific, so the fast `Testing` (net10.0) build **does** catch it — unlike the `net462`/`netstandard2.0` BCL-availability traps.
+- **`task { … }` returns `Task<unit>`; upcast to `Task`** with `:> System.Threading.Tasks.Task` when a C# fixture awaits a non-generic `Task`.
+
 ## Tests that pass but catch nothing
 
 A test that compiles and goes green is not yet a regression guard — it has to be able to go **red** on the bug it targets. The recurring ways an AI-drafted test silently guards nothing:
