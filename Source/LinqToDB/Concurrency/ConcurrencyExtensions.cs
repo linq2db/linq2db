@@ -284,6 +284,34 @@ namespace LinqToDB.Concurrency
 				cd.MemberAccessor.SetValue(to, cd.MemberAccessor.GetValue(from));
 		}
 
+		// new T { lockCol = <source>.lockCol, ... } — only the optimistic-lock column(s), nothing else
+		private static MemberInitExpression InitLockColumns(Type objType, ColumnDescriptor[] lockColumns, Expression source)
+		{
+			var bindings = new MemberBinding[lockColumns.Length];
+
+			for (var i = 0; i < lockColumns.Length; i++)
+				bindings[i] = Expression.Bind(lockColumns[i].MemberInfo, Expression.MakeMemberAccess(source, lockColumns[i].MemberInfo));
+
+			return Expression.MemberInit(Expression.New(objType), bindings);
+		}
+
+		// (deleted, inserted) => new T { lockCol = inserted.lockCol, ... } — OUTPUT projection of new lock value(s)
+		private static Expression<Func<T, T, T>> LockColumnsOutput<T>(Type objType, ColumnDescriptor[] lockColumns)
+		{
+			var deleted  = Expression.Parameter(objType, "deleted");
+			var inserted = Expression.Parameter(objType, "inserted");
+
+			return Expression.Lambda<Func<T, T, T>>(InitLockColumns(objType, lockColumns, inserted), deleted, inserted);
+		}
+
+		// x => new T { lockCol = x.lockCol, ... } — SELECT projection of the lock value(s) for the fallback read-back
+		private static Expression<Func<T, T>> LockColumnsSelector<T>(Type objType, ColumnDescriptor[] lockColumns)
+		{
+			var x = Expression.Parameter(objType, "x");
+
+			return Expression.Lambda<Func<T, T>>(InitLockColumns(objType, lockColumns, x), x);
+		}
+
 		private static async Task<List<TItem>> ToListAsync<TItem>(IAsyncEnumerable<TItem> source, CancellationToken cancellationToken)
 		{
 			var list = new List<TItem>();
@@ -297,35 +325,35 @@ namespace LinqToDB.Concurrency
 		private static int UpdateOptimisticWithRefreshCore<T>(IQueryable<T> source, IDataContext dc, T obj)
 			where T : class
 		{
-			var objType   = typeof(T);
-			var ed        = dc.MappingSchema.GetEntityDescriptor(objType, dc.Options.ConnectionOptions.OnEntityDescriptorCreated);
-			var updatable = MakeUpdateOptimistic(source, dc, obj);
+			var objType     = typeof(T);
+			var ed          = dc.MappingSchema.GetEntityDescriptor(objType, dc.Options.ConnectionOptions.OnEntityDescriptorCreated);
+			var updatable   = MakeUpdateOptimistic(source, dc, obj);
+			var lockColumns = GetOptimisticLockColumns(ed, objType);
+
+			// no optimistic-lock column -> nothing to refresh, behave like a plain optimistic update
+			if (lockColumns.Length == 0)
+				return updatable.Update();
 
 			if (dc.SqlProviderFlags.IsUpdateOutputSupported)
 			{
-				// project only the inserted (post-update) row so the OLD pseudo-table isn't referenced —
-				// SQLite / PostgreSQL < 18 / Firebird < 5 expose new values only
-				var inserted = updatable.UpdateWithOutput((deleted, ins) => ins).ToList();
+				// output only the regenerated lock column(s); referencing the inserted (new) row keeps it valid on
+				// new-values-only providers (SQLite / PostgreSQL < 18 / Firebird < 5)
+				var refreshed = updatable.UpdateWithOutput(LockColumnsOutput<T>(objType, lockColumns)).ToList();
 
-				if (inserted.Count > 0)
-					CopyColumns(GetOptimisticLockColumns(ed, objType), inserted[0], obj);
+				if (refreshed.Count > 0)
+					CopyColumns(lockColumns, refreshed[0], obj);
 
-				return inserted.Count;
+				return refreshed.Count;
 			}
 
 			var count = updatable.Update();
 
 			if (count > 0)
 			{
-				var lockColumns = GetOptimisticLockColumns(ed, objType);
+				var fresh = FilterByPrimaryKey(dc.GetTable<T>(), obj, ed).Select(LockColumnsSelector<T>(objType, lockColumns)).FirstOrDefault();
 
-				if (lockColumns.Length > 0)
-				{
-					var fresh = FilterByPrimaryKey(dc.GetTable<T>(), obj, ed).FirstOrDefault();
-
-					if (fresh != null)
-						CopyColumns(lockColumns, fresh, obj);
-				}
+				if (fresh != null)
+					CopyColumns(lockColumns, fresh, obj);
 			}
 
 			return count;
@@ -334,35 +362,35 @@ namespace LinqToDB.Concurrency
 		private static async Task<int> UpdateOptimisticWithRefreshCoreAsync<T>(IQueryable<T> source, IDataContext dc, T obj, CancellationToken cancellationToken)
 			where T : class
 		{
-			var objType   = typeof(T);
-			var ed        = dc.MappingSchema.GetEntityDescriptor(objType, dc.Options.ConnectionOptions.OnEntityDescriptorCreated);
-			var updatable = MakeUpdateOptimistic(source, dc, obj);
+			var objType     = typeof(T);
+			var ed          = dc.MappingSchema.GetEntityDescriptor(objType, dc.Options.ConnectionOptions.OnEntityDescriptorCreated);
+			var updatable   = MakeUpdateOptimistic(source, dc, obj);
+			var lockColumns = GetOptimisticLockColumns(ed, objType);
+
+			// no optimistic-lock column -> nothing to refresh, behave like a plain optimistic update
+			if (lockColumns.Length == 0)
+				return await updatable.UpdateAsync(cancellationToken).ConfigureAwait(false);
 
 			if (dc.SqlProviderFlags.IsUpdateOutputSupported)
 			{
-				// project only the inserted (post-update) row so the OLD pseudo-table isn't referenced —
-				// SQLite / PostgreSQL < 18 / Firebird < 5 expose new values only
-				var inserted = await ToListAsync(updatable.UpdateWithOutputAsync((deleted, ins) => ins), cancellationToken).ConfigureAwait(false);
+				// output only the regenerated lock column(s); referencing the inserted (new) row keeps it valid on
+				// new-values-only providers (SQLite / PostgreSQL < 18 / Firebird < 5)
+				var refreshed = await ToListAsync(updatable.UpdateWithOutputAsync(LockColumnsOutput<T>(objType, lockColumns)), cancellationToken).ConfigureAwait(false);
 
-				if (inserted.Count > 0)
-					CopyColumns(GetOptimisticLockColumns(ed, objType), inserted[0], obj);
+				if (refreshed.Count > 0)
+					CopyColumns(lockColumns, refreshed[0], obj);
 
-				return inserted.Count;
+				return refreshed.Count;
 			}
 
 			var count = await updatable.UpdateAsync(cancellationToken).ConfigureAwait(false);
 
 			if (count > 0)
 			{
-				var lockColumns = GetOptimisticLockColumns(ed, objType);
+				var fresh = await FilterByPrimaryKey(dc.GetTable<T>(), obj, ed).Select(LockColumnsSelector<T>(objType, lockColumns)).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
 
-				if (lockColumns.Length > 0)
-				{
-					var fresh = await FilterByPrimaryKey(dc.GetTable<T>(), obj, ed).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
-
-					if (fresh != null)
-						CopyColumns(lockColumns, fresh, obj);
-				}
+				if (fresh != null)
+					CopyColumns(lockColumns, fresh, obj);
 			}
 
 			return count;
