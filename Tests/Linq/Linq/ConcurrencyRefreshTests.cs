@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Concurrency;
-using LinqToDB.Internal.Concurrency;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -194,9 +193,9 @@ namespace Tests.Linq
 			Assert.That(record.Stamp, Is.EqualTo(stale), "entity must not be touched on concurrency failure");
 		}
 
-		// Guard test: keep ConcurrencyOutputSupport's declared provider set honest. It probes the provider's actual
-		// UPDATE OUTPUT support and fails when reality diverges from the declaration, signalling that the support set
-		// (and any required handling in ConcurrencyExtensions) needs updating.
+		// Guard test: keep SqlProviderFlags.IsUpdateOutputSupported honest. It probes the provider's actual UPDATE
+		// OUTPUT support and fails when reality diverges from the declared flag, signalling that the provider's flag
+		// (set in its DataProvider) needs updating.
 		[Test]
 		public void OutputSupportSurface([DataSources] string context)
 		{
@@ -207,8 +206,8 @@ namespace Tests.Linq
 
 			Assert.That(
 				actual,
-				Is.EqualTo(ConcurrencyOutputSupport.IsUpdateOutputSupported(db.ContextName)),
-				$"UPDATE OUTPUT support for '{db.ContextName}' diverged from ConcurrencyOutputSupport.IsUpdateOutputSupported; update the declared set and any handling in ConcurrencyExtensions.");
+				Is.EqualTo(db.SqlProviderFlags.IsUpdateOutputSupported),
+				$"UPDATE OUTPUT support for '{context}' diverged from SqlProviderFlags.IsUpdateOutputSupported; update the provider's flag.");
 		}
 
 		private static bool ProbeUpdateOutput(IDataContext db)

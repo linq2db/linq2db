@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 
 using LinqToDB.Async;
 using LinqToDB.Internal.Common;
-using LinqToDB.Internal.Concurrency;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.Reflection;
@@ -302,7 +301,7 @@ namespace LinqToDB.Concurrency
 			var ed        = dc.MappingSchema.GetEntityDescriptor(objType, dc.Options.ConnectionOptions.OnEntityDescriptorCreated);
 			var updatable = MakeUpdateOptimistic(source, dc, obj);
 
-			if (ConcurrencyOutputSupport.IsUpdateOutputSupported(dc.ContextName))
+			if (dc.SqlProviderFlags.IsUpdateOutputSupported)
 			{
 				// project only the inserted (post-update) row so the OLD pseudo-table isn't referenced —
 				// SQLite / PostgreSQL < 18 / Firebird < 5 expose new values only
@@ -339,7 +338,7 @@ namespace LinqToDB.Concurrency
 			var ed        = dc.MappingSchema.GetEntityDescriptor(objType, dc.Options.ConnectionOptions.OnEntityDescriptorCreated);
 			var updatable = MakeUpdateOptimistic(source, dc, obj);
 
-			if (ConcurrencyOutputSupport.IsUpdateOutputSupported(dc.ContextName))
+			if (dc.SqlProviderFlags.IsUpdateOutputSupported)
 			{
 				// project only the inserted (post-update) row so the OLD pseudo-table isn't referenced —
 				// SQLite / PostgreSQL < 18 / Firebird < 5 expose new values only

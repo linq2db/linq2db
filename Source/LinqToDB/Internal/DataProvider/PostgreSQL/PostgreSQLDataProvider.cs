@@ -58,6 +58,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			SqlProviderFlags.OutputInsertUseSpecialTable  = version >= PostgreSQLVersion.v18;
 			SqlProviderFlags.OutputUpdateUseSpecialTables = version >= PostgreSQLVersion.v18;
 			SqlProviderFlags.OutputMergeUseSpecialTables  = version >= PostgreSQLVersion.v18;
+			SqlProviderFlags.IsUpdateOutputSupported      = true;
 
 			// PostgreSQL added MERGE in v15. For earlier versions Upsert configurations that require
 			// MERGE lowering surface a descriptive error via Error_Upsert_MergeLowering_NotSupported.

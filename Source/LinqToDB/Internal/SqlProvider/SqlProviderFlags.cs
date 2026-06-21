@@ -682,6 +682,16 @@ namespace LinqToDB.Internal.SqlProvider
 		[DataMember(Order = 70), DefaultValue(NullsDefaultOrdering.Unknown)]
 		public NullsDefaultOrdering DefaultNullsOrdering { get; set; }
 
+		/// <summary>
+		/// Provider supports single-row <c>UPDATE … OUTPUT</c> / <c>RETURNING</c> of the new (post-update) values.
+		/// Used by <see cref="LinqToDB.Concurrency.ConcurrencyExtensions"/>'s <c>UpdateOptimisticWithRefresh</c> overloads
+		/// to read the regenerated optimistic-lock value back in the same statement; when <see langword="false"/> the
+		/// value is read with a follow-up <c>SELECT</c> instead.
+		/// Default: <see langword="false"/>.
+		/// </summary>
+		[DataMember(Order = 75), DefaultValue(false)]
+		public bool IsUpdateOutputSupported { get; set; }
+
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
 			return AcceptsTakeAsParameter || (AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null);
@@ -779,6 +789,7 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsInsertOrUpdateRequiresAlignedBranches              .GetHashCode()
 				^ IsNullsOrderingSupported                             .GetHashCode()
 				^ DefaultNullsOrdering                                 .GetHashCode()
+				^ IsUpdateOutputSupported                              .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => StringComparer.Ordinal.GetHashCode(flag) ^ hash);
 	}
 
@@ -858,6 +869,7 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsInsertOrUpdateRequiresAlignedBranches               == other.IsInsertOrUpdateRequiresAlignedBranches
 				&& IsNullsOrderingSupported                              == other.IsNullsOrderingSupported
 				&& DefaultNullsOrdering                                  == other.DefaultNullsOrdering
+				&& IsUpdateOutputSupported                               == other.IsUpdateOutputSupported
 				&& CustomFlags.SetEquals(other.CustomFlags);
 		}
 		#endregion

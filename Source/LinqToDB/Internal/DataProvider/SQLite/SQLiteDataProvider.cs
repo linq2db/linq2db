@@ -49,6 +49,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			SqlProviderFlags.DefaultNullsOrdering              = NullsDefaultOrdering.Smallest; // SQLite sorts NULL as the smallest value
 			SqlProviderFlags.IsUnionAllOrderBySupported        = true;
 			SqlProviderFlags.IsDistinctFromSupported           = true; // since 3.39.0
+			SqlProviderFlags.IsUpdateOutputSupported           = true; // RETURNING, since 3.35.0
 			SqlProviderFlags.SupportsPredicatesComparison      = true;
 			SqlProviderFlags.DefaultMultiQueryIsolationLevel   = IsolationLevel.Serializable;
 
