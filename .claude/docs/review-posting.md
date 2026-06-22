@@ -120,6 +120,10 @@ When withdrawing a previously posted finding — your own earlier review, a find
 
 **`replyComments[]` in both skills.** The manifest field is usable from `/review-pr` (for retracting findings from an earlier review while preparing a new one in the same cycle) and from `/verify-review` (for partial-fix follow-ups). It is **not** exclusive to verify-mode.
 
+### Following up on a body-section finding after submission
+
+A body-section finding (no `file` / `line` anchor) has **no inline thread** to reply to, and once the review is submitted its body is public history you must not overwrite (see **Retracting a posted finding** above — confirm `state` / `submitted_at` first). So when the user wants to add context or a decision to such a finding *after* the review went out, post a **new top-level PR issue comment** that references the finding ID (`Re SUG001 — …`). Don't try to `PUT` the submitted body and don't invent a thread. (Surfaced on PR #5647: a follow-up summarizing the history behind a SUG-level body finding had to go out as a `gh pr comment` referencing the ID, because the review was already `COMMENTED`.) If the review is still `PENDING`, amending the body in place is fine instead.
+
 ### Heredoc escaping caveat
 
 PowerShell single-quoted here-strings (`@'…'@`) end on the **first line** whose only content is `'@` (with the `'@` at column 0). If a comment body ever needs to contain that literal sequence, use a double-quoted here-string (`@"…"@`) instead — but then escape any literal `$` with a backtick (`` `$ ``) and double-quote marks with `` `" ``. Single-quoted here-strings are almost always the right choice because markdown content is nearly always safe inside them.
