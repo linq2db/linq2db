@@ -466,6 +466,46 @@ namespace Tests.Linq
 			Assert.That(db.LastQuery, Does.Contain("ORDER"));
 		}
 
+		// Version nibble of a GUID is the first hex digit of its third group (canonical layout),
+		// i.e. index 12 of the dash-less "N" form. Works on every TFM (Guid.Version is net9+ only).
+		static int GuidVersion(Guid guid) => Convert.ToInt32(guid.ToString("N").Substring(12, 1), 16);
+
+		[Test]
+		public void NewGuid7(
+			[IncludeDataSources(
+				TestProvName.AllPostgreSQL18Plus,
+				TestProvName.AllDuckDB,
+				TestProvName.AllClickHouse,
+				TestProvName.AllMariaDB)]
+			string context)
+		{
+			using var db = GetDataContext(context);
+
+			var guid = (from p in db.Types select Sql.NewGuid7()).First();
+
+			Assert.That(guid, Is.Not.EqualTo(Guid.Empty));
+			Assert.That(GuidVersion(guid), Is.EqualTo(7));
+		}
+
+#if NET9_0_OR_GREATER
+		[Test]
+		public void CreateVersion7(
+			[IncludeDataSources(
+				TestProvName.AllPostgreSQL18Plus,
+				TestProvName.AllDuckDB,
+				TestProvName.AllClickHouse,
+				TestProvName.AllMariaDB)]
+			string context)
+		{
+			using var db = GetDataContext(context);
+
+			var guid = (from p in db.Types select Guid.CreateVersion7()).First();
+
+			Assert.That(guid, Is.Not.EqualTo(Guid.Empty));
+			Assert.That(guid.Version, Is.EqualTo(7));
+		}
+#endif
+
 		[Test]
 		public void CustomFunc([DataSources] string context)
 		{

@@ -253,6 +253,46 @@ namespace LinqToDB
 			return Guid.NewGuid();
 		}
 
+		public static Guid NewGuid7()
+		{
+#if NET9_0_OR_GREATER
+			return Guid.CreateVersion7();
+#else
+			return CreateVersion7Fallback();
+#endif
+		}
+
+#if !NET9_0_OR_GREATER
+		// Client-side RFC 9562 UUIDv7 build for TFMs without Guid.CreateVersion7 (net462/netstandard2.0/net8.0).
+		// Bytes are laid out in RFC big-endian order, then mapped into the native Guid via the
+		// endianness-independent (int, short, short, byte...) constructor so the result reads as a v7 GUID.
+		static Guid CreateVersion7Fallback()
+		{
+			var bytes = new byte[16];
+
+			using (var rng = System.Security.Cryptography.RandomNumberGenerator.Create())
+				rng.GetBytes(bytes);
+
+			var unixMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+			bytes[0] = (byte)(unixMs >> 40);
+			bytes[1] = (byte)(unixMs >> 32);
+			bytes[2] = (byte)(unixMs >> 24);
+			bytes[3] = (byte)(unixMs >> 16);
+			bytes[4] = (byte)(unixMs >>  8);
+			bytes[5] = (byte) unixMs;
+
+			bytes[6] = (byte)((bytes[6] & 0x0F) | 0x70); // version 7
+			bytes[8] = (byte)((bytes[8] & 0x3F) | 0x80); // variant 10xx
+
+			return new Guid(
+				(bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | bytes[3],
+				(short)((bytes[4] << 8) | bytes[5]),
+				(short)((bytes[6] << 8) | bytes[7]),
+				bytes[8], bytes[9], bytes[10], bytes[11], bytes[12], bytes[13], bytes[14], bytes[15]);
+		}
+#endif
+
 		#endregion
 
 		#region Convert Functions
