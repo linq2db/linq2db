@@ -1919,6 +1919,8 @@ namespace Tests.Linq
 		public void SequentialAccessTest_CacheKey([DataSources] string context)
 		{
 			// Warm the query cache for this configuration with OptimizeForSequentialAccess OFF (random column-access plan).
+			// Exception: on the SqlServer .SA lane the factory forces the option ON for every context, so the warm-up there
+			// is already a sequential-access plan and the divergence below is exercised by the other [DataSources] providers.
 			using (var db = GetDataContext(context))
 				AreEqual(InheritanceParent, db.InheritanceParent);
 
