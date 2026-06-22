@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Text;
+using System.Threading;
 
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
@@ -15,10 +16,10 @@ namespace Tests
 	/// so an external observer can see which test is running, how many remain, and the running pass/fail tally
 	/// without scraping console output.
 	/// <para>
-	/// Opt-in: the reporter is a no-op unless the <c>LINQ2DB_TEST_PROGRESS</c> environment variable is set. When set
-	/// to a flag value (<c>1</c>/<c>true</c>/<c>on</c>/<c>yes</c>) the file is written to
-	/// <c>&lt;repoRoot&gt;/.build/.claude/test-progress.&lt;tfm&gt;.&lt;pid&gt;.json</c>; when set to a directory or
-	/// <c>*.json</c> path that path is used instead.
+	/// Opt-in: the reporter is a no-op unless the <c>--test-progress</c> command-line option is passed (see
+	/// <see cref="TestCommandLine"/>). A bare <c>--test-progress</c> writes the file to
+	/// <c>&lt;repoRoot&gt;/.build/.claude/test-progress.&lt;tfm&gt;.&lt;pid&gt;.json</c>; <c>--test-progress &lt;dir|*.json&gt;</c>
+	/// uses that path instead.
 	/// </para>
 	/// See <c>.claude/docs/testing.md</c> → "Monitoring a long run".
 	/// </summary>
@@ -49,7 +50,7 @@ namespace Tests
 		const int MaxRecentFailures = 20;
 		const int WriteThrottleMs   = 1000;  // at most ~1 file write/sec for the common (passing) case
 
-		static readonly object                              _sync     = new();
+		static readonly Lock                                _sync     = new();
 		static readonly Stopwatch                           _clock    = new();
 		static readonly List<(string Test, string Message)> _failures = new();
 
@@ -153,17 +154,27 @@ namespace Tests
 
 			_initialized = true;
 
-			// Disabled when unset, empty, or an explicit falsy token. The /test-progress skill turns the trace
-			// off by setting the value to "0" (not by removing the key), because Claude Code propagates a changed
-			// env value into the running session but does not un-apply a removed one until restart.
-			var env = Environment.GetEnvironmentVariable("LINQ2DB_TEST_PROGRESS");
-			if (IsDisabledValue(env))
+			// Enabled only by the --test-progress command-line option (see TestCommandLine); absent => no-op.
+			// A bare flag enables the default heartbeat path; a value is a target directory or .json path; a falsy
+			// value (e.g. --test-progress 0) disables it.
+			var cfg = TestCommandLine.TestProgress;
+			if (cfg is null)
+				return _enabled = false;
+
+			if (cfg.Length == 0)
+				cfg = "1";
+
+			if (IsDisabledValue(cfg))
 				return _enabled = false;
 
 			try
 			{
+#if NETFRAMEWORK
 				_pid        = Process.GetCurrentProcess().Id;
-				_file       = ResolvePath(env!.Trim());
+#else
+				_pid        = Environment.ProcessId;
+#endif
+				_file       = ResolvePath(cfg.Trim());
 				_startedUtc = DateTime.UtcNow;
 
 				var dir = Path.GetDirectoryName(_file);
@@ -192,7 +203,7 @@ namespace Tests
 					return Path.Combine(env, fileName);
 
 				if (env.EndsWith(".json", StringComparison.OrdinalIgnoreCase)
-					|| env.IndexOf('/') >= 0 || env.IndexOf('\\') >= 0)
+					|| env.Contains('/') || env.Contains('\\'))
 					return env;
 			}
 

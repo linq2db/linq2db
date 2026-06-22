@@ -11,33 +11,33 @@ Read-only subagent that executes tests and reports results. Invoked by `/test` a
 
 Test framework details, patterns, and the "read the full log" rule live in [`.claude/docs/testing.md`](../docs/testing.md). Review it before your first run in a session.
 
-## Pre-condition: providers must already be enabled
+## Pre-condition: providers must have a connection defined
 
-This agent does **not** edit `UserDataProviders.json`. Provider enable/disable, container start/stop, and any other env changes are owned by the `/test-providers` skill (`.claude/skills/test-providers/SKILL.md`); `test-runner` consumes that state read-only.
+This agent does **not** edit `UserDataProviders.json` or `DataProviders.json`. Connection strings, provider enable/disable, container start/stop, and any other env changes are owned by the `/test-providers` skill (`.claude/skills/test-providers/SKILL.md`); `test-runner` consumes that state read-only.
 
-Before the first `dotnet test` invocation:
+The run always passes `--provider <ids>` (see *Running tests*), which **replaces** the providers from `UserDataProviders.json` — so a provider does **not** need to be enabled in any `Providers` array, only to have a connection string defined. Before the first `dotnet test` invocation:
 
-1. `Read` `UserDataProviders.json` at the repo root — `<repoRoot>` when the caller passed one (see *Inputs* → `repoRoot`), otherwise the current working directory.
-2. For each target's `(tfm, providers[])` pair, locate the matching TFM bucket (`NETFX` / `NET80` / `NET90` / `NET100` per the table below). Verify each requested provider ID is present in that bucket's `Providers` array **and** is not prefixed with `- ` (i.e. is enabled).
-3. On any miss — provider missing from the bucket, provider disabled, or `UserDataProviders.json` itself absent — abort the entire run with:
+1. `Read` `DataProviders.json` (committed; defines connection strings for every standard provider) and `UserDataProviders.json` (if present) at the repo root — `<repoRoot>` when the caller passed one (see *Inputs* → `repoRoot`), otherwise the current working directory.
+2. For each requested provider ID, verify a `Connections` entry with that name exists in either file (case-insensitive).
+3. On any miss, abort the entire run with:
 
    ```json
    {
      "status": "blocked",
-     "reason": "Provider <ID> is not enabled in <BUCKET> of UserDataProviders.json — run /test-providers <ID> [...] to enable it, then re-run /test"
+     "reason": "Provider <ID> has no connection string defined in DataProviders.json / UserDataProviders.json — add one via /test-providers, then re-run /test"
    }
    ```
 
-   List every missing/disabled provider in the message; don't stop at the first. Don't run any partial subset of targets.
+   List every missing provider in the message; don't stop at the first. Don't run any partial subset of targets.
 
-The agent never writes to `UserDataProviders.json` and does not back it up — the file's pre-run state is the user's responsibility (and `/test-providers` already backs it up when it edits).
+Container availability is **not** checked here (that's `/test-providers`' job): a server provider whose container isn't running will fail at connect time — relay that failure and point the caller at `/test-providers`. The agent never writes to either config file.
 
 ## Inputs (provided in the invocation prompt)
 
 1. **`testPattern`** — full or partial `dotnet test --filter` value. Typically `FullyQualifiedName~<fragment>`; `|` for OR is fine, escape as needed for the shell.
 2. **`targets`** — list of one or more run targets. Two accepted shapes:
    - **Explicit**: `[{project: "Tests/.../Tests.EntityFrameworkCore.EF10.csproj", tfm: "net10.0", providers: ["SqlServer.2016.MS"]}, ...]`
-   - **Shorthand**: `{efMatrix: true, providers: [...]}` — expands to all four EFCore projects (EF3/EF8/EF9/EF10) with the matching TFMs (net462 / net8.0 / net9.0 / net10.0). Or `{mainTests: true, providers: [...]}` — defaults to `Tests/Tests.Playground/Tests.Playground.csproj` at `net10.0`. Add `tfm: "<...>"` and/or `project: "Tests/Linq/Tests.csproj"` explicitly to override the fast-path default.
+   - **Shorthand**: `{efMatrix: true, providers: [...]}` — expands to all four EFCore projects (EF3/EF8/EF9/EF10) with the matching TFMs (net462 / net8.0 / net9.0 / net10.0). Or `{mainTests: true, providers: [...]}` — defaults to `Tests/Tests.Playground/Tests.Playground.csproj` at `net10.0`. Add `tfm: "<...>"` and/or `project: "Tests/Linq/Tests.csproj"` explicitly to override the fast-path default. In every shape, `providers` is passed to the run as `--provider` (see *Running tests*) — for main tests it **replaces** the file's provider list, so a provider need not be enabled there, only have a connection string.
 3. **`config`** — default `"Debug"`. Testing guidance in `testing.md` warns against `Release` (slow, analyzers); don't override without a specific reason.
 4. **`verbosity`** — default `"normal"`. Set `"detailed"` when the caller needs SQL-dump diagnostics from `TestContext.Out.WriteLine`. Tests run on Microsoft.Testing.Platform (MTP), which captures the test app's console output by default; surface it with `-p:TestingPlatformCaptureOutput=false` (the VSTest `--logger "console;verbosity=detailed"` no longer applies).
 5. **`repoRoot`** — optional absolute path to the repo root the run targets. Default: the current working directory (primary clone). Set it when the change under test lives in a **git worktree** — then `UserDataProviders.json` resolution (pre-condition step 1), the `dotnet test` project path, and the **working directory you run from** all use `<repoRoot>` instead of cwd, so the worktree's code is what gets built and run. **Run `dotnet test` from `<repoRoot>`** (see *Running tests* → the `cd` note): `dotnet` resolves `global.json` — the SDK pin **and** the MTP-vs-VSTest `test.runner` selection — from the current directory, *not* from `--project`, so an inherited cwd whose `global.json` differs from the worktree's (e.g. the primary clone on a branch that hasn't merged a master `global.json` change) makes the run fall back to VSTest and fail on .NET 10 with `Testing with VSTest target is no longer supported by Microsoft.Testing.Platform`.
@@ -69,15 +69,16 @@ Use `Tests/Linq/Tests.csproj` only when the caller explicitly asks (`project: "T
 For each target, issue one `dotnet test` invocation:
 
 ```
-dotnet test --project <project> --filter "<testPattern>" -c <config> --settings <repoRoot>/.runsettings
+dotnet test --project <project> --filter "<testPattern>" -c <config> --settings .runsettings --provider <space-separated providers> --test-progress
 ```
 
 Notes:
+- **`--provider <providers>` runs exactly the target's `providers`.** Pass the target's provider IDs space-separated. For main tests this **replaces** the configured set — the providers need not be enabled in `UserDataProviders.json`, only have a connection string (see the pre-condition); EF Core projects intersect their curated supported set. An absent/empty list means no `--provider` (the providers enabled in `UserDataProviders.json` run).
+- **Always pass `--test-progress`.** It enables the live heartbeat at `.build/.claude/test-progress.<tfm>.<pid>.json` (see [Tests/Base/TestProgressReporter.cs](../../Tests/Base/TestProgressReporter.cs)), which `/test` and the user poll via `/test-progress` / `test-status.ps1`. It's a plain CLI option (no env var); a bare `--test-progress` uses the default path.
 - **`--project` is required.** The repo's `global.json` selects the Microsoft.Testing.Platform runner, where the bare `dotnet test <project>` form is rejected (`Specifying a project for 'dotnet test' should be via '--project'`). The test projects build as MTP executables.
-- **Pass `--settings <repoRoot>/.runsettings`.** MTP does not auto-discover `.runsettings`; NUnit bridges it via `--settings`, and it carries `AssemblySelectLimit` (without it a filter selecting >~2000 tests can fall back to running the whole assembly).
+- **Pass `--settings .runsettings`** (from the repo root). MTP does not auto-discover `.runsettings`; NUnit bridges it via `--settings`, and it carries `AssemblySelectLimit` (without it a filter selecting >~2000 tests can fall back to running the whole assembly).
 - When `repoRoot` is set, `<project>` is the **absolute** path `<repoRoot>/<project>` so the build targets the worktree (e.g. `<repoRoot>/Tests/Tests.Playground/Tests.Playground.csproj`), and `--settings` uses `<repoRoot>/.runsettings`. Output lands under `<repoRoot>/.build/bin`.
 - **`cd` into `<repoRoot>` first.** When `repoRoot` is set, issue a standalone `cd <repoRoot>` Bash call **before** the `dotnet test` call (the Bash tool's working directory persists across calls within an invocation) — don't rely on the absolute `--project` path alone. `dotnet` reads `global.json` (SDK version + `test.runner`) from the working directory, so running from the inherited primary-clone cwd uses *that* clone's `global.json`; if it lacks `"test": { "runner": "Microsoft.Testing.Platform" }` the run fails with `Testing with VSTest target is no longer supported by Microsoft.Testing.Platform on .NET 10 SDK`. Single `cd` calls are allowed (no chaining); the persisted cwd makes the subsequent `dotnet test` resolve the worktree's `global.json`. **If the `cd`-then-`dotnet test` approach still resolves the wrong `global.json`** (the Bash cwd not persisting as expected — the worktree run then fails with the VSTest-no-longer-supported / `MSB1001: Unknown switch '--project'` error), this agent (Bash-only) can't recover. Abort with a `blocked` status saying the worktree run needs the **caller** to invoke `dotnet test` via the PowerShell tool with `Set-Location <repoRoot>` (which reliably anchors `global.json` resolution and which this agent lacks). Surfaced on PR #5627: this agent blocked on the worktree MTP resolution; the main agent ran it via PowerShell `Set-Location <worktree>; dotnet test --project <abs> -f net10.0 --settings <abs>/.runsettings` successfully.
-- **Live progress heartbeat.** When `LINQ2DB_TEST_PROGRESS` is set, the test assembly writes a JSON heartbeat to `.build/.claude/test-progress.<tfm>.<pid>.json` during the run (see [Tests/Base/TestProgressReporter.cs](../../Tests/Base/TestProgressReporter.cs)). Don't set it inline — it's toggled session-wide by the `/test-progress` skill, so the command form above is unchanged whether the trace is on or off.
 - The four EFCore projects each have a single TFM, so `-f <tfm>` is redundant for them. Include `-f <tfm>` only for `Tests/Linq/Tests.csproj` (multi-TFM).
 - `-p:TestingPlatformCaptureOutput=false` when `verbosity: "detailed"` (shows the test app's console / SQL-dump output).
 - Don't pipe output to `head`/`tail` — read the whole log. Per `testing.md`: NUnit and `dotnet test` interleave relevant info across the log; setup exceptions can come well before the assertion, and stack traces may be truncated if you skim.

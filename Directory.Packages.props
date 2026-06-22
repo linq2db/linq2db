@@ -39,6 +39,8 @@
 		<AspNetCoreLegacyVersion>2.3.10</AspNetCoreLegacyVersion>
 		<!--bundled version for OpenTelemetry packages-->
 		<OpenTelemetryVersion>1.15.3</OpenTelemetryVersion>
+		<!--bundled version for Microsoft.Testing.Platform / Extensions packages-->
+		<MicrosoftTestingVersion>2.2.3</MicrosoftTestingVersion>
 	</PropertyGroup>
 
 	<ItemGroup Label="Build: Analyzers and Tools">
@@ -126,7 +128,7 @@
 		<PackageVersion Include="System.Data.SqlClient"                                 Version="4.9.1"                        />
 		<PackageVersion Include="System.Data.SQLite"                                    Version="2.0.3"                        />
 		<PackageVersion Include="SourceGear.sqlite3"                                    Version="3.50.4.5"                     />
-		<PackageVersion Include="Ydb.Sdk"                                               Version="0.31.0"                       />
+		<PackageVersion Include="Ydb.Sdk"                                               Version="0.33.0"                       />
 		<PackageVersion Include="DuckDB.NET.Data.Full"                                  Version="1.5.2"                        />
 		<PackageVersion Include="linq2db4iSeries"                                       Version="6.2.1"                        />
 	</ItemGroup>
@@ -151,7 +153,10 @@
 
 	<ItemGroup Label="Testing">
 		<PackageVersion Include="Shouldly"                                              Version="4.3.0"                        />
-		<PackageVersion Include="Microsoft.NET.Test.Sdk"                                Version="18.5.1"                       />
+		<PackageVersion Include="Microsoft.Testing.Platform"                            Version="$(MicrosoftTestingVersion)"   />
+		<PackageVersion Include="Microsoft.Testing.Platform.MSBuild"                    Version="$(MicrosoftTestingVersion)"   />
+		<PackageVersion Include="Microsoft.Testing.Extensions.TrxReport"                Version="$(MicrosoftTestingVersion)"   />
+		<PackageVersion Include="Microsoft.Testing.Extensions.HangDump"                 Version="$(MicrosoftTestingVersion)"   />
 		<PackageVersion Include="NUnit"                                                 Version="4.6.0"                        />
 		<PackageVersion Include="NUnit.Analyzers"                                       Version="4.13.0"                       />
 		<PackageVersion Include="NUnit3TestAdapter"                                     Version="6.2.0"                        />
@@ -160,6 +165,7 @@
 		<PackageVersion Include="Microsoft.AspNetCore.OData"                            Version="9.4.1"                        />
 		<PackageVersion Include="MiniProfiler.Shared"                                   Version="4.5.4"                        />
 		<PackageVersion Include="MiniProfiler.Minimal"                                  Version="4.5.4"                        />
+		<PackageVersion Include="Newtonsoft.Json"                                       Version="13.0.3"                       />
 		<PackageVersion Include="NodaTime"                                              Version="3.3.2"                        />
 		<PackageVersion Include="protobuf-net.Grpc.AspNetCore"                          Version="1.2.2"                        />
 		<PackageVersion Include="System.Linq.Dynamic.Core"                              Version="1.7.2"                        />
@@ -228,7 +234,13 @@
 			https://github.com/advisories/GHSA-x5qj-9vmx-7g6g;
 			https://github.com/advisories/GHSA-xhfc-gr8f-ffwc" />
 
-		<PackageVersion Include="Newtonsoft.Json"                                       Version="13.0.1"                       />
+		<!--
+		CVE-2025-6965 / GHSA-2m69-gcr7-jv3q: SQLite before 3.50.2. The transitive native package
+		SQLitePCLRaw.lib.e_sqlite3 (<= 2.1.11, via Microsoft.Data.Sqlite / Microsoft.EntityFrameworkCore.Sqlite)
+		has no patched release. Tests and LINQPad reference SourceGear.sqlite3 (>= 3.50.2) for a patched native binary.
+		-->
+		<NuGetAuditSuppress Include="https://github.com/advisories/GHSA-2m69-gcr7-jv3q" />
+
 		<PackageVersion Include="Microsoft.AspNetCore.Server.Kestrel.Core"              Version="$(AspNetCoreLegacyVersion)"   Condition="'$(TargetFramework)'=='net462'" />
 		<PackageVersion Include="Microsoft.Bcl.Memory"                                  Version="$(Net9Latest)"                Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))" />
 		<PackageVersion Include="Microsoft.Bcl.Memory"                                  Version="$(Net10Latest)"               Condition="'$(TargetFramework)'=='net10.0'" />

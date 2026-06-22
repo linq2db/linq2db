@@ -36,7 +36,7 @@ Split chained work into separate tool calls — parallel when independent, seque
 
 | Want to… | Use | Not |
 |---|---|---|
-| Search file contents | `Grep` (`pattern`, `-n`, `-i`, `-A`/`-B`/`-C`, `head_limit`, `multiline`, `glob`, `type`) | `grep`, `rg`, `ack`, `ag` |
+| Search file contents | `Grep` (`pattern`, `-n`, `-i`, `-A`/`-B`/`-C`, `head_limit`, `multiline`, `glob`, `type`; note `offset`/`head_limit` paginate *result* lines, not file lines) | `grep`, `rg`, `ack`, `ag` |
 | Read a file (full or sliced) | `Read` (`offset` / `limit`) | `cat`, `head`, `tail`, `less` |
 | Find files by name / glob | `Glob` | `find`, `ls -R`, `fd` |
 | Edit a file | `Edit` / `Write` | `sed -i`, `awk -i`, redirect-into-file |

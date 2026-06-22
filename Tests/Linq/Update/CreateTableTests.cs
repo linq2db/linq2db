@@ -465,6 +465,7 @@ namespace Tests.xUpdate
 			public int Value { get; set; }
 		}
 
+		[ActiveIssue(Configuration = TestProvName.AllYdb, Details = "YDB temporary-table creation is not yet supported by the provider (\"Creating temporary table is not supported\").")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4671")]
 		public void Issue4671Test([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{

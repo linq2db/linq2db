@@ -12,20 +12,20 @@ When working inside an authorized worktree, local / gitignored files in the *mai
 
 ## `UserDataProviders.json` in a worktree
 
-The test harness reads this file from the worktree root, and a fresh worktree starts without one (only `UserDataProviders.json.template` is tracked). Before running tests from a worktree:
+`TestConfiguration` finds this file by walking **up** the directory tree from the test assembly (`GetFilePath` in `Tests/Base/TestConfiguration.cs`), not from a fixed path. A worktree lives under `<main-repo>/.claude/worktrees/<name>` and builds to `<worktree>/.build/bin/…`, so when the worktree has no `UserDataProviders.json` of its own (a fresh worktree only tracks `UserDataProviders.json.template`), the walk-up reaches the **main repo's** copy. Tests run from a worktree therefore work without copying anything.
 
-1. Copy the **main repo's** `UserDataProviders.json` into the worktree root (e.g. `cp C:/GitHub/linq2db/UserDataProviders.json <worktree>/UserDataProviders.json`).
-2. Adjust the `Providers` list under the TFM you're testing against (`NET100` for `net10.0` runs).
+Two consequences:
 
-Editing the main repo's copy for a worktree-scoped run is the wrong place — it affects every future run in the main repo too.
+- **Per-run provider selection: use `--provider`, don't copy/edit the JSON.** `<exe> --provider <name>` (or `/test … on <name>`) replaces the active provider set for that run, so you need neither a worktree-local file nor any `Providers`-array edit. The provider only needs a connection string (already in the tracked `DataProviders.json`) and, for server providers, a running container. See [`testing.md`](testing.md) → *Scoping a run to specific providers*.
+- A **default** run (no `--provider`) from a worktree inherits the **main repo's** enabled set and `BaselinesPath` via the walk-up. Only if you want a *different default set* for the worktree, copy the main repo's `UserDataProviders.json` into the worktree root and adjust the `Providers` list under the TFM you're testing (`NET100` for `net10.0`). Don't edit the main repo's copy for a worktree-scoped run — it affects every future main-repo run too.
 
 ## Running tests from a worktree
 
-`test-runner`, `/test`, and `/test-providers` accept an explicit repo-root override so a worktree can be the test target instead of the primary clone. This matters because the skills otherwise resolve `UserDataProviders.json` and project paths against cwd, and subagents inherit the primary-clone cwd — so without the override they build and test the *primary* clone, not the worktree.
+`test-runner`, `/test`, and `/test-providers` accept an explicit repo-root override so a worktree can be the test target instead of the primary clone — without it the skills resolve project paths against the inherited primary-clone cwd and build/test the *primary* clone, not the worktree.
 
-1. **Env** — `/test-providers <providers> worktree <abs-worktree-path>` seeds `<worktree>/UserDataProviders.json` from the primary/sibling clone if absent, enables the requested providers *there*, and starts the (shared) containers. Enable **only** the provider(s) under test — `[DataSources]` tests otherwise fan out to every enabled provider's container. **Disable it again when that test is done:** a provider left enabled from an earlier repro whose container is later stopped makes every subsequent `[DataSources]` case fail with `connection refused`, which looks like a wave of regressions but is just the dead container drowning the real result.
-2. **Run** — `/test run <filter> worktree <abs-worktree-path>`: `/test` passes `repoRoot=<worktree>` to `test-runner`, which reads that `UserDataProviders.json` and runs `dotnet test --project <worktree>/<project>` so the worktree's code is built. Prepend `CreateData.CreateDatabase` to the filter only when the test needs the full schema — a self-contained `CreateLocalTable` test doesn't, which avoids rebuilding the target DB.
-3. **Scratch** — a `<Compile Include>` link added to the worktree's `Tests.Playground.csproj` for a fast Playground build, and the seeded `UserDataProviders.json`, are scratch: keep them out of any commit (stage with explicit pathspec; see [`agent-rules.md`](agent-rules.md) → *Git commit rules*).
+1. **Env** — start the container(s) the test needs (`/test-providers` owns container start/stop). Provider *selection* is per-run via `--provider` (next step), so no worktree-local `UserDataProviders.json` seeding or `Providers`-array enable is required — the provider only needs a connection string in the tracked `DataProviders.json`. A `--provider` naming a **stopped** container fails every `[DataSources]` case with `connection refused`, which looks like a wave of regressions but is just the dead container — start it first.
+2. **Run** — `/test run <filter> worktree <abs-worktree-path>`: `/test` passes `repoRoot=<worktree>` to `test-runner`, which runs `dotnet test --project <worktree>/<project> --provider <names>` so the worktree's code is built and exactly those providers run. Prepend `CreateData.CreateDatabase` to the filter only when the test needs the full schema — a self-contained `CreateLocalTable` test doesn't, which avoids rebuilding the target DB.
+3. **Scratch** — a `<Compile Include>` link added to the worktree's `Tests.Playground.csproj` for a fast Playground build (and any worktree-local `UserDataProviders.json` you seeded for a different default set) is scratch: keep it out of any commit (stage with explicit pathspec; see [`agent-rules.md`](agent-rules.md) → *Git commit rules*).
 
 ## Regenerating API baselines from a worktree
 

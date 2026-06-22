@@ -24,6 +24,7 @@ parameters:
 # - '[sybase.ase.all]' - SAP/Sybase ASE targets supported
 # - '[duckdb.all]' - DuckDB targets supported
 # - '[clickhouse.all]' - Yandex ClickHouse targets supported
+# - '[ydb.all]' - YDB targets supported
 # Note that filter value enclosed in [] brackets as we check filter using contains substring function and this allows
 # us to avoid naming conflicts
 
@@ -36,7 +37,6 @@ parameters:
 # GENERAL PROPERTIES
 # - name    (string, required)            : name of test matrix entry (unique, no spaces/dots)
 # - title   (string, required)            : test run name, added to display name for testrun
-# - extra   (string, optional)            : specify additional dotnet test arguments, e.g. "--arch x86"
 # - x86     (true/false string, optional) : windows-only, install dotnet sdk x86
 # - enabled (true/false string, required) : enables/disables test matrix entry completely for current run
 # - retry   (true/false string, optional) : specify that test run should retry on failue, use only for unstable runs like access and oracle
@@ -129,7 +129,6 @@ jobs:
           enable_fw_net90: true
           enable_fw_net100: true
           x86: true
-          extra: --arch x86
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]'))) }}:
@@ -148,7 +147,6 @@ jobs:
           enable_fw_net100: true
           x86: true
           retry: true # x86 provider also could crash with AV as x64, but less often, so we can just restart it
-          extra: --arch x86
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]'))) }}:
@@ -165,7 +163,6 @@ jobs:
           enable_fw_net80: true
           enable_fw_net90: true
           enable_fw_net100: true
-          extra: --arch x64
           retry: true # x64 provider could crash with AV
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
             enabled: true
@@ -929,4 +926,24 @@ jobs:
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[duckdb.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[duckdb.all]'))) }}:
+            enabled: false
+
+# YDB
+        - name: YDB
+          title: YDB
+          config_linux: ydb
+          config_macos: ydb
+          script_linux_global: ydb.sh
+          script_macos_global: ydb.sh
+          install_docker_macos: true
+          enable_os_windows: false
+          enable_os_ubuntu: true
+          enable_os_macos: true
+          enable_fw_netfx: false
+          enable_fw_net80: true
+          enable_fw_net90: true
+          enable_fw_net100: true
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[ydb.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[ydb.all]'))) }}:
             enabled: false

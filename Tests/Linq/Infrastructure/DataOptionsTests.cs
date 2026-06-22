@@ -761,6 +761,7 @@ namespace Tests.Infrastructure
 					var ctx when ctx.IsAnyOf(TestProvName.AllSqlServer)  => new DataOptions().UseConfiguration(context).UseSqlServer   (connectionString),
 					var ctx when ctx.IsAnyOf(TestProvName.AllSybase)     => new DataOptions().UseConfiguration(context).UseAse         (connectionString),
 					var ctx when ctx.IsAnyOf(TestProvName.AllDuckDB)     => new DataOptions().UseConfiguration(context).UseDuckDB      (connectionString),
+					var ctx when ctx.IsAnyOf(TestProvName.AllYdb)        => new DataOptions().UseConfiguration(context).UseYdb         (connectionString),
 					_                                                    => throw new NotImplementedException($"Missing case for provider {context}")
 				});
 
@@ -775,7 +776,7 @@ namespace Tests.Infrastructure
 			new DataOptions().UseDefaultNullsPosition(Sql.NullsPosition.First).SqlOptions.DefaultNullsPosition.ShouldBe(Sql.NullsPosition.First);
 		}
 
-		[Test, NonParallelizable]
+		[Test]
 		public void ConfigurationSqlDefaultNullsPositionTest()
 		{
 			// MIN006: the process-global static getter/setter, and its propagation to freshly-built DataOptions.

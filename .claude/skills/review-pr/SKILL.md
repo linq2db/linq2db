@@ -121,6 +121,8 @@ After this returns, every pass reads the cache from disk via `Read` / `Grep` / `
 
 The pre-pop manifest sets `include.styleScan: true`, so the call's stdout already carries each file's `styleFindings`. Collect the non-empty ones and pass them to the **code-correctness** pass (which owns rule 7 / style) as a `styleFindings` block in its briefing, and add to every pass's briefing **"styleScan is pre-computed — do not re-run diff-reader.ps1 for style"**. Without this, the code-correctness pass re-invokes `diff-reader.ps1` solely to recompute styleScan — a redundant opus-pass shell call (surfaced on PR #5561).
 
+**Include the briefings' supporting-context files in the prep manifest.** The `files` list must cover not just the files each pass will review, but every changed file the pass briefings name as supporting context — and, when the PR adds query-level API markers or options, their predictable public-surface companions (`LinqExtensions/*.cs`, `Internal/Reflection/Methods.cs`, options / `TranslationModifier`-style types). They are cheap to cache up front; discovering mid-review that one is missing costs a second manifest + `diff-reader.ps1` round-trip (PR #5450 review, 2026-06-12).
+
 For single-pass runs (count ≤ 5), skip this step — the single `code-reviewer` populates the cache itself per the agent's existing flow.
 
 ### 6. Spawn the subagents in parallel

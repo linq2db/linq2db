@@ -16,7 +16,32 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		// provider hardcodes precision/scale to those values for parameters, so we will use them as safe defaults for now
 		internal const int   DEFAULT_DECIMAL_PRECISION = 22;
 		internal const int   DEFAULT_DECIMAL_SCALE     = 9;
+		// YQL rejects Decimal with precision above 35 (Decimal(36,*) -> type-annotation error)
+		internal const int   MAX_DECIMAL_PRECISION     = 35;
 		internal const string DEFAULT_TIMEZONE         = "GMT";
+
+		/// <summary>
+		/// Returns a Decimal <see cref="DbDataType"/> whose precision/scale can hold either <paramref name="x"/>
+		/// or <paramref name="y"/> — taking the larger integer-digit count and the larger scale. When the two
+		/// together exceed <see cref="MAX_DECIMAL_PRECISION"/>, the integer part is preserved in full and only
+		/// fractional (scale) digits are dropped, so large values never overflow. Used to align two Decimal
+		/// operands for YQL constructs that require both arguments to share the exact same type
+		/// (e.g. <c>MIN_OF</c>/<c>MAX_OF</c>).
+		/// </summary>
+		internal static DbDataType GetCommonDecimalType(DbDataType x, DbDataType y)
+		{
+			var xs = x.Scale     ?? DEFAULT_DECIMAL_SCALE;
+			var ys = y.Scale     ?? DEFAULT_DECIMAL_SCALE;
+			var xp = x.Precision ?? DEFAULT_DECIMAL_PRECISION;
+			var yp = y.Precision ?? DEFAULT_DECIMAL_PRECISION;
+
+			// Preserve the integer part of both operands; drop only the scale digits that don't fit the budget.
+			var intDigits = Math.Min(Math.Max(xp - xs, yp - ys), MAX_DECIMAL_PRECISION);
+			var scale     = Math.Min(Math.Max(xs, ys), MAX_DECIMAL_PRECISION - intDigits);
+			var precision = intDigits + scale;
+
+			return x.WithPrecisionScale(precision, scale);
+		}
 
 #if SUPPORTS_COMPOSITE_FORMAT
 		private static readonly CompositeFormat DATE_FORMAT         = CompositeFormat.Parse("Date('{0:yyyy-MM-dd}')");
