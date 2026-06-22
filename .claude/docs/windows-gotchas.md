@@ -229,6 +229,8 @@ Failure modes that surface when running `dotnet build` (or `/test`, or `/release
 
 **`error: Access to the path '<dll>' is denied`** (typically `Microsoft.Build.Tasks.Git.dll` or another transient build dep). Root cause: VBCSCompiler / MSBuild server is holding the file from the previous build. Resolution: `dotnet build-server shutdown` (kills both servers cleanly), then re-run. The `analyzer-profile-build.ps1` script does this automatically; ad-hoc `dotnet build` invocations don't and must be done manually when the lock surfaces. Don't retry the build without the shutdown — it'll keep failing on the same file.
 
+**The lock holder is a testhost, not the build server.** When the `Access denied` / `MSB3021` copy failure names `The file is locked by: "linq2db.Tests (<pid>)"`, the holder is an orphaned MTP testhost left over from a cancelled `dotnet test` run — `dotnet build-server shutdown` does **not** release it (it only kills VBCSCompiler / MSBuild server). Confirm with `Get-Process -Id <pid>`, then `Stop-Process -Id <pid> -Force`, then re-run. The error message names the holding process and PID — that's the discriminator from the build-server case above.
+
 **`error MSB3021/MSB3027: There is not enough space on the disk`** during the post-compile copy step. Root cause: `.build/bin/` accumulates ~9 GB per Release build of `linq2db.slnx` and is not pruned between iterations. When iterating against a near-full C: drive (especially with a worktree, which adds a second `.build/bin/`), clean before re-running:
 
 ```
