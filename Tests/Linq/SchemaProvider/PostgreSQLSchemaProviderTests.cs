@@ -511,6 +511,49 @@ namespace Tests.SchemaProvider
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5628")]
+		public void Issue5628ParenthesizedSequenceDefaultIsIdentity([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var suffix       = TestUtils.GetNext();
+			var tableName    = $"issue5628_parenthesized_default_{suffix}";
+			var itemSequence = $"issue5628_item_id_seq_{suffix}";
+
+			try
+			{
+				db.Execute($"CREATE SEQUENCE {itemSequence}");
+
+				db.Execute($"""
+					CREATE TABLE {tableName} (
+						item_id integer DEFAULT (nextval('{itemSequence}'::regclass)) NOT NULL
+					)
+					""");
+
+				var defaultValue = db.Execute<string>($"""
+					SELECT pg_get_expr(adbin, adrelid)
+					FROM pg_attrdef
+					WHERE adrelid = '{tableName}'::regclass
+					AND adnum = 1
+					""");
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(
+					db,
+					new GetSchemaOptions { IncludedSchemas = ["public"] });
+				var table = schema.Tables.Single(t => t.TableName == tableName);
+
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(defaultValue, Does.StartWith("nextval("));
+					Assert.That(table.Columns.Single(c => c.ColumnName == "item_id").IsIdentity, Is.True);
+				}
+			}
+			finally
+			{
+				db.Execute($"DROP TABLE IF EXISTS {tableName}");
+				db.Execute($"DROP SEQUENCE IF EXISTS {itemSequence}");
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5628")]
 		public void Issue5628DuplicateSequenceDefaultsPreferPrimaryKey([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
 			using var db = GetDataConnection(context);

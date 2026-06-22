@@ -314,6 +314,8 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 					columns.Scale,
 					-- Prefer native PostgreSQL identity metadata. Use sequence-default fallback only when
 					-- the table has no native identity column and only for the selected fallback column.
+					-- This intentionally selects one linq2db identity-like candidate, not every PostgreSQL
+					-- column that can get a value from DEFAULT nextval(...), as scaffold expects one identity.
 					columns.IsIdentity
 						OR NOT columns.HasIdentity
 							AND columns.IsSequenceDefault
