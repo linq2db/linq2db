@@ -99,6 +99,12 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var selector = methodCall.Arguments[1].UnwrapLambda();
 
+			// When the DISTINCT ON branch below builds a sequence but cannot lower to DISTINCT ON (empty ON list or a
+			// key with no usable SQL form), that sequence is reused by the ROW_NUMBER fallback instead of building a
+			// second one — a second TryBuildSequence over the same source leaks an extra table reference into the
+			// query (a cartesian product, e.g. DistinctBy(x => 1)).
+			IBuildContext? sequence = null;
+
 			// On providers that support PostgreSQL-style DISTINCT ON, lower DistinctBy to it directly instead of the
 			// ROW_NUMBER() emulation: the key selector becomes the ON list and the preceding OrderBy is forced to lead
 			// with those keys (the syntax requires it). Falls through to ROW_NUMBER when the key has no usable SQL form.
@@ -110,7 +116,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (buildResult.BuildContext == null)
 					return buildResult;
 
-				var sequence      = buildResult.BuildContext;
+				sequence          = buildResult.BuildContext;
 				var partitionBody = SequenceHelper.PrepareBody(selector, sequence);
 				var keySql        = builder.BuildSqlExpression(sequence, partitionBody, BuildPurpose.Sql, BuildFlags.ForKeys);
 
@@ -132,12 +138,15 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (builder.DataContext.SqlProviderFlags.IsWindowFunctionsSupported)
 			{
-				var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, nonOrderedPart));
+				if (sequence == null)
+				{
+					var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, nonOrderedPart));
 
-				if (buildResult.BuildContext == null)
-					return buildResult;
+					if (buildResult.BuildContext == null)
+						return buildResult;
 
-				var sequence      = buildResult.BuildContext;
+					sequence = buildResult.BuildContext;
+				}
 
 				var partitionBody = SequenceHelper.PrepareBody(selector, sequence);
 
@@ -151,8 +160,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				expression = WindowFunctionHelpers.ApplyOrderBy(expression, orderByPart);
 
-				buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, expression));
-				return buildResult;
+				return builder.TryBuildSequence(new BuildInfo(buildInfo, expression));
 			}
 
 			// Rare case when outer apply is supported and window functions are not

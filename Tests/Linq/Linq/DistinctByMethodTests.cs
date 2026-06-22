@@ -225,6 +225,9 @@ namespace Tests.Linq
 			var sql = query.ToSqlQuery().Sql;
 			Assert.That(sql, Does.Not.Contain("DISTINCT ON"));
 			Assert.That(sql, Does.Contain("ROW_NUMBER"));
+			// The constant-key fall-through must reuse the single built sequence; a second build would leak an extra
+			// table reference into the ROW_NUMBER subquery (FROM TestData e, TestData e_1 — a cartesian product).
+			Assert.That(sql.Split("TestData").Length - 1, Is.EqualTo(1));
 		}
 
 		[Test]
