@@ -464,6 +464,173 @@ namespace Tests.SchemaProvider
 			}
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5628")]
+		public void Issue5628SequenceDefaultExpressionIsNotIdentity([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var suffix       = TestUtils.GetNext();
+			var tableName    = $"issue5628_sample_messages_{suffix}";
+			var codeSequence = $"issue5628_code_seq_{suffix}";
+			var itemSequence = $"issue5628_item_id_seq_{suffix}";
+
+			try
+			{
+				db.Execute($"CREATE SEQUENCE {codeSequence}");
+				db.Execute($"CREATE SEQUENCE {itemSequence}");
+
+				db.Execute($"""
+					CREATE TABLE {tableName} (
+						code character varying(255) DEFAULT ('PREFIX_'::text || nextval('{codeSequence}'::regclass)) NOT NULL,
+						item_id integer DEFAULT nextval('{itemSequence}'::regclass) NOT NULL,
+						status smallint DEFAULT 0 NOT NULL,
+						locale_id integer NOT NULL,
+						item_type integer DEFAULT 1 NOT NULL,
+						CONSTRAINT {tableName}_pkey PRIMARY KEY (item_id, item_type),
+						CONSTRAINT {tableName}_code_key UNIQUE (code)
+					)
+					""");
+
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(
+					db,
+					new GetSchemaOptions { IncludedSchemas = ["public"] });
+				var table = schema.Tables.Single(t => t.TableName == tableName);
+
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(table.Columns.Single(c => c.ColumnName == "code"   ).IsIdentity, Is.False);
+					Assert.That(table.Columns.Single(c => c.ColumnName == "item_id").IsIdentity, Is.True);
+				}
+			}
+			finally
+			{
+				db.Execute($"DROP TABLE IF EXISTS {tableName}");
+				db.Execute($"DROP SEQUENCE IF EXISTS {codeSequence}");
+				db.Execute($"DROP SEQUENCE IF EXISTS {itemSequence}");
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5628")]
+		public void Issue5628DuplicateSequenceDefaultsPreferPrimaryKey([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var suffix       = TestUtils.GetNext();
+			var tableName    = $"issue5628_two_defaults_pk_{suffix}";
+			var codeSequence = $"issue5628_code_seq_{suffix}";
+			var itemSequence = $"issue5628_item_id_seq_{suffix}";
+
+			try
+			{
+				db.Execute($"CREATE SEQUENCE {codeSequence}");
+				db.Execute($"CREATE SEQUENCE {itemSequence}");
+
+				db.Execute($"""
+					CREATE TABLE {tableName} (
+						code integer DEFAULT nextval('{codeSequence}'::regclass) NOT NULL,
+						item_id integer DEFAULT nextval('{itemSequence}'::regclass) NOT NULL,
+						CONSTRAINT {tableName}_pkey PRIMARY KEY (item_id)
+					)
+					""");
+
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(
+					db,
+					new GetSchemaOptions { IncludedSchemas = ["public"] });
+				var table = schema.Tables.Single(t => t.TableName == tableName);
+
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(table.Columns.Single(c => c.ColumnName == "code"   ).IsIdentity, Is.False);
+					Assert.That(table.Columns.Single(c => c.ColumnName == "item_id").IsIdentity, Is.True);
+				}
+			}
+			finally
+			{
+				db.Execute($"DROP TABLE IF EXISTS {tableName}");
+				db.Execute($"DROP SEQUENCE IF EXISTS {codeSequence}");
+				db.Execute($"DROP SEQUENCE IF EXISTS {itemSequence}");
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5628")]
+		public void Issue5628DuplicateSequenceDefaultsWithoutPrimaryKeyUseFirstColumn([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var suffix       = TestUtils.GetNext();
+			var tableName    = $"issue5628_two_defaults_no_pk_{suffix}";
+			var codeSequence = $"issue5628_code_seq_{suffix}";
+			var itemSequence = $"issue5628_item_id_seq_{suffix}";
+
+			try
+			{
+				db.Execute($"CREATE SEQUENCE {codeSequence}");
+				db.Execute($"CREATE SEQUENCE {itemSequence}");
+
+				db.Execute($"""
+					CREATE TABLE {tableName} (
+						code integer DEFAULT nextval('{codeSequence}'::regclass) NOT NULL,
+						item_id integer DEFAULT nextval('{itemSequence}'::regclass) NOT NULL
+					)
+					""");
+
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(
+					db,
+					new GetSchemaOptions { IncludedSchemas = ["public"] });
+				var table = schema.Tables.Single(t => t.TableName == tableName);
+
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(table.Columns.Single(c => c.ColumnName == "code"   ).IsIdentity, Is.True);
+					Assert.That(table.Columns.Single(c => c.ColumnName == "item_id").IsIdentity, Is.False);
+				}
+			}
+			finally
+			{
+				db.Execute($"DROP TABLE IF EXISTS {tableName}");
+				db.Execute($"DROP SEQUENCE IF EXISTS {codeSequence}");
+				db.Execute($"DROP SEQUENCE IF EXISTS {itemSequence}");
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5628")]
+		public void Issue5628RealIdentityPreferredOverSequenceDefault([IncludeDataSources(TestProvName.AllPostgreSQL10Plus)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var suffix       = TestUtils.GetNext();
+			var tableName    = $"issue5628_real_identity_{suffix}";
+			var codeSequence = $"issue5628_code_seq_{suffix}";
+
+			try
+			{
+				db.Execute($"CREATE SEQUENCE {codeSequence}");
+
+				db.Execute($"""
+					CREATE TABLE {tableName} (
+						code integer DEFAULT nextval('{codeSequence}'::regclass) NOT NULL,
+						item_id integer GENERATED BY DEFAULT AS IDENTITY NOT NULL
+					)
+					""");
+
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(
+					db,
+					new GetSchemaOptions { IncludedSchemas = ["public"] });
+				var table = schema.Tables.Single(t => t.TableName == tableName);
+
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(table.Columns.Single(c => c.ColumnName == "code"   ).IsIdentity, Is.False);
+					Assert.That(table.Columns.Single(c => c.ColumnName == "item_id").IsIdentity, Is.True);
+				}
+			}
+			finally
+			{
+				db.Execute($"DROP TABLE IF EXISTS {tableName}");
+				db.Execute($"DROP SEQUENCE IF EXISTS {codeSequence}");
+			}
+		}
+
 		[Test]
 		public void TestMaterializedViewSchema([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
