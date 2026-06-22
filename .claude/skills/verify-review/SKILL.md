@@ -89,6 +89,8 @@ Execute the **Change summary** and **Baselines clone setup** sections of `.claud
 
 Per `review-orchestration.md` → **Spawning the two subagents in parallel**. This skill adds only `verify`-mode specifics on top of the common briefing:
 
+**Refresh the diff cache before spawning (verify-mode only).** A prior `/review-pr` run leaves a `writeDir` cache populated at *that* run's HEAD. Re-run `diff-reader.ps1` for all changed files at current HEAD first, so a subagent whose own `diff-reader` call is denied (background runs can't surface a permission prompt) falls back to a *fresh* cache rather than the stale prior-run one — a stale cache produces false line-level findings (a dropped-then-readded comment surfaced as a NIT on PR #5639). Pairs with the live-blob cross-check in `pr-context-prep.md` → *Cache freshness*.
+
 - **`code-reviewer`:** `mode: verify`; **prior findings list** (the full parsed structure from step 3). The subagent returns `prior_finding_status` (fixed / still_actual / partial), plus fresh `findings` for `partial` cases and any genuinely new issues, plus `api_changes`.
 - **`baselines-reviewer`:** `mode: verify`.
 
@@ -223,3 +225,4 @@ Per `review-orchestration.md` → **Command-usage audit (closing step)**.
 - Do not edit reviews authored by other users.
 - Do not edit any source file or push anything.
 - Do not skip the batched confirmation in step 8 — one preview, one approval, then all writes in order.
+- **Don't act on a prior-review out-of-scope observation as a fixable defect without confirming its premise against current source.** OOS observations carry no severity and are often hedged ("if X holds…") — lower confidence than findings. Before fixing one (especially on a user "fix it" request), verify its load-bearing claim at HEAD; a "dead"-code OOS may be live, a "wrong default" OOS may already be correct. Same discipline as `agent-rules.md` → *Issue-proposed fix details are written from memory*. (Surfaced on PR #5639: a "dead" copy ctor was live — it backs every record `with` — and a "wrong default" was already correct.)
