@@ -692,6 +692,16 @@ namespace LinqToDB.Internal.SqlProvider
 		[DataMember(Order = 75), DefaultValue(false)]
 		public bool IsUpdateOutputSupported { get; set; }
 
+		/// <summary>
+		/// Provider reports the number of affected rows from <c>UPDATE</c> / <c>DELETE</c> execution.
+		/// Used by <see cref="LinqToDB.Concurrency.ConcurrencyExtensions"/>'s <c>UpdateOptimisticWithRefresh</c>
+		/// overloads: when <see langword="false"/> the affected-row count is unreliable, so the SELECT-fallback
+		/// read-back cannot be gated on it (it is performed best-effort instead).
+		/// Default: <see langword="true"/>.
+		/// </summary>
+		[DataMember(Order = 76), DefaultValue(true)]
+		public bool IsAffectedRowsCountSupported { get; set; } = true;
+
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
 			return AcceptsTakeAsParameter || (AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null);
@@ -790,6 +800,7 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsNullsOrderingSupported                             .GetHashCode()
 				^ DefaultNullsOrdering                                 .GetHashCode()
 				^ IsUpdateOutputSupported                              .GetHashCode()
+				^ IsAffectedRowsCountSupported                         .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => StringComparer.Ordinal.GetHashCode(flag) ^ hash);
 	}
 
@@ -870,6 +881,7 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsNullsOrderingSupported                              == other.IsNullsOrderingSupported
 				&& DefaultNullsOrdering                                  == other.DefaultNullsOrdering
 				&& IsUpdateOutputSupported                               == other.IsUpdateOutputSupported
+				&& IsAffectedRowsCountSupported                          == other.IsAffectedRowsCountSupported
 				&& CustomFlags.SetEquals(other.CustomFlags);
 		}
 		#endregion

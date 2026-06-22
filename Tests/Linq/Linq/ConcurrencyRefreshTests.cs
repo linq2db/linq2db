@@ -215,9 +215,40 @@ namespace Tests.Linq
 			try
 			{
 				using var t = db.CreateLocalTable<RefreshTable<int>>("ConcurrencyRefreshProbe");
-				db.Insert(new RefreshTable<int> { Id = 1, Stamp = 1, Value = "x" });
+				db.Insert(new RefreshTable<int> { Id = 1, Stamp = 1, Value = "x" }, tableName: "ConcurrencyRefreshProbe");
 				_ = t.Where(r => r.Id == 1).UpdateWithOutput(r => new RefreshTable<int> { Stamp = 2 }, (deleted, inserted) => inserted.Stamp).ToList();
 				return true;
+			}
+			catch
+			{
+				return false;
+			}
+		}
+
+		// Guard test: keep SqlProviderFlags.IsAffectedRowsCountSupported honest. It probes whether the provider reports
+		// the number of rows affected by an UPDATE and fails when reality diverges from the declared flag, signalling
+		// that the provider's flag (set in its DataProvider) needs updating.
+		[Test]
+		public void AffectedRowsCountSurface([DataSources] string context)
+		{
+			using var _  = new DisableBaseline("probes provider capability");
+			using var db = GetDataContext(context);
+
+			var actual = ProbeAffectedRows(db);
+
+			Assert.That(
+				actual,
+				Is.EqualTo(db.SqlProviderFlags.IsAffectedRowsCountSupported),
+				$"Affected-rows reporting for '{context}' diverged from SqlProviderFlags.IsAffectedRowsCountSupported; update the provider's flag.");
+		}
+
+		private static bool ProbeAffectedRows(IDataContext db)
+		{
+			try
+			{
+				using var t = db.CreateLocalTable<RefreshTable<int>>("ConcurrencyRowcountProbe");
+				db.Insert(new RefreshTable<int> { Id = 1, Stamp = 1, Value = "x" }, tableName: "ConcurrencyRowcountProbe");
+				return t.Where(r => r.Id == 1).Set(r => r.Stamp, 2).Update() == 1;
 			}
 			catch
 			{

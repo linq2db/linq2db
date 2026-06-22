@@ -1,4 +1,6 @@
 #nullable enable
+LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsAffectedRowsCountSupported.get -> bool
+LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsAffectedRowsCountSupported.set -> void
 LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsUpdateOutputSupported.get -> bool
 LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsUpdateOutputSupported.set -> void
 static LinqToDB.Concurrency.ConcurrencyExtensions.UpdateOptimisticWithRefresh<T>(this LinqToDB.IDataContext! dc, T! obj) -> int

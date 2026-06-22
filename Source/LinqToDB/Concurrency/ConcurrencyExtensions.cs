@@ -348,7 +348,10 @@ namespace LinqToDB.Concurrency
 
 			var count = updatable.Update();
 
-			if (count > 0)
+			// On providers that report affected rows, count == 0 is a genuine concurrency failure -> skip the read-back so
+			// the entity is left untouched. On providers that don't (e.g. ClickHouse), count is always 0 even on success, so
+			// gating on it would skip the refresh; read back best-effort there instead.
+			if (count > 0 || !dc.SqlProviderFlags.IsAffectedRowsCountSupported)
 			{
 				var fresh = FilterByPrimaryKey(dc.GetTable<T>(), obj, ed).Select(LockColumnsSelector<T>(objType, lockColumns)).FirstOrDefault();
 
@@ -385,7 +388,10 @@ namespace LinqToDB.Concurrency
 
 			var count = await updatable.UpdateAsync(cancellationToken).ConfigureAwait(false);
 
-			if (count > 0)
+			// On providers that report affected rows, count == 0 is a genuine concurrency failure -> skip the read-back so
+			// the entity is left untouched. On providers that don't (e.g. ClickHouse), count is always 0 even on success, so
+			// gating on it would skip the refresh; read back best-effort there instead.
+			if (count > 0 || !dc.SqlProviderFlags.IsAffectedRowsCountSupported)
 			{
 				var fresh = await FilterByPrimaryKey(dc.GetTable<T>(), obj, ed).Select(LockColumnsSelector<T>(objType, lockColumns)).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
 
