@@ -672,7 +672,8 @@ namespace LinqToDB
 		public static IAggregateFunctionSelfContained<T> LastValue<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr, [SqlQueryDependent] Sql.Nulls nulls)
 			=> throw new ServerSideOnlyException(nameof(LastValue));
 
-		[Sql.Extension("LEAD({expr}{_}{modifier?})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true, CanBeNull = true)]
+		[Sql.Extension("LEAD({expr}){_}{modifier?}", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, Configuration = PN.PostgreSQL19, ServerSideOnly = true, CanBeNull = true)]
+		[Sql.Extension("LEAD({expr}{_}{modifier?})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true, CanBeNull = true)]
 		public static IAnalyticFunctionWithoutWindow<T> Lead<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr, [SqlQueryDependent] Sql.Nulls nulls)
 			=> throw new ServerSideOnlyException(nameof(Lead));
 

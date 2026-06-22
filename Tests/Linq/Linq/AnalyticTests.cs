@@ -1424,6 +1424,63 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void LagLeadIgnoreNulls([IncludeDataSources(
+			TestProvName.AllOracle, TestProvName.AllDuckDB,
+			TestProvName.AllPostgreSQL19Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(Position.TestData);
+			var group = 7;
+
+			var q =
+					from p in db.GetTable<Position>()
+					where p.Group == @group
+					orderby p.Order
+					select new
+					{
+						Id          = p.Id,
+						LagRespect  = (int?)Sql.Ext.Lag (p.Id, Sql.Nulls.Respect).Over().OrderBy(p.Order).ToValue(),
+						LagIgnore   = (int?)Sql.Ext.Lag (p.Id, Sql.Nulls.Ignore ).Over().OrderBy(p.Order).ToValue(),
+						LeadRespect = (int?)Sql.Ext.Lead(p.Id, Sql.Nulls.Respect).Over().OrderByDesc(p.Order).ToValue(),
+						LeadIgnore  = (int?)Sql.Ext.Lead(p.Id, Sql.Nulls.Ignore ).Over().OrderByDesc(p.Order).ToValue(),
+					};
+
+			var res = q.ToArray();
+
+			Assert.That(res, Has.Length.EqualTo(4));
+			using (Assert.EnterMultipleScope())
+			{
+				// Order 10, Id 5
+				Assert.That(res[0].Id,          Is.EqualTo(5));
+				Assert.That(res[0].LagRespect,  Is.Null);
+				Assert.That(res[0].LagIgnore,   Is.Null);
+				Assert.That(res[0].LeadRespect, Is.Null);
+				Assert.That(res[0].LeadIgnore,  Is.Null);
+
+				// Order 20, Id 6
+				Assert.That(res[1].Id,          Is.EqualTo(6));
+				Assert.That(res[1].LagRespect,  Is.EqualTo(5));
+				Assert.That(res[1].LagIgnore,   Is.EqualTo(5));
+				Assert.That(res[1].LeadRespect, Is.EqualTo(5));
+				Assert.That(res[1].LeadIgnore,  Is.EqualTo(5));
+
+				// Order 30, Id null
+				Assert.That(res[2].Id,          Is.Null);
+				Assert.That(res[2].LagRespect,  Is.EqualTo(6));
+				Assert.That(res[2].LagIgnore,   Is.EqualTo(6));
+				Assert.That(res[2].LeadRespect, Is.EqualTo(6));
+				Assert.That(res[2].LeadIgnore,  Is.EqualTo(6));
+
+				// Order 40, Id null — RESPECT sees the trailing null, IGNORE skips back/forward to 6
+				Assert.That(res[3].Id,          Is.Null);
+				Assert.That(res[3].LagRespect,  Is.Null);
+				Assert.That(res[3].LagIgnore,   Is.EqualTo(6));
+				Assert.That(res[3].LeadRespect, Is.Null);
+				Assert.That(res[3].LeadIgnore,  Is.EqualTo(6));
+			}
+		}
+
+		[Test]
 		public void Issue1732FirstValue([DataSources(
 			TestProvName.AllSqlServer2008Minus,
 			TestProvName.AllSybase,
