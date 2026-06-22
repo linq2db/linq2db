@@ -99,6 +99,8 @@ static readonly MethodInfo _toValueMethodInfo =
 
 `MethodOf(() => Foo(arg))` for static or instance methods reachable via expression; `MethodOf<T>(t => t.Foo())` when an instance receiver of type `T` is needed; `MethodOfGeneric<T>` strips the generic instantiation off the result. Don't roll raw `typeof(X).GetMethod(name, BindingFlags.NonPublic | BindingFlags.Static)!` — it's fragile, doesn't give compile-time validation that the method exists with the expected signature, and isn't the codebase pattern.
 
+When **matching** a method-call node's identity (rather than constructing a call), register the `MethodInfo` in the shared `Methods.LinqToDB.*` registry (`Internal/Reflection/Methods.cs`, captured via the same `MemberHelper.MethodOf*` helpers) and compare with `node.IsSameGenericMethod(Methods.LinqToDB.…)` — the idiom used throughout the builders (`Methods.LinqToDB.ApplyModifierInternal`, etc.). Don't hand-roll `node.Method.DeclaringType == typeof(X) && node.Method.Name == nameof(...)`: string-by-name matching is fragile (no signature/arity check, breaks on overloads) and isn't the codebase pattern. Inside a nested `Methods.LinqToDB.*` class, fully-qualify the captured method with `global::LinqToDB.Sql.…` — a bare `LinqToDB.Sql` binds to the enclosing `Methods.LinqToDB` class, not the root namespace.
+
 ### SQL AST types live in `LinqToDB.Internal.SqlQuery`
 
 The SQL query tree building blocks — `SqlFrameClause`, `SqlKeepClause`, `SqlExtendedFunction`, `SqlFrameBoundary`, `SqlSearchCondition`, and every other AST node used only during query construction, translation, and rendering — are library-internal. They are not part of the stable public surface. New AST types MUST go in the `LinqToDB.Internal.SqlQuery` namespace.
