@@ -46,7 +46,12 @@ When the loaded context shows the PR's milestone differs from a linked issue's (
 
 ### 2b. Audit prior reviewer claims (bot + human)
 
-Re-verify every review thread in `pr-context.ps1`'s `reviewThreads[]` that is **not** `resolvedBy == currentUser`, classify as Fixed / Inaccurate / Still actual at HEAD, and batch the replies + resolves through `post-pr-thread-replies.ps1`.
+Re-verify prior reviews authored by **other** users (Copilot, Codex, other LLM reviewers, humans) against current PR HEAD — both surfaces:
+
+- every inline thread in `pr-context.ps1`'s `reviewThreads[]` that is **not** `resolvedBy == currentUser`, and
+- every discrete claim in the **body** of any `reviews[]` entry whose `user != currentUser` that isn't already covered by one of that review's threads.
+
+Classify each as Fixed / Inaccurate / Still actual at HEAD. Surface every verdict in the review body's `## Prior-review audit` section (step 8); batch thread replies + resolves through `post-pr-thread-replies.ps1` (body-summary claims have no thread to resolve — the audit line is their disposition, and Still-actual ones also feed the regular finding stream).
 
 Procedure (scope, classification rules, playground-verification protocol, thread dispositions, review-quality-signal log, mid-session re-run): [`review-bot-claim-audit.md`](../../docs/review-bot-claim-audit.md).
 
@@ -163,6 +168,16 @@ Per `review-orchestration.md` → **Classifying public-API surface changes**.
 
 `code-reviewer` already verifies its own line numbers (see its spec's **Line-number verification** section). Trust that output — do not re-run verification here, and in particular do not `git show origin/pr/<n>:path` to spot-check snippets. The subagent's first `diff-reader.ps1` call with `writeDir: .build/.claude/pr<n>` persisted every changed file's full HEAD body, base-ref body, and per-file diff to disk — if parent-skill reasoning ever needs to look at a file, `Read` / `Grep` it directly at the paths listed in `.claude/docs/pr-context-prep.md` → **`writeDir` directory layout**. Do **not** `ls` the directory to discover the shape; the layout is fixed and documented. Re-fetching via `git show ref:path | sed -n` pipes costs a permission prompt each and is forbidden. Post-subagent sanity is limited to: each `line` is a positive integer, `line_end >= line` when present, and `file` points to a path that actually appears in the PR's changed-file list from step 2. Findings that fail those lightweight checks go straight to body-section — no disk caching, no second pass.
 
+### 7b. Out-of-scope disposition gate
+
+When `code-reviewer` returned a non-empty `out_of_scope_observations[]`, decide each one **with the user before assembling the body** — never silently render them as FYI or silently file a tracking issue. Present all observations as a numbered list (title + one-line description + any reproducible root cause the reviewer noted) and ask, in a single batched prompt (per `agent-rules.md` → **Batching and user interaction**), for a per-item disposition. Front-load the follow-up each choice needs (proposed severity for a promote, issue title for a track) so the user answers once:
+
+1. **Promote to in-scope finding** — the observation is actually caused by / in scope for this PR. Convert it to a `findings[]` entry: assign the next ID at a severity you propose (state the proposed severity; the user may override), set `file` / `line` when the observation names one, and remove it from `out_of_scope_observations[]`. It then flows through the normal finding pipeline (body-section or line/file comment) in step 8.
+2. **Create tracking issue** — real but genuinely out of scope. Invoke [`/create-issue`](../create-issue/SKILL.md) to file it on `linq2db/linq2db` **before** posting the review, then keep the observation in the `## Out-of-scope observations` section with the issue number appended (`— tracked as #<n> · not caused by this PR`).
+3. **Leave as-is** — keep as an FYI entry in `## Out-of-scope observations`, unchanged.
+
+This explicit gate **replaces** the old "file separately when investigation is warranted" auto-heuristic — the choice to promote, track, or leave is always the user's, per observation. When the array is empty, skip this step. Apply the dispositions, then proceed to step 8 with the reshaped `findings[]` and `out_of_scope_observations[]`. (In `interactive` mode the OOS items are therefore already dispositioned here — the mode-choice walk does not re-ask; see `review-orchestration.md` → **interactive mode**.)
+
 ### 8. Assemble the review body
 
 Use the body structure defined in `.claude/docs/review-conventions.md` → **Output body structure**. No legend table — reviewers who need abbreviation meanings consult the conventions doc.
@@ -185,9 +200,7 @@ Classify each `code-reviewer` finding into one of three review output locations:
 
     - **<title>** — <description>
 
-Omit the section entirely when the array is empty. Do not classify out-of-scope observations by severity and do not convert them to line/file comments — they are not findings.
-
-**File separately when investigation is warranted.** When an out-of-scope observation has a clear, investigatable root cause that's worth its own ticket (a real bug surfaced during review, a test framework limitation, etc.), invoke `/create-issue` to file it as a separate issue **before** posting the review, then reference the issue number in the observation entry (e.g. "Tracked separately as #5513 — not caused by this PR"). This keeps the PR review focused while ensuring the finding doesn't disappear into review-body prose. Skip when the observation is a one-line note, doesn't have a reproducible root cause, or the user has explicitly opted to leave it as-is.
+Omit the section entirely when the array is empty (after the step-7b gate — promoted observations have already moved to `findings[]`). Do not classify out-of-scope observations by severity and do not convert them to line/file comments — they are not findings. Render each surviving entry per its step-7b disposition: a **tracked** one carries its `— tracked as #<n> · not caused by this PR` suffix; a **leave-as-is** one is the bare `**<title>** — <description>`.
 
 For line/file comments, build the `body` field as plain markdown with the shape below. The leading `<Severity>` is the spelled-out name (`Blocker`, `Major`, `Minor`, `Suggestion`, `Nit`) so a human reader seeing an isolated comment on a file line decodes the ID without context. (Shown as an indented block so the inner suggestion fence renders correctly in this doc — the actual `body` string contains the literal backticks.)
 

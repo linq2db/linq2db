@@ -47,7 +47,7 @@ Build an in-memory lookup `{ comment_id → { threadId, isResolved } }` by match
 
 ### 2b. Audit prior reviewer claims (bot + human)
 
-Run the same audit pass as [`/review-pr` step 2b](../review-pr/SKILL.md). Scope is every thread in `reviewThreads[]` not `resolvedBy == currentUser` — bot + human, open + closed-by-others. Classify each as **Fixed at HEAD** / **Inaccurate at HEAD** / **Still actual**, then disposition per the same table:
+Run the same audit pass as [`/review-pr` step 2b](../review-pr/SKILL.md). Scope is both surfaces from **other** authors (bot + human): every thread in `reviewThreads[]` not `resolvedBy == currentUser` (open + closed-by-others), **and** every discrete claim in the `body` of any `reviews[]` entry whose `user != currentUser` not already covered by one of that review's threads. Classify each as **Fixed at HEAD** / **Inaccurate at HEAD** / **Still actual**, surface every verdict in the `## Prior-review audit` section of the new draft review's body, then disposition the **thread** items per the same table (body-summary claims have no thread to mutate — the audit line is their disposition; Still-actual ones also feed the finding stream):
 
 - Fixed / Inaccurate → reply + resolve (`{ resolve: true }` in the `post-pr-thread-replies.ps1` manifest).
 - Still actual + resolved-by-other → reply + unresolve (`{ unresolve: true }`).
@@ -112,6 +112,10 @@ For each prior finding, pick the update action based on `status` × `location.ki
 
 Edit-in-place of prior review bodies uses GitHub's `PUT` endpoint — see `.claude/docs/github-review-api.md`. Mechanics: the prior review body is already in memory from step 2's `GET /pulls/<n>/reviews` response — do not re-fetch. Apply a targeted substring replacement on the exact line containing the finding's ID to flip its checkbox, then PUT the whole new body in one call per review.
 
+### 7b. Out-of-scope disposition gate
+
+When the verify-mode `code-reviewer` returned a non-empty `out_of_scope_observations[]`, run the per-observation **promote / create-tracking-issue / leave-as-is** gate exactly as [`/review-pr` step 7b](../review-pr/SKILL.md) — a single batched prompt, the user decides each one before the preview. Promoted observations become fresh findings in the new draft review (numbered from the step-3 floor); tracked ones get a `/create-issue` filing and a `— tracked as #<n>` suffix; leave-as-is ones render in the new review's `## Out-of-scope observations` section. Skip when the array is empty.
+
 ### 8. Preview, then run the mode-choice gate
 
 Print a single plan preview that includes:
@@ -175,6 +179,10 @@ Verification-update body template:
 
 ```
 ## Verification update — <date>, against HEAD <short_sha>
+
+## Prior-review audit
+<!-- step-2b audit of OTHER authors' threads + review-body summaries; omit when none.
+     One line per item: **<verdict>** · <author> — <claim> per review-conventions.md. -->
 
 ### Fixed
 - [x] BLK001 — <short title>

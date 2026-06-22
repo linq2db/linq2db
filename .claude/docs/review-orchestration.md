@@ -70,7 +70,7 @@ After the preview is shown and the user has seen the assembled review body + cou
 
 > How should we proceed?
 > 1. **submit-all** (default) — bulk-post the review draft with all findings; bulk-disposition every audited thread from step 2b (reply+resolve for Fixed/Inaccurate; reply+unresolve for Still-actual threads that were resolved by someone other than `currentUser`).
-> 2. **interactive** — walk every reviewable item (findings, out-of-scope observations, baselines anomalies, audited threads) one-by-one with `fix | reject | accept-for-post`. Items accepted for post accumulate into a final draft review at the end.
+> 2. **interactive** — walk every reviewable item (findings, baselines anomalies, audited threads) one-by-one with `fix | reject | accept-for-post`. Items accepted for post accumulate into a final draft review at the end. (Out-of-scope observations are dispositioned earlier, in the out-of-scope gate, not here.)
 > 3. **cancel** — abort; no writes.
 
 Wait for explicit choice — do not assume submit-all on silence.
@@ -96,9 +96,10 @@ Walk every reviewable item in this order:
 1. Body-section findings (severity order: BLK → MAJ → MIN → SUG → NIT).
 2. Line-level findings (file order, line order within file).
 3. File-level findings.
-4. Out-of-scope observations.
-5. Baselines anomalies (cross-provider distinctions the `baselines-reviewer` flagged).
-6. Thread dispositions from step 2b (Fixed/Inaccurate replies; Still-actual unresolve actions).
+4. Baselines anomalies (cross-provider distinctions the `baselines-reviewer` flagged).
+5. Thread dispositions from step 2b (Fixed/Inaccurate replies; Still-actual unresolve actions).
+
+Out-of-scope observations are **not** walked here — they were already dispositioned (promote / track-issue / leave) in the skill's out-of-scope disposition gate (`review-pr` step 7b), which runs before the mode-choice gate in every mode. Promoted ones now appear among the findings in steps 1–3; tracked / leave ones are fixed body content.
 
 Per item, offer three actions:
 

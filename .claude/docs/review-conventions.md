@@ -82,6 +82,11 @@ The review **must** lead with the agentic-review disclaimer block below — it i
 - [ ] <open note>
 - [x] <satisfied note>
 
+## Prior-review audit
+- **Fixed** · <author> — <claim, ≤1 line> (<thread link / "summary">)
+- **Inaccurate** · <author> — <claim> — <correct reading>
+- **Still actual** · <author> — <claim> (carried into findings below as <ID>)
+
 ## Findings (not tied to a specific line)
 ### Blockers (BLK)
 - [ ] **BLK001** — <title>
@@ -98,6 +103,8 @@ The review **must** lead with the agentic-review disclaimer block below — it i
 ## Baselines
 <from baselines-reviewer output, or a single line when skipped / missing>
 ```
+
+The `## Prior-review audit` section is populated from the step-2b audit of prior reviews by **other** authors (bots + humans) — see `review-bot-claim-audit.md`. One line per audited inline thread and per audited review-body-summary claim, prefixed with its verdict (`Fixed` / `Inaccurate` / `Still actual`) and the author. Omit the section entirely when there are no prior reviews from other authors to audit. Still-actual items are also carried into the regular finding stream; cite the assigned finding ID on the audit line so the reader can follow it down.
 
 The `## Out-of-scope observations` section is populated from `code-reviewer`'s `out_of_scope_observations[]` output and only appears when that array is non-empty. Entries have no severity, no checkbox, and no line anchor — they are FYI observations about behavior that exists on `master` without the PR, surfaced because a reviewer might find them useful context. See `.claude/agents/code-reviewer.md` → **Scope discipline** for what qualifies.
 

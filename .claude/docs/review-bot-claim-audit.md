@@ -4,15 +4,21 @@ Re-verification procedure for `/review-pr` step 2b and `/verify-review` follow-u
 
 ## Scope
 
-Re-verify every review thread that is **not** `resolvedBy == currentUser`:
+Two distinct surfaces from other authors get audited — inline **threads** and top-level review-**body summaries**. Both bot (`copilot-pull-request-reviewer[bot]`, Codex, other LLM reviewers) and human authors count; only `currentUser`'s own output is exempt.
 
-- **Open threads from bot reviewers** (`copilot-pull-request-reviewer[bot]`, Codex, other LLM reviewers) — may have run against an older commit or hallucinated a concern.
+**Inline threads.** Re-verify every review thread that is **not** `resolvedBy == currentUser`:
+
+- **Open threads from bot reviewers** — may have run against an older commit or hallucinated a concern.
 - **Open threads from human reviewers** — may have been addressed without anyone closing them.
 - **Closed threads `resolvedBy != currentUser`** — the closure may have been premature; the original concern needs re-verification before we accept it.
 
 Skip threads with `resolvedBy == currentUser` — those were deliberate, our own past action.
 
-For each in-scope thread, classify as **Fixed at HEAD** / **Inaccurate at HEAD** / **Still actual** by reading current PR HEAD content. Surface the audit verdict in the review's notes section so the human reviewer can see which prior threads are stale, incorrectly closed, or still actionable.
+**Review-body summaries.** A review authored by another user (Copilot's summary review body, a human's overall-review prose) carries claims that are **not** attached to any thread and therefore have no resolve state. Scan every `reviews[]` entry whose `user != currentUser` for discrete claims in its `body` — bullet points, "consider…", "this will break…", named-file callouts — that are not already covered by one of that review's inline threads. Each such claim is audited exactly like a thread claim. Skip pure approval / summary prose ("LGTM", "reviewed N files") that asserts nothing verifiable.
+
+For each in-scope thread **and** each body-summary claim, classify as **Fixed at HEAD** / **Inaccurate at HEAD** / **Still actual** by reading current PR HEAD content.
+
+**Surface every verdict in the review body's `## Prior-review audit` section** (see `review-conventions.md` → **Output body structure**), one line per audited item, so the human reviewer sees at a glance which prior claims are stale, incorrectly closed, or still actionable — not buried in the notes section. Thread claims additionally get the reply+resolve / reply+unresolve disposition below; body-summary claims have no thread to resolve, so the `## Prior-review audit` line is their only disposition (a Still-actual body-summary claim also feeds the regular finding stream).
 
 ## Apply `code-reviewer.md`'s rubric when classifying
 
