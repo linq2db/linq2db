@@ -447,6 +447,8 @@ namespace LinqToDB.Internal.Reflection
 			{
 				public static readonly ConstructorInfo SqlParameterConstructor = MemberHelper.ConstructorOf(() => new SqlParameter(default(DbDataType), default(string), null));
 				public static readonly ConstructorInfo SqlValueConstructor     = MemberHelper.ConstructorOf(() => new SqlValue    (default(DbDataType), null));
+
+				public static readonly MethodInfo      AsNullable              = MemberHelper.MethodOfGeneric(() => global::LinqToDB.Sql.AsNullable<int>(0));
 			}
 		}
 

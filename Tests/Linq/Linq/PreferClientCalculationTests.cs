@@ -172,6 +172,27 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void AsNullableOverMissingLeftJoinReturnsNull([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(ClientCalcEntity.Seed);
+
+			// Faithful analog of the ToNullable bug: AsNullable<T>(T) takes a NON-nullable argument (int column) and the
+			// nullability is applied OUTSIDE the call via (int?). The left join never matches, so the value must read NULL.
+			// If AsNullable is pulled client-side under PreferClientCalculation and reads its int argument non-nullably,
+			// the missing-row NULL collapses to default(int)=0 and the (int?) cast yields 0 instead of null.
+			var query =
+				from e in table
+				from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+				select new { e.Id, Joined = (int?)Sql.AsNullable(j.Value1) };
+
+			var results = query.ToArray();
+
+			results.Length.ShouldBe(ClientCalcEntity.Seed.Length);
+			results.ShouldAllBe(r => r.Joined == null);
+		}
+
+		[Test]
 		public void GroupByAggregateStaysServerSide([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
 		{
 			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));

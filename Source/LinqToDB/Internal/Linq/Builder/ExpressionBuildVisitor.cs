@@ -868,6 +868,15 @@ namespace LinqToDB.Internal.Linq.Builder
 					return translatedExposed;
 				}
 
+				// Sql.AsNullable only annotates nullability and returns its argument unchanged. When PreferClientCalculation
+				// pulls it client-side, keeping the call reads its non-nullable argument and collapses a SQL NULL (e.g. from a
+				// missed LEFT JOIN) to default(T); unwrap to the argument so the surrounding read keeps the column's own
+				// nullability. Server-side (option off) it keeps translating via its [Expression] attribute unchanged.
+				if (PreferClientCalculation(node) && node.IsSameGenericMethod(Methods.LinqToDB.Sql.AsNullable))
+				{
+					return Visit(node.Arguments[0]);
+				}
+
 				// Honor PreferClientCalculation only for a mapped function that carries an [Expression] attribute
 				// (MappedFunctionAllowsClientCalculation). Functions like Sql.ToNullable deliberately carry no attribute and
 				// are translated server-side by SqlFunctionsMemberTranslatorBase, so they fail the check and keep translating;
