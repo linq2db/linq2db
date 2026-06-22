@@ -90,7 +90,7 @@ When creating a PR on `linq2db/linq2db`:
 - **Always open as draft** (`gh pr create --draft`). Never publish a ready-for-review PR unless the user explicitly asks.
 - **Confirm title and body with the user before running `gh pr create`.** Propose both, wait for approval, then create.
 - **Link referenced issues/tasks as closed on merge.** If the work targets a known issue or task, include `Fixes #<n>` / `Closes #<n>` in the PR body so GitHub auto-closes it when the PR merges. One keyword per issue.
-- **Assignee.** Assign the PR to the current GitHub user (`gh pr create --assignee @me`) unless the user specifies someone else.
+- **Assignee.** Assign the PR to the current GitHub user (`gh pr create --assignee @me`) unless the user specifies someone else. If `@me` resolution fails with a transient `502 Bad Gateway` (it does a live API call during create, and the PR is **not** created when it fails), resolve the handle explicitly — `gh api user --jq '.login'` — and pass it as `--assignee <login>` on the retry.
 - **Milestone.**
   - If the linked issue/task has a milestone, reuse it.
   - Otherwise ask the user to pick one. Fetch open milestones via `gh api repos/linq2db/linq2db/milestones?state=open` and present a **numbered list** (so the user can reply with just a number) in this order:
@@ -98,6 +98,18 @@ When creating a PR on `linq2db/linq2db`:
     2. Remaining **versioned** milestones (titles starting with a digit, e.g. `6.x`, `7.0.0`), sorted by version.
     3. **Non-versioned** milestones (e.g. `Backlog`, `In-progress`), sorted alphabetically by title.
 - **CI run proposal.** After `gh pr create`, propose running the full provider matrix on Azure Pipelines via a `/azp run test-all` comment. See [`ci-tests.md`](ci-tests.md) for the trigger syntax and when a narrower `/azp run test-<dbname>` makes more sense. Wait for the user to confirm before posting the comment.
+
+### Setting a PR's project-board lane
+
+linq2db PRs are tracked on org **Project #8 "PR Review Queue"** (id `PVT_kwDOAA01hc4BZqGZ`). The `Status` field (id `PVTSSF_lADOAA01hc4BZqGZzhUnP5s`) has options: `Todo` · `In Progress` (`47fc9ee4`) · `Waiting For Review` · `In Review` · `Done`. "Work In Progress" lane = **In Progress**. When the user asks to put a PR in a lane:
+
+```
+gh project item-add 8 --owner linq2db --url <pr-url> --format json   # returns the project item id
+gh project item-edit --id <item-id> --project-id PVT_kwDOAA01hc4BZqGZ \
+  --field-id PVTSSF_lADOAA01hc4BZqGZzhUnP5s --single-select-option-id <option-id>
+```
+
+Re-fetch option ids via `gh project field-list 8 --owner linq2db --format json` if they ever drift.
 
 ### Extending an open PR
 

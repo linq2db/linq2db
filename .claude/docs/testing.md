@@ -252,6 +252,12 @@ sealed class Entity
 }
 ```
 
+### Verifying server-side function translations
+
+When a test asserts a method translates to a server-side function, wrap the call in `Sql.AsSql(...)` (e.g. `select Sql.AsSql(Sql.NewGuid7())`). Without it, a provider that *lacks* the translation can silently client-evaluate the method and the test still passes — a false green that hides a missing translation.
+
+A non-`ServerSideOnly` `Sql.*` method with a CLR body (e.g. `Sql.NewGuid` / `Sql.NewGuid7`) falls back to client-side evaluation wherever no server translation is registered. So one `[DataSources]` test covers the whole matrix: providers with the translation exercise the SQL function, the rest the client fallback. Assert the observable property (e.g. the GUID version nibble), and wrap in `DisableBaseline` when the generated value is non-deterministic (the value, not the SQL shape, varies per run). Don't infer "can't client-evaluate" from another test's provider-exclusion list — those exclusions are often roundtrip-specific, not translation-capability statements.
+
 ### Testing query cache HIT / MISS behaviour
 
 Three idioms, each proves something different. Full mechanics in [`query-cache-mechanics.md`](query-cache-mechanics.md).
