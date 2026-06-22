@@ -580,20 +580,16 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
 		{
-			var factory  = translationContext.ExpressionFactory;
-			var timePart = factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "generateUUIDv4");
-
-			return timePart;
+			var factory = translationContext.ExpressionFactory;
+			return factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "generateUUIDv4");
 		}
 
 		// generateUUIDv7() requires ClickHouse 24.1+. ClickHouse has no version-dialect split in
 		// linq2db, so it is emitted unconditionally (older versions predate practical support).
 		protected override ISqlExpression? TranslateNewGuid7Method(ITranslationContext translationContext, TranslationFlags translationFlags)
 		{
-			var factory  = translationContext.ExpressionFactory;
-			var timePart = factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "generateUUIDv7");
-
-			return timePart;
+			var factory = translationContext.ExpressionFactory;
+			return factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "generateUUIDv7");
 		}
 
 		protected class GuidMemberTranslator : GuidMemberTranslatorBase

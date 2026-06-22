@@ -11,10 +11,8 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 		// uuidv7() is a built-in server function since PostgreSQL 18.
 		protected override ISqlExpression? TranslateNewGuid7Method(ITranslationContext translationContext, TranslationFlags translationFlags)
 		{
-			var factory  = translationContext.ExpressionFactory;
-			var timePart = factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "uuidv7");
-
-			return timePart;
+			var factory = translationContext.ExpressionFactory;
+			return factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "uuidv7");
 		}
 	}
 }

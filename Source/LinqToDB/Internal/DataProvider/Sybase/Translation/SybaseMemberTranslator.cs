@@ -276,10 +276,8 @@ namespace LinqToDB.Internal.DataProvider.Sybase.Translation
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
 		{
-			var factory  = translationContext.ExpressionFactory;
-			var timePart = factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "NewID", factory.Value(1));
-
-			return timePart;
+			var factory = translationContext.ExpressionFactory;
+			return factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "NewID", factory.Value(1));
 		}
 
 		protected class GuidMemberTranslator : GuidMemberTranslatorBase
