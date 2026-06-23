@@ -19,4 +19,4 @@ variables:
 # Per-test retry for crash/resource-unstable providers (access, oracle). MTP re-runs ONLY the
 # failed tests in-process, so a flaky failure no longer trips retryCountOnTaskFailure into a full
 # ~50-min leg re-run. The max-tests cap skips retry on mass failures (real breakage, not flakiness).
-  test_retry_args: '--retry-failed-tests 2 --retry-failed-tests-max-tests 25'
+  test_retry_args: '--retry-failed-tests 2 --retry-failed-tests-max-tests 5'
