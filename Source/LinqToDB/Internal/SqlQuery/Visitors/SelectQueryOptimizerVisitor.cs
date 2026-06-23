@@ -489,7 +489,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		/// </summary>
 		bool TryLiftSetOperatorsFromSoleFromSubquery(SelectQuery selectQuery)
 		{
-			if (selectQuery.From.Tables is not [{ Source: SelectQuery { HasSetOperators: true } mainSubquery }])
+			// A join on the sole FROM table references the subquery's columns; lifting the set
+			// operators here would orphan that reference (the hazard #5625 guards in IsMovingUpValid).
+			if (selectQuery.From.Tables is not [{ Source: SelectQuery { HasSetOperators: true } mainSubquery, HasJoins: false }])
 				return false;
 
 			if (HasSetOperatorBarrier(selectQuery))
