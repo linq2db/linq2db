@@ -7,7 +7,9 @@ DROP FUNCTION TEST_FUNCTION;
 -- SKIP Firebird.3 BEGIN
 -- SKIP Firebird.4 BEGIN
 -- SKIP Firebird.5 BEGIN
+-- SKIP Firebird.6 BEGIN
 SELECT 1 FROM rdb$database
+-- SKIP Firebird.6 END
 -- SKIP Firebird.5 END
 -- SKIP Firebird.4 END
 -- SKIP Firebird.3 END
@@ -36,8 +38,10 @@ DROP PROCEDURE test_v4_types;
 -- SKIP Firebird.3 END
 -- SKIP Firebird.4 BEGIN
 -- SKIP Firebird.5 BEGIN
+-- SKIP Firebird.6 BEGIN
 SELECT 1 FROM rdb$database
 -- SKIP Firebird.4 END
+-- SKIP Firebird.6 END
 -- SKIP Firebird.5 END
 COMMIT;
 
@@ -55,6 +59,7 @@ DROP TABLE "Person";                            COMMIT;
 DROP GENERATOR "DataTypeID";                    COMMIT;
 DROP GENERATOR "PersonID";                      COMMIT;
 
+-- SKIP Firebird.6 BEGIN
 DROP EXTERNAL FUNCTION RTRIM;                   COMMIT;
 DROP EXTERNAL FUNCTION LTRIM;                   COMMIT;
 
@@ -70,6 +75,7 @@ DECLARE EXTERNAL FUNCTION RTRIM
 	RETURNS CSTRING(255) FREE_IT
 	ENTRY_POINT 'IB_UDF_rtrim' MODULE_NAME 'ib_udf';
 COMMIT;
+-- SKIP Firebird.6 END
 
 
 /*
@@ -184,7 +190,9 @@ CREATE TABLE "DataTypeTest"
 -- SKIP Firebird.3 BEGIN
 -- SKIP Firebird.4 BEGIN
 -- SKIP Firebird.5 BEGIN
+-- SKIP Firebird.6 BEGIN
 	"Boolean_"        CHAR(1),
+-- SKIP Firebird.6 END
 -- SKIP Firebird.5 END
 -- SKIP Firebird.4 END
 -- SKIP Firebird.3 END
@@ -243,7 +251,9 @@ VALUES
 -- SKIP Firebird.3 BEGIN
 -- SKIP Firebird.4 BEGIN
 -- SKIP Firebird.5 BEGIN
+-- SKIP Firebird.6 BEGIN
 	'1'
+-- SKIP Firebird.6 END
 -- SKIP Firebird.5 END
 -- SKIP Firebird.4 END
 -- SKIP Firebird.3 END
@@ -278,7 +288,9 @@ CREATE TABLE "LinqDataTypes"
 -- SKIP Firebird.3 BEGIN
 -- SKIP Firebird.4 BEGIN
 -- SKIP Firebird.5 BEGIN
+-- SKIP Firebird.6 BEGIN
 	"BoolValue"      char(1),
+-- SKIP Firebird.6 END
 -- SKIP Firebird.5 END
 -- SKIP Firebird.4 END
 -- SKIP Firebird.3 END
@@ -819,7 +831,9 @@ CREATE TABLE "TestMerge1"
 -- SKIP Firebird.3 BEGIN
 -- SKIP Firebird.4 BEGIN
 -- SKIP Firebird.5 BEGIN
+-- SKIP Firebird.6 BEGIN
 	"FieldBoolean"    CHAR(1),
+-- SKIP Firebird.6 END
 -- SKIP Firebird.5 END
 -- SKIP Firebird.4 END
 -- SKIP Firebird.3 END
@@ -856,7 +870,9 @@ CREATE TABLE "TestMerge2"
 -- SKIP Firebird.3 BEGIN
 -- SKIP Firebird.4 BEGIN
 -- SKIP Firebird.5 BEGIN
+-- SKIP Firebird.6 BEGIN
 	"FieldBoolean"    CHAR(1),
+-- SKIP Firebird.6 END
 -- SKIP Firebird.5 END
 -- SKIP Firebird.4 END
 -- SKIP Firebird.3 END
@@ -886,7 +902,9 @@ COMMIT;
 
 -- SKIP Firebird.4 BEGIN
 -- SKIP Firebird.5 BEGIN
+-- SKIP Firebird.6 BEGIN
 SELECT 1 FROM rdb$database
+-- SKIP Firebird.6 END
 -- SKIP Firebird.5 END
 -- SKIP Firebird.4 END
 
@@ -1027,7 +1045,9 @@ AS
 -- SKIP Firebird.3 BEGIN
 -- SKIP Firebird.4 BEGIN
 -- SKIP Firebird.5 BEGIN
+-- SKIP Firebird.6 BEGIN
 SELECT 1 FROM rdb$database
+-- SKIP Firebird.6 END
 -- SKIP Firebird.5 END
 -- SKIP Firebird.4 END
 -- SKIP Firebird.3 END

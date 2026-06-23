@@ -37,6 +37,7 @@
 	RunCliTool("DuckDB"         , null                 , "Cli.All.DuckDB"             , Path.Combine(targetDir, "DuckDB")             , mode, connectionString: duckdbCN, extraOptions: extraOptions);
 	RunCliTool("DB2"            , "DB2"                , "Cli.All.DB2"                , Path.Combine(targetDir, "DB2")                , mode, providerLocation: db2ProviderLocation, extraOptions: extraOptions);
 	RunCliTool("Firebird"       , "Firebird.5"         , "Cli.All.Firebird"           , Path.Combine(targetDir, "Firebird")           , mode, extraOptions: extraOptions);
+	RunCliTool("Firebird"       , "Firebird.6"         , "Cli.All.Firebird6"          , Path.Combine(targetDir, "Firebird6")          , mode, extraOptions: extraOptions);
 	RunCliTool("Informix"       , "Informix.DB2"       , "Cli.All.Informix"           , Path.Combine(targetDir, "Informix")           , mode, providerLocation: db2ProviderLocation, extraOptions: extraOptions);
 	RunCliTool("MySQL"          , "MariaDB.11"         , "Cli.All.MariaDB"            , Path.Combine(targetDir, "MariaDB")            , mode, extraOptions: extraOptionsWithoutTypes);
 	RunCliTool("MySQL"          , "MySqlConnector.8.0" , "Cli.All.MySql"              , Path.Combine(targetDir, "MySql")              , mode, extraOptions: extraOptionsWithoutTypes);
