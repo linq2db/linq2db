@@ -30,7 +30,9 @@ namespace Tests
 		{
 			var setting = Environment.GetEnvironmentVariable("LINQ2DB_TESTS_TRACE_CONSOLE");
 			if (!string.IsNullOrEmpty(setting))
-				return setting is "1" or "true" or "TRUE" or "on";
+				return setting is "1"
+					|| string.Equals(setting, "true", StringComparison.OrdinalIgnoreCase)
+					|| string.Equals(setting, "on",   StringComparison.OrdinalIgnoreCase);
 
 			// Azure Pipelines sets TF_BUILD; most CI providers set CI.
 			return Environment.GetEnvironmentVariable("TF_BUILD") == null
@@ -84,7 +86,7 @@ namespace Tests
 						// Record that this test captured trace output so OnAfterTest appends it to the
 						// failure message (Azure surfaces only ErrorInfo). Independent of the console
 						// echo below, so failure diagnostics survive when the echo is suppressed.
-						ctx.Set(CustomTestContext.LIMITED, true);
+						ctx.Set(CustomTestContext.TRACE_CAPTURED, true);
 
 						// Echoing every query to TestContext.Out floods the MTP-captured CI log (~100x).
 						// Keep it opt-in; Debug.WriteLine stays (debugger only, never hits the build log).
@@ -192,7 +194,7 @@ namespace Tests
 
 				var trace = ctx.Get<StringBuilder>(CustomTestContext.TRACE);
 
-				if (trace != null && TestContext.CurrentContext.Result.FailCount > 0 && ctx.Get<bool>(CustomTestContext.LIMITED))
+				if (trace != null && TestContext.CurrentContext.Result.FailCount > 0 && ctx.Get<bool>(CustomTestContext.TRACE_CAPTURED))
 				{
 					// we need to set ErrorInfo.Message element text
 					// because Azure displays only ErrorInfo node data
