@@ -22,7 +22,7 @@ namespace Tests.xUpdate
 			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
-				PrepareIdentityData(db, context);
+				var idData = PrepareIdentityData(db, context);
 
 				var nextId = db.GetTable<MPerson>().Select(_ => _.ID).Max() + 1;
 
@@ -47,15 +47,15 @@ namespace Tests.xUpdate
 
 				Assert.That(result, Has.Count.EqualTo(7));
 
-				AssertPerson(IdentityPersons[0], result[0]);
-				AssertPerson(IdentityPersons[1], result[1]);
-				AssertPerson(IdentityPersons[2], result[2]);
-				AssertPerson(IdentityPersons[3], result[3]);
-				AssertPerson(IdentityPersons[4], result[4]);
-				AssertPerson(IdentityPersons[5], result[5]);
+				AssertPerson(idData.Persons[0], result[0]);
+				AssertPerson(idData.Persons[1], result[1]);
+				AssertPerson(idData.Persons[2], result[2]);
+				AssertPerson(idData.Persons[3], result[3]);
+				AssertPerson(idData.Persons[4], result[4]);
+				AssertPerson(idData.Persons[5], result[5]);
 
-				IdentityPersons[2].ID = nextId;
-				AssertPerson(IdentityPersons[2], result[6]);
+				idData.Persons[2].ID = nextId;
+				AssertPerson(idData.Persons[2], result[6]);
 			}
 		}
 
@@ -68,7 +68,7 @@ namespace Tests.xUpdate
 			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
-				PrepareIdentityData(db, context);
+				var idData = PrepareIdentityData(db, context);
 
 				var nextId = db.GetTable<MPerson>().Select(_ => _.ID).Max() + 1;
 
@@ -95,12 +95,12 @@ namespace Tests.xUpdate
 					Assert.That(result, Has.Count.EqualTo(7));
 				}
 
-				AssertPerson(IdentityPersons[0], result[0]);
-				AssertPerson(IdentityPersons[1], result[1]);
-				AssertPerson(IdentityPersons[2], result[2]);
-				AssertPerson(IdentityPersons[3], result[3]);
-				AssertPerson(IdentityPersons[4], result[4]);
-				AssertPerson(IdentityPersons[5], result[5]);
+				AssertPerson(idData.Persons[0], result[0]);
+				AssertPerson(idData.Persons[1], result[1]);
+				AssertPerson(idData.Persons[2], result[2]);
+				AssertPerson(idData.Persons[3], result[3]);
+				AssertPerson(idData.Persons[4], result[4]);
+				AssertPerson(idData.Persons[5], result[5]);
 				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[6].ID, Is.EqualTo(nextId + 1));
@@ -121,7 +121,7 @@ namespace Tests.xUpdate
 			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
-				PrepareIdentityData(db, context);
+				var idData = PrepareIdentityData(db, context);
 
 				var nextId = db.GetTable<MPerson>().Select(_ => _.ID).Max() + 1;
 
@@ -145,12 +145,12 @@ namespace Tests.xUpdate
 
 				Assert.That(result, Has.Count.EqualTo(7));
 
-				AssertPerson(IdentityPersons[0], result[0]);
-				AssertPerson(IdentityPersons[1], result[1]);
-				AssertPerson(IdentityPersons[2], result[2]);
-				AssertPerson(IdentityPersons[3], result[3]);
-				AssertPerson(IdentityPersons[4], result[4]);
-				AssertPerson(IdentityPersons[5], result[5]);
+				AssertPerson(idData.Persons[0], result[0]);
+				AssertPerson(idData.Persons[1], result[1]);
+				AssertPerson(idData.Persons[2], result[2]);
+				AssertPerson(idData.Persons[3], result[3]);
+				AssertPerson(idData.Persons[4], result[4]);
+				AssertPerson(idData.Persons[5], result[5]);
 				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[6].ID, Is.EqualTo(nextId));
@@ -214,6 +214,29 @@ namespace Tests.xUpdate
 			}
 		}
 
+		// Regression for parallel test execution (#5614): PrepareIdentityData builds and returns
+		// per-invocation copies of the identity fixtures (Persons/Patients/Doctors), which it mutates
+		// (DB-assigned identities, PersonID wiring). They must not be shared state: under parallel
+		// execution two provider lanes run PrepareIdentityData concurrently, and sharing the arrays
+		// corrupts each other's PersonIDs -> FK_Patient_Person violations and identity assertion
+		// mismatches. This guards that each invocation owns independent data.
+		[Test]
+		public void IdentityFixtures_ArePerInvocation([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tx = db.BeginTransaction();
+
+			var first  = PrepareIdentityData(db, context);
+			var second = PrepareIdentityData(db, context);
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(first.Persons,  Is.Not.SameAs(second.Persons));
+				Assert.That(first.Patients, Is.Not.SameAs(second.Patients));
+				Assert.That(first.Doctors,  Is.Not.SameAs(second.Doctors));
+			}
+		}
+
 		#region Test Data (Identity/Association Tests)
 		[Table("Doctor")]
 		public class MDoctor
@@ -253,28 +276,6 @@ namespace Tests.xUpdate
 				=> (t, ctx) => ctx.GetTable<MPatient>().Where(p => p.PersonID == t.ID);
 		}
 
-		private static readonly MDoctor[] IdentityDoctors = new[]
-		{
-			new MDoctor() { PersonID = 105, Taxonomy = "Dr. Lector" },
-			new MDoctor() { PersonID = 106, Taxonomy = "Dr. who???" },
-		};
-
-		private static readonly MPatient[] IdentityPatients = new[]
-		{
-			new MPatient() { PersonID = 102, Diagnosis = "sick" },
-			new MPatient() { PersonID = 103, Diagnosis = "very sick" },
-		};
-
-		private static readonly MPerson[] IdentityPersons = new[]
-		{
-			new MPerson() { ID = 101, Gender = Gender.Female,  FirstName = "first 1",  LastName = "last 1" },
-			new MPerson() { ID = 102, Gender = Gender.Male,    FirstName = "first 2",  LastName = "last 2" },
-			new MPerson() { ID = 103, Gender = Gender.Other,   FirstName = "first 3",  LastName = "last 3" },
-			new MPerson() { ID = 104, Gender = Gender.Unknown, FirstName = "first 4",  LastName = "last 4" },
-			new MPerson() { ID = 105, Gender = Gender.Female,  FirstName = "first 5",  LastName = "last 5" },
-			new MPerson() { ID = 106, Gender = Gender.Male,    FirstName = "first 6",  LastName = "last 6" },
-		};
-
 		private static void AssertPerson(MPerson expected, MPerson actual)
 		{
 			using (Assert.EnterMultipleScope())
@@ -287,10 +288,51 @@ namespace Tests.xUpdate
 			}
 		}
 
-		private void PrepareIdentityData(ITestDataContext db, string context)
+		private sealed class IdentityData
+		{
+			public IdentityData(MPerson[] persons, MPatient[] patients, MDoctor[] doctors)
+			{
+				Persons  = persons;
+				Patients = patients;
+				Doctors  = doctors;
+			}
+
+			public MPerson[]  Persons  { get; }
+			public MPatient[] Patients { get; }
+			public MDoctor[]  Doctors  { get; }
+		}
+
+		// Returns per-invocation copies of the identity fixtures. They are mutated below (DB-assigned
+		// identities, PersonID wiring), so building them locally per call isolates the data between
+		// concurrently-running provider lanes under parallel execution (#5614) — sharing static
+		// instances let two lanes corrupt each other's PersonIDs, causing FK_Patient_Person violations
+		// and identity assertion mismatches.
+		private IdentityData PrepareIdentityData(ITestDataContext db, string context)
 		{
 			using var _1 = new DisableBaseline("Test Setup");
 			using var _2 = new DisableLogging();
+
+			var persons = new[]
+			{
+				new MPerson() { ID = 101, Gender = Gender.Female,  FirstName = "first 1",  LastName = "last 1" },
+				new MPerson() { ID = 102, Gender = Gender.Male,    FirstName = "first 2",  LastName = "last 2" },
+				new MPerson() { ID = 103, Gender = Gender.Other,   FirstName = "first 3",  LastName = "last 3" },
+				new MPerson() { ID = 104, Gender = Gender.Unknown, FirstName = "first 4",  LastName = "last 4" },
+				new MPerson() { ID = 105, Gender = Gender.Female,  FirstName = "first 5",  LastName = "last 5" },
+				new MPerson() { ID = 106, Gender = Gender.Male,    FirstName = "first 6",  LastName = "last 6" },
+			};
+
+			var doctors = new[]
+			{
+				new MDoctor() { PersonID = 105, Taxonomy = "Dr. Lector" },
+				new MDoctor() { PersonID = 106, Taxonomy = "Dr. who???" },
+			};
+
+			var patients = new[]
+			{
+				new MPatient() { PersonID = 102, Diagnosis = "sick" },
+				new MPatient() { PersonID = 103, Diagnosis = "very sick" },
+			};
 
 			// DuckDB bug: references, removed in transaction, still 'alive' till commit
 			// so we cannot clear Person
@@ -302,7 +344,7 @@ namespace Tests.xUpdate
 				db.Person .Delete();
 
 			var id = 1;
-			foreach (var person in IdentityPersons)
+			foreach (var person in persons)
 			{
 				person.ID = id++;
 
@@ -315,17 +357,19 @@ namespace Tests.xUpdate
 					person.ID = Convert.ToInt32(db.InsertWithIdentity(person));
 			}
 
-			IdentityDoctors[0].PersonID = IdentityPersons[4].ID;
-			IdentityDoctors[1].PersonID = IdentityPersons[5].ID;
+			doctors[0].PersonID = persons[4].ID;
+			doctors[1].PersonID = persons[5].ID;
 
-			foreach (var doctor in IdentityDoctors)
+			foreach (var doctor in doctors)
 				db.Insert(doctor);
 
-			IdentityPatients[0].PersonID = IdentityPersons[2].ID;
-			IdentityPatients[1].PersonID = IdentityPersons[3].ID;
+			patients[0].PersonID = persons[2].ID;
+			patients[1].PersonID = persons[3].ID;
 
-			foreach (var patient in IdentityPatients)
+			foreach (var patient in patients)
 				db.Insert(patient);
+
+			return new IdentityData(persons, patients, doctors);
 		}
 		#endregion
 	}
