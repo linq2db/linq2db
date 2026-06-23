@@ -68,6 +68,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			SqlProviderFlags.OutputInsertUseSpecialTable        = true;
 			SqlProviderFlags.OutputUpdateUseSpecialTables       = true;
 			SqlProviderFlags.OutputMergeUseSpecialTables        = true;
+			SqlProviderFlags.IsUpdateOutputSupported            = true;
 			SqlProviderFlags.IsApplyJoinSupported               = true;
 			SqlProviderFlags.TakeHintsSupported                 = TakeHints.Percent | TakeHints.WithTies;
 			SqlProviderFlags.IsCommonTableExpressionsSupported  = true;

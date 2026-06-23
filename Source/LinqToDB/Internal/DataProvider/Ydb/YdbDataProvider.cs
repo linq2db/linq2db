@@ -31,6 +31,8 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		{
 			SqlProviderFlags.IsSubQueryOrderBySupported       = true;
 			SqlProviderFlags.IsUnionAllOrderBySupported       = true;
+			SqlProviderFlags.IsUpdateOutputSupported          = true;
+			SqlProviderFlags.IsAffectedRowsCountSupported     = false; // YDB doesn't report affected-row counts
 			// YQL rejects an aggregate function directly in ORDER BY; it must be projected as a column
 			// and ordered by its alias, so keep the aggregate-projecting subquery un-flattened.
 			SqlProviderFlags.IsOrderByAggregateFunctionSupported = false;
