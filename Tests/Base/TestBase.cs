@@ -19,6 +19,24 @@ namespace Tests
 	{
 		const int TRACES_LIMIT = 50000;
 
+		// Live per-query trace echo to TestContext.Out. Under the MTP test runner this stream is
+		// captured into the CI build log, so echoing every executed query inflated per-leg logs
+		// ~100x (e.g. the Access leg log grew from 0.13MB to 25MB). Default: on locally, off under
+		// CI; override with LINQ2DB_TESTS_TRACE_CONSOLE=1/0. Failed tests still get the full trace
+		// appended to their failure message in OnAfterTest, and baseline capture is independent.
+		static readonly bool EchoTraceToConsole = GetEchoTraceToConsole();
+
+		static bool GetEchoTraceToConsole()
+		{
+			var setting = Environment.GetEnvironmentVariable("LINQ2DB_TESTS_TRACE_CONSOLE");
+			if (!string.IsNullOrEmpty(setting))
+				return setting is "1" or "true" or "TRUE" or "on";
+
+			// Azure Pipelines sets TF_BUILD; most CI providers set CI.
+			return Environment.GetEnvironmentVariable("TF_BUILD") == null
+				&& Environment.GetEnvironmentVariable("CI")       == null;
+		}
+
 		protected static string? LastQuery { get; set; }
 
 		static TestBase()
@@ -63,12 +81,17 @@ namespace Tests
 						lock (trace)
 							trace.AppendLine(CultureInfo.InvariantCulture, $"{name}: {message}");
 
-						if (traceCount < TRACES_LIMIT || level == TraceLevel.Error)
-						{
-							ctx.Set(CustomTestContext.LIMITED, true);
+						// Record that this test captured trace output so OnAfterTest appends it to the
+						// failure message (Azure surfaces only ErrorInfo). Independent of the console
+						// echo below, so failure diagnostics survive when the echo is suppressed.
+						ctx.Set(CustomTestContext.LIMITED, true);
+
+						// Echoing every query to TestContext.Out floods the MTP-captured CI log (~100x).
+						// Keep it opt-in; Debug.WriteLine stays (debugger only, never hits the build log).
+						if (EchoTraceToConsole && (traceCount < TRACES_LIMIT || level == TraceLevel.Error))
 							TestContext.Out.WriteLine("{0}: {1}", name, message);
-							Debug.WriteLine(message, name);
-						}
+
+						Debug.WriteLine(message, name);
 
 						Interlocked.Increment(ref traceCount);
 					}
