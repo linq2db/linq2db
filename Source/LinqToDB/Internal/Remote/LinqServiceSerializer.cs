@@ -1145,6 +1145,7 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 								Append(ObjectIndices[field]);
 
 							Append(elem.SqlQueryExtensions);
+							Append(elem.CanBeNull);
 
 							break;
 						}
@@ -2279,12 +2280,14 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 							var all        = Read<SqlField>()!;
 							var fields     = ReadArray<SqlCteTableField>()!;
 							var extensions = ReadList<SqlQueryExtension>();
+							var canBeNull  = ReadNullableBool();
 
 							cteTable = isDelayed ?
 								new SqlCteTable(sourceID, alias, all, fields, null) :
 								new SqlCteTable(sourceID, alias, all, fields, cte!);
 
 							cteTable.SqlQueryExtensions = extensions;
+							cteTable.CanBeNull          = canBeNull;
 
 							obj = cteTable;
 
