@@ -117,6 +117,8 @@ Exception — when the user says "run tests now" / "build now" / similar mid-wal
 
 At the end of the walk, run the thread-disposition bundle **first** (`post-pr-thread-replies.ps1`), then post the accumulated `accept-for-post` set as one draft review — the same one-pending-review ordering constraint as `submit-all` above (a standalone thread reply 422s while a fresh draft is pending).
 
+When every finding was dispositioned `fix` (the `accept-for-post` set is empty), **no draft review is posted** — the pushed commits plus the PR-body `## Follow-up commit(s)` subsection are the entire outcome. Still run the thread-disposition bundle if any prior-review threads were audited; skip the empty draft-review POST.
+
 **Grouping for high item counts (>20).** Before walking, compute clusters on the most-discriminating axis: by file path, by severity, or by shared wording (first 12 words of `why` lowercased — the same dedup key the multi-pass merge uses). Propose the most-clustered axis as a grouping: each group is dispositioned in one step (group-level `fix | reject | accept-for-post` applies to every item in the cluster). The user can accept the group disposition or expand a group to per-item walking. Single-item clusters are flattened back to per-item walking automatically — never wrap one finding in a "group of 1" prompt.
 
 ### Command-usage audit (closing step)

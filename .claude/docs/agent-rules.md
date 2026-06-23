@@ -153,6 +153,8 @@ Pairs with *Issue-proposed fix details are written from memory — verify them* 
 
 When the user asks to run tests, **invoke `Skill(test)`**. Don't call `Agent(test-runner)` directly, and don't run `dotnet build` before the skill — `dotnet test` rebuilds inside the skill, and bypassing it silently skips `CreateDatabase` filter injection and the baselines diff. Project selection (Playground vs Linq), multi-TFM gating, and `playgroundLink` are the skill's responsibility — see [`.claude/skills/test/SKILL.md`](../skills/test/SKILL.md) → step 3.1.
 
+For a **worktree** target (e.g. validating fixes during `/review-pr` interactive mode), `/test` still owns the run: pass `run <filter> worktree <abs-worktree-path>` so it forwards `repoRoot` to `test-runner` and builds/tests the worktree rather than the primary clone. Don't hand-run `dotnet test` against a worktree — you'll miss the custom `--provider` arg / `--settings .runsettings` / the `CreateData.CreateDatabase` prefix and burn calls on .NET 10 MTP CLI quirks (`dotnet test` needs `--project`; without `--provider`, `[IncludeDataSources]` tests resolve zero providers → "0 tests"). The full recipe is in [`worktree.md`](worktree.md) → *Running tests from a worktree* — read it before testing in a worktree.
+
 ### Iterative-build gotchas
 
 When iterated `dotnet build` / `/test` / `/release-verify` runs fail with `Access to the path '<dll>' is denied` (build-server file lock — fix: `dotnet build-server shutdown`) or `MSB3021/MSB3027 not enough space on disk` (`.build/bin/` accumulation — fix: `Remove-Item -Recurse -Force .build/bin .build/obj`), see [`windows-gotchas.md`](windows-gotchas.md) → *Iterative-build gotchas*.
