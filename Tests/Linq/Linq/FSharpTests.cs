@@ -283,6 +283,34 @@ namespace Tests.Linq
 			await FSharp.Issue5598.UpdateSetsOnlyChangedColumnAsync(db, false);
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5598")]
+		public void Issue5598_UpdateSetsOnlyChangedColumnNoPredicate([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+			FSharp.Issue5598.UpdateSetsOnlyChangedColumnNoPredicate(db, true);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5598")]
+		public void Issue5598_UpdateSetsOnlyChangedColumnNoPredicateYdb([IncludeDataSources(false, TestProvName.AllYdb)] string context)
+		{
+			using var db = GetDataConnection(context);
+			FSharp.Issue5598.UpdateSetsOnlyChangedColumnNoPredicate(db, false);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5598")]
+		public void Issue5598_UpdateNoOpExcludesPrimaryKey([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+			FSharp.Issue5598.UpdateNoOpExcludesPrimaryKey(db, true);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5598")]
+		public void Issue5598_UpdateNoOpExcludesPrimaryKeyYdb([IncludeDataSources(false, TestProvName.AllYdb)] string context)
+		{
+			using var db = GetDataConnection(context);
+			FSharp.Issue5598.UpdateNoOpExcludesPrimaryKey(db, false);
+		}
+
 		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1813")]
 		public void Issue1813Test1([DataSources] string context)
