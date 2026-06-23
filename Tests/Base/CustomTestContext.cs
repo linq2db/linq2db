@@ -6,7 +6,7 @@ namespace Tests
 	{
 		public static string BASELINE          = "key-baseline";
 		public static string TRACE             = "key-trace";
-		public static string LIMITED           = "key-limited";
+		public static string TRACE_CAPTURED    = "key-trace-captured";
 		public static string BASELINE_DISABLED = "key-baseline-disabled";
 		public static string TRACE_DISABLED    = "key-trace-disabled";
 
