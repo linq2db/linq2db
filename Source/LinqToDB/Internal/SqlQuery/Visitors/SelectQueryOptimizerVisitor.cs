@@ -123,7 +123,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 				// convert remaining nested joins to subqueries
 				if (!_providerFlags.IsNestedJoinsSupported)
-					JoinsOptimizer.UndoNestedJoins(_root);
+					_root = JoinsOptimizer.UndoNestedJoins(_root, _columnNestingCorrector, _columnOptimizerVisitor, _mappingSchema);
 			}
 
 			return _root;

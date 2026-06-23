@@ -4,6 +4,7 @@ using System.Linq;
 
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Internal.SqlQuery.Visitors;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.SqlProvider
 {
@@ -155,7 +156,11 @@ namespace LinqToDB.Internal.SqlProvider
 			return isModified;
 		}
 
-		public static void UndoNestedJoins(IQueryElement statement)
+		public static IQueryElement UndoNestedJoins(
+			IQueryElement                  statement,
+			SqlQueryColumnNestingCorrector columnNestingCorrector,
+			SqlQueryColumnOptimizerVisitor columnOptimizerVisitor,
+			MappingSchema                  mappingSchema)
 		{
 			var correct = false;
 			statement.Visit(e =>
@@ -191,9 +196,14 @@ namespace LinqToDB.Internal.SqlProvider
 
 			if (correct)
 			{
-				var corrector = new SqlQueryColumnNestingCorrector();
-				corrector.CorrectColumnNesting(statement);
+				// Derived tables minted here come after the optimizer's column pass: re-correct nesting and
+				// re-run column optimization so an unreferenced one is projected as SELECT 1, not SELECT *
+				// (which "could fail if there are columns with same name" — e.g. from the joined tables).
+				statement = columnNestingCorrector.CorrectColumnNesting(statement);
+				statement = columnOptimizerVisitor.OptimizeColumns(statement, mappingSchema);
 			}
+
+			return statement;
 		}
 
 		#region Helpers
