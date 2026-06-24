@@ -23,6 +23,8 @@ pwsh -NoProfile -File .claude/scripts/pr-context.ps1 -Pr <n>
 
 Execute the three sections of [`pr-context-prep.md`](pr-context-prep.md) in order: **Context load** (the one script call), **Change summary**, **Baselines clone setup**. Both skills need all three — draft PRs are no different from ready-for-review PRs.
 
+**Check the PR's build CI result.** After the context load, query CI status on the PR head: `gh pr checks <n> --repo linq2db/linq2db`. If the required Azure Pipelines `build` check is **failing / errored** (not merely pending or running), surface it to the user before spawning reviewers and record it as a `## Review notes` item in the review body — a red build means the diff may not compile, so some findings can be noise and the PR may be mid-flight. Don't block the review on it (draft and in-progress branches legitimately carry red CI); the build state is review-relevant context the human reader should see. Applies to both `/review-pr` and `/verify-review`.
+
 ### Spawning the subagents in parallel
 
 Launch every applicable subagent in a **single assistant turn with parallel Agent tool calls** so they run concurrently. Never sequence them.
@@ -100,6 +102,8 @@ Walk every reviewable item in this order:
 5. Thread dispositions from step 2b (Fixed/Inaccurate replies; Still-actual unresolve actions).
 
 Out-of-scope observations are **not** walked here — they were already dispositioned (promote / track-issue / leave) in the skill's out-of-scope disposition gate (`review-pr` step 7b), which runs before the mode-choice gate in every mode. Promoted ones now appear among the findings in steps 1–3; tracked / leave ones are fixed body content.
+
+Walk **one finding per prompt**, even when the finding count is small (< 5). Do not batch dispositions into a single multi-finding prompt — that defeats the per-item `fix | reject | accept-for-post` choice and the per-item severity/scope reconsideration the walk is for (a repeated correction).
 
 Per item, offer three actions:
 
