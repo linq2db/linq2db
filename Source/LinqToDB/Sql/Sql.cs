@@ -253,6 +253,10 @@ namespace LinqToDB
 			return Guid.NewGuid();
 		}
 
+		/// <summary>
+		/// Returns a version 7 (time-ordered, RFC 9562) <see cref="Guid"/>. When the target provider exposes a native
+		/// UUIDv7 generator the call is translated to it server-side; otherwise the value is generated client-side.
+		/// </summary>
 		public static Guid NewGuid7()
 		{
 #if NET9_0_OR_GREATER
