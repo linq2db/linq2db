@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
@@ -3373,6 +3373,7 @@ namespace Tests.Linq
 					count++;
 					pos += token.Length;
 				}
+
 				return count;
 			}
 		}

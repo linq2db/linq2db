@@ -105,6 +105,11 @@ namespace LinqToDB.Linq.Translation
 			Registration.RegisterMethod(() => Sql.Window.Max((byte?)1,      f => f.OrderBy(1)), TranslateMax);
 		}
 
+		/// <summary>
+		/// When <see langword="true"/>, the translated <c>ROW_NUMBER()</c> is wrapped in an explicit <c>CAST</c> to the
+		/// result type. Providers whose <c>ROW_NUMBER()</c> does not yield the expected numeric type override this to
+		/// opt in (e.g. ClickHouse). Default: <see langword="false"/>.
+		/// </summary>
 		public virtual bool IsRowNumberNeedsCasting => false;
 
 		public record ArgumentInformation(Expression Expr, Sql.AggregateModifier Modifier);
