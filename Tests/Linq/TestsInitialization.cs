@@ -180,10 +180,15 @@ public class TestsInitialization
 		// Parallelize tests across database providers: route each provider's tests to a
 		// dedicated lane so the same database is never hit concurrently. Only swap when
 		// NUnit is actually running in parallel; a serial run keeps the original dispatcher.
-		if (ResourceLaneDispatcherInstaller.TryInstall(new DatabaseLaneStrategy(), new DelegateParallelDiagnostics(ParallelDiag.Log), out var workers))
+		var configuredLanes = TestConfiguration.MaxParallelLanes;
+		var maxLanes        = configuredLanes ?? (2 * Environment.ProcessorCount);
+		if (maxLanes < 1)
+			maxLanes = 1;
+
+		if (ResourceLaneDispatcherInstaller.TryInstall(new DatabaseLaneStrategy(), new DelegateParallelDiagnostics(ParallelDiag.Log), maxLanes, out var workers))
 		{
 			TestBase.ParallelExecutionEnabled = true;
-			TestContext.Progress.WriteLine($"[parallel] installed ResourceLaneDispatcher (workers={workers})");
+			TestContext.Progress.WriteLine($"[parallel] installed ResourceLaneDispatcher (maxLanes={maxLanes} [{(configuredLanes.HasValue ? "from config" : "default 2xCPU")}], cpus={Environment.ProcessorCount}, nunitWorkers={workers})");
 		}
 		else
 		{

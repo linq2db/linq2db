@@ -19,14 +19,14 @@ namespace NUnit.ParallelByResource
 		/// dispatcher delegates composite suites and globally-exclusive work back to the original, so
 		/// NUnit's completion / shift machinery stays intact.
 		/// </remarks>
-		public static bool TryInstall(IResourceLaneStrategy strategy, IParallelDiagnostics? diagnostics, out int levelOfParallelism)
+		public static bool TryInstall(IResourceLaneStrategy strategy, IParallelDiagnostics? diagnostics, int maxLanes, out int levelOfParallelism)
 		{
 			var context = TestExecutionContext.CurrentContext;
 
 			if (context.Dispatcher is ParallelWorkItemDispatcher original)
 			{
 				levelOfParallelism = original.LevelOfParallelism;
-				context.Dispatcher = new ResourceLaneDispatcher(original, strategy, diagnostics);
+				context.Dispatcher = new ResourceLaneDispatcher(original, strategy, maxLanes, diagnostics);
 				return true;
 			}
 

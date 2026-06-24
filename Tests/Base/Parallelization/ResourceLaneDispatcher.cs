@@ -39,6 +39,12 @@ namespace NUnit.ParallelByResource
 		// without the thread-affinity / reentrancy semantics of Monitor / Lock.
 		readonly SemaphoreSlim _secondaryMutex = new SemaphoreSlim(1, 1);
 
+		// Caps how many resource lanes execute concurrently (excess lanes queue behind it). Bounds the
+		// aggregate per-lane memory footprint (DataConnection + query / materialization caches) on small
+		// CI agents — an uncapped lane count OOM-ed the multi-context legs. The exclusive lane is not
+		// throttled (it already runs alone under the write lock).
+		readonly SemaphoreSlim _laneThrottle;
+
 		// True (per-thread) while a thread already holds the gate (read or write). A work item
 		// can synchronously dispatch follow-up items on the same thread - a NonParallel fixture
 		// running its inline children, or any leaf whose completion triggers its parent's
@@ -51,12 +57,15 @@ namespace NUnit.ParallelByResource
 		readonly Dictionary<string, SerialLane>  _resourceLanes = new Dictionary<string, SerialLane>(StringComparer.OrdinalIgnoreCase);
 		readonly SerialLane                      _exclusiveLane;
 
-		public ResourceLaneDispatcher(IWorkItemDispatcher original, IResourceLaneStrategy strategy, IParallelDiagnostics? diagnostics = null)
+		public ResourceLaneDispatcher(IWorkItemDispatcher original, IResourceLaneStrategy strategy, int maxLanes, IParallelDiagnostics? diagnostics = null)
 		{
+			var lanes = Math.Max(1, maxLanes);
+
 			_original      = original;
 			_strategy      = strategy;
 			_diag          = diagnostics ?? NullParallelDiagnostics.Instance;
-			_exclusiveLane = new SerialLane("exclusive", _gate, _secondaryMutex, _diag, exclusive: true);
+			_laneThrottle  = new SemaphoreSlim(lanes, lanes);
+			_exclusiveLane = new SerialLane("exclusive", _gate, _secondaryMutex, _laneThrottle, _diag, exclusive: true);
 		}
 
 		public int LevelOfParallelism => _original.LevelOfParallelism;
@@ -185,7 +194,7 @@ namespace NUnit.ParallelByResource
 			{
 				if (!_resourceLanes.TryGetValue(key, out var lane))
 				{
-					lane = new SerialLane(key, _gate, _secondaryMutex, _diag, exclusive: false);
+					lane = new SerialLane(key, _gate, _secondaryMutex, _laneThrottle, _diag, exclusive: false);
 					_resourceLanes.Add(key, lane);
 				}
 
@@ -202,13 +211,15 @@ namespace NUnit.ParallelByResource
 			readonly BlockingCollection<(WorkItem work, bool secondary)> _queue = new BlockingCollection<(WorkItem, bool)>();
 			readonly ReaderWriterLockSlim                                _gate;
 			readonly SemaphoreSlim                                       _secondaryMutex;
+			readonly SemaphoreSlim                                       _laneThrottle;
 			readonly IParallelDiagnostics                                _diag;
 			readonly bool                                                _exclusive;
 
-			public SerialLane(string name, ReaderWriterLockSlim gate, SemaphoreSlim secondaryMutex, IParallelDiagnostics diag, bool exclusive)
+			public SerialLane(string name, ReaderWriterLockSlim gate, SemaphoreSlim secondaryMutex, SemaphoreSlim laneThrottle, IParallelDiagnostics diag, bool exclusive)
 			{
 				_gate           = gate;
 				_secondaryMutex = secondaryMutex;
+				_laneThrottle   = laneThrottle;
 				_diag           = diag;
 				_exclusive      = exclusive;
 
@@ -234,6 +245,14 @@ namespace NUnit.ParallelByResource
 					var holdsSecondary = !_exclusive && secondary;
 					if (holdsSecondary)
 						_secondaryMutex.Wait();
+
+					// Cap concurrent resource lanes (acquired after the secondary mutex, before the gate,
+					// for the same reason the gate is taken last: a lane waiting its turn must not pin a
+					// throttle permit while blocked on the secondary mutex). The exclusive lane is not
+					// throttled — it already runs alone under the write lock.
+					var holdsThrottle = !_exclusive;
+					if (holdsThrottle)
+						_laneThrottle.Wait();
 
 					if (_exclusive)
 						_gate.EnterWriteLock();
@@ -264,6 +283,9 @@ namespace NUnit.ParallelByResource
 							_gate.ExitWriteLock();
 						else
 							_gate.ExitReadLock();
+
+						if (holdsThrottle)
+							_laneThrottle.Release();
 
 						if (holdsSecondary)
 							_secondaryMutex.Release();
