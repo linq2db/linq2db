@@ -1254,6 +1254,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (!selectQuery.Select.IsDistinct || !selectQuery.Select.OptimizeDistinct)
 				return false;
 
+			// DISTINCT ON is never "redundant": removing it changes which row survives per ON key. Leave it intact.
+			if (selectQuery.Select.IsDistinctOn)
+				return false;
+
 			if (IsComplexQuery(selectQuery, false))
 				return false;
 
@@ -1564,7 +1568,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						else
 							searchCondition.Add(new SqlPredicate.ExprExpr(rnColumn, SqlPredicate.Operator.LessOrEqual, takeValue, null));
 					}
-					else if (sql.Select.IsDistinct)
+					else if (sql.Select.IsDistinct && !sql.Select.IsDistinctOn)
 					{
 						sql.Select.IsDistinct = false;
 						searchCondition.Add(new SqlPredicate.ExprExpr(rnColumn, SqlPredicate.Operator.Equal, new SqlValue(1), null));
@@ -1741,6 +1745,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				parentQuery.Select.OptimizeDistinct = parentQuery.Select.OptimizeDistinct || subQuery.Select.OptimizeDistinct;
 				parentQuery.Select.IsDistinct       = true;
+				// carry DISTINCT ON keys with the modifier so a flattened parent keeps the correct distinct semantics
+				if (subQuery.Select.IsDistinctOn)
+					parentQuery.Select.DistinctOn = subQuery.Select.DistinctOn;
 			}
 
 			if (subQuery.Select.TakeValue != null)
@@ -2230,6 +2237,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			if (subQuery.IsDistinct)
 			{
+				// A DISTINCT ON subquery must not be flattened into its parent: moving the modifier up would drop the
+				// ON list and break its ORDER BY dependency. Keep it as a nested derived table.
+				if (subQuery.Select.IsDistinctOn)
+					return false;
+
 				if (parentQuery.HasOrderBy && !parentQuery.OrderBy.Items.TrueForAll(oi => oi.Expression is SqlColumn col && subQuery.Select.Columns.Contains(col)))
 				{
 					return false;
@@ -3468,6 +3480,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				subQuery.Select.IsDistinct = true;
 				query.Select.IsDistinct    = false;
+				// move DISTINCT ON keys down with the modifier and clear them from the source query
+				subQuery.Select.DistinctOn = query.Select.DistinctOn;
+				query.Select.DistinctOn    = null;
 			}
 
 			_columnNestingCorrector.CorrectColumnNesting(query);
@@ -3569,7 +3584,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 			}
 
-			if (joinQuery.Select.Columns.Count > 1 && joinQuery.Select.IsDistinct)
+			if (joinQuery.Select.Columns.Count > 1 && joinQuery.Select.IsDistinct && !joinQuery.Select.IsDistinctOn)
 			{
 				if (!SqlProviderHelper.IsValidQuery(joinQuery, parentQuery: parentQuery, fakeJoin: null, columnSubqueryLevel: 1, _providerFlags, out _))
 					return false;
@@ -3742,8 +3757,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			var sq = predicate.SubQuery;
 
-			// We can safely optimize out Distinct
-			if (sq.Select.IsDistinct)
+			// We can safely optimize out Distinct (but not DISTINCT ON — clearing only IsDistinct would leave the ON
+			// list dangling; EXISTS ignores distinctness/ordering anyway, so leaving it intact is harmless).
+			if (sq.Select.IsDistinct && !sq.Select.IsDistinctOn)
 			{
 				sq.Select.IsDistinct = false;
 			}

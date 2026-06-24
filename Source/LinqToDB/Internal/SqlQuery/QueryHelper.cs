@@ -1559,7 +1559,9 @@ namespace LinqToDB.Internal.SqlQuery
 					if (selectQuery.HasUniqueKeys)
 						knownKeys.AddRange(selectQuery.UniqueKeys);
 
-					if (includeDistinctAndGrouping && selectQuery.Select.IsDistinct)
+					// DISTINCT ON guarantees uniqueness only on the ON tuple, not on the full projection, so it must
+					// not contribute the projected columns as a unique key.
+					if (includeDistinctAndGrouping && selectQuery.Select.IsDistinct && !selectQuery.Select.IsDistinctOn)
 						knownKeys.Add(selectQuery.Select.Columns.Select(c => c.Expression).ToList());
 
 					if (includeDistinctAndGrouping && !selectQuery.Select.GroupBy.IsEmpty)

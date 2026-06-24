@@ -1,6 +1,7 @@
 ﻿#if NET8_0_OR_GREATER
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -8,6 +9,7 @@ using System.Reflection;
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Internal.Linq.Builder
 {
@@ -114,6 +116,31 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (captured.Length == 0)
 				return BuildSequenceResult.Error(sequenceExpression, ErrorHelper.Error_DistinctByRequiresOrderBy);
 
+			// On providers that support PostgreSQL-style DISTINCT ON, lower DistinctBy to it directly instead of the
+			// ROW_NUMBER() emulation: the key selector becomes the ON list and the preceding OrderBy — already applied
+			// to the sequence built above — is reordered to lead with those keys. Reuses that sequence (no second
+			// TryBuildSequence, which would leak an extra table reference). Falls through to ROW_NUMBER when the key
+			// has no usable SQL form (empty ON list, e.g. DistinctBy(x => 1)).
+			if (builder.DataContext.SqlProviderFlags.IsDistinctOnSupported)
+			{
+				var partitionBody = SequenceHelper.PrepareBody(selector, sequence);
+				var keySql        = builder.BuildSqlExpression(sequence, partitionBody, BuildPurpose.Sql, BuildFlags.ForKeys);
+
+				if (SequenceHelper.IsSqlReady(keySql))
+				{
+					var onExpressions = ExpressionBuilder.CollectDistinctPlaceholders(keySql, false)
+						.Select(static p => p.Sql)
+						.Where(static s => !QueryHelper.IsConstant(s))
+						.ToList();
+
+					if (onExpressions.Count > 0)
+					{
+						ApplyDistinctOn(sequence.SelectQuery, onExpressions);
+						return BuildSequenceResult.FromContext(sequence);
+					}
+				}
+			}
+
 			if (builder.DataContext.SqlProviderFlags.IsWindowFunctionsSupported)
 			{
 				var partitionBody = SequenceHelper.PrepareBody(selector, sequence);
@@ -133,8 +160,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				expression = WindowFunctionHelpers.ApplyOrderBy(expression, orderByLambdas);
 
-				buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, expression));
-				return buildResult;
+				return builder.TryBuildSequence(new BuildInfo(buildInfo, expression));
 			}
 
 			// Rare case when outer apply is supported and window functions are not.
@@ -170,6 +196,30 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			var param = Expression.Parameter(elementType, "x");
 			return Expression.Lambda(body, param);
+		}
+
+		// PostgreSQL/DuckDB require ORDER BY to begin with the DISTINCT ON expressions. Move (or synthesize) the ON
+		// keys to the front of the existing OrderBy, preserving the user's ordering for the remaining keys, then mark
+		// the select clause as DISTINCT ON.
+		static void ApplyDistinctOn(SelectQuery selectQuery, List<ISqlExpression> onExpressions)
+		{
+			var items   = selectQuery.OrderBy.Items;
+			var leading = new List<SqlOrderByItem>(onExpressions.Count);
+
+			foreach (var on in onExpressions)
+			{
+				var existing = items.Find(i => i.Expression.Equals(on));
+				leading.Add(existing ?? new SqlOrderByItem(on, false, false, Sql.NullsPosition.None));
+			}
+
+			var tail = items.FindAll(i => !onExpressions.Exists(on => on.Equals(i.Expression)));
+
+			items.Clear();
+			items.AddRange(leading);
+			items.AddRange(tail);
+
+			selectQuery.Select.IsDistinct = true;
+			selectQuery.Select.DistinctOn = onExpressions;
 		}
 	}
 }

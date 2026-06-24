@@ -2345,7 +2345,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return QueryHelper.WrapQuery(
 				queryFilter,
 				statement,
-				static (queryFilter, q, _) => q.Select.IsDistinct && queryFilter(q),
+				static (queryFilter, q, _) => q.Select.IsDistinct && !q.Select.IsDistinctOn && queryFilter(q),
 				static (_, p, q) =>
 				{
 					p.Select.SkipValue = q.Select.SkipValue;

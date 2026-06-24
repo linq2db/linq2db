@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -1650,6 +1650,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					? new PreambleResult<object, object>(EqualityComparer<object>.Default)
 					: new PreambleResult<TKey, object>();
 			}
+
 			return buckets;
 		}
 
