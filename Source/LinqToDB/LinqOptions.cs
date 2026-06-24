@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
@@ -227,19 +227,19 @@ namespace LinqToDB
 		// `with` paths don't reference obsolete members. Keep it in sync with new parameters (see note above).
 		LinqOptions(LinqOptions original)
 		{
-			IgnoreEmptyUpdate       = original.IgnoreEmptyUpdate;
-			GenerateExpressionTest  = original.GenerateExpressionTest;
-			TraceMapperExpression   = original.TraceMapperExpression;
-			ConcatenateOrderBy      = original.ConcatenateOrderBy;
-			OptimizeJoins           = original.OptimizeJoins;
-			CompareNulls            = original.CompareNulls;
-			GuardGrouping           = original.GuardGrouping;
-			DisableQueryCache       = original.DisableQueryCache;
-			CacheSlidingExpiration  = original.CacheSlidingExpiration;
-			ParameterizeTakeSkip    = original.ParameterizeTakeSkip;
-			EnableContextSchemaEdit = original.EnableContextSchemaEdit;
-			PreferExistsForScalar   = original.PreferExistsForScalar;
-			UpsertEmulationPolicy   = original.UpsertEmulationPolicy;
+			IgnoreEmptyUpdate           = original.IgnoreEmptyUpdate;
+			GenerateExpressionTest      = original.GenerateExpressionTest;
+			TraceMapperExpression       = original.TraceMapperExpression;
+			ConcatenateOrderBy          = original.ConcatenateOrderBy;
+			OptimizeJoins               = original.OptimizeJoins;
+			CompareNulls                = original.CompareNulls;
+			GuardGrouping               = original.GuardGrouping;
+			DisableQueryCache           = original.DisableQueryCache;
+			CacheSlidingExpiration      = original.CacheSlidingExpiration;
+			ParameterizeTakeSkip        = original.ParameterizeTakeSkip;
+			EnableContextSchemaEdit     = original.EnableContextSchemaEdit;
+			PreferExistsForScalar       = original.PreferExistsForScalar;
+			UpsertEmulationPolicy       = original.UpsertEmulationPolicy;
 			DefaultEagerLoadingStrategy = original.DefaultEagerLoadingStrategy;
 			ImplicitCollectionLoading   = original.ImplicitCollectionLoading;
 			OptimizeForSequentialAccess = original.OptimizeForSequentialAccess;
