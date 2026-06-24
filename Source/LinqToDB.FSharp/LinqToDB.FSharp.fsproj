@@ -24,6 +24,7 @@
 
 	<ItemGroup>
 		<Compile Include="FSharpEntityBindingInterceptor.fs" />
+		<Compile Include="FSharpOptionSupport.fs" />
 		<Compile Include="DataOptionsExtensions.fs" />
 	</ItemGroup>
 
