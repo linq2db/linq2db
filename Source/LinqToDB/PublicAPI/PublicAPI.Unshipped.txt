@@ -40,6 +40,8 @@ LinqToDB.LinqOptions.PreferClientCalculation.get -> bool
 LinqToDB.LinqOptions.PreferClientCalculation.init -> void
 static LinqToDB.DataOptionsExtensions.WithPreferClientCalculation(this LinqToDB.LinqOptions! options, bool preferClientCalculation) -> LinqToDB.LinqOptions!
 static LinqToDB.DataOptionsExtensions.UsePreferClientCalculation(this LinqToDB.DataOptions! options, bool preferClientCalculation) -> LinqToDB.DataOptions!
+static LinqToDB.Common.Configuration.Linq.PreferClientCalculation.get -> bool
+static LinqToDB.Common.Configuration.Linq.PreferClientCalculation.set -> void
 LinqToDB.UpsertEmulationPolicy
 LinqToDB.UpsertEmulationPolicy.Allow = 0 -> LinqToDB.UpsertEmulationPolicy
 LinqToDB.UpsertEmulationPolicy.Throw = 1 -> LinqToDB.UpsertEmulationPolicy
