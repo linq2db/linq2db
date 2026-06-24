@@ -128,7 +128,7 @@ steps:
 - script: |
     if exist baselines\.git\ git -C baselines reset --hard
     if exist baselines\.git\ git -C baselines clean -fdq
-    $(netfx_tfm)\main\x86\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings $(netfx_tfm)\main\x86\.runsettings --report-trx --report-trx-filename netfx-main-x86.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
+    $(netfx_tfm)\main\x86\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings $(netfx_tfm)\main\x86\.runsettings --report-trx --report-trx-filename netfx-main-x86.trx --results-directory TestResults --hangdump --hangdump-timeout 5m $(test_retry_args)
   displayName: 'Tests (NETFX): $(title)'
   condition: and(eq(variables.netfx, 'true'), eq(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'))
   retryCountOnTaskFailure: 2
@@ -172,7 +172,7 @@ steps:
 - script: |
     if exist baselines\.git\ git -C baselines reset --hard
     if exist baselines\.git\ git -C baselines clean -fdq
-    $(netfx_tfm)\main\x64\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings $(netfx_tfm)\main\x64\.runsettings --report-trx --report-trx-filename netfx-main-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
+    $(netfx_tfm)\main\x64\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings $(netfx_tfm)\main\x64\.runsettings --report-trx --report-trx-filename netfx-main-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m $(test_retry_args)
   displayName: 'Tests (NETFX x64): $(title)'
   condition: and(eq(variables.netfx, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'))
   retryCountOnTaskFailure: 2
@@ -249,7 +249,7 @@ steps:
 - script: |
     if exist baselines\.git\ git -C baselines reset --hard
     if exist baselines\.git\ git -C baselines clean -fdq
-    net8.0\main\x64\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings net8.0\main\x64\.runsettings --report-trx --report-trx-filename net8.0-main-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
+    net8.0\main\x64\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings net8.0\main\x64\.runsettings --report-trx --report-trx-filename net8.0-main-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m $(test_retry_args)
   displayName: 'Tests (.NET 8 x64): $(title)'
   condition: and(eq(variables.net80, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'), ${{ parameters.full_run }})
   retryCountOnTaskFailure: 2
@@ -261,7 +261,7 @@ steps:
 - script: |
     if exist baselines\.git\ git -C baselines reset --hard
     if exist baselines\.git\ git -C baselines clean -fdq
-    net8.0\main\x86\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings net8.0\main\x86\.runsettings --report-trx --report-trx-filename net8.0-main-x86.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
+    net8.0\main\x86\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings net8.0\main\x86\.runsettings --report-trx --report-trx-filename net8.0-main-x86.trx --results-directory TestResults --hangdump --hangdump-timeout 5m $(test_retry_args)
   displayName: 'Tests (.NET 8 x86): $(title)'
   condition: and(eq(variables.net80, 'true'), eq(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'), ${{ parameters.full_run }})
   retryCountOnTaskFailure: 2
@@ -342,7 +342,7 @@ steps:
 - script: |
     if exist baselines\.git\ git -C baselines reset --hard
     if exist baselines\.git\ git -C baselines clean -fdq
-    net9.0\main\x64\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings net9.0\main\x64\.runsettings --report-trx --report-trx-filename net9.0-main-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
+    net9.0\main\x64\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings net9.0\main\x64\.runsettings --report-trx --report-trx-filename net9.0-main-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m $(test_retry_args)
   displayName: 'Tests (.NET 9 x64): $(title)'
   condition: and(eq(variables.net90, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'), ${{ parameters.full_run }})
   retryCountOnTaskFailure: 2
@@ -354,7 +354,7 @@ steps:
 - script: |
     if exist baselines\.git\ git -C baselines reset --hard
     if exist baselines\.git\ git -C baselines clean -fdq
-    net9.0\main\x86\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings net9.0\main\x86\.runsettings --report-trx --report-trx-filename net9.0-main-x86.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
+    net9.0\main\x86\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings net9.0\main\x86\.runsettings --report-trx --report-trx-filename net9.0-main-x86.trx --results-directory TestResults --hangdump --hangdump-timeout 5m $(test_retry_args)
   displayName: 'Tests (.NET 9 x86): $(title)'
   condition: and(eq(variables.net90, 'true'), eq(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'), ${{ parameters.full_run }})
   retryCountOnTaskFailure: 2
@@ -428,7 +428,7 @@ steps:
 - script: |
     if exist baselines\.git\ git -C baselines reset --hard
     if exist baselines\.git\ git -C baselines clean -fdq
-    net10.0\main\x64\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings net10.0\main\x64\.runsettings --report-trx --report-trx-filename net10.0-main-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
+    net10.0\main\x64\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings net10.0\main\x64\.runsettings --report-trx --report-trx-filename net10.0-main-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m $(test_retry_args)
   displayName: 'Tests (.NET 10 x64): $(title)'
   condition: and(eq(variables.net100, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'))
   retryCountOnTaskFailure: 2
@@ -440,7 +440,7 @@ steps:
 - script: |
     if exist baselines\.git\ git -C baselines reset --hard
     if exist baselines\.git\ git -C baselines clean -fdq
-    net10.0\main\x86\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings net10.0\main\x86\.runsettings --report-trx --report-trx-filename net10.0-main-x86.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
+    net10.0\main\x86\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings net10.0\main\x86\.runsettings --report-trx --report-trx-filename net10.0-main-x86.trx --results-directory TestResults --hangdump --hangdump-timeout 5m $(test_retry_args)
   displayName: 'Tests (.NET 10 x86): $(title)'
   condition: and(eq(variables.net100, 'true'), eq(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'))
   retryCountOnTaskFailure: 2
