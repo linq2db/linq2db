@@ -154,12 +154,8 @@ namespace Tests
 		[SetUp]
 		public virtual void OnBeforeTest()
 		{
-			// SequentialAccess-enabled provider setup
-			var (provider, _) = NUnitUtils.GetContext(TestExecutionContext.CurrentContext.CurrentTest);
-			if (provider?.IsAnyOf(TestProvName.AllSqlServerSequentialAccess) == true)
-			{
-				Configuration.OptimizeForSequentialAccess = true;
-			}
+			// SequentialAccess for the SqlServer.SA provider is now a per-context option set in the
+			// GetDataConnection/GetDataContext factory, so parallel lanes don't share a process-global toggle.
 		}
 
 		[TearDown]
@@ -167,12 +163,7 @@ namespace Tests
 		{
 			try
 			{
-				// SequentialAccess-enabled provider cleanup
 				var (provider, isRemote) = NUnitUtils.GetContext(TestExecutionContext.CurrentContext.CurrentTest);
-				if (provider?.IsAnyOf(TestProvName.AllSqlServerSequentialAccess) == true)
-				{
-					Configuration.OptimizeForSequentialAccess = false;
-				}
 
 				if (provider?.IsAnyOf(TestProvName.AllSapHana) == true)
 				{
