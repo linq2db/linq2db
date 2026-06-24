@@ -1915,6 +1915,24 @@ namespace Tests.Linq
 				AreEqual(InheritanceChild, db.InheritanceChild);
 			}
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/5639 - a non-sequential materialization plan cached for a configuration must not be reused by a SequentialAccess context sharing that configuration")]
+		public void SequentialAccessTest_CacheKey([DataSources] string context)
+		{
+			// Warm the query cache for this configuration with OptimizeForSequentialAccess OFF (random column-access plan).
+			// Exception: on the SqlServer .SA lane the factory forces the option ON for every context, so the warm-up there
+			// is already a sequential-access plan and the divergence below is exercised by the other [DataSources] providers.
+			using (var db = GetDataContext(context))
+				AreEqual(InheritanceParent, db.InheritanceParent);
+
+			// Same query and configuration, now with the option ON and the reader opened with
+			// CommandBehavior.SequentialAccess. The two plans differ only by OptimizeForSequentialAccess,
+			// which now participates in DataOptions.ConfigurationID; before this fix the cached
+			// random-access plan was reused here and threw "Invalid attempt to read from column ordinal
+			// '0'. With CommandBehavior.SequentialAccess, you may only read from column ordinal 'N' or greater."
+			using (var db = GetDataContext(context, interceptor: SequentialAccessCommandInterceptor.Instance, suppressSequentialAccess: true, optimizeForSequentialAccess: true))
+				AreEqual(InheritanceParent, db.InheritanceParent);
+		}
 		#endregion
 
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]

@@ -117,10 +117,21 @@ namespace Tests
 				(conf, ms) =>
 				{
 					var options = new DataOptions().UseConfiguration(conf);
+
+					if (conf?.IsAnyOf(TestProvName.AllSqlServerSequentialAccess) == true)
+						options = options.UseOptimizeForSequentialAccess(true);
+
 					if (ms != null)
 						options = options.UseAdditionalMappingSchema(ms);
 
 					var dc = new DataConnection(dbOptionsBuilder(options));
+
+					if (conf?.IsAnyOf(TestProvName.AllSqlServerSequentialAccess) == true)
+					{
+						dc.AddInterceptor(SequentialAccessCommandInterceptor.Instance);
+						dc.AddMappingSchema(_sequentialAccessSchema);
+					}
+
 					return dc;
 				});
 		}

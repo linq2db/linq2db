@@ -203,6 +203,10 @@ namespace LinqToDB
 		{
 		}
 
+		// Not dead code: this user-declared copy constructor replaces the compiler-synthesized one that every
+		// `with` expression on this record invokes (see Configuration / DataOptionsExtensions). It intentionally
+		// omits the [Obsolete] no-effect parameters (PreloadGroups, PreferApply, KeepDistinctOrdered) so synthesized
+		// `with` paths don't reference obsolete members. Keep it in sync with new parameters (see note above).
 		LinqOptions(LinqOptions original)
 		{
 			IgnoreEmptyUpdate       = original.IgnoreEmptyUpdate;
@@ -249,7 +253,7 @@ namespace LinqToDB
 				concatenateOrderBy, optimizeJoins, compareNulls, guardGrouping, disableQueryCache,
 				cacheSlidingExpiration, preferApply, keepDistinctOrdered, parameterizeTakeSkip,
 				enableContextSchemaEdit, preferExistsForScalar,
-				UpsertEmulationPolicy: default)
+				UpsertEmulationPolicy: UpsertEmulationPolicy.Allow)
 		{
 		}
 
