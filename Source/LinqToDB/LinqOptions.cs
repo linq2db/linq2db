@@ -172,6 +172,12 @@ namespace LinqToDB
 	///   <item><see cref="UpsertEmulationPolicy.Throw"/> — reject it with <see cref="LinqToDBException"/> at build time.</item>
 	/// </list>
 	/// </param>
+	/// <param name="OptimizeForSequentialAccess">
+	/// Enables mapping expression to be compatible with <see cref="System.Data.CommandBehavior.SequentialAccess"/> behavior.
+	/// Note that it doesn't switch linq2db to use <see cref="System.Data.CommandBehavior.SequentialAccess"/> behavior for
+	/// queries, so this optimization could be used for <see cref="System.Data.CommandBehavior.Default"/> too.
+	/// Default value: <see langword="false"/>.
+	/// </param>
 	public sealed record LinqOptions
 	(
 		// TODO: Remove in v7
@@ -196,7 +202,8 @@ namespace LinqToDB
 		bool         EnableContextSchemaEdit = false,
 		bool         PreferExistsForScalar   = default,
 		bool         PreferClientCalculation = default,
-		UpsertEmulationPolicy UpsertEmulationPolicy = UpsertEmulationPolicy.Allow
+		UpsertEmulationPolicy UpsertEmulationPolicy = UpsertEmulationPolicy.Allow,
+		bool         OptimizeForSequentialAccess = false
 		// If you add another parameter here, don't forget to update
 		// LinqOptions copy constructor and IConfigurationID.ConfigurationID.
 	)
@@ -206,6 +213,10 @@ namespace LinqToDB
 		{
 		}
 
+		// Not dead code: this user-declared copy constructor replaces the compiler-synthesized one that every
+		// `with` expression on this record invokes (see Configuration / DataOptionsExtensions). It intentionally
+		// omits the [Obsolete] no-effect parameters (PreloadGroups, PreferApply, KeepDistinctOrdered) so synthesized
+		// `with` paths don't reference obsolete members. Keep it in sync with new parameters (see note above).
 		LinqOptions(LinqOptions original)
 		{
 			IgnoreEmptyUpdate       = original.IgnoreEmptyUpdate;
@@ -222,6 +233,7 @@ namespace LinqToDB
 			PreferExistsForScalar   = original.PreferExistsForScalar;
 			PreferClientCalculation = original.PreferClientCalculation;
 			UpsertEmulationPolicy   = original.UpsertEmulationPolicy;
+			OptimizeForSequentialAccess = original.OptimizeForSequentialAccess;
 		}
 
 		/// <summary>
@@ -252,7 +264,7 @@ namespace LinqToDB
 				concatenateOrderBy, optimizeJoins, compareNulls, guardGrouping, disableQueryCache,
 				cacheSlidingExpiration, preferApply, keepDistinctOrdered, parameterizeTakeSkip,
 				enableContextSchemaEdit, preferExistsForScalar,
-				PreferClientCalculation: default, UpsertEmulationPolicy: default)
+				PreferClientCalculation: default, UpsertEmulationPolicy: UpsertEmulationPolicy.Allow, OptimizeForSequentialAccess: default)
 		{
 		}
 
@@ -284,7 +296,7 @@ namespace LinqToDB
 				out concatenateOrderBy, out optimizeJoins, out compareNulls, out guardGrouping, out disableQueryCache,
 				out cacheSlidingExpiration, out preferApply, out keepDistinctOrdered, out parameterizeTakeSkip,
 				out enableContextSchemaEdit, out preferExistsForScalar,
-				out _, out _);
+				out _, out _, out _);
 		}
 
 		int? _configurationID;
@@ -310,6 +322,7 @@ namespace LinqToDB
 						.Add(PreferExistsForScalar)
 						.Add(PreferClientCalculation)
 						.Add((int)UpsertEmulationPolicy)
+						.Add(OptimizeForSequentialAccess)
 						.CreateID();
 				}
 

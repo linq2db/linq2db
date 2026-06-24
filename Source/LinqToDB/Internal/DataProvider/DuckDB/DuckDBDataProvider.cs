@@ -37,6 +37,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			SqlProviderFlags.IsCrossApplyJoinSupportsCondition = true;
 			SqlProviderFlags.IsOuterApplyJoinSupportsCondition = true;
 			SqlProviderFlags.IsDistinctFromSupported           = true;
+			SqlProviderFlags.IsDistinctOnSupported             = true;
 			SqlProviderFlags.SupportsPredicatesComparison      = true;
 
 			SqlProviderFlags.DefaultMultiQueryIsolationLevel = System.Data.IsolationLevel.Snapshot;

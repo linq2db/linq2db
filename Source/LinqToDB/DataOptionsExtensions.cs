@@ -313,6 +313,18 @@ namespace LinqToDB
 			return options with { PreferClientCalculation = preferClientCalculation };
 		}
 
+		/// <summary>
+		/// Enables mapping expression to be compatible with <see cref="System.Data.CommandBehavior.SequentialAccess"/> behavior.
+		/// Note that it doesn't switch linq2db to use <see cref="System.Data.CommandBehavior.SequentialAccess"/> behavior for
+		/// queries, so this optimization could be used for <see cref="System.Data.CommandBehavior.Default"/> too.
+		/// Default value: <see langword="false"/>.
+		/// </summary>
+		[Pure]
+		public static LinqOptions WithOptimizeForSequentialAccess(this LinqOptions options, bool optimizeForSequentialAccess)
+		{
+			return options with { OptimizeForSequentialAccess = optimizeForSequentialAccess };
+		}
+
 		#endregion
 
 		#region DataOptions.LinqOptions
@@ -600,6 +612,18 @@ namespace LinqToDB
 		public static DataOptions UsePreferClientCalculation(this DataOptions options, bool preferClientCalculation)
 		{
 			return options.WithOptions<LinqOptions>(o => o with { PreferClientCalculation = preferClientCalculation });
+		}
+
+		/// <summary>
+		/// Enables mapping expression to be compatible with <see cref="System.Data.CommandBehavior.SequentialAccess"/> behavior.
+		/// Note that it doesn't switch linq2db to use <see cref="System.Data.CommandBehavior.SequentialAccess"/> behavior for
+		/// queries, so this optimization could be used for <see cref="System.Data.CommandBehavior.Default"/> too.
+		/// Default value: <see langword="false"/>.
+		/// </summary>
+		[Pure]
+		public static DataOptions UseOptimizeForSequentialAccess(this DataOptions options, bool optimizeForSequentialAccess)
+		{
+			return options.WithOptions<LinqOptions>(o => o with { OptimizeForSequentialAccess = optimizeForSequentialAccess });
 		}
 
 		#endregion
