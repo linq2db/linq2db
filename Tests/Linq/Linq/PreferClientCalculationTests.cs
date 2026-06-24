@@ -273,5 +273,101 @@ namespace Tests.Linq
 			AssertQuery(from e in table select -e.Value1);
 			AssertQuery(from e in table select e.Value1 + PreferServer(e.Value2));
 		}
+
+		// The following tests document a rule that is independent of PreferClientCalculation: in non-projection clauses
+		// (WHERE / JOIN / GROUP BY / ORDER BY / HAVING) linq2db already pre-evaluates any SQL-independent (row-data-free)
+		// client expression into a SQL parameter/constant, leaves row-dependent SQL parts as columns, throws for a
+		// row-dependent client-only expression with no SQL mapping, and keeps server-preferred functions server-side.
+		// Each is parameterized by preferClient to assert the option does not change this behaviour.
+
+		[Test]
+		public void ClientConstantInPredicateIsServerSide([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(ClientCalcEntity.Seed);
+
+			// ClientOnlyDouble(1) has no SQL mapping but is SQL-independent, so it is pre-evaluated into a parameter and
+			// the comparison runs server-side. ClientOnlyDouble(1) == 2, so this matches Id == 2.
+			AssertQuery(table.Where(e => e.Id == ClientOnlyDouble(1)));
+		}
+
+		[Test]
+		public void RowDependentClientOnlyInPredicateThrows([IncludeDataSources(false, TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(ClientCalcEntity.Seed);
+
+			// ClientOnlyDouble(e.Value1) depends on row data and has no SQL mapping: it cannot be translated and must
+			// throw, never silently becoming a client-side post-filter - even with PreferClientCalculation on.
+			Assert.Throws<LinqToDBException>(() => table.Where(e => ClientOnlyDouble(e.Value1) == 20).ToArray());
+		}
+
+		[Test]
+		public void MixedClientConstantAndColumnInPredicate([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(ClientCalcEntity.Seed);
+
+			// Granular split: the SQL-independent ClientOnlyDouble(1) folds to a parameter while e.Value1 stays a
+			// column (WHERE Id = @p + Value1). No row matches, but the query must build and run server-side.
+			AssertQuery(table.Where(e => e.Id == ClientOnlyDouble(1) + e.Value1));
+		}
+
+		[Test]
+		public void ServerPreferredFunctionInPredicateStaysInSql([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(ClientCalcEntity.Seed);
+
+			var query = table.Where(e => PreferServer(e.Value1) == 20);
+
+			AssertQuery(query);
+
+			// PreferServerSide = true keeps the function server-side: ABS stays in the WHERE clause.
+			(query.GetSelectQuery().Find(e => e is SqlFunction { Name: "ABS" }) != null).ShouldBeTrue();
+		}
+
+		[Test]
+		public void MappedClientPreferredFunctionInPredicateIsPreEvaluated([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(ClientCalcEntity.Seed);
+
+			var query = table.Where(e => e.Id == PreferClient(10));
+
+			AssertQuery(query);
+
+			// PreferClient(10) (ABS, PreferServerSide = false) is SQL-independent, so it is pre-evaluated to a constant
+			// instead of being emitted as ABS - the comparison becomes Id == 10.
+			(query.GetSelectQuery().Find(e => e is SqlFunction { Name: "ABS" }) == null).ShouldBeTrue();
+		}
+
+		[Test]
+		public void PreferClientFunctionWithRowArgInPredicateStaysInSql([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(ClientCalcEntity.Seed);
+
+			var query = table.Where(e => PreferClient(e.Value1) == 20);
+
+			AssertQuery(query);
+
+			// PreferServerSide = false, but PreferClientCalculation is projection-only: in a predicate a row-dependent
+			// mapped function still translates to SQL (ABS), regardless of the option.
+			(query.GetSelectQuery().Find(e => e is SqlFunction { Name: "ABS" }) != null).ShouldBeTrue();
+		}
+
+		[Test]
+		public void ClientConstantFoldsInOrderByGroupByHavingAndJoin([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(ClientCalcEntity.Seed);
+
+			// The SQL-independent ClientOnlyDouble(...) is pre-evaluated server-side in every clause, not just projections.
+			AssertQuery(table.OrderBy(e => ClientOnlyDouble(1)).ThenBy(e => e.Id));                                            // ORDER BY
+			AssertQuery(table.GroupBy(e => ClientOnlyDouble(1)).Select(g => g.Count()));                                       // GROUP BY
+			AssertQuery(table.GroupBy(e => e.Id).Where(g => g.Count() > ClientOnlyDouble(0)).Select(g => g.Key));              // HAVING
+			AssertQuery(from e in table join j in table on e.Id + ClientOnlyDouble(0) equals j.Id select new { e.Id, J = j.Id }); // JOIN
+		}
 	}
 }
