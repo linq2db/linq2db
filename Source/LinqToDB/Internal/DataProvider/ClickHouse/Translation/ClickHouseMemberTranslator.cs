@@ -584,7 +584,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 			return factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "generateUUIDv4");
 		}
 
-		// generateUUIDv7() requires ClickHouse 24.1+. ClickHouse has no version-dialect split in
+		// generateUUIDv7() requires ClickHouse 24.5+. ClickHouse has no version-dialect split in
 		// linq2db, so it is emitted unconditionally (older versions predate practical support).
 		protected override ISqlExpression? TranslateNewGuid7Method(ITranslationContext translationContext, TranslationFlags translationFlags)
 		{
