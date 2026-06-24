@@ -210,6 +210,14 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 							indexParameter);
 				}
 #endif
+
+				var decimalReader = new AdaptiveDecimalReader(Adapter.DataReaderType);
+
+				ReaderExpressions[new ReaderInfo
+				{
+					DataReaderType = Adapter.DataReaderType,
+					FieldType      = typeof(decimal),
+				}] = (Expression<Func<DbDataReader,int,decimal>>)((r, i) => decimalReader.GetDecimal(r, i));
 			}
 
 			SqlServerTypes.Configure(this);
@@ -226,20 +234,6 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		#endregion
 
 		#region Overrides
-
-		public override Expression GetReaderExpression(DbDataReader reader, int idx, Expression readerExpression, Type? toType)
-		{
-			if (toType                                   == typeof(decimal) &&
-			    reader.GetFieldType(idx)                 == typeof(decimal) &&
-			    reader.GetProviderSpecificFieldType(idx) == typeof(SqlDecimal))
-			{
-				var decimalReader = new AdaptiveDecimalReader(Adapter.DataReaderType);
-
-				return (Expression<Func<DbDataReader,int,decimal>>)((r, i) => decimalReader.GetDecimal(r, i));
-			}
-
-			return base.GetReaderExpression(reader, idx, readerExpression, toType);
-		}
 
 		/// <summary>
 		/// SQL Server decimal/numeric types can store up to 38 digits, while CLR <see cref="decimal"/> is limited to 29 digits.
@@ -306,10 +300,19 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			{
 				if (value.Precision > ClrPrecision)
 				{
-					var integralDigits = value.Precision - value.Scale;
-					var scale          = Math.Max(0, ClrPrecision - integralDigits);
-
-					return (decimal)SqlDecimal.ConvertToPrecScale(value, ClrPrecision, scale);
+					for (var scale = Math.Min((int)value.Scale, 28); scale >= 0; scale--)
+					{
+						try
+						{
+							return (decimal)SqlDecimal.ConvertToPrecScale(value, ClrPrecision, scale);
+						}
+						catch (OverflowException)
+						{
+						}
+						catch (SqlTruncateException)
+						{
+						}
+					}
 				}
 
 				return value.Value;
