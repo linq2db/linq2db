@@ -30,7 +30,6 @@ namespace LinqToDB.Linq.Translation
 
 		// Window clause support flags
 		protected virtual bool IsWindowFilterSupported         => false;
-		protected virtual bool IsNullsOrderSupported           => false;
 		protected virtual bool IsFrameRowsSupported            => true;
 		protected virtual bool IsFrameRangeSupported           => true;
 		protected virtual bool IsFrameGroupsSupported          => true;
@@ -577,7 +576,7 @@ namespace LinqToDB.Linq.Translation
 			return true;
 		}
 
-		protected bool TranslateOrderItems(ISqlExpressionTranslator translator, NullsDefaultOrdering defaultNullsOrdering, Type errorType, IEnumerable<OrderByInformation> orderBy, List<SqlWindowOrderItem> orderItems, [NotNullWhen(false)] out SqlErrorExpression? error)
+		protected bool TranslateOrderItems(ISqlExpressionTranslator translator, NullsDefaultOrdering defaultNullsOrdering, bool isNullsOrderingSupported, Type errorType, IEnumerable<OrderByInformation> orderBy, List<SqlWindowOrderItem> orderItems, [NotNullWhen(false)] out SqlErrorExpression? error)
 		{
 			error = null;
 			foreach (var orderItem in orderBy)
@@ -593,7 +592,7 @@ namespace LinqToDB.Linq.Translation
 				// key on SQL Server) — when the key can't be null, or when the requested position already matches the
 				// provider's natural NULL placement. NullabilityContext.NonQuery reflects the expression's intrinsic
 				// nullability (the query nullability context is not available at translation time).
-				if (orderItem.Nulls != Sql.NullsPosition.None && !IsNullsOrderSupported)
+				if (orderItem.Nulls != Sql.NullsPosition.None && !isNullsOrderingSupported)
 				{
 					var needsEmulation =
 						sql.CanBeNullable(NullabilityContext.NonQuery)
@@ -716,7 +715,7 @@ namespace LinqToDB.Linq.Translation
 			if (information.OrderBy != null)
 			{
 				orderItems ??= new();
-				if (!TranslateOrderItems(translationContext, translationContext.ProviderFlags.DefaultNullsOrdering, methodCall.Type, information.OrderBy, orderItems, out var orderError))
+				if (!TranslateOrderItems(translationContext, translationContext.ProviderFlags.DefaultNullsOrdering, translationContext.ProviderFlags.IsNullsOrderingSupported, methodCall.Type, information.OrderBy, orderItems, out var orderError))
 					return orderError;
 			}
 
@@ -808,7 +807,7 @@ namespace LinqToDB.Linq.Translation
 				if (information.KeepOrderBy != null)
 				{
 					var keepOrderItems = new List<SqlWindowOrderItem>();
-					if (!TranslateOrderItems(translationContext, translationContext.ProviderFlags.DefaultNullsOrdering, methodCall.Type, information.KeepOrderBy, keepOrderItems, out var keepOrderError))
+					if (!TranslateOrderItems(translationContext, translationContext.ProviderFlags.DefaultNullsOrdering, translationContext.ProviderFlags.IsNullsOrderingSupported, methodCall.Type, information.KeepOrderBy, keepOrderItems, out var keepOrderError))
 						return keepOrderError;
 
 					keepClause = new SqlKeepClause(information.KeepType.Value, keepOrderItems);
@@ -997,7 +996,7 @@ namespace LinqToDB.Linq.Translation
 						}
 
 						List<SqlWindowOrderItem> withinGroupOrder = new();
-						if (!TranslateOrderItems(composer.AggregationContext, translationContext.ProviderFlags.DefaultNullsOrdering, methodCall.Type, wfInfo.OrderBy, withinGroupOrder, out var orderError))
+						if (!TranslateOrderItems(composer.AggregationContext, translationContext.ProviderFlags.DefaultNullsOrdering, translationContext.ProviderFlags.IsNullsOrderingSupported, methodCall.Type, wfInfo.OrderBy, withinGroupOrder, out var orderError))
 						{
 							composer.SetError(orderError);
 							return;

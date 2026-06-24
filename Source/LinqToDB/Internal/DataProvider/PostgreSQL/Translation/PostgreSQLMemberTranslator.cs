@@ -450,7 +450,6 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 		protected class PostgreSQLWindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
 		{
 			protected override bool IsWindowFilterSupported     => true;
-			protected override bool IsNullsOrderSupported       => true;
 			protected override bool IsOrderedSetFilterSupported => true;
 		}
 
