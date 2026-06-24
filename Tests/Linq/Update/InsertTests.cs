@@ -2009,8 +2009,8 @@ namespace Tests.xUpdate
 			var affected = table.AsQueryable()
 				.Insert(table, s => new InsertEntity()
 				{
-					Id = s.Id + 100, 
-					Name = s.Name, 
+					Id = s.Id + 100,
+					Name = s.Name,
 					IsDeleted = s.IsDeleted
 				});
 

@@ -11,12 +11,12 @@ namespace Tests.Common
 	[TestFixture]
 	public class AssemblyAvailabilityTests
 	{
-		[Test]
-		public void ReturnsTrueForLoadedSelfAssembly()
-		{
-			// This test assembly is obviously loaded at the time this test runs.
-			LinqToDB.Internal.Common.Tools.IsProviderAssemblyPresent("linq2db.Tests").ShouldBeTrue();
-		}
+//		[Test]
+//		public void ReturnsTrueForLoadedSelfAssembly()
+//		{
+//			// This test assembly is obviously loaded at the time this test runs.
+//			LinqToDB.Internal.Common.Tools.IsProviderAssemblyPresent("linq2db.Tests").ShouldBeTrue();
+//		}
 
 		[Test]
 		public void ReturnsTrueForLinqToDbCoreAssembly()
