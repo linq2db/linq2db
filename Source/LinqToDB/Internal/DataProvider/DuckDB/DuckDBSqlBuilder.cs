@@ -42,6 +42,12 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 		protected override WindowNullsPlacement GetWindowNullsPlacement(SqlExtendedFunction extendedFunction)
 			=> WindowNullsPlacement.AfterLastArgument;
 
+		protected override void BuildDistinctModifier(SelectQuery selectQuery)
+		{
+			StringBuilder.Append(" DISTINCT");
+			BuildDistinctOnExpressions(selectQuery);
+		}
+
 		protected override void BuildGetIdentity(SqlInsertClause insertClause)
 		{
 			var identityField = insertClause.Into!.GetIdentityField()

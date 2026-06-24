@@ -33,6 +33,15 @@ namespace Tests.Infrastructure
 			Assert.That(((IConfigurationID)lo1).ConfigurationID, Is.Not.EqualTo(((IConfigurationID)lo2).ConfigurationID));
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/5639 - the sequential-access materialization plan must not be shared by the cache between contexts that differ only in this option")]
+		public void OptimizeForSequentialAccessConfigurationIDTest()
+		{
+			var off = new DataOptions().UseConfiguration("X").UseOptimizeForSequentialAccess(false);
+			var on  = new DataOptions().UseConfiguration("X").UseOptimizeForSequentialAccess(true);
+
+			Assert.That(((IConfigurationID)on).ConfigurationID, Is.Not.EqualTo(((IConfigurationID)off).ConfigurationID));
+		}
+
 		[Test]
 		public void OnTraceTest()
 		{
@@ -776,7 +785,7 @@ namespace Tests.Infrastructure
 			new DataOptions().UseDefaultNullsPosition(Sql.NullsPosition.First).SqlOptions.DefaultNullsPosition.ShouldBe(Sql.NullsPosition.First);
 		}
 
-		[Test, NonParallelizable]
+		[Test]
 		public void ConfigurationSqlDefaultNullsPositionTest()
 		{
 			// MIN006: the process-global static getter/setter, and its propagation to freshly-built DataOptions.

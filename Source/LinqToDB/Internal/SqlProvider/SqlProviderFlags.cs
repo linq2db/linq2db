@@ -682,6 +682,15 @@ namespace LinqToDB.Internal.SqlProvider
 		[DataMember(Order = 70), DefaultValue(NullsDefaultOrdering.Unknown)]
 		public NullsDefaultOrdering DefaultNullsOrdering { get; set; }
 
+		/// <summary>
+		/// Provider supports the <c>SELECT DISTINCT ON (expr, ...)</c> syntax (PostgreSQL, DuckDB): one row per
+		/// distinct ON-expression tuple, choosing the row that sorts first under the query <c>ORDER BY</c> (which
+		/// must begin with the ON expressions). When <see langword="false"/> (the default), <c>DistinctBy</c> falls
+		/// back to <c>ROW_NUMBER()</c> / <c>OUTER APPLY</c> emulation.
+		/// </summary>
+		[DataMember(Order = 75)]
+		public bool IsDistinctOnSupported { get; set; }
+
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
 			return AcceptsTakeAsParameter || (AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null);
@@ -779,6 +788,7 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsInsertOrUpdateRequiresAlignedBranches              .GetHashCode()
 				^ IsNullsOrderingSupported                             .GetHashCode()
 				^ DefaultNullsOrdering                                 .GetHashCode()
+				^ IsDistinctOnSupported                                .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => StringComparer.Ordinal.GetHashCode(flag) ^ hash);
 	}
 
@@ -858,6 +868,7 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsInsertOrUpdateRequiresAlignedBranches               == other.IsInsertOrUpdateRequiresAlignedBranches
 				&& IsNullsOrderingSupported                              == other.IsNullsOrderingSupported
 				&& DefaultNullsOrdering                                  == other.DefaultNullsOrdering
+				&& IsDistinctOnSupported                                 == other.IsDistinctOnSupported
 				&& CustomFlags.SetEquals(other.CustomFlags);
 		}
 		#endregion

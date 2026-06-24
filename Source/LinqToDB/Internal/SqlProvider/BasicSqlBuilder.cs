@@ -785,12 +785,44 @@ namespace LinqToDB.Internal.SqlProvider
 			StartStatementQueryExtensions(selectQuery);
 
 			if (selectQuery.Select.IsDistinct)
-				StringBuilder.Append(" DISTINCT");
+				BuildDistinctModifier(selectQuery);
 
 			BuildSkipFirst(selectQuery);
 
 			StringBuilder.AppendLine();
 			BuildColumns(selectQuery);
+		}
+
+		/// <summary>
+		/// Emits the <c>DISTINCT</c> modifier. Overridden by providers that support <c>DISTINCT ON (...)</c>
+		/// (see <see cref="SqlProviderFlags.IsDistinctOnSupported"/>); the base emits a plain <c>DISTINCT</c>.
+		/// </summary>
+		protected virtual void BuildDistinctModifier(SelectQuery selectQuery)
+		{
+			StringBuilder.Append(" DISTINCT");
+		}
+
+		/// <summary>
+		/// Renders the <c>ON (expr, ...)</c> part of a <c>DISTINCT ON</c> clause. Called from a
+		/// <see cref="BuildDistinctModifier"/> override on providers that support the syntax, right after the
+		/// <c>DISTINCT</c> keyword. Expressions are rendered exactly as in <c>ORDER BY</c> so the leading-prefix
+		/// match PostgreSQL/DuckDB require holds.
+		/// </summary>
+		protected void BuildDistinctOnExpressions(SelectQuery selectQuery)
+		{
+			var select = ConvertElement(selectQuery.Select);
+			if (select.DistinctOn is not { Count: > 0 } onExpressions)
+				return;
+
+			StringBuilder.Append(" ON (");
+			for (var i = 0; i < onExpressions.Count; i++)
+			{
+				if (i > 0)
+					StringBuilder.Append(InlineComma);
+				BuildExpressionForOrderBy(onExpressions[i]);
+			}
+
+			StringBuilder.Append(')');
 		}
 
 		protected virtual void StartStatementQueryExtensions(SelectQuery? selectQuery)
