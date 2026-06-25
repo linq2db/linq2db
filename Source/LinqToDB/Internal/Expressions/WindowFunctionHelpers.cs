@@ -460,7 +460,11 @@ namespace LinqToDB.Internal.Expressions
 			MethodInfo sampleMethod, Expression argument, bool isKeepFirst,
 			Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] keepOrderBy)
 		{
-			var method      = FindConcreteOverload(sampleMethod, argument.Type);
+			// Sum/Average/Min/Max are non-generic per-type overloads (resolved by argument type); the statistical
+			// aggregates (Variance/StdDev/...) are generic methods closed over the argument type.
+			var method      = sampleMethod.IsGenericMethodDefinition
+				? sampleMethod.MakeGenericMethod(argument.Type)
+				: FindConcreteOverload(sampleMethod, argument.Type);
 			if (method == null)
 				return null; // no matching Sql.Window overload for this value type — fall back to the legacy pipeline
 
@@ -501,6 +505,35 @@ namespace LinqToDB.Internal.Expressions
 
 			var windowLambda = Expression.Lambda(body, windowParam);
 			return Expression.Call(method, Expression.Constant(Sql.Window), argument, windowLambda);
+		}
+
+		/// <summary>
+		/// Builds a KEEP (DENSE_RANK FIRST/LAST) aggregate window function for the named legacy single-argument
+		/// aggregate (Sum/Average/Min/Max and the statistical aggregates). Returns <see langword="null"/> for
+		/// functions that have no single-argument KEEP form, so the caller can decide how to handle them.
+		/// </summary>
+		internal static Expression? BuildAggregateWithKeep(
+			string functionName, Expression argument, bool isKeepFirst,
+			Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] keepOrderBy)
+		{
+			MethodInfo? sampleMethod = functionName switch
+			{
+				nameof(AnalyticFunctions.Sum)        => SumMethodInfo,
+				nameof(AnalyticFunctions.Average)    => AvgMethodInfo,
+				nameof(AnalyticFunctions.Min)        => MinMethodInfo,
+				nameof(AnalyticFunctions.Max)        => MaxMethodInfo,
+				nameof(AnalyticFunctions.StdDev)     => _stdDevMethodInfo,
+				nameof(AnalyticFunctions.StdDevPop)  => _stdDevPopMethodInfo,
+				nameof(AnalyticFunctions.StdDevSamp) => _stdDevSampMethodInfo,
+				nameof(AnalyticFunctions.Variance)   => _varianceMethodInfo,
+				nameof(AnalyticFunctions.VarPop)     => _varPopMethodInfo,
+				nameof(AnalyticFunctions.VarSamp)    => _varSampMethodInfo,
+				_                                    => null,
+			};
+
+			return sampleMethod == null
+				? null
+				: BuildAggregateWithKeep(sampleMethod, argument, isKeepFirst, partitionBy, keepOrderBy);
 		}
 
 		// A null nulls element means the ordering key did not specify a NULLS position (plain BCL OrderBy);

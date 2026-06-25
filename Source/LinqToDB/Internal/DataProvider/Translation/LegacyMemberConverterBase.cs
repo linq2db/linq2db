@@ -487,14 +487,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (keepOrderByList != null && functionArg1 != null)
 			{
 				var keepOrderBy = keepOrderByList.ToArray();
-				return functionName switch
-				{
-					nameof(AnalyticFunctions.Sum)     => WindowFunctionHelpers.BuildAggregateWithKeep(WindowFunctionHelpers.SumMethodInfo, functionArg1, isKeepFirst, partitionBy, keepOrderBy),
-					nameof(AnalyticFunctions.Average) => WindowFunctionHelpers.BuildAggregateWithKeep(WindowFunctionHelpers.AvgMethodInfo, functionArg1, isKeepFirst, partitionBy, keepOrderBy),
-					nameof(AnalyticFunctions.Min)     => WindowFunctionHelpers.BuildAggregateWithKeep(WindowFunctionHelpers.MinMethodInfo, functionArg1, isKeepFirst, partitionBy, keepOrderBy),
-					nameof(AnalyticFunctions.Max)     => WindowFunctionHelpers.BuildAggregateWithKeep(WindowFunctionHelpers.MaxMethodInfo, functionArg1, isKeepFirst, partitionBy, keepOrderBy),
-					_                                 => null,
-				};
+				// KEEP returns here, so run the same return-type reconciliation the main switch path uses below.
+				return ReconcileConvertedType(WindowFunctionHelpers.BuildAggregateWithKeep(functionName, functionArg1, isKeepFirst, partitionBy, keepOrderBy), toValueCall.Type);
 			}
 
 			WindowFunctionHelpers.WindowFrameSpec? frame = null;
@@ -576,38 +570,41 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			// The Sql.Window.* functions have fixed CLR return types (e.g. RowNumber/Rank -> long, NTile -> int,
 			// the statistical aggregates -> double?) that can differ from the legacy chain's ToValue() type
 			// parameter (TR). Reconcile so the rewritten node slots into the original expression without a type clash.
-			if (converted != null && converted.Type != toValueCall.Type)
-			{
-				var sourceUnderlying = Nullable.GetUnderlyingType(converted.Type);
-				var targetUnderlying = Nullable.GetUnderlyingType(toValueCall.Type) ?? toValueCall.Type;
+			return ReconcileConvertedType(converted, toValueCall.Type);
+		}
 
-				if (converted.Type == typeof(double?) && targetUnderlying == typeof(decimal))
-				{
-					// double? -> decimal / decimal?. A non-finite double (NaN/Infinity — e.g. CORR over a single-row
-					// partition) has NO decimal representation and a direct cast throws. Map non-finite values to NULL,
-					// reproducing how the legacy provider column reader materialised a non-finite float into a decimal
-					// slot; then narrow to the requested slot (coalescing to 0m only for the non-nullable decimal).
-					var asDecimal = Expression.Call(FiniteOrNullMethod, converted);
-					converted = toValueCall.Type == typeof(decimal)
-						? Expression.Coalesce(asDecimal, Expression.Default(typeof(decimal)))
-						: asDecimal;
-				}
-				else if (sourceUnderlying != null && toValueCall.Type.IsValueType && Nullable.GetUnderlyingType(toValueCall.Type) == null)
-				{
-					// Nullable<S> -> non-nullable value type T (e.g. the statistical aggregates return double? but the
-					// legacy ToValue<T>() slot is double/int/float). A plain Convert unwraps via .Value and throws when
-					// the DB returns NULL. Coalesce the NULL to default(S) first — matching how the legacy column reader
-					// materialised a NULL value-type column — then perform the numeric S -> T conversion.
-					var nonNull = Expression.Coalesce(converted, Expression.Default(sourceUnderlying));
-					converted = sourceUnderlying == toValueCall.Type ? nonNull : Expression.Convert(nonNull, toValueCall.Type);
-				}
-				else
-				{
-					converted = Expression.Convert(converted, toValueCall.Type);
-				}
+		// Reconciles a converted Sql.Window expression's CLR type to the legacy chain's ToValue() slot type.
+		// Called from both the main dispatch and the KEEP path so neither slots a double? into a non-nullable slot.
+		static Expression? ReconcileConvertedType(Expression? converted, Type targetType)
+		{
+			if (converted == null || converted.Type == targetType)
+				return converted;
+
+			var sourceUnderlying = Nullable.GetUnderlyingType(converted.Type);
+			var targetUnderlying = Nullable.GetUnderlyingType(targetType) ?? targetType;
+
+			if (converted.Type == typeof(double?) && targetUnderlying == typeof(decimal))
+			{
+				// double? -> decimal / decimal?. A non-finite double (NaN/Infinity, e.g. CORR over a single-row
+				// partition) has no decimal representation and a direct cast throws. Map non-finite values to NULL,
+				// reproducing how the legacy provider column reader materialised a non-finite float into a decimal
+				// slot; then narrow to the requested slot (coalescing to 0m only for the non-nullable decimal).
+				var asDecimal = Expression.Call(FiniteOrNullMethod, converted);
+				return targetType == typeof(decimal)
+					? Expression.Coalesce(asDecimal, Expression.Default(typeof(decimal)))
+					: asDecimal;
 			}
 
-			return converted;
+			if (sourceUnderlying != null && targetType.IsValueType && Nullable.GetUnderlyingType(targetType) == null)
+			{
+				// Nullable<S> -> non-nullable value type T (e.g. the statistical aggregates return double? but the
+				// legacy ToValue<T>() slot is double/int/float). A plain Convert unwraps via .Value and throws when the
+				// DB returns NULL. Coalesce the NULL to default(S) first, then perform the numeric S -> T conversion.
+				var nonNull = Expression.Coalesce(converted, Expression.Default(sourceUnderlying));
+				return sourceUnderlying == targetType ? nonNull : Expression.Convert(nonNull, targetType);
+			}
+
+			return Expression.Convert(converted, targetType);
 		}
 
 		static readonly MethodInfo FiniteOrNullMethod = typeof(LegacyMemberConverterBase).GetMethod(nameof(FiniteOrNull), BindingFlags.Static | BindingFlags.NonPublic)!;
