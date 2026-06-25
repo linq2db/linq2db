@@ -2126,5 +2126,25 @@ namespace Tests.Linq
 
 			Assert.That(db.LastQuery, Does.Contain("NULLS FIRST"));
 		}
+
+		[Test]
+		public void LegacyAnalytic_ExplicitNullsPosition_OverridesConfiguredDefault(
+			[IncludeDataSources(false, TestProvName.AllPostgreSQL)] string context)
+		{
+			// An explicit NULLS position on a legacy analytic ORDER BY must win over the configured default. Here the
+			// configured default is Last (PostgreSQL's natural ASC ordering, which would be dropped as redundant), while the
+			// explicit position is First (differs from natural, so it is emitted verbatim). Seeing NULLS FIRST proves the
+			// explicit value survives the conversion; had the configured default wrongly overridden it, the position would be
+			// Last and the clause omitted.
+			using var db = GetDataConnection(context, o => o.UseDefaultNullsPosition(Sql.NullsPosition.Last));
+
+			var q =
+				from p in db.Parent
+				select Sql.Ext.Sum(p.Value1!.Value).Over().OrderBy(p.Value1, Sql.NullsPosition.First).ToValue();
+
+			q.ToArray();
+
+			Assert.That(db.LastQuery, Does.Contain("NULLS FIRST"));
+		}
 	}
 }
