@@ -56,18 +56,59 @@ namespace LinqToDB.Internal.SqlQuery
 		}
 
 		/// <summary>
-		/// Effective table-source alias: the finalized alias recorded by the aliasing pass, or the
-		/// node's own <see cref="SqlTableSource.Alias"/> when the node was not aliased.
+		/// Effective table-source alias: the finalized alias recorded by the aliasing pass, otherwise
+		/// derived from the node - resolving a nested table source through this context so finalized
+		/// names are honoured (mirrors SqlTableSource's own derivation, but context-aware).
 		/// </summary>
 		public string? GetTableAlias(SqlTableSource tableSource)
-			=> _tableAliases.TryGetValue(tableSource, out var alias) ? alias : tableSource.Alias;
+		{
+			if (_tableAliases.TryGetValue(tableSource, out var alias))
+				return alias;
+
+			if (string.IsNullOrEmpty(tableSource.RawAlias))
+			{
+				if (tableSource.Source is SqlTableSource source)
+					return GetTableAlias(source);
+				if (tableSource.Source is SqlTable table)
+					return table.Alias;
+			}
+
+			return tableSource.RawAlias;
+		}
 
 		/// <summary>
-		/// Effective column alias: the finalized alias recorded by the aliasing pass, or the node's
-		/// own <see cref="SqlColumn.Alias"/> when the column was not aliased.
+		/// Effective column alias: the finalized alias recorded by the aliasing pass, otherwise derived
+		/// from the column's expression - resolving sub-expression aliases through this context so
+		/// finalized names are honoured (mirrors SqlColumn's own derivation, but context-aware). This
+		/// is the crux of non-mutating aliasing: derivation must read finalized names, not stale nodes.
 		/// </summary>
 		public string? GetColumnAlias(SqlColumn column)
-			=> _columnAliases.TryGetValue(column, out var alias) ? alias : column.Alias;
+		{
+			if (_columnAliases.TryGetValue(column, out var alias))
+				return alias;
+
+			return column.RawAlias ?? DeriveAlias(column.Expression);
+		}
+
+		string? DeriveAlias(ISqlExpression? expr)
+		{
+			switch (expr)
+			{
+				case SqlField field:
+					return field.Alias ?? GetFieldName(field);
+				case SqlColumn column:
+					return GetColumnAlias(column);
+				case SelectQuery { Select.Columns: [var col] }:
+				{
+					var a = GetColumnAlias(col);
+					return a != "*" ? a : null;
+				}
+				case SqlExpression { Expr: "{0}", Parameters: [var parameter] }:
+					return DeriveAlias(parameter);
+				default:
+					return null;
+			}
+		}
 
 		/// <summary>
 		/// Effective field physical name: the finalized name recorded by the aliasing pass (for

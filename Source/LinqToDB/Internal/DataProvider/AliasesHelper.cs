@@ -66,10 +66,13 @@ namespace LinqToDB.Internal.DataProvider
 
 				string GetCurrentAlias(SqlTableSource tableSource)
 				{
-					return tableSource.Alias switch
+					// Read the current alias through the context so already-finalized nested table
+					// sources are honoured (non-mutating: names live in the context, not the node).
+					var current = _newAliases.GetTableAlias(tableSource);
+					return current switch
 					{
-						"$F" or "$" => tableSource.Alias,
-						_ => TruncateAlias(tableSource.Alias ?? string.Empty),
+						"$F" or "$" => current,
+						_ => TruncateAlias(current ?? string.Empty),
 					};
 				}
 
@@ -257,7 +260,7 @@ namespace LinqToDB.Internal.DataProvider
 						selectQuery.Select.Columns.Where(c => !string.Equals(c.Alias, "*", StringComparison.Ordinal)),
 						null,
 						(n, a) => IsValidAlias(n),
-						c => TruncateAlias(c.Alias ?? string.Empty),
+						c => TruncateAlias(_newAliases.GetColumnAlias(c) ?? string.Empty),
 						(c, n, a) =>
 						{
 							a?.Add(n);
@@ -265,7 +268,7 @@ namespace LinqToDB.Internal.DataProvider
 						},
 						c =>
 						{
-							var a = TruncateAlias(c.Alias ?? string.Empty);
+							var a = TruncateAlias(_newAliases.GetColumnAlias(c) ?? string.Empty);
 							return string.IsNullOrEmpty(a)
 								? "c1"
 								: a + (a!.EndsWith('_') ? string.Empty : "_") + "1";
