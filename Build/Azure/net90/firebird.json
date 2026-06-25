@@ -1,6 +1,9 @@
-﻿{
+{
 	"NET90.Azure": {
 		"Providers": [
+			"Firebird.2.5",
+			"Firebird.3",
+			"Firebird.4",
 			"Firebird.5"
 		]
 	}
