@@ -354,6 +354,15 @@ namespace LinqToDB
 		{
 		}
 
+		/// <summary>
+		/// Builder for two-argument statistical window aggregates: COVAR_POP/COVAR_SAMP, CORR, REGR_*.
+		/// <para>Chain: <c>[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...]</c>, or <c>.UseWindow(...)</c>.</para>
+		/// <para>Supports FILTER, frame specification, and UseWindow. Does NOT support DISTINCT or KEEP — neither is valid on two-argument aggregates.</para>
+		/// </summary>
+		public interface IBivariateAggregateFinal : IFilterPart<IOPartitionOOrderOFrameFinal>, IOPartitionOOrderOFrameFinal, IUseWindow<IDefinedFunction>
+		{
+		}
+
 		/// <summary>Terminal state after OrderBy in non-frame chains: allows ThenBy or completes.</summary>
 		public interface IOThenPartFinal : IThenOrderPart<IOThenPartFinal>, IDefinedFunction
 		{
@@ -2602,8 +2611,30 @@ namespace LinqToDB
 		/// RATIO_TO_REPORT(t.Value) OVER (PARTITION BY t.Dept)
 		/// </code>
 		/// </remarks>
-		public static double? RatioToReport<T>(this Sql.IWindowFunction window, T argument, Func<IAggregateFinal, IDefinedFunction> func)
+		public static double? RatioToReport<T>(this Sql.IWindowFunction window, T argument, Func<IOPartitionFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(RatioToReport));
+
+		#endregion
+
+		#region Median
+
+		/// <summary>
+		/// Generates the SQL <c>MEDIAN()</c> window function — the median (50th percentile, continuous) of the values within the window.
+		/// </summary>
+		/// <remarks>
+		/// <para><b>Syntax:</b> <c>Sql.Window.Median(expr, f =&gt; f.PartitionBy(...))</c></para>
+		/// <para>Native on Oracle and DB2 only; throws a descriptive exception at query-translation time elsewhere. Its OVER clause carries <c>PARTITION BY</c> only (no ORDER BY or frame).</para>
+		/// <para><b>C# usage:</b></para>
+		/// <code>
+		/// Sql.Window.Median(t.Value, f =&gt; f.PartitionBy(t.Dept))
+		/// </code>
+		/// <para><b>Generated SQL (Oracle):</b></para>
+		/// <code>
+		/// MEDIAN(t.Value) OVER (PARTITION BY t.Dept)
+		/// </code>
+		/// </remarks>
+		public static double? Median<T>(this Sql.IWindowFunction window, T argument, Func<IOPartitionFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(Median));
 
 		#endregion
 
@@ -2694,7 +2725,7 @@ namespace LinqToDB
 		/// <para>Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.</para>
 		/// <para><b>Generated SQL:</b> <c>COVAR_POP(expr1, expr2) OVER (...)</c></para>
 		/// </remarks>
-		public static double? CovarPop<T1, T2>(this Sql.IWindowFunction window, T1 argument1, T2 argument2, Func<IAggregateFinal, IDefinedFunction> func)
+		public static double? CovarPop<T1, T2>(this Sql.IWindowFunction window, T1 argument1, T2 argument2, Func<IBivariateAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(CovarPop));
 
 		/// <summary>
@@ -2705,7 +2736,7 @@ namespace LinqToDB
 		/// <para>Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.</para>
 		/// <para><b>Generated SQL:</b> <c>COVAR_SAMP(expr1, expr2) OVER (...)</c></para>
 		/// </remarks>
-		public static double? CovarSamp<T1, T2>(this Sql.IWindowFunction window, T1 argument1, T2 argument2, Func<IAggregateFinal, IDefinedFunction> func)
+		public static double? CovarSamp<T1, T2>(this Sql.IWindowFunction window, T1 argument1, T2 argument2, Func<IBivariateAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(CovarSamp));
 
 		/// <summary>
@@ -2716,7 +2747,7 @@ namespace LinqToDB
 		/// <para>Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.</para>
 		/// <para><b>Generated SQL:</b> <c>CORR(expr1, expr2) OVER (...)</c></para>
 		/// </remarks>
-		public static double? Corr<T1, T2>(this Sql.IWindowFunction window, T1 argument1, T2 argument2, Func<IAggregateFinal, IDefinedFunction> func)
+		public static double? Corr<T1, T2>(this Sql.IWindowFunction window, T1 argument1, T2 argument2, Func<IBivariateAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Corr));
 
 		/// <summary>
@@ -2727,7 +2758,7 @@ namespace LinqToDB
 		/// <para>Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.</para>
 		/// <para><b>Generated SQL:</b> <c>REGR_SLOPE(y, x) OVER (...)</c></para>
 		/// </remarks>
-		public static double? RegrSlope<T1, T2>(this Sql.IWindowFunction window, T1 argument1, T2 argument2, Func<IAggregateFinal, IDefinedFunction> func)
+		public static double? RegrSlope<T1, T2>(this Sql.IWindowFunction window, T1 argument1, T2 argument2, Func<IBivariateAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(RegrSlope));
 
 		/// <summary>
@@ -2738,7 +2769,7 @@ namespace LinqToDB
 		/// <para>Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.</para>
 		/// <para><b>Generated SQL:</b> <c>REGR_INTERCEPT(y, x) OVER (...)</c></para>
 		/// </remarks>
-		public static double? RegrIntercept<T1, T2>(this Sql.IWindowFunction window, T1 argument1, T2 argument2, Func<IAggregateFinal, IDefinedFunction> func)
+		public static double? RegrIntercept<T1, T2>(this Sql.IWindowFunction window, T1 argument1, T2 argument2, Func<IBivariateAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(RegrIntercept));
 
 		/// <summary>
@@ -2749,7 +2780,7 @@ namespace LinqToDB
 		/// <para>Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.</para>
 		/// <para><b>Generated SQL:</b> <c>REGR_COUNT(y, x) OVER (...)</c></para>
 		/// </remarks>
-		public static long? RegrCount<T1, T2>(this Sql.IWindowFunction window, T1 argument1, T2 argument2, Func<IAggregateFinal, IDefinedFunction> func)
+		public static long? RegrCount<T1, T2>(this Sql.IWindowFunction window, T1 argument1, T2 argument2, Func<IBivariateAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(RegrCount));
 
 		/// <summary>
@@ -2760,7 +2791,7 @@ namespace LinqToDB
 		/// <para>Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.</para>
 		/// <para><b>Generated SQL:</b> <c>REGR_R2(y, x) OVER (...)</c></para>
 		/// </remarks>
-		public static double? RegrR2<T1, T2>(this Sql.IWindowFunction window, T1 argument1, T2 argument2, Func<IAggregateFinal, IDefinedFunction> func)
+		public static double? RegrR2<T1, T2>(this Sql.IWindowFunction window, T1 argument1, T2 argument2, Func<IBivariateAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(RegrR2));
 
 		/// <summary>
@@ -2771,7 +2802,7 @@ namespace LinqToDB
 		/// <para>Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.</para>
 		/// <para><b>Generated SQL:</b> <c>REGR_AVGX(y, x) OVER (...)</c></para>
 		/// </remarks>
-		public static double? RegrAvgX<T1, T2>(this Sql.IWindowFunction window, T1 argument1, T2 argument2, Func<IAggregateFinal, IDefinedFunction> func)
+		public static double? RegrAvgX<T1, T2>(this Sql.IWindowFunction window, T1 argument1, T2 argument2, Func<IBivariateAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(RegrAvgX));
 
 		/// <summary>
@@ -2782,7 +2813,7 @@ namespace LinqToDB
 		/// <para>Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.</para>
 		/// <para><b>Generated SQL:</b> <c>REGR_AVGY(y, x) OVER (...)</c></para>
 		/// </remarks>
-		public static double? RegrAvgY<T1, T2>(this Sql.IWindowFunction window, T1 argument1, T2 argument2, Func<IAggregateFinal, IDefinedFunction> func)
+		public static double? RegrAvgY<T1, T2>(this Sql.IWindowFunction window, T1 argument1, T2 argument2, Func<IBivariateAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(RegrAvgY));
 
 		/// <summary>
@@ -2793,7 +2824,7 @@ namespace LinqToDB
 		/// <para>Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.</para>
 		/// <para><b>Generated SQL:</b> <c>REGR_SXX(y, x) OVER (...)</c></para>
 		/// </remarks>
-		public static double? RegrSXX<T1, T2>(this Sql.IWindowFunction window, T1 argument1, T2 argument2, Func<IAggregateFinal, IDefinedFunction> func)
+		public static double? RegrSXX<T1, T2>(this Sql.IWindowFunction window, T1 argument1, T2 argument2, Func<IBivariateAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(RegrSXX));
 
 		/// <summary>
@@ -2804,7 +2835,7 @@ namespace LinqToDB
 		/// <para>Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.</para>
 		/// <para><b>Generated SQL:</b> <c>REGR_SYY(y, x) OVER (...)</c></para>
 		/// </remarks>
-		public static double? RegrSYY<T1, T2>(this Sql.IWindowFunction window, T1 argument1, T2 argument2, Func<IAggregateFinal, IDefinedFunction> func)
+		public static double? RegrSYY<T1, T2>(this Sql.IWindowFunction window, T1 argument1, T2 argument2, Func<IBivariateAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(RegrSYY));
 
 		/// <summary>
@@ -2815,7 +2846,7 @@ namespace LinqToDB
 		/// <para>Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.</para>
 		/// <para><b>Generated SQL:</b> <c>REGR_SXY(y, x) OVER (...)</c></para>
 		/// </remarks>
-		public static double? RegrSXY<T1, T2>(this Sql.IWindowFunction window, T1 argument1, T2 argument2, Func<IAggregateFinal, IDefinedFunction> func)
+		public static double? RegrSXY<T1, T2>(this Sql.IWindowFunction window, T1 argument1, T2 argument2, Func<IBivariateAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(RegrSXY));
 
 		#endregion Covar/Corr/Regr

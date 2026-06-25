@@ -38,6 +38,7 @@
 		public const string Error_WindowFunction_Variance                   = "STDDEV/VARIANCE is not supported by current provider.";
 		public const string Error_WindowFunction_Correlation                = "COVAR/CORR is not supported by current provider.";
 		public const string Error_WindowFunction_LinearRegression           = "REGR_* is not supported by current provider.";
+		public const string Error_WindowFunction_Median                     = "MEDIAN is not supported by current provider.";
 		public const string Error_WindowFunction_FrameRows                  = "ROWS frame is not supported by current provider.";
 		public const string Error_WindowFunction_FrameRange                 = "RANGE frame is not supported by current provider.";
 		public const string Error_WindowFunction_FrameGroups                = "GROUPS frame is not supported by current provider.";

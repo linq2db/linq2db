@@ -490,6 +490,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 			protected override bool IsVarianceBareSupported         => true;
 			protected override bool IsCorrelationSupported          => true;
 			protected override bool IsLinearRegressionSupported     => true;
+			protected override bool IsMedianSupported               => true;
 
 			public override Expression? TranslateRatioToReport(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 				=> TranslateRatioToReportNative(translationContext, methodCall);

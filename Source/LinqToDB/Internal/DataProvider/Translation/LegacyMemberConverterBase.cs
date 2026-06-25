@@ -564,7 +564,10 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				nameof(AnalyticFunctions.LastValue)  when functionArg1 != null                       => WindowFunctionHelpers.BuildLastValue(functionArg1, functionNulls, partitionBy, orderBy, frame),
 				nameof(AnalyticFunctions.NthValue)   when functionArg1 != null && functionArg2 != null => WindowFunctionHelpers.BuildNthValue(functionArg1, functionArg2, functionNulls, partitionBy, orderBy, frame),
 
-				nameof(AnalyticFunctions.RatioToReport) when functionArg1 != null => WindowFunctionHelpers.BuildRatioToReport(functionArg1, partitionBy, orderBy, frame),
+				nameof(AnalyticFunctions.RatioToReport) when functionArg1 != null => WindowFunctionHelpers.BuildRatioToReport(functionArg1, partitionBy),
+
+				// MEDIAN's OVER clause carries PARTITION BY only — orderBy/frame from the legacy chain (if any) are ignored.
+				nameof(AnalyticFunctions.Median) when functionArg1 != null => WindowFunctionHelpers.BuildMedian(functionArg1, partitionBy),
 
 				_ => null, // Unsupported function — fall through to old pipeline
 			};

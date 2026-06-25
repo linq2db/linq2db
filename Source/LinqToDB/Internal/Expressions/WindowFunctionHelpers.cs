@@ -135,7 +135,10 @@ namespace LinqToDB.Internal.Expressions
 		static readonly MethodInfo _varSampMethodInfo    = MemberHelper.MethodOfGeneric(() => Sql.Window.VarSamp(1.0,    f => f.OrderBy(1)));
 
 		// RATIO_TO_REPORT (not a statistical aggregate; kept out of the aligned block above).
-		static readonly MethodInfo _ratioToReportMethodInfo = MemberHelper.MethodOfGeneric(() => Sql.Window.RatioToReport(1.0, f => f.OrderBy(1)));
+		static readonly MethodInfo _ratioToReportMethodInfo = MemberHelper.MethodOfGeneric(() => Sql.Window.RatioToReport(1.0, f => f.PartitionBy(1)));
+
+		// MEDIAN — partition-only OVER (IOPartitionFinal builder).
+		static readonly MethodInfo _medianMethodInfo        = MemberHelper.MethodOfGeneric(() => Sql.Window.Median(1.0, f => f.PartitionBy(1)));
 
 		// Two-argument statistical aggregates (covariance/correlation/regression) — generic on both argument types.
 		static readonly MethodInfo _covarPopMethodInfo      = MemberHelper.MethodOfGeneric(() => Sql.Window.CovarPop(1.0, 1.0,      f => f.OrderBy(1)));
@@ -410,21 +413,55 @@ namespace LinqToDB.Internal.Expressions
 		public static Expression BuildVarSamp(Expression argument, Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy, Sql.AggregateModifier modifier = Sql.AggregateModifier.None, WindowFrameSpec? frame = null)
 			=> BuildGenericAggregate(_varSampMethodInfo, argument, partitionBy, orderBy, modifier, frame);
 
-		// Builds the Sql.Window.RatioToReport call. The translator emits it natively (RATIO_TO_REPORT on Oracle/DB2)
-		// or emulates it via BuildRatioToReportEmulation on providers without native support.
-		public static Expression BuildRatioToReport(Expression argument, Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy, WindowFrameSpec? frame = null)
-			=> BuildGenericAggregate(_ratioToReportMethodInfo, argument, partitionBy, orderBy, Sql.AggregateModifier.None, frame);
+		// Builds the Sql.Window.RatioToReport call. Like MEDIAN, RATIO_TO_REPORT's OVER clause carries PARTITION BY only;
+		// the translator emits it natively (Oracle/DB2) or emulates it via BuildRatioToReportEmulation elsewhere.
+		public static Expression BuildRatioToReport(Expression argument, Expression[] partitionBy)
+			=> BuildPartitionOnlyAggregate(_ratioToReportMethodInfo, argument, partitionBy);
 
-		// Emulation for providers without native RATIO_TO_REPORT: expr / SUM(expr) OVER (w), reusing the same window
-		// lambda for the SUM. Both operands are cast to double? so the division is floating-point (not integer).
+		// Builds the Sql.Window.Median call. MEDIAN's OVER clause carries PARTITION BY only.
+		public static Expression BuildMedian(Expression argument, Expression[] partitionBy)
+			=> BuildPartitionOnlyAggregate(_medianMethodInfo, argument, partitionBy);
+
+		// Shared builder for partition-only window aggregates (MEDIAN, RATIO_TO_REPORT): their OVER clause carries only
+		// PARTITION BY, so this builds the IOPartitionFinal lambda directly rather than the shared aggregate (UseWindow) path.
+		static Expression BuildPartitionOnlyAggregate(MethodInfo genericMethod, Expression argument, Expression[] partitionBy)
+		{
+			var param = Expression.Parameter(typeof(WindowFunctionBuilder.IOPartitionFinal), "f");
+
+			Expression body = param;
+			if (partitionBy.Length > 0)
+			{
+				var partitionArr = Expression.NewArrayInit(typeof(object), partitionBy.Select(ExpressionHelpers.EnsureObject));
+				body = ExpressionHelpers.MakeCall((WindowFunctionBuilder.IOPartitionFinal b, object[] partition) => b.PartitionBy(partition), param, partitionArr);
+			}
+
+			var lambda = Expression.Lambda(typeof(Func<WindowFunctionBuilder.IOPartitionFinal, WindowFunctionBuilder.IDefinedFunction>), body, param);
+
+			return Expression.Call(genericMethod.MakeGenericMethod(argument.Type), Expression.Constant(Sql.Window), argument, lambda);
+		}
+
+		// Emulation for providers without native RATIO_TO_REPORT: expr / SUM(expr) OVER (PARTITION BY ...). The builder
+		// lambda is partition-only (IOPartitionFinal), so rebuild its PARTITION BY for SUM (which uses IAggregateFinal).
 		internal static Expression? BuildRatioToReportEmulation(Expression argument, Expression windowFuncLambda)
 		{
-			var sumMethod = FindConcreteOverload(SumMethodInfo, argument.Type);
-			if (sumMethod == null)
+			var sumCall = BuildSum(argument, ExtractPartitionBy(windowFuncLambda), []);
+			if (sumCall == null)
 				return null;
 
-			var sumCall = Expression.Call(sumMethod, Expression.Constant(Sql.Window), argument, windowFuncLambda);
 			return Expression.Divide(Expression.Convert(argument, typeof(double?)), Expression.Convert(sumCall, typeof(double?)));
+		}
+
+		// Extracts the PARTITION BY expressions from a partition-only window-builder lambda (f => f.PartitionBy(a, b)).
+		static Expression[] ExtractPartitionBy(Expression windowFuncLambda)
+		{
+			var lambda = windowFuncLambda as LambdaExpression ?? (windowFuncLambda as UnaryExpression)?.Operand as LambdaExpression;
+
+			if (lambda?.Body is MethodCallExpression { Arguments: [NewArrayExpression arr] } call && call.Method.Name == "PartitionBy")
+				return arr.Expressions
+					.Select(e => e is UnaryExpression { NodeType: ExpressionType.Convert } u ? u.Operand : e)
+					.ToArray();
+
+			return [];
 		}
 
 		// Two-argument statistical aggregate (COVAR_POP(x, y) etc.) — generic on both argument types, returns double?.
@@ -432,8 +469,8 @@ namespace LinqToDB.Internal.Expressions
 		{
 			var method       = genericMethod.MakeGenericMethod(argument1.Type, argument2.Type);
 			var windowLambda = frame is { } f
-				? BuildInlineFrameLambda(typeof(WindowFunctionBuilder.IAggregateFinal), partitionBy, orderBy, Sql.AggregateModifier.None, Sql.Nulls.None, f)
-				: BuildAggregateUseWindowLambda(typeof(WindowFunctionBuilder.IAggregateFinal), BuildWindowDefinition(partitionBy, orderBy), Sql.AggregateModifier.None);
+				? BuildInlineFrameLambda(typeof(WindowFunctionBuilder.IBivariateAggregateFinal), partitionBy, orderBy, Sql.AggregateModifier.None, Sql.Nulls.None, f)
+				: BuildAggregateUseWindowLambda(typeof(WindowFunctionBuilder.IBivariateAggregateFinal), BuildWindowDefinition(partitionBy, orderBy), Sql.AggregateModifier.None);
 			return Expression.Call(method, Expression.Constant(Sql.Window), argument1, argument2, windowLambda);
 		}
 

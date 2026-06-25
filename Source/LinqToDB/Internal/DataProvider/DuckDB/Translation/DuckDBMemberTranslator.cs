@@ -36,6 +36,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB.Translation
 			protected override bool IsVarianceBareSupported         => true;
 			protected override bool IsCorrelationSupported          => true;
 			protected override bool IsLinearRegressionSupported     => true;
+			protected override bool IsMedianSupported               => true;
 		}
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)

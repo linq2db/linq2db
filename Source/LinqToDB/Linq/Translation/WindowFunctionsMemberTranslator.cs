@@ -34,6 +34,8 @@ namespace LinqToDB.Linq.Translation
 		protected virtual bool IsVarianceBareSupported             => false;
 		protected virtual bool IsCorrelationSupported              => false;
 		protected virtual bool IsLinearRegressionSupported         => false;
+		// MEDIAN(x) OVER (PARTITION BY ...) — native on Oracle/DB2 only.
+		protected virtual bool IsMedianSupported                   => false;
 
 		// Window clause support flags
 		protected virtual bool IsWindowFilterSupported         => false;
@@ -178,7 +180,10 @@ namespace LinqToDB.Linq.Translation
 			Registration.RegisterMethod(() => Sql.Window.VarSamp(1.0,    f => f.OrderBy(1)), TranslateVarSamp,    isGenericTypeMatch: true);
 
 			// RATIO_TO_REPORT is not a statistical aggregate; registered here for proximity (native on Oracle/DB2, emulated elsewhere).
-			Registration.RegisterMethod(() => Sql.Window.RatioToReport(1.0, f => f.OrderBy(1)), TranslateRatioToReport, isGenericTypeMatch: true);
+			Registration.RegisterMethod(() => Sql.Window.RatioToReport(1.0, f => f.PartitionBy(1)), TranslateRatioToReport, isGenericTypeMatch: true);
+
+			// MEDIAN(x) OVER (PARTITION BY ...) — native on Oracle/DB2; partition-only OVER, no ORDER BY/frame.
+			Registration.RegisterMethod(() => Sql.Window.Median(1.0, f => f.PartitionBy(1)), TranslateMedian, isGenericTypeMatch: true);
 
 			Registration.RegisterMethod(() => Sql.Window.CovarPop(1.0, 1.0,      f => f.OrderBy(1)), TranslateCovarPop,      isGenericTypeMatch: true);
 			Registration.RegisterMethod(() => Sql.Window.CovarSamp(1.0, 1.0,     f => f.OrderBy(1)), TranslateCovarSamp,     isGenericTypeMatch: true);
@@ -1115,6 +1120,18 @@ namespace LinqToDB.Linq.Translation
 				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
 
 			return translationContext.Translate(emulation);
+		}
+
+		// MEDIAN(x) OVER (PARTITION BY ...). Gated by IsMedianSupported (Oracle/DB2); the OVER clause carries PARTITION BY
+		// only — no ORDER BY / frame.
+		public virtual Expression? TranslateMedian(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			if (!IsMedianSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_Median, methodCall.Type);
+
+			var dbDataType = translationContext.ExpressionFactory.GetDbDataType(methodCall.Type);
+
+			return TranslateWindowFunction(translationContext, methodCall, 1, 2, dbDataType, "MEDIAN");
 		}
 
 		// Native RATIO_TO_REPORT emission (Oracle/DB2). Shared so provider translators can opt in by calling it.
