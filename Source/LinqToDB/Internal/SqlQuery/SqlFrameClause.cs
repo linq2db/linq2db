@@ -105,6 +105,14 @@ namespace LinqToDB.Internal.SqlQuery
 			return HashCode.Combine(FrameType, Start, End, Exclusion);
 		}
 
+		public bool Equals(SqlFrameClause other, Func<ISqlExpression, ISqlExpression, bool> comparer)
+		{
+			return FrameType == other.FrameType
+				&& Exclusion == other.Exclusion
+				&& Start.Equals(other.Start, comparer)
+				&& End.Equals(other.End, comparer);
+		}
+
 		[DebuggerStepThrough]
 		public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitSqlFrameClause(this);
 

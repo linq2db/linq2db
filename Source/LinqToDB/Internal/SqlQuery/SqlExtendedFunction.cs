@@ -283,7 +283,7 @@ namespace LinqToDB.Internal.SqlQuery
 			if (!CheckNulls(FrameClause, otherFunction.FrameClause))
 				return false;
 
-			if (FrameClause != null && !FrameClause.Equals(otherFunction.FrameClause))
+			if (FrameClause != null && !FrameClause.Equals(otherFunction.FrameClause!, comparer))
 				return false;
 
 			if (!CheckNulls(KeepClause, otherFunction.KeepClause))
@@ -347,7 +347,7 @@ namespace LinqToDB.Internal.SqlQuery
 			{
 				for (var i = 0; i < OrderBy.Count; i++)
 				{
-					if (OrderBy[i].IsDescending != otherFunction.OrderBy![i].IsDescending || !OrderBy[i].Expression.Equals(otherFunction.OrderBy![i].Expression, comparer))
+					if (OrderBy[i].IsDescending != otherFunction.OrderBy![i].IsDescending || OrderBy[i].NullsPosition != otherFunction.OrderBy![i].NullsPosition || !OrderBy[i].Expression.Equals(otherFunction.OrderBy![i].Expression, comparer))
 						return false;
 				}
 			}
@@ -362,7 +362,7 @@ namespace LinqToDB.Internal.SqlQuery
 			{
 				for (var i = 0; i < WithinGroup.Count; i++)
 				{
-					if (WithinGroup[i].IsDescending != otherFunction.WithinGroup![i].IsDescending || !WithinGroup[i].Expression.Equals(otherFunction.WithinGroup![i].Expression, comparer))
+					if (WithinGroup[i].IsDescending != otherFunction.WithinGroup![i].IsDescending || WithinGroup[i].NullsPosition != otherFunction.WithinGroup![i].NullsPosition || !WithinGroup[i].Expression.Equals(otherFunction.WithinGroup![i].Expression, comparer))
 						return false;
 				}
 			}
