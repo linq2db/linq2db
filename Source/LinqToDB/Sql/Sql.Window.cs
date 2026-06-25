@@ -401,31 +401,6 @@ namespace LinqToDB
 		{
 		}
 
-		/// <summary>Terminal state after OrderBy in non-frame chains: allows ThenBy or completes.</summary>
-		public interface IOThenPartFinal : IThenOrderPart<IOThenPartFinal>, IDefinedFunction
-		{
-		}
-
-		/// <summary>State providing OrderBy in non-frame chains.</summary>
-		public interface IOOrderFinal : IOrderByPart<IOThenPartFinal>, IOThenPartFinal
-		{
-		}
-
-		/// <summary>State providing PartitionBy then OrderBy in non-frame chains.</summary>
-		public interface IOPartitionOOrderFinal : IPartitionPart<IOOrderFinal>, IOOrderFinal
-		{
-		}
-
-		/// <summary>State providing Filter, PartitionBy, OrderBy in non-frame chains.</summary>
-		public interface IOFilterOPartitionOOrderFinal : IFilterPart<IOPartitionOOrderFinal>, IOPartitionOOrderFinal
-		{
-		}
-
-		/// <summary>State providing Filter and PartitionBy only (no OrderBy).</summary>
-		public interface IOFilterOPartitionFinal : IFilterPart<IOPartitionFinal>, IOPartitionFinal
-		{
-		}
-
 		/// <summary>State providing PartitionBy only, then completes.</summary>
 		public interface IOPartitionFinal : IPartitionPart<IDefinedFunction>, IDefinedFunction
 		{
