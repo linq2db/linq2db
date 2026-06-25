@@ -5,6 +5,8 @@ using LinqToDB.Internal.Common;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.Linq
 {
 	partial class WindowFunctionsTests
@@ -29,6 +31,9 @@ namespace Tests.Linq
 					Value = Sql.Window.StdDevPop(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id)),
 				};
 
+			var sql = query.ToSqlQuery().Sql;
+			sql.ShouldContain("STDDEV_POP");
+
 				_ = query.ToList();
 		}
 
@@ -52,6 +57,9 @@ namespace Tests.Linq
 					Id    = t.Id,
 					Value = Sql.Window.StdDevPop(t.IntValue, w => w.UseWindow(wnd)),
 				};
+
+			var sql = query.ToSqlQuery().Sql;
+			sql.ShouldContain("STDDEV_POP");
 
 				_ = query.ToList();
 		}

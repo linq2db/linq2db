@@ -37,9 +37,9 @@ namespace LinqToDB.Linq.Translation
 		protected virtual bool IsVarianceBareSupported             => false;
 		protected virtual bool IsCorrelationSupported              => false;
 		protected virtual bool IsLinearRegressionSupported         => false;
-		// MEDIAN(x) OVER (PARTITION BY ...) — native on Oracle/DB2 only.
+		// MEDIAN(x) OVER (PARTITION BY ...) — native on Oracle/DB2/DuckDB.
 		protected virtual bool IsMedianSupported                   => false;
-		// Hypothetical-set RANK/DENSE_RANK/PERCENT_RANK/CUME_DIST WITHIN GROUP (ORDER BY ...) — Oracle/DB2/PostgreSQL.
+		// Hypothetical-set RANK/DENSE_RANK/PERCENT_RANK/CUME_DIST WITHIN GROUP (ORDER BY ...) — Oracle/PostgreSQL.
 		protected virtual bool IsHypotheticalSetSupported          => false;
 
 		// Window clause support flags
@@ -1197,7 +1197,7 @@ namespace LinqToDB.Linq.Translation
 
 		// Hypothetical-set ordered-set aggregate: FUNC(value...) WITHIN GROUP (ORDER BY key...). The values are the leading
 		// method arguments (positional, matched to the order keys by the database) and the order lambda is the last argument;
-		// no OVER clause is emitted. Gated by IsHypotheticalSetSupported (Oracle/DB2/PostgreSQL).
+		// no OVER clause is emitted. Gated by IsHypotheticalSetSupported (Oracle/PostgreSQL).
 		Expression? TranslateHypotheticalSet(ITranslationContext translationContext, MethodCallExpression methodCall, string functionName)
 		{
 			if (!IsWindowFunctionsSupported)

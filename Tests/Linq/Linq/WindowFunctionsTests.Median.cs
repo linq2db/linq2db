@@ -5,11 +5,13 @@ using LinqToDB.Internal.Common;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.Linq
 {
 	partial class WindowFunctionsTests
 	{
-		// MEDIAN(x) OVER (PARTITION BY ...) is native on Oracle and DB2 only; its OVER clause carries PARTITION BY only.
+		// MEDIAN(x) OVER (PARTITION BY ...) is native on Oracle, DB2 and DuckDB; its OVER clause carries PARTITION BY only.
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 		[ThrowsForProvider(typeof(LinqToDBException),
@@ -29,6 +31,9 @@ namespace Tests.Linq
 					Id     = t.Id,
 					Median = Sql.Window.Median(t.IntValue, w => w.PartitionBy(t.CategoryId)),
 				};
+
+			var sql = query.ToSqlQuery().Sql;
+			sql.ShouldContain("MEDIAN");
 
 				_ = query.ToList();
 		}

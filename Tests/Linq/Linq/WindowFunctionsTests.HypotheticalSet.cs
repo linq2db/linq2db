@@ -5,12 +5,14 @@ using LinqToDB.Internal.Common;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.Linq
 {
 	partial class WindowFunctionsTests
 	{
 		// Hypothetical-set RANK(value) WITHIN GROUP (ORDER BY key): the rank the value would have (with gaps) in the
-		// ordered group. Native on Oracle, DB2 and PostgreSQL; throws elsewhere.
+		// ordered group. Native on Oracle and PostgreSQL; throws elsewhere.
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 		[ThrowsForProvider(typeof(LinqToDBException),
@@ -32,6 +34,10 @@ namespace Tests.Linq
 					Rank1 = g.Rank(1000, (e, f) => f.OrderBy(e.IntValue)),
 					Rank2 = g.Rank(1000, 2000L, (e, f) => f.OrderBy(e.IntValue).ThenBy(e.LongValue)),
 				};
+
+			var sql = query.ToSqlQuery().Sql;
+			sql.ShouldContain("WITHIN GROUP");
+			sql.ShouldContain("RANK");
 
 				_ = query.ToList();
 		}
@@ -59,6 +65,10 @@ namespace Tests.Linq
 					DenseRank2 = g.DenseRank(1000, 2000L, (e, f) => f.OrderBy(e.IntValue).ThenBy(e.LongValue)),
 				};
 
+			var sql = query.ToSqlQuery().Sql;
+			sql.ShouldContain("WITHIN GROUP");
+			sql.ShouldContain("DENSE_RANK");
+
 				_ = query.ToList();
 		}
 
@@ -85,6 +95,10 @@ namespace Tests.Linq
 					PercentRank2 = g.PercentRank(1000, 2000L, (e, f) => f.OrderBy(e.IntValue).ThenBy(e.LongValue)),
 				};
 
+			var sql = query.ToSqlQuery().Sql;
+			sql.ShouldContain("WITHIN GROUP");
+			sql.ShouldContain("PERCENT_RANK");
+
 				_ = query.ToList();
 		}
 
@@ -110,6 +124,10 @@ namespace Tests.Linq
 					CumeDist1 = g.CumeDist(1000, (e, f) => f.OrderBy(e.IntValue)),
 					CumeDist2 = g.CumeDist(1000, 2000L, (e, f) => f.OrderBy(e.IntValue).ThenBy(e.LongValue)),
 				};
+
+			var sql = query.ToSqlQuery().Sql;
+			sql.ShouldContain("WITHIN GROUP");
+			sql.ShouldContain("CUME_DIST");
 
 				_ = query.ToList();
 		}

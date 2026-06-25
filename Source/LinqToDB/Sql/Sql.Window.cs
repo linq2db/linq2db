@@ -2667,7 +2667,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Median(expr, f =&gt; f.[PartitionBy(...)])</c></para>
-		/// <para>Native on Oracle and DB2 only; throws a descriptive exception at query-translation time elsewhere. Its OVER clause carries <c>PARTITION BY</c> only (no ORDER BY or frame).</para>
+		/// <para>Native on Oracle, DB2 and DuckDB; throws a descriptive exception at query-translation time elsewhere. Its OVER clause carries <c>PARTITION BY</c> only (no ORDER BY or frame).</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// Sql.Window.Median(t.Value, f =&gt; f.PartitionBy(t.Dept))

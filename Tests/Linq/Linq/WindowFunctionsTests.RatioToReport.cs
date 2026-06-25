@@ -5,6 +5,8 @@ using LinqToDB.Internal.Common;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.Linq
 {
 	partial class WindowFunctionsTests
@@ -26,6 +28,9 @@ namespace Tests.Linq
 					Id            = t.Id,
 					RatioToReport = Sql.Window.RatioToReport(t.IntValue, w => w.PartitionBy(t.CategoryId)),
 				};
+
+			var sql = query.ToSqlQuery().Sql;
+			sql.ShouldContain("OVER");
 
 				_ = query.ToList();
 		}
