@@ -282,12 +282,6 @@ namespace LinqToDB
 			public IDefinedFunction ExcludeTies();
 		}
 
-		/// <summary>Combined interface providing optional Filter and PartitionBy.</summary>
-		public interface IOptionalFilter<out TPartitioned> : IFilterPart<IPartitionPart<TPartitioned>>, IPartitionPart<TPartitioned>
-			where TPartitioned : class
-		{
-		}
-
 		/// <summary>Terminal state after OrderBy: allows ThenBy or completes the definition.</summary>
 		public interface IThenByPartFinal : IThenOrderPart<IThenByPartFinal>, IDefinedFunction
 		{
