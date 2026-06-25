@@ -5,10 +5,6 @@ using System.Diagnostics.CodeAnalysis;
 
 using LinqToDB.Internal.SqlQuery.Visitors;
 
-// SqlTableSource.Alias recursively derives from its Source through its own obsolete getter; that
-// internal use is intentional and exempt from the read-via-context guard.
-#pragma warning disable CS0618
-
 namespace LinqToDB.Internal.SqlQuery
 {
 	public sealed class SqlTableSource : SqlExpressionBase, ISqlTableSource
@@ -49,9 +45,16 @@ namespace LinqToDB.Internal.SqlQuery
 		public SqlTableType    SqlTableType => Source.SqlTableType;
 
 		private string? _alias;
+
+		/// <summary>
+		/// The raw / un-finalized table-source alias - the stored <see cref="RawAlias"/>, or the alias
+		/// derived from <see cref="Source"/>. For non-render use (optimizers, expression builders,
+		/// diagnostics). In a SQL builder, read the finalized alias via
+		/// <c>AliasesContext.GetTableAlias(this)</c> instead: finalized names live in the context, not
+		/// on the node (enforced by the <c>LINQ2DB0001</c> analyzer).
+		/// </summary>
 		public  string?  Alias
 		{
-			[Obsolete("Read the finalized table-source alias via AliasesContext.GetTableAlias(this); use RawAlias for the raw stored value. Direct reads bypass the aliasing context and break non-mutating aliasing.")]
 			get
 			{
 				if (string.IsNullOrEmpty(_alias))

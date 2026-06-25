@@ -106,7 +106,7 @@ namespace LinqToDB.Internal.SqlQuery
 				case SelectQuery { Select.Columns: [var col] }:
 				{
 					var a = GetColumnAlias(col);
-					return a != "*" ? a : null;
+					return string.Equals(a, "*", StringComparison.Ordinal) ? null : a;
 				}
 				case SqlExpression { Expr: "{0}", Parameters: [var parameter] }:
 					return DeriveAlias(parameter);
