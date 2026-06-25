@@ -209,7 +209,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 							frameClause : frameClause,
 							keepClause : keepClause,
 							nullTreatment : element.NullTreatment,
-							fromPosition : element.FromPosition), element);
+							fromPosition : element.FromPosition,
+							isWindowFunction: element.IsWindowFunction), element);
 					}
 
 					break;
