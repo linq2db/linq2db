@@ -471,10 +471,14 @@ namespace LinqToDB.Internal.DataProvider.Translation
 						var argIdx  = mc.Method.IsStatic ? 1 : 0;
 						if (argIdx < mc.Arguments.Count)
 						{
-							// Legacy analytic ORDER BY doesn't specify a NULLS position; resolve the configured default
-							// so it matches a plain query OrderBy (explicit NULLS-positioning chain methods bail to
-							// the legacy pipeline via the default arm below).
-							orderByList.Insert(0, (mc.Arguments[argIdx], isDesc, context.DataOptions.SqlOptions.DefaultNullsPosition));
+							// The order expression plus the optional explicit NULLS position (the OrderBy(expr, nulls) /
+							// ThenBy(expr, nulls) overloads). When none is given, resolve the configured default so it
+							// matches a plain query OrderBy.
+							var nulls = argIdx + 1 < mc.Arguments.Count && mc.Arguments[argIdx + 1].Type == typeof(Sql.NullsPosition)
+								? (Sql.NullsPosition)mc.Arguments[argIdx + 1].EvaluateExpression()!
+								: context.DataOptions.SqlOptions.DefaultNullsPosition;
+
+							orderByList.Insert(0, (mc.Arguments[argIdx], isDesc, nulls));
 						}
 
 						current = mc.Object ?? (mc.Arguments.Count > 0 ? mc.Arguments[0] : null);

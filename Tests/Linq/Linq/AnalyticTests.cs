@@ -2108,5 +2108,23 @@ namespace Tests.Linq
 
 			Assert.That(db.LastQuery, Does.Contain("NULLS FIRST"));
 		}
+
+		[Test]
+		public void LegacyAnalytic_ExplicitNullsPosition_AppliedToOrderBy(
+			[IncludeDataSources(false, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			// A legacy Sql.Ext analytic chain with an explicit NULLS position on its ORDER BY (the OrderBy(expr, nulls)
+			// overload) must carry that position through the conversion to the new Sql.Window pipeline rather than dropping
+			// it. PostgreSQL orders NULLs last by default for ASC, so an explicit NULLS FIRST is emitted verbatim.
+			var q =
+				from p in db.Parent
+				select Sql.Ext.Sum(p.Value1!.Value).Over().OrderBy(p.Value1, Sql.NullsPosition.First).ToValue();
+
+			q.ToArray();
+
+			Assert.That(db.LastQuery, Does.Contain("NULLS FIRST"));
+		}
 	}
 }
