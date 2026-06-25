@@ -1003,7 +1003,7 @@ namespace Tests.Linq
 			}
 		}
 
-		// Regression for the shared-statement alias race surfaced by parallel test execution (#1742):
+		// Regression for the shared-statement alias race surfaced by concurrent query execution:
 		// a parameter-dependent query is cached and re-aliased on every execution. The aliasing pass
 		// used to MUTATE the shared statement in place, so concurrent executions corrupted each other's
 		// aliases - yielding a wrong column->value mapping or invalid SQL. Aliasing is now non-mutating
