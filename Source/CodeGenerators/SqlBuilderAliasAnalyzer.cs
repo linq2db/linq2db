@@ -15,6 +15,13 @@ namespace CodeGenerators
 	/// <c>SqlColumn.Alias</c> / <c>SqlTableSource.Alias</c> bypasses the context and renders a
 	/// stale/raw name. (<c>RawAlias</c> remains the un-flagged escape hatch.)
 	/// </summary>
+	/// <remarks>
+	/// <c>SqlTable.Alias</c> is intentionally not guarded: SqlTable aliases are not migrated into
+	/// <c>AliasesContext</c> - they stay on the node (<c>AliasesContext.GetTableAlias</c> itself
+	/// falls back to <c>SqlTable.Alias</c>), so for SqlTable the node is the source of truth and a
+	/// raw render-path read is correct. If SqlTable aliasing is ever moved into the context, add
+	/// <c>SqlTable</c> to the guarded owner set below.
+	/// </remarks>
 	[DiagnosticAnalyzer(LanguageNames.CSharp)]
 	public sealed class SqlBuilderAliasAnalyzer : DiagnosticAnalyzer
 	{
