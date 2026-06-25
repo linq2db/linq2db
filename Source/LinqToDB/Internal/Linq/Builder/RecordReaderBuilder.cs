@@ -115,7 +115,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			
 			var lambda = Expression.Lambda<Func<IDataContext,DbDataReader,T>>(generator.ResultExpression, DataContextParam, DataReaderParam);
 
-			if (LinqToDB.Common.Configuration.OptimizeForSequentialAccess)
+			if (DataContext.Options.LinqOptions.OptimizeForSequentialAccess)
 				lambda = (Expression<Func<IDataContext, DbDataReader, T>>)SequentialAccessHelper.OptimizeMappingExpressionForSequentialAccess(lambda, Reader.FieldCount, reduce: true);
 
 			return lambda.CompileExpression();

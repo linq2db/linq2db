@@ -37,6 +37,12 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 		protected override string LimitFormat (SelectQuery selectQuery) => "LIMIT {0}";
 		protected override string OffsetFormat(SelectQuery selectQuery) => "OFFSET {0} ";
 
+		protected override void BuildDistinctModifier(SelectQuery selectQuery)
+		{
+			StringBuilder.Append(" DISTINCT");
+			BuildDistinctOnExpressions(selectQuery);
+		}
+
 		protected override void BuildGetIdentity(SqlInsertClause insertClause)
 		{
 			var identityField = insertClause.Into!.GetIdentityField()
