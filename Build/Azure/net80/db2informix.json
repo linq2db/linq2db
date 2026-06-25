@@ -1,7 +1,8 @@
-﻿{
+{
 	"NET80.Azure": {
 		"Providers": [
-			"Oracle.18.Managed"
+			"DB2",
+			"Informix.DB2"
 		]
 	}
 }

@@ -1,6 +1,7 @@
-﻿{
-	"NET100.Azure": {
+{
+	"NET90.Azure": {
 		"Providers": [
+			"Oracle.18.Managed",
 			"Oracle.19.Managed"
 		]
 	}
