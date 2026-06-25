@@ -2667,7 +2667,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Median(expr, f =&gt; f.[PartitionBy(...)])</c></para>
-		/// <para>Native on Oracle, DB2 and DuckDB; throws a descriptive exception at query-translation time elsewhere. Its OVER clause carries <c>PARTITION BY</c> only (no ORDER BY or frame).</para>
+		/// <para>Native on Oracle, DB2, DuckDB and MariaDB; throws a descriptive exception at query-translation time elsewhere. Its OVER clause carries <c>PARTITION BY</c> only (no ORDER BY or frame).</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// Sql.Window.Median(t.Value, f =&gt; f.PartitionBy(t.Dept))
@@ -2938,7 +2938,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.PercentileCont(fraction, w =&gt; w.OrderBy(key)[.PartitionBy(...)])</c></para>
-		/// <para>The windowed form is native on SQL Server and Oracle; PostgreSQL supports only the group form (<c>g.PercentileCont</c>).</para>
+		/// <para>The windowed form is native on SQL Server, Oracle and MariaDB; PostgreSQL supports only the group form (<c>g.PercentileCont</c>).</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// Sql.Window.PercentileCont(0.5, w =&gt; w.OrderBy(t.Salary).PartitionBy(t.Dept))
@@ -2995,7 +2995,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.PercentileDisc(fraction, w =&gt; w.OrderBy(key)[.ThenBy(...)][.PartitionBy(...)])</c></para>
-		/// <para>The windowed form is native on SQL Server and Oracle; PostgreSQL supports only the group form (<c>g.PercentileDisc</c>).</para>
+		/// <para>The windowed form is native on SQL Server, Oracle and MariaDB; PostgreSQL supports only the group form (<c>g.PercentileDisc</c>).</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// Sql.Window.PercentileDisc(0.5, w =&gt; w.OrderBy(t.Salary).PartitionBy(t.Dept))

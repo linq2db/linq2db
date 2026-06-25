@@ -138,11 +138,11 @@ namespace Tests.Linq
 		}
 
 		// Windowed ordered-set form: PERCENTILE_CONT(f) WITHIN GROUP (ORDER BY k) OVER (PARTITION BY ...). Native on
-		// Oracle and SQL Server 2012+ only; PostgreSQL/DB2/DuckDB support only the group form (g.PercentileCont) above.
+		// Oracle, SQL Server 2012+ and MariaDB; PostgreSQL/DB2/DuckDB support only the group form (g.PercentileCont) above.
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 		[ThrowsForProvider(typeof(LinqToDBException),
-			TestProvName.AllSQLite, TestProvName.AllSqlServer2008Minus, TestProvName.AllPostgreSQL, TestProvName.AllMySql8Plus, TestProvName.AllClickHouse,
+			TestProvName.AllSQLite, TestProvName.AllSqlServer2008Minus, TestProvName.AllPostgreSQL, TestProvName.AllMySql80, TestProvName.AllClickHouse,
 			ProviderName.Firebird3, ProviderName.Firebird4, TestProvName.AllFirebird5Plus, TestProvName.AllSapHana, TestProvName.AllInformix, ProviderName.Ydb,
 			TestProvName.AllDB2, TestProvName.AllDuckDB,
 			ErrorMessage = ErrorHelper.Error_WindowFunction_PercentileCont)]

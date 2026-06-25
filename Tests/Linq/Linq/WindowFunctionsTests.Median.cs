@@ -11,11 +11,11 @@ namespace Tests.Linq
 {
 	partial class WindowFunctionsTests
 	{
-		// MEDIAN(x) OVER (PARTITION BY ...) is native on Oracle, DB2 and DuckDB; its OVER clause carries PARTITION BY only.
+		// MEDIAN(x) OVER (PARTITION BY ...) is native on Oracle, DB2, DuckDB and MariaDB; its OVER clause carries PARTITION BY only.
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 		[ThrowsForProvider(typeof(LinqToDBException),
-			TestProvName.AllSQLite, TestProvName.AllSqlServer2008Minus, TestProvName.AllSqlServer2012Plus, TestProvName.AllPostgreSQL, TestProvName.AllMySql8Plus, TestProvName.AllClickHouse,
+			TestProvName.AllSQLite, TestProvName.AllSqlServer2008Minus, TestProvName.AllSqlServer2012Plus, TestProvName.AllPostgreSQL, TestProvName.AllMySql80, TestProvName.AllClickHouse,
 			ProviderName.Firebird3, ProviderName.Firebird4, TestProvName.AllFirebird5Plus, TestProvName.AllSapHana, TestProvName.AllInformix, ProviderName.Ydb,
 			ErrorMessage = ErrorHelper.Error_WindowFunction_Median)]
 		public void MedianBasic([DataSources] string context)

@@ -27,7 +27,7 @@ namespace LinqToDB.Linq.Translation
 		protected virtual bool IsPercentileContSupported           => true;
 		protected virtual bool IsPercentileDiscSupported           => true;
 		// Windowed ordered-set form: PERCENTILE_CONT/DISC(f) WITHIN GROUP (ORDER BY k) OVER (PARTITION BY ...). Distinct
-		// from the two group flags above — SQL Server supports only the windowed form, PostgreSQL only the group form, Oracle both.
+		// from the two group flags above — SQL Server and MariaDB support only the windowed form, PostgreSQL only the group form, Oracle both.
 		protected virtual bool IsOrderedSetWindowedSupported       => false;
 		protected virtual bool IsAggregateWindowFunctionsSupported => true;
 		// Statistical aggregate families — default off, enabled per provider; translators emit standard SQL names.
@@ -37,7 +37,7 @@ namespace LinqToDB.Linq.Translation
 		protected virtual bool IsVarianceBareSupported             => false;
 		protected virtual bool IsCorrelationSupported              => false;
 		protected virtual bool IsLinearRegressionSupported         => false;
-		// MEDIAN(x) OVER (PARTITION BY ...) — native on Oracle/DB2/DuckDB.
+		// MEDIAN(x) OVER (PARTITION BY ...) — native on Oracle/DB2/DuckDB/MariaDB.
 		protected virtual bool IsMedianSupported                   => false;
 		// Hypothetical-set RANK/DENSE_RANK/PERCENT_RANK/CUME_DIST WITHIN GROUP (ORDER BY ...) — Oracle/PostgreSQL.
 		protected virtual bool IsHypotheticalSetSupported          => false;
@@ -192,7 +192,7 @@ namespace LinqToDB.Linq.Translation
 			// RATIO_TO_REPORT is not a statistical aggregate; registered here for proximity (native on Oracle/DB2, emulated elsewhere).
 			Registration.RegisterMethod(() => Sql.Window.RatioToReport(1.0, f => f.PartitionBy(1)), TranslateRatioToReport, isGenericTypeMatch: true);
 
-			// MEDIAN(x) OVER (PARTITION BY ...) — native on Oracle/DB2/DuckDB; partition-only OVER, no ORDER BY/frame.
+			// MEDIAN(x) OVER (PARTITION BY ...) — native on Oracle/DB2/DuckDB/MariaDB; partition-only OVER, no ORDER BY/frame.
 			Registration.RegisterMethod(() => Sql.Window.Median(1.0, f => f.PartitionBy(1)), TranslateMedian, isGenericTypeMatch: true);
 
 			Registration.RegisterMethod(() => Sql.Window.CovarPop(1.0, 1.0,      f => f.OrderBy(1)), TranslateCovarPop,      isGenericTypeMatch: true);
@@ -1347,7 +1347,7 @@ namespace LinqToDB.Linq.Translation
 			return translationContext.Translate(emulation);
 		}
 
-		// MEDIAN(x) OVER (PARTITION BY ...). Gated by IsMedianSupported (Oracle/DB2/DuckDB); the OVER clause carries PARTITION BY
+		// MEDIAN(x) OVER (PARTITION BY ...). Gated by IsMedianSupported (Oracle/DB2/DuckDB/MariaDB); the OVER clause carries PARTITION BY
 		// only — no ORDER BY / frame.
 		public virtual Expression? TranslateMedian(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{

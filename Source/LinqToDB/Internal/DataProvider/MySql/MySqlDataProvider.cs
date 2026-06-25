@@ -110,9 +110,10 @@ namespace LinqToDB.Internal.DataProvider.MySql
 		{
 			return Version switch
 			{
-				MySqlVersion.MySql80 or MySqlVersion.MariaDB10 => new MySql80MemberTranslator(),
-				MySqlVersion.MySql57                           => new MySql57MemberTranslator(),
-				_                                              => new MySqlMemberTranslator(),
+				MySqlVersion.MariaDB10 => new MariaDBMemberTranslator(),
+				MySqlVersion.MySql80   => new MySql80MemberTranslator(),
+				MySqlVersion.MySql57   => new MySql57MemberTranslator(),
+				_                      => new MySqlMemberTranslator(),
 			};
 		}
 
