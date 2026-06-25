@@ -10,10 +10,15 @@ namespace LinqToDB.Internal.SqlQuery
 	{
 		readonly HashSet<IQueryElement> _aliasesSet = new (Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
 
-		// Finalized identifier names, keyed by node identity. Holding the names here (instead of
-		// mutating the AST nodes in place) keeps the statement immutable across executions, so the
-		// same cached statement can be aliased / rendered concurrently without a data race.
-		readonly Dictionary<SqlTableSource, string> _tableAliases  = new (Utils.ObjectReferenceEqualityComparer<SqlTableSource>.Default);
+		// Finalized identifier names. Holding the names here (instead of mutating the AST nodes in
+		// place) keeps the statement immutable across executions, so the same cached statement can be
+		// aliased / rendered concurrently without a data race.
+		//
+		// Table aliases are keyed by the source's stable SourceID, not object identity: one logical
+		// source can be wrapped by several SqlTableSource instances within a single statement (a
+		// correlated reference resolves to a different wrapper than the one in the FROM clause), and
+		// every wrapper must resolve to the same finalized alias.
+		readonly Dictionary<int, string>            _tableAliases  = new ();
 		readonly Dictionary<SqlColumn, string?>     _columnAliases = new (Utils.ObjectReferenceEqualityComparer<SqlColumn>.Default);
 		readonly Dictionary<SqlField, string>       _fieldNames    = new (Utils.ObjectReferenceEqualityComparer<SqlField>.Default);
 
@@ -39,7 +44,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 		#region Finalized names
 
-		public void SetTableAlias(SqlTableSource tableSource, string alias) => _tableAliases [tableSource] = alias;
+		public void SetTableAlias(SqlTableSource tableSource, string alias) => _tableAliases [tableSource.SourceID] = alias;
 		public void SetColumnAlias(SqlColumn column,          string? alias) => _columnAliases[column]      = alias;
 		public void SetFieldName  (SqlField field,            string name)   => _fieldNames   [field]       = name;
 
@@ -62,7 +67,7 @@ namespace LinqToDB.Internal.SqlQuery
 		/// </summary>
 		public string? GetTableAlias(SqlTableSource tableSource)
 		{
-			if (_tableAliases.TryGetValue(tableSource, out var alias))
+			if (_tableAliases.TryGetValue(tableSource.SourceID, out var alias))
 				return alias;
 
 			if (string.IsNullOrEmpty(tableSource.RawAlias))

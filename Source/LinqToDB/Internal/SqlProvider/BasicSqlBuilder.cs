@@ -48,6 +48,10 @@ namespace LinqToDB.Internal.SqlProvider
 			QueryName          = parentBuilder.QueryName;
 			TableIDs           = parentBuilder.TableIDs ??= new(StringComparer.Ordinal);
 			NullabilityContext = parentBuilder.NullabilityContext;
+			// Nested builders (subqueries, CTE bodies, set-operation parts) must share the parent's
+			// finalized aliases: names live in this context, not on the AST nodes, so a fresh empty
+			// context would make every name resolve to its raw node value.
+			AliasesContext     = parentBuilder.AliasesContext;
 		}
 
 		// Default to an empty context (all accessors fall back to the node's own value) so that any
@@ -253,7 +257,7 @@ namespace LinqToDB.Internal.SqlProvider
 						var sqlBuilder = ((BasicSqlBuilder)CreateSqlBuilder());
 						sqlBuilder.BuildSql(commandNumber,
 							new SqlSelectStatement(union.SelectQuery) { ParentStatement = statement }, sb,
-							optimizationContext, indent, 
+							optimizationContext, indent,
 							aliasMode, NullabilityContext);
 						MergeSqlBuilderData(sqlBuilder);
 					}
