@@ -188,49 +188,11 @@ jobs:
 
 # MySql/MariaDB
         - name: MySQL
-          title: MySQL 9 (both providers)
+          title: MySQL/MariaDB (all providers)
           config_linux: mysql
           config_macos: mysql
           script_linux_global: mysql.sh
           script_macos_global: mac.mysql.sh
-          install_docker_macos: true
-          enable_os_windows: false
-          enable_os_ubuntu: true
-          enable_os_macos: true
-          enable_fw_netfx: false
-          enable_fw_net80: true
-          enable_fw_net90: true
-          enable_fw_net100: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]'))) }}:
-            enabled: false
-
-        - name: MySQL57
-          title: MySQL 5.7 (both providers)
-          config_linux: mysql57
-          config_macos: mysql57
-          script_linux_global: mysql57.sh
-          script_macos_global: mac.mysql57.sh
-          install_docker_macos: true
-          enable_os_windows: false
-          enable_os_ubuntu: true
-          enable_os_macos: true
-          enable_fw_netfx: false
-          enable_fw_net80: true
-          enable_fw_net90: true
-          enable_fw_net100: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]'))) }}:
-            enabled: false
-
-        - name: MariaDB
-          title: MariaDB 11
-          config_linux: mariadb11
-          config_macos: mariadb11
-          script_linux_global: mariadb11.sh
-          script_macos_global: mac.mariadb11.sh
           install_docker_macos: true
           enable_os_windows: false
           enable_os_ubuntu: true
