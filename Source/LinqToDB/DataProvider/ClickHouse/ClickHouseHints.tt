@@ -36,6 +36,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 	GenerateJoinHint("AllSemi",     "ALL SEMI",  "Semi");
 	GenerateJoinHint("AllAnti",     "ALL ANTI",  "Anti");
 	GenerateJoinHint("AllAny",      "ALL ANY",   "Any");
+	GenerateJoinHint("AllAsOf",     "ALL ASOF",  "AsOf");
 #>
 	}
 }

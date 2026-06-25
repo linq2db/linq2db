@@ -37,6 +37,7 @@ namespace Tests.Extensions
 	GenerateLeftJoinHint("AllSemi",     "LEFT SEMI",  true);
 	GenerateLeftJoinHint("AllAnti",     "LEFT ANTI",  true);
 	GenerateLeftJoinHint("AllAny",      "LEFT ANY",   true);
+	GenerateLeftJoinHint("AllAsOf",     "LEFT ASOF",  true);
 
 	GenerateInnerJoinHint("Any",        "INNER ANY");
 	GenerateInnerJoinHint("All",        "INNER ALL");
