@@ -50,9 +50,22 @@ namespace LinqToDB.Common
 		/// Enables mapping expression to be compatible with <see cref="CommandBehavior.SequentialAccess"/> behavior.
 		/// Note that it doesn't switch linq2db to use <see cref="CommandBehavior.SequentialAccess"/> behavior for
 		/// queries, so this optimization could be used for <see cref="CommandBehavior.Default"/> too.
-		/// Default value: <c>false</c>.
+		/// Default value: <see langword="false"/>.
 		/// </summary>
-		public static bool OptimizeForSequentialAccess;
+		/// <remarks>
+		/// This is a process-global default for the <see cref="LinqOptions.OptimizeForSequentialAccess"/> context option;
+		/// prefer setting it per-context via <see cref="DataOptionsExtensions.UseOptimizeForSequentialAccess"/> when
+		/// different contexts (e.g. parallel test lanes) need different values.
+		/// </remarks>
+		public static bool OptimizeForSequentialAccess
+		{
+			get => Linq.Options.OptimizeForSequentialAccess;
+			set
+			{
+				if (Linq.Options.OptimizeForSequentialAccess != value)
+					Linq.Options = Linq.Options with { OptimizeForSequentialAccess = value };
+			}
+		}
 
 		/// <summary>
 		/// Determines the length after which logging of binary data in SQL will be truncated.
