@@ -694,7 +694,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				List<T>? list;
 
-				if (_prevList != null && _prevKey!.Equals(key))
+				if (_prevList != null && (_comparer != null ? _comparer.Equals(_prevKey, key) : _prevKey!.Equals(key)))
 				{
 					list = _prevList;
 				}

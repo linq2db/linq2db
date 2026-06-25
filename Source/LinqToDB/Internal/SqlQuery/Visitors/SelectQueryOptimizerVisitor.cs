@@ -2658,7 +2658,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 								Table:
 								{
 									Joins.Count: 0,
-									Source: SelectQuery { From.Tables.Count: 0, DoNotRemove: false, Where.SearchCondition.IsTrue: true } joinQuery,
+									Source: SelectQuery { From.Tables.Count: 0, HasSetOperators: false, Select.HasModifier: false, DoNotRemove: false, Where.SearchCondition.IsTrue: true } joinQuery,
 								},
 							} join
 						)

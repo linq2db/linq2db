@@ -12,9 +12,10 @@
 		Default,
 
 		/// <summary>
-		/// KeyedQuery strategy: same preamble model as <see cref="Default"/>, but the parent-side of the
-		/// preamble join projects only the key columns (SELECT DISTINCT key FROM parent) instead of the
-		/// full entity. Useful when parent entities have many/wide columns.
+		/// KeyedQuery strategy: the main query results are buffered, distinct parent keys are extracted
+		/// client-side, and child records are loaded in a single batch query using <c>WHERE key IN (...)</c>
+		/// or a <c>VALUES</c> table join. Useful when parent entities have many/wide columns, since the
+		/// child preamble carries only keys rather than the full parent entity.
 		/// </summary>
 		KeyedQuery,
 
