@@ -391,8 +391,8 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Builder for aggregate window functions with an argument: COUNT(expr), SUM, AVG, MIN, MAX.
-		/// <para>Chain: <c>[.Distinct()][.Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...]</c></para>
-		/// <para>Optional <c>DISTINCT</c> aggregate modifier, then the standard aggregate clauses (single-shot Distinct).</para>
+		/// <para>Chain: <c>[.Distinct()][.Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...]</c>, or <c>.UseWindow(...)</c>.</para>
+		/// <para>Optional <c>DISTINCT</c> aggregate modifier, then the standard aggregate clauses (single-shot Distinct). <c>UseWindow</c> applies a reusable window definition (from <c>DefineWindow</c>) and is an alternative to the inline clauses, not combined with them.</para>
 		/// </summary>
 		public interface IAggregateFinal : IDistinctPart<IOFilterOPartitionOOrderOFrameFinal>, IOFilterOPartitionOOrderOFrameFinal
 		{
@@ -439,9 +439,9 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Builder for aggregate window functions: SUM, AVG, MIN, MAX.
-		/// <para>Chain: <c>[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...]</c></para>
+		/// <para>Chain: <c>[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...]</c>, or <c>.UseWindow(...)</c>.</para>
 		/// <para>Or with KEEP: <c>[.KeepFirst()|.KeepLast()].OrderBy(...)[.ThenBy(...)][.PartitionBy(...)]</c></para>
-		/// <para>All clauses are optional. Supports FILTER, frame specification, UseWindow, and KEEP (Oracle).</para>
+		/// <para>All clauses are optional. Supports FILTER, frame specification, UseWindow, and KEEP (Oracle) — UseWindow (a reusable window definition from <c>DefineWindow</c>) and KEEP are alternatives to the inline clauses, not combined with them.</para>
 		/// </summary>
 		public interface IOFilterOPartitionOOrderOFrameFinal : IFilterPart<IOPartitionOOrderOFrameFinal>, IOPartitionOOrderOFrameFinal, IUseWindow<IDefinedFunction>, IKeepPart<IKeepOrderByRequired>
 		{
@@ -449,8 +449,8 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Builder for value window functions: FIRST_VALUE, LAST_VALUE, NTH_VALUE.
-		/// <para>Chain: <c>[PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...]</c></para>
-		/// <para>Supports frame specification and UseWindow. Does NOT support FILTER clause.</para>
+		/// <para>Chain: <c>[PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...]</c>, or <c>.UseWindow(...)</c>.</para>
+		/// <para>Supports frame specification and UseWindow (a reusable window definition from <c>DefineWindow</c>, an alternative to the inline clauses). Does NOT support FILTER clause.</para>
 		/// </summary>
 		public interface IOPartitionOOrderOFrameWithWindowFinal : IOPartitionOOrderOFrameFinal, IUseWindow<IDefinedFunction>
 		{
@@ -507,7 +507,7 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Builder for value window functions: FIRST_VALUE, LAST_VALUE.
-		/// <para>Chain: <c>[.IgnoreNulls()|.RespectNulls()] [PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...]</c></para>
+		/// <para>Chain: <c>[.IgnoreNulls()|.RespectNulls()] [UseWindow(wnd)] | [PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...]</c></para>
 		/// </summary>
 		public interface IValueFinal : INullTreatmentPart<IOPartitionOOrderOFrameWithWindowFinal>, IOPartitionOOrderOFrameWithWindowFinal
 		{
@@ -515,7 +515,7 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Builder for NTH_VALUE. Optional <c>FROM FIRST/LAST</c> then optional <c>IGNORE/RESPECT NULLS</c> (in SQL order), then the window spec.
-		/// <para>Chain: <c>[.FromFirst()|.FromLast()] [.IgnoreNulls()|.RespectNulls()] [PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...]</c></para>
+		/// <para>Chain: <c>[.FromFirst()|.FromLast()] [.IgnoreNulls()|.RespectNulls()] [UseWindow(wnd)] | [PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...]</c></para>
 		/// </summary>
 		public interface INthValueFinal : IFromPart<INthValueNullsStep>, INullTreatmentPart<IOPartitionOOrderOFrameWithWindowFinal>, IOPartitionOOrderOFrameWithWindowFinal
 		{
