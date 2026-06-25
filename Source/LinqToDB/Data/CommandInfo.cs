@@ -1976,7 +1976,7 @@ namespace LinqToDB.Data
 				expr = expr.Replace(dataReaderExpr, dataReaderVar);
 				expr = Expression.Block(new[] { dataReaderVar }, assignment, expr);
 
-				if (Common.Configuration.OptimizeForSequentialAccess)
+				if (dataConnection.Options.LinqOptions.OptimizeForSequentialAccess)
 					expr = SequentialAccessHelper.OptimizeMappingExpressionForSequentialAccess(expr, dataReader.FieldCount, reduce: false);
 			}
 

@@ -256,7 +256,7 @@ namespace LinqToDB.Internal.Linq
 				using var transformer = _mapperExpressionTransformerPool.Allocate();
 				var expression = transformer.Value.Transform(context, dataReader, dataReaderType, slowMode, _expression);
 
-				if (LinqToDB.Common.Configuration.OptimizeForSequentialAccess)
+				if (context.Options.LinqOptions.OptimizeForSequentialAccess)
 					expression = SequentialAccessHelper.OptimizeMappingExpressionForSequentialAccess(expression, dataReader.FieldCount, reduce: false);
 
 				return (Expression<Func<IQueryRunner, DbDataReader, T>>)expression;

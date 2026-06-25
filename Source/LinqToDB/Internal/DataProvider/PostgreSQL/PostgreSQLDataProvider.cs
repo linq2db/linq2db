@@ -52,6 +52,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			SqlProviderFlags.IsUnionAllOrderBySupported        = true;
 			SqlProviderFlags.IsAllSetOperationsSupported       = true;
 			SqlProviderFlags.IsDistinctFromSupported           = true;
+			SqlProviderFlags.IsDistinctOnSupported             = true;
 			SqlProviderFlags.SupportsPredicatesComparison      = true;
 
 			SqlProviderFlags.OutputDeleteUseSpecialTable  = version >= PostgreSQLVersion.v18;
