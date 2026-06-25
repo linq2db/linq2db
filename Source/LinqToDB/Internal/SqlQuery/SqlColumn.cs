@@ -5,6 +5,10 @@ using System.Linq;
 
 using LinqToDB.Internal.SqlQuery.Visitors;
 
+// SqlColumn derives (GetAlias) and displays (ToString) the column alias through its own obsolete
+// getter; those internal uses are intentional and exempt from the read-via-context guard.
+#pragma warning disable CS0618
+
 namespace LinqToDB.Internal.SqlQuery
 {
 	public sealed class SqlColumn : SqlExpressionBase
@@ -78,6 +82,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public string? Alias
 		{
+			[Obsolete("Read the finalized column alias via AliasesContext.GetColumnAlias(this); use RawAlias for the raw stored value. Direct reads bypass the aliasing context and break non-mutating aliasing.")]
 			get => RawAlias ?? GetAlias(Expression);
 			set => RawAlias = value;
 		}

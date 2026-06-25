@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -9,6 +9,13 @@ namespace LinqToDB.Internal.SqlQuery
 	public sealed class AliasesContext
 	{
 		readonly HashSet<IQueryElement> _aliasesSet = new (Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
+
+		// Finalized identifier names, keyed by node identity. Holding the names here (instead of
+		// mutating the AST nodes in place) keeps the statement immutable across executions, so the
+		// same cached statement can be aliased / rendered concurrently without a data race.
+		readonly Dictionary<SqlTableSource, string> _tableAliases  = new (Utils.ObjectReferenceEqualityComparer<SqlTableSource>.Default);
+		readonly Dictionary<SqlColumn, string?>     _columnAliases = new (Utils.ObjectReferenceEqualityComparer<SqlColumn>.Default);
+		readonly Dictionary<SqlField, string>       _fieldNames    = new (Utils.ObjectReferenceEqualityComparer<SqlField>.Default);
 
 		public void RegisterAliased(IQueryElement element)
 		{
@@ -30,10 +37,51 @@ namespace LinqToDB.Internal.SqlQuery
 			return _aliasesSet;
 		}
 
+		#region Finalized names
+
+		public void SetTableAlias(SqlTableSource tableSource, string alias) => _tableAliases [tableSource] = alias;
+		public void SetColumnAlias(SqlColumn column,          string? alias) => _columnAliases[column]      = alias;
+		public void SetFieldName  (SqlField field,            string name)   => _fieldNames   [field]       = name;
+
+		/// <summary>
+		/// Seed this context with the finalized names from a previous run. The prev-alias reuse
+		/// optimization skips re-aliasing already-aliased subtrees; since names live here (not on the
+		/// nodes), those names must be carried forward so the reused subtrees still resolve.
+		/// </summary>
+		public void InheritNamesFrom(AliasesContext prev)
+		{
+			foreach (var kv in prev._tableAliases)  _tableAliases [kv.Key] = kv.Value;
+			foreach (var kv in prev._columnAliases) _columnAliases[kv.Key] = kv.Value;
+			foreach (var kv in prev._fieldNames)    _fieldNames   [kv.Key] = kv.Value;
+		}
+
+		/// <summary>
+		/// Effective table-source alias: the finalized alias recorded by the aliasing pass, or the
+		/// node's own <see cref="SqlTableSource.Alias"/> when the node was not aliased.
+		/// </summary>
+		public string? GetTableAlias(SqlTableSource tableSource)
+			=> _tableAliases.TryGetValue(tableSource, out var alias) ? alias : tableSource.Alias;
+
+		/// <summary>
+		/// Effective column alias: the finalized alias recorded by the aliasing pass, or the node's
+		/// own <see cref="SqlColumn.Alias"/> when the column was not aliased.
+		/// </summary>
+		public string? GetColumnAlias(SqlColumn column)
+			=> _columnAliases.TryGetValue(column, out var alias) ? alias : column.Alias;
+
+		/// <summary>
+		/// Effective field physical name: the finalized name recorded by the aliasing pass (for
+		/// derived-table / CTE source fields), or the field's own <see cref="SqlField.PhysicalName"/>.
+		/// </summary>
+		public string GetFieldName(SqlField field)
+			=> _fieldNames.TryGetValue(field, out var name) ? name : field.PhysicalName;
+
+		#endregion
+
 		public HashSet<string> GetUsedTableAliases()
 		{
 			return new(_aliasesSet.Where(e => e.ElementType == QueryElementType.TableSource)
-					.Select(e => ((SqlTableSource)e).Alias!),
+					.Select(e => GetTableAlias((SqlTableSource)e)!),
 				StringComparer.OrdinalIgnoreCase);
 
 		}

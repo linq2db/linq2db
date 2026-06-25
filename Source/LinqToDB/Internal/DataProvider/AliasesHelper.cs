@@ -38,6 +38,8 @@ namespace LinqToDB.Internal.DataProvider
 			{
 				_identifierService = identifierService;
 				_newAliases        = new();
+				if (prevAliases != null)
+					_newAliases.InheritNamesFrom(prevAliases);
 				_allAliases        = new(StringComparer.OrdinalIgnoreCase);
 				_tablesVisited     = default;
 				_prevAliases       = prevAliases;
@@ -52,7 +54,7 @@ namespace LinqToDB.Internal.DataProvider
 						GetCurrentAlias,
 						(ts, n, a) =>
 						{
-							ts.Alias = n;
+							_newAliases.SetTableAlias(ts, n);
 						},
 						ts =>
 						{
@@ -96,7 +98,7 @@ namespace LinqToDB.Internal.DataProvider
 					// Remember already used aliases from previous run
 					if (element.ElementType == QueryElementType.TableSource)
 					{
-						var alias = ((SqlTableSource)element).Alias;
+						var alias = _newAliases.GetTableAlias((SqlTableSource)element);
 						if (!string.IsNullOrEmpty(alias))
 							_allAliases.Add(alias!);
 					}
@@ -138,7 +140,7 @@ namespace LinqToDB.Internal.DataProvider
 					null,
 					(n, a) => IsValidAlias(n),
 					f => TruncateAlias(f.PhysicalName),
-					(f, n, a) => { f.PhysicalName = n; },
+					(f, n, a) => { _newAliases.SetFieldName(f, n); },
 					f =>
 					{
 						var a = TruncateAlias(f.PhysicalName);
@@ -152,7 +154,7 @@ namespace LinqToDB.Internal.DataProvider
 				if (element.SourceQuery != null)
 				{
 					for (var i = 0; i < element.SourceFields.Count; i++)
-						element.SourceQuery.Select.Columns[i].Alias = element.SourceFields[i].PhysicalName;
+						_newAliases.SetColumnAlias(element.SourceQuery.Select.Columns[i], _newAliases.GetFieldName(element.SourceFields[i]));
 
 					_newAliases.RegisterAliased(element.SourceQuery);
 				}
@@ -171,7 +173,7 @@ namespace LinqToDB.Internal.DataProvider
 					f => TruncateAlias(f.PhysicalName),
 					(f, n, a) =>
 					{
-						f.PhysicalName = n;
+						_newAliases.SetFieldName(f, n);
 						// do not touch name
 					},
 					f =>
@@ -190,15 +192,16 @@ namespace LinqToDB.Internal.DataProvider
 				{
 					for (var i = 0; i < element.Fields.Count; i++)
 					{
-						var field = element.Fields[i];
+						var field     = element.Fields[i];
+						var fieldName = _newAliases.GetFieldName(field);
 
-						element.Body.Select.Columns[i].Alias = field.PhysicalName;
+						_newAliases.SetColumnAlias(element.Body.Select.Columns[i], fieldName);
 
 						if (element.Body.HasSetOperators)
 						{
 							foreach (var setOperator in element.Body.SetOperators)
 							{
-								setOperator.SelectQuery.Select.Columns[i].Alias = field.PhysicalName;
+								_newAliases.SetColumnAlias(setOperator.SelectQuery.Select.Columns[i], fieldName);
 							}
 						}
 					}
@@ -221,8 +224,12 @@ namespace LinqToDB.Internal.DataProvider
 					{
 						var field    = element.Fields[i];
 						var cteField = element.Cte.Fields.Find(f => string.Equals(f.Name, field.PhysicalName, StringComparison.Ordinal));
-						if (cteField != null && !string.Equals(field.PhysicalName, cteField.PhysicalName, StringComparison.Ordinal))
-							field.PhysicalName = cteField.PhysicalName;
+						if (cteField != null)
+						{
+							var cteName = _newAliases.GetFieldName(cteField);
+							if (!string.Equals(_newAliases.GetFieldName(field), cteName, StringComparison.Ordinal))
+								_newAliases.SetFieldName(field, cteName);
+						}
 					}
 				}
 
@@ -254,7 +261,7 @@ namespace LinqToDB.Internal.DataProvider
 						(c, n, a) =>
 						{
 							a?.Add(n);
-							c.Alias = n;
+							_newAliases.SetColumnAlias(c, n);
 						},
 						c =>
 						{
@@ -269,12 +276,13 @@ namespace LinqToDB.Internal.DataProvider
 					{
 						for (var i = 0; i < selectQuery.Select.Columns.Count; i++)
 						{
-							var col = selectQuery.Select.Columns[i];
+							var col      = selectQuery.Select.Columns[i];
+							var colAlias = _newAliases.GetColumnAlias(col);
 
 							foreach (var t in selectQuery.SetOperators)
 							{
 								var union = t.SelectQuery.Select;
-								union.Columns[i].Alias = col.Alias;
+								_newAliases.SetColumnAlias(union.Columns[i], colAlias);
 							}
 						}
 					}
