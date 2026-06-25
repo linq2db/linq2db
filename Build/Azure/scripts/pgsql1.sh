@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# Starts every supported PostgreSQL version, each in its own container on a distinct host port
-# (the 54NN scheme from CommonConnectionStrings: 9.2 -> 5492, 10 -> 5410, 18 -> 5418), so they
-# run as concurrent provider lanes within a single CI job. TCP only: no --net host (can't remap
-# ports) and no shared /var/run/postgresql socket mount (it would collide across containers).
+# Starts the older half of the supported PostgreSQL versions (9.2-12), each in its own container on
+# a distinct host port (54NN scheme: 9.2 -> 5492 ... 12 -> 5412), so they run as concurrent provider
+# lanes within a single CI job. TCP only: no --net host (can't remap ports) and no shared
+# /var/run/postgresql socket mount (it would collide across containers).
 
 # "<docker tag>:<host port>" pairs.
-versions="9.2:5492 9.3:5493 9.5:5495 10:5410 11:5411 12:5412 13:5413 14:5414 15:5415 16:5416 17:5417 18:5418"
+versions="9.2:5492 9.3:5493 9.5:5495 10:5410 11:5411 12:5412"
 
 # start every container (image is pulled on demand by docker run)
 for vp in $versions; do

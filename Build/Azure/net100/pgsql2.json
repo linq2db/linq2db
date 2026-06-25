@@ -1,0 +1,12 @@
+{
+	"NET100.Azure": {
+		"Providers": [
+			"PostgreSQL.13",
+			"PostgreSQL.14",
+			"PostgreSQL.15",
+			"PostgreSQL.16",
+			"PostgreSQL.17",
+			"PostgreSQL.18"
+		]
+	}
+}

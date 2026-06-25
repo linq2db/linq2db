@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# macOS variant of pgsql.sh: every supported PostgreSQL version in its own container on a distinct
-# host port (54NN scheme). macOS CI legs are currently disabled, but this mirrors the linux script
-# so the merged PostgreSQL matrix entry stays valid if they are re-enabled.
+# macOS variant of pgsql1.sh: older PostgreSQL versions (9.2-12), each in its own container on a
+# distinct host port (54NN scheme). macOS CI legs are currently disabled, but this mirrors the linux
+# script so the matrix entry stays valid if they are re-enabled.
 
 # "<docker tag>:<host port>" pairs.
-versions="9.2:5492 9.3:5493 9.5:5495 10:5410 11:5411 12:5412 13:5413 14:5414 15:5415 16:5416 17:5417 18:5418"
+versions="9.2:5492 9.3:5493 9.5:5495 10:5410 11:5411 12:5412"
 
 for vp in $versions; do
     ver="${vp%%:*}"
