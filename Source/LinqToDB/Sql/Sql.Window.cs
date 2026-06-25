@@ -2584,6 +2584,29 @@ namespace LinqToDB
 
 		#endregion Max
 
+		#region RatioToReport
+
+		/// <summary>
+		/// Generates the SQL <c>RATIO_TO_REPORT()</c> window function — the ratio of the value to the sum of the values
+		/// within the window (<c>expr / SUM(expr) OVER (...)</c>).
+		/// </summary>
+		/// <remarks>
+		/// <para><b>Syntax:</b> <c>Sql.Window.RatioToReport(expr, f =&gt; f.[PartitionBy(...)])</c></para>
+		/// <para>Emitted natively as <c>RATIO_TO_REPORT</c> on Oracle and DB2; emulated as <c>expr / SUM(expr) OVER (...)</c> on other providers.</para>
+		/// <para><b>C# usage:</b></para>
+		/// <code>
+		/// Sql.Window.RatioToReport(t.Value, f =&gt; f.PartitionBy(t.Dept))
+		/// </code>
+		/// <para><b>Generated SQL (Oracle):</b></para>
+		/// <code>
+		/// RATIO_TO_REPORT(t.Value) OVER (PARTITION BY t.Dept)
+		/// </code>
+		/// </remarks>
+		public static double? RatioToReport<T>(this Sql.IWindowFunction window, T argument, Func<IAggregateFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(RatioToReport));
+
+		#endregion
+
 		#region StdDev/Variance
 
 		/// <summary>

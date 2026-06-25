@@ -27,6 +27,13 @@ namespace LinqToDB.Linq.Translation
 		protected virtual bool IsPercentileContSupported           => true;
 		protected virtual bool IsPercentileDiscSupported           => true;
 		protected virtual bool IsAggregateWindowFunctionsSupported => true;
+		// Statistical aggregate families — default off, enabled per provider; translators emit standard SQL names.
+		// IsVarianceSupported gates the explicit STDDEV_POP/STDDEV_SAMP/VAR_POP/VAR_SAMP; IsVarianceBareSupported gates
+		// the bare STDDEV/VARIANCE (sample) shorthand, which ClickHouse lacks (it has only the explicit *_POP/*_SAMP).
+		protected virtual bool IsVarianceSupported                 => false;
+		protected virtual bool IsVarianceBareSupported             => false;
+		protected virtual bool IsCorrelationSupported              => false;
+		protected virtual bool IsLinearRegressionSupported         => false;
 
 		// Window clause support flags
 		protected virtual bool IsWindowFilterSupported         => false;
@@ -169,6 +176,9 @@ namespace LinqToDB.Linq.Translation
 			Registration.RegisterMethod(() => Sql.Window.Variance(1.0,   f => f.OrderBy(1)), TranslateVariance,   isGenericTypeMatch: true);
 			Registration.RegisterMethod(() => Sql.Window.VarPop(1.0,     f => f.OrderBy(1)), TranslateVarPop,     isGenericTypeMatch: true);
 			Registration.RegisterMethod(() => Sql.Window.VarSamp(1.0,    f => f.OrderBy(1)), TranslateVarSamp,    isGenericTypeMatch: true);
+
+			// RATIO_TO_REPORT is not a statistical aggregate; registered here for proximity (native on Oracle/DB2, emulated elsewhere).
+			Registration.RegisterMethod(() => Sql.Window.RatioToReport(1.0, f => f.OrderBy(1)), TranslateRatioToReport, isGenericTypeMatch: true);
 
 			Registration.RegisterMethod(() => Sql.Window.CovarPop(1.0, 1.0,      f => f.OrderBy(1)), TranslateCovarPop,      isGenericTypeMatch: true);
 			Registration.RegisterMethod(() => Sql.Window.CovarSamp(1.0, 1.0,     f => f.OrderBy(1)), TranslateCovarSamp,     isGenericTypeMatch: true);
@@ -1093,90 +1103,105 @@ namespace LinqToDB.Linq.Translation
 		// Sample standard deviation. STDDEV on Oracle/DuckDB/PostgreSQL; STDEV on SQL Server / Sybase. Override per provider.
 		protected virtual string StdDevFunctionName => "STDDEV";
 
-		public virtual Expression? TranslateStdDev(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		// RATIO_TO_REPORT(expr) OVER (w). Base implementation emulates it as expr / SUM(expr) OVER (w); providers with a
+		// native function (Oracle, DB2) override this to emit RATIO_TO_REPORT directly.
+		public virtual Expression? TranslateRatioToReport(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			if (!IsWindowFunctionsSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
+
+			var emulation = WindowFunctionHelpers.BuildRatioToReportEmulation(methodCall.Arguments[1], methodCall.Arguments[2]);
+			if (emulation == null)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
+
+			return translationContext.Translate(emulation);
+		}
+
+		// Native RATIO_TO_REPORT emission (Oracle/DB2). Shared so provider translators can opt in by calling it.
+		protected Expression? TranslateRatioToReportNative(ITranslationContext translationContext, MethodCallExpression methodCall)
 		{
 			var dbDataType = translationContext.ExpressionFactory.GetDbDataType(methodCall.Type);
 
-			return TranslateWindowFunction(translationContext, methodCall, 1, 2, dbDataType, StdDevFunctionName);
+			return TranslateWindowFunction(translationContext, methodCall, 1, 2, dbDataType, "RATIO_TO_REPORT");
 		}
+
+		public virtual Expression? TranslateStdDev(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+			=> TranslateVarianceFunction(translationContext, methodCall, StdDevFunctionName, IsVarianceBareSupported);
 
 		public virtual Expression? TranslateStdDevPop(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
-		{
-			var dbDataType = translationContext.ExpressionFactory.GetDbDataType(methodCall.Type);
-
-			return TranslateWindowFunction(translationContext, methodCall, 1, 2, dbDataType, "STDDEV_POP");
-		}
+			=> TranslateVarianceFunction(translationContext, methodCall, "STDDEV_POP", IsVarianceSupported);
 
 		public virtual Expression? TranslateStdDevSamp(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
-		{
-			var dbDataType = translationContext.ExpressionFactory.GetDbDataType(methodCall.Type);
-
-			return TranslateWindowFunction(translationContext, methodCall, 1, 2, dbDataType, "STDDEV_SAMP");
-		}
+			=> TranslateVarianceFunction(translationContext, methodCall, "STDDEV_SAMP", IsVarianceSupported);
 
 		public virtual Expression? TranslateVariance(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
-		{
-			var dbDataType = translationContext.ExpressionFactory.GetDbDataType(methodCall.Type);
-
-			return TranslateWindowFunction(translationContext, methodCall, 1, 2, dbDataType, "VARIANCE");
-		}
+			=> TranslateVarianceFunction(translationContext, methodCall, "VARIANCE", IsVarianceBareSupported);
 
 		public virtual Expression? TranslateVarPop(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
-		{
-			var dbDataType = translationContext.ExpressionFactory.GetDbDataType(methodCall.Type);
-
-			return TranslateWindowFunction(translationContext, methodCall, 1, 2, dbDataType, "VAR_POP");
-		}
+			=> TranslateVarianceFunction(translationContext, methodCall, "VAR_POP", IsVarianceSupported);
 
 		public virtual Expression? TranslateVarSamp(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+			=> TranslateVarianceFunction(translationContext, methodCall, "VAR_SAMP", IsVarianceSupported);
+
+		// Univariate statistical aggregates (STDDEV/VARIANCE family). The bare STDDEV/VARIANCE are gated by
+		// IsVarianceBareSupported and the explicit *_POP/*_SAMP by IsVarianceSupported, since ClickHouse has the latter
+		// but not the former. Providers using non-standard names (e.g. SQL Server STDEV/VAR) stay off until name-mapped.
+		Expression? TranslateVarianceFunction(ITranslationContext translationContext, MethodCallExpression methodCall, string functionName, bool isSupported)
 		{
+			if (!isSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_Variance, methodCall.Type);
+
 			var dbDataType = translationContext.ExpressionFactory.GetDbDataType(methodCall.Type);
 
-			return TranslateWindowFunction(translationContext, methodCall, 1, 2, dbDataType, "VAR_SAMP");
+			return TranslateWindowFunction(translationContext, methodCall, 1, 2, dbDataType, functionName);
 		}
 
 		// Two-value-argument statistical aggregates (COVAR_POP(x, y) etc.). The window-builder lambda is the 4th
 		// argument (this, expr1, expr2, func), and TranslateWindowFunctionCore already loops over the argument array.
 		public virtual Expression? TranslateCovarPop(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
-			=> TranslateBivariate(translationContext, methodCall, "COVAR_POP");
+			=> TranslateBivariate(translationContext, methodCall, "COVAR_POP", IsCorrelationSupported, ErrorHelper.Error_WindowFunction_Correlation);
 
 		public virtual Expression? TranslateCovarSamp(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
-			=> TranslateBivariate(translationContext, methodCall, "COVAR_SAMP");
+			=> TranslateBivariate(translationContext, methodCall, "COVAR_SAMP", IsCorrelationSupported, ErrorHelper.Error_WindowFunction_Correlation);
 
 		public virtual Expression? TranslateCorr(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
-			=> TranslateBivariate(translationContext, methodCall, "CORR");
+			=> TranslateBivariate(translationContext, methodCall, "CORR", IsCorrelationSupported, ErrorHelper.Error_WindowFunction_Correlation);
 
 		public virtual Expression? TranslateRegrSlope(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
-			=> TranslateBivariate(translationContext, methodCall, "REGR_SLOPE");
+			=> TranslateBivariate(translationContext, methodCall, "REGR_SLOPE", IsLinearRegressionSupported, ErrorHelper.Error_WindowFunction_LinearRegression);
 
 		public virtual Expression? TranslateRegrIntercept(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
-			=> TranslateBivariate(translationContext, methodCall, "REGR_INTERCEPT");
+			=> TranslateBivariate(translationContext, methodCall, "REGR_INTERCEPT", IsLinearRegressionSupported, ErrorHelper.Error_WindowFunction_LinearRegression);
 
 		public virtual Expression? TranslateRegrCount(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
-			=> TranslateBivariate(translationContext, methodCall, "REGR_COUNT");
+			=> TranslateBivariate(translationContext, methodCall, "REGR_COUNT", IsLinearRegressionSupported, ErrorHelper.Error_WindowFunction_LinearRegression);
 
 		public virtual Expression? TranslateRegrR2(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
-			=> TranslateBivariate(translationContext, methodCall, "REGR_R2");
+			=> TranslateBivariate(translationContext, methodCall, "REGR_R2", IsLinearRegressionSupported, ErrorHelper.Error_WindowFunction_LinearRegression);
 
 		public virtual Expression? TranslateRegrAvgX(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
-			=> TranslateBivariate(translationContext, methodCall, "REGR_AVGX");
+			=> TranslateBivariate(translationContext, methodCall, "REGR_AVGX", IsLinearRegressionSupported, ErrorHelper.Error_WindowFunction_LinearRegression);
 
 		public virtual Expression? TranslateRegrAvgY(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
-			=> TranslateBivariate(translationContext, methodCall, "REGR_AVGY");
+			=> TranslateBivariate(translationContext, methodCall, "REGR_AVGY", IsLinearRegressionSupported, ErrorHelper.Error_WindowFunction_LinearRegression);
 
 		public virtual Expression? TranslateRegrSXX(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
-			=> TranslateBivariate(translationContext, methodCall, "REGR_SXX");
+			=> TranslateBivariate(translationContext, methodCall, "REGR_SXX", IsLinearRegressionSupported, ErrorHelper.Error_WindowFunction_LinearRegression);
 
 		public virtual Expression? TranslateRegrSYY(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
-			=> TranslateBivariate(translationContext, methodCall, "REGR_SYY");
+			=> TranslateBivariate(translationContext, methodCall, "REGR_SYY", IsLinearRegressionSupported, ErrorHelper.Error_WindowFunction_LinearRegression);
 
 		public virtual Expression? TranslateRegrSXY(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
-			=> TranslateBivariate(translationContext, methodCall, "REGR_SXY");
+			=> TranslateBivariate(translationContext, methodCall, "REGR_SXY", IsLinearRegressionSupported, ErrorHelper.Error_WindowFunction_LinearRegression);
 
 		// Shared dispatch for the two-value-argument statistical aggregates: the window-builder lambda is the 4th
-		// argument (this, expr1, expr2, func); TranslateWindowFunctionCore emits both arguments.
-		Expression? TranslateBivariate(ITranslationContext translationContext, MethodCallExpression methodCall, string functionName)
+		// argument (this, expr1, expr2, func); TranslateWindowFunctionCore emits both arguments. Each caller passes its
+		// family capability flag + error so unsupported providers throw a clean error instead of emitting bad SQL.
+		Expression? TranslateBivariate(ITranslationContext translationContext, MethodCallExpression methodCall, string functionName, bool isSupported, string errorMessage)
 		{
+			if (!isSupported)
+				return translationContext.CreateErrorExpression(methodCall, errorMessage, methodCall.Type);
+
 			var dbDataType = translationContext.ExpressionFactory.GetDbDataType(methodCall.Type);
 
 			return TranslateWindowFunctionCore(translationContext, methodCall, [methodCall.Arguments[1], methodCall.Arguments[2]], 3, dbDataType, functionName, null);

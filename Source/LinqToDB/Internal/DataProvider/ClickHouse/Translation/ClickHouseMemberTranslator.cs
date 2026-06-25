@@ -609,6 +609,10 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 			protected override bool IsPercentileContSupported    => false;
 			protected override bool IsPercentileDiscSupported    => false;
 			protected override bool IsAggregateDistinctSupported => true;
+			// ClickHouse supports COVAR_POP/COVAR_SAMP/CORR and the explicit STDDEV_POP/STDDEV_SAMP/VAR_POP/VAR_SAMP;
+			// it lacks bare STDDEV/VARIANCE (IsVarianceBareSupported) and REGR_*.
+			protected override bool IsVarianceSupported          => true;
+			protected override bool IsCorrelationSupported       => true;
 		}
 
 		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()

@@ -31,6 +31,11 @@ namespace LinqToDB.Internal.DataProvider.DuckDB.Translation
 			protected override bool IsAggregateDistinctSupported    => true;
 			// DuckDB supports FILTER (WHERE ...) on ordered-set aggregates (PERCENTILE_CONT/DISC WITHIN GROUP).
 			protected override bool IsOrderedSetFilterSupported     => true;
+			// DuckDB supports the full statistical/regression window-function set with standard SQL names.
+			protected override bool IsVarianceSupported             => true;
+			protected override bool IsVarianceBareSupported         => true;
+			protected override bool IsCorrelationSupported          => true;
+			protected override bool IsLinearRegressionSupported     => true;
 		}
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)

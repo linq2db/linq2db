@@ -485,6 +485,14 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 			protected override bool IsValueNullTreatmentSupported   => true;
 			protected override bool IsNthValueFromSupported         => true;
 			protected override bool IsAggregateDistinctSupported    => true;
+			// Oracle supports the full statistical/regression window-function set with standard SQL names.
+			protected override bool IsVarianceSupported             => true;
+			protected override bool IsVarianceBareSupported         => true;
+			protected override bool IsCorrelationSupported          => true;
+			protected override bool IsLinearRegressionSupported     => true;
+
+			public override Expression? TranslateRatioToReport(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+				=> TranslateRatioToReportNative(translationContext, methodCall);
 		}
 
 		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()

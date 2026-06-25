@@ -422,6 +422,9 @@ namespace LinqToDB.Internal.DataProvider.MySql.Translation
 			protected override bool IsFrameExclusionSupported => false;
 			protected override bool IsPercentileContSupported => false;
 			protected override bool IsPercentileDiscSupported => false;
+			// MySQL 8 supports STDDEV/VARIANCE window functions (standard names); not COVAR/CORR/REGR.
+			protected override bool IsVarianceSupported       => true;
+			protected override bool IsVarianceBareSupported   => true;
 		}
 
 		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()

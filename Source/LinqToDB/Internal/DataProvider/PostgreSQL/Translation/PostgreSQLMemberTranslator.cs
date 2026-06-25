@@ -451,6 +451,11 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 		{
 			protected override bool IsWindowFilterSupported     => true;
 			protected override bool IsOrderedSetFilterSupported => true;
+			// PostgreSQL supports the full statistical/regression window-function set with standard SQL names.
+			protected override bool IsVarianceSupported         => true;
+			protected override bool IsVarianceBareSupported     => true;
+			protected override bool IsCorrelationSupported      => true;
+			protected override bool IsLinearRegressionSupported => true;
 		}
 
 		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()
