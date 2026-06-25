@@ -192,7 +192,7 @@ namespace LinqToDB.Linq.Translation
 			// RATIO_TO_REPORT is not a statistical aggregate; registered here for proximity (native on Oracle/DB2, emulated elsewhere).
 			Registration.RegisterMethod(() => Sql.Window.RatioToReport(1.0, f => f.PartitionBy(1)), TranslateRatioToReport, isGenericTypeMatch: true);
 
-			// MEDIAN(x) OVER (PARTITION BY ...) — native on Oracle/DB2; partition-only OVER, no ORDER BY/frame.
+			// MEDIAN(x) OVER (PARTITION BY ...) — native on Oracle/DB2/DuckDB; partition-only OVER, no ORDER BY/frame.
 			Registration.RegisterMethod(() => Sql.Window.Median(1.0, f => f.PartitionBy(1)), TranslateMedian, isGenericTypeMatch: true);
 
 			Registration.RegisterMethod(() => Sql.Window.CovarPop(1.0, 1.0,      f => f.OrderBy(1)), TranslateCovarPop,      isGenericTypeMatch: true);
@@ -1347,7 +1347,7 @@ namespace LinqToDB.Linq.Translation
 			return translationContext.Translate(emulation);
 		}
 
-		// MEDIAN(x) OVER (PARTITION BY ...). Gated by IsMedianSupported (Oracle/DB2); the OVER clause carries PARTITION BY
+		// MEDIAN(x) OVER (PARTITION BY ...). Gated by IsMedianSupported (Oracle/DB2/DuckDB); the OVER clause carries PARTITION BY
 		// only — no ORDER BY / frame.
 		public virtual Expression? TranslateMedian(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{

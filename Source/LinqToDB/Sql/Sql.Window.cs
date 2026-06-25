@@ -1387,7 +1387,7 @@ namespace LinqToDB
 		///     {
 		///         Avg1 = Sql.Window.Average(t.Salary, f =&gt; f.PartitionBy(t.Dept).OrderBy(t.Date)),
 		///         Avg2 = Sql.Window.Average(t.Salary, f =&gt; f.Filter(t.IsActive).OrderBy(t.Date)),
-		///         Avg3 = Sql.Window.Average(t.Salary, f =&gt; f.OrderBy(t.Date).RowsBetween.Value(3).And.CurrentRow),
+		///         Avg3 = Sql.Window.Average(t.Salary, f =&gt; f.OrderBy(t.Date).RowsBetween.ValuePreceding(3).And.CurrentRow),
 		///         Avg4 = Sql.Window.Average(t.Salary, f =&gt; f.Distinct().PartitionBy(t.Dept)),
 		///     };
 		///
@@ -1420,7 +1420,7 @@ namespace LinqToDB
 		///     {
 		///         Avg1 = Sql.Window.Average(t.Salary, f =&gt; f.PartitionBy(t.Dept).OrderBy(t.Date)),
 		///         Avg2 = Sql.Window.Average(t.Salary, f =&gt; f.Filter(t.IsActive).OrderBy(t.Date)),
-		///         Avg3 = Sql.Window.Average(t.Salary, f =&gt; f.OrderBy(t.Date).RowsBetween.Value(3).And.CurrentRow),
+		///         Avg3 = Sql.Window.Average(t.Salary, f =&gt; f.OrderBy(t.Date).RowsBetween.ValuePreceding(3).And.CurrentRow),
 		///     };
 		///
 		/// </code>
@@ -1451,7 +1451,7 @@ namespace LinqToDB
 		///     {
 		///         Avg1 = Sql.Window.Average(t.Salary, f =&gt; f.PartitionBy(t.Dept).OrderBy(t.Date)),
 		///         Avg2 = Sql.Window.Average(t.Salary, f =&gt; f.Filter(t.IsActive).OrderBy(t.Date)),
-		///         Avg3 = Sql.Window.Average(t.Salary, f =&gt; f.OrderBy(t.Date).RowsBetween.Value(3).And.CurrentRow),
+		///         Avg3 = Sql.Window.Average(t.Salary, f =&gt; f.OrderBy(t.Date).RowsBetween.ValuePreceding(3).And.CurrentRow),
 		///     };
 		///
 		/// </code>
@@ -1482,7 +1482,7 @@ namespace LinqToDB
 		///     {
 		///         Avg1 = Sql.Window.Average(t.Salary, f =&gt; f.PartitionBy(t.Dept).OrderBy(t.Date)),
 		///         Avg2 = Sql.Window.Average(t.Salary, f =&gt; f.Filter(t.IsActive).OrderBy(t.Date)),
-		///         Avg3 = Sql.Window.Average(t.Salary, f =&gt; f.OrderBy(t.Date).RowsBetween.Value(3).And.CurrentRow),
+		///         Avg3 = Sql.Window.Average(t.Salary, f =&gt; f.OrderBy(t.Date).RowsBetween.ValuePreceding(3).And.CurrentRow),
 		///     };
 		///
 		/// </code>
@@ -1513,7 +1513,7 @@ namespace LinqToDB
 		///     {
 		///         Avg1 = Sql.Window.Average(t.Salary, f =&gt; f.PartitionBy(t.Dept).OrderBy(t.Date)),
 		///         Avg2 = Sql.Window.Average(t.Salary, f =&gt; f.Filter(t.IsActive).OrderBy(t.Date)),
-		///         Avg3 = Sql.Window.Average(t.Salary, f =&gt; f.OrderBy(t.Date).RowsBetween.Value(3).And.CurrentRow),
+		///         Avg3 = Sql.Window.Average(t.Salary, f =&gt; f.OrderBy(t.Date).RowsBetween.ValuePreceding(3).And.CurrentRow),
 		///     };
 		///
 		/// </code>
@@ -1544,7 +1544,7 @@ namespace LinqToDB
 		///     {
 		///         Avg1 = Sql.Window.Average(t.Salary, f =&gt; f.PartitionBy(t.Dept).OrderBy(t.Date)),
 		///         Avg2 = Sql.Window.Average(t.Salary, f =&gt; f.Filter(t.IsActive).OrderBy(t.Date)),
-		///         Avg3 = Sql.Window.Average(t.Salary, f =&gt; f.OrderBy(t.Date).RowsBetween.Value(3).And.CurrentRow),
+		///         Avg3 = Sql.Window.Average(t.Salary, f =&gt; f.OrderBy(t.Date).RowsBetween.ValuePreceding(3).And.CurrentRow),
 		///     };
 		///
 		/// </code>
@@ -1575,7 +1575,7 @@ namespace LinqToDB
 		///     {
 		///         Avg1 = Sql.Window.Average(t.Salary, f =&gt; f.PartitionBy(t.Dept).OrderBy(t.Date)),
 		///         Avg2 = Sql.Window.Average(t.Salary, f =&gt; f.Filter(t.IsActive).OrderBy(t.Date)),
-		///         Avg3 = Sql.Window.Average(t.Salary, f =&gt; f.OrderBy(t.Date).RowsBetween.Value(3).And.CurrentRow),
+		///         Avg3 = Sql.Window.Average(t.Salary, f =&gt; f.OrderBy(t.Date).RowsBetween.ValuePreceding(3).And.CurrentRow),
 		///     };
 		///
 		/// </code>
@@ -1606,7 +1606,7 @@ namespace LinqToDB
 		///     {
 		///         Avg1 = Sql.Window.Average(t.Salary, f =&gt; f.PartitionBy(t.Dept).OrderBy(t.Date)),
 		///         Avg2 = Sql.Window.Average(t.Salary, f =&gt; f.Filter(t.IsActive).OrderBy(t.Date)),
-		///         Avg3 = Sql.Window.Average(t.Salary, f =&gt; f.OrderBy(t.Date).RowsBetween.Value(3).And.CurrentRow),
+		///         Avg3 = Sql.Window.Average(t.Salary, f =&gt; f.OrderBy(t.Date).RowsBetween.ValuePreceding(3).And.CurrentRow),
 		///     };
 		///
 		/// </code>
@@ -1637,7 +1637,7 @@ namespace LinqToDB
 		///     {
 		///         Avg1 = Sql.Window.Average(t.Salary, f =&gt; f.PartitionBy(t.Dept).OrderBy(t.Date)),
 		///         Avg2 = Sql.Window.Average(t.Salary, f =&gt; f.Filter(t.IsActive).OrderBy(t.Date)),
-		///         Avg3 = Sql.Window.Average(t.Salary, f =&gt; f.OrderBy(t.Date).RowsBetween.Value(3).And.CurrentRow),
+		///         Avg3 = Sql.Window.Average(t.Salary, f =&gt; f.OrderBy(t.Date).RowsBetween.ValuePreceding(3).And.CurrentRow),
 		///     };
 		///
 		/// </code>
@@ -1668,7 +1668,7 @@ namespace LinqToDB
 		///     {
 		///         Avg1 = Sql.Window.Average(t.Salary, f =&gt; f.PartitionBy(t.Dept).OrderBy(t.Date)),
 		///         Avg2 = Sql.Window.Average(t.Salary, f =&gt; f.Filter(t.IsActive).OrderBy(t.Date)),
-		///         Avg3 = Sql.Window.Average(t.Salary, f =&gt; f.OrderBy(t.Date).RowsBetween.Value(3).And.CurrentRow),
+		///         Avg3 = Sql.Window.Average(t.Salary, f =&gt; f.OrderBy(t.Date).RowsBetween.ValuePreceding(3).And.CurrentRow),
 		///     };
 		///
 		/// </code>
@@ -1699,7 +1699,7 @@ namespace LinqToDB
 		///     {
 		///         Avg1 = Sql.Window.Average(t.Salary, f =&gt; f.PartitionBy(t.Dept).OrderBy(t.Date)),
 		///         Avg2 = Sql.Window.Average(t.Salary, f =&gt; f.Filter(t.IsActive).OrderBy(t.Date)),
-		///         Avg3 = Sql.Window.Average(t.Salary, f =&gt; f.OrderBy(t.Date).RowsBetween.Value(3).And.CurrentRow),
+		///         Avg3 = Sql.Window.Average(t.Salary, f =&gt; f.OrderBy(t.Date).RowsBetween.ValuePreceding(3).And.CurrentRow),
 		///     };
 		///
 		/// </code>
@@ -1730,7 +1730,7 @@ namespace LinqToDB
 		///     {
 		///         Avg1 = Sql.Window.Average(t.Salary, f =&gt; f.PartitionBy(t.Dept).OrderBy(t.Date)),
 		///         Avg2 = Sql.Window.Average(t.Salary, f =&gt; f.Filter(t.IsActive).OrderBy(t.Date)),
-		///         Avg3 = Sql.Window.Average(t.Salary, f =&gt; f.OrderBy(t.Date).RowsBetween.Value(3).And.CurrentRow),
+		///         Avg3 = Sql.Window.Average(t.Salary, f =&gt; f.OrderBy(t.Date).RowsBetween.ValuePreceding(3).And.CurrentRow),
 		///     };
 		///
 		/// </code>
@@ -1761,7 +1761,7 @@ namespace LinqToDB
 		///     {
 		///         Avg1 = Sql.Window.Average(t.Salary, f =&gt; f.PartitionBy(t.Dept).OrderBy(t.Date)),
 		///         Avg2 = Sql.Window.Average(t.Salary, f =&gt; f.Filter(t.IsActive).OrderBy(t.Date)),
-		///         Avg3 = Sql.Window.Average(t.Salary, f =&gt; f.OrderBy(t.Date).RowsBetween.Value(3).And.CurrentRow),
+		///         Avg3 = Sql.Window.Average(t.Salary, f =&gt; f.OrderBy(t.Date).RowsBetween.ValuePreceding(3).And.CurrentRow),
 		///     };
 		///
 		/// </code>
@@ -1792,7 +1792,7 @@ namespace LinqToDB
 		///     {
 		///         Avg1 = Sql.Window.Average(t.Salary, f =&gt; f.PartitionBy(t.Dept).OrderBy(t.Date)),
 		///         Avg2 = Sql.Window.Average(t.Salary, f =&gt; f.Filter(t.IsActive).OrderBy(t.Date)),
-		///         Avg3 = Sql.Window.Average(t.Salary, f =&gt; f.OrderBy(t.Date).RowsBetween.Value(3).And.CurrentRow),
+		///         Avg3 = Sql.Window.Average(t.Salary, f =&gt; f.OrderBy(t.Date).RowsBetween.ValuePreceding(3).And.CurrentRow),
 		///     };
 		///
 		/// </code>
