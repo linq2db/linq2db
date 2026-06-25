@@ -446,7 +446,7 @@ namespace LinqToDB.Internal.Expressions
 			// w.OrderBy<TKey>(key) / w.OrderByDesc<TKey>(key) -> IPartitionPart<IDefinedFunction<TKey>>
 			var orderMethod = entryInterface
 				.GetMethods()
-				.First(m => m.Name == (descending ? "OrderByDesc" : "OrderBy") && m.IsGenericMethodDefinition && m.GetParameters().Length == 1)
+				.First(m => string.Equals(m.Name, descending ? "OrderByDesc" : "OrderBy", StringComparison.Ordinal) && m.IsGenericMethodDefinition && m.GetParameters().Length == 1)
 				.MakeGenericMethod(valueType);
 			Expression body = Expression.Call(param, orderMethod, orderExpr);
 
@@ -479,7 +479,7 @@ namespace LinqToDB.Internal.Expressions
 				body = ExpressionHelpers.MakeCall((WindowFunctionBuilder.IOPartitionFinal b, object[] partition) => b.PartitionBy(partition), param, partitionArr);
 			}
 
-			var lambda = Expression.Lambda(typeof(Func<WindowFunctionBuilder.IOPartitionFinal, WindowFunctionBuilder.IDefinedFunction>), body, param);
+			var lambda = Expression.Lambda<Func<WindowFunctionBuilder.IOPartitionFinal, WindowFunctionBuilder.IDefinedFunction>>(body, param);
 
 			return Expression.Call(genericMethod.MakeGenericMethod(argument.Type), Expression.Constant(Sql.Window), argument, lambda);
 		}
@@ -500,7 +500,7 @@ namespace LinqToDB.Internal.Expressions
 		{
 			var lambda = windowFuncLambda as LambdaExpression ?? (windowFuncLambda as UnaryExpression)?.Operand as LambdaExpression;
 
-			if (lambda?.Body is MethodCallExpression { Arguments: [NewArrayExpression arr] } call && call.Method.Name == "PartitionBy")
+			if (lambda?.Body is MethodCallExpression { Arguments: [NewArrayExpression arr] } call && string.Equals(call.Method.Name, "PartitionBy", StringComparison.Ordinal))
 				return arr.Expressions
 					.Select(e => e is UnaryExpression { NodeType: ExpressionType.Convert } u ? u.Operand : e)
 					.ToArray();
