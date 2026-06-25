@@ -861,6 +861,76 @@ namespace Tests.DataProvider
 			Assert.That(sql, Does.Contain("\"Int128\"     INT128,"));
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5483")]
+		public void TestFb6NativeIfExists([IncludeDataSources(false, TestProvName.AllFirebird6Plus)] string context)
+		{
+			using var db = new TestDataConnection(context);
+
+			db.DropTable<TestDropTable>(throwExceptionIfNotExists: false);
+
+			db.CreateTable<TestDropTable>(tableOptions: TableOptions.CreateIfNotExists);
+			var createSql = db.LastQuery!;
+
+			db.DropTable<TestDropTable>(tableOptions: TableOptions.DropIfExists, throwExceptionIfNotExists: false);
+			var dropSql = db.LastQuery!;
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(createSql, Does.Contain("IF NOT EXISTS").IgnoreCase);
+				Assert.That(createSql, Does.Not.Contain("EXECUTE BLOCK").IgnoreCase);
+				Assert.That(dropSql,   Does.Contain("DROP TABLE IF EXISTS").IgnoreCase);
+				Assert.That(dropSql,   Does.Not.Contain("EXECUTE BLOCK").IgnoreCase);
+			}
+		}
+
+		[Table]
+		sealed class Fb6FeatureRow
+		{
+			[Column]              public int     Id  { get; set; }
+			[Column]              public int     A   { get; set; }
+			[Column]              public int     B   { get; set; }
+			[Column(Length = 50)] public string? Val { get; set; }
+			[Column]              public int     Grp { get; set; }
+		}
+
+		[Test(Description = "https://github.com/FirebirdSQL/firebird/pull/8532")]
+		public void TestFb6GreatestLeast([IncludeDataSources(false, TestProvName.AllFirebird6Plus)] string context)
+		{
+			using var db = new TestDataConnection(context);
+			using var tb = db.CreateLocalTable(new[] { new Fb6FeatureRow { Id = 1, A = 3, B = 7 } });
+
+			var r   = tb.Select(t => new { Mx = Math.Max(t.A, t.B), Mn = Math.Min(t.A, t.B) }).Single();
+			var sql = db.LastQuery!;
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(sql,  Does.Contain("GREATEST").IgnoreCase);
+				Assert.That(sql,  Does.Contain("LEAST").IgnoreCase);
+				Assert.That(r.Mx, Is.EqualTo(7));
+				Assert.That(r.Mn, Is.EqualTo(3));
+			}
+		}
+
+		[Test(Description = "https://github.com/FirebirdSQL/firebird/pull/8689")]
+		public void TestFb6ListAggWithinGroup([IncludeDataSources(false, TestProvName.AllFirebird6Plus)] string context)
+		{
+			using var db = new TestDataConnection(context);
+			using var tb = db.CreateLocalTable(new[]
+			{
+				new Fb6FeatureRow { Id = 1, Val = "b", Grp = 1 },
+				new Fb6FeatureRow { Id = 2, Val = "a", Grp = 1 },
+			});
+
+			var r   = tb.GroupBy(t => t.Grp).Select(g => string.Join(",", g.OrderBy(x => x.Val).Select(x => x.Val))).Single();
+			var sql = db.LastQuery!;
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(sql, Does.Contain("WITHIN GROUP").IgnoreCase);
+				Assert.That(r,   Is.EqualTo("a,b"));
+			}
+		}
+
 		[Test]
 		public void TestFb4TypesParametersAndLiterals(
 			[IncludeDataSources(false, TestProvName.AllFirebird4Plus)] string context,

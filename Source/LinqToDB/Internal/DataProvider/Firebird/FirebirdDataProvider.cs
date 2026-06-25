@@ -21,6 +21,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 	sealed class FirebirdDataProvider3  : FirebirdDataProvider { public FirebirdDataProvider3()  : base(ProviderName.Firebird3,  FirebirdVersion.v3 ) { } }
 	sealed class FirebirdDataProvider4  : FirebirdDataProvider { public FirebirdDataProvider4()  : base(ProviderName.Firebird4,  FirebirdVersion.v4 ) { } }
 	sealed class FirebirdDataProvider5  : FirebirdDataProvider { public FirebirdDataProvider5()  : base(ProviderName.Firebird5,  FirebirdVersion.v5 ) { } }
+	sealed class FirebirdDataProvider6  : FirebirdDataProvider { public FirebirdDataProvider6()  : base(ProviderName.Firebird6,  FirebirdVersion.v6 ) { } }
 #pragma warning restore MA0048 // File name must match type name
 
 	public abstract class FirebirdDataProvider : DynamicDataProviderBase<FirebirdProviderAdapter>
@@ -104,6 +105,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 		{
 			return Version switch
 			{
+				>= FirebirdVersion.v6 => new Firebird6MemberTranslator(),
 				>= FirebirdVersion.v5 => new Firebird5MemberTranslator(),
 				>= FirebirdVersion.v4 => new Firebird4MemberTranslator(),
 				_                     => new FirebirdMemberTranslator(),
@@ -120,7 +122,9 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			return Version switch
 			{
 				FirebirdVersion.v3    => new Firebird3SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
-				>= FirebirdVersion.v4 => new Firebird4SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
+				FirebirdVersion.v4    => new Firebird4SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
+				FirebirdVersion.v5    => new Firebird4SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
+				>= FirebirdVersion.v6 => new Firebird6SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
 				_                     => new FirebirdSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
 			};
 		}
@@ -234,6 +238,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 				FirebirdVersion.v3  => new FirebirdMappingSchema.Firebird3MappingSchema (),
 				FirebirdVersion.v4  => new FirebirdMappingSchema.Firebird4MappingSchema (),
 				FirebirdVersion.v5  => new FirebirdMappingSchema.Firebird5MappingSchema (),
+				FirebirdVersion.v6  => new FirebirdMappingSchema.Firebird6MappingSchema (),
 				_                   => new FirebirdMappingSchema.Firebird25MappingSchema(),
 			};
 		}
