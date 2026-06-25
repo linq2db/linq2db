@@ -2666,7 +2666,7 @@ namespace LinqToDB
 		/// Generates the SQL <c>MEDIAN()</c> window function — the median (50th percentile, continuous) of the values within the window.
 		/// </summary>
 		/// <remarks>
-		/// <para><b>Syntax:</b> <c>Sql.Window.Median(expr, f =&gt; f.PartitionBy(...))</c></para>
+		/// <para><b>Syntax:</b> <c>Sql.Window.Median(expr, f =&gt; f.[PartitionBy(...)])</c></para>
 		/// <para>Native on Oracle and DB2 only; throws a descriptive exception at query-translation time elsewhere. Its OVER clause carries <c>PARTITION BY</c> only (no ORDER BY or frame).</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
@@ -2901,7 +2901,7 @@ namespace LinqToDB
 		/// Generates SQL <c>PERCENTILE_CONT()</c> ordered-set aggregate. Computes a percentile based on continuous distribution.
 		/// </summary>
 		/// <remarks>
-		/// <para><b>Syntax:</b> <c>source.PercentileCont(fraction, (e, f) =&gt; f.OrderBy(e.Column))</c></para>
+		/// <para><b>Syntax:</b> <c>source.PercentileCont(fraction, (e, f) =&gt; f.OrderBy(e.Column)[.Filter(...)])</c></para>
 		/// <para>May not be supported by all database providers (e.g. SQLite, MySQL, ClickHouse).</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
@@ -2959,7 +2959,7 @@ namespace LinqToDB
 		/// Generates SQL <c>PERCENTILE_DISC()</c> ordered-set aggregate. Returns the value at the specified percentile from the sorted set.
 		/// </summary>
 		/// <remarks>
-		/// <para><b>Syntax:</b> <c>source.PercentileDisc(fraction, (e, f) =&gt; f.OrderBy(e.Column)[.ThenBy(...)])</c></para>
+		/// <para><b>Syntax:</b> <c>source.PercentileDisc(fraction, (e, f) =&gt; f.OrderBy(e.Column)[.ThenBy(...)][.Filter(...)])</c></para>
 		/// <para>May not be supported by all database providers (e.g. SQLite, MySQL, ClickHouse).</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
@@ -3007,6 +3007,230 @@ namespace LinqToDB
 		/// </remarks>
 		public static TValue PercentileDisc<TValue>(this Sql.IWindowFunction window, double fraction, Func<IOrderedSetWindowMultiOrder, IDefinedFunction<TValue>> func)
 			=> throw new ServerSideOnlyException(nameof(PercentileDisc));
+
+		#endregion
+
+		#region Hypothetical-set (Rank/DenseRank/PercentRank/CumeDist WITHIN GROUP)
+
+#pragma warning disable RS0030
+
+		/// <summary>
+		/// Generates the SQL hypothetical-set <c>RANK()</c> aggregate — the rank the given value would have (with gaps after ties) if inserted into the ordered group.
+		/// </summary>
+		/// <remarks>
+		/// <para><b>Syntax:</b> <c>source.Rank(value, (e, f) =&gt; f.OrderBy(e.Column)[.Filter(...)])</c></para>
+		/// <para>Native on Oracle and PostgreSQL; throws a descriptive exception at query-translation time on other providers.</para>
+		/// <para><b>C# usage:</b></para>
+		/// <code>
+		/// var query =
+		///     from t in db.Table
+		///     group t by t.Dept into g
+		///     select new
+		///     {
+		///         g.Key,
+		///         Rank = g.Rank(1000, (e, f) =&gt; f.OrderBy(e.Salary)),
+		///     };
+		/// </code>
+		/// <para><b>Generated SQL:</b></para>
+		/// <code>
+		/// SELECT t.Dept, RANK(1000) WITHIN GROUP (ORDER BY t.Salary)
+		/// FROM Table t
+		/// GROUP BY t.Dept
+		/// </code>
+		/// </remarks>
+		public static long Rank<TElement, TValue>(this IEnumerable<TElement> source, object? value, Func<TElement, IOnlyOrderByPart, IDefinedFunction<TValue>> func)
+			=> throw new ServerSideOnlyException(nameof(Rank));
+
+		/// <summary>
+		/// Generates the SQL hypothetical-set <c>RANK()</c> aggregate over two ordering keys — the rank the given values would have (with gaps after ties) in the doubly-ordered group.
+		/// </summary>
+		/// <remarks>
+		/// <para><b>Syntax:</b> <c>source.Rank(value1, value2, (e, f) =&gt; f.OrderBy(e.Key1).ThenBy(e.Key2)[.Filter(...)])</c></para>
+		/// <para>Native on Oracle and PostgreSQL; throws a descriptive exception at query-translation time on other providers.</para>
+		/// <para><b>C# usage:</b></para>
+		/// <code>
+		/// var query =
+		///     from t in db.Table
+		///     group t by t.Dept into g
+		///     select new
+		///     {
+		///         g.Key,
+		///         Rank = g.Rank(1000, 2000, (e, f) =&gt; f.OrderBy(e.Salary).ThenBy(e.Bonus)),
+		///     };
+		/// </code>
+		/// <para><b>Generated SQL:</b></para>
+		/// <code>
+		/// SELECT t.Dept, RANK(1000, 2000) WITHIN GROUP (ORDER BY t.Salary, t.Bonus)
+		/// FROM Table t
+		/// GROUP BY t.Dept
+		/// </code>
+		/// </remarks>
+		public static long Rank<TElement, TValue>(this IEnumerable<TElement> source, object? value1, object? value2, Func<TElement, IMultipleOrderByPart, IDefinedFunction<TValue>> func)
+			=> throw new ServerSideOnlyException(nameof(Rank));
+
+		/// <summary>
+		/// Generates the SQL hypothetical-set <c>DENSE_RANK()</c> aggregate — the rank the given value would have (no gaps after ties) if inserted into the ordered group.
+		/// </summary>
+		/// <remarks>
+		/// <para><b>Syntax:</b> <c>source.DenseRank(value, (e, f) =&gt; f.OrderBy(e.Column)[.Filter(...)])</c></para>
+		/// <para>Native on Oracle and PostgreSQL; throws a descriptive exception at query-translation time on other providers.</para>
+		/// <para><b>C# usage:</b></para>
+		/// <code>
+		/// var query =
+		///     from t in db.Table
+		///     group t by t.Dept into g
+		///     select new
+		///     {
+		///         g.Key,
+		///         DenseRank = g.DenseRank(1000, (e, f) =&gt; f.OrderBy(e.Salary)),
+		///     };
+		/// </code>
+		/// <para><b>Generated SQL:</b></para>
+		/// <code>
+		/// SELECT t.Dept, DENSE_RANK(1000) WITHIN GROUP (ORDER BY t.Salary)
+		/// FROM Table t
+		/// GROUP BY t.Dept
+		/// </code>
+		/// </remarks>
+		public static long DenseRank<TElement, TValue>(this IEnumerable<TElement> source, object? value, Func<TElement, IOnlyOrderByPart, IDefinedFunction<TValue>> func)
+			=> throw new ServerSideOnlyException(nameof(DenseRank));
+
+		/// <summary>
+		/// Generates the SQL hypothetical-set <c>DENSE_RANK()</c> aggregate over two ordering keys — the rank the given values would have (no gaps after ties) in the doubly-ordered group.
+		/// </summary>
+		/// <remarks>
+		/// <para><b>Syntax:</b> <c>source.DenseRank(value1, value2, (e, f) =&gt; f.OrderBy(e.Key1).ThenBy(e.Key2)[.Filter(...)])</c></para>
+		/// <para>Native on Oracle and PostgreSQL; throws a descriptive exception at query-translation time on other providers.</para>
+		/// <para><b>C# usage:</b></para>
+		/// <code>
+		/// var query =
+		///     from t in db.Table
+		///     group t by t.Dept into g
+		///     select new
+		///     {
+		///         g.Key,
+		///         DenseRank = g.DenseRank(1000, 2000, (e, f) =&gt; f.OrderBy(e.Salary).ThenBy(e.Bonus)),
+		///     };
+		/// </code>
+		/// <para><b>Generated SQL:</b></para>
+		/// <code>
+		/// SELECT t.Dept, DENSE_RANK(1000, 2000) WITHIN GROUP (ORDER BY t.Salary, t.Bonus)
+		/// FROM Table t
+		/// GROUP BY t.Dept
+		/// </code>
+		/// </remarks>
+		public static long DenseRank<TElement, TValue>(this IEnumerable<TElement> source, object? value1, object? value2, Func<TElement, IMultipleOrderByPart, IDefinedFunction<TValue>> func)
+			=> throw new ServerSideOnlyException(nameof(DenseRank));
+
+		/// <summary>
+		/// Generates the SQL hypothetical-set <c>PERCENT_RANK()</c> aggregate — the relative rank, a value in <c>[0, 1]</c> computed as <c>(rank - 1) / (rowCount - 1)</c>, the given value would have in the ordered group.
+		/// </summary>
+		/// <remarks>
+		/// <para><b>Syntax:</b> <c>source.PercentRank(value, (e, f) =&gt; f.OrderBy(e.Column)[.Filter(...)])</c></para>
+		/// <para>Native on Oracle and PostgreSQL; throws a descriptive exception at query-translation time on other providers.</para>
+		/// <para><b>C# usage:</b></para>
+		/// <code>
+		/// var query =
+		///     from t in db.Table
+		///     group t by t.Dept into g
+		///     select new
+		///     {
+		///         g.Key,
+		///         PercentRank = g.PercentRank(1000, (e, f) =&gt; f.OrderBy(e.Salary)),
+		///     };
+		/// </code>
+		/// <para><b>Generated SQL:</b></para>
+		/// <code>
+		/// SELECT t.Dept, PERCENT_RANK(1000) WITHIN GROUP (ORDER BY t.Salary)
+		/// FROM Table t
+		/// GROUP BY t.Dept
+		/// </code>
+		/// </remarks>
+		public static double PercentRank<TElement, TValue>(this IEnumerable<TElement> source, object? value, Func<TElement, IOnlyOrderByPart, IDefinedFunction<TValue>> func)
+			=> throw new ServerSideOnlyException(nameof(PercentRank));
+
+		/// <summary>
+		/// Generates the SQL hypothetical-set <c>PERCENT_RANK()</c> aggregate over two ordering keys — the relative rank (a value in <c>[0, 1]</c>) the given values would have in the doubly-ordered group.
+		/// </summary>
+		/// <remarks>
+		/// <para><b>Syntax:</b> <c>source.PercentRank(value1, value2, (e, f) =&gt; f.OrderBy(e.Key1).ThenBy(e.Key2)[.Filter(...)])</c></para>
+		/// <para>Native on Oracle and PostgreSQL; throws a descriptive exception at query-translation time on other providers.</para>
+		/// <para><b>C# usage:</b></para>
+		/// <code>
+		/// var query =
+		///     from t in db.Table
+		///     group t by t.Dept into g
+		///     select new
+		///     {
+		///         g.Key,
+		///         PercentRank = g.PercentRank(1000, 2000, (e, f) =&gt; f.OrderBy(e.Salary).ThenBy(e.Bonus)),
+		///     };
+		/// </code>
+		/// <para><b>Generated SQL:</b></para>
+		/// <code>
+		/// SELECT t.Dept, PERCENT_RANK(1000, 2000) WITHIN GROUP (ORDER BY t.Salary, t.Bonus)
+		/// FROM Table t
+		/// GROUP BY t.Dept
+		/// </code>
+		/// </remarks>
+		public static double PercentRank<TElement, TValue>(this IEnumerable<TElement> source, object? value1, object? value2, Func<TElement, IMultipleOrderByPart, IDefinedFunction<TValue>> func)
+			=> throw new ServerSideOnlyException(nameof(PercentRank));
+
+		/// <summary>
+		/// Generates the SQL hypothetical-set <c>CUME_DIST()</c> aggregate — the cumulative distribution, a value in <c>(0, 1]</c> giving the fraction of rows ordering at or before the given value, it would have in the ordered group.
+		/// </summary>
+		/// <remarks>
+		/// <para><b>Syntax:</b> <c>source.CumeDist(value, (e, f) =&gt; f.OrderBy(e.Column)[.Filter(...)])</c></para>
+		/// <para>Native on Oracle and PostgreSQL; throws a descriptive exception at query-translation time on other providers.</para>
+		/// <para><b>C# usage:</b></para>
+		/// <code>
+		/// var query =
+		///     from t in db.Table
+		///     group t by t.Dept into g
+		///     select new
+		///     {
+		///         g.Key,
+		///         CumeDist = g.CumeDist(1000, (e, f) =&gt; f.OrderBy(e.Salary)),
+		///     };
+		/// </code>
+		/// <para><b>Generated SQL:</b></para>
+		/// <code>
+		/// SELECT t.Dept, CUME_DIST(1000) WITHIN GROUP (ORDER BY t.Salary)
+		/// FROM Table t
+		/// GROUP BY t.Dept
+		/// </code>
+		/// </remarks>
+		public static double CumeDist<TElement, TValue>(this IEnumerable<TElement> source, object? value, Func<TElement, IOnlyOrderByPart, IDefinedFunction<TValue>> func)
+			=> throw new ServerSideOnlyException(nameof(CumeDist));
+
+		/// <summary>
+		/// Generates the SQL hypothetical-set <c>CUME_DIST()</c> aggregate over two ordering keys — the cumulative distribution (a value in <c>(0, 1]</c>) the given values would have in the doubly-ordered group.
+		/// </summary>
+		/// <remarks>
+		/// <para><b>Syntax:</b> <c>source.CumeDist(value1, value2, (e, f) =&gt; f.OrderBy(e.Key1).ThenBy(e.Key2)[.Filter(...)])</c></para>
+		/// <para>Native on Oracle and PostgreSQL; throws a descriptive exception at query-translation time on other providers.</para>
+		/// <para><b>C# usage:</b></para>
+		/// <code>
+		/// var query =
+		///     from t in db.Table
+		///     group t by t.Dept into g
+		///     select new
+		///     {
+		///         g.Key,
+		///         CumeDist = g.CumeDist(1000, 2000, (e, f) =&gt; f.OrderBy(e.Salary).ThenBy(e.Bonus)),
+		///     };
+		/// </code>
+		/// <para><b>Generated SQL:</b></para>
+		/// <code>
+		/// SELECT t.Dept, CUME_DIST(1000, 2000) WITHIN GROUP (ORDER BY t.Salary, t.Bonus)
+		/// FROM Table t
+		/// GROUP BY t.Dept
+		/// </code>
+		/// </remarks>
+		public static double CumeDist<TElement, TValue>(this IEnumerable<TElement> source, object? value1, object? value2, Func<TElement, IMultipleOrderByPart, IDefinedFunction<TValue>> func)
+			=> throw new ServerSideOnlyException(nameof(CumeDist));
+
+#pragma warning restore RS0030
 
 		#endregion
 

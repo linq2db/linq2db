@@ -451,6 +451,8 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 		{
 			protected override bool IsWindowFilterSupported     => true;
 			protected override bool IsOrderedSetFilterSupported => true;
+			// PostgreSQL supports hypothetical-set RANK/DENSE_RANK/PERCENT_RANK/CUME_DIST.
+			protected override bool IsHypotheticalSetSupported  => true;
 			// PostgreSQL supports the full statistical/regression window-function set with standard SQL names.
 			protected override bool IsVarianceSupported         => true;
 			protected override bool IsVarianceBareSupported     => true;

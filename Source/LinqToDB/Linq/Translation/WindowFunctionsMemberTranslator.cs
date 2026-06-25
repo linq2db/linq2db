@@ -39,6 +39,8 @@ namespace LinqToDB.Linq.Translation
 		protected virtual bool IsLinearRegressionSupported         => false;
 		// MEDIAN(x) OVER (PARTITION BY ...) — native on Oracle/DB2 only.
 		protected virtual bool IsMedianSupported                   => false;
+		// Hypothetical-set RANK/DENSE_RANK/PERCENT_RANK/CUME_DIST WITHIN GROUP (ORDER BY ...) — Oracle/DB2/PostgreSQL.
+		protected virtual bool IsHypotheticalSetSupported          => false;
 
 		// Window clause support flags
 		protected virtual bool IsWindowFilterSupported         => false;
@@ -101,6 +103,7 @@ namespace LinqToDB.Linq.Translation
 			RegisterMin();
 			RegisterMax();
 			RegisterStatistical();
+			RegisterHypotheticalSet();
 		}
 
 		void RegisterSum()
@@ -204,6 +207,31 @@ namespace LinqToDB.Linq.Translation
 			Registration.RegisterMethod(() => Sql.Window.RegrSXX(1.0, 1.0,       f => f.OrderBy(1)), TranslateRegrSXX,       isGenericTypeMatch: true);
 			Registration.RegisterMethod(() => Sql.Window.RegrSYY(1.0, 1.0,       f => f.OrderBy(1)), TranslateRegrSYY,       isGenericTypeMatch: true);
 			Registration.RegisterMethod(() => Sql.Window.RegrSXY(1.0, 1.0,       f => f.OrderBy(1)), TranslateRegrSXY,       isGenericTypeMatch: true);
+		}
+
+		void RegisterHypotheticalSet()
+		{
+			// Hypothetical-set RANK/DENSE_RANK/PERCENT_RANK/CUME_DIST WITHIN GROUP (ORDER BY ...). Group-form ordered-set
+			// aggregates (no OVER); 1-value/1-key and 2-value/2-key arities, IEnumerable + IQueryable, all generic-matched.
+			Registration.RegisterMethod((IEnumerable<int> g) => g.Rank(1, (e, f) => f.OrderBy(e)), TranslateHypotheticalRank, isGenericTypeMatch: true);
+			Registration.RegisterMethod((IQueryable<int>  g) => g.Rank(1, (e, f) => f.OrderBy(e)), TranslateHypotheticalRank, isGenericTypeMatch: true);
+			Registration.RegisterMethod((IEnumerable<int> g) => g.Rank(1, 1, (e, f) => f.OrderBy(e).ThenBy(e)), TranslateHypotheticalRank, isGenericTypeMatch: true);
+			Registration.RegisterMethod((IQueryable<int>  g) => g.Rank(1, 1, (e, f) => f.OrderBy(e).ThenBy(e)), TranslateHypotheticalRank, isGenericTypeMatch: true);
+
+			Registration.RegisterMethod((IEnumerable<int> g) => g.DenseRank(1, (e, f) => f.OrderBy(e)), TranslateHypotheticalDenseRank, isGenericTypeMatch: true);
+			Registration.RegisterMethod((IQueryable<int>  g) => g.DenseRank(1, (e, f) => f.OrderBy(e)), TranslateHypotheticalDenseRank, isGenericTypeMatch: true);
+			Registration.RegisterMethod((IEnumerable<int> g) => g.DenseRank(1, 1, (e, f) => f.OrderBy(e).ThenBy(e)), TranslateHypotheticalDenseRank, isGenericTypeMatch: true);
+			Registration.RegisterMethod((IQueryable<int>  g) => g.DenseRank(1, 1, (e, f) => f.OrderBy(e).ThenBy(e)), TranslateHypotheticalDenseRank, isGenericTypeMatch: true);
+
+			Registration.RegisterMethod((IEnumerable<int> g) => g.PercentRank(1, (e, f) => f.OrderBy(e)), TranslateHypotheticalPercentRank, isGenericTypeMatch: true);
+			Registration.RegisterMethod((IQueryable<int>  g) => g.PercentRank(1, (e, f) => f.OrderBy(e)), TranslateHypotheticalPercentRank, isGenericTypeMatch: true);
+			Registration.RegisterMethod((IEnumerable<int> g) => g.PercentRank(1, 1, (e, f) => f.OrderBy(e).ThenBy(e)), TranslateHypotheticalPercentRank, isGenericTypeMatch: true);
+			Registration.RegisterMethod((IQueryable<int>  g) => g.PercentRank(1, 1, (e, f) => f.OrderBy(e).ThenBy(e)), TranslateHypotheticalPercentRank, isGenericTypeMatch: true);
+
+			Registration.RegisterMethod((IEnumerable<int> g) => g.CumeDist(1, (e, f) => f.OrderBy(e)), TranslateHypotheticalCumeDist, isGenericTypeMatch: true);
+			Registration.RegisterMethod((IQueryable<int>  g) => g.CumeDist(1, (e, f) => f.OrderBy(e)), TranslateHypotheticalCumeDist, isGenericTypeMatch: true);
+			Registration.RegisterMethod((IEnumerable<int> g) => g.CumeDist(1, 1, (e, f) => f.OrderBy(e).ThenBy(e)), TranslateHypotheticalCumeDist, isGenericTypeMatch: true);
+			Registration.RegisterMethod((IQueryable<int>  g) => g.CumeDist(1, 1, (e, f) => f.OrderBy(e).ThenBy(e)), TranslateHypotheticalCumeDist, isGenericTypeMatch: true);
 		}
 
 		public record ArgumentInformation(Expression Expr, Sql.AggregateModifier Modifier);
@@ -1153,6 +1181,125 @@ namespace LinqToDB.Linq.Translation
 			);
 
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, function, methodCall);
+		}
+
+		public virtual Expression? TranslateHypotheticalRank(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+			=> TranslateHypotheticalSet(translationContext, methodCall, "RANK");
+
+		public virtual Expression? TranslateHypotheticalDenseRank(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+			=> TranslateHypotheticalSet(translationContext, methodCall, "DENSE_RANK");
+
+		public virtual Expression? TranslateHypotheticalPercentRank(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+			=> TranslateHypotheticalSet(translationContext, methodCall, "PERCENT_RANK");
+
+		public virtual Expression? TranslateHypotheticalCumeDist(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+			=> TranslateHypotheticalSet(translationContext, methodCall, "CUME_DIST");
+
+		// Hypothetical-set ordered-set aggregate: FUNC(value...) WITHIN GROUP (ORDER BY key...). The values are the leading
+		// method arguments (positional, matched to the order keys by the database) and the order lambda is the last argument;
+		// no OVER clause is emitted. Gated by IsHypotheticalSetSupported (Oracle/DB2/PostgreSQL).
+		Expression? TranslateHypotheticalSet(ITranslationContext translationContext, MethodCallExpression methodCall, string functionName)
+		{
+			if (!IsWindowFunctionsSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
+			if (!IsHypotheticalSetSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_HypotheticalSet, methodCall.Type);
+
+			// Arguments: [source, value1, (value2,) builderLambda] — the leading args are the hypothetical values, the last is the order lambda.
+			var valueCount  = methodCall.Arguments.Count - 2;
+			var lambdaIndex = methodCall.Arguments.Count - 1;
+
+			var result = new AggregateFunctionBuilder()
+				.ConfigureAggregate(c => c
+					.HasSequenceIndex(0)
+					.HasValue(false)
+					.OnBuildFunction(composer =>
+					{
+						var arguments = new List<SqlFunctionArgument>();
+						for (var i = 1; i <= valueCount; i++)
+						{
+							if (!composer.AggregationContext.TranslateExpression(methodCall.Arguments[i], out var valueSql, out var valueError))
+							{
+								composer.SetError(valueError);
+								return;
+							}
+
+							arguments.Add(new SqlFunctionArgument(valueSql, Sql.AggregateModifier.None));
+						}
+
+						var builderLambda = methodCall.Arguments[lambdaIndex].UnwrapLambda();
+						builderLambda = composer.AggregationContext.SimplifyEntityLambda(builderLambda, 0);
+
+						if (!CollectWindowFunctionInformation(
+							    translationContext,
+							    methodCall.Type,
+							    null,
+							    builderLambda.Body,
+							    out var wfInfo,
+							    out var error))
+						{
+							composer.SetError(error);
+							return;
+						}
+
+						if (wfInfo.OrderBy == null)
+						{
+							composer.SetError(translationContext.CreateErrorExpression(methodCall.Arguments[lambdaIndex], "Expected order by expression", methodCall.Type));
+							return;
+						}
+
+						List<SqlWindowOrderItem> withinGroupOrder = new();
+						if (!TranslateOrderItems(composer.AggregationContext, translationContext.ProviderFlags.DefaultNullsOrdering, translationContext.ProviderFlags.IsNullsOrderingSupported, methodCall.Type, wfInfo.OrderBy, withinGroupOrder, out var orderError))
+						{
+							composer.SetError(orderError);
+							return;
+						}
+
+						SqlSearchCondition? filter = null;
+						if (wfInfo.Filter != null)
+						{
+							// FILTER (WHERE ...) on an ordered-set aggregate filters the input set; gate it like the percentile group form.
+							if (!IsOrderedSetFilterSupported)
+							{
+								composer.SetError(translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_OrderedSetFilter, methodCall.Type));
+								return;
+							}
+
+							if (!composer.AggregationContext.TranslateExpression(wfInfo.Filter, out var filterSql, out var filterError))
+							{
+								composer.SetError(filterError);
+								return;
+							}
+
+							if (filterSql is not SqlSearchCondition filterSc)
+							{
+								composer.SetError(translationContext.CreateErrorExpression(methodCall.Arguments[lambdaIndex], "Expected a boolean FILTER predicate", methodCall.Type));
+								return;
+							}
+
+							filter = filterSc;
+						}
+
+						var functionType = translationContext.ExpressionFactory.GetDbDataType(methodCall.Type);
+
+						var windowFunction = translationContext.ExpressionFactory.Function(
+							functionType,
+							functionName,
+							arguments.ToArray(),
+							arguments.Select(_ => true).ToArray(),
+							withinGroup : withinGroupOrder,
+							filter      : filter,
+							isAggregate : true
+						);
+
+						composer.SetResult(windowFunction);
+					}))
+				.Build(translationContext, methodCall);
+
+			if (result == null)
+				return translationContext.CreateErrorExpression(methodCall, $"Failed to build aggregation function for {functionName}.", methodCall.Type);
+
+			return result;
 		}
 
 		public virtual Expression? TranslateSum(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)

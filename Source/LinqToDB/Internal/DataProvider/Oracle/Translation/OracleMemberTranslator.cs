@@ -493,6 +493,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 			protected override bool IsMedianSupported               => true;
 			// Oracle supports both the group and windowed ordered-set forms (PERCENTILE_CONT/DISC).
 			protected override bool IsOrderedSetWindowedSupported   => true;
+			// Oracle supports hypothetical-set RANK/DENSE_RANK/PERCENT_RANK/CUME_DIST.
+			protected override bool IsHypotheticalSetSupported      => true;
 
 			public override Expression? TranslateRatioToReport(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 				=> TranslateRatioToReportNative(translationContext, methodCall);
