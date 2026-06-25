@@ -68,8 +68,10 @@ namespace LinqToDB
 			throw new InvalidOperationException();
 		}
 
+		// Nullability annotator, handled by SqlFunctionsMemberTranslatorBase so it always stays server-side.
+		// Deliberately carries no [Expression] attribute: that would let projection client-calculation
+		// (LinqOptions.PreferClientCalculation) pull it client-side, collapsing a SQL NULL to default(T).
 		[CLSCompliant(false)]
-		[Expression("{0}", 0, CanBeNull = true)]
 		public static T AsNullable<T>(T value)
 		{
 			return value;
