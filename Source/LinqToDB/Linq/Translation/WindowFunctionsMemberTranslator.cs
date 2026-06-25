@@ -26,6 +26,9 @@ namespace LinqToDB.Linq.Translation
 		protected virtual bool IsFirstLastValueSupported  => true;
 		protected virtual bool IsPercentileContSupported           => true;
 		protected virtual bool IsPercentileDiscSupported           => true;
+		// Windowed ordered-set form: PERCENTILE_CONT/DISC(f) WITHIN GROUP (ORDER BY k) OVER (PARTITION BY ...). Distinct
+		// from the two group flags above — SQL Server supports only the windowed form, PostgreSQL only the group form, Oracle both.
+		protected virtual bool IsOrderedSetWindowedSupported       => false;
 		protected virtual bool IsAggregateWindowFunctionsSupported => true;
 		// Statistical aggregate families — default off, enabled per provider; translators emit standard SQL names.
 		// IsVarianceSupported gates the explicit STDDEV_POP/STDDEV_SAMP/VAR_POP/VAR_SAMP; IsVarianceBareSupported gates
@@ -69,6 +72,10 @@ namespace LinqToDB.Linq.Translation
 
 			Registration.RegisterMethod((IEnumerable<int> g) => g.PercentileDisc(0.5, (e, f) => f.OrderBy(e)), TranslatePercentileDisc, isGenericTypeMatch: true);
 			Registration.RegisterMethod((IQueryable<int>  g) => g.PercentileDisc(0.5, (e, f) => f.OrderBy(e)), TranslatePercentileDisc, isGenericTypeMatch: true);
+
+			// Windowed ordered-set form (PERCENTILE_CONT/DISC(f) WITHIN GROUP (ORDER BY k) OVER (PARTITION BY ...)) — distinct from the group form above.
+			Registration.RegisterMethod(() => Sql.Window.PercentileCont(0.5, w => w.OrderBy(1)), TranslatePercentileContWindowed, isGenericTypeMatch: true);
+			Registration.RegisterMethod(() => Sql.Window.PercentileDisc(0.5, w => w.OrderBy(1)), TranslatePercentileDiscWindowed, isGenericTypeMatch: true);
 
 			Registration.RegisterMethod(() => Sql.Window.Count(f => f.OrderBy(1)), TranslateCount);
 			Registration.RegisterMethod(() => Sql.Window.Count(1, f => f.OrderBy(1)), TranslateCount);
@@ -1075,6 +1082,77 @@ namespace LinqToDB.Linq.Translation
 				return translationContext.CreateErrorExpression(methodCall, $"Failed to build aggregation function for {functionName}.", methodCall.Type);
 
 			return result;
+		}
+
+		public virtual Expression? TranslatePercentileContWindowed(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			if (!IsWindowFunctionsSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
+			if (!IsOrderedSetWindowedSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_PercentileCont, methodCall.Type);
+
+			return TranslatePercentileWindowed(translationContext, methodCall, "PERCENTILE_CONT", requireSingleOrderBy: true);
+		}
+
+		public virtual Expression? TranslatePercentileDiscWindowed(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			if (!IsWindowFunctionsSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
+			if (!IsOrderedSetWindowedSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_PercentileDisc, methodCall.Type);
+
+			return TranslatePercentileWindowed(translationContext, methodCall, "PERCENTILE_DISC", requireSingleOrderBy: false);
+		}
+
+		// Windowed ordered-set aggregate: PERCENTILE_CONT/DISC(fraction) WITHIN GROUP (ORDER BY key) OVER (PARTITION BY ...).
+		// The builder lambda's OrderBy maps to WITHIN GROUP (not the OVER ORDER BY) and PartitionBy maps to OVER; the form
+		// exposes neither FILTER nor a frame. Distinct from the group-source TranslatePercentileFunction (no group-element composer).
+		Expression? TranslatePercentileWindowed(ITranslationContext translationContext, MethodCallExpression methodCall, string functionName, bool requireSingleOrderBy)
+		{
+			var fraction = translationContext.Translate(methodCall.Arguments[1]);
+			if (fraction is not SqlPlaceholderExpression fractionPlaceholder)
+				return SqlErrorExpression.EnsureError(fraction, methodCall.Type);
+
+			if (!CollectWindowFunctionInformation(
+				    translationContext,
+				    methodCall.Type,
+				    null,
+				    methodCall.Arguments[2].UnwrapLambda().Body,
+				    out var information,
+				    out var error))
+				return error;
+
+			if (information.OrderBy == null || (requireSingleOrderBy && information.OrderBy.Length != 1))
+				return translationContext.CreateErrorExpression(
+					methodCall.Arguments[2],
+					requireSingleOrderBy ? "Expected single order by expression" : "Expected order by expression",
+					methodCall.Type);
+
+			var withinGroupOrder = new List<SqlWindowOrderItem>();
+			if (!TranslateOrderItems(translationContext, translationContext.ProviderFlags.DefaultNullsOrdering, translationContext.ProviderFlags.IsNullsOrderingSupported, methodCall.Type, information.OrderBy, withinGroupOrder, out var orderError))
+				return orderError;
+
+			List<ISqlExpression>? partitionBy = null;
+			if (information.PartitionBy != null)
+			{
+				partitionBy = new();
+				if (!TranslatePartitionBy(translationContext, methodCall.Type, information.PartitionBy, partitionBy, out var partitionError))
+					return partitionError;
+			}
+
+			var functionType = translationContext.GetDbDataType(withinGroupOrder[0].Expression);
+
+			var function = translationContext.ExpressionFactory.Function(
+				functionType,
+				functionName,
+				[new SqlFunctionArgument(fractionPlaceholder.Sql, Sql.AggregateModifier.None)],
+				[true],
+				withinGroup     : withinGroupOrder,
+				partitionBy     : partitionBy,
+				isWindowFunction: true
+			);
+
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, function, methodCall);
 		}
 
 		public virtual Expression? TranslateSum(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)

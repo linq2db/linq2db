@@ -319,13 +319,15 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 
 		protected class SqlServerWindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
 		{
-			protected override bool IsNthValueSupported        => false;
-			protected override bool IsFrameGroupsSupported     => false;
-			protected override bool IsFrameExclusionSupported  => false;
-			protected override bool IsPercentileContSupported  => false;
-			protected override bool IsPercentileDiscSupported  => false;
+			protected override bool IsNthValueSupported           => false;
+			protected override bool IsFrameGroupsSupported        => false;
+			protected override bool IsFrameExclusionSupported     => false;
+			protected override bool IsPercentileContSupported     => false;
+			protected override bool IsPercentileDiscSupported     => false;
+			// SQL Server (2012+) supports PERCENTILE_CONT/DISC only in the windowed (OVER) form, not the GROUP BY ordered-set form.
+			protected override bool IsOrderedSetWindowedSupported => true;
 			// SQL Server spells sample standard deviation STDEV, not STDDEV.
-			protected override string StdDevFunctionName       => "STDEV";
+			protected override string StdDevFunctionName          => "STDEV";
 		}
 
 		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()

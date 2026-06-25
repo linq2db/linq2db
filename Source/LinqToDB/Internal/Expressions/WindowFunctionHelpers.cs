@@ -140,6 +140,10 @@ namespace LinqToDB.Internal.Expressions
 		// MEDIAN — partition-only OVER (IOPartitionFinal builder).
 		static readonly MethodInfo _medianMethodInfo        = MemberHelper.MethodOfGeneric(() => Sql.Window.Median(1.0, f => f.PartitionBy(1)));
 
+		// Windowed ordered-set aggregates: PERCENTILE_CONT/DISC(fraction) WITHIN GROUP (ORDER BY k) OVER (PARTITION BY ...).
+		static readonly MethodInfo _percentileContWindowedMethodInfo = MemberHelper.MethodOfGeneric(() => Sql.Window.PercentileCont(1.0, w => w.OrderBy(1)));
+		static readonly MethodInfo _percentileDiscWindowedMethodInfo = MemberHelper.MethodOfGeneric(() => Sql.Window.PercentileDisc(1.0, w => w.OrderBy(1)));
+
 		// Two-argument statistical aggregates (covariance/correlation/regression) — generic on both argument types.
 		static readonly MethodInfo _covarPopMethodInfo      = MemberHelper.MethodOfGeneric(() => Sql.Window.CovarPop(1.0, 1.0,      f => f.OrderBy(1)));
 		static readonly MethodInfo _covarSampMethodInfo     = MemberHelper.MethodOfGeneric(() => Sql.Window.CovarSamp(1.0, 1.0,     f => f.OrderBy(1)));
@@ -421,6 +425,46 @@ namespace LinqToDB.Internal.Expressions
 		// Builds the Sql.Window.Median call. MEDIAN's OVER clause carries PARTITION BY only.
 		public static Expression BuildMedian(Expression argument, Expression[] partitionBy)
 			=> BuildPartitionOnlyAggregate(_medianMethodInfo, argument, partitionBy);
+
+		// Builds the windowed Sql.Window.PercentileCont call from a converted legacy WITHIN GROUP ... OVER (...) chain.
+		public static Expression BuildPercentileContWindowed(Expression fraction, (Expression expr, bool descending, Sql.NullsPosition nulls)[] withinGroupOrderBy, Expression[] partitionBy)
+			=> BuildPercentileWindowed(_percentileContWindowedMethodInfo, typeof(WindowFunctionBuilder.IOrderedSetWindowSingleOrder), fraction, withinGroupOrderBy, partitionBy);
+
+		// Builds the windowed Sql.Window.PercentileDisc call from a converted legacy WITHIN GROUP ... OVER (...) chain.
+		public static Expression BuildPercentileDiscWindowed(Expression fraction, (Expression expr, bool descending, Sql.NullsPosition nulls)[] withinGroupOrderBy, Expression[] partitionBy)
+			=> BuildPercentileWindowed(_percentileDiscWindowedMethodInfo, typeof(WindowFunctionBuilder.IOrderedSetWindowMultiOrder), fraction, withinGroupOrderBy, partitionBy);
+
+		// Builds Sql.Window.PercentileCont/Disc(fraction, w => w.OrderBy(key)[.PartitionBy(...)]). The legacy ordered-set
+		// form carries a single WITHIN GROUP key, so only the first order entry is used; PartitionBy maps to the OVER clause.
+		static Expression BuildPercentileWindowed(MethodInfo genericMethod, Type entryInterface, Expression fraction, (Expression expr, bool descending, Sql.NullsPosition nulls)[] withinGroupOrderBy, Expression[] partitionBy)
+		{
+			var (orderExpr, descending, _) = withinGroupOrderBy[0];
+			var valueType = orderExpr.Type;
+
+			var param = Expression.Parameter(entryInterface, "w");
+
+			// w.OrderBy<TKey>(key) / w.OrderByDesc<TKey>(key) -> IPartitionPart<IDefinedFunction<TKey>>
+			var orderMethod = entryInterface
+				.GetMethods()
+				.First(m => m.Name == (descending ? "OrderByDesc" : "OrderBy") && m.IsGenericMethodDefinition && m.GetParameters().Length == 1)
+				.MakeGenericMethod(valueType);
+			Expression body = Expression.Call(param, orderMethod, orderExpr);
+
+			// Optional OVER (PARTITION BY ...)
+			if (partitionBy.Length > 0)
+			{
+				var partitionArr   = Expression.NewArrayInit(typeof(object), partitionBy.Select(ExpressionHelpers.EnsureObject));
+				var partitionIface = typeof(WindowFunctionBuilder.IPartitionPart<>).MakeGenericType(typeof(WindowFunctionBuilder.IDefinedFunction<>).MakeGenericType(valueType));
+				body = Expression.Call(body, partitionIface.GetMethod("PartitionBy")!, partitionArr);
+			}
+
+			var resultType = typeof(WindowFunctionBuilder.IDefinedFunction<>).MakeGenericType(valueType);
+			var lambda     = Expression.Lambda(typeof(Func<,>).MakeGenericType(entryInterface, resultType), body, param);
+
+			var fractionArg = fraction.Type == typeof(double) ? fraction : Expression.Convert(fraction, typeof(double));
+
+			return Expression.Call(genericMethod.MakeGenericMethod(valueType), Expression.Constant(Sql.Window), fractionArg, lambda);
+		}
 
 		// Shared builder for partition-only window aggregates (MEDIAN, RATIO_TO_REPORT): their OVER clause carries only
 		// PARTITION BY, so this builds the IOPartitionFinal lambda directly rather than the shared aggregate (UseWindow) path.

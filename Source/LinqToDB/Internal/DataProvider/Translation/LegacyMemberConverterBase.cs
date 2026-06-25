@@ -255,6 +255,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 			List<(Expression expr, bool descending, Sql.NullsPosition nulls)>? keepOrderByList = null;
 
+			// Within-group ORDER BY for ordered-set aggregates (PERCENTILE_CONT/DISC ... WITHIN GROUP (...)).
+			List<(Expression expr, bool descending, Sql.NullsPosition nulls)>? withinGroupOrderByList = null;
+
 			var current = toValueCall.Object ?? (toValueCall.Arguments.Count > 0 ? toValueCall.Arguments[0] : null);
 
 			// --- Window frame pre-pass ---
@@ -337,8 +340,22 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				current   = receiver;
 			}
 
-			while (current is MethodCallExpression mc)
+			while (current != null)
 			{
+				// Ordered-set WITHIN GROUP is a property (not a method), so it breaks the method-chain walk. The OrderBy
+				// collected so far is the WITHIN GROUP order (not the OVER order); stash it, then continue to the root function.
+				if (current is MemberExpression { Member.Name: "WithinGroup" } withinGroupExpr
+					&& withinGroupExpr.Member.DeclaringType?.DeclaringType == typeof(AnalyticFunctions))
+				{
+					withinGroupOrderByList = orderByList;
+					orderByList            = new();
+					current                = withinGroupExpr.Expression;
+					continue;
+				}
+
+				if (current is not MethodCallExpression mc)
+					break;
+
 				var declaringType = mc.Method.DeclaringType;
 				var methodName    = mc.Method.Name;
 
@@ -568,6 +585,11 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 				// MEDIAN's OVER clause carries PARTITION BY only — orderBy/frame from the legacy chain (if any) are ignored.
 				nameof(AnalyticFunctions.Median) when functionArg1 != null => WindowFunctionHelpers.BuildMedian(functionArg1, partitionBy),
+
+				// Windowed ordered-set: PERCENTILE_CONT/DISC(f) WITHIN GROUP (ORDER BY k) OVER (PARTITION BY ...). The group
+				// form (no .Over()) bails above via !sawOver and stays on the legacy pipeline.
+				nameof(AnalyticFunctions.PercentileCont) when functionArg1 != null && withinGroupOrderByList is { Count: > 0 } => WindowFunctionHelpers.BuildPercentileContWindowed(functionArg1, withinGroupOrderByList.ToArray(), partitionBy),
+				nameof(AnalyticFunctions.PercentileDisc) when functionArg1 != null && withinGroupOrderByList is { Count: > 0 } => WindowFunctionHelpers.BuildPercentileDiscWindowed(functionArg1, withinGroupOrderByList.ToArray(), partitionBy),
 
 				_ => null, // Unsupported function — fall through to old pipeline
 			};

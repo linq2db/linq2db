@@ -97,6 +97,50 @@ namespace LinqToDB
 			IMultipleThenByPart<TValue> ThenByDesc(object? orderBy, Sql.NullsPosition nulls);
 		}
 
+		/// <summary>Within-group ORDER BY for a <b>windowed</b> single-key ordered-set aggregate (<c>Sql.Window.PercentileCont</c>): the sort key, then an optional <c>OVER (PARTITION BY ...)</c>.</summary>
+		public interface IOrderedSetWindowSingleOrder
+		{
+			/// <summary>Specifies the single WITHIN GROUP ORDER BY column.</summary>
+			IOrderedSetWindowPartition<TValue> OrderBy<TValue>(TValue     orderBy);
+			/// <summary>Specifies the single WITHIN GROUP ORDER BY column with NULLS position.</summary>
+			IOrderedSetWindowPartition<TValue> OrderBy<TValue>(TValue     orderBy, Sql.NullsPosition nulls);
+			/// <summary>Specifies the single WITHIN GROUP ORDER BY column (descending).</summary>
+			IOrderedSetWindowPartition<TValue> OrderByDesc<TValue>(TValue orderBy);
+			/// <summary>Specifies the single WITHIN GROUP ORDER BY column (descending) with NULLS position.</summary>
+			IOrderedSetWindowPartition<TValue> OrderByDesc<TValue>(TValue orderBy, Sql.NullsPosition nulls);
+		}
+
+		/// <summary>Optional <c>OVER (PARTITION BY ...)</c> for a windowed single-key ordered-set aggregate, then completes.</summary>
+		public interface IOrderedSetWindowPartition<out TValue> : IPartitionPart<IDefinedFunction<TValue>>, IDefinedFunction<TValue>
+		{
+		}
+
+		/// <summary>Within-group ORDER BY for a <b>windowed</b> multi-key ordered-set aggregate (<c>Sql.Window.PercentileDisc</c>): the first sort key, then ThenBy/ThenByDesc, then an optional <c>OVER (PARTITION BY ...)</c>.</summary>
+		public interface IOrderedSetWindowMultiOrder
+		{
+			/// <summary>Specifies the first WITHIN GROUP ORDER BY column.</summary>
+			IOrderedSetWindowThenBy<TValue> OrderBy<TValue>(TValue     orderBy);
+			/// <summary>Specifies the first WITHIN GROUP ORDER BY column with NULLS position.</summary>
+			IOrderedSetWindowThenBy<TValue> OrderBy<TValue>(TValue     orderBy, Sql.NullsPosition nulls);
+			/// <summary>Specifies the first WITHIN GROUP ORDER BY column (descending).</summary>
+			IOrderedSetWindowThenBy<TValue> OrderByDesc<TValue>(TValue orderBy);
+			/// <summary>Specifies the first WITHIN GROUP ORDER BY column (descending) with NULLS position.</summary>
+			IOrderedSetWindowThenBy<TValue> OrderByDesc<TValue>(TValue orderBy, Sql.NullsPosition nulls);
+		}
+
+		/// <summary>Additional WITHIN GROUP ORDER BY columns for a windowed ordered-set aggregate, plus an optional <c>OVER (PARTITION BY ...)</c>.</summary>
+		public interface IOrderedSetWindowThenBy<out TValue> : IPartitionPart<IDefinedFunction<TValue>>, IDefinedFunction<TValue>
+		{
+			/// <summary>Adds an additional WITHIN GROUP ORDER BY column.</summary>
+			IOrderedSetWindowThenBy<TValue> ThenBy(object?     orderBy);
+			/// <summary>Adds an additional WITHIN GROUP ORDER BY column with NULLS position.</summary>
+			IOrderedSetWindowThenBy<TValue> ThenBy(object?     orderBy, Sql.NullsPosition nulls);
+			/// <summary>Adds an additional WITHIN GROUP ORDER BY column (descending).</summary>
+			IOrderedSetWindowThenBy<TValue> ThenByDesc(object? orderBy);
+			/// <summary>Adds an additional WITHIN GROUP ORDER BY column (descending) with NULLS position.</summary>
+			IOrderedSetWindowThenBy<TValue> ThenByDesc(object? orderBy, Sql.NullsPosition nulls);
+		}
+
 		/// <summary>Provides additional ORDER BY columns via ThenBy/ThenByDesc.</summary>
 		public interface IThenOrderPart<out TThenPart>
 			where TThenPart : class
@@ -2889,6 +2933,24 @@ namespace LinqToDB
 
 #pragma warning restore RS0030
 
+		/// <summary>
+		/// Generates the SQL <c>PERCENTILE_CONT()</c> <b>windowed</b> ordered-set aggregate: <c>PERCENTILE_CONT(fraction) WITHIN GROUP (ORDER BY key) OVER (PARTITION BY ...)</c>.
+		/// </summary>
+		/// <remarks>
+		/// <para><b>Syntax:</b> <c>Sql.Window.PercentileCont(fraction, w =&gt; w.OrderBy(key)[.PartitionBy(...)])</c></para>
+		/// <para>The windowed form is native on SQL Server and Oracle; PostgreSQL supports only the group form (<c>g.PercentileCont</c>).</para>
+		/// <para><b>C# usage:</b></para>
+		/// <code>
+		/// Sql.Window.PercentileCont(0.5, w =&gt; w.OrderBy(t.Salary).PartitionBy(t.Dept))
+		/// </code>
+		/// <para><b>Generated SQL:</b></para>
+		/// <code>
+		/// PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY t.Salary) OVER (PARTITION BY t.Dept)
+		/// </code>
+		/// </remarks>
+		public static TValue PercentileCont<TValue>(this Sql.IWindowFunction window, double fraction, Func<IOrderedSetWindowSingleOrder, IDefinedFunction<TValue>> func)
+			=> throw new ServerSideOnlyException(nameof(PercentileCont));
+
 		#endregion
 
 		#region PercentileDisc
@@ -2927,6 +2989,24 @@ namespace LinqToDB
 		) => throw new InvalidOperationException($"'{nameof(PercentileDisc)}' is a server-side API. Use '{nameof(LinqExtensions.AggregateExecute)}' or '{nameof(LinqExtensions.AggregateExecuteAsync)}' to execute this function.");
 
 #pragma warning restore RS0030
+
+		/// <summary>
+		/// Generates the SQL <c>PERCENTILE_DISC()</c> <b>windowed</b> ordered-set aggregate: <c>PERCENTILE_DISC(fraction) WITHIN GROUP (ORDER BY key) OVER (PARTITION BY ...)</c>.
+		/// </summary>
+		/// <remarks>
+		/// <para><b>Syntax:</b> <c>Sql.Window.PercentileDisc(fraction, w =&gt; w.OrderBy(key)[.ThenBy(...)][.PartitionBy(...)])</c></para>
+		/// <para>The windowed form is native on SQL Server and Oracle; PostgreSQL supports only the group form (<c>g.PercentileDisc</c>).</para>
+		/// <para><b>C# usage:</b></para>
+		/// <code>
+		/// Sql.Window.PercentileDisc(0.5, w =&gt; w.OrderBy(t.Salary).PartitionBy(t.Dept))
+		/// </code>
+		/// <para><b>Generated SQL:</b></para>
+		/// <code>
+		/// PERCENTILE_DISC(0.5) WITHIN GROUP (ORDER BY t.Salary) OVER (PARTITION BY t.Dept)
+		/// </code>
+		/// </remarks>
+		public static TValue PercentileDisc<TValue>(this Sql.IWindowFunction window, double fraction, Func<IOrderedSetWindowMultiOrder, IDefinedFunction<TValue>> func)
+			=> throw new ServerSideOnlyException(nameof(PercentileDisc));
 
 		#endregion
 
