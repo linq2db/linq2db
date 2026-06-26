@@ -1351,6 +1351,9 @@ namespace LinqToDB.Linq.Translation
 		// only — no ORDER BY / frame.
 		public virtual Expression? TranslateMedian(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
+			if (!IsWindowFunctionsSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
+
 			if (!IsMedianSupported)
 				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_Median, methodCall.Type);
 
@@ -1390,6 +1393,9 @@ namespace LinqToDB.Linq.Translation
 		// but not the former. Providers using non-standard names (e.g. SQL Server STDEV/VAR) stay off until name-mapped.
 		Expression? TranslateVarianceFunction(ITranslationContext translationContext, MethodCallExpression methodCall, string functionName, bool isSupported)
 		{
+			if (!IsWindowFunctionsSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
+
 			if (!isSupported)
 				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_Variance, methodCall.Type);
 
@@ -1441,6 +1447,9 @@ namespace LinqToDB.Linq.Translation
 		// family capability flag + error so unsupported providers throw a clean error instead of emitting bad SQL.
 		Expression? TranslateBivariate(ITranslationContext translationContext, MethodCallExpression methodCall, string functionName, bool isSupported, string errorMessage)
 		{
+			if (!IsWindowFunctionsSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
+
 			if (!isSupported)
 				return translationContext.CreateErrorExpression(methodCall, errorMessage, methodCall.Type);
 
