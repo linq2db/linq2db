@@ -939,5 +939,93 @@ namespace Tests.Linq
 			edDerived.QueryFilters[0].FilterLambda.ShouldNotBeNull();
 			edDerived.QueryFilters[0].FilterFunc.ShouldBeNull();
 		}
+
+		sealed class ConcreteSoftDeleteQueryFilterAttribute : QueryFilterAttribute
+		{
+			public ConcreteSoftDeleteQueryFilterAttribute()
+			{
+				FilterKey = SoftDeleteKey;
+
+				FilterLambda =
+					(Expression<Func<AttrFilteredEntity, MyDataContext, bool>>)
+					((e, dc) => !dc.IsSoftDeleteFilterEnabled || !e.IsDeleted);
+			}
+		}
+
+		[Table]
+		[ConcreteSoftDeleteQueryFilter]
+		sealed class AttrFilteredEntity
+		{
+			[Column] public int  Id        { get; set; }
+			[Column] public bool IsDeleted { get; set; }
+		}
+
+		[Test]
+		public void QueryFilterAttribute_ConcreteTypedLambda([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			// Declarative query-filter coverage: a QueryFilterAttribute subclass applied to the entity via [Attribute]
+			// and discovered from CLR metadata with a bare MappingSchema (the only declarative form, since a lambda
+			// can't be an attribute argument). The lambda is typed to the concrete entity, so no interface adaptation
+			// is involved — this isolates the attribute-discovery + named-filter application path.
+
+			var data = Enumerable.Range(1, 10)
+				.Select(i => new AttrFilteredEntity { Id = i, IsDeleted = i % 2 == 0 })
+				.ToArray();
+
+			using var db = new MyDataContext(context, new MappingSchema());
+			using (db.CreateLocalTable(data))
+			{
+				db.IsSoftDeleteFilterEnabled = true;
+
+				var result = db.GetTable<AttrFilteredEntity>().ToList();
+
+				result.ShouldAllBe(e => !e.IsDeleted);
+				result.Count.ShouldBe(5);
+			}
+		}
+
+		sealed class InterfaceSoftDeleteQueryFilterAttribute : QueryFilterAttribute
+		{
+			public InterfaceSoftDeleteQueryFilterAttribute()
+			{
+				FilterKey = SoftDeleteKey;
+
+				FilterLambda =
+					(Expression<Func<ISoftDelete, MyDataContext, bool>>)
+					((e, dc) => !dc.IsSoftDeleteFilterEnabled || !e.IsDeleted);
+			}
+		}
+
+		[Table]
+		[InterfaceSoftDeleteQueryFilter]
+		sealed class InterfaceAttrFilteredEntity : ISoftDelete
+		{
+			[Column] public int  Id        { get; set; }
+			[Column] public bool IsDeleted { get; set; }
+		}
+
+		[Test]
+		public void QueryFilterAttribute_InterfaceTypedLambda([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			// Declarative + interface-typed: a QueryFilterAttribute subclass whose FilterLambda is typed against an
+			// interface (Func<ISoftDelete, ...>), applied via [Attribute] to a concrete entity and discovered from CLR
+			// metadata. Exercises both the declarative-attribute path and the TableBuilder interface->entityType lambda
+			// adaptation; before that fix this threw ArgumentException at query build.
+
+			var data = Enumerable.Range(1, 10)
+				.Select(i => new InterfaceAttrFilteredEntity { Id = i, IsDeleted = i % 2 == 0 })
+				.ToArray();
+
+			using var db = new MyDataContext(context, new MappingSchema());
+			using (db.CreateLocalTable(data))
+			{
+				db.IsSoftDeleteFilterEnabled = true;
+
+				var result = db.GetTable<InterfaceAttrFilteredEntity>().ToList();
+
+				result.ShouldAllBe(e => !e.IsDeleted);
+				result.Count.ShouldBe(5);
+			}
+		}
 	}
 }
