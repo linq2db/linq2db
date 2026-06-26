@@ -38,6 +38,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			bool?                 enforceDefault,
 			TranslationModifier   modifier,
 			LoadWithEntity?       loadWith,
+			bool                  parentAlreadyFiltered,
 			out bool?             isOptional)
 		{
 			Expression dataContextExpr = SqlQueryRootExpression.Create(mappingSchema, builder.DataContext.GetType());
@@ -307,10 +308,28 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 			}
 
-			if (parentOriginalType != parentType)
+			// Resolve the inheritance root from parentType (parentOriginalType is unreliable here — it may
+			// be the associated element type). When the association is declared on a derived TPH type, the
+			// join must carry that type's discriminator, otherwise a non-matching row whose FK column holds
+			// a value (e.g. a key column declared on the base) would spuriously match. Skipped when the
+			// parent rows were already narrowed to this type (e.g. via OfType), to avoid a redundant predicate.
+			Type? parentRootType = null;
+			if (!parentAlreadyFiltered)
+			{
+				for (var t = parentType.BaseType; t != null && t != typeof(object); t = t.BaseType)
+				{
+					if (builder.MappingSchema.GetEntityDescriptor(t, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated).InheritanceMapping.Count > 0)
+					{
+						parentRootType = t;
+						break;
+					}
+				}
+			}
+
+			if (parentRootType != null)
 			{
 				// add discriminator filter
-				var ed = builder.MappingSchema.GetEntityDescriptor(parentOriginalType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
+				var ed = builder.MappingSchema.GetEntityDescriptor(parentRootType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 				foreach (var inheritanceMapping in ed.InheritanceMapping)
 				{
 					if (inheritanceMapping.Type == parentType)
@@ -359,6 +378,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public static Expression BuildAssociationQuery(ExpressionBuilder builder, ContextRefExpression tableContext,
 			AccessorMember onMember, AssociationDescriptor descriptor, Expression? additionalCondition, bool inline, TranslationModifier modifier, LoadWithEntity? loadwith,
+			bool parentAlreadyFiltered,
 			ref bool? isOptional)
 		{
 			var elementType     = descriptor.GetElementType();
@@ -367,7 +387,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var queryMethod = CreateAssociationQueryLambda(
 				builder, tableContext.BuildContext.MappingSchema, onMember, descriptor, elementType /*tableContext.OriginalType*/, parentExactType, elementType,
 				additionalCondition,
-				inline, isOptional, modifier, loadwith, out isOptional);
+				inline, isOptional, modifier, loadwith, parentAlreadyFiltered, out isOptional);
 
 			var correctedContext = tableContext.WithType(queryMethod.Parameters[0].Type);
 

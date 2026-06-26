@@ -811,6 +811,57 @@ namespace Tests.Linq
 			Assert.That(res, Is.EqualTo(new[] { "Acme", null, null }));
 		}
 
+		[Table]
+		public class TphRefCompany
+		{
+			[PrimaryKey] public int     Id   { get; set; }
+			[Column]     public string? Name { get; set; }
+		}
+
+		[Table("TphRefPerson")]
+		[InheritanceMapping(Code = "E", IsDefault = true, Type = typeof(TphRefEmployee))]
+		[InheritanceMapping(Code = "C", Type = typeof(TphRefContractor))]
+		public abstract class TphRefPerson
+		{
+			[Column(IsDiscriminator = true)] public string? Kind  { get; set; }
+			[PrimaryKey]                     public int     Id    { get; set; }
+			// FK column declared on the base, so it is populated for EVERY row regardless of type.
+			[Column]                         public int?    RefId { get; set; }
+		}
+
+		public class TphRefEmployee : TphRefPerson
+		{
+			// Association on the derived type, keyed on the inherited base column.
+			[Association(ThisKey = nameof(RefId), OtherKey = nameof(TphRefCompany.Id), CanBeNull = true)]
+			public TphRefCompany? Company { get; set; }
+		}
+
+		public class TphRefContractor : TphRefPerson
+		{
+		}
+
+		[Test]
+		public void TPH_Assoc_OnDerived_NonNullFkForNonMatchingRow([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db      = GetDataContext(context);
+			using var company = db.CreateLocalTable<TphRefCompany>();
+			using var person  = db.CreateLocalTable<TphRefPerson>();
+
+			db.Insert(new TphRefCompany    { Id = 1, Name = "Acme" });
+			db.Insert(new TphRefEmployee   { Id = 1, RefId = 1 }); // employee -> Company 1
+			db.Insert(new TphRefContractor { Id = 2, RefId = 1 }); // contractor, same RefId, NOT an employee
+
+			// ((Employee)x).Company over the whole hierarchy. RefId is a base column, so the contractor
+			// row also has RefId=1. The association is declared on the derived Employee, so the join must
+			// carry the Employee discriminator — otherwise the contractor would spuriously match Company 1.
+			var res = db.GetTable<TphRefPerson>()
+				.OrderBy(x => x.Id)
+				.Select(x => ((TphRefEmployee)x).Company!.Name)
+				.ToArray();
+
+			Assert.That(res, Is.EqualTo(new[] { "Acme", null }));
+		}
+
 		#endregion
 	}
 }
