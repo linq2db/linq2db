@@ -863,5 +863,599 @@ namespace Tests.Linq
 		}
 
 		#endregion
+
+		#region Multi-level shared column (diagnostic)
+
+		[Table("TphMl")]
+		[InheritanceMapping(Code = 1, Type = typeof(TphMlDirect))]
+		[InheritanceMapping(Code = 2, Type = typeof(TphMlLeaf))]
+		[InheritanceMapping(Code = 3, Type = typeof(TphMlLeaf2))]
+		public abstract class TphMlBase
+		{
+			[PrimaryKey]                     public int Id   { get; set; }
+			[Column(IsDiscriminator = true)] public int Kind { get; set; }
+		}
+
+		public class TphMlDirect : TphMlBase
+		{
+			[Column, LinqToDB.Mapping.Nullable] public int Shared { get; set; }
+		}
+
+		public abstract class TphMlMid : TphMlBase
+		{
+			[Column, LinqToDB.Mapping.Nullable] public int MidField { get; set; }
+		}
+
+		public class TphMlLeaf : TphMlMid
+		{
+			[Column, LinqToDB.Mapping.Nullable] public int Shared { get; set; }
+		}
+
+		public class TphMlLeaf2 : TphMlMid
+		{
+		}
+
+		[Test]
+		public void TPH_MultiLevel_SharedColumn([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// Bulk insert via the base-typed array: Direct (primary owner of "Shared") writes correctly,
+			// but Leaf (sibling owner of the same physical column) does not — its Shared lands as NULL.
+			var data = new TphMlBase[]
+			{
+				new TphMlDirect { Id = 1, Kind = 1, Shared = 10 },
+				new TphMlLeaf   { Id = 2, Kind = 2, Shared = 20, MidField = 30 },
+				new TphMlLeaf2  { Id = 3, Kind = 3, MidField = 40 },
+			};
+			using var tb = db.CreateLocalTable(data);
+
+			var all = db.GetTable<TphMlBase>().OrderBy(x => x.Id).ToArray();
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(((TphMlDirect)all[0]).Shared, Is.EqualTo(10));
+				Assert.That(((TphMlLeaf)all[1]).Shared,   Is.EqualTo(20));
+			}
+		}
+
+		#endregion
+
+		#region TPH intermediate type
+		[ActiveIssue]
+		[Test]
+		public void TPH_Intermediate_Read_ViaIntermediateTable([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(TphThingBase.TestData);
+
+			var result = db.GetTable<TphThingIntermediate>().OrderBy(r => r.Id).ToArray();
+
+			AssertIntermediateThings(result);
+		}
+
+		[ActiveIssue]
+		[Test]
+		public void TPH_Intermediate_Read_FullHierarchy([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(TphThingBase.TestData);
+
+			var result = db.GetTable<TphThingBase>().OrderBy(r => r.Id).ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(4));
+
+			Assert.That(result[0], Is.InstanceOf<TphThingAlpha>());
+			var item1 = (TphThingAlpha)(object)result[0]!;
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(item1.Id, Is.EqualTo(1));
+				Assert.That(item1.Type, Is.EqualTo(1));
+				Assert.That(item1.BaseField, Is.EqualTo(2));
+
+				Assert.That(result[1], Is.InstanceOf<TphThingBeta>());
+			}
+
+			var item2 = (TphThingBeta)(object)result[1]!;
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(item2.Id, Is.EqualTo(2));
+				Assert.That(item2.Type, Is.EqualTo(2));
+				Assert.That(item2.BaseField, Is.EqualTo(3));
+				Assert.That(item2.ConcreteField, Is.EqualTo(4));
+
+				Assert.That(result[2], Is.InstanceOf<TphThingIntermediateOne>());
+			}
+
+			var item3 = (TphThingIntermediateOne)(object)result[2]!;
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(item3.Id, Is.EqualTo(3));
+				Assert.That(item3.Type, Is.EqualTo(101));
+				Assert.That(item3.BaseField, Is.EqualTo(4));
+				Assert.That(item3.ConcreteField, Is.EqualTo(5));
+				Assert.That(item3.IntermediateField, Is.EqualTo(6));
+
+				Assert.That(result[3], Is.InstanceOf<TphThingIntermediateTwo>());
+			}
+
+			var item4 = (TphThingIntermediateTwo)(object)result[3]!;
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(item4.Id, Is.EqualTo(4));
+				Assert.That(item4.Type, Is.EqualTo(102));
+				Assert.That(item4.BaseField, Is.EqualTo(5));
+				Assert.That(item4.IntermediateField, Is.EqualTo(6));
+			}
+		}
+
+		[ActiveIssue]
+		[Test]
+		public void TPH_Intermediate_Read_ViaOfType([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(TphThingBase.TestData);
+
+			var result = db.GetTable<TphThingBase>().OfType<TphThingIntermediate>().OrderBy(r => r.Id).ToArray();
+
+			AssertIntermediateThings(result);
+		}
+
+		[ActiveIssue]
+		[Test]
+		public void TPH_Intermediate_Read_ViaCast([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(TphThingBase.TestData);
+
+			var result = db.GetTable<TphThingBase>().Where(x => x.Type == 101 || x.Type == 102).Cast<TphThingIntermediate>().OrderBy(r => r.Id).ToArray();
+
+			AssertIntermediateThings(result);
+		}
+
+		[ActiveIssue]
+		[Test]
+		public void TPH_Intermediate_Read_ViaSelectCast([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(TphThingBase.TestData);
+
+			var result = db.GetTable<TphThingBase>().Where(x => x.Type == 101 || x.Type == 102).Select(x => (TphThingIntermediate)x).OrderBy(r => r.Id).ToArray();
+
+			AssertIntermediateThings(result);
+		}
+
+		[ActiveIssue]
+		[Test]
+		public void TPH_Intermediate_Read_Filtered([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(TphThingBase.TestData);
+
+			var result = db.GetTable<TphThingBase>().Where(x => x.Type == 101 || x.Type == 102).OrderBy(r => r.Id).ToArray();
+
+			AssertIntermediateThings(result);
+		}
+
+		static void TestUpdateAndFind(IQueryable<TphThingIntermediate> table)
+		{
+			var query = table.Where(x => x.Id == 3);
+
+			query.Set(y => y.IntermediateField, 333).Update();
+
+			var item = query.Single();
+
+			Assert.That(item, Is.InstanceOf<TphThingIntermediateOne>());
+
+			var item3 = (TphThingIntermediateOne)item;
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(item3.Id, Is.EqualTo(3));
+				Assert.That(item3.Type, Is.EqualTo(101));
+				Assert.That(item3.BaseField, Is.EqualTo(4));
+				Assert.That(item3.ConcreteField, Is.EqualTo(5));
+				Assert.That(item3.IntermediateField, Is.EqualTo(333));
+			}
+		}
+
+		static void TestJoinedAll(IDataContext db, IQueryable<TphThingBase> table)
+		{
+			var result =
+				(
+					from b in table
+					join i in db.GetTable<TphThingInteraction>() on b.Id equals i.ThingId
+					join p in db.GetTable<TphThingPerson>() on i.PersonId equals p.Id
+					orderby b.Id
+					select new
+					{
+						b.Type,
+						p.FullName
+					}
+				)
+				.ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(4));
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result[0].Type, Is.EqualTo(1));
+				Assert.That(result[0].FullName, Is.EqualTo("Person 4"));
+
+				Assert.That(result[1].Type, Is.EqualTo(2));
+				Assert.That(result[1].FullName, Is.EqualTo("Person 1"));
+
+				Assert.That(result[2].Type, Is.EqualTo(101));
+				Assert.That(result[2].FullName, Is.EqualTo("Person 2"));
+
+				Assert.That(result[3].Type, Is.EqualTo(102));
+				Assert.That(result[3].FullName, Is.EqualTo("Person 3"));
+			}
+		}
+
+		static void TestJoined<T>(IDataContext db, IQueryable<T> table)
+			where T: TphThingBase
+		{
+			var result =
+				(
+					from b in table
+					join i in db.GetTable<TphThingInteraction>() on b.Id equals i.ThingId
+					join p in db.GetTable<TphThingPerson>() on i.PersonId equals p.Id
+					orderby b.Id
+					select new
+					{
+						b.Type,
+						p.FullName
+					}
+				)
+				.ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(2));
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result[0].Type, Is.EqualTo(101));
+				Assert.That(result[0].FullName, Is.EqualTo("Person 2"));
+
+				Assert.That(result[1].Type, Is.EqualTo(102));
+				Assert.That(result[1].FullName, Is.EqualTo("Person 3"));
+			}
+		}
+
+		static void TestUpdateAndFindBase(IQueryable<TphThingBase> table)
+		{
+			var query = table.Where(x => x.Id == 3);
+
+			query.Set(y => ((TphThingIntermediate)y).IntermediateField, 333).Update();
+
+			var item = query.Single();
+
+			Assert.That(item, Is.InstanceOf<TphThingIntermediateOne>());
+
+			var item3 = (TphThingIntermediateOne)item;
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(item3.Id, Is.EqualTo(3));
+				Assert.That(item3.Type, Is.EqualTo(101));
+				Assert.That(item3.BaseField, Is.EqualTo(4));
+				Assert.That(item3.ConcreteField, Is.EqualTo(5));
+				Assert.That(item3.IntermediateField, Is.EqualTo(333));
+			}
+		}
+
+		[Test]
+		public void TPH_Intermediate_Update_ViaBaseTable([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(TphThingBase.TestData);
+
+			TestUpdateAndFindBase(db.GetTable<TphThingBase>());
+		}
+
+		[Test]
+		public void TPH_Intermediate_Join_AllTypes([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(TphThingBase.TestData);
+			using var tp = db.CreateLocalTable(TphThingPerson.TestData);
+			using var ti = db.CreateLocalTable(TphThingInteraction.TestData);
+
+			TestJoinedAll(db, db.GetTable<TphThingBase>());
+		}
+
+		[Test]
+		public void TPH_Intermediate_Update_ViaIntermediateTable([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(TphThingBase.TestData);
+
+			TestUpdateAndFind(db.GetTable<TphThingIntermediate>());
+		}
+
+		[Test]
+		public void TPH_Intermediate_Join_ViaIntermediateTable([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(TphThingBase.TestData);
+			using var tp = db.CreateLocalTable(TphThingPerson.TestData);
+			using var ti = db.CreateLocalTable(TphThingInteraction.TestData);
+
+			TestJoined(db, db.GetTable<TphThingIntermediate>());
+		}
+
+		[ActiveIssue]
+		[Test]
+		public void TPH_Intermediate_Update_ViaOfType([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(TphThingBase.TestData);
+
+			TestUpdateAndFind(db.GetTable<TphThingBase>().OfType<TphThingIntermediate>());
+		}
+
+		[Test]
+		public void TPH_Intermediate_Join_ViaOfType([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(TphThingBase.TestData);
+			using var tp = db.CreateLocalTable(TphThingPerson.TestData);
+			using var ti = db.CreateLocalTable(TphThingInteraction.TestData);
+
+			TestJoined(db, db.GetTable<TphThingBase>().OfType<TphThingIntermediate>());
+		}
+
+		[Test]
+		public void TPH_Intermediate_Update_ViaCast([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(TphThingBase.TestData);
+
+			TestUpdateAndFind(db.GetTable<TphThingBase>().Where(x => x.Type == 101 || x.Type == 102).Cast<TphThingIntermediate>());
+		}
+
+		[Test]
+		public void TPH_Intermediate_Join_ViaCast([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(TphThingBase.TestData);
+			using var tp = db.CreateLocalTable(TphThingPerson.TestData);
+			using var ti = db.CreateLocalTable(TphThingInteraction.TestData);
+
+			TestJoined(db, db.GetTable<TphThingBase>().Where(x => x.Type == 101 || x.Type == 102).Cast<TphThingIntermediate>());
+		}
+
+		[Test]
+		public void TPH_Intermediate_Update_Filtered([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(TphThingBase.TestData);
+
+			TestUpdateAndFindBase(db.GetTable<TphThingBase>().Where(x => x.Type == 101 || x.Type == 102));
+		}
+
+		[Test]
+		public void TPH_Intermediate_Join_Filtered([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(TphThingBase.TestData);
+			using var tp = db.CreateLocalTable(TphThingPerson.TestData);
+			using var ti = db.CreateLocalTable(TphThingInteraction.TestData);
+
+			TestJoined(db, db.GetTable<TphThingBase>().Where(x => x.Type == 101 || x.Type == 102));
+		}
+
+		[Test]
+		public void TPH_Intermediate_Update_ViaSelectCast([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(TphThingBase.TestData);
+
+			TestUpdateAndFind(db.GetTable<TphThingBase>().Where(x => x.Type == 101 || x.Type == 102).Select(x => (TphThingIntermediate)x));
+		}
+
+		[Test]
+		public void TPH_Intermediate_Join_ViaSelectCast([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(TphThingBase.TestData);
+			using var tp = db.CreateLocalTable(TphThingPerson.TestData);
+			using var ti = db.CreateLocalTable(TphThingInteraction.TestData);
+
+			TestJoined(db, db.GetTable<TphThingBase>().Where(x => x.Type == 101 || x.Type == 102).Select(x => (TphThingIntermediate)x));
+		}
+
+		static void AssertIntermediateThings<T>(T[] result)
+		{
+			Assert.That(result, Has.Length.EqualTo(2));
+
+			Assert.That(result[0], Is.InstanceOf<TphThingIntermediateOne>());
+			var item3 = (TphThingIntermediateOne)(object)result[0]!;
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(item3.Id, Is.EqualTo(3));
+				Assert.That(item3.Type, Is.EqualTo(101));
+				Assert.That(item3.BaseField, Is.EqualTo(4));
+				Assert.That(item3.ConcreteField, Is.EqualTo(5));
+				Assert.That(item3.IntermediateField, Is.EqualTo(6));
+
+				Assert.That(result[1], Is.InstanceOf<TphThingIntermediateTwo>());
+			}
+
+			var item4 = (TphThingIntermediateTwo)(object)result[1]!;
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(item4.Id, Is.EqualTo(4));
+				Assert.That(item4.Type, Is.EqualTo(102));
+				Assert.That(item4.BaseField, Is.EqualTo(5));
+				Assert.That(item4.IntermediateField, Is.EqualTo(6));
+			}
+		}
+
+		[Table(IsColumnAttributeRequired = false)]
+		[InheritanceMapping(Code = 1, Type = typeof(TphThingAlpha))]
+		[InheritanceMapping(Code = 2, Type = typeof(TphThingBeta))]
+		[InheritanceMapping(Code = 101, Type = typeof(TphThingIntermediateOne))]
+		[InheritanceMapping(Code = 102, Type = typeof(TphThingIntermediateTwo))]
+		abstract class TphThingBase
+		{
+			[PrimaryKey] public int Id { get; set; }
+			[Column(IsDiscriminator = true)] public int Type { get; set; }
+			public int BaseField { get; set; }
+
+			public static readonly TphThingBase[] TestData = new TphThingBase[]
+			{
+				new TphThingAlpha()
+				{
+					Id = 1,
+					Type = 1,
+					BaseField = 2
+				},
+				new TphThingBeta()
+				{
+					Id = 2,
+					Type = 2,
+					BaseField = 3,
+					ConcreteField = 4
+				},
+				new TphThingIntermediateOne()
+				{
+					Id = 3,
+					Type = 101,
+					BaseField = 4,
+					ConcreteField = 5,
+					IntermediateField = 6
+				},
+				new TphThingIntermediateTwo()
+				{
+					Id = 4,
+					Type = 102,
+					BaseField = 5,
+					IntermediateField = 6
+				}
+			};
+		}
+
+		class TphThingAlpha : TphThingBase
+		{
+		}
+
+		class TphThingBeta : TphThingBase
+		{
+			// TODO: remove when fixed, nullable added due to TPH_Intermediate_CreateTableNullableFields
+			[LinqToDB.Mapping.Nullable] public int ConcreteField { get; set; }
+		}
+
+		abstract class TphThingIntermediate : TphThingBase
+		{
+			// TODO: remove when fixed, nullable added due to TPH_Intermediate_CreateTableNullableFields
+			[LinqToDB.Mapping.Nullable] public int IntermediateField { get; set; }
+		}
+
+		class TphThingIntermediateOne : TphThingIntermediate
+		{
+			// TODO: remove when fixed, nullable added due to TPH_Intermediate_CreateTableNullableFields
+			[LinqToDB.Mapping.Nullable] public int ConcreteField { get; set; }
+		}
+
+		class TphThingIntermediateTwo : TphThingIntermediate
+		{
+		}
+
+		[Table(IsColumnAttributeRequired = false)]
+		class TphThingPerson
+		{
+			[PrimaryKey] public int Id { get; set; }
+			[NotNull] public string FullName { get; set; } = null!;
+
+			public static readonly TphThingPerson[] TestData = new[]
+			{
+				new TphThingPerson() { Id = 1, FullName = "Person 1" },
+				new TphThingPerson() { Id = 2, FullName = "Person 2" },
+				new TphThingPerson() { Id = 3, FullName = "Person 3" },
+				new TphThingPerson() { Id = 4, FullName = "Person 4" },
+				new TphThingPerson() { Id = 5, FullName = "Person 5" },
+			};
+		}
+
+		[Table(IsColumnAttributeRequired = false)]
+		class TphThingInteraction
+		{
+			[PrimaryKey] public int Id { get; set; }
+			public int PersonId { get; set; }
+			public int ThingId { get; set; }
+
+			public static readonly TphThingInteraction[] TestData = new[]
+			{
+				new TphThingInteraction() { Id = 1, PersonId = 2, ThingId = 3 },
+				new TphThingInteraction() { Id = 2, PersonId = 3, ThingId = 4 },
+				new TphThingInteraction() { Id = 3, PersonId = 4, ThingId = 1 },
+				new TphThingInteraction() { Id = 4, PersonId = 1, ThingId = 2 },
+			};
+		}
+		#endregion
+
+		#region TPH intermediate type (insert / DDL)
+		[ActiveIssue]
+		[Test]
+		public void TPH_Intermediate_InsertConcreteTypes([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<CreateTableBase>();
+
+			db.Insert(new CreateTable1() { Id = 1, Type = 1, Field1 = 1 });
+			db.Insert(new CreateTable2() { Id = 2, Type = 2, Field2 = 2 });
+
+			var result = tb.OrderBy(r => r.Id).ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(1));
+			Assert.That(result[0], Is.InstanceOf<CreateTable1>());
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result[0].Id, Is.EqualTo(1));
+				Assert.That(result[0].Type, Is.EqualTo(1));
+				Assert.That(((CreateTable1)result[0]).Field1, Is.EqualTo(1));
+
+				Assert.That(result[1], Is.InstanceOf<CreateTable2>());
+				Assert.That(result[1].Id, Is.EqualTo(2));
+				Assert.That(result[1].Type, Is.EqualTo(2));
+				Assert.That(((CreateTable2)result[1]).Field2, Is.EqualTo(2));
+			}
+		}
+
+		[ActiveIssue]
+		[Test]
+		public void TPH_Intermediate_CreateTableNullableFields([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<CreateTableBase>();
+
+			tb.Insert(() => new CreateTable1() { Id = 1, Type = 1, Field1 = 1});
+			tb.Insert(() => new CreateTable2() { Id = 2, Type = 2, Field2 = 2});
+
+			// TODO: those asserts could be incorrect, depends on our fixed model
+			var column = db.MappingSchema.GetEntityDescriptor(typeof(CreateTable1)).Columns.Single(c => c.ColumnName == "Field1");
+			Assert.That(column.CanBeNull, Is.False);
+			column = db.MappingSchema.GetEntityDescriptor(typeof(CreateTable1)).Columns.Single(c => c.ColumnName == "Field2");
+			Assert.That(column.CanBeNull, Is.False);
+		}
+
+		[Table]
+		[InheritanceMapping(Code = 1, Type = typeof(CreateTable1))]
+		[InheritanceMapping(Code = 2, Type = typeof(CreateTable2))]
+		abstract class CreateTableBase
+		{
+			[PrimaryKey] public int Id { get; set; }
+			[Column(IsDiscriminator = true)]  public int Type { get; set; }
+		}
+
+		[Table]
+		sealed class CreateTable1 : CreateTableBase
+		{
+			[Column] public int Field1 { get; set; }
+		}
+
+		[Table]
+		sealed class CreateTable2 : CreateTableBase
+		{
+			[Column] public int Field2 { get; set; }
+		}
+		#endregion
 	}
 }

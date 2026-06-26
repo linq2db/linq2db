@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
@@ -782,6 +783,15 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="obj">Entity object to extract column value from.</param>
 		/// <returns>Returns column value, converted to database type.</returns>
+		List<ColumnDescriptor>? _valueSiblings;
+
+		/// <summary>
+		/// Registers another inheritance-mapped column that maps a distinct member to the same physical
+		/// column as this one. Lets <see cref="GetProviderValue"/> read the value from the member matching
+		/// the row's runtime type, so inserts of a base-typed (mixed) source write shared columns correctly.
+		/// </summary>
+		internal void AddValueSibling(ColumnDescriptor sibling) => (_valueSiblings ??= new()).Add(sibling);
+
 		public virtual object? GetProviderValue(object obj)
 		{
 			if (_getter == null)
@@ -793,10 +803,28 @@ namespace LinqToDB.Mapping
 
 				if (HasInheritanceMapping)
 				{
+					// The column value belongs to a specific entity type. When several sibling types map
+					// distinct members to the same physical column, pick the value from the member matching
+					// the row's runtime type; for any other type write the default. Without this, a
+					// base-typed (mixed) insert writes the default for every non-primary sibling row.
+					Expression elseExpr = GetDefaultDbValueExpression();
+
+					if (_valueSiblings != null)
+					{
+						foreach (var sibling in _valueSiblings)
+						{
+							var siblingType = sibling.MemberAccessor.TypeAccessor.Type;
+							var siblingExpr = InternalExtensions.ApplyLambdaToExpression(
+								sibling.GetDbValueLambda(), Expression.Convert(objParam, siblingType));
+
+							elseExpr = Expression.Condition(Expression.TypeIs(objParam, siblingType), siblingExpr, elseExpr);
+						}
+					}
+
 					// Additional check that column member belong to proper entity
 					//
 					getterExpr = Expression.Condition(Expression.TypeIs(objParam, MemberAccessor.TypeAccessor.Type),
-						getterExpr, GetDefaultDbValueExpression());
+						getterExpr, elseExpr);
 				}
 
 				var getterLambda = Expression.Lambda<Func<object, object>>(Expression.Convert(getterExpr, typeof(object)), objParam);

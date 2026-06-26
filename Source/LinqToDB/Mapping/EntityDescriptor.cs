@@ -417,12 +417,26 @@ namespace LinqToDB.Mapping
 					if (seenMemberNames.Add(cd.MemberName))
 						AddColumn(cd);
 					else
+					{
 						// A sibling type maps a distinct member that shares its C# name with one already
 						// merged. It may target a different physical column (created/selected as its own)
 						// or the same physical column as another sibling (collapsed to one field in
 						// SqlTable). Either way it must be kept here so the per-type entity constructor
 						// can assign this member — see EntityConstructorBase.BuildFullEntityExpressionInternal.
 						(siblingColumns ??= []).Add(cd);
+
+						// When it shares its physical column with an already-merged column, register it on
+						// that column so inserts of a base-typed (mixed) source write the value from the
+						// member matching each row's runtime type — see ColumnDescriptor.GetProviderValue.
+						foreach (var existing in Columns)
+						{
+							if (string.Equals(existing.ColumnName, cd.ColumnName, StringComparison.Ordinal))
+							{
+								existing.AddValueSibling(cd);
+								break;
+							}
+						}
+					}
 				}
 			}
 
