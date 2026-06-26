@@ -246,23 +246,6 @@ namespace Tests.Extensions
 			Assert.That(LastQuery, Contains.Substring($"LEFT ANY JOIN"));
 		}
 #pragma warning restore CS0618 // Type or member is obsolete
-#pragma warning disable CS0618 // Type or member is obsolete
-		[Test]
-		public void LeftJoinAllAsOfHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-				from c in db.Child
-				join p in db.Parent.AsClickHouse().JoinAllAsOfHint() on c.ParentID equals p.ParentID into g
-				from p in g.DefaultIfEmpty()
-				select p;
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring($"LEFT ASOF JOIN"));
-		}
-#pragma warning restore CS0618 // Type or member is obsolete
 		[Test]
 		public void InnerJoinAnyHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
 		{
