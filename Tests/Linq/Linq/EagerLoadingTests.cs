@@ -3601,32 +3601,81 @@ namespace Tests.Linq
 
 		sealed class IssueEntity5649A
 		{
-			public IssueEntity5649B Prop { get; set; } = null!;
+			public IssueEntity5649B  Prop  { get; set; } = null!;
+			public IssueEntity5649B[] Props { get; set; } = null!;
 		}
 
-		sealed class IssueEntity5649B { }
-
-		[Test]
-		public void Issue5649_LoadWith_NonLinqToDBSource()
+		sealed class IssueEntity5649B
 		{
-			// LoadWith on a non-linq2db IQueryable should not throw — mirrors EF Core Include behavior.
-			// No associations are loaded, but enumeration must work.
-			var result = Enumerable.Empty<IssueEntity5649A>().AsQueryable()
-				.LoadWith(a => a.Prop)
-				.ToList();
-
-			Assert.That(result, Is.Empty);
+			public IssueEntity5649C  Child  { get; set; } = null!;
+			public IssueEntity5649C[] Children { get; set; } = null!;
 		}
 
-		[Test]
-		public void Issue5649_LoadWith_ThenLoad_NonLinqToDBSource()
-		{
-			var result = Enumerable.Empty<IssueEntity5649A>().AsQueryable()
-				.LoadWith(a => a.Prop)
-				.ThenLoad(b => b)
-				.ToList();
+		sealed class IssueEntity5649C { }
 
-			Assert.That(result, Is.Empty);
+		static readonly IQueryable<IssueEntity5649A> _emptyA = Enumerable.Empty<IssueEntity5649A>().AsQueryable();
+
+		// LoadWith overload 1: LoadWith(source, selector)
+		[Test]
+		public void Issue5649_LoadWith_Single()
+		{
+			Assert.That(_emptyA.LoadWith(a => a.Prop).ToList(), Is.Empty);
+		}
+
+		// LoadWith overload 2: LoadWith(source, IEnumerable selector, loadFunc)
+		[Test]
+		public void Issue5649_LoadWith_Collection_LoadFunc()
+		{
+			Assert.That(_emptyA.LoadWith(a => a.Props, q => q).ToList(), Is.Empty);
+		}
+
+		// LoadWith overload 3: LoadWith(source, single selector, loadFunc)
+		[Test]
+		public void Issue5649_LoadWith_Single_LoadFunc()
+		{
+			Assert.That(_emptyA.LoadWith(a => a.Prop, q => q).ToList(), Is.Empty);
+		}
+
+		// ThenLoad overload 1: ThenLoad from single, single selector
+		[Test]
+		public void Issue5649_ThenLoad_FromSingle_Single()
+		{
+			Assert.That(_emptyA.LoadWith(a => a.Prop).ThenLoad(b => b.Child).ToList(), Is.Empty);
+		}
+
+		// ThenLoad overload 2: ThenLoad from collection, single selector
+		[Test]
+		public void Issue5649_ThenLoad_FromCollection_Single()
+		{
+			Assert.That(_emptyA.LoadWith(a => a.Props).ThenLoad(b => b.Child).ToList(), Is.Empty);
+		}
+
+		// ThenLoad overload 3: ThenLoad from single, collection selector + loadFunc
+		[Test]
+		public void Issue5649_ThenLoad_FromSingle_Collection_LoadFunc()
+		{
+			Assert.That(_emptyA.LoadWith(a => a.Prop).ThenLoad(b => b.Children, q => q).ToList(), Is.Empty);
+		}
+
+		// ThenLoad overload 4: ThenLoad from single, single selector + loadFunc
+		[Test]
+		public void Issue5649_ThenLoad_FromSingle_Single_LoadFunc()
+		{
+			Assert.That(_emptyA.LoadWith(a => a.Prop).ThenLoad(b => b.Child, q => q).ToList(), Is.Empty);
+		}
+
+		// ThenLoad overload 5: ThenLoad from collection, single selector + loadFunc
+		[Test]
+		public void Issue5649_ThenLoad_FromCollection_Single_LoadFunc()
+		{
+			Assert.That(_emptyA.LoadWith(a => a.Props).ThenLoad(b => b.Child, q => q).ToList(), Is.Empty);
+		}
+
+		// ThenLoad overload 6: ThenLoad from collection, collection selector + loadFunc
+		[Test]
+		public void Issue5649_ThenLoad_FromCollection_Collection_LoadFunc()
+		{
+			Assert.That(_emptyA.LoadWith(a => a.Props).ThenLoad(b => b.Children, q => q).ToList(), Is.Empty);
 		}
 
 		#endregion
