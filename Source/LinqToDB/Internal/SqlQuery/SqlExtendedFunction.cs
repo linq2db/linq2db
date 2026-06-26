@@ -313,9 +313,11 @@ namespace LinqToDB.Internal.SqlQuery
 			if (FromPosition != otherFunction.FromPosition)
 				return false;
 
-			foreach (var argument in Arguments)
+			for (var i = 0; i < Arguments.Count; i++)
 			{
-				if (!otherFunction.Arguments.Exists(a => argument.Modifier == a.Modifier && argument.Expression.Equals(a.Expression, comparer) && argument.Suffix.AreEqual(a.Suffix, comparer)))
+				var argument = Arguments[i];
+				var otherArg = otherFunction.Arguments[i];
+				if (argument.Modifier != otherArg.Modifier || !argument.Expression.Equals(otherArg.Expression, comparer) || !argument.Suffix.AreEqual(otherArg.Suffix, comparer))
 					return false;
 			}
 
