@@ -230,7 +230,11 @@ namespace LinqToDB.Data
 					var commands = new CommandWithParameters[cc];
 
 					var optimizeAndConvertAll = !continuousRun && !statement.IsParameterDependent;
-					// We can optimize and convert all queries at once, because they are not parameter dependent.
+					// Non-parameter-dependent, first-run queries may be optimized/converted in place (Modify
+					// mode) and their built commands cached/reused. Parameter-dependent / continuous-run
+					// queries must stay non-mutating (Transform mode) and rebuild per execution. NOTE: the
+					// convert pass itself now runs unconditionally before aliasing (below) regardless of this
+					// flag; the flag only selects visitor mutability + command caching.
 
 					var optimizeVisitor = sqlOptimizer.CreateOptimizerVisitor(optimizeAndConvertAll);
 					var convertVisitor  = sqlOptimizer.CreateConvertVisitor(optimizeAndConvertAll);
@@ -245,10 +249,17 @@ namespace LinqToDB.Data
 						convertVisitor,
 						factory,
 						dataConnection.DataProvider.SqlProviderFlags.IsParameterOrderDependent,
-						isAlreadyOptimizedAndConverted : optimizeAndConvertAll,
+						isAlreadyOptimizedAndConverted : true,
 						parametersNormalizerFactory : dataConnection.DataProvider.GetQueryParameterNormalizer);
 
-					if (optimizeAndConvertAll)
+					// Optimize+convert the whole statement before aliasing, unconditionally. Any conversion
+					// that restructures the AST (e.g. IN->EXISTS clones its sub-query) must run before the
+					// aliasing pass: the alias context is keyed to the nodes it visits, so nodes created
+					// after aliasing carry SourceIDs it never recorded and the SQL builder can't resolve
+					// their aliases. Parameter-dependent queries previously deferred conversion into BuildSql
+					// (after aliasing) - that was the alias-corruption bug. Mirrors the remote runner, which
+					// already prepares-then-aliases. The optimizeAndConvertAll flag now only governs
+					// mutate-in-place (visitor mode) + command caching below.
 					{
 						var nullability = NullabilityContext.GetContext(statement.SelectQuery);
 						statement = optimizationContext.OptimizeAndConvertAll(statement, nullability);
