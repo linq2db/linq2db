@@ -407,7 +407,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana.Translation
 
 		protected class SapHanaWindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
 		{
-			protected override bool IsFrameRowsSupported      => false;
+			protected override bool IsFrameRowsSupported      => true;
 			protected override bool IsFrameRangeSupported     => false;
 			protected override bool IsFrameGroupsSupported    => false;
 			protected override bool IsFrameExclusionSupported => false;
