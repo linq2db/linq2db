@@ -874,14 +874,21 @@ namespace LinqToDB.Internal.Linq.Builder
 					return translatedExposed;
 				}
 
-				if (TranslateMember(BuildContext, node, out var translatedMember))
+				// Honor PreferClientCalculation only for a mapped function that carries an [Expression] attribute
+				// (MappedFunctionAllowsClientCalculation). Functions like Sql.ToNullable deliberately carry no attribute and
+				// are translated server-side by SqlFunctionsMemberTranslatorBase, so they fail the check and keep translating;
+				// structural LINQ methods (aggregates) likewise have no attribute and translate as usual.
+				if (!PreferClientCalculation(node) || !MappedFunctionAllowsClientCalculation(node.Method))
 				{
-					return Visit(translatedMember);
-				}
+					if (TranslateMember(BuildContext, node, out var translatedMember))
+					{
+						return Visit(translatedMember);
+					}
 
-				if (HandleExtension(BuildContext, node, out translatedMember))
-				{
-					return Visit(translatedMember);
+					if (HandleExtension(BuildContext, node, out translatedMember))
+					{
+						return Visit(translatedMember);
+					}
 				}
 
 				if (HandleValue(node, out var translated))
@@ -2123,9 +2130,36 @@ namespace LinqToDB.Internal.Linq.Builder
 			return result;
 		}
 
+		/// <summary>
+		/// When <see cref="LinqOptions.PreferClientCalculation"/> is enabled, computed expressions in the final
+		/// projection are left client-side instead of being forced into SQL columns. Anything that prefers or
+		/// requires server-side evaluation (per <c>Builder.PreferServerSide</c>) and set projections
+		/// (<see cref="BuildFlags.ForSetProjection"/>) still go to SQL.
+		/// </summary>
+		bool PreferClientCalculation(Expression node)
+		{
+			return _buildPurpose is BuildPurpose.Expression
+				&& !_buildFlags.HasFlag(BuildFlags.ForSetProjection)
+				&& BuildContext != null
+				&& DataOptions.LinqOptions.PreferClientCalculation
+				&& !Builder.PreferServerSide(node, false)
+				&& !Builder.IsServerSideOnly(node);
+		}
+
+		/// <summary>
+		/// A method may be pulled client-side (under <see cref="LinqOptions.PreferClientCalculation"/>) only when it is a
+		/// mapped function — i.e. it carries an <see cref="Sql.ExpressionAttribute"/>. Structural LINQ methods (e.g.
+		/// aggregates) have no attribute and must keep translating to SQL.
+		/// </summary>
+		bool MappedFunctionAllowsClientCalculation(MethodInfo method)
+		{
+			return method.GetExpressionAttribute(MappingSchema) != null;
+		}
+
 		bool TryConvertToSql(Expression node, out Expression translated)
 		{
-			if (_preferClientSide && !_buildFlags.HasFlag(BuildFlags.ForSetProjection))
+			if ((_preferClientSide && !_buildFlags.HasFlag(BuildFlags.ForSetProjection))
+				|| PreferClientCalculation(node))
 			{
 				translated = node;
 				return false;
@@ -2164,6 +2198,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		protected override Expression VisitUnary(UnaryExpression node)
 		{
+			if (PreferClientCalculation(node))
+				return base.VisitUnary(node);
+
 			if (node.Method != null && IsSqlOrExpression() && BuildContext != null)
 			{
 				if (TranslateMember(BuildContext, node, out var translatedMember))
@@ -2806,7 +2843,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		protected override Expression VisitBinary(BinaryExpression node)
 		{
-			if (node.Method != null && IsSqlOrExpression() && BuildContext != null)
+			if (node.Method != null && IsSqlOrExpression() && BuildContext != null && !PreferClientCalculation(node))
 			{
 				if (TranslateMember(BuildContext, node, out var translatedMember))
 					return Visit(translatedMember);
