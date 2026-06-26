@@ -1926,9 +1926,38 @@ namespace LinqToDB.Data
 
 				if (ctors.Count > 0 && ctors.TrueForAll(c => c.ps.Length > 0))
 				{
+					// Resolve each ctor parameter to its mapped column (parameter name == member name, ordinal then
+					// case-insensitive — mirrors EntityConstructorBase.MatchParameter on the LINQ path), then match a
+					// result column by the mapped ColumnName OR the parameter name and convert via the column's
+					// ValueConverter, so [Column]/[ValueConverter] are honored for raw SQL whether the query uses the
+					// DB column name or aliases it to the member name (#4437).
+					ColumnDescriptor? GetColumn(ParameterInfo p)
+						=> td.Columns.FirstOrDefault(c => string.Equals(c.MemberName, p.Name, StringComparison.Ordinal))
+						?? td.Columns.FirstOrDefault(c => string.Equals(c.MemberName, p.Name, StringComparison.OrdinalIgnoreCase));
+
+					int MatchIndex(ParameterInfo p, ColumnDescriptor? column)
+					{
+						var comparer = dataConnection.MappingSchema.ColumnNameComparer;
+						var idx      = -1;
+
+						if (column != null)
+						{
+							var columnName = column.ColumnName;
+							idx = Array.FindIndex(names, n => comparer.Compare(n, columnName) == 0);
+						}
+
+						if (idx < 0)
+						{
+							var name = p.Name;
+							idx = Array.FindIndex(names, n => comparer.Compare(n, name) == 0);
+						}
+
+						return idx;
+					}
+
 					var q =
 						from c in ctors
-						let count = c.ps.Count(p => names.Contains(p.Name, dataConnection.MappingSchema.ColumnNameComparer))
+						let count = c.ps.Count(p => MatchIndex(p, GetColumn(p)) >= 0)
 						orderby count descending
 						select c;
 
@@ -1938,18 +1967,21 @@ namespace LinqToDB.Data
 					{
 						expr = Expression.New(
 							ctor.c,
-							ctor.ps.Select(p => names.Contains(p.Name, dataConnection.MappingSchema.ColumnNameComparer) ?
-								getMemberExpression(
-									dataConnection,
-									dataReader,
-									p.ParameterType,
-									(names
-										.Select((n,i) => new { n, i })
-										.FirstOrDefault(n => dataConnection.MappingSchema.ColumnNameComparer.Compare(n.n, p.Name) == 0) ?? new { n="", i=-1 }).i,
-									ctxParameter,
-									dataReaderExpr,
-									null) :
-								Expression.Constant(dataConnection.MappingSchema.GetDefaultValue(p.ParameterType), p.ParameterType)));
+							ctor.ps.Select(p =>
+							{
+								var column = GetColumn(p);
+								var idx    = MatchIndex(p, column);
+								return idx >= 0 ?
+									getMemberExpression(
+										dataConnection,
+										dataReader,
+										p.ParameterType,
+										idx,
+										ctxParameter,
+										dataReaderExpr,
+										column?.ValueConverter) :
+									Expression.Constant(dataConnection.MappingSchema.GetDefaultValue(p.ParameterType), p.ParameterType);
+							}));
 					}
 				}
 
