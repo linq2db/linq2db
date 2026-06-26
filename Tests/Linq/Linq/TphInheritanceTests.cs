@@ -13,7 +13,7 @@ namespace Tests.Linq
 	{
 
 		[Test]
-		public void TPH_DeepHierarchy_FindRecord([DataSources] string context)
+		public void TPH_DeepHierarchy_FindRecord([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<TphDeepPersonBase>();
@@ -33,7 +33,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TPH_DeepHierarchy_PolymorphicResult([DataSources] string context)
+		public void TPH_DeepHierarchy_PolymorphicResult([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<TphDeepPersonBase>();
@@ -53,7 +53,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TPH_DeepHierarchy_BulkCopy([DataSources(false)] string context, [Values] BulkCopyType copyType)
+		public void TPH_DeepHierarchy_BulkCopy([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] BulkCopyType copyType)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<TphDeepPersonBase>();
@@ -102,7 +102,7 @@ namespace Tests.Linq
 		{ }
 
 		[Test]
-		public void TPH_PropertiesWithSameNameMapped([DataSources] string context)
+		public void TPH_PropertiesWithSameNameMapped([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<TphSiblingTicketBase>();
@@ -132,7 +132,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TPH_SiblingColumnNullPredicate([DataSources] string context)
+		public void TPH_SiblingColumnNullPredicate([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<TphSiblingTicketBase>();
@@ -161,7 +161,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TPH_SiblingColumn_Projection([DataSources] string context)
+		public void TPH_SiblingColumn_Projection([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<TphSiblingTicketBase>();
@@ -197,7 +197,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TPH_SiblingColumn_ValueFilter([DataSources] string context)
+		public void TPH_SiblingColumn_ValueFilter([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<TphSiblingTicketBase>();
@@ -229,7 +229,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TPH_SiblingColumn_Update([DataSources] string context)
+		public void TPH_SiblingColumn_Update([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<TphSiblingTicketBase>();
@@ -276,7 +276,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TPH_SiblingColumn_ThreeSiblings([DataSources] string context)
+		public void TPH_SiblingColumn_ThreeSiblings([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<TphTriBase>();
@@ -318,7 +318,7 @@ namespace Tests.Linq
 		class TphTriTypeC : TphTriBase { [Column("CodeC")] public string? Code { get; set; } }
 
 		[Test]
-		public void TPH_SiblingColumn_SharedPhysicalColumn([DataSources] string context)
+		public void TPH_SiblingColumn_SharedPhysicalColumn([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<TphSharedColumnBase>();
@@ -356,7 +356,7 @@ namespace Tests.Linq
 		class TphSharedTypeB : TphSharedColumnBase { [Column("SharedCode")] public string? Code { get; set; } }
 
 		[Test]
-		public void TPH_CodeFilter([DataSources] string context)
+		public void TPH_CodeFilter([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<TphCodeFilterBase>();
@@ -373,7 +373,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TPH_InterfaceFilter([DataSources] string context)
+		public void TPH_InterfaceFilter([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<TphCodeFilterBase>();
@@ -427,7 +427,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TPH_TernaryIsTypePredicate([DataSources(TestProvName.AllSybase)] string context, [Values] bool additionalFlag)
+		public void TPH_TernaryIsTypePredicate([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool additionalFlag)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<TphConditionBase>();
@@ -504,7 +504,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TPH_ScalarProjection([DataSources] string context)
+		public void TPH_ScalarProjection([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<TphCastBase>();
@@ -525,7 +525,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TPH_ObjectProjection([DataSources] string context)
+		public void TPH_ObjectProjection([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<TphCastBase>();
@@ -588,7 +588,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TPH_Downcast_RowToLeaf([DataSources] string context)
+		public void TPH_Downcast_RowToLeaf([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<TphCastBase>();
@@ -612,7 +612,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TPH_Downcast_ThenIntermediateMember([DataSources] string context)
+		public void TPH_Downcast_ThenIntermediateMember([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<TphCastBase>();
@@ -630,7 +630,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TPH_Downcast_ThenLeafMember([DataSources] string context)
+		public void TPH_Downcast_ThenLeafMember([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<TphCastBase>();
@@ -648,7 +648,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TPH_Downcast_ThenLeafMember_MixedRows([DataSources] string context)
+		public void TPH_Downcast_ThenLeafMember_MixedRows([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<TphCastBase>();
@@ -683,7 +683,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TPH_Downcast_MemberToLeaf([DataSources] string context)
+		public void TPH_Downcast_MemberToLeaf([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db          = GetDataContext(context);
 			using var baseTable   = db.CreateLocalTable<TphCastBase>();
@@ -707,5 +707,110 @@ namespace Tests.Linq
 				Assert.That(res[0].IsMale, Is.True);
 			}
 		}
+
+		#region Associations on derived types
+
+		[Table]
+		public class TphAssocCompany
+		{
+			[PrimaryKey] public int     Id   { get; set; }
+			[Column]     public string? Name { get; set; }
+		}
+
+		[Table("TphAssocPerson")]
+		[InheritanceMapping(Code = "E", IsDefault = true, Type = typeof(TphAssocEmployee))]
+		[InheritanceMapping(Code = "C", Type = typeof(TphAssocContractor))]
+		public abstract class TphAssocPerson
+		{
+			[Column(IsDiscriminator = true)] public string? Kind { get; set; }
+			[PrimaryKey]                     public int     Id   { get; set; }
+		}
+
+		public class TphAssocEmployee : TphAssocPerson
+		{
+			// FK column lives in the shared TPH table; NULL for non-employee rows.
+			[Column] public int? CompanyId { get; set; }
+
+			[Association(ThisKey = nameof(CompanyId), OtherKey = nameof(TphAssocCompany.Id), CanBeNull = true)]
+			public TphAssocCompany? Company { get; set; }
+		}
+
+		public class TphAssocContractor : TphAssocPerson
+		{
+			[Column] public string? Agency { get; set; }
+		}
+
+		static void InsertAssocData(IDataContext db)
+		{
+			db.Insert(new TphAssocCompany    { Id = 1, Name = "Acme" });
+			db.Insert(new TphAssocEmployee   { Id = 1, CompanyId = 1 });    // employee -> Acme
+			db.Insert(new TphAssocContractor { Id = 2, Agency = "Temp" });  // not an employee
+			db.Insert(new TphAssocEmployee   { Id = 3, CompanyId = null }); // employee, no company
+		}
+
+		[Test]
+		public void TPH_Assoc_OnDerived_Navigate([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db      = GetDataContext(context);
+			using var company = db.CreateLocalTable<TphAssocCompany>();
+			using var person  = db.CreateLocalTable<TphAssocPerson>();
+
+			InsertAssocData(db);
+
+			// Association declared on the derived type, reached via OfType.
+			var res = db.GetTable<TphAssocPerson>()
+				.OfType<TphAssocEmployee>()
+				.OrderBy(e => e.Id)
+				.Select(e => e.Company!.Name)
+				.ToArray();
+
+			Assert.That(res, Is.EqualTo(new[] { "Acme", null }));
+		}
+
+		[Test]
+		public void TPH_Assoc_OnDerived_LoadWith([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db      = GetDataContext(context);
+			using var company = db.CreateLocalTable<TphAssocCompany>();
+			using var person  = db.CreateLocalTable<TphAssocPerson>();
+
+			InsertAssocData(db);
+
+			var res = db.GetTable<TphAssocPerson>()
+				.OfType<TphAssocEmployee>()
+				.LoadWith(e => e.Company)
+				.OrderBy(e => e.Id)
+				.ToArray();
+
+			Assert.That(res, Has.Length.EqualTo(2));
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(res[0].Company,       Is.Not.Null);
+				Assert.That(res[0].Company!.Name, Is.EqualTo("Acme"));
+				Assert.That(res[1].Company,       Is.Null);
+			}
+		}
+
+		[Test]
+		public void TPH_Assoc_OnDerived_DowncastNavigate_Unfiltered([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db      = GetDataContext(context);
+			using var company = db.CreateLocalTable<TphAssocCompany>();
+			using var person  = db.CreateLocalTable<TphAssocPerson>();
+
+			InsertAssocData(db);
+
+			// No discriminator filter: ((Derived)x).Association over the whole hierarchy. The FK is
+			// NULL for non-employee rows (and for employees without a company), so the LEFT JOIN
+			// yields NULL there without an explicit discriminator check.
+			var res = db.GetTable<TphAssocPerson>()
+				.OrderBy(x => x.Id)
+				.Select(x => ((TphAssocEmployee)x).Company!.Name)
+				.ToArray();
+
+			Assert.That(res, Is.EqualTo(new[] { "Acme", null, null }));
+		}
+
+		#endregion
 	}
 }
