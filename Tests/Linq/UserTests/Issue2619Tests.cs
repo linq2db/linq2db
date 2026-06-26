@@ -79,7 +79,7 @@ namespace Tests.UserTests
 			concat.ToArray();
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
 		public void OrderByExcept([DataSources(TestProvName.AllSybase, TestProvName.AllSqlServer, TestProvName.AllAccess)] string context)
 		{
@@ -99,6 +99,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void OrderByExceptModifier([DataSources(TestProvName.AllSybase)] string context)
 		{
 			using var db = GetDataContext(context);

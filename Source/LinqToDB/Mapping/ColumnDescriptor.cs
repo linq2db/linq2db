@@ -417,7 +417,13 @@ namespace LinqToDB.Mapping
 			DbDataType? dbDataType = null;
 
 			if (completeDataType && dataType == DataType.Undefined)
-				dbDataType = CalculateDbDataType(MappingSchema, systemType);
+				// When a ValueConverter is present, resolve the DB type from the converter's *provider* type
+				// against this descriptor's (active, provider-inclusive) MappingSchema rather than the member
+				// type - so e.g. an F# 'decimal option' (provider type Nullable<decimal>) picks up the
+				// provider's decimal(18,10) and 'string option' the provider's preferred string type. The
+				// member type often has no DB type of its own (the converter is what maps it to a column).
+				// Falls back to the member type when there is no converter.
+				dbDataType = CalculateDbDataType(MappingSchema, ValueConverter?.ToProviderExpression.Body.Type ?? systemType);
 
 			return new DbDataType(systemType, dbDataType?.DataType ?? dataType, DbType ?? dbDataType?.DbType, Length ?? dbDataType?.Length, Precision ?? dbDataType?.Precision, Scale ?? dbDataType?.Scale);
 		}

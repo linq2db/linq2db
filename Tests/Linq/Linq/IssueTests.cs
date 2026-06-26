@@ -576,9 +576,9 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
-		public void Issue909Subquery([DataSources(TestProvName.AllClickHouse)] string context)
+		public void Issue909Subquery([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			var values = new int?[] { 1, 2, 3 };
@@ -884,6 +884,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5193")]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void IncorrectNesting_Workaround([DataSources] string context)
 		{
 			using var db = GetDataContext(context);

@@ -165,114 +165,106 @@ namespace LinqToDB.Internal.DataProvider.DuckDB.Translation
 				var factory = translationContext.ExpressionFactory;
 				var dbDataType = factory.GetDbDataType(typeof(DateTime));
 
-				return factory.NotNullExpression(dbDataType, "CURRENT_TIMESTAMP");
+				// Use the now() function form rather than the CURRENT_TIMESTAMP keyword: DuckDB's
+				// ON CONFLICT ... DO UPDATE SET binder parses the bare keyword as a column reference
+				// (Binder Error: ... does not have a column named "CURRENT_TIMESTAMP"). now() is the
+				// DuckDB-equivalent (TIMESTAMP WITH TIME ZONE) and binds correctly in every context.
+				return factory.Function(dbDataType, "now");
 			}
 
 			protected override ISqlExpression? TranslateNow(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
 				var factory = translationContext.ExpressionFactory;
 				var dbDataType = factory.GetDbDataType(typeof(DateTime));
-				return factory.NotNullExpression(dbDataType, "LOCALTIMESTAMP");
+				// current_localtimestamp() function form, not the bare LOCALTIMESTAMP keyword: the keyword
+				// is parsed as a column reference inside ON CONFLICT ... DO UPDATE SET. Returns a plain
+				// TIMESTAMP (local time, no time zone), matching the LOCALTIMESTAMP keyword's semantics.
+				return factory.Function(dbDataType, "current_localtimestamp");
 			}
 
 			protected override ISqlExpression? TranslateZonedNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
 			{
 				var factory = translationContext.ExpressionFactory;
-				return factory.NotNullExpression(dbDataType, "CURRENT_TIMESTAMP");
+				return factory.Function(dbDataType, "now");
 			}
 
 			protected override ISqlExpression? TranslateZonedUtcNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
 			{
 				var factory = translationContext.ExpressionFactory;
-				return factory.NotNullExpression(dbDataType, "CURRENT_TIMESTAMP AT TIME ZONE 'UTC'");
+				return factory.NotNullExpression(dbDataType, "{0} AT TIME ZONE 'UTC'", factory.Function(dbDataType, "now"));
 			}
 		}
 
 		protected class StringMemberTranslator : StringMemberTranslatorBase
 		{
-			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult)
+			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult, bool withoutSeparator)
 			{
 				var builder = new AggregateFunctionBuilder()
-					.ConfigureAggregate(c => c
-						.HasSequenceIndex(1)
-						.AllowOrderBy()
-						.AllowFilter()
-						.AllowDistinct()
-						.AllowNotNullCheck(true)
-						.TranslateArguments(0)
-						.OnBuildFunction(composer =>
-						{
-							var info = composer.BuildInfo;
-							if (info.Value == null || info.Argument(0) == null)
-								return;
+					.ConfigureAggregate(c =>
+					{
+						c.TransformValue(ConvertOperandToString);
 
-							var factory   = info.Factory;
-							var separator = info.Argument(0)!;
-							var valueType = factory.GetDbDataType(info.Value);
+						if (withoutSeparator)
+							c.HasSequenceIndex(0);
+						else
+							c.HasSequenceIndex(1).TranslateArguments(0);
 
-							var value = info.Value;
-							if (!info.IsNullFiltered && nullValuesAsEmptyString)
-								value = factory.Coalesce(value, factory.Value(valueType, string.Empty));
-
-							if (info is { IsDistinct: true, OrderBySql.Length: > 0 })
+						c.AllowOrderBy()
+							.AllowFilter()
+							.AllowDistinct()
+							.AllowNotNullCheck(true)
+							.OnBuildFunction(composer =>
 							{
-								if (info.OrderBySql.Any(o => o.expr != value))
-								{
-									composer.SetFallback(fc => fc
-										.AllowDistinct(false)
-										.AllowNotNullCheck(null)
-									);
+								var info = composer.BuildInfo;
+								if (info.Value == null || (!withoutSeparator && info.Argument(0) == null))
 									return;
-								}
-							}
 
-							ISqlExpression? suffix = null;
-							if (info.OrderBySql.Length > 0)
-							{
-								using var sb = Pools.StringBuilder.Allocate();
+								var factory   = info.Factory;
+								var valueType = factory.GetDbDataType(info.Value);
+								var separator = withoutSeparator
+									? factory.Value(valueType, string.Empty)
+									: info.Argument(0)!;
 
-								var args = info.OrderBySql.Select(o => o.expr).ToArray();
+								var value = info.Value;
+								if (!info.IsNullFiltered && nullValuesAsEmptyString)
+									value = factory.Coalesce(value, factory.Value(valueType, string.Empty));
 
-								sb.Value.Append("ORDER BY ");
-								for (int i = 0; i < info.OrderBySql.Length; i++)
+								if (info is { IsDistinct: true, OrderBySql.Length: > 0 })
 								{
-									if (i > 0) sb.Value.Append(", ");
-									sb.Value.Append('{').Append(i).Append('}');
-									if (info.OrderBySql[i].desc) sb.Value.Append(" DESC");
-
-									if (!info.IsNullFiltered)
+									if (info.OrderBySql.Any(o => o.expr != value))
 									{
-										sb.Value.Append(" NULLS ");
-										sb.Value.Append(info.OrderBySql[i].nulls is Sql.NullsPosition.First or Sql.NullsPosition.None ? "FIRST" : "LAST");
+										composer.SetFallback(fc => fc
+											.AllowDistinct(false)
+											.AllowNotNullCheck(null)
+										);
+										return;
 									}
 								}
 
-								suffix = factory.Fragment(sb.Value.ToString(), args);
-							}
+								var suffix = BuildAggregateNullsOrderBy(factory, info.OrderBySql, info.IsNullFiltered, NullsDefaultOrdering.AlwaysLast);
 
-							SqlSearchCondition? filterCondition = null;
+								SqlSearchCondition? filterCondition = null;
 
-							if (info is { FilterCondition.IsTrue: false })
-								filterCondition = info.FilterCondition;
+								if (info is { FilterCondition.IsTrue: false })
+									filterCondition = info.FilterCondition;
 
-							var aggregateModifier = info.IsDistinct ? Sql.AggregateModifier.Distinct : Sql.AggregateModifier.None;
+								var aggregateModifier = info.IsDistinct ? Sql.AggregateModifier.Distinct : Sql.AggregateModifier.None;
 
-							var fn = factory.Function(valueType, "STRING_AGG",
-								[new SqlFunctionArgument(value, modifier : aggregateModifier), new SqlFunctionArgument(separator, suffix : suffix)],
-								[true, true],
-								filter: filterCondition,
-								isAggregate: true,
-								canBeAffectedByOrderBy: true
-							);
+								var fn = factory.Function(valueType, "STRING_AGG",
+									[new SqlFunctionArgument(value, modifier : aggregateModifier), new SqlFunctionArgument(separator, suffix : suffix)],
+									[true, true],
+									filter: filterCondition,
+									isAggregate: true,
+									canBeAffectedByOrderBy: true
+								);
 
-							var result = isNullableResult ? fn : factory.Coalesce(fn, factory.Value(valueType, string.Empty));
+								SetStringJoinResult(composer, fn, isNullableResult, valueType);
+							});
+					});
 
-							composer.SetResult(result);
-						}));
+				ConfigureConcatWs(builder, nullValuesAsEmptyString, isNullableResult, withoutSeparator: withoutSeparator);
 
-				ConfigureConcatWs(builder, nullValuesAsEmptyString, isNullableResult);
-
-				return builder.Build(translationContext, methodCall);
+				return builder.Build(translationContext, methodCall, isExpression: translationFlags.HasFlag(TranslationFlags.Expression));
 			}
 		}
 	}

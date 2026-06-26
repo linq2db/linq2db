@@ -1076,6 +1076,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (!selectQuery.Select.IsDistinct || !selectQuery.Select.OptimizeDistinct)
 				return false;
 
+			// DISTINCT ON is never "redundant": removing it changes which row survives per ON key. Leave it intact.
+			if (selectQuery.Select.IsDistinctOn)
+				return false;
+
 			if (IsComplexQuery(selectQuery, false))
 				return false;
 
@@ -1118,7 +1122,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				foreach (var item in subQuery.OrderBy.Items)
 				{
-					mainQuery.OrderBy.Expr(item.Expression, item.IsDescending, item.IsPositioned);
+					mainQuery.OrderBy.Expr(item.Expression, item.IsDescending, item.IsPositioned, item.NullsPosition);
 				}
 			}
 		}
@@ -1256,7 +1260,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						}
 					}
 
-					var orderItems = orderByItems.Select(o => new SqlWindowOrderItem(o.Expression, o.IsDescending, Sql.NullsPosition.None));
+					var orderItems = orderByItems.Select(o => new SqlWindowOrderItem(o.Expression, o.IsDescending, o.NullsPosition));
 
 					var longType = _mappingSchema.GetDbDataType(typeof(long));
 					rnExpression = new SqlExtendedFunction(longType, "ROW_NUMBER", [], [], partitionBy: partitionBy, orderBy: orderItems);
@@ -1386,7 +1390,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						else
 							searchCondition.Add(new SqlPredicate.ExprExpr(rnColumn, SqlPredicate.Operator.LessOrEqual, takeValue, null));
 					}
-					else if (sql.Select.IsDistinct)
+					else if (sql.Select.IsDistinct && !sql.Select.IsDistinctOn)
 					{
 						sql.Select.IsDistinct = false;
 						searchCondition.Add(new SqlPredicate.ExprExpr(rnColumn, SqlPredicate.Operator.Equal, new SqlValue(1), null));
@@ -1438,6 +1442,31 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				if (QueryHelper.IsConstantFast(binary.Expr2))
 				{
 					return IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, binary.Expr1, ignoreWhere, inGrouping);
+				}
+			}
+			else if (underlying is SqlConcatExpression concat)
+			{
+				// All-but-one operands constant — recurse on the unique non-constant.
+				// Covers `"prefix-" || col || "-suffix"`-style formatting concats with N >= 2 operands.
+				ISqlExpression? nonConstant = null;
+				var             multipleNonConstants = false;
+				foreach (var expr in concat.Expressions)
+				{
+					if (!QueryHelper.IsConstantFast(expr))
+					{
+						if (nonConstant != null)
+						{
+							multipleNonConstants = true;
+							break;
+						}
+
+						nonConstant = expr;
+					}
+				}
+
+				if (!multipleNonConstants && nonConstant != null)
+				{
+					return IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, nonConstant, ignoreWhere, inGrouping);
 				}
 			}
 			else if (underlying is SqlCastExpression castExpression)
@@ -1542,6 +1571,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				parentQuery.Select.OptimizeDistinct = parentQuery.Select.OptimizeDistinct || subQuery.Select.OptimizeDistinct;
 				parentQuery.Select.IsDistinct       = true;
+				// carry DISTINCT ON keys with the modifier so a flattened parent keeps the correct distinct semantics
+				if (subQuery.Select.IsDistinctOn)
+					parentQuery.Select.DistinctOn = subQuery.Select.DistinctOn;
 			}
 
 			if (subQuery.Select.TakeValue != null)
@@ -2060,6 +2092,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			if (subQuery.IsDistinct)
 			{
+				// A DISTINCT ON subquery must not be flattened into its parent: moving the modifier up would drop the
+				// ON list and break its ORDER BY dependency. Keep it as a nested derived table.
+				if (subQuery.Select.IsDistinctOn)
+					return false;
+
 				if (parentQuery.HasOrderBy && !parentQuery.OrderBy.Items.TrueForAll(oi => oi.Expression is SqlColumn col && subQuery.Select.Columns.Contains(col)))
 				{
 					return false;
@@ -2166,6 +2203,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					return false;
 
 				if (parentQuery.HasSetOperators)
+					return false;
+
+				// A set-operation subquery can only be folded up into a trivial single-table
+				// parent: any join or extra FROM table would attach to the first union branch
+				// only (keeping a reference to the now-removed subquery column), silently
+				// dropping the filter from the other branches. See issue #5625.
+				if (!parentQuery.IsSingleTableQueryWithoutJoins)
 					return false;
 
 				if (parentQuery.Select.Columns.Count != subQuery.Select.Columns.Count)
@@ -2310,6 +2354,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			}
 
 			if (subQuery.Select.Columns.Exists(c => QueryHelper.ContainsAggregationOrWindowFunction(c.Expression)))
+				return false;
+
+			// #5413: only flatten a subquery-expression apply when its source is a single table whose joins
+			// are each limited to one record - otherwise flattening could lose the apply one-row bound.
+			if (joinTable.IsSubqueryExpression && !(subQuery.From.Tables is [{ Joins: var joins }] && joins.TrueForAll(QueryHelper.IsLimitedToOneRecord)))
 				return false;
 
 			// Actual modification starts from this point
@@ -2506,14 +2555,14 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						var join = tableSource.Joins[j];
 
 						if (join.JoinType is (JoinType.Inner or JoinType.Left) && !join.Condition.IsOr && join.Condition.Predicates.Count != 0)
-							modified |= MoveJoinConditionsToWhere(root, tableSource, join, selectQuery.Where, NullabilityContext.GetContext(selectQuery));
+							modified |= MoveJoinConditionsToWhere(root, join, selectQuery.Where, NullabilityContext.GetContext(selectQuery));
 					}
 				}
 			}
 
 			return modified;
 
-			bool MoveJoinConditionsToWhere(SqlStatement root, SqlTableSource left, SqlJoinedTable join, SqlWhereClause where, NullabilityContext nullabilityContext)
+			bool MoveJoinConditionsToWhere(SqlStatement root, SqlJoinedTable join, SqlWhereClause where, NullabilityContext nullabilityContext)
 			{
 				var modified                   = false;
 				var isLeft                     = join.JoinType == JoinType.Left;
@@ -2535,7 +2584,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						sources ??= QueryHelper.EnumerateAccessibleSources(join.Table).ToList();
 						move = !QueryHelper.IsDependsOnSources(predicate, sources);
 
-						if (!move && !QueryHelper.IsDependsOnSource(predicate, left))
+						// Push into the right derived table only when the predicate depends solely on the join's
+						// own subtree (sources); a predicate that also references the outer side is a genuine
+						// cross-input condition and must stay in ON.
+						if (!move && !QueryHelper.IsDependsOnOuterSources(predicate, currentSources: sources))
 						{
 							if (nestedWhereCond == null)
 							{
@@ -3032,6 +3084,29 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 			}
 
+			// Providers that require explicit CROSS JOIN syntax can't emit the comma (implicit
+			// cartesian) FROM list, so fold any extra top-level FROM tables into CROSS JOINs on the
+			// first table (e.g. YDB rejects `FROM a, b`).
+			if (_providerFlags.IsCrossJoinSyntaxRequired && selectQuery.From.Tables.Count > 1)
+			{
+				var mainTable = selectQuery.From.Tables[0];
+
+				while (selectQuery.From.Tables.Count > 1)
+				{
+					var crossTable = selectQuery.From.Tables[1];
+					selectQuery.From.Tables.RemoveAt(1);
+
+					mainTable.Joins.Add(new SqlJoinedTable(JoinType.Cross, crossTable, false));
+
+					// a folded table's own joins must follow its CROSS JOIN, flat on the main table
+					for (var ij = 0; ij < crossTable.Joins.Count; ij++)
+						mainTable.Joins.Add(crossTable.Joins[ij]);
+					crossTable.Joins.Clear();
+
+					isModified = true;
+				}
+			}
+
 			return isModified;
 		}
 
@@ -3238,6 +3313,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				subQuery.Select.IsDistinct = true;
 				query.Select.IsDistinct    = false;
+				// move DISTINCT ON keys down with the modifier and clear them from the source query
+				subQuery.Select.DistinctOn = query.Select.DistinctOn;
+				query.Select.DistinctOn    = null;
 			}
 
 			_columnNestingCorrector.CorrectColumnNesting(query);
@@ -3339,7 +3417,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 			}
 
-			if (joinQuery.Select.Columns.Count > 1 && joinQuery.Select.IsDistinct)
+			if (joinQuery.Select.Columns.Count > 1 && joinQuery.Select.IsDistinct && !joinQuery.Select.IsDistinctOn)
 			{
 				if (!SqlProviderHelper.IsValidQuery(joinQuery, parentQuery: parentQuery, fakeJoin: null, columnSubqueryLevel: 1, _providerFlags, out _))
 					return false;
@@ -3512,8 +3590,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			var sq = predicate.SubQuery;
 
-			// We can safely optimize out Distinct
-			if (sq.Select.IsDistinct)
+			// We can safely optimize out Distinct (but not DISTINCT ON — clearing only IsDistinct would leave the ON
+			// list dangling; EXISTS ignores distinctness/ordering anyway, so leaving it intact is harmless).
+			if (sq.Select.IsDistinct && !sq.Select.IsDistinctOn)
 			{
 				sq.Select.IsDistinct = false;
 			}
@@ -3678,6 +3757,19 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				return element;
 			}
 
+			protected internal override IQueryElement VisitSqlConcatExpression(SqlConcatExpression element)
+			{
+				var saveIsSubqueryInsideCondition = _isSubqueryInsideCondition;
+
+				_isSubqueryInsideCondition = true;
+
+				base.VisitSqlConcatExpression(element);
+
+				_isSubqueryInsideCondition = saveIsSubqueryInsideCondition;
+
+				return element;
+			}
+
 			protected internal override IQueryElement VisitIsNullPredicate(SqlPredicate.IsNull predicate)
 			{
 				var saveIsSubqueryInsideCondition = _isSubqueryInsideCondition;
@@ -3759,7 +3851,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				if (ReferenceEquals(element, _predicate))
 					return base.Visit(element);
 
-				if (element is ISqlExpression sqlExpr and not SqlSearchCondition)
+				// SelectQuery is an ISqlExpression too (e.g. the operand of an IN/EXISTS subquery), but it must not be
+				// hoisted into a column - recurse into it so only the inner-only leaves get corrected.
+				if (element is ISqlExpression sqlExpr and not SqlSearchCondition and not SelectQuery)
 				{
 					if (QueryHelper.IsDependsOnSources(sqlExpr, _currentSources) && !QueryHelper.IsDependsOnOuterSources(sqlExpr, currentSources: _currentSources))
 					{

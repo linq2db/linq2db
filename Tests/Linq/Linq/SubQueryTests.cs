@@ -46,7 +46,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test3([DataSources(TestProvName.AllClickHouse)] string context)
+		public void Test3([DataSources(TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -161,7 +161,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[YdbCteAsSource]
 		public void Test8([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -233,7 +232,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void Contains1([DataSources(
 			TestProvName.AllInformix,
 			TestProvName.AllClickHouse,
@@ -256,7 +255,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void Contains2([DataSources(
 			TestProvName.AllClickHouse,
 			TestProvName.AllMySql,
@@ -616,6 +615,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void Count2([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -666,6 +666,7 @@ namespace Tests.Linq
 				select p);
 		}
 
+		[ActiveIssue(5591, Configuration = TestProvName.AllYdb, Details = "YDB strict-decimal rejects COALESCE of mismatched decimal facets (Decimal(35,2) vs default Decimal(22,9)).")]
 		[Test]
 		public void Issue1601([DataSources(false)] string context)
 		{
@@ -877,7 +878,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[YdbCteAsSource]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void DropOrderByFromNonLimitedSubquery([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -971,6 +972,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4458")]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void Issue4458Test1([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -995,6 +997,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4458")]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void Issue4458Test2([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1102,6 +1105,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4347")]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void Issue4347Test1([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllMariaDB, TestProvName.AllOracle11)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1123,6 +1127,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4347")]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void Issue4347Test2([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllMariaDB, TestProvName.AllOracle11)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1269,7 +1274,7 @@ namespace Tests.Linq
 			TestProvName.AllSqlServer2008Minus, TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase,
 			TestProvName.AllClickHouse, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql,
 			TestProvName.AllPostgreSQL, TestProvName.AllSapHana, TestProvName.AllSQLite, TestProvName.AllDB2,
-			TestProvName.AllDuckDB
+			TestProvName.AllDuckDB, TestProvName.AllYdb
 			)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1438,7 +1443,7 @@ namespace Tests.Linq
 		#endregion
 
 		[Test]
-		public void DistinctSubqueryTest([DataSources(TestProvName.AllFirebird, TestProvName.AllInformix)] string context)
+		public void DistinctSubqueryTest([DataSources(TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllYdb)] string context)
 		{
 			using var db = GetDataContext(context);
 

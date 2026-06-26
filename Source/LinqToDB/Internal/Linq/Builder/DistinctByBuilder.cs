@@ -1,6 +1,7 @@
 ﻿#if NET8_0_OR_GREATER
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -8,6 +9,7 @@ using System.Reflection;
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Internal.Linq.Builder
 {
@@ -19,13 +21,13 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		static readonly MethodInfo _buildDistinctByViaRowNumberMethodInfo = MemberHelper.MethodOfGeneric(() => BuildDistinctByViaRowNumber<int>(null!, null!, null!, null!));
 
-		static Expression BuildDistinctByViaRowNumber<T>(ExpressionBuilder builder, IBuildContext sequence, Expression[] partitionPart, (LambdaExpression lambda, bool isDescending)[] orderByPart)
+		static Expression BuildDistinctByViaRowNumber<T>(ExpressionBuilder builder, IBuildContext sequence, Expression[] partitionPart, (LambdaExpression lambda, bool isDescending, Sql.NullsPosition nulls)[] orderByPart)
 		{
 			var           contextRef = new ContextRefExpression(typeof(IQueryable<T>), sequence);
 			IQueryable<T> query      = new ExpressionQueryImpl<T>(builder.DataContext, contextRef);
 
 			var orderByPrepared = orderByPart
-				.Select(o => (SequenceHelper.PrepareBody(o.lambda, sequence), o.isDescending))
+				.Select(o => (SequenceHelper.PrepareBody(o.lambda, sequence), o.isDescending, o.nulls))
 				.ToArray();
 
 			var rnCall = WindowFunctionHelpers.BuildRowNumber(partitionPart, orderByPrepared);
@@ -44,7 +46,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		static readonly MethodInfo _buildDistinctByViaOuterApplyMethodInfo = MemberHelper.MethodOfGeneric(() => BuildDistinctByViaOuterApply<int, int>(null!, null!, null!, null!));
 
-		static Expression BuildDistinctByViaOuterApply<T, TSelector>(ExpressionBuilder builder, Expression nonOrdered, (LambdaExpression lambda, bool isDescending)[] orderByPart, 
+		static Expression BuildDistinctByViaOuterApply<T, TSelector>(ExpressionBuilder builder, Expression nonOrdered, (LambdaExpression lambda, bool isDescending, Sql.NullsPosition nulls)[] orderByPart,
 			Expression<Func<T, TSelector>>                                                          selector)
 		{
 			IQueryable<T> query = new ExpressionQueryImpl<T>(builder.DataContext, nonOrdered);
@@ -83,20 +85,68 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			var sequenceExpression = methodCall.Arguments[0];
 
-			var orderByPart = WindowFunctionHelpers.ExtractOrderByPart(sequenceExpression, out var nonOrderedPart);
-			if (orderByPart.Length == 0)
+			var extractedOrderBy = WindowFunctionHelpers.ExtractOrderByPart(sequenceExpression, out var nonOrderedPart);
+			if (extractedOrderBy.Length == 0)
 				return BuildSequenceResult.Error(sequenceExpression, ErrorHelper.Error_DistinctByRequiresOrderBy);
+
+			// The preceding OrderBy is extracted here and bypasses OrderByBuilder, so resolve the configured default
+			// NULLS position for keys that did not specify one (null), matching OrderByBuilder behavior. An explicit
+			// position (including Sql.NullsPosition.None) is kept as-is so it can opt out of the configured default.
+			var defaultNulls = builder.DataOptions.SqlOptions.DefaultNullsPosition;
+			var orderByPart  = extractedOrderBy
+				.Select(o => (o.lambda, o.isDescending, o.nulls ?? defaultNulls))
+				.ToArray();
 
 			var selector = methodCall.Arguments[1].UnwrapLambda();
 
-			if (builder.DataContext.SqlProviderFlags.IsWindowFunctionsSupported)
-			{
-				var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, nonOrderedPart));
+			// When the DISTINCT ON branch below builds a sequence but cannot lower to DISTINCT ON (empty ON list or a
+			// key with no usable SQL form), that sequence is reused by the ROW_NUMBER fallback instead of building a
+			// second one — a second TryBuildSequence over the same source leaks an extra table reference into the
+			// query (a cartesian product, e.g. DistinctBy(x => 1)).
+			IBuildContext? sequence = null;
 
+			// On providers that support PostgreSQL-style DISTINCT ON, lower DistinctBy to it directly instead of the
+			// ROW_NUMBER() emulation: the key selector becomes the ON list and the preceding OrderBy is forced to lead
+			// with those keys (the syntax requires it). Falls through to ROW_NUMBER when the key has no usable SQL form.
+			if (builder.DataContext.SqlProviderFlags.IsDistinctOnSupported)
+			{
+				var orderedExpression = WindowFunctionHelpers.ApplyOrderBy(nonOrderedPart, orderByPart);
+
+				var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, orderedExpression));
 				if (buildResult.BuildContext == null)
 					return buildResult;
 
-				var sequence      = buildResult.BuildContext;
+				sequence          = buildResult.BuildContext;
+				var partitionBody = SequenceHelper.PrepareBody(selector, sequence);
+				var keySql        = builder.BuildSqlExpression(sequence, partitionBody, BuildPurpose.Sql, BuildFlags.ForKeys);
+
+				if (SequenceHelper.IsSqlReady(keySql))
+				{
+					var onExpressions = ExpressionBuilder.CollectDistinctPlaceholders(keySql, false)
+						.Select(static p => p.Sql)
+						.Where(static s => !QueryHelper.IsConstant(s))
+						.ToList();
+
+					// An empty ON list (e.g. DistinctBy(x => 1)) has no valid DISTINCT ON form — fall back to ROW_NUMBER below.
+					if (onExpressions.Count > 0)
+					{
+						ApplyDistinctOn(sequence.SelectQuery, onExpressions);
+						return BuildSequenceResult.FromContext(sequence);
+					}
+				}
+			}
+
+			if (builder.DataContext.SqlProviderFlags.IsWindowFunctionsSupported)
+			{
+				if (sequence == null)
+				{
+					var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, nonOrderedPart));
+
+					if (buildResult.BuildContext == null)
+						return buildResult;
+
+					sequence = buildResult.BuildContext;
+				}
 
 				var partitionBody = SequenceHelper.PrepareBody(selector, sequence);
 
@@ -110,8 +160,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				expression = WindowFunctionHelpers.ApplyOrderBy(expression, orderByPart);
 
-				buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, expression));
-				return buildResult;
+				return builder.TryBuildSequence(new BuildInfo(buildInfo, expression));
 			}
 
 			// Rare case when outer apply is supported and window functions are not
@@ -128,6 +177,30 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			return BuildSequenceResult.NotSupported();
+		}
+
+		// PostgreSQL/DuckDB require ORDER BY to begin with the DISTINCT ON expressions. Move (or synthesize) the ON
+		// keys to the front of the existing OrderBy, preserving the user's ordering for the remaining keys, then mark
+		// the select clause as DISTINCT ON.
+		static void ApplyDistinctOn(SelectQuery selectQuery, List<ISqlExpression> onExpressions)
+		{
+			var items   = selectQuery.OrderBy.Items;
+			var leading = new List<SqlOrderByItem>(onExpressions.Count);
+
+			foreach (var on in onExpressions)
+			{
+				var existing = items.Find(i => i.Expression.Equals(on));
+				leading.Add(existing ?? new SqlOrderByItem(on, false, false, Sql.NullsPosition.None));
+			}
+
+			var tail = items.FindAll(i => !onExpressions.Exists(on => on.Equals(i.Expression)));
+
+			items.Clear();
+			items.AddRange(leading);
+			items.AddRange(tail);
+
+			selectQuery.Select.IsDistinct = true;
+			selectQuery.Select.DistinctOn = onExpressions;
 		}
 	}
 }

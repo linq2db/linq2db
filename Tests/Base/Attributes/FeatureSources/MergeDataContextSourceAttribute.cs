@@ -13,7 +13,7 @@ namespace Tests
 			{
 				TestProvName.AllAccess,
 				ProviderName.SqlCe,
-				ProviderName.Ydb,
+				TestProvName.AllYdb,
 				TestProvName.AllSQLite,
 				TestProvName.AllSqlServer2005,
 				TestProvName.AllClickHouse,

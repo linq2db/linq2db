@@ -56,6 +56,11 @@ namespace LinqToDB.Internal.SqlProvider
 
 			var evaluationContext = new EvaluationContext(null);
 
+			// Lower NULLS FIRST/LAST emulation into CASE order keys before optimization so the existing
+			// DISTINCT / set-operation / sub-query handling treats them as ordinary derived order expressions.
+			if (!SqlProviderFlags.IsNullsOrderingSupported)
+				statement = (SqlStatement)new SqlNullsOrderingLoweringVisitor(SqlProviderFlags.DefaultNullsOrdering).LowerNullsOrdering(statement);
+
 			statement = (SqlStatement)OptimizeQueries(statement, statement, dataOptions, mappingSchema, evaluationContext);
 
 			if (dataOptions.LinqOptions.OptimizeJoins)
@@ -1647,7 +1652,15 @@ namespace LinqToDB.Internal.SqlProvider
 			var join = hostTs.Joins[joinIdx];
 
 			if (join.Condition.Predicates.Count > 0)
-				target.Where.ConcatSearchCondition(join.Condition);
+			{
+				// #5413: the ON may reference target's own projected columns - the apply projected the
+				// correlation key as a column, and the caller rewrites target's projection so that column
+				// is gone. Once the condition lives in target.Where those refs would dangle, so rebase any
+				// column owned by target to its underlying expression first (join is consumed: mutate in place).
+				var condition = join.Condition.Convert(target, allowMutation: true, (_, e) =>
+					e is SqlColumn c && ReferenceEquals(c.Parent, target) ? c.Expression : e);
+				target.Where.ConcatSearchCondition(condition);
+			}
 
 			hostTs.Joins.RemoveAt(joinIdx);
 		}
@@ -2326,7 +2339,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return QueryHelper.WrapQuery(
 				queryFilter,
 				statement,
-				static (queryFilter, q, _) => q.Select.IsDistinct && queryFilter(q),
+				static (queryFilter, q, _) => q.Select.IsDistinct && !q.Select.IsDistinctOn && queryFilter(q),
 				static (_, p, q) =>
 				{
 					p.Select.SkipValue = q.Select.SkipValue;
@@ -2374,7 +2387,7 @@ namespace LinqToDB.Internal.SqlProvider
 								{
 									if (c.Expression.Equals(item.Expression))
 									{
-										outerQuery.OrderBy.Items.Add(new SqlOrderByItem(c, item.IsDescending, item.IsPositioned));
+										outerQuery.OrderBy.Items.Add(new SqlOrderByItem(c, item.IsDescending, item.IsPositioned, item.NullsPosition));
 										break;
 									}
 								}
@@ -2428,10 +2441,10 @@ namespace LinqToDB.Internal.SqlProvider
 							processingQuery.Where.SearchCondition.AddLessOrEqual(
 								rowNumberColumn,
 								new SqlBinaryExpression(
-									query.Select.SkipValue.SystemType!, 
-									query.Select.SkipValue, 
-									"+", 
-									query.Select.TakeValue), 
+									query.Select.SkipValue.SystemType!,
+									query.Select.SkipValue,
+									"+",
+									query.Select.TakeValue),
 								CompareNulls.LikeSql);
 					}
 					else

@@ -5,33 +5,29 @@
 // </auto-generated>
 // ---------------------------------------------------------------------------------------------------
 
-using LinqToDB.Mapping;
 
 #pragma warning disable 1573, 1591
 #nullable enable
 
 namespace Cli.NoMetadata.DuckDB
 {
-	[Table("Person")]
 	public class Person
 	{
-		[Column("PersonID"  , IsPrimaryKey = true , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int     PersonId   { get; set; } // INTEGER
-		[Column("FirstName" , CanBeNull    = false                                                             )] public string  FirstName  { get; set; } = null!; // VARCHAR
-		[Column("LastName"  , CanBeNull    = false                                                             )] public string  LastName   { get; set; } = null!; // VARCHAR
-		[Column("MiddleName"                                                                                   )] public string? MiddleName { get; set; } // VARCHAR
-		[Column("Gender"    , CanBeNull    = false                                                             )] public string  Gender     { get; set; } = null!; // VARCHAR
+		public int     PersonId   { get; set; } // INTEGER
+		public string  FirstName  { get; set; } = null!; // VARCHAR
+		public string  LastName   { get; set; } = null!; // VARCHAR
+		public string? MiddleName { get; set; } // VARCHAR
+		public string  Gender     { get; set; } = null!; // VARCHAR
 
 		#region Associations
 		/// <summary>
 		/// Doctor_personid_personid_fkey backreference
 		/// </summary>
-		[Association(ThisKey = nameof(PersonId), OtherKey = nameof(DuckDB.Doctor.PersonId))]
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
 		/// Patient_personid_personid_fkey backreference
 		/// </summary>
-		[Association(ThisKey = nameof(PersonId), OtherKey = nameof(DuckDB.Patient.PersonId))]
 		public Patient? Patient { get; set; }
 		#endregion
 	}

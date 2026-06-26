@@ -23,7 +23,7 @@
 	RunCliTool("Access"         , null                 , "Cli.NoMetadata.Access.Odbc"        , Path.Combine(targetDir, "AccessOdbc")         , mode, connectionString: accessOdbcCN, extraOptions: extraOptions);
 	RunCliTool("Access"         , null                 , "Cli.NoMetadata.Access.OleDb"       , Path.Combine(targetDir, "AccessOleDb")        , mode, connectionString: accessOleDbCN, extraOptions: extraOptions);
 	RunCliTool("Access"         , null                 , "Cli.NoMetadata.Access.Both"        , Path.Combine(targetDir, "AccessBoth")         , mode, connectionString: accessOleDbCN, additionalConnectionString: accessOdbcCN, extraOptions: extraOptions);
-	RunCliTool("DuckDB"         , null                 , "Cli.NoMetadata.DuckDB"             , Path.Combine(targetDir, "DuckDB")             , mode, connectionString: duckdbCN);
+	RunCliTool("DuckDB"         , null                 , "Cli.NoMetadata.DuckDB"             , Path.Combine(targetDir, "DuckDB")             , mode, connectionString: duckdbCN, extraOptions: extraOptions);
 	RunCliTool("DB2"            , "DB2"                , "Cli.NoMetadata.DB2"                , Path.Combine(targetDir, "DB2")                , mode, providerLocation: db2ProviderLocation, extraOptions: extraOptions);
 	RunCliTool("Firebird"       , "Firebird.5"         , "Cli.NoMetadata.Firebird"           , Path.Combine(targetDir, "Firebird")           , mode, extraOptions: extraOptions);
 	RunCliTool("Informix"       , "Informix.DB2"       , "Cli.NoMetadata.Informix"           , Path.Combine(targetDir, "Informix")           , mode, providerLocation: db2ProviderLocation, extraOptions: extraOptions);
@@ -42,4 +42,5 @@
 	RunCliTool("ClickHouseMySql", "ClickHouse.MySql"   , "Cli.NoMetadata.ClickHouse.MySql"   , Path.Combine(targetDir, "ClickHouse.MySql")   , mode, extraOptions: extraOptions);
 	RunCliTool("ClickHouseHttp" , "ClickHouse.Driver"  , "Cli.NoMetadata.ClickHouse.Driver"  , Path.Combine(targetDir, "ClickHouse.Driver")  , mode, extraOptions: extraOptions);
 	RunCliTool("ClickHouseTcp"  , "ClickHouse.Octonica", "Cli.NoMetadata.ClickHouse.Octonica", Path.Combine(targetDir, "ClickHouse.Octonica"), mode, extraOptions: extraOptions);
+	RunCliTool("Ydb"            , "YDB"                , "Cli.NoMetadata.Ydb"                , Path.Combine(targetDir, "Ydb")                , mode, extraOptions: extraOptions);
 #>

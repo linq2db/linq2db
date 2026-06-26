@@ -7,6 +7,8 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 using Tests.Model;
 
 namespace Tests.Linq
@@ -18,7 +20,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class SampleClass
 		{
-			[Column]                                                              public int     Id     { get; set; }
+			[PrimaryKey]                                                          public int     Id     { get; set; }
 			[Column(Length = 50, CanBeNull = true)]                               public string? Value1 { get; set; }
 			[Column(Length = 50, CanBeNull = true)]                               public string? Value2 { get; set; }
 			[Column(Length = 50, CanBeNull = true, DataType = DataType.VarChar)]  public string? Value3 { get; set; }
@@ -252,6 +254,75 @@ namespace Tests.Linq
 				// as we don't order aggregation, we should expect unstable results
 				Assert.That(expected1 == actual || expected2 == actual, Is.True, $"Expected '{expected1}' or '{expected2}' but got '{actual}'");
 			}
+
+		static SampleClass[] GenerateNullsOrderData() =>
+		[
+			new SampleClass { Id = 1, Value1 = "b",  Value2 = "B" },
+			new SampleClass { Id = 2, Value1 = null, Value2 = "N" },
+			new SampleClass { Id = 3, Value1 = "a",  Value2 = "A" },
+		];
+
+		[Test]
+		public void AggregationOrderByNulls(
+			[IncludeDataSources(TestProvName.AllMySql, TestProvName.AllClickHouse, TestProvName.AllPostgreSQL, TestProvName.AllSqlServer2017Plus, TestProvName.AllOracle, TestProvName.AllSapHana, ProviderName.DB2, TestProvName.AllDuckDB)] string context,
+			[Values(Sql.NullsPosition.First, Sql.NullsPosition.Last)] Sql.NullsPosition nulls,
+			[Values] bool descending)
+		{
+			var data = GenerateNullsOrderData();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			// Order by a nullable column (Value1), aggregate a non-null column (Value2) so the NULLS placement is observable.
+			var ordered = descending
+				? table.OrderByDescending(x => x.Value1, nulls)
+				: table.OrderBy          (x => x.Value1, nulls);
+
+			var actual = ordered.Select(x => x.Value2).StringAggregate(" -> ").ToValue();
+
+			var grouped = nulls == Sql.NullsPosition.First
+				? data.OrderBy(d => d.Value1 != null)   // null group first
+				: data.OrderBy(d => d.Value1 == null);  // null group last
+			var expectedSeq = descending ? grouped.ThenByDescending(d => d.Value1) : grouped.ThenBy(d => d.Value1);
+			var expected    = Sql.ConcatStringsNullable(" -> ", expectedSeq.Select(d => d.Value2));
+
+			actual.ShouldBe(expected);
+		}
+
+		[Test]
+		public void AggregationDefaultNullsPosition(
+			[IncludeDataSources(TestProvName.AllMySql, TestProvName.AllClickHouse, TestProvName.AllPostgreSQL, TestProvName.AllSqlServer2017Plus, TestProvName.AllOracle, TestProvName.AllSapHana, ProviderName.DB2, TestProvName.AllDuckDB)] string context)
+		{
+			var data = GenerateNullsOrderData();
+
+			// The configured default must apply to a plain (no explicit position) aggregate OrderBy.
+			using var db    = GetDataContext(context, o => o.UseDefaultNullsPosition(Sql.NullsPosition.Last));
+			using var table = db.CreateLocalTable(data);
+
+			var byDefault  = table.OrderBy(x => x.Value1).Select(x => x.Value2).StringAggregate(" -> ").ToValue();
+			var byExplicit = table.OrderBy(x => x.Value1, Sql.NullsPosition.Last).Select(x => x.Value2).StringAggregate(" -> ").ToValue();
+
+			byDefault.ShouldBe(byExplicit);
+		}
+
+		[Test]
+		public void AggregationNonNullableNullsNoop(
+			[IncludeDataSources(TestProvName.AllMySql, TestProvName.AllClickHouse, TestProvName.AllPostgreSQL, TestProvName.AllSqlServer2017Plus, TestProvName.AllOracle, TestProvName.AllSapHana, ProviderName.DB2, TestProvName.AllDuckDB)] string context)
+		{
+			var data = GenerateNullsOrderData();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			// Id is non-nullable, so the NULLS position has no effect on the result — First == Last. The nullability
+			// gate drops the position to None for the SQL; some native providers (PostgreSQL, SapHana, DuckDB) still
+			// render a harmless NULLS token because their aggregate ordering pins a default null placement, but with
+			// no NULLs in a non-nullable key it cannot change the outcome.
+			var asFirst = table.OrderBy(x => x.Id, Sql.NullsPosition.First).Select(x => x.Value2).StringAggregate(" -> ").ToValue();
+			var asLast  = table.OrderBy(x => x.Id, Sql.NullsPosition.Last).Select(x => x.Value2).StringAggregate(" -> ").ToValue();
+
+			asFirst.ShouldBe(asLast);
+		}
 
 		[Test]
 		public void FinalAggregationOrderedTest([StringTestOrderSources] string context)
@@ -551,35 +622,13 @@ namespace Tests.Linq
 			//var str = "C";
 
 			_ = (from p in db.Person where p.FirstName == "A" + p.FirstName + "B" select p).ToList();
-			Assert.That(db.LastQuery, Contains.Substring("Concat('A', `p`.`FirstName`, 'B')"));
-		}
-
-		[ActiveIssue]
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/1916")]
-		public void Issue1916Test1([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var cnt = db.Person.Where(p => string.Concat(p.FirstName, p.MiddleName) != null).Count();
-
-			Assert.That(cnt, Is.EqualTo(4));
-		}
-
-		[ActiveIssue]
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/1916")]
-		public void Issue1916Test2([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var cnt = db.Person.Where(p => Sql.Concat(p.FirstName, p.MiddleName) != null).Count();
-
-			Assert.That(cnt, Is.EqualTo(4));
+			Assert.That(db.LastQuery, Contains.Substring("CONCAT('A', `p`.`FirstName`, 'B')"));
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4597")]
 		public void Issue4597Test([DataSources(
 			ProviderName.SqlCe,
-			ProviderName.Ydb,
+			TestProvName.AllYdb,
 			TestProvName.AllAccess,
 			TestProvName.AllClickHouse,
 			TestProvName.AllSybase,

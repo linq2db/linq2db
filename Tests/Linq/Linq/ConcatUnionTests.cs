@@ -336,6 +336,28 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void UnionOrderByNulls(
+			[DataSources] string context,
+			[Values(Sql.NullsPosition.First, Sql.NullsPosition.Last)] Sql.NullsPosition nulls,
+			[Values] bool descending)
+		{
+			using var db = GetDataContext(context);
+
+			// Set-operation + NULLS: the emulation CASE key must reach the outer ORDER BY and stay valid
+			// (the union's ORDER BY column-promotion / sub-query wrapping must project it where required).
+			var union = db.Parent.Where(p => p.ParentID < 5)
+				.Union(db.Parent.Where(p => p.ParentID >= 3));
+
+			var ordered = descending
+				? union.OrderByDescending(p => p.Value1, nulls)
+				: union.OrderBy          (p => p.Value1, nulls);
+
+			AssertQuery(ordered
+				.ThenBy(p => p.ParentID)
+				.Take(3));
+		}
+
+		[Test]
 		public void Union1([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -937,7 +959,6 @@ namespace Tests.Linq
 			AreEqual(expected, actual);
 		}
 
-		[YdbCteAsSource]
 		[ActiveIssue("UNION in subquery not supported by Access. We should transform it if we want to support such cases", Configuration = TestProvName.AllAccess)]
 		[Test]
 		public void ConcatInAny([DataSources] string context)
@@ -1855,9 +1876,9 @@ namespace Tests.Linq
 			res[0].Name.ShouldBe("John");
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test(Description = "invalid SQL for Any() subquery")]
-		public void Issue2932_Broken([DataSources(TestProvName.AllClickHouse)] string context)
+		public void Issue2932_Broken([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1866,9 +1887,9 @@ namespace Tests.Linq
 			query.Concat(query).ToArray();
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test(Description = "invalid SQL for Any() subquery")]
-		public void Issue2932_Works([DataSources(TestProvName.AllClickHouse)] string context)
+		public void Issue2932_Works([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 

@@ -735,6 +735,10 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 
 			void SerializeOptions(DataOptions options)
 			{
+				// Integer values must not be the last token: the statement is serialized immediately after the
+				// options with no separator, and the greedy ReadInt would otherwise consume the statement's
+				// leading digit. Keep a single-char (bool) token last.
+				Append((int)options.SqlOptions.DefaultNullsPosition);
 				Append(options.LinqOptions.PreferExistsForScalar);
 				Append(options.SqlOptions.EnableConstantExpressionInOrderBy);
 				Append(options.SqlOptions.GenerateFinalAliases);
@@ -1348,6 +1352,7 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 							Append(elem.TakeValue);
 							Append((int?)elem.TakeHints);
 							Append(elem.OptimizeDistinct);
+							Append(elem.DistinctOn);
 
 							Append(elem.Columns);
 
@@ -1451,6 +1456,7 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 							Append(elem.With);
 							Append(elem.Insert);
 							Append(elem.Update);
+							Append(elem.UpdateWhere);
 							Append(elem.SelectQuery);
 							Append(elem.SqlQueryExtensions);
 
@@ -1562,6 +1568,7 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 							Append(elem.Expression);
 							Append(elem.IsDescending);
 							Append(elem.IsPositioned);
+							Append((int)elem.NullsPosition);
 
 							break;
 						}
@@ -1761,6 +1768,15 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						break;
 					}
 
+					case QueryElementType.SqlConcat:
+					{
+						var elem = (SqlConcatExpression)e;
+
+						Append(elem.PreserveNull);
+						Append(elem.Expressions);
+						break;
+					}
+
 					case QueryElementType.SqlExtendedFunction:
 					{
 						var elem = (SqlExtendedFunction)e;
@@ -1869,11 +1885,19 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 
 			DataOptions DeserializeOptions(DataOptions options)
 			{
+				// Must match SerializeOptions order. The integer token is read first so the greedy ReadInt is not
+				// adjacent to the statement that follows the options with no separator.
+				var defaultNullsPosition          = (Sql.NullsPosition)ReadInt();
+				var preferExistsForScalar         = ReadBool();
+				var enableConstantExprInOrderBy   = ReadBool();
+				var generateFinalAliases          = ReadBool();
+
 				options = options
-					.WithOptions<LinqOptions>(lo => lo.WithPreferExistsForScalar(ReadBool()))
+					.WithOptions<LinqOptions>(lo => lo.WithPreferExistsForScalar(preferExistsForScalar))
 					.WithOptions<SqlOptions>(so =>
-						so.WithEnableConstantExpressionInOrderBy(ReadBool())
-							.WithGenerateFinalAliases(ReadBool()));
+						so.WithEnableConstantExpressionInOrderBy(enableConstantExprInOrderBy)
+							.WithGenerateFinalAliases(generateFinalAliases)
+							.WithDefaultNullsPosition(defaultNullsPosition));
 
 				return options;
 			}
@@ -2449,11 +2473,13 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 							var takeValue        = Read<ISqlExpression>()!;
 							var takeHints        = (TakeHints?)ReadNullableInt();
 							var optimizeDistinct = ReadBool();
+							var distinctOn       = ReadArray<ISqlExpression>();
 							var columns          = ReadArray<SqlColumn>()!;
 
 							obj = new SqlSelectClause(isDistinct, takeValue, takeHints, skipValue, columns)
 							{
 								OptimizeDistinct = optimizeDistinct,
+								DistinctOn       = distinctOn == null ? null : [..distinctOn],
 							};
 
 							break;
@@ -2595,6 +2621,7 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 							var with        = Read<SqlWithClause>();
 							var insert      = Read<SqlInsertClause>()!;
 							var update      = Read<SqlUpdateClause>()!;
+							var updateWhere = Read<SqlSearchCondition>();
 							var selectQuery = Read<SelectQuery>();
 							var extensions  = ReadList<SqlQueryExtension>();
 
@@ -2602,6 +2629,7 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 							{
 								Insert             = insert,
 								Update             = update,
+								UpdateWhere        = updateWhere,
 								With               = with,
 								Tag                = tag,
 								SqlQueryExtensions = extensions,
@@ -2717,11 +2745,12 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 
 					case QueryElementType.OrderByItem :
 						{
-							var expression   = Read<ISqlExpression>()!;
-							var isDescending = ReadBool();
-							var isPositioned = ReadBool();
+							var expression    = Read<ISqlExpression>()!;
+							var isDescending  = ReadBool();
+							var isPositioned  = ReadBool();
+							var nullsPosition = (Sql.NullsPosition)ReadInt();
 
-							obj = new SqlOrderByItem(expression, isDescending, isPositioned);
+							obj = new SqlOrderByItem(expression, isDescending, isPositioned, nullsPosition);
 
 							break;
 						}
@@ -2949,6 +2978,16 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						var expressions = ReadArray<ISqlExpression>()!;
 
 						obj = new SqlCoalesceExpression(expressions);
+
+						break;
+					}
+
+					case QueryElementType.SqlConcat:
+					{
+						var preserveNull = ReadBool();
+						var expressions  = ReadArray<ISqlExpression>()!;
+
+						obj = new SqlConcatExpression(preserveNull, expressions);
 
 						break;
 					}

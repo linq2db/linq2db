@@ -13,6 +13,8 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 		{
 		}
 
+		protected override bool ConcatRequiresExplicitStringCast => false;
+
 		#region LIKE
 
 		protected static string[] LikeFirebirdEscapeSymbols = { "_", "%" };
@@ -38,7 +40,6 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 				"&"                                           => new SqlFunction(element.Type, "Bin_And", element.Expr1, element.Expr2),
 				"|"                                           => new SqlFunction(element.Type, "Bin_Or", element.Expr1, element.Expr2),
 				"^"                                           => new SqlFunction(element.Type, "Bin_Xor", element.Expr1, element.Expr2),
-				"+" when element.SystemType == typeof(string) => new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence),
 				_                                             => base.ConvertSqlBinaryExpression(element),
 			};
 		}
@@ -163,8 +164,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			}
 			else if (cast.SystemType.ToUnderlying() == typeof(string) && cast.Expression.SystemType?.ToUnderlying() == typeof(Guid))
 			{
-				// TODO: think how to use FirebirdMemberTranslator.GuidMemberTranslator.TranslateGuildToString instead of code duplication here
-				return PseudoFunctions.MakeToLower(new SqlFunction(QueryHelper.GetDbDataType(cast, MappingSchema), "UUID_TO_CHAR", cast.Expression), MappingSchema);
+				return Translation.FirebirdMemberTranslator.TranslateGuidToString(cast.Expression, Factory);
 			}
 			else if (cast.SystemType.ToUnderlying() == typeof(Guid) && cast.Expression.SystemType?.ToUnderlying() == typeof(string))
 			{

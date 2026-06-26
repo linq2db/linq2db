@@ -409,7 +409,7 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
-		public void Coalesce4([DataSources(ProviderName.Ydb, ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		public void Coalesce4([DataSources(TestProvName.AllYdb, ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -420,7 +420,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Coalesce5([DataSources(ProviderName.Ydb, ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		public void Coalesce5([DataSources(TestProvName.AllYdb, ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -1436,6 +1436,28 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ProviderName.SqlCe, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_RowNumber)]
+		public void SelectWithIndexerOrderByNulls(
+			[DataSources] string context,
+			[Values(Sql.NullsPosition.First, Sql.NullsPosition.Last)] Sql.NullsPosition nulls,
+			[Values] bool descending)
+		{
+			using var db = GetDataContext(context);
+
+			// Indexed Select lowers ordering into ROW_NUMBER(); the requested NULLS position must reach the OVER clause.
+			var ordered = descending
+				? db.Person.OrderByDescending(p => p.MiddleName, nulls)
+				: db.Person.OrderBy          (p => p.MiddleName, nulls);
+
+			var query = ordered
+				.ThenBy(p => p.ID)
+				.Select((p, idx) => new { p.ID, Index = idx })
+				.Where(x => x.Index >= 0);
+
+			AssertQuery(query);
+		}
+
 		public class Table1788
 		{
 			[PrimaryKey]
@@ -1857,8 +1879,7 @@ namespace Tests.Linq
 			// System.Data.SqlClient
 			// Microsoft.Data.SqlClient
 			// SqlCe
-			using (new OptimizeForSequentialAccess(true))
-			using (var db = GetDataContext(context, interceptor: SequentialAccessCommandInterceptor.Instance, suppressSequentialAccess: true))
+			using (var db = GetDataContext(context, interceptor: SequentialAccessCommandInterceptor.Instance, suppressSequentialAccess: true, optimizeForSequentialAccess: true))
 			{
 				var q = db.Person
 					.Select(p => new
@@ -1879,9 +1900,8 @@ namespace Tests.Linq
 		public void SequentialAccessTest_Complex([DataSources] string context)
 		{
 			// fields read out-of-order, multiple times and with different types
-			using (new OptimizeForSequentialAccess(true))
 			// suppressSequentialAccess: true to avoid interceptor added twice
-			using (var db = GetDataContext(context, interceptor: SequentialAccessCommandInterceptor.Instance, suppressSequentialAccess: true))
+			using (var db = GetDataContext(context, interceptor: SequentialAccessCommandInterceptor.Instance, suppressSequentialAccess: true, optimizeForSequentialAccess: true))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -1894,6 +1914,24 @@ namespace Tests.Linq
 				AreEqual(InheritanceChild, db.InheritanceChild);
 			}
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/5639 - a non-sequential materialization plan cached for a configuration must not be reused by a SequentialAccess context sharing that configuration")]
+		public void SequentialAccessTest_CacheKey([DataSources] string context)
+		{
+			// Warm the query cache for this configuration with OptimizeForSequentialAccess OFF (random column-access plan).
+			// Exception: on the SqlServer .SA lane the factory forces the option ON for every context, so the warm-up there
+			// is already a sequential-access plan and the divergence below is exercised by the other [DataSources] providers.
+			using (var db = GetDataContext(context))
+				AreEqual(InheritanceParent, db.InheritanceParent);
+
+			// Same query and configuration, now with the option ON and the reader opened with
+			// CommandBehavior.SequentialAccess. The two plans differ only by OptimizeForSequentialAccess,
+			// which now participates in DataOptions.ConfigurationID; before this fix the cached
+			// random-access plan was reused here and threw "Invalid attempt to read from column ordinal
+			// '0'. With CommandBehavior.SequentialAccess, you may only read from column ordinal 'N' or greater."
+			using (var db = GetDataContext(context, interceptor: SequentialAccessCommandInterceptor.Instance, suppressSequentialAccess: true, optimizeForSequentialAccess: true))
+				AreEqual(InheritanceParent, db.InheritanceParent);
+		}
 		#endregion
 
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
@@ -1901,6 +1939,8 @@ namespace Tests.Linq
 		public void Issue4520Test([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
+
+			using var _ = context.IsAnyOf(TestProvName.AllYdb) ? new DisableBaseline("https://github.com/linq2db/linq2db/issues/5169 - remote/direct derived-table alias numbering divergence") : null;
 
 			db.Types2
 				.Where(i => i.ID == 1)

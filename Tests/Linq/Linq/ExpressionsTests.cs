@@ -72,7 +72,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class MappingTestClass
 		{
-			[Column] public int       Id    { get; set; }
+			[PrimaryKey] public int   Id    { get; set; }
 			[Column] public int       Value { get; set; }
 			[Column] public FlagsEnum Flags { get; set; }
 		}
@@ -189,35 +189,38 @@ namespace Tests.Linq
 		static int Count1(Parent p) { return p.Children.Count(c => c.ChildID > 0); }
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void MapMember1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
-			Expressions.MapMember<Parent,int>(p => Count1(p), p => p.Children.Count(c => c.ChildID > 0));
+			Expressions.MapMember<Parent,int>(nameof(MapMember1), p => Count1(p), p => p.Children.Count(c => c.ChildID > 0));
 
-			using var db = GetDataContext(context);
+			using var db = GetDataContext(context, new MappingSchema(nameof(MapMember1)));
 			AreEqual(Parent.Select(Count1), db.Parent.Select(p => Count1(p)));
 		}
 
 		static int Count2(Parent p, int id) { return p.Children.Count(c => c.ChildID > id); }
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void MapMember2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
-			Expressions.MapMember<Parent,int,int>((p,id) => Count2(p, id), (p, id) => p.Children.Count(c => c.ChildID > id));
+			Expressions.MapMember<Parent,int,int>(nameof(MapMember2), (p,id) => Count2(p, id), (p, id) => p.Children.Count(c => c.ChildID > id));
 
-			using var db = GetDataContext(context);
+			using var db = GetDataContext(context, new MappingSchema(nameof(MapMember2)));
 			AreEqual(Parent.Select(p => Count2(p, 1)), db.Parent.Select(p => Count2(p, 1)));
 		}
 
 		static int Count3(Parent p, int id) { return p.Children.Count(c => c.ChildID > id) + 2; }
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void MapMember3([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
-			Expressions.MapMember<Parent,int,int>((p,id) => Count3(p, id), (p, id) => p.Children.Count(c => c.ChildID > id) + 2);
+			Expressions.MapMember<Parent,int,int>(nameof(MapMember3), (p,id) => Count3(p, id), (p, id) => p.Children.Count(c => c.ChildID > id) + 2);
 
 			var n = 2;
 
-			using var db = GetDataContext(context);
+			using var db = GetDataContext(context, new MappingSchema(nameof(MapMember3)));
 			AreEqual(Parent.Select(p => Count3(p, n)), db.Parent.Select(p => Count3(p, n)));
 		}
 
@@ -570,9 +573,9 @@ namespace Tests.Linq
 			var _ = db.Child.LeftJoin(db.Parent, c => c.ParentID, p => p.ParentID).ToList();
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
-		public void LeftJoinTest2([DataSources(TestProvName.AllClickHouse)] string context)
+		public void LeftJoinTest2([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			var _ = (
@@ -585,9 +588,9 @@ namespace Tests.Linq
 		[Test]
 		public void ToLowerInvariantTest([DataSources] string context)
 		{
-			Expressions.MapMember((string s) => s.ToLowerInvariant(), s => s.ToLower());
+			Expressions.MapMember(nameof(ToLowerInvariantTest), (string s) => s.ToLowerInvariant(), s => s.ToLower());
 
-			using var db = GetDataContext(context);
+			using var db = GetDataContext(context, new MappingSchema(nameof(ToLowerInvariantTest)));
 			AreEqual(
 				   Doctor.Where(p => p.Taxonomy.ToLowerInvariant() == "psychiatry").Select(p => p.Taxonomy.ToLower()),
 				db.Doctor.Where(p => p.Taxonomy.ToLowerInvariant() == "psychiatry").Select(p => p.Taxonomy.ToLower()));
@@ -1115,7 +1118,6 @@ namespace Tests.Linq
 		#endregion
 
 		#region Regression: query comparison
-		[YdbCteAsSource]
 		[Test(Description = "Tests regression introduced in 3.5.2")]
 		public void ComparisonTest1([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context, [Values(1, 2)] int iteration)
 		{
@@ -1136,7 +1138,6 @@ namespace Tests.Linq
 				db.Patient.GetCacheMissCount().ShouldBe(cacheMiss);
 		}
 
-		[YdbCteAsSource]
 		[Test(Description = "Tests regression introduced in 3.5.2")]
 		public void ComparisonTest2([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{

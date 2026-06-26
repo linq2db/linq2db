@@ -349,23 +349,45 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 
 		protected class StringMemberTranslator : StringMemberTranslatorBase
 		{
-			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult)
+			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult, bool withoutSeparator)
 			{
 				var builder = new AggregateFunctionBuilder();
 
-				ConfigureConcatWsEmulation(builder, nullValuesAsEmptyString, isNullableResult, (factory, valueType, separator, valuesExpr) =>
+				if (withoutSeparator)
 				{
-					var intDbType = factory.GetDbDataType(typeof(int));
-					var substring = factory.Function(valueType, "SUBSTRING",
-						[new SqlFunctionArgument(valuesExpr, suffix: factory.Fragment("FROM {0}", factory.Add(intDbType, factory.Length(separator), factory.Value(intDbType, 1))))],
-						[true],
-						canBeNull: true
-					);
+					ConfigureConcat(builder, wrapByCoalesce: true);
+				}
+				else
+				{
+					ConfigureConcatWsEmulation(builder, nullValuesAsEmptyString, isNullableResult, (factory, valueType, separator, valuesExpr) =>
+					{
+						var intDbType = factory.GetDbDataType(typeof(int));
+						var substring = factory.Function(valueType, "SUBSTRING",
+							[new SqlFunctionArgument(valuesExpr, suffix: factory.Fragment("FROM {0}", factory.Add(intDbType, factory.Length(separator), factory.Value(intDbType, 1))))],
+							[true],
+							canBeNull: true
+						);
 
-					return substring;
-				});
+						return substring;
+					}, withoutSeparator);
+				}
 
-				return builder.Build(translationContext, methodCall);
+				return builder.Build(translationContext, methodCall, isExpression: translationFlags.HasFlag(TranslationFlags.Expression));
+			}
+
+			// {value} IS NULL OR LTRIM({value}, 'ASCII_WHITESPACES') = ''
+			// (Informix LTRIM with the ASCII subset; non-ASCII whitespace coverage matches the
+			// pre-refactor behavior.)
+			public override ISqlExpression? TranslateIsNullOrWhiteSpace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value)
+			{
+				var factory     = translationContext.ExpressionFactory;
+				var valueType   = factory.GetDbDataType(value);
+				var literalType = factory.GetDbDataType(typeof(string));
+
+				var trimmed   = factory.Function(valueType, "LTRIM", value, factory.Value(literalType, ASCII_WHITESPACES));
+				var predicate = factory.Equal(trimmed, factory.Value(literalType, string.Empty));
+
+				return WrapIsNullOrWhiteSpaceResult(translationContext, value, predicate);
 			}
 		}
 

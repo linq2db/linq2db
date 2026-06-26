@@ -349,6 +349,22 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 
 		protected class AccessStringMemberTranslator : StringMemberTranslatorBase
 		{
+			public override ISqlExpression? TranslateTrimStart(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression? trimChars)
+			{
+				if (trimChars != null)
+					return null;
+
+				return base.TranslateTrimStart(translationContext, methodCall, translationFlags, value, trimChars);
+			}
+
+			public override ISqlExpression? TranslateTrimEnd(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression? trimChars)
+			{
+				if (trimChars != null)
+					return null;
+
+				return base.TranslateTrimEnd(translationContext, methodCall, translationFlags, value, trimChars);
+			}
+
 			public override ISqlExpression? TranslateLPad(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression paddingChar)
 			{
 				var factory = translationContext.ExpressionFactory;
@@ -366,21 +382,42 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 				return factory.Concat(fillingString, value);
 			}
 
-			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult)
+			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult, bool withoutSeparator)
 			{
 				var builder = new AggregateFunctionBuilder();
 
-				ConfigureConcatWsEmulation(builder, nullValuesAsEmptyString, isNullableResult, (factory, valueType, separator, valuesExpr) =>
+				if (withoutSeparator)
 				{
-					var intDbType = factory.GetDbDataType(typeof(int));
-					var substring = factory.Function(valueType, "Mid",
-						valuesExpr,
-						factory.Add(intDbType, factory.Length(separator), factory.Value(intDbType, 1)));
+					ConfigureConcat(builder, wrapByCoalesce: true);
+				}
+				else
+				{
+					ConfigureConcatWsEmulation(builder, nullValuesAsEmptyString, isNullableResult, (factory, valueType, separator, valuesExpr) =>
+					{
+						var intDbType = factory.GetDbDataType(typeof(int));
+						var substring = factory.Function(valueType, "Mid",
+							valuesExpr,
+							factory.Add(intDbType, factory.Length(separator), factory.Value(intDbType, 1)));
 
-					return substring;
-				});
+						return substring;
+					}, withoutSeparator);
+				}
 
-				return builder.Build(translationContext, methodCall);
+				return builder.Build(translationContext, methodCall, isExpression: translationFlags.HasFlag(TranslationFlags.Expression));
+			}
+
+			// {value} IS NULL OR LTRIM({value}) = ''
+			// (Access LTRIM only trims spaces; full Unicode whitespace handling would require
+			// sandbox-mode REPLACE chains. This matches the pre-refactor behavior.)
+			public override ISqlExpression? TranslateIsNullOrWhiteSpace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value)
+			{
+				var factory   = translationContext.ExpressionFactory;
+				var valueType = factory.GetDbDataType(value);
+
+				var trimmed   = factory.Function(valueType, "LTRIM", value);
+				var predicate = factory.Equal(trimmed, factory.Value(valueType, string.Empty));
+
+				return WrapIsNullOrWhiteSpaceResult(translationContext, value, predicate);
 			}
 		}
 
@@ -389,16 +426,26 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr,
 				TranslationFlags                                                          translationFlags)
 			{
-				// LCase(Mid(CStr({0}), 2, 36))
+				// IIf(IsNull({0}), NULL, LCase(Mid(CStr({0}), 2, 36)))
+				// Access's `CStr(NULL)` throws "Invalid use of Null" at the ODBC layer
+				// (does not propagate NULL like other providers), so guard explicitly.
+				// Mirrors DB2 / SQLite / Oracle Guid translators.
+				// Note: VBA's `IIf` function evaluates both branches eagerly
+				// (https://support.microsoft.com/en-us/office/iif-function-32436ecf-c629-48a3-9900-647539c764e3),
+				// but Jet/ACE SQL `IIF` short-circuits — the false branch is skipped when the
+				// predicate is true (https://nolongerset.com/ternary-operator-iif/).
+				// Verified empirically by `StringConcatTests.Concat_StringConcat_StringIntGuidObjectArgs_NullableArgs`
+				// driving null `Guid?` rows on Access.Ace.Odbc without hitting the `CStr(NULL)` throw.
 
 				var factory      = translationContext.ExpressionFactory;
 				var stringDbType = factory.GetDbDataType(typeof(string));
 
-				var cStrExpression = factory.Function(stringDbType, "CStr", guidExpr);
-				var midExpression  = factory.Function(stringDbType, "Mid",  cStrExpression, factory.Value(2), factory.Value(36));
-				var toLower        = factory.ToLower(midExpression);
+				var cStrExpression   = factory.Function(stringDbType, "CStr", guidExpr);
+				var midExpression    = factory.Function(stringDbType, "Mid",  cStrExpression, factory.Value(2), factory.Value(36));
+				var toLower          = factory.ToLower(midExpression);
+				var resultExpression = factory.Condition(factory.IsNullPredicate(guidExpr), factory.Value<string?>(stringDbType, null), factory.NotNull(toLower));
 
-				return toLower;
+				return resultExpression;
 			}
 		}
 

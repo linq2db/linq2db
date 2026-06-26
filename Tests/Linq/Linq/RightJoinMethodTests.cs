@@ -35,9 +35,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void RightJoinWithNullableKey([DataSources(TestProvName.AllClickHouse)] string context)
+		public void RightJoinWithNullableKey([DataSources] string context)
 		{
-			using var db = GetDataContext(context);
+			using var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context));
 
 			var query =
 				db.Parent.RightJoin(
@@ -68,9 +68,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void RightJoinWithCompositeKey([DataSources(TestProvName.AllClickHouse)] string context)
+		public void RightJoinWithCompositeKey([DataSources] string context)
 		{
-			using var db = GetDataContext(context);
+			using var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context));
 
 			var query =
 				db.Parent.RightJoin(

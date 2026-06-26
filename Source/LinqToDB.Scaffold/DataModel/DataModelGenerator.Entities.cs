@@ -233,12 +233,12 @@ namespace LinqToDB.DataModel
 			if ((model.FindExtensions & methodType) != methodType)
 				return;
 
-			var async     = (methodType & FindTypes.Async       ) == FindTypes.Async;
-			var query     = (methodType & FindTypes.Query       ) == FindTypes.Query;
-			var byPK      = (methodType & FindTypes.ByPrimaryKey) == FindTypes.ByPrimaryKey;
-			var byEntity  = (methodType & FindTypes.ByEntity    ) == FindTypes.ByEntity;
-			var onTable   = (methodType & FindTypes.OnTable     ) == FindTypes.OnTable;
-			var onContext = (methodType & FindTypes.OnContext   ) == FindTypes.OnContext;
+			var async     = methodType.HasFlag(FindTypes.Async       );
+			var query     = methodType.HasFlag(FindTypes.Query       );
+			var byPK      = methodType.HasFlag(FindTypes.ByPrimaryKey);
+			var byEntity  = methodType.HasFlag(FindTypes.ByEntity    );
+			var onTable   = methodType.HasFlag(FindTypes.OnTable     );
+			var onContext = methodType.HasFlag(FindTypes.OnContext   );
 
 			var entityType = context.GetEntityBuilder(model).Type.Type;
 

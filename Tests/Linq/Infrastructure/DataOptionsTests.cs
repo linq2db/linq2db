@@ -15,6 +15,8 @@ using Microsoft.Data.SqlClient;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 using Tests.Model;
 
 namespace Tests.Infrastructure
@@ -29,6 +31,15 @@ namespace Tests.Infrastructure
 			var lo2 = lo1 with { GuardGrouping = true };
 
 			Assert.That(((IConfigurationID)lo1).ConfigurationID, Is.Not.EqualTo(((IConfigurationID)lo2).ConfigurationID));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/5639 - the sequential-access materialization plan must not be shared by the cache between contexts that differ only in this option")]
+		public void OptimizeForSequentialAccessConfigurationIDTest()
+		{
+			var off = new DataOptions().UseConfiguration("X").UseOptimizeForSequentialAccess(false);
+			var on  = new DataOptions().UseConfiguration("X").UseOptimizeForSequentialAccess(true);
+
+			Assert.That(((IConfigurationID)on).ConfigurationID, Is.Not.EqualTo(((IConfigurationID)off).ConfigurationID));
 		}
 
 		[Test]
@@ -759,10 +770,37 @@ namespace Tests.Infrastructure
 					var ctx when ctx.IsAnyOf(TestProvName.AllSqlServer)  => new DataOptions().UseConfiguration(context).UseSqlServer   (connectionString),
 					var ctx when ctx.IsAnyOf(TestProvName.AllSybase)     => new DataOptions().UseConfiguration(context).UseAse         (connectionString),
 					var ctx when ctx.IsAnyOf(TestProvName.AllDuckDB)     => new DataOptions().UseConfiguration(context).UseDuckDB      (connectionString),
+					var ctx when ctx.IsAnyOf(TestProvName.AllYdb)        => new DataOptions().UseConfiguration(context).UseYdb         (connectionString),
 					_                                                    => throw new NotImplementedException($"Missing case for provider {context}")
 				});
 
 			db.GetTable<Person>().ToArray();
+		}
+
+		[Test]
+		public void WithDefaultNullsPositionTest()
+		{
+			// SUG002: the SqlOptions fluent extension and the DataOptions extension both carry the value.
+			new SqlOptions().WithDefaultNullsPosition(Sql.NullsPosition.Last).DefaultNullsPosition.ShouldBe(Sql.NullsPosition.Last);
+			new DataOptions().UseDefaultNullsPosition(Sql.NullsPosition.First).SqlOptions.DefaultNullsPosition.ShouldBe(Sql.NullsPosition.First);
+		}
+
+		[Test]
+		public void ConfigurationSqlDefaultNullsPositionTest()
+		{
+			// MIN006: the process-global static getter/setter, and its propagation to freshly-built DataOptions.
+			var saved = Configuration.Sql.DefaultNullsPosition;
+			try
+			{
+				Configuration.Sql.DefaultNullsPosition = Sql.NullsPosition.Last;
+
+				Configuration.Sql.DefaultNullsPosition.ShouldBe(Sql.NullsPosition.Last);
+				new DataOptions().SqlOptions.DefaultNullsPosition.ShouldBe(Sql.NullsPosition.Last);
+			}
+			finally
+			{
+				Configuration.Sql.DefaultNullsPosition = saved;
+			}
 		}
 	}
 }

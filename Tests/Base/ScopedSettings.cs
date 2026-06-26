@@ -25,6 +25,7 @@ namespace Tests
 
 			_db.GetTable<Parent>().Delete(p => p.ParentID > 7);
 			_db.GetTable<Child>().Delete(p => p.ParentID > 7 || p.ChildID > 77);
+			_db.GetTable<GrandChild>().Delete(p => p.ParentID > 7 || p.GrandChildID > 1000);
 
 			_db.GetTable<Patient>().Delete(p => p.PersonID > 4 || p.PersonID < 1);
 			_db.GetTable<Person>().Delete(p => p.ID > 4 || p.ID < 1);
@@ -78,20 +79,6 @@ namespace Tests
 		{
 			if (_original != null)
 				Thread.CurrentThread.CurrentCulture = _original;
-		}
-	}
-
-	public class OptimizeForSequentialAccess : IDisposable
-	{
-		private readonly bool _original = Configuration.OptimizeForSequentialAccess;
-		public OptimizeForSequentialAccess(bool enable)
-		{
-			Configuration.OptimizeForSequentialAccess = enable;
-		}
-
-		public void Dispose()
-		{
-			Configuration.OptimizeForSequentialAccess = _original;
 		}
 	}
 

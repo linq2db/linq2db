@@ -10,6 +10,7 @@ namespace Tests.UserTests
 	public class Issue1556Tests : TestBase
 	{
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void Issue1556Test([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);

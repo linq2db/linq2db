@@ -128,8 +128,6 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 					element.SystemType
 				),
 
-				"+" when element.SystemType == typeof(string) => new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence),
-
 				_ => base.ConvertSqlBinaryExpression(element),
 			};
 		}
@@ -179,6 +177,27 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			}
 
 			return base.ConvertCoalesce(element);
+		}
+
+		// Oracle's `||` auto-coerces non-string operands — explicit CAST is redundant.
+		protected override bool ConcatRequiresExplicitStringCast => false;
+
+		public override ISqlExpression ConvertConcat(SqlConcatExpression element)
+		{
+			// On Oracle `''` IS NULL, so the base `Coalesce(x, '')` wrap (added when
+			// PreserveNull=false to match C# null-as-empty semantics) is functionally a
+			// no-op AND introduces ORA-12704 character-set mismatches when wrapping
+			// NVARCHAR operands (`''` defaults to CHAR_CS, conflicts with NCHAR_CS).
+			// Oracle's native `||` already treats NULL operands as empty for non-all-null
+			// concats — equivalent to C# null-as-empty for everything except the all-null
+			// case (which yields NULL on Oracle, vs `""` in C#; the well-known empty=NULL
+			// quirk is already accommodated by tests via the EmptyAsNullConcat helper).
+			// Skip the Coalesce wrap and let `||` emission handle the rest.
+
+			if (element.Expressions.Length == 1)
+				return element.Expressions[0];
+
+			return element;
 		}
 
 		protected override ISqlExpression ConvertSqlCondition(SqlConditionExpression element)
@@ -264,7 +283,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 						return new SqlFunction(cast.Type, "Trunc", argument, new SqlValue("DD"));
 					}
 
-					return new SqlFunction(cast.Type, "TO_DATE", argument, new SqlValue("YYYY-MM-DD"));
+					if (argument.SystemType == typeof(string))
+						return new SqlFunction(cast.Type, "TO_DATE", argument, new SqlValue("YYYY-MM-DD"));
 				}
 
 				if (argument.ElementType == QueryElementType.SqlParameter && argumentType.Equals(toType))
@@ -275,29 +295,32 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 					if (ftype == typeof(DateTimeOffset))
 						return argument;
 
-					return new SqlFunction(cast.Type, "TO_TIMESTAMP_TZ", argument, new SqlValue("YYYY-MM-DD HH24:MI:SS"));
+					if (argument.SystemType == typeof(string))
+						return new SqlFunction(cast.Type, "TO_TIMESTAMP_TZ", argument, new SqlValue("YYYY-MM-DD HH24:MI:SS"));
 				}
 
-				return new SqlFunction(cast.Type, "TO_TIMESTAMP", argument, new SqlValue("YYYY-MM-DD HH24:MI:SS"));
+				if (argument.SystemType == typeof(string))
+					return new SqlFunction(cast.Type, "TO_TIMESTAMP", argument, new SqlValue("YYYY-MM-DD HH24:MI:SS"));
 			}
 			else if (ftype == typeof(string))
 			{
 				var stype = argument.SystemType!.ToUnderlying();
-
-				if (stype == typeof(DateTimeOffset))
-				{
-					return new SqlFunction(cast.Type, "To_Char", argument, new SqlValue("YYYY-MM-DD HH24:MI:SS TZH:TZM"));
-				}
-				else if (stype == typeof(DateTime))
-				{
-					return new SqlFunction(cast.Type, "To_Char", argument, new SqlValue("YYYY-MM-DD HH24:MI:SS"));
-				}
+				var format =
+					stype == typeof(DateTimeOffset) ? "YYYY-MM-DD HH24:MI:SS TZH:TZM" :
+					stype == typeof(DateTime)       ? "YYYY-MM-DD HH24:MI:SS" :
 #if SUPPORTS_DATEONLY
-				else if (stype == typeof(DateOnly))
-				{
-					return new SqlFunction(cast.Type, "To_Char", argument, new SqlValue("YYYY-MM-DD"));
-				}
+					stype == typeof(DateOnly)       ? "YYYY-MM-DD" :
 #endif
+					null;
+
+				if (format != null)
+				{
+					return new SqlFunction(
+						cast.Type,
+						cast.Type.DataType is DataType.NChar or DataType.NVarChar ? "To_NChar" : "To_Char",
+						argument,
+						new SqlValue(format));
+				}
 			}
 
 			return FloorBeforeConvert(cast);

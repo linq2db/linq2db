@@ -40,6 +40,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void Test2([CteContextSource(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -83,7 +84,7 @@ namespace Tests.Linq
 
 		// MariaDB allows CTE ordering but do not respect it
 		[Test]
-		public void WithOrderBy([CteContextSource(TestProvName.AllMariaDB)] string context)
+		public void WithOrderBy([CteContextSource(TestProvName.AllMariaDB, TestProvName.AllYdb)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -107,6 +108,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(5596, Configuration = TestProvName.AllYdb, Details = "YDB does not preserve a CTE's inner ORDER BY in the outer SELECT (the ORDER BY there only bounds LIMIT). Proper fix is to propagate the CTE's ORDER BY into the referencing query.")]
 		[Test]
 		public void WithLimitedOrderBy([CteContextSource] string context)
 		{
@@ -496,7 +498,7 @@ namespace Tests.Linq
 
 			query.ToArray();
 
-			if (context.IsAnyOf(ProviderName.Ydb))
+			if (context.IsAnyOf(TestProvName.AllYdb))
 				Assert.That(str, Does.Contain("$CTE"));
 			else
 				Assert.That(str, Does.Contain("WITH"));
@@ -540,7 +542,7 @@ namespace Tests.Linq
 		// MariaDB support expected in v10.6 : https://jira.mariadb.org/browse/MDEV-18511
 		[ActiveIssue(3015, Configurations = [TestProvName.AllSapHana, ProviderName.InformixDB2])]
 		[Test]
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void TestDelete([CteContextSource(TestProvName.AllFirebird, ProviderName.DB2, TestProvName.AllMariaDB, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -563,6 +565,7 @@ namespace Tests.Linq
 		// MariaDB support expected in v10.6 : https://jira.mariadb.org/browse/MDEV-18511
 		[ActiveIssue(3015, Configurations = [TestProvName.AllOracle, TestProvName.AllSapHana, ProviderName.InformixDB2], Details = "Oracle needs special syntax for CTE + UPDATE")]
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void TestUpdate(
 			[CteContextSource(TestProvName.AllFirebird, ProviderName.DB2, TestProvName.AllClickHouse, TestProvName.AllOracle, TestProvName.AllMariaDB)]
 			string context)
@@ -928,7 +931,6 @@ namespace Tests.Linq
 			AreEqual(query2_, query2);
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void TestEmbedded([CteContextSource] string context)
 		{
@@ -1081,7 +1083,7 @@ namespace Tests.Linq
 
 		#region Issue 2029
 		[Test]
-		public void Issue2029Test([CteContextSource(TestProvName.AllClickHouse)] string context)
+		public void Issue2029Test([CteContextSource(TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
 		{
 			using (var db = GetDataContext(context, o => o.UseGenerateFinalAliases(true)))
 			using (db.CreateLocalTable<NcCode>())
@@ -2104,7 +2106,8 @@ namespace Tests.Linq
 				Assert.That(result[0].Gender, Is.EqualTo(Gender.Female));
 			}
 
-			if (db is DataConnection dc)
+			// YQL has no WITH; CTEs render as "$name = SELECT ...", so skip the WITH-shape check for YDB.
+			if (db is DataConnection dc && !context.IsAnyOf(TestProvName.AllYdb))
 			{
 				Assert.That(dc.LastQuery, Contains.Substring("WITH"));
 			}
@@ -2889,13 +2892,13 @@ namespace Tests.Linq
 		[Table]
 		sealed class Projection1
 		{
-			[Column(Length = 50)] public string S1 { get; set; } = null!;
+			[PrimaryKey, Column(Length = 50, CanBeNull = false)] public string S1 { get; set; } = null!;
 		}
 
 		[Table]
 		sealed class Projection2
 		{
-			[Column(Length = 50)] public string S1 { get; set; } = null!;
+			[PrimaryKey, Column(Length = 50, CanBeNull = false)] public string S1 { get; set; } = null!;
 		}
 
 		// https://github.com/linq2db/linq2db/issues/5359

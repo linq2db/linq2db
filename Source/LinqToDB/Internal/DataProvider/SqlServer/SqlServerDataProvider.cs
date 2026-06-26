@@ -18,6 +18,7 @@ using LinqToDB.Internal.DataProvider.SqlServer.Translation;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
@@ -75,6 +76,14 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			SqlProviderFlags.IsUpdateTakeSupported              = true;
 			SqlProviderFlags.IsDistinctFromSupported            = Version >= SqlServerVersion.v2022;
 			SqlProviderFlags.SupportsBooleanType                = false;
+			SqlProviderFlags.DefaultNullsOrdering               = NullsDefaultOrdering.Smallest; // SQL Server sorts NULL as the smallest value
+
+			// SqlServer 2005 emits InsertOrUpdate as UPDATE + IF @@ROWCOUNT=0 INSERT (single statement);
+			// it can't carry an extra predicate on the UPDATE branch. 2008+ go through MERGE which can.
+			// SqlServer 2005 also predates MERGE (introduced in 2008), so synthesized MERGE lowering
+			// for bulk/SkipInsert/InsertWhen/non-PK-match Upsert isn't an option.
+			SqlProviderFlags.IsInsertOrUpdateWithPredicateSupported = Version > SqlServerVersion.v2005;
+			SqlProviderFlags.IsUpsertWithMergeLoweringSupported     = Version > SqlServerVersion.v2005;
 
 			SetCharField("char", (r, i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("nchar", (r, i) => r.GetString(i).TrimEnd(' '));
@@ -90,7 +99,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				(SqlServerVersion.v2017, _) => new SqlServer2017SqlOptimizer(SqlProviderFlags),
 				(SqlServerVersion.v2019, _) => new SqlServer2019SqlOptimizer(SqlProviderFlags),
 				(SqlServerVersion.v2022, _) => new SqlServer2022SqlOptimizer(SqlProviderFlags),
-				(SqlServerVersion.v2025, SqlServerProvider.MicrosoftDataSqlClient) => new SqlServer2022SqlOptimizer(SqlProviderFlags),
+				(SqlServerVersion.v2025, SqlServerProvider.MicrosoftDataSqlClient) => new SqlServer2025SqlOptimizer(SqlProviderFlags),
 				(SqlServerVersion.v2025, SqlServerProvider.SystemDataSqlClient)    => new SqlServerSystem2025SqlOptimizer(SqlProviderFlags),
 				_ => new SqlServer2008SqlOptimizer(SqlProviderFlags),
 			};
@@ -131,15 +140,19 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
 				var indexParameter      = Expression.Parameter(typeof(int), "i");
 
-				var methodCall = Expression.Call(dataReaderParameter, Adapter.GetSqlVectorReaderMethod!, new[] { typeof(float) }, indexParameter);
+				var methodCall  = Expression.Call(dataReaderParameter, Adapter.GetSqlVectorReaderMethod!, new[] { typeof(float) }, indexParameter);
+				var readerExpr  = Expression.Lambda(methodCall, dataReaderParameter, indexParameter);
+				var toArrayExpr = Expression.Lambda(Expression.Call(ExpressionHelper.Property(methodCall, "Memory"), "ToArray", Array.Empty<Type>()), dataReaderParameter, indexParameter);
 
-				ReaderExpressions[new ReaderInfo { ToType = Adapter.SqlVectorType, FieldType = typeof(byte[]), DataReaderType = Adapter.DataReaderType, DataTypeName = "vector" }] =
-					Expression.Lambda(methodCall, dataReaderParameter, indexParameter);
+				// SqlClient 6.x reports vector columns as FieldType=byte[]; 7.0.1+ as SqlVector<T>. Register for both.
+				foreach (var fieldType in new[] { typeof(byte[]), Adapter.SqlVectorType })
+				{
+					ReaderExpressions[new ReaderInfo { ToType = Adapter.SqlVectorType, FieldType = fieldType, DataReaderType = Adapter.DataReaderType, DataTypeName = "vector" }] = readerExpr;
+					ReaderExpressions[new ReaderInfo { ToType = typeof(float[]),       FieldType = fieldType, DataReaderType = Adapter.DataReaderType, DataTypeName = "vector" }] = toArrayExpr;
+				}
 
-				ReaderExpressions[new ReaderInfo { ToType = typeof(float[]), FieldType = typeof(byte[]), DataReaderType = Adapter.DataReaderType, DataTypeName = "vector" }] =
-					Expression.Lambda(Expression.Call(ExpressionHelper.Property(methodCall, "Memory"), "ToArray", Array.Empty<Type>()), dataReaderParameter, indexParameter);
-
-				SetField<DbDataReader, string>("vector", typeof(byte[]), (r, i) => r.GetString(i));
+				SetField<DbDataReader, string>("vector", typeof(byte[]),        (r, i) => r.GetString(i));
+				SetField<DbDataReader, string>("vector", Adapter.SqlVectorType, (r, i) => r.GetString(i));
 			}
 
 #if NET8_0_OR_GREATER
@@ -151,15 +164,18 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
 				var indexParameter      = Expression.Parameter(typeof(int), "i");
 
-				var methodCall = Expression.Call(dataReaderParameter, Adapter.GetSqlVectorReaderMethod!, new[] { typeof(Half) }, indexParameter);
+				var methodCall  = Expression.Call(dataReaderParameter, Adapter.GetSqlVectorReaderMethod!, new[] { typeof(Half) }, indexParameter);
+				var readerExpr  = Expression.Lambda(methodCall, dataReaderParameter, indexParameter);
+				var toArrayExpr = Expression.Lambda(Expression.Call(ExpressionHelper.Property(methodCall, "Memory"), "ToArray", Array.Empty<Type>()), dataReaderParameter, indexParameter);
 
-				ReaderExpressions[new ReaderInfo { ToType = Adapter.SqlHalfVectorType, FieldType = typeof(byte[]), DataReaderType = Adapter.DataReaderType, DataTypeName = "vector" }] =
-					Expression.Lambda(methodCall, dataReaderParameter, indexParameter);
-
-				ReaderExpressions[new ReaderInfo { ToType = typeof(Half[]), FieldType = typeof(byte[]), DataReaderType = Adapter.DataReaderType, DataTypeName = "vector" }] =
-					Expression.Lambda(Expression.Call(ExpressionHelper.Property(methodCall, "Memory"), "ToArray", Array.Empty<Type>()), dataReaderParameter, indexParameter);
+				foreach (var fieldType in new[] { typeof(byte[]), Adapter.SqlHalfVectorType })
+				{
+					ReaderExpressions[new ReaderInfo { ToType = Adapter.SqlHalfVectorType, FieldType = fieldType, DataReaderType = Adapter.DataReaderType, DataTypeName = "vector" }] = readerExpr;
+					ReaderExpressions[new ReaderInfo { ToType = typeof(Half[]),            FieldType = fieldType, DataReaderType = Adapter.DataReaderType, DataTypeName = "vector" }] = toArrayExpr;
+				}
 
 				//SetField<DbDataReader, string>("vector", typeof(byte[]), (r, i) => r.GetString(i));
+				//SetField<DbDataReader, string>("vector", Adapter.SqlHalfVectorType, (r, i) => r.GetString(i));
 			}
 #endif
 

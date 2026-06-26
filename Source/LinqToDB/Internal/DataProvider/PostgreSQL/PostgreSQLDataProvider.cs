@@ -13,6 +13,7 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.Internal.DataProvider.PostgreSQL.Translation;
 using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
@@ -46,15 +47,22 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			SqlProviderFlags.IsInsertOrUpdateSupported         = version is not PostgreSQLVersion.v92 and not PostgreSQLVersion.v93;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
+			SqlProviderFlags.IsNullsOrderingSupported          = true;
+			SqlProviderFlags.DefaultNullsOrdering              = NullsDefaultOrdering.Largest; // PostgreSQL sorts NULL as the largest value
 			SqlProviderFlags.IsUnionAllOrderBySupported        = true;
 			SqlProviderFlags.IsAllSetOperationsSupported       = true;
 			SqlProviderFlags.IsDistinctFromSupported           = true;
+			SqlProviderFlags.IsDistinctOnSupported             = true;
 			SqlProviderFlags.SupportsPredicatesComparison      = true;
 
 			SqlProviderFlags.OutputDeleteUseSpecialTable  = version >= PostgreSQLVersion.v18;
 			SqlProviderFlags.OutputInsertUseSpecialTable  = version >= PostgreSQLVersion.v18;
 			SqlProviderFlags.OutputUpdateUseSpecialTables = version >= PostgreSQLVersion.v18;
 			SqlProviderFlags.OutputMergeUseSpecialTables  = version >= PostgreSQLVersion.v18;
+
+			// PostgreSQL added MERGE in v15. For earlier versions Upsert configurations that require
+			// MERGE lowering surface a descriptive error via Error_Upsert_MergeLowering_NotSupported.
+			SqlProviderFlags.IsUpsertWithMergeLoweringSupported = version >= PostgreSQLVersion.v15;
 
 			SqlProviderFlags.RowConstructorSupport = RowFeature.Equality        | RowFeature.Comparisons |
 			                                         RowFeature.CompareToSelect | RowFeature.In | RowFeature.IsNull |

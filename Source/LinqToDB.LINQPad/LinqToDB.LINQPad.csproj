@@ -66,6 +66,7 @@
 		<PackageReference Include="Net.IBM.Data.Db2" />
 		<PackageReference Include="Octonica.ClickHouseClient" />
 		<PackageReference Include="DuckDB.NET.Data.Full" />
+		<PackageReference Include="Ydb.Sdk" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -106,7 +107,14 @@
 		</Page>
 	</ItemGroup>
 
-	<Target Name="PostBuild1" AfterTargets="PostBuildEvent" Condition="'$(TargetFramework)' != 'net472'">
+	<!-- Generate the LINQPad .lpx/.lpx6 artifacts on build. Set to false to build the driver
+	     assembly only (e.g. from LinqToDB.LINQPad.Pack, which packs the NuGet and doesn't need
+	     the .lpx, and to avoid coupling `dotnet pack` to 7-Zip / Pack.cmd). -->
+	<PropertyGroup>
+		<GenerateLpxArtifacts Condition="'$(GenerateLpxArtifacts)' == ''">true</GenerateLpxArtifacts>
+	</PropertyGroup>
+
+	<Target Name="PostBuild1" AfterTargets="PostBuildEvent" Condition="'$(TargetFramework)' != 'net472' and '$(GenerateLpxArtifacts)' != 'false'">
 		<Exec Command="&quot;$(ProjectDir)\NuGet\Pack.cmd&quot; &quot;$(TargetDir)&quot; lpx6" />
 	</Target>
 
@@ -121,7 +129,7 @@
 		<Copy SourceFiles="$(PkgSourceGear_sqlite3)\runtimes\win-x64\native\e_sqlite3.dll" DestinationFiles="$(TargetDir)\runtimes\win-x64\native\e_sqlite3.dll" />
 		<Copy SourceFiles="$(PkgSourceGear_sqlite3)\runtimes\win-arm64\native\e_sqlite3.dll" DestinationFiles="$(TargetDir)\runtimes\win-arm64\native\e_sqlite3.dll" />
 
-		<Exec Command="&quot;$(ProjectDir)\NuGet\Pack.cmd&quot; &quot;$(TargetDir)&quot; lpx" />
+		<Exec Command="&quot;$(ProjectDir)\NuGet\Pack.cmd&quot; &quot;$(TargetDir)&quot; lpx" Condition="'$(GenerateLpxArtifacts)' != 'false'" />
 	</Target>
 
 	<ItemGroup>

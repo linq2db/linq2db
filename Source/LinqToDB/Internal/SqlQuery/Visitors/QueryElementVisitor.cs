@@ -1049,6 +1049,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					Visit(element.SelectQuery);
 					Visit(element.Insert);
 					Visit(element.Update);
+					Visit(element.UpdateWhere);
 
 					VisitElements(element.SqlQueryExtensions, VisitMode.ReadOnly);
 
@@ -1061,6 +1062,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					element.SelectQuery = (SelectQuery?)Visit(element.SelectQuery);
 					element.Insert      = (SqlInsertClause)Visit(element.Insert);
 					element.Update      = (SqlUpdateClause)Visit(element.Update);
+					element.UpdateWhere = (SqlSearchCondition?)Visit(element.UpdateWhere);
 
 					VisitElements(element.SqlQueryExtensions, VisitMode.Modify);
 
@@ -1073,6 +1075,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					var selectQuery = (SelectQuery?)Visit(element.SelectQuery);
 					var insert      = (SqlInsertClause)Visit(element.Insert);
 					var update      = (SqlUpdateClause)Visit(element.Update);
+					var updateWhere = (SqlSearchCondition?)Visit(element.UpdateWhere);
 					var ext         = VisitElements(element.SqlQueryExtensions, VisitMode.Transform);
 
 					if (ShouldReplace(element)                             ||
@@ -1081,6 +1084,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					    !ReferenceEquals(element.With, with)               ||
 					    !ReferenceEquals(element.Insert, insert)           ||
 					    !ReferenceEquals(element.Update, update)           ||
+					    !ReferenceEquals(element.UpdateWhere, updateWhere) ||
 					    element.SqlQueryExtensions != ext)
 					{
 						return NotifyReplaced(new SqlInsertOrUpdateStatement(selectQuery)
@@ -1089,6 +1093,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 							With               = with,
 							Insert             = insert,
 							Update             = update,
+							UpdateWhere        = updateWhere,
 							SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList(),
 						}, element);
 					}
@@ -1519,7 +1524,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					var e = (ISqlExpression)Visit(element.Expression);
 
 					if (ShouldReplace(element) || !ReferenceEquals(element.Expression, e))
-						return NotifyReplaced(new SqlOrderByItem(e, element.IsDescending, element.IsPositioned), element);
+						return NotifyReplaced(new SqlOrderByItem(e, element.IsDescending, element.IsPositioned, element.NullsPosition), element);
 
 					break;
 				}
@@ -2041,6 +2046,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					Visit(element.TakeValue);
 					Visit(element.SkipValue);
 
+					if (element.DistinctOn != null)
+						foreach (var on in element.DistinctOn)
+							Visit(on);
+
 					foreach (var column in element.Columns)
 					{
 						VisitSqlColumnExpression(column, column.Expression);
@@ -2053,6 +2062,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					element.TakeValue = (ISqlExpression?)Visit(element.TakeValue);
 					element.SkipValue = (ISqlExpression?)Visit(element.SkipValue);
 
+					if (element.DistinctOn != null)
+						for (var i = 0; i < element.DistinctOn.Count; i++)
+							element.DistinctOn[i] = (ISqlExpression)Visit(element.DistinctOn[i]);
+
 					foreach (var column in element.Columns)
 					{
 						column.Expression = VisitSqlColumnExpression(column, column.Expression);
@@ -2064,6 +2077,19 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				{
 					var take = (ISqlExpression?)Visit(element.TakeValue);
 					var skip = (ISqlExpression?)Visit(element.SkipValue);
+
+					List<ISqlExpression>? newDistinctOn = null;
+					if (element.DistinctOn != null)
+					{
+						for (var i = 0; i < element.DistinctOn.Count; i++)
+						{
+							var on    = element.DistinctOn[i];
+							var newOn = (ISqlExpression)Visit(on);
+
+							if (!ReferenceEquals(on, newOn))
+								(newDistinctOn ??= [..element.DistinctOn])[i] = newOn;
+						}
+					}
 
 					ISqlExpression?[]? newExpressions = null;
 
@@ -2078,6 +2104,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 					if (ShouldReplace(element)                    ||
 						newExpressions != null                    ||
+						newDistinctOn  != null                    ||
 						!ReferenceEquals(element.TakeValue, take) ||
 						!ReferenceEquals(element.SkipValue, skip))
 					{
@@ -2090,7 +2117,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 							NotifyReplaced(newColumn, oldColumn);
 						}
 
-						return NotifyReplaced(new SqlSelectClause(element.IsDistinct, take, element.TakeHints, skip, newColumns) { OptimizeDistinct = element.OptimizeDistinct }, element);
+						// DistinctOn is a mutable list — give the new clause its own copy so later in-place visits don't alias the original
+						var distinctOn = newDistinctOn ?? (element.DistinctOn != null ? new List<ISqlExpression>(element.DistinctOn) : null);
+
+						return NotifyReplaced(new SqlSelectClause(element.IsDistinct, distinctOn, take, element.TakeHints, skip, newColumns) { OptimizeDistinct = element.OptimizeDistinct }, element);
 					}
 
 					break;
@@ -2162,7 +2192,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 					if (ReferenceEquals(sc, query.Select))
 					{
-						sc = new SqlSelectClause(query.Select.IsDistinct, query.Select.TakeValue,
+						sc = new SqlSelectClause(query.Select.IsDistinct,
+							query.Select.DistinctOn != null ? [..query.Select.DistinctOn] : null,
+							query.Select.TakeValue,
 							query.Select.TakeHints, query.Select.SkipValue,
 							query.Select.Columns.Select(c => new SqlColumn(nq, c.Expression, c.RawAlias)));
 
@@ -3278,6 +3310,41 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					    !ReferenceEquals(element.Expressions, expressions))
 					{
 						return NotifyReplaced(new SqlCoalesceExpression(element.Expressions != expressions ? expressions : expressions.ToArray()), element);
+					}
+
+					break;
+				}
+				default:
+					return ThrowInvalidVisitModeException();
+			}
+
+			return element;
+		}
+
+		protected internal virtual IQueryElement VisitSqlConcatExpression(SqlConcatExpression element)
+		{
+			switch (GetVisitMode(element))
+			{
+				case VisitMode.ReadOnly:
+				{
+					VisitElements(element.Expressions, VisitMode.ReadOnly);
+
+					break;
+				}
+				case VisitMode.Modify:
+				{
+					element.Modify(VisitElements(element.Expressions, VisitMode.Modify));
+
+					break;
+				}
+				case VisitMode.Transform:
+				{
+					var expressions = VisitElements(element.Expressions, VisitMode.Transform);
+
+					if (ShouldReplace(element) ||
+						!ReferenceEquals(element.Expressions, expressions))
+					{
+						return NotifyReplaced(new SqlConcatExpression(element.PreserveNull, element.Expressions != expressions ? expressions : expressions.ToArray()), element);
 					}
 
 					break;

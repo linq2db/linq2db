@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 using LinqToDB.Internal.DataProvider.Translation;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 using LinqToDB.SqlQuery;
@@ -20,24 +21,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 
 		protected override IMemberTranslator CreateGuidMemberTranslator() => new GuidMemberTranslator();
 
-		protected override IMemberTranslator CreateSqlTypesTranslator() => new SqlTypesTranslation();
-
 		protected override IMemberTranslator CreateMathMemberTranslator() => new MathMemberTranslator();
-
-		//ConvertToString
-		//ProcessSqlConvert
-		//TranslateConvertToBoolean/ProcessConvertToBoolean
-		//ProcessGetValueOrDefault
-
-		// TODO: we cannot use this implementation as it will generate same UUID for all invocations within single query
-		//protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
-		//{
-		//	var factory  = translationContext.ExpressionFactory;
-
-		//	var timePart = factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "RandomUuid", factory.Value(1));
-
-		//	return timePart;
-		//}
 
 		protected class GuidMemberTranslator : GuidMemberTranslatorBase
 		{
@@ -68,6 +52,16 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 					, valueTypeString, isMandatory: true);
 			}
 
+			public override ISqlExpression? TranslateLength(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression value)
+			{
+				var factory = translationContext.ExpressionFactory;
+				var intType = factory.GetDbDataType(typeof(int));
+
+				// YQL Length() returns the BYTE length of a Utf8 string; Unicode::GetLength returns the
+				// character count (matching C# string.Length). It returns Uint32, so cast to Int32.
+				return factory.Cast(factory.Function(intType, "Unicode::GetLength", value), intType, isMandatory: true);
+			}
+
 			public override ISqlExpression? TranslateReplace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression oldValue, ISqlExpression newValue)
 			{
 				var factory = translationContext.ExpressionFactory;
@@ -76,6 +70,59 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				newValue = factory.Coalesce(newValue, factory.Value(string.Empty));
 
 				return factory.Function(valueTypeString, "Unicode::ReplaceAll", value, oldValue, newValue);
+			}
+
+			public override ISqlExpression? TranslateTrimStart(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression? trimChars)
+			{
+				return TranslateRegexTrim(translationContext, value, trimChars, atStart: true);
+			}
+
+			public override ISqlExpression? TranslateTrimEnd(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression? trimChars)
+			{
+				return TranslateRegexTrim(translationContext, value, trimChars, atStart: false);
+			}
+
+			// YDB/YQL has no native LTRIM/RTRIM. Emit Re2::Replace(pattern)(value, '') with an
+			// anchored character-class pattern. The chars literal is constructed at translation
+			// time so the pattern is a static literal — Re2 compiles it once per query plan.
+			static ISqlExpression? TranslateRegexTrim(ITranslationContext translationContext, ISqlExpression value, ISqlExpression? trimChars, bool atStart)
+			{
+				var factory   = translationContext.ExpressionFactory;
+				var valueType = factory.GetDbDataType(value);
+
+				string pattern;
+				if (trimChars == null)
+				{
+					pattern = atStart ? @"^\s+" : @"\s+$";
+				}
+				else if (trimChars is SqlValue { Value: string chars } && chars.Length > 0)
+				{
+					var sb = new System.Text.StringBuilder(chars.Length * 2 + 4);
+					if (atStart)
+						sb.Append('^');
+					sb.Append('[');
+					foreach (var ch in chars)
+					{
+						if (ch is '\\' or ']' or '^' or '-' or '[')
+							sb.Append('\\');
+						sb.Append(ch);
+					}
+
+					sb.Append("]+");
+					if (!atStart)
+						sb.Append('$');
+					pattern = sb.ToString();
+				}
+				else
+				{
+					// trimChars wasn't reducible to a literal — fall back to client-side eval.
+					return null;
+				}
+
+				// Re2::Replace operates on YQL String (binary bytes) and returns String?. Cast the
+				// result back to Utf8? so the .NET driver materializes it as text, not base64-encoded
+				// bytes. The CAST(value AS String?) on the input ensures Utf8 columns are accepted.
+				return factory.Expression(valueType, "CAST(Re2::Replace({0})(CAST({1} AS String?), '') AS Utf8?)", factory.Value(valueType, pattern), value);
 			}
 
 			protected override Expression? TranslateLike(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
@@ -107,219 +154,227 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, searchCondition, methodCall);
 			}
 
-			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult)
+			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult, bool withoutSeparator)
 			{
 				var builder = new AggregateFunctionBuilder()
-					.ConfigureAggregate(c => c
-						.HasSequenceIndex(1)
-						.AllowOrderBy()
-						.AllowFilter()
-						.AllowDistinct()
-						.AllowNotNullCheck(true)
-						.TranslateArguments(0)
-						.OnBuildFunction(composer =>
-						{
-							var info = composer.BuildInfo;
-							if (info.Value == null || info.Argument(0) == null)
+					.ConfigureAggregate(c =>
+					{
+						c.TransformValue(ConvertOperandToString);
+
+						if (withoutSeparator)
+							c.HasSequenceIndex(0);
+						else
+							c.HasSequenceIndex(1).TranslateArguments(0);
+
+						c.AllowOrderBy()
+							.AllowFilter()
+							.AllowDistinct()
+							.AllowNotNullCheck(true)
+							.OnBuildFunction(composer =>
 							{
-								return;
-							}
-
-							var factory   = info.Factory;
-							var separator = info.Argument(0)!;
-							var valueType = factory.GetDbDataType(info.Value);
-
-							var value = info.Value;
-							if (!info.IsNullFiltered && nullValuesAsEmptyString)
-								value = factory.Coalesce(value, factory.Value(valueType, string.Empty));
-
-							if (info is { FilterCondition.IsTrue: false })
-							{
-								value = factory.Condition(info.FilterCondition, value, factory.Null(valueType));
-
-								if (!info.IsGroupBy)
+								var info = composer.BuildInfo;
+								if (info.Value == null || (!withoutSeparator && info.Argument(0) == null))
 								{
-									composer.SetFallback(f => f.AllowFilter(false));
 									return;
 								}
-							}
 
-							var aggregateModifier = info.IsDistinct ? Sql.AggregateModifier.Distinct : Sql.AggregateModifier.None;
+								var factory   = info.Factory;
+								var valueType = factory.GetDbDataType(info.Value);
+								var separator = withoutSeparator
+									? factory.Value(valueType, string.Empty)
+									: info.Argument(0)!;
 
-							var list = info.OrderBySql.Length == 0
-							? MakeList(factory, info, valueType, value)
-							: WithSort(factory, info, composer, valueType, value);
+								var value = info.Value;
+								if (!info.IsNullFiltered && nullValuesAsEmptyString)
+									value = factory.Coalesce(value, factory.Value(valueType, string.Empty));
 
-							if (list != null)
-							{
-								var fn     = factory.Function(factory.GetDbDataType(typeof(string)), "Unicode::JoinFromList", list, separator);
-								var result = isNullableResult ? fn : factory.Coalesce(fn, factory.Value(valueType, string.Empty));
+								if (info is { FilterCondition.IsTrue: false })
+								{
+									value = factory.Condition(info.FilterCondition, value, factory.Null(valueType));
 
-								composer.SetResult(result);
-							}
+									if (!info.IsGroupBy)
+									{
+										composer.SetFallback(f => f.AllowFilter(false));
+										return;
+									}
+								}
 
-							static ISqlExpression MakeList(ISqlExpressionFactory factory, AggregateFunctionBuilder.AggregateBuildInfo info, DbDataType valueType, ISqlExpression value)
-							{
 								var aggregateModifier = info.IsDistinct ? Sql.AggregateModifier.Distinct : Sql.AggregateModifier.None;
 
-								return factory.Function(
-									valueType,
-									"AGGREGATE_LIST",
-									[new SqlFunctionArgument(value, modifier : aggregateModifier)],
-									[true],
-									isAggregate : true,
-									canBeAffectedByOrderBy : false);
-							}
+								var list = info.OrderBySql.Length == 0
+								? MakeList(factory, info, valueType, value)
+								: WithSort(factory, info, composer, valueType, value);
 
-							static ISqlExpression? WithSort(
-								ISqlExpressionFactory factory,
-								AggregateFunctionBuilder.AggregateBuildInfo info,
-								AggregateFunctionBuilder.AggregateComposer composer,
-								DbDataType valueType,
-								ISqlExpression value)
-							{
-								var orderItems = info.OrderBySql; // (.expr, .desc, .nulls)
-
-								bool IsString(int i) => factory.GetDbDataType(orderItems[i].expr).SystemType == typeof(string);
-								bool IsDesc(int i) => orderItems[i].desc;
-
-								bool firstIsStringDesc       = orderItems.Length > 0 && IsString(0) && IsDesc(0);
-								bool anyStringAfterFirst     = Enumerable.Range(1, Math.Max(0, orderItems.Length - 1)).Any(IsString);
-								bool anyStringDescAfterFirst = Enumerable.Range(1, Math.Max(0, orderItems.Length - 1)).Any(i => IsString(i) && IsDesc(i));
-
-								// Rules:
-								//  - allow: numeric/date ASC/DESC anywhere (DESC via inversion)
-								//  - allow: string ASC anywhere (bytewise)
-								//  - allow: string DESC only if it is the FIRST key AND there are NO other string keys after it
-								//  - otherwise => unsupported -> fallback
-								bool unsupported =
-								anyStringDescAfterFirst ||
-								(firstIsStringDesc && anyStringAfterFirst);
-
-								if (unsupported)
+								if (list != null)
 								{
-									// Fallback: cannot emulate this ORDER pattern with a single arraySort key-selector.
-									composer.SetFallback(fc => fc.AllowOrderBy(false));
-									return null;
+									var fn = factory.Function(factory.GetDbDataType(typeof(string)), "Unicode::JoinFromList", list, separator);
+
+									SetStringJoinResult(composer, fn, isNullableResult, valueType);
 								}
 
-								// Build tuple (k1, k2, ..., value)
-								ISqlExpression BuildTuple(IReadOnlyList<ISqlExpression> elems)
+								static ISqlExpression MakeList(ISqlExpressionFactory factory, AggregateFunctionBuilder.AggregateBuildInfo info, DbDataType valueType, ISqlExpression value)
 								{
-									var fmt = "(" + string.Join(", ", Enumerable.Range(0, elems.Count).Select(i => "{" + i.ToString(CultureInfo.InvariantCulture) + "}")) + ")";
-									return factory.Fragment(fmt, elems.ToArray());
+									var aggregateModifier = info.IsDistinct ? Sql.AggregateModifier.Distinct : Sql.AggregateModifier.None;
+
+									return factory.Function(
+										valueType,
+										"AGGREGATE_LIST",
+										[new SqlFunctionArgument(value, modifier : aggregateModifier)],
+										[true],
+										isAggregate : true,
+										canBeAffectedByOrderBy : false);
 								}
 
-								var tupleElems = new List<ISqlExpression>(orderItems.Length + 1);
-								foreach (var (expr, _, _) in orderItems)
-									tupleElems.Add(expr);
-								tupleElems.Add(value); // last is the aggregated value
-
-								var tupleExpr = BuildTuple(tupleElems);
-
-								// Aggregate tuples
-								var tuplesArr = MakeList(factory, info, valueType, tupleExpr);
-
-								// ---- Build key selector: (t) -> (k1_nullsKey, k1_key, k2_nullsKey, k2_key, ...)
-								// Nulls policy: ASC => NULLS FIRST; DESC => NULLS LAST
-								ISqlExpression MakeNullsKey(ISqlExpression t_i, bool desc)
+								static ISqlExpression? WithSort(
+									ISqlExpressionFactory factory,
+									AggregateFunctionBuilder.AggregateBuildInfo info,
+									AggregateFunctionBuilder.AggregateComposer composer,
+									DbDataType valueType,
+									ISqlExpression value)
 								{
-									return desc
-									? factory.Fragment("if({0} IS NULL, 1, 0)", t_i)  // DESC: nulls last
-									: factory.Fragment("if({0} IS NULL, 0, 1)", t_i); // ASC : nulls first
-								}
+									var orderItems = info.OrderBySql; // (.expr, .desc, .nulls)
 
-								// Numeric: DESC via Negate; ASC as-is
-								ISqlExpression MakeKeyDescNumeric(ISqlExpression t_i)
-								{
-									var tType = factory.GetDbDataType(t_i);
-									return factory.Negate(tType, t_i);
-								}
+									bool IsString(int i) => factory.GetDbDataType(orderItems[i].expr).SystemType == typeof(string);
+									bool IsDesc(int i) => orderItems[i].desc;
 
-								ISqlExpression MakeKeyAsc(ISqlExpression t_i) => t_i;
+									bool firstIsStringDesc       = orderItems.Length > 0 && IsString(0) && IsDesc(0);
+									bool anyStringAfterFirst     = Enumerable.Range(1, Math.Max(0, orderItems.Length - 1)).Any(IsString);
+									bool anyStringDescAfterFirst = Enumerable.Range(1, Math.Max(0, orderItems.Length - 1)).Any(i => IsString(i) && IsDesc(i));
 
-								// Date/DateTime: convert to timestamp (long) then Negate for DESC
-								var longType = factory.GetDbDataType(typeof(long));
-								ISqlExpression MakeKeyDescDateTime(ISqlExpression t_i)
-								{
-									var ts = factory.Cast(t_i, longType);
-									return factory.Negate(longType, ts);
-								}
+									// Rules:
+									//  - allow: numeric/date ASC/DESC anywhere (DESC via inversion)
+									//  - allow: string ASC anywhere (bytewise)
+									//  - allow: string DESC only if it is the FIRST key AND there are NO other string keys after it
+									//  - otherwise => unsupported -> fallback
+									bool unsupported =
+									anyStringDescAfterFirst ||
+									(firstIsStringDesc && anyStringAfterFirst);
 
-								// Strings: bytewise ASC; DESC only allowed for first key (we’ll reverse whole array later)
-								ISqlExpression MakeKeyStringAsc(ISqlExpression t_i) => t_i;
-								bool reverseWholeArray = false;
-								ISqlExpression MakeKeyStringDescFirst(ISqlExpression t_i)
-								{
-									reverseWholeArray = true;   // will reverse after sorting
-									return t_i;                 // sort ASC first
-								}
-
-								ISqlExpression TransformKey(ISqlExpression t_i, DbDataType srcType, bool desc, bool isFirstKey)
-								{
-									var st = srcType.SystemType;
-
-									if (st == typeof(string))
+									if (unsupported)
 									{
-										if (!desc) return MakeKeyStringAsc(t_i);
-										// only valid if first; detector above blocked other cases
-										return MakeKeyStringDescFirst(t_i);
+										// Fallback: cannot emulate this ORDER pattern with a single arraySort key-selector.
+										composer.SetFallback(fc => fc.AllowOrderBy(false));
+										return null;
 									}
 
-									if (st == typeof(DateTime) || st == typeof(DateTimeOffset))
-										return desc ? MakeKeyDescDateTime(t_i) : MakeKeyAsc(t_i);
+									// Build tuple (k1, k2, ..., value)
+									ISqlExpression BuildTuple(IReadOnlyList<ISqlExpression> elems)
+									{
+										var fmt = "(" + string.Join(", ", Enumerable.Range(0, elems.Count).Select(i => "{" + i.ToString(CultureInfo.InvariantCulture) + "}")) + ")";
+										return factory.Fragment(fmt, elems.ToArray());
+									}
 
-									// numeric & other scalars
-									return desc ? MakeKeyDescNumeric(t_i) : MakeKeyAsc(t_i);
+									var tupleElems = new List<ISqlExpression>(orderItems.Length + 1);
+									foreach (var (expr, _, _) in orderItems)
+										tupleElems.Add(expr);
+									tupleElems.Add(value); // last is the aggregated value
+
+									var tupleExpr = BuildTuple(tupleElems);
+
+									// Aggregate tuples
+									var tuplesArr = MakeList(factory, info, valueType, tupleExpr);
+
+									// ---- Build key selector: (t) -> (k1_nullsKey, k1_key, k2_nullsKey, k2_key, ...)
+									// Nulls policy: ASC => NULLS FIRST; DESC => NULLS LAST
+									ISqlExpression MakeNullsKey(ISqlExpression t_i, bool desc)
+									{
+										return desc
+										? factory.Fragment("if({0} IS NULL, 1, 0)", t_i)  // DESC: nulls last
+										: factory.Fragment("if({0} IS NULL, 0, 1)", t_i); // ASC : nulls first
+									}
+
+									// Numeric: DESC via Negate; ASC as-is
+									ISqlExpression MakeKeyDescNumeric(ISqlExpression t_i)
+									{
+										var tType = factory.GetDbDataType(t_i);
+										return factory.Negate(tType, t_i);
+									}
+
+									ISqlExpression MakeKeyAsc(ISqlExpression t_i) => t_i;
+
+									// Date/DateTime: convert to timestamp (long) then Negate for DESC
+									var longType = factory.GetDbDataType(typeof(long));
+									ISqlExpression MakeKeyDescDateTime(ISqlExpression t_i)
+									{
+										var ts = factory.Cast(t_i, longType);
+										return factory.Negate(longType, ts);
+									}
+
+									// Strings: bytewise ASC; DESC only allowed for first key (we’ll reverse whole array later)
+									ISqlExpression MakeKeyStringAsc(ISqlExpression t_i) => t_i;
+									bool reverseWholeArray = false;
+									ISqlExpression MakeKeyStringDescFirst(ISqlExpression t_i)
+									{
+										reverseWholeArray = true;   // will reverse after sorting
+										return t_i;                 // sort ASC first
+									}
+
+									ISqlExpression TransformKey(ISqlExpression t_i, DbDataType srcType, bool desc, bool isFirstKey)
+									{
+										var st = srcType.SystemType;
+
+										if (st == typeof(string))
+										{
+											if (!desc) return MakeKeyStringAsc(t_i);
+											// only valid if first; detector above blocked other cases
+											return MakeKeyStringDescFirst(t_i);
+										}
+
+										if (st == typeof(DateTime) || st == typeof(DateTimeOffset))
+											return desc ? MakeKeyDescDateTime(t_i) : MakeKeyAsc(t_i);
+
+										// numeric & other scalars
+										return desc ? MakeKeyDescNumeric(t_i) : MakeKeyAsc(t_i);
+									}
+
+									// Collect transformed keys WITH leading nulls-key per ORDER item
+									var keyElems = new List<ISqlExpression>(orderItems.Length * 2);
+									for (int i = 0; i < orderItems.Length; i++)
+									{
+										var t_i   = factory.Fragment("$t.{0}", factory.Value(i)); // tuple key i
+										var srcT  = factory.GetDbDataType(orderItems[i].expr);
+										var desc  = orderItems[i].desc;
+
+										// 1) nulls policy key
+										keyElems.Add(MakeNullsKey(t_i, desc));
+
+										// 2) transformed key (direction encoded)
+										var keyEl = TransformKey(t_i, srcT, desc, isFirstKey: i == 0);
+										keyElems.Add(keyEl);
+									}
+
+									// ($t) -> { return (k1_nullsKey, k1_key, k2_nullsKey, k2_key, ...) }
+									ISqlExpression BuildKeyLambda(IReadOnlyList<ISqlExpression> keys)
+									{
+										var keysFmt   = "(" + string.Join(", ", Enumerable.Range(0, keys.Count).Select(i => "{" + i.ToString(CultureInfo.InvariantCulture) + "}")) + ")";
+										var tupleKeys = factory.Fragment(keysFmt, keys.ToArray());
+										return factory.Fragment("($t) -> {{ return {0} }}", tupleKeys);
+									}
+
+									var keySelector = BuildKeyLambda(keyElems);
+
+									// DISTINCT: apply before sort as it will destroy sort
+									if (info.IsDistinct)
+										tuplesArr = factory.Function(valueType, "ListUniq", tuplesArr);
+
+									// Sort: ListSort(tuplesArr, keySelector)
+									ISqlExpression sortedTuples = factory.Function(valueType, "ListSort", tuplesArr, keySelector);
+
+									// Reverse only if FIRST key was string DESC
+									if (reverseWholeArray)
+										sortedTuples = factory.Function(valueType, "ListReverse", sortedTuples);
+
+									// Project value back: ListMap(valuesArr, ($t) -> { return $t.N })
+									var valIndex  = orderItems.Length;
+									var projector = factory.Fragment("($t) -> {{ return $t.{0} }}", factory.Value(valIndex));
+									var onlyVals  = factory.Function(valueType, "ListMap", sortedTuples, projector);
+
+									return onlyVals;
 								}
+							});
+					});
 
-								// Collect transformed keys WITH leading nulls-key per ORDER item
-								var keyElems = new List<ISqlExpression>(orderItems.Length * 2);
-								for (int i = 0; i < orderItems.Length; i++)
-								{
-									var t_i   = factory.Fragment("$t.{0}", factory.Value(i)); // tuple key i
-									var srcT  = factory.GetDbDataType(orderItems[i].expr);
-									var desc  = orderItems[i].desc;
-
-									// 1) nulls policy key
-									keyElems.Add(MakeNullsKey(t_i, desc));
-
-									// 2) transformed key (direction encoded)
-									var keyEl = TransformKey(t_i, srcT, desc, isFirstKey: i == 0);
-									keyElems.Add(keyEl);
-								}
-
-								// ($t) -> { return (k1_nullsKey, k1_key, k2_nullsKey, k2_key, ...) }
-								ISqlExpression BuildKeyLambda(IReadOnlyList<ISqlExpression> keys)
-								{
-									var keysFmt   = "(" + string.Join(", ", Enumerable.Range(0, keys.Count).Select(i => "{" + i.ToString(CultureInfo.InvariantCulture) + "}")) + ")";
-									var tupleKeys = factory.Fragment(keysFmt, keys.ToArray());
-									return factory.Fragment("($t) -> {{ return {0} }}", tupleKeys);
-								}
-
-								var keySelector = BuildKeyLambda(keyElems);
-
-								// DISTINCT: apply before sort as it will destroy sort
-								if (info.IsDistinct)
-									tuplesArr = factory.Function(valueType, "ListUniq", tuplesArr);
-
-								// Sort: ListSort(tuplesArr, keySelector)
-								ISqlExpression sortedTuples = factory.Function(valueType, "ListSort", tuplesArr, keySelector);
-
-								// Reverse only if FIRST key was string DESC
-								if (reverseWholeArray)
-									sortedTuples = factory.Function(valueType, "ListReverse", sortedTuples);
-
-								// Project value back: ListMap(valuesArr, ($t) -> { return $t.N })
-								var valIndex  = orderItems.Length;
-								var projector = factory.Fragment("($t) -> {{ return $t.{0} }}", factory.Value(valIndex));
-								var onlyVals  = factory.Function(valueType, "ListMap", sortedTuples, projector);
-
-								return onlyVals;
-							}
-						}));
-
-				ConfigureConcatWs(builder, nullValuesAsEmptyString, isNullableResult, (factory, valueType, separator, values) =>
+				ConfigureConcatWs(builder, nullValuesAsEmptyString, isNullableResult, withoutSeparator: withoutSeparator, functionFactory: (factory, valueType, separator, values) =>
 				{
 					// ListConcat(AsList(t.Value3, t.Value1, t.Value2), ' -> ')
 
@@ -330,41 +385,30 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 					param = factory.Function(arrayDataType, "ListNotNull", param);
 
 					var function = factory.Function(valueType, "ListConcat", param, separator);
-					return function;
+
+					// ListConcat of an empty list (all values NULL) returns NULL, but ConcatStrings must yield "".
+					return factory.Coalesce(function, factory.Value(string.Empty));
 				});
 
-				return builder.Build(translationContext, methodCall);
+				return builder.Build(translationContext, methodCall, isExpression: translationFlags.HasFlag(TranslationFlags.Expression));
 			}
-		}
 
-		protected class SqlTypesTranslation : SqlTypesTranslationDefault
-		{
-			protected override Expression? ConvertBit(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
+			// {value} IS NULL OR LENGTH(Unicode::Strip({value})) = 0
+			public override ISqlExpression? TranslateIsNullOrWhiteSpace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value)
 			{
-				//return base.ConvertBit(translationContext, memberExpression, translationFlags);
-				throw new NotSupportedException("55");
+				var factory    = translationContext.ExpressionFactory;
+				var stringType = factory.GetDbDataType(value);
+				var intType    = factory.GetDbDataType(typeof(int));
+
+				// Unicode::Strip does not treat U+0085 (NEL) as whitespace, but .NET's char.IsWhiteSpace does,
+				// so normalize it to a space before stripping.
+				var normalized = factory.Function(stringType, "Unicode::ReplaceAll", ParametersNullabilityType.IfAnyParameterNullable, value, factory.Value(stringType, "\u0085"), factory.Value(stringType, " "));
+				var stripped   = factory.Function(stringType, "Unicode::Strip", ParametersNullabilityType.IfAnyParameterNullable, normalized);
+				var lenFn      = factory.Length(stripped);
+				var predicate  = factory.Equal(lenFn, factory.Value(intType, 0));
+
+				return WrapIsNullOrWhiteSpaceResult(translationContext, value, predicate);
 			}
-#if SUPPORTS_DATEONLY
-
-			protected override Expression? ConvertDateOnly(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
-			{
-				//return base.ConvertDateOnly(translationContext, memberExpression, translationFlags);
-				throw new NotSupportedException("52");
-			}
-#endif
-
-		//	// YDB stores DateTime with microsecond precision in the Timestamp type
-		//	protected override Expression? ConvertDateTime(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
-		//		=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.Timestamp));
-
-		//	protected override Expression? ConvertDateTime2(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
-		//		=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.Timestamp));
-
-		//	protected override Expression? ConvertSmallDateTime(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
-		//		=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.Timestamp));
-
-		//	protected override Expression? ConvertDateTimeOffset(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
-		//		=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.Timestamp));
 		}
 
 		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
@@ -372,18 +416,6 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 			protected override ISqlExpression? TranslateDateTimeOffsetDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 			{
 				return TranslateDateTimeDatePart(translationContext, translationFlag, dateTimeExpression, datepart);
-			}
-
-			protected override ISqlExpression? TranslateDateTimeOffsetTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
-			{
-				//return base.TranslateDateTimeOffsetTruncationToDate(translationContext, dateExpression, translationFlags);
-				throw new NotSupportedException("10");
-			}
-
-			protected override ISqlExpression? TranslateDateTimeOffsetTruncationToTime(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
-			{
-				//return base.TranslateDateTimeOffsetTruncationToTime(translationContext, dateExpression, translationFlags);
-				throw new NotSupportedException("09");
 			}
 
 			protected override ISqlExpression? TranslateDateTimeTruncationToTime(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
@@ -466,11 +498,6 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				return baseExpr;
 			}
 
-			//	protected override ISqlExpression? TranslateDateTimeOffsetDatePart(
-			//			ITranslationContext translationContext, TranslationFlags translationFlag,
-			//			ISqlExpression dateTimeExpression, Sql.DateParts datepart)
-			//		=> TranslateDateTimeDatePart(translationContext, translationFlag, dateTimeExpression, datepart);
-
 			protected override ISqlExpression? TranslateDateTimeDateAdd(
 					ITranslationContext translationContext, TranslationFlags translationFlag,
 					ISqlExpression dateTimeExpression, ISqlExpression increment, Sql.DateParts datepart)
@@ -489,13 +516,20 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 						_                     => throw new InvalidOperationException(),
 					};
 
-					var shiftArg = increment;
+					// ShiftYears/ShiftMonths require a non-optional Int32 second argument; the increment may be
+					// a nullable / narrower integer column. CAST(x AS Int32?) widens it and Unwrap() coerces
+					// the optional to Int32 (a plain factory cast is dropped for safe widenings and isn't
+					// Unwrap-wrapped for a nullable source).
+					var shiftArg = f.Expression(intType, "Unwrap(CAST({0} AS Int32?))", increment);
 
 					if (datepart == Sql.DateParts.Quarter)
-						shiftArg = f.Multiply(intType, increment, 3);
+						shiftArg = f.Multiply(intType, shiftArg, 3);
 
-					var shifted      = f.Function(f.GetDbDataType(dateTimeExpression), shiftFn, dateTimeExpression, shiftArg);
-					var makeDateTime = f.Function(dateType, "DateTime::MakeDatetime", shifted);
+					// DateTime::ShiftYears/ShiftMonths operate on a split datetime (Resource<TM>), not a raw
+					// Timestamp — split first, shift, then re-assemble: MakeTimestamp(ShiftX(Split(x), n)).
+					var split        = f.Function(dateType, "DateTime::Split", dateTimeExpression);
+					var shifted      = f.Function(dateType, shiftFn, split, shiftArg);
+					var makeDateTime = f.Function(dateType, "DateTime::MakeTimestamp", shifted);
 
 					return makeDateTime;
 				}
@@ -514,10 +548,23 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				if (intervalFn == null)
 					return null;
 
+				// The IntervalFrom* UDFs take an integer arg (Int32 — Int64 for milliseconds). The .NET
+				// Add*(double) / Sql.DateAdd signature types a *floating* increment that must be converted to
+				// that width; an already-integer increment is passed through (YQL widens it to the UDF param).
+				// We cast ONLY the floating case on purpose: a no-op/widening SqlCastExpression survives the
+				// optimizer only via IsMandatory, but IsMandatory is lost across the remote LinqService
+				// serialization boundary — so an integer→integer cast is pruned only on the remote side and
+				// diverges direct/remote baselines. A floating→integer cast is a real narrowing and survives
+				// both paths; the YDB builder's BuildSqlCastExpression adds Unwrap() for a non-null source.
+				var isMs    = datepart == Sql.DateParts.Millisecond;
+				var incType = f.GetDbDataType(isMs ? typeof(long) : typeof(int));
+				var sysType = f.GetDbDataType(increment).SystemType.UnwrappedNullableType;
+
+				if (sysType == typeof(double) || sysType == typeof(float))
+					increment = f.Cast(increment, incType, isMandatory: true);
+
 				if (datepart == Sql.DateParts.Week)
-				{
-					increment = f.Multiply(f.GetDbDataType(increment), increment, 7);
-				}
+					increment = f.Multiply(incType, increment, 7);
 
 				var interval = f.Function(
 						f.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Interval),
@@ -527,42 +574,113 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				return f.Add(dateType, dateTimeExpression, interval);
 			}
 
-			//	protected override ISqlExpression? TranslateDateTimeTruncationToDate(
-			//			ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
-			//	{
-			//		var f        = translationContext.ExpressionFactory;
-			//		var resType  = f.GetDbDataType(typeof(DateTime)).WithDataType(DataType.Date);
-			//		var startDay = f.Function(f.GetDbDataType(dateExpression), "DateTime::StartOfDay", dateExpression);
-			//		return f.Function(resType, "DateTime::MakeDate", startDay);
-			//	}
+			protected override ISqlExpression? TranslateMakeDateTime(
+				ITranslationContext translationContext,
+				DbDataType          resulType,
+				ISqlExpression      year,
+				ISqlExpression      month,
+				ISqlExpression      day,
+				ISqlExpression?     hour,
+				ISqlExpression?     minute,
+				ISqlExpression?     second,
+				ISqlExpression?     millisecond)
+			{
+				var f          = translationContext.ExpressionFactory;
+				var stringType = f.GetDbDataType(typeof(string));
+				var intType    = f.GetDbDataType(typeof(int));
 
-			//	protected override ISqlExpression? TranslateDateTimeOffsetTruncationToDate(
-			//			ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
-			//		=> TranslateDateTimeTruncationToDate(translationContext, dateExpression, translationFlags);
+				// YQL has no make-timestamp-from-parts builtin, so build the conventional
+				// 'yyyy-MM-dd HH:mm:ss[.fff]' (date-only 'yyyy-MM-dd') string and CAST it; YdbSqlExpressionConvertVisitor
+				// turns the string->Datetime/Timestamp cast into the ISO ParseIso8601 form (single place that
+				// owns the format). Components are zero-padded via Substring(CAST(100 + x AS String), 1, 2)
+				// (year is always four digits in YDB's 1970..2105 range); the Substring also keeps the
+				// expression out of client-side constant folding, so an all-constant new DateTime(...) stays in
+				// SQL. millisecond is supplied by the 7-arg new DateTime(...) constructor (TranslateDateTimeConstructor)
+				// and emitted as the '.fff' fraction so a Timestamp result keeps sub-second precision.
+				ISqlExpression Str(ISqlExpression e)  => f.Cast(e, stringType);
+				ISqlExpression Pad2(ISqlExpression e) => f.Function(stringType, "Unicode::Substring", f.Cast(f.Add(intType, e, f.Value(intType, 100)),  stringType), f.Value(intType, 1), f.Value(intType, 2));
+				ISqlExpression Pad3(ISqlExpression e) => f.Function(stringType, "Unicode::Substring", f.Cast(f.Add(intType, e, f.Value(intType, 1000)), stringType), f.Value(intType, 1), f.Value(intType, 3));
+				ISqlExpression Sep(string v)          => f.Value(stringType, v);
+
+				var isDateOnly = resulType.DataType == DataType.Date;
+#if SUPPORTS_DATEONLY
+				isDateOnly = isDateOnly || resulType.SystemType.UnwrappedNullableType == typeof(DateOnly);
+#endif
+
+				var pieces = new List<ISqlExpression>
+				{
+					Str(year),   Sep("-"),
+					Pad2(month), Sep("-"),
+					Pad2(day),
+				};
+
+				if (!isDateOnly)
+				{
+					pieces.Add(Sep(" "));
+					pieces.Add(Pad2(hour   ?? f.Value(intType, 0))); pieces.Add(Sep(":"));
+					pieces.Add(Pad2(minute ?? f.Value(intType, 0))); pieces.Add(Sep(":"));
+					pieces.Add(Pad2(second ?? f.Value(intType, 0)));
+
+					if (millisecond != null)
+					{
+						pieces.Add(Sep("."));
+						pieces.Add(Pad3(millisecond));
+					}
+				}
+
+				return f.Cast(f.Concat(pieces.ToArray()), resulType);
+			}
+
+			protected override ISqlExpression? TranslateDateTimeTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
+			{
+				var f        = translationContext.ExpressionFactory;
+				var dateType = f.GetDbDataType(dateExpression);
+
+				// .Date drops the time-of-day, keeping a DateTime at midnight. Use the function chain
+				// Split -> StartOfDay -> MakeTimestamp (as the ShiftYears path does) rather than a
+				// CAST(Timestamp AS Date AS Timestamp) round-trip: that round-trip is collapsible to the
+				// original value, and since SqlCastExpression.IsMandatory is lost across the remote
+				// LinqService boundary the collapse fires only on the remote side (skipping truncation).
+				var split   = f.Function(dateType, "DateTime::Split", dateExpression);
+				var startOf = f.Function(dateType, "DateTime::StartOfDay", split);
+
+				return f.Function(dateType, "DateTime::MakeTimestamp", startOf);
+			}
 		}
 
 		protected class MathMemberTranslator : MathMemberTranslatorBase
 		{
 			protected override ISqlExpression? TranslateMaxMethod(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression xValue, ISqlExpression yValue)
-			{
-				var factory = translationContext.ExpressionFactory;
-
-				var valueType = factory.GetDbDataType(xValue);
-
-				var result = factory.Function(valueType, "MAX_OF", xValue, yValue);
-
-				return result;
-			}
+				=> TranslateMinMax(translationContext, "MAX_OF", xValue, yValue);
 
 			protected override ISqlExpression? TranslateMinMethod(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression xValue, ISqlExpression yValue)
+				=> TranslateMinMax(translationContext, "MIN_OF", xValue, yValue);
+
+			// YQL MIN_OF/MAX_OF require both arguments to have the same type — in particular two Decimals
+			// must share precision/scale. Widen both to a common type that can hold either operand
+			// (max integer digits, max scale) rather than forcing one onto the other's type.
+			static ISqlExpression TranslateMinMax(ITranslationContext translationContext, string function, ISqlExpression xValue, ISqlExpression yValue)
 			{
 				var factory = translationContext.ExpressionFactory;
+				var xType   = factory.GetDbDataType(xValue);
+				var yType   = factory.GetDbDataType(yValue);
 
-				var valueType = factory.GetDbDataType(xValue);
+				if (xType.EqualsDbOnly(yType))
+					return factory.Function(xType, function, xValue, yValue);
 
-				var result = factory.Function(valueType, "MIN_OF", xValue, yValue);
+				static bool IsDecimal(DbDataType t) => t.DataType == DataType.Decimal || t.SystemType.UnwrappedNullableType == typeof(decimal);
 
-				return result;
+				// Two Decimals: widen to a type holding both. Other (same-CLR) mismatch: align onto the first.
+				var common = IsDecimal(xType) && IsDecimal(yType)
+					? YdbMappingSchema.GetCommonDecimalType(xType, yType)
+					: xType;
+
+				if (!xType.EqualsDbOnly(common))
+					xValue = factory.Cast(xValue, common);
+				if (!yType.EqualsDbOnly(common))
+					yValue = factory.Cast(yValue, common);
+
+				return factory.Function(common, function, xValue, yValue);
 			}
 
 			protected override ISqlExpression? TranslatePow(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression xValue, ISqlExpression yValue)
@@ -595,73 +713,72 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				return result;
 			}
 
+			// YQL has no top-level ROUND builtin, and CAST(<Double> AS Decimal) is rejected. Strategy:
+			// scale the value by 10^p in its OWN type first (exact for Decimal, so the rounding boundary
+			// — a half-integer — becomes exactly representable in Double), round to an integer in Double,
+			// cast back (Double->Decimal becomes a string round-trip via YdbSqlExpressionConvertVisitor),
+			// then unscale by /10^p. Rounding the scaled-then-cast value avoids the float-midpoint errors
+			// that a direct CAST(decimal AS Double) would introduce.
+			//   - to-even        : Math::NearbyInt(s, Math::RoundToNearest())
+			//   - away-from-zero : Math::Round is half-toward-+inf, so round the magnitude and reapply sign
+
 			protected override ISqlExpression? TranslateRoundToEven(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
+				=> RoundScaled(translationContext, value, precision,
+					(f, dt, s) => f.Function(dt, "Math::NearbyInt", s, f.Fragment("Math::RoundToNearest()")));
+
+			protected override ISqlExpression? TranslateRoundAwayFromZero(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
+				=> RoundScaled(translationContext, value, precision, static (f, dt, s) =>
+				{
+					// Math::Round rounds half toward +inf, so it equals away-from-zero only for s >= 0.
+					// away(s) = (s >= 0) ? Math::Round(s) : -Math::Round(-s)
+					var pos  = f.Function(dt, "Math::Round", s);
+					var neg  = f.Negate(dt, f.Function(dt, "Math::Round", f.Negate(dt, s)));
+					var cond = f.SearchCondition().AddGreaterOrEqual(s, f.Value(dt, 0.0), CompareNulls.LikeSql);
+
+					return f.Condition(cond, pos, neg);
+				});
+
+			static ISqlExpression RoundScaled(
+				ITranslationContext                                                         translationContext,
+				ISqlExpression                                                              value,
+				ISqlExpression?                                                             precision,
+				Func<ISqlExpressionFactory, DbDataType, ISqlExpression, ISqlExpression>     roundToInt)
 			{
-				if (precision != null)
-					return base.TranslateRoundToEven(translationContext, methodCall, value, precision);
+				var factory    = translationContext.ExpressionFactory;
+				var valueType  = factory.GetDbDataType(value);
+				var doubleType = factory.GetDbDataType(typeof(double));
+				var isDecimal  = valueType.SystemType.UnwrappedNullableType == typeof(decimal);
 
-				var factory = translationContext.ExpressionFactory;
+				var hasPrecision = precision is not (null or SqlValue { Value: 0 } or SqlValue { Value: 0L });
 
-				var valueType = factory.GetDbDataType(value);
+				// scale by 10^p in the value's own type (exact for Decimal)
+				var scaled = hasPrecision ? factory.Multiply(valueType, value, Pow10(factory, valueType, precision!)) : value;
 
-				var result = factory.Function(valueType, "Math::NearbyInt", value, factory.Fragment("Math::RoundToNearest()"));
+				// round to an integer in Double — the scaled rounding boundary is exactly representable
+				var rounded = roundToInt(factory, doubleType, factory.Cast(scaled, doubleType));
 
-				return result;
+				// back to the value's type (Double->Decimal becomes the string round-trip)
+				var back = isDecimal || !valueType.EqualsDbOnly(doubleType) ? factory.Cast(rounded, valueType) : rounded;
+
+				return hasPrecision ? factory.Div(valueType, back, Pow10(factory, valueType, precision!)) : back;
 			}
 
-		//	/// <summary>
-		//	/// Banker's rounding: In YQL, ROUND(value, precision?) already performs to-even rounding for Decimal types.
-		//	/// </summary>
-		//	protected override ISqlExpression? TranslateRoundToEven(
-		//		ITranslationContext translationContext,
-		//		MethodCallExpression methodCall,
-		//		ISqlExpression value,
-		//		ISqlExpression? precision)
-		//	{
-		//		var factory   = translationContext.ExpressionFactory;
-		//		var valueType = factory.GetDbDataType(value);
+			// 10^precision rendered in the requested type (decimal or double).
+			static ISqlExpression Pow10(ISqlExpressionFactory factory, DbDataType type, ISqlExpression precision)
+			{
+				var isDecimal = type.SystemType.UnwrappedNullableType == typeof(decimal);
 
-		//		return precision != null
-		//			? factory.Function(valueType, "ROUND", value, precision)
-		//			: factory.Function(valueType, "ROUND", value);
-		//	}
-
-		//	/// <summary>
-		//	/// Away-from-zero rounding: In YQL, ROUND(value, precision?) for Numeric types already uses away-from-zero rounding.
-		//	/// </summary>
-		//	protected override ISqlExpression? TranslateRoundAwayFromZero(
-		//		ITranslationContext translationContext,
-		//		MethodCallExpression methodCall,
-		//		ISqlExpression value,
-		//		ISqlExpression? precision)
-		//	{
-		//		var factory   = translationContext.ExpressionFactory;
-		//		var valueType = factory.GetDbDataType(value);
-
-		//		return precision != null
-		//			? factory.Function(valueType, "ROUND", value, precision)
-		//			: factory.Function(valueType, "ROUND", value);
-		//	}
-
-		//	/// <summary>
-		//	/// Exponentiation using the built-in POWER(a, b) function.
-		//	/// </summary>
-		//	protected override ISqlExpression? TranslatePow(
-		//		ITranslationContext translationContext,
-		//		MethodCallExpression methodCall,
-		//		ISqlExpression xValue,
-		//		ISqlExpression yValue)
-		//	{
-		//		var factory = translationContext.ExpressionFactory;
-		//		var xType   = factory.GetDbDataType(xValue);
-		//		var yType   = factory.GetDbDataType(yValue);
-
-		//		if (!xType.EqualsDbOnly(yType))
-		//			yValue = factory.Cast(yValue, xType);
-
-		//		return factory.Function(xType, "POWER", xValue, yValue);
-		//	}
+				return precision switch
+				{
+					SqlValue { Value: int p }   => factory.Value(type, isDecimal ? (object)(decimal)Math.Pow(10, p)  : Math.Pow(10, p)),
+					SqlValue { Value: long pl }  => factory.Value(type, isDecimal ? (object)(decimal)Math.Pow(10, pl) : Math.Pow(10, pl)),
+					_                           => factory.Cast(
+						factory.Function(factory.GetDbDataType(typeof(double)), "Math::Pow",
+							factory.Value(factory.GetDbDataType(typeof(double)), 10.0),
+							factory.Cast(precision, factory.GetDbDataType(typeof(double)))),
+						type),
+				};
+			}
 		}
-
 	}
 }
