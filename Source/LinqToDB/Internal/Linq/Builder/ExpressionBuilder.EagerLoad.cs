@@ -98,7 +98,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				count     = ValueTupleTypes.Length;
 				arguments = new Expression[count];
 				Array.Copy(members, startIndex, arguments, 0, count - 1);
-				arguments[count - 1] = GenerateKeyExpression(members, startIndex + count);
+				arguments[count - 1] = GenerateKeyExpression(members, startIndex + count - 1);
 			}
 			else
 			{
