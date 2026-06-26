@@ -153,6 +153,15 @@ namespace LinqToDB
 	/// </code>
 	/// Default value: <see langword="false"/>.
 	/// </param>
+	/// <param name="PreferClientCalculation">
+	/// When enabled, computed expressions in the final projection (arithmetic, conditionals, unary operations, and
+	/// mapped members/methods that do not prefer server-side evaluation) are calculated on the client during
+	/// materialization instead of being translated into additional SQL columns. Real database columns,
+	/// already-built subqueries, and expressions that prefer or require server-side evaluation (for example,
+	/// members or methods mapped with <see cref="Sql.ExpressionAttribute.PreferServerSide"/> or
+	/// <see cref="Sql.ExpressionAttribute.ServerSideOnly"/>) are still translated to SQL.
+	/// Default value: <see langword="false"/>.
+	/// </param>
 	/// <param name="UpsertEmulationPolicy">
 	/// Controls what happens when an <c>Upsert</c> cannot be expressed as a native single-statement upsert
 	/// or <c>MERGE</c> for the target provider and would fall back to an emulated multi-statement
@@ -162,6 +171,12 @@ namespace LinqToDB
 	///   <item><see cref="UpsertEmulationPolicy.Allow"/> (default) — perform the emulated fallback.</item>
 	///   <item><see cref="UpsertEmulationPolicy.Throw"/> — reject it with <see cref="LinqToDBException"/> at build time.</item>
 	/// </list>
+	/// </param>
+	/// <param name="OptimizeForSequentialAccess">
+	/// Enables mapping expression to be compatible with <see cref="System.Data.CommandBehavior.SequentialAccess"/> behavior.
+	/// Note that it doesn't switch linq2db to use <see cref="System.Data.CommandBehavior.SequentialAccess"/> behavior for
+	/// queries, so this optimization could be used for <see cref="System.Data.CommandBehavior.Default"/> too.
+	/// Default value: <see langword="false"/>.
 	/// </param>
 	public sealed record LinqOptions
 	(
@@ -186,7 +201,9 @@ namespace LinqToDB
 		bool         ParameterizeTakeSkip    = true,
 		bool         EnableContextSchemaEdit = false,
 		bool         PreferExistsForScalar   = default,
-		UpsertEmulationPolicy UpsertEmulationPolicy = UpsertEmulationPolicy.Allow
+		bool         PreferClientCalculation = default,
+		UpsertEmulationPolicy UpsertEmulationPolicy = UpsertEmulationPolicy.Allow,
+		bool         OptimizeForSequentialAccess = false
 		// If you add another parameter here, don't forget to update
 		// LinqOptions copy constructor and IConfigurationID.ConfigurationID.
 	)
@@ -196,6 +213,10 @@ namespace LinqToDB
 		{
 		}
 
+		// Not dead code: this user-declared copy constructor replaces the compiler-synthesized one that every
+		// `with` expression on this record invokes (see Configuration / DataOptionsExtensions). It intentionally
+		// omits the [Obsolete] no-effect parameters (PreloadGroups, PreferApply, KeepDistinctOrdered) so synthesized
+		// `with` paths don't reference obsolete members. Keep it in sync with new parameters (see note above).
 		LinqOptions(LinqOptions original)
 		{
 			IgnoreEmptyUpdate       = original.IgnoreEmptyUpdate;
@@ -210,7 +231,9 @@ namespace LinqToDB
 			ParameterizeTakeSkip    = original.ParameterizeTakeSkip;
 			EnableContextSchemaEdit = original.EnableContextSchemaEdit;
 			PreferExistsForScalar   = original.PreferExistsForScalar;
+			PreferClientCalculation = original.PreferClientCalculation;
 			UpsertEmulationPolicy   = original.UpsertEmulationPolicy;
+			OptimizeForSequentialAccess = original.OptimizeForSequentialAccess;
 		}
 
 		/// <summary>
@@ -241,7 +264,7 @@ namespace LinqToDB
 				concatenateOrderBy, optimizeJoins, compareNulls, guardGrouping, disableQueryCache,
 				cacheSlidingExpiration, preferApply, keepDistinctOrdered, parameterizeTakeSkip,
 				enableContextSchemaEdit, preferExistsForScalar,
-				UpsertEmulationPolicy: default)
+				PreferClientCalculation: default, UpsertEmulationPolicy: UpsertEmulationPolicy.Allow, OptimizeForSequentialAccess: default)
 		{
 		}
 
@@ -273,7 +296,7 @@ namespace LinqToDB
 				out concatenateOrderBy, out optimizeJoins, out compareNulls, out guardGrouping, out disableQueryCache,
 				out cacheSlidingExpiration, out preferApply, out keepDistinctOrdered, out parameterizeTakeSkip,
 				out enableContextSchemaEdit, out preferExistsForScalar,
-				out _);
+				out _, out _, out _);
 		}
 
 		int? _configurationID;
@@ -297,7 +320,9 @@ namespace LinqToDB
 						.Add(ParameterizeTakeSkip)
 						.Add(EnableContextSchemaEdit)
 						.Add(PreferExistsForScalar)
+						.Add(PreferClientCalculation)
 						.Add((int)UpsertEmulationPolicy)
+						.Add(OptimizeForSequentialAccess)
 						.CreateID();
 				}
 

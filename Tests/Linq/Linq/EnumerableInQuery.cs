@@ -427,5 +427,48 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 		}
+
+		[Test(Description = "VALUES-column dedup keeps the column's own type when the same column is used in both a string and an int projection context")]
+		public void CoalesceColumnSelection_DedupKeepsColumnOwnType([IncludeDataSources(
+			TestProvName.AllPostgreSQL93Plus,
+			TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+			var (items, colors, styles) = SomeItem.Seed();
+
+			using var itemsTable  = db.CreateLocalTable(items);
+			using var colorsTable = db.CreateLocalTable(colors);
+			using var stylesTable = db.CreateLocalTable(styles);
+
+			var query =
+				from item in itemsTable.LoadWith(it => it.Color).LoadWith(it => it.Style)
+				from it in new InnerProjection[]
+				{
+					new InnerProjection
+					{
+						ColorId     = (item.Color == null ? null : item.ColorId) ?? 0,
+						ColorName   = (string?)item.Color!.Name,
+						StyleName   = item.Style!.Name,
+						Conditional = item.Color!.Name == "Red" ? itemsTable.Count() : 0,
+					},
+					new InnerProjection
+					{
+						ColorId     = (item.Color == null ? null : item.ColorId) ?? 0,
+						ColorName   = (string?)null,
+						StyleName   = item.Style!.Name,
+						Conditional = 0,
+					},
+				}.DefaultIfEmpty()
+				select new
+				{
+					// it.ColorId inside a string expression -> ambient string descriptor
+					StrValue     = Sql.ToNullable(it!.ColorId).ToString(),
+					// it.ColorId bare -> ambient int descriptor; the VALUES-column dedup collapses
+					// both references into one column, which must keep ColorId's own (int) type.
+					ColorIdValue = it!.ColorId,
+				};
+
+			AssertQuery(query);
+		}
 	}
 }
