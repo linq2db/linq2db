@@ -153,6 +153,15 @@ namespace LinqToDB
 	/// </code>
 	/// Default value: <see langword="false"/>.
 	/// </param>
+	/// <param name="PreferClientCalculation">
+	/// When enabled, computed expressions in the final projection (arithmetic, conditionals, unary operations, and
+	/// mapped members/methods that do not prefer server-side evaluation) are calculated on the client during
+	/// materialization instead of being translated into additional SQL columns. Real database columns,
+	/// already-built subqueries, and expressions that prefer or require server-side evaluation (for example,
+	/// members or methods mapped with <see cref="Sql.ExpressionAttribute.PreferServerSide"/> or
+	/// <see cref="Sql.ExpressionAttribute.ServerSideOnly"/>) are still translated to SQL.
+	/// Default value: <see langword="false"/>.
+	/// </param>
 	/// <param name="UpsertEmulationPolicy">
 	/// Controls what happens when an <c>Upsert</c> cannot be expressed as a native single-statement upsert
 	/// or <c>MERGE</c> for the target provider and would fall back to an emulated multi-statement
@@ -192,6 +201,7 @@ namespace LinqToDB
 		bool         ParameterizeTakeSkip    = true,
 		bool         EnableContextSchemaEdit = false,
 		bool         PreferExistsForScalar   = default,
+		bool         PreferClientCalculation = default,
 		UpsertEmulationPolicy UpsertEmulationPolicy = UpsertEmulationPolicy.Allow,
 		bool         OptimizeForSequentialAccess = false
 		// If you add another parameter here, don't forget to update
@@ -221,6 +231,7 @@ namespace LinqToDB
 			ParameterizeTakeSkip    = original.ParameterizeTakeSkip;
 			EnableContextSchemaEdit = original.EnableContextSchemaEdit;
 			PreferExistsForScalar   = original.PreferExistsForScalar;
+			PreferClientCalculation = original.PreferClientCalculation;
 			UpsertEmulationPolicy   = original.UpsertEmulationPolicy;
 			OptimizeForSequentialAccess = original.OptimizeForSequentialAccess;
 		}
@@ -253,7 +264,7 @@ namespace LinqToDB
 				concatenateOrderBy, optimizeJoins, compareNulls, guardGrouping, disableQueryCache,
 				cacheSlidingExpiration, preferApply, keepDistinctOrdered, parameterizeTakeSkip,
 				enableContextSchemaEdit, preferExistsForScalar,
-				UpsertEmulationPolicy: UpsertEmulationPolicy.Allow)
+				PreferClientCalculation: default, UpsertEmulationPolicy: UpsertEmulationPolicy.Allow, OptimizeForSequentialAccess: default)
 		{
 		}
 
@@ -285,7 +296,7 @@ namespace LinqToDB
 				out concatenateOrderBy, out optimizeJoins, out compareNulls, out guardGrouping, out disableQueryCache,
 				out cacheSlidingExpiration, out preferApply, out keepDistinctOrdered, out parameterizeTakeSkip,
 				out enableContextSchemaEdit, out preferExistsForScalar,
-				out _, out _);
+				out _, out _, out _);
 		}
 
 		int? _configurationID;
@@ -309,6 +320,7 @@ namespace LinqToDB
 						.Add(ParameterizeTakeSkip)
 						.Add(EnableContextSchemaEdit)
 						.Add(PreferExistsForScalar)
+						.Add(PreferClientCalculation)
 						.Add((int)UpsertEmulationPolicy)
 						.Add(OptimizeForSequentialAccess)
 						.CreateID();

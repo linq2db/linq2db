@@ -300,6 +300,20 @@ namespace LinqToDB
 		}
 
 		/// <summary>
+		/// When enabled, computed expressions in the final projection are calculated on the client during
+		/// materialization instead of being translated into additional SQL columns. Expressions that prefer or
+		/// require server-side evaluation (for example, members or methods mapped with
+		/// <see cref="Sql.ExpressionAttribute.PreferServerSide"/> or <see cref="Sql.ExpressionAttribute.ServerSideOnly"/>)
+		/// are still translated to SQL.
+		/// Default value: <see langword="false"/>.
+		/// </summary>
+		[Pure]
+		public static LinqOptions WithPreferClientCalculation(this LinqOptions options, bool preferClientCalculation)
+		{
+			return options with { PreferClientCalculation = preferClientCalculation };
+		}
+
+		/// <summary>
 		/// Enables mapping expression to be compatible with <see cref="System.Data.CommandBehavior.SequentialAccess"/> behavior.
 		/// Note that it doesn't switch linq2db to use <see cref="System.Data.CommandBehavior.SequentialAccess"/> behavior for
 		/// queries, so this optimization could be used for <see cref="System.Data.CommandBehavior.Default"/> too.
@@ -584,6 +598,20 @@ namespace LinqToDB
 		public static DataOptions UsePreferExistsForScalar(this DataOptions options, bool preferExistsForScalar)
 		{
 			return options.WithOptions<LinqOptions>(o => o with { PreferExistsForScalar = preferExistsForScalar });
+		}
+
+		/// <summary>
+		/// When enabled, computed expressions in the final projection are calculated on the client during
+		/// materialization instead of being translated into additional SQL columns. Expressions that prefer or
+		/// require server-side evaluation (for example, members or methods mapped with
+		/// <see cref="Sql.ExpressionAttribute.PreferServerSide"/> or <see cref="Sql.ExpressionAttribute.ServerSideOnly"/>)
+		/// are still translated to SQL.
+		/// Default value: <see langword="false"/>.
+		/// </summary>
+		[Pure]
+		public static DataOptions UsePreferClientCalculation(this DataOptions options, bool preferClientCalculation)
+		{
+			return options.WithOptions<LinqOptions>(o => o with { PreferClientCalculation = preferClientCalculation });
 		}
 
 		/// <summary>
