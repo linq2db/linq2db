@@ -3597,85 +3597,86 @@ namespace Tests.Linq
 
 		#endregion
 
-		#region Non-linq2db IQueryable source (issue #5649)
+		#region LoadWith/ThenLoad on non-linq2db IQueryable source
 
-		sealed class IssueEntity5649A
+		sealed class LoadWithPassthroughRoot
 		{
-			public IssueEntity5649B  Prop  { get; set; } = null!;
-			public IssueEntity5649B[] Props { get; set; } = null!;
+			public LoadWithPassthroughChild  Child    { get; set; } = null!;
+			public LoadWithPassthroughChild[] Children { get; set; } = null!;
 		}
 
-		sealed class IssueEntity5649B
+		sealed class LoadWithPassthroughChild
 		{
-			public IssueEntity5649C  Child  { get; set; } = null!;
-			public IssueEntity5649C[] Children { get; set; } = null!;
+			public LoadWithPassthroughLeaf  Leaf   { get; set; } = null!;
+			public LoadWithPassthroughLeaf[] Leaves { get; set; } = null!;
 		}
 
-		sealed class IssueEntity5649C { }
+		sealed class LoadWithPassthroughLeaf { }
 
-		static readonly IQueryable<IssueEntity5649A> _emptyA = Enumerable.Empty<IssueEntity5649A>().AsQueryable();
+		static readonly IQueryable<LoadWithPassthroughRoot> _passthroughQuery =
+			Enumerable.Empty<LoadWithPassthroughRoot>().AsQueryable();
 
-		// LoadWith overload 1: LoadWith(source, selector)
+		// LoadWith overload 1: single selector
 		[Test]
-		public void Issue5649_LoadWith_Single()
+		public void LoadWith_NonLinqToDBSource_Single()
 		{
-			Assert.That(_emptyA.LoadWith(a => a.Prop).ToList(), Is.Empty);
+			Assert.That(_passthroughQuery.LoadWith(a => a.Child).ToList(), Is.Empty);
 		}
 
-		// LoadWith overload 2: LoadWith(source, IEnumerable selector, loadFunc)
+		// LoadWith overload 2: collection selector + loadFunc
 		[Test]
-		public void Issue5649_LoadWith_Collection_LoadFunc()
+		public void LoadWith_NonLinqToDBSource_Collection_LoadFunc()
 		{
-			Assert.That(_emptyA.LoadWith(a => a.Props, q => q).ToList(), Is.Empty);
+			Assert.That(_passthroughQuery.LoadWith(a => a.Children, q => q).ToList(), Is.Empty);
 		}
 
-		// LoadWith overload 3: LoadWith(source, single selector, loadFunc)
+		// LoadWith overload 3: single selector + loadFunc
 		[Test]
-		public void Issue5649_LoadWith_Single_LoadFunc()
+		public void LoadWith_NonLinqToDBSource_Single_LoadFunc()
 		{
-			Assert.That(_emptyA.LoadWith(a => a.Prop, q => q).ToList(), Is.Empty);
+			Assert.That(_passthroughQuery.LoadWith(a => a.Child, q => q).ToList(), Is.Empty);
 		}
 
-		// ThenLoad overload 1: ThenLoad from single, single selector
+		// ThenLoad overload 1: from single, single selector
 		[Test]
-		public void Issue5649_ThenLoad_FromSingle_Single()
+		public void ThenLoad_NonLinqToDBSource_FromSingle_Single()
 		{
-			Assert.That(_emptyA.LoadWith(a => a.Prop).ThenLoad(b => b.Child).ToList(), Is.Empty);
+			Assert.That(_passthroughQuery.LoadWith(a => a.Child).ThenLoad(b => b.Leaf).ToList(), Is.Empty);
 		}
 
-		// ThenLoad overload 2: ThenLoad from collection, single selector
+		// ThenLoad overload 2: from collection, single selector
 		[Test]
-		public void Issue5649_ThenLoad_FromCollection_Single()
+		public void ThenLoad_NonLinqToDBSource_FromCollection_Single()
 		{
-			Assert.That(_emptyA.LoadWith(a => a.Props).ThenLoad(b => b.Child).ToList(), Is.Empty);
+			Assert.That(_passthroughQuery.LoadWith(a => a.Children).ThenLoad(b => b.Leaf).ToList(), Is.Empty);
 		}
 
-		// ThenLoad overload 3: ThenLoad from single, collection selector + loadFunc
+		// ThenLoad overload 3: from single, collection selector + loadFunc
 		[Test]
-		public void Issue5649_ThenLoad_FromSingle_Collection_LoadFunc()
+		public void ThenLoad_NonLinqToDBSource_FromSingle_Collection_LoadFunc()
 		{
-			Assert.That(_emptyA.LoadWith(a => a.Prop).ThenLoad(b => b.Children, q => q).ToList(), Is.Empty);
+			Assert.That(_passthroughQuery.LoadWith(a => a.Child).ThenLoad(b => b.Leaves, q => q).ToList(), Is.Empty);
 		}
 
-		// ThenLoad overload 4: ThenLoad from single, single selector + loadFunc
+		// ThenLoad overload 4: from single, single selector + loadFunc
 		[Test]
-		public void Issue5649_ThenLoad_FromSingle_Single_LoadFunc()
+		public void ThenLoad_NonLinqToDBSource_FromSingle_Single_LoadFunc()
 		{
-			Assert.That(_emptyA.LoadWith(a => a.Prop).ThenLoad(b => b.Child, q => q).ToList(), Is.Empty);
+			Assert.That(_passthroughQuery.LoadWith(a => a.Child).ThenLoad(b => b.Leaf, q => q).ToList(), Is.Empty);
 		}
 
-		// ThenLoad overload 5: ThenLoad from collection, single selector + loadFunc
+		// ThenLoad overload 5: from collection, single selector + loadFunc
 		[Test]
-		public void Issue5649_ThenLoad_FromCollection_Single_LoadFunc()
+		public void ThenLoad_NonLinqToDBSource_FromCollection_Single_LoadFunc()
 		{
-			Assert.That(_emptyA.LoadWith(a => a.Props).ThenLoad(b => b.Child, q => q).ToList(), Is.Empty);
+			Assert.That(_passthroughQuery.LoadWith(a => a.Children).ThenLoad(b => b.Leaf, q => q).ToList(), Is.Empty);
 		}
 
-		// ThenLoad overload 6: ThenLoad from collection, collection selector + loadFunc
+		// ThenLoad overload 6: from collection, collection selector + loadFunc
 		[Test]
-		public void Issue5649_ThenLoad_FromCollection_Collection_LoadFunc()
+		public void ThenLoad_NonLinqToDBSource_FromCollection_Collection_LoadFunc()
 		{
-			Assert.That(_emptyA.LoadWith(a => a.Props).ThenLoad(b => b.Children, q => q).ToList(), Is.Empty);
+			Assert.That(_passthroughQuery.LoadWith(a => a.Children).ThenLoad(b => b.Leaves, q => q).ToList(), Is.Empty);
 		}
 
 		#endregion
