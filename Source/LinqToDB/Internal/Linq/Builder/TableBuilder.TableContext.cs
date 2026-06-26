@@ -469,7 +469,8 @@ namespace LinqToDB.Internal.Linq.Builder
 									{
 										foreach (var mm in MappingSchema.GetEntityDescriptor(mapping.Type, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated).Columns)
 										{
-											if (mm.MemberAccessor.MemberInfo.EqualsTo(memberExpression.Member))
+											if (mm.MemberAccessor.MemberInfo.EqualsTo(memberExpression.Member)
+												&& string.Equals(mm.ColumnName, field.PhysicalName, StringComparison.Ordinal))
 												return field;
 										}
 									}

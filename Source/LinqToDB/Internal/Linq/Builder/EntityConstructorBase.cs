@@ -270,7 +270,12 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var entityDescriptor = MappingSchema.GetEntityDescriptor(entityType);
 
-			var generic = BuildGenericFromMembers(entityDescriptor.Columns, flags, refExpression, 0, purpose);
+			// Include sibling columns so each concrete TPH type can reference its own physical column (same C# member, different DB column names).
+			var columns = entityDescriptor.InheritanceSiblingColumns.Count == 0
+				? entityDescriptor.Columns
+				: (IReadOnlyCollection<ColumnDescriptor>)entityDescriptor.Columns.Concat(entityDescriptor.InheritanceSiblingColumns).ToList();
+
+			var generic = BuildGenericFromMembers(columns, flags, refExpression, 0, purpose);
 
 			return generic;
 		}
