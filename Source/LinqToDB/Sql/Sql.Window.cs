@@ -19,7 +19,7 @@ namespace LinqToDB
 	/// <para>Not all window functions and clauses are supported by every database provider.
 	/// An exception with a descriptive message will be thrown at query translation time
 	/// if the current provider does not support the requested function or clause.</para>
-	/// <para>The FILTER (WHERE ...) clause is natively supported by PostgreSQL.
+	/// <para>The FILTER (WHERE ...) clause is natively supported by PostgreSQL and DuckDB.
 	/// For other providers, it is automatically emulated using CASE WHEN.</para>
 	/// <para>NULLS FIRST / NULLS LAST ordering is natively supported by PostgreSQL, Oracle, and Firebird 3+.
 	/// For other providers, it is automatically emulated.</para>
@@ -35,7 +35,7 @@ namespace LinqToDB
 		public interface IFilterPart<out TFiltered>
 			where TFiltered : class
 		{
-			/// <summary>Adds a <c>FILTER (WHERE ...)</c> clause. Natively supported by PostgreSQL; emulated via <c>CASE WHEN</c> on other providers.</summary>
+			/// <summary>Adds a <c>FILTER (WHERE ...)</c> clause. Natively supported by PostgreSQL and DuckDB; emulated via <c>CASE WHEN</c> on other providers.</summary>
 			TFiltered Filter(bool filter);
 		}
 
@@ -938,7 +938,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Count(f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -967,7 +967,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Count(expr, f =&gt; f.[Distinct()][.Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><c>DISTINCT</c> in a window aggregate is not supported by most providers; where unsupported it throws a descriptive exception at query-translation time.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
@@ -1019,7 +1019,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Sum(expr, f =&gt; f.[Distinct()][.Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para>Use <c>.Distinct()</c> for <c>SUM(DISTINCT x) OVER (...)</c>. <c>DISTINCT</c> in a window aggregate is not supported by most providers; where unsupported it throws a descriptive exception at query-translation time.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
@@ -1054,7 +1054,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Sum(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -1086,7 +1086,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Sum(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -1118,7 +1118,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Sum(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -1150,7 +1150,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Sum(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -1182,7 +1182,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Sum(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -1214,7 +1214,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Sum(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -1246,7 +1246,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Sum(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -1278,7 +1278,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Sum(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -1310,7 +1310,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Sum(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -1346,7 +1346,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Average(expr, f =&gt; f.[Distinct()][.Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para>Use <c>.Distinct()</c> for <c>AVG(DISTINCT x) OVER (...)</c>. <c>DISTINCT</c> in a window aggregate is not supported by most providers; where unsupported it throws a descriptive exception at query-translation time.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
@@ -1380,7 +1380,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Average(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -1411,7 +1411,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Average(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -1442,7 +1442,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Average(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -1473,7 +1473,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Average(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -1504,7 +1504,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Average(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -1535,7 +1535,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Average(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -1566,7 +1566,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Average(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -1597,7 +1597,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Average(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -1628,7 +1628,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Average(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -1659,7 +1659,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Average(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -1690,7 +1690,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Average(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -1721,7 +1721,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Average(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -1752,7 +1752,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Average(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -1787,7 +1787,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Min(expr, f =&gt; f.[Distinct()][.Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para>Use <c>.Distinct()</c> for <c>MIN(DISTINCT x) OVER (...)</c>. <c>DISTINCT</c> in a window aggregate is not supported by most providers; where unsupported it throws a descriptive exception at query-translation time.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
@@ -1819,7 +1819,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Min(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -1848,7 +1848,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Min(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -1877,7 +1877,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Min(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -1906,7 +1906,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Min(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -1935,7 +1935,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Min(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -1964,7 +1964,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Min(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -1993,7 +1993,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Min(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -2022,7 +2022,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Min(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -2051,7 +2051,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Min(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -2080,7 +2080,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Min(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -2109,7 +2109,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Min(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -2138,7 +2138,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Min(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -2167,7 +2167,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Min(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -2200,7 +2200,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Max(expr, f =&gt; f.[Distinct()][.Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para>Use <c>.Distinct()</c> for <c>MAX(DISTINCT x) OVER (...)</c>. <c>DISTINCT</c> in a window aggregate is not supported by most providers; where unsupported it throws a descriptive exception at query-translation time.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
@@ -2232,7 +2232,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Max(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -2261,7 +2261,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Max(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -2290,7 +2290,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Max(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -2319,7 +2319,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Max(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -2348,7 +2348,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Max(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -2377,7 +2377,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Max(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -2406,7 +2406,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Max(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -2435,7 +2435,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Max(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -2464,7 +2464,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Max(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -2493,7 +2493,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Max(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -2522,7 +2522,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Max(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -2551,7 +2551,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Max(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -2580,7 +2580,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// <para><b>Syntax:</b> <c>Sql.Window.Max(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
-		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
