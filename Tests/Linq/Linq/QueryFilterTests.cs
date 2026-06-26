@@ -794,5 +794,68 @@ namespace Tests.Linq
 				result.ShouldContain(r => r.InfoId == null);
 			}
 		}
+
+		[Test]
+		public void NamedFilter_InterfaceTypedLambda_FastPath([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			// Regression: a filter lambda typed against an interface (Func<ISoftDelete, ...>) applied to a concrete
+			// entity must be adapted to the entity type before Queryable.Where<DetailClass>, otherwise query build
+			// throws ArgumentException. This declares only a lambda filter, exercising the lambda-only fast path.
+
+			var testData = GenerateTestData();
+
+			var builder = new FluentMappingBuilder(new MappingSchema());
+
+			builder.Entity<DetailClass>().HasAttribute(new QueryFilterAttribute
+			{
+				FilterKey    = SoftDeleteKey,
+				FilterLambda = (Expression<Func<ISoftDelete, MyDataContext, bool>>)((e, dc) => !dc.IsSoftDeleteFilterEnabled || !e.IsDeleted)
+			});
+
+			builder.Build();
+
+			using var db = new MyDataContext(context, builder.MappingSchema);
+			using (db.CreateLocalTable(testData.Item3))
+			{
+				db.IsSoftDeleteFilterEnabled = true;
+
+				var result = db.GetTable<DetailClass>().ToList();
+
+				result.ShouldAllBe(e => !e.IsDeleted);
+				result.Count.ShouldBeLessThan(testData.Item3.Length);
+			}
+		}
+
+		[Test]
+		public void NamedFilter_InterfaceTypedLambda_WithFunc_DynamicPath([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			// Same interface-typed lambda regression on the dynamic-accessor path: pairing the interface-typed
+			// lambda filter with a func filter on the same entity forces the func branch of ApplyQueryFilters,
+			// which must apply the same entity-type adaptation as the fast path.
+
+			var testData = GenerateTestData();
+
+			var builder = new FluentMappingBuilder(new MappingSchema());
+
+			builder.Entity<DetailClass>().HasAttribute(new QueryFilterAttribute
+			{
+				FilterKey    = SoftDeleteKey,
+				FilterLambda = (Expression<Func<ISoftDelete, MyDataContext, bool>>)((e, dc) => !dc.IsSoftDeleteFilterEnabled || !e.IsDeleted)
+			});
+			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(IdRangeKey, (Func<IQueryable<DetailClass>, MyDataContext, IQueryable<DetailClass>>)((q, dc) => q.Where(e => e.Id < 500)));
+
+			builder.Build();
+
+			using var db = new MyDataContext(context, builder.MappingSchema);
+			using (db.CreateLocalTable(testData.Item3))
+			{
+				db.IsSoftDeleteFilterEnabled = true;
+
+				var result = db.GetTable<DetailClass>().ToList();
+
+				result.ShouldAllBe(e => !e.IsDeleted && e.Id < 500);
+				result.Count.ShouldBeLessThan(testData.Item3.Length);
+			}
+		}
 	}
 }

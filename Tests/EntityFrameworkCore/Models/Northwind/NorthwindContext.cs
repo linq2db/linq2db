@@ -73,7 +73,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.Northwind
 			builder.Entity<TEntity>().HasQueryFilter("SoftDeleteFilter", e => !obj!.IsSoftDeleteFilterEnabled || !e.IsDeleted);
 #endif
 #else
-			// Earlier EF versions: anonymous filter (can coexist with at most one other anonymous filter)
+			// Earlier EF versions: only one query filter per entity (a later HasQueryFilter call replaces an earlier one)
 #if !NETFRAMEWORK
 			builder.Entity<TEntity>().HasQueryFilter(e => !obj!.IsSoftDeleteFilterEnabled || !e.IsDeleted || !EF.Property<bool>(e, "IsDeleted"));
 #else

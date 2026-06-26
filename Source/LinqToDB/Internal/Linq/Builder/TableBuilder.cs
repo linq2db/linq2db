@@ -133,10 +133,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				foreach (var entry in activeFilters)
 				{
-					var filterLambdaExpr = entry.FilterLambda!;
-					var dcParam          = filterLambdaExpr.Parameters[1];
-					var dcExpr           = SqlQueryRootExpression.Create(mappingSchema, dcParam.Type);
-					var filterLambda     = Expression.Lambda(filterLambdaExpr.Body.Replace(dcParam, dcExpr), filterLambdaExpr.Parameters[0]);
+					var filterLambda = BuildFilterLambda(mappingSchema, entityType, entry.FilterLambda!);
 
 					filteredExpression = Expression.Call(Methods.Queryable.Where.MakeGenericMethod(entityType), filteredExpression, Expression.Quote(filterLambda));
 				}
@@ -174,9 +171,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 						if (filterLambdaExpr != null)
 						{
-							var dcParam      = filterLambdaExpr.Parameters[1];
-							var dcExpr       = SqlQueryRootExpression.Create(ms, dcParam.Type);
-							var filterLambda = Expression.Lambda(filterLambdaExpr.Body.Replace(dcParam, dcExpr), filterLambdaExpr.Parameters[0]);
+							var filterLambda = BuildFilterLambda(ms, entityType, filterLambdaExpr);
 
 							sequenceExpr = Expression.Call(Methods.Queryable.Where.MakeGenericMethod(entityType), sequenceExpr, Expression.Quote(filterLambda));
 						}
@@ -201,6 +196,32 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			return filteredExpression;
+		}
+
+		// Builds the Where-lambda for a single query filter: substitutes the data-context parameter with the
+		// SqlQueryRootExpression and adapts the entity parameter to the concrete entityType. The adaptation is
+		// required for filter lambdas typed against an interface/base type (e.g. a QueryFilterAttribute subclass
+		// whose FilterLambda is Expression<Func<ISoftDelete, IDataContext, bool>> applied to a concrete entity);
+		// without it Queryable.Where<entityType> rejects the interface-typed lambda parameter.
+		static LambdaExpression BuildFilterLambda(MappingSchema mappingSchema, Type entityType, LambdaExpression filterLambdaExpr)
+		{
+			var entityParam = filterLambdaExpr.Parameters[0];
+			var dcParam     = filterLambdaExpr.Parameters[1];
+			var dcExpr      = SqlQueryRootExpression.Create(mappingSchema, dcParam.Type);
+
+			var body        = filterLambdaExpr.Body.Replace(dcParam, dcExpr);
+			var lambdaParam = entityParam;
+
+			if (entityParam.Type != entityType)
+			{
+				if (!entityParam.Type.IsAssignableFrom(entityType))
+					throw new LinqToDBException($"Query filter parameter type '{entityParam.Type}' is not assignable from entity type '{entityType}'.");
+
+				lambdaParam = Expression.Parameter(entityType, entityParam.Name);
+				body        = body.Replace(entityParam, Expression.Convert(lambdaParam, entityParam.Type));
+			}
+
+			return Expression.Lambda(body, lambdaParam);
 		}
 
 		static MappingSchema GetRootMappingSchema(ExpressionBuilder builder, Expression expression)
