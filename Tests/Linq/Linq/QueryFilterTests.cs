@@ -857,5 +857,87 @@ namespace Tests.Linq
 				result.Count.ShouldBeLessThan(testData.Item3.Length);
 			}
 		}
+
+		[Test]
+		public void QueryFilters_Introspection_ShapeOrderAndDefaultSlot()
+		{
+			// Directly asserts the public introspection surface (EntityDescriptor.QueryFilters / EntityQueryFilter)
+			// rather than going through query results: entry count, declaration order, per-entry key, and which
+			// entries carry FilterLambda vs FilterFunc. No DB roundtrip needed.
+
+			var builder = new FluentMappingBuilder(new MappingSchema());
+
+			// Declaration order: anonymous predicate, named predicate, named func.
+			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>((e, dc) => !e.IsDeleted);
+			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(SoftDeleteKey, (e, dc) => !e.IsDeleted);
+			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(IdRangeKey, (q, dc) => q.Where(e => e.Id < 500));
+
+			builder.Build();
+
+			var ed = builder.MappingSchema.GetEntityDescriptor(typeof(DetailClass));
+
+			ed.QueryFilters.Count.ShouldBe(3);
+			ed.QueryFilters.Select(f => f.FilterKey).ShouldBe(new[] { "", SoftDeleteKey, IdRangeKey });
+
+			var anon = ed.QueryFilters[0];
+			anon.FilterLambda.ShouldNotBeNull();
+			anon.FilterFunc.ShouldBeNull();
+
+			var soft = ed.QueryFilters[1];
+			soft.FilterLambda.ShouldNotBeNull();
+			soft.FilterFunc.ShouldBeNull();
+
+			var idRange = ed.QueryFilters[2];
+			idRange.FilterLambda.ShouldBeNull();
+			idRange.FilterFunc.ShouldNotBeNull();
+
+			// Legacy single-slot accessors mirror the default (anonymous, empty-key) entry.
+			ed.QueryFilterLambda.ShouldBeSameAs(anon.FilterLambda);
+			ed.QueryFilterFunc.ShouldBeNull();
+		}
+
+		[Test]
+		public void QueryFilters_Introspection_NullRemovesEntry()
+		{
+			var builder = new FluentMappingBuilder(new MappingSchema());
+
+			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(SoftDeleteKey, (e, dc) => !e.IsDeleted);
+			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(IdRangeKey, (q, dc) => q.Where(e => e.Id < 500));
+			// Null under an existing key removes that entry from the collection.
+			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(SoftDeleteKey, (Expression<Func<DetailClass, MyDataContext, bool>>?)null);
+
+			builder.Build();
+
+			var ed = builder.MappingSchema.GetEntityDescriptor(typeof(DetailClass));
+
+			ed.QueryFilters.Count.ShouldBe(1);
+			ed.QueryFilters.Select(f => f.FilterKey).ShouldBe(new[] { IdRangeKey });
+		}
+
+		[Test]
+		public void QueryFilters_Introspection_DerivedOverridesBase()
+		{
+			var builder = new FluentMappingBuilder(new MappingSchema());
+
+			// Base declares the key as a func; derived overrides the same key with a predicate lambda.
+			builder.Entity<FilterBaseEntity>()   .HasQueryFilter<MyDataContext>(SoftDeleteKey, (q, dc) => q.Where(e => !e.IsDeleted));
+			builder.Entity<FilterDerivedEntity>().HasQueryFilter<MyDataContext>(SoftDeleteKey, (e, dc) => !e.IsDeleted);
+
+			builder.Build();
+
+			var ms = builder.MappingSchema;
+
+			// Base keeps its own func entry.
+			var edBase = ms.GetEntityDescriptor(typeof(FilterBaseEntity));
+			edBase.QueryFilters.Count.ShouldBe(1);
+			edBase.QueryFilters[0].FilterFunc.ShouldNotBeNull();
+
+			// Derived collapses to a single entry under the shared key, carrying the derived lambda (not the base func).
+			var edDerived = ms.GetEntityDescriptor(typeof(FilterDerivedEntity));
+			edDerived.QueryFilters.Count.ShouldBe(1);
+			edDerived.QueryFilters[0].FilterKey.ShouldBe(SoftDeleteKey);
+			edDerived.QueryFilters[0].FilterLambda.ShouldNotBeNull();
+			edDerived.QueryFilters[0].FilterFunc.ShouldBeNull();
+		}
 	}
 }
