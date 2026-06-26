@@ -3596,5 +3596,39 @@ namespace Tests.Linq
 		}
 
 		#endregion
+
+		#region Non-linq2db IQueryable source (issue #5649)
+
+		sealed class IssueEntity5649A
+		{
+			public IssueEntity5649B Prop { get; set; } = null!;
+		}
+
+		sealed class IssueEntity5649B { }
+
+		[Test]
+		public void Issue5649_LoadWith_NonLinqToDBSource()
+		{
+			// LoadWith on a non-linq2db IQueryable should not throw — mirrors EF Core Include behavior.
+			// No associations are loaded, but enumeration must work.
+			var result = Enumerable.Empty<IssueEntity5649A>().AsQueryable()
+				.LoadWith(a => a.Prop)
+				.ToList();
+
+			Assert.That(result, Is.Empty);
+		}
+
+		[Test]
+		public void Issue5649_LoadWith_ThenLoad_NonLinqToDBSource()
+		{
+			var result = Enumerable.Empty<IssueEntity5649A>().AsQueryable()
+				.LoadWith(a => a.Prop)
+				.ThenLoad(b => b)
+				.ToList();
+
+			Assert.That(result, Is.Empty);
+		}
+
+		#endregion
 	}
 }
