@@ -1433,6 +1433,13 @@ namespace Tests.DataProvider
 			[Column(DataType = DataType.Decimal, Precision = 38, Scale = 35)] public decimal Value;
 		}
 
+		[Table]
+		sealed class SqlServerMoneyAutoRead
+		{
+			[Column(DataType = DataType.Money)]      public decimal MoneyValue;
+			[Column(DataType = DataType.SmallMoney)] public decimal SmallMoneyValue;
+		}
+
 		[Test]
 		public void OverflowTest2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
@@ -1461,6 +1468,25 @@ namespace Tests.DataProvider
 			values[0].Value2.ShouldBe(expectedDec2);
 			secondRead[0].Value1.ShouldBe(expectedDec1);
 			secondRead[0].Value2.ShouldBe(expectedDec2);
+		}
+
+		[Test]
+		public void MoneyTypesReadAfterDecimalFallbackTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context, suppressSequentialAccess: true);
+			using var decimalTable = db.CreateLocalTable<SqlServerDecimalOverflowAutoRead>("SqlServerDecimalOverflowAutoRead");
+			using var moneyTable = db.CreateLocalTable<SqlServerMoneyAutoRead>("SqlServerMoneyAutoRead");
+
+			db.Execute("INSERT INTO [SqlServerDecimalOverflowAutoRead] ([Value1], [Value2]) VALUES (1.2345678901234567890123456789, 1234567890123456789012.123456789)");
+			decimalTable.ToList().Count.ShouldBe(1);
+
+			db.Execute("INSERT INTO [SqlServerMoneyAutoRead] ([MoneyValue], [SmallMoneyValue]) VALUES (123456.7891, 1234.5678)");
+
+			var values = moneyTable.ToList();
+
+			values.Count.ShouldBe(1);
+			values[0].MoneyValue.ShouldBe(123456.7891m);
+			values[0].SmallMoneyValue.ShouldBe(1234.5678m);
 		}
 
 		[Test]
