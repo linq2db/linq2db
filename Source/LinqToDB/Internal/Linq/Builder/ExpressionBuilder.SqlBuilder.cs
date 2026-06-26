@@ -372,6 +372,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			return result;
 		}
 
+		internal bool IsServerSideOnly(Expression expr)
+		{
+			return _optimizationContext.IsServerSideOnly(expr);
+		}
+
 		Expression? _currentlyTestingForTranslation;
 
 		public bool HasTranslation(Expression expression)
