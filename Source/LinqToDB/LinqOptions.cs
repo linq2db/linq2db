@@ -230,21 +230,21 @@ namespace LinqToDB
 		// `with` paths don't reference obsolete members. Keep it in sync with new parameters (see note above).
 		LinqOptions(LinqOptions original)
 		{
-			IgnoreEmptyUpdate       = original.IgnoreEmptyUpdate;
-			GenerateExpressionTest  = original.GenerateExpressionTest;
-			TraceMapperExpression   = original.TraceMapperExpression;
-			ConcatenateOrderBy      = original.ConcatenateOrderBy;
-			OptimizeJoins           = original.OptimizeJoins;
-			CompareNulls            = original.CompareNulls;
-			GuardGrouping           = original.GuardGrouping;
-			DisableQueryCache       = original.DisableQueryCache;
-			CacheSlidingExpiration  = original.CacheSlidingExpiration;
-			ParameterizeTakeSkip    = original.ParameterizeTakeSkip;
-			EnableContextSchemaEdit = original.EnableContextSchemaEdit;
-			PreferExistsForScalar   = original.PreferExistsForScalar;
-			PreferClientCalculation = original.PreferClientCalculation;
-			UpsertEmulationPolicy   = original.UpsertEmulationPolicy;
-			OptimizeForSequentialAccess = original.OptimizeForSequentialAccess;
+			IgnoreEmptyUpdate                   = original.IgnoreEmptyUpdate;
+			GenerateExpressionTest              = original.GenerateExpressionTest;
+			TraceMapperExpression               = original.TraceMapperExpression;
+			ConcatenateOrderBy                  = original.ConcatenateOrderBy;
+			OptimizeJoins                       = original.OptimizeJoins;
+			CompareNulls                        = original.CompareNulls;
+			GuardGrouping                       = original.GuardGrouping;
+			DisableQueryCache                   = original.DisableQueryCache;
+			CacheSlidingExpiration              = original.CacheSlidingExpiration;
+			ParameterizeTakeSkip                = original.ParameterizeTakeSkip;
+			EnableContextSchemaEdit             = original.EnableContextSchemaEdit;
+			PreferExistsForScalar               = original.PreferExistsForScalar;
+			PreferClientCalculation             = original.PreferClientCalculation;
+			UpsertEmulationPolicy               = original.UpsertEmulationPolicy;
+			OptimizeForSequentialAccess         = original.OptimizeForSequentialAccess;
 			OptimizeDuplicateParameters         = original.OptimizeDuplicateParameters;
 			OptimizeDuplicatePropertyParameters = original.OptimizeDuplicatePropertyParameters;
 		}
@@ -310,7 +310,7 @@ namespace LinqToDB
 				out concatenateOrderBy, out optimizeJoins, out compareNulls, out guardGrouping, out disableQueryCache,
 				out cacheSlidingExpiration, out preferApply, out keepDistinctOrdered, out parameterizeTakeSkip,
 				out enableContextSchemaEdit, out preferExistsForScalar,
-				out _, out _, out _);
+				out _, out _, out _, out _, out _);
 		}
 
 		int? _configurationID;
