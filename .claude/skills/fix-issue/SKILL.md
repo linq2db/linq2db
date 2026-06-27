@@ -45,6 +45,16 @@ Only invoke this skill for `linq2db/linq2db` issues. For issues in other repos, 
    - linq2db version(s) mentioned — useful when the repro needs a particular dialect path
    - Any attached linked PRs from earlier fix attempts (via the `closingIssues` edges in `closingIssuesReferences`, if present)
 
+### 1b. Consult the KB for the affected area
+
+Before reproducing the bug or writing the regression test, orient via the knowledge base (skip silently if `.claude/knowledge-base/` isn't built — don't run `/kb-build` mid-task). Map the issue's provider / subsystem to its area code in [`kb-areas.md`](../../docs/kb-areas.md), then **read the cheap anchors directly**:
+
+- `areas/<AREA>/issues.md` — is this symptom already a known issue or a prior fix?
+- `areas/<AREA>/decisions.md` — past decisions that constrain the fix
+- `areas/<AREA>/patterns.md` — the idiomatic shape for changes here
+
+Reserve `/kb-ask <question>` (spawns a subagent) for cross-area synthesis. Orientation only — confirm against current source before acting (code wins). See [`agent-rules.md`](../../docs/agent-rules.md) → *Consult the knowledge base*.
+
 ### 2. Summarize + ask-ask-do-all (clarify in one round)
 
 Summarize the issue back to the user in 5–8 lines. Then, in **the same message**, batch every clarification question you can anticipate. Typical questions:

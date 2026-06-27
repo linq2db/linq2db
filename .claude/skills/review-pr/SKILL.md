@@ -69,6 +69,16 @@ If the PR scope summary or linked issue body rests on an external-system claim �
 
 If the claim is wrong, tell the user and stop. The PR likely needs re-scoping (sometimes re-filing under a different issue), not reviewing. Running `code-reviewer` + `baselines-reviewer` on a PR whose premise is false produces findings tuned to the wrong expectation — FB5 → FB6 pivot of 2026-04-22 is the motivating case.
 
+### 3c. Consult the KB for the changed areas
+
+Before spawning the reviewers, orient via the knowledge base (skip silently if `.claude/knowledge-base/` isn't built). Map each changed path from step 2's file list to its area code in [`kb-areas.md`](../../docs/kb-areas.md), then **read the cheap anchors directly** for each touched area:
+
+- `areas/<AREA>/issues.md` / `tech-debt.md` — known issues / debt the diff may hit or should fix
+- `areas/<AREA>/decisions.md` — past decisions the change must respect
+- `areas/<AREA>/patterns.md` — the area's idioms, to judge whether the diff conforms
+
+Reserve `/kb-ask` for cross-area synthesis. Orientation only — the diff + current source win. See [`agent-rules.md`](../../docs/agent-rules.md) → *Consult the knowledge base*.
+
 ### 4. Pre-review confirmation
 
 After the target-branch check passes and the change summary is in hand, ask the user two bundled questions in a single prompt so both answers land in one reply (per `agent-rules.md` → **Batching and user interaction**):

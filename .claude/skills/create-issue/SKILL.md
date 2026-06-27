@@ -27,6 +27,7 @@ Only when the user explicitly asks to create / file / open an issue, task, bug, 
    Include the proof links in the **Background** section. If verification fails, surface it to the user — a filed issue anchored on a false premise wastes downstream effort (FB5 → FB6 pivot of 2026-04-22 is the motivating case).
 4. If the topic is a pure feature request with no behavior claim — internal or external — skip verification, but still ground the proposal in concrete file paths the change would touch.
 5. Collect concrete `file:line` references for the **Current behavior** section.
+6. **Consult the KB for the affected area.** Map the topic to its area code in [`kb-areas.md`](../../docs/kb-areas.md) and read `areas/<AREA>/{issues,decisions,tech-debt}.md` directly (skip silently if the KB isn't built) — a known issue, prior decision, or recorded tech-debt may already cover this or sharpen the report. Orientation only; ground every claim in current source (point 2). Reserve `/kb-ask` for synthesis.
 
 ### 2. Check for duplicates
 

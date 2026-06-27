@@ -37,7 +37,7 @@ Design invariants that define what linq2db *is* as a library — public-API cont
 
 ## Knowledge base
 
-A curated knowledge base may exist under `.claude/knowledge-base/` (built by `/kb-build`). When present, consult it for architecture / history / area-pattern / past-decision questions and for bug-investigation context — via `/kb-ask <question>` or by reading the area / architecture files directly. It's an orientation layer, not current-code truth; see [.claude/docs/agent-rules.md](.claude/docs/agent-rules.md) → *Consult the knowledge base*.
+A curated knowledge base may exist under `.claude/knowledge-base/` (built by `/kb-build`): 50+ per-area folders (`areas/<AREA>/{INDEX,issues,decisions,patterns,tech-debt}.md` — area codes indexed in [.claude/docs/kb-areas.md](.claude/docs/kb-areas.md)), plus `architecture/`, `history/`, and `glossary.md`. **When present, consult it first** for architecture / history / area-pattern / past-decision questions and bug-investigation context — by reading the relevant `areas/<AREA>/` files directly (cheap — make it a reflex), reserving `/kb-ask <question>` for cross-area synthesis. It's an orientation layer, not current-code truth; see [.claude/docs/agent-rules.md](.claude/docs/agent-rules.md) → *Consult the knowledge base*.
 
 ## Code conventions
 

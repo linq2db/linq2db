@@ -56,6 +56,8 @@ Follow the discipline in [`.claude/docs/issue-search.md`](../../docs/issue-searc
 
 Use parallel `Bash` calls for the independent `gh` invocations.
 
+Also check the KB for the topic's area (skip silently if `.claude/knowledge-base/` isn't built): `areas/<AREA>/issues.md` and `detected-issues/` may surface a related known issue that GitHub-search term-matching misses. Map the area via [`kb-areas.md`](../../docs/kb-areas.md). Treat any hit as a candidate to cross-check, not as a GitHub search result.
+
 ### 4. Present results
 
 Compact table per `issue-search.md` step 5.
