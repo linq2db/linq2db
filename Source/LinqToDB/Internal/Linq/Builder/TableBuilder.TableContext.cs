@@ -310,7 +310,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				};
 
 				if (_filteredByOfType != null)
-					cloned._filteredByOfType = new List<Type>(_filteredByOfType);
+					cloned._filteredByOfType = [.._filteredByOfType];
 
 				return cloned;
 			}

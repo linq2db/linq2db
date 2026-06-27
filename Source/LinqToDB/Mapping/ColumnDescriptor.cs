@@ -778,11 +778,6 @@ namespace LinqToDB.Mapping
 			return ApplyConversions(MappingSchema, getterExpr, dbDataType, ValueConverter, includingEnum, CanBeNull);
 		}
 
-		/// <summary>
-		/// Extracts column value, converted to database type, from entity object.
-		/// </summary>
-		/// <param name="obj">Entity object to extract column value from.</param>
-		/// <returns>Returns column value, converted to database type.</returns>
 		List<ColumnDescriptor>? _valueSiblings;
 
 		/// <summary>
@@ -792,6 +787,11 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		internal void AddValueSibling(ColumnDescriptor sibling) => (_valueSiblings ??= new()).Add(sibling);
 
+		/// <summary>
+		/// Extracts column value, converted to database type, from entity object.
+		/// </summary>
+		/// <param name="obj">Entity object to extract column value from.</param>
+		/// <returns>Returns column value, converted to database type.</returns>
 		public virtual object? GetProviderValue(object obj)
 		{
 			if (_getter == null)
@@ -822,6 +822,13 @@ namespace LinqToDB.Mapping
 					// base-typed (mixed) insert writes the default for every non-primary sibling row.
 					Expression elseExpr = GetDefaultDbValueExpression();
 
+					// The value-sibling chain below is only reached when TypeIs(obj, entityType) is false.
+					// Declaring-type widening above and the sibling chain are mutually exclusive on a given
+					// physical column in current TPH models: a shared column is reached either via one
+					// inherited (widened) member or via distinct sibling members, never both. If a future
+					// mapping ever targets one physical column with both an inherited shared member (which
+					// widens entityType so TypeIs is true for all subtypes) AND value-siblings, this branch
+					// becomes unreachable and those sibling rows would write the default — revisit then.
 					if (_valueSiblings != null)
 					{
 						foreach (var sibling in _valueSiblings)

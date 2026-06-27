@@ -1430,7 +1430,7 @@ namespace Tests.Linq
 
 			var result = tb.OrderBy(r => r.Id).ToArray();
 
-			Assert.That(result, Has.Length.EqualTo(1));
+			Assert.That(result, Has.Length.EqualTo(2));
 			Assert.That(result[0], Is.InstanceOf<CreateTable1>());
 			using (Assert.EnterMultipleScope())
 			{
