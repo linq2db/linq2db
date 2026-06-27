@@ -65,6 +65,8 @@ Files with very large patches have `.patch` omitted by the API (hence the `!= nu
 
 When several parallel Bash calls launch Git Bash at once, one may die with `fatal error — add_item (… errno 1)`. Retry the specific failed command individually; it almost always succeeds on the next attempt. This is a MSYS cygheap race, not a command error.
 
+It also fires on **sequential, single** Bash calls — not only parallel bursts — and a retry does **not** always clear it (it can fail several times in a row). When it recurs, stop retrying and **route the call through the PowerShell tool** instead (or, for `gh`, the `Invoke-Gh` helpers): that bypasses the Git-Bash/MSYS layer entirely and the command runs clean. (Surfaced on PR #5605: `gh pr checks` failed twice via Bash, then succeeded immediately via the PowerShell tool, as did `post-pr-review.ps1`.)
+
 ## `docker exec <container> /<container-side-path>` is path-mangled
 
 Git Bash rewrites `/usr/local/bin/foo` to `C:/Program Files/Git/usr/local/bin/foo` before docker sees it, so any `docker exec` that references a container-side absolute path fails with `stat … no such file or directory`. Workaround: prefix the command with `MSYS_NO_PATHCONV=1` **and** invoke through `bash -c '…'` so the path lives inside a single argument that bypasses the rewrite:

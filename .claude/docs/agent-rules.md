@@ -63,7 +63,7 @@ MSYS path-mangling and stdout-decoding bite well-formed `gh` / `git` / `docker` 
 - `git show <ref>:<path>` fails with `ambiguous argument` when `<ref>` contains `/` — use `git ls-tree` + `git cat-file -p` instead.
 - **`gh … --body` is banned.** Always `--body-file <path>` or `--body-file -`. For `/azp run …` triggers use `.claude/scripts/azp-run.ps1`. (`gh … --body @-` is *not* stdin either — it sets the body to the literal string `@-`.)
 - `git fetch <headRefName>` of a fork PR may produce no usable ref — fetch via `refs/pull/<n>/head:refs/remotes/origin/pr/<n>`.
-- Transient `fatal error — add_item (… errno 1)` on parallel fork bursts: retry the failed command once.
+- Transient `fatal error — add_item (… errno 1)` on fork bursts (and sometimes single sequential calls): retry once; if it recurs, switch to the PowerShell tool rather than retry-looping.
 - `docker exec <container> /<path>` mangles the path: prefix with `MSYS_NO_PATHCONV=1` and wrap in `bash -c '…'`.
 - Captured `gh` / `git` stdout decodes via the console code page, not UTF-8 — non-ASCII (emoji, em-dash) gets mangled. Don't capture body-ish output into a pwsh variable; use `Invoke-Gh` helpers, file roundtrip, or ASCII-only anchors.
 - `Glob` returns "No files found" for a path documented in CLAUDE.md / a SKILL / `agent-rules.md` — `Read` the documented path directly before concluding it's missing or reimplementing the helper.
