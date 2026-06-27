@@ -10,16 +10,12 @@ using Shouldly;
 
 namespace Tests.Linq
 {
-	// Regression coverage for the >7-member (Rest-nested ValueTuple) composite eager-loading key path.
-	// Two distinct defects, both reachable only with a composite correlation key of 8+ members:
-	//  1. GenerateKeyExpression nested the Rest tuple from startIndex+count instead of startIndex+count-1,
-	//     dropping one member and producing a ValueTuple`1 Rest that AccessValueTupleField then read with
-	//     Item2 -> ArgumentException at query-build time. Fixed in ExpressionBuilder.EagerLoad.cs.
-	//  2. The KeyedQuery key-carry SELECT projects only the 7 top-level ValueTuple Item fields and does not
-	//     recurse into Rest, so the grouping key carried back to the client is truncated; children fail to
-	//     match their parent. Fix lives in the (cross-cutting) nested-ValueTuple SELECT-projection path.
+	// Eager loading with a wide composite correlation key (8+ members), which the key machinery
+	// represents as a Rest-nested ValueTuple. These cases span multiple load strategies (KeyedQuery
+	// and the Default/separate strategy), so they live on their own rather than under a single
+	// strategy's fixture.
 	[TestFixture]
-	public class Pr5450KeyExprTests : TestBase
+	public class EagerLoadingWideKeyTests : TestBase
 	{
 		[Table]
 		sealed class KParent
@@ -69,9 +65,7 @@ namespace Tests.Linq
 			return (parents, children);
 		}
 
-		// Defect #1 regression: a 9-member composite KeyedQuery key built the Rest tuple incorrectly and
-		// threw ArgumentException ("Item2 is not defined for ValueTuple`1") at build time. With the fix the
-		// query builds and executes (returning every parent); see the gated test below for the grouping bug.
+		// A 9-member composite key under KeyedQuery builds and executes, returning every parent.
 		[Test]
 		public void NineMemberCompositeKey_KeyedQuery_NoCrash([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -82,7 +76,6 @@ namespace Tests.Linq
 			db.BulkCopy(parents);
 			db.BulkCopy(children);
 
-			// Pre-fix this query threw ArgumentException while building the key tuple; the fix lets it execute.
 			var result = (
 				from p in tP
 				orderby p.Id
@@ -99,9 +92,9 @@ namespace Tests.Linq
 			result.Count.ShouldBe(2);
 		}
 
-		// Defect #2 regression (gated): the key-carry SELECT truncates the nested key to its 7 top-level
-		// fields, so children differing only in members >=8 are mis-grouped. Each parent must get its own child.
-		[ActiveIssue("PR #5450 review: KeyedQuery key-carry projection of a Rest-nested (>7-member) ValueTuple omits the Rest_* columns, truncating the client grouping key to 7 members.")]
+		// A 9-member composite key under KeyedQuery: each parent gets only the child whose full key matches,
+		// including members >=8 (the Rest-nested part of the key).
+		[ActiveIssue("KeyedQuery key-carry projection of a Rest-nested (>7-member) ValueTuple omits the Rest_* columns, truncating the client grouping key to 7 members.")]
 		[Test]
 		public void NineMemberCompositeKey_KeyedQuery_NestedKeyGrouping([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -130,8 +123,7 @@ namespace Tests.Linq
 			result[1].Children.Select(c => c.Tag).ShouldBe(new[] { "p2" });
 		}
 
-		// Baseline: the same 9-member composite key under the Default strategy groups correctly,
-		// proving the data and the correlation are sound independent of KeyedQuery.
+		// A 9-member composite key under the Default strategy: each parent gets its own matching child.
 		[Test]
 		public void NineMemberCompositeKey_Default([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -160,7 +152,8 @@ namespace Tests.Linq
 			result[1].Children.Select(c => c.Tag).ShouldBe(new[] { "p2" });
 		}
 
-		// Baseline: a 7-member composite key (no Rest nesting) groups correctly under KeyedQuery.
+		// A 7-member composite key (no Rest nesting) under KeyedQuery: all rows share K1..K7, so every
+		// parent matches both children.
 		[Test]
 		public void SevenMemberCompositeKey_KeyedQuery([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -184,7 +177,6 @@ namespace Tests.Linq
 				})
 				.WithKeyedLoadStrategy().ToList();
 
-			// All rows share K1..K7, so every parent matches both children here.
 			result.Count.ShouldBe(2);
 			result[0].Children.Select(c => c.Tag).OrderBy(t => t).ShouldBe(new[] { "p1", "p2" });
 			result[1].Children.Select(c => c.Tag).OrderBy(t => t).ShouldBe(new[] { "p1", "p2" });
