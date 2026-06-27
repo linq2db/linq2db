@@ -3694,6 +3694,15 @@ namespace Tests.Linq
 			AssertPassthrough(_passthroughQuery.LoadWith(a => a.Children).ThenLoad(b => b.Leaves, q => q));
 		}
 
+		// The passthrough wrapper over a non-linq2db source is not an async source —
+		// async enumeration must throw a clear LinqToDBException, not silently no-op.
+		[Test]
+		public void LoadWith_NonLinqToDBSource_AsyncEnumeration_Throws()
+		{
+			var query = (IAsyncEnumerable<LoadWithPassthroughRoot>)_passthroughQuery.LoadWith(a => a.Child);
+			Assert.That(() => query.GetAsyncEnumerator(), Throws.TypeOf<LinqToDBException>());
+		}
+
 		#endregion
 	}
 }
