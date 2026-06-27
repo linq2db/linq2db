@@ -51,7 +51,9 @@ namespace LinqToDB.Mapping
 
 		public override string GetObjectID()
 		{
-			return string.Create(CultureInfo.InvariantCulture, $"{FilterKey}.{IdentifierBuilder.GetObjectID(FilterLambda)}.{IdentifierBuilder.GetObjectID(FilterFunc?.Method)}");
+			// Length-prefix the user-controlled FilterKey so a key containing '.' cannot collide with the
+			// id-segment boundaries (the '.' separators alone are ambiguous once a segment can embed one).
+			return string.Create(CultureInfo.InvariantCulture, $"{FilterKey?.Length ?? 0}:{FilterKey}.{IdentifierBuilder.GetObjectID(FilterLambda)}.{IdentifierBuilder.GetObjectID(FilterFunc?.Method)}");
 		}
 	}
 }
