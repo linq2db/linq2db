@@ -849,8 +849,19 @@ namespace LinqToDB.Internal.SqlProvider
 
 			var select = ConvertElement(selectQuery.Select);
 
-			foreach (var col in select.Columns)
+			// ConvertElement can rebuild the Select into fresh SqlColumn instances (parameter-dependent
+			// queries re-run the per-element convert at build time, after aliasing). Synthetic column
+			// aliases live in the object-identity-keyed AliasesContext, not on the node, so they must be
+			// read from the original aliased columns - the rebuilt copies were never registered, so
+			// GetColumnAlias would miss them and drop the alias. Convert is value-level and preserves
+			// column count/order, so the i-th rebuilt column maps to the i-th original (when counts agree).
+			var aliasColumns = selectQuery.Select.Columns;
+			var aliasAligned = aliasColumns.Count == select.Columns.Count;
+
+			for (var i = 0; i < select.Columns.Count; i++)
 			{
+				var col = select.Columns[i];
+
 				if (!first)
 					StringBuilder.AppendLine(Comma);
 
@@ -858,7 +869,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 				var addAlias = true;
 				var expr     = (ISqlExpression)Optimize(col.Expression, reducePredicates: true);
-				var colAlias = AliasesContext.GetColumnAlias(col);
+				var colAlias = AliasesContext.GetColumnAlias(aliasAligned ? aliasColumns[i] : col);
 
 				AppendIndent();
 				BuildColumnExpression(selectQuery, expr, colAlias, ref addAlias);
