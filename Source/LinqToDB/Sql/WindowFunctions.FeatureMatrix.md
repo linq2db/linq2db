@@ -63,10 +63,6 @@ Notes: SQL Server has no `NTH_VALUE` (any version). MariaDB & YDB reject the LEA
 | `DISTINCT` in window agg | ✗ | ✗ | ✓ | ✗ | ✗ | ✗ | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
 | STDDEV_POP/SAMP, VAR_POP/SAMP | ✗† | ✓ | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ✗† | ✗† | ✗ | ✗ | ✗ |
 | bare STDDEV / VARIANCE | ✗† | ✓ | ✓ | ✓ | ✓ | ✗ | ✗ | ✓ | ✓ | ✗† | ✗† | ✗ | ✗ | ✗ |
-
-(Grouped statistical rows hide per-function asymmetry for SAP HANA & Informix — e.g. HANA has
-`STDDEV_POP/SAMP`+`VAR_POP/SAMP` but not bare `VARIANCE`; Informix has `STDDEV*`+bare `VARIANCE` but
-not `VAR_POP/SAMP`. See §5 for the exact per-function verified results.)
 | COVAR_POP/SAMP, CORR | ✗ | ✓ | ✓ | ✗ | ✗ | ✗ | ✓ | ✓ | ✓ | ✗† | ✗ | ✗ | ✗ | ✗ |
 | REGR_* (9 functions) | ✗ | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ |
 | MEDIAN | ✗ | ✗ | ✓ | ✗ | ✓ | ✗ | ✗† | ✓ | ✓ | ✗† | ✗ | ✗ | ✗ | ✗ |
@@ -79,6 +75,10 @@ not `VAR_POP/SAMP`. See §5 for the exact per-function verified results.)
 `RATIO_TO_REPORT` is native on Oracle/DB2 and emulated everywhere else as `x / SUM(x) OVER (…)`
 (verified: the PostgreSQL baseline emits `x::Float / SUM(x) OVER (PARTITION BY …)`).
 `STDDEV` is spelled `STDEV` on SQL Server / Sybase via `StdDevFunctionName`.
+
+The grouped statistical rows hide per-function asymmetry for SAP HANA & Informix — e.g. HANA has
+`STDDEV_POP/SAMP` + `VAR_POP/SAMP` but not bare `VARIANCE`; Informix has `STDDEV*` + bare `VARIANCE`
+but not `VAR_POP/SAMP`. See §5 for the exact per-function verified results.
 
 ---
 
@@ -106,7 +106,7 @@ the provider's natural NULL ordering, and for non-nullable keys).
 
 ## 5. Divergences & open questions
 
-Candidate fidelity gaps where the gate may not match the real database. **⚠ verify** cells above.
+Where the linq2db gate may not match the real database. These are the `✗†` cells flagged in §2–4.
 
 ### Confirmed gaps
 
@@ -166,7 +166,7 @@ as one group, and `IsVarianceBareSupported` gates bare `STDDEV`+`VARIANCE` toget
 `STDDEV*`+`VAR_POP/SAMP`+bare-`STDDEV` *without* bare-`VARIANCE`, and Informix wants `STDDEV*`+bare-`VARIANCE`
 *without* `VAR_POP/SAMP`. Cleanly enabling these requires finer-grained flags (or per-function name
 mapping), so they are documented here rather than enabled in this PR. Same coarse-flag issue blocks
-the SQL Server variance gap in §5.1.
+the SQL Server variance gap under **Confirmed gaps** above.
 
 (The **GROUPS-frame ✗** on Oracle / DB2 / SQL Server / MySQL / ClickHouse and **frame-EXCLUDE ✗** on
 those providers are believed correct — those engines lack the SQL:2011 `GROUPS` frame and `EXCLUDE`
