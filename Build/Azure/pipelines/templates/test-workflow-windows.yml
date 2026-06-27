@@ -52,6 +52,27 @@ steps:
     packageType: sdk
     version: 10.x
 
+- task: DownloadPipelineArtifact@2
+  inputs:
+    artifactName: $(artifact_test_scripts)
+    targetPath: '$(System.DefaultWorkingDirectory)/scripts'
+  condition: and(variables.title, succeeded())
+  displayName: Extract test scripts
+
+# Re-create the baselines branch if a previous completed run deleted it (empty-branch
+# cleanup). Without this, a "rerun failed jobs" restart fails on the clone below because
+# create_baselines_branch is not re-run on a partial restart. See build 21555.
+- task: PowerShell@2
+  inputs:
+    pwsh: true
+    filePath: '$(System.DefaultWorkingDirectory)/scripts/ensure-baselines-branch.ps1'
+    arguments: -Branch "$(baselines_branch)" -BaselinesMaster "$(baselines_master)" -BaseHash "$(baselines_head)"
+    workingDirectory: '$(System.DefaultWorkingDirectory)'
+  displayName: Ensure test baselines branch
+  condition: and(variables.title, ${{ parameters.with_baselines }}, succeeded())
+  env:
+    GITHUB_TOKEN: $(BASELINES_GH_PAT)
+
 - task: CmdLine@2
   inputs:
     script: 'git clone https://$(BASELINES_GH_PAT)@github.com/linq2db/linq2db.baselines.git baselines && cd baselines && git checkout -b $(baselines_branch) origin/$(baselines_branch) && cd ..'
@@ -65,13 +86,6 @@ steps:
     targetPath: '$(System.DefaultWorkingDirectory)/configs'
   condition: and(variables.title, succeeded())
   displayName: Extract test configs
-
-- task: DownloadPipelineArtifact@2
-  inputs:
-    artifactName: $(artifact_test_scripts)
-    targetPath: '$(System.DefaultWorkingDirectory)/scripts'
-  condition: and(variables.title, succeeded())
-  displayName: Extract test scripts
 
 - task: CmdLine@2
   inputs:
