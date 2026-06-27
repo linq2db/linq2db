@@ -74,14 +74,17 @@ namespace LinqToDB
 			IDataContext IExpressionQuery.DataContext =>
 				Query is IExpressionQuery<TEntity> exprQuery
 					? ((IExpressionQuery)exprQuery.GetLinqToDBSource()).DataContext
-					: throw new LinqToDBException($"LoadWith source '{Query.GetType()}' is not a linq2db query.");
+					: throw NotLinqToDbSource();
 
 			public abstract QueryDebugView DebugView { get; }
 
 			IReadOnlyList<QuerySql> IExpressionQuery.GetSqlQueries(SqlGenerationOptions? options) =>
 				Query is IExpressionQuery<TEntity> exprQuery
 					? ((IExpressionQuery)exprQuery.GetLinqToDBSource()).GetSqlQueries(options)
-					: throw new LinqToDBException($"LoadWith source '{Query.GetType()}' is not a linq2db query.");
+					: throw NotLinqToDbSource();
+
+			protected LinqToDBException NotLinqToDbSource() =>
+				new($"LoadWith source '{Query.GetType()}' is not a linq2db query.");
 		}
 
 		sealed class LoadWithQueryable<TEntity, TProperty>(IQueryable<TEntity> query) : LoadWithQueryableBase<TEntity>(query), ILoadWithQueryable<TEntity, TProperty>, IAsyncEnumerable<TEntity>
@@ -100,7 +103,7 @@ namespace LinqToDB
 			public override QueryDebugView DebugView =>
 				Query is IExpressionQuery<TEntity> exprQuery
 					? exprQuery.DebugView
-					: throw new LinqToDBException($"LoadWith source '{Query.GetType()}' is not a linq2db query.");
+					: throw NotLinqToDbSource();
 
 			IAsyncEnumerator<TEntity> IAsyncEnumerable<TEntity>.GetAsyncEnumerator(CancellationToken cancellationToken) =>
 				Query is IAsyncEnumerable<TEntity> asyncEnum
