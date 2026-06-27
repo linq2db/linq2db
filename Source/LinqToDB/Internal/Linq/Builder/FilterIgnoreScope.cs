@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace LinqToDB.Internal.Linq.Builder
@@ -75,7 +76,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			return Array.IndexOf(Types, entityType) >= 0;
 		}
 
-		public bool Equals(FilterIgnoreScope? other)
+		public bool Equals([NotNullWhen(true)] FilterIgnoreScope? other)
 		{
 			if (other is null)
 				return false;
@@ -86,7 +87,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			return ArrayEquals(Keys, other.Keys) && ArrayEquals(Types, other.Types);
 		}
 
-		public override bool Equals(object? obj) => obj is FilterIgnoreScope other && Equals(other);
+		public override bool Equals([NotNullWhen(true)] object? obj) => obj is FilterIgnoreScope other && Equals(other);
 
 		public override int GetHashCode()
 		{
