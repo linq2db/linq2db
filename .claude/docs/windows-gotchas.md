@@ -38,6 +38,10 @@ For the most common case — posting an `/azp run …` CI trigger — use `.clau
 
 `gh` treats `@-` as a literal body string, not "read from stdin" — `gh issue edit N --body @- <<'BODY' … BODY` silently sets the body to `@-`. The blanket ban above already requires `--body-file -` for stdin and `--body-file <path>` for a file; the `@-` form is called out separately because it looks plausible enough to slip past the ban.
 
+## Multi-line `git commit` messages: write to a file + `-F`
+
+The Bash tool is Git Bash (POSIX sh), **not** PowerShell — a PowerShell here-string `git commit -m @'…'@` is not a heredoc there, so the `@'` / `'@` markers leak into the message (mangled subject line `@`, trailing `@` footer), forcing an amend. Bash double-quoted `-m "…"` also command-substitutes backticks (`` `word` `` vanishes). Robust on Windows regardless of shell or content: `Write` the message to `.build/.claude/commit-msg.txt`, then `git commit -F <path>` (and `git commit --amend -F <path>` to fix a botched one). Same trap/fix the `gh … --body-file` rules above address for issue/PR bodies.
+
 ## Fetch a PR head via `refs/pull/<n>/head` into `origin/pr/<n>`
 
 `git fetch origin <headRefName>:refs/remotes/origin/<headRefName>` is fragile — when the head ref isn't tracked by the local remote's fetch refspec (fork PRs, pruned branches, stale refs), the fetch exits 0 but creates no usable ref, and a later `git diff origin/master...origin/<headRefName>` dies with "ambiguous argument". Instead:
