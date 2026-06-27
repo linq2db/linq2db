@@ -10,6 +10,8 @@ Only when the user explicitly asks. Do not silently `git worktree add` to work a
 
 When working inside an authorized worktree, local / gitignored files in the *main* repo (`UserDataProviders.json`, `.claude/settings.local.json`, etc.) don't need to be stashed — the worktree has its own copy and edits there leave the main repo untouched.
 
+Once you know you'll *edit* a file in the worktree, do the investigation `Read` / `Grep` against the **worktree** path, not the primary clone. `Edit`'s read-precondition is path-specific, so a read of the primary-clone copy doesn't satisfy it — you'd have to re-read the worktree copy before editing. Reading source the PR doesn't touch from the primary clone is harmless (same bytes), but it costs an extra round-trip the moment you decide to edit.
+
 ## `UserDataProviders.json` in a worktree
 
 `TestConfiguration` finds this file by walking **up** the directory tree from the test assembly (`GetFilePath` in `Tests/Base/TestConfiguration.cs`), not from a fixed path. A worktree lives under `<main-repo>/.claude/worktrees/<name>` and builds to `<worktree>/.build/bin/…`, so when the worktree has no `UserDataProviders.json` of its own (a fresh worktree only tracks `UserDataProviders.json.template`), the walk-up reaches the **main repo's** copy. Tests run from a worktree therefore work without copying anything.

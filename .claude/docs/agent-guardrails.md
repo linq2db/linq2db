@@ -8,6 +8,10 @@ The most-violated guardrails (don't reformat unrelated code; don't reshape cross
 
 If a decision affects public API, generated SQL, or provider behavior, describe the options in the conversation rather than picking silently. For SQL AST signature changes specifically, also flag whether the type's current namespace placement is correct — see [`code-design.md`](code-design.md) → **SQL AST types live in `LinqToDB.Internal.SqlQuery`**.
 
+## Don't accept a delegation's regression as inherent
+
+When reusing or delegating to existing shared code introduces a regression — a perf cost (slower reader / codepath), or a behavior change — investigate whether the shared code can be improved to *avoid* it before presenting it as an accepted trade-off. Flagging a trade-off is not the same as confirming it's unavoidable; the incidental-but-fixable case looks identical to the inherent one until you check. (Surfaced on #5659: routing raw-SQL materialization through `RecordReaderBuilder` was flagged as forcing slow-mode reads, but slow mode was incidental — the builder could reduce in fast mode like the main mapper, so the "cost" disappeared once checked.)
+
 ## Build configurations: `== 'Release'` is not `!= 'Debug'`
 
 The repo defines four configurations (`Testing;Debug;Release;Azure`). When proposing MSBuild edits that should fire only in production-style builds, gate with `Condition="'$(Configuration)' == 'Release'"` — the existing `RunAnalyzersDuringBuild` line at `Directory.Build.props:110` is the canonical pattern. The looser `!= 'Debug'` form leaves the property enabled for `Testing` and `Azure`, which is rarely the intent (Testing in particular is the fast-iteration single-TFM CI build that should match Debug behavior).
