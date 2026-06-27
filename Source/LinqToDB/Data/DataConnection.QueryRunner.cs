@@ -234,7 +234,8 @@ namespace LinqToDB.Data
 					// mode) and their built commands cached/reused. Parameter-dependent / continuous-run
 					// queries must stay non-mutating (Transform mode) and rebuild per execution. NOTE: the
 					// convert pass itself now runs unconditionally before aliasing (below) regardless of this
-					// flag; the flag only selects visitor mutability + command caching.
+					// flag; the flag selects visitor mutability, command caching, and (via
+					// isAlreadyOptimizedAndConverted) whether the per-element build-time convert still runs.
 
 					var optimizeVisitor = sqlOptimizer.CreateOptimizerVisitor(optimizeAndConvertAll);
 					var convertVisitor  = sqlOptimizer.CreateConvertVisitor(optimizeAndConvertAll);
@@ -249,7 +250,7 @@ namespace LinqToDB.Data
 						convertVisitor,
 						factory,
 						dataConnection.DataProvider.SqlProviderFlags.IsParameterOrderDependent,
-						isAlreadyOptimizedAndConverted : true,
+						isAlreadyOptimizedAndConverted : optimizeAndConvertAll,
 						parametersNormalizerFactory : dataConnection.DataProvider.GetQueryParameterNormalizer);
 
 					// Optimize+convert the whole statement before aliasing, unconditionally. Any conversion
@@ -258,8 +259,13 @@ namespace LinqToDB.Data
 					// after aliasing carry SourceIDs it never recorded and the SQL builder can't resolve
 					// their aliases. Parameter-dependent queries previously deferred conversion into BuildSql
 					// (after aliasing) - that was the alias-corruption bug. Mirrors the remote runner, which
-					// already prepares-then-aliases. The optimizeAndConvertAll flag now only governs
-					// mutate-in-place (visitor mode) + command caching below.
+					// already prepares-then-aliases. This upfront pass does not cover every localized
+					// refinement the per-element build-time convert applies (e.g. narrowing an InsertOrUpdate
+					// SET-value cast to the target column's DbDataType, or provider expression conversions
+					// like ClickHouse bitAnd); so parameter-dependent queries keep isAlreadyOptimizedAndConverted
+					// false (above) and re-run that convert in BuildSql. That is safe because their visitors are
+					// non-mutating (Transform mode), so the build-time pass produces new nodes without mutating
+					// the shared cached statement - it cannot reintroduce the aliasing race.
 					{
 						var nullability = NullabilityContext.GetContext(statement.SelectQuery);
 						statement = optimizationContext.OptimizeAndConvertAll(statement, nullability);
