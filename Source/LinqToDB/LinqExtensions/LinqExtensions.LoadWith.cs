@@ -173,6 +173,11 @@ namespace LinqToDB
 		/// <param name="source">The source query.</param>
 		/// <param name="selector">A lambda expression representing navigation property to be included (<c>t => t.Property1</c>).</param>
 		/// <returns>Returns new query with related data included.</returns>
+		/// <remarks>
+		/// When the underlying query is not a linq2db query (for example a plain in-memory <see cref="IQueryable{T}"/>
+		/// such as <c>Enumerable.Empty&lt;T&gt;().AsQueryable()</c>), the eager-load directive is ignored and the query
+		/// is returned unchanged as a passthrough — mirroring EF Core <c>Include</c> behavior.
+		/// </remarks>
 		[LinqTunnel]
 		[Pure]
 		public static ILoadWithQueryable<TEntity,TProperty> LoadWith<TEntity,TProperty>(
@@ -263,6 +268,11 @@ namespace LinqToDB
 		/// <param name="selector">A lambda expression representing navigation property to be included (<c>t => t.Property1</c>).</param>
 		/// <param name="loadFunc">Defines additional logic for association load query.</param>
 		/// <returns>Returns new query with related data included.</returns>
+		/// <remarks>
+		/// When the underlying query is not a linq2db query (for example a plain in-memory <see cref="IQueryable{T}"/>
+		/// such as <c>Enumerable.Empty&lt;T&gt;().AsQueryable()</c>), the eager-load directive is ignored and the query
+		/// is returned unchanged as a passthrough — mirroring EF Core <c>Include</c> behavior.
+		/// </remarks>
 		[LinqTunnel]
 		[Pure]
 		public static ILoadWithQueryable<TEntity,TProperty> LoadWith<TEntity,TProperty>(
@@ -353,6 +363,11 @@ namespace LinqToDB
 		/// <param name="selector">A lambda expression representing navigation property to be included (<c>t => t.Property1</c>).</param>
 		/// <param name="loadFunc">Defines additional logic for association load query.</param>
 		/// <returns>Returns new query with related data included.</returns>
+		/// <remarks>
+		/// When the underlying query is not a linq2db query (for example a plain in-memory <see cref="IQueryable{T}"/>
+		/// such as <c>Enumerable.Empty&lt;T&gt;().AsQueryable()</c>), the eager-load directive is ignored and the query
+		/// is returned unchanged as a passthrough — mirroring EF Core <c>Include</c> behavior.
+		/// </remarks>
 		[LinqTunnel]
 		[Pure]
 		public static ILoadWithQueryable<TEntity,TProperty> LoadWith<TEntity,TProperty>(
@@ -414,6 +429,11 @@ namespace LinqToDB
 		/// <param name="source">The source query.</param>
 		/// <param name="selector">A lambda expression representing navigation property to be included (<c>t => t.Property1</c>).</param>
 		/// <returns>Returns new query with related data included.</returns>
+		/// <remarks>
+		/// When the underlying query is not a linq2db query (for example a plain in-memory <see cref="IQueryable{T}"/>
+		/// such as <c>Enumerable.Empty&lt;T&gt;().AsQueryable()</c>), the eager-load directive is ignored and the query
+		/// is returned unchanged as a passthrough — mirroring EF Core <c>Include</c> behavior.
+		/// </remarks>
 		[LinqTunnel]
 		[Pure]
 		public static ILoadWithQueryable<TEntity,TProperty> ThenLoad<TEntity,TPreviousProperty,TProperty>(
@@ -473,6 +493,11 @@ namespace LinqToDB
 		/// <param name="source">The source query.</param>
 		/// <param name="selector">A lambda expression representing navigation property to be included (<c>t => t.Property1</c>).</param>
 		/// <returns>Returns new query with related data included.</returns>
+		/// <remarks>
+		/// When the underlying query is not a linq2db query (for example a plain in-memory <see cref="IQueryable{T}"/>
+		/// such as <c>Enumerable.Empty&lt;T&gt;().AsQueryable()</c>), the eager-load directive is ignored and the query
+		/// is returned unchanged as a passthrough — mirroring EF Core <c>Include</c> behavior.
+		/// </remarks>
 		[LinqTunnel]
 		[Pure]
 		public static ILoadWithQueryable<TEntity,TProperty> ThenLoad<TEntity,TPreviousProperty,TProperty>(
@@ -541,6 +566,11 @@ namespace LinqToDB
 		/// <param name="selector">A lambda expression representing navigation property to be included (<c>t => t.Property1</c>).</param>
 		/// <param name="loadFunc">Defines additional logic for association load query.</param>
 		/// <returns>Returns new query with related data included.</returns>
+		/// <remarks>
+		/// When the underlying query is not a linq2db query (for example a plain in-memory <see cref="IQueryable{T}"/>
+		/// such as <c>Enumerable.Empty&lt;T&gt;().AsQueryable()</c>), the eager-load directive is ignored and the query
+		/// is returned unchanged as a passthrough — mirroring EF Core <c>Include</c> behavior.
+		/// </remarks>
 		[LinqTunnel]
 		[Pure] // ThenLoadFromSingleManyFilter
 		public static ILoadWithQueryable<TEntity,TProperty> ThenLoad<TEntity,TPreviousProperty,TProperty>(
@@ -610,6 +640,11 @@ namespace LinqToDB
 		/// <param name="selector">A lambda expression representing navigation property to be included (<c>t => t.Property1</c>).</param>
 		/// <param name="loadFunc">Defines additional logic for association load query.</param>
 		/// <returns>Returns new query with related data included.</returns>
+		/// <remarks>
+		/// When the underlying query is not a linq2db query (for example a plain in-memory <see cref="IQueryable{T}"/>
+		/// such as <c>Enumerable.Empty&lt;T&gt;().AsQueryable()</c>), the eager-load directive is ignored and the query
+		/// is returned unchanged as a passthrough — mirroring EF Core <c>Include</c> behavior.
+		/// </remarks>
 		[LinqTunnel]
 		[Pure] // Methods.LinqToDB.ThenLoadFromSingleSingleFilter
 		public static ILoadWithQueryable<TEntity,TProperty> ThenLoad<TEntity,TPreviousProperty,TProperty>(
@@ -681,6 +716,11 @@ namespace LinqToDB
 		/// <param name="selector">A lambda expression representing navigation property to be included (<c>t => t.Property1</c>).</param>
 		/// <param name="loadFunc">Defines additional logic for association load query.</param>
 		/// <returns>Returns new query with related data included.</returns>
+		/// <remarks>
+		/// When the underlying query is not a linq2db query (for example a plain in-memory <see cref="IQueryable{T}"/>
+		/// such as <c>Enumerable.Empty&lt;T&gt;().AsQueryable()</c>), the eager-load directive is ignored and the query
+		/// is returned unchanged as a passthrough — mirroring EF Core <c>Include</c> behavior.
+		/// </remarks>
 		[LinqTunnel]
 		[Pure] // // Methods.LinqToDB.ThenLoadFromManySingleFilter
 		public static ILoadWithQueryable<TEntity,TProperty> ThenLoad<TEntity,TPreviousProperty,TProperty>(
@@ -752,6 +792,11 @@ namespace LinqToDB
 		/// <param name="selector">A lambda expression representing navigation property to be included (<c>t => t.Property1</c>).</param>
 		/// <param name="loadFunc">Defines additional logic for association load query.</param>
 		/// <returns>Returns new query with related data included.</returns>
+		/// <remarks>
+		/// When the underlying query is not a linq2db query (for example a plain in-memory <see cref="IQueryable{T}"/>
+		/// such as <c>Enumerable.Empty&lt;T&gt;().AsQueryable()</c>), the eager-load directive is ignored and the query
+		/// is returned unchanged as a passthrough — mirroring EF Core <c>Include</c> behavior.
+		/// </remarks>
 		[LinqTunnel]
 		[Pure] // Methods.LinqToDB.ThenLoadFromManyManyFilter
 		public static ILoadWithQueryable<TEntity, TProperty> ThenLoad<TEntity, TPreviousProperty, TProperty>(
