@@ -145,6 +145,21 @@ If your test modifies data, revert changes to avoid side effects in downstream t
 
 **A filtered run that skips `CreateDatabase` can show failures that masquerade as pre-existing / unrelated.** A prior data-mutating test can leave `TestData*.sqlite` with corrupted rows; a later filtered run then reads bad data and fails on tests that have nothing to do with your change. **Stash-and-rerun does not disprove this** — both runs share the same corrupted file, so they fail identically and the comparison looks like "pre-existing". Before concluding "these failures pre-date my change / are unrelated", re-run with `FullyQualifiedName~CreateData.CreateDatabase|` prepended to rebuild the schema. This applies especially when working in a `git worktree`: `/test` targets the main checkout, not the worktree branch, so you run `dotnet test` directly in the worktree and must prepend `CreateDatabase` yourself.
 
+## A test that fails only on NETFX (net462) jobs
+
+When CI shows a test failing on the `Tests (NETFX x64)` jobs while the same test passes on the .NET 8/9/10 tasks of the same provider, suspect a **runtime driver divergence**, not a TFM-agnostic code bug. ADO.NET providers can behave differently across runtimes — e.g. `SqlDataReader.GetName` returns duplicate empty names for unnamed result columns (`select 1, 1`) on .NET Framework but distinct names on modern .NET (#5659).
+
+The `Testing` config is net10.0-only and a net10.0 run **won't reproduce** such a failure. Reproduce on net462 directly:
+
+```bash
+dotnet build Tests/Linq/Tests.csproj -c Debug -f net462
+```
+```bash
+.build/bin/Tests/Debug/net462/linq2db.Tests.exe --provider SqlServer.2022 --filter "FullyQualifiedName~CreateData.CreateDatabase|FullyQualifiedName~<Fixture>.<Test>" --settings .runsettings
+```
+
+`--provider` supplies the connection string from `DataProviders.json` without editing the enabled-providers list; the net462 exe runs x86. This is the runtime sibling of the compile-time `agent-rules.md` → *TFM API availability* rule.
+
 ## Test Patterns
 
 ```csharp
