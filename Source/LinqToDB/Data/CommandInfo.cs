@@ -1926,11 +1926,12 @@ namespace LinqToDB.Data
 
 				if (ctors.Count > 0 && ctors.TrueForAll(c => c.ps.Length > 0))
 				{
-					// Resolve each ctor parameter to its mapped column (parameter name == member name, ordinal then
-					// case-insensitive — mirrors EntityConstructorBase.MatchParameter on the LINQ path), then match a
-					// result column by the mapped ColumnName OR the parameter name and convert via the column's
-					// ValueConverter, so [Column]/[ValueConverter] are honored for raw SQL whether the query uses the
-					// DB column name or aliases it to the member name (#4437).
+					// Resolve each ctor parameter to its mapped column by name (parameter name == member name, ordinal
+					// then case-insensitive — the name-matching of EntityConstructorBase.MatchParameter on the LINQ
+					// path; its additional member-type check is omitted, as positional-record params and their members
+					// always share a type). Then match a result column by the mapped ColumnName OR the parameter name
+					// and convert via the column's ValueConverter, so [Column]/[ValueConverter] are honored for raw SQL
+					// whether the query uses the DB column name or aliases it to the member name (#4437).
 					ColumnDescriptor? GetColumn(ParameterInfo p)
 						=> td.Columns.FirstOrDefault(c => string.Equals(c.MemberName, p.Name, StringComparison.Ordinal))
 						?? td.Columns.FirstOrDefault(c => string.Equals(c.MemberName, p.Name, StringComparison.OrdinalIgnoreCase));
