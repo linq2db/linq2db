@@ -955,7 +955,7 @@ namespace Tests.Linq
 		#endregion
 
 		#region TPH intermediate type
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4364")]
 		public void TPH_Intermediate_Read_ViaIntermediateTable([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -966,7 +966,7 @@ namespace Tests.Linq
 			AssertIntermediateThings(result);
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4364")]
 		public void TPH_Intermediate_Read_FullHierarchy([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1020,7 +1020,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4364")]
 		public void TPH_Intermediate_Read_ViaOfType([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1031,7 +1031,7 @@ namespace Tests.Linq
 			AssertIntermediateThings(result);
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4364")]
 		public void TPH_Intermediate_Read_ViaCast([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1042,7 +1042,7 @@ namespace Tests.Linq
 			AssertIntermediateThings(result);
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4364")]
 		public void TPH_Intermediate_Read_ViaSelectCast([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1053,7 +1053,7 @@ namespace Tests.Linq
 			AssertIntermediateThings(result);
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4364")]
 		public void TPH_Intermediate_Read_Filtered([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1167,7 +1167,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4364")]
 		public void TPH_Intermediate_Update_ViaBaseTable([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1176,7 +1176,7 @@ namespace Tests.Linq
 			TestUpdateAndFindBase(db.GetTable<TphThingBase>());
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4364")]
 		public void TPH_Intermediate_Join_AllTypes([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1187,7 +1187,7 @@ namespace Tests.Linq
 			TestJoinedAll(db, db.GetTable<TphThingBase>());
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4364")]
 		public void TPH_Intermediate_Update_ViaIntermediateTable([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1196,7 +1196,7 @@ namespace Tests.Linq
 			TestUpdateAndFind(db.GetTable<TphThingIntermediate>());
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4364")]
 		public void TPH_Intermediate_Join_ViaIntermediateTable([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1207,7 +1207,7 @@ namespace Tests.Linq
 			TestJoined(db, db.GetTable<TphThingIntermediate>());
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4364")]
 		public void TPH_Intermediate_Update_ViaOfType([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1216,7 +1216,7 @@ namespace Tests.Linq
 			TestUpdateAndFind(db.GetTable<TphThingBase>().OfType<TphThingIntermediate>());
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4364")]
 		public void TPH_Intermediate_Join_ViaOfType([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1227,7 +1227,7 @@ namespace Tests.Linq
 			TestJoined(db, db.GetTable<TphThingBase>().OfType<TphThingIntermediate>());
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4364")]
 		public void TPH_Intermediate_Update_ViaCast([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1236,7 +1236,7 @@ namespace Tests.Linq
 			TestUpdateAndFind(db.GetTable<TphThingBase>().Where(x => x.Type == 101 || x.Type == 102).Cast<TphThingIntermediate>());
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4364")]
 		public void TPH_Intermediate_Join_ViaCast([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1247,7 +1247,7 @@ namespace Tests.Linq
 			TestJoined(db, db.GetTable<TphThingBase>().Where(x => x.Type == 101 || x.Type == 102).Cast<TphThingIntermediate>());
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4364")]
 		public void TPH_Intermediate_Update_Filtered([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1256,7 +1256,7 @@ namespace Tests.Linq
 			TestUpdateAndFindBase(db.GetTable<TphThingBase>().Where(x => x.Type == 101 || x.Type == 102));
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4364")]
 		public void TPH_Intermediate_Join_Filtered([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1267,7 +1267,7 @@ namespace Tests.Linq
 			TestJoined(db, db.GetTable<TphThingBase>().Where(x => x.Type == 101 || x.Type == 102));
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4364")]
 		public void TPH_Intermediate_Update_ViaSelectCast([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1276,7 +1276,7 @@ namespace Tests.Linq
 			TestUpdateAndFind(db.GetTable<TphThingBase>().Where(x => x.Type == 101 || x.Type == 102).Select(x => (TphThingIntermediate)x));
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4364")]
 		public void TPH_Intermediate_Join_ViaSelectCast([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1419,7 +1419,7 @@ namespace Tests.Linq
 
 		#region TPH intermediate type (insert / DDL)
 		[ActiveIssue]
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4364")]
 		public void TPH_Intermediate_InsertConcreteTypes([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1446,7 +1446,7 @@ namespace Tests.Linq
 		}
 
 		[ActiveIssue]
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4364")]
 		public void TPH_Intermediate_CreateTableNullableFields([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
