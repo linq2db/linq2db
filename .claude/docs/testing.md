@@ -258,6 +258,17 @@ When a test asserts a method translates to a server-side function, wrap the call
 
 A non-`ServerSideOnly` `Sql.*` method with a CLR body (e.g. `Sql.NewGuid` / `Sql.NewGuid7`) falls back to client-side evaluation wherever no server translation is registered. So one `[DataSources]` test covers the whole matrix: providers with the translation exercise the SQL function, the rest the client fallback. Assert the observable property (e.g. the GUID version nibble), and wrap in `DisableBaseline` when the generated value is non-deterministic (the value, not the SQL shape, varies per run). Don't infer "can't client-evaluate" from another test's provider-exclusion list — those exclusions are often roundtrip-specific, not translation-capability statements.
 
+### Test-proofing a gated provider capability
+
+To empirically determine whether a database actually supports a feature gated off by a capability flag (`Is…Supported` on a translator, a `SqlProviderFlags` bool, etc.) — rather than trusting docs:
+
+1. **Flip the gate** to `true` in the provider's translator/builder.
+2. **Enable only that provider** in `UserDataProviders.json` and **disable providers whose containers are down** — otherwise their connection-timeouts dominate the run and bury the signal (start the container the probe needs; a stopped container makes the run crawl).
+3. **Run the gated tests** for that feature. A test whose `[ThrowsForProvider]` now reports *"Expected a `LinqToDBException` … but found `''`"* means the DB **executed** the SQL → **supported**. A native DB exception (e.g. `HanaException`, `DB2Exception`, `… does not exist`) means **unsupported**. (The throw-expectation "failing" is the signal — read the failure mode, not the pass/fail.)
+4. **Revert the experimental flip** (`git checkout HEAD -- <translator>`); proofing edits are throwaway.
+
+To then *enable* the capability for real, mirror the per-test `[ThrowsForProvider]` gating of a **sibling provider with the same capability profile** (e.g. YDB was the precedent for SAP HANA ROWS-frame support — both ROWS-only), and expect baseline regeneration for the now-executing tests. Watch for coarse flags that can't express asymmetric support — see the `window-fn-coarse-flags` auto-memory for the window-functions case. This is the technique used to find the PR #5468 SAP HANA / Informix statistical-window gaps.
+
 ### Testing query cache HIT / MISS behaviour
 
 Three idioms, each proves something different. Full mechanics in [`query-cache-mechanics.md`](query-cache-mechanics.md).
