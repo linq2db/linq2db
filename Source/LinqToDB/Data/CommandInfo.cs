@@ -1936,6 +1936,11 @@ namespace LinqToDB.Data
 						=> td.Columns.FirstOrDefault(c => string.Equals(c.MemberName, p.Name, StringComparison.Ordinal))
 						?? td.Columns.FirstOrDefault(c => string.Equals(c.MemberName, p.Name, StringComparison.OrdinalIgnoreCase));
 
+					// Resolution precedence: the mapped ColumnName (so [Column("x")] is honored) wins, with the raw
+					// parameter name kept as a fallback for queries that alias the column to the member name
+					// (... AS SomeColumn). Both use first-match (Array.FindIndex), so a multi-table raw query that
+					// selects the same column name from more than one table binds the first occurrence — alias the
+					// columns to distinct member names when that ambiguity matters.
 					int MatchIndex(ParameterInfo p, ColumnDescriptor? column)
 					{
 						var comparer = dataConnection.MappingSchema.ColumnNameComparer;
