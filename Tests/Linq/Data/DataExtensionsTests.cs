@@ -72,6 +72,41 @@ namespace Tests.Data
 			Assert.That(list, Has.Count.EqualTo(1));
 		}
 
+		[Table("test")]
+		public record Issue4437Record(
+			[property: Column("some_column")] string SomeColumn);
+
+		[Test]
+		public void Issue4437_RawSqlMapsByColumnName([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			// Raw-SQL mapping is unified with the LINQ path: the [Column] name is honored for records with a
+			// primary constructor, so a 'some_column' field maps onto SomeColumn instead of returning null.
+			using var conn = GetDataContext(context);
+
+			var list = conn.Query<Issue4437Record>("SELECT 'mapped' AS some_column").ToList();
+
+			Assert.That(list, Has.Count.EqualTo(1));
+			Assert.That(list[0].SomeColumn, Is.EqualTo("mapped"));
+		}
+
+		sealed class DuplicateColumnObject
+		{
+			[Column("Column1")] public int Column1 { get; set; }
+		}
+
+		[Test]
+		public void RawSqlDuplicateColumnNameTakesFirst([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			// A multi-table-style result set with a repeated column name must not throw on reader-index build;
+			// the first occurrence wins (matching the legacy by-name behavior).
+			using var conn = GetDataContext(context);
+
+			var list = conn.Query<DuplicateColumnObject>("SELECT 1 AS Column1, 2 AS Column1").ToList();
+
+			Assert.That(list, Has.Count.EqualTo(1));
+			Assert.That(list[0].Column1, Is.EqualTo(1));
+		}
+
 		[Test]
 		public void TestObject3()
 		{

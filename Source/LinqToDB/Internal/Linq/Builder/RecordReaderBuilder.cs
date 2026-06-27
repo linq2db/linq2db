@@ -67,7 +67,16 @@ namespace LinqToDB.Internal.Linq.Builder
 			ObjectType    = objectType;
 			Reader        = reader;
 			ConverterExpr = converterExpr;
-			ReaderIndexes = Enumerable.Range(0, reader.FieldCount).ToDictionary(reader.GetName, static i => i, MappingSchema.ColumnNameComparer);
+
+			// Keep the first occurrence of a duplicated field name (e.g. multi-table 'SELECT t1.f, t2.f'),
+			// matching the by-name behavior of raw-SQL mapping; a plain ToDictionary would throw on duplicates.
+			ReaderIndexes = new Dictionary<string,int>(reader.FieldCount, MappingSchema.ColumnNameComparer);
+			for (var i = 0; i < reader.FieldCount; i++)
+			{
+				var name = reader.GetName(i);
+				if (!ReaderIndexes.ContainsKey(name))
+					ReaderIndexes.Add(name, i);
+			}
 		}
 
 		int GetReaderIndex(string columnName)
