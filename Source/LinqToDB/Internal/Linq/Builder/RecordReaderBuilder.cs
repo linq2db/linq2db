@@ -78,7 +78,17 @@ namespace LinqToDB.Internal.Linq.Builder
 			ObjectType    = objectType;
 			Reader        = reader;
 			ConverterExpr = converterExpr;
-			ReaderIndexes = Enumerable.Range(0, reader.FieldCount).ToDictionary(reader.GetName, static i => i, MappingSchema.ColumnNameComparer);
+			// A raw-SQL result set can carry duplicate (or empty) column names — e.g. "select 1, 1" — which a
+			// plain ToDictionary would reject. Keep the first index per name, matching GetReaderIndex's first-match lookup.
+			var readerIndexes = new Dictionary<string,int>(MappingSchema.ColumnNameComparer);
+			for (var i = 0; i < reader.FieldCount; i++)
+			{
+				var name = reader.GetName(i);
+				if (!readerIndexes.ContainsKey(name))
+					readerIndexes[name] = i;
+			}
+
+			ReaderIndexes = readerIndexes;
 		}
 
 		int GetReaderIndex(string columnName)
