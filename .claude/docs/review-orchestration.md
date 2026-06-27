@@ -13,6 +13,16 @@ Follow [`pr-resolver.md`](pr-resolver.md). The resolver returns the PR **number*
 - `/review-pr`: stop and propose creating one (per `agent-rules.md` → **Pull request rules**).
 - `/verify-review`: stop — there's nothing to verify.
 
+### Re-review at an unchanged HEAD already reviewed by `currentUser`
+
+After the context load, if the PR's `headRefOid` equals the `commit_id` of an existing `reviews[]` entry authored by `currentUser`, surface this **before** spawning reviewers — a blind fresh run re-derives near-identical findings and risks posting duplicate threads for findings already open on the PR. Offer the user three paths:
+
+- **fresh re-review** — run the full pipeline anyway (the user may want a clean pass).
+- **verify open-only** — re-check just the still-open prior findings against HEAD (since HEAD is unchanged, they'll all confirm "still actual"); cheaper, no duplicate threads.
+- **summarize & stop** — report the current open-findings + CI state, no subagents, no new review.
+
+Carry the choice forward (a fresh re-review still walks `initial`-mode normally). This is orientation, not a hard gate — proceed on the user's pick. (Surfaced on PR #5525: "review 5525" targeted a HEAD identical to the prior `currentUser` review's commit with three findings still open.)
+
 ### Loading PR context
 
 One call does all of it:
