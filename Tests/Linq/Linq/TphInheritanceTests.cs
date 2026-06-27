@@ -925,6 +925,33 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void TPH_OfTypeAbstractIntermediate([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var data = new TphMlBase[]
+			{
+				new TphMlDirect { Id = 1, Kind = 1, Shared = 10 },
+				new TphMlLeaf   { Id = 2, Kind = 2, Shared = 20, MidField = 30 },
+				new TphMlLeaf2  { Id = 3, Kind = 3, MidField = 40 },
+			};
+			using var tb = db.CreateLocalTable(data);
+
+			// OfType against the abstract intermediate must materialize the concrete subtypes per
+			// discriminator (Leaf, Leaf2) — not attempt to construct the abstract TphMlMid itself.
+			var mids = db.GetTable<TphMlBase>().OfType<TphMlMid>().OrderBy(x => x.Id).ToArray();
+
+			Assert.That(mids, Has.Length.EqualTo(2));
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(mids[0], Is.InstanceOf<TphMlLeaf>());
+				Assert.That(mids[1], Is.InstanceOf<TphMlLeaf2>());
+				Assert.That(((TphMlLeaf)mids[0]).MidField,  Is.EqualTo(30));
+				Assert.That(((TphMlLeaf2)mids[1]).MidField, Is.EqualTo(40));
+			}
+		}
+
 		#endregion
 
 		#region TPH intermediate type
@@ -993,7 +1020,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue]
 		[Test]
 		public void TPH_Intermediate_Read_ViaOfType([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -1181,7 +1207,6 @@ namespace Tests.Linq
 			TestJoined(db, db.GetTable<TphThingIntermediate>());
 		}
 
-		[ActiveIssue]
 		[Test]
 		public void TPH_Intermediate_Update_ViaOfType([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{

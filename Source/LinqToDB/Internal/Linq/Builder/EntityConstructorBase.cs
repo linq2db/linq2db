@@ -570,7 +570,27 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (checkInheritance && flags.HasFlag(ProjectFlags.Expression))
 			{
-				var inheritanceMappings = entityDescriptor.InheritanceMapping;
+				var inheritanceMappings   = entityDescriptor.InheritanceMapping;
+				var perSubtypeConstructor = false;
+
+				// An abstract intermediate type (e.g. OfType<TIntermediate>()) carries no inheritance
+				// mappings of its own — they live on the hierarchy root. Resolve the root's mappings, keep the
+				// concrete subtypes assignable to this type, and build a dedicated constructor per subtype (the
+				// intermediate's own constructor would lack the subtype-specific columns).
+				if (inheritanceMappings.Count == 0 && entityType.IsAbstract)
+				{
+					for (var baseType = entityType.BaseType; baseType != null; baseType = baseType.BaseType)
+					{
+						var rootMappings = MappingSchema.GetEntityDescriptor(baseType).InheritanceMapping;
+						if (rootMappings.Count > 0)
+						{
+							inheritanceMappings   = rootMappings.Where(m => entityType.IsAssignableFrom(m.Type)).ToList();
+							perSubtypeConstructor = true;
+							break;
+						}
+					}
+				}
+
 				if (inheritanceMappings.Count > 0)
 				{
 					var defaultDescriptor = inheritanceMappings.FirstOrDefault(x => x.IsDefault);
@@ -645,10 +665,20 @@ namespace LinqToDB.Internal.Linq.Builder
 						// Tell Builder to prefer client side
 						test = MarkerExpression.PreferClientSide(test);
 
-						var fullEntity = TryConstructFullEntity(constructorExpression, inheritance.Type, flags, false, out error);
-						if (fullEntity == null)
-							return null;
-						var tableExpr = Expression.Convert(fullEntity, current.Type);
+						Expression tableExpr;
+						if (perSubtypeConstructor)
+						{
+							// Build the concrete subtype against the hierarchy root so it gets its own columns.
+							var subConstructor = BuildFullEntityExpressionInternal(rootReference, inheritance.Type, flags, FullEntityPurpose.Default);
+							tableExpr = Expression.Convert(ConstructFullEntity(subConstructor, flags, false), current.Type);
+						}
+						else
+						{
+							var fullEntity = TryConstructFullEntity(constructorExpression, inheritance.Type, flags, false, out error);
+							if (fullEntity == null)
+								return null;
+							tableExpr = Expression.Convert(fullEntity, current.Type);
+						}
 
 						current = Expression.Condition(test, tableExpr, current);
 					}
