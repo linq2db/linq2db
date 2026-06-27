@@ -24,7 +24,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				return null;
 
 			if (array.Length == 1)
-				return array;
+				return new[] { array[0] };
 
 			var unique = new HashSet<T>(array);
 			var sorted = new T[unique.Count];
