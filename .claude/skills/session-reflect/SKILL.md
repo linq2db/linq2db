@@ -1,6 +1,6 @@
 ---
 name: session-reflect
-description: Harvest the current conversation for insights worth capturing. Scans the transcript for user corrections, confirmed approaches, ad-hoc procedures, permission-prompt patterns, and knowledge gaps, then proposes concrete additions to `.claude/` (docs, skills, agents, scripts, feedback rules) or the user-level auto-memory system. Read-only until per-finding confirmation.
+description: Harvest the current conversation for insights worth capturing. Scans the transcript for user corrections, confirmed approaches, ad-hoc procedures, permission-prompt patterns, command-usage redundancy, and knowledge gaps, then proposes concrete additions to `.claude/` (docs, skills, agents, scripts, feedback rules) or the user-level auto-memory system. Read-only until per-finding confirmation.
 ---
 
 # /session-reflect
@@ -88,6 +88,17 @@ When in doubt between 1–3 and 4, prefer the allowlist fix (category 4) only wh
 
 For each prompt, report which category + the proposed edit path. Aggregate the fallback (category 4) counts into the single `/fewer-permission-prompts` recommendation at the end.
 
+## Command-usage audit
+
+Permission triage above only sees calls that *prompted*. A separate pass catches wasteful calls that ran silently. Walk every Bash / `gh` / `git` / `pwsh` call the session issued — plus any subagent `callLog[]` entries (tagged with the subagent name) — and classify each with the same taxonomy as the `/review-pr` / `/verify-review` closing audit (`.claude/docs/review-orchestration.md` → **Command-usage audit (closing step)**):
+
+- **Necessary** — no-op; don't report.
+- **Redundant** — output was already available from a prior call's output or an existing script. Route to a `feedback` finding when the redundancy is a recurring shape worth a rule ("read the cached `<path>` instead of re-fetching via `git show`"); otherwise report it as a one-off observation without a patch.
+- **Batchable** — 3+ calls of the same shape passing data between them → route to the **script** bucket (new or extended `.claude/scripts/*.ps1`).
+- **Guardrail gap** — a call a rule / allowlist should have caught but didn't → route to **feedback** (an `agent-rules.md` edit) or the **permission** bucket.
+
+This catches the redundant/batchable cases permission triage misses (a wasteful call that never prompted). Fold the results into the step-4 report; **don't double-count** a call that already produced a permission-bucket finding — a single call yields at most one finding (per the one-signal-one-finding rule in step 2).
+
 ## Steps
 
 ### 1. Survey the transcript
@@ -99,6 +110,7 @@ Build an internal index of session signals:
 - **Discovered facts** — things you had to read / grep / web-search for that weren't in `.claude/docs/` or `CLAUDE.md`. Pay attention to what sent you searching: those are documentation gaps.
 - **Ad-hoc procedures** — multi-step sequences of Bash / `gh` / `git` / tool calls you composed by hand that might repeat. If you invoked the same pattern 2+ times, it's a script candidate.
 - **Permission prompts** — tool calls you issued that required user approval. Include command prefix + whether an allowlist entry would have avoided it.
+- **Command-usage redundancy** — Bash / `gh` / `git` / `pwsh` calls whose output duplicated an earlier call's (or an existing script's) output, or that could have folded into one manifest-driven call. Distinct from *permission prompts*: a redundant call wastes a round-trip even when it never prompts. Include subagent `callLog[]` entries when a subagent reported them, tagged with the subagent name. Classify per **Command-usage audit** below.
 - **Delegated vs inline work** — tasks you handled in the main thread that would have fit a subagent's profile better.
 - **User-triggered workflows** — you noticed the user repeat the same shape of request 2+ times; that's a skill candidate.
 - **Dead-ends** — approaches you tried this session and then abandoned: a hypothesis the evidence disproved, a refactor you reverted, a tool / API / fetch / dialect path that doesn't work for the case. Record *what was tried*, *why it failed*, and *what not to re-attempt*. These are the highest-value captures — they stop the next session paying again for a lesson already learned.

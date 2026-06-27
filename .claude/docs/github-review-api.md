@@ -43,6 +43,8 @@ Manifest-script shape (all fields optional except `pr`, `commitId`, `body`):
 }
 ````
 
+**`commitId` must be the full 40-char commit SHA.** An abbreviated SHA is rejected by the GraphQL review-create with `HTTP 422 … "Variable $commitOID of type GitObjectID was provided invalid value"`. `pr-context.ps1`'s `headSha` is already full-length, so the trap only fires when you re-derive the SHA after pushing follow-up commits — use `git rev-parse HEAD`, not the short hash printed by `git push` / `git log`. (Cost one wasted post call on PR #5659.)
+
 **Legacy: JSON on stdin.** Still accepted for shell heredocs / external callers:
 
 ```
