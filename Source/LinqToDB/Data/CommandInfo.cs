@@ -1907,109 +1907,11 @@ namespace LinqToDB.Data
 			}
 			else
 			{
-				var td = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T), dataConnection.Options.ConnectionOptions.OnEntityDescriptorCreated);
-
-				if (td.InheritanceMapping.Count > 0 || td.HasComplexColumns)
-				{
-					var    readerBuilder = new RecordReaderBuilder(dataConnection, typeof(T), dataReader, converterExpr);
-					return readerBuilder.BuildReaderFunction<T>();
-				}
-
-				var names = new string[dataReader.FieldCount];
-
-				for (var i = 0; i < dataReader.FieldCount; i++)
-					names[i] = dataReader.GetName(i);
-
-				expr = null;
-
-				var ctors = typeof(T).GetConstructors().Select(c => new { c, ps = c.GetParameters() }).ToList();
-
-				if (ctors.Count > 0 && ctors.TrueForAll(c => c.ps.Length > 0))
-				{
-					// Resolve each ctor parameter to its mapped column by name (parameter name == member name, ordinal
-					// then case-insensitive — the name-matching of EntityConstructorBase.MatchParameter on the LINQ
-					// path; its additional member-type check is omitted, as positional-record params and their members
-					// always share a type). Then match a result column by the mapped ColumnName OR the parameter name
-					// and convert via the column's ValueConverter, so [Column]/[ValueConverter] are honored for raw SQL
-					// whether the query uses the DB column name or aliases it to the member name (#4437).
-					ColumnDescriptor? GetColumn(ParameterInfo p)
-						=> td.Columns.FirstOrDefault(c => string.Equals(c.MemberName, p.Name, StringComparison.Ordinal))
-						?? td.Columns.FirstOrDefault(c => string.Equals(c.MemberName, p.Name, StringComparison.OrdinalIgnoreCase));
-
-					// Resolution precedence: the mapped ColumnName (so [Column("x")] is honored) wins, with the raw
-					// parameter name kept as a fallback for queries that alias the column to the member name
-					// (... AS SomeColumn). Both use first-match (Array.FindIndex), so a multi-table raw query that
-					// selects the same column name from more than one table binds the first occurrence — alias the
-					// columns to distinct member names when that ambiguity matters.
-					int MatchIndex(ParameterInfo p, ColumnDescriptor? column)
-					{
-						var comparer = dataConnection.MappingSchema.ColumnNameComparer;
-						var idx      = -1;
-
-						if (column != null)
-						{
-							var columnName = column.ColumnName;
-							idx = Array.FindIndex(names, n => comparer.Compare(n, columnName) == 0);
-						}
-
-						if (idx < 0)
-						{
-							var name = p.Name;
-							idx = Array.FindIndex(names, n => comparer.Compare(n, name) == 0);
-						}
-
-						return idx;
-					}
-
-					var q =
-						from c in ctors
-						let count = c.ps.Count(p => MatchIndex(p, GetColumn(p)) >= 0)
-						orderby count descending
-						select c;
-
-					var ctor = q.FirstOrDefault();
-
-					if (ctor != null)
-					{
-						expr = Expression.New(
-							ctor.c,
-							ctor.ps.Select(p =>
-							{
-								var column = GetColumn(p);
-								var idx    = MatchIndex(p, column);
-								return idx >= 0 ?
-									getMemberExpression(
-										dataConnection,
-										dataReader,
-										p.ParameterType,
-										idx,
-										ctxParameter,
-										dataReaderExpr,
-										column?.ValueConverter) :
-									Expression.Constant(dataConnection.MappingSchema.GetDefaultValue(p.ParameterType), p.ParameterType);
-							}));
-					}
-				}
-
-				if (expr == null)
-				{
-					var members =
-					(
-						from n in names.Select((name,idx) => new { name, idx })
-						let   member = td.Columns.FirstOrDefault(m =>
-							dataConnection.MappingSchema.ColumnNameComparer.Compare(m.ColumnName, n.name) == 0)
-						where member != null
-						select new
-						{
-							Member = member,
-							Expr   = getMemberExpression(dataConnection, dataReader, member.MemberType, n.idx, ctxParameter, dataReaderExpr, member.ValueConverter),
-						}
-					).ToList();
-
-					expr = Expression.MemberInit(
-						Expression.New(typeof(T)),
-						members.Select(m => Expression.Bind(m.Member.MemberInfo, m.Expr)));
-				}
+				// Entity / record / constructor materialization goes through the same builder as the LINQ path
+				// (RecordReaderBuilder -> EntityConstructorBase), so raw SQL honors [Column] name mapping,
+				// [ValueConverter], constructor selection and member binding identically to GetTable<T>() (#4437).
+				var readerBuilder = new RecordReaderBuilder(dataConnection, typeof(T), dataReader, converterExpr);
+				return readerBuilder.BuildReaderFunction<T>();
 			}
 
 			if (expr.GetCount(dataReaderExpr, static (dataReaderExpr, e) => e == dataReaderExpr) > 1)
