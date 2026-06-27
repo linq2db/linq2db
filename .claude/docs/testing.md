@@ -317,6 +317,17 @@ When debugging query translation or provider issues,
 use `Console.WriteLine` to output intermediate values or SQL fragments.
 Do not introduce logging dependencies.
 
+### Capturing a passing test's exception / stack
+
+The MTP runner surfaces per-test stdout only for **failed / skipped** tests — a passing test's `TestContext.Out.WriteLine` / `Console.WriteLine` is generated but never routed to the run output (also why `/test` reports succeeded tests by count only). So when a test passes via `Assert.Throws<T>` and you need the *caught* exception's full stack — e.g. to find where deep in the pipeline it's thrown — printing it from inside the test shows nothing.
+
+To get the stack, make the test **fail** so MTP prints it:
+
+- Replace `Assert.Throws<T>(() => x())` with a bare `x();` — the exception propagates and the failure carries the complete trace (the deepest `LinqToDB.*` frame is the throw site); or
+- When you've added a probe `throw` that an enclosing `Assert.Throws<T>` would catch, throw a type `T` won't match (e.g. `NotImplementedException` against an expected `InvalidOperationException`) so it escapes and fails the test.
+
+Do this in a throwaway worktree or local checkout only — never commit the assertion change.
+
 ### Inspecting generated SQL offline (reproducing "could not be converted to SQL")
 
 Use `query.ToSqlQuery().Sql` to see a query's SQL without running it. `IQueryable.ToString()` returns the query *type* name (`ExpressionQueryImpl`1[…]`), **not** SQL. Translation failures ("The LINQ expression '…' could not be converted to SQL") are raised at SQL-build time, so `ToSqlQuery()` — or a `CreateLocalTable<T>()` + query in the playground — reproduces them with no populated database.
