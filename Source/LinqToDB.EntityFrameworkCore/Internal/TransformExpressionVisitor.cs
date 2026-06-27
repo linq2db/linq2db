@@ -185,6 +185,16 @@ namespace LinqToDB.EntityFrameworkCore.Internal
 #if EF10
 					if (generic == ReflectionMethods.IgnoreQueryFiltersByKeyMethodInfo)
 					{
+						// EF: IgnoreQueryFilters(IReadOnlyCollection<string>) → linq2db: IgnoreFilters(string[]).
+						// EF treats an empty key collection as a no-op (filterKeys?.Count > 0 guard in EF's
+						// QueryableMethodNormalizingExpressionVisitor — every filter stays applied), while linq2db's
+						// IgnoreFilters(empty array) normalizes empty to a wildcard and disables every filter. Mirror EF
+						// by skipping the remap when no keys are supplied. The keys arg is [NotParameterized], so it is a
+						// constant here and safe to evaluate.
+						var filterKeys = node.Arguments[1].EvaluateExpression<IReadOnlyCollection<string>>();
+						if (filterKeys is not { Count: > 0 })
+							return Visit(node.Arguments[0]);
+
 						// EF: IgnoreQueryFilters(IReadOnlyCollection<string>) → linq2db: IgnoreFilters(string[])
 						var keysExpr = Expression.Call(
 							typeof(Enumerable), nameof(Enumerable.ToArray), [typeof(string)],

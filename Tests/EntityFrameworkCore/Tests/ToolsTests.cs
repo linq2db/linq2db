@@ -348,6 +348,24 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			Assert.That(linq2dbResult, Has.Length.EqualTo(efResult.Length));
 		}
+
+		[ActiveIssue("https://github.com/linq2db/linq2db/issues/4669", Configuration = TestProvName.AllMySql)]
+		[Test]
+		public void TestIgnoreQueryFilters_Empty_IsNoOp([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider, true);
+			ctx.IsFilterProducts = true;
+
+			// EF Core treats IgnoreQueryFilters([]) (empty key collection) as a no-op — all filters stay applied.
+			// linq2db must mirror that rather than disabling every filter (empty array = "any key" wildcard on its
+			// native IgnoreFilters API), so the EF and linq2db row sets must match and both keep the named filters.
+			var query         = ctx.Products.IgnoreQueryFilters(Array.Empty<string>());
+			var efResult      = query.ToArray();
+			var linq2dbResult = query.ToLinqToDB().ToArray();
+
+			Assert.That(linq2dbResult, Has.Length.EqualTo(efResult.Length));
+			linq2dbResult.ShouldAllBe(p => p.ProductId > 2 && !p.Discontinued);
+		}
 #endif
 
 		[Test]
