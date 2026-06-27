@@ -896,12 +896,16 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TPH_MultiLevel_SharedColumn([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TPH_MultiLevel_SharedAndInheritedColumns([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 
-			// Bulk insert via the base-typed array: Direct (primary owner of "Shared") writes correctly,
-			// but Leaf (sibling owner of the same physical column) does not — its Shared lands as NULL.
+			// A base-typed (mixed) bulk insert exercises two shared-storage cases at once:
+			//  - "Shared" is one physical column owned by the sibling types Direct and Leaf;
+			//  - "MidField" is declared on the abstract intermediate and inherited by both Leaf and the
+			//    column-less Leaf2.
+			// Every member must round-trip — including MidField on Leaf2, which owns no column of its own
+			// and whose value is written through the intermediate's declaring type.
 			var data = new TphMlBase[]
 			{
 				new TphMlDirect { Id = 1, Kind = 1, Shared = 10 },
@@ -914,15 +918,16 @@ namespace Tests.Linq
 
 			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(((TphMlDirect)all[0]).Shared, Is.EqualTo(10));
-				Assert.That(((TphMlLeaf)all[1]).Shared,   Is.EqualTo(20));
+				Assert.That(((TphMlDirect)all[0]).Shared,  Is.EqualTo(10));
+				Assert.That(((TphMlLeaf)all[1]).Shared,    Is.EqualTo(20));
+				Assert.That(((TphMlLeaf)all[1]).MidField,  Is.EqualTo(30));
+				Assert.That(((TphMlLeaf2)all[2]).MidField, Is.EqualTo(40));
 			}
 		}
 
 		#endregion
 
 		#region TPH intermediate type
-		[ActiveIssue]
 		[Test]
 		public void TPH_Intermediate_Read_ViaIntermediateTable([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -934,7 +939,6 @@ namespace Tests.Linq
 			AssertIntermediateThings(result);
 		}
 
-		[ActiveIssue]
 		[Test]
 		public void TPH_Intermediate_Read_FullHierarchy([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -1001,7 +1005,6 @@ namespace Tests.Linq
 			AssertIntermediateThings(result);
 		}
 
-		[ActiveIssue]
 		[Test]
 		public void TPH_Intermediate_Read_ViaCast([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -1013,7 +1016,6 @@ namespace Tests.Linq
 			AssertIntermediateThings(result);
 		}
 
-		[ActiveIssue]
 		[Test]
 		public void TPH_Intermediate_Read_ViaSelectCast([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -1025,7 +1027,6 @@ namespace Tests.Linq
 			AssertIntermediateThings(result);
 		}
 
-		[ActiveIssue]
 		[Test]
 		public void TPH_Intermediate_Read_Filtered([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{

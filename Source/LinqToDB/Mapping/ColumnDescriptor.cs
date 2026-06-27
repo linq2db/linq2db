@@ -798,7 +798,20 @@ namespace LinqToDB.Mapping
 			{
 				var objParam      = Expression.Parameter(typeof(object), "obj");
 
-				var objExpression = Expression.Convert(objParam, MemberAccessor.TypeAccessor.Type);
+				// A column inherited from an abstract intermediate type is owned by the member's declaring
+				// type, which every concrete subtype shares. Guarding/casting by the single concrete entity
+				// type would exclude sibling subtypes, so a base-typed (mixed) insert would write the default
+				// for them. Widen to the declaring type for inheritance-mapped columns.
+				var entityType    = MemberAccessor.TypeAccessor.Type;
+				if (HasInheritanceMapping
+					&& MemberAccessor.MemberInfo.DeclaringType is { } declaringType
+					&& declaringType != entityType
+					&& declaringType.IsAssignableFrom(entityType))
+				{
+					entityType = declaringType;
+				}
+
+				var objExpression = Expression.Convert(objParam, entityType);
 				var getterExpr    = InternalExtensions.ApplyLambdaToExpression(GetDbValueLambda(), objExpression);
 
 				if (HasInheritanceMapping)
@@ -823,7 +836,7 @@ namespace LinqToDB.Mapping
 
 					// Additional check that column member belong to proper entity
 					//
-					getterExpr = Expression.Condition(Expression.TypeIs(objParam, MemberAccessor.TypeAccessor.Type),
+					getterExpr = Expression.Condition(Expression.TypeIs(objParam, entityType),
 						getterExpr, elseExpr);
 				}
 
