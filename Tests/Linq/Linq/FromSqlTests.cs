@@ -556,7 +556,9 @@ namespace Tests.Linq
 					from c in db.FromSql<int>($"select {1} {Sql.AliasExpr()}")
 					select c;
 
-			Assert.Throws<InvalidOperationException>(() => query.ToArray());
+			// Sql.AliasExpr() placed where it cannot become a table alias produces invalid SQL that the
+			// database rejects (there is no build-time validation for placeholder position in raw SQL).
+			Assert.Throws<Npgsql.PostgresException>(() => query.ToArray());
 		}
 
 		[Test]
