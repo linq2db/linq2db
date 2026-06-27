@@ -35,7 +35,12 @@ namespace LinqToDB.Linq.Translation
 		// the bare STDDEV/VARIANCE (sample) shorthand, which ClickHouse lacks (it has only the explicit *_POP/*_SAMP).
 		protected virtual bool IsVarianceSupported                 => false;
 		protected virtual bool IsVarianceBareSupported             => false;
+		// IsVarianceSupported gates VAR_POP/VAR_SAMP; IsStdDevSupported gates STDDEV_POP/STDDEV_SAMP and defaults to it, so a
+		// provider supporting one family but not the other (Informix: STDDEV_POP/SAMP yes, VAR_POP/SAMP no) overrides just one.
+		protected virtual bool IsStdDevSupported                   => IsVarianceSupported;
 		protected virtual bool IsCorrelationSupported              => false;
+		// IsCovarianceSupported (COVAR_POP/SAMP) defaults to IsCorrelationSupported (CORR); SAP HANA has CORR but no COVAR.
+		protected virtual bool IsCovarianceSupported               => IsCorrelationSupported;
 		protected virtual bool IsLinearRegressionSupported         => false;
 		// MEDIAN(x) OVER (PARTITION BY ...) — native on Oracle/DB2/DuckDB/MariaDB.
 		protected virtual bool IsMedianSupported                   => false;
@@ -1331,7 +1336,14 @@ namespace LinqToDB.Linq.Translation
 		}
 
 		// Sample standard deviation. STDDEV on Oracle/DuckDB/PostgreSQL; STDEV on SQL Server / Sybase. Override per provider.
-		protected virtual string StdDevFunctionName => "STDDEV";
+		protected virtual string StdDevFunctionName     => "STDDEV";
+		// Per-function name overrides for the explicit STDDEV_*/VAR_* forms and bare VARIANCE. Providers that spell them
+		// differently (SQL Server STDEVP/STDEV/VAR/VARP; SAP HANA VAR for sample variance) override these.
+		protected virtual string StdDevPopFunctionName  => "STDDEV_POP";
+		protected virtual string StdDevSampFunctionName => "STDDEV_SAMP";
+		protected virtual string VarianceFunctionName   => "VARIANCE";
+		protected virtual string VarPopFunctionName     => "VAR_POP";
+		protected virtual string VarSampFunctionName    => "VAR_SAMP";
 
 		// RATIO_TO_REPORT(expr) OVER (w). Base implementation emulates it as expr / SUM(expr) OVER (w); providers with a
 		// native function (Oracle, DB2) override this to emit RATIO_TO_REPORT directly.
@@ -1374,19 +1386,19 @@ namespace LinqToDB.Linq.Translation
 			=> TranslateVarianceFunction(translationContext, methodCall, StdDevFunctionName, IsVarianceBareSupported);
 
 		public virtual Expression? TranslateStdDevPop(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
-			=> TranslateVarianceFunction(translationContext, methodCall, "STDDEV_POP", IsVarianceSupported);
+			=> TranslateVarianceFunction(translationContext, methodCall, StdDevPopFunctionName, IsStdDevSupported);
 
 		public virtual Expression? TranslateStdDevSamp(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
-			=> TranslateVarianceFunction(translationContext, methodCall, "STDDEV_SAMP", IsVarianceSupported);
+			=> TranslateVarianceFunction(translationContext, methodCall, StdDevSampFunctionName, IsStdDevSupported);
 
 		public virtual Expression? TranslateVariance(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
-			=> TranslateVarianceFunction(translationContext, methodCall, "VARIANCE", IsVarianceBareSupported);
+			=> TranslateVarianceFunction(translationContext, methodCall, VarianceFunctionName, IsVarianceBareSupported);
 
 		public virtual Expression? TranslateVarPop(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
-			=> TranslateVarianceFunction(translationContext, methodCall, "VAR_POP", IsVarianceSupported);
+			=> TranslateVarianceFunction(translationContext, methodCall, VarPopFunctionName, IsVarianceSupported);
 
 		public virtual Expression? TranslateVarSamp(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
-			=> TranslateVarianceFunction(translationContext, methodCall, "VAR_SAMP", IsVarianceSupported);
+			=> TranslateVarianceFunction(translationContext, methodCall, VarSampFunctionName, IsVarianceSupported);
 
 		// Univariate statistical aggregates (STDDEV/VARIANCE family). The bare STDDEV/VARIANCE are gated by
 		// IsVarianceBareSupported and the explicit *_POP/*_SAMP by IsVarianceSupported, since ClickHouse has the latter
@@ -1407,10 +1419,10 @@ namespace LinqToDB.Linq.Translation
 		// Two-value-argument statistical aggregates (COVAR_POP(x, y) etc.). The window-builder lambda is the 4th
 		// argument (this, expr1, expr2, func), and TranslateWindowFunctionCore already loops over the argument array.
 		public virtual Expression? TranslateCovarPop(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
-			=> TranslateBivariate(translationContext, methodCall, "COVAR_POP", IsCorrelationSupported, ErrorHelper.Error_WindowFunction_Correlation);
+			=> TranslateBivariate(translationContext, methodCall, "COVAR_POP", IsCovarianceSupported, ErrorHelper.Error_WindowFunction_Correlation);
 
 		public virtual Expression? TranslateCovarSamp(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
-			=> TranslateBivariate(translationContext, methodCall, "COVAR_SAMP", IsCorrelationSupported, ErrorHelper.Error_WindowFunction_Correlation);
+			=> TranslateBivariate(translationContext, methodCall, "COVAR_SAMP", IsCovarianceSupported, ErrorHelper.Error_WindowFunction_Correlation);
 
 		public virtual Expression? TranslateCorr(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 			=> TranslateBivariate(translationContext, methodCall, "CORR", IsCorrelationSupported, ErrorHelper.Error_WindowFunction_Correlation);

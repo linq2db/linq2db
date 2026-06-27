@@ -407,12 +407,21 @@ namespace LinqToDB.Internal.DataProvider.SapHana.Translation
 
 		protected class SapHanaWindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
 		{
-			protected override bool IsFrameRowsSupported      => true;
-			protected override bool IsFrameRangeSupported     => false;
-			protected override bool IsFrameGroupsSupported    => false;
-			protected override bool IsFrameExclusionSupported => false;
-			protected override bool IsPercentileContSupported => false;
-			protected override bool IsPercentileDiscSupported => false;
+			protected override bool   IsFrameRowsSupported          => true;
+			protected override bool   IsFrameRangeSupported         => false;
+			protected override bool   IsFrameGroupsSupported        => false;
+			protected override bool   IsFrameExclusionSupported     => false;
+			protected override bool   IsPercentileContSupported     => false;
+			protected override bool   IsPercentileDiscSupported     => false;
+			// MEDIAN, windowed PERCENTILE_CONT/DISC, the full STDDEV*/VAR_*/bare variance family (sample variance is
+			// spelled VAR), and CORR execute on SAP HANA; COVAR and the GROUP BY ordered-set form stay gated (HANA rejects them).
+			protected override bool   IsMedianSupported             => true;
+			protected override bool   IsOrderedSetWindowedSupported => true;
+			protected override bool   IsVarianceBareSupported       => true;
+			protected override bool   IsVarianceSupported           => true;
+			protected override string VarianceFunctionName          => "VAR";
+			protected override bool   IsCorrelationSupported        => true;
+			protected override bool   IsCovarianceSupported         => false;
 		}
 
 		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()

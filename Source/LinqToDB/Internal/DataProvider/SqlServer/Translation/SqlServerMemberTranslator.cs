@@ -326,8 +326,16 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 			protected override bool IsPercentileDiscSupported     => false;
 			// SQL Server (2012+) supports PERCENTILE_CONT/DISC only in the windowed (OVER) form, not the GROUP BY ordered-set form.
 			protected override bool IsOrderedSetWindowedSupported => true;
-			// SQL Server spells sample standard deviation STDEV, not STDDEV.
+			// SQL Server (2012+) spells the statistical aggregates STDEV/STDEVP/VAR/VARP, not the standard STDDEV*/VAR* names;
+			// pre-2012 has no window aggregates and stays gated by SqlServerPre2012WindowFunctionsMemberTranslator.
+			protected override bool IsVarianceBareSupported       => true;
+			protected override bool IsVarianceSupported           => true;
 			protected override string StdDevFunctionName          => "STDEV";
+			protected override string StdDevPopFunctionName       => "STDEVP";
+			protected override string StdDevSampFunctionName      => "STDEV";
+			protected override string VarianceFunctionName        => "VAR";
+			protected override string VarPopFunctionName          => "VARP";
+			protected override string VarSampFunctionName         => "VAR";
 		}
 
 		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()

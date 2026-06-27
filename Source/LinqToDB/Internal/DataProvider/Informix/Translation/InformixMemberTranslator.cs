@@ -415,6 +415,10 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 			protected override bool IsPercentileDiscSupported       => false;
 			protected override bool IsLeadLagNullTreatmentSupported => true;
 			protected override bool IsValueNullTreatmentSupported   => true;
+			// bare STDDEV/VARIANCE and the explicit STDDEV_POP/STDDEV_SAMP execute on Informix; VAR_POP/VAR_SAMP, CORR,
+			// COVAR, REGR_* and MEDIAN are not implemented, so IsVarianceSupported (VAR_POP/SAMP) stays off.
+			protected override bool IsVarianceBareSupported         => true;
+			protected override bool IsStdDevSupported               => true;
 		}
 
 		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()
