@@ -32,7 +32,7 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Filter LambdaExpression. <code>Expression&lt;Func&lt;TEntity, IDataContext, bool&gt;&gt;</code>
 		/// <para>
-		/// For example (e, db) => e.IsDeleted == false "/>
+		/// For example (e, db) => e.IsDeleted == false
 		/// </para>
 		/// </summary>
 		public LambdaExpression? FilterLambda { get; set; }
