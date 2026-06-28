@@ -29,6 +29,7 @@ namespace LinqToDB.Internal.DataProvider
 			AliasesContext           _newAliases = default!;
 			HashSet<string>          _allAliases = default!;
 			HashSet<SqlTableSource>? _tablesVisited;
+			SelectQuery?             _rootSelectQuery;
 
 			public AliasesVisitor() : base(VisitMode.ReadOnly, null)
 			{
@@ -43,6 +44,7 @@ namespace LinqToDB.Internal.DataProvider
 				_allAliases        = new(StringComparer.OrdinalIgnoreCase);
 				_tablesVisited     = default;
 				_prevAliases       = prevAliases;
+				_rootSelectQuery   = statement.SelectQuery;
 
 				Visit(statement);
 
@@ -86,6 +88,7 @@ namespace LinqToDB.Internal.DataProvider
 				_allAliases        = default!;
 				_tablesVisited     = default;
 				_prevAliases       = null;
+				_rootSelectQuery   = null;
 
 				base.Cleanup();
 			}
@@ -132,6 +135,20 @@ namespace LinqToDB.Internal.DataProvider
 					return false;
 
 				return true;
+			}
+
+			// Seed used to uniquify a select column's alias. For a bare entity-field column in the ROOT
+			// select, seed from the field's physical column name instead of its member-name alias: the
+			// result-set column then keeps its physical name, which is what raw-SQL by-name entity mapping
+			// resolves on (providers that force root aliases - SqlCe / YDB - otherwise rename it to the
+			// member name and break the mapping). The uniquifier still suffixes genuine duplicates, so the
+			// "no duplicate root column names" rule those providers enforce stays satisfied (#5599).
+			string? GetColumnAliasSeed(SelectQuery selectQuery, SqlColumn column)
+			{
+				if (ReferenceEquals(selectQuery, _rootSelectQuery) && column.Expression is SqlField field)
+					return field.PhysicalName;
+
+				return _newAliases.GetColumnAlias(column);
 			}
 
 			protected internal override IQueryElement VisitSqlTableLikeSource(SqlTableLikeSource element)
@@ -260,7 +277,7 @@ namespace LinqToDB.Internal.DataProvider
 						selectQuery.Select.Columns.Where(c => !string.Equals(c.Alias, "*", StringComparison.Ordinal)),
 						null,
 						(n, a) => IsValidAlias(n),
-						c => TruncateAlias(_newAliases.GetColumnAlias(c) ?? string.Empty),
+						c => TruncateAlias(GetColumnAliasSeed(selectQuery, c) ?? string.Empty),
 						(c, n, a) =>
 						{
 							a?.Add(n);
