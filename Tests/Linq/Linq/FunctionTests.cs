@@ -466,6 +466,42 @@ namespace Tests.Linq
 			Assert.That(db.LastQuery, Does.Contain("ORDER"));
 		}
 
+		// Version nibble of a GUID is the first hex digit of its third group (canonical layout),
+		// i.e. index 12 of the dash-less "N" form. Works on every TFM (Guid.Version is net9+ only).
+		static int GuidVersion(Guid guid) => Convert.ToInt32(guid.ToString("N").Substring(12, 1), 16);
+
+		// Runs on every provider: those with a server-side UUIDv7 generator translate Sql.NewGuid7()
+		// to it, the rest fall back to client-side generation. Sql.AsSql forces the value into SQL
+		// (not silent client parameterization), and the generated value is non-deterministic so the
+		// baseline is disabled.
+		[Test]
+		public void NewGuid7([DataSources] string context)
+		{
+			using (new DisableBaseline("Non-deterministic UUIDv7 value"))
+			using (var db = GetDataContext(context))
+			{
+				var guid = (from p in db.Types select Sql.AsSql(Sql.NewGuid7())).First();
+
+				Assert.That(guid, Is.Not.EqualTo(Guid.Empty));
+				Assert.That(GuidVersion(guid), Is.EqualTo(7));
+			}
+		}
+
+#if NET9_0_OR_GREATER
+		[Test]
+		public void CreateVersion7([DataSources] string context)
+		{
+			using (new DisableBaseline("Non-deterministic UUIDv7 value"))
+			using (var db = GetDataContext(context))
+			{
+				var guid = (from p in db.Types select Sql.AsSql(Guid.CreateVersion7())).First();
+
+				Assert.That(guid, Is.Not.EqualTo(Guid.Empty));
+				Assert.That(guid.Version, Is.EqualTo(7));
+			}
+		}
+#endif
+
 		[Test]
 		public void CustomFunc([DataSources] string context)
 		{

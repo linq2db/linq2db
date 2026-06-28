@@ -374,10 +374,8 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
 		{
-			var factory  = translationContext.ExpressionFactory;
-			var timePart = factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "Gen_Uuid");
-
-			return timePart;
+			var factory = translationContext.ExpressionFactory;
+			return factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "Gen_Uuid");
 		}
 
 		/// <summary>

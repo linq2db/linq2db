@@ -97,6 +97,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		{
 			return Version switch
 			{
+				>= PostgreSQLVersion.v18 => new PostgreSQL18MemberTranslator(),
 				>= PostgreSQLVersion.v13 => new PostgreSQL13MemberTranslator(),
 				_ => new PostgreSQLMemberTranslator(),
 			};
