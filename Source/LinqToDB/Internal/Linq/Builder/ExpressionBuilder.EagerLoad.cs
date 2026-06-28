@@ -93,7 +93,10 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			Expression[] arguments;
 
-			if (count > ValueTupleTypes.Length)
+			// The 8-arity ValueTuple's last slot is always Rest (a nested ValueTuple), never a plain value,
+			// so a key needs nesting once it has 8+ members — matching BuildValueTupleType / AccessValueTupleField
+			// (which recurse via Rest from the 8th element). A flat ValueTuple holds at most 7 members.
+			if (count >= ValueTupleTypes.Length)
 			{
 				count     = ValueTupleTypes.Length;
 				arguments = new Expression[count];
