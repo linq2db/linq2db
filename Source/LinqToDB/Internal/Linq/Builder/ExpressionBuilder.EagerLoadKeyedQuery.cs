@@ -251,9 +251,26 @@ namespace LinqToDB.Internal.Linq.Builder
 					var correctedSequenceWithLocalKey = ReplaceDetailKeysWithParameter(
 						correctedSequence, detailKeys, keyParameter);
 
+					// A key with more than ValueTupleTypes.Length members is a ValueTuple whose 8th slot
+					// (Rest) is itself a nested ValueTuple. Projecting the whole key element back through
+					// entity construction would read that nested Rest as a single column and truncate the
+					// carried grouping key to its first 7 members. Instead carry the key as an explicit tuple
+					// rebuilt from its leaf accessors (the same New-based shape used for the VALUES keys), so
+					// every leaf is carried as its own scalar column and the client reconstructs the full
+					// nested key by index.
+					var carriedKey = (Expression)keyParameter;
+					if (mainKeys.Length > ValueTupleTypes.Length)
+					{
+						var keyLeaves = new Expression[mainKeys.Length];
+						for (var li = 0; li < mainKeys.Length; li++)
+							keyLeaves[li] = AccessValueTupleField(keyParameter, li);
+
+						carriedKey = GenerateKeyExpression(keyLeaves, 0);
+					}
+
 					var keyDetailExpression = Expression.New(
 						keyDetailType.GetConstructor([keyType, detailType])!,
-						keyParameter,
+						carriedKey,
 						detailParameter);
 					var selector = Expression.Lambda(keyDetailExpression, keyParameter, detailParameter);
 

@@ -94,7 +94,6 @@ namespace Tests.Linq
 
 		// A 9-member composite key under KeyedQuery: each parent gets only the child whose full key matches,
 		// including members >=8 (the Rest-nested part of the key).
-		[ActiveIssue("KeyedQuery key-carry projection of a Rest-nested (>7-member) ValueTuple omits the Rest_* columns, truncating the client grouping key to 7 members.")]
 		[Test]
 		public void NineMemberCompositeKey_KeyedQuery_NestedKeyGrouping([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
