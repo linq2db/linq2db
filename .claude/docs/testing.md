@@ -137,6 +137,8 @@ Each process writes its own `.build/.claude/test-progress.<tfm>.<pid>.json`; pol
 
 **Always include `CreateDatabase` in your `--filter`.** Prepend `FullyQualifiedName~CreateData.CreateDatabase|` to any filter you construct — the test is idempotent, re-running it is cheap, and it removes the "empty database" failure mode entirely.
 
+**Derive the `FullyQualifiedName~` filter from the test's `namespace`, not its folder path — and sanity-check the run's test count.** linq2db test namespaces don't mirror the directory tree: `Tests/Linq/Linq/QueryGenerationTests.cs` is `namespace Tests.Linq` (not `Tests.Linq.Linq`), `Tests/Linq/Update/MergeTests.*.cs` is `Tests.xUpdate`. A filter built from the folder (`FullyQualifiedName~Tests.Linq.Linq.QueryGenerationTests`) matches **zero** real tests, so the run is **vacuously green** — only the prepended `CreateDatabase` cases execute (e.g. `total: 3`, "Passed!"). Always `Grep` the file's `^namespace` line to build the filter, and after the run confirm `total` is in the expected ballpark — a suspiciously small `total` on a "passed" run is the tell. (Surfaced verifying #5599/#5169 ungatings: a `Tests.Linq.Linq.*` filter ran 3 tests and reported green before the count exposed it.)
+
 ```bash
 dotnet test --project Tests/Linq/Tests.csproj -f net10.0 --filter "FullyQualifiedName~CreateData.CreateDatabase|FullyQualifiedName~FirebirdTests.DropTableTest" --settings .runsettings
 ```
