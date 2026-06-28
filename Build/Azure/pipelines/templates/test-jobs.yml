@@ -21,102 +21,16 @@ jobs:
 
   steps:
   - checkout: none
+  - task: DownloadPipelineArtifact@2
+    inputs:
+      artifactName: $(artifact_test_scripts)
+      targetPath: '$(System.DefaultWorkingDirectory)/scripts'
+    displayName: Extract test scripts
   - task: PowerShell@2
     inputs:
-      targetType: 'inline'
-      script: |
-        $prId = "$(source_pr_id)"
-        $orgName = "linq2db"
-        $baselinesRepo = "linq2db.baselines"
-        $baselinesRepoUrl = "https://${Env:GITHUB_TOKEN}@github.com/${orgName}/${baselinesRepo}.git"
-        Write-Host "Source PR ID: ${prId}"
-        if ($prId) {
-            $baselinesBranch = "baselines/pr_${prId}"
-        } else {
-            $baselinesBranch = "baselines/default"
-        }
-        Write-Host "Baselines branch name: ${baselinesBranch}"
-        $output = git ls-remote --heads $baselinesRepoUrl $baselinesBranch
-        Write-Host "Baselines HEAD: ${output}"
-        if ($LASTEXITCODE -ne 0) {
-            Write-Host "Baselines HEAD request failed with code ${LASTEXITCODE}"
-            exit 1
-        }
-        $baselinesNewBranch = 0
-        if ($output.Length -lt 40) {
-            Write-Host "Baselines branch not found"
-            Write-Host "Reading baselines repository HEAD hash..."
-            $output = git ls-remote $baselinesRepoUrl $(baselines_master)
-            if ($LASTEXITCODE -ne 0) {
-                Write-Host "Failed to read HEAD hash. Error code ${LASTEXITCODE}"
-                exit 1
-            }
-            if ($output.Length -lt 40) {
-                Write-Host "Baselines repo HEAD not found. Last output: ${output}"
-                exit 1
-            }
-            $baslinesHeadHash = ($output -split '\s+')[0]
-            Write-Host "Creating new baselines branch ${baselinesBranch}..."
-            $output = gh api /repos/$orgName/$baselinesRepo/git/refs -i -F ref=refs/heads/$baselinesBranch -F sha=$baslinesHeadHash
-            Write-Host "Create command output: ${output}"
-            if ($LASTEXITCODE -ne 0) {
-                Write-Host "Failed to create branch. Error code ${LASTEXITCODE}"
-                exit 1
-            }
-            if ($output -match "201 Created") {
-                Write-Host "Baselines branch created"
-                $baselinesNewBranch = 1
-            } else {
-                Write-Host "Baselines branch creation failed"
-                exit 1
-            }
-        } else {
-            Write-Host "Baselines branch already exists, checking if rebase required"
-            $head = git ls-remote $baselinesRepoUrl $(baselines_master)
-            if ($LASTEXITCODE -ne 0) {
-                Write-Host "Failed to read HEAD hash. Error code ${LASTEXITCODE}"
-                exit 1
-            }
-            if ($head.Length -lt 40) {
-                Write-Host "Baselines repo HEAD not found. Last output: ${head}"
-                exit 1
-            }
-            $baslinesHeadHash = ($output -split '\s+')[0]
-            $headHash = ($head -split '\s+')[0]
-            if ($baslinesHeadHash -eq $headHash) {
-                Write-Host "Baselines branch already based on HEAD, no rebase required"
-            } else {
-                Write-Host "Baselines head is ${baslinesHeadHash}, but HEAD is ${head}, trying to rebase on current HEAD"
-                git clone $baselinesRepoUrl baselines
-                if ($LASTEXITCODE -ne 0) {
-                    Write-Host "Failed to clone baselines repository. Error code ${LASTEXITCODE}"
-                    exit 1
-                }
-                cd baselines
-                git checkout origin/$baselinesBranch
-                if ($LASTEXITCODE -ne 0) {
-                    Write-Host "Failed to checkout baselines branch origin/${baselinesBranch}. Error code ${LASTEXITCODE}"
-                    exit 1
-                }
-                git rebase origin/$(baselines_master)
-                if ($LASTEXITCODE -ne 0) {
-                    Write-Host "Failed to rebase baselines PR on origin/$(baselines_master). Delete branch and re-run tests. Error code ${LASTEXITCODE}"
-                    exit 1
-                }
-                git push -f origin HEAD:$baselinesBranch
-                if ($LASTEXITCODE -ne 0) {
-                    Write-Host "Failed to push rebased baselines. Error code ${LASTEXITCODE}"
-                    exit 1
-                }
-                Write-Host "Baselines PR was rebased on HEAD"
-                $baslinesHeadHash = $headHash
-            }
-        }
-        Write-Host "Baselines branch head hash: ${baslinesHeadHash}"
-        # export branch name and hash to pipelines variables
-        echo "##vso[task.setvariable variable=baselines_branch;isOutput=true]${baselinesBranch}"
-        echo "##vso[task.setvariable variable=baselines_head;isOutput=true]${baslinesHeadHash}"
-        echo "##vso[task.setvariable variable=baselines_new_branch;isOutput=true]${baselinesNewBranch}"
+      pwsh: true
+      filePath: '$(System.DefaultWorkingDirectory)/scripts/ensure-baselines-branch.ps1'
+      arguments: -PrId "$(source_pr_id)" -BaselinesMaster "$(baselines_master)" -Rebase -EmitOutputs
       workingDirectory: '$(System.DefaultWorkingDirectory)'
     displayName: Checkout test baselines
     name: baselines_init
@@ -140,6 +54,7 @@ jobs:
   condition: ${{ parameters.enabled }}
   variables:
     baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
+    baselines_head: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_head'] ]
 
   strategy:
     matrix:
@@ -179,6 +94,7 @@ jobs:
   condition: ${{ parameters.enabled }}
   variables:
     baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
+    baselines_head: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_head'] ]
 
   strategy:
     matrix:
@@ -212,6 +128,7 @@ jobs:
   condition: and(eq(${{ parameters.enabled }}, 'true'), eq(${{ parameters.mac_enabled }}, 'true'))
   variables:
     baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
+    baselines_head: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_head'] ]
 
   strategy:
     matrix:
