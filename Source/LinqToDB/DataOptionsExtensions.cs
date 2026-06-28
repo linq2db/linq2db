@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data.Common;
@@ -273,6 +273,27 @@ namespace LinqToDB
 		public static LinqOptions WithParameterizeTakeSkip(this LinqOptions options, bool parameterizeTakeSkip)
 		{
 			return options with { ParameterizeTakeSkip = parameterizeTakeSkip };
+		}
+
+		/// <summary>
+		/// Enables SQL query parameter reuse for repeated references to the same LINQ query parameter.
+		/// Default value: <see langword="false"/>.
+		/// </summary>
+		[Pure]
+		public static LinqOptions WithOptimizeDuplicateParameters(this LinqOptions options, bool optimizeDuplicateParameters)
+		{
+			return options with { OptimizeDuplicateParameters = optimizeDuplicateParameters };
+		}
+
+		/// <summary>
+		/// Allows <see cref="LinqOptions.OptimizeDuplicateParameters"/> to reuse duplicate SQL parameters for repeated captured object property access expressions.
+		/// This option has effect only when <see cref="LinqOptions.OptimizeDuplicateParameters"/> is enabled.
+		/// Default value: <see langword="true"/>.
+		/// </summary>
+		[Pure]
+		public static LinqOptions WithOptimizeDuplicatePropertyParameters(this LinqOptions options, bool optimizeDuplicatePropertyParameters)
+		{
+			return options with { OptimizeDuplicatePropertyParameters = optimizeDuplicatePropertyParameters };
 		}
 
 		/// <summary>
@@ -574,6 +595,27 @@ namespace LinqToDB
 		public static DataOptions UseParameterizeTakeSkip(this DataOptions options, bool parameterizeTakeSkip)
 		{
 			return options.WithOptions<LinqOptions>(o => o with { ParameterizeTakeSkip = parameterizeTakeSkip });
+		}
+
+		/// <summary>
+		/// Enables SQL query parameter reuse for repeated references to the same LINQ query parameter.
+		/// Default value: <see langword="false"/>.
+		/// </summary>
+		[Pure]
+		public static DataOptions UseOptimizeDuplicateParameters(this DataOptions options, bool optimizeDuplicateParameters)
+		{
+			return options.WithOptions<LinqOptions>(o => o with { OptimizeDuplicateParameters = optimizeDuplicateParameters });
+		}
+
+		/// <summary>
+		/// Allows <see cref="LinqOptions.OptimizeDuplicateParameters"/> to reuse duplicate SQL parameters for repeated captured object property access expressions.
+		/// This option has effect only when <see cref="LinqOptions.OptimizeDuplicateParameters"/> is enabled.
+		/// Default value: <see langword="true"/>.
+		/// </summary>
+		[Pure]
+		public static DataOptions UseOptimizeDuplicatePropertyParameters(this DataOptions options, bool optimizeDuplicatePropertyParameters)
+		{
+			return options.WithOptions<LinqOptions>(o => o with { OptimizeDuplicatePropertyParameters = optimizeDuplicatePropertyParameters });
 		}
 
 		/// <summary>

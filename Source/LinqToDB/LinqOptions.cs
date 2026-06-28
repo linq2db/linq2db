@@ -135,6 +135,15 @@ namespace LinqToDB
 	/// Enables Take/Skip parameterization.
 	/// Default value: <see langword="true"/>.
 	/// </param>
+	/// <param name="OptimizeDuplicateParameters">
+	/// Enables SQL query parameter reuse for repeated references to the same LINQ query parameter.
+	/// Default value: <see langword="false"/>.
+	/// </param>
+	/// <param name="OptimizeDuplicatePropertyParameters">
+	/// Allows <see cref="OptimizeDuplicateParameters"/> to reuse duplicate SQL parameters for repeated captured object property access expressions.
+	/// This option has effect only when <see cref="OptimizeDuplicateParameters"/> is enabled.
+	/// Default value: <see langword="true"/>.
+	/// </param>
 	/// <param name="EnableContextSchemaEdit">
 	/// If <see langword="true"/>, user could add new mappings to context mapping schems (<see cref="IDataContext.MappingSchema"/>).
 	/// Otherwise, <see cref="LinqToDBException"/> will be generated on locked mapping schema edit attempt.
@@ -182,19 +191,19 @@ namespace LinqToDB
 	(
 		// TODO: Remove in v7
 		[property: Obsolete("This API doesn't have effect anymore and will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
-		bool         PreloadGroups           = false,
-		bool         IgnoreEmptyUpdate       = false,
-		bool         GenerateExpressionTest  = false,
-		bool         TraceMapperExpression   = false,
-		bool         ConcatenateOrderBy      = false,
-		bool         OptimizeJoins           = true,
-		CompareNulls CompareNulls            = CompareNulls.LikeClr,
-		bool         GuardGrouping           = true,
-		bool         DisableQueryCache       = false,
-		TimeSpan?    CacheSlidingExpiration  = default,
+		bool         PreloadGroups                       = false,
+		bool         IgnoreEmptyUpdate                   = false,
+		bool         GenerateExpressionTest              = false,
+		bool         TraceMapperExpression               = false,
+		bool         ConcatenateOrderBy                  = false,
+		bool         OptimizeJoins                       = true,
+		CompareNulls CompareNulls                        = CompareNulls.LikeClr,
+		bool         GuardGrouping                       = true,
+		bool         DisableQueryCache                   = false,
+		TimeSpan?    CacheSlidingExpiration              = default,
 		// TODO: Remove in v7
 		[property: Obsolete("This API doesn't have effect anymore and will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
-		bool         PreferApply             = true,
+		bool         PreferApply                         = true,
 		// TODO: Remove in v7
 		[property: Obsolete("This API doesn't have effect anymore and will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		bool         KeepDistinctOrdered     = true,
@@ -203,7 +212,9 @@ namespace LinqToDB
 		bool         PreferExistsForScalar   = default,
 		bool         PreferClientCalculation = default,
 		UpsertEmulationPolicy UpsertEmulationPolicy = UpsertEmulationPolicy.Allow,
-		bool         OptimizeForSequentialAccess = false
+		bool         OptimizeForSequentialAccess = false,
+		bool         OptimizeDuplicateParameters         = false,
+		bool         OptimizeDuplicatePropertyParameters = true
 		// If you add another parameter here, don't forget to update
 		// LinqOptions copy constructor and IConfigurationID.ConfigurationID.
 	)
@@ -219,21 +230,23 @@ namespace LinqToDB
 		// `with` paths don't reference obsolete members. Keep it in sync with new parameters (see note above).
 		LinqOptions(LinqOptions original)
 		{
-			IgnoreEmptyUpdate       = original.IgnoreEmptyUpdate;
-			GenerateExpressionTest  = original.GenerateExpressionTest;
-			TraceMapperExpression   = original.TraceMapperExpression;
-			ConcatenateOrderBy      = original.ConcatenateOrderBy;
-			OptimizeJoins           = original.OptimizeJoins;
-			CompareNulls            = original.CompareNulls;
-			GuardGrouping           = original.GuardGrouping;
-			DisableQueryCache       = original.DisableQueryCache;
-			CacheSlidingExpiration  = original.CacheSlidingExpiration;
-			ParameterizeTakeSkip    = original.ParameterizeTakeSkip;
-			EnableContextSchemaEdit = original.EnableContextSchemaEdit;
-			PreferExistsForScalar   = original.PreferExistsForScalar;
-			PreferClientCalculation = original.PreferClientCalculation;
-			UpsertEmulationPolicy   = original.UpsertEmulationPolicy;
-			OptimizeForSequentialAccess = original.OptimizeForSequentialAccess;
+			IgnoreEmptyUpdate                   = original.IgnoreEmptyUpdate;
+			GenerateExpressionTest              = original.GenerateExpressionTest;
+			TraceMapperExpression               = original.TraceMapperExpression;
+			ConcatenateOrderBy                  = original.ConcatenateOrderBy;
+			OptimizeJoins                       = original.OptimizeJoins;
+			CompareNulls                        = original.CompareNulls;
+			GuardGrouping                       = original.GuardGrouping;
+			DisableQueryCache                   = original.DisableQueryCache;
+			CacheSlidingExpiration              = original.CacheSlidingExpiration;
+			ParameterizeTakeSkip                = original.ParameterizeTakeSkip;
+			EnableContextSchemaEdit             = original.EnableContextSchemaEdit;
+			PreferExistsForScalar               = original.PreferExistsForScalar;
+			PreferClientCalculation             = original.PreferClientCalculation;
+			UpsertEmulationPolicy               = original.UpsertEmulationPolicy;
+			OptimizeForSequentialAccess         = original.OptimizeForSequentialAccess;
+			OptimizeDuplicateParameters         = original.OptimizeDuplicateParameters;
+			OptimizeDuplicatePropertyParameters = original.OptimizeDuplicatePropertyParameters;
 		}
 
 		/// <summary>
@@ -266,6 +279,7 @@ namespace LinqToDB
 				enableContextSchemaEdit, preferExistsForScalar,
 				PreferClientCalculation: default, UpsertEmulationPolicy: UpsertEmulationPolicy.Allow, OptimizeForSequentialAccess: default)
 		{
+
 		}
 
 		/// <summary>
@@ -296,7 +310,7 @@ namespace LinqToDB
 				out concatenateOrderBy, out optimizeJoins, out compareNulls, out guardGrouping, out disableQueryCache,
 				out cacheSlidingExpiration, out preferApply, out keepDistinctOrdered, out parameterizeTakeSkip,
 				out enableContextSchemaEdit, out preferExistsForScalar,
-				out _, out _, out _);
+				out _, out _, out _, out _, out _);
 		}
 
 		int? _configurationID;
@@ -323,6 +337,8 @@ namespace LinqToDB
 						.Add(PreferClientCalculation)
 						.Add((int)UpsertEmulationPolicy)
 						.Add(OptimizeForSequentialAccess)
+						.Add(OptimizeDuplicateParameters)
+						.Add(OptimizeDuplicatePropertyParameters)
 						.CreateID();
 				}
 
@@ -334,21 +350,19 @@ namespace LinqToDB
 
 		#region Default Options
 
-		static LinqOptions _default = new();
-
 		/// <summary>
 		/// Gets default <see cref="LinqOptions"/> instance.
 		/// </summary>
 		public static LinqOptions Default
 		{
-			get => _default;
+			get;
 			set
 			{
-				_default = value;
+				field = value;
 				DataConnection.ResetDefaultOptions();
 				DataConnection.ConnectionOptionsByConfigurationString.Clear();
 			}
-		}
+		} = new();
 
 		/// <inheritdoc />
 		IOptionSet IOptionSet.Default => Default;
