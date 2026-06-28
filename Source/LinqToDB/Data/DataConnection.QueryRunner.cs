@@ -273,7 +273,16 @@ namespace LinqToDB.Data
 
 					// correct aliases if needed
 					var serviceProvider = ((IInfrastructure<IServiceProvider>)dataConnection.DataProvider).Instance;
-					AliasesHelper.PrepareQueryAndAliases(serviceProvider.GetRequiredService<IIdentifierService>(), statement, query.Aliases, out var aliases);
+					// Do not seed aliasing with the previous run's context. The reuse-seed assumes the statement
+					// is immutable across executions, but parameter-dependent / continuous-run queries (the only
+					// queries that re-reach this point - non-parameter-dependent ones cache their commands above
+					// and short-circuit) rebuild the statement each execution via OptimizeAndConvertAll in
+					// Transform mode, producing fresh node identities the object-identity-keyed prev context
+					// cannot map onto. Re-feeding it yields non-deterministic alias numbering that drifts between
+					// executions and diverges from the remote path (which always aliases fresh server-side over a
+					// freshly deserialized statement). Aliasing fresh is deterministic for a given statement shape,
+					// so it is both stable across executions and identical to the remote rendering.
+					AliasesHelper.PrepareQueryAndAliases(serviceProvider.GetRequiredService<IIdentifierService>(), statement, null, out var aliases);
 
 					query.Aliases = aliases;
 
