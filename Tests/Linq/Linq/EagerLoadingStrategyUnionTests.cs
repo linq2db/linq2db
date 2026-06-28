@@ -6,8 +6,10 @@ using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Async;
+using LinqToDB.DataProvider.SQLite;
 using LinqToDB.Interceptors;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.DataProvider.SQLite;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
 
@@ -3131,9 +3133,21 @@ namespace Tests.Linq
 			[Column]             public int     Rate     { get; set; }
 		}
 
+		// A dedicated SQLite provider whose MaxColumnCount is preset low. Using a separate provider instance
+		// keeps the limit off the shared per-provider SqlProviderFlags singleton, which a parallel test run
+		// would otherwise observe (each provider instance owns its own SqlProviderFlags).
+		sealed class LimitedColumnsSQLiteProvider : SQLiteDataProvider
+		{
+			public LimitedColumnsSQLiteProvider(string name, SQLiteProvider provider, int maxColumnCount)
+				: base(name, provider)
+			{
+				SqlProviderFlags.MaxColumnCount = maxColumnCount;
+			}
+		}
+
 		[Test]
 		public void Select_Union_FallsBackToKeyedQuery_WhenExceedsMaxColumnCount(
-			[IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+			[IncludeDataSources(false, TestProvName.AllSQLiteBase)] string context)
 		{
 			var parents = Enumerable.Range(1, 3).Select(i => new MaxColParent { Id = i, Name = "P" + i }).ToArray();
 			var childA  = parents.SelectMany(p => Enumerable.Range(1, 2)
@@ -3141,7 +3155,13 @@ namespace Tests.Linq
 			var childB  = parents.SelectMany(p => Enumerable.Range(1, 2)
 				.Select(k => new MaxColChildB { Id = p.Id * 100 + k + 40, ParentId = p.Id, Name = $"B{p.Id}_{k}", Rate = 100 + k })).ToArray();
 
-			using var db  = GetDataConnection(context);
+			// Drive the fallback through a provider with MaxColumnCount = 5 instead of mutating the shared
+			// provider singleton, so concurrent SQLite tests never observe the temporary limit.
+			var sqliteProvider = context == ProviderName.SQLiteClassic ? SQLiteProvider.System : SQLiteProvider.Microsoft;
+			var dataProvider   = new LimitedColumnsSQLiteProvider(context + ".MaxCol5", sqliteProvider, maxColumnCount: 5);
+			var options        = new DataOptions().UseConnectionString(dataProvider, GetConnectionString(context));
+
+			using var db  = GetDataConnection(options);
 			using var tP  = db.CreateLocalTable(parents);
 			using var tA  = db.CreateLocalTable(childA);
 			using var tB  = db.CreateLocalTable(childB);
@@ -3149,45 +3169,35 @@ namespace Tests.Linq
 			var counter = new SelectQueryCounter();
 			db.AddInterceptor(counter);
 
-			var originalMax = db.DataProvider.SqlProviderFlags.MaxColumnCount;
-			try
-			{
-				db.DataProvider.SqlProviderFlags.MaxColumnCount = 5;
+			var query =
+				from p in tP
+				orderby p.Id
+				select new
+				{
+					p.Id,
+					p.Name,
+					A = tA.Where(a => a.ParentId == p.Id).OrderBy(a => a.Id).ToList(),
+					B = tB.Where(b => b.ParentId == p.Id).OrderBy(b => b.Id).ToList(),
+				};
 
-				var query =
-					from p in tP
-					orderby p.Id
-					select new
-					{
-						p.Id,
-						p.Name,
-						A = tA.Where(a => a.ParentId == p.Id).OrderBy(a => a.Id).ToList(),
-						B = tB.Where(b => b.ParentId == p.Id).OrderBy(b => b.Id).ToList(),
-					};
+			var result = query.WithUnionLoadStrategy().ToList();
 
-				var result = query.WithUnionLoadStrategy().ToList();
+			// CteUnion carrier exceeds MaxColumnCount → whole-strategy fallback to KeyedQuery:
+			// 1 main buffer query + 2 child preambles = 3 queries (vs. 1 for native CteUnion).
+			counter.Count.ShouldBe(3);
 
-				// CteUnion carrier exceeds MaxColumnCount → whole-strategy fallback to KeyedQuery:
-				// 1 main buffer query + 2 child preambles = 3 queries (vs. 1 for native CteUnion).
-				counter.Count.ShouldBe(3);
+			var expected = parents
+				.OrderBy(p => p.Id)
+				.Select(p => new
+				{
+					p.Id,
+					p.Name,
+					A = childA.Where(a => a.ParentId == p.Id).OrderBy(a => a.Id).ToList(),
+					B = childB.Where(b => b.ParentId == p.Id).OrderBy(b => b.Id).ToList(),
+				})
+				.ToList();
 
-				var expected = parents
-					.OrderBy(p => p.Id)
-					.Select(p => new
-					{
-						p.Id,
-						p.Name,
-						A = childA.Where(a => a.ParentId == p.Id).OrderBy(a => a.Id).ToList(),
-						B = childB.Where(b => b.ParentId == p.Id).OrderBy(b => b.Id).ToList(),
-					})
-					.ToList();
-
-				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
-			}
-			finally
-			{
-				db.DataProvider.SqlProviderFlags.MaxColumnCount = originalMax;
-			}
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 		}
 
 		#endregion
