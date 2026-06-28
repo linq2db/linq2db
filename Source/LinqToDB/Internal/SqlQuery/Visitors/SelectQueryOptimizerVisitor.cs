@@ -3135,9 +3135,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						// JOIN, express it as one (the validator accepts CROSS). INNER ON 1=1 is always
 						// equivalent to CROSS; LEFT ON 1=1 only when the joined source is guaranteed non-empty
 						// (an aggregate without GROUP BY, e.g. a scalar COUNT carrier, yields exactly one row).
+						// A HAVING clause breaks that guarantee — a no-GROUP BY aggregate with HAVING yields
+						// zero rows when the predicate fails, so the LEFT JOIN is not equivalent to CROSS.
 						if (join.Condition.IsTrue && _providerFlags.IsCrossJoinSupported
 							&& (join.JoinType == JoinType.Inner
-								|| (join is { JoinType: JoinType.Left, Table.Source: SelectQuery { HasGroupBy: false } aggSrc } && QueryHelper.IsAggregationQuery(aggSrc))))
+								|| (join is { JoinType: JoinType.Left, Table.Source: SelectQuery { HasGroupBy: false, HasHaving: false } aggSrc } && QueryHelper.IsAggregationQuery(aggSrc))))
 						{
 							join.JoinType = JoinType.Cross;
 
