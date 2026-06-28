@@ -50,7 +50,18 @@ namespace LinqToDB.Internal.DataProvider
 
 				if (_tablesVisited != null)
 				{
-					Utils.MakeUniqueNames(_tablesVisited,
+					// Uniquify per distinct SourceID, not per SqlTableSource object. One logical source can be
+					// wrapped by several SqlTableSource instances sharing a SourceID (a correlated reference / a
+					// CTE reference resolves to a different wrapper than the FROM clause). Finalized table
+					// aliases are keyed by SourceID, so processing the same SourceID twice makes the second
+					// occurrence collide with the alias the first just set and spuriously suffixes it (t1 -> t1_1).
+					// That self-collision is non-deterministic across the direct vs remote paths, because the
+					// number of wrappers differs after the serialize/deserialize round-trip (#5169).
+					var distinctSources = _tablesVisited
+						.GroupBy(ts => ts.SourceID)
+						.Select(g => g.First());
+
+					Utils.MakeUniqueNames(distinctSources,
 						_allAliases,
 						(n, a) => !a!.Contains(n) && IsValidAlias(n),
 						GetCurrentAlias,
