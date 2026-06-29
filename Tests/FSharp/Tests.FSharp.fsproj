@@ -6,6 +6,12 @@
 		<WarningLevel>5</WarningLevel>
 		<LangVersion>9</LangVersion>
 
+		<TestProject>false</TestProject>
+		<IsTestProject>false</IsTestProject>
+		<IsTestable>false</IsTestable>
+		<IsTestingPlatformApplication>false</IsTestingPlatformApplication>
+		<DisableTestingPlatformServerCapability>true</DisableTestingPlatformServerCapability>
+
 		<MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB3277</MSBuildWarningsAsMessages>
 	</PropertyGroup>
 

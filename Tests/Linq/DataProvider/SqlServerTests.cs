@@ -1420,12 +1420,179 @@ namespace Tests.DataProvider
 			[Column] public SqlDecimal Decimal3;
 		}
 
+		[Table]
+		sealed class SqlServerDecimalOverflowAutoRead
+		{
+			[Column(DataType = DataType.Decimal, Precision = 38, Scale = 35)] public decimal Value1;
+			[Column(DataType = DataType.Decimal, Precision = 38, Scale = 9)]  public decimal Value2;
+		}
+
+		[Table]
+		sealed class SqlServerDecimalOverflowSequentialRead
+		{
+			const string SequentialAccessMappingSchema = "SequentialAccess";
+
+			[Column(DataType = DataType.Decimal, Precision = 38, Scale = 35)]
+			[GetSqlDecimal(Configuration = SequentialAccessMappingSchema)]
+			[GetSqlDecimal(Configuration = TestProvName.SqlServerSequentialAccess)]
+			[GetSqlDecimal(Configuration = TestProvName.SqlServerSequentialAccessMS)]
+			public decimal Value1;
+
+			[Column(DataType = DataType.Decimal, Precision = 38, Scale = 9)]
+			[GetSqlDecimal(Configuration = SequentialAccessMappingSchema)]
+			[GetSqlDecimal(Configuration = TestProvName.SqlServerSequentialAccess)]
+			[GetSqlDecimal(Configuration = TestProvName.SqlServerSequentialAccessMS)]
+			public decimal Value2;
+		}
+
+		[Table]
+		sealed class SqlServerHighScaleDecimalAutoRead
+		{
+			[Column(DataType = DataType.Decimal, Precision = 38, Scale = 35)] public decimal Value;
+		}
+
+		[Table]
+		sealed class SqlServerGetSqlDecimalAttributeRead
+		{
+			[Column(DataType = DataType.Decimal, Precision = 38, Scale = 30)]
+			[GetSqlDecimal]
+			public decimal Value1;
+
+			[Column(DataType = DataType.Decimal, Precision = 38, Scale = 9)]
+			[GetSqlDecimal]
+			public decimal Value2;
+		}
+
+		[Table]
+		sealed class SqlServerMoneyAutoRead
+		{
+			[Column(DataType = DataType.Money)]      public decimal MoneyValue;
+			[Column(DataType = DataType.SmallMoney)] public decimal SmallMoneyValue;
+		}
+
 		[Test]
 		public void OverflowTest2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = GetDataContext(context);
-				var list = db.GetTable<DecimalOverflow2>().ToList();
-			}
+			var list = db.GetTable<DecimalOverflow2>().ToList();
+		}
+
+		[Test]
+		public void OverflowAutoFallbackTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context, suppressSequentialAccess: true);
+			using var table = db.CreateLocalTable<SqlServerDecimalOverflowAutoRead>("SqlServerDecimalOverflowAutoRead");
+
+			const string expectedValue1 = "1.2345678901234567890123456789";
+			const string expectedValue2 = "1234567890123456789012.123456789";
+
+			db.Execute($"INSERT INTO [SqlServerDecimalOverflowAutoRead] ([Value1], [Value2]) VALUES ({expectedValue1}, {expectedValue2})");
+
+			var values       = table.ToList();
+			var secondRead   = table.ToList();
+			var expectedDec1 = decimal.Parse(expectedValue1, CultureInfo.InvariantCulture);
+			var expectedDec2 = decimal.Parse(expectedValue2, CultureInfo.InvariantCulture);
+
+			values.Count.ShouldBe(1);
+			values[0].Value1.ShouldBe(expectedDec1);
+			values[0].Value2.ShouldBe(expectedDec2);
+			secondRead[0].Value1.ShouldBe(expectedDec1);
+			secondRead[0].Value2.ShouldBe(expectedDec2);
+		}
+
+		[Test]
+		public void GetSqlDecimalAttributeTest([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.SqlServerSequentialAccessMS)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<SqlServerGetSqlDecimalAttributeRead>("SqlServerGetSqlDecimalAttributeRead");
+
+			const string expectedValue1 = "1.234567890123456789012345678901";
+			const string expectedValue2 = "1234567890123456789012.123456789";
+
+			db.Execute($"INSERT INTO [SqlServerGetSqlDecimalAttributeRead] ([Value1], [Value2]) VALUES ({expectedValue1}, {expectedValue2})");
+
+			var values       = table.ToList();
+			var secondRead   = table.ToList();
+			var expectedDec1 = decimal.Parse(expectedValue1, CultureInfo.InvariantCulture);
+			var expectedDec2 = decimal.Parse(expectedValue2, CultureInfo.InvariantCulture);
+
+			values.Count.ShouldBe(1);
+			values[0].Value1.ShouldBe(expectedDec1);
+			values[0].Value2.ShouldBe(expectedDec2);
+			secondRead[0].Value1.ShouldBe(expectedDec1);
+			secondRead[0].Value2.ShouldBe(expectedDec2);
+		}
+
+		[Test]
+		public void MoneyTypesReadAfterDecimalFallbackTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context, suppressSequentialAccess: true);
+			using var decimalTable = db.CreateLocalTable<SqlServerDecimalOverflowAutoRead>("SqlServerDecimalOverflowAutoRead");
+			using var moneyTable = db.CreateLocalTable<SqlServerMoneyAutoRead>("SqlServerMoneyAutoRead");
+
+			db.Execute("INSERT INTO [SqlServerDecimalOverflowAutoRead] ([Value1], [Value2]) VALUES (1.2345678901234567890123456789, 1234567890123456789012.123456789)");
+			decimalTable.ToList().Count.ShouldBe(1);
+
+			db.Execute("INSERT INTO [SqlServerMoneyAutoRead] ([MoneyValue], [SmallMoneyValue]) VALUES (123456.7891, 1234.5678)");
+
+			var values = moneyTable.ToList();
+
+			values.Count.ShouldBe(1);
+			values[0].MoneyValue.ShouldBe(123456.7891m);
+			values[0].SmallMoneyValue.ShouldBe(1234.5678m);
+		}
+
+		[Test]
+		public void OverflowMicrosoftDataSqlClientReadTest([IncludeDataSources(TestProvName.AllSqlServerMS)] string context)
+		{
+			using var db = GetDataContext(context, suppressSequentialAccess: true);
+			using var table = db.CreateLocalTable<SqlServerHighScaleDecimalAutoRead>("SqlServerHighScaleDecimalAutoRead");
+
+			const string expectedValue = "0.1";
+
+			db.Execute($"INSERT INTO [SqlServerHighScaleDecimalAutoRead] ([Value]) VALUES ({expectedValue})");
+
+			var values       = table.ToList();
+			var secondRead   = table.ToList();
+			var expectedDec  = decimal.Parse(expectedValue, CultureInfo.InvariantCulture);
+
+			values.Count.ShouldBe(1);
+			values[0].Value.ShouldBe(expectedDec);
+			secondRead[0].Value.ShouldBe(expectedDec);
+		}
+
+		[Test]
+		public void OverflowAutoFallbackSequentialTest([IncludeDataSources(TestProvName.SqlServerSequentialAccessMS)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<SqlServerDecimalOverflowSequentialRead>("SqlServerDecimalOverflowSequentialRead");
+
+			const string expectedValue1 = "1.234567890123456789012345678901";
+			const string expectedValue2 = "1234567890123456789012.123456701";
+
+			db.Execute($"INSERT INTO [SqlServerDecimalOverflowSequentialRead] ([Value1], [Value2]) VALUES ({expectedValue1}, {expectedValue2})");
+
+			var values       = table.ToList();
+			var secondRead   = table.ToList();
+			var expectedDec1 = decimal.Parse(expectedValue1, CultureInfo.InvariantCulture);
+			var expectedDec2 = decimal.Parse(expectedValue2, CultureInfo.InvariantCulture);
+
+			values.Count.ShouldBe(1);
+			values[0].Value1.ShouldBe(expectedDec1);
+			values[0].Value2.ShouldBe(expectedDec2);
+			secondRead[0].Value1.ShouldBe(expectedDec1);
+			secondRead[0].Value2.ShouldBe(expectedDec2);
+		}
+
+		[Test]
+		public void SqlDecimalValueOverflowTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var sqlDecimal = db.Execute<SqlDecimal>("SELECT CAST('12345678901234567890123456789.123456789' AS decimal(38, 9))");
+
+			Assert.Throws<OverflowException>(() => _ = sqlDecimal.Value);
+		}
 
 		[Test]
 		public void SelectTableWithHintTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)

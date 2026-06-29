@@ -10,6 +10,7 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Expressions;
@@ -17,6 +18,7 @@ using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider.SqlServer.Translation;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
@@ -89,6 +91,8 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			SetCharField("nchar", (r, i) => r.GetString(i).TrimEnd(' '));
 			SetCharFieldToType<char>("char", DataTools.GetCharExpression);
 			SetCharFieldToType<char>("nchar", DataTools.GetCharExpression);
+
+			_defaultDecimalReaderExpression = ReaderExpressions[new ReaderInfo { FieldType = typeof(decimal) }];
 
 			_sqlOptimizer = (version, Provider) switch
 			{
@@ -225,6 +229,92 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 		#region Overrides
 
+		public override Expression GetReaderExpression(DbDataReader reader, int idx, Expression readerExpression, Type? toType)
+		{
+			var expr = base.GetReaderExpression(reader, idx, readerExpression, toType);
+
+			if (toType == typeof(decimal)
+				&& reader.GetFieldType(idx) == typeof(decimal)
+				&& reader.GetProviderSpecificFieldType(idx) == typeof(SqlDecimal)
+				&& ReferenceEquals(expr, _defaultDecimalReaderExpression))
+			{
+				var decimalReader = new AdaptiveDecimalReader(Adapter.DataReaderType);
+
+				return (Expression<Func<DbDataReader,int,decimal>>)((r, i) => decimalReader.GetDecimal(r, i));
+			}
+
+			return expr;
+		}
+
+		/// <summary>
+		/// SQL Server decimal/numeric types can store up to 38 digits, while CLR <see cref="decimal"/> is limited to 29 digits.
+		/// Most values fit and should use the provider's normal <see cref="DbDataReader.GetDecimal(int)"/> path. Some values,
+		/// however, have SQL precision greater than CLR decimal precision while still being representable after reducing scale.
+		/// For those values SqlClient throws <see cref="OverflowException"/> from <c>GetDecimal</c>.
+		///
+		/// This reader keeps the provider's normal decimal read as the default behavior. If that read overflows, it switches
+		/// the current reader instance to the SqlServer-specific <see cref="SqlDecimal"/> path, which avoids throwing the same
+		/// exception for every subsequent row in the same materializer/column. The fallback delegate is built lazily on the
+		/// first overflow, as most decimal values never need it. The helper instance is created from
+		/// <see cref="GetReaderExpression(DbDataReader, int, Expression, Type?)"/> instead of the provider-level
+		/// <c>ReaderExpressions</c> dictionary, so the mutable switch is scoped to a generated column reader and doesn't leak
+		/// into unrelated decimal materialization paths.
+		///
+		/// This catch-and-reread approach is not compatible with <see cref="CommandBehavior.SequentialAccess"/>: after
+		/// <see cref="DbDataReader.GetDecimal(int)"/> attempts to read column <c>i</c>, the same column cannot be read again
+		/// with <c>GetSqlDecimal(i)</c>. Sequential-access users who need this conversion must configure a custom reader
+		/// expression that reads <see cref="SqlDecimal"/> first, so the column is consumed only once.
+		/// </summary>
+		sealed class AdaptiveDecimalReader
+		{
+			readonly Type _dataReaderType;
+
+			Func<DbDataReader, int, decimal> _reader;
+
+			public AdaptiveDecimalReader(Type dataReaderType)
+			{
+				_dataReaderType = dataReaderType;
+				_reader         = DefaultReader;
+			}
+
+			[ColumnReader(1)]
+			public decimal GetDecimal(DbDataReader reader, int index)
+			{
+				return _reader(reader, index);
+			}
+
+			decimal DefaultReader(DbDataReader reader, int index)
+			{
+				try
+				{
+					return reader.GetDecimal(index);
+				}
+				catch (OverflowException)
+				{
+					_reader = BuildFallbackReader(_dataReaderType);
+
+					return _reader(reader, index);
+				}
+			}
+
+			static Func<DbDataReader, int, decimal> BuildFallbackReader(Type dataReaderType)
+			{
+				var reader = Expression.Parameter(typeof(DbDataReader), "r");
+				var index  = Expression.Parameter(typeof(int), "i");
+
+				return Expression.Lambda<Func<DbDataReader, int, decimal>>(
+					Expression.Call(
+						MemberHelper.MethodOf(() => SqlServerDecimalUtils.ConvertSqlDecimal(default)),
+						Expression.Call(
+							Expression.Convert(reader, dataReaderType),
+							SqlTypes.GetSqlDecimalReaderMethod,
+							Type.EmptyTypes,
+							index)),
+					reader,
+					index).CompileExpression();
+			}
+		}
+
 		static class MappingSchemaInstance
 		{
 			public static MappingSchema Get(SqlServerVersion version, SqlServerProvider provider)
@@ -297,6 +387,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
+		readonly Expression    _defaultDecimalReaderExpression;
 
 		public override ISqlOptimizer GetSqlOptimizer(DataOptions dataOptions) => _sqlOptimizer;
 
