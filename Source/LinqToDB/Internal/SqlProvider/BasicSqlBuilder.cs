@@ -3570,7 +3570,7 @@ namespace LinqToDB.Internal.SqlProvider
 			    extendedFunction.PartitionBy?.Count > 0     ||
 			    extendedFunction.OrderBy?.Count     > 0     ||
 			    extendedFunction.FrameClause        != null ||
-			    (extendedFunction.WithinGroup?.Count > 0 && IsOverRequiredWithinGroup && extendedFunction.IsWindowFunction))
+			    (extendedFunction.WithinGroup?.Count > 0 && IsOverRequiredWithinGroup))
 			{
 				StringBuilder.Append(" OVER (");
 				if (extendedFunction.PartitionBy?.Count > 0)

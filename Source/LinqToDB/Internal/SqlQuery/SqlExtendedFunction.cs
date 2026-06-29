@@ -313,6 +313,9 @@ namespace LinqToDB.Internal.SqlQuery
 			if (FromPosition != otherFunction.FromPosition)
 				return false;
 
+			if (IsWindowFunction != otherFunction.IsWindowFunction)
+				return false;
+
 			for (var i = 0; i < Arguments.Count; i++)
 			{
 				var argument = Arguments[i];
@@ -524,6 +527,7 @@ namespace LinqToDB.Internal.SqlQuery
 			hash.Add(KeepClause?.GetElementHashCode());
 			hash.Add(NullTreatment);
 			hash.Add(FromPosition);
+			hash.Add(IsWindowFunction);
 			hash.Add(CanBeNull);
 			hash.Add(CanBeNullInAggregationQuery);
 

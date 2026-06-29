@@ -492,7 +492,11 @@ namespace LinqToDB.Internal.Expressions
 			if (sumCall == null)
 				return null;
 
-			return Expression.Divide(Expression.Convert(argument, typeof(double?)), Expression.Convert(sumCall, typeof(double?)));
+			// NULLIF the denominator so a zero partition total yields NULL (matching native RATIO_TO_REPORT) instead of
+			// a division-by-zero — which errors on PostgreSQL and is provider-specific elsewhere.
+			var denominator = ExpressionHelpers.MakeCall((double? sum) => Sql.NullIf(sum, 0d), Expression.Convert(sumCall, typeof(double?)));
+
+			return Expression.Divide(Expression.Convert(argument, typeof(double?)), denominator);
 		}
 
 		// Extracts the PARTITION BY expressions from a partition-only window-builder lambda (f => f.PartitionBy(a, b)).

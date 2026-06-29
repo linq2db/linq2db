@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using System.Threading.Tasks;
 
 using LinqToDB;
@@ -14,9 +14,8 @@ namespace Tests.Linq
 	partial class WindowFunctionsTests
 	{
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, TestProvName.AllClickHouse, TestProvName.AllSqlServer2012Plus, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllSQLite, TestProvName.AllFirebird3Plus, TestProvName.AllSapHana, TestProvName.AllInformix, ProviderName.Ydb, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentileCont)]
-		public void PercentileContGrouping([DataSources] string context)
+		public void PercentileContGrouping([SupportsAnalyticFunctionsContext] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -44,11 +43,10 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, TestProvName.AllClickHouse, TestProvName.AllSqlServer2012Plus, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllSQLite, TestProvName.AllFirebird3Plus, TestProvName.AllSapHana, TestProvName.AllInformix, ProviderName.Ydb, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentileCont)]
 		// PERCENTILE_CONT works on Oracle/DuckDB/DB2; FILTER on an ordered-set aggregate is supported only by PostgreSQL and DuckDB.
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllOracle, TestProvName.AllDB2, ErrorMessage = ErrorHelper.Error_WindowFunction_OrderedSetFilter)]
-		public void PercentileContFilter([DataSources] string context)
+		public void PercentileContFilter([SupportsAnalyticFunctionsContext] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -73,9 +71,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, TestProvName.AllClickHouse, TestProvName.AllSqlServer2012Plus, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllSQLite, TestProvName.AllFirebird3Plus, TestProvName.AllSapHana, TestProvName.AllInformix, ProviderName.Ydb, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentileCont)]
-		public void PercentileContGroupingProjection([DataSources] string context)
+		public void PercentileContGroupingProjection([SupportsAnalyticFunctionsContext] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -101,9 +98,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, TestProvName.AllClickHouse, TestProvName.AllSqlServer2012Plus, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllSQLite, TestProvName.AllFirebird3Plus, TestProvName.AllSapHana, TestProvName.AllInformix, ProviderName.Ydb, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentileCont)]
-		public void PercentileSubquery([DataSources] string context)
+		public void PercentileSubquery([SupportsAnalyticFunctionsContext] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -124,9 +120,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, TestProvName.AllClickHouse, TestProvName.AllSqlServer2012Plus, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllSQLite, TestProvName.AllFirebird3Plus, TestProvName.AllSapHana, TestProvName.AllInformix, ProviderName.Ydb, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentileCont)]
-		public async Task PercentileCont([DataSources] string context)
+		public async Task PercentileCont([SupportsAnalyticFunctionsContext] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -140,13 +135,12 @@ namespace Tests.Linq
 		// Windowed ordered-set form: PERCENTILE_CONT(f) WITHIN GROUP (ORDER BY k) OVER (PARTITION BY ...). Native on
 		// Oracle, SQL Server 2012+ and MariaDB; PostgreSQL/DB2/DuckDB support only the group form (g.PercentileCont) above.
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 		[ThrowsForProvider(typeof(LinqToDBException),
 			TestProvName.AllSQLite, TestProvName.AllSqlServer2008Minus, TestProvName.AllPostgreSQL, TestProvName.AllMySql80, TestProvName.AllClickHouse,
 			ProviderName.Firebird3, ProviderName.Firebird4, TestProvName.AllFirebird5Plus, TestProvName.AllInformix, ProviderName.Ydb,
 			TestProvName.AllDB2, TestProvName.AllDuckDB,
 			ErrorMessage = ErrorHelper.Error_WindowFunction_PercentileCont)]
-		public void PercentileContWindowed([DataSources] string context)
+		public void PercentileContWindowed([SupportsAnalyticFunctionsContext] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 

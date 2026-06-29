@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Internal.Common;
@@ -12,12 +12,11 @@ namespace Tests.Linq
 	partial class WindowFunctionsTests
 	{
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 		[ThrowsForProvider(typeof(LinqToDBException),
 			TestProvName.AllSQLite, TestProvName.AllSqlServer2008Minus,
 			ProviderName.Firebird3, ProviderName.Firebird4, TestProvName.AllFirebird5Plus, TestProvName.AllInformix, ProviderName.Ydb,
 			ErrorMessage = ErrorHelper.Error_WindowFunction_Variance)]
-		public void VarSampBasic([DataSources] string context)
+		public void VarSampBasic([SupportsAnalyticFunctionsContext] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -38,12 +37,11 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 		[ThrowsForProvider(typeof(LinqToDBException),
 			TestProvName.AllSQLite, TestProvName.AllSqlServer2008Minus,
 			ProviderName.Firebird3, ProviderName.Firebird4, TestProvName.AllFirebird5Plus, TestProvName.AllInformix, ProviderName.Ydb,
 			ErrorMessage = ErrorHelper.Error_WindowFunction_Variance)]
-		public void VarSampViaWindow([DataSources] string context)
+		public void VarSampViaWindow([SupportsAnalyticFunctionsContext] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 

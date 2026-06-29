@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Internal.Common;
@@ -14,8 +14,7 @@ namespace Tests.Linq
 		// RATIO_TO_REPORT is native on Oracle/DB2 and emulated as expr / SUM(expr) OVER (...) on every other window
 		// provider, so it only fails where window functions are unsupported.
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
-		public void RatioToReportBasic([DataSources] string context)
+		public void RatioToReportBasic([SupportsAnalyticFunctionsContext] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -33,6 +32,31 @@ namespace Tests.Linq
 			sql.ShouldContain("OVER");
 
 				_ = query.ToList();
+		}
+
+		// A zero partition total must yield NULL (native RATIO_TO_REPORT semantics), not a division-by-zero —
+		// the emulation wraps the denominator in NULLIF. Without it this errors on PostgreSQL (x / 0).
+		[Test]
+		public void RatioToReportZeroPartitionSum([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = new[]
+			{
+				new WindowFunctionTestEntity { Id = 1, CategoryId = 1, IntValue =  10 },
+				new WindowFunctionTestEntity { Id = 2, CategoryId = 1, IntValue = -10 },
+			};
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var result =
+				(from t in table
+				 select new
+				 {
+					 Id            = t.Id,
+					 RatioToReport = Sql.Window.RatioToReport(t.IntValue, w => w.PartitionBy(t.CategoryId)),
+				 })
+				.ToList();
+
+			result.ShouldAllBe(r => r.RatioToReport == null);
 		}
 	}
 }

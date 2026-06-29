@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Internal.Common;
@@ -14,12 +14,11 @@ namespace Tests.Linq
 		// Hypothetical-set RANK(value) WITHIN GROUP (ORDER BY key): the rank the value would have (with gaps) in the
 		// ordered group. Native on Oracle and PostgreSQL; throws elsewhere.
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 		[ThrowsForProvider(typeof(LinqToDBException),
 			TestProvName.AllSqlServer2008Minus, TestProvName.AllSqlServer2012Plus, TestProvName.AllSQLite, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllClickHouse,
 			TestProvName.AllFirebird3Plus, TestProvName.AllSapHana, TestProvName.AllInformix, ProviderName.Ydb, TestProvName.AllDuckDB, TestProvName.AllDB2,
 			ErrorMessage = ErrorHelper.Error_WindowFunction_HypotheticalSet)]
-		public void HypotheticalRank([DataSources] string context)
+		public void HypotheticalRank([SupportsAnalyticFunctionsContext] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -44,12 +43,11 @@ namespace Tests.Linq
 
 		// Hypothetical-set DENSE_RANK(value) WITHIN GROUP (ORDER BY key): the rank the value would have (no gaps).
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 		[ThrowsForProvider(typeof(LinqToDBException),
 			TestProvName.AllSqlServer2008Minus, TestProvName.AllSqlServer2012Plus, TestProvName.AllSQLite, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllClickHouse,
 			TestProvName.AllFirebird3Plus, TestProvName.AllSapHana, TestProvName.AllInformix, ProviderName.Ydb, TestProvName.AllDuckDB, TestProvName.AllDB2,
 			ErrorMessage = ErrorHelper.Error_WindowFunction_HypotheticalSet)]
-		public void HypotheticalDenseRank([DataSources] string context)
+		public void HypotheticalDenseRank([SupportsAnalyticFunctionsContext] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -74,12 +72,11 @@ namespace Tests.Linq
 
 		// Hypothetical-set PERCENT_RANK(value) WITHIN GROUP (ORDER BY key): the relative rank (0..1) the value would have.
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 		[ThrowsForProvider(typeof(LinqToDBException),
 			TestProvName.AllSqlServer2008Minus, TestProvName.AllSqlServer2012Plus, TestProvName.AllSQLite, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllClickHouse,
 			TestProvName.AllFirebird3Plus, TestProvName.AllSapHana, TestProvName.AllInformix, ProviderName.Ydb, TestProvName.AllDuckDB, TestProvName.AllDB2,
 			ErrorMessage = ErrorHelper.Error_WindowFunction_HypotheticalSet)]
-		public void HypotheticalPercentRank([DataSources] string context)
+		public void HypotheticalPercentRank([SupportsAnalyticFunctionsContext] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -104,12 +101,11 @@ namespace Tests.Linq
 
 		// Hypothetical-set CUME_DIST(value) WITHIN GROUP (ORDER BY key): the cumulative distribution (0..1) of the value.
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 		[ThrowsForProvider(typeof(LinqToDBException),
 			TestProvName.AllSqlServer2008Minus, TestProvName.AllSqlServer2012Plus, TestProvName.AllSQLite, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllClickHouse,
 			TestProvName.AllFirebird3Plus, TestProvName.AllSapHana, TestProvName.AllInformix, ProviderName.Ydb, TestProvName.AllDuckDB, TestProvName.AllDB2,
 			ErrorMessage = ErrorHelper.Error_WindowFunction_HypotheticalSet)]
-		public void HypotheticalCumeDist([DataSources] string context)
+		public void HypotheticalCumeDist([SupportsAnalyticFunctionsContext] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 

@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Internal.Common;
@@ -10,8 +10,7 @@ namespace Tests.Linq
 	public partial class WindowFunctionsTests
 	{
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
-		public void RowNumberWithMultiplePartitions([DataSources] string context)
+		public void RowNumberWithMultiplePartitions([SupportsAnalyticFunctionsContext] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(WindowFunctionTestEntity.Seed());
@@ -33,8 +32,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
-		public void RowNumberWithMultiplePartitionsWithDefineWindow([DataSources] string context)
+		public void RowNumberWithMultiplePartitionsWithDefineWindow([SupportsAnalyticFunctionsContext] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(WindowFunctionTestEntity.Seed());
@@ -65,10 +63,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 		//TODO: we can emulate it for other providers by using additional order by with CASE:
 		//ROW_NUMBER() OVER (ORDER BY WHEN x.Value IS NULL THEN 1 ELSE 0 END, x.Value)
-		public void RowNumberWithNulls([DataSources] string context)
+		public void RowNumberWithNulls([SupportsAnalyticFunctionsContext] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(WindowFunctionTestEntity.Seed());
@@ -86,8 +83,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
-		public void RowNumberWithoutPartition([DataSources] string context)
+		public void RowNumberWithoutPartition([SupportsAnalyticFunctionsContext] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(WindowFunctionTestEntity.Seed());
@@ -106,6 +102,38 @@ namespace Tests.Linq
 				.OrderBy(x => x.Entity.Id);
 
 				_ = query.ToList();
+		}
+
+		// Value assertion (not just SQL shape): ROW_NUMBER and SUM OVER (PARTITION BY ...) over deterministic
+		// integer data must compute the expected per-partition rank and total on every supported provider.
+		[Test]
+		public void RowNumberAndSumComputedValues([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = new[]
+			{
+				new WindowFunctionTestEntity { Id = 1, CategoryId = 1, IntValue = 10 },
+				new WindowFunctionTestEntity { Id = 2, CategoryId = 1, IntValue = 20 },
+				new WindowFunctionTestEntity { Id = 3, CategoryId = 2, IntValue = 30 },
+				new WindowFunctionTestEntity { Id = 4, CategoryId = 2, IntValue = 40 },
+			};
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var result =
+				(from t in table
+				 select new
+				 {
+					 t.Id,
+					 RN  = Sql.Window.RowNumber(f => f.PartitionBy(t.CategoryId).OrderBy(t.Id)),
+					 Sum = Sql.Window.Sum(t.IntValue, f => f.PartitionBy(t.CategoryId)),
+				 })
+				.ToList()
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			Assert.That(result.Select(r => r.RN),  Is.EqualTo(new long[] { 1, 2, 1, 2 }));
+			Assert.That(result.Select(r => r.Sum), Is.EqualTo(new[]      { 30, 30, 70, 70 }));
 		}
 	}
 }

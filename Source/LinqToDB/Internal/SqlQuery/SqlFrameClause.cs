@@ -77,7 +77,12 @@ namespace LinqToDB.Internal.SqlQuery
 
 		protected bool Equals(SqlFrameClause other)
 		{
-			return FrameType == other.FrameType && Start.Equals(other.Start) && End.Equals(other.End) && Exclusion == other.Exclusion;
+			// SqlFrameBoundary has no object-level structural Equals; its GetElementHashCode is the structural
+			// fingerprint and is what GetElementHashCode/GetHashCode key on — compare it to stay consistent.
+			return FrameType == other.FrameType
+				&& Exclusion == other.Exclusion
+				&& Start.GetElementHashCode() == other.Start.GetElementHashCode()
+				&& End.GetElementHashCode() == other.End.GetElementHashCode();
 		}
 
 		public override bool Equals([NotNullWhen(true)] object? obj)
@@ -102,7 +107,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public override int GetHashCode()
 		{
-			return HashCode.Combine(FrameType, Start, End, Exclusion);
+			return GetElementHashCode();
 		}
 
 		public bool Equals(SqlFrameClause other, Func<ISqlExpression, ISqlExpression, bool> comparer)
