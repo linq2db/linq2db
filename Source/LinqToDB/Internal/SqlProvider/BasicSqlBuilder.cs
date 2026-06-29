@@ -853,10 +853,15 @@ namespace LinqToDB.Internal.SqlProvider
 			// queries re-run the per-element convert at build time, after aliasing). Synthetic column
 			// aliases live in the object-identity-keyed AliasesContext, not on the node, so they must be
 			// read from the original aliased columns - the rebuilt copies were never registered, so
-			// GetColumnAlias would miss them and drop the alias. Convert is value-level and preserves
-			// column count/order, so the i-th rebuilt column maps to the i-th original (when counts agree).
+			// GetColumnAlias would miss them and drop the alias. The build-time convert is value-level: it
+			// refines column expressions but must not add or remove projected columns, so the i-th rebuilt
+			// column maps 1:1 onto the i-th original. Enforce that invariant - a count mismatch would
+			// silently mis-map aliases and emit wrong SQL.
 			var aliasColumns = selectQuery.Select.Columns;
-			var aliasAligned = aliasColumns.Count == select.Columns.Count;
+
+			if (aliasColumns.Count != select.Columns.Count)
+				throw new InvalidOperationException(
+					$"SQL builder convert must not change the SELECT column set (was {aliasColumns.Count}, became {select.Columns.Count}); column aliasing cannot be resolved.");
 
 			for (var i = 0; i < select.Columns.Count; i++)
 			{
@@ -869,7 +874,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 				var addAlias = true;
 				var expr     = (ISqlExpression)Optimize(col.Expression, reducePredicates: true);
-				var colAlias = AliasesContext.GetColumnAlias(aliasAligned ? aliasColumns[i] : col);
+				var colAlias = AliasesContext.GetColumnAlias(aliasColumns[i]);
 
 				AppendIndent();
 				BuildColumnExpression(selectQuery, expr, colAlias, ref addAlias);
