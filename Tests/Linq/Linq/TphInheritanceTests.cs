@@ -326,10 +326,15 @@ namespace Tests.Linq
 			db.Insert(new TphSharedTypeA { Id = 1, Code = "a" });
 			db.Insert(new TphSharedTypeB { Id = 2, Code = "b" });
 
-			// Two siblings map the same member to the SAME physical column: dedup must collapse
-			// them to a single field, so the table (and SELECT) carries SharedCode exactly once.
-			// Without dedup the DDL would emit a duplicate SharedCode column.
-			var all = db.GetTable<TphSharedColumnBase>().OrderBy(r => r.Id).ToArray();
+			// Two siblings map the same member to the SAME physical column. The entity SELECT must project
+			// that column exactly once: the sibling's value expression is built from the primary member
+			// (BuildGenericFromMembers), so both collapse to one column. Before the fix SELECT had it twice.
+			var query = db.GetTable<TphSharedColumnBase>().OrderBy(r => r.Id);
+
+			var sql = query.ToSqlQuery().Sql;
+			Assert.That(sql.Split(["SharedCode"], System.StringSplitOptions.None).Length - 1, Is.EqualTo(1), sql);
+
+			var all = query.ToArray();
 
 			Assert.That(all, Has.Length.EqualTo(2));
 
@@ -354,6 +359,50 @@ namespace Tests.Linq
 
 		class TphSharedTypeA : TphSharedColumnBase { [Column("SharedCode")] public string? Code { get; set; } }
 		class TphSharedTypeB : TphSharedColumnBase { [Column("SharedCode")] public string? Code { get; set; } }
+
+		[ActiveIssue("Sibling subtypes mapping the same physical column with different ValueConverters share one SqlField/ColumnDescriptor, so the second sibling's converter is not applied on read (pre-existing, independent of the duplicate-column projection fix).")]
+		[Test]
+		public void TPH_SiblingColumn_DifferentValueConverters([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<TphConvBase>();
+
+			db.Insert(new TphConvPlain  { Id = 1, Kind = 1, Value = 7 });
+			db.Insert(new TphConvScaled { Id = 2, Kind = 2, Value = 7 });
+
+			var all = db.GetTable<TphConvBase>().OrderBy(r => r.Id).ToArray();
+
+			Assert.That(all, Has.Length.EqualTo(2));
+			using (Assert.EnterMultipleScope())
+			{
+				// Two siblings map the same physical column but read it through DIFFERENT value converters.
+				// Each must read with its own converter (TphConvScaled stores Value*100 and reads /100), so
+				// the dedup must NOT collapse them onto a single read expression.
+				Assert.That(((TphConvPlain)all[0]).Value,  Is.EqualTo(7));
+				Assert.That(((TphConvScaled)all[1]).Value, Is.EqualTo(7));
+			}
+		}
+
+		sealed class TphConvTimesHundred() : ValueConverter<int, int>(v => v * 100, v => v / 100, false);
+
+		[Table("TphConv")]
+		[InheritanceMapping(Code = 1, IsDefault = true, Type = typeof(TphConvPlain))]
+		[InheritanceMapping(Code = 2, Type = typeof(TphConvScaled))]
+		abstract class TphConvBase
+		{
+			[PrimaryKey] public int Id { get; set; }
+			[Column(IsDiscriminator = true)] public int Kind { get; set; }
+		}
+
+		class TphConvPlain : TphConvBase
+		{
+			[Column("Payload")] public int Value { get; set; }
+		}
+
+		class TphConvScaled : TphConvBase
+		{
+			[Column("Payload"), ValueConverter(ConverterType = typeof(TphConvTimesHundred))] public int Value { get; set; }
+		}
 
 		[Test]
 		public void TPH_CodeFilter([IncludeDataSources(TestProvName.AllSQLite)] string context)

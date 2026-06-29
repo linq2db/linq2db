@@ -62,12 +62,21 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (level == 0)
 			{
+				// A physical column shared by several inheritance siblings (distinct members mapped to the
+				// same column) must be projected only once. Cache the value expression built for the first
+				// member that maps each physical column and reuse it for later siblings that read the column
+				// identically — same member type and value converter — so they collapse onto a single SELECT
+				// column. Each assignment keeps its own member as the bind target, so the per-type
+				// discriminator switch still assigns each subtype's member. Siblings that read the column
+				// differently (different type or converter), and columns with distinct physical names, are
+				// built independently and stay separate.
+				var sharedColumns = new Dictionary<string, (ColumnDescriptor Column, Expression Expression)>(StringComparer.Ordinal);
+
 				foreach (var column in columns)
 				{
 					if (column.SkipOnEntityFetch)
 						continue;
 
-					Expression me;
 					if (column.MemberName.Contains('.', StringComparison.Ordinal) && !column.MemberInfo.Name.Contains('.', StringComparison.Ordinal))
 					{
 						hasNested = true;
@@ -75,14 +84,26 @@ namespace LinqToDB.Internal.Linq.Builder
 					else
 					{
 						var declaringType = column.MemberInfo.DeclaringType!;
-						var objExpression = SequenceHelper.EnsureType(currentPath, declaringType);
 
 						// Target ReflectedType to DeclaringType for better caching
 						//
 						var memberInfo = declaringType.GetMemberEx(column.MemberInfo) ??
 						                 throw new InvalidOperationException();
 
-						me = MakeAssignExpression(objExpression, memberInfo, column);
+						Expression me;
+						if (sharedColumns.TryGetValue(column.ColumnName, out var shared)
+							&& shared.Column.MemberType == column.MemberType
+							&& ReferenceEquals(shared.Column.ValueConverter, column.ValueConverter))
+						{
+							me = shared.Expression;
+						}
+						else
+						{
+							var objExpression = SequenceHelper.EnsureType(currentPath, declaringType);
+							me = MakeAssignExpression(objExpression, memberInfo, column);
+							if (!sharedColumns.ContainsKey(column.ColumnName))
+								sharedColumns[column.ColumnName] = (column, me);
+						}
 
 						members.Add(new SqlGenericConstructorExpression.Assignment(memberInfo, me,
 							column.MemberAccessor.HasSetter, false));
