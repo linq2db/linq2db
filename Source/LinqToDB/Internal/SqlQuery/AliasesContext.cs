@@ -19,8 +19,10 @@ namespace LinqToDB.Internal.SqlQuery
 		// correlated reference resolves to a different wrapper than the one in the FROM clause), and
 		// every wrapper must resolve to the same finalized alias.
 		readonly Dictionary<int, string>            _tableAliases  = new ();
-		readonly Dictionary<SqlColumn, string?>     _columnAliases = new (Utils.ObjectReferenceEqualityComparer<SqlColumn>.Default);
-		readonly Dictionary<SqlField, string>       _fieldNames    = new (Utils.ObjectReferenceEqualityComparer<SqlField>.Default);
+		readonly Dictionary<SqlColumn, string?>        _columnAliases = new (Utils.ObjectReferenceEqualityComparer<SqlColumn>.Default);
+		// Keyed by the common field base so it covers SqlField, SqlCteTableField (both SqlFieldBase) and
+		// SqlCteField (a CTE definition field) - all of which carry a finalized name in the non-mutating model.
+		readonly Dictionary<SqlExpressionBase, string> _fieldNames    = new (Utils.ObjectReferenceEqualityComparer<SqlExpressionBase>.Default);
 
 		public void RegisterAliased(IQueryElement element)
 		{
@@ -41,7 +43,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public void SetTableAlias(SqlTableSource tableSource, string alias) => _tableAliases [tableSource.SourceID] = alias;
 		public void SetColumnAlias(SqlColumn column,          string? alias) => _columnAliases[column]      = alias;
-		public void SetFieldName  (SqlField field,            string name)   => _fieldNames   [field]       = name;
+		public void SetFieldName  (SqlExpressionBase field,   string name)   => _fieldNames   [field]       = name;
 
 		/// <summary>
 		/// Effective table-source alias: the finalized alias recorded by the aliasing pass, otherwise
@@ -82,8 +84,8 @@ namespace LinqToDB.Internal.SqlQuery
 		{
 			switch (expr)
 			{
-				case SqlField field:
-					return field.Alias ?? GetFieldName(field);
+				case SqlFieldBase field:
+					return GetFieldName(field);
 				case SqlColumn column:
 					return GetColumnAlias(column);
 				case SelectQuery { Select.Columns: [var col] }:
@@ -100,10 +102,20 @@ namespace LinqToDB.Internal.SqlQuery
 
 		/// <summary>
 		/// Effective field physical name: the finalized name recorded by the aliasing pass (for
-		/// derived-table / CTE source fields), or the field's own <see cref="SqlField.PhysicalName"/>.
+		/// derived-table / CTE source fields), otherwise the field's own physical name -
+		/// <see cref="SqlField.PhysicalName"/> for a table field, or the delegated <c>Name</c> for a
+		/// CTE field (<see cref="SqlCteTableField"/> / <see cref="SqlCteField"/>).
 		/// </summary>
-		public string GetFieldName(SqlField field)
-			=> _fieldNames.TryGetValue(field, out var name) ? name : field.PhysicalName;
+		public string GetFieldName(SqlExpressionBase field)
+			=> _fieldNames.TryGetValue(field, out var name)
+				? name
+				: field switch
+				{
+					SqlField f      => f.PhysicalName,
+					SqlFieldBase fb => fb.Name,
+					SqlCteField cf  => cf.Name,
+					_               => throw new InvalidOperationException($"GetFieldName: unexpected field type '{field?.GetType().Name}'."),
+				};
 
 		#endregion
 

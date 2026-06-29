@@ -174,7 +174,7 @@ namespace LinqToDB.Internal.DataProvider
 					element.Fields,
 					null,
 					(n, a) => IsValidAlias(n),
-					f => TruncateAlias(f.PhysicalName),
+					f => TruncateAlias(f.Name),
 					(f, n, a) =>
 					{
 						_newAliases.SetFieldName(f, n);
@@ -182,7 +182,7 @@ namespace LinqToDB.Internal.DataProvider
 					},
 					f =>
 					{
-						var a = TruncateAlias(f.PhysicalName);
+						var a = TruncateAlias(f.Name);
 						return string.IsNullOrEmpty(a)
 							? "f1"
 							: a + (a!.EndsWith('_') ? string.Empty : "_") + "1";
@@ -212,7 +212,7 @@ namespace LinqToDB.Internal.DataProvider
 
 					_newAliases.RegisterAliased(element.Body);
 				}
-				
+
 				_newAliases.RegisterAliased(element);
 
 				return element;
@@ -222,18 +222,17 @@ namespace LinqToDB.Internal.DataProvider
 			{
 				base.VisitSqlCteTable(element);
 
-				if (element.Cte != null)
+				// A CTE table field's finalized name must follow its CTE-definition field
+				// (SqlCteTableField.CteField), so the rendered reference matches the WITH-clause column
+				// name. Mirror the definition field's finalized name into this field's context entry
+				// (non-mutating: SqlCteTableField.Name still delegates to the un-renamed CteField).
+				foreach (var field in element.Fields)
 				{
-					for (int i = 0; i < element.Fields.Count; i++)
+					if (field.CteField is { } cteField)
 					{
-						var field    = element.Fields[i];
-						var cteField = element.Cte.Fields.Find(f => string.Equals(f.Name, field.PhysicalName, StringComparison.Ordinal));
-						if (cteField != null)
-						{
-							var cteName = _newAliases.GetFieldName(cteField);
-							if (!string.Equals(_newAliases.GetFieldName(field), cteName, StringComparison.Ordinal))
-								_newAliases.SetFieldName(field, cteName);
-						}
+						var cteName = _newAliases.GetFieldName(cteField);
+						if (!string.Equals(_newAliases.GetFieldName(field), cteName, StringComparison.Ordinal))
+							_newAliases.SetFieldName(field, cteName);
 					}
 				}
 

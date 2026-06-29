@@ -93,7 +93,7 @@ namespace LinqToDB.Internal.SqlQuery
 		{
 			return expr switch
 			{
-				SqlField field => field.Alias ?? field.PhysicalName,
+				SqlField field => field.PhysicalName,
 				SqlColumn column => column.Alias,
 				SelectQuery { Select.Columns: [{ Alias: not "*" and var alias }] } => alias,
 				SqlExpression { Expr: "{0}", Parameters: [var parameter] } => GetAlias(parameter),
@@ -139,7 +139,7 @@ namespace LinqToDB.Internal.SqlQuery
 			return writer.ToString();
 
 #else
-			if (Expression is SqlField or SqlColumn)
+			if (Expression is SqlField or SqlCteTableField or SqlColumn)
 				return this.ToDebugString();
 
 			return base.ToString()!;
