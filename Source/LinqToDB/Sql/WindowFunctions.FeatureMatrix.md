@@ -61,24 +61,28 @@ Notes: SQL Server has no `NTH_VALUE` (any version). MariaDB & YDB reject the LEA
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | SUM/AVG/MIN/MAX/COUNT OVER | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | `DISTINCT` in window agg | ✗ | ✗ | ✓ | ✗ | ✗ | ✗ | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
-| STDDEV_POP/SAMP, VAR_POP/SAMP | ✗† | ✓ | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ✗† | ✗† | ✗ | ✗ | ✗ |
-| bare STDDEV / VARIANCE | ✗† | ✓ | ✓ | ✓ | ✓ | ✗ | ✗ | ✓ | ✓ | ✗† | ✗† | ✗ | ✗ | ✗ |
-| COVAR_POP/SAMP, CORR | ✗ | ✓ | ✓ | ✗ | ✗ | ✗ | ✓ | ✓ | ✓ | ✗† | ✗ | ✗ | ✗ | ✗ |
+| STDDEV_POP/SAMP, VAR_POP/SAMP | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ✓ | ✓ⁱ | ✗ | ✗ | ✗ |
+| bare STDDEV / VARIANCE | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | ✗ | ✓ | ✓ | ✓ | ✓ | ✗ | ✗ | ✗ |
+| COVAR_POP/SAMP, CORR | ✗ | ✓ | ✓ | ✗ | ✗ | ✗ | ✓ | ✓ | ✓ | ✓ʰ | ✗ | ✗ | ✗ | ✗ |
 | REGR_* (9 functions) | ✗ | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ |
-| MEDIAN | ✗ | ✗ | ✓ | ✗ | ✓ | ✗ | ✗† | ✓ | ✓ | ✗† | ✗ | ✗ | ✗ | ✗ |
+| MEDIAN | ✗ | ✗ | ✓ | ✗ | ✓ | ✗ | ✗† | ✓ | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ |
 | RATIO_TO_REPORT | ~ | ~ | ✓ | ~ | ~ | ~ | ~ | ~ | ✓ | ~ | ~ | ~ | ~ | ~ |
 | PERCENTILE_CONT/DISC — `WITHIN GROUP` (group) | ✗ | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ |
-| PERCENTILE_CONT/DISC — windowed `OVER` | ✓ | ✗ | ✓ | ✗ | ✓ | ✗ | ✗ | ✗ | ✗ | ✗† | ✗ | ✗ | ✗ | ✗ |
+| PERCENTILE_CONT/DISC — windowed `OVER` | ✓ | ✗ | ✓ | ✗ | ✓ | ✗ | ✗ | ✗ | ✗ | ✓ | ✗ | ✗ | ✗ | ✗ |
 | Hypothetical-set RANK/… `WITHIN GROUP` | ✗ | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
 | KEEP (DENSE_RANK FIRST/LAST) | ✗ | ✗ | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
 
 `RATIO_TO_REPORT` is native on Oracle/DB2 and emulated everywhere else as `x / SUM(x) OVER (…)`
 (verified: the PostgreSQL baseline emits `x::Float / SUM(x) OVER (PARTITION BY …)`).
-`STDDEV` is spelled `STDEV` on SQL Server / Sybase via `StdDevFunctionName`.
+`STDDEV` is spelled `STDEV` on SQL Server via `StdDevFunctionName`; bare `VARIANCE` is spelled `VAR` on
+SQL Server and SAP HANA via `VarianceFunctionName`.
 
-The grouped statistical rows hide per-function asymmetry for SAP HANA & Informix — e.g. HANA has
-`STDDEV_POP/SAMP` + `VAR_POP/SAMP` but not bare `VARIANCE`; Informix has `STDDEV*` + bare `VARIANCE`
-but not `VAR_POP/SAMP`. See §5 for the exact per-function verified results.
+The grouped statistical rows hide per-function asymmetry, marked above:
+- **ⁱ Informix** supports `STDDEV_POP/SAMP` and bare `STDDEV`/`VARIANCE`, but **not** `VAR_POP`/`VAR_SAMP`
+  (`IsStdDevSupported`/`IsVarianceBareSupported` on, `IsVarianceSupported` off).
+- **ʰ SAP HANA** supports `CORR` but **not** `COVAR_POP`/`COVAR_SAMP` (`IsCovarianceSupported` off).
+
+See §5 for the per-function verified results.
 
 ---
 
@@ -106,16 +110,51 @@ the provider's natural NULL ordering, and for non-nullable keys).
 
 ## 5. Divergences & open questions
 
-Where the linq2db gate may not match the real database. These are the `✗†` cells flagged in §2–4.
+Where the linq2db gate may not match the real database, and the per-function results proven against
+live instances during this PR.
 
-### Confirmed gaps
+### Remaining fidelity gap
 
-- **SQL Server (2012+) statistical window aggregates** — `STDEV`/`STDEVP`/`VAR`/`VARP` are valid
-  window aggregates on SQL Server, but `IsVarianceSupported`/`IsVarianceBareSupported` are `false`,
-  so `Sql.Window.StdDev/Variance/…` throw. Enabling them needs per-name mapping (the base emits the
-  standard `STDDEV_POP`/`VAR_POP`/… names SQL Server rejects), not just flipping the flags. There is
-  also a dead `StdDevFunctionName => "STDEV"` override that is never reached today (raised as SUG013
-  on the PR). *Net: SQL Server users cannot compute windowed variance/stddev through this API.*
+- **ClickHouse `MEDIAN`** (the one `✗†` left in §3) — ClickHouse *does* have a median aggregate but
+  spelled lowercase `median`; linq2db emits `MEDIAN`, which ClickHouse rejects (`Unknown aggregate
+  function MEDIAN. Maybe you meant: ['median','medianDD']`). A future enablement would need lowercase
+  emission.
+
+### Statistical functions enabled in this PR (SQL Server / SAP HANA / Informix)
+
+These were initially gated off and **enabled in this PR** (commit `a8f398c04c`) once the finer-grained
+flags were added — `IsStdDevSupported` split from `IsVarianceSupported`, `IsCovarianceSupported` split
+from `IsCorrelationSupported` — together with per-function name overrides. The coarse-flag asymmetry
+that previously blocked them is now expressible. Each was probed against a live instance (`✓ᵗ` = DB
+accepted, `✗ᵗ` = DB rejected).
+
+- **SQL Server 2012+** — `STDEV`/`STDEVP`/`VAR`/`VARP` are enabled via `IsVarianceSupported` +
+  `IsVarianceBareSupported` and the `StdDevFunctionName => "STDEV"` / `VarianceFunctionName => "VAR"`
+  name overrides (the base would otherwise emit the standard `STDDEV_POP`/`VAR_POP`/… names SQL Server
+  rejects — so the overrides *are* live). `COVAR`/`CORR`/`REGR_*`/`MEDIAN` stay ✗ (no SQL Server window form).
+
+**SAP HANA — `✓ᵗ` enabled, `✗ᵗ` genuinely unsupported:**
+
+| Function | Result | Note |
+|---|---|---|
+| `STDDEV`, `STDDEV_POP`, `STDDEV_SAMP` | **✓ᵗ enabled** | `IsVarianceSupported` |
+| `VAR_POP`, `VAR_SAMP` | **✓ᵗ enabled** | `IsVarianceSupported` |
+| bare `STDDEV` / `VARIANCE` | **✓ᵗ enabled** | `IsVarianceBareSupported`; bare `VARIANCE` spelled `VAR` (`VarianceFunctionName`) |
+| `CORR` | **✓ᵗ enabled** | `IsCorrelationSupported` |
+| `MEDIAN` | **✓ᵗ enabled** | `IsMedianSupported` |
+| `PERCENTILE_CONT/DISC` (windowed `OVER`) | **✓ᵗ enabled** | `IsOrderedSetWindowedSupported`; the group-`WITHIN GROUP` projection forms hit linq2db query-shape errors (`not a GROUP BY expression` / `LATERAL`) so the group form stays off |
+| `COVAR_POP`/`COVAR_SAMP` | ✗ᵗ | `not supported window function` (`IsCovarianceSupported => false`) |
+| `REGR_*` | ✗ᵗ | `not supported window function` |
+
+**Informix — `✓ᵗ` enabled, `✗ᵗ` genuinely unsupported (asymmetric):**
+
+| Function | Result |
+|---|---|
+| `STDDEV`, `STDDEV_POP`, `STDDEV_SAMP` | **✓ᵗ enabled** (`IsStdDevSupported`) |
+| bare `STDDEV` / `VARIANCE` | **✓ᵗ enabled** (`IsVarianceBareSupported`) |
+| `VAR_POP`, `VAR_SAMP` | ✗ᵗ syntax error (`IsVarianceSupported` stays off) |
+| `CORR`, `COVAR_POP/SAMP`, `REGR_*` | ✗ᵗ syntax error |
+| `MEDIAN` | ✗ᵗ `Not implemented yet` |
 
 ### Resolved during review (PR #5468)
 
@@ -123,50 +162,12 @@ Where the linq2db gate may not match the real database. These are the `✗†` c
   enabled (`✓ᵗ`). **RANGE/EXCLUDE/GROUPS** confirmed *unsupported* on HANA (`✗ᵗ` — HANA raises
   `feature not supported: Window frame specification of RANGE not allowed`).
 
-### Verified by test-proofing (this audit, against live instances)
-
-Each candidate was probed by flipping the gate and executing `Sql.Window.*` against the live DB
-(`✓ᵗ` = DB accepted, `✗ᵗ` = DB rejected with the noted error).
-
-**SAP HANA — real fidelity gaps (gated off, but the engine supports them):**
-
-| Function | Result | Note |
-|---|---|---|
-| `STDDEV`, `STDDEV_POP`, `STDDEV_SAMP` | **✓ᵗ supported** | currently rejected by `IsVariance*Supported => false` |
-| `VAR_POP`, `VAR_SAMP` | **✓ᵗ supported** | currently rejected |
-| `CORR` | **✓ᵗ supported** | currently rejected by `IsCorrelationSupported => false` |
-| `MEDIAN` | **✓ᵗ supported** | currently rejected by `IsMedianSupported => false` |
-| `PERCENTILE_CONT/DISC` (windowed `OVER`) | **✓ᵗ supported** | currently rejected; the group-`WITHIN GROUP` projection forms hit linq2db query-shape errors (`not a GROUP BY expression` / `LATERAL`) so leave the group form off |
-| bare `VARIANCE` | ✗ᵗ | `feature not supported: not supported window function` (HANA has no bare `VARIANCE`) |
-| `COVAR_POP`/`COVAR_SAMP` | ✗ᵗ | `not supported window function` |
-| `REGR_*` | ✗ᵗ | `not supported window function` |
-
-**Informix — partial fidelity gap (asymmetric):**
-
-| Function | Result |
-|---|---|
-| `STDDEV`, `STDDEV_POP`, `STDDEV_SAMP` | **✓ᵗ supported** (gated off) |
-| bare `VARIANCE` | **✓ᵗ supported** (gated off) |
-| `VAR_POP`, `VAR_SAMP` | ✗ᵗ syntax error |
-| `CORR`, `COVAR_POP/SAMP`, `REGR_*` | ✗ᵗ syntax error |
-| `MEDIAN` | ✗ᵗ `Not implemented yet` |
-
-**ClickHouse & DuckDB — current gating confirmed correct:**
+### Other gating confirmed correct (engine genuinely lacks the function)
 
 - ClickHouse: bare `STDDEV`/`VARIANCE` ✗ᵗ (`… does not exist` — ClickHouse only has `stddevPop/Samp`,
-  `varPop/Samp`), `REGR_*` ✗ᵗ. `MEDIAN` ✗ᵗ — ClickHouse *does* have a median aggregate but spelled
-  lowercase `median`; linq2db emits `MEDIAN`, which ClickHouse rejects (`Unknown aggregate function
-  MEDIAN. Maybe you meant: ['median','medianDD']`). A future enablement would need lowercase emission.
+  `varPop/Samp`), `REGR_*` ✗ᵗ.
 - DuckDB: windowed `PERCENTILE_CONT/DISC` ✗ᵗ (`Aggregate Function … percentile_cont does not exist` —
   DuckDB uses `quantile_cont`), hypothetical-set RANK/… ✗ᵗ (`Unknown ordered aggregate`).
-
-**Flag-granularity caveat for enabling the HANA/Informix gaps.** The support is *asymmetric* in a way
-the current coarse flags can't express: `IsVarianceSupported` gates `STDDEV_POP`/`STDDEV_SAMP`/`VAR_POP`/`VAR_SAMP`
-as one group, and `IsVarianceBareSupported` gates bare `STDDEV`+`VARIANCE` together — but HANA wants
-`STDDEV*`+`VAR_POP/SAMP`+bare-`STDDEV` *without* bare-`VARIANCE`, and Informix wants `STDDEV*`+bare-`VARIANCE`
-*without* `VAR_POP/SAMP`. Cleanly enabling these requires finer-grained flags (or per-function name
-mapping), so they are documented here rather than enabled in this PR. Same coarse-flag issue blocks
-the SQL Server variance gap under **Confirmed gaps** above.
 
 (The **GROUPS-frame ✗** on Oracle / DB2 / SQL Server / MySQL / ClickHouse and **frame-EXCLUDE ✗** on
 those providers are believed correct — those engines lack the SQL:2011 `GROUPS` frame and `EXCLUDE`
@@ -193,15 +194,17 @@ Standard window grammar (SQL:2016) productions and whether the `Sql.Window` API 
 | `FROM FIRST / FROM LAST` (NTH_VALUE) | ✓ | `FromFirst()` / `FromLast()` |
 | Named window reuse (`WINDOW w AS (…)`) | ✓ | `DefineWindow` + `UseWindow` |
 | Ordered-set `PERCENTILE_CONT/DISC WITHIN GROUP` | ✓ | group + windowed forms |
-| Ordered-set **`MODE() WITHIN GROUP`** | **✗ gap** | SQL-standard ordered-set aggregate (PostgreSQL/Oracle/…); not implemented |
+| Ordered-set **`MODE() WITHIN GROUP`** | **✗ — considered for future** | Non-standard provider extension (PostgreSQL `mode()`, Oracle `STATS_MODE`); not implemented, **considered for a future release** (see below) |
 | Hypothetical-set RANK/DENSE_RANK/PERCENT_RANK/CUME_DIST `WITHIN GROUP` | ✓ | on `IEnumerable<T>` |
 | Aggregate `DISTINCT` modifier | ✓ | `Distinct()` (gated per provider) |
 | KEEP (DENSE_RANK FIRST/LAST) — Oracle extension | ✓ | `KeepFirst()` / `KeepLast()` |
 
-**Standard productions not implemented at all:**
-1. **`MODE() WITHIN GROUP (ORDER BY …)`** — the SQL-standard ordered-set mode aggregate. Supported by
-   PostgreSQL, Oracle, and others; no `Sql.Window.Mode(…)` exists.
-2. **`EXCLUDE NO OTHERS`** — the explicit form of the default frame-exclusion; cosmetic, not worth adding.
+**Not implemented:**
+1. **`MODE() WITHIN GROUP (ORDER BY …)`** — a non-standard ordered-set mode aggregate (not part of the
+   SQL standard; offered as a provider extension — PostgreSQL `mode()`, Oracle `STATS_MODE`, and others
+   with diverging syntax). No `Sql.Window.Mode(…)` exists today; **considered for a future release**.
+2. **`EXCLUDE NO OTHERS`** — the explicit form of the default frame-exclusion (this one *is* SQL-standard);
+   cosmetic, not worth adding.
 
 ---
 
@@ -209,13 +212,16 @@ Standard window grammar (SQL:2016) productions and whether the `Sql.Window` API 
 
 - **Proven against live instances:**
   - SAP HANA ROWS frame (supported) and RANGE/EXCLUDE/GROUPS (rejected) — `WindowFunctionsTests` 307/307.
-  - SAP HANA statistical / percentile / median (this audit) — see §5; `STDDEV*`/`VAR_POP/SAMP`/`CORR`/
-    `MEDIAN`/windowed-`PERCENTILE` supported; bare `VARIANCE`/`COVAR`/`REGR_*` rejected.
-  - Informix statistical (this audit) — `STDDEV*`+bare-`VARIANCE` supported; the rest rejected.
+  - SAP HANA statistical / percentile / median (this audit, **enabled in this PR**) — see §5;
+    `STDDEV*`/`VAR_POP/SAMP`/bare-`STDDEV`/`VARIANCE`/`CORR`/`MEDIAN`/windowed-`PERCENTILE` supported;
+    `COVAR`/`REGR_*` rejected.
+  - Informix statistical (this audit, **enabled in this PR**) — `STDDEV*`+bare-`STDDEV`/`VARIANCE`
+    supported; `VAR_POP/SAMP`/`CORR`/`COVAR`/`REGR_*`/`MEDIAN` rejected.
+  - SQL Server 2012+ variance/stddev (**enabled in this PR** via `STDEV`/`VAR` name overrides).
   - ClickHouse `MEDIAN`/bare-stats/`REGR_*` and DuckDB windowed-percentile/hypothetical-set — all
     confirmed *rejected* by the engine, so the current gating is correct.
 - **Not re-proven (assumed correct):** the GROUPS-frame / frame-EXCLUDE ✗ cells on the providers that
   lack those SQL:2011 features (Oracle/DB2/SQL Server/MySQL/ClickHouse).
-- **Follow-up to enable the proven gaps** (SAP HANA + Informix statistical/percentile/median, SQL Server
-  variance) needs finer-grained capability flags than the current coarse `IsVariance*Supported` pair,
-  plus the usual per-test `[ThrowsForProvider]` reconciliation and baseline regeneration — see §5.
+- **Remaining future enablement:** only ClickHouse `MEDIAN` (needs lowercase `median` emission — see
+  §5). The SAP HANA / Informix / SQL Server statistical gaps the earlier draft listed here were enabled
+  in this PR by the finer-grained `IsStdDevSupported` / `IsCovarianceSupported` flag split.
