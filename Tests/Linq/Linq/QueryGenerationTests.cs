@@ -413,6 +413,34 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void ToSqlQuery_MultiTableSamePhysicalName([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = from p in db.Person
+			            join d in db.Doctor on p.ID equals d.PersonID
+			            select new { p.ID, d.PersonID };
+
+			var command = query.ToSqlQuery();
+
+			using var dc = GetDataContext(context.StripRemote());
+			var results  = dc.Query<DoctorPersonPair>(command.Sql).ToArray();
+			var expected = query.ToArray();
+
+			Assert.That(results, Has.Length.EqualTo(expected.Length));
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(command.Sql, Does.Contain("SELECT"));
+				Assert.That(command.Parameters, Has.Count.Zero);
+				if (context.IsAnyOf(ProviderName.SqlCe, TestProvName.AllYdb))
+					Assert.That(command.Sql, Does.Contain("PersonID_1"));
+				Assert.That(results.Select(r => r.PersonID), Is.EquivalentTo(expected.Select(e => e.PersonID)));
+			}
+		}
+
+		sealed class DoctorPersonPair { public int PersonID { get; set; } }
+
+		[Test]
 		public void ToSqlQuery_IMultiInsertInto([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataContext(context);
