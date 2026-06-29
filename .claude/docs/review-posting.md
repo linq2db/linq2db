@@ -12,7 +12,7 @@ Template (outer fence is 4 backticks so the inner 3-backtick `suggestion` fence 
 # .build/.claude/pr<n>-manifest.ps1
 @{
     pr       = <n>
-    commitId = '<head SHA>'
+    commitId = '<full 40-char head SHA — git rev-parse HEAD; abbreviated SHAs 422 with "GitObjectID … invalid value">'
     verify   = $true
     body     = @'
 <assembled review body — see the calling skill's body template>
