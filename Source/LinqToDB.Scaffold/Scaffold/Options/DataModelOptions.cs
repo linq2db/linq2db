@@ -160,6 +160,16 @@ namespace LinqToDB.Scaffold
 		public bool GenerateScale { get; set; }
 
 		/// <summary>
+		/// Enables generation of SQL Server-specific <c>GetSqlDecimalAttribute</c> for <see cref="decimal"/> entity columns
+		/// with precision or scale outside of CLR <see cref="decimal"/> limits.
+		/// <list type="bullet">
+		/// <item>Default: <see langword="false"/></item>
+		/// <item>In T4 compability mode: <see langword="false"/></item>
+		/// </list>
+		/// </summary>
+		public bool GenerateSqlServerDecimalOverflowProtection { get; set; }
+
+		/// <summary>
 		/// Specify custom extension methods names for <see cref="EntityMappingBuilder{TEntity}"/> type, that will be called for each entity builder if fluent mapping metadata generation enabled.
 		/// Except <c>EntityMappingBuilder</c> parameter, method takes second null parameter of entity type (could be generic).
 		/// <list type="bullet">

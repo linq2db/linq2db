@@ -26,26 +26,27 @@ namespace LinqToDB.Tools.ModelGeneration
 		public Func<ITable,MemberBase?> GenerateProviderSpecificTable { get; set; } = _ => null;
 		public Func<Parameter,bool>     GenerateProcedureDbType       { get; set; } = _ => false;
 
-		public bool   GenerateDataOptionsConstructors     { get; set; } = true;
-		public bool   GenerateObsoleteAttributeForAliases { get; set; }
-		public bool   GenerateFindExtensions              { get; set; } = true;
-		public bool   IsCompactColumns                    { get; set; } = true;
-		public bool   IsCompactColumnAliases              { get; set; } = true;
-		public bool   GenerateDataTypes                   { get; set; }
-		public bool?  GenerateLengthProperty              { get; set; }
-		public bool?  GeneratePrecisionProperty           { get; set; }
-		public bool?  GenerateScaleProperty               { get; set; }
-		public bool   GenerateDbTypes                     { get; set; }
-		public bool   GenerateSchemaAsType                { get; set; }
-		public bool   GenerateViews                       { get; set; } = true;
-		public bool   GenerateProcedureResultAsList       { get; set; }
-		public bool   GenerateProceduresOnTypedContext    { get; set; } = true;
-		public bool   PrefixTableMappingWithSchema        { get; set; } = true;
-		public bool   PrefixTableMappingForDefaultSchema  { get; set; }
-		public string SchemaNameSuffix                    { get; set; } = "Schema";
-		public string SchemaDataContextTypeName           { get; set; } = "DataContext";
-		public bool   GenerateNameOf                      { get; set; } = true;
-		public bool   GenerateTableRegion                 { get; set; } = true;
+		public bool   GenerateDataOptionsConstructors            { get; set; } = true;
+		public bool   GenerateObsoleteAttributeForAliases        { get; set; }
+		public bool   GenerateFindExtensions                     { get; set; } = true;
+		public bool   IsCompactColumns                           { get; set; } = true;
+		public bool   IsCompactColumnAliases                     { get; set; } = true;
+		public bool   GenerateDataTypes                          { get; set; }
+		public bool   GenerateSqlServerDecimalOverflowProtection { get; set; }
+		public bool?  GenerateLengthProperty                     { get; set; }
+		public bool?  GeneratePrecisionProperty                  { get; set; }
+		public bool?  GenerateScaleProperty                      { get; set; }
+		public bool   GenerateDbTypes                            { get; set; }
+		public bool   GenerateSchemaAsType                       { get; set; }
+		public bool   GenerateViews                              { get; set; } = true;
+		public bool   GenerateProcedureResultAsList              { get; set; }
+		public bool   GenerateProceduresOnTypedContext           { get; set; } = true;
+		public bool   PrefixTableMappingWithSchema               { get; set; } = true;
+		public bool   PrefixTableMappingForDefaultSchema         { get; set; }
+		public string SchemaNameSuffix                           { get; set; } = "Schema";
+		public string SchemaDataContextTypeName                  { get; set; } = "DataContext";
+		public bool   GenerateNameOf                             { get; set; } = true;
+		public bool   GenerateTableRegion                        { get; set; } = true;
 
 		public Dictionary<string,string> SchemaNameMapping = new(StringComparer.Ordinal);
 
@@ -554,6 +555,22 @@ namespace LinqToDB.Tools.ModelGeneration
 					}
 
 					c.Attributes.Insert(0, ca);
+
+					if (GenerateSqlServerDecimalOverflowProtection && ShouldUseGetSqlDecimal(c))
+					{
+						Model.Usings.Add("LinqToDB.DataProvider.SqlServer");
+						c.Attributes.Add(new TAttribute { Name = "GetSqlDecimal" });
+					}
+
+					static bool ShouldUseGetSqlDecimal(IColumn column)
+					{
+						const int ClrDecimalPrecision = 29;
+						const int ClrDecimalScale     = 28;
+
+						return
+							string.Equals(column.BuildType(), "decimal", StringComparison.Ordinal) &&
+							(column.Precision > ClrDecimalPrecision || column.Scale > ClrDecimalScale);
+					}
 
 					// PK.
 					//
