@@ -18,7 +18,7 @@ namespace LinqToDB.Internal.SqlQuery
 		// source can be wrapped by several SqlTableSource instances within a single statement (a
 		// correlated reference resolves to a different wrapper than the one in the FROM clause), and
 		// every wrapper must resolve to the same finalized alias.
-		readonly Dictionary<int, string>            _tableAliases  = new ();
+		readonly Dictionary<int, string>               _tableAliases  = new ();
 		readonly Dictionary<SqlColumn, string?>        _columnAliases = new (Utils.ObjectReferenceEqualityComparer<SqlColumn>.Default);
 		// Keyed by the common field base so it covers SqlField, SqlCteTableField (both SqlFieldBase) and
 		// SqlCteField (a CTE definition field) - all of which carry a finalized name in the non-mutating model.
@@ -41,9 +41,9 @@ namespace LinqToDB.Internal.SqlQuery
 
 		#region Finalized names
 
-		public void SetTableAlias(SqlTableSource tableSource, string alias) => _tableAliases [tableSource.SourceID] = alias;
-		public void SetColumnAlias(SqlColumn column,          string? alias) => _columnAliases[column]      = alias;
-		public void SetFieldName  (SqlExpressionBase field,   string name)   => _fieldNames   [field]       = name;
+		public void SetTableAlias (SqlTableSource    tableSource, string alias)  => _tableAliases [tableSource.SourceID] = alias;
+		public void SetColumnAlias(SqlColumn         column,      string? alias) => _columnAliases[column]               = alias;
+		public void SetFieldName  (SqlExpressionBase field,       string name)   => _fieldNames   [field]                = name;
 
 		/// <summary>
 		/// Effective table-source alias: the finalized alias recorded by the aliasing pass, otherwise
