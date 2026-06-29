@@ -208,7 +208,14 @@ namespace LinqToDB.Internal.Linq.Builder
 						if (currentMember == null)
 							continue;
 
-						var expression = Expression.MakeMemberAccess(currentPath, currentMember);
+						Expression expression = Expression.MakeMemberAccess(currentPath, currentMember);
+
+						if (DataOptions.LinqOptions.ImplicitCollectionLoading == ImplicitCollectionLoading.Throw)
+						{
+							// When implicit collection loading is set to Throw, tag explicit (LoadWith/ThenLoad) collection loads
+							// so ImplicitEagerLoadGuardVisitor lets them through; unmarked (implicit) projections throw.
+							expression = new MarkerExpression(expression, MarkerType.ExplicitEagerLoad);
+						}
 
 						members.Add(
 							new SqlGenericConstructorExpression.Assignment(currentMember, expression, true, true));
