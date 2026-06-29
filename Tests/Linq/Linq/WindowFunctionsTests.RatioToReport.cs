@@ -34,9 +34,11 @@ namespace Tests.Linq
 				_ = query.ToList();
 		}
 
-		// A zero partition total must yield NULL (native RATIO_TO_REPORT semantics), not a division-by-zero —
-		// the emulation wraps the denominator in NULLIF. Without it this errors on PostgreSQL (x / 0).
+		// A zero partition total must yield NULL (native RATIO_TO_REPORT semantics on Oracle, and the emulation wraps
+		// the denominator in NULLIF), not a division-by-zero — without it this errors on PostgreSQL (x / 0).
+		// DB2 diverges: RATIO_TO_REPORT yields a DECFLOAT Infinity which the reader can't map (see #5663).
 		[Test]
+		[ActiveIssue(5663, Configurations = [TestProvName.AllDB2], Details = "DB2 RATIO_TO_REPORT yields DECFLOAT Infinity on a zero partition sum; reader can't map the special value")]
 		public void RatioToReportZeroPartitionSum([SupportsAnalyticFunctionsContext] string context)
 		{
 			var data = new[]
