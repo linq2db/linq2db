@@ -31,6 +31,9 @@ namespace LinqToDB.Internal.Linq.Builder
 				return table?.LoadWithRoot;
 			}
 
+			protected override Expression ExposeCalculatedColumn(Expression memberAccess)
+				=> Builder.ConvertExpressionTree(memberAccess);
+
 			public override Expression? TryConstructFullEntity(SqlGenericConstructorExpression constructorExpression, Type constructType, ProjectFlags flags, bool checkInheritance, out string? error)
 			{
 				var constructed = base.TryConstructFullEntity(constructorExpression, constructType, flags, checkInheritance, out error);

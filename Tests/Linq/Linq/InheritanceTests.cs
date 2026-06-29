@@ -1948,6 +1948,101 @@ namespace Tests.Linq
 		}
 		#endregion
 
+		#region Calculated column on inheritance subtype
+		public class CalcSubtypeName
+		{
+			public string? First  { get; set; }
+			public string? Second { get; set; }
+		}
+
+		[Table("CalcSubtypeTable")]
+		[InheritanceMapping(Code = 1, Type = typeof(CalcSubtypeChild))]
+		public abstract class CalcSubtypeBase
+		{
+			[Column, PrimaryKey]             public int Id   { get; set; }
+			[Column(IsDiscriminator = true)] public int Type { get; set; }
+		}
+
+		// The complex member + its flattened (dotted-MemberName) columns AND the calculated column live on
+		// the DERIVED type only. Building GetTable<CalcSubtypeBase>() resolves "Name.First", which isn't on
+		// the base, so entity construction converts the construction path to the subtype. The calculated
+		// column must still be expanded against the subtype's descriptor, not the base's.
+		[Table("CalcSubtypeTable")]
+		[Column(MemberName = "Name.First",  Name = "Name_First")]
+		[Column(MemberName = "Name.Second", Name = "Name_Second")]
+		public class CalcSubtypeChild : CalcSubtypeBase
+		{
+			public CalcSubtypeChild() => Type = 1;
+
+			public CalcSubtypeName? Name { get; set; }
+
+			[ExpressionMethod(nameof(FullNameImpl), IsColumn = true)]
+			public string? FullName { get; set; }
+
+			private static Expression<Func<CalcSubtypeChild, string?>> FullNameImpl()
+				=> e => e.Name!.First + " " + e.Name!.Second;
+		}
+
+		[Test(Description = "Calculated column declared on an inheritance subtype reached via flattened-column conversion must be expanded against the subtype descriptor")]
+		public void CalculatedColumnOnInheritanceSubtype([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<CalcSubtypeBase>();
+
+			db.Insert(new CalcSubtypeChild { Id = 1, Name = new CalcSubtypeName { First = "John", Second = "Doe" } });
+
+			var res = db.GetTable<CalcSubtypeBase>().Single();
+			Assert.That(res, Is.InstanceOf<CalcSubtypeChild>());
+			Assert.That(((CalcSubtypeChild)res).FullName, Is.EqualTo("John Doe"));
+		}
+
+		// Variant where the subtype's calculated column is ALSO mapped as a physical column ([Column] +
+		// [ExpressionMethod(IsColumn=true)]) with no backing DDL column. InitInheritanceMapping merges the
+		// subtype's physical column into the base but not its calculated member, so the base query must
+		// dedup it (and expand the calculated value) rather than emit a read of the non-existent column.
+		[Table("CalcSubtypeDual")]
+		public class CalcSubtypeStorage
+		{
+			[Column, PrimaryKey] public int     Id     { get; set; }
+			[Column]             public int     Type   { get; set; }
+			[Column]             public string? Stored { get; set; }
+		}
+
+		[Table("CalcSubtypeDual")]
+		[InheritanceMapping(Code = 1, Type = typeof(CalcSubtypeDualChild))]
+		public abstract class CalcSubtypeDualBase
+		{
+			[Column, PrimaryKey]             public int     Id     { get; set; }
+			[Column(IsDiscriminator = true)] public int     Type   { get; set; }
+			[Column]                         public string? Stored { get; set; }
+		}
+
+		public class CalcSubtypeDualChild : CalcSubtypeDualBase
+		{
+			public CalcSubtypeDualChild() => Type = 1;
+
+			[Column]
+			[ExpressionMethod(nameof(ComputedImpl), IsColumn = true)]
+			public string? Computed { get; set; }
+
+			private static Expression<Func<CalcSubtypeDualChild, string?>> ComputedImpl()
+				=> e => e.Stored + "!";
+		}
+
+		[Test(Description = "Calculated column on an inheritance subtype that is also mapped as a physical column must dedup + expand on a base query, not read the non-existent column")]
+		public void CalculatedColumnOnInheritanceSubtypeDualMapped([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<CalcSubtypeStorage>();
+
+			db.Insert(new CalcSubtypeStorage { Id = 1, Type = 1, Stored = "John" });
+
+			var res = db.GetTable<CalcSubtypeDualBase>().Single();
+			Assert.That(res, Is.InstanceOf<CalcSubtypeDualChild>());
+			Assert.That(((CalcSubtypeDualChild)res).Computed, Is.EqualTo("John!"));
+		}
+		#endregion
+
 		#region Issue 4666
 		public enum Issue4666EntityType { None, Type1, Type2 }
 

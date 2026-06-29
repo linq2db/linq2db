@@ -224,9 +224,10 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					if (path.Type.IsAssignableFrom(ElementType) || ElementType.IsAssignableFrom(path.Type))
 					{
+						// Calculated columns (ExpressionMethodAttribute.IsColumn=true) are expanded during
+						// full-entity construction (EntityConstructor.ExposeCalculatedColumn); IsColumn=false
+						// expression-methods are intentionally left as plain column reads here — see #5540.
 						Expression fullEntity = Builder.BuildFullEntityExpression(MappingSchema, path, ElementType, flags);
-						// Entity can contain calculated columns which should be exposed
-						fullEntity = Builder.ConvertExpressionTree(fullEntity);
 
 						if (fullEntity.Type != path.Type)
 							fullEntity = Expression.Convert(fullEntity, path.Type);

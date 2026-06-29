@@ -35,7 +35,30 @@ namespace LinqToDB.Internal.Linq.Builder
 			IReadOnlyCollection<ColumnDescriptor> columns, ProjectFlags flags, Expression currentPath, int level,
 			FullEntityPurpose purpose)
 		{
-			var members = new List<SqlGenericConstructorExpression.Assignment>();
+			var members          = new List<SqlGenericConstructorExpression.Assignment>();
+			var entityDescriptor = MappingSchema.GetEntityDescriptor(currentPath.Type);
+
+			// A calculated column (ExpressionMethodAttribute.IsColumn=true) may also be mapped as a physical
+			// column — e.g. fluent .Property(e => e.X).HasAttribute(new ExpressionMethodAttribute(...) { IsColumn = true }),
+			// where .Property() forces IsColumn. Such a member's value comes from BuildCalculatedColumns (the
+			// expanded substitution body), not a physical column read, so exclude it from the physical-column
+			// assignments below — otherwise the entity emits both a bogus column read and the calculated
+			// expression for the same member (see #5540: the removed blanket ConvertExpressionTree pass used to
+			// rewrite that stray read into the same substitution).
+			// For an inheritance root, InitInheritanceMapping merges derived types' Columns into this
+			// descriptor but NOT their CalculatedMembers, so a calculated member declared on a subtype would
+			// otherwise leak through as a stray column read — union the derived types' calculated members too.
+			HashSet<MemberInfo>? calculatedMembers = null;
+			if (entityDescriptor.HasCalculatedMembers)
+				calculatedMembers = entityDescriptor.CalculatedMembers!.Select(m => m.MemberInfo).ToHashSet(MemberInfoComparer.Instance);
+
+			foreach (var inheritance in entityDescriptor.InheritanceMapping)
+			{
+				var derivedDescriptor = MappingSchema.GetEntityDescriptor(inheritance.Type);
+				if (derivedDescriptor.HasCalculatedMembers)
+					(calculatedMembers ??= new HashSet<MemberInfo>(MemberInfoComparer.Instance))
+						.UnionWith(derivedDescriptor.CalculatedMembers!.Select(m => m.MemberInfo));
+			}
 
 			var checkForKey = flags.HasFlag(ProjectFlags.Keys) && columns.Any(c => c.IsPrimaryKey);
 
@@ -65,6 +88,9 @@ namespace LinqToDB.Internal.Linq.Builder
 				foreach (var column in columns)
 				{
 					if (column.SkipOnEntityFetch)
+						continue;
+
+					if (calculatedMembers?.Contains(column.MemberInfo) == true)
 						continue;
 
 					Expression me;
@@ -97,6 +123,9 @@ namespace LinqToDB.Internal.Linq.Builder
 				foreach (var column in columns)
 				{
 					if (column.SkipOnEntityFetch)
+						continue;
+
+					if (calculatedMembers?.Contains(column.MemberInfo) == true)
 						continue;
 
 					if (!column.MemberName.Contains('.', StringComparison.Ordinal))
@@ -160,8 +189,12 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (!flags.HasFlag(ProjectFlags.Keys) && purpose == FullEntityPurpose.Default)
 			{
-				var entityDescriptor = MappingSchema.GetEntityDescriptor(currentPath.Type);
-				BuildCalculatedColumns(currentPath, entityDescriptor, entityDescriptor.ObjectType, members);
+				// currentPath may have been converted to an inheritance subtype while resolving a flattened
+				// (dotted-MemberName) column above, so re-resolve the descriptor here instead of reusing the
+				// entry-type one — BuildCalculatedColumns must expand the calculated members of the actual
+				// constructed type, not the base.
+				var constructedDescriptor = MappingSchema.GetEntityDescriptor(currentPath.Type);
+				BuildCalculatedColumns(currentPath, constructedDescriptor, constructedDescriptor.ObjectType, members);
 			}
 
 			if (!flags.IsKeys() && level == 0 && purpose == FullEntityPurpose.Default)
@@ -294,7 +327,24 @@ namespace LinqToDB.Internal.Linq.Builder
 			return generic;
 		}
 
-		static void BuildCalculatedColumns(Expression root, EntityDescriptor entityDescriptor, Type objectType, List<SqlGenericConstructorExpression.Assignment> assignments)
+		void BuildCalculatedColumns(Expression root, EntityDescriptor entityDescriptor, Type objectType, List<SqlGenericConstructorExpression.Assignment> assignments)
+		{
+			HashSet<MemberInfo>? seen = null;
+
+			AddCalculatedColumns(root, entityDescriptor, objectType, assignments, ref seen);
+
+			// Calculated members declared on inheritance subtypes are not merged into the root descriptor
+			// (InitInheritanceMapping merges Columns only — see BuildGenericFromMembers), so expand them
+			// explicitly against each subtype, casting the root to that subtype. Single-table inheritance
+			// keeps all columns in one table, so the substitution's referenced columns exist for every row.
+			foreach (var inheritance in entityDescriptor.InheritanceMapping)
+			{
+				var derived = MappingSchema.GetEntityDescriptor(inheritance.Type);
+				AddCalculatedColumns(root, derived, derived.ObjectType, assignments, ref seen);
+			}
+		}
+
+		void AddCalculatedColumns(Expression root, EntityDescriptor entityDescriptor, Type objectType, List<SqlGenericConstructorExpression.Assignment> assignments, ref HashSet<MemberInfo>? seen)
 		{
 			if (!entityDescriptor.HasCalculatedMembers)
 				return;
@@ -304,12 +354,30 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			foreach (var member in entityDescriptor.CalculatedMembers!)
 			{
+				// A member may appear on both the base and a derived descriptor (override) — expand once.
+				if (!(seen ??= new HashSet<MemberInfo>(MemberInfoComparer.Instance)).Add(member.MemberInfo))
+					continue;
+
+				// Calculated columns are exactly the ExpressionMethodAttribute.IsColumn=true members.
+				// Expand their substitution body here, where the IsColumn distinction is known, instead
+				// of relying on a blanket ConvertExpressionTree pass over the whole entity afterwards
+				// (which also rewrites IsColumn=false column reads at materialization — see issue #5540).
+				var memberAccess = ExposeCalculatedColumn(Expression.MakeMemberAccess(root, member.MemberInfo));
+
 				var assignment = new SqlGenericConstructorExpression.Assignment(member.MemberInfo,
-					Expression.MakeMemberAccess(root, member.MemberInfo), true, false);
+					memberAccess, true, false);
 
 				assignments.Add(assignment);
 			}
 		}
+
+		/// <summary>
+		/// Expands a calculated column's <see cref="ExpressionMethodAttribute"/> substitution body.
+		/// Base implementation leaves the member access untouched (used by reader-based construction,
+		/// which never routed calculated columns through the expose visitor); the query-building
+		/// constructor overrides this to run <c>ConvertExpressionTree</c> on just this member access.
+		/// </summary>
+		protected virtual Expression ExposeCalculatedColumn(Expression memberAccess) => memberAccess;
 
 		public static int FindIndex<T>(ReadOnlyCollection<T> collection, Func<T, bool> predicate)
 		{
