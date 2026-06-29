@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using LinqToDB;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
 using Newtonsoft.Json.Linq;
@@ -2092,9 +2093,28 @@ namespace Tests.Linq
 		}
 		#endregion
 
+		// These legacy-analytic NULLS tests run on the full analytic provider set (SupportsAnalyticFunctionsContext),
+		// excluding SQL Server 2005/2008 which have no aggregate window functions (SUM() OVER (ORDER BY ...)). A
+		// requested NULLS FIRST surfaces differently per provider, so the assertion is gated on the provider's
+		// capability flags, mirroring the builder's own emission rule (BuildWindowOrderByItem): the position is emitted
+		// only when it is NOT already the provider's natural NULL placement (QueryHelper.MatchesNaturalNullsPosition) —
+		// then natively as a NULLS FIRST token, or as a CASE-WHEN sort key on providers without native support.
+		static void AssertNullsFirstHonored(TestDataConnection db)
+		{
+			var flags = db.DataProvider.SqlProviderFlags;
+
+			if (QueryHelper.MatchesNaturalNullsPosition(flags.DefaultNullsOrdering, Sql.NullsPosition.First, descending: false))
+				// NULLS FIRST already matches the provider's natural ASC ordering — emitted implicitly, must not be inverted.
+				Assert.That(db.LastQuery, Does.Not.Contain("NULLS LAST"));
+			else if (flags.IsNullsOrderingSupported)
+				Assert.That(db.LastQuery, Does.Contain("NULLS FIRST"));
+			else
+				Assert.That(db.LastQuery, Does.Contain("CASE").And.Contains("IS NULL"));
+		}
+
 		[Test]
 		public void LegacyAnalytic_DefaultNullsPosition_AppliedToOrderBy(
-			[IncludeDataSources(false, TestProvName.AllPostgreSQL)] string context)
+			[SupportsAnalyticFunctionsContext(false, TestProvName.AllSqlServer2008Minus)] string context)
 		{
 			using var db = GetDataConnection(context, o => o.UseDefaultNullsPosition(Sql.NullsPosition.First));
 
@@ -2106,36 +2126,33 @@ namespace Tests.Linq
 
 			q.ToArray();
 
-			Assert.That(db.LastQuery, Does.Contain("NULLS FIRST"));
+			AssertNullsFirstHonored(db);
 		}
 
 		[Test]
 		public void LegacyAnalytic_ExplicitNullsPosition_AppliedToOrderBy(
-			[IncludeDataSources(false, TestProvName.AllPostgreSQL)] string context)
+			[SupportsAnalyticFunctionsContext(false, TestProvName.AllSqlServer2008Minus)] string context)
 		{
 			using var db = GetDataConnection(context);
 
 			// A legacy Sql.Ext analytic chain with an explicit NULLS position on its ORDER BY (the OrderBy(expr, nulls)
-			// overload) must carry that position through the conversion to the new Sql.Window pipeline rather than dropping
-			// it. PostgreSQL orders NULLs last by default for ASC, so an explicit NULLS FIRST is emitted verbatim.
+			// overload) must carry that position through the conversion to the new Sql.Window pipeline rather than dropping it.
 			var q =
 				from p in db.Parent
 				select Sql.Ext.Sum(p.Value1!.Value).Over().OrderBy(p.Value1, Sql.NullsPosition.First).ToValue();
 
 			q.ToArray();
 
-			Assert.That(db.LastQuery, Does.Contain("NULLS FIRST"));
+			AssertNullsFirstHonored(db);
 		}
 
 		[Test]
 		public void LegacyAnalytic_ExplicitNullsPosition_OverridesConfiguredDefault(
-			[IncludeDataSources(false, TestProvName.AllPostgreSQL)] string context)
+			[SupportsAnalyticFunctionsContext(false, TestProvName.AllSqlServer2008Minus)] string context)
 		{
-			// An explicit NULLS position on a legacy analytic ORDER BY must win over the configured default. Here the
-			// configured default is Last (PostgreSQL's natural ASC ordering, which would be dropped as redundant), while the
-			// explicit position is First (differs from natural, so it is emitted verbatim). Seeing NULLS FIRST proves the
-			// explicit value survives the conversion; had the configured default wrongly overridden it, the position would be
-			// Last and the clause omitted.
+			// An explicit NULLS position on a legacy analytic ORDER BY must win over the configured default: the configured
+			// default is Last while the explicit position is First. Seeing the First position honored (per provider) proves
+			// the explicit value survives the conversion; had the configured default wrongly overridden it, it would be Last.
 			using var db = GetDataConnection(context, o => o.UseDefaultNullsPosition(Sql.NullsPosition.Last));
 
 			var q =
@@ -2144,7 +2161,7 @@ namespace Tests.Linq
 
 			q.ToArray();
 
-			Assert.That(db.LastQuery, Does.Contain("NULLS FIRST"));
+			AssertNullsFirstHonored(db);
 		}
 	}
 }

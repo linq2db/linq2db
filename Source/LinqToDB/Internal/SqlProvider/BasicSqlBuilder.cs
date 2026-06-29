@@ -3540,9 +3540,9 @@ namespace LinqToDB.Internal.SqlProvider
 			var nullsPlacement = GetWindowNullsPlacement(extendedFunction);
 			var nullsToken     = extendedFunction.NullTreatment switch
 			{
-				Sql.Nulls.Ignore                                                        => "IGNORE NULLS",
+				Sql.Nulls.Ignore                                                            => "IGNORE NULLS",
 				Sql.Nulls.Respect when WindowFunctionRespectNullsRequired(extendedFunction) => "RESPECT NULLS",
-				_                                                                       => null,
+				_                                                                           => null,
 			};
 
 			StringBuilder.Append(extendedFunction.FunctionName);
@@ -3625,11 +3625,11 @@ namespace LinqToDB.Internal.SqlProvider
 				StringBuilder.Append(')');
 			}
 
-			if (extendedFunction.IsWindowFunction          ||
+			if (extendedFunction.IsWindowFunction           ||
 			    extendedFunction.PartitionBy?.Count > 0     ||
 			    extendedFunction.OrderBy?.Count     > 0     ||
 			    extendedFunction.FrameClause        != null ||
-			    (extendedFunction.WithinGroup?.Count > 0 && IsOverRequiredWithinGroup))
+			    (extendedFunction.WithinGroup?.Count > 0 && IsOverRequiredWithinGroup && extendedFunction.IsWindowFunction))
 			{
 				StringBuilder.Append(" OVER (");
 				if (extendedFunction.PartitionBy?.Count > 0)
