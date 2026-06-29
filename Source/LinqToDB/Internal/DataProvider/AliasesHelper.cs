@@ -14,17 +14,16 @@ namespace LinqToDB.Internal.DataProvider
 
 		#region Aliases
 
-		public static void PrepareQueryAndAliases(IIdentifierService identifierService, SqlStatement statement, AliasesContext? prevAliasContext, out AliasesContext newAliasContext)
+		public static void PrepareQueryAndAliases(IIdentifierService identifierService, SqlStatement statement, out AliasesContext newAliasContext)
 		{
 			using var visitor = _aliasesVisitorPool.Allocate();
 
-			newAliasContext = visitor.Value.SetAliases(identifierService, statement, prevAliasContext);
+			newAliasContext = visitor.Value.SetAliases(identifierService, statement);
 		}
 
 		sealed class AliasesVisitor : SqlQueryVisitor
 		{
 			IIdentifierService _identifierService = default!;
-			AliasesContext?    _prevAliases;
 
 			AliasesContext           _newAliases = default!;
 			HashSet<string>          _allAliases = default!;
@@ -35,15 +34,12 @@ namespace LinqToDB.Internal.DataProvider
 			{
 			}
 
-			public AliasesContext SetAliases(IIdentifierService identifierService, SqlStatement statement, AliasesContext? prevAliases)
+			public AliasesContext SetAliases(IIdentifierService identifierService, SqlStatement statement)
 			{
 				_identifierService = identifierService;
 				_newAliases        = new();
-				if (prevAliases != null)
-					_newAliases.InheritNamesFrom(prevAliases);
 				_allAliases        = new(StringComparer.OrdinalIgnoreCase);
 				_tablesVisited     = default;
-				_prevAliases       = prevAliases;
 				_rootSelectQuery   = statement.SelectQuery;
 
 				Visit(statement);
@@ -98,32 +94,9 @@ namespace LinqToDB.Internal.DataProvider
 				_newAliases        = default!;
 				_allAliases        = default!;
 				_tablesVisited     = default;
-				_prevAliases       = null;
 				_rootSelectQuery   = null;
 
 				base.Cleanup();
-			}
-
-			public override IQueryElement? Visit(IQueryElement? element)
-			{
-				if (element != null && _prevAliases != null && _prevAliases.IsAliased(element))
-				{
-					// Copy aliased from previous run
-					//
-					_newAliases.RegisterAliased(element);
-
-					// Remember already used aliases from previous run
-					if (element.ElementType == QueryElementType.TableSource)
-					{
-						var alias = _newAliases.GetTableAlias((SqlTableSource)element);
-						if (!string.IsNullOrEmpty(alias))
-							_allAliases.Add(alias!);
-					}
-
-					return element;
-				}
-
-				return base.Visit(element);
 			}
 
 			string TruncateAlias(string identifier)

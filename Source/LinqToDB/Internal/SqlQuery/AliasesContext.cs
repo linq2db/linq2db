@@ -32,11 +32,6 @@ namespace LinqToDB.Internal.SqlQuery
 			_aliasesSet.AddRange(elements);
 		}
 
-		public bool IsAliased(IQueryElement element)
-		{
-			return _aliasesSet.Contains(element);
-		}
-
 		public IReadOnlyCollection<IQueryElement> GetAliased()
 		{
 			return _aliasesSet;
@@ -47,18 +42,6 @@ namespace LinqToDB.Internal.SqlQuery
 		public void SetTableAlias(SqlTableSource tableSource, string alias) => _tableAliases [tableSource.SourceID] = alias;
 		public void SetColumnAlias(SqlColumn column,          string? alias) => _columnAliases[column]      = alias;
 		public void SetFieldName  (SqlField field,            string name)   => _fieldNames   [field]       = name;
-
-		/// <summary>
-		/// Seed this context with the finalized names from a previous run. The prev-alias reuse
-		/// optimization skips re-aliasing already-aliased subtrees; since names live here (not on the
-		/// nodes), those names must be carried forward so the reused subtrees still resolve.
-		/// </summary>
-		public void InheritNamesFrom(AliasesContext prev)
-		{
-			foreach (var kv in prev._tableAliases)  _tableAliases [kv.Key] = kv.Value;
-			foreach (var kv in prev._columnAliases) _columnAliases[kv.Key] = kv.Value;
-			foreach (var kv in prev._fieldNames)    _fieldNames   [kv.Key] = kv.Value;
-		}
 
 		/// <summary>
 		/// Effective table-source alias: the finalized alias recorded by the aliasing pass, otherwise
