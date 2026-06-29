@@ -86,6 +86,9 @@
 		<PackageVersion Include="Microsoft.Extensions.Logging.Abstractions"             Version="$(Net8LatestForNuget)"        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))"  />
 		<PackageVersion Include="Microsoft.Extensions.Logging.Abstractions"             Version="$(Net9LatestForNuget)"        Condition="'$(TargetFramework)'=='net9.0'"  />
 		<PackageVersion Include="Microsoft.Extensions.Logging.Abstractions"             Version="$(Net10LatestForNuget)"       Condition="'$(TargetFramework)'=='net10.0'" />
+		<PackageVersion Include="Microsoft.Extensions.Identity.Stores"                  Version="$(Net8LatestForNuget)"        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))"  />
+		<PackageVersion Include="Microsoft.Extensions.Identity.Stores"                  Version="$(Net9LatestForNuget)"        Condition="'$(TargetFramework)'=='net9.0'"  />
+		<PackageVersion Include="Microsoft.Extensions.Identity.Stores"                  Version="$(Net10LatestForNuget)"       Condition="'$(TargetFramework)'=='net10.0'" />
 	</ItemGroup>
 
 	<ItemGroup Label="LINQPad-only">
