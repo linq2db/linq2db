@@ -106,6 +106,17 @@ the provider's natural NULL ordering, and for non-nullable keys).
 
 ---
 
+## 5. Divergences & open questions
+
+### Remaining fidelity gap
+
+- **ClickHouse `MEDIAN`** (the one `✗†` left in §3) — ClickHouse *does* have a median aggregate but
+  spelled lowercase `median`; linq2db emits `MEDIAN`, which ClickHouse rejects (`Unknown aggregate
+  function MEDIAN. Maybe you meant: ['median','medianDD']`). A future enablement would need lowercase
+  emission.
+
+---
+
 ## 6. API-completeness vs the SQL standard
 
 Standard window grammar (SQL:2016) productions and whether the `Sql.Window` API exposes them:
