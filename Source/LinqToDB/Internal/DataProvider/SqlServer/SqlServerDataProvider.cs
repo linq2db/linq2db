@@ -267,8 +267,6 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		/// </summary>
 		sealed class AdaptiveDecimalReader
 		{
-			const int ClrPrecision = 29;
-
 			readonly Type _dataReaderType;
 
 			Func<DbDataReader, int, decimal> _reader;
@@ -306,7 +304,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 				return Expression.Lambda<Func<DbDataReader, int, decimal>>(
 					Expression.Call(
-						MemberHelper.MethodOf(() => ConvertSqlDecimal(default)),
+						MemberHelper.MethodOf(() => SqlServerDecimalUtils.ConvertSqlDecimal(default)),
 						Expression.Call(
 							Expression.Convert(reader, dataReaderType),
 							SqlTypes.GetSqlDecimalReaderMethod,
@@ -314,28 +312,6 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 							index)),
 					reader,
 					index).CompileExpression();
-			}
-
-			static decimal ConvertSqlDecimal(SqlDecimal value)
-			{
-				if (value.Precision > ClrPrecision)
-				{
-					for (var scale = Math.Min((int)value.Scale, 28); scale >= 0; scale--)
-					{
-						try
-						{
-							return (decimal)SqlDecimal.ConvertToPrecScale(value, ClrPrecision, scale);
-						}
-						catch (OverflowException)
-						{
-						}
-						catch (SqlTruncateException)
-						{
-						}
-					}
-				}
-
-				return value.Value;
 			}
 		}
 

@@ -3,6 +3,12 @@
 	<PropertyGroup>
 		<AssemblyName>linq2db.Tests.Base</AssemblyName>
 		<RootNamespace>Tests</RootNamespace>
+
+		<TestProject>false</TestProject>
+		<IsTestProject>false</IsTestProject>
+		<IsTestable>false</IsTestable>
+		<IsTestingPlatformApplication>false</IsTestingPlatformApplication>
+		<DisableTestingPlatformServerCapability>true</DisableTestingPlatformServerCapability>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -38,7 +44,7 @@
 
 	<ItemGroup Condition=" '$(TargetFramework)' != 'net462' ">
 		<FrameworkReference Include="Microsoft.AspNetCore.App" />
-		
+
 		<PackageReference Include="protobuf-net.Grpc.AspNetCore" />
 		<PackageReference Include="MiniProfiler.Minimal" />
 	</ItemGroup>

@@ -33,6 +33,33 @@ namespace Tests.Mapping
 		}
 
 		[Test]
+		public void DecimalNegativeTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db  = GetDataConnection(context);
+			using var tmp = db.CreateTempTable("#dtmp",
+				[new { Value = 0.1m }],
+				ed => ed
+					.Property(p => p.Value)
+						.HasPrecision(38)
+						.HasScale    (37));
+
+			var dataProvider = (DataProviderBase)db.DataProvider;
+
+			dataProvider.SetFieldReaderExpression<System.Data.SqlClient.SqlDataReader,    decimal>(true, (r, i) => r.GetDecimal(i));
+			dataProvider.SetFieldReaderExpression<Microsoft.Data.SqlClient.SqlDataReader, decimal>(true, (r, i) => r.GetDecimal(i));
+
+			if (context.IsAnyOf(TestProvName.AllSqlServerMS))
+			{
+				// fixed by https://github.com/dotnet/SqlClient/pull/1179 probably
+				_ = tmp.ToList();
+			}
+			else
+			{
+				Assert.That(() => _ = tmp.ToList(), Throws.TypeOf<OverflowException>());
+			}
+		}
+
+		[Test]
 		public void DecimalPositiveTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = GetDataConnection(context);
