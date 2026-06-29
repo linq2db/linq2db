@@ -32,6 +32,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			Registration.RegisterMethod(() => Sql.Replace("", (char?)null, null), TranslateSqlReplace);
 			Registration.RegisterMember(() => "".Length, TranslateLength);
 
+			Registration.RegisterMethod(() => "".CompareTo(""), TranslateCompareTo);
+			Registration.RegisterMethod(() => "".CompareTo(1),  TranslateCompareTo);
+
 			// ReSharper disable ReturnValueOfPureMethodIsNotUsed
 			Registration.RegisterMethod(() => "".Replace("", ""), TranslateStringReplace);
 			Registration.RegisterMethod(() => "".Replace(' ', ' '), TranslateStringReplace);
@@ -318,6 +321,32 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				return null;
 
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, resultSql, methodCall);
+		}
+
+		Expression? TranslateCompareTo(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			if (methodCall.Object == null)
+				return null;
+
+			if (translationContext.CanBeEvaluatedOnClient(methodCall))
+				return null;
+
+			using var disposable = translationContext.UsingTypeFromExpression(methodCall.Object);
+
+			if (!translationContext.TranslateToSqlExpression(methodCall.Object, out var left))
+				return translationContext.CreateErrorExpression(methodCall.Object, type: methodCall.Type);
+
+			// The CompareTo(object) overload compares against the argument's string form:
+			// string.CompareTo(object) throws for a non-string value, so the comparison is defined
+			// over arg.ToString() (matching the legacy member mapping).
+			var argument = methodCall.Arguments[0];
+			if (argument.Type != typeof(string))
+				argument = Expression.Call(argument, Methods.System.Object_ToString);
+
+			if (!translationContext.TranslateToSqlExpression(argument, out var right))
+				return translationContext.CreateErrorExpression(methodCall.Arguments[0], type: methodCall.Type);
+
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, new SqlCompareToExpression(left, right), methodCall);
 		}
 
 		private Expression? TranslateStringPadLeft(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)

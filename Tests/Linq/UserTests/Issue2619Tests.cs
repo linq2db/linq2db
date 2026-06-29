@@ -99,6 +99,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void OrderByExceptModifier([DataSources(TestProvName.AllSybase)] string context)
 		{
 			using var db = GetDataContext(context);

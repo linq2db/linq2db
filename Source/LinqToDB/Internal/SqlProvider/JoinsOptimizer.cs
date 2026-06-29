@@ -4,6 +4,7 @@ using System.Linq;
 
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Internal.SqlQuery.Visitors;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.SqlProvider
 {
@@ -155,7 +156,11 @@ namespace LinqToDB.Internal.SqlProvider
 			return isModified;
 		}
 
-		public static void UndoNestedJoins(IQueryElement statement)
+		public static IQueryElement UndoNestedJoins(
+			IQueryElement                  statement,
+			SqlQueryColumnNestingCorrector columnNestingCorrector,
+			SqlQueryColumnOptimizerVisitor columnOptimizerVisitor,
+			MappingSchema                  mappingSchema)
 		{
 			var correct = false;
 			statement.Visit(e =>
@@ -191,9 +196,14 @@ namespace LinqToDB.Internal.SqlProvider
 
 			if (correct)
 			{
-				var corrector = new SqlQueryColumnNestingCorrector();
-				corrector.CorrectColumnNesting(statement);
+				// Derived tables minted here come after the optimizer's column pass: re-correct nesting and
+				// re-run column optimization so an unreferenced one is projected as SELECT 1, not SELECT *
+				// (which "could fail if there are columns with same name" — e.g. from the joined tables).
+				statement = columnNestingCorrector.CorrectColumnNesting(statement);
+				statement = columnOptimizerVisitor.OptimizeColumns(statement, mappingSchema);
 			}
+
+			return statement;
 		}
 
 		#region Helpers
@@ -219,6 +229,7 @@ namespace LinqToDB.Internal.SqlProvider
 			// check wether join used outside join itself
 			if (null != statement.FindExcept(join.Table.SourceID, join, static (sourceID, e) =>
 				(e is SqlField field && field.Table?.SourceID == sourceID) ||
+				(e is SqlCteTableField cteField && cteField.Table?.SourceID == sourceID) ||
 				(e is SqlColumn column && column.Parent?.SourceID == sourceID)))
 				return false;
 
@@ -332,8 +343,9 @@ namespace LinqToDB.Internal.SqlProvider
 		{
 			return field switch
 			{
-				SqlField  sqlField  => sqlField .Table? .SourceID,
-				SqlColumn sqlColumn => sqlColumn.Parent?.SourceID,
+				SqlField         sqlField      => sqlField     .Table? .SourceID,
+				SqlCteTableField cteTableField => cteTableField.Table? .SourceID,
+				SqlColumn        sqlColumn     => sqlColumn    .Parent?.SourceID,
 				_ => null,
 			} ?? -1;
 		}
@@ -392,6 +404,7 @@ namespace LinqToDB.Internal.SqlProvider
 					return GetUnderlyingFieldOrColumn(((SqlNullabilityExpression)expr).SqlExpression);
 
 				case QueryElementType.SqlField:
+				case QueryElementType.SqlCteTableField:
 				case QueryElementType.Column:
 					return expr;
 			}

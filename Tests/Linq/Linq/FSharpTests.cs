@@ -1,4 +1,6 @@
-﻿using LinqToDB;
+﻿using System.Threading.Tasks;
+
+using LinqToDB;
 using LinqToDB.Data;
 
 using NUnit.Framework;
@@ -163,7 +165,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Insert1([DataSources(ProviderName.Ydb, TestProvName.AllClickHouse)] string context)
+		public void Insert1([DataSources(TestProvName.AllYdb, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			FSharp.InsertTest.Insert1(db);
@@ -251,6 +253,62 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 			FSharp.Issue4132.Issue4132Test2(db);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5598")]
+		public void Issue5598_UpdateSetsOnlyChangedColumn([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+			FSharp.Issue5598.UpdateSetsOnlyChangedColumn(db, true);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5598")]
+		public void Issue5598_UpdateSetsOnlyChangedColumnYdb([IncludeDataSources(false, TestProvName.AllYdb)] string context)
+		{
+			using var db = GetDataConnection(context);
+			FSharp.Issue5598.UpdateSetsOnlyChangedColumn(db, false);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5598")]
+		public async Task Issue5598_UpdateSetsOnlyChangedColumnAsync([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+			await FSharp.Issue5598.UpdateSetsOnlyChangedColumnAsync(db, true);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5598")]
+		public async Task Issue5598_UpdateSetsOnlyChangedColumnAsyncYdb([IncludeDataSources(false, TestProvName.AllYdb)] string context)
+		{
+			using var db = GetDataConnection(context);
+			await FSharp.Issue5598.UpdateSetsOnlyChangedColumnAsync(db, false);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5598")]
+		public void Issue5598_UpdateSetsOnlyChangedColumnNoPredicate([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+			FSharp.Issue5598.UpdateSetsOnlyChangedColumnNoPredicate(db, true);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5598")]
+		public void Issue5598_UpdateSetsOnlyChangedColumnNoPredicateYdb([IncludeDataSources(false, TestProvName.AllYdb)] string context)
+		{
+			using var db = GetDataConnection(context);
+			FSharp.Issue5598.UpdateSetsOnlyChangedColumnNoPredicate(db, false);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5598")]
+		public void Issue5598_UpdateNoOpExcludesPrimaryKey([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+			FSharp.Issue5598.UpdateNoOpExcludesPrimaryKey(db, true);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5598")]
+		public void Issue5598_UpdateNoOpExcludesPrimaryKeyYdb([IncludeDataSources(false, TestProvName.AllYdb)] string context)
+		{
+			using var db = GetDataConnection(context);
+			FSharp.Issue5598.UpdateNoOpExcludesPrimaryKey(db, false);
 		}
 
 		[ActiveIssue]

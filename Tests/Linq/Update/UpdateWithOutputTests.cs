@@ -17,9 +17,9 @@ namespace Tests.xUpdate
 		private const string FeatureUpdateOutputWithOldSingle                      = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebirdLess5},{TestProvName.AllPostgreSQL18Plus}";
 		private const string FeatureUpdateOutputWithOldSingleNoAlternateRewrite    = $"{TestProvName.AllSqlServer},{TestProvName.AllPostgreSQL18Plus}";
 		private const string FeatureUpdateOutputWithOldMultiple                    = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird5Plus},{TestProvName.AllPostgreSQL18Plus}";
-		private const string FeatureUpdateOutputWithoutOldSingle                   = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebirdLess5},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite},{ProviderName.Ydb}";
-		private const string FeatureUpdateOutputWithoutOldSingleNoAlternateRewrite = $"{TestProvName.AllSqlServer},{TestProvName.AllPostgreSQL},{ProviderName.Ydb}";
-		private const string FeatureUpdateOutputWithoutOldMultiple                 = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird5Plus},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite},{ProviderName.Ydb}";
+		private const string FeatureUpdateOutputWithoutOldSingle                   = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebirdLess5},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite},{TestProvName.AllYdb}";
+		private const string FeatureUpdateOutputWithoutOldSingleNoAlternateRewrite = $"{TestProvName.AllSqlServer},{TestProvName.AllPostgreSQL},{TestProvName.AllYdb}";
+		private const string FeatureUpdateOutputWithoutOldMultiple                 = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird5Plus},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite},{TestProvName.AllYdb}";
 		private const string FeatureUpdateOutputInto                               = $"{TestProvName.AllSqlServer}";
 
 		sealed class UpdateOutputComparer<T> : IEqualityComparer<UpdateOutput<T>>
@@ -297,6 +297,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void UpdateITableWithProjectionOutputTestWithoutOld([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingleNoAlternateRewrite)] string context)
 		{
 			var sourceData    = GetSourceData();
@@ -332,6 +333,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void UpdateITableWithProjectionOutputTestWithoutOldAlternateUpdate([IncludeDataSources(true, FeatureUpdateOutputWithoutOldMultiple)] string context)
 		{
 			var sourceData    = GetSourceData();
@@ -365,6 +367,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void UpdateITableWithProjectionOutputTestWithoutOldAlternateUpdateSingleRecord([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
 		{
 			var sourceData    = GetSourceData();
@@ -509,6 +512,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public async Task UpdateITableWithProjectionOutputTestAsyncWithoutOld([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingleNoAlternateRewrite)] string context)
 		{
 			var sourceData    = GetSourceData();
@@ -544,6 +548,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public async Task UpdateITableWithProjectionOutputTestAsyncWithoutOldAlternateUpdate([IncludeDataSources(true, FeatureUpdateOutputWithoutOldMultiple)] string context)
 		{
 			var sourceData    = GetSourceData();
@@ -577,6 +582,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public async Task UpdateITableWithProjectionOutputTestAsyncWithoutOldAlternateUpdateSingleRecord([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
 		{
 			var sourceData    = GetSourceData();
@@ -1073,6 +1079,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void UpdateExpressionWithProjectionOutputTestWithoutOld([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingleNoAlternateRewrite)] string context)
 		{
 			var sourceData    = GetSourceData();
@@ -1108,6 +1115,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void UpdateExpressionWithProjectionOutputTestWithoutOldAlternateUpdate([IncludeDataSources(true, FeatureUpdateOutputWithoutOldMultiple)] string context)
 		{
 			var sourceData    = GetSourceData();
@@ -1141,6 +1149,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void UpdateExpressionWithProjectionOutputTestWithoutOldAlternateUpdateSingleRecord([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
 		{
 			var sourceData    = GetSourceData();
@@ -1285,6 +1294,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public async Task UpdateExpressionWithProjectionOutputTestAsyncWithoutOld([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingleNoAlternateRewrite)] string context)
 		{
 			var sourceData    = GetSourceData();
@@ -1320,6 +1330,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public async Task UpdateExpressionWithProjectionOutputTestAsyncWithoutOldAlternateUpdate([IncludeDataSources(true, FeatureUpdateOutputWithoutOldMultiple)] string context)
 		{
 			var sourceData    = GetSourceData();
@@ -1353,6 +1364,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public async Task UpdateExpressionWithProjectionOutputTestAsyncWithoutOldAlternateUpdateSingleRecord([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
 		{
 			var sourceData    = GetSourceData();
@@ -2861,6 +2873,32 @@ namespace Tests.xUpdate
 				new UpdateOutputComparer<TableWithData>());
 		}
 
+		[Test]
+		public void Issue5450_UpdateOverCte_WithMultiTableQuery([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			// Regression: BasicCorrectUpdate previously bailed unless Update.Table was a
+			// concrete SqlTable, and MakeUniversalUpdate cast cloned tables back to SqlTable
+			// — both broke for SqlCteTable. This shape exercises both paths: the AsCte()
+			// target makes Update.Table a SqlCteTable, and the join with another local table
+			// drives BasicCorrectUpdate's correction branch on SQL Server.
+			var sourceData = GetSourceData();
+			using var db     = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			using var lookup = db.CreateLocalTable("LookupForCteUpdate", sourceData.Select(s => new { s.Id, Multiplier = s.Id * 10 }));
+
+			source
+				.Where(i => i.Id == 7)
+				.AsCte()
+				.Update(s =>
+					new TableWithData
+					{
+						Value = lookup.Where(l => l.Id == s.Id).Select(l => l.Multiplier).First(),
+					});
+
+			var updated = source.Single(s => s.Id == 7);
+			Assert.That(updated.Value, Is.EqualTo(70));
+		}
+
 		[Table]
 		public class Test3697
 		{
@@ -2878,7 +2916,7 @@ namespace Tests.xUpdate
 			[Column              ] public int TestId { get; set; }
 		}
 
-		[YdbIntoValuesNotImplemented]
+		[ActiveIssue("YDB: cannot insert a row consisting only of an auto-generated key", Configuration = TestProvName.AllYdb)]
 		[Test]
 		public void Issue3697Test([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
 		{
@@ -2995,8 +3033,8 @@ namespace Tests.xUpdate
 			Assert.That(newAmount, Is.EqualTo(25));
 		}
 
-		[YdbUnexpectedSqlQuery]
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void Issue4414Test([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -3020,6 +3058,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4253")]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void Issue4253Test([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
 		{
 			using var db = GetDataContext(context);

@@ -594,7 +594,7 @@ namespace Tests.Linq
 		[Test]
 		public void Issue3158([DataSources(TestProvName.AllClickHouse)] string context)
 		{
-			using var db = GetDataContext(context);
+			using var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context));
 			Assert.DoesNotThrow(() =>
 			{
 				(from p in db.GetTable<PersonWithoutDynamicStore>()
@@ -822,40 +822,6 @@ namespace Tests.Linq
 				return $".{nameof(CustomMetadataReader)}";
 			}
 		}
-
-		#region Issue 4770
-
-		sealed class Issue4770Person
-		{
-			public int Id { get; set; }
-			public Issue4770Address? Address { get; set; }
-			public string ?TestPostcode { get; set; }
-		}
-
-		sealed class Issue4770Address
-		{
-			public string? Postcode { get; set; }
-		}
-
-		[ActiveIssue]
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4770")]
-		public void Issue4770([DataSources] string context)
-		{
-			var ms = new MappingSchema();
-			var fb = new FluentMappingBuilder(ms);
-			fb.Entity<Issue4770Person>()
-				.Property(c => c.Id).IsPrimaryKey()
-				.Property(c => c.Address!.Postcode).IsExpression(c => Sql.Upper(Sql.Property<string>(c, "Postcode")), true).IsColumn()
-				.Property(c => c.TestPostcode).IsExpression(c => Sql.Upper(Sql.Property<string>(c, "Postcode")), true);
-
-			fb.Build();
-
-			using var db = GetDataContext(context, ms);
-			using var tb = db.CreateLocalTable<Issue4770Person>();
-
-			tb.ToArray();
-		}
-		#endregion
 
 		sealed class ConvertTable
 		{

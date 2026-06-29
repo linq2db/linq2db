@@ -11,7 +11,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.SqlQuery
 {
-	public class SqlTable : SqlExpressionBase, ISqlTableSource
+	public class SqlTable : SqlExpressionBase, ISqlNamedTable
 	{
 		#region Init
 

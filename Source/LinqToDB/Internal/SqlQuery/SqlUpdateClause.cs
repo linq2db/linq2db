@@ -10,11 +10,11 @@ namespace LinqToDB.Internal.SqlQuery
 	{
 		public List<SqlSetExpression> Items         { get; set; } = new();
 		public List<SqlSetExpression> Keys          { get; set; } = new();
-		public SqlTable?              Table         { get; set; }
+		public ISqlNamedTable?        Table         { get; set; }
 		public SqlTableSource?        TableSource   { get; set; }
 		public bool                   HasComparison { get; set; }
 
-		public void Modify(SqlTable? table, SqlTableSource? tableSource)
+		public void Modify(ISqlNamedTable? table, SqlTableSource? tableSource)
 		{
 			Table       = table;
 			TableSource = tableSource;

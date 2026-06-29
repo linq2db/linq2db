@@ -52,12 +52,18 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			SqlProviderFlags.IsUnionAllOrderBySupported        = true;
 			SqlProviderFlags.IsAllSetOperationsSupported       = true;
 			SqlProviderFlags.IsDistinctFromSupported           = true;
+			SqlProviderFlags.IsDistinctOnSupported             = true;
 			SqlProviderFlags.SupportsPredicatesComparison      = true;
+			SqlProviderFlags.MaxColumnCount                    = 1600;
 
 			SqlProviderFlags.OutputDeleteUseSpecialTable  = version >= PostgreSQLVersion.v18;
 			SqlProviderFlags.OutputInsertUseSpecialTable  = version >= PostgreSQLVersion.v18;
 			SqlProviderFlags.OutputUpdateUseSpecialTables = version >= PostgreSQLVersion.v18;
 			SqlProviderFlags.OutputMergeUseSpecialTables  = version >= PostgreSQLVersion.v18;
+
+			// PostgreSQL added MERGE in v15. For earlier versions Upsert configurations that require
+			// MERGE lowering surface a descriptive error via Error_Upsert_MergeLowering_NotSupported.
+			SqlProviderFlags.IsUpsertWithMergeLoweringSupported = version >= PostgreSQLVersion.v15;
 
 			SqlProviderFlags.RowConstructorSupport = RowFeature.Equality        | RowFeature.Comparisons |
 			                                         RowFeature.CompareToSelect | RowFeature.In | RowFeature.IsNull |
@@ -249,7 +255,9 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
-			return new PostgreSQLSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
+			return Version >= PostgreSQLVersion.v13
+				? new PostgreSQL13SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags)
+				: new PostgreSQLSqlBuilder  (this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;

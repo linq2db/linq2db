@@ -351,7 +351,6 @@ namespace Tests.Linq
 				select x;
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void ContainsTest([DataSources] string context)
 		{
@@ -368,7 +367,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public async Task ContainsTestAsync([DataSources] string context)
 		{

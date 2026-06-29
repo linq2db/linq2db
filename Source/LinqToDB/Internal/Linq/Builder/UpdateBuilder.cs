@@ -25,7 +25,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		#region Update
 
 		public static bool CanBuildMethod(MethodCallExpression call)
-			=> call.IsQueryable;
+			=> call.IsQueryable && !EntityUpdateBuilder.IsEntityUpdateShape(call);
 
 		static void ExtractSequence(BuildInfo buildInfo, ref IBuildContext sequence, out UpdateContext updateContext)
 		{
@@ -180,7 +180,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					{
 						into = builder.BuildSequence(new BuildInfo(buildInfo, expr, new SelectQuery()));
 						var sequenceTableContext = SequenceHelper.GetTableOrCteContext(sequence);
-						var intoTableContext     = SequenceHelper.GetTableOrCteContext(into);
+						var intoTableContext     = SequenceHelper.GetTableContext(into);
 
 						if (intoTableContext == null)
 						{
@@ -212,17 +212,17 @@ namespace LinqToDB.Internal.Linq.Builder
 							sequenceTableContext    = kvp.Key;
 						}
 
-						if (QueryHelper.IsEqualTables(sequenceTableContext.SqlTable, intoTableContext.SqlTable, false))
+						if (sequenceTableContext is TableBuilder.TableContext stctx && QueryHelper.IsEqualTables(stctx.SqlTable, intoTableContext.SqlTable, false))
 						{
-							intoTableContext = sequenceTableContext;
+							intoTableContext = stctx;
 						}
 						else
 						{
 							// create join between tables
 							//
 
-							var sequenceRef = new ContextRefExpression(sequenceTableContext.SqlTable.ObjectType, sequenceTableContext);
-							var intoRef     = new ContextRefExpression(sequenceTableContext.SqlTable.ObjectType, into);
+							var sequenceRef = new ContextRefExpression(sequenceTableContext.ObjectType, sequenceTableContext);
+							var intoRef     = new ContextRefExpression(sequenceTableContext.ObjectType, into);
 
 							var compareSearchCondition = builder.GenerateComparison(sequenceTableContext, sequenceRef, intoRef, BuildPurpose.Sql);
 							sequenceTableContext.SelectQuery.Where.ConcatSearchCondition(compareSearchCondition);
@@ -280,7 +280,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				var outputTable = methodCall.GetArgumentByName("outputTable")!;
 				var destination = builder.BuildSequence(new BuildInfo(buildInfo, outputTable, new SelectQuery()));
 
-				var destinationContext = SequenceHelper.GetTableOrCteContext(destination);
+				var destinationContext = SequenceHelper.GetTableContext(destination);
 				if (destinationContext == null)
 					throw new InvalidOperationException();
 
@@ -355,14 +355,18 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (targetTableContext is CteTableContext cteTable)
 			{
 				insertedContext = new CteTableContext(builder.GetTranslationModifier(), builder, null,
-					targetTableContext.SqlTable.ObjectType, outputSelectQuery, cteTable.CteContext);
+					cteTable.ObjectType, outputSelectQuery, cteTable.CteContext);
 				deletedContext = new CteTableContext(builder.GetTranslationModifier(), builder, null,
-					targetTableContext.SqlTable.ObjectType, outputSelectQuery, cteTable.CteContext);
+					cteTable.ObjectType, outputSelectQuery, cteTable.CteContext);
+			}
+			else if (targetTableContext is TableBuilder.TableContext tableContext)
+			{
+				insertedContext = new TableBuilder.TableContext(builder.GetTranslationModifier(), builder, targetTableContext.MappingSchema, outputSelectQuery, tableContext.SqlTable, false);
+				deletedContext  = new TableBuilder.TableContext(builder.GetTranslationModifier(), builder, targetTableContext.MappingSchema, outputSelectQuery, tableContext.SqlTable, false);
 			}
 			else
 			{
-				insertedContext = new TableBuilder.TableContext(builder.GetTranslationModifier(), builder, targetTableContext.MappingSchema, outputSelectQuery, targetTableContext.SqlTable, false);
-				deletedContext  = new TableBuilder.TableContext(builder.GetTranslationModifier(), builder, targetTableContext.MappingSchema, outputSelectQuery, targetTableContext.SqlTable, false);
+				throw new InvalidOperationException("Unexpected table context type: " + targetTableContext.GetType().Name);
 			}
 
 			outputContext = deletedContext;
@@ -535,7 +539,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			static bool NeedsConversion(ISqlExpression sqlExpression, ColumnDescriptor? targetDescriptor)
 			{
-				if (sqlExpression is SqlParameter or SqlValue or SqlColumn or SqlField)
+				if (sqlExpression is SqlParameter or SqlValue or SqlColumn or SqlFieldBase)
 					return false;
 
 				if (sqlExpression is SqlAnchor anchor)
@@ -709,7 +713,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					field = value;
 
-					UpdateStatement.Update.Table = value?.SqlTable;
+					UpdateStatement.Update.Table = value?.NamedTable;
 				}
 			}
 
@@ -744,7 +748,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				var tableContext = TargetTable;
 
-				update.Table                = tableContext?.SqlTable;
+				update.Table                = tableContext?.NamedTable;
 				UpdateStatement.SelectQuery = QuerySequence.SelectQuery;
 
 				SetExpressions.RemoveDuplicatesFromTail((s1, s2) =>

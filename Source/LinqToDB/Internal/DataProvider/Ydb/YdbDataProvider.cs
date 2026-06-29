@@ -31,6 +31,9 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		{
 			SqlProviderFlags.IsSubQueryOrderBySupported       = true;
 			SqlProviderFlags.IsUnionAllOrderBySupported       = true;
+			// YQL rejects an aggregate function directly in ORDER BY; it must be projected as a column
+			// and ordered by its alias, so keep the aggregate-projecting subquery un-flattened.
+			SqlProviderFlags.IsOrderByAggregateFunctionSupported = false;
 			SqlProviderFlags.IsDistinctSetOperationsSupported = false;
 			// NULLS ordering is emulated (IsNullsOrderingSupported left unset); NULL sorts as the smallest value.
 			SqlProviderFlags.DefaultNullsOrdering             = NullsDefaultOrdering.Smallest;
@@ -51,6 +54,9 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			SqlProviderFlags.IsComplexJoinConditionSupported  = false;
 			SqlProviderFlags.IsNestedJoinsSupported           = false;
 			SqlProviderFlags.IsCrossJoinSyntaxRequired        = true;
+			// YQL rejects a JOIN ON without a real input-dependent predicate ("each equality predicate
+			// argument must depend on exactly one JOIN input"), so the engine must not emit `JOIN ON 1=1`.
+			SqlProviderFlags.IsSupportsJoinWithoutCondition   = false;
 
 			SqlProviderFlags.IsSupportedSimpleCorrelatedSubqueries = false;
 			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel    = 0;
@@ -72,11 +78,12 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			SetProviderField<DbDataReader, string, byte[]>((r, i) => Encoding.UTF8.GetString((byte[])r.GetValue(i)), dataTypeName: "Yson");
 			SetProviderField<DbDataReader, string, byte[]>((r, i) => Encoding.UTF8.GetString((byte[])r.GetValue(i)), dataTypeName: "Yson", dataReaderType: Adapter.DataReaderType);
 
-			SetProviderField<DbDataReader, string, byte[]>((r, i) => Encoding.UTF8.GetString((byte[])r.GetValue(i)), dataTypeName: "String");
-			SetProviderField<DbDataReader, string, byte[]>((r, i) => Encoding.UTF8.GetString((byte[])r.GetValue(i)), dataTypeName: "String", dataReaderType: Adapter.DataReaderType);
+			// the YQL `String` (binary) primitive is reported by the driver as type name "Bytes" (Ydb.Sdk SchemaUtils.YqlTableType)
+			SetProviderField<DbDataReader, string, byte[]>((r, i) => Encoding.UTF8.GetString((byte[])r.GetValue(i)), dataTypeName: "Bytes");
+			SetProviderField<DbDataReader, string, byte[]>((r, i) => Encoding.UTF8.GetString((byte[])r.GetValue(i)), dataTypeName: "Bytes", dataReaderType: Adapter.DataReaderType);
 
-			SetProviderField<DbDataReader, char, byte[]>((r, i) => Encoding.UTF8.GetString((byte[])r.GetValue(i))[0], dataTypeName: "String");
-			SetProviderField<DbDataReader, char, byte[]>((r, i) => Encoding.UTF8.GetString((byte[])r.GetValue(i))[0], dataTypeName: "String", dataReaderType: Adapter.DataReaderType);
+			SetProviderField<DbDataReader, char, byte[]>((r, i) => Encoding.UTF8.GetString((byte[])r.GetValue(i))[0], dataTypeName: "Bytes");
+			SetProviderField<DbDataReader, char, byte[]>((r, i) => Encoding.UTF8.GetString((byte[])r.GetValue(i))[0], dataTypeName: "Bytes", dataReaderType: Adapter.DataReaderType);
 
 #if SUPPORTS_DATEONLY
 			SetProviderField<DbDataReader, DateOnly, DateTime>((rd, idx) => rd.GetFieldValue<DateOnly>(idx), "Date", dataReaderType: Adapter.DataReaderType);
@@ -109,7 +116,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		private readonly ISqlOptimizer _sqlOptimizer;
 		public override ISqlOptimizer GetSqlOptimizer(DataOptions dataOptions) => _sqlOptimizer;
 
-		public override ISchemaProvider GetSchemaProvider() => throw new NotImplementedException("Not implemented yet");
+		public override ISchemaProvider GetSchemaProvider() => new YdbSchemaProvider();
 
 		// GetSchemaTable not implemented by provider
 		public override bool? IsDBNullAllowed(DataOptions options, DbDataReader reader, int idx) => true;
@@ -370,6 +377,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				case DataType.DateTime:
 				case DataType.DateTime64:
 				case DataType.DateTime2:
+				case DataType.DateTimeOffset:
 				case DataType.Timestamp64:
 				{
 					if (value is DateTime dt)

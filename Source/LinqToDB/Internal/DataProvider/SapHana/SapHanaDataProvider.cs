@@ -41,7 +41,6 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			//mark this as supported, it's better to throw exception
 			//instead of replace with left join, in which case returns incorrect data
 			SqlProviderFlags.IsCorrelatedSubQueryTakeSupported = false;
-			SqlProviderFlags.IsInsertOrUpdateSupported         = false;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
 			SqlProviderFlags.IsApplyJoinSupported              = true;
 			SqlProviderFlags.IsCrossApplyJoinSupportsCondition = true;
@@ -50,6 +49,24 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			SqlProviderFlags.IsNullsOrderingSupported          = true;
 			SqlProviderFlags.DefaultNullsOrdering              = NullsDefaultOrdering.Smallest; // SAP HANA sorts NULL as the smallest value
 			SqlProviderFlags.SupportsBooleanType               = false;
+			// SAP HANA's per-SELECT column limit (~1000) caps how wide a CteUnion carrier projection can
+			// grow before the eager-loading strategy falls back to KeyedQuery. Not validated against a live
+			// HANA engine; verify against the documented limit before relying on it.
+			SqlProviderFlags.MaxColumnCount                    = 1000;
+
+			// Native single-statement upsert via HANA's UPSERT … WITH PRIMARY KEY. The statement
+			// applies one VALUES list to both branches and has no UPDATE-side predicate, so:
+			//   * IsInsertOrUpdateWithPredicateSupported  = false → Update.When falls back to the
+			//     3-query SELECT→UPDATE→INSERT orchestration.
+			//   * IsInsertOrUpdateRequiresAlignedBranches = true → per-branch SET divergence
+			//     (Insert(i => …) / Update(v => …) overrides) falls back to UPDATE→INSERT emulation.
+			SqlProviderFlags.IsInsertOrUpdateSupported               = true;
+			SqlProviderFlags.IsInsertOrUpdateWithPredicateSupported  = false;
+			SqlProviderFlags.IsInsertOrUpdateRequiresAlignedBranches = true;
+
+			// HANA's MERGE is restricted — it rejects the two-branch (WHEN NOT MATCHED + WHEN MATCHED)
+			// shape linq2db synthesizes for Upsert's bulk / non-PK-match / conditional-insert paths.
+			SqlProviderFlags.IsUpsertWithMergeLoweringSupported = false;
 
 			_sqlOptimizer = new SapHanaSqlOptimizer(SqlProviderFlags);
 

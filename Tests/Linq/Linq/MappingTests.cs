@@ -435,7 +435,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ColumnMappingException1([DataSources(ProviderName.SqlCe)] string context)
+		public void ColumnMappingException1([DataSources(ProviderName.SqlCe, TestProvName.AllYdb)] string context)
 		{
 			GetProviderName(context, out var isLinqService);
 
@@ -458,7 +458,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ColumnMappingException2([DataSources(ProviderName.SqlCe)] string context)
+		public void ColumnMappingException2([DataSources(ProviderName.SqlCe, TestProvName.AllYdb)] string context)
 		{
 			GetProviderName(context, out var isLinqService);
 
@@ -856,7 +856,7 @@ namespace Tests.Linq
 
 		#region Issue 3117
 
-		[ActiveIssue(Configurations = [TestProvName.AllDB2, TestProvName.AllInformix, TestProvName.AllMySqlConnector, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSQLite])]
+		[ActiveIssue(Configurations = [TestProvName.AllDB2, TestProvName.AllInformix, TestProvName.AllMySqlConnector, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSQLite, TestProvName.AllYdb])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3117")]
 		public void Issue3117Test1([DataSources(false, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
@@ -876,7 +876,7 @@ namespace Tests.Linq
 			user = db.GetTable<User>().FirstOrDefault(u => userIds.Contains(u.Id));
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllDB2, TestProvName.AllInformix, TestProvName.AllMySqlConnector, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSQLite])]
+		[ActiveIssue(Configurations = [TestProvName.AllDB2, TestProvName.AllInformix, TestProvName.AllMySqlConnector, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSQLite, TestProvName.AllYdb])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3117")]
 		public void Issue3117Test2([DataSources(false, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
@@ -1288,7 +1288,6 @@ namespace Tests.Linq
 			Assert.That(result[0].SomeColumn, Is.EqualTo("value"));
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4437")]
 		public void Issue4437Test2([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
@@ -1307,14 +1306,40 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(new Issue4437Record[] { new("value") });
 
+			// Constructor materialization is unified with the LINQ path: the mapped column name (some_column) is
+			// authoritative, so a result column aliased to the member name does not bind and the parameter stays
+			// at its default. Select the mapped column name (Issue4437Test2) to populate it.
 			var result = db.Query<Issue4437Record>("select some_column as SomeColumn from test4437").ToArray();
 
 			Assert.That(result, Has.Length.EqualTo(1));
-			Assert.That(result[0].SomeColumn, Is.EqualTo("value"));
+			Assert.That(result[0].SomeColumn, Is.Null);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4437")]
+		public void Issue4437Test4([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(new Issue4437VcRecord[] { new(true) });
+
+			var result = db.Query<Issue4437VcRecord>("select some_column from test4437vc").ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(1));
+			Assert.That(result[0].SomeColumn, Is.True);
 		}
 
 		[Table("test4437")]
 		sealed record Issue4437Record([property: Column("some_column")] string SomeColumn);
+
+		[Table("test4437vc")]
+		sealed record Issue4437VcRecord(
+			[property: Column("some_column", DataType = DataType.VarChar, Length = 1), ValueConverter(ConverterType = typeof(Issue4437BoolConverter))] bool SomeColumn);
+
+		sealed class Issue4437BoolConverter : ValueConverter<bool, string>
+		{
+			public Issue4437BoolConverter() : base(v => v ? "Y" : "N", p => p == "Y", true)
+			{
+			}
+		}
 		#endregion
 
 		#region Issue 1833

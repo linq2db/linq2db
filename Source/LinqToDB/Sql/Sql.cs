@@ -78,8 +78,10 @@ namespace LinqToDB
 			throw new InvalidOperationException();
 		}
 
+		// Nullability annotator, handled by SqlFunctionsMemberTranslatorBase so it always stays server-side.
+		// Deliberately carries no [Expression] attribute: that would let projection client-calculation
+		// (LinqOptions.PreferClientCalculation) pull it client-side, collapsing a SQL NULL to default(T).
 		[CLSCompliant(false)]
-		[Expression("{0}", 0, CanBeNull = true)]
 		public static T AsNullable<T>(T value)
 		{
 			return value;
@@ -99,8 +101,10 @@ namespace LinqToDB
 			return value;
 		}
 
+		// Pure nullability widener — handled by SqlFunctionsMemberTranslatorBase so it always stays server-side.
+		// Deliberately carries no [Expression] attribute: that would let projection client-calculation
+		// (LinqOptions.PreferClientCalculation) pull it client-side, collapsing a SQL NULL to default(T) before the widen.
 		[CLSCompliant(false)]
-		[Expression("{0}", 0, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static T? ToNullable<T>(T value)
 			where T : struct
 		{
@@ -1000,17 +1004,26 @@ namespace LinqToDB
 		[Function(PN.ClickHouse, "cosh", IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static double?  Cosh   (double?  value) => value == null ? null : Math.Cosh   (value.Value);
 
+		[Expression(PN.Ydb,        "Math::Cos({0}) / Math::Sin({0})", IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Multiplicative)]
 		[Expression(PN.ClickHouse, "1/tan({0})", IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Multiplicative)]
 		[Expression(PN.SQLite,     "1/TAN({0})", IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Multiplicative)]
 		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static double?  Cot    (double?  value) { return value == null ? null : (double?)Math.Cos(value.Value) / Math.Sin(value.Value); }
 
+		// YQL has no DEGREES; compute via Math::Pi(). Cast the argument to Double so it does not mix with the literal/Pi.
+		[Expression(PN.Ydb, "CAST({0} AS Double) * 180.0 / Math::Pi()", IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Multiplicative)]
 		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static decimal? Degrees(decimal? value) => value == null ? null : (value.Value * 180m / (decimal)Math.PI);
+		[Expression(PN.Ydb, "CAST({0} AS Double) * 180.0 / Math::Pi()", IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Multiplicative)]
 		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static double?  Degrees(double?  value) => value == null ? null : (value.Value * 180 / Math.PI);
+		[Expression(PN.Ydb, "CAST({0} AS Double) * 180.0 / Math::Pi()", IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Multiplicative)]
 		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static short?   Degrees(short?   value) { return value == null ? null : (short?)  (value.Value * 180 / Math.PI); }
+		[Expression(PN.Ydb, "CAST({0} AS Double) * 180.0 / Math::Pi()", IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Multiplicative)]
 		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static int?     Degrees(int?     value) { return value == null ? null : (int?)    (value.Value * 180 / Math.PI); }
+		[Expression(PN.Ydb, "CAST({0} AS Double) * 180.0 / Math::Pi()", IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Multiplicative)]
 		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static long?    Degrees(long?    value) { return value == null ? null : (long?)   (value.Value * 180 / Math.PI); }
 		[CLSCompliant(false)]
+		[Expression(PN.Ydb, "CAST({0} AS Double) * 180.0 / Math::Pi()", IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Multiplicative)]
 		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static sbyte?   Degrees(sbyte?   value) { return value == null ? null : (sbyte?)  (value.Value * 180 / Math.PI); }
+		[Expression(PN.Ydb, "CAST({0} AS Double) * 180.0 / Math::Pi()", IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Multiplicative)]
 		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static float?   Degrees(float?   value) { return value == null ? null : (float?)  (value.Value * 180 / Math.PI); }
 
 		[Function(PN.Ydb, "Math::Exp", IsNullable = IsNullableType.IfAnyParameterNullable)]

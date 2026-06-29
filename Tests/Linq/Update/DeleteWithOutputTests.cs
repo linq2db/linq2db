@@ -13,9 +13,9 @@ namespace Tests.xUpdate
 	public class DeleteWithOutputTests : TestBase
 	{
 		private const string FeatureDeleteOutputMultipleWithExpressions = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird5Plus},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite},{TestProvName.AllDuckDB}";
-		private const string FeatureDeleteOutputMultiple                = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird5Plus},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite},{ProviderName.Ydb},{TestProvName.AllDuckDB}";
+		private const string FeatureDeleteOutputMultiple                = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird5Plus},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite},{TestProvName.AllYdb},{TestProvName.AllDuckDB}";
 		private const string FeatureDeleteOutputSingleWithExpressions   = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebirdLess5},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite},{TestProvName.AllDuckDB}";
-		private const string FeatureDeleteOutputSingle                  = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebirdLess5},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite},{ProviderName.Ydb},{TestProvName.AllDuckDB}";
+		private const string FeatureDeleteOutputSingle                  = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebirdLess5},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite},{TestProvName.AllYdb},{TestProvName.AllDuckDB}";
 		private const string FeatureDeleteOutputInto                    = $"{TestProvName.AllSqlServer}";
 
 		[Table]
