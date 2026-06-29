@@ -117,7 +117,9 @@ namespace Tests.Linq
 			[Column] public int Value { get; set; }
 		}
 
-		[Test]
+		// NonParallelizable: creates a SQL Server GLOBAL temp table (##) in instance-wide tempdb;
+		// a concurrent session on the same server collides on the object name.
+		[Test, NonParallelizable]
 		public void IsGlobalTemporaryTest([IncludeDataSources(
 			ProviderName.DB2,
 			ProviderName.Firebird25,
@@ -142,7 +144,9 @@ namespace Tests.Linq
 			[Column] public int Value { get; set; }
 		}
 
-		[Test]
+		// NonParallelizable: on SQL Server 2012 maps to the GLOBAL temp table ##temp_table (instance-wide tempdb);
+		// a concurrent session collides on the object name.
+		[Test, NonParallelizable]
 		public void CreateIfNotExistsTest([IncludeDataSources(
 			true,
 			ProviderName.DB2,
@@ -174,7 +178,10 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
+		// NonParallelizable: creates a SQL Server GLOBAL temp table (##), which lives in the
+		// instance-wide tempdb; a concurrent session (e.g. the .MS variant in another lane on the
+		// same server) collides on the same object name.
+		[Test, NonParallelizable]
 		public void CreateTempIfNotExistsTest([IncludeDataSources(
 			false,
 			ProviderName.DB2,
@@ -467,7 +474,9 @@ namespace Tests.Linq
 			TestTableOptions(context, tableOptions);
 		}
 
-		[Test]
+		// NonParallelizable: the IsGlobalTemporary* cases create a GLOBAL temp table (##) in instance-wide
+		// tempdb; a concurrent session on the same server collides on the object name.
+		[Test, NonParallelizable]
 		public void SqlServerTableOptionsTest(
 			[IncludeDataSources(TestProvName.AllSqlServer)] string context,
 			[Values(

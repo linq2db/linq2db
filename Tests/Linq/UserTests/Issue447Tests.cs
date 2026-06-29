@@ -44,7 +44,8 @@ namespace Tests.UserTests
 			_ = result.ToSqlQuery().Sql;
 		}
 
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void TestLinqToDBComplexQueryCache([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -85,7 +86,8 @@ namespace Tests.UserTests
 			result1.GetCacheMissCount().ShouldBe(cacheMiss);
 		}
 
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void TestLinqToDBComplexQueryCacheWithExposing([DataSources] string context)
 		{
 			using var db = GetDataContext(context);

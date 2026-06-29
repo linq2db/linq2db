@@ -16,7 +16,8 @@ namespace Tests.UserTests
 
 		int? ID2;
 
-		[Test]
+		// NonParallelizable: mutates shared per-fixture instance fields ID1/ID2 mid-test that the query closures capture; concurrent cases corrupt them.
+		[Test, NonParallelizable]
 		public void TestWrongValue([DataSources(TestProvName.AllClickHouse)] string context, [Values(1, 2)] int _)
 		{
 			using var db = GetDataContext(context);
@@ -38,7 +39,8 @@ namespace Tests.UserTests
 			Assert.That(result[0].ID, Is.EqualTo(4));
 		}
 
-		[Test]
+		// NonParallelizable: mutates shared per-fixture instance fields ID1/ID2 mid-test that the query closures capture; concurrent cases corrupt them.
+		[Test, NonParallelizable]
 		public void TestNullValue([DataSources(TestProvName.AllClickHouse)] string context, [Values(1, 2)] int _)
 		{
 			using var db = GetDataContext(context);

@@ -111,7 +111,8 @@ namespace Tests.Mapping
 				.MergeAsync();
 		}
 
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void CacheTest([DataSources] string context)
 		{
 			var count = Test("Value");

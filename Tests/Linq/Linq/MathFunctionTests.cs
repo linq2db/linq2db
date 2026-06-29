@@ -340,7 +340,8 @@ namespace Tests.Linq
 		}
 
 		// TODO: implement other MidpointRounding values (and remove NUnit4001 suppress)
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 #pragma warning disable NUnit4001
 		public void Round12([DataSources(TestProvName.AllSQLite)] string context, [Values(MidpointRounding.AwayFromZero, MidpointRounding.ToEven)] MidpointRounding mp, [Values(1, 2)] int iteration)
 #pragma warning restore NUnit4001

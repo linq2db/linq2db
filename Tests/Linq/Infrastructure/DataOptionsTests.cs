@@ -292,7 +292,8 @@ namespace Tests.Infrastructure
 			public int Id { get; }
 		}
 
-		[Test]
+		// mutates the global MappingSchema.EntityDescriptorCreatedCallback and clears the mapping cache
+		[Test, NonParallelizable]
 		public void OnEntityDescriptorCreatedTest([DataSources(false)] string context)
 		{
 			MappingSchema.ClearCache();

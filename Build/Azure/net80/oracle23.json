@@ -1,7 +1,0 @@
-﻿{
-	"NET80.Azure": {
-		"Providers": [
-			"Oracle.23.Managed"
-		]
-	}
-}

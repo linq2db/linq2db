@@ -399,7 +399,8 @@ namespace Tests.DataProvider
 			public int Id;
 		}
 
-		[Test]
+		// NonParallelizable: creates/drops a hardcoded shared "TestDatabase" file used by all Access OLE DB providers; their lanes run concurrently and collide. Future: per-provider filename.
+		[Test, NonParallelizable]
 		public void CreateDatabase([IncludeDataSources(TestProvName.AllAccessOleDb)] string context)
 		{
 			var cs = DataConnection.GetConnectionString(context);

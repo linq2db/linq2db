@@ -26,7 +26,8 @@ namespace Tests.Linq
 			Assert.That(orderBy.Items[0].IsPositioned, Is.True);
 		}
 
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void Parameter([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -53,7 +54,8 @@ namespace Tests.Linq
 			Assert.That(parameters[0].IsQueryParameter, Is.True);
 		}
 
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void Constant([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(1, 2)] int iteration)
 		{
 			using var db = GetDataContext(context);

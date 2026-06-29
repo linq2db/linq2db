@@ -171,7 +171,8 @@ namespace Tests.xUpdate
 		/// call does NOT trigger a cache miss. If the entity's columns were inlined as SQL
 		/// constants instead of parameters, the second call would generate different SQL and miss.
 		/// </summary>
-		[Test]
+		// NonParallelizable: asserts an exact process-global query-cache miss count; a concurrent test's compilation perturbs it.
+		[Test, NonParallelizable]
 		public void QueryCache_ParameterisesItemValues([DataSources] string context)
 		{
 			using var db = GetDataContext(context);

@@ -88,7 +88,10 @@ namespace Tests.Mapping
 			}
 		}
 
-		[Test]
+		// NonParallelizable: mutates the process-global Common.Convert<TFrom,TTo> converter, which
+		// Sql.Convert / ConvertTo read across all tests - would corrupt concurrent conversion-sensitive
+		// tests under parallel execution. Restored in a finally so a failed assertion can't leak it.
+		[Test, NonParallelizable]
 		public void BaseSchema2()
 		{
 			var ms1 = new MappingSchema();
@@ -371,7 +374,8 @@ namespace Tests.Mapping
 			public PkTable? Parent;
 		}
 
-		[Test]
+		// NonParallelizable: reads MappingSchema.Default entity-descriptor state; a concurrent Default mutation removes the expected column.
+		[Test, NonParallelizable]
 		public void DoNotUseComplexAttributes()
 		{
 			var ed = MappingSchema.Default.GetEntityDescriptor(typeof(FkTable));

@@ -52,7 +52,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void Unnest([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context, [Values(1, 2)] int iteration)
 		{
 			var testData = SampleClass.Seed();
@@ -445,7 +446,7 @@ namespace Tests.DataProvider
 			_ = query.ToArray();
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/5480")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5480"), NonParallelizable]
 		public void FromSqlScalarCache([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context, [Values(1, 2)] int iteration)
 		{
 			var testData = SampleClass.Seed();
@@ -466,7 +467,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/5480")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5480"), NonParallelizable]
 		public void UnnestCache([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context, [Values(1, 2)] int iteration)
 		{
 			var       testData = SampleClass.Seed();
@@ -487,7 +488,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/5480")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5480"), NonParallelizable]
 		public void UnnestWithOrdinalityCache([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context, [Values(1, 2)] int iteration)
 		{
 			var       testData = SampleClass.Seed();
@@ -508,7 +509,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/5480")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5480"), NonParallelizable]
 		public void GenerateSubscriptsCache([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context, [Values(1, 2)] int iteration)
 		{
 			var       testData = SampleClass.Seed();
@@ -529,7 +530,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/5480")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5480"), NonParallelizable]
 		public void GenerateSubscriptsReverseCache([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context, [Values(1, 2)] int iteration)
 		{
 			var       testData = SampleClass.Seed();
@@ -550,7 +551,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/5480")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5480"), NonParallelizable]
 		public void GenerateSeriesIntCache([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context, [Values(1, 2)] int iteration)
 		{
 			var       testData = SampleClass.Seed();
@@ -572,7 +573,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/5480")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5480"), NonParallelizable]
 		public void GenerateSeriesIntStepCache([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context, [Values(1, 2)] int iteration)
 		{
 			var       testData = SampleClass.Seed();
@@ -595,7 +596,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/5480")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5480"), NonParallelizable]
 		public void GenerateSeriesDateCache([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context, [Values(1, 2)] int iteration)
 		{
 			using var db = GetDataContext(context);
