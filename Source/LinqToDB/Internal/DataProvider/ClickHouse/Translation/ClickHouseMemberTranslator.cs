@@ -5,7 +5,6 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
-using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
@@ -40,6 +39,11 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 		protected override IMemberTranslator CreateGuidMemberTranslator()
 		{
 			return new GuidMemberTranslator();
+		}
+
+		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()
+		{
+			return new ClickHouseWindowFunctionsMemberTranslator();
 		}
 
 		protected class SqlTypesTranslation : SqlTypesTranslationDefault
@@ -613,11 +617,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 			// it lacks bare STDDEV/VARIANCE (IsVarianceBareSupported) and REGR_*.
 			protected override bool IsVarianceSupported          => true;
 			protected override bool IsCorrelationSupported       => true;
-		}
-
-		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()
-		{
-			return new ClickHouseWindowFunctionsMemberTranslator();
+			public    override bool IsRowNumberNeedsCasting      => true;
 		}
 	}
 }

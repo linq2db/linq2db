@@ -239,6 +239,13 @@ namespace LinqToDB.Linq.Translation
 			Registration.RegisterMethod((IQueryable<int>  g) => g.CumeDist(1, 1, (e, f) => f.OrderBy(e).ThenBy(e)), TranslateHypotheticalCumeDist, isGenericTypeMatch: true);
 		}
 
+		/// <summary>
+		/// When <see langword="true"/>, the translated <c>ROW_NUMBER()</c> is wrapped in an explicit <c>CAST</c> to the
+		/// result type. Providers whose <c>ROW_NUMBER()</c> does not yield the expected numeric type override this to
+		/// opt in (e.g. ClickHouse). Default: <see langword="false"/>.
+		/// </summary>
+		public virtual bool IsRowNumberNeedsCasting => false;
+
 		public record ArgumentInformation(Expression Expr, Sql.AggregateModifier Modifier);
 		public record OrderByInformation(Expression Expr, bool IsDescending, Sql.NullsPosition Nulls);
 		public record FrameBoundary(bool IsPreceding, SqlFrameBoundary.FrameBoundaryType BoundaryType, Expression? Offset);
@@ -698,17 +705,18 @@ namespace LinqToDB.Linq.Translation
 		}
 
 		protected Expression TranslateWindowFunction(
-			ITranslationContext                    translationContext,
-			MethodCallExpression                   methodCall,
-			int?                                   argumentIndex,
-			int                                    windowArgument,
-			DbDataType                             dbDataType,
-			string                                 functionName,
-			Action<List<SqlFunctionArgument>, bool>? adjustArguments = null)
+			ITranslationContext                      translationContext,
+			MethodCallExpression                     methodCall,
+			int?                                     argumentIndex,
+			int                                      windowArgument,
+			DbDataType                               dbDataType,
+			string                                   functionName,
+			Action<List<SqlFunctionArgument>, bool>? adjustArguments = null,
+			Func<ISqlExpression, ISqlExpression>?    transform       = null)
 			=> TranslateWindowFunctionCore(
 				translationContext, methodCall,
 				argumentIndex == null ? null : [methodCall.Arguments[argumentIndex.Value]],
-				windowArgument, dbDataType, functionName, adjustArguments);
+				windowArgument, dbDataType, functionName, adjustArguments, transform);
 
 		// Shared implementation for single- and multi-argument window functions (was ~120 duplicated lines
 		// across TranslateWindowFunction / TranslateWindowFunctionMultiArg).
@@ -719,7 +727,8 @@ namespace LinqToDB.Linq.Translation
 			int                                      windowArgument,
 			DbDataType                               dbDataType,
 			string                                   functionName,
-			Action<List<SqlFunctionArgument>, bool>? adjustArguments)
+			Action<List<SqlFunctionArgument>, bool>? adjustArguments,
+			Func<ISqlExpression, ISqlExpression>?    transform)
 		{
 			if (!IsWindowFunctionsSupported)
 				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
@@ -899,7 +908,9 @@ namespace LinqToDB.Linq.Translation
 				isWindowFunction: true
 			);
 
-			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, function, methodCall);
+			var finalExpression = transform != null ? transform(function) : function;
+
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, finalExpression, methodCall);
 		}
 
 		static LambdaExpression SimplifyEntityLambda(LambdaExpression lambda, int parameterIndex, Expression contextExpression)
@@ -930,7 +941,7 @@ namespace LinqToDB.Linq.Translation
 			var factory = translationContext.ExpressionFactory;
 			var dbDataType = factory.GetDbDataType(methodCall.Type);
 
-			return TranslateWindowFunction(translationContext, methodCall, null, 1, dbDataType, "ROW_NUMBER");
+			return TranslateWindowFunction(translationContext, methodCall, null, 1, dbDataType, "ROW_NUMBER", transform: f => IsRowNumberNeedsCasting ? factory.Cast(f, dbDataType, true) : f);
 		}
 
 		public virtual Expression? TranslateRank(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
@@ -1467,7 +1478,7 @@ namespace LinqToDB.Linq.Translation
 
 			var dbDataType = translationContext.ExpressionFactory.GetDbDataType(methodCall.Type);
 
-			return TranslateWindowFunctionCore(translationContext, methodCall, [methodCall.Arguments[1], methodCall.Arguments[2]], 3, dbDataType, functionName, null);
+			return TranslateWindowFunctionCore(translationContext, methodCall, [methodCall.Arguments[1], methodCall.Arguments[2]], 3, dbDataType, functionName, null, null);
 		}
 
 		public virtual Expression? TranslateCount(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
@@ -1595,7 +1606,7 @@ namespace LinqToDB.Linq.Translation
 			for (var i = 0; i < argumentIndexes.Length; i++)
 				functionArgs[i] = methodCall.Arguments[argumentIndexes[i]];
 
-			return TranslateWindowFunctionCore(translationContext, methodCall, functionArgs, windowArgument, dbDataType, functionName, null);
+			return TranslateWindowFunctionCore(translationContext, methodCall, functionArgs, windowArgument, dbDataType, functionName, null, null);
 		}
 	}
 }

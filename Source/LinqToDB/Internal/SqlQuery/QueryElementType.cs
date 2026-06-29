@@ -116,6 +116,15 @@
 		// TODO: appended here for v6.x LinqService wire-compat (enum ordinals are serialized as int).
 		// In v7 move next to SqlCast / SqlCoalesce where it belongs logically.
 		SqlConcat,
+
+		// TODO: appended here for v6.x LinqService wire-compat (enum ordinals are serialized as int) —
+		// inserting mid-enum shifts later members' ordinals and breaks the LinqService wire.
+		// In v7 move next to SqlCteTable where they belong logically.
+		SqlCteField,
+		SqlCteTableField,
+
+		// TODO: appended here for v6.x LinqService wire-compat (enum ordinals are serialized as int).
+		// In v7 move next to SqlCast / SqlCoalesce where it belongs logically.
 		SqlKeepClause,
 	}
 }
