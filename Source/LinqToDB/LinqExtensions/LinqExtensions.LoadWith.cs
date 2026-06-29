@@ -862,6 +862,7 @@ namespace LinqToDB
 		/// per association), fetching the full parent entity on the parent side of the join.
 		/// <para>
 		/// Applied to the root query; the strategy propagates to all contained child collections.
+		/// Equivalent to <see cref="EagerLoadingStrategy.Default"/>.
 		/// Consider <see cref="WithKeyedLoadStrategy{T}(IQueryable{T})"/> instead when the parent entity has many columns.
 		/// </para>
 		/// <para>An explicit per-query marker takes precedence over the <see cref="LinqOptions.DefaultEagerLoadingStrategy"/> global default. When more than one marker is applied to the same query, the outermost (last-applied) marker wins and inner markers are ignored; e.g. <c>q.WithKeyedLoadStrategy().Where(...).WithUnionLoadStrategy()</c> uses <see cref="EagerLoadingStrategy.CteUnion"/>.</para>

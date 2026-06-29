@@ -258,7 +258,7 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Binary-compatibility overload of the record's positional constructor — mirrors the
-		/// public ctor signature as it was before <see cref="UpsertEmulationPolicy"/> and DefaultEagerLoadingStrategy were added,
+		/// public ctor signature as it was before <see cref="UpsertEmulationPolicy"/> and the later options were added,
 		/// so assemblies compiled against the previous linq2db release continue to load.
 		/// </summary>
 		// TODO: remove in v7 (binary-compat shim — drop together with the matching Deconstruct overload).
@@ -290,7 +290,7 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Binary-compatibility overload of the record's <c>Deconstruct</c> — mirrors the
-		/// method signature as it was before <see cref="UpsertEmulationPolicy"/> and DefaultEagerLoadingStrategy were added.
+		/// method signature as it was before <see cref="UpsertEmulationPolicy"/> and the later options were added.
 		/// </summary>
 		// TODO: remove in v7 (binary-compat shim — drop together with the matching constructor overload).
 		[EditorBrowsable(EditorBrowsableState.Never)]
