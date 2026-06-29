@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -104,6 +104,13 @@ namespace LinqToDB.Linq.Translation
 			Registration.RegisterMethod(() => Sql.Window.Max((byte)1,       f => f.OrderBy(1)), TranslateMax);
 			Registration.RegisterMethod(() => Sql.Window.Max((byte?)1,      f => f.OrderBy(1)), TranslateMax);
 		}
+
+		/// <summary>
+		/// When <see langword="true"/>, the translated <c>ROW_NUMBER()</c> is wrapped in an explicit <c>CAST</c> to the
+		/// result type. Providers whose <c>ROW_NUMBER()</c> does not yield the expected numeric type override this to
+		/// opt in (e.g. ClickHouse). Default: <see langword="false"/>.
+		/// </summary>
+		public virtual bool IsRowNumberNeedsCasting => false;
 
 		public record ArgumentInformation(Expression Expr, Sql.AggregateModifier Modifier);
 		public record OrderByInformation(Expression Expr, bool IsDescending, Sql.NullsPosition Nulls);
@@ -395,12 +402,13 @@ namespace LinqToDB.Linq.Translation
 		}
 
 		protected Expression TranslateWindowFunction(
-			ITranslationContext  translationContext,
-			MethodCallExpression methodCall,
-			int?                 argumentIndex,
-			int                  windowArgument,
-			DbDataType           dbDataType,
-			string               functionName)
+			ITranslationContext                   translationContext,
+			MethodCallExpression                  methodCall,
+			int?                                  argumentIndex,
+			int                                   windowArgument,
+			DbDataType                            dbDataType,
+			string                                functionName,
+			Func<ISqlExpression, ISqlExpression>? transform = null)
 		{
 			if (!CollectWindowFunctionInformation(
 				    translationContext, 
@@ -492,7 +500,9 @@ namespace LinqToDB.Linq.Translation
 				frameClause : frame
 			);
 
-			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, function, methodCall);
+			var finalExpression = transform != null ? transform(function) : function;
+
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, finalExpression, methodCall);
 		}
 
 		static LambdaExpression SimplifyEntityLambda(LambdaExpression lambda, int parameterIndex, Expression contextExpression)
@@ -523,7 +533,7 @@ namespace LinqToDB.Linq.Translation
 			var factory = translationContext.ExpressionFactory;
 			var dbDataType = factory.GetDbDataType(methodCall.Type);
 
-			return TranslateWindowFunction(translationContext, methodCall, null, 1, dbDataType, "ROW_NUMBER");
+			return TranslateWindowFunction(translationContext, methodCall, null, 1, dbDataType, "ROW_NUMBER", f => IsRowNumberNeedsCasting ? factory.Cast(f, dbDataType, true) : f);
 		}
 
 		public virtual Expression? TranslateRank(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
