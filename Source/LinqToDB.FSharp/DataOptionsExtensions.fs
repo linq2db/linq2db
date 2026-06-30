@@ -9,4 +9,6 @@ type Methods() =
     /// <remarks>Currently it is limited to record types support, but we plan to add more support in future releases.</remarks>
     [<Extension>]
     static member UseFSharp(options : DataOptions) =
-        options.UseInterceptor FSharpEntityBindingInterceptor.Instance
+        options
+            .UseInterceptor(FSharpEntityBindingInterceptor.Instance)
+            .UseInterceptor(FSharpQueryExpressionInterceptor.Instance)

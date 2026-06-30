@@ -5,21 +5,24 @@ using System.Linq;
 
 namespace LinqToDB.Internal.Linq.Builder
 {
-	[DebuggerDisplay("InlineParameters = {InlineParameters}, IgnoreQueryFilters = {IgnoreQueryFilters}")]
+	[DebuggerDisplay("InlineParameters = {InlineParameters}, IgnoreQueryFilters = {IgnoreQueryFilters}, EagerLoadingStrategy = {EagerLoadingStrategy}")]
 	sealed class TranslationModifier : IEquatable<TranslationModifier>
 	{
 		public static readonly TranslationModifier Default = new();
 
 		public TranslationModifier(
-			bool    inlineParameters   = false,
-			Type[]? ignoreQueryFilters = null)
+			bool                  inlineParameters     = false,
+			Type[]?               ignoreQueryFilters   = null,
+			EagerLoadingStrategy? eagerLoadingStrategy = null)
 		{
-			InlineParameters   = inlineParameters;
-			IgnoreQueryFilters = ignoreQueryFilters;
+			InlineParameters      = inlineParameters;
+			IgnoreQueryFilters    = ignoreQueryFilters;
+			EagerLoadingStrategy  = eagerLoadingStrategy;
 		}
 
-		public bool    InlineParameters   { get; }
-		public Type[]? IgnoreQueryFilters { get; }
+		public bool                  InlineParameters      { get; }
+		public Type[]?               IgnoreQueryFilters    { get; }
+		public EagerLoadingStrategy? EagerLoadingStrategy  { get; }
 
 		public bool IsFilterDisabled(Type entityType)
 		{
@@ -45,6 +48,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			return InlineParameters == other.InlineParameters &&
+				EagerLoadingStrategy == other.EagerLoadingStrategy &&
 				((IgnoreQueryFilters == null && other.IgnoreQueryFilters == null) ||
 				(IgnoreQueryFilters != null && other.IgnoreQueryFilters != null && IgnoreQueryFilters.SequenceEqual(other.IgnoreQueryFilters)));
 		}
@@ -56,7 +60,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				return this;
 			}
 
-			return new TranslationModifier(inlineParameters, IgnoreQueryFilters);
+			return new TranslationModifier(inlineParameters, IgnoreQueryFilters, EagerLoadingStrategy);
 		}
 
 		public TranslationModifier WithIgnoreQueryFilters(Type[]? ignoreQueryFilters)
@@ -73,7 +77,17 @@ namespace LinqToDB.Internal.Linq.Builder
 				_ => IgnoreQueryFilters.Union(ignoreQueryFilters).ToArray(),
 			};
 
-			return new TranslationModifier(InlineParameters, newFilters);
+			return new TranslationModifier(InlineParameters, newFilters, EagerLoadingStrategy);
+		}
+
+		public TranslationModifier WithEagerLoadingStrategy(EagerLoadingStrategy strategy)
+		{
+			if (EagerLoadingStrategy == strategy)
+			{
+				return this;
+			}
+
+			return new TranslationModifier(InlineParameters, IgnoreQueryFilters, strategy);
 		}
 
 		public override bool Equals([NotNullWhen(true)] object? obj)
@@ -85,6 +99,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			var hashCode = new HashCode();
 			hashCode.Add(InlineParameters);
+			hashCode.Add(EagerLoadingStrategy);
 
 			if (IgnoreQueryFilters != null)
 			{

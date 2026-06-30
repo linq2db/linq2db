@@ -29,10 +29,13 @@ Also applies to your **own** submitted review/comment — overwriting erases pub
 
 ### Verify after every manual PATCH / PUT
 
-After any manual `gh api PATCH` / `PUT` on a comment or review body, re-fetch and verify. The API's success response only confirms the request was accepted — it doesn't confirm the body you intended was actually stored. Two known traps:
+**Prefer the dedicated scripts for body edits** — `.claude/scripts/pr-body-edit.ps1` (PR description; anchor-based insert) and `.claude/scripts/edit-gh-comment.ps1` (issue / PR-issue comment; PATCH + byte-compare). Both round-trip the body through `Invoke-Gh` + `[System.IO.File]` UTF-8 I/O, immune to every trap below. Hand-roll a `gh api` PATCH only when neither fits.
+
+After any manual `gh api PATCH` / `PUT` on a comment or review body, re-fetch and verify. The API's success response only confirms the request was accepted — it doesn't confirm the body you intended was actually stored. Three known traps:
 
 - `gh api -f body=@<file>` does **not** read the file; it stores the literal string `@<file>` as the body. Same trap as `gh … --body @-`. Use `--input <json-file>` with a properly-escaped wrapper instead — build it via pwsh (`@{body=Get-Content -Raw <md>} | ConvertTo-Json -Compress | Set-Content <json>`), then `gh api --method PATCH ... --input <json>`.
-- Stdin encoding via Bash pipes can mangle non-ASCII (em-dash → `ΓÇö` etc.) on Windows.
+- **Fetching a body to mutate-and-repush:** never `gh api … --jq '.body' | Set-Content` — the PowerShell pipe splits gh's output into an array of lines and `Set-Content` (especially `-NoNewline`) rejoins them with no separator, **stripping every newline** so the whole body collapses onto one line (headings, code fences, paragraphs all run together). Capture `Invoke-Gh`'s `.stdout`, or read a redirected file with `[System.IO.File]::ReadAllText`, then write back with `[System.IO.File]::WriteAllText` (UTF-8, no BOM) — exactly what `pr-body-edit.ps1` does. A tail-only verify of an appended edit misses this; assert a structural invariant (e.g. heading count) too.
+- Stdin encoding via Bash pipes can mangle non-ASCII (em-dash → `ΓÇö` etc.) on Windows; capturing raw `gh` stdout into a pwsh variable mangles the same way unless `[Console]::OutputEncoding = [Text.Encoding]::UTF8` is set first.
 
 After every manual PATCH/PUT, run `gh api repos/<o>/<r>/issues/comments/<id> --jq '.body[:200]'` (or equivalent) and confirm the prefix matches what you intended. Skill-driven posts via `post-pr-review.ps1` already do this byte-compare via `verify: true`; manual calls don't, so verify by hand.
 

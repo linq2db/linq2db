@@ -49,6 +49,10 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			SqlProviderFlags.IsNullsOrderingSupported          = true;
 			SqlProviderFlags.DefaultNullsOrdering              = NullsDefaultOrdering.Smallest; // SAP HANA sorts NULL as the smallest value
 			SqlProviderFlags.SupportsBooleanType               = false;
+			// SAP HANA's per-SELECT column limit (~1000) caps how wide a CteUnion carrier projection can
+			// grow before the eager-loading strategy falls back to KeyedQuery. Not validated against a live
+			// HANA engine; verify against the documented limit before relying on it.
+			SqlProviderFlags.MaxColumnCount                    = 1000;
 
 			// Native single-statement upsert via HANA's UPSERT … WITH PRIMARY KEY. The statement
 			// applies one VALUES list to both branches and has no UPDATE-side predicate, so:
