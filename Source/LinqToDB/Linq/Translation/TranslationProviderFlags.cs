@@ -9,6 +9,9 @@ namespace LinqToDB.Linq.Translation
 	/// </summary>
 	public sealed class TranslationProviderFlags
 	{
+		/// <summary>Initializes a new <see cref="TranslationProviderFlags"/>.</summary>
+		/// <param name="defaultNullsOrdering">The provider's natural NULL placement when no <c>NULLS FIRST</c>/<c>NULLS LAST</c> is specified.</param>
+		/// <param name="isNullsOrderingSupported">Whether the provider supports the <c>NULLS FIRST</c>/<c>NULLS LAST</c> keyword in <c>ORDER BY</c>.</param>
 		public TranslationProviderFlags(NullsDefaultOrdering defaultNullsOrdering, bool isNullsOrderingSupported)
 		{
 			DefaultNullsOrdering     = defaultNullsOrdering;

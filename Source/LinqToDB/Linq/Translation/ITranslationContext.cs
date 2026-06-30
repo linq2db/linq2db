@@ -26,6 +26,8 @@ namespace LinqToDB.Linq.Translation
 
 		MappingSchema            MappingSchema { get; }
 		DataOptions              DataOptions   { get; }
+
+		/// <summary>Read-only, translation-relevant subset of the provider's SQL flags (see <see cref="TranslationProviderFlags"/>).</summary>
 		TranslationProviderFlags ProviderFlags { get; }
 
 		ISqlExpressionFactory ExpressionFactory { get; }
