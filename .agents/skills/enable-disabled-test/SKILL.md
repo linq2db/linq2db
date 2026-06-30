@@ -70,7 +70,7 @@ If the bisect cost looks large up front (> 200 commits in the range), surface it
 
 1. Switch to main repo (`C:\GitHub\linq2db.claude` typically); confirm working tree is clean (the worktree edits don't propagate — they're independent).
 2. Create branch from fresh `origin/master`: `git fetch origin master` → `git switch -c issue/<n>-<kebab-slug> origin/master`. Slug per agent-rules; verb-led (`enable-enum-mapping-test`, `enable-cte-alias-test`).
-3. If carrying `.agents/` from `infra/claude-curation` (per agent-rules → *Carrying `.agents/` curation across branch switches*), do it now: `git checkout origin/infra/claude-curation -- .agents/`. These changes must NOT be committed on this branch.
+3. If carrying `.agents/` from `infra/agents-curation` (per agent-rules → *Carrying `.agents/` curation across branch switches*), do it now: `git checkout origin/infra/agents-curation -- .agents/`. These changes must NOT be committed on this branch.
 4. Edit each gated test to remove `[ActiveIssue]`. One-line change per test (the attribute on its own line).
 5. Stage **only** the test file(s): `git add <test-file>`. If `.agents/` was carried, `git restore --staged .agents/` immediately after to drop the auto-stage.
 

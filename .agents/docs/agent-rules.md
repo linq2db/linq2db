@@ -20,7 +20,7 @@ This is the **Claude-Code-specific operational overlay**, auto-imported by `CLAU
 
 ### Carrying `.agents/` curation across branch switches
 
-When switching off `infra/claude-curation` to a working branch (feature/\*, issue/\*, etc.), pull the latest curation `.agents/` state into the new branch as **uncommitted** modifications (`git fetch origin infra/claude-curation` → `git checkout origin/infra/claude-curation -- .agents/`) so the agent isn't running against stale `.agents/`. **Never commit those carried-over diffs on a working branch** — stage with explicit pathspecs only, never `git add .`/`-A`; `.agents/` is only committed on `infra/claude-curation` itself. `master` / `release` are exempt. Full rule (staging discipline, push-time verification, save-back path): [`worktree.md`](worktree.md) → *Carrying `.agents/` curation across branch switches*.
+When switching off `infra/agents-curation` to a working branch (feature/\*, issue/\*, etc.), pull the latest curation `.agents/` state into the new branch as **uncommitted** modifications (`git fetch origin infra/agents-curation` → `git checkout origin/infra/agents-curation -- .agents/`) so the agent isn't running against stale `.agents/`. **Never commit those carried-over diffs on a working branch** — stage with explicit pathspecs only, never `git add .`/`-A`; `.agents/` is only committed on `infra/agents-curation` itself. `master` / `release` are exempt. Full rule (staging discipline, push-time verification, save-back path): [`worktree.md`](worktree.md) → *Carrying `.agents/` curation across branch switches*.
 
 ### Bash command rules
 

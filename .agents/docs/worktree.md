@@ -53,13 +53,13 @@ Cleanup (only when removal is lock-blocked): **`pwsh -NoProfile -File .agents/sc
 
 ## Carrying `.agents/` curation across branch switches
 
-`.agents/` skills, docs, hooks, and scripts accumulate on `infra/claude-curation` between weekly merges to `master`. Switching from `infra/claude-curation` to a working branch (feature/\*, issue/\*, etc.) without carrying those changes forward causes the agent to operate against stale `.agents/` state, losing every refinement since the last master merge. The one-line trigger lives in [`agent-rules.md`](agent-rules.md) → *Creating a new branch*.
+`.agents/` skills, docs, hooks, and scripts accumulate on `infra/agents-curation` between weekly merges to `master`. Switching from `infra/agents-curation` to a working branch (feature/\*, issue/\*, etc.) without carrying those changes forward causes the agent to operate against stale `.agents/` state, losing every refinement since the last master merge. The one-line trigger lives in [`agent-rules.md`](agent-rules.md) → *Creating a new branch*.
 
-- **Rule:** when the working branch is not `master`/`release`, the `.agents/` working tree should reflect the latest `origin/infra/claude-curation` state as **uncommitted** modifications. Right after `git switch <target>`, run **`pwsh -NoProfile -File .agents/scripts/carry-curation.ps1`** — it refuses on master/release, fetches the curation branch, checks out its `.agents/`, and leaves the result as *unstaged* working-tree changes.
+- **Rule:** when the working branch is not `master`/`release`, the `.agents/` working tree should reflect the latest `origin/infra/agents-curation` state as **uncommitted** modifications. Right after `git switch <target>`, run **`pwsh -NoProfile -File .agents/scripts/carry-curation.ps1`** — it refuses on master/release, fetches the curation branch, checks out its `.agents/`, and leaves the result as *unstaged* working-tree changes.
 - **Never commit the carried-over changes on the working branch.** When staging, use `git add <specific paths>` only — never `git add .` / `-A` while curation diffs are present (`git restore --staged .agents/` if they slip in). Before `git merge` / `rebase origin/master`, discard the carry first (`git restore --staged --worktree .agents/`) or the modified `.agents/` tree blocks the merge; re-pull after. Before any `git push`, run **`carry-curation.ps1 -Verify`** — it flags any committed or staged `.agents/` in the `origin/<branch>..HEAD` range.
   - Before any `git push` on a working branch, verify the pushed range carries no `.agents/` diff: `git log origin/<branch>..HEAD --stat -- .agents/` should be empty.
 - **Exceptions:** switching to `master` or `release` does **not** carry curation diffs — those branches reflect merged state and should diff cleanly.
-- **The only branch where `.agents/` changes are committed is `infra/claude-curation` itself.** Session-end learnings captured via `/session-reflect`, `/audit-agents`, or ad-hoc edits should be applied on the curation branch, not on a working branch. When a session ends with carried-over `.agents/` changes on a working branch and the user wants to keep new edits, the canonical save path is: `git switch infra/claude-curation`, replay the edits there, commit on curation, switch back if more work remains.
+- **The only branch where `.agents/` changes are committed is `infra/agents-curation` itself.** Session-end learnings captured via `/session-reflect`, `/audit-agents`, or ad-hoc edits should be applied on the curation branch, not on a working branch. When a session ends with carried-over `.agents/` changes on a working branch and the user wants to keep new edits, the canonical save path is: `git switch infra/agents-curation`, replay the edits there, commit on curation, switch back if more work remains.
 
 ## Release-prep orchestration model
 
@@ -67,7 +67,7 @@ When `/release` runs against a `release-prep/<ver>` worktree, the moving parts s
 
 | Clone | Branch | Owns |
 |---|---|---|
-| `C:\GitHub\linq2db.claude` (curation workspace) | `infra/claude-curation` | `.agents/` skills + scripts; orchestrator state file at `.build/.agents/release-<ver>.json`; per-task plan caches; walk-decisions tracker |
+| `C:\GitHub\linq2db.claude` (curation workspace) | `infra/agents-curation` | `.agents/` skills + scripts; orchestrator state file at `.build/.agents/release-<ver>.json`; per-task plan caches; walk-decisions tracker |
 | `C:\GitHub\linq2db.claude.release-<ver>` (worktree) | `release-prep/<ver>` | source-tree edits (`Directory.Packages.props`, `.editorconfig`, csproj `VersionOverride` sites, code fixes); per-build outputs under `.build/bin/` |
 
 **Cross-clone calling pattern:** sub-skills that need to run a script from inside the worktree invoke `pwsh -NoProfile -File C:\GitHub\linq2db.claude\.agents\scripts\<name>.ps1 ...` with an absolute path back to curation. The script's `Get-Location` then yields the worktree, so file-system reads (Directory.Packages.props parsing, source globbing) target the right tree. The PowerShell tool's working directory is set explicitly via `Set-Location <worktree>` before each cross-clone call.

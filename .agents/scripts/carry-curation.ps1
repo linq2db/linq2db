@@ -20,7 +20,7 @@ working branch".
 param(
     [switch]$Verify,
     [string]$Branch,
-    [string]$Curation = 'infra/claude-curation',
+    [string]$Curation = 'infra/agents-curation',
     [string]$Remote   = 'origin'
 )
 

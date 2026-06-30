@@ -195,5 +195,5 @@ Every sub-skill that hits an unknown (new package without a known release-notes 
 - Do not run any sub-skill's work inline. The contract is that each sub-skill owns its own approval gates.
 - Do not auto-commit, auto-push, auto-merge, auto-tag, auto-publish. Every shared-state mutation needs an explicit user request (per `agent-rules.md` → **Git commit rules** / **Push to remote rules** / **Pull request rules**).
 - Do not silently skip a checklist item. Every `[-]` skip needs the user's explicit "skip this".
-- Do not edit `.agents/` files committed on the `release-prep/<ver>` branch. `.agents/` changes always live on `infra/claude-curation` per `agent-rules.md` → **Carrying `.agents/` curation across branch switches**. The orchestrator surfaces this rule whenever it switches branches.
+- Do not edit `.agents/` files committed on the `release-prep/<ver>` branch. `.agents/` changes always live on `infra/agents-curation` per `agent-rules.md` → **Carrying `.agents/` curation across branch switches**. The orchestrator surfaces this rule whenever it switches branches.
 - Do not assume `/version-bump`'s default `infra/bump-versions` branch is the right target during release prep — it's not. Run the edit logic on `release-prep/<ver>` directly (step 1a).

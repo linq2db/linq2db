@@ -21,7 +21,7 @@ Small, fast, deterministic-where-possible checks — runnable as a smoke suite (
 
 - **Runner + fixtures.** Where eval cases live (`.agents/evals/`?), how fixtures are pinned, and whether cases that invoke a model run in CI or only on demand (cost / non-determinism).
 - **Determinism.** Items 1, 3, 4 can be deterministic; 2, 5, 6 involve a model and need tolerance / sampling, not exact-match.
-- **CI integration.** Whether this runs in the linq2db CI (it touches no product code) or as a local `/`-skill the curator runs before landing `.agents/` changes on `infra/claude-curation`.
+- **CI integration.** Whether this runs in the linq2db CI (it touches no product code) or as a local `/`-skill the curator runs before landing `.agents/` changes on `infra/agents-curation`.
 - **Worth-it threshold.** A corpus this size may not justify a full harness; the cheapest first step is items 1 + 2 (script-schema + refuse-to-fabricate) as a single script, measured before expanding.
 
 Until built, the existing safeguards stand in for this: `git status` verification after every subagent ([`agent-rules.md`](agent-rules.md) → *Agent guardrails*), the `/audit-agents` static checks, and human review of `.agents/` edits.
