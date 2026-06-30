@@ -32,6 +32,12 @@ namespace Tests.UserTests
 			public int Id { get; set; }
 		}
 
+		class EnumNullTable
+		{
+			[Column] public int    Id     { get; set; }
+			[Column] public Enum1? Status { get; set; }
+		}
+
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5666")]
 		public void Issue5666Test([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -60,6 +66,27 @@ namespace Tests.UserTests
 			// The non-nullable enum column is never referenced by the query; it must not leak into the SQL.
 			var sql = query.ToSqlQuery().Sql;
 			Assert.That(sql, Does.Not.Contain("SERV_CATG"));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5666")]
+		public void Issue5666NullComparison([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool notEqual)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(new[]
+			{
+				new EnumNullTable { Id = 1, Status = Enum1.Ok }, // Ok = 0, the value the old "<> 0" filter dropped
+				new EnumNullTable { Id = 2, Status = null },
+			});
+
+			var query = notEqual
+				? db.GetTable<EnumNullTable>().Where(x => x.Status != null)
+				: db.GetTable<EnumNullTable>().Where(x => x.Status == null);
+
+			var sql = query.ToSqlQuery().Sql;
+			Assert.That(sql, Does.Contain(notEqual ? "IS NOT NULL" : "IS NULL"));
+
+			var result = query.Select(x => x.Id).ToList();
+			Assert.That(result, Is.EquivalentTo(notEqual ? new[] { 1 } : new[] { 2 }));
 		}
 	}
 }
