@@ -43,10 +43,13 @@ $ErrorActionPreference = 'Stop'
 
 # --- Resolve transcript directory -------------------------------------------
 if (-not $TranscriptDir) {
-    # Claude encodes the cwd into the projects folder name by replacing ':' and
-    # path separators with '-'. This repo's cwd is C:\GitHub\linq2db.claude.
+    # Claude Code stores each project's transcripts under ~/.claude/projects/<slug>,
+    # where <slug> is the project's working directory with ':' '\' '/' '.' each
+    # replaced by '-'. Derive it from the current location so this isn't pinned to
+    # one machine's clone path; pass -TranscriptDir to override.
     $home1 = [Environment]::GetFolderPath('UserProfile')
-    $TranscriptDir = Join-Path $home1 '.claude/projects/C--GitHub-linq2db-claude'
+    $slug  = (Get-Location).Path -replace '[:\\/.]', '-'
+    $TranscriptDir = Join-Path $home1 ".claude/projects/$slug"
 }
 if (-not (Test-Path -LiteralPath $TranscriptDir)) {
     [Console]::Error.WriteLine("kb-usage-audit: transcript dir not found: $TranscriptDir")

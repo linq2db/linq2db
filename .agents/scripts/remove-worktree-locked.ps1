@@ -9,8 +9,8 @@ concurrent worktree builds. So this script tries the clean removal first and onl
 runs build-server shutdown when you pass -AllowBuildServerShutdown (i.e. you've
 confirmed no other builds are running). The shutdown judgment stays with you.
 
-  pwsh -NoProfile -File .agents/scripts/remove-worktree-locked.ps1 -Path ../linq2db.claude.5657
-  pwsh -NoProfile -File .agents/scripts/remove-worktree-locked.ps1 -Path ../linq2db.claude.5657 -AllowBuildServerShutdown
+  pwsh -NoProfile -File .agents/scripts/remove-worktree-locked.ps1 -Path <worktree-path>
+  pwsh -NoProfile -File .agents/scripts/remove-worktree-locked.ps1 -Path <worktree-path> -AllowBuildServerShutdown
 #>
 param(
     [Parameter(Mandatory)][string]$Path,

@@ -2,7 +2,7 @@
 <#
 Insert new content into a GitHub PR body at one or more ASCII anchors, in a
 single allowlisted pwsh call. Solves two recurring problems when editing a PR
-body from a Claude Code session:
+body from an automated agent session on Windows (Git Bash + pwsh):
 
   1. **Encoding.** `gh pr view` / `gh api … --jq '.body'` stdout arriving via
      Git Bash + pwsh gets decoded through the Windows console code page (cp850
@@ -39,7 +39,7 @@ Input (stdin, JSON):
         "text":     "…full text block…"    // inserted verbatim; caller is responsible for leading/trailing blank lines
       },
       {
-        "anchor":   "Generated with [Claude Code]",
+        "anchor":   "## Checklist",
         "position": "before",
         "text":     "…"
       }
@@ -62,7 +62,7 @@ Output (stdout, JSON):
     "bodyAfter":   ".build/.agents/pr5479-body-after.txt",
     "insertions": [
       { "anchor": "## Test plan", "position": "before", "ok": true, "insertedAt": 3912 },
-      { "anchor": "Generated with [Claude Code]", "position": "before", "ok": true, "insertedAt": 7013 }
+      { "anchor": "## Checklist", "position": "before", "ok": true, "insertedAt": 7013 }
     ],
     "diffStat": { "charsBefore": 8012, "charsAfter": 8741 }
   }
