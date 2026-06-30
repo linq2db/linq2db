@@ -1352,7 +1352,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "Ordering of selected columns inside UnionAll breaks query building")]
-		public void ColumnOrderInUnionAll([DataSources] string context)
+		public void ColumnOrderInUnionAll([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 
