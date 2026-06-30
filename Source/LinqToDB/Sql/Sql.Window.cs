@@ -559,7 +559,7 @@ namespace LinqToDB
 		/// FROM Table t
 		/// </code>
 		/// </remarks>
-		public static int Rank(this Sql.IWindowFunction window, Func<IOPartitionROrderFinal, IDefinedFunction> func)
+		public static long Rank(this Sql.IWindowFunction window, Func<IOPartitionROrderFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Rank));
 
 		/// <summary>
