@@ -1,0 +1,212 @@
+# Test databases
+
+Reference table mapping every test-provider family to its local-development database setup. The single entry point that *acts* on this table is the `/test-providers` skill (`.agents/skills/test-providers/SKILL.md`) — it edits `UserDataProviders.json` and runs the `docker ps -a` / `docker start` / `docker stop` / setup-script sequences below. `/test` and `test-runner` consume the resulting state read-only and never touch containers or `UserDataProviders.json` themselves.
+
+## Reading this table
+
+- **Provider family** — the `TestProvName.All<X>` family the test would select with `[IncludeDataSources]`.
+- **Provider IDs** — the strings that appear in `UserDataProviders.json` `Providers` arrays, one per version. Multiple IDs map to one container when the container exposes both the native and managed ADO.NET paths.
+- **Setup script** — Windows `.cmd` under `Data/Setup Scripts/`. Creates + starts the container (destroys any prior instance with the same name). Must be run from that directory: `cd "Data/Setup Scripts" && <script>.cmd`.
+- **Container name** — the `--name` Docker assigns. Used for `docker ps -a --filter name=<name>` (state query) / `docker start <name>` / `docker stop <name>`. Container scope on this repo is `docker start` / `docker stop` / `docker create` / `docker ps` only — see `agent-rules.md` → *Docker containers: start/stop/create only*.
+- **Image** — the Docker image tag the script pulls. Setup-script success / failure is the authoritative signal for whether the image is cached; do not call `docker image inspect` to pre-check.
+- **Preference rank** — which version `/test-providers` proposes by default when the user asks for that family and hasn't picked a specific version. Lower = preferred.
+
+## Preferred provider order (cross-family)
+
+When the user hasn't picked a family and `/test-providers` is asked to propose a default set (or `/test` is asked to choose a small subset to run against the currently enabled providers), prefer this order:
+
+1. **SQLite** — no docker, runs from NuGet packages, always available.
+2. **SQL Server** — prefer `SqlServer.2016` / `SqlServer.2016.MS` (typically reachable via a local non-docker SQL Server Express / Developer instance on the dev machine — zero startup cost). Fall back to docker only if the user explicitly asks for docker, or the local instance is unavailable.
+3. **PostgreSQL** — prefer `PostgreSQL.18` (latest; slim image).
+4. Anything else — propose only if the test specifically requires it.
+
+## Provider name resolution
+
+Family rules normalise loosely-typed provider tokens to the variant the user actually wants. `/test-providers` applies these rules in step 1 (Resolve intent) before any edit. Apply them **only when the input is not fully qualified** — an explicit, full provider ID (e.g. `Oracle.12.Native`, `SqlServer.2019`, `Access.Jet.OleDb`) always wins and passes through unchanged.
+
+### Family-variant shortcuts
+
+| User input form | Resolved to |
+|---|---|
+| `Access` (bare family) | `Access.Ace.Odbc` |
+| `MySql` / `MySql.<v>` (no variant suffix) | `MySqlConnector.<v>` (with `<v>` resolved per *Bare-family version* below) |
+| `Oracle` / `Oracle.<v>` (no variant suffix) | `Oracle.<v>.Managed` |
+| `ClickHouse` / `Clickhouse` (bare family) | `ClickHouse.MySql` |
+| `SapHana` (bare family) | `SapHana.Native` |
+| `SqlServer` / `SqlServer.<v>` (no variant suffix) | `SqlServer.<v>.MS` |
+
+Anything that already has an explicit variant suffix bypasses the table:
+
+- `Oracle.12.Native`, `Oracle.12.Devart.OCI` — explicit, pass through.
+- `MySql.8.0` — literal-ID-as-typed (this is the System.Data.MySqlClient variant in `UserDataProviders.json`); explicit, pass through.
+- `SqlServer.2019` — System.Data.SqlClient variant; explicit, pass through.
+- `Access.Jet.OleDb`, `ClickHouse.Octonica`, `SapHana.Odbc`, `Sybase` — explicit, pass through.
+
+### Bare-family version
+
+When a family rule needs a version (the user typed `Oracle`, `MySql`, `SqlServer`, `PostgreSQL`, `Firebird`, `MariaDB`, etc. with no version) pick the version this way:
+
+1. Check the **per-family overrides** table below. If the family has an override, use it.
+2. Otherwise, scan the affected TFM bucket's `Providers` array for entries that match the family. Parse the version segment of each ID (the piece between the family name and the variant suffix). Pick the largest by lexical-numeric comparison (`9.5 < 10 < 12 < 18`, `2014 < 2019 < 2022`).
+3. If the bucket has no entries for that family at all, fall back to the **default version** noted in the per-family table elsewhere in this doc.
+
+Skip entries listed in the **per-family exclusions** table below when computing the latest. Excluded IDs are never picked as the bare-family default — they're only enabled when the user types the full ID explicitly.
+
+#### Per-family overrides
+
+| Family | Bare-family default |
+|---|---|
+| `SqlServer` | `SqlServer.2019.MS` (user-pinned workflow target — overrides "latest available") |
+
+Other families currently have no override; extend this table when the user identifies more.
+
+#### Per-family exclusions
+
+| Family | Excluded IDs (never auto-resolved by family or version rules) |
+|---|---|
+| `SqlServer` | `SqlServer.SA`, `SqlServer.SA.MS`, `SqlServer.Contained`, `SqlServer.Contained.MS`, `SqlServer.Northwind`, `SqlServer.Northwind.MS`, `SqlServer.Azure`, `SqlServer.Azure.MS` (special-purpose configs not used on the dev desktop) |
+
+Explicit input still wins for excluded IDs — the user can enable `SqlServer.Azure.MS` by typing it verbatim, and the *Normalised inputs* block in `/test-providers` step 4 will be empty for that token.
+
+### Sticky entries (never auto-disable, never auto-modify)
+
+Two entries in `UserDataProviders.json` are protected from `/test-providers`'s automatic mutations:
+
+- **`TestNoopProvider`** — when `/test-providers` Set mode sweeps a bucket to disable everything not in the user's request, it skips this ID. A previously-enabled `TestNoopProvider` stays enabled. (User-driven `remove TestNoopProvider` still works — the sticky rule only blocks the implicit-disable sweep.)
+- **`"DefaultConfiguration": "SQLite.MS"`** — never read, written, added, or removed by `/test-providers`. Per-bucket `Edit` calls replace only the `"Providers": [...]` array; the surrounding bucket keys (`BasedOn`, `DefaultConfiguration`) stay byte-for-byte identical.
+
+## Local (non-docker) SQL Server
+
+SQL Server 2016 and earlier are typically already installed on Windows developer machines as a local SQL Server Express / Developer instance — no docker needed and no per-session startup cost. **Prefer the local instance by default** for `SqlServer.2005`, `SqlServer.2008`, `SqlServer.2012`, `SqlServer.2014`, `SqlServer.2016`. Only fall back to docker when the user explicitly asks for docker, or the local instance isn't reachable.
+
+SQL Server 2017+ does not have a supported local Windows installer in the typical dev setup — use docker (Linux images, listed below). The Windows-based `-win` variants exist but aren't recommended (base-image mismatch, see note under the SQL Server table).
+
+## SQLite
+
+No setup needed. Runs against `Microsoft.Data.Sqlite` (provider ID `SQLite.MS`) and `System.Data.SQLite` (provider ID `SQLite.Classic`) via their NuGet packages. No container, no ports.
+
+**Provider IDs:** `SQLite.MS`, `SQLite.Classic`.
+
+## SQL Server
+
+| Version | Provider IDs | Local non-docker? | Setup script | Container | Image | Pref |
+|---|---|---|---|---|---|---|
+| 2005 | `SqlServer.2005`, `SqlServer.2005.MS` | yes (usually) | `sqlserver2005-win.cmd` | `mssql` | `linq2db/linq2db:win-mssql-2005` | local |
+| 2016 | `SqlServer.2016`, `SqlServer.2016.MS` | yes (usually) | `sqlserver2016.cmd` | `sql2016` | `microsoft/mssql-server-2016-express-windows` | **local: 1** |
+| 2017 | `SqlServer.2017`, `SqlServer.2017.MS` | no | `sqlserver2017.cmd` | `sql2017` | `linq2db/linq2db:mssql-2017` | docker: 3 |
+| 2019 | `SqlServer.2019`, `SqlServer.2019.MS` | no | `sqlserver2019.cmd` | `sql2019` | `linq2db/linq2db:mssql-2019-fts` | docker: 2 |
+| 2022 | `SqlServer.2022`, `SqlServer.2022.MS` | no | `sqlserver2022.cmd` | `sql2022` | `linq2db/linq2db:mssql-2022` | docker: 1 |
+| 2025 | `SqlServer.2025`, `SqlServer.2025.MS` | no | `sqlserver2025.cmd` | `sql2025` | `linq2db/linq2db:mssql-2025` | docker: latest |
+| 2022 (Win) | — | no | `sqlserver2022-win.cmd` | `sql2022` | `linq2db/linq2db:win-mssql-2022` | avoid |
+| 2025 (Win) | — | no | `sqlserver2025-win.cmd` | `sql2025` | `linq2db/linq2db:win-mssql-2025` | avoid |
+
+**Picking a version.**
+- **Default** → `SqlServer.2016` via the local non-docker instance (no startup cost; already reachable on typical dev machines). Applies to 2005 / 2008 / 2012 / 2014 / 2016.
+- **If docker is explicitly requested, or the test depends on a 2017+ feature** → pick the oldest docker version that covers the feature. `sql2022` (latest stable) and `sql2025` (latest) are the usual docker choices; `sql2019` for FTS coverage.
+- **`-win` images are avoid-by-default.** Linux images are slimmer, faster to pull, and cover the same SQL surface for everything we test. Only use `-win` when the user explicitly requests it.
+
+## PostgreSQL
+
+Postgres images are slim (~150MB) and fast to start, so running multiple dialect versions in parallel is cheap. The recommended default set covers every SQL dialect linq2db emits, with latest on top.
+
+| Version | Provider IDs | Dialect-anchor? | Setup script | Container | Image | Pref |
+|---|---|---|---|---|---|---|
+| 9.2 | `PostgreSQL.9.2` | yes | `pgsql92.cmd` | `pgsql92` | `postgres:9.2` | **default** |
+| 9.3 | `PostgreSQL.9.3` | yes | `pgsql93.cmd` | `pgsql93` | `postgres:9.3` | **default** |
+| 9.5 | `PostgreSQL.9.5` | yes | `pgsql95.cmd` | `pgsql95` | `postgres:9.5` | **default** |
+| 10 | — | no | `pgsql10.cmd` | `pgsql10` | `postgres:10` | on demand |
+| 11 | — | no | `pgsql11.cmd` | `pgsql11` | `postgres:11` | on demand |
+| 12 | — | no | `pgsql12.cmd` | `pgsql12` | `postgres:12` | on demand |
+| 13 | `PostgreSQL.13` | yes | `pgsql13.cmd` | `pgsql13` | `postgres:13` | **default** |
+| 14 | — | no | `pgsql14.cmd` | `pgsql14` | `postgres:14` | on demand |
+| 15 | `PostgreSQL.15` | yes | `pgsql15.cmd` | `pgsql15` | `postgres:15` | **default** |
+| 16 | — | no | `pgsql16.cmd` | `pgsql16` | `postgres:16` | on demand |
+| 17 | — | no | `pgsql17.cmd` | `pgsql17` | `postgres:17` | on demand |
+| 18 | `PostgreSQL.18` | yes | `pgsql18.cmd` | `pgsql18` | `postgres:18` | **default (latest)** |
+
+**Picking a version.**
+- **"Default" rows above** are the dialect anchors — each introduces a new PostgreSQL SQL dialect we target, so running one per row gives full dialect coverage.
+- **Single-version pick** (smallest useful coverage) → `PostgreSQL.18` — latest, slim, most surface.
+- **"On demand" rows** exist as containers for ad-hoc reproduction (e.g. a version-specific bug) and aren't wired into `UserDataProviders.json.template`. Use only when the user asks.
+
+Test provider IDs referenced from code are in `Source/LinqToDB/ProviderName.cs`.
+
+## MySQL / MariaDB
+
+| Flavor | Provider IDs | Setup script | Container | Image |
+|---|---|---|---|---|
+| MySQL latest | `MySql.8.0.MySql.Data`, `MySql.8.0.MySqlConnector` | `mysql.cmd` | `mysql` | `mysql:latest` |
+| MySQL 5.7 | `MySql.5.7.MySql.Data`, `MySql.5.7.MySqlConnector` | `mysql57.cmd` | `mysql57` | `mysql:5.7` |
+| MariaDB | `MariaDB.11` (plus connector variants) | `mariadb.cmd` | `mariadb` | `mariadb:latest` |
+
+## Oracle
+
+| Version | Provider IDs | Setup script | Container | Image | Pref |
+|---|---|---|---|---|---|
+| 11 | `Oracle.11.Native`, `Oracle.11.Managed`, `Oracle.11.Devart` | `oracle11.cmd` | `oracle11` | `datagrip/oracle:11.2` | **default (slim)** |
+| 12 | `Oracle.12.Native`, `Oracle.12.Managed`, `Oracle.12.Devart` | `oracle12.cmd` | `oracle12` | `datagrip/oracle:12.2.0.1-se2-directio` | **default (lowest dialect)** |
+| 18 | `Oracle.18.Native`, `Oracle.18.Managed`, `Oracle.18.Devart` | `oracle18.cmd` | `oracle18` | `container-registry.oracle.com/database/express:18.4.0-xe` | on demand |
+| 19 | `Oracle.19.Native`, `Oracle.19.Managed`, `Oracle.19.Devart` | `oracle19.cmd` | `oracle19` | `oracledb19c/oracle.19.3.0-ee:oracle19.3.0-ee` | on demand |
+| 21 | `Oracle.21.Native`, `Oracle.21.Managed`, `Oracle.21.Devart` | `oracle21.cmd` | `oracle21` | `container-registry.oracle.com/database/express:21.3.0-xe` | on demand |
+| 23 | `Oracle.23.Native`, `Oracle.23.Managed`, `Oracle.23.Devart` | `oracle23.cmd` | `oracle23` | `container-registry.oracle.com/database/free:23.2.0.0` | on demand |
+
+**Picking a version.** Default to `oracle11` + `oracle12`:
+- `oracle11` — slim image, easy startup.
+- `oracle12` — lowest version whose dialect we actually emit distinctly; Oracle 12 dialect is reused for 18 / 19 / 21 / 23 since we don't yet have distinct dialect implementations for those.
+
+Oracle 18+ images are large and add very little test value until per-version dialects land — propose them only when the user explicitly asks.
+
+## Firebird
+
+| Version | Provider IDs | Setup script | Container | Image | Pref |
+|---|---|---|---|---|---|
+| 2.5 | `Firebird.2.5` | `firebird25.cmd` | `firebird25` | `jacobalberty/firebird:2.5-sc` | **default** |
+| 3 | `Firebird.3` | `firebird30.cmd` | `firebird30` | `jacobalberty/firebird:v3` | **default** |
+| 4 | `Firebird.4` | `firebird40.cmd` | `firebird40` | `jacobalberty/firebird:v4` | **default** |
+| 5 | `Firebird.5` | `firebird50.cmd` | `firebird50` | `jacobalberty/firebird:v5` | **default** |
+
+**Picking a version.** Run all four by default — the images are slim and each maps to a distinct dialect we emit (2.5 / 3 / 4 / 5), so full-matrix coverage is cheap. Drop to a single version only when the user explicitly narrows the scope.
+
+## ClickHouse
+
+| Provider | Provider IDs | Setup script | Container | Image | Pref |
+|---|---|---|---|---|---|
+| ClickHouse | `ClickHouse.Client`, `ClickHouse.MySql`, `ClickHouse.Octonica` | `clickhouse.cmd` | `clickhouse` | `clickhouse/clickhouse-server:latest` | **default (all 3 test providers)** |
+
+**Picking a version.** Single container exposes all three linq2db ClickHouse test providers (`Client` / `MySql` / `Octonica`). Run all three by default — they share one container, so the cost is the same as running one.
+
+## YDB
+
+| Provider | Provider IDs | Setup script | Container | Image | Pref |
+|---|---|---|---|---|---|
+| YDB | `YDB` | `ydb.cmd` | `ydb` | `ydbplatform/local-ydb:latest` | on demand |
+
+## Heavy providers (ask first)
+
+These containers either take a long time to initialize, use a lot of RAM, or pull very large images. `/test-providers` must **confirm with the user** before proposing or starting any of them, even when the requested provider list would naturally include them. `/test` never starts containers — if a user-requested filter implies a heavy provider, the skill points at `/test-providers` for the start.
+
+| Provider | Provider IDs | Setup script | Container | Image | Cost |
+|---|---|---|---|---|---|
+| DB2 | `DB2` | `db2.cmd` | `db2` | `icr.io/db2_community/db2:latest` | slow startup, ~2GB image, high RAM |
+| Informix 14 | `Informix.DB2` | `informix14.cmd` | `informix14` | `icr.io/informix/informix-developer-database:latest` | slow startup, large image |
+| SAP HANA 2 | `SapHana.Native`, `SapHana.Odbc` | `saphana2.cmd` | `hana2` | `saplabs/hanaexpress:latest` | very slow startup (~5–10 min), very high RAM |
+| SAP ASE | `Sybase`, `Sybase.Managed` | `sybase-ase.cmd` | `sybase` | `linq2db/linq2db:ase-16.1` | slow startup |
+
+Confirmation prompt should spell out the expected cost (startup time / memory) so the user can decide whether to skip that provider for the session.
+
+## Docker lifecycle (for `/test-providers`)
+
+Canonical sequence for `/test-providers` to bring a non-SQLite provider's container up before `/test` runs against it. No other skill or agent is expected to drive this directly. Container scope is `docker start` / `docker stop` / `docker create` / `docker ps` only — never `docker container inspect` or `docker image inspect` (per `agent-rules.md` → *Docker containers: start/stop/create only*).
+
+1. **Snapshot state.** Single `docker ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Image}}"` call. The status column (`Up …` / `Exited …` / `Created`) and image column give everything needed for the decision tree below. Containers absent from the snapshot are missing.
+2. Decision tree per target container:
+   - **Container missing** — ask the user whether to run `Data/Setup Scripts/<script>.cmd` (recreates from scratch; the script pulls the image if not cached). Record that the skill initiated startup.
+   - **Container exited/created** — `docker start <container>`. Record that the skill initiated startup.
+   - **Container running** — use as-is; do not touch.
+3. After tests finish, if the skill initiated startup during this session, ask the user whether to `docker stop <container>`. Default to **leave running** — the user may want follow-up runs.
+
+Ports are fixed per script (see `-p <host>:<guest>` above) and don't need verification — if the container is running, the port is bound.
+
+## Keeping this doc current
+
+When a new setup script is added to `Data/Setup Scripts/` or a container name changes, update this table and the preferred-provider rank. The source of truth for provider ID strings is `Source/LinqToDB/ProviderName.cs`; the source of truth for scripts is `Data/Setup Scripts/readme.md`. This doc is the cached join of the two — regenerate by grepping the `.cmd` files for `docker run … --name` and cross-referencing.
