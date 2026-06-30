@@ -6,10 +6,10 @@ Paths and references used by the release skills. Pre-seeded with known defaults;
 
 | Repo | Path | Purpose | Verified |
 |------|------|---------|----------|
-| `linq2db` | `C:\GitHub\linq2db` | primary product repo (this curation workspace is `linq2db.claude`, a separate clone) | conventional |
-| `linq2db.baselines` | `C:\GitHub\linq2db.baselines` | test result baselines; read by `/review-pr`, reset by `/release-publish` step 3 | conventional |
-| `linq2db.docs` | `C:\GitHub\linq2db.docs` | documentation source repo; docs PR opened here by `/release-postpublish` step 2. **Not** `linq2db.github.io` — that's the published site, updated by CI from this repo | conventional |
-| `linq2db.wiki` | `C:\GitHub\linq2db.wiki` | hosts the release-notes page (`Releases-and-Roadmap.md`). **Read** via `https://raw.githubusercontent.com/wiki/linq2db/linq2db/<page>.md` on demand (not exposed under the REST `/contents/` endpoint). **Write** needs the local clone (`git clone https://github.com/linq2db/linq2db.wiki.git`); `/release-notes apply` regenerates the version section there, shows the diff, and pushes on confirm. | — |
+| `linq2db` | `../linq2db` | primary product repo (this curation workspace is `linq2db.claude`, a separate clone) | conventional |
+| `linq2db.baselines` | `../linq2db.baselines` | test result baselines; read by `/review-pr`, reset by `/release-publish` step 3 | conventional |
+| `linq2db.docs` | `../linq2db.docs` | documentation source repo; docs PR opened here by `/release-postpublish` step 2. **Not** `linq2db.github.io` — that's the published site, updated by CI from this repo | conventional |
+| `linq2db.wiki` | `../linq2db.wiki` | hosts the release-notes page (`Releases-and-Roadmap.md`). **Read** via `https://raw.githubusercontent.com/wiki/linq2db/linq2db/<page>.md` on demand (not exposed under the REST `/contents/` endpoint). **Write** needs the local clone (`git clone https://github.com/linq2db/linq2db.wiki.git`); `/release-notes apply` regenerates the version section there, shows the diff, and pushes on confirm. | — |
 
 If a recorded path doesn't exist on disk, the skill asks the user once and updates this table. `/release-notes apply-wiki` stops and asks the user to clone `linq2db.wiki` once if the path is absent — it never auto-clones.
 
@@ -18,9 +18,9 @@ If a recorded path doesn't exist on disk, the skill asks the user once and updat
 The wiki repo contains a page named `[Internal]-Azure-Pipelines:-Open-Tasks.md`. The `:` is illegal in NTFS filenames, so a plain `git clone` **fails at checkout** ("invalid path … : …") and leaves an empty/inconsistent working tree — do **not** `git add`/commit from that state (every other page shows as a staged deletion). Clone with no checkout, restrict to the release-notes page via sparse-checkout, then check out with NTFS protection disabled (the bad file is `skip-worktree`, so it's never written to disk):
 
 ```
-git clone --no-checkout https://github.com/linq2db/linq2db.wiki.git C:\GitHub\linq2db.wiki
-git -C C:\GitHub\linq2db.wiki sparse-checkout set --no-cone Releases-and-Roadmap.md
-git -C C:\GitHub\linq2db.wiki -c core.protectNTFS=false checkout master
+git clone --no-checkout https://github.com/linq2db/linq2db.wiki.git ../linq2db.wiki
+git -C ../linq2db.wiki sparse-checkout set --no-cone Releases-and-Roadmap.md
+git -C ../linq2db.wiki -c core.protectNTFS=false checkout master
 ```
 
 After this, `git status` is clean and only `Releases-and-Roadmap.md` is materialized; `apply-wiki` + commit + push work normally (they never touch the colon-named blob, which stays in the tree untouched).

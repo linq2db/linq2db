@@ -16,7 +16,7 @@ parsing. This script answers the whole job in one call:
 Input (stdin, JSON)
 -------------------
   {
-    "paths":   ["c:/GitHub/linq2db.bls/Firebird.4", ...],  // required, non-empty
+    "paths":   ["<baselines-clone>/Firebird.4", ...],  // required, non-empty
     "outFile": ".build/.agents/baselines-pre-<run>.json"   // required — hash map written here
   }
 
@@ -32,7 +32,7 @@ Output (stdout, single JSON object):
     "outFile":   "...",
     "fileCount": 1234,
     "rootCount": 2,
-    "missing":   ["c:/GitHub/linq2db.bls/NonExistent"]
+    "missing":   ["<baselines-clone>/NonExistent"]
   }
 
 The `outFile` receives a flat `{ "<absolute-path>": "<sha1-hex>", ... }`

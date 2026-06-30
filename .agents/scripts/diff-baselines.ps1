@@ -19,7 +19,7 @@ Input (stdin, JSON)
 -------------------
   {
     "preFile":  ".build/.agents/baselines-pre-<run>.json",  // required — produced by snap-baselines.ps1
-    "paths":    ["c:/GitHub/linq2db.bls/Firebird.4", ...]   // required — same shape as snap-baselines paths[]
+    "paths":    ["<baselines-clone>/Firebird.4", ...]   // required — same shape as snap-baselines paths[]
   }
 
 Output (stdout, single JSON object):

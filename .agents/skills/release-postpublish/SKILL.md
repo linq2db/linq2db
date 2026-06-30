@@ -70,7 +70,7 @@ Action:
 The docs site is built from a separate repo `linq2db.docs` (not `linq2db.github.io` — that's the published site, CI-updated from `linq2db.docs`).
 
 Action:
-1. Verify clone exists at the path recorded in `external-repos.md` (default `C:\GitHub\linq2db.docs`). If missing, ask user for the correct path; record + session-reload.
+1. Verify clone exists at the path recorded in `external-repos.md` (default `../linq2db.docs`). If missing, ask user for the correct path; record + session-reload.
 2. **First run:** ask user for the exact submodule sync command. Most likely:
    ```
    git -C <docs-path> submodule update --init --remote

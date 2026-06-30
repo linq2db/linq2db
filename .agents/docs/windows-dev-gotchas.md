@@ -17,9 +17,9 @@ Git Bash on Windows treats `<ref>:<path>` as a Unix-style `PATH` list (`:`-separ
 The wiki repo contains a page named `[Internal]-Azure-Pipelines:-Open-Tasks.md`. The `:` is illegal in NTFS filenames, so a plain `git clone` **fails at checkout** ("invalid path … : …") and leaves an empty / inconsistent working tree — do **not** `git add` / commit from that state (every other page shows as a staged deletion, and committing would delete them). Clone with no checkout, restrict to the page(s) you need via sparse-checkout, then check out with NTFS protection disabled (the bad file is `skip-worktree`, so it's never written to disk):
 
 ```
-git clone --no-checkout https://github.com/linq2db/linq2db.wiki.git C:\GitHub\linq2db.wiki
-git -C C:\GitHub\linq2db.wiki sparse-checkout set --no-cone Releases-and-Roadmap.md
-git -C C:\GitHub\linq2db.wiki -c core.protectNTFS=false checkout master
+git clone --no-checkout https://github.com/linq2db/linq2db.wiki.git ../linq2db.wiki
+git -C ../linq2db.wiki sparse-checkout set --no-cone Releases-and-Roadmap.md
+git -C ../linq2db.wiki -c core.protectNTFS=false checkout master
 ```
 
 After this, `git status` is clean and only the sparse page(s) are materialized; `apply-wiki` + commit + push work normally (they never touch the colon-named blob, which stays in the tree untouched). Release-notes usage of the clone: [`release/external-repos.md`](release/external-repos.md).

@@ -67,12 +67,12 @@ When `/release` runs against a `release-prep/<ver>` worktree, the moving parts s
 
 | Clone | Branch | Owns |
 |---|---|---|
-| `C:\GitHub\linq2db.claude` (curation workspace) | `infra/agents-curation` | `.agents/` skills + scripts; orchestrator state file at `.build/.agents/release-<ver>.json`; per-task plan caches; walk-decisions tracker |
-| `C:\GitHub\linq2db.claude.release-<ver>` (worktree) | `release-prep/<ver>` | source-tree edits (`Directory.Packages.props`, `.editorconfig`, csproj `VersionOverride` sites, code fixes); per-build outputs under `.build/bin/` |
+| `<curation-clone>` (curation workspace) | `infra/agents-curation` | `.agents/` skills + scripts; orchestrator state file at `.build/.agents/release-<ver>.json`; per-task plan caches; walk-decisions tracker |
+| `../linq2db.claude.release-<ver>` (worktree) | `release-prep/<ver>` | source-tree edits (`Directory.Packages.props`, `.editorconfig`, csproj `VersionOverride` sites, code fixes); per-build outputs under `.build/bin/` |
 
-**Cross-clone calling pattern:** sub-skills that need to run a script from inside the worktree invoke `pwsh -NoProfile -File C:\GitHub\linq2db.claude\.agents\scripts\<name>.ps1 ...` with an absolute path back to curation. The script's `Get-Location` then yields the worktree, so file-system reads (Directory.Packages.props parsing, source globbing) target the right tree. The PowerShell tool's working directory is set explicitly via `Set-Location <worktree>` before each cross-clone call.
+**Cross-clone calling pattern:** sub-skills that need to run a script from inside the worktree invoke `pwsh -NoProfile -File <curation-clone>\.agents\scripts\<name>.ps1 ...` with an absolute path back to curation. The script's `Get-Location` then yields the worktree, so file-system reads (Directory.Packages.props parsing, source globbing) target the right tree. The PowerShell tool's working directory is set explicitly via `Set-Location <worktree>` before each cross-clone call.
 
-**State files** always under curation (`C:\GitHub\linq2db.claude\.build\.agents\release-<ver>*.json` etc.) — one canonical location regardless of which clone the agent is operating from. Plan caches written by sub-skills running in the worktree should also write to curation's `.build/.agents/` (pass `-WriteDir <abs-path>` if the script defaults to a relative `.build/.agents/`).
+**State files** always under curation (`<curation-clone>\.build\.agents\release-<ver>*.json` etc.) — one canonical location regardless of which clone the agent is operating from. Plan caches written by sub-skills running in the worktree should also write to curation's `.build/.agents/` (pass `-WriteDir <abs-path>` if the script defaults to a relative `.build/.agents/`).
 
 **Disk pressure.** Each Release build of `linq2db.slnx` adds ~9 GB of `.build/bin` output. With a worktree, that's two `.build/bin/` trees (curation's may be empty if no builds run there; worktree's accumulates per release-prep cycle). When iterating against a near-full C: drive, clean per the *Iterative-build gotchas* section in [`agent-rules.md`](agent-rules.md).
 
