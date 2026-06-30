@@ -222,6 +222,28 @@ Don't try to outwait a transient disk-space failure or ignore it as "the build m
 
 **A backgrounded build piped to `tail`/`head` reports the pipe's exit code, not the build's.** `dotnet build … | tail -N` run via `run_in_background` surfaces a completion exit code of `0` (tail succeeded) even when the build FAILED — a red build reads as green. Don't trust the notification's exit code on a piped build; `Read` the output file and check for `Build FAILED` / `N Error(s)`. Better: don't pipe at all — let the full output persist and `Read` it (mirrors the "read the whole log, don't pipe to head/tail" rule for test runs in [`../agents/test-runner.md`](../agents/test-runner.md)). Observed verifying a PR's Release build: a failed build (6 `IDE0306` errors) reported `exit code 0` because the pipe's tail succeeded.
 
+## TFM API availability (net462 / netstandard2.0)
+
+The `Testing` configuration builds **net10.0 only**, so a local `dotnet build -c Testing` (and any single-`net10.0` fast iteration) will **not** catch APIs missing on the older TFMs in `<TargetFrameworks>` (`net462`, `netstandard2.0`). Before pushing source that calls a BCL API / extension method newer than .NET Standard 2.0 (e.g. `Enumerable.ToHashSet`, span overloads, `string.Contains(char)`), build one portable TFM locally first:
+
+```
+dotnet build Source/LinqToDB/LinqToDB.csproj -c Release -f netstandard2.0
+```
+
+CI's `build` check builds every TFM and otherwise fails with `CS1061 … are you missing a using directive` on the `net462`/`netstandard2.0` leg (`Build Examples (verify)`), costing a full red CI cycle.
+
+When the API is genuinely missing on an older TFM, **prefer enabling the matching `Meziantou.Polyfill` entry** in the `<Polyfill>` opt-in list in `Directory.Build.props` over reworking the call — keep the idiomatic BCL form. The polyfill is TFM-conditional (newer TFMs use the real method), and the supported-polyfill ID list is linked in the props header. Reworking the call (`new HashSet<T>(seq, cmp)` instead of `seq.ToHashSet(cmp)`, etc.) is the fallback when no polyfill exists.
+
+## Analyzers are Release-only — build Release before push when a change can trip one
+
+Roslyn analyzers, banned-API checks, and Meziantou (`MA*`) rules run **only in Release** (`Testing`/`Debug` fast-iteration skips them). So a `dotnet build -c Testing` / `/test` run can be fully green while CI's Release `build` leg fails. Before pushing a change that can plausibly trip an analyzer — new/changed public API, `Equals`/`GetHashCode`, nullable annotations (`[NotNullWhen]` etc.), banned-API-adjacent calls — do one local Release build first:
+
+```
+dotnet build Source/LinqToDB/LinqToDB.csproj -c Release -f net10.0
+```
+
+(net10.0 alone is enough to surface the diagnostic — analyzers are TFM-independent.) Otherwise CI fails on e.g. `MA0186` (Equals parameter missing `[NotNullWhen(true)]`) after a green local run, costing a red CI cycle.
+
 ## Bisecting across SDK upgrades
 
 When checking out historic commits to bisect a regression or to confirm "after which PR did the test start passing", the historic code may compile cleanly on the SDK it was written against but trip newer compiler warnings on the current SDK. Combined with `TreatWarningsAsErrors=true` (the default in `Directory.Build.props`), these warnings become build-blocking errors and the test never runs.

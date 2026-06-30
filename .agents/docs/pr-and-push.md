@@ -42,12 +42,10 @@ Despite branch protection's `dismiss_stale_reviews: true`, GitHub's auto-dismiss
 Manual dismissal:
 
 ```
-# 1. find the numeric review id (GraphQL ids from `gh pr view ... --json reviews` won't work for the REST PUT)
-gh api repos/<o>/<r>/pulls/<n>/reviews --jq '.[] | select(.state == "CHANGES_REQUESTED") | {id, user: .user.login, commit_id, submitted_at}'
-
-# 2. dismiss
-gh api -X PUT repos/<o>/<r>/pulls/<n>/reviews/<id>/dismissals -f message="Stale" -f event=DISMISS
+pwsh -NoProfile -File .agents/scripts/dismiss-stale-reviews.ps1 -Pr <n>          # add -DryRun to preview
 ```
+
+It resolves the numeric REST review ids (GraphQL ids from `gh pr view --json reviews` won't work for the PUT) and dismisses each `CHANGES_REQUESTED` review with a non-empty `-Message` (default `Stale`).
 
 Two gotchas on the dismissal call:
 
@@ -60,13 +58,7 @@ Two gotchas on the dismissal call:
 
 After pushing follow-up commits that rename / move / delete any test:
 
-1. Find the baselines PR (`gh pr list --repo linq2db/linq2db.baselines --head baselines/pr_<n> --state all --json number,url`).
-2. Close it with an explanatory comment:
-   ```
-   gh pr close <m> --repo linq2db/linq2db.baselines --comment "Closing — PR linq2db/linq2db#<n>'s follow-up commits renamed / moved test(s); these baselines are stale. Next CI baseline-regeneration run will produce fresh baselines under the new name(s)."
-   ```
-3. Delete the branch: `gh api -X DELETE repos/linq2db/linq2db.baselines/git/refs/heads/baselines/pr_<n>`. Verify with `git -C ../linq2db.baselines fetch origin --prune` afterwards.
-4. The next CI run (triggered by `/azp run test-all` or similar on the renamed commit) produces a new baselines PR under the up-to-date names. No further manual action required.
+Run **`pwsh -NoProfile -File .agents/scripts/close-stale-baselines.ps1 -Pr <n>`** (add `-DryRun` to preview). It finds the baselines PR keyed to head `baselines/pr_<n>`, closes it with an explanatory comment, deletes the branch ref (treating an already-gone ref as success), and `git fetch --prune`s the local `../linq2db.baselines` clone. The next CI run (e.g. `/azp run test-all` on the renamed commit) then produces a fresh baselines PR under the up-to-date names — no further manual action.
 
 The same applies when a follow-up commit changes a test's projection shape / SQL output without renaming it — the old PR's files no longer match the new expected output. Out of scope: pure test *additions* that don't rename anything (the existing baselines PR is incremental — new files just get added on the next CI run), and bug-fix commits that update SQL but leave both names and structure untouched (the existing baselines PR's diff updates in-place).
 
@@ -123,14 +115,12 @@ Commits that extend an open PR's scope go on that PR's branch, not a new paralle
 
 ### Amending a commit on a non-checked-out branch with a dirty current tree
 
-Don't `stash` → `switch` → `--amend` → `switch -` → `stash pop` — the pop can conflict on overlapping files. Build a replacement commit object and atomically retarget the branch ref while staying on the current branch:
+Don't `stash` → `switch` → `--amend` → `switch -` → `stash pop` — the pop can conflict on overlapping files. Use **`pwsh -NoProfile -File .agents/scripts/amend-branch-commit.ps1 -Branch <branch> -Message <text>`** (`-MessageFile <path>` for multi-line; `-Sign` if the original was GPG-signed). It reuses the branch tip's tree (a message/metadata amend — content unchanged), rebuilds the commit object preserving the original author, and atomically retargets the ref with the old-SHA safety check — all while staying on the current branch.
 
-```
-git show -s --format='%T%n%P%n%an%n%ae%n%aI' <branch>   # tree, parent, author name/email, date
-GIT_AUTHOR_NAME='...' GIT_AUTHOR_EMAIL='...' GIT_AUTHOR_DATE='...' \
-  GIT_COMMITTER_NAME='...' GIT_COMMITTER_EMAIL='...' GIT_COMMITTER_DATE='...' \
-  git commit-tree <tree> -p <parent> -m '<message>'      # prints <new-sha>
-git update-ref refs/heads/<branch> <new-sha> <old-sha>   # 3rd arg = expected old SHA, safety check
-```
+### Merging master into a feature PR — recurring conflict recipes
 
-Add `-S` to `git commit-tree` if the original was GPG-signed.
+When syncing `origin/master` into a long-lived feature PR, three collisions recur:
+
+- **`LinqOptions` (positional record) params: update all five sites.** A master-vs-PR collision on its parameter list (both sides add options before the trailing param) recurs on most option-adding PRs. Keeping *all* new params means updating, consistently: (1) the **primary constructor** param list, (2) the **copy constructor** assignments, (3) the **`ConfigurationID`** hash `.Add(...)` calls, (4) **`PublicAPI.Unshipped.txt`** (the full ctor signature *and* the `Deconstruct` signature, in source param order), and (5) the **binary-compat shim** — the `Deconstruct` shim's trailing `out _` discard count must equal the number of params added after the shim's last named one. A Release `net10.0` build of `Source/LinqToDB/LinqToDB.csproj` validates both the ctor/Deconstruct arity and the RS0016 PublicAPI match. (Surfaced on PR #5450: master added `PreferClientCalculation`, the PR added `DefaultEagerLoadingStrategy` + `ImplicitCollectionLoading`.)
+- **A merge that inserts a parameter *ahead* of an existing optional one breaks positional callers silently — convert them to named arguments.** When resolving a method-signature conflict by keeping params from both sides (e.g. the PR's pre-build `adjustArguments` hook *and* master's post-build `transform` hook on `TranslateWindowFunction`), an auto-merged caller that passed a *later* argument **positionally** now binds it to the wrong slot. A Release build catches it only when the types differ; a same-type mis-bind compiles and runs wrong. After such a merge, audit every caller of the widened method and switch later positional args to **named** (`transform: f => …`). (Surfaced syncing PR #5468: master's `TranslateRowNumber` passed its ROW_NUMBER-cast lambda positionally, which would have bound to `adjustArguments` after the merge added it ahead of `transform`.)
+- **Merging an end-appended serialized enum keeps the master side's members first.** Enums whose ordinals are serialized over the LinqService wire (`QueryElementType`, etc.) get new members appended at the end on both sides. When master and a feature branch both append, order the resolution as *master's members first, then the branch's* — never interleave — so master's already-shipped ordinals don't shift. (Surfaced syncing PR #5468: master's `SqlCteField`/`SqlCteTableField` placed before the PR's `SqlKeepClause`.)

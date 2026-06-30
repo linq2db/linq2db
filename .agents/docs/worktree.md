@@ -49,27 +49,14 @@ Run the skill's underlying tool command in the worktree instead — it's the san
 
 Most removals don't hit this — `git worktree remove --force <path>` succeeds outright once the worktree's own build has finished, no shutdown needed. And **on a shared / multi-worktree machine, do not lead with `dotnet build-server shutdown`**: it is global per-SDK and kills the VBCSCompiler / MSBuild servers that *other* concurrent worktree builds are using, disrupting them mid-build. (This repo is routinely checked out as a dozen parallel worktrees — `git worktree list`.) Reach for `build-server shutdown` only when removal is genuinely lock-blocked **and** no other builds are running.
 
-Cleanup sequence (only when removal is lock-blocked):
-
-1. `dotnet build-server shutdown` — often partial; the VB/C# compiler server may report "failed to shut down" but the handle release still progresses enough.
-2. `Remove-Item -Recurse -Force <worktree-path>` from PowerShell. This succeeds in practice even when the build-server output suggested otherwise.
-3. `git worktree prune` to drop any leftover registration if step 1 left the worktree in a half-removed state (rare; `--force` in step 0 usually cleared it already).
-
-Don't loop on `git worktree remove --force` — it'll keep failing on the same locked dll. Skip to PowerShell `Remove-Item -Recurse -Force` and the directory deletes cleanly even with the lock-reporting process still around.
+Cleanup (only when removal is lock-blocked): **`pwsh -NoProfile -File .agents/scripts/remove-worktree-locked.ps1 -Path <worktree-path>`**. It tries `git worktree remove --force` first (the common, no-shutdown case), then `Remove-Item -Recurse -Force` (succeeds in practice even with the lock-reporting process still around), then `git worktree prune`. Build-server shutdown is **off by default** per the shared-machine guard above — pass `-AllowBuildServerShutdown` only once you've confirmed no other worktree builds are running. Don't loop on `git worktree remove --force` — it'll keep failing on the same locked dll.
 
 ## Carrying `.agents/` curation across branch switches
 
 `.agents/` skills, docs, hooks, and scripts accumulate on `infra/claude-curation` between weekly merges to `master`. Switching from `infra/claude-curation` to a working branch (feature/\*, issue/\*, etc.) without carrying those changes forward causes the agent to operate against stale `.agents/` state, losing every refinement since the last master merge. The one-line trigger lives in [`agent-rules.md`](agent-rules.md) → *Creating a new branch*.
 
-- **Rule:** when the working branch is not `master` and not `release`, the `.agents/` working tree should reflect the latest `origin/infra/claude-curation` state, applied as **uncommitted** modifications. Most commonly this means: right after `git switch <target-branch>` (or `git switch -c …`), pull the curation branch's `.agents/` contents into the new branch's tree:
-  ```
-  git fetch origin infra/claude-curation
-  git checkout origin/infra/claude-curation -- .agents/
-  ```
-- **Never commit the carried-over changes on the working branch.** They show as modified in `git status` but must not be included in any commit. When staging:
-  - `git add <specific paths>` only — never `git add .` or `git add -A` while curation diffs are present.
-  - `git restore --staged .agents/` if `.agents/` accidentally gets staged.
-  - Before `git merge origin/master` / `git rebase origin/master` to sync a working branch, discard the carry-over first — `git restore --staged --worktree .agents/` — otherwise the modified `.agents/` tree blocks the merge with *"Your local changes to the following files would be overwritten by merge"*. Re-pull curation afterward only if the session still needs it.
+- **Rule:** when the working branch is not `master`/`release`, the `.agents/` working tree should reflect the latest `origin/infra/claude-curation` state as **uncommitted** modifications. Right after `git switch <target>`, run **`pwsh -NoProfile -File .agents/scripts/carry-curation.ps1`** — it refuses on master/release, fetches the curation branch, checks out its `.agents/`, and leaves the result as *unstaged* working-tree changes.
+- **Never commit the carried-over changes on the working branch.** When staging, use `git add <specific paths>` only — never `git add .` / `-A` while curation diffs are present (`git restore --staged .agents/` if they slip in). Before `git merge` / `rebase origin/master`, discard the carry first (`git restore --staged --worktree .agents/`) or the modified `.agents/` tree blocks the merge; re-pull after. Before any `git push`, run **`carry-curation.ps1 -Verify`** — it flags any committed or staged `.agents/` in the `origin/<branch>..HEAD` range.
   - Before any `git push` on a working branch, verify the pushed range carries no `.agents/` diff: `git log origin/<branch>..HEAD --stat -- .agents/` should be empty.
 - **Exceptions:** switching to `master` or `release` does **not** carry curation diffs — those branches reflect merged state and should diff cleanly.
 - **The only branch where `.agents/` changes are committed is `infra/claude-curation` itself.** Session-end learnings captured via `/session-reflect`, `/audit-agents`, or ad-hoc edits should be applied on the curation branch, not on a working branch. When a session ends with carried-over `.agents/` changes on a working branch and the user wants to keep new edits, the canonical save path is: `git switch infra/claude-curation`, replay the edits there, commit on curation, switch back if more work remains.

@@ -72,7 +72,7 @@ Runner, config, patterns, and debugging are in [.agents/docs/testing.md](.agents
 - **Dirty working tree.** If there are staged/unstaged changes before branching, stop and ask whether to stash or discard — never silently carry or drop them.
 - **A distinct shared-engine fix discovered mid-task gets its own branch/PR** — don't bundle a separable fix (one with a standalone observable effect) onto another open PR. A tightly-coupled enabling fix (no observable effect without the originating change) stays on the originating PR.
 - **Multi-commit feature branches:** prefer `git merge origin/master` over rebase when the branch is long-lived / already has merge commits; rebase only short-lived linear branches.
-- Conflict-resolution patterns for recurring collisions (`LinqOptions` positional record's 5 sites, params inserted ahead of optionals, end-appended serialized enums): [.agents/docs/agent-rules.md](.agents/docs/agent-rules.md) → *Creating a new branch*.
+- Conflict-resolution patterns for recurring collisions (`LinqOptions` positional record's 5 sites, params inserted ahead of optionals, end-appended serialized enums): [.agents/docs/pr-and-push.md](.agents/docs/pr-and-push.md) → *Merging master into a feature PR — recurring conflict recipes*.
 
 > **Claude Code:** branch-based work goes in a `git worktree`, never by switching the primary clone; `.claude/` curation carry-over rules apply. See the overlay.
 
