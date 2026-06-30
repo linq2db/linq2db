@@ -61,7 +61,7 @@ Notes: SQL Server has no `NTH_VALUE` (any version). MariaDB & YDB reject the LEA
 | SUM/AVG/MIN/MAX/COUNT OVER | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | `DISTINCT` in window agg | ✗ | ✗ | ✓ | ✗ | ✗ | ✗ | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
 | STDDEV_POP/SAMP, VAR_POP/SAMP | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ✓ | ✓ⁱ | ✗ | ✗ | ✗ |
-| bare STDDEV / VARIANCE | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | ✗ | ✓ | ✓ | ✓ | ✓ | ✗ | ✗ | ✗ |
+| bare STDDEV / VARIANCE (sample) | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | ✗ | ✓ | ✓ | ✓ | ✓ⱽ | ✗ | ✗ | ✗ |
 | COVAR_POP/SAMP, CORR | ✗ | ✓ | ✓ | ✗ | ✗ | ✗ | ✓ | ✓ | ✓ | ✓ʰ | ✗ | ✗ | ✗ | ✗ |
 | REGR_* (9 functions) | ✗ | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ |
 | MEDIAN | ✗ | ✗ | ✓ | ✗ | ✓ | ✗ | ✗† | ✓ | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ |
@@ -73,12 +73,21 @@ Notes: SQL Server has no `NTH_VALUE` (any version). MariaDB & YDB reject the LEA
 
 `RATIO_TO_REPORT` is native on Oracle/DB2 and emulated everywhere else as `x / SUM(x) OVER (…)`
 (verified: the PostgreSQL baseline emits `x::Float / SUM(x) OVER (PARTITION BY …)`).
-`STDDEV` is spelled `STDEV` on SQL Server via `StdDevFunctionName`; bare `VARIANCE` is spelled `VAR` on
-SQL Server and SAP HANA via `VarianceFunctionName`.
+`Sql.Window.StdDev`/`Variance` are the **sample** (N−1 divisor) standard deviation / variance. The bare SQL
+`STDDEV`/`VARIANCE` keywords are the *population* form on MySQL/MariaDB/DB2/Informix, so they are mapped to the
+sample `STDDEV_SAMP`/`VAR_SAMP` via `StdDevFunctionName`/`VarianceFunctionName` (documented sample functions on
+MySQL & DB2). On SQL Server the sample form is spelled `STDEV`/`VAR`, and on SAP HANA bare `VARIANCE` is spelled
+`VAR` — all sample — set through the same overrides. PostgreSQL / Oracle / DuckDB use the bare names directly
+(already sample).
 
 The grouped statistical rows hide per-function asymmetry, marked above:
-- **ⁱ Informix** supports `STDDEV_POP/SAMP` and bare `STDDEV`/`VARIANCE`, but **not** `VAR_POP`/`VAR_SAMP`
+- **ⁱ Informix** supports the explicit `STDDEV_POP`/`STDDEV_SAMP`, but **not** `VAR_POP`/`VAR_SAMP`
   (`IsStdDevSupported`/`IsVarianceBareSupported` on, `IsVarianceSupported` off).
+- **ⱽ Informix sample StdDev / Variance:** `Sql.Window.StdDev` maps to `STDDEV_SAMP` — undocumented on Informix
+  but the only form that returns the sample value (the documented `STDEV`, like bare `STDDEV`/`VARIANCE`, returns
+  the *population* value — verified empirically against IDS 14). `Sql.Window.Variance` is **unsupported** on
+  Informix: there is no sample-variance function (`VAR_SAMP` is a syntax error, bare `VARIANCE` is population), so
+  it throws a clear translation-time error.
 - **ʰ SAP HANA** supports `CORR` but **not** `COVAR_POP`/`COVAR_SAMP` (`IsCovarianceSupported` off).
 
 

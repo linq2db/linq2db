@@ -13,7 +13,7 @@ namespace Tests.Linq
 	{
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException),
-			TestProvName.AllSQLite, TestProvName.AllSqlServer2008Minus, TestProvName.AllClickHouse,
+			TestProvName.AllSQLite, TestProvName.AllSqlServer2008Minus, TestProvName.AllClickHouse, TestProvName.AllInformix,
 			ProviderName.Firebird3, ProviderName.Firebird4, TestProvName.AllFirebird5Plus, ProviderName.Ydb,
 			ErrorMessage = ErrorHelper.Error_WindowFunction_Variance)]
 		public void VarianceBasic([SupportsAnalyticFunctionsContext] string context)
@@ -33,12 +33,13 @@ namespace Tests.Linq
 			var sql = query.ToSqlQuery().Sql;
 			sql.ShouldContain("OVER");
 
-				_ = query.ToList();
+			foreach (var row in query.ToList())
+				AssertRunningStat(row.Value, ExpectedRunningVariance(data, row.Id, population: false), stdDev: false);
 		}
 
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException),
-			TestProvName.AllSQLite, TestProvName.AllSqlServer2008Minus, TestProvName.AllClickHouse,
+			TestProvName.AllSQLite, TestProvName.AllSqlServer2008Minus, TestProvName.AllClickHouse, TestProvName.AllInformix,
 			ProviderName.Firebird3, ProviderName.Firebird4, TestProvName.AllFirebird5Plus, ProviderName.Ydb,
 			ErrorMessage = ErrorHelper.Error_WindowFunction_Variance)]
 		public void VarianceViaWindow([SupportsAnalyticFunctionsContext] string context)

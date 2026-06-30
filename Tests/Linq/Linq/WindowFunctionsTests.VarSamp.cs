@@ -33,7 +33,8 @@ namespace Tests.Linq
 			var sql = query.ToSqlQuery().Sql;
 			sql.ShouldContain("OVER");
 
-				_ = query.ToList();
+			foreach (var row in query.ToList())
+				AssertRunningStat(row.Value, ExpectedRunningVariance(data, row.Id, population: false), stdDev: false);
 		}
 
 		[Test]

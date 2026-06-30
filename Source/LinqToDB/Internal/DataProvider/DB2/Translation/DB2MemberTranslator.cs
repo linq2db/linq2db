@@ -467,12 +467,16 @@ namespace LinqToDB.Internal.DataProvider.DB2.Translation
 			protected override bool IsLeadLagNullTreatmentSupported => true;
 			protected override bool IsValueNullTreatmentSupported   => true;
 			protected override bool IsNthValueFromSupported         => true;
-			// DB2 supports the full statistical/regression window-function set with standard SQL names.
-			protected override bool IsVarianceSupported             => true;
-			protected override bool IsVarianceBareSupported         => true;
-			protected override bool IsCorrelationSupported          => true;
-			protected override bool IsLinearRegressionSupported     => true;
-			protected override bool IsMedianSupported               => true;
+			// DB2 supports the full statistical/regression window-function set. Bare STDDEV/VARIANCE are the
+			// *population* forms (DB2 docs), so map the sample-API Sql.Window.StdDev/Variance to the documented
+			// sample names STDDEV_SAMP/VAR_SAMP.
+			protected override bool   IsVarianceSupported           => true;
+			protected override bool   IsVarianceBareSupported       => true;
+			protected override bool   IsCorrelationSupported        => true;
+			protected override bool   IsLinearRegressionSupported   => true;
+			protected override bool   IsMedianSupported             => true;
+			protected override string StdDevFunctionName            => "STDDEV_SAMP";
+			protected override string VarianceFunctionName          => "VAR_SAMP";
 
 			public override Expression? TranslateRatioToReport(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 				=> TranslateRatioToReportNative(translationContext, methodCall);

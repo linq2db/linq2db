@@ -251,6 +251,54 @@ namespace Tests.Linq
 				];
 			}
 		}
+
+		// Expected running (cumulative) population/sample variance over a window PARTITION BY CategoryId
+		// ORDER BY Id (default RANGE UNBOUNDED PRECEDING .. CURRENT ROW): the set is every row in the same
+		// category with Id <= the current row's Id. Sample variance is undefined (NULL) for a single row.
+		internal static double? ExpectedRunningVariance(WindowFunctionTestEntity[] data, int id, bool population)
+		{
+			var current = System.Array.Find(data, d => d.Id == id)!;
+			var values  = new System.Collections.Generic.List<double>();
+
+			foreach (var d in data)
+				if (d.CategoryId == current.CategoryId && d.Id <= id)
+					values.Add(d.IntValue);
+
+			var n = values.Count;
+
+			if (!population && n < 2)
+				return null;
+
+			var mean = 0d;
+			foreach (var v in values)
+				mean += v;
+			mean /= n;
+
+			var sumSq = 0d;
+			foreach (var v in values)
+				sumSq += (v - mean) * (v - mean);
+
+			return sumSq / (population ? n : n - 1);
+		}
+
+		// Asserts a windowed stddev/variance result against the expected running value. The single-row window case
+		// (sample variance undefined) is intentionally relaxed: engines disagree on the result — NULL (PostgreSQL,
+		// DuckDB), 0 (Oracle, MySQL, SAP HANA, Informix), or NaN (ClickHouse) — and it is not a sample-vs-population
+		// discriminator. For windows of 2+ rows the assertion is strict, so a provider that computes a population
+		// statistic where the API promises a sample one (e.g. bare STDDEV = STDDEV_POP on MySQL/DB2) fails here.
+		internal static void AssertRunningStat(double? actual, double? expectedVariance, bool stdDev)
+		{
+			if (expectedVariance is null)
+			{
+				Assert.That(actual is null || double.IsNaN(actual.Value) || System.Math.Abs(actual.Value) < 0.1, Is.True);
+				return;
+			}
+
+			var expected = stdDev ? System.Math.Sqrt(expectedVariance.Value) : expectedVariance.Value;
+
+			Assert.That(actual, Is.Not.Null);
+			Assert.That(actual!.Value, Is.EqualTo(expected).Within(0.1));
+		}
 	}
 }
 

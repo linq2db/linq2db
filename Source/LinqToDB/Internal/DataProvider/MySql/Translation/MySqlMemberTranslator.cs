@@ -418,13 +418,18 @@ namespace LinqToDB.Internal.DataProvider.MySql.Translation
 
 		protected class MySqlWindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
 		{
-			protected override bool IsFrameGroupsSupported    => false;
-			protected override bool IsFrameExclusionSupported => false;
-			protected override bool IsPercentileContSupported => false;
-			protected override bool IsPercentileDiscSupported => false;
-			// MySQL 8 supports STDDEV/VARIANCE window functions (standard names); not COVAR/CORR/REGR.
-			protected override bool IsVarianceSupported       => true;
-			protected override bool IsVarianceBareSupported   => true;
+			protected override bool   IsFrameGroupsSupported    => false;
+			protected override bool   IsFrameExclusionSupported => false;
+			protected override bool   IsPercentileContSupported => false;
+			protected override bool   IsPercentileDiscSupported => false;
+			// MySQL 8 / MariaDB expose STDDEV/VARIANCE as window functions, but bare STDDEV/VARIANCE are the
+			// *population* forms — MySQL docs state they are synonyms for STDDEV_POP/VAR_POP. Sql.Window.StdDev/Variance
+			// are the sample statistics, so map them to the documented sample names STDDEV_SAMP/VAR_SAMP. COVAR/CORR/REGR
+			// not supported.
+			protected override bool   IsVarianceSupported       => true;
+			protected override bool   IsVarianceBareSupported   => true;
+			protected override string StdDevFunctionName        => "STDDEV_SAMP";
+			protected override string VarianceFunctionName      => "VAR_SAMP";
 		}
 
 		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()
