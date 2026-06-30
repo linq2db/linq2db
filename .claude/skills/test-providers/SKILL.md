@@ -14,7 +14,9 @@ Shared reference material:
 
 ## When to run
 
-Only when the user explicitly invokes `/test-providers` — typically before a `/test run …` to make sure the right providers are enabled and their containers are up, or after a session to stop containers the user no longer needs. Do not invoke this skill from inside `/test`, from `test-runner`, or from any other skill — the boundary is intentional, and `/test` is allowed to fail when the env doesn't match (the user re-runs `/test-providers` to fix it).
+Only when the user explicitly invokes `/test-providers` — typically before a `/test run …` to make sure the needed connection strings exist and the containers are up, or after a session to stop containers the user no longer needs. Do not invoke this skill from inside `/test`, from `test-runner`, or from any other skill — the boundary is intentional, and `/test` is allowed to fail when the env doesn't match (the user re-runs `/test-providers` to fix it).
+
+**Per-run provider *selection* lives in `--provider`, not this skill.** To run a one-off against specific providers, use `/test … on <provider>` (or `<exe> --provider <name>`) — it replaces the active provider set for that run, so the provider does **not** need to be enabled in a `Providers` array. This skill's enduring jobs are (1) **connection strings** (filling `TODO_ADD_CONNECTION_STRING`, custom overrides), (2) **docker containers** (`--provider X` still needs X's container running), and (3) the **default enabled set** used when a run passes no `--provider`. The `Providers`-array editing below is mainly for (3).
 
 ## Accepted arg shapes
 

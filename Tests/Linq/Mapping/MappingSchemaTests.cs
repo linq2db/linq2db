@@ -94,38 +94,48 @@ namespace Tests.Mapping
 			var ms1 = new MappingSchema();
 			var ms2 = new MappingSchema(ms1);
 
-			Convert<DateTime,string>.Lambda = d => d.ToString(DateTimeFormatInfo.InvariantInfo);
-
-			ms1.SetConverter<DateTime,string>(d => d.ToString("M\\/d\\/yyyy h:mm:ss", System.Globalization.CultureInfo.InvariantCulture));
-			ms2.SetConverter<DateTime,string>(d => d.ToString("dd.MM.yyyy HH:mm:ss",  System.Globalization.CultureInfo.InvariantCulture));
-
+			try
 			{
-				var c0 = Convert<DateTime,string>.Lambda;
-				var c1 = ms1.GetConverter<DateTime,string>()!;
-				var c2 = ms2.GetConverter<DateTime,string>()!;
-				using (Assert.EnterMultipleScope())
+				Convert<DateTime,string>.Lambda = d => d.ToString(DateTimeFormatInfo.InvariantInfo);
+
+				ms1.SetConverter<DateTime,string>(d => d.ToString("M\\/d\\/yyyy h:mm:ss", System.Globalization.CultureInfo.InvariantCulture));
+				ms2.SetConverter<DateTime,string>(d => d.ToString("dd.MM.yyyy HH:mm:ss",  System.Globalization.CultureInfo.InvariantCulture));
+
 				{
-					Assert.That(c0(new DateTime(2012, 1, 20, 16, 30, 40, 50, DateTimeKind.Utc)), Is.EqualTo("01/20/2012 16:30:40"));
-					Assert.That(c1(new DateTime(2012, 1, 20, 16, 30, 40, 50, DateTimeKind.Utc)), Is.EqualTo("1/20/2012 4:30:40"));
-					Assert.That(c2(new DateTime(2012, 1, 20, 16, 30, 40, 50, DateTimeKind.Utc)), Is.EqualTo("20.01.2012 16:30:40"));
+					var c0 = Convert<DateTime,string>.Lambda;
+					var c1 = ms1.GetConverter<DateTime,string>()!;
+					var c2 = ms2.GetConverter<DateTime,string>()!;
+					using (Assert.EnterMultipleScope())
+					{
+						Assert.That(c0(new DateTime(2012, 1, 20, 16, 30, 40, 50, DateTimeKind.Utc)), Is.EqualTo("01/20/2012 16:30:40"));
+						Assert.That(c1(new DateTime(2012, 1, 20, 16, 30, 40, 50, DateTimeKind.Utc)), Is.EqualTo("1/20/2012 4:30:40"));
+						Assert.That(c2(new DateTime(2012, 1, 20, 16, 30, 40, 50, DateTimeKind.Utc)), Is.EqualTo("20.01.2012 16:30:40"));
+					}
+				}
+
+				Convert<string,DateTime>.Expression = s => DateTime.Parse(s, DateTimeFormatInfo.InvariantInfo);
+
+				ms1.SetConvertExpression<string,DateTime>(s => DateTime.Parse(s, new CultureInfo("en-US", false).DateTimeFormat));
+				ms2.SetConvertExpression<string,DateTime>(s => DateTime.Parse(s, new CultureInfo("ru-RU", false).DateTimeFormat));
+
+				{
+					var c0 = Convert<string,DateTime>.Lambda;
+					var c1 = ms1.GetConverter<string,DateTime>()!;
+					var c2 = ms2.GetConverter<string,DateTime>()!;
+					using (Assert.EnterMultipleScope())
+					{
+						Assert.That(c0("01/20/2012 16:30:40"), Is.EqualTo(new DateTime(2012, 1, 20, 16, 30, 40)));
+						Assert.That(c1("1/20/2012 4:30:40 PM"), Is.EqualTo(new DateTime(2012, 1, 20, 16, 30, 40)));
+						Assert.That(c2("20.01.2012 16:30:40"), Is.EqualTo(new DateTime(2012, 1, 20, 16, 30, 40)));
+					}
 				}
 			}
-
-			Convert<string,DateTime>.Expression = s => DateTime.Parse(s, DateTimeFormatInfo.InvariantInfo);
-
-			ms1.SetConvertExpression<string,DateTime>(s => DateTime.Parse(s, new CultureInfo("en-US", false).DateTimeFormat));
-			ms2.SetConvertExpression<string,DateTime>(s => DateTime.Parse(s, new CultureInfo("ru-RU", false).DateTimeFormat));
-
+			finally
 			{
-				var c0 = Convert<string,DateTime>.Lambda;
-				var c1 = ms1.GetConverter<string,DateTime>()!;
-				var c2 = ms2.GetConverter<string,DateTime>()!;
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(c0("01/20/2012 16:30:40"), Is.EqualTo(new DateTime(2012, 1, 20, 16, 30, 40)));
-					Assert.That(c1("1/20/2012 4:30:40 PM"), Is.EqualTo(new DateTime(2012, 1, 20, 16, 30, 40)));
-					Assert.That(c2("20.01.2012 16:30:40"), Is.EqualTo(new DateTime(2012, 1, 20, 16, 30, 40)));
-				}
+				// Restore the process-global converters this test overrode; otherwise they leak to every
+				// later test (e.g. ConvertTests.ToSqlTime would resolve string->DateTime via DateTime.Parse).
+				Convert<DateTime,string>.Lambda     = null;
+				Convert<string,DateTime>.Expression = null;
 			}
 		}
 

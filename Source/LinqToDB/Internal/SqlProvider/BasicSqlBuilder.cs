@@ -721,7 +721,7 @@ namespace LinqToDB.Internal.SqlProvider
 								StringBuilder.AppendLine(Comma);
 							firstField = false;
 							AppendIndent();
-							Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
+							Convert(StringBuilder, field.Name, ConvertType.NameToQueryField);
 						}
 
 						--Indent;
@@ -738,7 +738,7 @@ namespace LinqToDB.Internal.SqlProvider
 							if (!firstField)
 								StringBuilder.Append(InlineComma);
 							firstField = false;
-							Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
+							Convert(StringBuilder, field.Name, ConvertType.NameToQueryField);
 						}
 
 						StringBuilder.AppendLine(")");
@@ -785,12 +785,44 @@ namespace LinqToDB.Internal.SqlProvider
 			StartStatementQueryExtensions(selectQuery);
 
 			if (selectQuery.Select.IsDistinct)
-				StringBuilder.Append(" DISTINCT");
+				BuildDistinctModifier(selectQuery);
 
 			BuildSkipFirst(selectQuery);
 
 			StringBuilder.AppendLine();
 			BuildColumns(selectQuery);
+		}
+
+		/// <summary>
+		/// Emits the <c>DISTINCT</c> modifier. Overridden by providers that support <c>DISTINCT ON (...)</c>
+		/// (see <see cref="SqlProviderFlags.IsDistinctOnSupported"/>); the base emits a plain <c>DISTINCT</c>.
+		/// </summary>
+		protected virtual void BuildDistinctModifier(SelectQuery selectQuery)
+		{
+			StringBuilder.Append(" DISTINCT");
+		}
+
+		/// <summary>
+		/// Renders the <c>ON (expr, ...)</c> part of a <c>DISTINCT ON</c> clause. Called from a
+		/// <see cref="BuildDistinctModifier"/> override on providers that support the syntax, right after the
+		/// <c>DISTINCT</c> keyword. Expressions are rendered exactly as in <c>ORDER BY</c> so the leading-prefix
+		/// match PostgreSQL/DuckDB require holds.
+		/// </summary>
+		protected void BuildDistinctOnExpressions(SelectQuery selectQuery)
+		{
+			var select = ConvertElement(selectQuery.Select);
+			if (select.DistinctOn is not { Count: > 0 } onExpressions)
+				return;
+
+			StringBuilder.Append(" ON (");
+			for (var i = 0; i < onExpressions.Count; i++)
+			{
+				if (i > 0)
+					StringBuilder.Append(InlineComma);
+				BuildExpressionForOrderBy(onExpressions[i]);
+			}
+
+			StringBuilder.Append(')');
 		}
 
 		protected virtual void StartStatementQueryExtensions(SelectQuery? selectQuery)
@@ -1044,7 +1076,11 @@ namespace LinqToDB.Internal.SqlProvider
 				{
 					AppendIndent()
 						.Append("INTO ");
-					BuildObjectName(StringBuilder, new(output.OutputTable.TableName.Name), ConvertType.NameToQueryTable, true, output.OutputTable.TableOptions);
+
+					BuildObjectName(StringBuilder, new(output.OutputTable.TableName.Name), ConvertType.NameToQueryTable,
+						escape : true,
+						tableOptions : output.OutputTable is SqlTable sqlTable ? sqlTable.TableOptions : TableOptions.NotSet);
+
 					StringBuilder
 						.AppendLine();
 
@@ -3120,6 +3156,61 @@ namespace LinqToDB.Internal.SqlProvider
 		{
 			switch (expr.ElementType)
 			{
+				case QueryElementType.SqlCteTableField:
+				{
+					var cteTableField = (SqlCteTableField)expr;
+
+					if (_disableAlias)
+					{
+						Convert(StringBuilder, cteTableField.Name, ConvertType.NameToQueryField);
+						break;
+					}
+
+					if (buildTableName && cteTableField.Table != null)
+					{
+						var ts = Statement.SelectQuery?.GetTableSource(cteTableField.Table);
+
+						if (ts == null)
+						{
+							var current = Statement;
+
+							do
+							{
+								ts = current.GetTableSource(cteTableField.Table, out _);
+								if (ts != null)
+									break;
+								current = current.ParentStatement;
+							}
+							while (current != null);
+						}
+
+						if (ts != null)
+						{
+							var table = GetTableAlias(ts);
+							var len   = StringBuilder.Length;
+
+							if (table != null)
+								Convert(StringBuilder, table, ConvertType.NameToQueryTableAlias);
+							else
+								StringBuilder.Append(GetPhysicalTableName(cteTableField.Table, null, ignoreTableExpression: true));
+
+							if (len == StringBuilder.Length)
+								throw new LinqToDBException($"Table {cteTableField.Table} should have an alias.");
+
+							addAlias =
+								!string.Equals(alias, cteTableField.Name, StringComparison.Ordinal)
+								|| !AliasMode.HasFlag(ColumnAliasMode.CompareFieldNames);
+
+							StringBuilder
+								.Append('.');
+						}
+					}
+
+					Convert(StringBuilder, cteTableField.Name, ConvertType.NameToQueryField);
+
+					break;
+				}
+
 				case QueryElementType.SqlField:
 				{
 					var field = (SqlField)expr;
@@ -3705,7 +3796,7 @@ namespace LinqToDB.Internal.SqlProvider
 				}
 				case SqlAnchor.AnchorKindEnum.TableSource:
 				{
-					if (anchor.SqlExpression is not SqlField { Table: { } fieldTable })
+					if (anchor.SqlExpression is not SqlFieldBase { NamedTable: { } fieldTable })
 						throw new LinqToDBException("Cannot find Table or Column associated with expression");
 
 					var ts = Statement.GetTableSource(fieldTable, out var noAlias);
@@ -3723,7 +3814,7 @@ namespace LinqToDB.Internal.SqlProvider
 				}
 				case SqlAnchor.AnchorKindEnum.TableName:
 				{
-					if (anchor.SqlExpression is not SqlField { Table: { } fieldTable })
+					if (anchor.SqlExpression is not SqlFieldBase { NamedTable: { } fieldTable })
 						throw new LinqToDBException("Cannot find Table or Column associated with expression");
 
 					BuildPhysicalTable(fieldTable, null);
@@ -3731,7 +3822,7 @@ namespace LinqToDB.Internal.SqlProvider
 				}
 				case SqlAnchor.AnchorKindEnum.TableAsSelfColumn:
 				{
-					if (anchor.SqlExpression is not SqlField { Table: { } fieldTable })
+					if (anchor.SqlExpression is not SqlFieldBase { NamedTable: { } fieldTable })
 						throw new LinqToDBException("Cannot find Table or Column associated with expression");
 
 					var table = FindTable(fieldTable);
@@ -3744,13 +3835,15 @@ namespace LinqToDB.Internal.SqlProvider
 				}
 				case SqlAnchor.AnchorKindEnum.TableAsSelfColumnOrField:
 				{
-					if (anchor.SqlExpression is not SqlField { Table: { } fieldTable } sqlField)
+					if (anchor.SqlExpression is not SqlFieldBase { NamedTable: { } fieldTable })
 						throw new LinqToDBException("Cannot find Table or Column associated with expression");
 
 					if (FindTable(fieldTable) is not { } table)
 						throw new LinqToDBException("Cannot find table.");
 
-					if (sqlField == fieldTable.All)
+					if (anchor.SqlExpression is SqlField sqlField
+						&& (   (fieldTable is SqlTable    sqlTable && sqlField == sqlTable.All)
+						    || (fieldTable is SqlCteTable cte      && sqlField == cte     .All)))
 					{
 						BuildExpression(new SqlField(table, table.TableName.Name));
 					}
@@ -3771,18 +3864,18 @@ namespace LinqToDB.Internal.SqlProvider
 
 			_disableAlias = saveDisableAlias;
 
-			SqlTable? FindTable(ISqlTableSource tableSource)
+			ISqlNamedTable? FindTable(ISqlTableSource tableSource)
 			{
-				if (tableSource is SqlTable table)
-					return table;
+				if (tableSource is ISqlNamedTable named)
+					return named;
 
 				var currentTable = tableSource;
 				while (currentTable is SelectQuery { From.Tables.Count: 1 } sc)
 				{
 					currentTable = sc.From.Tables[0].Source;
-					if (currentTable is SqlTable st)
+					if (currentTable is ISqlNamedTable nested)
 					{
-						return st;
+						return nested;
 					}
 				}
 
@@ -4318,9 +4411,13 @@ namespace LinqToDB.Internal.SqlProvider
 					return alias is not ("$" or "$F") ? alias : null;
 				}
 				case QueryElementType.SqlTable:
-				case QueryElementType.SqlCteTable:
 				{
 					var alias = ((SqlTable)table).Alias;
+					return alias is not ("$" or "$F") ? alias : null;
+				}
+				case QueryElementType.SqlCteTable:
+				{
+					var alias = ((SqlCteTable)table).Alias;
 					return alias is not ("$" or "$F") ? alias : null;
 				}
 				case QueryElementType.SqlRawSqlTable:
@@ -4412,6 +4509,8 @@ namespace LinqToDB.Internal.SqlProvider
 					return GetPhysicalTableName(((SqlTableSource)table).Source, alias, withoutSuffix: withoutSuffix);
 
 				case QueryElementType.SqlCteTable:
+					return BuildObjectName(new(), ((SqlCteTable)table).TableName, ConvertType.NameToCteName, true, TableOptions.NotSet, withoutSuffix: withoutSuffix).ToString();
+
 				case QueryElementType.SqlRawSqlTable:
 					return BuildObjectName(new(), ((SqlTable)table).TableName, ConvertType.NameToCteName, true, TableOptions.NotSet, withoutSuffix: withoutSuffix).ToString();
 

@@ -9,8 +9,21 @@
 		<PackageReference Include="Microsoft.Testing.Platform.MSBuild" />
 		<PackageReference Include="Microsoft.Testing.Extensions.TrxReport" />
 		<PackageReference Include="Microsoft.Testing.Extensions.HangDump" />
+		<PackageReference Include="Microsoft.Testing.Extensions.Retry" />
 		<PackageReference Include="Shouldly" />
 		<!-- Was a transitive dependency of Microsoft.NET.Test.Sdk; referenced directly now that the SDK is gone. -->
 		<PackageReference Include="Newtonsoft.Json" />
+	</ItemGroup>
+
+	<!-- Register linq2db's test-run command-line options (provider / test-progress) with the NUnit MTP
+	     runner. The generated entry point calls Tests.TestRunBuilderHook.AddExtensions(); the type lives in
+	     Tests.Base. Limited to C# test projects: they all reference Tests.Base, whereas the F# EF test project
+	     (Tests.EntityFrameworkCore.FSharp) imports these props but neither references Tests.Base nor uses
+	     TestConfiguration, so the hook type would not resolve there (and there is nothing to filter). -->
+	<ItemGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'">
+		<TestingPlatformBuilderHook Include="23DD2B7A-070B-49AF-A837-EE5B967B4B4B">
+			<DisplayName>linq2db</DisplayName>
+			<TypeFullName>Tests.TestRunBuilderHook</TypeFullName>
+		</TestingPlatformBuilderHook>
 	</ItemGroup>
 </Project>
