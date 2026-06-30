@@ -25,6 +25,7 @@
     <File Path=".agents/agents/_shared/kb-protocol.md" />
   </Folder>
   <Folder Name="/.agents/docs/">
+    <File Path=".agents/docs/adding-provider-version.md" />
     <File Path=".agents/docs/agent-evals.md" />
     <File Path=".agents/docs/agent-guardrails.md" />
     <File Path=".agents/docs/agent-rules.md" />
@@ -40,6 +41,7 @@
     <File Path=".agents/docs/definition-of-done.md" />
     <File Path=".agents/docs/github-authoring.md" />
     <File Path=".agents/docs/github-review-api.md" />
+    <File Path=".agents/docs/issue-labels.md" />
     <File Path=".agents/docs/issue-search.md" />
     <File Path=".agents/docs/kb-architecture.md" />
     <File Path=".agents/docs/kb-areas.md" />
@@ -84,14 +86,18 @@
   </Folder>
   <Folder Name="/.agents/scripts/">
     <File Path=".agents/scripts/_shared.ps1" />
+    <File Path=".agents/scripts/amend-branch-commit.ps1" />
     <File Path=".agents/scripts/analyzer-profile-build.ps1" />
     <File Path=".agents/scripts/analyzer-profile-report.ps1" />
     <File Path=".agents/scripts/apply-verify-writes.ps1" />
     <File Path=".agents/scripts/azp-build-failures.ps1" />
     <File Path=".agents/scripts/azp-run.ps1" />
     <File Path=".agents/scripts/baselines-diff.ps1" />
+    <File Path=".agents/scripts/carry-curation.ps1" />
+    <File Path=".agents/scripts/close-stale-baselines.ps1" />
     <File Path=".agents/scripts/diff-baselines.ps1" />
     <File Path=".agents/scripts/diff-reader.ps1" />
+    <File Path=".agents/scripts/dismiss-stale-reviews.ps1" />
     <File Path=".agents/scripts/edit-gh-comment.ps1" />
     <File Path=".agents/scripts/extract-agent-output.ps1" />
     <File Path=".agents/scripts/fuget-api-diff.ps1" />
@@ -118,6 +124,7 @@
     <File Path=".agents/scripts/release-publicapi-reconcile.ps1" />
     <File Path=".agents/scripts/release-state.ps1" />
     <File Path=".agents/scripts/release-test-cli-scaffold.ps1" />
+    <File Path=".agents/scripts/remove-worktree-locked.ps1" />
     <File Path=".agents/scripts/snap-baselines.ps1" />
     <File Path=".agents/scripts/test-status.ps1" />
     <File Path=".agents/scripts/verify-lines.ps1" />
