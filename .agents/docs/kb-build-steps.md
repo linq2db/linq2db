@@ -51,7 +51,7 @@ The skill never silently advances past a `partial` step.
 
 **Owner**: `kb-architect`.
 
-**Input**: pinned file list (`Source/LinqToDB/IDataContext.cs`, `DataConnection.cs`, top-level `*.csproj`, `Source/LinqToDB/SqlQuery/SqlStatement.cs`, `Source/LinqToDB/Linq/Builder/ExpressionBuilder.cs`).
+**Input**: pinned file list (`Source/LinqToDB/IDataContext.cs`, `DataConnection.cs`, top-level `*.csproj`, `Source/LinqToDB/Internal/SqlQuery/SqlStatement.cs`, `Source/LinqToDB/Internal/Linq/Builder/ExpressionBuilder.cs`).
 
 **Output**:
 - `architecture/overview.md` — 1-page repo map: directory tree + paragraph per top-level area.
