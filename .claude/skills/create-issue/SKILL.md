@@ -90,6 +90,13 @@ to prevent scope creep, not to expand scope.>
 
 Keep the body focused on what the user reported. Don't invent extra scope. Related observations you noticed while verifying go in **Notes** or — better — get flagged to the user as "want a separate issue for this?" rather than folded into the filed one.
 
+**Wording.** Write the body as a plain report, not filled-in template slots:
+
+- **No first person, no invented persons.** Never `we` / `I` / `our` / `the team` — the author files the issue, they don't speak for the maintainers. State what the code does and what should happen in neutral, mostly passive voice (`the keys are inlined …`, `this shows up on …`), not `we inline …` or `I noticed …`. Don't attribute intent or authorship to anyone.
+- **Human over robotic.** Prefer natural sentences to clipped template-speak; it's fine to explain *why* something is a problem in ordinary words. Terse ≠ stilted.
+
+**Calibrate confidence — don't dress a hypothesis as a finding.** Separate what was verified from what is inferred. If the root cause wasn't reproduced end to end, say so explicitly in **Notes**: list the mechanics that *are* confirmed (with `file:line`), state which step is a hypothesis, and note any artifact that wasn't captured (a failing `.sql.other`, a repro script). A confidently-worded but unproven cause sends the assignee down the wrong path; an honest "confirmed X and Y; Z not reproduced" is more useful than a clean-looking but speculative narrative.
+
 ### 5. Propose labels (up to 3)
 
 Read the current label list once per session:
