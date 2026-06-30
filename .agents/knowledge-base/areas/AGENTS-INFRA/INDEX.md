@@ -222,7 +222,7 @@ Both hooks are PowerShell scripts wired in the user's `.agents/settings.local.js
 | `track-docker-start.ps1` | `PostToolUse` (Bash) | Parses `docker start <name>` commands from the Bash tool's `tool_input.command`; appends container names to `.build/.agents/docker-session-started.txt` (deduplicated). Consumers: `cleanup-docker-session.ps1` (SessionEnd) and the agent's scope-change guard rule in `agent-rules.md`. |
 | `cleanup-docker-session.ps1` | `SessionEnd` | Reads `.build/.agents/docker-session-started.txt`; runs `docker stop <all names>` in one call; removes the state file. Silent no-op when file is missing. |
 
-A user-level hook `~/.claude-my/hooks/check-bash-chain.js` (not in this repo) enforces the no-compound-Bash rule (`&&`/`;`/control-flow) as a `PreToolUse` gate. This hook is referenced in `CLAUDE.md` system context but lives outside the AGENTS-INFRA area.
+A user-level hook `~/.claude/hooks/check-bash-chain.js` (not in this repo) enforces the no-compound-Bash rule (`&&`/`;`/control-flow) as a `PreToolUse` gate. This hook is referenced in `CLAUDE.md` system context but lives outside the AGENTS-INFRA area.
 
 ## Files (Tier 1 / Tier 2)
 
@@ -375,7 +375,7 @@ A user-level hook `~/.claude-my/hooks/check-bash-chain.js` (not in this repo) en
 
 1. **`BannedSymbols.txt` path mismatch.** `CLAUDE.md` states the banned API list is at `Build/BannedSymbols.txt`. The actual file is at `Source/BannedSymbols.txt` (and `Tests/BannedSymbols.txt`). This also affects the `BUILD` area row in `kb-areas.md` which pins `BannedSymbols.txt` as a Tier-1 file -- the path pattern `Build/**` will not match `Source/BannedSymbols.txt`.
 2. **`claude-setup.md` is stale.** The file's "Current skills" list omits all skills added since it was last updated. The doc functions as a quick-reference so the gap is informational rather than operational -- agents read individual SKILL.md files -- but a future `/audit-agents` run will flag this as a retired-content issue.
-3. **User-level hook not in this corpus.** The `check-bash-chain.js` PreToolUse hook that enforces the no-compound-Bash rule is referenced in CLAUDE.md system context but lives at the user level (`~/.claude-my/hooks/`), not under `.agents/hooks/`. Any new team member must install it manually; it is not discoverable from this corpus.
+3. **User-level hook not in this corpus.** The `check-bash-chain.js` PreToolUse hook that enforces the no-compound-Bash rule is referenced in CLAUDE.md system context but lives at the user level (`~/.claude/hooks/`), not under `.agents/hooks/`. Any new team member must install it manually; it is not discoverable from this corpus.
 4. **`audit-agents` refactor-candidate threshold.** Several SKILL.md files exceed 250 lines: `review-pr/SKILL.md`, `verify-review/SKILL.md`, `test-providers/SKILL.md`, `fix-issue/SKILL.md`. Much of the shared procedure is already factored into `.agents/docs/review-orchestration.md` and `pr-context-prep.md`; the remaining bulk in `test-providers/SKILL.md` has no shared-doc counterpart yet.
 5. **`settings.local.json` not committed.** Hooks are wired via `settings.local.json` (gitignored). The hook scripts themselves are committed but their wiring is not, so new contributors see no hooks until they configure `settings.local.json` themselves. `claude-setup.md` acknowledges this by design.
 6. **Release subdoc subdirectory not previously indexed.** `.agents/docs/release/` contains 7 files added as part of the release workflow expansion; they are now included in the Tier-2 file list above.
@@ -409,5 +409,5 @@ Read (this run -- delta):
 - `.agents/skills/test-progress/SKILL.md` -- new skill `/test-progress`: toggles `LINQ2DB_TEST_PROGRESS` in `settings.local.json` env block; `on`/`off` (sets `"0"`, does not remove key)/`status` actions; invokes `test-status.ps1` for status; scope limited to Claude-launched runs.
 - `.agents/skills/test/SKILL.md` -- added step 3.1a "Long runs -- auto-trace + background monitor": auto-invokes `/test-progress on`, runs `test-runner` with `run_in_background: true`, polls heartbeat mid-run; updated step 3.3 to pass `repoRoot` for worktrees; added worktree `repoRoot` threading from args clause.
 
-NOTE (indexer): the on-disk `.claude/` tree is the `infra/claude-curation` branch (ahead of `origin/master`); this INDEX reflects that current on-disk state, which is the correct representation for the KB living on this branch. `last_verified_sha` is stamped to the `origin/master` refresh anchor.
+NOTE (indexer): the on-disk `.claude/` tree is the `infra/agents-curation` branch (ahead of `origin/master`); this INDEX reflects that current on-disk state, which is the correct representation for the KB living on this branch. `last_verified_sha` is stamped to the `origin/master` refresh anchor.
 </details>
