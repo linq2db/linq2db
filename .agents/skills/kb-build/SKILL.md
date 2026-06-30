@@ -70,7 +70,7 @@ Find the **first step where status ≠ `done`** (in id order). That's the target
 git rev-parse origin/master
 ```
 
-**Use `origin/master` — NOT local `HEAD`.** The KB tracks the upstream master branch (same rule as `/kb-refresh` per [`kb-refresh-cursors.md`](../../docs/kb-refresh-cursors.md)). If the active local branch has unpushed feature work (e.g. an `infra/claude` branch with `.agents/` edits), recording local `HEAD` in `last_verified_sha` will silently break `/kb-refresh` — the next refresh diffs `cursors.code.sha..origin/master`, and a SHA that's not on master can't be diffed against master. Run `git fetch origin master` first if `origin/master` is stale.
+**Use `origin/master` — NOT local `HEAD`.** The KB tracks the upstream master branch (same rule as `/kb-refresh` per [`kb-refresh-cursors.md`](../../docs/kb-refresh-cursors.md)). If the active local branch has unpushed feature work (e.g. an `infra/agents-curation` branch with `.agents/` edits), recording local `HEAD` in `last_verified_sha` will silently break `/kb-refresh` — the next refresh diffs `cursors.code.sha..origin/master`, and a SHA that's not on master can't be diffed against master. Run `git fetch origin master` first if `origin/master` is stale.
 
 Cache the SHA — you'll pass it to every agent invocation as `currentSha`, and to `apply-fences` for `last_verified_sha` validation.
 

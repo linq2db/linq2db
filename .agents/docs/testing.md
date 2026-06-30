@@ -371,7 +371,7 @@ When a fix changes provider-specific SQL *shape* (especially provider-specific f
 Open `UserDataProviders.json`, find the `MyConnectionStrings` section, and add:
 
 ```json
-"BaselinesPath": "c:\\GitHub\\linq2db.bls"
+"BaselinesPath": "../linq2db.baselines"
 ```
 
 Path is arbitrary but the sibling-clone convention — `../linq2db.baselines` — matches the upstream baselines repo's layout and keeps the diff against CI clean.

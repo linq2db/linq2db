@@ -166,7 +166,7 @@ hana2     will-create     (run Data/Setup Scripts/saphana2.cmd)
 Also include:
 
 - The backup target path: `.build/.agents/UserDataProviders.json.bak.<ISO-timestamp>`.
-- Whether `BaselinesPath` is currently set; if unset, ask in this same prompt whether to set it (propose `c:\\GitHub\\linq2db.bls` per `testing.md`'s **Enabling baselines locally**) — same numbered list, so the user can answer everything at once.
+- Whether `BaselinesPath` is currently set; if unset, ask in this same prompt whether to set it (propose `../linq2db.baselines` per `testing.md`'s **Enabling baselines locally**) — same numbered list, so the user can answer everything at once.
 
 Wait for an explicit go-ahead before any mutation. On a refusal, stop cleanly — no partial application.
 
@@ -194,7 +194,7 @@ Per affected TFM bucket:
 2. The `new_string` is the same block with markers flipped per step 3. Do not reorder, do not regex-replace across the whole file, and do not split into one `Edit` per provider — that triggers N permission prompts. One `Edit` per bucket.
 3. Leave whitespace, comments, and unrelated buckets exactly as they were.
 
-If the user agreed in step 4 to set `BaselinesPath`: a separate `Edit` call inserts the `"BaselinesPath": "c:\\GitHub\\linq2db.bls"` field into the `MyConnectionStrings` block (see the example in `testing.md` → **Enabling baselines locally**).
+If the user agreed in step 4 to set `BaselinesPath`: a separate `Edit` call inserts the `"BaselinesPath": "../linq2db.baselines"` field into the `MyConnectionStrings` block (see the example in `testing.md` → **Enabling baselines locally**).
 
 #### 5c. Container actions
 

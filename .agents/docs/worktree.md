@@ -14,7 +14,7 @@ Once you know you'll *edit* a file in the worktree, do the investigation `Read` 
 
 ## `UserDataProviders.json` in a worktree
 
-`TestConfiguration` finds this file by walking **up** the directory tree from the test assembly (`GetFilePath` in `Tests/Base/TestConfiguration.cs`), not from a fixed path — and the walk-up traverses **ancestors only**. Worktrees are created as **siblings** of the primary clone (`git worktree add ../linq2db.claude.<slug>`, per [`agent-rules.md`](agent-rules.md) → *Creating a new branch*), so the walk-up from `<worktree>/.build/bin/…` reaches the **worktree root** — which tracks only `UserDataProviders.json.template` — and **never** the primary clone's `UserDataProviders.json` (a sibling, not an ancestor). A `--provider` run needs nothing from that file; a baseline-sensitive run does (see the second consequence below).
+`TestConfiguration` finds this file by walking **up** the directory tree from the test assembly (`GetFilePath` in `Tests/Base/TestConfiguration.cs`), not from a fixed path — and the walk-up traverses **ancestors only**. Worktrees are created as **siblings** of the primary clone (`git worktree add ../<clone-dir>.<slug>`, per [`agent-rules.md`](agent-rules.md) → *Creating a new branch*), so the walk-up from `<worktree>/.build/bin/…` reaches the **worktree root** — which tracks only `UserDataProviders.json.template` — and **never** the primary clone's `UserDataProviders.json` (a sibling, not an ancestor). A `--provider` run needs nothing from that file; a baseline-sensitive run does (see the second consequence below).
 
 Two consequences:
 
@@ -68,7 +68,7 @@ When `/release` runs against a `release-prep/<ver>` worktree, the moving parts s
 | Clone | Branch | Owns |
 |---|---|---|
 | `<curation-clone>` (curation workspace) | `infra/agents-curation` | `.agents/` skills + scripts; orchestrator state file at `.build/.agents/release-<ver>.json`; per-task plan caches; walk-decisions tracker |
-| `../linq2db.claude.release-<ver>` (worktree) | `release-prep/<ver>` | source-tree edits (`Directory.Packages.props`, `.editorconfig`, csproj `VersionOverride` sites, code fixes); per-build outputs under `.build/bin/` |
+| `../<clone-dir>.release-<ver>` (worktree) | `release-prep/<ver>` | source-tree edits (`Directory.Packages.props`, `.editorconfig`, csproj `VersionOverride` sites, code fixes); per-build outputs under `.build/bin/` |
 
 **Cross-clone calling pattern:** sub-skills that need to run a script from inside the worktree invoke `pwsh -NoProfile -File <curation-clone>\.agents\scripts\<name>.ps1 ...` with an absolute path back to curation. The script's `Get-Location` then yields the worktree, so file-system reads (Directory.Packages.props parsing, source globbing) target the right tree. The PowerShell tool's working directory is set explicitly via `Set-Location <worktree>` before each cross-clone call.
 
