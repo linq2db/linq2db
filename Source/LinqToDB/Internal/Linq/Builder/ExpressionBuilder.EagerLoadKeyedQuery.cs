@@ -686,8 +686,35 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (execution == null)
 					return;
 
+				// Canonicalize key order so the inlined VALUES table is identical regardless of which
+				// extraction path produced the keys (client-side buffer vs SQL key query) or what order
+				// the database returned rows in. Without this, direct and remote (LinqService) execution
+				// can emit divergent SQL for the same query (#5664). Keys whose type is not orderable
+				// (e.g. a composite with a byte[] component) keep their source order — eager load compares
+				// keys structurally for equality only, so no orderable contract is otherwise required.
+				keys = SortKeysDeterministically(keys);
+
 				_perExecution.Remove(execution);
 				_perExecution.Add(execution, keys);
+			}
+
+			static TKey[] SortKeysDeterministically(TKey[] keys)
+			{
+				if (keys.Length < 2)
+					return keys;
+
+				try
+				{
+					var sorted = (TKey[])keys.Clone();
+					Array.Sort(sorted, Comparer<TKey>.Default);
+					return sorted;
+				}
+				catch (InvalidOperationException)
+				{
+					// TKey (or one of its composite components) does not implement IComparable.
+					// Leave the original order untouched (a partial Array.Sort is avoided via the clone).
+					return keys;
+				}
 			}
 
 			// execution is null only if the keys accessor is evaluated without a live IQueryExpressions
