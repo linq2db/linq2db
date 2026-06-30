@@ -705,16 +705,20 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				try
 				{
-					var sorted = (TKey[])keys.Clone();
-					Array.Sort(sorted, Comparer<TKey>.Default);
-					return sorted;
+					// Sort in place — every caller passes a freshly-allocated array (.ToArray()) that
+					// nothing else holds, so mutating it is safe.
+					Array.Sort(keys, Comparer<TKey>.Default);
 				}
 				catch (InvalidOperationException)
 				{
 					// TKey (or one of its composite components) does not implement IComparable.
-					// Leave the original order untouched (a partial Array.Sort is avoided via the clone).
-					return keys;
+					// Such keys are not deterministically orderable, so they keep source order — eager
+					// load compares keys structurally for equality only, no ordering contract is required.
+					// A partial Array.Sort here is harmless: it only reorders (never drops) elements, and
+					// the order of a non-orderable key class is non-deterministic between paths regardless.
 				}
+
+				return keys;
 			}
 
 			// execution is null only if the keys accessor is evaluated without a live IQueryExpressions
