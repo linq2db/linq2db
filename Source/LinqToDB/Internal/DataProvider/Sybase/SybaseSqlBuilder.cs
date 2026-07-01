@@ -273,22 +273,17 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 			StringBuilder.Append("TRUNCATE TABLE ");
 		}
 
-		public override int CommandCount(SqlStatement statement)
+		protected override void BuildCommandFragment(SqlCommandFragment fragment, int fieldIndex, SqlStatement statement)
 		{
-			return statement switch
-			{
-				SqlTruncateTableStatement trun => trun.ResetIdentity && trun.Table!.IdentityFields.Count > 0 ? 2 : 1,
-				_ => 1,
-			};
-		}
-
-		protected override void BuildCommand(SqlStatement statement, int commandNumber)
-		{
-			if (statement is SqlTruncateTableStatement trun)
+			if (fragment == SqlCommandFragment.IdentityReseed && statement is SqlTruncateTableStatement trun)
 			{
 				StringBuilder.Append("sp_chgattribute ");
 				BuildObjectName(StringBuilder, trun.Table!.TableName, ConvertType.NameToQueryTable, true, trun.Table.TableOptions);
 				StringBuilder.AppendLine(", 'identity_burn_max', 0, '0'");
+			}
+			else
+			{
+				base.BuildCommandFragment(fragment, fieldIndex, statement);
 			}
 		}
 
