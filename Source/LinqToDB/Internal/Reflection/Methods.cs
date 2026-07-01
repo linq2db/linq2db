@@ -203,7 +203,6 @@ namespace LinqToDB.Internal.Reflection
 			public static readonly MethodInfo RemoveOrderBy             = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.RemoveOrderBy());
 			public static readonly MethodInfo IgnoreFilters             = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.IgnoreFilters());
 			public static readonly MethodInfo IgnoreFiltersByKey        = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.IgnoreFilters(Array.Empty<string>()));
-			public static readonly MethodInfo IgnoreFiltersByKeyAndType = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.IgnoreFilters(Array.Empty<string>(), Array.Empty<Type>()));
 			public static readonly MethodInfo DisableGuard              = MemberHelper.MethodOfGeneric<IQueryable<IGrouping<int, object>>>(q => q.DisableGuard());
 			public static readonly MethodInfo InlineParameters          = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.InlineParameters());
 

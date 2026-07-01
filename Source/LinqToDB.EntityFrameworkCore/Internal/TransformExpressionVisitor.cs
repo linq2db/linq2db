@@ -185,24 +185,23 @@ namespace LinqToDB.EntityFrameworkCore.Internal
 #if EF10
 					if (generic == ReflectionMethods.IgnoreQueryFiltersByKeyMethodInfo)
 					{
-						// EF: IgnoreQueryFilters(IReadOnlyCollection<string>) → linq2db: IgnoreFilters(string[]).
-						// EF treats an empty key collection as a no-op (filterKeys?.Count > 0 guard in EF's
-						// QueryableMethodNormalizingExpressionVisitor — every filter stays applied), while linq2db's
-						// IgnoreFilters(empty array) normalizes empty to a wildcard and disables every filter. Mirror EF
-						// by skipping the remap when no keys are supplied. The keys arg is [NotParameterized], so it is a
-						// constant here and safe to evaluate.
+						// EF: IgnoreQueryFilters(IReadOnlyCollection<string>) → linq2db: IgnoreFilters(IEnumerable<string>, params Type[]).
+						// EF treats a null/empty key collection as a no-op (filterKeys?.Count > 0 guard in EF's
+						// QueryableMethodNormalizingExpressionVisitor — every filter stays applied); linq2db's keyed
+						// overload does the same, but short-circuit here to drop the redundant call and stay null-safe.
+						// The keys arg is [NotParameterized], so it is a constant here and safe to evaluate.
 						var filterKeys = node.Arguments[1].EvaluateExpression<IReadOnlyCollection<string>>();
 						if (filterKeys is not { Count: > 0 })
 							return Visit(node.Arguments[0]);
 
-						// EF: IgnoreQueryFilters(IReadOnlyCollection<string>) → linq2db: IgnoreFilters(string[])
 						var keysExpr = Expression.Call(
 							typeof(Enumerable), nameof(Enumerable.ToArray), [typeof(string)],
 							node.Arguments[1]);
 
+						// The keyed overload has a trailing params Type[]; Expression.Call doesn't expand it, so pass an empty array.
 						var newMethod = Expression.Call(
 							Methods.LinqToDB.IgnoreFiltersByKey.MakeGenericMethod(node.Method.GetGenericArguments()),
-							node.Arguments[0], keysExpr);
+							node.Arguments[0], keysExpr, Expression.NewArrayInit(typeof(Type)));
 						return newMethod;
 					}
 #endif

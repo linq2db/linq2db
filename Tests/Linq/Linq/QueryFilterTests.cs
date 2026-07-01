@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
@@ -582,13 +583,13 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void IgnoreFilters_ByKey_Empty_DisablesAll([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		public void IgnoreFilters_ByKey_Empty_DisablesNothing([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
 			var testData = GenerateTestData();
 
 			var builder = new FluentMappingBuilder(new MappingSchema());
 
-			// Anonymous (default-key) filter — would survive a buggy "empty array disables only named" implementation.
+			// An explicit empty key list disables nothing (mirrors EF Core) — every filter, anonymous and named, stays.
 			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>((q, dc) => q.Where(e => e.Id < 750));
 			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(SoftDeleteKey, (q, dc) => q.Where(e => !e.IsDeleted));
 			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(IdRangeKey,  (q, dc) => q.Where(e => e.Id < 500));
@@ -600,7 +601,54 @@ namespace Tests.Linq
 			{
 				var result = db.GetTable<DetailClass>().IgnoreFilters(Array.Empty<string>()).ToList();
 
-				result.Count.ShouldBe(testData.Item3.Length);
+				result.ShouldAllBe(e => e.Id < 500 && !e.IsDeleted);
+				result.Count.ShouldBeLessThan(testData.Item3.Length);
+			}
+		}
+
+		[Test]
+		public void IgnoreFilters_ByKey_Null_DisablesNothing([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			var testData = GenerateTestData();
+
+			var builder = new FluentMappingBuilder(new MappingSchema());
+
+			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(SoftDeleteKey, (q, dc) => q.Where(e => !e.IsDeleted));
+			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(IdRangeKey,  (q, dc) => q.Where(e => e.Id < 500));
+
+			builder.Build();
+
+			using var db = new MyDataContext(context, builder.MappingSchema);
+			using (db.CreateLocalTable(testData.Item3))
+			{
+				// A null key list disables nothing and does not throw.
+				var result = db.GetTable<DetailClass>().IgnoreFilters((IEnumerable<string>)null!).ToList();
+
+				result.ShouldAllBe(e => e.Id < 500 && !e.IsDeleted);
+				result.Count.ShouldBeLessThan(testData.Item3.Length);
+			}
+		}
+
+		[Test]
+		public void IgnoreFilters_EmptyKeys_WithTypes_DisablesNothing([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			var testData = GenerateTestData();
+
+			var builder = new FluentMappingBuilder(new MappingSchema());
+
+			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(SoftDeleteKey, (q, dc) => q.Where(e => !e.IsDeleted));
+			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(IdRangeKey,  (q, dc) => q.Where(e => e.Id < 500));
+
+			builder.Build();
+
+			using var db = new MyDataContext(context, builder.MappingSchema);
+			using (db.CreateLocalTable(testData.Item3))
+			{
+				// The key list gates: empty keys disable nothing even when entity types are supplied.
+				var result = db.GetTable<DetailClass>().IgnoreFilters(Array.Empty<string>(), typeof(DetailClass)).ToList();
+
+				result.ShouldAllBe(e => e.Id < 500 && !e.IsDeleted);
+				result.Count.ShouldBeLessThan(testData.Item3.Length);
 			}
 		}
 

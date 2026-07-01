@@ -11,20 +11,16 @@ namespace LinqToDB.Internal.Linq.Builder
 	{
 		public static bool CanBuildMethod(MethodCallExpression call)
 			=> call.IsSameGenericMethod(Methods.LinqToDB.IgnoreFilters)
-			|| call.IsSameGenericMethod(Methods.LinqToDB.IgnoreFiltersByKey)
-			|| call.IsSameGenericMethod(Methods.LinqToDB.IgnoreFiltersByKeyAndType);
+			|| call.IsSameGenericMethod(Methods.LinqToDB.IgnoreFiltersByKey);
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			if (methodCall.IsSameGenericMethod(Methods.LinqToDB.IgnoreFiltersByKey))
 			{
-				var keys = builder.EvaluateExpression<string[]>(methodCall.Arguments[1])!;
-				builder.PushDisabledQueryFilters(keys, []);
-			}
-			else if (methodCall.IsSameGenericMethod(Methods.LinqToDB.IgnoreFiltersByKeyAndType))
-			{
-				var keys  = builder.EvaluateExpression<string[]>(methodCall.Arguments[1])!;
-				var types = builder.EvaluateExpression<Type[]>  (methodCall.Arguments[2])!;
+				// Coalesce a null key list to empty so it never reaches FilterIgnoreScope as the null "any key"
+				// wildcard — an explicit (empty/null) key list disables nothing, only the type-based overload disables all.
+				var keys  = builder.EvaluateExpression<string[]>(methodCall.Arguments[1]) ?? [];
+				var types = builder.EvaluateExpression<Type[]>  (methodCall.Arguments[2]) ?? [];
 				builder.PushDisabledQueryFilters(keys, types);
 			}
 			else

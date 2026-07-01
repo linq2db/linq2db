@@ -21,7 +21,7 @@ namespace LinqToDB.Mapping
 		/// Filter identifier used to address the filter individually via the keyed
 		/// <see cref="EntityMappingBuilder{T}.HasQueryFilter(string, Expression{Func{T, IDataContext, bool}}?)"/>
 		/// overloads and to selectively disable it via
-		/// <see cref="LinqExtensions.IgnoreFilters{TSource}(System.Linq.IQueryable{TSource}, string[])"/>.
+		/// <see cref="LinqExtensions.IgnoreFilters{TSource}(System.Linq.IQueryable{TSource}, System.Collections.Generic.IEnumerable{string}, System.Type[])"/>.
 		/// <para>
 		/// A <see langword="null"/> or empty value identifies the default (anonymous) filter slot, populated by the
 		/// non-keyed <c>HasQueryFilter</c> overloads.

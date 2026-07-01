@@ -1582,51 +1582,34 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Disables query filters in current query, identified by filter key.
+		/// Disables named query filters in current query, identified by filter key and optionally scoped to entity
+		/// types. A filter is disabled when its key is listed and its entity type matches; an empty
+		/// <paramref name="entityTypes"/> list means "any entity type".
+		/// <para>
+		/// A <see langword="null"/> or empty <paramref name="filterKeys"/> list disables nothing (mirroring EF Core's
+		/// <c>IgnoreQueryFilters(IEnumerable&lt;string&gt;)</c>). Use the parameterless
+		/// <see cref="IgnoreFilters{TSource}(System.Linq.IQueryable{TSource}, System.Type[])"/> to disable every filter.
+		/// </para>
 		/// </summary>
 		/// <typeparam name="TSource">Source query record type.</typeparam>
 		/// <param name="source">Source query.</param>
-		/// <param name="filterKeys">Filter keys to disable. An empty array means "all keys" — disables every filter (named and anonymous) on every entity in the query.</param>
-		/// <returns>Query with the specified filters disabled.</returns>
+		/// <param name="filterKeys">Filter keys to disable. <see langword="null"/> or empty disables nothing.</param>
+		/// <param name="entityTypes">Optional entity types the disable is scoped to. Empty means "any entity type".</param>
+		/// <returns>Query with the specified named filters disabled.</returns>
 		[LinqTunnel]
 		[Pure]
-		public static IQueryable<TSource> IgnoreFilters<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string[] filterKeys)
+		public static IQueryable<TSource> IgnoreFilters<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] IEnumerable<string> filterKeys, [SqlQueryDependent] params Type[] entityTypes)
 		{
 			ArgumentNullException.ThrowIfNull(source);
-			ArgumentNullException.ThrowIfNull(filterKeys);
+
+			var keys  = filterKeys?.ToArray() ?? [];
+			var types = entityTypes           ?? [];
 
 			var currentSource = source.ProcessIQueryable();
 
 			var expr = Expression.Call(
 				null,
-				MethodHelper.GetMethodInfo(IgnoreFilters, source, filterKeys), currentSource.Expression, Expression.Constant(filterKeys));
-
-			return currentSource.Provider.CreateQuery<TSource>(expr);
-		}
-
-		/// <summary>
-		/// Disables query filters in current query, scoped to the intersection of the supplied filter keys
-		/// and entity types. A filter is disabled when both dimensions match — an empty array on either dimension
-		/// means "any" for that dimension.
-		/// </summary>
-		/// <typeparam name="TSource">Source query record type.</typeparam>
-		/// <param name="source">Source query.</param>
-		/// <param name="filterKeys">Filter keys to disable. Empty array means "any key" (matches every filter, named and anonymous).</param>
-		/// <param name="entityTypes">Entity types whose matching-keyed filters should be disabled. Empty array means "any entity type".</param>
-		/// <returns>Query with the specified filters disabled on the specified entity types.</returns>
-		[LinqTunnel]
-		[Pure]
-		public static IQueryable<TSource> IgnoreFilters<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string[] filterKeys, [SqlQueryDependent] Type[] entityTypes)
-		{
-			ArgumentNullException.ThrowIfNull(source);
-			ArgumentNullException.ThrowIfNull(filterKeys);
-			ArgumentNullException.ThrowIfNull(entityTypes);
-
-			var currentSource = source.ProcessIQueryable();
-
-			var expr = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(IgnoreFilters, source, filterKeys, entityTypes), currentSource.Expression, Expression.Constant(filterKeys), Expression.Constant(entityTypes));
+				MethodHelper.GetMethodInfo(IgnoreFilters, source, keys, types), currentSource.Expression, Expression.Constant(keys), Expression.Constant(types));
 
 			return currentSource.Provider.CreateQuery<TSource>(expr);
 		}

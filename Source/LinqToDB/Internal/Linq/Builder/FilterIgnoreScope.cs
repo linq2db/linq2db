@@ -12,16 +12,20 @@ namespace LinqToDB.Internal.Linq.Builder
 		// equality-based cache from missing on logically-equivalent inputs.
 		public FilterIgnoreScope(string[]? keys, Type[]? types)
 		{
-			Keys  = Normalize(keys, StringComparer.Ordinal);
-			Types = Normalize(types, TypeComparer.Instance);
+			// Keys: null is the wildcard ("any key" — produced only by the type-based IgnoreFilters(Type[]) path);
+			// an empty array means "no keys" and must survive as empty so it matches nothing. Types: null and empty
+			// both mean "any type", so collapsing empty→null keeps one canonical representation for the wildcard.
+			Keys  = Normalize(keys, StringComparer.Ordinal, collapseEmptyToNull: false);
+			Types = Normalize(types, TypeComparer.Instance, collapseEmptyToNull: true);
 		}
 
-		static T[]? Normalize<T>(T[]? array, IComparer<T> comparer) where T : class
+		static T[]? Normalize<T>(T[]? array, IComparer<T> comparer, bool collapseEmptyToNull) where T : class
 		{
-			// Treat null and empty as the same wildcard so logically-identical scopes (e.g. {Keys=null, Types=[]}
-			// vs {Keys=[], Types=[]}) share one representation and don't fragment TranslationModifier's cache.
-			if (array == null || array.Length == 0)
+			if (array == null)
 				return null;
+
+			if (array.Length == 0)
+				return collapseEmptyToNull ? null : array;
 
 			if (array.Length == 1)
 				return new[] { array[0] };
@@ -49,7 +53,8 @@ namespace LinqToDB.Internal.Linq.Builder
 		}
 
 		/// <summary>
-		/// Filter-key dimension. <see langword="null"/> or empty means "any key".
+		/// Filter-key dimension. <see langword="null"/> is the wildcard ("any key"); an empty array means "no keys"
+		/// (matches nothing). A non-empty array matches only the listed keys.
 		/// </summary>
 		public string[]? Keys  { get; }
 
@@ -58,11 +63,11 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// </summary>
 		public Type[]?   Types { get; }
 
-		public bool MatchesAnyKey() => Keys == null || Keys.Length == 0;
+		public bool MatchesAnyKey() => Keys == null;
 
 		public bool MatchesKey(string filterKey)
 		{
-			if (Keys == null || Keys.Length == 0)
+			if (Keys == null)
 				return true;
 
 			return Array.IndexOf(Keys, filterKey) >= 0;
