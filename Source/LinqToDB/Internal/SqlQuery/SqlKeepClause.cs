@@ -90,6 +90,22 @@ namespace LinqToDB.Internal.SqlQuery
 			return GetElementHashCode();
 		}
 
+		public bool Equals(SqlKeepClause other, Func<ISqlExpression, ISqlExpression, bool> comparer)
+		{
+			if (Type != other.Type || OrderBy.Count != other.OrderBy.Count)
+				return false;
+
+			for (var i = 0; i < OrderBy.Count; i++)
+			{
+				if (OrderBy[i].IsDescending  != other.OrderBy[i].IsDescending
+					|| OrderBy[i].NullsPosition != other.OrderBy[i].NullsPosition
+					|| !OrderBy[i].Expression.Equals(other.OrderBy[i].Expression, comparer))
+					return false;
+			}
+
+			return true;
+		}
+
 		[DebuggerStepThrough]
 		public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitSqlKeepClause(this);
 

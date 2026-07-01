@@ -289,7 +289,7 @@ namespace LinqToDB.Internal.SqlQuery
 			if (!CheckNulls(KeepClause, otherFunction.KeepClause))
 				return false;
 
-			if (KeepClause != null && !KeepClause.Equals(otherFunction.KeepClause))
+			if (KeepClause != null && !KeepClause.Equals(otherFunction.KeepClause!, comparer))
 				return false;
 
 			if (!CheckNulls(Filter, otherFunction.Filter))
