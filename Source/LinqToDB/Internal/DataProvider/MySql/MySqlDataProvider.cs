@@ -116,6 +116,11 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			};
 		}
 
+		protected override IDmlService CreateDmlService()
+		{
+			return new MySqlDmlService();
+		}
+
 		public override ISchemaProvider GetSchemaProvider()
 		{
 			return new MySqlSchemaProvider(this);

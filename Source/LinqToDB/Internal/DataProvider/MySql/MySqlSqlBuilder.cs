@@ -42,16 +42,6 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			return true;
 		}
 
-		public override int CommandCount(SqlStatement statement)
-		{
-			return statement.NeedsIdentity ? 2 : 1;
-		}
-
-		protected override void BuildCommand(SqlStatement statement, int commandNumber)
-		{
-			StringBuilder.AppendLine("SELECT LAST_INSERT_ID()");
-		}
-
 		protected override string LimitFormat(SelectQuery selectQuery)
 		{
 			return "LIMIT {0}";
