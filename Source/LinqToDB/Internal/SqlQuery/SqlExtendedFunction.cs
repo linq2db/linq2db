@@ -401,6 +401,10 @@ namespace LinqToDB.Internal.SqlQuery
 		// Stored marker: set when the function originates from an explicit OVER/window context (e.g. legacy
 		// Sql.Ext.*().Over() or Sql.Window.*). Lets an empty window (no PARTITION/ORDER/frame) still emit OVER (),
 		// which the clause-derived check below can't detect.
+		// LinqServiceSerializer persists the *derived* IsWindowFunction value and restores it into this field on
+		// read. That is safe as long as every term in the derivation below is itself serialized (they are): a
+		// function derived-true via its clauses restores true either way, and the empty-OVER case relies on this
+		// stored bit, which is round-tripped faithfully. Keep that invariant if the derivation gains a new term.
 		readonly bool _isWindowFunction;
 
 		public bool IsWindowFunction => _isWindowFunction || OrderBy?.Count > 0 || PartitionBy?.Count > 0 || FrameClause != null || KeepClause != null;
