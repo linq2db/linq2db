@@ -13,7 +13,7 @@ namespace Tests.Linq
 	{
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException),
-			TestProvName.AllSQLite, TestProvName.AllSqlServer2008Minus, TestProvName.AllClickHouse,
+			TestProvName.AllSQLite, TestProvName.AllSqlServer2008Minus,
 			ProviderName.Firebird3, ProviderName.Firebird4, TestProvName.AllFirebird5Plus, ProviderName.Ydb,
 			ErrorMessage = ErrorHelper.Error_WindowFunction_Variance)]
 		public void StdDevBasic([SupportsAnalyticFunctionsContext] string context)
@@ -39,7 +39,7 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException),
-			TestProvName.AllSQLite, TestProvName.AllSqlServer2008Minus, TestProvName.AllClickHouse,
+			TestProvName.AllSQLite, TestProvName.AllSqlServer2008Minus,
 			ProviderName.Firebird3, ProviderName.Firebird4, TestProvName.AllFirebird5Plus, ProviderName.Ydb,
 			ErrorMessage = ErrorHelper.Error_WindowFunction_Variance)]
 		public void StdDevViaWindow([SupportsAnalyticFunctionsContext] string context)

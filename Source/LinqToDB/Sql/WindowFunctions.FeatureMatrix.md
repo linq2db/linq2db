@@ -61,7 +61,7 @@ Notes: SQL Server has no `NTH_VALUE` (any version). MariaDB & YDB reject the LEA
 | SUM/AVG/MIN/MAX/COUNT OVER | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | `DISTINCT` in window agg | ✗ | ✗ | ✓ | ✗ | ✗ | ✗ | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
 | STDDEV_POP/SAMP, VAR_POP/SAMP | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ✓ | ✓ⁱ | ✗ | ✗ | ✗ |
-| bare STDDEV / VARIANCE (sample) | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | ✗ | ✓ | ✓ | ✓ | ✓ⱽ | ✗ | ✗ | ✗ |
+| bare STDDEV / VARIANCE (sample) | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ✓ | ✓ⱽ | ✗ | ✗ | ✗ |
 | COVAR_POP/SAMP, CORR | ✗ | ✓ | ✓ | ✗ | ✗ | ✗ | ✓ | ✓ | ✓ | ✓ʰ | ✗ | ✗ | ✗ | ✗ |
 | REGR_* (9 functions) | ✗ | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ |
 | MEDIAN | ✗ | ✗ | ✓ | ✗ | ✓ | ✗ | ✗† | ✓ | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ |
@@ -77,8 +77,9 @@ Notes: SQL Server has no `NTH_VALUE` (any version). MariaDB & YDB reject the LEA
 `STDDEV`/`VARIANCE` keywords are the *population* form on MySQL/MariaDB/DB2/Informix, so they are mapped to the
 sample `STDDEV_SAMP`/`VAR_SAMP` via `StdDevFunctionName`/`VarianceFunctionName` (documented sample functions on
 MySQL & DB2). On SQL Server the sample form is spelled `STDEV`/`VAR`, and on SAP HANA bare `VARIANCE` is spelled
-`VAR` — all sample — set through the same overrides. PostgreSQL / Oracle / DuckDB use the bare names directly
-(already sample).
+`VAR` — all sample — set through the same overrides. ClickHouse has no bare `STDDEV`/`VARIANCE` keyword at all,
+so bare maps to the explicit sample forms `STDDEV_SAMP`/`VAR_SAMP` (the same SQL ClickHouse already accepts for
+`StdDevSamp`/`VarSamp`). PostgreSQL / Oracle / DuckDB use the bare names directly (already sample).
 
 The grouped statistical rows hide per-function asymmetry, marked above:
 - **ⁱ Informix** supports the explicit `STDDEV_POP`/`STDDEV_SAMP`, but **not** `VAR_POP`/`VAR_SAMP`
