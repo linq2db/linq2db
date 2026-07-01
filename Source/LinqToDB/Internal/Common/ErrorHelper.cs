@@ -47,6 +47,7 @@
 		public const string Error_WindowFunction_FrameRangeGroupsOrderBy    = "A RANGE or GROUPS frame with a value offset requires exactly one ORDER BY expression.";
 		public const string Error_WindowFunction_OrderedSetFilter           = "FILTER (WHERE ...) on ordered-set aggregates (PERCENTILE_CONT/PERCENTILE_DISC) is not supported by current provider.";
 		public const string Error_WindowFunction_Keep                       = "KEEP clause is not supported by current provider.";
+		public const string Error_WindowFunction_KeepOrderBy                = "KEEP (DENSE_RANK FIRST/LAST) requires an ORDER BY.";
 		public const string Error_WindowFunction_NullTreatment              = "IGNORE NULLS is not supported by current provider.";
 		public const string Error_WindowFunction_NthValueFrom               = "NTH_VALUE FROM LAST is not supported by current provider.";
 		public const string Error_WindowFunction_LeadLagDefault             = "Default value argument for LEAD/LAG is not supported by current provider.";

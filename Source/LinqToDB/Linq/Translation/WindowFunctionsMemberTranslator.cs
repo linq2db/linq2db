@@ -876,6 +876,8 @@ namespace LinqToDB.Linq.Translation
 
 					keepClause = new SqlKeepClause(information.KeepType.Value, keepOrderItems);
 				}
+				else
+					return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_KeepOrderBy, methodCall.Type);
 			}
 
 			if (information.NullTreatment == Sql.Nulls.Ignore)
