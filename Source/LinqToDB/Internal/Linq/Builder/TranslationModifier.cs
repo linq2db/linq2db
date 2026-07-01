@@ -1,30 +1,32 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 
 namespace LinqToDB.Internal.Linq.Builder
 {
-	[DebuggerDisplay("InlineParameters = {InlineParameters}, IgnoreQueryFilterScopes = {IgnoreQueryFilterScopes}")]
+	[DebuggerDisplay("InlineParameters = {InlineParameters}, IgnoreQueryFilterScopes = {IgnoreQueryFilterScopes}, EagerLoadingStrategy = {EagerLoadingStrategy}")]
 	sealed class TranslationModifier : IEquatable<TranslationModifier>
 	{
 		public static readonly TranslationModifier Default = new();
 
 		public TranslationModifier(
-			bool    inlineParameters   = false,
-			Type[]? ignoreQueryFilters = null)
-			: this(inlineParameters, ignoreQueryFilters == null ? null : [new FilterIgnoreScope(null, ignoreQueryFilters)])
+			bool                  inlineParameters     = false,
+			Type[]?               ignoreQueryFilters   = null,
+			EagerLoadingStrategy? eagerLoadingStrategy = null)
+			: this(inlineParameters, ignoreQueryFilters == null ? null : [new FilterIgnoreScope(null, ignoreQueryFilters)], eagerLoadingStrategy)
 		{
 		}
 
-		TranslationModifier(bool inlineParameters, FilterIgnoreScope[]? scopes)
+		TranslationModifier(bool inlineParameters, FilterIgnoreScope[]? scopes, EagerLoadingStrategy? eagerLoadingStrategy)
 		{
 			InlineParameters        = inlineParameters;
 			IgnoreQueryFilterScopes = scopes;
+			EagerLoadingStrategy    = eagerLoadingStrategy;
 		}
 
-		public bool                 InlineParameters        { get; }
-		public FilterIgnoreScope[]? IgnoreQueryFilterScopes { get; }
+		public bool                  InlineParameters        { get; }
+		public FilterIgnoreScope[]?  IgnoreQueryFilterScopes { get; }
+		public EagerLoadingStrategy? EagerLoadingStrategy    { get; }
 
 		/// <summary>
 		/// Whole-entity disable check — returns <see langword="true"/> when at least one registered scope disables
@@ -73,6 +75,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (InlineParameters != other.InlineParameters)
 				return false;
 
+			if (EagerLoadingStrategy != other.EagerLoadingStrategy)
+				return false;
+
 			if (ReferenceEquals(IgnoreQueryFilterScopes, other.IgnoreQueryFilterScopes))
 				return true;
 
@@ -94,7 +99,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (InlineParameters == inlineParameters)
 				return this;
 
-			return new TranslationModifier(inlineParameters, IgnoreQueryFilterScopes);
+			return new TranslationModifier(inlineParameters, IgnoreQueryFilterScopes, EagerLoadingStrategy);
 		}
 
 		/// <summary>
@@ -114,7 +119,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var existing = IgnoreQueryFilterScopes;
 			if (existing == null)
-				return new TranslationModifier(InlineParameters, [scope]);
+				return new TranslationModifier(InlineParameters, [scope], EagerLoadingStrategy);
 
 			foreach (var s in existing)
 				if (s.Equals(scope))
@@ -124,7 +129,15 @@ namespace LinqToDB.Internal.Linq.Builder
 			Array.Copy(existing, newArr, existing.Length);
 			newArr[existing.Length] = scope;
 
-			return new TranslationModifier(InlineParameters, newArr);
+			return new TranslationModifier(InlineParameters, newArr, EagerLoadingStrategy);
+		}
+
+		public TranslationModifier WithEagerLoadingStrategy(EagerLoadingStrategy strategy)
+		{
+			if (EagerLoadingStrategy == strategy)
+				return this;
+
+			return new TranslationModifier(InlineParameters, IgnoreQueryFilterScopes, strategy);
 		}
 
 		public override bool Equals([NotNullWhen(true)] object? obj)
@@ -136,6 +149,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			var hashCode = new HashCode();
 			hashCode.Add(InlineParameters);
+			hashCode.Add(EagerLoadingStrategy);
 
 			if (IgnoreQueryFilterScopes != null)
 			{

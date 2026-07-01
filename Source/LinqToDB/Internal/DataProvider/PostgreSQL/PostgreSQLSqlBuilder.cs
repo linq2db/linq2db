@@ -36,7 +36,9 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 		protected override bool IsRecursiveCteKeywordRequired => true;
 
-		protected override bool SupportsMaterializedCteHint   => true;
+		// AS [NOT] MATERIALIZED requires PostgreSQL 12+; the base builder (used by pre-12 providers) omits it.
+		// PostgreSQL13SqlBuilder enables it for v13+ — see PostgreSQLDataProvider.CreateSqlBuilder.
+		protected override bool SupportsMaterializedCteHint   => false;
 
 		protected override ConcatBuildStyle ConcatStyle       => ConcatBuildStyle.Pipes;
 

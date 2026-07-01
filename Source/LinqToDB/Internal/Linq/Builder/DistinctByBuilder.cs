@@ -21,16 +21,12 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		static readonly MethodInfo _buildDistinctByViaRowNumberMethodInfo = MemberHelper.MethodOfGeneric(() => BuildDistinctByViaRowNumber<int>(null!, null!, null!, null!));
 
-		static Expression BuildDistinctByViaRowNumber<T>(ExpressionBuilder builder, IBuildContext sequence, Expression[] partitionPart, (LambdaExpression lambda, bool isDescending, Sql.NullsPosition nulls)[] orderByPart)
+		static Expression BuildDistinctByViaRowNumber<T>(ExpressionBuilder builder, IBuildContext sequence, Expression[] partitionPart, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderByPart)
 		{
 			var           contextRef = new ContextRefExpression(typeof(IQueryable<T>), sequence);
 			IQueryable<T> query      = new ExpressionQueryImpl<T>(builder.DataContext, contextRef);
 
-			var orderByPrepared = orderByPart
-				.Select(o => (SequenceHelper.PrepareBody(o.lambda, sequence), o.isDescending, o.nulls))
-				.ToArray();
-
-			var rnCall = WindowFunctionHelpers.BuildRowNumber(partitionPart, orderByPrepared);
+			var rnCall = WindowFunctionHelpers.BuildRowNumber(partitionPart, orderByPart);
 
 			var resultExpression = ExpressionHelpers.MakeCall((IQueryable<T> q, long rn) =>
 					q
@@ -84,39 +80,49 @@ namespace LinqToDB.Internal.Linq.Builder
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequenceExpression = methodCall.Arguments[0];
+			var selector           = methodCall.Arguments[1].UnwrapLambda();
 
-			var extractedOrderBy = WindowFunctionHelpers.ExtractOrderByPart(sequenceExpression, out var nonOrderedPart);
-			if (extractedOrderBy.Length == 0)
+			BuildSequenceResult                   buildResult;
+			IBuildContext                         sequence;
+			(Expression expr, bool descending, Sql.NullsPosition nulls)[] captured;
+
+			// Isolate OrderBy state across the *inner* sequence build only. DistinctBy
+			// consumes the upstream OrderBy semantically (row-number partition order);
+			// the inner registration must not leak to downstream readers. The outer
+			// ApplyOrderBy below runs OUTSIDE the scope so OrderByBuilder publishes the
+			// result's OrderBy to _currentOrderBy where downstream consumers (e.g. CteUnion)
+			// see it.
+			using (builder.IsolateOrderBy())
+			{
+				// OrderByBuilder fires inside the recursive TryBuildSequence and populates
+				// _currentOrderBy with prepared bodies tied to the freshly-built sequence's
+				// context. Snapshot the entries before the scope disposes.
+				buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, sequenceExpression));
+				if (buildResult.BuildContext == null)
+				{
+					// A non-SQL preceding ordering (e.g. an OrderBy/ThenBy carrying a custom IComparer<T>) has no SQL form,
+					// so the sequence build fails with a generic "cannot convert" error. When no SQL-translatable ordering
+					// key exists at all, surface the clearer DistinctBy error instead, matching the no-OrderBy case below.
+					if (WindowFunctionHelpers.ExtractOrderByPart(sequenceExpression, out _).Length == 0)
+						return BuildSequenceResult.Error(sequenceExpression, ErrorHelper.Error_DistinctByRequiresOrderBy);
+
+					return buildResult;
+				}
+
+				sequence = buildResult.BuildContext;
+				captured = builder.CurrentOrderBy is { Count: > 0 } current ? current.ToArray() : [];
+			}
+
+			if (captured.Length == 0)
 				return BuildSequenceResult.Error(sequenceExpression, ErrorHelper.Error_DistinctByRequiresOrderBy);
 
-			// The preceding OrderBy is extracted here and bypasses OrderByBuilder, so resolve the configured default
-			// NULLS position for keys that did not specify one (null), matching OrderByBuilder behavior. An explicit
-			// position (including Sql.NullsPosition.None) is kept as-is so it can opt out of the configured default.
-			var defaultNulls = builder.DataOptions.SqlOptions.DefaultNullsPosition;
-			var orderByPart  = extractedOrderBy
-				.Select(o => (o.lambda, o.isDescending, o.nulls ?? defaultNulls))
-				.ToArray();
-
-			var selector = methodCall.Arguments[1].UnwrapLambda();
-
-			// When the DISTINCT ON branch below builds a sequence but cannot lower to DISTINCT ON (empty ON list or a
-			// key with no usable SQL form), that sequence is reused by the ROW_NUMBER fallback instead of building a
-			// second one — a second TryBuildSequence over the same source leaks an extra table reference into the
-			// query (a cartesian product, e.g. DistinctBy(x => 1)).
-			IBuildContext? sequence = null;
-
 			// On providers that support PostgreSQL-style DISTINCT ON, lower DistinctBy to it directly instead of the
-			// ROW_NUMBER() emulation: the key selector becomes the ON list and the preceding OrderBy is forced to lead
-			// with those keys (the syntax requires it). Falls through to ROW_NUMBER when the key has no usable SQL form.
+			// ROW_NUMBER() emulation: the key selector becomes the ON list and the preceding OrderBy — already applied
+			// to the sequence built above — is reordered to lead with those keys. Reuses that sequence (no second
+			// TryBuildSequence, which would leak an extra table reference). Falls through to ROW_NUMBER when the key
+			// has no usable SQL form (empty ON list, e.g. DistinctBy(x => 1)).
 			if (builder.DataContext.SqlProviderFlags.IsDistinctOnSupported)
 			{
-				var orderedExpression = WindowFunctionHelpers.ApplyOrderBy(nonOrderedPart, orderByPart);
-
-				var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, orderedExpression));
-				if (buildResult.BuildContext == null)
-					return buildResult;
-
-				sequence          = buildResult.BuildContext;
 				var partitionBody = SequenceHelper.PrepareBody(selector, sequence);
 				var keySql        = builder.BuildSqlExpression(sequence, partitionBody, BuildPurpose.Sql, BuildFlags.ForKeys);
 
@@ -127,7 +133,6 @@ namespace LinqToDB.Internal.Linq.Builder
 						.Where(static s => !QueryHelper.IsConstant(s))
 						.ToList();
 
-					// An empty ON list (e.g. DistinctBy(x => 1)) has no valid DISTINCT ON form — fall back to ROW_NUMBER below.
 					if (onExpressions.Count > 0)
 					{
 						ApplyDistinctOn(sequence.SelectQuery, onExpressions);
@@ -138,16 +143,6 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (builder.DataContext.SqlProviderFlags.IsWindowFunctionsSupported)
 			{
-				if (sequence == null)
-				{
-					var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, nonOrderedPart));
-
-					if (buildResult.BuildContext == null)
-						return buildResult;
-
-					sequence = buildResult.BuildContext;
-				}
-
 				var partitionBody = SequenceHelper.PrepareBody(selector, sequence);
 
 				var partitionPart = ExpressionHelpers.CollectMembers(partitionBody).ToArray();
@@ -155,28 +150,52 @@ namespace LinqToDB.Internal.Linq.Builder
 					partitionPart = [Expression.Constant(1)];
 
 				var buildMethod = _buildDistinctByViaRowNumberMethodInfo.MakeGenericMethod(sequence.ElementType);
+				var expression  = (Expression)buildMethod.InvokeExt(null, [builder, sequence, partitionPart, captured])!;
 
-				var expression = (Expression)buildMethod.InvokeExt(null, [builder, sequence, partitionPart, orderByPart])!;
+				// Re-apply OrderBy on the outer result. The OVER clause's ORDER BY only governs
+				// which row in each partition wins rn=1; it doesn't order the surviving rows.
+				var orderByLambdas = new (LambdaExpression lambda, bool isDescending, Sql.NullsPosition nulls)[captured.Length];
+				for (var i = 0; i < captured.Length; i++)
+					orderByLambdas[i] = (BuildOrderByLambda(captured[i].expr, sequence.ElementType), captured[i].descending, captured[i].nulls);
 
-				expression = WindowFunctionHelpers.ApplyOrderBy(expression, orderByPart);
+				expression = WindowFunctionHelpers.ApplyOrderBy(expression, orderByLambdas);
 
 				return builder.TryBuildSequence(new BuildInfo(buildInfo, expression));
 			}
 
-			// Rare case when outer apply is supported and window functions are not
+			// Rare case when outer apply is supported and window functions are not.
+			// The helper builds an expression tree that re-emits OrderBy as method calls,
+			// so we synthesize lambdas from captured prepared bodies (replacing the matching
+			// ContextRefExpression with the lambda parameter).
 			if (builder.DataContext.SqlProviderFlags.IsOuterApplyJoinSupportsCondition && buildInfo.Parent == null)
 			{
+				var orderByLambdas = new (LambdaExpression lambda, bool isDescending, Sql.NullsPosition nulls)[captured.Length];
+				for (var i = 0; i < captured.Length; i++)
+					orderByLambdas[i] = (BuildOrderByLambda(captured[i].expr, sequence.ElementType), captured[i].descending, captured[i].nulls);
+
 				var elementType = selector.Parameters[0].Type;
 
 				var buildMethod = _buildDistinctByViaOuterApplyMethodInfo.MakeGenericMethod(elementType, selector.Body.Type);
 
-				var expression = (Expression)buildMethod.InvokeExt(null, [builder, nonOrderedPart, orderByPart, selector])!;
+				var expression = (Expression)buildMethod.InvokeExt(null, [builder, sequenceExpression, orderByLambdas, selector])!;
 
-				var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, expression));
+				buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, expression));
 				return buildResult;
 			}
 
 			return BuildSequenceResult.NotSupported();
+		}
+
+		/// <summary>
+		/// Wraps a prepared body captured by <see cref="OrderByBuilder"/> as a lambda usable by
+		/// <c>WindowFunctionHelpers.ApplyOrderBy</c>. The body's <see cref="ContextRefExpression"/>s
+		/// are left intact — they resolve through the surrounding build chain at SQL-generation time.
+		/// The lambda parameter is unused.
+		/// </summary>
+		static LambdaExpression BuildOrderByLambda(Expression body, Type elementType)
+		{
+			var param = Expression.Parameter(elementType, "x");
+			return Expression.Lambda(body, param);
 		}
 
 		// PostgreSQL/DuckDB require ORDER BY to begin with the DISTINCT ON expressions. Move (or synthesize) the ON

@@ -43,6 +43,10 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			SqlProviderFlags.IsDistinctFromSupported                               = true;
 			SqlProviderFlags.SupportsPredicatesComparison                          = true;
 			SqlProviderFlags.IsOrderByAggregateSubquerySupported                   = false;
+			// DB2's per-SELECT column limit (~1012 on LUW) caps how wide a CteUnion carrier projection can
+			// grow before the eager-loading strategy falls back to KeyedQuery. Not validated against a live
+			// DB2 engine; verify against the target edition's documented limit before relying on it.
+			SqlProviderFlags.MaxColumnCount                                        = 1012;
 
 			// Requires:
 			// DB2 LUW: 11.1+
