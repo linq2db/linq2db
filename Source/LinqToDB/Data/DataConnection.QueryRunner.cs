@@ -347,6 +347,39 @@ namespace LinqToDB.Data
 				return p;
 			}
 
+			// Forwarding: bind each of the step's forwarded parameters (its value comes from an earlier step's result,
+			// not the client) on the already-initialized command. The SqlParameter AST node is immutable/shared, so we
+			// locate its per-execution DbParameter by position (its index in the command's SqlParameter list) rather
+			// than by name (which providers may normalize).
+			static void ApplyForwardedParameters(ExecutionPreparedQuery executionQuery, int commandIndex, SqlCommandStep step, SqlCommandExecutionContext context)
+			{
+				if (step.ParameterBindings.Count == 0)
+					return;
+
+				var sqlParameters = executionQuery.PreparedQuery.Commands[commandIndex].SqlParameters;
+				var dbParameters  = executionQuery.CommandsParameters[commandIndex];
+
+				if (dbParameters == null)
+					return;
+
+				foreach (var binding in step.ParameterBindings)
+				{
+					var index = -1;
+
+					for (var k = 0; k < sqlParameters.Count; k++)
+					{
+						if (ReferenceEquals(sqlParameters[k], binding.Target))
+						{
+							index = k;
+							break;
+						}
+					}
+
+					if (index >= 0 && index < dbParameters.Length)
+						dbParameters[index].Value = context.GetResult(binding.SourceStepIndex) ?? DBNull.Value;
+				}
+			}
+
 			static DbParameter[]?[] GetParameters(DataConnection dataConnection, PreparedQuery pq, IReadOnlyParameterValues? parameterValues)
 			{
 				var result = new DbParameter[pq.Commands.Length][];
@@ -490,6 +523,8 @@ namespace LinqToDB.Data
 
 					InitCommand(dataConnection, executionQuery, i);
 
+					ApplyForwardedParameters(executionQuery, i, step, context);
+
 					if (step.OnError == SqlStepOnError.Ignore)
 					{
 						try
@@ -548,6 +583,8 @@ namespace LinqToDB.Data
 						continue;
 
 					InitCommand(dataConnection, executionQuery, i);
+
+					ApplyForwardedParameters(executionQuery, i, step, context);
 
 					if (step.OnError == SqlStepOnError.Ignore)
 					{
