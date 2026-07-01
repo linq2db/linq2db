@@ -332,6 +332,21 @@ namespace LinqToDB.Data
 				return aliases;
 			}
 
+			// Adds an output parameter to the current command for a step that produces its value via an OUT parameter
+			// (Oracle/Firebird identity). The step's context result becomes the parameter's value after execution.
+			static DbParameter AddOutputParameter(DataConnection dataConnection, SqlCommandStep step)
+			{
+				var p = dataConnection.CurrentCommand!.CreateParameter();
+
+				p.ParameterName = step.OutParameterName!;
+				p.Direction     = ParameterDirection.Output;
+				p.DbType        = step.OutParameterDbType;
+
+				dataConnection.CurrentCommand!.Parameters.Add(p);
+
+				return p;
+			}
+
 			static DbParameter[]?[] GetParameters(DataConnection dataConnection, PreparedQuery pq, IReadOnlyParameterValues? parameterValues)
 			{
 				var result = new DbParameter[pq.Commands.Length][];
@@ -493,10 +508,20 @@ namespace LinqToDB.Data
 					{
 						case SqlStepKind.NonQuery:
 						{
-							var n = dataConnection.ExecuteNonQuery();
-							context.SetResult(i, n);
-							if (i == 0)
-								rowsAffected = n;
+							var outParam = step.OutParameterName is null ? null : AddOutputParameter(dataConnection, step);
+							var n        = dataConnection.ExecuteNonQuery();
+
+							if (outParam != null)
+							{
+								context.SetResult(i, outParam.Value);
+							}
+							else
+							{
+								context.SetResult(i, n);
+								if (i == 0)
+									rowsAffected = n;
+							}
+
 							break;
 						}
 						case SqlStepKind.Scalar:
@@ -542,10 +567,20 @@ namespace LinqToDB.Data
 					{
 						case SqlStepKind.NonQuery:
 						{
-							var n = await dataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(false);
-							context.SetResult(i, n);
-							if (i == 0)
-								rowsAffected = n;
+							var outParam = step.OutParameterName is null ? null : AddOutputParameter(dataConnection, step);
+							var n        = await dataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(false);
+
+							if (outParam != null)
+							{
+								context.SetResult(i, outParam.Value);
+							}
+							else
+							{
+								context.SetResult(i, n);
+								if (i == 0)
+									rowsAffected = n;
+							}
+
 							break;
 						}
 						case SqlStepKind.Scalar:
