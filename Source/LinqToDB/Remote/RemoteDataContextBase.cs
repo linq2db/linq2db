@@ -224,6 +224,12 @@ namespace LinqToDB.Remote
 
 			public bool IsTableNotFoundException(Exception exception)
 				=> ProviderService.IsTableNotFoundException(exception);
+
+			public Internal.SqlProvider.SqlCommandScenario? BuildCommandScenario(Internal.SqlQuery.SqlStatement statement, Internal.SqlProvider.SqlProviderFlags flags, Linq.Translation.ISqlExpressionFactory factory)
+				=> ProviderService.BuildCommandScenario(statement, flags, factory);
+
+			public Internal.SqlProvider.SqlCommandGroupPlan PlanScenario(Internal.SqlProvider.SqlCommandScenario scenario)
+				=> ProviderService.PlanScenario(scenario);
 		}
 
 		ConfigurationInfo? _configurationInfo;

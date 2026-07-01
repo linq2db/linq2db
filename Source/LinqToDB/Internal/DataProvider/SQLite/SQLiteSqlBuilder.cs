@@ -33,25 +33,16 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 		protected override ConcatBuildStyle ConcatStyle       => ConcatBuildStyle.Pipes;
 
-		public override int CommandCount(SqlStatement statement)
+		protected override void BuildCommandFragment(SqlCommandFragment fragment, int fieldIndex, SqlStatement statement)
 		{
-			return statement switch
-			{
-				SqlTruncateTableStatement trun => trun.ResetIdentity && trun.Table!.IdentityFields.Count > 0 ? 2 : 1,
-				_ => statement.NeedsIdentity ? 2 : 1,
-			};
-		}
-
-		protected override void BuildCommand(SqlStatement statement, int commandNumber)
-		{
-			if (statement is SqlTruncateTableStatement trun)
+			if (fragment == SqlCommandFragment.IdentityReseed && statement is SqlTruncateTableStatement trun)
 			{
 				StringBuilder.Append("UPDATE SQLITE_SEQUENCE SET SEQ=0 WHERE NAME=");
 				MappingSchema.ConvertToSqlValue(StringBuilder, null, DataOptions, trun.Table!.TableName.Name);
 			}
 			else
 			{
-				StringBuilder.AppendLine("SELECT last_insert_rowid()");
+				base.BuildCommandFragment(fragment, fieldIndex, statement);
 			}
 		}
 

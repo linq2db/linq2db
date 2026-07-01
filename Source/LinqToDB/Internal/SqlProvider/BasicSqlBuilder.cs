@@ -284,6 +284,24 @@ namespace LinqToDB.Internal.SqlProvider
 		{
 		}
 
+		public virtual void BuildCommandFragment(SqlCommandFragment fragment, int fieldIndex, SqlStatement statement, StringBuilder sb, OptimizationContext optimizationContext, AliasesContext aliases, NullabilityContext? nullabilityContext,
+			int startIndent = 0)
+		{
+			AliasesContext      = aliases;
+			Statement           = statement;
+			StringBuilder       = sb;
+			OptimizationContext = optimizationContext;
+			Indent              = startIndent;
+			NullabilityContext  = nullabilityContext ?? NullabilityContext.GetContext(statement.SelectQuery);
+
+			BuildCommandFragment(fragment, fieldIndex, statement);
+		}
+
+		protected virtual void BuildCommandFragment(SqlCommandFragment fragment, int fieldIndex, SqlStatement statement)
+		{
+			throw new NotImplementedException($"'{GetType().Name}' does not implement command fragment '{fragment}'.");
+		}
+
 		List<Action>? _finalBuilders;
 
 		protected virtual void FinalizeBuildQuery(SqlStatement statement)

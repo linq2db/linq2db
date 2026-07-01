@@ -701,6 +701,22 @@ namespace LinqToDB.Internal.SqlProvider
 		[DataMember(Order = 75)]
 		public bool IsDistinctOnSupported { get; set; }
 
+		/// <summary>
+		/// Indicates that the provider can execute several statements sent as a single command and return their
+		/// result sets in order, enabling multiple scenario steps to run in one round-trip. Enabled conservatively
+		/// per provider. Default: <see langword="false"/>.
+		/// </summary>
+		[DataMember(Order = 77)]
+		public bool IsMultiStatementBatchSupported { get; set; }
+
+		/// <summary>
+		/// Indicates that the provider supports declaring, assigning and referencing a server-side variable within a
+		/// single command batch, enabling combined scenario forwarding (a value produced by one step referenced by a
+		/// later step) in one round-trip. Enabled conservatively per provider. Default: <see langword="false"/>.
+		/// </summary>
+		[DataMember(Order = 78)]
+		public bool IsServerSideVariablesSupported { get; set; }
+
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
 			return AcceptsTakeAsParameter || (AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null);
@@ -800,6 +816,8 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsNullsOrderingSupported                             .GetHashCode()
 				^ DefaultNullsOrdering                                 .GetHashCode()
 				^ IsDistinctOnSupported                                .GetHashCode()
+				^ IsMultiStatementBatchSupported                       .GetHashCode()
+				^ IsServerSideVariablesSupported                       .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => StringComparer.Ordinal.GetHashCode(flag) ^ hash);
 	}
 
@@ -881,6 +899,8 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsNullsOrderingSupported                              == other.IsNullsOrderingSupported
 				&& DefaultNullsOrdering                                  == other.DefaultNullsOrdering
 				&& IsDistinctOnSupported                                 == other.IsDistinctOnSupported
+				&& IsMultiStatementBatchSupported                        == other.IsMultiStatementBatchSupported
+				&& IsServerSideVariablesSupported                        == other.IsServerSideVariablesSupported
 				&& CustomFlags.SetEquals(other.CustomFlags);
 		}
 		#endregion

@@ -224,10 +224,7 @@ namespace LinqToDB.Data
 						}
 					}
 
-					var cc = sqlBuilder.CommandCount(statement);
 					using var sb = Pools.StringBuilder.Allocate();
-
-					var commands = new CommandWithParameters[cc];
 
 					var optimizeAndConvertAll = !continuousRun && !statement.IsParameterDependent;
 					// We can optimize and convert all queries at once, because they are not parameter dependent.
@@ -260,15 +257,53 @@ namespace LinqToDB.Data
 
 					query.Aliases = aliases;
 
-					for (var i = 0; i < cc; i++)
+					var dmlService = serviceProvider.GetRequiredService<IDmlService>();
+					var scenario   = dmlService.BuildCommandScenario(statement, dataConnection.DataProvider.SqlProviderFlags, factory);
+
+					CommandWithParameters[] commands;
+
+					if (scenario != null)
 					{
-						sb.Value.Length = 0;
+						// Provider supplied an explicit scenario: render each step's statement (step 0 is usually the main
+						// statement, already optimized/aliased above; synthetic steps get their own aliases).
+						commands = new CommandWithParameters[scenario.Steps.Count];
 
-						using (ActivityService.Start(ActivityID.BuildSql))
-							sqlBuilder.BuildSql(i, statement, sb.Value, optimizationContext, aliases, null, startIndent);
+						for (var i = 0; i < scenario.Steps.Count; i++)
+						{
+							var step        = scenario.Steps[i];
+							var stepAliases = ReferenceEquals(step.Statement, statement) ? aliases : PrepareStepAliases(serviceProvider, step.Statement);
 
-						commands[i] = new CommandWithParameters(sb.Value.ToString(), optimizationContext.GetParameters());
-						optimizationContext.ClearParameters();
+							sb.Value.Length = 0;
+
+							using (ActivityService.Start(ActivityID.BuildSql))
+							{
+								if (step.Fragment == SqlCommandFragment.None)
+									sqlBuilder.BuildSql(0, step.Statement, sb.Value, optimizationContext, stepAliases, null, startIndent);
+								else
+									sqlBuilder.BuildCommandFragment(step.Fragment, step.FragmentFieldIndex, step.Statement, sb.Value, optimizationContext, stepAliases, null, startIndent);
+							}
+
+							commands[i] = new CommandWithParameters(sb.Value.ToString(), optimizationContext.GetParameters());
+							optimizationContext.ClearParameters();
+						}
+					}
+					else
+					{
+						// Legacy command-splitting: CommandCount + BuildSql(commandNumber) render N commands from one statement.
+						var cc = sqlBuilder.CommandCount(statement);
+
+						commands = new CommandWithParameters[cc];
+
+						for (var i = 0; i < cc; i++)
+						{
+							sb.Value.Length = 0;
+
+							using (ActivityService.Start(ActivityID.BuildSql))
+								sqlBuilder.BuildSql(i, statement, sb.Value, optimizationContext, aliases, null, startIndent);
+
+							commands[i] = new CommandWithParameters(sb.Value.ToString(), optimizationContext.GetParameters());
+							optimizationContext.ClearParameters();
+						}
 					}
 
 					if (optimizeAndConvertAll)
@@ -289,6 +324,12 @@ namespace LinqToDB.Data
 					if (aquiredLock)
 						Monitor.Exit(query);
 				}
+			}
+
+			static AliasesContext PrepareStepAliases(IServiceProvider serviceProvider, SqlStatement statement)
+			{
+				AliasesHelper.PrepareQueryAndAliases(serviceProvider.GetRequiredService<IIdentifierService>(), statement, null, out var aliases);
+				return aliases;
 			}
 
 			static DbParameter[]?[] GetParameters(DataConnection dataConnection, PreparedQuery pq, IReadOnlyParameterValues? parameterValues)
@@ -351,11 +392,172 @@ namespace LinqToDB.Data
 				_executionQuery = CreateExecutionQuery(_dataConnection, Query.Queries[QueryNumber], parameterValues, forGetSqlText);
 			}
 
-			void SetCommand()
+			#region Scenario interpreter
+
+			// One unified value returned by the sequential scenario interpreter; the public execute methods project the
+			// field they need (rows-affected for ExecuteNonQuery, scalar for ExecuteScalar).
+			readonly record struct ScenarioOutcome(int RowsAffected, object? Scalar);
+
+			// TEMPORARY bridge: builds a sequential scenario from the already-rendered commands (CommandCount/BuildSql).
+			// Step i maps 1:1 to command i; the last step is a Scalar when the terminal is a scalar query, all others are
+			// non-queries; a non-last command starting with "DROP" is marked Ignore (the historical run-and-swallow).
+			// Superseded by the per-provider IDmlService.BuildCommandScenario once providers move off CommandCount/BuildCommand.
+			static SqlCommandScenario BuildSequentialScenario(ExecutionPreparedQuery executionQuery, SqlStepKind terminalKind)
 			{
-				SetCommand(false);
-				InitFirstCommand(_dataConnection, _executionQuery!);
+				var commands  = executionQuery.PreparedQuery.Commands;
+				var count     = commands.Length;
+				var statement = executionQuery.PreparedQuery.Statement;
+				var steps     = new SqlCommandStep[count];
+
+				for (var i = 0; i < count; i++)
+				{
+					var isLast = i == count - 1;
+					var ignore = !isLast && commands[i].Command.StartsWith("DROP", StringComparison.Ordinal);
+					var kind   = terminalKind == SqlStepKind.Scalar && isLast ? SqlStepKind.Scalar : SqlStepKind.NonQuery;
+
+					steps[i] = new SqlCommandStep
+					{
+						Statement = statement,
+						Kind      = kind,
+						OnError   = ignore ? SqlStepOnError.Ignore : SqlStepOnError.Throw,
+					};
+				}
+
+				return new SqlCommandScenario
+				{
+					Steps        = steps,
+					OutcomeSteps = terminalKind == SqlStepKind.Scalar ? new[] { count - 1 } : new[] { 0 },
+				};
 			}
+
+			static bool EvaluateGate(SqlStepCondition condition, SqlCommandExecutionContext context)
+			{
+				var value = context.GetResult(condition.SourceStepIndex);
+
+				return condition.Kind switch
+				{
+					SqlStepConditionKind.ResultIsNull    => value is null,
+					SqlStepConditionKind.ResultIsNotNull => value is not null,
+					SqlStepConditionKind.ResultIsZero    => value is 0,
+					SqlStepConditionKind.ResultIsNonZero => value is not null and not 0,
+					_                                    => throw new InvalidOperationException($"Unexpected {nameof(SqlStepConditionKind)}: {condition.Kind}"),
+				};
+			}
+
+			static object? ResolveOutcome(SqlCommandScenario scenario, SqlCommandExecutionContext context)
+			{
+				object? outcome = null;
+
+				foreach (var index in scenario.OutcomeSteps)
+				{
+					if (context.WasExecuted(index))
+						outcome = context.GetResult(index);
+				}
+
+				return outcome;
+			}
+
+			// Sequential interpreter (sync): each step becomes its own command (one round-trip), executed in order; gates
+			// pull earlier results from the execution context; the outcome is the last executed candidate. Owns all
+			// InitCommand calls.
+			static ScenarioOutcome ExecuteScenario(DataConnection dataConnection, ExecutionPreparedQuery executionQuery, SqlCommandScenario scenario)
+			{
+				var steps        = scenario.Steps;
+				var context      = new SqlCommandExecutionContext(steps.Count);
+				var rowsAffected = -1;
+
+				for (var i = 0; i < steps.Count; i++)
+				{
+					var step = steps[i];
+
+					if (step.RunIf is { } gate && !EvaluateGate(gate, context))
+						continue;
+
+					InitCommand(dataConnection, executionQuery, i);
+
+					if (step.OnError == SqlStepOnError.Ignore)
+					{
+						try
+						{
+							dataConnection.ExecuteNonQuery();
+						}
+						catch
+						{
+							// ignore
+						}
+
+						continue;
+					}
+
+					switch (step.Kind)
+					{
+						case SqlStepKind.NonQuery:
+						{
+							var n = dataConnection.ExecuteNonQuery();
+							context.SetResult(i, n);
+							if (i == 0)
+								rowsAffected = n;
+							break;
+						}
+						case SqlStepKind.Scalar:
+							context.SetResult(i, dataConnection.ExecuteScalar());
+							break;
+					}
+				}
+
+				return new ScenarioOutcome(rowsAffected, ResolveOutcome(scenario, context));
+			}
+
+			// Sequential interpreter (async sibling). In case of change the logic of this method, DO NOT FORGET to change the sibling method.
+			static async Task<ScenarioOutcome> ExecuteScenarioAsync(DataConnection dataConnection, ExecutionPreparedQuery executionQuery, SqlCommandScenario scenario, CancellationToken cancellationToken)
+			{
+				var steps        = scenario.Steps;
+				var context      = new SqlCommandExecutionContext(steps.Count);
+				var rowsAffected = -1;
+
+				for (var i = 0; i < steps.Count; i++)
+				{
+					var step = steps[i];
+
+					if (step.RunIf is { } gate && !EvaluateGate(gate, context))
+						continue;
+
+					InitCommand(dataConnection, executionQuery, i);
+
+					if (step.OnError == SqlStepOnError.Ignore)
+					{
+						try
+						{
+							await dataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(false);
+						}
+						catch
+						{
+							// ignore
+						}
+
+						continue;
+					}
+
+					switch (step.Kind)
+					{
+						case SqlStepKind.NonQuery:
+						{
+							var n = await dataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(false);
+							context.SetResult(i, n);
+							if (i == 0)
+								rowsAffected = n;
+							break;
+						}
+						case SqlStepKind.Scalar:
+							context.SetResult(i, await dataConnection.ExecuteScalarDataAsync(cancellationToken).ConfigureAwait(false));
+							break;
+					}
+				}
+
+				return new ScenarioOutcome(rowsAffected, ResolveOutcome(scenario, context));
+			}
+
+			#endregion
 
 			#region ExecuteNonQuery
 
@@ -373,35 +575,7 @@ namespace LinqToDB.Data
 						.ConfigureAwait(false);
 				}
 
-				var rowsAffected = -1;
-
-				for (var i = 0; i < executionQuery.PreparedQuery.Commands.Length; i++)
-				{
-					InitCommand(dataConnection, executionQuery, i);
-
-					if (i < executionQuery.PreparedQuery.Commands.Length - 1 && executionQuery.PreparedQuery.Commands[i].Command.StartsWith("DROP", StringComparison.Ordinal))
-					{
-						try
-						{
-							await dataConnection.ExecuteNonQueryDataAsync(cancellationToken)
-								.ConfigureAwait(false);
-						}
-						catch
-						{
-							// ignore
-						}
-					}
-					else
-					{
-						var n = await dataConnection.ExecuteNonQueryDataAsync(cancellationToken)
-							.ConfigureAwait(false);
-
-						if (i == 0)
-							rowsAffected = n;
-					}
-				}
-
-				return rowsAffected;
+				return (await ExecuteScenarioAsync(dataConnection, executionQuery, BuildSequentialScenario(executionQuery, SqlStepKind.NonQuery), cancellationToken).ConfigureAwait(false)).RowsAffected;
 			}
 
 			// In case of change the logic of this method, DO NOT FORGET to change the sibling method.
@@ -414,33 +588,7 @@ namespace LinqToDB.Data
 					return dataConnection.ExecuteNonQuery();
 				}
 
-				var rowsAffected = -1;
-
-				for (var i = 0; i < executionQuery.PreparedQuery.Commands.Length; i++)
-				{
-					InitCommand(dataConnection, executionQuery, i);
-
-					if (i < executionQuery.PreparedQuery.Commands.Length - 1 && executionQuery.PreparedQuery.Commands[i].Command.StartsWith("DROP", StringComparison.Ordinal))
-					{
-						try
-						{
-							dataConnection.ExecuteNonQuery();
-						}
-						catch
-						{
-							// ignore
-						}
-					}
-					else
-					{
-						var n = dataConnection.ExecuteNonQuery();
-
-						if (i == 0)
-							rowsAffected = n;
-					}
-				}
-
-				return rowsAffected;
+				return ExecuteScenario(dataConnection, executionQuery, BuildSequentialScenario(executionQuery, SqlStepKind.NonQuery)).RowsAffected;
 			}
 
 			public override int ExecuteNonQuery()
@@ -484,10 +632,12 @@ namespace LinqToDB.Data
 				ExecutionPreparedQuery executionQuery,
 				CancellationToken      cancellationToken)
 			{
-				var idParam = GetIdentityParameter(dataConnection, executionQuery);
-
 				if (executionQuery.PreparedQuery.Commands.Length == 1)
 				{
+					InitFirstCommand(dataConnection, executionQuery);
+
+					var idParam = GetIdentityParameter(dataConnection, executionQuery);
+
 					if (idParam != null)
 					{
 						// This is because the firebird provider does not return any parameters via ExecuteReader
@@ -500,20 +650,18 @@ namespace LinqToDB.Data
 					return await dataConnection.ExecuteScalarDataAsync(cancellationToken).ConfigureAwait(false);
 				}
 
-				await dataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(false);
-
-				InitCommand(dataConnection, executionQuery, 1);
-
-				return await dataConnection.ExecuteScalarDataAsync(cancellationToken).ConfigureAwait(false);
+				return (await ExecuteScenarioAsync(dataConnection, executionQuery, BuildSequentialScenario(executionQuery, SqlStepKind.Scalar), cancellationToken).ConfigureAwait(false)).Scalar;
 			}
 
 			// In case of change the logic of this method, DO NOT FORGET to change the sibling method.
 			static object? ExecuteScalarImpl(DataConnection dataConnection, ExecutionPreparedQuery executionQuery)
 			{
-				var idParam = GetIdentityParameter(dataConnection, executionQuery);
-
 				if (executionQuery.PreparedQuery.Commands.Length == 1)
 				{
+					InitFirstCommand(dataConnection, executionQuery);
+
+					var idParam = GetIdentityParameter(dataConnection, executionQuery);
+
 					if (idParam != null)
 					{
 						// This is because the firebird provider does not return any parameters via ExecuteReader
@@ -526,11 +674,7 @@ namespace LinqToDB.Data
 					return dataConnection.ExecuteScalar();
 				}
 
-				dataConnection.ExecuteNonQuery();
-
-				InitCommand(dataConnection, executionQuery, 1);
-
-				return dataConnection.ExecuteScalar();
+				return ExecuteScenario(dataConnection, executionQuery, BuildSequentialScenario(executionQuery, SqlStepKind.Scalar)).Scalar;
 			}
 
 			private static DbParameter? GetIdentityParameter(DataConnection dataConnection, ExecutionPreparedQuery executionQuery)
@@ -565,8 +709,6 @@ namespace LinqToDB.Data
 				var commandsParameters = GetParameters(dataConnection, preparedQuery, parameterValues);
 				var executionQuery     = new ExecutionPreparedQuery(preparedQuery, commandsParameters);
 
-				InitFirstCommand(dataConnection, executionQuery);
-
 				return ExecuteScalarImplAsync(dataConnection, executionQuery, cancellationToken);
 			}
 
@@ -577,14 +719,12 @@ namespace LinqToDB.Data
 				var commandsParameters = GetParameters(dataConnection, preparedQuery, parameterValues);
 				var executionQuery     = new ExecutionPreparedQuery(preparedQuery, commandsParameters);
 
-				InitFirstCommand(dataConnection, executionQuery);
-
 				return ExecuteScalarImpl(dataConnection, executionQuery);
 			}
 
 			public override object? ExecuteScalar()
 			{
-				SetCommand();
+				SetCommand(false);
 				return ExecuteScalarImpl(_dataConnection, _executionQuery!);
 			}
 
@@ -706,71 +846,16 @@ namespace LinqToDB.Data
 					return await _dataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(false);
 				}
 
-				for (var i = 0; i < _executionQuery.PreparedQuery.Commands.Length; i++)
-				{
-					InitCommand(_dataConnection, _executionQuery, i);
-
-					if (i < _executionQuery.PreparedQuery.Commands.Length - 1 && _executionQuery.PreparedQuery.Commands[i].Command.StartsWith("DROP", StringComparison.Ordinal))
-					{
-						try
-						{
-							await _dataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(false);
-						}
-						catch
-						{
-							// ignore
-						}
-					}
-					else
-					{
-						await _dataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(false);
-					}
-				}
-
-				return -1;
+				return (await ExecuteScenarioAsync(_dataConnection, _executionQuery!, BuildSequentialScenario(_executionQuery!, SqlStepKind.NonQuery), cancellationToken).ConfigureAwait(false)).RowsAffected;
 			}
 
 			public override async Task<object?> ExecuteScalarAsync(CancellationToken cancellationToken)
 			{
 				_isAsync = true;
 
-				SetCommand();
+				SetCommand(false);
 
-				DbParameter? idparam = null;
-
-				if (_dataConnection.DataProvider.SqlProviderFlags.IsIdentityParameterRequired)
-				{
-					if (_executionQuery!.PreparedQuery.Statement.NeedsIdentity)
-					{
-						idparam = _dataConnection.CurrentCommand!.CreateParameter();
-
-						idparam.ParameterName = "IDENTITY_PARAMETER";
-						idparam.Direction     = ParameterDirection.Output;
-						idparam.DbType        = DbType.Decimal;
-
-						_dataConnection.CurrentCommand!.Parameters.Add(idparam);
-					}
-				}
-
-				if (_executionQuery!.PreparedQuery.Commands.Length == 1)
-				{
-					if (idparam != null)
-					{
-						// it is done because Firebird does not return parameters through ExecuteReader
-						// Other providers should support such mode
-						await _dataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(false);
-
-						return idparam.Value;
-					}
-
-					return await _dataConnection.ExecuteScalarDataAsync(cancellationToken).ConfigureAwait(false);
-				}
-
-				await _dataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(false);
-
-				InitCommand(_dataConnection, _executionQuery, 1);
-
-				return await _dataConnection.ExecuteScalarDataAsync(cancellationToken).ConfigureAwait(false);
+				return await ExecuteScalarImplAsync(_dataConnection, _executionQuery!, cancellationToken).ConfigureAwait(false);
 			}
 		}
 	}
