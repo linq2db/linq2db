@@ -244,6 +244,14 @@ dotnet build Source/LinqToDB/LinqToDB.csproj -c Release -f net10.0
 
 (net10.0 alone is enough to surface the diagnostic — analyzers are TFM-independent.) Otherwise CI fails on e.g. `MA0186` (Equals parameter missing `[NotNullWhen(true)]`) after a green local run, costing a red CI cycle.
 
+**PublicAPI RS0016/RS0017 are a *separate* opt-in the Release build above does NOT run.** The `Microsoft.CodeAnalysis.PublicApiAnalyzers` diagnostics — RS0016 (public symbol missing from `PublicAPI.Unshipped.txt`) and RS0017 (entry in the declared API but not in code) — are gated behind `RunApiAnalyzersDuringBuild`, which defaults to **`false`** in `Source/Directory.Build.props`. A plain `dotnet build -c Release` reports **0 errors even when new public members are unregistered**. To surface them locally after adding/removing/renaming public surface, add the flag:
+
+```
+dotnet build Source/LinqToDB/LinqToDB.csproj -c Release -f net10.0 -p:RunApiAnalyzersDuringBuild=true
+```
+
+Each RS0016 message quotes the exact line to paste into `PublicAPI.Unshipped.txt` (verbatim, incl. the `static ` / `params ` prefixes). Normal PR CI (`build.yml`) runs with the flag **off**; only the comprehensive `default.yml` / `/azp run test-all` leg turns it on — so missing entries slip through fast iteration and a plain Release build, then fail the comprehensive leg. (Distinct from `CompatibilitySuppressions.xml` / ApiCompat, handled by `/api-baselines`.)
+
 ## Bisecting across SDK upgrades
 
 When checking out historic commits to bisect a regression or to confirm "after which PR did the test start passing", the historic code may compile cleanly on the SDK it was written against but trip newer compiler warnings on the current SDK. Combined with `TreatWarningsAsErrors=true` (the default in `Directory.Build.props`), these warnings become build-blocking errors and the test never runs.
