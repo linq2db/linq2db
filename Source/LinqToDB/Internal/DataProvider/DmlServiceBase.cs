@@ -34,6 +34,11 @@ namespace LinqToDB.Internal.DataProvider
 		/// <see cref="SqlProviderFlags.IsMultipleResultSetsSupported"/> is set — otherwise the run is split so each
 		/// combined group holds at most one result-producing step.
 		/// </summary>
+		// Upper bound on statements merged into one combined command (see PlanScenario). Keeps a large eager-load
+		// fan-out from producing one oversized multi-statement command; 32 SELECTs is a few KB of SQL, well under
+		// provider batch / parameter limits, while still collapsing the common N+1 case to a single round-trip.
+		const int MaxStatementsPerCombinedGroup = 32;
+
 		public virtual SqlCommandGroupPlan PlanScenario(SqlCommandScenario scenario, SqlProviderFlags flags)
 		{
 			var steps = scenario.Steps;
@@ -91,7 +96,18 @@ namespace LinqToDB.Internal.DataProvider
 
 				if (multipleResultSets)
 				{
-					EmitGroup(run);
+					// Size-aware: cap how many statements merge into one command so a large fan-out (e.g. an eager load
+					// with many child collections) splits across several round-trips instead of one oversized command.
+					// DML scenarios are tiny (<= a few steps) so this never changes their grouping.
+					if (run.Count <= MaxStatementsPerCombinedGroup)
+					{
+						EmitGroup(run);
+					}
+					else
+					{
+						for (var start = 0; start < run.Count; start += MaxStatementsPerCombinedGroup)
+							EmitGroup(run.GetRange(start, Math.Min(MaxStatementsPerCombinedGroup, run.Count - start)));
+					}
 				}
 				else
 				{

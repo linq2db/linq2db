@@ -24,6 +24,7 @@ using LinqToDB.Internal.Interceptors;
 using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Internal.Logging;
 using LinqToDB.Internal.Reflection;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.Metrics;
@@ -735,10 +736,12 @@ namespace LinqToDB.Internal.Linq
 			}
 		}
 
-		// Runs the main query together with all its combinable eager-load child collections as ONE multi-result-set
-		// command: each child result set is buffered into its PreambleResult (mapped by that child query's own
-		// materializer), then the main result set streams lazily from the SAME reader — this enumerable owns the reader
-		// for the stream's lifetime. Collapses N+1 eager round-trips into 1; created only when every preamble is
+		// Runs the main query together with all its combinable eager-load child collections as a size-bounded set of
+		// multi-result-set commands: the [child1 … childN, main] statements are modelled as a SqlCommandScenario of
+		// Reader steps and grouped by PlanScenario (which caps how many merge into one command). Each child result set
+		// is buffered into its PreambleResult (mapped by that child query's own materializer); the main result set —
+		// always the last step of the last group — streams lazily from that group's reader, which this enumerable owns.
+		// Collapses N+1 eager round-trips to 1 (a few for a very large fan-out); created only when every preamble is
 		// combinable and the provider supports multi-statement batches with multiple result sets (see
 		// TryGetCombinedEagerEnumerable), otherwise callers fall back to sequential InitPreambles.
 		sealed class CombinedEagerResultEnumerable<T> : IResultEnumerable<T>
@@ -763,50 +766,123 @@ namespace LinqToDB.Internal.Linq
 				_preambles   = preambles;
 			}
 
-			// Assembles the [child1 … childN, main] statement list and the merged parameter values — every child's and
-			// the main's SqlParameter->value entries in one SqlParameterValues, keyed by AST node.
-			(SqlStatement[] Statements, SqlParameterValues Values) Prepare()
+			// Models the eager load as a scenario of Reader steps [child1 … childN, main] and merges every child's and
+			// the main's parameter values into one SqlParameterValues (keyed by SqlParameter node). The main is the last
+			// step, so PlanScenario's contiguous grouping keeps it in (and at the end of) the last group.
+			(SqlCommandScenario Scenario, SqlParameterValues Values) PrepareScenario()
 			{
-				var statements = new SqlStatement[_preambles.Length + 1];
-				var values     = new SqlParameterValues();
+				var steps  = new SqlCommandStep[_preambles.Length + 1];
+				var values = new SqlParameterValues();
 
 				for (var i = 0; i < _preambles.Length; i++)
 				{
-					statements[i] = _preambles[i].GetCombinableStatement()!;
+					steps[i] = new SqlCommandStep { Statement = _preambles[i].GetCombinableStatement()!, Kind = SqlStepKind.Reader };
 					_preambles[i].AddCombinableParameterValues(values, _expressions, _dataContext, _parameters);
 				}
 
-				statements[_preambles.Length] = _query.Queries[0].Statement;
+				steps[_preambles.Length] = new SqlCommandStep { Statement = _query.Queries[0].Statement, Kind = SqlStepKind.Reader };
 				SetParameters(_query, _expressions, _dataContext, _parameters, values);
 
-				return (statements, values);
+				return (new SqlCommandScenario { Steps = steps, OutcomeSteps = [] }, values);
+			}
+
+			// Plans the scenario into size-bounded commands: PlanScenario groups the steps (bounded by statement count),
+			// then each group's statements render into one or more commands bounded by SQL length. Each returned command
+			// carries the scenario step indices it covers, so the executor knows which child result sets to buffer and
+			// where the main result set lands — always the last step of the last command.
+			List<(string Sql, DbParameter[]? Parameters, int[] StepIndexes)> BuildCommands()
+			{
+				var (scenario, values) = PrepareScenario();
+
+				var dataConnection = (DataConnection)_dataContext;
+				var plan           = DataConnection.QueryRunner.PlanEagerScenario(dataConnection, scenario);
+
+				var commands = new List<(string, DbParameter[]?, int[])>();
+
+				foreach (var group in plan.Groups)
+				{
+					var stepIndexes     = group.StepIndexes;
+					var groupStatements = new SqlStatement[stepIndexes.Count];
+
+					for (var k = 0; k < stepIndexes.Count; k++)
+						groupStatements[k] = scenario.Steps[stepIndexes[k]].Statement;
+
+					var batches = DataConnection.QueryRunner.RenderCombinedBatches(dataConnection, groupStatements, values);
+
+					var offset = 0;
+
+					foreach (var (sql, parameters, statementCount) in batches)
+					{
+						var indexes = new int[statementCount];
+
+						for (var k = 0; k < statementCount; k++)
+							indexes[k] = stepIndexes[offset + k];
+
+						commands.Add((sql, parameters, indexes));
+						offset += statementCount;
+					}
+				}
+
+				return commands;
 			}
 
 			public IEnumerator<T> GetEnumerator()
 			{
 				using var _ = ActivityService.Start(ActivityID.GetIEnumerable);
 
-				var (statements, values) = Prepare();
+				var commands       = BuildCommands();
+				var mainStepIndex  = _preambles.Length;
+				var preambles      = new object?[_preambles.Length];
+				var dataConnection = (DataConnection)_dataContext;
 
-				var preambles = new object?[_preambles.Length];
-				var reader    = DataConnection.QueryRunner.ExecuteCombinedReader((DataConnection)_dataContext, statements, values);
+				DataReaderWrapper? mainReader = null;
 
 				try
 				{
-					var dr = reader.DataReader!;
-
-					for (var i = 0; i < _preambles.Length; i++)
+					foreach (var (sql, parameters, stepIndexes) in commands)
 					{
-						preambles[i] = _preambles[i].MaterializeFromReader(_dataContext, _expressions, _parameters, preambles, dr);
-						dr.NextResult();
-					}
+						var reader  = DataConnection.QueryRunner.ExecuteRendered(dataConnection, sql, parameters);
+						var hasMain = stepIndexes[stepIndexes.Length - 1] == mainStepIndex;
 
-					foreach (var item in _query.GetResultFromReader!(_dataContext, _expressions, _parameters, preambles, dr))
-						yield return item;
+						if (!hasMain)
+						{
+							try
+							{
+								var dr = reader.DataReader!;
+
+								for (var k = 0; k < stepIndexes.Length; k++)
+								{
+									preambles[stepIndexes[k]] = _preambles[stepIndexes[k]].MaterializeFromReader(_dataContext, _expressions, _parameters, preambles, dr);
+
+									if (k < stepIndexes.Length - 1)
+										dr.NextResult();
+								}
+							}
+							finally
+							{
+								reader.Dispose();
+							}
+						}
+						else
+						{
+							mainReader = reader;
+
+							var dr = reader.DataReader!;
+
+							for (var k = 0; k < stepIndexes.Length - 1; k++)
+							{
+								preambles[stepIndexes[k]] = _preambles[stepIndexes[k]].MaterializeFromReader(_dataContext, _expressions, _parameters, preambles, dr);
+								dr.NextResult();
+							}
+
+							foreach (var item in _query.GetResultFromReader!(_dataContext, _expressions, _parameters, preambles, dr))
+								yield return item;
+						}
+					}
 				}
 				finally
 				{
-					reader.Dispose();
+					mainReader?.Dispose();
 				}
 			}
 
@@ -814,27 +890,60 @@ namespace LinqToDB.Internal.Linq
 
 			public async IAsyncEnumerable<T> GetAsyncEnumerable([EnumeratorCancellation] CancellationToken cancellationToken = default)
 			{
-				var (statements, values) = Prepare();
+				var commands       = BuildCommands();
+				var mainStepIndex  = _preambles.Length;
+				var preambles      = new object?[_preambles.Length];
+				var dataConnection = (DataConnection)_dataContext;
 
-				var preambles = new object?[_preambles.Length];
-				var reader    = await DataConnection.QueryRunner.ExecuteCombinedReaderAsync((DataConnection)_dataContext, statements, values, cancellationToken).ConfigureAwait(false);
+				DataReaderWrapper? mainReader = null;
 
 				try
 				{
-					var dr = reader.DataReader!;
-
-					for (var i = 0; i < _preambles.Length; i++)
+					foreach (var (sql, parameters, stepIndexes) in commands)
 					{
-						preambles[i] = await _preambles[i].MaterializeFromReaderAsync(_dataContext, _expressions, _parameters, preambles, dr, cancellationToken).ConfigureAwait(false);
-						await dr.NextResultAsync(cancellationToken).ConfigureAwait(false);
-					}
+						var reader  = await DataConnection.QueryRunner.ExecuteRenderedAsync(dataConnection, sql, parameters, cancellationToken).ConfigureAwait(false);
+						var hasMain = stepIndexes[stepIndexes.Length - 1] == mainStepIndex;
 
-					await foreach (var item in _query.GetResultFromReader!(_dataContext, _expressions, _parameters, preambles, dr).WithCancellation(cancellationToken).ConfigureAwait(false))
-						yield return item;
+						if (!hasMain)
+						{
+							try
+							{
+								var dr = reader.DataReader!;
+
+								for (var k = 0; k < stepIndexes.Length; k++)
+								{
+									preambles[stepIndexes[k]] = await _preambles[stepIndexes[k]].MaterializeFromReaderAsync(_dataContext, _expressions, _parameters, preambles, dr, cancellationToken).ConfigureAwait(false);
+
+									if (k < stepIndexes.Length - 1)
+										await dr.NextResultAsync(cancellationToken).ConfigureAwait(false);
+								}
+							}
+							finally
+							{
+								await reader.DisposeAsync().ConfigureAwait(false);
+							}
+						}
+						else
+						{
+							mainReader = reader;
+
+							var dr = reader.DataReader!;
+
+							for (var k = 0; k < stepIndexes.Length - 1; k++)
+							{
+								preambles[stepIndexes[k]] = await _preambles[stepIndexes[k]].MaterializeFromReaderAsync(_dataContext, _expressions, _parameters, preambles, dr, cancellationToken).ConfigureAwait(false);
+								await dr.NextResultAsync(cancellationToken).ConfigureAwait(false);
+							}
+
+							await foreach (var item in _query.GetResultFromReader!(_dataContext, _expressions, _parameters, preambles, dr).WithCancellation(cancellationToken).ConfigureAwait(false))
+								yield return item;
+						}
+					}
 				}
 				finally
 				{
-					await reader.DisposeAsync().ConfigureAwait(false);
+					if (mainReader != null)
+						await mainReader.DisposeAsync().ConfigureAwait(false);
 				}
 			}
 

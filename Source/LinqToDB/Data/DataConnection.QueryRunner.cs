@@ -460,12 +460,21 @@ namespace LinqToDB.Data
 				_executionQuery = CreateExecutionQuery(_dataConnection, Query.Queries[QueryNumber], parameterValues, forGetSqlText);
 			}
 
-			// Renders several already-built (structurally optimized at build time) statements into ONE combined
-			// multi-statement command through a SINGLE shared OptimizationContext: each statement is dialect-converted
-			// during BuildSql (which never mutates the shared cached statement) while the shared parameter normalizer
-			// uniquifies/dedups parameter names ACROSS the whole command — this is what lets sibling eager-load queries
-			// that each render @p0/@intParam merge into one command without a name collision.
-			static (string Sql, DbParameter[]? Parameters) RenderCombined(
+			// Upper bound on the rendered SQL length of ONE combined command. A group whose statements render past this
+			// is split across several round-trips (statement COUNT is separately bounded by PlanScenario's
+			// MaxStatementsPerCombinedGroup, which guards provider parameter/batch limits). The cap is soft — a command
+			// may overshoot by the last statement appended, and a single statement is never split. 100 KB keeps commands
+			// well under provider batch-size limits and parser pressure while rarely splitting.
+			const int MaxCombinedSqlLength = 100_000;
+
+			// Renders the given (already build-optimized) statements into ONE OR MORE combined multi-statement commands,
+			// starting a new command whenever the accumulated SQL would exceed MaxCombinedSqlLength — so a large
+			// eager-load group splits across several round-trips instead of one oversized command. Within each command the
+			// statements render through a SINGLE shared OptimizationContext (dialect-converted during BuildSql, which
+			// never mutates the shared cached statement) whose parameter normalizer uniquifies/dedups names ACROSS that
+			// command; each command therefore carries its OWN parameter scope. Returns, per command: the SQL, the bound
+			// parameters, and how many of the input statements it covers (contiguous, in order).
+			internal static IReadOnlyList<(string Sql, DbParameter[]? Parameters, int StatementCount)> RenderCombinedBatches(
 				DataConnection dataConnection, IReadOnlyList<SqlStatement> statements, IReadOnlyParameterValues? parameterValues)
 			{
 				var options      = dataConnection.Options;
@@ -473,72 +482,94 @@ namespace LinqToDB.Data
 				var sqlBuilder   = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema, options);
 				var factory      = sqlOptimizer.CreateSqlExpressionFactory(dataConnection.MappingSchema, options);
 
-				var optimizationContext = new OptimizationContext(
-					new EvaluationContext(parameterValues),
-					options,
-					dataConnection.DataProvider.SqlProviderFlags,
-					dataConnection.MappingSchema,
-					sqlOptimizer.CreateOptimizerVisitor(false),
-					sqlOptimizer.CreateConvertVisitor(false),
-					factory,
-					dataConnection.DataProvider.SqlProviderFlags.IsParameterOrderDependent,
-					isAlreadyOptimizedAndConverted : false,
-					parametersNormalizerFactory    : dataConnection.DataProvider.GetQueryParameterNormalizer);
-
 				var serviceProvider = ((IInfrastructure<IServiceProvider>)dataConnection.DataProvider).Instance;
+
+				var result = new List<(string, DbParameter[]?, int)>();
 
 				using var sb = Pools.StringBuilder.Allocate();
 
-				for (var i = 0; i < statements.Count; i++)
+				var i = 0;
+
+				while (i < statements.Count)
 				{
-					var aliases = PrepareStepAliases(serviceProvider, statements[i]);
+					// Each command has its OWN parameter scope (fresh normalizer), so names are uniquified per command.
+					var optimizationContext = new OptimizationContext(
+						new EvaluationContext(parameterValues),
+						options,
+						dataConnection.DataProvider.SqlProviderFlags,
+						dataConnection.MappingSchema,
+						sqlOptimizer.CreateOptimizerVisitor(false),
+						sqlOptimizer.CreateConvertVisitor(false),
+						factory,
+						dataConnection.DataProvider.SqlProviderFlags.IsParameterOrderDependent,
+						isAlreadyOptimizedAndConverted : false,
+						parametersNormalizerFactory    : dataConnection.DataProvider.GetQueryParameterNormalizer);
 
-					if (i > 0)
-						sb.Value.Append(";\n");
+					sb.Value.Length = 0;
 
-					using (ActivityService.Start(ActivityID.BuildSql))
-						sqlBuilder.BuildSql(0, statements[i], sb.Value, optimizationContext, aliases, null, 0);
-				}
+					var count = 0;
 
-				var sqlParameters = optimizationContext.GetParameters();
-
-				DbParameter[]? dbParameters = null;
-
-				if (sqlParameters.Count > 0)
-				{
-					var dbCommand = dataConnection.GetOrCreateCommand();
-
-					dbParameters = new DbParameter[sqlParameters.Count];
-
-					for (var i = 0; i < sqlParameters.Count; i++)
+					// Always at least one statement per command; then keep appending until the SQL reaches the length cap.
+					while (i < statements.Count && (count == 0 || sb.Value.Length < MaxCombinedSqlLength))
 					{
-						var sqlp = sqlParameters[i];
-						dbParameters[i] = CreateParameter(dataConnection, dbCommand, sqlp, sqlp.GetParameterValue(parameterValues));
+						var aliases = PrepareStepAliases(serviceProvider, statements[i]);
+
+						if (count > 0)
+							sb.Value.Append(";\n");
+
+						using (ActivityService.Start(ActivityID.BuildSql))
+							sqlBuilder.BuildSql(0, statements[i], sb.Value, optimizationContext, aliases, null, 0);
+
+						count++;
+						i++;
 					}
+
+					var sqlParameters = optimizationContext.GetParameters();
+
+					DbParameter[]? dbParameters = null;
+
+					if (sqlParameters.Count > 0)
+					{
+						var dbCommand = dataConnection.GetOrCreateCommand();
+
+						dbParameters = new DbParameter[sqlParameters.Count];
+
+						for (var p = 0; p < sqlParameters.Count; p++)
+						{
+							var sqlp = sqlParameters[p];
+							dbParameters[p] = CreateParameter(dataConnection, dbCommand, sqlp, sqlp.GetParameterValue(parameterValues));
+						}
+					}
+
+					result.Add((sb.Value.ToString(), dbParameters, count));
 				}
 
-				return (sb.Value.ToString(), dbParameters);
+				return result;
 			}
 
-			// Executes an assembled eager-loading scenario (child collection queries followed by the main query) as ONE
-			// multi-result-set command and returns the reader positioned at the first result set. The caller harvests
-			// each child result set (buffered) then streams the main result set, and owns the returned reader.
-			internal static DataReaderWrapper ExecuteCombinedReader(
-				DataConnection dataConnection, IReadOnlyList<SqlStatement> statements, IReadOnlyParameterValues? parameterValues)
+			// Plans the physical command groups for an assembled eager-loading scenario, size-aware (a large child
+			// fan-out splits into several round-trips). Resolves the provider's IDmlService so eager loading reuses the
+			// same PlanScenario grouping authority as DML combining.
+			internal static SqlCommandGroupPlan PlanEagerScenario(DataConnection dataConnection, SqlCommandScenario scenario)
 			{
-				var (sql, dbParameters) = RenderCombined(dataConnection, statements, parameterValues);
+				var dmlService = ((IInfrastructure<IServiceProvider>)dataConnection.DataProvider).Instance.GetRequiredService<IDmlService>();
 
+				return dmlService.PlanScenario(scenario, dataConnection.DataProvider.SqlProviderFlags);
+			}
+
+			// Executes one pre-rendered command (from RenderCombinedBatches) and returns the reader positioned at the
+			// first result set. The caller harvests each buffered result set then, for the command holding the main
+			// query, streams the last result set — and owns the returned reader for the stream's lifetime.
+			internal static DataReaderWrapper ExecuteRendered(DataConnection dataConnection, string sql, DbParameter[]? dbParameters)
+			{
 				InitCommand(dataConnection, new CommandWithParameters(sql, []), dbParameters, null);
 
 				return dataConnection.ExecuteDataReader(CommandBehavior.Default);
 			}
 
 			// In case of change the logic of this method, DO NOT FORGET to change the sibling method.
-			internal static async Task<DataReaderWrapper> ExecuteCombinedReaderAsync(
-				DataConnection dataConnection, IReadOnlyList<SqlStatement> statements, IReadOnlyParameterValues? parameterValues, CancellationToken cancellationToken)
+			internal static async Task<DataReaderWrapper> ExecuteRenderedAsync(DataConnection dataConnection, string sql, DbParameter[]? dbParameters, CancellationToken cancellationToken)
 			{
-				var (sql, dbParameters) = RenderCombined(dataConnection, statements, parameterValues);
-
 				InitCommand(dataConnection, new CommandWithParameters(sql, []), dbParameters, null);
 
 				return await dataConnection.ExecuteDataReaderAsync(CommandBehavior.Default, cancellationToken).ConfigureAwait(false);
