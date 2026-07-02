@@ -81,6 +81,7 @@
     <File Path=".claude/scripts/snap-baselines.ps1" />
     <File Path=".claude/scripts/verify-lines.ps1" />
   </Folder>
+  <Folder Name="/.claude/skills/" />
   <Folder Name="/.claude/skills/api-baselines/">
     <File Path=".claude/skills/api-baselines/SKILL.md" />
   </Folder>
@@ -137,6 +138,14 @@
   </Folder>
   <Folder Name="/.claude/skills/version-bump/">
     <File Path=".claude/skills/version-bump/SKILL.md" />
+  </Folder>
+  <Folder Name="/.codex/" />
+  <Folder Name="/.codex/skills/" />
+  <Folder Name="/.codex/skills/compatibility/">
+    <File Path=".codex/skills/compatibility/SKILL.md" />
+  </Folder>
+  <Folder Name="/.codex/skills/test/">
+    <File Path=".codex/skills/test/SKILL.md" />
   </Folder>
   <Folder Name="/.github/">
     <File Path=".github/CODEOWNERS" />
@@ -525,7 +534,9 @@
   </Folder>
   <Folder Name="/Source/">
     <File Path="Source/BannedSymbols.txt" />
+    <File Path="Source/CodeMetricsConfig.txt" />
     <File Path="Source/Directory.Build.props" />
+    <File Path="Source/TODO.md" />
     <Project Path="Source/CodeGenerators/CodeGenerators.csproj" />
     <Project Path="Source/LinqToDB.CLI/LinqToDB.CLI.csproj">
       <Build Solution="Testing|*" Project="false" />

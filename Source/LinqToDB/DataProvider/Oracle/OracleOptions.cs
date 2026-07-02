@@ -1,4 +1,6 @@
+﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 
 using LinqToDB.Data;
@@ -21,11 +23,20 @@ namespace LinqToDB.DataProvider.Oracle
 	/// Default value: <see langword="false"/>.
 	/// This flag is added for backward compatibility and not recommended for use with new applications.
 	/// </param>
+	/// <param name="MaxStringParameterLength">
+	/// Maximum string parameter length for regular string parameters, aligned with Oracle MAX_STRING_SIZE semantics.
+	/// Undefined string parameters with length greater than or equal to this value are bound as NCLOB.
+	/// Set to <see langword="null"/> to disable automatic NCLOB inference.
+	/// See Oracle documentation for VARCHAR2 limits:
+	/// <see href="https://docs.oracle.com/en/database/oracle/oracle-database/23/sqlrf/Data-Types.html"/>.
+	/// Default value: 4000.
+	/// </param>
 	public sealed record OracleOptions
 	(
 		BulkCopyType        BulkCopyType                   = BulkCopyType.MultipleRows,
 		AlternativeBulkCopy AlternativeBulkCopy            = AlternativeBulkCopy.InsertAll,
-		bool                DontEscapeLowercaseIdentifiers = false
+		bool                DontEscapeLowercaseIdentifiers = false,
+		int?                MaxStringParameterLength       = 4000
 		// If you add another parameter here, don't forget to update
 		// OracleOptions copy constructor and CreateID method.
 	)
@@ -39,11 +50,50 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			AlternativeBulkCopy            = original.AlternativeBulkCopy;
 			DontEscapeLowercaseIdentifiers = original.DontEscapeLowercaseIdentifiers;
+			MaxStringParameterLength       = original.MaxStringParameterLength;
+		}
+
+		/// <summary>
+		/// Binary-compatibility overload of the record's positional constructor: mirrors the
+		/// public ctor signature as it was before <see cref="MaxStringParameterLength"/> was added,
+		/// so assemblies compiled against the previous linq2db release continue to load.
+		/// </summary>
+		// TODO: remove in v7
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		public OracleOptions(
+			BulkCopyType        BulkCopyType,
+			AlternativeBulkCopy AlternativeBulkCopy,
+			bool                DontEscapeLowercaseIdentifiers)
+			: this(
+				BulkCopyType,
+				AlternativeBulkCopy,
+				DontEscapeLowercaseIdentifiers,
+				MaxStringParameterLength: 4000)
+		{
+		}
+
+		/// <summary>
+		/// Binary-compatibility overload of the record's <c>Deconstruct</c>: mirrors the
+		/// method signature as it was before <see cref="MaxStringParameterLength"/> was added.
+		/// </summary>
+		// TODO: remove in v7
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		public void Deconstruct(
+			out BulkCopyType        BulkCopyType,
+			out AlternativeBulkCopy AlternativeBulkCopy,
+			out bool                DontEscapeLowercaseIdentifiers)
+		{
+			Deconstruct(
+				out BulkCopyType,
+				out AlternativeBulkCopy,
+				out DontEscapeLowercaseIdentifiers,
+				out _);
 		}
 
 		protected override IdentifierBuilder CreateID(IdentifierBuilder builder) => builder
 			.Add(AlternativeBulkCopy)
 			.Add(DontEscapeLowercaseIdentifiers)
+			.Add(MaxStringParameterLength)
 			;
 
 		#region IEquatable implementation
