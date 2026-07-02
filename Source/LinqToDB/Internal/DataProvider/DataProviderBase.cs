@@ -50,6 +50,7 @@ namespace LinqToDB.Internal.DataProvider
 				IsInsertOrUpdateSupported            = true,
 				CanCombineParameters                 = true,
 				MaxInListValuesCount                 = int.MaxValue,
+				MaxCombinedCommandLength             = 60_000,
 				IsCrossJoinSupported                 = true,
 				IsDistinctSetOperationsSupported     = true,
 				AcceptsOuterExpressionInAggregate    = true,

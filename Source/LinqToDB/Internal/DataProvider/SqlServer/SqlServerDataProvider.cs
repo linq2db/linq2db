@@ -85,6 +85,8 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			// so eager loading combines the main query + child collections into one multi-result-set round-trip.
 			SqlProviderFlags.IsMultiStatementBatchSupported     = true;
 			SqlProviderFlags.IsMultipleResultSetsSupported      = true;
+			// Batch limit is 65536 x network packet size (>= 32 MB even at the 512 B minimum packet); 8 MB is a safe cap.
+			SqlProviderFlags.MaxCombinedCommandLength           = 8_000_000;
 
 			// SqlServer 2005 emits InsertOrUpdate as UPDATE + IF @@ROWCOUNT=0 INSERT (single statement);
 			// it can't carry an extra predicate on the UPDATE branch. 2008+ go through MERGE which can.

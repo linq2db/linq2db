@@ -727,6 +727,22 @@ namespace LinqToDB.Internal.SqlProvider
 		[DataMember(Order = 79)]
 		public bool IsMultipleResultSetsSupported { get; set; }
 
+		/// <summary>
+		/// Maximum length, in characters, of one combined multi-statement command's SQL text. When the combined engine
+		/// (<see cref="IsMultiStatementBatchSupported"/>) merges scenario steps into a single command, it starts a new
+		/// command once the rendered SQL would exceed this, keeping each command under the provider's command / batch /
+		/// packet size limit. Interpreted with a safety margin (room for statement separators and parameter markers) and
+		/// as a character count, so multi-byte SQL text stays under the provider's byte limit. <c>0</c> disables merging
+		/// (each statement runs as its own command). Default (set by <see cref="DataProviderBase"/>): 60000 — under the
+		/// common 64&#160;KB floor, safe for any provider until tuned.
+		/// </summary>
+		// Researched provider ceilings (pick a value below these when enabling IsMultiStatementBatchSupported for one):
+		//   SQL Server 65536 x packet (256 MB @ 4 KB, 32 MB @ min) · MySQL/MariaDB max_allowed_packet (16-64 MB, min 4) ·
+		//   SQLite 1 GB · PostgreSQL ~1 GB · SAP HANA ~2 GB · DB2 LUW ~2 MB · ClickHouse max_query_size (~1 MB) ·
+		//   Oracle ~64 KB · Firebird 64 KB (<3.0) / 10 MB (3.0+) · Informix 64 KB (SQLi) / 2 MB (DRDA) · Sybase ASE ~64 KB.
+		[DataMember(Order = 80)]
+		public int MaxCombinedCommandLength { get; set; }
+
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
 			return AcceptsTakeAsParameter || (AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null);
@@ -829,6 +845,7 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsMultiStatementBatchSupported                       .GetHashCode()
 				^ IsServerSideVariablesSupported                       .GetHashCode()
 				^ IsMultipleResultSetsSupported                        .GetHashCode()
+				^ MaxCombinedCommandLength                             .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => StringComparer.Ordinal.GetHashCode(flag) ^ hash);
 	}
 
@@ -913,6 +930,7 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsMultiStatementBatchSupported                        == other.IsMultiStatementBatchSupported
 				&& IsServerSideVariablesSupported                        == other.IsServerSideVariablesSupported
 				&& IsMultipleResultSetsSupported                         == other.IsMultipleResultSetsSupported
+				&& MaxCombinedCommandLength                              == other.MaxCombinedCommandLength
 				&& CustomFlags.SetEquals(other.CustomFlags);
 		}
 		#endregion

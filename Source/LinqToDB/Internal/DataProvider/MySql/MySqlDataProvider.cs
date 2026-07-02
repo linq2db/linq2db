@@ -63,6 +63,8 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			// so eager loading combines the main query + child collections into one multi-result-set round-trip.
 			SqlProviderFlags.IsMultiStatementBatchSupported = true;
 			SqlProviderFlags.IsMultipleResultSetsSupported  = true;
+			// Bounded by max_allowed_packet (server default 16-64 MB, minimum 4 MB); 1 MB stays safe if configured low.
+			SqlProviderFlags.MaxCombinedCommandLength       = 1_000_000;
 
 			// MySQL/MariaDB emit InsertOrUpdate as INSERT ... ON DUPLICATE KEY UPDATE, which
 			// has no WHERE clause on the UPDATE branch. Route Upsert.Update.When through

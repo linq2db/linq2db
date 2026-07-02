@@ -15,6 +15,7 @@ using LinqToDB.Internal.Infrastructure;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Mapping;
 using LinqToDB.Metrics;
 
 namespace LinqToDB.Data
@@ -182,6 +183,41 @@ namespace LinqToDB.Data
 				return executionQuery;
 			}
 
+			// Finalizes the DML service's synthetic scenario steps (identity SELECT, InsertOrReplace/Upsert emulation).
+			// They are built from the already-finalized main statement, so they never went through provider finalization
+			// (FinalizeStatement) — most importantly the UPDATE rewrite some providers need (e.g. SqlCe cannot parse a
+			// table alias in UPDATE). Steps that reuse the main statement (e.g. truncate reseed) are already finalized and
+			// are skipped by reference; the scenario is rebuilt only if a step actually changed.
+			static SqlCommandScenario FinalizeScenarioSteps(SqlCommandScenario scenario, SqlStatement mainStatement, ISqlOptimizer sqlOptimizer, DataOptions options, MappingSchema mappingSchema)
+			{
+				SqlCommandStep[]? finalized = null;
+
+				for (var i = 0; i < scenario.Steps.Count; i++)
+				{
+					var step = scenario.Steps[i];
+
+					if (ReferenceEquals(step.Statement, mainStatement))
+						continue;
+
+					var finalStatement = sqlOptimizer.Finalize(mappingSchema, step.Statement, options);
+
+					if (ReferenceEquals(finalStatement, step.Statement))
+						continue;
+
+					if (finalized == null)
+					{
+						finalized = new SqlCommandStep[scenario.Steps.Count];
+
+						for (var j = 0; j < scenario.Steps.Count; j++)
+							finalized[j] = scenario.Steps[j];
+					}
+
+					finalized[i] = step with { Statement = finalStatement };
+				}
+
+				return finalized == null ? scenario : scenario with { Steps = finalized };
+			}
+
 			static PreparedQuery GetCommand(DataConnection dataConnection, IQueryContext query, IReadOnlyParameterValues? parameterValues, bool forGetSqlText, int startIndent = 0)
 			{
 				bool aquiredLock = false;
@@ -270,6 +306,12 @@ namespace LinqToDB.Data
 
 					if (scenario != null)
 					{
+						// The DML service builds synthetic step statements (identity SELECT, the InsertOrReplace/Upsert
+						// UPDATE/INSERT/SELECT emulation) after the main statement was finalized, so they miss provider
+						// finalization — run it now so per-provider transforms apply (e.g. SqlCe rewrites its UPDATE into the
+						// alias-free form it accepts). Steps reusing the already-finalized main statement are skipped.
+						scenario = FinalizeScenarioSteps(scenario, statement, sqlOptimizer, options, dataConnection.MappingSchema);
+
 						// Plan FIRST: group the scenario's steps into physical commands (round-trips), size-aware.
 						plan = dmlService.PlanScenario(scenario, dataConnection.DataProvider.SqlProviderFlags);
 
@@ -460,17 +502,8 @@ namespace LinqToDB.Data
 				_executionQuery = CreateExecutionQuery(_dataConnection, Query.Queries[QueryNumber], parameterValues, forGetSqlText);
 			}
 
-			// Upper bound on the rendered SQL length of ONE combined command. A group whose statements render past this
-			// is split across several round-trips (statement COUNT is separately bounded by PlanScenario's
-			// MaxStatementsPerCombinedGroup, which guards provider parameter/batch limits). The cap is soft — a command
-			// may overshoot by the last statement appended, and a single statement is never split. 100 KB keeps commands
-			// well under provider batch-size limits and parser pressure while rarely splitting.
-			// TODO: make this provider-dependent — max command/packet/batch size differs per DataProvider; 100 KB is a
-			// conservative provider-agnostic placeholder for now.
-			const int MaxCombinedSqlLength = 100_000;
-
 			// Renders the given (already build-optimized) statements into ONE OR MORE combined multi-statement commands,
-			// starting a new command whenever the accumulated SQL would exceed MaxCombinedSqlLength — so a large
+			// starting a new command whenever the accumulated SQL would exceed the provider's command-length cap — so a large
 			// eager-load group splits across several round-trips instead of one oversized command. Within each command the
 			// statements render through a SINGLE shared OptimizationContext (dialect-converted during BuildSql, which
 			// never mutates the shared cached statement) whose parameter normalizer uniquifies/dedups names ACROSS that
@@ -485,6 +518,12 @@ namespace LinqToDB.Data
 				var factory      = sqlOptimizer.CreateSqlExpressionFactory(dataConnection.MappingSchema, options);
 
 				var serviceProvider = ((IInfrastructure<IServiceProvider>)dataConnection.DataProvider).Instance;
+
+				// Upper bound on ONE combined command's rendered SQL length — provider-dependent (packet / batch / command
+				// limit; see SqlProviderFlags.MaxCombinedCommandLength). Soft cap: a command may overshoot by the last
+				// statement appended, and a single statement is never split; a group past it splits across round-trips
+				// (statement COUNT is separately bounded by PlanScenario's MaxStatementsPerCombinedGroup).
+				var maxCommandLength = dataConnection.DataProvider.SqlProviderFlags.MaxCombinedCommandLength;
 
 				var result = new List<(string, DbParameter[]?, int)>();
 
@@ -512,7 +551,7 @@ namespace LinqToDB.Data
 					var count = 0;
 
 					// Always at least one statement per command; then keep appending until the SQL reaches the length cap.
-					while (i < statements.Count && (count == 0 || sb.Value.Length < MaxCombinedSqlLength))
+					while (i < statements.Count && (count == 0 || sb.Value.Length < maxCommandLength))
 					{
 						var aliases = PrepareStepAliases(serviceProvider, statements[i]);
 

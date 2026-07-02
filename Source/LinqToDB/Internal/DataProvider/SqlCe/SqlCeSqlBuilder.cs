@@ -59,20 +59,11 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 			return base.CanSkipRootAliases(statement);
 		}
 
-		public override int CommandCount(SqlStatement statement)
+		protected override void BuildCommandFragment(SqlCommandFragment fragment, int fieldIndex, SqlStatement statement)
 		{
-			return statement switch
+			if (fragment == SqlCommandFragment.IdentityReseed && statement is SqlTruncateTableStatement trun)
 			{
-				SqlTruncateTableStatement trun => trun.ResetIdentity ? 1 + trun.Table!.IdentityFields.Count : 1,
-				_ => statement.NeedsIdentity ? 2 : 1,
-			};
-		}
-
-		protected override void BuildCommand(SqlStatement statement, int commandNumber)
-		{
-			if (statement is SqlTruncateTableStatement trun)
-			{
-				var field = trun.Table!.IdentityFields[commandNumber - 1];
+				var field = trun.Table!.IdentityFields[fieldIndex];
 
 				StringBuilder.Append("ALTER TABLE ");
 				BuildObjectName(StringBuilder, trun.Table.TableName, ConvertType.NameToQueryTable, true, trun.Table.TableOptions);
@@ -82,7 +73,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 			}
 			else
 			{
-				StringBuilder.AppendLine("SELECT @@IDENTITY");
+				base.BuildCommandFragment(fragment, fieldIndex, statement);
 			}
 		}
 

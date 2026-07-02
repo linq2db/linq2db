@@ -54,6 +54,8 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			SqlProviderFlags.MaxColumnCount                    = 2000;
 			SqlProviderFlags.IsMultiStatementBatchSupported    = true;
 			SqlProviderFlags.IsMultipleResultSetsSupported     = true;
+			// SQLITE_MAX_SQL_LENGTH defaults to 1 GB; 4 MB is a generous, safe cap.
+			SqlProviderFlags.MaxCombinedCommandLength          = 4_000_000;
 
 			// This is commented, because runtime for SDS 2 has this flag disabled
 			// and there is no value in supporting it for v1 as it doesn't add any additional value
