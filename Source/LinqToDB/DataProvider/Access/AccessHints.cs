@@ -20,6 +20,10 @@ namespace LinqToDB.DataProvider.Access
 
 		#region AccessSpecific Hints
 
+		/// <summary>
+		/// Adds an Access <c>WITH OWNERACCESS OPTION</c> subquery hint.
+		/// </summary>
+		/// <ai-tags group="Hints" hint-type="SubQuery" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(WithOwnerAccessOptionImpl))]
 		public static IAccessSpecificQueryable<TSource> WithOwnerAccessOption<TSource>(this IAccessSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -44,6 +48,7 @@ namespace LinqToDB.DataProvider.Access
 		/// <param name="source">Query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Query source with join hints.</returns>
+		/// <ai-tags group="Hints" hint-type="SubQuery" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.Access, Sql.QueryExtensionScope.SubQueryHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.None,         typeof(NoneExtensionBuilder))]

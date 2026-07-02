@@ -30,6 +30,12 @@ Development version nugets [feeds](https://dev.azure.com/linq2db/linq2db/_artifa
 
 See [Github.io documentation](https://linq2db.github.io/index.html) for more details.
 
+## AI/LLM-oriented documentation
+
+Package-oriented AI/LLM guidance is included with the NuGet package.
+AI agents should start with the bundled skill entry point: [Source/Skills/linq2db/SKILL.md](Source/Skills/linq2db/SKILL.md).
+The package-facing overview remains in [Source/LinqToDB/README.md](Source/LinqToDB/README.md).
+
 <!-- You can visit our [blog](http://blog.linq2db.com/) -->
 
 Code examples and demos can be found [here](https://github.com/linq2db/examples) or in [tests](https://github.com/linq2db/linq2db/tree/master/Tests/Linq).

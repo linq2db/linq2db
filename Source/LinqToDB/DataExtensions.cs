@@ -18,6 +18,7 @@ using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Internal.Options;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB
@@ -25,6 +26,18 @@ namespace LinqToDB
 	/// <summary>
 	/// Data context extension methods.
 	/// </summary>
+	/// <remarks>
+	/// <para>
+	/// AI/LLM agents using this NuGet package should first read package-local
+	/// <c>skills/linq2db/SKILL.md</c>, <c>README.md</c>, and <c>skills/linq2db/docs/api.md</c>; use
+	/// <c>skills/linq2db/docs/*.md</c> for task-specific guidance before proposing code.
+	/// </para>
+	///
+	/// Common metadata defaults for this API surface:
+	/// method-level <c>ai-tags</c> elements should specify only behavior-specific fields and override
+	/// defaults only when needed.
+	/// </remarks>
+	/// <ai-tags-defaults pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 	[PublicAPI]
 	public static partial class DataExtensions
 	{
@@ -36,6 +49,11 @@ namespace LinqToDB
 		/// <typeparam name="T">Mapping class type.</typeparam>
 		/// <param name="dataContext">Data connection context.</param>
 		/// <returns>Queryable source.</returns>
+		/// <remarks>
+		/// Use to obtain a query root for a mapped table or view. Execution is deferred until enumeration
+		/// or explicit materialization.
+		/// </remarks>
+		/// <ai-tags group="Helpers" execution="Deferred" composability="Composable" affects="QueryRoot" />
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> GetTable<T>(this IDataContext dataContext)
@@ -56,6 +74,11 @@ namespace LinqToDB
 		/// <param name="methodInfo">Method, decorated with expression attribute, based on <see cref="Sql.TableFunctionAttribute"/>.</param>
 		/// <param name="parameters">Parameters for <paramref name="methodInfo"/> method.</param>
 		/// <returns>Queryable source.</returns>
+		/// <remarks>
+		/// Use to create a query root for a table-valued function or a custom table expression.
+		/// Execution is deferred until enumeration or explicit materialization.
+		/// </remarks>
+		/// <ai-tags group="Helpers" execution="Deferred" composability="Composable" affects="QueryRoot" />
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> GetTable<T>(
@@ -110,6 +133,10 @@ namespace LinqToDB
 		/// <param name="query">The query expression to be compiled.</param>
 		/// <typeparam name="TDc">Type of data context parameter, passed to compiled query.</typeparam>
 		/// <typeparam name="TResult">Query result type.</typeparam>
+		/// <remarks>
+		/// Produces a reusable delegate for query execution with stable expression structure.
+		/// </remarks>
+		/// <ai-tags group="Helpers" execution="Deferred" composability="Terminal" affects="QueryCompilation" provider="ProviderAgnostic" />
 		public static Func<TDc,TResult> Compile<TDc,TResult>(
 			this IDataContext             dataContext,
 			Expression<Func<TDc,TResult>> query)
@@ -132,6 +159,10 @@ namespace LinqToDB
 		/// <typeparam name="TDc">Type of data context parameter, passed to compiled query.</typeparam>
 		/// <typeparam name="TArg1">Type of parameter for compiled query.</typeparam>
 		/// <typeparam name="TResult">Query result type.</typeparam>
+		/// <remarks>
+		/// Produces a reusable delegate for query execution with stable expression structure.
+		/// </remarks>
+		/// <ai-tags group="Helpers" execution="Deferred" composability="Terminal" affects="QueryCompilation" provider="ProviderAgnostic" />
 		public static Func<TDc,TArg1,TResult> Compile<TDc,TArg1, TResult>(
 			this IDataContext dataContext,
 			Expression<Func<TDc,TArg1,TResult>> query)
@@ -155,6 +186,10 @@ namespace LinqToDB
 		/// <typeparam name="TArg1">Type of first parameter for compiled query.</typeparam>
 		/// <typeparam name="TArg2">Type of second parameter for compiled query.</typeparam>
 		/// <typeparam name="TResult">Query result type.</typeparam>
+		/// <remarks>
+		/// Produces a reusable delegate for query execution with stable expression structure.
+		/// </remarks>
+		/// <ai-tags group="Helpers" execution="Deferred" composability="Terminal" affects="QueryCompilation" provider="ProviderAgnostic" />
 		public static Func<TDc,TArg1,TArg2,TResult> Compile<TDc,TArg1,TArg2,TResult>(
 			this IDataContext dataContext,
 			Expression<Func<TDc,TArg1,TArg2,TResult>> query)
@@ -179,6 +214,10 @@ namespace LinqToDB
 		/// <typeparam name="TArg2">Type of second parameter for compiled query.</typeparam>
 		/// <typeparam name="TArg3">Type of third parameter for compiled query.</typeparam>
 		/// <typeparam name="TResult">Query result type.</typeparam>
+		/// <remarks>
+		/// Produces a reusable delegate for query execution with stable expression structure.
+		/// </remarks>
+		/// <ai-tags group="Helpers" execution="Deferred" composability="Terminal" affects="QueryCompilation" provider="ProviderAgnostic" />
 		public static Func<TDc,TArg1,TArg2,TArg3,TResult> Compile<TDc,TArg1,TArg2,TArg3,TResult>(
 			this IDataContext dataContext,
 			Expression<Func<TDc,TArg1,TArg2,TArg3,TResult>> query)
@@ -206,6 +245,10 @@ namespace LinqToDB
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <returns>Number of affected records.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static int Insert<T>(this IDataContext dataContext, T obj,
 			string? tableName = default, string? databaseName = default, string? schemaName = default, string? serverName = default, TableOptions tableOptions = default)
 			where T : notnull
@@ -226,6 +269,10 @@ namespace LinqToDB
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <returns>Number of affected records.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static int Insert<T>(this IDataContext dataContext, T obj, InsertColumnFilter<T>? columnFilter,
 			string? tableName = default, string? databaseName = default, string? schemaName = default, string? serverName = default, TableOptions tableOptions = default)
 			where T : notnull
@@ -248,6 +295,10 @@ namespace LinqToDB
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static Task<int> InsertAsync<T>(
 			this IDataContext dataContext,
 			T                 obj,
@@ -276,6 +327,10 @@ namespace LinqToDB
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static Task<int> InsertAsync<T>(
 			this IDataContext dataContext,
 			T obj,
@@ -309,6 +364,15 @@ namespace LinqToDB
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <returns>Number of affected records.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// <para>
+		/// This method does not support entities with identity (database-generated) columns (<see cref="IdentityAttribute"/>).
+		/// If the entity has an identity column, calling this method throws <see cref="LinqToDBException"/> at query build time.
+		/// For upsert with identity keys, generate the key value application-side and remove <see cref="IdentityAttribute"/> from the entity.
+		/// </para>
+		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static int InsertOrReplace<T>(this IDataContext dataContext, T obj,
 			string?      tableName    = default,
 			string?      databaseName = default,
@@ -334,6 +398,15 @@ namespace LinqToDB
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <returns>Number of affected records.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// <para>
+		/// This method does not support entities with identity (database-generated) columns (<see cref="IdentityAttribute"/>).
+		/// If the entity has an identity column, calling this method throws <see cref="LinqToDBException"/> at query build time.
+		/// For upsert with identity keys, generate the key value application-side and remove <see cref="IdentityAttribute"/> from the entity.
+		/// </para>
+		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static int InsertOrReplace<T>(this IDataContext dataContext, T obj,
 			InsertOrUpdateColumnFilter<T>? columnFilter,
 			string?      tableName    = default,
@@ -361,6 +434,15 @@ namespace LinqToDB
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// <para>
+		/// This method does not support entities with identity (database-generated) columns (<see cref="IdentityAttribute"/>).
+		/// If the entity has an identity column, calling this method throws <see cref="LinqToDBException"/> at query build time.
+		/// For upsert with identity keys, generate the key value application-side and remove <see cref="IdentityAttribute"/> from the entity.
+		/// </para>
+		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static Task<int> InsertOrReplaceAsync<T>(
 			this IDataContext dataContext,
 			T                 obj,
@@ -390,6 +472,15 @@ namespace LinqToDB
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// <para>
+		/// This method does not support entities with identity (database-generated) columns (<see cref="IdentityAttribute"/>).
+		/// If the entity has an identity column, calling this method throws <see cref="LinqToDBException"/> at query build time.
+		/// For upsert with identity keys, generate the key value application-side and remove <see cref="IdentityAttribute"/> from the entity.
+		/// </para>
+		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static Task<int> InsertOrReplaceAsync<T>(
 			this IDataContext              dataContext,
 			T                              obj,
@@ -423,6 +514,10 @@ namespace LinqToDB
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <returns>Inserted record's identity value.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static object InsertWithIdentity<T>(
 			this IDataContext dataContext,
 			T             obj,
@@ -450,6 +545,10 @@ namespace LinqToDB
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <returns>Inserted record's identity value.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static object InsertWithIdentity<T>(
 			this IDataContext      dataContext,
 			T                      obj,
@@ -478,6 +577,10 @@ namespace LinqToDB
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <returns>Inserted record's identity value.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static int InsertWithInt32Identity<T>(
 			this IDataContext dataContext,
 			T                 obj,
@@ -505,6 +608,10 @@ namespace LinqToDB
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <returns>Inserted record's identity value.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static int InsertWithInt32Identity<T>(
 			this IDataContext      dataContext,
 			T                      obj,
@@ -533,6 +640,10 @@ namespace LinqToDB
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <returns>Inserted record's identity value.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static long InsertWithInt64Identity<T>(
 			this IDataContext dataContext,
 			T                 obj,
@@ -560,6 +671,10 @@ namespace LinqToDB
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <returns>Inserted record's identity value.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static long InsertWithInt64Identity<T>(
 			this IDataContext      dataContext,
 			T                      obj,
@@ -588,6 +703,10 @@ namespace LinqToDB
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <returns>Inserted record's identity value.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static decimal InsertWithDecimalIdentity<T>(
 			this IDataContext dataContext,
 			T                 obj,
@@ -615,6 +734,10 @@ namespace LinqToDB
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <returns>Inserted record's identity value.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static decimal InsertWithDecimalIdentity<T>(
 			this IDataContext      dataContext,
 			T                      obj,
@@ -644,6 +767,10 @@ namespace LinqToDB
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Inserted record's identity value.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static Task<object> InsertWithIdentityAsync<T>(
 			this IDataContext dataContext,
 			T                 obj,
@@ -703,6 +830,10 @@ namespace LinqToDB
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Inserted record's identity value.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static Task<int> InsertWithInt32IdentityAsync<T>(
 			this IDataContext dataContext,
 			T                 obj,
@@ -766,6 +897,10 @@ namespace LinqToDB
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Inserted record's identity value.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static Task<long> InsertWithInt64IdentityAsync<T>(
 			this IDataContext dataContext,
 			T                 obj,
@@ -830,6 +965,10 @@ namespace LinqToDB
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Inserted record's identity value.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static Task<decimal> InsertWithDecimalIdentityAsync<T>(
 			this IDataContext dataContext,
 			T                 obj,
@@ -897,6 +1036,10 @@ namespace LinqToDB
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <returns>Number of affected records.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static int Update<T>(
 			this IDataContext dataContext,
 			T                 obj,
@@ -924,6 +1067,10 @@ namespace LinqToDB
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <returns>Number of affected records.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static int Update<T>(
 			this IDataContext      dataContext,
 			T                      obj,
@@ -953,6 +1100,10 @@ namespace LinqToDB
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static Task<int> UpdateAsync<T>(
 			this IDataContext dataContext,
 			T                 obj,
@@ -982,6 +1133,10 @@ namespace LinqToDB
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static Task<int> UpdateAsync<T>(
 			this IDataContext      dataContext,
 			T                      obj,
@@ -1015,6 +1170,10 @@ namespace LinqToDB
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <returns>Number of affected records.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static int Delete<T>(
 			this IDataContext dataContext,
 			T                 obj,
@@ -1043,6 +1202,10 @@ namespace LinqToDB
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// </remarks>
+		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
 		public static Task<int> DeleteAsync<T>(
 			this IDataContext dataContext,
 			T                 obj,
@@ -1082,6 +1245,11 @@ namespace LinqToDB
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <returns>Created table as queryable source.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// The schema command is executed first, then an <see cref="ITable{T}"/> query root is returned for further LINQ queries.
+		/// </remarks>
+		/// <ai-tags group="Helpers" execution="Immediate" composability="Terminal" affects="DdlStatement,QueryRoot" pipeline="SqlAST,SqlText" />
 		public static ITable<T> CreateTable<T>(
 			this IDataContext dataContext,
 			string?           tableName       = default,
@@ -1117,6 +1285,11 @@ namespace LinqToDB
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="tableOptions">Create table options.</param>
 		/// <returns>Created table as queryable source.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// The schema command is executed first, then an <see cref="ITable{T}"/> query root is returned for further LINQ queries.
+		/// </remarks>
+		/// <ai-tags group="Helpers" execution="Immediate" composability="Terminal" affects="DdlStatement,QueryRoot" pipeline="SqlAST,SqlText" />
 		public static ITable<T> CreateTable<T>(this IDataContext dataContext, CreateTableOptions tableOptions)
 			where T: notnull
 		{
@@ -1145,6 +1318,11 @@ namespace LinqToDB
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Created table as queryable source.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// The schema command is executed first, then an <see cref="ITable{T}"/> query root is returned for further LINQ queries.
+		/// </remarks>
+		/// <ai-tags group="Helpers" execution="Immediate" composability="Terminal" affects="DdlStatement,QueryRoot" pipeline="SqlAST,SqlText" />
 		public static Task<ITable<T>> CreateTableAsync<T>(
 			this IDataContext dataContext,
 			string?           tableName       = default,
@@ -1183,6 +1361,11 @@ namespace LinqToDB
 		/// <param name="tableOptions">Create table options.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Created table as queryable source.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// The schema command is executed first, then an <see cref="ITable{T}"/> query root is returned for further LINQ queries.
+		/// </remarks>
+		/// <ai-tags group="Helpers" execution="Immediate" composability="Terminal" affects="DdlStatement,QueryRoot" pipeline="SqlAST,SqlText" />
 		public static Task<ITable<T>> CreateTableAsync<T>(this IDataContext dataContext, CreateTableOptions tableOptions, CancellationToken token = default)
 			where T : notnull
 		{
@@ -1210,6 +1393,10 @@ namespace LinqToDB
 		/// </param>
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// </remarks>
+		/// <ai-tags group="Helpers" execution="Immediate" composability="Terminal" affects="DdlStatement" pipeline="SqlAST,SqlText" />
 		public static void DropTable<T>(
 			this IDataContext dataContext,
 			string?           tableName                 = default,
@@ -1247,6 +1434,10 @@ namespace LinqToDB
 		/// </param>
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// </remarks>
+		/// <ai-tags group="Helpers" execution="Immediate" composability="Terminal" affects="DdlStatement" pipeline="SqlAST,SqlText" />
 		public static void DropTable<T>(
 			this ITable<T> table,
 			string?        tableName                 = default,
@@ -1287,6 +1478,10 @@ namespace LinqToDB
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Asynchronous operation completion task.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// </remarks>
+		/// <ai-tags group="Helpers" execution="Immediate" composability="Terminal" affects="DdlStatement" pipeline="SqlAST,SqlText" />
 		public static Task DropTableAsync<T>(
 			this IDataContext dataContext,
 			string?           tableName                 = default,
@@ -1328,6 +1523,10 @@ namespace LinqToDB
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Asynchronous operation completion task.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// </remarks>
+		/// <ai-tags group="Helpers" execution="Immediate" composability="Terminal" affects="DdlStatement" pipeline="SqlAST,SqlText" />
 		public static Task DropTableAsync<T>(
 			this ITable<T>    table,
 			string?           tableName                 = default,
@@ -1364,6 +1563,10 @@ namespace LinqToDB
 		/// <param name="cteBody">Recursive query body.</param>
 		/// <param name="cteTableName">Common table expression name.</param>
 		/// <returns>Common table expression.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
+		/// <ai-tags group="QueryDirectives" execution="Deferred" composability="Composable" affects="QueryStructure" />
 		public static IQueryable<T> GetCte<T>(
 			                this IDataContext                 dataContext,
 			[InstantHandle] Func<IQueryable<T>,IQueryable<T>> cteBody,
@@ -1428,6 +1631,10 @@ namespace LinqToDB
 		/// <param name="cteBody">Recursive query body.</param>
 		/// <param name="cteTableName">Common table expression name.</param>
 		/// <returns>Common table expression.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
+		/// <ai-tags group="QueryDirectives" execution="Deferred" composability="Composable" affects="QueryStructure" />
 		public static IQueryable<T> GetCte<T>(
 			                this IDataContext                 dataContext,
 			                string?                           cteTableName,
@@ -1447,7 +1654,7 @@ namespace LinqToDB
 			{
 				if (p == null)
 					return Expression.Constant(null, typeof(object));
-				
+
 				var argumentType    = p.GetType();
 				var valueExpression = SequenceHelper.WrapAsParameter(Expression.Constant(p, argumentType));
 				if (valueExpression.Type != typeof(object))
@@ -1477,7 +1684,13 @@ namespace LinqToDB
 		/// <typeparam name="TEntity">Source query record type.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="sql"> The interpolated string representing a SQL query. </param>
-		/// <remarks>Additional parentheses will be added to the query if first word in raw query is 'SELECT', otherwise users are responsible to add them themselves.</remarks>
+		/// <remarks>
+		/// Additional parentheses will be added to the query if first word in raw query is 'SELECT', otherwise users are responsible to add them themselves.
+		/// <para>
+		/// Execution is deferred and the method is composable.
+		/// </para>
+		/// </remarks>
+		/// <ai-tags group="Helpers" execution="Deferred" composability="Composable" affects="QueryRoot" />
 		/// <returns> An <see cref="IQueryable{T}" /> representing the raw SQL query. </returns>
 		[StringFormatMethod("sql")]
 		public static IQueryable<TEntity> FromSql<TEntity>(
@@ -1527,7 +1740,13 @@ namespace LinqToDB
 		/// <typeparam name="TEntity">Source query record type.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="sql"> The interpolated string representing a SQL query. </param>
-		/// <remarks>Additional parentheses will be added to the query if first word in raw query is 'SELECT', otherwise users are responsible to add them themselves.</remarks>
+		/// <remarks>
+		/// Additional parentheses will be added to the query if first word in raw query is 'SELECT', otherwise users are responsible to add them themselves.
+		/// <para>
+		/// Execution is deferred and the method is composable.
+		/// </para>
+		/// </remarks>
+		/// <ai-tags group="Helpers" execution="Deferred" composability="Composable" affects="QueryRoot" />
 		/// <returns> An <see cref="IQueryable{T}" /> representing the raw SQL query. </returns>
 		[StringFormatMethod("sql")]
 		public static IQueryable<TEntity> FromSqlScalar<TEntity>(
@@ -1576,7 +1795,13 @@ namespace LinqToDB
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="sql">The raw SQL query</param>
 		/// <param name="parameters"> The values to be assigned to parameters. </param>
-		/// <remarks>Additional parentheses will be added to the query if first word in raw query is 'SELECT', otherwise users are responsible to add them themselves.</remarks>
+		/// <remarks>
+		/// Additional parentheses will be added to the query if first word in raw query is 'SELECT', otherwise users are responsible to add them themselves.
+		/// <para>
+		/// Execution is deferred and the method is composable.
+		/// </para>
+		/// </remarks>
+		/// <ai-tags group="Helpers" execution="Deferred" composability="Composable" affects="QueryRoot" />
 		/// <returns> An <see cref="IQueryable{T}" /> representing the raw SQL query. </returns>
 		[StringFormatMethod("sql")]
 		public static IQueryable<TEntity> FromSql<TEntity>(
@@ -1617,6 +1842,7 @@ namespace LinqToDB
 		///     Method works for most supported database engines, except databases which do not support <code>SELECT Value</code> without FROM statement.<para />
 		///     For Oracle it will be translated to <code>SELECT Value FROM SYS.DUAL</code>
 		/// </remarks>
+		/// <ai-tags group="Helpers" execution="Deferred" composability="Composable" affects="QueryRoot" />
 		/// <example>
 		/// Complex record:
 		/// <code>
@@ -1649,6 +1875,10 @@ namespace LinqToDB
 		/// <typeparam name="TResult">The result type of the table expression.</typeparam>
 		/// <param name="expression">The query expression to create.</param>
 		/// <returns>An <see cref="ITable{T}" /> representing the query.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
+		/// <ai-tags group="Helpers" execution="Deferred" composability="Composable" affects="QueryRoot" />
 		public static ITable<TResult> TableFromExpression<TResult>(
 			this IDataContext                 dataContext,
 			Expression<Func<ITable<TResult>>> expression)
@@ -1676,6 +1906,10 @@ namespace LinqToDB
 		/// <typeparam name="TResult">The result type of the query expression.</typeparam>
 		/// <param name="expression">The query expression to create.</param>
 		/// <returns>An <see cref="IQueryable{T}" /> representing the query.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
+		/// <ai-tags group="Helpers" execution="Deferred" composability="Composable" affects="QueryRoot" />
 		public static IQueryable<TResult> QueryFromExpression<TResult>(
 			this IDataContext                     dataContext,
 			Expression<Func<IQueryable<TResult>>> expression)

@@ -69,17 +69,19 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		}
 
 		/// <summary>
-		/// Adds join hint to a generated query.
-		/// <code>
-		/// // will produce following SQL code in generated query: INNER LOOP JOIN
-		/// var tableWithHint = db.Table.JoinHint("LOOP");
-		/// </code>
+		/// Adds a PostgreSQL subquery row-locking hint to a generated query.
 		/// </summary>
 		/// <typeparam name="TSource">Table record mapping class.</typeparam>
 		/// <param name="source">Query source.</param>
-		/// <param name="hint">SQL text, added to join in generated query.</param>
-		/// <param name="tableIDs">Table IDs.</param>
-		/// <returns>Query source with join hints.</returns>
+		/// <param name="hint">PostgreSQL row-locking hint, e.g. <c>FOR UPDATE</c> or <c>FOR SHARE</c>.</param>
+		/// <param name="tableIDs">Optional table identifiers for the <c>OF</c> clause.</param>
+		/// <returns>Query source with subquery hint.</returns>
+		/// <remarks>
+		/// The <c>tableIDs</c> values are created with <c>Sql.TableAlias</c>, <c>Sql.TableName</c>, or
+		/// <c>Sql.TableSpec</c> for table sources marked with <c>TableID</c>. They resolve to the
+		/// generated SQL identifiers for the selected table sources.
+		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="SubQuery" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.PostgreSQL, Sql.QueryExtensionScope.SubQueryHint, typeof(SubQueryTableHintExtensionBuilder))]
 		[Sql.QueryExtension(null,                    Sql.QueryExtensionScope.None,         typeof(NoneExtensionBuilder))]
@@ -101,18 +103,20 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		}
 
 		/// <summary>
-		/// Adds join hint to a generated query.
-		/// <code>
-		/// // will produce following SQL code in generated query: INNER LOOP JOIN
-		/// var tableWithHint = db.Table.JoinHint("LOOP");
-		/// </code>
+		/// Adds a PostgreSQL subquery row-locking hint to a generated query.
 		/// </summary>
 		/// <typeparam name="TSource">Table record mapping class.</typeparam>
 		/// <param name="source">Query source.</param>
-		/// <param name="hint">SQL text, added to join in generated query.</param>
+		/// <param name="hint">PostgreSQL row-locking hint, e.g. <c>FOR UPDATE</c> or <c>FOR SHARE</c>.</param>
 		/// <param name="hint2">NOWAIT | SKIP LOCKED</param>
-		/// <param name="tableIDs">Table IDs.</param>
-		/// <returns>Query source with join hints.</returns>
+		/// <param name="tableIDs">Optional table identifiers for the <c>OF</c> clause.</param>
+		/// <returns>Query source with subquery hint.</returns>
+		/// <remarks>
+		/// The <c>tableIDs</c> values are created with <c>Sql.TableAlias</c>, <c>Sql.TableName</c>, or
+		/// <c>Sql.TableSpec</c> for table sources marked with <c>TableID</c>. They resolve to the
+		/// generated SQL identifiers for the selected table sources.
+		/// </remarks>
+		/// <ai-tags group="Hints" hint-type="SubQuery" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.PostgreSQL, Sql.QueryExtensionScope.SubQueryHint, typeof(SubQueryTableHintExtensionBuilder))]
 		[Sql.QueryExtension(null,                    Sql.QueryExtensionScope.None,         typeof(NoneExtensionBuilder))]

@@ -24,6 +24,10 @@ namespace LinqToDB.DataProvider.SQLite
 			}
 		}
 
+		/// <summary>
+		/// Adds a SQLite index hint.
+		/// </summary>
+		/// <ai-tags group="Hints" hint-type="Index" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(IndexedByImpl))]
 		public static ISQLiteSpecificTable<TSource> IndexedByHint<TSource>(this ISQLiteSpecificTable<TSource> table, string indexName)
 			where TSource : notnull
@@ -37,6 +41,10 @@ namespace LinqToDB.DataProvider.SQLite
 			return (table, indexName) => table.TableHint(Hint.IndexedBy(indexName));
 		}
 
+		/// <summary>
+		/// Adds a SQLite table hint.
+		/// </summary>
+		/// <ai-tags group="Hints" hint-type="Table" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(NotIndexedImpl))]
 		public static ISQLiteSpecificTable<TSource> NotIndexedHint<TSource>(this ISQLiteSpecificTable<TSource> table)
 			where TSource : notnull
@@ -50,6 +58,10 @@ namespace LinqToDB.DataProvider.SQLite
 			return table => table.TableHint(Hint.NotIndexed);
 		}
 
+		/// <summary>
+		/// Adds a SQLite table hint.
+		/// </summary>
+		/// <ai-tags group="Hints" hint-type="Table" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SQLite, Sql.QueryExtensionScope.TableHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]

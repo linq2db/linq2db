@@ -22,8 +22,44 @@ using LinqToDB.Metrics;
 namespace LinqToDB
 {
 	/// <summary>
-	/// Implements abstraction over non-persistent database connection that could be released after query or transaction execution.
+	/// <see cref="IDataContext"/> implementation with non-persistent (per-operation)
+	/// connection management.
 	/// </summary>
+	/// <remarks>
+	/// <para>
+	/// <see cref="DataContext"/> represents a configured execution context:
+	/// provider + mapping + options + database connection.
+	/// </para>
+	///
+	/// <para>
+	/// Use when you want per-operation connection management or a context structure
+	/// familiar from earlier LINQ-to-database APIs.
+	/// </para>
+	///
+	/// <para><b>Connection lifetime:</b></para>
+	/// <para>
+	/// Unlike <see cref="DataConnection"/>, the underlying connection may be opened and closed
+	/// per query or command execution. Connection retention is controlled by the
+	/// <c>KeepConnectionAlive</c> setting.
+	/// </para>
+	///
+	/// <para><b>Execution model:</b></para>
+	/// <para>
+	/// LINQ queries are translated from <c>Expression Tree</c>
+	/// into an internal SQL AST, then into provider-specific SQL text,
+	/// and executed when enumerated or explicitly materialized.
+	/// </para>
+	///
+	/// <para>
+	/// This type does not introduce implicit change tracking or unit-of-work semantics;
+	/// data modification occurs only via explicit DML APIs.
+	/// </para>
+	///
+	/// <para>
+	/// Dispose the context to release provider resources and connections.
+	/// </para>
+	/// </remarks>
+	/// <ai-tags group="Connection" affects="ExecutionContext" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 	[PublicAPI]
 	public partial class DataContext : IDataContext, IInfrastructure<IServiceProvider>
 	{
@@ -579,6 +615,7 @@ namespace LinqToDB
 		/// <param name="level">Transaction isolation level.</param>
 		/// <returns>Database transaction object.</returns>
 		/// <exception cref="InvalidOperationException">Thrown when connection already has a transaction.</exception>
+		/// <ai-tags group="Connection" execution="Immediate" composability="Terminal" pipeline="SqlText" provider="ProviderDefined" />
 		public virtual DataContextTransaction BeginTransaction(IsolationLevel level)
 		{
 			AssertDisposed();
@@ -596,6 +633,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <returns>Database transaction object.</returns>
 		/// <exception cref="InvalidOperationException">Thrown when connection already has a transaction.</exception>
+		/// <ai-tags group="Connection" execution="Immediate" composability="Terminal" pipeline="SqlText" provider="ProviderDefined" />
 		public virtual DataContextTransaction BeginTransaction()
 		{
 			AssertDisposed();
@@ -615,6 +653,7 @@ namespace LinqToDB
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Database transaction object.</returns>
 		/// <exception cref="InvalidOperationException">Thrown when connection already has a transaction.</exception>
+		/// <ai-tags group="Connection" execution="Immediate" composability="Terminal" pipeline="SqlText" provider="ProviderDefined" />
 		public virtual async Task<DataContextTransaction> BeginTransactionAsync(IsolationLevel level, CancellationToken cancellationToken = default)
 		{
 			AssertDisposed();
@@ -633,6 +672,7 @@ namespace LinqToDB
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Database transaction object.</returns>
 		/// <exception cref="InvalidOperationException">Thrown when connection already has a transaction.</exception>
+		/// <ai-tags group="Connection" execution="Immediate" composability="Terminal" pipeline="SqlText" provider="ProviderDefined" />
 		public virtual async Task<DataContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
 		{
 			AssertDisposed();
@@ -786,6 +826,15 @@ namespace LinqToDB
 						throw new LinqToDBException("Invalid configuration. Configuration string or DataProvider is not provided.");
 				}
 
+				// Mapping schema selection follows the same three-branch pattern everywhere:
+				// 1. If an explicit MappingSchema is supplied, use it for this context.
+				// 2. Otherwise, if EnableContextSchemaEdit is enabled, create a writable
+				//    per-context overlay over the provider/default schema. Context-local
+				//    mapping additions then reset only the overlay id and don't mutate shared
+				//    provider schemas used by other contexts.
+				// 3. Otherwise, keep the provider/default schema as-is; if it is locked,
+				//    attempts to edit it should fail.
+				// See MappingSchema.IsLockable/IsLocked and IConfigurationID for the cache-identity reason behind this split.
 				if (options.MappingSchema != null)
 				{
 					dataContext.MappingSchema = options.MappingSchema;
@@ -838,12 +887,23 @@ namespace LinqToDB
 
 					dataContext.MappingSchema = dataContext.DataProvider.MappingSchema;
 
+					// Mapping schema selection follows the same three-branch pattern everywhere:
+					// 1. If an explicit MappingSchema is supplied, use it for this context.
+					// 2. Otherwise, if EnableContextSchemaEdit is enabled, create a writable
+					//    per-context overlay over the provider/default schema. Context-local
+					//    mapping additions then reset only the overlay id and don't mutate shared
+					//    provider schemas used by other contexts.
+					// 3. Otherwise, keep the provider/default schema as-is; if it is locked,
+					//    attempts to edit it should fail.
+					// See MappingSchema.IsLockable/IsLocked and IConfigurationID for the cache-identity reason behind this split.
 					if (options.MappingSchema != null)
 					{
 						dataContext.MappingSchema = options.MappingSchema;
 					}
 					else if (dataContext.Options.LinqOptions.EnableContextSchemaEdit)
 					{
+						// The undo action below restores the previous schema, including any
+						// writable overlay that belonged to the outer context.
 						dataContext.MappingSchema = new (dataContext.MappingSchema);
 					}
 

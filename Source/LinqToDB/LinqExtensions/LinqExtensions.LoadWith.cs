@@ -13,7 +13,7 @@ using LinqToDB.Internal.Linq;
 
 namespace LinqToDB
 {
-	public partial class LinqExtensions
+	public static partial class LinqExtensions
 	{
 		/// <summary>
 		/// Specifies associations, that should be loaded for each loaded record from current table.
@@ -43,6 +43,35 @@ namespace LinqToDB
 		/// <param name="table">Table-like query source.</param>
 		/// <param name="selector">Association selection expression.</param>
 		/// <returns>Table-like query source.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// The navigation loading directive affects SQL semantics and is emitted according to provider rules.
+		/// <para><b>LoadWith call graph:</b></para>
+		/// <code>
+		/// Queryable&lt;TEntity&gt;
+		///  ├─ LoadWith(selector)
+		///  │   └─ ILoadWithQueryable&lt;TEntity,TProperty&gt;
+		///  │       ├─ ThenLoad(...)
+		///  │       ├─ ThenLoad(..., loadFunc)
+		///  │       ├─ [add more ThenLoad links]
+		///  │       └─ Enumerate / ToList / First / ...
+		///  │           └─ executes base query + additional association queries as needed
+		///  └─ LoadWith(selector, loadFunc)
+		///      └─ same chain as above
+		/// </code>
+		/// <para><b>AI agent state transitions:</b></para>
+		/// <code>
+		/// S0: IQueryable&lt;TEntity&gt;
+		///   - LoadWith(selector)             -&gt; S1: ILoadWithQueryable&lt;TEntity,TProperty&gt;
+		///   - LoadWith(selector, loadFunc)   -&gt; S1
+		///
+		/// S1:
+		///   - ThenLoad(...)                  -&gt; S1
+		///   - ThenLoad(..., loadFunc)        -&gt; S1
+		///   - Materialization / Enumeration  -&gt; execute
+		/// </code>
+		/// </remarks>
+		/// <ai-tags group="NavigationLoading" execution="Deferred" composability="Composable" affects="JoinGraph" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> LoadWithAsTable<T>(
@@ -178,6 +207,7 @@ namespace LinqToDB
 		/// such as <c>Enumerable.Empty&lt;T&gt;().AsQueryable()</c>), the eager-load directive is ignored and the query
 		/// is returned unchanged as a passthrough — mirroring EF Core <c>Include</c> behavior.
 		/// </remarks>
+		/// <ai-tags group="NavigationLoading" execution="Deferred" composability="Composable" affects="JoinGraph" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[LinqTunnel]
 		[Pure]
 		public static ILoadWithQueryable<TEntity,TProperty> LoadWith<TEntity,TProperty>(
@@ -933,5 +963,5 @@ namespace LinqToDB
 		}
 
 		#endregion
-		}
 	}
+}
