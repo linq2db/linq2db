@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data.Common;
 using System.Diagnostics;
 using System.Linq.Expressions;
 
@@ -42,6 +43,11 @@ namespace LinqToDB.Internal.Linq
 		internal IQueryExpressions? CompiledExpressions;
 
 		internal Func<IDataContext,IQueryExpressions,object?[]?,object?[]?,IResultEnumerable<T>> GetResultEnumerable = null!;
+
+		// Set only for combinable SELECT queries (see SetRunQuery): materializes this query's rows from an
+		// externally-opened reader already positioned at its result set — used by combined multi-result-set eager loading
+		// so N child collection queries run as one command and each result set is mapped by its own query's mapper.
+		internal Func<IDataContext,IQueryExpressions,object?[]?,object?[]?,DbDataReader,IResultEnumerable<T>>? GetResultFromReader;
 
 		#endregion
 

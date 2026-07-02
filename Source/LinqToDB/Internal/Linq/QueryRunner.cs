@@ -620,6 +620,258 @@ namespace LinqToDB.Internal.Linq
 			}
 		}
 
+		// Materializes a query's rows from an externally-opened reader already positioned at its result set (the caller
+		// owns the reader lifetime and advances it with NextResult after enumeration). Mirrors BasicResultEnumerable but
+		// does NOT open its own reader — used by combined multi-result-set eager loading, where N child queries run as
+		// one command and each result set is mapped by its own query's mapper. The runner is created only to give the
+		// mapper its context (DataContext / parameters / RowsCount); its command is never executed.
+		sealed class ExternalReaderResultEnumerable<T> : IResultEnumerable<T>
+		{
+			readonly IDataContext      _dataContext;
+			readonly IQueryExpressions _expressions;
+			readonly Query             _query;
+			readonly object?[]?        _parameters;
+			readonly object?[]?        _preambles;
+			readonly int               _queryNumber;
+			readonly Mapper<T>         _mapper;
+			readonly DbDataReader      _dataReader;
+
+			public ExternalReaderResultEnumerable(
+				IDataContext      dataContext,
+				IQueryExpressions expressions,
+				Query             query,
+				object?[]?        parameters,
+				object?[]?        preambles,
+				int               queryNumber,
+				Mapper<T>         mapper,
+				DbDataReader      dataReader)
+			{
+				_dataContext = dataContext;
+				_expressions = expressions;
+				_query       = query;
+				_parameters  = parameters;
+				_preambles   = preambles;
+				_queryNumber = queryNumber;
+				_mapper      = mapper;
+				_dataReader  = dataReader;
+			}
+
+			public IEnumerator<T> GetEnumerator()
+			{
+				using var runner = _dataContext.GetQueryRunner(_query, _dataContext, _queryNumber, _expressions, _parameters, _preambles);
+
+				var dataReader = _dataReader;
+
+				if (dataReader.Read())
+				{
+					DbDataReader origDataReader;
+
+					if (_dataContext is IInterceptable<IUnwrapDataObjectInterceptor> { Interceptor: { } interceptor })
+					{
+						using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
+							origDataReader = interceptor.UnwrapDataReader(_dataContext, dataReader);
+					}
+					else
+					{
+						origDataReader = dataReader;
+					}
+
+					var mapperInfo = _mapper.GetMapperInfo(_dataContext, runner, origDataReader);
+
+					do
+					{
+						var res = _mapper.Map(_dataContext, runner, origDataReader, ref mapperInfo);
+						runner.RowsCount++;
+						yield return res;
+					}
+					while (dataReader.Read());
+				}
+			}
+
+			IEnumerator IEnumerable.GetEnumerator()
+			{
+				return GetEnumerator();
+			}
+
+			public async IAsyncEnumerable<T> GetAsyncEnumerable([EnumeratorCancellation] CancellationToken cancellationToken = default)
+			{
+				var runner = _dataContext.GetQueryRunner(_query, _dataContext, _queryNumber, _expressions, _parameters, _preambles);
+				await using var _2 = runner.ConfigureAwait(false);
+
+				var dataReader = _dataReader;
+
+				cancellationToken.ThrowIfCancellationRequested();
+
+				if (await dataReader.ReadAsync(cancellationToken).ConfigureAwait(false))
+				{
+					DbDataReader origDataReader;
+
+					if (_dataContext is IInterceptable<IUnwrapDataObjectInterceptor> { Interceptor: { } interceptor })
+					{
+						using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
+							origDataReader = interceptor.UnwrapDataReader(_dataContext, dataReader);
+					}
+					else
+					{
+						origDataReader = dataReader;
+					}
+
+					var mapperInfo = _mapper.GetMapperInfo(_dataContext, runner, origDataReader);
+
+					do
+					{
+						var res = _mapper.Map(_dataContext, runner, origDataReader, ref mapperInfo);
+						runner.RowsCount++;
+						yield return res;
+						cancellationToken.ThrowIfCancellationRequested();
+					}
+					while (await dataReader.ReadAsync(cancellationToken).ConfigureAwait(false));
+				}
+			}
+
+			public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+			{
+				return GetAsyncEnumerable(cancellationToken).GetAsyncEnumerator(cancellationToken);
+			}
+		}
+
+		// Runs the main query together with all its combinable eager-load child collections as ONE multi-result-set
+		// command: each child result set is buffered into its PreambleResult (mapped by that child query's own
+		// materializer), then the main result set streams lazily from the SAME reader — this enumerable owns the reader
+		// for the stream's lifetime. Collapses N+1 eager round-trips into 1; created only when every preamble is
+		// combinable and the provider supports multi-statement batches with multiple result sets (see
+		// TryGetCombinedEagerEnumerable), otherwise callers fall back to sequential InitPreambles.
+		sealed class CombinedEagerResultEnumerable<T> : IResultEnumerable<T>
+		{
+			readonly IDataContext      _dataContext;
+			readonly IQueryExpressions _expressions;
+			readonly Query<T>          _query;
+			readonly object?[]?        _parameters;
+			readonly Preamble[]        _preambles;
+
+			public CombinedEagerResultEnumerable(
+				IDataContext      dataContext,
+				IQueryExpressions expressions,
+				Query<T>          query,
+				object?[]?        parameters,
+				Preamble[]        preambles)
+			{
+				_dataContext = dataContext;
+				_expressions = expressions;
+				_query       = query;
+				_parameters  = parameters;
+				_preambles   = preambles;
+			}
+
+			// Assembles the [child1 … childN, main] statement list and the merged parameter values — every child's and
+			// the main's SqlParameter->value entries in one SqlParameterValues, keyed by AST node.
+			(SqlStatement[] Statements, SqlParameterValues Values) Prepare()
+			{
+				var statements = new SqlStatement[_preambles.Length + 1];
+				var values     = new SqlParameterValues();
+
+				for (var i = 0; i < _preambles.Length; i++)
+				{
+					statements[i] = _preambles[i].GetCombinableStatement()!;
+					_preambles[i].AddCombinableParameterValues(values, _expressions, _dataContext, _parameters);
+				}
+
+				statements[_preambles.Length] = _query.Queries[0].Statement;
+				SetParameters(_query, _expressions, _dataContext, _parameters, values);
+
+				return (statements, values);
+			}
+
+			public IEnumerator<T> GetEnumerator()
+			{
+				using var _ = ActivityService.Start(ActivityID.GetIEnumerable);
+
+				var (statements, values) = Prepare();
+
+				var preambles = new object?[_preambles.Length];
+				var reader    = DataConnection.QueryRunner.ExecuteCombinedReader((DataConnection)_dataContext, statements, values);
+
+				try
+				{
+					var dr = reader.DataReader!;
+
+					for (var i = 0; i < _preambles.Length; i++)
+					{
+						preambles[i] = _preambles[i].MaterializeFromReader(_dataContext, _expressions, _parameters, preambles, dr);
+						dr.NextResult();
+					}
+
+					foreach (var item in _query.GetResultFromReader!(_dataContext, _expressions, _parameters, preambles, dr))
+						yield return item;
+				}
+				finally
+				{
+					reader.Dispose();
+				}
+			}
+
+			IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+			public async IAsyncEnumerable<T> GetAsyncEnumerable([EnumeratorCancellation] CancellationToken cancellationToken = default)
+			{
+				var (statements, values) = Prepare();
+
+				var preambles = new object?[_preambles.Length];
+				var reader    = await DataConnection.QueryRunner.ExecuteCombinedReaderAsync((DataConnection)_dataContext, statements, values, cancellationToken).ConfigureAwait(false);
+
+				try
+				{
+					var dr = reader.DataReader!;
+
+					for (var i = 0; i < _preambles.Length; i++)
+					{
+						preambles[i] = await _preambles[i].MaterializeFromReaderAsync(_dataContext, _expressions, _parameters, preambles, dr, cancellationToken).ConfigureAwait(false);
+						await dr.NextResultAsync(cancellationToken).ConfigureAwait(false);
+					}
+
+					await foreach (var item in _query.GetResultFromReader!(_dataContext, _expressions, _parameters, preambles, dr).WithCancellation(cancellationToken).ConfigureAwait(false))
+						yield return item;
+				}
+				finally
+				{
+					await reader.DisposeAsync().ConfigureAwait(false);
+				}
+			}
+
+			public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+				=> GetAsyncEnumerable(cancellationToken).GetAsyncEnumerator(cancellationToken);
+		}
+
+		// Returns a combined N+1 -> 1 eager-loading enumerable for the main query, or null when the query can't be
+		// combined (no combinable-reader materializer, no preambles, provider lacks multi-statement / multi-result-set
+		// support, the main query isn't a single statement, or any preamble isn't combinable) — callers then fall back
+		// to the sequential InitPreambles + GetResultEnumerable path.
+		internal static IResultEnumerable<T>? TryGetCombinedEagerEnumerable<T>(
+			Query<T> query, IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters)
+		{
+			if (query.GetResultFromReader == null)
+				return null;
+
+			var preambles = query.PreamblesArray;
+
+			if (preambles == null || preambles.Length == 0)
+				return null;
+
+			if (dataContext is not DataConnection dataConnection
+				|| !dataConnection.DataProvider.SqlProviderFlags.IsMultiStatementBatchSupported
+				|| !dataConnection.DataProvider.SqlProviderFlags.IsMultipleResultSetsSupported)
+				return null;
+
+			if (query.Queries.Count != 1)
+				return null;
+
+			foreach (var preamble in preambles)
+				if (!preamble.CanCombine || preamble.GetCombinableStatement() == null)
+					return null;
+
+			return new CombinedEagerResultEnumerable<T>(dataContext, expressions, query, parameters, preambles);
+		}
+
 		static IResultEnumerable<T> ExecuteQuery<T>(
 			Query             query,
 			IDataContext      dataContext,
@@ -646,6 +898,9 @@ namespace LinqToDB.Internal.Linq
 				using var _ = ActivityService.Start(ActivityID.GetIEnumerable);
 				return executeQuery(query, db, mapper, expr, ps, preambles, 0);
 			};
+
+			query.GetResultFromReader = (db, expr, ps, preambles, reader) =>
+				new ExternalReaderResultEnumerable<T>(db, expr, query, ps, preambles, 0, mapper, reader);
 		}
 
 		static readonly PropertyInfo _dataContextInfo = MemberHelper.PropertyOf<IQueryRunner>(p => p.DataContext);

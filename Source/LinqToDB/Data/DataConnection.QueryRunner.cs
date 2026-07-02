@@ -460,6 +460,90 @@ namespace LinqToDB.Data
 				_executionQuery = CreateExecutionQuery(_dataConnection, Query.Queries[QueryNumber], parameterValues, forGetSqlText);
 			}
 
+			// Renders several already-built (structurally optimized at build time) statements into ONE combined
+			// multi-statement command through a SINGLE shared OptimizationContext: each statement is dialect-converted
+			// during BuildSql (which never mutates the shared cached statement) while the shared parameter normalizer
+			// uniquifies/dedups parameter names ACROSS the whole command — this is what lets sibling eager-load queries
+			// that each render @p0/@intParam merge into one command without a name collision.
+			static (string Sql, DbParameter[]? Parameters) RenderCombined(
+				DataConnection dataConnection, IReadOnlyList<SqlStatement> statements, IReadOnlyParameterValues? parameterValues)
+			{
+				var options      = dataConnection.Options;
+				var sqlOptimizer = dataConnection.DataProvider.GetSqlOptimizer (options);
+				var sqlBuilder   = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema, options);
+				var factory      = sqlOptimizer.CreateSqlExpressionFactory(dataConnection.MappingSchema, options);
+
+				var optimizationContext = new OptimizationContext(
+					new EvaluationContext(parameterValues),
+					options,
+					dataConnection.DataProvider.SqlProviderFlags,
+					dataConnection.MappingSchema,
+					sqlOptimizer.CreateOptimizerVisitor(false),
+					sqlOptimizer.CreateConvertVisitor(false),
+					factory,
+					dataConnection.DataProvider.SqlProviderFlags.IsParameterOrderDependent,
+					isAlreadyOptimizedAndConverted : false,
+					parametersNormalizerFactory    : dataConnection.DataProvider.GetQueryParameterNormalizer);
+
+				var serviceProvider = ((IInfrastructure<IServiceProvider>)dataConnection.DataProvider).Instance;
+
+				using var sb = Pools.StringBuilder.Allocate();
+
+				for (var i = 0; i < statements.Count; i++)
+				{
+					var aliases = PrepareStepAliases(serviceProvider, statements[i]);
+
+					if (i > 0)
+						sb.Value.Append(";\n");
+
+					using (ActivityService.Start(ActivityID.BuildSql))
+						sqlBuilder.BuildSql(0, statements[i], sb.Value, optimizationContext, aliases, null, 0);
+				}
+
+				var sqlParameters = optimizationContext.GetParameters();
+
+				DbParameter[]? dbParameters = null;
+
+				if (sqlParameters.Count > 0)
+				{
+					var dbCommand = dataConnection.GetOrCreateCommand();
+
+					dbParameters = new DbParameter[sqlParameters.Count];
+
+					for (var i = 0; i < sqlParameters.Count; i++)
+					{
+						var sqlp = sqlParameters[i];
+						dbParameters[i] = CreateParameter(dataConnection, dbCommand, sqlp, sqlp.GetParameterValue(parameterValues));
+					}
+				}
+
+				return (sb.Value.ToString(), dbParameters);
+			}
+
+			// Executes an assembled eager-loading scenario (child collection queries followed by the main query) as ONE
+			// multi-result-set command and returns the reader positioned at the first result set. The caller harvests
+			// each child result set (buffered) then streams the main result set, and owns the returned reader.
+			internal static DataReaderWrapper ExecuteCombinedReader(
+				DataConnection dataConnection, IReadOnlyList<SqlStatement> statements, IReadOnlyParameterValues? parameterValues)
+			{
+				var (sql, dbParameters) = RenderCombined(dataConnection, statements, parameterValues);
+
+				InitCommand(dataConnection, new CommandWithParameters(sql, []), dbParameters, null);
+
+				return dataConnection.ExecuteDataReader(CommandBehavior.Default);
+			}
+
+			// In case of change the logic of this method, DO NOT FORGET to change the sibling method.
+			internal static async Task<DataReaderWrapper> ExecuteCombinedReaderAsync(
+				DataConnection dataConnection, IReadOnlyList<SqlStatement> statements, IReadOnlyParameterValues? parameterValues, CancellationToken cancellationToken)
+			{
+				var (sql, dbParameters) = RenderCombined(dataConnection, statements, parameterValues);
+
+				InitCommand(dataConnection, new CommandWithParameters(sql, []), dbParameters, null);
+
+				return await dataConnection.ExecuteDataReaderAsync(CommandBehavior.Default, cancellationToken).ConfigureAwait(false);
+			}
+
 			#region Scenario interpreter
 
 			// One unified value returned by the sequential scenario interpreter; the public execute methods project the
@@ -708,7 +792,8 @@ namespace LinqToDB.Data
 			{
 				InitCommand(dataConnection, executionQuery, commandIndex);
 
-				await using var rd = await dataConnection.ExecuteDataReaderAsync(CommandBehavior.Default, cancellationToken).ConfigureAwait(false);
+				var rd = await dataConnection.ExecuteDataReaderAsync(CommandBehavior.Default, cancellationToken).ConfigureAwait(false);
+				await using var _ = rd.ConfigureAwait(false);
 
 				await WalkCombinedResultSetsAsync(rd.DataReader!, group.StepIndexes, steps, async (i, dr) =>
 				{

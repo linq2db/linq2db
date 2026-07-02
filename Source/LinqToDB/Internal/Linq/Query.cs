@@ -166,6 +166,10 @@ namespace LinqToDB.Internal.Linq
 			return false;
 		}
 
+		// Exposes the preamble array to QueryRunner.TryGetCombinedEagerEnumerable so the main query and its combinable
+		// eager-load children can be assembled into one multi-result-set command.
+		internal Preamble[]? PreamblesArray => _preambles;
+
 		internal object?[]? InitPreambles(IDataContext dc, IQueryExpressions expressions, object?[]? ps)
 		{
 			if (_preambles == null)

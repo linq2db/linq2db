@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
@@ -194,6 +195,36 @@ namespace LinqToDB.Internal.Linq.Builder
 						result.Add(e.Key, e.Detail);
 					}
 				}
+
+				return result;
+			}
+
+			public override bool CanCombine => query.GetResultFromReader != null;
+
+			public override SqlStatement? GetCombinableStatement()
+				=> query.Queries.Count == 1 ? query.Queries[0].Statement : null;
+
+			public override void AddCombinableParameterValues(SqlParameterValues values, IQueryExpressions expressions, IDataContext dataContext, object?[]? parameters)
+			{
+				QueryRunner.SetParameters(query, expressions, dataContext, parameters, values);
+			}
+
+			public override object MaterializeFromReader(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles, DbDataReader dataReader)
+			{
+				var result = new PreambleResult<TKey, T>();
+
+				foreach (var e in query.GetResultFromReader!(dataContext, expressions, parameters, preambles, dataReader))
+					result.Add(e.Key, e.Detail);
+
+				return result;
+			}
+
+			public override async Task<object> MaterializeFromReaderAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles, DbDataReader dataReader, CancellationToken cancellationToken)
+			{
+				var result = new PreambleResult<TKey, T>();
+
+				await foreach (var e in query.GetResultFromReader!(dataContext, expressions, parameters, preambles, dataReader).WithCancellation(cancellationToken).ConfigureAwait(false))
+					result.Add(e.Key, e.Detail);
 
 				return result;
 			}

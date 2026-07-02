@@ -206,10 +206,20 @@ namespace LinqToDB.Internal.Linq
 			var transaction = await StartLoadTransactionAsync(query, cancellationToken).ConfigureAwait(false);
 			await using var _ = (transaction ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false);
 
-			Preambles = await query.InitPreamblesAsync(DataContext, expressions, Parameters, cancellationToken)
-				.ConfigureAwait(false);
+			var combined = QueryRunner.TryGetCombinedEagerEnumerable(query, DataContext, expressions, Parameters);
 
-			var enumerable = (IAsyncEnumerable<T>)query.GetResultEnumerable(DataContext, expressions, Parameters, Preambles);
+			IAsyncEnumerable<T> enumerable;
+			if (combined != null)
+			{
+				enumerable = combined;
+			}
+			else
+			{
+				Preambles = await query.InitPreamblesAsync(DataContext, expressions, Parameters, cancellationToken)
+					.ConfigureAwait(false);
+
+				enumerable = (IAsyncEnumerable<T>)query.GetResultEnumerable(DataContext, expressions, Parameters, Preambles);
+			}
 
 			var enumerator = enumerable.GetAsyncEnumerator(cancellationToken);
 			await using (enumerator.ConfigureAwait(false))
@@ -252,11 +262,21 @@ namespace LinqToDB.Internal.Linq
 				var tr = await StartLoadTransactionAsync(query, cancellationToken).ConfigureAwait(false);
 				try
 				{
-					Preambles = await query.InitPreamblesAsync(DataContext, expressions, Parameters, cancellationToken)
-						.ConfigureAwait(false);
-					return Tuple.Create(
-						query.GetResultEnumerable(DataContext, expressions, Parameters, Preambles)
-						.GetAsyncEnumerator(cancellationToken), tr);
+					var combined = QueryRunner.TryGetCombinedEagerEnumerable(query, DataContext, expressions, Parameters);
+
+					IResultEnumerable<T> enumerable;
+					if (combined != null)
+					{
+						enumerable = combined;
+					}
+					else
+					{
+						Preambles = await query.InitPreamblesAsync(DataContext, expressions, Parameters, cancellationToken)
+							.ConfigureAwait(false);
+						enumerable = query.GetResultEnumerable(DataContext, expressions, Parameters, Preambles);
+					}
+
+					return Tuple.Create(enumerable.GetAsyncEnumerator(cancellationToken), tr);
 				}
 				catch
 				{
@@ -357,6 +377,10 @@ namespace LinqToDB.Internal.Linq
 
 			using (StartLoadTransaction(query))
 			{
+				var combined = QueryRunner.TryGetCombinedEagerEnumerable(query, DataContext, expressions, Parameters);
+				if (combined != null)
+					return combined.GetEnumerator();
+
 				Preambles = query.InitPreambles(DataContext, expressions, Parameters);
 
 				return query.GetResultEnumerable(DataContext, expressions, Parameters, Preambles).GetEnumerator();
@@ -376,6 +400,10 @@ namespace LinqToDB.Internal.Linq
 
 			using (StartLoadTransaction(query))
 			{
+				var combined = QueryRunner.TryGetCombinedEagerEnumerable(query, DataContext, expressions, Parameters);
+				if (combined != null)
+					return combined.GetEnumerator();
+
 				Preambles = query.InitPreambles(DataContext, expressions, Parameters);
 
 				return query.GetResultEnumerable(DataContext, expressions, Parameters, Preambles).GetEnumerator();
