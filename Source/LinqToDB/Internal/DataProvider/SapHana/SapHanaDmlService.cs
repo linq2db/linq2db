@@ -36,7 +36,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 				};
 			}
 
-			return null;
+			return base.BuildCommandScenario(statement, flags, factory);
 		}
 	}
 }

@@ -49,7 +49,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 				};
 			}
 
-			return null;
+			return base.BuildCommandScenario(statement, flags, factory);
 		}
 	}
 }

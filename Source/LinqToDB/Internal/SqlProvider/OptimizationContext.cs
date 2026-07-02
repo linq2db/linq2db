@@ -126,6 +126,11 @@ namespace LinqToDB.Internal.SqlProvider
 			// must discard instance instead of Clean as it is returned by GetParameters
 			_actualParameters     = null;
 			_parametersNormalizer = null;
+			// Each rendered group is a separate DbCommand carrying only its own parameters, so the dedup map
+			// must reset at the group boundary too — otherwise a later group's parameters are collapsed onto
+			// the previous group's identities and never emitted. Breaks gated multi-group scenarios such as the
+			// InsertOrReplace/Upsert UPDATE→INSERT emulation, where both groups carry value parameters.
+			_parametersMap        = null;
 		}
 
 		public T OptimizeAndConvertAll<T>(T element, NullabilityContext nullabilityContext)

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
+using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
@@ -23,7 +24,133 @@ namespace LinqToDB.Internal.DataProvider
 		/// </summary>
 		public virtual SqlCommandScenario? BuildCommandScenario(SqlStatement statement, SqlProviderFlags flags, ISqlExpressionFactory factory)
 		{
+			if (statement is SqlInsertOrUpdateStatement insertOrUpdate)
+				return BuildInsertOrUpdateScenario(insertOrUpdate, flags, factory);
+
 			return null;
+		}
+
+		/// <summary>
+		/// Reshapes an InsertOrReplace / Upsert / InsertOrUpdate statement into the UPDATE→INSERT emulation when the
+		/// provider's native single-statement upsert can't honor it (see
+		/// <see cref="UpsertBuilder.WillEmulateInsertOrUpdate"/>); returns <see langword="null"/> to let the builder
+		/// render the native form. Running here — rather than at query-build time — means remote data contexts rebuild
+		/// the same gated scenario server-side from the serialized statement. Three gated shapes, matching the legacy
+		/// orchestration:
+		/// <list type="bullet">
+		///   <item>UPDATE, then INSERT when it affected no rows (Update.Items present, no UPDATE predicate);</item>
+		///   <item>existence-SELECT, then INSERT when absent (Update.Items empty — nothing to update);</item>
+		///   <item>existence-SELECT, then UPDATE when present / INSERT when absent (Upsert.Update.When predicate).</item>
+		/// </list>
+		/// </summary>
+		protected static SqlCommandScenario? BuildInsertOrUpdateScenario(SqlInsertOrUpdateStatement statement, SqlProviderFlags flags, ISqlExpressionFactory factory)
+		{
+			if (!UpsertBuilder.WillEmulateInsertOrUpdate(statement, flags))
+				return null;
+
+			// Reshape a CLONE, never the input. This runs at execution time and — unlike the old build-time emulation —
+			// can run more than once on the same cached / serialized statement; mutating it would leak the match keys
+			// and the UPDATE predicate across executions, and make the remote GetSqlText trace diverge from direct.
+			var work = statement.Clone();
+
+			// The INSERT keeps its own From-less, key-less query, so the keys folded into the shared query below (used by
+			// the UPDATE / existence-SELECT branches) never reach it — it stays a plain INSERT … VALUES.
+			var insertQuery = work.SelectQuery.Clone();
+			insertQuery.From.Tables.Clear();
+
+			var insertStatement = new SqlInsertStatement(insertQuery)
+			{
+				Insert             = work.Insert,
+				Tag                = work.Tag,
+				SqlQueryExtensions = work.SqlQueryExtensions,
+			};
+
+			var wsc = work.SelectQuery.Where.EnsureConjunction();
+
+			foreach (var key in work.Update.Keys)
+				wsc.AddEqual(key.Column, key.Expression!, CompareNulls.LikeSql);
+
+			var intType = factory.GetDbDataType(typeof(int));
+
+			// Common INSERT step for the two existence-SELECT shapes: run only when the row is absent.
+			var insertStep = new SqlCommandStep
+			{
+				Statement = insertStatement,
+				Kind      = SqlStepKind.NonQuery,
+				RunIf     = new SqlStepCondition { Kind = SqlStepConditionKind.ResultIsNull, SourceStepIndex = 0 },
+			};
+
+			// Upsert.Update.When: existence-SELECT gates a keys-AND-predicate UPDATE and the INSERT. The UPDATE may
+			// legitimately affect zero rows (predicate rejected an existing row), so the INSERT is gated on "row
+			// absent" — never on "zero rows updated", which would double-insert when the predicate rejects.
+			if (work.Update.Items.Count > 0 && work.UpdateWhere is { Predicates.Count: > 0 })
+			{
+				var existsSelect = work.SelectQuery.Clone(); // keys only — cloned before the predicate is folded in below
+				existsSelect.Select.Columns.Clear();
+				existsSelect.Select.Columns.Add(new SqlColumn(existsSelect, new SqlExpression(intType, "1")));
+
+				var updateSelect = work.SelectQuery; // has keys; add the When predicate for the UPDATE branch only
+				foreach (var predicate in work.UpdateWhere.Predicates)
+					updateSelect.Where.EnsureConjunction().Predicates.Add(predicate);
+
+				return new SqlCommandScenario
+				{
+					Steps =
+					[
+						new SqlCommandStep { Statement = new SqlSelectStatement(existsSelect), Kind = SqlStepKind.Scalar },
+						new SqlCommandStep
+						{
+							Statement = new SqlUpdateStatement(updateSelect)
+							{
+								Update             = work.Update,
+								Tag                = work.Tag,
+								SqlQueryExtensions = work.SqlQueryExtensions,
+							},
+							Kind  = SqlStepKind.NonQuery,
+							RunIf = new SqlStepCondition { Kind = SqlStepConditionKind.ResultIsNotNull, SourceStepIndex = 0 },
+						},
+						insertStep,
+					],
+					OutcomeSteps = [1, 2],
+				};
+			}
+
+			// Update.Items present: UPDATE first, INSERT only if it affected no rows.
+			if (work.Update.Items.Count > 0)
+			{
+				return new SqlCommandScenario
+				{
+					Steps =
+					[
+						new SqlCommandStep
+						{
+							Statement = new SqlUpdateStatement(work.SelectQuery)
+							{
+								Update             = work.Update,
+								Tag                = work.Tag,
+								SqlQueryExtensions = work.SqlQueryExtensions,
+							},
+							Kind = SqlStepKind.NonQuery,
+						},
+						insertStep with { RunIf = new SqlStepCondition { Kind = SqlStepConditionKind.ResultIsZero, SourceStepIndex = 0 } },
+					],
+					OutcomeSteps = [0, 1],
+				};
+			}
+
+			// Update.Items empty (nothing to update): existence-SELECT gates a plain INSERT.
+			work.SelectQuery.Select.Columns.Clear();
+			work.SelectQuery.Select.Columns.Add(new SqlColumn(work.SelectQuery, new SqlExpression(intType, "1")));
+
+			return new SqlCommandScenario
+			{
+				Steps =
+				[
+					new SqlCommandStep { Statement = new SqlSelectStatement(work.SelectQuery), Kind = SqlStepKind.Scalar },
+					insertStep,
+				],
+				OutcomeSteps = [1],
+			};
 		}
 
 		/// <summary>

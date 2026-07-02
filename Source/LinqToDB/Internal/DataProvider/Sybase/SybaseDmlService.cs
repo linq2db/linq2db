@@ -30,7 +30,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 				};
 			}
 
-			return null;
+			return base.BuildCommandScenario(statement, flags, factory);
 		}
 	}
 }

@@ -642,17 +642,6 @@ namespace LinqToDB.Data
 				return outcome;
 			}
 
-			static int ResolveRowsAffected(IReadOnlyList<SqlCommandStep> steps, SqlCommandExecutionContext context)
-			{
-				// Whole-operation rows-affected = the first step's count (a non-query, non-out-param step), matching the
-				// historical "command 0" semantics; -1 otherwise (out-param / skipped / scalar-first).
-				if (steps.Count > 0 && steps[0] is { Kind: SqlStepKind.NonQuery, OutParameterName: null }
-					&& context.WasExecuted(0) && context.GetResult(0) is int r)
-					return r;
-
-				return -1;
-			}
-
 			// Executes one step as its own command. stepIndex indexes the logical step (context / gate / result);
 			// commandIndex indexes the pre-rendered physical command (Commands[commandIndex]) — the two differ once steps
 			// are grouped (for the legacy bridge they are equal).
@@ -763,7 +752,11 @@ namespace LinqToDB.Data
 					}
 				}
 
-				return new ScenarioOutcome(ResolveRowsAffected(steps, context), ResolveOutcome(scenario, context));
+				// ExecuteNonQuery's rows-affected is the last-executed outcome branch's count (the UPDATE or INSERT that
+				// actually ran in the InsertOrReplace/Upsert emulation; step 0 for a plain single statement; 0 when a
+				// gate skipped every outcome branch, e.g. SELECT-exists found the row). See ResolveOutcome.
+				var resolved = ResolveOutcome(scenario, context);
+				return new ScenarioOutcome(resolved is int rowsAffected ? rowsAffected : 0, resolved);
 			}
 
 			// In case of change the logic of this method, DO NOT FORGET to change the sibling method.
@@ -869,7 +862,11 @@ namespace LinqToDB.Data
 					}
 				}
 
-				return new ScenarioOutcome(ResolveRowsAffected(steps, context), ResolveOutcome(scenario, context));
+				// ExecuteNonQuery's rows-affected is the last-executed outcome branch's count (the UPDATE or INSERT that
+				// actually ran in the InsertOrReplace/Upsert emulation; step 0 for a plain single statement; 0 when a
+				// gate skipped every outcome branch, e.g. SELECT-exists found the row). See ResolveOutcome.
+				var resolved = ResolveOutcome(scenario, context);
+				return new ScenarioOutcome(resolved is int rowsAffected ? rowsAffected : 0, resolved);
 			}
 
 			#endregion

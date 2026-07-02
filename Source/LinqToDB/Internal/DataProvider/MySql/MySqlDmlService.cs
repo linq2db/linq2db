@@ -35,7 +35,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				};
 			}
 
-			return null;
+			return base.BuildCommandScenario(statement, flags, factory);
 		}
 	}
 }

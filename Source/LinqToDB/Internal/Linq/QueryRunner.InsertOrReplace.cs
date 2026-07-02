@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 
 using LinqToDB.Internal.Cache;
 using LinqToDB.Internal.Infrastructure;
-using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
@@ -140,20 +139,10 @@ namespace LinqToDB.Internal.Linq
 
 				insertOrUpdateStatement.Update.Keys.AddRange(q.Select(i => i.i));
 
-				// Set the query.
-				//
-				// Providers whose native single-statement upsert applies one VALUES list to both branches
-				// (SAP HANA UPSERT … WITH PRIMARY KEY) cannot honor divergent Insert/Update column sets,
-				// which InsertOrReplace produces routinely for entities with SkipOnInsert / SkipOnUpdate
-				// column metadata. Detect divergence and fall back to the UPDATE→INSERT emulation in that case.
-				var needsAlignedBranchesEmulation =
-					ei.SqlProviderFlags.IsInsertOrUpdateRequiresAlignedBranches
-					&& UpsertBuilder.HasDivergentInsertOrUpdateBranches(insertOrUpdateStatement);
-
-				if (ei.SqlProviderFlags.IsInsertOrUpdateSupported && !needsAlignedBranchesEmulation)
-					SetNonQueryQuery(ei);
-				else
-					MakeAlternativeInsertOrUpdate(dataContext.MappingSchema, ei);
+				// Set the query. The native-vs-alternative choice and the UPDATE→INSERT reshape now happen at
+				// execution time in DmlServiceBase.BuildInsertOrUpdateScenario, derived from the (serialized)
+				// statement + provider flags, so remote data contexts rebuild the same scenario server-side.
+				SetNonQueryQuery(ei);
 
 				return ei;
 			}
@@ -257,95 +246,6 @@ namespace LinqToDB.Internal.Linq
 					return (int)result!;
 				}
 			}
-		}
-
-		public static void MakeAlternativeInsertOrUpdate(MappingSchema mappingSchema, Query query)
-		{
-			var firstStatement  = (SqlInsertOrUpdateStatement)query.Queries[0].Statement;
-			var cloned          = firstStatement.Clone();
-			var insertStatement = new SqlInsertStatement(cloned.SelectQuery)
-			{
-				Insert             = cloned.Insert,
-				Tag                = cloned.Tag,
-				SqlQueryExtensions = cloned.SqlQueryExtensions,
-			};
-
-			insertStatement.SelectQuery.From.Tables.Clear();
-
-			query.Queries.Add(new QueryInfo
-			{
-				Statement          = insertStatement,
-			});
-
-			var keys = firstStatement.Update.Keys;
-
-			var wsc = firstStatement.SelectQuery.Where.EnsureConjunction();
-
-			foreach (var key in keys)
-				wsc.AddEqual(key.Column, key.Expression!, CompareNulls.LikeSql);
-
-			// Special case: Upsert.Update.When on a provider that supports neither MERGE nor ON CONFLICT.
-			// The classic UPDATE-then-IF-ROWCOUNT-ZERO-INSERT shape can't tell "update rejected by predicate"
-			// apart from "row missing" — falling through to INSERT would violate the unique key. We route
-			// through a 3-query orchestration: existence-check → conditional UPDATE (with keys AND when) → INSERT.
-			if (firstStatement.Update.Items.Count > 0 && firstStatement.UpdateWhere is { Predicates.Count: > 0 })
-			{
-				// Q0: SELECT 1 WHERE keys (existence, keys only — no When).
-				var existsSelect = firstStatement.SelectQuery.Clone();
-				existsSelect.Select.Columns.Clear();
-				existsSelect.Select.Columns.Add(new SqlColumn(existsSelect, new SqlExpression(mappingSchema.GetDbDataType(typeof(int)), "1")));
-				query.Queries[0].Statement = new SqlSelectStatement(existsSelect);
-
-				// Q1: UPDATE WHERE keys AND when.
-				var updateSelect = firstStatement.SelectQuery; // already has keys in WHERE
-				foreach (var predicate in firstStatement.UpdateWhere.Predicates)
-					updateSelect.Where.EnsureConjunction().Predicates.Add(predicate);
-
-				query.Queries.Add(new QueryInfo
-				{
-					Statement          = new SqlUpdateStatement(updateSelect)
-					{
-						Update             = firstStatement.Update,
-						Tag                = firstStatement.Tag,
-						SqlQueryExtensions = firstStatement.SqlQueryExtensions,
-					},
-				});
-
-				// Q2 is already set up above (insertStatement at Queries[1] — but we need Q2 to be INSERT).
-				// Reorder: Queries[0]=existsSelect, Queries[1]=UPDATE (just added), Queries[2]=INSERT.
-				// Currently Queries = [existsSelect, INSERT, UPDATE]. Swap Queries[1] and Queries[2].
-				(query.Queries[1], query.Queries[2]) = (query.Queries[2], query.Queries[1]);
-
-				query.IsFinalized = false;
-				SetIfExistsUpdateElseInsert(query);
-				return;
-			}
-
-			if (firstStatement.Update.Items.Count > 0)
-			{
-				query.Queries[0].Statement = new SqlUpdateStatement(firstStatement.SelectQuery)
-				{
-					Update             = firstStatement.Update,
-					Tag                = firstStatement.Tag,
-					SqlQueryExtensions = firstStatement.SqlQueryExtensions,
-				};
-				query.IsFinalized = false;
-				SetNonQueryQuery2(query);
-			}
-			else
-			{
-				firstStatement.SelectQuery.Select.Columns.Clear();
-				firstStatement.SelectQuery.Select.Columns.Add(new SqlColumn(firstStatement.SelectQuery, new SqlExpression(mappingSchema.GetDbDataType(typeof(int)), "1")));
-				query.Queries[0].Statement = new SqlSelectStatement(firstStatement.SelectQuery);
-				query.IsFinalized          = false;
-				SetQueryQuery2(query);
-			}
-
-			query.Queries.Add(new QueryInfo
-			{
-				Statement  = new SqlSelectStatement(firstStatement.SelectQuery),
-			});
-			query.IsFinalized = false;
 		}
 	}
 }
