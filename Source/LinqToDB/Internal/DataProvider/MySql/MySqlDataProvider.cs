@@ -59,6 +59,11 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			SqlProviderFlags.IsTakeWithInAllAnySomeSubquerySupported = false;
 			SqlProviderFlags.MaxColumnCount = 4096;
 
+			// MySQL runs multiple statements in one command and returns their result sets in order (NextResult),
+			// so eager loading combines the main query + child collections into one multi-result-set round-trip.
+			SqlProviderFlags.IsMultiStatementBatchSupported = true;
+			SqlProviderFlags.IsMultipleResultSetsSupported  = true;
+
 			// MySQL/MariaDB emit InsertOrUpdate as INSERT ... ON DUPLICATE KEY UPDATE, which
 			// has no WHERE clause on the UPDATE branch. Route Upsert.Update.When through
 			// the alternative UPDATE→INSERT emulation instead.
