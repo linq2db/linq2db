@@ -63,14 +63,14 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (level == 0)
 			{
 				// A physical column shared by several inheritance siblings (distinct members mapped to the
-				// same column) must be projected only once. Cache the value expression built for the first
-				// member that maps each physical column and reuse it for later siblings that read the column
-				// identically — same member type and value converter — so they collapse onto a single SELECT
+				// same column) must be projected only once per read-shape. Cache the value expression built
+				// for each distinct read-shape (member type + value converter) of a physical column and reuse
+				// it for later siblings that read the column identically, so they collapse onto a single SELECT
 				// column. Each assignment keeps its own member as the bind target, so the per-type
-				// discriminator switch still assigns each subtype's member. Siblings that read the column
-				// differently (different type or converter), and columns with distinct physical names, are
-				// built independently and stay separate.
-				var sharedColumns = new Dictionary<string, (ColumnDescriptor Column, Expression Expression)>(StringComparer.Ordinal);
+				// discriminator switch still assigns each subtype's member. A list per physical column is kept
+				// (not just the first shape) so that two later siblings sharing a shape that differs from the
+				// first-seen one still collapse. Columns with distinct physical names stay separate.
+				var sharedColumns = new Dictionary<string, List<(ColumnDescriptor Column, Expression Expression)>>(StringComparer.Ordinal);
 
 				foreach (var column in columns)
 				{
@@ -90,19 +90,27 @@ namespace LinqToDB.Internal.Linq.Builder
 						var memberInfo = declaringType.GetMemberEx(column.MemberInfo) ??
 						                 throw new InvalidOperationException();
 
-						Expression me;
-						if (sharedColumns.TryGetValue(column.ColumnName, out var shared)
-							&& shared.Column.MemberType == column.MemberType
-							&& ReferenceEquals(shared.Column.ValueConverter, column.ValueConverter))
+						Expression? me = null;
+						if (sharedColumns.TryGetValue(column.ColumnName, out var shapes))
 						{
-							me = shared.Expression;
+							foreach (var shape in shapes)
+							{
+								if (shape.Column.MemberType == column.MemberType
+									&& ReferenceEquals(shape.Column.ValueConverter, column.ValueConverter))
+								{
+									me = shape.Expression;
+									break;
+								}
+							}
 						}
-						else
+
+						if (me == null)
 						{
 							var objExpression = SequenceHelper.EnsureType(currentPath, declaringType);
 							me = MakeAssignExpression(objExpression, memberInfo, column);
-							if (!sharedColumns.ContainsKey(column.ColumnName))
-								sharedColumns[column.ColumnName] = (column, me);
+							if (shapes == null)
+								sharedColumns[column.ColumnName] = shapes = [];
+							shapes.Add((column, me));
 						}
 
 						members.Add(new SqlGenericConstructorExpression.Assignment(memberInfo, me,

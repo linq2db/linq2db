@@ -403,6 +403,44 @@ namespace Tests.Linq
 		class TphNameCollisionTypeA : TphNameCollisionBase { [Column("ExtraA")] public string? Extra { get; set; } }
 		class TphNameCollisionTypeB : TphNameCollisionBase { [Column("Shared")] public string? Extra { get; set; } }
 
+		[Test]
+		public void TPH_SiblingColumn_ThreeSiblingsDivergentReadShapes([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<TphDupColBase>();
+
+			db.Insert(new TphDupColFirst  { Id = 1, Payload = 10 });
+			db.Insert(new TphDupColSecond { Id = 2, Payload = 20 });
+			db.Insert(new TphDupColThird  { Id = 3, Payload = 30 });
+
+			// Three siblings map the same physical column. The first reads it as long; the next two read it
+			// identically as int and must collapse onto a single projected column — so Payload appears in the
+			// SELECT once per distinct read-shape (twice: long + int), not three times. Before the cache fix
+			// only the first read-shape per physical column was cached, so the two int siblings each rebuilt a
+			// projection and the column was emitted three times.
+			var query = db.GetTable<TphDupColBase>().OrderBy(r => r.Id);
+
+			var sql = query.ToSqlQuery().Sql;
+			Assert.That(sql.Split(["[Payload]"], System.StringSplitOptions.None).Length - 1, Is.EqualTo(2), sql);
+
+			var all = query.ToArray();
+			Assert.That(all, Has.Length.EqualTo(3));
+		}
+
+		[Table("TphDupCol")]
+		[InheritanceMapping(Code = "D1", IsDefault = true, Type = typeof(TphDupColFirst))]
+		[InheritanceMapping(Code = "D2", Type = typeof(TphDupColSecond))]
+		[InheritanceMapping(Code = "D3", Type = typeof(TphDupColThird))]
+		abstract class TphDupColBase
+		{
+			[Column(IsDiscriminator = true)] public string? Kind { get; set; }
+			[PrimaryKey] public int Id { get; set; }
+		}
+
+		class TphDupColFirst  : TphDupColBase { [Column("Payload")] public long Payload { get; set; } }
+		class TphDupColSecond : TphDupColBase { [Column("Payload")] public int  Payload { get; set; } }
+		class TphDupColThird  : TphDupColBase { [Column("Payload")] public int  Payload { get; set; } }
+
 		[ActiveIssue("Sibling subtypes mapping the same physical column with different ValueConverters share one SqlField/ColumnDescriptor, so the second sibling's converter is not applied on read (pre-existing, independent of the duplicate-column projection fix).")]
 		[Test]
 		public void TPH_SiblingColumn_DifferentValueConverters([IncludeDataSources(TestProvName.AllSQLite)] string context)
