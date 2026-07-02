@@ -41,7 +41,7 @@ namespace Tests
 				isHidden: false),
 			new CommandLineOption(
 				TestCommandLine.TestProgressOption,
-				"Write the live test-progress heartbeat. Optional value: a target directory or a .json file path; omit for the default path under .build/.claude.",
+				"Write the live test-progress heartbeat. Optional value: a target directory or a .json file path; omit for the default path under .build/.agents.",
 				ArgumentArity.ZeroOrOne,
 				isHidden: false),
 		];
