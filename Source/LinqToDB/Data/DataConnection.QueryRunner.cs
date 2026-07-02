@@ -465,6 +465,8 @@ namespace LinqToDB.Data
 			// MaxStatementsPerCombinedGroup, which guards provider parameter/batch limits). The cap is soft — a command
 			// may overshoot by the last statement appended, and a single statement is never split. 100 KB keeps commands
 			// well under provider batch-size limits and parser pressure while rarely splitting.
+			// TODO: make this provider-dependent — max command/packet/batch size differs per DataProvider; 100 KB is a
+			// conservative provider-agnostic placeholder for now.
 			const int MaxCombinedSqlLength = 100_000;
 
 			// Renders the given (already build-optimized) statements into ONE OR MORE combined multi-statement commands,
