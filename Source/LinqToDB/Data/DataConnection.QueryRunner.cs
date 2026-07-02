@@ -159,7 +159,12 @@ namespace LinqToDB.Data
 
 			private sealed record CommandWithParameters(string Command, IReadOnlyList<SqlParameter> SqlParameters);
 
-			private sealed record PreparedQuery(CommandWithParameters[] Commands, SqlStatement Statement, IReadOnlyCollection<string>? QueryHints);
+			// Cached in query.Context on first compile so a re-run reuses both the rendered commands and the logical
+			// scenario (the interpreter needs the real scenario for combined grouping / forwarding — the bridge can't
+			// re-infer those).
+			private sealed record CachedScenario(CommandWithParameters[] Commands, SqlCommandScenario? Scenario);
+
+			private sealed record PreparedQuery(CommandWithParameters[] Commands, SqlStatement Statement, IReadOnlyCollection<string>? QueryHints, SqlCommandScenario? Scenario);
 
 			private sealed record ExecutionPreparedQuery(PreparedQuery PreparedQuery, DbParameter[]?[] CommandsParameters);
 
@@ -187,9 +192,9 @@ namespace LinqToDB.Data
 					var statement = query.Statement;
 					var options   = query.DataOptions ?? dataConnection.Options;
 
-					if (query.Context is CommandWithParameters[] context)
+					if (query.Context is CachedScenario cached)
 					{
-						return new PreparedQuery(context, statement, dataConnection.GetNextCommandHints(!forGetSqlText));
+						return new PreparedQuery(cached.Commands, statement, dataConnection.GetNextCommandHints(!forGetSqlText), cached.Scenario);
 					}
 
 					var continuousRun = query.IsContinuousRun;
@@ -308,7 +313,7 @@ namespace LinqToDB.Data
 
 					if (optimizeAndConvertAll)
 					{
-						query.Context = commands;
+						query.Context = new CachedScenario(commands, scenario);
 
 						// clear aliases, they are not needed after SQL generation.
 						//
@@ -317,7 +322,7 @@ namespace LinqToDB.Data
 
 					query.IsContinuousRun = true;
 
-					return new PreparedQuery(commands, statement, dataConnection.GetNextCommandHints(!forGetSqlText));
+					return new PreparedQuery(commands, statement, dataConnection.GetNextCommandHints(!forGetSqlText), scenario);
 				}
 				finally
 				{
@@ -647,7 +652,7 @@ namespace LinqToDB.Data
 						.ConfigureAwait(false);
 				}
 
-				return (await ExecuteScenarioAsync(dataConnection, executionQuery, BuildSequentialScenario(executionQuery, SqlStepKind.NonQuery), cancellationToken).ConfigureAwait(false)).RowsAffected;
+				return (await ExecuteScenarioAsync(dataConnection, executionQuery, (executionQuery.PreparedQuery.Scenario ?? BuildSequentialScenario(executionQuery, SqlStepKind.NonQuery)), cancellationToken).ConfigureAwait(false)).RowsAffected;
 			}
 
 			// In case of change the logic of this method, DO NOT FORGET to change the sibling method.
@@ -660,7 +665,7 @@ namespace LinqToDB.Data
 					return dataConnection.ExecuteNonQuery();
 				}
 
-				return ExecuteScenario(dataConnection, executionQuery, BuildSequentialScenario(executionQuery, SqlStepKind.NonQuery)).RowsAffected;
+				return ExecuteScenario(dataConnection, executionQuery, (executionQuery.PreparedQuery.Scenario ?? BuildSequentialScenario(executionQuery, SqlStepKind.NonQuery))).RowsAffected;
 			}
 
 			public override int ExecuteNonQuery()
@@ -722,7 +727,7 @@ namespace LinqToDB.Data
 					return await dataConnection.ExecuteScalarDataAsync(cancellationToken).ConfigureAwait(false);
 				}
 
-				return (await ExecuteScenarioAsync(dataConnection, executionQuery, BuildSequentialScenario(executionQuery, SqlStepKind.Scalar), cancellationToken).ConfigureAwait(false)).Scalar;
+				return (await ExecuteScenarioAsync(dataConnection, executionQuery, (executionQuery.PreparedQuery.Scenario ?? BuildSequentialScenario(executionQuery, SqlStepKind.Scalar)), cancellationToken).ConfigureAwait(false)).Scalar;
 			}
 
 			// In case of change the logic of this method, DO NOT FORGET to change the sibling method.
@@ -746,7 +751,7 @@ namespace LinqToDB.Data
 					return dataConnection.ExecuteScalar();
 				}
 
-				return ExecuteScenario(dataConnection, executionQuery, BuildSequentialScenario(executionQuery, SqlStepKind.Scalar)).Scalar;
+				return ExecuteScenario(dataConnection, executionQuery, (executionQuery.PreparedQuery.Scenario ?? BuildSequentialScenario(executionQuery, SqlStepKind.Scalar))).Scalar;
 			}
 
 			private static DbParameter? GetIdentityParameter(DataConnection dataConnection, ExecutionPreparedQuery executionQuery)
@@ -918,7 +923,7 @@ namespace LinqToDB.Data
 					return await _dataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(false);
 				}
 
-				return (await ExecuteScenarioAsync(_dataConnection, _executionQuery!, BuildSequentialScenario(_executionQuery!, SqlStepKind.NonQuery), cancellationToken).ConfigureAwait(false)).RowsAffected;
+				return (await ExecuteScenarioAsync(_dataConnection, _executionQuery!, (_executionQuery!.PreparedQuery.Scenario ?? BuildSequentialScenario(_executionQuery!, SqlStepKind.NonQuery)), cancellationToken).ConfigureAwait(false)).RowsAffected;
 			}
 
 			public override async Task<object?> ExecuteScalarAsync(CancellationToken cancellationToken)
