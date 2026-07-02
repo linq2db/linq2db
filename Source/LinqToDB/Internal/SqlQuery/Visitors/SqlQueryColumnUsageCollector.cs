@@ -77,7 +77,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					v.RegisterColumn(c);
 				}
 
-				if (e is SqlField { Table: SqlCteTable cte } f)
+				if (e is SqlCteTableField { CteField.Column: { } cteBodyColumn1 })
+				{
+					v.RegisterColumn(cteBodyColumn1);
+				}
+				else if (e is SqlField { Table: SqlCteTable cte } f)
 				{
 					for (var i = 0; i < cte.Cte!.Fields.Count; i++)
 					{
@@ -92,6 +96,16 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 				return true;
 			});
+		}
+
+		protected internal override IQueryElement VisitSqlCteTableField(SqlCteTableField element)
+		{
+			if (element.CteField?.Column is { } bodyColumn)
+			{
+				RegisterColumn(bodyColumn);
+			}
+
+			return element;
 		}
 
 		protected internal override IQueryElement VisitSqlFieldReference(SqlField element)

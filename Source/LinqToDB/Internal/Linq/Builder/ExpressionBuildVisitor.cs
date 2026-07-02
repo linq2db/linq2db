@@ -873,14 +873,21 @@ namespace LinqToDB.Internal.Linq.Builder
 					return translatedExposed;
 				}
 
-				if (TranslateMember(BuildContext, node, out var translatedMember))
+				// Honor PreferClientCalculation only for a mapped function that carries an [Expression] attribute
+				// (MappedFunctionAllowsClientCalculation). Functions like Sql.ToNullable deliberately carry no attribute and
+				// are translated server-side by SqlFunctionsMemberTranslatorBase, so they fail the check and keep translating;
+				// structural LINQ methods (aggregates) likewise have no attribute and translate as usual.
+				if (!PreferClientCalculation(node) || !MappedFunctionAllowsClientCalculation(node.Method))
 				{
-					return Visit(translatedMember);
-				}
+					if (TranslateMember(BuildContext, node, out var translatedMember))
+					{
+						return Visit(translatedMember);
+					}
 
-				if (HandleExtension(BuildContext, node, out translatedMember))
-				{
-					return Visit(translatedMember);
+					if (HandleExtension(BuildContext, node, out translatedMember))
+					{
+						return Visit(translatedMember);
+					}
 				}
 
 				if (HandleValue(node, out var translated))
@@ -1403,7 +1410,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var table = SequenceHelper.GetTableOrCteContext(Builder, expr);
 			if (table != null)
 			{
-				var allPlaceholder = CreatePlaceholder(table.SqlTable.All, expr);
+				var allPlaceholder = CreatePlaceholder(table.NamedTable.All, expr);
 				translated = allPlaceholder;
 				return true;
 			}
@@ -2122,9 +2129,36 @@ namespace LinqToDB.Internal.Linq.Builder
 			return result;
 		}
 
+		/// <summary>
+		/// When <see cref="LinqOptions.PreferClientCalculation"/> is enabled, computed expressions in the final
+		/// projection are left client-side instead of being forced into SQL columns. Anything that prefers or
+		/// requires server-side evaluation (per <c>Builder.PreferServerSide</c>) and set projections
+		/// (<see cref="BuildFlags.ForSetProjection"/>) still go to SQL.
+		/// </summary>
+		bool PreferClientCalculation(Expression node)
+		{
+			return _buildPurpose is BuildPurpose.Expression
+				&& !_buildFlags.HasFlag(BuildFlags.ForSetProjection)
+				&& BuildContext != null
+				&& DataOptions.LinqOptions.PreferClientCalculation
+				&& !Builder.PreferServerSide(node, false)
+				&& !Builder.IsServerSideOnly(node);
+		}
+
+		/// <summary>
+		/// A method may be pulled client-side (under <see cref="LinqOptions.PreferClientCalculation"/>) only when it is a
+		/// mapped function — i.e. it carries an <see cref="Sql.ExpressionAttribute"/>. Structural LINQ methods (e.g.
+		/// aggregates) have no attribute and must keep translating to SQL.
+		/// </summary>
+		bool MappedFunctionAllowsClientCalculation(MethodInfo method)
+		{
+			return method.GetExpressionAttribute(MappingSchema) != null;
+		}
+
 		bool TryConvertToSql(Expression node, out Expression translated)
 		{
-			if (_preferClientSide && !_buildFlags.HasFlag(BuildFlags.ForSetProjection))
+			if ((_preferClientSide && !_buildFlags.HasFlag(BuildFlags.ForSetProjection))
+				|| PreferClientCalculation(node))
 			{
 				translated = node;
 				return false;
@@ -2163,6 +2197,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		protected override Expression VisitUnary(UnaryExpression node)
 		{
+			if (PreferClientCalculation(node))
+				return base.VisitUnary(node);
+
 			if (node.Method != null && IsSqlOrExpression() && BuildContext != null)
 			{
 				if (TranslateMember(BuildContext, node, out var translatedMember))
@@ -2430,6 +2467,13 @@ namespace LinqToDB.Internal.Linq.Builder
 				};
 			}
 
+			if (node.MarkerType == MarkerType.ExplicitEagerLoad)
+			{
+				// Preserve the marker around the built eager-load (and visit the inner so the collection
+				// reaches HandleSubquery) — ImplicitEagerLoadGuardVisitor reads it during eager-load processing.
+				return node.Update(Visit(node.InnerExpression));
+			}
+
 			// MarkerType.AggregationFallback or MarkerType.None
 			return node;
 		}
@@ -2625,7 +2669,14 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			_disableSubqueries.Push(traversed);
 			_disableSubqueries.Push(node);
-			var ctx = GetSubQuery(node, onContext, out var isSequence, out var errorMessage);
+			IBuildContext? ctx;
+			bool           isSequence;
+			string?        errorMessage;
+			using (Builder.IsolateOrderBy())
+			{
+				ctx = GetSubQuery(node, onContext, out isSequence, out errorMessage);
+			}
+
 			_disableSubqueries.Pop();
 			_disableSubqueries.Pop();
 
@@ -2805,7 +2856,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		protected override Expression VisitBinary(BinaryExpression node)
 		{
-			if (node.Method != null && IsSqlOrExpression() && BuildContext != null)
+			if (node.Method != null && IsSqlOrExpression() && BuildContext != null && !PreferClientCalculation(node))
 			{
 				if (TranslateMember(BuildContext, node, out var translatedMember))
 					return Visit(translatedMember);
@@ -4716,6 +4767,16 @@ namespace LinqToDB.Internal.Linq.Builder
 						context.Scale     = fld.Type.Scale;
 						return true;
 					}
+					case QueryElementType.SqlCteTableField:
+					{
+						var fld = (SqlCteTableField)e;
+						context.DataType  = fld.Type.DataType;
+						context.DbType    = fld.Type.DbType;
+						context.Length    = fld.Type.Length;
+						context.Precision = fld.Type.Precision;
+						context.Scale     = fld.Type.Scale;
+						return true;
+					}
 					case QueryElementType.SqlParameter:
 					{
 						var type             = ((SqlParameter)e).Type;
@@ -4952,7 +5013,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			foreach (var m in mapping)
 			{
-				var field = tableContext.SqlTable.FindFieldByMemberName(tableContext.InheritanceMapping[m.i].DiscriminatorName) ?? throw new LinqToDBException($"Field {tableContext.InheritanceMapping[m.i].DiscriminatorName} not found in table {tableContext.SqlTable}");
+				var field = tableContext.SqlTable.FindFieldByMemberName(tableContext.InheritanceMapping[m.i].DiscriminatorName) ?? throw new LinqToDBException($"Field {tableContext.InheritanceMapping[m.i].DiscriminatorName} not found in table {tableContext.NamedTable}");
 				var ttype = field.ColumnDescriptor.MemberAccessor.TypeAccessor.Type;
 				var obj   = expression.Expression;
 
@@ -5388,15 +5449,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			    or UnaryExpression
 			    or BinaryExpression)
 			{
-				// Skip translation if there is a placeholder in the expression. It means that we already tried to translate, but it is failed.
-				// don't skip for binary/unary expressions with Method as we could create them during translation
-				if (memberExpression is not (BinaryExpression { Method: not null } or UnaryExpression { Method: not null })
-				    && null != memberExpression.Find(e => e is SqlPlaceholderExpression))
-				{
-					translated = null;
-					return false;
-				}
-
 				if (context?.SelectQuery != null)
 				{
 					if (GetAlreadyTranslated(context.SelectQuery, memberExpression, out translated))
