@@ -74,7 +74,7 @@ namespace Tests.UserTests
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(new[]
 			{
-				new EnumNullTable { Id = 1, Status = Enum1.Ok }, // Ok = 0, the value the old "<> 0" filter dropped
+				new EnumNullTable { Id = 1, Status = Enum1.Ok }, // nullable-enum vs null goes through the generic null path (IS [NOT] NULL); the "<> 0" regression itself is guarded by Issue5666Test
 				new EnumNullTable { Id = 2, Status = null },
 			});
 
