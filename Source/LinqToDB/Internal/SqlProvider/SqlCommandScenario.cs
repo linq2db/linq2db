@@ -3,6 +3,8 @@ using System.Data;
 
 using LinqToDB.Internal.SqlQuery;
 
+#pragma warning disable MA0048 // cohesive scenario model: steps/enums/plan grouped in one file (repo convention, cf. Sql.Window.cs, Attributes.cs)
+
 namespace LinqToDB.Internal.SqlProvider
 {
 	/// <summary>
