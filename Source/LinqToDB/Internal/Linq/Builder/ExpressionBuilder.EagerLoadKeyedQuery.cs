@@ -707,7 +707,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					// Sort in place — every caller passes a freshly-allocated array (.ToArray()) that
 					// nothing else holds, so mutating it is safe.
-					Array.Sort(keys, Comparer<TKey>.Default);
+					Array.Sort(keys, _keyComparer);
 				}
 				catch (InvalidOperationException)
 				{
@@ -719,6 +719,60 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 
 				return keys;
+			}
+
+			// Ordinal, culture-invariant key comparer. Comparer<TKey>.Default orders string keys (and
+			// string components of composite ValueTuple keys) with string.CompareTo, i.e. a culture-sensitive
+			// linguistic comparison. That is unsuitable for canonicalizing SQL text: it is not a stable total
+			// order over distinct strings (canonically-equal but distinct values — e.g. "å" vs "å"
+			// — tie, and Array.Sort is not stable, so the two extraction paths could still order them
+			// differently), and it is machine-culture-dependent (baselines would reorder across cultures).
+			// Both defeat the deterministic ordering this canonicalization exists to provide (#5664), so
+			// strings are compared ordinally.
+			static readonly IComparer<TKey> _keyComparer = CreateKeyComparer();
+
+			static IComparer<TKey> CreateKeyComparer()
+			{
+				if (typeof(TKey) == typeof(string))
+					return (IComparer<TKey>)(object)StringComparer.Ordinal;
+
+				// Composite key (ValueTuple implements IStructuralComparable) that may contain string
+				// components: compare element-wise with ordinal string handling. Arrays also implement
+				// IStructuralComparable but are excluded — a byte[] key keeps the not-orderable fallback,
+				// as before. Non-tuple, non-string keys use the default order, which is already
+				// culture-invariant and a total order for the scalar types used as keys.
+				if (typeof(IStructuralComparable).IsAssignableFrom(typeof(TKey)) && !typeof(TKey).IsArray)
+					return new OrdinalKeyComparer();
+
+				return Comparer<TKey>.Default;
+			}
+
+			// IComparer (non-generic) is implemented so IStructuralComparable.CompareTo can drive the
+			// element-wise comparison recursively — it passes each component pair back through Compare.
+			sealed class OrdinalKeyComparer : IComparer<TKey>, IComparer
+			{
+				public int Compare(TKey? x, TKey? y) => CompareElement(x, y);
+
+				int IComparer.Compare(object? x, object? y) => CompareElement(x, y);
+
+				int CompareElement(object? a, object? b)
+				{
+					if (a is null) return b is null ? 0 : -1;
+					if (b is null) return 1;
+
+					if (a is string sa && b is string sb)
+						return string.CompareOrdinal(sa, sb);
+
+					// Recurse into nested tuples (ValueTuple/Tuple implement IStructuralComparable) so
+					// string components at any depth compare ordinally. Arrays are excluded: a byte[]
+					// component is left to Comparer<object>.Default, which throws — Array.Sort wraps that
+					// as InvalidOperationException, which SortKeysDeterministically catches to fall back to
+					// source order, preserving the prior behaviour for non-orderable key classes.
+					if (a is IStructuralComparable structural and not Array)
+						return structural.CompareTo(b, this);
+
+					return Comparer<object>.Default.Compare(a, b);
+				}
 			}
 
 			// execution is null only if the keys accessor is evaluated without a live IQueryExpressions
