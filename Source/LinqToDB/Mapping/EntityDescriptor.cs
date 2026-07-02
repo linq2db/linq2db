@@ -140,8 +140,10 @@ namespace LinqToDB.Mapping
 
 		private ColumnDescriptor[] _inheritanceSiblingColumns = [];
 		/// <summary>
-		/// Columns from sibling TPH types that share a C# member name with an existing column but map to a different physical column name.
-		/// Kept separate to avoid MemberName collision in the merged descriptor and to allow per-type entity init to reference the correct column.
+		/// Distinct members from sibling TPH types that share a C# member name with an already-merged column.
+		/// They may map to a different physical column or to the same physical column as another sibling (collapsed
+		/// to one field in SqlTable). Kept separate to avoid MemberName collision in the merged descriptor and to
+		/// let per-type entity init reference each subtype's own column.
 		/// </summary>
 		internal IReadOnlyList<ColumnDescriptor> InheritanceSiblingColumns => _inheritanceSiblingColumns;
 
