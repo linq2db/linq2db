@@ -266,35 +266,50 @@ namespace LinqToDB.Data
 					var scenario   = dmlService.BuildCommandScenario(statement, dataConnection.DataProvider.SqlProviderFlags, factory);
 
 					CommandWithParameters[] commands;
+					SqlCommandGroupPlan?    plan;
 
 					if (scenario != null)
 					{
-						// Provider supplied an explicit scenario: render each step's statement (step 0 is usually the main
-						// statement, already optimized/aliased above; synthetic steps get their own aliases).
-						commands = new CommandWithParameters[scenario.Steps.Count];
+						// Plan FIRST: group the scenario's steps into physical commands (round-trips), size-aware.
+						plan = dmlService.PlanScenario(scenario, dataConnection.DataProvider.SqlProviderFlags);
 
-						for (var i = 0; i < scenario.Steps.Count; i++)
+						// Render each GROUP as ONE command through the group-scoped shared context: a group's step statements
+						// render into one command text (the shared param normalizer within the group yields unique/deduped
+						// names); parameters are cleared at each group boundary so every command carries only its own params.
+						commands = new CommandWithParameters[plan.Groups.Count];
+
+						for (var g = 0; g < plan.Groups.Count; g++)
 						{
-							var step        = scenario.Steps[i];
-							var stepAliases = ReferenceEquals(step.Statement, statement) ? aliases : PrepareStepAliases(serviceProvider, step.Statement);
+							var stepIndexes = plan.Groups[g].StepIndexes;
 
 							sb.Value.Length = 0;
 
-							using (ActivityService.Start(ActivityID.BuildSql))
+							for (var k = 0; k < stepIndexes.Count; k++)
 							{
-								if (step.Fragment == SqlCommandFragment.None)
-									sqlBuilder.BuildSql(0, step.Statement, sb.Value, optimizationContext, stepAliases, null, startIndent);
-								else
-									sqlBuilder.BuildCommandFragment(step.Fragment, step.FragmentFieldIndex, step.Statement, sb.Value, optimizationContext, stepAliases, null, startIndent);
+								var step        = scenario.Steps[stepIndexes[k]];
+								var stepAliases = ReferenceEquals(step.Statement, statement) ? aliases : PrepareStepAliases(serviceProvider, step.Statement);
+
+								if (k > 0)
+									sb.Value.Append(";\n");
+
+								using (ActivityService.Start(ActivityID.BuildSql))
+								{
+									if (step.Fragment == SqlCommandFragment.None)
+										sqlBuilder.BuildSql(0, step.Statement, sb.Value, optimizationContext, stepAliases, null, startIndent);
+									else
+										sqlBuilder.BuildCommandFragment(step.Fragment, step.FragmentFieldIndex, step.Statement, sb.Value, optimizationContext, stepAliases, null, startIndent);
+								}
 							}
 
-							commands[i] = new CommandWithParameters(sb.Value.ToString(), optimizationContext.GetParameters());
+							commands[g] = new CommandWithParameters(sb.Value.ToString(), optimizationContext.GetParameters());
 							optimizationContext.ClearParameters();
 						}
 					}
 					else
 					{
 						// Legacy command-splitting: CommandCount + BuildSql(commandNumber) render N commands from one statement.
+						plan = null;
+
 						var cc = sqlBuilder.CommandCount(statement);
 
 						commands = new CommandWithParameters[cc];
@@ -310,10 +325,6 @@ namespace LinqToDB.Data
 							optimizationContext.ClearParameters();
 						}
 					}
-
-					var plan = scenario != null
-						? dmlService.PlanScenario(scenario, dataConnection.DataProvider.SqlProviderFlags)
-						: null;
 
 					if (optimizeAndConvertAll)
 					{
@@ -525,49 +536,19 @@ namespace LinqToDB.Data
 				return -1;
 			}
 
-			// Builds one physical command for a combined group by concatenating its steps' rendered command texts with a
-			// statement separator and merging their parameters (identity/eager groups don't share parameter names).
-			static void InitCombinedCommand(DataConnection dataConnection, ExecutionPreparedQuery executionQuery, SqlCommandGroup group)
+			// Executes one step as its own command. stepIndex indexes the logical step (context / gate / result);
+			// commandIndex indexes the pre-rendered physical command (Commands[commandIndex]) — the two differ once steps
+			// are grouped (for the legacy bridge they are equal).
+			static void ExecuteSingleStep(DataConnection dataConnection, ExecutionPreparedQuery executionQuery, IReadOnlyList<SqlCommandStep> steps, int stepIndex, int commandIndex, SqlCommandExecutionContext context)
 			{
-				var pq       = executionQuery.PreparedQuery;
-				var sb       = new System.Text.StringBuilder();
-				var dbParams = new List<DbParameter>();
-
-				for (var k = 0; k < group.StepIndexes.Count; k++)
-				{
-					var idx = group.StepIndexes[k];
-
-					if (k > 0)
-						sb.Append(";\n");
-
-					sb.Append(pq.Commands[idx].Command);
-
-					var ps = executionQuery.CommandsParameters[idx];
-					if (ps != null)
-						dbParams.AddRange(ps);
-				}
-
-				var queryHints = group.StepIndexes[0] == 0 ? pq.QueryHints : null;
-
-				dataConnection.InitCommand(CommandType.Text, sb.ToString(), null, queryHints, dbParams.Count > 0);
-
-				foreach (var p in dbParams)
-					dataConnection.CurrentCommand!.Parameters.Add(p);
-
-				dataConnection.CommitCommandInit();
-			}
-
-			// Executes one step as its own command (the sequential path; also every step when the provider can't batch).
-			static void ExecuteSingleStep(DataConnection dataConnection, ExecutionPreparedQuery executionQuery, IReadOnlyList<SqlCommandStep> steps, int i, SqlCommandExecutionContext context)
-			{
-				var step = steps[i];
+				var step = steps[stepIndex];
 
 				if (step.RunIf is { } gate && !EvaluateGate(gate, context))
 					return;
 
-				InitCommand(dataConnection, executionQuery, i);
+				InitCommand(dataConnection, executionQuery, commandIndex);
 
-				ApplyForwardedParameters(executionQuery, i, step, context);
+				ApplyForwardedParameters(executionQuery, commandIndex, step, context);
 
 				if (step.OnError == SqlStepOnError.Ignore)
 				{
@@ -589,11 +570,11 @@ namespace LinqToDB.Data
 					{
 						var outParam = step.OutParameterName is null ? null : AddOutputParameter(dataConnection, step);
 						var n        = dataConnection.ExecuteNonQuery();
-						context.SetResult(i, outParam != null ? outParam.Value : n);
+						context.SetResult(stepIndex, outParam != null ? outParam.Value : n);
 						break;
 					}
 					case SqlStepKind.Scalar:
-						context.SetResult(i, dataConnection.ExecuteScalar());
+						context.SetResult(stepIndex, dataConnection.ExecuteScalar());
 						break;
 				}
 			}
@@ -613,11 +594,12 @@ namespace LinqToDB.Data
 				}
 			}
 
-			// Executes a combined group as ONE command and harvests its result sets in step order: a Scalar step reads the
-			// first cell of the current result set; a pure non-query step yields no result set (RecordsAffected only).
-			static void ExecuteCombinedGroup(DataConnection dataConnection, ExecutionPreparedQuery executionQuery, IReadOnlyList<SqlCommandStep> steps, SqlCommandGroup group, SqlCommandExecutionContext context)
+			// Executes a combined group as ONE pre-rendered command (Commands[commandIndex]) and harvests its result sets in
+			// step order: a Scalar step reads the first cell of the current result set; a pure non-query step yields no
+			// result set (RecordsAffected only).
+			static void ExecuteCombinedGroup(DataConnection dataConnection, ExecutionPreparedQuery executionQuery, IReadOnlyList<SqlCommandStep> steps, SqlCommandGroup group, int commandIndex, SqlCommandExecutionContext context)
 			{
-				InitCombinedCommand(dataConnection, executionQuery, group);
+				InitCommand(dataConnection, executionQuery, commandIndex);
 
 				using var rd = dataConnection.ExecuteDataReader(CommandBehavior.Default);
 
@@ -646,17 +628,21 @@ namespace LinqToDB.Data
 
 				if (groups == null)
 				{
+					// Legacy bridge: each step is its own command (Commands are per-command, 1:1 with steps).
 					for (var i = 0; i < steps.Count; i++)
-						ExecuteSingleStep(dataConnection, executionQuery, steps, i, context);
+						ExecuteSingleStep(dataConnection, executionQuery, steps, i, i, context);
 				}
 				else
 				{
-					foreach (var group in groups)
+					// Per-group: each group is one pre-rendered command (Commands[g]).
+					for (var g = 0; g < groups.Count; g++)
 					{
+						var group = groups[g];
+
 						if (group.StepIndexes.Count == 1)
-							ExecuteSingleStep(dataConnection, executionQuery, steps, group.StepIndexes[0], context);
+							ExecuteSingleStep(dataConnection, executionQuery, steps, group.StepIndexes[0], g, context);
 						else
-							ExecuteCombinedGroup(dataConnection, executionQuery, steps, group, context);
+							ExecuteCombinedGroup(dataConnection, executionQuery, steps, group, g, context);
 					}
 				}
 
@@ -664,16 +650,16 @@ namespace LinqToDB.Data
 			}
 
 			// In case of change the logic of this method, DO NOT FORGET to change the sibling method.
-			static async Task ExecuteSingleStepAsync(DataConnection dataConnection, ExecutionPreparedQuery executionQuery, IReadOnlyList<SqlCommandStep> steps, int i, SqlCommandExecutionContext context, CancellationToken cancellationToken)
+			static async Task ExecuteSingleStepAsync(DataConnection dataConnection, ExecutionPreparedQuery executionQuery, IReadOnlyList<SqlCommandStep> steps, int stepIndex, int commandIndex, SqlCommandExecutionContext context, CancellationToken cancellationToken)
 			{
-				var step = steps[i];
+				var step = steps[stepIndex];
 
 				if (step.RunIf is { } gate && !EvaluateGate(gate, context))
 					return;
 
-				InitCommand(dataConnection, executionQuery, i);
+				InitCommand(dataConnection, executionQuery, commandIndex);
 
-				ApplyForwardedParameters(executionQuery, i, step, context);
+				ApplyForwardedParameters(executionQuery, commandIndex, step, context);
 
 				if (step.OnError == SqlStepOnError.Ignore)
 				{
@@ -695,11 +681,11 @@ namespace LinqToDB.Data
 					{
 						var outParam = step.OutParameterName is null ? null : AddOutputParameter(dataConnection, step);
 						var n        = await dataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(false);
-						context.SetResult(i, outParam != null ? outParam.Value : n);
+						context.SetResult(stepIndex, outParam != null ? outParam.Value : n);
 						break;
 					}
 					case SqlStepKind.Scalar:
-						context.SetResult(i, await dataConnection.ExecuteScalarDataAsync(cancellationToken).ConfigureAwait(false));
+						context.SetResult(stepIndex, await dataConnection.ExecuteScalarDataAsync(cancellationToken).ConfigureAwait(false));
 						break;
 				}
 			}
@@ -718,9 +704,9 @@ namespace LinqToDB.Data
 			}
 
 			// In case of change the logic of this method, DO NOT FORGET to change the sibling method.
-			static async Task ExecuteCombinedGroupAsync(DataConnection dataConnection, ExecutionPreparedQuery executionQuery, IReadOnlyList<SqlCommandStep> steps, SqlCommandGroup group, SqlCommandExecutionContext context, CancellationToken cancellationToken)
+			static async Task ExecuteCombinedGroupAsync(DataConnection dataConnection, ExecutionPreparedQuery executionQuery, IReadOnlyList<SqlCommandStep> steps, SqlCommandGroup group, int commandIndex, SqlCommandExecutionContext context, CancellationToken cancellationToken)
 			{
-				InitCombinedCommand(dataConnection, executionQuery, group);
+				InitCommand(dataConnection, executionQuery, commandIndex);
 
 				await using var rd = await dataConnection.ExecuteDataReaderAsync(CommandBehavior.Default, cancellationToken).ConfigureAwait(false);
 
@@ -747,17 +733,21 @@ namespace LinqToDB.Data
 
 				if (groups == null)
 				{
+					// Legacy bridge: each step is its own command (Commands are per-command, 1:1 with steps).
 					for (var i = 0; i < steps.Count; i++)
-						await ExecuteSingleStepAsync(dataConnection, executionQuery, steps, i, context, cancellationToken).ConfigureAwait(false);
+						await ExecuteSingleStepAsync(dataConnection, executionQuery, steps, i, i, context, cancellationToken).ConfigureAwait(false);
 				}
 				else
 				{
-					foreach (var group in groups)
+					// Per-group: each group is one pre-rendered command (Commands[g]).
+					for (var g = 0; g < groups.Count; g++)
 					{
+						var group = groups[g];
+
 						if (group.StepIndexes.Count == 1)
-							await ExecuteSingleStepAsync(dataConnection, executionQuery, steps, group.StepIndexes[0], context, cancellationToken).ConfigureAwait(false);
+							await ExecuteSingleStepAsync(dataConnection, executionQuery, steps, group.StepIndexes[0], g, context, cancellationToken).ConfigureAwait(false);
 						else
-							await ExecuteCombinedGroupAsync(dataConnection, executionQuery, steps, group, context, cancellationToken).ConfigureAwait(false);
+							await ExecuteCombinedGroupAsync(dataConnection, executionQuery, steps, group, g, context, cancellationToken).ConfigureAwait(false);
 					}
 				}
 
@@ -774,7 +764,7 @@ namespace LinqToDB.Data
 				ExecutionPreparedQuery executionQuery,
 				CancellationToken      cancellationToken)
 			{
-				if (executionQuery.PreparedQuery.Commands.Length == 1)
+				if (IsSingleSimpleCommand(executionQuery))
 				{
 					InitFirstCommand(dataConnection, executionQuery);
 
@@ -788,7 +778,7 @@ namespace LinqToDB.Data
 			// In case of change the logic of this method, DO NOT FORGET to change the sibling method.
 			static int ExecuteNonQueryImpl(DataConnection dataConnection, ExecutionPreparedQuery executionQuery)
 			{
-				if (executionQuery.PreparedQuery.Commands.Length == 1)
+				if (IsSingleSimpleCommand(executionQuery))
 				{
 					InitFirstCommand(dataConnection, executionQuery);
 
@@ -839,7 +829,7 @@ namespace LinqToDB.Data
 				ExecutionPreparedQuery executionQuery,
 				CancellationToken      cancellationToken)
 			{
-				if (executionQuery.PreparedQuery.Commands.Length == 1)
+				if (IsSingleSimpleCommand(executionQuery))
 				{
 					InitFirstCommand(dataConnection, executionQuery);
 
@@ -863,7 +853,7 @@ namespace LinqToDB.Data
 			// In case of change the logic of this method, DO NOT FORGET to change the sibling method.
 			static object? ExecuteScalarImpl(DataConnection dataConnection, ExecutionPreparedQuery executionQuery)
 			{
-				if (executionQuery.PreparedQuery.Commands.Length == 1)
+				if (IsSingleSimpleCommand(executionQuery))
 				{
 					InitFirstCommand(dataConnection, executionQuery);
 
@@ -944,6 +934,15 @@ namespace LinqToDB.Data
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			// A single physical command that is NOT a combined (multi-statement) group can be executed directly (the fast
+			// path). A lone COMBINED group must instead go through the scenario interpreter so its result sets are read via
+			// the NextResult walk — ExecuteScalar/ExecuteNonQuery over a batch is the cross-provider footgun the walk avoids.
+			static bool IsSingleSimpleCommand(ExecutionPreparedQuery executionQuery)
+			{
+				var pq = executionQuery.PreparedQuery;
+				return pq.Commands.Length == 1 && (pq.Plan == null || pq.Plan.Groups[0].StepIndexes.Count == 1);
+			}
+
 			static void InitCommand(DataConnection dataConnection, ExecutionPreparedQuery executionQuery, int index)
 			{
 				InitCommand(dataConnection,
@@ -1046,9 +1045,9 @@ namespace LinqToDB.Data
 
 				SetCommand(false);
 
-				if (_executionQuery!.PreparedQuery.Commands.Length == 1)
+				if (IsSingleSimpleCommand(_executionQuery!))
 				{
-					InitFirstCommand(_dataConnection, _executionQuery);
+					InitFirstCommand(_dataConnection, _executionQuery!);
 
 					return await _dataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(false);
 				}
