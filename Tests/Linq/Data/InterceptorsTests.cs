@@ -335,13 +335,16 @@ namespace Tests.Data
 			table.InsertWithIdentity(() => new InterceptorsTestsTable() { ID = 1 });
 			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(interceptor.ExecuteScalarTriggered, Is.True);
+				// SQLite supports multi-statement batches returning multiple result sets, so the identity insert
+				// (INSERT + SELECT last_insert_rowid()) runs as ONE combined command via ExecuteReader — rows-affected
+				// and the identity are harvested from the reader, so ExecuteScalar / ExecuteNonQuery are never called;
+				// ExecuteReader + AfterExecuteReader fire instead.
+				Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
 				Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
-				Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
+				Assert.That(interceptor.ExecuteReaderTriggered, Is.True);
 				Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
-				Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
-				// also true, as for sqlite we generate two queries
-				Assert.That(interceptor.ExecuteNonQueryTriggered, Is.True);
+				Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.True);
+				Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
 				Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
 			}
 		}
@@ -367,14 +370,15 @@ namespace Tests.Data
 			await table.InsertWithIdentityAsync(() => new InterceptorsTestsTable() { ID = 1 });
 			using (Assert.EnterMultipleScope())
 			{
+				// Combined into ONE command via ExecuteReaderAsync (see the sync test): the async reader interceptors
+				// fire, not ExecuteScalarAsync / ExecuteNonQueryAsync.
 				Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
-				Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.True);
+				Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
 				Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
-				Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
-				Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
+				Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.True);
+				Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.True);
 				Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
-				// also true, as for sqlite we generate two queries
-				Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.True);
+				Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
 			}
 		}
 
@@ -524,13 +528,14 @@ namespace Tests.Data
 			table.InsertWithIdentity(() => new InterceptorsTestsTable() { ID = 1 });
 			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(interceptor.ExecuteScalarTriggered, Is.True);
+				// Combined into ONE command via ExecuteReader (see DataConnection_ExecuteScalar): reader interceptors
+				// fire, not ExecuteScalar / ExecuteNonQuery.
+				Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
 				Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
-				Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
+				Assert.That(interceptor.ExecuteReaderTriggered, Is.True);
 				Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
-				Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
-				// also true, as for sqlite we generate two queries
-				Assert.That(interceptor.ExecuteNonQueryTriggered, Is.True);
+				Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.True);
+				Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
 				Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
 			}
 		}
@@ -557,14 +562,15 @@ namespace Tests.Data
 			await table.InsertWithIdentityAsync(() => new InterceptorsTestsTable() { ID = 1 });
 			using (Assert.EnterMultipleScope())
 			{
+				// Combined into ONE command via ExecuteReaderAsync (see the sync test): the async reader interceptors
+				// fire, not ExecuteScalarAsync / ExecuteNonQueryAsync.
 				Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
-				Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.True);
+				Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
 				Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
-				Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
-				Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
+				Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.True);
+				Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.True);
 				Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
-				// also true, as for sqlite we generate two queries
-				Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.True);
+				Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
 			}
 		}
 
