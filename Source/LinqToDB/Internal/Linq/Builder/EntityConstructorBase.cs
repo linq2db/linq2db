@@ -62,12 +62,21 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (level == 0)
 			{
+				// A physical column shared by several inheritance siblings (distinct members mapped to the
+				// same column) must be projected only once. Cache the value expression built for the first
+				// member that maps each physical column and reuse it for later siblings that read the column
+				// identically — same member type and value converter — so they collapse onto a single SELECT
+				// column. Each assignment keeps its own member as the bind target, so the per-type
+				// discriminator switch still assigns each subtype's member. Siblings that read the column
+				// differently (different type or converter), and columns with distinct physical names, are
+				// built independently and stay separate.
+				var sharedColumns = new Dictionary<string, (ColumnDescriptor Column, Expression Expression)>(StringComparer.Ordinal);
+
 				foreach (var column in columns)
 				{
 					if (column.SkipOnEntityFetch)
 						continue;
 
-					Expression me;
 					if (column.MemberName.Contains('.', StringComparison.Ordinal) && !column.MemberInfo.Name.Contains('.', StringComparison.Ordinal))
 					{
 						hasNested = true;
@@ -75,14 +84,26 @@ namespace LinqToDB.Internal.Linq.Builder
 					else
 					{
 						var declaringType = column.MemberInfo.DeclaringType!;
-						var objExpression = SequenceHelper.EnsureType(currentPath, declaringType);
 
 						// Target ReflectedType to DeclaringType for better caching
 						//
 						var memberInfo = declaringType.GetMemberEx(column.MemberInfo) ??
 						                 throw new InvalidOperationException();
 
-						me = MakeAssignExpression(objExpression, memberInfo, column);
+						Expression me;
+						if (sharedColumns.TryGetValue(column.ColumnName, out var shared)
+							&& shared.Column.MemberType == column.MemberType
+							&& ReferenceEquals(shared.Column.ValueConverter, column.ValueConverter))
+						{
+							me = shared.Expression;
+						}
+						else
+						{
+							var objExpression = SequenceHelper.EnsureType(currentPath, declaringType);
+							me = MakeAssignExpression(objExpression, memberInfo, column);
+							if (!sharedColumns.ContainsKey(column.ColumnName))
+								sharedColumns[column.ColumnName] = (column, me);
+						}
 
 						members.Add(new SqlGenericConstructorExpression.Assignment(memberInfo, me,
 							column.MemberAccessor.HasSetter, false));
@@ -277,7 +298,12 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var entityDescriptor = MappingSchema.GetEntityDescriptor(entityType);
 
-			var generic = BuildGenericFromMembers(entityDescriptor.Columns, flags, refExpression, 0, purpose);
+			// Include sibling columns so each concrete TPH type can reference its own physical column (same C# member, different DB column names).
+			var columns = entityDescriptor.InheritanceSiblingColumns.Count == 0
+				? entityDescriptor.Columns
+				: (IReadOnlyCollection<ColumnDescriptor>)entityDescriptor.Columns.Concat(entityDescriptor.InheritanceSiblingColumns).ToList();
+
+			var generic = BuildGenericFromMembers(columns, flags, refExpression, 0, purpose);
 
 			return generic;
 		}
@@ -572,7 +598,27 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (checkInheritance && flags.HasFlag(ProjectFlags.Expression))
 			{
-				var inheritanceMappings = entityDescriptor.InheritanceMapping;
+				var inheritanceMappings   = entityDescriptor.InheritanceMapping;
+				var perSubtypeConstructor = false;
+
+				// An abstract intermediate type (e.g. OfType<TIntermediate>()) carries no inheritance
+				// mappings of its own — they live on the hierarchy root. Resolve the root's mappings, keep the
+				// concrete subtypes assignable to this type, and build a dedicated constructor per subtype (the
+				// intermediate's own constructor would lack the subtype-specific columns).
+				if (inheritanceMappings.Count == 0 && entityType.IsAbstract)
+				{
+					for (var baseType = entityType.BaseType; baseType != null; baseType = baseType.BaseType)
+					{
+						var rootMappings = MappingSchema.GetEntityDescriptor(baseType).InheritanceMapping;
+						if (rootMappings.Count > 0)
+						{
+							inheritanceMappings   = rootMappings.Where(m => entityType.IsAssignableFrom(m.Type)).ToList();
+							perSubtypeConstructor = true;
+							break;
+						}
+					}
+				}
+
 				if (inheritanceMappings.Count > 0)
 				{
 					var defaultDescriptor = inheritanceMappings.FirstOrDefault(x => x.IsDefault);
@@ -647,10 +693,20 @@ namespace LinqToDB.Internal.Linq.Builder
 						// Tell Builder to prefer client side
 						test = MarkerExpression.PreferClientSide(test);
 
-						var fullEntity = TryConstructFullEntity(constructorExpression, inheritance.Type, flags, false, out error);
-						if (fullEntity == null)
-							return null;
-						var tableExpr = Expression.Convert(fullEntity, current.Type);
+						Expression tableExpr;
+						if (perSubtypeConstructor)
+						{
+							// Build the concrete subtype against the hierarchy root so it gets its own columns.
+							var subConstructor = BuildFullEntityExpressionInternal(rootReference, inheritance.Type, flags, FullEntityPurpose.Default);
+							tableExpr = Expression.Convert(ConstructFullEntity(subConstructor, flags, false), current.Type);
+						}
+						else
+						{
+							var fullEntity = TryConstructFullEntity(constructorExpression, inheritance.Type, flags, false, out error);
+							if (fullEntity == null)
+								return null;
+							tableExpr = Expression.Convert(fullEntity, current.Type);
+						}
 
 						current = Expression.Condition(test, tableExpr, current);
 					}

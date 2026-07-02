@@ -138,6 +138,13 @@ namespace LinqToDB.Mapping
 		/// </remarks>
 		public IReadOnlyList<InheritanceMapping> InheritanceMapping => _inheritanceMappings;
 
+		private ColumnDescriptor[] _inheritanceSiblingColumns = [];
+		/// <summary>
+		/// Columns from sibling TPH types that share a C# member name with an existing column but map to a different physical column name.
+		/// Kept separate to avoid MemberName collision in the merged descriptor and to allow per-type entity init to reference the correct column.
+		/// </summary>
+		internal IReadOnlyList<ColumnDescriptor> InheritanceSiblingColumns => _inheritanceSiblingColumns;
+
 		/// <summary>
 		/// For entity descriptor with inheritance mapping gets descriptor of root (base) entity.
 		/// </summary>
@@ -474,10 +481,29 @@ namespace LinqToDB.Mapping
 				_inheritanceMappings[i] = mapping;
 			}
 
-			var allColumnMemberNames = new HashSet<string>(StringComparer.Ordinal);
+			var seenMemberNames = new HashSet<string>(StringComparer.Ordinal);
 
 			foreach (var cd in Columns)
-				allColumnMemberNames.Add(cd.MemberName);
+				seenMemberNames.Add(cd.MemberName);
+
+			List<ColumnDescriptor>? siblingColumns = null;
+
+			// A column from a sibling type is already represented when its C# member is the same
+			// member we have merged (e.g. inherited from a shared base) — compared by member identity,
+			// not by name, so two sibling types declaring distinct same-named members are kept apart.
+			bool AlreadyMapped(ColumnDescriptor candidate)
+			{
+				foreach (var existing in Columns)
+					if (existing.MemberInfo.EqualsTo(candidate.MemberInfo))
+						return true;
+
+				if (siblingColumns != null)
+					foreach (var existing in siblingColumns)
+						if (existing.MemberInfo.EqualsTo(candidate.MemberInfo))
+							return true;
+
+				return false;
+			}
 
 			foreach (var m in _inheritanceMappings)
 			{
@@ -488,9 +514,37 @@ namespace LinqToDB.Mapping
 				ed.InheritanceRoot = this;
 
 				foreach (var cd in ed.Columns)
-					if (allColumnMemberNames.Add(cd.MemberName))
+				{
+					if (AlreadyMapped(cd))
+						continue;
+
+					if (seenMemberNames.Add(cd.MemberName))
 						AddColumn(cd);
+					else
+					{
+						// A sibling type maps a distinct member that shares its C# name with one already
+						// merged. It may target a different physical column (created/selected as its own)
+						// or the same physical column as another sibling (collapsed to one field in
+						// SqlTable). Either way it must be kept here so the per-type entity constructor
+						// can assign this member — see EntityConstructorBase.BuildFullEntityExpressionInternal.
+						(siblingColumns ??= []).Add(cd);
+
+						// When it shares its physical column with an already-merged column, register it on
+						// that column so inserts of a base-typed (mixed) source write the value from the
+						// member matching each row's runtime type — see ColumnDescriptor.GetProviderValue.
+						foreach (var existing in Columns)
+						{
+							if (string.Equals(existing.ColumnName, cd.ColumnName, StringComparison.Ordinal))
+							{
+								existing.AddValueSibling(cd);
+								break;
+							}
+						}
+					}
+				}
 			}
+
+			_inheritanceSiblingColumns = siblingColumns == null ? [] : [.. siblingColumns];
 
 			var discriminator = Columns.FirstOrDefault(x => x.IsDiscriminator)
 				?? throw new LinqToDBException($"Inheritance Discriminator is not defined for the '{ObjectType}' hierarchy.");
