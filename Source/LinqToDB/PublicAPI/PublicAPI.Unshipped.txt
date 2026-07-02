@@ -36,6 +36,34 @@ static LinqToDB.Internal.Expressions.WindowFunctionHelpers.ExtractOrderByPart(Sy
 *REMOVED*static LinqToDB.Internal.Expressions.WindowFunctionHelpers.BuildWindowDefinition(System.Linq.Expressions.Expression![]! partitionBy, (System.Linq.Expressions.Expression! expr, bool descending)[]! orderBy) -> System.Linq.Expressions.Expression!
 *REMOVED*static LinqToDB.Internal.Expressions.WindowFunctionHelpers.ExtractOrderByPart(System.Linq.Expressions.Expression! query, out System.Linq.Expressions.Expression! nonOrderedPart) -> (System.Linq.Expressions.LambdaExpression! lambda, bool isDescending)[]!
 LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.RemoveNullValues(LinqToDB.Internal.SqlQuery.SqlCoalesceExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+LinqToDB.Internal.SqlQuery.QueryElementType.SqlKeepClause = 81 -> LinqToDB.Internal.SqlQuery.QueryElementType
+LinqToDB.Internal.SqlQuery.SqlExtendedFunction.FromPosition.get -> LinqToDB.Sql.From
+LinqToDB.Internal.SqlQuery.SqlExtendedFunction.NullTreatment.get -> LinqToDB.Sql.Nulls
+LinqToDB.Internal.SqlQuery.SqlKeepClause
+LinqToDB.Internal.SqlQuery.SqlKeepClause.KeepType
+LinqToDB.Internal.SqlQuery.SqlKeepClause.KeepType.First = 0 -> LinqToDB.Internal.SqlQuery.SqlKeepClause.KeepType
+LinqToDB.Internal.SqlQuery.SqlKeepClause.KeepType.Last = 1 -> LinqToDB.Internal.SqlQuery.SqlKeepClause.KeepType
+LinqToDB.Internal.SqlQuery.SqlKeepClause.Modify(System.Collections.Generic.List<LinqToDB.SqlQuery.SqlWindowOrderItem!>! orderBy) -> void
+LinqToDB.Internal.SqlQuery.SqlKeepClause.OrderBy.get -> System.Collections.Generic.List<LinqToDB.SqlQuery.SqlWindowOrderItem!>!
+LinqToDB.Internal.SqlQuery.SqlKeepClause.SqlKeepClause(LinqToDB.Internal.SqlQuery.SqlKeepClause.KeepType type, System.Collections.Generic.List<LinqToDB.SqlQuery.SqlWindowOrderItem!>! orderBy) -> void
+LinqToDB.Internal.SqlQuery.SqlKeepClause.Type.get -> LinqToDB.Internal.SqlQuery.SqlKeepClause.KeepType
+LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.WindowFunctionInformation.FromPosition.get -> LinqToDB.Sql.From
+LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.WindowFunctionInformation.FromPosition.set -> void
+LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.WindowFunctionInformation.KeepType.get -> LinqToDB.Internal.SqlQuery.SqlKeepClause.KeepType?
+LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.WindowFunctionInformation.NullTreatment.get -> LinqToDB.Sql.Nulls
+LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.WindowFunctionInformation.NullTreatment.set -> void
+override LinqToDB.Internal.SqlQuery.SqlKeepClause.Accept(LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor! visitor) -> LinqToDB.Internal.SqlQuery.IQueryElement!
+override LinqToDB.Internal.SqlQuery.SqlKeepClause.ElementType.get -> LinqToDB.Internal.SqlQuery.QueryElementType
+override LinqToDB.Internal.SqlQuery.SqlKeepClause.GetElementHashCode() -> int
+override LinqToDB.Internal.SqlQuery.SqlKeepClause.ToString(LinqToDB.Internal.SqlQuery.QueryElementTextWriter! writer) -> LinqToDB.Internal.SqlQuery.QueryElementTextWriter!
+virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlKeepClause(LinqToDB.Internal.SqlQuery.SqlKeepClause! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
+LinqToDB.Linq.Translation.ITranslationContext.ProviderFlags.get -> LinqToDB.Linq.Translation.TranslationProviderFlags!
+LinqToDB.Linq.Translation.TranslationProviderFlags
+LinqToDB.Linq.Translation.TranslationProviderFlags.DefaultNullsOrdering.get -> LinqToDB.Internal.SqlQuery.NullsDefaultOrdering
+LinqToDB.Linq.Translation.TranslationProviderFlags.IsNullsOrderingSupported.get -> bool
+LinqToDB.Linq.Translation.TranslationProviderFlags.TranslationProviderFlags(LinqToDB.Internal.SqlQuery.NullsDefaultOrdering defaultNullsOrdering, bool isNullsOrderingSupported) -> void
+LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.TranslateOrderItems(LinqToDB.Linq.Translation.ISqlExpressionTranslator! translator, LinqToDB.Internal.SqlQuery.NullsDefaultOrdering defaultNullsOrdering, System.Type! errorType, System.Collections.Generic.IEnumerable<LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.OrderByInformation!>! orderBy, System.Collections.Generic.List<LinqToDB.SqlQuery.SqlWindowOrderItem!>! orderItems, out LinqToDB.Internal.Expressions.SqlErrorExpression? error) -> bool
+*REMOVED*LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.TranslateOrderItems(LinqToDB.Linq.Translation.ISqlExpressionTranslator! translator, System.Type! errorType, System.Collections.Generic.IEnumerable<LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.OrderByInformation!>! orderBy, System.Collections.Generic.List<LinqToDB.SqlQuery.SqlWindowOrderItem!>! orderItems, out LinqToDB.Internal.Expressions.SqlErrorExpression? error) -> bool
 LinqToDB.LinqOptions.PreferClientCalculation.get -> bool
 LinqToDB.LinqOptions.PreferClientCalculation.init -> void
 static LinqToDB.DataOptionsExtensions.WithPreferClientCalculation(this LinqToDB.LinqOptions! options, bool preferClientCalculation) -> LinqToDB.LinqOptions!

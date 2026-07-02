@@ -1,0 +1,92 @@
+using System.Linq;
+
+using LinqToDB;
+using LinqToDB.Internal.Common;
+
+using NUnit.Framework;
+
+namespace Tests.Linq
+{
+	partial class WindowFunctionsTests
+	{
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer, TestProvName.AllClickHouse, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllSQLite, TestProvName.AllDuckDB, TestProvName.AllFirebird3Plus, TestProvName.AllDB2, TestProvName.AllSapHana, TestProvName.AllInformix, TestProvName.AllPostgreSQL, ProviderName.Ydb, ErrorMessage = ErrorHelper.Error_WindowFunction_Keep)]
+		public void KeepFirstBasic([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
+				from t in table
+				select new
+				{
+					MinFirst = Sql.Window.Min(t.IntValue, f => f.KeepFirst().OrderBy(t.DoubleValue).PartitionBy(t.CategoryId)),
+					MaxLast  = Sql.Window.Max(t.IntValue, f => f.KeepLast().OrderBy(t.DoubleValue).PartitionBy(t.CategoryId)),
+				};
+
+			_ = query.ToList();
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer, TestProvName.AllClickHouse, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllSQLite, TestProvName.AllDuckDB, TestProvName.AllFirebird3Plus, TestProvName.AllDB2, TestProvName.AllSapHana, TestProvName.AllInformix, TestProvName.AllPostgreSQL, ProviderName.Ydb, ErrorMessage = ErrorHelper.Error_WindowFunction_Keep)]
+		public void KeepWithMultipleOrderBy([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
+				from t in table
+				select new
+				{
+					SumFirst = Sql.Window.Sum(t.IntValue, f => f.KeepFirst().OrderBy(t.DoubleValue).ThenByDesc(t.Id).PartitionBy(t.CategoryId)),
+				};
+
+			_ = query.ToList();
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer, TestProvName.AllClickHouse, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllSQLite, TestProvName.AllDuckDB, TestProvName.AllFirebird3Plus, TestProvName.AllDB2, TestProvName.AllSapHana, TestProvName.AllInformix, TestProvName.AllPostgreSQL, ProviderName.Ydb, ErrorMessage = ErrorHelper.Error_WindowFunction_Keep)]
+		public void KeepWithoutPartition([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
+				from t in table
+				select new
+				{
+					MinFirst = Sql.Window.Min(t.IntValue, f => f.KeepFirst().OrderBy(t.DoubleValue)),
+					MaxLast  = Sql.Window.Max(t.IntValue, f => f.KeepLast().OrderByDesc(t.DoubleValue)),
+				};
+
+			_ = query.ToList();
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer, TestProvName.AllClickHouse, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllSQLite, TestProvName.AllDuckDB, TestProvName.AllFirebird3Plus, TestProvName.AllDB2, TestProvName.AllSapHana, TestProvName.AllInformix, TestProvName.AllPostgreSQL, ProviderName.Ydb, ErrorMessage = ErrorHelper.Error_WindowFunction_Keep)]
+		public void KeepAllAggregates([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
+				from t in table
+				select new
+				{
+					MinFirst = Sql.Window.Min(t.IntValue,     f => f.KeepFirst().OrderBy(t.DoubleValue).PartitionBy(t.CategoryId)),
+					MaxFirst = Sql.Window.Max(t.IntValue,     f => f.KeepFirst().OrderBy(t.DoubleValue).PartitionBy(t.CategoryId)),
+					SumFirst = Sql.Window.Sum(t.IntValue,     f => f.KeepFirst().OrderBy(t.DoubleValue).PartitionBy(t.CategoryId)),
+					AvgFirst = Sql.Window.Average(t.IntValue, f => f.KeepFirst().OrderBy(t.DoubleValue).PartitionBy(t.CategoryId)),
+				};
+
+			_ = query.ToList();
+		}
+
+		// Note: UseWindow is intentionally NOT available after KeepFirst/KeepLast.
+		// KEEP only supports PARTITION BY in the OVER clause — no ORDER BY or frame.
+	}
+}

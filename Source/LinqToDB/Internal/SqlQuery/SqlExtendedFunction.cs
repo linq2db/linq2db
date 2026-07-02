@@ -1,15 +1,14 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
 using LinqToDB.Common;
-using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Internal.SqlQuery.Visitors;
+using LinqToDB.SqlQuery;
 
-namespace LinqToDB.SqlQuery
+namespace LinqToDB.Internal.SqlQuery
 {
-	// TODO: v7 - move to internal namespace to other AST members...
 	public class SqlExtendedFunction : SqlExpressionBase
 	{
 		public SqlExtendedFunction(DbDataType dbDataType,
@@ -24,7 +23,11 @@ namespace LinqToDB.SqlQuery
 			SqlSearchCondition?               filter                      = null,
 			SqlFrameClause?                   frameClause                 = null,
 			bool                              isAggregate                 = false,
-			bool                              canBeAffectedByOrderBy      = false)
+			bool                              canBeAffectedByOrderBy      = false,
+			SqlKeepClause?                    keepClause                  = null,
+			Sql.Nulls                         nullTreatment               = Sql.Nulls.None,
+			Sql.From                          fromPosition                = Sql.From.None,
+			bool                              isWindowFunction            = false)
 		{
 			Type                        = dbDataType;
 			FunctionName                = functionName;
@@ -39,6 +42,10 @@ namespace LinqToDB.SqlQuery
 			Filter                      = filter;
 			IsAggregate                 = isAggregate;
 			CanBeAffectedByOrderBy      = canBeAffectedByOrderBy;
+			KeepClause                  = keepClause;
+			NullTreatment               = nullTreatment;
+			FromPosition                = fromPosition;
+			_isWindowFunction           = isWindowFunction;
 		}
 
 		public DbDataType                Type                        { get; }
@@ -54,13 +61,17 @@ namespace LinqToDB.SqlQuery
 		public SqlSearchCondition?       Filter                      { get; private set; }
 		public bool                      IsAggregate                 { get; }
 		public bool                      CanBeAffectedByOrderBy      { get; }
+		public SqlKeepClause?            KeepClause                  { get; private set; }
+		public Sql.Nulls                 NullTreatment               { get; }
+		public Sql.From                  FromPosition                { get; }
 
 		public void Modify(List<SqlFunctionArgument> arguments,
 			List<SqlWindowOrderItem>?                withinGroup,
 			List<ISqlExpression>?                    partitionBy,
 			List<SqlWindowOrderItem>?                orderBy,
 			SqlSearchCondition?                      filter,
-			SqlFrameClause?                          frameClause)
+			SqlFrameClause?                          frameClause,
+			SqlKeepClause?                           keepClause)
 		{
 			Arguments   = arguments;
 			WithinGroup = withinGroup;
@@ -68,6 +79,7 @@ namespace LinqToDB.SqlQuery
 			OrderBy     = orderBy;
 			Filter      = filter;
 			FrameClause = frameClause;
+			KeepClause  = keepClause;
 		}
 
 		public SqlExtendedFunction WithType(DbDataType dbDataType)
@@ -83,9 +95,13 @@ namespace LinqToDB.SqlQuery
 				PartitionBy,
 				OrderBy,
 				Filter,
-				FrameClause, 
+				FrameClause,
 				IsAggregate,
-				CanBeAffectedByOrderBy);
+				CanBeAffectedByOrderBy,
+				keepClause: KeepClause,
+				nullTreatment: NullTreatment,
+				fromPosition: FromPosition,
+				isWindowFunction: IsWindowFunction);
 		}
 
 		public SqlExtendedFunction WithFunctionName(string functionName)
@@ -101,9 +117,13 @@ namespace LinqToDB.SqlQuery
 				PartitionBy,
 				OrderBy,
 				Filter,
-				FrameClause, 
+				FrameClause,
 				IsAggregate,
-				CanBeAffectedByOrderBy);
+				CanBeAffectedByOrderBy,
+				keepClause: KeepClause,
+				nullTreatment: NullTreatment,
+				fromPosition: FromPosition,
+				isWindowFunction: IsWindowFunction);
 		}
 
 		public SqlExtendedFunction WithArguments(IEnumerable<SqlFunctionArgument> arguments, bool[] argumentsNullability)
@@ -119,9 +139,13 @@ namespace LinqToDB.SqlQuery
 				PartitionBy,
 				OrderBy,
 				Filter,
-				FrameClause, 
+				FrameClause,
 				IsAggregate,
-				CanBeAffectedByOrderBy);
+				CanBeAffectedByOrderBy,
+				keepClause: KeepClause,
+				nullTreatment: NullTreatment,
+				fromPosition: FromPosition,
+				isWindowFunction: IsWindowFunction);
 		}
 
 		public SqlExtendedFunction WithPartitionBy(IEnumerable<ISqlExpression>? partitionBy)
@@ -137,9 +161,13 @@ namespace LinqToDB.SqlQuery
 				partitionBy,
 				OrderBy,
 				Filter,
-				FrameClause, 
+				FrameClause,
 				IsAggregate,
-				CanBeAffectedByOrderBy);
+				CanBeAffectedByOrderBy,
+				keepClause: KeepClause,
+				nullTreatment: NullTreatment,
+				fromPosition: FromPosition,
+				isWindowFunction: IsWindowFunction);
 		}
 
 		public SqlExtendedFunction WithOrderBy(IEnumerable<SqlWindowOrderItem>? orderBy)
@@ -155,9 +183,13 @@ namespace LinqToDB.SqlQuery
 				PartitionBy,
 				orderBy,
 				Filter,
-				FrameClause, 
+				FrameClause,
 				IsAggregate,
-				CanBeAffectedByOrderBy);
+				CanBeAffectedByOrderBy,
+				keepClause: KeepClause,
+				nullTreatment: NullTreatment,
+				fromPosition: FromPosition,
+				isWindowFunction: IsWindowFunction);
 		}
 
 		public SqlExtendedFunction WithFrameClause(SqlFrameClause? frameClause)
@@ -173,9 +205,13 @@ namespace LinqToDB.SqlQuery
 				PartitionBy,
 				OrderBy,
 				Filter,
-				frameClause, 
+				frameClause,
 				IsAggregate,
-				CanBeAffectedByOrderBy);
+				CanBeAffectedByOrderBy,
+				keepClause: KeepClause,
+				nullTreatment: NullTreatment,
+				fromPosition: FromPosition,
+				isWindowFunction: IsWindowFunction);
 		}
 
 		public SqlExtendedFunction WithFilter(SqlSearchCondition? filter)
@@ -191,9 +227,13 @@ namespace LinqToDB.SqlQuery
 				PartitionBy,
 				OrderBy,
 				filter,
-				FrameClause, 
+				FrameClause,
 				IsAggregate,
-				CanBeAffectedByOrderBy);
+				CanBeAffectedByOrderBy,
+				keepClause: KeepClause,
+				nullTreatment: NullTreatment,
+				fromPosition: FromPosition,
+				isWindowFunction: IsWindowFunction);
 		}
 
 		public SqlExtendedFunction WithWithinGroup(IEnumerable<SqlWindowOrderItem>? withinGroup)
@@ -209,9 +249,13 @@ namespace LinqToDB.SqlQuery
 				PartitionBy,
 				OrderBy,
 				Filter,
-				FrameClause, 
+				FrameClause,
 				IsAggregate,
-				CanBeAffectedByOrderBy);
+				CanBeAffectedByOrderBy,
+				keepClause: KeepClause,
+				nullTreatment: NullTreatment,
+				fromPosition: FromPosition,
+				isWindowFunction: IsWindowFunction);
 		}
 
 		static bool CheckNulls(object? expr1, object? expr2)
@@ -239,7 +283,13 @@ namespace LinqToDB.SqlQuery
 			if (!CheckNulls(FrameClause, otherFunction.FrameClause))
 				return false;
 
-			if (FrameClause != null && !FrameClause.Equals(otherFunction.FrameClause))
+			if (FrameClause != null && !FrameClause.Equals(otherFunction.FrameClause!, comparer))
+				return false;
+
+			if (!CheckNulls(KeepClause, otherFunction.KeepClause))
+				return false;
+
+			if (KeepClause != null && !KeepClause.Equals(otherFunction.KeepClause!, comparer))
 				return false;
 
 			if (!CheckNulls(Filter, otherFunction.Filter))
@@ -257,9 +307,20 @@ namespace LinqToDB.SqlQuery
 			if (CanBeNullInAggregationQuery != otherFunction.CanBeNullInAggregationQuery)
 				return false;
 
-			foreach (var argument in Arguments)
+			if (NullTreatment != otherFunction.NullTreatment)
+				return false;
+
+			if (FromPosition != otherFunction.FromPosition)
+				return false;
+
+			if (IsWindowFunction != otherFunction.IsWindowFunction)
+				return false;
+
+			for (var i = 0; i < Arguments.Count; i++)
 			{
-				if (!otherFunction.Arguments.Exists(a => argument.Modifier == a.Modifier && argument.Expression.Equals(a.Expression, comparer) && argument.Suffix.AreEqual(a.Suffix, comparer)))
+				var argument = Arguments[i];
+				var otherArg = otherFunction.Arguments[i];
+				if (argument.Modifier != otherArg.Modifier || !argument.Expression.Equals(otherArg.Expression, comparer) || !argument.Suffix.AreEqual(otherArg.Suffix, comparer))
 					return false;
 			}
 
@@ -291,7 +352,7 @@ namespace LinqToDB.SqlQuery
 			{
 				for (var i = 0; i < OrderBy.Count; i++)
 				{
-					if (OrderBy[i].IsDescending != otherFunction.OrderBy![i].IsDescending || !OrderBy[i].Expression.Equals(otherFunction.OrderBy![i].Expression, comparer))
+					if (OrderBy[i].IsDescending != otherFunction.OrderBy![i].IsDescending || OrderBy[i].NullsPosition != otherFunction.OrderBy![i].NullsPosition || !OrderBy[i].Expression.Equals(otherFunction.OrderBy![i].Expression, comparer))
 						return false;
 				}
 			}
@@ -306,7 +367,7 @@ namespace LinqToDB.SqlQuery
 			{
 				for (var i = 0; i < WithinGroup.Count; i++)
 				{
-					if (WithinGroup[i].IsDescending != otherFunction.WithinGroup![i].IsDescending || !WithinGroup[i].Expression.Equals(otherFunction.WithinGroup![i].Expression, comparer))
+					if (WithinGroup[i].IsDescending != otherFunction.WithinGroup![i].IsDescending || WithinGroup[i].NullsPosition != otherFunction.WithinGroup![i].NullsPosition || !WithinGroup[i].Expression.Equals(otherFunction.WithinGroup![i].Expression, comparer))
 						return false;
 				}
 			}
@@ -331,13 +392,22 @@ namespace LinqToDB.SqlQuery
 			return false;
 		}
 
-		public override int Precedence => SqlQuery.Precedence.Primary;
+		public override int Precedence => LinqToDB.SqlQuery.Precedence.Primary;
 
 		public override Type SystemType => Type.SystemType;
 
 		public override QueryElementType ElementType => QueryElementType.SqlExtendedFunction;
 
-		public bool IsWindowFunction => OrderBy?.Count > 0 || PartitionBy?.Count > 0 || FrameClause != null;
+		// Stored marker: set when the function originates from an explicit OVER/window context (e.g. legacy
+		// Sql.Ext.*().Over() or Sql.Window.*). Lets an empty window (no PARTITION/ORDER/frame) still emit OVER (),
+		// which the clause-derived check below can't detect.
+		// LinqServiceSerializer persists the *derived* IsWindowFunction value and restores it into this field on
+		// read. That is safe as long as every term in the derivation below is itself serialized (they are): a
+		// function derived-true via its clauses restores true either way, and the empty-OVER case relies on this
+		// stored bit, which is round-tripped faithfully. Keep that invariant if the derivation gains a new term.
+		readonly bool _isWindowFunction;
+
+		public bool IsWindowFunction => _isWindowFunction || OrderBy?.Count > 0 || PartitionBy?.Count > 0 || FrameClause != null || KeepClause != null;
 
 		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
@@ -354,6 +424,12 @@ namespace LinqToDB.SqlQuery
 			}
 
 			writer.Append(')');
+
+			if (FromPosition != Sql.From.None)
+				writer.Append(FromPosition == Sql.From.Last ? " FROM LAST" : " FROM FIRST");
+
+			if (NullTreatment != Sql.Nulls.None)
+				writer.Append(NullTreatment == Sql.Nulls.Ignore ? " IGNORE NULLS" : " RESPECT NULLS");
 
 			if (WithinGroup != null && WithinGroup.Count > 0)
 			{
@@ -452,6 +528,10 @@ namespace LinqToDB.SqlQuery
 			hash.Add(Filter?.GetElementHashCode());
 			hash.Add(IsAggregate);
 			hash.Add(CanBeAffectedByOrderBy);
+			hash.Add(KeepClause?.GetElementHashCode());
+			hash.Add(NullTreatment);
+			hash.Add(FromPosition);
+			hash.Add(IsWindowFunction);
 			hash.Add(CanBeNull);
 			hash.Add(CanBeNullInAggregationQuery);
 
