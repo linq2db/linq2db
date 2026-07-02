@@ -536,14 +536,12 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 					h = h[(ClickHouseHints.Join.Global.Length + 1)..];
 				}
-				else if (h.StartsWith(ClickHouseHints.Join.All, StringComparison.Ordinal))
+				else if (h.StartsWith(ClickHouseHints.Join.All, StringComparison.Ordinal) && !string.Equals(h, ClickHouseHints.Join.All, StringComparison.Ordinal))
 				{
+					// Keep legacy "ALL <strictness>" values working for already compiled callers and explicit hint strings.
 					StringBuilder
 						.Append(ClickHouseHints.Join.All)
 						.Append(' ');
-
-					if (string.Equals(h, ClickHouseHints.Join.All, StringComparison.Ordinal))
-						return base.BuildJoinType(join, condition);
 
 					h = h[(ClickHouseHints.Join.All.Length + 1)..];
 				}

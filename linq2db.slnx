@@ -163,6 +163,7 @@
     <File Path=".gitignore" />
     <File Path=".runsettings" />
     <File Path="Build.cmd" />
+    <File Path="CHANGELOG.md" />
     <File Path="Clean.cmd" />
     <File Path="Compile.cmd" />
     <File Path="CONTRIBUTING.md" />

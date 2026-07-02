@@ -306,6 +306,8 @@ Subsequent reviews on the same PR (verify-runs, regenerations after author fixes
 
 When drafting, follow the per-provider claim verification discipline in `agent-rules.md` → **GitHub wording discipline**: provider-specific behavior claims must be checked against the actual translator code at PR HEAD before posting.
 
+When an agent prepares or reviews a PR with user-visible changes that should appear in release notes, the agent should add a release-note description for that PR to root `CHANGELOG.md`. Treat that file as a temporary staging area for the official wiki release notes at <https://github.com/linq2db/linq2db/wiki/Releases-and-Roadmap>: match the wiki structure (`### Release <version>` → `#### <component>` → `##### <category>`), include the PR number in the entry (e.g. `(#5555)`), and keep wording ready to copy to the wiki. During release prep, move the entries from `CHANGELOG.md` to the wiki release notes and clear the moved entries from the local file.
+
 ## Don'ts
 
 - **Do not submit** the review. Omit `event` — this is what creates a PENDING draft.
