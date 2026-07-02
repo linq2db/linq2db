@@ -172,7 +172,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (inline && !shouldAddDefaultIfEmpty)
 				{
 					var ed = builder.MappingSchema.GetEntityDescriptor(objectType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
-					if (ed.QueryFilterLambda != null)
+					if (ed.QueryFilters.Count > 0)
 					{
 						shouldAddDefaultIfEmpty = true;
 						shouldAddCacheCheck     = true;
