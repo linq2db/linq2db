@@ -81,6 +81,11 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			SqlProviderFlags.MaxColumnCount                     = 4096;
 			SqlProviderFlags.DefaultNullsOrdering               = NullsDefaultOrdering.Smallest; // SQL Server sorts NULL as the smallest value
 
+			// SQL Server runs multiple statements in one command and returns their result sets in order (NextResult),
+			// so eager loading combines the main query + child collections into one multi-result-set round-trip.
+			SqlProviderFlags.IsMultiStatementBatchSupported     = true;
+			SqlProviderFlags.IsMultipleResultSetsSupported      = true;
+
 			// SqlServer 2005 emits InsertOrUpdate as UPDATE + IF @@ROWCOUNT=0 INSERT (single statement);
 			// it can't carry an extra predicate on the UPDATE branch. 2008+ go through MERGE which can.
 			// SqlServer 2005 also predates MERGE (introduced in 2008), so synthesized MERGE lowering
