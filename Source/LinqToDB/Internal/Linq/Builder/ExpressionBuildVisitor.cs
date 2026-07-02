@@ -4655,15 +4655,25 @@ namespace LinqToDB.Internal.Linq.Builder
 				case ExpressionType.Constant:
 				{
 					var origValue = ((ConstantExpression)value).Value;
+
+					// Comparing an enum to null is a null check, not a value comparison. Mapping null to the
+					// enum's underlying default (e.g. 0) would pollute the SQL and turn the check into a value
+					// filter that drops rows whose enum equals that default — see issue #5666. Emit IS [NOT] NULL.
+					if (origValue == null)
+					{
+						var operandSql = (Visit(operand) as SqlPlaceholderExpression)?.Sql;
+						if (operandSql == null)
+							return null;
+
+						return new SqlPredicate.IsNull(operandSql, op == SqlPredicate.Operator.NotEqual);
+					}
+
 					var mapValue  = origValue;
 
-					if (origValue != null)
+					foreach (var enumVal in MappingSchema.GetMapValues(type.UnwrapNullableType())!)
 					{
-						foreach (var enumVal in MappingSchema.GetMapValues(type.UnwrapNullableType())!)
-						{
-							if (origValue.Equals(enumVal.OrigValue) && enumVal.MapValues.Length > 0)
-								mapValue = enumVal.MapValues[0].Value;
-						}
+						if (origValue.Equals(enumVal.OrigValue) && enumVal.MapValues.Length > 0)
+							mapValue = enumVal.MapValues[0].Value;
 					}
 
 					SqlValue sqlvalue;
