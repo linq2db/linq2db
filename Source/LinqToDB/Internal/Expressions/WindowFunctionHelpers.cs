@@ -209,10 +209,15 @@ namespace LinqToDB.Internal.Expressions
 		// explicitly — some providers (e.g. ClickHouse) do not default FIRST_VALUE/LAST_VALUE to RESPECT NULLS, and
 		// the per-provider emission still drops the token where it is the natural default. builderType must expose
 		// INullTreatmentPart (e.g. IValueFinal/ILeadLagFinal/INthValueFinal) when nullTreatment may be set.
-		static LambdaExpression BuildUseWindowLambda(Type builderType, Expression windowDefinition, Sql.Nulls nullTreatment)
+		static LambdaExpression BuildUseWindowLambda(Type builderType, Expression windowDefinition, Sql.Nulls nullTreatment, Sql.From fromPosition = Sql.From.None)
 		{
 			var windowParam = Expression.Parameter(builderType, "f");
 			Expression body = windowParam;
+
+			// FROM FIRST/LAST (NTH_VALUE only) precedes IGNORE/RESPECT NULLS in the builder chain and in SQL. FROM FIRST
+			// is the SQL default and emits nothing, so only FROM LAST needs an explicit builder step.
+			if (fromPosition == Sql.From.Last)
+				body = Expression.Call(body, FindMethodInfo(body.Type, nameof(WindowFunctionBuilder.IFromPart<>.FromLast), 0));
 
 			if (nullTreatment == Sql.Nulls.Ignore)
 			{
@@ -378,12 +383,12 @@ namespace LinqToDB.Internal.Expressions
 				? BuildGenericValueWithFrame(_lastValueMethodInfo, argument, typeof(WindowFunctionBuilder.IValueFinal), nullTreatment, partitionBy, orderBy, f)
 				: BuildWindowFunctionWithGenericArg(_lastValueMethodInfo, argument, BuildWindowDefinition(partitionBy, orderBy), typeof(WindowFunctionBuilder.IValueFinal), nullTreatment);
 
-		public static Expression BuildNthValue(Expression argument, Expression nArg, Sql.Nulls nullTreatment, Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy, WindowFrameSpec? frame = null)
+		public static Expression BuildNthValue(Expression argument, Expression nArg, Sql.Nulls nullTreatment, Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy, WindowFrameSpec? frame = null, Sql.From fromPosition = Sql.From.None)
 		{
 			var method       = _nthValueMethodInfo.MakeGenericMethod(argument.Type);
 			var windowLambda = frame is { } f
-				? BuildInlineFrameLambda(typeof(WindowFunctionBuilder.INthValueFinal), partitionBy, orderBy, Sql.AggregateModifier.None, nullTreatment, f)
-				: BuildUseWindowLambda(typeof(WindowFunctionBuilder.INthValueFinal), BuildWindowDefinition(partitionBy, orderBy), nullTreatment);
+				? BuildInlineFrameLambda(typeof(WindowFunctionBuilder.INthValueFinal), partitionBy, orderBy, Sql.AggregateModifier.None, nullTreatment, f, fromPosition)
+				: BuildUseWindowLambda(typeof(WindowFunctionBuilder.INthValueFinal), BuildWindowDefinition(partitionBy, orderBy), nullTreatment, fromPosition);
 			return Expression.Call(method, Expression.Constant(Sql.Window), argument, nArg, windowLambda);
 		}
 
@@ -801,10 +806,15 @@ namespace LinqToDB.Internal.Expressions
 			(Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy,
 			Sql.AggregateModifier                                         modifier,
 			Sql.Nulls                                                     nullTreatment,
-			WindowFrameSpec                                               frame)
+			WindowFrameSpec                                               frame,
+			Sql.From                                                      fromPosition = Sql.From.None)
 		{
 			var        param = Expression.Parameter(builderType, "f");
 			Expression body  = param;
+
+			// FROM LAST (NTH_VALUE only) precedes IGNORE/RESPECT NULLS; FROM FIRST is the SQL default and emits nothing.
+			if (fromPosition == Sql.From.Last)
+				body = Expression.Call(body, FindMethodInfo(body.Type, nameof(WindowFunctionBuilder.IFromPart<>.FromLast), 0));
 
 			if (modifier == Sql.AggregateModifier.Distinct)
 				body = Expression.Call(body, FindMethodInfo(body.Type, nameof(WindowFunctionBuilder.IDistinctPart<>.Distinct), 0));

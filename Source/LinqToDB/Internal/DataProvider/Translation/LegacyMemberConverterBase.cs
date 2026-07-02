@@ -251,6 +251,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			bool        isKeepFirst      = false;
 			bool        sawOver          = false;
 			Sql.Nulls   functionNulls    = Sql.Nulls.None;
+			Sql.From    functionFrom     = Sql.From.None;
 			Sql.AggregateModifier functionModifier = Sql.AggregateModifier.None;
 
 			List<(Expression expr, bool descending, Sql.NullsPosition nulls)>? keepOrderByList = null;
@@ -399,8 +400,17 @@ namespace LinqToDB.Internal.DataProvider.Translation
 							continue;
 						}
 
-						if (pType == typeof(Sql.NullsPosition) || pType == typeof(Sql.From))
+						if (pType == typeof(Sql.NullsPosition))
 							continue;
+
+						// Capture the NTH_VALUE FROM FIRST/LAST modifier so it survives the conversion (re-applied as
+						// .FromLast() on the new builder). Skipping it here silently dropped FROM LAST — a wrong result
+						// on providers where it changes which row is returned (Oracle).
+						if (pType == typeof(Sql.From))
+						{
+							functionFrom = (Sql.From)mc.Arguments[i].EvaluateExpression()!;
+							continue;
+						}
 
 						var capturedArg = mc.Arguments[i];
 
@@ -583,7 +593,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 				nameof(AnalyticFunctions.FirstValue) when functionArg1 != null                       => WindowFunctionHelpers.BuildFirstValue(functionArg1, functionNulls, partitionBy, orderBy, frame),
 				nameof(AnalyticFunctions.LastValue)  when functionArg1 != null                       => WindowFunctionHelpers.BuildLastValue(functionArg1, functionNulls, partitionBy, orderBy, frame),
-				nameof(AnalyticFunctions.NthValue)   when functionArg1 != null && functionArg2 != null => WindowFunctionHelpers.BuildNthValue(functionArg1, functionArg2, functionNulls, partitionBy, orderBy, frame),
+				nameof(AnalyticFunctions.NthValue)   when functionArg1 != null && functionArg2 != null => WindowFunctionHelpers.BuildNthValue(functionArg1, functionArg2, functionNulls, partitionBy, orderBy, frame, functionFrom),
 
 				nameof(AnalyticFunctions.RatioToReport) when functionArg1 != null => WindowFunctionHelpers.BuildRatioToReport(functionArg1, partitionBy),
 

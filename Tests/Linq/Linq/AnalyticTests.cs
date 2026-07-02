@@ -762,6 +762,25 @@ namespace Tests.Linq
 			Assert.That(res, Is.Not.Empty);
 		}
 
+		// Regression: a legacy Sql.Ext NthValue FROM LAST modifier must survive conversion to the Sql.Window
+		// pipeline. It was previously discarded (the converter skipped Sql.From), so NTH_VALUE(...) FROM LAST
+		// silently emitted without FROM LAST and returned the value counted from the first row instead of the last.
+		[Test]
+		public void TestNthValueOracleFromLast([IncludeDataSources(TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+			var q =
+					from p in db.Parent
+					join c in db.Child on p.ParentID equals c.ParentID
+					select Sql.Ext.NthValue(c.ChildID, p.ParentID, Sql.From.Last, Sql.Nulls.Ignore).Over().PartitionBy(p.Value1, c.ChildID).ToValue();
+
+			var sql = q.ToSqlQuery().Sql;
+			sql.ShouldContain("FROM LAST");
+			sql.ShouldContain("IGNORE NULLS");
+
+			q.ToArray();
+		}
+
 		[Test]
 		public void TestNTileOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllDuckDB)]
 			string context)
