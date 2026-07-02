@@ -29,8 +29,9 @@ namespace LinqToDB.Internal.DataProvider
 		SqlCommandScenario? BuildCommandScenario(SqlStatement statement, SqlProviderFlags flags, ISqlExpressionFactory factory);
 
 		/// <summary>
-		/// Plans how a scenario's steps map to physical command groups (round-trips).
+		/// Plans how a scenario's steps map to physical command groups (round-trips): contiguous non-gated steps may be
+		/// combined into one command when <see cref="SqlProviderFlags.IsMultiStatementBatchSupported"/> is set.
 		/// </summary>
-		SqlCommandGroupPlan PlanScenario(SqlCommandScenario scenario);
+		SqlCommandGroupPlan PlanScenario(SqlCommandScenario scenario, SqlProviderFlags flags);
 	}
 }

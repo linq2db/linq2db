@@ -717,6 +717,16 @@ namespace LinqToDB.Internal.SqlProvider
 		[DataMember(Order = 78)]
 		public bool IsServerSideVariablesSupported { get; set; }
 
+		/// <summary>
+		/// Indicates that the provider can return multiple result sets from a single command (walked via
+		/// <c>NextResult</c>), so several result-producing scenario steps can be harvested from one combined command.
+		/// Without it a combined group may hold at most one result-producing step (identity's INSERT + identity SELECT
+		/// is one result set); with it, many readers combine into one round-trip (eager loading). Enabled conservatively
+		/// per provider. Default: <see langword="false"/>.
+		/// </summary>
+		[DataMember(Order = 79)]
+		public bool IsMultipleResultSetsSupported { get; set; }
+
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
 			return AcceptsTakeAsParameter || (AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null);
@@ -818,6 +828,7 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsDistinctOnSupported                                .GetHashCode()
 				^ IsMultiStatementBatchSupported                       .GetHashCode()
 				^ IsServerSideVariablesSupported                       .GetHashCode()
+				^ IsMultipleResultSetsSupported                        .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => StringComparer.Ordinal.GetHashCode(flag) ^ hash);
 	}
 
@@ -901,6 +912,7 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsDistinctOnSupported                                 == other.IsDistinctOnSupported
 				&& IsMultiStatementBatchSupported                        == other.IsMultiStatementBatchSupported
 				&& IsServerSideVariablesSupported                        == other.IsServerSideVariablesSupported
+				&& IsMultipleResultSetsSupported                         == other.IsMultipleResultSetsSupported
 				&& CustomFlags.SetEquals(other.CustomFlags);
 		}
 		#endregion

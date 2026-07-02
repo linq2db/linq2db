@@ -162,9 +162,9 @@ namespace LinqToDB.Data
 			// Cached in query.Context on first compile so a re-run reuses both the rendered commands and the logical
 			// scenario (the interpreter needs the real scenario for combined grouping / forwarding — the bridge can't
 			// re-infer those).
-			private sealed record CachedScenario(CommandWithParameters[] Commands, SqlCommandScenario? Scenario);
+			private sealed record CachedScenario(CommandWithParameters[] Commands, SqlCommandScenario? Scenario, SqlCommandGroupPlan? Plan);
 
-			private sealed record PreparedQuery(CommandWithParameters[] Commands, SqlStatement Statement, IReadOnlyCollection<string>? QueryHints, SqlCommandScenario? Scenario);
+			private sealed record PreparedQuery(CommandWithParameters[] Commands, SqlStatement Statement, IReadOnlyCollection<string>? QueryHints, SqlCommandScenario? Scenario, SqlCommandGroupPlan? Plan);
 
 			private sealed record ExecutionPreparedQuery(PreparedQuery PreparedQuery, DbParameter[]?[] CommandsParameters);
 
@@ -194,7 +194,7 @@ namespace LinqToDB.Data
 
 					if (query.Context is CachedScenario cached)
 					{
-						return new PreparedQuery(cached.Commands, statement, dataConnection.GetNextCommandHints(!forGetSqlText), cached.Scenario);
+						return new PreparedQuery(cached.Commands, statement, dataConnection.GetNextCommandHints(!forGetSqlText), cached.Scenario, cached.Plan);
 					}
 
 					var continuousRun = query.IsContinuousRun;
@@ -311,9 +311,13 @@ namespace LinqToDB.Data
 						}
 					}
 
+					var plan = scenario != null
+						? dmlService.PlanScenario(scenario, dataConnection.DataProvider.SqlProviderFlags)
+						: null;
+
 					if (optimizeAndConvertAll)
 					{
-						query.Context = new CachedScenario(commands, scenario);
+						query.Context = new CachedScenario(commands, scenario, plan);
 
 						// clear aliases, they are not needed after SQL generation.
 						//
@@ -322,7 +326,7 @@ namespace LinqToDB.Data
 
 					query.IsContinuousRun = true;
 
-					return new PreparedQuery(commands, statement, dataConnection.GetNextCommandHints(!forGetSqlText), scenario);
+					return new PreparedQuery(commands, statement, dataConnection.GetNextCommandHints(!forGetSqlText), scenario, plan);
 				}
 				finally
 				{
@@ -510,128 +514,230 @@ namespace LinqToDB.Data
 				return outcome;
 			}
 
-			// Sequential interpreter (sync): each step becomes its own command (one round-trip), executed in order; gates
-			// pull earlier results from the execution context; the outcome is the last executed candidate. Owns all
-			// InitCommand calls.
-			static ScenarioOutcome ExecuteScenario(DataConnection dataConnection, ExecutionPreparedQuery executionQuery, SqlCommandScenario scenario)
+			static int ResolveRowsAffected(IReadOnlyList<SqlCommandStep> steps, SqlCommandExecutionContext context)
 			{
-				var steps        = scenario.Steps;
-				var context      = new SqlCommandExecutionContext(steps.Count);
-				var rowsAffected = -1;
+				// Whole-operation rows-affected = the first step's count (a non-query, non-out-param step), matching the
+				// historical "command 0" semantics; -1 otherwise (out-param / skipped / scalar-first).
+				if (steps.Count > 0 && steps[0] is { Kind: SqlStepKind.NonQuery, OutParameterName: null }
+					&& context.WasExecuted(0) && context.GetResult(0) is int r)
+					return r;
 
-				for (var i = 0; i < steps.Count; i++)
-				{
-					var step = steps[i];
-
-					if (step.RunIf is { } gate && !EvaluateGate(gate, context))
-						continue;
-
-					InitCommand(dataConnection, executionQuery, i);
-
-					ApplyForwardedParameters(executionQuery, i, step, context);
-
-					if (step.OnError == SqlStepOnError.Ignore)
-					{
-						try
-						{
-							dataConnection.ExecuteNonQuery();
-						}
-						catch
-						{
-							// ignore
-						}
-
-						continue;
-					}
-
-					switch (step.Kind)
-					{
-						case SqlStepKind.NonQuery:
-						{
-							var outParam = step.OutParameterName is null ? null : AddOutputParameter(dataConnection, step);
-							var n        = dataConnection.ExecuteNonQuery();
-
-							if (outParam != null)
-							{
-								context.SetResult(i, outParam.Value);
-							}
-							else
-							{
-								context.SetResult(i, n);
-								if (i == 0)
-									rowsAffected = n;
-							}
-
-							break;
-						}
-						case SqlStepKind.Scalar:
-							context.SetResult(i, dataConnection.ExecuteScalar());
-							break;
-					}
-				}
-
-				return new ScenarioOutcome(rowsAffected, ResolveOutcome(scenario, context));
+				return -1;
 			}
 
-			// Sequential interpreter (async sibling). In case of change the logic of this method, DO NOT FORGET to change the sibling method.
-			static async Task<ScenarioOutcome> ExecuteScenarioAsync(DataConnection dataConnection, ExecutionPreparedQuery executionQuery, SqlCommandScenario scenario, CancellationToken cancellationToken)
+			// Builds one physical command for a combined group by concatenating its steps' rendered command texts with a
+			// statement separator and merging their parameters (identity/eager groups don't share parameter names).
+			static void InitCombinedCommand(DataConnection dataConnection, ExecutionPreparedQuery executionQuery, SqlCommandGroup group)
 			{
-				var steps        = scenario.Steps;
-				var context      = new SqlCommandExecutionContext(steps.Count);
-				var rowsAffected = -1;
+				var pq       = executionQuery.PreparedQuery;
+				var sb       = new System.Text.StringBuilder();
+				var dbParams = new List<DbParameter>();
 
-				for (var i = 0; i < steps.Count; i++)
+				for (var k = 0; k < group.StepIndexes.Count; k++)
 				{
-					var step = steps[i];
+					var idx = group.StepIndexes[k];
 
-					if (step.RunIf is { } gate && !EvaluateGate(gate, context))
-						continue;
+					if (k > 0)
+						sb.Append(";\n");
 
-					InitCommand(dataConnection, executionQuery, i);
+					sb.Append(pq.Commands[idx].Command);
 
-					ApplyForwardedParameters(executionQuery, i, step, context);
+					var ps = executionQuery.CommandsParameters[idx];
+					if (ps != null)
+						dbParams.AddRange(ps);
+				}
 
-					if (step.OnError == SqlStepOnError.Ignore)
+				var queryHints = group.StepIndexes[0] == 0 ? pq.QueryHints : null;
+
+				dataConnection.InitCommand(CommandType.Text, sb.ToString(), null, queryHints, dbParams.Count > 0);
+
+				foreach (var p in dbParams)
+					dataConnection.CurrentCommand!.Parameters.Add(p);
+
+				dataConnection.CommitCommandInit();
+			}
+
+			// Executes one step as its own command (the sequential path; also every step when the provider can't batch).
+			static void ExecuteSingleStep(DataConnection dataConnection, ExecutionPreparedQuery executionQuery, IReadOnlyList<SqlCommandStep> steps, int i, SqlCommandExecutionContext context)
+			{
+				var step = steps[i];
+
+				if (step.RunIf is { } gate && !EvaluateGate(gate, context))
+					return;
+
+				InitCommand(dataConnection, executionQuery, i);
+
+				ApplyForwardedParameters(executionQuery, i, step, context);
+
+				if (step.OnError == SqlStepOnError.Ignore)
+				{
+					try
 					{
-						try
-						{
-							await dataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(false);
-						}
-						catch
-						{
-							// ignore
-						}
-
-						continue;
+						dataConnection.ExecuteNonQuery();
+					}
+					catch
+					{
+						// ignore
 					}
 
-					switch (step.Kind)
+					return;
+				}
+
+				switch (step.Kind)
+				{
+					case SqlStepKind.NonQuery:
 					{
-						case SqlStepKind.NonQuery:
-						{
-							var outParam = step.OutParameterName is null ? null : AddOutputParameter(dataConnection, step);
-							var n        = await dataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(false);
+						var outParam = step.OutParameterName is null ? null : AddOutputParameter(dataConnection, step);
+						var n        = dataConnection.ExecuteNonQuery();
+						context.SetResult(i, outParam != null ? outParam.Value : n);
+						break;
+					}
+					case SqlStepKind.Scalar:
+						context.SetResult(i, dataConnection.ExecuteScalar());
+						break;
+				}
+			}
 
-							if (outParam != null)
-							{
-								context.SetResult(i, outParam.Value);
-							}
-							else
-							{
-								context.SetResult(i, n);
-								if (i == 0)
-									rowsAffected = n;
-							}
+			// Executes a combined group as ONE command and harvests its result sets in step order: a Scalar step reads the
+			// first cell of the current result set then advances; a pure non-query step yields no result set (skipped).
+			static void ExecuteCombinedGroup(DataConnection dataConnection, ExecutionPreparedQuery executionQuery, IReadOnlyList<SqlCommandStep> steps, SqlCommandGroup group, SqlCommandExecutionContext context)
+			{
+				InitCombinedCommand(dataConnection, executionQuery, group);
 
-							break;
-						}
+				using var rd = dataConnection.ExecuteDataReader(CommandBehavior.Default);
+				var       dr = rd.DataReader!;
+
+				foreach (var i in group.StepIndexes)
+				{
+					switch (steps[i].Kind)
+					{
 						case SqlStepKind.Scalar:
-							context.SetResult(i, await dataConnection.ExecuteScalarDataAsync(cancellationToken).ConfigureAwait(false));
+							context.SetResult(i, dr.Read() ? dr.GetValue(0) : null);
+							dr.NextResult();
+							break;
+						case SqlStepKind.NonQuery:
+							context.SetResult(i, dr.RecordsAffected);
 							break;
 					}
 				}
+			}
 
-				return new ScenarioOutcome(rowsAffected, ResolveOutcome(scenario, context));
+			// Interpreter (sync). Walks the group plan (from PreparedQuery.Plan): a singleton group runs as its own
+			// command; a combined group runs as one command whose result sets are harvested per step. When there is no
+			// plan (the legacy bridge), every step is its own command. Owns all InitCommand calls.
+			static ScenarioOutcome ExecuteScenario(DataConnection dataConnection, ExecutionPreparedQuery executionQuery, SqlCommandScenario scenario)
+			{
+				var steps   = scenario.Steps;
+				var context = new SqlCommandExecutionContext(steps.Count);
+				var groups  = executionQuery.PreparedQuery.Plan?.Groups;
+
+				if (groups == null)
+				{
+					for (var i = 0; i < steps.Count; i++)
+						ExecuteSingleStep(dataConnection, executionQuery, steps, i, context);
+				}
+				else
+				{
+					foreach (var group in groups)
+					{
+						if (group.StepIndexes.Count == 1)
+							ExecuteSingleStep(dataConnection, executionQuery, steps, group.StepIndexes[0], context);
+						else
+							ExecuteCombinedGroup(dataConnection, executionQuery, steps, group, context);
+					}
+				}
+
+				return new ScenarioOutcome(ResolveRowsAffected(steps, context), ResolveOutcome(scenario, context));
+			}
+
+			// In case of change the logic of this method, DO NOT FORGET to change the sibling method.
+			static async Task ExecuteSingleStepAsync(DataConnection dataConnection, ExecutionPreparedQuery executionQuery, IReadOnlyList<SqlCommandStep> steps, int i, SqlCommandExecutionContext context, CancellationToken cancellationToken)
+			{
+				var step = steps[i];
+
+				if (step.RunIf is { } gate && !EvaluateGate(gate, context))
+					return;
+
+				InitCommand(dataConnection, executionQuery, i);
+
+				ApplyForwardedParameters(executionQuery, i, step, context);
+
+				if (step.OnError == SqlStepOnError.Ignore)
+				{
+					try
+					{
+						await dataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(false);
+					}
+					catch
+					{
+						// ignore
+					}
+
+					return;
+				}
+
+				switch (step.Kind)
+				{
+					case SqlStepKind.NonQuery:
+					{
+						var outParam = step.OutParameterName is null ? null : AddOutputParameter(dataConnection, step);
+						var n        = await dataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(false);
+						context.SetResult(i, outParam != null ? outParam.Value : n);
+						break;
+					}
+					case SqlStepKind.Scalar:
+						context.SetResult(i, await dataConnection.ExecuteScalarDataAsync(cancellationToken).ConfigureAwait(false));
+						break;
+				}
+			}
+
+			// In case of change the logic of this method, DO NOT FORGET to change the sibling method.
+			static async Task ExecuteCombinedGroupAsync(DataConnection dataConnection, ExecutionPreparedQuery executionQuery, IReadOnlyList<SqlCommandStep> steps, SqlCommandGroup group, SqlCommandExecutionContext context, CancellationToken cancellationToken)
+			{
+				InitCombinedCommand(dataConnection, executionQuery, group);
+
+				await using var rd = await dataConnection.ExecuteDataReaderAsync(CommandBehavior.Default, cancellationToken).ConfigureAwait(false);
+				var             dr = rd.DataReader!;
+
+				foreach (var i in group.StepIndexes)
+				{
+					switch (steps[i].Kind)
+					{
+						case SqlStepKind.Scalar:
+							context.SetResult(i, await dr.ReadAsync(cancellationToken).ConfigureAwait(false) ? dr.GetValue(0) : null);
+							await dr.NextResultAsync(cancellationToken).ConfigureAwait(false);
+							break;
+						case SqlStepKind.NonQuery:
+							context.SetResult(i, dr.RecordsAffected);
+							break;
+					}
+				}
+			}
+
+			// Interpreter (async sibling). In case of change the logic of this method, DO NOT FORGET to change the sibling method.
+			static async Task<ScenarioOutcome> ExecuteScenarioAsync(DataConnection dataConnection, ExecutionPreparedQuery executionQuery, SqlCommandScenario scenario, CancellationToken cancellationToken)
+			{
+				var steps   = scenario.Steps;
+				var context = new SqlCommandExecutionContext(steps.Count);
+				var groups  = executionQuery.PreparedQuery.Plan?.Groups;
+
+				if (groups == null)
+				{
+					for (var i = 0; i < steps.Count; i++)
+						await ExecuteSingleStepAsync(dataConnection, executionQuery, steps, i, context, cancellationToken).ConfigureAwait(false);
+				}
+				else
+				{
+					foreach (var group in groups)
+					{
+						if (group.StepIndexes.Count == 1)
+							await ExecuteSingleStepAsync(dataConnection, executionQuery, steps, group.StepIndexes[0], context, cancellationToken).ConfigureAwait(false);
+						else
+							await ExecuteCombinedGroupAsync(dataConnection, executionQuery, steps, group, context, cancellationToken).ConfigureAwait(false);
+					}
+				}
+
+				return new ScenarioOutcome(ResolveRowsAffected(steps, context), ResolveOutcome(scenario, context));
 			}
 
 			#endregion

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
@@ -26,17 +27,116 @@ namespace LinqToDB.Internal.DataProvider
 		}
 
 		/// <summary>
-		/// Default plan: every step is its own physical command group (sequential). Providers override to combine
-		/// contiguous non-gated steps into one round-trip.
+		/// Plans physical command groups. Without <see cref="SqlProviderFlags.IsMultiStatementBatchSupported"/> — or
+		/// around a gated step (which must be evaluated client-side before it runs) — every step is its own group
+		/// (today's sequential behavior). Otherwise a maximal run of contiguous non-gated steps is combined; a single
+		/// combined command may harvest more than one result-producing step only when
+		/// <see cref="SqlProviderFlags.IsMultipleResultSetsSupported"/> is set — otherwise the run is split so each
+		/// combined group holds at most one result-producing step.
 		/// </summary>
-		public virtual SqlCommandGroupPlan PlanScenario(SqlCommandScenario scenario)
+		public virtual SqlCommandGroupPlan PlanScenario(SqlCommandScenario scenario, SqlProviderFlags flags)
 		{
-			var groups = new SqlCommandGroup[scenario.Steps.Count];
+			var steps = scenario.Steps;
 
-			for (var i = 0; i < scenario.Steps.Count; i++)
-				groups[i] = new SqlCommandGroup { StepIndexes = [i] };
+			if (!flags.IsMultiStatementBatchSupported)
+			{
+				var singletons = new SqlCommandGroup[steps.Count];
 
-			return new SqlCommandGroupPlan { Groups = groups };
+				for (var i = 0; i < steps.Count; i++)
+					singletons[i] = new SqlCommandGroup { StepIndexes = [i] };
+
+				return new SqlCommandGroupPlan { Groups = singletons };
+			}
+
+			var multipleResultSets = flags.IsMultipleResultSetsSupported;
+
+			var groups = new List<SqlCommandGroup>();
+			var run    = new List<int>();
+
+			// Emits one physical group for a contiguous slice: combined into a single command when it has a
+			// result-producing step (Scalar/Reader) and more than one step; otherwise one group per step, so a pure
+			// non-query run (e.g. truncate + reset) keeps its per-step rows-affected semantics.
+			void EmitGroup(List<int> slice)
+			{
+				var hasResult = false;
+
+				foreach (var idx in slice)
+				{
+					if (steps[idx].Kind != SqlStepKind.NonQuery)
+					{
+						hasResult = true;
+						break;
+					}
+				}
+
+				if (hasResult && slice.Count > 1)
+				{
+					groups.Add(new SqlCommandGroup { StepIndexes = slice.ToArray() });
+				}
+				else
+				{
+					foreach (var idx in slice)
+						groups.Add(new SqlCommandGroup { StepIndexes = [idx] });
+				}
+			}
+
+			// A run of contiguous non-gated steps forms one combined command. One command can harvest more than one
+			// result-producing step only when the provider returns multiple result sets (NextResult); without that the
+			// run is split so each combined group holds at most one result-producing step (e.g. identity's INSERT +
+			// SELECT), and any additional readers fall into their own commands.
+			void FlushRun()
+			{
+				if (run.Count == 0)
+					return;
+
+				if (multipleResultSets)
+				{
+					EmitGroup(run);
+				}
+				else
+				{
+					var slice     = new List<int>();
+					var sawResult = false;
+
+					foreach (var idx in run)
+					{
+						var isResult = steps[idx].Kind != SqlStepKind.NonQuery;
+
+						if (isResult && sawResult)
+						{
+							EmitGroup(slice);
+							slice     = new List<int>();
+							sawResult = false;
+						}
+
+						slice.Add(idx);
+
+						if (isResult)
+							sawResult = true;
+					}
+
+					EmitGroup(slice);
+				}
+
+				run.Clear();
+			}
+
+			for (var i = 0; i < steps.Count; i++)
+			{
+				if (steps[i].RunIf != null)
+				{
+					FlushRun();
+					groups.Add(new SqlCommandGroup { StepIndexes = [i] });
+				}
+				else
+				{
+					run.Add(i);
+				}
+			}
+
+			FlushRun();
+
+			return new SqlCommandGroupPlan { Groups = groups.ToArray() };
 		}
 
 		public bool IsTableNotFoundException(Exception exception)

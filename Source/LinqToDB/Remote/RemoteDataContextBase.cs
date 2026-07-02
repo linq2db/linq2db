@@ -228,8 +228,8 @@ namespace LinqToDB.Remote
 			public Internal.SqlProvider.SqlCommandScenario? BuildCommandScenario(Internal.SqlQuery.SqlStatement statement, Internal.SqlProvider.SqlProviderFlags flags, Linq.Translation.ISqlExpressionFactory factory)
 				=> ProviderService.BuildCommandScenario(statement, flags, factory);
 
-			public Internal.SqlProvider.SqlCommandGroupPlan PlanScenario(Internal.SqlProvider.SqlCommandScenario scenario)
-				=> ProviderService.PlanScenario(scenario);
+			public Internal.SqlProvider.SqlCommandGroupPlan PlanScenario(Internal.SqlProvider.SqlCommandScenario scenario, Internal.SqlProvider.SqlProviderFlags flags)
+				=> ProviderService.PlanScenario(scenario, flags);
 		}
 
 		ConfigurationInfo? _configurationInfo;
