@@ -1586,14 +1586,14 @@ namespace LinqToDB
 		/// types. A filter is disabled when its key is listed and its entity type matches; an empty
 		/// <paramref name="entityTypes"/> list means "any entity type".
 		/// <para>
-		/// A <see langword="null"/> or empty <paramref name="filterKeys"/> list disables nothing (mirroring EF Core's
+		/// An empty <paramref name="filterKeys"/> list disables nothing (mirroring EF Core's
 		/// <c>IgnoreQueryFilters(IEnumerable&lt;string&gt;)</c>). Use the parameterless
 		/// <see cref="IgnoreFilters{TSource}(System.Linq.IQueryable{TSource}, System.Type[])"/> to disable every filter.
 		/// </para>
 		/// </summary>
 		/// <typeparam name="TSource">Source query record type.</typeparam>
 		/// <param name="source">Source query.</param>
-		/// <param name="filterKeys">Filter keys to disable. <see langword="null"/> or empty disables nothing.</param>
+		/// <param name="filterKeys">Filter keys to disable. An empty list disables nothing.</param>
 		/// <param name="entityTypes">Optional entity types the disable is scoped to. Empty means "any entity type".</param>
 		/// <returns>Query with the specified named filters disabled.</returns>
 		[LinqTunnel]
@@ -1604,6 +1604,11 @@ namespace LinqToDB
 
 			var keys  = filterKeys?.ToArray() ?? [];
 			var types = entityTypes           ?? [];
+
+			// An empty key list is a documented no-op (mirroring EF Core); skip injecting the call so it
+			// doesn't create a distinct translation modifier / query-cache entry for a query that filters identically.
+			if (keys.Length == 0)
+				return source;
 
 			var currentSource = source.ProcessIQueryable();
 
