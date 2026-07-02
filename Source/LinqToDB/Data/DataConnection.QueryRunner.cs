@@ -598,28 +598,41 @@ namespace LinqToDB.Data
 				}
 			}
 
+			// Shared combined-command harvest walk (sync): over one open reader, invokes the per-step harvest callback for
+			// each step in order, then advances to the next result set for every result-producing step (a pure non-query
+			// step yields no result set, so no advance). DML harvests scalar / rows-affected into the execution context;
+			// eager loading plugs its own materializer into the same walk.
+			static void WalkCombinedResultSets(DbDataReader dr, IReadOnlyList<int> stepIndexes, IReadOnlyList<SqlCommandStep> steps, Action<int, DbDataReader> harvest)
+			{
+				foreach (var i in stepIndexes)
+				{
+					harvest(i, dr);
+
+					if (steps[i].Kind != SqlStepKind.NonQuery)
+						dr.NextResult();
+				}
+			}
+
 			// Executes a combined group as ONE command and harvests its result sets in step order: a Scalar step reads the
-			// first cell of the current result set then advances; a pure non-query step yields no result set (skipped).
+			// first cell of the current result set; a pure non-query step yields no result set (RecordsAffected only).
 			static void ExecuteCombinedGroup(DataConnection dataConnection, ExecutionPreparedQuery executionQuery, IReadOnlyList<SqlCommandStep> steps, SqlCommandGroup group, SqlCommandExecutionContext context)
 			{
 				InitCombinedCommand(dataConnection, executionQuery, group);
 
 				using var rd = dataConnection.ExecuteDataReader(CommandBehavior.Default);
-				var       dr = rd.DataReader!;
 
-				foreach (var i in group.StepIndexes)
+				WalkCombinedResultSets(rd.DataReader!, group.StepIndexes, steps, (i, dr) =>
 				{
 					switch (steps[i].Kind)
 					{
 						case SqlStepKind.Scalar:
 							context.SetResult(i, dr.Read() ? dr.GetValue(0) : null);
-							dr.NextResult();
 							break;
 						case SqlStepKind.NonQuery:
 							context.SetResult(i, dr.RecordsAffected);
 							break;
 					}
-				}
+				});
 			}
 
 			// Interpreter (sync). Walks the group plan (from PreparedQuery.Plan): a singleton group runs as its own
@@ -691,27 +704,38 @@ namespace LinqToDB.Data
 				}
 			}
 
+			// Shared combined-command harvest walk (async sibling). In case of change the logic of this method, DO NOT
+			// FORGET to change the sibling method.
+			static async Task WalkCombinedResultSetsAsync(DbDataReader dr, IReadOnlyList<int> stepIndexes, IReadOnlyList<SqlCommandStep> steps, Func<int, DbDataReader, Task> harvest, CancellationToken cancellationToken)
+			{
+				foreach (var i in stepIndexes)
+				{
+					await harvest(i, dr).ConfigureAwait(false);
+
+					if (steps[i].Kind != SqlStepKind.NonQuery)
+						await dr.NextResultAsync(cancellationToken).ConfigureAwait(false);
+				}
+			}
+
 			// In case of change the logic of this method, DO NOT FORGET to change the sibling method.
 			static async Task ExecuteCombinedGroupAsync(DataConnection dataConnection, ExecutionPreparedQuery executionQuery, IReadOnlyList<SqlCommandStep> steps, SqlCommandGroup group, SqlCommandExecutionContext context, CancellationToken cancellationToken)
 			{
 				InitCombinedCommand(dataConnection, executionQuery, group);
 
 				await using var rd = await dataConnection.ExecuteDataReaderAsync(CommandBehavior.Default, cancellationToken).ConfigureAwait(false);
-				var             dr = rd.DataReader!;
 
-				foreach (var i in group.StepIndexes)
+				await WalkCombinedResultSetsAsync(rd.DataReader!, group.StepIndexes, steps, async (i, dr) =>
 				{
 					switch (steps[i].Kind)
 					{
 						case SqlStepKind.Scalar:
 							context.SetResult(i, await dr.ReadAsync(cancellationToken).ConfigureAwait(false) ? dr.GetValue(0) : null);
-							await dr.NextResultAsync(cancellationToken).ConfigureAwait(false);
 							break;
 						case SqlStepKind.NonQuery:
 							context.SetResult(i, dr.RecordsAffected);
 							break;
 					}
-				}
+				}, cancellationToken).ConfigureAwait(false);
 			}
 
 			// Interpreter (async sibling). In case of change the logic of this method, DO NOT FORGET to change the sibling method.
