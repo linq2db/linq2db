@@ -32,31 +32,13 @@ namespace LinqToDB.Internal.DataProvider.DB2
 		{
 		}
 
-		SqlField? _identityField;
-
 		protected abstract DB2Version Version { get; }
 
-		public override int CommandCount(SqlStatement statement)
+		protected override void BuildCommandFragment(SqlCommandFragment fragment, int fieldIndex, SqlStatement statement)
 		{
-			if (statement is SqlTruncateTableStatement trun)
-				return trun.ResetIdentity ? 1 + trun.Table!.IdentityFields.Count : 1;
-
-			if (Version == DB2Version.LUW && statement is SqlInsertStatement insertStatement && insertStatement.Insert.WithIdentity)
+			if (fragment == SqlCommandFragment.IdentityReseed && statement is SqlTruncateTableStatement trun)
 			{
-				_identityField = insertStatement.Insert.Into!.GetIdentityField();
-
-				if (_identityField == null)
-					return 2;
-			}
-
-			return 1;
-		}
-
-		protected override void BuildCommand(SqlStatement statement, int commandNumber)
-		{
-			if (statement is SqlTruncateTableStatement trun)
-			{
-				var field = trun.Table!.IdentityFields[commandNumber - 1];
+				var field = trun.Table!.IdentityFields[fieldIndex];
 
 				StringBuilder.Append("ALTER TABLE ");
 				BuildObjectName(StringBuilder, trun.Table.TableName, ConvertType.NameToQueryTable, true, trun.Table.TableOptions);
@@ -66,7 +48,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			}
 			else
 			{
-				StringBuilder.AppendLine("SELECT identity_val_local() FROM SYSIBM.SYSDUMMY1");
+				base.BuildCommandFragment(fragment, fieldIndex, statement);
 			}
 		}
 
@@ -102,13 +84,20 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			Indent              = indent;
 			AliasMode           = aliasMode;
 
-			if (_identityField != null)
+			// DB2 LUW returns a with-identity insert's identity by wrapping it: SELECT <id> FROM NEW TABLE (INSERT ...).
+			// Computed locally here (previously cross-call state set by CommandCount, now removed; the DML service
+			// produces the identity scenario).
+			var identityField = Version == DB2Version.LUW && statement is SqlInsertStatement { Insert.WithIdentity: true } insertStatement
+				? insertStatement.Insert.Into!.GetIdentityField()
+				: null;
+
+			if (identityField != null)
 			{
 				indent += 2;
 
 				AppendIndent().AppendLine("SELECT");
 				AppendIndent().Append('\t');
-				BuildExpression(_identityField, false, true);
+				BuildExpression(identityField, false, true);
 				sb.AppendLine();
 				AppendIndent().AppendLine("FROM");
 				AppendIndent().AppendLine("\tNEW TABLE");
@@ -117,7 +106,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 
 			base.BuildSql(commandNumber, statement, sb, optimizationContext, indent, aliasMode, nullabilityContext);
 
-			if (_identityField != null)
+			if (identityField != null)
 				sb.AppendLine("\t)");
 		}
 
