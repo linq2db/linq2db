@@ -992,6 +992,66 @@ namespace Tests.Linq
 			Assert.That(res, Is.EqualTo(new[] { "Acme", null }));
 		}
 
+		[Test]
+		public void TPH_Assoc_OnDerived_MultipleDiscriminatorCodes([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db      = GetDataContext(context);
+			using var company = db.CreateLocalTable<TphMcCompany>();
+			using var person  = db.CreateLocalTable<TphMcPerson>();
+
+			db.Insert(new TphMcCompany { Id = 1, Name = "Acme" });
+
+			// Seed explicit discriminator values via a flat mapping to the same table (polymorphic insert
+			// can't disambiguate two codes mapping to one concrete type).
+			db.Insert(new TphMcRaw { Id = 1, Kind = "E1", RefId = 1 }); // employee, discriminator code 1
+			db.Insert(new TphMcRaw { Id = 2, Kind = "E2", RefId = 1 }); // employee, discriminator code 2 (same CLR type)
+			db.Insert(new TphMcRaw { Id = 3, Kind = "C",  RefId = 1 }); // contractor, same RefId, NOT an employee
+
+			// The association is declared on the derived Employee type, which carries TWO discriminator codes
+			// (E1, E2). The join must include both — filtering to only the first would drop the E2 employee.
+			// The contractor (whose RefId also matches) must still be excluded by the discriminator.
+			var res = db.GetTable<TphMcPerson>()
+				.OrderBy(x => x.Id)
+				.Select(x => ((TphMcEmployee)x).Company!.Name)
+				.ToArray();
+
+			Assert.That(res, Is.EqualTo(new[] { "Acme", "Acme", null }));
+		}
+
+		[Table]
+		public class TphMcCompany
+		{
+			[PrimaryKey] public int     Id   { get; set; }
+			[Column]     public string? Name { get; set; }
+		}
+
+		[Table("TphMcPerson")]
+		[InheritanceMapping(Code = "E1", Type = typeof(TphMcEmployee))]
+		[InheritanceMapping(Code = "E2", Type = typeof(TphMcEmployee))]
+		[InheritanceMapping(Code = "C", IsDefault = true, Type = typeof(TphMcContractor))]
+		public abstract class TphMcPerson
+		{
+			[Column(IsDiscriminator = true)] public string? Kind  { get; set; }
+			[PrimaryKey]                     public int     Id    { get; set; }
+			[Column]                         public int?    RefId { get; set; }
+		}
+
+		public class TphMcEmployee : TphMcPerson
+		{
+			[Association(ThisKey = nameof(RefId), OtherKey = nameof(TphMcCompany.Id), CanBeNull = true)]
+			public TphMcCompany? Company { get; set; }
+		}
+
+		public class TphMcContractor : TphMcPerson { }
+
+		[Table("TphMcPerson")]
+		public class TphMcRaw
+		{
+			[PrimaryKey] public int     Id    { get; set; }
+			[Column]     public string? Kind  { get; set; }
+			[Column]     public int?    RefId { get; set; }
+		}
+
 		#endregion
 
 		#region Multi-level shared column (diagnostic)

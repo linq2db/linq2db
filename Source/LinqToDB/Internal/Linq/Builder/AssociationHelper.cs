@@ -328,25 +328,36 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (parentRootType != null)
 			{
-				// add discriminator filter
+				// add discriminator filter — a CLR type may carry several discriminator codes, so OR every
+				// code mapped to parentType; filtering to only the first would silently drop rows carrying
+				// the other codes from the association.
 				var ed = builder.MappingSchema.GetEntityDescriptor(parentRootType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
+				Expression? discriminatorPredicate = null;
 				foreach (var inheritanceMapping in ed.InheritanceMapping)
 				{
 					if (inheritanceMapping.Type == parentType)
 					{
-						var objParam     = Expression.Parameter(objectType, "o");
-						var filterLambda = Expression.Lambda(ExpressionBuilder.Equal(builder.MappingSchema,
+						var codeEquals = ExpressionBuilder.Equal(builder.MappingSchema,
 							Expression.MakeMemberAccess(definedQueryMethod.Parameters[0], inheritanceMapping.Discriminator.MemberInfo),
-							Expression.Constant(inheritanceMapping.Code)), objParam);
+							Expression.Constant(inheritanceMapping.Code));
 
-						var body = definedQueryMethod.Body.Unwrap();
-						body = Expression.Call(Methods.Queryable.Where.MakeGenericMethod(objectType),
-							body, Expression.Quote(filterLambda));
-						definedQueryMethod = Expression.Lambda(body, definedQueryMethod.Parameters);
-
-						shouldAddDefaultIfEmpty = true;
-						break;
+						discriminatorPredicate = discriminatorPredicate == null
+							? codeEquals
+							: Expression.OrElse(discriminatorPredicate, codeEquals);
 					}
+				}
+
+				if (discriminatorPredicate != null)
+				{
+					var objParam     = Expression.Parameter(objectType, "o");
+					var filterLambda = Expression.Lambda(discriminatorPredicate, objParam);
+
+					var body = definedQueryMethod.Body.Unwrap();
+					body = Expression.Call(Methods.Queryable.Where.MakeGenericMethod(objectType),
+						body, Expression.Quote(filterLambda));
+					definedQueryMethod = Expression.Lambda(body, definedQueryMethod.Parameters);
+
+					shouldAddDefaultIfEmpty = true;
 				}
 			}
 
