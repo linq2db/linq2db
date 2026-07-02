@@ -2057,6 +2057,94 @@ namespace Tests.Linq
 
 		#endregion
 
+		#region Deterministic key order — string keys inlined in ordinal order (#5664)
+
+		[Table]
+		sealed class StringKeyParent
+		{
+			[Column, PrimaryKey] public string  Code { get; set; } = null!;
+			[Column]             public string? Name { get; set; }
+		}
+
+		[Table]
+		sealed class StringKeyChild
+		{
+			[Column, PrimaryKey] public int     Id         { get; set; }
+			[Column]             public string  ParentCode { get; set; } = null!;
+			[Column]             public string? Value      { get; set; }
+		}
+
+		sealed class CommandTextCollector : CommandInterceptor
+		{
+			public List<string> Commands { get; } = new();
+
+			public override DbCommand CommandInitialized(CommandEventData eventData, DbCommand command)
+			{
+				Commands.Add(command.CommandText);
+				return command;
+			}
+		}
+
+		// #5664: the master keys inlined into the detail query's VALUES/IN list must be ordered
+		// deterministically, so direct and remote (LinqService) execution emit identical SQL. The order
+		// must be ordinal, not culture-linguistic: "zzB" and "zza" are distinct string keys whose ordinal
+		// order ('B' 0x42 < 'a' 0x61) is the reverse of their linguistic order (a < B). A culture-sensitive
+		// comparer would order them machine-culture-dependently (and unstably for canonically-equal strings),
+		// which is exactly the divergence #5664 fixes. Assert the inlined keys appear in ordinal order.
+		[Test]
+		public void Select_KeyedQuery_StringKeys_InlinedInOrdinalOrder(
+			[IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			var parents = new[]
+			{
+				new StringKeyParent { Code = "zza", Name = "P_a" },
+				new StringKeyParent { Code = "zzB", Name = "P_B" },
+			};
+
+			var children = new[]
+			{
+				new StringKeyChild { Id = 1, ParentCode = "zza", Value = "a1" },
+				new StringKeyChild { Id = 2, ParentCode = "zzB", Value = "B1" },
+			};
+
+			var collector = new CommandTextCollector();
+
+			using var db = GetDataContext(context);
+			db.AddInterceptor(collector);
+
+			using var tP = db.CreateLocalTable(parents);
+			using var tC = db.CreateLocalTable(children);
+
+			// Drop the table-creation / insert commands — only the query commands matter below.
+			collector.Commands.Clear();
+
+			var query =
+				from p in tP
+				select new
+				{
+					p.Code,
+					p.Name,
+					Children = tC
+						.Where(c => c.ParentCode == p.Code)
+						.OrderBy(c => c.Id)
+						.ToList(),
+				};
+
+			var result = query.WithKeyedLoadStrategy().ToList();
+
+			result.Count.ShouldBe(2);
+
+			// The child detail query is the single command that inlines both parent-code keys.
+			var detailSql = collector.Commands.SingleOrDefault(sql => sql.Contains("'zzB'") && sql.Contains("'zza'"));
+			detailSql.ShouldNotBeNull();
+
+			// Ordinal order: 'B' sorts before 'a'; culture-linguistic order would be the reverse.
+			detailSql.IndexOf("'zzB'", StringComparison.Ordinal)
+				.ShouldBeLessThan(detailSql.IndexOf("'zza'", StringComparison.Ordinal));
+		}
+
+		#endregion
+
 		#region Nullable FK key — orphan children must not attach to any parent
 
 		[Table]
