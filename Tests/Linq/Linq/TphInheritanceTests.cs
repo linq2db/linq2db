@@ -485,6 +485,49 @@ namespace Tests.Linq
 			[Column("Payload"), ValueConverter(ConverterType = typeof(TphConvTimesHundred))] public int Value { get; set; }
 		}
 
+		[ActiveIssue("Sibling subtypes mapping the same physical column through the same ValueConverter type are not collapsed on read: the projection dedup compares converter instances by reference, but GetValueConverter builds a fresh instance per column, so the shared column is projected more than once. Cosmetic (data is correct); a fix must compare converters safely, not by runtime type. Surfaced by Copilot review on #5661.")]
+		[Test]
+		public void TPH_SiblingColumn_SameValueConverterType([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<TphSameConvBase>();
+
+			db.Insert(new TphSameConvA { Id = 1, Kind = 1, Value = 3 });
+			db.Insert(new TphSameConvB { Id = 2, Kind = 2, Value = 4 });
+
+			var query = db.GetTable<TphSameConvBase>().OrderBy(r => r.Id);
+
+			// Two siblings map the SAME physical column through the SAME converter type, so they read it
+			// identically and the entity SELECT should project it once. The dedup keys on ReferenceEquals of
+			// the converter instance, but GetValueConverter builds a fresh instance per column, so the shapes
+			// look distinct and the column is projected twice.
+			var sql = query.ToSqlQuery().Sql;
+			Assert.That(sql.Split(["[Payload]"], System.StringSplitOptions.None).Length - 1, Is.EqualTo(1), sql);
+
+			var all = query.ToArray();
+
+			Assert.That(all, Has.Length.EqualTo(2));
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(((TphSameConvA)all[0]).Value, Is.EqualTo(3));
+				Assert.That(((TphSameConvB)all[1]).Value, Is.EqualTo(4));
+			}
+		}
+
+		sealed class TphSameConvTimesTen() : ValueConverter<int, int>(v => v * 10, v => v / 10, false);
+
+		[Table("TphSameConv")]
+		[InheritanceMapping(Code = 1, IsDefault = true, Type = typeof(TphSameConvA))]
+		[InheritanceMapping(Code = 2, Type = typeof(TphSameConvB))]
+		abstract class TphSameConvBase
+		{
+			[PrimaryKey] public int Id { get; set; }
+			[Column(IsDiscriminator = true)] public int Kind { get; set; }
+		}
+
+		class TphSameConvA : TphSameConvBase { [Column("Payload"), ValueConverter(ConverterType = typeof(TphSameConvTimesTen))] public int Value { get; set; } }
+		class TphSameConvB : TphSameConvBase { [Column("Payload"), ValueConverter(ConverterType = typeof(TphSameConvTimesTen))] public int Value { get; set; } }
+
 		[Test]
 		public void TPH_CodeFilter([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
