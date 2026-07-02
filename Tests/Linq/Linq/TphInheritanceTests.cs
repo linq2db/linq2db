@@ -360,6 +360,49 @@ namespace Tests.Linq
 		class TphSharedTypeA : TphSharedColumnBase { [Column("SharedCode")] public string? Code { get; set; } }
 		class TphSharedTypeB : TphSharedColumnBase { [Column("SharedCode")] public string? Code { get; set; } }
 
+		[Test]
+		public void TPH_SiblingColumn_ColumnNameEqualsOtherMemberName([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// A sibling maps its member to a physical column whose name equals a different member's C# name
+			// (the base member Shared, which itself maps to a distinct physical column). The sibling field's
+			// _fieldsLookup key must not collide with the base Shared field, or SqlTable construction throws.
+			using var tb = db.CreateLocalTable<TphNameCollisionBase>();
+
+			db.Insert(new TphNameCollisionTypeA { Id = 1, Shared = "base-a", Extra = "a" });
+			db.Insert(new TphNameCollisionTypeB { Id = 2, Shared = "base-b", Extra = "b" });
+
+			var all = db.GetTable<TphNameCollisionBase>().OrderBy(r => r.Id).ToArray();
+
+			Assert.That(all, Has.Length.EqualTo(2));
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(all[0], Is.InstanceOf<TphNameCollisionTypeA>());
+				Assert.That(all[1], Is.InstanceOf<TphNameCollisionTypeB>());
+
+				Assert.That(((TphNameCollisionTypeA)all[0]).Extra, Is.EqualTo("a"));
+				Assert.That(((TphNameCollisionTypeB)all[1]).Extra, Is.EqualTo("b"));
+
+				Assert.That(all[0].Shared, Is.EqualTo("base-a"));
+				Assert.That(all[1].Shared, Is.EqualTo("base-b"));
+			}
+		}
+
+		[Table("TphNameCollision")]
+		[InheritanceMapping(Code = "N1", IsDefault = true, Type = typeof(TphNameCollisionTypeA))]
+		[InheritanceMapping(Code = "N2", Type = typeof(TphNameCollisionTypeB))]
+		abstract class TphNameCollisionBase
+		{
+			[Column(IsDiscriminator = true)] public string? Kind { get; set; }
+			[PrimaryKey] public int Id { get; set; }
+			[Column("shared_phys")] public string? Shared { get; set; }
+		}
+
+		class TphNameCollisionTypeA : TphNameCollisionBase { [Column("ExtraA")] public string? Extra { get; set; } }
+		class TphNameCollisionTypeB : TphNameCollisionBase { [Column("Shared")] public string? Extra { get; set; } }
+
 		[ActiveIssue("Sibling subtypes mapping the same physical column with different ValueConverters share one SqlField/ColumnDescriptor, so the second sibling's converter is not applied on read (pre-existing, independent of the duplicate-column projection fix).")]
 		[Test]
 		public void TPH_SiblingColumn_DifferentValueConverters([IncludeDataSources(TestProvName.AllSQLite)] string context)

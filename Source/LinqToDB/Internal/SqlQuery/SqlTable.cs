@@ -97,8 +97,16 @@ namespace LinqToDB.Internal.SqlQuery
 						continue;
 
 					// ColumnName as Name avoids MemberName collision with the primary sibling field already in _fieldsLookup.
+					// If that key is itself already taken — a distinct member whose C# name equals this physical
+					// column name — fall back to a unique synthetic key: the emitted column is driven by PhysicalName
+					// and the sibling is resolved by member identity in TableContext.GetField, so the lookup key only
+					// has to be unique.
 					// CanBeNull is always true: other sibling types will have NULL in this column.
-					var field = new SqlField(column) { Name = column.ColumnName, CanBeNull = true };
+					var fieldName = column.ColumnName;
+					while (_fieldsLookup.ContainsKey(fieldName))
+						fieldName = fieldName + ":" + column.MemberName;
+
+					var field = new SqlField(column) { Name = fieldName, CanBeNull = true };
 
 					Add(field);
 
