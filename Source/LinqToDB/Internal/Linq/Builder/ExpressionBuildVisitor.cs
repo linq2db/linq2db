@@ -1763,7 +1763,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var modifier = associationRoot.BuildContext.TranslationModifier;
 
 			// If the parent rows are already narrowed to the association's declaring (derived) type via
-			// OfType/Cast, the discriminator predicate is already applied — tell the association builder
+			// OfType, the discriminator predicate is already applied — tell the association builder
 			// to skip adding a redundant one.
 			var parentExactType       = associationDescriptor.GetParentElementType();
 			var parentAlreadyFiltered = (table as TableBuilder.TableContext)?.FilteredByOfType?.Exists(t => parentExactType.IsAssignableFrom(t)) == true;

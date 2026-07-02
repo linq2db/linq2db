@@ -519,7 +519,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TPH_TernaryIsTypePredicate([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool additionalFlag)
+		public void TPH_TernaryIsTypePredicate([DataSources(TestProvName.AllSybase)] string context, [Values] bool additionalFlag)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<TphConditionBase>();
