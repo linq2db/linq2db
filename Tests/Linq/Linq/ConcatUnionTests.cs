@@ -1351,6 +1351,22 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test(Description = "Ordering of selected columns inside UnionAll breaks query building")]
+		public void ColumnOrderInUnionAll([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query1 = db.Parent.Select(p => new { Column1 = 123, Id = p.ParentID });
+			var query2 = db.Parent.Select(p => new { Column1 = 234, Id = p.ParentID });
+
+			var query3 = query1.UnionAll(query2).Select(x => new { Id = x.Id, Column2 = 222, Column1 = x.Column1 });
+			var query4 = query1.UnionAll(query2).Select(x => new { Id = x.Id, Column2 = 333, Column1 = x.Column1 });
+
+			var result = query3.UnionAll(query4);
+
+			AssertQuery(result);
+		}
+
 		public record class RecordClass (int Id, string FirstName, string LastName);
 
 		public class RecordLikeClass
