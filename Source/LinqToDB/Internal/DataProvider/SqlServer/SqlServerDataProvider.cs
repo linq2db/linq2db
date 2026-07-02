@@ -76,6 +76,9 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			SqlProviderFlags.IsUpdateTakeSupported              = true;
 			SqlProviderFlags.IsDistinctFromSupported            = Version >= SqlServerVersion.v2022;
 			SqlProviderFlags.SupportsBooleanType                = false;
+			// SQL Server's per-SELECT column limit is 4096 (the CteUnion carrier is a SELECT body);
+			// 1024 is the per-table/view limit, which would abandon CteUnion for 1025-4096-column carriers.
+			SqlProviderFlags.MaxColumnCount                     = 4096;
 			SqlProviderFlags.DefaultNullsOrdering               = NullsDefaultOrdering.Smallest; // SQL Server sorts NULL as the smallest value
 
 			// SqlServer 2005 emits InsertOrUpdate as UPDATE + IF @@ROWCOUNT=0 INSERT (single statement);

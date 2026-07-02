@@ -89,6 +89,19 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			if (statement is SqlInsertStatement insert)
 				insert.Insert = visitor.Value.Convert(withStatement, mappingSchema, insert.Insert);
 
+			// Pre-existing CTE bodies can hold inline scalar subqueries too (e.g. the eager-load union carrier
+			// carries query.Count() as a FROM-less `SELECT (subquery)`). The walks above cover only the main
+			// statement, so lift inside each original CTE body as well. Iterate the snapshot count: CTEs the
+			// lifter appends here carry no further inline subqueries and need no second pass.
+			if (withStatement.With is {} with)
+			{
+				for (var i = 0; i < cteCount; i++)
+				{
+					if (with.Clauses[i].Body is {} body)
+						with.Clauses[i].Body = visitor.Value.Convert(withStatement, mappingSchema, body);
+				}
+			}
+
 			return withStatement.With?.Clauses.Count > cteCount;
 		}
 

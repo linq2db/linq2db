@@ -1,1 +1,3 @@
-﻿#nullable enable
+#nullable enable
+override LinqToDB.DataProvider.DuckDB.DuckDBOptions.<Clone>$() -> LinqToDB.DataProvider.DuckDB.DuckDBOptions!
+*REMOVED*override LinqToDB.Internal.DataProvider.Ydb.Translation.YdbMemberTranslator.SqlTypesTranslation.ConvertDateOnly(LinqToDB.Linq.Translation.ITranslationContext! translationContext, System.Linq.Expressions.MemberExpression! memberExpression, LinqToDB.Linq.Translation.TranslationFlags translationFlags) -> System.Linq.Expressions.Expression?

@@ -153,7 +153,6 @@ namespace Tests.xUpdate
 			AssertRowUpdateOptimized(context);
 		}
 
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllInformix, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test]
 		public void UpdateFromSubqueryRowFirst([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle12Plus, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
 		{
@@ -351,7 +350,6 @@ namespace Tests.xUpdate
 			LastQuery!.ShouldNotContain(") =");
 		}
 
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllInformix, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test]
 		public void UpdateFromSubqueryRowFirstOrDefault([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle12Plus, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
 		{
@@ -413,10 +411,10 @@ namespace Tests.xUpdate
 					LastQuery!.ShouldNotContain("EXISTS");
 					break;
 
-				// Informix/Firebird5 fall through: Informix throws (see ThrowsForProvider on the
-				// First/FirstOrDefault methods); Firebird5 no longer throws thanks to the
-				// projection-column fix in FlattenRowConstructors, but its SQL shape differs
-				// enough that a shape assertion isn't meaningful here.
+				// Informix/Firebird5 fall through: both now build valid SQL (FlattenRowConstructors
+				// puts the row subquery's OUTER joins inside per-setter scalar subqueries, which both
+				// accept), but their shapes differ (Informix keeps an EXISTS filter) enough that a
+				// shape assertion isn't meaningful here.
 			}
 		}
 
