@@ -390,7 +390,7 @@ namespace LinqToDB.Data
 				return result;
 			}
 
-			static DbParameter CreateParameter(DataConnection dataConnection, DbCommand command, SqlParameter parameter, SqlParameterValue parmValue)
+			internal static DbParameter CreateParameter(DataConnection dataConnection, DbCommand command, SqlParameter parameter, SqlParameterValue parmValue)
 			{
 				var p          = command.CreateParameter();
 				var dbDataType = parmValue.DbDataType;

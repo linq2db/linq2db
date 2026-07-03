@@ -78,6 +78,8 @@
 		<DefineConstants Condition=" $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0')) ">SUPPORTS_REGEX_GENERATORS;$(DefineConstants)</DefineConstants>
 		<!--(u)int128 types-->
 		<DefineConstants Condition=" $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0')) ">SUPPORTS_INT128;$(DefineConstants)</DefineConstants>
+		<!--System.Data.Common.DbBatch structural batching API (DbConnection.CreateBatch / CanCreateBatch)-->
+		<DefineConstants Condition=" $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0')) ">SUPPORTS_DBBATCH;$(DefineConstants)</DefineConstants>
 
 		<ArtifactsPath>$(MSBuildThisFileDirectory).build</ArtifactsPath>
 		<ArtifactsPivots>$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)</ArtifactsPivots>

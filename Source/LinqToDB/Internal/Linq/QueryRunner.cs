@@ -741,6 +741,50 @@ namespace LinqToDB.Internal.Linq
 		// Reader steps and grouped by PlanScenario (which caps how many merge into one command). Each child result set
 		// is buffered into its PreambleResult (mapped by that child query's own materializer); the main result set —
 		// always the last step of the last group — streams lazily from that group's reader, which this enumerable owns.
+		// One physical eager-load command: a semicolon-concatenated SQL (Sql/Parameters) or, on the DbBatch path, its
+		// per-statement (text, parameters) list (BatchStatements). StepIndexes are the scenario step indices it covers,
+		// in order; the main query is always the last step of the last command.
+		readonly record struct EagerCommand(
+			string? Sql,
+			DbParameter[]? Parameters,
+			IReadOnlyList<(string Sql, DbParameter[]? Parameters)>? BatchStatements,
+			int[] StepIndexes);
+
+		// Executes one eager-load command and returns its reader. On the DbBatch path the DbBatch is attached to the
+		// reader wrapper (AdditionalDisposable) so it is released when the reader is disposed. Sync sibling below.
+		static DataReaderWrapper ExecEagerCommand(DataConnection dataConnection, EagerCommand command)
+		{
+#if SUPPORTS_DBBATCH
+			if (command.BatchStatements != null)
+			{
+				var batch  = dataConnection.CreateBatch(command.BatchStatements);
+				var reader = dataConnection.ExecuteBatchDataReader(batch, System.Data.CommandBehavior.Default);
+
+				reader.AdditionalDisposable = batch;
+
+				return reader;
+			}
+#endif
+			return DataConnection.QueryRunner.ExecuteRendered(dataConnection, command.Sql!, command.Parameters);
+		}
+
+		// In case of change the logic of this method, DO NOT FORGET to change the sibling method.
+		static async Task<DataReaderWrapper> ExecEagerCommandAsync(DataConnection dataConnection, EagerCommand command, CancellationToken cancellationToken)
+		{
+#if SUPPORTS_DBBATCH
+			if (command.BatchStatements != null)
+			{
+				var batch  = dataConnection.CreateBatch(command.BatchStatements);
+				var reader = await dataConnection.ExecuteBatchDataReaderAsync(batch, System.Data.CommandBehavior.Default, cancellationToken).ConfigureAwait(false);
+
+				reader.AdditionalDisposable = batch;
+
+				return reader;
+			}
+#endif
+			return await DataConnection.QueryRunner.ExecuteRenderedAsync(dataConnection, command.Sql!, command.Parameters, cancellationToken).ConfigureAwait(false);
+		}
+
 		// Collapses N+1 eager round-trips to 1 (a few for a very large fan-out); created only when every preamble is
 		// combinable and the provider supports multi-statement batches with multiple result sets (see
 		// TryGetCombinedEagerEnumerable), otherwise callers fall back to sequential InitPreambles.
@@ -790,14 +834,18 @@ namespace LinqToDB.Internal.Linq
 			// then each group's statements render into one or more commands bounded by SQL length. Each returned command
 			// carries the scenario step indices it covers, so the executor knows which child result sets to buffer and
 			// where the main result set lands — always the last step of the last command.
-			List<(string Sql, DbParameter[]? Parameters, int[] StepIndexes)> BuildCommands()
+			List<EagerCommand> BuildCommands()
 			{
 				var (scenario, values) = PrepareScenario();
 
 				var dataConnection = (DataConnection)_dataContext;
 				var plan           = DataConnection.QueryRunner.PlanEagerScenario(dataConnection, scenario);
 
-				var commands = new List<(string, DbParameter[]?, int[])>();
+				var commands = new List<EagerCommand>();
+
+#if SUPPORTS_DBBATCH
+				var useBatch = dataConnection.CanUseDbBatch;
+#endif
 
 				foreach (var group in plan.Groups)
 				{
@@ -806,6 +854,23 @@ namespace LinqToDB.Internal.Linq
 
 					for (var k = 0; k < stepIndexes.Count; k++)
 						groupStatements[k] = scenario.Steps[stepIndexes[k]].Statement;
+
+#if SUPPORTS_DBBATCH
+					// DbBatch: the whole group is one batch (each statement its own DbBatchCommand + parameter scope); no SQL-length
+					// split, so it covers every step of the group in order.
+					if (useBatch)
+					{
+						var batchStatements = ScenarioCommandRenderer.RenderBatchStatements(dataConnection, groupStatements, values);
+						var batchIndexes    = new int[stepIndexes.Count];
+
+						for (var k = 0; k < stepIndexes.Count; k++)
+							batchIndexes[k] = stepIndexes[k];
+
+						commands.Add(new EagerCommand(null, null, batchStatements, batchIndexes));
+
+						continue;
+					}
+#endif
 
 					var batches = DataConnection.QueryRunner.RenderCombinedBatches(dataConnection, groupStatements, values);
 
@@ -818,7 +883,7 @@ namespace LinqToDB.Internal.Linq
 						for (var k = 0; k < statementCount; k++)
 							indexes[k] = stepIndexes[offset + k];
 
-						commands.Add((sql, parameters, indexes));
+						commands.Add(new EagerCommand(sql, parameters, null, indexes));
 						offset += statementCount;
 					}
 				}
@@ -839,10 +904,11 @@ namespace LinqToDB.Internal.Linq
 
 				try
 				{
-					foreach (var (sql, parameters, stepIndexes) in commands)
+					foreach (var command in commands)
 					{
-						var reader  = DataConnection.QueryRunner.ExecuteRendered(dataConnection, sql, parameters);
-						var hasMain = stepIndexes[stepIndexes.Length - 1] == mainStepIndex;
+						var reader      = ExecEagerCommand(dataConnection, command);
+						var stepIndexes = command.StepIndexes;
+						var hasMain     = stepIndexes[stepIndexes.Length - 1] == mainStepIndex;
 
 						if (!hasMain)
 						{
@@ -899,10 +965,11 @@ namespace LinqToDB.Internal.Linq
 
 				try
 				{
-					foreach (var (sql, parameters, stepIndexes) in commands)
+					foreach (var command in commands)
 					{
-						var reader  = await DataConnection.QueryRunner.ExecuteRenderedAsync(dataConnection, sql, parameters, cancellationToken).ConfigureAwait(false);
-						var hasMain = stepIndexes[stepIndexes.Length - 1] == mainStepIndex;
+						var reader      = await ExecEagerCommandAsync(dataConnection, command, cancellationToken).ConfigureAwait(false);
+						var stepIndexes = command.StepIndexes;
+						var hasMain     = stepIndexes[stepIndexes.Length - 1] == mainStepIndex;
 
 						if (!hasMain)
 						{

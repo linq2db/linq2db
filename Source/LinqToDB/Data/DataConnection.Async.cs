@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
@@ -775,6 +775,72 @@ namespace LinqToDB.Data
 				throw;
 			}
 		}
+
+#if SUPPORTS_DBBATCH
+		// In case of change the logic of this method, DO NOT FORGET to change ExecuteBatchDataReader (the sync sibling).
+		// See ExecuteBatchDataReader for why this path carries no command interceptor (the CanUseDbBatch gate); tracing IS supported.
+		internal async Task<DataReaderWrapper> ExecuteBatchDataReaderAsync(DbBatch batch, CommandBehavior commandBehavior, CancellationToken cancellationToken)
+		{
+			CheckAndThrowOnDisposed();
+
+			await OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
+
+			if (TraceSwitchConnection.Level == TraceLevel.Off)
+				await using ((DataProvider.ExecuteScope(this) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false))
+					return new DataReaderWrapper(this, await batch.ExecuteReaderAsync(GetCommandBehavior(commandBehavior), cancellationToken).ConfigureAwait(false), null);
+
+			var traceText = GetBatchTraceText(batch);
+			var now       = DateTime.UtcNow;
+			var sw        = Stopwatch.StartNew();
+
+			if (TraceSwitchConnection.TraceInfo)
+			{
+				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, TraceOperation.ExecuteReader, true)
+				{
+					TraceLevel  = TraceLevel.Info,
+					CommandText = traceText,
+					StartTime   = now,
+				});
+			}
+
+			try
+			{
+				DataReaderWrapper ret;
+
+				await using ((DataProvider.ExecuteScope(this) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false))
+					ret = new DataReaderWrapper(this, await batch.ExecuteReaderAsync(GetCommandBehavior(commandBehavior), cancellationToken).ConfigureAwait(false), null);
+
+				if (TraceSwitchConnection.TraceInfo)
+				{
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute, TraceOperation.ExecuteReader, true)
+					{
+						TraceLevel    = TraceLevel.Info,
+						CommandText   = traceText,
+						StartTime     = now,
+						ExecutionTime = sw.Elapsed,
+					});
+				}
+
+				return ret;
+			}
+			catch (Exception ex)
+			{
+				if (TraceSwitchConnection.TraceError)
+				{
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.ExecuteReader, true)
+					{
+						TraceLevel    = TraceLevel.Error,
+						CommandText   = traceText,
+						StartTime     = now,
+						ExecutionTime = sw.Elapsed,
+						Exception     = ex,
+					});
+				}
+
+				throw;
+			}
+		}
+#endif
 
 		#endregion
 	}

@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Text;
 
+using LinqToDB.Data;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.Infrastructure;
 using LinqToDB.Internal.SqlQuery;
@@ -106,5 +109,70 @@ namespace LinqToDB.Internal.SqlProvider
 
 			return commands;
 		}
+
+#if SUPPORTS_DBBATCH
+		// Renders each statement into its OWN parameter scope (fresh normalizer per statement) for DbBatch execution: the
+		// group becomes one DbBatch whose DbBatchCommands each carry only their own parameters (NO cross-statement name
+		// uniquification, unlike RenderCombinedBatches which merges a group into one semicolon-concatenated command). No
+		// SQL-length splitting - DbBatch sends statements structurally, so the only bound is PlanScenario per-group count.
+		internal static IReadOnlyList<(string Sql, DbParameter[]? Parameters)> RenderBatchStatements(
+			DataConnection dataConnection, IReadOnlyList<SqlStatement> statements, IReadOnlyParameterValues? parameterValues)
+		{
+			var options      = dataConnection.Options;
+			var sqlOptimizer = dataConnection.DataProvider.GetSqlOptimizer (options);
+			var sqlBuilder   = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema, options);
+			var factory      = sqlOptimizer.CreateSqlExpressionFactory(dataConnection.MappingSchema, options);
+
+			var serviceProvider = ((IInfrastructure<IServiceProvider>)dataConnection.DataProvider).Instance;
+
+			var result = new (string, DbParameter[]?)[statements.Count];
+
+			using var sb = Pools.StringBuilder.Allocate();
+
+			for (var i = 0; i < statements.Count; i++)
+			{
+				// Fresh normalizer per statement => each statement's parameters are named independently.
+				var optimizationContext = new OptimizationContext(
+					new EvaluationContext(parameterValues),
+					options,
+					dataConnection.DataProvider.SqlProviderFlags,
+					dataConnection.MappingSchema,
+					sqlOptimizer.CreateOptimizerVisitor(false),
+					sqlOptimizer.CreateConvertVisitor(false),
+					factory,
+					dataConnection.DataProvider.SqlProviderFlags.IsParameterOrderDependent,
+					isAlreadyOptimizedAndConverted : false,
+					parametersNormalizerFactory    : dataConnection.DataProvider.GetQueryParameterNormalizer);
+
+				sb.Value.Length = 0;
+
+				var aliases = PrepareStepAliases(serviceProvider, statements[i]);
+
+				using (ActivityService.Start(ActivityID.BuildSql))
+					sqlBuilder.BuildSql(statements[i], sb.Value, optimizationContext, aliases, null, 0);
+
+				var sqlParameters = optimizationContext.GetParameters();
+
+				DbParameter[]? dbParameters = null;
+
+				if (sqlParameters.Count > 0)
+				{
+					var dbCommand = dataConnection.GetOrCreateCommand();
+
+					dbParameters = new DbParameter[sqlParameters.Count];
+
+					for (var p = 0; p < sqlParameters.Count; p++)
+					{
+						var sqlp = sqlParameters[p];
+						dbParameters[p] = DataConnection.QueryRunner.CreateParameter(dataConnection, dbCommand, sqlp, sqlp.GetParameterValue(parameterValues));
+					}
+				}
+
+				result[i] = (sb.Value.ToString(), dbParameters);
+			}
+
+			return result;
+		}
+#endif
 	}
 }

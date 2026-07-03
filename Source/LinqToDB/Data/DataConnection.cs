@@ -992,6 +992,145 @@ namespace LinqToDB.Data
 			LastQuery = _command!.CommandText;
 		}
 
+#if SUPPORTS_DBBATCH
+		/// <summary>
+		/// Gets whether the underlying provider connection supports the ADO.NET <see cref="DbBatch"/> structural batching API.
+		/// </summary>
+		internal bool CanCreateBatch => GetOrCreateConnection().Connection.CanCreateBatch;
+
+		/// <summary>
+		/// Builds a <see cref="DbBatch"/> from the given per-statement command texts and parameters. Each statement becomes a
+		/// <see cref="DbBatchCommand"/> with its own parameter scope, so parameter names are NOT uniquified across statements
+		/// (unlike the semicolon-concatenated combined command). The caller owns the returned batch and must dispose it.
+		/// </summary>
+		internal DbBatch CreateBatch(IReadOnlyList<(string Sql, DbParameter[]? Parameters)> statements)
+		{
+			CheckAndThrowOnDisposed();
+
+			var batch     = GetOrCreateConnection().Connection.CreateBatch();
+			var lastQuery = "";
+
+			if (_commandTimeout.HasValue)
+				batch.Timeout = _commandTimeout.Value;
+
+			if (TransactionAsync != null)
+				batch.Transaction = Transaction;
+
+			foreach (var (sql, parameters) in statements)
+			{
+				var command = batch.CreateBatchCommand();
+
+				command.CommandText = sql;
+
+				if (parameters != null)
+					foreach (var parameter in parameters)
+						command.Parameters.Add(parameter);
+
+				batch.BatchCommands.Add(command);
+
+				lastQuery = lastQuery.Length == 0 ? sql : lastQuery + ";\n" + sql;
+			}
+
+			LastQuery = lastQuery;
+
+			return batch;
+		}
+
+		// DbBatch execution mirrors ExecuteDataReader, but has no command interceptor: interceptors are DbCommand-typed and
+		// a DbBatch is not a DbCommand, so the CanUseDbBatch gate excludes a registered ICommandInterceptor. Tracing IS
+		// supported - the batch's combined text is traced - so logging and baselines still observe the SQL.
+		// TODO: remove the interceptor fallback once a DbBatch-aware interceptor surface (e.g. IDbBatchInterceptor) exists.
+		internal DataReaderWrapper ExecuteBatchDataReader(DbBatch batch, CommandBehavior commandBehavior)
+		{
+			CheckAndThrowOnDisposed();
+
+			OpenConnection();
+
+			if (TraceSwitchConnection.Level == TraceLevel.Off)
+				using (DataProvider.ExecuteScope(this))
+					return new DataReaderWrapper(this, batch.ExecuteReader(GetCommandBehavior(commandBehavior)), null);
+
+			var traceText = GetBatchTraceText(batch);
+			var now       = DateTime.UtcNow;
+			var sw        = Stopwatch.StartNew();
+
+			if (TraceSwitchConnection.TraceInfo)
+			{
+				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, TraceOperation.ExecuteReader, false)
+				{
+					TraceLevel  = TraceLevel.Info,
+					CommandText = traceText,
+					StartTime   = now,
+				});
+			}
+
+			try
+			{
+				DataReaderWrapper ret;
+
+				using (DataProvider.ExecuteScope(this))
+					ret = new DataReaderWrapper(this, batch.ExecuteReader(GetCommandBehavior(commandBehavior)), null);
+
+				if (TraceSwitchConnection.TraceInfo)
+				{
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute, TraceOperation.ExecuteReader, false)
+					{
+						TraceLevel    = TraceLevel.Info,
+						CommandText   = traceText,
+						StartTime     = now,
+						ExecutionTime = sw.Elapsed,
+					});
+				}
+
+				return ret;
+			}
+			catch (Exception ex)
+			{
+				if (TraceSwitchConnection.TraceError)
+				{
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.ExecuteReader, false)
+					{
+						TraceLevel    = TraceLevel.Error,
+						CommandText   = traceText,
+						StartTime     = now,
+						ExecutionTime = sw.Elapsed,
+						Exception     = ex,
+					});
+				}
+
+				throw;
+			}
+		}
+
+		// The batch's combined SQL for tracing/baselines: each DbBatchCommand text joined with the statement separator.
+		// Parameters are not dumped (each command has its own scope); the SQL text carries the independent parameter names.
+		static string GetBatchTraceText(DbBatch batch)
+		{
+			var text = "";
+
+			foreach (DbBatchCommand command in batch.BatchCommands)
+				text = text.Length == 0 ? command.CommandText : text + ";\n" + command.CommandText;
+
+			return text;
+		}
+#endif
+
+		/// <summary>
+		/// Whether a combined multi-statement group should run via the ADO.NET <c>DbBatch</c> API rather than as one
+		/// semicolon-concatenated command. Requires the <see cref="LinqToDB.LinqOptions.UseDbBatch"/> option, a provider
+		/// connection that supports batching, and no registered <see cref="ICommandInterceptor"/> (interceptors are
+		/// <see cref="DbCommand"/>-typed, so they cannot observe a batch). Tracing is supported. Always
+		/// <see langword="false"/> on target frameworks without the <c>DbBatch</c> API.
+		/// </summary>
+		internal bool CanUseDbBatch =>
+#if SUPPORTS_DBBATCH
+			Options.LinqOptions.UseDbBatch
+			&& ((IInterceptable<ICommandInterceptor>)this).Interceptor == null
+			&& CanCreateBatch;
+#else
+			false;
+#endif
+
 		private int? _commandTimeout;
 		/// <summary>
 		/// Gets or sets command execution timeout in seconds.
