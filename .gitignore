@@ -27,3 +27,4 @@ packages/
 .build/
 **/launchSettings.json
 /.claude/settings.local.json
+Source/LinqToDB/.claude/

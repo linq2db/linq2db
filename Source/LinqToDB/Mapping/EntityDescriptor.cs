@@ -138,6 +138,15 @@ namespace LinqToDB.Mapping
 		/// </remarks>
 		public IReadOnlyList<InheritanceMapping> InheritanceMapping => _inheritanceMappings;
 
+		private ColumnDescriptor[] _inheritanceSiblingColumns = [];
+		/// <summary>
+		/// Distinct members from sibling TPH types that share a C# member name with an already-merged column.
+		/// They may map to a different physical column or to the same physical column as another sibling (collapsed
+		/// to one field in SqlTable). Kept separate to avoid MemberName collision in the merged descriptor and to
+		/// let per-type entity init reference each subtype's own column.
+		/// </summary>
+		internal IReadOnlyList<ColumnDescriptor> InheritanceSiblingColumns => _inheritanceSiblingColumns;
+
 		/// <summary>
 		/// For entity descriptor with inheritance mapping gets descriptor of root (base) entity.
 		/// </summary>
@@ -153,12 +162,117 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		internal bool HasComplexColumns { get; private set; }
 
+		/// <summary>
+		/// Predicate-style filter (legacy single-slot accessor). Equivalent to looking up the entry under the
+		/// default (anonymous, empty-string) key in <see cref="QueryFilters"/>.
+		/// </summary>
 		public LambdaExpression? QueryFilterLambda { get; private set; }
-		public Delegate?         QueryFilterFunc   { get; private set; }
+
+		/// <summary>
+		/// Function-style filter (legacy single-slot accessor). Equivalent to looking up the entry under the
+		/// default (anonymous, empty-string) key in <see cref="QueryFilters"/>.
+		/// </summary>
+		public Delegate? QueryFilterFunc { get; private set; }
+
+		/// <summary>
+		/// Ordered set of named query filters declared on this entity. The default (anonymous) filter is exposed
+		/// under the empty-string key; additional entries come from the keyed
+		/// <see cref="EntityMappingBuilder{T}.HasQueryFilter(string, Expression{Func{T, IDataContext, bool}}?)"/>
+		/// overloads. Multiple entries are AND-combined when the entity is queried.
+		/// </summary>
+		public IReadOnlyList<EntityQueryFilter> QueryFilters { get; private set; } = Array.Empty<EntityQueryFilter>();
 
 		bool HasInheritanceMapping()
 		{
 			return TypeAccessor.Type.BaseType != null && MappingSchema.HasAttribute<InheritanceMappingAttribute>(TypeAccessor.Type.BaseType);
+		}
+
+		void InitQueryFilters()
+		{
+			if (MappingSchema.GetAttributes<QueryFilterAttribute>(TypeAccessor.Type).Length == 0)
+				return;
+
+			// MappingAttributesCache returns a flat list `[own(t), ...interfaces, ...base]`. Walk the hierarchy
+			// base→derived ourselves and apply each class's own attributes in declaration order. This gives
+			// derived-class entries the final say (they overwrite inherited entries with the same key, and a
+			// derived tombstone suppresses an inherited filter) while still honouring last-write-wins for
+			// sequential calls on the same class (e.g. `HasQueryFilter("k", filter)` then `HasQueryFilter("k", null)`).
+			var ordered = new List<string>();
+			var entries = new Dictionary<string, EntityQueryFilter>(StringComparer.Ordinal);
+			var visited = new HashSet<Type>();
+
+			ApplyHierarchy(TypeAccessor.Type);
+
+			if (entries.Count == 0)
+				return;
+
+			var list = new EntityQueryFilter[entries.Count];
+			for (var i = 0; i < ordered.Count; i++)
+				list[i] = entries[ordered[i]];
+
+			QueryFilters = list;
+
+			if (entries.TryGetValue(string.Empty, out var defaultEntry))
+			{
+				QueryFilterLambda = defaultEntry.FilterLambda;
+				QueryFilterFunc   = defaultEntry.FilterFunc;
+			}
+
+			void ApplyHierarchy(Type t)
+			{
+				if (!visited.Add(t))
+					return;
+
+				if (t.BaseType != null && t.BaseType != typeof(object))
+					ApplyHierarchy(t.BaseType);
+
+				foreach (var intf in t.GetInterfaces())
+					ApplyHierarchy(intf);
+
+				var allAttrs = MappingSchema.GetAttributes<QueryFilterAttribute>(t);
+				if (allAttrs.Length == 0)
+					return;
+
+				// Subtract attributes inherited from base/interfaces (reference identity via cache reuse) so we
+				// only apply what's attached directly to `t`. Avoids double-application as we walk back up.
+				HashSet<QueryFilterAttribute>? inherited = null;
+
+				void CollectInherited(Type source)
+				{
+					var attrs = MappingSchema.GetAttributes<QueryFilterAttribute>(source);
+					if (attrs.Length == 0)
+						return;
+					inherited ??= new HashSet<QueryFilterAttribute>();
+					foreach (var a in attrs)
+						inherited.Add(a);
+				}
+
+				if (t.BaseType != null && t.BaseType != typeof(object))
+					CollectInherited(t.BaseType);
+
+				foreach (var intf in t.GetInterfaces())
+					CollectInherited(intf);
+
+				foreach (var qf in allAttrs)
+				{
+					if (inherited != null && inherited.Contains(qf))
+						continue;
+
+					var key = qf.FilterKey ?? string.Empty;
+
+					if (qf.FilterLambda == null && qf.FilterFunc == null)
+					{
+						if (entries.Remove(key))
+							ordered.Remove(key);
+						continue;
+					}
+
+					if (!entries.ContainsKey(key))
+						ordered.Add(key);
+
+					entries[key] = new EntityQueryFilter(key, qf.FilterLambda, qf.FilterFunc);
+				}
+			}
 		}
 
 		void Init(Action<MappingSchema, IEntityChangeDescriptor>? onEntityDescriptorCreated)
@@ -191,13 +305,7 @@ namespace LinqToDB.Mapping
 
 			Name = new SqlObjectName(tableName, Server: server, Database: database, Schema: schema);
 
-			var qf = MappingSchema.GetAttribute<QueryFilterAttribute>(TypeAccessor.Type);
-
-			if (qf != null)
-			{
-				QueryFilterLambda = qf.FilterLambda;
-				QueryFilterFunc   = qf.FilterFunc;
-			}
+			InitQueryFilters();
 
 			InitializeDynamicColumnsAccessors(hasInheritanceMapping);
 
@@ -375,10 +483,29 @@ namespace LinqToDB.Mapping
 				_inheritanceMappings[i] = mapping;
 			}
 
-			var allColumnMemberNames = new HashSet<string>(StringComparer.Ordinal);
+			var seenMemberNames = new HashSet<string>(StringComparer.Ordinal);
 
 			foreach (var cd in Columns)
-				allColumnMemberNames.Add(cd.MemberName);
+				seenMemberNames.Add(cd.MemberName);
+
+			List<ColumnDescriptor>? siblingColumns = null;
+
+			// A column from a sibling type is already represented when its C# member is the same
+			// member we have merged (e.g. inherited from a shared base) — compared by member identity,
+			// not by name, so two sibling types declaring distinct same-named members are kept apart.
+			bool AlreadyMapped(ColumnDescriptor candidate)
+			{
+				foreach (var existing in Columns)
+					if (existing.MemberInfo.EqualsTo(candidate.MemberInfo))
+						return true;
+
+				if (siblingColumns != null)
+					foreach (var existing in siblingColumns)
+						if (existing.MemberInfo.EqualsTo(candidate.MemberInfo))
+							return true;
+
+				return false;
+			}
 
 			foreach (var m in _inheritanceMappings)
 			{
@@ -389,9 +516,37 @@ namespace LinqToDB.Mapping
 				ed.InheritanceRoot = this;
 
 				foreach (var cd in ed.Columns)
-					if (allColumnMemberNames.Add(cd.MemberName))
+				{
+					if (AlreadyMapped(cd))
+						continue;
+
+					if (seenMemberNames.Add(cd.MemberName))
 						AddColumn(cd);
+					else
+					{
+						// A sibling type maps a distinct member that shares its C# name with one already
+						// merged. It may target a different physical column (created/selected as its own)
+						// or the same physical column as another sibling (collapsed to one field in
+						// SqlTable). Either way it must be kept here so the per-type entity constructor
+						// can assign this member — see EntityConstructorBase.BuildFullEntityExpressionInternal.
+						(siblingColumns ??= []).Add(cd);
+
+						// When it shares its physical column with an already-merged column, register it on
+						// that column so inserts of a base-typed (mixed) source write the value from the
+						// member matching each row's runtime type — see ColumnDescriptor.GetProviderValue.
+						foreach (var existing in Columns)
+						{
+							if (string.Equals(existing.ColumnName, cd.ColumnName, StringComparison.Ordinal))
+							{
+								existing.AddValueSibling(cd);
+								break;
+							}
+						}
+					}
+				}
 			}
+
+			_inheritanceSiblingColumns = siblingColumns == null ? [] : [.. siblingColumns];
 
 			var discriminator = Columns.FirstOrDefault(x => x.IsDiscriminator)
 				?? throw new LinqToDBException($"Inheritance Discriminator is not defined for the '{ObjectType}' hierarchy.");

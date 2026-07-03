@@ -130,14 +130,14 @@ namespace LinqToDB.EntityFrameworkCore
 				foreach (var queryFilter in et.GetDeclaredQueryFilters())
 				{
 					if (queryFilter is { Expression: { } filter })
-						TransformFilter(filter);
+						TransformFilter(queryFilter.Key, filter);
 				}
 #else
 				if (et.GetQueryFilter() is { } filter)
-					TransformFilter(filter);
+					TransformFilter(null, filter);
 #endif
 
-				void TransformFilter(LambdaExpression filter)
+				void TransformFilter(string? filterKey, LambdaExpression filter)
 				{
 					var dcParam     = Expression.Parameter(typeof(IDataContext), "dc");
 					var contextProp = Expression.Property(Expression.Convert(dcParam, typeof(LinqToDBForEFToolsDataConnection)), "Context");
@@ -156,7 +156,7 @@ namespace LinqToDB.EntityFrameworkCore
 
 					var newFilter = Expression.Lambda(filterBody, filter.Parameters[0], dcParam);
 
-					result.Add(new QueryFilterAttribute() { FilterLambda = newFilter });
+					result.Add(new QueryFilterAttribute() { FilterKey = filterKey, FilterLambda = newFilter });
 				}
 
 				// InheritanceMappingAttribute

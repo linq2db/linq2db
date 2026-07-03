@@ -103,6 +103,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 		{
 			return Version switch
 			{
+				FirebirdVersion.v25   => new Firebird25MemberTranslator(),
 				>= FirebirdVersion.v5 => new Firebird5MemberTranslator(),
 				>= FirebirdVersion.v4 => new Firebird4MemberTranslator(),
 				_                     => new FirebirdMemberTranslator(),

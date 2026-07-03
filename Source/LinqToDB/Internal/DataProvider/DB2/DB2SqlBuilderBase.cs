@@ -23,6 +23,47 @@ namespace LinqToDB.Internal.DataProvider.DB2
 
 		protected override ConcatBuildStyle ConcatStyle => ConcatBuildStyle.Pipes;
 
+		// DB2 null-treatment placement is per function:
+		//  - FIRST_VALUE/LAST_VALUE/LAG/LEAD take it as a quoted string argument: FUNC(.., 'IGNORE NULLS').
+		//    (LAG/LEAD require offset + default to precede it — see BuildSqlExtendedFunction below.)
+		//  - NTH_VALUE takes no string argument; it uses the standard after-close keyword: NTH_VALUE(e, n) IGNORE NULLS.
+		protected override WindowNullsPlacement GetWindowNullsPlacement(SqlExtendedFunction extendedFunction)
+			=> extendedFunction.FunctionName is "NTH_VALUE"
+				? WindowNullsPlacement.AfterClose
+				: WindowNullsPlacement.StringArgument;
+
+		protected override void BuildSqlExtendedFunction(SqlExtendedFunction extendedFunction)
+		{
+			// DB2 LAG/LEAD take the null-treatment string as the argument after offset and default:
+			// LAG(expr, offset, default, 'IGNORE NULLS'). Pad the (optional) offset (1) and default (NULL)
+			// so the string lands in the correct position.
+			if (extendedFunction.NullTreatment == LinqToDB.Sql.Nulls.Ignore
+				&& extendedFunction.FunctionName is "LAG" or "LEAD"
+				&& extendedFunction.Arguments.Count < 3)
+			{
+				var args        = extendedFunction.Arguments.ToList();
+				var nullability = extendedFunction.ArgumentsNullability.ToList();
+				var dbType      = QueryHelper.GetDbDataTypeWithoutSchema(extendedFunction.Arguments[0].Expression);
+
+				if (args.Count < 2)
+				{
+					args.Add(new SqlFunctionArgument(new SqlValue(typeof(int), 1)));
+					nullability.Add(false);
+				}
+
+				if (args.Count < 3)
+				{
+					// DB2 rejects an untyped NULL default (SQL0418N); emit a typed CAST(NULL AS <type>).
+					args.Add(new SqlFunctionArgument(new SqlCastExpression(new SqlValue(dbType, null), dbType, null, isMandatory: true)));
+					nullability.Add(true);
+				}
+
+				extendedFunction = extendedFunction.WithArguments(args, nullability.ToArray());
+			}
+
+			base.BuildSqlExtendedFunction(extendedFunction);
+		}
+
 		protected DB2SqlBuilderBase(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{

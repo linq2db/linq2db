@@ -476,5 +476,33 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 			}
 		}
 
+		protected class OracleWindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
+		{
+			protected override bool IsFrameGroupsSupported          => false;
+			protected override bool IsFrameExclusionSupported       => false;
+			protected override bool IsKeepSupported                 => true;
+			protected override bool IsLeadLagNullTreatmentSupported => true;
+			protected override bool IsValueNullTreatmentSupported   => true;
+			protected override bool IsNthValueFromSupported         => true;
+			protected override bool IsAggregateDistinctSupported    => true;
+			// Oracle supports the full statistical/regression window-function set with standard SQL names.
+			protected override bool IsVarianceSupported             => true;
+			protected override bool IsVarianceBareSupported         => true;
+			protected override bool IsCorrelationSupported          => true;
+			protected override bool IsLinearRegressionSupported     => true;
+			protected override bool IsMedianSupported               => true;
+			// Oracle supports both the group and windowed ordered-set forms (PERCENTILE_CONT/DISC).
+			protected override bool IsOrderedSetWindowedSupported   => true;
+			// Oracle supports hypothetical-set RANK/DENSE_RANK/PERCENT_RANK/CUME_DIST.
+			protected override bool IsHypotheticalSetSupported      => true;
+
+			public override Expression? TranslateRatioToReport(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+				=> TranslateRatioToReportNative(translationContext, methodCall);
+		}
+
+		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()
+		{
+			return new OracleWindowFunctionsMemberTranslator();
+		}
 	}
 }
