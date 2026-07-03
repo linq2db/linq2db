@@ -170,34 +170,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			where TKey : notnull
 		{
 			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
-			{
-				var result = new PreambleResult<TKey, T>();
-				foreach (var e in query.GetResultEnumerable(dataContext, expressions, parameters, preambles))
-				{
-					result.Add(e.Key, e.Detail);
-				}
+				=> BuildResult(query.GetResultEnumerable(dataContext, expressions, parameters, preambles));
 
-				return result;
-			}
-
-			public override async Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object[]? preambles,
-				CancellationToken                                        cancellationToken)
-			{
-				var result = new PreambleResult<TKey, T>();
-
-				var enumerator = query.GetResultEnumerable(dataContext, expressions, parameters, preambles)
-					.GetAsyncEnumerator(cancellationToken);
-				await using (enumerator.ConfigureAwait(false))
-				{
-					while (await enumerator.MoveNextAsync().ConfigureAwait(false))
-					{
-						var e = enumerator.Current;
-						result.Add(e.Key, e.Detail);
-					}
-				}
-
-				return result;
-			}
+			public override Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object[]? preambles, CancellationToken cancellationToken)
+				=> BuildResultAsync(query.GetResultEnumerable(dataContext, expressions, parameters, preambles), cancellationToken);
 
 			public override bool CanCombine => query.GetResultFromReader != null;
 
@@ -210,20 +186,28 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			public override object MaterializeFromReader(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles, DbDataReader dataReader)
+				=> BuildResult(query.GetResultFromReader!(dataContext, expressions, parameters, preambles, dataReader));
+
+			public override Task<object> MaterializeFromReaderAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles, DbDataReader dataReader, CancellationToken cancellationToken)
+				=> BuildResultAsync(query.GetResultFromReader!(dataContext, expressions, parameters, preambles, dataReader), cancellationToken);
+
+			// Both the sequential (GetResultEnumerable) and combined (GetResultFromReader) paths bucket the same
+			// KeyDetailEnvelope stream into a PreambleResult; only the source enumerable differs.
+			static PreambleResult<TKey, T> BuildResult(IEnumerable<KeyDetailEnvelope<TKey, T>> source)
 			{
 				var result = new PreambleResult<TKey, T>();
 
-				foreach (var e in query.GetResultFromReader!(dataContext, expressions, parameters, preambles, dataReader))
+				foreach (var e in source)
 					result.Add(e.Key, e.Detail);
 
 				return result;
 			}
 
-			public override async Task<object> MaterializeFromReaderAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles, DbDataReader dataReader, CancellationToken cancellationToken)
+			static async Task<object> BuildResultAsync(IAsyncEnumerable<KeyDetailEnvelope<TKey, T>> source, CancellationToken cancellationToken)
 			{
 				var result = new PreambleResult<TKey, T>();
 
-				await foreach (var e in query.GetResultFromReader!(dataContext, expressions, parameters, preambles, dataReader).WithCancellation(cancellationToken).ConfigureAwait(false))
+				await foreach (var e in source.WithCancellation(cancellationToken).ConfigureAwait(false))
 					result.Add(e.Key, e.Detail);
 
 				return result;
