@@ -1762,8 +1762,14 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var modifier = associationRoot.BuildContext.TranslationModifier;
 
+			// If the parent rows are already narrowed to the association's declaring (derived) type via
+			// OfType, the discriminator predicate is already applied — tell the association builder
+			// to skip adding a redundant one.
+			var parentExactType       = associationDescriptor.GetParentElementType();
+			var parentAlreadyFiltered = (table as TableBuilder.TableContext)?.FilteredByOfType?.Exists(t => parentExactType.IsAssignableFrom(t)) == true;
+
 			var association = AssociationHelper.BuildAssociationQuery(Builder, rootContext, memberInfo,
-				associationDescriptor, notNullCheck, !associationDescriptor.IsList, modifier, loadWith, ref isOptional);
+				associationDescriptor, notNullCheck, !associationDescriptor.IsList, modifier, loadWith, parentAlreadyFiltered, ref isOptional);
 
 			associationExpression = association;
 
@@ -4655,15 +4661,25 @@ namespace LinqToDB.Internal.Linq.Builder
 				case ExpressionType.Constant:
 				{
 					var origValue = ((ConstantExpression)value).Value;
+
+					// Comparing an enum to null is a null check, not a value comparison. Mapping null to the
+					// enum's underlying default (e.g. 0) would pollute the SQL and turn the check into a value
+					// filter that drops rows whose enum equals that default — see issue #5666. Emit IS [NOT] NULL.
+					if (origValue == null)
+					{
+						var operandSql = (Visit(operand) as SqlPlaceholderExpression)?.Sql;
+						if (operandSql == null)
+							return null;
+
+						return new SqlPredicate.IsNull(operandSql, op == SqlPredicate.Operator.NotEqual);
+					}
+
 					var mapValue  = origValue;
 
-					if (origValue != null)
+					foreach (var enumVal in MappingSchema.GetMapValues(type.UnwrapNullableType())!)
 					{
-						foreach (var enumVal in MappingSchema.GetMapValues(type.UnwrapNullableType())!)
-						{
-							if (origValue.Equals(enumVal.OrigValue) && enumVal.MapValues.Length > 0)
-								mapValue = enumVal.MapValues[0].Value;
-						}
+						if (origValue.Equals(enumVal.OrigValue) && enumVal.MapValues.Length > 0)
+							mapValue = enumVal.MapValues[0].Value;
 					}
 
 					SqlValue sqlvalue;

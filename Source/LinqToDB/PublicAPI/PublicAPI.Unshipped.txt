@@ -1026,3 +1026,18 @@ virtual LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.IsRowNumberNee
 *REMOVED*virtual LinqToDB.Internal.DataProvider.Translation.TranslationRegistration.TranslateUnaryOperatorFunc.Invoke(LinqToDB.Linq.Translation.ITranslationContext! translationContext, System.Linq.Expressions.UnaryExpression! unaryExpression, LinqToDB.Linq.Translation.TranslationFlags translationFlags) -> System.Linq.Expressions.Expression?
 *REMOVED*virtual LinqToDB.Internal.Expressions.ExpressionVisitorBase.VisitSqlValidateExpression(LinqToDB.Internal.Expressions.SqlValidateExpression! node) -> System.Linq.Expressions.Expression!
 *REMOVED*virtual LinqToDB.Internal.SqlProvider.BasicSqlOptimizer.CorrectUnionOrderBy(LinqToDB.Internal.SqlQuery.SqlStatement! statement) -> LinqToDB.Internal.SqlQuery.SqlStatement!
+LinqToDB.Mapping.EntityQueryFilter
+LinqToDB.Mapping.EntityQueryFilter.EntityQueryFilter(string! filterKey, System.Linq.Expressions.LambdaExpression? filterLambda, System.Delegate? filterFunc) -> void
+LinqToDB.Mapping.EntityQueryFilter.FilterKey.get -> string!
+LinqToDB.Mapping.EntityQueryFilter.FilterLambda.get -> System.Linq.Expressions.LambdaExpression?
+LinqToDB.Mapping.EntityQueryFilter.FilterFunc.get -> System.Delegate?
+LinqToDB.Mapping.EntityDescriptor.QueryFilters.get -> System.Collections.Generic.IReadOnlyList<LinqToDB.Mapping.EntityQueryFilter!>!
+LinqToDB.Mapping.QueryFilterAttribute.FilterKey.get -> string?
+LinqToDB.Mapping.QueryFilterAttribute.FilterKey.set -> void
+LinqToDB.Mapping.EntityMappingBuilder<TEntity>.HasQueryFilter(string! filterKey, System.Linq.Expressions.Expression<System.Func<TEntity, LinqToDB.IDataContext!, bool>!>? filter) -> LinqToDB.Mapping.EntityMappingBuilder<TEntity>!
+LinqToDB.Mapping.EntityMappingBuilder<TEntity>.HasQueryFilter(string! filterKey, System.Linq.Expressions.Expression<System.Func<TEntity, bool>!>? filter) -> LinqToDB.Mapping.EntityMappingBuilder<TEntity>!
+LinqToDB.Mapping.EntityMappingBuilder<TEntity>.HasQueryFilter<TDataContext>(string! filterKey, System.Linq.Expressions.Expression<System.Func<TEntity, TDataContext, bool>!>? filter) -> LinqToDB.Mapping.EntityMappingBuilder<TEntity>!
+LinqToDB.Mapping.EntityMappingBuilder<TEntity>.HasQueryFilter(string! filterKey, System.Func<System.Linq.IQueryable<TEntity>!, LinqToDB.IDataContext!, System.Linq.IQueryable<TEntity>!>? filterFunc) -> LinqToDB.Mapping.EntityMappingBuilder<TEntity>!
+LinqToDB.Mapping.EntityMappingBuilder<TEntity>.HasQueryFilter<TDataContext>(string! filterKey, System.Func<System.Linq.IQueryable<TEntity>!, TDataContext, System.Linq.IQueryable<TEntity>!>? filterFunc) -> LinqToDB.Mapping.EntityMappingBuilder<TEntity>!
+static LinqToDB.LinqExtensions.IgnoreFilters<TSource>(this System.Linq.IQueryable<TSource>! source, System.Collections.Generic.IEnumerable<string!>! filterKeys, params System.Type![]! entityTypes) -> System.Linq.IQueryable<TSource>!
+static readonly LinqToDB.Internal.Reflection.Methods.LinqToDB.IgnoreFiltersByKey -> System.Reflection.MethodInfo!
