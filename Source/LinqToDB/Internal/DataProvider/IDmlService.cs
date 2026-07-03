@@ -21,10 +21,10 @@ namespace LinqToDB.Internal.DataProvider
 		bool IsTableNotFoundException(Exception exception);
 
 		/// <summary>
-		/// Builds the logical <see cref="SqlCommandScenario"/> (ordered steps + outcome) for <paramref name="statement"/>,
-		/// or <see langword="null"/> to fall back to the legacy command-splitting path
-		/// (<see cref="ISqlBuilder.CommandCount"/> / <c>BuildCommand</c>). Use <paramref name="factory"/> to construct any
-		/// synthetic statements a step needs (e.g. an identity-retrieval <c>SELECT</c>).
+		/// Builds the logical <see cref="SqlCommandScenario"/> (ordered steps + outcome) for <paramref name="statement"/>.
+		/// The base implementation always produces a scenario (a single-step one for a self-contained statement); the
+		/// runner treats a <see langword="null"/> result as a contract error. Use <paramref name="factory"/> to construct
+		/// any synthetic statements a step needs (e.g. an identity-retrieval <c>SELECT</c>).
 		/// </summary>
 		SqlCommandScenario? BuildCommandScenario(SqlStatement statement, SqlProviderFlags flags, ISqlExpressionFactory factory);
 

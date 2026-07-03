@@ -158,7 +158,6 @@ namespace LinqToDB.Data
 				await base.DisposeAsync().ConfigureAwait(false);
 			}
 
-			private sealed record CommandWithParameters(string Command, IReadOnlyList<SqlParameter> SqlParameters);
 
 			// Cached in query.Context on first compile so a re-run reuses both the rendered commands and the logical
 			// scenario (the interpreter needs the real scenario for combined grouping / forwarding — the bridge can't
@@ -188,36 +187,6 @@ namespace LinqToDB.Data
 			// (FinalizeStatement) — most importantly the UPDATE rewrite some providers need (e.g. SqlCe cannot parse a
 			// table alias in UPDATE). Steps that reuse the main statement (e.g. truncate reseed) are already finalized and
 			// are skipped by reference; the scenario is rebuilt only if a step actually changed.
-			static SqlCommandScenario FinalizeScenarioSteps(SqlCommandScenario scenario, SqlStatement mainStatement, ISqlOptimizer sqlOptimizer, DataOptions options, MappingSchema mappingSchema)
-			{
-				SqlCommandStep[]? finalized = null;
-
-				for (var i = 0; i < scenario.Steps.Count; i++)
-				{
-					var step = scenario.Steps[i];
-
-					if (ReferenceEquals(step.Statement, mainStatement))
-						continue;
-
-					var finalStatement = sqlOptimizer.Finalize(mappingSchema, step.Statement, options);
-
-					if (ReferenceEquals(finalStatement, step.Statement))
-						continue;
-
-					if (finalized == null)
-					{
-						finalized = new SqlCommandStep[scenario.Steps.Count];
-
-						for (var j = 0; j < scenario.Steps.Count; j++)
-							finalized[j] = scenario.Steps[j];
-					}
-
-					finalized[i] = step with { Statement = finalStatement };
-				}
-
-				return finalized == null ? scenario : scenario with { Steps = finalized };
-			}
-
 			static PreparedQuery GetCommand(DataConnection dataConnection, IQueryContext query, IReadOnlyParameterValues? parameterValues, bool forGetSqlText, int startIndent = 0)
 			{
 				bool aquiredLock = false;
@@ -310,57 +279,19 @@ namespace LinqToDB.Data
 						// UPDATE/INSERT/SELECT emulation) after the main statement was finalized, so they miss provider
 						// finalization — run it now so per-provider transforms apply (e.g. SqlCe rewrites its UPDATE into the
 						// alias-free form it accepts). Steps reusing the already-finalized main statement are skipped.
-						scenario = FinalizeScenarioSteps(scenario, statement, sqlOptimizer, options, dataConnection.MappingSchema);
+						scenario = ScenarioCommandRenderer.FinalizeScenarioSteps(scenario, statement, sqlOptimizer, options, dataConnection.MappingSchema);
 
 						// Plan FIRST: group the scenario's steps into physical commands (round-trips), size-aware.
 						plan = dmlService.PlanScenario(scenario, dataConnection.DataProvider.SqlProviderFlags);
 
-						// Render each GROUP as ONE command through the group-scoped shared context: a group's step statements
-						// render into one command text (the shared param normalizer within the group yields unique/deduped
-						// names); parameters are cleared at each group boundary so every command carries only its own params.
-						commands = new CommandWithParameters[plan.Groups.Count];
-
-						for (var g = 0; g < plan.Groups.Count; g++)
-						{
-							var stepIndexes = plan.Groups[g].StepIndexes;
-
-							sb.Value.Length = 0;
-
-							for (var k = 0; k < stepIndexes.Count; k++)
-							{
-								var step        = scenario.Steps[stepIndexes[k]];
-								var stepAliases = ReferenceEquals(step.Statement, statement) ? aliases : PrepareStepAliases(serviceProvider, step.Statement);
-
-								if (k > 0)
-									sb.Value.Append(";\n");
-
-								using (ActivityService.Start(ActivityID.BuildSql))
-									sqlBuilder.BuildSql(0, step.Statement, sb.Value, optimizationContext, stepAliases, null, startIndent);
-							}
-
-							commands[g] = new CommandWithParameters(sb.Value.ToString(), optimizationContext.GetParameters());
-							optimizationContext.ClearParameters();
-						}
+						// Render each group as one command (shared with the remote GetSqlText path).
+						commands = ScenarioCommandRenderer.RenderScenarioGroups(scenario, plan, statement, aliases, sqlBuilder, optimizationContext, serviceProvider, sb.Value, startIndent);
 					}
 					else
 					{
-						// Legacy command-splitting: CommandCount + BuildSql(commandNumber) render N commands from one statement.
-						plan = null;
-
-						var cc = sqlBuilder.CommandCount(statement);
-
-						commands = new CommandWithParameters[cc];
-
-						for (var i = 0; i < cc; i++)
-						{
-							sb.Value.Length = 0;
-
-							using (ActivityService.Start(ActivityID.BuildSql))
-								sqlBuilder.BuildSql(i, statement, sb.Value, optimizationContext, aliases, null, startIndent);
-
-							commands[i] = new CommandWithParameters(sb.Value.ToString(), optimizationContext.GetParameters());
-							optimizationContext.ClearParameters();
-						}
+						// BuildCommandScenario always returns a scenario now (DmlServiceBase supplies a default single-step
+						// one), so this is unreachable — a custom IDmlService returning null is a contract violation.
+						throw new InvalidOperationException($"'{dmlService.GetType().Name}.BuildCommandScenario' returned null; it must always produce a scenario.");
 					}
 
 					if (optimizeAndConvertAll)
@@ -381,12 +312,6 @@ namespace LinqToDB.Data
 					if (aquiredLock)
 						Monitor.Exit(query);
 				}
-			}
-
-			static AliasesContext PrepareStepAliases(IServiceProvider serviceProvider, SqlStatement statement)
-			{
-				AliasesHelper.PrepareQueryAndAliases(serviceProvider.GetRequiredService<IIdentifierService>(), statement, null, out var aliases);
-				return aliases;
 			}
 
 			// Adds an output parameter to the current command for a step that produces its value via an OUT parameter
@@ -548,7 +473,7 @@ namespace LinqToDB.Data
 					// Always at least one statement per command; then keep appending until the SQL reaches the length cap.
 					while (i < statements.Count && (count == 0 || sb.Value.Length < maxCommandLength))
 					{
-						var aliases = PrepareStepAliases(serviceProvider, statements[i]);
+						var aliases = ScenarioCommandRenderer.PrepareStepAliases(serviceProvider, statements[i]);
 
 						if (count > 0)
 							sb.Value.Append(";\n");
@@ -616,38 +541,6 @@ namespace LinqToDB.Data
 			// One unified value returned by the sequential scenario interpreter; the public execute methods project the
 			// field they need (rows-affected for ExecuteNonQuery, scalar for ExecuteScalar).
 			readonly record struct ScenarioOutcome(int RowsAffected, object? Scalar);
-
-			// TEMPORARY bridge: builds a sequential scenario from the already-rendered commands (CommandCount/BuildSql).
-			// Step i maps 1:1 to command i; the last step is a Scalar when the terminal is a scalar query, all others are
-			// non-queries; a non-last command starting with "DROP" is marked Ignore (the historical run-and-swallow).
-			// Superseded by the per-provider IDmlService.BuildCommandScenario once providers move off CommandCount/BuildCommand.
-			static SqlCommandScenario BuildSequentialScenario(ExecutionPreparedQuery executionQuery, SqlStepKind terminalKind)
-			{
-				var commands  = executionQuery.PreparedQuery.Commands;
-				var count     = commands.Length;
-				var statement = executionQuery.PreparedQuery.Statement;
-				var steps     = new SqlCommandStep[count];
-
-				for (var i = 0; i < count; i++)
-				{
-					var isLast = i == count - 1;
-					var ignore = !isLast && commands[i].Command.StartsWith("DROP", StringComparison.Ordinal);
-					var kind   = terminalKind == SqlStepKind.Scalar && isLast ? SqlStepKind.Scalar : SqlStepKind.NonQuery;
-
-					steps[i] = new SqlCommandStep
-					{
-						Statement = statement,
-						Kind      = kind,
-						OnError   = ignore ? SqlStepOnError.Ignore : SqlStepOnError.Throw,
-					};
-				}
-
-				return new SqlCommandScenario
-				{
-					Steps        = steps,
-					OutcomeSteps = terminalKind == SqlStepKind.Scalar ? new[] { count - 1 } : new[] { 0 },
-				};
-			}
 
 			static bool EvaluateGate(SqlStepCondition condition, SqlCommandExecutionContext context)
 			{
@@ -921,7 +814,7 @@ namespace LinqToDB.Data
 						.ConfigureAwait(false);
 				}
 
-				return (await ExecuteScenarioAsync(dataConnection, executionQuery, (executionQuery.PreparedQuery.Scenario ?? BuildSequentialScenario(executionQuery, SqlStepKind.NonQuery)), cancellationToken).ConfigureAwait(false)).RowsAffected;
+				return (await ExecuteScenarioAsync(dataConnection, executionQuery, executionQuery.PreparedQuery.Scenario!, cancellationToken).ConfigureAwait(false)).RowsAffected;
 			}
 
 			// In case of change the logic of this method, DO NOT FORGET to change the sibling method.
@@ -934,7 +827,7 @@ namespace LinqToDB.Data
 					return dataConnection.ExecuteNonQuery();
 				}
 
-				return ExecuteScenario(dataConnection, executionQuery, (executionQuery.PreparedQuery.Scenario ?? BuildSequentialScenario(executionQuery, SqlStepKind.NonQuery))).RowsAffected;
+				return ExecuteScenario(dataConnection, executionQuery, executionQuery.PreparedQuery.Scenario!).RowsAffected;
 			}
 
 			public override int ExecuteNonQuery()
@@ -982,21 +875,10 @@ namespace LinqToDB.Data
 				{
 					InitFirstCommand(dataConnection, executionQuery);
 
-					var idParam = GetIdentityParameter(dataConnection, executionQuery);
-
-					if (idParam != null)
-					{
-						// This is because the firebird provider does not return any parameters via ExecuteReader
-						// the rest of the providers must support this mode
-						await dataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(false);
-
-						return idParam.Value;
-					}
-
 					return await dataConnection.ExecuteScalarDataAsync(cancellationToken).ConfigureAwait(false);
 				}
 
-				return (await ExecuteScenarioAsync(dataConnection, executionQuery, (executionQuery.PreparedQuery.Scenario ?? BuildSequentialScenario(executionQuery, SqlStepKind.Scalar)), cancellationToken).ConfigureAwait(false)).Scalar;
+				return (await ExecuteScenarioAsync(dataConnection, executionQuery, executionQuery.PreparedQuery.Scenario!, cancellationToken).ConfigureAwait(false)).Scalar;
 			}
 
 			// In case of change the logic of this method, DO NOT FORGET to change the sibling method.
@@ -1006,45 +888,13 @@ namespace LinqToDB.Data
 				{
 					InitFirstCommand(dataConnection, executionQuery);
 
-					var idParam = GetIdentityParameter(dataConnection, executionQuery);
-
-					if (idParam != null)
-					{
-						// This is because the firebird provider does not return any parameters via ExecuteReader
-						// the rest of the providers must support this mode
-						dataConnection.ExecuteNonQuery();
-
-						return idParam.Value;
-					}
-
 					return dataConnection.ExecuteScalar();
 				}
 
-				return ExecuteScenario(dataConnection, executionQuery, (executionQuery.PreparedQuery.Scenario ?? BuildSequentialScenario(executionQuery, SqlStepKind.Scalar))).Scalar;
+				return ExecuteScenario(dataConnection, executionQuery, executionQuery.PreparedQuery.Scenario!).Scalar;
 			}
 
-			private static DbParameter? GetIdentityParameter(DataConnection dataConnection, ExecutionPreparedQuery executionQuery)
-			{
-				DbParameter? idParam = null;
-
-				if (dataConnection.DataProvider.SqlProviderFlags.IsIdentityParameterRequired)
-				{
-					if (executionQuery.PreparedQuery.Statement.NeedsIdentity)
-					{
-						idParam = dataConnection.CurrentCommand!.CreateParameter();
-
-						idParam.ParameterName = "IDENTITY_PARAMETER";
-						idParam.Direction     = ParameterDirection.Output;
-						idParam.DbType        = DbType.Decimal;
-
-						dataConnection.CurrentCommand!.Parameters.Add(idParam);
-					}
-				}
-
-				return idParam;
-			}
-
-			// In case of change the logic of this method, DO NOT FORGET to change the sibling method.
+						// In case of change the logic of this method, DO NOT FORGET to change the sibling method.
 			public static Task<object?> ExecuteScalarAsync(
 				DataConnection            dataConnection,
 				IQueryContext             context,
@@ -1094,9 +944,8 @@ namespace LinqToDB.Data
 					return false;
 
 				// A lone OUT-parameter step (Firebird/Oracle identity built as a scenario) must run through the interpreter
-				// so AddOutputParameter creates the output parameter; the fast path's GetIdentityParameter only knows the
-				// legacy IsIdentityParameterRequired shape. The legacy bridge never sets OutParameterName, so unmigrated
-				// providers stay on the fast path.
+				// so AddOutputParameter creates the output parameter; the fast path would execute the command directly with
+				// no output parameter. Every other single-command scenario takes the fast path.
 				if (pq.Scenario is { Steps: [{ OutParameterName: not null }] })
 					return false;
 
@@ -1212,7 +1061,7 @@ namespace LinqToDB.Data
 					return await _dataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(false);
 				}
 
-				return (await ExecuteScenarioAsync(_dataConnection, _executionQuery!, (_executionQuery!.PreparedQuery.Scenario ?? BuildSequentialScenario(_executionQuery!, SqlStepKind.NonQuery)), cancellationToken).ConfigureAwait(false)).RowsAffected;
+				return (await ExecuteScenarioAsync(_dataConnection, _executionQuery!, _executionQuery!.PreparedQuery.Scenario!, cancellationToken).ConfigureAwait(false)).RowsAffected;
 			}
 
 			public override async Task<object?> ExecuteScalarAsync(CancellationToken cancellationToken)

@@ -11,25 +11,39 @@ namespace LinqToDB.Internal.DataProvider
 {
 	/// <summary>
 	/// Base class for provider-specific <see cref="IDmlService"/> implementations. By default
-	/// <see cref="BuildCommandScenario"/> returns <see langword="null"/> (the runner falls back to the legacy
-	/// <see cref="ISqlBuilder.CommandCount"/> / <c>BuildCommand</c> splitting); providers override it for identity,
-	/// truncate-reset, etc. <see cref="PlanScenario"/> defaults to all-singleton (sequential) groups.
+	/// <see cref="BuildCommandScenario"/> returns a single-step scenario (one statement rendered as one command), or
+	/// the InsertOrReplace/Upsert emulation for those statements; providers override it for identity, truncate-reset,
+	/// etc. <see cref="PlanScenario"/> defaults to all-singleton (sequential) groups.
 	/// </summary>
 	public abstract class DmlServiceBase : IDmlService
 	{
 		/// <summary>
-		/// Returns <see langword="null"/> by default — the runner uses the legacy command-splitting path
-		/// (<see cref="ISqlBuilder.CommandCount"/> / <c>BuildCommand</c>). Providers override to build an explicit
-		/// scenario (identity retrieval, per-field truncate reset, etc.), using <paramref name="factory"/> to
-		/// construct any synthetic statements (e.g. an identity <c>SELECT</c>).
+		/// Builds the command scenario for <paramref name="statement"/>. The base handles the InsertOrReplace / Upsert
+		/// emulation and otherwise returns a single-step <see cref="DefaultScenario"/> (one statement, one command).
+		/// Providers override to build an explicit multi-step scenario (identity retrieval, per-field truncate reset,
+		/// etc.), using <paramref name="factory"/> to construct any synthetic statements (e.g. an identity <c>SELECT</c>),
+		/// and delegate the default case back here via <c>base.BuildCommandScenario(...)</c>.
 		/// </summary>
 		public virtual SqlCommandScenario? BuildCommandScenario(SqlStatement statement, SqlProviderFlags flags, ISqlExpressionFactory factory)
 		{
 			if (statement is SqlInsertOrUpdateStatement insertOrUpdate)
-				return BuildInsertOrUpdateScenario(insertOrUpdate, flags, factory);
+				return BuildInsertOrUpdateScenario(insertOrUpdate, flags, factory) ?? DefaultScenario(statement);
 
-			return null;
+			return DefaultScenario(statement);
 		}
+
+		/// <summary>
+		/// The trivial scenario for a self-contained statement: one step rendered as one command. The step
+		/// <see cref="SqlCommandStep.Kind"/> is not consulted for a lone simple command — the runner's fast path
+		/// dispatches by the called <c>Execute*</c> method — so <see cref="SqlStepKind.NonQuery"/> is an arbitrary
+		/// placeholder here; <see cref="SqlCommandScenario.OutcomeSteps"/> points at the single step.
+		/// </summary>
+		protected static SqlCommandScenario DefaultScenario(SqlStatement statement) =>
+			new()
+			{
+				Steps        = [new SqlCommandStep { Statement = statement, Kind = SqlStepKind.NonQuery }],
+				OutcomeSteps = [0],
+			};
 
 		/// <summary>
 		/// Reshapes an InsertOrReplace / Upsert / InsertOrUpdate statement into the UPDATE→INSERT emulation when the

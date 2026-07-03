@@ -137,12 +137,6 @@ namespace LinqToDB.Internal.SqlProvider
 		public bool        IsCountSubQuerySupported       { get; set; }
 
 		/// <summary>
-		/// Indicates that provider requires explicit output parameter for insert with identity queries to get identity from database.
-		/// Default (set by <see cref="DataProviderBase"/>): <see langword="false"/>.
-		/// </summary>
-		[DataMember(Order = 18)]
-		public bool        IsIdentityParameterRequired    { get; set; }
-		/// <summary>
 		/// Indicates support for OUTER/CROSS APPLY.
 		/// Default (set by <see cref="DataProviderBase"/>): <see langword="false"/>.
 		/// </summary>
@@ -782,7 +776,6 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsSubQueryOrderBySupported                           .GetHashCode()
 				^ IsUnionAllOrderBySupported                           .GetHashCode()
 				^ IsCountSubQuerySupported                             .GetHashCode()
-				^ IsIdentityParameterRequired                          .GetHashCode()
 				^ IsApplyJoinSupported                                 .GetHashCode()
 				^ IsCrossApplyJoinSupportsCondition                    .GetHashCode()
 				^ IsOuterApplyJoinSupportsCondition                    .GetHashCode()
@@ -867,7 +860,6 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsSubQueryOrderBySupported                            == other.IsSubQueryOrderBySupported
 				&& IsUnionAllOrderBySupported                            == other.IsUnionAllOrderBySupported
 				&& IsCountSubQuerySupported                              == other.IsCountSubQuerySupported
-				&& IsIdentityParameterRequired                           == other.IsIdentityParameterRequired
 				&& IsApplyJoinSupported                                  == other.IsApplyJoinSupported
 				&& IsCrossApplyJoinSupportsCondition                     == other.IsCrossApplyJoinSupportsCondition
 				&& IsOuterApplyJoinSupportsCondition                     == other.IsOuterApplyJoinSupportsCondition

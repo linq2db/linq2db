@@ -37,8 +37,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			{
 				// Firebird returns the generated identity through an OUT parameter: the insert renders a trailing
 				// RETURNING <id>, and the interpreter adds the "IDENTITY_PARAMETER" output parameter and reads it back
-				// after ExecuteNonQuery (the Firebird provider cannot return values through a reader). This replaces the
-				// legacy IsIdentityParameterRequired fast path for Firebird.
+				// after ExecuteNonQuery (the Firebird provider cannot return values through a reader).
 				return new SqlCommandScenario
 				{
 					Steps        = [new SqlCommandStep { Statement = statement, Kind = SqlStepKind.NonQuery, OutParameterName = "IDENTITY_PARAMETER" }],

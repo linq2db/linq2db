@@ -30,7 +30,6 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 		{
 			Version = version;
 
-			SqlProviderFlags.IsIdentityParameterRequired       = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
 			SqlProviderFlags.IsNullsOrderingSupported          = true;

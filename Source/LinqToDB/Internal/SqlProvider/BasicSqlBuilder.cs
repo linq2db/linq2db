@@ -121,15 +121,6 @@ namespace LinqToDB.Internal.SqlProvider
 
 		#endregion
 
-		#region CommandCount
-
-		public virtual int CommandCount(SqlStatement statement)
-		{
-			return 1;
-		}
-
-		#endregion
-
 		#region Formatting
 		/// <summary>
 		/// Inline comma separator.
@@ -270,17 +261,9 @@ namespace LinqToDB.Internal.SqlProvider
 
 				FinalizeBuildQuery(statement);
 			}
-			else
-			{
-				BuildCommand(statement, commandNumber);
-			}
 		}
 
 		protected virtual void MergeSqlBuilderData(BasicSqlBuilder sqlBuilder)
-		{
-		}
-
-		protected virtual void BuildCommand(SqlStatement statement, int commandNumber)
 		{
 		}
 

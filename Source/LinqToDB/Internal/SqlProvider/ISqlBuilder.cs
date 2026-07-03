@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Data.Common;
 using System.Text;
 
@@ -10,8 +10,6 @@ namespace LinqToDB.Internal.SqlProvider
 {
 	public interface ISqlBuilder
 	{
-		int  CommandCount(SqlStatement statement);
-
 		void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, OptimizationContext optimizationContext, AliasesContext aliases, NullabilityContext? nullabilityContext,
 			int           startIndent = 0);
 

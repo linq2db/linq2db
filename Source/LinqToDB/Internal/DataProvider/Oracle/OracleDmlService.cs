@@ -87,7 +87,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				{
 					// Oracle returns the generated identity through an OUT parameter — the insert renders a trailing
 					// RETURNING <id> INTO :IDENTITY_PARAMETER; the interpreter adds the output parameter and reads it
-					// back after ExecuteNonQuery. Replaces the legacy IsIdentityParameterRequired fast path for Oracle.
+					// back after ExecuteNonQuery.
 					return new SqlCommandScenario
 					{
 						Steps        = [new SqlCommandStep { Statement = statement, Kind = SqlStepKind.NonQuery, OutParameterName = "IDENTITY_PARAMETER" }],
