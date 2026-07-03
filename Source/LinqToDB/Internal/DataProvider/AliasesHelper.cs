@@ -127,6 +127,9 @@ namespace LinqToDB.Internal.DataProvider
 			// resolves on (providers that force root aliases - SqlCe / YDB - otherwise rename it to the
 			// member name and break the mapping). The uniquifier still suffixes genuine duplicates, so the
 			// "no duplicate root column names" rule those providers enforce stays satisfied (#5599).
+			// An explicit member rename of a bare field at the root (new { Alias = t.Field }) is
+			// indistinguishable from an implicit member alias in the AST, so it normalizes to the physical
+			// name too; safe because result materialization is ordinal, not by-name (#5657).
 			string? GetColumnAliasSeed(SelectQuery selectQuery, SqlColumn column)
 			{
 				if (ReferenceEquals(selectQuery, _rootSelectQuery) && column.Expression is SqlField field)

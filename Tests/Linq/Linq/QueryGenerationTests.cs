@@ -10,6 +10,8 @@ using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 using Tests.Model;
 using Tests.xUpdate;
 
@@ -427,18 +429,32 @@ namespace Tests.Linq
 			var results  = dc.Query<DoctorPersonPair>(command.Sql).ToArray();
 			var expected = query.ToArray();
 
-			Assert.That(results, Has.Length.EqualTo(expected.Length));
-			using (Assert.EnterMultipleScope())
-			{
-				Assert.That(command.Sql, Does.Contain("SELECT"));
-				Assert.That(command.Parameters, Has.Count.Zero);
-				if (context.IsAnyOf(ProviderName.SqlCe, TestProvName.AllYdb))
-					Assert.That(command.Sql, Does.Contain("PersonID_1"));
-				Assert.That(results.Select(r => r.PersonID), Is.EquivalentTo(expected.Select(e => e.PersonID)));
-			}
+			results.Length.ShouldBe(expected.Length);
+			command.Sql.ShouldContain("SELECT");
+			command.Parameters.Count.ShouldBe(0);
+			if (context.IsAnyOf(ProviderName.SqlCe, TestProvName.AllYdb))
+				command.Sql.ShouldContain("PersonID_1");
+			results.Select(r => r.PersonID).ShouldBe(expected.Select(e => e.PersonID), ignoreOrder: true);
 		}
 
 		sealed class DoctorPersonPair { public int PersonID { get; set; } }
+
+		// #5657/#5599: an explicit member rename of a bare entity field at the root select normalizes to the
+		// field's physical column name (the AST cannot distinguish an explicit rename from an implicit member
+		// alias). Safe because result materialization is ordinal - the dropped member alias never affects typed
+		// or anonymous results, and providers that force root aliases keep the physical name for by-name mapping.
+		[Test]
+		public void ToSqlQuery_ExplicitRootRenameUsesPhysicalName([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = from p in db.Person
+			            select new { Renamed = p.FirstName };
+
+			var command = query.ToSqlQuery();
+
+			command.Sql.ShouldNotContain("Renamed");
+		}
 
 		[Test]
 		public void ToSqlQuery_IMultiInsertInto([IncludeDataSources(true, TestProvName.AllOracle)] string context)

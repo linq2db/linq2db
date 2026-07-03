@@ -12,6 +12,8 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.Linq
 {
 	[TestFixture]
@@ -1043,7 +1045,7 @@ namespace Tests.Linq
 
 			void Worker()
 			{
-				for (var i = 0; i < 64 && error == null && Volatile.Read(ref bad) == 0; i++)
+				for (var i = 0; i < 64 && Volatile.Read(ref error) == null && Volatile.Read(ref bad) == 0; i++)
 				{
 					try
 					{
@@ -1071,8 +1073,8 @@ namespace Tests.Linq
 			foreach (var t in threads) t.Start();
 			foreach (var t in threads) t.Join();
 
-			Assert.That(error, Is.Null, () => $"concurrent execution threw: {error}");
-			Assert.That(bad,   Is.Zero, "a concurrent execution returned a corrupted alias mapping (wrong column value)");
+			error.ShouldBeNull($"concurrent execution threw: {error}");
+			bad.ShouldBe(0, "a concurrent execution returned a corrupted alias mapping (wrong column value)");
 		}
 	}
 }
