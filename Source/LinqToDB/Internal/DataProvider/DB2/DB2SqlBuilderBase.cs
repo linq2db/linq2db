@@ -36,8 +36,6 @@ namespace LinqToDB.Internal.DataProvider.DB2
 
 		protected override void BuildTruncateTableStatement(SqlTruncateTableStatement truncateTable)
 		{
-			var nullability = NullabilityContext.NonQuery;
-
 			var table = truncateTable.Table!;
 
 			BuildTag(truncateTable);
@@ -57,8 +55,6 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			NullabilityContext? nullabilityContext
 		)
 		{
-			var nullability = NullabilityContext.GetContext(statement.SelectQuery);
-
 			Statement           = statement;
 			StringBuilder       = sb;
 			OptimizationContext = optimizationContext;
@@ -280,7 +276,6 @@ namespace LinqToDB.Internal.DataProvider.DB2
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
-			var nullability = NullabilityContext.NonQuery;
 			var table       = dropTable.Table;
 
 			BuildTag(dropTable);
