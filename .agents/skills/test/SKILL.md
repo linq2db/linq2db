@@ -1,6 +1,6 @@
 ---
 name: test
-description: Write a new linq2db test, run an existing test / filter, or both. Orchestrates the `test-writer` and `test-runner` agents and reports a single pass/fail summary at the end. Env management (docker containers, `UserDataProviders.json`) lives in the `/test-providers` skill, not here — `/test` reads the configured state but never edits it.
+description: Write a new linq2db test, run an existing test / filter, or both. Performs the write/run steps documented in `.agents/agents/test-writer.md` / `test-runner.md` (a tool with a named-subagent facility can delegate to them; otherwise perform the steps directly) and reports a single pass/fail summary at the end. Env management (docker containers, `UserDataProviders.json`) lives in the `/test-providers` skill, not here — `/test` reads the configured state but never edits it.
 ---
 
 # /test
@@ -74,7 +74,7 @@ A run is **long** when any of: project is `Tests/Linq/Tests.csproj` (especially 
 
 For a long run:
 
-1. **Run it in the background so progress is readable** — invoke `test-runner` with `run_in_background: true`. The test process always writes the heartbeat to `.build/.agents/test-progress.<tfm>.<pid>.json` (`test-runner` passes `--test-progress`); running the agent in the background is what frees you to poll it instead of blocking with nothing to show.
+1. **Run it out-of-band so progress stays pollable** — run the long test asynchronously so you can poll the heartbeat instead of blocking with nothing to show. (Claude Code: invoke `test-runner` with `run_in_background: true`.) The test process always writes the heartbeat to `.build/.agents/test-progress.<tfm>.<pid>.json` (`test-runner` passes `--test-progress`).
 2. **Poll and surface progress** — between turns, read the heartbeat with `pwsh -NoProfile -File .agents/scripts/test-status.ps1` (or `Read` the JSON) and give the user a one-line update (completed/total, current test, failures so far). You can do this any time the user asks "how's it going?" — you don't have to wait for the run to finish. Don't busy-poll; check when prompted or at natural intervals.
 3. When the background `test-runner` completes, continue with the baselines diff (3.4) and the final report (3.5) as usual.
 
@@ -97,7 +97,7 @@ Call `test-runner` with:
 - `config` — `"Debug"` unless the user asked for Release.
 - `verbosity` — `"normal"`; flip to `"detailed"` when the user needs SQL-dump output from `TestContext.Out.WriteLine`.
 
-For a **short** run, invoke `test-runner` synchronously. For a **long** run, invoke it with `run_in_background: true` and monitor the heartbeat per 3.1a.
+For a **short** run, invoke `test-runner` synchronously. For a **long** run, run it out-of-band and monitor the heartbeat per 3.1a (Claude Code: `run_in_background: true`).
 
 `test-runner` is read-only on `UserDataProviders.json` — there is no `userProvidersConsent` or `restoreOnCompletion` input, and no provider edits happen as a side effect of the run. If the agent reports `status: "blocked"` (e.g. a provider with no connection string defined), relay it to the user with a one-liner: "Run `/test-providers <provider>` to add its connection, then re-run `/test`."
 

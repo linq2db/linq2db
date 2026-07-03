@@ -1,15 +1,19 @@
 ---
 name: test-progress
-description: Report the live test-progress heartbeat for linq2db test runs (read-only). The heartbeat is always written by Claude-launched runs (test-runner passes --test-progress), so this skill reads the latest .build/.agents/test-progress.*.json and relays a one-line status — current test, completed/total, pass/fail tally. Use when the user says "/test-progress", "how far along are the tests", "watch the test run", "test status".
+description: Report the live test-progress heartbeat for linq2db test runs (read-only). The heartbeat is written by runs launched per this instruction set (test-runner passes --test-progress), so this skill reads the latest .build/.agents/test-progress.*.json and relays a one-line status — current test, completed/total, pass/fail tally. Use when the user says "/test-progress", "how far along are the tests", "watch the test run", "test status".
 ---
 
 # /test-progress
 
 Report the live progress heartbeat written by the test assembly during a run. Backed by [Tests/Base/TestProgressReporter.cs](../../../Tests/Base/TestProgressReporter.cs); reader docs in [`.agents/docs/testing.md`](../../docs/testing.md) → **Monitoring a long run**.
 
+## When to run
+
+Invoke `/test-progress` to check on an in-flight or most-recent test run — "how far along are the tests", "test status", "watch the run". Use `/test` to write or start tests, and `/test-providers` for provider / container setup; this skill only *reads* the heartbeat and never launches or edits anything.
+
 ## How it works
 
-The heartbeat is opt-in via the **`--test-progress`** command-line option on the test executable. Claude-launched runs **always** pass it — `test-runner` appends `--test-progress`, and `/test` step 3.1a relies on that for long runs — so a heartbeat file is normally present for the active or most-recent run. There is **no env var and nothing to toggle**; this skill only *reads* the heartbeat.
+The heartbeat is opt-in via the **`--test-progress`** command-line option on the test executable. Runs launched per this instruction set **always** pass it — `test-runner` appends `--test-progress`, and `/test` step 3.1a relies on that for long runs — so a heartbeat file is normally present for the active or most-recent run. There is **no env var and nothing to toggle**; this skill only *reads* the heartbeat.
 
 The file lands at `.build/.agents/test-progress.<tfm>.<pid>.json` (one per TFM / process). For a run the user starts in their own terminal, they pass `--test-progress` themselves (see `testing.md`).
 

@@ -66,7 +66,7 @@ Bare-family / version-only inputs are normalised to fully-qualified provider IDs
 
 ## Permission-prompt discipline
 
-Every Bash call is allowlist-matched as one opaque string, so:
+Run one shell command per invocation; no chaining, no shell control flow. (Claude Code: every Bash call is allowlist-matched as one opaque string, so this also minimises permission prompts.) Concretely:
 
 - One Bash call per command. No `&&` / `||` / `;` chaining; no shell control flow. (Also enforced by the rules in `.agents/docs/agent-rules.md`.)
 - Batch independent inspects in a single assistant turn (multiple parallel Bash tool calls), not one chained string.
