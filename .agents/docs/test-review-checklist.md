@@ -69,6 +69,10 @@ When a test asserts the *value* of a sample stddev/variance window aggregate (`S
 
 A test that only materializes the query (`_ = query.ToList()`, `.ToArray()` with no assertion) proves the SQL *executes*, not that the result is *correct*. When the feature under test has observable runtime semantics — row ordering, NULLS FIRST/LAST placement, rank/dense-rank values, aggregate values, filtered/partitioned counts — the test passes even when a provider's emulation produces the wrong rows. Flag `MAJ` when the test was added for a feature whose correctness is the point (a wrong emulation goes undetected), `MIN` otherwise; propose asserting the expected values against the materialized result, and confirm the seed data actually exercises the edge (e.g. a NULL in the ordering key for a NULLS-placement test). (Surfaced on PR #5468: the `*WithNulls` window tests set a `Sql.NullsPosition` and had a NULL-key seed row but only called `ToList()`, so a wrong per-provider NULLS emulation would not fail — result assertions were added and confirmed correct across ClickHouse/DuckDB/YDB/SQLite.)
 
+### NUnit `Assert.*` in a new/modified test → prefer Shouldly
+
+The repo standardizes on Shouldly for assertions (`AGENTS.md` → Tests; "Use **Shouldly**, not NUnit `Assert`"). Flag any new or modified test that uses `Assert.That` / `Assert.AreEqual` / `Assert.IsTrue` / `Assert.IsFalse` / etc. as `MIN`, and propose the Shouldly equivalent (`ShouldBe` / `ShouldBeFalse` / `ShouldBeTrue` / `ShouldContain` / …) plus `using Shouldly;` if the file doesn't already import it. Mixing styles in new coverage is the trap — it reads inconsistently and loses Shouldly's clearer failure messages. (Surfaced on PR #5468: `WindowFunctionsTests.RowNumber`/`Equality` shipped `Assert.That` and only an external bot flagged it; this checklist had no rule.)
+
 ---
 
 Apply this checklist whenever rule 6 of `code-reviewer.md` fires — i.e. on any test file added or modified by the PR. Findings from this checklist go in the regular `findings[]` stream with severity per the per-item guidance (most are MAJ when the test fails to exercise its named purpose, MIN otherwise).

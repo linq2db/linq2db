@@ -8,6 +8,13 @@ Git Bash (MSYS / MINGW) on Windows rewrites and fails on a handful of `git` / `g
 
 MSYS path-mangles a leading slash into `C:/Program Files/Git/...` and `gh` rejects it. Always write `gh api user`, `gh api repos/linq2db/linq2db/pulls/<n>/reviews` — never `gh api /user` or `gh api /repos/...`. GraphQL calls (`gh api graphql`) are unaffected.
 
+## `gh api graphql --paginate` output + query passing
+
+Two traps when paginating a GraphQL connection (e.g. a PR's `reviewThreads`, which exceeds the default `first:100` on heavily-reviewed PRs):
+
+- **`--paginate` emits one JSON object per page**, concatenated. Piping the whole thing to `ConvertFrom-Json` fails with *"Additional text encountered after finished reading JSON content"*. Add `--jq '<filter>'` so `gh` applies the filter **per page** and streams newline-delimited records you parse line-by-line — or paginate the cursor yourself in a script (the `pr-context.ps1` `reviewThreads` job does the latter). The query must expose `pageInfo { hasNextPage endCursor }` and take an `$endCursor: String` variable for `--paginate` to advance.
+- **Pass the query via a variable, not `@file`.** `gh api graphql -f query=@path.graphql` does **not** read the file — it sends the literal `@path.graphql`, and the server rejects it with *"Expected one of SCHEMA, SCALAR, TYPE, … actual: DIR_SIGN (\"@\")"*. Read the file into a variable first (`$q = Get-Content path.graphql -Raw`) and pass `-f query=$q`.
+
 ## `git show <ref>:<path>` is path-mangled when the ref contains `/`
 
 Git Bash on Windows treats `<ref>:<path>` as a Unix-style `PATH` list (`:`-separated) when both halves look path-ish, so a ref like `infra/agents-curation` produces `'infra\agents-curation;.agents\hooks\foo.ps1'` and dies with `fatal: ambiguous argument`. Single-token refs (a SHA or `master`) usually escape the heuristic. Workaround: read the blob in two allowlist-friendly steps — `git ls-tree <ref> <path>` returns `<mode> blob <sha> <path>`, then `git cat-file -p <sha>` prints the content. Both match `Bash(git *)` and avoid the colon entirely.
