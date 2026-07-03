@@ -451,6 +451,12 @@ namespace LinqToDB.Internal.SqlQuery
 				writer.Append(')');
 			}
 
+			if (KeepClause != null)
+			{
+				writer.Append(' ');
+				writer.AppendElement(KeepClause);
+			}
+
 			if (PartitionBy is { Count: > 0 } || OrderBy is { Count: > 0 } || FrameClause != null)
 			{
 				writer.Append(" OVER (");
