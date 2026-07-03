@@ -665,8 +665,18 @@ namespace LinqToDB.Internal.SqlProvider
 		public bool IsInsertOrUpdateRequiresAlignedBranches { get; set; }
 
 		/// <summary>
+		/// Maximum number of columns in a single SELECT list enforced by linq2db when building CteUnion
+		/// eager-loading queries. When the estimated column count of the combined UNION ALL projection
+		/// exceeds this limit the strategy falls back to individual preamble queries.
+		/// <c>0</c> means no limit is enforced.
+		/// Default: <c>0</c>.
+		/// </summary>
+		[DataMember(Order = 76), DefaultValue(0)]
+		public int MaxColumnCount { get; set; }
+
+		/// <summary>
 		/// Provider renders <c>NULLS FIRST</c> / <c>NULLS LAST</c> natively in <c>ORDER BY</c> (and window
-		/// <c>OVER(ORDER BY …)</c>). When <see langword="false"/> (the default), <see cref="Sql.NullsPosition"/>
+		/// <c>OVER (ORDER BY …)</c>). When <see langword="false"/> (the default), <see cref="Sql.NullsPosition"/>
 		/// is emulated via a <c>CASE WHEN &lt;expr&gt; IS NULL THEN …</c> sort key.
 		/// </summary>
 		[DataMember(Order = 69), DefaultValue(false)]
@@ -786,6 +796,7 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsUpsertWithMergeLoweringSupported                   .GetHashCode()
 				^ IsUpsertMergeWithPredicateSupported                  .GetHashCode()
 				^ IsInsertOrUpdateRequiresAlignedBranches              .GetHashCode()
+				^ MaxColumnCount                                       .GetHashCode()
 				^ IsNullsOrderingSupported                             .GetHashCode()
 				^ DefaultNullsOrdering                                 .GetHashCode()
 				^ IsDistinctOnSupported                                .GetHashCode()
@@ -866,6 +877,7 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsUpsertWithMergeLoweringSupported                    == other.IsUpsertWithMergeLoweringSupported
 				&& IsUpsertMergeWithPredicateSupported                   == other.IsUpsertMergeWithPredicateSupported
 				&& IsInsertOrUpdateRequiresAlignedBranches               == other.IsInsertOrUpdateRequiresAlignedBranches
+				&& MaxColumnCount                                        == other.MaxColumnCount
 				&& IsNullsOrderingSupported                              == other.IsNullsOrderingSupported
 				&& DefaultNullsOrdering                                  == other.DefaultNullsOrdering
 				&& IsDistinctOnSupported                                 == other.IsDistinctOnSupported

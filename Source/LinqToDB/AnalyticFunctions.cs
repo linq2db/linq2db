@@ -310,10 +310,8 @@ namespace LinqToDB
 
 		public interface IOrderedReadyToWindowing<out TR> : IReadyToFunction<TR>
 		{
-			[Sql.Extension("ROWS {boundary_clause}", TokenName = "windowing_clause")]
 			IBoundaryExpected<TR> Rows { get; }
 
-			[Sql.Extension("RANGE {boundary_clause}", TokenName = "windowing_clause")]
 			IBoundaryExpected<TR> Range { get; }
 
 			[Sql.Extension("{order_expr}", TokenName = "order_item")]
@@ -331,50 +329,37 @@ namespace LinqToDB
 
 		public interface IBoundaryExpected<out TR>
 		{
-			[Sql.Extension("UNBOUNDED PRECEDING", TokenName = "boundary_clause")]
 			IReadyToFunction<TR> UnboundedPreceding { get; }
 
-			[Sql.Extension("CURRENT ROW", TokenName = "boundary_clause")]
 			IReadyToFunction<TR> CurrentRow { get; }
 
-			[Sql.Extension("{value_expr} PRECEDING", TokenName = "boundary_clause")]
 			IReadyToFunction<TR> ValuePreceding<T>([ExprParameter("value_expr")] T value);
 
-			[Sql.Extension("BETWEEN {start_boundary} AND {end_boundary}", TokenName = "boundary_clause")]
 			IBetweenStartExpected<TR> Between { get; }
 		}
 
 		public interface IBetweenStartExpected<out TR>
 		{
-			[Sql.Extension("UNBOUNDED PRECEDING", TokenName = "start_boundary")]
 			IAndExpected<TR> UnboundedPreceding { get; }
 
-			[Sql.Extension("CURRENT ROW", TokenName = "start_boundary")]
 			IAndExpected<TR> CurrentRow { get; }
 
-			[Sql.Extension("{value_expr} PRECEDING", TokenName = "start_boundary")]
 			IAndExpected<TR> ValuePreceding<T>([ExprParameter("value_expr")] T value);
 		}
 
 		public interface IAndExpected<out TR>
 		{
-			// TokenName used only for chain continuation
-			[Sql.Extension("", TokenName = "and_connector")]
 			ISecondBoundaryExpected<TR> And { get; }
 		}
 
 		public interface ISecondBoundaryExpected<out TR>
 		{
-			[Sql.Extension("UNBOUNDED FOLLOWING", TokenName = "end_boundary")]
 			IReadyToFunction<TR> UnboundedFollowing { get; }
 
-			[Sql.Extension("CURRENT ROW", TokenName = "end_boundary")]
 			IReadyToFunction<TR> CurrentRow { get; }
 
-			[Sql.Extension("{value_expr} PRECEDING", TokenName = "end_boundary")]
 			IReadyToFunction<TR> ValuePreceding<T>([ExprParameter("value_expr")] T value);
 
-			[Sql.Extension("{value_expr} FOLLOWING", TokenName = "end_boundary")]
 			IReadyToFunction<TR> ValueFollowing<T>([ExprParameter("value_expr")] T value);
 		}
 

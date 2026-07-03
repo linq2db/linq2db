@@ -13,6 +13,11 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 			return new Firebird4DateFunctionsTranslator();
 		}
 
+		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()
+		{
+			return new Firebird4WindowFunctionsMemberTranslator();
+		}
+
 		protected class Firebird4DateFunctionsTranslator : FirebirdDateFunctionsTranslator
 		{
 			protected override ISqlExpression? TranslateServerNow(ITranslationContext translationContext, TranslationFlags translationFlags)
@@ -34,6 +39,16 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 				var factory = translationContext.ExpressionFactory;
 				return factory.NotNullExpression(dbDataType, "CURRENT_TIMESTAMP AT TIME ZONE 'UTC'");
 			}
+		}
+
+		protected class Firebird4WindowFunctionsMemberTranslator : FirebirdWindowFunctionsMemberTranslator
+		{
+			protected override bool IsFrameRowsSupported  => true;
+			protected override bool IsFrameRangeSupported => true;
+			// PERCENT_RANK, CUME_DIST and NTILE are supported from Firebird 4.
+			protected override bool IsPercentRankSupported => true;
+			protected override bool IsCumeDistSupported    => true;
+			protected override bool IsNTileSupported       => true;
 		}
 	}
 }

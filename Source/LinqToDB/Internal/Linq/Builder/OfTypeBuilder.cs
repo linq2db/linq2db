@@ -35,6 +35,8 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (predicate != null)
 						sequence.SelectQuery.Where.EnsureConjunction().Add(predicate);
 
+					table.AddFilteredByOfType(objectType);
+
 					return BuildSequenceResult.FromContext(new OfTypeContext(sequence, objectType));
 				}
 			}
@@ -56,6 +58,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 							if (predicate != null)
 								sequence.SelectQuery.Where.EnsureConjunction().Add(predicate);
+
+							SequenceHelper.GetTableContext(sequence)?.AddFilteredByOfType(toType);
 
 							return BuildSequenceResult.FromContext(new OfTypeContext(sequence, toType));
 						}
