@@ -43,7 +43,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 				var idType   = factory.GetDbDataType(typeof(long));
 				var idSelect = new SqlSelectStatement();
 
-				idSelect.SelectQuery.Select.AddNew(new SqlExpression(idType, "@@IDENTITY"));
+				idSelect.SelectQuery.Select.AddNew(factory.Expression(idType, "@@IDENTITY"));
 
 				return new SqlCommandScenario
 				{

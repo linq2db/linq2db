@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
+using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
@@ -87,7 +88,7 @@ namespace LinqToDB.Internal.DataProvider
 			{
 				var existsSelect = work.SelectQuery.Clone(); // keys only — cloned before the predicate is folded in below
 				existsSelect.Select.Columns.Clear();
-				existsSelect.Select.Columns.Add(new SqlColumn(existsSelect, new SqlExpression(intType, "1")));
+				existsSelect.Select.Columns.Add(new SqlColumn(existsSelect, factory.Expression(intType, "1")));
 
 				var updateSelect = work.SelectQuery; // has keys; add the When predicate for the UPDATE branch only
 				foreach (var predicate in work.UpdateWhere.Predicates)
@@ -140,7 +141,7 @@ namespace LinqToDB.Internal.DataProvider
 
 			// Update.Items empty (nothing to update): existence-SELECT gates a plain INSERT.
 			work.SelectQuery.Select.Columns.Clear();
-			work.SelectQuery.Select.Columns.Add(new SqlColumn(work.SelectQuery, new SqlExpression(intType, "1")));
+			work.SelectQuery.Select.Columns.Add(new SqlColumn(work.SelectQuery, factory.Expression(intType, "1")));
 
 			return new SqlCommandScenario
 			{
