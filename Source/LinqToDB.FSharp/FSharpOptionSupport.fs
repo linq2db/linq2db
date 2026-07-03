@@ -108,23 +108,17 @@ type internal FSharpOptionMetadataReader() =
         member _.GetAttributes(_type: Type, memberInfo: MemberInfo) =
             let mt = memberType memberInfo
             if FSharpOptionSupport.IsScalarOption mt then
-                let elementType = mt.GetGenericArguments().[0]
-                // The column's DB type is the element's DB type; derive it from the default schema so the
-                // option type (whose own DB type is undefined) maps to a concrete column type.
-                // Limitation: a metadata reader has no access to the connection/provider mapping schema, so
-                // this resolves against MappingSchema.Default only - provider-specific or user-custom DB-type
-                // overrides for the element type are not honored (e.g. 'string option' maps to NVarChar, not
-                // a provider's preferred VarChar). Set the column's DataType explicitly (attribute or fluent
-                // mapping) when a provider-faithful type is required.
-                let dbDataType  = MappingSchema.Default.GetDbDataType(elementType)
                 // An option column is always nullable (the "none" case maps to NULL). A reference option is
                 // nullable by virtue of its type, but a struct value-option ('T voption) is a non-nullable
                 // value type, so the column must be marked CanBeNull explicitly - otherwise the DDL emits
                 // NOT NULL and rejects the "none" case.
-                let column = ColumnAttribute(CanBeNull = true, DataType = dbDataType.DataType)
-                if not (isNull dbDataType.DbType) then column.DbType <- dbDataType.DbType
+                // The DB type is intentionally left unset: with no explicit DataType, ColumnDescriptor resolves
+                // it from the value converter's provider type (the element, or Nullable<element>) against the
+                // active provider-inclusive schema, so provider-faithful facets (decimal precision/scale, string
+                // length, etc.) are preserved - unlike deriving here from MappingSchema.Default, which has no
+                // provider context and would truncate them (#5645; e.g. 'decimal option' -> decimal(18,0)).
                 [|
-                    column :> MappingAttribute
+                    ColumnAttribute(CanBeNull = true) :> MappingAttribute
                     ValueConverterAttribute(ValueConverter = FSharpOptionSupport.GetConverter mt) :> MappingAttribute
                 |]
             else

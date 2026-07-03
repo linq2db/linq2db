@@ -150,6 +150,13 @@ namespace Tests.Linq
 			FSharp.OptionTypes.TestValueOptionRoundtrip(db);
 		}
 
+		[Test(Description = "Auto 'decimal option' mapping resolves provider-faithful precision/scale - no scale truncation (#195)")]
+		public void Option_DecimalRoundtrip([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.OptionTypes.TestDecimalOptionRoundtrip(db);
+		}
+
 		[Test]
 		public void LoadSingleCLIMutable([DataSources] string context)
 		{

@@ -57,3 +57,29 @@ let TestValueOptionRoundtrip (db : IDataContext) =
     Assert.That(r1.StrValue, Is.EqualTo(ValueSome "hello"))
     Assert.That(r2.IntValue, Is.EqualTo (ValueNone : int voption))
     Assert.That(r2.StrValue, Is.EqualTo (ValueNone : string voption))
+
+// https://github.com/linq2db/linq2db/issues/195
+// Guards precision/scale preservation for an auto-mapped 'decimal option' column. Its DB type is resolved
+// from the converter's provider type against the provider schema (not MappingSchema.Default), so a non-zero
+// scale must survive the round-trip: a bare decimal(18,0) on a strict provider would truncate 12.34 to 12.
+[<NoComparison>]
+[<Table("OptionDecimalTable", IsColumnAttributeRequired = false)>]
+type DecimalOptionRow =
+    { [<PrimaryKey>] Id    : int
+      Value               : decimal option }
+
+let TestDecimalOptionRoundtrip (db : IDataContext) =
+    use _t = db.CreateLocalTable<DecimalOptionRow>()
+
+    db.Insert({ Id = 1; Value = Some 12.34m }) |> ignore
+    db.Insert({ Id = 2; Value = None         }) |> ignore
+
+    let r1 = query { for r in db.GetTable<DecimalOptionRow>() do
+                     where (r.Id = 1)
+                     exactlyOne }
+    let r2 = query { for r in db.GetTable<DecimalOptionRow>() do
+                     where (r.Id = 2)
+                     exactlyOne }
+
+    Assert.That(r1.Value, Is.EqualTo(Some 12.34m))
+    Assert.That(r2.Value, Is.EqualTo None)
