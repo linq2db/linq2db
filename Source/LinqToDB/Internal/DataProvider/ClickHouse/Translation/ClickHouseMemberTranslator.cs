@@ -607,7 +607,22 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 
 		protected class ClickHouseWindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
 		{
-			public override bool IsRowNumberNeedsCasting => true;
+			protected override bool IsCumeDistSupported          => false;
+			protected override bool IsFrameGroupsSupported       => false;
+			protected override bool IsFrameExclusionSupported    => false;
+			protected override bool IsPercentileContSupported    => false;
+			protected override bool IsPercentileDiscSupported    => false;
+			protected override bool IsAggregateDistinctSupported => true;
+			// ClickHouse supports COVAR_POP/COVAR_SAMP/CORR and the explicit STDDEV_POP/STDDEV_SAMP/VAR_POP/VAR_SAMP,
+			// but not REGR_*. ClickHouse has no bare STDDEV/VARIANCE keyword; since Sql.Window.StdDev/Variance are the
+			// *sample* statistics, map the bare API to the explicit sample functions (STDDEV_SAMP / VAR_SAMP) rather
+			// than gating it off — same SQL ClickHouse already accepts for StdDevSamp/VarSamp.
+			protected override bool   IsVarianceSupported       => true;
+			protected override bool   IsVarianceBareSupported   => true;
+			protected override string StdDevFunctionName        => "STDDEV_SAMP";
+			protected override string VarianceFunctionName      => "VAR_SAMP";
+			protected override bool   IsCorrelationSupported    => true;
+			public    override bool   IsRowNumberNeedsCasting   => true;
 		}
 	}
 }
