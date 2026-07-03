@@ -32,7 +32,7 @@ namespace Tests.Linq
 			var factory      = sqlOptimizer.CreateSqlExpressionFactory(connection.MappingSchema, connection.Options);
 			var sb           = new StringBuilder();
 
-			sqlBuilder.BuildSql(0, query, sb,
+			sqlBuilder.BuildSql(query, sb,
 				new OptimizationContext(
 					evaluationContext : new EvaluationContext(),
 					dataOptions : dataContext.Options,

@@ -95,7 +95,7 @@ namespace LinqToDB.Internal.SqlProvider
 						sb.Append(";\n");
 
 					using (ActivityService.Start(ActivityID.BuildSql))
-						sqlBuilder.BuildSql(0, step.Statement, sb, optimizationContext, stepAliases, null, startIndent);
+						sqlBuilder.BuildSql(step.Statement, sb, optimizationContext, stepAliases, null, startIndent);
 				}
 
 				commands[g] = new CommandWithParameters(sb.ToString(), optimizationContext.GetParameters());

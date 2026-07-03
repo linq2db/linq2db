@@ -479,7 +479,7 @@ namespace LinqToDB.Data
 							sb.Value.Append(";\n");
 
 						using (ActivityService.Start(ActivityID.BuildSql))
-							sqlBuilder.BuildSql(0, statements[i], sb.Value, optimizationContext, aliases, null, 0);
+							sqlBuilder.BuildSql(statements[i], sb.Value, optimizationContext, aliases, null, 0);
 
 						count++;
 						i++;

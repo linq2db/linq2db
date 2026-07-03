@@ -38,7 +38,6 @@ namespace LinqToDB.Internal.DataProvider.Informix
 		}
 
 		protected override void BuildSql(
-			int commandNumber,
 			SqlStatement statement,
 			StringBuilder sb,
 			OptimizationContext optimizationContext,
@@ -47,7 +46,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			NullabilityContext? nullabilityContext
 		)
 		{
-			base.BuildSql(commandNumber, statement, sb, optimizationContext, indent, aliasMode, nullabilityContext);
+			base.BuildSql(statement, sb, optimizationContext, indent, aliasMode, nullabilityContext);
 
 			sb
 				.Replace("NULL IS NOT NULL", "1=0")

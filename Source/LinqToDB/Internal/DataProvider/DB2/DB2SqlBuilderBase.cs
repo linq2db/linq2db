@@ -49,7 +49,6 @@ namespace LinqToDB.Internal.DataProvider.DB2
 		}
 
 		protected override void BuildSql(
-			int commandNumber,
 			SqlStatement statement,
 			StringBuilder sb,
 			OptimizationContext optimizationContext,
@@ -86,7 +85,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 				AppendIndent().Append('\t').AppendLine(OpenParens);
 			}
 
-			base.BuildSql(commandNumber, statement, sb, optimizationContext, indent, aliasMode, nullabilityContext);
+			base.BuildSql(statement, sb, optimizationContext, indent, aliasMode, nullabilityContext);
 
 			if (identityField != null)
 				sb.AppendLine("\t)");

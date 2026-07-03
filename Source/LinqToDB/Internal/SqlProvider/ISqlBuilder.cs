@@ -10,7 +10,7 @@ namespace LinqToDB.Internal.SqlProvider
 {
 	public interface ISqlBuilder
 	{
-		void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, OptimizationContext optimizationContext, AliasesContext aliases, NullabilityContext? nullabilityContext,
+		void BuildSql(SqlStatement statement, StringBuilder sb, OptimizationContext optimizationContext, AliasesContext aliases, NullabilityContext? nullabilityContext,
 			int           startIndent = 0);
 
 		/// <summary>

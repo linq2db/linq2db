@@ -179,7 +179,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		#region BuildSql
 
-		public void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, OptimizationContext optimizationContext, AliasesContext aliases, NullabilityContext? nullabilityContext,
+		public void BuildSql(SqlStatement statement, StringBuilder sb, OptimizationContext optimizationContext, AliasesContext aliases, NullabilityContext? nullabilityContext,
 			int startIndent = 0)
 		{
 			AliasesContext = aliases;
@@ -188,7 +188,7 @@ namespace LinqToDB.Internal.SqlProvider
 			if (!DataOptions.SqlOptions.GenerateFinalAliases && CanSkipRootAliases(statement))
 				columnAliasMode |= ColumnAliasMode.SkipAlias;
 
-			BuildSql(commandNumber, statement, sb, optimizationContext, startIndent, columnAliasMode, nullabilityContext: nullabilityContext);
+			BuildSql(statement, sb, optimizationContext, startIndent, columnAliasMode, nullabilityContext: nullabilityContext);
 		}
 
 		protected virtual void BuildSetOperation(SetOperation operation, StringBuilder sb)
@@ -208,7 +208,6 @@ namespace LinqToDB.Internal.SqlProvider
 		}
 
 		protected virtual void BuildSql(
-			int commandNumber,
 			SqlStatement statement,
 			StringBuilder sb,
 			OptimizationContext optimizationContext,
@@ -223,44 +222,41 @@ namespace LinqToDB.Internal.SqlProvider
 			Indent              = indent;
 			AliasMode           = aliasMode;
 
-			if (commandNumber == 0)
+			NullabilityContext = nullabilityContext ?? NullabilityContext.GetContext(statement.SelectQuery);
+			if (statement.SelectQuery != null)
+				NullabilityContext = NullabilityContext.WithQuery(statement.SelectQuery);
+
+			BuildSql();
+
+			if (Statement.SelectQuery is { HasSetOperators: true })
 			{
-				NullabilityContext = nullabilityContext ?? NullabilityContext.GetContext(statement.SelectQuery);
-				if (statement.SelectQuery != null)
-					NullabilityContext = NullabilityContext.WithQuery(statement.SelectQuery);
-
-				BuildSql();
-
-				if (Statement.SelectQuery is { HasSetOperators: true })
+				foreach (var union in Statement.SelectQuery.SetOperators)
 				{
-					foreach (var union in Statement.SelectQuery.SetOperators)
-					{
-						AppendIndent();
-						BuildSetOperation(union.Operation, sb);
-						sb.AppendLine();
+					AppendIndent();
+					BuildSetOperation(union.Operation, sb);
+					sb.AppendLine();
 
-						var sqlBuilder = ((BasicSqlBuilder)CreateSqlBuilder());
-						sqlBuilder.BuildSql(commandNumber,
-							new SqlSelectStatement(union.SelectQuery) { ParentStatement = statement }, sb,
-							optimizationContext, indent, 
-							aliasMode, NullabilityContext);
-						MergeSqlBuilderData(sqlBuilder);
-					}
+					var sqlBuilder = ((BasicSqlBuilder)CreateSqlBuilder());
+					sqlBuilder.BuildSql(
+						new SqlSelectStatement(union.SelectQuery) { ParentStatement = statement }, sb,
+						optimizationContext, indent,
+						aliasMode, NullabilityContext);
+					MergeSqlBuilderData(sqlBuilder);
 				}
-
-				switch (statement.QueryType)
-				{
-					case QueryType.Select:
-					case QueryType.Delete:
-					case QueryType.Update:
-					case QueryType.Insert:
-						BuildStep = Step.QueryExtensions;
-						BuildQueryExtensions(statement);
-						break;
-				}
-
-				FinalizeBuildQuery(statement);
 			}
+
+			switch (statement.QueryType)
+			{
+				case QueryType.Select:
+				case QueryType.Delete:
+				case QueryType.Update:
+				case QueryType.Insert:
+					BuildStep = Step.QueryExtensions;
+					BuildQueryExtensions(statement);
+					break;
+			}
+
+			FinalizeBuildQuery(statement);
 		}
 
 		protected virtual void MergeSqlBuilderData(BasicSqlBuilder sqlBuilder)
@@ -289,7 +285,7 @@ namespace LinqToDB.Internal.SqlProvider
 				throw new LinqToDBException(ErrorHelper.Error_Skip_in_Subquery);
 
 			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
-			sqlBuilder.BuildSql(0,
+			sqlBuilder.BuildSql(
 				new SqlSelectStatement(selectQuery) { ParentStatement = Statement }, StringBuilder, OptimizationContext, indent, aliasMode, NullabilityContext);
 			MergeSqlBuilderData(sqlBuilder);
 		}
@@ -439,7 +435,7 @@ namespace LinqToDB.Internal.SqlProvider
 			{ ParentStatement = deleteStatement, With = deleteStatement.WithClause };
 
 			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
-			sqlBuilder.BuildSql(0, selectStatement, StringBuilder, OptimizationContext, AliasesContext, NullabilityContext, Indent);
+			sqlBuilder.BuildSql(selectStatement, StringBuilder, OptimizationContext, AliasesContext, NullabilityContext, Indent);
 			MergeSqlBuilderData(sqlBuilder);
 
 			--Indent;
@@ -496,7 +492,7 @@ namespace LinqToDB.Internal.SqlProvider
 		protected virtual void BuildCteBody(SelectQuery selectQuery)
 		{
 			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
-			sqlBuilder.BuildSql(0, new SqlSelectStatement(selectQuery), StringBuilder, OptimizationContext, Indent, AliasMode, NullabilityContext);
+			sqlBuilder.BuildSql(new SqlSelectStatement(selectQuery), StringBuilder, OptimizationContext, Indent, AliasMode, NullabilityContext);
 			MergeSqlBuilderData(sqlBuilder);
 		}
 

@@ -112,7 +112,7 @@ namespace Tests.Infrastructure
 
 			var sqlBuilder = dataProvider.CreateSqlBuilder(dataProvider.MappingSchema, dataOptions);
 
-			sqlBuilder.BuildSql(0, new SqlSelectStatement(selectQuery), stringBuilder, optimizationContext, aliasesContext, null, 0);
+			sqlBuilder.BuildSql(new SqlSelectStatement(selectQuery), stringBuilder, optimizationContext, aliasesContext, null, 0);
 
 			return stringBuilder.ToString();
 		}
