@@ -11,7 +11,7 @@ namespace Tests
 		// every window/analytic function at translate time. Excluded so these tests run only where the feature exists,
 		// and any newly-added context is included automatically. SQL Server 2005/2008 are kept (the ranking functions
 		// work there); per-feature gaps are still asserted per test via [ThrowsForProvider].
-		public static List<string> Unsupported = new List<string>
+		internal static readonly List<string> Unsupported = new List<string>
 		{
 			TestProvName.AllMySql57,
 			TestProvName.AllAccess,
