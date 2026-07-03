@@ -34,6 +34,7 @@ After this, `git status` is clean and only `Releases-and-Roadmap.md` is material
 How `/release-notes` buckets a PR into the wiki structure. Accrued as the skill learns; start heuristic:
 
 - **Component** (`#### <Component>` group): `LinqToDB` by default; `LinqToDB CLI` when the PR touches `Source/LinqToDB.Tools` / CLI paths; provider-specific components when the change is provider-scoped. Confirm ambiguous cases with the user.
+  - **Feature spanning core + an integration (EF / provider):** assign by *where the public API lives* — verify via which package's `PublicAPI.*.txt` declares it. A core API usable standalone (its entries are under `Source/LinqToDB/PublicAPI/…`) → `LinqToDB`; the integration/forwarding half → the integration component (`LinqToDB for EntityFramework`, a provider, …). **Split into per-component bullets** rather than filing the whole PR under the integration. (e.g. #5525 named query filters: the `HasQueryFilter(key,…)` / `IgnoreFilters(keys)` API is core `LinqToDB`; the EF-Core-10 keyed-filter forwarding is `LinqToDB for EntityFramework`.)
 - **Change type** (sub-group): from PR labels — `breaking-change` → ⚠ Breaking, `enhancement` / `feature` → Added, `bug` → Fixed; otherwise ask. Order within a component: Breaking, Added, Improved, Fixed.
 
 ## Release notes location
