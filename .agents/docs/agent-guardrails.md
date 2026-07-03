@@ -20,10 +20,6 @@ The repo defines four configurations (`Testing;Debug;Release;Azure`). When propo
 
 If a change requires picking an arbitrary constant (timeout, threshold, version cutoff) or making an assumption, leave a short comment or `// TODO` at the call site so a reviewer can verify it. Deliberate exception to the default "no comments" policy — the value is inherently questionable and the comment is the signal for review.
 
-## Prepend the UTF-8 BOM after `Write` on a `.cs` / `.csx` / `.vb` / `.vbx` file
-
-The repo `.editorconfig` mandates `charset = utf-8-bom` for those extensions, but Claude Code's `Write` tool creates files without a BOM. After creating a new code file, prepend the BOM via `[System.IO.File]::WriteAllText($path, $content, [System.Text.UTF8Encoding]::new($true))` from pwsh, or read-prepend-`EF BB BF`-write. `Edit` preserves whatever BOM state the file already has, so this only applies to *new* files. Cross-check with `Read`-then-byte-inspection on the first three bytes if in doubt.
-
 ## Provider behavior claims must be verified against translator code
 
 Any agent-authored content (reviews, release notes, PR comments, XML docs, inline comments) that claims how a provider translates a member or operation must be verified against the translator at PR HEAD (`Source/LinqToDB/Internal/DataProvider/<Provider>/Translation/<Provider>MemberTranslator.cs`) before writing. The base virtuals can mislead — `TranslateNow` defaults to `CURRENT_TIMESTAMP` but most providers override it to `null`, so claims like "DateTime.Now is server-side" depend on which providers inherit vs override. Audit each per-provider claim against the actual override; don't rely on baseline diffs or older `[SqlFunction]` attributes. ([`code-reviewer.md`](../agents/code-reviewer.md) rule 9 covers external-system claims; this rule covers first-party translator behavior.)

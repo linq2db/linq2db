@@ -112,7 +112,7 @@ Each agent definition carries `name`, `description`, `tools`, and `model` frontm
 | File | Purpose |
 |---|---|
 | `agent-rules.md` | Auto-imported operational ruleset (see Root instructions above) |
-| `agent-guardrails.md` | Extended guardrail catalog: surface trade-offs, build configs, arbitrary-value documentation, BOM after Write, default-to-script, provider/codebase claim verification |
+| `agent-guardrails.md` | Extended guardrail catalog: surface trade-offs, build configs, arbitrary-value documentation, default-to-script, provider/codebase claim verification |
 | `architecture.md` | Core query pipeline, directory layout, companion projects |
 | `code-design.md` | Design invariants: public-API contract, cross-cutting internals, SQL AST namespace placement, column-aligned formatting |
 | `testing.md` | Test runner, config, framework patterns, "read the full log" rule, database initialization, `LINQ2DB_TEST_PROGRESS` heartbeat monitoring, BUGCHECK-gated tests, diagnosing hung runs (infinite-recursion detection), LinqService port-in-use cleanup, cross-provider gotchas (YDB PK, SupportsRowcount, IsPredicate, column nullability, query-cache HIT/MISS idioms), property-based testing proposal, baselines (vacuous substring assertions, `.sql.other` files, known flaky baselines), long full-suite run pattern |
