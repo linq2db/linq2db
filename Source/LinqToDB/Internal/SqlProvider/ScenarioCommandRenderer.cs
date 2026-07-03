@@ -8,6 +8,8 @@ using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.Metrics;
 
+#pragma warning disable MA0048 // CommandWithParameters record grouped with its shared renderer
+
 namespace LinqToDB.Internal.SqlProvider
 {
 	/// <summary>A rendered physical command: its SQL text and the parameters it carries.</summary>

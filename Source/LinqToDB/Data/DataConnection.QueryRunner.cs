@@ -158,7 +158,6 @@ namespace LinqToDB.Data
 				await base.DisposeAsync().ConfigureAwait(false);
 			}
 
-
 			// Cached in query.Context on first compile so a re-run reuses both the rendered commands and the logical
 			// scenario (the interpreter needs the real scenario for combined grouping / forwarding — the bridge can't
 			// re-infer those).

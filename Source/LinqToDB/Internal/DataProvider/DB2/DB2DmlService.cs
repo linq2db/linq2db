@@ -7,6 +7,8 @@ using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 using LinqToDB.SqlQuery;
 
+#pragma warning disable MA0048 // version-specific DmlServices (abstract + LUW/zOS leaves) grouped in one file
+
 namespace LinqToDB.Internal.DataProvider.DB2
 {
 	/// <summary>
