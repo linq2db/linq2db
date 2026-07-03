@@ -5,6 +5,8 @@ using LinqToDB.Internal.Common;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.Linq
 {
 	partial class WindowFunctionsTests
@@ -94,7 +96,13 @@ namespace Tests.Linq
 					Sum = Sql.Window.Sum(t.IntValue, w => w.Distinct().PartitionBy(t.CategoryId)),
 				};
 
-				_ = query.ToList();
+			// Only reached on providers that support DISTINCT in a window aggregate (ClickHouse); the rest are
+			// gated by [ThrowsForProvider]. Verify the DISTINCT modifier is actually emitted, not silently dropped.
+			var sql = query.ToSqlQuery().Sql;
+			sql.ShouldContain("OVER");
+			sql.ShouldContain("DISTINCT");
+
+			_ = query.ToList();
 		}
 
 	}
