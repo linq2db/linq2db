@@ -591,7 +591,7 @@ namespace LinqToDB.Data
 					catch
 					{
 						// ExecuteBatchDataReaderAsync threw before ownership passed to the reader wrapper: release the batch here.
-						batch.Dispose();
+						await batch.DisposeAsync().ConfigureAwait(false);
 						throw;
 					}
 				}
