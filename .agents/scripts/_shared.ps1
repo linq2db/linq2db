@@ -18,9 +18,15 @@ $ErrorActionPreference = 'Stop'
 [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
 
 function Exit-WithError {
-    param([string]$Message, [int]$Code = 1)
+    # $NextAction is an optional machine-readable remediation hint. When set it
+    # is emitted as a second stderr line with a stable `next_action:` prefix so
+    # the calling agent can self-correct (re-invoke with the fix) instead of
+    # only reporting the failure. Keep it a concrete, actionable instruction —
+    # "pass -ManifestFile <path>", not "check your input".
+    param([string]$Message, [int]$Code = 1, [string]$NextAction)
     $name = if ($global:ScriptBaseName) { $global:ScriptBaseName } else { 'script' }
     [Console]::Error.WriteLine("${name}: $Message")
+    if ($NextAction) { [Console]::Error.WriteLine("${name}: next_action: $NextAction") }
     exit $Code
 }
 
@@ -130,11 +136,13 @@ function Read-StdinText {
 
 function Read-StdinJson {
     $raw = Read-StdinText
-    if (-not $raw -or -not $raw.Trim()) { Exit-WithError 'no manifest JSON on stdin' }
+    if (-not $raw -or -not $raw.Trim()) {
+        Exit-WithError 'no manifest JSON on stdin' -NextAction 'pipe the manifest JSON on stdin, or write it to a file and pass -ManifestFile <path>'
+    }
     try {
         return $raw | ConvertFrom-Json -Depth 100
     } catch {
-        Exit-WithError "invalid JSON on stdin: $($_.Exception.Message)"
+        Exit-WithError "invalid JSON on stdin: $($_.Exception.Message)" -NextAction 'the parse error names the offending token — fix the manifest JSON and re-invoke'
     }
 }
 
@@ -148,16 +156,16 @@ function Read-ManifestFromFileOrStdin {
     param([string]$ManifestFile)
     if ($ManifestFile) {
         if (-not (Test-Path -LiteralPath $ManifestFile)) {
-            Exit-WithError "manifest file not found: $ManifestFile"
+            Exit-WithError "manifest file not found: $ManifestFile" -NextAction "write the manifest JSON to $ManifestFile (under .build/.agents/) before re-invoking"
         }
         $raw = Get-Content -Raw -LiteralPath $ManifestFile
         if (-not $raw -or -not $raw.Trim()) {
-            Exit-WithError "manifest file is empty: $ManifestFile"
+            Exit-WithError "manifest file is empty: $ManifestFile" -NextAction "write non-empty JSON to $ManifestFile before re-invoking"
         }
         try {
             return $raw | ConvertFrom-Json -Depth 100
         } catch {
-            Exit-WithError "invalid JSON in ${ManifestFile}: $($_.Exception.Message)"
+            Exit-WithError "invalid JSON in ${ManifestFile}: $($_.Exception.Message)" -NextAction "the parse error names the offending token — fix the JSON in $ManifestFile and re-invoke"
         }
     }
     return Read-StdinJson
