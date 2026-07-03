@@ -300,11 +300,8 @@ namespace Tests.OData.Microsoft
 		}
 
 		#region Issue 3757 Data
-		// LinqService (remote) excluded: the combined-command engine uniquifies the duplicate parameter name
-		// (@TypedProperty -> @TypedProperty_1) when merging the statements, while the remote separate-command path
-		// keeps @TypedProperty — the SQL text (not the result) differs, tripping the remote-vs-direct baseline.
 		[Test]
-		public void Issue3757Test([DataSources(false, TestProvName.AllClickHouse, TestProvName.AllYdb)] string context, [Values("", "?$filter=Children/any(c: contains(c/LS, 'de'))")] string queryString)
+		public void Issue3757Test([DataSources(TestProvName.AllClickHouse, TestProvName.AllYdb)] string context, [Values("", "?$filter=Children/any(c: contains(c/LS, 'de'))")] string queryString)
 		{
 			var modelBuilder = new ODataModelBuilder();
 

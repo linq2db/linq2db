@@ -465,6 +465,8 @@ namespace LinqToDB.Data
 						isAlreadyOptimizedAndConverted : false,
 						parametersNormalizerFactory    : dataConnection.DataProvider.GetQueryParameterNormalizer);
 
+					optimizationContext.ShareParametersByAccessor = true;
+
 					sb.Value.Length = 0;
 
 					var count = 0;
@@ -479,6 +481,8 @@ namespace LinqToDB.Data
 
 						using (ActivityService.Start(ActivityID.BuildSql))
 							sqlBuilder.BuildSql(statements[i], sb.Value, optimizationContext, aliases, null, 0);
+
+						optimizationContext.PromoteParametersForSharing();
 
 						count++;
 						i++;

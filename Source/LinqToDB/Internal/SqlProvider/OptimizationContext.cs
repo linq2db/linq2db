@@ -64,6 +64,17 @@ namespace LinqToDB.Internal.SqlProvider
 
 		public IReadOnlyList<SqlParameter> GetParameters() => _actualParameters ?? (IReadOnlyList<SqlParameter>)[];
 
+		/// <summary>
+		/// When set (combined multi-statement command render), a later statement reuses an earlier statement's parameter
+		/// when they share a value accessor (<see cref="SqlParameter.AccessorId"/>), so the merged command references one
+		/// @p (matching the remote separate-command path) instead of minting @p_1. Cross-statement only: enable on the
+		/// render context and call <see cref="PromoteParametersForSharing"/> between statements.
+		/// </summary>
+		public bool ShareParametersByAccessor { get; set; }
+
+		private Dictionary<int, SqlParameter>? _sharedByAccessor;
+		private Dictionary<(string?, DbDataType, object?), SqlParameter>? _sharedByValue;
+
 		public SqlParameter AddParameter(SqlParameter parameter)
 		{
 			var returnValue = parameter;
@@ -71,6 +82,15 @@ namespace LinqToDB.Internal.SqlProvider
 			if (!IsParameterOrderDependent && _parametersMap?.TryGetValue(parameter, out var newParameter) == true)
 			{
 				returnValue = newParameter;
+			}
+			else if (ShareParametersByAccessor && !IsParameterOrderDependent && TryGetSharedParameter(parameter, out var shared))
+			{
+				// A prior statement in this combined command already emitted an equivalent parameter (same value accessor, or
+				// same name+value when it has no accessor - e.g. a convert-derived LIKE pattern). Reuse it so the merged command
+				// references one @p (matching remote's separate-command path) instead of minting @p_1. Cross-statement only:
+				// within-statement duplicates still uniquify (see PromoteParametersForSharing).
+				returnValue = shared;
+				(_parametersMap ??= new()).Add(parameter, returnValue);
 			}
 			else
 			{
@@ -93,6 +113,57 @@ namespace LinqToDB.Internal.SqlProvider
 			}
 
 			return returnValue;
+		}
+
+		// Finds a parameter emitted by an earlier statement of the current combined command equivalent to <paramref
+		// name="parameter"/>: by value accessor when it has one, otherwise by (name, type, resolved value) - the latter
+		// covers convert-derived constants (e.g. LIKE patterns) whose AccessorId is null. Requires bound values for the
+		// value path, so it is a no-op there at compile time (EvaluationContext.ParameterValues null).
+		bool TryGetSharedParameter(SqlParameter parameter, [MaybeNullWhen(false)] out SqlParameter shared)
+		{
+			if (parameter.AccessorId is {} accessorId)
+			{
+				if (_sharedByAccessor != null && _sharedByAccessor.TryGetValue(accessorId, out shared))
+					return true;
+			}
+			else if (_sharedByValue != null && EvaluationContext.ParameterValues != null)
+			{
+				var value = parameter.GetParameterValue(EvaluationContext.ParameterValues);
+
+				if (_sharedByValue.TryGetValue((parameter.Name, value.DbDataType, value.ProviderValue), out shared))
+					return true;
+			}
+
+			shared = null;
+			return false;
+		}
+
+		/// <summary>
+		/// Promotes the parameters emitted so far (through the just-rendered statement) into the cross-statement sharing
+		/// map, so a later statement in the same combined command that references the same value accessor reuses them.
+		/// No-op unless <see cref="ShareParametersByAccessor"/> is set. Call between statements of a combined command.
+		/// </summary>
+		public void PromoteParametersForSharing()
+		{
+			if (!ShareParametersByAccessor || _actualParameters == null)
+				return;
+
+			foreach (var parameter in _actualParameters)
+			{
+				if (parameter.AccessorId is {} accessorId)
+				{
+					_sharedByAccessor ??= new();
+					_sharedByAccessor[accessorId] = parameter;
+				}
+				else if (EvaluationContext.ParameterValues != null)
+				{
+					var value = parameter.GetParameterValue(EvaluationContext.ParameterValues);
+					var key   = (parameter.Name, value.DbDataType, value.ProviderValue);
+
+					_sharedByValue ??= new();
+					_sharedByValue[key] = parameter;
+				}
+			}
 		}
 
 		/// <summary>
@@ -131,6 +202,8 @@ namespace LinqToDB.Internal.SqlProvider
 			// the previous group's identities and never emitted. Breaks gated multi-group scenarios such as the
 			// InsertOrReplace/Upsert UPDATE→INSERT emulation, where both groups carry value parameters.
 			_parametersMap        = null;
+			_sharedByAccessor     = null;
+			_sharedByValue        = null;
 		}
 
 		public T OptimizeAndConvertAll<T>(T element, NullabilityContext nullabilityContext)

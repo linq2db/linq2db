@@ -85,6 +85,10 @@ namespace LinqToDB.Internal.SqlProvider
 		{
 			var commands = new CommandWithParameters[plan.Groups.Count];
 
+			// A combined group renders as one command; share a parameter across its statements (match the remote
+			// separate-command path) instead of minting @p_1. Single-step groups have no prior statement, so no-op.
+			optimizationContext.ShareParametersByAccessor = true;
+
 			for (var g = 0; g < plan.Groups.Count; g++)
 			{
 				var stepIndexes = plan.Groups[g].StepIndexes;
@@ -101,6 +105,8 @@ namespace LinqToDB.Internal.SqlProvider
 
 					using (ActivityService.Start(ActivityID.BuildSql))
 						sqlBuilder.BuildSql(step.Statement, sb, optimizationContext, stepAliases, null, startIndent);
+
+					optimizationContext.PromoteParametersForSharing();
 				}
 
 				commands[g] = new CommandWithParameters(sb.ToString(), optimizationContext.GetParameters());
