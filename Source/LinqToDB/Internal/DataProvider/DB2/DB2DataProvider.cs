@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -43,6 +44,10 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			SqlProviderFlags.IsDistinctFromSupported                               = true;
 			SqlProviderFlags.SupportsPredicatesComparison                          = true;
 			SqlProviderFlags.IsOrderByAggregateSubquerySupported                   = false;
+			// DB2's per-SELECT column limit (~1012 on LUW) caps how wide a CteUnion carrier projection can
+			// grow before the eager-loading strategy falls back to KeyedQuery. Not validated against a live
+			// DB2 engine; verify against the target edition's documented limit before relying on it.
+			SqlProviderFlags.MaxColumnCount                                        = 1012;
 
 			// Requires:
 			// DB2 LUW: 11.1+
@@ -78,6 +83,20 @@ namespace LinqToDB.Internal.DataProvider.DB2
 
 			if (Adapter.DB2DateTimeType != null)
 				SetProviderField(Adapter.DB2DateTimeType, typeof(DateTime), Adapter.GetDB2DateTimeReaderMethod!   , dataReaderType: Adapter.DataReaderType);
+
+			// DECFLOAT can hold IEEE special values (Infinity/-Infinity/NaN) that the default decimal reader
+			// (GetDecimal) cannot convert. Read the raw DB2DecimalFloat instead and let the conversions
+			// registered in DB2ProviderAdapter map it per target type. See issue #5663.
+			{
+				var readerParameter = Expression.Parameter(Adapter.DataReaderType, "r");
+				var indexParameter  = Expression.Parameter(typeof(int), "i");
+
+				ReaderExpressions[new ReaderInfo { DataReaderType = Adapter.DataReaderType, FieldType = typeof(decimal), DataTypeName = "DECFLOAT" }] =
+					Expression.Lambda(
+						Expression.Call(readerParameter, Adapter.GetDB2DecimalFloatReaderMethod, null, indexParameter),
+						readerParameter,
+						indexParameter);
+			}
 		}
 
 		public DB2Version Version { get; }

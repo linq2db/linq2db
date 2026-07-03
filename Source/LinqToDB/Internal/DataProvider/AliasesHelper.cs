@@ -168,15 +168,14 @@ namespace LinqToDB.Internal.DataProvider
 					element.Fields,
 					null,
 					(n, a) => IsValidAlias(n),
-					f => TruncateAlias(f.PhysicalName),
+					f => TruncateAlias(f.Name),
 					(f, n, a) =>
 					{
-						f.PhysicalName = n;
-						// do not touch name
+						f.Name = n;
 					},
 					f =>
 					{
-						var a = TruncateAlias(f.PhysicalName);
+						var a = TruncateAlias(f.Name);
 						return string.IsNullOrEmpty(a)
 							? "f1"
 							: a + (a!.EndsWith('_') ? string.Empty : "_") + "1";
@@ -192,20 +191,20 @@ namespace LinqToDB.Internal.DataProvider
 					{
 						var field = element.Fields[i];
 
-						element.Body.Select.Columns[i].Alias = field.PhysicalName;
+						element.Body.Select.Columns[i].Alias = field.Name;
 
 						if (element.Body.HasSetOperators)
 						{
 							foreach (var setOperator in element.Body.SetOperators)
 							{
-								setOperator.SelectQuery.Select.Columns[i].Alias = field.PhysicalName;
+								setOperator.SelectQuery.Select.Columns[i].Alias = field.Name;
 							}
 						}
 					}
 
 					_newAliases.RegisterAliased(element.Body);
 				}
-				
+
 				_newAliases.RegisterAliased(element);
 
 				return element;
@@ -215,16 +214,8 @@ namespace LinqToDB.Internal.DataProvider
 			{
 				base.VisitSqlCteTable(element);
 
-				if (element.Cte != null)
-				{
-					for (int i = 0; i < element.Fields.Count; i++)
-					{
-						var field    = element.Fields[i];
-						var cteField = element.Cte.Fields.Find(f => string.Equals(f.Name, field.PhysicalName, StringComparison.Ordinal));
-						if (cteField != null && !string.Equals(field.PhysicalName, cteField.PhysicalName, StringComparison.Ordinal))
-							field.PhysicalName = cteField.PhysicalName;
-					}
-				}
+				// SqlCteTableField.Name delegates to CteField.Name automatically,
+				// so no manual sync needed.
 
 				_newAliases.RegisterAliased(element);
 

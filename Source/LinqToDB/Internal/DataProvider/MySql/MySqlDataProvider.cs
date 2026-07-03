@@ -57,6 +57,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 			SqlProviderFlags.IsUpdateTakeSupported = true;
 			SqlProviderFlags.IsTakeWithInAllAnySomeSubquerySupported = false;
+			SqlProviderFlags.MaxColumnCount = 4096;
 
 			// MySQL/MariaDB emit InsertOrUpdate as INSERT ... ON DUPLICATE KEY UPDATE, which
 			// has no WHERE clause on the UPDATE branch. Route Upsert.Update.When through
@@ -110,8 +111,10 @@ namespace LinqToDB.Internal.DataProvider.MySql
 		{
 			return Version switch
 			{
-				MySqlVersion.MySql80 or MySqlVersion.MariaDB10 => new MySql80MemberTranslator(),
-				_                                              => new MySqlMemberTranslator(),
+				MySqlVersion.MariaDB10 => new MariaDBMemberTranslator(),
+				MySqlVersion.MySql80   => new MySql80MemberTranslator(),
+				MySqlVersion.MySql57   => new MySql57MemberTranslator(),
+				_                      => new MySqlMemberTranslator(),
 			};
 		}
 

@@ -16,7 +16,10 @@ type Methods() =
     /// <remarks>Adds support for F# record types and automatic mapping of F# <c>'T option</c> columns.</remarks>
     [<Extension>]
     static member UseFSharp(options : DataOptions) =
-        let options = options.UseInterceptor(FSharpEntityBindingInterceptor.Instance)
+        let options =
+            options
+                .UseInterceptor(FSharpEntityBindingInterceptor.Instance)
+                .UseInterceptor(FSharpQueryExpressionInterceptor.Instance)
         // Combine the option schema as a *lower-priority* fallback so it never shadows the user's
         // explicit mappings: auto 'T option support only fills in members the user hasn't mapped.
         // (UseAdditionalMappingSchema would add it at higher priority, letting its embedded default
