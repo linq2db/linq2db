@@ -5,6 +5,8 @@ using LinqToDB.Internal.Common;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.Linq
 {
 	partial class WindowFunctionsTests
@@ -21,11 +23,24 @@ namespace Tests.Linq
 				from t in table
 				select new
 				{
+					t.CategoryId,
 					MinFirst = Sql.Window.Min(t.IntValue, f => f.KeepFirst().OrderBy(t.DoubleValue).PartitionBy(t.CategoryId)),
 					MaxLast  = Sql.Window.Max(t.IntValue, f => f.KeepLast().OrderBy(t.DoubleValue).PartitionBy(t.CategoryId)),
 				};
 
-			_ = query.ToList();
+			var result = query.ToList();
+
+			// KEEP (DENSE_RANK FIRST/LAST ORDER BY DoubleValue) evaluated per CategoryId partition.
+			// DoubleValue is distinct within each partition, so FIRST is the row with the smallest
+			// DoubleValue and LAST the row with the largest; the aggregate then reduces that single row.
+			var byCategory = result.GroupBy(r => r.CategoryId).ToDictionary(g => g.Key, g => g.First());
+
+			byCategory[1].MinFirst.ShouldBe(10);
+			byCategory[1].MaxLast .ShouldBe(90);
+			byCategory[2].MinFirst.ShouldBe(30);
+			byCategory[2].MaxLast .ShouldBe(40);
+			byCategory[3].MinFirst.ShouldBe(60);
+			byCategory[3].MaxLast .ShouldBe(70);
 		}
 
 		[Test]
