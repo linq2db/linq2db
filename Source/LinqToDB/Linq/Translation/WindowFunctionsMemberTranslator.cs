@@ -260,9 +260,13 @@ namespace LinqToDB.Linq.Translation
 			public required FrameBoundary?                    Start          { get; set; }
 			public required FrameBoundary?                    End            { get; set; }
 			public required SqlFrameClause.FrameExclusionKind FrameExclusion { get; set; }
+			/// <summary>KEEP (DENSE_RANK FIRST/LAST) modifier for the aggregate, or <see langword="null"/> when there is no KEEP clause.</summary>
 			public required SqlKeepClause.KeepType?           KeepType       { get; set; }
+			/// <summary>ORDER BY keys for the KEEP (DENSE_RANK FIRST/LAST) clause.</summary>
 			public required OrderByInformation[]?             KeepOrderBy    { get; set; }
+			/// <summary>NULL treatment (RESPECT / IGNORE NULLS) for offset and value functions.</summary>
 			public          Sql.Nulls                         NullTreatment  { get; set; }
+			/// <summary>FROM FIRST / FROM LAST position for NTH_VALUE.</summary>
 			public          Sql.From                          FromPosition   { get; set; }
 		}
 
