@@ -1094,7 +1094,18 @@ namespace LinqToDB.Data
 			static bool IsSingleSimpleCommand(ExecutionPreparedQuery executionQuery)
 			{
 				var pq = executionQuery.PreparedQuery;
-				return pq.Commands.Length == 1 && (pq.Plan == null || pq.Plan.Groups[0].StepIndexes.Count == 1);
+
+				if (pq.Commands.Length != 1 || (pq.Plan != null && pq.Plan.Groups[0].StepIndexes.Count != 1))
+					return false;
+
+				// A lone OUT-parameter step (Firebird/Oracle identity built as a scenario) must run through the interpreter
+				// so AddOutputParameter creates the output parameter; the fast path's GetIdentityParameter only knows the
+				// legacy IsIdentityParameterRequired shape. The legacy bridge never sets OutParameterName, so unmigrated
+				// providers stay on the fast path.
+				if (pq.Scenario is { Steps: [{ OutParameterName: not null }] })
+					return false;
+
+				return true;
 			}
 
 			static void InitCommand(DataConnection dataConnection, ExecutionPreparedQuery executionQuery, int index)

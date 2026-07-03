@@ -309,16 +309,6 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			base.BuildParameter(parameter);
 		}
 
-		public override int CommandCount(SqlStatement statement)
-		{
-			return statement switch
-			{
-				SqlTruncateTableStatement truncate => truncate.ResetIdentity && truncate.Table!.IdentityFields.Count > 0 ? 2 : 1,
-
-				_ => base.CommandCount(statement),
-			};
-		}
-
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
 			var identityField = dropTable.Table.IdentityFields.Count > 0 ? dropTable.Table.IdentityFields[0] : null;
@@ -391,16 +381,18 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			}
 		}
 
-		protected override void BuildCommand(SqlStatement statement, int commandNumber)
+		protected override void BuildCommandFragment(SqlCommandFragment fragment, int fieldIndex, SqlStatement statement)
 		{
 			// should we introduce new convertion types like NameToGeneratorName/NameToTriggerName?
-			switch (Statement)
+			if (fragment == SqlCommandFragment.IdentityReseed && statement is SqlTruncateTableStatement truncate)
 			{
-				case SqlTruncateTableStatement truncate:
-					StringBuilder.Append("SET GENERATOR ");
-					Convert(StringBuilder, "GIDENTITY_" + truncate.Table!.TableName.Name, ConvertType.NameToQueryTable);
-					StringBuilder.AppendLine(" TO 0");
-					break;
+				StringBuilder.Append("SET GENERATOR ");
+				Convert(StringBuilder, "GIDENTITY_" + truncate.Table!.TableName.Name, ConvertType.NameToQueryTable);
+				StringBuilder.AppendLine(" TO 0");
+			}
+			else
+			{
+				base.BuildCommandFragment(fragment, fieldIndex, statement);
 			}
 		}
 

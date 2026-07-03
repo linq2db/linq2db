@@ -115,6 +115,8 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			return new IdentifierServiceSimple(Version <= FirebirdVersion.v3 ? 31 : 63);
 		}
 
+		protected override IDmlService CreateDmlService() => new FirebirdDmlService();
+
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
 			return Version switch
