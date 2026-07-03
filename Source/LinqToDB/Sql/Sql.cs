@@ -258,8 +258,10 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Returns a version 7 (time-ordered, RFC 9562) <see cref="Guid"/>. When the target provider exposes a native
-		/// UUIDv7 generator the call is translated to it server-side; otherwise the value is generated client-side.
+		/// Returns a version 7 (time-ordered, RFC 9562) <see cref="Guid"/>. For providers with a native UUIDv7 function
+		/// (PostgreSQL 18+, ClickHouse, DuckDB, MariaDB) the call is translated to it; on all other providers the value
+		/// is generated client-side. The server function is emitted for those providers unconditionally, without probing
+		/// the connected server version.
 		/// </summary>
 		public static Guid NewGuid7()
 		{
