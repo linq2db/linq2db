@@ -5,6 +5,8 @@ using LinqToDB.Internal.Common;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.Linq
 {
 	public partial class WindowFunctionsTests
@@ -64,7 +66,7 @@ namespace Tests.Linq
 
 		[Test]
 		//TODO: we can emulate it for other providers by using additional order by with CASE:
-		//ROW_NUMBER() OVER (ORDER BY WHEN x.Value IS NULL THEN 1 ELSE 0 END, x.Value)
+		//ROW_NUMBER() OVER (ORDER BY CASE WHEN x.Value IS NULL THEN 1 ELSE 0 END, x.Value)
 		public void RowNumberWithNulls([SupportsAnalyticFunctionsContext] string context)
 		{
 			using var db    = GetDataContext(context);
@@ -132,8 +134,8 @@ namespace Tests.Linq
 				.OrderBy(r => r.Id)
 				.ToList();
 
-			Assert.That(result.Select(r => r.RN),  Is.EqualTo(new long[] { 1, 2, 1, 2 }));
-			Assert.That(result.Select(r => r.Sum), Is.EqualTo(new[]      { 30, 30, 70, 70 }));
+			result.Select(r => r.RN).ShouldBe(new long[] { 1, 2, 1, 2 });
+			result.Select(r => r.Sum).ShouldBe(new[]      { 30, 30, 70, 70 });
 		}
 	}
 }
