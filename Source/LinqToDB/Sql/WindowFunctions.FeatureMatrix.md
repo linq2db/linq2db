@@ -120,10 +120,15 @@ the provider's natural NULL ordering, and for non-nullable keys).
 
 ### Remaining fidelity gap
 
-- **ClickHouse `MEDIAN`** (the one `✗†` left in §3) — ClickHouse *does* have a median aggregate but
-  spelled lowercase `median`; linq2db emits `MEDIAN`, which ClickHouse rejects (`Unknown aggregate
-  function MEDIAN. Maybe you meant: ['median','medianDD']`). A future enablement would need lowercase
-  emission.
+- **ClickHouse `MEDIAN` — not applicable.** ClickHouse *does* have a median aggregate but spelled
+  lowercase `median`; linq2db emits `MEDIAN`, which ClickHouse rejects (`Unknown aggregate function
+  MEDIAN. Maybe you meant: ['median','medianDD']`). Lowercase emission alone would not make it
+  equivalent: ClickHouse `median` is an alias for `quantile`, which is **approximate and
+  non-deterministic** (reservoir sampling) — unusable for deterministic results — and the exact
+  variant `medianExact` returns an actual data element rather than **interpolating** between the two
+  middle values, whereas the `MEDIAN` this API models (Oracle/DB2/DuckDB, = `PERCENTILE_CONT(0.5)`)
+  interpolates. So ClickHouse cannot produce the same result on even-count windows; the gate stays off
+  intentionally rather than emit divergent semantics.
 
 ---
 
