@@ -79,6 +79,25 @@ namespace LinqToDB.Internal.SqlProvider
 		}
 
 		/// <summary>
+		/// Appends one statement to <paramref name="sb"/> as part of a semicolon-concatenated command: writes the separator
+		/// (when not the first statement), renders through the shared <paramref name="optimizationContext"/>, then promotes its
+		/// parameters into the cross-statement sharing set. Shared by RenderScenarioGroups (compile-time, per plan group) and
+		/// RenderCombinedBatches (execute-time, length-split) so both concatenate statements identically.
+		/// </summary>
+		internal static void AppendConcatenatedStatement(
+			StringBuilder sb, ISqlBuilder sqlBuilder, OptimizationContext optimizationContext,
+			SqlStatement statement, AliasesContext aliases, bool first, int startIndent)
+		{
+			if (!first)
+				sb.Append(";\n");
+
+			using (ActivityService.Start(ActivityID.BuildSql))
+				sqlBuilder.BuildSql(statement, sb, optimizationContext, aliases, null, startIndent);
+
+			optimizationContext.PromoteParametersForSharing();
+		}
+
+		/// <summary>
 		/// Renders each physical group as ONE command through the group-scoped shared context: a group's step statements
 		/// render into one command text (the shared param normalizer within the group yields unique/deduped names);
 		/// parameters are cleared at each group boundary so every command carries only its own params.
@@ -111,13 +130,7 @@ namespace LinqToDB.Internal.SqlProvider
 					var step        = scenario.Steps[stepIndexes[k]];
 					var stepAliases = ReferenceEquals(step.Statement, mainStatement) ? mainAliases : PrepareStepAliases(serviceProvider, step.Statement);
 
-					if (k > 0)
-						sb.Append(";\n");
-
-					using (ActivityService.Start(ActivityID.BuildSql))
-						sqlBuilder.BuildSql(step.Statement, sb, optimizationContext, stepAliases, null, startIndent);
-
-					optimizationContext.PromoteParametersForSharing();
+					AppendConcatenatedStatement(sb, sqlBuilder, optimizationContext, step.Statement, stepAliases, k == 0, startIndent);
 				}
 
 				commands[g] = new CommandWithParameters(sb.ToString(), optimizationContext.GetParameters());

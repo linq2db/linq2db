@@ -476,13 +476,7 @@ namespace LinqToDB.Data
 					{
 						var aliases = ScenarioCommandRenderer.PrepareStepAliases(serviceProvider, statements[i]);
 
-						if (count > 0)
-							sb.Value.Append(";\n");
-
-						using (ActivityService.Start(ActivityID.BuildSql))
-							sqlBuilder.BuildSql(statements[i], sb.Value, optimizationContext, aliases, null, 0);
-
-						optimizationContext.PromoteParametersForSharing();
+						ScenarioCommandRenderer.AppendConcatenatedStatement(sb.Value, sqlBuilder, optimizationContext, statements[i], aliases, count == 0, 0);
 
 						count++;
 						i++;
