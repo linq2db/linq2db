@@ -58,12 +58,12 @@ namespace Tests.Mapping
 
 			var dbType = col.GetDbDataType(true);
 
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(dbType.DataType,  Is.EqualTo(DataType.Decimal));
 				Assert.That(dbType.Precision, Is.EqualTo(18));
 				Assert.That(dbType.Scale,     Is.EqualTo(10));
-			});
+			}
 		}
 	}
 }

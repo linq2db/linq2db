@@ -13,9 +13,31 @@ namespace LinqToDB.Internal.DataProvider.DuckDB.Translation
 {
 	public class DuckDBMemberTranslator : ProviderMemberTranslatorDefault
 	{
-		protected override IMemberTranslator CreateSqlTypesTranslator()     => new SqlTypesTranslation();
-		protected override IMemberTranslator CreateDateMemberTranslator()   => new DateFunctionsTranslator();
-		protected override IMemberTranslator CreateStringMemberTranslator() => new StringMemberTranslator();
+		protected override IMemberTranslator  CreateSqlTypesTranslator()             => new SqlTypesTranslation();
+		protected override IMemberTranslator  CreateDateMemberTranslator()           => new DateFunctionsTranslator();
+		protected override IMemberTranslator  CreateStringMemberTranslator()         => new StringMemberTranslator();
+		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator() => new DuckDBWindowFunctionsMemberTranslator();
+
+		protected class DuckDBWindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
+		{
+			// DuckDB supports IGNORE NULLS for LEAD/LAG/FIRST_VALUE/LAST_VALUE/NTH_VALUE (modifier inside the
+			// parentheses, after the last argument). It does not support NTH_VALUE FROM FIRST/LAST.
+			protected override bool IsLeadLagNullTreatmentSupported => true;
+			protected override bool IsValueNullTreatmentSupported   => true;
+			// DuckDB natively supports FILTER (WHERE ...) on aggregate window functions, so emit it directly
+			// rather than emulating via CASE WHEN.
+			protected override bool IsWindowFilterSupported         => true;
+			// DuckDB supports DISTINCT in window aggregates: e.g. SUM(DISTINCT x) OVER (...).
+			protected override bool IsAggregateDistinctSupported    => true;
+			// DuckDB supports FILTER (WHERE ...) on ordered-set aggregates (PERCENTILE_CONT/DISC WITHIN GROUP).
+			protected override bool IsOrderedSetFilterSupported     => true;
+			// DuckDB supports the full statistical/regression window-function set with standard SQL names.
+			protected override bool IsVarianceSupported             => true;
+			protected override bool IsVarianceBareSupported         => true;
+			protected override bool IsCorrelationSupported          => true;
+			protected override bool IsLinearRegressionSupported     => true;
+			protected override bool IsMedianSupported               => true;
+		}
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
 		{
@@ -241,7 +263,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB.Translation
 									}
 								}
 
-								var suffix = BuildAggregateNullsOrderBy(factory, info.OrderBySql, info.IsNullFiltered, NullsDefaultOrdering.AlwaysLast);
+								var suffix = BuildAggregateNullsOrderBy(factory, info.OrderBySql, info.IsNullFiltered, translationContext.ProviderFlags.DefaultNullsOrdering);
 
 								SqlSearchCondition? filterCondition = null;
 
