@@ -1478,6 +1478,66 @@ namespace Tests.Data
 		}
 		#endregion
 
+		#region Eager read-consistency transaction (	6)
+		// The eager loader opens a read-consistency transaction (at SqlProviderFlags.DefaultMultiQueryIsolationLevel) whenever a
+		// query has preambles, so the main query and its child collections see one snapshot. 	6 decision: keep it always (never
+		// skip for a single round-trip) and never double it when a transaction is already active. These lock that in.
+		[Test]
+		public void EagerLoadOpensReadConsistencyTransaction([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			var beginCount = 0;
+
+			using var db = GetDataContext(context, o => o.UseTracing(ti =>
+			{
+				if (ti.Operation == TraceOperation.BeginTransaction)
+					beginCount++;
+			}));
+
+			using var parents  = db.CreateLocalTable<Pr5EagerParent>();
+			using var children = db.CreateLocalTable<Pr5EagerChild>();
+
+			db.Insert(new Pr5EagerParent { Id = 1 });
+			db.Insert(new Pr5EagerChild  { Id = 1, ParentId = 1 });
+
+			beginCount = 0;
+
+			var result = db.GetTable<Pr5EagerParent>().LoadWith(p => p.Children).ToList();
+
+			Assert.That(result,             Has.Count.EqualTo(1));
+			Assert.That(result[0].Children, Has.Count.EqualTo(1));
+			Assert.That(beginCount, Is.GreaterThanOrEqualTo(1), "eager load should open a read-consistency transaction");
+		}
+
+		[Test]
+		public void EagerLoadReusesActiveTransaction([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			var beginCount = 0;
+
+			using var db = GetDataContext(context, o => o.UseTracing(ti =>
+			{
+				if (ti.Operation == TraceOperation.BeginTransaction)
+					beginCount++;
+			}));
+
+			var dc = (DataConnection)db;
+
+			using var parents  = db.CreateLocalTable<Pr5EagerParent>();
+			using var children = db.CreateLocalTable<Pr5EagerChild>();
+
+			db.Insert(new Pr5EagerParent { Id = 1 });
+			db.Insert(new Pr5EagerChild  { Id = 1, ParentId = 1 });
+
+			using var tx = dc.BeginTransaction();
+
+			beginCount = 0;
+
+			var result = db.GetTable<Pr5EagerParent>().LoadWith(p => p.Children).ToList();
+
+			Assert.That(result, Has.Count.EqualTo(1));
+			Assert.That(beginCount, Is.Zero, "eager load should reuse the active transaction, not open a second one");
+		}
+		#endregion
+
 		private sealed class TestCommandInterceptor : CommandInterceptor
 		{
 			public bool CommandInitializedTriggered { get; set; }
@@ -1673,6 +1733,23 @@ namespace Tests.Data
 
 		[Table("EagerExceptionChild")]
 		sealed class EagerExceptionChild
+		{
+			[Column, PrimaryKey] public int Id;
+			[Column]             public int ParentId;
+		}
+
+		// Real tables (CreateLocalTable) for the 	6 eager read-consistency transaction tests.
+		[Table("Pr5EagerParent")]
+		sealed class Pr5EagerParent
+		{
+			[Column, PrimaryKey] public int Id;
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(Pr5EagerChild.ParentId))]
+			public List<Pr5EagerChild> Children = null!;
+		}
+
+		[Table("Pr5EagerChild")]
+		sealed class Pr5EagerChild
 		{
 			[Column, PrimaryKey] public int Id;
 			[Column]             public int ParentId;
