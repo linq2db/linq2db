@@ -3185,7 +3185,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 					if (_disableAlias)
 					{
-						Convert(StringBuilder, cteTableField.Name, ConvertType.NameToQueryField);
+						Convert(StringBuilder, AliasesContext.GetFieldName(cteTableField), ConvertType.NameToQueryField);
 						break;
 					}
 
@@ -3229,7 +3229,7 @@ namespace LinqToDB.Internal.SqlProvider
 						}
 					}
 
-					Convert(StringBuilder, cteTableField.Name, ConvertType.NameToQueryField);
+					Convert(StringBuilder, AliasesContext.GetFieldName(cteTableField), ConvertType.NameToQueryField);
 
 					break;
 				}
