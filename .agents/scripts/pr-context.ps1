@@ -56,8 +56,10 @@ Output (stdout, single JSON object): see the review skills' expected shape —
 step 7 and `/review-pr` step 2b (which thread-disposition action to take per
 prior line/file comment based on thread state + resolver identity). Each entry
 is `{ threadId, isResolved, resolvedBy, firstCommentId }`, matching the GraphQL
-`reviewThreads(first:100).nodes[*]` shape. `resolvedBy` is the GitHub login of
-the user who resolved the thread, or `null` when the thread is open.
+`reviewThreads.nodes[*]` shape. The query paginates the thread cursor to the
+last page (heavily-reviewed PRs exceed 100 threads), so no open thread in the
+tail is dropped. `resolvedBy` is the GitHub login of the user who resolved the
+thread, or `null` when the thread is open.
 
 Exit codes
 ----------
@@ -177,9 +179,23 @@ $jobs.reviewThreads = Start-ThreadJob -ScriptBlock {
     # databaseId → thread.id map. `/verify-review` step 7 decides per-thread
     # resolve actions against `isResolved`; pairing it with the first comment's
     # databaseId lets the caller go REST comment_id → GraphQL thread_id in one
-    # lookup. `first:100` matches the upper bound observed on linq2db PRs.
-    $query = 'query($o:String!,$r:String!,$n:Int!){ repository(owner:$o,name:$r){ pullRequest(number:$n){ reviewThreads(first:100){ nodes{ id isResolved resolvedBy{ login } comments(first:1){ nodes{ databaseId } } } } } } }'
-    Invoke-GhJson @('api','graphql','-F',"o=$using:owner",'-F',"r=$using:repo",'-F',"n=$using:pr",'-f',"query=$query")
+    # lookup. MUST paginate: heavily-reviewed PRs exceed 100 threads (#5468 had
+    # 120+), and a single first:100 page silently drops the tail — where the
+    # still-open threads frequently are. Loop the cursor to the last page.
+    $query = 'query($o:String!,$r:String!,$n:Int!,$after:String){ repository(owner:$o,name:$r){ pullRequest(number:$n){ reviewThreads(first:100, after:$after){ pageInfo{ hasNextPage endCursor } nodes{ id isResolved resolvedBy{ login } comments(first:1){ nodes{ databaseId } } } } } } }'
+    $all   = @()
+    $after = $null
+    for ($page = 0; $page -lt 200; $page++) {
+        $args = @('api','graphql','-F',"o=$using:owner",'-F',"r=$using:repo",'-F',"n=$using:pr",'-f',"query=$query")
+        if ($after) { $args += @('-f',"after=$after") }
+        $res = Invoke-GhJson $args
+        if (-not $res.ok) { return $res }
+        $threads = $res.data.data.repository.pullRequest.reviewThreads
+        if ($threads.nodes) { $all += $threads.nodes }
+        if (-not $threads.pageInfo.hasNextPage) { break }
+        $after = [string]$threads.pageInfo.endCursor
+    }
+    [pscustomobject]@{ ok = $true; data = $all; error = $null }
 }
 
 $fetchRes         = if ($jobs.fetch) { Receive-Job $jobs.fetch -Wait; Remove-Job $jobs.fetch } else { [pscustomobject]@{ ok = $true; stdout = '' } }
@@ -215,7 +231,7 @@ if ($nodes) {
 }
 
 $reviewThreads = @()
-$threadNodes = $reviewThreadsRes.data.data.repository.pullRequest.reviewThreads.nodes
+$threadNodes = $reviewThreadsRes.data
 if ($threadNodes) {
     foreach ($t in $threadNodes) {
         $firstId = $null
