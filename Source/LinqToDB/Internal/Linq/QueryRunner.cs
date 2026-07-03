@@ -736,23 +736,27 @@ namespace LinqToDB.Internal.Linq
 			}
 		}
 
-		// Runs the main query together with all its combinable eager-load child collections as a size-bounded set of
-		// multi-result-set commands: the [child1 … childN, main] statements are modelled as a SqlCommandScenario of
-		// Reader steps and grouped by PlanScenario (which caps how many merge into one command). Each child result set
-		// is buffered into its PreambleResult (mapped by that child query's own materializer); the main result set —
-		// always the last step of the last group — streams lazily from that group's reader, which this enumerable owns.
-		// Collapses N+1 eager round-trips to 1 (a few for a very large fan-out); created only when every preamble is
-		// combinable and the provider supports multi-statement batches with multiple result sets (see
-		// TryGetCombinedEagerEnumerable), otherwise callers fall back to sequential InitPreambles.
-		sealed class CombinedEagerResultEnumerable<T> : IResultEnumerable<T>
+		// Runs the main query together with its eager-load child collections, collapsing the combinable children (Default
+		// strategy, IStepMaterializer) and the main into a size-bounded set of multi-result-set commands (N+1 -> 1, a few for
+		// a very large fan-out). Non-combinable preambles (KeyedQuery / CteUnion / detached / buffer / no-op) run sequentially
+		// FIRST (in index order; they may depend on each other), then the combinable children + main are modelled as a
+		// SqlCommandScenario of Reader steps and grouped by PlanScenario. Each combinable child result set is buffered into
+		// its PreambleResult; the main result set (always the last step of the last group) streams lazily from that group's
+		// reader, which this enumerable owns. Created only when the provider supports multi-statement batches with multiple
+		// result sets and at least one preamble is combinable (see TryGetCombinedEagerEnumerable); a purely non-combinable
+		// load falls back to the sequential InitPreambles path.
+		sealed class EagerResultEnumerable<T> : IResultEnumerable<T>
 		{
 			readonly IDataContext      _dataContext;
 			readonly IQueryExpressions _expressions;
 			readonly Query<T>          _query;
 			readonly object?[]?        _parameters;
 			readonly Preamble[]        _preambles;
+			// Preamble indices that are reader-combinable, in order. Scenario step k (< Length) maps back to preamble
+			// _combinableIndexes[k]; scenario step Length is the main query.
+			readonly int[]             _combinableIndexes;
 
-			public CombinedEagerResultEnumerable(
+			public EagerResultEnumerable(
 				IDataContext      dataContext,
 				IQueryExpressions expressions,
 				Query<T>          query,
@@ -764,34 +768,47 @@ namespace LinqToDB.Internal.Linq
 				_query       = query;
 				_parameters  = parameters;
 				_preambles   = preambles;
+
+				var combinable = new List<int>(preambles.Length);
+
+				for (var i = 0; i < preambles.Length; i++)
+					if (IsCombinable(preambles[i]))
+						combinable.Add(i);
+
+				_combinableIndexes = combinable.ToArray();
 			}
 
-			// Models the eager load as a scenario of Reader steps [child1 … childN, main] and merges every child's and
-			// the main's parameter values into one SqlParameterValues (keyed by SqlParameter node). The main is the last
-			// step, so PlanScenario's contiguous grouping keeps it in (and at the end of) the last group.
+			static bool IsCombinable(Preamble preamble)
+				=> preamble is IStepMaterializer { CanCombine: true } materializer && materializer.GetCombinableStatement() != null;
+
+			// Models the combinable children + main as a scenario of Reader steps [child1 .. childN, main] and merges every
+			// child's and the main's parameter values into one SqlParameterValues (keyed by SqlParameter node). The main is the
+			// last step, so PlanScenario's contiguous grouping keeps it at the end of the last group. Scenario step k (< count)
+			// maps to preamble _combinableIndexes[k]; step count is the main query.
 			(SqlCommandScenario Scenario, SqlParameterValues Values) PrepareScenario()
 			{
-				var steps  = new SqlCommandStep[_preambles.Length + 1];
+				var count  = _combinableIndexes.Length;
+				var steps  = new SqlCommandStep[count + 1];
 				var values = new SqlParameterValues();
 
-				for (var i = 0; i < _preambles.Length; i++)
+				for (var k = 0; k < count; k++)
 				{
-					var materializer = (IStepMaterializer)_preambles[i];
+					var materializer = (IStepMaterializer)_preambles[_combinableIndexes[k]];
 
-					steps[i] = new SqlCommandStep { Statement = materializer.GetCombinableStatement()!, Kind = SqlStepKind.Reader };
+					steps[k] = new SqlCommandStep { Statement = materializer.GetCombinableStatement()!, Kind = SqlStepKind.Reader };
 					materializer.AddCombinableParameterValues(values, _expressions, _dataContext, _parameters);
 				}
 
-				steps[_preambles.Length] = new SqlCommandStep { Statement = _query.Queries[0].Statement, Kind = SqlStepKind.Reader };
+				steps[count] = new SqlCommandStep { Statement = _query.Queries[0].Statement, Kind = SqlStepKind.Reader };
 				SetParameters(_query, _expressions, _dataContext, _parameters, values);
 
 				return (new SqlCommandScenario { Steps = steps, OutcomeSteps = [] }, values);
 			}
 
-			// Plans the scenario into size-bounded commands: PlanScenario groups the steps (bounded by statement count),
-			// then each group's statements render into one or more commands bounded by SQL length. Each returned command
-			// carries the scenario step indices it covers, so the executor knows which child result sets to buffer and
-			// where the main result set lands — always the last step of the last command.
+			// Plans the scenario into size-bounded commands: PlanScenario groups the steps (bounded by statement count), then
+			// each group's statements render into one or more commands bounded by SQL length. Each returned command carries the
+			// scenario step indices it covers, so the executor knows which child result sets to buffer and where the main result
+			// set lands (always the last step of the last command).
 			List<CombinedCommand> BuildCommands()
 			{
 				var (scenario, values) = PrepareScenario();
@@ -854,9 +871,16 @@ namespace LinqToDB.Internal.Linq
 			{
 				using var _ = ActivityService.Start(ActivityID.GetIEnumerable);
 
+				var preambles      = new object[_preambles.Length];
+
+				// Non-combinable preambles run sequentially first, in index order (they may depend on each other); their results
+				// populate the shared array that the combinable materializers and the main mapper read.
+				for (var i = 0; i < _preambles.Length; i++)
+					if (!IsCombinable(_preambles[i]))
+						preambles[i] = _preambles[i].Execute(_dataContext, _expressions, _parameters, preambles);
+
 				var commands       = BuildCommands();
-				var mainStepIndex  = _preambles.Length;
-				var preambles      = new object?[_preambles.Length];
+				var mainStepIndex  = _combinableIndexes.Length;
 				var dataConnection = (DataConnection)_dataContext;
 
 				DataReaderWrapper? mainReader = null;
@@ -877,7 +901,9 @@ namespace LinqToDB.Internal.Linq
 
 								for (var k = 0; k < stepIndexes.Length; k++)
 								{
-									preambles[stepIndexes[k]] = ((IStepMaterializer)_preambles[stepIndexes[k]]).MaterializeFromReader(_dataContext, _expressions, _parameters, preambles, dr);
+									var preambleIndex = _combinableIndexes[stepIndexes[k]];
+
+									preambles[preambleIndex] = ((IStepMaterializer)_preambles[preambleIndex]).MaterializeFromReader(_dataContext, _expressions, _parameters, preambles, dr);
 
 									if (k < stepIndexes.Length - 1)
 										dr.NextResult();
@@ -896,7 +922,9 @@ namespace LinqToDB.Internal.Linq
 
 							for (var k = 0; k < stepIndexes.Length - 1; k++)
 							{
-								preambles[stepIndexes[k]] = ((IStepMaterializer)_preambles[stepIndexes[k]]).MaterializeFromReader(_dataContext, _expressions, _parameters, preambles, dr);
+								var preambleIndex = _combinableIndexes[stepIndexes[k]];
+
+								preambles[preambleIndex] = ((IStepMaterializer)_preambles[preambleIndex]).MaterializeFromReader(_dataContext, _expressions, _parameters, preambles, dr);
 								dr.NextResult();
 							}
 
@@ -915,9 +943,15 @@ namespace LinqToDB.Internal.Linq
 
 			public async IAsyncEnumerable<T> GetAsyncEnumerable([EnumeratorCancellation] CancellationToken cancellationToken = default)
 			{
+				var preambles      = new object[_preambles.Length];
+
+				// Non-combinable preambles run sequentially first, in index order (see the sync sibling).
+				for (var i = 0; i < _preambles.Length; i++)
+					if (!IsCombinable(_preambles[i]))
+						preambles[i] = await _preambles[i].ExecuteAsync(_dataContext, _expressions, _parameters, preambles, cancellationToken).ConfigureAwait(false);
+
 				var commands       = BuildCommands();
-				var mainStepIndex  = _preambles.Length;
-				var preambles      = new object?[_preambles.Length];
+				var mainStepIndex  = _combinableIndexes.Length;
 				var dataConnection = (DataConnection)_dataContext;
 
 				DataReaderWrapper? mainReader = null;
@@ -938,7 +972,9 @@ namespace LinqToDB.Internal.Linq
 
 								for (var k = 0; k < stepIndexes.Length; k++)
 								{
-									preambles[stepIndexes[k]] = await ((IStepMaterializer)_preambles[stepIndexes[k]]).MaterializeFromReaderAsync(_dataContext, _expressions, _parameters, preambles, dr, cancellationToken).ConfigureAwait(false);
+									var preambleIndex = _combinableIndexes[stepIndexes[k]];
+
+									preambles[preambleIndex] = await ((IStepMaterializer)_preambles[preambleIndex]).MaterializeFromReaderAsync(_dataContext, _expressions, _parameters, preambles, dr, cancellationToken).ConfigureAwait(false);
 
 									if (k < stepIndexes.Length - 1)
 										await dr.NextResultAsync(cancellationToken).ConfigureAwait(false);
@@ -957,7 +993,9 @@ namespace LinqToDB.Internal.Linq
 
 							for (var k = 0; k < stepIndexes.Length - 1; k++)
 							{
-								preambles[stepIndexes[k]] = await ((IStepMaterializer)_preambles[stepIndexes[k]]).MaterializeFromReaderAsync(_dataContext, _expressions, _parameters, preambles, dr, cancellationToken).ConfigureAwait(false);
+								var preambleIndex = _combinableIndexes[stepIndexes[k]];
+
+								preambles[preambleIndex] = await ((IStepMaterializer)_preambles[preambleIndex]).MaterializeFromReaderAsync(_dataContext, _expressions, _parameters, preambles, dr, cancellationToken).ConfigureAwait(false);
 								await dr.NextResultAsync(cancellationToken).ConfigureAwait(false);
 							}
 
@@ -1000,11 +1038,19 @@ namespace LinqToDB.Internal.Linq
 			if (query.Queries.Count != 1)
 				return null;
 
-			foreach (var preamble in preambles)
-				if (preamble is not IStepMaterializer materializer || !materializer.CanCombine || materializer.GetCombinableStatement() == null)
-					return null;
+			var anyCombinable = false;
 
-			return new CombinedEagerResultEnumerable<T>(dataContext, expressions, query, parameters, preambles);
+			foreach (var preamble in preambles)
+				if (preamble is IStepMaterializer { CanCombine: true } materializer && materializer.GetCombinableStatement() != null)
+				{
+					anyCombinable = true;
+					break;
+				}
+
+			if (!anyCombinable)
+				return null;
+
+			return new EagerResultEnumerable<T>(dataContext, expressions, query, parameters, preambles);
 		}
 
 		static IResultEnumerable<T> ExecuteQuery<T>(
