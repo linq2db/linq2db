@@ -6,6 +6,8 @@ using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.Linq
 {
 	public partial class WindowFunctionsTests
@@ -35,11 +37,11 @@ namespace Tests.Linq
 			var funcAA = MakeCovarPop(a, a);
 
 			// Argument order is semantically load-bearing: COVAR_POP(a, b) != COVAR_POP(b, a).
-			Assert.That(funcAB.Equals(funcBA, comparer), Is.False);
+			funcAB.Equals(funcBA, comparer).ShouldBeFalse();
 
 			// COVAR_POP(a, a) != COVAR_POP(a, b), and equality must be symmetric.
-			Assert.That(funcAA.Equals(funcAB, comparer), Is.False);
-			Assert.That(funcAA.Equals(funcAB, comparer), Is.EqualTo(funcAB.Equals(funcAA, comparer)));
+			funcAA.Equals(funcAB, comparer).ShouldBeFalse();
+			funcAA.Equals(funcAB, comparer).ShouldBe(funcAB.Equals(funcAA, comparer));
 		}
 	}
 }
