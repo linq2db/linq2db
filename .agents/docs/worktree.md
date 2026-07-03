@@ -6,6 +6,10 @@ Worktree-workflow notes. The high-level "blocked `git checkout`" rule lives in [
 
 Only when the user explicitly asks. Do not silently `git worktree add` to work around a blocked `git checkout` / `gh pr checkout` — that hides the state conflict and fragments work across two directories. Ask the user how to proceed (stash, commit, discard) and name the blocking files in the question.
 
+## Base an existing-branch worktree on `origin/<branch>`, not the local ref
+
+`git worktree add <path> <branch>` checks out the **local** branch ref — and a plain `git fetch origin <branch>` does **not** fast-forward it (the fetch only advances `origin/<branch>` and `FETCH_HEAD`, leaving any pre-existing local `<branch>` stale). Worktreeing the bare name then bases your work on the stale tip: a `git merge origin/master` lands on old code, and the eventual `git push` is rejected non-fast-forward because the remote branch is actually ahead. For an existing (especially already-pushed PR) branch, create the worktree from the remote-tracking ref — `git worktree add <path> origin/<branch>` — or `git -C <worktree> reset --hard origin/<branch>` immediately after creating it, before doing any work. (Surfaced syncing PR #5648: worktree off the stale local `feature/…` ref → merge on a base 3 commits behind origin → push rejected → full redo after `reset --hard origin/<branch>`.)
+
 ## Local / gitignored files in the main repo
 
 When working inside an authorized worktree, local / gitignored files in the *main* repo (`UserDataProviders.json`, `.agents/settings.local.json`, etc.) don't need to be stashed — the worktree has its own copy and edits there leave the main repo untouched.
