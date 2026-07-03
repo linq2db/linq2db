@@ -1543,6 +1543,26 @@ namespace Tests.Data
 			Assert.That(beginCount, Is.Zero, "eager load should reuse the active transaction, not open a second one");
 		}
 
+		[Test]
+		public void EagerLoadConsumesNextQueryHints([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			using var parents  = db.CreateLocalTable<Pr5EagerParent>();
+			using var children = db.CreateLocalTable<Pr5EagerChild>();
+
+			db.Insert(new Pr5EagerParent { Id = 1 });
+			db.Insert(new Pr5EagerChild  { Id = 1, ParentId = 1 });
+
+			db.NextQueryHints.Add("-- pr5 next-query hint");
+
+			var result = db.GetTable<Pr5EagerParent>().LoadWith(p => p.Children).ToList();
+
+			Assert.That(result[0].Children, Has.Count.EqualTo(1));
+			// The one-shot hint must be consumed by the eager load, not left behind to leak onto the next query.
+			Assert.That(db.NextQueryHints, Is.Empty, "eager load must consume NextQueryHints so it cannot leak to the next query");
+		}
+
 		// Captures whether the eager read ran while a transaction was active on the command (see EagerLoadOpensReadConsistencyTransaction).
 		sealed class ReaderTransactionInterceptor : CommandInterceptor
 		{

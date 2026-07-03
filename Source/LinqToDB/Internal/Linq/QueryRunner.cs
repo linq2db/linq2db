@@ -1037,6 +1037,13 @@ namespace LinqToDB.Internal.Linq
 			if (query.Queries.Count != 1)
 				return null;
 
+			// Query hints (context QueryHints / one-shot NextQueryHints) are applied AND cleared by the sequential
+			// GetCommand -> GetNextCommandHints path, which the combined executor bypasses. Fall back to sequential when
+			// hints are pending; otherwise the hint is dropped from the eager SQL and a one-shot NextQueryHints leaks onto
+			// the next query.
+			if (dataContext.QueryHints.Count > 0 || dataContext.NextQueryHints.Count > 0)
+				return null;
+
 			var anyCombinable = false;
 
 			foreach (var preamble in preambles)
