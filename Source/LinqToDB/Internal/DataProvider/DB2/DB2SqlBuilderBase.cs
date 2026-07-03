@@ -34,24 +34,6 @@ namespace LinqToDB.Internal.DataProvider.DB2
 
 		protected abstract DB2Version Version { get; }
 
-		protected override void BuildCommandFragment(SqlCommandFragment fragment, int fieldIndex, SqlStatement statement)
-		{
-			if (fragment == SqlCommandFragment.IdentityReseed && statement is SqlTruncateTableStatement trun)
-			{
-				var field = trun.Table!.IdentityFields[fieldIndex];
-
-				StringBuilder.Append("ALTER TABLE ");
-				BuildObjectName(StringBuilder, trun.Table.TableName, ConvertType.NameToQueryTable, true, trun.Table.TableOptions);
-				StringBuilder.Append(" ALTER ");
-				Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
-				StringBuilder.AppendLine(" RESTART WITH 1");
-			}
-			else
-			{
-				base.BuildCommandFragment(fragment, fieldIndex, statement);
-			}
-		}
-
 		protected override void BuildTruncateTableStatement(SqlTruncateTableStatement truncateTable)
 		{
 			var nullability = NullabilityContext.NonQuery;

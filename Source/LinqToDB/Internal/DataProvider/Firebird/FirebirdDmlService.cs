@@ -1,15 +1,17 @@
 ﻿using System;
 
+using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Firebird
 {
 	/// <summary>
 	/// Firebird DML mechanics. An identity insert runs as a single non-query whose generated key is returned through an
 	/// OUT parameter (the insert renders a trailing <c>RETURNING &lt;id&gt;</c>); a truncate-with-identity-reset is the
-	/// truncate plus a <see cref="SqlCommandFragment.IdentityReseed"/> fragment
+	/// truncate plus a <see cref="SqlFragmentStatement"/>
 	/// (<c>SET GENERATOR GIDENTITY_&lt;table&gt; TO 0</c>). Everything else uses the base scenario.
 	/// </summary>
 	public sealed class FirebirdDmlService : DmlServiceBase
@@ -25,7 +27,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 					Steps =
 					[
 						new SqlCommandStep { Statement = statement, Kind = SqlStepKind.NonQuery },
-						new SqlCommandStep { Statement = statement, Kind = SqlStepKind.NonQuery, Fragment = SqlCommandFragment.IdentityReseed },
+						new SqlCommandStep { Statement = new SqlFragmentStatement(factory.Fragment("SET GENERATOR {0} TO 0", new SqlObjectNameExpression(new SqlObjectName("GIDENTITY_" + truncate.Table.TableName.Name), ConvertType.NameToQueryTable))), Kind = SqlStepKind.NonQuery },
 					],
 					OutcomeSteps = [0],
 				};

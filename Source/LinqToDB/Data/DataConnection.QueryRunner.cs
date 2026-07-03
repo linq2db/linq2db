@@ -335,12 +335,7 @@ namespace LinqToDB.Data
 									sb.Value.Append(";\n");
 
 								using (ActivityService.Start(ActivityID.BuildSql))
-								{
-									if (step.Fragment == SqlCommandFragment.None)
-										sqlBuilder.BuildSql(0, step.Statement, sb.Value, optimizationContext, stepAliases, null, startIndent);
-									else
-										sqlBuilder.BuildCommandFragment(step.Fragment, step.FragmentFieldIndex, step.Statement, sb.Value, optimizationContext, stepAliases, null, startIndent);
-								}
+									sqlBuilder.BuildSql(0, step.Statement, sb.Value, optimizationContext, stepAliases, null, startIndent);
 							}
 
 							commands[g] = new CommandWithParameters(sb.Value.ToString(), optimizationContext.GetParameters());

@@ -381,21 +381,6 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			}
 		}
 
-		protected override void BuildCommandFragment(SqlCommandFragment fragment, int fieldIndex, SqlStatement statement)
-		{
-			// should we introduce new convertion types like NameToGeneratorName/NameToTriggerName?
-			if (fragment == SqlCommandFragment.IdentityReseed && statement is SqlTruncateTableStatement truncate)
-			{
-				StringBuilder.Append("SET GENERATOR ");
-				Convert(StringBuilder, "GIDENTITY_" + truncate.Table!.TableName.Name, ConvertType.NameToQueryTable);
-				StringBuilder.AppendLine(" TO 0");
-			}
-			else
-			{
-				base.BuildCommandFragment(fragment, fieldIndex, statement);
-			}
-		}
-
 		public override StringBuilder BuildObjectName(
 			StringBuilder sb,
 			SqlObjectName name,

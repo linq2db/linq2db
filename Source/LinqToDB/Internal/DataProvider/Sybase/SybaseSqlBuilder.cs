@@ -273,20 +273,6 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 			StringBuilder.Append("TRUNCATE TABLE ");
 		}
 
-		protected override void BuildCommandFragment(SqlCommandFragment fragment, int fieldIndex, SqlStatement statement)
-		{
-			if (fragment == SqlCommandFragment.IdentityReseed && statement is SqlTruncateTableStatement trun)
-			{
-				StringBuilder.Append("sp_chgattribute ");
-				BuildObjectName(StringBuilder, trun.Table!.TableName, ConvertType.NameToQueryTable, true, trun.Table.TableOptions);
-				StringBuilder.AppendLine(", 'identity_burn_max', 0, '0'");
-			}
-			else
-			{
-				base.BuildCommandFragment(fragment, fieldIndex, statement);
-			}
-		}
-
 		private void BuildIdentityInsert(SqlTableSource table, bool enable)
 		{
 			StringBuilder.Append("SET IDENTITY_INSERT ");

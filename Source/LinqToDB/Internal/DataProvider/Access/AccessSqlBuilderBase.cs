@@ -22,24 +22,6 @@ namespace LinqToDB.Internal.DataProvider.Access
 		{
 		}
 
-		protected override void BuildCommandFragment(SqlCommandFragment fragment, int fieldIndex, SqlStatement statement)
-		{
-			if (fragment == SqlCommandFragment.IdentityReseed && statement is SqlTruncateTableStatement trun)
-			{
-				var field = trun.Table!.IdentityFields[fieldIndex];
-
-				StringBuilder.Append("ALTER TABLE ");
-				BuildObjectName(StringBuilder, trun.Table.TableName, ConvertType.NameToQueryTable, true, trun.Table.TableOptions);
-				StringBuilder.Append(" ALTER COLUMN ");
-				Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
-				StringBuilder.AppendLine(" COUNTER(1, 1)");
-			}
-			else
-			{
-				base.BuildCommandFragment(fragment, fieldIndex, statement);
-			}
-		}
-
 		public override    bool IsNestedJoinSupported         => false;
 		public override    bool WrapJoinCondition             => true;
 		protected override bool IsValuesSyntaxSupported       => false;

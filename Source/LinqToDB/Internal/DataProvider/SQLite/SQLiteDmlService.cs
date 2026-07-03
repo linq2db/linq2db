@@ -25,7 +25,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 					Steps =
 					[
 						new SqlCommandStep { Statement = statement, Kind = SqlStepKind.NonQuery },
-						new SqlCommandStep { Statement = statement, Kind = SqlStepKind.NonQuery, Fragment = SqlCommandFragment.IdentityReseed },
+						new SqlCommandStep { Statement = new SqlFragmentStatement(factory.Fragment("UPDATE SQLITE_SEQUENCE SET SEQ=0 WHERE NAME={0}", factory.Value(truncate.Table.TableName.Name))), Kind = SqlStepKind.NonQuery },
 					],
 					OutcomeSteps = [0],
 				};

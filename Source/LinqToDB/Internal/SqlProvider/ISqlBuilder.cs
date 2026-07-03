@@ -16,12 +16,6 @@ namespace LinqToDB.Internal.SqlProvider
 			int           startIndent = 0);
 
 		/// <summary>
-		/// Renders a synthetic command fragment (e.g. an identity reset) for a scenario step whose
-		/// <see cref="SqlCommandStep.Fragment"/> is not <see cref="SqlCommandFragment.None"/>.
-		/// </summary>
-		void BuildCommandFragment(SqlCommandFragment fragment, int fieldIndex, SqlStatement statement, StringBuilder sb, OptimizationContext optimizationContext, AliasesContext aliases, NullabilityContext? nullabilityContext,
-			int           startIndent = 0);
-		/// <summary>
 		/// Writes database object name into provided <see cref="StringBuilder"/> instance.
 		/// </summary>
 		/// <param name="sb">String builder for generated object name.</param>

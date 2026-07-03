@@ -59,24 +59,6 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 			return base.CanSkipRootAliases(statement);
 		}
 
-		protected override void BuildCommandFragment(SqlCommandFragment fragment, int fieldIndex, SqlStatement statement)
-		{
-			if (fragment == SqlCommandFragment.IdentityReseed && statement is SqlTruncateTableStatement trun)
-			{
-				var field = trun.Table!.IdentityFields[fieldIndex];
-
-				StringBuilder.Append("ALTER TABLE ");
-				BuildObjectName(StringBuilder, trun.Table.TableName, ConvertType.NameToQueryTable, true, trun.Table.TableOptions);
-				StringBuilder.Append(" ALTER COLUMN ");
-				Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
-				StringBuilder.AppendLine(" IDENTITY(1, 1)");
-			}
-			else
-			{
-				base.BuildCommandFragment(fragment, fieldIndex, statement);
-			}
-		}
-
 		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
 		{
 			// https://learn.microsoft.com/en-us/previous-versions/sql/sql-server-2005/ms172424(v=sql.90)

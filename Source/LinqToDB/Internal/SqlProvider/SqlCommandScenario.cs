@@ -47,17 +47,6 @@ namespace LinqToDB.Internal.SqlProvider
 	}
 
 	/// <summary>
-	/// Identifies a synthetic command fragment rendered for a step instead of its full statement.
-	/// </summary>
-	public enum SqlCommandFragment
-	{
-		/// <summary>No fragment; the step renders its full <see cref="SqlCommandStep.Statement"/>.</summary>
-		None,
-		/// <summary>Provider-specific identity-reset DDL fragment (rendered per identity field).</summary>
-		IdentityReseed,
-	}
-
-	/// <summary>
 	/// A gate: the owning step runs only if the condition holds against an earlier step's result (explicit reference).
 	/// </summary>
 	public sealed record SqlStepCondition
@@ -89,12 +78,6 @@ namespace LinqToDB.Internal.SqlProvider
 	{
 		/// <summary>The statement rendered for this step (via the SQL builder).</summary>
 		public required SqlStatement Statement { get; init; }
-
-		/// <summary>Synthetic fragment to render instead of the full statement, or <see cref="SqlCommandFragment.None"/>.</summary>
-		public SqlCommandFragment Fragment { get; init; } = SqlCommandFragment.None;
-
-		/// <summary>Identity-field index for <see cref="SqlCommandFragment.IdentityReseed"/> fragments; otherwise <c>-1</c>.</summary>
-		public int FragmentFieldIndex { get; init; } = -1;
 
 		/// <summary>How the step is executed.</summary>
 		public required SqlStepKind Kind { get; init; }

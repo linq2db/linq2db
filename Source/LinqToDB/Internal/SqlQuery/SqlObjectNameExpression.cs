@@ -15,14 +15,16 @@ namespace LinqToDB.Internal.SqlQuery
 	/// </summary>
 	public sealed class SqlObjectNameExpression : SqlExpressionBase
 	{
-		public SqlObjectNameExpression(SqlObjectName name, ConvertType convertType)
+		public SqlObjectNameExpression(SqlObjectName name, ConvertType convertType, TableOptions tableOptions = TableOptions.NotSet)
 		{
-			Name        = name;
-			ConvertType = convertType;
+			Name         = name;
+			ConvertType  = convertType;
+			TableOptions = tableOptions;
 		}
 
-		public SqlObjectName Name        { get; }
-		public ConvertType   ConvertType { get; }
+		public SqlObjectName Name         { get; }
+		public ConvertType   ConvertType  { get; }
+		public TableOptions  TableOptions { get; }
 
 		public override QueryElementType ElementType => QueryElementType.SqlObjectNameExpression;
 
@@ -39,6 +41,7 @@ namespace LinqToDB.Internal.SqlQuery
 			var hash = new HashCode();
 			hash.Add(Name);
 			hash.Add(ConvertType);
+			hash.Add(TableOptions);
 			return hash.ToHashCode();
 		}
 
@@ -50,6 +53,7 @@ namespace LinqToDB.Internal.SqlQuery
 			return other is SqlObjectNameExpression expr
 				&& Name.Equals(expr.Name)
 				&& ConvertType == expr.ConvertType
+				&& TableOptions == expr.TableOptions
 				&& comparer(this, expr);
 		}
 

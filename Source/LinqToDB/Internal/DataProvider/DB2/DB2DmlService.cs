@@ -5,6 +5,7 @@ using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.DB2
 {
@@ -13,7 +14,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 	/// <c>SELECT &lt;id&gt; FROM NEW TABLE (INSERT …)</c> (one scalar command, emitted by the builder), or — when no
 	/// identity field is detected — falls back to the insert plus <c>SELECT identity_val_local()</c>; z/OS appends
 	/// <c>; SELECT IDENTITY_VAL_LOCAL() FROM SYSIBM.SYSDUMMY1</c> to the insert (builder <c>BuildGetIdentity</c>).
-	/// A truncate-with-reset becomes the truncate plus one <see cref="SqlCommandFragment.IdentityReseed"/> fragment per
+	/// A truncate-with-reset becomes the truncate plus one <see cref="SqlFragmentStatement"/> per
 	/// identity column (<c>ALTER TABLE … ALTER … RESTART WITH 1</c>). Everything else uses the base scenario.
 	/// </summary>
 	public abstract class DB2DmlService : DmlServiceBase
@@ -36,7 +37,14 @@ namespace LinqToDB.Internal.DataProvider.DB2
 				steps[0] = new SqlCommandStep { Statement = statement, Kind = SqlStepKind.NonQuery };
 
 				for (var i = 0; i < fields.Count; i++)
-					steps[i + 1] = new SqlCommandStep { Statement = statement, Kind = SqlStepKind.NonQuery, Fragment = SqlCommandFragment.IdentityReseed, FragmentFieldIndex = i };
+				{
+					var reset = new SqlFragmentStatement(factory.Fragment(
+						"ALTER TABLE {0} ALTER {1} RESTART WITH 1",
+						new SqlObjectNameExpression(truncate.Table.TableName, ConvertType.NameToQueryTable, truncate.Table.TableOptions),
+						new SqlObjectNameExpression(new SqlObjectName(fields[i].PhysicalName), ConvertType.NameToQueryField)));
+
+					steps[i + 1] = new SqlCommandStep { Statement = reset, Kind = SqlStepKind.NonQuery };
+				}
 
 				return new SqlCommandScenario { Steps = steps, OutcomeSteps = [0] };
 			}
