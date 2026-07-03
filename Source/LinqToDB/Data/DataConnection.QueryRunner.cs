@@ -165,7 +165,7 @@ namespace LinqToDB.Data
 
 			private sealed record PreparedQuery(CommandWithParameters[] Commands, SqlStatement Statement, IReadOnlyCollection<string>? QueryHints, SqlCommandScenario? Scenario, SqlCommandGroupPlan? Plan);
 
-			private sealed record ExecutionPreparedQuery(PreparedQuery PreparedQuery, DbParameter[]?[] CommandsParameters);
+			private sealed record ExecutionPreparedQuery(PreparedQuery PreparedQuery, DbParameter[]?[] CommandsParameters, IReadOnlyParameterValues? ParameterValues);
 
 			ExecutionPreparedQuery? _executionQuery;
 
@@ -177,7 +177,7 @@ namespace LinqToDB.Data
 			{
 				var preparedQuery      = GetCommand(dataConnection, context, parameterValues, forGetSqlText);
 				var commandsParameters = GetParameters(dataConnection, preparedQuery, parameterValues);
-				var executionQuery     = new ExecutionPreparedQuery(preparedQuery, commandsParameters);
+				var executionQuery     = new ExecutionPreparedQuery(preparedQuery, commandsParameters, parameterValues);
 				return executionQuery;
 			}
 
@@ -674,11 +674,68 @@ namespace LinqToDB.Data
 			// Executes a combined group as ONE pre-rendered command (Commands[commandIndex]) and harvests its result sets in
 			// step order: a Scalar step reads the first cell of the current result set; a pure non-query step yields no
 			// result set (RecordsAffected only).
+#if SUPPORTS_DBBATCH
+			// A combined group can run as a DbBatch (isolated per-statement parameter scopes) only when no step needs
+			// cross-statement binding the batch can't do: an OUT parameter (Oracle/Firebird identity) or a forwarded
+			// ParameterBinding must stay in the single semicolon-concatenated command, and query hints (command 0 only) can't be
+			// applied to a DbBatch. Otherwise it is DbBatch-eligible when the provider supports it (CanUseDbBatch).
+			static bool IsGroupBatchEligible(DataConnection dataConnection, ExecutionPreparedQuery executionQuery, IReadOnlyList<SqlCommandStep> steps, SqlCommandGroup group, int commandIndex)
+			{
+				if (!dataConnection.CanUseDbBatch)
+					return false;
+
+				if (commandIndex == 0 && executionQuery.PreparedQuery.QueryHints != null)
+					return false;
+
+				foreach (var i in group.StepIndexes)
+				{
+					var step = steps[i];
+
+					if (step.OutParameterName != null || step.ParameterBindings.Count > 0)
+						return false;
+				}
+
+				return true;
+			}
+#endif
+
+			// Builds the physical command for a combined group: a DbBatch of isolated per-statement scopes when eligible (rendered
+			// fresh from the group's statements), otherwise the single pre-rendered semicolon-concatenated command
+			// (Commands[commandIndex]) executed as one DbCommand. Both flow through the same ExecuteCombined seam.
+			static CombinedCommand BuildCombinedGroupCommand(DataConnection dataConnection, ExecutionPreparedQuery executionQuery, IReadOnlyList<SqlCommandStep> steps, SqlCommandGroup group, int commandIndex)
+			{
+				var stepIndexes = new int[group.StepIndexes.Count];
+
+				for (var k = 0; k < stepIndexes.Length; k++)
+					stepIndexes[k] = group.StepIndexes[k];
+
+#if SUPPORTS_DBBATCH
+				if (IsGroupBatchEligible(dataConnection, executionQuery, steps, group, commandIndex))
+				{
+					var groupStatements = new SqlStatement[stepIndexes.Length];
+
+					for (var k = 0; k < stepIndexes.Length; k++)
+						groupStatements[k] = steps[stepIndexes[k]].Statement;
+
+					var rendered = ScenarioCommandRenderer.RenderStatements(dataConnection, groupStatements, executionQuery.ParameterValues);
+
+					return new CombinedCommand(rendered, stepIndexes, null);
+				}
+#endif
+
+				var pq = executionQuery.PreparedQuery;
+
+				return new CombinedCommand(
+					[new RenderedStatement(pq.Commands[commandIndex].Command, executionQuery.CommandsParameters[commandIndex])],
+					stepIndexes,
+					commandIndex == 0 ? pq.QueryHints : null);
+			}
+
 			static void ExecuteCombinedGroup(DataConnection dataConnection, ExecutionPreparedQuery executionQuery, IReadOnlyList<SqlCommandStep> steps, SqlCommandGroup group, int commandIndex, SqlCommandExecutionContext context)
 			{
-				InitCommand(dataConnection, executionQuery, commandIndex);
+				var command = BuildCombinedGroupCommand(dataConnection, executionQuery, steps, group, commandIndex);
 
-				using var rd = dataConnection.ExecuteDataReader(CommandBehavior.Default);
+				using var rd = ExecuteCombined(dataConnection, command, CommandBehavior.Default);
 
 				WalkCombinedResultSets(rd.DataReader!, group.StepIndexes, steps, (i, dr) =>
 				{
@@ -787,9 +844,9 @@ namespace LinqToDB.Data
 			// In case of change the logic of this method, DO NOT FORGET to change the sibling method.
 			static async Task ExecuteCombinedGroupAsync(DataConnection dataConnection, ExecutionPreparedQuery executionQuery, IReadOnlyList<SqlCommandStep> steps, SqlCommandGroup group, int commandIndex, SqlCommandExecutionContext context, CancellationToken cancellationToken)
 			{
-				InitCommand(dataConnection, executionQuery, commandIndex);
+				var command = BuildCombinedGroupCommand(dataConnection, executionQuery, steps, group, commandIndex);
 
-				var rd = await dataConnection.ExecuteDataReaderAsync(CommandBehavior.Default, cancellationToken).ConfigureAwait(false);
+				var rd = await ExecuteCombinedAsync(dataConnection, command, CommandBehavior.Default, cancellationToken).ConfigureAwait(false);
 				await using var _ = rd.ConfigureAwait(false);
 
 				await WalkCombinedResultSetsAsync(rd.DataReader!, group.StepIndexes, steps, async (i, dr) =>
@@ -889,7 +946,7 @@ namespace LinqToDB.Data
 			{
 				var preparedQuery      = GetCommand(dataConnection, context, parameterValues, false);
 				var commandsParameters = GetParameters(dataConnection, preparedQuery, parameterValues);
-				var executionQuery     = new ExecutionPreparedQuery(preparedQuery, commandsParameters);
+				var executionQuery     = new ExecutionPreparedQuery(preparedQuery, commandsParameters, parameterValues);
 
 				return await ExecuteNonQueryImplAsync(dataConnection, executionQuery, cancellationToken)
 					.ConfigureAwait(false);
@@ -900,7 +957,7 @@ namespace LinqToDB.Data
 			{
 				var preparedQuery      = GetCommand(dataConnection, context, parameterValues, false);
 				var commandsParameters = GetParameters(dataConnection, preparedQuery, parameterValues);
-				var executionQuery     = new ExecutionPreparedQuery(preparedQuery, commandsParameters);
+				var executionQuery     = new ExecutionPreparedQuery(preparedQuery, commandsParameters, parameterValues);
 
 				return ExecuteNonQueryImpl(dataConnection, executionQuery);
 			}
@@ -947,7 +1004,7 @@ namespace LinqToDB.Data
 			{
 				var preparedQuery      = GetCommand(dataConnection, context, parameterValues, false);
 				var commandsParameters = GetParameters(dataConnection, preparedQuery, parameterValues);
-				var executionQuery     = new ExecutionPreparedQuery(preparedQuery, commandsParameters);
+				var executionQuery     = new ExecutionPreparedQuery(preparedQuery, commandsParameters, parameterValues);
 
 				return ExecuteScalarImplAsync(dataConnection, executionQuery, cancellationToken);
 			}
@@ -957,7 +1014,7 @@ namespace LinqToDB.Data
 			{
 				var preparedQuery      = GetCommand(dataConnection, context, parameterValues, false);
 				var commandsParameters = GetParameters(dataConnection, preparedQuery, parameterValues);
-				var executionQuery     = new ExecutionPreparedQuery(preparedQuery, commandsParameters);
+				var executionQuery     = new ExecutionPreparedQuery(preparedQuery, commandsParameters, parameterValues);
 
 				return ExecuteScalarImpl(dataConnection, executionQuery);
 			}
