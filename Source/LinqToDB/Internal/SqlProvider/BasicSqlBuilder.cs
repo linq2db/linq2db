@@ -106,7 +106,7 @@ namespace LinqToDB.Internal.SqlProvider
 		public virtual bool WrapJoinCondition => false;
 
 		/// <summary>
-		/// <see langword="true" /> if provider requires <c>OVER()</c> clause to be present in window function <c>WITHIN GROUP</c>.
+		/// <see langword="true" /> if provider requires <c>OVER ()</c> clause to be present in window function <c>WITHIN GROUP</c>.
 		/// Currently only SQL Server
 		/// </summary>
 		protected virtual bool IsOverRequiredWithinGroup => false;
@@ -3534,8 +3534,42 @@ namespace LinqToDB.Internal.SqlProvider
 			BuildTypedExpression(castExpression.ToType, castExpression.Expression);
 		}
 
+		/// <summary>How the <c>IGNORE NULLS</c> modifier of a value/offset window function is emitted relative to the argument list.</summary>
+		protected enum WindowNullsPlacement
+		{
+			/// <summary>Keyword after the closing parenthesis: <c>FUNC(args) IGNORE NULLS</c> (Oracle, SQL Server 2022+, Informix).</summary>
+			AfterClose,
+			/// <summary>Keyword inside the parentheses, after the last argument: <c>FUNC(..., expr IGNORE NULLS)</c> (DuckDB).</summary>
+			AfterLastArgument,
+			/// <summary>Quoted string as the last argument: <c>FUNC(args, 'IGNORE NULLS')</c> (DB2).</summary>
+			StringArgument,
+		}
+
+		/// <summary>
+		/// Returns where the <c>IGNORE NULLS</c> modifier is emitted for the given value/offset window function.
+		/// Defaults to <see cref="WindowNullsPlacement.AfterClose"/>; providers override for non-standard placement.
+		/// </summary>
+		protected virtual WindowNullsPlacement GetWindowNullsPlacement(SqlExtendedFunction extendedFunction)
+			=> WindowNullsPlacement.AfterClose;
+
+		/// <summary>
+		/// When <see langword="true"/> for the given function, that value window function defaults to IGNORE NULLS on
+		/// this provider, so an explicit <c>RESPECT NULLS</c> token must be emitted for null-respecting behavior (e.g.
+		/// ClickHouse FIRST_VALUE/LAST_VALUE/NTH_VALUE). Most providers default to RESPECT NULLS, so the token is
+		/// omitted; functions that reject the token (e.g. ClickHouse LEAD/LAG) must return <see langword="false"/>.
+		/// </summary>
+		protected virtual bool WindowFunctionRespectNullsRequired(SqlExtendedFunction extendedFunction) => false;
+
 		protected virtual void BuildSqlExtendedFunction(SqlExtendedFunction extendedFunction)
 		{
+			var nullsPlacement = GetWindowNullsPlacement(extendedFunction);
+			var nullsToken     = extendedFunction.NullTreatment switch
+			{
+				Sql.Nulls.Ignore                                                            => "IGNORE NULLS",
+				Sql.Nulls.Respect when WindowFunctionRespectNullsRequired(extendedFunction) => "RESPECT NULLS",
+				_                                                                           => null,
+			};
+
 			StringBuilder.Append(extendedFunction.FunctionName);
 			StringBuilder.Append('(');
 
@@ -3570,15 +3604,42 @@ namespace LinqToDB.Internal.SqlProvider
 						StringBuilder.Append(' ');
 						BuildExpression(argument.Suffix);
 					}
+
+					// NULLS treatment emitted inside the parentheses after the last argument: as a keyword (DuckDB)
+					// or as a quoted string argument (DB2).
+					if (nullsToken != null && i == extendedFunction.Arguments.Count - 1)
+					{
+						if (nullsPlacement == WindowNullsPlacement.AfterLastArgument)
+							StringBuilder.Append(' ').Append(nullsToken);
+						else if (nullsPlacement == WindowNullsPlacement.StringArgument)
+							StringBuilder.Append(", '").Append(nullsToken).Append('\'');
+					}
 				}
 			}
 
 			StringBuilder.Append(')');
 
+			// Function-level modifiers for value/offset functions: FUNC(args) [FROM FIRST|LAST] [IGNORE|RESPECT NULLS].
+			// FROM FIRST is the SQL default and is not emitted. RESPECT NULLS is emitted only where the provider
+			// needs it explicitly (WindowFunctionsRespectNullsRequired); elsewhere it is the default and omitted.
+			if (extendedFunction.FromPosition == Sql.From.Last)
+				StringBuilder.Append(" FROM LAST");
+
+			if (nullsToken != null && nullsPlacement == WindowNullsPlacement.AfterClose)
+				StringBuilder.Append(' ').Append(nullsToken);
+
 			if (extendedFunction.WithinGroup?.Count > 0)
 			{
 				StringBuilder.Append(" WITHIN GROUP (");
 				BuildOrderBy(extendedFunction.WithinGroup!);
+				StringBuilder.Append(')');
+			}
+
+			if (extendedFunction.KeepClause != null)
+			{
+				StringBuilder.Append(" KEEP (DENSE_RANK ");
+				StringBuilder.Append(extendedFunction.KeepClause.Type == SqlKeepClause.KeepType.First ? "FIRST " : "LAST ");
+				BuildOrderBy(extendedFunction.KeepClause.OrderBy);
 				StringBuilder.Append(')');
 			}
 
@@ -3589,9 +3650,10 @@ namespace LinqToDB.Internal.SqlProvider
 				StringBuilder.Append(')');
 			}
 
-			if (extendedFunction.PartitionBy?.Count > 0     || 
+			if (extendedFunction.IsWindowFunction           ||
+			    extendedFunction.PartitionBy?.Count > 0     ||
 			    extendedFunction.OrderBy?.Count     > 0     ||
-			    extendedFunction.FrameClause        != null || 
+			    extendedFunction.FrameClause        != null ||
 			    (extendedFunction.WithinGroup?.Count > 0 && IsOverRequiredWithinGroup && extendedFunction.IsWindowFunction))
 			{
 				StringBuilder.Append(" OVER (");
@@ -3646,7 +3708,7 @@ namespace LinqToDB.Internal.SqlProvider
 							break;
 						case SqlFrameBoundary.FrameBoundaryType.Offset:
 							BuildExpression(frame.Start.Offset!);
-							StringBuilder.Append(" PRECEDING");
+							StringBuilder.Append(frame.Start.IsPreceding ? " PRECEDING" : " FOLLOWING");
 							break;
 						default:
 							throw new InvalidOperationException($"Unexpected window frame boundary type: {frame.Start.BoundaryType}");
@@ -3664,10 +3726,27 @@ namespace LinqToDB.Internal.SqlProvider
 							break;
 						case SqlFrameBoundary.FrameBoundaryType.Offset:
 							BuildExpression(frame.End.Offset!);
-							StringBuilder.Append(" FOLLOWING");
+							StringBuilder.Append(frame.End.IsPreceding ? " PRECEDING" : " FOLLOWING");
 							break;
 						default:
 							throw new InvalidOperationException($"Unexpected window frame boundary type: {frame.End.BoundaryType}");
+					}
+
+					switch (frame.Exclusion)
+					{
+						case SqlFrameClause.FrameExclusionKind.None:
+							break;
+						case SqlFrameClause.FrameExclusionKind.CurrentRow:
+							StringBuilder.Append(" EXCLUDE CURRENT ROW");
+							break;
+						case SqlFrameClause.FrameExclusionKind.Group:
+							StringBuilder.Append(" EXCLUDE GROUP");
+							break;
+						case SqlFrameClause.FrameExclusionKind.Ties:
+							StringBuilder.Append(" EXCLUDE TIES");
+							break;
+						default:
+							throw new InvalidOperationException($"Unexpected frame exclusion: {frame.Exclusion}");
 					}
 				}
 
@@ -3690,7 +3769,7 @@ namespace LinqToDB.Internal.SqlProvider
 						&& orderItem.Expression.CanBeNullable(NullabilityContext)
 						&& !QueryHelper.MatchesNaturalNullsPosition(SqlProviderFlags.DefaultNullsOrdering, orderItem.NullsPosition, orderItem.IsDescending);
 
-					// Emulate NULLS positioning inside OVER(...)/WITHIN GROUP for providers without native support
+					// Emulate NULLS positioning inside OVER (...)/WITHIN GROUP for providers without native support
 					// by prepending a CASE sort key. OVER ordering has no select-list constraint, so this is safe here.
 					if (hasNulls && !SqlProviderFlags.IsNullsOrderingSupported)
 					{
