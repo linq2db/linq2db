@@ -5,6 +5,8 @@ using LinqToDB.Internal.Common;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.Linq
 {
 	partial class WindowFunctionsTests
@@ -21,10 +23,15 @@ namespace Tests.Linq
 				from t in table
 				select new
 				{
+					Id          = t.Id,
 					SumFiltered = Sql.Window.Sum(t.IntValue, w => w.Filter(t.CategoryId == 1).PartitionBy(t.CategoryId).OrderBy(t.Id)),
 				};
 
-			_ = query.ToList();
+			var sql = query.ToSqlQuery().Sql;
+			sql.ShouldContain("OVER");
+
+			foreach (var row in query.ToList())
+				row.SumFiltered.ShouldBe(ExpectedRunningFilteredSum(data, row.Id) ?? 0);
 		}
 
 		[Test]
@@ -39,10 +46,15 @@ namespace Tests.Linq
 				from t in table
 				select new
 				{
+					Id          = t.Id,
 					AvgFiltered = Sql.Window.Average(t.DoubleValue, w => w.Filter(t.CategoryId == 1).PartitionBy(t.CategoryId).OrderBy(t.Id)),
 				};
 
-			_ = query.ToList();
+			var sql = query.ToSqlQuery().Sql;
+			sql.ShouldContain("OVER");
+
+			foreach (var row in query.ToList())
+				row.AvgFiltered.ShouldBe(ExpectedRunningFilteredAvg(data, row.Id) ?? 0d, 0.001);
 		}
 	}
 }

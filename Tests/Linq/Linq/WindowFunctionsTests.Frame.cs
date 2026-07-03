@@ -5,6 +5,8 @@ using LinqToDB.Internal.Common;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.Linq
 {
 	partial class WindowFunctionsTests
@@ -25,6 +27,8 @@ namespace Tests.Linq
 				let wndRowsValueAndValue = Sql.Window.DefineWindow(w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RowsBetween.ValuePreceding(1).And.ValueFollowing(2))
 				select new
 				{
+					Id = t.Id,
+
 					RowsCurrentAndUnbounded = Sql.Window.Sum(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RowsBetween.CurrentRow.And.Unbounded),
 					RowsCurrentAndCurrent   = Sql.Window.Sum(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RowsBetween.CurrentRow.And.CurrentRow),
 					RowsValueAndValue       = Sql.Window.Sum(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RowsBetween.ValuePreceding(1).And.ValueFollowing(2)),
@@ -34,7 +38,24 @@ namespace Tests.Linq
 					RowsValueAndValueDefine       = Sql.Window.Sum(t.IntValue, w => w.UseWindow(wndRowsValueAndValue)),
 				};
 
-				query.ToList();
+			var sql = query.ToSqlQuery().Sql;
+			sql.ShouldContain("OVER");
+			sql.ShouldContain("ROWS");
+
+			foreach (var row in query.ToList())
+			{
+				var currentAndUnbounded = ExpectedFrameSum(data, row.Id, range: false, "CR", 0, "UF", 0);
+				var currentAndCurrent   = ExpectedFrameSum(data, row.Id, range: false, "CR", 0, "CR", 0);
+				var valueAndValue       = ExpectedFrameSum(data, row.Id, range: false, "P",  1, "F",  2);
+
+				row.RowsCurrentAndUnbounded.ShouldBe(currentAndUnbounded);
+				row.RowsCurrentAndCurrent.ShouldBe(currentAndCurrent);
+				row.RowsValueAndValue.ShouldBe(valueAndValue);
+
+				row.RowsCurrentAndUnboundedDefine.ShouldBe(currentAndUnbounded);
+				row.RowsCurrentAndCurrentDefine.ShouldBe(currentAndCurrent);
+				row.RowsValueAndValueDefine.ShouldBe(valueAndValue);
+			}
 		}
 
 		[Test]
@@ -53,6 +74,8 @@ namespace Tests.Linq
 				let wndGroupsValueAndValue = Sql.Window.DefineWindow(w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).GroupsBetween.ValuePreceding(1).And.ValueFollowing(2))
 				select new
 				{
+					Id = t.Id,
+
 					GroupsCurrentAndUnbounded = Sql.Window.Sum(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).GroupsBetween.CurrentRow.And.Unbounded),
 					GroupsCurrentAndCurrent   = Sql.Window.Sum(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).GroupsBetween.CurrentRow.And.CurrentRow),
 					GroupsValueAndValue       = Sql.Window.Sum(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).GroupsBetween.ValuePreceding(1).And.ValueFollowing(2)),
@@ -62,7 +85,25 @@ namespace Tests.Linq
 					GroupsValueAndValueDefine       = Sql.Window.Sum(t.IntValue, w => w.UseWindow(wndGroupsValueAndValue))
 				};
 
-				query.ToList();
+			var sql = query.ToSqlQuery().Sql;
+			sql.ShouldContain("OVER");
+			sql.ShouldContain("GROUPS");
+
+			// Unique Id ⇒ each ORDER BY peer group is a single row ⇒ GROUPS frames are equivalent to ROWS.
+			foreach (var row in query.ToList())
+			{
+				var currentAndUnbounded = ExpectedFrameSum(data, row.Id, range: false, "CR", 0, "UF", 0);
+				var currentAndCurrent   = ExpectedFrameSum(data, row.Id, range: false, "CR", 0, "CR", 0);
+				var valueAndValue       = ExpectedFrameSum(data, row.Id, range: false, "P",  1, "F",  2);
+
+				row.GroupsCurrentAndUnbounded.ShouldBe(currentAndUnbounded);
+				row.GroupsCurrentAndCurrent.ShouldBe(currentAndCurrent);
+				row.GroupsValueAndValue.ShouldBe(valueAndValue);
+
+				row.GroupsCurrentAndUnboundedDefine.ShouldBe(currentAndUnbounded);
+				row.GroupsCurrentAndCurrentDefine.ShouldBe(currentAndCurrent);
+				row.GroupsValueAndValueDefine.ShouldBe(valueAndValue);
+			}
 		}
 
 		[Test]
@@ -81,12 +122,24 @@ namespace Tests.Linq
 				let wndRangeValueAndValue = Sql.Window.DefineWindow(w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RangeBetween.ValuePreceding(1).And.ValueFollowing(2))
 				select new
 				{
+					Id = t.Id,
+
 					RangeValueAndValue = Sql.Window.Sum(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RangeBetween.ValuePreceding(1).And.ValueFollowing(2)),
 
 					RangeValueAndValueDefine = Sql.Window.Sum(t.IntValue, w => w.UseWindow(wndRangeValueAndValue))
 				};
 
-				query.ToList();
+			var sql = query.ToSqlQuery().Sql;
+			sql.ShouldContain("OVER");
+			sql.ShouldContain("RANGE");
+
+			foreach (var row in query.ToList())
+			{
+				var valueAndValue = ExpectedFrameSum(data, row.Id, range: true, "P", 1, "F", 2);
+
+				row.RangeValueAndValue.ShouldBe(valueAndValue);
+				row.RangeValueAndValueDefine.ShouldBe(valueAndValue);
+			}
 		}
 
 		[Test]
@@ -104,6 +157,8 @@ namespace Tests.Linq
 				let wndRangeCurrentAndCurrent = Sql.Window.DefineWindow(w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RangeBetween.CurrentRow.And.CurrentRow)
 				select new
 				{
+					Id = t.Id,
+
 					RangeCurrentAndUnbounded = Sql.Window.Sum(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RangeBetween.CurrentRow.And.Unbounded),
 					RangeCurrentAndCurrent   = Sql.Window.Sum(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RangeBetween.CurrentRow.And.CurrentRow),
 
@@ -111,7 +166,21 @@ namespace Tests.Linq
 					RangeCurrentAndCurrentDefine   = Sql.Window.Sum(t.IntValue, w => w.UseWindow(wndRangeCurrentAndCurrent)),
 				};
 
-				query.ToList();
+			var sql = query.ToSqlQuery().Sql;
+			sql.ShouldContain("OVER");
+			sql.ShouldContain("RANGE");
+
+			foreach (var row in query.ToList())
+			{
+				var currentAndUnbounded = ExpectedFrameSum(data, row.Id, range: true, "CR", 0, "UF", 0);
+				var currentAndCurrent   = ExpectedFrameSum(data, row.Id, range: true, "CR", 0, "CR", 0);
+
+				row.RangeCurrentAndUnbounded.ShouldBe(currentAndUnbounded);
+				row.RangeCurrentAndCurrent.ShouldBe(currentAndCurrent);
+
+				row.RangeCurrentAndUnboundedDefine.ShouldBe(currentAndUnbounded);
+				row.RangeCurrentAndCurrentDefine.ShouldBe(currentAndCurrent);
+			}
 		}
 
 		// Explicit boundary direction — same-direction frames the old positional .Value(...) API could not express.
@@ -128,6 +197,8 @@ namespace Tests.Linq
 				from t in table
 				select new
 				{
+					Id = t.Id,
+
 					// ROWS BETWEEN 5 PRECEDING AND 2 PRECEDING
 					RowsPrecedingPreceding = Sql.Window.Sum(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RowsBetween.ValuePreceding(5).And.ValuePreceding(2)),
 					// ROWS BETWEEN 1 FOLLOWING AND 3 FOLLOWING
@@ -136,7 +207,18 @@ namespace Tests.Linq
 					RowsShortcut           = Sql.Window.Sum(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RowsBetweenValues(1, 2)),
 				};
 
-				query.ToList();
+			var sql = query.ToSqlQuery().Sql;
+			sql.ShouldContain("OVER");
+			sql.ShouldContain("ROWS");
+
+			foreach (var row in query.ToList())
+			{
+				// Same-direction frames can be empty for the leading/trailing rows of a partition; an empty frame
+				// aggregates to SQL NULL, materialized as 0 in the non-nullable projection.
+				row.RowsPrecedingPreceding.ShouldBe(ExpectedFrameSum(data, row.Id, range: false, "P", 5, "P", 2));
+				row.RowsFollowingFollowing.ShouldBe(ExpectedFrameSum(data, row.Id, range: false, "F", 1, "F", 3));
+				row.RowsShortcut.ShouldBe(ExpectedFrameSum(data, row.Id, range: false, "P", 1, "F", 2));
+			}
 		}
 
 		// GROUPS BETWEEN n PRECEDING AND m FOLLOWING shortcut.
@@ -153,11 +235,18 @@ namespace Tests.Linq
 				from t in table
 				select new
 				{
+					Id = t.Id,
+
 					// GROUPS BETWEEN 1 PRECEDING AND 2 FOLLOWING (shortcut)
 					GroupsShortcut = Sql.Window.Sum(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).GroupsBetweenValues(1, 2)),
 				};
 
-				query.ToList();
+			var sql = query.ToSqlQuery().Sql;
+			sql.ShouldContain("OVER");
+			sql.ShouldContain("GROUPS");
+
+			foreach (var row in query.ToList())
+				row.GroupsShortcut.ShouldBe(ExpectedFrameSum(data, row.Id, range: false, "P", 1, "F", 2));
 		}
 
 		// RANGE BETWEEN n PRECEDING AND m FOLLOWING shortcut (RANGE-with-offset unsupported on SQL Server).
@@ -176,11 +265,18 @@ namespace Tests.Linq
 				from t in table
 				select new
 				{
+					Id = t.Id,
+
 					// RANGE BETWEEN 1 PRECEDING AND 2 FOLLOWING (shortcut)
 					RangeShortcut = Sql.Window.Sum(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RangeBetweenValues(1, 2)),
 				};
 
-				query.ToList();
+			var sql = query.ToSqlQuery().Sql;
+			sql.ShouldContain("OVER");
+			sql.ShouldContain("RANGE");
+
+			foreach (var row in query.ToList())
+				row.RangeShortcut.ShouldBe(ExpectedFrameSum(data, row.Id, range: true, "P", 1, "F", 2));
 		}
 
 	}

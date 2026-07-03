@@ -5,6 +5,8 @@ using LinqToDB.Internal.Common;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.Linq
 {
 	partial class WindowFunctionsTests
@@ -23,10 +25,16 @@ namespace Tests.Linq
 				from t in table
 				select new
 				{
+					Id                = t.Id,
 					ExcludeCurrentRow = Sql.Window.Sum(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RowsBetween.Unbounded.And.Unbounded.ExcludeCurrentRow()),
 				};
 
-				_ = query.ToList();
+			var sql = query.ToSqlQuery().Sql;
+			sql.ShouldContain("OVER");
+			sql.ShouldContain("EXCLUDE");
+
+			foreach (var row in query.ToList())
+				row.ExcludeCurrentRow.ShouldBe(ExpectedFrameSum(data, row.Id, range: false, "UP", 0, "UF", 0, "current"));
 		}
 
 		[Test]
@@ -43,10 +51,16 @@ namespace Tests.Linq
 				from t in table
 				select new
 				{
+					Id           = t.Id,
 					ExcludeGroup = Sql.Window.Sum(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RowsBetween.Unbounded.And.Unbounded.ExcludeGroup()),
 				};
 
-				_ = query.ToList();
+			var sql = query.ToSqlQuery().Sql;
+			sql.ShouldContain("OVER");
+			sql.ShouldContain("EXCLUDE");
+
+			foreach (var row in query.ToList())
+				row.ExcludeGroup.ShouldBe(ExpectedFrameSum(data, row.Id, range: false, "UP", 0, "UF", 0, "group"));
 		}
 
 		[Test]
@@ -63,10 +77,18 @@ namespace Tests.Linq
 				from t in table
 				select new
 				{
+					Id          = t.Id,
 					ExcludeTies = Sql.Window.Sum(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RowsBetween.Unbounded.And.Unbounded.ExcludeTies()),
 				};
 
-				_ = query.ToList();
+			var sql = query.ToSqlQuery().Sql;
+			sql.ShouldContain("OVER");
+			sql.ShouldContain("EXCLUDE");
+
+			// Unique Id ⇒ no ties ⇒ EXCLUDE TIES removes nothing ⇒ the full partition total. The EXCLUDE-clause
+			// presence is guarded by the ShouldContain above, since the value alone equals the no-EXCLUDE result.
+			foreach (var row in query.ToList())
+				row.ExcludeTies.ShouldBe(ExpectedFrameSum(data, row.Id, range: false, "UP", 0, "UF", 0, "ties"));
 		}
 
 		[Test]
@@ -83,10 +105,16 @@ namespace Tests.Linq
 				from t in table
 				select new
 				{
+					Id                = t.Id,
 					ExcludeCurrentRow = Sql.Window.Sum(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RangeBetween.Unbounded.And.Unbounded.ExcludeCurrentRow()),
 				};
 
-				_ = query.ToList();
+			var sql = query.ToSqlQuery().Sql;
+			sql.ShouldContain("OVER");
+			sql.ShouldContain("EXCLUDE");
+
+			foreach (var row in query.ToList())
+				row.ExcludeCurrentRow.ShouldBe(ExpectedFrameSum(data, row.Id, range: true, "UP", 0, "UF", 0, "current"));
 		}
 
 		[Test]
@@ -102,10 +130,17 @@ namespace Tests.Linq
 				from t in table
 				select new
 				{
+					Id          = t.Id,
 					ExcludeTies = Sql.Window.Sum(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).GroupsBetween.Unbounded.And.Unbounded.ExcludeTies()),
 				};
 
-				_ = query.ToList();
+			var sql = query.ToSqlQuery().Sql;
+			sql.ShouldContain("OVER");
+			sql.ShouldContain("EXCLUDE");
+
+			// GROUPS over unique Id ⇒ each group is one row ⇒ EXCLUDE TIES removes nothing ⇒ full partition total.
+			foreach (var row in query.ToList())
+				row.ExcludeTies.ShouldBe(ExpectedFrameSum(data, row.Id, range: false, "UP", 0, "UF", 0, "ties"));
 		}
 	}
 }

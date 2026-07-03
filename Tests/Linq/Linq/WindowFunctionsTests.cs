@@ -299,6 +299,101 @@ namespace Tests.Linq
 			Assert.That(actual, Is.Not.Null);
 			Assert.That(actual!.Value, Is.EqualTo(expected).Within(0.1));
 		}
+
+		// Expected running FILTERed aggregate over a window PARTITION BY CategoryId ORDER BY Id (default
+		// RANGE UNBOUNDED PRECEDING .. CURRENT ROW): the set is every row in the same category with Id <= the
+		// current row's Id that also satisfies the FILTER predicate (CategoryId == 1). Because the partition key
+		// IS the filter column, the filter is all-true inside the CategoryId==1 partition and all-false elsewhere,
+		// so categories 2/3 aggregate over an empty set and the window function returns NULL — a dropped/mangled
+		// FILTER (or its CASE-WHEN emulation) would instead return the unfiltered running value here.
+		internal static int? ExpectedRunningFilteredSum(WindowFunctionTestEntity[] data, int id)
+		{
+			var current = System.Array.Find(data, d => d.Id == id)!;
+			var sum     = 0;
+			var any     = false;
+
+			foreach (var d in data)
+				if (d.CategoryId == current.CategoryId && d.Id <= id && d.CategoryId == 1)
+				{
+					sum += d.IntValue;
+					any  = true;
+				}
+
+			return any ? sum : (int?)null;
+		}
+
+		internal static double? ExpectedRunningFilteredAvg(WindowFunctionTestEntity[] data, int id)
+		{
+			var current = System.Array.Find(data, d => d.Id == id)!;
+			var sum     = 0d;
+			var n       = 0;
+
+			foreach (var d in data)
+				if (d.CategoryId == current.CategoryId && d.Id <= id && d.CategoryId == 1)
+				{
+					sum += d.DoubleValue;
+					n++;
+				}
+
+			return n == 0 ? (double?)null : sum / n;
+		}
+
+		// Expected windowed SUM(IntValue) over an explicit frame within a partition (PARTITION BY CategoryId
+		// ORDER BY Id). The seed uses unique Id values, so every ORDER BY peer group is a single row: ROWS and
+		// GROUPS frames are therefore equivalent, and RANGE frames select by Id value. An empty frame produces
+		// SQL NULL, which linq2db materializes into the non-nullable int projection as 0 (verified on the FILTER
+		// tests), so the empty case returns 0 here. Boundary kinds: "UP" unbounded preceding, "UF" unbounded
+		// following, "CR" current row, "P" <offset> preceding, "F" <offset> following. exclude: "none" | "current"
+		// | "group" | "ties" (with unique keys, "group" == "current" and "ties" removes nothing).
+		internal static int ExpectedFrameSum(
+			WindowFunctionTestEntity[] data, int id, bool range,
+			string startKind, int startOffset, string endKind, int endOffset,
+			string exclude = "none")
+		{
+			var current   = System.Array.Find(data, d => d.Id == id)!;
+			var partition = new System.Collections.Generic.List<WindowFunctionTestEntity>();
+
+			foreach (var d in data)
+				if (d.CategoryId == current.CategoryId)
+					partition.Add(d);
+
+			partition.Sort((a, b) => a.Id.CompareTo(b.Id));
+
+			var included = new System.Collections.Generic.List<WindowFunctionTestEntity>();
+
+			if (!range)
+			{
+				var i  = partition.FindIndex(d => d.Id == id);
+				var lo = startKind switch { "UP" => 0, "CR" => i, "P" => i - startOffset, "F" => i + startOffset, _ => 0 };
+				var hi = endKind   switch { "UF" => partition.Count - 1, "CR" => i, "P" => i - endOffset, "F" => i + endOffset, _ => partition.Count - 1 };
+
+				if (lo < 0)
+					lo = 0;
+				if (hi > partition.Count - 1)
+					hi = partition.Count - 1;
+
+				for (var k = lo; k <= hi; k++)
+					included.Add(partition[k]);
+			}
+			else
+			{
+				var loVal = startKind switch { "UP" => int.MinValue, "CR" => id, "P" => id - startOffset, "F" => id + startOffset, _ => int.MinValue };
+				var hiVal = endKind   switch { "UF" => int.MaxValue, "CR" => id, "P" => id - endOffset, "F" => id + endOffset, _ => int.MaxValue };
+
+				foreach (var d in partition)
+					if (d.Id >= loVal && d.Id <= hiVal)
+						included.Add(d);
+			}
+
+			if (exclude is "current" or "group")
+				included.RemoveAll(d => d.Id == id);
+
+			var sum = 0;
+			foreach (var d in included)
+				sum += d.IntValue;
+
+			return sum;
+		}
 	}
 }
 
