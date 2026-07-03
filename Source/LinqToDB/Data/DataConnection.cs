@@ -1036,68 +1036,30 @@ namespace LinqToDB.Data
 			return batch;
 		}
 
-		// DbBatch execution mirrors ExecuteDataReader, but has no command interceptor: interceptors are DbCommand-typed and
-		// a DbBatch is not a DbCommand, so the CanUseDbBatch gate excludes a registered ICommandInterceptor. Tracing IS
-		// supported - the batch's combined text is traced - so logging and baselines still observe the SQL.
-		// TODO: remove the interceptor fallback once a DbBatch-aware interceptor surface (e.g. IDbBatchInterceptor) exists.
+		// DbBatch execution shares the ExecuteReader tracing scaffold (TraceExecuteReader) with the single-command path, but
+		// carries no command interceptor: interceptors are DbCommand-typed and a DbBatch is not a DbCommand, so the
+		// CanUseDbBatch gate excludes a registered ICommandInterceptor. Tracing IS supported (the batch's combined text is
+		// traced) and the exception interceptor DOES run (see RunBatchReader).
+		// TODO: route through a DbBatch-aware interceptor surface (e.g. IDbBatchInterceptor) once one exists.
 		internal DataReaderWrapper ExecuteBatchDataReader(DbBatch batch, CommandBehavior commandBehavior)
+		{
+			return TraceExecuteReader(null, () => GetBatchTraceText(batch), () => RunBatchReader(batch, GetCommandBehavior(commandBehavior)));
+		}
+
+		// The DbBatch execution delegate for TraceExecuteReader. A DbBatch is not a DbCommand, so no command interceptor runs
+		// here (the CanUseDbBatch gate already excludes a registered ICommandInterceptor); the exception interceptor DOES run.
+		DataReaderWrapper RunBatchReader(DbBatch batch, CommandBehavior commandBehavior)
 		{
 			CheckAndThrowOnDisposed();
 
-			OpenConnection();
-
-			if (TraceSwitchConnection.Level == TraceLevel.Off)
-				using (DataProvider.ExecuteScope(this))
-					return new DataReaderWrapper(this, batch.ExecuteReader(GetCommandBehavior(commandBehavior)), null);
-
-			var traceText = GetBatchTraceText(batch);
-			var now       = DateTime.UtcNow;
-			var sw        = Stopwatch.StartNew();
-
-			if (TraceSwitchConnection.TraceInfo)
-			{
-				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, TraceOperation.ExecuteReader, false)
-				{
-					TraceLevel  = TraceLevel.Info,
-					CommandText = traceText,
-					StartTime   = now,
-				});
-			}
-
 			try
 			{
-				DataReaderWrapper ret;
-
-				using (DataProvider.ExecuteScope(this))
-					ret = new DataReaderWrapper(this, batch.ExecuteReader(GetCommandBehavior(commandBehavior)), null);
-
-				if (TraceSwitchConnection.TraceInfo)
-				{
-					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute, TraceOperation.ExecuteReader, false)
-					{
-						TraceLevel    = TraceLevel.Info,
-						CommandText   = traceText,
-						StartTime     = now,
-						ExecutionTime = sw.Elapsed,
-					});
-				}
-
-				return ret;
+				return new DataReaderWrapper(this, batch.ExecuteReader(commandBehavior), null);
 			}
-			catch (Exception ex)
+			catch (Exception ex) when (((IInterceptable<IExceptionInterceptor>)this).Interceptor is { } eInterceptor)
 			{
-				if (TraceSwitchConnection.TraceError)
-				{
-					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.ExecuteReader, false)
-					{
-						TraceLevel    = TraceLevel.Error,
-						CommandText   = traceText,
-						StartTime     = now,
-						ExecutionTime = sw.Elapsed,
-						Exception     = ex,
-					});
-				}
-
+				using (ActivityService.Start(ActivityID.ExceptionInterceptorProcessException))
+					eInterceptor.ProcessException(new(this), ex);
 				throw;
 			}
 		}
@@ -1531,7 +1493,14 @@ namespace LinqToDB.Data
 			}
 		}
 
-		internal DataReaderWrapper ExecuteDataReader(CommandBehavior commandBehavior)
+		// One tracing scaffold shared by the single-command (ExecuteDataReader) and DbBatch (ExecuteBatchDataReader) reader
+		// lifecycles: it opens the connection, honors the trace-Off short-circuit + execute scope, and emits the
+		// Before/After/Error trace events. The `run` delegate owns the actual execution and its interceptor semantics
+		// (ExecuteReader carries the command interceptor; RunBatchReader carries the exception interceptor). `command` traces
+		// the single-command path; `commandTextFactory` lazily builds the batch's combined text only when tracing is on.
+		// TraceInfo.SqlText prefers a non-null CommandText and otherwise formats Command, so the single path (command set,
+		// commandText null) and the batch path (command null, commandText set) each trace exactly as before.
+		DataReaderWrapper TraceExecuteReader(DbCommand? command, Func<string>? commandTextFactory, Func<DataReaderWrapper> run)
 		{
 			CheckAndThrowOnDisposed();
 
@@ -1539,18 +1508,20 @@ namespace LinqToDB.Data
 
 			if (TraceSwitchConnection.Level == TraceLevel.Off)
 				using (DataProvider.ExecuteScope(this))
-					return ExecuteReader(GetCommandBehavior(commandBehavior));
+					return run();
 
-			var now = DateTime.UtcNow;
-			var sw  = Stopwatch.StartNew();
+			var now         = DateTime.UtcNow;
+			var sw          = Stopwatch.StartNew();
+			var commandText = commandTextFactory?.Invoke();
 
 			if (TraceSwitchConnection.TraceInfo)
 			{
 				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, TraceOperation.ExecuteReader, false)
 				{
-					TraceLevel = TraceLevel.Info,
-					Command    = CurrentCommand,
-					StartTime  = now,
+					TraceLevel  = TraceLevel.Info,
+					Command     = command,
+					CommandText = commandText,
+					StartTime   = now,
 				});
 			}
 
@@ -1559,14 +1530,15 @@ namespace LinqToDB.Data
 				DataReaderWrapper ret;
 
 				using (DataProvider.ExecuteScope(this))
-					ret = ExecuteReader(GetCommandBehavior(commandBehavior));
+					ret = run();
 
 				if (TraceSwitchConnection.TraceInfo)
 				{
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute, TraceOperation.ExecuteReader, false)
 					{
 						TraceLevel    = TraceLevel.Info,
-						Command       = ret.Command,
+						Command       = ret.Command ?? command,
+						CommandText   = commandText,
 						StartTime     = now,
 						ExecutionTime = sw.Elapsed,
 					});
@@ -1581,7 +1553,8 @@ namespace LinqToDB.Data
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.ExecuteReader, false)
 					{
 						TraceLevel    = TraceLevel.Error,
-						Command       = CurrentCommand,
+						Command       = command,
+						CommandText   = commandText,
 						StartTime     = now,
 						ExecutionTime = sw.Elapsed,
 						Exception     = ex,
@@ -1590,6 +1563,11 @@ namespace LinqToDB.Data
 
 				throw;
 			}
+		}
+
+		internal DataReaderWrapper ExecuteDataReader(CommandBehavior commandBehavior)
+		{
+			return TraceExecuteReader(CurrentCommand, null, () => ExecuteReader(GetCommandBehavior(commandBehavior)));
 		}
 
 		#endregion

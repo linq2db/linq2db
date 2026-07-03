@@ -1452,6 +1452,30 @@ namespace Tests.Data
 			Assert.Throws<TestException>(() =>
 				db.GetTable<InterceptorsTestsTable>().ToList());
 		}
+
+		// The combined eager-loading engine executes a multi-statement group via ADO.NET DbBatch on batch-capable providers
+		// (net8.0+, CanUseDbBatch). A DbBatch is not a DbCommand, so no command interceptor runs on that path - but the
+		// exception interceptor MUST still fire (RunBatchReader). The tables here are intentionally never created, so the
+		// batch execution throws; on net462 the same eager load runs via the semicolon-concat fallback, which also intercepts.
+		[Test]
+		public void EagerLoadExceptionIntercepted([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllPostgreSQL, TestProvName.AllMySql)] string context)
+		{
+			using var db = GetDataConnection(context);
+			db.AddInterceptor(new TestExceptionInterceptor());
+
+			Assert.Throws<TestException>(() =>
+				db.GetTable<EagerExceptionParent>().LoadWith(p => p.Children).ToList());
+		}
+
+		[Test]
+		public void EagerLoadExceptionInterceptedAsync([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllPostgreSQL, TestProvName.AllMySql)] string context)
+		{
+			using var db = GetDataConnection(context);
+			db.AddInterceptor(new TestExceptionInterceptor());
+
+			Assert.ThrowsAsync<TestException>(() =>
+				db.GetTable<EagerExceptionParent>().LoadWith(p => p.Children).ToListAsync());
+		}
 		#endregion
 
 		private sealed class TestCommandInterceptor : CommandInterceptor
@@ -1634,6 +1658,24 @@ namespace Tests.Data
 		public class InterceptorsTestsTable
 		{
 			[Column, Identity] public int ID;
+		}
+
+		// Never created - an eager LoadWith over these forces the combined batch/concat execution to throw (see
+		// EagerLoadExceptionIntercepted).
+		[Table("EagerExceptionParent")]
+		sealed class EagerExceptionParent
+		{
+			[Column, PrimaryKey] public int Id;
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(EagerExceptionChild.ParentId))]
+			public List<EagerExceptionChild> Children = null!;
+		}
+
+		[Table("EagerExceptionChild")]
+		sealed class EagerExceptionChild
+		{
+			[Column, PrimaryKey] public int Id;
+			[Column]             public int ParentId;
 		}
 
 		private sealed class TestExceptionInterceptor : ExceptionInterceptor
