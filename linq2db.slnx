@@ -84,6 +84,9 @@
     <File Path=".agents/hooks/track-kb-usage.js" />
     <File Path=".agents/hooks/track-session-start.js" />
   </Folder>
+  <Folder Name="/.agents/rules/">
+    <File Path=".agents/rules/cross-cutting-core.md" />
+  </Folder>
   <Folder Name="/.agents/scripts/">
     <File Path=".agents/scripts/_shared.ps1" />
     <File Path=".agents/scripts/amend-branch-commit.ps1" />
