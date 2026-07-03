@@ -835,7 +835,18 @@ namespace LinqToDB.Linq.Translation
 				if (frameType is SqlFrameClause.FrameTypeKind.Range or SqlFrameClause.FrameTypeKind.Groups
 					&& (start.BoundaryType == SqlFrameBoundary.FrameBoundaryType.Offset || end.BoundaryType == SqlFrameBoundary.FrameBoundaryType.Offset)
 					&& (orderItems == null || orderItems.Count != 1))
-					return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_FrameRangeGroupsOrderBy, methodCall.Type);
+				{
+					// A single logical ORDER BY key can still yield more than one physical sort key: on a provider
+					// without native NULLS ordering, a nullable key with an explicit NULLS position is emulated with
+					// a leading CASE key. Point at that specific conflict rather than the generic "one key" message.
+					var singleLogicalKey = information.OrderBy?.Length == 1 && orderItems is { Count: > 1 };
+					return translationContext.CreateErrorExpression(
+						methodCall,
+						singleLogicalKey
+							? ErrorHelper.Error_WindowFunction_FrameRangeGroupsNullsEmulation
+							: ErrorHelper.Error_WindowFunction_FrameRangeGroupsOrderBy,
+						methodCall.Type);
+				}
 
 				ISqlExpression? startOffset = null;
 				ISqlExpression? endOffset   = null;

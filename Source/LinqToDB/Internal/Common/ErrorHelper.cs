@@ -45,6 +45,7 @@
 		public const string Error_WindowFunction_FrameGroups                = "GROUPS frame is not supported by current provider.";
 		public const string Error_WindowFunction_FrameExclude               = "Frame EXCLUDE clause is not supported by current provider.";
 		public const string Error_WindowFunction_FrameRangeGroupsOrderBy    = "A RANGE or GROUPS frame with a value offset requires exactly one ORDER BY expression.";
+		public const string Error_WindowFunction_FrameRangeGroupsNullsEmulation = "A RANGE or GROUPS frame with a value offset requires a single ORDER BY key, but the requested NULLS ordering is emulated with an extra sort key on this provider. Use a non-nullable ORDER BY key, drop the explicit NULLS position, or use a ROWS frame.";
 		public const string Error_WindowFunction_OrderedSetFilter           = "FILTER (WHERE ...) on ordered-set aggregates (PERCENTILE_CONT/PERCENTILE_DISC) is not supported by current provider.";
 		public const string Error_WindowFunction_Keep                       = "KEEP clause is not supported by current provider.";
 		public const string Error_WindowFunction_KeepOrderBy                = "KEEP (DENSE_RANK FIRST/LAST) requires an ORDER BY.";

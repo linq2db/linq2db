@@ -279,5 +279,30 @@ namespace Tests.Linq
 				row.RangeShortcut.ShouldBe(ExpectedFrameSum(data, row.Id, range: true, "P", 1, "F", 2));
 		}
 
+		// A single logical ORDER BY key on a nullable column with an explicit NULLS position is CASE-emulated
+		// into two physical sort keys on providers without native NULLS ordering (e.g. MySQL), which a RANGE
+		// value offset cannot carry. The translate-time error should name the NULLS-emulation conflict rather
+		// than the generic "requires exactly one ORDER BY expression" — the user did supply exactly one key.
+		[Test]
+		public void FrameRangeOffsetNullsEmulatedKey([IncludeDataSources(true, TestProvName.AllMySql80)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(WindowFunctionTestEntity.Seed());
+
+			var emulated =
+				from t in table
+				select Sql.Window.Sum(t.IntValue, w => w.OrderBy(t.NullableDoubleValue, Sql.NullsPosition.Last).RangeBetween.ValuePreceding(1).And.ValueFollowing(2));
+
+			var ex = Assert.Throws<LinqToDBException>(() => emulated.ToList());
+			ex!.Message.ShouldContain("NULLS ordering is emulated");
+
+			// Control: identical frame, non-nullable single key => no NULLS emulation => translates and runs.
+			var control =
+				from t in table
+				select Sql.Window.Sum(t.IntValue, w => w.OrderBy(t.Id).RangeBetween.ValuePreceding(1).And.ValueFollowing(2));
+
+			Assert.DoesNotThrow(() => control.ToList());
+		}
+
 	}
 }
