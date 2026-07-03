@@ -1485,7 +1485,8 @@ namespace Tests.Data
 		[Test]
 		public void EagerLoadOpensReadConsistencyTransaction([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
-			var beginCount = 0;
+			var beginCount  = 0;
+			var interceptor = new ReaderTransactionInterceptor();
 
 			using var db = GetDataContext(context, o => o.UseTracing(ti =>
 			{
@@ -1493,19 +1494,23 @@ namespace Tests.Data
 					beginCount++;
 			}));
 
+			db.AddInterceptor(interceptor);
+
 			using var parents  = db.CreateLocalTable<Pr5EagerParent>();
 			using var children = db.CreateLocalTable<Pr5EagerChild>();
 
 			db.Insert(new Pr5EagerParent { Id = 1 });
 			db.Insert(new Pr5EagerChild  { Id = 1, ParentId = 1 });
 
-			beginCount = 0;
+			beginCount                       = 0;
+			interceptor.ReaderHadTransaction = null;
 
 			var result = db.GetTable<Pr5EagerParent>().LoadWith(p => p.Children).ToList();
 
 			Assert.That(result,             Has.Count.EqualTo(1));
 			Assert.That(result[0].Children, Has.Count.EqualTo(1));
 			Assert.That(beginCount, Is.GreaterThanOrEqualTo(1), "eager load should open a read-consistency transaction");
+			Assert.That(interceptor.ReaderHadTransaction, Is.True, "eager load must execute its read inside the read-consistency transaction");
 		}
 
 		[Test]
@@ -1533,8 +1538,27 @@ namespace Tests.Data
 
 			var result = db.GetTable<Pr5EagerParent>().LoadWith(p => p.Children).ToList();
 
-			Assert.That(result, Has.Count.EqualTo(1));
+			Assert.That(result,             Has.Count.EqualTo(1));
+			Assert.That(result[0].Children, Has.Count.EqualTo(1));
 			Assert.That(beginCount, Is.Zero, "eager load should reuse the active transaction, not open a second one");
+		}
+
+		// Captures whether the eager read ran while a transaction was active on the command (see EagerLoadOpensReadConsistencyTransaction).
+		sealed class ReaderTransactionInterceptor : CommandInterceptor
+		{
+			public bool? ReaderHadTransaction;
+
+			public override Option<DbDataReader> ExecuteReader(CommandEventData eventData, DbCommand command, CommandBehavior commandBehavior, Option<DbDataReader> result)
+			{
+				ReaderHadTransaction ??= command.Transaction != null;
+				return base.ExecuteReader(eventData, command, commandBehavior, result);
+			}
+
+			public override Task<Option<DbDataReader>> ExecuteReaderAsync(CommandEventData eventData, DbCommand command, CommandBehavior commandBehavior, Option<DbDataReader> result, CancellationToken cancellationToken)
+			{
+				ReaderHadTransaction ??= command.Transaction != null;
+				return base.ExecuteReaderAsync(eventData, command, commandBehavior, result, cancellationToken);
+			}
 		}
 		#endregion
 

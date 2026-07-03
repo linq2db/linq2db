@@ -375,15 +375,30 @@ namespace LinqToDB.Internal.Linq
 			if (!dependsOnParameters)
 				Expression = expressions.MainExpression;
 
-			using (StartLoadTransaction(query))
+			// The read-consistency transaction must stay open across the (lazy) enumeration, so its ownership is transferred
+			// to the returned enumerator (disposed together with it) instead of being closed here. See EnumeratorWrapper.
+			var transaction = StartLoadTransaction(query);
+			try
 			{
 				var combined = QueryRunner.TryGetCombinedEagerEnumerable(query, DataContext, expressions, Parameters);
+
+				IEnumerator<T> enumerator;
 				if (combined != null)
-					return combined.GetEnumerator();
+				{
+					enumerator = combined.GetEnumerator();
+				}
+				else
+				{
+					Preambles  = query.InitPreambles(DataContext, expressions, Parameters);
+					enumerator = query.GetResultEnumerable(DataContext, expressions, Parameters, Preambles).GetEnumerator();
+				}
 
-				Preambles = query.InitPreambles(DataContext, expressions, Parameters);
-
-				return query.GetResultEnumerable(DataContext, expressions, Parameters, Preambles).GetEnumerator();
+				return transaction == null ? enumerator : new EnumeratorWrapper<T>(enumerator, transaction);
+			}
+			catch
+			{
+				transaction?.Dispose();
+				throw;
 			}
 		}
 
@@ -398,15 +413,30 @@ namespace LinqToDB.Internal.Linq
 			if (!dependsOnParameters)
 				Expression = expressions.MainExpression;
 
-			using (StartLoadTransaction(query))
+			// The read-consistency transaction must stay open across the (lazy) enumeration, so its ownership is transferred
+			// to the returned enumerator (disposed together with it) instead of being closed here. See EnumeratorWrapper.
+			var transaction = StartLoadTransaction(query);
+			try
 			{
 				var combined = QueryRunner.TryGetCombinedEagerEnumerable(query, DataContext, expressions, Parameters);
+
+				IEnumerator<T> enumerator;
 				if (combined != null)
-					return combined.GetEnumerator();
+				{
+					enumerator = combined.GetEnumerator();
+				}
+				else
+				{
+					Preambles  = query.InitPreambles(DataContext, expressions, Parameters);
+					enumerator = query.GetResultEnumerable(DataContext, expressions, Parameters, Preambles).GetEnumerator();
+				}
 
-				Preambles = query.InitPreambles(DataContext, expressions, Parameters);
-
-				return query.GetResultEnumerable(DataContext, expressions, Parameters, Preambles).GetEnumerator();
+				return transaction == null ? enumerator : new EnumeratorWrapper<T>(enumerator, transaction);
+			}
+			catch
+			{
+				transaction?.Dispose();
+				throw;
 			}
 		}
 
