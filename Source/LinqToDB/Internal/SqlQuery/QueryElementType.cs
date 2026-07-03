@@ -122,5 +122,10 @@
 		// In v7 move next to SqlCteTable where they belong logically.
 		SqlCteField,
 		SqlCteTableField,
+
+		// Appended for the SqlCommandScenario refactor — enum ordinals are wire-serialized, so new members
+		// must stay at the end.
+		SqlObjectNameExpression,
+		SqlFragmentStatement,
 	}
 }

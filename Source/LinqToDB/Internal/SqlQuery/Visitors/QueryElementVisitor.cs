@@ -1645,6 +1645,57 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return element;
 		}
 
+		protected internal virtual IQueryElement VisitSqlObjectNameExpression(SqlObjectNameExpression element)
+		{
+			return element;
+		}
+
+		protected internal virtual IQueryElement VisitSqlFragmentStatement(SqlFragmentStatement element)
+		{
+			switch (GetVisitMode(element))
+			{
+				case VisitMode.ReadOnly:
+				{
+					Visit(element.Tag);
+					Visit(element.Expression);
+					VisitElements(element.SqlQueryExtensions, VisitMode.ReadOnly);
+					break;
+				}
+				case VisitMode.Modify:
+				{
+					element.Tag        = (SqlComment?)Visit(element.Tag);
+					element.Expression = (ISqlExpression)Visit(element.Expression)!;
+					VisitElements(element.SqlQueryExtensions, VisitMode.Modify);
+					break;
+				}
+				case VisitMode.Transform:
+				{
+					var tag        = (SqlComment?)Visit(element.Tag);
+					var expression = (ISqlExpression)Visit(element.Expression)!;
+					var ext        = VisitElements(element.SqlQueryExtensions, VisitMode.Transform);
+
+					if (ShouldReplace(element)                           ||
+					    !ReferenceEquals(element.Tag, tag)               ||
+					    !ReferenceEquals(element.Expression, expression) ||
+					    element.SqlQueryExtensions != ext)
+					{
+						return NotifyReplaced(
+							new SqlFragmentStatement(expression)
+							{
+								Tag                = tag,
+								SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList(),
+							}, element);
+					}
+
+					break;
+				}
+				default:
+					return ThrowInvalidVisitModeException();
+			}
+
+			return element;
+		}
+
 		protected internal virtual IQueryElement VisitSqlOrderByClause(SqlOrderByClause element)
 		{
 			switch (GetVisitMode(element))

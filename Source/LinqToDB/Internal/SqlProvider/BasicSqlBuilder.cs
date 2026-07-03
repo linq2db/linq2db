@@ -408,8 +408,14 @@ namespace LinqToDB.Internal.SqlProvider
 				case QueryType.TruncateTable : BuildTruncateTableStatement((SqlTruncateTableStatement)Statement);                                               break;
 				case QueryType.Merge         : BuildMergeStatement((SqlMergeStatement)Statement);                                                               break;
 				case QueryType.MultiInsert   : BuildMultiInsertQuery((SqlMultiInsertStatement)Statement);                                                       break;
+				case QueryType.Fragment      : BuildFragmentStatement((SqlFragmentStatement)Statement);                                                         break;
 				default                      : BuildUnknownQuery();                                                                                             break;
 			}
+		}
+
+		protected virtual void BuildFragmentStatement(SqlFragmentStatement statement)
+		{
+			BuildExpression(statement.Expression);
 		}
 
 		protected void BuildSqlForUnion()
@@ -3399,6 +3405,13 @@ namespace LinqToDB.Internal.SqlProvider
 					else
 						BuildFormatValues(e.Expr, e.Parameters, GetPrecedence(e));
 
+					break;
+				}
+
+				case QueryElementType.SqlObjectNameExpression:
+				{
+					var e = (SqlObjectNameExpression)expr;
+					BuildObjectName(StringBuilder, e.Name, e.ConvertType);
 					break;
 				}
 
