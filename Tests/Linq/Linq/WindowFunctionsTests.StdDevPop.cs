@@ -60,7 +60,7 @@ namespace Tests.Linq
 			var sql = query.ToSqlQuery().Sql;
 			sql.ShouldContain("OVER");
 
-				_ = query.ToList();
+			_ = query.ToList();
 		}
 	}
 }
