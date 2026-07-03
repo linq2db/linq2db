@@ -776,8 +776,10 @@ namespace LinqToDB.Internal.Linq
 
 				for (var i = 0; i < _preambles.Length; i++)
 				{
-					steps[i] = new SqlCommandStep { Statement = _preambles[i].GetCombinableStatement()!, Kind = SqlStepKind.Reader };
-					_preambles[i].AddCombinableParameterValues(values, _expressions, _dataContext, _parameters);
+					var materializer = (IStepMaterializer)_preambles[i];
+
+					steps[i] = new SqlCommandStep { Statement = materializer.GetCombinableStatement()!, Kind = SqlStepKind.Reader };
+					materializer.AddCombinableParameterValues(values, _expressions, _dataContext, _parameters);
 				}
 
 				steps[_preambles.Length] = new SqlCommandStep { Statement = _query.Queries[0].Statement, Kind = SqlStepKind.Reader };
@@ -875,7 +877,7 @@ namespace LinqToDB.Internal.Linq
 
 								for (var k = 0; k < stepIndexes.Length; k++)
 								{
-									preambles[stepIndexes[k]] = _preambles[stepIndexes[k]].MaterializeFromReader(_dataContext, _expressions, _parameters, preambles, dr);
+									preambles[stepIndexes[k]] = ((IStepMaterializer)_preambles[stepIndexes[k]]).MaterializeFromReader(_dataContext, _expressions, _parameters, preambles, dr);
 
 									if (k < stepIndexes.Length - 1)
 										dr.NextResult();
@@ -894,7 +896,7 @@ namespace LinqToDB.Internal.Linq
 
 							for (var k = 0; k < stepIndexes.Length - 1; k++)
 							{
-								preambles[stepIndexes[k]] = _preambles[stepIndexes[k]].MaterializeFromReader(_dataContext, _expressions, _parameters, preambles, dr);
+								preambles[stepIndexes[k]] = ((IStepMaterializer)_preambles[stepIndexes[k]]).MaterializeFromReader(_dataContext, _expressions, _parameters, preambles, dr);
 								dr.NextResult();
 							}
 
@@ -936,7 +938,7 @@ namespace LinqToDB.Internal.Linq
 
 								for (var k = 0; k < stepIndexes.Length; k++)
 								{
-									preambles[stepIndexes[k]] = await _preambles[stepIndexes[k]].MaterializeFromReaderAsync(_dataContext, _expressions, _parameters, preambles, dr, cancellationToken).ConfigureAwait(false);
+									preambles[stepIndexes[k]] = await ((IStepMaterializer)_preambles[stepIndexes[k]]).MaterializeFromReaderAsync(_dataContext, _expressions, _parameters, preambles, dr, cancellationToken).ConfigureAwait(false);
 
 									if (k < stepIndexes.Length - 1)
 										await dr.NextResultAsync(cancellationToken).ConfigureAwait(false);
@@ -955,7 +957,7 @@ namespace LinqToDB.Internal.Linq
 
 							for (var k = 0; k < stepIndexes.Length - 1; k++)
 							{
-								preambles[stepIndexes[k]] = await _preambles[stepIndexes[k]].MaterializeFromReaderAsync(_dataContext, _expressions, _parameters, preambles, dr, cancellationToken).ConfigureAwait(false);
+								preambles[stepIndexes[k]] = await ((IStepMaterializer)_preambles[stepIndexes[k]]).MaterializeFromReaderAsync(_dataContext, _expressions, _parameters, preambles, dr, cancellationToken).ConfigureAwait(false);
 								await dr.NextResultAsync(cancellationToken).ConfigureAwait(false);
 							}
 
@@ -999,7 +1001,7 @@ namespace LinqToDB.Internal.Linq
 				return null;
 
 			foreach (var preamble in preambles)
-				if (!preamble.CanCombine || preamble.GetCombinableStatement() == null)
+				if (preamble is not IStepMaterializer materializer || !materializer.CanCombine || materializer.GetCombinableStatement() == null)
 					return null;
 
 			return new CombinedEagerResultEnumerable<T>(dataContext, expressions, query, parameters, preambles);

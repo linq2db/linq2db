@@ -166,7 +166,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 		}
 
-		sealed class Preamble<TKey, T>(Query<KeyDetailEnvelope<TKey, T>> query) : Preamble
+		sealed class Preamble<TKey, T>(Query<KeyDetailEnvelope<TKey, T>> query) : Preamble, IStepMaterializer
 			where TKey : notnull
 		{
 			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
@@ -175,20 +175,20 @@ namespace LinqToDB.Internal.Linq.Builder
 			public override Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object[]? preambles, CancellationToken cancellationToken)
 				=> BuildResultAsync(query.GetResultEnumerable(dataContext, expressions, parameters, preambles), cancellationToken);
 
-			public override bool CanCombine => query.GetResultFromReader != null;
+			public bool CanCombine => query.GetResultFromReader != null;
 
-			public override SqlStatement? GetCombinableStatement()
+			public SqlStatement? GetCombinableStatement()
 				=> query.Queries.Count == 1 ? query.Queries[0].Statement : null;
 
-			public override void AddCombinableParameterValues(SqlParameterValues values, IQueryExpressions expressions, IDataContext dataContext, object?[]? parameters)
+			public void AddCombinableParameterValues(SqlParameterValues values, IQueryExpressions expressions, IDataContext dataContext, object?[]? parameters)
 			{
 				QueryRunner.SetParameters(query, expressions, dataContext, parameters, values);
 			}
 
-			public override object MaterializeFromReader(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles, DbDataReader dataReader)
+			public object MaterializeFromReader(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles, DbDataReader dataReader)
 				=> BuildResult(query.GetResultFromReader!(dataContext, expressions, parameters, preambles, dataReader));
 
-			public override Task<object> MaterializeFromReaderAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles, DbDataReader dataReader, CancellationToken cancellationToken)
+			public Task<object> MaterializeFromReaderAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles, DbDataReader dataReader, CancellationToken cancellationToken)
 				=> BuildResultAsync(query.GetResultFromReader!(dataContext, expressions, parameters, preambles, dataReader), cancellationToken);
 
 			// Both the sequential (GetResultEnumerable) and combined (GetResultFromReader) paths bucket the same
