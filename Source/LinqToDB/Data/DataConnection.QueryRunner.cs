@@ -536,12 +536,22 @@ namespace LinqToDB.Data
 #if SUPPORTS_DBBATCH
 				if (dataConnection.CanUseDbBatch)
 				{
-					var batch  = dataConnection.CreateBatch(statements);
-					var reader = dataConnection.ExecuteBatchDataReader(batch, commandBehavior);
+					var batch = dataConnection.CreateBatch(statements);
 
-					reader.AdditionalDisposable = batch;
+					try
+					{
+						var reader = dataConnection.ExecuteBatchDataReader(batch, commandBehavior);
 
-					return reader;
+						reader.AdditionalDisposable = batch;
+
+						return reader;
+					}
+					catch
+					{
+						// ExecuteBatchDataReader threw before ownership passed to the reader wrapper: release the batch here.
+						batch.Dispose();
+						throw;
+					}
 				}
 #endif
 
@@ -568,12 +578,22 @@ namespace LinqToDB.Data
 #if SUPPORTS_DBBATCH
 				if (dataConnection.CanUseDbBatch)
 				{
-					var batch  = dataConnection.CreateBatch(statements);
-					var reader = await dataConnection.ExecuteBatchDataReaderAsync(batch, commandBehavior, cancellationToken).ConfigureAwait(false);
+					var batch = dataConnection.CreateBatch(statements);
 
-					reader.AdditionalDisposable = batch;
+					try
+					{
+						var reader = await dataConnection.ExecuteBatchDataReaderAsync(batch, commandBehavior, cancellationToken).ConfigureAwait(false);
 
-					return reader;
+						reader.AdditionalDisposable = batch;
+
+						return reader;
+					}
+					catch
+					{
+						// ExecuteBatchDataReaderAsync threw before ownership passed to the reader wrapper: release the batch here.
+						batch.Dispose();
+						throw;
+					}
 				}
 #endif
 
