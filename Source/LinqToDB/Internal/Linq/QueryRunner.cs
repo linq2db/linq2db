@@ -755,6 +755,7 @@ namespace LinqToDB.Internal.Linq
 			// Preamble indices that are reader-combinable, in order. Scenario step k (< Length) maps back to preamble
 			// _combinableIndexes[k]; scenario step Length is the main query.
 			readonly int[]             _combinableIndexes;
+			readonly int[]             _nonCombinableIndexes;
 
 			public EagerResultEnumerable(
 				IDataContext      dataContext,
@@ -769,13 +770,17 @@ namespace LinqToDB.Internal.Linq
 				_parameters  = parameters;
 				_preambles   = preambles;
 
-				var combinable = new List<int>(preambles.Length);
+				var combinable    = new List<int>(preambles.Length);
+				var nonCombinable = new List<int>(preambles.Length);
 
 				for (var i = 0; i < preambles.Length; i++)
 					if (IsCombinable(preambles[i]))
 						combinable.Add(i);
+					else
+						nonCombinable.Add(i);
 
-				_combinableIndexes = combinable.ToArray();
+				_combinableIndexes    = combinable.ToArray();
+				_nonCombinableIndexes = nonCombinable.ToArray();
 			}
 
 			static bool IsCombinable(Preamble preamble)
@@ -836,12 +841,8 @@ namespace LinqToDB.Internal.Linq
 					if (useBatch)
 					{
 						var batchStatements = ScenarioCommandRenderer.RenderStatements(dataConnection, groupStatements, values);
-						var batchIndexes    = new int[stepIndexes.Count];
 
-						for (var k = 0; k < stepIndexes.Count; k++)
-							batchIndexes[k] = stepIndexes[k];
-
-						commands.Add(new CombinedCommand(batchStatements, batchIndexes, null));
+						commands.Add(new CombinedCommand(batchStatements, stepIndexes, null));
 
 						continue;
 					}
@@ -875,9 +876,8 @@ namespace LinqToDB.Internal.Linq
 
 				// Non-combinable preambles run sequentially first, in index order (they may depend on each other); their results
 				// populate the shared array that the combinable materializers and the main mapper read.
-				for (var i = 0; i < _preambles.Length; i++)
-					if (!IsCombinable(_preambles[i]))
-						preambles[i] = _preambles[i].Execute(_dataContext, _expressions, _parameters, preambles);
+				foreach (var i in _nonCombinableIndexes)
+					preambles[i] = _preambles[i].Execute(_dataContext, _expressions, _parameters, preambles);
 
 				var commands       = BuildCommands();
 				var mainStepIndex  = _combinableIndexes.Length;
@@ -891,7 +891,7 @@ namespace LinqToDB.Internal.Linq
 					{
 						var reader      = DataConnection.QueryRunner.ExecuteCombined(dataConnection, command, System.Data.CommandBehavior.Default);
 						var stepIndexes = command.StepIndexes;
-						var hasMain     = stepIndexes[stepIndexes.Length - 1] == mainStepIndex;
+						var hasMain     = stepIndexes[stepIndexes.Count - 1] == mainStepIndex;
 
 						if (!hasMain)
 						{
@@ -899,13 +899,13 @@ namespace LinqToDB.Internal.Linq
 							{
 								var dr = reader.DataReader!;
 
-								for (var k = 0; k < stepIndexes.Length; k++)
+								for (var k = 0; k < stepIndexes.Count; k++)
 								{
 									var preambleIndex = _combinableIndexes[stepIndexes[k]];
 
 									preambles[preambleIndex] = ((IStepMaterializer)_preambles[preambleIndex]).MaterializeFromReader(_dataContext, _expressions, _parameters, preambles, dr);
 
-									if (k < stepIndexes.Length - 1)
+									if (k < stepIndexes.Count - 1)
 										dr.NextResult();
 								}
 							}
@@ -920,7 +920,7 @@ namespace LinqToDB.Internal.Linq
 
 							var dr = reader.DataReader!;
 
-							for (var k = 0; k < stepIndexes.Length - 1; k++)
+							for (var k = 0; k < stepIndexes.Count - 1; k++)
 							{
 								var preambleIndex = _combinableIndexes[stepIndexes[k]];
 
@@ -946,9 +946,8 @@ namespace LinqToDB.Internal.Linq
 				var preambles      = new object[_preambles.Length];
 
 				// Non-combinable preambles run sequentially first, in index order (see the sync sibling).
-				for (var i = 0; i < _preambles.Length; i++)
-					if (!IsCombinable(_preambles[i]))
-						preambles[i] = await _preambles[i].ExecuteAsync(_dataContext, _expressions, _parameters, preambles, cancellationToken).ConfigureAwait(false);
+				foreach (var i in _nonCombinableIndexes)
+					preambles[i] = await _preambles[i].ExecuteAsync(_dataContext, _expressions, _parameters, preambles, cancellationToken).ConfigureAwait(false);
 
 				var commands       = BuildCommands();
 				var mainStepIndex  = _combinableIndexes.Length;
@@ -962,7 +961,7 @@ namespace LinqToDB.Internal.Linq
 					{
 						var reader      = await DataConnection.QueryRunner.ExecuteCombinedAsync(dataConnection, command, System.Data.CommandBehavior.Default, cancellationToken).ConfigureAwait(false);
 						var stepIndexes = command.StepIndexes;
-						var hasMain     = stepIndexes[stepIndexes.Length - 1] == mainStepIndex;
+						var hasMain     = stepIndexes[stepIndexes.Count - 1] == mainStepIndex;
 
 						if (!hasMain)
 						{
@@ -970,13 +969,13 @@ namespace LinqToDB.Internal.Linq
 							{
 								var dr = reader.DataReader!;
 
-								for (var k = 0; k < stepIndexes.Length; k++)
+								for (var k = 0; k < stepIndexes.Count; k++)
 								{
 									var preambleIndex = _combinableIndexes[stepIndexes[k]];
 
 									preambles[preambleIndex] = await ((IStepMaterializer)_preambles[preambleIndex]).MaterializeFromReaderAsync(_dataContext, _expressions, _parameters, preambles, dr, cancellationToken).ConfigureAwait(false);
 
-									if (k < stepIndexes.Length - 1)
+									if (k < stepIndexes.Count - 1)
 										await dr.NextResultAsync(cancellationToken).ConfigureAwait(false);
 								}
 							}
@@ -991,7 +990,7 @@ namespace LinqToDB.Internal.Linq
 
 							var dr = reader.DataReader!;
 
-							for (var k = 0; k < stepIndexes.Length - 1; k++)
+							for (var k = 0; k < stepIndexes.Count - 1; k++)
 							{
 								var preambleIndex = _combinableIndexes[stepIndexes[k]];
 

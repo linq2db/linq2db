@@ -1478,9 +1478,9 @@ namespace Tests.Data
 		}
 		#endregion
 
-		#region Eager read-consistency transaction (	6)
+		#region Eager read-consistency transaction
 		// The eager loader opens a read-consistency transaction (at SqlProviderFlags.DefaultMultiQueryIsolationLevel) whenever a
-		// query has preambles, so the main query and its child collections see one snapshot. 	6 decision: keep it always (never
+		// query has preambles, so the main query and its child collections see one snapshot. The decision: keep it always (never
 		// skip for a single round-trip) and never double it when a transaction is already active. These lock that in.
 		[Test]
 		public void EagerLoadOpensReadConsistencyTransaction([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
@@ -1762,7 +1762,7 @@ namespace Tests.Data
 			[Column]             public int ParentId;
 		}
 
-		// Real tables (CreateLocalTable) for the 	6 eager read-consistency transaction tests.
+		// Real tables (CreateLocalTable) for the eager read-consistency transaction tests.
 		[Table("Pr5EagerParent")]
 		sealed class Pr5EagerParent
 		{

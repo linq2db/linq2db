@@ -724,17 +724,14 @@ namespace LinqToDB.Data
 			// (Commands[commandIndex]) executed as one DbCommand. Both flow through the same ExecuteCombined seam.
 			static CombinedCommand BuildCombinedGroupCommand(DataConnection dataConnection, ExecutionPreparedQuery executionQuery, IReadOnlyList<SqlCommandStep> steps, SqlCommandGroup group, int commandIndex)
 			{
-				var stepIndexes = new int[group.StepIndexes.Count];
-
-				for (var k = 0; k < stepIndexes.Length; k++)
-					stepIndexes[k] = group.StepIndexes[k];
+				var stepIndexes = group.StepIndexes;
 
 #if SUPPORTS_DBBATCH
 				if (IsGroupBatchEligible(dataConnection, executionQuery, steps, group, commandIndex))
 				{
-					var groupStatements = new SqlStatement[stepIndexes.Length];
+					var groupStatements = new SqlStatement[stepIndexes.Count];
 
-					for (var k = 0; k < stepIndexes.Length; k++)
+					for (var k = 0; k < stepIndexes.Count; k++)
 						groupStatements[k] = steps[stepIndexes[k]].Statement;
 
 					var rendered = ScenarioCommandRenderer.RenderStatements(dataConnection, groupStatements, executionQuery.ParameterValues);

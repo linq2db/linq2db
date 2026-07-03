@@ -27,7 +27,7 @@ namespace LinqToDB.Internal.SqlProvider
 	/// single pre-merged (semicolon-concatenated) statement or, on the DbBatch path, one entry per statement (each its own
 	/// parameter scope). <see cref="StepIndexes"/> are the scenario step indices it covers, in order.
 	/// </summary>
-	sealed record CombinedCommand(IReadOnlyList<RenderedStatement> Statements, int[] StepIndexes, IReadOnlyCollection<string>? QueryHints);
+	sealed record CombinedCommand(IReadOnlyList<RenderedStatement> Statements, IReadOnlyList<int> StepIndexes, IReadOnlyCollection<string>? QueryHints);
 
 	/// <summary>
 	/// Shared rendering of a <see cref="SqlCommandScenario"/> into physical commands (one per <see cref="SqlCommandGroup"/>).
