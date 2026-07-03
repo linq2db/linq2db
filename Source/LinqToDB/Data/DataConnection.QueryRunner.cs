@@ -273,12 +273,13 @@ namespace LinqToDB.Data
 
 					// correct aliases if needed
 					var serviceProvider = ((IInfrastructure<IServiceProvider>)dataConnection.DataProvider).Instance;
-					// Alias fresh every execution. Parameter-dependent / continuous-run queries (the only ones
-					// that re-reach this point - non-parameter-dependent ones cache their commands above and
-					// short-circuit) rebuild the statement each execution via OptimizeAndConvertAll in Transform
-					// mode, producing fresh node identities. Fresh aliasing is deterministic for a given statement
-					// shape, so it is both stable across executions and identical to the remote rendering (which
-					// always aliases fresh server-side over a freshly deserialized statement).
+					// Alias fresh every execution. Non-parameter-dependent queries reach this block only on the
+					// first execution, then cache their built commands (below) and short-circuit on subsequent
+					// runs, so they never re-alias. Parameter-dependent / continuous-run queries don't cache; they
+					// re-reach this point every execution and rebuild the statement via OptimizeAndConvertAll in
+					// Transform mode, producing fresh node identities. Fresh aliasing is deterministic for a given
+					// statement shape, so it is both stable across executions and identical to the remote rendering
+					// (which always aliases fresh server-side over a freshly deserialized statement).
 					AliasesHelper.PrepareQueryAndAliases(serviceProvider.GetRequiredService<IIdentifierService>(), statement, out var aliases);
 
 					for (var i = 0; i < cc; i++)
