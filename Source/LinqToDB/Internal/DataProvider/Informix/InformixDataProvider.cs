@@ -103,6 +103,8 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			TableOptions.CreateIfNotExists         |
 			TableOptions.DropIfExists;
 
+		protected override IDmlService CreateDmlService() => new InformixDmlService();
+
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
 			return new InformixSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);

@@ -119,6 +119,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			return new IdentifierServiceSimple(Version <= OracleVersion.v11 ? 30 : 128);
 		}
 
+		protected override IDmlService CreateDmlService() => new OracleDmlService();
+
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
 			return Version switch
