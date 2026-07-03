@@ -330,7 +330,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				// add discriminator filter — a CLR type may carry several discriminator codes, so OR every
 				// code mapped to parentType; filtering to only the first would silently drop rows carrying
-				// the other codes from the association.
+				// the other codes from the association. Concrete types are matched exactly (Type == parentType):
+				// an association declared on an abstract intermediate carries no discriminator code of its own,
+				// so no filter is emitted for it and the join is not narrowed to the intermediate's leaf codes
+				// (known limitation).
 				var ed = builder.MappingSchema.GetEntityDescriptor(parentRootType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 				Expression? discriminatorPredicate = null;
 				foreach (var inheritanceMapping in ed.InheritanceMapping)
