@@ -237,8 +237,8 @@ $matrix = @(
 $scaffoldTtPath = Join-Path $cliOutRoot 'scaffold.tt'
 $newCliRows = @(
     # 'ns' is the namespace suffix from each .tt's namespaceName argument; defaults to 'key' otherwise.
-    @{ key='SQLite';        ns='SQLite';       cs=$sqliteCN; extra="--context-modifier internal --add-static-init-context true --customize $scaffoldTtPath" }
-    @{ key='SQLite.Fluent'; ns='FluentSQLite'; cs=$sqliteCN; extra='--metadata fluent --fluent-entity-type-helpers SpecificTypeHelper,AllTypesHelper'        }
+    @{ key='SQLite';        ns='SQLite';       cs=$sqliteCN; extra=@('--context-modifier','internal','--add-static-init-context','true','--customize',$scaffoldTtPath) }
+    @{ key='SQLite.Fluent'; ns='FluentSQLite'; cs=$sqliteCN; extra=@('--metadata','fluent','--fluent-entity-type-helpers','SpecificTypeHelper,AllTypesHelper')        }
 )
 
 # --- Build the invocation list ------------------------------------------------------------------
@@ -252,7 +252,7 @@ foreach ($tpl in $Templates) {
             $namespace = "Cli.NewCliFeatures.$nsSuffix"
             $targetDir = Join-Path $cliOutRoot (Join-Path 'NewCliFeatures' $r.key)
             $cliArgs = @('scaffold','-o',$targetDir,'-p','SQLite','-c',$r.cs,'-t','default','--nrt','true','-n',$namespace,'--context-name','TestDataDB')
-            $cliArgs += ($r.extra -split ' ' | Where-Object { $_ })
+            $cliArgs += $r.extra
             $jobs += [pscustomobject]@{ Template='NewCliFeatures'; Key=$r.key; Provider='SQLite'; CnName=$null; TargetDir=$targetDir; CliArgs=$cliArgs }
         }
         continue

@@ -122,7 +122,7 @@ function Build-Report {
             $issMs = [ordered]@{ number = [int]$iss.milestone.number; title = [string]$iss.milestone.title }
             $issMsState = [string]$iss.milestone.state
         }
-        $matches = ($prMs -and $issMs -and ([int]$issMs.number -eq [int]$prMs.number))
+        $sameMilestone = ($prMs -and $issMs -and ([int]$issMs.number -eq [int]$prMs.number))
         $relation = if ($prMs) { Get-MilestoneRelation -PrTitle $prMs.title -IssueTitle ($issMs.title) } else { 'none' }
         # An issue on an earlier or already-closed milestone is most likely a
         # legitimate cross-milestone case (it shipped earlier; this PR is a
@@ -133,12 +133,12 @@ function Build-Report {
             title             = [string]$iss.title
             milestone         = $issMs
             milestoneState    = $issMsState
-            matches           = $matches
+            matches           = $sameMilestone
             relation          = $relation
             likelyIntentional = [bool]$likelyIntentional
         }
         $closed.Add($row) | Out-Null
-        if ($prMs -and -not $matches) { $laggards.Add($row) | Out-Null }
+        if ($prMs -and -not $sameMilestone) { $laggards.Add($row) | Out-Null }
     }
     return [pscustomobject]@{ pr = $PrNumber; title = [string]$pr.title; prMilestone = $prMs; closedIssues = $closed.ToArray(); laggards = $laggards.ToArray() }
 }

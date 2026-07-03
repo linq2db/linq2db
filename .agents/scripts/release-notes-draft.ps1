@@ -547,11 +547,12 @@ function Do-SweepPlan {
 
     # wiki text: local clone page if provided, else published raw URL
     $wikiText = ''
+    $wikiFetchFailed = $false
     if ($WikiClone -and (Test-Path -LiteralPath (Join-Path $WikiClone 'Releases-and-Roadmap.md'))) {
         $wikiText = [System.IO.File]::ReadAllText((Join-Path $WikiClone 'Releases-and-Roadmap.md'), [System.Text.UTF8Encoding]::new($false))
     } else {
         $url = "https://raw.githubusercontent.com/wiki/$Repo/Releases-and-Roadmap.md"
-        try { $wikiText = (Invoke-WebRequest -Uri $url -TimeoutSec 30 -UseBasicParsing).Content } catch { $wikiText = '' }
+        try { $wikiText = (Invoke-WebRequest -Uri $url -TimeoutSec 30 -UseBasicParsing).Content } catch { $wikiText = ''; $wikiFetchFailed = $true }
     }
 
     $missingDraft = New-Object 'System.Collections.Generic.List[object]'
@@ -580,11 +581,13 @@ function Do-SweepPlan {
     $sweepPath = Join-Path (Get-WorkDir) "release-$Version-notes-sweep.json"
     $payload = [ordered]@{
         ok = $true; action = 'sweep-plan'; milestone = $Milestone; sweepFile = $sweepPath
+        wikiFetchFailed = $wikiFetchFailed
         missingDraft = $missingDraft.ToArray(); missingWiki = $missingWiki.ToArray()
     }
     [System.IO.File]::WriteAllText($sweepPath, ($payload | ConvertTo-Json -Depth 100), [System.Text.UTF8Encoding]::new($false))
     Write-JsonOutput ([ordered]@{
         ok = $true; action = 'sweep-plan'; milestone = $Milestone; sweepFile = $sweepPath
+        wikiFetchFailed = $wikiFetchFailed
         counts = [ordered]@{ total = @($prs).Count; missingDraft = $missingDraft.Count; missingWiki = $missingWiki.Count }
     })
 }

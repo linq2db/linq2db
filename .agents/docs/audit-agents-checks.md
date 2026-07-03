@@ -2,7 +2,7 @@
 
 Per-check rules invoked from [`/audit-agents`](../skills/audit-agents/SKILL.md) → step 2 ("Run the eleven checks"). The skill's orchestration (enumerate corpus → run checks → assemble report → offer patches → apply slnx → report) lives in the SKILL.md; the rules below are the body of step 2.
 
-Each check produces zero or more finding records of the shape defined in the SKILL.md ("Run the eight checks" intro). Run them in parallel where possible; checks are mostly independent.
+Each check produces zero or more finding records of the shape defined in the SKILL.md ("Run the eleven checks" intro). Run them in parallel where possible; checks are mostly independent.
 
 ## 2a. Dead-reference check
 

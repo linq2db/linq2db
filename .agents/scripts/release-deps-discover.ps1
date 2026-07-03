@@ -441,7 +441,7 @@ function Do-Discover {
     $main = Read-PackagesPropsFile -Path (Join-Path $root 'Directory.Packages.props')
     if (-not $main) { Exit-WithError "Directory.Packages.props not found at $root" }
 
-    $t4Path = Join-Path $root 'Tests\Tests.T4.Nugets\Directory.Packages.props'
+    $t4Path = Join-Path $root 'Tests' 'Tests.T4.Nugets' 'Directory.Packages.props'
     $t4 = if (Test-Path -LiteralPath $t4Path) { Read-PackagesPropsFile -Path $t4Path } else { $null }
 
     # 2. Find VersionOverride sites

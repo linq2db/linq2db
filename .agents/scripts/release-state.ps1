@@ -43,6 +43,16 @@ Actions:
                 Inputs:  -Version <ver> -PrepPR <n>
                 Output:  { ok, statePath, state, changedTasks[] }
 
+  ci-probe      Probe `gh pr checks` for the prep PR and record any CI
+                failures not yet acknowledged (via ci-ack) into state.
+                Inputs:  -Version <ver> -PrepPR <n>
+                Output:  { ok, statePath, prepPR, newFailures[] }
+
+  ci-ack        Mark ci-probe-reported failure keys as acknowledged so they
+                aren't surfaced again on the next probe.
+                Inputs:  -Version <ver> -RunIds '<key1>,<key2>;...'
+                Output:  { ok, statePath, added, total }
+
 Conventions follow `.agents/docs/agent-rules.md` →
 *PowerShell Core scripts for complex operations* and
 `.agents/docs/script-authoring.md`.

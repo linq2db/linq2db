@@ -75,13 +75,13 @@ if ($suffix -le 0) {
             if ($n -gt $max) { $max = $n }
         }
     } catch {
-        Write-Error "version query failed ($($_.Exception.Message)); defaulting suffix to 1 — push will 409 if taken"
+        [Console]::Error.WriteLine("version query failed ($($_.Exception.Message)); defaulting suffix to 1 — push will 409 if taken")
     }
     $suffix = $max + 1
 }
 
 $pkgVersion = "$Version-local.$suffix"
-Write-Error "Packing closure at $pkgVersion -> $OutDir (feed: $FeedUrl)"
+[Console]::Error.WriteLine("Packing closure at $pkgVersion -> $OutDir (feed: $FeedUrl)")
 
 # --- pack -------------------------------------------------------------------
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
@@ -92,8 +92,8 @@ if ($NoBuild) { $packArgs += '--no-build' }
 
 foreach ($id in $projects.Keys) {
     $proj = Join-Path $RepoRoot $projects[$id]
-    Write-Error "pack $id"
-    & dotnet pack $proj @packArgs 2>&1 | Out-String | Write-Error
+    [Console]::Error.WriteLine("pack $id")
+    [Console]::Error.WriteLine((& dotnet pack $proj @packArgs 2>&1 | Out-String))
     if ($LASTEXITCODE -ne 0) { Exit-WithError "pack failed for $id ($proj)" }
 }
 
@@ -105,7 +105,7 @@ foreach ($id in $projects.Keys) {
     $entry = [ordered]@{ id = $id; path = $path; pushed = $false; status = 'packed' }
     if (-not $SkipPush) {
         $out = (& dotnet nuget push $path -s $FeedUrl 2>&1 | Out-String)
-        Write-Error $out
+        [Console]::Error.WriteLine($out)
         if ($LASTEXITCODE -eq 0)                                       { $entry.pushed = $true; $entry.status = 'created' }
         elseif ($out -match 'Conflict|already exists|409')             { $entry.status = 'conflict' }
         else                                                            { $entry.status = 'error' }
