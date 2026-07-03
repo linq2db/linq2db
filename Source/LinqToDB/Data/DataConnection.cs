@@ -18,6 +18,7 @@ using LinqToDB.Internal.Async;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Infrastructure;
 using LinqToDB.Internal.Interceptors;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Mapping;
 using LinqToDB.Metrics;
 
@@ -1003,7 +1004,7 @@ namespace LinqToDB.Data
 		/// <see cref="DbBatchCommand"/> with its own parameter scope, so parameter names are NOT uniquified across statements
 		/// (unlike the semicolon-concatenated combined command). The caller owns the returned batch and must dispose it.
 		/// </summary>
-		internal DbBatch CreateBatch(IReadOnlyList<(string Sql, DbParameter[]? Parameters)> statements)
+		internal DbBatch CreateBatch(IReadOnlyList<RenderedStatement> statements)
 		{
 			CheckAndThrowOnDisposed();
 

@@ -521,22 +521,69 @@ namespace LinqToDB.Data
 				return dmlService.PlanScenario(scenario, dataConnection.DataProvider.SqlProviderFlags);
 			}
 
-			// Executes one pre-rendered command (from RenderCombinedBatches) and returns the reader positioned at the
-			// first result set. The caller harvests each buffered result set then, for the command holding the main
-			// query, streams the last result set — and owns the returned reader for the stream's lifetime.
-			internal static DataReaderWrapper ExecuteRendered(DataConnection dataConnection, string sql, DbParameter[]? dbParameters)
+			// The single execution seam for one combined-eager command. A single (pre-merged / concatenated) statement runs
+			// as one DbCommand; a multi-statement command runs as a DbBatch (each statement its own parameter scope),
+			// attached to the reader wrapper so the batch is released when the reader is disposed. Returns the reader
+			// positioned at the first result set: the caller harvests each buffered result set, then for the command holding
+			// the main query streams the last result set — and owns the returned reader for the stream's lifetime.
+			internal static DataReaderWrapper ExecuteCombined(DataConnection dataConnection, CombinedCommand command, CommandBehavior commandBehavior)
 			{
-				InitCommand(dataConnection, new CommandWithParameters(sql, []), dbParameters, null);
+				var statements = command.Statements;
 
-				return dataConnection.ExecuteDataReader(CommandBehavior.Default);
+				if (statements.Count == 1)
+				{
+					var statement = statements[0];
+
+					InitCommand(dataConnection, new CommandWithParameters(statement.Sql, []), statement.Parameters, command.QueryHints);
+
+					return dataConnection.ExecuteDataReader(commandBehavior);
+				}
+
+#if SUPPORTS_DBBATCH
+				if (dataConnection.CanUseDbBatch)
+				{
+					var batch  = dataConnection.CreateBatch(statements);
+					var reader = dataConnection.ExecuteBatchDataReader(batch, commandBehavior);
+
+					reader.AdditionalDisposable = batch;
+
+					return reader;
+				}
+#endif
+
+				// A multi-statement command carries isolated (non-uniquified) parameter scopes, so it can only run as a
+				// DbBatch; the eager builder renders a semicolon-concatenated single statement when DbBatch is unavailable,
+				// so this path is unreachable.
+				throw new InvalidOperationException("A multi-statement combined command requires DbBatch support.");
 			}
 
 			// In case of change the logic of this method, DO NOT FORGET to change the sibling method.
-			internal static async Task<DataReaderWrapper> ExecuteRenderedAsync(DataConnection dataConnection, string sql, DbParameter[]? dbParameters, CancellationToken cancellationToken)
+			internal static async Task<DataReaderWrapper> ExecuteCombinedAsync(DataConnection dataConnection, CombinedCommand command, CommandBehavior commandBehavior, CancellationToken cancellationToken)
 			{
-				InitCommand(dataConnection, new CommandWithParameters(sql, []), dbParameters, null);
+				var statements = command.Statements;
 
-				return await dataConnection.ExecuteDataReaderAsync(CommandBehavior.Default, cancellationToken).ConfigureAwait(false);
+				if (statements.Count == 1)
+				{
+					var statement = statements[0];
+
+					InitCommand(dataConnection, new CommandWithParameters(statement.Sql, []), statement.Parameters, command.QueryHints);
+
+					return await dataConnection.ExecuteDataReaderAsync(commandBehavior, cancellationToken).ConfigureAwait(false);
+				}
+
+#if SUPPORTS_DBBATCH
+				if (dataConnection.CanUseDbBatch)
+				{
+					var batch  = dataConnection.CreateBatch(statements);
+					var reader = await dataConnection.ExecuteBatchDataReaderAsync(batch, commandBehavior, cancellationToken).ConfigureAwait(false);
+
+					reader.AdditionalDisposable = batch;
+
+					return reader;
+				}
+#endif
+
+				throw new InvalidOperationException("A multi-statement combined command requires DbBatch support.");
 			}
 
 			#region Scenario interpreter

@@ -18,6 +18,17 @@ namespace LinqToDB.Internal.SqlProvider
 	/// <summary>A rendered physical command: its SQL text and the parameters it carries.</summary>
 	sealed record CommandWithParameters(string Command, IReadOnlyList<SqlParameter> SqlParameters);
 
+	/// <summary>One rendered statement in an isolated parameter scope (its own bound parameters), as a DbBatch command
+	/// carries it. Names are NOT uniquified against sibling statements (unlike a semicolon-concatenated command).</summary>
+	sealed record RenderedStatement(string Sql, DbParameter[]? Parameters);
+
+	/// <summary>
+	/// One physical combined-execution command covering one or more scenario steps. <see cref="Statements"/> holds either a
+	/// single pre-merged (semicolon-concatenated) statement or, on the DbBatch path, one entry per statement (each its own
+	/// parameter scope). <see cref="StepIndexes"/> are the scenario step indices it covers, in order.
+	/// </summary>
+	sealed record CombinedCommand(IReadOnlyList<RenderedStatement> Statements, int[] StepIndexes, IReadOnlyCollection<string>? QueryHints);
+
 	/// <summary>
 	/// Shared rendering of a <see cref="SqlCommandScenario"/> into physical commands (one per <see cref="SqlCommandGroup"/>).
 	/// Used by the direct runner (<c>DataConnection.QueryRunner.GetCommand</c>) and the remote <c>GetSqlText</c> path so
@@ -121,7 +132,7 @@ namespace LinqToDB.Internal.SqlProvider
 		// group becomes one DbBatch whose DbBatchCommands each carry only their own parameters (NO cross-statement name
 		// uniquification, unlike RenderCombinedBatches which merges a group into one semicolon-concatenated command). No
 		// SQL-length splitting - DbBatch sends statements structurally, so the only bound is PlanScenario per-group count.
-		internal static IReadOnlyList<(string Sql, DbParameter[]? Parameters)> RenderBatchStatements(
+		internal static IReadOnlyList<RenderedStatement> RenderStatements(
 			DataConnection dataConnection, IReadOnlyList<SqlStatement> statements, IReadOnlyParameterValues? parameterValues)
 		{
 			var options      = dataConnection.Options;
@@ -131,7 +142,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 			var serviceProvider = ((IInfrastructure<IServiceProvider>)dataConnection.DataProvider).Instance;
 
-			var result = new (string, DbParameter[]?)[statements.Count];
+			var result = new RenderedStatement[statements.Count];
 
 			using var sb = Pools.StringBuilder.Allocate();
 
@@ -174,7 +185,7 @@ namespace LinqToDB.Internal.SqlProvider
 					}
 				}
 
-				result[i] = (sb.Value.ToString(), dbParameters);
+				result[i] = new RenderedStatement(sb.Value.ToString(), dbParameters);
 			}
 
 			return result;
