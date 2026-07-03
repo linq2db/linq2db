@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using LinqToDB;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
 using Newtonsoft.Json.Linq;
@@ -490,7 +491,7 @@ namespace Tests.Linq
 			if (context.IsAnyOf(TestProvName.AllOracle))
 				Assert.That(db.LastQuery, Does.Contain("(ORDER BY p.\"Value1\", c_1.\"ChildID\" DESC, p.\"ParentID\")"));
 			else if (context.IsAnyOf(TestProvName.AllClickHouse, TestProvName.AllDuckDB))
-				Assert.That(db.LastQuery, Does.Contain("ROW_NUMBER() OVER(ORDER BY p.Value1, c_1.ChildID DESC, p.ParentID)"));
+				Assert.That(db.LastQuery, Does.Contain("ROW_NUMBER() OVER (ORDER BY p.Value1, c_1.ChildID DESC, p.ParentID)"));
 			else
 				Assert.Fail("Missing assertion");
 		}
@@ -759,6 +760,25 @@ namespace Tests.Linq
 					};
 			var res = q.ToArray();
 			Assert.That(res, Is.Not.Empty);
+		}
+
+		// Regression: a legacy Sql.Ext NthValue FROM LAST modifier must survive conversion to the Sql.Window
+		// pipeline. It was previously discarded (the converter skipped Sql.From), so NTH_VALUE(...) FROM LAST
+		// silently emitted without FROM LAST and returned the value counted from the first row instead of the last.
+		[Test]
+		public void TestNthValueOracleFromLast([IncludeDataSources(TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+			var q =
+					from p in db.Parent
+					join c in db.Child on p.ParentID equals c.ParentID
+					select Sql.Ext.NthValue(c.ChildID, p.ParentID, Sql.From.Last, Sql.Nulls.Ignore).Over().PartitionBy(p.Value1, c.ChildID).ToValue();
+
+			var sql = q.ToSqlQuery().Sql;
+			sql.ShouldContain("FROM LAST");
+			sql.ShouldContain("IGNORE NULLS");
+
+			q.ToArray();
 		}
 
 		[Test]
@@ -2149,5 +2169,76 @@ namespace Tests.Linq
 			documentCombinedJson.ToArray();
 		}
 		#endregion
+
+		// These legacy-analytic NULLS tests run on the full analytic provider set (SupportsAnalyticFunctionsContext),
+		// excluding SQL Server 2005/2008 which have no aggregate window functions (SUM() OVER (ORDER BY ...)). A
+		// requested NULLS FIRST surfaces differently per provider, so the assertion is gated on the provider's
+		// capability flags, mirroring the builder's own emission rule (BuildWindowOrderByItem): the position is emitted
+		// only when it is NOT already the provider's natural NULL placement (QueryHelper.MatchesNaturalNullsPosition) —
+		// then natively as a NULLS FIRST token, or as a CASE-WHEN sort key on providers without native support.
+		static void AssertNullsFirstHonored(TestDataConnection db)
+		{
+			var flags = db.DataProvider.SqlProviderFlags;
+
+			if (QueryHelper.MatchesNaturalNullsPosition(flags.DefaultNullsOrdering, Sql.NullsPosition.First, descending: false))
+				// NULLS FIRST already matches the provider's natural ASC ordering — emitted implicitly, must not be inverted.
+				Assert.That(db.LastQuery, Does.Not.Contain("NULLS LAST"));
+			else if (flags.IsNullsOrderingSupported)
+				Assert.That(db.LastQuery, Does.Contain("NULLS FIRST"));
+			else
+				Assert.That(db.LastQuery, Does.Contain("CASE").And.Contains("IS NULL"));
+		}
+
+		[Test]
+		public void LegacyAnalytic_DefaultNullsPosition_AppliedToOrderBy(
+			[SupportsAnalyticFunctionsContext(false, TestProvName.AllSqlServer2008Minus)] string context)
+		{
+			using var db = GetDataConnection(context, o => o.UseDefaultNullsPosition(Sql.NullsPosition.First));
+
+			// A legacy Sql.Ext analytic chain (converted to the new Sql.Window pipeline) must pick up the
+			// configured DefaultNullsPosition for its ORDER BY, just like a plain query OrderBy would.
+			var q =
+				from p in db.Parent
+				select Sql.Ext.Sum(p.Value1!.Value).Over().OrderBy(p.Value1).ToValue();
+
+			q.ToArray();
+
+			AssertNullsFirstHonored(db);
+		}
+
+		[Test]
+		public void LegacyAnalytic_ExplicitNullsPosition_AppliedToOrderBy(
+			[SupportsAnalyticFunctionsContext(false, TestProvName.AllSqlServer2008Minus)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			// A legacy Sql.Ext analytic chain with an explicit NULLS position on its ORDER BY (the OrderBy(expr, nulls)
+			// overload) must carry that position through the conversion to the new Sql.Window pipeline rather than dropping it.
+			var q =
+				from p in db.Parent
+				select Sql.Ext.Sum(p.Value1!.Value).Over().OrderBy(p.Value1, Sql.NullsPosition.First).ToValue();
+
+			q.ToArray();
+
+			AssertNullsFirstHonored(db);
+		}
+
+		[Test]
+		public void LegacyAnalytic_ExplicitNullsPosition_OverridesConfiguredDefault(
+			[SupportsAnalyticFunctionsContext(false, TestProvName.AllSqlServer2008Minus)] string context)
+		{
+			// An explicit NULLS position on a legacy analytic ORDER BY must win over the configured default: the configured
+			// default is Last while the explicit position is First. Seeing the First position honored (per provider) proves
+			// the explicit value survives the conversion; had the configured default wrongly overridden it, it would be Last.
+			using var db = GetDataConnection(context, o => o.UseDefaultNullsPosition(Sql.NullsPosition.Last));
+
+			var q =
+				from p in db.Parent
+				select Sql.Ext.Sum(p.Value1!.Value).Over().OrderBy(p.Value1, Sql.NullsPosition.First).ToValue();
+
+			q.ToArray();
+
+			AssertNullsFirstHonored(db);
+		}
 	}
 }

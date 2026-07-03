@@ -1879,42 +1879,56 @@ namespace Tests.Linq
 			// System.Data.SqlClient
 			// Microsoft.Data.SqlClient
 			// SqlCe
-			using (new OptimizeForSequentialAccess(true))
-			using (var db = GetDataContext(context, interceptor: SequentialAccessCommandInterceptor.Instance, suppressSequentialAccess: true))
-			{
-				var q = db.Person
-					.Select(p => new
-					{
-						FirstName  = p.FirstName,
-						ID         = p.ID,
-						IDNullable = Sql.ToNullable(p.ID),
-						LastName   = p.LastName,
-						FullName   = $"{p.FirstName} {p.LastName}"
-					});
+			using var db = GetDataContext(context, interceptor: SequentialAccessCommandInterceptor.Instance, suppressSequentialAccess: true, optimizeForSequentialAccess: true);
 
-				foreach (var p in q.ToArray())
-					Assert.That(p.FullName, Is.EqualTo($"{p.FirstName} {p.LastName}"));
-			}
+			var q = db.Person
+				.Select(p => new
+				{
+					FirstName  = p.FirstName,
+					ID         = p.ID,
+					IDNullable = Sql.ToNullable(p.ID),
+					LastName   = p.LastName,
+					FullName   = $"{p.FirstName} {p.LastName}"
+				});
+
+			foreach (var p in q.ToArray())
+				Assert.That(p.FullName, Is.EqualTo($"{p.FirstName} {p.LastName}"));
 		}
 
 		[Test]
 		public void SequentialAccessTest_Complex([DataSources] string context)
 		{
 			// fields read out-of-order, multiple times and with different types
-			using (new OptimizeForSequentialAccess(true))
 			// suppressSequentialAccess: true to avoid interceptor added twice
-			using (var db = GetDataContext(context, interceptor: SequentialAccessCommandInterceptor.Instance, suppressSequentialAccess: true))
-			{
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(InheritanceParent[0].GetType(), Is.EqualTo(typeof(InheritanceParentBase)));
-					Assert.That(InheritanceParent[1].GetType(), Is.EqualTo(typeof(InheritanceParent1)));
-					Assert.That(InheritanceParent[2].GetType(), Is.EqualTo(typeof(InheritanceParent2)));
-				}
+			using var db = GetDataContext(context, interceptor: SequentialAccessCommandInterceptor.Instance, suppressSequentialAccess: true, optimizeForSequentialAccess: true);
 
-				AreEqual(InheritanceParent, db.InheritanceParent);
-				AreEqual(InheritanceChild, db.InheritanceChild);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(InheritanceParent[0].GetType(), Is.EqualTo(typeof(InheritanceParentBase)));
+				Assert.That(InheritanceParent[1].GetType(), Is.EqualTo(typeof(InheritanceParent1)));
+				Assert.That(InheritanceParent[2].GetType(), Is.EqualTo(typeof(InheritanceParent2)));
 			}
+
+			AreEqual(InheritanceParent, db.InheritanceParent);
+			AreEqual(InheritanceChild, db.InheritanceChild);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/5639 - a non-sequential materialization plan cached for a configuration must not be reused by a SequentialAccess context sharing that configuration")]
+		public void SequentialAccessTest_CacheKey([DataSources] string context)
+		{
+			// Warm the query cache for this configuration with OptimizeForSequentialAccess OFF (random column-access plan).
+			// Exception: on the SqlServer .SA lane the factory forces the option ON for every context, so the warm-up there
+			// is already a sequential-access plan and the divergence below is exercised by the other [DataSources] providers.
+			using (var db = GetDataContext(context))
+				AreEqual(InheritanceParent, db.InheritanceParent);
+
+			// Same query and configuration, now with the option ON and the reader opened with
+			// CommandBehavior.SequentialAccess. The two plans differ only by OptimizeForSequentialAccess,
+			// which now participates in DataOptions.ConfigurationID; before this fix the cached
+			// random-access plan was reused here and threw "Invalid attempt to read from column ordinal
+			// '0'. With CommandBehavior.SequentialAccess, you may only read from column ordinal 'N' or greater."
+			using (var db = GetDataContext(context, interceptor: SequentialAccessCommandInterceptor.Instance, suppressSequentialAccess: true, optimizeForSequentialAccess: true))
+				AreEqual(InheritanceParent, db.InheritanceParent);
 		}
 		#endregion
 
