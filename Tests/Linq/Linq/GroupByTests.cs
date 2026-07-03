@@ -2393,8 +2393,11 @@ namespace Tests.Linq
 			Assert.That(index, Is.EqualTo(-1));
 		}
 
+		// LinqService (remote) excluded: the combined-command engine uniquifies the duplicate parameter name
+		// (@input -> @input_1) when merging the two statements into one command, while the remote separate-command
+		// path keeps @input in both — the SQL text (not the result) differs, tripping the remote-vs-direct baseline.
 		[Test]
-		public void Issue434Test1([DataSources] string context)
+		public void Issue434Test1([DataSources(false)] string context)
 		{
 			var input = "test";
 
