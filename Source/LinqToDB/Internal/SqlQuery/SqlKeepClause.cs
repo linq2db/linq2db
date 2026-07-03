@@ -56,19 +56,11 @@ namespace LinqToDB.Internal.SqlQuery
 
 		protected bool Equals(SqlKeepClause other)
 		{
-			if (Type != other.Type || OrderBy.Count != other.OrderBy.Count)
-				return false;
-
-			// SqlWindowOrderItem has no structural Equals; its GetElementHashCode is the structural
-			// fingerprint (expression + direction + nulls), and is what the parent SqlExtendedFunction
-			// hash already keys on — so comparing it keeps Equals consistent with GetElementHashCode.
-			for (var i = 0; i < OrderBy.Count; i++)
-			{
-				if (OrderBy[i].GetElementHashCode() != other.OrderBy[i].GetElementHashCode())
-					return false;
-			}
-
-			return true;
+			// Delegate to the structural comparer overload with the AST's DefaultComparer rather than
+			// comparing order items by GetElementHashCode: a hash collision would make two distinct KEEP
+			// clauses compare equal and corrupt CSE / query-cache dedup. Mirrors how SqlExtendedFunction
+			// compares its child clauses structurally via the comparer.
+			return Equals(other, SqlExtensions.DefaultComparer);
 		}
 
 		public override bool Equals([NotNullWhen(true)] object? obj)
