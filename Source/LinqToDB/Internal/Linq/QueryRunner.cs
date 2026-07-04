@@ -994,7 +994,7 @@ namespace LinqToDB.Internal.Linq
 			// they may depend on each other and feed the combinable materializers + main mapper via the shared context),
 			// then the combined reader commands with the main-carrying command last. BuildCommands does not read the context,
 			// so rendering it here (before the sequential preambles run) is order-independent. Returns the scenario steps too,
-			// so the combined-reader walk can drive the shared WalkCombinedResultSets (which reads each step's Kind).
+			// so the combined-reader commands drive the shared ExecuteCombinedHarvest (whose walk reads each step's Kind).
 			(IReadOnlyList<SqlCommandStep> ScenarioSteps, List<EagerStep> Steps) BuildSteps()
 			{
 				var (scenario, values) = PrepareScenario();
@@ -1013,13 +1013,13 @@ namespace LinqToDB.Internal.Linq
 				return (scenario.Steps, steps);
 			}
 
-			// Harvests a combined command's combinable child result sets into the shared execution context via the shared
-			// WalkCombinedResultSets, advancing the reader past each child. childStepIndexes are the scenario indices of the
-			// children only; the main-carrying command's terminal step is excluded and streamed by the caller, and the walk's
-			// trailing NextResult after the last child leaves the reader on the following result set (the main, when it follows).
-			void HarvestChildren(DbDataReader dr, IReadOnlyList<int> childStepIndexes, IReadOnlyList<SqlCommandStep> scenarioSteps, SqlCommandExecutionContext context)
+			// Executes a combined command through the shared ExecuteCombinedHarvest seam and harvests its combinable child
+			// result sets into the execution context, returning the open reader for the caller to dispose or stream from.
+			// harvestStepIndexes are the scenario indices of the children only; a main-carrying command excludes its terminal
+			// (main) step, whose result set the walk's trailing NextResult leaves the reader positioned on for streaming.
+			DataReaderWrapper ExecuteAndHarvest(DataConnection dataConnection, CombinedCommand command, IReadOnlyList<int> harvestStepIndexes, IReadOnlyList<SqlCommandStep> scenarioSteps, SqlCommandExecutionContext context)
 			{
-				DataConnection.QueryRunner.WalkCombinedResultSets(dr, childStepIndexes, scenarioSteps, (i, r) =>
+				return DataConnection.QueryRunner.ExecuteCombinedHarvest(dataConnection, command, scenarioSteps, harvestStepIndexes, (i, r) =>
 				{
 					var preambleIndex = _combinableIndexes[i];
 
@@ -1047,30 +1047,24 @@ namespace LinqToDB.Internal.Linq
 							continue;
 						}
 
-						var readerStep  = (CombinedReaderStep)step;
-						var reader      = DataConnection.QueryRunner.ExecuteCombined(dataConnection, readerStep.Command, System.Data.CommandBehavior.Default);
-						var stepIndexes = readerStep.Command.StepIndexes;
+						var readerStep     = (CombinedReaderStep)step;
+						var command        = readerStep.Command;
+						var stepIndexes    = command.StepIndexes;
+						// A main-carrying command's terminal (main) step is its last; harvest only the children, and the walk's
+						// trailing NextResult after the last child leaves the reader on the main result set for streaming below.
+						var harvestIndexes = readerStep.CarriesMain ? stepIndexes.Take(stepIndexes.Count - 1).ToList() : stepIndexes;
+
+						var reader = ExecuteAndHarvest(dataConnection, command, harvestIndexes, scenarioSteps, context);
 
 						if (!readerStep.CarriesMain)
 						{
-							try
-							{
-								HarvestChildren(reader.DataReader!, stepIndexes, scenarioSteps, context);
-							}
-							finally
-							{
-								reader.Dispose();
-							}
+							reader.Dispose();
 						}
 						else
 						{
 							mainReader = reader;
 
 							var dr = reader.DataReader!;
-
-							// The main is the last step of this command; harvest only the children — the walk's trailing NextResult
-							// after the last child leaves the reader on the main result set, which the caller streams below.
-							HarvestChildren(dr, stepIndexes.Take(stepIndexes.Count - 1).ToList(), scenarioSteps, context);
 
 							foreach (var item in _query.GetResultFromReader!(_dataContext, _expressions, _parameters, context, dr))
 								yield return item;
@@ -1085,10 +1079,10 @@ namespace LinqToDB.Internal.Linq
 
 			IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-			// Async sibling of HarvestChildren.
-			Task HarvestChildrenAsync(DbDataReader dr, IReadOnlyList<int> childStepIndexes, IReadOnlyList<SqlCommandStep> scenarioSteps, SqlCommandExecutionContext context, CancellationToken cancellationToken)
+			// Async sibling of ExecuteAndHarvest.
+			Task<DataReaderWrapper> ExecuteAndHarvestAsync(DataConnection dataConnection, CombinedCommand command, IReadOnlyList<int> harvestStepIndexes, IReadOnlyList<SqlCommandStep> scenarioSteps, SqlCommandExecutionContext context, CancellationToken cancellationToken)
 			{
-				return DataConnection.QueryRunner.WalkCombinedResultSetsAsync(dr, childStepIndexes, scenarioSteps, async (i, r) =>
+				return DataConnection.QueryRunner.ExecuteCombinedHarvestAsync(dataConnection, command, scenarioSteps, harvestStepIndexes, async (i, r) =>
 				{
 					var preambleIndex = _combinableIndexes[i];
 
@@ -1115,30 +1109,24 @@ namespace LinqToDB.Internal.Linq
 							continue;
 						}
 
-						var readerStep  = (CombinedReaderStep)step;
-						var reader      = await DataConnection.QueryRunner.ExecuteCombinedAsync(dataConnection, readerStep.Command, System.Data.CommandBehavior.Default, cancellationToken).ConfigureAwait(false);
-						var stepIndexes = readerStep.Command.StepIndexes;
+						var readerStep     = (CombinedReaderStep)step;
+						var command        = readerStep.Command;
+						var stepIndexes    = command.StepIndexes;
+						// A main-carrying command's terminal (main) step is its last; harvest only the children, and the walk's
+						// trailing NextResult after the last child leaves the reader on the main result set for streaming below.
+						var harvestIndexes = readerStep.CarriesMain ? stepIndexes.Take(stepIndexes.Count - 1).ToList() : stepIndexes;
+
+						var reader = await ExecuteAndHarvestAsync(dataConnection, command, harvestIndexes, scenarioSteps, context, cancellationToken).ConfigureAwait(false);
 
 						if (!readerStep.CarriesMain)
 						{
-							try
-							{
-								await HarvestChildrenAsync(reader.DataReader!, stepIndexes, scenarioSteps, context, cancellationToken).ConfigureAwait(false);
-							}
-							finally
-							{
-								await reader.DisposeAsync().ConfigureAwait(false);
-							}
+							await reader.DisposeAsync().ConfigureAwait(false);
 						}
 						else
 						{
 							mainReader = reader;
 
 							var dr = reader.DataReader!;
-
-							// The main is the last step of this command; harvest only the children — the walk's trailing NextResult
-							// after the last child leaves the reader on the main result set, which the caller streams below.
-							await HarvestChildrenAsync(dr, stepIndexes.Take(stepIndexes.Count - 1).ToList(), scenarioSteps, context, cancellationToken).ConfigureAwait(false);
 
 							await foreach (var item in _query.GetResultFromReader!(_dataContext, _expressions, _parameters, context, dr).WithCancellation(cancellationToken).ConfigureAwait(false))
 								yield return item;
