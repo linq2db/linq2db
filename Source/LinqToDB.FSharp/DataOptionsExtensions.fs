@@ -13,7 +13,13 @@ type Methods() =
         ms
 
     /// <summary>Enables support for F#-specific features.</summary>
-    /// <remarks>Adds support for F# record types and automatic mapping of F# <c>'T option</c> columns.</remarks>
+    /// <remarks>
+    /// Adds support for:
+    /// <list type="bullet">
+    /// <item>F# record types;</item>
+    /// <item>automatic mapping of F# <c>'T option</c> and <c>'T voption</c> columns.</item>
+    /// </list>
+    /// </remarks>
     [<Extension>]
     static member UseFSharp(options : DataOptions) =
         let options =
