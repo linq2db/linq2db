@@ -1563,6 +1563,32 @@ namespace Tests.Data
 			Assert.That(db.NextQueryHints, Is.Empty, "eager load must consume NextQueryHints so it cannot leak to the next query");
 		}
 
+		[Test]
+		public void EagerLoadCachedRenderBindsPerExecutionParameters([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllMySql)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			using var parents  = db.CreateLocalTable<Pr5EagerParent>();
+			using var children = db.CreateLocalTable<Pr5EagerChild>();
+
+			db.Insert(new Pr5EagerParent { Id = 1 });
+			db.Insert(new Pr5EagerParent { Id = 2 });
+			db.Insert(new Pr5EagerChild  { Id = 10, ParentId = 1 });
+			db.Insert(new Pr5EagerChild  { Id = 20, ParentId = 2 });
+
+			// Same compiled query, different @id each run: the second execution reuses the cached render and must bind its
+			// OWN parameter (2), not the first run's cached value (1). A stale bind would return parent 1 / child 10.
+			for (var id = 1; id <= 2; id++)
+			{
+				var result = db.GetTable<Pr5EagerParent>().Where(p => p.Id == id).LoadWith(p => p.Children).ToList();
+
+				Assert.That(result,                         Has.Count.EqualTo(1));
+				Assert.That(result[0].Id,                   Is.EqualTo(id));
+				Assert.That(result[0].Children,             Has.Count.EqualTo(1));
+				Assert.That(result[0].Children[0].ParentId, Is.EqualTo(id));
+			}
+		}
+
 		// Captures whether the eager read ran while a transaction was active on the command (see EagerLoadOpensReadConsistencyTransaction).
 		sealed class ReaderTransactionInterceptor : CommandInterceptor
 		{

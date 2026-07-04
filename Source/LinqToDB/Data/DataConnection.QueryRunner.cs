@@ -421,9 +421,10 @@ namespace LinqToDB.Data
 			// eager-load group splits across several round-trips instead of one oversized command. Within each command the
 			// statements render through a SINGLE shared OptimizationContext (dialect-converted during BuildSql, which
 			// never mutates the shared cached statement) whose parameter normalizer uniquifies/dedups names ACROSS that
-			// command; each command therefore carries its OWN parameter scope. Returns, per command: the SQL, the bound
-			// parameters, and how many of the input statements it covers (contiguous, in order).
-			internal static IReadOnlyList<(string Sql, DbParameter[]? Parameters, int StatementCount)> RenderCombinedBatches(
+			// command; each command therefore carries its OWN parameter scope. Returns, per command: the SQL, its unbound
+			// SqlParameter list, and how many of the input statements it covers (contiguous, in order) — cacheable for a
+			// non-parameter-dependent scenario; DbParameter binding then repeats per execution.
+			internal static IReadOnlyList<(string Sql, IReadOnlyList<SqlParameter> SqlParameters, int StatementCount)> RenderCombinedBatchTemplates(
 				DataConnection dataConnection, IReadOnlyList<SqlStatement> statements, IReadOnlyParameterValues? parameterValues)
 			{
 				var options      = dataConnection.Options;
@@ -439,7 +440,7 @@ namespace LinqToDB.Data
 				// (statement COUNT is separately bounded by PlanScenario's MaxStatementsPerCombinedGroup).
 				var maxCommandLength = dataConnection.DataProvider.SqlProviderFlags.MaxCombinedCommandLength;
 
-				var result = new List<(string, DbParameter[]?, int)>();
+				var result = new List<(string, IReadOnlyList<SqlParameter>, int)>();
 
 				using var sb = Pools.StringBuilder.Allocate();
 
@@ -467,7 +468,7 @@ namespace LinqToDB.Data
 						i++;
 					}
 
-					result.Add((sb.Value.ToString(), ScenarioCommandRenderer.MaterializeDbParameters(dataConnection, optimizationContext.GetParameters(), parameterValues), count));
+					result.Add((sb.Value.ToString(), optimizationContext.GetParameters(), count));
 				}
 
 				return result;
