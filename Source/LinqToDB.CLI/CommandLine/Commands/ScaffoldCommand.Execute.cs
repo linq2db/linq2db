@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.IO;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.CodeModel;
@@ -24,7 +25,8 @@ namespace LinqToDB.CommandLine
 			ICliEnvironment                environment,
 			string[]                       rawArgs,
 			Dictionary<CliOption, object?> options,
-			IReadOnlyCollection<string>    unknownArgs)
+			IReadOnlyCollection<string>    unknownArgs,
+			CancellationToken              cancellationToken)
 		{
 			// processed on controller level already
 			options.Remove(General.Import);

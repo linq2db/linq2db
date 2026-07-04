@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace LinqToDB.CommandLine
@@ -181,12 +182,14 @@ namespace LinqToDB.CommandLine
 		/// <param name="rawArgs">Raw list of CLI arguments.</param>
 		/// <param name="options">Parsed command options with values. Command allowed to modify dictionary (e.g. remove processed options to detect options without handler).</param>
 		/// <param name="unknownArgs">List of unrecognized arguments.</param>
+		/// <param name="cancellationToken">Command cancellation token.</param>
 		/// <returns>Command execution status code.</returns>
 		public abstract ValueTask<int> Execute(
 			CliController                  controller,
 			ICliEnvironment                environment,
 			string[]                       rawArgs,
 			Dictionary<CliOption, object?> options,
-			IReadOnlyCollection<string>    unknownArgs);
+			IReadOnlyCollection<string>    unknownArgs,
+			CancellationToken              cancellationToken);
 	}
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace LinqToDB.CommandLine
@@ -138,7 +139,8 @@ namespace LinqToDB.CommandLine
 			ICliEnvironment                environment,
 			string[]                       rawArgs,
 			Dictionary<CliOption, object?> options,
-			IReadOnlyCollection<string>    unknownArgs)
+			IReadOnlyCollection<string>    unknownArgs,
+			CancellationToken              cancellationToken)
 		{
 			var settings = ProcessOptions(environment, options);
 
@@ -154,7 +156,7 @@ namespace LinqToDB.CommandLine
 			}
 
 			var executor = new QueryCommandExecutor(environment, settings);
-			return executor.Execute();
+			return executor.Execute(cancellationToken);
 		}
 
 		private QueryCommandSettings? ProcessOptions(ICliEnvironment environment, Dictionary<CliOption, object?> options)
@@ -171,6 +173,12 @@ namespace LinqToDB.CommandLine
 			var profileName = (string?)profile ?? DefaultProfileName;
 
 			QueryCommandConfiguration? configuration = null;
+			if (profile != null && config == null)
+			{
+				environment.Error.WriteLine($"Option '--{Profile.Name}' requires option '--{Config.Name}'.");
+				return null;
+			}
+
 			if (config != null && !QueryCommandConfiguration.TryLoad(environment, (string)config, profileName, out configuration, out var error))
 			{
 				environment.Error.WriteLine(error);

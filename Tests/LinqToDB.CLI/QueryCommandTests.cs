@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.CommandLine;
@@ -75,6 +76,23 @@ namespace LinqToDB.CLI.Tests
 		}
 
 		[Test]
+		public void QueryHonorsCancellationToken()
+		{
+			using var cancellation = new CancellationTokenSource();
+
+			cancellation.Cancel();
+
+			Assert.ThrowsAsync<OperationCanceledException>(async () =>
+				await new LinqToDBCliController()
+					.Execute(
+						["query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql", "select 1"],
+						new TestCliEnvironment(),
+						cancellation.Token)
+					.AsTask()
+					.ConfigureAwait(false));
+		}
+
+		[Test]
 		public async Task QueryAcceptsSqlFile()
 		{
 			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql-file", "query.sql");
@@ -87,14 +105,14 @@ namespace LinqToDB.CLI.Tests
 		}
 
 		[Test]
-		public async Task QueryAcceptsProfile()
+		public async Task QueryRejectsProfileWithoutConfig()
 		{
 			var result = await RunCli("query", "--profile", "uat", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql", "select 1");
 
 			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-3));
-				Assert.That(result.Error,    Does.Contain("Query command execution is not implemented yet."));
+				Assert.That(result.ExitCode, Is.EqualTo(-1));
+				Assert.That(result.Error,    Does.Contain("Option '--profile' requires option '--config'."));
 			}
 		}
 
@@ -152,6 +170,60 @@ namespace LinqToDB.CLI.Tests
 				""");
 
 			var result = await RunCli(environment, "query", "--config", config, "--profile", "uat", "--sql-file", "query.sql");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.EqualTo(-3));
+				Assert.That(result.Error,    Does.Contain("Query command execution is not implemented yet."));
+			}
+		}
+
+		[Test]
+		public async Task QueryUsesDefaultValuesForMissingProfileValues()
+		{
+			var environment = new TestCliEnvironment();
+			var config      = AddConfigFile(environment, """
+				{
+					"default": {
+						"provider": "SQLite",
+						"connectionString": "Data Source=:memory:",
+						"output": "csv",
+						"outputFile": "default.csv"
+					},
+					"uat": {
+						"connectionString": "Server=.;Database=test;Trusted_Connection=True"
+					}
+				}
+				""");
+
+			var result = await RunCli(environment, "query", "--config", config, "--profile", "uat", "--sql", "select 1");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.EqualTo(-3));
+				Assert.That(result.Error,    Does.Contain("Query command execution is not implemented yet."));
+			}
+		}
+
+		[Test]
+		public async Task QueryCliOptionsOverrideConfigProfile()
+		{
+			var environment = new TestCliEnvironment();
+			var config      = AddConfigFile(environment, """
+				{
+					"default": {
+						"provider": "SQLite",
+						"connectionString": "Data Source=default;",
+						"output": "csv",
+						"outputFile": "default.csv"
+					},
+					"uat": {
+						"connectionString": "Data Source=uat;"
+					}
+				}
+				""");
+
+			var result = await RunCli(environment, "query", "--config", config, "--profile", "uat", "--connection-string", "Data Source=cli;", "--output", "json", "--output-file", "cli.json", "--sql", "select 1");
 
 			using (Assert.EnterMultipleScope())
 			{

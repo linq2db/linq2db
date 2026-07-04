@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace LinqToDB.CommandLine
@@ -50,7 +51,8 @@ namespace LinqToDB.CommandLine
 			ICliEnvironment                environment,
 			string[]                       rawArgs,
 			Dictionary<CliOption, object?> options,
-			IReadOnlyCollection<string>    unknownArgs)
+			IReadOnlyCollection<string>    unknownArgs,
+			CancellationToken              cancellationToken)
 		{
 			var path     = options.TryGetValue(Output, out var value) ? (string)value! : DEFAULT_PATH;
 			var fullPath = Path.GetFullPath(path);

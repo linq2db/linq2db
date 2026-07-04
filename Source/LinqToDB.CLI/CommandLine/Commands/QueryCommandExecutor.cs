@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace LinqToDB.CommandLine
@@ -17,8 +18,10 @@ namespace LinqToDB.CommandLine
 			_settings     = settings;
 		}
 
-		public ValueTask<int> Execute()
+		public ValueTask<int> Execute(CancellationToken cancellationToken)
 		{
+			cancellationToken.ThrowIfCancellationRequested();
+
 			_ = _settings;
 			_environment.Error.WriteLine("Query command execution is not implemented yet.");
 			return new(StatusCodes.EXPECTED_ERROR);

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.Naming;
@@ -30,7 +31,8 @@ namespace LinqToDB.CommandLine
 			ICliEnvironment                environment,
 			string[]                       rawArgs,
 			Dictionary<CliOption, object?> options,
-			IReadOnlyCollection<string>    unknownArgs)
+			IReadOnlyCollection<string>    unknownArgs,
+			CancellationToken              cancellationToken)
 		{
 			if (options.Count == 0 && (rawArgs.Length == 0 || (rawArgs.Length == 1 && string.Equals(rawArgs[0], "help", StringComparison.Ordinal))))
 			{

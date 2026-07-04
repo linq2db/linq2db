@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace LinqToDB.CommandLine
@@ -49,7 +50,7 @@ namespace LinqToDB.CommandLine
 		/// <returns>Command execution status code.</returns>
 		public virtual ValueTask<int> Execute(string[] args)
 		{
-			return Execute(args, SystemCliEnvironment.Instance);
+			return Execute(args, SystemCliEnvironment.Instance, CancellationToken.None);
 		}
 
 		/// <summary>
@@ -60,11 +61,23 @@ namespace LinqToDB.CommandLine
 		/// <returns>Command execution status code.</returns>
 		public virtual ValueTask<int> Execute(string[] args, ICliEnvironment environment)
 		{
+			return Execute(args, environment, CancellationToken.None);
+		}
+
+		/// <summary>
+		/// Process CLI arguments and invoke corresponding command.
+		/// </summary>
+		/// <param name="args">Raw CLI arguments.</param>
+		/// <param name="environment">CLI runtime environment.</param>
+		/// <param name="cancellationToken">Command cancellation token.</param>
+		/// <returns>Command execution status code.</returns>
+		public virtual ValueTask<int> Execute(string[] args, ICliEnvironment environment, CancellationToken cancellationToken)
+		{
 			if (args.Length == 0)
 			{
 				// no arguments specified - invoke default command (if set)
 				if (_defaultCommand != null)
-					return _defaultCommand.Execute(this, environment, args, new Dictionary<CliOption, object?>(), args);
+					return _defaultCommand.Execute(this, environment, args, new Dictionary<CliOption, object?>(), args, cancellationToken);
 
 				return new(StatusCodes.SUCCESS);
 			}
@@ -84,13 +97,13 @@ namespace LinqToDB.CommandLine
 							return new(StatusCodes.INVALID_ARGUMENTS);
 					}
 
-					return command.Execute(this, environment, args, options ?? new(), unknownArgs);
+					return command.Execute(this, environment, args, options ?? new(), unknownArgs, cancellationToken);
 				}
 			}
 
 			// cannot find matching command - invoke default command (if set)
 			if (_defaultCommand != null)
-				return _defaultCommand.Execute(this, environment, args, new Dictionary<CliOption, object?>(), args);
+				return _defaultCommand.Execute(this, environment, args, new Dictionary<CliOption, object?>(), args, cancellationToken);
 
 			return new(StatusCodes.INVALID_ARGUMENTS);
 		}
