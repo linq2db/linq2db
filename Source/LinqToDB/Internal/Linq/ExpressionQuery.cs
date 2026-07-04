@@ -206,20 +206,10 @@ namespace LinqToDB.Internal.Linq
 			var transaction = await StartLoadTransactionAsync(query, cancellationToken).ConfigureAwait(false);
 			await using var _ = (transaction ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false);
 
-			var combined = QueryRunner.TryGetCombinedEagerEnumerable(query, DataContext, expressions, Parameters);
+			var (enumerable, preambles, combined) = await query.GetEagerEnumerableAsync(DataContext, expressions, Parameters, cancellationToken).ConfigureAwait(false);
 
-			IAsyncEnumerable<T> enumerable;
-			if (combined != null)
-			{
-				enumerable = combined;
-			}
-			else
-			{
-				Preambles = await query.InitPreamblesAsync(DataContext, expressions, Parameters, cancellationToken)
-					.ConfigureAwait(false);
-
-				enumerable = (IAsyncEnumerable<T>)query.GetResultEnumerable(DataContext, expressions, Parameters, Preambles);
-			}
+			if (!combined)
+				Preambles = preambles;
 
 			var enumerator = enumerable.GetAsyncEnumerator(cancellationToken);
 			await using (enumerator.ConfigureAwait(false))
@@ -262,19 +252,10 @@ namespace LinqToDB.Internal.Linq
 				var tr = await StartLoadTransactionAsync(query, cancellationToken).ConfigureAwait(false);
 				try
 				{
-					var combined = QueryRunner.TryGetCombinedEagerEnumerable(query, DataContext, expressions, Parameters);
+					var (enumerable, preambles, combined) = await query.GetEagerEnumerableAsync(DataContext, expressions, Parameters, cancellationToken).ConfigureAwait(false);
 
-					IResultEnumerable<T> enumerable;
-					if (combined != null)
-					{
-						enumerable = combined;
-					}
-					else
-					{
-						Preambles = await query.InitPreamblesAsync(DataContext, expressions, Parameters, cancellationToken)
-							.ConfigureAwait(false);
-						enumerable = query.GetResultEnumerable(DataContext, expressions, Parameters, Preambles);
-					}
+					if (!combined)
+						Preambles = preambles;
 
 					return Tuple.Create(enumerable.GetAsyncEnumerator(cancellationToken), tr);
 				}
@@ -380,18 +361,12 @@ namespace LinqToDB.Internal.Linq
 			var transaction = StartLoadTransaction(query);
 			try
 			{
-				var combined = QueryRunner.TryGetCombinedEagerEnumerable(query, DataContext, expressions, Parameters);
+				var (enumerable, preambles, combined) = query.GetEagerEnumerable(DataContext, expressions, Parameters);
 
-				IEnumerator<T> enumerator;
-				if (combined != null)
-				{
-					enumerator = combined.GetEnumerator();
-				}
-				else
-				{
-					Preambles  = query.InitPreambles(DataContext, expressions, Parameters);
-					enumerator = query.GetResultEnumerable(DataContext, expressions, Parameters, Preambles).GetEnumerator();
-				}
+				if (!combined)
+					Preambles = preambles;
+
+				var enumerator = enumerable.GetEnumerator();
 
 				return transaction == null ? enumerator : new EnumeratorWrapper<T>(enumerator, transaction);
 			}
@@ -418,18 +393,12 @@ namespace LinqToDB.Internal.Linq
 			var transaction = StartLoadTransaction(query);
 			try
 			{
-				var combined = QueryRunner.TryGetCombinedEagerEnumerable(query, DataContext, expressions, Parameters);
+				var (enumerable, preambles, combined) = query.GetEagerEnumerable(DataContext, expressions, Parameters);
 
-				IEnumerator<T> enumerator;
-				if (combined != null)
-				{
-					enumerator = combined.GetEnumerator();
-				}
-				else
-				{
-					Preambles  = query.InitPreambles(DataContext, expressions, Parameters);
-					enumerator = query.GetResultEnumerable(DataContext, expressions, Parameters, Preambles).GetEnumerator();
-				}
+				if (!combined)
+					Preambles = preambles;
+
+				var enumerator = enumerable.GetEnumerator();
 
 				return transaction == null ? enumerator : new EnumeratorWrapper<T>(enumerator, transaction);
 			}

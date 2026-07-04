@@ -2,6 +2,8 @@
 using System.Data.Common;
 using System.Diagnostics;
 using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
 
 using LinqToDB.Interceptors;
 using LinqToDB.Internal.Interceptors;
@@ -48,6 +50,37 @@ namespace LinqToDB.Internal.Linq
 		// externally-opened reader already positioned at its result set — used by combined multi-result-set eager loading
 		// so N child collection queries run as one command and each result set is mapped by its own query's mapper.
 		internal Func<IDataContext,IQueryExpressions,object?[]?,object?[]?,DbDataReader,IResultEnumerable<T>>? GetResultFromReader;
+
+		// Centralizes the eager-load enumerable decision shared by the ExpressionQuery enumeration paths: use the combined
+		// multi-result-set executor when eligible, else the sequential InitPreambles + GetResultEnumerable path. Returns the
+		// preambles and whether the combined path was taken, so the caller sets its Preambles field ONLY for the sequential
+		// path — the combined enumerable owns its preambles, and GetForEachUntilAsync relies on Preambles being untouched there.
+		internal (IResultEnumerable<T> Enumerable, object?[]? Preambles, bool Combined) GetEagerEnumerable(
+			IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters)
+		{
+			var combined = QueryRunner.TryGetCombinedEagerEnumerable<T>(this, dataContext, expressions, parameters);
+
+			if (combined != null)
+				return (combined, null, true);
+
+			var preambles = InitPreambles(dataContext, expressions, parameters);
+
+			return (GetResultEnumerable(dataContext, expressions, parameters, preambles), preambles, false);
+		}
+
+		// Async sibling of GetEagerEnumerable.
+		internal async Task<(IResultEnumerable<T> Enumerable, object?[]? Preambles, bool Combined)> GetEagerEnumerableAsync(
+			IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, CancellationToken cancellationToken)
+		{
+			var combined = QueryRunner.TryGetCombinedEagerEnumerable<T>(this, dataContext, expressions, parameters);
+
+			if (combined != null)
+				return (combined, null, true);
+
+			var preambles = await InitPreamblesAsync(dataContext, expressions, parameters, cancellationToken).ConfigureAwait(false);
+
+			return (GetResultEnumerable(dataContext, expressions, parameters, preambles), preambles, false);
+		}
 
 		#endregion
 
