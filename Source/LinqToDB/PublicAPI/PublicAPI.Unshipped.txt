@@ -131,6 +131,16 @@ static LinqToDB.Internal.DataProvider.AliasesHelper.PrepareQueryAndAliases(LinqT
 *REMOVED*LinqToDB.Internal.Linq.QueryInfo.Aliases.set -> void
 *REMOVED*LinqToDB.Internal.SqlQuery.AliasesContext.IsAliased(LinqToDB.Internal.SqlQuery.IQueryElement! element) -> bool
 *REMOVED*static LinqToDB.Internal.DataProvider.AliasesHelper.PrepareQueryAndAliases(LinqToDB.Internal.DataProvider.IIdentifierService! identifierService, LinqToDB.Internal.SqlQuery.SqlStatement! statement, LinqToDB.Internal.SqlQuery.AliasesContext? prevAliasContext, out LinqToDB.Internal.SqlQuery.AliasesContext! newAliasContext) -> void
+static LinqToDB.Sql.NewGuid7() -> System.Guid
+LinqToDB.Internal.DataProvider.MySql.Translation.MariaDBMemberTranslator
+LinqToDB.Internal.DataProvider.MySql.Translation.MariaDBMemberTranslator.MariaDBMemberTranslator() -> void
+LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQL18MemberTranslator
+LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQL18MemberTranslator.PostgreSQL18MemberTranslator() -> void
+virtual LinqToDB.Internal.DataProvider.Translation.ProviderMemberTranslatorDefault.TranslateNewGuid7Method(LinqToDB.Linq.Translation.ITranslationContext! translationContext, LinqToDB.Linq.Translation.TranslationFlags translationFlags) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.ClickHouse.Translation.ClickHouseMemberTranslator.TranslateNewGuid7Method(LinqToDB.Linq.Translation.ITranslationContext! translationContext, LinqToDB.Linq.Translation.TranslationFlags translationFlags) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.DuckDB.Translation.DuckDBMemberTranslator.TranslateNewGuid7Method(LinqToDB.Linq.Translation.ITranslationContext! translationContext, LinqToDB.Linq.Translation.TranslationFlags translationFlags) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.MySql.Translation.MariaDBMemberTranslator.TranslateNewGuid7Method(LinqToDB.Linq.Translation.ITranslationContext! translationContext, LinqToDB.Linq.Translation.TranslationFlags translationFlags) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQL18MemberTranslator.TranslateNewGuid7Method(LinqToDB.Linq.Translation.ITranslationContext! translationContext, LinqToDB.Linq.Translation.TranslationFlags translationFlags) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 abstract LinqToDB.Internal.DataProvider.DmlServiceBase.IsTableNotFoundExceptionCore(System.Exception! exception) -> bool
 abstract LinqToDB.Internal.SqlQuery.SqlFieldBase.NamedTable.get -> LinqToDB.Internal.SqlQuery.ISqlNamedTable?
 const LinqToDB.Internal.Common.ErrorHelper.Error_ImplicitEagerLoadingNotAllowed = "Implicit eager loading is not allowed (LinqOptions.ImplicitCollectionLoading = Throw): a collection was projected without an explicit eager-load request. To allow it, request the load explicitly with LoadWith()/ThenLoad(), or opt the whole query in with WithUnionLoadStrategy()/WithKeyedLoadStrategy()/WithSeparateLoadStrategy() — or set ImplicitCollectionLoading = Allow to turn the guard off." -> string!

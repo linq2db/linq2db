@@ -410,10 +410,8 @@ namespace LinqToDB.Internal.DataProvider.MySql.Translation
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
 		{
-			var factory  = translationContext.ExpressionFactory;
-			var timePart = factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "Uuid");
-
-			return timePart;
+			var factory = translationContext.ExpressionFactory;
+			return factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "Uuid");
 		}
 
 		protected class MySqlWindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
