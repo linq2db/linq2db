@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Data;
+using System.Reflection;
 
 using LinqToDB.Internal.SqlQuery;
 
@@ -150,6 +151,25 @@ namespace LinqToDB.Internal.SqlProvider
 			_results  = new object?[stepCount];
 			_executed = new bool[stepCount];
 		}
+
+		/// <summary>
+		/// Wraps an already-materialized results array (the legacy preamble results). The context becomes an owner of the
+		/// same array reference (<see cref="Results"/> returns it as-is) with every slot marked executed.
+		/// </summary>
+		/// <param name="results">The results array to adopt.</param>
+		internal SqlCommandExecutionContext(object?[] results)
+		{
+			_results  = results;
+			_executed = new bool[results.Length];
+			for (var i = 0; i < _executed.Length; i++)
+				_executed[i] = true;
+		}
+
+		/// <summary>The backing results array. Exposed so the shim <c>IQueryRunner.Preambles</c> can surface it unchanged.</summary>
+		internal object?[] Results => _results;
+
+		/// <summary>Cached reflection handle for <see cref="GetResult"/>, used by the row-materialization expression builders.</summary>
+		internal static readonly MethodInfo GetResultMethodInfo = typeof(SqlCommandExecutionContext).GetMethod(nameof(GetResult))!;
 
 		/// <summary>Records the result value of a step and marks it executed.</summary>
 		public void SetResult(int step, object? value)

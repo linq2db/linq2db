@@ -9,6 +9,7 @@ using LinqToDB.Interceptors;
 using LinqToDB.Internal.Interceptors;
 using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Internal.Logging;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Linq;
 using LinqToDB.Metrics;
 
@@ -44,18 +45,18 @@ namespace LinqToDB.Internal.Linq
 
 		internal IQueryExpressions? CompiledExpressions;
 
-		internal Func<IDataContext,IQueryExpressions,object?[]?,object?[]?,IResultEnumerable<T>> GetResultEnumerable = null!;
+		internal Func<IDataContext,IQueryExpressions,object?[]?,SqlCommandExecutionContext?,IResultEnumerable<T>> GetResultEnumerable = null!;
 
 		// Set only for combinable SELECT queries (see SetRunQuery): materializes this query's rows from an
 		// externally-opened reader already positioned at its result set — used by combined multi-result-set eager loading
 		// so N child collection queries run as one command and each result set is mapped by its own query's mapper.
-		internal Func<IDataContext,IQueryExpressions,object?[]?,object?[]?,DbDataReader,IResultEnumerable<T>>? GetResultFromReader;
+		internal Func<IDataContext,IQueryExpressions,object?[]?,SqlCommandExecutionContext?,DbDataReader,IResultEnumerable<T>>? GetResultFromReader;
 
 		// Centralizes the eager-load enumerable decision shared by the ExpressionQuery enumeration paths: use the combined
 		// multi-result-set executor when eligible, else the sequential InitPreambles + GetResultEnumerable path. Returns the
 		// preambles and whether the combined path was taken, so the caller sets its Preambles field ONLY for the sequential
 		// path — the combined enumerable owns its preambles, and GetForEachUntilAsync relies on Preambles being untouched there.
-		internal (IResultEnumerable<T> Enumerable, object?[]? Preambles, bool Combined) GetEagerEnumerable(
+		internal (IResultEnumerable<T> Enumerable, SqlCommandExecutionContext? Preambles, bool Combined) GetEagerEnumerable(
 			IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters)
 		{
 			var combined = QueryRunner.TryGetCombinedEagerEnumerable<T>(this, dataContext, expressions, parameters);
@@ -69,7 +70,7 @@ namespace LinqToDB.Internal.Linq
 		}
 
 		// Async sibling of GetEagerEnumerable.
-		internal async Task<(IResultEnumerable<T> Enumerable, object?[]? Preambles, bool Combined)> GetEagerEnumerableAsync(
+		internal async Task<(IResultEnumerable<T> Enumerable, SqlCommandExecutionContext? Preambles, bool Combined)> GetEagerEnumerableAsync(
 			IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, CancellationToken cancellationToken)
 		{
 			var combined = QueryRunner.TryGetCombinedEagerEnumerable<T>(this, dataContext, expressions, parameters);

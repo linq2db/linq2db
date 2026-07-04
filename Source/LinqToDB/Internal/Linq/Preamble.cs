@@ -13,8 +13,8 @@ namespace LinqToDB.Internal.Linq
 {
 	abstract class Preamble
 	{
-		public abstract object       Execute(IDataContext      dataContext, IQueryExpressions expressions, object?[]? parameters, object[]? preambles);
-		public abstract Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object[]? preambles, CancellationToken cancellationToken);
+		public abstract object       Execute(IDataContext      dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context);
+		public abstract Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context, CancellationToken cancellationToken);
 
 		public abstract void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values);
 
@@ -56,12 +56,12 @@ namespace LinqToDB.Internal.Linq
 		/// Materializes this preamble's result from a reader already positioned at its result set; the caller advances the
 		/// reader with <c>NextResult</c> afterwards.
 		/// </summary>
-		object MaterializeFromReader(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles, DbDataReader dataReader);
+		object MaterializeFromReader(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context, DbDataReader dataReader);
 
 		/// <summary>
 		/// Asynchronous sibling of <see cref="MaterializeFromReader"/>.
 		/// </summary>
-		Task<object> MaterializeFromReaderAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles, DbDataReader dataReader, CancellationToken cancellationToken);
+		Task<object> MaterializeFromReaderAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context, DbDataReader dataReader, CancellationToken cancellationToken);
 	}
 
 	/// <summary>

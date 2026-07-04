@@ -718,6 +718,7 @@ namespace LinqToDB
 			public IQueryExpressions Expressions      => _queryRunner!.Expressions;
 			public object?[]?        Parameters       => _queryRunner!.Parameters;
 			public object?[]?        Preambles        => _queryRunner!.Preambles;
+			public SqlCommandExecutionContext? ExecutionContext => _queryRunner!.ExecutionContext;
 			public Expression?       MapperExpression { get => _queryRunner!.MapperExpression; set => _queryRunner!.MapperExpression = value; }
 			public int               RowsCount        { get => _queryRunner!.RowsCount;        set => _queryRunner!.RowsCount        = value; }
 #pragma warning disable CS0618 // obsolete QueryNumber forwarder must still satisfy IQueryRunner

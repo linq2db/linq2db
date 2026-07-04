@@ -14,6 +14,7 @@ using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Reflection;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Metrics;
 
@@ -855,7 +856,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			Expression resultExpression =
 				Expression.Call(
-					Expression.Convert(Expression.ArrayIndex(PreambleParam, ExpressionInstances.Int32(idx)),
+					Expression.Convert(Expression.Call(ExecutionContextParam, SqlCommandExecutionContext.GetResultMethodInfo, ExpressionInstances.Int32(idx)),
 						typeof(PreambleResult<TKey, T>)), getListMethod, keyExpression);
 
 			if (additionalOrderBy != null)
@@ -892,16 +893,16 @@ namespace LinqToDB.Internal.Linq.Builder
 				_holder = holder;
 			}
 
-			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
+			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context)
 			{
-				var keys = _query.GetResultEnumerable(dataContext, expressions, parameters, preambles).ToArray();
+				var keys = _query.GetResultEnumerable(dataContext, expressions, parameters, context).ToArray();
 				_holder.SetKeys(expressions, keys);
 				return keys;
 			}
 
-			public override async Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object[]? preambles, CancellationToken cancellationToken)
+			public override async Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context, CancellationToken cancellationToken)
 			{
-				var keys = await _query.GetResultEnumerable(dataContext, expressions, parameters, preambles)
+				var keys = await _query.GetResultEnumerable(dataContext, expressions, parameters, context)
 					.ToArrayAsync(cancellationToken).ConfigureAwait(false);
 				_holder.SetKeys(expressions, keys);
 				return keys;
@@ -943,7 +944,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				_holder = holder;
 			}
 
-			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
+			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context)
 			{
 				var keys = _holder.GetKeys(expressions);
 				try
@@ -954,7 +955,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (keys is not { Length: > 0 })
 						return result;
 
-					foreach (var e in _query.GetResultEnumerable(dataContext, expressions, parameters, preambles))
+					foreach (var e in _query.GetResultEnumerable(dataContext, expressions, parameters, context))
 					{
 						result.Add(e.Key, e.Detail);
 					}
@@ -967,7 +968,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 			}
 
-			public override async Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object[]? preambles, CancellationToken cancellationToken)
+			public override async Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context, CancellationToken cancellationToken)
 			{
 				var keys = _holder.GetKeys(expressions);
 				try
@@ -978,7 +979,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (keys is not { Length: > 0 })
 						return result;
 
-					await foreach (var e in _query.GetResultEnumerable(dataContext, expressions, parameters, preambles)
+					await foreach (var e in _query.GetResultEnumerable(dataContext, expressions, parameters, context)
 						.WithCancellation(cancellationToken)
 						.ConfigureAwait(false))
 					{
@@ -1076,7 +1077,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				placeholderMap[placeholders[i].Index!.Value] = i;
 
 			var bufferRowParam = Expression.Parameter(typeof(TBuffer), "bufRow");
-			var preambleParam  = Expression.Parameter(typeof(object?[]), "pr");
+			var preambleParam  = Expression.Parameter(typeof(SqlCommandExecutionContext), "pr");
 
 			var visitor = new BufferReconstructionVisitor(placeholderMap, bufferRowParam, preambleParam);
 			var reconstructed = visitor.Visit(finalized)!;
@@ -1084,7 +1085,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (reconstructed.Type != typeof(T))
 				reconstructed = Expression.Convert(reconstructed, typeof(T));
 
-			var reconstructionLambda = Expression.Lambda<Func<IQueryExpressions, object?[]?, TBuffer, object?[], T>>(
+			var reconstructionLambda = Expression.Lambda<Func<IQueryExpressions, object?[]?, TBuffer, SqlCommandExecutionContext?, T>>(
 				reconstructed,
 				QueryExpressionContainerParam,
 				ParametersParam,
@@ -1106,19 +1107,19 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			// Build key extractors: extract key expressions from the finalized expression
-			// by finding PreambleResult.GetList(keyExpr) calls for each child preamble index.
+			// by finding PreambleResult.GetList(keyExpr) calls for each child preamble index. The child-result
+			// lookup is context.GetResult(idx) (was preambleArray[idx] before the SqlCommandExecutionContext
+			// threading), so match the GetResult call carrying the constant preamble index.
 			var keyExpressions = new Dictionary<int, Expression>();
 			finalized.Visit(keyExpressions, static (ctx, e) =>
 			{
 				if (e is MethodCallExpression { Method.Name: nameof(PreambleResult<,>.GetList) } call
 					&& call.Arguments.Count == 1
-					&& call.Object is UnaryExpression { NodeType: ExpressionType.Convert, Operand: { } operand })
+					&& call.Object is UnaryExpression { NodeType: ExpressionType.Convert, Operand: { } operand }
+					&& operand is MethodCallExpression { Arguments: [ConstantExpression { Value: int idx }] } getResultCall
+					&& getResultCall.Method == SqlCommandExecutionContext.GetResultMethodInfo)
 				{
-					var current = operand;
-					if (current is BinaryExpression { NodeType: ExpressionType.ArrayIndex, Right: ConstantExpression { Value: int idx } })
-					{
-						ctx[idx] = call.Arguments[0];
-					}
+					ctx[idx] = call.Arguments[0];
 				}
 
 				return true;
@@ -1175,7 +1176,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			query.GetResultEnumerable = (db, expr, ps, preambleResults) =>
 			{
 				using var _ = ActivityService.Start(ActivityID.GetIEnumerable);
-				var buffer = (List<TBuffer>)preambleResults![bufferPreambleIdx]!;
+				var buffer = (List<TBuffer>)preambleResults!.GetResult(bufferPreambleIdx)!;
 				return new BufferResultEnumerable<TBuffer, T>(buffer, expr, ps, reconstructionFunc, preambleResults);
 			};
 
@@ -1200,7 +1201,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var bufferRowParam = Expression.Parameter(typeof(object), "row");
 			// Use a Convert expression as the "buffer row" so the visitor reads tuple fields from it
 			var typedRow       = Expression.Convert(bufferRowParam, typeof(TBuffer));
-			var dummyPreamble  = Expression.Parameter(typeof(object?[]), "unused");
+			var dummyPreamble  = Expression.Parameter(typeof(SqlCommandExecutionContext), "unused");
 
 			var visitor = new BufferReconstructionVisitor(placeholderMap, typedRow, dummyPreamble);
 			var keyFromBuffer = visitor.Visit(mainKeyExpression)!;
@@ -1235,8 +1236,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			protected override Expression VisitParameter(ParameterExpression node)
 			{
-				// Replace PreambleParam with our local preamble expression
-				if (ReferenceEquals(node, PreambleParam))
+				// Replace ExecutionContextParam with our local execution-context expression
+				if (ReferenceEquals(node, ExecutionContextParam))
 					return _preambleExpr;
 				return base.VisitParameter(node);
 			}
@@ -1372,8 +1373,8 @@ namespace LinqToDB.Internal.Linq.Builder
 		sealed class NoOpPreamble : Preamble
 		{
 			public static readonly NoOpPreamble Instance = new();
-			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles) => null!;
-			public override Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object[]? preambles, CancellationToken cancellationToken) => Task.FromResult<object>(null!);
+			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context) => null!;
+			public override Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context, CancellationToken cancellationToken) => Task.FromResult<object>(null!);
 			public override void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values) { }
 		}
 
@@ -1390,21 +1391,21 @@ namespace LinqToDB.Internal.Linq.Builder
 				_keysPreambles = keysPreambles;
 			}
 
-			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
+			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context)
 			{
 				// Copy parameter accessors lazily — they may not be finalized at construction time.
 				_bufferQuery.SetParametersAccessors(_sourceQuery.ParameterAccessors);
-				var buffer = _bufferQuery.GetResultEnumerable(dataContext, expressions, parameters, preambles).ToList();
+				var buffer = _bufferQuery.GetResultEnumerable(dataContext, expressions, parameters, context).ToList();
 				var ilist  = (IList)buffer;
 				foreach (var kp in _keysPreambles)
 					kp.SetKeysFromBuffer(expressions, ilist);
 				return buffer;
 			}
 
-			public override async Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object[]? preambles, CancellationToken cancellationToken)
+			public override async Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context, CancellationToken cancellationToken)
 			{
 				_bufferQuery.SetParametersAccessors(_sourceQuery.ParameterAccessors);
-				var buffer = await _bufferQuery.GetResultEnumerable(dataContext, expressions, parameters, preambles)
+				var buffer = await _bufferQuery.GetResultEnumerable(dataContext, expressions, parameters, context)
 					.ToListAsync(cancellationToken).ConfigureAwait(false);
 				var ilist = (IList)buffer;
 				foreach (var kp in _keysPreambles)
@@ -1423,28 +1424,30 @@ namespace LinqToDB.Internal.Linq.Builder
 			readonly List<TBuffer>                                        _buffer;
 			readonly IQueryExpressions                                    _expr;
 			readonly object?[]?                                           _ps;
-			readonly Func<IQueryExpressions, object?[]?, TBuffer, object?[], T> _reconstruct;
-			readonly object?[]?                                           _preambles;
+			readonly Func<IQueryExpressions, object?[]?, TBuffer, SqlCommandExecutionContext?, T> _reconstruct;
+			readonly SqlCommandExecutionContext?                         _context;
 
 			public BufferResultEnumerable(
 				List<TBuffer>                                                buffer,
 				IQueryExpressions                                            expr,
 				object?[]?                                                   ps,
-				Func<IQueryExpressions, object?[]?, TBuffer, object?[], T>  reconstruct,
-				object?[]?                                                   preambles)
+				Func<IQueryExpressions, object?[]?, TBuffer, SqlCommandExecutionContext?, T>  reconstruct,
+				SqlCommandExecutionContext?                                  context)
 			{
 				_buffer      = buffer;
 				_expr        = expr;
 				_ps          = ps;
 				_reconstruct = reconstruct;
-				_preambles   = preambles;
+				_context     = context;
 			}
 
 			public IEnumerator<T> GetEnumerator()
 			{
-				var preambles = _preambles ?? Array.Empty<object>();
+				// Mirror the pre-threading `?? Array.Empty<object>()` guard: a reconstruction that references the
+				// execution context must never receive null, so substitute an empty context when none was supplied.
+				var context = _context ?? new SqlCommandExecutionContext(0);
 				foreach (var row in _buffer)
-					yield return _reconstruct(_expr, _ps, row, preambles!);
+					yield return _reconstruct(_expr, _ps, row, context);
 			}
 
 			IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();

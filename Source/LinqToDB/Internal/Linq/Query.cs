@@ -19,8 +19,8 @@ namespace LinqToDB.Internal.Linq
 {
 	public abstract class Query
 	{
-		internal Func<IDataContext,IQueryExpressions,object?[]?,object?[]?,object?>                         GetElement      = null!;
-		internal Func<IDataContext,IQueryExpressions,object?[]?,object?[]?,CancellationToken,Task<object?>> GetElementAsync = null!;
+		internal Func<IDataContext,IQueryExpressions,object?[]?,SqlCommandExecutionContext?,object?>                         GetElement      = null!;
+		internal Func<IDataContext,IQueryExpressions,object?[]?,SqlCommandExecutionContext?,CancellationToken,Task<object?>> GetElementAsync = null!;
 
 		#region Init
 
@@ -172,32 +172,32 @@ namespace LinqToDB.Internal.Linq
 		// eager-load children can be assembled into one multi-result-set command.
 		internal Preamble[]? PreamblesArray => _preambles;
 
-		internal object?[]? InitPreambles(IDataContext dc, IQueryExpressions expressions, object?[]? ps)
+		internal SqlCommandExecutionContext? InitPreambles(IDataContext dc, IQueryExpressions expressions, object?[]? ps)
 		{
 			if (_preambles == null)
 				return null;
 
-			var preambles = new object[_preambles.Length];
-			for (var i = 0; i < preambles.Length; i++)
+			var context = new SqlCommandExecutionContext(_preambles.Length);
+			for (var i = 0; i < _preambles.Length; i++)
 			{
-				preambles[i] = _preambles[i].Execute(dc, expressions, ps, preambles);
+				context.SetResult(i, _preambles[i].Execute(dc, expressions, ps, context));
 			}
 
-			return preambles;
+			return context;
 		}
 
-		internal async Task<object?[]?> InitPreamblesAsync(IDataContext dc, IQueryExpressions expressions, object?[]? ps, CancellationToken cancellationToken)
+		internal async Task<SqlCommandExecutionContext?> InitPreamblesAsync(IDataContext dc, IQueryExpressions expressions, object?[]? ps, CancellationToken cancellationToken)
 		{
 			if (_preambles == null)
 				return null;
 
-			var preambles = new object[_preambles.Length];
-			for (var i = 0; i < preambles.Length; i++)
+			var context = new SqlCommandExecutionContext(_preambles.Length);
+			for (var i = 0; i < _preambles.Length; i++)
 			{
-				preambles[i] = await _preambles[i].ExecuteAsync(dc, expressions, ps, preambles, cancellationToken).ConfigureAwait(false);
+				context.SetResult(i, await _preambles[i].ExecuteAsync(dc, expressions, ps, context, cancellationToken).ConfigureAwait(false));
 			}
 
-			return preambles;
+			return context;
 		}
 
 		#endregion

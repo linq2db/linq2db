@@ -422,9 +422,9 @@ namespace LinqToDB.Internal.Linq
 			IDataContext?     dataContext,
 			object?[]?        ps);
 
-		static Func<Query,IDataContext,Mapper<T>, IQueryExpressions, object?[]?,object?[]?,int, IResultEnumerable<T>> GetExecuteQuery<T>(
+		static Func<Query,IDataContext,Mapper<T>, IQueryExpressions, object?[]?,SqlCommandExecutionContext?,int, IResultEnumerable<T>> GetExecuteQuery<T>(
 				Query                                                                                                  query,
-				Func<Query,IDataContext,Mapper<T>, IQueryExpressions, object?[]?,object?[]?,int, IResultEnumerable<T>> queryFunc)
+				Func<Query,IDataContext,Mapper<T>, IQueryExpressions, object?[]?,SqlCommandExecutionContext?,int, IResultEnumerable<T>> queryFunc)
 		{
 			FinalizeQuery(query);
 
@@ -464,7 +464,7 @@ namespace LinqToDB.Internal.Linq
 			readonly IQueryExpressions _expressions;
 			readonly Query             _query;
 			readonly object?[]?        _parameters;
-			readonly object?[]?        _preambles;
+			readonly SqlCommandExecutionContext? _preambles;
 			readonly int               _queryNumber;
 			readonly Mapper<T>         _mapper;
 
@@ -473,7 +473,7 @@ namespace LinqToDB.Internal.Linq
 				IQueryExpressions expressions,
 				Query             query,
 				object?[]?        parameters,
-				object?[]?        preambles,
+				SqlCommandExecutionContext? preambles,
 				int               queryNumber,
 				Mapper<T>         mapper)
 			{
@@ -490,7 +490,7 @@ namespace LinqToDB.Internal.Linq
 			{
 				using var _      = ActivityService.Start(ActivityID.ExecuteQuery);
 
-				using var runner = _dataContext.GetQueryRunner(_query, _dataContext, _queryNumber, _expressions, _parameters, _preambles);
+				using var runner = _dataContext.GetQueryRunner(_query, _dataContext, _queryNumber, _expressions, _parameters, _preambles?.Results);
 				using var dr     = runner.ExecuteReader();
 
 				var dataReader = dr.DataReader!;
@@ -551,7 +551,7 @@ namespace LinqToDB.Internal.Linq
 			{
 				await using (ActivityService.StartAndConfigureAwait(ActivityID.ExecuteQueryAsync))
 				{
-					var runner = _dataContext.GetQueryRunner(_query, _dataContext, _queryNumber, _expressions, _parameters, _preambles);
+					var runner = _dataContext.GetQueryRunner(_query, _dataContext, _queryNumber, _expressions, _parameters, _preambles?.Results);
 					await using var _2 = runner.ConfigureAwait(false);
 
 					var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
@@ -627,7 +627,7 @@ namespace LinqToDB.Internal.Linq
 			readonly IQueryExpressions _expressions;
 			readonly Query             _query;
 			readonly object?[]?        _parameters;
-			readonly object?[]?        _preambles;
+			readonly SqlCommandExecutionContext? _preambles;
 			readonly int               _queryNumber;
 			readonly Mapper<T>         _mapper;
 			readonly DbDataReader      _dataReader;
@@ -637,7 +637,7 @@ namespace LinqToDB.Internal.Linq
 				IQueryExpressions expressions,
 				Query             query,
 				object?[]?        parameters,
-				object?[]?        preambles,
+				SqlCommandExecutionContext? preambles,
 				int               queryNumber,
 				Mapper<T>         mapper,
 				DbDataReader      dataReader)
@@ -654,7 +654,7 @@ namespace LinqToDB.Internal.Linq
 
 			public IEnumerator<T> GetEnumerator()
 			{
-				using var runner = _dataContext.GetQueryRunner(_query, _dataContext, _queryNumber, _expressions, _parameters, _preambles);
+				using var runner = _dataContext.GetQueryRunner(_query, _dataContext, _queryNumber, _expressions, _parameters, _preambles?.Results);
 
 				var dataReader = _dataReader;
 
@@ -691,7 +691,7 @@ namespace LinqToDB.Internal.Linq
 
 			public async IAsyncEnumerable<T> GetAsyncEnumerable([EnumeratorCancellation] CancellationToken cancellationToken = default)
 			{
-				var runner = _dataContext.GetQueryRunner(_query, _dataContext, _queryNumber, _expressions, _parameters, _preambles);
+				var runner = _dataContext.GetQueryRunner(_query, _dataContext, _queryNumber, _expressions, _parameters, _preambles?.Results);
 				await using var _2 = runner.ConfigureAwait(false);
 
 				var dataReader = _dataReader;
@@ -1014,7 +1014,7 @@ namespace LinqToDB.Internal.Linq
 			// Materializes a combined command's combinable child result sets into the shared preambles[], advancing the reader
 			// past each. When materializeMain is true the command also carries the main step (last), so the last child is
 			// followed by NextResult to leave the reader positioned on the main result set; the caller then streams it.
-			void MaterializeChildren(DbDataReader dr, IReadOnlyList<int> stepIndexes, bool materializeMain, object?[] preambles)
+			void MaterializeChildren(DbDataReader dr, IReadOnlyList<int> stepIndexes, bool materializeMain, SqlCommandExecutionContext context)
 			{
 				var childCount = materializeMain ? stepIndexes.Count - 1 : stepIndexes.Count;
 
@@ -1022,7 +1022,7 @@ namespace LinqToDB.Internal.Linq
 				{
 					var preambleIndex = _combinableIndexes[stepIndexes[k]];
 
-					preambles[preambleIndex] = ((IStepMaterializer)_preambles[preambleIndex]).MaterializeFromReader(_dataContext, _expressions, _parameters, preambles, dr);
+					context.SetResult(preambleIndex, ((IStepMaterializer)_preambles[preambleIndex]).MaterializeFromReader(_dataContext, _expressions, _parameters, context, dr));
 
 					if (materializeMain || k < stepIndexes.Count - 1)
 						dr.NextResult();
@@ -1033,7 +1033,7 @@ namespace LinqToDB.Internal.Linq
 			{
 				using var _ = ActivityService.Start(ActivityID.GetIEnumerable);
 
-				var preambles      = new object[_preambles.Length];
+				var context        = new SqlCommandExecutionContext(_preambles.Length);
 				var dataConnection = (DataConnection)_dataContext;
 				var steps          = BuildSteps();
 
@@ -1045,7 +1045,7 @@ namespace LinqToDB.Internal.Linq
 					{
 						if (step is SequentialStep sequential)
 						{
-							preambles[sequential.PreambleIndex] = _preambles[sequential.PreambleIndex].Execute(_dataContext, _expressions, _parameters, preambles);
+							context.SetResult(sequential.PreambleIndex, _preambles[sequential.PreambleIndex].Execute(_dataContext, _expressions, _parameters, context));
 							continue;
 						}
 
@@ -1056,7 +1056,7 @@ namespace LinqToDB.Internal.Linq
 						{
 							try
 							{
-								MaterializeChildren(reader.DataReader!, readerStep.Command.StepIndexes, materializeMain: false, preambles);
+								MaterializeChildren(reader.DataReader!, readerStep.Command.StepIndexes, materializeMain: false, context);
 							}
 							finally
 							{
@@ -1069,9 +1069,9 @@ namespace LinqToDB.Internal.Linq
 
 							var dr = reader.DataReader!;
 
-							MaterializeChildren(dr, readerStep.Command.StepIndexes, materializeMain: true, preambles);
+							MaterializeChildren(dr, readerStep.Command.StepIndexes, materializeMain: true, context);
 
-							foreach (var item in _query.GetResultFromReader!(_dataContext, _expressions, _parameters, preambles, dr))
+							foreach (var item in _query.GetResultFromReader!(_dataContext, _expressions, _parameters, context, dr))
 								yield return item;
 						}
 					}
@@ -1085,7 +1085,7 @@ namespace LinqToDB.Internal.Linq
 			IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
 			// Async sibling of MaterializeChildren.
-			async Task MaterializeChildrenAsync(DbDataReader dr, IReadOnlyList<int> stepIndexes, bool materializeMain, object?[] preambles, CancellationToken cancellationToken)
+			async Task MaterializeChildrenAsync(DbDataReader dr, IReadOnlyList<int> stepIndexes, bool materializeMain, SqlCommandExecutionContext context, CancellationToken cancellationToken)
 			{
 				var childCount = materializeMain ? stepIndexes.Count - 1 : stepIndexes.Count;
 
@@ -1093,7 +1093,7 @@ namespace LinqToDB.Internal.Linq
 				{
 					var preambleIndex = _combinableIndexes[stepIndexes[k]];
 
-					preambles[preambleIndex] = await ((IStepMaterializer)_preambles[preambleIndex]).MaterializeFromReaderAsync(_dataContext, _expressions, _parameters, preambles, dr, cancellationToken).ConfigureAwait(false);
+					context.SetResult(preambleIndex, await ((IStepMaterializer)_preambles[preambleIndex]).MaterializeFromReaderAsync(_dataContext, _expressions, _parameters, context, dr, cancellationToken).ConfigureAwait(false));
 
 					if (materializeMain || k < stepIndexes.Count - 1)
 						await dr.NextResultAsync(cancellationToken).ConfigureAwait(false);
@@ -1103,7 +1103,7 @@ namespace LinqToDB.Internal.Linq
 			// In case of change the logic of this method, DO NOT FORGET to change the sibling GetEnumerator.
 			public async IAsyncEnumerable<T> GetAsyncEnumerable([EnumeratorCancellation] CancellationToken cancellationToken = default)
 			{
-				var preambles      = new object[_preambles.Length];
+				var context        = new SqlCommandExecutionContext(_preambles.Length);
 				var dataConnection = (DataConnection)_dataContext;
 				var steps          = BuildSteps();
 
@@ -1115,7 +1115,7 @@ namespace LinqToDB.Internal.Linq
 					{
 						if (step is SequentialStep sequential)
 						{
-							preambles[sequential.PreambleIndex] = await _preambles[sequential.PreambleIndex].ExecuteAsync(_dataContext, _expressions, _parameters, preambles, cancellationToken).ConfigureAwait(false);
+							context.SetResult(sequential.PreambleIndex, await _preambles[sequential.PreambleIndex].ExecuteAsync(_dataContext, _expressions, _parameters, context, cancellationToken).ConfigureAwait(false));
 							continue;
 						}
 
@@ -1126,7 +1126,7 @@ namespace LinqToDB.Internal.Linq
 						{
 							try
 							{
-								await MaterializeChildrenAsync(reader.DataReader!, readerStep.Command.StepIndexes, materializeMain: false, preambles, cancellationToken).ConfigureAwait(false);
+								await MaterializeChildrenAsync(reader.DataReader!, readerStep.Command.StepIndexes, materializeMain: false, context, cancellationToken).ConfigureAwait(false);
 							}
 							finally
 							{
@@ -1139,9 +1139,9 @@ namespace LinqToDB.Internal.Linq
 
 							var dr = reader.DataReader!;
 
-							await MaterializeChildrenAsync(dr, readerStep.Command.StepIndexes, materializeMain: true, preambles, cancellationToken).ConfigureAwait(false);
+							await MaterializeChildrenAsync(dr, readerStep.Command.StepIndexes, materializeMain: true, context, cancellationToken).ConfigureAwait(false);
 
-							await foreach (var item in _query.GetResultFromReader!(_dataContext, _expressions, _parameters, preambles, dr).WithCancellation(cancellationToken).ConfigureAwait(false))
+							await foreach (var item in _query.GetResultFromReader!(_dataContext, _expressions, _parameters, context, dr).WithCancellation(cancellationToken).ConfigureAwait(false))
 								yield return item;
 						}
 					}
@@ -1196,7 +1196,7 @@ namespace LinqToDB.Internal.Linq
 			Mapper<T>         mapper,
 			IQueryExpressions expressions,
 			object?[]?        ps,
-			object?[]?        preambles,
+			SqlCommandExecutionContext? preambles,
 			int               queryNumber
 		)
 		{
@@ -1224,13 +1224,13 @@ namespace LinqToDB.Internal.Linq
 		static readonly PropertyInfo _dataContextInfo = MemberHelper.PropertyOf<IQueryRunner>(p => p.DataContext);
 		static readonly PropertyInfo _expressionsInfo = MemberHelper.PropertyOf<IQueryRunner>(p => p.Expressions);
 		static readonly PropertyInfo _parametersInfo  = MemberHelper.PropertyOf<IQueryRunner>(p => p.Parameters);
-		static readonly PropertyInfo _preamblesInfo   = MemberHelper.PropertyOf<IQueryRunner>(p => p.Preambles);
+		static readonly PropertyInfo _preamblesInfo   = MemberHelper.PropertyOf<IQueryRunner>(p => p.ExecutionContext);
 
 		public static readonly PropertyInfo RowsCountInfo   = MemberHelper.PropertyOf<IQueryRunner>(p => p.RowsCount);
 		public static readonly PropertyInfo DataContextInfo = MemberHelper.PropertyOf<IQueryRunner>(p => p.DataContext);
 
 		static Expression<Func<IQueryRunner, DbDataReader, T>> WrapMapper<T>(
-			Expression<Func<IQueryRunner,IDataContext, DbDataReader, IQueryExpressions, object?[]?,object?[]?,T>> expression)
+			Expression<Func<IQueryRunner,IDataContext, DbDataReader, IQueryExpressions, object?[]?,SqlCommandExecutionContext?,T>> expression)
 		{
 			var queryRunnerParam = expression.Parameters[0];
 			var dataReaderParam  = expression.Parameters[2];
@@ -1276,7 +1276,7 @@ namespace LinqToDB.Internal.Linq
 
 		public static void SetRunQuery<T>(
 			Query<T>                                                                                              query,
-			Expression<Func<IQueryRunner,IDataContext,DbDataReader,IQueryExpressions,object?[]?,object?[]?,T>> expression)
+			Expression<Func<IQueryRunner,IDataContext,DbDataReader,IQueryExpressions,object?[]?,SqlCommandExecutionContext?,T>> expression)
 		{
 			var l = WrapMapper(expression);
 
@@ -1289,7 +1289,7 @@ namespace LinqToDB.Internal.Linq
 
 		public static void SetRunQuery<T>(
 			Query<T>                                                                                                   query,
-			Expression<Func<IQueryRunner,IDataContext,DbDataReader,IQueryExpressions,object?[]?,object?[]?,object>> expression)
+			Expression<Func<IQueryRunner,IDataContext,DbDataReader,IQueryExpressions,object?[]?,SqlCommandExecutionContext?,object>> expression)
 		{
 			FinalizeQuery(query);
 
@@ -1306,10 +1306,10 @@ namespace LinqToDB.Internal.Linq
 			Mapper<T>         mapper,
 			IQueryExpressions expressions,
 			object?[]?        ps,
-			object?[]?        preambles)
+			SqlCommandExecutionContext? preambles)
 		{
 			using var m      = ActivityService.Start(ActivityID.ExecuteElement);
-			using var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, ps, preambles);
+			using var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, ps, preambles?.Results);
 			using var dr     = runner.ExecuteReader();
 
 			DbDataReader dataReader;
@@ -1344,12 +1344,12 @@ namespace LinqToDB.Internal.Linq
 			Mapper<object>    mapper,
 			IQueryExpressions expressions,
 			object?[]?        ps,
-			object?[]?        preambles,
+			SqlCommandExecutionContext? preambles,
 			CancellationToken cancellationToken)
 		{
 			await using (ActivityService.StartAndConfigureAwait(ActivityID.ExecuteElementAsync))
 			{
-				var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, ps, preambles);
+				var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, ps, preambles?.Results);
 				await using var _1 = runner.ConfigureAwait(false);
 
 				var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
@@ -1395,10 +1395,10 @@ namespace LinqToDB.Internal.Linq
 			query.GetElementAsync = (db, expr, ps, preambles, token) => ScalarQueryAsync(query, db, expr, ps, preambles, token);
 		}
 
-		static object? ScalarQuery(Query query, IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
+		static object? ScalarQuery(Query query, IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? preambles)
 		{
 			using var m      = ActivityService.Start(ActivityID.ExecuteScalar);
-			using var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, parameters, preambles);
+			using var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, parameters, preambles?.Results);
 			return runner.ExecuteScalar();
 		}
 
@@ -1407,12 +1407,12 @@ namespace LinqToDB.Internal.Linq
 			IDataContext      dataContext,
 			IQueryExpressions expressions,
 			object?[]?        ps,
-			object?[]?        preambles,
+			SqlCommandExecutionContext? preambles,
 			CancellationToken cancellationToken)
 		{
 			await using (ActivityService.StartAndConfigureAwait(ActivityID.ExecuteScalarAsync))
 			{
-				var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, ps, preambles);
+				var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, ps, preambles?.Results);
 				await using (runner.ConfigureAwait(false))
 					return await runner.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
 			}
@@ -1430,10 +1430,10 @@ namespace LinqToDB.Internal.Linq
 			query.GetElementAsync = (db, expr, ps, preambles, token) => NonQueryQueryAsync(query, db, expr, ps, preambles, token);
 		}
 
-		static int NonQueryQuery(Query query, IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
+		static int NonQueryQuery(Query query, IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? preambles)
 		{
 			using var m      = ActivityService.Start(ActivityID.ExecuteNonQuery);
-			using var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, parameters, preambles);
+			using var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, parameters, preambles?.Results);
 			return runner.ExecuteNonQuery();
 		}
 
@@ -1442,12 +1442,12 @@ namespace LinqToDB.Internal.Linq
 			IDataContext      dataContext,
 			IQueryExpressions expressions,
 			object?[]?        ps,
-			object?[]?        preambles,
+			SqlCommandExecutionContext? preambles,
 			CancellationToken cancellationToken)
 		{
 			await using (ActivityService.StartAndConfigureAwait(ActivityID.ExecuteNonQueryAsync))
 			{
-				var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, ps, preambles);
+				var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, ps, preambles?.Results);
 				await using (runner.ConfigureAwait(false))
 					return await runner.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
 			}
@@ -1457,11 +1457,11 @@ namespace LinqToDB.Internal.Linq
 
 		#region GetSqlText
 
-		public static IReadOnlyList<QuerySql> GetSqlText(Query query, IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
+		public static IReadOnlyList<QuerySql> GetSqlText(Query query, IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? preambles)
 		{
 			using var m      = ActivityService.Start(ActivityID.GetSqlText);
 
-			using var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, parameters, preambles);
+			using var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, parameters, preambles?.Results);
 			return runner.GetSqlText();
 		}
 

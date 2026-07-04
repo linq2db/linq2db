@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.Data;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Internal.Linq
@@ -18,16 +19,21 @@ namespace LinqToDB.Internal.Linq
 			Expressions       = expressions;
 			QueryNumber       = queryNumber;
 			Parameters        = parameters;
-			Preambles         = preambles;
+			// Wrap the legacy preamble results array in an execution context. Behavior-neutral: the context adopts the same
+			// array reference, so Preambles returns it unchanged and the mapper reads the same per-step results.
+			_executionContext = preambles is null ? null : new SqlCommandExecutionContext(preambles);
 		}
 
 		protected readonly Query    Query;
+
+		readonly SqlCommandExecutionContext? _executionContext;
 
 		public          IDataContext      DataContext       { get; }
 		public          IDataContext      ParametersContext { get; }
 		public          IQueryExpressions Expressions       { get; }
 		public          object?[]?        Parameters        { get; }
-		public          object?[]?        Preambles         { get; }
+		public          object?[]?        Preambles         => _executionContext?.Results;
+		public          SqlCommandExecutionContext? ExecutionContext => _executionContext;
 		public abstract Expression?       MapperExpression  { get; set; }
 
 		public abstract int                    ExecuteNonQuery();

@@ -12,6 +12,7 @@ using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Reflection;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
@@ -1024,7 +1025,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					Expression preambleAccess = Expression.Convert(
 						Expression.ArrayIndex(
 							Expression.Convert(
-								Expression.ArrayIndex(PreambleParam, ExpressionInstances.Int32(preambles.Count)),
+								Expression.Call(ExecutionContextParam, SqlCommandExecutionContext.GetResultMethodInfo, ExpressionInstances.Int32(preambles.Count)),
 								typeof(object?[])),
 							ExpressionInstances.Int32(b)),
 						preambleResultType);
@@ -1084,15 +1085,15 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// ValueTuple slot, resolving any nested preamble lookups. Shared by the preamble
 		/// (BuildCteUnionPreamble) and inline (SetupCteUnionQuery) execution modes.
 		/// </summary>
-		Func<TCarrier, object?[]?, object>[] BuildCteUnionDetailExtractors<TCarrier>(CteUnionBranch[] branches, int[][] slotMaps, int preambleIndex)
+		Func<TCarrier, SqlCommandExecutionContext?, object>[] BuildCteUnionDetailExtractors<TCarrier>(CteUnionBranch[] branches, int[][] slotMaps, int preambleIndex)
 		{
-			var detailExtractors = new Func<TCarrier, object?[]?, object>[branches.Length];
+			var detailExtractors = new Func<TCarrier, SqlCommandExecutionContext?, object>[branches.Length];
 
 			for (int b = 0; b < branches.Length; b++)
 			{
 				var branch = branches[b];
 				var cp     = Expression.Parameter(typeof(TCarrier), "vt");
-				var pa     = Expression.Parameter(typeof(object?[]), "pa");
+				var pa     = Expression.Parameter(typeof(SqlCommandExecutionContext), "pa");
 
 				// Reconstruct using builtDetailExpr: replace each SqlPlaceholderExpression
 				// with the corresponding carrier VT field access
@@ -1122,7 +1123,7 @@ namespace LinqToDB.Internal.Linq.Builder
 							return Expression.Convert(
 								Expression.ArrayIndex(
 									Expression.Convert(
-										Expression.ArrayIndex(ctx.pa, ExpressionInstances.Int32(ctx.preambleIndex)),
+										Expression.Call(ctx.pa, SqlCommandExecutionContext.GetResultMethodInfo, ExpressionInstances.Int32(ctx.preambleIndex)),
 										typeof(object?[])),
 									ExpressionInstances.Int32(nple.NestedSetId)),
 								nple.PreambleResultType);
@@ -1133,12 +1134,12 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				// Finalize SqlGenericConstructorExpression nodes into compilable MemberInit/New
 				reconstructed = FinalizeConstructors(branch.DetailContext, reconstructed);
-				reconstructed = reconstructed.Transform(pa, static (ctx, e) => e == PreambleParam ? ctx : e);
+				reconstructed = reconstructed.Transform(pa, static (ctx, e) => e == ExecutionContextParam ? ctx : e);
 
 				if (reconstructed.Type != branch.DetailType)
 					reconstructed = Expression.Convert(reconstructed, branch.DetailType);
 
-				detailExtractors[b] = Expression.Lambda<Func<TCarrier, object?[]?, object>>(
+				detailExtractors[b] = Expression.Lambda<Func<TCarrier, SqlCommandExecutionContext?, object>>(
 					Expression.Convert(reconstructed, typeof(object)), cp, pa).CompileExpression();
 			}
 
@@ -1228,7 +1229,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				Expression preambleAccess = Expression.Convert(
 					Expression.ArrayIndex(
 						Expression.Convert(
-							Expression.ArrayIndex(PreambleParam, ExpressionInstances.Int32(idx)),
+							Expression.Call(ExecutionContextParam, SqlCommandExecutionContext.GetResultMethodInfo, ExpressionInstances.Int32(idx)),
 							typeof(object?[])),
 						ExpressionInstances.Int32(b)),
 					preambleResultType);
@@ -1377,13 +1378,13 @@ namespace LinqToDB.Internal.Linq.Builder
 					return e;
 				});
 
-			// Replace PreambleParam with a closure variable (populated at runtime)
-			var preambleArrayVar = Expression.Variable(typeof(object?[]), "preambleArray");
+			// Replace ExecutionContextParam with a closure variable (populated at runtime)
+			var preambleArrayVar = Expression.Variable(typeof(SqlCommandExecutionContext), "executionContext");
 			parentReconstructed = parentReconstructed.Transform(
 				preambleArrayVar,
-				static (ctx, e) => e == PreambleParam ? ctx : e);
+				static (ctx, e) => e == ExecutionContextParam ? ctx : e);
 
-			var parentMapper = Expression.Lambda<Func<IQueryExpressions, object?[]?, TCarrier, object?[], T>>(
+			var parentMapper = Expression.Lambda<Func<IQueryExpressions, object?[]?, TCarrier, SqlCommandExecutionContext?, T>>(
 				parentReconstructed,
 				QueryExpressionContainerParam,
 				ParametersParam,
@@ -1425,9 +1426,9 @@ namespace LinqToDB.Internal.Linq.Builder
 				// Create PreambleResults for child branches
 				var childResults = CreateCteUnionBuckets<TKey>(branchCount0, nestedSetIds0);
 
-				// Store in the preambles array so PreambleResult.GetList calls work
-				if (preambleResults != null && preambleIdx0 < preambleResults.Length)
-					preambleResults[preambleIdx0] = childResults;
+				// Store in the execution context so PreambleResult.GetList calls work
+				if (preambleResults != null && preambleIdx0 < preambleResults.Results.Length)
+					preambleResults.SetResult(preambleIdx0, childResults);
 
 				// Execute the UNION ALL query and buffer all rows
 				var carriers = unionQuery.GetResultEnumerable(db, expr, ps, preambleResults).ToList();
@@ -1474,8 +1475,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			readonly bool                                                          _synthesizeParent;
 			readonly IQueryExpressions                                             _expr;
 			readonly object?[]?                                                    _ps;
-			readonly Func<IQueryExpressions, object?[]?, TCarrier, object?[], T>  _parentMapper;
-			readonly object?[]                                                     _preambleResults;
+			readonly Func<IQueryExpressions, object?[]?, TCarrier, SqlCommandExecutionContext?, T>  _parentMapper;
+			readonly SqlCommandExecutionContext?                                  _preambleResults;
 
 			public CteUnionResultEnumerable(
 				List<TCarrier>                                                     carriers,
@@ -1484,8 +1485,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				bool                                                               synthesizeParent,
 				IQueryExpressions                                                  expr,
 				object?[]?                                                         ps,
-				Func<IQueryExpressions, object?[]?, TCarrier, object?[], T>       parentMapper,
-				object?[]                                                          preambleResults)
+				Func<IQueryExpressions, object?[]?, TCarrier, SqlCommandExecutionContext?, T>       parentMapper,
+				SqlCommandExecutionContext?                                        preambleResults)
 			{
 				_carriers         = carriers;
 				_getSetId         = getSetId;
@@ -1593,10 +1594,10 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			public override bool IsInlined => true;
 
-			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
+			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context)
 				=> Array.Empty<object?>();
 
-			public override Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object[]? preambles, CancellationToken cancellationToken)
+			public override Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context, CancellationToken cancellationToken)
 				=> Task.FromResult<object>(Array.Empty<object?>());
 
 			public override void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values) { }
@@ -1662,9 +1663,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			object?[]                            buckets,
 			Func<TCarrier, int>                  getSetId,
 			Func<TCarrier, TKey>                 getKey,
-			Func<TCarrier, object?[]?, object>[] detailExtractors,
+			Func<TCarrier, SqlCommandExecutionContext?, object>[] detailExtractors,
 			int[]                                nestedProcessingOrder,
-			object?[]?                           preambleResults)
+			SqlCommandExecutionContext?          preambleResults)
 			where TKey : notnull
 		{
 			foreach (var nestedSetId in nestedProcessingOrder)
@@ -1689,10 +1690,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			object?[]                            buckets,
 			Func<TCarrier, int>                  getSetId,
 			Func<TCarrier, TKey>                 getKey,
-			Func<TCarrier, object?[]?, object>[] detailExtractors,
+			Func<TCarrier, SqlCommandExecutionContext?, object>[] detailExtractors,
 			int                                  branchCount,
 			HashSet<int>?                        nestedSetIds,
-			object?[]?                           preambleResults)
+			SqlCommandExecutionContext?          preambleResults)
 			where TKey : notnull
 		{
 			var setId = getSetId(carrier);
@@ -1710,7 +1711,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			readonly Query<TCarrier>            _query;
 			readonly Func<TCarrier, int>        _getSetId;
 			readonly Func<TCarrier, TKey>       _getKey;
-			readonly Func<TCarrier, object?[]?, object>[] _detailExtractors;
+			readonly Func<TCarrier, SqlCommandExecutionContext?, object>[] _detailExtractors;
 			readonly int                        _branchCount;
 			readonly int[]?                     _nestedProcessingOrder; // nested setIds in reverse depth order (deepest first)
 			readonly int                        _preambleIndex;
@@ -1719,7 +1720,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				Query<TCarrier>                      query,
 				Func<TCarrier, int>                  getSetId,
 				Func<TCarrier, TKey>                 getKey,
-				Func<TCarrier, object?[]?, object>[] detailExtractors,
+				Func<TCarrier, SqlCommandExecutionContext?, object>[] detailExtractors,
 				int                                  branchCount,
 				int[]?                               nestedProcessingOrder,
 				int                                  preambleIndex)
@@ -1733,58 +1734,58 @@ namespace LinqToDB.Internal.Linq.Builder
 				_preambleIndex          = preambleIndex;
 			}
 
-			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
+			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context)
 			{
 				var nestedSetIds = _nestedProcessingOrder != null ? new HashSet<int>(_nestedProcessingOrder) : null;
 
 				var results = ExpressionBuilder.CreateCteUnionBuckets<TKey>(_branchCount, nestedSetIds);
 
-				// Store results in preambles early so nested branch detail extractors
-				// can access them via preambles[_preambleIndex]
-				if (preambles != null && _preambleIndex < preambles.Length)
-					preambles[_preambleIndex] = results;
+				// Store results in the execution context early so nested branch detail extractors
+				// can access them via context.GetResult(_preambleIndex)
+				if (context != null && _preambleIndex < context.Results.Length)
+					context.SetResult(_preambleIndex, results);
 
 				if (_nestedProcessingOrder != null)
 				{
 					// Multi-pass: buffer all carriers, nested branches (deepest first), then non-nested,
 					// so nested PreambleResults are populated before parent extractors look them up.
-					var carriers = _query.GetResultEnumerable(dataContext, expressions, parameters, preambles).ToList();
+					var carriers = _query.GetResultEnumerable(dataContext, expressions, parameters, context).ToList();
 
-					ExpressionBuilder.RunNestedCteUnionPasses<TKey, TCarrier>(carriers, results, _getSetId, _getKey, _detailExtractors, _nestedProcessingOrder, preambles);
+					ExpressionBuilder.RunNestedCteUnionPasses<TKey, TCarrier>(carriers, results, _getSetId, _getKey, _detailExtractors, _nestedProcessingOrder, context);
 
 					foreach (var carrier in carriers)
 					{
-						ExpressionBuilder.AddNonNestedCarrier<TKey, TCarrier>(carrier, results, _getSetId, _getKey, _detailExtractors, _branchCount, nestedSetIds, preambles);
+						ExpressionBuilder.AddNonNestedCarrier<TKey, TCarrier>(carrier, results, _getSetId, _getKey, _detailExtractors, _branchCount, nestedSetIds, context);
 					}
 				}
 				else
 				{
 					// Single pass: stream, no nested branches
-					foreach (var carrier in _query.GetResultEnumerable(dataContext, expressions, parameters, preambles))
+					foreach (var carrier in _query.GetResultEnumerable(dataContext, expressions, parameters, context))
 					{
-						ExpressionBuilder.AddNonNestedCarrier<TKey, TCarrier>(carrier, results, _getSetId, _getKey, _detailExtractors, _branchCount, nestedSetIds, preambles);
+						ExpressionBuilder.AddNonNestedCarrier<TKey, TCarrier>(carrier, results, _getSetId, _getKey, _detailExtractors, _branchCount, nestedSetIds, context);
 					}
 				}
 
 				return results;
 			}
 
-			public override async Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object[]? preambles,
+			public override async Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context,
 				CancellationToken cancellationToken)
 			{
 				var nestedSetIds = _nestedProcessingOrder != null ? new HashSet<int>(_nestedProcessingOrder) : null;
 
 				var results = ExpressionBuilder.CreateCteUnionBuckets<TKey>(_branchCount, nestedSetIds);
 
-				// Store results in preambles early so nested branch detail extractors
-				// can access them via preambles[_preambleIndex]
-				if (preambles != null && _preambleIndex < preambles.Length)
-					preambles[_preambleIndex] = results;
+				// Store results in the execution context early so nested branch detail extractors
+				// can access them via context.GetResult(_preambleIndex)
+				if (context != null && _preambleIndex < context.Results.Length)
+					context.SetResult(_preambleIndex, results);
 
 				if (_nestedProcessingOrder != null)
 				{
 					var carriers = new List<TCarrier>();
-					var enumerator = _query.GetResultEnumerable(dataContext, expressions, parameters, preambles)
+					var enumerator = _query.GetResultEnumerable(dataContext, expressions, parameters, context)
 						.GetAsyncEnumerator(cancellationToken);
 					await using (enumerator.ConfigureAwait(false))
 					{
@@ -1794,22 +1795,22 @@ namespace LinqToDB.Internal.Linq.Builder
 						}
 					}
 
-					ExpressionBuilder.RunNestedCteUnionPasses<TKey, TCarrier>(carriers, results, _getSetId, _getKey, _detailExtractors, _nestedProcessingOrder, preambles);
+					ExpressionBuilder.RunNestedCteUnionPasses<TKey, TCarrier>(carriers, results, _getSetId, _getKey, _detailExtractors, _nestedProcessingOrder, context);
 
 					foreach (var carrier in carriers)
 					{
-						ExpressionBuilder.AddNonNestedCarrier<TKey, TCarrier>(carrier, results, _getSetId, _getKey, _detailExtractors, _branchCount, nestedSetIds, preambles);
+						ExpressionBuilder.AddNonNestedCarrier<TKey, TCarrier>(carrier, results, _getSetId, _getKey, _detailExtractors, _branchCount, nestedSetIds, context);
 					}
 				}
 				else
 				{
-					var enumerator = _query.GetResultEnumerable(dataContext, expressions, parameters, preambles)
+					var enumerator = _query.GetResultEnumerable(dataContext, expressions, parameters, context)
 						.GetAsyncEnumerator(cancellationToken);
 					await using (enumerator.ConfigureAwait(false))
 					{
 						while (await enumerator.MoveNextAsync().ConfigureAwait(false))
 						{
-							ExpressionBuilder.AddNonNestedCarrier<TKey, TCarrier>(enumerator.Current, results, _getSetId, _getKey, _detailExtractors, _branchCount, nestedSetIds, preambles);
+							ExpressionBuilder.AddNonNestedCarrier<TKey, TCarrier>(enumerator.Current, results, _getSetId, _getKey, _detailExtractors, _branchCount, nestedSetIds, context);
 						}
 					}
 				}

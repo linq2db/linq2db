@@ -8,14 +8,15 @@ using System.Runtime.InteropServices;
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Internal.Linq.Builder
 {
 	partial class ExpressionBuilder
 	{
-		public static readonly ParameterExpression PreambleParam =
-			Expression.Parameter(typeof(object[]), "preamble");
+		public static readonly ParameterExpression ExecutionContextParam =
+			Expression.Parameter(typeof(SqlCommandExecutionContext), "executionContext");
 
 		void CollectDependencies(IBuildContext context, Expression expression, HashSet<Expression> dependencies)
 		{
@@ -377,7 +378,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			Expression resultExpression =
 				Expression.Call(
-					Expression.Convert(Expression.ArrayIndex(PreambleParam, ExpressionInstances.Int32(idx)),
+					Expression.Convert(Expression.Call(ExecutionContextParam, SqlCommandExecutionContext.GetResultMethodInfo, ExpressionInstances.Int32(idx)),
 						typeof(PreambleResult<TKey, T>)), getListMethod, keyExpression);
 
 			if (additionalOrderBy != null)
@@ -407,7 +408,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var preamble = new DetachedPreamble<T>(query);
 			preambles.Add(preamble);
 
-			var resultExpression = Expression.Convert(Expression.ArrayIndex(PreambleParam, ExpressionInstances.Int32(idx)), typeof(List<T>));
+			var resultExpression = Expression.Convert(Expression.Call(ExecutionContextParam, SqlCommandExecutionContext.GetResultMethodInfo, ExpressionInstances.Int32(idx)), typeof(List<T>));
 
 			return resultExpression;
 		}

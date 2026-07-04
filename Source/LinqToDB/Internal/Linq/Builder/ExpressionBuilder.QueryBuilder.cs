@@ -10,6 +10,7 @@ using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Reflection;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
@@ -655,7 +656,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			return toRead;
 		}
 
-		public Expression<Func<IQueryRunner,IDataContext,DbDataReader,IQueryExpressions, object?[]?,object?[]?,T>> BuildMapper<T>(SelectQuery query, Expression expr)
+		public Expression<Func<IQueryRunner,IDataContext,DbDataReader,IQueryExpressions, object?[]?,SqlCommandExecutionContext?,T>> BuildMapper<T>(SelectQuery query, Expression expr)
 		{
 			var type = typeof(T);
 
@@ -672,13 +673,13 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var mappingBody = expressionGenerator.Build();
 
-			var mapper = Expression.Lambda<Func<IQueryRunner,IDataContext,DbDataReader,IQueryExpressions,object?[]?,object?[]?,T>>(mappingBody,
+			var mapper = Expression.Lambda<Func<IQueryRunner,IDataContext,DbDataReader,IQueryExpressions,object?[]?,SqlCommandExecutionContext?,T>>(mappingBody,
 				QueryRunnerParam,
 				ExpressionConstants.DataContextParam,
 				DataReaderParam,
 				QueryExpressionContainerParam,
 				ParametersParam,
-				PreambleParam);
+				ExecutionContextParam);
 
 			return mapper;
 		}
