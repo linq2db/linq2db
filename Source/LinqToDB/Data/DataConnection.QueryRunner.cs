@@ -161,9 +161,13 @@ namespace LinqToDB.Data
 			// Cached in query.Context on first compile so a re-run reuses both the rendered commands and the logical
 			// scenario (the interpreter needs the real scenario for combined grouping / forwarding — the bridge can't
 			// re-infer those).
-			private sealed record CachedScenario(CommandWithParameters[] Commands, SqlCommandScenario? Scenario, SqlCommandGroupPlan? Plan);
+			// BatchCommands: per combined-group (index == commandIndex) DbBatch templates - each statement's isolated-scope SQL +
+			// unbound SqlParameter list - rendered once for a non-parameter-dependent scenario so batch execution binds DbParameters
+			// per run instead of re-rendering. Null => not cached (parameter-dependent / connection can't batch); a null slot => that
+			// group always runs concat (a single step, or an OUT-param / forwarded-binding step).
+			private sealed record CachedScenario(CommandWithParameters[] Commands, CommandWithParameters[]?[]? BatchCommands, SqlCommandScenario? Scenario, SqlCommandGroupPlan? Plan);
 
-			private sealed record PreparedQuery(CommandWithParameters[] Commands, SqlStatement Statement, IReadOnlyCollection<string>? QueryHints, SqlCommandScenario? Scenario, SqlCommandGroupPlan? Plan);
+			private sealed record PreparedQuery(CommandWithParameters[] Commands, CommandWithParameters[]?[]? BatchCommands, SqlStatement Statement, IReadOnlyCollection<string>? QueryHints, SqlCommandScenario? Scenario, SqlCommandGroupPlan? Plan);
 
 			private sealed record ExecutionPreparedQuery(PreparedQuery PreparedQuery, DbParameter[]?[] CommandsParameters, IReadOnlyParameterValues? ParameterValues);
 
@@ -198,7 +202,7 @@ namespace LinqToDB.Data
 
 					if (query.Context is CachedScenario cached)
 					{
-						return new PreparedQuery(cached.Commands, statement, dataConnection.GetNextCommandHints(!forGetSqlText), cached.Scenario, cached.Plan);
+						return new PreparedQuery(cached.Commands, cached.BatchCommands, statement, dataConnection.GetNextCommandHints(!forGetSqlText), cached.Scenario, cached.Plan);
 					}
 
 					var continuousRun = query.IsContinuousRun;
@@ -293,9 +297,19 @@ namespace LinqToDB.Data
 						throw new InvalidOperationException($"'{dmlService.GetType().Name}.BuildCommandScenario' returned null; it must always produce a scenario.");
 					}
 
+					CommandWithParameters[]?[]? batchCommands = null;
+
+#if SUPPORTS_DBBATCH
+					// Pre-render the per-group DbBatch templates once for a cacheable (non-parameter-dependent) scenario, so batch
+					// execution binds DbParameters per run instead of re-rendering the SQL each time - only when the connection can
+					// actually batch (UseDbBatch on, no command interceptor), else the concat command (Commands) is used.
+					if (optimizeAndConvertAll && dataConnection.CanUseDbBatch)
+						batchCommands = RenderBatchTemplates(dataConnection, scenario, plan);
+#endif
+
 					if (optimizeAndConvertAll)
 					{
-						query.Context = new CachedScenario(commands, scenario, plan);
+						query.Context = new CachedScenario(commands, batchCommands, scenario, plan);
 
 						// clear aliases, they are not needed after SQL generation.
 						//
@@ -304,7 +318,7 @@ namespace LinqToDB.Data
 
 					query.IsContinuousRun = true;
 
-					return new PreparedQuery(commands, statement, dataConnection.GetNextCommandHints(!forGetSqlText), scenario, plan);
+					return new PreparedQuery(commands, batchCommands, statement, dataConnection.GetNextCommandHints(!forGetSqlText), scenario, plan);
 				}
 				finally
 				{
@@ -662,18 +676,11 @@ namespace LinqToDB.Data
 			// step order: a Scalar step reads the first cell of the current result set; a pure non-query step yields no
 			// result set (RecordsAffected only).
 #if SUPPORTS_DBBATCH
-			// A combined group can run as a DbBatch (isolated per-statement parameter scopes) only when no step needs
-			// cross-statement binding the batch can't do: an OUT parameter (Oracle/Firebird identity) or a forwarded
-			// ParameterBinding must stay in the single semicolon-concatenated command, and query hints (command 0 only) can't be
-			// applied to a DbBatch. Otherwise it is DbBatch-eligible when the provider supports it (CanUseDbBatch).
-			static bool IsGroupBatchEligible(DataConnection dataConnection, ExecutionPreparedQuery executionQuery, IReadOnlyList<SqlCommandStep> steps, SqlCommandGroup group, int commandIndex)
+			// The static part of batch-eligibility (independent of the connection / hints): a group can run as a DbBatch (isolated
+			// per-statement scopes) only when no step needs cross-statement binding the batch can't do - an OUT parameter
+			// (Oracle/Firebird identity) or a forwarded ParameterBinding must stay in the single concatenated command.
+			static bool IsGroupStructurallyBatchEligible(IReadOnlyList<SqlCommandStep> steps, SqlCommandGroup group)
 			{
-				if (!dataConnection.CanUseDbBatch)
-					return false;
-
-				if (commandIndex == 0 && executionQuery.PreparedQuery.QueryHints != null)
-					return false;
-
 				foreach (var i in group.StepIndexes)
 				{
 					var step = steps[i];
@@ -683,6 +690,45 @@ namespace LinqToDB.Data
 				}
 
 				return true;
+			}
+
+			// Renders the per-group DbBatch templates (each statement's isolated-scope SQL + unbound SqlParameter list) for the
+			// batch-eligible multi-statement groups of a plan, so a cacheable scenario renders them once; a null slot marks a group
+			// that always runs concat (a single step, or a step needing OUT-param / forwarded-binding). Execution binds DbParameters.
+			static CommandWithParameters[]?[] RenderBatchTemplates(DataConnection dataConnection, SqlCommandScenario scenario, SqlCommandGroupPlan plan)
+			{
+				var steps  = scenario.Steps;
+				var result = new CommandWithParameters[plan.Groups.Count][];
+
+				for (var g = 0; g < plan.Groups.Count; g++)
+				{
+					var group = plan.Groups[g];
+
+					if (group.StepIndexes.Count <= 1 || !IsGroupStructurallyBatchEligible(steps, group))
+						continue;
+
+					var groupStatements = new SqlStatement[group.StepIndexes.Count];
+
+					for (var k = 0; k < group.StepIndexes.Count; k++)
+						groupStatements[k] = steps[group.StepIndexes[k]].Statement;
+
+					result[g] = ScenarioCommandRenderer.RenderStatementTemplates(dataConnection, groupStatements, null);
+				}
+
+				return result;
+			}
+
+			// Runtime batch-eligibility: the provider connection can batch, and no query hints apply (command 0 only - those can't
+			// go on a DbBatch, so a hinted command 0 stays concat), on top of the structural check.
+			static bool IsGroupBatchEligible(DataConnection dataConnection, ExecutionPreparedQuery executionQuery, IReadOnlyList<SqlCommandStep> steps, SqlCommandGroup group, int commandIndex)
+			{
+				if (!dataConnection.CanUseDbBatch)
+					return false;
+
+				if (commandIndex == 0 && executionQuery.PreparedQuery.QueryHints != null)
+					return false;
+
+				return IsGroupStructurallyBatchEligible(steps, group);
 			}
 #endif
 
@@ -696,12 +742,24 @@ namespace LinqToDB.Data
 #if SUPPORTS_DBBATCH
 				if (IsGroupBatchEligible(dataConnection, executionQuery, steps, group, commandIndex))
 				{
-					var groupStatements = new SqlStatement[stepIndexes.Count];
+					// Reuse the templates rendered once for a cacheable scenario; render fresh only when parameter-dependent (no cache).
+					// Either way DbParameters are bound per execution from the templates' SqlParameter lists.
+					var templates = executionQuery.PreparedQuery.BatchCommands?[commandIndex];
 
-					for (var k = 0; k < stepIndexes.Count; k++)
-						groupStatements[k] = steps[stepIndexes[k]].Statement;
+					if (templates == null)
+					{
+						var groupStatements = new SqlStatement[stepIndexes.Count];
 
-					var rendered = ScenarioCommandRenderer.RenderStatements(dataConnection, groupStatements, executionQuery.ParameterValues);
+						for (var k = 0; k < stepIndexes.Count; k++)
+							groupStatements[k] = steps[stepIndexes[k]].Statement;
+
+						templates = ScenarioCommandRenderer.RenderStatementTemplates(dataConnection, groupStatements, executionQuery.ParameterValues);
+					}
+
+					var rendered = new RenderedStatement[templates.Length];
+
+					for (var k = 0; k < templates.Length; k++)
+						rendered[k] = new RenderedStatement(templates[k].Command, ScenarioCommandRenderer.MaterializeDbParameters(dataConnection, templates[k].SqlParameters, executionQuery.ParameterValues));
 
 					return new CombinedCommand(rendered, stepIndexes, null);
 				}

@@ -191,6 +191,24 @@ namespace LinqToDB.Internal.SqlProvider
 		internal static IReadOnlyList<RenderedStatement> RenderStatements(
 			DataConnection dataConnection, IReadOnlyList<SqlStatement> statements, IReadOnlyParameterValues? parameterValues)
 		{
+			var templates = RenderStatementTemplates(dataConnection, statements, parameterValues);
+			var result    = new RenderedStatement[templates.Length];
+
+			for (var i = 0; i < templates.Length; i++)
+				result[i] = new RenderedStatement(templates[i].Command, MaterializeDbParameters(dataConnection, templates[i].SqlParameters, parameterValues));
+
+			return result;
+		}
+
+		/// <summary>
+		/// The cacheable half of <see cref="RenderStatements"/>: renders each statement's SQL and collects its (unbound)
+		/// <see cref="SqlParameter"/> list into a <see cref="CommandWithParameters"/> (fresh normalizer per statement, so
+		/// names are independent). For a non-parameter-dependent scenario the result is stable and can be cached across
+		/// executions; only DbParameter binding (<see cref="MaterializeDbParameters"/>) then repeats per execution.
+		/// </summary>
+		internal static CommandWithParameters[] RenderStatementTemplates(
+			DataConnection dataConnection, IReadOnlyList<SqlStatement> statements, IReadOnlyParameterValues? parameterValues)
+		{
 			var options      = dataConnection.Options;
 			var sqlOptimizer = dataConnection.DataProvider.GetSqlOptimizer (options);
 			var sqlBuilder   = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema, options);
@@ -198,7 +216,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 			var serviceProvider = ((IInfrastructure<IServiceProvider>)dataConnection.DataProvider).Instance;
 
-			var result = new RenderedStatement[statements.Count];
+			var result = new CommandWithParameters[statements.Count];
 
 			using var sb = Pools.StringBuilder.Allocate();
 
@@ -214,7 +232,7 @@ namespace LinqToDB.Internal.SqlProvider
 				using (ActivityService.Start(ActivityID.BuildSql))
 					sqlBuilder.BuildSql(statements[i], sb.Value, optimizationContext, aliases, null, 0);
 
-				result[i] = new RenderedStatement(sb.Value.ToString(), MaterializeDbParameters(dataConnection, optimizationContext.GetParameters(), parameterValues));
+				result[i] = new CommandWithParameters(sb.Value.ToString(), optimizationContext.GetParameters());
 			}
 
 			return result;
