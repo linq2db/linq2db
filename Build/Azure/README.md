@@ -89,6 +89,7 @@ Legend:
 |PostgreSQL 16<br>[Npgsql](https://www.nuget.org/packages/Npgsql/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |PostgreSQL 17<br>[Npgsql](https://www.nuget.org/packages/Npgsql/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |PostgreSQL 18<br>[Npgsql](https://www.nuget.org/packages/Npgsql/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|PostgreSQL 19<br>[Npgsql](https://www.nuget.org/packages/Npgsql/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |Firebird 2.5<br>[FirebirdSql.Data.FirebirdClient](https://www.nuget.org/packages/FirebirdSql.Data.FirebirdClient/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |Firebird 3.0<br>[FirebirdSql.Data.FirebirdClient](https://www.nuget.org/packages/FirebirdSql.Data.FirebirdClient/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |Firebird 4.0<br>[FirebirdSql.Data.FirebirdClient](https://www.nuget.org/packages/FirebirdSql.Data.FirebirdClient/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
@@ -156,6 +157,7 @@ Legend:
 |`TestProvName.PostgreSQL16`|PostgreSQL 16||
 |`TestProvName.PostgreSQL17`|PostgreSQL 17||
 |`ProviderName.PostgreSQL18`|PostgreSQL 18||
+|`ProviderName.PostgreSQL19`|PostgreSQL 19||
 |`ProviderName.Firebird25`|Firebird 2.5||
 |`TestProvName.Firebird3`|Firebird 3.0||
 |`TestProvName.Firebird4`|Firebird 4.0||
