@@ -42,6 +42,10 @@ Entity construction must emit each such member **once**: `BuildGenericFromMember
 
 The SQL AST (`Source/LinqToDB/SqlQuery/` and `Source/LinqToDB/Internal/SqlQuery/`), the `IDataProvider` interface, and the translator interfaces under `Source/LinqToDB/Linq/Translation/` are consumed by every database provider in the repo. A fix scoped to one provider or one test shouldn't reshape them — the blast radius is the whole product. When a local task seems to need a cross-cutting change, surface the question explicitly rather than making the change silently.
 
+### Companion interfaces to public contracts stay public, in the contract's namespace
+
+An opt-in companion interface extending an existing public contract (e.g. a schema-aware extension of `IMetadataReader`) defaults to **public, in the same namespace as the contract it extends** — not `LinqToDB.Internal.*`, and not `InternalsVisibleTo` (the repo uses none). An extension seam that third parties may implement has no value hidden; it is part of the same contract surface. (User decision on #5675, overriding a proposed `Internal.Metadata` placement: "no value in hiding it".) This does not soften the SQL AST rule below — AST construction types are *not* extension seams and MUST stay in `LinqToDB.Internal.SqlQuery`.
+
 ### `IsDependsOnSources` ignore-set doesn't cover field/column refs
 
 `QueryHelper.IsDependsOnSources(expr, onSources, sourcesToIgnore:)` applies `sourcesToIgnore` only on the **direct `ISqlTableSource`-element** match path. The `SqlField` / `SqlColumn` paths — how predicates actually reference tables — check `OnSources.Contains(field.Table)` / `Contains(column.Parent)` **without** consulting `sourcesToIgnore`. So `sourcesToIgnore` does *not* subtract a table a predicate reaches through a field, and `IsDependsOnSources(pred, [t], sourcesToIgnore: [t])` still returns true.

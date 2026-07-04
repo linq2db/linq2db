@@ -115,6 +115,8 @@ See [`AGENTS.md`](../../AGENTS.md) → *Working discipline* for the orientation 
 
 **Red test first for a review-finding fix.** When fixing a reproducible review finding (yours or a reviewer's), write the failing (red) regression test *before* the fix — it confirms the finding is real and that the fix targets it. If no repro can trigger it, don't fix on speculation: post a "could not reproduce" FYI with repro details + a test pinning the current (correct) behaviour, rather than a speculative core change.
 
+**Proposing a new cross-cutting core capability? Include a beneficiary survey.** When a task leads to proposing a new core seam (interface, hook, extension point), don't justify it by the driving case alone — sweep for existing code exhibiting the same gap (grep for the workaround pattern, e.g. `MappingSchema.Default` fallbacks) and existing/potential issues it addresses (KB github indexes + `gh search issues`), and fold that adoption analysis into the design artifact. A core change justified only by one consumer is a workaround wearing a design's coat. (Established on #5675, the schema-aware metadata-reader task.)
+
 ### Definition of done
 
 Before calling a code change "done" — and before proposing to commit / push — walk the consolidated completion checklist in [`definition-of-done.md`](definition-of-done.md). It gathers the completion gates that otherwise live scattered across these rules (tests green via `/test`, baselines reviewed, `PublicAPI.Unshipped.txt` updated for new public surface, `CompatibilitySuppressions.xml` refreshed via `/api-baselines`, no playground scratch staged, XML docs on new public members) into one place so none is silently skipped. The individual rules stay canonical; the checklist only points at them.

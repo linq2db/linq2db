@@ -90,6 +90,8 @@ to prevent scope creep, not to expand scope.>
 
 Keep the body focused on what the user reported. Don't invent extra scope. Related observations you noticed while verifying go in **Notes** or — better — get flagged to the user as "want a separate issue for this?" rather than folded into the filed one.
 
+**Implementation-spec variant.** When the user asks for a design/implementation hand-off task ("specify all required implementation information", "descriptive enough for another agent to follow"), the fixed structure above yields to a richer, self-contained one: Summary → root cause / structural constraint → why-general (beneficiary survey per `agent-rules.md` → *Before coding a fix or feature*) → decisions incl. rejected alternatives with reasons → proposed design → adoption notes for other affected code → tests → definition of done → notes. Every claim still carries verified `file:line` refs; refs that point at an unmerged PR branch (not master) must be labeled as such in the body. (Shape established on #5675.)
+
 **Wording.** Write the body as a plain report, not filled-in template slots:
 
 - **No first person, no invented persons.** Never `we` / `I` / `our` / `the team` — the author files the issue, they don't speak for the maintainers. State what the code does and what should happen in neutral, mostly passive voice (`the keys are inlined …`, `this shows up on …`), not `we inline …` or `I noticed …`. Don't attribute intent or authorship to anyone.
