@@ -135,6 +135,9 @@ LinqToDB.Internal.DataProvider.MySql.Translation.MariaDBMemberTranslator
 LinqToDB.Internal.DataProvider.MySql.Translation.MariaDBMemberTranslator.MariaDBMemberTranslator() -> void
 LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQL18MemberTranslator
 LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQL18MemberTranslator.PostgreSQL18MemberTranslator() -> void
+LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQL19MemberTranslator
+LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQL19MemberTranslator.PostgreSQL19MemberTranslator() -> void
+override LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQL19MemberTranslator.CreateWindowFunctionsMemberTranslator() -> LinqToDB.Linq.Translation.IMemberTranslator?
 virtual LinqToDB.Internal.DataProvider.Translation.ProviderMemberTranslatorDefault.TranslateNewGuid7Method(LinqToDB.Linq.Translation.ITranslationContext! translationContext, LinqToDB.Linq.Translation.TranslationFlags translationFlags) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 override LinqToDB.Internal.DataProvider.ClickHouse.Translation.ClickHouseMemberTranslator.TranslateNewGuid7Method(LinqToDB.Linq.Translation.ITranslationContext! translationContext, LinqToDB.Linq.Translation.TranslationFlags translationFlags) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 override LinqToDB.Internal.DataProvider.DuckDB.Translation.DuckDBMemberTranslator.TranslateNewGuid7Method(LinqToDB.Linq.Translation.ITranslationContext! translationContext, LinqToDB.Linq.Translation.TranslationFlags translationFlags) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
