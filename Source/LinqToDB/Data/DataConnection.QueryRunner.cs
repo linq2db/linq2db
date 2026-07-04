@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -795,47 +796,82 @@ namespace LinqToDB.Data
 				return rd;
 			}
 
-			static void ExecuteCombinedGroup(DataConnection dataConnection, ExecutionPreparedQuery executionQuery, IReadOnlyList<SqlCommandStep> steps, SqlCommandGroup group, int commandIndex, SqlCommandExecutionContext context)
+			// Shared group-plan driver for the DML interpreter (this file) and the eager enumerator (Linq/QueryRunner):
+			// walks the groups in order and harvests each group's results into the context. When dispatchSingletons is set a
+			// singleton group is dispatched to runSingleton (DML NonQuery/Scalar via ExecuteSingleStep); every other group runs
+			// as one combined command via ExecuteCombinedHarvest with harvestCombined. When a group's last step is
+			// terminalStepIndex (the eager main), that group's earlier steps are harvested and the still-open reader is returned
+			// for the caller to stream (only the last group carries a terminal); otherwise every reader is disposed here and the
+			// method returns null. getCommand supplies each combined group's physical command (DML builds it per group from the
+			// prepared query; eager already holds it).
+			static DataReaderWrapper? RunGroups(
+				DataConnection                              dataConnection,
+				IReadOnlyList<SqlCommandStep>               steps,
+				IReadOnlyList<SqlCommandGroup>              groups,
+				Func<SqlCommandGroup, int, CombinedCommand> getCommand,
+				Action<int, int>?                           runSingleton,
+				Action<int, DbDataReader>                   harvestCombined,
+				bool                                        dispatchSingletons,
+				int                                         terminalStepIndex)
 			{
-				var command = BuildCombinedGroupCommand(dataConnection, executionQuery, steps, group, commandIndex);
-
-				using var rd = ExecuteCombinedHarvest(dataConnection, command, steps, group.StepIndexes, (i, dr) =>
+				for (var g = 0; g < groups.Count; g++)
 				{
-					switch (steps[i].Kind)
+					var group = groups[g];
+
+					if (dispatchSingletons && group.StepIndexes.Count == 1)
 					{
-						case SqlStepKind.Scalar:
-							context.SetResult(i, dr.Read() ? dr.GetValue(0) : null);
-							break;
-						// A combined group's NonQuery rows-affected is the reader's cumulative count, reliable only once the
-						// reader is fully consumed; no current combined group gates/outcomes on a NonQuery step, so it is
-						// stored but unused. A future combined scenario consuming it must harvest per-statement counts.
-						case SqlStepKind.NonQuery:
-							context.SetResult(i, dr.RecordsAffected);
-							break;
+						runSingleton!(group.StepIndexes[0], g);
+						continue;
 					}
-				});
+
+					var stepIndexes     = group.StepIndexes;
+					var carriesTerminal = terminalStepIndex >= 0 && stepIndexes[stepIndexes.Count - 1] == terminalStepIndex;
+					var harvestIndexes  = carriesTerminal ? stepIndexes.Take(stepIndexes.Count - 1).ToList() : stepIndexes;
+
+					var rd = ExecuteCombinedHarvest(dataConnection, getCommand(group, g), steps, harvestIndexes, harvestCombined);
+
+					if (carriesTerminal)
+						return rd;
+
+					rd.Dispose();
+				}
+
+				return null;
 			}
 
-			// Interpreter (sync). Walks the group plan (from PreparedQuery.Plan): a singleton group runs as its own
-			// command; a combined group runs as one command whose result sets are harvested per step. When there is no
-			// plan (the legacy bridge), every step is its own command. Owns all InitCommand calls.
+			// Interpreter (sync). Walks the group plan (from PreparedQuery.Plan) via the shared RunGroups: a singleton group
+			// runs as its own command (ExecuteSingleStep); a combined group runs as one command whose result sets are harvested
+			// per step. DML has no streaming terminal, so RunGroups always returns null here.
 			static ScenarioOutcome ExecuteScenario(DataConnection dataConnection, ExecutionPreparedQuery executionQuery, SqlCommandScenario scenario)
 			{
 				var steps   = scenario.Steps;
 				var context = new SqlCommandExecutionContext(steps.Count);
 				var groups  = executionQuery.PreparedQuery.Prepared.Plan.Groups;
 
-				// Each group is one pre-rendered command: a singleton runs directly; a combined group harvests its
-				// result sets per step via the NextResult walk.
-				for (var g = 0; g < groups.Count; g++)
-				{
-					var group = groups[g];
+				var terminalReader = RunGroups(
+					dataConnection, steps, groups,
+					(group, commandIndex) => BuildCombinedGroupCommand(dataConnection, executionQuery, steps, group, commandIndex),
+					(stepIndex, commandIndex) => ExecuteSingleStep(dataConnection, executionQuery, steps, stepIndex, commandIndex, context),
+					(i, dr) =>
+					{
+						switch (steps[i].Kind)
+						{
+							case SqlStepKind.Scalar:
+								context.SetResult(i, dr.Read() ? dr.GetValue(0) : null);
+								break;
+							// A combined group's NonQuery rows-affected is the reader's cumulative count, reliable only once the
+							// reader is fully consumed; no current combined group gates/outcomes on a NonQuery step, so it is
+							// stored but unused. A future combined scenario consuming it must harvest per-statement counts.
+							case SqlStepKind.NonQuery:
+								context.SetResult(i, dr.RecordsAffected);
+								break;
+						}
+					},
+					dispatchSingletons: true,
+					terminalStepIndex: -1);
 
-					if (group.StepIndexes.Count == 1)
-						ExecuteSingleStep(dataConnection, executionQuery, steps, group.StepIndexes[0], g, context);
-					else
-						ExecuteCombinedGroup(dataConnection, executionQuery, steps, group, g, context);
-				}
+				// DML scenarios have no streaming terminal (terminalStepIndex = -1), so terminalReader is always null.
+				terminalReader?.Dispose();
 
 				// ExecuteNonQuery's rows-affected is the last-executed outcome branch's count (the UPDATE or INSERT that
 				// actually ran in the InsertOrReplace/Upsert emulation; step 0 for a plain single statement; 0 when a
@@ -917,27 +953,40 @@ namespace LinqToDB.Data
 			}
 
 			// In case of change the logic of this method, DO NOT FORGET to change the sibling method.
-			static async Task ExecuteCombinedGroupAsync(DataConnection dataConnection, ExecutionPreparedQuery executionQuery, IReadOnlyList<SqlCommandStep> steps, SqlCommandGroup group, int commandIndex, SqlCommandExecutionContext context, CancellationToken cancellationToken)
+			static async Task<DataReaderWrapper?> RunGroupsAsync(
+				DataConnection                              dataConnection,
+				IReadOnlyList<SqlCommandStep>               steps,
+				IReadOnlyList<SqlCommandGroup>              groups,
+				Func<SqlCommandGroup, int, CombinedCommand> getCommand,
+				Func<int, int, Task>?                       runSingleton,
+				Func<int, DbDataReader, Task>               harvestCombined,
+				bool                                        dispatchSingletons,
+				int                                         terminalStepIndex,
+				CancellationToken                           cancellationToken)
 			{
-				var command = BuildCombinedGroupCommand(dataConnection, executionQuery, steps, group, commandIndex);
-
-				var rd = await ExecuteCombinedHarvestAsync(dataConnection, command, steps, group.StepIndexes, async (i, dr) =>
+				for (var g = 0; g < groups.Count; g++)
 				{
-					switch (steps[i].Kind)
-					{
-						case SqlStepKind.Scalar:
-							context.SetResult(i, await dr.ReadAsync(cancellationToken).ConfigureAwait(false) ? dr.GetValue(0) : null);
-							break;
-						// A combined group's NonQuery rows-affected is the reader's cumulative count, reliable only once the
-						// reader is fully consumed; no current combined group gates/outcomes on a NonQuery step, so it is
-						// stored but unused. A future combined scenario consuming it must harvest per-statement counts.
-						case SqlStepKind.NonQuery:
-							context.SetResult(i, dr.RecordsAffected);
-							break;
-					}
-				}, cancellationToken).ConfigureAwait(false);
+					var group = groups[g];
 
-				await rd.DisposeAsync().ConfigureAwait(false);
+					if (dispatchSingletons && group.StepIndexes.Count == 1)
+					{
+						await runSingleton!(group.StepIndexes[0], g).ConfigureAwait(false);
+						continue;
+					}
+
+					var stepIndexes     = group.StepIndexes;
+					var carriesTerminal = terminalStepIndex >= 0 && stepIndexes[stepIndexes.Count - 1] == terminalStepIndex;
+					var harvestIndexes  = carriesTerminal ? stepIndexes.Take(stepIndexes.Count - 1).ToList() : stepIndexes;
+
+					var rd = await ExecuteCombinedHarvestAsync(dataConnection, getCommand(group, g), steps, harvestIndexes, harvestCombined, cancellationToken).ConfigureAwait(false);
+
+					if (carriesTerminal)
+						return rd;
+
+					await rd.DisposeAsync().ConfigureAwait(false);
+				}
+
+				return null;
 			}
 
 			// Interpreter (async sibling). In case of change the logic of this method, DO NOT FORGET to change the sibling method.
@@ -947,17 +996,32 @@ namespace LinqToDB.Data
 				var context = new SqlCommandExecutionContext(steps.Count);
 				var groups  = executionQuery.PreparedQuery.Prepared.Plan.Groups;
 
-				// Each group is one pre-rendered command: a singleton runs directly; a combined group harvests its
-				// result sets per step via the NextResult walk.
-				for (var g = 0; g < groups.Count; g++)
-				{
-					var group = groups[g];
+				var terminalReader = await RunGroupsAsync(
+					dataConnection, steps, groups,
+					(group, commandIndex) => BuildCombinedGroupCommand(dataConnection, executionQuery, steps, group, commandIndex),
+					(stepIndex, commandIndex) => ExecuteSingleStepAsync(dataConnection, executionQuery, steps, stepIndex, commandIndex, context, cancellationToken),
+					async (i, dr) =>
+					{
+						switch (steps[i].Kind)
+						{
+							case SqlStepKind.Scalar:
+								context.SetResult(i, await dr.ReadAsync(cancellationToken).ConfigureAwait(false) ? dr.GetValue(0) : null);
+								break;
+							// A combined group's NonQuery rows-affected is the reader's cumulative count, reliable only once the
+							// reader is fully consumed; no current combined group gates/outcomes on a NonQuery step, so it is
+							// stored but unused. A future combined scenario consuming it must harvest per-statement counts.
+							case SqlStepKind.NonQuery:
+								context.SetResult(i, dr.RecordsAffected);
+								break;
+						}
+					},
+					dispatchSingletons: true,
+					terminalStepIndex: -1,
+					cancellationToken).ConfigureAwait(false);
 
-					if (group.StepIndexes.Count == 1)
-						await ExecuteSingleStepAsync(dataConnection, executionQuery, steps, group.StepIndexes[0], g, context, cancellationToken).ConfigureAwait(false);
-					else
-						await ExecuteCombinedGroupAsync(dataConnection, executionQuery, steps, group, g, context, cancellationToken).ConfigureAwait(false);
-				}
+				// DML scenarios have no streaming terminal (terminalStepIndex = -1), so terminalReader is always null.
+				if (terminalReader != null)
+					await terminalReader.DisposeAsync().ConfigureAwait(false);
 
 				// ExecuteNonQuery's rows-affected is the last-executed outcome branch's count (the UPDATE or INSERT that
 				// actually ran in the InsertOrReplace/Upsert emulation; step 0 for a plain single statement; 0 when a
