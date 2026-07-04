@@ -773,13 +773,33 @@ namespace LinqToDB.Data
 					commandIndex == 0 ? pq.QueryHints : null);
 			}
 
+			// Executes one combined command and harvests the given result-producing steps into the execution context via the
+			// shared WalkCombinedResultSets, returning the open reader for the caller to dispose. A non-terminal group disposes
+			// it immediately (DML, eager child-only commands); the eager main-carrying group streams its trailing main result
+			// set from it first. Disposes the reader itself only if harvesting throws. The reader-lifecycle seam shared by the
+			// DML interpreter and the eager enumerator.
+			internal static DataReaderWrapper ExecuteCombinedHarvest(DataConnection dataConnection, CombinedCommand command, IReadOnlyList<SqlCommandStep> steps, IReadOnlyList<int> harvestStepIndexes, Action<int, DbDataReader> harvest)
+			{
+				var rd = ExecuteCombined(dataConnection, command, CommandBehavior.Default);
+
+				try
+				{
+					WalkCombinedResultSets(rd.DataReader!, harvestStepIndexes, steps, harvest);
+				}
+				catch
+				{
+					rd.Dispose();
+					throw;
+				}
+
+				return rd;
+			}
+
 			static void ExecuteCombinedGroup(DataConnection dataConnection, ExecutionPreparedQuery executionQuery, IReadOnlyList<SqlCommandStep> steps, SqlCommandGroup group, int commandIndex, SqlCommandExecutionContext context)
 			{
 				var command = BuildCombinedGroupCommand(dataConnection, executionQuery, steps, group, commandIndex);
 
-				using var rd = ExecuteCombined(dataConnection, command, CommandBehavior.Default);
-
-				WalkCombinedResultSets(rd.DataReader!, group.StepIndexes, steps, (i, dr) =>
+				using var rd = ExecuteCombinedHarvest(dataConnection, command, steps, group.StepIndexes, (i, dr) =>
 				{
 					switch (steps[i].Kind)
 					{
@@ -879,14 +899,29 @@ namespace LinqToDB.Data
 			}
 
 			// In case of change the logic of this method, DO NOT FORGET to change the sibling method.
+			internal static async Task<DataReaderWrapper> ExecuteCombinedHarvestAsync(DataConnection dataConnection, CombinedCommand command, IReadOnlyList<SqlCommandStep> steps, IReadOnlyList<int> harvestStepIndexes, Func<int, DbDataReader, Task> harvest, CancellationToken cancellationToken)
+			{
+				var rd = await ExecuteCombinedAsync(dataConnection, command, CommandBehavior.Default, cancellationToken).ConfigureAwait(false);
+
+				try
+				{
+					await WalkCombinedResultSetsAsync(rd.DataReader!, harvestStepIndexes, steps, harvest, cancellationToken).ConfigureAwait(false);
+				}
+				catch
+				{
+					await rd.DisposeAsync().ConfigureAwait(false);
+					throw;
+				}
+
+				return rd;
+			}
+
+			// In case of change the logic of this method, DO NOT FORGET to change the sibling method.
 			static async Task ExecuteCombinedGroupAsync(DataConnection dataConnection, ExecutionPreparedQuery executionQuery, IReadOnlyList<SqlCommandStep> steps, SqlCommandGroup group, int commandIndex, SqlCommandExecutionContext context, CancellationToken cancellationToken)
 			{
 				var command = BuildCombinedGroupCommand(dataConnection, executionQuery, steps, group, commandIndex);
 
-				var rd = await ExecuteCombinedAsync(dataConnection, command, CommandBehavior.Default, cancellationToken).ConfigureAwait(false);
-				await using var _ = rd.ConfigureAwait(false);
-
-				await WalkCombinedResultSetsAsync(rd.DataReader!, group.StepIndexes, steps, async (i, dr) =>
+				var rd = await ExecuteCombinedHarvestAsync(dataConnection, command, steps, group.StepIndexes, async (i, dr) =>
 				{
 					switch (steps[i].Kind)
 					{
@@ -901,6 +936,8 @@ namespace LinqToDB.Data
 							break;
 					}
 				}, cancellationToken).ConfigureAwait(false);
+
+				await rd.DisposeAsync().ConfigureAwait(false);
 			}
 
 			// Interpreter (async sibling). In case of change the logic of this method, DO NOT FORGET to change the sibling method.
