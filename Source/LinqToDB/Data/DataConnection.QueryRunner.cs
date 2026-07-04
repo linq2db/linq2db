@@ -797,30 +797,30 @@ namespace LinqToDB.Data
 			}
 
 			// Shared group-plan driver for the DML interpreter (this file) and the eager enumerator (Linq/QueryRunner):
-			// walks the groups in order and harvests each group's results into the context. When dispatchSingletons is set a
-			// singleton group is dispatched to runSingleton (DML NonQuery/Scalar via ExecuteSingleStep); every other group runs
-			// as one combined command via ExecuteCombinedHarvest with harvestCombined. When a group's last step is
-			// terminalStepIndex (the eager main), that group's earlier steps are harvested and the still-open reader is returned
-			// for the caller to stream (only the last group carries a terminal); otherwise every reader is disposed here and the
-			// method returns null. getCommand supplies each combined group's physical command (DML builds it per group from the
-			// prepared query; eager already holds it).
+			// walks the groups in order and harvests each group's results into the context. A group for which isSingleton holds
+			// is dispatched to runSingleton (DML: a one-step group runs NonQuery/Scalar via ExecuteSingleStep; eager: a
+			// self-executing preamble runs its own query); every other group runs as one combined command via
+			// ExecuteCombinedHarvest with harvestCombined. When a group's last step is terminalStepIndex (the eager main), that
+			// group's earlier steps are harvested and the still-open reader is returned for the caller to stream (only the last
+			// group carries a terminal); otherwise every reader is disposed here and the method returns null. getCommand supplies
+			// each combined group's physical command (DML builds it per group from the prepared query; eager already holds it).
 			static DataReaderWrapper? RunGroups(
 				DataConnection                              dataConnection,
 				IReadOnlyList<SqlCommandStep>               steps,
 				IReadOnlyList<SqlCommandGroup>              groups,
 				Func<SqlCommandGroup, int, CombinedCommand> getCommand,
-				Action<int, int>?                           runSingleton,
+				Func<SqlCommandGroup, bool>                 isSingleton,
+				Action<int, int>                            runSingleton,
 				Action<int, DbDataReader>                   harvestCombined,
-				bool                                        dispatchSingletons,
 				int                                         terminalStepIndex)
 			{
 				for (var g = 0; g < groups.Count; g++)
 				{
 					var group = groups[g];
 
-					if (dispatchSingletons && group.StepIndexes.Count == 1)
+					if (isSingleton(group))
 					{
-						runSingleton!(group.StepIndexes[0], g);
+						runSingleton(group.StepIndexes[0], g);
 						continue;
 					}
 
@@ -851,6 +851,7 @@ namespace LinqToDB.Data
 				var terminalReader = RunGroups(
 					dataConnection, steps, groups,
 					(group, commandIndex) => BuildCombinedGroupCommand(dataConnection, executionQuery, steps, group, commandIndex),
+					group => group.StepIndexes.Count == 1,
 					(stepIndex, commandIndex) => ExecuteSingleStep(dataConnection, executionQuery, steps, stepIndex, commandIndex, context),
 					(i, dr) =>
 					{
@@ -867,7 +868,6 @@ namespace LinqToDB.Data
 								break;
 						}
 					},
-					dispatchSingletons: true,
 					terminalStepIndex: -1);
 
 				// DML scenarios have no streaming terminal (terminalStepIndex = -1), so terminalReader is always null.
@@ -958,9 +958,9 @@ namespace LinqToDB.Data
 				IReadOnlyList<SqlCommandStep>               steps,
 				IReadOnlyList<SqlCommandGroup>              groups,
 				Func<SqlCommandGroup, int, CombinedCommand> getCommand,
-				Func<int, int, Task>?                       runSingleton,
+				Func<SqlCommandGroup, bool>                 isSingleton,
+				Func<int, int, Task>                        runSingleton,
 				Func<int, DbDataReader, Task>               harvestCombined,
-				bool                                        dispatchSingletons,
 				int                                         terminalStepIndex,
 				CancellationToken                           cancellationToken)
 			{
@@ -968,9 +968,9 @@ namespace LinqToDB.Data
 				{
 					var group = groups[g];
 
-					if (dispatchSingletons && group.StepIndexes.Count == 1)
+					if (isSingleton(group))
 					{
-						await runSingleton!(group.StepIndexes[0], g).ConfigureAwait(false);
+						await runSingleton(group.StepIndexes[0], g).ConfigureAwait(false);
 						continue;
 					}
 
@@ -999,6 +999,7 @@ namespace LinqToDB.Data
 				var terminalReader = await RunGroupsAsync(
 					dataConnection, steps, groups,
 					(group, commandIndex) => BuildCombinedGroupCommand(dataConnection, executionQuery, steps, group, commandIndex),
+					group => group.StepIndexes.Count == 1,
 					(stepIndex, commandIndex) => ExecuteSingleStepAsync(dataConnection, executionQuery, steps, stepIndex, commandIndex, context, cancellationToken),
 					async (i, dr) =>
 					{
@@ -1015,7 +1016,6 @@ namespace LinqToDB.Data
 								break;
 						}
 					},
-					dispatchSingletons: true,
 					terminalStepIndex: -1,
 					cancellationToken).ConfigureAwait(false);
 
