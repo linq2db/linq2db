@@ -9,7 +9,7 @@ namespace LinqToDB.CommandLine
 	{
 		public static QuerySafetyResult Validate(string sql)
 		{
-			var parser = new TSql160Parser(false);
+			var parser = new TSql180Parser(false);
 			var fragment = parser.Parse(new StringReader(sql), out var errors);
 
 			if (errors.Count > 0)
@@ -26,10 +26,21 @@ namespace LinqToDB.CommandLine
 			if (statements[0] is ExecuteStatement)
 				return QuerySafetyResult.Unsafe("Query is not read-only: EXECUTE is not allowed.");
 
-			if (statements[0] is not SelectStatement)
+			if (statements[0] is not SelectStatement selectStatement)
 				return QuerySafetyResult.Unsafe($"Query is not read-only: {statements[0].GetType().Name} is not allowed.");
 
-			return GenericQuerySafetyValidator.Validate(sql);
+			if (HasSelectInto(selectStatement))
+				return QuerySafetyResult.Unsafe("Query is not read-only: SELECT INTO is not allowed.");
+
+			return QuerySafetyResult.Safe;
+		}
+
+		private static bool HasSelectInto(SelectStatement selectStatement)
+		{
+			return selectStatement.ScriptTokenStream
+				.Skip(selectStatement.FirstTokenIndex)
+				.Take(selectStatement.LastTokenIndex - selectStatement.FirstTokenIndex + 1)
+				.Any(token => token.TokenType == TSqlTokenType.Into);
 		}
 	}
 }

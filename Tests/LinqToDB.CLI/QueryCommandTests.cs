@@ -186,7 +186,7 @@ namespace Tests.LinqToDB.CLI
 			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.IsSafe, Is.False);
-				Assert.That(result.Error,  Does.Contain("token 'INTO' is not allowed"));
+				Assert.That(result.Error,  Does.Contain("SELECT INTO is not allowed"));
 			}
 		}
 
