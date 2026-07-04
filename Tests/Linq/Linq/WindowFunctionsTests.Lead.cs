@@ -111,7 +111,7 @@ namespace Tests.Linq
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_LeadLag)]
 		[ThrowsForProvider(typeof(LinqToDBException),
-			TestProvName.AllPostgreSQL, TestProvName.AllMySql8Plus, TestProvName.AllSQLite, TestProvName.AllClickHouse,
+			TestProvName.AllPostgreSQL18Minus, TestProvName.AllMySql8Plus, TestProvName.AllSQLite, TestProvName.AllClickHouse,
 			TestProvName.AllFirebird3Plus, TestProvName.AllSapHana,
 			TestProvName.AllSqlServer2012, TestProvName.AllSqlServer2014, TestProvName.AllSqlServer2016, TestProvName.AllSqlServer2017, TestProvName.AllSqlServer2019,
 			ProviderName.Ydb,
