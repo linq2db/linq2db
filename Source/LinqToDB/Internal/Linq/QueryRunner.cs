@@ -731,17 +731,6 @@ namespace LinqToDB.Internal.Linq
 			}
 		}
 
-		// A cached eager command: one physical command's per-statement SQL templates (SQL + unbound SqlParameter list) plus
-		// the scenario step indices it covers; DbParameters are bound per execution (see EagerResultEnumerable.BindTemplate).
-		// A null slot marks a parameter-dependent (volatile) statement whose SQL is re-rendered each run (DbBatch path only;
-		// the concat path is cached only when fully stable). Slot i aligns with StepIndexes[i].
-		internal sealed record EagerCommandTemplate(CommandWithParameters?[] Statements, IReadOnlyList<int> StepIndexes);
-
-		// The per-backend eager render cache stored on Query<T>: the per-command templates plus the backend they were
-		// rendered for. WasBatch guards reuse — batch (per-statement) and concat (merged) templates are not interchangeable,
-		// so a run whose CanUseDbBatch differs re-renders instead of binding a wrong-shaped cache.
-		internal sealed record EagerRenderCache(EagerCommandTemplate[] Commands, bool WasBatch);
-
 		// Runs the main query together with its eager-load child collections, collapsing the combinable children (Default
 		// strategy, IStepMaterializer) and the main into a size-bounded set of multi-result-set commands (N+1 -> 1, a few for
 		// a very large fan-out). Non-combinable preambles (KeyedQuery / CteUnion / detached / buffer / no-op) run sequentially
@@ -829,15 +818,15 @@ namespace LinqToDB.Internal.Linq
 				var dataConnection = (DataConnection)_dataContext;
 				var useBatch       = dataConnection.CanUseDbBatch;   // false on frameworks without the DbBatch API
 
-				// Fast path: reuse the per-command templates cached for THIS backend and bind this run's DbParameters,
-				// re-rendering only the parameter-dependent (null) slots. Skipped when the cache was built for the other
-				// backend (batch and concat templates are not interchangeable) or is absent (concat with a volatile step).
-				if (_query.EagerCommands is { } cache && cache.WasBatch == useBatch)
+				// Fast path: reuse the per-command cache built for THIS backend and bind this run's DbParameters, re-rendering
+				// only the parameter-dependent (null) batch slots. Skipped when the cache was built for the other backend
+				// (batch and concat shapes are not interchangeable) or is absent (concat with a volatile step).
+				if (_query.QueryInfo.EagerCommandCache is { } cache && cache.WasBatch == useBatch)
 				{
 					var bound = new List<CombinedCommand>(cache.Commands.Length);
 
-					foreach (var cachedCommand in cache.Commands)
-						bound.Add(BindTemplate(dataConnection, cachedCommand, scenario, values));
+					foreach (var command in cache.Commands)
+						bound.Add(BindCommand(dataConnection, command, useBatch, scenario, values));
 
 					return bound;
 				}
@@ -856,8 +845,8 @@ namespace LinqToDB.Internal.Linq
 
 				var plan = DataConnection.QueryRunner.PlanEagerScenario(dataConnection, scenario);
 
-				var commands  = new List<CombinedCommand>();
-				var templates = new List<EagerCommandTemplate>();
+				var commands = new List<CombinedCommand>();
+				var prepared = new List<PreparedCommand>();
 
 				foreach (var group in plan.Groups)
 				{
@@ -875,7 +864,7 @@ namespace LinqToDB.Internal.Linq
 						var rendered = ScenarioCommandRenderer.RenderStatementTemplates(dataConnection, groupStatements, values);
 
 						// Run this execution off the freshly-rendered statements (bind all, no re-render).
-						commands.Add(BindTemplate(dataConnection, new EagerCommandTemplate(rendered, stepIndexes), scenario, values));
+						commands.Add(BindCommand(dataConnection, new PreparedCommand(stepIndexes, null, rendered), useBatch, scenario, values));
 
 						// Cache with the parameter-dependent slots nulled so a later run re-renders only those.
 						var slots = new CommandWithParameters?[rendered.Length];
@@ -883,13 +872,13 @@ namespace LinqToDB.Internal.Linq
 						for (var k = 0; k < rendered.Length; k++)
 							slots[k] = volatility[stepIndexes[k]] ? null : rendered[k];
 
-						templates.Add(new EagerCommandTemplate(slots, stepIndexes));
+						prepared.Add(new PreparedCommand(stepIndexes, null, slots));
 
 						continue;
 					}
 #endif
 
-					// Concat path: each length-split batch is one pre-merged (semicolon-concatenated) statement. Its shared,
+					// Concat path: each length-split batch is one pre-merged (semicolon-concatenated) command. Its shared,
 					// stateful parameter normalizer means a slice can't be half-cached, so the concat cache is all-or-nothing
 					// (stored only when the whole scenario is stable, see the store below); otherwise it re-renders each run.
 					var batches = DataConnection.QueryRunner.RenderCombinedBatchTemplates(dataConnection, groupStatements, values);
@@ -903,53 +892,65 @@ namespace LinqToDB.Internal.Linq
 						for (var k = 0; k < statementCount; k++)
 							indexes[k] = stepIndexes[offset + k];
 
-						var template = new EagerCommandTemplate([new CommandWithParameters(sql, sqlParameters)], indexes);
+						var command = new PreparedCommand(indexes, new CommandWithParameters(sql, sqlParameters), null);
 
-						templates.Add(template);
-						commands.Add(BindTemplate(dataConnection, template, scenario, values));
+						prepared.Add(command);
+						commands.Add(BindCommand(dataConnection, command, useBatch, scenario, values));
 
 						offset += statementCount;
 					}
 				}
 
 				// Cache the per-command templates for this backend so re-enumeration binds DbParameters instead of
-				// re-rendering. Batch templates carry null slots for the parameter-dependent steps (re-rendered per run).
-				// Concat with a parameter-dependent step is NOT cached (its slices can't be half-rendered): it re-renders
-				// wholesale each run, matching the pre-existing all-or-nothing behavior on that fallback path.
+				// re-rendering. Batch caches per-statement (null slots for parameter-dependent steps, re-rendered per run);
+				// concat is all-or-nothing (skipped when any step is volatile — its slices share a parameter scope and can't
+				// be half-cached), matching today's behavior on that fallback path.
 				if (useBatch || !anyVolatile)
-					_query.EagerCommands = new EagerRenderCache(templates.ToArray(), useBatch);
+					_query.QueryInfo.EagerCommandCache = new PreparedScenario(scenario, plan, prepared.ToArray(), useBatch);
 
 				return commands;
 			}
 
-			// Binds a rendered command template's statements to this execution's DbParameter values, producing the command the
-			// executor runs. Shared by the fast (cached) path and the first render. A null slot is a parameter-dependent DbBatch
-			// statement re-rendered here in its own isolated scope (never occurs for concat, nor on non-DbBatch frameworks).
-			static CombinedCommand BindTemplate(DataConnection dataConnection, EagerCommandTemplate template, SqlCommandScenario scenario, SqlParameterValues values)
+			// Binds a cached PreparedCommand to this execution's DbParameter values, producing the command the executor runs.
+			// Shared by the fast (cached) path and the first render. On the batch backend, a null slot is a parameter-dependent
+			// statement re-rendered here in its own isolated scope; concat carries a single, always-present merged command.
+			static CombinedCommand BindCommand(DataConnection dataConnection, PreparedCommand command, bool useBatch, SqlCommandScenario scenario, SqlParameterValues values)
 			{
-				var statements = template.Statements;
-				var rendered   = new RenderedStatement[statements.Length];
+				var stepIndexes = command.StepIndexes;
 
-				for (var i = 0; i < statements.Length; i++)
+				if (useBatch)
 				{
-					var slot = statements[i];
+					var statements = command.Batch!;
+					var rendered   = new RenderedStatement[statements.Length];
 
-					if (slot is null)
+					for (var i = 0; i < statements.Length; i++)
 					{
+						var slot = statements[i];
+
+						if (slot is null)
+						{
 #if SUPPORTS_DBBATCH
-						slot = ScenarioCommandRenderer.RenderStatementTemplates(
-							dataConnection, [scenario.Steps[template.StepIndexes[i]].Statement], values)[0];
+							slot = ScenarioCommandRenderer.RenderStatementTemplates(
+								dataConnection, [scenario.Steps[stepIndexes[i]].Statement], values)[0];
 #else
-						throw new InvalidOperationException("Eager render cache slot is null on a non-DbBatch build.");
+							throw new InvalidOperationException("Eager batch cache slot is null on a non-DbBatch build.");
 #endif
+						}
+
+						rendered[i] = new RenderedStatement(
+							slot.Command,
+							ScenarioCommandRenderer.MaterializeDbParameters(dataConnection, slot.SqlParameters, values));
 					}
 
-					rendered[i] = new RenderedStatement(
-						slot.Command,
-						ScenarioCommandRenderer.MaterializeDbParameters(dataConnection, slot.SqlParameters, values));
+					return new CombinedCommand(rendered, stepIndexes, null);
 				}
 
-				return new CombinedCommand(rendered, template.StepIndexes, null);
+				// Concat: one pre-merged command, always present (concat is cached only when fully stable).
+				var concat = command.Concat!;
+
+				return new CombinedCommand(
+					[new RenderedStatement(concat.Command, ScenarioCommandRenderer.MaterializeDbParameters(dataConnection, concat.SqlParameters, values))],
+					stepIndexes, null);
 			}
 
 			// Per-step parameter-dependence: a step is volatile when its statement's SQL varies with parameter values, so its

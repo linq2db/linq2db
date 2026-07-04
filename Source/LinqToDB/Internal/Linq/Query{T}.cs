@@ -49,13 +49,6 @@ namespace LinqToDB.Internal.Linq
 		// so N child collection queries run as one command and each result set is mapped by its own query's mapper.
 		internal Func<IDataContext,IQueryExpressions,object?[]?,object?[]?,DbDataReader,IResultEnumerable<T>>? GetResultFromReader;
 
-		// Combined eager-loading render cache: the per-command SQL templates (each statement's SQL + unbound SqlParameter
-		// list) rendered once and tagged with the backend they were built for (EagerRenderCache.WasBatch), so re-enumerating
-		// binds DbParameters per run instead of re-rendering. Null until the first eager execution; batch templates carry
-		// null slots for parameter-dependent steps (re-rendered per run); a concat scenario with any parameter-dependent
-		// step is left uncached (re-rendered wholesale each run). See EagerResultEnumerable.BuildCommands.
-		internal QueryRunner.EagerRenderCache? EagerCommands;
-
 		#endregion
 
 		#region Query

@@ -80,11 +80,11 @@ namespace LinqToDB.Data
 
 			private IReadOnlyList<QuerySql> GetSqlTextImpl()
 			{
-				var queries = new QuerySql[_executionQuery!.PreparedQuery.Commands.Length];
+				var queries = new QuerySql[_executionQuery!.PreparedQuery.Prepared.Commands.Length];
 
-				for (var index = 0; index < _executionQuery!.PreparedQuery.Commands.Length; index++)
+				for (var index = 0; index < _executionQuery!.PreparedQuery.Prepared.Commands.Length; index++)
 				{
-					var queryCommand    = _executionQuery.PreparedQuery.Commands[index];
+					var queryCommand    = _executionQuery.PreparedQuery.Prepared.Commands[index].Concat!;
 					var queryParameters = _executionQuery.CommandsParameters[index];
 
 					var parameters = queryParameters == null || queryParameters.Length == 0
@@ -158,16 +158,11 @@ namespace LinqToDB.Data
 				await base.DisposeAsync().ConfigureAwait(false);
 			}
 
-			// Cached in query.Context on first compile so a re-run reuses both the rendered commands and the logical
-			// scenario (the interpreter needs the real scenario for combined grouping / forwarding — the bridge can't
-			// re-infer those).
-			// BatchCommands: per combined-group (index == commandIndex) DbBatch templates - each statement's isolated-scope SQL +
-			// unbound SqlParameter list - rendered once for a non-parameter-dependent scenario so batch execution binds DbParameters
-			// per run instead of re-rendering. Null => not cached (parameter-dependent / connection can't batch); a null slot => that
-			// group always runs concat (a single step, or an OUT-param / forwarded-binding step).
-			private sealed record CachedScenario(CommandWithParameters[] Commands, CommandWithParameters[]?[]? BatchCommands, SqlCommandScenario? Scenario, SqlCommandGroupPlan? Plan);
-
-			private sealed record PreparedQuery(CommandWithParameters[] Commands, CommandWithParameters[]?[]? BatchCommands, SqlStatement Statement, IReadOnlyCollection<string>? QueryHints, SqlCommandScenario? Scenario, SqlCommandGroupPlan? Plan);
+			// Per-execution wrapper around the unified render cache (Prepared, a PreparedScenario). For a non-parameter-dependent
+			// query the same PreparedScenario is cached on QueryInfo.CommandCache and reused across runs; a parameter-dependent
+			// one is rebuilt each run. Each PreparedCommand carries its group's concat form (Concat, always present for DML) and,
+			// when batch-eligible, the per-statement DbBatch templates (Batch); the interpreter picks per run by CanUseDbBatch.
+			private sealed record PreparedQuery(PreparedScenario Prepared, SqlStatement Statement, IReadOnlyCollection<string>? QueryHints);
 
 			private sealed record ExecutionPreparedQuery(PreparedQuery PreparedQuery, DbParameter[]?[] CommandsParameters, IReadOnlyParameterValues? ParameterValues);
 
@@ -200,9 +195,9 @@ namespace LinqToDB.Data
 					var statement = query.Statement;
 					var options   = query.DataOptions ?? dataConnection.Options;
 
-					if (query.Context is CachedScenario cached)
+					if (query is QueryInfo { CommandCache: { } cachedScenario })
 					{
-						return new PreparedQuery(cached.Commands, cached.BatchCommands, statement, dataConnection.GetNextCommandHints(!forGetSqlText), cached.Scenario, cached.Plan);
+						return new PreparedQuery(cachedScenario, statement, dataConnection.GetNextCommandHints(!forGetSqlText));
 					}
 
 					var continuousRun = query.IsContinuousRun;
@@ -273,43 +268,46 @@ namespace LinqToDB.Data
 					var dmlService = serviceProvider.GetRequiredService<IDmlService>();
 					var scenario   = dmlService.BuildCommandScenario(statement, dataConnection.DataProvider.SqlProviderFlags, factory);
 
-					CommandWithParameters[] commands;
-					SqlCommandGroupPlan?    plan;
-
-					if (scenario != null)
-					{
-						// The DML service builds synthetic step statements (identity SELECT, the InsertOrReplace/Upsert
-						// UPDATE/INSERT/SELECT emulation) after the main statement was finalized, so they miss provider
-						// finalization — run it now so per-provider transforms apply (e.g. SqlCe rewrites its UPDATE into the
-						// alias-free form it accepts). Steps reusing the already-finalized main statement are skipped.
-						scenario = ScenarioCommandRenderer.FinalizeScenarioSteps(scenario, statement, sqlOptimizer, options, dataConnection.MappingSchema);
-
-						// Plan FIRST: group the scenario's steps into physical commands (round-trips), size-aware.
-						plan = dmlService.PlanScenario(scenario, dataConnection.DataProvider.SqlProviderFlags);
-
-						// Render each group as one command (shared with the remote GetSqlText path).
-						commands = ScenarioCommandRenderer.RenderScenarioGroups(scenario, plan, statement, aliases, sqlBuilder, optimizationContext, serviceProvider, sb.Value, startIndent);
-					}
-					else
-					{
-						// BuildCommandScenario always returns a scenario now (DmlServiceBase supplies a default single-step
-						// one), so this is unreachable — a custom IDmlService returning null is a contract violation.
+					// BuildCommandScenario always returns a scenario now (DmlServiceBase supplies a default single-step one);
+					// a custom IDmlService returning null is a contract violation.
+					if (scenario == null)
 						throw new InvalidOperationException($"'{dmlService.GetType().Name}.BuildCommandScenario' returned null; it must always produce a scenario.");
-					}
+
+					// The DML service builds synthetic step statements (identity SELECT, the InsertOrReplace/Upsert
+					// UPDATE/INSERT/SELECT emulation) after the main statement was finalized, so they miss provider
+					// finalization — run it now so per-provider transforms apply (e.g. SqlCe rewrites its UPDATE into the
+					// alias-free form it accepts). Steps reusing the already-finalized main statement are skipped.
+					scenario = ScenarioCommandRenderer.FinalizeScenarioSteps(scenario, statement, sqlOptimizer, options, dataConnection.MappingSchema);
+
+					// Plan FIRST: group the scenario's steps into physical commands (round-trips), size-aware.
+					var plan = dmlService.PlanScenario(scenario, dataConnection.DataProvider.SqlProviderFlags);
+
+					// Render each group as one concat command (shared with the remote GetSqlText path).
+					var commands = ScenarioCommandRenderer.RenderScenarioGroups(scenario, plan, statement, aliases, sqlBuilder, optimizationContext, serviceProvider, sb.Value, startIndent);
 
 					CommandWithParameters[]?[]? batchCommands = null;
 
 #if SUPPORTS_DBBATCH
 					// Pre-render the per-group DbBatch templates once for a cacheable (non-parameter-dependent) scenario, so batch
 					// execution binds DbParameters per run instead of re-rendering the SQL each time - only when the connection can
-					// actually batch (UseDbBatch on, no command interceptor), else the concat command (Commands) is used.
+					// actually batch (UseDbBatch on, no command interceptor), else the concat command (Concat) is used.
 					if (optimizeAndConvertAll && dataConnection.CanUseDbBatch)
 						batchCommands = RenderBatchTemplates(dataConnection, scenario, plan);
 #endif
 
+					// Assemble the unified per-command cache: one PreparedCommand per group, carrying its concat form and,
+					// when batch-eligible, the per-statement DbBatch templates. WasBatch is eager-only (DML fills both forms).
+					var preparedCommands = new PreparedCommand[plan.Groups.Count];
+
+					for (var g = 0; g < plan.Groups.Count; g++)
+						preparedCommands[g] = new PreparedCommand(plan.Groups[g].StepIndexes, commands[g], batchCommands?[g]);
+
+					var prepared = new PreparedScenario(scenario, plan, preparedCommands, WasBatch: false);
+
 					if (optimizeAndConvertAll)
 					{
-						query.Context = new CachedScenario(commands, batchCommands, scenario, plan);
+						if (query is QueryInfo queryInfo)
+							queryInfo.CommandCache = prepared;
 
 						// clear aliases, they are not needed after SQL generation.
 						//
@@ -318,7 +316,7 @@ namespace LinqToDB.Data
 
 					query.IsContinuousRun = true;
 
-					return new PreparedQuery(commands, batchCommands, statement, dataConnection.GetNextCommandHints(!forGetSqlText), scenario, plan);
+					return new PreparedQuery(prepared, statement, dataConnection.GetNextCommandHints(!forGetSqlText));
 				}
 				finally
 				{
@@ -351,7 +349,7 @@ namespace LinqToDB.Data
 				if (step.ParameterBindings.Count == 0)
 					return;
 
-				var sqlParameters = executionQuery.PreparedQuery.Commands[commandIndex].SqlParameters;
+				var sqlParameters = executionQuery.PreparedQuery.Prepared.Commands[commandIndex].Concat!.SqlParameters;
 				var dbParameters  = executionQuery.CommandsParameters[commandIndex];
 
 				if (dbParameters == null)
@@ -377,10 +375,10 @@ namespace LinqToDB.Data
 
 			static DbParameter[]?[] GetParameters(DataConnection dataConnection, PreparedQuery pq, IReadOnlyParameterValues? parameterValues)
 			{
-				DbParameter[]?[] result = new DbParameter[pq.Commands.Length][];
+				DbParameter[]?[] result = new DbParameter[pq.Prepared.Commands.Length][];
 
-				for (var index = 0; index < pq.Commands.Length; index++)
-					result[index] = ScenarioCommandRenderer.MaterializeDbParameters(dataConnection, pq.Commands[index].SqlParameters, parameterValues);
+				for (var index = 0; index < pq.Prepared.Commands.Length; index++)
+					result[index] = ScenarioCommandRenderer.MaterializeDbParameters(dataConnection, pq.Prepared.Commands[index].Concat!.SqlParameters, parameterValues);
 
 				return result;
 			}
@@ -745,7 +743,7 @@ namespace LinqToDB.Data
 				{
 					// Reuse the templates rendered once for a cacheable scenario; render fresh only when parameter-dependent (no cache).
 					// Either way DbParameters are bound per execution from the templates' SqlParameter lists.
-					var templates = executionQuery.PreparedQuery.BatchCommands?[commandIndex];
+					var templates = executionQuery.PreparedQuery.Prepared.Commands[commandIndex].Batch;
 
 					if (templates == null)
 					{
@@ -759,8 +757,9 @@ namespace LinqToDB.Data
 
 					var rendered = new RenderedStatement[templates.Length];
 
+					// DML batch templates are always fully rendered (no per-statement volatility), so every element is non-null.
 					for (var k = 0; k < templates.Length; k++)
-						rendered[k] = new RenderedStatement(templates[k].Command, ScenarioCommandRenderer.MaterializeDbParameters(dataConnection, templates[k].SqlParameters, executionQuery.ParameterValues));
+						rendered[k] = new RenderedStatement(templates[k]!.Command, ScenarioCommandRenderer.MaterializeDbParameters(dataConnection, templates[k]!.SqlParameters, executionQuery.ParameterValues));
 
 					return new CombinedCommand(rendered, stepIndexes, null);
 				}
@@ -769,7 +768,7 @@ namespace LinqToDB.Data
 				var pq = executionQuery.PreparedQuery;
 
 				return new CombinedCommand(
-					[new RenderedStatement(pq.Commands[commandIndex].Command, executionQuery.CommandsParameters[commandIndex])],
+					[new RenderedStatement(pq.Prepared.Commands[commandIndex].Concat!.Command, executionQuery.CommandsParameters[commandIndex])],
 					stepIndexes,
 					commandIndex == 0 ? pq.QueryHints : null);
 			}
@@ -804,26 +803,18 @@ namespace LinqToDB.Data
 			{
 				var steps   = scenario.Steps;
 				var context = new SqlCommandExecutionContext(steps.Count);
-				var groups  = executionQuery.PreparedQuery.Plan?.Groups;
+				var groups  = executionQuery.PreparedQuery.Prepared.Plan.Groups;
 
-				if (groups == null)
+				// Each group is one pre-rendered command: a singleton runs directly; a combined group harvests its
+				// result sets per step via the NextResult walk.
+				for (var g = 0; g < groups.Count; g++)
 				{
-					// Legacy bridge: each step is its own command (Commands are per-command, 1:1 with steps).
-					for (var i = 0; i < steps.Count; i++)
-						ExecuteSingleStep(dataConnection, executionQuery, steps, i, i, context);
-				}
-				else
-				{
-					// Per-group: each group is one pre-rendered command (Commands[g]).
-					for (var g = 0; g < groups.Count; g++)
-					{
-						var group = groups[g];
+					var group = groups[g];
 
-						if (group.StepIndexes.Count == 1)
-							ExecuteSingleStep(dataConnection, executionQuery, steps, group.StepIndexes[0], g, context);
-						else
-							ExecuteCombinedGroup(dataConnection, executionQuery, steps, group, g, context);
-					}
+					if (group.StepIndexes.Count == 1)
+						ExecuteSingleStep(dataConnection, executionQuery, steps, group.StepIndexes[0], g, context);
+					else
+						ExecuteCombinedGroup(dataConnection, executionQuery, steps, group, g, context);
 				}
 
 				// ExecuteNonQuery's rows-affected is the last-executed outcome branch's count (the UPDATE or INSERT that
@@ -917,26 +908,18 @@ namespace LinqToDB.Data
 			{
 				var steps   = scenario.Steps;
 				var context = new SqlCommandExecutionContext(steps.Count);
-				var groups  = executionQuery.PreparedQuery.Plan?.Groups;
+				var groups  = executionQuery.PreparedQuery.Prepared.Plan.Groups;
 
-				if (groups == null)
+				// Each group is one pre-rendered command: a singleton runs directly; a combined group harvests its
+				// result sets per step via the NextResult walk.
+				for (var g = 0; g < groups.Count; g++)
 				{
-					// Legacy bridge: each step is its own command (Commands are per-command, 1:1 with steps).
-					for (var i = 0; i < steps.Count; i++)
-						await ExecuteSingleStepAsync(dataConnection, executionQuery, steps, i, i, context, cancellationToken).ConfigureAwait(false);
-				}
-				else
-				{
-					// Per-group: each group is one pre-rendered command (Commands[g]).
-					for (var g = 0; g < groups.Count; g++)
-					{
-						var group = groups[g];
+					var group = groups[g];
 
-						if (group.StepIndexes.Count == 1)
-							await ExecuteSingleStepAsync(dataConnection, executionQuery, steps, group.StepIndexes[0], g, context, cancellationToken).ConfigureAwait(false);
-						else
-							await ExecuteCombinedGroupAsync(dataConnection, executionQuery, steps, group, g, context, cancellationToken).ConfigureAwait(false);
-					}
+					if (group.StepIndexes.Count == 1)
+						await ExecuteSingleStepAsync(dataConnection, executionQuery, steps, group.StepIndexes[0], g, context, cancellationToken).ConfigureAwait(false);
+					else
+						await ExecuteCombinedGroupAsync(dataConnection, executionQuery, steps, group, g, context, cancellationToken).ConfigureAwait(false);
 				}
 
 				// ExecuteNonQuery's rows-affected is the last-executed outcome branch's count (the UPDATE or INSERT that
@@ -964,7 +947,7 @@ namespace LinqToDB.Data
 						.ConfigureAwait(false);
 				}
 
-				return (await ExecuteScenarioAsync(dataConnection, executionQuery, executionQuery.PreparedQuery.Scenario!, cancellationToken).ConfigureAwait(false)).RowsAffected;
+				return (await ExecuteScenarioAsync(dataConnection, executionQuery, executionQuery.PreparedQuery.Prepared.Scenario, cancellationToken).ConfigureAwait(false)).RowsAffected;
 			}
 
 			// In case of change the logic of this method, DO NOT FORGET to change the sibling method.
@@ -977,7 +960,7 @@ namespace LinqToDB.Data
 					return dataConnection.ExecuteNonQuery();
 				}
 
-				return ExecuteScenario(dataConnection, executionQuery, executionQuery.PreparedQuery.Scenario!).RowsAffected;
+				return ExecuteScenario(dataConnection, executionQuery, executionQuery.PreparedQuery.Prepared.Scenario).RowsAffected;
 			}
 
 			public override int ExecuteNonQuery()
@@ -1028,7 +1011,7 @@ namespace LinqToDB.Data
 					return await dataConnection.ExecuteScalarDataAsync(cancellationToken).ConfigureAwait(false);
 				}
 
-				return (await ExecuteScenarioAsync(dataConnection, executionQuery, executionQuery.PreparedQuery.Scenario!, cancellationToken).ConfigureAwait(false)).Scalar;
+				return (await ExecuteScenarioAsync(dataConnection, executionQuery, executionQuery.PreparedQuery.Prepared.Scenario, cancellationToken).ConfigureAwait(false)).Scalar;
 			}
 
 			// In case of change the logic of this method, DO NOT FORGET to change the sibling method.
@@ -1041,7 +1024,7 @@ namespace LinqToDB.Data
 					return dataConnection.ExecuteScalar();
 				}
 
-				return ExecuteScenario(dataConnection, executionQuery, executionQuery.PreparedQuery.Scenario!).Scalar;
+				return ExecuteScenario(dataConnection, executionQuery, executionQuery.PreparedQuery.Prepared.Scenario).Scalar;
 			}
 
 			// In case of change the logic of this method, DO NOT FORGET to change the sibling method.
@@ -1090,13 +1073,13 @@ namespace LinqToDB.Data
 			{
 				var pq = executionQuery.PreparedQuery;
 
-				if (pq.Commands.Length != 1 || (pq.Plan != null && pq.Plan.Groups[0].StepIndexes.Count != 1))
+				if (pq.Prepared.Commands.Length != 1 || pq.Prepared.Plan.Groups[0].StepIndexes.Count != 1)
 					return false;
 
 				// A lone OUT-parameter step (Firebird/Oracle identity built as a scenario) must run through the interpreter
 				// so AddOutputParameter creates the output parameter; the fast path would execute the command directly with
 				// no output parameter. Every other single-command scenario takes the fast path.
-				if (pq.Scenario is { Steps: [{ OutParameterName: not null }] })
+				if (pq.Prepared.Scenario is { Steps: [{ OutParameterName: not null }] })
 					return false;
 
 				return true;
@@ -1105,7 +1088,7 @@ namespace LinqToDB.Data
 			static void InitCommand(DataConnection dataConnection, ExecutionPreparedQuery executionQuery, int index)
 			{
 				InitCommand(dataConnection,
-					executionQuery.PreparedQuery.Commands[index],
+					executionQuery.PreparedQuery.Prepared.Commands[index].Concat!,
 					executionQuery.CommandsParameters[index],
 					index == 0 ? executionQuery.PreparedQuery.QueryHints : null);
 			}
@@ -1211,7 +1194,7 @@ namespace LinqToDB.Data
 					return await _dataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(false);
 				}
 
-				return (await ExecuteScenarioAsync(_dataConnection, _executionQuery!, _executionQuery!.PreparedQuery.Scenario!, cancellationToken).ConfigureAwait(false)).RowsAffected;
+				return (await ExecuteScenarioAsync(_dataConnection, _executionQuery!, _executionQuery!.PreparedQuery.Prepared.Scenario, cancellationToken).ConfigureAwait(false)).RowsAffected;
 			}
 
 			public override async Task<object?> ExecuteScalarAsync(CancellationToken cancellationToken)

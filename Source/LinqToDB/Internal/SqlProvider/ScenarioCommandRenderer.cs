@@ -30,6 +30,26 @@ namespace LinqToDB.Internal.SqlProvider
 	/// </summary>
 	sealed record CombinedCommand(IReadOnlyList<RenderedStatement> Statements, IReadOnlyList<int> StepIndexes, IReadOnlyCollection<string>? QueryHints);
 
+	/// <summary>
+	/// One physical command's cache slot in a <see cref="PreparedScenario"/>, covering a contiguous run of scenario steps
+	/// (<see cref="StepIndexes"/>). <see cref="Concat"/> is the universal semicolon-joined form (runs on any backend as one
+	/// DbCommand); <see cref="Batch"/> is the optional per-statement isolated-scope form (DbBatch). DML fills BOTH and picks
+	/// at runtime by <c>CanUseDbBatch</c>; eager fills exactly ONE (the backend recorded in <see cref="PreparedScenario.WasBatch"/>).
+	/// A null <see cref="Concat"/> or a null <see cref="Batch"/> element means "render fresh this run" (parameter-dependent);
+	/// a null <see cref="Batch"/> array means the command is not batch-eligible.
+	/// </summary>
+	sealed record PreparedCommand(IReadOnlyList<int> StepIndexes, CommandWithParameters? Concat, CommandWithParameters?[]? Batch);
+
+	/// <summary>
+	/// The render cache for a compiled query's command scenario: the logical <see cref="SqlCommandScenario"/> + its
+	/// physical-command <see cref="SqlCommandGroupPlan"/> + the per-command rendered templates. Shared by the DML runner
+	/// (stored on <c>QueryInfo.CommandCache</c>) and the combined eager-loading executor, so both bind DbParameters to
+	/// cached SQL instead of re-rendering. <see cref="WasBatch"/> records which backend the templates were rendered for so a
+	/// run whose <c>CanUseDbBatch</c> differs re-renders instead of binding a wrong-shaped cache (eager); DML fills both
+	/// forms and ignores it.
+	/// </summary>
+	sealed record PreparedScenario(SqlCommandScenario Scenario, SqlCommandGroupPlan Plan, PreparedCommand[] Commands, bool WasBatch);
+
 #if BUGCHECK
 	/// <summary>
 	/// Test diagnostics — Release builds don't see this (BUGCHECK-gated). It is <c>public</c> so BUGCHECK tests that have no
