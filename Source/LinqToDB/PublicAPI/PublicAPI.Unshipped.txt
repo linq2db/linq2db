@@ -1082,6 +1082,4 @@ static readonly LinqToDB.Internal.Reflection.Methods.LinqToDB.IgnoreFiltersByKey
 virtual LinqToDB.Internal.SqlProvider.BasicSqlBuilder.RequiresUniqueRootColumnNames.get -> bool
 override LinqToDB.Internal.DataProvider.Access.AccessSqlBuilderBase.RequiresUniqueRootColumnNames.get -> bool
 override LinqToDB.Internal.DataProvider.SqlCe.SqlCeSqlBuilder.RequiresUniqueRootColumnNames.get -> bool
-override LinqToDB.Internal.DataProvider.Ydb.YdbSqlBuilder.RequiresUniqueRootColumnNames.get -> bool
 *REMOVED*override LinqToDB.Internal.DataProvider.SqlCe.SqlCeSqlBuilder.CanSkipRootAliases(LinqToDB.Internal.SqlQuery.SqlStatement! statement) -> bool
-*REMOVED*override LinqToDB.Internal.DataProvider.Ydb.YdbSqlBuilder.CanSkipRootAliases(LinqToDB.Internal.SqlQuery.SqlStatement! statement) -> bool
