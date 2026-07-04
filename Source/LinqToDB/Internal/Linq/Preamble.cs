@@ -4,6 +4,7 @@ using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 
 #pragma warning disable MA0048 // IStepMaterializer grouped with the Preamble base it complements
@@ -61,5 +62,27 @@ namespace LinqToDB.Internal.Linq
 		/// Asynchronous sibling of <see cref="MaterializeFromReader"/>.
 		/// </summary>
 		Task<object> MaterializeFromReaderAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles, DbDataReader dataReader, CancellationToken cancellationToken);
+	}
+
+	/// <summary>
+	/// Unified per-step result producer for the shared scenario interpreter — the seam that will replace the split between
+	/// <see cref="Preamble.Execute"/> (self-executing, recursive) and <see cref="IStepMaterializer.MaterializeFromReader"/>
+	/// (reads a shared combined reader). The interpreter calls <see cref="Harvest"/> for a <c>Reader</c> step and stores the
+	/// returned value in that step's <see cref="SqlCommandExecutionContext"/> slot.
+	/// </summary>
+	interface IStepHarvester
+	{
+		/// <summary>
+		/// Produces this step's result. When <paramref name="reader"/> is non-null the step reads its own result set from the
+		/// shared combined reader (the interpreter advances <c>NextResult</c> afterwards); when <see langword="null"/> the step
+		/// runs its own query (self-executing, may recurse into nested eager loading). <paramref name="context"/> gives read
+		/// access to earlier steps' results.
+		/// </summary>
+		object Harvest(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext context, int stepIndex, DbDataReader? reader);
+
+		/// <summary>
+		/// Asynchronous sibling of <see cref="Harvest"/>.
+		/// </summary>
+		Task<object> HarvestAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext context, int stepIndex, DbDataReader? reader, CancellationToken cancellationToken);
 	}
 }

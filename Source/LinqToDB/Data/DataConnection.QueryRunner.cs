@@ -660,7 +660,7 @@ namespace LinqToDB.Data
 			// each step in order, then advances to the next result set for every result-producing step (a pure non-query
 			// step yields no result set, so no advance). DML harvests scalar / rows-affected into the execution context;
 			// eager loading plugs its own materializer into the same walk.
-			static void WalkCombinedResultSets(DbDataReader dr, IReadOnlyList<int> stepIndexes, IReadOnlyList<SqlCommandStep> steps, Action<int, DbDataReader> harvest)
+			internal static void WalkCombinedResultSets(DbDataReader dr, IReadOnlyList<int> stepIndexes, IReadOnlyList<SqlCommandStep> steps, Action<int, DbDataReader> harvest)
 			{
 				foreach (var i in stepIndexes)
 				{
@@ -867,7 +867,7 @@ namespace LinqToDB.Data
 
 			// Shared combined-command harvest walk (async sibling). In case of change the logic of this method, DO NOT
 			// FORGET to change the sibling method.
-			static async Task WalkCombinedResultSetsAsync(DbDataReader dr, IReadOnlyList<int> stepIndexes, IReadOnlyList<SqlCommandStep> steps, Func<int, DbDataReader, Task> harvest, CancellationToken cancellationToken)
+			internal static async Task WalkCombinedResultSetsAsync(DbDataReader dr, IReadOnlyList<int> stepIndexes, IReadOnlyList<SqlCommandStep> steps, Func<int, DbDataReader, Task> harvest, CancellationToken cancellationToken)
 			{
 				foreach (var i in stepIndexes)
 				{
