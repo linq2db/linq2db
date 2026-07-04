@@ -1045,7 +1045,7 @@ namespace LinqToDB.Internal.Linq
 					{
 						if (step is SequentialStep sequential)
 						{
-							context.SetResult(sequential.PreambleIndex, _preambles[sequential.PreambleIndex].Execute(_dataContext, _expressions, _parameters, context));
+							context.SetResult(sequential.PreambleIndex, _preambles[sequential.PreambleIndex].Harvest(_dataContext, _expressions, _parameters, context, sequential.PreambleIndex, reader: null));
 							continue;
 						}
 
@@ -1115,7 +1115,7 @@ namespace LinqToDB.Internal.Linq
 					{
 						if (step is SequentialStep sequential)
 						{
-							context.SetResult(sequential.PreambleIndex, await _preambles[sequential.PreambleIndex].ExecuteAsync(_dataContext, _expressions, _parameters, context, cancellationToken).ConfigureAwait(false));
+							context.SetResult(sequential.PreambleIndex, await _preambles[sequential.PreambleIndex].HarvestAsync(_dataContext, _expressions, _parameters, context, sequential.PreambleIndex, null, cancellationToken).ConfigureAwait(false));
 							continue;
 						}
 

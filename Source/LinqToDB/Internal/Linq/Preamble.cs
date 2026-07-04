@@ -11,7 +11,7 @@ using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Internal.Linq
 {
-	abstract class Preamble
+	abstract class Preamble : IStepHarvester
 	{
 		public abstract object       Execute(IDataContext      dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context);
 		public abstract Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context, CancellationToken cancellationToken);
@@ -24,6 +24,23 @@ namespace LinqToDB.Internal.Linq
 		/// preamble is a placeholder that resolves data from the main query's result set.
 		/// </summary>
 		public virtual bool IsInlined => false;
+
+		/// <summary>
+		/// <see cref="IStepHarvester"/> adapter over the two preamble result-producers: the self-executing path
+		/// (<paramref name="reader"/> is <see langword="null"/>) runs <see cref="Execute"/>; the combined-reader path
+		/// materializes this preamble's result set from the shared reader via <see cref="IStepMaterializer"/> — only
+		/// combinable preambles are ever invoked with a non-null reader.
+		/// </summary>
+		public object Harvest(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext context, int stepIndex, DbDataReader? reader)
+			=> reader is null
+				? Execute(dataContext, expressions, parameters, context)
+				: ((IStepMaterializer)this).MaterializeFromReader(dataContext, expressions, parameters, context, reader);
+
+		/// <summary>Asynchronous sibling of <see cref="Harvest"/>.</summary>
+		public Task<object> HarvestAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext context, int stepIndex, DbDataReader? reader, CancellationToken cancellationToken)
+			=> reader is null
+				? ExecuteAsync(dataContext, expressions, parameters, context, cancellationToken)
+				: ((IStepMaterializer)this).MaterializeFromReaderAsync(dataContext, expressions, parameters, context, reader, cancellationToken);
 	}
 
 	/// <summary>
