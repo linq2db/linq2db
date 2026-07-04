@@ -47,6 +47,7 @@ namespace LinqToDB.CommandLine
 
 		public override async ValueTask<int> Execute(
 			CliController                  controller,
+			ICliEnvironment                environment,
 			string[]                       rawArgs,
 			Dictionary<CliOption, object?> options,
 			IReadOnlyCollection<string>    unknownArgs)

@@ -177,12 +177,14 @@ namespace LinqToDB.CommandLine
 		/// Execute command with provided parameters.
 		/// </summary>
 		/// <param name="controller">CLI controller instance.</param>
+		/// <param name="environment">CLI runtime environment.</param>
 		/// <param name="rawArgs">Raw list of CLI arguments.</param>
 		/// <param name="options">Parsed command options with values. Command allowed to modify dictionary (e.g. remove processed options to detect options without handler).</param>
 		/// <param name="unknownArgs">List of unrecognized arguments.</param>
 		/// <returns>Command execution status code.</returns>
 		public abstract ValueTask<int> Execute(
 			CliController                  controller,
+			ICliEnvironment                environment,
 			string[]                       rawArgs,
 			Dictionary<CliOption, object?> options,
 			IReadOnlyCollection<string>    unknownArgs);

@@ -1,0 +1,327 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Threading.Tasks;
+
+using LinqToDB.CommandLine;
+
+using NUnit.Framework;
+
+#pragma warning disable JSON002 // Allow JSON in test code for config file content.
+
+namespace LinqToDB.CLI.Tests
+{
+	[TestFixture]
+	public sealed class QueryCommandTests
+	{
+		[Test]
+		public async Task QueryRequiresSqlOrSqlFile()
+		{
+			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.EqualTo(-1));
+				Assert.That(result.Error,    Does.Contain("Either '--sql' or '--sql-file' option must be specified."));
+			}
+		}
+
+		[Test]
+		public async Task QueryRejectsSqlAndSqlFileTogether()
+		{
+			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql", "select 1", "--sql-file", "query.sql");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.EqualTo(-1));
+				Assert.That(result.Error,    Does.Contain("Option '--sql-file' conflicts with other option(s): --sql"));
+			}
+		}
+
+		[Test]
+		public async Task QueryRequiresProvider()
+		{
+			var result = await RunCli("query", "--connection-string", "Data Source=:memory:", "--sql", "select 1");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.EqualTo(-1));
+				Assert.That(result.Error,    Does.Contain("Option '--provider' must be specified."));
+			}
+		}
+
+		[Test]
+		public async Task QueryRequiresConnectionString()
+		{
+			var result = await RunCli("query", "--provider", "SQLite", "--sql", "select 1");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.EqualTo(-1));
+				Assert.That(result.Error,    Does.Contain("Option '--connection-string' must be specified."));
+			}
+		}
+
+		[Test]
+		public async Task QueryAcceptsSql()
+		{
+			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql", "select 1");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.EqualTo(-3));
+				Assert.That(result.Error,    Does.Contain("Query command execution is not implemented yet."));
+			}
+		}
+
+		[Test]
+		public async Task QueryAcceptsSqlFile()
+		{
+			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql-file", "query.sql");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.EqualTo(-3));
+				Assert.That(result.Error,    Does.Contain("Query command execution is not implemented yet."));
+			}
+		}
+
+		[Test]
+		public async Task QueryAcceptsProfile()
+		{
+			var result = await RunCli("query", "--profile", "uat", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql", "select 1");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.EqualTo(-3));
+				Assert.That(result.Error,    Does.Contain("Query command execution is not implemented yet."));
+			}
+		}
+
+		[Test]
+		public async Task QueryAcceptsOutputOptions()
+		{
+			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--output", "csv", "--output-file", "query.csv", "--sql", "select 1");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.EqualTo(-3));
+				Assert.That(result.Error,    Does.Contain("Query command execution is not implemented yet."));
+			}
+		}
+
+		[Test]
+		public async Task QueryAcceptsDefaultConfigProfile()
+		{
+			var environment = new TestCliEnvironment();
+			var config      = AddConfigFile(environment, """
+				{
+					"default": {
+						"provider": "SQLite",
+						"connectionString": "Data Source=:memory:",
+						"output": "csv",
+						"outputFile": "query.csv"
+					}
+				}
+				""");
+
+			var result = await RunCli(environment, "query", "--config", config, "--sql", "select 1");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.EqualTo(-3));
+				Assert.That(result.Error,    Does.Contain("Query command execution is not implemented yet."));
+			}
+		}
+
+		[Test]
+		public async Task QueryAcceptsNamedConfigProfile()
+		{
+			var environment = new TestCliEnvironment();
+			var config      = AddConfigFile(environment, """
+				{
+					"default": {
+						"provider": "SQLite",
+						"connectionString": "Data Source=:memory:"
+					},
+					"uat": {
+						"provider": "SqlServer",
+						"connectionString": "Server=.;Database=test;Trusted_Connection=True"
+					}
+				}
+				""");
+
+			var result = await RunCli(environment, "query", "--config", config, "--profile", "uat", "--sql-file", "query.sql");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.EqualTo(-3));
+				Assert.That(result.Error,    Does.Contain("Query command execution is not implemented yet."));
+			}
+		}
+
+		[Test]
+		public async Task QueryStillRequiresSqlOrSqlFileWithConfig()
+		{
+			var environment = new TestCliEnvironment();
+			var config      = AddConfigFile(environment, """
+				{
+					"default": {
+						"provider": "SQLite",
+						"connectionString": "Data Source=:memory:"
+					}
+				}
+				""");
+
+			var result = await RunCli(environment, "query", "--config", config);
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.EqualTo(-1));
+				Assert.That(result.Error,    Does.Contain("Either '--sql' or '--sql-file' option must be specified."));
+			}
+		}
+
+		[Test]
+		public async Task QueryRejectsUnknownConfigProfile()
+		{
+			var environment = new TestCliEnvironment();
+			var config      = AddConfigFile(environment, """
+				{
+					"default": {
+						"provider": "SQLite",
+						"connectionString": "Data Source=:memory:"
+					}
+				}
+				""");
+
+			var result = await RunCli(environment, "query", "--config", config, "--profile", "uat", "--sql", "select 1");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.EqualTo(-1));
+				Assert.That(result.Error,    Does.Contain($"Configuration file '{config}' doesn't contain 'uat' profile."));
+			}
+		}
+
+		[Test]
+		public async Task QueryRejectsSqlInConfigProfile()
+		{
+			var environment = new TestCliEnvironment();
+			var config      = AddConfigFile(environment, """
+				{
+					"default": {
+						"provider": "SQLite",
+						"connectionString": "Data Source=:memory:",
+						"sql": "select 1"
+					}
+				}
+				""");
+
+			var result = await RunCli(environment, "query", "--config", config, "--sql-file", "query.sql");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.EqualTo(-1));
+				Assert.That(result.Error,    Does.Contain($"Configuration file '{config}' profile 'default' contains unknown property 'sql'."));
+			}
+		}
+
+		[Test]
+		public async Task QueryRejectsUnknownConfigOutput()
+		{
+			var environment = new TestCliEnvironment();
+			var config      = AddConfigFile(environment, """
+				{
+					"default": {
+						"provider": "SQLite",
+						"connectionString": "Data Source=:memory:",
+						"output": "xml"
+					}
+				}
+				""");
+
+			var result = await RunCli(environment, "query", "--config", config, "--sql", "select 1");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.EqualTo(-1));
+				Assert.That(result.Error,    Does.Contain($"Configuration file '{config}' profile 'default' property 'output' has unknown value 'xml'."));
+			}
+		}
+
+		[Test]
+		public async Task QueryHelpShowsSqlInputOptions()
+		{
+			var result = await RunCli("help", "query");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.Zero);
+				Assert.That(result.Output,   Does.Contain("dotnet linq2db query [--config config] [--profile profile] [--provider provider] [--connection-string connection-string] [--output output] [--output-file output-file] [--sql sql | --sql-file file]"));
+				Assert.That(result.Output,   Does.Contain("--config"));
+				Assert.That(result.Output,   Does.Contain("--profile"));
+				Assert.That(result.Output,   Does.Contain("--provider"));
+				Assert.That(result.Output,   Does.Contain("--connection-string"));
+				Assert.That(result.Output,   Does.Contain("--output"));
+				Assert.That(result.Output,   Does.Contain("--output-file"));
+				Assert.That(result.Output,   Does.Contain("--sql"));
+				Assert.That(result.Output,   Does.Contain("--sql-file"));
+			}
+		}
+
+		private static string AddConfigFile(TestCliEnvironment environment, string content)
+		{
+			var fileName = $"query-{environment.Files.Count + 1}.json";
+
+			environment.Files.Add(fileName, content);
+
+			return fileName;
+		}
+
+		private static async Task<CliResult> RunCli(params string[] arguments)
+		{
+			return await RunCli(new TestCliEnvironment(), arguments).ConfigureAwait(false);
+		}
+
+		private static async Task<CliResult> RunCli(TestCliEnvironment environment, params string[] arguments)
+		{
+			var exitCode = await new LinqToDBCliController().Execute(arguments, environment).ConfigureAwait(false);
+
+			return new CliResult(exitCode, environment.Output, environment.ErrorOutput);
+		}
+
+		private sealed record CliResult(int ExitCode, string Output, string Error);
+
+		private sealed class TestCliEnvironment : ICliEnvironment
+		{
+			private readonly StringWriter _output = new();
+			private readonly StringWriter _error  = new();
+
+			public Dictionary<string, string> Files { get; } = new(StringComparer.Ordinal);
+
+			public TextWriter Out   => _output;
+			public TextWriter Error => _error;
+
+			public int BufferWidth => 120;
+
+			public string Output      => _output.ToString();
+			public string ErrorOutput => _error .ToString();
+
+			public bool FileExists(string path)
+			{
+				return Files.ContainsKey(path);
+			}
+
+			public string ReadAllText(string path)
+			{
+				return Files[path];
+			}
+
+			public void WriteAllText(string path, string contents)
+			{
+				Files[path] = contents;
+			}
+		}
+	}
+}

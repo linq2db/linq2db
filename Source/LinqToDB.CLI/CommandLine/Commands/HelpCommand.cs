@@ -27,6 +27,7 @@ namespace LinqToDB.CommandLine
 
 		public override ValueTask<int> Execute(
 			CliController                  controller,
+			ICliEnvironment                environment,
 			string[]                       rawArgs,
 			Dictionary<CliOption, object?> options,
 			IReadOnlyCollection<string>    unknownArgs)
@@ -36,7 +37,7 @@ namespace LinqToDB.CommandLine
 				// handle proper calls with general help display:
 				// "dotnet linq2db"
 				// "dotnet linq2db help"
-				PrintGeneralHelp(controller, Array.Empty<string>());
+				PrintGeneralHelp(environment, controller, Array.Empty<string>());
 				return new(StatusCodes.SUCCESS);
 			}
 
@@ -51,7 +52,7 @@ namespace LinqToDB.CommandLine
 						if (string.Equals(command.Name, rawArgs[1], StringComparison.Ordinal))
 						{
 							// request for command help for known non-help command - print specific command help
-							PrintCommandHelp(command, unknownArgs);
+							PrintCommandHelp(environment, command, unknownArgs);
 							return new(StatusCodes.SUCCESS);
 						}
 					}
@@ -59,13 +60,13 @@ namespace LinqToDB.CommandLine
 
 				// help request for unknown command:
 				// dotnet linq2db help <unknown-command>
-				PrintGeneralHelp(controller, new[] { rawArgs[1] });
+				PrintGeneralHelp(environment, controller, new[] { rawArgs[1] });
 				return new(StatusCodes.INVALID_ARGUMENTS);
 			}
 
 			// all other cases - print default help and error message:
 			// "dotnet linq2db help <whatever> <arguments> <here>"
-			PrintGeneralHelp(controller, rawArgs);
+			PrintGeneralHelp(environment, controller, rawArgs);
 			return new(StatusCodes.INVALID_ARGUMENTS);
 		}
 
@@ -74,18 +75,18 @@ namespace LinqToDB.CommandLine
 		/// </summary>
 		/// <param name="command">Command descriptor.</param>
 		/// <param name="unknownArgs">List of unrecognized command-line arguments.</param>
-		private void PrintCommandHelp(CliCommand command, IReadOnlyCollection<string> unknownArgs)
+		private void PrintCommandHelp(ICliEnvironment environment, CliCommand command, IReadOnlyCollection<string> unknownArgs)
 		{
-			PrintHeader();
+			PrintHeader(environment);
 
-			PrintBadArgumentsError(unknownArgs);
+			PrintBadArgumentsError(environment, unknownArgs);
 
-			Console.Out.WriteLine();
-			Console.Out.WriteLine("Usage:");
-			Console.Out.WriteLine("        dotnet linq2db {0}{1}", command.Name, command.Template.Length != 0 ? " " + command.Template : command.Template);
+			environment.Out.WriteLine();
+			environment.Out.WriteLine("Usage:");
+			environment.Out.WriteLine("        dotnet linq2db {0}{1}", command.Name, command.Template.Length != 0 ? " " + command.Template : command.Template);
 
-			Console.Out.WriteLine();
-			Console.Out.WriteLine("Options:");
+			environment.Out.WriteLine();
+			environment.Out.WriteLine("Options:");
 
 			// calculate column width for column layout
 			var maxOptionNameWidth = 0;
@@ -104,30 +105,30 @@ namespace LinqToDB.CommandLine
 			const string indent = "      ";
 
 			foreach (var option in command.GetOptionsWithoutCategory())
-				WriteOptionHelp(command, maxOptionNameWidth, indent, null, option);
+				WriteOptionHelp(environment, command, maxOptionNameWidth, indent, null, option);
 
 			foreach (var category in command.Categories)
 			{
-				Console.Out.WriteLine();
-				Console.Out.WriteLine("=== {0} : {1}", category.Name, category.Description);
+				environment.Out.WriteLine();
+				environment.Out.WriteLine("=== {0} : {1}", category.Name, category.Description);
 
 				foreach (var option in command.GetCategoryOptions(category))
 				{
-					WriteOptionHelp(command, maxOptionNameWidth, indent, category, option);
+					WriteOptionHelp(environment, command, maxOptionNameWidth, indent, category, option);
 				}
 			}
 
 			// print command examples
 			if (command.Examples.Count > 0)
 			{
-				Console.Out.WriteLine();
-				Console.Out.WriteLine("Examples:");
+				environment.Out.WriteLine();
+				environment.Out.WriteLine("Examples:");
 
 				foreach (var example in command.Examples)
 				{
-					Console.Out.WriteLine();
-					Console.Out.WriteLine("        {0}", example.Command);
-					Console.Out.WriteLine("                {0}", example.Help);
+					environment.Out.WriteLine();
+					environment.Out.WriteLine("        {0}", example.Command);
+					environment.Out.WriteLine("                {0}", example.Help);
 				}
 			}
 
@@ -174,18 +175,13 @@ namespace LinqToDB.CommandLine
 			return type + (option.Required ? " (required)" : " (optional)");
 		}
 
-		private void WriteOptionHelp(CliCommand command, int maxOptionNameWidth, string indent, OptionCategory? category, CliOption option)
+		private void WriteOptionHelp(ICliEnvironment environment, CliCommand command, int maxOptionNameWidth, string indent, OptionCategory? category, CliOption option)
 		{
 			// workaround for https://github.com/linq2db/linq2db/issues/3612
-			var consoleWidth = 80;
-			try
-			{
-				consoleWidth = Console.BufferWidth;
-			}
-			catch { }
+			var consoleWidth = environment.BufferWidth;
 
-			Console.Out.WriteLine();
-			Console.Out.Write("   ");
+			environment.Out.WriteLine();
+			environment.Out.Write("   ");
 
 			var optionNameWidth = GetOptionWidth(option);
 			var type            = GetOptionTypeName(option);
@@ -194,42 +190,42 @@ namespace LinqToDB.CommandLine
 			{
 				// -x, --x-option    : <help>
 				if (option.ShortName != null)
-					Console.Out.Write("-{0}, ", option.ShortName.Value);
+					environment.Out.Write("-{0}, ", option.ShortName.Value);
 
-				Console.Out.Write("--{0}", option.Name);
-				Console.Out.Write(new string(' ', maxOptionNameWidth - optionNameWidth + 2));
-				Console.Out.WriteLine(" : {0}", option.Help);
+				environment.Out.Write("--{0}", option.Name);
+				environment.Out.Write(new string(' ', maxOptionNameWidth - optionNameWidth + 2));
+				environment.Out.WriteLine(" : {0}", option.Help);
 			}
 			else if (command.SupportsJSON)
 			{
 				// json-option       : (allowed only in JSON) <help>
-				Console.Out.Write("  {0}", option.Name);
-				Console.Out.Write(new string(' ', maxOptionNameWidth - optionNameWidth + 2));
-				Console.Out.WriteLine(" : (allowed only in JSON) {0}", option.Help);
+				environment.Out.Write("  {0}", option.Name);
+				environment.Out.Write(new string(' ', maxOptionNameWidth - optionNameWidth + 2));
+				environment.Out.WriteLine(" : (allowed only in JSON) {0}", option.Help);
 			}
 
 			// option data type
-			Console.Out.Write("{0}   type: ", indent);
-			Console.Out.WriteLine(type);
+			environment.Out.Write("{0}   type: ", indent);
+			environment.Out.WriteLine(type);
 
 			// display options, that cannot be used together with current option
 			var incompatibleWith = command.GetIncompatibleOptions(option);
 			if (incompatibleWith != null)
-				Console.Out.WriteLine("{0}   cannot use with: {1}", indent, string.Join(", ", incompatibleWith.Select(o => $"--{o.Name}")));
+				environment.Out.WriteLine("{0}   cannot use with: {1}", indent, string.Join(", ", incompatibleWith.Select(o => $"--{o.Name}")));
 
 			if (command.SupportsJSON)
 			{
 				// option property path in json or "not allowed" text if not supported
-				Console.Out.Write("{0}   json: ", indent);
+				environment.Out.Write("{0}   json: ", indent);
 				if (option.AllowInJson)
 				{
 					if (category != null)
-						Console.Out.WriteLine("{0}.{1}", category.JsonProperty, option.Name);
+						environment.Out.WriteLine("{0}.{1}", category.JsonProperty, option.Name);
 					else
-						Console.Out.WriteLine("{0}", option.Name);
+						environment.Out.WriteLine("{0}", option.Name);
 				}
 				else
-					Console.Out.WriteLine("not allowed");
+					environment.Out.WriteLine("not allowed");
 			}
 
 			// print default value (if set) for non-required option
@@ -237,8 +233,8 @@ namespace LinqToDB.CommandLine
 			{
 				if (option is BooleanCliOption booleanOption)
 				{
-					Console.Out.WriteLine("{0}   default: {1}", indent, booleanOption.Default ? "true" : "false");
-					Console.Out.WriteLine("{0}   default (T4 mode): {1}", indent, booleanOption.T4Default ? "true" : "false");
+					environment.Out.WriteLine("{0}   default: {1}", indent, booleanOption.Default ? "true" : "false");
+					environment.Out.WriteLine("{0}   default (T4 mode): {1}", indent, booleanOption.T4Default ? "true" : "false");
 				}
 
 				if (option is StringCliOption stringOption)
@@ -246,67 +242,67 @@ namespace LinqToDB.CommandLine
 					if (stringOption.Default != null)
 					{
 						if (!stringOption.AllowMultiple)
-							Console.Out.WriteLine("{0}   default: {1}", indent, stringOption.Default[0]);
+							environment.Out.WriteLine("{0}   default: {1}", indent, stringOption.Default[0]);
 						else
-							Console.Out.WriteLine("{0}   default: {1}", indent, string.JoinStrings(',', stringOption.Default));
+							environment.Out.WriteLine("{0}   default: {1}", indent, string.JoinStrings(',', stringOption.Default));
 					}
 
 					if (stringOption.T4Default != null)
 					{
 						if (!stringOption.AllowMultiple)
-							Console.Out.WriteLine("{0}   default (T4 mode): {1}", indent, stringOption.T4Default[0]);
+							environment.Out.WriteLine("{0}   default (T4 mode): {1}", indent, stringOption.T4Default[0]);
 						else
-							Console.Out.WriteLine("{0}   default (T4 mode): {1}", indent, string.JoinStrings(',', stringOption.T4Default));
+							environment.Out.WriteLine("{0}   default (T4 mode): {1}", indent, string.JoinStrings(',', stringOption.T4Default));
 					}
 				}
 				else if (option is StringEnumCliOption enumOption)
 				{
 					var defaults = enumOption.Values.Where(o => o.Default).Select(o => o.Value).ToArray();
 					if (defaults.Length > 0)
-						Console.Out.WriteLine("{0}   default: {1}", indent, string.Join(", ", defaults));
+						environment.Out.WriteLine("{0}   default: {1}", indent, string.Join(", ", defaults));
 
 					defaults = enumOption.Values.Where(o => o.T4Default).Select(o => o.Value).ToArray();
 					if (defaults.Length > 0)
-						Console.Out.WriteLine("{0}   default (T4 mode): {1}", indent, string.Join(", ", defaults));
+						environment.Out.WriteLine("{0}   default (T4 mode): {1}", indent, string.Join(", ", defaults));
 				}
 				else if (option is NamingCliOption namingOption)
 				{
 					if (namingOption.Default != null)
-						PrintNamingOptionDefaults(indent, "default", namingOption.Default);
+						PrintNamingOptionDefaults(environment, indent, "default", namingOption.Default);
 					if (namingOption.T4Default != null)
-						PrintNamingOptionDefaults(indent, "default (T4 mode)", namingOption.T4Default);
+						PrintNamingOptionDefaults(environment, indent, "default (T4 mode)", namingOption.T4Default);
 				}
 			}
 
 			// for enum-typed option print list of supported values with description
 			if (option is StringEnumCliOption enumStringOption)
 			{
-				Console.Out.WriteLine("{0}   supported values:", indent);
+				environment.Out.WriteLine("{0}   supported values:", indent);
 				var maxValueWidth = enumStringOption.Values.Select(_ => _.Value.Length).Max();
 
 				foreach (var value in enumStringOption.Values)
-					Console.Out.WriteLine("{0}{0}   {1}{3} : {2}", indent, value.Value, value.Help, new string(' ', maxValueWidth - value.Value.Length));
+					environment.Out.WriteLine("{0}{0}   {1}{3} : {2}", indent, value.Value, value.Help, new string(' ', maxValueWidth - value.Value.Length));
 			}
 
 			// print option CLI and JSON examples if provided
 			if (option.Examples != null)
 			{
-				Console.Out.WriteLine("{0}   examples:", indent);
+				environment.Out.WriteLine("{0}   examples:", indent);
 				foreach (var example in option.Examples)
-					Console.Out.WriteLine("{0}{0}   {1}", indent, example);
+					environment.Out.WriteLine("{0}{0}   {1}", indent, example);
 			}
 
 			if (option.JsonExamples != null)
 			{
-				Console.Out.WriteLine("{0}   JSON examples:", indent);
+				environment.Out.WriteLine("{0}   JSON examples:", indent);
 				foreach (var example in option.JsonExamples)
-					Console.Out.WriteLine("{0}{0}   {1}", indent, example);
+					environment.Out.WriteLine("{0}{0}   {1}", indent, example);
 			}
 
 			// print detailed option help if provided
 			if (option.DetailedHelp != null)
 			{
-				Console.Out.WriteLine();
+				environment.Out.WriteLine();
 
 				// split long text into lines manually and prepend each line with help indent for nicer formatting
 				// TODO: dunno wether it works on linux/macos, not tested yet
@@ -325,16 +321,16 @@ namespace LinqToDB.CommandLine
 									j * lineWidth,
 									j == partsCount - 1 && incompleteLineLength > 0 ? incompleteLineLength : lineWidth);
 
-						Console.Out.Write(indent);
-						Console.Out.WriteLine(part);
+						environment.Out.Write(indent);
+						environment.Out.WriteLine(part);
 					}
 				}
 			}
 		}
 
-		private static void PrintNamingOptionDefaults(string indent, string mode, NormalizationOptions options)
+		private static void PrintNamingOptionDefaults(ICliEnvironment environment, string indent, string mode, NormalizationOptions options)
 		{
-			Console.Out.WriteLine("{0}   {1}: {{", indent, mode);
+			environment.Out.WriteLine("{0}   {1}: {{", indent, mode);
 
 			var value = options.Casing switch
 			{
@@ -382,11 +378,11 @@ namespace LinqToDB.CommandLine
 			if (options.MaxUpperCaseWordLength > 1)
 				printJsonProperty(indent, "max_uppercase_word_length", options.MaxUpperCaseWordLength.ToString(CultureInfo.InvariantCulture));
 
-			Console.Out.WriteLine("{0}            }}", indent);
+			environment.Out.WriteLine("{0}            }}", indent);
 
-			static void printJsonProperty(string padding, string optionName, string value)
+			void printJsonProperty(string padding, string optionName, string value)
 			{
-				Console.Out.WriteLine("{0}                \"{1}\"{3}: {2},", padding, optionName, value, new string(' ', "pluralize_if_ends_with_word_only".Length - optionName.Length));
+				environment.Out.WriteLine("{0}                \"{1}\"{3}: {2},", padding, optionName, value, new string(' ', "pluralize_if_ends_with_word_only".Length - optionName.Length));
 			}
 		}
 
@@ -395,102 +391,102 @@ namespace LinqToDB.CommandLine
 		/// </summary>
 		/// <param name="controller">CLI controller instance.</param>
 		/// <param name="unknownArgs">Unrecognized command line arguments for current call.</param>
-		private void PrintGeneralHelp(CliController controller, IReadOnlyCollection<string> unknownArgs)
+		private void PrintGeneralHelp(ICliEnvironment environment, CliController controller, IReadOnlyCollection<string> unknownArgs)
 		{
-			PrintHeader();
+			PrintHeader(environment);
 
-			PrintBadArgumentsError(unknownArgs);
+			PrintBadArgumentsError(environment, unknownArgs);
 
 			if (OperatingSystem.IsWindows())
 			{
-				Console.Out.WriteLine();
-				Console.Out.WriteLine("Choosing 32-bit vs 64-bit on Windows:");
-				Console.Out.WriteLine("    The tool ships as per-RID packages (win-x64, win-x86, win-arm64). `dotnet tool install -g linq2db.cli`");
-				Console.Out.WriteLine("    picks one variant based on your SDK architecture (usually x64). The default x64 install works for");
-				Console.Out.WriteLine("    most providers; you need a specific variant only when a database driver constrains the bitness:");
-				Console.Out.WriteLine();
-				Console.Out.WriteLine("    Always 32-bit (must install win-x86):");
-				Console.Out.WriteLine("        - Microsoft.Jet.OLEDB (legacy Access .mdb databases)");
-				Console.Out.WriteLine();
-				Console.Out.WriteLine("    Bitness must match the installed driver (install the matching variant of linq2db.cli):");
-				Console.Out.WriteLine("        - Microsoft.ACE.OLEDB.12.0 / .16.0 — must match the installed Office bitness");
-				Console.Out.WriteLine("        - SQL Server Compact Edition — must match the installed SQL CE runtime bitness");
-				Console.Out.WriteLine("        - SAP HANA — must match the installed HANA driver bitness (the HANA ODBC driver ships");
-				Console.Out.WriteLine("          under different names for x86 vs x64; the native dotnet client is also bitness-specific)");
-				Console.Out.WriteLine();
-				Console.Out.WriteLine("    Install the x86 variant explicitly:");
-				Console.Out.WriteLine("        dotnet tool install -g linq2db.cli --arch x86");
-				Console.Out.WriteLine();
-				Console.Out.WriteLine("    A single tool ID can only have ONE arch installed under -g. To switch architectures, either");
-				Console.Out.WriteLine("    use 'dotnet tool update -g linq2db.cli --arch <x86|x64>', or uninstall first:");
-				Console.Out.WriteLine("        dotnet tool uninstall -g linq2db.cli");
-				Console.Out.WriteLine("        dotnet tool install -g linq2db.cli --arch x86");
-				Console.Out.WriteLine();
-				Console.Out.WriteLine("    To keep both x86 and x64 available, install each to a separate path and manage PATH order");
-				Console.Out.WriteLine("    yourself. Use any paths you like (quote if they contain spaces):");
-				Console.Out.WriteLine("        dotnet tool install linq2db.cli --tool-path C:\\tools\\linq2db-x64 --arch x64");
-				Console.Out.WriteLine("        dotnet tool install linq2db.cli --tool-path C:\\tools\\linq2db-x86 --arch x86");
+				environment.Out.WriteLine();
+				environment.Out.WriteLine("Choosing 32-bit vs 64-bit on Windows:");
+				environment.Out.WriteLine("    The tool ships as per-RID packages (win-x64, win-x86, win-arm64). `dotnet tool install -g linq2db.cli`");
+				environment.Out.WriteLine("    picks one variant based on your SDK architecture (usually x64). The default x64 install works for");
+				environment.Out.WriteLine("    most providers; you need a specific variant only when a database driver constrains the bitness:");
+				environment.Out.WriteLine();
+				environment.Out.WriteLine("    Always 32-bit (must install win-x86):");
+				environment.Out.WriteLine("        - Microsoft.Jet.OLEDB (legacy Access .mdb databases)");
+				environment.Out.WriteLine();
+				environment.Out.WriteLine("    Bitness must match the installed driver (install the matching variant of linq2db.cli):");
+				environment.Out.WriteLine("        - Microsoft.ACE.OLEDB.12.0 / .16.0 — must match the installed Office bitness");
+				environment.Out.WriteLine("        - SQL Server Compact Edition — must match the installed SQL CE runtime bitness");
+				environment.Out.WriteLine("        - SAP HANA — must match the installed HANA driver bitness (the HANA ODBC driver ships");
+				environment.Out.WriteLine("          under different names for x86 vs x64; the native dotnet client is also bitness-specific)");
+				environment.Out.WriteLine();
+				environment.Out.WriteLine("    Install the x86 variant explicitly:");
+				environment.Out.WriteLine("        dotnet tool install -g linq2db.cli --arch x86");
+				environment.Out.WriteLine();
+				environment.Out.WriteLine("    A single tool ID can only have ONE arch installed under -g. To switch architectures, either");
+				environment.Out.WriteLine("    use 'dotnet tool update -g linq2db.cli --arch <x86|x64>', or uninstall first:");
+				environment.Out.WriteLine("        dotnet tool uninstall -g linq2db.cli");
+				environment.Out.WriteLine("        dotnet tool install -g linq2db.cli --arch x86");
+				environment.Out.WriteLine();
+				environment.Out.WriteLine("    To keep both x86 and x64 available, install each to a separate path and manage PATH order");
+				environment.Out.WriteLine("    yourself. Use any paths you like (quote if they contain spaces):");
+				environment.Out.WriteLine("        dotnet tool install linq2db.cli --tool-path C:\\tools\\linq2db-x64 --arch x64");
+				environment.Out.WriteLine("        dotnet tool install linq2db.cli --tool-path C:\\tools\\linq2db-x86 --arch x86");
 			}
 
-			Console.Out.WriteLine();
-			Console.Out.WriteLine("Usage:");
-			Console.Out.WriteLine("        dotnet linq2db [help]: print this help");
-			Console.Out.WriteLine("        dotnet linq2db help <command>: print help on specific command");
-			Console.Out.WriteLine("        dotnet linq2db <command> [<options>]: execute specific command");
+			environment.Out.WriteLine();
+			environment.Out.WriteLine("Usage:");
+			environment.Out.WriteLine("        dotnet linq2db [help]: print this help");
+			environment.Out.WriteLine("        dotnet linq2db help <command>: print help on specific command");
+			environment.Out.WriteLine("        dotnet linq2db <command> [<options>]: execute specific command");
 
-			Console.Out.WriteLine();
-			Console.Out.WriteLine("linq2db tool provides database model scaffolding (reverse engineering) of database into Linq To DB (https://linq2db.github.io/) database model classes.");
+			environment.Out.WriteLine();
+			environment.Out.WriteLine("linq2db tool provides database model scaffolding (reverse engineering) of database into Linq To DB (https://linq2db.github.io/) database model classes.");
 
 			// list all commands with short description
 			if (controller.Commands.Count > 1)
 			{
-				Console.Out.WriteLine();
-				Console.Out.WriteLine("Supported commands:");
+				environment.Out.WriteLine();
+				environment.Out.WriteLine("Supported commands:");
 
 				foreach (var command in controller.Commands)
 				{
 					if (command != this)
-						Console.Out.WriteLine("        dotnet linq2db {0}{1} : {2}", command.Name, command.Template.Length != 0 ? " " + command.Template : command.Template, command.Help);
+						environment.Out.WriteLine("        dotnet linq2db {0}{1} : {2}", command.Name, command.Template.Length != 0 ? " " + command.Template : command.Template, command.Help);
 				}
 			}
 
 			// TODO: load command examples from command object?
 			// for now it's fine, as we have only one command
-			Console.Out.WriteLine();
-			Console.Out.WriteLine("Examples:");
-			Console.Out.WriteLine("        dotnet linq2db scaffold -o c:\\my_project\\model -p SqlServer -c \"Server=MySqlServer;Database=MyDatabase;User Id=scaffold_user;Password=secret;\"");
-			Console.Out.WriteLine("            generate data model code for SQL Server database in c:\\my_project\\model folder");
-			Console.Out.WriteLine();
-			Console.Out.WriteLine("        dotnet linq2db scaffold -i path\\to\\my_scaffold_options.json");
-			Console.Out.WriteLine("            generate data model code using options from JSON file");
-			Console.Out.WriteLine();
-			Console.Out.WriteLine("        dotnet linq2db template");
-			Console.Out.WriteLine("            create base T4 template for scaffolding customization in current folder");
+			environment.Out.WriteLine();
+			environment.Out.WriteLine("Examples:");
+			environment.Out.WriteLine("        dotnet linq2db scaffold -o c:\\my_project\\model -p SqlServer -c \"Server=MySqlServer;Database=MyDatabase;User Id=scaffold_user;Password=secret;\"");
+			environment.Out.WriteLine("            generate data model code for SQL Server database in c:\\my_project\\model folder");
+			environment.Out.WriteLine();
+			environment.Out.WriteLine("        dotnet linq2db scaffold -i path\\to\\my_scaffold_options.json");
+			environment.Out.WriteLine("            generate data model code using options from JSON file");
+			environment.Out.WriteLine();
+			environment.Out.WriteLine("        dotnet linq2db template");
+			environment.Out.WriteLine("            create base T4 template for scaffolding customization in current folder");
 		}
 
 		/// <summary>
 		/// Prints error message about unrecognized arguments.
 		/// </summary>
 		/// <param name="unknownArgs">List of unknown arguments.</param>
-		private static void PrintBadArgumentsError(IReadOnlyCollection<string> unknownArgs)
+		private static void PrintBadArgumentsError(ICliEnvironment environment, IReadOnlyCollection<string> unknownArgs)
 		{
 			if (unknownArgs.Count > 0)
 			{
 				// all errors from console must be directed to stderr
-				Console.Error.WriteLine();
-				Console.Error.WriteLine("Error: unrecognized arguments:");
+				environment.Error.WriteLine();
+				environment.Error.WriteLine("Error: unrecognized arguments:");
 
 				foreach (var arg in unknownArgs)
-					Console.Error.WriteLine("    {0}", arg);
+					environment.Error.WriteLine("    {0}", arg);
 			}
 		}
 
 		/// <summary>
 		/// Prints help command header. Used for both general and command-specific help display.
 		/// </summary>
-		private void PrintHeader()
+		private void PrintHeader(ICliEnvironment environment)
 		{
-			Console.Out.WriteLine("dotnet linq2db - Linq To DB command-line utilities. Version: {0}", GetType().Assembly.GetName().Version);
+			environment.Out.WriteLine("dotnet linq2db - Linq To DB command-line utilities. Version: {0}", GetType().Assembly.GetName().Version);
 		}
 	}
 }

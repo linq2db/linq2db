@@ -17,7 +17,7 @@ namespace LinqToDB.CommandLine
 		/// </summary>
 		/// <param name="options">CLI options.</param>
 		/// <returns>Scaffold settings or <see langword="null"/> on error.</returns>
-		private static ScaffoldOptions? ProcessScaffoldOptions(Dictionary<CliOption, object?> options)
+		private static ScaffoldOptions ProcessScaffoldOptions(Dictionary<CliOption, object?> options)
 		{
 			ScaffoldOptions settings;
 
@@ -116,7 +116,7 @@ namespace LinqToDB.CommandLine
 					"public"   => Modifiers.Public,
 					"internal" => Modifiers.Internal,
 					"private"  => Modifiers.Private,
-					_ => throw new InvalidOperationException($"Unsuppored value for option {DataModel.DataContextModifier.Name}: {str}"),
+					_ => throw new InvalidOperationException($"Unsupported value for option {DataModel.DataContextModifier.Name}: {str}"),
 				};
 			}
 
@@ -129,7 +129,7 @@ namespace LinqToDB.CommandLine
 					{
 						case "sync" : settings.GenerateProcedureSync  = true; break;
 						case "async": settings.GenerateProcedureAsync = true; break;
-						default     : throw new InvalidOperationException($"Unsuppored value for option {DataModel.StoredProcedureTypes.Name}: {strVal}");
+						default     : throw new InvalidOperationException($"Unsupported value for option {DataModel.StoredProcedureTypes.Name}: {strVal}");
 					}
 				}
 			}
@@ -143,7 +143,7 @@ namespace LinqToDB.CommandLine
 					"none"       => MetadataSource.None,
 					"attributes" => MetadataSource.Attributes,
 					"fluent"     => MetadataSource.FluentMapping,
-					_            => throw new InvalidOperationException($"Unsuppored value for option {DataModel.Metadata.Name}: {str}"),
+					_            => throw new InvalidOperationException($"Unsupported value for option {DataModel.Metadata.Name}: {str}"),
 				};
 			}
 
@@ -169,12 +169,12 @@ namespace LinqToDB.CommandLine
 						case "sync-entity-context" : findTypes |= FindTypes.FindByRecordOnContext     ; break;
 						case "async-entity-context": findTypes |= FindTypes.FindAsyncByRecordOnContext; break;
 						case "query-entity-context": findTypes |= FindTypes.FindQueryByRecordOnContext; break;
-						default                    : throw new InvalidOperationException($"Unsuppored value for option {DataModel.GenerateFind.Name}: {strVal}");
+						default                    : throw new InvalidOperationException($"Unsupported value for option {DataModel.GenerateFind.Name}: {strVal}");
 					}
 				}
 
 				if (hasNone && findTypes != FindTypes.None)
-					throw new InvalidOperationException($"Option {DataModel.GenerateFind.Name} combines `none` value with other values ({string.Join(',', (string[])value!)})");
+					throw new InvalidOperationException($"Option {DataModel.GenerateFind.Name} combines `none` value with other values ({string.Join(',', (string[])value)})");
 
 				settings.GenerateFindExtensions = findTypes;
 			}
