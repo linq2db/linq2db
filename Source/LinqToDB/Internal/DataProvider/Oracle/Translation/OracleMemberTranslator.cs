@@ -278,10 +278,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
 		{
-			var factory  = translationContext.ExpressionFactory;
-			var timePart = factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "Sys_Guid");
-
-			return timePart;
+			var factory = translationContext.ExpressionFactory;
+			return factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "Sys_Guid");
 		}
 
 		// Similar to SQLite
