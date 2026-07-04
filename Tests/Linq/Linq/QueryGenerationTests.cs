@@ -432,7 +432,11 @@ namespace Tests.Linq
 			results.Length.ShouldBe(expected.Length);
 			command.Sql.ShouldContain("SELECT");
 			command.Parameters.Count.ShouldBe(0);
-			if (context.IsAnyOf(ProviderName.SqlCe, TestProvName.AllYdb))
+			// The by-name Query<T> round-trip above is the cross-provider probe: it fails for any provider
+			// whose reader can't disambiguate two same-named result columns (Access OLE DB returned 0).
+			// Providers that force final aliases for the collision (SqlCe / YDB always, Access on duplicate
+			// column names) emit the uniquified PersonID_1; the rest keep the duplicate name (#5599 / #5657).
+			if (context.IsAnyOf(ProviderName.SqlCe, TestProvName.AllYdb, TestProvName.AllAccess))
 				command.Sql.ShouldContain("PersonID_1");
 			results.Select(r => r.PersonID).ShouldBe(expected.Select(e => e.PersonID), ignoreOrder: true);
 		}

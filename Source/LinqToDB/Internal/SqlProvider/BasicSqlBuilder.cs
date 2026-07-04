@@ -111,7 +111,53 @@ namespace LinqToDB.Internal.SqlProvider
 		/// </summary>
 		protected virtual bool IsOverRequiredWithinGroup => false;
 
-		protected virtual bool CanSkipRootAliases(SqlStatement statement) => true;
+		protected virtual bool CanSkipRootAliases(SqlStatement statement)
+		{
+			// Providers whose final SELECT can't carry two columns with the same name - SqlCe / YDB reject
+			// it at the server, Access' reader can't map the duplicate back by name so a raw
+			// ToSqlQuery -> Query<T> round-trip returns defaults - must emit final aliases when the root
+			// SELECT has a name collision, so the aliasing-pass-uniquified names (PersonID / PersonID_1) are
+			// rendered. Non-colliding selects are unaffected. #5599 / #5657.
+			if (RequiresUniqueRootColumnNames && RootSelectHasDuplicateColumnNames(statement))
+				return false;
+
+			return true;
+		}
+
+		/// <summary>
+		/// <see langword="true" /> when the provider's final SELECT cannot contain two columns that render
+		/// with the same result-set name. Such providers force final aliases for a root column-name
+		/// collision (see <see cref="CanSkipRootAliases"/>) instead of skipping root aliases.
+		/// </summary>
+		protected virtual bool RequiresUniqueRootColumnNames => false;
+
+		// True when the root SELECT projects two columns that render with the same result-set name: bare
+		// fields sharing a physical column name (e.g. `select new { p.ID, d.PersonID }` where both map to
+		// PersonID). The aliasing pass already uniquified the collision in the context (PersonID / PersonID_1);
+		// this detects it so CanSkipRootAliases can force those aliases to be emitted for providers that
+		// can't tolerate duplicate result-column names.
+		static bool RootSelectHasDuplicateColumnNames(SqlStatement statement)
+		{
+			var select = statement.SelectQuery?.Select;
+			if (select is null || select.Columns.Count < 2)
+				return false;
+
+			HashSet<string>? names = null;
+			foreach (var column in select.Columns)
+			{
+				// Only bare fields have a deterministic name when the alias is skipped (their physical column
+				// name). Computed columns render without a usable name and carry unique synthetic aliases, so
+				// they never collide by name.
+				if (column.Expression is SqlField field && field.PhysicalName.Length > 0)
+				{
+					names ??= new(StringComparer.OrdinalIgnoreCase);
+					if (!names.Add(field.PhysicalName))
+						return true;
+				}
+			}
+
+			return false;
+		}
 
 		/// <summary>
 		/// Placement of the optional <c>WHERE &lt;predicate&gt;</c> that guards the UPDATE branch of

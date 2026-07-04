@@ -113,8 +113,9 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			StringBuilder.Append(command);
 		}
 
-		// duplicate aliases in final select are not supported
-		protected override bool CanSkipRootAliases(SqlStatement statement) => false;
+		// duplicate aliases in the final select are not supported, so final aliases are forced on a root
+		// column-name collision
+		protected override bool RequiresUniqueRootColumnNames => true;
 
 		protected override void BuildCreateTableFieldType(SqlField field)
 		{

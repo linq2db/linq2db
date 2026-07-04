@@ -1069,3 +1069,9 @@ LinqToDB.Mapping.EntityMappingBuilder<TEntity>.HasQueryFilter(string! filterKey,
 LinqToDB.Mapping.EntityMappingBuilder<TEntity>.HasQueryFilter<TDataContext>(string! filterKey, System.Func<System.Linq.IQueryable<TEntity>!, TDataContext, System.Linq.IQueryable<TEntity>!>? filterFunc) -> LinqToDB.Mapping.EntityMappingBuilder<TEntity>!
 static LinqToDB.LinqExtensions.IgnoreFilters<TSource>(this System.Linq.IQueryable<TSource>! source, System.Collections.Generic.IEnumerable<string!>! filterKeys, params System.Type![]! entityTypes) -> System.Linq.IQueryable<TSource>!
 static readonly LinqToDB.Internal.Reflection.Methods.LinqToDB.IgnoreFiltersByKey -> System.Reflection.MethodInfo!
+virtual LinqToDB.Internal.SqlProvider.BasicSqlBuilder.RequiresUniqueRootColumnNames.get -> bool
+override LinqToDB.Internal.DataProvider.Access.AccessSqlBuilderBase.RequiresUniqueRootColumnNames.get -> bool
+override LinqToDB.Internal.DataProvider.SqlCe.SqlCeSqlBuilder.RequiresUniqueRootColumnNames.get -> bool
+override LinqToDB.Internal.DataProvider.Ydb.YdbSqlBuilder.RequiresUniqueRootColumnNames.get -> bool
+*REMOVED*override LinqToDB.Internal.DataProvider.SqlCe.SqlCeSqlBuilder.CanSkipRootAliases(LinqToDB.Internal.SqlQuery.SqlStatement! statement) -> bool
+*REMOVED*override LinqToDB.Internal.DataProvider.Ydb.YdbSqlBuilder.CanSkipRootAliases(LinqToDB.Internal.SqlQuery.SqlStatement! statement) -> bool

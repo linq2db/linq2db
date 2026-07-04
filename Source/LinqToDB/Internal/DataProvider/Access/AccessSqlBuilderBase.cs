@@ -56,6 +56,11 @@ namespace LinqToDB.Internal.DataProvider.Access
 		protected override bool IsValuesSyntaxSupported       => false;
 		protected override bool SupportsColumnAliasesInSource => false;
 
+		// Access' reader can't map duplicate result-set column names back by name (a raw
+		// ToSqlQuery -> Query<T> round-trip returns defaults), so final aliases are forced on a root
+		// column-name collision. #5599 / #5657.
+		protected override bool RequiresUniqueRootColumnNames => true;
+
 		#region Skip / Take Support
 
 		protected override string FirstFormat(SelectQuery selectQuery)

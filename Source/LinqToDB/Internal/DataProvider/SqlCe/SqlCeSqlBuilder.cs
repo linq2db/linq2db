@@ -48,16 +48,9 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 		protected override bool SupportsColumnAliasesInSource => false;
 		protected override bool RequiresConstantColumnAliases => true;
 
-		protected override bool CanSkipRootAliases(SqlStatement statement)
-		{
-			if (statement.SelectQuery != null)
-			{
-				// SQL CE doesn't support multiple columns with the same name in SELECT clause
-				return false;
-			}
-
-			return base.CanSkipRootAliases(statement);
-		}
+		// SQL CE doesn't support multiple columns with the same name in the SELECT clause, so final aliases
+		// are forced on a root column-name collision.
+		protected override bool RequiresUniqueRootColumnNames => true;
 
 		public override int CommandCount(SqlStatement statement)
 		{
