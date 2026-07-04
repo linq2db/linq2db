@@ -10,7 +10,7 @@ using NUnit.Framework;
 
 #pragma warning disable JSON002 // Allow JSON in test code for config file content.
 
-namespace LinqToDB.CLI.Tests
+namespace Tests.LinqToDB.CLI
 {
 	[TestFixture]
 	public sealed class QueryCommandTests

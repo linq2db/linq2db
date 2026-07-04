@@ -119,29 +119,28 @@ namespace LinqToDB.CommandLine
 		private static async Task<string> FormatJson(DbDataReader reader, CancellationToken cancellationToken)
 		{
 			using var stream = new MemoryStream();
-			using (var writer = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = true }))
+			using var writer = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = true });
+
+			writer.WriteStartArray();
+
+			while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
 			{
-				writer.WriteStartArray();
+				writer.WriteStartObject();
 
-				while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+				for (var i = 0; i < reader.FieldCount; i++)
 				{
-					writer.WriteStartObject();
+					writer.WritePropertyName(reader.GetName(i));
 
-					for (var i = 0; i < reader.FieldCount; i++)
-					{
-						writer.WritePropertyName(reader.GetName(i));
-
-						if (await reader.IsDBNullAsync(i, cancellationToken).ConfigureAwait(false))
-							writer.WriteNullValue();
-						else
-							JsonSerializer.Serialize(writer, reader.GetValue(i), reader.GetFieldType(i));
-					}
-
-					writer.WriteEndObject();
+					if (await reader.IsDBNullAsync(i, cancellationToken).ConfigureAwait(false))
+						writer.WriteNullValue();
+					else
+						JsonSerializer.Serialize(writer, reader.GetValue(i), reader.GetFieldType(i));
 				}
 
-				writer.WriteEndArray();
+				writer.WriteEndObject();
 			}
+
+			writer.WriteEndArray();
 
 			return Encoding.UTF8.GetString(stream.ToArray());
 		}
