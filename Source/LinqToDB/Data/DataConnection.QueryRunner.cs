@@ -709,7 +709,7 @@ namespace LinqToDB.Data
 					var groupStatements = new SqlStatement[group.StepIndexes.Count];
 
 					for (var k = 0; k < group.StepIndexes.Count; k++)
-						groupStatements[k] = steps[group.StepIndexes[k]].Statement;
+						groupStatements[k] = steps[group.StepIndexes[k]].Statement!;
 
 					result[g] = ScenarioCommandRenderer.RenderStatementTemplates(dataConnection, groupStatements, null);
 				}
@@ -750,7 +750,7 @@ namespace LinqToDB.Data
 						var groupStatements = new SqlStatement[stepIndexes.Count];
 
 						for (var k = 0; k < stepIndexes.Count; k++)
-							groupStatements[k] = steps[stepIndexes[k]].Statement;
+							groupStatements[k] = steps[stepIndexes[k]].Statement!;
 
 						templates = ScenarioCommandRenderer.RenderStatementTemplates(dataConnection, groupStatements, executionQuery.ParameterValues);
 					}

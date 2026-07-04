@@ -863,7 +863,7 @@ namespace LinqToDB.Internal.Linq
 					var groupStatements = new SqlStatement[stepIndexes.Count];
 
 					for (var k = 0; k < stepIndexes.Count; k++)
-						groupStatements[k] = scenario.Steps[stepIndexes[k]].Statement;
+						groupStatements[k] = scenario.Steps[stepIndexes[k]].Statement!;
 
 #if SUPPORTS_DBBATCH
 					// DbBatch: the whole group is one command carrying one isolated-scope statement per step (each its own
@@ -940,7 +940,7 @@ namespace LinqToDB.Internal.Linq
 						{
 #if SUPPORTS_DBBATCH
 							slot = ScenarioCommandRenderer.RenderStatementTemplates(
-								dataConnection, [scenario.Steps[stepIndexes[i]].Statement], values)[0];
+								dataConnection, [scenario.Steps[stepIndexes[i]].Statement!], values)[0];
 #else
 							throw new InvalidOperationException("Eager batch cache slot is null on a non-DbBatch build.");
 #endif
@@ -975,7 +975,12 @@ namespace LinqToDB.Internal.Linq
 
 				for (var i = 0; i < steps.Count; i++)
 				{
-					var statement = steps[i].Statement;
+					// A self-executing step has no rendered SQL, so it is never a cacheable render slot (not volatile here).
+					if (steps[i].Statement is not { } statement)
+					{
+						result[i] = false;
+						continue;
+					}
 
 					result[i] = statement.IsParameterDependent
 						|| sqlOptimizer.IsParameterDependent(NullabilityContext.NonQuery, dataConnection.MappingSchema, statement, options);

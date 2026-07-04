@@ -87,12 +87,16 @@ namespace LinqToDB.Internal.SqlProvider
 			{
 				var step = scenario.Steps[i];
 
-				if (ReferenceEquals(step.Statement, mainStatement))
+				// A self-executing step (eager self-executing preamble) carries no rendered statement to finalize.
+				if (step.Statement is not { } statement)
 					continue;
 
-				var finalStatement = sqlOptimizer.Finalize(mappingSchema, step.Statement, options);
+				if (ReferenceEquals(statement, mainStatement))
+					continue;
 
-				if (ReferenceEquals(finalStatement, step.Statement))
+				var finalStatement = sqlOptimizer.Finalize(mappingSchema, statement, options);
+
+				if (ReferenceEquals(finalStatement, statement))
 					continue;
 
 				if (finalized == null)
@@ -210,9 +214,10 @@ namespace LinqToDB.Internal.SqlProvider
 				for (var k = 0; k < stepIndexes.Count; k++)
 				{
 					var step        = scenario.Steps[stepIndexes[k]];
-					var stepAliases = ReferenceEquals(step.Statement, mainStatement) ? mainAliases : PrepareStepAliases(serviceProvider, step.Statement);
+					var statement   = step.Statement!; // combined-group steps always carry a statement (self-executing steps are singletons)
+					var stepAliases = ReferenceEquals(statement, mainStatement) ? mainAliases : PrepareStepAliases(serviceProvider, statement);
 
-					AppendConcatenatedStatement(sb, sqlBuilder, optimizationContext, step.Statement, stepAliases, k == 0, startIndent);
+					AppendConcatenatedStatement(sb, sqlBuilder, optimizationContext, statement, stepAliases, k == 0, startIndent);
 				}
 
 				commands[g] = new CommandWithParameters(sb.ToString(), optimizationContext.GetParameters());

@@ -19,6 +19,12 @@ namespace LinqToDB.Internal.SqlProvider
 		Scalar,
 		/// <summary>Executed as a reader; its result is a recordset consumed by the caller.</summary>
 		Reader,
+		/// <summary>
+		/// Runs itself through a caller-supplied harvester (eager self-executing preamble: a detached / keyed / CTE-union
+		/// child that executes its own query, possibly recursing into nested eager loading) rather than a rendered command.
+		/// Such a step has no <see cref="SqlCommandStep.Statement"/> and is always its own singleton group.
+		/// </summary>
+		SelfExecuting,
 	}
 
 	/// <summary>
@@ -77,8 +83,9 @@ namespace LinqToDB.Internal.SqlProvider
 	/// </summary>
 	public sealed record SqlCommandStep
 	{
-		/// <summary>The statement rendered for this step (via the SQL builder).</summary>
-		public required SqlStatement Statement { get; init; }
+		/// <summary>The statement rendered for this step (via the SQL builder), or <see langword="null"/> for a
+		/// <see cref="SqlStepKind.SelfExecuting"/> step, which has no rendered SQL.</summary>
+		public required SqlStatement? Statement { get; init; }
 
 		/// <summary>How the step is executed.</summary>
 		public required SqlStepKind Kind { get; init; }
