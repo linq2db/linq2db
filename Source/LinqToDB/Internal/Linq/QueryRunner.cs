@@ -822,10 +822,8 @@ namespace LinqToDB.Internal.Linq
 			// each group's statements render into one or more commands bounded by SQL length. Each returned command carries the
 			// scenario step indices it covers, so the executor knows which child result sets to buffer and where the main result
 			// set lands (always the last step of the last command).
-			List<CombinedCommand> BuildCommands()
+			List<CombinedCommand> BuildCommands(SqlCommandScenario scenario, SqlParameterValues values)
 			{
-				var (scenario, values) = PrepareScenario();
-
 				var dataConnection = (DataConnection)_dataContext;
 				var useBatch       = dataConnection.CanUseDbBatch;   // false on frameworks without the DbBatch API
 
@@ -993,49 +991,49 @@ namespace LinqToDB.Internal.Linq
 			sealed record CombinedReaderStep(CombinedCommand Command, bool CarriesMain) : EagerStep;
 
 			// The ordered eager walk, shared by the sync and async drivers: all non-combinable preambles first (index order;
-			// they may depend on each other and feed the combinable materializers + main mapper via the shared preambles[]),
-			// then the combined reader commands with the main-carrying command last. BuildCommands does not read preambles[],
-			// so rendering it here (before the sequential preambles run) is order-independent.
-			List<EagerStep> BuildSteps()
+			// they may depend on each other and feed the combinable materializers + main mapper via the shared context),
+			// then the combined reader commands with the main-carrying command last. BuildCommands does not read the context,
+			// so rendering it here (before the sequential preambles run) is order-independent. Returns the scenario steps too,
+			// so the combined-reader walk can drive the shared WalkCombinedResultSets (which reads each step's Kind).
+			(IReadOnlyList<SqlCommandStep> ScenarioSteps, List<EagerStep> Steps) BuildSteps()
 			{
-				var steps = new List<EagerStep>(_nonCombinableIndexes.Length + 1);
+				var (scenario, values) = PrepareScenario();
+				var commands           = BuildCommands(scenario, values);
+
+				var steps = new List<EagerStep>(_nonCombinableIndexes.Length + commands.Count);
 
 				foreach (var i in _nonCombinableIndexes)
 					steps.Add(new SequentialStep(i));
 
 				var mainStepIndex = _combinableIndexes.Length;
 
-				foreach (var command in BuildCommands())
+				foreach (var command in commands)
 					steps.Add(new CombinedReaderStep(command, command.StepIndexes[command.StepIndexes.Count - 1] == mainStepIndex));
 
-				return steps;
+				return (scenario.Steps, steps);
 			}
 
-			// Materializes a combined command's combinable child result sets into the shared preambles[], advancing the reader
-			// past each. When materializeMain is true the command also carries the main step (last), so the last child is
-			// followed by NextResult to leave the reader positioned on the main result set; the caller then streams it.
-			void MaterializeChildren(DbDataReader dr, IReadOnlyList<int> stepIndexes, bool materializeMain, SqlCommandExecutionContext context)
+			// Harvests a combined command's combinable child result sets into the shared execution context via the shared
+			// WalkCombinedResultSets, advancing the reader past each child. childStepIndexes are the scenario indices of the
+			// children only; the main-carrying command's terminal step is excluded and streamed by the caller, and the walk's
+			// trailing NextResult after the last child leaves the reader on the following result set (the main, when it follows).
+			void HarvestChildren(DbDataReader dr, IReadOnlyList<int> childStepIndexes, IReadOnlyList<SqlCommandStep> scenarioSteps, SqlCommandExecutionContext context)
 			{
-				var childCount = materializeMain ? stepIndexes.Count - 1 : stepIndexes.Count;
-
-				for (var k = 0; k < childCount; k++)
+				DataConnection.QueryRunner.WalkCombinedResultSets(dr, childStepIndexes, scenarioSteps, (i, r) =>
 				{
-					var preambleIndex = _combinableIndexes[stepIndexes[k]];
+					var preambleIndex = _combinableIndexes[i];
 
-					context.SetResult(preambleIndex, ((IStepMaterializer)_preambles[preambleIndex]).MaterializeFromReader(_dataContext, _expressions, _parameters, context, dr));
-
-					if (materializeMain || k < stepIndexes.Count - 1)
-						dr.NextResult();
-				}
+					context.SetResult(preambleIndex, _preambles[preambleIndex].Harvest(_dataContext, _expressions, _parameters, context, preambleIndex, r));
+				});
 			}
 
 			public IEnumerator<T> GetEnumerator()
 			{
 				using var _ = ActivityService.Start(ActivityID.GetIEnumerable);
 
-				var context        = new SqlCommandExecutionContext(_preambles.Length);
-				var dataConnection = (DataConnection)_dataContext;
-				var steps          = BuildSteps();
+				var context                = new SqlCommandExecutionContext(_preambles.Length);
+				var dataConnection         = (DataConnection)_dataContext;
+				var (scenarioSteps, steps) = BuildSteps();
 
 				DataReaderWrapper? mainReader = null;
 
@@ -1049,14 +1047,15 @@ namespace LinqToDB.Internal.Linq
 							continue;
 						}
 
-						var readerStep = (CombinedReaderStep)step;
+						var readerStep  = (CombinedReaderStep)step;
 						var reader      = DataConnection.QueryRunner.ExecuteCombined(dataConnection, readerStep.Command, System.Data.CommandBehavior.Default);
+						var stepIndexes = readerStep.Command.StepIndexes;
 
 						if (!readerStep.CarriesMain)
 						{
 							try
 							{
-								MaterializeChildren(reader.DataReader!, readerStep.Command.StepIndexes, materializeMain: false, context);
+								HarvestChildren(reader.DataReader!, stepIndexes, scenarioSteps, context);
 							}
 							finally
 							{
@@ -1069,7 +1068,9 @@ namespace LinqToDB.Internal.Linq
 
 							var dr = reader.DataReader!;
 
-							MaterializeChildren(dr, readerStep.Command.StepIndexes, materializeMain: true, context);
+							// The main is the last step of this command; harvest only the children — the walk's trailing NextResult
+							// after the last child leaves the reader on the main result set, which the caller streams below.
+							HarvestChildren(dr, stepIndexes.Take(stepIndexes.Count - 1).ToList(), scenarioSteps, context);
 
 							foreach (var item in _query.GetResultFromReader!(_dataContext, _expressions, _parameters, context, dr))
 								yield return item;
@@ -1084,28 +1085,23 @@ namespace LinqToDB.Internal.Linq
 
 			IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-			// Async sibling of MaterializeChildren.
-			async Task MaterializeChildrenAsync(DbDataReader dr, IReadOnlyList<int> stepIndexes, bool materializeMain, SqlCommandExecutionContext context, CancellationToken cancellationToken)
+			// Async sibling of HarvestChildren.
+			Task HarvestChildrenAsync(DbDataReader dr, IReadOnlyList<int> childStepIndexes, IReadOnlyList<SqlCommandStep> scenarioSteps, SqlCommandExecutionContext context, CancellationToken cancellationToken)
 			{
-				var childCount = materializeMain ? stepIndexes.Count - 1 : stepIndexes.Count;
-
-				for (var k = 0; k < childCount; k++)
+				return DataConnection.QueryRunner.WalkCombinedResultSetsAsync(dr, childStepIndexes, scenarioSteps, async (i, r) =>
 				{
-					var preambleIndex = _combinableIndexes[stepIndexes[k]];
+					var preambleIndex = _combinableIndexes[i];
 
-					context.SetResult(preambleIndex, await ((IStepMaterializer)_preambles[preambleIndex]).MaterializeFromReaderAsync(_dataContext, _expressions, _parameters, context, dr, cancellationToken).ConfigureAwait(false));
-
-					if (materializeMain || k < stepIndexes.Count - 1)
-						await dr.NextResultAsync(cancellationToken).ConfigureAwait(false);
-				}
+					context.SetResult(preambleIndex, await _preambles[preambleIndex].HarvestAsync(_dataContext, _expressions, _parameters, context, preambleIndex, r, cancellationToken).ConfigureAwait(false));
+				}, cancellationToken);
 			}
 
 			// In case of change the logic of this method, DO NOT FORGET to change the sibling GetEnumerator.
 			public async IAsyncEnumerable<T> GetAsyncEnumerable([EnumeratorCancellation] CancellationToken cancellationToken = default)
 			{
-				var context        = new SqlCommandExecutionContext(_preambles.Length);
-				var dataConnection = (DataConnection)_dataContext;
-				var steps          = BuildSteps();
+				var context                = new SqlCommandExecutionContext(_preambles.Length);
+				var dataConnection         = (DataConnection)_dataContext;
+				var (scenarioSteps, steps) = BuildSteps();
 
 				DataReaderWrapper? mainReader = null;
 
@@ -1119,14 +1115,15 @@ namespace LinqToDB.Internal.Linq
 							continue;
 						}
 
-						var readerStep = (CombinedReaderStep)step;
+						var readerStep  = (CombinedReaderStep)step;
 						var reader      = await DataConnection.QueryRunner.ExecuteCombinedAsync(dataConnection, readerStep.Command, System.Data.CommandBehavior.Default, cancellationToken).ConfigureAwait(false);
+						var stepIndexes = readerStep.Command.StepIndexes;
 
 						if (!readerStep.CarriesMain)
 						{
 							try
 							{
-								await MaterializeChildrenAsync(reader.DataReader!, readerStep.Command.StepIndexes, materializeMain: false, context, cancellationToken).ConfigureAwait(false);
+								await HarvestChildrenAsync(reader.DataReader!, stepIndexes, scenarioSteps, context, cancellationToken).ConfigureAwait(false);
 							}
 							finally
 							{
@@ -1139,7 +1136,9 @@ namespace LinqToDB.Internal.Linq
 
 							var dr = reader.DataReader!;
 
-							await MaterializeChildrenAsync(dr, readerStep.Command.StepIndexes, materializeMain: true, context, cancellationToken).ConfigureAwait(false);
+							// The main is the last step of this command; harvest only the children — the walk's trailing NextResult
+							// after the last child leaves the reader on the main result set, which the caller streams below.
+							await HarvestChildrenAsync(dr, stepIndexes.Take(stepIndexes.Count - 1).ToList(), scenarioSteps, context, cancellationToken).ConfigureAwait(false);
 
 							await foreach (var item in _query.GetResultFromReader!(_dataContext, _expressions, _parameters, context, dr).WithCancellation(cancellationToken).ConfigureAwait(false))
 								yield return item;
