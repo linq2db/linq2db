@@ -1123,7 +1123,14 @@ namespace LinqToDB.Mapping
 
 			if (!combine && Schemas[0].MetadataReader == null)
 			{
-				Schemas[0].MetadataReader = Schemas[1].MetadataReader;
+				// Borrowing the base aggregator by reference is safe only when it has no schema-aware children:
+				// their per-(type, member) cache would otherwise serve the base schema's answers to this schema.
+				// Re-bind such an aggregator to this schema; keep the plain borrow otherwise (the common case,
+				// e.g. borrowing MetadataReader.Default).
+				var borrowed = Schemas[1].MetadataReader;
+				Schemas[0].MetadataReader = borrowed is MetadataReader mr && mr.HasSchemaAwareReaders
+					? mr.WithSchema(this)
+					: borrowed;
 			}
 			else
 			{
@@ -1138,7 +1145,7 @@ namespace LinqToDB.Mapping
 				}
 
 				if (readers != null)
-					Schemas[0].MetadataReader = new MetadataReader(readers.ToArray());
+					Schemas[0].MetadataReader = new MetadataReader(this, readers.ToArray());
 
 				void AddMetadataReaderInternal(IMetadataReader reader)
 				{
@@ -1168,6 +1175,7 @@ namespace LinqToDB.Mapping
 				if (currentReader != null)
 				{
 					Schemas[0].MetadataReader = new MetadataReader(
+						this,
 						[
 							reader,
 							.. currentReader.Readers,
@@ -1175,7 +1183,7 @@ namespace LinqToDB.Mapping
 					);
 				}
 				else
-					Schemas[0].MetadataReader = new MetadataReader(reader);
+					Schemas[0].MetadataReader = new MetadataReader(this, reader);
 
 				(_cache, _firstOnlyCache) = CreateAttributeCaches();
 

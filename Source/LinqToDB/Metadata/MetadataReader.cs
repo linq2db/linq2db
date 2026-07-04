@@ -29,12 +29,37 @@ namespace LinqToDB.Metadata
 		readonly Lock                                     _syncRoot = new();
 
 		readonly IMetadataReader[]              _readers;
+		readonly MappingSchema?                 _mappingSchema;
 		public   IReadOnlyList<IMetadataReader> Readers => _readers;
 
+		/// <summary>
+		/// <see langword="true"/> when any nested reader implements <see cref="ISchemaAwareMetadataReader"/>.
+		/// Such an aggregator must be paired with exactly one <see cref="MappingSchema"/> (its per-<c>(type, member)</c>
+		/// cache holds schema-dependent output), so a schema-blind borrow of it across schemas must be re-bound
+		/// via <see cref="WithSchema"/>.
+		/// </summary>
+		internal bool HasSchemaAwareReaders { get; }
+
 		public MetadataReader(params IMetadataReader[] readers)
+			: this(null, readers)
 		{
-			_readers  = readers ?? throw new ArgumentNullException(nameof(readers));
-			_objectId = $"[{string.JoinStrings(',', _readers.Select(r => r.GetObjectID()))}]";
+		}
+
+		internal MetadataReader(MappingSchema? mappingSchema, params IMetadataReader[] readers)
+		{
+			_readers       = readers ?? throw new ArgumentNullException(nameof(readers));
+			_mappingSchema = mappingSchema;
+			_objectId      = $"[{string.JoinStrings(',', _readers.Select(r => r.GetObjectID()))}]";
+
+			var hasSchemaAware = false;
+			foreach (var r in _readers)
+				if (r is ISchemaAwareMetadataReader)
+				{
+					hasSchemaAware = true;
+					break;
+				}
+
+			HasSchemaAwareReaders = hasSchemaAware;
 
 			_cache = new(
 				(type, source) =>
@@ -42,22 +67,38 @@ namespace LinqToDB.Metadata
 					if (_readers.Length == 0)
 						return [];
 					if (_readers.Length == 1)
-						if (type != null)
-							return _readers[0].GetAttributes(type, (MemberInfo)source);
-						else
-							return _readers[0].GetAttributes((Type)source);
+						return GetReaderAttributes(_readers[0], type, source);
 
 					var attrs = new MappingAttribute[_readers.Length][];
 
 					for (var i = 0; i < _readers.Length; i++)
-						if (type != null)
-							attrs[i] = _readers[i].GetAttributes(type, (MemberInfo)source);
-						else
-							attrs[i] = _readers[i].GetAttributes((Type)source);
+						attrs[i] = GetReaderAttributes(_readers[i], type, source);
 
 					return attrs.Flatten();
 				});
 		}
+
+		// Dispatch to the schema-taking overload for a schema-aware child when this aggregator is bound to a
+		// schema (the combined schema it resolves for); otherwise the schema-less fallback path.
+		MappingAttribute[] GetReaderAttributes(IMetadataReader reader, Type? type, ICustomAttributeProvider source)
+		{
+			if (_mappingSchema != null && reader is ISchemaAwareMetadataReader schemaAware)
+				return type != null
+					? schemaAware.GetAttributes(_mappingSchema, type, (MemberInfo)source)
+					: schemaAware.GetAttributes(_mappingSchema, (Type)source);
+
+			return type != null
+				? reader.GetAttributes(type, (MemberInfo)source)
+				: reader.GetAttributes((Type)source);
+		}
+
+		/// <summary>
+		/// Returns a copy of this aggregator bound to <paramref name="mappingSchema"/>, so nested
+		/// <see cref="ISchemaAwareMetadataReader"/> children resolve against it. Same readers, same
+		/// <see cref="GetObjectID"/>, fresh per-schema attribute cache.
+		/// </summary>
+		internal MetadataReader WithSchema(MappingSchema mappingSchema)
+			=> new(mappingSchema, _readers);
 
 		internal T[] GetAttributes<T>(Type type)
 			where T : MappingAttribute

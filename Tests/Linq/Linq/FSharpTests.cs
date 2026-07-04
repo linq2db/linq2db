@@ -164,14 +164,29 @@ namespace Tests.Linq
 			FSharp.OptionTypes.VerifyComplexElementOptionNotScalarized(db);
 		}
 
-		[ActiveIssue("F# option auto-mapping gate (IsScalarOption) consults MappingSchema.Default, so an option over a type that is scalar only in the user/provider schema is not auto-mapped")]
-		[Test(Description = "An option over a type that is scalar only in the user/provider schema (not MappingSchema.Default) must still auto-map (#195)")]
+		[Test(Description = "An option over a type that is scalar only in the user/provider schema (not MappingSchema.Default) must still auto-map (#195, #5675)")]
 		public void Option_CustomScalarElementMapped([DataSources] string context)
 		{
 			var ms = FSharp.OptionTypes.BuildCustomScalarSchema();
 
 			using var db = GetDataContext(context, ms);
 			FSharp.OptionTypes.VerifyCustomScalarOptionMapped(db);
+		}
+
+		[Test(Description = "Schema-aware option mapping is resolved per combined schema: a context whose schema does NOT register the custom scalar must NOT auto-map the option, even though another context sharing the same F# reader does (#5675 cache safety)")]
+		public void Option_CustomScalarCacheIsolation([DataSources] string context)
+		{
+			// Context A registers MyId as a scalar; context B does not. Both go through UseFSharp(), so both
+			// combined schemas embed the same shared F# option reader. The reader is schema-aware, so its answer
+			// must follow each context's own schema - A maps the MyId option, B leaves it unmapped. A regression
+			// here (B also mapping) would mean the aggregator's per-(type, member) cache leaked A's answer to B.
+			var msA = FSharp.OptionTypes.BuildCustomScalarSchema();
+
+			using (var dbA = GetDataContext(context, msA))
+				FSharp.OptionTypes.VerifyCustomScalarOptionMapped(dbA);
+
+			using var dbB = GetDataContext(context);
+			FSharp.OptionTypes.VerifyCustomScalarOptionNotMapped(dbB);
 		}
 
 		[Test]

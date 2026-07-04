@@ -87,6 +87,9 @@ type internal FSharpOptionSupport =
 
 /// Supplies a <see cref="ValueConverterAttribute"/> for every scalar <c>'T option</c> / <c>'T voption</c>
 /// member encountered, so option columns are recognised and converted during entity-descriptor construction.
+/// Implements <see cref="ISchemaAwareMetadataReader"/>: scalar-ness is resolved against the ACTIVE combined
+/// schema (provider + user layers), so options over provider-native (e.g. NpgsqlPoint, IPAddress) or
+/// user-registered (AddScalarType) scalars auto-map too - not only over types scalar in MappingSchema.Default.
 type internal FSharpOptionMetadataReader() =
 
     static let memberType (mi: MemberInfo) : Type =
@@ -95,34 +98,54 @@ type internal FSharpOptionMetadataReader() =
         | :? FieldInfo    as f -> f.FieldType
         | _                    -> typeof<obj>
 
+    // Mark an option type as scalar (only when its element is itself scalar) so option members are treated
+    // as columns rather than nested entities; the per-member ValueConverter (below) supplies the conversion.
+    static let typeAttributes (isScalarOption: bool) : MappingAttribute[] =
+        if isScalarOption then [| ScalarTypeAttribute() :> MappingAttribute |]
+        else Array.empty<MappingAttribute>
+
+    static let memberAttributes (mt: Type) (isScalarOption: bool) : MappingAttribute[] =
+        if isScalarOption then
+            // An option column is always nullable (the "none" case maps to NULL). A reference option is
+            // nullable by virtue of its type, but a struct value-option ('T voption) is a non-nullable value
+            // type, so the column must be marked CanBeNull explicitly - otherwise the DDL emits NOT NULL and
+            // rejects the "none" case.
+            // The DB type is intentionally left unset: with no explicit DataType, ColumnDescriptor resolves it
+            // from the value converter's provider type (the element, or Nullable<element>) against the active
+            // provider-inclusive schema, so provider-faithful facets (decimal precision/scale, string length,
+            // etc.) are preserved - unlike deriving from MappingSchema.Default, which would truncate them
+            // (#5645; e.g. 'decimal option' -> decimal(18,0)).
+            [|
+                ColumnAttribute(CanBeNull = true) :> MappingAttribute
+                ValueConverterAttribute(ValueConverter = FSharpOptionSupport.GetConverter mt) :> MappingAttribute
+            |]
+        else
+            Array.empty<MappingAttribute>
+
+    // Schema-relative gate (production path): an option is a column when its element is scalar in the ACTIVE
+    // combined schema, resolved across the whole layer stack. Recurses only on the element (strictly smaller),
+    // never on the option type itself, so it cannot self-recurse into the attribute resolution in flight.
+    static let isScalarOptionIn (ms: MappingSchema) (t: Type) =
+        FSharpOptionSupport.IsOption t && ms.IsScalarType(t.GetGenericArguments().[0])
+
+    // Production path: the aggregator is bound to the active combined schema and dispatches here.
+    interface ISchemaAwareMetadataReader with
+        member _.GetAttributes(mappingSchema: MappingSchema, _type: Type) =
+            typeAttributes (isScalarOptionIn mappingSchema _type)
+
+        member _.GetAttributes(mappingSchema: MappingSchema, _type: Type, memberInfo: MemberInfo) =
+            let mt = memberType memberInfo
+            memberAttributes mt (isScalarOptionIn mappingSchema mt)
+
+    // Schema-less fallback: only reached when the aggregator is not bound to a schema (e.g.
+    // MetadataReader.Default). Keeps the MappingSchema.Default gate, so behaviour on that path is unchanged.
     interface IMetadataReader with
-        // Mark an option type as scalar (only when its element is itself scalar) so option members are
-        // treated as columns rather than nested entities; the per-member ValueConverter (below) supplies
-        // the actual conversion.
         member _.GetAttributes(_type: Type) =
-            if FSharpOptionSupport.IsScalarOption _type then
-                [| ScalarTypeAttribute() :> MappingAttribute |]
-            else
-                Array.empty<MappingAttribute>
+            typeAttributes (FSharpOptionSupport.IsScalarOption _type)
 
         member _.GetAttributes(_type: Type, memberInfo: MemberInfo) =
             let mt = memberType memberInfo
-            if FSharpOptionSupport.IsScalarOption mt then
-                // An option column is always nullable (the "none" case maps to NULL). A reference option is
-                // nullable by virtue of its type, but a struct value-option ('T voption) is a non-nullable
-                // value type, so the column must be marked CanBeNull explicitly - otherwise the DDL emits
-                // NOT NULL and rejects the "none" case.
-                // The DB type is intentionally left unset: with no explicit DataType, ColumnDescriptor resolves
-                // it from the value converter's provider type (the element, or Nullable<element>) against the
-                // active provider-inclusive schema, so provider-faithful facets (decimal precision/scale, string
-                // length, etc.) are preserved - unlike deriving here from MappingSchema.Default, which has no
-                // provider context and would truncate them (#5645; e.g. 'decimal option' -> decimal(18,0)).
-                [|
-                    ColumnAttribute(CanBeNull = true) :> MappingAttribute
-                    ValueConverterAttribute(ValueConverter = FSharpOptionSupport.GetConverter mt) :> MappingAttribute
-                |]
-            else
-                Array.empty<MappingAttribute>
+            memberAttributes mt (FSharpOptionSupport.IsScalarOption mt)
 
         member _.GetDynamicColumns(_type: Type) = Array.empty<MemberInfo>
         member _.GetObjectID() = ".FSharpOptionMetadataReader."

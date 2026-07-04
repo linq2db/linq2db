@@ -143,3 +143,14 @@ let VerifyCustomScalarOptionMapped (db : IDataContext) =
     match ed.Columns |> Seq.tryFind (fun c -> c.MemberName = "Value") with
     | Some c -> Assert.That(c.ValueConverter, Is.Not.Null)
     | None   -> Assert.Fail("MyId option column was not mapped - auto-option-mapping did not recognise the user-registered scalar type")
+
+// Negative counterpart used for the cache-isolation test: in a schema that does NOT register MyId as a scalar,
+// the schema-aware reader must leave the MyId option member unmapped (no auto value converter) - either no
+// "Value" column, or one carrying no ValueConverter.
+let VerifyCustomScalarOptionNotMapped (db : IDataContext) =
+    let ed  = db.MappingSchema.GetEntityDescriptor(typeof<CustomScalarOptionRow>)
+    let converter =
+        ed.Columns
+        |> Seq.tryFind (fun c -> c.MemberName = "Value")
+        |> Option.bind (fun c -> Option.ofObj c.ValueConverter)
+    Assert.That(converter, Is.EqualTo None)
