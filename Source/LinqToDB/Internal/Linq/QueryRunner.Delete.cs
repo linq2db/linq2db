@@ -44,7 +44,7 @@ namespace LinqToDB.Internal.Linq
 
 				var ei = new Query<int>(dataContext)
 				{
-					Queries = { new QueryInfo { Statement = deleteStatement, } },
+					QueryInfo = new QueryInfo { Statement = deleteStatement, },
 				};
 
 				var keys = sqlTable.GetKeys(true)!.Cast<SqlField>().ToList();

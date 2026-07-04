@@ -46,7 +46,7 @@ namespace LinqToDB.Internal.Linq
 
 				var ei = new Query<int>(dataContext)
 				{
-					Queries = { new QueryInfo { Statement = insertStatement } },
+					QueryInfo = new QueryInfo { Statement = insertStatement },
 				};
 
 				var accessorIdGenerator = new UniqueIdGenerator<ParameterAccessor>();

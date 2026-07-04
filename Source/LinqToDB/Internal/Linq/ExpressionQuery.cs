@@ -53,7 +53,7 @@ namespace LinqToDB.Internal.Linq
 			var expressions = (IQueryExpressions)new RuntimeExpressionsContainer(expression);
 			var info        = GetQuery(ref expressions, true, out var dependsOnParameters);
 
-			if (options?.MultiInsertMode != null && info.Queries[0].Statement is SqlMultiInsertStatement multiInsert)
+			if (options?.MultiInsertMode != null && info.QueryInfo.Statement is SqlMultiInsertStatement multiInsert)
 				multiInsert.InsertType = options.MultiInsertMode.Value;
 
 			if (!dependsOnParameters)

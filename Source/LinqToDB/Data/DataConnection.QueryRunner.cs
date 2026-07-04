@@ -413,7 +413,7 @@ namespace LinqToDB.Data
 
 			protected override void SetQuery(IReadOnlyParameterValues parameterValues, bool forGetSqlText)
 			{
-				_executionQuery = CreateExecutionQuery(_dataConnection, Query.Queries[QueryNumber], parameterValues, forGetSqlText);
+				_executionQuery = CreateExecutionQuery(_dataConnection, Query.QueryInfo, parameterValues, forGetSqlText);
 			}
 
 			// Renders the given (already build-optimized) statements into ONE OR MORE combined multi-statement commands,

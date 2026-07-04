@@ -24,9 +24,11 @@ namespace LinqToDB.Internal.Linq
 
 		#region Init
 
-		internal readonly List<QueryInfo> Queries = new (1);
+		// One logical query per Query. Multi-statement expansion is modelled by SqlCommandScenario at render time
+		// (DataConnection.QueryRunner.GetCommand), not by a list here. Set in Init.
+		internal QueryInfo QueryInfo = null!;
 
-		public IReadOnlyCollection<QueryInfo> GetQueries()    => Queries;
+		public IReadOnlyCollection<QueryInfo> GetQueries()    => new[] { QueryInfo };
 		public bool                           IsFinalized     { get; internal set; }
 		public SqlErrorExpression?            ErrorExpression { get; internal set; }
 

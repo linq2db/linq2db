@@ -275,10 +275,8 @@ namespace LinqToDB.Internal.Linq
 
 			using var m = ActivityService.Start(ActivityID.FinalizeQuery);
 
-			foreach (var sql in query.Queries)
-			{
-				sql.Statement = query.SqlOptimizer.Finalize(query.MappingSchema, sql.Statement, query.DataOptions);
-			}
+			var sql = query.QueryInfo;
+			sql.Statement = query.SqlOptimizer.Finalize(query.MappingSchema, sql.Statement, query.DataOptions);
 
 			query.IsFinalized = true;
 		}
@@ -430,10 +428,7 @@ namespace LinqToDB.Internal.Linq
 		{
 			FinalizeQuery(query);
 
-			if (query.Queries.Count != 1)
-				throw new InvalidOperationException();
-
-			var selectQuery = query.Queries[0].Statement.SelectQuery!;
+			var selectQuery = query.QueryInfo.Statement.SelectQuery!;
 			var select      = selectQuery.Select;
 
 			if (select.SkipValue != null && !query.SqlProviderFlags.GetIsSkipSupportedFlag(select.TakeValue))
@@ -817,7 +812,7 @@ namespace LinqToDB.Internal.Linq
 					materializer.AddCombinableParameterValues(values, _expressions, _dataContext, _parameters);
 				}
 
-				steps[count] = new SqlCommandStep { Statement = _query.Queries[0].Statement, Kind = SqlStepKind.Reader };
+				steps[count] = new SqlCommandStep { Statement = _query.QueryInfo.Statement, Kind = SqlStepKind.Reader };
 				SetParameters(_query, _expressions, _dataContext, _parameters, values);
 
 				return (new SqlCommandScenario { Steps = steps, OutcomeSteps = [] }, values);
@@ -1145,9 +1140,6 @@ namespace LinqToDB.Internal.Linq
 				|| !dataConnection.DataProvider.SqlProviderFlags.IsMultipleResultSetsSupported)
 				return null;
 
-			if (query.Queries.Count != 1)
-				return null;
-
 			// Query hints (context QueryHints / one-shot NextQueryHints) are applied AND cleared by the sequential
 			// GetCommand -> GetNextCommandHints path, which the combined executor bypasses. Fall back to sequential when
 			// hints are pending; otherwise the hint is dropped from the eager SQL and a one-shot NextQueryHints leaks onto
@@ -1273,9 +1265,6 @@ namespace LinqToDB.Internal.Linq
 		{
 			FinalizeQuery(query);
 
-			if (query.Queries.Count != 1)
-				throw new InvalidOperationException();
-
 			var l      = WrapMapper(expression);
 			var mapper = new Mapper<object>(l);
 
@@ -1374,9 +1363,6 @@ namespace LinqToDB.Internal.Linq
 		{
 			FinalizeQuery(query);
 
-			if (query.Queries.Count != 1)
-				throw new InvalidOperationException();
-
 			query.GetElement      = (db, expr, ps, preambles) => ScalarQuery(query, db, expr, ps, preambles);
 			query.GetElementAsync = (db, expr, ps, preambles, token) => ScalarQueryAsync(query, db, expr, ps, preambles, token);
 		}
@@ -1411,9 +1397,6 @@ namespace LinqToDB.Internal.Linq
 		public static void SetNonQueryQuery(Query query)
 		{
 			FinalizeQuery(query);
-
-			if (query.Queries.Count != 1)
-				throw new InvalidOperationException();
 
 			query.GetElement      = (db, expr, ps, preambles) => NonQueryQuery(query, db, expr, ps, preambles);
 			query.GetElementAsync = (db, expr, ps, preambles, token) => NonQueryQueryAsync(query, db, expr, ps, preambles, token);

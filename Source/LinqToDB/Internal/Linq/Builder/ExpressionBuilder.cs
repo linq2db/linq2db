@@ -226,17 +226,16 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (_query.ErrorExpression == null)
 			{
-				foreach (var q in _query.Queries)
-				{
-					if (Tag?.Lines.Count > 0)
-					{
-						(q.Statement.Tag ??= new()).Lines.AddRange(Tag.Lines);
-					}
+				var q = _query.QueryInfo;
 
-					if (SqlQueryExtensions != null)
-					{
-						(q.Statement.SqlQueryExtensions ??= new()).AddRange(SqlQueryExtensions);
-					}
+				if (Tag?.Lines.Count > 0)
+				{
+					(q.Statement.Tag ??= new()).Lines.AddRange(Tag.Lines);
+				}
+
+				if (SqlQueryExtensions != null)
+				{
+					(q.Statement.SqlQueryExtensions ??= new()).AddRange(SqlQueryExtensions);
 				}
 
 				_query.SetPreambles(preambles);
@@ -273,17 +272,16 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				if (!query.IsFinalized)
 				{
-					foreach (var queryInfo in query.Queries)
-					{
-						queryInfo.Statement = query.SqlOptimizer.Finalize(query.MappingSchema, queryInfo.Statement, query.DataOptions);
+					var queryInfo = query.QueryInfo;
 
-						if (queryInfo.Statement.SelectQuery != null)
+					queryInfo.Statement = query.SqlOptimizer.Finalize(query.MappingSchema, queryInfo.Statement, query.DataOptions);
+
+					if (queryInfo.Statement.SelectQuery != null)
+					{
+						if (!SqlProviderHelper.IsValidQuery(queryInfo.Statement, parentQuery: null, fakeJoin: null, columnSubqueryLevel: null, DataContext.SqlProviderFlags, out var errorMessage))
 						{
-							if (!SqlProviderHelper.IsValidQuery(queryInfo.Statement, parentQuery: null, fakeJoin: null, columnSubqueryLevel: null, DataContext.SqlProviderFlags, out var errorMessage))
-							{
-								query.ErrorExpression = new SqlErrorExpression(Expression, errorMessage, Expression.Type);
-								return false;
-							}
+							query.ErrorExpression = new SqlErrorExpression(Expression, errorMessage, Expression.Type);
+							return false;
 						}
 					}
 				}
@@ -325,10 +323,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				var usedParameters = new HashSet<SqlParameter>();
 				var usedValues     = new HashSet<SqlValue>();
 
-				foreach (var queryInfo in query.Queries)
-				{
-					QueryHelper.CollectParametersAndValues(queryInfo.Statement, usedParameters, usedValues);
-				}
+				QueryHelper.CollectParametersAndValues(query.QueryInfo.Statement, usedParameters, usedValues);
 
 				if (preambles?.Count > 0)
 				{

@@ -1819,8 +1819,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public override void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values)
 			{
-				foreach (var query in _query.Queries)
-					QueryHelper.CollectParametersAndValues(query.Statement, parameters, values);
+				QueryHelper.CollectParametersAndValues(_query.QueryInfo.Statement, parameters, values);
 			}
 		}
 

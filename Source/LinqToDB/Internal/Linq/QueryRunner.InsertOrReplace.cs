@@ -58,7 +58,7 @@ namespace LinqToDB.Internal.Linq
 
 				var ei = new Query<int>(dataContext)
 				{
-					Queries = { new QueryInfo { Statement = insertOrUpdateStatement, } },
+					QueryInfo = new QueryInfo { Statement = insertOrUpdateStatement, },
 				};
 
 				var supported = ei.SqlProviderFlags.IsInsertOrUpdateSupported && ei.SqlProviderFlags.CanCombineParameters;

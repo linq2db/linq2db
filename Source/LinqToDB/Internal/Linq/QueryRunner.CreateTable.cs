@@ -43,7 +43,7 @@ namespace LinqToDB.Internal.Linq
 
 				var query = new Query<int>(dataContext)
 				{
-					Queries = { new QueryInfo { Statement = createTable, } },
+					QueryInfo = new QueryInfo { Statement = createTable, },
 				};
 
 				SetNonQueryQuery(query);
@@ -89,7 +89,7 @@ namespace LinqToDB.Internal.Linq
 
 					var query = new Query<int>(dataContext)
 					{
-						Queries = { new QueryInfo { Statement = createTable, } },
+						QueryInfo = new QueryInfo { Statement = createTable, },
 					};
 
 					SetNonQueryQuery(query);

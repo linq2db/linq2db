@@ -28,10 +28,10 @@ namespace LinqToDB.Internal.Linq
 		{
 			var statement = parseContext.GetResultStatement();
 
-			Queries.Add(new QueryInfo
+			QueryInfo = new QueryInfo
 			{
 				Statement          = statement,
-			});
+			};
 		}
 
 		#endregion

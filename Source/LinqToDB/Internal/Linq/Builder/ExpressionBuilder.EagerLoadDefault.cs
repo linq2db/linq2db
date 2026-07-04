@@ -159,10 +159,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public override void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values)
 			{
-				foreach (var q in query.Queries)
-				{
-					QueryHelper.CollectParametersAndValues(q.Statement, parameters, values);
-				}
+				QueryHelper.CollectParametersAndValues(query.QueryInfo.Statement, parameters, values);
 			}
 		}
 
@@ -178,7 +175,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			public bool CanCombine => query.GetResultFromReader != null;
 
 			public SqlStatement? GetCombinableStatement()
-				=> query.Queries.Count == 1 ? query.Queries[0].Statement : null;
+				=> query.QueryInfo.Statement;
 
 			public void AddCombinableParameterValues(SqlParameterValues values, IQueryExpressions expressions, IDataContext dataContext, object?[]? parameters)
 			{
@@ -215,10 +212,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public override void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values)
 			{
-				foreach (var q in query.Queries)
-				{
-					QueryHelper.CollectParametersAndValues(q.Statement, parameters, values);
-				}
+				QueryHelper.CollectParametersAndValues(query.QueryInfo.Statement, parameters, values);
 			}
 		}
 	}

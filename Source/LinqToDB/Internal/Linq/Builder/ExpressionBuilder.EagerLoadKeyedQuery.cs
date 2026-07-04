@@ -925,8 +925,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public override void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values)
 			{
-				foreach (var query in _query.Queries)
-					QueryHelper.CollectParametersAndValues(query.Statement, parameters, values);
+				QueryHelper.CollectParametersAndValues(_query.QueryInfo.Statement, parameters, values);
 			}
 		}
 
@@ -996,8 +995,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public override void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values)
 			{
-				foreach (var query in _query.Queries)
-					QueryHelper.CollectParametersAndValues(query.Statement, parameters, values);
+				QueryHelper.CollectParametersAndValues(_query.QueryInfo.Statement, parameters, values);
 			}
 		}
 
@@ -1067,9 +1065,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			// Without this, the optimizer passes null ParameterValues to EvaluationContext,
 			// making the SqlParameter unevaluable at SQL generation time.
 			var bufferQuery = new Query<TBuffer>(DataContext);
-			var bufferStatement = query.Queries[0].Statement;
+			var bufferStatement = query.QueryInfo.Statement;
 			bufferStatement.IsParameterDependent = true;
-			bufferQuery.Queries.Add(new QueryInfo { Statement = bufferStatement, IsContinuousRun = true });
+			bufferQuery.QueryInfo = new QueryInfo { Statement = bufferStatement, IsContinuousRun = true };
 			QueryRunner.SetRunQuery(bufferQuery, bufferMapper);
 
 			// 5. Build reconstruction using a visitor that handles all custom expression types.
@@ -1416,8 +1414,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public override void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values)
 			{
-				foreach (var q in _bufferQuery.Queries)
-					QueryHelper.CollectParametersAndValues(q.Statement, parameters, values);
+				QueryHelper.CollectParametersAndValues(_bufferQuery.QueryInfo.Statement, parameters, values);
 			}
 		}
 

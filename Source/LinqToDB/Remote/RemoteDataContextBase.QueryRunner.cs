@@ -57,7 +57,7 @@ namespace LinqToDB.Remote
 
 			private IReadOnlyList<QuerySql> GetSqlTextImpl()
 			{
-				var query           = Query.Queries[QueryNumber];
+				var query           = Query.QueryInfo;
 				var sqlBuilder      = DataContext.CreateSqlBuilder();
 				var sqlOptimizer    = DataContext.GetSqlOptimizer(DataContext.Options);
 				var factory         = sqlOptimizer.CreateSqlExpressionFactory(DataContext.MappingSchema, DataContext.Options);
@@ -180,7 +180,7 @@ namespace LinqToDB.Remote
 
 				SetCommand(false);
 
-				var queryContext = Query.Queries[QueryNumber];
+				var queryContext = Query.QueryInfo;
 
 				await _dataContext.PreloadConfigurationInfoAsync(cancellationToken).ConfigureAwait(false);
 
@@ -212,7 +212,7 @@ namespace LinqToDB.Remote
 
 				SetCommand(false);
 
-				var queryContext = Query.Queries[QueryNumber];
+				var queryContext = Query.QueryInfo;
 
 				await _dataContext.PreloadConfigurationInfoAsync(cancellationToken).ConfigureAwait(false);
 
@@ -247,7 +247,7 @@ namespace LinqToDB.Remote
 
 				SetCommand(false);
 
-				var queryContext = Query.Queries[QueryNumber];
+				var queryContext = Query.QueryInfo;
 
 				await _dataContext.PreloadConfigurationInfoAsync(cancellationToken).ConfigureAwait(false);
 

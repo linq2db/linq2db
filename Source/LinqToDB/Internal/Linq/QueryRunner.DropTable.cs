@@ -95,7 +95,7 @@ namespace LinqToDB.Internal.Linq
 
 				var query = new Query<int>(dataContext)
 				{
-					Queries = { new QueryInfo { Statement = dropTable } },
+					QueryInfo = new QueryInfo { Statement = dropTable },
 				};
 
 				SetNonQueryQuery(query);
