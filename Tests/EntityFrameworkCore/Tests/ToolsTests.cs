@@ -249,6 +249,25 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			}
 		}
 
+		[Test(Description = "#5675: a DataType customisation on the active EF mapping schema reaches an EF-mapped column via the schema-aware metadata reader. Gated to SQLite, where the string column carries no EF DbType so its DataType is inferred from the schema (the branch this change threads the active schema into); on providers that set a DbType the value comes from there and this lever wouldn't apply.")]
+		public void TestSchemaAwareColumnDataType([EFIncludeDataSources(TestProvName.AllSQLite)] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			var ms = LinqToDBForEFTools.GetMappingSchema(ctx.Model, ctx, null);
+
+			// Customise string -> VarChar on the active schema, before the column is first resolved. The reader's
+			// schema-less fallback reconstructs a fresh schema (default NVarChar for string), so seeing VarChar
+			// proves the schema-aware path used *this* schema to infer the column's DataType.
+			ms.SetDataType(typeof(string), DataType.VarChar);
+
+			var col = ms.GetAttribute<ColumnAttribute>(typeof(Product),
+				MemberHelper.MemberOf<Product>(p => p.QuantityPerUnit));
+
+			Assert.That(col, Is.Not.Null);
+			Assert.That(col!.DataType, Is.EqualTo(DataType.VarChar));
+		}
+
 		[Test]
 		public void TestAssociations([EFDataSources] string provider)
 		{

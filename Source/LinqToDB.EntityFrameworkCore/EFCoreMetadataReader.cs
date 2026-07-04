@@ -45,7 +45,7 @@ namespace LinqToDB.EntityFrameworkCore
 	/// <summary>
 	/// LINQ To DB metadata reader for EF.Core model.
 	/// </summary>
-	internal sealed partial class EFCoreMetadataReader : IMetadataReader
+	internal sealed partial class EFCoreMetadataReader : ISchemaAwareMetadataReader
 	{
 #if !EF31
 		// renamed in 8.0.0
@@ -236,6 +236,14 @@ namespace LinqToDB.EntityFrameworkCore
 			return CompareProperty(property.GetIdentifyingMemberInfo(), memberInfo);
 		}
 
+		// Schema used to infer a column's DataType from its CLR type. Prefer the active schema passed by the
+		// schema-aware resolution path - it carries the provider's DataType customizations - and avoid the
+		// per-call reconstruction. Fall back to reconstructing from the EF model (schema-less path), or to
+		// MappingSchema.Default when there is no model.
+		private MappingSchema GetDataTypeSchema(MappingSchema? mappingSchema)
+			=> mappingSchema
+				?? (_model != null ? LinqToDBForEFTools.GetMappingSchema(_model, _mappingSource, _valueConverterSelector, null) : MappingSchema.Default);
+
 		static DataType DbTypeToDataType(DbType dbType)
 		{
 			return dbType switch
@@ -272,6 +280,20 @@ namespace LinqToDB.EntityFrameworkCore
 		}
 
 		public MappingAttribute[] GetAttributes(Type type, MemberInfo memberInfo)
+			=> GetAttributes(type, memberInfo, mappingSchema: null);
+
+		// Schema-aware entry points: the active combined schema is threaded to the DataType-inference sites so
+		// they use the provider's DataType customizations instead of a schema reconstructed per call (or, when
+		// there is no EF model, MappingSchema.Default). Type-level metadata is schema-independent, so it delegates
+		// to the schema-less path. Purity holds (ISchemaAwareMetadataReader): this reader's instance caches
+		// (_calculatedExtensions, _manyToManyJoins) are schema-independent and GetObjectID is content-derived.
+		MappingAttribute[] ISchemaAwareMetadataReader.GetAttributes(MappingSchema mappingSchema, Type type)
+			=> GetAttributes(type);
+
+		MappingAttribute[] ISchemaAwareMetadataReader.GetAttributes(MappingSchema mappingSchema, Type type, MemberInfo memberInfo)
+			=> GetAttributes(type, memberInfo, mappingSchema);
+
+		MappingAttribute[] GetAttributes(Type type, MemberInfo memberInfo, MappingSchema? mappingSchema)
 		{
 			if (typeof(Expression).IsSameOrParentOf(type))
 				return [];
@@ -283,7 +305,7 @@ namespace LinqToDB.EntityFrameworkCore
 			{
 				if (memberInfo is DynamicColumnInfo)
 				{
-					var ca = BuildJoinColumnAttribute(markerJoinInfo, memberInfo.Name);
+					var ca = BuildJoinColumnAttribute(markerJoinInfo, memberInfo.Name, mappingSchema);
 					return ca != null ? [ca] : [];
 				}
 
@@ -398,8 +420,7 @@ namespace LinqToDB.EntityFrameworkCore
 						}
 						else
 						{
-							var ms = _model != null ? LinqToDBForEFTools.GetMappingSchema(_model, _mappingSource, _valueConverterSelector, null) : MappingSchema.Default;
-							dataType = ms.GetDataType(typeMapping.ClrType).Type.DataType;
+							dataType = GetDataTypeSchema(mappingSchema).GetDataType(typeMapping.ClrType).Type.DataType;
 						}
 					}
 
