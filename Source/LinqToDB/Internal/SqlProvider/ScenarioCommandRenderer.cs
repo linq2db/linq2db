@@ -30,6 +30,22 @@ namespace LinqToDB.Internal.SqlProvider
 	/// </summary>
 	sealed record CombinedCommand(IReadOnlyList<RenderedStatement> Statements, IReadOnlyList<int> StepIndexes, IReadOnlyCollection<string>? QueryHints);
 
+#if BUGCHECK
+	/// <summary>
+	/// Test diagnostics — Release builds don't see this (BUGCHECK-gated). It is <c>public</c> so BUGCHECK tests that have no
+	/// <c>InternalsVisibleTo</c> can read it, mirroring <see cref="LinqToDB.Internal.Linq.QueryCache"/>'s BUGCHECK hooks.
+	/// </summary>
+	public static class RenderDiagnostics
+	{
+		/// <summary>
+		/// Count of top-level statement renders on the current thread (one per <c>ISqlBuilder.BuildSql</c> entry). Used by
+		/// EagerRenderCacheTests to prove a non-parameter-dependent command is rendered once and not re-rendered on reuse.
+		/// <see cref="ThreadStaticAttribute"/> keeps the count clean under parallel test execution.
+		/// </summary>
+		[ThreadStatic] public static long BuildSqlCount;
+	}
+#endif
+
 	/// <summary>
 	/// Shared rendering of a <see cref="SqlCommandScenario"/> into physical commands (one per <see cref="SqlCommandGroup"/>).
 	/// Used by the direct runner (<c>DataConnection.QueryRunner.GetCommand</c>) and the remote <c>GetSqlText</c> path so
@@ -134,6 +150,9 @@ namespace LinqToDB.Internal.SqlProvider
 			if (!first)
 				sb.Append(";\n");
 
+#if BUGCHECK
+			RenderDiagnostics.BuildSqlCount++;
+#endif
 			using (ActivityService.Start(ActivityID.BuildSql))
 				sqlBuilder.BuildSql(statement, sb, optimizationContext, aliases, null, startIndent);
 
@@ -229,6 +248,9 @@ namespace LinqToDB.Internal.SqlProvider
 
 				var aliases = PrepareStepAliases(serviceProvider, statements[i]);
 
+#if BUGCHECK
+				RenderDiagnostics.BuildSqlCount++;
+#endif
 				using (ActivityService.Start(ActivityID.BuildSql))
 					sqlBuilder.BuildSql(statements[i], sb.Value, optimizationContext, aliases, null, 0);
 

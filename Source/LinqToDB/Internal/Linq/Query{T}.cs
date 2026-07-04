@@ -50,11 +50,11 @@ namespace LinqToDB.Internal.Linq
 		internal Func<IDataContext,IQueryExpressions,object?[]?,object?[]?,DbDataReader,IResultEnumerable<T>>? GetResultFromReader;
 
 		// Combined eager-loading render cache: the per-command SQL templates (each statement's SQL + unbound SqlParameter
-		// list) rendered once for a non-parameter-dependent eager scenario, so re-enumerating binds DbParameters per run
-		// instead of re-rendering. EagerCommandsResolved guards the one-time parameter-dependence check; EagerCommands is
-		// null when the scenario is parameter-dependent (rendered fresh each run) or not yet resolved.
-		internal bool                                EagerCommandsResolved;
-		internal QueryRunner.EagerCommandTemplate[]? EagerCommands;
+		// list) rendered once and tagged with the backend they were built for (EagerRenderCache.WasBatch), so re-enumerating
+		// binds DbParameters per run instead of re-rendering. Null until the first eager execution; batch templates carry
+		// null slots for parameter-dependent steps (re-rendered per run); a concat scenario with any parameter-dependent
+		// step is left uncached (re-rendered wholesale each run). See EagerResultEnumerable.BuildCommands.
+		internal QueryRunner.EagerRenderCache? EagerCommands;
 
 		#endregion
 

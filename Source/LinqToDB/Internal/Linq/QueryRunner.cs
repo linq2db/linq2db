@@ -738,7 +738,14 @@ namespace LinqToDB.Internal.Linq
 
 		// A cached eager command: one physical command's per-statement SQL templates (SQL + unbound SqlParameter list) plus
 		// the scenario step indices it covers; DbParameters are bound per execution (see EagerResultEnumerable.BindTemplate).
-		internal sealed record EagerCommandTemplate(CommandWithParameters[] Statements, IReadOnlyList<int> StepIndexes);
+		// A null slot marks a parameter-dependent (volatile) statement whose SQL is re-rendered each run (DbBatch path only;
+		// the concat path is cached only when fully stable). Slot i aligns with StepIndexes[i].
+		internal sealed record EagerCommandTemplate(CommandWithParameters?[] Statements, IReadOnlyList<int> StepIndexes);
+
+		// The per-backend eager render cache stored on Query<T>: the per-command templates plus the backend they were
+		// rendered for. WasBatch guards reuse — batch (per-statement) and concat (merged) templates are not interchangeable,
+		// so a run whose CanUseDbBatch differs re-renders instead of binding a wrong-shaped cache.
+		internal sealed record EagerRenderCache(EagerCommandTemplate[] Commands, bool WasBatch);
 
 		// Runs the main query together with its eager-load child collections, collapsing the combinable children (Default
 		// strategy, IStepMaterializer) and the main into a size-bounded set of multi-result-set commands (N+1 -> 1, a few for
@@ -825,27 +832,37 @@ namespace LinqToDB.Internal.Linq
 				var (scenario, values) = PrepareScenario();
 
 				var dataConnection = (DataConnection)_dataContext;
+				var useBatch       = dataConnection.CanUseDbBatch;   // false on frameworks without the DbBatch API
 
-				// Fast path: for a non-parameter-dependent scenario the SQL was rendered once into templates on the Query; just
-				// bind this execution's DbParameters. Parameter-dependent scenarios have EagerCommands == null and re-render.
-				if (_query.EagerCommandsResolved && _query.EagerCommands is { } cached)
+				// Fast path: reuse the per-command templates cached for THIS backend and bind this run's DbParameters,
+				// re-rendering only the parameter-dependent (null) slots. Skipped when the cache was built for the other
+				// backend (batch and concat templates are not interchangeable) or is absent (concat with a volatile step).
+				if (_query.EagerCommands is { } cache && cache.WasBatch == useBatch)
 				{
-					var bound = new List<CombinedCommand>(cached.Length);
+					var bound = new List<CombinedCommand>(cache.Commands.Length);
 
-					foreach (var cachedCommand in cached)
-						bound.Add(BindTemplate(dataConnection, cachedCommand, values));
+					foreach (var cachedCommand in cache.Commands)
+						bound.Add(BindTemplate(dataConnection, cachedCommand, scenario, values));
 
 					return bound;
 				}
+
+				// Per-step parameter-dependence, computed once for this render pass: a volatile step's SQL varies with
+				// parameter values, so its template can't be cached (a stable main is cached while a Contains/LIKE child re-renders).
+				var volatility  = ComputeStepVolatility(dataConnection, scenario);
+				var anyVolatile = false;
+
+				foreach (var v in volatility)
+					if (v)
+					{
+						anyVolatile = true;
+						break;
+					}
 
 				var plan = DataConnection.QueryRunner.PlanEagerScenario(dataConnection, scenario);
 
 				var commands  = new List<CombinedCommand>();
 				var templates = new List<EagerCommandTemplate>();
-
-#if SUPPORTS_DBBATCH
-				var useBatch = dataConnection.CanUseDbBatch;
-#endif
 
 				foreach (var group in plan.Groups)
 				{
@@ -860,17 +877,26 @@ namespace LinqToDB.Internal.Linq
 					// DbBatchCommand + parameter scope); no SQL-length split, so it covers every step of the group in order.
 					if (useBatch)
 					{
-						var batchStatements = ScenarioCommandRenderer.RenderStatementTemplates(dataConnection, groupStatements, values);
-						var template        = new EagerCommandTemplate(batchStatements, stepIndexes);
+						var rendered = ScenarioCommandRenderer.RenderStatementTemplates(dataConnection, groupStatements, values);
 
-						templates.Add(template);
-						commands.Add(BindTemplate(dataConnection, template, values));
+						// Run this execution off the freshly-rendered statements (bind all, no re-render).
+						commands.Add(BindTemplate(dataConnection, new EagerCommandTemplate(rendered, stepIndexes), scenario, values));
+
+						// Cache with the parameter-dependent slots nulled so a later run re-renders only those.
+						var slots = new CommandWithParameters?[rendered.Length];
+
+						for (var k = 0; k < rendered.Length; k++)
+							slots[k] = volatility[stepIndexes[k]] ? null : rendered[k];
+
+						templates.Add(new EagerCommandTemplate(slots, stepIndexes));
 
 						continue;
 					}
 #endif
 
-					// Concat path: each length-split batch is one pre-merged (semicolon-concatenated) statement.
+					// Concat path: each length-split batch is one pre-merged (semicolon-concatenated) statement. Its shared,
+					// stateful parameter normalizer means a slice can't be half-cached, so the concat cache is all-or-nothing
+					// (stored only when the whole scenario is stable, see the store below); otherwise it re-renders each run.
 					var batches = DataConnection.QueryRunner.RenderCombinedBatchTemplates(dataConnection, groupStatements, values);
 
 					var offset = 0;
@@ -885,58 +911,72 @@ namespace LinqToDB.Internal.Linq
 						var template = new EagerCommandTemplate([new CommandWithParameters(sql, sqlParameters)], indexes);
 
 						templates.Add(template);
-						commands.Add(BindTemplate(dataConnection, template, values));
+						commands.Add(BindTemplate(dataConnection, template, scenario, values));
 
 						offset += statementCount;
 					}
 				}
 
-				// Cache the templates once — only when the scenario's SQL is stable (not parameter-dependent), so that
-				// re-enumerating binds this run's DbParameters to the cached SQL instead of rebuilding it. Eager loading
-				// bypasses GetCommand, so parameter-dependence is resolved here (once, guarded by EagerCommandsResolved).
-				if (!_query.EagerCommandsResolved)
-				{
-					_query.EagerCommandsResolved = true;
-
-					if (IsScenarioCacheable(dataConnection, scenario))
-						_query.EagerCommands = templates.ToArray();
-				}
+				// Cache the per-command templates for this backend so re-enumeration binds DbParameters instead of
+				// re-rendering. Batch templates carry null slots for the parameter-dependent steps (re-rendered per run).
+				// Concat with a parameter-dependent step is NOT cached (its slices can't be half-rendered): it re-renders
+				// wholesale each run, matching the pre-existing all-or-nothing behavior on that fallback path.
+				if (useBatch || !anyVolatile)
+					_query.EagerCommands = new EagerRenderCache(templates.ToArray(), useBatch);
 
 				return commands;
 			}
 
 			// Binds a rendered command template's statements to this execution's DbParameter values, producing the command the
-			// executor runs. Shared by the fast (cached) path and the first render.
-			static CombinedCommand BindTemplate(DataConnection dataConnection, EagerCommandTemplate template, SqlParameterValues values)
+			// executor runs. Shared by the fast (cached) path and the first render. A null slot is a parameter-dependent DbBatch
+			// statement re-rendered here in its own isolated scope (never occurs for concat, nor on non-DbBatch frameworks).
+			static CombinedCommand BindTemplate(DataConnection dataConnection, EagerCommandTemplate template, SqlCommandScenario scenario, SqlParameterValues values)
 			{
-				var rendered = new RenderedStatement[template.Statements.Length];
+				var statements = template.Statements;
+				var rendered   = new RenderedStatement[statements.Length];
 
-				for (var i = 0; i < template.Statements.Length; i++)
+				for (var i = 0; i < statements.Length; i++)
+				{
+					var slot = statements[i];
+
+					if (slot is null)
+					{
+#if SUPPORTS_DBBATCH
+						slot = ScenarioCommandRenderer.RenderStatementTemplates(
+							dataConnection, [scenario.Steps[template.StepIndexes[i]].Statement], values)[0];
+#else
+						throw new InvalidOperationException("Eager render cache slot is null on a non-DbBatch build.");
+#endif
+					}
+
 					rendered[i] = new RenderedStatement(
-						template.Statements[i].Command,
-						ScenarioCommandRenderer.MaterializeDbParameters(dataConnection, template.Statements[i].SqlParameters, values));
+						slot.Command,
+						ScenarioCommandRenderer.MaterializeDbParameters(dataConnection, slot.SqlParameters, values));
+				}
 
 				return new CombinedCommand(rendered, template.StepIndexes, null);
 			}
 
-			// A scenario is render-cacheable when none of its statements' SQL varies with parameter values; then the template
-			// (SQL + unbound SqlParameter list) is stable across executions and only DbParameter binding repeats. Eager loading
-			// bypasses GetCommand's parameter-dependence check, so it is done here.
-			static bool IsScenarioCacheable(DataConnection dataConnection, SqlCommandScenario scenario)
+			// Per-step parameter-dependence: a step is volatile when its statement's SQL varies with parameter values, so its
+			// rendered template can't be cached and must be re-rendered each run. Finer than an all-or-nothing scenario check —
+			// a stable main can be cached while a Contains-filtered (LIKE) child re-renders. Each step has a distinct SqlStatement
+			// instance, so per-step evaluation is well-defined. Eager loading bypasses GetCommand's check, so it is done here.
+			static bool[] ComputeStepVolatility(DataConnection dataConnection, SqlCommandScenario scenario)
 			{
 				var options      = dataConnection.Options;
 				var sqlOptimizer = dataConnection.DataProvider.GetSqlOptimizer(options);
+				var steps        = scenario.Steps;
+				var result       = new bool[steps.Count];
 
-				foreach (var step in scenario.Steps)
+				for (var i = 0; i < steps.Count; i++)
 				{
-					var statement = step.Statement;
+					var statement = steps[i].Statement;
 
-					if (statement.IsParameterDependent
-						|| sqlOptimizer.IsParameterDependent(NullabilityContext.NonQuery, dataConnection.MappingSchema, statement, options))
-						return false;
+					result[i] = statement.IsParameterDependent
+						|| sqlOptimizer.IsParameterDependent(NullabilityContext.NonQuery, dataConnection.MappingSchema, statement, options);
 				}
 
-				return true;
+				return result;
 			}
 
 			public IEnumerator<T> GetEnumerator()
