@@ -20,6 +20,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				 "13" or "14"                  => PostgreSQLVersion.v13,
 				 "15" or "16" or "17"          => PostgreSQLVersion.v15,
 				 "18"                          => PostgreSQLVersion.v18,
+				 "19"                          => PostgreSQLVersion.v19,
 				_                              => PostgreSQLVersion.AutoDetect,
 			};
 

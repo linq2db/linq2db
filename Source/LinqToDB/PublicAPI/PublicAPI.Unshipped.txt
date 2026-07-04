@@ -2,6 +2,10 @@
 const LinqToDB.DataProvider.ClickHouse.ClickHouseHints.Join.GlobalAll = "GLOBAL ALL" -> string!
 static LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinGlobalAllHint<TSource>(this LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificQueryable<TSource>! query) -> LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificQueryable<TSource>!
 static LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinGlobalAllHint<TSource>(this LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificTable<TSource>! table) -> LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificTable<TSource>!
+LinqToDB.DataProvider.PostgreSQL.PostgreSQLVersion.v19 = 7 -> LinqToDB.DataProvider.PostgreSQL.PostgreSQLVersion
+const LinqToDB.ProviderName.PostgreSQL19 = "PostgreSQL.19" -> string!
+LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLMappingSchema.PostgreSQL19MappingSchema
+LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLMappingSchema.PostgreSQL19MappingSchema.PostgreSQL19MappingSchema() -> void
 LinqToDB.Internal.SqlProvider.OptimizationContext.NormalizeParameterName(string? name) -> string?
 static LinqToDB.Internal.Common.Tools.IsProviderAssemblyPresent(string! assemblyName) -> bool
 static LinqToDB.LinqExtensions.OrderBy<TSource, TKey>(this System.Linq.IQueryable<TSource>! source, System.Linq.Expressions.Expression<System.Func<TSource, TKey>!>! keySelector, LinqToDB.Sql.NullsPosition nulls) -> System.Linq.IOrderedQueryable<TSource>!
@@ -39,6 +43,34 @@ static LinqToDB.Internal.Expressions.WindowFunctionHelpers.ExtractOrderByPart(Sy
 *REMOVED*static LinqToDB.Internal.Expressions.WindowFunctionHelpers.BuildWindowDefinition(System.Linq.Expressions.Expression![]! partitionBy, (System.Linq.Expressions.Expression! expr, bool descending)[]! orderBy) -> System.Linq.Expressions.Expression!
 *REMOVED*static LinqToDB.Internal.Expressions.WindowFunctionHelpers.ExtractOrderByPart(System.Linq.Expressions.Expression! query, out System.Linq.Expressions.Expression! nonOrderedPart) -> (System.Linq.Expressions.LambdaExpression! lambda, bool isDescending)[]!
 LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.RemoveNullValues(LinqToDB.Internal.SqlQuery.SqlCoalesceExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+LinqToDB.Internal.SqlQuery.QueryElementType.SqlKeepClause = 81 -> LinqToDB.Internal.SqlQuery.QueryElementType
+LinqToDB.Internal.SqlQuery.SqlExtendedFunction.FromPosition.get -> LinqToDB.Sql.From
+LinqToDB.Internal.SqlQuery.SqlExtendedFunction.NullTreatment.get -> LinqToDB.Sql.Nulls
+LinqToDB.Internal.SqlQuery.SqlKeepClause
+LinqToDB.Internal.SqlQuery.SqlKeepClause.KeepType
+LinqToDB.Internal.SqlQuery.SqlKeepClause.KeepType.First = 0 -> LinqToDB.Internal.SqlQuery.SqlKeepClause.KeepType
+LinqToDB.Internal.SqlQuery.SqlKeepClause.KeepType.Last = 1 -> LinqToDB.Internal.SqlQuery.SqlKeepClause.KeepType
+LinqToDB.Internal.SqlQuery.SqlKeepClause.Modify(System.Collections.Generic.List<LinqToDB.SqlQuery.SqlWindowOrderItem!>! orderBy) -> void
+LinqToDB.Internal.SqlQuery.SqlKeepClause.OrderBy.get -> System.Collections.Generic.List<LinqToDB.SqlQuery.SqlWindowOrderItem!>!
+LinqToDB.Internal.SqlQuery.SqlKeepClause.SqlKeepClause(LinqToDB.Internal.SqlQuery.SqlKeepClause.KeepType type, System.Collections.Generic.List<LinqToDB.SqlQuery.SqlWindowOrderItem!>! orderBy) -> void
+LinqToDB.Internal.SqlQuery.SqlKeepClause.Type.get -> LinqToDB.Internal.SqlQuery.SqlKeepClause.KeepType
+LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.WindowFunctionInformation.FromPosition.get -> LinqToDB.Sql.From
+LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.WindowFunctionInformation.FromPosition.set -> void
+LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.WindowFunctionInformation.KeepType.get -> LinqToDB.Internal.SqlQuery.SqlKeepClause.KeepType?
+LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.WindowFunctionInformation.NullTreatment.get -> LinqToDB.Sql.Nulls
+LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.WindowFunctionInformation.NullTreatment.set -> void
+override LinqToDB.Internal.SqlQuery.SqlKeepClause.Accept(LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor! visitor) -> LinqToDB.Internal.SqlQuery.IQueryElement!
+override LinqToDB.Internal.SqlQuery.SqlKeepClause.ElementType.get -> LinqToDB.Internal.SqlQuery.QueryElementType
+override LinqToDB.Internal.SqlQuery.SqlKeepClause.GetElementHashCode() -> int
+override LinqToDB.Internal.SqlQuery.SqlKeepClause.ToString(LinqToDB.Internal.SqlQuery.QueryElementTextWriter! writer) -> LinqToDB.Internal.SqlQuery.QueryElementTextWriter!
+virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlKeepClause(LinqToDB.Internal.SqlQuery.SqlKeepClause! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
+LinqToDB.Linq.Translation.ITranslationContext.ProviderFlags.get -> LinqToDB.Linq.Translation.TranslationProviderFlags!
+LinqToDB.Linq.Translation.TranslationProviderFlags
+LinqToDB.Linq.Translation.TranslationProviderFlags.DefaultNullsOrdering.get -> LinqToDB.Internal.SqlQuery.NullsDefaultOrdering
+LinqToDB.Linq.Translation.TranslationProviderFlags.IsNullsOrderingSupported.get -> bool
+LinqToDB.Linq.Translation.TranslationProviderFlags.TranslationProviderFlags(LinqToDB.Internal.SqlQuery.NullsDefaultOrdering defaultNullsOrdering, bool isNullsOrderingSupported) -> void
+LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.TranslateOrderItems(LinqToDB.Linq.Translation.ISqlExpressionTranslator! translator, LinqToDB.Internal.SqlQuery.NullsDefaultOrdering defaultNullsOrdering, System.Type! errorType, System.Collections.Generic.IEnumerable<LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.OrderByInformation!>! orderBy, System.Collections.Generic.List<LinqToDB.SqlQuery.SqlWindowOrderItem!>! orderItems, out LinqToDB.Internal.Expressions.SqlErrorExpression? error) -> bool
+*REMOVED*LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.TranslateOrderItems(LinqToDB.Linq.Translation.ISqlExpressionTranslator! translator, System.Type! errorType, System.Collections.Generic.IEnumerable<LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.OrderByInformation!>! orderBy, System.Collections.Generic.List<LinqToDB.SqlQuery.SqlWindowOrderItem!>! orderItems, out LinqToDB.Internal.Expressions.SqlErrorExpression? error) -> bool
 LinqToDB.LinqOptions.PreferClientCalculation.get -> bool
 LinqToDB.LinqOptions.PreferClientCalculation.init -> void
 static LinqToDB.DataOptionsExtensions.WithPreferClientCalculation(this LinqToDB.LinqOptions! options, bool preferClientCalculation) -> LinqToDB.LinqOptions!
@@ -101,6 +133,19 @@ LinqToDB.LinqOptions.Deconstruct(out bool PreloadGroups, out bool IgnoreEmptyUpd
 LinqToDB.LinqOptions.Deconstruct(out bool preloadGroups, out bool ignoreEmptyUpdate, out bool generateExpressionTest, out bool traceMapperExpression, out bool concatenateOrderBy, out bool optimizeJoins, out LinqToDB.CompareNulls compareNulls, out bool guardGrouping, out bool disableQueryCache, out System.TimeSpan? cacheSlidingExpiration, out bool preferApply, out bool keepDistinctOrdered, out bool parameterizeTakeSkip, out bool enableContextSchemaEdit, out bool preferExistsForScalar) -> void
 *REMOVED*LinqToDB.LinqOptions.LinqOptions(bool PreloadGroups = false, bool IgnoreEmptyUpdate = false, bool GenerateExpressionTest = false, bool TraceMapperExpression = false, bool ConcatenateOrderBy = false, bool OptimizeJoins = true, LinqToDB.CompareNulls CompareNulls = LinqToDB.CompareNulls.LikeClr, bool GuardGrouping = true, bool DisableQueryCache = false, System.TimeSpan? CacheSlidingExpiration = null, bool PreferApply = true, bool KeepDistinctOrdered = true, bool ParameterizeTakeSkip = true, bool EnableContextSchemaEdit = false, bool PreferExistsForScalar = false) -> void
 *REMOVED*LinqToDB.LinqOptions.Deconstruct(out bool PreloadGroups, out bool IgnoreEmptyUpdate, out bool GenerateExpressionTest, out bool TraceMapperExpression, out bool ConcatenateOrderBy, out bool OptimizeJoins, out LinqToDB.CompareNulls CompareNulls, out bool GuardGrouping, out bool DisableQueryCache, out System.TimeSpan? CacheSlidingExpiration, out bool PreferApply, out bool KeepDistinctOrdered, out bool ParameterizeTakeSkip, out bool EnableContextSchemaEdit, out bool PreferExistsForScalar) -> void
+static LinqToDB.Sql.NewGuid7() -> System.Guid
+LinqToDB.Internal.DataProvider.MySql.Translation.MariaDBMemberTranslator
+LinqToDB.Internal.DataProvider.MySql.Translation.MariaDBMemberTranslator.MariaDBMemberTranslator() -> void
+LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQL18MemberTranslator
+LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQL18MemberTranslator.PostgreSQL18MemberTranslator() -> void
+LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQL19MemberTranslator
+LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQL19MemberTranslator.PostgreSQL19MemberTranslator() -> void
+override LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQL19MemberTranslator.CreateWindowFunctionsMemberTranslator() -> LinqToDB.Linq.Translation.IMemberTranslator?
+virtual LinqToDB.Internal.DataProvider.Translation.ProviderMemberTranslatorDefault.TranslateNewGuid7Method(LinqToDB.Linq.Translation.ITranslationContext! translationContext, LinqToDB.Linq.Translation.TranslationFlags translationFlags) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.ClickHouse.Translation.ClickHouseMemberTranslator.TranslateNewGuid7Method(LinqToDB.Linq.Translation.ITranslationContext! translationContext, LinqToDB.Linq.Translation.TranslationFlags translationFlags) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.DuckDB.Translation.DuckDBMemberTranslator.TranslateNewGuid7Method(LinqToDB.Linq.Translation.ITranslationContext! translationContext, LinqToDB.Linq.Translation.TranslationFlags translationFlags) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.MySql.Translation.MariaDBMemberTranslator.TranslateNewGuid7Method(LinqToDB.Linq.Translation.ITranslationContext! translationContext, LinqToDB.Linq.Translation.TranslationFlags translationFlags) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQL18MemberTranslator.TranslateNewGuid7Method(LinqToDB.Linq.Translation.ITranslationContext! translationContext, LinqToDB.Linq.Translation.TranslationFlags translationFlags) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 abstract LinqToDB.Internal.DataProvider.DmlServiceBase.IsTableNotFoundExceptionCore(System.Exception! exception) -> bool
 abstract LinqToDB.Internal.SqlQuery.SqlFieldBase.NamedTable.get -> LinqToDB.Internal.SqlQuery.ISqlNamedTable?
 const LinqToDB.Internal.Common.ErrorHelper.Error_ImplicitEagerLoadingNotAllowed = "Implicit eager loading is not allowed (LinqOptions.ImplicitCollectionLoading = Throw): a collection was projected without an explicit eager-load request. To allow it, request the load explicitly with LoadWith()/ThenLoad(), or opt the whole query in with WithUnionLoadStrategy()/WithKeyedLoadStrategy()/WithSeparateLoadStrategy() — or set ImplicitCollectionLoading = Allow to turn the guard off." -> string!

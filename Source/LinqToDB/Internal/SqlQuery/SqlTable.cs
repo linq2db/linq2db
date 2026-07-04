@@ -77,6 +77,43 @@ namespace LinqToDB.Internal.SqlQuery
 					}
 				}
 
+				foreach (var column in entityDescriptor.InheritanceSiblingColumns)
+				{
+					// Two sibling types may map their (distinct) members to the same physical column.
+					// Emit that column only once — otherwise DDL/SELECT would carry it twice. The
+					// duplicate member still resolves to this single field via the inheritance lookup
+					// in TableContext.GetField (matched by physical column name).
+					var alreadyPresent = false;
+					foreach (var existing in _orderedFields)
+					{
+						if (string.Equals(existing.PhysicalName, column.ColumnName, StringComparison.Ordinal))
+						{
+							alreadyPresent = true;
+							break;
+						}
+					}
+
+					if (alreadyPresent)
+						continue;
+
+					// ColumnName as Name avoids MemberName collision with the primary sibling field already in _fieldsLookup.
+					// If that key is itself already taken — a distinct member whose C# name equals this physical
+					// column name — fall back to a unique synthetic key: the emitted column is driven by PhysicalName
+					// and the sibling is resolved by member identity in TableContext.GetField, so the lookup key only
+					// has to be unique.
+					// CanBeNull is always true: other sibling types will have NULL in this column.
+					var fieldName = column.ColumnName;
+					while (_fieldsLookup.ContainsKey(fieldName))
+						fieldName = fieldName + ":" + column.MemberName;
+
+					var field = new SqlField(column) { Name = fieldName, CanBeNull = true };
+
+					Add(field);
+
+					if (field.Type.DataType == DataType.Undefined)
+						field.Type = SuggestType(field.Type, entityDescriptor.MappingSchema, out _);
+				}
+
 				var identityField = GetIdentityField();
 
 				if (identityField != null)
