@@ -113,3 +113,33 @@ let VerifyComplexElementOptionNotScalarized (db : IDataContext) =
         |> Seq.tryFind (fun c -> c.MemberName = "ComplexOpt")
         |> Option.bind (fun c -> Option.ofObj c.ValueConverter)
     Assert.That(complexConverter, Is.EqualTo None)
+
+// A custom value type that is a scalar ONLY when registered on a schema - never in MappingSchema.Default.
+[<Struct>]
+type MyId = { IdValue : int }
+
+// Registers MyId as a scalar type (Int32) on a fresh schema, plus round-trip converters. MyId is unknown
+// to MappingSchema.Default, so it is scalar only via this registration.
+let BuildCustomScalarSchema () =
+    let ms = MappingSchema()
+    ms.SetConverter<MyId, int>(fun id -> id.IdValue)  |> ignore
+    ms.SetConverter<int, MyId>(fun v -> { IdValue = v }) |> ignore
+    ms.AddScalarType(typeof<MyId>, DataType.Int32)
+    ms
+
+// https://github.com/linq2db/linq2db/issues/195
+// A 'T option whose element is scalar ONLY in the active/user schema (MyId, made scalar via AddScalarType
+// on the schema passed to GetDataContext) must still auto-map. Currently it does NOT: IsScalarOption
+// consults MappingSchema.Default, which doesn't know MyId, so no ColumnAttribute/ValueConverter is emitted
+// and the option member is not mapped as a column. Gated [ActiveIssue] until the scalar gate is fixed.
+[<NoComparison>]
+[<Table("CustomScalarOptionTable", IsColumnAttributeRequired = false)>]
+type CustomScalarOptionRow =
+    { [<PrimaryKey>] Id    : int
+      Value               : MyId option }
+
+let VerifyCustomScalarOptionMapped (db : IDataContext) =
+    let ed  = db.MappingSchema.GetEntityDescriptor(typeof<CustomScalarOptionRow>)
+    match ed.Columns |> Seq.tryFind (fun c -> c.MemberName = "Value") with
+    | Some c -> Assert.That(c.ValueConverter, Is.Not.Null)
+    | None   -> Assert.Fail("MyId option column was not mapped - auto-option-mapping did not recognise the user-registered scalar type")
