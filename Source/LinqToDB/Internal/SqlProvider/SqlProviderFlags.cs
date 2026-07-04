@@ -737,6 +737,17 @@ namespace LinqToDB.Internal.SqlProvider
 		[DataMember(Order = 80)]
 		public int MaxCombinedCommandLength { get; set; }
 
+		/// <summary>
+		/// Maximum number of scenario steps merged into one combined multi-statement command. When the combined engine
+		/// (<see cref="IsMultiStatementBatchSupported"/> + <see cref="IsMultipleResultSetsSupported"/>) groups steps, a run
+		/// longer than this splits across several commands (round-trips), so a wide eager-load fan-out never produces one
+		/// oversized command. Complements <see cref="MaxCombinedCommandLength"/> (which caps by SQL length). Must be at
+		/// least 1. Default (set by <see cref="DataProviderBase"/>): 32 — a few KB of SQL, well under provider batch /
+		/// parameter limits, while still collapsing the common N+1 case to a single round-trip.
+		/// </summary>
+		[DataMember(Order = 81)]
+		public int MaxStatementsPerCombinedGroup { get; set; }
+
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
 			return AcceptsTakeAsParameter || (AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null);
@@ -839,6 +850,7 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsServerSideVariablesSupported                       .GetHashCode()
 				^ IsMultipleResultSetsSupported                        .GetHashCode()
 				^ MaxCombinedCommandLength                             .GetHashCode()
+				^ MaxStatementsPerCombinedGroup                        .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => StringComparer.Ordinal.GetHashCode(flag) ^ hash);
 	}
 
@@ -923,6 +935,7 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsServerSideVariablesSupported                        == other.IsServerSideVariablesSupported
 				&& IsMultipleResultSetsSupported                         == other.IsMultipleResultSetsSupported
 				&& MaxCombinedCommandLength                              == other.MaxCombinedCommandLength
+				&& MaxStatementsPerCombinedGroup                         == other.MaxStatementsPerCombinedGroup
 				&& CustomFlags.SetEquals(other.CustomFlags);
 		}
 		#endregion
