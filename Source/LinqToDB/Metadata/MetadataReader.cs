@@ -45,6 +45,13 @@ namespace LinqToDB.Metadata
 		{
 		}
 
+		// The active schema is captured here rather than threaded per call because the fan-out to child readers
+		// goes through _cache, keyed by (type, member) with no schema. A schema-aware child's output depends on
+		// the schema, so that cache is valid only when the aggregator is tied to one schema. Each combined schema
+		// already builds its own fresh aggregator (CombineSchemas is memoized; AddMetadataReader builds fresh), so
+		// capture keeps the existing cache correct for free. Threading per call would instead force a schema into
+		// the hot-path cache key, or bypass the cache for schema-aware readers (recompute every resolution).
+		// mappingSchema is null for the schema-blind fallback path (public ctor, MetadataReader.Default).
 		internal MetadataReader(MappingSchema? mappingSchema, params IMetadataReader[] readers)
 		{
 			_readers       = readers ?? throw new ArgumentNullException(nameof(readers));
