@@ -68,7 +68,7 @@ namespace LinqToDB.CommandLine
 			using var template = GetType().Assembly.GetManifestResourceStream("LinqToDB.CLI.Template.tt")!;
 			using var file     = File.Create(fullPath);
 
-			await template.CopyToAsync(file).ConfigureAwait(false);
+			await template.CopyToAsync(file, cancellationToken).ConfigureAwait(false);
 
 			return StatusCodes.SUCCESS;
 		}

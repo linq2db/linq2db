@@ -134,7 +134,7 @@ namespace LinqToDB.CommandLine
 			AddMutuallyExclusiveOptions(_inputOptions, Sql, SqlFile);
 		}
 
-		public override ValueTask<int> Execute(
+		public override async ValueTask<int> Execute(
 			CliController                  controller,
 			ICliEnvironment                environment,
 			string[]                       rawArgs,
@@ -145,18 +145,18 @@ namespace LinqToDB.CommandLine
 			var settings = ProcessOptions(environment, options);
 
 			if (settings == null)
-				return new(StatusCodes.INVALID_ARGUMENTS);
+				return StatusCodes.INVALID_ARGUMENTS;
 
 			if (options.Count > 0)
 			{
 				foreach (var kvp in options)
-					environment.Error.WriteLine($"{Name} command miss '{kvp.Key.Name}' option handler");
+					await environment.Error.WriteLineAsync($"{Name} command miss '{kvp.Key.Name}' option handler").ConfigureAwait(false);
 
 				throw new InvalidOperationException($"Not all options handled by {Name} command");
 			}
 
 			var executor = new QueryCommandExecutor(environment, settings);
-			return executor.Execute(cancellationToken);
+			return await executor.Execute(cancellationToken).ConfigureAwait(false);
 		}
 
 		private QueryCommandSettings? ProcessOptions(ICliEnvironment environment, Dictionary<CliOption, object?> options)

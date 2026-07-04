@@ -66,12 +66,13 @@ namespace LinqToDB.CLI.Tests
 		[Test]
 		public async Task QueryAcceptsSql()
 		{
-			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql", "select 1");
+			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql", "select 1 as Value");
 
 			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-3));
-				Assert.That(result.Error,    Does.Contain("Query command execution is not implemented yet."));
+				Assert.That(result.ExitCode, Is.Zero);
+				Assert.That(result.Output,   Does.Contain("\"Value\": 1"));
+				Assert.That(result.Error,    Is.Empty);
 			}
 		}
 
@@ -95,12 +96,29 @@ namespace LinqToDB.CLI.Tests
 		[Test]
 		public async Task QueryAcceptsSqlFile()
 		{
+			var environment = new TestCliEnvironment();
+
+			environment.Files.Add("query.sql", "select 'test' as Value");
+
+			var result = await RunCli(environment, "query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql-file", "query.sql");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.Zero);
+				Assert.That(result.Output,   Does.Contain("\"Value\": \"test\""));
+				Assert.That(result.Error,    Is.Empty);
+			}
+		}
+
+		[Test]
+		public async Task QueryRejectsMissingSqlFile()
+		{
 			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql-file", "query.sql");
 
 			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.ExitCode, Is.EqualTo(-3));
-				Assert.That(result.Error,    Does.Contain("Query command execution is not implemented yet."));
+				Assert.That(result.Error,    Does.Contain("SQL file 'query.sql' not found."));
 			}
 		}
 
@@ -119,12 +137,15 @@ namespace LinqToDB.CLI.Tests
 		[Test]
 		public async Task QueryAcceptsOutputOptions()
 		{
-			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--output", "csv", "--output-file", "query.csv", "--sql", "select 1");
+			var environment = new TestCliEnvironment();
+			var result      = await RunCli(environment, "query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--output", "csv", "--output-file", "query.csv", "--sql", "select 1 as Value");
 
 			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-3));
-				Assert.That(result.Error,    Does.Contain("Query command execution is not implemented yet."));
+				Assert.That(result.ExitCode, Is.Zero);
+				Assert.That(result.Output,   Is.Empty);
+				Assert.That(result.Error,    Is.Empty);
+				Assert.That(environment.Files["query.csv"], Is.EqualTo($"Value{Environment.NewLine}1{Environment.NewLine}"));
 			}
 		}
 
@@ -147,8 +168,10 @@ namespace LinqToDB.CLI.Tests
 
 			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-3));
-				Assert.That(result.Error,    Does.Contain("Query command execution is not implemented yet."));
+				Assert.That(result.ExitCode, Is.Zero);
+				Assert.That(result.Output,   Is.Empty);
+				Assert.That(result.Error,    Is.Empty);
+				Assert.That(environment.Files["query.csv"], Is.EqualTo($"1{Environment.NewLine}1{Environment.NewLine}"));
 			}
 		}
 
@@ -163,18 +186,21 @@ namespace LinqToDB.CLI.Tests
 						"connectionString": "Data Source=:memory:"
 					},
 					"uat": {
-						"provider": "SqlServer",
-						"connectionString": "Server=.;Database=test;Trusted_Connection=True"
+						"provider": "SQLite",
+						"connectionString": "Data Source=:memory:"
 					}
 				}
 				""");
+
+			environment.Files.Add("query.sql", "select 2 as Value");
 
 			var result = await RunCli(environment, "query", "--config", config, "--profile", "uat", "--sql-file", "query.sql");
 
 			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-3));
-				Assert.That(result.Error,    Does.Contain("Query command execution is not implemented yet."));
+				Assert.That(result.ExitCode, Is.Zero);
+				Assert.That(result.Output,   Does.Contain("\"Value\": 2"));
+				Assert.That(result.Error,    Is.Empty);
 			}
 		}
 
@@ -191,7 +217,7 @@ namespace LinqToDB.CLI.Tests
 						"outputFile": "default.csv"
 					},
 					"uat": {
-						"connectionString": "Server=.;Database=test;Trusted_Connection=True"
+						"output": "json"
 					}
 				}
 				""");
@@ -200,8 +226,10 @@ namespace LinqToDB.CLI.Tests
 
 			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-3));
-				Assert.That(result.Error,    Does.Contain("Query command execution is not implemented yet."));
+				Assert.That(result.ExitCode, Is.Zero);
+				Assert.That(result.Output,   Is.Empty);
+				Assert.That(result.Error,    Is.Empty);
+				Assert.That(environment.Files["default.csv"], Does.Contain("\"1\": 1"));
 			}
 		}
 
@@ -223,12 +251,14 @@ namespace LinqToDB.CLI.Tests
 				}
 				""");
 
-			var result = await RunCli(environment, "query", "--config", config, "--profile", "uat", "--connection-string", "Data Source=cli;", "--output", "json", "--output-file", "cli.json", "--sql", "select 1");
+			var result = await RunCli(environment, "query", "--config", config, "--profile", "uat", "--connection-string", "Data Source=:memory:", "--output", "json", "--output-file", "cli.json", "--sql", "select 1 as Value");
 
 			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-3));
-				Assert.That(result.Error,    Does.Contain("Query command execution is not implemented yet."));
+				Assert.That(result.ExitCode, Is.Zero);
+				Assert.That(result.Output,   Is.Empty);
+				Assert.That(result.Error,    Is.Empty);
+				Assert.That(environment.Files["cli.json"], Does.Contain("\"Value\": 1"));
 			}
 		}
 
