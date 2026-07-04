@@ -123,7 +123,21 @@ namespace LinqToDB.CommandLine
 				false,
 				"[--config config] [--profile profile] [--provider provider] [--connection-string connection-string] [--output output] [--output-file output-file] [--sql sql | --sql-file file]",
 				"execute SQL query against specified database",
-				[])
+				new CommandExample[]
+				{
+					new(
+						"dotnet linq2db query --provider SQLite --connection-string \"Data Source=data.db\" --sql \"select * from Person\"",
+						"executes specified SQL query and writes JSON result to console"),
+					new(
+						"dotnet linq2db query --provider SQLite --connection-string \"Data Source=data.db\" --sql-file query.sql",
+						"executes SQL query from file and writes JSON result to console"),
+					new(
+						"dotnet linq2db query --config query.json --profile uat --sql-file query.sql",
+						"executes SQL query using connection settings from specified configuration profile"),
+					new(
+						"dotnet linq2db query --provider SQLite --connection-string \"Data Source=data.db\" --output csv --output-file result.csv --sql \"select * from Person\"",
+						"executes specified SQL query and writes CSV result to file"),
+				})
 		{
 			AddOption(_configurationOptions, Config);
 			AddOption(_configurationOptions, Profile);

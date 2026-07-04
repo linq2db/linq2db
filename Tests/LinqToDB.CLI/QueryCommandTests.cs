@@ -483,6 +483,11 @@ namespace Tests.LinqToDB.CLI
 				Assert.That(result.Output,   Does.Contain("--output-file"));
 				Assert.That(result.Output,   Does.Contain("--sql"));
 				Assert.That(result.Output,   Does.Contain("--sql-file"));
+				Assert.That(result.Output,   Does.Contain("Examples:"));
+				Assert.That(result.Output,   Does.Contain("dotnet linq2db query --provider SQLite --connection-string \"Data Source=data.db\" --sql \"select * from Person\""));
+				Assert.That(result.Output,   Does.Contain("dotnet linq2db query --provider SQLite --connection-string \"Data Source=data.db\" --sql-file query.sql"));
+				Assert.That(result.Output,   Does.Contain("dotnet linq2db query --config query.json --profile uat --sql-file query.sql"));
+				Assert.That(result.Output,   Does.Contain("dotnet linq2db query --provider SQLite --connection-string \"Data Source=data.db\" --output csv --output-file result.csv --sql \"select * from Person\""));
 			}
 		}
 
