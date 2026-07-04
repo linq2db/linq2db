@@ -22,22 +22,12 @@ namespace LinqToDB.Internal.DataProvider.Informix
 		{
 			if (statement is SqlTruncateTableStatement { ResetIdentity: true } truncate && truncate.Table!.IdentityFields.Count > 0)
 			{
-				var fields = truncate.Table.IdentityFields;
-				var steps  = new SqlCommandStep[fields.Count + 1];
+				var table = truncate.Table!;
 
-				steps[0] = new SqlCommandStep { Statement = statement, Kind = SqlStepKind.NonQuery };
-
-				for (var i = 0; i < fields.Count; i++)
-				{
-					var reset = new SqlFragmentStatement(factory.Fragment(
-						"ALTER TABLE {0} MODIFY {1} SERIAL(1)",
-						new SqlObjectNameExpression(truncate.Table.TableName, ConvertType.NameToQueryTable),
-						new SqlObjectNameExpression(new SqlObjectName(fields[i].PhysicalName), ConvertType.NameToQueryField)));
-
-					steps[i + 1] = new SqlCommandStep { Statement = reset, Kind = SqlStepKind.NonQuery };
-				}
-
-				return new SqlCommandScenario { Steps = steps, OutcomeSteps = [0] };
+				return PerFieldResetScenario(truncate, field => new SqlFragmentStatement(factory.Fragment(
+					"ALTER TABLE {0} MODIFY {1} SERIAL(1)",
+					new SqlObjectNameExpression(table.TableName, ConvertType.NameToQueryTable),
+					new SqlObjectNameExpression(new SqlObjectName(field.PhysicalName), ConvertType.NameToQueryField))));
 			}
 
 			if (statement is SqlInsertStatement { Insert.WithIdentity: true })
@@ -45,20 +35,9 @@ namespace LinqToDB.Internal.DataProvider.Informix
 				// Informix returns the generated identity via a separate scalar query (not a RETURNING clause):
 				// SELECT DBINFO('sqlca.sqlerrd1'). Built as a real from-less select — the builder appends Informix's
 				// single-row FakeTable.
-				var idType   = factory.GetDbDataType(typeof(long));
-				var idSelect = new SqlSelectStatement();
+				var idType = factory.GetDbDataType(typeof(long));
 
-				idSelect.SelectQuery.Select.AddNew(factory.Function(idType, "DBINFO", factory.Value("sqlca.sqlerrd1")));
-
-				return new SqlCommandScenario
-				{
-					Steps =
-					[
-						new SqlCommandStep { Statement = statement, Kind = SqlStepKind.NonQuery },
-						new SqlCommandStep { Statement = idSelect,  Kind = SqlStepKind.Scalar   },
-					],
-					OutcomeSteps = [1],
-				};
+				return IdentitySelectScenario(statement, factory.Function(idType, "DBINFO", factory.Value("sqlca.sqlerrd1")));
 			}
 
 			return base.BuildCommandScenario(statement, flags, factory);

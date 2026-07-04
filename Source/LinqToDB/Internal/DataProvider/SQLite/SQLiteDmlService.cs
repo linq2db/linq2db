@@ -33,20 +33,9 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 			if (statement.NeedsIdentity)
 			{
-				var idType   = factory.GetDbDataType(typeof(long));
-				var idSelect = new SqlSelectStatement();
+				var idType = factory.GetDbDataType(typeof(long));
 
-				idSelect.SelectQuery.Select.AddNew(factory.Function(idType, "last_insert_rowid"));
-
-				return new SqlCommandScenario
-				{
-					Steps =
-					[
-						new SqlCommandStep { Statement = statement, Kind = SqlStepKind.NonQuery },
-						new SqlCommandStep { Statement = idSelect,  Kind = SqlStepKind.Scalar   },
-					],
-					OutcomeSteps = [1],
-				};
+				return IdentitySelectScenario(statement, factory.Function(idType, "last_insert_rowid"));
 			}
 
 			return base.BuildCommandScenario(statement, flags, factory);

@@ -363,29 +363,10 @@ namespace LinqToDB.Data
 
 			static DbParameter[]?[] GetParameters(DataConnection dataConnection, PreparedQuery pq, IReadOnlyParameterValues? parameterValues)
 			{
-				var result = new DbParameter[pq.Commands.Length][];
-
-				DbCommand? dbCommand = null;
+				DbParameter[]?[] result = new DbParameter[pq.Commands.Length][];
 
 				for (var index = 0; index < pq.Commands.Length; index++)
-				{
-					var command = pq.Commands[index];
-					if (command.SqlParameters.Count == 0)
-						continue;
-
-					var parms = new DbParameter[command.SqlParameters.Count];
-
-					for (var i = 0; i < command.SqlParameters.Count; i++)
-					{
-						var sqlp = command.SqlParameters[i];
-
-						dbCommand ??= dataConnection.GetOrCreateCommand();
-
-						parms[i] = CreateParameter(dataConnection, dbCommand, sqlp, sqlp.GetParameterValue(parameterValues));
-					}
-
-					result[index] = parms;
-				}
+					result[index] = ScenarioCommandRenderer.MaterializeDbParameters(dataConnection, pq.Commands[index].SqlParameters, parameterValues);
 
 				return result;
 			}
@@ -453,17 +434,7 @@ namespace LinqToDB.Data
 				while (i < statements.Count)
 				{
 					// Each command has its OWN parameter scope (fresh normalizer), so names are uniquified per command.
-					var optimizationContext = new OptimizationContext(
-						new EvaluationContext(parameterValues),
-						options,
-						dataConnection.DataProvider.SqlProviderFlags,
-						dataConnection.MappingSchema,
-						sqlOptimizer.CreateOptimizerVisitor(false),
-						sqlOptimizer.CreateConvertVisitor(false),
-						factory,
-						dataConnection.DataProvider.SqlProviderFlags.IsParameterOrderDependent,
-						isAlreadyOptimizedAndConverted : false,
-						parametersNormalizerFactory    : dataConnection.DataProvider.GetQueryParameterNormalizer);
+					var optimizationContext = ScenarioCommandRenderer.CreateRenderContext(dataConnection, sqlOptimizer, factory, parameterValues);
 
 					optimizationContext.ShareParametersByAccessor = true;
 
@@ -482,24 +453,7 @@ namespace LinqToDB.Data
 						i++;
 					}
 
-					var sqlParameters = optimizationContext.GetParameters();
-
-					DbParameter[]? dbParameters = null;
-
-					if (sqlParameters.Count > 0)
-					{
-						var dbCommand = dataConnection.GetOrCreateCommand();
-
-						dbParameters = new DbParameter[sqlParameters.Count];
-
-						for (var p = 0; p < sqlParameters.Count; p++)
-						{
-							var sqlp = sqlParameters[p];
-							dbParameters[p] = CreateParameter(dataConnection, dbCommand, sqlp, sqlp.GetParameterValue(parameterValues));
-						}
-					}
-
-					result.Add((sb.Value.ToString(), dbParameters, count));
+					result.Add((sb.Value.ToString(), ScenarioCommandRenderer.MaterializeDbParameters(dataConnection, optimizationContext.GetParameters(), parameterValues), count));
 				}
 
 				return result;
@@ -614,11 +568,24 @@ namespace LinqToDB.Data
 				{
 					SqlStepConditionKind.ResultIsNull    => value is null,
 					SqlStepConditionKind.ResultIsNotNull => value is not null,
-					SqlStepConditionKind.ResultIsZero    => value is 0,
-					SqlStepConditionKind.ResultIsNonZero => value is not null and not 0,
+					SqlStepConditionKind.ResultIsZero    => IsZeroNumeric(value),
+					SqlStepConditionKind.ResultIsNonZero => value is not null && !IsZeroNumeric(value),
 					_                                    => throw new InvalidOperationException($"Unexpected {nameof(SqlStepConditionKind)}: {condition.Kind}"),
 				};
 			}
+
+			// Numeric-zero test for a gate value. Today the only ResultIsZero source is the InsertOrReplace/Upsert
+			// UPDATE step's rows-affected (always a boxed int), but a future gate over a Scalar step could carry a
+			// COUNT boxed as long/decimal, so match any integral/decimal zero rather than only a boxed Int32.
+			static bool IsZeroNumeric(object? value) => value switch
+			{
+				int     i => i == 0,
+				long    l => l == 0,
+				short   s => s == 0,
+				byte    b => b == 0,
+				decimal m => m == 0m,
+				_         => false,
+			};
 
 			static object? ResolveOutcome(SqlCommandScenario scenario, SqlCommandExecutionContext context)
 			{
@@ -761,6 +728,9 @@ namespace LinqToDB.Data
 						case SqlStepKind.Scalar:
 							context.SetResult(i, dr.Read() ? dr.GetValue(0) : null);
 							break;
+						// A combined group's NonQuery rows-affected is the reader's cumulative count, reliable only once the
+						// reader is fully consumed; no current combined group gates/outcomes on a NonQuery step, so it is
+						// stored but unused. A future combined scenario consuming it must harvest per-statement counts.
 						case SqlStepKind.NonQuery:
 							context.SetResult(i, dr.RecordsAffected);
 							break;
@@ -873,6 +843,9 @@ namespace LinqToDB.Data
 						case SqlStepKind.Scalar:
 							context.SetResult(i, await dr.ReadAsync(cancellationToken).ConfigureAwait(false) ? dr.GetValue(0) : null);
 							break;
+						// A combined group's NonQuery rows-affected is the reader's cumulative count, reliable only once the
+						// reader is fully consumed; no current combined group gates/outcomes on a NonQuery step, so it is
+						// stored but unused. A future combined scenario consuming it must harvest per-statement counts.
 						case SqlStepKind.NonQuery:
 							context.SetResult(i, dr.RecordsAffected);
 							break;
@@ -1012,7 +985,7 @@ namespace LinqToDB.Data
 				return ExecuteScenario(dataConnection, executionQuery, executionQuery.PreparedQuery.Scenario!).Scalar;
 			}
 
-						// In case of change the logic of this method, DO NOT FORGET to change the sibling method.
+			// In case of change the logic of this method, DO NOT FORGET to change the sibling method.
 			public static Task<object?> ExecuteScalarAsync(
 				DataConnection            dataConnection,
 				IQueryContext             context,

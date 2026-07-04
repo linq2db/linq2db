@@ -774,10 +774,12 @@ namespace LinqToDB.Internal.Linq
 				var nonCombinable = new List<int>(preambles.Length);
 
 				for (var i = 0; i < preambles.Length; i++)
+				{
 					if (IsCombinable(preambles[i]))
 						combinable.Add(i);
 					else
 						nonCombinable.Add(i);
+				}
 
 				_combinableIndexes    = combinable.ToArray();
 				_nonCombinableIndexes = nonCombinable.ToArray();

@@ -46,6 +46,46 @@ namespace LinqToDB.Internal.DataProvider
 			};
 
 		/// <summary>
+		/// The two-step identity-insert scenario: the INSERT executed as a non-query, then a scalar SELECT of the
+		/// generated key (<paramref name="identity"/>, e.g. <c>@@IDENTITY</c> / <c>LAST_INSERT_ID()</c>). The SELECT is
+		/// the outcome. Providers differ only in the identity expression; the step shape lives here.
+		/// </summary>
+		protected static SqlCommandScenario IdentitySelectScenario(SqlStatement insert, ISqlExpression identity)
+		{
+			var idSelect = new SqlSelectStatement();
+
+			idSelect.SelectQuery.Select.AddNew(identity);
+
+			return new SqlCommandScenario
+			{
+				Steps =
+				[
+					new SqlCommandStep { Statement = insert,   Kind = SqlStepKind.NonQuery },
+					new SqlCommandStep { Statement = idSelect, Kind = SqlStepKind.Scalar   },
+				],
+				OutcomeSteps = [1],
+			};
+		}
+
+		/// <summary>
+		/// The truncate-with-identity-reset scenario: the TRUNCATE as a non-query (the outcome), followed by one reset
+		/// statement per identity column, built by <paramref name="reset"/>. For providers whose reset is a per-column
+		/// <c>ALTER TABLE …</c> fragment (the template and name quoting differ per provider).
+		/// </summary>
+		protected static SqlCommandScenario PerFieldResetScenario(SqlTruncateTableStatement truncate, Func<SqlField, SqlStatement> reset)
+		{
+			var fields = truncate.Table!.IdentityFields;
+			var steps  = new SqlCommandStep[fields.Count + 1];
+
+			steps[0] = new SqlCommandStep { Statement = truncate, Kind = SqlStepKind.NonQuery };
+
+			for (var i = 0; i < fields.Count; i++)
+				steps[i + 1] = new SqlCommandStep { Statement = reset(fields[i]), Kind = SqlStepKind.NonQuery };
+
+			return new SqlCommandScenario { Steps = steps, OutcomeSteps = [0] };
+		}
+
+		/// <summary>
 		/// Reshapes an InsertOrReplace / Upsert / InsertOrUpdate statement into the UPDATE→INSERT emulation when the
 		/// provider's native single-statement upsert can't honor it (see
 		/// <see cref="UpsertBuilder.WillEmulateInsertOrUpdate"/>); returns <see langword="null"/> to let the builder

@@ -20,40 +20,19 @@ namespace LinqToDB.Internal.DataProvider.Access
 		{
 			if (statement is SqlTruncateTableStatement { ResetIdentity: true } truncate && truncate.Table!.IdentityFields.Count > 0)
 			{
-				var fields = truncate.Table.IdentityFields;
-				var steps  = new SqlCommandStep[fields.Count + 1];
+				var table = truncate.Table!;
 
-				steps[0] = new SqlCommandStep { Statement = statement, Kind = SqlStepKind.NonQuery };
-
-				for (var i = 0; i < fields.Count; i++)
-				{
-					var reset = new SqlFragmentStatement(factory.Fragment(
-						"ALTER TABLE {0} ALTER COLUMN {1} COUNTER(1, 1)",
-						new SqlObjectNameExpression(truncate.Table.TableName, ConvertType.NameToQueryTable, truncate.Table.TableOptions),
-						new SqlObjectNameExpression(new SqlObjectName(fields[i].PhysicalName), ConvertType.NameToQueryField)));
-
-					steps[i + 1] = new SqlCommandStep { Statement = reset, Kind = SqlStepKind.NonQuery };
-				}
-
-				return new SqlCommandScenario { Steps = steps, OutcomeSteps = [0] };
+				return PerFieldResetScenario(truncate, field => new SqlFragmentStatement(factory.Fragment(
+					"ALTER TABLE {0} ALTER COLUMN {1} COUNTER(1, 1)",
+					new SqlObjectNameExpression(table.TableName, ConvertType.NameToQueryTable, table.TableOptions),
+					new SqlObjectNameExpression(new SqlObjectName(field.PhysicalName), ConvertType.NameToQueryField))));
 			}
 
 			if (statement.NeedsIdentity)
 			{
-				var idType   = factory.GetDbDataType(typeof(long));
-				var idSelect = new SqlSelectStatement();
+				var idType = factory.GetDbDataType(typeof(long));
 
-				idSelect.SelectQuery.Select.AddNew(factory.Expression(idType, "@@IDENTITY"));
-
-				return new SqlCommandScenario
-				{
-					Steps =
-					[
-						new SqlCommandStep { Statement = statement, Kind = SqlStepKind.NonQuery },
-						new SqlCommandStep { Statement = idSelect,  Kind = SqlStepKind.Scalar   },
-					],
-					OutcomeSteps = [1],
-				};
+				return IdentitySelectScenario(statement, factory.Expression(idType, "@@IDENTITY"));
 			}
 
 			return base.BuildCommandScenario(statement, flags, factory);

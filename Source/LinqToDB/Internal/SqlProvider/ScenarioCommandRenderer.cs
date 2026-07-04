@@ -8,6 +8,7 @@ using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.Infrastructure;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.Metrics;
 
@@ -76,6 +77,48 @@ namespace LinqToDB.Internal.SqlProvider
 		{
 			AliasesHelper.PrepareQueryAndAliases(serviceProvider.GetRequiredService<IIdentifierService>(), statement, null, out var aliases);
 			return aliases;
+		}
+
+		/// <summary>
+		/// A per-statement / per-command render scope: a fresh parameter normalizer (names uniquified within this scope
+		/// only) over already build-optimized statements (no whole-query optimize/convert pass). Shared by
+		/// <c>RenderStatements</c> (one scope per DbBatch statement) and <c>RenderCombinedBatches</c> (one scope per
+		/// length-split concatenated command); the caller sets <see cref="OptimizationContext.ShareParametersByAccessor"/>
+		/// when several statements share one scope.
+		/// </summary>
+		internal static OptimizationContext CreateRenderContext(DataConnection dataConnection, ISqlOptimizer sqlOptimizer, ISqlExpressionFactory factory, IReadOnlyParameterValues? parameterValues) =>
+			new(
+				new EvaluationContext(parameterValues),
+				dataConnection.Options,
+				dataConnection.DataProvider.SqlProviderFlags,
+				dataConnection.MappingSchema,
+				sqlOptimizer.CreateOptimizerVisitor(false),
+				sqlOptimizer.CreateConvertVisitor(false),
+				factory,
+				dataConnection.DataProvider.SqlProviderFlags.IsParameterOrderDependent,
+				isAlreadyOptimizedAndConverted : false,
+				parametersNormalizerFactory    : dataConnection.DataProvider.GetQueryParameterNormalizer);
+
+		/// <summary>
+		/// Binds a rendered scope's <paramref name="sqlParameters"/> into <see cref="DbParameter"/>s (<see langword="null"/>
+		/// when there are none). Every parameter is created on the connection's shared command instance (used only as a
+		/// <see cref="DbParameter"/> factory), matching the single-command path.
+		/// </summary>
+		internal static DbParameter[]? MaterializeDbParameters(DataConnection dataConnection, IReadOnlyList<SqlParameter> sqlParameters, IReadOnlyParameterValues? parameterValues)
+		{
+			if (sqlParameters.Count == 0)
+				return null;
+
+			var dbCommand    = dataConnection.GetOrCreateCommand();
+			var dbParameters = new DbParameter[sqlParameters.Count];
+
+			for (var p = 0; p < sqlParameters.Count; p++)
+			{
+				var sqlp = sqlParameters[p];
+				dbParameters[p] = DataConnection.QueryRunner.CreateParameter(dataConnection, dbCommand, sqlp, sqlp.GetParameterValue(parameterValues));
+			}
+
+			return dbParameters;
 		}
 
 		/// <summary>
@@ -162,17 +205,7 @@ namespace LinqToDB.Internal.SqlProvider
 			for (var i = 0; i < statements.Count; i++)
 			{
 				// Fresh normalizer per statement => each statement's parameters are named independently.
-				var optimizationContext = new OptimizationContext(
-					new EvaluationContext(parameterValues),
-					options,
-					dataConnection.DataProvider.SqlProviderFlags,
-					dataConnection.MappingSchema,
-					sqlOptimizer.CreateOptimizerVisitor(false),
-					sqlOptimizer.CreateConvertVisitor(false),
-					factory,
-					dataConnection.DataProvider.SqlProviderFlags.IsParameterOrderDependent,
-					isAlreadyOptimizedAndConverted : false,
-					parametersNormalizerFactory    : dataConnection.DataProvider.GetQueryParameterNormalizer);
+				var optimizationContext = CreateRenderContext(dataConnection, sqlOptimizer, factory, parameterValues);
 
 				sb.Value.Length = 0;
 
@@ -181,24 +214,7 @@ namespace LinqToDB.Internal.SqlProvider
 				using (ActivityService.Start(ActivityID.BuildSql))
 					sqlBuilder.BuildSql(statements[i], sb.Value, optimizationContext, aliases, null, 0);
 
-				var sqlParameters = optimizationContext.GetParameters();
-
-				DbParameter[]? dbParameters = null;
-
-				if (sqlParameters.Count > 0)
-				{
-					var dbCommand = dataConnection.GetOrCreateCommand();
-
-					dbParameters = new DbParameter[sqlParameters.Count];
-
-					for (var p = 0; p < sqlParameters.Count; p++)
-					{
-						var sqlp = sqlParameters[p];
-						dbParameters[p] = DataConnection.QueryRunner.CreateParameter(dataConnection, dbCommand, sqlp, sqlp.GetParameterValue(parameterValues));
-					}
-				}
-
-				result[i] = new RenderedStatement(sb.Value.ToString(), dbParameters);
+				result[i] = new RenderedStatement(sb.Value.ToString(), MaterializeDbParameters(dataConnection, optimizationContext.GetParameters(), parameterValues));
 			}
 
 			return result;

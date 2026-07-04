@@ -33,22 +33,12 @@ namespace LinqToDB.Internal.DataProvider.DB2
 		{
 			if (statement is SqlTruncateTableStatement { ResetIdentity: true } truncate && truncate.Table!.IdentityFields.Count > 0)
 			{
-				var fields = truncate.Table.IdentityFields;
-				var steps  = new SqlCommandStep[fields.Count + 1];
+				var table = truncate.Table!;
 
-				steps[0] = new SqlCommandStep { Statement = statement, Kind = SqlStepKind.NonQuery };
-
-				for (var i = 0; i < fields.Count; i++)
-				{
-					var reset = new SqlFragmentStatement(factory.Fragment(
-						"ALTER TABLE {0} ALTER {1} RESTART WITH 1",
-						new SqlObjectNameExpression(truncate.Table.TableName, ConvertType.NameToQueryTable, truncate.Table.TableOptions),
-						new SqlObjectNameExpression(new SqlObjectName(fields[i].PhysicalName), ConvertType.NameToQueryField)));
-
-					steps[i + 1] = new SqlCommandStep { Statement = reset, Kind = SqlStepKind.NonQuery };
-				}
-
-				return new SqlCommandScenario { Steps = steps, OutcomeSteps = [0] };
+				return PerFieldResetScenario(truncate, field => new SqlFragmentStatement(factory.Fragment(
+					"ALTER TABLE {0} ALTER {1} RESTART WITH 1",
+					new SqlObjectNameExpression(table.TableName, ConvertType.NameToQueryTable, table.TableOptions),
+					new SqlObjectNameExpression(new SqlObjectName(field.PhysicalName), ConvertType.NameToQueryField))));
 			}
 
 			if (statement is SqlInsertStatement { Insert.WithIdentity: true } insert)
@@ -57,20 +47,9 @@ namespace LinqToDB.Internal.DataProvider.DB2
 				// renders the from-less SELECT with FROM SYSIBM.SYSDUMMY1).
 				if (Version == DB2Version.LUW && insert.Insert.Into!.GetIdentityField() == null)
 				{
-					var idType   = factory.GetDbDataType(typeof(long));
-					var idSelect = new SqlSelectStatement();
+					var idType = factory.GetDbDataType(typeof(long));
 
-					idSelect.SelectQuery.Select.AddNew(factory.Function(idType, "identity_val_local"));
-
-					return new SqlCommandScenario
-					{
-						Steps =
-						[
-							new SqlCommandStep { Statement = statement, Kind = SqlStepKind.NonQuery },
-							new SqlCommandStep { Statement = idSelect,  Kind = SqlStepKind.Scalar   },
-						],
-						OutcomeSteps = [1],
-					};
+					return IdentitySelectScenario(statement, factory.Function(idType, "identity_val_local"));
 				}
 
 				// LUW (identity field): the builder wraps the insert as SELECT <id> FROM NEW TABLE (INSERT ...).

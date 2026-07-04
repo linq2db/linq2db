@@ -20,20 +20,9 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 		{
 			if (statement.NeedsIdentity)
 			{
-				var idType   = factory.GetDbDataType(typeof(long));
-				var idSelect = new SqlSelectStatement();
+				var idType = factory.GetDbDataType(typeof(long));
 
-				idSelect.SelectQuery.Select.AddNew(factory.Function(idType, "CURRENT_IDENTITY_VALUE"));
-
-				return new SqlCommandScenario
-				{
-					Steps =
-					[
-						new SqlCommandStep { Statement = statement, Kind = SqlStepKind.NonQuery },
-						new SqlCommandStep { Statement = idSelect,  Kind = SqlStepKind.Scalar   },
-					],
-					OutcomeSteps = [1],
-				};
+				return IdentitySelectScenario(statement, factory.Function(idType, "CURRENT_IDENTITY_VALUE"));
 			}
 
 			return base.BuildCommandScenario(statement, flags, factory);

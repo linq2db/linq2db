@@ -19,20 +19,9 @@ namespace LinqToDB.Internal.DataProvider.MySql
 		{
 			if (statement.NeedsIdentity)
 			{
-				var idType   = factory.GetDbDataType(typeof(long));
-				var idSelect = new SqlSelectStatement();
+				var idType = factory.GetDbDataType(typeof(long));
 
-				idSelect.SelectQuery.Select.AddNew(factory.Function(idType, "LAST_INSERT_ID"));
-
-				return new SqlCommandScenario
-				{
-					Steps =
-					[
-						new SqlCommandStep { Statement = statement, Kind = SqlStepKind.NonQuery },
-						new SqlCommandStep { Statement = idSelect,  Kind = SqlStepKind.Scalar   },
-					],
-					OutcomeSteps = [1],
-				};
+				return IdentitySelectScenario(statement, factory.Function(idType, "LAST_INSERT_ID"));
 			}
 
 			return base.BuildCommandScenario(statement, flags, factory);
