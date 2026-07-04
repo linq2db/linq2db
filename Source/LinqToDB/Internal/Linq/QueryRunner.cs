@@ -783,6 +783,17 @@ namespace LinqToDB.Internal.Linq
 			static bool IsCombinable(Preamble preamble)
 				=> preamble is IStepMaterializer { CanCombine: true } materializer && materializer.GetCombinableStatement() != null;
 
+			// Whether any preamble is reader-combinable — the single definition of the combinable predicate, shared by the
+			// ctor's partition and TryGetCombinedEagerEnumerable's gate.
+			internal static bool HasCombinable(Preamble[] preambles)
+			{
+				foreach (var preamble in preambles)
+					if (IsCombinable(preamble))
+						return true;
+
+				return false;
+			}
+
 			// Models the combinable children + main as a scenario of Reader steps [child1 .. childN, main] and merges every
 			// child's and the main's parameter values into one SqlParameterValues (keyed by SqlParameter node). The main is the
 			// last step, so PlanScenario's contiguous grouping keeps it at the end of the last group. Scenario step k (< count)
@@ -975,46 +986,77 @@ namespace LinqToDB.Internal.Linq
 				return result;
 			}
 
+			// A step in the unified eager walk: a sequential preamble (runs its own Execute) or a combined reader command
+			// (ExecuteCombined + materialize its combinable children; the main-carrying command also streams the main rows).
+			abstract record EagerStep;
+			sealed record SequentialStep(int PreambleIndex) : EagerStep;
+			sealed record CombinedReaderStep(CombinedCommand Command, bool CarriesMain) : EagerStep;
+
+			// The ordered eager walk, shared by the sync and async drivers: all non-combinable preambles first (index order;
+			// they may depend on each other and feed the combinable materializers + main mapper via the shared preambles[]),
+			// then the combined reader commands with the main-carrying command last. BuildCommands does not read preambles[],
+			// so rendering it here (before the sequential preambles run) is order-independent.
+			List<EagerStep> BuildSteps()
+			{
+				var steps = new List<EagerStep>(_nonCombinableIndexes.Length + 1);
+
+				foreach (var i in _nonCombinableIndexes)
+					steps.Add(new SequentialStep(i));
+
+				var mainStepIndex = _combinableIndexes.Length;
+
+				foreach (var command in BuildCommands())
+					steps.Add(new CombinedReaderStep(command, command.StepIndexes[command.StepIndexes.Count - 1] == mainStepIndex));
+
+				return steps;
+			}
+
+			// Materializes a combined command's combinable child result sets into the shared preambles[], advancing the reader
+			// past each. When materializeMain is true the command also carries the main step (last), so the last child is
+			// followed by NextResult to leave the reader positioned on the main result set; the caller then streams it.
+			void MaterializeChildren(DbDataReader dr, IReadOnlyList<int> stepIndexes, bool materializeMain, object?[] preambles)
+			{
+				var childCount = materializeMain ? stepIndexes.Count - 1 : stepIndexes.Count;
+
+				for (var k = 0; k < childCount; k++)
+				{
+					var preambleIndex = _combinableIndexes[stepIndexes[k]];
+
+					preambles[preambleIndex] = ((IStepMaterializer)_preambles[preambleIndex]).MaterializeFromReader(_dataContext, _expressions, _parameters, preambles, dr);
+
+					if (materializeMain || k < stepIndexes.Count - 1)
+						dr.NextResult();
+				}
+			}
+
 			public IEnumerator<T> GetEnumerator()
 			{
 				using var _ = ActivityService.Start(ActivityID.GetIEnumerable);
 
 				var preambles      = new object[_preambles.Length];
-
-				// Non-combinable preambles run sequentially first, in index order (they may depend on each other); their results
-				// populate the shared array that the combinable materializers and the main mapper read.
-				foreach (var i in _nonCombinableIndexes)
-					preambles[i] = _preambles[i].Execute(_dataContext, _expressions, _parameters, preambles);
-
-				var commands       = BuildCommands();
-				var mainStepIndex  = _combinableIndexes.Length;
 				var dataConnection = (DataConnection)_dataContext;
+				var steps          = BuildSteps();
 
 				DataReaderWrapper? mainReader = null;
 
 				try
 				{
-					foreach (var command in commands)
+					foreach (var step in steps)
 					{
-						var reader      = DataConnection.QueryRunner.ExecuteCombined(dataConnection, command, System.Data.CommandBehavior.Default);
-						var stepIndexes = command.StepIndexes;
-						var hasMain     = stepIndexes[stepIndexes.Count - 1] == mainStepIndex;
+						if (step is SequentialStep sequential)
+						{
+							preambles[sequential.PreambleIndex] = _preambles[sequential.PreambleIndex].Execute(_dataContext, _expressions, _parameters, preambles);
+							continue;
+						}
 
-						if (!hasMain)
+						var readerStep = (CombinedReaderStep)step;
+						var reader      = DataConnection.QueryRunner.ExecuteCombined(dataConnection, readerStep.Command, System.Data.CommandBehavior.Default);
+
+						if (!readerStep.CarriesMain)
 						{
 							try
 							{
-								var dr = reader.DataReader!;
-
-								for (var k = 0; k < stepIndexes.Count; k++)
-								{
-									var preambleIndex = _combinableIndexes[stepIndexes[k]];
-
-									preambles[preambleIndex] = ((IStepMaterializer)_preambles[preambleIndex]).MaterializeFromReader(_dataContext, _expressions, _parameters, preambles, dr);
-
-									if (k < stepIndexes.Count - 1)
-										dr.NextResult();
-								}
+								MaterializeChildren(reader.DataReader!, readerStep.Command.StepIndexes, materializeMain: false, preambles);
 							}
 							finally
 							{
@@ -1027,13 +1069,7 @@ namespace LinqToDB.Internal.Linq
 
 							var dr = reader.DataReader!;
 
-							for (var k = 0; k < stepIndexes.Count - 1; k++)
-							{
-								var preambleIndex = _combinableIndexes[stepIndexes[k]];
-
-								preambles[preambleIndex] = ((IStepMaterializer)_preambles[preambleIndex]).MaterializeFromReader(_dataContext, _expressions, _parameters, preambles, dr);
-								dr.NextResult();
-							}
+							MaterializeChildren(dr, readerStep.Command.StepIndexes, materializeMain: true, preambles);
 
 							foreach (var item in _query.GetResultFromReader!(_dataContext, _expressions, _parameters, preambles, dr))
 								yield return item;
@@ -1048,43 +1084,49 @@ namespace LinqToDB.Internal.Linq
 
 			IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
+			// Async sibling of MaterializeChildren.
+			async Task MaterializeChildrenAsync(DbDataReader dr, IReadOnlyList<int> stepIndexes, bool materializeMain, object?[] preambles, CancellationToken cancellationToken)
+			{
+				var childCount = materializeMain ? stepIndexes.Count - 1 : stepIndexes.Count;
+
+				for (var k = 0; k < childCount; k++)
+				{
+					var preambleIndex = _combinableIndexes[stepIndexes[k]];
+
+					preambles[preambleIndex] = await ((IStepMaterializer)_preambles[preambleIndex]).MaterializeFromReaderAsync(_dataContext, _expressions, _parameters, preambles, dr, cancellationToken).ConfigureAwait(false);
+
+					if (materializeMain || k < stepIndexes.Count - 1)
+						await dr.NextResultAsync(cancellationToken).ConfigureAwait(false);
+				}
+			}
+
+			// In case of change the logic of this method, DO NOT FORGET to change the sibling GetEnumerator.
 			public async IAsyncEnumerable<T> GetAsyncEnumerable([EnumeratorCancellation] CancellationToken cancellationToken = default)
 			{
 				var preambles      = new object[_preambles.Length];
-
-				// Non-combinable preambles run sequentially first, in index order (see the sync sibling).
-				foreach (var i in _nonCombinableIndexes)
-					preambles[i] = await _preambles[i].ExecuteAsync(_dataContext, _expressions, _parameters, preambles, cancellationToken).ConfigureAwait(false);
-
-				var commands       = BuildCommands();
-				var mainStepIndex  = _combinableIndexes.Length;
 				var dataConnection = (DataConnection)_dataContext;
+				var steps          = BuildSteps();
 
 				DataReaderWrapper? mainReader = null;
 
 				try
 				{
-					foreach (var command in commands)
+					foreach (var step in steps)
 					{
-						var reader      = await DataConnection.QueryRunner.ExecuteCombinedAsync(dataConnection, command, System.Data.CommandBehavior.Default, cancellationToken).ConfigureAwait(false);
-						var stepIndexes = command.StepIndexes;
-						var hasMain     = stepIndexes[stepIndexes.Count - 1] == mainStepIndex;
+						if (step is SequentialStep sequential)
+						{
+							preambles[sequential.PreambleIndex] = await _preambles[sequential.PreambleIndex].ExecuteAsync(_dataContext, _expressions, _parameters, preambles, cancellationToken).ConfigureAwait(false);
+							continue;
+						}
 
-						if (!hasMain)
+						var readerStep = (CombinedReaderStep)step;
+						var reader      = await DataConnection.QueryRunner.ExecuteCombinedAsync(dataConnection, readerStep.Command, System.Data.CommandBehavior.Default, cancellationToken).ConfigureAwait(false);
+
+						if (!readerStep.CarriesMain)
 						{
 							try
 							{
-								var dr = reader.DataReader!;
-
-								for (var k = 0; k < stepIndexes.Count; k++)
-								{
-									var preambleIndex = _combinableIndexes[stepIndexes[k]];
-
-									preambles[preambleIndex] = await ((IStepMaterializer)_preambles[preambleIndex]).MaterializeFromReaderAsync(_dataContext, _expressions, _parameters, preambles, dr, cancellationToken).ConfigureAwait(false);
-
-									if (k < stepIndexes.Count - 1)
-										await dr.NextResultAsync(cancellationToken).ConfigureAwait(false);
-								}
+								await MaterializeChildrenAsync(reader.DataReader!, readerStep.Command.StepIndexes, materializeMain: false, preambles, cancellationToken).ConfigureAwait(false);
 							}
 							finally
 							{
@@ -1097,13 +1139,7 @@ namespace LinqToDB.Internal.Linq
 
 							var dr = reader.DataReader!;
 
-							for (var k = 0; k < stepIndexes.Count - 1; k++)
-							{
-								var preambleIndex = _combinableIndexes[stepIndexes[k]];
-
-								preambles[preambleIndex] = await ((IStepMaterializer)_preambles[preambleIndex]).MaterializeFromReaderAsync(_dataContext, _expressions, _parameters, preambles, dr, cancellationToken).ConfigureAwait(false);
-								await dr.NextResultAsync(cancellationToken).ConfigureAwait(false);
-							}
+							await MaterializeChildrenAsync(dr, readerStep.Command.StepIndexes, materializeMain: true, preambles, cancellationToken).ConfigureAwait(false);
 
 							await foreach (var item in _query.GetResultFromReader!(_dataContext, _expressions, _parameters, preambles, dr).WithCancellation(cancellationToken).ConfigureAwait(false))
 								yield return item;
@@ -1148,16 +1184,7 @@ namespace LinqToDB.Internal.Linq
 			if (dataContext.QueryHints.Count > 0 || dataContext.NextQueryHints.Count > 0)
 				return null;
 
-			var anyCombinable = false;
-
-			foreach (var preamble in preambles)
-				if (preamble is IStepMaterializer { CanCombine: true } materializer && materializer.GetCombinableStatement() != null)
-				{
-					anyCombinable = true;
-					break;
-				}
-
-			if (!anyCombinable)
+			if (!EagerResultEnumerable<T>.HasCombinable(preambles))
 				return null;
 
 			return new EagerResultEnumerable<T>(dataContext, expressions, query, parameters, preambles);

@@ -57,6 +57,7 @@ namespace LinqToDB.Internal.Linq
 		object?[]?        Preambles        { get; }
 		Expression?       MapperExpression { get; set; }
 		int               RowsCount        { get; set; }
+		[Obsolete("Query batches are modeled by SqlCommandScenario; QueryNumber is always 0 and will be removed.")]
 		int               QueryNumber      { get; set; }
 	}
 }
