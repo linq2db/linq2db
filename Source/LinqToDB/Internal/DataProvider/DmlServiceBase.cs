@@ -275,15 +275,18 @@ namespace LinqToDB.Internal.DataProvider
 				{
 					// Size-aware: cap how many statements merge into one command so a large fan-out (e.g. an eager load
 					// with many child collections) splits across several round-trips instead of one oversized command.
-					// DML scenarios are tiny (<= a few steps) so this never changes their grouping.
-					if (run.Count <= flags.MaxStatementsPerCombinedGroup)
+					// DML scenarios are tiny (<= a few steps) so this never changes their grouping. Clamp to >= 1: the flag
+					// is public/settable, and a 0 or negative value would make the split loop below spin forever.
+					var maxPerGroup = Math.Max(1, flags.MaxStatementsPerCombinedGroup);
+
+					if (run.Count <= maxPerGroup)
 					{
 						EmitGroup(run);
 					}
 					else
 					{
-						for (var start = 0; start < run.Count; start += flags.MaxStatementsPerCombinedGroup)
-							EmitGroup(run.GetRange(start, Math.Min(flags.MaxStatementsPerCombinedGroup, run.Count - start)));
+						for (var start = 0; start < run.Count; start += maxPerGroup)
+							EmitGroup(run.GetRange(start, Math.Min(maxPerGroup, run.Count - start)));
 					}
 				}
 				else
