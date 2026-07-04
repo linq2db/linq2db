@@ -157,6 +157,13 @@ namespace Tests.Linq
 			FSharp.OptionTypes.TestDecimalOptionRoundtrip(db);
 		}
 
+		[Test(Description = "An option over a complex/entity element is not auto-scalarized; only scalar-element options are (#195)")]
+		public void Option_ComplexElementNotScalarized([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.OptionTypes.VerifyComplexElementOptionNotScalarized(db);
+		}
+
 		[Test]
 		public void LoadSingleCLIMutable([DataSources] string context)
 		{

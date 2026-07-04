@@ -83,3 +83,33 @@ let TestDecimalOptionRoundtrip (db : IDataContext) =
 
     Assert.That(r1.Value, Is.EqualTo(Some 12.34m))
     Assert.That(r2.Value, Is.EqualTo None)
+
+// A complex (record) element type - not a scalar in MappingSchema.Default.
+[<NoComparison; NoEquality>]
+type ComplexElem = { A : int; B : string }
+
+// https://github.com/linq2db/linq2db/issues/195
+// Negative branch of the scalar gate: an option over a complex/entity element is NOT auto-scalarized.
+// IsScalarOption gates on MappingSchema.Default.IsScalarType, so only a scalar-element option gets the
+// F# ValueConverter. The scalar-element option ('int option') here must carry the converter; the
+// complex-element option ('ComplexElem option') must be left untouched (no auto-mapped value converter).
+[<NoComparison; NoEquality>]
+[<Table("ComplexOptionTable", IsColumnAttributeRequired = false)>]
+type ComplexOptionRow =
+    { [<PrimaryKey>] Id    : int
+      ScalarOpt           : int option
+      ComplexOpt          : ComplexElem option }
+
+let VerifyComplexElementOptionNotScalarized (db : IDataContext) =
+    let ed = db.MappingSchema.GetEntityDescriptor(typeof<ComplexOptionRow>)
+
+    // The scalar-element option is recognised as a column carrying the F# value converter...
+    let scalar = ed.Columns |> Seq.find (fun c -> c.MemberName = "ScalarOpt")
+    Assert.That(scalar.ValueConverter, Is.Not.Null)
+
+    // ...but the complex-element option is left untouched: no auto-mapped value converter.
+    let complexConverter =
+        ed.Columns
+        |> Seq.tryFind (fun c -> c.MemberName = "ComplexOpt")
+        |> Option.bind (fun c -> Option.ofObj c.ValueConverter)
+    Assert.That(complexConverter, Is.EqualTo None)
