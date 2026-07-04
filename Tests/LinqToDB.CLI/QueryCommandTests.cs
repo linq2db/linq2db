@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.CommandLine;
+using LinqToDB.Data;
 
 using NUnit.Framework;
 
@@ -73,6 +74,119 @@ namespace Tests.LinqToDB.CLI
 				Assert.That(result.ExitCode, Is.Zero);
 				Assert.That(result.Output,   Does.Contain("\"Value\": 1"));
 				Assert.That(result.Error,    Is.Empty);
+			}
+		}
+
+		[Test]
+		public async Task QueryRejectsDml()
+		{
+			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql", "update Person set Name = 'test'");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.EqualTo(-3));
+				Assert.That(result.Error,    Does.Contain("Query is not read-only: token 'UPDATE' is not allowed."));
+			}
+		}
+
+		[Test]
+		public async Task QueryRejectsDdl()
+		{
+			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql", "drop table Person");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.EqualTo(-3));
+				Assert.That(result.Error,    Does.Contain("Query is not read-only: token 'DROP' is not allowed."));
+			}
+		}
+
+		[Test]
+		public async Task QueryRejectsProcedureCalls()
+		{
+			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql", "call DoWork()");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.EqualTo(-3));
+				Assert.That(result.Error,    Does.Contain("Query is not read-only: token 'CALL' is not allowed."));
+			}
+		}
+
+		[Test]
+		public async Task QueryRejectsMultipleStatements()
+		{
+			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql", "select 1; select 2");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.EqualTo(-3));
+				Assert.That(result.Error,    Does.Contain("Only single SELECT statement is allowed."));
+			}
+		}
+
+		[Test]
+		public async Task QueryIgnoresForbiddenTokensInStringsAndComments()
+		{
+			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql", "select 'drop table' as Value -- update table");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.Zero);
+				Assert.That(result.Output,   Does.Contain("\"Value\": \"drop table\""));
+				Assert.That(result.Error,    Is.Empty);
+			}
+		}
+
+		[Test]
+		public void QuerySafetyAllowsSqlServerSelect()
+		{
+			var provider = DataConnection.GetDataProvider("SqlServer", "Server=.;Database=test;Trusted_Connection=True")!;
+
+			var result = QuerySafetyValidator.Validate(provider, "select 1 as Value");
+
+			Assert.That(result.IsSafe, Is.True);
+		}
+
+		[Test]
+		public void QuerySafetyRejectsSqlServerDml()
+		{
+			var provider = DataConnection.GetDataProvider("SqlServer", "Server=.;Database=test;Trusted_Connection=True")!;
+
+			var result = QuerySafetyValidator.Validate(provider, "update dbo.Person set Name = 'test'");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.IsSafe, Is.False);
+				Assert.That(result.Error,  Does.Contain("UpdateStatement"));
+			}
+		}
+
+		[Test]
+		public void QuerySafetyRejectsSqlServerExecute()
+		{
+			var provider = DataConnection.GetDataProvider("SqlServer", "Server=.;Database=test;Trusted_Connection=True")!;
+
+			var result = QuerySafetyValidator.Validate(provider, "exec dbo.DoWork");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.IsSafe, Is.False);
+				Assert.That(result.Error,  Does.Contain("EXECUTE is not allowed"));
+			}
+		}
+
+		[Test]
+		public void QuerySafetyRejectsSqlServerSelectInto()
+		{
+			var provider = DataConnection.GetDataProvider("SqlServer", "Server=.;Database=test;Trusted_Connection=True")!;
+
+			var result = QuerySafetyValidator.Validate(provider, "select * into dbo.NewPerson from dbo.Person");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.IsSafe, Is.False);
+				Assert.That(result.Error,  Does.Contain("token 'INTO' is not allowed"));
 			}
 		}
 

@@ -38,16 +38,27 @@ namespace LinqToDB.CommandLine
 			try
 			{
 				var dataProvider = DataConnection.GetDataProvider(_settings.Provider, _settings.ConnectionString);
+
 				if (dataProvider == null)
 				{
 					await _environment.Error.WriteLineAsync($"Cannot create database provider: {_settings.Provider}").ConfigureAwait(false);
 					return StatusCodes.EXPECTED_ERROR;
 				}
 
+				var safetyResult = QuerySafetyValidator.Validate(dataProvider, sql);
+
+				if (!safetyResult.IsSafe)
+				{
+					await _environment.Error.WriteLineAsync(safetyResult.Error).ConfigureAwait(false);
+					return StatusCodes.EXPECTED_ERROR;
+				}
+
 				var dataConnection = new DataConnection(new DataOptions().UseConnectionString(dataProvider, _settings.ConnectionString));
+
 				await using (dataConnection.ConfigureAwait(false))
 				{
 					var dataReader = await dataConnection.ExecuteReaderAsync(sql, cancellationToken).ConfigureAwait(false);
+
 					await using (dataReader.ConfigureAwait(false))
 					{
 						var reader = dataReader.Reader;

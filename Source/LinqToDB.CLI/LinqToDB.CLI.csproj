@@ -61,6 +61,7 @@
 		<!--providers-->
 		<PackageReference Include="Microsoft.Data.SQLite" />
 		<PackageReference Include="Microsoft.Data.SqlClient" />
+		<PackageReference Include="Microsoft.SqlServer.TransactSql.ScriptDom" />
 		<PackageReference Include="FirebirdSql.Data.FirebirdClient" />
 		<PackageReference Include="MySqlConnector" />
 		<PackageReference Include="Oracle.ManagedDataAccess.Core" />

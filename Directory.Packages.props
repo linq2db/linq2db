@@ -107,6 +107,7 @@
 		<PackageVersion Include="IBM.Data.DB.Provider"                                  Version="11.5.9000.4"                  />
 		<PackageVersion Include="Microsoft.Data.SqlClient"                              Version="7.0.1"                        />
 		<PackageVersion Include="Microsoft.Data.Sqlite"                                 Version="$(Net10Latest)"               />
+		<PackageVersion Include="Microsoft.SqlServer.TransactSql.ScriptDom"             Version="180.37.3"                     />
 		<PackageVersion Include="Microsoft.SqlServer.Types"                             Version="170.1000.7"                   />
 		<PackageVersion Include="MySqlConnector"                                        Version="2.5.0"                        />
 		<PackageVersion Include="MySql.Data"                                            Version="9.7.0"                        />
