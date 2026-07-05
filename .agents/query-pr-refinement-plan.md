@@ -154,15 +154,15 @@ Done when: unlimited output is not the default.
 
 ## Phase 10: Streaming Output
 
-Status: pending
+Status: completed
 
 Avoid buffering full result sets.
 
-- [ ] Stream CSV row by row.
-- [ ] Stream JSON array row by row.
-- [ ] Write output files directly through a writer/stream.
-- [ ] Remove full-result `MemoryStream.ToArray()` and full CSV `StringBuilder` buffering.
-- [ ] Keep implementation simple and reviewable.
+- [x] Stream CSV row by row.
+- [x] Stream JSON array row by row.
+- [x] Write output files directly through a writer/stream.
+- [x] Remove full-result `MemoryStream.ToArray()` and full CSV `StringBuilder` buffering.
+- [x] Keep implementation simple and reviewable.
 
 Done when: output path does not build the entire result as one string.
 

@@ -102,6 +102,11 @@ namespace Tests.LinqToDB.CLI
 			{
 				throw new NotSupportedException();
 			}
+
+			public TextWriter CreateTextWriter(string path)
+			{
+				throw new NotSupportedException();
+			}
 		}
 	}
 }

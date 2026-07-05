@@ -43,5 +43,10 @@ namespace LinqToDB.CommandLine
 		{
 			File.WriteAllText(path, contents);
 		}
+
+		public TextWriter CreateTextWriter(string path)
+		{
+			return File.CreateText(path);
+		}
 	}
 }

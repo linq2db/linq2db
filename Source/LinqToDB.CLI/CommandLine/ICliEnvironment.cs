@@ -12,5 +12,6 @@ namespace LinqToDB.CommandLine
 		bool FileExists(string path);
 		string ReadAllText(string path);
 		void WriteAllText(string path, string contents);
+		TextWriter CreateTextWriter(string path);
 	}
 }

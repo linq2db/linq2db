@@ -72,7 +72,7 @@ namespace Tests.LinqToDB.CLI
 			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("\"Value\": \"1\""));
+				Assert.That(result.Output,   Does.Contain("\"Value\":\"1\""));
 				Assert.That(result.Error,    Is.Empty);
 			}
 		}
@@ -239,7 +239,7 @@ namespace Tests.LinqToDB.CLI
 			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("\"Value\": \"drop table\""));
+				Assert.That(result.Output,   Does.Contain("\"Value\":\"drop table\""));
 				Assert.That(result.Error,    Is.Empty);
 			}
 		}
@@ -325,7 +325,7 @@ namespace Tests.LinqToDB.CLI
 			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("\"Value\": \"test\""));
+				Assert.That(result.Output,   Does.Contain("\"Value\":\"test\""));
 				Assert.That(result.Error,    Is.Empty);
 			}
 		}
@@ -392,8 +392,8 @@ namespace Tests.LinqToDB.CLI
 			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("\"Value1\": \"1\""));
-				Assert.That(result.Output,   Does.Contain("\"Value2\": \"2\""));
+				Assert.That(result.Output,   Does.Contain("\"Value1\":\"1\""));
+				Assert.That(result.Output,   Does.Contain("\"Value2\":\"2\""));
 				Assert.That(result.Error,    Is.Empty);
 			}
 		}
@@ -406,16 +406,16 @@ namespace Tests.LinqToDB.CLI
 			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("\"rowCount\": 1"));
-				Assert.That(result.Output,   Does.Contain("\"truncated\": false"));
-				Assert.That(result.Output,   Does.Contain("\"columns\": ["));
-				Assert.That(result.Output,   Does.Contain("\"ordinal\": 0"));
-				Assert.That(result.Output,   Does.Contain("\"ordinal\": 1"));
-				Assert.That(result.Output,   Does.Contain("\"name\": \"Value\""));
-				Assert.That(result.Output,   Does.Contain("\"fieldType\": \"System.Int64\""));
-				Assert.That(result.Output,   Does.Contain("\"providerSpecificFieldType\": \"System.Int64\""));
-				Assert.That(result.Output,   Does.Contain("\"dataTypeName\": \"INTEGER\""));
-				Assert.That(result.Output,   Does.Contain("\"rows\": ["));
+				Assert.That(result.Output,   Does.Contain("\"rowCount\":1"));
+				Assert.That(result.Output,   Does.Contain("\"truncated\":false"));
+				Assert.That(result.Output,   Does.Contain("\"columns\":["));
+				Assert.That(result.Output,   Does.Contain("\"ordinal\":0"));
+				Assert.That(result.Output,   Does.Contain("\"ordinal\":1"));
+				Assert.That(result.Output,   Does.Contain("\"name\":\"Value\""));
+				Assert.That(result.Output,   Does.Contain("\"fieldType\":\"System.Int64\""));
+				Assert.That(result.Output,   Does.Contain("\"providerSpecificFieldType\":\"System.Int64\""));
+				Assert.That(result.Output,   Does.Contain("\"dataTypeName\":\"INTEGER\""));
+				Assert.That(result.Output,   Does.Contain("\"rows\":["));
 				Assert.That(result.Output,   Does.Contain("\"1\""));
 				Assert.That(result.Output,   Does.Contain("\"2\""));
 				Assert.That(result.Error,    Is.Empty);
@@ -441,9 +441,9 @@ namespace Tests.LinqToDB.CLI
 			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("\"rowCount\": 1"));
-				Assert.That(result.Output,   Does.Contain("\"columns\": ["));
-				Assert.That(result.Output,   Does.Contain("\"rows\": ["));
+				Assert.That(result.Output,   Does.Contain("\"rowCount\":1"));
+				Assert.That(result.Output,   Does.Contain("\"columns\":["));
+				Assert.That(result.Output,   Does.Contain("\"rows\":["));
 				Assert.That(result.Error,    Is.Empty);
 			}
 		}
@@ -471,8 +471,8 @@ namespace Tests.LinqToDB.CLI
 			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("\"Value\": \"1\""));
-				Assert.That(result.Output,   Does.Not.Contain("\"Value\": \"2\""));
+				Assert.That(result.Output,   Does.Contain("\"Value\":\"1\""));
+				Assert.That(result.Output,   Does.Not.Contain("\"Value\":\"2\""));
 				Assert.That(result.Error,    Does.Contain("Query result truncated to 1 row(s)."));
 			}
 		}
@@ -496,8 +496,8 @@ namespace Tests.LinqToDB.CLI
 			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("\"Value\": \"1\""));
-				Assert.That(result.Output,   Does.Not.Contain("\"Value\": \"2\""));
+				Assert.That(result.Output,   Does.Contain("\"Value\":\"1\""));
+				Assert.That(result.Output,   Does.Not.Contain("\"Value\":\"2\""));
 				Assert.That(result.Error,    Does.Contain("Query result truncated to 1 row(s)."));
 			}
 		}
@@ -545,8 +545,8 @@ namespace Tests.LinqToDB.CLI
 			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("\"rowCount\": 1"));
-				Assert.That(result.Output,   Does.Contain("\"truncated\": true"));
+				Assert.That(result.Output,   Does.Contain("\"rowCount\":1"));
+				Assert.That(result.Output,   Does.Contain("\"truncated\":true"));
 				Assert.That(result.Output,   Does.Contain("\"1\""));
 				Assert.That(result.Output,   Does.Not.Contain("\"2\""));
 				Assert.That(result.Error,    Is.Empty);
@@ -561,7 +561,7 @@ namespace Tests.LinqToDB.CLI
 			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("\"Value\": \"1\""));
+				Assert.That(result.Output,   Does.Contain("\"Value\":\"1\""));
 				Assert.That(result.Error,    Is.Empty);
 			}
 		}
@@ -654,7 +654,7 @@ namespace Tests.LinqToDB.CLI
 			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("\"Value\": \"2\""));
+				Assert.That(result.Output,   Does.Contain("\"Value\":\"2\""));
 				Assert.That(result.Error,    Is.Empty);
 			}
 		}
@@ -685,7 +685,7 @@ namespace Tests.LinqToDB.CLI
 				Assert.That(result.ExitCode, Is.Zero);
 				Assert.That(result.Output,   Is.Empty);
 				Assert.That(result.Error,    Is.Empty);
-				Assert.That(environment.Files["default.csv"], Does.Contain("\"1\": \"1\""));
+				Assert.That(environment.Files["default.csv"], Does.Contain("\"1\":\"1\""));
 			}
 		}
 
@@ -714,7 +714,7 @@ namespace Tests.LinqToDB.CLI
 				Assert.That(result.ExitCode, Is.Zero);
 				Assert.That(result.Output,   Is.Empty);
 				Assert.That(result.Error,    Is.Empty);
-				Assert.That(environment.Files["cli.json"], Does.Contain("\"Value\": \"1\""));
+				Assert.That(environment.Files["cli.json"], Does.Contain("\"Value\":\"1\""));
 			}
 		}
 
@@ -726,7 +726,7 @@ namespace Tests.LinqToDB.CLI
 			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("\"Value\": \"1\""));
+				Assert.That(result.Output,   Does.Contain("\"Value\":\"1\""));
 				Assert.That(result.Error,    Is.Empty);
 			}
 		}
@@ -751,7 +751,7 @@ namespace Tests.LinqToDB.CLI
 			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("\"Value\": \"1\""));
+				Assert.That(result.Output,   Does.Contain("\"Value\":\"1\""));
 				Assert.That(result.Error,    Is.Empty);
 			}
 		}
@@ -970,6 +970,39 @@ namespace Tests.LinqToDB.CLI
 			public void WriteAllText(string path, string contents)
 			{
 				Files[path] = contents;
+			}
+
+			public TextWriter CreateTextWriter(string path)
+			{
+				return new TestFileWriter(contents => Files[path] = contents);
+			}
+
+			sealed class TestFileWriter(Action<string> save) : StringWriter
+			{
+				bool _saved;
+
+				public override ValueTask DisposeAsync()
+				{
+					Save();
+					return base.DisposeAsync();
+				}
+
+				protected override void Dispose(bool disposing)
+				{
+					if (disposing)
+						Save();
+
+					base.Dispose(disposing);
+				}
+
+				void Save()
+				{
+					if (_saved)
+						return;
+
+					save(ToString());
+					_saved = true;
+				}
 			}
 		}
 	}

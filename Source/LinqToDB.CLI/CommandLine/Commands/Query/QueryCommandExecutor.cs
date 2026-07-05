@@ -31,8 +31,6 @@ namespace LinqToDB.CommandLine
 	{
 		sealed record QueryOutputColumn(int Ordinal, string Name, string FieldType, string ProviderSpecificFieldType, string DataTypeName, QueryActualFieldType ActualFieldType);
 
-		sealed record QueryOutput(QueryOutputColumn[] Columns, List<string?[]> Rows, bool Truncated);
-
 		enum QueryActualFieldType
 		{
 			None = 0,
@@ -183,51 +181,80 @@ namespace LinqToDB.CommandLine
 							}
 						}
 
-						// Read the rows from the data reader and convert each field to a string representation.
+						// Read rows from the data reader and write them directly to the output stream.
 						//
-						var rows = new List<string?[]>();
-
+						var outputWriter = _settings.OutputFile != null ? _environment.CreateTextWriter(_settings.OutputFile) : _environment.Out;
+						var disposeOutputWriter = _settings.OutputFile != null;
+						var rowCount = 0;
 						var truncated = false;
 
-						while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+						try
 						{
-							if (rows.Count >= _settings.MaxRows)
+							switch (_settings.Output)
 							{
-								truncated = true;
-								break;
+								case "csv":
+									await WriteCsvHeader(outputWriter, columns, cancellationToken).ConfigureAwait(false);
+									break;
+								case "json-table":
+									await WriteJsonTableStart(outputWriter, columns, cancellationToken).ConfigureAwait(false);
+									break;
+								default:
+									await outputWriter.WriteAsync("[".AsMemory(), cancellationToken).ConfigureAwait(false);
+									break;
 							}
 
-							var row = new string?[columns.Length];
-
-							for (var i = 0; i < columns.Length; i++)
+							while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
 							{
-								if (await reader.IsDBNullAsync(i, cancellationToken).ConfigureAwait(false))
-									continue;
+								if (rowCount >= _settings.MaxRows)
+								{
+									truncated = true;
+									break;
+								}
 
-								row[i] = ReadFieldAsString(reader, columns[i].ActualFieldType, i);
+								var row = new string?[columns.Length];
+
+								for (var i = 0; i < columns.Length; i++)
+								{
+									if (await reader.IsDBNullAsync(i, cancellationToken).ConfigureAwait(false))
+										continue;
+
+									row[i] = ReadFieldAsString(reader, columns[i].ActualFieldType, i);
+								}
+
+								switch (_settings.Output)
+								{
+									case "csv":
+										await WriteCsvRow(outputWriter, row, cancellationToken).ConfigureAwait(false);
+										break;
+									case "json-table":
+										await WriteJsonTableRow(outputWriter, row, rowCount, cancellationToken).ConfigureAwait(false);
+										break;
+									default:
+										await WriteJsonRow(outputWriter, columns, row, rowCount, cancellationToken).ConfigureAwait(false);
+										break;
+								}
+
+								rowCount++;
 							}
 
-							rows.Add(row);
+							switch (_settings.Output)
+							{
+								case "json-table":
+									await WriteJsonTableEnd(outputWriter, rowCount, truncated, cancellationToken).ConfigureAwait(false);
+									break;
+								case "csv":
+									break;
+								default:
+									await outputWriter.WriteAsync("]".AsMemory(), cancellationToken).ConfigureAwait(false);
+									break;
+							}
+
+							await outputWriter.FlushAsync(cancellationToken).ConfigureAwait(false);
 						}
-
-						// Create a query output object containing the column definitions and rows.
-						//
-						var queryOutput = new QueryOutput(columns, rows, truncated);
-
-						var output = _settings.Output switch
+						finally
 						{
-							"csv"        => FormatCsv(queryOutput),
-							"json-table" => FormatJsonTable(queryOutput),
-							_            => FormatJson(queryOutput),
-						};
-
-						if (_settings.OutputFile != null)
-						{
-							_environment.WriteAllText(_settings.OutputFile, output);
-						}
-						else
-						{
-							await _environment.Out.WriteAsync(output.AsMemory(), cancellationToken).ConfigureAwait(false);
+							if (disposeOutputWriter)
+								await outputWriter.DisposeAsync().ConfigureAwait(false);
 						}
 
 						if (truncated && !string.Equals(_settings.Output, "json-table", StringComparison.OrdinalIgnoreCase))
@@ -284,113 +311,103 @@ namespace LinqToDB.CommandLine
 			return null;
 		}
 
-		static string FormatJson(QueryOutput queryOutput)
+		static async Task WriteJsonRow(TextWriter output, QueryOutputColumn[] columns, string?[] row, int rowIndex, CancellationToken cancellationToken)
 		{
-			using var stream = new MemoryStream();
-			using var writer = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = true });
+			if (rowIndex > 0)
+				await output.WriteAsync(",".AsMemory(), cancellationToken).ConfigureAwait(false);
 
-			writer.WriteStartArray();
+			await output.WriteAsync("{".AsMemory(), cancellationToken).ConfigureAwait(false);
 
-			foreach (var row in queryOutput.Rows)
-			{
-				writer.WriteStartObject();
-
-				for (var i = 0; i < queryOutput.Columns.Length; i++)
-				{
-					writer.WritePropertyName(queryOutput.Columns[i].Name);
-
-					if (row[i] == null)
-						writer.WriteNullValue();
-					else
-						writer.WriteStringValue(row[i]);
-				}
-
-				writer.WriteEndObject();
-			}
-
-			writer.WriteEndArray();
-			writer.Flush();
-
-			return Encoding.UTF8.GetString(stream.ToArray());
-		}
-
-		static string FormatJsonTable(QueryOutput queryOutput)
-		{
-			using var stream = new MemoryStream();
-			using var writer = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = true });
-
-			writer.WriteStartObject();
-			writer.WriteNumber("rowCount", queryOutput.Rows.Count);
-			writer.WriteBoolean("truncated", queryOutput.Truncated);
-			writer.WritePropertyName("columns");
-			writer.WriteStartArray();
-
-			foreach (var column in queryOutput.Columns)
-			{
-				writer.WriteStartObject();
-				writer.WriteNumber("ordinal", column.Ordinal);
-				writer.WriteString("name", column.Name);
-				writer.WriteString("fieldType", column.FieldType);
-				writer.WriteString("providerSpecificFieldType", column.ProviderSpecificFieldType);
-				writer.WriteString("dataTypeName", column.DataTypeName);
-				writer.WriteEndObject();
-			}
-
-			writer.WriteEndArray();
-			writer.WritePropertyName("rows");
-			writer.WriteStartArray();
-
-			foreach (var row in queryOutput.Rows)
-			{
-				writer.WriteStartArray();
-
-				for (var i = 0; i < queryOutput.Columns.Length; i++)
-				{
-					if (row[i] == null)
-						writer.WriteNullValue();
-					else
-						writer.WriteStringValue(row[i]);
-				}
-
-				writer.WriteEndArray();
-			}
-
-			writer.WriteEndArray();
-			writer.WriteEndObject();
-			writer.Flush();
-
-			return Encoding.UTF8.GetString(stream.ToArray());
-		}
-
-		static string FormatCsv(QueryOutput queryOutput)
-		{
-			var text = new StringBuilder();
-
-			for (var i = 0; i < queryOutput.Columns.Length; i++)
+			for (var i = 0; i < columns.Length; i++)
 			{
 				if (i > 0)
-					text.Append(',');
+					await output.WriteAsync(",".AsMemory(), cancellationToken).ConfigureAwait(false);
 
-				AppendCsvValue(text, queryOutput.Columns[i].Name);
+				await WriteJsonString(output, columns[i].Name, cancellationToken).ConfigureAwait(false);
+				await output.WriteAsync(":".AsMemory(), cancellationToken).ConfigureAwait(false);
+				await WriteJsonValue(output, row[i], cancellationToken).ConfigureAwait(false);
 			}
 
-			text.AppendLine();
+			await output.WriteAsync("}".AsMemory(), cancellationToken).ConfigureAwait(false);
+		}
 
-			foreach (var row in queryOutput.Rows)
+		static async Task WriteJsonTableStart(TextWriter output, QueryOutputColumn[] columns, CancellationToken cancellationToken)
+		{
+			await output.WriteAsync("{\"columns\":[".AsMemory(), cancellationToken).ConfigureAwait(false);
+
+			for (var i = 0; i < columns.Length; i++)
 			{
-				for (var i = 0; i < queryOutput.Columns.Length; i++)
-				{
-					if (i > 0)
-						text.Append(',');
+				if (i > 0)
+					await output.WriteAsync(",".AsMemory(), cancellationToken).ConfigureAwait(false);
 
-					if (row[i] != null)
-						AppendCsvValue(text, row[i]!);
-				}
-
-				text.AppendLine();
+				await output.WriteAsync("{\"ordinal\":".AsMemory(), cancellationToken).ConfigureAwait(false);
+				await output.WriteAsync(columns[i].Ordinal.ToString(CultureInfo.InvariantCulture).AsMemory(), cancellationToken).ConfigureAwait(false);
+				await output.WriteAsync(",\"name\":".AsMemory(), cancellationToken).ConfigureAwait(false);
+				await WriteJsonString(output, columns[i].Name, cancellationToken).ConfigureAwait(false);
+				await output.WriteAsync(",\"fieldType\":".AsMemory(), cancellationToken).ConfigureAwait(false);
+				await WriteJsonString(output, columns[i].FieldType, cancellationToken).ConfigureAwait(false);
+				await output.WriteAsync(",\"providerSpecificFieldType\":".AsMemory(), cancellationToken).ConfigureAwait(false);
+				await WriteJsonString(output, columns[i].ProviderSpecificFieldType, cancellationToken).ConfigureAwait(false);
+				await output.WriteAsync(",\"dataTypeName\":".AsMemory(), cancellationToken).ConfigureAwait(false);
+				await WriteJsonString(output, columns[i].DataTypeName, cancellationToken).ConfigureAwait(false);
+				await output.WriteAsync("}".AsMemory(), cancellationToken).ConfigureAwait(false);
 			}
 
-			return text.ToString();
+			await output.WriteAsync("],\"rows\":[".AsMemory(), cancellationToken).ConfigureAwait(false);
+		}
+
+		static async Task WriteJsonTableRow(TextWriter output, string?[] row, int rowIndex, CancellationToken cancellationToken)
+		{
+			if (rowIndex > 0)
+				await output.WriteAsync(",".AsMemory(), cancellationToken).ConfigureAwait(false);
+
+			await output.WriteAsync("[".AsMemory(), cancellationToken).ConfigureAwait(false);
+
+			for (var i = 0; i < row.Length; i++)
+			{
+				if (i > 0)
+					await output.WriteAsync(",".AsMemory(), cancellationToken).ConfigureAwait(false);
+
+				await WriteJsonValue(output, row[i], cancellationToken).ConfigureAwait(false);
+			}
+
+			await output.WriteAsync("]".AsMemory(), cancellationToken).ConfigureAwait(false);
+		}
+
+		static async Task WriteJsonTableEnd(TextWriter output, int rowCount, bool truncated, CancellationToken cancellationToken)
+		{
+			await output.WriteAsync("],\"rowCount\":".AsMemory(), cancellationToken).ConfigureAwait(false);
+			await output.WriteAsync(rowCount.ToString(CultureInfo.InvariantCulture).AsMemory(), cancellationToken).ConfigureAwait(false);
+			await output.WriteAsync(",\"truncated\":".AsMemory(), cancellationToken).ConfigureAwait(false);
+			await output.WriteAsync((truncated ? "true" : "false").AsMemory(), cancellationToken).ConfigureAwait(false);
+			await output.WriteAsync("}".AsMemory(), cancellationToken).ConfigureAwait(false);
+		}
+
+		static async Task WriteCsvHeader(TextWriter output, QueryOutputColumn[] columns, CancellationToken cancellationToken)
+		{
+			for (var i = 0; i < columns.Length; i++)
+			{
+				if (i > 0)
+					await output.WriteAsync(",".AsMemory(), cancellationToken).ConfigureAwait(false);
+
+				await WriteCsvValue(output, columns[i].Name, cancellationToken).ConfigureAwait(false);
+			}
+
+			await output.WriteAsync(Environment.NewLine.AsMemory(), cancellationToken).ConfigureAwait(false);
+		}
+
+		static async Task WriteCsvRow(TextWriter output, string?[] row, CancellationToken cancellationToken)
+		{
+			for (var i = 0; i < row.Length; i++)
+			{
+				if (i > 0)
+					await output.WriteAsync(",".AsMemory(), cancellationToken).ConfigureAwait(false);
+
+				if (row[i] != null)
+					await WriteCsvValue(output, row[i]!, cancellationToken).ConfigureAwait(false);
+			}
+
+			await output.WriteAsync(Environment.NewLine.AsMemory(), cancellationToken).ConfigureAwait(false);
 		}
 
 		static QueryOutputColumn CreateOutputColumn(DbDataReader reader, int ordinal, Type providerSpecificType)
@@ -486,17 +503,29 @@ namespace LinqToDB.CommandLine
 			return output.ToString();
 		}
 
-		static void AppendCsvValue(StringBuilder output, string value)
+		static Task WriteJsonString(TextWriter output, string value, CancellationToken cancellationToken)
+		{
+			return output.WriteAsync(JsonSerializer.Serialize(value).AsMemory(), cancellationToken);
+		}
+
+		static Task WriteJsonValue(TextWriter output, string? value, CancellationToken cancellationToken)
+		{
+			return value == null
+				? output.WriteAsync("null".AsMemory(), cancellationToken)
+				: WriteJsonString(output, value, cancellationToken);
+		}
+
+		static async Task WriteCsvValue(TextWriter output, string value, CancellationToken cancellationToken)
 		{
 			if (value.IndexOfAny([',', '"', '\r', '\n']) < 0)
 			{
-				output.Append(value);
+				await output.WriteAsync(value.AsMemory(), cancellationToken).ConfigureAwait(false);
 				return;
 			}
 
-			output.Append('"');
-			output.Append(value.Replace("\"", "\"\"", StringComparison.Ordinal));
-			output.Append('"');
+			await output.WriteAsync("\"".AsMemory(), cancellationToken).ConfigureAwait(false);
+			await output.WriteAsync(value.Replace("\"", "\"\"", StringComparison.Ordinal).AsMemory(), cancellationToken).ConfigureAwait(false);
+			await output.WriteAsync("\"".AsMemory(), cancellationToken).ConfigureAwait(false);
 		}
 	}
 }
