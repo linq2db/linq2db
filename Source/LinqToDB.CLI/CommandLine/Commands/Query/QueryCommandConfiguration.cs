@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 using System.Text.Json;
 
@@ -33,6 +34,16 @@ namespace LinqToDB.CommandLine
 		/// Optional database password used as <c>{1}</c> argument for connection string formatting.
 		/// </summary>
 		public string? Password         { get; private set; }
+
+		/// <summary>
+		/// Optional query command timeout in seconds.
+		/// </summary>
+		public int?    CommandTimeout   { get; private set; }
+
+		/// <summary>
+		/// Optional provider-specific lock wait timeout in seconds.
+		/// </summary>
+		public int?    LockTimeout      { get; private set; }
 
 		/// <summary>
 		/// Unsafe SQL execution policy. This value is intentionally available only from configuration profiles.
@@ -125,31 +136,52 @@ namespace LinqToDB.CommandLine
 
 			foreach (var property in profile.EnumerateObject())
 			{
-				if (property.Value.ValueKind != JsonValueKind.String)
-				{
-					error = $"Configuration file '{fileName}' profile '{profileName}' property '{property.Name}' must be string.";
-					return false;
-				}
-
-				var value = property.Value.GetString();
-
 				switch (property.Name)
 				{
 					case "provider":
+						if (!TryGetString(fileName, profileName, property, out var value, out error))
+							return false;
+
 						Provider = value;
 						break;
 					case "connectionString":
 					case "connection-string":
+						if (!TryGetString(fileName, profileName, property, out value, out error))
+							return false;
+
 						ConnectionString = value;
 						break;
 					case "user":
+						if (!TryGetString(fileName, profileName, property, out value, out error))
+							return false;
+
 						User = value;
 						break;
 					case "password":
+						if (!TryGetString(fileName, profileName, property, out value, out error))
+							return false;
+
 						Password = value;
+						break;
+					case "commandTimeout":
+					case "command-timeout":
+						if (!TryParseTimeout(fileName, profileName, property, out var timeout, out error))
+							return false;
+
+						CommandTimeout = timeout;
+						break;
+					case "lockTimeout":
+					case "lock-timeout":
+						if (!TryParseTimeout(fileName, profileName, property, out timeout, out error))
+							return false;
+
+						LockTimeout = timeout;
 						break;
 					case "unsafeSql":
 					case "unsafe-sql":
+						if (!TryGetString(fileName, profileName, property, out value, out error))
+							return false;
+
 						if (!TryParseSqlSafety(value, out var sqlSafety))
 						{
 							error = $"Configuration file '{fileName}' profile '{profileName}' property '{property.Name}' has unknown value '{value}'.";
@@ -159,6 +191,9 @@ namespace LinqToDB.CommandLine
 						SqlSafety = sqlSafety;
 						break;
 					case "output":
+						if (!TryGetString(fileName, profileName, property, out value, out error))
+							return false;
+
 						if (!string.Equals(value, "json", StringComparison.OrdinalIgnoreCase) && !string.Equals(value, "csv", StringComparison.OrdinalIgnoreCase))
 						{
 							error = $"Configuration file '{fileName}' profile '{profileName}' property '{property.Name}' has unknown value '{value}'.";
@@ -169,6 +204,9 @@ namespace LinqToDB.CommandLine
 						break;
 					case "outputFile":
 					case "output-file":
+						if (!TryGetString(fileName, profileName, property, out value, out error))
+							return false;
+
 						OutputFile = value;
 						break;
 					default:
@@ -181,7 +219,44 @@ namespace LinqToDB.CommandLine
 			return true;
 		}
 
-		private static bool TryParseSqlSafety(string? value, out QuerySqlSafetyMode sqlSafety)
+		static bool TryGetString(string fileName, string profileName, JsonProperty property, out string? value, out string? error)
+		{
+			if (property.Value.ValueKind != JsonValueKind.String)
+			{
+				value = null;
+				error = $"Configuration file '{fileName}' profile '{profileName}' property '{property.Name}' must be string.";
+				return false;
+			}
+
+			value = property.Value.GetString();
+			error = null;
+			return true;
+		}
+
+		static bool TryParseTimeout(string fileName, string profileName, JsonProperty property, out int? timeout, out string? error)
+		{
+			if (property.Value.ValueKind == JsonValueKind.Number && property.Value.TryGetInt32(out var numericValue) && numericValue >= 0)
+			{
+				timeout = numericValue;
+				error   = null;
+				return true;
+			}
+
+			if (property.Value.ValueKind == JsonValueKind.String
+				&& int.TryParse(property.Value.GetString(), NumberStyles.None, CultureInfo.InvariantCulture, out numericValue)
+				&& numericValue >= 0)
+			{
+				timeout = numericValue;
+				error   = null;
+				return true;
+			}
+
+			timeout = null;
+			error   = $"Configuration file '{fileName}' profile '{profileName}' property '{property.Name}' must be a non-negative integer number of seconds.";
+			return false;
+		}
+
+		static bool TryParseSqlSafety(string? value, out QuerySqlSafetyMode sqlSafety)
 		{
 			if (string.Equals(value, "deny", StringComparison.OrdinalIgnoreCase))
 			{

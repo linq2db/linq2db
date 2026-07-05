@@ -48,6 +48,8 @@ Example configuration:
   "default": {
     "provider"        : "SqlServer",
     "connectionString": "Server=.;Database=Test;User Id={0};Password={1};TrustServerCertificate=True",
+    "commandTimeout"   : 30,
+    "lockTimeout"      : 5,
     "unsafeSql"       : "deny",
     "output"          : "json"
   },
@@ -61,6 +63,22 @@ Example configuration:
   }
 }
 ```
+
+Timeouts:
+
+- `--command-timeout <seconds>` sets the ADO.NET command timeout through linq2db.
+- `--lock-timeout <seconds>` applies a provider-specific lock wait timeout before the query when supported by the selected provider.
+- Timeout values are non-negative integer seconds.
+- `lockTimeout` is best-effort and currently has provider-specific behavior; unsupported providers ignore it.
+- Connection timeout should be specified directly in the provider connection string using provider-supported keywords.
+
+Supported `lockTimeout` providers:
+
+- SQL Server: `SET LOCK_TIMEOUT <milliseconds>`.
+- PostgreSQL: `SET lock_timeout = '<seconds>s'`.
+- MySQL and MariaDB: `SET SESSION innodb_lock_wait_timeout = <seconds>`.
+- SQLite: `PRAGMA busy_timeout = <milliseconds>`.
+- Firebird: `SET LOCK TIMEOUT <seconds>`.
 
 Output:
 
@@ -103,6 +121,7 @@ Common examples:
 ```bash
 dotnet linq2db query --provider SQLite --connection-string "Data Source=data.db" --sql "select * from Person"
 dotnet linq2db query --provider SQLite --connection-string "Data Source=data.db" --sql-file query.sql
+dotnet linq2db query --config query.json --profile uat --command-timeout 30 --sql-file query.sql
 dotnet linq2db query --config query.json --profile uat --sql-file query.sql
 dotnet linq2db query --config query.json --profile uat --user readonly_user --password secret --sql "select * from Person"
 dotnet linq2db query --config query.json --profile dev --allow-unsafe-sql --sql "create table Test(Id int)"

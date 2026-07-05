@@ -76,18 +76,18 @@ Done when: secrets can be supplied without command-line or config literal values
 
 ## Phase 5: Timeout Model
 
-Status: pending
+Status: completed
 
 Add timeout controls in seconds.
 
-- [ ] Add `--connection-timeout <seconds>` / `connectionTimeout`.
-- [ ] Add `--command-timeout <seconds>` / `commandTimeout`.
-- [ ] Add `--lock-timeout <seconds>` / `lockTimeout`.
-- [ ] Ensure all timeout values are seconds.
-- [ ] Implement `commandTimeout` before release.
-- [ ] Implement `lockTimeout` best-effort by provider where reasonable.
-- [ ] Document unsupported lock timeout behavior.
-- [ ] Add parsing and invalid-value tests.
+- [x] Document connection timeout as a connection-string responsibility.
+- [x] Add `--command-timeout <seconds>` / `commandTimeout`.
+- [x] Add `--lock-timeout <seconds>` / `lockTimeout`.
+- [x] Ensure all timeout values are seconds.
+- [x] Implement `commandTimeout` before release.
+- [x] Implement `lockTimeout` best-effort by provider where reasonable.
+- [x] Document unsupported lock timeout behavior.
+- [x] Add parsing and invalid-value tests.
 
 Done when: exploratory agent queries have bounded execution by default or configuration.
 

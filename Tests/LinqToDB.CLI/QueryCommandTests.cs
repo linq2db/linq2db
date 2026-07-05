@@ -370,6 +370,31 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task QueryAcceptsTimeoutOptions()
+		{
+			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--command-timeout", "30", "--lock-timeout", "5", "--sql", "select 1 as Value");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.Zero);
+				Assert.That(result.Output,   Does.Contain("\"Value\": \"1\""));
+				Assert.That(result.Error,    Is.Empty);
+			}
+		}
+
+		[Test]
+		public async Task QueryRejectsInvalidTimeoutOption()
+		{
+			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--command-timeout", "slow", "--sql", "select 1");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.EqualTo(-1));
+				Assert.That(result.Error,    Does.Contain("Option '--command-timeout' must be a non-negative integer number of seconds."));
+			}
+		}
+
+		[Test]
 		public async Task QueryAcceptsDefaultConfigProfile()
 		{
 			var environment = new TestCliEnvironment();
@@ -378,6 +403,8 @@ namespace Tests.LinqToDB.CLI
 					"default": {
 						"provider": "SQLite",
 						"connectionString": "Data Source=:memory:",
+						"commandTimeout": 30,
+						"lockTimeout": "5",
 						"output": "csv",
 						"outputFile": "query.csv"
 					}
@@ -392,6 +419,29 @@ namespace Tests.LinqToDB.CLI
 				Assert.That(result.Output,   Is.Empty);
 				Assert.That(result.Error,    Is.Empty);
 				Assert.That(environment.Files["query.csv"], Is.EqualTo($"1{Environment.NewLine}1{Environment.NewLine}"));
+			}
+		}
+
+		[Test]
+		public async Task QueryRejectsInvalidConfigTimeout()
+		{
+			var environment = new TestCliEnvironment();
+			var config      = AddConfigFile(environment, """
+				{
+					"default": {
+						"provider": "SQLite",
+						"connectionString": "Data Source=:memory:",
+						"commandTimeout": -1
+					}
+				}
+				""");
+
+			var result = await RunCli(environment, "query", "--config", config, "--sql", "select 1");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.EqualTo(-1));
+				Assert.That(result.Error,    Does.Contain($"Configuration file '{config}' profile 'default' property 'commandTimeout' must be a non-negative integer number of seconds."));
 			}
 		}
 
@@ -433,6 +483,7 @@ namespace Tests.LinqToDB.CLI
 					"default": {
 						"provider": "SQLite",
 						"connectionString": "Data Source=:memory:",
+						"commandTimeout": 30,
 						"output": "csv",
 						"outputFile": "default.csv"
 					},
@@ -641,13 +692,15 @@ namespace Tests.LinqToDB.CLI
 			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("dotnet linq2db query [--config config] [--profile profile] [--provider provider] [--connection-string connection-string] [--user user] [--password password] [--allow-unsafe-sql] [--output output] [--output-file output-file] [--sql sql | --sql-file file]"));
+				Assert.That(result.Output,   Does.Contain("dotnet linq2db query [--config config] [--profile profile] [--provider provider] [--connection-string connection-string] [--user user] [--password password] [--command-timeout seconds] [--lock-timeout seconds] [--allow-unsafe-sql] [--output output] [--output-file output-file] [--sql sql | --sql-file file]"));
 				Assert.That(result.Output,   Does.Contain("--config"));
 				Assert.That(result.Output,   Does.Contain("--profile"));
 				Assert.That(result.Output,   Does.Contain("--provider"));
 				Assert.That(result.Output,   Does.Contain("--connection-string"));
 				Assert.That(result.Output,   Does.Contain("--user"));
 				Assert.That(result.Output,   Does.Contain("--password"));
+				Assert.That(result.Output,   Does.Contain("--command-timeout"));
+				Assert.That(result.Output,   Does.Contain("--lock-timeout"));
 				Assert.That(result.Output,   Does.Contain("--allow-unsafe-sql"));
 				Assert.That(result.Output,   Does.Contain("ask the user before using this option"));
 				Assert.That(result.Output,   Does.Contain("agents can analyze code together with live database data"));
@@ -658,6 +711,7 @@ namespace Tests.LinqToDB.CLI
 				Assert.That(result.Output,   Does.Contain("Examples:"));
 				Assert.That(result.Output,   Does.Contain("dotnet linq2db query --provider SQLite --connection-string \"Data Source=data.db\" --sql \"select * from Person\""));
 				Assert.That(result.Output,   Does.Contain("dotnet linq2db query --provider SQLite --connection-string \"Data Source=data.db\" --sql-file query.sql"));
+				Assert.That(result.Output,   Does.Contain("dotnet linq2db query --config query.json --profile uat --command-timeout 30 --sql-file query.sql"));
 				Assert.That(result.Output,   Does.Contain("dotnet linq2db query --config query.json --profile uat --user readonly --password secret --sql-file query.sql"));
 				Assert.That(result.Output,   Does.Contain("dotnet linq2db query --provider SQLite --connection-string \"Data Source=data.db\" --output csv --output-file result.csv --sql \"select * from Person\""));
 			}

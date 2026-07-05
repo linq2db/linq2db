@@ -11,7 +11,14 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.DataProvider;
+using LinqToDB.Internal.DataProvider.Firebird;
+using LinqToDB.Internal.DataProvider.MySql;
+using LinqToDB.Internal.DataProvider.PostgreSQL;
+using LinqToDB.Internal.DataProvider.SQLite;
+using LinqToDB.Internal.DataProvider.SqlServer;
 
 using Microsoft.Data.SqlTypes;
 
@@ -117,10 +124,20 @@ namespace LinqToDB.CommandLine
 
 				// Execute the SQL query and read the results.
 				//
-				var dataConnection = new DataConnection(new DataOptions().UseConnectionString(dataProvider, _settings.ConnectionString));
+				var dataOptions = new DataOptions().UseConnectionString(dataProvider, _settings.ConnectionString);
+
+				if (_settings.CommandTimeout != null)
+					dataOptions = dataOptions.UseCommandTimeout(_settings.CommandTimeout);
+
+				var dataConnection = new DataConnection(dataOptions);
 
 				await using (dataConnection.ConfigureAwait(false))
 				{
+					var lockTimeoutCommand = GetLockTimeoutCommand(dataProvider, _settings.LockTimeout);
+
+					if (lockTimeoutCommand != null)
+						await dataConnection.ExecuteAsync(lockTimeoutCommand, cancellationToken).ConfigureAwait(false);
+
 					// Execute the SQL query and get a data reader for the results.
 					//
 					var dataReader = await dataConnection.ExecuteReaderAsync(sql, cancellationToken).ConfigureAwait(false);
@@ -204,6 +221,29 @@ namespace LinqToDB.CommandLine
 				await _environment.Error.WriteLineAsync($"Query execution failed: {ex.Message}").ConfigureAwait(false);
 				return StatusCodes.EXPECTED_ERROR;
 			}
+		}
+
+		static string? GetLockTimeoutCommand(IDataProvider dataProvider, int? timeout)
+		{
+			if (timeout == null)
+				return null;
+
+			if (dataProvider is SqlServerDataProvider)
+				return string.Create(CultureInfo.InvariantCulture, $"SET LOCK_TIMEOUT {(long)timeout.Value * 1000}");
+
+			if (dataProvider is PostgreSQLDataProvider)
+				return string.Create(CultureInfo.InvariantCulture, $"SET lock_timeout = '{timeout.Value}s'");
+
+			if (dataProvider is MySqlDataProvider)
+				return string.Create(CultureInfo.InvariantCulture, $"SET SESSION innodb_lock_wait_timeout = {timeout.Value}");
+
+			if (dataProvider is SQLiteDataProvider)
+				return string.Create(CultureInfo.InvariantCulture, $"PRAGMA busy_timeout = {(long)timeout.Value * 1000}");
+
+			if (dataProvider is FirebirdDataProvider)
+				return string.Create(CultureInfo.InvariantCulture, $"SET LOCK TIMEOUT {timeout.Value}");
+
+			return null;
 		}
 
 		static string FormatJson(QueryOutput queryOutput)
