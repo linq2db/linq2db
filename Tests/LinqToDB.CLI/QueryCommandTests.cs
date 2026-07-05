@@ -370,6 +370,35 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task QueryJsonRejectsDuplicateColumnNames()
+		{
+			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql", "select 1 as Value, 2 as Value");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.EqualTo(-3));
+				Assert.That(result.Error,    Does.Contain("JSON output requires unique column names."));
+				Assert.That(result.Error,    Does.Contain("Duplicate column name 'Value' found."));
+				Assert.That(result.Error,    Does.Contain("Use explicit SQL aliases"));
+				Assert.That(result.Error,    Does.Contain("json-table"));
+			}
+		}
+
+		[Test]
+		public async Task QueryJsonAcceptsExplicitColumnAliases()
+		{
+			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql", "select 1 as Value1, 2 as Value2");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.Zero);
+				Assert.That(result.Output,   Does.Contain("\"Value1\": \"1\""));
+				Assert.That(result.Output,   Does.Contain("\"Value2\": \"2\""));
+				Assert.That(result.Error,    Is.Empty);
+			}
+		}
+
+		[Test]
 		public async Task QueryAcceptsTimeoutOptions()
 		{
 			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--command-timeout", "30", "--lock-timeout", "5", "--sql", "select 1 as Value");

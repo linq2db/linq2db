@@ -112,13 +112,13 @@ Done when: `JsonSerializer.Serialize(reader.GetValue(...))` is gone from query o
 
 ## Phase 7: Duplicate Column Names
 
-Status: pending
+Status: completed
 
 Avoid ambiguous JSON object output.
 
-- [ ] Detect duplicate projected column names for `--output json`.
-- [ ] Return a diagnostic asking for explicit aliases or `json-table`.
-- [ ] Add tests for duplicate names and explicit aliases.
+- [x] Detect duplicate projected column names for `--output json`.
+- [x] Return a diagnostic asking for explicit aliases or `json-table`.
+- [x] Add tests for duplicate names and explicit aliases.
 
 Done when: duplicate JSON object property names are not silently emitted.
 

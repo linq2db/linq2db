@@ -172,6 +172,17 @@ namespace LinqToDB.CommandLine
 							columns[i] = CreateOutputColumn(reader, i, providerSpecificType);
 						}
 
+						if (string.Equals(_settings.Output, "json", StringComparison.OrdinalIgnoreCase))
+						{
+							var duplicateColumnName = GetDuplicateColumnName(columns);
+
+							if (duplicateColumnName != null)
+							{
+								await _environment.Error.WriteLineAsync($"JSON output requires unique column names. Duplicate column name '{duplicateColumnName}' found. Use explicit SQL aliases for duplicate columns or switch to json-table output when duplicate-safe column metadata is needed.").ConfigureAwait(false);
+								return StatusCodes.EXPECTED_ERROR;
+							}
+						}
+
 						// Read the rows from the data reader and convert each field to a string representation.
 						//
 						var rows = new List<string?[]>();
@@ -242,6 +253,19 @@ namespace LinqToDB.CommandLine
 
 			if (dataProvider is FirebirdDataProvider)
 				return string.Create(CultureInfo.InvariantCulture, $"SET LOCK TIMEOUT {timeout.Value}");
+
+			return null;
+		}
+
+		static string? GetDuplicateColumnName(QueryOutputColumn[] columns)
+		{
+			var columnNames = new HashSet<string>(StringComparer.Ordinal);
+
+			foreach (var column in columns)
+			{
+				if (!columnNames.Add(column.Name))
+					return column.Name;
+			}
 
 			return null;
 		}
