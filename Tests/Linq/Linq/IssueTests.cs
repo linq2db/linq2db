@@ -958,11 +958,12 @@ namespace Tests.Linq
 		}
 
 		// Same shape with a derived inner table (GroupBy forces a nested SelectQuery inside the scalar subquery).
-		// The GroupBy turns the scalar correlated subquery into a derived-table join: YDB / ClickHouse can
-		// express that and return correct results (unlike the simple form they reject), while Sybase still
-		// rejects it as an unsupported correlated subquery.
+		// The GroupBy turns the scalar correlated subquery into a derived-table (OUTER/LATERAL) join: YDB /
+		// ClickHouse can express it and return correct results (unlike the simple form they reject), while
+		// Sybase rejects the OUTER/LATERAL join it lowers to (a different limitation than the simple form's
+		// correlated-subquery rejection).
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void AliasBug5657_ParameterDependentWithCorrelatedDerivedSubquery([DataSources] string context)
 		{
 			using var db    = GetDataContext(context);
