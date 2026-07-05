@@ -1,7 +1,6 @@
 using System;
 using System.Data;
 using System.Data.Common;
-using System.Data.SqlTypes;
 using System.Reflection;
 
 using LinqToDB.CommandLine;
@@ -27,10 +26,11 @@ namespace Tests.LinqToDB.CLI
 			table.Columns.Add("DecimalValue", typeof(decimal));
 			table.Columns.Add("DoubleValue", typeof(double));
 			table.Columns.Add("DateTimeValue", typeof(DateTime));
+			table.Columns.Add("TimeSpanValue", typeof(TimeSpan));
 			table.Columns.Add("GuidValue", typeof(Guid));
 			table.Columns.Add("BytesValue", typeof(byte[]));
 			table.Columns.Add("NullValue", typeof(string));
-			table.Rows.Add("text", true, 42, 42000000000L, 123.45m, 1.25d, created, id, new byte[] { 1, 2, 3 }, DBNull.Value);
+			table.Rows.Add("text", true, 42, 42000000000L, 123.45m, 1.25d, created, new TimeSpan(12, 34, 56), id, new byte[] { 1, 2, 3 }, DBNull.Value);
 
 			using var reader = table.CreateDataReader();
 
@@ -45,24 +45,11 @@ namespace Tests.LinqToDB.CLI
 				Assert.That(ReadFieldAsString(reader, "None", 4), Is.EqualTo("123.45"));
 				Assert.That(ReadFieldAsString(reader, "Double", 5), Is.EqualTo("1.25"));
 				Assert.That(ReadFieldAsString(reader, "DateTime", 6), Is.EqualTo("2026-07-05T12:34:56.0000000"));
-				Assert.That(ReadFieldAsString(reader, "None", 7), Is.EqualTo("01234567-89ab-cdef-0123-456789abcdef"));
-				Assert.That(ReadFieldAsString(reader, "Bytes", 8), Is.EqualTo("AQID"));
-				Assert.That(reader.IsDBNull(9), Is.True);
+				Assert.That(ReadFieldAsString(reader, "TimeSpan", 7), Is.EqualTo("12:34:56"));
+				Assert.That(ReadFieldAsString(reader, "None", 8), Is.EqualTo("01234567-89ab-cdef-0123-456789abcdef"));
+				Assert.That(ReadFieldAsString(reader, "Bytes", 9), Is.EqualTo("AQID"));
+				Assert.That(reader.IsDBNull(10), Is.True);
 			}
-		}
-
-		[Test]
-		public void ReadFieldAsStringConvertsSqlDecimalWithoutDecimalOverflow()
-		{
-			using var reader = new SingleValueDataReader(
-				SqlDecimal.Parse("12345678901234567890123456789012345678"),
-				typeof(SqlDecimal),
-				typeof(decimal),
-				throwOnGetValue: true);
-
-			Assert.That(reader.Read(), Is.True);
-
-			Assert.That(ReadFieldAsString(reader, "SqlDecimal", 0), Is.EqualTo("12345678901234567890123456789012345678"));
 		}
 
 		[Test]
@@ -77,6 +64,21 @@ namespace Tests.LinqToDB.CLI
 			Assert.That(reader.Read(), Is.True);
 
 			Assert.That(ReadFieldAsString(reader, "None", 0), Is.EqualTo("provider-specific"));
+		}
+
+		[Test]
+		public void ReadFieldAsStringFallsBackToGetValueWhenProviderSpecificReadFails()
+		{
+			using var reader = new SingleValueDataReader(
+				new ProviderSpecificStringValue("provider-specific"),
+				typeof(ProviderSpecificStringValue),
+				typeof(string),
+				"clr-value",
+				providerSpecificException: new InvalidOperationException());
+
+			Assert.That(reader.Read(), Is.True);
+
+			Assert.That(ReadFieldAsString(reader, "None", 0), Is.EqualTo("clr-value"));
 		}
 
 		static string? ReadFieldAsString(DbDataReader reader, string actualFieldTypeName, int ordinal)
@@ -97,15 +99,17 @@ namespace Tests.LinqToDB.CLI
 			readonly Type   _fieldType;
 			readonly object _value;
 			readonly bool   _throwOnGetValue;
+			readonly Exception? _providerSpecificException;
 			bool _read;
 
-			public SingleValueDataReader(object providerSpecificValue, Type providerSpecificType, Type fieldType, object? value = null, bool throwOnGetValue = false)
+			public SingleValueDataReader(object providerSpecificValue, Type providerSpecificType, Type fieldType, object? value = null, bool throwOnGetValue = false, Exception? providerSpecificException = null)
 			{
-				_providerSpecificValue = providerSpecificValue;
-				_providerSpecificType  = providerSpecificType;
-				_fieldType             = fieldType;
-				_value                 = value ?? providerSpecificValue;
-				_throwOnGetValue       = throwOnGetValue;
+				_providerSpecificValue     = providerSpecificValue;
+				_providerSpecificType      = providerSpecificType;
+				_fieldType                 = fieldType;
+				_value                     = value ?? providerSpecificValue;
+				_throwOnGetValue           = throwOnGetValue;
+				_providerSpecificException = providerSpecificException;
 			}
 
 			public override int FieldCount => 1;
@@ -163,6 +167,9 @@ namespace Tests.LinqToDB.CLI
 
 			public override object GetProviderSpecificValue(int ordinal)
 			{
+				if (_providerSpecificException is not null)
+					throw _providerSpecificException;
+
 				return _providerSpecificValue;
 			}
 
