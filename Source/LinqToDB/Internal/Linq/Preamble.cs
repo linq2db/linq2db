@@ -11,7 +11,7 @@ using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Internal.Linq
 {
-	abstract class Preamble : IStepHarvester
+	abstract class Preamble
 	{
 		public abstract object       Execute(IDataContext      dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context);
 		public abstract Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context, CancellationToken cancellationToken);
@@ -26,18 +26,18 @@ namespace LinqToDB.Internal.Linq
 		public virtual bool IsInlined => false;
 
 		/// <summary>
-		/// <see cref="IStepHarvester"/> adapter over the two preamble result-producers: the self-executing path
-		/// (<paramref name="reader"/> is <see langword="null"/>) runs <see cref="Execute"/>; the combined-reader path
-		/// materializes this preamble's result set from the shared reader via <see cref="IStepMaterializer"/> — only
-		/// combinable preambles are ever invoked with a non-null reader.
+		/// Produces this preamble's result for the scenario interpreter: the self-executing path (<paramref name="reader"/>
+		/// is <see langword="null"/>) runs <see cref="Execute"/> (its own query, may recurse into nested eager loading); the
+		/// combined-reader path materializes this preamble's result set from the shared reader via
+		/// <see cref="IStepMaterializer"/> — only combinable preambles are ever invoked with a non-null reader.
 		/// </summary>
-		public object Harvest(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext context, int stepIndex, DbDataReader? reader)
+		public object Harvest(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext context, DbDataReader? reader)
 			=> reader is null
 				? Execute(dataContext, expressions, parameters, context)
 				: ((IStepMaterializer)this).MaterializeFromReader(dataContext, expressions, parameters, context, reader);
 
 		/// <summary>Asynchronous sibling of <see cref="Harvest"/>.</summary>
-		public Task<object> HarvestAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext context, int stepIndex, DbDataReader? reader, CancellationToken cancellationToken)
+		public Task<object> HarvestAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext context, DbDataReader? reader, CancellationToken cancellationToken)
 			=> reader is null
 				? ExecuteAsync(dataContext, expressions, parameters, context, cancellationToken)
 				: ((IStepMaterializer)this).MaterializeFromReaderAsync(dataContext, expressions, parameters, context, reader, cancellationToken);
@@ -79,27 +79,5 @@ namespace LinqToDB.Internal.Linq
 		/// Asynchronous sibling of <see cref="MaterializeFromReader"/>.
 		/// </summary>
 		Task<object> MaterializeFromReaderAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context, DbDataReader dataReader, CancellationToken cancellationToken);
-	}
-
-	/// <summary>
-	/// Unified per-step result producer for the shared scenario interpreter — the seam that will replace the split between
-	/// <see cref="Preamble.Execute"/> (self-executing, recursive) and <see cref="IStepMaterializer.MaterializeFromReader"/>
-	/// (reads a shared combined reader). The interpreter calls <see cref="Harvest"/> for a <c>Reader</c> step and stores the
-	/// returned value in that step's <see cref="SqlCommandExecutionContext"/> slot.
-	/// </summary>
-	interface IStepHarvester
-	{
-		/// <summary>
-		/// Produces this step's result. When <paramref name="reader"/> is non-null the step reads its own result set from the
-		/// shared combined reader (the interpreter advances <c>NextResult</c> afterwards); when <see langword="null"/> the step
-		/// runs its own query (self-executing, may recurse into nested eager loading). <paramref name="context"/> gives read
-		/// access to earlier steps' results.
-		/// </summary>
-		object Harvest(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext context, int stepIndex, DbDataReader? reader);
-
-		/// <summary>
-		/// Asynchronous sibling of <see cref="Harvest"/>.
-		/// </summary>
-		Task<object> HarvestAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext context, int stepIndex, DbDataReader? reader, CancellationToken cancellationToken);
 	}
 }

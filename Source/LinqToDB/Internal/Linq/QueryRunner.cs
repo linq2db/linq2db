@@ -1058,8 +1058,8 @@ namespace LinqToDB.Internal.Linq
 						dataConnection, scenario.Steps, groups,
 						(group, groupIndex) => commandByGroup[groupIndex]!,
 						group => scenario.Steps[group.StepIndexes[0]].Kind == SqlStepKind.SelfExecuting,
-						(stepIndex, groupIndex) => context.SetResult(stepIndex, _preambles[stepIndex].Harvest(_dataContext, _expressions, _parameters, context, stepIndex, reader: null)),
-						(i, dr) => context.SetResult(i, _preambles[i].Harvest(_dataContext, _expressions, _parameters, context, i, dr)),
+						(stepIndex, groupIndex) => context.SetResult(stepIndex, _preambles[stepIndex].Harvest(_dataContext, _expressions, _parameters, context, reader: null)),
+						(i, dr) => context.SetResult(i, _preambles[i].Harvest(_dataContext, _expressions, _parameters, context, dr)),
 						terminalStepIndex: _preambles.Length);
 
 					if (mainReader != null)
@@ -1089,8 +1089,8 @@ namespace LinqToDB.Internal.Linq
 						dataConnection, scenario.Steps, groups,
 						(group, groupIndex) => commandByGroup[groupIndex]!,
 						group => scenario.Steps[group.StepIndexes[0]].Kind == SqlStepKind.SelfExecuting,
-						async (stepIndex, groupIndex) => context.SetResult(stepIndex, await _preambles[stepIndex].HarvestAsync(_dataContext, _expressions, _parameters, context, stepIndex, null, cancellationToken).ConfigureAwait(false)),
-						async (i, dr) => context.SetResult(i, await _preambles[i].HarvestAsync(_dataContext, _expressions, _parameters, context, i, dr, cancellationToken).ConfigureAwait(false)),
+						async (stepIndex, groupIndex) => context.SetResult(stepIndex, await _preambles[stepIndex].HarvestAsync(_dataContext, _expressions, _parameters, context, null, cancellationToken).ConfigureAwait(false)),
+						async (i, dr) => context.SetResult(i, await _preambles[i].HarvestAsync(_dataContext, _expressions, _parameters, context, dr, cancellationToken).ConfigureAwait(false)),
 						terminalStepIndex: _preambles.Length,
 						cancellationToken).ConfigureAwait(false);
 
