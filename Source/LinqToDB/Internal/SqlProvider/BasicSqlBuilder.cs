@@ -133,10 +133,12 @@ namespace LinqToDB.Internal.SqlProvider
 
 		// True when the root SELECT projects two columns that render with the same result-set name: bare
 		// fields sharing a physical column name (e.g. `select new { p.ID, d.PersonID }` where both map to
-		// PersonID). The aliasing pass already uniquified the collision in the context (PersonID / PersonID_1);
-		// this detects it so CanSkipRootAliases can force those aliases to be emitted for providers that
-		// can't tolerate duplicate result-column names.
-		static bool RootSelectHasDuplicateColumnNames(SqlStatement statement)
+		// PersonID), or a derived-subquery column colliding with such a field (e.g. the same name reached via
+		// `db.Doctor.Select(x => x.PersonID).AsSubQuery()` joined to a table exposing PersonID). The aliasing
+		// pass already uniquified the collision in the context (PersonID / PersonID_1); this detects it so
+		// CanSkipRootAliases can force those aliases to be emitted for providers that can't tolerate duplicate
+		// result-column names.
+		bool RootSelectHasDuplicateColumnNames(SqlStatement statement)
 		{
 			var select = statement.SelectQuery?.Select;
 			if (select is null || select.Columns.Count < 2)
@@ -145,13 +147,21 @@ namespace LinqToDB.Internal.SqlProvider
 			HashSet<string>? names = null;
 			foreach (var column in select.Columns)
 			{
-				// Only bare fields have a deterministic name when the alias is skipped (their physical column
-				// name). Computed columns render without a usable name and carry unique synthetic aliases, so
-				// they never collide by name.
-				if (column.Expression is SqlField field && field.PhysicalName.Length > 0)
+				// The result-set name a column renders with when its alias is skipped: a bare field renders
+				// its finalized field name, a reference to a sub-query / derived-table column renders that
+				// column's finalized alias. Computed columns render without a usable name and carry unique
+				// synthetic aliases, so they never collide by name.
+				var name = column.Expression switch
+				{
+					SqlFieldBase field => AliasesContext.GetFieldName(field),
+					SqlColumn nested   => AliasesContext.GetColumnAlias(nested),
+					_                  => null,
+				};
+
+				if (!string.IsNullOrEmpty(name))
 				{
 					names ??= new(StringComparer.OrdinalIgnoreCase);
-					if (!names.Add(field.PhysicalName))
+					if (!names.Add(name!))
 						return true;
 				}
 			}

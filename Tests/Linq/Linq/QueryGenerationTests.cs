@@ -458,6 +458,29 @@ namespace Tests.Linq
 			var command = query.ToSqlQuery();
 
 			command.Sql.ShouldNotContain("Renamed");
+			command.Sql.ShouldContain("FirstName");
+		}
+
+		// #5657: RootSelectHasDuplicateColumnNames only counted columns whose Expression is a SqlField, so a
+		// root collision between a derived-subquery column (SqlColumn) and a real-table field of the same
+		// physical name slipped through - providers that force unique root column names (SqlCe / Access) then
+		// emitted two bare same-named result columns (server error / by-name mapping breakage). The detector
+		// now also resolves the derived column's rendered name, so a disambiguating alias is forced.
+		[Test]
+		public void ToSqlQuery_MixedDerivedFieldSamePhysicalName([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = from p in db.Person
+			            join d in db.Doctor.Select(x => new { x.PersonID }).AsSubQuery() on p.ID equals d.PersonID
+			            select new { d.PersonID, p.ID };
+
+			var command = query.ToSqlQuery();
+
+			// The collision on physical name "PersonID" between the derived column and the real-table field
+			// must be disambiguated by a forced alias, so the root SELECT has no two same-named result columns.
+			if (context.IsAnyOf(ProviderName.SqlCe, TestProvName.AllAccess))
+				command.Sql.ShouldContain("PersonID] as [");
 		}
 
 		[Test]
