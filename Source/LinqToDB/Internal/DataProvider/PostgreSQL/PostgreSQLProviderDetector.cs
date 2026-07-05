@@ -17,6 +17,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		static readonly Lazy<IDataProvider> _postgreSQLDataProvider13 = CreateDataProvider<PostgreSQLDataProvider13>();
 		static readonly Lazy<IDataProvider> _postgreSQLDataProvider15 = CreateDataProvider<PostgreSQLDataProvider15>();
 		static readonly Lazy<IDataProvider> _postgreSQLDataProvider18 = CreateDataProvider<PostgreSQLDataProvider18>();
+		static readonly Lazy<IDataProvider> _postgreSQLDataProvider19 = CreateDataProvider<PostgreSQLDataProvider19>();
 
 		public override IDataProvider? DetectProvider(ConnectionOptions options)
 		{
@@ -28,6 +29,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 				case ProviderName.PostgreSQL13 : return _postgreSQLDataProvider13.Value;
 				case ProviderName.PostgreSQL15 : return _postgreSQLDataProvider15.Value;
 				case ProviderName.PostgreSQL18 : return _postgreSQLDataProvider18.Value;
+				case ProviderName.PostgreSQL19 : return _postgreSQLDataProvider19.Value;
 				case ""                        :
 				case null                      :
 					if (string.Equals(options.ConfigurationString, "PostgreSQL", StringComparison.Ordinal))
@@ -37,6 +39,9 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 				case var providerName when providerName.Contains("PostgreSQL", StringComparison.Ordinal) || providerName.Contains(NpgsqlProviderAdapter.AssemblyName, StringComparison.Ordinal):
 					if (options.ConfigurationString != null)
 					{
+						if (options.ConfigurationString.Contains("19", StringComparison.Ordinal))
+							return _postgreSQLDataProvider19.Value;
+
 						if (options.ConfigurationString.Contains("18", StringComparison.Ordinal))
 							return _postgreSQLDataProvider18.Value;
 
@@ -93,6 +98,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			return version switch
 			{
 				PostgreSQLVersion.AutoDetect => GetDataProvider(options, default, DetectServerVersion(options, default) ?? DefaultVersion),
+				PostgreSQLVersion.v19        => _postgreSQLDataProvider19.Value,
 				PostgreSQLVersion.v18        => _postgreSQLDataProvider18.Value,
 				PostgreSQLVersion.v15        => _postgreSQLDataProvider15.Value,
 				PostgreSQLVersion.v13        => _postgreSQLDataProvider13.Value,
@@ -106,6 +112,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		{
 			return NpgsqlProviderAdapter.GetInstance().ConnectionWrapper(connection).PostgreSqlVersion switch
 			{
+				{ Major: >= 19 } => PostgreSQLVersion.v19,
 				{ Major: >= 18 } => PostgreSQLVersion.v18,
 				{ Major: >= 15 } => PostgreSQLVersion.v15,
 				{ Major: >= 13 } => PostgreSQLVersion.v13,

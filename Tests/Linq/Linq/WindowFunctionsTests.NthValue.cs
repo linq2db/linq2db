@@ -74,7 +74,7 @@ namespace Tests.Linq
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, TestProvName.AllSqlServer2012Plus, TestProvName.AllInformix, ErrorMessage = ErrorHelper.Error_WindowFunction_NthValue)]
 		[ThrowsForProvider(typeof(LinqToDBException),
-			TestProvName.AllPostgreSQL, TestProvName.AllMySql8Plus, TestProvName.AllSQLite, TestProvName.AllClickHouse,
+			TestProvName.AllPostgreSQL18Minus, TestProvName.AllMySql8Plus, TestProvName.AllSQLite, TestProvName.AllClickHouse,
 			ProviderName.Firebird3, ProviderName.Firebird4, TestProvName.AllFirebird5Plus, TestProvName.AllSapHana,
 			ErrorMessage = ErrorHelper.Error_WindowFunction_NullTreatment)]
 		public void NthValueIgnoreNulls([SupportsAnalyticFunctionsContext] string context)
