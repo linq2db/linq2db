@@ -173,13 +173,15 @@ namespace Tests.Linq
 			FSharp.OptionTypes.VerifyCustomScalarOptionMapped(db);
 		}
 
-		[Test(Description = "Schema-aware option mapping is resolved per combined schema: a context whose schema does NOT register the custom scalar must NOT auto-map the option, even though another context sharing the same F# reader does (#5675 cache safety)")]
+		[Test(Description = "Schema-aware option mapping follows each context's own combined schema: a context that registers the custom scalar auto-maps the option, while another context sharing the same F# reader instance but not registering it leaves the option unmapped - the reader's answer is per-schema, not a schema-independent constant (#5675)")]
 		public void Option_CustomScalarCacheIsolation([DataSources] string context)
 		{
 			// Context A registers MyId as a scalar; context B does not. Both go through UseFSharp(), so both
-			// combined schemas embed the same shared F# option reader. The reader is schema-aware, so its answer
-			// must follow each context's own schema - A maps the MyId option, B leaves it unmapped. A regression
-			// here (B also mapping) would mean the aggregator's per-(type, member) cache leaked A's answer to B.
+			// combined schemas embed the same shared, schema-aware F# option reader instance. Its answer must
+			// follow each context's own schema - A maps the MyId option, B leaves it unmapped - proving resolution
+			// is per-schema and not a single schema-independent answer. This does NOT exercise the combine:false
+			// borrow-rebind path (independent combined schemas never share an aggregator); that guard is covered by
+			// MappingSchemaTests.SchemaAwareReader_BorrowedAggregatorRebindsToDerivedSchema.
 			var msA = FSharp.OptionTypes.BuildCustomScalarSchema();
 
 			using (var dbA = GetDataContext(context, msA))
