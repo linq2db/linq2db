@@ -28,6 +28,9 @@ namespace Tests.LinqToDB.CLI
 				Assert.That(result.Output,   Does.Contain("## Skill Command"));
 				Assert.That(result.Output,   Does.Contain("Exactly one of `--sql` or `--sql-file` must be specified."));
 				Assert.That(result.Output,   Does.Contain("Use `{0}` in the connection string for the user value and `{1}` for the password value."));
+				Assert.That(result.Output,   Does.Contain("an agent can analyze your code together with data from your database"));
+				Assert.That(result.Output,   Does.Contain("Prepare regression tests for bugs found in real data"));
+				Assert.That(result.Output,   Does.Contain("Support synchronous development of code and a development database"));
 				Assert.That(result.Output,   Does.Contain("An agent MUST ask the user for explicit confirmation before executing any unsafe SQL operation."));
 				Assert.That(result.Output,   Does.Contain("Default mode is safe mode"));
 				Assert.That(result.Output,   Does.Contain("Use `dotnet linq2db skill` or `dotnet linq2db skills`"));

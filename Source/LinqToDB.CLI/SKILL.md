@@ -4,7 +4,18 @@ Use `dotnet linq2db` to run linq2db command-line tools.
 
 ## Query Command
 
-Use `dotnet linq2db query` to execute a read-only SQL query against a database supported by linq2db.
+Use `dotnet linq2db query` to execute a SQL query against a database supported by linq2db.
+The core value proposition is that an agent can analyze your code together with data from your database.
+
+Primary scenarios:
+
+- Analyze application code together with live database data to investigate performance bottlenecks, data distribution issues, slow workflows, or suspicious production-like behavior.
+- Let business analysts and domain experts ask code-aware questions that also depend on real database state, reference data, or business data samples.
+- Prepare regression tests for bugs found in real data by querying the database first and then generating focused test cases, fixtures, or seed data.
+- Support synchronous development of code and a development database: create or modify a table in a dev database, then immediately update mappings, DTOs, projections, or query code.
+- Inspect schema and data shape before changing code, such as checking nullable values, enum-like columns, outliers, orphaned records, duplicates, and migration readiness.
+- Compare expected business rules in code with actual persisted data to find data quality issues or rule drift.
+- Generate documentation or diagnostics from database-backed facts, such as row counts, reference-data coverage, lookup values, and examples of real records.
 
 Required command-line input:
 
@@ -41,9 +52,9 @@ Example configuration:
     "output"          : "json"
   },
   "uat": {
-    "unsafeSql": "confirm"
+    "unsafeSql": "confirm",
     "user"     : "readonly_user",
-    "password" : "secret",
+    "password" : "secret"
   },
   "dev": {
     "unsafeSql": "allow"

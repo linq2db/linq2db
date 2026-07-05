@@ -650,6 +650,7 @@ namespace Tests.LinqToDB.CLI
 				Assert.That(result.Output,   Does.Contain("--password"));
 				Assert.That(result.Output,   Does.Contain("--allow-unsafe-sql"));
 				Assert.That(result.Output,   Does.Contain("ask the user before using this option"));
+				Assert.That(result.Output,   Does.Contain("agents can analyze code together with live database data"));
 				Assert.That(result.Output,   Does.Contain("--output"));
 				Assert.That(result.Output,   Does.Contain("--output-file"));
 				Assert.That(result.Output,   Does.Contain("--sql"));

@@ -159,7 +159,7 @@ namespace LinqToDB.CommandLine
 				true,
 				false,
 				"[--config config] [--profile profile] [--provider provider] [--connection-string connection-string] [--user user] [--password password] [--allow-unsafe-sql] [--output output] [--output-file output-file] [--sql sql | --sql-file file]",
-				"execute SQL query against specified database",
+				"execute SQL query so agents can analyze code together with live database data",
 				new CommandExample[]
 				{
 					new(
