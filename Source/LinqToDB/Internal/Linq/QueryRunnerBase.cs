@@ -11,7 +11,7 @@ namespace LinqToDB.Internal.Linq
 {
 	abstract class QueryRunnerBase : IQueryRunner
 	{
-		protected QueryRunnerBase(Query query, int queryNumber, IDataContext dataContext, IDataContext parametersContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
+		protected QueryRunnerBase(Query query, int queryNumber, IDataContext dataContext, IDataContext parametersContext, IQueryExpressions expressions, object?[]? parameters, object?[]? harvesters)
 		{
 			Query             = query;
 			DataContext       = dataContext;
@@ -19,9 +19,9 @@ namespace LinqToDB.Internal.Linq
 			Expressions       = expressions;
 			QueryNumber       = queryNumber;
 			Parameters        = parameters;
-			// Wrap the legacy preamble results array in an execution context. Behavior-neutral: the context adopts the same
+			// Wrap the legacy harvester results array in an execution context. Behavior-neutral: the context adopts the same
 			// array reference, so Preambles returns it unchanged and the mapper reads the same per-step results.
-			_executionContext = preambles is null ? null : new SqlCommandExecutionContext(preambles);
+			_executionContext = harvesters is null ? null : new SqlCommandExecutionContext(harvesters);
 		}
 
 		protected readonly Query    Query;

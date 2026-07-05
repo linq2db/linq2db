@@ -107,7 +107,7 @@ namespace LinqToDB.Internal.Linq
 			var transaction = await StartLoadTransactionAsync(query, cancellationToken).ConfigureAwait(false);
 			await using var tr = (transaction ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false);
 
-			Preambles = await query.InitPreamblesAsync(DataContext, expressions, Parameters, cancellationToken)
+			Preambles = await query.InitHarvestersAsync(DataContext, expressions, Parameters, cancellationToken)
 				.ConfigureAwait(false);
 
 			var value = await query.GetElementAsync(DataContext, expressions, Parameters, Preambles, cancellationToken)
@@ -118,9 +118,9 @@ namespace LinqToDB.Internal.Linq
 
 		IDisposable? StartLoadTransaction(Query query)
 		{
-			// Do not start implicit transaction if there is no preambles
+			// Do not start implicit transaction if there is no harvesters
 			//
-			if (!query.IsAnyPreambles())
+			if (!query.IsAnyHarvesters())
 				return null;
 
 			var dc = DataContext switch
@@ -149,9 +149,9 @@ namespace LinqToDB.Internal.Linq
 
 		async Task<IAsyncDisposable?> StartLoadTransactionAsync(Query query, CancellationToken cancellationToken)
 		{
-			// Do not start implicit transaction if there is no preambles
+			// Do not start implicit transaction if there is no harvesters
 			//
-			if (!query.IsAnyPreambles())
+			if (!query.IsAnyHarvesters())
 				return null;
 
 			var dc = DataContext switch
@@ -188,7 +188,7 @@ namespace LinqToDB.Internal.Linq
 			var transaction = await StartLoadTransactionAsync(query, cancellationToken).ConfigureAwait(false);
 			await using var tr = (transaction ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false);
 
-			Preambles = await query.InitPreamblesAsync(DataContext, expressions, Parameters, cancellationToken)
+			Preambles = await query.InitHarvestersAsync(DataContext, expressions, Parameters, cancellationToken)
 				.ConfigureAwait(false);
 
 			return Query<TResult>.GetQuery(DataContext, ref expressions, out _)
@@ -207,10 +207,10 @@ namespace LinqToDB.Internal.Linq
 			var transaction = await StartLoadTransactionAsync(query, cancellationToken).ConfigureAwait(false);
 			await using var _ = (transaction ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false);
 
-			var (enumerable, preambles, combined) = await query.GetEagerEnumerableAsync(DataContext, expressions, Parameters, cancellationToken).ConfigureAwait(false);
+			var (enumerable, harvesters, combined) = await query.GetEagerEnumerableAsync(DataContext, expressions, Parameters, cancellationToken).ConfigureAwait(false);
 
 			if (!combined)
-				Preambles = preambles;
+				Preambles = harvesters;
 
 			var enumerator = enumerable.GetAsyncEnumerator(cancellationToken);
 			await using (enumerator.ConfigureAwait(false))
@@ -253,10 +253,10 @@ namespace LinqToDB.Internal.Linq
 				var tr = await StartLoadTransactionAsync(query, cancellationToken).ConfigureAwait(false);
 				try
 				{
-					var (enumerable, preambles, combined) = await query.GetEagerEnumerableAsync(DataContext, expressions, Parameters, cancellationToken).ConfigureAwait(false);
+					var (enumerable, harvesters, combined) = await query.GetEagerEnumerableAsync(DataContext, expressions, Parameters, cancellationToken).ConfigureAwait(false);
 
 					if (!combined)
-						Preambles = preambles;
+						Preambles = harvesters;
 
 					return Tuple.Create(enumerable.GetAsyncEnumerator(cancellationToken), tr);
 				}
@@ -315,7 +315,7 @@ namespace LinqToDB.Internal.Linq
 
 			using (StartLoadTransaction(query))
 			{
-				Preambles = query.InitPreambles(DataContext, expressions, Parameters);
+				Preambles = query.InitHarvesters(DataContext, expressions, Parameters);
 
 				var getElement = query.GetElement;
 				if (getElement == null)
@@ -333,7 +333,7 @@ namespace LinqToDB.Internal.Linq
 
 			using (StartLoadTransaction(query))
 			{
-				Preambles = query.InitPreambles(DataContext, expressions, Parameters);
+				Preambles = query.InitHarvesters(DataContext, expressions, Parameters);
 
 				var getElement = query.GetElement;
 				if (getElement == null)
@@ -362,10 +362,10 @@ namespace LinqToDB.Internal.Linq
 			var transaction = StartLoadTransaction(query);
 			try
 			{
-				var (enumerable, preambles, combined) = query.GetEagerEnumerable(DataContext, expressions, Parameters);
+				var (enumerable, harvesters, combined) = query.GetEagerEnumerable(DataContext, expressions, Parameters);
 
 				if (!combined)
-					Preambles = preambles;
+					Preambles = harvesters;
 
 				var enumerator = enumerable.GetEnumerator();
 
@@ -394,10 +394,10 @@ namespace LinqToDB.Internal.Linq
 			var transaction = StartLoadTransaction(query);
 			try
 			{
-				var (enumerable, preambles, combined) = query.GetEagerEnumerable(DataContext, expressions, Parameters);
+				var (enumerable, harvesters, combined) = query.GetEagerEnumerable(DataContext, expressions, Parameters);
 
 				if (!combined)
-					Preambles = preambles;
+					Preambles = harvesters;
 
 				var enumerator = enumerable.GetEnumerator();
 

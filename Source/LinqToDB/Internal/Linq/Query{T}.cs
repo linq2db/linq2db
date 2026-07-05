@@ -53,9 +53,9 @@ namespace LinqToDB.Internal.Linq
 		internal Func<IDataContext,IQueryExpressions,object?[]?,SqlCommandExecutionContext?,DbDataReader,IResultEnumerable<T>>? GetResultFromReader;
 
 		// Centralizes the eager-load enumerable decision shared by the ExpressionQuery enumeration paths: use the combined
-		// multi-result-set executor when eligible, else the sequential InitPreambles + GetResultEnumerable path. Returns the
-		// preambles and whether the combined path was taken, so the caller sets its Preambles field ONLY for the sequential
-		// path — the combined enumerable owns its preambles, and GetForEachUntilAsync relies on Preambles being untouched there.
+		// multi-result-set executor when eligible, else the sequential InitHarvesters + GetResultEnumerable path. Returns the
+		// harvesters and whether the combined path was taken, so the caller sets its Preambles field ONLY for the sequential
+		// path — the combined enumerable owns its harvesters, and GetForEachUntilAsync relies on Preambles being untouched there.
 		internal (IResultEnumerable<T> Enumerable, SqlCommandExecutionContext? Preambles, bool Combined) GetEagerEnumerable(
 			IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters)
 		{
@@ -64,9 +64,9 @@ namespace LinqToDB.Internal.Linq
 			if (combined != null)
 				return (combined, null, true);
 
-			var preambles = InitPreambles(dataContext, expressions, parameters);
+			var harvesters = InitHarvesters(dataContext, expressions, parameters);
 
-			return (GetResultEnumerable(dataContext, expressions, parameters, preambles), preambles, false);
+			return (GetResultEnumerable(dataContext, expressions, parameters, harvesters), harvesters, false);
 		}
 
 		// Async sibling of GetEagerEnumerable.
@@ -78,9 +78,9 @@ namespace LinqToDB.Internal.Linq
 			if (combined != null)
 				return (combined, null, true);
 
-			var preambles = await InitPreamblesAsync(dataContext, expressions, parameters, cancellationToken).ConfigureAwait(false);
+			var harvesters = await InitHarvestersAsync(dataContext, expressions, parameters, cancellationToken).ConfigureAwait(false);
 
-			return (GetResultEnumerable(dataContext, expressions, parameters, preambles), preambles, false);
+			return (GetResultEnumerable(dataContext, expressions, parameters, harvesters), harvesters, false);
 		}
 
 		#endregion

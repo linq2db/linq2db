@@ -20,7 +20,7 @@ namespace LinqToDB.Internal.SqlProvider
 		/// <summary>Executed as a reader; its result is a recordset consumed by the caller.</summary>
 		Reader,
 		/// <summary>
-		/// Runs itself through a caller-supplied harvester (eager self-executing preamble: a detached / keyed / CTE-union
+		/// Runs itself through a caller-supplied harvester (eager self-executing harvester: a detached / keyed / CTE-union
 		/// child that executes its own query, possibly recursing into nested eager loading) rather than a rendered command.
 		/// Such a step has no <see cref="SqlCommandStep.Statement"/> and is always its own singleton group.
 		/// </summary>
@@ -160,7 +160,7 @@ namespace LinqToDB.Internal.SqlProvider
 		}
 
 		/// <summary>
-		/// Wraps an already-materialized results array (the legacy preamble results). The context becomes an owner of the
+		/// Wraps an already-materialized results array (the legacy harvester results). The context becomes an owner of the
 		/// same array reference (<see cref="Results"/> returns it as-is) with every slot marked executed.
 		/// </summary>
 		/// <param name="results">The results array to adopt.</param>

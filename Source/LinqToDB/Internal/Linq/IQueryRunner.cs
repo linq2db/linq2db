@@ -58,7 +58,7 @@ namespace LinqToDB.Internal.Linq
 		object?[]?        Preambles        { get; }
 
 		/// <summary>
-		/// The execution context wrapping the preamble (eager-load) results, threaded into the row-materialization mapper.
+		/// The execution context wrapping the harvester (eager-load) results, threaded into the row-materialization mapper.
 		/// Backs <see cref="Preambles"/>, which surfaces its results array unchanged.
 		/// </summary>
 		SqlCommandExecutionContext? ExecutionContext { get; }

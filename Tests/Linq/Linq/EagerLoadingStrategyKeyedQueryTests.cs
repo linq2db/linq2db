@@ -203,7 +203,7 @@ namespace Tests.Linq
 
 			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 
-			// 1 buffer preamble + 1 child query = 2 SELECT queries
+			// 1 buffer harvester + 1 child query = 2 SELECT queries
 			if (!context.IsRemote()) counter.Count.ShouldBe(2);
 		}
 
@@ -254,7 +254,7 @@ namespace Tests.Linq
 
 			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 
-			// 1 buffer preamble + 2 child queries = 3 SELECT queries
+			// 1 buffer harvester + 2 child queries = 3 SELECT queries
 			if (!context.IsRemote()) counter.Count.ShouldBe(3);
 		}
 
@@ -352,7 +352,7 @@ namespace Tests.Linq
 					.ShouldBe(expected, ComparerBuilder.GetEqualityComparer(expected));
 			}
 
-			// 1 buffer preamble + 1 child query = 2 SELECT queries
+			// 1 buffer harvester + 1 child query = 2 SELECT queries
 			if (!context.IsRemote()) counter.Count.ShouldBe(2);
 		}
 
@@ -398,7 +398,7 @@ namespace Tests.Linq
 
 			AreEqual(expectedDepts, result.Departments, ComparerBuilder.GetEqualityComparer(expectedDepts));
 
-			// 1 buffer preamble + 1 child query = 2 SELECT queries
+			// 1 buffer harvester + 1 child query = 2 SELECT queries
 			if (!context.IsRemote()) counter.Count.ShouldBe(2);
 		}
 
@@ -1587,7 +1587,7 @@ namespace Tests.Linq
 		// Regression for MAJ001: the keyed keys were once build-time state baked into the
 		// cached query, so concurrent executions of the same cached query clobbered each other's
 		// key sets — producing empty or cross-loaded child collections. Keys are now isolated per
-		// execution via the preamble-results array, so this must stay green under concurrency.
+		// execution via the harvester-results array, so this must stay green under concurrency.
 		// Scoped to providers whose CreateLocalTable tables are visible across connections.
 		[Test]
 		public async Task KeyedQuery_ConcurrentExecutions_DoNotShareKeyState(
@@ -1676,9 +1676,9 @@ namespace Tests.Linq
 
 		#region Default strategy — runtime-parameter regression
 
-		// Regression: DetachedPreamble and Preamble<TKey,T> in ExpressionBuilder.EagerLoadDefault.cs
-		// used to call query.GetResultEnumerable(…, preambles, preambles) — passing preambles in both
-		// the parameters and preambles slots. Any captured local variable that feeds a SQL parameter on
+		// Regression: DetachedHarvester and Harvester<TKey,T> in ExpressionBuilder.EagerLoadDefault.cs
+		// used to call query.GetResultEnumerable(…, harvesters, harvesters) — passing harvesters in both
+		// the parameters and harvesters slots. Any captured local variable that feeds a SQL parameter on
 		// the detail query arrived as null (or empty) because the real parameters array was never forwarded.
 		// This test ensures that a captured local variable (minId) reaches the detail query correctly.
 		[Test]
@@ -1860,7 +1860,7 @@ namespace Tests.Linq
 			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 
 			// CteUnion (marker won): 1 UNION ALL query loads both child collections.
-			// Non-CTE providers fall back to KeyedQuery: 1 buffer preamble + 2 child queries = 3.
+			// Non-CTE providers fall back to KeyedQuery: 1 buffer harvester + 2 child queries = 3.
 			if (!context.IsRemote()) counter.Count.ShouldBe(!IsCteSupported(context) ? 3 : 1);
 		}
 
@@ -1922,7 +1922,7 @@ namespace Tests.Linq
 		}
 
 		// Inverse order: outer WithKeyedLoadStrategy() beats inner WithUnionLoadStrategy(), so KeyedQuery runs
-		// (1 buffer preamble + 2 child queries = 3) even though SQLite supports CTE — proving the rule is
+		// (1 buffer harvester + 2 child queries = 3) even though SQLite supports CTE — proving the rule is
 		// "outermost wins", not "CteUnion always wins".
 		[Test]
 		public void WithLoadStrategy_LastMarkerWins_OuterKeyedOverInnerUnion(
@@ -1972,7 +1972,7 @@ namespace Tests.Linq
 
 			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 
-			// Outer KeyedQuery won: 1 buffer preamble + 2 child queries = 3.
+			// Outer KeyedQuery won: 1 buffer harvester + 2 child queries = 3.
 			if (!context.IsRemote()) counter.Count.ShouldBe(3);
 		}
 

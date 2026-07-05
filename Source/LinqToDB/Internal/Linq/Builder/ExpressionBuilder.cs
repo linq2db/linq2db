@@ -221,8 +221,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var param = Expression.Parameter(typeof(Query<T>), "info");
 
-			List<Preamble>? preambles = null;
-			BuildQuery((Query<T>)_query, sequence, param, ref preambles, []);
+			List<Harvester>? harvesters = null;
+			BuildQuery((Query<T>)_query, sequence, param, ref harvesters, []);
 
 			if (_query.ErrorExpression == null)
 			{
@@ -238,9 +238,9 @@ namespace LinqToDB.Internal.Linq.Builder
 					(q.Statement.SqlQueryExtensions ??= new()).AddRange(SqlQueryExtensions);
 				}
 
-				_query.SetPreambles(preambles);
+				_query.SetHarvesters(harvesters);
 
-				expressions = FinalizeQueryCacheInformation((Query<T>)_query, preambles);
+				expressions = FinalizeQueryCacheInformation((Query<T>)_query, harvesters);
 			}
 
 			return (Query<T>)_query;
@@ -250,16 +250,16 @@ namespace LinqToDB.Internal.Linq.Builder
 			Query<T>            query,
 			IBuildContext       sequence,
 			ParameterExpression queryParameter,
-			ref List<Preamble>? preambles,
+			ref List<Harvester>? harvesters,
 			Expression[]        previousKeys)
 		{
-			// Track preamble start index so buffer materialization only processes
-			// preambles added at this BuildQuery level (not outer levels).
-			var preambleStartIndex = preambles?.Count ?? 0;
+			// Track harvester start index so buffer materialization only processes
+			// harvesters added at this BuildQuery level (not outer levels).
+			var harvesterStartIndex = harvesters?.Count ?? 0;
 
 			var expr = _buildVisitor.BuildExpression(sequence, new ContextRefExpression(typeof(T), sequence), buildPurpose: BuildPurpose.Expression);
 
-			var finalized = FinalizeProjection<T>(sequence, expr, queryParameter, ref preambles, previousKeys);
+			var finalized = FinalizeProjection<T>(sequence, expr, queryParameter, ref harvesters, previousKeys);
 
 			var error = SequenceHelper.FindError(finalized);
 			if (error != null)
@@ -294,26 +294,26 @@ namespace LinqToDB.Internal.Linq.Builder
 				var eagerLoadState = _eagerLoadState;
 				_eagerLoadState    = null;
 
-				if (eagerLoadState?.HasCteUnionQuery == true && eagerLoadState.CteUnionInfo != null && preambles != null)
+				if (eagerLoadState?.HasCteUnionQuery == true && eagerLoadState.CteUnionInfo != null && harvesters != null)
 				{
-					SetRunQueryWithCteUnion(query, sequence, finalized, preambles, preambleStartIndex, queryParameter, eagerLoadState.CteUnionInfo);
+					SetRunQueryWithCteUnion(query, sequence, finalized, harvesters, harvesterStartIndex, queryParameter, eagerLoadState.CteUnionInfo);
 				}
-				else if (eagerLoadState?.HasKeyedQueryPreambles == true && preambles != null)
+				else if (eagerLoadState?.HasKeyedQueryHarvesters == true && harvesters != null)
 				{
-					SetRunQueryWithKeyedQueryBuffer(query, sequence, finalized, preambles, preambleStartIndex);
+					SetRunQueryWithKeyedQueryBuffer(query, sequence, finalized, harvesters, harvesterStartIndex);
 				}
 				else
 				{
 					sequence.SetRunQuery(query, finalized);
 				}
 
-				FinalizeQueryCacheInformation(query, preambles);
+				FinalizeQueryCacheInformation(query, harvesters);
 			}
 
 			return true;
 		}
 
-		IQueryExpressions FinalizeQueryCacheInformation<T>(Query<T> query, List<Preamble>? preambles)
+		IQueryExpressions FinalizeQueryCacheInformation<T>(Query<T> query, List<Harvester>? harvesters)
 		{
 			List<SqlParameter>? builtParameters = null;
 			List<SqlValue>?     builtValues     = null;
@@ -325,11 +325,11 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				QueryHelper.CollectParametersAndValues(query.QueryInfo.Statement, usedParameters, usedValues);
 
-				if (preambles?.Count > 0)
+				if (harvesters?.Count > 0)
 				{
-					foreach (var preamble in preambles)
+					foreach (var harvester in harvesters)
 					{
-						preamble.GetUsedParametersAndValues(usedParameters, usedValues);
+						harvester.GetUsedParametersAndValues(usedParameters, usedValues);
 					}
 				}
 

@@ -21,7 +21,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			IBuildContext          buildContext,
 			SqlEagerLoadExpression eagerLoad,
 			ParameterExpression    queryParameter,
-			List<Preamble>         preambles,
+			List<Harvester>         harvesters,
 			Expression[]           previousKeys,
 			EagerLoadState         state)
 		{
@@ -64,9 +64,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				var detailSequence = BuildSequence(new BuildInfo((IBuildContext?)null, correctedSequence, new SelectQuery()));
 
-				var parameters = new object[] { detailSequence, queryParameter, preambles };
+				var parameters = new object[] { detailSequence, queryParameter, harvesters };
 
-				resultExpression = _buildPreambleQueryDetachedMethodInfo
+				resultExpression = _buildHarvesterQueryDetachedMethodInfo
 					.MakeGenericMethod(detailType)
 					.InvokeExt<Expression>(this, parameters);
 			}
@@ -127,9 +127,9 @@ namespace LinqToDB.Internal.Linq.Builder
 				var detailSequence = BuildSequence(new BuildInfo((IBuildContext?)null, selectManyCall,
 					clonedParentContextRef.BuildContext.SelectQuery));
 
-				var parameters = new object?[] { detailSequence, mainKeyExpression, queryParameter, preambles, orderByToApply, detailKeys };
+				var parameters = new object?[] { detailSequence, mainKeyExpression, queryParameter, harvesters, orderByToApply, detailKeys };
 
-				resultExpression = _buildPreambleQueryAttachedMethodInfo
+				resultExpression = _buildHarvesterQueryAttachedMethodInfo
 					.MakeGenericMethod(mainKeyExpression.Type, detailType)
 					.InvokeExt<Expression>(this, parameters);
 
@@ -146,7 +146,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			return resultExpression;
 		}
 
-		sealed class DetachedPreamble<T>(Query<T> query) : Preamble
+		sealed class DetachedHarvester<T>(Query<T> query) : Harvester
 		{
 			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context)
 			{
@@ -164,7 +164,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 		}
 
-		sealed class Preamble<TKey, T>(Query<KeyDetailEnvelope<TKey, T>> query) : Preamble, IStepMaterializer
+		sealed class Harvester<TKey, T>(Query<KeyDetailEnvelope<TKey, T>> query) : Harvester, IStepMaterializer
 			where TKey : notnull
 		{
 			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context)
@@ -190,10 +190,10 @@ namespace LinqToDB.Internal.Linq.Builder
 				=> BuildResultAsync(query.GetResultFromReader!(dataContext, expressions, parameters, context, dataReader), cancellationToken);
 
 			// Both the sequential (GetResultEnumerable) and combined (GetResultFromReader) paths bucket the same
-			// KeyDetailEnvelope stream into a PreambleResult; only the source enumerable differs.
-			static PreambleResult<TKey, T> BuildResult(IEnumerable<KeyDetailEnvelope<TKey, T>> source)
+			// KeyDetailEnvelope stream into a HarvesterResult; only the source enumerable differs.
+			static HarvesterResult<TKey, T> BuildResult(IEnumerable<KeyDetailEnvelope<TKey, T>> source)
 			{
-				var result = new PreambleResult<TKey, T>();
+				var result = new HarvesterResult<TKey, T>();
 
 				foreach (var e in source)
 					result.Add(e.Key, e.Detail);
@@ -203,7 +203,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			static async Task<object> BuildResultAsync(IAsyncEnumerable<KeyDetailEnvelope<TKey, T>> source, CancellationToken cancellationToken)
 			{
-				var result = new PreambleResult<TKey, T>();
+				var result = new HarvesterResult<TKey, T>();
 
 				await foreach (var e in source.WithCancellation(cancellationToken).ConfigureAwait(false))
 					result.Add(e.Key, e.Detail);
