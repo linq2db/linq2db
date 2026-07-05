@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -1705,7 +1706,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 		}
 
-		sealed class CteUnionPreamble<TKey, TCarrier> : Preamble
+		sealed class CteUnionPreamble<TKey, TCarrier> : Preamble, IStepMaterializer
 			where TKey : notnull
 		{
 			readonly Query<TCarrier>            _query;
@@ -1734,14 +1735,38 @@ namespace LinqToDB.Internal.Linq.Builder
 				_preambleIndex          = preambleIndex;
 			}
 
+			// Self-executing path (a non-combinable UNION-ALL preamble: separate round-trip). Same bucketing as the
+			// combined-reader path below; only the carrier source differs.
 			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context)
+				=> BuildResult(_query.GetResultEnumerable(dataContext, expressions, parameters, context), context);
+
+			// IStepMaterializer: the UNION-ALL is a single statement, so it can join the combined command as one Reader step
+			// whose result set is bucketed off the shared reader instead of a separate round-trip.
+			public bool CanCombine => _query.GetResultFromReader != null;
+
+			public SqlStatement? GetCombinableStatement()
+				=> _query.QueryInfo.Statement;
+
+			public void AddCombinableParameterValues(SqlParameterValues values, IQueryExpressions expressions, IDataContext dataContext, object?[]? parameters)
+			{
+				QueryRunner.SetParameters(_query, expressions, dataContext, parameters, values);
+			}
+
+			public object MaterializeFromReader(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context, DbDataReader dataReader)
+				=> BuildResult(_query.GetResultFromReader!(dataContext, expressions, parameters, context, dataReader), context);
+
+			public Task<object> MaterializeFromReaderAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context, DbDataReader dataReader, CancellationToken cancellationToken)
+				=> BuildResultAsync(_query.GetResultFromReader!(dataContext, expressions, parameters, context, dataReader), context, cancellationToken);
+
+			// Buckets the carrier stream (setId-routed) into the N-branch PreambleResults; only the source enumerable differs
+			// between the self-executing (GetResultEnumerable) and combined-reader (GetResultFromReader) paths. Results are
+			// stored in the context slot early so nested-branch detail extractors can resolve sibling results while bucketing.
+			object BuildResult(IEnumerable<TCarrier> carriers, SqlCommandExecutionContext? context)
 			{
 				var nestedSetIds = _nestedProcessingOrder != null ? new HashSet<int>(_nestedProcessingOrder) : null;
 
 				var results = ExpressionBuilder.CreateCteUnionBuckets<TKey>(_branchCount, nestedSetIds);
 
-				// Store results in the execution context early so nested branch detail extractors
-				// can access them via context.GetResult(_preambleIndex)
 				if (context != null && _preambleIndex < context.Results.Length)
 					context.SetResult(_preambleIndex, results);
 
@@ -1749,70 +1774,53 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					// Multi-pass: buffer all carriers, nested branches (deepest first), then non-nested,
 					// so nested PreambleResults are populated before parent extractors look them up.
-					var carriers = _query.GetResultEnumerable(dataContext, expressions, parameters, context).ToList();
+					var buffered = carriers.ToList();
 
-					ExpressionBuilder.RunNestedCteUnionPasses<TKey, TCarrier>(carriers, results, _getSetId, _getKey, _detailExtractors, _nestedProcessingOrder, context);
+					ExpressionBuilder.RunNestedCteUnionPasses<TKey, TCarrier>(buffered, results, _getSetId, _getKey, _detailExtractors, _nestedProcessingOrder, context);
 
-					foreach (var carrier in carriers)
-					{
+					foreach (var carrier in buffered)
 						ExpressionBuilder.AddNonNestedCarrier<TKey, TCarrier>(carrier, results, _getSetId, _getKey, _detailExtractors, _branchCount, nestedSetIds, context);
-					}
 				}
 				else
 				{
-					// Single pass: stream, no nested branches
-					foreach (var carrier in _query.GetResultEnumerable(dataContext, expressions, parameters, context))
-					{
+					// Single pass: stream, no nested branches.
+					foreach (var carrier in carriers)
 						ExpressionBuilder.AddNonNestedCarrier<TKey, TCarrier>(carrier, results, _getSetId, _getKey, _detailExtractors, _branchCount, nestedSetIds, context);
-					}
 				}
 
 				return results;
 			}
 
-			public override async Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context,
+			public override Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context,
 				CancellationToken cancellationToken)
+				=> BuildResultAsync(_query.GetResultEnumerable(dataContext, expressions, parameters, context), context, cancellationToken);
+
+			// Async sibling of BuildResult.
+			async Task<object> BuildResultAsync(IAsyncEnumerable<TCarrier> carriers, SqlCommandExecutionContext? context, CancellationToken cancellationToken)
 			{
 				var nestedSetIds = _nestedProcessingOrder != null ? new HashSet<int>(_nestedProcessingOrder) : null;
 
 				var results = ExpressionBuilder.CreateCteUnionBuckets<TKey>(_branchCount, nestedSetIds);
 
-				// Store results in the execution context early so nested branch detail extractors
-				// can access them via context.GetResult(_preambleIndex)
 				if (context != null && _preambleIndex < context.Results.Length)
 					context.SetResult(_preambleIndex, results);
 
 				if (_nestedProcessingOrder != null)
 				{
-					var carriers = new List<TCarrier>();
-					var enumerator = _query.GetResultEnumerable(dataContext, expressions, parameters, context)
-						.GetAsyncEnumerator(cancellationToken);
-					await using (enumerator.ConfigureAwait(false))
-					{
-						while (await enumerator.MoveNextAsync().ConfigureAwait(false))
-						{
-							carriers.Add(enumerator.Current);
-						}
-					}
+					var buffered = new List<TCarrier>();
 
-					ExpressionBuilder.RunNestedCteUnionPasses<TKey, TCarrier>(carriers, results, _getSetId, _getKey, _detailExtractors, _nestedProcessingOrder, context);
+					await foreach (var carrier in carriers.WithCancellation(cancellationToken).ConfigureAwait(false))
+						buffered.Add(carrier);
 
-					foreach (var carrier in carriers)
-					{
+					ExpressionBuilder.RunNestedCteUnionPasses<TKey, TCarrier>(buffered, results, _getSetId, _getKey, _detailExtractors, _nestedProcessingOrder, context);
+
+					foreach (var carrier in buffered)
 						ExpressionBuilder.AddNonNestedCarrier<TKey, TCarrier>(carrier, results, _getSetId, _getKey, _detailExtractors, _branchCount, nestedSetIds, context);
-					}
 				}
 				else
 				{
-					var enumerator = _query.GetResultEnumerable(dataContext, expressions, parameters, context)
-						.GetAsyncEnumerator(cancellationToken);
-					await using (enumerator.ConfigureAwait(false))
-					{
-						while (await enumerator.MoveNextAsync().ConfigureAwait(false))
-						{
-							ExpressionBuilder.AddNonNestedCarrier<TKey, TCarrier>(enumerator.Current, results, _getSetId, _getKey, _detailExtractors, _branchCount, nestedSetIds, context);
-						}
-					}
+					await foreach (var carrier in carriers.WithCancellation(cancellationToken).ConfigureAwait(false))
+						ExpressionBuilder.AddNonNestedCarrier<TKey, TCarrier>(carrier, results, _getSetId, _getKey, _detailExtractors, _branchCount, nestedSetIds, context);
 				}
 
 				return results;
