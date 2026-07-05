@@ -52,8 +52,9 @@ namespace LinqToDB.CommandLine
 			null,
 			null,
 			false,
-			new StringEnumOption(true,  true,  "json", "JSON output"),
-			new StringEnumOption(false, false, "csv",  "CSV output"));
+			new StringEnumOption(true,  true,  "json",       "JSON output"),
+			new StringEnumOption(false, false, "json-table", "JSON table output"),
+			new StringEnumOption(false, false, "csv",        "CSV output"));
 
 		public static CliCommand Instance { get; } = new QueryCommand();
 

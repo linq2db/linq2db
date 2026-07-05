@@ -83,12 +83,14 @@ Supported `lockTimeout` providers:
 Output:
 
 - `--output json` writes JSON output. This is the default and preferred format for agents.
+- `--output json-table` writes a duplicate-safe JSON object with column metadata and rows as arrays.
 - `--output csv` writes CSV output.
 - `--output-file <file>` writes command output to a file.
 - When `--output-file` is not specified, output is written to stdout.
 - Query output reads database values using .NET `DbDataReader.GetProviderSpecificValue` and serializes them as strings using invariant culture and provider-specific safe formatting. `byte[]` values are emitted as base64 strings. `NULL` values are emitted as JSON `null`.
 - For `json` output, projected column names must be unique because rows are emitted as JSON objects. The agent is responsible for adding explicit SQL aliases when a query could produce duplicate names.
 - Duplicate column names are rejected for `json` output. Use explicit aliases or switch to duplicate-safe `json-table` output when column metadata and duplicate names must be preserved.
+- `json-table` output contains `rowCount`, `truncated`, `columns`, and `rows`. Each column has `ordinal`, `name`, `fieldType`, `providerSpecificFieldType`, and `dataTypeName`; rows are arrays of string or null values.
 
 Safety:
 
@@ -126,6 +128,7 @@ dotnet linq2db query --provider SQLite --connection-string "Data Source=data.db"
 dotnet linq2db query --config query.json --profile uat --command-timeout 30 --sql-file query.sql
 dotnet linq2db query --config query.json --profile uat --sql-file query.sql
 dotnet linq2db query --config query.json --profile uat --user readonly_user --password secret --sql "select * from Person"
+dotnet linq2db query --config query.json --profile uat --output json-table --sql "select Id, Id from Person"
 dotnet linq2db query --config query.json --profile dev --allow-unsafe-sql --sql "create table Test(Id int)"
 ```
 

@@ -399,6 +399,56 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task QueryJsonTableAcceptsDuplicateColumnNames()
+		{
+			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--output", "json-table", "--sql", "select 1 as Value, 2 as Value");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.Zero);
+				Assert.That(result.Output,   Does.Contain("\"rowCount\": 1"));
+				Assert.That(result.Output,   Does.Contain("\"truncated\": false"));
+				Assert.That(result.Output,   Does.Contain("\"columns\": ["));
+				Assert.That(result.Output,   Does.Contain("\"ordinal\": 0"));
+				Assert.That(result.Output,   Does.Contain("\"ordinal\": 1"));
+				Assert.That(result.Output,   Does.Contain("\"name\": \"Value\""));
+				Assert.That(result.Output,   Does.Contain("\"fieldType\": \"System.Int64\""));
+				Assert.That(result.Output,   Does.Contain("\"providerSpecificFieldType\": \"System.Int64\""));
+				Assert.That(result.Output,   Does.Contain("\"dataTypeName\": \"INTEGER\""));
+				Assert.That(result.Output,   Does.Contain("\"rows\": ["));
+				Assert.That(result.Output,   Does.Contain("\"1\""));
+				Assert.That(result.Output,   Does.Contain("\"2\""));
+				Assert.That(result.Error,    Is.Empty);
+			}
+		}
+
+		[Test]
+		public async Task QueryAcceptsJsonTableConfigOutput()
+		{
+			var environment = new TestCliEnvironment();
+			var config      = AddConfigFile(environment, """
+				{
+					"default": {
+						"provider": "SQLite",
+						"connectionString": "Data Source=:memory:",
+						"output": "json-table"
+					}
+				}
+				""");
+
+			var result = await RunCli(environment, "query", "--config", config, "--sql", "select 1 as Value");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.Zero);
+				Assert.That(result.Output,   Does.Contain("\"rowCount\": 1"));
+				Assert.That(result.Output,   Does.Contain("\"columns\": ["));
+				Assert.That(result.Output,   Does.Contain("\"rows\": ["));
+				Assert.That(result.Error,    Is.Empty);
+			}
+		}
+
+		[Test]
 		public async Task QueryAcceptsTimeoutOptions()
 		{
 			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--command-timeout", "30", "--lock-timeout", "5", "--sql", "select 1 as Value");
@@ -735,6 +785,7 @@ namespace Tests.LinqToDB.CLI
 				Assert.That(result.Output,   Does.Contain("agents can analyze code together with live database data"));
 				Assert.That(result.Output,   Does.Contain("--output"));
 				Assert.That(result.Output,   Does.Contain("--output-file"));
+				Assert.That(result.Output,   Does.Contain("json-table"));
 				Assert.That(result.Output,   Does.Contain("--sql"));
 				Assert.That(result.Output,   Does.Contain("--sql-file"));
 				Assert.That(result.Output,   Does.Contain("Examples:"));

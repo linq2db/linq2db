@@ -194,7 +194,9 @@ namespace LinqToDB.CommandLine
 						if (!TryGetString(fileName, profileName, property, out value, out error))
 							return false;
 
-						if (!string.Equals(value, "json", StringComparison.OrdinalIgnoreCase) && !string.Equals(value, "csv", StringComparison.OrdinalIgnoreCase))
+						if (!string.Equals(value, "json", StringComparison.OrdinalIgnoreCase)
+							&& !string.Equals(value, "json-table", StringComparison.OrdinalIgnoreCase)
+							&& !string.Equals(value, "csv", StringComparison.OrdinalIgnoreCase))
 						{
 							error = $"Configuration file '{fileName}' profile '{profileName}' property '{property.Name}' has unknown value '{value}'.";
 							return false;

@@ -124,16 +124,16 @@ Done when: duplicate JSON object property names are not silently emitted.
 
 ## Phase 8: `json-table` Output
 
-Status: pending
+Status: completed
 
 Add metadata-rich, duplicate-safe output format.
 
-- [ ] Add `--output json-table`.
-- [ ] Emit `columns` metadata with ordinal, name, field type, provider-specific field type, and data type name.
-- [ ] Emit `rows` as arrays of string/null values.
-- [ ] Emit `rowCount`.
-- [ ] Emit `truncated`.
-- [ ] Add tests for metadata, duplicate names by ordinal, and rows-as-arrays.
+- [x] Add `--output json-table`.
+- [x] Emit `columns` metadata with ordinal, name, field type, provider-specific field type, and data type name.
+- [x] Emit `rows` as arrays of string/null values.
+- [x] Emit `rowCount`.
+- [x] Emit `truncated`.
+- [x] Add tests for metadata, duplicate names by ordinal, and rows-as-arrays.
 
 Done when: agents can request mechanically robust result output.
 

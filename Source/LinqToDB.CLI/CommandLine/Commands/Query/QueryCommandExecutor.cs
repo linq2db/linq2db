@@ -29,7 +29,7 @@ namespace LinqToDB.CommandLine
 	/// </summary>
 	sealed class QueryCommandExecutor(ICliEnvironment environment, QueryCommandSettings settings)
 	{
-		sealed record QueryOutputColumn(string Name, QueryActualFieldType ActualFieldType);
+		sealed record QueryOutputColumn(int Ordinal, string Name, string FieldType, string ProviderSpecificFieldType, string DataTypeName, QueryActualFieldType ActualFieldType);
 
 		sealed record QueryOutput(QueryOutputColumn[] Columns, List<string?[]> Rows);
 
@@ -206,9 +206,12 @@ namespace LinqToDB.CommandLine
 						//
 						var queryOutput = new QueryOutput(columns, rows);
 
-						var output = string.Equals(_settings.Output, "csv", StringComparison.OrdinalIgnoreCase)
-							? FormatCsv (queryOutput)
-							: FormatJson(queryOutput);
+						var output = _settings.Output switch
+						{
+							"csv"        => FormatCsv(queryOutput),
+							"json-table" => FormatJsonTable(queryOutput),
+							_            => FormatJson(queryOutput),
+						};
 
 						if (_settings.OutputFile != null)
 						{
@@ -300,6 +303,54 @@ namespace LinqToDB.CommandLine
 			return Encoding.UTF8.GetString(stream.ToArray());
 		}
 
+		static string FormatJsonTable(QueryOutput queryOutput)
+		{
+			using var stream = new MemoryStream();
+			using var writer = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = true });
+
+			writer.WriteStartObject();
+			writer.WriteNumber("rowCount", queryOutput.Rows.Count);
+			writer.WriteBoolean("truncated", false);
+			writer.WritePropertyName("columns");
+			writer.WriteStartArray();
+
+			foreach (var column in queryOutput.Columns)
+			{
+				writer.WriteStartObject();
+				writer.WriteNumber("ordinal", column.Ordinal);
+				writer.WriteString("name", column.Name);
+				writer.WriteString("fieldType", column.FieldType);
+				writer.WriteString("providerSpecificFieldType", column.ProviderSpecificFieldType);
+				writer.WriteString("dataTypeName", column.DataTypeName);
+				writer.WriteEndObject();
+			}
+
+			writer.WriteEndArray();
+			writer.WritePropertyName("rows");
+			writer.WriteStartArray();
+
+			foreach (var row in queryOutput.Rows)
+			{
+				writer.WriteStartArray();
+
+				for (var i = 0; i < queryOutput.Columns.Length; i++)
+				{
+					if (row[i] == null)
+						writer.WriteNullValue();
+					else
+						writer.WriteStringValue(row[i]);
+				}
+
+				writer.WriteEndArray();
+			}
+
+			writer.WriteEndArray();
+			writer.WriteEndObject();
+			writer.Flush();
+
+			return Encoding.UTF8.GetString(stream.ToArray());
+		}
+
 		static string FormatCsv(QueryOutput queryOutput)
 		{
 			var text = new StringBuilder();
@@ -333,6 +384,9 @@ namespace LinqToDB.CommandLine
 
 		static QueryOutputColumn CreateOutputColumn(DbDataReader reader, int ordinal, Type providerSpecificType)
 		{
+			var fieldType = reader.GetFieldType(ordinal);
+			var dataTypeName = reader.GetDataTypeName(ordinal);
+
 			var actualFieldType = providerSpecificType switch
 			{
 				_ when providerSpecificType == typeof(bool)             => QueryActualFieldType.Boolean,
@@ -358,7 +412,7 @@ namespace LinqToDB.CommandLine
 				_                                                       => QueryActualFieldType.None,
 			};
 
-			return new QueryOutputColumn(reader.GetName(ordinal), actualFieldType);
+			return new QueryOutputColumn(ordinal, reader.GetName(ordinal), fieldType.FullName ?? fieldType.Name, providerSpecificType.FullName ?? providerSpecificType.Name, dataTypeName, actualFieldType);
 		}
 
 		static string? ReadFieldAsString(DbDataReader reader, QueryActualFieldType actualFieldType, int ordinal)
