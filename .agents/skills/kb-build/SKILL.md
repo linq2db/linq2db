@@ -72,6 +72,18 @@ git rev-parse origin/master
 
 **Use `origin/master` — NOT local `HEAD`.** The KB tracks the upstream master branch (same rule as `/kb-refresh` per [`kb-refresh-cursors.md`](../../docs/kb-refresh-cursors.md)). If the active local branch has unpushed feature work (e.g. an `infra/agents-curation` branch with `.agents/` edits), recording local `HEAD` in `last_verified_sha` will silently break `/kb-refresh` — the next refresh diffs `cursors.code.sha..origin/master`, and a SHA that's not on master can't be diffed against master. Run `git fetch origin master` first if `origin/master` is stale.
 
+**Then verify the working tree actually contains that commit** — the indexer agents read source files from the working tree, so if the checkout is behind or diverged from `origin/master`, they index **stale on-disk source**:
+
+```bash
+git merge-base --is-ancestor <currentSha> HEAD
+```
+
+If this exits non-zero (`currentSha` is not an ancestor of `HEAD`), **abort before spawning any agent**:
+
+> Working tree is not at `origin/master` (`<currentSha>`). Indexer agents read on-disk source and would index stale files. Run `/kb-build` from a worktree checked out at `origin/master` — e.g. `git worktree add ../<clone-dir>.kb origin/master` — or fast-forward this checkout first.
+
+Do **not** work around a failed guard by reading `git show <sha>:<path>` in the agents — it is fragile per-file and easy to get partially wrong across a large scan.
+
 Cache the SHA — you'll pass it to every agent invocation as `currentSha`, and to `apply-fences` for `last_verified_sha` validation.
 
 ### 4. Mark step in-progress
@@ -85,6 +97,20 @@ EOF
 ### 5. Run the step
 
 Step-specific procedures. Each step's gate rules and inputs are in [`../../docs/kb-build-steps.md`](../../docs/kb-build-steps.md) — consult it before running.
+
+#### Capturing agent output (applies to every agent-spawning step below)
+
+All agent spawns (`kb-architect` / `kb-historian` / `kb-github-curator` / `kb-issue-detector` / `kb-research`) follow the same capture loop:
+
+1. **Spawn synchronously** (`run_in_background: false`) and wait. Keep to the step/area cadence already built into this skill — one step per turn, and for per-area steps (3, 8, 10, 11) one area at a time with a checkpoint after each. **Never fan out all areas' agents at once, and never in the background** — a background agent's output cannot be captured (beat 2), and a mass spawn exhausts the session rate limit.
+2. **Capture from the persisted tool-result JSON — never from the agent's notification/chat text.** A synchronous agent's fenced envelope is persisted by the harness to `.../tool-results/<id>.json` with literal `<` / `>` / `&`. Extract it (one allowlisted call):
+   ```bash
+   pwsh -NoProfile -File .agents/scripts/extract-agent-output.ps1 <<'EOF'
+   {"sourceJson": "<path to tool-results/<id>.json>", "outFile": ".build/.agents/kb-build-step<n>.txt"}
+   EOF
+   ```
+   It reports `hasEnvelope: true` when the file holds a usable envelope. **Never hand-transcribe or paste envelope text from an agent's chat/notification** — that channel HTML-escapes `<`→`&lt;`, `>`→`&gt;`, `&`→`&amp;`, corrupting every `<details>` / `<T>` / `<n>` written into the KB. Background agents deliver only the escaped notification and leave an empty transcript, so they have **no faithful capture path** — hence beat 1's synchronous rule.
+3. **Apply, then gate:** `kb-state.ps1 apply-fences` with the captured `agentOutputFile`. If `extract-agent-output.ps1` returns `hasEnvelope: false`, or `apply-fences` reports `gateFailures`, mark the step `partial` and stop at this boundary.
 
 #### Step 0 — bootstrap (skill-owned)
 

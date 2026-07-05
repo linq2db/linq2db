@@ -30,6 +30,7 @@ After all source deltas: random-sample K=5 KB files; run `kb-audit-citations.ps1
 
 - `/kb-build` has reached at least step 0 (state files exist). If not, abort with "Run /kb-build first".
 - `git fetch origin master` has run recently (the user is responsible — the skill doesn't fetch behind their back). The `code` and `commits` sources read deltas against `origin/master`, not the local `HEAD`, so a stale `origin/master` ref means the KB will miss recently-merged work. Skill aborts at step 2 if `origin/master` is missing.
+- **The working tree must already contain `origin/master`'s tip.** Deltas are computed against `origin/master` (step 2), but the indexer agents (`kb-architect`, `kb-issue-detector`, `kb-historian`, `kb-github-curator`) read source files from the **working tree**. If the checked-out branch is behind or diverged from `origin/master` (e.g. a long-lived `infra/agents-curation` clone that hasn't merged master), agents read **stale on-disk source** for files that changed on master since the branch point — silently producing wrong KB content, or forcing fragile per-file `git show <sha>:<path>` workarounds. The skill enforces this at step 2 and aborts if the guard fails; run from a worktree checked out at `origin/master` instead.
 
 ## When to run
 
@@ -64,11 +65,39 @@ If this errors (e.g. `origin/master` is missing), abort with "Run `git fetch ori
 
 `currentSha` is used for both the `code` and `commits` source delta-bounds and for every artifact's `last_verified_sha` frontmatter. Do not substitute `HEAD` anywhere downstream.
 
+**Then verify the working tree actually contains that commit** (indexers read on-disk source — see pre-conditions):
+
+```bash
+git merge-base --is-ancestor <currentSha> HEAD
+```
+
+If this exits non-zero — `currentSha` is **not** an ancestor of `HEAD`, i.e. the checkout is behind or diverged from `origin/master` — **abort before spawning any indexer** with:
+
+> Working tree is not at `origin/master` (`<currentSha>`). Indexer agents read on-disk source and would index stale files. Re-run `/kb-refresh` from a worktree checked out at `origin/master` — e.g. `git worktree add ../<clone-dir>.kb origin/master` and run there — or fast-forward this checkout to `origin/master` first.
+
+Do **not** try to work around a failed guard by having agents read `git show <sha>:<path>` instead of the working tree: it is fragile, per-file, and easy to get partially wrong across a large delta (some agents will silently index the stale on-disk copy).
+
 ### 3. Iterate sources
 
 In this order: `code → coverage → commits → issues → prs → discussions → wiki`. Skip any source not in `--source` (if specified).
 
 For each source, follow the per-source procedure below. Cursor advances are written *after* each indexer's `apply-fences` succeeds — partial progress is safe.
+
+#### Running indexer agents — capture contract (applies to every source below)
+
+Every "Spawn `<indexer>` … apply fences" step in the per-source procedures runs the same three-beat loop. **Do not deviate:**
+
+1. **Spawn synchronously, one at a time — never a mass fan-out.** Run each indexer with `run_in_background: false` and wait for it; process one area/unit fully (spawn → capture → apply-fences), then start the next. The skill is *interruptible at every cursor boundary* by design. **Never launch all areas' agents at once.** A large master delta can touch 30+ areas; fanning them all out (especially in the background) exhausts the session rate limit and produces output that cannot be captured (beat 2). If the mapped delta touches more than ~8 areas, first tell the user the scope and rough cost and let them confirm or narrow it (`--source`, or an explicit subset) before spawning anything.
+2. **Capture from the persisted tool-result JSON — never from the agent's notification/chat text.** A synchronous agent's full fenced envelope is persisted by the harness to `.../tool-results/<id>.json` with literal `<` / `>` / `&`. Feed that file through the capture helper (one allowlisted call):
+   ```bash
+   pwsh -NoProfile -File .agents/scripts/extract-agent-output.ps1 <<'EOF'
+   {"sourceJson": "<path to tool-results/<id>.json>", "outFile": ".build/.agents/kb-refresh-<agent>-<area>.txt"}
+   EOF
+   ```
+   It reports `hasEnvelope: true` when the file holds a usable envelope. **Never hand-transcribe or paste envelope text from an agent's chat/notification output** — that channel HTML-escapes `<`→`&lt;`, `>`→`&gt;`, `&`→`&amp;`, silently corrupting every `<details>` / `<T>` / `<n>` written into the KB. **Background agents have no faithful capture path here** (delivery is the escaped notification; the on-disk transcript is empty), which is why beat 1 requires synchronous spawns.
+3. **Apply, then advance:** `kb-state.ps1 apply-fences` with `{"op":"apply-fences","agentOutputFile":"<outFile>"}`. Advance the source's cursor only after every unit in that source has applied cleanly.
+
+If `extract-agent-output.ps1` returns `hasEnvelope: false`, or `apply-fences` reports `gateFailures`, **stop at that boundary** — surface it, leave the cursor un-advanced, and do not keep spawning.
 
 #### `code` source
 
@@ -78,11 +107,9 @@ The code source compares against `origin/master`, not the local `HEAD`. Local fe
 2. If equal to `currentSha` (`origin/master` tip from step 2): skip (no new code on master since last refresh).
 3. Otherwise: `git diff --name-status <cursor.sha>..origin/master` → changed file list. Do **not** use `HEAD` here — see step 2's note.
 4. Map to areas via path-pattern match against `kb-areas.md`. Build `{area: [files...]}` map.
-5. For each area:
-   - Spawn `kb-architect` with `mode: "delta"`, `area: <code>`, `changedFiles: [...]`, `currentSha`.
-   - Capture stdout, write to `.build/.agents/kb-refresh-arch-<area>.txt`, run `apply-fences`.
-   - Spawn `kb-issue-detector` with `mode: "delta"`, same inputs plus `existingIndex` and `openGithubIssues`.
-   - Apply fences.
+5. For each area, **finish one area before starting the next** — follow the capture contract above (synchronous spawn → `extract-agent-output.ps1` → `apply-fences`); never fan out all areas at once:
+   - Spawn `kb-architect` with `mode: "delta"`, `area: <code>`, `changedFiles: [...]`, `currentSha`; capture + apply-fences.
+   - Spawn `kb-issue-detector` with `mode: "delta"`, same inputs plus `existingIndex` and `openGithubIssues`; capture + apply-fences.
 6. **Prune deferred queue overlap.** For each `(area, file)` in the delta where `file` is currently in `state/deferred-coverage.json[area].files`, drop it from the queue (the code-source pass just re-scanned it). One `set-deferred-area` call per affected area with the surviving file list.
 7. Update `cursors.json.code` to `{sha: currentSha, verified_at: <ISO>}`.
 
@@ -192,6 +219,8 @@ Plus any rate-limit / unreachable warnings collected during the run.
 - **Fetch script returns rate-limited**: skill appends to audit log, surfaces reset time, stops cleanly. Cursors not advanced for that source.
 - **Indexer emits invalid envelope**: `apply-fences` reports `gateFailures`; skill stops at that source's boundary, surfaces failures, leaves cursor un-advanced.
 - **A delta touches a file in a path not classified by any area**: `kb-architect` emits an `=== UNCLASSIFIED-FILE ===`; the skill surfaces it and asks the user to extend `kb-areas.md`.
+- **Working tree behind / diverged from `origin/master`**: step 2's `git merge-base --is-ancestor <currentSha> HEAD` guard fails; abort *before spawning any agent* and have the user re-run from an `origin/master` worktree (or fast-forward). Do not proceed by reading `git show <sha>:<path>` in the agents — that indexes a mix of correct and stale source.
+- **Agent output can't be captured**: `extract-agent-output.ps1` returns `hasEnvelope: false` — usually because the agent was spawned in the **background** (only the HTML-escaped notification exists and the transcript is empty) or the wrong `tool-results/<id>.json` was passed. Stop at that boundary and re-run the agent **synchronously**; never reconstruct the envelope by hand from notification text (it corrupts `<`/`>`/`&`).
 
 ## Do not
 
