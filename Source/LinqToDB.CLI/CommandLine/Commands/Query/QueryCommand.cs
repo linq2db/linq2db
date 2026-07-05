@@ -65,7 +65,7 @@ namespace LinqToDB.CommandLine
 				"query",
 				true,
 				false,
-				"[--config config] [--profile profile] [--provider provider] [--connection-string connection-string] [--user user] [--password password] [--command-timeout seconds] [--lock-timeout seconds] [--max-rows count] [--allow-unsafe-sql] [--output output] [--output-file output-file] [--sql sql | --sql-file file]",
+				"<options>",
 				"execute SQL query so agents can analyze code together with live database data",
 				[
 					new("dotnet linq2db query --provider SQLite --connection-string \"Data Source=data.db\" --sql \"select * from Person\"",

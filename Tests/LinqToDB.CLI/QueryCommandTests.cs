@@ -877,7 +877,7 @@ namespace Tests.LinqToDB.CLI
 			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("dotnet linq2db query [--config config] [--profile profile] [--provider provider] [--connection-string connection-string] [--user user] [--password password] [--command-timeout seconds] [--lock-timeout seconds] [--max-rows count] [--allow-unsafe-sql] [--output output] [--output-file output-file] [--sql sql | --sql-file file]"));
+				Assert.That(result.Output,   Does.Contain("dotnet linq2db query <options>"));
 				Assert.That(result.Output,   Does.Contain("--config"));
 				Assert.That(result.Output,   Does.Contain("--profile"));
 				Assert.That(result.Output,   Does.Contain("--provider"));
@@ -901,6 +901,21 @@ namespace Tests.LinqToDB.CLI
 				Assert.That(result.Output,   Does.Contain("dotnet linq2db query --config query.json --profile uat --command-timeout 30 --sql-file query.sql"));
 				Assert.That(result.Output,   Does.Contain("dotnet linq2db query --config query.json --profile uat --user readonly --password secret --sql-file query.sql"));
 				Assert.That(result.Output,   Does.Contain("dotnet linq2db query --provider SQLite --connection-string \"Data Source=data.db\" --output csv --output-file result.csv --sql \"select * from Person\""));
+			}
+		}
+
+		[Test]
+		public async Task GeneralHelpShowsShortQueryCommandAndExample()
+		{
+			var result = await RunCli("help");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.Zero);
+				Assert.That(result.Output,   Does.Contain("dotnet linq2db query <options> : execute SQL query so agents can analyze code together with live database data"));
+				Assert.That(result.Output,   Does.Contain("dotnet linq2db scaffold <options> : generate database data model classes from database schema"));
+				Assert.That(result.Output,   Does.Contain("dotnet linq2db query --provider SQLite --connection-string \"Data Source=data.db\" --sql \"select * from Person\""));
+				Assert.That(result.Output,   Does.Contain("execute SQL query against SQLite database and write JSON result to console"));
 			}
 		}
 

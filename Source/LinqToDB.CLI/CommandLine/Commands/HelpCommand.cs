@@ -460,6 +460,9 @@ namespace LinqToDB.CommandLine
 			// for now it's fine, as we have only one command
 			environment.Out.WriteLine();
 			environment.Out.WriteLine("Examples:");
+			environment.Out.WriteLine("        dotnet linq2db query --provider SQLite --connection-string \"Data Source=data.db\" --sql \"select * from Person\"");
+			environment.Out.WriteLine("            execute SQL query against SQLite database and write JSON result to console");
+			environment.Out.WriteLine();
 			environment.Out.WriteLine("        dotnet linq2db scaffold -o c:\\my_project\\model -p SqlServer -c \"Server=MySqlServer;Database=MyDatabase;User Id=scaffold_user;Password=secret;\"");
 			environment.Out.WriteLine("            generate data model code for SQL Server database in c:\\my_project\\model folder");
 			environment.Out.WriteLine();
