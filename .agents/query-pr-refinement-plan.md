@@ -168,14 +168,14 @@ Done when: output path does not build the entire result as one string.
 
 ## Phase 11: Output File Overwrite Policy
 
-Status: pending
+Status: completed
 
 Avoid silent file replacement.
 
-- [ ] Add `--overwrite`.
-- [ ] If output file exists and `--overwrite` is not specified, return an error.
-- [ ] If `--overwrite` is specified, replace the file.
-- [ ] Add tests.
+- [x] Add `--overwrite`.
+- [x] If output file exists and `--overwrite` is not specified, return an error.
+- [x] If `--overwrite` is specified, replace the file.
+- [x] Add tests.
 
 Done when: output files are not overwritten silently.
 

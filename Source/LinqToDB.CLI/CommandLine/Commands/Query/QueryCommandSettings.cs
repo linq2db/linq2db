@@ -13,6 +13,7 @@ namespace LinqToDB.CommandLine
 	/// <param name="MaxRows">Maximum number of result rows to read.</param>
 	/// <param name="Output">Query output format.</param>
 	/// <param name="OutputFile">Optional output file path. When not specified, output is written to stdout.</param>
+	/// <param name="Overwrite">Allow replacing existing output file.</param>
 	/// <param name="SqlSafety">Unsafe SQL execution policy resolved from configuration profiles.</param>
 	/// <param name="AllowUnsafeSql">Command-line confirmation for unsafe SQL execution.</param>
 	/// <param name="Sql">SQL query text from command line.</param>
@@ -26,6 +27,7 @@ namespace LinqToDB.CommandLine
 		int                MaxRows,
 		string             Output,
 		string?            OutputFile,
+		bool               Overwrite,
 		QuerySqlSafetyMode SqlSafety,
 		bool               AllowUnsafeSql,
 		string?            Sql,

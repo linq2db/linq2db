@@ -87,6 +87,7 @@ Output:
 - `--output json-table` writes a duplicate-safe JSON object with column metadata and rows as arrays.
 - `--output csv` writes CSV output.
 - `--output-file <file>` writes command output to a file.
+- Existing output files are not replaced by default. Use `--overwrite` only when the user explicitly wants to replace the file.
 - When `--output-file` is not specified, output is written to stdout.
 - Query output reads database values using .NET `DbDataReader.GetProviderSpecificValue` and serializes them as strings using invariant culture and provider-specific safe formatting. `byte[]` values are emitted as base64 strings. `NULL` values are emitted as JSON `null`.
 - For `json` output, projected column names must be unique because rows are emitted as JSON objects. The agent is responsible for adding explicit SQL aliases when a query could produce duplicate names.

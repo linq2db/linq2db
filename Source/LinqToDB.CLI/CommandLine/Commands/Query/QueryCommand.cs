@@ -30,6 +30,7 @@ namespace LinqToDB.CommandLine
 		static readonly CliOption _lockTimeout      = new StringCliOption("lock-timeout",      null, false, false, "provider-specific lock wait timeout in seconds");
 		static readonly CliOption _maxRows          = new StringCliOption("max-rows",          null, false, false, "maximum number of result rows to read");
 		static readonly CliOption _outputFile       = new StringCliOption("output-file",       null, false, false, "path to file for command output");
+		static readonly CliOption _overwrite        = new BooleanCliOption("overwrite",        null, false, "replace existing output file", null, null, null, false, false);
 		static readonly CliOption _sql              = new StringCliOption("sql",               null, false, false, "SQL query text to execute");
 		static readonly CliOption _sqlFile          = new StringCliOption("sql-file",          null, false, false, "path to file with SQL query text to execute");
 
@@ -91,6 +92,7 @@ namespace LinqToDB.CommandLine
 			AddOption(_safetyOptions,        _allowUnsafeSql);
 			AddOption(_outputOptions,        _output);
 			AddOption(_outputOptions,        _outputFile);
+			AddOption(_outputOptions,        _overwrite);
 			AddOption(_outputOptions,        _maxRows);
 
 			AddMutuallyExclusiveOptions(_inputOptions, _sql, _sqlFile);
@@ -140,6 +142,7 @@ namespace LinqToDB.CommandLine
 			options.Remove(_allowUnsafeSql,   out var allowUnsafeSql);
 			options.Remove(_output,           out var output);
 			options.Remove(_outputFile,       out var outputFile);
+			options.Remove(_overwrite,        out var overwrite);
 			options.Remove(_maxRows,          out var maxRows);
 			options.Remove(_sql,              out var sql);
 			options.Remove(_sqlFile,          out var sqlFile);
@@ -168,6 +171,7 @@ namespace LinqToDB.CommandLine
 			var maxRowsValue         = (string?)maxRows        != null ? ParseRowCount(environment, _maxRows,          (string)maxRows)           : configuration?.MaxRows ?? DefaultMaxRows;
 			var outputFormat         = (string?)output ?? configuration?.Output ?? "json";
 			var outputFileName       = (string?)outputFile ?? configuration?.OutputFile;
+			var overwriteOutputFile  = (bool?)overwrite ?? false;
 			var sqlSafety            = configuration?.SqlSafety ?? QuerySqlSafetyMode.Deny;
 			var allowUnsafeSqlValue  = (bool?)allowUnsafeSql ?? false;
 			var querySql             = (string?)sql;
@@ -211,6 +215,7 @@ namespace LinqToDB.CommandLine
 				maxRowsValue,
 				outputFormat,
 				outputFileName,
+				overwriteOutputFile,
 				sqlSafety,
 				allowUnsafeSqlValue,
 				querySql,

@@ -370,6 +370,42 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task QueryRejectsExistingOutputFileWithoutOverwrite()
+		{
+			var environment = new TestCliEnvironment();
+
+			environment.Files.Add("query.csv", "existing");
+
+			var result = await RunCli(environment, "query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--output", "csv", "--output-file", "query.csv", "--sql", "select 1 as Value");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.EqualTo(-3));
+				Assert.That(result.Error,    Does.Contain("Output file 'query.csv' already exists."));
+				Assert.That(result.Error,    Does.Contain("--overwrite"));
+				Assert.That(environment.Files["query.csv"], Is.EqualTo("existing"));
+			}
+		}
+
+		[Test]
+		public async Task QueryOverwritesExistingOutputFileWithOverwrite()
+		{
+			var environment = new TestCliEnvironment();
+
+			environment.Files.Add("query.csv", "existing");
+
+			var result = await RunCli(environment, "query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--output", "csv", "--output-file", "query.csv", "--overwrite", "--sql", "select 1 as Value");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.Zero);
+				Assert.That(result.Output,   Is.Empty);
+				Assert.That(result.Error,    Is.Empty);
+				Assert.That(environment.Files["query.csv"], Is.EqualTo($"Value{Environment.NewLine}1{Environment.NewLine}"));
+			}
+		}
+
+		[Test]
 		public async Task QueryJsonRejectsDuplicateColumnNames()
 		{
 			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql", "select 1 as Value, 2 as Value");
@@ -892,6 +928,7 @@ namespace Tests.LinqToDB.CLI
 				Assert.That(result.Output,   Does.Contain("agents can analyze code together with live database data"));
 				Assert.That(result.Output,   Does.Contain("--output"));
 				Assert.That(result.Output,   Does.Contain("--output-file"));
+				Assert.That(result.Output,   Does.Contain("--overwrite"));
 				Assert.That(result.Output,   Does.Contain("json-table"));
 				Assert.That(result.Output,   Does.Contain("--sql"));
 				Assert.That(result.Output,   Does.Contain("--sql-file"));

@@ -122,6 +122,12 @@ namespace LinqToDB.CommandLine
 
 				// Execute the SQL query and read the results.
 				//
+				if (_settings.OutputFile != null && !_settings.Overwrite && _environment.FileExists(_settings.OutputFile))
+				{
+					await _environment.Error.WriteLineAsync($"Output file '{_settings.OutputFile}' already exists. Use '--overwrite' to replace it.").ConfigureAwait(false);
+					return StatusCodes.EXPECTED_ERROR;
+				}
+
 				var dataOptions = new DataOptions().UseConnectionString(dataProvider, _settings.ConnectionString);
 
 				if (_settings.CommandTimeout != null)
