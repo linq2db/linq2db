@@ -473,16 +473,6 @@ namespace LinqToDB.Data
 				return result;
 			}
 
-			// Plans the physical command groups for an assembled eager-loading scenario, size-aware (a large child
-			// fan-out splits into several round-trips). Resolves the provider's IDmlService so eager loading reuses the
-			// same PlanScenario grouping authority as DML combining.
-			internal static SqlCommandGroupPlan PlanEagerScenario(DataConnection dataConnection, SqlCommandScenario scenario)
-			{
-				var dmlService = ((IInfrastructure<IServiceProvider>)dataConnection.DataProvider).Instance.GetRequiredService<IDmlService>();
-
-				return dmlService.PlanScenario(scenario, dataConnection.DataProvider.SqlProviderFlags);
-			}
-
 			// The single execution seam for one combined-eager command. A single (pre-merged / concatenated) statement runs
 			// as one DbCommand; a multi-statement command runs as a DbBatch (each statement its own parameter scope),
 			// attached to the reader wrapper so the batch is released when the reader is disposed. Returns the reader
@@ -804,7 +794,7 @@ namespace LinqToDB.Data
 			// group's earlier steps are harvested and the still-open reader is returned for the caller to stream (only the last
 			// group carries a terminal); otherwise every reader is disposed here and the method returns null. getCommand supplies
 			// each combined group's physical command (DML builds it per group from the prepared query; eager already holds it).
-			static DataReaderWrapper? RunGroups(
+			internal static DataReaderWrapper? RunGroups(
 				DataConnection                              dataConnection,
 				IReadOnlyList<SqlCommandStep>               steps,
 				IReadOnlyList<SqlCommandGroup>              groups,
@@ -953,7 +943,7 @@ namespace LinqToDB.Data
 			}
 
 			// In case of change the logic of this method, DO NOT FORGET to change the sibling method.
-			static async Task<DataReaderWrapper?> RunGroupsAsync(
+			internal static async Task<DataReaderWrapper?> RunGroupsAsync(
 				DataConnection                              dataConnection,
 				IReadOnlyList<SqlCommandStep>               steps,
 				IReadOnlyList<SqlCommandGroup>              groups,
