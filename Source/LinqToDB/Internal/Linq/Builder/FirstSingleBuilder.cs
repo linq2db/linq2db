@@ -217,13 +217,27 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 			}
 
+			// Each element selector sets BOTH: GetElement (legacy sequential path, kept for callers that pre-init
+			// harvesters, e.g. compiled queries) and GetEagerElement (routes through GetEagerEnumerable so the
+			// element query batches its eager children into the combined multi-result-set command when eligible).
+			// The ExpressionQuery element execution paths prefer GetEagerElement.
+
 			static void GetFirstElement<T>(Query<T> query)
 			{
 				query.GetElement = (db, expr, ps, preambles) =>
 					query.GetResultEnumerable(db, expr, ps, preambles).First();
 
-				query.GetElementAsync = query.GetElementAsync = async (db, expr, ps, preambles, token) =>
+				query.GetElementAsync = async (db, expr, ps, preambles, token) =>
 					await query.GetResultEnumerable(db, expr, ps, preambles).FirstAsync(token).ConfigureAwait(false);
+
+				query.GetEagerElement = (db, expr, ps) =>
+					query.GetEagerEnumerable(db, expr, ps).Enumerable.First();
+
+				query.GetEagerElementAsync = async (db, expr, ps, token) =>
+				{
+					var (enumerable, _, _) = await query.GetEagerEnumerableAsync(db, expr, ps, token).ConfigureAwait(false);
+					return await enumerable.FirstAsync(token).ConfigureAwait(false);
+				};
 			}
 
 			static void GetFirstOrDefaultElement<T>(Query<T> query)
@@ -233,6 +247,15 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				query.GetElementAsync = async (db, expr, ps, preambles, token) =>
 					await query.GetResultEnumerable(db, expr, ps, preambles).FirstOrDefaultAsync(token).ConfigureAwait(false);
+
+				query.GetEagerElement = (db, expr, ps) =>
+					query.GetEagerEnumerable(db, expr, ps).Enumerable.FirstOrDefault();
+
+				query.GetEagerElementAsync = async (db, expr, ps, token) =>
+				{
+					var (enumerable, _, _) = await query.GetEagerEnumerableAsync(db, expr, ps, token).ConfigureAwait(false);
+					return await enumerable.FirstOrDefaultAsync(token).ConfigureAwait(false);
+				};
 			}
 
 			static void GetSingleElement<T>(Query<T> query)
@@ -242,6 +265,15 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				query.GetElementAsync = async (db, expr, ps, preambles, token) =>
 					await query.GetResultEnumerable(db, expr, ps, preambles).SingleAsync(token).ConfigureAwait(false);
+
+				query.GetEagerElement = (db, expr, ps) =>
+					query.GetEagerEnumerable(db, expr, ps).Enumerable.Single();
+
+				query.GetEagerElementAsync = async (db, expr, ps, token) =>
+				{
+					var (enumerable, _, _) = await query.GetEagerEnumerableAsync(db, expr, ps, token).ConfigureAwait(false);
+					return await enumerable.SingleAsync(token).ConfigureAwait(false);
+				};
 			}
 
 			static void GetSingleOrDefaultElement<T>(Query<T> query)
@@ -251,6 +283,15 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				query.GetElementAsync = async (db, expr, ps, preambles, token) =>
 					await query.GetResultEnumerable(db, expr, ps, preambles).SingleOrDefaultAsync(token).ConfigureAwait(false);
+
+				query.GetEagerElement = (db, expr, ps) =>
+					query.GetEagerEnumerable(db, expr, ps).Enumerable.SingleOrDefault();
+
+				query.GetEagerElementAsync = async (db, expr, ps, token) =>
+				{
+					var (enumerable, _, _) = await query.GetEagerEnumerableAsync(db, expr, ps, token).ConfigureAwait(false);
+					return await enumerable.SingleOrDefaultAsync(token).ConfigureAwait(false);
+				};
 			}
 
 			bool _isJoinCreated;

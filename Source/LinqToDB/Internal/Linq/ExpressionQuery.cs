@@ -107,6 +107,14 @@ namespace LinqToDB.Internal.Linq
 			var transaction = await StartLoadTransactionAsync(query, cancellationToken).ConfigureAwait(false);
 			await using var tr = (transaction ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false);
 
+			if (query.GetEagerElementAsync != null)
+			{
+				var eagerValue = await query.GetEagerElementAsync(DataContext, expressions, Parameters, cancellationToken)
+					.ConfigureAwait(false);
+
+				return (TResult)eagerValue!;
+			}
+
 			Preambles = await query.InitHarvestersAsync(DataContext, expressions, Parameters, cancellationToken)
 				.ConfigureAwait(false);
 
@@ -315,6 +323,9 @@ namespace LinqToDB.Internal.Linq
 
 			using (StartLoadTransaction(query))
 			{
+				if (query.GetEagerElement != null)
+					return (TResult)query.GetEagerElement(DataContext, expressions, Parameters)!;
+
 				Preambles = query.InitHarvesters(DataContext, expressions, Parameters);
 
 				var getElement = query.GetElement;
@@ -333,6 +344,9 @@ namespace LinqToDB.Internal.Linq
 
 			using (StartLoadTransaction(query))
 			{
+				if (query.GetEagerElement != null)
+					return query.GetEagerElement(DataContext, expressions, Parameters);
+
 				Preambles = query.InitHarvesters(DataContext, expressions, Parameters);
 
 				var getElement = query.GetElement;

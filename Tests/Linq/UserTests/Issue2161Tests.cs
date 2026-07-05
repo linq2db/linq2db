@@ -3,6 +3,7 @@ using System.Data.Common;
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
 
@@ -59,11 +60,17 @@ namespace Tests.UserTests
 			{
 				var interceptor = new CountCommandsInterceptor();
 				db.AddInterceptor(interceptor);
-				//Below line makes same join queries twice
 				var query = db.GetTable<Order>().LoadWith(o => o.Details).Where(o => o.OrderId == 1);
 				var order = query.FirstOrDefault();
 
-				Assert.That(interceptor.Count, Is.EqualTo(2));
+				// A First/Single over an eager LoadWith batches the main query and the eager query into one combined
+				// multi-result-set command on providers that support multi-statement batches + multiple result sets
+				// (SQLite here); ClickHouse and remote contexts lack that and still run them as two separate commands.
+				var combined = db is DataConnection dc
+					&& dc.DataProvider.SqlProviderFlags.IsMultiStatementBatchSupported
+					&& dc.DataProvider.SqlProviderFlags.IsMultipleResultSetsSupported;
+
+				Assert.That(interceptor.Count, Is.EqualTo(combined ? 1 : 2));
 			}
 		}
 

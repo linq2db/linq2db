@@ -22,6 +22,15 @@ namespace LinqToDB.Internal.Linq
 		internal Func<IDataContext,IQueryExpressions,object?[]?,SqlCommandExecutionContext?,object?>                         GetElement      = null!;
 		internal Func<IDataContext,IQueryExpressions,object?[]?,SqlCommandExecutionContext?,CancellationToken,Task<object?>> GetElementAsync = null!;
 
+		// Eager-aware element selection (First/Single/…), set only by FirstSingleBuilder. Unlike GetElement, these route
+		// through the combined eager engine (Query<T>.GetEagerEnumerable — one multi-result-set command when eligible,
+		// else the sequential harvesters + base enumerable) and take the single element, so First/Single batch their
+		// eager children the same way ToList()/foreach do. When set, the element execution paths use these INSTEAD of
+		// GetElement and skip the InitHarvesters pre-init (GetEagerEnumerable runs the harvesters itself). Null for
+		// scalar / ExecuteElement / non-query queries, which keep the pre-inited-harvesters GetElement path.
+		internal Func<IDataContext,IQueryExpressions,object?[]?,object?>?                         GetEagerElement;
+		internal Func<IDataContext,IQueryExpressions,object?[]?,CancellationToken,Task<object?>>? GetEagerElementAsync;
+
 		#region Init
 
 		// One logical query per Query. Multi-statement expansion is modelled by SqlCommandScenario at render time
