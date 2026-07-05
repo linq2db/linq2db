@@ -699,40 +699,60 @@ namespace LinqToDB.Internal.Linq.Builder
 				_perExecution.Add(execution, keys);
 			}
 
-			static TKey[] SortKeysDeterministically(TKey[] keys)
+			// execution is null only if the keys accessor is evaluated without a live IQueryExpressions
+			// (e.g. during SQL-text generation); the value is unused there, so return null — exactly as
+			// the previous nullable field did.
+			public TKey[]? GetKeys(object? execution)
+				=> execution != null && _perExecution.TryGetValue(execution, out var keys) ? keys : null;
+
+			public void ClearKeys(object? execution)
 			{
-				if (keys.Length < 2)
-					return keys;
+				if (execution != null)
+					_perExecution.Remove(execution);
+			}
+		}
 
-				try
-				{
-					// Sort in place — every caller passes a freshly-allocated array (.ToArray()) that
-					// nothing else holds, so mutating it is safe.
-					Array.Sort(keys, _keyComparer);
-				}
-				catch (InvalidOperationException)
-				{
-					// TKey (or one of its composite components) does not implement IComparable.
-					// Such keys are not deterministically orderable, so they keep source order — eager
-					// load compares keys structurally for equality only, no ordering contract is required.
-					// A partial Array.Sort here is harmless: it only reorders (never drops) elements, and
-					// the order of a non-orderable key class is non-deterministic between paths regardless.
-				}
-
+		// Canonicalize key order so the inlined VALUES table is identical regardless of which extraction
+		// path produced the keys (client-side buffer vs SQL key query) or what order the database returned
+		// rows in. Without this, direct and remote (LinqService) execution can emit divergent SQL for the
+		// same query (#5664). Keys whose type is not orderable (e.g. a composite with a byte[] component)
+		// keep their source order — eager load compares keys structurally for equality only, so no orderable
+		// contract is otherwise required.
+		static TKey[] SortKeysDeterministically<TKey>(TKey[] keys)
+		{
+			if (keys.Length < 2)
 				return keys;
+
+			try
+			{
+				// Sort in place — every caller passes a freshly-allocated array (.ToArray()) that
+				// nothing else holds, so mutating it is safe.
+				Array.Sort(keys, DeterministicKeyComparer<TKey>.Instance);
+			}
+			catch (InvalidOperationException)
+			{
+				// TKey (or one of its composite components) does not implement IComparable.
+				// Such keys are not deterministically orderable, so they keep source order — eager
+				// load compares keys structurally for equality only, no ordering contract is required.
+				// A partial Array.Sort here is harmless: it only reorders (never drops) elements, and
+				// the order of a non-orderable key class is non-deterministic between paths regardless.
 			}
 
-			// Ordinal, culture-invariant key comparer. Comparer<TKey>.Default orders string keys (and
-			// string components of composite ValueTuple keys) with string.CompareTo, i.e. a culture-sensitive
-			// linguistic comparison. That is unsuitable for canonicalizing SQL text: it is not a stable total
-			// order over distinct strings (canonically-equal but distinct values — e.g. "å" vs "å"
-			// — tie, and Array.Sort is not stable, so the two extraction paths could still order them
-			// differently), and it is machine-culture-dependent (baselines would reorder across cultures).
-			// Both defeat the deterministic ordering this canonicalization exists to provide (#5664), so
-			// strings are compared ordinally.
-			static readonly IComparer<TKey> _keyComparer = CreateKeyComparer();
+			return keys;
+		}
 
-			static IComparer<TKey> CreateKeyComparer()
+		// Ordinal, culture-invariant key comparer. Comparer<TKey>.Default orders string keys (and string
+		// components of composite ValueTuple keys) with string.CompareTo, i.e. a culture-sensitive linguistic
+		// comparison. That is unsuitable for canonicalizing SQL text: it is not a stable total order over
+		// distinct strings (canonically-equal but distinct values can tie, and Array.Sort is not stable, so
+		// the two extraction paths could still order them differently), and it is machine-culture-dependent
+		// (baselines would reorder across cultures). Both defeat the deterministic ordering this
+		// canonicalization exists to provide (#5664), so strings are compared ordinally.
+		static class DeterministicKeyComparer<TKey>
+		{
+			public static readonly IComparer<TKey> Instance = Create();
+
+			static IComparer<TKey> Create()
 			{
 				if (typeof(TKey) == typeof(string))
 					return (IComparer<TKey>)(object)StringComparer.Ordinal;
@@ -774,18 +794,6 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					return Comparer<object>.Default.Compare(a, b);
 				}
-			}
-
-			// execution is null only if the keys accessor is evaluated without a live IQueryExpressions
-			// (e.g. during SQL-text generation); the value is unused there, so return null — exactly as
-			// the previous nullable field did.
-			public TKey[]? GetKeys(object? execution)
-				=> execution != null && _perExecution.TryGetValue(execution, out var keys) ? keys : null;
-
-			public void ClearKeys(object? execution)
-			{
-				if (execution != null)
-					_perExecution.Remove(execution);
 			}
 		}
 
