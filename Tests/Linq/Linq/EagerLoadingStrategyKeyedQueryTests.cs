@@ -1584,7 +1584,7 @@ namespace Tests.Linq
 
 		#region Concurrency — shared cached query must not share per-execution key state
 
-		// Regression for MAJ001: KeyedQueryKeysHolder used to be build-time state baked into the
+		// Regression for MAJ001: the keyed keys were once build-time state baked into the
 		// cached query, so concurrent executions of the same cached query clobbered each other's
 		// key sets — producing empty or cross-loaded child collections. Keys are now isolated per
 		// execution via the preamble-results array, so this must stay green under concurrency.
