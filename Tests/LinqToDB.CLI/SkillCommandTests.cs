@@ -33,6 +33,8 @@ namespace Tests.LinqToDB.CLI
 				Assert.That(result.Output,   Does.Contain("Support synchronous development of code and a development database"));
 				Assert.That(result.Output,   Does.Contain("An agent MUST ask the user for explicit confirmation before executing any unsafe SQL operation."));
 				Assert.That(result.Output,   Does.Contain("Default mode is safe mode"));
+				Assert.That(result.Output,   Does.Contain("Query output reads database values using .NET `DbDataReader.GetProviderSpecificValue`"));
+				Assert.That(result.Output,   Does.Contain("`byte[]` values are emitted as base64 strings"));
 				Assert.That(result.Output,   Does.Contain("Use `dotnet linq2db skill` or `dotnet linq2db skills`"));
 				Assert.That(result.Output,   Does.Contain(@"dotnet linq2db skill > "".\.agents\skills\linq2db-cli\SKILL.md"""));
 			}

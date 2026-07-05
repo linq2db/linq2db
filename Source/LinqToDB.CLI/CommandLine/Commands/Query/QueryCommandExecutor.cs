@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Data.Common;
+using System.Data.SqlTypes;
 using System.Globalization;
 using System.IO;
 using System.Text;
@@ -8,32 +10,56 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.Data;
-using LinqToDB.DataProvider;
 
 namespace LinqToDB.CommandLine
 {
 	/// <summary>
 	/// Query command execution logic.
 	/// </summary>
-	internal sealed class QueryCommandExecutor
+	sealed class QueryCommandExecutor(ICliEnvironment environment, QueryCommandSettings settings)
 	{
-		private readonly ICliEnvironment       _environment;
-		private readonly QueryCommandSettings _settings;
+		sealed record QueryOutputColumn(string Name, QueryActualFieldType ActualFieldType);
 
-		public QueryCommandExecutor(ICliEnvironment environment, QueryCommandSettings settings)
+		sealed record QueryOutput(QueryOutputColumn[] Columns, List<string?[]> Rows);
+
+		enum QueryActualFieldType
 		{
-			_environment = environment;
-			_settings     = settings;
+			None = 0,
+			Boolean,
+			Double,
+			Single,
+			DateTime,
+			DateTimeOffset,
+			Bytes,
+			SqlDecimal,
 		}
+
+		readonly ICliEnvironment      _environment = environment;
+		readonly QueryCommandSettings _settings    = settings;
 
 		public async ValueTask<int> Execute(CancellationToken cancellationToken)
 		{
 			cancellationToken.ThrowIfCancellationRequested();
 
-			if (!TryGetSql(out var sql, out var error))
+			string sql;
+
+			if (_settings.Sql != null)
 			{
-				await _environment.Error.WriteLineAsync(error).ConfigureAwait(false);
-				return StatusCodes.EXPECTED_ERROR;
+				sql = _settings.Sql;
+			}
+			else if (_settings.SqlFile != null)
+			{
+				if (!_environment.FileExists(_settings.SqlFile))
+				{
+					await _environment.Error.WriteLineAsync($"SQL file '{_settings.SqlFile}' not found.").ConfigureAwait(false);
+					return StatusCodes.EXPECTED_ERROR;
+				}
+
+				sql = _environment.ReadAllText(_settings.SqlFile);
+			}
+			else
+			{
+				throw new InvalidOperationException("Either SQL text or SQL file must be specified.");
 			}
 
 			try
@@ -46,8 +72,28 @@ namespace LinqToDB.CommandLine
 					return StatusCodes.EXPECTED_ERROR;
 				}
 
-				if (!await ValidateSafety(dataProvider, sql).ConfigureAwait(false))
+				var singleStatementResult = QuerySafetyValidator.ValidateSingleStatement(dataProvider, sql);
+
+				if (!singleStatementResult.IsSafe)
+				{
+					await _environment.Error.WriteLineAsync(singleStatementResult.Error).ConfigureAwait(false);
 					return StatusCodes.EXPECTED_ERROR;
+				}
+
+				if (_settings.SqlSafety != QuerySqlSafetyMode.Allow)
+				{
+					var safetyResult = QuerySafetyValidator.Validate(dataProvider, sql);
+
+					if (!safetyResult.IsSafe && !(_settings.SqlSafety == QuerySqlSafetyMode.Confirm && _settings.AllowUnsafeSql))
+					{
+						if (_settings.SqlSafety == QuerySqlSafetyMode.Confirm)
+							await _environment.Error.WriteLineAsync($"Unsafe SQL requires '--allow-unsafe-sql': {safetyResult.Error}").ConfigureAwait(false);
+						else
+							await _environment.Error.WriteLineAsync(safetyResult.Error).ConfigureAwait(false);
+
+						return StatusCodes.EXPECTED_ERROR;
+					}
+				}
 
 				var dataConnection = new DataConnection(new DataOptions().UseConnectionString(dataProvider, _settings.ConnectionString));
 
@@ -58,17 +104,62 @@ namespace LinqToDB.CommandLine
 					await using (dataReader.ConfigureAwait(false))
 					{
 						var reader = dataReader.Reader;
+
 						if (reader == null)
 						{
 							await _environment.Error.WriteLineAsync("Query didn't return data reader.").ConfigureAwait(false);
 							return StatusCodes.EXPECTED_ERROR;
 						}
 
-						var output = string.Equals(_settings.Output, "csv", StringComparison.OrdinalIgnoreCase)
-							? await FormatCsv (reader, cancellationToken).ConfigureAwait(false)
-							: await FormatJson(reader, cancellationToken).ConfigureAwait(false);
+						var columns = new QueryOutputColumn[reader.FieldCount];
 
-						await WriteOutput(output, cancellationToken).ConfigureAwait(false);
+						for (var i = 0; i < columns.Length; i++)
+						{
+							Type providerSpecificType;
+
+							try
+							{
+								providerSpecificType = reader.GetProviderSpecificFieldType(i);
+							}
+							catch (NotSupportedException)
+							{
+								providerSpecificType = reader.GetFieldType(i);
+							}
+
+							columns[i] = CreateOutputColumn(reader, i, providerSpecificType);
+						}
+
+						var rows = new List<string?[]>();
+
+						while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+						{
+							var row = new string?[columns.Length];
+
+							for (var i = 0; i < columns.Length; i++)
+							{
+								if (await reader.IsDBNullAsync(i, cancellationToken).ConfigureAwait(false))
+									continue;
+
+								row[i] = ReadFieldAsString(reader, columns[i].ActualFieldType, i);
+							}
+
+							rows.Add(row);
+						}
+
+						var queryOutput = new QueryOutput(columns, rows);
+
+						var output = string.Equals(_settings.Output, "csv", StringComparison.OrdinalIgnoreCase)
+							? FormatCsv (queryOutput)
+							: FormatJson(queryOutput);
+
+						if (_settings.OutputFile != null)
+						{
+							_environment.WriteAllText(_settings.OutputFile, output);
+						}
+						else
+						{
+							await _environment.Out.WriteAsync(output.AsMemory(), cancellationToken).ConfigureAwait(false);
+						}
 					}
 				}
 
@@ -85,133 +176,110 @@ namespace LinqToDB.CommandLine
 			}
 		}
 
-		private bool TryGetSql(out string sql, out string error)
-		{
-			if (_settings.Sql != null)
-			{
-				sql   = _settings.Sql;
-				error = string.Empty;
-				return true;
-			}
-
-			if (_settings.SqlFile != null)
-			{
-				if (!_environment.FileExists(_settings.SqlFile))
-				{
-					sql   = string.Empty;
-					error = $"SQL file '{_settings.SqlFile}' not found.";
-					return false;
-				}
-
-				sql   = _environment.ReadAllText(_settings.SqlFile);
-				error = string.Empty;
-				return true;
-			}
-
-			throw new InvalidOperationException("Either SQL text or SQL file must be specified.");
-		}
-
-		private async Task<bool> ValidateSafety(IDataProvider dataProvider, string sql)
-		{
-			var singleStatementResult = QuerySafetyValidator.ValidateSingleStatement(dataProvider, sql);
-			if (!singleStatementResult.IsSafe)
-			{
-				await _environment.Error.WriteLineAsync(singleStatementResult.Error).ConfigureAwait(false);
-				return false;
-			}
-
-			if (_settings.SqlSafety == QuerySqlSafetyMode.Allow)
-				return true;
-
-			var safetyResult = QuerySafetyValidator.Validate(dataProvider, sql);
-
-			if (safetyResult.IsSafe)
-				return true;
-
-			if (_settings.SqlSafety == QuerySqlSafetyMode.Confirm && _settings.AllowUnsafeSql)
-				return true;
-
-			if (_settings.SqlSafety == QuerySqlSafetyMode.Confirm)
-				await _environment.Error.WriteLineAsync($"Unsafe SQL requires '--allow-unsafe-sql': {safetyResult.Error}").ConfigureAwait(false);
-			else
-				await _environment.Error.WriteLineAsync(safetyResult.Error).ConfigureAwait(false);
-
-			return false;
-		}
-
-		private async Task WriteOutput(string output, CancellationToken cancellationToken)
-		{
-			if (_settings.OutputFile != null)
-			{
-				_environment.WriteAllText(_settings.OutputFile, output);
-			}
-			else
-			{
-				await _environment.Out.WriteAsync(output.AsMemory(), cancellationToken).ConfigureAwait(false);
-			}
-		}
-
-		private static async Task<string> FormatJson(DbDataReader reader, CancellationToken cancellationToken)
+		static string FormatJson(QueryOutput queryOutput)
 		{
 			using var stream = new MemoryStream();
 			using var writer = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = true });
 
 			writer.WriteStartArray();
 
-			while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+			foreach (var row in queryOutput.Rows)
 			{
 				writer.WriteStartObject();
 
-				for (var i = 0; i < reader.FieldCount; i++)
+				for (var i = 0; i < queryOutput.Columns.Length; i++)
 				{
-					writer.WritePropertyName(reader.GetName(i));
+					writer.WritePropertyName(queryOutput.Columns[i].Name);
 
-					if (await reader.IsDBNullAsync(i, cancellationToken).ConfigureAwait(false))
+					if (row[i] == null)
 						writer.WriteNullValue();
 					else
-						JsonSerializer.Serialize(writer, reader.GetValue(i), reader.GetFieldType(i));
+						writer.WriteStringValue(row[i]);
 				}
 
 				writer.WriteEndObject();
 			}
 
 			writer.WriteEndArray();
+			writer.Flush();
 
 			return Encoding.UTF8.GetString(stream.ToArray());
 		}
 
-		private static async Task<string> FormatCsv(DbDataReader reader, CancellationToken cancellationToken)
+		static string FormatCsv(QueryOutput queryOutput)
 		{
-			var output = new StringBuilder();
+			var text = new StringBuilder();
 
-			for (var i = 0; i < reader.FieldCount; i++)
+			for (var i = 0; i < queryOutput.Columns.Length; i++)
 			{
 				if (i > 0)
-					output.Append(',');
+					text.Append(',');
 
-				AppendCsvValue(output, reader.GetName(i));
+				AppendCsvValue(text, queryOutput.Columns[i].Name);
 			}
 
-			output.AppendLine();
+			text.AppendLine();
 
-			while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+			foreach (var row in queryOutput.Rows)
 			{
-				for (var i = 0; i < reader.FieldCount; i++)
+				for (var i = 0; i < queryOutput.Columns.Length; i++)
 				{
 					if (i > 0)
-						output.Append(',');
+						text.Append(',');
 
-					if (!await reader.IsDBNullAsync(i, cancellationToken).ConfigureAwait(false))
-						AppendCsvValue(output, Convert.ToString(reader.GetValue(i), CultureInfo.InvariantCulture) ?? string.Empty);
+					if (row[i] != null)
+						AppendCsvValue(text, row[i]!);
 				}
 
-				output.AppendLine();
+				text.AppendLine();
 			}
 
-			return output.ToString();
+			return text.ToString();
 		}
 
-		private static void AppendCsvValue(StringBuilder output, string value)
+		static QueryOutputColumn CreateOutputColumn(DbDataReader reader, int ordinal, Type providerSpecificType)
+		{
+			var actualFieldType = providerSpecificType switch
+			{
+				_ when providerSpecificType == typeof(bool)           => QueryActualFieldType.Boolean,
+				_ when providerSpecificType == typeof(double)         => QueryActualFieldType.Double,
+				_ when providerSpecificType == typeof(float)          => QueryActualFieldType.Single,
+				_ when providerSpecificType == typeof(DateTime)       => QueryActualFieldType.DateTime,
+				_ when providerSpecificType == typeof(DateTimeOffset) => QueryActualFieldType.DateTimeOffset,
+				_ when providerSpecificType == typeof(byte[])         => QueryActualFieldType.Bytes,
+				_ when providerSpecificType == typeof(SqlDecimal)     => QueryActualFieldType.SqlDecimal,
+				_                                                     => QueryActualFieldType.None,
+			};
+
+			return new QueryOutputColumn(reader.GetName(ordinal), actualFieldType);
+		}
+
+		static string? ReadFieldAsString(DbDataReader reader, QueryActualFieldType actualFieldType, int ordinal)
+		{
+			object fieldValue;
+
+			try
+			{
+				fieldValue = reader.GetProviderSpecificValue(ordinal);
+			}
+			catch (NotSupportedException)
+			{
+				fieldValue = reader.GetValue(ordinal);
+			}
+
+			return actualFieldType switch
+			{
+				QueryActualFieldType.Boolean        => ((bool)fieldValue) ? "true" : "false",
+				QueryActualFieldType.Double         => ((double)fieldValue).ToString("R", CultureInfo.InvariantCulture),
+				QueryActualFieldType.Single         => ((float)fieldValue).ToString("R", CultureInfo.InvariantCulture),
+				QueryActualFieldType.DateTime       => ((DateTime)fieldValue).ToString("O", CultureInfo.InvariantCulture),
+				QueryActualFieldType.DateTimeOffset => ((DateTimeOffset)fieldValue).ToString("O", CultureInfo.InvariantCulture),
+				QueryActualFieldType.Bytes          => Convert.ToBase64String((byte[])fieldValue),
+				_                                   => Convert.ToString(fieldValue, CultureInfo.InvariantCulture),
+			};
+		}
+
+		static void AppendCsvValue(StringBuilder output, string value)
 		{
 			if (value.IndexOfAny([',', '"', '\r', '\n']) < 0)
 			{

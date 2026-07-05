@@ -93,20 +93,20 @@ Done when: exploratory agent queries have bounded execution by default or config
 
 ## Phase 6: Output Value Conversion
 
-Status: pending
+Status: completed
 
 Stop serializing provider values directly.
 
-- [ ] Add `QueryFieldKind`.
-- [ ] Add centralized `QueryFieldKindMap`.
-- [ ] Read provider-specific field type once per column.
-- [ ] Add central `ReadFieldAsString(...)`.
-- [ ] Use one conversion path for JSON and CSV.
-- [ ] Emit JSON values as strings or null.
-- [ ] Convert bytes to base64.
-- [ ] Convert dates with round-trip format.
-- [ ] Handle SQL Server `SqlDecimal` without CLR decimal overflow.
-- [ ] Add conversion tests for primitive, binary, date/time, null, and `SqlDecimal`.
+- [x] Add `QueryProviderSpecificFieldKind`.
+- [x] Add centralized `QueryFieldKindMap`.
+- [x] Read provider-specific field type once per column.
+- [x] Add central `ReadFieldAsString(...)`.
+- [x] Use one conversion path for JSON and CSV.
+- [x] Emit JSON values as strings or null.
+- [x] Convert bytes to base64.
+- [x] Convert dates with round-trip format.
+- [x] Handle SQL Server `SqlDecimal` without CLR decimal overflow.
+- [x] Add conversion tests for primitive, binary, date/time, null, and `SqlDecimal`.
 
 Done when: `JsonSerializer.Serialize(reader.GetValue(...))` is gone from query output.
 

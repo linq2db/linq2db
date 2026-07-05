@@ -68,6 +68,7 @@ Output:
 - `--output csv` writes CSV output.
 - `--output-file <file>` writes command output to a file.
 - When `--output-file` is not specified, output is written to stdout.
+- Query output reads database values using .NET `DbDataReader.GetProviderSpecificValue` and serializes them as strings using invariant culture and provider-specific safe formatting. `byte[]` values are emitted as base64 strings. `NULL` values are emitted as JSON `null`.
 
 Safety:
 

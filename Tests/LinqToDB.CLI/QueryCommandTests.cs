@@ -72,7 +72,7 @@ namespace Tests.LinqToDB.CLI
 			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("\"Value\": 1"));
+				Assert.That(result.Output,   Does.Contain("\"Value\": \"1\""));
 				Assert.That(result.Error,    Is.Empty);
 			}
 		}
@@ -419,7 +419,7 @@ namespace Tests.LinqToDB.CLI
 			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("\"Value\": 2"));
+				Assert.That(result.Output,   Does.Contain("\"Value\": \"2\""));
 				Assert.That(result.Error,    Is.Empty);
 			}
 		}
@@ -449,7 +449,7 @@ namespace Tests.LinqToDB.CLI
 				Assert.That(result.ExitCode, Is.Zero);
 				Assert.That(result.Output,   Is.Empty);
 				Assert.That(result.Error,    Is.Empty);
-				Assert.That(environment.Files["default.csv"], Does.Contain("\"1\": 1"));
+				Assert.That(environment.Files["default.csv"], Does.Contain("\"1\": \"1\""));
 			}
 		}
 
@@ -478,7 +478,7 @@ namespace Tests.LinqToDB.CLI
 				Assert.That(result.ExitCode, Is.Zero);
 				Assert.That(result.Output,   Is.Empty);
 				Assert.That(result.Error,    Is.Empty);
-				Assert.That(environment.Files["cli.json"], Does.Contain("\"Value\": 1"));
+				Assert.That(environment.Files["cli.json"], Does.Contain("\"Value\": \"1\""));
 			}
 		}
 
@@ -490,7 +490,7 @@ namespace Tests.LinqToDB.CLI
 			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("\"Value\": 1"));
+				Assert.That(result.Output,   Does.Contain("\"Value\": \"1\""));
 				Assert.That(result.Error,    Is.Empty);
 			}
 		}
@@ -515,7 +515,7 @@ namespace Tests.LinqToDB.CLI
 			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("\"Value\": 1"));
+				Assert.That(result.Output,   Does.Contain("\"Value\": \"1\""));
 				Assert.That(result.Error,    Is.Empty);
 			}
 		}
