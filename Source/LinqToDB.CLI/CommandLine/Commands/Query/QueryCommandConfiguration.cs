@@ -4,13 +4,44 @@ using System.Text.Json;
 
 namespace LinqToDB.CommandLine
 {
+	/// <summary>
+	/// Query command configuration loaded from JSON profile file.
+	/// The root object contains a required profile named "default" and optional named profiles.
+	/// Named profiles inherit values from the "default" profile because it is applied first.
+	/// </summary>
 	internal sealed class QueryCommandConfiguration
 	{
 		private const string DefaultProfileName = "default";
 
+		/// <summary>
+		/// linq2db provider name.
+		/// </summary>
 		public string? Provider         { get; private set; }
+
+		/// <summary>
+		/// Database connection string. It is always formatted with <see cref="string.Format(System.IFormatProvider,string,object?[])"/>;
+		/// <c>{0}</c> is replaced with <see cref="User"/> and <c>{1}</c> is replaced with <see cref="Password"/>.
+		/// </summary>
 		public string? ConnectionString { get; private set; }
+
+		/// <summary>
+		/// Optional database user name used as <c>{0}</c> argument for connection string formatting.
+		/// </summary>
+		public string? User             { get; private set; }
+
+		/// <summary>
+		/// Optional database password used as <c>{1}</c> argument for connection string formatting.
+		/// </summary>
+		public string? Password         { get; private set; }
+
+		/// <summary>
+		/// Query output format.
+		/// </summary>
 		public string? Output           { get; private set; }
+
+		/// <summary>
+		/// Optional output file path. When it is not specified, query result is written to stdout.
+		/// </summary>
 		public string? OutputFile       { get; private set; }
 
 		public static bool TryLoad(ICliEnvironment environment, string fileName, string profileName, out QueryCommandConfiguration? configuration, out string? error)
@@ -105,6 +136,12 @@ namespace LinqToDB.CommandLine
 					case "connectionString":
 					case "connection-string":
 						ConnectionString = value;
+						break;
+					case "user":
+						User = value;
+						break;
+					case "password":
+						Password = value;
 						break;
 					case "output":
 						if (!string.Equals(value, "json", StringComparison.OrdinalIgnoreCase) && !string.Equals(value, "csv", StringComparison.OrdinalIgnoreCase))

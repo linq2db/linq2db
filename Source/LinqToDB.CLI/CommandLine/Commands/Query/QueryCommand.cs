@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -58,7 +59,31 @@ namespace LinqToDB.CommandLine
 			null,
 			false,
 			false,
-			"database connection string",
+			"database connection string; use {0} for user and {1} for password placeholders",
+			null,
+			null,
+			null,
+			null,
+			null);
+
+		private static readonly CliOption User = new StringCliOption(
+			"user",
+			null,
+			false,
+			false,
+			"database user name for connection string formatting",
+			null,
+			null,
+			null,
+			null,
+			null);
+
+		private static readonly CliOption Password = new StringCliOption(
+			"password",
+			null,
+			false,
+			false,
+			"database password for connection string formatting",
 			null,
 			null,
 			null,
@@ -121,7 +146,7 @@ namespace LinqToDB.CommandLine
 				"query",
 				true,
 				false,
-				"[--config config] [--profile profile] [--provider provider] [--connection-string connection-string] [--output output] [--output-file output-file] [--sql sql | --sql-file file]",
+				"[--config config] [--profile profile] [--provider provider] [--connection-string connection-string] [--user user] [--password password] [--output output] [--output-file output-file] [--sql sql | --sql-file file]",
 				"execute SQL query against specified database",
 				new CommandExample[]
 				{
@@ -132,7 +157,7 @@ namespace LinqToDB.CommandLine
 						"dotnet linq2db query --provider SQLite --connection-string \"Data Source=data.db\" --sql-file query.sql",
 						"executes SQL query from file and writes JSON result to console"),
 					new(
-						"dotnet linq2db query --config query.json --profile uat --sql-file query.sql",
+						"dotnet linq2db query --config query.json --profile uat --user readonly --password secret --sql-file query.sql",
 						"executes SQL query using connection settings from specified configuration profile"),
 					new(
 						"dotnet linq2db query --provider SQLite --connection-string \"Data Source=data.db\" --output csv --output-file result.csv --sql \"select * from Person\"",
@@ -143,6 +168,8 @@ namespace LinqToDB.CommandLine
 			AddOption(_configurationOptions, Profile);
 			AddOption(_connectionOptions, Provider);
 			AddOption(_connectionOptions, ConnectionString);
+			AddOption(_connectionOptions, User);
+			AddOption(_connectionOptions, Password);
 			AddOption(_outputOptions, Output);
 			AddOption(_outputOptions, OutputFile);
 			AddMutuallyExclusiveOptions(_inputOptions, Sql, SqlFile);
@@ -173,12 +200,19 @@ namespace LinqToDB.CommandLine
 			return await executor.Execute(cancellationToken).ConfigureAwait(false);
 		}
 
+		/// <summary>
+		/// Applies query option precedence: command line values override selected profile values, selected profile
+		/// values override the default profile values, and built-in defaults are applied last.
+		/// SQL text and SQL file are command-line only options and are not loaded from configuration profiles.
+		/// </summary>
 		private QueryCommandSettings? ProcessOptions(ICliEnvironment environment, Dictionary<CliOption, object?> options)
 		{
 			options.Remove(Config,   out var config);
 			options.Remove(Profile,  out var profile);
 			options.Remove(Provider, out var provider);
 			options.Remove(ConnectionString, out var connectionString);
+			options.Remove(User, out var user);
+			options.Remove(Password, out var password);
 			options.Remove(Output,   out var output);
 			options.Remove(OutputFile, out var outputFile);
 			options.Remove(Sql,     out var sql);
@@ -201,6 +235,8 @@ namespace LinqToDB.CommandLine
 
 			var providerName         = (string?)provider ?? configuration?.Provider;
 			var connectionStringText = (string?)connectionString ?? configuration?.ConnectionString;
+			var userName             = (string?)user ?? configuration?.User;
+			var passwordText         = (string?)password ?? configuration?.Password;
 			var outputFormat         = (string?)output ?? configuration?.Output ?? "json";
 			var outputFileName       = (string?)outputFile ?? configuration?.OutputFile;
 			var querySql             = (string?)sql;
@@ -217,6 +253,8 @@ namespace LinqToDB.CommandLine
 				environment.Error.WriteLine($"Option '--{ConnectionString.Name}' must be specified.");
 				return null;
 			}
+
+			connectionStringText = string.Format(CultureInfo.InvariantCulture, connectionStringText, userName, passwordText);
 
 			if (querySql == null && querySqlFile == null)
 			{

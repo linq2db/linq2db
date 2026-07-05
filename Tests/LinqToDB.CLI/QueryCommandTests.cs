@@ -377,6 +377,44 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task QueryFormatsConnectionStringWithCliCredentials()
+		{
+			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source={0}", "--user", ":memory:", "--password", "ignored", "--sql", "select 1 as Value");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.Zero);
+				Assert.That(result.Output,   Does.Contain("\"Value\": 1"));
+				Assert.That(result.Error,    Is.Empty);
+			}
+		}
+
+		[Test]
+		public async Task QueryFormatsConnectionStringWithConfigCredentials()
+		{
+			var environment = new TestCliEnvironment();
+			var config      = AddConfigFile(environment, """
+				{
+					"default": {
+						"provider": "SQLite",
+						"connectionString": "Data Source={0}",
+						"user": ":memory:",
+						"password": "ignored"
+					}
+				}
+				""");
+
+			var result = await RunCli(environment, "query", "--config", config, "--sql", "select 1 as Value");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.Zero);
+				Assert.That(result.Output,   Does.Contain("\"Value\": 1"));
+				Assert.That(result.Error,    Is.Empty);
+			}
+		}
+
+		[Test]
 		public async Task QueryStillRequiresSqlOrSqlFileWithConfig()
 		{
 			var environment = new TestCliEnvironment();
@@ -474,11 +512,13 @@ namespace Tests.LinqToDB.CLI
 			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("dotnet linq2db query [--config config] [--profile profile] [--provider provider] [--connection-string connection-string] [--output output] [--output-file output-file] [--sql sql | --sql-file file]"));
+				Assert.That(result.Output,   Does.Contain("dotnet linq2db query [--config config] [--profile profile] [--provider provider] [--connection-string connection-string] [--user user] [--password password] [--output output] [--output-file output-file] [--sql sql | --sql-file file]"));
 				Assert.That(result.Output,   Does.Contain("--config"));
 				Assert.That(result.Output,   Does.Contain("--profile"));
 				Assert.That(result.Output,   Does.Contain("--provider"));
 				Assert.That(result.Output,   Does.Contain("--connection-string"));
+				Assert.That(result.Output,   Does.Contain("--user"));
+				Assert.That(result.Output,   Does.Contain("--password"));
 				Assert.That(result.Output,   Does.Contain("--output"));
 				Assert.That(result.Output,   Does.Contain("--output-file"));
 				Assert.That(result.Output,   Does.Contain("--sql"));
@@ -486,7 +526,7 @@ namespace Tests.LinqToDB.CLI
 				Assert.That(result.Output,   Does.Contain("Examples:"));
 				Assert.That(result.Output,   Does.Contain("dotnet linq2db query --provider SQLite --connection-string \"Data Source=data.db\" --sql \"select * from Person\""));
 				Assert.That(result.Output,   Does.Contain("dotnet linq2db query --provider SQLite --connection-string \"Data Source=data.db\" --sql-file query.sql"));
-				Assert.That(result.Output,   Does.Contain("dotnet linq2db query --config query.json --profile uat --sql-file query.sql"));
+				Assert.That(result.Output,   Does.Contain("dotnet linq2db query --config query.json --profile uat --user readonly --password secret --sql-file query.sql"));
 				Assert.That(result.Output,   Does.Contain("dotnet linq2db query --provider SQLite --connection-string \"Data Source=data.db\" --output csv --output-file result.csv --sql \"select * from Person\""));
 			}
 		}
