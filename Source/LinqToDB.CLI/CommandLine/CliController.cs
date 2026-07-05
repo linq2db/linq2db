@@ -172,9 +172,19 @@ namespace LinqToDB.CommandLine
 							environment.Error.WriteLine("Option '{0}' not allowed in command line", args[i]);
 						hasErrors = true;
 					}
+					else if (option is BooleanCliOption && (args.Length == i + 1 || args[i + 1].StartsWith('-')))
+					{
+						var incompatibleOptions = command.GetIncompatibleOptions(option);
+						if (incompatibleOptions != null)
+						{
+							foreach (var opt in incompatibleOptions)
+								conflictingOptions.Add(opt);
+						}
+
+						cliOptions.Add(option, true);
+					}
 					else if (args.Length == i + 1)
 					{
-						// currently all options has exactly one argument
 						if (!hasErrors || !reportFirstErrorOnly)
 							environment.Error.WriteLine("Option '{0}' must have value", args[i]);
 						hasErrors = true;

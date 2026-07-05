@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.Data;
+using LinqToDB.DataProvider;
 
 namespace LinqToDB.CommandLine
 {
@@ -45,13 +46,8 @@ namespace LinqToDB.CommandLine
 					return StatusCodes.EXPECTED_ERROR;
 				}
 
-				var safetyResult = QuerySafetyValidator.Validate(dataProvider, sql);
-
-				if (!safetyResult.IsSafe)
-				{
-					await _environment.Error.WriteLineAsync(safetyResult.Error).ConfigureAwait(false);
+				if (!await ValidateSafety(dataProvider, sql).ConfigureAwait(false))
 					return StatusCodes.EXPECTED_ERROR;
-				}
 
 				var dataConnection = new DataConnection(new DataOptions().UseConnectionString(dataProvider, _settings.ConnectionString));
 
@@ -113,6 +109,34 @@ namespace LinqToDB.CommandLine
 			}
 
 			throw new InvalidOperationException("Either SQL text or SQL file must be specified.");
+		}
+
+		private async Task<bool> ValidateSafety(IDataProvider dataProvider, string sql)
+		{
+			var singleStatementResult = QuerySafetyValidator.ValidateSingleStatement(dataProvider, sql);
+			if (!singleStatementResult.IsSafe)
+			{
+				await _environment.Error.WriteLineAsync(singleStatementResult.Error).ConfigureAwait(false);
+				return false;
+			}
+
+			if (_settings.SqlSafety == QuerySqlSafetyMode.Allow)
+				return true;
+
+			var safetyResult = QuerySafetyValidator.Validate(dataProvider, sql);
+
+			if (safetyResult.IsSafe)
+				return true;
+
+			if (_settings.SqlSafety == QuerySqlSafetyMode.Confirm && _settings.AllowUnsafeSql)
+				return true;
+
+			if (_settings.SqlSafety == QuerySqlSafetyMode.Confirm)
+				await _environment.Error.WriteLineAsync($"Unsafe SQL requires '--allow-unsafe-sql': {safetyResult.Error}").ConfigureAwait(false);
+			else
+				await _environment.Error.WriteLineAsync(safetyResult.Error).ConfigureAwait(false);
+
+			return false;
 		}
 
 		private async Task WriteOutput(string output, CancellationToken cancellationToken)

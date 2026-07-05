@@ -9,19 +9,13 @@ namespace LinqToDB.CommandLine
 	{
 		public static QuerySafetyResult Validate(string sql)
 		{
-			var parser = new TSql180Parser(false);
-			var fragment = parser.Parse(new StringReader(sql), out var errors);
+			var scriptResult = ParseScript(sql, out var script);
+			if (!scriptResult.IsSafe)
+				return scriptResult;
 
-			if (errors.Count > 0)
-				return QuerySafetyResult.Unsafe($"Query is not valid T-SQL: {errors[0].Message}");
-
-			if (fragment is not TSqlScript script)
-				return QuerySafetyResult.Unsafe("Query is not valid T-SQL.");
-
-			var statements = script.Batches.SelectMany(batch => batch.Statements).ToArray();
-
-			if (statements.Length != 1)
-				return QuerySafetyResult.Unsafe("Only single SELECT statement is allowed.");
+			var singleStatementResult = ValidateSingleStatement(script!, out var statements);
+			if (!singleStatementResult.IsSafe)
+				return singleStatementResult;
 
 			if (statements[0] is ExecuteStatement)
 				return QuerySafetyResult.Unsafe("Query is not read-only: EXECUTE is not allowed.");
@@ -31,6 +25,46 @@ namespace LinqToDB.CommandLine
 
 			if (HasSelectInto(selectStatement))
 				return QuerySafetyResult.Unsafe("Query is not read-only: SELECT INTO is not allowed.");
+
+			return QuerySafetyResult.Safe;
+		}
+
+		public static QuerySafetyResult ValidateSingleStatement(string sql)
+		{
+			var scriptResult = ParseScript(sql, out var script);
+			if (!scriptResult.IsSafe)
+				return scriptResult;
+
+			return ValidateSingleStatement(script!, out _);
+		}
+
+		private static QuerySafetyResult ParseScript(string sql, out TSqlScript? script)
+		{
+			var parser = new TSql180Parser(false);
+			var fragment = parser.Parse(new StringReader(sql), out var errors);
+
+			if (errors.Count > 0)
+			{
+				script = null;
+				return QuerySafetyResult.Unsafe($"Query is not valid T-SQL: {errors[0].Message}");
+			}
+
+			if (fragment is not TSqlScript parsedScript)
+			{
+				script = null;
+				return QuerySafetyResult.Unsafe("Query is not valid T-SQL.");
+			}
+
+			script = parsedScript;
+			return QuerySafetyResult.Safe;
+		}
+
+		private static QuerySafetyResult ValidateSingleStatement(TSqlScript script, out TSqlStatement[] statements)
+		{
+			statements = script.Batches.SelectMany(batch => batch.Statements).ToArray();
+
+			if (statements.Length != 1)
+				return QuerySafetyResult.Unsafe("Only single SQL statement is allowed.");
 
 			return QuerySafetyResult.Safe;
 		}

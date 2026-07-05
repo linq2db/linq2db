@@ -10,6 +10,8 @@
 		{
 			AddCommand(HelpCommand.Instance);
 			AddCommand(QueryCommand.Instance);
+			AddCommand(SkillCommand.Skill);
+			AddCommand(SkillCommand.Skills);
 			AddCommand(ScaffoldCommand.Instance);
 			AddCommand(TemplateCommand.Instance);
 		}

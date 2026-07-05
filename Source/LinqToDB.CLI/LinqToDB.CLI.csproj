@@ -51,6 +51,7 @@
 
 	<ItemGroup>
 		<EmbeddedResource Include="Template.tt" />
+		<EmbeddedResource Include="SKILL.md" />
 
 		<ProjectReference Include="..\LinqToDB.Scaffold\LinqToDB.Scaffold.csproj" />
 

@@ -15,8 +15,9 @@ namespace LinqToDB.CommandLine
 
 		private static readonly OptionCategory _configurationOptions = new (1, "Configuration", "Configuration options", "configuration");
 		private static readonly OptionCategory _connectionOptions    = new (2, "Connection",    "Connection options",    "connection");
-		private static readonly OptionCategory _outputOptions        = new (3, "Output",        "Output options",        "output");
-		private static readonly OptionCategory _inputOptions         = new (4, "Input",         "SQL input options",     "input");
+		private static readonly OptionCategory _safetyOptions        = new (3, "Safety",        "SQL safety options",    "safety");
+		private static readonly OptionCategory _outputOptions        = new (4, "Output",        "Output options",        "output");
+		private static readonly OptionCategory _inputOptions         = new (5, "Input",         "SQL input options",     "input");
 
 		private static readonly CliOption Config = new StringCliOption(
 			"config",
@@ -90,6 +91,17 @@ namespace LinqToDB.CommandLine
 			null,
 			null);
 
+		private static readonly CliOption AllowUnsafeSql = new BooleanCliOption(
+			"allow-unsafe-sql",
+			null,
+			false,
+			"confirm unsafe SQL execution when configuration unsafeSql policy is confirm; ask the user before using this option",
+			null,
+			null,
+			null,
+			false,
+			false);
+
 		private static readonly CliOption Output = new StringEnumCliOption(
 			"output",
 			null,
@@ -146,7 +158,7 @@ namespace LinqToDB.CommandLine
 				"query",
 				true,
 				false,
-				"[--config config] [--profile profile] [--provider provider] [--connection-string connection-string] [--user user] [--password password] [--output output] [--output-file output-file] [--sql sql | --sql-file file]",
+				"[--config config] [--profile profile] [--provider provider] [--connection-string connection-string] [--user user] [--password password] [--allow-unsafe-sql] [--output output] [--output-file output-file] [--sql sql | --sql-file file]",
 				"execute SQL query against specified database",
 				new CommandExample[]
 				{
@@ -170,6 +182,7 @@ namespace LinqToDB.CommandLine
 			AddOption(_connectionOptions, ConnectionString);
 			AddOption(_connectionOptions, User);
 			AddOption(_connectionOptions, Password);
+			AddOption(_safetyOptions, AllowUnsafeSql);
 			AddOption(_outputOptions, Output);
 			AddOption(_outputOptions, OutputFile);
 			AddMutuallyExclusiveOptions(_inputOptions, Sql, SqlFile);
@@ -213,6 +226,7 @@ namespace LinqToDB.CommandLine
 			options.Remove(ConnectionString, out var connectionString);
 			options.Remove(User, out var user);
 			options.Remove(Password, out var password);
+			options.Remove(AllowUnsafeSql, out var allowUnsafeSql);
 			options.Remove(Output,   out var output);
 			options.Remove(OutputFile, out var outputFile);
 			options.Remove(Sql,     out var sql);
@@ -239,6 +253,8 @@ namespace LinqToDB.CommandLine
 			var passwordText         = (string?)password ?? configuration?.Password;
 			var outputFormat         = (string?)output ?? configuration?.Output ?? "json";
 			var outputFileName       = (string?)outputFile ?? configuration?.OutputFile;
+			var sqlSafety            = configuration?.SqlSafety ?? QuerySqlSafetyMode.Deny;
+			var allowUnsafeSqlValue  = (bool?)allowUnsafeSql ?? false;
 			var querySql             = (string?)sql;
 			var querySqlFile         = (string?)sqlFile;
 
@@ -256,13 +272,19 @@ namespace LinqToDB.CommandLine
 
 			connectionStringText = string.Format(CultureInfo.InvariantCulture, connectionStringText, userName, passwordText);
 
+			if (allowUnsafeSqlValue && sqlSafety == QuerySqlSafetyMode.Deny)
+			{
+				environment.Error.WriteLine($"Option '--{AllowUnsafeSql.Name}' cannot be used because SQL safety policy is 'deny'.");
+				return null;
+			}
+
 			if (querySql == null && querySqlFile == null)
 			{
 				environment.Error.WriteLine($"Either '--{Sql.Name}' or '--{SqlFile.Name}' option must be specified.");
 				return null;
 			}
 
-			return new QueryCommandSettings(profileName, providerName, connectionStringText, outputFormat, outputFileName, querySql, querySqlFile);
+			return new QueryCommandSettings(profileName, providerName, connectionStringText, outputFormat, outputFileName, sqlSafety, allowUnsafeSqlValue, querySql, querySqlFile);
 		}
 	}
 }

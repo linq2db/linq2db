@@ -38,12 +38,9 @@ namespace LinqToDB.CommandLine
 		{
 			var tokens = Tokenize(sql);
 
-			if (tokens.Count == 0)
-				return QuerySafetyResult.Unsafe("Query is empty.");
-
-			var semicolonIndex = tokens.IndexOf(";");
-			if (semicolonIndex >= 0 && semicolonIndex != tokens.Count - 1)
-				return QuerySafetyResult.Unsafe("Only single SELECT statement is allowed.");
+			var singleStatementResult = ValidateSingleStatement(tokens);
+			if (!singleStatementResult.IsSafe)
+				return singleStatementResult;
 
 			for (var i = 0; i < tokens.Count; i++)
 			{
@@ -58,6 +55,23 @@ namespace LinqToDB.CommandLine
 			{
 				return QuerySafetyResult.Unsafe("Only SELECT queries are allowed.");
 			}
+
+			return QuerySafetyResult.Safe;
+		}
+
+		public static QuerySafetyResult ValidateSingleStatement(string sql)
+		{
+			return ValidateSingleStatement(Tokenize(sql));
+		}
+
+		private static QuerySafetyResult ValidateSingleStatement(List<string> tokens)
+		{
+			if (tokens.Count == 0)
+				return QuerySafetyResult.Unsafe("Query is empty.");
+
+			var semicolonIndex = tokens.IndexOf(";");
+			if (semicolonIndex >= 0 && semicolonIndex != tokens.Count - 1)
+				return QuerySafetyResult.Unsafe("Only single SQL statement is allowed.");
 
 			return QuerySafetyResult.Safe;
 		}

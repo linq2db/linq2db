@@ -35,6 +35,11 @@ namespace LinqToDB.CommandLine
 		public string? Password         { get; private set; }
 
 		/// <summary>
+		/// Unsafe SQL execution policy. This value is intentionally available only from configuration profiles.
+		/// </summary>
+		public QuerySqlSafetyMode? SqlSafety { get; private set; }
+
+		/// <summary>
 		/// Query output format.
 		/// </summary>
 		public string? Output           { get; private set; }
@@ -143,6 +148,16 @@ namespace LinqToDB.CommandLine
 					case "password":
 						Password = value;
 						break;
+					case "unsafeSql":
+					case "unsafe-sql":
+						if (!TryParseSqlSafety(value, out var sqlSafety))
+						{
+							error = $"Configuration file '{fileName}' profile '{profileName}' property '{property.Name}' has unknown value '{value}'.";
+							return false;
+						}
+
+						SqlSafety = sqlSafety;
+						break;
 					case "output":
 						if (!string.Equals(value, "json", StringComparison.OrdinalIgnoreCase) && !string.Equals(value, "csv", StringComparison.OrdinalIgnoreCase))
 						{
@@ -164,6 +179,30 @@ namespace LinqToDB.CommandLine
 
 			error = null;
 			return true;
+		}
+
+		private static bool TryParseSqlSafety(string? value, out QuerySqlSafetyMode sqlSafety)
+		{
+			if (string.Equals(value, "deny", StringComparison.OrdinalIgnoreCase))
+			{
+				sqlSafety = QuerySqlSafetyMode.Deny;
+				return true;
+			}
+
+			if (string.Equals(value, "confirm", StringComparison.OrdinalIgnoreCase))
+			{
+				sqlSafety = QuerySqlSafetyMode.Confirm;
+				return true;
+			}
+
+			if (string.Equals(value, "allow", StringComparison.OrdinalIgnoreCase))
+			{
+				sqlSafety = QuerySqlSafetyMode.Allow;
+				return true;
+			}
+
+			sqlSafety = default;
+			return false;
 		}
 	}
 }

@@ -121,7 +121,113 @@ namespace Tests.LinqToDB.CLI
 			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.ExitCode, Is.EqualTo(-3));
-				Assert.That(result.Error,    Does.Contain("Only single SELECT statement is allowed."));
+				Assert.That(result.Error,    Does.Contain("Only single SQL statement is allowed."));
+			}
+		}
+
+		[Test]
+		public async Task QueryRejectsMultipleStatementsEvenWhenUnsafeSqlAllowed()
+		{
+			var environment = new TestCliEnvironment();
+			var config      = AddConfigFile(environment, """
+				{
+					"default": {
+						"provider": "SQLite",
+						"connectionString": "Data Source=:memory:",
+						"unsafeSql": "allow"
+					}
+				}
+				""");
+
+			var result = await RunCli(environment, "query", "--config", config, "--sql", "select 1; drop table Person");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.EqualTo(-3));
+				Assert.That(result.Error,    Does.Contain("Only single SQL statement is allowed."));
+			}
+		}
+
+		[Test]
+		public async Task QueryRejectsUnsafeSqlConfirmationWhenSafetyPolicyDenies()
+		{
+			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--allow-unsafe-sql", "--sql", "select 1");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.EqualTo(-1));
+				Assert.That(result.Error,    Does.Contain("Option '--allow-unsafe-sql' cannot be used because SQL safety policy is 'deny'."));
+			}
+		}
+
+		[Test]
+		public async Task QueryConfirmSafetyPolicyRequiresUnsafeSqlConfirmation()
+		{
+			var environment = new TestCliEnvironment();
+			var config      = AddConfigFile(environment, """
+				{
+					"default": {
+						"provider": "SQLite",
+						"connectionString": "Data Source=:memory:",
+						"unsafeSql": "confirm"
+					}
+				}
+				""");
+
+			var result = await RunCli(environment, "query", "--config", config, "--sql", "drop table Person");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.EqualTo(-3));
+				Assert.That(result.Error,    Does.Contain("Unsafe SQL requires '--allow-unsafe-sql'"));
+			}
+		}
+
+		[Test]
+		public async Task QueryConfirmSafetyPolicyAllowsUnsafeSqlWithConfirmation()
+		{
+			var environment = new TestCliEnvironment();
+			var config      = AddConfigFile(environment, """
+				{
+					"default": {
+						"provider": "SQLite",
+						"connectionString": "Data Source=:memory:",
+						"unsafeSql": "confirm"
+					}
+				}
+				""");
+
+			var result = await RunCli(environment, "query", "--config", config, "--allow-unsafe-sql", "--sql", "drop table Person");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.EqualTo(-3));
+				Assert.That(result.Error,    Does.Contain("Query execution failed"));
+				Assert.That(result.Error,    Does.Not.Contain("token 'DROP' is not allowed"));
+			}
+		}
+
+		[Test]
+		public async Task QueryAllowSafetyPolicyAllowsUnsafeSqlWithoutConfirmation()
+		{
+			var environment = new TestCliEnvironment();
+			var config      = AddConfigFile(environment, """
+				{
+					"default": {
+						"provider": "SQLite",
+						"connectionString": "Data Source=:memory:",
+						"unsafeSql": "allow"
+					}
+				}
+				""");
+
+			var result = await RunCli(environment, "query", "--config", config, "--sql", "drop table Person");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.EqualTo(-3));
+				Assert.That(result.Error,    Does.Contain("Query execution failed"));
+				Assert.That(result.Error,    Does.Not.Contain("token 'DROP' is not allowed"));
 			}
 		}
 
@@ -505,6 +611,29 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task QueryRejectsUnknownConfigUnsafeSql()
+		{
+			var environment = new TestCliEnvironment();
+			var config      = AddConfigFile(environment, """
+				{
+					"default": {
+						"provider": "SQLite",
+						"connectionString": "Data Source=:memory:",
+						"unsafeSql": "prompt"
+					}
+				}
+				""");
+
+			var result = await RunCli(environment, "query", "--config", config, "--sql", "select 1");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.EqualTo(-1));
+				Assert.That(result.Error,    Does.Contain($"Configuration file '{config}' profile 'default' property 'unsafeSql' has unknown value 'prompt'."));
+			}
+		}
+
+		[Test]
 		public async Task QueryHelpShowsSqlInputOptions()
 		{
 			var result = await RunCli("help", "query");
@@ -512,13 +641,15 @@ namespace Tests.LinqToDB.CLI
 			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("dotnet linq2db query [--config config] [--profile profile] [--provider provider] [--connection-string connection-string] [--user user] [--password password] [--output output] [--output-file output-file] [--sql sql | --sql-file file]"));
+				Assert.That(result.Output,   Does.Contain("dotnet linq2db query [--config config] [--profile profile] [--provider provider] [--connection-string connection-string] [--user user] [--password password] [--allow-unsafe-sql] [--output output] [--output-file output-file] [--sql sql | --sql-file file]"));
 				Assert.That(result.Output,   Does.Contain("--config"));
 				Assert.That(result.Output,   Does.Contain("--profile"));
 				Assert.That(result.Output,   Does.Contain("--provider"));
 				Assert.That(result.Output,   Does.Contain("--connection-string"));
 				Assert.That(result.Output,   Does.Contain("--user"));
 				Assert.That(result.Output,   Does.Contain("--password"));
+				Assert.That(result.Output,   Does.Contain("--allow-unsafe-sql"));
+				Assert.That(result.Output,   Does.Contain("ask the user before using this option"));
 				Assert.That(result.Output,   Does.Contain("--output"));
 				Assert.That(result.Output,   Does.Contain("--output-file"));
 				Assert.That(result.Output,   Does.Contain("--sql"));
