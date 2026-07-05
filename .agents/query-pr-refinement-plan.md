@@ -139,16 +139,16 @@ Done when: agents can request mechanically robust result output.
 
 ## Phase 9: Result Limits
 
-Status: pending
+Status: completed
 
 Protect against accidental broad reads.
 
-- [ ] Add `--max-rows <count>` / `maxRows`.
-- [ ] Default to a conservative value, proposed: `1000`.
-- [ ] Stop reading after `maxRows`.
-- [ ] Report truncation to stderr for `json` and `csv`.
-- [ ] Report `truncated: true` for `json-table`.
-- [ ] Add tests for default limit, configured limit, and truncation diagnostics.
+- [x] Add `--max-rows <count>` / `maxRows`.
+- [x] Default to a conservative value, proposed: `1000`.
+- [x] Stop reading after `maxRows`.
+- [x] Report truncation to stderr for `json` and `csv`.
+- [x] Report `truncated: true` for `json-table`.
+- [x] Add tests for default limit, configured limit, and truncation diagnostics.
 
 Done when: unlimited output is not the default.
 

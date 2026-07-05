@@ -31,7 +31,7 @@ namespace LinqToDB.CommandLine
 	{
 		sealed record QueryOutputColumn(int Ordinal, string Name, string FieldType, string ProviderSpecificFieldType, string DataTypeName, QueryActualFieldType ActualFieldType);
 
-		sealed record QueryOutput(QueryOutputColumn[] Columns, List<string?[]> Rows);
+		sealed record QueryOutput(QueryOutputColumn[] Columns, List<string?[]> Rows, bool Truncated);
 
 		enum QueryActualFieldType
 		{
@@ -187,8 +187,16 @@ namespace LinqToDB.CommandLine
 						//
 						var rows = new List<string?[]>();
 
+						var truncated = false;
+
 						while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
 						{
+							if (rows.Count >= _settings.MaxRows)
+							{
+								truncated = true;
+								break;
+							}
+
 							var row = new string?[columns.Length];
 
 							for (var i = 0; i < columns.Length; i++)
@@ -204,7 +212,7 @@ namespace LinqToDB.CommandLine
 
 						// Create a query output object containing the column definitions and rows.
 						//
-						var queryOutput = new QueryOutput(columns, rows);
+						var queryOutput = new QueryOutput(columns, rows, truncated);
 
 						var output = _settings.Output switch
 						{
@@ -221,6 +229,9 @@ namespace LinqToDB.CommandLine
 						{
 							await _environment.Out.WriteAsync(output.AsMemory(), cancellationToken).ConfigureAwait(false);
 						}
+
+						if (truncated && !string.Equals(_settings.Output, "json-table", StringComparison.OrdinalIgnoreCase))
+							await _environment.Error.WriteLineAsync($"Query result truncated to {_settings.MaxRows.ToString(CultureInfo.InvariantCulture)} row(s). Use '--max-rows' to change the limit.").ConfigureAwait(false);
 					}
 				}
 
@@ -310,7 +321,7 @@ namespace LinqToDB.CommandLine
 
 			writer.WriteStartObject();
 			writer.WriteNumber("rowCount", queryOutput.Rows.Count);
-			writer.WriteBoolean("truncated", false);
+			writer.WriteBoolean("truncated", queryOutput.Truncated);
 			writer.WritePropertyName("columns");
 			writer.WriteStartArray();
 

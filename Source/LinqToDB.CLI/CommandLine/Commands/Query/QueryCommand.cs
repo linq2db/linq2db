@@ -12,6 +12,7 @@ namespace LinqToDB.CommandLine
 	sealed class QueryCommand : CliCommand
 	{
 		const string DefaultProfileName = "default";
+		const int    DefaultMaxRows     = 1000;
 
 		static readonly OptionCategory _configurationOptions = new (1, "Configuration", "Configuration options", "configuration");
 		static readonly OptionCategory _connectionOptions    = new (2, "Connection",    "Connection options",    "connection");
@@ -27,6 +28,7 @@ namespace LinqToDB.CommandLine
 		static readonly CliOption _password          = new StringCliOption("password",           null, false, false, "database password for connection string formatting");
 		static readonly CliOption _commandTimeout    = new StringCliOption("command-timeout",    null, false, false, "SQL command timeout in seconds");
 		static readonly CliOption _lockTimeout       = new StringCliOption("lock-timeout",       null, false, false, "provider-specific lock wait timeout in seconds");
+		static readonly CliOption _maxRows           = new StringCliOption("max-rows",           null, false, false, "maximum number of result rows to read");
 		static readonly CliOption _outputFile        = new StringCliOption("output-file",        null, false, false, "path to file for command output");
 		static readonly CliOption _sql               = new StringCliOption("sql",                null, false, false, "SQL query text to execute");
 		static readonly CliOption _sqlFile           = new StringCliOption("sql-file",           null, false, false, "path to file with SQL query text to execute");
@@ -63,7 +65,7 @@ namespace LinqToDB.CommandLine
 				"query",
 				true,
 				false,
-				"[--config config] [--profile profile] [--provider provider] [--connection-string connection-string] [--user user] [--password password] [--command-timeout seconds] [--lock-timeout seconds] [--allow-unsafe-sql] [--output output] [--output-file output-file] [--sql sql | --sql-file file]",
+				"[--config config] [--profile profile] [--provider provider] [--connection-string connection-string] [--user user] [--password password] [--command-timeout seconds] [--lock-timeout seconds] [--max-rows count] [--allow-unsafe-sql] [--output output] [--output-file output-file] [--sql sql | --sql-file file]",
 				"execute SQL query so agents can analyze code together with live database data",
 				[
 					new("dotnet linq2db query --provider SQLite --connection-string \"Data Source=data.db\" --sql \"select * from Person\"",
@@ -89,6 +91,7 @@ namespace LinqToDB.CommandLine
 			AddOption(_safetyOptions,        _allowUnsafeSql);
 			AddOption(_outputOptions,        _output);
 			AddOption(_outputOptions,        _outputFile);
+			AddOption(_outputOptions,        _maxRows);
 
 			AddMutuallyExclusiveOptions(_inputOptions, _sql, _sqlFile);
 		}
@@ -137,6 +140,7 @@ namespace LinqToDB.CommandLine
 			options.Remove(_allowUnsafeSql,    out var allowUnsafeSql);
 			options.Remove(_output,            out var output);
 			options.Remove(_outputFile,        out var outputFile);
+			options.Remove(_maxRows,           out var maxRows);
 			options.Remove(_sql,               out var sql);
 			options.Remove(_sqlFile,           out var sqlFile);
 
@@ -161,6 +165,7 @@ namespace LinqToDB.CommandLine
 			var passwordText         = (string?)password ?? configuration?.Password;
 			var commandTimeoutValue    = (string?)commandTimeout    != null ? ParseTimeout(environment, _commandTimeout,    (string)commandTimeout)    : configuration?.CommandTimeout;
 			var lockTimeoutValue       = (string?)lockTimeout       != null ? ParseTimeout(environment, _lockTimeout,       (string)lockTimeout)       : configuration?.LockTimeout;
+			var maxRowsValue           = (string?)maxRows           != null ? ParseRowCount(environment, _maxRows,          (string)maxRows)           : configuration?.MaxRows ?? DefaultMaxRows;
 			var outputFormat         = (string?)output ?? configuration?.Output ?? "json";
 			var outputFileName       = (string?)outputFile ?? configuration?.OutputFile;
 			var sqlSafety            = configuration?.SqlSafety ?? QuerySqlSafetyMode.Deny;
@@ -168,7 +173,7 @@ namespace LinqToDB.CommandLine
 			var querySql             = (string?)sql;
 			var querySqlFile         = (string?)sqlFile;
 
-			if (commandTimeoutValue < 0 || lockTimeoutValue < 0)
+			if (commandTimeoutValue < 0 || lockTimeoutValue < 0 || maxRowsValue < 0)
 				return null;
 
 			if (providerName == null)
@@ -197,7 +202,7 @@ namespace LinqToDB.CommandLine
 				return null;
 			}
 
-			return new QueryCommandSettings(profileName, providerName, connectionStringText, commandTimeoutValue, lockTimeoutValue, outputFormat, outputFileName, sqlSafety, allowUnsafeSqlValue, querySql, querySqlFile);
+			return new QueryCommandSettings(profileName, providerName, connectionStringText, commandTimeoutValue, lockTimeoutValue, maxRowsValue, outputFormat, outputFileName, sqlSafety, allowUnsafeSqlValue, querySql, querySqlFile);
 		}
 
 		static int? ParseTimeout(ICliEnvironment environment, CliOption option, string value)
@@ -206,6 +211,15 @@ namespace LinqToDB.CommandLine
 				return timeout;
 
 			environment.Error.WriteLine($"Option '--{option.Name}' must be a non-negative integer number of seconds.");
+			return -1;
+		}
+
+		static int ParseRowCount(ICliEnvironment environment, CliOption option, string value)
+		{
+			if (int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out var rowCount) && rowCount >= 0)
+				return rowCount;
+
+			environment.Error.WriteLine($"Option '--{option.Name}' must be a non-negative integer row count.");
 			return -1;
 		}
 	}

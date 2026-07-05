@@ -46,6 +46,11 @@ namespace LinqToDB.CommandLine
 		public int?    LockTimeout      { get; private set; }
 
 		/// <summary>
+		/// Optional maximum number of result rows to read.
+		/// </summary>
+		public int?    MaxRows          { get; private set; }
+
+		/// <summary>
 		/// Unsafe SQL execution policy. This value is intentionally available only from configuration profiles.
 		/// </summary>
 		public QuerySqlSafetyMode? SqlSafety { get; private set; }
@@ -177,6 +182,13 @@ namespace LinqToDB.CommandLine
 
 						LockTimeout = timeout;
 						break;
+					case "maxRows":
+					case "max-rows":
+						if (!TryParseRowCount(fileName, profileName, property, out var maxRows, out error))
+							return false;
+
+						MaxRows = maxRows;
+						break;
 					case "unsafeSql":
 					case "unsafe-sql":
 						if (!TryGetString(fileName, profileName, property, out value, out error))
@@ -255,6 +267,29 @@ namespace LinqToDB.CommandLine
 
 			timeout = null;
 			error   = $"Configuration file '{fileName}' profile '{profileName}' property '{property.Name}' must be a non-negative integer number of seconds.";
+			return false;
+		}
+
+		static bool TryParseRowCount(string fileName, string profileName, JsonProperty property, out int? rowCount, out string? error)
+		{
+			if (property.Value.ValueKind == JsonValueKind.Number && property.Value.TryGetInt32(out var numericValue) && numericValue >= 0)
+			{
+				rowCount = numericValue;
+				error    = null;
+				return true;
+			}
+
+			if (property.Value.ValueKind == JsonValueKind.String
+				&& int.TryParse(property.Value.GetString(), NumberStyles.None, CultureInfo.InvariantCulture, out numericValue)
+				&& numericValue >= 0)
+			{
+				rowCount = numericValue;
+				error    = null;
+				return true;
+			}
+
+			rowCount = null;
+			error    = $"Configuration file '{fileName}' profile '{profileName}' property '{property.Name}' must be a non-negative integer row count.";
 			return false;
 		}
 

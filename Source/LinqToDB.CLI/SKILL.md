@@ -50,6 +50,7 @@ Example configuration:
     "connectionString": "Server=.;Database=Test;User Id={0};Password={1};TrustServerCertificate=True",
     "commandTimeout"   : 30,
     "lockTimeout"      : 5,
+    "maxRows"          : 1000,
     "unsafeSql"       : "deny",
     "output"          : "json"
   },
@@ -92,6 +93,14 @@ Output:
 - Duplicate column names are rejected for `json` output. Use explicit aliases or switch to duplicate-safe `json-table` output when column metadata and duplicate names must be preserved.
 - `json-table` output contains `rowCount`, `truncated`, `columns`, and `rows`. Each column has `ordinal`, `name`, `fieldType`, `providerSpecificFieldType`, and `dataTypeName`; rows are arrays of string or null values.
 
+Result limits:
+
+- `--max-rows <count>` limits the number of result rows read by the query command.
+- `maxRows` can be set in configuration profiles.
+- The default limit is 1000 rows.
+- When `json` or `csv` output is truncated, the command writes a truncation diagnostic to stderr.
+- When `json-table` output is truncated, the command sets `truncated` to `true`.
+
 Safety:
 
 - Default mode is safe mode: unsafe SQL is rejected unless configuration explicitly allows it.
@@ -129,6 +138,7 @@ dotnet linq2db query --config query.json --profile uat --command-timeout 30 --sq
 dotnet linq2db query --config query.json --profile uat --sql-file query.sql
 dotnet linq2db query --config query.json --profile uat --user readonly_user --password secret --sql "select * from Person"
 dotnet linq2db query --config query.json --profile uat --output json-table --sql "select Id, Id from Person"
+dotnet linq2db query --config query.json --profile uat --max-rows 100 --sql "select * from Person"
 dotnet linq2db query --config query.json --profile dev --allow-unsafe-sql --sql "create table Test(Id int)"
 ```
 

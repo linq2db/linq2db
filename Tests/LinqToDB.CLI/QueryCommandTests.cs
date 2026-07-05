@@ -449,6 +449,111 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task QueryAppliesDefaultMaxRows()
+		{
+			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql", "with recursive c(Value) as (select 1 union all select Value + 1 from c where Value < 1001) select Value from c");
+			var rowCount = result.Output.Split("\"Value\":", StringSplitOptions.None).Length - 1;
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.Zero);
+				Assert.That(rowCount,        Is.EqualTo(1000));
+				Assert.That(result.Error,    Does.Contain("Query result truncated to 1000 row(s)."));
+				Assert.That(result.Error,    Does.Contain("--max-rows"));
+			}
+		}
+
+		[Test]
+		public async Task QueryAppliesCliMaxRows()
+		{
+			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--max-rows", "1", "--sql", "select 1 as Value union all select 2 as Value");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.Zero);
+				Assert.That(result.Output,   Does.Contain("\"Value\": \"1\""));
+				Assert.That(result.Output,   Does.Not.Contain("\"Value\": \"2\""));
+				Assert.That(result.Error,    Does.Contain("Query result truncated to 1 row(s)."));
+			}
+		}
+
+		[Test]
+		public async Task QueryAppliesConfigMaxRows()
+		{
+			var environment = new TestCliEnvironment();
+			var config      = AddConfigFile(environment, """
+				{
+					"default": {
+						"provider": "SQLite",
+						"connectionString": "Data Source=:memory:",
+						"maxRows": 1
+					}
+				}
+				""");
+
+			var result = await RunCli(environment, "query", "--config", config, "--sql", "select 1 as Value union all select 2 as Value");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.Zero);
+				Assert.That(result.Output,   Does.Contain("\"Value\": \"1\""));
+				Assert.That(result.Output,   Does.Not.Contain("\"Value\": \"2\""));
+				Assert.That(result.Error,    Does.Contain("Query result truncated to 1 row(s)."));
+			}
+		}
+
+		[Test]
+		public async Task QueryRejectsInvalidMaxRowsOption()
+		{
+			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--max-rows", "-1", "--sql", "select 1");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.EqualTo(-1));
+				Assert.That(result.Error,    Does.Contain("Option '--max-rows' must be a non-negative integer row count."));
+			}
+		}
+
+		[Test]
+		public async Task QueryRejectsInvalidConfigMaxRows()
+		{
+			var environment = new TestCliEnvironment();
+			var config      = AddConfigFile(environment, """
+				{
+					"default": {
+						"provider": "SQLite",
+						"connectionString": "Data Source=:memory:",
+						"maxRows": -1
+					}
+				}
+				""");
+
+			var result = await RunCli(environment, "query", "--config", config, "--sql", "select 1");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.EqualTo(-1));
+				Assert.That(result.Error,    Does.Contain($"Configuration file '{config}' profile 'default' property 'maxRows' must be a non-negative integer row count."));
+			}
+		}
+
+		[Test]
+		public async Task QueryJsonTableReportsTruncationInOutput()
+		{
+			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--output", "json-table", "--max-rows", "1", "--sql", "select 1 as Value union all select 2 as Value");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.Zero);
+				Assert.That(result.Output,   Does.Contain("\"rowCount\": 1"));
+				Assert.That(result.Output,   Does.Contain("\"truncated\": true"));
+				Assert.That(result.Output,   Does.Contain("\"1\""));
+				Assert.That(result.Output,   Does.Not.Contain("\"2\""));
+				Assert.That(result.Error,    Is.Empty);
+			}
+		}
+
+		[Test]
 		public async Task QueryAcceptsTimeoutOptions()
 		{
 			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--command-timeout", "30", "--lock-timeout", "5", "--sql", "select 1 as Value");
@@ -484,6 +589,7 @@ namespace Tests.LinqToDB.CLI
 						"connectionString": "Data Source=:memory:",
 						"commandTimeout": 30,
 						"lockTimeout": "5",
+						"maxRows": 1000,
 						"output": "csv",
 						"outputFile": "query.csv"
 					}
@@ -771,7 +877,7 @@ namespace Tests.LinqToDB.CLI
 			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("dotnet linq2db query [--config config] [--profile profile] [--provider provider] [--connection-string connection-string] [--user user] [--password password] [--command-timeout seconds] [--lock-timeout seconds] [--allow-unsafe-sql] [--output output] [--output-file output-file] [--sql sql | --sql-file file]"));
+				Assert.That(result.Output,   Does.Contain("dotnet linq2db query [--config config] [--profile profile] [--provider provider] [--connection-string connection-string] [--user user] [--password password] [--command-timeout seconds] [--lock-timeout seconds] [--max-rows count] [--allow-unsafe-sql] [--output output] [--output-file output-file] [--sql sql | --sql-file file]"));
 				Assert.That(result.Output,   Does.Contain("--config"));
 				Assert.That(result.Output,   Does.Contain("--profile"));
 				Assert.That(result.Output,   Does.Contain("--provider"));
@@ -780,6 +886,7 @@ namespace Tests.LinqToDB.CLI
 				Assert.That(result.Output,   Does.Contain("--password"));
 				Assert.That(result.Output,   Does.Contain("--command-timeout"));
 				Assert.That(result.Output,   Does.Contain("--lock-timeout"));
+				Assert.That(result.Output,   Does.Contain("--max-rows"));
 				Assert.That(result.Output,   Does.Contain("--allow-unsafe-sql"));
 				Assert.That(result.Output,   Does.Contain("ask the user before using this option"));
 				Assert.That(result.Output,   Does.Contain("agents can analyze code together with live database data"));

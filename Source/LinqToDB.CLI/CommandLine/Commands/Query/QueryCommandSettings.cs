@@ -10,6 +10,7 @@ namespace LinqToDB.CommandLine
 	/// </param>
 	/// <param name="CommandTimeout">Optional query command timeout in seconds.</param>
 	/// <param name="LockTimeout">Optional provider-specific lock wait timeout in seconds.</param>
+	/// <param name="MaxRows">Maximum number of result rows to read.</param>
 	/// <param name="Output">Query output format.</param>
 	/// <param name="OutputFile">Optional output file path. When not specified, output is written to stdout.</param>
 	/// <param name="SqlSafety">Unsafe SQL execution policy resolved from configuration profiles.</param>
@@ -22,6 +23,7 @@ namespace LinqToDB.CommandLine
 		string  ConnectionString,
 		int?    CommandTimeout,
 		int?    LockTimeout,
+		int     MaxRows,
 		string  Output,
 		string? OutputFile,
 		QuerySqlSafetyMode SqlSafety,
