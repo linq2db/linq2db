@@ -9,89 +9,27 @@ namespace LinqToDB.CommandLine
 	/// <summary>
 	/// Query command descriptor and CLI option processing.
 	/// </summary>
-	internal sealed class QueryCommand : CliCommand
+	sealed class QueryCommand : CliCommand
 	{
-		private const string DefaultProfileName = "default";
+		const string DefaultProfileName = "default";
 
-		private static readonly OptionCategory _configurationOptions = new (1, "Configuration", "Configuration options", "configuration");
-		private static readonly OptionCategory _connectionOptions    = new (2, "Connection",    "Connection options",    "connection");
-		private static readonly OptionCategory _safetyOptions        = new (3, "Safety",        "SQL safety options",    "safety");
-		private static readonly OptionCategory _outputOptions        = new (4, "Output",        "Output options",        "output");
-		private static readonly OptionCategory _inputOptions         = new (5, "Input",         "SQL input options",     "input");
+		static readonly OptionCategory _configurationOptions = new (1, "Configuration", "Configuration options", "configuration");
+		static readonly OptionCategory _connectionOptions    = new (2, "Connection",    "Connection options",    "connection");
+		static readonly OptionCategory _safetyOptions        = new (3, "Safety",        "SQL safety options",    "safety");
+		static readonly OptionCategory _outputOptions        = new (4, "Output",        "Output options",        "output");
+		static readonly OptionCategory _inputOptions         = new (5, "Input",         "SQL input options",     "input");
 
-		private static readonly CliOption Config = new StringCliOption(
-			"config",
-			null,
-			false,
-			false,
-			"path to query configuration file",
-			null,
-			null,
-			null,
-			null,
-			null);
+		static readonly CliOption _config           = new StringCliOption("config",            null, false, false, "path to query configuration file");
+		static readonly CliOption _profile          = new StringCliOption("profile",           null, false, false, "configuration profile name");
+		static readonly CliOption _provider         = new StringCliOption("provider",          null, false, false, "linq2db provider name");
+		static readonly CliOption _connectionString = new StringCliOption("connection-string", null, false, false, "database connection string; use {0} for user and {1} for password placeholders");
+		static readonly CliOption _user             = new StringCliOption("user",              null, false, false, "database user name for connection string formatting");
+		static readonly CliOption _password         = new StringCliOption("password",          null, false, false, "database password for connection string formatting");
+		static readonly CliOption _outputFile       = new StringCliOption("output-file",       null, false, false, "path to file for command output");
+		static readonly CliOption _sql              = new StringCliOption("sql",               null, false, false, "SQL query text to execute");
+		static readonly CliOption _sqlFile          = new StringCliOption("sql-file",          null, false, false, "path to file with SQL query text to execute");
 
-		private static readonly CliOption Profile = new StringCliOption(
-			"profile",
-			null,
-			false,
-			false,
-			"configuration profile name",
-			null,
-			null,
-			null,
-			null,
-			null);
-
-		private static readonly CliOption Provider = new StringCliOption(
-			"provider",
-			null,
-			false,
-			false,
-			"linq2db provider name",
-			null,
-			null,
-			null,
-			null,
-			null);
-
-		private static readonly CliOption ConnectionString = new StringCliOption(
-			"connection-string",
-			null,
-			false,
-			false,
-			"database connection string; use {0} for user and {1} for password placeholders",
-			null,
-			null,
-			null,
-			null,
-			null);
-
-		private static readonly CliOption User = new StringCliOption(
-			"user",
-			null,
-			false,
-			false,
-			"database user name for connection string formatting",
-			null,
-			null,
-			null,
-			null,
-			null);
-
-		private static readonly CliOption Password = new StringCliOption(
-			"password",
-			null,
-			false,
-			false,
-			"database password for connection string formatting",
-			null,
-			null,
-			null,
-			null,
-			null);
-
-		private static readonly CliOption AllowUnsafeSql = new BooleanCliOption(
+		static readonly CliOption _allowUnsafeSql = new BooleanCliOption(
 			"allow-unsafe-sql",
 			null,
 			false,
@@ -102,7 +40,7 @@ namespace LinqToDB.CommandLine
 			false,
 			false);
 
-		private static readonly CliOption Output = new StringEnumCliOption(
+		static readonly CliOption _output = new StringEnumCliOption(
 			"output",
 			null,
 			false,
@@ -112,80 +50,40 @@ namespace LinqToDB.CommandLine
 			null,
 			null,
 			false,
-			new StringEnumOption(true, true, "json", "JSON output"),
-			new StringEnumOption(false, false, "csv", "CSV output"));
-
-		private static readonly CliOption OutputFile = new StringCliOption(
-			"output-file",
-			null,
-			false,
-			false,
-			"path to file for command output",
-			null,
-			null,
-			null,
-			null,
-			null);
-
-		private static readonly CliOption Sql = new StringCliOption(
-			"sql",
-			null,
-			false,
-			false,
-			"SQL query text to execute",
-			null,
-			null,
-			null,
-			null,
-			null);
-
-		private static readonly CliOption SqlFile = new StringCliOption(
-			"sql-file",
-			null,
-			false,
-			false,
-			"path to file with SQL query text to execute",
-			null,
-			null,
-			null,
-			null,
-			null);
+			new StringEnumOption(true,  true,  "json", "JSON output"),
+			new StringEnumOption(false, false, "csv",  "CSV output"));
 
 		public static CliCommand Instance { get; } = new QueryCommand();
 
-		private QueryCommand()
+		QueryCommand()
 			: base(
 				"query",
 				true,
 				false,
 				"[--config config] [--profile profile] [--provider provider] [--connection-string connection-string] [--user user] [--password password] [--allow-unsafe-sql] [--output output] [--output-file output-file] [--sql sql | --sql-file file]",
 				"execute SQL query so agents can analyze code together with live database data",
-				new CommandExample[]
-				{
-					new(
-						"dotnet linq2db query --provider SQLite --connection-string \"Data Source=data.db\" --sql \"select * from Person\"",
+				[
+					new("dotnet linq2db query --provider SQLite --connection-string \"Data Source=data.db\" --sql \"select * from Person\"",
 						"executes specified SQL query and writes JSON result to console"),
-					new(
-						"dotnet linq2db query --provider SQLite --connection-string \"Data Source=data.db\" --sql-file query.sql",
+					new("dotnet linq2db query --provider SQLite --connection-string \"Data Source=data.db\" --sql-file query.sql",
 						"executes SQL query from file and writes JSON result to console"),
-					new(
-						"dotnet linq2db query --config query.json --profile uat --user readonly --password secret --sql-file query.sql",
+					new("dotnet linq2db query --config query.json --profile uat --user readonly --password secret --sql-file query.sql",
 						"executes SQL query using connection settings from specified configuration profile"),
-					new(
-						"dotnet linq2db query --provider SQLite --connection-string \"Data Source=data.db\" --output csv --output-file result.csv --sql \"select * from Person\"",
+					new("dotnet linq2db query --provider SQLite --connection-string \"Data Source=data.db\" --output csv --output-file result.csv --sql \"select * from Person\"",
 						"executes specified SQL query and writes CSV result to file"),
-				})
+				])
 		{
-			AddOption(_configurationOptions, Config);
-			AddOption(_configurationOptions, Profile);
-			AddOption(_connectionOptions, Provider);
-			AddOption(_connectionOptions, ConnectionString);
-			AddOption(_connectionOptions, User);
-			AddOption(_connectionOptions, Password);
-			AddOption(_safetyOptions, AllowUnsafeSql);
-			AddOption(_outputOptions, Output);
-			AddOption(_outputOptions, OutputFile);
-			AddMutuallyExclusiveOptions(_inputOptions, Sql, SqlFile);
+			AddOption(_configurationOptions, _config);
+			AddOption(_configurationOptions, _profile);
+			AddOption(_connectionOptions,    _provider);
+			AddOption(_connectionOptions,    _connectionString);
+			AddOption(_connectionOptions,    _user);
+			AddOption(_connectionOptions,    _password);
+			AddOption(_safetyOptions,        _allowUnsafeSql);
+			AddOption(_outputOptions,        _output);
+			AddOption(_outputOptions,        _outputFile);
+
+			AddMutuallyExclusiveOptions(_inputOptions, _sql, _sqlFile);
 		}
 
 		public override async ValueTask<int> Execute(
@@ -210,6 +108,7 @@ namespace LinqToDB.CommandLine
 			}
 
 			var executor = new QueryCommandExecutor(environment, settings);
+
 			return await executor.Execute(cancellationToken).ConfigureAwait(false);
 		}
 
@@ -218,26 +117,26 @@ namespace LinqToDB.CommandLine
 		/// values override the default profile values, and built-in defaults are applied last.
 		/// SQL text and SQL file are command-line only options and are not loaded from configuration profiles.
 		/// </summary>
-		private QueryCommandSettings? ProcessOptions(ICliEnvironment environment, Dictionary<CliOption, object?> options)
+		QueryCommandSettings? ProcessOptions(ICliEnvironment environment, Dictionary<CliOption, object?> options)
 		{
-			options.Remove(Config,   out var config);
-			options.Remove(Profile,  out var profile);
-			options.Remove(Provider, out var provider);
-			options.Remove(ConnectionString, out var connectionString);
-			options.Remove(User, out var user);
-			options.Remove(Password, out var password);
-			options.Remove(AllowUnsafeSql, out var allowUnsafeSql);
-			options.Remove(Output,   out var output);
-			options.Remove(OutputFile, out var outputFile);
-			options.Remove(Sql,     out var sql);
-			options.Remove(SqlFile, out var sqlFile);
+			options.Remove(_config,           out var config);
+			options.Remove(_profile,          out var profile);
+			options.Remove(_provider,         out var provider);
+			options.Remove(_connectionString, out var connectionString);
+			options.Remove(_user,             out var user);
+			options.Remove(_password,         out var password);
+			options.Remove(_allowUnsafeSql,   out var allowUnsafeSql);
+			options.Remove(_output,           out var output);
+			options.Remove(_outputFile,       out var outputFile);
+			options.Remove(_sql,              out var sql);
+			options.Remove(_sqlFile,          out var sqlFile);
 
 			var profileName = (string?)profile ?? DefaultProfileName;
 
 			QueryCommandConfiguration? configuration = null;
 			if (profile != null && config == null)
 			{
-				environment.Error.WriteLine($"Option '--{Profile.Name}' requires option '--{Config.Name}'.");
+				environment.Error.WriteLine($"Option '--{_profile.Name}' requires option '--{_config.Name}'.");
 				return null;
 			}
 
@@ -260,13 +159,13 @@ namespace LinqToDB.CommandLine
 
 			if (providerName == null)
 			{
-				environment.Error.WriteLine($"Option '--{Provider.Name}' must be specified.");
+				environment.Error.WriteLine($"Option '--{_provider.Name}' must be specified.");
 				return null;
 			}
 
 			if (connectionStringText == null)
 			{
-				environment.Error.WriteLine($"Option '--{ConnectionString.Name}' must be specified.");
+				environment.Error.WriteLine($"Option '--{_connectionString.Name}' must be specified.");
 				return null;
 			}
 
@@ -274,13 +173,13 @@ namespace LinqToDB.CommandLine
 
 			if (allowUnsafeSqlValue && sqlSafety == QuerySqlSafetyMode.Deny)
 			{
-				environment.Error.WriteLine($"Option '--{AllowUnsafeSql.Name}' cannot be used because SQL safety policy is 'deny'.");
+				environment.Error.WriteLine($"Option '--{_allowUnsafeSql.Name}' cannot be used because SQL safety policy is 'deny'.");
 				return null;
 			}
 
 			if (querySql == null && querySqlFile == null)
 			{
-				environment.Error.WriteLine($"Either '--{Sql.Name}' or '--{SqlFile.Name}' option must be specified.");
+				environment.Error.WriteLine($"Either '--{_sql.Name}' or '--{_sqlFile.Name}' option must be specified.");
 				return null;
 			}
 

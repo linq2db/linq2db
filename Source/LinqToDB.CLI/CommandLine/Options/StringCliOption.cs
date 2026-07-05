@@ -22,11 +22,11 @@ namespace LinqToDB.CommandLine
 		bool      Required,
 		bool      AllowMultiple,
 		string    Help,
-		string?   DetailedHelp,
-		string[]? Examples,
-		string[]? JsonExamples,
-		string[]? Default,
-		string[]? T4Default)
+		string?   DetailedHelp = null,
+		string[]? Examples     = null,
+		string[]? JsonExamples = null,
+		string[]? Default      = null,
+		string[]? T4Default    = null)
 		: CliOption(
 			Name,
 			ShortName,

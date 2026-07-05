@@ -4,6 +4,7 @@ using System.Data.Common;
 using System.Data.SqlTypes;
 using System.Globalization;
 using System.IO;
+using System.Numerics;
 using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Text.Json;
@@ -11,6 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.Data;
+
 using Microsoft.Data.SqlTypes;
 
 namespace LinqToDB.CommandLine
@@ -40,6 +42,8 @@ namespace LinqToDB.CommandLine
 			SqlChars,
 			SqlString,
 			SqlXml,
+			SqlVectorFloat,
+			SqlVectorHalf,
 		}
 
 		readonly ICliEnvironment      _environment = environment;
@@ -49,6 +53,8 @@ namespace LinqToDB.CommandLine
 		{
 			cancellationToken.ThrowIfCancellationRequested();
 
+			// Get SQL text from command line or file.
+			//
 			string sql;
 
 			if (_settings.Sql != null)
@@ -72,6 +78,8 @@ namespace LinqToDB.CommandLine
 
 			try
 			{
+				// Create data provider for the specified database provider and connection string.
+				//
 				var dataProvider = DataConnection.GetDataProvider(_settings.Provider, _settings.ConnectionString);
 
 				if (dataProvider == null)
@@ -80,6 +88,8 @@ namespace LinqToDB.CommandLine
 					return StatusCodes.EXPECTED_ERROR;
 				}
 
+				// Validate that the SQL query is a single statement and does not contain multiple statements or batch separators.
+				//
 				var singleStatementResult = QuerySafetyValidator.ValidateSingleStatement(dataProvider, sql);
 
 				if (!singleStatementResult.IsSafe)
@@ -88,6 +98,8 @@ namespace LinqToDB.CommandLine
 					return StatusCodes.EXPECTED_ERROR;
 				}
 
+				// Validate that the SQL query is safe to execute based on the configured safety mode.
+				//
 				if (_settings.SqlSafety != QuerySqlSafetyMode.Allow)
 				{
 					var safetyResult = QuerySafetyValidator.Validate(dataProvider, sql);
@@ -103,10 +115,14 @@ namespace LinqToDB.CommandLine
 					}
 				}
 
+				// Execute the SQL query and read the results.
+				//
 				var dataConnection = new DataConnection(new DataOptions().UseConnectionString(dataProvider, _settings.ConnectionString));
 
 				await using (dataConnection.ConfigureAwait(false))
 				{
+					// Execute the SQL query and get a data reader for the results.
+					//
 					var dataReader = await dataConnection.ExecuteReaderAsync(sql, cancellationToken).ConfigureAwait(false);
 
 					await using (dataReader.ConfigureAwait(false))
@@ -119,6 +135,8 @@ namespace LinqToDB.CommandLine
 							return StatusCodes.EXPECTED_ERROR;
 						}
 
+						// Read the column metadata from the data reader and create output column definitions.
+						//
 						var columns = new QueryOutputColumn[reader.FieldCount];
 
 						for (var i = 0; i < columns.Length; i++)
@@ -137,6 +155,8 @@ namespace LinqToDB.CommandLine
 							columns[i] = CreateOutputColumn(reader, i, providerSpecificType);
 						}
 
+						// Read the rows from the data reader and convert each field to a string representation.
+						//
 						var rows = new List<string?[]>();
 
 						while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
@@ -154,6 +174,8 @@ namespace LinqToDB.CommandLine
 							rows.Add(row);
 						}
 
+						// Create a query output object containing the column definitions and rows.
+						//
 						var queryOutput = new QueryOutput(columns, rows);
 
 						var output = string.Equals(_settings.Output, "csv", StringComparison.OrdinalIgnoreCase)
@@ -249,25 +271,27 @@ namespace LinqToDB.CommandLine
 		{
 			var actualFieldType = providerSpecificType switch
 			{
-				_ when providerSpecificType == typeof(bool)           => QueryActualFieldType.Boolean,
-				_ when providerSpecificType == typeof(SqlBoolean)     => QueryActualFieldType.Boolean,
-				_ when providerSpecificType == typeof(double)         => QueryActualFieldType.Double,
-				_ when providerSpecificType == typeof(SqlDouble)      => QueryActualFieldType.Double,
-				_ when providerSpecificType == typeof(float)          => QueryActualFieldType.Single,
-				_ when providerSpecificType == typeof(SqlSingle)      => QueryActualFieldType.Single,
-				_ when providerSpecificType == typeof(DateTime)       => QueryActualFieldType.DateTime,
-				_ when providerSpecificType == typeof(SqlDateTime)    => QueryActualFieldType.DateTime,
-				_ when providerSpecificType == typeof(DateTimeOffset) => QueryActualFieldType.DateTimeOffset,
-				_ when providerSpecificType == typeof(TimeSpan)       => QueryActualFieldType.TimeSpan,
-				_ when providerSpecificType == typeof(Guid)           => QueryActualFieldType.Guid,
-				_ when providerSpecificType == typeof(SqlGuid)        => QueryActualFieldType.Guid,
-				_ when providerSpecificType == typeof(byte[])         => QueryActualFieldType.Bytes,
-				_ when providerSpecificType == typeof(SqlBinary)      => QueryActualFieldType.SqlBinary,
-				_ when providerSpecificType == typeof(SqlBytes)       => QueryActualFieldType.SqlBytes,
-				_ when providerSpecificType == typeof(SqlChars)       => QueryActualFieldType.SqlChars,
-				_ when providerSpecificType == typeof(SqlString)      => QueryActualFieldType.SqlString,
-				_ when providerSpecificType == typeof(SqlXml)         => QueryActualFieldType.SqlXml,
-				_                                                     => QueryActualFieldType.None,
+				_ when providerSpecificType == typeof(bool)             => QueryActualFieldType.Boolean,
+				_ when providerSpecificType == typeof(SqlBoolean)       => QueryActualFieldType.Boolean,
+				_ when providerSpecificType == typeof(double)           => QueryActualFieldType.Double,
+				_ when providerSpecificType == typeof(SqlDouble)        => QueryActualFieldType.Double,
+				_ when providerSpecificType == typeof(float)            => QueryActualFieldType.Single,
+				_ when providerSpecificType == typeof(SqlSingle)        => QueryActualFieldType.Single,
+				_ when providerSpecificType == typeof(DateTime)         => QueryActualFieldType.DateTime,
+				_ when providerSpecificType == typeof(SqlDateTime)      => QueryActualFieldType.DateTime,
+				_ when providerSpecificType == typeof(DateTimeOffset)   => QueryActualFieldType.DateTimeOffset,
+				_ when providerSpecificType == typeof(TimeSpan)         => QueryActualFieldType.TimeSpan,
+				_ when providerSpecificType == typeof(Guid)             => QueryActualFieldType.Guid,
+				_ when providerSpecificType == typeof(SqlGuid)          => QueryActualFieldType.Guid,
+				_ when providerSpecificType == typeof(byte[])           => QueryActualFieldType.Bytes,
+				_ when providerSpecificType == typeof(SqlBinary)        => QueryActualFieldType.SqlBinary,
+				_ when providerSpecificType == typeof(SqlBytes)         => QueryActualFieldType.SqlBytes,
+				_ when providerSpecificType == typeof(SqlChars)         => QueryActualFieldType.SqlChars,
+				_ when providerSpecificType == typeof(SqlString)        => QueryActualFieldType.SqlString,
+				_ when providerSpecificType == typeof(SqlXml)           => QueryActualFieldType.SqlXml,
+				_ when providerSpecificType == typeof(SqlVector<float>) => QueryActualFieldType.SqlVectorFloat,
+				_ when providerSpecificType == typeof(SqlVector<Half>)  => QueryActualFieldType.SqlVectorHalf,
+				_                                                       => QueryActualFieldType.None,
 			};
 
 			return new QueryOutputColumn(reader.GetName(ordinal), actualFieldType);
@@ -275,17 +299,17 @@ namespace LinqToDB.CommandLine
 
 		static string? ReadFieldAsString(DbDataReader reader, QueryActualFieldType actualFieldType, int ordinal)
 		{
-			object fieldValue;
+			object value;
 
 			try
 			{
-				fieldValue = reader.GetProviderSpecificValue(ordinal);
+				value = reader.GetProviderSpecificValue(ordinal);
 			}
 			catch (Exception providerSpecificException) when (providerSpecificException is not OperationCanceledException)
 			{
 				try
 				{
-					fieldValue = reader.GetValue(ordinal);
+					value = reader.GetValue(ordinal);
 				}
 				catch (Exception getValueException) when (getValueException is not OperationCanceledException)
 				{
@@ -296,22 +320,22 @@ namespace LinqToDB.CommandLine
 
 			return actualFieldType switch
 			{
-				QueryActualFieldType.Boolean        => fieldValue is SqlBoolean sqlBoolean ? sqlBoolean.Value ? "true" : "false" : ((bool)fieldValue) ? "true" : "false",
-				QueryActualFieldType.Double         => (fieldValue is SqlDouble sqlDouble ? sqlDouble.Value : (double)fieldValue).ToString("R", CultureInfo.InvariantCulture),
-				QueryActualFieldType.Single         => (fieldValue is SqlSingle sqlSingle ? sqlSingle.Value : (float)fieldValue).ToString("R", CultureInfo.InvariantCulture),
-				QueryActualFieldType.DateTime       => (fieldValue is SqlDateTime sqlDateTime ? sqlDateTime.Value : (DateTime)fieldValue).ToString("O", CultureInfo.InvariantCulture),
-				QueryActualFieldType.DateTimeOffset => ((DateTimeOffset)fieldValue).ToString("O", CultureInfo.InvariantCulture),
-				QueryActualFieldType.TimeSpan       => ((TimeSpan)fieldValue).ToString("c", CultureInfo.InvariantCulture),
-				QueryActualFieldType.Guid           => (fieldValue is SqlGuid sqlGuid ? sqlGuid.Value : (Guid)fieldValue).ToString("D"),
-				QueryActualFieldType.Bytes          => Convert.ToBase64String((byte[])fieldValue),
-				QueryActualFieldType.SqlBinary      => Convert.ToBase64String(((SqlBinary)fieldValue).Value),
-				QueryActualFieldType.SqlBytes       => Convert.ToBase64String(((SqlBytes)fieldValue).Value),
-				QueryActualFieldType.SqlChars       => new string(((SqlChars)fieldValue).Value),
-				QueryActualFieldType.SqlString      => ((SqlString)fieldValue).Value,
-				QueryActualFieldType.SqlXml         => ((SqlXml)fieldValue).Value,
-				_ when fieldValue is SqlVector<float> vector => ConvertVectorToString(vector.Memory.ToArray()),
-				_ when fieldValue is SqlVector<Half> vector  => ConvertVectorToString(vector.Memory.ToArray()),
-				_                                   => Convert.ToString(fieldValue, CultureInfo.InvariantCulture),
+				QueryActualFieldType.Boolean        => value is SqlBoolean sqlBoolean ? sqlBoolean.Value ? "true" : "false" : ((bool)value) ? "true" : "false",
+				QueryActualFieldType.Double         => (value is SqlDouble sqlDouble ? sqlDouble.Value : (double)value).ToString("R", CultureInfo.InvariantCulture),
+				QueryActualFieldType.Single         => (value is SqlSingle sqlSingle ? sqlSingle.Value : (float)value).ToString("R", CultureInfo.InvariantCulture),
+				QueryActualFieldType.DateTime       => (value is SqlDateTime sqlDateTime ? sqlDateTime.Value : (DateTime)value).ToString("O", CultureInfo.InvariantCulture),
+				QueryActualFieldType.DateTimeOffset => ((DateTimeOffset)value).ToString("O", CultureInfo.InvariantCulture),
+				QueryActualFieldType.TimeSpan       => ((TimeSpan)value).ToString("c", CultureInfo.InvariantCulture),
+				QueryActualFieldType.Guid           => (value is SqlGuid sqlGuid ? sqlGuid.Value : (Guid)value).ToString("D"),
+				QueryActualFieldType.Bytes          => Convert.ToBase64String((byte[])value),
+				QueryActualFieldType.SqlBinary      => Convert.ToBase64String(((SqlBinary)value).Value),
+				QueryActualFieldType.SqlBytes       => Convert.ToBase64String(((SqlBytes)value).Value),
+				QueryActualFieldType.SqlChars       => new string(((SqlChars)value).Value),
+				QueryActualFieldType.SqlString      => ((SqlString)value).Value,
+				QueryActualFieldType.SqlXml         => ((SqlXml)value).Value,
+				QueryActualFieldType.SqlVectorFloat => ConvertVectorToString(((SqlVector<float>)value).Memory.ToArray()),
+				QueryActualFieldType.SqlVectorHalf  => ConvertVectorToString(((SqlVector<Half>) value).Memory.ToArray()),
+				_                                   => Convert.ToString(value, CultureInfo.InvariantCulture),
 			};
 		}
 
