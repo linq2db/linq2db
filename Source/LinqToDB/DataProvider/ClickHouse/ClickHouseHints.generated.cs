@@ -429,7 +429,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds the same ClickHouse join hint as <c>JoinOuterHint</c>. This method is deprecated.
 		/// </summary>
-		[Obsolete("This API is deprecated and will be removed in future versions. Use JoinOuterHint instead.")]
+		[Obsolete("TODO: remove in v7. This API is based on an incorrect ClickHouse join hint model and works incorrectly. Use JoinOuterHint instead.")]
 		[ExpressionMethod(nameof(JoinAllOuterHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinAllOuterHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -446,7 +446,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds the same ClickHouse join hint as <c>JoinOuterHint</c>. This method is deprecated.
 		/// </summary>
-		[Obsolete("This API is deprecated and will be removed in future versions. Use JoinOuterHint instead.")]
+		[Obsolete("TODO: remove in v7. This API is based on an incorrect ClickHouse join hint model and works incorrectly. Use JoinOuterHint instead.")]
 		[ExpressionMethod(nameof(JoinAllOuterTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinAllOuterHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
@@ -463,7 +463,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds the same ClickHouse join hint as <c>JoinSemiHint</c>. This method is deprecated.
 		/// </summary>
-		[Obsolete("This API is deprecated and will be removed in future versions. Use JoinSemiHint instead.")]
+		[Obsolete("TODO: remove in v7. This API is based on an incorrect ClickHouse join hint model and works incorrectly. Use JoinSemiHint instead.")]
 		[ExpressionMethod(nameof(JoinAllSemiHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinAllSemiHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -480,7 +480,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds the same ClickHouse join hint as <c>JoinSemiHint</c>. This method is deprecated.
 		/// </summary>
-		[Obsolete("This API is deprecated and will be removed in future versions. Use JoinSemiHint instead.")]
+		[Obsolete("TODO: remove in v7. This API is based on an incorrect ClickHouse join hint model and works incorrectly. Use JoinSemiHint instead.")]
 		[ExpressionMethod(nameof(JoinAllSemiTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinAllSemiHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
@@ -497,7 +497,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds the same ClickHouse join hint as <c>JoinAntiHint</c>. This method is deprecated.
 		/// </summary>
-		[Obsolete("This API is deprecated and will be removed in future versions. Use JoinAntiHint instead.")]
+		[Obsolete("TODO: remove in v7. This API is based on an incorrect ClickHouse join hint model and works incorrectly. Use JoinAntiHint instead.")]
 		[ExpressionMethod(nameof(JoinAllAntiHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinAllAntiHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -514,7 +514,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds the same ClickHouse join hint as <c>JoinAntiHint</c>. This method is deprecated.
 		/// </summary>
-		[Obsolete("This API is deprecated and will be removed in future versions. Use JoinAntiHint instead.")]
+		[Obsolete("TODO: remove in v7. This API is based on an incorrect ClickHouse join hint model and works incorrectly. Use JoinAntiHint instead.")]
 		[ExpressionMethod(nameof(JoinAllAntiTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinAllAntiHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
@@ -531,7 +531,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds the same ClickHouse join hint as <c>JoinAnyHint</c>. This method is deprecated.
 		/// </summary>
-		[Obsolete("This API is deprecated and will be removed in future versions. Use JoinAnyHint instead.")]
+		[Obsolete("TODO: remove in v7. This API is based on an incorrect ClickHouse join hint model and works incorrectly. Use JoinAnyHint instead.")]
 		[ExpressionMethod(nameof(JoinAllAnyHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinAllAnyHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -548,7 +548,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds the same ClickHouse join hint as <c>JoinAnyHint</c>. This method is deprecated.
 		/// </summary>
-		[Obsolete("This API is deprecated and will be removed in future versions. Use JoinAnyHint instead.")]
+		[Obsolete("TODO: remove in v7. This API is based on an incorrect ClickHouse join hint model and works incorrectly. Use JoinAnyHint instead.")]
 		[ExpressionMethod(nameof(JoinAllAnyTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinAllAnyHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
@@ -565,7 +565,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds the same ClickHouse join hint as <c>JoinAsOfHint</c>. This method is deprecated.
 		/// </summary>
-		[Obsolete("This API is deprecated and will be removed in future versions. Use JoinAsOfHint instead.")]
+		[Obsolete("TODO: remove in v7. This API is based on an incorrect ClickHouse join hint model and works incorrectly. Use JoinAsOfHint instead.")]
 		[ExpressionMethod(nameof(JoinAllAsOfHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinAllAsOfHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -582,7 +582,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds the same ClickHouse join hint as <c>JoinAsOfHint</c>. This method is deprecated.
 		/// </summary>
-		[Obsolete("This API is deprecated and will be removed in future versions. Use JoinAsOfHint instead.")]
+		[Obsolete("TODO: remove in v7. This API is based on an incorrect ClickHouse join hint model and works incorrectly. Use JoinAsOfHint instead.")]
 		[ExpressionMethod(nameof(JoinAllAsOfTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinAllAsOfHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull

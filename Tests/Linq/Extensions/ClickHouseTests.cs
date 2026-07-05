@@ -3,6 +3,7 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.DataProvider.ClickHouse;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -17,6 +18,22 @@ namespace Tests.Extensions
 		{
 			public uint     ID;
 			public DateTime TS;
+		}
+
+		[Table("AsofTrade")]
+		sealed class AsofTrade
+		{
+			[Column] public int      ID     { get; set; }
+			[Column] public string   Symbol { get; set; } = null!;
+			[Column] public DateTime Time   { get; set; }
+		}
+
+		[Table("AsofQuote")]
+		sealed class AsofQuote
+		{
+			[Column] public int      ID     { get; set; }
+			[Column] public string   Symbol { get; set; } = null!;
+			[Column] public DateTime Time   { get; set; }
 		}
 
 		[Test]
@@ -174,6 +191,44 @@ namespace Tests.Extensions
 			LastQuery
 				.ShouldNotBeNull()
 				.ShouldContain(" " + ClickHouseHints.Table.Final);
+		}
+
+		[Test]
+		public void AsOfJoinHintSqlGeneration([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q = db.GetTable<AsofTrade>()
+				.Join(
+					db.GetTable<AsofQuote>().AsClickHouse().JoinAsOfHint(),
+					SqlJoinType.Left,
+					(trade, quote) => trade.Symbol == quote.Symbol && trade.Time >= quote.Time,
+					(trade, quote) => new { trade.ID, QuoteID = quote.ID });
+
+			var sql = q.ToSqlQuery().Sql;
+
+			sql.ShouldContain("LEFT ASOF JOIN");
+			sql.ShouldContain(" >= ");
+		}
+
+		[Test]
+		public void ObsoleteAllAsOfJoinHintSqlGeneration([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+#pragma warning disable CS0618 // Type or member is obsolete
+			var q = db.GetTable<AsofTrade>()
+				.Join(
+					db.GetTable<AsofQuote>().AsClickHouse().JoinAllAsOfHint(),
+					SqlJoinType.Left,
+					(trade, quote) => trade.Symbol == quote.Symbol && trade.Time >= quote.Time,
+					(trade, quote) => new { trade.ID, QuoteID = quote.ID });
+#pragma warning restore CS0618 // Type or member is obsolete
+
+			var sql = q.ToSqlQuery().Sql;
+
+			sql.ShouldContain("LEFT ASOF JOIN");
+			sql.ShouldContain(" >= ");
 		}
 	}
 }

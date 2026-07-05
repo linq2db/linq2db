@@ -38,15 +38,15 @@ namespace LinqToDB.DataProvider.ClickHouse
 			public const string GlobalAll   = $"{Global} {All}";
 			public const string GlobalAsOf  = $"{Global} {AsOf}";
 
-			[Obsolete("Use Outer instead.")]
+			[Obsolete("TODO: remove in v7. This API is based on an incorrect ClickHouse join hint model and works incorrectly. Use Outer instead.")]
 			public const string AllOuter    = Outer;
-			[Obsolete("Use Semi instead.")]
+			[Obsolete("TODO: remove in v7. This API is based on an incorrect ClickHouse join hint model and works incorrectly. Use Semi instead.")]
 			public const string AllSemi     = Semi;
-			[Obsolete("Use Anti instead.")]
+			[Obsolete("TODO: remove in v7. This API is based on an incorrect ClickHouse join hint model and works incorrectly. Use Anti instead.")]
 			public const string AllAnti     = Anti;
-			[Obsolete("Use Any instead.")]
+			[Obsolete("TODO: remove in v7. This API is based on an incorrect ClickHouse join hint model and works incorrectly. Use Any instead.")]
 			public const string AllAny      = Any;
-			[Obsolete("Use AsOf instead.")]
+			[Obsolete("TODO: remove in v7. This API is based on an incorrect ClickHouse join hint model and works incorrectly. Use AsOf instead.")]
 			public const string AllAsOf     = AsOf;
 		}
 

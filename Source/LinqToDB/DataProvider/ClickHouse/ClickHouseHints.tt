@@ -32,11 +32,11 @@ namespace LinqToDB.DataProvider.ClickHouse
 	GenerateJoinHint("GlobalAll",   "GLOBAL ALL");
 	GenerateJoinHint("GlobalAsOf",  "GLOBAL ASOF");
 
-	GenerateJoinHint("AllOuter",    "ALL OUTER", "Outer");
-	GenerateJoinHint("AllSemi",     "ALL SEMI",  "Semi");
-	GenerateJoinHint("AllAnti",     "ALL ANTI",  "Anti");
-	GenerateJoinHint("AllAny",      "ALL ANY",   "Any");
-	GenerateJoinHint("AllAsOf",     "ALL ASOF",  "AsOf");
+	GenerateJoinHint("AllOuter",    null, "Outer");
+	GenerateJoinHint("AllSemi",     null, "Semi");
+	GenerateJoinHint("AllAnti",     null, "Anti");
+	GenerateJoinHint("AllAny",      null, "Any");
+	GenerateJoinHint("AllAsOf",     null, "AsOf");
 #>
 	}
 }
@@ -52,7 +52,7 @@ void GenerateJoinHint(string hint, string sqlHint = null, string useInstead = nu
 <#+ } #>
 		/// </summary>
 <#+ if (useInstead != null) { #>
-		[Obsolete("This API is deprecated and will be removed in future versions. Use Join<#= useInstead #>Hint instead.")]
+		[Obsolete("TODO: remove in v7. This API is based on an incorrect ClickHouse join hint model and works incorrectly. Use Join<#= useInstead #>Hint instead.")]
 <#+ } #>
 		[ExpressionMethod(nameof(Join<#= hint #>HintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> Join<#= hint #>Hint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
@@ -75,7 +75,7 @@ void GenerateJoinHint(string hint, string sqlHint = null, string useInstead = nu
 <#+	} #>
 		/// </summary>
 <#+ if (useInstead != null) { #>
-		[Obsolete("This API is deprecated and will be removed in future versions. Use Join<#= useInstead #>Hint instead.")]
+		[Obsolete("TODO: remove in v7. This API is based on an incorrect ClickHouse join hint model and works incorrectly. Use Join<#= useInstead #>Hint instead.")]
 <#+ } #>
 		[ExpressionMethod(nameof(Join<#= hint #>TableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> Join<#= hint #>Hint<TSource>(this IClickHouseSpecificTable<TSource> table)
