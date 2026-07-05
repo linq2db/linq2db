@@ -293,14 +293,14 @@ namespace LinqToDB.Internal.Linq
 		}
 
 		internal static void SetParameters(
-			Query query, IQueryExpressions expressions, IDataContext? parametersContext, object?[]? parameters, SqlParameterValues parameterValues)
+			Query query, IQueryExpressions expressions, IDataContext? parametersContext, object?[]? parameters, SqlParameterValues parameterValues, SqlCommandExecutionContext? context = null)
 		{
 			if (query.ParameterAccessors == null)
 				return;
 
 			foreach (var accessor in query.ParameterAccessors)
 			{
-				var clientValue   = accessor.ClientValueAccessor(expressions, parametersContext, parameters);
+				var clientValue   = accessor.ClientValueAccessor(expressions, parametersContext, parameters, context);
 				var providerValue = clientValue;
 
 				DbDataType? dbDataType = null;

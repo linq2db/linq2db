@@ -11,6 +11,7 @@ using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Infrastructure;
 using LinqToDB.Internal.Linq.Builder;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
@@ -444,8 +445,8 @@ namespace LinqToDB.Internal.Linq
 						var itemAccessorExpr = PrepareExpressionAccessors(dc, entry.ItemAccessor, nonComparable);
 						var dbDataTypeAccessorExpr = PrepareExpressionAccessors(dc, entry.DbDataTypeAccessor, nonComparable);
 
-						var clientValueGetterLambda = Expression.Lambda<Func<IQueryExpressions, IDataContext?, object?[]?, object?>>(clientValueGetterExpr.EnsureType<object>(),
-							ExpressionBuilder.QueryExpressionContainerParam, ExpressionConstants.DataContextParam, ExpressionBuilder.ParametersParam);
+						var clientValueGetterLambda = Expression.Lambda<Func<IQueryExpressions, IDataContext?, object?[]?, SqlCommandExecutionContext?, object?>>(clientValueGetterExpr.EnsureType<object>(),
+							ExpressionBuilder.QueryExpressionContainerParam, ExpressionConstants.DataContextParam, ExpressionBuilder.ParametersParam, ExpressionBuilder.ExecutionContextParam);
 
 						var clientValueGetter = clientValueGetterLambda.CompileExpression();
 
