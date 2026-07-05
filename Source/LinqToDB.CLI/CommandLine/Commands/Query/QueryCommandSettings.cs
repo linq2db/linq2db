@@ -18,16 +18,16 @@ namespace LinqToDB.CommandLine
 	/// <param name="Sql">SQL query text from command line.</param>
 	/// <param name="SqlFile">Path to command-line SQL file.</param>
 	internal sealed record QueryCommandSettings(
-		string  Profile,
-		string  Provider,
-		string  ConnectionString,
-		int?    CommandTimeout,
-		int?    LockTimeout,
-		int     MaxRows,
-		string  Output,
-		string? OutputFile,
+		string             Profile,
+		string             Provider,
+		string             ConnectionString,
+		int?               CommandTimeout,
+		int?               LockTimeout,
+		int                MaxRows,
+		string             Output,
+		string?            OutputFile,
 		QuerySqlSafetyMode SqlSafety,
-		bool    AllowUnsafeSql,
-		string? Sql,
-		string? SqlFile);
+		bool               AllowUnsafeSql,
+		string?            Sql,
+		string?            SqlFile);
 }

@@ -170,6 +170,8 @@ namespace LinqToDB.CommandLine
 							columns[i] = CreateOutputColumn(reader, i, providerSpecificType);
 						}
 
+						// Validate that the output format is compatible with the column metadata.
+						//
 						if (string.Equals(_settings.Output, "json", StringComparison.OrdinalIgnoreCase))
 						{
 							var duplicateColumnName = GetDuplicateColumnName(columns);
@@ -183,13 +185,15 @@ namespace LinqToDB.CommandLine
 
 						// Read rows from the data reader and write them directly to the output stream.
 						//
-						var outputWriter = _settings.OutputFile != null ? _environment.CreateTextWriter(_settings.OutputFile) : _environment.Out;
+						var outputWriter        = _settings.OutputFile != null ? _environment.CreateTextWriter(_settings.OutputFile) : _environment.Out;
 						var disposeOutputWriter = _settings.OutputFile != null;
-						var rowCount = 0;
-						var truncated = false;
+						var rowCount            = 0;
+						var truncated           = false;
 
 						try
 						{
+							// Write the output header based on the specified output format.
+							//
 							switch (_settings.Output)
 							{
 								case "csv":
@@ -280,22 +284,15 @@ namespace LinqToDB.CommandLine
 			if (timeout == null)
 				return null;
 
-			if (dataProvider is SqlServerDataProvider)
-				return string.Create(CultureInfo.InvariantCulture, $"SET LOCK_TIMEOUT {(long)timeout.Value * 1000}");
-
-			if (dataProvider is PostgreSQLDataProvider)
-				return string.Create(CultureInfo.InvariantCulture, $"SET lock_timeout = '{timeout.Value}s'");
-
-			if (dataProvider is MySqlDataProvider)
-				return string.Create(CultureInfo.InvariantCulture, $"SET SESSION innodb_lock_wait_timeout = {timeout.Value}");
-
-			if (dataProvider is SQLiteDataProvider)
-				return string.Create(CultureInfo.InvariantCulture, $"PRAGMA busy_timeout = {(long)timeout.Value * 1000}");
-
-			if (dataProvider is FirebirdDataProvider)
-				return string.Create(CultureInfo.InvariantCulture, $"SET LOCK TIMEOUT {timeout.Value}");
-
-			return null;
+			return dataProvider switch
+			{
+				SqlServerDataProvider  => string.Create(CultureInfo.InvariantCulture, $"SET LOCK_TIMEOUT {(long)timeout.Value * 1000}"),
+				PostgreSQLDataProvider => string.Create(CultureInfo.InvariantCulture, $"SET lock_timeout = '{timeout.Value}s'"),
+				MySqlDataProvider      => string.Create(CultureInfo.InvariantCulture, $"SET SESSION innodb_lock_wait_timeout = {timeout.Value}"),
+				SQLiteDataProvider     => string.Create(CultureInfo.InvariantCulture, $"PRAGMA busy_timeout = {(long)timeout.Value * 1000}"),
+				FirebirdDataProvider   => string.Create(CultureInfo.InvariantCulture, $"SET LOCK TIMEOUT {timeout.Value}"),
+				_                      => null,
+			};
 		}
 
 		static string? GetDuplicateColumnName(QueryOutputColumn[] columns)
