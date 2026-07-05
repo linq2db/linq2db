@@ -3228,10 +3228,11 @@ namespace LinqToDB.Internal.SqlProvider
 				case QueryElementType.SqlCteTableField:
 				{
 					var cteTableField = (SqlCteTableField)expr;
+					var fieldName     = AliasesContext.GetFieldName(cteTableField);
 
 					if (_disableAlias)
 					{
-						Convert(StringBuilder, AliasesContext.GetFieldName(cteTableField), ConvertType.NameToQueryField);
+						Convert(StringBuilder, fieldName, ConvertType.NameToQueryField);
 						break;
 					}
 
@@ -3267,7 +3268,7 @@ namespace LinqToDB.Internal.SqlProvider
 								throw new LinqToDBException($"Table {cteTableField.Table} should have an alias.");
 
 							addAlias =
-								!string.Equals(alias, cteTableField.Name, StringComparison.Ordinal)
+								!string.Equals(alias, fieldName, StringComparison.Ordinal)
 								|| !AliasMode.HasFlag(ColumnAliasMode.CompareFieldNames);
 
 							StringBuilder
@@ -3275,7 +3276,7 @@ namespace LinqToDB.Internal.SqlProvider
 						}
 					}
 
-					Convert(StringBuilder, AliasesContext.GetFieldName(cteTableField), ConvertType.NameToQueryField);
+					Convert(StringBuilder, fieldName, ConvertType.NameToQueryField);
 
 					break;
 				}
