@@ -181,27 +181,41 @@ Done when: output files are not overwritten silently.
 
 ## Phase 12: `SKILL.md` Final Pass
 
-Status: pending
+Status: completed
 
 Make `SKILL.md` a complete agent instruction document.
 
-- [ ] Query command purpose and scenarios.
-- [ ] Agent responsibility.
-- [ ] SQL generation rules for agents.
-- [ ] Read-only guard and unsafe SQL policy.
-- [ ] Single-statement contract.
-- [ ] Timeout options.
-- [ ] Connection string formatting and brace escaping.
-- [ ] Environment variable support for secrets.
-- [ ] Output formats and string serialization.
-- [ ] Result limits.
-- [ ] Skill command usage.
-- [ ] Non-goals / future `execute`.
-- [ ] Validate all JSON examples.
+- [x] Query command purpose and scenarios.
+- [x] Agent responsibility.
+- [x] SQL generation rules for agents.
+- [x] Read-only guard and unsafe SQL policy.
+- [x] Single-statement contract.
+- [x] Timeout options.
+- [x] Connection string formatting and brace escaping.
+- [x] Environment variable support for secrets.
+- [x] Output formats and string serialization.
+- [x] Result limits.
+- [x] Skill command usage.
+- [x] Non-goals / future `execute`.
+- [x] Validate all JSON examples.
 
 Done when: `dotnet linq2db skill` accurately reflects command behavior.
 
-## Phase 13: PR Body Final Pass
+## Phase 13: Provider-Specific Type Coverage
+
+Status: pending
+
+Expand provider-specific value conversion beyond SQL Server.
+
+- [ ] Keep one provider-specific conversion validation test file in the main test assembly.
+- [ ] Validate provider-specific read and string conversion behavior for each provider family before adding special handling.
+- [ ] Add conversion handling only for provider-specific types that need it.
+- [ ] Document provider-specific conversion coverage and limitations.
+- [ ] Keep standard CLR type conversion in the shared query output path.
+
+Done when: provider-specific output conversion is validated beyond the current SQL Server-focused coverage.
+
+## Phase 14: PR Body Final Pass
 
 Status: pending
 

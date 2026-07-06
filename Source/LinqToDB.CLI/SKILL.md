@@ -32,7 +32,7 @@ Connection settings:
 - `--user <user>` and `--password <password>` are optional values for connection string formatting.
 - `--connection-string-env <name>`, `--user-env <name>`, and `--password-env <name>` read those values from environment variables.
 - Configuration profiles can use `connectionStringEnv`, `userEnv`, and `passwordEnv` for the same purpose.
-- Literal command-line values override command-line environment variable options; command-line values override configuration values.
+- Value precedence is: command-line literal, command-line environment variable option, selected profile literal, selected profile environment variable option, inherited default profile literal or environment variable option.
 - If an environment variable option is specified, the variable must exist.
 - The final connection string is always produced with `string.Format(connectionString, user, password)`.
 - Use `{0}` in the connection string for the user value and `{1}` for the password value.
@@ -58,12 +58,12 @@ Example configuration:
     "lockTimeout"      : 5,
     "maxRows"          : 1000,
     "unsafeSql"       : "deny",
-    "output"          : "json"
+    "output"          : "json",
+    "passwordEnv"     : "LINQ2DB_QUERY_PASSWORD"
   },
   "uat": {
     "unsafeSql": "confirm",
-    "user"     : "readonly_user",
-    "password" : "secret"
+    "user"     : "readonly_user"
   },
   "dev": {
     "unsafeSql": "allow"
@@ -96,6 +96,7 @@ Output:
 - Existing output files are not replaced by default. Use `--overwrite` only when the user explicitly wants to replace the file.
 - When `--output-file` is not specified, output is written to stdout.
 - Query output reads database values using .NET `DbDataReader.GetProviderSpecificValue` and serializes them as strings using invariant culture and provider-specific safe formatting. `byte[]` values are emitted as base64 strings. `NULL` values are emitted as JSON `null`.
+- Current special provider-specific value handling is focused on SQL Server types validated so far. Other providers still use `GetProviderSpecificValue`, but provider-specific formatting coverage should be expanded and validated per provider before relying on unusual provider-specific types.
 - For `json` output, projected column names must be unique because rows are emitted as JSON objects. The agent is responsible for adding explicit SQL aliases when a query could produce duplicate names.
 - Duplicate column names are rejected for `json` output. Use explicit aliases or switch to duplicate-safe `json-table` output when column metadata and duplicate names must be preserved.
 - `json-table` output contains `rowCount`, `truncated`, `columns`, and `rows`. Each column has `ordinal`, `name`, `fieldType`, `providerSpecificFieldType`, and `dataTypeName`; rows are arrays of string or null values.

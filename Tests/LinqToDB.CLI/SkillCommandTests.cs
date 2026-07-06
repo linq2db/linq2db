@@ -28,6 +28,7 @@ namespace Tests.LinqToDB.CLI
 				Assert.That(result.Output,   Does.Contain("## Skill Command"));
 				Assert.That(result.Output,   Does.Contain("Exactly one of `--sql` or `--sql-file` must be specified."));
 				Assert.That(result.Output,   Does.Contain("Use `{0}` in the connection string for the user value and `{1}` for the password value."));
+				Assert.That(result.Output,   Does.Contain("Value precedence is: command-line literal, command-line environment variable option"));
 				Assert.That(result.Output,   Does.Contain("an agent can analyze your code together with data from your database"));
 				Assert.That(result.Output,   Does.Contain("Prepare regression tests for bugs found in real data"));
 				Assert.That(result.Output,   Does.Contain("Support synchronous development of code and a development database"));
@@ -37,6 +38,7 @@ namespace Tests.LinqToDB.CLI
 				Assert.That(result.Output,   Does.Contain("does not change the `query` command contract into a general DDL/DML execution workflow"));
 				Assert.That(result.Output,   Does.Contain("best-effort guardrails intended to help avoid agent mistakes"));
 				Assert.That(result.Output,   Does.Contain("Query output reads database values using .NET `DbDataReader.GetProviderSpecificValue`"));
+				Assert.That(result.Output,   Does.Contain("Current special provider-specific value handling is focused on SQL Server types"));
 				Assert.That(result.Output,   Does.Contain("`byte[]` values are emitted as base64 strings"));
 				Assert.That(result.Output,   Does.Contain("Use `dotnet linq2db skill` or `dotnet linq2db skills`"));
 				Assert.That(result.Output,   Does.Contain(@"dotnet linq2db skill > "".\.agents\skills\linq2db-cli\SKILL.md"""));
