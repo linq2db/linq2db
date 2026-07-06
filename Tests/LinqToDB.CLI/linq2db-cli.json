@@ -32,6 +32,11 @@
 		"provider"        : "Firebird",
 		"connectionString": "DataSource=localhost;Port=3050;Database=/firebird/data/testdb50.fdb;User Id=sysdba;Password=masterkey;charset=UTF8;wirecrypt=disabled"
 	},
+	"SQLite": {
+		"provider"        : "SQLite",
+		"providerLocation": "..\\..\\.build\\bin\\LinqToDB\\net10.0\\linq2db.dll",
+		"connectionString": "Data Source=:memory:"
+	},
 	"MySql": {
 		"provider"        : "MySql",
 		"providerLocation": "%NUGET_PACKAGES%\\mysql.data\\9.4.0\\lib\\net8.0\\MySql.Data.dll",

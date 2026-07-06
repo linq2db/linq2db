@@ -390,14 +390,15 @@ Provider could be downloaded from:
 			}
 
 			var currentDirectory = Environment.CurrentDirectory;
-			var providerDirectory = Path.GetDirectoryName(Path.GetFullPath(_settings.ProviderLocation));
+			var providerLocation = Path.GetFullPath(_settings.ProviderLocation);
+			var providerDirectory = Path.GetDirectoryName(providerLocation);
 
 			try
 			{
 				if (!string.IsNullOrEmpty(providerDirectory))
 					Environment.CurrentDirectory = providerDirectory;
 
-				var assembly = new ExternalProviderLoadContext(providerDirectory).LoadFromAssemblyPath(Path.GetFullPath(_settings.ProviderLocation));
+				var assembly = new ExternalProviderLoadContext(providerDirectory).LoadFromAssemblyPath(providerLocation);
 
 				if (IsDB2FamilyProvider(_settings.Provider))
 				{
