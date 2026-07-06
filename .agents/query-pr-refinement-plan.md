@@ -33,15 +33,15 @@ Done when: code, tests, help, and `SKILL.md` no longer imply strict SQL safety g
 
 ## Phase 2: Query Contract
 
-Status: pending
+Status: completed
 
 Clarify that `query` is not a general SQL execution command.
 
-- [ ] Remove DDL examples from common examples.
-- [ ] Add explicit documentation: `unsafeSql` bypasses the read-only guard only; it does not turn `query` into a general DDL/DML command runner.
-- [ ] Document future `execute` workflow as the right home for general DDL/DML execution.
-- [ ] Keep multiple statements forbidden regardless of `unsafeSql`.
-- [ ] Update PR body after documentation changes.
+- [x] Remove DDL examples from common examples.
+- [x] Add explicit documentation: `unsafeSql` bypasses the read-only guard only; it does not turn `query` into a general DDL/DML command runner.
+- [x] Document future `execute` workflow as the right home for general DDL/DML execution.
+- [x] Keep multiple statements forbidden regardless of `unsafeSql`.
+- [x] Leave PR body alignment to Phase 13.
 
 Done when: `query` is documented as result-set oriented everywhere.
 

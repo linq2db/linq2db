@@ -1120,10 +1120,10 @@ namespace Tests.LinqToDB.CLI
 			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("dotnet linq2db query <options> : execute SQL query so agents can analyze code together with live database data"));
+				Assert.That(result.Output,   Does.Contain("dotnet linq2db query <options> : execute read-oriented SQL query so agents can analyze code together with live database data"));
 				Assert.That(result.Output,   Does.Contain("dotnet linq2db scaffold <options> : generate database data model classes from database schema"));
 				Assert.That(result.Output,   Does.Contain("dotnet linq2db query --provider SQLite --connection-string \"Data Source=data.db\" --sql \"select * from Person\""));
-				Assert.That(result.Output,   Does.Contain("execute SQL query against SQLite database and write JSON result to console"));
+				Assert.That(result.Output,   Does.Contain("execute read-oriented SQL query against SQLite database and write JSON result to console"));
 			}
 		}
 

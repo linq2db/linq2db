@@ -4,7 +4,8 @@ Use `dotnet linq2db` to run linq2db command-line tools.
 
 ## Query Command
 
-Use `dotnet linq2db query` to execute a SQL query against a database supported by linq2db.
+Use `dotnet linq2db query` to execute a read-oriented SQL query against a database supported by linq2db.
+`query` is a result-set-oriented database inspection command. It is intended for `SELECT` and other read-oriented SQL that returns rows for analysis. It is not a general DDL/DML command runner.
 The core value proposition is that an agent can analyze your code together with data from your database.
 
 Primary scenarios:
@@ -12,7 +13,7 @@ Primary scenarios:
 - Analyze application code together with live database data to investigate performance bottlenecks, data distribution issues, slow workflows, or suspicious production-like behavior.
 - Let business analysts and domain experts ask code-aware questions that also depend on real database state, reference data, or business data samples.
 - Prepare regression tests for bugs found in real data by querying the database first and then generating focused test cases, fixtures, or seed data.
-- Support synchronous development of code and a development database: create or modify a table in a dev database, then immediately update mappings, DTOs, projections, or query code.
+- Support synchronous development of code and a development database by inspecting recently changed schema/data and then updating mappings, DTOs, projections, or query code.
 - Inspect schema and data shape before changing code, such as checking nullable values, enum-like columns, outliers, orphaned records, duplicates, and migration readiness.
 - Compare expected business rules in code with actual persisted data to find data quality issues or rule drift.
 - Generate documentation or diagnostics from database-backed facts, such as row counts, reference-data coverage, lookup values, and examples of real records.
@@ -115,8 +116,10 @@ Safety:
 - Single-statement execution is a hard command contract for all providers. SQL Server is checked with ScriptDom AST; other providers currently use a generic best-effort validator until provider-specific parsers are added.
 - If an agent needs to execute several independent operations, it should run several separate `query` commands.
 - Multi-statement workflows that rely on session state, such as temporary tables, are not supported yet.
-- The query command is intended for read-only SQL.
+- The query command is intended for read-oriented SQL that returns a result set.
 - DML, DDL, and `EXEC` are rejected before execution unless unsafe SQL is explicitly allowed.
+- `unsafeSql` only controls the read-only guardrail. It does not change the `query` command contract into a general DDL/DML execution workflow.
+- General DDL/DML execution belongs to a future dedicated `execute` workflow.
 - SQL Server queries are validated using the SQL Server ScriptDom parser.
 - Other providers use a generic read-only validator.
 - `unsafeSql: "deny"` rejects unsafe SQL. This is the default.
@@ -145,7 +148,6 @@ dotnet linq2db query --config query.json --profile uat --sql-file query.sql
 dotnet linq2db query --config query.json --profile uat --user readonly_user --password secret --sql "select * from Person"
 dotnet linq2db query --config query.json --profile uat --output json-table --sql "select Id, Id from Person"
 dotnet linq2db query --config query.json --profile uat --max-rows 100 --sql "select * from Person"
-dotnet linq2db query --config query.json --profile dev --allow-unsafe-sql --sql "create table Test(Id int)"
 ```
 
 ## Scaffold Command

@@ -71,18 +71,18 @@ namespace LinqToDB.CommandLine
 				true,
 				false,
 				"<options>",
-				"execute SQL query so agents can analyze code together with live database data",
+				"execute read-oriented SQL query so agents can analyze code together with live database data",
 				[
 					new("dotnet linq2db query --provider SQLite --connection-string \"Data Source=data.db\" --sql \"select * from Person\"",
-						"executes specified SQL query and writes JSON result to console"),
+						"executes specified read-oriented SQL query and writes JSON result to console"),
 					new("dotnet linq2db query --provider SQLite --connection-string \"Data Source=data.db\" --sql-file query.sql",
-						"executes SQL query from file and writes JSON result to console"),
+						"executes read-oriented SQL query from file and writes JSON result to console"),
 					new("dotnet linq2db query --config query.json --profile uat --command-timeout 30 --sql-file query.sql",
-						"executes SQL query with a command timeout override"),
+						"executes read-oriented SQL query with a command timeout override"),
 					new("dotnet linq2db query --config query.json --profile uat --user readonly --password secret --sql-file query.sql",
-						"executes SQL query using connection settings from specified configuration profile"),
+						"executes read-oriented SQL query using connection settings from specified configuration profile"),
 					new("dotnet linq2db query --provider SQLite --connection-string \"Data Source=data.db\" --output csv --output-file result.csv --sql \"select * from Person\"",
-						"executes specified SQL query and writes CSV result to file"),
+						"executes specified read-oriented SQL query and writes CSV result to file"),
 				])
 		{
 			AddOption(_configurationOptions, _config);
