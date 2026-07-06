@@ -476,9 +476,9 @@ namespace LinqToDB.CommandLine
 				QueryActualFieldType.DateTimeOffset => ((DateTimeOffset)value).ToString("O", CultureInfo.InvariantCulture),
 				QueryActualFieldType.TimeSpan       => ((TimeSpan)value).ToString("c", CultureInfo.InvariantCulture),
 				QueryActualFieldType.Guid           => (value is SqlGuid sqlGuid ? sqlGuid.Value : (Guid)value).ToString("D"),
-				QueryActualFieldType.Bytes          => Convert.ToBase64String((byte[])value),
-				QueryActualFieldType.SqlBinary      => Convert.ToBase64String(((SqlBinary)value).Value),
-				QueryActualFieldType.SqlBytes       => Convert.ToBase64String(((SqlBytes)value).Value),
+				QueryActualFieldType.Bytes          => ConvertBytesToString((byte[])value),
+				QueryActualFieldType.SqlBinary      => ConvertBytesToString(((SqlBinary)value).Value),
+				QueryActualFieldType.SqlBytes       => ConvertBytesToString(((SqlBytes)value).Value),
 				QueryActualFieldType.SqlChars       => new string(((SqlChars)value).Value),
 				QueryActualFieldType.SqlString      => ((SqlString)value).Value,
 				QueryActualFieldType.SqlXml         => ((SqlXml)value).Value,
@@ -486,6 +486,11 @@ namespace LinqToDB.CommandLine
 				QueryActualFieldType.SqlVectorHalf  => ConvertVectorToString(((SqlVector<Half>) value).Memory.ToArray()),
 				_                                   => Convert.ToString(value, CultureInfo.InvariantCulture),
 			};
+		}
+
+		static string ConvertBytesToString(byte[] bytes)
+		{
+			return "0x" + Convert.ToHexString(bytes);
 		}
 
 		static string ConvertVectorToString<T>(T[] vector)
@@ -520,7 +525,7 @@ namespace LinqToDB.CommandLine
 
 		static async Task WriteCsvValue(TextWriter output, string value, CancellationToken cancellationToken)
 		{
-			if (value.IndexOfAny([',', '"', '\r', '\n']) < 0)
+			if (value.Length > 0 && value.IndexOfAny([',', '"', '\r', '\n']) < 0)
 			{
 				await output.WriteAsync(value.AsMemory(), cancellationToken).ConfigureAwait(false);
 				return;

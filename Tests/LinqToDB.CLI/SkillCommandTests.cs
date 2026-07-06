@@ -39,7 +39,7 @@ namespace Tests.LinqToDB.CLI
 				Assert.That(result.Output,   Does.Contain("best-effort guardrails intended to help avoid agent mistakes"));
 				Assert.That(result.Output,   Does.Contain("Query output reads database values using .NET `DbDataReader.GetProviderSpecificValue`"));
 				Assert.That(result.Output,   Does.Contain("Current special provider-specific value handling is focused on SQL Server types"));
-				Assert.That(result.Output,   Does.Contain("`byte[]` values are emitted as base64 strings"));
+				Assert.That(result.Output,   Does.Contain("Binary values are emitted using SQL-style hexadecimal notation like `0x010203`"));
 				Assert.That(result.Output,   Does.Contain("Use `dotnet linq2db skill` or `dotnet linq2db skills`"));
 				Assert.That(result.Output,   Does.Contain(@"dotnet linq2db skill > "".\.agents\skills\linq2db-cli\SKILL.md"""));
 			}

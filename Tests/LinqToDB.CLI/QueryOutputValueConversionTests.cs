@@ -2,6 +2,7 @@ using System;
 using System.Data;
 using System.Data.Common;
 using System.Reflection;
+using System.Data.SqlTypes;
 
 using LinqToDB.CommandLine;
 
@@ -47,8 +48,28 @@ namespace Tests.LinqToDB.CLI
 				Assert.That(ReadFieldAsString(reader, "DateTime", 6), Is.EqualTo("2026-07-05T12:34:56.0000000"));
 				Assert.That(ReadFieldAsString(reader, "TimeSpan", 7), Is.EqualTo("12:34:56"));
 				Assert.That(ReadFieldAsString(reader, "None", 8), Is.EqualTo("01234567-89ab-cdef-0123-456789abcdef"));
-				Assert.That(ReadFieldAsString(reader, "Bytes", 9), Is.EqualTo("AQID"));
+				Assert.That(ReadFieldAsString(reader, "Bytes", 9), Is.EqualTo("0x010203"));
 				Assert.That(reader.IsDBNull(10), Is.True);
+			}
+		}
+
+		[Test]
+		public void ReadFieldAsStringConvertsProviderSpecificBinaryTypes()
+		{
+			var table = new DataTable();
+
+			table.Columns.Add("SqlBinaryValue", typeof(SqlBinary));
+			table.Columns.Add("SqlBytesValue",  typeof(SqlBytes));
+			table.Rows.Add(new SqlBinary([1, 2, 3]), new SqlBytes([4, 5, 6]));
+
+			using var reader = table.CreateDataReader();
+
+			Assert.That(reader.Read(), Is.True);
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(ReadFieldAsString(reader, "SqlBinary", 0), Is.EqualTo("0x010203"));
+				Assert.That(ReadFieldAsString(reader, "SqlBytes",  1), Is.EqualTo("0x040506"));
 			}
 		}
 

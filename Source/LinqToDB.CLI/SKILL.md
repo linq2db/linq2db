@@ -95,7 +95,7 @@ Output:
 - `--output-file <file>` writes command output to a file.
 - Existing output files are not replaced by default. Use `--overwrite` only when the user explicitly wants to replace the file.
 - When `--output-file` is not specified, output is written to stdout.
-- Query output reads database values using .NET `DbDataReader.GetProviderSpecificValue` and serializes them as strings using invariant culture and provider-specific safe formatting. `byte[]` values are emitted as base64 strings. `NULL` values are emitted as JSON `null`.
+- Query output reads database values using .NET `DbDataReader.GetProviderSpecificValue` and serializes them as strings using invariant culture and provider-specific safe formatting. Binary values are emitted using SQL-style hexadecimal notation like `0x010203`. `NULL` values are emitted as JSON `null`.
 - Current special provider-specific value handling is focused on SQL Server types validated so far. Other providers still use `GetProviderSpecificValue`, but provider-specific formatting coverage should be expanded and validated per provider before relying on unusual provider-specific types.
 - For `json` output, projected column names must be unique because rows are emitted as JSON objects. The agent is responsible for adding explicit SQL aliases when a query could produce duplicate names.
 - Duplicate column names are rejected for `json` output. Use explicit aliases or switch to duplicate-safe `json-table` output when column metadata and duplicate names must be preserved.

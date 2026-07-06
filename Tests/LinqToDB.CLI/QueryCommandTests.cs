@@ -370,6 +370,21 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task QueryCsvEscapesSpecialCharacters()
+		{
+			var environment = new TestCliEnvironment();
+			var result      = await RunCli(environment, "query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--output", "csv", "--output-file", "query.csv", "--sql", "select 'a,b' as [Comma,Name], 'a\"b' as QuoteValue, 'a' || char(10) || 'b' as MultilineValue, '' as EmptyValue, null as NullValue");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.Zero);
+				Assert.That(result.Output,   Is.Empty);
+				Assert.That(result.Error,    Is.Empty);
+				Assert.That(environment.Files["query.csv"], Is.EqualTo($"\"Comma,Name\",QuoteValue,MultilineValue,EmptyValue,NullValue{Environment.NewLine}\"a,b\",\"a\"\"b\",\"a\nb\",\"\",{Environment.NewLine}"));
+			}
+		}
+
+		[Test]
 		public async Task QueryRejectsExistingOutputFileWithoutOverwrite()
 		{
 			var environment = new TestCliEnvironment();
