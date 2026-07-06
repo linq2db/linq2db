@@ -18,10 +18,14 @@ namespace LinqToDB.Internal.Linq
 			ParametersContext = parametersContext;
 			Expressions       = expressions;
 			QueryNumber       = queryNumber;
-			Parameters        = parameters;
-			// Wrap the legacy harvester results array in an execution context. Behavior-neutral: the context adopts the same
-			// array reference, so Preambles returns it unchanged and the mapper reads the same per-step results.
-			_executionContext = harvesters is null ? null : new SqlCommandExecutionContext(harvesters);
+			// Re-wrap the transport arrays (compiled-query parameters + legacy harvester results) into one execution context.
+			// Behavior-neutral: the context adopts the same array references, so Preambles/Parameters surface them unchanged
+			// and the mapper reads the same values. Allocate only when there is something to carry — regular queries pass both
+			// null (compiled-query parameters are null there), so they stay context-free on the hot path.
+			_executionContext =
+				harvesters is not null ? new SqlCommandExecutionContext(harvesters, parameters) :
+				parameters is not null ? new SqlCommandExecutionContext(0, parameters)          :
+				null;
 		}
 
 		protected readonly Query    Query;
@@ -31,7 +35,6 @@ namespace LinqToDB.Internal.Linq
 		public          IDataContext      DataContext       { get; }
 		public          IDataContext      ParametersContext { get; }
 		public          IQueryExpressions Expressions       { get; }
-		public          object?[]?        Parameters        { get; }
 		public          object?[]?        Preambles         => _executionContext?.Results;
 		public          SqlCommandExecutionContext? ExecutionContext => _executionContext;
 		public abstract Expression?       MapperExpression  { get; set; }
@@ -64,7 +67,7 @@ namespace LinqToDB.Internal.Linq
 		{
 			var parameterValues = new SqlParameterValues();
 
-			QueryRunner.SetParameters(Query, Expressions, ParametersContext, Parameters, parameterValues, ExecutionContext);
+			QueryRunner.SetParameters(Query, Expressions, ParametersContext, parameterValues, ExecutionContext);
 
 			SetQuery(parameterValues, forGetSqlText);
 		}

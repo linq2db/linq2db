@@ -54,7 +54,6 @@ namespace LinqToDB.Internal.Linq
 
 		IQueryExpressions Expressions      { get; }
 		IDataContext      DataContext      { get; }
-		object?[]?        Parameters       { get; }
 		object?[]?        Preambles        { get; }
 
 		/// <summary>

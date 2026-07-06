@@ -152,14 +152,14 @@ namespace LinqToDB.Internal.Linq.Builder
 		// the query renders as a single command (GetResultFromReader != null); otherwise it self-executes.
 		sealed class DetachedHarvester<T>(Query<T> query) : Harvester, IStepMaterializer
 		{
-			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context)
+			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context)
 			{
-				return query.GetResultEnumerable(dataContext, expressions, parameters, context).ToList();
+				return query.GetResultEnumerable(dataContext, expressions, context).ToList();
 			}
 
-			public override async Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context, CancellationToken cancellationToken)
+			public override async Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context, CancellationToken cancellationToken)
 			{
-				return await query.GetResultEnumerable(dataContext, expressions, parameters, context).ToListAsync(cancellationToken).ConfigureAwait(false);
+				return await query.GetResultEnumerable(dataContext, expressions, context).ToListAsync(cancellationToken).ConfigureAwait(false);
 			}
 
 			public override void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values)
@@ -177,23 +177,23 @@ namespace LinqToDB.Internal.Linq.Builder
 				QueryRunner.SetParameters(query, expressions, dataContext, parameters, values);
 			}
 
-			public object MaterializeFromReader(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context, DbDataReader dataReader)
-				=> query.GetResultFromReader!(dataContext, expressions, parameters, context, dataReader).ToList();
+			public object MaterializeFromReader(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context, DbDataReader dataReader)
+				=> query.GetResultFromReader!(dataContext, expressions, context, dataReader).ToList();
 
-			public async Task<object> MaterializeFromReaderAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context, DbDataReader dataReader, CancellationToken cancellationToken)
+			public async Task<object> MaterializeFromReaderAsync(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context, DbDataReader dataReader, CancellationToken cancellationToken)
 			{
-				return await query.GetResultFromReader!(dataContext, expressions, parameters, context, dataReader).ToListAsync(cancellationToken).ConfigureAwait(false);
+				return await query.GetResultFromReader!(dataContext, expressions, context, dataReader).ToListAsync(cancellationToken).ConfigureAwait(false);
 			}
 		}
 
 		sealed class Harvester<TKey, T>(Query<KeyDetailEnvelope<TKey, T>> query) : Harvester, IStepMaterializer
 			where TKey : notnull
 		{
-			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context)
-				=> BuildResult(query.GetResultEnumerable(dataContext, expressions, parameters, context));
+			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context)
+				=> BuildResult(query.GetResultEnumerable(dataContext, expressions, context));
 
-			public override Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context, CancellationToken cancellationToken)
-				=> BuildResultAsync(query.GetResultEnumerable(dataContext, expressions, parameters, context), cancellationToken);
+			public override Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context, CancellationToken cancellationToken)
+				=> BuildResultAsync(query.GetResultEnumerable(dataContext, expressions, context), cancellationToken);
 
 			public bool CanCombine => query.GetResultFromReader != null;
 
@@ -205,11 +205,11 @@ namespace LinqToDB.Internal.Linq.Builder
 				QueryRunner.SetParameters(query, expressions, dataContext, parameters, values);
 			}
 
-			public object MaterializeFromReader(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context, DbDataReader dataReader)
-				=> BuildResult(query.GetResultFromReader!(dataContext, expressions, parameters, context, dataReader));
+			public object MaterializeFromReader(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context, DbDataReader dataReader)
+				=> BuildResult(query.GetResultFromReader!(dataContext, expressions, context, dataReader));
 
-			public Task<object> MaterializeFromReaderAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context, DbDataReader dataReader, CancellationToken cancellationToken)
-				=> BuildResultAsync(query.GetResultFromReader!(dataContext, expressions, parameters, context, dataReader), cancellationToken);
+			public Task<object> MaterializeFromReaderAsync(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context, DbDataReader dataReader, CancellationToken cancellationToken)
+				=> BuildResultAsync(query.GetResultFromReader!(dataContext, expressions, context, dataReader), cancellationToken);
 
 			// Both the sequential (GetResultEnumerable) and combined (GetResultFromReader) paths bucket the same
 			// KeyDetailEnvelope stream into a HarvesterResult; only the source enumerable differs.

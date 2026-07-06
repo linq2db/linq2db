@@ -1422,7 +1422,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			// Override GetResultEnumerable (no SetRunQuery: CteUnion uses path-based reconstruction,
 			// not column indices, so the standard mapper is never needed)
-			query.GetResultEnumerable = (db, expr, ps, harvesterResults) =>
+			query.GetResultEnumerable = (db, expr, harvesterResults) =>
 			{
 				// Create HarvesterResults for child branches
 				var childResults = CreateCteUnionBuckets<TKey>(branchCount0, nestedSetIds0);
@@ -1432,7 +1432,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					harvesterResults.SetResult(harvesterIdx0, childResults);
 
 				// Execute the UNION ALL query and buffer all rows
-				var carriers = unionQuery.GetResultEnumerable(db, expr, ps, harvesterResults).ToList();
+				var carriers = unionQuery.GetResultEnumerable(db, expr, harvesterResults).ToList();
 
 				if (nestedProcessingOrder0 != null)
 				{
@@ -1458,7 +1458,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				// single synthetic row from default(TCarrier).
 				return new CteUnionResultEnumerable<T, TCarrier>(
 					carriers, setIdExtractor, parentSetId0, synthesizeParent0,
-					expr, ps, parentMapper, harvesterResults!);
+					expr, parentMapper, harvesterResults!);
 			};
 
 			// Apply element-selection semantics from the calling sequence context.
@@ -1475,7 +1475,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			readonly int                                                           _parentSetId;
 			readonly bool                                                          _synthesizeParent;
 			readonly IQueryExpressions                                             _expr;
-			readonly object?[]?                                                    _ps;
 			readonly Func<IQueryExpressions, object?[]?, TCarrier, SqlCommandExecutionContext?, T>  _parentMapper;
 			readonly SqlCommandExecutionContext?                                  _harvesterResults;
 
@@ -1485,7 +1484,6 @@ namespace LinqToDB.Internal.Linq.Builder
 				int                                                                parentSetId,
 				bool                                                               synthesizeParent,
 				IQueryExpressions                                                  expr,
-				object?[]?                                                         ps,
 				Func<IQueryExpressions, object?[]?, TCarrier, SqlCommandExecutionContext?, T>       parentMapper,
 				SqlCommandExecutionContext?                                        harvesterResults)
 			{
@@ -1494,7 +1492,6 @@ namespace LinqToDB.Internal.Linq.Builder
 				_parentSetId      = parentSetId;
 				_synthesizeParent = synthesizeParent;
 				_expr             = expr;
-				_ps               = ps;
 				_parentMapper     = parentMapper;
 				_harvesterResults  = harvesterResults;
 			}
@@ -1506,14 +1503,14 @@ namespace LinqToDB.Internal.Linq.Builder
 					// No parent branch contributes carriers. The constructed-root projection has
 					// no SQL-driven scalars, so parentMapper is invoked once with default(TCarrier);
 					// the only substitutions are HarvesterResult lookups.
-					yield return _parentMapper(_expr, _ps, default!, _harvesterResults);
+					yield return _parentMapper(_expr, _harvesterResults?.Parameters, default!, _harvesterResults);
 					yield break;
 				}
 
 				foreach (var carrier in _carriers)
 				{
 					if (_getSetId(carrier) == _parentSetId)
-						yield return _parentMapper(_expr, _ps, carrier, _harvesterResults);
+						yield return _parentMapper(_expr, _harvesterResults?.Parameters, carrier, _harvesterResults);
 				}
 			}
 
@@ -1595,10 +1592,10 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			public override bool IsInlined => true;
 
-			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context)
+			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context)
 				=> Array.Empty<object?>();
 
-			public override Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context, CancellationToken cancellationToken)
+			public override Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context, CancellationToken cancellationToken)
 				=> Task.FromResult<object>(Array.Empty<object?>());
 
 			public override void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values) { }
@@ -1737,8 +1734,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			// Self-executing path (a non-combinable UNION-ALL harvester: separate round-trip). Same bucketing as the
 			// combined-reader path below; only the carrier source differs.
-			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context)
-				=> BuildResult(_query.GetResultEnumerable(dataContext, expressions, parameters, context), context);
+			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context)
+				=> BuildResult(_query.GetResultEnumerable(dataContext, expressions, context), context);
 
 			// IStepMaterializer: the UNION-ALL is a single statement, so it can join the combined command as one Reader step
 			// whose result set is bucketed off the shared reader instead of a separate round-trip.
@@ -1752,11 +1749,11 @@ namespace LinqToDB.Internal.Linq.Builder
 				QueryRunner.SetParameters(_query, expressions, dataContext, parameters, values);
 			}
 
-			public object MaterializeFromReader(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context, DbDataReader dataReader)
-				=> BuildResult(_query.GetResultFromReader!(dataContext, expressions, parameters, context, dataReader), context);
+			public object MaterializeFromReader(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context, DbDataReader dataReader)
+				=> BuildResult(_query.GetResultFromReader!(dataContext, expressions, context, dataReader), context);
 
-			public Task<object> MaterializeFromReaderAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context, DbDataReader dataReader, CancellationToken cancellationToken)
-				=> BuildResultAsync(_query.GetResultFromReader!(dataContext, expressions, parameters, context, dataReader), context, cancellationToken);
+			public Task<object> MaterializeFromReaderAsync(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context, DbDataReader dataReader, CancellationToken cancellationToken)
+				=> BuildResultAsync(_query.GetResultFromReader!(dataContext, expressions, context, dataReader), context, cancellationToken);
 
 			// Buckets the carrier stream (setId-routed) into the N-branch HarvesterResults; only the source enumerable differs
 			// between the self-executing (GetResultEnumerable) and combined-reader (GetResultFromReader) paths. Results are
@@ -1791,9 +1788,9 @@ namespace LinqToDB.Internal.Linq.Builder
 				return results;
 			}
 
-			public override Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context,
+			public override Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context,
 				CancellationToken cancellationToken)
-				=> BuildResultAsync(_query.GetResultEnumerable(dataContext, expressions, parameters, context), context, cancellationToken);
+				=> BuildResultAsync(_query.GetResultEnumerable(dataContext, expressions, context), context, cancellationToken);
 
 			// Async sibling of BuildResult.
 			async Task<object> BuildResultAsync(IAsyncEnumerable<TCarrier> carriers, SqlCommandExecutionContext? context, CancellationToken cancellationToken)

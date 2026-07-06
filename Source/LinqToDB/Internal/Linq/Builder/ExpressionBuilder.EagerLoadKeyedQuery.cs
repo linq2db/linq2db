@@ -877,17 +877,17 @@ namespace LinqToDB.Internal.Linq.Builder
 				_query = query;
 			}
 
-			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context)
+			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context)
 			{
-				var keys = SortKeysDeterministically(_query.GetResultEnumerable(dataContext, expressions, parameters, context).ToArray());
+				var keys = SortKeysDeterministically(_query.GetResultEnumerable(dataContext, expressions, context).ToArray());
 				// The child reads its parent keys from the dedicated KeysDataIndex slot. See BuildKeyedQueryHarvesterAttached.
 				context?.SetResult(KeysDataIndex, keys);
 				return keys;
 			}
 
-			public override async Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context, CancellationToken cancellationToken)
+			public override async Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context, CancellationToken cancellationToken)
 			{
-				var keys = SortKeysDeterministically(await _query.GetResultEnumerable(dataContext, expressions, parameters, context)
+				var keys = SortKeysDeterministically(await _query.GetResultEnumerable(dataContext, expressions, context)
 					.ToArrayAsync(cancellationToken).ConfigureAwait(false));
 				context?.SetResult(KeysDataIndex, keys);
 				return keys;
@@ -931,7 +931,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				_keysDataIndex = keysDataIndex;
 			}
 
-			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context)
+			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context)
 			{
 				var keys   = context is null ? null : (TKey[]?)context.GetResult(_keysDataIndex);
 				var result = new HarvesterResult<TKey, T>();
@@ -940,7 +940,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (keys is not { Length: > 0 })
 					return result;
 
-				foreach (var e in _query.GetResultEnumerable(dataContext, expressions, parameters, context))
+				foreach (var e in _query.GetResultEnumerable(dataContext, expressions, context))
 				{
 					result.Add(e.Key, e.Detail);
 				}
@@ -948,7 +948,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				return result;
 			}
 
-			public override async Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context, CancellationToken cancellationToken)
+			public override async Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context, CancellationToken cancellationToken)
 			{
 				var keys   = context is null ? null : (TKey[]?)context.GetResult(_keysDataIndex);
 				var result = new HarvesterResult<TKey, T>();
@@ -957,7 +957,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (keys is not { Length: > 0 })
 					return result;
 
-				await foreach (var e in _query.GetResultEnumerable(dataContext, expressions, parameters, context)
+				await foreach (var e in _query.GetResultEnumerable(dataContext, expressions, context)
 					.WithCancellation(cancellationToken)
 					.ConfigureAwait(false))
 				{
@@ -1146,11 +1146,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			// 7. Override GetResultEnumerable to iterate buffer
 			var bufferHarvesterIdx = firstKeyIdx;
 
-			query.GetResultEnumerable = (db, expr, ps, harvesterResults) =>
+			query.GetResultEnumerable = (db, expr, harvesterResults) =>
 			{
 				using var _ = ActivityService.Start(ActivityID.GetIEnumerable);
 				var buffer = (List<TBuffer>)harvesterResults!.GetResult(bufferHarvesterIdx)!;
-				return new BufferResultEnumerable<TBuffer, T>(buffer, expr, ps, reconstructionFunc, harvesterResults);
+				return new BufferResultEnumerable<TBuffer, T>(buffer, expr, reconstructionFunc, harvesterResults);
 			};
 
 			// 8. Apply element-selection semantics from the calling sequence context.
@@ -1346,8 +1346,8 @@ namespace LinqToDB.Internal.Linq.Builder
 		sealed class NoOpHarvester : Harvester
 		{
 			public static readonly NoOpHarvester Instance = new();
-			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context) => null!;
-			public override Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context, CancellationToken cancellationToken) => Task.FromResult<object>(null!);
+			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context) => null!;
+			public override Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context, CancellationToken cancellationToken) => Task.FromResult<object>(null!);
 			public override void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values) { }
 		}
 
@@ -1363,8 +1363,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public KeysDataSlotHarvester(int index) => _index = index;
 
-			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context) => context?.GetResult(_index)!;
-			public override Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context, CancellationToken cancellationToken) => Task.FromResult(context?.GetResult(_index)!);
+			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context) => context?.GetResult(_index)!;
+			public override Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context, CancellationToken cancellationToken) => Task.FromResult(context?.GetResult(_index)!);
 			public override void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values) { }
 		}
 
@@ -1381,11 +1381,11 @@ namespace LinqToDB.Internal.Linq.Builder
 				_keysHarvesters = keysHarvesters;
 			}
 
-			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context)
+			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context)
 			{
 				// Copy parameter accessors lazily — they may not be finalized at construction time.
 				_bufferQuery.SetParametersAccessors(_sourceQuery.ParameterAccessors);
-				var buffer = _bufferQuery.GetResultEnumerable(dataContext, expressions, parameters, context).ToList();
+				var buffer = _bufferQuery.GetResultEnumerable(dataContext, expressions, context).ToList();
 				var ilist  = (IList)buffer;
 				// Buffer mode always runs on the sequential path with a live context; guard defensively so a
 				// null context (e.g. SQL-text generation) can't NRE — keys simply aren't forwarded then.
@@ -1398,10 +1398,10 @@ namespace LinqToDB.Internal.Linq.Builder
 				return buffer;
 			}
 
-			public override async Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context, CancellationToken cancellationToken)
+			public override async Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context, CancellationToken cancellationToken)
 			{
 				_bufferQuery.SetParametersAccessors(_sourceQuery.ParameterAccessors);
-				var buffer = await _bufferQuery.GetResultEnumerable(dataContext, expressions, parameters, context)
+				var buffer = await _bufferQuery.GetResultEnumerable(dataContext, expressions, context)
 					.ToListAsync(cancellationToken).ConfigureAwait(false);
 				var ilist = (IList)buffer;
 				if (context != null)
@@ -1423,20 +1423,17 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			readonly List<TBuffer>                                        _buffer;
 			readonly IQueryExpressions                                    _expr;
-			readonly object?[]?                                           _ps;
 			readonly Func<IQueryExpressions, object?[]?, TBuffer, SqlCommandExecutionContext?, T> _reconstruct;
 			readonly SqlCommandExecutionContext?                         _context;
 
 			public BufferResultEnumerable(
 				List<TBuffer>                                                buffer,
 				IQueryExpressions                                            expr,
-				object?[]?                                                   ps,
 				Func<IQueryExpressions, object?[]?, TBuffer, SqlCommandExecutionContext?, T>  reconstruct,
 				SqlCommandExecutionContext?                                  context)
 			{
 				_buffer      = buffer;
 				_expr        = expr;
-				_ps          = ps;
 				_reconstruct = reconstruct;
 				_context     = context;
 			}
@@ -1447,7 +1444,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				// execution context must never receive null, so substitute an empty context when none was supplied.
 				var context = _context ?? new SqlCommandExecutionContext(0);
 				foreach (var row in _buffer)
-					yield return _reconstruct(_expr, _ps, row, context);
+					yield return _reconstruct(_expr, context.Parameters, row, context);
 			}
 
 			IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();

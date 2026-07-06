@@ -148,15 +148,18 @@ namespace LinqToDB.Internal.SqlProvider
 	/// </summary>
 	public sealed class SqlCommandExecutionContext
 	{
-		readonly object?[] _results;
-		readonly bool[]    _executed;
+		readonly object?[]  _results;
+		readonly bool[]     _executed;
+		readonly object?[]? _parameters;
 
 		/// <summary>Creates a context sized for <paramref name="stepCount"/> steps.</summary>
 		/// <param name="stepCount">Number of steps in the scenario.</param>
-		public SqlCommandExecutionContext(int stepCount)
+		/// <param name="parameters">The compiled-query argument array, or <see langword="null"/> for a regular query.</param>
+		public SqlCommandExecutionContext(int stepCount, object?[]? parameters = null)
 		{
-			_results  = new object?[stepCount];
-			_executed = new bool[stepCount];
+			_results    = new object?[stepCount];
+			_executed   = new bool[stepCount];
+			_parameters = parameters;
 		}
 
 		/// <summary>
@@ -164,16 +167,25 @@ namespace LinqToDB.Internal.SqlProvider
 		/// same array reference (<see cref="Results"/> returns it as-is) with every slot marked executed.
 		/// </summary>
 		/// <param name="results">The results array to adopt.</param>
-		internal SqlCommandExecutionContext(object?[] results)
+		/// <param name="parameters">The compiled-query argument array, or <see langword="null"/> for a regular query.</param>
+		internal SqlCommandExecutionContext(object?[] results, object?[]? parameters = null)
 		{
-			_results  = results;
-			_executed = new bool[results.Length];
+			_results    = results;
+			_executed   = new bool[results.Length];
+			_parameters = parameters;
 			for (var i = 0; i < _executed.Length; i++)
 				_executed[i] = true;
 		}
 
 		/// <summary>The backing results array. Exposed so the shim <c>IQueryRunner.Preambles</c> can surface it unchanged.</summary>
 		internal object?[] Results => _results;
+
+		/// <summary>
+		/// The compiled-query argument array (<see langword="null"/> for a regular query). Carried on the context so it need
+		/// not be threaded as a separate <c>object?[]?</c> argument alongside the context; the row mapper and parameter
+		/// accessors read it from here.
+		/// </summary>
+		public object?[]? Parameters => _parameters;
 
 		/// <summary>Cached reflection handle for <see cref="GetResult"/>, used by the row-materialization expression builders.</summary>
 		internal static readonly MethodInfo GetResultMethodInfo = typeof(SqlCommandExecutionContext).GetMethod(nameof(GetResult))!;

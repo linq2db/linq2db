@@ -716,7 +716,6 @@ namespace LinqToDB
 
 			public IDataContext      DataContext      => _dataContext!;
 			public IQueryExpressions Expressions      => _queryRunner!.Expressions;
-			public object?[]?        Parameters       => _queryRunner!.Parameters;
 			public object?[]?        Preambles        => _queryRunner!.Preambles;
 			public SqlCommandExecutionContext? ExecutionContext => _queryRunner!.ExecutionContext;
 			public Expression?       MapperExpression { get => _queryRunner!.MapperExpression; set => _queryRunner!.MapperExpression = value; }

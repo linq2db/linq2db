@@ -13,8 +13,8 @@ namespace LinqToDB.Internal.Linq
 {
 	abstract class Harvester
 	{
-		public abstract object       Execute(IDataContext      dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context);
-		public abstract Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context, CancellationToken cancellationToken);
+		public abstract object       Execute(IDataContext      dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context);
+		public abstract Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context, CancellationToken cancellationToken);
 
 		public abstract void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values);
 
@@ -31,16 +31,16 @@ namespace LinqToDB.Internal.Linq
 		/// combined-reader path materializes this harvester's result set from the shared reader via
 		/// <see cref="IStepMaterializer"/> — only combinable harvesters are ever invoked with a non-null reader.
 		/// </summary>
-		public object Harvest(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext context, DbDataReader? reader)
+		public object Harvest(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext context, DbDataReader? reader)
 			=> reader is null
-				? Execute(dataContext, expressions, parameters, context)
-				: ((IStepMaterializer)this).MaterializeFromReader(dataContext, expressions, parameters, context, reader);
+				? Execute(dataContext, expressions, context)
+				: ((IStepMaterializer)this).MaterializeFromReader(dataContext, expressions, context, reader);
 
 		/// <summary>Asynchronous sibling of <see cref="Harvest"/>.</summary>
-		public Task<object> HarvestAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext context, DbDataReader? reader, CancellationToken cancellationToken)
+		public Task<object> HarvestAsync(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext context, DbDataReader? reader, CancellationToken cancellationToken)
 			=> reader is null
-				? ExecuteAsync(dataContext, expressions, parameters, context, cancellationToken)
-				: ((IStepMaterializer)this).MaterializeFromReaderAsync(dataContext, expressions, parameters, context, reader, cancellationToken);
+				? ExecuteAsync(dataContext, expressions, context, cancellationToken)
+				: ((IStepMaterializer)this).MaterializeFromReaderAsync(dataContext, expressions, context, reader, cancellationToken);
 	}
 
 	/// <summary>
@@ -73,11 +73,11 @@ namespace LinqToDB.Internal.Linq
 		/// Materializes this harvester's result from a reader already positioned at its result set; the caller advances the
 		/// reader with <c>NextResult</c> afterwards.
 		/// </summary>
-		object MaterializeFromReader(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context, DbDataReader dataReader);
+		object MaterializeFromReader(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context, DbDataReader dataReader);
 
 		/// <summary>
 		/// Asynchronous sibling of <see cref="MaterializeFromReader"/>.
 		/// </summary>
-		Task<object> MaterializeFromReaderAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context, DbDataReader dataReader, CancellationToken cancellationToken);
+		Task<object> MaterializeFromReaderAsync(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context, DbDataReader dataReader, CancellationToken cancellationToken);
 	}
 }

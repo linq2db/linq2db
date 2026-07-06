@@ -199,11 +199,13 @@ namespace LinqToDB.Internal.Linq
 			var db    = (IDataContext)parameters[0];
 			var query = GetInfo(db, parameters);
 
-			// Compiled queries pass no eager-load preambles (see CompiledQuery.ExecuteQuery); wrap defensively so the
-			// context threading stays behavior-neutral.
-			var context = preambles is null ? null : new SqlCommandExecutionContext(preambles);
+			// A compiled query always carries its argument array; build a context to carry it (plus any eager-load
+			// preambles) so the mapper and parameter accessors read the compiled args from the context.
+			var context = preambles is null
+				? new SqlCommandExecutionContext(0, parameters)
+				: new SqlCommandExecutionContext(preambles, parameters);
 
-			return (T)query.GetElement(db, query.CompiledExpressions!, parameters, context)!;
+			return (T)query.GetElement(db, query.CompiledExpressions!, context)!;
 		}
 
 		public async Task<T> ExecuteAsync(object[] parameters, object[] preambles)
@@ -211,9 +213,11 @@ namespace LinqToDB.Internal.Linq
 			var db    = (IDataContext)parameters[0];
 			var query = GetInfo(db, parameters);
 
-			var context = preambles is null ? null : new SqlCommandExecutionContext(preambles);
+			var context = preambles is null
+				? new SqlCommandExecutionContext(0, parameters)
+				: new SqlCommandExecutionContext(preambles, parameters);
 
-			return (T)(await query.GetElementAsync(db, query.CompiledExpressions!, parameters, context, default).ConfigureAwait(false))!;
+			return (T)(await query.GetElementAsync(db, query.CompiledExpressions!, context, default).ConfigureAwait(false))!;
 		}
 	}
 }

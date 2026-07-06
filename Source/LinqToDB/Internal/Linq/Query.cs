@@ -19,8 +19,8 @@ namespace LinqToDB.Internal.Linq
 {
 	public abstract class Query
 	{
-		internal Func<IDataContext,IQueryExpressions,object?[]?,SqlCommandExecutionContext?,object?>                         GetElement      = null!;
-		internal Func<IDataContext,IQueryExpressions,object?[]?,SqlCommandExecutionContext?,CancellationToken,Task<object?>> GetElementAsync = null!;
+		internal Func<IDataContext,IQueryExpressions,SqlCommandExecutionContext?,object?>                         GetElement      = null!;
+		internal Func<IDataContext,IQueryExpressions,SqlCommandExecutionContext?,CancellationToken,Task<object?>> GetElementAsync = null!;
 
 		// Eager-aware element selection (First/Single/…), set only by FirstSingleBuilder. Unlike GetElement, these route
 		// through the combined eager engine (Query<T>.GetEagerEnumerable — one multi-result-set command when eligible,
@@ -183,13 +183,15 @@ namespace LinqToDB.Internal.Linq
 
 		internal SqlCommandExecutionContext? InitHarvesters(IDataContext dc, IQueryExpressions expressions, object?[]? ps)
 		{
+			// A query with no harvesters still needs a context when it carries compiled-query parameters (ps != null), so the
+			// mapper/parameter accessors can read them from the context. Regular queries pass ps == null here and stay context-free.
 			if (_harvesters == null)
-				return null;
+				return ps is null ? null : new SqlCommandExecutionContext(0, ps);
 
-			var context = new SqlCommandExecutionContext(_harvesters.Length);
+			var context = new SqlCommandExecutionContext(_harvesters.Length, ps);
 			for (var i = 0; i < _harvesters.Length; i++)
 			{
-				context.SetResult(i, _harvesters[i].Execute(dc, expressions, ps, context));
+				context.SetResult(i, _harvesters[i].Execute(dc, expressions, context));
 			}
 
 			return context;
@@ -198,12 +200,12 @@ namespace LinqToDB.Internal.Linq
 		internal async Task<SqlCommandExecutionContext?> InitHarvestersAsync(IDataContext dc, IQueryExpressions expressions, object?[]? ps, CancellationToken cancellationToken)
 		{
 			if (_harvesters == null)
-				return null;
+				return ps is null ? null : new SqlCommandExecutionContext(0, ps);
 
-			var context = new SqlCommandExecutionContext(_harvesters.Length);
+			var context = new SqlCommandExecutionContext(_harvesters.Length, ps);
 			for (var i = 0; i < _harvesters.Length; i++)
 			{
-				context.SetResult(i, await _harvesters[i].ExecuteAsync(dc, expressions, ps, context, cancellationToken).ConfigureAwait(false));
+				context.SetResult(i, await _harvesters[i].ExecuteAsync(dc, expressions, context, cancellationToken).ConfigureAwait(false));
 			}
 
 			return context;

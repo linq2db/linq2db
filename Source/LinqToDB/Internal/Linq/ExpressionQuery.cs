@@ -118,7 +118,7 @@ namespace LinqToDB.Internal.Linq
 			Preambles = await query.InitHarvestersAsync(DataContext, expressions, Parameters, cancellationToken)
 				.ConfigureAwait(false);
 
-			var value = await query.GetElementAsync(DataContext, expressions, Parameters, Preambles, cancellationToken)
+			var value = await query.GetElementAsync(DataContext, expressions, Preambles, cancellationToken)
 				.ConfigureAwait(false);
 
 			return (TResult)value!;
@@ -200,7 +200,7 @@ namespace LinqToDB.Internal.Linq
 				.ConfigureAwait(false);
 
 			return Query<TResult>.GetQuery(DataContext, ref expressions, out _)
-				.GetResultEnumerable(DataContext, expressions, Parameters, Preambles);
+				.GetResultEnumerable(DataContext, expressions, Preambles);
 		}
 
 		public async Task GetForEachAsync(Action<T> action, CancellationToken cancellationToken)
@@ -237,7 +237,7 @@ namespace LinqToDB.Internal.Linq
 			if (!dependsOnParameters)
 				Expression = expressions.MainExpression;
 
-			var enumerable = (IAsyncEnumerable<T>)query.GetResultEnumerable(DataContext, expressions, Parameters, Preambles);
+			var enumerable = (IAsyncEnumerable<T>)query.GetResultEnumerable(DataContext, expressions, Preambles);
 			var enumerator = enumerable.GetAsyncEnumerator(cancellationToken);
 
 			while (await enumerator.MoveNextAsync().ConfigureAwait(false))
@@ -331,7 +331,7 @@ namespace LinqToDB.Internal.Linq
 				var getElement = query.GetElement;
 				if (getElement == null)
 					throw new LinqToDBException("GetElement is not assigned by the context.");
-				return (TResult)getElement(DataContext, expressions, Parameters, Preambles)!;
+				return (TResult)getElement(DataContext, expressions, Preambles)!;
 			}
 		}
 
@@ -352,7 +352,7 @@ namespace LinqToDB.Internal.Linq
 				var getElement = query.GetElement;
 				if (getElement == null)
 					throw new LinqToDBException("GetElement is not assigned by the context.");
-				return getElement(DataContext, expressions, Parameters, Preambles);
+				return getElement(DataContext, expressions, Preambles);
 			}
 		}
 
