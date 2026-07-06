@@ -1,10 +1,12 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Data.SqlTypes;
 using System.Globalization;
 using System.IO;
 using System.Runtime.ExceptionServices;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
@@ -38,11 +40,13 @@ namespace LinqToDB.CommandLine
 			Boolean,
 			Double,
 			Single,
+			Date,
 			DateTime,
 			DateTimeOffset,
 			TimeSpan,
 			Guid,
 			Bytes,
+			ByteArray,
 			SqlBinary,
 			SqlBytes,
 			SqlChars,
@@ -472,12 +476,15 @@ namespace LinqToDB.CommandLine
 				_ when providerSpecificType == typeof(SqlDouble)          => QueryActualFieldType.Double,
 				_ when providerSpecificType == typeof(float)              => QueryActualFieldType.Single,
 				_ when providerSpecificType == typeof(SqlSingle)          => QueryActualFieldType.Single,
+				_ when providerSpecificType == typeof(DateTime) && IsDateDataType(dataTypeName) => QueryActualFieldType.Date,
+				_ when providerSpecificType == typeof(DateOnly)           => QueryActualFieldType.Date,
 				_ when providerSpecificType == typeof(DateTime)           => QueryActualFieldType.DateTime,
 				_ when providerSpecificType == typeof(SqlDateTime)        => QueryActualFieldType.DateTime,
 				_ when providerSpecificType == typeof(DateTimeOffset)     => QueryActualFieldType.DateTimeOffset,
 				_ when providerSpecificType == typeof(TimeSpan)           => QueryActualFieldType.TimeSpan,
 				_ when providerSpecificType == typeof(Guid)               => QueryActualFieldType.Guid,
 				_ when providerSpecificType == typeof(SqlGuid)            => QueryActualFieldType.Guid,
+				_ when providerSpecificType == typeof(byte[]) && dataTypeName.StartsWith("Array(", StringComparison.OrdinalIgnoreCase) => QueryActualFieldType.ByteArray,
 				_ when providerSpecificType == typeof(byte[])             => QueryActualFieldType.Bytes,
 				_ when providerSpecificType == typeof(SqlBinary)          => QueryActualFieldType.SqlBinary,
 				_ when providerSpecificType == typeof(SqlBytes)           => QueryActualFieldType.SqlBytes,
@@ -539,11 +546,13 @@ namespace LinqToDB.CommandLine
 				QueryActualFieldType.Boolean            => value is SqlBoolean sqlBoolean ? sqlBoolean.Value ? "true" : "false" : ((bool)value) ? "true" : "false",
 				QueryActualFieldType.Double             => (value is SqlDouble sqlDouble ? sqlDouble.Value : (double)value).ToString("R", CultureInfo.InvariantCulture),
 				QueryActualFieldType.Single             => (value is SqlSingle sqlSingle ? sqlSingle.Value : (float)value).ToString("R", CultureInfo.InvariantCulture),
+				QueryActualFieldType.Date               => FormatDate(value),
 				QueryActualFieldType.DateTime           => (value is SqlDateTime sqlDateTime ? sqlDateTime.Value : (DateTime)value).ToString("O", CultureInfo.InvariantCulture),
 				QueryActualFieldType.DateTimeOffset     => ((DateTimeOffset)value).ToString("O", CultureInfo.InvariantCulture),
 				QueryActualFieldType.TimeSpan           => ((TimeSpan)value).ToString("c", CultureInfo.InvariantCulture),
 				QueryActualFieldType.Guid               => (value is SqlGuid sqlGuid ? sqlGuid.Value : (Guid)value).ToString("D"),
 				QueryActualFieldType.Bytes              => ConvertBytesToString((byte[])value),
+				QueryActualFieldType.ByteArray          => ConvertByteArrayToString((byte[])value),
 				QueryActualFieldType.SqlBinary          => ConvertBytesToString(((SqlBinary)value).Value),
 				QueryActualFieldType.SqlBytes           => ConvertBytesToString(((SqlBytes)value).Value),
 				QueryActualFieldType.SqlChars           => new string(((SqlChars)value).Value),
@@ -558,11 +567,26 @@ namespace LinqToDB.CommandLine
 				QueryActualFieldType.OracleBlob         => ConvertBytesToString(((OracleBlob)value).Value),
 				QueryActualFieldType.OracleClob         => ((OracleClob)value).Value,
 				QueryActualFieldType.OracleXmlType      => ((OracleXmlType)value).Value,
-				QueryActualFieldType.OracleDate         => FormatOracleDate((OracleDate)value),
+				QueryActualFieldType.OracleDate         => FormatDate(((OracleDate)value).Value),
 				QueryActualFieldType.OracleTimeStamp    => FormatOracleTimeStamp((OracleTimeStamp)value),
 				QueryActualFieldType.OracleTimeStampTZ  => FormatOracleTimeStampTZ((OracleTimeStampTZ)value),
 				QueryActualFieldType.OracleTimeStampLTZ => FormatOracleTimeStampLTZ((OracleTimeStampLTZ)value),
-				_                                       => Convert.ToString(value, CultureInfo.InvariantCulture),
+				_                                       => ConvertValueToString(value),
+			};
+		}
+
+		static string? ConvertValueToString(object? value)
+		{
+			return value switch
+			{
+				null                  => null,
+				string stringValue    => stringValue,
+				byte[] bytes          => ConvertBytesToString(bytes),
+				DateOnly date         => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+				TimeOnly time         => time.ToString("HH:mm:ss.fffffff", CultureInfo.InvariantCulture),
+				ITuple tuple         => ConvertTupleToString(tuple),
+				IEnumerable sequence => ConvertSequenceToString(sequence),
+				_                     => Convert.ToString(value, CultureInfo.InvariantCulture),
 			};
 		}
 
@@ -571,9 +595,122 @@ namespace LinqToDB.CommandLine
 			return "0x" + Convert.ToHexString(bytes);
 		}
 
-		static string FormatOracleDate(OracleDate value)
+		static bool IsDateDataType(string dataTypeName)
 		{
-			return string.Create(CultureInfo.InvariantCulture, $"{value.Year:D4}-{value.Month:D2}-{value.Day:D2}T{value.Hour:D2}:{value.Minute:D2}:{value.Second:D2}");
+			return string.Equals(dataTypeName, "Date", StringComparison.OrdinalIgnoreCase)
+				|| string.Equals(dataTypeName, "Date32", StringComparison.OrdinalIgnoreCase)
+				|| string.Equals(dataTypeName, "Nullable(Date)", StringComparison.OrdinalIgnoreCase)
+				|| string.Equals(dataTypeName, "Nullable(Date32)", StringComparison.OrdinalIgnoreCase);
+		}
+
+		static string FormatDate(object value)
+		{
+			return value switch
+			{
+				DateOnly date     => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+				DateTime dateTime => dateTime.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+				_                 => Convert.ToString(value, CultureInfo.InvariantCulture)!,
+			};
+		}
+
+		static string ConvertByteArrayToString(byte[] bytes)
+		{
+			var output = new StringBuilder();
+
+			output.Append('[');
+
+			for (var i = 0; i < bytes.Length; i++)
+			{
+				if (i > 0)
+					output.Append(',');
+
+				output.Append(bytes[i].ToString(CultureInfo.InvariantCulture));
+			}
+
+			output.Append(']');
+			return output.ToString();
+		}
+
+		static string ConvertTupleToString(ITuple tuple)
+		{
+			var output = new StringBuilder();
+
+			output.Append('(');
+
+			for (var i = 0; i < tuple.Length; i++)
+			{
+				if (i > 0)
+					output.Append(',');
+
+				output.Append(ConvertValueToString(tuple[i]));
+			}
+
+			output.Append(')');
+			return output.ToString();
+		}
+
+		static string ConvertSequenceToString(IEnumerable sequence)
+		{
+			var output       = new StringBuilder();
+			var first        = true;
+			var map          = false;
+			var openBracket  = '[';
+			var closeBracket = ']';
+
+			foreach (var item in sequence)
+			{
+				if (first)
+				{
+					map = IsKeyValuePair(item);
+
+					if (map)
+					{
+						openBracket  = '{';
+						closeBracket = '}';
+					}
+
+					output.Append(openBracket);
+					first = false;
+				}
+
+				if (output.Length > 1)
+					output.Append(',');
+
+				if (map)
+					AppendKeyValuePair(output, item);
+				else
+					output.Append(ConvertValueToString(item));
+			}
+
+			if (first)
+				output.Append(openBracket);
+
+			output.Append(closeBracket);
+			return output.ToString();
+		}
+
+		static bool IsKeyValuePair(object? value)
+		{
+			return value != null
+				&& value.GetType().IsGenericType
+				&& value.GetType().GetGenericTypeDefinition() == typeof(KeyValuePair<,>);
+		}
+
+		static void AppendKeyValuePair(StringBuilder output, object? value)
+		{
+			if (value == null)
+			{
+				output.Append(':');
+				return;
+			}
+
+			var type  = value.GetType();
+			var key   = type.GetProperty("Key")!.GetValue(value);
+			var item  = type.GetProperty("Value")!.GetValue(value);
+
+			output.Append(ConvertValueToString(key));
+			output.Append(':');
+			output.Append(ConvertValueToString(item));
 		}
 
 		static string FormatOracleTimeStamp(OracleTimeStamp value)
