@@ -10,6 +10,8 @@ using Microsoft.SqlServer.Types;
 
 using NUnit.Framework;
 
+using Oracle.ManagedDataAccess.Types;
+
 namespace Tests.LinqToDB.CLI
 {
 	[TestFixture]
@@ -83,6 +85,19 @@ namespace Tests.LinqToDB.CLI
 				Assert.That(ReadSingleValue(SqlHierarchyId.Parse("/1/2/3/"), "SqlHierarchyId"), Is.EqualTo("/1/2/3/"));
 				Assert.That(ReadSingleValue(SqlGeometry.STGeomFromText(new SqlChars("POINT (1 2)"), 0), "SqlGeometry"), Is.EqualTo("POINT (1 2)"));
 				Assert.That(ReadSingleValue(SqlGeography.STGeomFromText(new SqlChars("POINT(-122.34900 47.65100)"), 4326), "SqlGeography"), Is.EqualTo("POINT (-122.349 47.651)"));
+			}
+		}
+
+		[Test]
+		public void ReadFieldAsStringConvertsOracleProviderSpecificTypes()
+		{
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(ReadSingleValue(new OracleBinary([0x30, 0x39]), "OracleBinary"), Is.EqualTo("0x3039"));
+				Assert.That(ReadSingleValue(new OracleDate(2024, 1, 2, 3, 4, 5), "OracleDate"), Is.EqualTo("2024-01-02T03:04:05"));
+				Assert.That(ReadSingleValue(new OracleTimeStamp(2024, 1, 2, 3, 4, 5, 123456000), "OracleTimeStamp"), Is.EqualTo("2024-01-02T03:04:05.123456000"));
+				Assert.That(ReadSingleValue(new OracleTimeStampTZ(2024, 1, 2, 3, 4, 5, 123456000, "-05:00"), "OracleTimeStampTZ"), Is.EqualTo("2024-01-02T03:04:05.123456000-05:00"));
+				Assert.That(ReadSingleValue(new OracleTimeStampLTZ(2024, 1, 2, 3, 4, 5, 123456000), "OracleTimeStampLTZ"), Is.EqualTo("2024-01-02T03:04:05.123456000"));
 			}
 		}
 

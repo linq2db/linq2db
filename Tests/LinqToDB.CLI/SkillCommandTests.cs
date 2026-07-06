@@ -38,7 +38,7 @@ namespace Tests.LinqToDB.CLI
 				Assert.That(result.Output,   Does.Contain("does not change the `query` command contract into a general DDL/DML execution workflow"));
 				Assert.That(result.Output,   Does.Contain("best-effort guardrails intended to help avoid agent mistakes"));
 				Assert.That(result.Output,   Does.Contain("Query output reads database values using .NET `DbDataReader.GetProviderSpecificValue`"));
-				Assert.That(result.Output,   Does.Contain("Provider-specific output formatting is intentionally SQL Server-first in this PR"));
+				Assert.That(result.Output,   Does.Contain("Provider-specific output formatting has special handling validated for SQL Server and Oracle provider-specific types"));
 				Assert.That(result.Output,   Does.Contain("Binary values are emitted using SQL-style hexadecimal notation like `0x010203`"));
 				Assert.That(result.Output,   Does.Contain("Connection timeout is intentionally not exposed as a separate query command option"));
 				Assert.That(result.Output,   Does.Contain("The query command accepts exactly one user-provided SQL statement per invocation"));

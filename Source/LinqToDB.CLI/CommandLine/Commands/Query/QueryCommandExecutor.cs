@@ -4,14 +4,12 @@ using System.Data.Common;
 using System.Data.SqlTypes;
 using System.Globalization;
 using System.IO;
-using System.Numerics;
 using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.Internal.DataProvider.Firebird;
@@ -22,6 +20,8 @@ using LinqToDB.Internal.DataProvider.SqlServer;
 
 using Microsoft.Data.SqlTypes;
 using Microsoft.SqlServer.Types;
+
+using Oracle.ManagedDataAccess.Types;
 
 namespace LinqToDB.CommandLine
 {
@@ -53,6 +53,15 @@ namespace LinqToDB.CommandLine
 			SqlHierarchyId,
 			SqlGeometry,
 			SqlGeography,
+			OracleBinary,
+			OracleBlob,
+			OracleBFile,
+			OracleClob,
+			OracleXmlType,
+			OracleDate,
+			OracleTimeStamp,
+			OracleTimeStampTZ,
+			OracleTimeStampLTZ,
 		}
 
 		readonly ICliEnvironment      _environment = environment;
@@ -245,6 +254,15 @@ namespace LinqToDB.CommandLine
 
 								for (var i = 0; i < columns.Length; i++)
 								{
+									// Oracle BFILE is an external file locator. Even IsDBNull can trigger a file/LOB
+									// operation, so avoid reader value APIs for it.
+									//
+									if (columns[i].ActualFieldType == QueryActualFieldType.OracleBFile)
+									{
+										row[i] = "BFILE";
+										continue;
+									}
+
 									if (await reader.IsDBNullAsync(i, cancellationToken).ConfigureAwait(false))
 										continue;
 
@@ -443,43 +461,61 @@ namespace LinqToDB.CommandLine
 
 		static QueryOutputColumn CreateOutputColumn(DbDataReader reader, int ordinal, Type providerSpecificType)
 		{
-			var fieldType = reader.GetFieldType(ordinal) ?? typeof(object);
+			var fieldType    = reader.GetFieldType(ordinal) ?? typeof(object);
 			var dataTypeName = reader.GetDataTypeName(ordinal);
 
 			var actualFieldType = providerSpecificType switch
 			{
-				_ when providerSpecificType == typeof(bool)             => QueryActualFieldType.Boolean,
-				_ when providerSpecificType == typeof(SqlBoolean)       => QueryActualFieldType.Boolean,
-				_ when providerSpecificType == typeof(double)           => QueryActualFieldType.Double,
-				_ when providerSpecificType == typeof(SqlDouble)        => QueryActualFieldType.Double,
-				_ when providerSpecificType == typeof(float)            => QueryActualFieldType.Single,
-				_ when providerSpecificType == typeof(SqlSingle)        => QueryActualFieldType.Single,
-				_ when providerSpecificType == typeof(DateTime)         => QueryActualFieldType.DateTime,
-				_ when providerSpecificType == typeof(SqlDateTime)      => QueryActualFieldType.DateTime,
-				_ when providerSpecificType == typeof(DateTimeOffset)   => QueryActualFieldType.DateTimeOffset,
-				_ when providerSpecificType == typeof(TimeSpan)         => QueryActualFieldType.TimeSpan,
-				_ when providerSpecificType == typeof(Guid)             => QueryActualFieldType.Guid,
-				_ when providerSpecificType == typeof(SqlGuid)          => QueryActualFieldType.Guid,
-				_ when providerSpecificType == typeof(byte[])           => QueryActualFieldType.Bytes,
-				_ when providerSpecificType == typeof(SqlBinary)        => QueryActualFieldType.SqlBinary,
-				_ when providerSpecificType == typeof(SqlBytes)         => QueryActualFieldType.SqlBytes,
-				_ when providerSpecificType == typeof(SqlChars)         => QueryActualFieldType.SqlChars,
-				_ when providerSpecificType == typeof(SqlString)        => QueryActualFieldType.SqlString,
-				_ when providerSpecificType == typeof(SqlXml)           => QueryActualFieldType.SqlXml,
-				_ when providerSpecificType == typeof(SqlVector<float>) => QueryActualFieldType.SqlVectorFloat,
-				_ when providerSpecificType == typeof(SqlVector<Half>)  => QueryActualFieldType.SqlVectorHalf,
-				_ when providerSpecificType == typeof(SqlHierarchyId)   => QueryActualFieldType.SqlHierarchyId,
-				_ when providerSpecificType == typeof(SqlGeometry)      => QueryActualFieldType.SqlGeometry,
-				_ when providerSpecificType == typeof(SqlGeography)     => QueryActualFieldType.SqlGeography,
-				_                                                       => QueryActualFieldType.None,
+				_ when providerSpecificType == typeof(bool)               => QueryActualFieldType.Boolean,
+				_ when providerSpecificType == typeof(SqlBoolean)         => QueryActualFieldType.Boolean,
+				_ when providerSpecificType == typeof(double)             => QueryActualFieldType.Double,
+				_ when providerSpecificType == typeof(SqlDouble)          => QueryActualFieldType.Double,
+				_ when providerSpecificType == typeof(float)              => QueryActualFieldType.Single,
+				_ when providerSpecificType == typeof(SqlSingle)          => QueryActualFieldType.Single,
+				_ when providerSpecificType == typeof(DateTime)           => QueryActualFieldType.DateTime,
+				_ when providerSpecificType == typeof(SqlDateTime)        => QueryActualFieldType.DateTime,
+				_ when providerSpecificType == typeof(DateTimeOffset)     => QueryActualFieldType.DateTimeOffset,
+				_ when providerSpecificType == typeof(TimeSpan)           => QueryActualFieldType.TimeSpan,
+				_ when providerSpecificType == typeof(Guid)               => QueryActualFieldType.Guid,
+				_ when providerSpecificType == typeof(SqlGuid)            => QueryActualFieldType.Guid,
+				_ when providerSpecificType == typeof(byte[])             => QueryActualFieldType.Bytes,
+				_ when providerSpecificType == typeof(SqlBinary)          => QueryActualFieldType.SqlBinary,
+				_ when providerSpecificType == typeof(SqlBytes)           => QueryActualFieldType.SqlBytes,
+				_ when providerSpecificType == typeof(SqlChars)           => QueryActualFieldType.SqlChars,
+				_ when providerSpecificType == typeof(SqlString)          => QueryActualFieldType.SqlString,
+				_ when providerSpecificType == typeof(SqlXml)             => QueryActualFieldType.SqlXml,
+				_ when providerSpecificType == typeof(SqlVector<float>)   => QueryActualFieldType.SqlVectorFloat,
+				_ when providerSpecificType == typeof(SqlVector<Half>)    => QueryActualFieldType.SqlVectorHalf,
+				_ when providerSpecificType == typeof(SqlHierarchyId)     => QueryActualFieldType.SqlHierarchyId,
+				_ when providerSpecificType == typeof(SqlGeometry)        => QueryActualFieldType.SqlGeometry,
+				_ when providerSpecificType == typeof(SqlGeography)       => QueryActualFieldType.SqlGeography,
+				_ when providerSpecificType == typeof(OracleBinary)       => QueryActualFieldType.OracleBinary,
+				_ when providerSpecificType == typeof(OracleBlob)         => QueryActualFieldType.OracleBlob,
+				_ when providerSpecificType == typeof(OracleBFile)        => QueryActualFieldType.OracleBFile,
+				_ when providerSpecificType == typeof(OracleClob)         => QueryActualFieldType.OracleClob,
+				_ when providerSpecificType == typeof(OracleXmlType)      => QueryActualFieldType.OracleXmlType,
+				_ when providerSpecificType == typeof(OracleDate)         => QueryActualFieldType.OracleDate,
+				_ when providerSpecificType == typeof(OracleTimeStamp)    => QueryActualFieldType.OracleTimeStamp,
+				_ when providerSpecificType == typeof(OracleTimeStampTZ)  => QueryActualFieldType.OracleTimeStampTZ,
+				_ when providerSpecificType == typeof(OracleTimeStampLTZ) => QueryActualFieldType.OracleTimeStampLTZ,
+				_                                                         => QueryActualFieldType.None,
 			};
 
-			return new QueryOutputColumn(ordinal, reader.GetName(ordinal), fieldType.FullName ?? fieldType.Name, providerSpecificType.FullName ?? providerSpecificType.Name, dataTypeName, actualFieldType);
+			return new QueryOutputColumn(
+				ordinal,
+				reader.GetName(ordinal),
+				fieldType.FullName ?? fieldType.Name,
+				providerSpecificType.FullName ?? providerSpecificType.Name,
+				dataTypeName,
+				actualFieldType);
 		}
 
 		static string? ReadFieldAsString(DbDataReader reader, QueryActualFieldType actualFieldType, int ordinal)
 		{
 			object value;
+
+			if (actualFieldType == QueryActualFieldType.OracleBFile)
+				return "<BFILE>";
 
 			try
 			{
@@ -500,31 +536,64 @@ namespace LinqToDB.CommandLine
 
 			return actualFieldType switch
 			{
-				QueryActualFieldType.Boolean        => value is SqlBoolean sqlBoolean ? sqlBoolean.Value ? "true" : "false" : ((bool)value) ? "true" : "false",
-				QueryActualFieldType.Double         => (value is SqlDouble sqlDouble ? sqlDouble.Value : (double)value).ToString("R", CultureInfo.InvariantCulture),
-				QueryActualFieldType.Single         => (value is SqlSingle sqlSingle ? sqlSingle.Value : (float)value).ToString("R", CultureInfo.InvariantCulture),
-				QueryActualFieldType.DateTime       => (value is SqlDateTime sqlDateTime ? sqlDateTime.Value : (DateTime)value).ToString("O", CultureInfo.InvariantCulture),
-				QueryActualFieldType.DateTimeOffset => ((DateTimeOffset)value).ToString("O", CultureInfo.InvariantCulture),
-				QueryActualFieldType.TimeSpan       => ((TimeSpan)value).ToString("c", CultureInfo.InvariantCulture),
-				QueryActualFieldType.Guid           => (value is SqlGuid sqlGuid ? sqlGuid.Value : (Guid)value).ToString("D"),
-				QueryActualFieldType.Bytes          => ConvertBytesToString((byte[])value),
-				QueryActualFieldType.SqlBinary      => ConvertBytesToString(((SqlBinary)value).Value),
-				QueryActualFieldType.SqlBytes       => ConvertBytesToString(((SqlBytes)value).Value),
-				QueryActualFieldType.SqlChars       => new string(((SqlChars)value).Value),
-				QueryActualFieldType.SqlString      => ((SqlString)value).Value,
-				QueryActualFieldType.SqlXml         => ((SqlXml)value).Value,
-				QueryActualFieldType.SqlVectorFloat => ConvertVectorToString(((SqlVector<float>)value).Memory.ToArray()),
-				QueryActualFieldType.SqlVectorHalf  => ConvertVectorToString(((SqlVector<Half>) value).Memory.ToArray()),
-				QueryActualFieldType.SqlHierarchyId => ((SqlHierarchyId)value).ToString(),
-				QueryActualFieldType.SqlGeometry    => ((SqlGeometry)value).ToString(),
-				QueryActualFieldType.SqlGeography   => ((SqlGeography)value).ToString(),
-				_                                   => Convert.ToString(value, CultureInfo.InvariantCulture),
+				QueryActualFieldType.Boolean            => value is SqlBoolean sqlBoolean ? sqlBoolean.Value ? "true" : "false" : ((bool)value) ? "true" : "false",
+				QueryActualFieldType.Double             => (value is SqlDouble sqlDouble ? sqlDouble.Value : (double)value).ToString("R", CultureInfo.InvariantCulture),
+				QueryActualFieldType.Single             => (value is SqlSingle sqlSingle ? sqlSingle.Value : (float)value).ToString("R", CultureInfo.InvariantCulture),
+				QueryActualFieldType.DateTime           => (value is SqlDateTime sqlDateTime ? sqlDateTime.Value : (DateTime)value).ToString("O", CultureInfo.InvariantCulture),
+				QueryActualFieldType.DateTimeOffset     => ((DateTimeOffset)value).ToString("O", CultureInfo.InvariantCulture),
+				QueryActualFieldType.TimeSpan           => ((TimeSpan)value).ToString("c", CultureInfo.InvariantCulture),
+				QueryActualFieldType.Guid               => (value is SqlGuid sqlGuid ? sqlGuid.Value : (Guid)value).ToString("D"),
+				QueryActualFieldType.Bytes              => ConvertBytesToString((byte[])value),
+				QueryActualFieldType.SqlBinary          => ConvertBytesToString(((SqlBinary)value).Value),
+				QueryActualFieldType.SqlBytes           => ConvertBytesToString(((SqlBytes)value).Value),
+				QueryActualFieldType.SqlChars           => new string(((SqlChars)value).Value),
+				QueryActualFieldType.SqlString          => ((SqlString)value).Value,
+				QueryActualFieldType.SqlXml             => ((SqlXml)value).Value,
+				QueryActualFieldType.SqlVectorFloat     => ConvertVectorToString(((SqlVector<float>)value).Memory.ToArray()),
+				QueryActualFieldType.SqlVectorHalf      => ConvertVectorToString(((SqlVector<Half>) value).Memory.ToArray()),
+				QueryActualFieldType.SqlHierarchyId     => ((SqlHierarchyId)value).ToString(),
+				QueryActualFieldType.SqlGeometry        => ((SqlGeometry)value).ToString(),
+				QueryActualFieldType.SqlGeography       => ((SqlGeography)value).ToString(),
+				QueryActualFieldType.OracleBinary       => ConvertBytesToString(((OracleBinary)value).Value),
+				QueryActualFieldType.OracleBlob         => ConvertBytesToString(((OracleBlob)value).Value),
+				QueryActualFieldType.OracleClob         => ((OracleClob)value).Value,
+				QueryActualFieldType.OracleXmlType      => ((OracleXmlType)value).Value,
+				QueryActualFieldType.OracleDate         => FormatOracleDate((OracleDate)value),
+				QueryActualFieldType.OracleTimeStamp    => FormatOracleTimeStamp((OracleTimeStamp)value),
+				QueryActualFieldType.OracleTimeStampTZ  => FormatOracleTimeStampTZ((OracleTimeStampTZ)value),
+				QueryActualFieldType.OracleTimeStampLTZ => FormatOracleTimeStampLTZ((OracleTimeStampLTZ)value),
+				_                                       => Convert.ToString(value, CultureInfo.InvariantCulture),
 			};
 		}
 
 		static string ConvertBytesToString(byte[] bytes)
 		{
 			return "0x" + Convert.ToHexString(bytes);
+		}
+
+		static string FormatOracleDate(OracleDate value)
+		{
+			return string.Create(CultureInfo.InvariantCulture, $"{value.Year:D4}-{value.Month:D2}-{value.Day:D2}T{value.Hour:D2}:{value.Minute:D2}:{value.Second:D2}");
+		}
+
+		static string FormatOracleTimeStamp(OracleTimeStamp value)
+		{
+			return FormatOracleTimeStamp(value.Year, value.Month, value.Day, value.Hour, value.Minute, value.Second, value.Nanosecond);
+		}
+
+		static string FormatOracleTimeStampTZ(OracleTimeStampTZ value)
+		{
+			return FormatOracleTimeStamp(value.Year, value.Month, value.Day, value.Hour, value.Minute, value.Second, value.Nanosecond) + value.TimeZone;
+		}
+
+		static string FormatOracleTimeStampLTZ(OracleTimeStampLTZ value)
+		{
+			return FormatOracleTimeStamp(value.Year, value.Month, value.Day, value.Hour, value.Minute, value.Second, value.Nanosecond);
+		}
+
+		static string FormatOracleTimeStamp(int year, int month, int day, int hour, int minute, int second, int nanosecond)
+		{
+			return string.Create(CultureInfo.InvariantCulture, $"{year:D4}-{month:D2}-{day:D2}T{hour:D2}:{minute:D2}:{second:D2}.{nanosecond:D9}");
 		}
 
 		static string ConvertVectorToString<T>(T[] vector)
