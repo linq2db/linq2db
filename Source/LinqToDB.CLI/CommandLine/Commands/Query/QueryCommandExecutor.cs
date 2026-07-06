@@ -8,6 +8,7 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.ExceptionServices;
 using System.Runtime.CompilerServices;
+using System.Runtime.Loader;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
@@ -394,7 +395,7 @@ Provider could be downloaded from:
 				if (!string.IsNullOrEmpty(providerDirectory))
 					Environment.CurrentDirectory = providerDirectory;
 
-				var assembly = Assembly.LoadFrom(_settings.ProviderLocation);
+				var assembly = new ExternalProviderLoadContext(providerDirectory).LoadFromAssemblyPath(Path.GetFullPath(_settings.ProviderLocation));
 
 				if (IsDB2FamilyProvider(_settings.Provider))
 				{
@@ -417,6 +418,76 @@ Provider could be downloaded from:
 			}
 
 			return true;
+		}
+
+		sealed class ExternalProviderLoadContext(string? providerDirectory) : AssemblyLoadContext(isCollectible: false)
+		{
+			protected override Assembly? Load(AssemblyName assemblyName)
+			{
+				if (!string.IsNullOrEmpty(providerDirectory))
+				{
+					var assemblyPath = Path.Combine(providerDirectory, assemblyName.Name + ".dll");
+
+					if (IsMatchingAssembly(assemblyPath, assemblyName))
+						return LoadFromAssemblyPath(assemblyPath);
+				}
+
+				var nugetAssemblyPath = FindNuGetAssemblyPath(assemblyName);
+
+				return nugetAssemblyPath != null ? LoadFromAssemblyPath(nugetAssemblyPath) : null;
+			}
+
+			static string? FindNuGetAssemblyPath(AssemblyName assemblyName)
+			{
+				if (assemblyName.Name == null)
+					return null;
+
+				var nugetPackages = Environment.GetEnvironmentVariable("NUGET_PACKAGES");
+
+				if (string.IsNullOrEmpty(nugetPackages))
+					nugetPackages = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".nuget", "packages");
+
+				var packageDirectory = Path.Combine(nugetPackages, assemblyName.Name.ToLowerInvariant());
+
+				if (!Directory.Exists(packageDirectory))
+					return null;
+
+				var versionDirectories = Directory.GetDirectories(packageDirectory);
+
+				Array.Sort(versionDirectories, static (left, right) => string.Compare(Path.GetFileName(right), Path.GetFileName(left), StringComparison.OrdinalIgnoreCase));
+
+				foreach (var versionDirectory in versionDirectories)
+				{
+					foreach (var targetFramework in GetCompatibleTargetFrameworks())
+					{
+						var assemblyPath = Path.Combine(versionDirectory, "lib", targetFramework, assemblyName.Name + ".dll");
+
+						if (IsMatchingAssembly(assemblyPath, assemblyName))
+							return assemblyPath;
+					}
+				}
+
+				return null;
+			}
+
+			static bool IsMatchingAssembly(string assemblyPath, AssemblyName requestedAssemblyName)
+			{
+				if (!File.Exists(assemblyPath))
+					return false;
+
+				var candidateAssemblyName = AssemblyName.GetAssemblyName(assemblyPath);
+
+				return AssemblyName.ReferenceMatchesDefinition(requestedAssemblyName, candidateAssemblyName);
+			}
+
+			static IEnumerable<string> GetCompatibleTargetFrameworks()
+			{
+				for (var version = Environment.Version.Major; version >= 5; version--)
+					yield return string.Create(CultureInfo.InvariantCulture, $"net{version}.0");
+
+				yield return "netstandard2.1";
+				yield return "netstandard2.0";
+			}
 		}
 
 		static Type? FindProviderFactory(Assembly assembly, string factoryTypeName)

@@ -65,7 +65,6 @@
 		<PackageReference Include="Microsoft.SqlServer.Types" />
 		<PackageReference Include="Microsoft.SqlServer.TransactSql.ScriptDom" />
 		<PackageReference Include="FirebirdSql.Data.FirebirdClient" />
-		<PackageReference Include="MySql.Data" />
 		<PackageReference Include="MySqlConnector" />
 		<PackageReference Include="Oracle.ManagedDataAccess.Core" />
 		<PackageReference Include="Npgsql" />
