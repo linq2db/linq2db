@@ -1034,6 +1034,87 @@ namespace Tests.Linq
 			}
 		}
 
+		sealed class Issue5457Part
+		{
+			[PrimaryKey] public int     Id   { get; set; }
+			public              string? Name { get; set; }
+		}
+
+		sealed class Issue5457Reference
+		{
+			[PrimaryKey] public int Id          { get; set; }
+			public              int ParentId    { get; set; }
+			public              int ReferenceId { get; set; }
+		}
+
+		sealed class Issue5457Cte
+		{
+			public object? RootPartSortField { get; set; }
+			public int     RootPartId        { get; set; }
+			public int     PartId            { get; set; }
+			public int     HierarchyLevel    { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5457 - recursive CTE drops columns used only in recursive/outer joins")]
+		public void Issue5457([RecursiveCteContextSource] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var parts = db.CreateLocalTable(new[]
+			{
+				new Issue5457Part { Id = 1, Name = "A" },
+				new Issue5457Part { Id = 2, Name = "B" },
+				new Issue5457Part { Id = 3, Name = "C" },
+			});
+			using var refs = db.CreateLocalTable(new[]
+			{
+				new Issue5457Reference { Id = 1, ParentId = 1, ReferenceId = 2 },
+				new Issue5457Reference { Id = 2, ParentId = 2, ReferenceId = 3 },
+			});
+
+			// Anchor term paginated with OrderBy/Skip/Take (wraps it in a subquery).
+			var anchor = parts
+				.Select(x => new Issue5457Cte
+				{
+					RootPartSortField = x.Name,
+					RootPartId        = x.Id,
+					HierarchyLevel    = 0,
+					PartId            = x.Id
+				})
+				.OrderBy(x => x.RootPartSortField)
+				.Skip(0)
+				.Take(20);
+
+			var partCte = db.GetCte<Issue5457Cte>(partHierarchy =>
+				anchor.Concat(
+					partHierarchy.InnerJoin(
+						refs,
+						(cte, reference) => reference.ParentId == cte.PartId,
+						(cte, reference) => new Issue5457Cte
+						{
+							RootPartSortField = cte.RootPartSortField,
+							RootPartId        = cte.RootPartId,
+							PartId            = reference.ReferenceId,
+							HierarchyLevel    = cte.HierarchyLevel + 1
+						})));
+
+			// Outer query joins on cte.PartId but only projects RootPartId/RootPartSortField.
+			var allRelevant = parts
+				.InnerJoin(
+					partCte,
+					(me, cte) => me.Id == cte.PartId,
+					(me, id) => new { id.RootPartId, id.RootPartSortField, me });
+
+			var result = allRelevant.ToList();
+
+			// CTE columns PartId/RootPartId/HierarchyLevel must survive so the recursion and the outer
+			// join resolve correctly. Expected (RootPartId, joined Part.Id) pairs for the hierarchy:
+			//   roots: (1,1) (2,2) (3,3); 1->2: (1,2); 2->3: (2,3); 1->2->3: (1,3)
+			result
+				.Select(x => (x.RootPartId, x.me.Id))
+				.OrderBy(x => x)
+				.ShouldBe(new[] { (1, 1), (1, 2), (1, 3), (2, 2), (2, 3), (3, 3) });
+		}
+
 		class NestingA
 		{
 			[PrimaryKey] public int Id { get; set; }
