@@ -61,6 +61,10 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 			// MySQL runs multiple statements in one command and returns their result sets in order (NextResult),
 			// so eager loading combines the main query + child collections into one multi-result-set round-trip.
+			// This assumes the connection accepts multi-statement text: MySqlConnector allows it by default and
+			// supports DbBatch (so with UseDbBatch on — the default — a combined group runs as a DbBatch, not
+			// concatenated text); MySql.Data needs multi-statement enabled in the connection string. A MySql.Data
+			// connection with neither multi-statement nor DbBatch would reject a concatenated multi-statement command.
 			SqlProviderFlags.IsMultiStatementBatchSupported = true;
 			SqlProviderFlags.IsMultipleResultSetsSupported  = true;
 			// Bounded by max_allowed_packet (server default 16-64 MB, minimum 4 MB); 1 MB stays safe if configured low.

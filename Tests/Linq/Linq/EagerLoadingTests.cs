@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Async;
+using LinqToDB.Interceptors;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
@@ -3701,6 +3703,154 @@ namespace Tests.Linq
 		{
 			var query = (IAsyncEnumerable<LoadWithPassthroughRoot>)_passthroughQuery.LoadWith(a => a.Child);
 			Assert.That(() => query.GetAsyncEnumerator(), Throws.TypeOf<LinqToDBException>());
+		}
+
+		#endregion
+
+		#region Mixed combinable/non-combinable eager loads in one query
+
+		[Table]
+		sealed class MixedMaster
+		{
+			[Column, PrimaryKey] public int     Id   { get; set; }
+			[Column]             public string? Name { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(MixedCorrelatedChild.MasterId))]
+			public List<MixedCorrelatedChild> CorrelatedChildren { get; set; } = null!;
+		}
+
+		// FK-correlated to MixedMaster: each master sees only its own rows. Under the Default
+		// eager-loading strategy this becomes a combinable Harvester<TKey,T> (IStepMaterializer).
+		[Table]
+		sealed class MixedCorrelatedChild
+		{
+			[Column, PrimaryKey] public int     Id       { get; set; }
+			[Column]             public int     MasterId { get; set; }
+			[Column]             public string? Name     { get; set; }
+		}
+
+		// Not correlated to MixedMaster at all — the eager-loaded expression references no master
+		// field, so the same full set attaches to every master. Under the Default strategy this
+		// becomes a non-combinable DetachedHarvester<T> (plain Harvester, no IStepMaterializer).
+		[Table]
+		sealed class MixedDetachedChild
+		{
+			[Column, PrimaryKey] public int     Id   { get; set; }
+			[Column]             public string? Name { get; set; }
+		}
+
+		sealed class CombinedCommandCounter : CommandInterceptor
+		{
+			public int Count { get; set; }
+
+			public override DbCommand CommandInitialized(CommandEventData eventData, DbCommand command)
+			{
+				var sql = command.CommandText;
+
+				if (sql.Contains("SELECT", StringComparison.OrdinalIgnoreCase)
+					&& !sql.Contains("CREATE", StringComparison.OrdinalIgnoreCase)
+					&& !sql.Contains("DROP", StringComparison.OrdinalIgnoreCase)
+					&& !sql.Contains("INSERT", StringComparison.OrdinalIgnoreCase))
+				{
+					Count++;
+				}
+
+				return command;
+			}
+		}
+
+		(MixedMaster[], MixedCorrelatedChild[], MixedDetachedChild[]) GenerateMixedEagerData()
+		{
+			var masters = Enumerable.Range(1, 3).Select(i => new MixedMaster { Id = i, Name = "Master" + i }).ToArray();
+
+			var correlated = masters
+				.SelectMany(m => Enumerable.Range(1, 2 + m.Id)
+					.Select(k => new MixedCorrelatedChild
+					{
+						Id       = m.Id * 100 + k,
+						MasterId = m.Id,
+						Name     = $"Corr{m.Id}_{k}",
+					}))
+				.ToArray();
+
+			var detached = Enumerable.Range(1, 4)
+				.Select(k => new MixedDetachedChild { Id = k, Name = "Det" + k })
+				.ToArray();
+
+			return (masters, correlated, detached);
+		}
+
+		// Regression for the mixed-strategy path in EagerResultEnumerable (Source/LinqToDB/Internal/Linq/QueryRunner.cs):
+		// one query eager-loads a combinable child collection (CorrelatedChildren, FK-correlated -> Harvester<TKey,T>)
+		// alongside a non-combinable one (a detached collection with no master dependency -> DetachedHarvester<T>).
+		// _combinableIndexes and _nonCombinableIndexes must both be non-empty and each child must materialize
+		// correctly for every master row.
+		[Test]
+		public void MixedEagerLoad_CombinableAndDetachedChildren_BothMaterializeCorrectly(
+			[IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var (masters, correlated, detached) = GenerateMixedEagerData();
+
+			using var db = GetDataContext(context);
+
+			var counter = new CombinedCommandCounter();
+			if (!context.IsRemote()) db.AddInterceptor(counter);
+
+			using var tMaster     = db.CreateLocalTable(masters);
+			using var tCorrelated = db.CreateLocalTable(correlated);
+			using var tDetached   = db.CreateLocalTable(detached);
+
+			if (!context.IsRemote()) counter.Count = 0;
+
+			var query =
+				from m in tMaster
+				orderby m.Id
+				select new
+				{
+					m.Id,
+					m.Name,
+					Correlated = tCorrelated
+						.Where(c => c.MasterId == m.Id)
+						.OrderBy(c => c.Id)
+						.ToList(),
+					Detached = tDetached
+						.OrderBy(d => d.Id)
+						.ToList(),
+				};
+
+			var result = query.ToList();
+
+			var expected = masters
+				.OrderBy(m => m.Id)
+				.Select(m => new
+				{
+					m.Id,
+					m.Name,
+					Correlated = correlated
+						.Where(c => c.MasterId == m.Id)
+						.OrderBy(c => c.Id)
+						.ToList(),
+					Detached = detached
+						.OrderBy(d => d.Id)
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+
+			// Every master must see its own correlated rows (never another master's) and the full detached set.
+			foreach (var m in result)
+			{
+				var expectedCorrelated = correlated.Where(c => c.MasterId == m.Id).Select(c => c.Id).OrderBy(id => id).ToList();
+				m.Correlated.Select(c => c.Id).OrderBy(id => id).ToList().ShouldBe(expectedCorrelated);
+
+				m.Detached.Select(d => d.Id).OrderBy(id => id).ToList()
+					.ShouldBe(detached.Select(d => d.Id).OrderBy(id => id).ToList());
+			}
+
+			// 1 self-executing command (the detached, non-combinable child) + 1 combined command
+			// (the combinable correlated child + main, sent as a single multi-statement round-trip).
+			if (!context.IsRemote()) counter.Count.ShouldBe(2);
 		}
 
 		#endregion

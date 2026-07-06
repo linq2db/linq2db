@@ -9,10 +9,10 @@ using LinqToDB.SqlQuery;
 namespace LinqToDB.Internal.DataProvider.Informix
 {
 	/// <summary>
-	/// Informix DML mechanics. An identity insert retrieves the generated key with
-	/// <c>SELECT DBINFO('sqlca.sqlerrd1') FROM systables WHERE tabid = 1</c> (a scalar step); a
+	/// Informix DML mechanics. An identity insert retrieves the generated key with a from-less scalar
+	/// <c>SELECT DBINFO('sqlca.sqlerrd1')</c> — the builder appends Informix's single-row fake table (a scalar step); a
 	/// truncate-with-identity-reset is the truncate plus one <c>ALTER TABLE … MODIFY … SERIAL(1)</c> per identity
-	/// column. Both auxiliary commands are <see cref="SqlFragmentStatement"/>s. Everything else uses the base scenario.
+	/// column (a <see cref="SqlFragmentStatement"/>). Everything else uses the base scenario.
 	/// </summary>
 	public sealed class InformixDmlService : DmlServiceBase
 	{
