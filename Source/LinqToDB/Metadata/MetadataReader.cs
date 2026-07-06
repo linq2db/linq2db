@@ -33,10 +33,12 @@ namespace LinqToDB.Metadata
 		public   IReadOnlyList<IMetadataReader> Readers => _readers;
 
 		/// <summary>
-		/// <see langword="true"/> when any nested reader implements <see cref="ISchemaAwareMetadataReader"/>.
-		/// Such an aggregator must be paired with exactly one <see cref="MappingSchema"/> (its per-<c>(type, member)</c>
-		/// cache holds schema-dependent output), so a schema-blind borrow of it across schemas must be re-bound
-		/// via <see cref="WithSchema"/>.
+		/// <see langword="true"/> when any direct child reader implements <see cref="ISchemaAwareMetadataReader"/>.
+		/// The scan is intentionally shallow: every schema construction path adds schema-aware readers as direct
+		/// children (<see cref="MappingSchema.AddMetadataReader"/> flattens nested aggregators), so a wrapping
+		/// aggregator is never on a production path. Such an aggregator must be paired with exactly one
+		/// <see cref="MappingSchema"/> (its per-<c>(type, member)</c> cache holds schema-dependent output), so a
+		/// schema-blind borrow of it across schemas must be re-bound via <see cref="WithSchema"/>.
 		/// </summary>
 		internal bool HasSchemaAwareReaders { get; }
 
