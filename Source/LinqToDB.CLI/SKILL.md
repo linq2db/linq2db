@@ -127,6 +127,7 @@ Safety:
 - `unsafeSql: "allow"` allows unsafe SQL without confirmation.
 - Use `confirm` or `allow` only in trusted development profiles.
 - The SQL safety validator is a guardrail, not a security boundary. If an agent can edit the configuration file, it can change configuration-based safety policy.
+- All safety measures in this command are best-effort guardrails intended to help avoid agent mistakes; they are not absolute protection for a database.
 - The strongest protection against agent mistakes is to execute SQL using a database account with limited permissions appropriate for the task. For read-only agent queries, prefer a read-only account. For development workflows that need DDL/DML, prefer a dedicated disposable database or a restricted development account.
 
 Agent confirmation rule:

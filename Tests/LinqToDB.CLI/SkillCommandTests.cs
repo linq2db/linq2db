@@ -35,6 +35,7 @@ namespace Tests.LinqToDB.CLI
 				Assert.That(result.Output,   Does.Contain("Default mode is safe mode"));
 				Assert.That(result.Output,   Does.Contain("result-set-oriented database inspection command"));
 				Assert.That(result.Output,   Does.Contain("does not change the `query` command contract into a general DDL/DML execution workflow"));
+				Assert.That(result.Output,   Does.Contain("best-effort guardrails intended to help avoid agent mistakes"));
 				Assert.That(result.Output,   Does.Contain("Query output reads database values using .NET `DbDataReader.GetProviderSpecificValue`"));
 				Assert.That(result.Output,   Does.Contain("`byte[]` values are emitted as base64 strings"));
 				Assert.That(result.Output,   Does.Contain("Use `dotnet linq2db skill` or `dotnet linq2db skills`"));
