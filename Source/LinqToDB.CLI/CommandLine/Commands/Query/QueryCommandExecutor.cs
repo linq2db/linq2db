@@ -62,7 +62,7 @@ namespace LinqToDB.CommandLine
 		{
 			cancellationToken.ThrowIfCancellationRequested();
 
-			// Get SQL text from command line or file.
+			// Get user-provided SQL text from command line or file.
 			//
 			string sql;
 
@@ -97,7 +97,7 @@ namespace LinqToDB.CommandLine
 					return StatusCodes.EXPECTED_ERROR;
 				}
 
-				// Validate that the SQL query is a single statement and does not contain multiple statements or batch separators.
+				// Validate that user-provided SQL contains a single statement.
 				//
 				var singleStatementResult = ReadOnlySqlGuard.ValidateSingleStatement(dataProvider, sql);
 
@@ -107,7 +107,7 @@ namespace LinqToDB.CommandLine
 					return StatusCodes.EXPECTED_ERROR;
 				}
 
-				// Validate that the SQL query is allowed by the configured unsafe SQL policy.
+				// Validate that user-provided SQL is allowed by the configured unsafe SQL policy.
 				//
 				if (_settings.UnsafeSqlPolicy != UnsafeSqlPolicy.Allow)
 				{
@@ -124,19 +124,23 @@ namespace LinqToDB.CommandLine
 					}
 				}
 
-				// Execute the SQL query and read the results.
+				// Check if the output file already exists and the overwrite option is not specified.
 				//
-				if (_settings.OutputFile != null && !_settings.Overwrite && _environment.FileExists(_settings.OutputFile))
+				if (_settings is { OutputFile: not null, Overwrite: false } && _environment.FileExists(_settings.OutputFile))
 				{
 					await _environment.Error.WriteLineAsync($"Output file '{_settings.OutputFile}' already exists. Use '--overwrite' to replace it.").ConfigureAwait(false);
 					return StatusCodes.EXPECTED_ERROR;
 				}
 
+				// Configure linq2db connection options for the resolved provider and connection string.
+				//
 				var dataOptions = new DataOptions().UseConnectionString(dataProvider, _settings.ConnectionString);
 
 				if (_settings.CommandTimeout != null)
 					dataOptions = dataOptions.UseCommandTimeout(_settings.CommandTimeout);
 
+				// Open a connection and apply optional provider-specific session setup before user SQL execution.
+				//
 				var dataConnection = new DataConnection(dataOptions);
 
 				await using (dataConnection.ConfigureAwait(false))
@@ -146,7 +150,7 @@ namespace LinqToDB.CommandLine
 					if (lockTimeoutCommand != null)
 						await dataConnection.ExecuteAsync(lockTimeoutCommand, cancellationToken).ConfigureAwait(false);
 
-					// Execute the SQL query and get a data reader for the results.
+					// Execute user-provided SQL and get a data reader for the result set.
 					//
 					var dataReader = await dataConnection.ExecuteReaderAsync(sql, cancellationToken).ConfigureAwait(false);
 
@@ -209,24 +213,34 @@ namespace LinqToDB.CommandLine
 							switch (_settings.Output)
 							{
 								case "csv":
+									// CSV output starts with a header row.
+									//
 									await WriteCsvHeader(outputWriter, columns, cancellationToken).ConfigureAwait(false);
 									break;
 								case "json-table":
+									// JSON table output starts with column metadata and then streams rows.
+									//
 									await WriteJsonTableStart(outputWriter, columns, cancellationToken).ConfigureAwait(false);
 									break;
 								default:
+									// Regular JSON output is an array of row objects.
+									//
 									await outputWriter.WriteAsync("[".AsMemory(), cancellationToken).ConfigureAwait(false);
 									break;
 							}
 
 							while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
 							{
+								// Stop reading after the configured row limit and report truncation.
+								//
 								if (rowCount >= _settings.MaxRows)
 								{
 									truncated = true;
 									break;
 								}
 
+								// Read one result row as normalized string values.
+								//
 								var row = new string?[columns.Length];
 
 								for (var i = 0; i < columns.Length; i++)
@@ -237,6 +251,8 @@ namespace LinqToDB.CommandLine
 									row[i] = ReadFieldAsString(reader, columns[i].ActualFieldType, i);
 								}
 
+								// Write the row using the selected output format.
+								//
 								switch (_settings.Output)
 								{
 									case "csv":
@@ -253,6 +269,8 @@ namespace LinqToDB.CommandLine
 								rowCount++;
 							}
 
+							// Close the selected output format.
+							//
 							switch (_settings.Output)
 							{
 								case "json-table":
@@ -274,7 +292,11 @@ namespace LinqToDB.CommandLine
 						}
 
 						if (truncated && !string.Equals(_settings.Output, "json-table", StringComparison.OrdinalIgnoreCase))
+						{
+							// JSON table carries truncation in-band; other formats report it through stderr.
+							//
 							await _environment.Error.WriteLineAsync($"Query result truncated to {_settings.MaxRows.ToString(CultureInfo.InvariantCulture)} row(s). Use '--max-rows' to change the limit.").ConfigureAwait(false);
+						}
 					}
 				}
 

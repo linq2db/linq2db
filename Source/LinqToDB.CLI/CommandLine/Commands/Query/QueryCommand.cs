@@ -17,25 +17,25 @@ namespace LinqToDB.CommandLine
 
 		static readonly OptionCategory _configurationOptions = new (1, "Configuration", "Configuration options", "configuration");
 		static readonly OptionCategory _connectionOptions    = new (2, "Connection",    "Connection options",    "connection");
-		static readonly OptionCategory _guardOptions        = new (3, "Guardrails",    "SQL guardrail options", "guardrails");
+		static readonly OptionCategory _guardOptions         = new (3, "Guardrails",    "SQL guardrail options", "guardrails");
 		static readonly OptionCategory _outputOptions        = new (4, "Output",        "Output options",        "output");
 		static readonly OptionCategory _inputOptions         = new (5, "Input",         "SQL input options",     "input");
 
-		static readonly CliOption _config           = new StringCliOption("config",            null, false, false, "path to query configuration file");
-		static readonly CliOption _profile          = new StringCliOption("profile",           null, false, false, "configuration profile name");
-		static readonly CliOption _provider         = new StringCliOption("provider",          null, false, false, "linq2db provider name");
-		static readonly CliOption _connectionString = new StringCliOption("connection-string", null, false, false, "database connection string; use {0} for user and {1} for password placeholders; configure provider-specific connection timeout here");
+		static readonly CliOption _config              = new StringCliOption("config",                null, false, false, "path to query configuration file");
+		static readonly CliOption _profile             = new StringCliOption("profile",               null, false, false, "configuration profile name");
+		static readonly CliOption _provider            = new StringCliOption("provider",              null, false, false, "linq2db provider name");
+		static readonly CliOption _connectionString    = new StringCliOption("connection-string",     null, false, false, "database connection string; use {0} for user and {1} for password placeholders; configure provider-specific connection timeout here");
 		static readonly CliOption _connectionStringEnv = new StringCliOption("connection-string-env", null, false, false, "environment variable with database connection string");
-		static readonly CliOption _user             = new StringCliOption("user",              null, false, false, "database user name for connection string formatting");
-		static readonly CliOption _userEnv          = new StringCliOption("user-env",          null, false, false, "environment variable with database user name");
-		static readonly CliOption _password         = new StringCliOption("password",          null, false, false, "database password for connection string formatting");
-		static readonly CliOption _passwordEnv      = new StringCliOption("password-env",      null, false, false, "environment variable with database password");
-		static readonly CliOption _commandTimeout   = new StringCliOption("command-timeout",   null, false, false, "SQL command timeout in seconds");
-		static readonly CliOption _lockTimeout      = new StringCliOption("lock-timeout",      null, false, false, "provider-specific lock wait timeout in seconds");
-		static readonly CliOption _maxRows          = new StringCliOption("max-rows",          null, false, false, "maximum number of result rows to read");
-		static readonly CliOption _outputFile       = new StringCliOption("output-file",       null, false, false, "path to file for command output");
-		static readonly CliOption _sql              = new StringCliOption("sql",               null, false, false, "single user-provided SQL query text to execute");
-		static readonly CliOption _sqlFile          = new StringCliOption("sql-file",          null, false, false, "path to file with single user-provided SQL query text to execute");
+		static readonly CliOption _user                = new StringCliOption("user",                  null, false, false, "database user name for connection string formatting");
+		static readonly CliOption _userEnv             = new StringCliOption("user-env",              null, false, false, "environment variable with database user name");
+		static readonly CliOption _password            = new StringCliOption("password",              null, false, false, "database password for connection string formatting");
+		static readonly CliOption _passwordEnv         = new StringCliOption("password-env",          null, false, false, "environment variable with database password");
+		static readonly CliOption _commandTimeout      = new StringCliOption("command-timeout",       null, false, false, "SQL command timeout in seconds");
+		static readonly CliOption _lockTimeout         = new StringCliOption("lock-timeout",          null, false, false, "provider-specific lock wait timeout in seconds");
+		static readonly CliOption _maxRows             = new StringCliOption("max-rows",              null, false, false, "maximum number of result rows to read");
+		static readonly CliOption _outputFile          = new StringCliOption("output-file",           null, false, false, "path to file for command output");
+		static readonly CliOption _sql                 = new StringCliOption("sql",                   null, false, false, "single user-provided SQL query text to execute");
+		static readonly CliOption _sqlFile             = new StringCliOption("sql-file",              null, false, false, "path to file with single user-provided SQL query text to execute");
 
 		static readonly CliOption _overwrite      = new BooleanCliOption("overwrite", null, false, "replace existing output file", null, null, null, false, false);
 		static readonly CliOption _allowUnsafeSql = new BooleanCliOption(
@@ -98,7 +98,7 @@ namespace LinqToDB.CommandLine
 			AddOption(_connectionOptions,    _passwordEnv);
 			AddOption(_connectionOptions,    _commandTimeout);
 			AddOption(_connectionOptions,    _lockTimeout);
-			AddOption(_guardOptions,        _allowUnsafeSql);
+			AddOption(_guardOptions,         _allowUnsafeSql);
 			AddOption(_outputOptions,        _output);
 			AddOption(_outputOptions,        _outputFile);
 			AddOption(_outputOptions,        _overwrite);
@@ -140,24 +140,24 @@ namespace LinqToDB.CommandLine
 		/// </summary>
 		QueryCommandSettings? ProcessOptions(ICliEnvironment environment, Dictionary<CliOption, object?> options)
 		{
-			options.Remove(_config,           out var config);
-			options.Remove(_profile,          out var profile);
-			options.Remove(_provider,         out var provider);
-			options.Remove(_connectionString, out var connectionString);
+			options.Remove(_config,              out var config);
+			options.Remove(_profile,             out var profile);
+			options.Remove(_provider,            out var provider);
+			options.Remove(_connectionString,    out var connectionString);
 			options.Remove(_connectionStringEnv, out var connectionStringEnv);
-			options.Remove(_user,             out var user);
-			options.Remove(_userEnv,          out var userEnv);
-			options.Remove(_password,         out var password);
-			options.Remove(_passwordEnv,      out var passwordEnv);
-			options.Remove(_commandTimeout,   out var commandTimeout);
-			options.Remove(_lockTimeout,      out var lockTimeout);
-			options.Remove(_allowUnsafeSql,   out var allowUnsafeSql);
-			options.Remove(_output,           out var output);
-			options.Remove(_outputFile,       out var outputFile);
-			options.Remove(_overwrite,        out var overwrite);
-			options.Remove(_maxRows,          out var maxRows);
-			options.Remove(_sql,              out var sql);
-			options.Remove(_sqlFile,          out var sqlFile);
+			options.Remove(_user,                out var user);
+			options.Remove(_userEnv,             out var userEnv);
+			options.Remove(_password,            out var password);
+			options.Remove(_passwordEnv,         out var passwordEnv);
+			options.Remove(_commandTimeout,      out var commandTimeout);
+			options.Remove(_lockTimeout,         out var lockTimeout);
+			options.Remove(_allowUnsafeSql,      out var allowUnsafeSql);
+			options.Remove(_output,              out var output);
+			options.Remove(_outputFile,          out var outputFile);
+			options.Remove(_overwrite,           out var overwrite);
+			options.Remove(_maxRows,             out var maxRows);
+			options.Remove(_sql,                 out var sql);
+			options.Remove(_sqlFile,             out var sqlFile);
 
 			var profileName = (string?)profile ?? DefaultProfileName;
 
@@ -178,9 +178,9 @@ namespace LinqToDB.CommandLine
 			var connectionStringText = GetConfiguredValue(environment, _connectionString, (string?)connectionString, (string?)connectionStringEnv, configuration?.ConnectionString, configuration?.ConnectionStringEnv);
 			var userName             = GetConfiguredValue(environment, _user,             (string?)user,             (string?)userEnv,             configuration?.User,             configuration?.UserEnv);
 			var passwordText         = GetConfiguredValue(environment, _password,         (string?)password,         (string?)passwordEnv,         configuration?.Password,         configuration?.PasswordEnv);
-			var commandTimeoutValue  = (string?)commandTimeout != null ? ParseTimeout(environment, _commandTimeout,    (string)commandTimeout)    : configuration?.CommandTimeout;
-			var lockTimeoutValue     = (string?)lockTimeout    != null ? ParseTimeout(environment, _lockTimeout,       (string)lockTimeout)       : configuration?.LockTimeout;
-			var maxRowsValue         = (string?)maxRows        != null ? ParseRowCount(environment, _maxRows,          (string)maxRows)           : configuration?.MaxRows ?? DefaultMaxRows;
+			var commandTimeoutValue  = (string?)commandTimeout != null ? ParseTimeout(environment, _commandTimeout,  (string)commandTimeout) :     configuration?.CommandTimeout;
+			var lockTimeoutValue     = (string?)lockTimeout    != null ? ParseTimeout(environment, _lockTimeout,     (string)lockTimeout)    :     configuration?.LockTimeout;
+			var maxRowsValue         = (string?)maxRows        != null ? ParseRowCount(environment, _maxRows,        (string)maxRows)        :     configuration?.MaxRows ?? DefaultMaxRows;
 			var outputFormat         = (string?)output ?? configuration?.Output ?? "json";
 			var outputFileName       = (string?)outputFile ?? configuration?.OutputFile;
 			var overwriteOutputFile  = (bool?)overwrite ?? false;
@@ -192,9 +192,9 @@ namespace LinqToDB.CommandLine
 			if (commandTimeoutValue < 0 || lockTimeoutValue < 0 || maxRowsValue < 0)
 				return null;
 
-			if (string.Equals(connectionStringText, MissingEnvironmentVariable, StringComparison.Ordinal)
-				|| string.Equals(userName, MissingEnvironmentVariable, StringComparison.Ordinal)
-				|| string.Equals(passwordText, MissingEnvironmentVariable, StringComparison.Ordinal))
+			if (string.Equals(connectionStringText, MissingEnvironmentVariable, StringComparison.Ordinal) ||
+			    string.Equals(userName,             MissingEnvironmentVariable, StringComparison.Ordinal) ||
+			    string.Equals(passwordText,         MissingEnvironmentVariable, StringComparison.Ordinal))
 				return null;
 
 			if (providerName == null)
