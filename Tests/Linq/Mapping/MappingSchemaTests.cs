@@ -2,6 +2,7 @@
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -13,6 +14,8 @@ using LinqToDB.Mapping;
 using LinqToDB.Metadata;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.Mapping
 {
@@ -322,6 +325,48 @@ namespace Tests.Mapping
 				Assert.That(attrs[2].Value, Is.EqualTo(2));
 				Assert.That(attrs[3].Value, Is.EqualTo(1));
 			}
+		}
+
+		// A reference type that is scalar only when explicitly registered on a schema (never a primitive/enum,
+		// so IsScalarType reports it scalar only via registration or a ScalarTypeAttribute - not a value-type fallback).
+		sealed class BorrowProbeElement;
+
+		// The type whose scalar-ness the reader below answers: scalar iff the *passed* schema treats
+		// BorrowProbeElement (a different type - no self-recursion) as scalar.
+		sealed class BorrowGatedType;
+
+		// Minimal schema-aware reader: marks BorrowGatedType scalar iff the schema handed to it treats
+		// BorrowProbeElement as scalar. Its answer is fully determined by which schema the aggregator forwards.
+		sealed class BorrowProbeReader : IMetadataReader
+		{
+			public MappingAttribute[] GetAttributes(MappingSchema mappingSchema, Type type)
+				=> type == typeof(BorrowGatedType) && mappingSchema.IsScalarType(typeof(BorrowProbeElement))
+					? [new ScalarTypeAttribute()]
+					: [];
+
+			public MappingAttribute[] GetAttributes(MappingSchema mappingSchema, Type type, MemberInfo memberInfo) => [];
+			public MemberInfo[]       GetDynamicColumns(Type type)                                                => [];
+			public string             GetObjectID()                                                               => ".BorrowProbeReader.";
+		}
+
+		[Test(Description = "A schema-aware reader borrowed by reference from a base schema (new MappingSchema(baseSchema), combine:false path) resolves against the deriving schema, not the base - the stateless aggregator forwards the active schema on every call (#5675)")]
+		public void SchemaAwareReader_BorrowedAggregatorResolvesAgainstDerivedSchema()
+		{
+			// baseMs owns a schema-aware reader; AddMetadataReader builds an aggregator over it.
+			var baseMs = new MappingSchema();
+			baseMs.AddMetadataReader(new BorrowProbeReader());
+
+			// Single-base ctor takes the combine:false path, which borrows baseMs' aggregator by reference.
+			// The aggregator holds no schema, so it forwards whichever schema drives the resolution.
+			var derived = new MappingSchema(baseMs);
+			derived.AddScalarType(typeof(BorrowProbeElement), DataType.Int32);
+
+			// derived registered BorrowProbeElement, so resolving through derived must report BorrowGatedType
+			// scalar. If the borrowed aggregator leaked baseMs (no registration) this would be false.
+			derived.IsScalarType(typeof(BorrowGatedType)).ShouldBeTrue();
+
+			// baseMs never registered BorrowProbeElement, so BorrowGatedType stays non-scalar there (control).
+			baseMs.IsScalarType(typeof(BorrowGatedType)).ShouldBeFalse();
 		}
 
 		enum Enum1

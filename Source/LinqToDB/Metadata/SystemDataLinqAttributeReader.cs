@@ -21,7 +21,7 @@ namespace LinqToDB.Metadata
 	/// </summary>
 	public class SystemDataLinqAttributeReader : IMetadataReader
 	{
-		public MappingAttribute[] GetAttributes(Type type)
+		public MappingAttribute[] GetAttributes(MappingSchema mappingSchema, Type type)
 		{
 			var t = type.GetAttribute<System.Data.Linq.Mapping.TableAttribute>   ();
 			var d = type.GetAttribute<System.Data.Linq.Mapping.DatabaseAttribute>();
@@ -61,7 +61,7 @@ namespace LinqToDB.Metadata
 			return [];
 		}
 
-		public MappingAttribute[] GetAttributes(Type type, MemberInfo memberInfo)
+		public MappingAttribute[] GetAttributes(MappingSchema mappingSchema, Type type, MemberInfo memberInfo)
 		{
 			List<MappingAttribute>? results = null;
 			var c = memberInfo.GetAttribute<System.Data.Linq.Mapping.ColumnAttribute>();

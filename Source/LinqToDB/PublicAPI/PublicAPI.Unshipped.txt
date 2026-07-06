@@ -1081,3 +1081,27 @@ LinqToDB.Mapping.EntityMappingBuilder<TEntity>.HasQueryFilter(string! filterKey,
 LinqToDB.Mapping.EntityMappingBuilder<TEntity>.HasQueryFilter<TDataContext>(string! filterKey, System.Func<System.Linq.IQueryable<TEntity>!, TDataContext, System.Linq.IQueryable<TEntity>!>? filterFunc) -> LinqToDB.Mapping.EntityMappingBuilder<TEntity>!
 static LinqToDB.LinqExtensions.IgnoreFilters<TSource>(this System.Linq.IQueryable<TSource>! source, System.Collections.Generic.IEnumerable<string!>! filterKeys, params System.Type![]! entityTypes) -> System.Linq.IQueryable<TSource>!
 static readonly LinqToDB.Internal.Reflection.Methods.LinqToDB.IgnoreFiltersByKey -> System.Reflection.MethodInfo!
+LinqToDB.Metadata.IMetadataReader.GetAttributes(LinqToDB.Mapping.MappingSchema! mappingSchema, System.Type! type) -> LinqToDB.Mapping.MappingAttribute![]!
+LinqToDB.Metadata.IMetadataReader.GetAttributes(LinqToDB.Mapping.MappingSchema! mappingSchema, System.Type! type, System.Reflection.MemberInfo! memberInfo) -> LinqToDB.Mapping.MappingAttribute![]!
+*REMOVED*LinqToDB.Metadata.IMetadataReader.GetAttributes(System.Type! type) -> LinqToDB.Mapping.MappingAttribute![]!
+*REMOVED*LinqToDB.Metadata.IMetadataReader.GetAttributes(System.Type! type, System.Reflection.MemberInfo! memberInfo) -> LinqToDB.Mapping.MappingAttribute![]!
+LinqToDB.Metadata.AttributeReader.GetAttributes(LinqToDB.Mapping.MappingSchema! mappingSchema, System.Type! type) -> LinqToDB.Mapping.MappingAttribute![]!
+LinqToDB.Metadata.AttributeReader.GetAttributes(LinqToDB.Mapping.MappingSchema! mappingSchema, System.Type! type, System.Reflection.MemberInfo! memberInfo) -> LinqToDB.Mapping.MappingAttribute![]!
+*REMOVED*LinqToDB.Metadata.AttributeReader.GetAttributes(System.Type! type) -> LinqToDB.Mapping.MappingAttribute![]!
+*REMOVED*LinqToDB.Metadata.AttributeReader.GetAttributes(System.Type! type, System.Reflection.MemberInfo! memberInfo) -> LinqToDB.Mapping.MappingAttribute![]!
+LinqToDB.Metadata.FluentMetadataReader.GetAttributes(LinqToDB.Mapping.MappingSchema! mappingSchema, System.Type! type) -> LinqToDB.Mapping.MappingAttribute![]!
+LinqToDB.Metadata.FluentMetadataReader.GetAttributes(LinqToDB.Mapping.MappingSchema! mappingSchema, System.Type! type, System.Reflection.MemberInfo! memberInfo) -> LinqToDB.Mapping.MappingAttribute![]!
+*REMOVED*LinqToDB.Metadata.FluentMetadataReader.GetAttributes(System.Type! type) -> LinqToDB.Mapping.MappingAttribute![]!
+*REMOVED*LinqToDB.Metadata.FluentMetadataReader.GetAttributes(System.Type! type, System.Reflection.MemberInfo! memberInfo) -> LinqToDB.Mapping.MappingAttribute![]!
+LinqToDB.Metadata.XmlAttributeReader.GetAttributes(LinqToDB.Mapping.MappingSchema! mappingSchema, System.Type! type) -> LinqToDB.Mapping.MappingAttribute![]!
+LinqToDB.Metadata.XmlAttributeReader.GetAttributes(LinqToDB.Mapping.MappingSchema! mappingSchema, System.Type! type, System.Reflection.MemberInfo! memberInfo) -> LinqToDB.Mapping.MappingAttribute![]!
+*REMOVED*LinqToDB.Metadata.XmlAttributeReader.GetAttributes(System.Type! type) -> LinqToDB.Mapping.MappingAttribute![]!
+*REMOVED*LinqToDB.Metadata.XmlAttributeReader.GetAttributes(System.Type! type, System.Reflection.MemberInfo! memberInfo) -> LinqToDB.Mapping.MappingAttribute![]!
+LinqToDB.Metadata.SystemComponentModelDataAnnotationsSchemaAttributeReader.GetAttributes(LinqToDB.Mapping.MappingSchema! mappingSchema, System.Type! type) -> LinqToDB.Mapping.MappingAttribute![]!
+LinqToDB.Metadata.SystemComponentModelDataAnnotationsSchemaAttributeReader.GetAttributes(LinqToDB.Mapping.MappingSchema! mappingSchema, System.Type! type, System.Reflection.MemberInfo! memberInfo) -> LinqToDB.Mapping.MappingAttribute![]!
+*REMOVED*LinqToDB.Metadata.SystemComponentModelDataAnnotationsSchemaAttributeReader.GetAttributes(System.Type! type) -> LinqToDB.Mapping.MappingAttribute![]!
+*REMOVED*LinqToDB.Metadata.SystemComponentModelDataAnnotationsSchemaAttributeReader.GetAttributes(System.Type! type, System.Reflection.MemberInfo! memberInfo) -> LinqToDB.Mapping.MappingAttribute![]!
+LinqToDB.DataProvider.SqlServer.SystemDataSqlServerAttributeReader.GetAttributes(LinqToDB.Mapping.MappingSchema! mappingSchema, System.Type! type) -> LinqToDB.Mapping.MappingAttribute![]!
+LinqToDB.DataProvider.SqlServer.SystemDataSqlServerAttributeReader.GetAttributes(LinqToDB.Mapping.MappingSchema! mappingSchema, System.Type! type, System.Reflection.MemberInfo! memberInfo) -> LinqToDB.Mapping.MappingAttribute![]!
+*REMOVED*LinqToDB.DataProvider.SqlServer.SystemDataSqlServerAttributeReader.GetAttributes(System.Type! type) -> LinqToDB.Mapping.MappingAttribute![]!
+*REMOVED*LinqToDB.DataProvider.SqlServer.SystemDataSqlServerAttributeReader.GetAttributes(System.Type! type, System.Reflection.MemberInfo! memberInfo) -> LinqToDB.Mapping.MappingAttribute![]!

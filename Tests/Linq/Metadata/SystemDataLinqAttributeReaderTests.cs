@@ -108,7 +108,7 @@ namespace Tests.Metadata
 		[Test]
 		public void ParseTableAttribute() {
 			var rd     = new SystemDataLinqAttributeReader();
-			var attrs = rd.GetAttributes(typeof(Shipper))
+			var attrs = rd.GetAttributes(LinqToDB.Mapping.MappingSchema.Default, typeof(Shipper))
 				.OfType<LinqToDB.Mapping.TableAttribute>().ToArray();
 
 			Assert.That(attrs, Is.Not.Null);

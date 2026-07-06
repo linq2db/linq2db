@@ -258,7 +258,7 @@ namespace LinqToDB.Metadata
 			.ToDictionary(t => t.Name, StringComparer.Ordinal);
 		}
 
-		public MappingAttribute[] GetAttributes(Type type)
+		public MappingAttribute[] GetAttributes(MappingSchema mappingSchema, Type type)
 		{
 			if ((_types.TryGetValue(type.FullName!, out var t) || _types.TryGetValue(type.Name, out t)) && t.Attributes.Length > 0)
 				return t.Attributes.Select(a => a.MakeAttribute()).ToArray();
@@ -266,7 +266,7 @@ namespace LinqToDB.Metadata
 			return [];
 		}
 
-		public MappingAttribute[] GetAttributes(Type type, MemberInfo memberInfo)
+		public MappingAttribute[] GetAttributes(MappingSchema mappingSchema, Type type, MemberInfo memberInfo)
 		{
 			if (_types.TryGetValue(type.FullName!, out var t) || _types.TryGetValue(type.Name, out t))
 			{

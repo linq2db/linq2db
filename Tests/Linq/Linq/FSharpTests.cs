@@ -164,14 +164,47 @@ namespace Tests.Linq
 			FSharp.OptionTypes.VerifyComplexElementOptionNotScalarized(db);
 		}
 
-		[ActiveIssue("F# option auto-mapping gate (IsScalarOption) consults MappingSchema.Default, so an option over a type that is scalar only in the user/provider schema is not auto-mapped")]
-		[Test(Description = "An option over a type that is scalar only in the user/provider schema (not MappingSchema.Default) must still auto-map (#195)")]
+		[Test(Description = "An option over a type that is scalar only in the user/provider schema (not MappingSchema.Default) must still auto-map (#195, #5675)")]
 		public void Option_CustomScalarElementMapped([DataSources] string context)
 		{
 			var ms = FSharp.OptionTypes.BuildCustomScalarSchema();
 
 			using var db = GetDataContext(context, ms);
 			FSharp.OptionTypes.VerifyCustomScalarOptionMapped(db);
+		}
+
+		[Test(Description = "Schema-aware option mapping follows each context's own combined schema: a context that registers the custom scalar auto-maps the option, while another context sharing the same F# reader instance but not registering it leaves the option unmapped - the reader's answer is per-schema, not a schema-independent constant (#5675)")]
+		public void Option_CustomScalarCacheIsolation([DataSources] string context)
+		{
+			// Context A registers MyId as a scalar; context B does not. Both go through UseFSharp(), so both
+			// combined schemas embed the same shared, schema-aware F# option reader instance. Its answer must
+			// follow each context's own schema - A maps the MyId option, B leaves it unmapped - proving resolution
+			// is per-schema and not a single schema-independent answer. This does NOT exercise the combine:false
+			// borrow-rebind path (independent combined schemas never share an aggregator); that guard is covered by
+			// MappingSchemaTests.SchemaAwareReader_BorrowedAggregatorRebindsToDerivedSchema.
+			var msA = FSharp.OptionTypes.BuildCustomScalarSchema();
+
+			using (var dbA = GetDataContext(context, msA))
+				FSharp.OptionTypes.VerifyCustomScalarOptionMapped(dbA);
+
+			using var dbB = GetDataContext(context);
+			FSharp.OptionTypes.VerifyCustomScalarOptionNotMapped(dbB);
+		}
+
+		[Test(Description = "An explicit fluent DataType on an option over a user-scalar element (MyId, scalar only via schema registration) survives the schema-aware broadening: the explicit mapping wins over auto-scalarization, complementing OptionMapping_ExplicitDataTypePreserved which covers the Default-scalar element (#5675 Tests #7)")]
+		public void Option_CustomScalarExplicitDataTypePreserved([DataSources] string context)
+		{
+			var ms = FSharp.OptionTypes.BuildCustomScalarExplicitColumnSchema();
+
+			using var db = GetDataContext(context, ms);
+			FSharp.OptionTypes.VerifyCustomScalarExplicitDataTypePreserved(db);
+		}
+
+		[Test(Description = "An option over a provider-native scalar element (IPAddress, scalar only via the PostgreSQL provider layer, not MappingSchema.Default) auto-maps as a scalar column - the schema-aware gate resolves scalar-ness against the active provider-inclusive schema (#5675 Tests #2)")]
+		public void Option_ProviderNativeScalarElementMapped([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.OptionTypes.VerifyProviderNativeScalarOptionMapped(db);
 		}
 
 		[Test]

@@ -1123,6 +1123,9 @@ namespace LinqToDB.Mapping
 
 			if (!combine && Schemas[0].MetadataReader == null)
 			{
+				// Borrow the base aggregator by reference. The aggregator holds no schema state and no per-schema
+				// attribute cache (it forwards the active schema to child readers on every call), so sharing it
+				// across schemas is safe - each schema's own cache keeps their resolved answers separate.
 				Schemas[0].MetadataReader = Schemas[1].MetadataReader;
 			}
 			else
@@ -1184,28 +1187,24 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
-		/// Gets attributes of specified type, associated with specified type.
+		/// Gets all mapping attributes associated with specified type, resolved against this schema.
 		/// </summary>
-		/// <typeparam name="T">Mapping attribute type (must inherit <see cref="MappingAttribute"/>).</typeparam>
 		/// <param name="type">Attributes owner type.</param>
-		/// <returns>Attributes of specified type.</returns>
-		private T[] GetAllAttributes<T>(Type type)
-			where T : MappingAttribute
+		/// <returns>Mapping attributes.</returns>
+		private MappingAttribute[] GetAllAttributes(Type type)
 		{
-			return Schemas[0].MetadataReader?.GetAttributes<T>(type) ?? [];
+			return Schemas[0].MetadataReader?.GetAttributes(this, type) ?? [];
 		}
 
 		/// <summary>
-		/// Gets attributes of specified type, associated with specified type member.
+		/// Gets all mapping attributes associated with specified type member, resolved against this schema.
 		/// </summary>
-		/// <typeparam name="T">Mapping attribute type (must inherit <see cref="MappingAttribute"/>).</typeparam>
 		/// <param name="type">Member's owner type.</param>
 		/// <param name="memberInfo">Attributes owner member.</param>
-		/// <returns>Attributes of specified type.</returns>
-		private T[] GetAllAttributes<T>(Type type, MemberInfo memberInfo)
-			where T : MappingAttribute
+		/// <returns>Mapping attributes.</returns>
+		private MappingAttribute[] GetAllAttributes(Type type, MemberInfo memberInfo)
 		{
-			return Schemas[0].MetadataReader?.GetAttributes<T>(type, memberInfo) ?? [];
+			return Schemas[0].MetadataReader?.GetAttributes(this, type, memberInfo) ?? [];
 		}
 
 		private (MappingAttributesCache cache, MappingAttributesCache firstOnlyCache) CreateAttributeCaches()
@@ -1214,8 +1213,8 @@ namespace LinqToDB.Mapping
 				(sourceOwner, source) =>
 				{
 					var attrs = sourceOwner != null
-						? GetAllAttributes<MappingAttribute>(sourceOwner, (MemberInfo)source)
-						: GetAllAttributes<MappingAttribute>((Type)source);
+						? GetAllAttributes(sourceOwner, (MemberInfo)source)
+						: GetAllAttributes((Type)source);
 
 					if (attrs.Length == 0)
 						return attrs;
@@ -1240,8 +1239,8 @@ namespace LinqToDB.Mapping
 				(sourceOwner, source) =>
 				{
 					var attrs = sourceOwner != null
-						? GetAllAttributes<MappingAttribute>(sourceOwner, (MemberInfo)source)
-						: GetAllAttributes<MappingAttribute>((Type)source);
+						? GetAllAttributes(sourceOwner, (MemberInfo)source)
+						: GetAllAttributes((Type)source);
 
 					if (attrs.Length == 0)
 						return attrs;

@@ -1,2 +1,6 @@
 #nullable enable
 override LinqToDB.DataProvider.DuckDB.DuckDBOptions.<Clone>$() -> LinqToDB.Internal.DataProvider.DataProviderOptions<LinqToDB.DataProvider.DuckDB.DuckDBOptions!>!
+LinqToDB.Metadata.SystemDataLinqAttributeReader.GetAttributes(LinqToDB.Mapping.MappingSchema! mappingSchema, System.Type! type) -> LinqToDB.Mapping.MappingAttribute![]!
+LinqToDB.Metadata.SystemDataLinqAttributeReader.GetAttributes(LinqToDB.Mapping.MappingSchema! mappingSchema, System.Type! type, System.Reflection.MemberInfo! memberInfo) -> LinqToDB.Mapping.MappingAttribute![]!
+*REMOVED*LinqToDB.Metadata.SystemDataLinqAttributeReader.GetAttributes(System.Type! type) -> LinqToDB.Mapping.MappingAttribute![]!
+*REMOVED*LinqToDB.Metadata.SystemDataLinqAttributeReader.GetAttributes(System.Type! type, System.Reflection.MemberInfo! memberInfo) -> LinqToDB.Mapping.MappingAttribute![]!

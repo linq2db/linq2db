@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,7 +6,6 @@ using System.Reflection;
 using System.Threading;
 
 using LinqToDB.Internal.Extensions;
-using LinqToDB.Internal.Mapping;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Metadata
@@ -23,7 +22,6 @@ namespace LinqToDB.Metadata
 		public static MetadataReader Default = new (new AttributeReader());
 
 		         Type[]?                                  _registeredTypes;
-		readonly MappingAttributesCache                   _cache;
 		readonly string                                   _objectId;
 		readonly ConcurrentDictionary<Type, MemberInfo[]> _dynamicColumns = new();
 		readonly Lock                                     _syncRoot = new();
@@ -35,43 +33,48 @@ namespace LinqToDB.Metadata
 		{
 			_readers  = readers ?? throw new ArgumentNullException(nameof(readers));
 			_objectId = $"[{string.JoinStrings(',', _readers.Select(r => r.GetObjectID()))}]";
-
-			_cache = new(
-				(type, source) =>
-				{
-					if (_readers.Length == 0)
-						return [];
-					if (_readers.Length == 1)
-						if (type != null)
-							return _readers[0].GetAttributes(type, (MemberInfo)source);
-						else
-							return _readers[0].GetAttributes((Type)source);
-
-					var attrs = new MappingAttribute[_readers.Length][];
-
-					for (var i = 0; i < _readers.Length; i++)
-						if (type != null)
-							attrs[i] = _readers[i].GetAttributes(type, (MemberInfo)source);
-						else
-							attrs[i] = _readers[i].GetAttributes((Type)source);
-
-					return attrs.Flatten();
-				});
 		}
 
-		internal T[] GetAttributes<T>(Type type)
-			where T : MappingAttribute
-			=> _cache.GetMappingAttributes<T>(type);
+		// Stateless fan-out: the active schema is threaded straight through to child readers on every call, so
+		// schema-aware readers (e.g. EFCore / F#-option) resolve against it. This aggregator keeps no per-(type,
+		// member) attribute cache of its own - memoization lives in MappingSchema's per-schema cache, which is 1:1
+		// with a schema and already walks the inheritance tree. Holding no schema state, the aggregator can be
+		// freely shared/borrowed across schemas without leaking one schema's answers to another.
+		internal MappingAttribute[] GetAttributes(MappingSchema mappingSchema, Type type)
+		{
+			if (_readers.Length == 0)
+				return [];
+			if (_readers.Length == 1)
+				return _readers[0].GetAttributes(mappingSchema, type);
 
-		internal T[] GetAttributes<T>(Type type, MemberInfo memberInfo)
-			where T: MappingAttribute
-			=> _cache.GetMappingAttributes<T>(type, memberInfo);
+			var attrs = new MappingAttribute[_readers.Length][];
 
-		MappingAttribute[] IMetadataReader.GetAttributes(Type type)
-			=> _cache.GetMappingAttributes<MappingAttribute>(type);
+			for (var i = 0; i < _readers.Length; i++)
+				attrs[i] = _readers[i].GetAttributes(mappingSchema, type);
 
-		MappingAttribute[] IMetadataReader.GetAttributes(Type type, MemberInfo memberInfo)
-			=> _cache.GetMappingAttributes<MappingAttribute>(type, memberInfo);
+			return attrs.Flatten();
+		}
+
+		internal MappingAttribute[] GetAttributes(MappingSchema mappingSchema, Type type, MemberInfo memberInfo)
+		{
+			if (_readers.Length == 0)
+				return [];
+			if (_readers.Length == 1)
+				return _readers[0].GetAttributes(mappingSchema, type, memberInfo);
+
+			var attrs = new MappingAttribute[_readers.Length][];
+
+			for (var i = 0; i < _readers.Length; i++)
+				attrs[i] = _readers[i].GetAttributes(mappingSchema, type, memberInfo);
+
+			return attrs.Flatten();
+		}
+
+		MappingAttribute[] IMetadataReader.GetAttributes(MappingSchema mappingSchema, Type type)
+			=> GetAttributes(mappingSchema, type);
+
+		MappingAttribute[] IMetadataReader.GetAttributes(MappingSchema mappingSchema, Type type, MemberInfo memberInfo)
+			=> GetAttributes(mappingSchema, type, memberInfo);
 
 		/// <inheritdoc cref="IMetadataReader.GetDynamicColumns"/>
 		public MemberInfo[] GetDynamicColumns(Type type)

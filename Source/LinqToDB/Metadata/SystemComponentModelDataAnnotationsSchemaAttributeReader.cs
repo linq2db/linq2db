@@ -15,7 +15,7 @@ namespace LinqToDB.Metadata
 	/// </summary>
 	public class SystemComponentModelDataAnnotationsSchemaAttributeReader : IMetadataReader
 	{
-		public MappingAttribute[] GetAttributes(Type type)
+		public MappingAttribute[] GetAttributes(MappingSchema mappingSchema, Type type)
 		{
 			var t = type.GetAttribute<System.ComponentModel.DataAnnotations.Schema.TableAttribute>();
 
@@ -48,7 +48,7 @@ namespace LinqToDB.Metadata
 			return [];
 		}
 
-		public MappingAttribute[] GetAttributes(Type type, MemberInfo memberInfo)
+		public MappingAttribute[] GetAttributes(MappingSchema mappingSchema, Type type, MemberInfo memberInfo)
 		{
 			var c = memberInfo.GetAttribute<System.ComponentModel.DataAnnotations.Schema.ColumnAttribute>();
 

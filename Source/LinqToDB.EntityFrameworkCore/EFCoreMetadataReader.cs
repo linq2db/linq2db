@@ -56,7 +56,6 @@ namespace LinqToDB.EntityFrameworkCore
 		private readonly IModel?                                                      _model;
 		private readonly RelationalSqlTranslatingExpressionVisitorDependencies?       _dependencies;
 		private readonly IRelationalTypeMappingSource?                                _mappingSource;
-		private readonly IValueConverterSelector?                                     _valueConverterSelector;
 #if !EF31
 		private readonly IRelationalAnnotationProvider?                               _annotationProvider;
 #else
@@ -81,7 +80,6 @@ namespace LinqToDB.EntityFrameworkCore
 			{
 				_dependencies           = accessor.GetService<RelationalSqlTranslatingExpressionVisitorDependencies>();
 				_mappingSource          = accessor.GetService<IRelationalTypeMappingSource>();
-				_valueConverterSelector = accessor.GetService<IValueConverterSelector>();
 #if EF31
 				_annotationProvider     = accessor.GetService<IMigrationsAnnotationProvider>();
 #else
@@ -98,7 +96,8 @@ namespace LinqToDB.EntityFrameworkCore
 #endif
 		}
 
-		public MappingAttribute[] GetAttributes(Type type)
+		// Type-level metadata (table / query-filter / inheritance) is schema-independent, so mappingSchema is unused here.
+		public MappingAttribute[] GetAttributes(MappingSchema mappingSchema, Type type)
 		{
 			List<MappingAttribute>? result = null;
 
@@ -271,7 +270,10 @@ namespace LinqToDB.EntityFrameworkCore
 			};
 		}
 
-		public MappingAttribute[] GetAttributes(Type type, MemberInfo memberInfo)
+		// The active combined schema is threaded to the DataType-inference sites so they use the provider's DataType
+		// customizations. Purity holds (IMetadataReader contract): this reader's instance caches (_calculatedExtensions,
+		// _manyToManyJoins) are schema-independent and GetObjectID is content-derived.
+		public MappingAttribute[] GetAttributes(MappingSchema mappingSchema, Type type, MemberInfo memberInfo)
 		{
 			if (typeof(Expression).IsSameOrParentOf(type))
 				return [];
@@ -283,7 +285,7 @@ namespace LinqToDB.EntityFrameworkCore
 			{
 				if (memberInfo is DynamicColumnInfo)
 				{
-					var ca = BuildJoinColumnAttribute(markerJoinInfo, memberInfo.Name);
+					var ca = BuildJoinColumnAttribute(markerJoinInfo, memberInfo.Name, mappingSchema);
 					return ca != null ? [ca] : [];
 				}
 
@@ -398,8 +400,7 @@ namespace LinqToDB.EntityFrameworkCore
 						}
 						else
 						{
-							var ms = _model != null ? LinqToDBForEFTools.GetMappingSchema(_model, _mappingSource, _valueConverterSelector, null) : MappingSchema.Default;
-							dataType = ms.GetDataType(typeMapping.ClrType).Type.DataType;
+							dataType = mappingSchema.GetDataType(typeMapping.ClrType).Type.DataType;
 						}
 					}
 
