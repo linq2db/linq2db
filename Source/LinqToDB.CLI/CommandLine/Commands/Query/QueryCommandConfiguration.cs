@@ -26,14 +26,29 @@ namespace LinqToDB.CommandLine
 		public string? ConnectionString { get; private set; }
 
 		/// <summary>
+		/// Environment variable name that contains database connection string.
+		/// </summary>
+		public string? ConnectionStringEnv { get; private set; }
+
+		/// <summary>
 		/// Optional database user name used as <c>{0}</c> argument for connection string formatting.
 		/// </summary>
 		public string? User             { get; private set; }
 
 		/// <summary>
+		/// Environment variable name that contains database user name.
+		/// </summary>
+		public string? UserEnv          { get; private set; }
+
+		/// <summary>
 		/// Optional database password used as <c>{1}</c> argument for connection string formatting.
 		/// </summary>
 		public string? Password         { get; private set; }
+
+		/// <summary>
+		/// Environment variable name that contains database password.
+		/// </summary>
+		public string? PasswordEnv      { get; private set; }
 
 		/// <summary>
 		/// Optional query command timeout in seconds.
@@ -156,17 +171,38 @@ namespace LinqToDB.CommandLine
 
 						ConnectionString = value;
 						break;
+					case "connectionStringEnv":
+					case "connection-string-env":
+						if (!TryGetString(fileName, profileName, property, out value, out error))
+							return false;
+
+						ConnectionStringEnv = value;
+						break;
 					case "user":
 						if (!TryGetString(fileName, profileName, property, out value, out error))
 							return false;
 
 						User = value;
 						break;
+					case "userEnv":
+					case "user-env":
+						if (!TryGetString(fileName, profileName, property, out value, out error))
+							return false;
+
+						UserEnv = value;
+						break;
 					case "password":
 						if (!TryGetString(fileName, profileName, property, out value, out error))
 							return false;
 
 						Password = value;
+						break;
+					case "passwordEnv":
+					case "password-env":
+						if (!TryGetString(fileName, profileName, property, out value, out error))
+							return false;
+
+						PasswordEnv = value;
 						break;
 					case "commandTimeout":
 					case "command-timeout":

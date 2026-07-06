@@ -822,6 +822,145 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task QueryReadsConnectionStringFromEnvironmentVariable()
+		{
+			var environment = new TestCliEnvironment();
+
+			environment.EnvironmentVariables.Add("LINQ2DB_QUERY_CONNECTION", "Data Source=:memory:");
+
+			var result = await RunCli(environment, "query", "--provider", "SQLite", "--connection-string-env", "LINQ2DB_QUERY_CONNECTION", "--sql", "select 1 as Value");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.Zero);
+				Assert.That(result.Output,   Does.Contain("\"Value\":\"1\""));
+				Assert.That(result.Error,    Is.Empty);
+			}
+		}
+
+		[Test]
+		public async Task QueryReadsUserFromEnvironmentVariable()
+		{
+			var environment = new TestCliEnvironment();
+
+			environment.EnvironmentVariables.Add("LINQ2DB_QUERY_USER", ":memory:");
+
+			var result = await RunCli(environment, "query", "--provider", "SQLite", "--connection-string", "Data Source={0}", "--user-env", "LINQ2DB_QUERY_USER", "--sql", "select 1 as Value");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.Zero);
+				Assert.That(result.Output,   Does.Contain("\"Value\":\"1\""));
+				Assert.That(result.Error,    Is.Empty);
+			}
+		}
+
+		[Test]
+		public async Task QueryReadsPasswordFromEnvironmentVariable()
+		{
+			var environment = new TestCliEnvironment();
+
+			environment.EnvironmentVariables.Add("LINQ2DB_QUERY_PASSWORD", ":memory:");
+
+			var result = await RunCli(environment, "query", "--provider", "SQLite", "--connection-string", "Data Source={1}", "--password-env", "LINQ2DB_QUERY_PASSWORD", "--sql", "select 1 as Value");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.Zero);
+				Assert.That(result.Output,   Does.Contain("\"Value\":\"1\""));
+				Assert.That(result.Error,    Is.Empty);
+			}
+		}
+
+		[Test]
+		public async Task QueryReportsMissingEnvironmentVariable()
+		{
+			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source={1}", "--password-env", "LINQ2DB_QUERY_PASSWORD", "--sql", "select 1 as Value");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.EqualTo(-1));
+				Assert.That(result.Error,    Does.Contain("Environment variable 'LINQ2DB_QUERY_PASSWORD' specified for option '--password' is not set."));
+			}
+		}
+
+		[Test]
+		public async Task QueryCliLiteralOverridesConfigEnvironmentVariable()
+		{
+			var environment = new TestCliEnvironment();
+			var config      = AddConfigFile(environment, """
+				{
+					"default": {
+						"provider": "SQLite",
+						"connectionStringEnv": "LINQ2DB_QUERY_CONNECTION"
+					}
+				}
+				""");
+
+			var result = await RunCli(environment, "query", "--config", config, "--connection-string", "Data Source=:memory:", "--sql", "select 1 as Value");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.Zero);
+				Assert.That(result.Output,   Does.Contain("\"Value\":\"1\""));
+				Assert.That(result.Error,    Is.Empty);
+			}
+		}
+
+		[Test]
+		public async Task QueryReadsConnectionStringFromConfigEnvironmentVariable()
+		{
+			var environment = new TestCliEnvironment();
+			var config      = AddConfigFile(environment, """
+				{
+					"default": {
+						"provider": "SQLite",
+						"connectionStringEnv": "LINQ2DB_QUERY_CONNECTION"
+					}
+				}
+				""");
+
+			environment.EnvironmentVariables.Add("LINQ2DB_QUERY_CONNECTION", "Data Source=:memory:");
+
+			var result = await RunCli(environment, "query", "--config", config, "--sql", "select 1 as Value");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.Zero);
+				Assert.That(result.Output,   Does.Contain("\"Value\":\"1\""));
+				Assert.That(result.Error,    Is.Empty);
+			}
+		}
+
+		[Test]
+		public async Task QueryReadsConnectionSettingsFromConfigEnvironmentVariables()
+		{
+			var environment = new TestCliEnvironment();
+			var config      = AddConfigFile(environment, """
+				{
+					"default": {
+						"provider": "SQLite",
+						"connectionString": "Data Source={0}",
+						"userEnv": "LINQ2DB_QUERY_USER",
+						"passwordEnv": "LINQ2DB_QUERY_PASSWORD"
+					}
+				}
+				""");
+
+			environment.EnvironmentVariables.Add("LINQ2DB_QUERY_USER", ":memory:");
+			environment.EnvironmentVariables.Add("LINQ2DB_QUERY_PASSWORD", "ignored");
+
+			var result = await RunCli(environment, "query", "--config", config, "--sql", "select 1 as Value");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.Zero);
+				Assert.That(result.Output,   Does.Contain("\"Value\":\"1\""));
+				Assert.That(result.Error,    Is.Empty);
+			}
+		}
+
+		[Test]
 		public async Task QueryStillRequiresSqlOrSqlFileWithConfig()
 		{
 			var environment = new TestCliEnvironment();
@@ -947,8 +1086,11 @@ namespace Tests.LinqToDB.CLI
 				Assert.That(result.Output,   Does.Contain("--profile"));
 				Assert.That(result.Output,   Does.Contain("--provider"));
 				Assert.That(result.Output,   Does.Contain("--connection-string"));
+				Assert.That(result.Output,   Does.Contain("--connection-string-env"));
 				Assert.That(result.Output,   Does.Contain("--user"));
+				Assert.That(result.Output,   Does.Contain("--user-env"));
 				Assert.That(result.Output,   Does.Contain("--password"));
+				Assert.That(result.Output,   Does.Contain("--password-env"));
 				Assert.That(result.Output,   Does.Contain("--command-timeout"));
 				Assert.That(result.Output,   Does.Contain("--lock-timeout"));
 				Assert.That(result.Output,   Does.Contain("--max-rows"));
@@ -1014,6 +1156,7 @@ namespace Tests.LinqToDB.CLI
 			private readonly StringWriter _error  = new();
 
 			public Dictionary<string, string> Files { get; } = new(StringComparer.Ordinal);
+			public Dictionary<string, string> EnvironmentVariables { get; } = new(StringComparer.Ordinal);
 
 			public TextWriter Out   => _output;
 			public TextWriter Error => _error;
@@ -1041,6 +1184,11 @@ namespace Tests.LinqToDB.CLI
 			public TextWriter CreateTextWriter(string path)
 			{
 				return new TestFileWriter(contents => Files[path] = contents);
+			}
+
+			public string? GetEnvironmentVariable(string name)
+			{
+				return EnvironmentVariables.GetValueOrDefault(name);
 			}
 
 			sealed class TestFileWriter(Action<string> save) : StringWriter

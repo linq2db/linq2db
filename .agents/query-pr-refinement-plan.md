@@ -61,16 +61,16 @@ Done when: invalid connection string format returns `INVALID_ARGUMENTS` with act
 
 ## Phase 4: Environment Variables for Secrets
 
-Status: pending
+Status: completed
 
 Add optional environment-variable based inputs.
 
-- [ ] Add CLI options: `--connection-string-env`, `--user-env`, `--password-env`.
-- [ ] Add config properties: `connectionStringEnv`, `userEnv`, `passwordEnv`.
-- [ ] Apply precedence: explicit CLI > CLI env option > profile explicit > profile env option > inherited default profile.
-- [ ] Missing env var must be a clear error.
-- [ ] Do not print secret values in diagnostics.
-- [ ] Add tests for password env, missing env, CLI override, connection string env, and user env.
+- [x] Add CLI options: `--connection-string-env`, `--user-env`, `--password-env`.
+- [x] Add config properties: `connectionStringEnv`, `userEnv`, `passwordEnv`.
+- [x] Apply precedence: explicit CLI > CLI env option > profile explicit > profile env option > inherited default profile.
+- [x] Missing env var must be a clear error.
+- [x] Do not print secret values in diagnostics.
+- [x] Add tests for password env, missing env, CLI override, connection string env, and user env.
 
 Done when: secrets can be supplied without command-line or config literal values.
 

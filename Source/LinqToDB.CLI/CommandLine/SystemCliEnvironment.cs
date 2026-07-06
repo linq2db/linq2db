@@ -48,5 +48,10 @@ namespace LinqToDB.CommandLine
 		{
 			return File.CreateText(path);
 		}
+
+		public string? GetEnvironmentVariable(string name)
+		{
+			return Environment.GetEnvironmentVariable(name);
+		}
 	}
 }

@@ -29,6 +29,10 @@ Connection settings:
 - `--provider <provider>` is the linq2db provider name.
 - `--connection-string <connection-string>` is the database connection string.
 - `--user <user>` and `--password <password>` are optional values for connection string formatting.
+- `--connection-string-env <name>`, `--user-env <name>`, and `--password-env <name>` read those values from environment variables.
+- Configuration profiles can use `connectionStringEnv`, `userEnv`, and `passwordEnv` for the same purpose.
+- Literal command-line values override command-line environment variable options; command-line values override configuration values.
+- If an environment variable option is specified, the variable must exist.
 - The final connection string is always produced with `string.Format(connectionString, user, password)`.
 - Use `{0}` in the connection string for the user value and `{1}` for the password value.
 - Escape literal braces in connection strings as `{{` and `}}`.

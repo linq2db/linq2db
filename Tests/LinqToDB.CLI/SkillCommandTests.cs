@@ -107,6 +107,11 @@ namespace Tests.LinqToDB.CLI
 			{
 				throw new NotSupportedException();
 			}
+
+			public string? GetEnvironmentVariable(string name)
+			{
+				throw new NotSupportedException();
+			}
 		}
 	}
 }

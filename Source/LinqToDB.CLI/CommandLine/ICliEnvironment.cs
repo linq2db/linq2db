@@ -13,5 +13,6 @@ namespace LinqToDB.CommandLine
 		string ReadAllText(string path);
 		void WriteAllText(string path, string contents);
 		TextWriter CreateTextWriter(string path);
+		string? GetEnvironmentVariable(string name);
 	}
 }

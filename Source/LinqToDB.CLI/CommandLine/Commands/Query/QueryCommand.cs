@@ -13,6 +13,7 @@ namespace LinqToDB.CommandLine
 	{
 		const string DefaultProfileName = "default";
 		const int    DefaultMaxRows     = 1000;
+		const string MissingEnvironmentVariable = "\u0000";
 
 		static readonly OptionCategory _configurationOptions = new (1, "Configuration", "Configuration options", "configuration");
 		static readonly OptionCategory _connectionOptions    = new (2, "Connection",    "Connection options",    "connection");
@@ -24,8 +25,11 @@ namespace LinqToDB.CommandLine
 		static readonly CliOption _profile          = new StringCliOption("profile",           null, false, false, "configuration profile name");
 		static readonly CliOption _provider         = new StringCliOption("provider",          null, false, false, "linq2db provider name");
 		static readonly CliOption _connectionString = new StringCliOption("connection-string", null, false, false, "database connection string; use {0} for user and {1} for password placeholders");
+		static readonly CliOption _connectionStringEnv = new StringCliOption("connection-string-env", null, false, false, "environment variable with database connection string");
 		static readonly CliOption _user             = new StringCliOption("user",              null, false, false, "database user name for connection string formatting");
+		static readonly CliOption _userEnv          = new StringCliOption("user-env",          null, false, false, "environment variable with database user name");
 		static readonly CliOption _password         = new StringCliOption("password",          null, false, false, "database password for connection string formatting");
+		static readonly CliOption _passwordEnv      = new StringCliOption("password-env",      null, false, false, "environment variable with database password");
 		static readonly CliOption _commandTimeout   = new StringCliOption("command-timeout",   null, false, false, "SQL command timeout in seconds");
 		static readonly CliOption _lockTimeout      = new StringCliOption("lock-timeout",      null, false, false, "provider-specific lock wait timeout in seconds");
 		static readonly CliOption _maxRows          = new StringCliOption("max-rows",          null, false, false, "maximum number of result rows to read");
@@ -85,8 +89,11 @@ namespace LinqToDB.CommandLine
 			AddOption(_configurationOptions, _profile);
 			AddOption(_connectionOptions,    _provider);
 			AddOption(_connectionOptions,    _connectionString);
+			AddOption(_connectionOptions,    _connectionStringEnv);
 			AddOption(_connectionOptions,    _user);
+			AddOption(_connectionOptions,    _userEnv);
 			AddOption(_connectionOptions,    _password);
+			AddOption(_connectionOptions,    _passwordEnv);
 			AddOption(_connectionOptions,    _commandTimeout);
 			AddOption(_connectionOptions,    _lockTimeout);
 			AddOption(_safetyOptions,        _allowUnsafeSql);
@@ -135,8 +142,11 @@ namespace LinqToDB.CommandLine
 			options.Remove(_profile,          out var profile);
 			options.Remove(_provider,         out var provider);
 			options.Remove(_connectionString, out var connectionString);
+			options.Remove(_connectionStringEnv, out var connectionStringEnv);
 			options.Remove(_user,             out var user);
+			options.Remove(_userEnv,          out var userEnv);
 			options.Remove(_password,         out var password);
+			options.Remove(_passwordEnv,      out var passwordEnv);
 			options.Remove(_commandTimeout,   out var commandTimeout);
 			options.Remove(_lockTimeout,      out var lockTimeout);
 			options.Remove(_allowUnsafeSql,   out var allowUnsafeSql);
@@ -163,9 +173,9 @@ namespace LinqToDB.CommandLine
 			}
 
 			var providerName         = (string?)provider ?? configuration?.Provider;
-			var connectionStringText = (string?)connectionString ?? configuration?.ConnectionString;
-			var userName             = (string?)user ?? configuration?.User;
-			var passwordText         = (string?)password ?? configuration?.Password;
+			var connectionStringText = GetConfiguredValue(environment, _connectionString, (string?)connectionString, (string?)connectionStringEnv, configuration?.ConnectionString, configuration?.ConnectionStringEnv);
+			var userName             = GetConfiguredValue(environment, _user,             (string?)user,             (string?)userEnv,             configuration?.User,             configuration?.UserEnv);
+			var passwordText         = GetConfiguredValue(environment, _password,         (string?)password,         (string?)passwordEnv,         configuration?.Password,         configuration?.PasswordEnv);
 			var commandTimeoutValue  = (string?)commandTimeout != null ? ParseTimeout(environment, _commandTimeout,    (string)commandTimeout)    : configuration?.CommandTimeout;
 			var lockTimeoutValue     = (string?)lockTimeout    != null ? ParseTimeout(environment, _lockTimeout,       (string)lockTimeout)       : configuration?.LockTimeout;
 			var maxRowsValue         = (string?)maxRows        != null ? ParseRowCount(environment, _maxRows,          (string)maxRows)           : configuration?.MaxRows ?? DefaultMaxRows;
@@ -178,6 +188,11 @@ namespace LinqToDB.CommandLine
 			var querySqlFile         = (string?)sqlFile;
 
 			if (commandTimeoutValue < 0 || lockTimeoutValue < 0 || maxRowsValue < 0)
+				return null;
+
+			if (string.Equals(connectionStringText, MissingEnvironmentVariable, StringComparison.Ordinal)
+				|| string.Equals(userName, MissingEnvironmentVariable, StringComparison.Ordinal)
+				|| string.Equals(passwordText, MissingEnvironmentVariable, StringComparison.Ordinal))
 				return null;
 
 			if (providerName == null)
@@ -237,6 +252,34 @@ namespace LinqToDB.CommandLine
 
 			environment.Error.WriteLine($"Option '--{option.Name}' must be a non-negative integer number of seconds.");
 			return -1;
+		}
+
+		static string? GetConfiguredValue(ICliEnvironment environment, CliOption option, string? commandLineValue, string? commandLineEnvironmentVariableName, string? configurationValue, string? configurationEnvironmentVariableName)
+		{
+			if (commandLineValue != null)
+				return commandLineValue;
+
+			if (commandLineEnvironmentVariableName != null)
+				return GetEnvironmentValue(environment, option, commandLineEnvironmentVariableName);
+
+			if (configurationValue != null)
+				return configurationValue;
+
+			if (configurationEnvironmentVariableName != null)
+				return GetEnvironmentValue(environment, option, configurationEnvironmentVariableName);
+
+			return null;
+		}
+
+		static string? GetEnvironmentValue(ICliEnvironment environment, CliOption option, string environmentVariableName)
+		{
+			var value = environment.GetEnvironmentVariable(environmentVariableName);
+
+			if (value != null)
+				return value;
+
+			environment.Error.WriteLine($"Environment variable '{environmentVariableName}' specified for option '--{option.Name}' is not set.");
+			return MissingEnvironmentVariable;
 		}
 
 		static int ParseRowCount(ICliEnvironment environment, CliOption option, string value)
