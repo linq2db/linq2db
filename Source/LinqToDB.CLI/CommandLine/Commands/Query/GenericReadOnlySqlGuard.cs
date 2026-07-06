@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace LinqToDB.CommandLine
 {
-	internal static class GenericQuerySafetyValidator
+	internal static class GenericReadOnlySqlGuard
 	{
 		private static readonly HashSet<string> _forbiddenTokens = new(StringComparer.OrdinalIgnoreCase)
 		{
@@ -34,46 +34,46 @@ namespace LinqToDB.CommandLine
 			"VACUUM",
 		};
 
-		public static QuerySafetyResult Validate(string sql)
+		public static SqlGuardResult Validate(string sql)
 		{
 			var tokens = Tokenize(sql);
 
 			var singleStatementResult = ValidateSingleStatement(tokens);
-			if (!singleStatementResult.IsSafe)
+			if (!singleStatementResult.IsAllowed)
 				return singleStatementResult;
 
 			for (var i = 0; i < tokens.Count; i++)
 			{
 				var token = tokens[i];
 				if (_forbiddenTokens.Contains(token))
-					return QuerySafetyResult.Unsafe($"Query is not read-only: token '{token}' is not allowed.");
+					return SqlGuardResult.Rejected($"Query is not read-only: token '{token}' is not allowed.");
 			}
 
 			var firstToken = tokens[0];
 			if (!string.Equals(firstToken, "SELECT", StringComparison.OrdinalIgnoreCase)
 				&& !string.Equals(firstToken, "WITH", StringComparison.OrdinalIgnoreCase))
 			{
-				return QuerySafetyResult.Unsafe("Only SELECT queries are allowed.");
+				return SqlGuardResult.Rejected("Only SELECT queries are allowed.");
 			}
 
-			return QuerySafetyResult.Safe;
+			return SqlGuardResult.Allowed;
 		}
 
-		public static QuerySafetyResult ValidateSingleStatement(string sql)
+		public static SqlGuardResult ValidateSingleStatement(string sql)
 		{
 			return ValidateSingleStatement(Tokenize(sql));
 		}
 
-		private static QuerySafetyResult ValidateSingleStatement(List<string> tokens)
+		private static SqlGuardResult ValidateSingleStatement(List<string> tokens)
 		{
 			if (tokens.Count == 0)
-				return QuerySafetyResult.Unsafe("Query is empty.");
+				return SqlGuardResult.Rejected("Query is empty.");
 
 			var semicolonIndex = tokens.IndexOf(";");
 			if (semicolonIndex >= 0 && semicolonIndex != tokens.Count - 1)
-				return QuerySafetyResult.Unsafe("Only single SQL statement is allowed.");
+				return SqlGuardResult.Rejected("Only single SQL statement is allowed.");
 
-			return QuerySafetyResult.Safe;
+			return SqlGuardResult.Allowed;
 		}
 
 		private static List<string> Tokenize(string sql)

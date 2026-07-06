@@ -1,6 +1,6 @@
 namespace LinqToDB.CommandLine
 {
-	internal enum QuerySqlSafetyMode
+	internal enum UnsafeSqlPolicy
 	{
 		Deny,
 		Confirm,

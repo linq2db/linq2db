@@ -17,19 +17,19 @@ Goal: refine the `dotnet linq2db query` command into a clear agent-oriented, res
 
 ## Phase 1: Terminology
 
-Status: pending
+Status: completed
 
 Rename safety terminology to guard terminology.
 
-- [ ] `QuerySafetyValidator` -> `ReadOnlySqlGuard`
-- [ ] `GenericQuerySafetyValidator` -> `GenericReadOnlySqlGuard`
-- [ ] `SqlServerQuerySafetyValidator` -> `SqlServerReadOnlySqlGuard`
-- [ ] `QuerySafetyResult` -> `SqlGuardResult`
-- [ ] `QuerySqlSafetyMode` -> `UnsafeSqlPolicy`
-- [ ] Update tests and user-facing text.
-- [ ] Prefer wording: read-only guard, best-effort guard, guardrail, unsafe SQL policy.
+- [x] `QuerySafetyValidator` -> `ReadOnlySqlGuard`
+- [x] `GenericQuerySafetyValidator` -> `GenericReadOnlySqlGuard`
+- [x] `SqlServerQuerySafetyValidator` -> `SqlServerReadOnlySqlGuard`
+- [x] `QuerySafetyResult` -> `SqlGuardResult`
+- [x] `QuerySqlSafetyMode` -> `UnsafeSqlPolicy`
+- [x] Update tests and user-facing text.
+- [x] Prefer wording: read-only guard, best-effort guard, guardrail, unsafe SQL policy.
 
-Done when: code, tests, help, and `SKILL.md` no longer imply strict SQL safety guarantees.
+Done when: code, tests, help, and `SKILL.md` consistently describe best-effort SQL guardrails.
 
 ## Phase 2: Query Contract
 
@@ -210,7 +210,7 @@ Keep PR description aligned with actual implementation.
 - [ ] Update Summary.
 - [ ] Update Why.
 - [ ] Update Scenarios.
-- [ ] Update Safety / guardrail model.
+- [ ] Update Guardrail model.
 - [ ] Update Testing.
 - [ ] Mention follow-ups explicitly if any planned items are deferred.
 

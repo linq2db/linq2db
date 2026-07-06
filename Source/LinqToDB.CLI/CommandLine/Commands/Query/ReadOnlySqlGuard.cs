@@ -4,22 +4,22 @@ using LinqToDB.DataProvider;
 
 namespace LinqToDB.CommandLine
 {
-	internal static class QuerySafetyValidator
+	internal static class ReadOnlySqlGuard
 	{
-		public static QuerySafetyResult Validate(IDataProvider provider, string sql)
+		public static SqlGuardResult Validate(IDataProvider provider, string sql)
 		{
 			return IsSqlServerProvider(provider.Name)
-				? SqlServerQuerySafetyValidator.Validate(sql)
-				: GenericQuerySafetyValidator.Validate(sql);
+				? SqlServerReadOnlySqlGuard.Validate(sql)
+				: GenericReadOnlySqlGuard.Validate(sql);
 		}
 
-		public static QuerySafetyResult ValidateSingleStatement(IDataProvider provider, string sql)
+		public static SqlGuardResult ValidateSingleStatement(IDataProvider provider, string sql)
 		{
 			// Single-statement execution is a hard query command contract. SQL Server gets
 			// AST-level validation; other providers use generic best-effort validation.
 			return IsSqlServerProvider(provider.Name)
-				? SqlServerQuerySafetyValidator.ValidateSingleStatement(sql)
-				: GenericQuerySafetyValidator.ValidateSingleStatement(sql);
+				? SqlServerReadOnlySqlGuard.ValidateSingleStatement(sql)
+				: GenericReadOnlySqlGuard.ValidateSingleStatement(sql);
 		}
 
 		private static bool IsSqlServerProvider(string provider)

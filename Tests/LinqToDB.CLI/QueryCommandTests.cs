@@ -149,19 +149,19 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
-		public async Task QueryRejectsUnsafeSqlConfirmationWhenSafetyPolicyDenies()
+		public async Task QueryRejectsUnsafeSqlConfirmationWhenUnsafeSqlPolicyDenies()
 		{
 			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--allow-unsafe-sql", "--sql", "select 1");
 
 			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.ExitCode, Is.EqualTo(-1));
-				Assert.That(result.Error,    Does.Contain("Option '--allow-unsafe-sql' cannot be used because SQL safety policy is 'deny'."));
+				Assert.That(result.Error,    Does.Contain("Option '--allow-unsafe-sql' cannot be used because unsafe SQL policy is 'deny'."));
 			}
 		}
 
 		[Test]
-		public async Task QueryConfirmSafetyPolicyRequiresUnsafeSqlConfirmation()
+		public async Task QueryConfirmUnsafeSqlPolicyRequiresUnsafeSqlConfirmation()
 		{
 			var environment = new TestCliEnvironment();
 			var config      = AddConfigFile(environment, """
@@ -184,7 +184,7 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
-		public async Task QueryConfirmSafetyPolicyAllowsUnsafeSqlWithConfirmation()
+		public async Task QueryConfirmUnsafeSqlPolicyAllowsUnsafeSqlWithConfirmation()
 		{
 			var environment = new TestCliEnvironment();
 			var config      = AddConfigFile(environment, """
@@ -208,7 +208,7 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
-		public async Task QueryAllowSafetyPolicyAllowsUnsafeSqlWithoutConfirmation()
+		public async Task QueryAllowUnsafeSqlPolicyAllowsUnsafeSqlWithoutConfirmation()
 		{
 			var environment = new TestCliEnvironment();
 			var config      = AddConfigFile(environment, """
@@ -245,53 +245,53 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
-		public void QuerySafetyAllowsSqlServerSelect()
+		public void QueryGuardAllowsSqlServerSelect()
 		{
 			var provider = DataConnection.GetDataProvider("SqlServer", "Server=.;Database=test;Trusted_Connection=True")!;
 
-			var result = QuerySafetyValidator.Validate(provider, "select 1 as Value");
+			var result = ReadOnlySqlGuard.Validate(provider, "select 1 as Value");
 
-			Assert.That(result.IsSafe, Is.True);
+			Assert.That(result.IsAllowed, Is.True);
 		}
 
 		[Test]
-		public void QuerySafetyRejectsSqlServerDml()
+		public void QueryGuardRejectsSqlServerDml()
 		{
 			var provider = DataConnection.GetDataProvider("SqlServer", "Server=.;Database=test;Trusted_Connection=True")!;
 
-			var result = QuerySafetyValidator.Validate(provider, "update dbo.Person set Name = 'test'");
+			var result = ReadOnlySqlGuard.Validate(provider, "update dbo.Person set Name = 'test'");
 
 			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.IsSafe, Is.False);
+				Assert.That(result.IsAllowed, Is.False);
 				Assert.That(result.Error,  Does.Contain("UpdateStatement"));
 			}
 		}
 
 		[Test]
-		public void QuerySafetyRejectsSqlServerExecute()
+		public void QueryGuardRejectsSqlServerExecute()
 		{
 			var provider = DataConnection.GetDataProvider("SqlServer", "Server=.;Database=test;Trusted_Connection=True")!;
 
-			var result = QuerySafetyValidator.Validate(provider, "exec dbo.DoWork");
+			var result = ReadOnlySqlGuard.Validate(provider, "exec dbo.DoWork");
 
 			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.IsSafe, Is.False);
+				Assert.That(result.IsAllowed, Is.False);
 				Assert.That(result.Error,  Does.Contain("EXECUTE is not allowed"));
 			}
 		}
 
 		[Test]
-		public void QuerySafetyRejectsSqlServerSelectInto()
+		public void QueryGuardRejectsSqlServerSelectInto()
 		{
 			var provider = DataConnection.GetDataProvider("SqlServer", "Server=.;Database=test;Trusted_Connection=True")!;
 
-			var result = QuerySafetyValidator.Validate(provider, "select * into dbo.NewPerson from dbo.Person");
+			var result = ReadOnlySqlGuard.Validate(provider, "select * into dbo.NewPerson from dbo.Person");
 
 			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.IsSafe, Is.False);
+				Assert.That(result.IsAllowed, Is.False);
 				Assert.That(result.Error,  Does.Contain("SELECT INTO is not allowed"));
 			}
 		}

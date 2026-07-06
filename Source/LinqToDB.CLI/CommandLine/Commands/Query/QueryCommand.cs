@@ -17,7 +17,7 @@ namespace LinqToDB.CommandLine
 
 		static readonly OptionCategory _configurationOptions = new (1, "Configuration", "Configuration options", "configuration");
 		static readonly OptionCategory _connectionOptions    = new (2, "Connection",    "Connection options",    "connection");
-		static readonly OptionCategory _safetyOptions        = new (3, "Safety",        "SQL safety options",    "safety");
+		static readonly OptionCategory _guardOptions        = new (3, "Guardrails",    "SQL guardrail options", "guardrails");
 		static readonly OptionCategory _outputOptions        = new (4, "Output",        "Output options",        "output");
 		static readonly OptionCategory _inputOptions         = new (5, "Input",         "SQL input options",     "input");
 
@@ -96,7 +96,7 @@ namespace LinqToDB.CommandLine
 			AddOption(_connectionOptions,    _passwordEnv);
 			AddOption(_connectionOptions,    _commandTimeout);
 			AddOption(_connectionOptions,    _lockTimeout);
-			AddOption(_safetyOptions,        _allowUnsafeSql);
+			AddOption(_guardOptions,        _allowUnsafeSql);
 			AddOption(_outputOptions,        _output);
 			AddOption(_outputOptions,        _outputFile);
 			AddOption(_outputOptions,        _overwrite);
@@ -182,7 +182,7 @@ namespace LinqToDB.CommandLine
 			var outputFormat         = (string?)output ?? configuration?.Output ?? "json";
 			var outputFileName       = (string?)outputFile ?? configuration?.OutputFile;
 			var overwriteOutputFile  = (bool?)overwrite ?? false;
-			var sqlSafety            = configuration?.SqlSafety ?? QuerySqlSafetyMode.Deny;
+			var unsafeSqlPolicy      = configuration?.UnsafeSqlPolicy ?? UnsafeSqlPolicy.Deny;
 			var allowUnsafeSqlValue  = (bool?)allowUnsafeSql ?? false;
 			var querySql             = (string?)sql;
 			var querySqlFile         = (string?)sqlFile;
@@ -217,9 +217,9 @@ namespace LinqToDB.CommandLine
 				return null;
 			}
 
-			if (allowUnsafeSqlValue && sqlSafety == QuerySqlSafetyMode.Deny)
+			if (allowUnsafeSqlValue && unsafeSqlPolicy == UnsafeSqlPolicy.Deny)
 			{
-				environment.Error.WriteLine($"Option '--{_allowUnsafeSql.Name}' cannot be used because SQL safety policy is 'deny'.");
+				environment.Error.WriteLine($"Option '--{_allowUnsafeSql.Name}' cannot be used because unsafe SQL policy is 'deny'.");
 				return null;
 			}
 
@@ -239,7 +239,7 @@ namespace LinqToDB.CommandLine
 				outputFormat,
 				outputFileName,
 				overwriteOutputFile,
-				sqlSafety,
+				unsafeSqlPolicy,
 				allowUnsafeSqlValue,
 				querySql,
 				querySqlFile);

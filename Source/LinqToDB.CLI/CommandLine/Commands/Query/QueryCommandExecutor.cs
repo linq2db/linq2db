@@ -95,26 +95,26 @@ namespace LinqToDB.CommandLine
 
 				// Validate that the SQL query is a single statement and does not contain multiple statements or batch separators.
 				//
-				var singleStatementResult = QuerySafetyValidator.ValidateSingleStatement(dataProvider, sql);
+				var singleStatementResult = ReadOnlySqlGuard.ValidateSingleStatement(dataProvider, sql);
 
-				if (!singleStatementResult.IsSafe)
+				if (!singleStatementResult.IsAllowed)
 				{
 					await _environment.Error.WriteLineAsync(singleStatementResult.Error).ConfigureAwait(false);
 					return StatusCodes.EXPECTED_ERROR;
 				}
 
-				// Validate that the SQL query is safe to execute based on the configured safety mode.
+				// Validate that the SQL query is allowed by the configured unsafe SQL policy.
 				//
-				if (_settings.SqlSafety != QuerySqlSafetyMode.Allow)
+				if (_settings.UnsafeSqlPolicy != UnsafeSqlPolicy.Allow)
 				{
-					var safetyResult = QuerySafetyValidator.Validate(dataProvider, sql);
+					var guardResult = ReadOnlySqlGuard.Validate(dataProvider, sql);
 
-					if (!safetyResult.IsSafe && !(_settings.SqlSafety == QuerySqlSafetyMode.Confirm && _settings.AllowUnsafeSql))
+					if (!guardResult.IsAllowed && !(_settings.UnsafeSqlPolicy == UnsafeSqlPolicy.Confirm && _settings.AllowUnsafeSql))
 					{
-						if (_settings.SqlSafety == QuerySqlSafetyMode.Confirm)
-							await _environment.Error.WriteLineAsync($"Unsafe SQL requires '--allow-unsafe-sql': {safetyResult.Error}").ConfigureAwait(false);
+						if (_settings.UnsafeSqlPolicy == UnsafeSqlPolicy.Confirm)
+							await _environment.Error.WriteLineAsync($"Unsafe SQL requires '--allow-unsafe-sql': {guardResult.Error}").ConfigureAwait(false);
 						else
-							await _environment.Error.WriteLineAsync(safetyResult.Error).ConfigureAwait(false);
+							await _environment.Error.WriteLineAsync(guardResult.Error).ConfigureAwait(false);
 
 						return StatusCodes.EXPECTED_ERROR;
 					}

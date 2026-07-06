@@ -32,7 +32,7 @@ namespace Tests.LinqToDB.CLI
 				Assert.That(result.Output,   Does.Contain("Prepare regression tests for bugs found in real data"));
 				Assert.That(result.Output,   Does.Contain("Support synchronous development of code and a development database"));
 				Assert.That(result.Output,   Does.Contain("An agent MUST ask the user for explicit confirmation before executing any unsafe SQL operation."));
-				Assert.That(result.Output,   Does.Contain("Default mode is safe mode"));
+				Assert.That(result.Output,   Does.Contain("Default policy is guarded mode"));
 				Assert.That(result.Output,   Does.Contain("result-set-oriented database inspection command"));
 				Assert.That(result.Output,   Does.Contain("does not change the `query` command contract into a general DDL/DML execution workflow"));
 				Assert.That(result.Output,   Does.Contain("best-effort guardrails intended to help avoid agent mistakes"));

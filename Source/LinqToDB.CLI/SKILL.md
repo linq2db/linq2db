@@ -108,10 +108,10 @@ Result limits:
 - When `json` or `csv` output is truncated, the command writes a truncation diagnostic to stderr.
 - When `json-table` output is truncated, the command sets `truncated` to `true`.
 
-Safety:
+Guardrails:
 
-- Default mode is safe mode: unsafe SQL is rejected unless configuration explicitly allows it.
-- Safe mode can be relaxed only by creating a configuration profile with `unsafeSql: "confirm"` or `unsafeSql: "allow"`.
+- Default policy is guarded mode: unsafe SQL is rejected unless configuration explicitly allows it.
+- Guarded mode can be relaxed only by creating a configuration profile with `unsafeSql: "confirm"` or `unsafeSql: "allow"`.
 - The query command always accepts only one SQL statement per invocation. Multiple statements are rejected even when unsafe SQL is allowed.
 - Single-statement execution is a hard command contract for all providers. SQL Server is checked with ScriptDom AST; other providers currently use a generic best-effort validator until provider-specific parsers are added.
 - If an agent needs to execute several independent operations, it should run several separate `query` commands.
@@ -126,7 +126,7 @@ Safety:
 - `unsafeSql: "confirm"` allows unsafe SQL only when `--allow-unsafe-sql` is specified.
 - `unsafeSql: "allow"` allows unsafe SQL without confirmation.
 - Use `confirm` or `allow` only in trusted development profiles.
-- The SQL safety validator is a guardrail, not a security boundary. If an agent can edit the configuration file, it can change configuration-based safety policy.
+- The read-only SQL guard is a guardrail, not a security boundary. If an agent can edit the configuration file, it can change configuration-based unsafe SQL policy.
 - All safety measures in this command are best-effort guardrails intended to help avoid agent mistakes; they are not absolute protection for a database.
 - The strongest protection against agent mistakes is to execute SQL using a database account with limited permissions appropriate for the task. For read-only agent queries, prefer a read-only account. For development workflows that need DDL/DML, prefer a dedicated disposable database or a restricted development account.
 
@@ -185,4 +185,4 @@ cmd.exe:
 mkdir ".\.agents\skills\linq2db-cli" 2>nul & dotnet linq2db skill > ".\.agents\skills\linq2db-cli\SKILL.md"
 ```
 
-Keep this document synchronized with command behavior. When a command option, configuration rule, safety policy, or agent workflow changes, update `SKILL.md` and the `skill` command tests in the same change.
+Keep this document synchronized with command behavior. When a command option, configuration rule, unsafe SQL policy, or agent workflow changes, update `SKILL.md` and the `skill` command tests in the same change.

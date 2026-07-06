@@ -68,7 +68,7 @@ namespace LinqToDB.CommandLine
 		/// <summary>
 		/// Unsafe SQL execution policy. This value is intentionally available only from configuration profiles.
 		/// </summary>
-		public QuerySqlSafetyMode? SqlSafety { get; private set; }
+		public UnsafeSqlPolicy? UnsafeSqlPolicy { get; private set; }
 
 		/// <summary>
 		/// Query output format.
@@ -230,13 +230,13 @@ namespace LinqToDB.CommandLine
 						if (!TryGetString(fileName, profileName, property, out value, out error))
 							return false;
 
-						if (!TryParseSqlSafety(value, out var sqlSafety))
+						if (!TryParseUnsafeSqlPolicy(value, out var unsafeSqlPolicy))
 						{
 							error = $"Configuration file '{fileName}' profile '{profileName}' property '{property.Name}' has unknown value '{value}'.";
 							return false;
 						}
 
-						SqlSafety = sqlSafety;
+						UnsafeSqlPolicy = unsafeSqlPolicy;
 						break;
 					case "output":
 						if (!TryGetString(fileName, profileName, property, out value, out error))
@@ -329,27 +329,27 @@ namespace LinqToDB.CommandLine
 			return false;
 		}
 
-		static bool TryParseSqlSafety(string? value, out QuerySqlSafetyMode sqlSafety)
+		static bool TryParseUnsafeSqlPolicy(string? value, out UnsafeSqlPolicy unsafeSqlPolicy)
 		{
 			if (string.Equals(value, "deny", StringComparison.OrdinalIgnoreCase))
 			{
-				sqlSafety = QuerySqlSafetyMode.Deny;
+				unsafeSqlPolicy = global::LinqToDB.CommandLine.UnsafeSqlPolicy.Deny;
 				return true;
 			}
 
 			if (string.Equals(value, "confirm", StringComparison.OrdinalIgnoreCase))
 			{
-				sqlSafety = QuerySqlSafetyMode.Confirm;
+				unsafeSqlPolicy = global::LinqToDB.CommandLine.UnsafeSqlPolicy.Confirm;
 				return true;
 			}
 
 			if (string.Equals(value, "allow", StringComparison.OrdinalIgnoreCase))
 			{
-				sqlSafety = QuerySqlSafetyMode.Allow;
+				unsafeSqlPolicy = global::LinqToDB.CommandLine.UnsafeSqlPolicy.Allow;
 				return true;
 			}
 
-			sqlSafety = default;
+			unsafeSqlPolicy = default;
 			return false;
 		}
 	}
