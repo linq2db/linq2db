@@ -6,6 +6,8 @@ using System.Data.SqlTypes;
 
 using LinqToDB.CommandLine;
 
+using Microsoft.SqlServer.Types;
+
 using NUnit.Framework;
 
 namespace Tests.LinqToDB.CLI
@@ -74,6 +76,17 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public void ReadFieldAsStringConvertsSqlServerUdtTypes()
+		{
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(ReadSingleValue(SqlHierarchyId.Parse("/1/2/3/"), "SqlHierarchyId"), Is.EqualTo("/1/2/3/"));
+				Assert.That(ReadSingleValue(SqlGeometry.STGeomFromText(new SqlChars("POINT (1 2)"), 0), "SqlGeometry"), Is.EqualTo("POINT (1 2)"));
+				Assert.That(ReadSingleValue(SqlGeography.STGeomFromText(new SqlChars("POINT(-122.34900 47.65100)"), 4326), "SqlGeography"), Is.EqualTo("POINT (-122.349 47.651)"));
+			}
+		}
+
+		[Test]
 		public void ReadFieldAsStringUsesProviderSpecificValueByDefault()
 		{
 			using var reader = new SingleValueDataReader(
@@ -111,6 +124,15 @@ namespace Tests.LinqToDB.CLI
 				?? throw new MissingMethodException(nameof(QueryCommandExecutor), "ReadFieldAsString");
 
 			return (string?)method.Invoke(null, new[] { reader, actualFieldType, ordinal });
+		}
+
+		static string? ReadSingleValue(object value, string actualFieldTypeName)
+		{
+			using var reader = new SingleValueDataReader(value, value.GetType(), value.GetType());
+
+			Assert.That(reader.Read(), Is.True);
+
+			return ReadFieldAsString(reader, actualFieldTypeName, 0);
 		}
 
 		sealed class SingleValueDataReader : DbDataReader

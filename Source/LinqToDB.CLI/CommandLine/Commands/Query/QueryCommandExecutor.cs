@@ -21,6 +21,7 @@ using LinqToDB.Internal.DataProvider.SQLite;
 using LinqToDB.Internal.DataProvider.SqlServer;
 
 using Microsoft.Data.SqlTypes;
+using Microsoft.SqlServer.Types;
 
 namespace LinqToDB.CommandLine
 {
@@ -49,6 +50,9 @@ namespace LinqToDB.CommandLine
 			SqlXml,
 			SqlVectorFloat,
 			SqlVectorHalf,
+			SqlHierarchyId,
+			SqlGeometry,
+			SqlGeography,
 		}
 
 		readonly ICliEnvironment      _environment = environment;
@@ -162,7 +166,7 @@ namespace LinqToDB.CommandLine
 
 						for (var i = 0; i < columns.Length; i++)
 						{
-							Type providerSpecificType;
+							Type? providerSpecificType;
 
 							try
 							{
@@ -172,6 +176,8 @@ namespace LinqToDB.CommandLine
 							{
 								providerSpecificType = reader.GetFieldType(i);
 							}
+
+							providerSpecificType ??= reader.GetFieldType(i) ?? typeof(object);
 
 							columns[i] = CreateOutputColumn(reader, i, providerSpecificType);
 						}
@@ -415,7 +421,7 @@ namespace LinqToDB.CommandLine
 
 		static QueryOutputColumn CreateOutputColumn(DbDataReader reader, int ordinal, Type providerSpecificType)
 		{
-			var fieldType = reader.GetFieldType(ordinal);
+			var fieldType = reader.GetFieldType(ordinal) ?? typeof(object);
 			var dataTypeName = reader.GetDataTypeName(ordinal);
 
 			var actualFieldType = providerSpecificType switch
@@ -440,6 +446,9 @@ namespace LinqToDB.CommandLine
 				_ when providerSpecificType == typeof(SqlXml)           => QueryActualFieldType.SqlXml,
 				_ when providerSpecificType == typeof(SqlVector<float>) => QueryActualFieldType.SqlVectorFloat,
 				_ when providerSpecificType == typeof(SqlVector<Half>)  => QueryActualFieldType.SqlVectorHalf,
+				_ when providerSpecificType == typeof(SqlHierarchyId)   => QueryActualFieldType.SqlHierarchyId,
+				_ when providerSpecificType == typeof(SqlGeometry)      => QueryActualFieldType.SqlGeometry,
+				_ when providerSpecificType == typeof(SqlGeography)     => QueryActualFieldType.SqlGeography,
 				_                                                       => QueryActualFieldType.None,
 			};
 
@@ -484,6 +493,9 @@ namespace LinqToDB.CommandLine
 				QueryActualFieldType.SqlXml         => ((SqlXml)value).Value,
 				QueryActualFieldType.SqlVectorFloat => ConvertVectorToString(((SqlVector<float>)value).Memory.ToArray()),
 				QueryActualFieldType.SqlVectorHalf  => ConvertVectorToString(((SqlVector<Half>) value).Memory.ToArray()),
+				QueryActualFieldType.SqlHierarchyId => ((SqlHierarchyId)value).ToString(),
+				QueryActualFieldType.SqlGeometry    => ((SqlGeometry)value).ToString(),
+				QueryActualFieldType.SqlGeography   => ((SqlGeography)value).ToString(),
 				_                                   => Convert.ToString(value, CultureInfo.InvariantCulture),
 			};
 		}
