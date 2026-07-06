@@ -24,10 +24,15 @@ Required command-line input:
 - `--sql-file <file>` reads SQL text from a file.
 - Exactly one of `--sql` or `--sql-file` must be specified.
 - SQL text is command-line only and cannot be provided by configuration profiles.
+- Path options support `%NAME%` and `${NAME}` environment variable expansion. This applies to `--config`, `--sql-file`, `--output-file`, and `--provider-location` or `providerLocation` from configuration.
+- Referenced environment variables in path options must exist.
 
 Connection settings:
 
 - `--provider <provider>` is the linq2db provider name.
+- `--provider-location <path>` loads an external ADO.NET provider assembly before the query provider is resolved. Use it when the provider is not bundled with `linq2db.cli` or when a specific provider assembly version must be supplied by the user.
+- Loading an external assembly only makes it available to the process; compatibility with the selected linq2db provider and any provider dependencies remains the user's responsibility.
+- DB2 provider assemblies are not bundled because of package size. For DB2, install the matching IBM provider package separately and pass the path to `IBM.Data.Db2.dll` with `--provider-location` or `providerLocation` in the configuration profile.
 - `--connection-string <connection-string>` is the database connection string.
 - `--user <user>` and `--password <password>` are optional values for connection string formatting.
 - `--connection-string-env <name>`, `--user-env <name>`, and `--password-env <name>` read those values from environment variables.
@@ -158,6 +163,7 @@ Common examples:
 dotnet linq2db query --provider SQLite --connection-string "Data Source=data.db" --sql "select * from Person"
 dotnet linq2db query --provider SQLite --connection-string "Data Source=data.db" --sql-file query.sql
 dotnet linq2db query --config query.json --profile uat --command-timeout 30 --sql-file query.sql
+dotnet linq2db query --provider DB2 --provider-location "C:\path\to\IBM.Data.Db2.dll" --connection-string "Server=localhost:50000;Database=testdb;UID=db2inst1;PWD=Password12!" --sql "select * from SYSIBM.SYSDUMMY1"
 dotnet linq2db query --config query.json --profile uat --sql-file query.sql
 dotnet linq2db query --config query.json --profile uat --user readonly_user --password secret --sql "select * from Person"
 dotnet linq2db query --config query.json --profile uat --output json-table --sql "select p.Id, o.Id from Person p join Orders o on o.PersonId = p.Id"

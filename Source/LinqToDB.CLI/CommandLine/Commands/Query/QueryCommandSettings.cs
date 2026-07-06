@@ -5,6 +5,7 @@ namespace LinqToDB.CommandLine
 	/// </summary>
 	/// <param name="Profile">Selected configuration profile name.</param>
 	/// <param name="Provider">linq2db provider name.</param>
+	/// <param name="ProviderLocation">Optional path to external provider assembly, e.g. IBM.Data.Db2.dll for DB2.</param>
 	/// <param name="ConnectionString">
 	/// Final database connection string after command line/profile merge and user/password formatting.
 	/// </param>
@@ -21,6 +22,7 @@ namespace LinqToDB.CommandLine
 	internal sealed record QueryCommandSettings(
 		string             Profile,
 		string             Provider,
+		string?            ProviderLocation,
 		string             ConnectionString,
 		int?               CommandTimeout,
 		int?               LockTimeout,

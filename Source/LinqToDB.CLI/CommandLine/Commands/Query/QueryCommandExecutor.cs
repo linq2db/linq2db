@@ -5,6 +5,7 @@ using System.Data.Common;
 using System.Data.SqlTypes;
 using System.Globalization;
 using System.IO;
+using System.Reflection;
 using System.Runtime.ExceptionServices;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -12,8 +13,11 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
+using LinqToDB.DataProvider.DB2;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider.Firebird;
 using LinqToDB.Internal.DataProvider.MySql;
 using LinqToDB.Internal.DataProvider.PostgreSQL;
@@ -66,6 +70,13 @@ namespace LinqToDB.CommandLine
 			OracleTimeStamp,
 			OracleTimeStampTZ,
 			OracleTimeStampLTZ,
+			DB2Binary,
+			DB2Blob,
+			DB2Clob,
+			DB2Date,
+			DB2Time,
+			DB2TimeStamp,
+			DB2Xml,
 		}
 
 		readonly ICliEnvironment      _environment = environment;
@@ -100,6 +111,9 @@ namespace LinqToDB.CommandLine
 
 			try
 			{
+				if (!LoadExternalProvider())
+					return StatusCodes.EXPECTED_ERROR;
+
 				// Create data provider for the specified database provider and connection string.
 				//
 				var dataProvider = DataConnection.GetDataProvider(_settings.Provider, _settings.ConnectionString);
@@ -335,6 +349,85 @@ namespace LinqToDB.CommandLine
 			}
 		}
 
+		bool LoadExternalProvider()
+		{
+			if (_settings.ProviderLocation == null)
+			{
+				if (IsDB2Provider(_settings.Provider))
+				{
+					_environment.Error.WriteLine(@"Cannot locate IBM.Data.Db2.dll provider assembly.
+Due to huge size of it, we don't include Net.IBM.Data.Db2 provider into installation.
+You need to install it manually and specify provider path using '--provider-location <path_to_assembly>' option.
+Provider could be downloaded from:
+- for Windows: https://www.nuget.org/packages/Net.IBM.Data.Db2
+- for Linux: https://www.nuget.org/packages/Net.IBM.Data.Db2-lnx
+- for macOS: https://www.nuget.org/packages/Net.IBM.Data.Db2-osx");
+					return false;
+				}
+
+				return true;
+			}
+
+			if (!_environment.FileExists(_settings.ProviderLocation))
+			{
+				_environment.Error.WriteLine($"Provider assembly '{_settings.ProviderLocation}' not found.");
+				return false;
+			}
+
+			var currentDirectory = Environment.CurrentDirectory;
+			var providerDirectory = Path.GetDirectoryName(Path.GetFullPath(_settings.ProviderLocation));
+
+			try
+			{
+				if (!string.IsNullOrEmpty(providerDirectory))
+					Environment.CurrentDirectory = providerDirectory;
+
+				var assembly = Assembly.LoadFrom(_settings.ProviderLocation);
+
+				if (IsDB2Provider(_settings.Provider))
+				{
+					DB2Tools.AutoDetectProvider = true;
+
+					var factory = FindProviderFactory(assembly, "DB2Factory");
+
+					if (factory == null)
+					{
+						_environment.Error.WriteLine($"Provider assembly '{_settings.ProviderLocation}' doesn't contain DB2Factory type.");
+						return false;
+					}
+
+					DbProviderFactories.RegisterFactory("IBM.Data.DB2", factory);
+				}
+			}
+			finally
+			{
+				Environment.CurrentDirectory = currentDirectory;
+			}
+
+			return true;
+		}
+
+		static Type? FindProviderFactory(Assembly assembly, string factoryTypeName)
+		{
+			foreach (var type in assembly.GetTypes())
+			{
+				if (string.Equals(type.Name, factoryTypeName, StringComparison.Ordinal)
+					&& typeof(DbProviderFactory).IsAssignableFrom(type))
+				{
+					return type;
+				}
+			}
+
+			return null;
+		}
+
+		static bool IsDB2Provider(string provider)
+		{
+			return string.Equals(provider, ProviderName.DB2,     StringComparison.OrdinalIgnoreCase)
+				|| string.Equals(provider, ProviderName.DB2LUW,  StringComparison.OrdinalIgnoreCase)
+				|| string.Equals(provider, ProviderName.DB2zOS,  StringComparison.OrdinalIgnoreCase);
+		}
+
 		static string? GetLockTimeoutCommand(IDataProvider dataProvider, int? timeout)
 		{
 			if (timeout is null or <= 0)
@@ -505,6 +598,13 @@ namespace LinqToDB.CommandLine
 				_ when providerSpecificType == typeof(OracleTimeStamp)    => QueryActualFieldType.OracleTimeStamp,
 				_ when providerSpecificType == typeof(OracleTimeStampTZ)  => QueryActualFieldType.OracleTimeStampTZ,
 				_ when providerSpecificType == typeof(OracleTimeStampLTZ) => QueryActualFieldType.OracleTimeStampLTZ,
+				_ when IsProviderSpecificType(providerSpecificType, "IBM.Data.DB2Types.DB2Binary")    => QueryActualFieldType.DB2Binary,
+				_ when IsProviderSpecificType(providerSpecificType, "IBM.Data.DB2Types.DB2Blob")      => QueryActualFieldType.DB2Blob,
+				_ when IsProviderSpecificType(providerSpecificType, "IBM.Data.DB2Types.DB2Clob")      => QueryActualFieldType.DB2Clob,
+				_ when IsProviderSpecificType(providerSpecificType, "IBM.Data.DB2Types.DB2Date")      => QueryActualFieldType.DB2Date,
+				_ when IsProviderSpecificType(providerSpecificType, "IBM.Data.DB2Types.DB2Time")      => QueryActualFieldType.DB2Time,
+				_ when IsProviderSpecificType(providerSpecificType, "IBM.Data.DB2Types.DB2TimeStamp") => QueryActualFieldType.DB2TimeStamp,
+				_ when IsProviderSpecificType(providerSpecificType, "IBM.Data.DB2Types.DB2Xml")       => QueryActualFieldType.DB2Xml,
 				_                                                         => QueryActualFieldType.None,
 			};
 
@@ -571,6 +671,13 @@ namespace LinqToDB.CommandLine
 				QueryActualFieldType.OracleTimeStamp    => FormatOracleTimeStamp((OracleTimeStamp)value),
 				QueryActualFieldType.OracleTimeStampTZ  => FormatOracleTimeStampTZ((OracleTimeStampTZ)value),
 				QueryActualFieldType.OracleTimeStampLTZ => FormatOracleTimeStampLTZ((OracleTimeStampLTZ)value),
+				QueryActualFieldType.DB2Binary          => ConvertBytesToString((byte[])GetProviderSpecificPropertyValue(value, "Value")),
+				QueryActualFieldType.DB2Blob            => ConvertBytesToString((byte[])GetProviderSpecificPropertyValue(value, "Value")),
+				QueryActualFieldType.DB2Clob            => (string)GetProviderSpecificPropertyValue(value, "Value"),
+				QueryActualFieldType.DB2Date            => FormatDate((DateTime)GetProviderSpecificPropertyValue(value, "Value")),
+				QueryActualFieldType.DB2Time            => ((TimeSpan)GetProviderSpecificPropertyValue(value, "Value")).ToString("c", CultureInfo.InvariantCulture),
+				QueryActualFieldType.DB2TimeStamp       => ((DateTime)GetProviderSpecificPropertyValue(value, "Value")).ToString("O", CultureInfo.InvariantCulture),
+				QueryActualFieldType.DB2Xml             => (string)GetProviderSpecificMethodValue(value, "GetString"),
 				_                                       => ConvertValueToString(value),
 			};
 		}
@@ -601,6 +708,29 @@ namespace LinqToDB.CommandLine
 				|| string.Equals(dataTypeName, "Date32", StringComparison.OrdinalIgnoreCase)
 				|| string.Equals(dataTypeName, "Nullable(Date)", StringComparison.OrdinalIgnoreCase)
 				|| string.Equals(dataTypeName, "Nullable(Date32)", StringComparison.OrdinalIgnoreCase);
+		}
+
+		static bool IsProviderSpecificType(Type type, string fullName)
+		{
+			return string.Equals(type.FullName, fullName, StringComparison.Ordinal);
+		}
+
+		static object GetProviderSpecificPropertyValue(object value, string propertyName)
+		{
+			var property = value.GetType().GetProperty(propertyName, BindingFlags.Public | BindingFlags.Instance)
+				?? throw new InvalidOperationException($"Provider-specific type '{value.GetType().FullName}' doesn't contain '{propertyName}' property.");
+
+			return property.GetValue(value)
+				?? throw new InvalidOperationException($"Provider-specific type '{value.GetType().FullName}' property '{propertyName}' returned null.");
+		}
+
+		static object GetProviderSpecificMethodValue(object value, string methodName)
+		{
+			var method = value.GetType().GetMethod(methodName, BindingFlags.Public | BindingFlags.Instance, binder: null, types: Type.EmptyTypes, modifiers: null)
+				?? throw new InvalidOperationException($"Provider-specific type '{value.GetType().FullName}' doesn't contain '{methodName}' method.");
+
+			return method.InvokeExt(value, null)
+				?? throw new InvalidOperationException($"Provider-specific type '{value.GetType().FullName}' method '{methodName}' returned null.");
 		}
 
 		static string FormatDate(object value)

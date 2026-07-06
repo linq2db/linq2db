@@ -8,6 +8,7 @@ using System.Globalization;
 using System.Runtime.CompilerServices;
 
 using ClickHouse.Driver.Numerics;
+using IBM.Data.DB2Types;
 using LinqToDB;
 using LinqToDB.Data;
 
@@ -113,6 +114,31 @@ namespace Tests.DataProvider
 				AssertReadMatrix(conn, "interval '1-2' year to month"                         , typeof(OracleIntervalYM) , typeof(long)          , "+01-02");
 				AssertReadMatrix(conn, "interval '3 04:05:06.789' day to second"              , typeof(OracleIntervalDS) , typeof(TimeSpan)      , "+03 04:05:06.789000", "3.04:05:06.7890000");
 				AssertReadMatrix(conn, "bfilename('DATA_PUMP_DIR', 'missing.bin')"            , typeof(OracleBFile)      , typeof(byte[])        , "<BFILE>", providerSpecificOnly: true);
+			}
+		}
+
+		[Test]
+		public void DB2ProviderSpecificReadMatrix([IncludeDataSources(ProviderName.DB2)] string context)
+		{
+			using var conn = GetDataConnection(context);
+
+			using (Assert.EnterMultipleScope())
+			{
+				AssertReadMatrix(conn, "CAST(1000000 AS BIGINT) FROM SYSIBM.SYSDUMMY1"                       , typeof(DB2Int64)       , typeof(long)    , "1000000");
+				AssertReadMatrix(conn, "CAST(7777777 AS INTEGER) FROM SYSIBM.SYSDUMMY1"                      , typeof(DB2Int32)       , typeof(int)     , "7777777");
+				AssertReadMatrix(conn, "CAST(100 AS SMALLINT) FROM SYSIBM.SYSDUMMY1"                         , typeof(DB2Int16)       , typeof(short)   , "100");
+				AssertReadMatrix(conn, "CAST(9999999 AS DECIMAL(31,0)) FROM SYSIBM.SYSDUMMY1"                , typeof(DB2Decimal)     , typeof(decimal) , "9999999");
+				AssertReadMatrix(conn, "CAST(8888888 AS DECFLOAT) FROM SYSIBM.SYSDUMMY1"                     , typeof(DB2DecimalFloat), typeof(decimal) , "8888888");
+				AssertReadMatrix(conn, "CAST(20.31 AS REAL) FROM SYSIBM.SYSDUMMY1"                           , typeof(DB2Real)        , typeof(float)   , "20.31");
+				AssertReadMatrix(conn, "CAST(16.2 AS DOUBLE) FROM SYSIBM.SYSDUMMY1"                          , typeof(DB2Double)      , typeof(double)  , "16.2");
+				AssertReadMatrix(conn, "CAST('text' AS VARCHAR(10)) FROM SYSIBM.SYSDUMMY1"                   , typeof(DB2String)      , typeof(string)  , "text");
+				AssertReadMatrix(conn, "CAST('2024-01-02' AS DATE) FROM SYSIBM.SYSDUMMY1"                    , typeof(DB2Date)        , typeof(DateTime), "2024-01-02");
+				AssertReadMatrix(conn, "CAST('03:04:05' AS TIME) FROM SYSIBM.SYSDUMMY1"                      , typeof(DB2Time)        , typeof(TimeSpan), "03:04:05");
+				AssertReadMatrix(conn, "CAST('2024-01-02 03:04:05.123456' AS TIMESTAMP) FROM SYSIBM.SYSDUMMY1", typeof(DB2TimeStamp)   , typeof(DateTime), "2024-01-02T03:04:05.1234560");
+				AssertReadMatrix(conn, "CAST(BX'3039' AS VARBINARY(2)) FROM SYSIBM.SYSDUMMY1"                , typeof(DB2Binary)      , typeof(byte[])  , "0x3039");
+				AssertReadMatrix(conn, "BLOB(BX'3039') FROM SYSIBM.SYSDUMMY1"                                , typeof(DB2Blob)        , typeof(byte[])  , "0x3039");
+				AssertReadMatrix(conn, "CLOB('hello, csv') FROM SYSIBM.SYSDUMMY1"                            , typeof(DB2Clob)        , typeof(string)  , "hello, csv");
+				AssertReadMatrix(conn, "XMLPARSE(DOCUMENT '<root><v>1</v></root>') FROM SYSIBM.SYSDUMMY1"    , typeof(DB2Xml)         , typeof(string)  , "<root><v>1</v></root>");
 			}
 		}
 
@@ -246,6 +272,13 @@ namespace Tests.DataProvider
 				SqlDouble sqlDouble           => sqlDouble.Value.ToString("R", CultureInfo.InvariantCulture),
 				double doubleValue            => doubleValue.ToString("R", CultureInfo.InvariantCulture),
 				string stringValue            => stringValue,
+				DB2Binary db2Binary           => ConvertBytesToString(db2Binary.Value),
+				DB2Blob db2Blob               => ConvertBytesToString(db2Blob.Value),
+				DB2Clob db2Clob               => db2Clob.Value,
+				DB2Date db2Date               => FormatDate(db2Date.Value),
+				DB2Time db2Time               => db2Time.Value.ToString("c", CultureInfo.InvariantCulture),
+				DB2TimeStamp db2TimeStamp     => db2TimeStamp.Value.ToString("O", CultureInfo.InvariantCulture),
+				DB2Xml db2Xml                 => db2Xml.GetString(),
 				OracleDate oracleDate         => FormatDate(oracleDate.Value),
 				OracleTimeStamp timestamp     => FormatOracleTimeStamp(timestamp.Year, timestamp.Month, timestamp.Day, timestamp.Hour, timestamp.Minute, timestamp.Second, timestamp.Nanosecond),
 				OracleTimeStampTZ timestamp   => FormatOracleTimeStamp(timestamp.Year, timestamp.Month, timestamp.Day, timestamp.Hour, timestamp.Minute, timestamp.Second, timestamp.Nanosecond) + timestamp.TimeZone,

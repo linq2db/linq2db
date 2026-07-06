@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -21,9 +22,10 @@ namespace LinqToDB.CommandLine
 		static readonly OptionCategory _outputOptions        = new (4, "Output",        "Output options",        "output");
 		static readonly OptionCategory _inputOptions         = new (5, "Input",         "SQL input options",     "input");
 
-		static readonly CliOption _config              = new StringCliOption("config",                null, false, false, "path to query configuration file");
+		static readonly CliOption _config              = new StringCliOption("config",                null, false, false, "path to query configuration file; supports %NAME% and ${NAME} environment variable expansion");
 		static readonly CliOption _profile             = new StringCliOption("profile",               null, false, false, "configuration profile name");
 		static readonly CliOption _provider            = new StringCliOption("provider",              null, false, false, "linq2db provider name");
+		static readonly CliOption _providerLocation    = new StringCliOption("provider-location",     'l',  false, false, "path to external database provider assembly, e.g. IBM.Data.Db2.dll for DB2; supports %NAME% and ${NAME} environment variable expansion");
 		static readonly CliOption _connectionString    = new StringCliOption("connection-string",     null, false, false, "database connection string; use {0} for user and {1} for password placeholders; configure provider-specific connection timeout here");
 		static readonly CliOption _connectionStringEnv = new StringCliOption("connection-string-env", null, false, false, "environment variable with database connection string");
 		static readonly CliOption _user                = new StringCliOption("user",                  null, false, false, "database user name for connection string formatting");
@@ -33,9 +35,9 @@ namespace LinqToDB.CommandLine
 		static readonly CliOption _commandTimeout      = new StringCliOption("command-timeout",       null, false, false, "SQL command timeout in seconds; 0 disables the option");
 		static readonly CliOption _lockTimeout         = new StringCliOption("lock-timeout",          null, false, false, "provider-specific lock wait timeout in seconds; 0 disables the option");
 		static readonly CliOption _maxRows             = new StringCliOption("max-rows",              null, false, false, "maximum number of result rows to read; 0 disables the limit");
-		static readonly CliOption _outputFile          = new StringCliOption("output-file",           null, false, false, "path to file for command output");
+		static readonly CliOption _outputFile          = new StringCliOption("output-file",           null, false, false, "path to file for command output; supports %NAME% and ${NAME} environment variable expansion");
 		static readonly CliOption _sql                 = new StringCliOption("sql",                   null, false, false, "single user-provided SQL query text to execute");
-		static readonly CliOption _sqlFile             = new StringCliOption("sql-file",              null, false, false, "path to file with single user-provided SQL query text to execute");
+		static readonly CliOption _sqlFile             = new StringCliOption("sql-file",              null, false, false, "path to file with single user-provided SQL query text to execute; supports %NAME% and ${NAME} environment variable expansion");
 
 		static readonly CliOption _overwrite      = new BooleanCliOption("overwrite", null, false, "replace existing output file", null, null, null, false, false);
 		static readonly CliOption _allowUnsafeSql = new BooleanCliOption(
@@ -83,6 +85,8 @@ namespace LinqToDB.CommandLine
 						"executes read-oriented SQL query using connection settings from specified configuration profile"),
 					new("dotnet linq2db query --config query.json --profile uat --output json-table --sql \"select p.Id, o.Id from Person p join Orders o on o.PersonId = p.Id\"",
 						"executes query and writes duplicate-safe JSON table output with column metadata"),
+					new("dotnet linq2db query --provider DB2 --provider-location \"C:\\path\\to\\IBM.Data.Db2.dll\" --connection-string \"Server=localhost:50000;Database=testdb;UID=db2inst1;PWD=Password12!\" --sql \"select * from SYSIBM.SYSDUMMY1\"",
+						"executes query using an external DB2 provider assembly"),
 					new("dotnet linq2db query --provider SQLite --connection-string \"Data Source=data.db\" --output csv --output-file result.csv --sql \"select * from Person\"",
 						"executes specified read-oriented SQL query and writes CSV result to file"),
 				])
@@ -90,6 +94,7 @@ namespace LinqToDB.CommandLine
 			AddOption(_configurationOptions, _config);
 			AddOption(_configurationOptions, _profile);
 			AddOption(_connectionOptions,    _provider);
+			AddOption(_connectionOptions,    _providerLocation);
 			AddOption(_connectionOptions,    _connectionString);
 			AddOption(_connectionOptions,    _connectionStringEnv);
 			AddOption(_connectionOptions,    _user);
@@ -143,6 +148,7 @@ namespace LinqToDB.CommandLine
 			options.Remove(_config,              out var config);
 			options.Remove(_profile,             out var profile);
 			options.Remove(_provider,            out var provider);
+			options.Remove(_providerLocation,    out var providerLocation);
 			options.Remove(_connectionString,    out var connectionString);
 			options.Remove(_connectionStringEnv, out var connectionStringEnv);
 			options.Remove(_user,                out var user);
@@ -168,13 +174,19 @@ namespace LinqToDB.CommandLine
 				return null;
 			}
 
-			if (config != null && !QueryCommandConfiguration.TryLoad(environment, (string)config, profileName, out configuration, out var error))
+			var configFileName = ResolvePath(environment, _config, (string?)config);
+
+			if (string.Equals(configFileName, MissingEnvironmentVariable, StringComparison.Ordinal))
+				return null;
+
+			if (configFileName != null && !QueryCommandConfiguration.TryLoad(environment, configFileName, profileName, out configuration, out var error))
 			{
 				environment.Error.WriteLine(error);
 				return null;
 			}
 
 			var providerName         = (string?)provider ?? configuration?.Provider;
+			var providerLocationPath = ResolvePath(environment, _providerLocation, (string?)providerLocation ?? configuration?.ProviderLocation);
 			var connectionStringText = GetConfiguredValue(environment, _connectionString, (string?)connectionString, (string?)connectionStringEnv, configuration?.ConnectionString, configuration?.ConnectionStringEnv);
 			var userName             = GetConfiguredValue(environment, _user,             (string?)user,             (string?)userEnv,             configuration?.User,             configuration?.UserEnv);
 			var passwordText         = GetConfiguredValue(environment, _password,         (string?)password,         (string?)passwordEnv,         configuration?.Password,         configuration?.PasswordEnv);
@@ -182,19 +194,22 @@ namespace LinqToDB.CommandLine
 			var lockTimeoutValue     = (string?)lockTimeout    != null ? ParseTimeout(environment, _lockTimeout,     (string)lockTimeout)    :     configuration?.LockTimeout;
 			var maxRowsValue         = (string?)maxRows        != null ? ParseRowCount(environment, _maxRows,        (string)maxRows)        :     configuration?.MaxRows ?? DefaultMaxRows;
 			var outputFormat         = (string?)output ?? configuration?.Output ?? "json";
-			var outputFileName       = (string?)outputFile ?? configuration?.OutputFile;
+			var outputFileName       = ResolvePath(environment, _outputFile, (string?)outputFile ?? configuration?.OutputFile);
 			var overwriteOutputFile  = (bool?)overwrite ?? false;
 			var unsafeSqlPolicy      = configuration?.UnsafeSqlPolicy ?? UnsafeSqlPolicy.Deny;
 			var allowUnsafeSqlValue  = (bool?)allowUnsafeSql ?? false;
 			var querySql             = (string?)sql;
-			var querySqlFile         = (string?)sqlFile;
+			var querySqlFile         = ResolvePath(environment, _sqlFile, (string?)sqlFile);
 
 			if (commandTimeoutValue < 0 || lockTimeoutValue < 0 || maxRowsValue < 0)
 				return null;
 
 			if (string.Equals(connectionStringText, MissingEnvironmentVariable, StringComparison.Ordinal) ||
 			    string.Equals(userName,             MissingEnvironmentVariable, StringComparison.Ordinal) ||
-			    string.Equals(passwordText,         MissingEnvironmentVariable, StringComparison.Ordinal))
+			    string.Equals(passwordText,         MissingEnvironmentVariable, StringComparison.Ordinal) ||
+			    string.Equals(providerLocationPath, MissingEnvironmentVariable, StringComparison.Ordinal) ||
+			    string.Equals(outputFileName,       MissingEnvironmentVariable, StringComparison.Ordinal) ||
+			    string.Equals(querySqlFile,         MissingEnvironmentVariable, StringComparison.Ordinal))
 				return null;
 
 			if (providerName == null)
@@ -234,6 +249,7 @@ namespace LinqToDB.CommandLine
 			return new QueryCommandSettings(
 				profileName,
 				providerName,
+				providerLocationPath,
 				connectionStringText,
 				commandTimeoutValue,
 				lockTimeoutValue,
@@ -282,6 +298,63 @@ namespace LinqToDB.CommandLine
 
 			environment.Error.WriteLine($"Environment variable '{environmentVariableName}' specified for option '--{option.Name}' is not set.");
 			return MissingEnvironmentVariable;
+		}
+
+		static string? ResolvePath(ICliEnvironment environment, CliOption option, string? path)
+		{
+			if (path == null)
+				return null;
+
+			var result = new StringBuilder(path.Length);
+
+			for (var i = 0; i < path.Length; i++)
+			{
+				if (path[i] == '%')
+				{
+					var end = path.IndexOf('%', i + 1);
+
+					if (end > i + 1)
+					{
+						if (!TryAppendEnvironmentValue(environment, option, path.Substring(i + 1, end - i - 1), result))
+							return MissingEnvironmentVariable;
+
+						i = end;
+						continue;
+					}
+				}
+
+				if (path[i] == '$' && i + 1 < path.Length && path[i + 1] == '{')
+				{
+					var end = path.IndexOf('}', i + 2);
+
+					if (end > i + 2)
+					{
+						if (!TryAppendEnvironmentValue(environment, option, path.Substring(i + 2, end - i - 2), result))
+							return MissingEnvironmentVariable;
+
+						i = end;
+						continue;
+					}
+				}
+
+				result.Append(path[i]);
+			}
+
+			return result.ToString();
+		}
+
+		static bool TryAppendEnvironmentValue(ICliEnvironment environment, CliOption option, string name, StringBuilder result)
+		{
+			var value = environment.GetEnvironmentVariable(name);
+
+			if (value == null)
+			{
+				environment.Error.WriteLine($"Environment variable '{name}' referenced by option '--{option.Name}' is not set.");
+				return false;
+			}
+
+			result.Append(value);
+			return true;
 		}
 
 		static int ParseRowCount(ICliEnvironment environment, CliOption option, string value)

@@ -65,6 +65,20 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task QueryRejectsMissingProviderLocation()
+		{
+			var result = await RunCli("query", "--provider", "DB2", "--connection-string", "Server=localhost:50000;Database=testdb;UID=db2inst1;PWD=Password12!", "--sql", "select 1 from SYSIBM.SYSDUMMY1");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.EqualTo(-3));
+				Assert.That(result.Error,    Does.Contain("Cannot locate IBM.Data.Db2.dll provider assembly."));
+				Assert.That(result.Error,    Does.Contain("Due to huge size of it, we don't include Net.IBM.Data.Db2 provider into installation."));
+				Assert.That(result.Error,    Does.Contain("--provider-location <path_to_assembly>"));
+			}
+		}
+
+		[Test]
 		public async Task QueryAcceptsSql()
 		{
 			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql", "select 1 as Value");
@@ -331,6 +345,24 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task QueryResolvesEnvironmentVariablesInSqlFilePath()
+		{
+			var environment = new TestCliEnvironment();
+
+			environment.EnvironmentVariables.Add("QUERY_DIR", "queries");
+			environment.Files.Add("queries\\query.sql", "select 'test' as Value");
+
+			var result = await RunCli(environment, "query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql-file", "%QUERY_DIR%\\query.sql");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.Zero);
+				Assert.That(result.Output,   Does.Contain("\"Value\":\"test\""));
+				Assert.That(result.Error,    Is.Empty);
+			}
+		}
+
+		[Test]
 		public async Task QueryRejectsMissingSqlFile()
 		{
 			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql-file", "query.sql");
@@ -366,6 +398,24 @@ namespace Tests.LinqToDB.CLI
 				Assert.That(result.Output,   Is.Empty);
 				Assert.That(result.Error,    Is.Empty);
 				Assert.That(environment.Files["query.csv"], Is.EqualTo($"Value{Environment.NewLine}1{Environment.NewLine}"));
+			}
+		}
+
+		[Test]
+		public async Task QueryResolvesEnvironmentVariablesInOutputFilePath()
+		{
+			var environment = new TestCliEnvironment();
+
+			environment.EnvironmentVariables.Add("OUTPUT_DIR", "output");
+
+			var result = await RunCli(environment, "query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--output", "csv", "--output-file", "${OUTPUT_DIR}\\query.csv", "--sql", "select 1 as Value");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.Zero);
+				Assert.That(result.Output,   Is.Empty);
+				Assert.That(result.Error,    Is.Empty);
+				Assert.That(environment.Files["output\\query.csv"], Is.EqualTo($"Value{Environment.NewLine}1{Environment.NewLine}"));
 			}
 		}
 
@@ -707,6 +757,70 @@ namespace Tests.LinqToDB.CLI
 				Assert.That(result.Output,   Is.Empty);
 				Assert.That(result.Error,    Is.Empty);
 				Assert.That(environment.Files["query.csv"], Is.EqualTo($"1{Environment.NewLine}1{Environment.NewLine}"));
+			}
+		}
+
+		[Test]
+		public async Task QueryAcceptsProviderLocationFromConfigProfile()
+		{
+			var environment = new TestCliEnvironment();
+			var providerDirectory = Path.GetDirectoryName(typeof(DataConnection).Assembly.Location)!;
+			var config      = AddConfigFile(environment, """
+				{
+					"default": {
+						"provider": "SQLite",
+						"providerLocation": "%PROVIDER_ROOT%\\linq2db.dll",
+						"connectionString": "Data Source=:memory:"
+					}
+				}
+				""");
+
+			environment.EnvironmentVariables.Add("PROVIDER_ROOT", providerDirectory);
+
+			var result = await RunCli(environment, "query", "--config", config, "--sql", "select 1 as Value");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.Zero);
+				Assert.That(result.Output,   Does.Contain("\"Value\":\"1\""));
+				Assert.That(result.Error,    Is.Empty);
+			}
+		}
+
+		[Test]
+		public async Task QueryResolvesEnvironmentVariablesInConfigPath()
+		{
+			var environment = new TestCliEnvironment();
+
+			environment.EnvironmentVariables.Add("CONFIG_DIR", "config");
+			environment.Files.Add("config\\query.json", """
+				{
+					"default": {
+						"provider": "SQLite",
+						"connectionString": "Data Source=:memory:"
+					}
+				}
+				""");
+
+			var result = await RunCli(environment, "query", "--config", "${CONFIG_DIR}\\query.json", "--sql", "select 1 as Value");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.Zero);
+				Assert.That(result.Output,   Does.Contain("\"Value\":\"1\""));
+				Assert.That(result.Error,    Is.Empty);
+			}
+		}
+
+		[Test]
+		public async Task QueryRejectsMissingEnvironmentVariableInPath()
+		{
+			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql-file", "%QUERY_DIR%\\query.sql");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.EqualTo(-1));
+				Assert.That(result.Error,    Does.Contain("Environment variable 'QUERY_DIR' referenced by option '--sql-file' is not set."));
 			}
 		}
 
@@ -1152,6 +1266,7 @@ namespace Tests.LinqToDB.CLI
 				Assert.That(result.Output,   Does.Contain("--config"));
 				Assert.That(result.Output,   Does.Contain("--profile"));
 				Assert.That(result.Output,   Does.Contain("--provider"));
+				Assert.That(result.Output,   Does.Contain("--provider-location"));
 				Assert.That(result.Output,   Does.Contain("--connection-string"));
 				Assert.That(result.Output,   Does.Contain("--connection-string-env"));
 				Assert.That(result.Output,   Does.Contain("--user"));
@@ -1181,6 +1296,7 @@ namespace Tests.LinqToDB.CLI
 				Assert.That(result.Output,   Does.Contain("dotnet linq2db query --config query.json --profile uat --command-timeout 30 --sql-file query.sql"));
 				Assert.That(result.Output,   Does.Contain("dotnet linq2db query --config query.json --profile uat --user readonly --password secret --sql-file query.sql"));
 				Assert.That(result.Output,   Does.Contain("dotnet linq2db query --config query.json --profile uat --output json-table --sql \"select p.Id, o.Id from Person p join Orders o on o.PersonId = p.Id\""));
+				Assert.That(result.Output,   Does.Contain("dotnet linq2db query --provider DB2 --provider-location \"C:\\path\\to\\IBM.Data.Db2.dll\" --connection-string \"Server=localhost:50000;Database=testdb;UID=db2inst1;PWD=Password12!\" --sql \"select * from SYSIBM.SYSDUMMY1\""));
 				Assert.That(result.Output,   Does.Contain("dotnet linq2db query --provider SQLite --connection-string \"Data Source=data.db\" --output csv --output-file result.csv --sql \"select * from Person\""));
 			}
 		}
@@ -1241,7 +1357,7 @@ namespace Tests.LinqToDB.CLI
 
 			public bool FileExists(string path)
 			{
-				return Files.ContainsKey(path);
+				return Files.ContainsKey(path) || File.Exists(path);
 			}
 
 			public string ReadAllText(string path)

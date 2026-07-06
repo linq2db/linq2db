@@ -20,6 +20,11 @@ namespace LinqToDB.CommandLine
 		public string? Provider         { get; private set; }
 
 		/// <summary>
+		/// Optional path to external provider assembly. For DB2 this is a path to IBM.Data.Db2.dll from Net.IBM.Data.Db2 package.
+		/// </summary>
+		public string? ProviderLocation { get; private set; }
+
+		/// <summary>
 		/// Database connection string. It is always formatted with <see cref="string.Format(System.IFormatProvider,string,object?[])"/>;
 		/// <c>{0}</c> is replaced with <see cref="User"/> and <c>{1}</c> is replaced with <see cref="Password"/>.
 		/// </summary>
@@ -163,6 +168,13 @@ namespace LinqToDB.CommandLine
 							return false;
 
 						Provider = value;
+						break;
+					case "providerLocation":
+					case "provider-location":
+						if (!TryGetString(fileName, profileName, property, out value, out error))
+							return false;
+
+						ProviderLocation = value;
 						break;
 					case "connectionString":
 					case "connection-string":
