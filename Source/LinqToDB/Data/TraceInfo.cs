@@ -3,6 +3,7 @@ using System.Data.Common;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Text;
 
 using LinqToDB.Internal.Common;
 
@@ -111,35 +112,7 @@ namespace LinqToDB.Data
 					using var sbv    = Pools.StringBuilder.Allocate();
 					var sb           = sbv.Value;
 
-					sb.Append("--");
-
-					if (DataConnection.ConfigurationString != null)
-						sb.Append(' ').Append(DataConnection.ConfigurationString);
-
-					if (!string.Equals(DataConnection.ConfigurationString, DataConnection.DataProvider.Name, StringComparison.Ordinal))
-						sb.Append(' ').Append(DataConnection.DataProvider.Name);
-
-					if (!string.Equals(DataConnection.DataProvider.Name, sqlProvider.Name, StringComparison.Ordinal))
-						sb.Append(' ').Append(sqlProvider.Name);
-
-					if (IsAsync || DataConnection.Tag is not null)
-						sb.Append(" (");
-
-					if (IsAsync)
-					{
-						sb.Append("asynchronously");
-
-						if (DataConnection.Tag is not null)
-							sb.Append(", ");
-					}
-
-					if (DataConnection.Tag is not null)
-						sb.Append(DataConnection.Tag);
-
-					if (IsAsync || DataConnection.Tag is not null)
-						sb.Append(')');
-
-					sb.AppendLine();
+					AppendCommandComment(sb, DataConnection, sqlProvider.Name, IsAsync);
 
 					sqlProvider.PrintParameters(DataConnection, sb, Command.Parameters.Cast<DbParameter>());
 
@@ -155,6 +128,41 @@ namespace LinqToDB.Data
 
 				return "";
 			}
+		}
+
+		// The "-- <config> <provider> [(asynchronously, tag)]" comment header that prefixes a traced command.
+		// Shared by the single-command trace (SqlText) and the DbBatch trace (one header per batch submission).
+		internal static void AppendCommandComment(StringBuilder sb, DataConnection dataConnection, string? sqlBuilderName, bool isAsync)
+		{
+			sb.Append("--");
+
+			if (dataConnection.ConfigurationString != null)
+				sb.Append(' ').Append(dataConnection.ConfigurationString);
+
+			if (!string.Equals(dataConnection.ConfigurationString, dataConnection.DataProvider.Name, StringComparison.Ordinal))
+				sb.Append(' ').Append(dataConnection.DataProvider.Name);
+
+			if (sqlBuilderName != null && !string.Equals(dataConnection.DataProvider.Name, sqlBuilderName, StringComparison.Ordinal))
+				sb.Append(' ').Append(sqlBuilderName);
+
+			if (isAsync || dataConnection.Tag is not null)
+				sb.Append(" (");
+
+			if (isAsync)
+			{
+				sb.Append("asynchronously");
+
+				if (dataConnection.Tag is not null)
+					sb.Append(", ");
+			}
+
+			if (dataConnection.Tag is not null)
+				sb.Append(dataConnection.Tag);
+
+			if (isAsync || dataConnection.Tag is not null)
+				sb.Append(')');
+
+			sb.AppendLine();
 		}
 	}
 }

@@ -796,7 +796,7 @@ namespace LinqToDB.Data
 		// (see RunBatchReaderAsync).
 		internal Task<DataReaderWrapper> ExecuteBatchDataReaderAsync(DbBatch batch, CommandBehavior commandBehavior, CancellationToken cancellationToken)
 		{
-			return TraceExecuteReaderAsync(null, () => GetBatchTraceText(batch), () => RunBatchReaderAsync(batch, GetCommandBehavior(commandBehavior), cancellationToken), cancellationToken);
+			return TraceExecuteReaderAsync(null, () => GetBatchTraceText(batch, isAsync: true), () => RunBatchReaderAsync(batch, GetCommandBehavior(commandBehavior), cancellationToken), cancellationToken);
 		}
 
 		// The DbBatch execution delegate for TraceExecuteReaderAsync. No command interceptor runs here (the CanUseDbBatch gate
