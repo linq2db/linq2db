@@ -122,7 +122,7 @@ namespace LinqToDB.Internal.SqlProvider
 		/// <summary>
 		/// A per-statement / per-command render scope: a fresh parameter normalizer (names uniquified within this scope
 		/// only) over already build-optimized statements (no whole-query optimize/convert pass). Shared by
-		/// <c>RenderStatements</c> (one scope per DbBatch statement) and <c>RenderCombinedBatches</c> (one scope per
+		/// <c>RenderStatementTemplates</c> (one scope per DbBatch statement) and <c>RenderCombinedBatchTemplates</c> (one scope per
 		/// length-split concatenated command); the caller sets <see cref="OptimizationContext.ShareParametersByAccessor"/>
 		/// when several statements share one scope.
 		/// </summary>
@@ -165,7 +165,7 @@ namespace LinqToDB.Internal.SqlProvider
 		/// Appends one statement to <paramref name="sb"/> as part of a semicolon-concatenated command: writes the separator
 		/// (when not the first statement), renders through the shared <paramref name="optimizationContext"/>, then promotes its
 		/// parameters into the cross-statement sharing set. Shared by RenderScenarioGroups (compile-time, per plan group) and
-		/// RenderCombinedBatches (execute-time, length-split) so both concatenate statements identically.
+		/// RenderCombinedBatchTemplates (execute-time, length-split) so both concatenate statements identically.
 		/// </summary>
 		internal static void AppendConcatenatedStatement(
 			StringBuilder sb, ISqlBuilder sqlBuilder, OptimizationContext optimizationContext,
@@ -228,24 +228,8 @@ namespace LinqToDB.Internal.SqlProvider
 		}
 
 #if SUPPORTS_DBBATCH
-		// Renders each statement into its OWN parameter scope (fresh normalizer per statement) for DbBatch execution: the
-		// group becomes one DbBatch whose DbBatchCommands each carry only their own parameters (NO cross-statement name
-		// uniquification, unlike RenderCombinedBatches which merges a group into one semicolon-concatenated command). No
-		// SQL-length splitting - DbBatch sends statements structurally, so the only bound is PlanScenario per-group count.
-		internal static IReadOnlyList<RenderedStatement> RenderStatements(
-			DataConnection dataConnection, IReadOnlyList<SqlStatement> statements, IReadOnlyParameterValues? parameterValues)
-		{
-			var templates = RenderStatementTemplates(dataConnection, statements, parameterValues);
-			var result    = new RenderedStatement[templates.Length];
-
-			for (var i = 0; i < templates.Length; i++)
-				result[i] = new RenderedStatement(templates[i].Command, MaterializeDbParameters(dataConnection, templates[i].SqlParameters, parameterValues));
-
-			return result;
-		}
-
 		/// <summary>
-		/// The cacheable half of <see cref="RenderStatements"/>: renders each statement's SQL and collects its (unbound)
+		/// Renders each statement's SQL and collects its (unbound)
 		/// <see cref="SqlParameter"/> list into a <see cref="CommandWithParameters"/> (fresh normalizer per statement, so
 		/// names are independent). For a non-parameter-dependent scenario the result is stable and can be cached across
 		/// executions; only DbParameter binding (<see cref="MaterializeDbParameters"/>) then repeats per execution.

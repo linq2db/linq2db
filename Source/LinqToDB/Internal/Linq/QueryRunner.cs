@@ -483,7 +483,7 @@ namespace LinqToDB.Internal.Linq
 				_dataContext = dataContext;
 				_expressions = expressions;
 				_query       = query;
-				_harvesters   = harvesters;
+				_harvesters  = harvesters;
 				_queryNumber = queryNumber;
 				_mapper      = mapper;
 			}
@@ -645,7 +645,7 @@ namespace LinqToDB.Internal.Linq
 				_dataContext = dataContext;
 				_expressions = expressions;
 				_query       = query;
-				_harvesters   = harvesters;
+				_harvesters  = harvesters;
 				_queryNumber = queryNumber;
 				_mapper      = mapper;
 				_dataReader  = dataReader;
@@ -745,7 +745,7 @@ namespace LinqToDB.Internal.Linq
 			readonly IQueryExpressions _expressions;
 			readonly Query<T>          _query;
 			readonly object?[]?        _parameters;
-			readonly Harvester[]        _harvesters;
+			readonly Harvester[]       _harvesters;
 			// Harvester indices partitioned by combinability, in build order. A combinable harvester becomes a combined Reader
 			// step; a non-combinable one becomes a SelfExecuting step. Both keep their harvester index as the scenario step
 			// index (the main query is the last step); combinable + main are the combined groups, self-executing are singletons.
@@ -763,7 +763,7 @@ namespace LinqToDB.Internal.Linq
 				_expressions = expressions;
 				_query       = query;
 				_parameters  = parameters;
-				_harvesters   = harvesters;
+				_harvesters  = harvesters;
 
 				var combinable    = new List<int>(harvesters.Length);
 				var nonCombinable = new List<int>(harvesters.Length);

@@ -370,7 +370,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (!BuildQuery(query, sequence, queryParameter, ref harvesters!, previousKeys))
 				return query.ErrorExpression!;
 
-			var idx      = harvesters.Count;
+			var idx       = harvesters.Count;
 			var harvester = new Harvester<TKey, T>(query);
 			harvesters.Add(harvester);
 
@@ -404,7 +404,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			BuildQuery(query, sequence, queryParameter, ref harvesters!, []);
 
-			var idx      = harvesters.Count;
+			var idx       = harvesters.Count;
 			var harvester = new DetachedHarvester<T>(query);
 			harvesters.Add(harvester);
 
@@ -574,7 +574,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			expression = ReplaceLeakedSubqueries(expression);
 
-			var strategy       = ResolveStrategy(buildContext);
+			var strategy        = ResolveStrategy(buildContext);
 			var localHarvesters = harvesters ?? [];
 
 			// Diagnostic chain — populated as failed attempts are discarded; cleared on commit if
@@ -585,7 +585,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				// Fresh per-attempt state — no rollback plumbing needed because nothing outside of
 				// CompleteEagerLoadingExpressions observes this instance until commit.
-				var attempt          = new EagerLoadState();
+				var attempt           = new EagerLoadState();
 				var harvesterSnapshot = localHarvesters.Count;
 
 				// Phase 1: CteUnion — try to batch all eager loads into a single UNION ALL query

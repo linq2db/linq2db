@@ -1210,7 +1210,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 			}
 
-			var idx      = harvesters.Count;
+			var idx       = harvesters.Count;
 			var harvester = new CteUnionHarvester<TKey, TCarrier>(query, setIdExtractor, keyExtractor, detailExtractors, branches.Length, nestedProcessingOrder, idx);
 			harvesters.Add(harvester);
 
@@ -1571,12 +1571,12 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// </summary>
 		sealed class NestedHarvesterLookupExpression : Expression
 		{
-			public int  NestedSetId        { get; }
+			public int  NestedSetId         { get; }
 			public Type HarvesterResultType { get; }
 
 			public NestedHarvesterLookupExpression(int nestedSetId, Type harvesterResultType)
 			{
-				NestedSetId        = nestedSetId;
+				NestedSetId         = nestedSetId;
 				HarvesterResultType = harvesterResultType;
 			}
 
@@ -1729,7 +1729,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				_detailExtractors       = detailExtractors;
 				_branchCount            = branchCount;
 				_nestedProcessingOrder  = nestedProcessingOrder;
-				_harvesterIndex          = harvesterIndex;
+				_harvesterIndex         = harvesterIndex;
 			}
 
 			// Self-executing path (a non-combinable UNION-ALL harvester: separate round-trip). Same bucketing as the

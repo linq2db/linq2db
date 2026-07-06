@@ -826,7 +826,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			// Signal the CURRENT level's BuildQuery to set up buffer materialization
 			state.HasKeyedQueryHarvesters = true;
 
-			var idx          = harvesters.Count;
+			var idx            = harvesters.Count;
 			var childHarvester = new KeyedQueryChildHarvester<TKey, T>(childQuery, keysDataIndex);
 			harvesters.Add(childHarvester);
 
@@ -1204,7 +1204,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				_placeholderMap = placeholderMap;
 				_bufferRowExpr  = bufferRowExpr;
-				_harvesterExpr   = harvesterExpr;
+				_harvesterExpr  = harvesterExpr;
 			}
 
 			protected override Expression VisitParameter(ParameterExpression node)
