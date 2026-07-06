@@ -3707,7 +3707,7 @@ namespace Tests.Linq
 
 		#endregion
 
-		#region Mixed combinable/non-combinable eager loads in one query
+		#region Heterogeneous combinable eager children (keyed correlated + non-keyed detached) in one query
 
 		[Table]
 		sealed class MixedMaster
@@ -3731,7 +3731,8 @@ namespace Tests.Linq
 
 		// Not correlated to MixedMaster at all — the eager-loaded expression references no master
 		// field, so the same full set attaches to every master. Under the Default strategy this
-		// becomes a non-combinable DetachedHarvester<T> (plain Harvester, no IStepMaterializer).
+		// becomes a DetachedHarvester<T>: a non-keyed but combinable child (IStepMaterializer), so its
+		// standalone SELECT merges into the same combined command as the keyed correlated child.
 		[Table]
 		sealed class MixedDetachedChild
 		{
@@ -3780,13 +3781,13 @@ namespace Tests.Linq
 			return (masters, correlated, detached);
 		}
 
-		// Regression for the mixed-strategy path in EagerResultEnumerable (Source/LinqToDB/Internal/Linq/QueryRunner.cs):
-		// one query eager-loads a combinable child collection (CorrelatedChildren, FK-correlated -> Harvester<TKey,T>)
-		// alongside a non-combinable one (a detached collection with no master dependency -> DetachedHarvester<T>).
-		// _combinableIndexes and _nonCombinableIndexes must both be non-empty and each child must materialize
-		// correctly for every master row.
+		// Regression for the combined eager engine (Source/LinqToDB/Internal/Linq/QueryRunner.cs) merging
+		// HETEROGENEOUS combinable children in one query: a KEYED correlated child (CorrelatedChildren,
+		// FK-correlated -> Harvester<TKey,T>) and a NON-KEYED detached child (no master dependency ->
+		// DetachedHarvester<T>) merge into a single multi-result-set command, and each still materializes
+		// correctly for every master row (the correlated per-master, the detached shared across all).
 		[Test]
-		public void MixedEagerLoad_CombinableAndDetachedChildren_BothMaterializeCorrectly(
+		public void CorrelatedAndDetachedChildren_CombineIntoSingleCommand(
 			[IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var (masters, correlated, detached) = GenerateMixedEagerData();
@@ -3848,9 +3849,9 @@ namespace Tests.Linq
 					.ShouldBe(detached.Select(d => d.Id).OrderBy(id => id).ToList());
 			}
 
-			// 1 self-executing command (the detached, non-combinable child) + 1 combined command
-			// (the combinable correlated child + main, sent as a single multi-statement round-trip).
-			if (!context.IsRemote()) counter.Count.ShouldBe(2);
+			// Both children are combinable, so the detached SELECT, the correlated child, and the main query
+			// all merge into ONE combined multi-result-set command (a single round-trip).
+			if (!context.IsRemote()) counter.Count.ShouldBe(1);
 		}
 
 		#endregion

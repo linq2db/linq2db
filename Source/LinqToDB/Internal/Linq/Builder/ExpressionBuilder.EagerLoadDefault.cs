@@ -146,7 +146,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			return resultExpression;
 		}
 
-		sealed class DetachedHarvester<T>(Query<T> query) : Harvester
+		// A detached child is a standalone single-statement SELECT (no per-master correlation) whose whole result
+		// attaches to every master, so it can be merged into the combined multi-result-set command as one extra
+		// result set (read once, materialized to a list) instead of a separate round-trip. Combinable exactly when
+		// the query renders as a single command (GetResultFromReader != null); otherwise it self-executes.
+		sealed class DetachedHarvester<T>(Query<T> query) : Harvester, IStepMaterializer
 		{
 			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context)
 			{
@@ -161,6 +165,24 @@ namespace LinqToDB.Internal.Linq.Builder
 			public override void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values)
 			{
 				QueryHelper.CollectParametersAndValues(query.QueryInfo.Statement, parameters, values);
+			}
+
+			public bool CanCombine => query.GetResultFromReader != null;
+
+			public SqlStatement? GetCombinableStatement()
+				=> query.QueryInfo.Statement;
+
+			public void AddCombinableParameterValues(SqlParameterValues values, IQueryExpressions expressions, IDataContext dataContext, object?[]? parameters)
+			{
+				QueryRunner.SetParameters(query, expressions, dataContext, parameters, values);
+			}
+
+			public object MaterializeFromReader(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context, DbDataReader dataReader)
+				=> query.GetResultFromReader!(dataContext, expressions, parameters, context, dataReader).ToList();
+
+			public async Task<object> MaterializeFromReaderAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? context, DbDataReader dataReader, CancellationToken cancellationToken)
+			{
+				return await query.GetResultFromReader!(dataContext, expressions, parameters, context, dataReader).ToListAsync(cancellationToken).ConfigureAwait(false);
 			}
 		}
 
