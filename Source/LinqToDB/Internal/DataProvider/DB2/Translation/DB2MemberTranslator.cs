@@ -368,7 +368,7 @@ namespace LinqToDB.Internal.DataProvider.DB2.Translation
 										// rows sorted first or last via 0/1) and drop the unsupported NULLS token from the real key —
 										// unless the requested position already matches DB2's natural order (NULL is the largest value).
 										if (nulls != Sql.NullsPosition.None
-											&& !QueryHelper.MatchesNaturalNullsPosition(NullsDefaultOrdering.Largest, nulls, desc))
+											&& !QueryHelper.MatchesNaturalNullsPosition(translationContext.ProviderFlags.DefaultNullsOrdering, nulls, desc))
 										{
 											var nullsKey = factory.Fragment(
 												nulls == Sql.NullsPosition.Last
@@ -458,6 +458,33 @@ namespace LinqToDB.Internal.DataProvider.DB2.Translation
 					return factory.Function(stringDbType, "substr", expression, factory.Value(pos), factory.Value(length));
 				}
 			}
+		}
+
+		protected class DB2WindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
+		{
+			protected override bool IsFrameGroupsSupported          => false;
+			protected override bool IsFrameExclusionSupported       => false;
+			protected override bool IsLeadLagNullTreatmentSupported => true;
+			protected override bool IsValueNullTreatmentSupported   => true;
+			protected override bool IsNthValueFromSupported         => true;
+			// DB2 supports the full statistical/regression window-function set. Bare STDDEV/VARIANCE are the
+			// *population* forms (DB2 docs), so map the sample-API Sql.Window.StdDev/Variance to the documented
+			// sample names STDDEV_SAMP/VAR_SAMP.
+			protected override bool   IsVarianceSupported           => true;
+			protected override bool   IsVarianceBareSupported       => true;
+			protected override bool   IsCorrelationSupported        => true;
+			protected override bool   IsLinearRegressionSupported   => true;
+			protected override bool   IsMedianSupported             => true;
+			protected override string StdDevFunctionName            => "STDDEV_SAMP";
+			protected override string VarianceFunctionName          => "VAR_SAMP";
+
+			public override Expression? TranslateRatioToReport(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+				=> TranslateRatioToReportNative(translationContext, methodCall);
+		}
+
+		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()
+		{
+			return new DB2WindowFunctionsMemberTranslator();
 		}
 	}
 }

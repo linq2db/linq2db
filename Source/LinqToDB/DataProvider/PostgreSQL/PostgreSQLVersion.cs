@@ -33,5 +33,9 @@
 		/// PostgreSQL 18+ SQL dialect.
 		/// </summary>
 		v18,
+		/// <summary>
+		/// PostgreSQL 19+ SQL dialect.
+		/// </summary>
+		v19,
 	}
 }

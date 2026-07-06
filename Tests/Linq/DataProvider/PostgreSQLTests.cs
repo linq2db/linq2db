@@ -879,6 +879,7 @@ namespace Tests.DataProvider
 			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL16)]
 			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL17)]
 			[Column(DbType = "macaddr8", Configuration = ProviderName.PostgreSQL18)]
+			[Column(DbType = "macaddr8", Configuration = ProviderName.PostgreSQL19)]
 			                                           public PhysicalAddress? macaddr8DataType         { get; set; }
 			// json
 			[Column]                                   public string? jsonDataType                      { get; set; }
