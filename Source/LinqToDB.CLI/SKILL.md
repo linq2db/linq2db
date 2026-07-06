@@ -31,6 +31,7 @@ Connection settings:
 - `--user <user>` and `--password <password>` are optional values for connection string formatting.
 - The final connection string is always produced with `string.Format(connectionString, user, password)`.
 - Use `{0}` in the connection string for the user value and `{1}` for the password value.
+- Escape literal braces in connection strings as `{{` and `}}`.
 
 Configuration profiles:
 

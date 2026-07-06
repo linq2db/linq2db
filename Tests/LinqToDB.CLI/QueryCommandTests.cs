@@ -768,6 +768,35 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task QueryReportsInvalidConnectionStringFormat()
+		{
+			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source={memory};Mode=Memory;Cache=Shared", "--sql", "select 1 as Value");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.EqualTo(-1));
+				Assert.That(result.Error,    Does.Contain("Invalid connection string format:"));
+				Assert.That(result.Error,    Does.Contain("{0}"));
+				Assert.That(result.Error,    Does.Contain("{1}"));
+				Assert.That(result.Error,    Does.Contain("{{"));
+				Assert.That(result.Error,    Does.Contain("}}"));
+			}
+		}
+
+		[Test]
+		public async Task QueryAcceptsEscapedConnectionStringBraces()
+		{
+			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source={{memory}};Mode=Memory;Cache=Shared", "--sql", "select 1 as Value");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.Zero);
+				Assert.That(result.Output,   Does.Contain("\"Value\":\"1\""));
+				Assert.That(result.Error,    Is.Empty);
+			}
+		}
+
+		[Test]
 		public async Task QueryFormatsConnectionStringWithConfigCredentials()
 		{
 			var environment = new TestCliEnvironment();

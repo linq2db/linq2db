@@ -47,15 +47,15 @@ Done when: `query` is documented as result-set oriented everywhere.
 
 ## Phase 3: Connection String Formatting Diagnostics
 
-Status: pending
+Status: completed
 
 Replace raw `string.Format` failure with clear CLI diagnostics.
 
-- [ ] Catch `FormatException` around connection string formatting.
-- [ ] Explain `{0}` is user and `{1}` is password.
-- [ ] Explain literal braces must be escaped as `{{` and `}}`.
-- [ ] Include original exception message.
-- [ ] Add tests for invalid braces, escaped braces, and normal user/password replacement.
+- [x] Catch `FormatException` around connection string formatting.
+- [x] Explain `{0}` is user and `{1}` is password.
+- [x] Explain literal braces must be escaped as `{{` and `}}`.
+- [x] Include original exception message.
+- [x] Add tests for invalid braces, escaped braces, and normal user/password replacement.
 
 Done when: invalid connection string format returns `INVALID_ARGUMENTS` with actionable text.
 

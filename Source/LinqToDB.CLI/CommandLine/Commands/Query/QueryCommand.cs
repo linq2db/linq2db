@@ -30,10 +30,10 @@ namespace LinqToDB.CommandLine
 		static readonly CliOption _lockTimeout      = new StringCliOption("lock-timeout",      null, false, false, "provider-specific lock wait timeout in seconds");
 		static readonly CliOption _maxRows          = new StringCliOption("max-rows",          null, false, false, "maximum number of result rows to read");
 		static readonly CliOption _outputFile       = new StringCliOption("output-file",       null, false, false, "path to file for command output");
-		static readonly CliOption _overwrite        = new BooleanCliOption("overwrite",        null, false, "replace existing output file", null, null, null, false, false);
 		static readonly CliOption _sql              = new StringCliOption("sql",               null, false, false, "SQL query text to execute");
 		static readonly CliOption _sqlFile          = new StringCliOption("sql-file",          null, false, false, "path to file with SQL query text to execute");
 
+		static readonly CliOption _overwrite      = new BooleanCliOption("overwrite", null, false, "replace existing output file", null, null, null, false, false);
 		static readonly CliOption _allowUnsafeSql = new BooleanCliOption(
 			"allow-unsafe-sql",
 			null,
@@ -192,7 +192,15 @@ namespace LinqToDB.CommandLine
 				return null;
 			}
 
-			connectionStringText = string.Format(CultureInfo.InvariantCulture, connectionStringText, userName, passwordText);
+			try
+			{
+				connectionStringText = string.Format(CultureInfo.InvariantCulture, connectionStringText, userName, passwordText);
+			}
+			catch (FormatException ex)
+			{
+				environment.Error.WriteLine($"Invalid connection string format: {ex.Message} Use '{{0}}' for user, '{{1}}' for password, and escape literal braces as '{{{{' and '}}}}'.");
+				return null;
+			}
 
 			if (allowUnsafeSqlValue && sqlSafety == QuerySqlSafetyMode.Deny)
 			{
