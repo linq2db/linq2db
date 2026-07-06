@@ -32,12 +32,12 @@
 		"provider"        : "Firebird",
 		"connectionString": "DataSource=localhost;Port=3050;Database=/firebird/data/testdb50.fdb;User Id=sysdba;Password=masterkey;charset=UTF8;wirecrypt=disabled"
 	},
-	"MySql.8.0": {
-		"provider"        : "MySql.8.0",
+	"MySql": {
+		"provider"        : "MySql",
 		"connectionString": "Server=localhost;Port=3306;Database=testdata;Uid=root;Pwd=root;charset=utf8mb4;Allow User Variables=True;"
 	},
-	"MySqlConnector.8.0": {
-		"provider"        : "MySqlConnector.8.0",
+	"MySqlConnector": {
+		"provider"        : "MySqlConnector",
 		"connectionString": "Server=localhost;Port=3306;Database=testdataconnector;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;AllowLoadLocalInfile=true;"
 	},
 	"MariaDB.11": {

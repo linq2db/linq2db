@@ -1,5 +1,8 @@
 #if !NETFRAMEWORK
 
+extern alias MySqlConnector;
+extern alias MySqlData;
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -18,6 +21,9 @@ using Microsoft.SqlServer.Types;
 
 using NUnit.Framework;
 using Oracle.ManagedDataAccess.Types;
+
+using MySqlConnectorDecimal = MySqlConnector::MySqlConnector.MySqlDecimal;
+using MySqlDataDecimal = MySqlData::MySql.Data.Types.MySqlDecimal;
 
 namespace Tests.DataProvider
 {
@@ -196,6 +202,48 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		public void MySqlDataProviderSpecificReadMatrix([IncludeDataSources(TestProvName.AllMySqlData)] string context)
+		{
+			using var conn = GetDataConnection(context);
+
+			using (Assert.EnterMultipleScope())
+			{
+				AssertReadMatrix(conn, "CAST(1000000 AS SIGNED)"                                      , typeof(long)    , typeof(long)    , "1000000");
+				AssertReadMatrix(conn, "CAST(7777777 AS SIGNED)"                                      , typeof(long)    , typeof(long)    , "7777777");
+				AssertReadMatrix(conn, "CAST(9999999 AS DECIMAL(31,0))"                               , typeof(decimal) , typeof(decimal) , "9999999");
+				AssertReadMatrix(conn, "CAST(20.31 AS DOUBLE)"                                        , typeof(double)  , typeof(double)  , "20.31");
+				AssertReadMatrix(conn, "CAST(16.2 AS FLOAT)"                                          , typeof(float)   , typeof(float)   , "16.2");
+				AssertReadMatrix(conn, "CAST('text' AS CHAR(10))"                                     , typeof(string)  , typeof(string)  , "text");
+				AssertReadMatrix(conn, "DATE '2024-01-02'"                                            , typeof(DateTime), typeof(DateTime), "2024-01-02");
+				AssertReadMatrix(conn, "TIMESTAMP '2024-01-02 03:04:05.123456'"                       , typeof(DateTime), typeof(DateTime), "2024-01-02T03:04:05.1234560");
+				AssertReadMatrix(conn, "CAST(0x3039 AS BINARY(2))"                                    , typeof(byte[])  , typeof(byte[])  , "0x3039");
+				AssertReadMatrix(conn, "POINT(1, 2)"                                                  , typeof(byte[])  , typeof(byte[])  , "0x000000000101000000000000000000F03F0000000000000040");
+				AssertProviderSpecificReaderMethodRequired(conn, "CAST(123456789012345678901234567890.12 AS DECIMAL(65,2))", "GetMySqlDecimal", typeof(MySqlDataDecimal), "123456789012345678901234567890.12");
+			}
+		}
+
+		[Test]
+		public void MySqlConnectorProviderSpecificReadMatrix([IncludeDataSources(TestProvName.AllMySqlConnector)] string context)
+		{
+			using var conn = GetDataConnection(context);
+
+			using (Assert.EnterMultipleScope())
+			{
+				AssertReadMatrix(conn, "CAST(1000000 AS SIGNED)"                                      , typeof(long)    , typeof(long)    , "1000000");
+				AssertReadMatrix(conn, "CAST(7777777 AS SIGNED)"                                      , typeof(long)    , typeof(long)    , "7777777");
+				AssertReadMatrix(conn, "CAST(9999999 AS DECIMAL(31,0))"                               , typeof(decimal) , typeof(decimal) , "9999999");
+				AssertReadMatrix(conn, "CAST(20.31 AS DOUBLE)"                                        , typeof(double)  , typeof(double)  , "20.31");
+				AssertReadMatrix(conn, "CAST(16.2 AS FLOAT)"                                          , typeof(float)   , typeof(float)   , "16.2");
+				AssertReadMatrix(conn, "CAST('text' AS CHAR(10))"                                     , typeof(string)  , typeof(string)  , "text");
+				AssertReadMatrix(conn, "DATE '2024-01-02'"                                            , typeof(DateTime), typeof(DateTime), "2024-01-02");
+				AssertReadMatrix(conn, "TIMESTAMP '2024-01-02 03:04:05.123456'"                       , typeof(DateTime), typeof(DateTime), "2024-01-02T03:04:05.1234560");
+				AssertReadMatrix(conn, "CAST(0x3039 AS BINARY(2))"                                    , typeof(byte[])  , typeof(byte[])  , "0x3039");
+				AssertReadMatrix(conn, "POINT(1, 2)"                                                  , typeof(byte[])  , typeof(byte[])  , "0x000000000101000000000000000000F03F0000000000000040");
+				AssertProviderSpecificReaderMethodRequired(conn, "CAST(123456789012345678901234567890.12 AS DECIMAL(65,2))", "GetMySqlDecimal", typeof(MySqlConnectorDecimal), "123456789012345678901234567890.12");
+			}
+		}
+
+		[Test]
 		public void ClickHouseOctonicaProviderSpecificReadMatrix([IncludeDataSources(ProviderName.ClickHouseOctonica)] string context)
 		{
 			using var conn = GetDataConnection(context);
@@ -294,6 +342,22 @@ namespace Tests.DataProvider
 			}
 		}
 
+		void AssertProviderSpecificReaderMethodRequired(DataConnection conn, string sqlExpression, string methodName, Type expectedType, string expectedString)
+		{
+			var providerSpecific = ReadValue(conn, sqlExpression, providerSpecific: true);
+			var getValue         = ReadValue(conn, sqlExpression, providerSpecific: false);
+			var methodValue      = ReadProviderSpecificReaderMethodValue(conn, sqlExpression, methodName);
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(providerSpecific.ExceptionTypeName, Is.Not.Null, sqlExpression);
+				Assert.That(getValue.ExceptionTypeName, Is.Not.Null, sqlExpression);
+				Assert.That(methodValue.ExceptionTypeName, Is.Null, sqlExpression);
+				Assert.That(methodValue.Type, Is.EqualTo(expectedType), sqlExpression);
+				Assert.That(methodValue.StringValue, Is.EqualTo(expectedString), sqlExpression);
+			}
+		}
+
 		ReadResult ReadValue(DataConnection conn, string sqlExpression, bool providerSpecific)
 		{
 			using var result = conn.ExecuteReader("SELECT " + sqlExpression);
@@ -305,6 +369,28 @@ namespace Tests.DataProvider
 			{
 				var dataTypeName = reader.GetDataTypeName(0);
 				var value        = providerSpecific ? reader.GetProviderSpecificValue(0) : reader.GetValue(0);
+
+				return new ReadResult(value.GetType(), value.GetType().FullName, ConvertValueToString(value, dataTypeName), null);
+			}
+			catch (Exception exception)
+			{
+				return new ReadResult(null, null, null, exception.GetType().FullName);
+			}
+		}
+
+		ReadResult ReadProviderSpecificReaderMethodValue(DataConnection conn, string sqlExpression, string methodName)
+		{
+			using var result = conn.ExecuteReader("SELECT " + sqlExpression);
+			var reader       = result.Reader ?? throw new InvalidOperationException("Reader is not available.");
+
+			Assert.That(reader.Read(), Is.True);
+
+			try
+			{
+				var dataTypeName = reader.GetDataTypeName(0);
+				var method       = reader.GetType().GetMethod(methodName, [typeof(int)])
+					?? throw new InvalidOperationException($"Reader method '{methodName}' is not available.");
+				var value        = method.Invoke(reader, [0]) ?? throw new InvalidOperationException($"Reader method '{methodName}' returned null.");
 
 				return new ReadResult(value.GetType(), value.GetType().FullName, ConvertValueToString(value, dataTypeName), null);
 			}

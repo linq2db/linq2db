@@ -79,6 +79,7 @@ namespace LinqToDB.CommandLine
 			DB2Time,
 			DB2TimeStamp,
 			DB2Xml,
+			MySqlDecimal,
 			FirebirdDecFloat,
 			FirebirdZonedDateTime,
 			FirebirdZonedTime,
@@ -283,6 +284,12 @@ namespace LinqToDB.CommandLine
 									if (columns[i].ActualFieldType == QueryActualFieldType.OracleBFile)
 									{
 										row[i] = "BFILE";
+										continue;
+									}
+
+									if (columns[i].ActualFieldType == QueryActualFieldType.MySqlDecimal)
+									{
+										row[i] = ReadFieldAsString(reader, columns[i].ActualFieldType, i);
 										continue;
 									}
 
@@ -611,6 +618,7 @@ Provider could be downloaded from:
 				_ when IsProviderSpecificType(providerSpecificType, "IBM.Data.DB2Types.DB2Time")      => QueryActualFieldType.DB2Time,
 				_ when IsProviderSpecificType(providerSpecificType, "IBM.Data.DB2Types.DB2TimeStamp") => QueryActualFieldType.DB2TimeStamp,
 				_ when IsProviderSpecificType(providerSpecificType, "IBM.Data.DB2Types.DB2Xml")       => QueryActualFieldType.DB2Xml,
+				_ when IsMySqlDecimalDataType(dataTypeName) && HasProviderSpecificReaderMethod(reader, "GetMySqlDecimal") => QueryActualFieldType.MySqlDecimal,
 				_ when providerSpecificType == typeof(FbDecFloat)       => QueryActualFieldType.FirebirdDecFloat,
 				_ when providerSpecificType == typeof(FbZonedDateTime)  => QueryActualFieldType.FirebirdZonedDateTime,
 				_ when providerSpecificType == typeof(FbZonedTime)      => QueryActualFieldType.FirebirdZonedTime,
@@ -632,6 +640,9 @@ Provider could be downloaded from:
 
 			if (actualFieldType == QueryActualFieldType.OracleBFile)
 				return "<BFILE>";
+
+			if (actualFieldType == QueryActualFieldType.MySqlDecimal)
+				return ReadMySqlDecimalAsString(reader, ordinal);
 
 			try
 			{
@@ -687,6 +698,7 @@ Provider could be downloaded from:
 				QueryActualFieldType.DB2Time            => ((TimeSpan)GetProviderSpecificPropertyValue(value, "Value")).ToString("c", CultureInfo.InvariantCulture),
 				QueryActualFieldType.DB2TimeStamp       => ((DateTime)GetProviderSpecificPropertyValue(value, "Value")).ToString("O", CultureInfo.InvariantCulture),
 				QueryActualFieldType.DB2Xml             => (string)GetProviderSpecificMethodValue(value, "GetString"),
+				QueryActualFieldType.MySqlDecimal       => Convert.ToString(value, CultureInfo.InvariantCulture),
 				QueryActualFieldType.FirebirdDecFloat   => FormatFirebirdDecFloat((FbDecFloat)value),
 				QueryActualFieldType.FirebirdZonedDateTime => FormatFirebirdZonedDateTime((FbZonedDateTime)value),
 				QueryActualFieldType.FirebirdZonedTime  => FormatFirebirdZonedTime((FbZonedTime)value),
@@ -722,6 +734,26 @@ Provider could be downloaded from:
 				|| string.Equals(dataTypeName, "Nullable(Date32)", StringComparison.OrdinalIgnoreCase);
 		}
 
+		static bool IsMySqlDecimalDataType(string dataTypeName)
+		{
+			return string.Equals(dataTypeName, "Decimal", StringComparison.OrdinalIgnoreCase)
+				|| string.Equals(dataTypeName, "NewDecimal", StringComparison.OrdinalIgnoreCase);
+		}
+
+		static bool HasProviderSpecificReaderMethod(DbDataReader reader, string methodName)
+		{
+			return reader.GetType().GetMethod(methodName, BindingFlags.Public | BindingFlags.Instance, binder: null, types: [typeof(int)], modifiers: null) != null;
+		}
+
+		static object GetProviderSpecificReaderMethodValue(DbDataReader reader, int ordinal, string methodName)
+		{
+			var method = reader.GetType().GetMethod(methodName, BindingFlags.Public | BindingFlags.Instance, binder: null, types: [typeof(int)], modifiers: null)
+				?? throw new InvalidOperationException($"Provider-specific reader type '{reader.GetType().FullName}' doesn't contain '{methodName}' method.");
+
+			return method.InvokeExt(reader, [ordinal])
+				?? throw new InvalidOperationException($"Provider-specific reader type '{reader.GetType().FullName}' method '{methodName}' returned null.");
+		}
+
 		static bool IsProviderSpecificType(Type type, string fullName)
 		{
 			return string.Equals(type.FullName, fullName, StringComparison.Ordinal);
@@ -753,6 +785,33 @@ Provider could be downloaded from:
 				DateTime dateTime => dateTime.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
 				_                 => Convert.ToString(value, CultureInfo.InvariantCulture)!,
 			};
+		}
+
+		static string? ReadMySqlDecimalAsString(DbDataReader reader, int ordinal)
+		{
+			try
+			{
+				if (reader.IsDBNull(ordinal))
+					return null;
+			}
+			catch (Exception exception) when (exception is not OperationCanceledException)
+			{
+			}
+
+			return FormatMySqlDecimal(GetProviderSpecificReaderMethodValue(reader, ordinal, "GetMySqlDecimal"));
+		}
+
+		static string? FormatMySqlDecimal(object value)
+		{
+			if (value is DBNull)
+				return null;
+
+			var isNullProperty = value.GetType().GetProperty("IsNull", BindingFlags.Public | BindingFlags.Instance);
+
+			if (isNullProperty != null && isNullProperty.GetValue(value) is true)
+				return null;
+
+			return Convert.ToString(value, CultureInfo.InvariantCulture);
 		}
 
 		static string FormatFirebirdDecFloat(FbDecFloat value)
