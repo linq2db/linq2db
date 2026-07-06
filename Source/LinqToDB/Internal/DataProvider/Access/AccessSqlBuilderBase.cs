@@ -56,9 +56,13 @@ namespace LinqToDB.Internal.DataProvider.Access
 		protected override bool IsValuesSyntaxSupported       => false;
 		protected override bool SupportsColumnAliasesInSource => false;
 
-		// Access' reader can't map duplicate result-set column names back by name (a raw
-		// ToSqlQuery -> Query<T> round-trip returns defaults), so final aliases are forced on a root
-		// column-name collision. #5599 / #5657.
+		// Unlike SqlCe/YDB - which reject a duplicate root result-column name at the server - Access renders
+		// such SQL fine: it auto-qualifies the colliding columns with their source alias (p.ID / d.ID). The
+		// need is purely client-side: a raw ToSqlQuery -> Query<T> round-trip maps the result set by name and
+		// can't map the qualified/duplicate columns back to the member, so it returns defaults. Forcing final
+		// aliases on the collision (PersonID / PersonID_1) fixes that round-trip. It only actually matters for
+		// exported SQL (normal execution reads by ordinal), but there's no builder signal to scope it there,
+		// so it's forced on every root collision - the extra alias is harmless. #5599 / #5657.
 		protected override bool RequiresUniqueRootColumnNames => true;
 
 		#region Skip / Take Support
