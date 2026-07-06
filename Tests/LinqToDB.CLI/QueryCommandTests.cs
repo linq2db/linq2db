@@ -79,6 +79,19 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task QueryRejectsMissingProviderLocationForInformixDB2Provider()
+		{
+			var result = await RunCli("query", "--provider", "Informix.DB2", "--connection-string", "Server=localhost:9189;Database=testdatadb2;userid=informix;password=in4mix", "--sql", "select 1 as Value from systables where tabid = 1");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.EqualTo(-3));
+				Assert.That(result.Error,    Does.Contain("Cannot locate IBM.Data.Db2.dll provider assembly."));
+				Assert.That(result.Error,    Does.Contain("--provider-location <path_to_assembly>"));
+			}
+		}
+
+		[Test]
 		public async Task QueryAcceptsSql()
 		{
 			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql", "select 1 as Value");

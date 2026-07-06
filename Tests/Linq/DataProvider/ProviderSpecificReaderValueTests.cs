@@ -143,6 +143,25 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		public void InformixProviderSpecificReadMatrix([IncludeDataSources(TestProvName.AllInformix)] string context)
+		{
+			using var conn = GetDataConnection(context);
+
+			using (Assert.EnterMultipleScope())
+			{
+				AssertReadMatrix(conn, "CAST(1000000 AS BIGINT) FROM systables WHERE tabid = 1"                             , typeof(long)    , typeof(long)    , "1000000");
+				AssertReadMatrix(conn, "CAST(7777777 AS INTEGER) FROM systables WHERE tabid = 1"                            , typeof(int)     , typeof(int)     , "7777777");
+				AssertReadMatrix(conn, "CAST(100 AS SMALLINT) FROM systables WHERE tabid = 1"                               , typeof(short)   , typeof(short)   , "100");
+				AssertReadMatrix(conn, "CAST(9999999 AS DECIMAL(31,0)) FROM systables WHERE tabid = 1"                      , typeof(decimal) , typeof(decimal) , "9999999");
+				AssertReadMatrix(conn, "CAST(20.31 AS REAL) FROM systables WHERE tabid = 1"                                 , typeof(float)   , typeof(float)   , "20.31");
+				AssertReadMatrix(conn, "CAST(16.2 AS DOUBLE PRECISION) FROM systables WHERE tabid = 1"                      , typeof(double)  , typeof(double)  , "16.2");
+				AssertReadMatrix(conn, "CAST('text' AS VARCHAR(10)) FROM systables WHERE tabid = 1"                         , typeof(string)  , typeof(string)  , "text");
+				AssertReadMatrix(conn, "DATE('2024-01-02') FROM systables WHERE tabid = 1"                                  , typeof(DateTime), typeof(DateTime), "2024-01-02");
+				AssertReadMatrix(conn, "DATETIME(2024-01-02 03:04:05.12345) YEAR TO FRACTION(5) FROM systables WHERE tabid = 1", typeof(DateTime), typeof(DateTime), "2024-01-02T03:04:05.1234500");
+			}
+		}
+
+		[Test]
 		public void ClickHouseOctonicaProviderSpecificReadMatrix([IncludeDataSources(ProviderName.ClickHouseOctonica)] string context)
 		{
 			using var conn = GetDataConnection(context);

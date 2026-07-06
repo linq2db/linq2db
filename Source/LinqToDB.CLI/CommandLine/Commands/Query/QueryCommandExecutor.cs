@@ -353,7 +353,7 @@ namespace LinqToDB.CommandLine
 		{
 			if (_settings.ProviderLocation == null)
 			{
-				if (IsDB2Provider(_settings.Provider))
+				if (IsDB2FamilyProvider(_settings.Provider))
 				{
 					_environment.Error.WriteLine(@"Cannot locate IBM.Data.Db2.dll provider assembly.
 Due to huge size of it, we don't include Net.IBM.Data.Db2 provider into installation.
@@ -384,7 +384,7 @@ Provider could be downloaded from:
 
 				var assembly = Assembly.LoadFrom(_settings.ProviderLocation);
 
-				if (IsDB2Provider(_settings.Provider))
+				if (IsDB2FamilyProvider(_settings.Provider))
 				{
 					DB2Tools.AutoDetectProvider = true;
 
@@ -421,11 +421,13 @@ Provider could be downloaded from:
 			return null;
 		}
 
-		static bool IsDB2Provider(string provider)
+		static bool IsDB2FamilyProvider(string provider)
 		{
 			return string.Equals(provider, ProviderName.DB2,     StringComparison.OrdinalIgnoreCase)
 				|| string.Equals(provider, ProviderName.DB2LUW,  StringComparison.OrdinalIgnoreCase)
-				|| string.Equals(provider, ProviderName.DB2zOS,  StringComparison.OrdinalIgnoreCase);
+				|| string.Equals(provider, ProviderName.DB2zOS,  StringComparison.OrdinalIgnoreCase)
+				|| string.Equals(provider, ProviderName.Informix,    StringComparison.OrdinalIgnoreCase)
+				|| string.Equals(provider, ProviderName.InformixDB2, StringComparison.OrdinalIgnoreCase);
 		}
 
 		static string? GetLockTimeoutCommand(IDataProvider dataProvider, int? timeout)
