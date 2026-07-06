@@ -777,11 +777,13 @@ namespace Tests.LinqToDB.CLI
 		public async Task QueryResolvesConfigRelativePathsFromConfigDirectory()
 		{
 			var environment = new TestCliEnvironment();
+			var providerLocation = Path.GetRelativePath("config", typeof(DataConnection).Assembly.Location);
 
-			environment.Files.Add("config\\query.json", """
+			environment.Files.Add("config\\query.json", $$"""
 				{
 					"default": {
 						"provider": "SQLite",
+						"providerLocation": "{{providerLocation.Replace("\\", "\\\\")}}",
 						"connectionString": "Data Source=:memory:",
 						"output": "csv",
 						"outputFile": "query.csv"
