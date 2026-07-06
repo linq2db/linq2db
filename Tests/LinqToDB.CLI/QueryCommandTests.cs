@@ -774,6 +774,63 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task QueryResolvesConfigRelativePathsFromConfigDirectory()
+		{
+			var environment = new TestCliEnvironment();
+
+			environment.Files.Add("config\\query.json", """
+				{
+					"default": {
+						"provider": "SQLite",
+						"connectionString": "Data Source=:memory:",
+						"output": "csv",
+						"outputFile": "query.csv"
+					}
+				}
+				""");
+
+			var result = await RunCli(environment, "query", "--config", "config\\query.json", "--sql", "select 1");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.Zero);
+				Assert.That(result.Output,   Is.Empty);
+				Assert.That(result.Error,    Is.Empty);
+				Assert.That(environment.Files["config\\query.csv"], Is.EqualTo($"1{Environment.NewLine}1{Environment.NewLine}"));
+				Assert.That(environment.Files.ContainsKey("query.csv"), Is.False);
+			}
+		}
+
+		[Test]
+		public async Task QueryResolvesCommandLinePathsFromApplicationCurrentDirectory()
+		{
+			var environment = new TestCliEnvironment();
+
+			environment.Files.Add("config\\query.json", """
+				{
+					"default": {
+						"provider": "SQLite",
+						"connectionString": "Data Source=:memory:",
+						"output": "csv",
+						"outputFile": "config.csv"
+					}
+				}
+				""");
+
+			var result = await RunCli(environment, "query", "--config", "config\\query.json", "--output-file", "cli.csv", "--sql", "select 1");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.Zero);
+				Assert.That(result.Output,   Is.Empty);
+				Assert.That(result.Error,    Is.Empty);
+				Assert.That(environment.Files["cli.csv"], Is.EqualTo($"1{Environment.NewLine}1{Environment.NewLine}"));
+				Assert.That(environment.Files.ContainsKey("config\\cli.csv"), Is.False);
+				Assert.That(environment.Files.ContainsKey("config\\config.csv"), Is.False);
+			}
+		}
+
+		[Test]
 		public async Task QueryAcceptsProviderLocationFromConfigProfile()
 		{
 			var environment = new TestCliEnvironment();

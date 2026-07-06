@@ -279,19 +279,21 @@ namespace LinqToDB.CommandLine
 
 								for (var i = 0; i < columns.Length; i++)
 								{
-									// Oracle BFILE is an external file locator. Even IsDBNull can trigger a file/LOB
-									// operation, so avoid reader value APIs for it.
-									//
-									if (columns[i].ActualFieldType == QueryActualFieldType.OracleBFile)
+									switch (columns[i].ActualFieldType)
 									{
-										row[i] = "BFILE";
-										continue;
-									}
+										// Oracle BFILE is an external file locator. Even IsDBNull can trigger a file/LOB
+										// operation, so avoid reader value APIs for it.
+										//
+										case QueryActualFieldType.OracleBFile:
+											row[i] = "BFILE";
+											continue;
 
-									if (columns[i].ActualFieldType == QueryActualFieldType.MySqlDecimal)
-									{
-										row[i] = ReadFieldAsString(reader, columns[i].ActualFieldType, i);
-										continue;
+										// MySQL wide DECIMAL values can overflow inside regular reader null checks.
+										// The native GetMySqlDecimal path does its own best-effort null handling.
+										//
+										case QueryActualFieldType.MySqlDecimal:
+											row[i] = ReadFieldAsString(reader, columns[i].ActualFieldType, i);
+											continue;
 									}
 
 									if (await reader.IsDBNullAsync(i, cancellationToken).ConfigureAwait(false))
@@ -682,6 +684,9 @@ Provider could be downloaded from:
 				_ when providerSpecificType == typeof(OracleTimeStamp)    => QueryActualFieldType.OracleTimeStamp,
 				_ when providerSpecificType == typeof(OracleTimeStampTZ)  => QueryActualFieldType.OracleTimeStampTZ,
 				_ when providerSpecificType == typeof(OracleTimeStampLTZ) => QueryActualFieldType.OracleTimeStampLTZ,
+				_ when providerSpecificType == typeof(FbDecFloat)         => QueryActualFieldType.FirebirdDecFloat,
+				_ when providerSpecificType == typeof(FbZonedDateTime)    => QueryActualFieldType.FirebirdZonedDateTime,
+				_ when providerSpecificType == typeof(FbZonedTime)        => QueryActualFieldType.FirebirdZonedTime,
 				_ when IsProviderSpecificType(providerSpecificType, "IBM.Data.DB2Types.DB2Binary")    => QueryActualFieldType.DB2Binary,
 				_ when IsProviderSpecificType(providerSpecificType, "IBM.Data.DB2Types.DB2Blob")      => QueryActualFieldType.DB2Blob,
 				_ when IsProviderSpecificType(providerSpecificType, "IBM.Data.DB2Types.DB2Clob")      => QueryActualFieldType.DB2Clob,
@@ -690,9 +695,6 @@ Provider could be downloaded from:
 				_ when IsProviderSpecificType(providerSpecificType, "IBM.Data.DB2Types.DB2TimeStamp") => QueryActualFieldType.DB2TimeStamp,
 				_ when IsProviderSpecificType(providerSpecificType, "IBM.Data.DB2Types.DB2Xml")       => QueryActualFieldType.DB2Xml,
 				_ when IsMySqlDecimalDataType(dataTypeName) && HasProviderSpecificReaderMethod(reader, "GetMySqlDecimal") => QueryActualFieldType.MySqlDecimal,
-				_ when providerSpecificType == typeof(FbDecFloat)       => QueryActualFieldType.FirebirdDecFloat,
-				_ when providerSpecificType == typeof(FbZonedDateTime)  => QueryActualFieldType.FirebirdZonedDateTime,
-				_ when providerSpecificType == typeof(FbZonedTime)      => QueryActualFieldType.FirebirdZonedTime,
 				_                                                         => QueryActualFieldType.None,
 			};
 

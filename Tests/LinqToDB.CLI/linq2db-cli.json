@@ -41,8 +41,9 @@
 		"provider"        : "MySqlConnector",
 		"connectionString": "Server=localhost;Port=3306;Database=testdataconnector;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;AllowLoadLocalInfile=true;"
 	},
-	"MariaDB.11": {
-		"provider"        : "MariaDB.11",
+	"MariaDB": {
+		"provider"        : "MariaDB",
+		"providerLocation": "%NUGET_PACKAGES%\\mysql.data\\9.4.0\\lib\\net8.0\\MySql.Data.dll",
 		"connectionString": "Server=localhost;Port=3316;Database=testdata;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;SslMode=Disabled;AllowLoadLocalInfile=true;"
 	},
 	"Oracle": {

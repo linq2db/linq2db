@@ -36,15 +36,14 @@ namespace LinqToDB.CommandLine
 
 		public static SqlGuardResult Validate(string sql)
 		{
-			var tokens = Tokenize(sql);
-
+			var tokens                = Tokenize(sql);
 			var singleStatementResult = ValidateSingleStatement(tokens);
+
 			if (!singleStatementResult.IsAllowed)
 				return singleStatementResult;
 
-			for (var i = 0; i < tokens.Count; i++)
+			foreach (var token in tokens)
 			{
-				var token = tokens[i];
 				if (_forbiddenTokens.Contains(token))
 					return SqlGuardResult.Rejected($"Query is not read-only: token '{token}' is not allowed.");
 			}
@@ -88,78 +87,91 @@ namespace LinqToDB.CommandLine
 				{
 					i++;
 				}
-				else if (current == '-' && i + 1 < sql.Length && sql[i + 1] == '-')
+				else switch (current)
 				{
-					i += 2;
-					while (i < sql.Length && sql[i] != '\r' && sql[i] != '\n')
-						i++;
-				}
-				else if (current == '/' && i + 1 < sql.Length && sql[i + 1] == '*')
-				{
-					i += 2;
-					while (i + 1 < sql.Length && (sql[i] != '*' || sql[i + 1] != '/'))
-						i++;
-
-					i = Math.Min(i + 2, sql.Length);
-				}
-				else if (current == '\'')
-				{
-					i++;
-					while (i < sql.Length)
+					case '-' when i + 1 < sql.Length && sql[i + 1] == '-':
 					{
-						if (sql[i] == '\'')
-						{
+						i += 2;
+						while (i < sql.Length && sql[i] != '\r' && sql[i] != '\n')
 							i++;
-							if (i < sql.Length && sql[i] == '\'')
+						break;
+					}
+					case '/' when i + 1 < sql.Length && sql[i + 1] == '*':
+					{
+						i += 2;
+						while (i + 1 < sql.Length && (sql[i] != '*' || sql[i + 1] != '/'))
+							i++;
+
+						i = Math.Min(i + 2, sql.Length);
+						break;
+					}
+					case '\'':
+					{
+						i++;
+						while (i < sql.Length)
+						{
+							if (sql[i] == '\'')
 							{
 								i++;
-								continue;
+								if (i < sql.Length && sql[i] == '\'')
+								{
+									i++;
+									continue;
+								}
+
+								break;
 							}
 
-							break;
+							i++;
 						}
 
-						i++;
+						break;
 					}
-				}
-				else if (current == '"' || current == '`' || current == '[')
-				{
-					var close = current == '[' ? ']' : current;
-
-					i++;
-					while (i < sql.Length)
+					case '"' or '`' or '[':
 					{
-						if (sql[i] == close)
+						var close = current == '[' ? ']' : current;
+
+						i++;
+						while (i < sql.Length)
 						{
-							i++;
-							if (i < sql.Length && sql[i] == close)
+							if (sql[i] == close)
 							{
 								i++;
-								continue;
+								if (i < sql.Length && sql[i] == close)
+								{
+									i++;
+									continue;
+								}
+
+								break;
 							}
 
-							break;
+							i++;
 						}
 
-						i++;
+						break;
 					}
-				}
-				else if (current == ';')
-				{
-					tokens.Add(";");
-					i++;
-				}
-				else if (char.IsLetter(current) || current == '_')
-				{
-					var start = i++;
-					while (i < sql.Length && (char.IsLetterOrDigit(sql[i]) || sql[i] == '_' || sql[i] == '$'))
+					case ';':
+						tokens.Add(";");
 						i++;
+						break;
+					default:
+					{
+						if (char.IsLetter(current) || current == '_')
+						{
+							var start = i++;
+							while (i < sql.Length && (char.IsLetterOrDigit(sql[i]) || sql[i] == '_' || sql[i] == '$'))
+								i++;
 
-					tokens.Add(sql[start..i].ToUpperInvariant());
-				}
-				else
-				{
-					i++;
+							tokens.Add(sql[start..i].ToUpperInvariant());
+						}
+						else
+						{
+							i++;
+						}
+
+						break;
+					}
 				}
 			}
 

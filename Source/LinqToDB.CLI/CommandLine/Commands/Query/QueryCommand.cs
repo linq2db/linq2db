@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -185,8 +186,11 @@ namespace LinqToDB.CommandLine
 				return null;
 			}
 
+			var configDirectory = configFileName != null ? Path.GetDirectoryName(configFileName) : null;
 			var providerName         = (string?)provider ?? configuration?.Provider;
-			var providerLocationPath = ResolvePath(environment, _providerLocation, (string?)providerLocation ?? configuration?.ProviderLocation);
+			var providerLocationPath = providerLocation != null
+				? ResolvePath(environment, _providerLocation, (string)providerLocation)
+				: ResolvePath(environment, _providerLocation, configuration?.ProviderLocation, configDirectory);
 			var connectionStringText = GetConfiguredValue(environment, _connectionString, (string?)connectionString, (string?)connectionStringEnv, configuration?.ConnectionString, configuration?.ConnectionStringEnv);
 			var userName             = GetConfiguredValue(environment, _user,             (string?)user,             (string?)userEnv,             configuration?.User,             configuration?.UserEnv);
 			var passwordText         = GetConfiguredValue(environment, _password,         (string?)password,         (string?)passwordEnv,         configuration?.Password,         configuration?.PasswordEnv);
@@ -194,7 +198,9 @@ namespace LinqToDB.CommandLine
 			var lockTimeoutValue     = (string?)lockTimeout    != null ? ParseTimeout(environment, _lockTimeout,     (string)lockTimeout)    :     configuration?.LockTimeout;
 			var maxRowsValue         = (string?)maxRows        != null ? ParseRowCount(environment, _maxRows,        (string)maxRows)        :     configuration?.MaxRows ?? DefaultMaxRows;
 			var outputFormat         = (string?)output ?? configuration?.Output ?? "json";
-			var outputFileName       = ResolvePath(environment, _outputFile, (string?)outputFile ?? configuration?.OutputFile);
+			var outputFileName       = outputFile != null
+				? ResolvePath(environment, _outputFile, (string)outputFile)
+				: ResolvePath(environment, _outputFile, configuration?.OutputFile, configDirectory);
 			var overwriteOutputFile  = (bool?)overwrite ?? false;
 			var unsafeSqlPolicy      = configuration?.UnsafeSqlPolicy ?? UnsafeSqlPolicy.Deny;
 			var allowUnsafeSqlValue  = (bool?)allowUnsafeSql ?? false;
@@ -300,7 +306,7 @@ namespace LinqToDB.CommandLine
 			return MissingEnvironmentVariable;
 		}
 
-		static string? ResolvePath(ICliEnvironment environment, CliOption option, string? path)
+		static string? ResolvePath(ICliEnvironment environment, CliOption option, string? path, string? baseDirectory = null)
 		{
 			if (path == null)
 				return null;
@@ -340,7 +346,12 @@ namespace LinqToDB.CommandLine
 				result.Append(path[i]);
 			}
 
-			return result.ToString();
+			var resolvedPath = result.ToString();
+
+			if (!string.IsNullOrEmpty(baseDirectory) && !Path.IsPathRooted(resolvedPath))
+				resolvedPath = Path.Combine(baseDirectory, resolvedPath);
+
+			return resolvedPath;
 		}
 
 		static bool TryAppendEnvironmentValue(ICliEnvironment environment, CliOption option, string name, StringBuilder result)
