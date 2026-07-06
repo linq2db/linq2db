@@ -78,9 +78,10 @@ git rev-parse origin/master
 git merge-base --is-ancestor <currentSha> HEAD
 ```
 
-If this exits non-zero (`currentSha` is not an ancestor of `HEAD`), **abort before spawning any agent**:
+If this exits non-zero (`currentSha` is not an ancestor of `HEAD`), **resolve it yourself before spawning any agent; don't hand it back to the user:**
 
-> Working tree is not at `origin/master` (`<currentSha>`). Indexer agents read on-disk source and would index stale files. Run `/kb-build` from a worktree checked out at `origin/master` — e.g. `git worktree add ../<clone-dir>.kb origin/master` — or fast-forward this checkout first.
+- **If the working tree is clean** (`git status --porcelain` empty): `git merge origin/master --no-edit` into the current branch (the established sync pattern for a long-lived curation branch — brings master's `Source/` / `Tests/` in while keeping the branch's own `.agents/knowledge-base/`), then re-run the `git merge-base --is-ancestor` guard and proceed. Leave the merge commit **unpushed** — pushing is a separate, explicitly-requested user action.
+- **If the merge conflicts, or the tree was dirty:** stop and ask the user — don't auto-resolve conflicts or silently stash. A worktree checked out at `origin/master` (carrying the KB across per [`../../docs/worktree.md`](../../docs/worktree.md)) is the fallback.
 
 Do **not** work around a failed guard by reading `git show <sha>:<path>` in the agents — it is fragile per-file and easy to get partially wrong across a large scan.
 
@@ -102,8 +103,8 @@ Step-specific procedures. Each step's gate rules and inputs are in [`../../docs/
 
 All agent spawns (`kb-architect` / `kb-historian` / `kb-github-curator` / `kb-issue-detector` / `kb-research`) follow the same capture loop:
 
-1. **Spawn synchronously** (`run_in_background: false`) and wait. Keep to the step/area cadence already built into this skill — one step per turn, and for per-area steps (3, 8, 10, 11) one area at a time with a checkpoint after each. **Never fan out all areas' agents at once, and never in the background** — a background agent's output cannot be captured (beat 2), and a mass spawn exhausts the session rate limit.
-2. **Capture from the persisted tool-result JSON — never from the agent's notification/chat text.** A synchronous agent's fenced envelope is persisted by the harness to `.../tool-results/<id>.json` with literal `<` / `>` / `&`. Extract it (one allowlisted call):
+1. **Spawn synchronously** (`run_in_background: false`) in **parallel batches — batch size is a run parameter (default 10)**. For a per-area step (3, 8, 10, 11), if the user hasn't set a batch size for this run, ask them how many indexer agents to run in parallel (default 10) and record it; then spawn up to that many at a time in one message and apply the whole batch (beats 2–3) before the next. **Never use background agents** (their result arrives only as an HTML-escaping notification over an empty transcript — uncapturable, beat 2) and **never exceed the agreed batch size** (a mass spawn exhausts the session rate limit).
+2. **Capture each envelope — from its inline result or persisted tool-result JSON, never from a background notification.** A synchronous agent returns its fenced envelope with literal `<` / `>` / `&`: small results come back **inline** (write verbatim to the `outFile`); large results are **persisted to `.../tool-results/<id>.json`** (path given in the tool result) — extract that (one allowlisted call):
    ```bash
    pwsh -NoProfile -File .agents/scripts/extract-agent-output.ps1 <<'EOF'
    {"sourceJson": "<path to tool-results/<id>.json>", "outFile": ".build/.agents/kb-build-step<n>.txt"}
