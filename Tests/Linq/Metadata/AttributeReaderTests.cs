@@ -23,7 +23,7 @@ namespace Tests.Metadata
 		public void TypeAttribute()
 		{
 			var rd    = new AttributeReader();
-			var attrs = rd.GetAttributes(typeof(TestEntity))
+			var attrs = rd.GetAttributes(MappingSchema.Default, typeof(TestEntity))
 				.OfType<TableAttribute>().ToArray();
 
 			Assert.That(attrs, Is.Not.Null);
@@ -35,7 +35,7 @@ namespace Tests.Metadata
 		public void FieldAttribute()
 		{
 			var rd    = new AttributeReader();
-			var attrs = rd.GetAttributes(typeof(TestEntity), MemberHelper.MemberOf<TestEntity>(a => a.Field1))
+			var attrs = rd.GetAttributes(MappingSchema.Default, typeof(TestEntity), MemberHelper.MemberOf<TestEntity>(a => a.Field1))
 				.OfType<ColumnAttribute>().ToArray();
 
 			Assert.That(attrs, Is.Empty);
@@ -45,7 +45,7 @@ namespace Tests.Metadata
 		public void PropertyAttribute()
 		{
 			var rd    = new AttributeReader();
-			var attrs = rd.GetAttributes(typeof(TestEntity), MemberHelper.MemberOf<TestEntity>(a => a.Property1))
+			var attrs = rd.GetAttributes(MappingSchema.Default, typeof(TestEntity), MemberHelper.MemberOf<TestEntity>(a => a.Property1))
 				.OfType<ColumnAttribute>().ToArray();
 
 			Assert.That(attrs, Is.Not.Null);

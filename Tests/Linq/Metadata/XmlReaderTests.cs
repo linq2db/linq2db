@@ -55,7 +55,7 @@ namespace Tests.Metadata
 		public void TypeAttribute()
 		{
 			var rd    = new XmlAttributeReader(new MemoryStream(Encoding.UTF8.GetBytes(Data)));
-			var attrs = rd.GetAttributes(typeof(XmlReaderTests)).OfType<TableAttribute>().ToArray();
+			var attrs = rd.GetAttributes(MappingSchema.Default, typeof(XmlReaderTests)).OfType<TableAttribute>().ToArray();
 
 			Assert.That(attrs, Is.Not.Null);
 			Assert.That(attrs, Has.Length.EqualTo(1));
@@ -68,7 +68,7 @@ namespace Tests.Metadata
 		public void FieldAttribute()
 		{
 			var rd    = new XmlAttributeReader(new MemoryStream(Encoding.UTF8.GetBytes(Data)));
-			var attrs = rd.GetAttributes(typeof(XmlReaderTests), MemberHelper.MemberOf<XmlReaderTests>(a => a.Field1))
+			var attrs = rd.GetAttributes(MappingSchema.Default, typeof(XmlReaderTests), MemberHelper.MemberOf<XmlReaderTests>(a => a.Field1))
 				.OfType<ColumnAttribute>().ToArray();
 
 			Assert.That(attrs, Is.Not.Null);
@@ -82,7 +82,7 @@ namespace Tests.Metadata
 		public void PropertyAttribute()
 		{
 			var rd    = new XmlAttributeReader(new MemoryStream(Encoding.UTF8.GetBytes(Data)));
-			var attrs = rd.GetAttributes(typeof(XmlReaderTests), MemberHelper.MemberOf<XmlReaderTests>(a => a.Property1))
+			var attrs = rd.GetAttributes(MappingSchema.Default, typeof(XmlReaderTests), MemberHelper.MemberOf<XmlReaderTests>(a => a.Property1))
 				.OfType<ColumnAttribute>().ToArray();
 
 			Assert.That(attrs, Is.Not.Null);

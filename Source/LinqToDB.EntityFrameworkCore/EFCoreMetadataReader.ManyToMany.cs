@@ -82,7 +82,7 @@ namespace LinqToDB.EntityFrameworkCore
 		/// Builds a <see cref="ColumnAttribute"/> for a foreign key column of a many-to-many join table,
 		/// exposed on the marker type as a dynamic column.
 		/// </summary>
-		private ColumnAttribute? BuildJoinColumnAttribute(ManyToManyJoinInfo joinInfo, string memberName, MappingSchema? mappingSchema)
+		private ColumnAttribute? BuildJoinColumnAttribute(ManyToManyJoinInfo joinInfo, string memberName, MappingSchema mappingSchema)
 		{
 			IProperty? prop = null;
 
@@ -121,7 +121,7 @@ namespace LinqToDB.EntityFrameworkCore
 				}
 				else
 				{
-					dataType = GetDataTypeSchema(mappingSchema).GetDataType(typeMapping.ClrType).Type.DataType;
+					dataType = mappingSchema.GetDataType(typeMapping.ClrType).Type.DataType;
 				}
 			}
 

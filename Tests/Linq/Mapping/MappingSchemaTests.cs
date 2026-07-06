@@ -335,10 +335,9 @@ namespace Tests.Mapping
 		// BorrowProbeElement (a different type - no self-recursion) as scalar.
 		sealed class BorrowGatedType;
 
-		// Minimal ISchemaAwareMetadataReader: marks BorrowGatedType scalar iff the schema handed to it treats
-		// BorrowProbeElement as scalar. The schema-less fallback never marks it scalar, so the answer is fully
-		// determined by which schema the aggregator passes in.
-		sealed class BorrowProbeReader : ISchemaAwareMetadataReader
+		// Minimal schema-aware reader: marks BorrowGatedType scalar iff the schema handed to it treats
+		// BorrowProbeElement as scalar. Its answer is fully determined by which schema the aggregator forwards.
+		sealed class BorrowProbeReader : IMetadataReader
 		{
 			public MappingAttribute[] GetAttributes(MappingSchema mappingSchema, Type type)
 				=> type == typeof(BorrowGatedType) && mappingSchema.IsScalarType(typeof(BorrowProbeElement))
@@ -346,27 +345,24 @@ namespace Tests.Mapping
 					: [];
 
 			public MappingAttribute[] GetAttributes(MappingSchema mappingSchema, Type type, MemberInfo memberInfo) => [];
-			public MappingAttribute[] GetAttributes(Type type)                                                    => [];
-			public MappingAttribute[] GetAttributes(Type type, MemberInfo memberInfo)                             => [];
 			public MemberInfo[]       GetDynamicColumns(Type type)                                                => [];
 			public string             GetObjectID()                                                               => ".BorrowProbeReader.";
 		}
 
-		[Test(Description = "A schema-aware reader borrowed by reference from a base schema (new MappingSchema(baseSchema), combine:false path) must resolve against the deriving schema, not the base - MetadataReader.WithSchema re-binds the borrowed aggregator (#5675)")]
-		public void SchemaAwareReader_BorrowedAggregatorRebindsToDerivedSchema()
+		[Test(Description = "A schema-aware reader borrowed by reference from a base schema (new MappingSchema(baseSchema), combine:false path) resolves against the deriving schema, not the base - the stateless aggregator forwards the active schema on every call (#5675)")]
+		public void SchemaAwareReader_BorrowedAggregatorResolvesAgainstDerivedSchema()
 		{
-			// baseMs owns a schema-aware reader; AddMetadataReader binds its aggregator to baseMs.
+			// baseMs owns a schema-aware reader; AddMetadataReader builds an aggregator over it.
 			var baseMs = new MappingSchema();
 			baseMs.AddMetadataReader(new BorrowProbeReader());
 
 			// Single-base ctor takes the combine:false path, which borrows baseMs' aggregator by reference.
-			// Only the WithSchema re-bind makes that aggregator resolve against derived rather than baseMs.
+			// The aggregator holds no schema, so it forwards whichever schema drives the resolution.
 			var derived = new MappingSchema(baseMs);
 			derived.AddScalarType(typeof(BorrowProbeElement), DataType.Int32);
 
-			// derived registered BorrowProbeElement, so its schema-aware reader must report BorrowGatedType
-			// scalar. Without the re-bind the borrowed aggregator would consult baseMs (no registration) and
-			// this would be false - the regression this pins.
+			// derived registered BorrowProbeElement, so resolving through derived must report BorrowGatedType
+			// scalar. If the borrowed aggregator leaked baseMs (no registration) this would be false.
 			derived.IsScalarType(typeof(BorrowGatedType)).ShouldBeTrue();
 
 			// baseMs never registered BorrowProbeElement, so BorrowGatedType stays non-scalar there (control).

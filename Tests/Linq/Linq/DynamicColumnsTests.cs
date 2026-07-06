@@ -790,12 +790,12 @@ namespace Tests.Linq
 		
 		class CustomMetadataReader: IMetadataReader
 		{
-			public MappingAttribute[] GetAttributes(Type type)
+			public MappingAttribute[] GetAttributes(MappingSchema mappingSchema, Type type)
 			{
 				return Array.Empty<MappingAttribute>();
 			}
 
-			public MappingAttribute[] GetAttributes(Type type, MemberInfo memberInfo)
+			public MappingAttribute[] GetAttributes(MappingSchema mappingSchema, Type type, MemberInfo memberInfo)
 			{
 				if (type != typeof(DynamicChild) || memberInfo.Name != "ParentID")
 					return Array.Empty<MappingAttribute>();

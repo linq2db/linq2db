@@ -59,10 +59,10 @@ namespace LinqToDB.Metadata
 				return _members.TryGetValue((MemberInfo)attributeProvider, out var memberAttributes) ? memberAttributes : [];
 		}
 
-		public MappingAttribute[] GetAttributes(Type type)
+		public MappingAttribute[] GetAttributes(MappingSchema mappingSchema, Type type)
 			=> _cache.GetMappingAttributes<MappingAttribute>(type);
 
-		public MappingAttribute[] GetAttributes(Type type, MemberInfo memberInfo)
+		public MappingAttribute[] GetAttributes(MappingSchema mappingSchema, Type type, MemberInfo memberInfo)
 		{
 			if (memberInfo.ReflectedType != type)
 				memberInfo = type.GetMemberEx(memberInfo) ?? memberInfo;

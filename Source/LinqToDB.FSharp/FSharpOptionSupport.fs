@@ -76,20 +76,15 @@ type internal FSharpOptionSupport =
         t.IsGenericType &&
         (let d = t.GetGenericTypeDefinition() in d = typedefof<_ option> || d = typedefof<_ voption>)
 
-    /// Returns <c>true</c> when <paramref name="t"/> is an option type whose element is a scalar (column)
-    /// type. An option over a complex/entity element is not treated as a column.
-    static member IsScalarOption(t: Type) =
-        FSharpOptionSupport.IsOption t && MappingSchema.Default.IsScalarType(t.GetGenericArguments().[0])
-
     /// Returns the cached <see cref="IValueConverter"/> for a closed option type.
     static member GetConverter(optionType: Type) : IValueConverter =
         cache.GetOrAdd(optionType, build)
 
 /// Supplies a <see cref="ValueConverterAttribute"/> for every scalar <c>'T option</c> / <c>'T voption</c>
 /// member encountered, so option columns are recognised and converted during entity-descriptor construction.
-/// Implements <see cref="ISchemaAwareMetadataReader"/>: scalar-ness is resolved against the ACTIVE combined
-/// schema (provider + user layers), so options over provider-native (e.g. NpgsqlPoint, IPAddress) or
-/// user-registered (AddScalarType) scalars auto-map too - not only over types scalar in MappingSchema.Default.
+/// Scalar-ness is resolved against the ACTIVE combined schema passed to <see cref="IMetadataReader"/> (provider +
+/// user layers), so options over provider-native (e.g. NpgsqlPoint, IPAddress) or user-registered (AddScalarType)
+/// scalars auto-map too - not only over types scalar in MappingSchema.Default.
 type internal FSharpOptionMetadataReader() =
 
     static let memberType (mi: MemberInfo) : Type =
@@ -128,24 +123,14 @@ type internal FSharpOptionMetadataReader() =
     static let isScalarOptionIn (ms: MappingSchema) (t: Type) =
         FSharpOptionSupport.IsOption t && ms.IsScalarType(t.GetGenericArguments().[0])
 
-    // Production path: the aggregator is bound to the active combined schema and dispatches here.
-    interface ISchemaAwareMetadataReader with
+    // The aggregator forwards the active combined schema on every call; scalar-ness is resolved against it.
+    interface IMetadataReader with
         member _.GetAttributes(mappingSchema: MappingSchema, _type: Type) =
             typeAttributes (isScalarOptionIn mappingSchema _type)
 
         member _.GetAttributes(mappingSchema: MappingSchema, _type: Type, memberInfo: MemberInfo) =
             let mt = memberType memberInfo
             memberAttributes mt (isScalarOptionIn mappingSchema mt)
-
-    // Schema-less fallback: only reached when the aggregator is not bound to a schema (e.g.
-    // MetadataReader.Default). Keeps the MappingSchema.Default gate, so behaviour on that path is unchanged.
-    interface IMetadataReader with
-        member _.GetAttributes(_type: Type) =
-            typeAttributes (FSharpOptionSupport.IsScalarOption _type)
-
-        member _.GetAttributes(_type: Type, memberInfo: MemberInfo) =
-            let mt = memberType memberInfo
-            memberAttributes mt (FSharpOptionSupport.IsScalarOption mt)
 
         member _.GetDynamicColumns(_type: Type) = Array.empty<MemberInfo>
         member _.GetObjectID() = ".FSharpOptionMetadataReader."

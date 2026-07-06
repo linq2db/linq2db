@@ -92,7 +92,7 @@ type ComplexElem = { A : int; B : string }
 
 // https://github.com/linq2db/linq2db/issues/195
 // Negative branch of the scalar gate: an option over a complex/entity element is NOT auto-scalarized.
-// IsScalarOption gates on MappingSchema.Default.IsScalarType, so only a scalar-element option gets the
+// The scalar gate uses the active schema's IsScalarType, so only a scalar-element option gets the
 // F# ValueConverter. The scalar-element option ('int option') here must carry the converter; the
 // complex-element option ('ComplexElem option') must be left untouched (no auto-mapped value converter).
 [<NoComparison; NoEquality>]
@@ -131,9 +131,9 @@ let BuildCustomScalarSchema () =
 
 // https://github.com/linq2db/linq2db/issues/195
 // A 'T option whose element is scalar ONLY in the active/user schema (MyId, made scalar via AddScalarType
-// on the schema passed to GetDataContext) must still auto-map. Currently it does NOT: IsScalarOption
-// consults MappingSchema.Default, which doesn't know MyId, so no ColumnAttribute/ValueConverter is emitted
-// and the option member is not mapped as a column. Gated [ActiveIssue] until the scalar gate is fixed.
+// on the schema passed to GetDataContext) auto-maps: the scalar gate resolves against the active schema
+// (not MappingSchema.Default, which doesn't know MyId), so the ColumnAttribute/ValueConverter is emitted
+// and the option member is mapped as a column.
 [<NoComparison>]
 [<Table("CustomScalarOptionTable", IsColumnAttributeRequired = false)>]
 type CustomScalarOptionRow =

@@ -104,9 +104,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			return null;
 		}
 
-		public MappingAttribute[] GetAttributes(Type type) => [];
+		public MappingAttribute[] GetAttributes(MappingSchema mappingSchema, Type type) => [];
 
-		public MappingAttribute[] GetAttributes(Type type, MemberInfo memberInfo)
+		public MappingAttribute[] GetAttributes(MappingSchema mappingSchema, Type type, MemberInfo memberInfo)
 		{
 			// HACK: we use _sqlMethodAttribute/_sqlUserDefinedTypeAttribute as cache key part instead of typeof(T) to avoid closure generation for lambda
 			// this is valid approach for current code but if we will add more attributes support we will need to add typeof(T) to key too
