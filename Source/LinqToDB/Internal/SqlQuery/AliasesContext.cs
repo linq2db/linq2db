@@ -103,18 +103,20 @@ namespace LinqToDB.Internal.SqlQuery
 		/// <summary>
 		/// Effective field physical name: the finalized name recorded by the aliasing pass (for
 		/// derived-table / CTE source fields), otherwise the field's own physical name -
-		/// <see cref="SqlField.PhysicalName"/> for a table field, or the delegated <c>Name</c> for a
-		/// CTE field (<see cref="SqlCteTableField"/> / <see cref="SqlCteField"/>).
+		/// <see cref="SqlField.PhysicalName"/> for a table field, the finalized name of its
+		/// definition field for a CTE reference field (<see cref="SqlCteTableField.CteField"/>), or
+		/// the delegated <c>Name</c> for a CTE definition field (<see cref="SqlCteField"/>).
 		/// </summary>
 		public string GetFieldName(SqlExpressionBase field)
 			=> _fieldNames.TryGetValue(field, out var name)
 				? name
 				: field switch
 				{
-					SqlField f      => f.PhysicalName,
-					SqlFieldBase fb => fb.Name,
-					SqlCteField cf  => cf.Name,
-					_               => throw new InvalidOperationException($"GetFieldName: unexpected field type '{field?.GetType().Name}'."),
+					SqlField f                                 => f.PhysicalName,
+					SqlCteTableField { CteField: {} cteField } => GetFieldName(cteField),
+					SqlFieldBase fb                            => fb.Name,
+					SqlCteField cf                             => cf.Name,
+					_                                          => throw new InvalidOperationException($"GetFieldName: unexpected field type '{field?.GetType().Name}'."),
 				};
 
 		#endregion

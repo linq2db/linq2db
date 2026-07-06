@@ -225,20 +225,6 @@ namespace LinqToDB.Internal.DataProvider
 			{
 				base.VisitSqlCteTable(element);
 
-				// A CTE table field's finalized name must follow its CTE-definition field
-				// (SqlCteTableField.CteField), so the rendered reference matches the WITH-clause column
-				// name. Mirror the definition field's finalized name into this field's context entry
-				// (non-mutating: SqlCteTableField.Name still delegates to the un-renamed CteField).
-				foreach (var field in element.Fields)
-				{
-					if (field.CteField is { } cteField)
-					{
-						var cteName = _newAliases.GetFieldName(cteField);
-						if (!string.Equals(_newAliases.GetFieldName(field), cteName, StringComparison.Ordinal))
-							_newAliases.SetFieldName(field, cteName);
-					}
-				}
-
 				_newAliases.RegisterAliased(element);
 
 				return element;
