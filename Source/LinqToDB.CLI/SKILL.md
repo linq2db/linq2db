@@ -37,6 +37,7 @@ Connection settings:
 - The final connection string is always produced with `string.Format(connectionString, user, password)`.
 - Use `{0}` in the connection string for the user value and `{1}` for the password value.
 - Escape literal braces in connection strings as `{{` and `}}`.
+- Connection timeout is intentionally not exposed as a separate query command option. It is provider-specific and must be configured in the connection string using the selected provider's supported keywords.
 
 Configuration profiles:
 
@@ -77,7 +78,7 @@ Timeouts:
 - `--lock-timeout <seconds>` applies a provider-specific lock wait timeout before the query when supported by the selected provider.
 - Timeout values are non-negative integer seconds.
 - `lockTimeout` is best-effort and currently has provider-specific behavior; unsupported providers ignore it.
-- Connection timeout should be specified directly in the provider connection string using provider-supported keywords.
+- Connection timeout is intentionally left to the provider connection string. The query command exposes command timeout and provider-specific lock timeout only.
 
 Supported `lockTimeout` providers:
 
@@ -96,7 +97,7 @@ Output:
 - Existing output files are not replaced by default. Use `--overwrite` only when the user explicitly wants to replace the file.
 - When `--output-file` is not specified, output is written to stdout.
 - Query output reads database values using .NET `DbDataReader.GetProviderSpecificValue` and serializes them as strings using invariant culture and provider-specific safe formatting. Binary values are emitted using SQL-style hexadecimal notation like `0x010203`. `NULL` values are emitted as JSON `null`.
-- Current special provider-specific value handling is focused on SQL Server types validated so far. Other providers still use `GetProviderSpecificValue`, but provider-specific formatting coverage should be expanded and validated per provider before relying on unusual provider-specific types.
+- Provider-specific output formatting is intentionally SQL Server-first in this PR. The command still uses `DbDataReader.GetProviderSpecificValue` for all providers and falls back to invariant string conversion, but special formatting rules have been validated primarily for SQL Server provider-specific types. Additional provider-specific formatting rules will be added incrementally as provider behavior is tested.
 - For `json` output, projected column names must be unique because rows are emitted as JSON objects. The agent is responsible for adding explicit SQL aliases when a query could produce duplicate names.
 - Duplicate column names are rejected for `json` output. Use explicit aliases or switch to duplicate-safe `json-table` output when column metadata and duplicate names must be preserved.
 - `json-table` output contains `rowCount`, `truncated`, `columns`, and `rows`. Each column has `ordinal`, `name`, `fieldType`, `providerSpecificFieldType`, and `dataTypeName`; rows are arrays of string or null values.
@@ -113,8 +114,10 @@ Guardrails:
 
 - Default policy is guarded mode: unsafe SQL is rejected unless configuration explicitly allows it.
 - Guarded mode can be relaxed only by creating a configuration profile with `unsafeSql: "confirm"` or `unsafeSql: "allow"`.
-- The query command always accepts only one SQL statement per invocation. Multiple statements are rejected even when unsafe SQL is allowed.
-- Single-statement execution is a hard command contract for all providers. SQL Server is checked with ScriptDom AST; other providers currently use a generic best-effort validator until provider-specific parsers are added.
+- The query command accepts exactly one user-provided SQL statement per invocation. This restriction applies to SQL text passed through `--sql` or `--sql-file`.
+- The CLI may execute provider-specific setup commands internally, such as lock timeout configuration, before executing the user-provided SQL. Those internal commands are not part of the user SQL contract.
+- User-provided SQL must contain exactly one statement. Multiple user-provided statements are rejected even when unsafe SQL is allowed.
+- Single-statement user SQL is a hard command contract for all providers. SQL Server is checked with ScriptDom AST; other providers currently use a generic best-effort validator until provider-specific parsers are added.
 - If an agent needs to execute several independent operations, it should run several separate `query` commands.
 - Multi-statement workflows that rely on session state, such as temporary tables, are not supported yet.
 - The query command is intended for read-oriented SQL that returns a result set.
@@ -130,6 +133,13 @@ Guardrails:
 - The read-only SQL guard is a guardrail, not a security boundary. If an agent can edit the configuration file, it can change configuration-based unsafe SQL policy.
 - All safety measures in this command are best-effort guardrails intended to help avoid agent mistakes; they are not absolute protection for a database.
 - The strongest protection against agent mistakes is to execute SQL using a database account with limited permissions appropriate for the task. For read-only agent queries, prefer a read-only account. For development workflows that need DDL/DML, prefer a dedicated disposable database or a restricted development account.
+
+Agent responsibility:
+
+- The agent is responsible for keeping user-provided SQL to one statement and choosing explicit aliases when column names could be duplicated.
+- The agent is responsible for choosing an output format appropriate to the task. Use `json-table` when duplicate column names or column metadata matter.
+- The agent is responsible for setting provider-specific connection timeout keywords in the connection string when connection establishment must be bounded.
+- The agent must treat guardrails as mistake-prevention aids, not as a security boundary.
 
 Agent confirmation rule:
 
@@ -148,17 +158,17 @@ dotnet linq2db query --provider SQLite --connection-string "Data Source=data.db"
 dotnet linq2db query --config query.json --profile uat --command-timeout 30 --sql-file query.sql
 dotnet linq2db query --config query.json --profile uat --sql-file query.sql
 dotnet linq2db query --config query.json --profile uat --user readonly_user --password secret --sql "select * from Person"
-dotnet linq2db query --config query.json --profile uat --output json-table --sql "select Id, Id from Person"
+dotnet linq2db query --config query.json --profile uat --output json-table --sql "select p.Id, o.Id from Person p join Orders o on o.PersonId = p.Id"
 dotnet linq2db query --config query.json --profile uat --max-rows 100 --sql "select * from Person"
 ```
 
 ## Scaffold Command
 
-To be updated.
+This skill currently documents query and skill commands. Scaffold documentation will be expanded separately.
 
 ## Template Command
 
-To be updated.
+This skill currently documents query and skill commands. Template documentation will be expanded separately.
 
 ## Help
 

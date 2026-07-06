@@ -24,7 +24,7 @@ namespace LinqToDB.CommandLine
 		static readonly CliOption _config           = new StringCliOption("config",            null, false, false, "path to query configuration file");
 		static readonly CliOption _profile          = new StringCliOption("profile",           null, false, false, "configuration profile name");
 		static readonly CliOption _provider         = new StringCliOption("provider",          null, false, false, "linq2db provider name");
-		static readonly CliOption _connectionString = new StringCliOption("connection-string", null, false, false, "database connection string; use {0} for user and {1} for password placeholders");
+		static readonly CliOption _connectionString = new StringCliOption("connection-string", null, false, false, "database connection string; use {0} for user and {1} for password placeholders; configure provider-specific connection timeout here");
 		static readonly CliOption _connectionStringEnv = new StringCliOption("connection-string-env", null, false, false, "environment variable with database connection string");
 		static readonly CliOption _user             = new StringCliOption("user",              null, false, false, "database user name for connection string formatting");
 		static readonly CliOption _userEnv          = new StringCliOption("user-env",          null, false, false, "environment variable with database user name");
@@ -34,8 +34,8 @@ namespace LinqToDB.CommandLine
 		static readonly CliOption _lockTimeout      = new StringCliOption("lock-timeout",      null, false, false, "provider-specific lock wait timeout in seconds");
 		static readonly CliOption _maxRows          = new StringCliOption("max-rows",          null, false, false, "maximum number of result rows to read");
 		static readonly CliOption _outputFile       = new StringCliOption("output-file",       null, false, false, "path to file for command output");
-		static readonly CliOption _sql              = new StringCliOption("sql",               null, false, false, "SQL query text to execute");
-		static readonly CliOption _sqlFile          = new StringCliOption("sql-file",          null, false, false, "path to file with SQL query text to execute");
+		static readonly CliOption _sql              = new StringCliOption("sql",               null, false, false, "single user-provided SQL query text to execute");
+		static readonly CliOption _sqlFile          = new StringCliOption("sql-file",          null, false, false, "path to file with single user-provided SQL query text to execute");
 
 		static readonly CliOption _overwrite      = new BooleanCliOption("overwrite", null, false, "replace existing output file", null, null, null, false, false);
 		static readonly CliOption _allowUnsafeSql = new BooleanCliOption(
@@ -81,6 +81,8 @@ namespace LinqToDB.CommandLine
 						"executes read-oriented SQL query with a command timeout override"),
 					new("dotnet linq2db query --config query.json --profile uat --user readonly --password secret --sql-file query.sql",
 						"executes read-oriented SQL query using connection settings from specified configuration profile"),
+					new("dotnet linq2db query --config query.json --profile uat --output json-table --sql \"select p.Id, o.Id from Person p join Orders o on o.PersonId = p.Id\"",
+						"executes query and writes duplicate-safe JSON table output with column metadata"),
 					new("dotnet linq2db query --provider SQLite --connection-string \"Data Source=data.db\" --output csv --output-file result.csv --sql \"select * from Person\"",
 						"executes specified read-oriented SQL query and writes CSV result to file"),
 				])
