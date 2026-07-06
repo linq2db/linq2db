@@ -92,7 +92,6 @@ Supported `lockTimeout` providers:
 - PostgreSQL: `SET lock_timeout = '<seconds>s'`.
 - MySQL and MariaDB: `SET SESSION innodb_lock_wait_timeout = <seconds>`.
 - SQLite: `PRAGMA busy_timeout = <milliseconds>`.
-- Firebird: `SET LOCK TIMEOUT <seconds>`.
 
 Output:
 

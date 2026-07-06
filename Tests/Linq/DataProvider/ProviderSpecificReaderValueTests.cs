@@ -8,6 +8,7 @@ using System.Globalization;
 using System.Runtime.CompilerServices;
 
 using ClickHouse.Driver.Numerics;
+using FirebirdSql.Data.Types;
 using IBM.Data.DB2Types;
 using LinqToDB;
 using LinqToDB.Data;
@@ -162,6 +163,39 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		public void FirebirdProviderSpecificReadMatrix([IncludeDataSources(TestProvName.AllFirebird)] string context)
+		{
+			using var conn = GetDataConnection(context);
+
+			using (Assert.EnterMultipleScope())
+			{
+				AssertReadMatrix(conn, "CAST(1000000 AS BIGINT) FROM rdb$database"          , typeof(long)    , typeof(long)    , "1000000");
+				AssertReadMatrix(conn, "CAST(7777777 AS INTEGER) FROM rdb$database"         , typeof(int)     , typeof(int)     , "7777777");
+				AssertReadMatrix(conn, "CAST(100 AS SMALLINT) FROM rdb$database"            , typeof(short)   , typeof(short)   , "100");
+				AssertReadMatrix(conn, "CAST(9999999 AS DECIMAL(18,0)) FROM rdb$database"   , typeof(decimal) , typeof(decimal) , "9999999");
+				AssertReadMatrix(conn, "CAST(20.31 AS FLOAT) FROM rdb$database"             , typeof(float)   , typeof(float)   , "20.31");
+				AssertReadMatrix(conn, "CAST(16.2 AS DOUBLE PRECISION) FROM rdb$database"   , typeof(double)  , typeof(double)  , "16.2");
+				AssertReadMatrix(conn, "CAST('text' AS VARCHAR(10)) FROM rdb$database"      , typeof(string)  , typeof(string)  , "text");
+				AssertReadMatrix(conn, "DATE '2024-01-02' FROM rdb$database"                , typeof(DateTime), typeof(DateTime), "2024-01-02");
+				AssertReadMatrix(conn, "TIMESTAMP '2024-01-02 03:04:05.1234' FROM rdb$database", typeof(DateTime), typeof(DateTime), "2024-01-02T03:04:05.1234000");
+				AssertReadMatrix(conn, "CAST(x'3039' AS VARBINARY(2)) FROM rdb$database"    , typeof(byte[])  , typeof(byte[])  , "0x3039");
+			}
+		}
+
+		[Test]
+		public void Firebird4ProviderSpecificReadMatrix([IncludeDataSources(TestProvName.AllFirebird4Plus)] string context)
+		{
+			using var conn = GetDataConnection(context);
+
+			using (Assert.EnterMultipleScope())
+			{
+				AssertReadMatrix(conn, "CAST(123.45 AS DECFLOAT(16)) FROM rdb$database"              , typeof(FbDecFloat)     , typeof(FbDecFloat)     , "12345E-2");
+				AssertReadMatrix(conn, "TIMESTAMP '2024-01-02 03:04:05.1234 UTC' FROM rdb$database"  , typeof(FbZonedDateTime), typeof(FbZonedDateTime), "2024-01-02T03:04:05.1234000 UTC");
+				AssertReadMatrix(conn, "TIME '03:04:05.1234 UTC' FROM rdb$database"                  , typeof(FbZonedTime)    , typeof(FbZonedTime)    , "03:04:05.1234000 UTC");
+			}
+		}
+
+		[Test]
 		public void ClickHouseOctonicaProviderSpecificReadMatrix([IncludeDataSources(ProviderName.ClickHouseOctonica)] string context)
 		{
 			using var conn = GetDataConnection(context);
@@ -298,6 +332,9 @@ namespace Tests.DataProvider
 				DB2Time db2Time               => db2Time.Value.ToString("c", CultureInfo.InvariantCulture),
 				DB2TimeStamp db2TimeStamp     => db2TimeStamp.Value.ToString("O", CultureInfo.InvariantCulture),
 				DB2Xml db2Xml                 => db2Xml.GetString(),
+				FbDecFloat fbDecFloat         => FormatFirebirdDecFloat(fbDecFloat),
+				FbZonedDateTime zonedDateTime => FormatFirebirdZonedDateTime(zonedDateTime),
+				FbZonedTime zonedTime         => FormatFirebirdZonedTime(zonedTime),
 				OracleDate oracleDate         => FormatDate(oracleDate.Value),
 				OracleTimeStamp timestamp     => FormatOracleTimeStamp(timestamp.Year, timestamp.Month, timestamp.Day, timestamp.Hour, timestamp.Minute, timestamp.Second, timestamp.Nanosecond),
 				OracleTimeStampTZ timestamp   => FormatOracleTimeStamp(timestamp.Year, timestamp.Month, timestamp.Day, timestamp.Hour, timestamp.Minute, timestamp.Second, timestamp.Nanosecond) + timestamp.TimeZone,
@@ -341,6 +378,26 @@ namespace Tests.DataProvider
 		static string FormatOracleTimeStamp(int year, int month, int day, int hour, int minute, int second, int nanosecond)
 		{
 			return string.Create(CultureInfo.InvariantCulture, $"{year:D4}-{month:D2}-{day:D2}T{hour:D2}:{minute:D2}:{second:D2}.{nanosecond:D9}");
+		}
+
+		static string FormatFirebirdDecFloat(FbDecFloat value)
+		{
+			return string.Create(CultureInfo.InvariantCulture, $"{value.Coefficient}E{value.Exponent}");
+		}
+
+		static string FormatFirebirdZonedDateTime(FbZonedDateTime value)
+		{
+			return value.DateTime.ToString("yyyy-MM-ddTHH:mm:ss.fffffff", CultureInfo.InvariantCulture) + " " + FormatFirebirdTimeZone(value.TimeZone, value.Offset);
+		}
+
+		static string FormatFirebirdZonedTime(FbZonedTime value)
+		{
+			return value.Time.ToString("c", CultureInfo.InvariantCulture) + " " + FormatFirebirdTimeZone(value.TimeZone, value.Offset);
+		}
+
+		static string FormatFirebirdTimeZone(string timeZone, TimeSpan? offset)
+		{
+			return offset?.ToString("c", CultureInfo.InvariantCulture) ?? timeZone;
 		}
 
 		static string ConvertBytesToString(byte[] bytes)

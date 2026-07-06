@@ -13,6 +13,8 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
+using FirebirdSql.Data.Types;
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
@@ -77,6 +79,9 @@ namespace LinqToDB.CommandLine
 			DB2Time,
 			DB2TimeStamp,
 			DB2Xml,
+			FirebirdDecFloat,
+			FirebirdZonedDateTime,
+			FirebirdZonedTime,
 		}
 
 		readonly ICliEnvironment      _environment = environment;
@@ -441,7 +446,6 @@ Provider could be downloaded from:
 				PostgreSQLDataProvider => string.Create(CultureInfo.InvariantCulture, $"SET lock_timeout = '{timeout.Value}s'"),
 				MySqlDataProvider      => string.Create(CultureInfo.InvariantCulture, $"SET SESSION innodb_lock_wait_timeout = {timeout.Value}"),
 				SQLiteDataProvider     => string.Create(CultureInfo.InvariantCulture, $"PRAGMA busy_timeout = {(long)timeout.Value * 1000}"),
-				FirebirdDataProvider   => string.Create(CultureInfo.InvariantCulture, $"SET LOCK TIMEOUT {timeout.Value}"),
 				_                      => null,
 			};
 		}
@@ -607,6 +611,9 @@ Provider could be downloaded from:
 				_ when IsProviderSpecificType(providerSpecificType, "IBM.Data.DB2Types.DB2Time")      => QueryActualFieldType.DB2Time,
 				_ when IsProviderSpecificType(providerSpecificType, "IBM.Data.DB2Types.DB2TimeStamp") => QueryActualFieldType.DB2TimeStamp,
 				_ when IsProviderSpecificType(providerSpecificType, "IBM.Data.DB2Types.DB2Xml")       => QueryActualFieldType.DB2Xml,
+				_ when providerSpecificType == typeof(FbDecFloat)       => QueryActualFieldType.FirebirdDecFloat,
+				_ when providerSpecificType == typeof(FbZonedDateTime)  => QueryActualFieldType.FirebirdZonedDateTime,
+				_ when providerSpecificType == typeof(FbZonedTime)      => QueryActualFieldType.FirebirdZonedTime,
 				_                                                         => QueryActualFieldType.None,
 			};
 
@@ -680,6 +687,9 @@ Provider could be downloaded from:
 				QueryActualFieldType.DB2Time            => ((TimeSpan)GetProviderSpecificPropertyValue(value, "Value")).ToString("c", CultureInfo.InvariantCulture),
 				QueryActualFieldType.DB2TimeStamp       => ((DateTime)GetProviderSpecificPropertyValue(value, "Value")).ToString("O", CultureInfo.InvariantCulture),
 				QueryActualFieldType.DB2Xml             => (string)GetProviderSpecificMethodValue(value, "GetString"),
+				QueryActualFieldType.FirebirdDecFloat   => FormatFirebirdDecFloat((FbDecFloat)value),
+				QueryActualFieldType.FirebirdZonedDateTime => FormatFirebirdZonedDateTime((FbZonedDateTime)value),
+				QueryActualFieldType.FirebirdZonedTime  => FormatFirebirdZonedTime((FbZonedTime)value),
 				_                                       => ConvertValueToString(value),
 			};
 		}
@@ -743,6 +753,26 @@ Provider could be downloaded from:
 				DateTime dateTime => dateTime.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
 				_                 => Convert.ToString(value, CultureInfo.InvariantCulture)!,
 			};
+		}
+
+		static string FormatFirebirdDecFloat(FbDecFloat value)
+		{
+			return string.Create(CultureInfo.InvariantCulture, $"{value.Coefficient}E{value.Exponent}");
+		}
+
+		static string FormatFirebirdZonedDateTime(FbZonedDateTime value)
+		{
+			return value.DateTime.ToString("yyyy-MM-ddTHH:mm:ss.fffffff", CultureInfo.InvariantCulture) + " " + FormatFirebirdTimeZone(value.TimeZone, value.Offset);
+		}
+
+		static string FormatFirebirdZonedTime(FbZonedTime value)
+		{
+			return value.Time.ToString("c", CultureInfo.InvariantCulture) + " " + FormatFirebirdTimeZone(value.TimeZone, value.Offset);
+		}
+
+		static string FormatFirebirdTimeZone(string timeZone, TimeSpan? offset)
+		{
+			return offset?.ToString("c", CultureInfo.InvariantCulture) ?? timeZone;
 		}
 
 		static string ConvertByteArrayToString(byte[] bytes)
