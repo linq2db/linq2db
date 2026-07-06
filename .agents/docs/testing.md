@@ -92,6 +92,8 @@ Most non-file providers (SAP HANA, most Oracle versions, PostgreSQL, MySQL, DB2,
 
 File-based providers (SQLite, SqlCe, Access) don't need a container.
 
+**Not netfx-only.** SqlCe and Access — despite being "legacy" providers — run on *every* test TFM (`net462` + `net8.0`/`net9.0`/`net10.0`), enabled in the matching `Providers` bucket. Run their suites on `net10.0` (fast single-TFM), not `net462`. (A bare `pwsh 7` host can't load SqlCe's native engine for ad-hoc probes — see [`windows-gotchas.md`](windows-gotchas.md) — but the test process loads it fine on any TFM.)
+
 ### Provider variant defaults
 
 When the user asks to run tests against a provider family without naming the exact variant:
