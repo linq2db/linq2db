@@ -100,6 +100,23 @@ Every "Spawn `<indexer>` … apply fences" step in the per-source procedures run
 
 If `extract-agent-output.ps1` returns `hasEnvelope: false`, or `apply-fences` reports `gateFailures`, **stop at that boundary** — surface it, leave the cursor un-advanced, and do not keep spawning.
 
+##### Parallel-batch operational notes (learned from full sweeps)
+
+When batches actually run, these failure modes recur — handle them proactively:
+
+- **Agents self-persist their envelope; the orchestrator only applies the path.** At batch scale, relaying each envelope back through the orchestrator's context does not scale (a batch of 10 floods it). Instruct each indexer to write its COMPLETE envelope to `.build/.agents/kb-refresh-<agent>-<unit>.txt` and return only a 3–4 line summary. A single large `cat <<'EOF'` heredoc **fails with `ENAMETOOLONG`**, and **apostrophes in a heredoc body break it**, so tell agents to write via many small `cat >>` appends (first `cat >`). Always require the path be **repository-relative** (`.build/.agents/…`) — some agents otherwise write to an absolute `C:\.build\…` or a mangled repo-root literal filename.
+- **Normalize + apply the whole batch with [`kb-apply-envelopes.ps1`](../../scripts/kb-apply-envelopes.ps1).** Agents frequently emit the closing marker as `=== END KB-INDEXER OUTPUT v1 ===` (stray `v1`), which `apply-fences` rejects as "envelope not found". The script normalizes that in place, then applies every file matching a `glob` **sequentially**, reporting per-file `ok/patches/gate` — replacing the hand-rolled normalize→apply loop:
+  ```bash
+  pwsh -NoProfile -File .agents/scripts/kb-apply-envelopes.ps1 <<'EOF'
+  {"glob": ".build/.agents/kb-refresh-arch-*.txt"}
+  EOF
+  ```
+- **INDEX-PATCH envelopes must apply sequentially.** issues/prs/discussions patches all target one shared `github/*-index.json`; concurrent apply races and silently loses patches (`kb-apply-envelopes.ps1` is sequential by design). Per-area `ARTIFACT` envelopes (separate `INDEX.md`/`issues.md`) are parallel-safe, but sequential is used uniformly.
+- **Give parallel `kb-issue-detector`s distinct DI-ID bases.** Each detector independently picks "next ID after the current global max", so a parallel batch all emits the same `DI-<n>` and overwrites on apply. Pass a distinct `assign IDs starting at DI-<base>` per area in the prompt (leave gaps), or renumber collisions before applying.
+- **Advance issues/prs/discussions cursors from the delta's max `updated_at` (ISO).** `kb-fetch-github`'s `next_cursor` is a locale-formatted string (`07/06/2026 14:54:08`) that can break the next `since` parse — compute `max(item.updated_at)` in ISO (`yyyy-MM-ddTHH:mm:ssZ`) and set that instead.
+- **Run wide-range GitHub fetches in the background.** `kb-fetch-github` for `prs`/`issues` over a multi-week range exceeds the 2-minute foreground Bash timeout — launch those with `run_in_background`.
+- **Sweep for stray outputs before finishing.** Because of the absolute-path issue above, after each batch check `C:\.build\.agents\` (recover any envelope written there into the repo `.build/.agents/`) and remove mangled literal-named files from the repo root before applying / declaring done.
+
 #### `code` source
 
 The code source compares against `origin/master`, not the local `HEAD`. Local feature branches, WIP commits, and unpushed work do not contribute to the KB delta — the KB tracks merged-to-master state only.

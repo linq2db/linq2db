@@ -49,7 +49,7 @@ The final message MUST be exactly one envelope, parsed from the first `=== KB-IN
 
 ### INDEX-PATCH shape (`github-indexes`)
 
-Each item is ONE patch whose body is `{op, entry}` -- the item fields go INSIDE `entry`, and `entry.id` is mandatory (the issue / PR / discussion number). Do NOT flatten the fields to the top level (a flat `{op, id, ...}` fails validation with "upsert missing entry").
+Each item is ONE patch whose body is `{op, entry}` -- the item fields go INSIDE `entry`, and `entry.id` is mandatory (the issue / PR / discussion number). Do NOT flatten the fields to the top level (a flat `{op, id, ...}` fails validation with "upsert missing entry"). Equally, `entry` must be a real JSON **object**, not a JSON-encoded **string** (`{"op":"upsert","entry":"{\"id\":...}"}`) -- a stringified entry fails validation with "upsert entry missing id" (the parser sees a string, not an object with an `id`).
 
 ```
 === INDEX-PATCH: github/issues-index.json ===
