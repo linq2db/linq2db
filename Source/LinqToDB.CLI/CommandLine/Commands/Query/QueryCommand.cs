@@ -30,9 +30,9 @@ namespace LinqToDB.CommandLine
 		static readonly CliOption _userEnv             = new StringCliOption("user-env",              null, false, false, "environment variable with database user name");
 		static readonly CliOption _password            = new StringCliOption("password",              null, false, false, "database password for connection string formatting");
 		static readonly CliOption _passwordEnv         = new StringCliOption("password-env",          null, false, false, "environment variable with database password");
-		static readonly CliOption _commandTimeout      = new StringCliOption("command-timeout",       null, false, false, "SQL command timeout in seconds");
-		static readonly CliOption _lockTimeout         = new StringCliOption("lock-timeout",          null, false, false, "provider-specific lock wait timeout in seconds");
-		static readonly CliOption _maxRows             = new StringCliOption("max-rows",              null, false, false, "maximum number of result rows to read");
+		static readonly CliOption _commandTimeout      = new StringCliOption("command-timeout",       null, false, false, "SQL command timeout in seconds; 0 disables the option");
+		static readonly CliOption _lockTimeout         = new StringCliOption("lock-timeout",          null, false, false, "provider-specific lock wait timeout in seconds; 0 disables the option");
+		static readonly CliOption _maxRows             = new StringCliOption("max-rows",              null, false, false, "maximum number of result rows to read; 0 disables the limit");
 		static readonly CliOption _outputFile          = new StringCliOption("output-file",           null, false, false, "path to file for command output");
 		static readonly CliOption _sql                 = new StringCliOption("sql",                   null, false, false, "single user-provided SQL query text to execute");
 		static readonly CliOption _sqlFile             = new StringCliOption("sql-file",              null, false, false, "path to file with single user-provided SQL query text to execute");

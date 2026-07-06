@@ -77,6 +77,7 @@ Timeouts:
 - `--command-timeout <seconds>` sets the ADO.NET command timeout through linq2db.
 - `--lock-timeout <seconds>` applies a provider-specific lock wait timeout before the query when supported by the selected provider.
 - Timeout values are non-negative integer seconds.
+- Timeout value `0` disables the corresponding timeout option.
 - `lockTimeout` is best-effort and currently has provider-specific behavior; unsupported providers ignore it.
 - Connection timeout is intentionally left to the provider connection string. The query command exposes command timeout and provider-specific lock timeout only.
 
@@ -107,6 +108,7 @@ Result limits:
 - `--max-rows <count>` limits the number of result rows read by the query command.
 - `maxRows` can be set in configuration profiles.
 - The default limit is 1000 rows.
+- `maxRows` value `0` disables the row limit.
 - When `json` or `csv` output is truncated, the command writes a truncation diagnostic to stderr.
 - When `json-table` output is truncated, the command sets `truncated` to `true`.
 

@@ -51,17 +51,17 @@ namespace LinqToDB.CommandLine
 		public string? PasswordEnv      { get; private set; }
 
 		/// <summary>
-		/// Optional query command timeout in seconds.
+		/// Optional query command timeout in seconds. Value <c>0</c> disables the option.
 		/// </summary>
 		public int?    CommandTimeout   { get; private set; }
 
 		/// <summary>
-		/// Optional provider-specific lock wait timeout in seconds.
+		/// Optional provider-specific lock wait timeout in seconds. Value <c>0</c> disables the option.
 		/// </summary>
 		public int?    LockTimeout      { get; private set; }
 
 		/// <summary>
-		/// Optional maximum number of result rows to read.
+		/// Optional maximum number of result rows to read. Value <c>0</c> disables the limit.
 		/// </summary>
 		public int?    MaxRows          { get; private set; }
 

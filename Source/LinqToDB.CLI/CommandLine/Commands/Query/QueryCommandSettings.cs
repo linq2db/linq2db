@@ -8,9 +8,9 @@ namespace LinqToDB.CommandLine
 	/// <param name="ConnectionString">
 	/// Final database connection string after command line/profile merge and user/password formatting.
 	/// </param>
-	/// <param name="CommandTimeout">Optional query command timeout in seconds.</param>
-	/// <param name="LockTimeout">Optional provider-specific lock wait timeout in seconds.</param>
-	/// <param name="MaxRows">Maximum number of result rows to read.</param>
+	/// <param name="CommandTimeout">Optional query command timeout in seconds. Value <c>0</c> disables the option.</param>
+	/// <param name="LockTimeout">Optional provider-specific lock wait timeout in seconds. Value <c>0</c> disables the option.</param>
+	/// <param name="MaxRows">Maximum number of result rows to read. Value <c>0</c> disables the limit.</param>
 	/// <param name="Output">Query output format.</param>
 	/// <param name="OutputFile">Optional output file path. When not specified, output is written to stdout.</param>
 	/// <param name="Overwrite">Allow replacing existing output file.</param>

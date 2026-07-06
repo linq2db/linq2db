@@ -43,6 +43,8 @@ namespace Tests.LinqToDB.CLI
 				Assert.That(result.Output,   Does.Contain("Connection timeout is intentionally not exposed as a separate query command option"));
 				Assert.That(result.Output,   Does.Contain("The query command accepts exactly one user-provided SQL statement per invocation"));
 				Assert.That(result.Output,   Does.Contain("The CLI may execute provider-specific setup commands internally"));
+				Assert.That(result.Output,   Does.Contain("Timeout value `0` disables the corresponding timeout option"));
+				Assert.That(result.Output,   Does.Contain("`maxRows` value `0` disables the row limit"));
 				Assert.That(result.Output,   Does.Contain("Agent responsibility"));
 				Assert.That(result.Output,   Does.Contain("Use `dotnet linq2db skill` or `dotnet linq2db skills`"));
 				Assert.That(result.Output,   Does.Contain(@"dotnet linq2db skill > "".\.agents\skills\linq2db-cli\SKILL.md"""));

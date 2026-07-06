@@ -136,7 +136,7 @@ namespace LinqToDB.CommandLine
 				//
 				var dataOptions = new DataOptions().UseConnectionString(dataProvider, _settings.ConnectionString);
 
-				if (_settings.CommandTimeout != null)
+				if (_settings.CommandTimeout > 0)
 					dataOptions = dataOptions.UseCommandTimeout(_settings.CommandTimeout);
 
 				// Open a connection and apply optional provider-specific session setup before user SQL execution.
@@ -233,7 +233,7 @@ namespace LinqToDB.CommandLine
 							{
 								// Stop reading after the configured row limit and report truncation.
 								//
-								if (rowCount >= _settings.MaxRows)
+								if (_settings.MaxRows > 0 && rowCount >= _settings.MaxRows)
 								{
 									truncated = true;
 									break;
@@ -315,7 +315,7 @@ namespace LinqToDB.CommandLine
 
 		static string? GetLockTimeoutCommand(IDataProvider dataProvider, int? timeout)
 		{
-			if (timeout == null)
+			if (timeout is null or <= 0)
 				return null;
 
 			return dataProvider switch

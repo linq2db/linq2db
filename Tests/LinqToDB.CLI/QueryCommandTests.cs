@@ -529,6 +529,20 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task QueryMaxRowsZeroDisablesCliRowLimit()
+		{
+			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--max-rows", "0", "--sql", "select 1 as Value union all select 2 as Value");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.Zero);
+				Assert.That(result.Output,   Does.Contain("\"Value\":\"1\""));
+				Assert.That(result.Output,   Does.Contain("\"Value\":\"2\""));
+				Assert.That(result.Error,    Is.Empty);
+			}
+		}
+
+		[Test]
 		public async Task QueryAppliesConfigMaxRows()
 		{
 			var environment = new TestCliEnvironment();
@@ -550,6 +564,31 @@ namespace Tests.LinqToDB.CLI
 				Assert.That(result.Output,   Does.Contain("\"Value\":\"1\""));
 				Assert.That(result.Output,   Does.Not.Contain("\"Value\":\"2\""));
 				Assert.That(result.Error,    Does.Contain("Query result truncated to 1 row(s)."));
+			}
+		}
+
+		[Test]
+		public async Task QueryMaxRowsZeroDisablesConfigRowLimit()
+		{
+			var environment = new TestCliEnvironment();
+			var config      = AddConfigFile(environment, """
+				{
+					"default": {
+						"provider": "SQLite",
+						"connectionString": "Data Source=:memory:",
+						"maxRows": 0
+					}
+				}
+				""");
+
+			var result = await RunCli(environment, "query", "--config", config, "--sql", "select 1 as Value union all select 2 as Value");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.Zero);
+				Assert.That(result.Output,   Does.Contain("\"Value\":\"1\""));
+				Assert.That(result.Output,   Does.Contain("\"Value\":\"2\""));
+				Assert.That(result.Error,    Is.Empty);
 			}
 		}
 
@@ -608,6 +647,19 @@ namespace Tests.LinqToDB.CLI
 		public async Task QueryAcceptsTimeoutOptions()
 		{
 			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--command-timeout", "30", "--lock-timeout", "5", "--sql", "select 1 as Value");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.Zero);
+				Assert.That(result.Output,   Does.Contain("\"Value\":\"1\""));
+				Assert.That(result.Error,    Is.Empty);
+			}
+		}
+
+		[Test]
+		public async Task QueryTimeoutZeroDisablesTimeoutOptions()
+		{
+			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--command-timeout", "0", "--lock-timeout", "0", "--sql", "select 1 as Value");
 
 			using (Assert.EnterMultipleScope())
 			{
@@ -1120,6 +1172,9 @@ namespace Tests.LinqToDB.CLI
 				Assert.That(result.Output,   Does.Contain("--sql-file"));
 				Assert.That(result.Output,   Does.Contain("single user-provided SQL query text"));
 				Assert.That(result.Output,   Does.Contain("configure provider-specific connection timeout here"));
+				Assert.That(result.Output,   Does.Contain("SQL command timeout in seconds; 0 disables the option"));
+				Assert.That(result.Output,   Does.Contain("provider-specific lock wait timeout in seconds; 0 disables the option"));
+				Assert.That(result.Output,   Does.Contain("maximum number of result rows to read; 0 disables the limit"));
 				Assert.That(result.Output,   Does.Contain("Examples:"));
 				Assert.That(result.Output,   Does.Contain("dotnet linq2db query --provider SQLite --connection-string \"Data Source=data.db\" --sql \"select * from Person\""));
 				Assert.That(result.Output,   Does.Contain("dotnet linq2db query --provider SQLite --connection-string \"Data Source=data.db\" --sql-file query.sql"));
