@@ -3,8 +3,8 @@ area: PROV-SYBASE
 kind: area-index
 sources: [code]
 confidence: high
-last_verified: 2026-06-15
-last_verified_sha: b3340aa9ded15ffc626983fd202e6399daa081ca
+last_verified: 2026-07-05
+last_verified_sha: 36ee4f82f06eaf242b052ade8c87121d251a6165
 coverage_tier_1: 10/10
 coverage_tier_2: 6/6
 ---
@@ -56,6 +56,7 @@ SAP Adaptive Server Enterprise (formerly Sybase ASE). **Not** SQL Anywhere. Sing
 - 
 - 
 - 
+- `SqlProviderFlags.IsInsertOrUpdateWithPredicateSupported = false` -- Sybase's `InsertOrUpdate` emits a single-statement `UPDATE` followed by `IF @@ROWCOUNT=0 INSERT`, which cannot honor an extra UPDATE predicate (`Upsert.Update.When`); predicated upserts on this provider fall back to the alternative UPDATE-then-INSERT emulation instead (`Source/LinqToDB/Internal/DataProvider/Sybase/SybaseDataProvider.cs:58-61`).
 
 
  overrides handle: , , , ,  (native client only), .
@@ -117,6 +118,7 @@ Key overrides:
 -  /  -- for non-temporary tables with : wraps the DDL in .
 -  -- falls back to the fallback implementation.
 
+
 :
 - Parameter names (, , ): truncated to **26 characters** (hard limit in ), prefixed with .
 - Identifiers (, , , , , , ): quoted in  unless , length > 28, already bracketed, or is a temp-table (-prefixed) name.
@@ -164,6 +166,7 @@ Extends .
  -- wraps EXISTS subqueries that have set operators (/etc.) in an outer  to make them valid.
 
  -- adds mandatory  for untyped numeric literals and parameters (, , , , , ) in column position to prevent type inference errors.
+
 
 ### Mapping schema
 
@@ -245,6 +248,7 @@ Extends . Sub-translators:
 -  --  overloads force explicit  precision when none provided.
 -  --  -> .
 -  ->  (non-pure function).
+- `CreateWindowFunctionsMemberTranslator` override returns `SybaseWindowFunctionsMemberTranslator`, a `WindowFunctionsMemberTranslator` subclass with `IsWindowFunctionsSupported => false` (PR #5468, the `Sql.Window` API) -- reinforces the constructor-level `SqlProviderFlags.IsWindowFunctionsSupported = false` flag so `Sql.Window.*` LINQ calls fall back to client-side evaluation consistently (`Source/LinqToDB/Internal/DataProvider/Sybase/Translation/SybaseMemberTranslator.cs:299-307`).
 
 
 ---
@@ -272,6 +276,7 @@ Extends . Sub-translators:
 | String concat style |  (ANSI pipe concat); ASE 15.7+; NULL-propagation guard still needed |  |
 | String concat NULL | pipe does not propagate NULL;  wrapped in  |  |
 | TrimStart/TrimEnd chars | Custom trim-chars unsupported; returns null (no translation) |  |
+| InsertOrUpdate predicate | `Upsert.Update.When` unsupported in the single-statement UPDATE+INSERT emulation; falls back to UPDATE-then-INSERT emulation | `Source/LinqToDB/Internal/DataProvider/Sybase/SybaseDataProvider.cs:61` |
 
 ---
 
@@ -279,7 +284,7 @@ Extends . Sub-translators:
 
 | Type | File | Role |
 |---|---|---|
-| SybaseDataProvider | Internal/.../SybaseDataProvider.cs | Abstract base; SybaseDataProviderNative / SybaseDataProviderManaged are the concrete singletons |
+| SybaseDataProvider | Internal/.../SybaseDataProvider.cs | Abstract base; SybaseDataProviderNative / SybaseDataProviderManaged are the concrete singletons; IsInsertOrUpdateWithPredicateSupported=false forces UPDATE-then-INSERT emulation for predicated upserts |
 | SybaseSqlBuilder | Internal/.../SybaseSqlBuilder.cs (+.Merge.cs) | SQL text generation; T-SQL/ASE dialect; ConcatBuildStyle.Pipes; SqlConcatExpression NULL-propagation guard (PR #5504) |
 | SybaseSqlOptimizer | Internal/.../SybaseSqlOptimizer.cs | Statement rewrites (UPDATE compatibility, CorrectMultiTableQueries) |
 | SybaseSqlExpressionConvertVisitor | Internal/.../SybaseSqlExpressionConvertVisitor.cs | Function name mapping, LIKE escapes, EXISTS wrapping, column type casts |
@@ -289,11 +294,12 @@ Extends . Sub-translators:
 | SybaseBulkCopy | Internal/.../SybaseBulkCopy.cs | AseBulkCopy (native) or MultipleRowsCopy2 fallback |
 | SybaseSchemaProvider | Internal/.../SybaseSchemaProvider.cs | ASE system-table queries, procedure discovery |
 | SybaseParametersNormalizer | Internal/.../SybaseParametersNormalizer.cs | 26-char parameter name truncation |
-| SybaseMemberTranslator | Internal/.../Translation/SybaseMemberTranslator.cs | .NET member -> ASE SQL function translation; Now-split into 5 virtuals (PR #5467); TrimStart/TrimEnd char-guard (PR #5515); String.Join withoutSeparator (PR #5504) |
+| SybaseMemberTranslator | Internal/.../Translation/SybaseMemberTranslator.cs | .NET member -> ASE SQL function translation; Now-split into 5 virtuals (PR #5467); TrimStart/TrimEnd char-guard (PR #5515); String.Join withoutSeparator (PR #5504); window functions disabled via SybaseWindowFunctionsMemberTranslator (PR #5468) |
 | SybaseTools | DataProvider/Sybase/SybaseTools.cs | Public registration/connection API |
 | SybaseProvider | DataProvider/Sybase/SybaseProvider.cs | ADO.NET client enum (AutoDetect, Unmanaged, DataAction) |
 | SybaseOptions | DataProvider/Sybase/SybaseOptions.cs | BulkCopyType option (default MultipleRows due to native driver bugs) |
 | SybaseFactory | DataProvider/Sybase/SybaseFactory.cs | Configuration-system factory, loaded via reflection |
+
 
 ---
 
@@ -303,7 +309,7 @@ Extends . Sub-translators:
 
 | File | Notes |
 |---|---|
-| Internal/DataProvider/Sybase/SybaseDataProvider.cs | Provider flags, parameter handling, bulk copy dispatch; DefaultNullsOrdering = NullsDefaultOrdering.Smallest |
+| Internal/DataProvider/Sybase/SybaseDataProvider.cs | Provider flags, parameter handling, bulk copy dispatch; DefaultNullsOrdering = NullsDefaultOrdering.Smallest; IsInsertOrUpdateWithPredicateSupported=false (predicated upsert -> UPDATE-then-INSERT emulation) |
 | Internal/DataProvider/Sybase/SybaseSqlBuilder.cs | SQL text builder, identifier/parameter quoting; ConcatBuildStyle.Pipes; BuildSqlConcatExpression NULL-guard (PR #5504); SupportsColumnAliasesInSource (PR #5504) |
 | Internal/DataProvider/Sybase/SybaseSqlOptimizer.cs | Statement rewrite, UPDATE/DELETE guard |
 | Internal/DataProvider/Sybase/SybaseMappingSchema.cs | Type defaults and literal converters |
@@ -320,7 +326,7 @@ Extends . Sub-translators:
 |---|---|
 | Internal/DataProvider/Sybase/SybaseSqlBuilder.Merge.cs | MERGE partial -- identity insert wrapping, no VALUES syntax |
 | Internal/DataProvider/Sybase/SybaseSqlExpressionConvertVisitor.cs | Function renames, EXISTS wrapping, column type casts, LIKE chars |
-| Internal/DataProvider/Sybase/Translation/SybaseMemberTranslator.cs | Date/string/math/Guid LINQ translation; Now-split (PR #5467); Date truncation DbType preservation (PR #5517); TrimStart/TrimEnd char-guard (PR #5515); String.Join withoutSeparator (PR #5504) |
+| Internal/DataProvider/Sybase/Translation/SybaseMemberTranslator.cs | Date/string/math/Guid LINQ translation; Now-split (PR #5467); Date truncation DbType preservation (PR #5517); TrimStart/TrimEnd char-guard (PR #5515); String.Join withoutSeparator (PR #5504); window-functions disabled via SybaseWindowFunctionsMemberTranslator (PR #5468) |
 | Internal/DataProvider/Sybase/SybaseSchemaProvider.cs | System-table schema queries |
 | Internal/DataProvider/Sybase/SybaseParametersNormalizer.cs | MaxLength=26 override |
 | DataProvider/Sybase/SybaseFactory.cs | Configuration factory |
@@ -342,13 +348,15 @@ Tier 3: none identified.
 - SchemaProviderBase -- [METADATA](../METADATA/INDEX.md)
 - ProviderMemberTranslatorDefault, DateFunctionsTranslatorBase, StringMemberTranslatorBase, MathMemberTranslatorBase -- [SQL-PROVIDER](../SQL-PROVIDER/INDEX.md)
 - SqlConcatExpression (PR #5504) -- [SQL-PROVIDER](../SQL-PROVIDER/INDEX.md); SybaseSqlBuilder.BuildSqlConcatExpression consumes the new AST node directly.
+- WindowFunctionsMemberTranslator (PR #5468's Sql.Window API) -- [SQL-PROVIDER](../SQL-PROVIDER/INDEX.md); SybaseWindowFunctionsMemberTranslator subclasses it with IsWindowFunctionsSupported => false, keeping Sql.Window.* LINQ calls client-side-only, consistent with the SqlProviderFlags-level flag.
 - T-SQL dialect heritage shared with [PROV-SQLSERVER](../PROV-SQLSERVER/INDEX.md): TOP, IDENTITY, @@IDENTITY, CONVERT, DatePart, DateAdd, temp-table #/## prefixes, OBJECT_ID() for existence checks, SET IDENTITY_INSERT ON/OFF.
+
 
 ---
 
 ## Known issues / debt
 
-- IsDistinctSetOperationsSupported = false and IsWindowFunctionsSupported = false carry a TODO noting potential enablement at ASE 16SP3; no version detection is implemented.
+- IsDistinctSetOperationsSupported = false and IsWindowFunctionsSupported = false carry a TODO noting potential enablement at ASE 16SP3; no version detection is implemented. The `Sql.Window` API added in PR #5468 is disabled at the translator level too, via `SybaseWindowFunctionsMemberTranslator.IsWindowFunctionsSupported => false`, keeping window-function LINQ calls client-side-only consistent with the `SqlProviderFlags`-level flag.
 - SybaseSqlExpressionConvertVisitor.cs:13 has a commented-out SupportsDistinctAsExistsIntersect property guarded by the same SP03 caveat.
 - Native driver bulk copy has known bugs with BIT and IDENTITY fields; SybaseOptions.BulkCopyType defaults to MultipleRows as a permanent defensive workaround rather than a version-gated fix.
 - GetProcedureParameters throws when called inside a transaction -- a hard limitation of sp_oledb_getprocedurecolumns. No workaround path exists; callers must disable GetSchemaOptions.GetProcedures.
@@ -358,6 +366,7 @@ Tier 3: none identified.
 - TranslateNow returns null -- DateTime.Now has no ASE server-side equivalent and falls back to client-side evaluation. This is by design but may surprise callers who expect a server timestamp.
 - DateTimeOffset is stored as DateTime (offset stripped) at both the mapping-schema level (literal emission) and the SQL-types-translation level. Round-trip fidelity for non-UTC offsets is lost.
 - TranslateTrimStart / TranslateTrimEnd return null for the trimChars != null case -- ASE has no native trim-with-characters function. The LINQ expression will fall back to client-side evaluation. No server-side workaround is provided. (PR #5515)
+- `SqlProviderFlags.IsInsertOrUpdateWithPredicateSupported = false` -- ASE's single-statement `UPDATE` + `IF @@ROWCOUNT=0 INSERT` idiom for `InsertOrUpdate` can't honor an `Upsert.Update.When` predicate; predicated upserts fall back to the UPDATE-then-INSERT emulation path instead of the native single-statement form, which costs an extra round trip / statement compared to the un-predicated case.
 
 ---
 
@@ -401,6 +410,10 @@ Tier 3: none identified.
 - Source/LinqToDB/Internal/DataProvider/Sybase/SybaseProviderDetector.cs -- no material change vs prior content; GetDataProvider always re-detects, confirmed.
 - Source/LinqToDB/Internal/DataProvider/Sybase/SybaseSqlBuilder.cs -- new ConcatStyle => ConcatBuildStyle.Pipes override (line 45): ASE 15.7+ supports ANSI pipe concat alongside T-SQL +; builder now emits pipe for consistency with ANSI providers. NULL-propagation semantics unchanged; PreserveNull CASE WHEN guard in BuildSqlConcatExpression still applies.
 - Source/LinqToDB/Internal/DataProvider/Sybase/Translation/SybaseMemberTranslator.cs -- no material change vs prior content; all sub-translators confirmed.
+
+**Read (this run -- delta, sha 36ee4f82f06eaf242b052ade8c87121d251a6165):**
+- Source/LinqToDB/Internal/DataProvider/Sybase/SybaseDataProvider.cs -- new `SqlProviderFlags.IsInsertOrUpdateWithPredicateSupported = false` (line 61): Sybase's single-statement `UPDATE` + `IF @@ROWCOUNT=0 INSERT` `InsertOrUpdate` idiom can't honor an `Upsert.Update.When` predicate; predicated upserts route through the alternative UPDATE-then-INSERT emulation.
+- Source/LinqToDB/Internal/DataProvider/Sybase/Translation/SybaseMemberTranslator.cs -- new `SybaseWindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator` with `IsWindowFunctionsSupported => false`, wired via a new `CreateWindowFunctionsMemberTranslator` override (lines 299-307, PR #5468); `TranslateNewGuidMethod` also had a no-op refactor (inlined local variable into the return statement, no behavior change).
 
 **Tier 3:** none.
 

@@ -3,10 +3,10 @@ area: PROV-SAPHANA
 kind: area-index
 sources: [code]
 confidence: high
-last_verified: 2026-06-14
-last_verified_sha: b3340aa9ded15ffc626983fd202e6399daa081ca
+last_verified: 2026-07-05
+last_verified_sha: 36ee4f82f06eaf242b052ade8c87121d251a6165
 coverage_tier_1: 11/11
-coverage_tier_2: 9/9
+coverage_tier_2: 10/10
 ---
 
 # PROV-SAPHANA
@@ -39,7 +39,10 @@ Set in `SapHanaDataProvider` constructor (`SapHanaDataProvider.cs:34`):
 | `IsSubQueryOrderBySupported` | `false` | not supported |
 | `IsUnionAllOrderBySupported` | `true` | |
 | `IsCorrelatedSubQueryTakeSupported` | `false` | engine returns `more than one row` instead of truncating |
-| `IsInsertOrUpdateSupported` | `false` | no native UPSERT |
+| `IsInsertOrUpdateSupported` | `true` | native single-statement `UPSERT ... WITH PRIMARY KEY` (`SapHanaSqlBuilder.InsertOrUpdate.cs`); see UPSERT dialect note below |
+| `IsInsertOrUpdateWithPredicateSupported` | `false` | UPSERT has no UPDATE-side predicate; `Update.When` falls back to the 3-query SELECT->UPDATE->INSERT orchestration |
+| `IsInsertOrUpdateRequiresAlignedBranches` | `true` | UPSERT applies one VALUES list to both branches; per-branch `Insert(i => ...)`/`Update(v => ...)` divergence falls back to UPDATE->INSERT emulation |
+| `IsUpsertWithMergeLoweringSupported` | `false` | HANA's MERGE rejects the two-branch (WHEN NOT MATCHED + WHEN MATCHED) shape linq2db synthesizes for Upsert's bulk / non-PK-match / conditional-insert paths |
 | `IsUpdateFromSupported` | `false` | no `UPDATE ... FROM` |
 | `IsApplyJoinSupported` | `true` | LATERAL supported |
 | `IsCrossApplyJoinSupportsCondition` | `true` | INNER JOIN LATERAL supports ON condition |
@@ -49,6 +52,7 @@ Set in `SapHanaDataProvider` constructor (`SapHanaDataProvider.cs:34`):
 | `DefaultNullsOrdering` | `NullsDefaultOrdering.Smallest` | HANA sorts NULL as the smallest value |
 | `SupportsBooleanType` | `false` | BOOLEAN is not a storable type |
 | `IsParameterOrderDependent` | `true` | |
+| `MaxColumnCount` | `1000` | SAP HANA's per-SELECT column limit caps how wide a `CteUnion` carrier projection can grow before eager-loading falls back to `KeyedQuery`; not validated against a live HANA engine (`SapHanaDataProvider.cs:52-55`) |
 
 ### ADO.NET driver matrix
 
@@ -95,6 +99,8 @@ ODBC adapter wraps `OdbcProviderAdapter` rather than native HANA types (`SapHana
 
 **Numeric value casting in VALUES columns.** `uint`, `long`, `ulong`, `float`, `double`, `decimal` literals and non-query parameters are wrapped in explicit `CAST` in `VALUES` column context (`SapHanaSqlExpressionConvertVisitor.cs:58`). The cast is now expressed as `SqlCastExpression` with `isMandatory: true` (`SapHanaSqlExpressionConvertVisitor.cs:65`).
 
+**UPSERT (native single-statement).** `SapHanaSqlBuilder.InsertOrUpdate.cs` overrides `BuildInsertOrUpdateQuery` to emit `UPSERT <table> (col, ...) VALUES (val, ...) WITH PRIMARY KEY` via `BuildInsertClause(insertOrUpdate, insertOrUpdate.Insert, "UPSERT ", appendTableName: true, addAlias: false)` followed by `WITH PRIMARY KEY` (`SapHanaSqlBuilder.InsertOrUpdate.cs:14-19`). One VALUES list feeds both branches -- by the time this builder runs, `Insert.Items` is guaranteed aligned with `Update.Items` on every non-key column, enforced upstream by `IsInsertOrUpdateRequiresAlignedBranches = true` and `IsInsertOrUpdateWithPredicateSupported = false` (`SapHanaDataProvider.cs:57-65`). This is a separate lowering path from MERGE below -- `IsUpsertWithMergeLoweringSupported = false` (`SapHanaDataProvider.cs:69`) keeps MERGE out of Upsert lowering entirely, so misaligned branches or a predicated `Update.When` fall back to 3-query SELECT->UPDATE->INSERT emulation instead of MERGE.
+
 **MERGE partial** (`SapHanaSqlBuilder.Merge.cs`): `SupportsColumnAliasesInSource = false`; `IsValuesSyntaxSupported = false`; `FakeTable = "DUMMY"`.
 
 **ODBC parameter style.** `SapHanaOdbcSqlBuilder.Convert` overrides query parameter format to positional `?` (`SapHanaOdbcSqlBuilder.cs:29`). ODBC also maps `Money` -> `Decimal(19,4)` and `SmallMoney` -> `Decimal(10,4)` (`SapHanaOdbcSqlBuilder.cs:39`).
@@ -140,7 +146,7 @@ Parameter type mappings (`SapHanaDataProvider.SetParameterType`):
 - **Date parts**: `Year`/`Month`/`Day` -> `Year()`/`Month()`/`DayOfMonth()`; `DayOfYear` -> `DayOfYear()`; `Week` -> `Week()`; `Quarter` -> floor-based arithmetic on `Month()`; `WeekDay` -> `Mod(Weekday()+1, 7)+1`; `Millisecond` -> `Cast(To_NVarchar(x, 'FF3') as int)`.
 - **DateAdd**: `Add_Years`, `Add_Months`, `Add_Days`, `Add_Seconds` (hours/minutes/ms scaled accordingly).
 - **MakeDateTime**: builds `To_Timestamp(...)` over a `factory.Concat(...)` call -- uses the `SqlConcatExpression`-based factory helper (PR #5504) rather than explicit `||` operator chaining (`SapHanaMemberTranslator.cs:230`).
-- **Truncate to date**: `To_Date(expr)` via `TranslateDateTimeTruncationToDate`; return type uses `factory.GetDbDataType(dateExpression)` to preserve the column's `DbType` (PR #5517 -- fixes incorrect cast when the column carries an explicit `DbType`).
+- **Truncate to date**: `To_Date(expr)` via `TranslateDateTimeTruncationToDate`; return type uses `factory.GetDbDataType(dateExpression)` to preserve the source column DbType (PR #5517 -- fixes incorrect cast when the column carries an explicit `DbType`).
 - **Now translations** (PR #5467):
   - `TranslateServerNow` (`DateTime.Now` server-side) -> `CURRENT_TIMESTAMP` (`SapHanaMemberTranslator.cs:256`).
   - `TranslateNow` -> returns `null` (no client/server-side `DateTime.Now` translation; falls through to base).
@@ -151,6 +157,7 @@ Parameter type mappings (`SapHanaDataProvider.SetParameterType`):
 - **Guid.ToString**: `Lower(Cast(guid as NVarChar(36)))`.
 - **NewGuid**: returns `null` (no working solution found, commented-out `SYSUUID` attempt).
 - **SqlTypes**: `Bit` -> `Int16`; `Money` -> `Decimal(19,4)`; `SmallMoney` -> `Decimal(10,4)`; `DateTime`/`DateTime2`/`DateTimeOffset` -> `Timestamp`; `Time` -> `Time`; `SmallDateTime` -> `SecondDate`.
+- **Window functions**: `SapHanaWindowFunctionsMemberTranslator` (nested class, extends `WindowFunctionsMemberTranslator`, wired via `CreateWindowFunctionsMemberTranslator` override -- `SapHanaMemberTranslator.cs:408-430`) sets frame/aggregate capability flags: `IsFrameRowsSupported = true` (`IsFrameRangeSupported`/`IsFrameGroupsSupported`/`IsFrameExclusionSupported` all `false`); `IsPercentileContSupported`/`IsPercentileDiscSupported` (windowed form) `false`; `IsMedianSupported`/`IsOrderedSetWindowedSupported`/`IsVarianceBareSupported`/`IsVarianceSupported`/`IsCorrelationSupported` all `true`; `VarianceFunctionName = "VAR"` (sample variance is spelled `VAR`, not `VAR_SAMP`); `IsCovarianceSupported = false`. Inline comment (`SapHanaMemberTranslator.cs:416-417`) states MEDIAN, windowed PERCENTILE_CONT/DISC, the full STDDEV*/VAR_* family, and CORR execute on HANA while COVAR and the GROUP BY ordered-set form are rejected -- the comment claim that windowed PERCENTILE_CONT/DISC execute reads as inconsistent with the adjacent `IsPercentileContSupported = false`/`IsPercentileDiscSupported = false` flag values; flagged here rather than resolved (see Known issues / debt).
 
 ### Bulk copy strategy
 
@@ -165,7 +172,7 @@ ODBC provider skips `SapHanaBulkCopy` entirely -- `SapHanaDataProvider.BulkCopy`
 
 ### Calculation views (HANA-specific)
 
-HANA calculation views are BI analytic views stored under the `_SYS_BIC` schema (accessed via `_SYS_BI.BIMC_ALL_CUBES`). They may accept input parameters that constrain the view's computation -- these are distinct from SQL predicates and must be passed via a `WITH PARAMETERS ('PLACEHOLDER' = ('$$param$$', 'value'), ...)` clause appended to the table expression.
+HANA calculation views are BI analytic views stored under the `_SYS_BIC` schema (accessed via `_SYS_BI.BIMC_ALL_CUBES`). They may accept input parameters that constrain the view computation -- these are distinct from SQL predicates and must be passed via a `WITH PARAMETERS ('PLACEHOLDER' = ('$$param$$', 'value'), ...)` clause appended to the table expression.
 
 **Schema discovery.** `SapHanaSchemaProvider.CheckAccessForCalculationViews` probes `_SYS_BI.BIMC_ALL_CUBES LIMIT 1` at the start of `GetSchema` (`SapHanaSchemaProvider.cs:38`). If access is granted, `GetTablesQuery` adds a `JOIN _SYS_BI.BIMC_ALL_CUBES` union branch to include parameterless calculation views as ordinary views (`SapHanaSchemaProvider.cs:147`). Parameterized calculation views are handled separately via `GetProviderSpecificTables` -> `GetViewsWithParameters` + `GetParametersForViews` (`SapHanaSchemaProvider.cs:739`), and returned as `ViewWithParametersTableSchema` instances.
 
@@ -173,11 +180,11 @@ HANA calculation views are BI analytic views stored under the `_SYS_BIC` schema 
 
 **`ViewWithParametersTableSchema`** (`DataProvider/SapHana/ViewWithParametersTableSchema.cs`): extends `TableSchema`, sets `IsProviderSpecific = true`, and adds `List<ParameterSchema> Parameters`. This surface area type lets consumers of `GetSchema` distinguish parameterized calculation views from regular views and generate wrapper methods.
 
-**`CalculationViewInputParametersExpressionAttribute`** (`DataProvider/SapHana/CalculationViewInputParametersExpressionAttribute.cs`): extends `Sql.TableExpressionAttribute`. When applied to a static method that wraps a calculation view call, `SetTable` reflects the method's parameters, pairs each with its value as a `$$name$$` / `'value'` SQL fragment, and sets:
+**`CalculationViewInputParametersExpressionAttribute`** (`DataProvider/SapHana/CalculationViewInputParametersExpressionAttribute.cs`): extends `Sql.TableExpressionAttribute`. When applied to a static method that wraps a calculation view call, `SetTable` reflects the method parameters, pairs each with its value as a `$$name$$` / `'value'` SQL fragment, and sets:
 ```
 table.Expression = "{0}('PLACEHOLDER' = ({2})) {1}";
 ```
-This renders as `"view_name"('PLACEHOLDER' = ($$p1$$, 'val1', $$p2$$, 'val2')) alias` in the final SQL -- the engine substitutes the placeholder values into the view's calculation logic.
+This renders as `"view_name"('PLACEHOLDER' = ($$p1$$, 'val1', $$p2$$, 'val2')) alias` in the final SQL -- the engine substitutes the placeholder values into the view calculation logic.
 
 ### Schema provider internals
 
@@ -212,7 +219,7 @@ Geospatial types (`ST_GEOMETRY`, `ST_POINT`, `ST_MULTIPOLYGON`, etc.) are mapped
 | `SapHanaDataProvider` | `LinqToDB.Internal.DataProvider.SapHana` | Abstract base; `DynamicDataProviderBase<SapHanaProviderAdapter>` |
 | `SapHanaNativeDataProvider` | same | Sealed; `SapHanaProvider.Unmanaged` |
 | `SapHanaOdbcDataProvider` | same | Sealed; `SapHanaProvider.ODBC` |
-| `SapHanaSqlBuilder` | same | Native SQL builder; `BasicSqlBuilder` subclass; `ConcatStyle = Pipes` |
+| `SapHanaSqlBuilder` | same | Native SQL builder; `BasicSqlBuilder` subclass; `ConcatStyle = Pipes`; native `UPSERT ... WITH PRIMARY KEY` via `BuildInsertOrUpdateQuery` (`SapHanaSqlBuilder.InsertOrUpdate.cs`) |
 | `SapHanaOdbcSqlBuilder` | same | ODBC SQL builder; `SapHanaSqlBuilder` subclass |
 | `SapHanaSqlOptimizer` | same | Statement transforms (DELETE/UPDATE alternatives, lateral parameter hoisting) |
 | `SapHanaSqlExpressionConvertVisitor` | same | Expression rewrites (bitwise, numeric CAST in VALUES; no longer rewrites string concat) |
@@ -223,6 +230,7 @@ Geospatial types (`ST_GEOMETRY`, `ST_POINT`, `ST_MULTIPOLYGON`, etc.) are mapped
 | `SapHanaProviderAdapter` | same | Runtime reflection wrapper; owns `HanaDbType`, bulk copy wrappers |
 | `SapHanaProviderDetector` | same | Auto-detect logic |
 | `SapHanaMemberTranslator` | `...SapHana.Translation` | Date/math/string/GUID translations; `StringMemberTranslator` inner class |
+| `SapHanaWindowFunctionsMemberTranslator` | `...SapHana.Translation` (nested in `SapHanaMemberTranslator`) | Window-frame/aggregate capability flags; `VarianceFunctionName = "VAR"` |
 | `SapHanaTools` | `LinqToDB.DataProvider.SapHana` | Public entry point; `GetDataProvider`, `CreateDataConnection`, `ResolveSapHana` |
 | `SapHanaOptions` | same | `record`; `BulkCopyType` default |
 | `SapHanaProvider` | same | Enum: `AutoDetect`, `Unmanaged`, `ODBC` |
@@ -237,7 +245,7 @@ Geospatial types (`ST_GEOMETRY`, `ST_POINT`, `ST_MULTIPOLYGON`, etc.) are mapped
 
 | File | Role |
 |---|---|
-| `Internal/DataProvider/SapHana/SapHanaDataProvider.cs` | Abstract provider; driver dispatch; parameter/type mapping |
+| `Internal/DataProvider/SapHana/SapHanaDataProvider.cs` | Abstract provider; driver dispatch; parameter/type mapping; upsert/merge-lowering capability flags |
 | `Internal/DataProvider/SapHana/SapHanaSqlBuilder.cs` | Native SQL builder; paging; CURRENT_IDENTITY_VALUE; DUMMY; DDL; `ConcatStyle = Pipes` |
 | `Internal/DataProvider/SapHana/SapHanaOdbcSqlBuilder.cs` | ODBC overrides: positional `?`, Money types |
 | `Internal/DataProvider/SapHana/SapHanaSqlOptimizer.cs` | DELETE/UPDATE alternatives; `LateralJoinParametersCorrector` |
@@ -254,8 +262,9 @@ Geospatial types (`ST_GEOMETRY`, `ST_POINT`, `ST_MULTIPOLYGON`, etc.) are mapped
 | File | Role |
 |---|---|
 | `Internal/DataProvider/SapHana/SapHanaSqlBuilder.Merge.cs` | MERGE partial overrides |
+| `Internal/DataProvider/SapHana/SapHanaSqlBuilder.InsertOrUpdate.cs` | Native single-statement `UPSERT ... WITH PRIMARY KEY` override of `BuildInsertOrUpdateQuery` |
 | `Internal/DataProvider/SapHana/SapHanaSqlExpressionConvertVisitor.cs` | Bitwise rewrites; numeric CAST in VALUES; `ConcatRequiresExplicitStringCast = false` |
-| `Internal/DataProvider/SapHana/Translation/SapHanaMemberTranslator.cs` | Date/math/string/GUID member translations; `STRING_AGG`; `string.Concat` via `ConfigureConcat` |
+| `Internal/DataProvider/SapHana/Translation/SapHanaMemberTranslator.cs` | Date/math/string/GUID member translations; `STRING_AGG`; `string.Concat` via `ConfigureConcat`; window-function capability flags (`SapHanaWindowFunctionsMemberTranslator`) |
 | `Internal/DataProvider/SapHana/SapHanaSchemaProvider.cs` | Native schema provider; calculation view discovery |
 | `Internal/DataProvider/SapHana/SapHanaOdbcSchemaProvider.cs` | ODBC schema overrides |
 | `DataProvider/SapHana/SapHanaFactory.cs` | XML config factory |
@@ -285,6 +294,8 @@ Geospatial types (`ST_GEOMETRY`, `ST_POINT`, `ST_MULTIPOLYGON`, etc.) are mapped
 - `SapHanaMemberTranslator.cs:273` -- `NewGuid()` translation returns `null` (no working solution); `SYSUUID` attempt is commented out.
 - `SapHanaDataProvider.cs:42` -- `IsCorrelatedSubQueryTakeSupported = false` with inline comment explaining the engine throws `single-row query returns more than one row` rather than truncating, so the flag was set to avoid silent wrong results from LEFT JOIN rewrite.
 - `SapHanaSchemaProvider.cs:267` -- `POSITION` is used as both `Length` and `Precision` for columns (same raw column read twice).
+- `SapHanaDataProvider.cs:52-55` -- `MaxColumnCount = 1000` comment states the value is not validated against a live HANA engine and should be verified against the documented limit before relying on it.
+- `SapHanaMemberTranslator.cs:416-417` -- inline comment on `SapHanaWindowFunctionsMemberTranslator` claims windowed PERCENTILE_CONT/DISC execute on SAP HANA, but the adjacent flags set `IsPercentileContSupported = false` and `IsPercentileDiscSupported = false` -- comment and code disagree; needs a maintainer to confirm actual HANA behavior.
 
 ## See also
 
@@ -296,7 +307,7 @@ Geospatial types (`ST_GEOMETRY`, `ST_POINT`, `ST_MULTIPOLYGON`, etc.) are mapped
 <details><summary>Coverage</summary>
 
 - Tier 1 (visited / total): 11 / 11
-- Tier 2 (visited / total): 9 / 9 (100%)
+- Tier 2 (visited / total): 10 / 10 (100%)
 - Tier 3 (skipped, logged): 0
 
 Read (prior run -- delta, sha 4a478ff14):
@@ -314,4 +325,9 @@ Read (this run -- delta, sha b3340aa9):
 - `SapHanaOptions.cs` -- no functional changes; `BulkCopyType.MultipleRows` default unchanged.
 - `SapHanaProviderDetector.cs` -- no functional changes vs prior index; detection order unchanged.
 - `SapHanaMemberTranslator.cs` -- no functional changes vs prior run; `Week` date part (`Week()` function) confirmed present (`SapHanaMemberTranslator.cs:94`); `ConvertDateTimeOffset` -> `Timestamp` confirmed.
+
+Read (this run -- delta, sha 36ee4f82):
+- `SapHanaDataProvider.cs` -- `IsInsertOrUpdateSupported` flipped from `false` to `true` (native single-statement `UPSERT ... WITH PRIMARY KEY`, see new `SapHanaSqlBuilder.InsertOrUpdate.cs`); added `IsInsertOrUpdateWithPredicateSupported = false`, `IsInsertOrUpdateRequiresAlignedBranches = true`, `IsUpsertWithMergeLoweringSupported = false`, `MaxColumnCount = 1000` (unvalidated-against-live-engine comment).
+- `Internal/DataProvider/SapHana/SapHanaSqlBuilder.InsertOrUpdate.cs` (NEW FILE, added to Tier 2) -- `BuildInsertOrUpdateQuery` override emits `UPSERT <table> (...) VALUES (...) WITH PRIMARY KEY`.
+- `Translation/SapHanaMemberTranslator.cs` -- new `SapHanaWindowFunctionsMemberTranslator` nested class + `CreateWindowFunctionsMemberTranslator` override; window-frame/aggregate capability flags (`IsFrameRowsSupported = true`; RANGE/GROUPS/exclusion/windowed-PERCENTILE `false`; MEDIAN/ordered-set-windowed/bare-variance/variance/correlation `true`; `VarianceFunctionName = "VAR"`; covariance `false`); comment vs flags inconsistency noted in Known issues/debt.
 </details>

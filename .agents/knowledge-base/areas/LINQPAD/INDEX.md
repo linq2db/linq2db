@@ -3,10 +3,10 @@ area: LINQPAD
 kind: area-index
 sources: [code]
 confidence: high
-last_verified: 2026-06-15
-last_verified_sha: b3340aa9ded15ffc626983fd202e6399daa081ca
+last_verified: 2026-07-05
+last_verified_sha: 36ee4f82f06eaf242b052ade8c87121d251a6165
 coverage_tier_1: 15/15
-coverage_tier_2: 45/48
+coverage_tier_2: 46/49
 ---
 
 # LINQPAD
@@ -34,16 +34,18 @@ Two public driver classes, both prefixed `LinqToDB` as required by the LINQPad S
 
 ### Provider registry (`DatabaseProviders/`)
 
-`DatabaseProviders` (static) holds two `FrozenDictionary` tables: `Providers` (keyed by `ProviderName` generic DB string) and `ProvidersByProviderName` (keyed by specific provider name string). On net8.0-windows, DB2 and Informix are registered only on 64-bit processes; `DuckDBProvider` is registered unconditionally on net8.0-windows (outside the 64-bit guard); on net472 DuckDB is absent.
+`DatabaseProviders` (static) holds two `FrozenDictionary` tables: `Providers` (keyed by `ProviderName` generic DB string) and `ProvidersByProviderName` (keyed by specific provider name string). On net8.0-windows, DB2 and Informix are registered only on 64-bit processes; `DuckDBProvider` and `YdbProvider` are registered unconditionally on net8.0-windows (outside the 64-bit guard, `DatabaseProviders.cs:36-37`); on net472 both DuckDB and YDB are absent (`YdbProvider.cs` is wrapped in `#if !NETFRAMEWORK`, matching `DuckDBProvider`).
 
 `IDatabaseProvider` defines the contract: `Database`, `Description`, `Providers`, `GetDataProvider`, `GetProviderFactory`, `GetAdditionalReferences`, `IsProviderPathSupported`, `RegisterProviderFactory`, `AutomaticProviderSelection`, `GetProviderByConnectionString`, `GetLastSchemaUpdate`, `ClearAllPools`.
 
 `DatabaseProviderBase` provides virtual no-op defaults; concrete providers override only what they need.
 
-14 concrete provider classes:
+15 concrete provider classes:
 - `SqlServerProvider`: on net8.0-windows overrides `GetDataProvider` to hardcode `Microsoft.Data.SqlClient`.
 - `AccessProvider`: `AutomaticProviderSelection = true`; `SupportsSecondaryConnection = true`.
 - **`DuckDBProvider`**: net8.0-windows only (`#if !NETFRAMEWORK`). Single `ProviderInfo` entry (`ProviderName.DuckDB`, display name `"DuckDB"`, `IsDefault = true`). Overrides `GetProviderFactory` to return `DuckDBClientFactory.Instance`; `GetLastSchemaUpdate` returns `null`; `ClearAllPools` is a no-op.
+- **`YdbProvider`** (`DatabaseProviders/YdbProvider.cs`): net8.0-windows only (`#if !NETFRAMEWORK`), same exemption from the 64-bit guard as `DuckDBProvider`. Single `ProviderInfo` entry (`ProviderName.Ydb`, display name `"YDB"`, `IsDefault = true`). `GetProviderFactory` returns `YdbProviderFactory.Instance`; `ClearAllPools` calls `YdbConnection.ClearAllPools().GetAwaiter().GetResult()` (async API bridged synchronously); `GetLastSchemaUpdate` returns `null` (unimplemented, same as DuckDB).
+- **`PostgreSQLProvider`** (`DatabaseProviders/PostgreSQLProvider.cs`): exposes eight dialect-detection `ProviderInfo` entries -- `ProviderName.PostgreSQL` (auto-detect, default), `PostgreSQL92/93/95/13/15/18/19` (`PostgreSQL19` added this delta, `"PostgreSQL 19 Dialect"`, `PostgreSQLProvider.cs:20`). `GetProviderFactory` returns `NpgsqlFactory.Instance`; `ClearAllPools` calls `NpgsqlConnection.ClearAllPools()`; `GetLastSchemaUpdate` returns `null`.
 
 `ProviderInfo` record: `Name`, `DisplayName`, `IsDefault`, `IsHidden`, `Troubleshoot`.
 
@@ -71,8 +73,8 @@ Dialog hosted as `SettingsDialog` (XAML `Window`). `DataContext` is `SettingsMod
 
 Two project files govern the area:
 
-- **`LinqToDB.LINQPad.csproj`** (`Microsoft.NET.Sdk.WindowsDesktop`): the WPF driver assembly, TFMs `net472` + `net8.0-windows7.0`. `UseWPF=true`, `IsPackable=false`. `.lpx`/`.lpx6` generation gated by `GenerateLpxArtifacts` property (default `true`); set to `false` from the Pack project to avoid coupling `dotnet pack` to 7-Zip / `Pack.cmd`. `<Page Update>` items for all nine XAML files (including `AboutTab.xaml`, `DynamicConnectionTab.xaml`) are declared here.
-- **`LinqToDB.LINQPad.Pack.csproj`** (`Microsoft.NET.Sdk`): packaging-only, single TFM `net8.0`. Does NOT recompile the driver. References `LinqToDB.LINQPad.csproj` with `ReferenceOutputAssembly=false` for build ordering, then pulls the `net8.0-windows7.0` driver assembly into `lib/net8.0/` via the `_AddLinqPadDriverToPackage` MSBuild target (calls `GetTargetPath` on the sibling). Motivation: LINQPad on macOS/Linux rejected a `net8.0-windows7.0`-only package ("No compatible assemblies found", issue #5497); packing under plain `net8.0` restores the pre-#5279 layout. `EnableDefaultItems=false`, `IncludeBuildOutput=false`. `<Description>` (line 40) still lists 14 databases and omits DuckDB -- known issue.
+- **`LinqToDB.LINQPad.csproj`** (`Microsoft.NET.Sdk.WindowsDesktop`): the WPF driver assembly, TFMs `net472` + `net8.0-windows7.0`. `UseWPF=true`, `IsPackable=false`. `.lpx`/`.lpx6` generation gated by `GenerateLpxArtifacts` property (default `true`); set to `false` from the Pack project to avoid coupling `dotnet pack` to 7-Zip / `Pack.cmd`. `<Page Update>` items for all nine XAML files (including `AboutTab.xaml`, `DynamicConnectionTab.xaml`) are declared here. Non-net472 `<ItemGroup>` carries both `DuckDB.NET.Data.Full` and `Ydb.Sdk` (line 69, added this delta) `PackageReference`s.
+- **`LinqToDB.LINQPad.Pack.csproj`** (`Microsoft.NET.Sdk`): packaging-only, single TFM `net8.0`. Does NOT recompile the driver. References `LinqToDB.LINQPad.csproj` with `ReferenceOutputAssembly=false` for build ordering, then pulls the `net8.0-windows7.0` driver assembly into `lib/net8.0/` via the `_AddLinqPadDriverToPackage` MSBuild target (calls `GetTargetPath` on the sibling). Motivation: LINQPad on macOS/Linux rejected a `net8.0-windows7.0`-only package ("No compatible assemblies found", issue #5497); packing under plain `net8.0` restores the pre-#5279 layout. `EnableDefaultItems=false`, `IncludeBuildOutput=false`. Now also carries a `Ydb.Sdk` `PackageReference` (line 79, added this delta) alongside `DuckDB.NET.Data.Full`. `<Description>` (line 40) still lists 14 databases and omits both DuckDB and YDB -- known issue.
 
 ## Key types
 
@@ -86,6 +88,7 @@ Two project files govern the area:
 | `DatabaseProviderBase` | `DatabaseProviders/DatabaseProviderBase.cs` | Default-virtual base |
 | `DatabaseProviders` | `DatabaseProviders/DatabaseProviders.cs` | `FrozenDictionary`-backed static registry |
 | `DuckDBProvider` | `DatabaseProviders/DuckDBProvider.cs` | net8.0-windows DuckDB provider |
+| `YdbProvider` | `DatabaseProviders/YdbProvider.cs` | net8.0-windows YDB provider |
 | `ProviderInfo` | `DatabaseProviders/ProviderInfo.cs` | Per-dialect descriptor |
 | `ConnectionSettings` | `Configuration/ConnectionSettings.cs` | Root settings DTO |
 | `AppConfig` | `Configuration/AppConfig.cs` | `ILinqToDBSettings` for static contexts |
@@ -103,8 +106,8 @@ Two project files govern the area:
 
 **Tier 1 (canonical anchors) -- 15 files:** Drivers (Dynamic/Static/DriverHelper), LINQPadDataConnection, IDatabaseProvider, DatabaseProviderBase, DatabaseProviders, ProviderInfo, ConnectionSettings, AppConfig, DynamicSchemaGenerator, StaticSchemaGenerator, Scaffold/ModelProviderInterceptor, Scaffold/DataModelAugmentor, csproj.
 
-**Tier 2 -- visited 45 of 48 files:**
-- Concrete providers (14 files): all sampled; Access, SqlServer, DuckDB read in full.
+**Tier 2 -- visited 46 of 49 files:**
+- Concrete providers (15 files, `YdbProvider.cs` added this delta): all sampled; Access, SqlServer, DuckDB, YDB, PostgreSQL read in full.
 - UI Models (12 files): sample read in full; pattern confirmed.
 - UI Settings code-behind (11 files): `SettingsDialog.xaml.cs` read; pattern confirmed.
 - Compat (3 files): `IReadOnlySet.cs` read; others structurally implied.
@@ -119,6 +122,7 @@ Two project files govern the area:
 - `LINQPad.Reference` NuGet -- `DynamicDataContextDriver`, etc.
 - `Microsoft.CodeAnalysis.CSharp` NuGet -- Roslyn compilation.
 - `DuckDB.NET.Data.Full` NuGet -- used by `DuckDBProvider.GetProviderFactory` (net8.0-windows only); present in both `LinqToDB.LINQPad.csproj` (non-net472 ItemGroup) and `LinqToDB.LINQPad.Pack.csproj`.
+- `Ydb.Sdk` NuGet -- used by `YdbProvider.GetProviderFactory` (`YdbProviderFactory.Instance`) and `ClearAllPools` (`YdbConnection.ClearAllPools`); net8.0-windows only; added this delta to both `LinqToDB.LINQPad.csproj` (non-net472 ItemGroup, line 69) and `LinqToDB.LINQPad.Pack.csproj` (line 79).
 
 **Inbound:** standalone driver project; nothing inside `Source/LinqToDB/` depends on this area.
 
@@ -132,7 +136,8 @@ Two project files govern the area:
 - `WITH_ISERIES` conditional: iSeries support compiled in by default but the nuspec packaging step is manual.
 - IBM DB2 on net472 requires a PostBuild trick.
 - `DuckDBProvider.GetLastSchemaUpdate` always returns `null` -- schema change detection not implemented for DuckDB.
-- `LinqToDB.LINQPad.Pack.csproj` `<Description>` (line 40) still lists 14 named databases and omits DuckDB despite DuckDB being a registered provider.
+- `YdbProvider.GetLastSchemaUpdate` always returns `null` -- same unimplemented schema-change-detection limitation as DuckDB (added this delta).
+- `LinqToDB.LINQPad.Pack.csproj` `<Description>` (line 40) still lists 14 named databases and omits both DuckDB and YDB despite both being registered providers.
 
 ## See also
 
@@ -143,7 +148,7 @@ Two project files govern the area:
 <details><summary>Coverage</summary>
 
 - Tier 1: 15/15 done
-- Tier 2: 45/48 done (93.75%)
+- Tier 2: 46/49 done (93.9%)
 - Tier 3 (skipped, logged): 6
 
 **Delta read (prior run -- PR #5451 DuckDB additions):**
@@ -161,5 +166,12 @@ Two project files govern the area:
 - `Source/LinqToDB.LINQPad/LinqToDB.LINQPad.Pack.csproj` -- now a packaging-only project (`Microsoft.NET.Sdk`, single TFM `net8.0`, `EnableDefaultItems=false`, `IncludeBuildOutput=false`); driver assembly pulled into `lib/net8.0/` via `_AddLinqPadDriverToPackage` MSBuild target; split motivated by macOS/Linux NuGet compatibility issue #5497 (pre-#5279 layout restored). `<Description>` (line 40) still omits DuckDB. `DuckDB.NET.Data.Full` PackageReference present (line 78).
 - `Source/LinqToDB.LINQPad/LinqToDB.LINQPad.csproj` -- SDK changed to `Microsoft.NET.Sdk.WindowsDesktop`; `IsPackable=false` added; `GenerateLpxArtifacts` property gate added for PostBuild `.lpx`/`.lpx6` targets; `<Page Update>` block for all nine XAML files (including `AboutTab.xaml`, `DynamicConnectionTab.xaml`) declared here; `DuckDB.NET.Data.Full` in non-net472 `<ItemGroup>` (line 68).
 - `Source/LinqToDB.LINQPad/UI/Settings/DynamicConnectionTab.xaml` -- `UserControl`, design-time `DataContext` `DynamicConnectionModel`; renders Database Type / Provider combo boxes, provider path TextBox + Select button, connection string TextBox (multiline, `{pm:name}` tooltip), secondary connection string panel (MS Access, visibility-gated), Encrypt checkBox, command timeout TextBox (`CommandTimeoutConverter`). No structural change; surfaced for first-time explicit coverage.
+
+**Read (this run -- delta, sha 36ee4f82):**
+- `Source/LinqToDB.LINQPad/DatabaseProviders/DatabaseProviders.cs` -- registers new `YdbProvider` unconditionally inside `#if !NETFRAMEWORK` (outside the 64-bit guard, line 37), alongside `DuckDBProvider`.
+- `Source/LinqToDB.LINQPad/DatabaseProviders/PostgreSQLProvider.cs` -- added `ProviderName.PostgreSQL19` (`"PostgreSQL 19 Dialect"`) to the dialect-detection `ProviderInfo` list (now eight entries, line 20).
+- `Source/LinqToDB.LINQPad/DatabaseProviders/YdbProvider.cs` -- new file; `DatabaseProviderBase` subclass for YDB, `#if !NETFRAMEWORK`-gated, mirrors `DuckDBProvider`'s shape (`GetProviderFactory` -> `YdbProviderFactory.Instance`, `GetLastSchemaUpdate` -> `null`, `ClearAllPools` -> `YdbConnection.ClearAllPools().GetAwaiter().GetResult()`).
+- `Source/LinqToDB.LINQPad/LinqToDB.LINQPad.Pack.csproj` -- added `PackageReference Include="Ydb.Sdk"` to the net8.0 dependency group (line 79); `<Description>` (line 40) not updated, still omits DuckDB and now also YDB.
+- `Source/LinqToDB.LINQPad/LinqToDB.LINQPad.csproj` -- added `PackageReference Include="Ydb.Sdk"` to the non-net472 `<ItemGroup>` (line 69), alongside existing `DuckDB.NET.Data.Full`.
 
 </details>

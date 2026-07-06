@@ -3,21 +3,25 @@ area: SQL-PROVIDER
 kind: issues
 sources: [gh-issues, gh-prs, gh-discussions]
 confidence: high
-last_verified: 2026-06-15
-last_verified_sha: b3340aa9ded15ffc626983fd202e6399daa081ca
+last_verified: 2026-07-06
+last_verified_sha: df84c7784
 ---
 
 # SQL-PROVIDER -- GitHub themes
 
 ## Open themes
 
-- **SQL generation edge cases** -- Multiple issues around SQL generation in complex scenarios: grouped projections with instances (#4256), chained associations and expression methods (#3822), nested case-conversion wraps in Guid→string conversion (#5528), and redundant IS NULL optimizations through SqlConcatExpression (#5529). Several PRs address specific cases but broader pattern emerges of edge cases in optimizer. Issues: #4256, #3822, #5528, #5529, #5570.
+- **Identifier quotation and escaping edge cases** -- Multiple providers lack proper identifier quotation logic, causing SQL errors when identifiers contain special characters. General issue (#1510) tracks cross-provider gaps; Access-specific issue (#3893) addresses backtick and reserved-character escaping per SQL/OLE DB standard. Both represent recurring pattern of quotation logic deficiencies affecting special characters and provider-specific identifier handling rules. Issues: #1510, #3893.
 
-- **Table/alias resolution failures** -- Intermittent failures to build queries with complex joins and associations. Users report 'Table not found' exceptions that appear random or depend on accessing specific navigation properties. #4919 shows aliasing can become corrupted under certain query patterns. #4773 involves casting to interfaces combined with inheritance. Issues: #4919, #4773, #1347, #1816.
+- **Operator precedence and SQL generation** -- SQL expression precedence table at `Source/LinqToDB/SqlQuery/Precedence.cs` is hardcoded and applied uniformly across all providers, but each SQL dialect defines its own operator precedence. Mismatch causes unnecessary brackets in generated SQL. TODO comment acknowledged but no prior tracking. Issues: #5527.
 
-- **DDL support gaps (ForeignKey, Enum creation)** -- Users cannot create foreign keys or enums directly via linq2db DDL API. Both feature requests (#4334, #4335) show demand for fuller DDL coverage on providers like PostgreSQL. Related to incomplete temporary table support (#2368 closed but likely open items remain). Issues: #4334, #4335, #2368.
+- **Complete INSERT and UPSERT operations coverage** -- Epic issue (#2558) tracking design and incremental implementation of various INSERT forms including UPSERT, excluding bulk operations. Aims to translate merge API calls to provider-specific UPSERT variants (e.g., `INSERT ... ON DUPLICATE KEY UPDATE` for MySQL, `INSERT ... ON CONFLICT` for PostgreSQL, native MERGE for SQL Server). Issues: #2558.
 
-- **Projection and order-by composition** -- Recent regression in 6.0.0-rc.1: projecting to a new class then ordering by a composite property (e.g., string interpolation) fails SQL generation (#5050). Also, associations to arbitrary projection queries from joined group-by no longer compile (#5049). Both represent composition/ordering breakdown post-v5. Issues: #5050, #5049.
+- **DDL and schema management helper extensions** -- Three related requests: table-existence detection (#506) seeks efficient check without full schema enumeration; comprehensive CreateTable type coverage (#749) needs test suite covering all supported column types per provider; convenience helpers (#1201) request ColumnExists/AddColumn fluent extensions replacing try-catch patterns. Issues: #506, #749, #1201.
+
+- **Advanced SQL features (PIVOT/UNPIVOT, Regex)** -- Two unrelated advanced features: PIVOT/UNPIVOT support (#1475) requires per-provider implementation (SQL Server PIVOT, Oracle UNPIVOT, PostgreSQL tablefunc extension, MariaDB CONNECT, etc.); regex support (#698) needs translation of LINQ Regex.IsMatch to provider-specific regex operators (LIKE for SQLite, REGEXP for MySQL/PostgreSQL, REGEXP_LIKE for Oracle, etc.). Issues: #1475, #698.
+
+- **Sql.Function attribute generics support** -- Feature request (#326) to allow provider-specific function overloads based on generic type parameters. Currently Sql.Function supports per-provider and per-TFM selection but not per-generic-instantiation, requiring users to create multiple concrete wrapper methods instead of one generic template. Issues: #326.
 
 ## Resolved themes
 
@@ -33,15 +37,15 @@ No active discussions in this area.
 
 ## Stats
 
-- Open issues: 7
+- Open issues: 10
 - Closed issues: 37
 - Open PRs: 1 (+ 2 draft)
 - Total PRs: 22
 - Discussions: 0
-- Last fetched: 2026-06-15
+- Last fetched: 2026-07-06
 
 <details><summary>Coverage</summary>
 
-- Index entries scanned: 66 (44 issues + 22 PRs + 0 discussions)
-- Themes extracted: 7
+- Index entries scanned: 47 (10 issues + 37 closed + 0 discussions)
+- Themes extracted: 6
 </details>

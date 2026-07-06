@@ -3,8 +3,8 @@ area: PROV-DUCKDB
 kind: area-index
 sources: [code]
 confidence: high
-last_verified: 2026-06-14
-last_verified_sha: b3340aa9ded15ffc626983fd202e6399daa081ca
+last_verified: 2026-07-05
+last_verified_sha: 36ee4f82f06eaf242b052ade8c87121d251a6165
 coverage_tier_1: 13/13
 coverage_tier_2: 4/4
 ---
@@ -19,7 +19,8 @@ DuckDB provider added by PR #5451. DuckDB is an embedded, in-process analytical 
 
 `DuckDBDataProvider` extends `DynamicDataProviderBase<DuckDBProviderAdapter>` (Source/LinqToDB/Internal/DataProvider/DuckDB/DuckDBDataProvider.cs:23). Key `SqlProviderFlags` set at construction:
 
-- CTE, sub-query ORDER BY, all set operations, APPLY joins (CROSS + OUTER), INSERT-OR-UPDATE, `DISTINCT FROM`, predicate comparison -- all enabled.
+- CTE, sub-query ORDER BY, all set operations, APPLY joins (CROSS + OUTER), INSERT-OR-UPDATE, `DISTINCT FROM`, `DISTINCT ON`, predicate comparison -- all enabled.
+- `IsDistinctOnSupported = true` (DuckDBDataProvider.cs:40): pairs with `DuckDBSqlBuilder.BuildDistinctModifier`, which emits `DISTINCT ON (...)` via `BuildDistinctOnExpressions`.
 - `IsNullsOrderingSupported = true`; `DefaultNullsOrdering = NullsDefaultOrdering.AlwaysLast` (DuckDBDataProvider.cs:31-32): DuckDB places NULL last regardless of sort direction.
 - `IsCrossApplyJoinSupportsCondition = true`; `IsOuterApplyJoinSupportsCondition = true` (DuckDBDataProvider.cs:37-38).
 - `DefaultMultiQueryIsolationLevel` = `Snapshot` (DuckDB default).
@@ -31,7 +32,7 @@ Reader mappings handle DuckDB.NET non-standard return types:
 - `TIME` columns arrive as `TimeOnly`; converted to `TimeSpan` or `DateTime` as needed (DuckDBDataProvider.cs:58-62).
 - `TIMESTAMPTZ` arrives as `DateTime(Kind=Utc)`; converted to `DateTimeOffset` via `GetFieldValue<DateTimeOffset>` (DuckDBDataProvider.cs:64-66).
 - `BITSTRING` default reader is `string`; `BitArray` reads use `GetFieldValue<BitArray>` (DuckDBDataProvider.cs:68-70).
-- `"Bit"` field type mapped to `byte[]` via `ParseBitString` (DuckDBDataProvider.cs:74): parses a binary-string representation (`"0"`/`"1"` chars) into a `byte[]` array, LSB-first per byte.
+- Bit field type mapped to `byte[]` via `ParseBitString` (DuckDBDataProvider.cs:74): parses a binary-string representation of 0/1 chars into a `byte[]` array, LSB-first per byte.
 
 `SetParameter` strips the `$` prefix from parameter names (DuckDB.NET expects unprefixed names but BulkCopy may pass prefixed ones) and converts `TimeSpan` -> `DateTimeOffset` for `TimeTZ`, `TimeSpan` -> `TimeOnly` for `Time` (net8+), `Binary` -> `byte[]` (DuckDBDataProvider.cs:127-165). `DateTimeOffset` values with `DataType.DateTime` are unwrapped to `dto.DateTime` (DuckDBDataProvider.cs:138-141). The base `SetParameter` is deliberately NOT called (comment at line 154) to avoid DbType being reset to string after value assignment.
 
@@ -42,17 +43,19 @@ Reader mappings handle DuckDB.NET non-standard return types:
 
 Notable overrides:
 
-- `ConcatStyle` = `ConcatBuildStyle.Pipes` (DuckDBSqlBuilder.cs:35): delegates `||`-concatenation to the base builder. This replaces the prior visitor-level `+` -> `||` rewrite (PR #5504). `ConcatRequiresExplicitStringCast` is `false` in the visitor (DuckDBSqlExpressionConvertVisitor.cs:14), so no CAST wrapping is emitted for string operands.
+- `ConcatStyle` = `ConcatBuildStyle.Pipes` (DuckDBSqlBuilder.cs:35): delegates concatenation to the base builder. This replaces the prior visitor-level rewrite (PR #5504). `ConcatRequiresExplicitStringCast` is `false` in the visitor (DuckDBSqlExpressionConvertVisitor.cs:14), so no CAST wrapping is emitted for string operands.
 - `IsRecursiveCteKeywordRequired` = `true`; `SupportsMaterializedCteHint` = `true` (DuckDBSqlBuilder.cs:32-33).
-- `BuildDataTypeFromDataType` maps all linq2db `DataType` values to DuckDB SQL types. Includes DuckDB-specific types: `HUGEINT`/`UHUGEINT` (Int128/UInt128), `UHUGEINT`, `BITSTRING`, `INTERVAL`, `BIGNUM`, `TIMETZ`, `TIME_NS`, `TIMESTAMP_NS`/`_MS`/`_S` (precision-dispatched) (DuckDBSqlBuilder.cs:49-111).
-- `Convert` (identifier quoting): standard double-quote escaping; parameters rendered as `$name`; `merge_action` pseudo-function maps to lowercase `merge_action` (DuckDBSqlBuilder.cs:118-160).
-- `BuildGetIdentity`: emits `RETURNING <identity-field>` instead of a post-insert select (DuckDBSqlBuilder.cs:38-47).
-- Identity via sequences: DuckDB does not support `GENERATED AS IDENTITY` with `PRIMARY KEY`. `BuildCreateTableStatement` prepends `CREATE SEQUENCE IF NOT EXISTS {table}_{field}_seq START 1` before the `CREATE TABLE`; `BuildCreateTableFieldType` appends `DEFAULT NEXTVAL('"<seqname>"')` (DuckDBSqlBuilder.cs:189-220). Sequence name formula: `{tableName}_{fieldName}_seq` (DuckDBSqlBuilder.cs:421).
-- `BuildTruncateTableStatement`: DuckDB `ALTER SEQUENCE RESTART` is not implemented; `TRUNCATE` does not reset sequences. Workaround: create a replacement `{seqname}_reset` sequence and `ALTER TABLE ... SET DEFAULT nextval(...)` to it. The old sequence becomes orphaned (DuckDBSqlBuilder.cs:345-388). On `DROP TABLE`, both the primary and reset sequences are dropped (DuckDBSqlBuilder.cs:262-296).
-- `BuildJoinType`: `CrossApply` -> `INNER JOIN LATERAL`, `OuterApply` -> `LEFT JOIN LATERAL` (DuckDBSqlBuilder.cs:223-232).
-- `BuildObjectName`: strips schema/db for temp tables; supports `[database.][schema.]name` three-part form (DuckDBSqlBuilder.cs:234-260).
-- `BuildParameter`: emits explicit `CAST` for `INTERVAL` and `DECIMAL` parameters in binary expressions to guide DuckDB operator overload resolution (DuckDBSqlBuilder.cs:390-414).
-- `BuildCreateTableNullAttribute`: emits `NOT NULL` only for non-PK non-nullable fields; PK nullability is implicit (DuckDBSqlBuilder.cs:298-301).
+- `BuildDataTypeFromDataType` maps all linq2db `DataType` values to DuckDB SQL types. Includes DuckDB-specific types: HUGEINT/UHUGEINT (Int128/UInt128), BITSTRING, INTERVAL, BIGNUM, TIMETZ, TIME_NS, TIMESTAMP_NS/_MS/_S (precision-dispatched) (DuckDBSqlBuilder.cs:49-111).
+- `Convert` (identifier quoting): standard double-quote escaping; parameters rendered with a `$` prefix; `merge_action` pseudo-function maps to lowercase `merge_action` (DuckDBSqlBuilder.cs:118-160).
+- `BuildGetIdentity`: emits a RETURNING clause instead of a post-insert select (DuckDBSqlBuilder.cs:38-47).
+- Identity via sequences: DuckDB does not support GENERATED AS IDENTITY with PRIMARY KEY. `BuildCreateTableStatement` prepends a CREATE SEQUENCE IF NOT EXISTS statement before the CREATE TABLE; `BuildCreateTableFieldType` appends a DEFAULT NEXTVAL clause (DuckDBSqlBuilder.cs:189-220). Sequence name formula: tableName_fieldName_seq (DuckDBSqlBuilder.cs:421).
+- `BuildTruncateTableStatement`: DuckDB ALTER SEQUENCE RESTART is not implemented; TRUNCATE does not reset sequences. Workaround: create a replacement reset sequence and switch the column DEFAULT to it. The old sequence becomes orphaned (DuckDBSqlBuilder.cs:345-388). On DROP TABLE, both the primary and reset sequences are dropped (DuckDBSqlBuilder.cs:262-296).
+- `BuildJoinType`: CrossApply -> INNER JOIN LATERAL, OuterApply -> LEFT JOIN LATERAL (DuckDBSqlBuilder.cs:223-232).
+- `BuildObjectName`: strips schema/db for temp tables; supports a three-part database.schema.name form (DuckDBSqlBuilder.cs:234-260).
+- `BuildParameter`: emits an explicit CAST for INTERVAL and DECIMAL parameters in binary expressions to guide DuckDB operator overload resolution (DuckDBSqlBuilder.cs:390-414).
+- `BuildCreateTableNullAttribute`: emits NOT NULL only for non-PK non-nullable fields; PK nullability is implicit (DuckDBSqlBuilder.cs:298-301).
+- `GetWindowNullsPlacement` -> `WindowNullsPlacement.AfterLastArgument` (DuckDBSqlBuilder.cs:40-43): DuckDB places IGNORE NULLS inside the parentheses after the last argument, e.g. LAG(expr, offset, default IGNORE NULLS), NTH_VALUE(expr, n IGNORE NULLS).
+- `BuildDistinctModifier` (DuckDBSqlBuilder.cs:45-49): emits DISTINCT followed by `BuildDistinctOnExpressions`, backing DISTINCT ON queries; paired with `IsDistinctOnSupported = true` on the provider.
 ### SQL optimizer (`DuckDBSqlOptimizer`)
 
 `DuckDBSqlOptimizer` extends `BasicSqlOptimizer` (Source/LinqToDB/Internal/DataProvider/DuckDB/DuckDBSqlOptimizer.cs:8). Notable overrides:
@@ -66,7 +69,7 @@ Notable overrides:
 Singleton that loads DuckDB.NET dynamically (Source/LinqToDB/Internal/DataProvider/DuckDB/DuckDBProviderAdapter.cs). Key surface:
 
 - `CreateConnection(connectionString)`: factory via reflection-loaded DuckDB.NET assembly.
-- DuckDB-native types: `DuckDBDateOnly`, `DuckDBTimeOnly`, `DuckDBTimestamp`, `DuckDBInterval` -- exposed as `Type?` properties (DuckDBProviderAdapter.cs:50-53), registered via `SetGetFieldValueReader` in `DuckDBDataProvider` ctor.
+- DuckDB-native types: `DuckDBDateOnly`, `DuckDBTimeOnly`, `DuckDBTimestamp`, `DuckDBInterval` -- exposed as Type? properties (DuckDBProviderAdapter.cs:50-53), registered via `SetGetFieldValueReader` in `DuckDBDataProvider` ctor.
 - `CreateAppender(connection, table)`: creates a DuckDB native Appender object used by `DuckDBBulkCopy` for the Appender path.
 - `AppendRow` / `EndRow` / `Flush`: Appender write cycle wrappers.
 
@@ -74,41 +77,43 @@ Singleton that loads DuckDB.NET dynamically (Source/LinqToDB/Internal/DataProvid
 
 `DuckDBMappingSchema` is a singleton that extends `LockedMappingSchema` (Source/LinqToDB/Internal/DataProvider/DuckDB/DuckDBMappingSchema.cs:9). It registers:
 
-- Default converters for DuckDB-specific scalar types: `Int128`, `UInt128` (HUGEINT/UHUGEINT), `BitArray` (BITSTRING).
-- DuckDB-specific column type annotations (e.g. `TIMESTAMP_NS`, `HUGEINT`, `UHUGEINT`) via `SetDataType`.
-- Scalar `string` -> `BitArray` converter using `BitArray(bool[])` ctor.
+- Default converters for DuckDB-specific scalar types: Int128, UInt128 (HUGEINT/UHUGEINT), BitArray (BITSTRING).
+- DuckDB-specific column type annotations (e.g. TIMESTAMP_NS, HUGEINT, UHUGEINT) via `SetDataType`.
+- Scalar string -> BitArray converter using the BitArray(bool[]) ctor.
 
 ### Bulk copy (`DuckDBBulkCopy`)
 
 `DuckDBBulkCopy` (Source/LinqToDB/Internal/DataProvider/DuckDB/DuckDBBulkCopy.cs) handles two paths dispatched by `DuckDBOptions.BulkCopyType`:
 
-- `BulkCopyType.ProviderSpecific` (= Appender path): uses DuckDB native Appender API for best performance. Auto-falls back to `MultipleRows` when the table has unmapped columns or identity columns with `nextval()` defaults (as documented by the XML doc on `DuckDBOptions.BulkCopyType`).
+- `BulkCopyType.ProviderSpecific` (= Appender path): uses DuckDB native Appender API for best performance. Auto-falls back to MultipleRows when the table has unmapped columns or identity columns with nextval() defaults (as documented by the XML doc on `DuckDBOptions.BulkCopyType`).
 - `BulkCopyType.MultipleRows`: standard parametrized multi-row INSERT.
-- Default `BulkCopyType` is `ProviderSpecific` (DuckDBOptions.cs).
+- Default `BulkCopyType` is ProviderSpecific (DuckDBOptions.cs).
 ### Schema provider (`DuckDBSchemaProvider`)
 
-`DuckDBSchemaProvider` extends `SchemaProviderBase` (Source/LinqToDB/Internal/DataProvider/DuckDB/DuckDBSchemaProvider.cs). Queries `information_schema` views for tables, columns, procedures, and foreign keys. Key details:
+`DuckDBSchemaProvider` extends `SchemaProviderBase` (Source/LinqToDB/Internal/DataProvider/DuckDB/DuckDBSchemaProvider.cs). Queries information_schema views for tables, columns, procedures, and foreign keys. Key details:
 
-- Column type mapping: reads `DATA_TYPE` + `NUMERIC_PRECISION`/`SCALE` and maps to linq2db `DataType` including DuckDB-specific types (`HUGEINT`, `UHUGEINT`, `BITSTRING`, `INTERVAL`, `TIMETZ`, `TIME WITH TIME ZONE`).
+- Column type mapping: reads DATA_TYPE + NUMERIC_PRECISION/SCALE and maps to linq2db DataType including DuckDB-specific types (HUGEINT, UHUGEINT, BITSTRING, INTERVAL, TIMETZ, TIME WITH TIME ZONE).
 - `GetProcedures`: returns empty by default (DuckDB functions are handled separately, not as stored procedures in the schema provider).
-- Temp table filtering: tables in `information_schema.tables` with `TABLE_SCHEMA = 'temp'` are excluded.
+- Temp table filtering: tables in information_schema.tables with TABLE_SCHEMA = temp are excluded.
 
 ### Member translator (`DuckDBMemberTranslator`)
 
-`DuckDBMemberTranslator` extends `ProviderMemberTranslatorDefault` (DuckDBMemberTranslator.cs:14) and composes three sub-translators:
+`DuckDBMemberTranslator` extends `ProviderMemberTranslatorDefault` (DuckDBMemberTranslator.cs:14) and composes four sub-translators:
 
-- `SqlTypesTranslation`: overrides `ConvertMoney` (DECIMAL(19,4)), `ConvertSmallMoney` (DECIMAL(10,4)), `ConvertDateTime`/`ConvertDateTime2` (both -> `DataType.DateTime2`).
-- `DateFunctionsTranslator`: translates `Sql.DatePart` to `EXTRACT(part FROM x)` (DuckDBMemberTranslator.cs:43-80); `Millisecond` special-cased to `EXTRACT(millisecond FROM x) % 1000` (line 63-68); `DateAdd` via typed INTERVAL arithmetic (lines 87-116); `MakeDateTime` -> `make_timestamp(y,m,d,h,mi,s)` (lines 118-145); date/time truncation via CAST (lines 147-161); now-functions: `CURRENT_TIMESTAMP`, `LOCALTIMESTAMP`, `CURRENT_TIMESTAMP AT TIME ZONE 'UTC'` (lines 163-188).
-- `StringMemberTranslator`: `String.Join` -> `STRING_AGG(value, separator [ORDER BY ...])` (DuckDBMemberTranslator.cs:193-260); uses `AggregateFunctionBuilder` pattern; `withoutSeparator` path passes empty string; DISTINCT+ORDER BY is validated (must order by the aggregated value itself, else falls back via `SetFallback`); NULLs ordering via `BuildAggregateNullsOrderBy` with `NullsDefaultOrdering.AlwaysLast`.
-- `TranslateNewGuidMethod`: `Guid.NewGuid()` -> non-pure `uuid()` function (DuckDBMemberTranslator.cs:20-24).
+- `SqlTypesTranslation`: overrides `ConvertMoney` (DECIMAL(19,4)), `ConvertSmallMoney` (DECIMAL(10,4)), `ConvertDateTime`/`ConvertDateTime2` (both -> DataType.DateTime2).
+- `DateFunctionsTranslator`: translates `Sql.DatePart` to an EXTRACT expression (DuckDBMemberTranslator.cs:73-110); Millisecond special-cased to EXTRACT(millisecond) modulo 1000 (lines 92-98); DateAdd via typed INTERVAL arithmetic (lines 117-146); MakeDateTime -> make_timestamp(y,m,d,h,mi,s) (lines 148-175); date/time truncation via CAST (lines 177-191); now-functions emit function-call forms, not bare keywords: `TranslateServerNow`/`TranslateZonedNow` -> now(), `TranslateNow` -> current_localtimestamp(), `TranslateZonedUtcNow` -> now() AT TIME ZONE UTC (lines 193-225). Changed from the prior bare-keyword forms (CURRENT_TIMESTAMP, LOCALTIMESTAMP, CURRENT_TIMESTAMP AT TIME ZONE UTC): DuckDBs ON CONFLICT DO UPDATE SET binder parses the bare keyword as a column reference (a Binder Error reporting no column named CURRENT_TIMESTAMP), so the function-call form is required for correctness in that context.
+- `StringMemberTranslator`: String.Join -> STRING_AGG(value, separator, optional ORDER BY) (DuckDBMemberTranslator.cs:230-298); uses the `AggregateFunctionBuilder` pattern; withoutSeparator path passes an empty string; DISTINCT+ORDER BY is validated (must order by the aggregated value itself, else falls back via `SetFallback`); NULLs ordering via `BuildAggregateNullsOrderBy`, now driven by `translationContext.ProviderFlags.DefaultNullsOrdering` (line 274) rather than a hardcoded AlwaysLast literal -- same effective result for DuckDB (which sets DefaultNullsOrdering to AlwaysLast), but the ordering now follows the provider flag instead of being duplicated as a literal.
+- `DuckDBWindowFunctionsMemberTranslator` (extends `WindowFunctionsMemberTranslator`, wired via `CreateWindowFunctionsMemberTranslator()`, DuckDBMemberTranslator.cs:19-40): enables `IsLeadLagNullTreatmentSupported` / `IsValueNullTreatmentSupported` (IGNORE NULLS for LEAD/LAG/FIRST_VALUE/LAST_VALUE/NTH_VALUE; DuckDB does not support NTH_VALUE FROM FIRST/LAST), `IsWindowFilterSupported` (native FILTER (WHERE ...) on aggregate window functions instead of CASE-WHEN emulation), `IsAggregateDistinctSupported` (SUM(DISTINCT x) OVER (...)), `IsOrderedSetFilterSupported` (FILTER on PERCENTILE_CONT/DISC WITHIN GROUP), and the full statistical/regression set (`IsVarianceSupported`, `IsVarianceBareSupported`, `IsCorrelationSupported`, `IsLinearRegressionSupported`, `IsMedianSupported`). IGNORE NULLS placement is provided by `DuckDBSqlBuilder.GetWindowNullsPlacement` -> AfterLastArgument.
+- `TranslateNewGuidMethod`: Guid.NewGuid() -> non-pure uuid() function (DuckDBMemberTranslator.cs:42-46).
+- `TranslateNewGuid7Method`: the Guid v7 equivalent -> non-pure uuidv7() function (DuckDBMemberTranslator.cs:48-54). Requires DuckDB 1.3.0+; emitted unconditionally since DuckDB has no version-dialect split in linq2db.
 ### Public API layer (`DuckDB` namespace)
 
 `Source/LinqToDB/DataProvider/DuckDB/` contains the public-facing surface:
 
 - `DuckDBTools` (DuckDBTools.cs): `UseDuckDB()` extension on `DataOptions` with connection-string overloads; `GetDuckDBConnection()` extension on `IDataContext`.
-- `DuckDBOptions` (DuckDBOptions.cs): single option -- `BulkCopyType` (default `ProviderSpecific`). Uses native DuckDB Appender for best performance with automatic fallback to MultipleRows when the table has unmapped columns or identity columns with `nextval()` defaults.
+- `DuckDBOptions` (DuckDBOptions.cs): single option -- `BulkCopyType` (default ProviderSpecific). Uses native DuckDB Appender for best performance with automatic fallback to MultipleRows when the table has unmapped columns or identity columns with nextval() defaults.
 - `DuckDBFactory` (DuckDBFactory.cs): `IDataProviderFactory` implementation used by connection-string-based provider resolution.
-- `ProviderName.DuckDB` = 'DuckDB'.
+- `ProviderName.DuckDB` = DuckDB.
 
 ## Key types
 
@@ -123,6 +128,7 @@ Singleton that loads DuckDB.NET dynamically (Source/LinqToDB/Internal/DataProvid
 | `DuckDBBulkCopy` | Internal/.../DuckDB/DuckDBBulkCopy.cs | Appender + multi-row bulk-copy |
 | `DuckDBSchemaProvider` | Internal/.../DuckDB/DuckDBSchemaProvider.cs | Schema introspection |
 | `DuckDBMemberTranslator` | Internal/.../DuckDB/Translation/DuckDBMemberTranslator.cs | LINQ -> SQL date/string/type translation |
+| `DuckDBWindowFunctionsMemberTranslator` | Internal/.../DuckDB/Translation/DuckDBMemberTranslator.cs (nested) | Window-function capability flags (IGNORE NULLS, FILTER, DISTINCT, variance/correlation/regression/median) |
 | `DuckDBOptions` | DataProvider/DuckDB/DuckDBOptions.cs | Public option: BulkCopyType |
 | `DuckDBTools` | DataProvider/DuckDB/DuckDBTools.cs | Public: UseDuckDB(), GetDuckDBConnection() |
 | `DuckDBFactory` | DataProvider/DuckDB/DuckDBFactory.cs | IDataProviderFactory |
@@ -163,13 +169,14 @@ Singleton that loads DuckDB.NET dynamically (Source/LinqToDB/Internal/DataProvid
 - `DuckDB.NET` (NuGet, loaded dynamically via `DuckDBProviderAdapter`)
 - `BasicSqlBuilder`, `BasicSqlOptimizer`, `DynamicDataProviderBase`, `LockedMappingSchema` -- all from the shared linq2db engine
 - `SchemaProviderBase` -- schema infrastructure
-- `ProviderMemberTranslatorDefault`, `AggregateFunctionBuilder`, `DateFunctionsTranslatorBase` -- translator infrastructure
+- `ProviderMemberTranslatorDefault`, `AggregateFunctionBuilder`, `DateFunctionsTranslatorBase`, `WindowFunctionsMemberTranslator` -- translator infrastructure
 ## Known issues / debt
 
-- **TRUNCATE does not reset sequences** (DuckDBSqlBuilder.cs:345-388): the workaround creates a replacement `{seqname}_reset` sequence and re-points the column default, leaving the original sequence orphaned. A clean fix requires DuckDB to implement `ALTER SEQUENCE RESTART`.
-- **Bitstring parsing** (`ParseBitString`, DuckDBDataProvider.cs:91-109): parses `"0"`/`"1"` chars into `byte[]` LSB-first per byte. This is a private method on the provider; any future change to DuckDB.NET bitstring wire format would require updating it.
+- **TRUNCATE does not reset sequences** (DuckDBSqlBuilder.cs:345-388): the workaround creates a replacement reset sequence and re-points the column default, leaving the original sequence orphaned. A clean fix requires DuckDB to implement ALTER SEQUENCE RESTART.
+- **Bitstring parsing** (`ParseBitString`, DuckDBDataProvider.cs:91-109): parses 0/1 chars into `byte[]` LSB-first per byte. This is a private method on the provider; any future change to DuckDB.NET bitstring wire format would require updating it.
 - **No stored procedure support**: `GetProcedures` returns empty (DuckDB has macro/scalar functions but no traditional stored procedures accessible via the schema provider).
-- **T4/NuGet DuckDB package skips netfx TFM** (from MEMORY.md): DuckDB.NET has no `net462` TFM, so the T4 NuGet package and LINQPad NuGet driver are unsupported. CLI scaffold and LINQPad driver are supported via netstandard2.0.
+- **T4/NuGet DuckDB package skips netfx TFM** (from MEMORY.md): DuckDB.NET has no net462 TFM, so the T4 NuGet package and LINQPad NuGet driver are unsupported. CLI scaffold and LINQPad driver are supported via netstandard2.0.
+- **DuckDB has no version-dialect split in linq2db**: `TranslateNewGuid7Method` emits uuidv7() unconditionally even though it requires DuckDB 1.3.0+; there is no mechanism to gate it on an older DuckDB instance.
 
 ## See also
 
@@ -181,9 +188,9 @@ Singleton that loads DuckDB.NET dynamically (Source/LinqToDB/Internal/DataProvid
 
 ## Pointers
 
-- DuckDB.NET repo: https://github.com/Giorgi/DuckDB.NET -- upstream provider; data-reader types documented under `DuckDB.NET.Data/DataChunk/Reader`.
+- DuckDB.NET repo: https://github.com/Giorgi/DuckDB.NET -- upstream provider; data-reader types documented under DuckDB.NET.Data/DataChunk/Reader.
 - PR #5451: initial DuckDB provider addition.
-- PR #5504: `ConcatBuildStyle.Pipes` -- replaced visitor-level `+` -> `||` rewrite.
+- PR #5504: `ConcatBuildStyle.Pipes` -- replaced visitor-level concatenation rewrite.
 <details><summary>Coverage</summary>
 
 **Tier 1 (13/13):** All 13 Tier-1 files read in full during initial build run.
@@ -192,11 +199,16 @@ Singleton that loads DuckDB.NET dynamically (Source/LinqToDB/Internal/DataProvid
 
 **Read (prior delta run):**
 - Source/LinqToDB/Internal/DataProvider/DuckDB/DuckDBSqlBuilder.cs -- ConcatBuildStyle.Pipes, BuildJoinType LATERAL, BuildObjectName three-part form verified
-- Source/LinqToDB/Internal/DataProvider/DuckDB/DuckDBSqlExpressionConvertVisitor.cs -- ConcatRequiresExplicitStringCast=false, no visitor-level + -> rewrite
+- Source/LinqToDB/Internal/DataProvider/DuckDB/DuckDBSqlExpressionConvertVisitor.cs -- ConcatRequiresExplicitStringCast=false, no visitor-level rewrite
 
-**Read (this run -- delta):**
+**Read (prior delta run, 2026-06-14):**
 - Source/LinqToDB/DataProvider/DuckDB/DuckDBOptions.cs -- XML doc update on BulkCopyType parameter documenting Appender fallback conditions; no structural change.
 - Source/LinqToDB/Internal/DataProvider/DuckDB/DuckDBDataProvider.cs -- Added IsNullsOrderingSupported=true, DefaultNullsOrdering=AlwaysLast (lines 31-32); IsCrossApplyJoinSupportsCondition=true, IsOuterApplyJoinSupportsCondition=true (lines 37-38); Bit field type -> byte[] via ParseBitString reader (line 74); DateTimeOffset+DataType.DateTime -> dto.DateTime unwrap (lines 138-141); SetParameterType override for DataType.VarNumeric -> DbType.Decimal (lines 170-178).
 - Source/LinqToDB/Internal/DataProvider/DuckDB/Translation/DuckDBMemberTranslator.cs -- No structural changes; withoutSeparator path and AggregateFunctionBuilder pattern confirmed accurate per prior delta.
+
+**Read (this run -- delta):**
+- Source/LinqToDB/Internal/DataProvider/DuckDB/DuckDBDataProvider.cs -- Added `SqlProviderFlags.IsDistinctOnSupported = true` (line 40), pairing with the SQL builder's new `BuildDistinctModifier` for DISTINCT ON support.
+- Source/LinqToDB/Internal/DataProvider/DuckDB/DuckDBSqlBuilder.cs -- Added `GetWindowNullsPlacement` override (AfterLastArgument, lines 40-43) for IGNORE NULLS placement on LAG/NTH_VALUE etc.; added `BuildDistinctModifier` override (lines 45-49) emitting DISTINCT plus `BuildDistinctOnExpressions` for DISTINCT ON support.
+- Source/LinqToDB/Internal/DataProvider/DuckDB/Translation/DuckDBMemberTranslator.cs -- Added `DuckDBWindowFunctionsMemberTranslator` nested class (lines 21-40) enabling the full window-function capability set (IGNORE NULLS treatment, window FILTER, aggregate DISTINCT, ordered-set FILTER, variance/correlation/regression/median); added `TranslateNewGuid7Method` -> uuidv7() (lines 48-54); changed `TranslateServerNow`/`TranslateNow`/`TranslateZonedNow`/`TranslateZonedUtcNow` from bare-keyword forms to function-call forms (now(), current_localtimestamp()) to fix ON CONFLICT DO UPDATE SET binder misparsing the bare keyword as a column reference; `TranslateStringJoin`'s `BuildAggregateNullsOrderBy` call now sources NullsDefaultOrdering from `translationContext.ProviderFlags.DefaultNullsOrdering` instead of a hardcoded literal.
 
 </details>

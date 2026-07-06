@@ -3,8 +3,8 @@ area: PROV-CLICKHOUSE
 kind: area-index
 sources: [code]
 confidence: high
-last_verified: 2026-06-14
-last_verified_sha: b3340aa9ded15ffc626983fd202e6399daa081ca
+last_verified: 2026-07-05
+last_verified_sha: 36ee4f82f06eaf242b052ade8c87121d251a6165
 coverage_tier_1: 10/10
 coverage_tier_2: 13/13
 ---
@@ -98,6 +98,8 @@ The cross-provider relationship with PROV-MYSQL: `ClickHouseProviderDetector` do
 
 **Table hints** -- `BuildTableExtensions` emits `TableHint` and `TablesInScopeHint` extensions with `" "` (space) as the prefix separator before the first hint token (`ClickHouseSqlBuilder.cs:512`). PR #5449 fixed a missing space between the table name and the hint keyword (e.g. `FINAL`) that caused malformed SQL when a `TableHint` was applied.
 
+**Window function NULL handling** -- `WindowFunctionRespectNullsRequired` emits `RESPECT NULLS` only for `FIRST_VALUE`/`LAST_VALUE`/`NTH_VALUE` (ClickHouse value window functions skip NULLs by default); `LEAD`/`LAG` are excluded because ClickHouse rejects the keyword there ("Function lead does not support RESPECT NULLS") (`ClickHouseSqlBuilder.cs:37-41`). See also the "Window functions" subsystem below for the companion translator-level capability flags.
+
 **DISTINCT predicate** -- uses the IS DISTINCT fallback implementation.
 
 **InsertOrUpdate** -- the provider flag `IsInsertOrUpdateSupported = true` is set deliberately, but the SQL builder and optimizer do not implement it -- the intent is to let the flag flow into query pipeline diagnostics rather than generate broken SQL. The comment in `ClickHouseDataProvider.cs:46` states "we enable InsertOrUpdate deliberately here and then throw exception from SqlBuilder".
@@ -107,7 +109,7 @@ The cross-provider relationship with PROV-MYSQL: `ClickHouseProviderDetector` do
 `ClickHouseSqlOptimizer` extends `BasicSqlOptimizer`. Key transformations in `FinalizeStatement`:
 
 1. **`DisableParameters`** -- converts every `SqlParameter` to an inline literal by setting `IsQueryParameter = false`. This is unconditional; no provider configuration overrides it (`ClickHouseSqlOptimizer.cs:47`).
-2. **`FixCteAliases`** -- copies CTE field names into the SELECT column aliases of the CTE body, and sets `DoNotSetAliases = true` to block later rewriting (`ClickHouseSqlOptimizer.cs:65`).
+2. **`FixCteAliases`** -- copies CTE field names into the SELECT column aliases of the CTE body, and sets `DoNotSetAliases = true` to block later rewriting (`ClickHouseSqlOptimizer.cs:65`). The propagated name source is `CteField.Name` (changed from `Alias ?? PhysicalName`), aligning the CTE body's column alias with the CTE clause's own field name.
 3. **`CorrectUpdateSetters`** -- standard basic-optimizer update-setter normalization.
 
 The optimizer creates `ClickHouseSqlExpressionConvertVisitor` via `CreateConvertVisitor`, passing the `ClickHouseOptions` instance to enable `UseStandardCompatibleAggregates` checks at visitor creation time.
@@ -184,8 +186,17 @@ Extends `ProviderMemberTranslatorDefault` with:
   - **`TrimStart` / `TrimEnd`** (PR #5515): `TranslateTrimStart` emits `trimLeft(value)` when no trim characters are specified, or `trim(LEADING {chars} FROM {value})` when trim characters are given. `TranslateTrimEnd` emits `trimRight(value)` or `trim(TRAILING {chars} FROM {value})` (`ClickHouseMemberTranslator.cs:278-297`).
   - **`string.Join`** (PR #5504): `TranslateStringJoin` signature extended with `bool withoutSeparator`. When `withoutSeparator` is `true`, the aggregate is configured with `HasSequenceIndex(0)` (no separator argument from the caller) and an empty-string constant is used as the separator in `arrayStringConcat`. When `false`, the existing `HasSequenceIndex(1).TranslateArguments(0)` path applies (separator at index 0 in arguments) (`ClickHouseMemberTranslator.cs:300-328`).
   - **`string.IsNullOrWhiteSpace`** -- `TranslateIsNullOrWhiteSpace` emits `empty(replaceRegexpAll(coalesce({value}, ''), '<WHITESPACES_REGEX>', ''))`. The `coalesce` handles NULL inline so no separate `IS NULL OR` branch is needed (`ClickHouseMemberTranslator.cs:563`).
-- **Guid** -- `generateUUIDv4()` for `Guid.NewGuid()`; `Guid.ToString()` -> `lower(toString(uuid))`.
+- **Guid** -- `generateUUIDv4()` for `Guid.NewGuid()`; `Guid.ToString()` -> `lower(toString(uuid))`. `TranslateNewGuid7Method` maps `Sql.NewGuid7()` / `Guid.CreateVersion7()` to `generateUUIDv7()` -- emitted unconditionally since linq2db has no ClickHouse version-dialect split, though `generateUUIDv7()` itself requires ClickHouse 24.5+ (`ClickHouseMemberTranslator.cs:591-597`). The same cross-provider capability is also implemented by the PostgreSQL18, MariaDB, and DuckDB member translators.
 - **SqlTypes** -- `Money`/`SmallMoney` -> `Decimal128`; `DateTime2`/`DateTimeOffset` -> `DateTime64`.
+
+### Window functions (`ClickHouseWindowFunctionsMemberTranslator`)
+
+`ClickHouseMemberTranslator.CreateWindowFunctionsMemberTranslator()` returns `ClickHouseWindowFunctionsMemberTranslator`, a nested `WindowFunctionsMemberTranslator` subclass with ClickHouse-specific capability flags (`ClickHouseMemberTranslator.cs:614-632`):
+
+- **Unsupported** -- `IsCumeDistSupported`, `IsFrameGroupsSupported`, `IsFrameExclusionSupported`, `IsPercentileContSupported`, `IsPercentileDiscSupported` all `false`. ClickHouse has no `CUME_DIST`, frame `GROUPS` mode, frame `EXCLUDE`, or `PERCENTILE_CONT`/`PERCENTILE_DISC` equivalents.
+- **Supported** -- `IsAggregateDistinctSupported`, `IsVarianceSupported`, `IsVarianceBareSupported`, `IsCorrelationSupported` all `true`; `IsRowNumberNeedsCasting = true`. ClickHouse supports `COVAR_POP`/`COVAR_SAMP`/`CORR` and the explicit `STDDEV_POP`/`STDDEV_SAMP`/`VAR_POP`/`VAR_SAMP`, but not `REGR_*`.
+- **Bare STDDEV/VARIANCE mapping** -- ClickHouse has no bare `STDDEV`/`VARIANCE` keyword. Since `Sql.Window.StdDev`/`Variance` are defined as *sample* statistics in linq2db, the bare API maps to the explicit sample functions (`StdDevFunctionName = "STDDEV_SAMP"`, `VarianceFunctionName = "VAR_SAMP"`) rather than being gated off -- same SQL ClickHouse already accepts for the explicit `StdDevSamp`/`VarSamp` calls (`ClickHouseMemberTranslator.cs:622-629`).
+- Companion builder-level behavior: `ClickHouseSqlBuilder.WindowFunctionRespectNullsRequired` (see SQL builder section above) restricts `RESPECT NULLS` emission to `FIRST_VALUE`/`LAST_VALUE`/`NTH_VALUE`.
 
 ## Key types
 
@@ -195,7 +206,7 @@ Extends `ProviderMemberTranslatorDefault` with:
 | `ClickHouseOctonicaDataProvider` | same | Concrete for Octonica |
 | `ClickHouseDriverDataProvider` | same | Concrete for ClickHouse.Driver |
 | `ClickHouseMySqlDataProvider` | same | Concrete for MySqlConnector |
-| `ClickHouseSqlBuilder` | `Internal/.../ClickHouseSqlBuilder.cs` | SQL text generation; owns `ConcatStyle=Function` / `ConcatFunctionName="concat"` |
+| `ClickHouseSqlBuilder` | `Internal/.../ClickHouseSqlBuilder.cs` | SQL text generation; owns `ConcatStyle=Function` / `ConcatFunctionName="concat"`; `WindowFunctionRespectNullsRequired` gates RESPECT NULLS to FIRST_VALUE/LAST_VALUE/NTH_VALUE |
 | `ClickHouseSqlOptimizer` | `Internal/.../ClickHouseSqlOptimizer.cs` | Statement rewrite; owns DisableParameters and FixCteAliases |
 | `ClickHouseSqlExpressionConvertVisitor` | `Internal/.../ClickHouseSqlExpressionConvertVisitor.cs` | Expression-level rewrites; LIKE, bitwise, casts, aggregate suffixes |
 | `ClickHouseMappingSchema` | `Internal/.../ClickHouseMappingSchema.cs` | Type mappings, literal generators, three driver-specific sub-schemas |
@@ -203,7 +214,8 @@ Extends `ProviderMemberTranslatorDefault` with:
 | `ClickHouseProviderDetector` | `Internal/.../ClickHouseProviderDetector.cs` | Auto-detection by name/file probe |
 | `ClickHouseBulkCopy` | `Internal/.../ClickHouseBulkCopy.cs` | Three ProviderSpecific paths + multi-row fallback |
 | `ClickHouseSchemaProvider` | `Internal/.../ClickHouseSchemaProvider.cs` | Schema via `system.tables` / `system.columns` |
-| `ClickHouseMemberTranslator` | `Internal/.../Translation/ClickHouseMemberTranslator.cs` | LINQ member -> SQL function mapping; TrimStart/TrimEnd (PR #5515); string.Join withoutSeparator (PR #5504); IsNullOrWhiteSpace via replaceRegexpAll |
+| `ClickHouseMemberTranslator` | `Internal/.../Translation/ClickHouseMemberTranslator.cs` | LINQ member -> SQL function mapping; TrimStart/TrimEnd (PR #5515); string.Join withoutSeparator (PR #5504); IsNullOrWhiteSpace via replaceRegexpAll; NewGuid7 -> generateUUIDv7(); CreateWindowFunctionsMemberTranslator() |
+| `ClickHouseWindowFunctionsMemberTranslator` (nested) | `Internal/.../Translation/ClickHouseMemberTranslator.cs` | Window-function capability flags; bare STDDEV/VARIANCE mapped to STDDEV_SAMP/VAR_SAMP |
 | `ClickHouseTools` | `DataProvider/ClickHouse/ClickHouseTools.cs` | Public registration API |
 | `ClickHouseOptions` | `DataProvider/ClickHouse/ClickHouseOptions.cs` | Provider options record |
 | `ClickHouseProvider` (enum) | `DataProvider/ClickHouse/ClickHouseProvider.cs` | Client selector |
@@ -237,7 +249,7 @@ Extends `ProviderMemberTranslatorDefault` with:
 | File | Notes |
 |---|---|
 | `Internal/DataProvider/ClickHouse/ClickHouseSqlExpressionConvertVisitor.cs` | Bitwise/decimal/LIKE/cast/aggregate rewrites; string concat rewrite removed (PR #5504) |
-| `Internal/DataProvider/ClickHouse/Translation/ClickHouseMemberTranslator.cs` | Date, math, string, Guid LINQ member translations; TrimStart/TrimEnd added (PR #5515); string.Join withoutSeparator (PR #5504); IsNullOrWhiteSpace via replaceRegexpAll |
+| `Internal/DataProvider/ClickHouse/Translation/ClickHouseMemberTranslator.cs` | Date, math, string, Guid LINQ member translations; TrimStart/TrimEnd added (PR #5515); string.Join withoutSeparator (PR #5504); IsNullOrWhiteSpace via replaceRegexpAll; NewGuid7 -> generateUUIDv7(); nested ClickHouseWindowFunctionsMemberTranslator |
 | `Internal/DataProvider/ClickHouse/ClickHouseSchemaProvider.cs` | system.tables / system.columns queries |
 | `Internal/DataProvider/ClickHouse/ClickHouseSpecificQueryable.cs` | Thin wrapper implementing `IClickHouseSpecificQueryable<T>` |
 | `Internal/DataProvider/ClickHouse/ClickHouseSpecificTable.cs` | Thin wrapper implementing `IClickHouseSpecificTable<T>` |
@@ -271,6 +283,7 @@ Extends `ProviderMemberTranslatorDefault` with:
 - **v7 migration TODO** -- `BulkCopyRowsCopied.RowsCopied` is currently `int`; a comment in the new-client bulk-copy path marks it for migration to `long` in v7 (`ClickHouseBulkCopy.cs:638`).
 - **`CURRENT_TIMESTAMP` parser bug in ClickHouse** -- `TranslateServerNow` deliberately avoids emitting `CURRENT_TIMESTAMP` and routes through `now()` instead, because `CURRENT_TIMESTAMP` (a ClickHouse alias for `now()`) triggers CH parser bugs in some server versions (`ClickHouseMemberTranslator.cs:221`).
 - **`string.Join` ORDER BY with multiple string keys** -- the `TranslateStringJoin` implementation falls back to a no-order-by path when the ORDER BY contains a string DESC key that is not the first key, or when a string DESC first key is combined with other string keys. The fallback invokes `composer.SetFallback(fc => fc.AllowOrderBy(false))` (`ClickHouseMemberTranslator.cs:404-408`).
+- **Window function capability gaps** -- `ClickHouseWindowFunctionsMemberTranslator` reports no `CUME_DIST`, no frame `GROUPS` mode, no frame `EXCLUDE`, and no `PERCENTILE_CONT`/`PERCENTILE_DISC` support -- ClickHouse has no native equivalents (`ClickHouseMemberTranslator.cs:616-620`). `LEAD`/`LAG` cannot take `RESPECT NULLS` (ClickHouse parser rejects the keyword there), so `WindowFunctionRespectNullsRequired` only applies it to `FIRST_VALUE`/`LAST_VALUE`/`NTH_VALUE` (`ClickHouseSqlBuilder.cs:37-41`).
 
 ## Inbound / outbound dependencies
 
@@ -314,5 +327,10 @@ Read (this delta run -- sha b3340aa9):
 - `Source/LinqToDB/Internal/DataProvider/ClickHouse/ClickHouseDataProvider.cs` -- confirmed `IsSupportedSimpleCorrelatedSubqueries = true` and `SupportsPredicatesComparison = true` flags present; no new functional additions beyond prior documentation
 - `Source/LinqToDB/Internal/DataProvider/ClickHouse/ClickHouseProviderDetector.cs` -- no changes; string-matching and assembly-probe detection logic matches existing documentation
 - `Source/LinqToDB/Internal/DataProvider/ClickHouse/Translation/ClickHouseMemberTranslator.cs` -- added `TranslateIsNullOrWhiteSpace` (emits `empty(replaceRegexpAll(coalesce(v,''), regex, ''))`); confirmed `TranslateDateTimeOffsetTruncationToTime` delegates to `CommonTruncationToTime` shared helper
+
+Read (this delta run -- sha 36ee4f82f):
+- `Source/LinqToDB/Internal/DataProvider/ClickHouse/ClickHouseSqlBuilder.cs` -- added `WindowFunctionRespectNullsRequired` override: emits `RESPECT NULLS` for `FIRST_VALUE`/`LAST_VALUE`/`NTH_VALUE` only (ClickHouse rejects the keyword on `LEAD`/`LAG`)
+- `Source/LinqToDB/Internal/DataProvider/ClickHouse/ClickHouseSqlOptimizer.cs` -- `FixCteAliases` field source changed from `cte.Fields[i].Alias ?? cte.Fields[i].PhysicalName` to `cte.Fields[i].Name`; no other functional changes
+- `Source/LinqToDB/Internal/DataProvider/ClickHouse/Translation/ClickHouseMemberTranslator.cs` -- added `CreateWindowFunctionsMemberTranslator()` returning new nested `ClickHouseWindowFunctionsMemberTranslator` (disables CUME_DIST/frame GROUPS/frame EXCLUDE/PERCENTILE_CONT/PERCENTILE_DISC; enables aggregate-distinct/variance/correlation; maps bare STDDEV/VARIANCE to STDDEV_SAMP/VAR_SAMP; row-number needs casting); added `TranslateNewGuid7Method` mapping `Sql.NewGuid7()`/`Guid.CreateVersion7()` to `generateUUIDv7()`; minor no-op refactor of `TranslateNewGuidMethod`; removed unused `LinqToDB.Internal.Common` using
 
 </details>

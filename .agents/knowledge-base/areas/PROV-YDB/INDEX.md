@@ -3,9 +3,9 @@ area: PROV-YDB
 kind: area-index
 sources: [code]
 confidence: high
-last_verified: 2026-06-15
-last_verified_sha: b3340aa9ded15ffc626983fd202e6399daa081ca
-coverage_tier_1: 13/13
+last_verified: 2026-07-05
+last_verified_sha: 36ee4f82f06eaf242b052ade8c87121d251a6165
+coverage_tier_1: 15/15
 coverage_tier_2: 8/8
 ---
 
@@ -24,6 +24,8 @@ YDB is a distributed NewSQL database by Yandex, queried via YQL (a SQL dialect).
 
 All calls into these assemblies are bridged via `TypeMapper` wrappers. There is no provider-selection enum (single driver family, unlike PROV-SQLSERVER or PROV-MYSQL), and there is no `YdbProviderDetector`; provider detection is performed in `YdbTools.ProviderDetector` (`DataProvider/Ydb/YdbTools.cs:26`) by checking whether `ProviderName` or `ConfigurationString` contains `"Ydb"`.
 
+For schema introspection, `YdbProviderAdapter` also wraps `Ydb.Sdk.Ado.Session.ISession`, `Ydb.Sdk.IDriver`, `Ydb.Sdk.Ado.YdbSchema` (internal-static `DescribeTable`, resolved via `[WrappedBindingFlags]`), `Ydb.Sdk.Ado.Schema.YdbTableDescription`, and `Ydb.Sdk.Ado.Schema.DescribeTableSettings`. `YdbProviderAdapter.GetPrimaryKeys(DbConnection, IEnumerable<string>)` (`YdbProviderAdapter.cs:225`) resolves the driver once per batch and reads each table's ordered PK columns via the gRPC describe call -- the only source for PK metadata, since neither SQL introspection nor `GetSchema("Columns")` expose it.
+
 ### Data provider
 
 `YdbDataProvider` (`Internal/DataProvider/Ydb/YdbDataProvider.cs:21`) extends `DynamicDataProviderBase<YdbProviderAdapter>`. Notable `SqlProviderFlags` settings:
@@ -34,6 +36,13 @@ All calls into these assemblies are bridged via `TypeMapper` wrappers. There is 
 - `IsCommonTableExpressionsSupported = true` but emulated via table expressions (see `YdbSqlOptimizer`).
 - `SupportedCorrelatedSubqueriesLevel = 0` -- correlated subqueries not supported (simple correlated subqueries are handled via CTE promotion).
 - `IsSupportedSimpleCorrelatedSubqueries = false` -- explicitly set alongside `SupportedCorrelatedSubqueriesLevel = 0` (`YdbDataProvider.cs:55`).
+- `IsSubQueryOrderBySupported = true`, `IsUnionAllOrderBySupported = true`.
+- `IsOrderByAggregateFunctionSupported = false` -- YQL rejects an aggregate function directly in `ORDER BY`; it must be projected as a column and referenced by alias, so the aggregate-projecting subquery is kept un-flattened (`YdbDataProvider.cs:36`).
+- `IsDistinctSetOperationsSupported = false`.
+- `DefaultNullsOrdering = NullsDefaultOrdering.Smallest` -- NULLS ordering is emulated (`IsNullsOrderingSupported` left unset); NULL sorts as the smallest value.
+- `RowConstructorSupport = RowFeature.Equality | Comparisons | Between | In | UpdateLiteral`.
+- `SupportsPredicatesComparison = true`, `IsDistinctFromSupported = true`.
+- `IsSupportsJoinWithoutCondition = false` -- YQL rejects a `JOIN ON` without a real input-dependent predicate ("each equality predicate argument must depend on exactly one JOIN input"), so the engine must not emit `JOIN ON 1=1` (`YdbDataProvider.cs:59`).
 
 `YdbDataProvider` overrides `SetParameter` with extensive numeric type coercion covering all integer widths (`sbyte`, `byte`, `short`, `ushort`, `int`, `uint`, `long`, `ulong`) and floating-point types (`float`, `double`, `decimal` coercions also cover `DataType.Single`, `DataType.Double`, `DataType.DecFloat`). `SetParameterType` maps linq2db `DataType` values to `YdbDbType` enum members. The `DataType.Array` flag is handled inline: if set, the `YdbDbType.List` flag is OR-ed into the resulting type.
 
@@ -42,9 +51,21 @@ Special parameter handling:
 - `char` is always promoted to `string` (provider has no char parameter type).
 - `DataType.Binary`/`VarBinary` string values are UTF-8-encoded before passing.
 - `DataType.Yson` string values are UTF-8-encoded to `byte[]`.
-- `DateTime` values with `DateTimeKind.Local` are converted to UTC; `Unspecified` kind is re-specified as UTC. `DateTimeOffset` values are converted to `UtcDateTime`. This applies to `DataType.Date`, `Date32`, `DateTime`, `DateTime64`, `DateTime2`, `Timestamp64` (`YdbDataProvider.cs:368-385`).
-- `GetSchemaProvider()` throws `NotImplementedException` -- schema introspection is not implemented.
+- `DateTime` values with `DateTimeKind.Local` are converted to UTC; `Unspecified` kind is re-specified as UTC. `DateTimeOffset` values are converted to `UtcDateTime`. This applies to `DataType.Date`, `Date32`, `DateTime`, `DateTime64`, `DateTime2`, `DateTimeOffset`, `Timestamp64` (`YdbDataProvider.cs:375-392`).
+- `GetSchemaProvider()` returns a `YdbSchemaProvider` instance (`YdbDataProvider.cs:119`) -- schema introspection is now implemented (see Schema provider subsystem below).
 - `IsDBNullAllowed` always returns `true` (provider does not implement `GetSchemaTable`).
+
+### Schema provider (`YdbSchemaProvider`)
+
+`YdbSchemaProvider` (`Internal/DataProvider/Ydb/YdbSchemaProvider.cs:19`) extends `SchemaProviderBase`. YDB has no SQL-queryable catalog (no `information_schema`; `.sys` views are monitoring-only), so it reads metadata through the ADO `GetSchema` collections:
+
+- `GetTables` reads `GetSchema("Tables")`, skips `.sys`-prefixed paths and rows typed `SYSTEM_TABLE`, and splits each YDB path (`dir/sub/Customers`) into `SchemaName`/`TableName` via `SplitPath` -- mirrors `YdbSqlBuilder.BuildObjectName`'s `/Database/Schema/Name` layout.
+- `GetColumns` reads `GetSchema("Columns")`; `ParseType` splits a raw type string like `"Decimal(22, 9)"` into name/precision/scale.
+- `GetPrimaryKeys` batches all table IDs into one call to `YdbProviderAdapter.Instance.GetPrimaryKeys` (one gRPC describe pass for the whole batch) -- `GetSchema("Columns")` doesn't expose PK flags.
+- `GetForeignKeys` always returns empty -- YDB has no foreign keys.
+- `GetDataTypes` always returns an empty list (`GetDbType`/`GetDataType` overloads return `null`); type resolution instead goes through a private `_typeMap` dictionary keyed by the YQL type name the driver reports (`SchemaUtils.YqlTableType`: `Utf8` -> `"Text"`, `String` -> `"Bytes"`, `Decimal` -> `"Decimal(p, s)"`, everything else the primitive enum name).
+
+`GetServerVersion` executes `SELECT Version();`.
 
 ### SQL builder (`YdbSqlBuilder`)
 
@@ -56,7 +77,7 @@ CTE emission is non-standard: each CTE is written as `$name = SELECT ...;` (doll
 
 Table path construction (`BuildObjectName`) supports YDB's hierarchical path format: `/database/path/tablename` assembled from `SqlObjectName.Database`, `Schema`, and `Name` components.
 
-`CAST` is wrapped in `Unwrap(...)` (`BuildSqlCastExpression`) because YDB's `CAST` returns an Optional type.
+`CAST` is wrapped in `Unwrap(...)` (`BuildSqlCastExpression`) only when the cast result cannot be null -- YQL `CAST` yields `Optional<T>`, but `Unwrap()` on a nullable cast throws "Failed to unwrap empty optional" at runtime when the value is actually NULL (`YdbSqlBuilder.cs:585-600`).
 
 `RETURNING` is supported for identity retrieval (`BuildGetIdentity`) but RETURNING columns cannot be table-qualified (`_buildTableName = false` during `BuildOutputColumnExpressions`).
 
@@ -68,9 +89,15 @@ Identity field DDL uses PostgreSQL-style serials: `SMALLSERIAL`, `SERIAL`, `BIGS
 
 `CanSkipRootAliases` returns `false` -- duplicate aliases in the final SELECT are not supported by YDB (`YdbSqlBuilder.cs:100`).
 
-`BuildInListPredicate` materialises parameters from list-typed `SqlParameter` values and re-emits them as individual `$Ids{bucket}_{n}` named parameters to work around YDB's lack of array-typed IN parameters.
+`BuildInListPredicate` materialises parameters from list-typed `SqlParameter` values and re-emits them as individual `$Ids{bucket}_{n}` named parameters to work around YDB's lack of array-typed IN parameters. It also strips NULL items from the materialized list and re-adds their semantics explicitly: under `CompareNulls.LikeClr` a NULL in the list becomes an `OR ... IS NULL`; under `LikeSql` a NULL anywhere in a `NOT IN` list collapses the whole predicate to `false` (three-valued logic), and an all-NULL `IN` list also collapses to `false` -- YQL forbids a NULL literal directly inside an `IN` list (`YdbSqlBuilder.cs:460-492`).
 
 **String concatenation via `ConcatStyle` (PR #5504):** `YdbSqlBuilder` overrides `ConcatStyle` to return `ConcatBuildStyle.Pipes` (`YdbSqlBuilder.cs:36`). This instructs `BasicSqlBuilder` to emit `||` when building `SqlConcatExpression` nodes introduced by PR #5504. This is the builder-level concat path; the visitor-level binary `+` rewrite in `YdbSqlExpressionConvertVisitor` now covers only `Binary`/`VarBinary`/`Blob` byte concatenation (the string-type `+` arm was removed -- see Expression conversion visitor section).
+
+**VALUES-table typing and from-less/empty sources:** `IsSqlValuesTableValueTypeRequired` forces `CAST(value AS <type>)` on a VALUES cell when the first row holds a bare numeric literal (YDB may infer a narrower type than the column) or when every cell in a column is untyped NULL -- mirrors the PostgreSQL builder (`YdbSqlBuilder.cs:40-47`). `SupportsColumnAliasesInScalarSource => false` -- a derived column list is legal only on `VALUES`, not a scalar/raw-SQL subquery source. `BuildSelectClause`/`BuildEmptyValuesFrom` supply a one-row dummy source `FROM (SELECT 1) AS dual` for a from-less filtered constant query or an empty VALUES projection -- YQL rejects `WHERE` without `FROM` and has no `DUAL` (mirrors `MySql57SqlBuilder`) (`YdbSqlBuilder.cs:312-329`).
+
+`BuildSql` pre-registers every CTE name with the parameter normalizer before the statement body is built, so a parameter name generated during the build can't collide with a `$name` CTE variable -- resolves the conflict noted in `BasicSqlOptimizer.FinalizeCte` (`YdbSqlBuilder.cs:333-354`). `BuildFromClause` is skipped entirely for UPDATE statements (`YdbSqlBuilder.cs:377-381`).
+
+`BuildDataTypeFromDataType` renders DDL/CAST target type names (`Bool`, `Int8`/`Uint8`/`Int16`/`Uint16`/`Int32`/`Uint32`/`Int64`/`Uint64`, `Float`, `Double`, `DyNumber`, `Bytes`, `Text`, `Json`, `JsonDocument`, `Yson`, `Uuid`, `Date`/`Date32`/`Datetime`/`Datetime64`/`Timestamp`/`Timestamp64`, `Interval`/`Interval64`, `Tz*` variants, `Decimal(p,s)`), wrapping the result in `List<...>` when `DataType.Array` is set.
 
 ### SQL optimizer (`YdbSqlOptimizer`)
 
@@ -79,6 +106,8 @@ Identity field DDL uses PostgreSQL-style serials: `SMALLSERIAL`, `SERIAL`, `BIGS
 `TransformStatement` disables table aliases on DELETE and UPDATE (sets alias to `$`; the dollar-sign is YDB's anonymous scope marker). UPDATE is rewritten to alternative form via `GetAlternativeUpdate`. INSERT with a `SELECT` sub-query has column aliases injected from the insert items so that column names propagate correctly (`CorrectInsertStatement`).
 
 `Finalize` promotes all scalar correlated sub-queries to CTEs via `MoveScalarSubQueriesToCte`. The transformation walks the AST and wraps any single-column, non-dependent `SelectQuery` found in a column, predicate, or set-expression position into a `CteClause`+`SqlCteTable` pair. After promotion it calls `FinalizeCte` to finalise names.
+
+The rewrite itself now lives in a dedicated visitor, `YdbScalarSubQueryToCteVisitor` (`Internal/DataProvider/Ydb/YdbScalarSubQueryToCteVisitor.cs:25`), pooled via `ObjectPool<YdbScalarSubQueryToCteVisitor>` (`Pool`, capacity 100). It classifies each element's *position* (`Scalar` -- column/predicate/scalar-expression slot, becomes a bare `$cte` reference; `Wrapped` -- an IN/EXISTS operand, becomes a trivial `SELECT <col> FROM $cte`; `Excluded` -- table source, statement root, or an equality-comparison operand) via `ClassifyChildren`, bottom-up in a single finalize-phase pass (`VisitMode.Modify`). `subquery = x` / `subquery <> x` comparisons on a single-column non-correlated subquery rewrite to `x [NOT] IN (subquery)` (`TryRewriteScalarComparisonToIn`) before the generic position-based rewrite runs. Structurally-identical subqueries (compared via `ISqlExpressionEqualityComparer`) share one CTE (`_scalarCtes` dictionary), so a subquery duplicated across clauses -- e.g. a SELECT-column copy plus the rendered INSERT/UPDATE item -- collapses to a single named query. `YdbSqlOptimizer.MoveScalarSubQueriesToCte` also walks `SqlUpdateStatement.Update` (so `UPDATE SET` subqueries move to CTEs, processed first so duplicate SELECT-column copies dedup against them) and the bodies of any CTEs that already existed before this pass (e.g. the eager-load union carrier's `query.Count()` FROM-less scalar subquery), iterating only the pre-pass CTE count since lifted CTEs carry no further inline subqueries.
 
 `ReplaceTableAll` clears `SELECT *` from `EXISTS` sub-queries and replaces them with `SELECT 1` to avoid ambiguous duplicate column names.
 
@@ -89,10 +118,20 @@ Identity field DDL uses PostgreSQL-style serials: `SMALLSERIAL`, `SERIAL`, `BIGS
 `YdbSqlExpressionConvertVisitor` (`Internal/DataProvider/Ydb/YdbSqlExpressionConvertVisitor.cs:11`) extends `SqlExpressionConvertVisitor`.
 
 - Byte concatenation (`+` on `Binary`/`VarBinary`/`Blob`) is rewritten to `||`. **Note (PR #5504):** the previous string-type concatenation arm (`+` on `NVarChar`/`Char`/`VarChar` -> `||`) has been removed; string concat is now handled by `ConcatStyle.Pipes` in `YdbSqlBuilder` via the `SqlConcatExpression` AST node.
-- Bitwise operations (`&`, `|`, `^`) require unsigned operands; operands are cast to unsigned via `SqlCastExpression` when needed.
+- Bitwise operations (`&`, `|`, `^`) require unsigned operands; operands are cast to unsigned via `SqlCastExpression` when needed. `ConvertSqlUnaryExpression` applies the same treatment to bitwise negation (`~`), casting a signed operand to unsigned when needed (`YdbSqlExpressionConvertVisitor.cs:75-88`).
+- `AlignFloatingDecimal` (called from `ConvertSqlBinaryExpression` for `+ - * / %`) casts a `Decimal` operand to `Double` when the other operand is floating-point -- YQL arithmetic rejects mixing a floating-point operand with a Decimal operand (`YdbSqlExpressionConvertVisitor.cs:131-150`).
+- `ConvertSqlFunction` routes `Math::Floor`/`Math::Ceil`/`Math::Trunc` through `Double` for a `Decimal` argument (those UDFs are Double-only), casting the result back to the original Decimal type.
+- `ConvertConversion` overrides several CAST rewrites that work around gaps in YQL's `CAST`:
+  - string -> `Datetime`/`Timestamp`: rewrites the conventional `'yyyy-MM-dd HH:mm:ss'` text to ISO-8601 (`Unicode::ReplaceAll` space->`'T'`, append `'Z'`) and parses via `DateTime::ParseIso8601` + `DateTime::MakeDatetime`/`MakeTimestamp` -- a bare `CAST` only accepts ISO input and would return an empty Optional (`Unwrap` then throws "Failed to unwrap empty optional").
+  - string -> `Interval`/`Time`: splits on `:` (`Unicode::SplitToList`/`ListHead`/`ListSkip`) and sums the parts as seconds via `DateTime::IntervalFromSeconds`, since `CAST(string AS Interval)` only parses ISO-8601 durations and silently zeroes a conventional `'H:MM:SS'` string.
+  - floating -> `Decimal`: routed through a string cast (`CAST(CAST(x AS Text) AS Decimal(p,s))`) -- YQL has no direct float->Decimal cast.
+  - `Decimal` -> integer: routed through `Double` -- YQL's `CAST(Decimal AS int)` rounds, but C# `(int)decimal` truncates toward zero; `Double`'s truncating cast matches C# semantics.
+- `VisitInSubQueryPredicate` folds a row-valued (`SqlRowExpression`) `IN`-subquery projecting more than one column into a single tuple column (`(a, b) IN (SELECT (c1, c2) ...)`) -- YQL's `IN` requires a single-column source and rejects the row-valued N-column form; the correlated-EXISTS rewrite the base class would otherwise use is unavailable since YDB doesn't support correlated subqueries.
 - `TO_LOWER`/`TO_UPPER`/`REPLACE` pseudo-functions map to `Unicode::ToLower`, `Unicode::ToUpper`, `Unicode::ReplaceAll`.
 - LIKE uses `%` and `_` as escape characters. Case-insensitive search emits `ILIKE`.
 - `CASE WHEN ... THEN ... END` without `ELSE` gets a `NULL` ELSE appended (required by YQL).
+- `ConcatRequiresExplicitStringCast => false` -- YQL's `||` auto-coerces non-string operands to text, so an explicit `CAST(x AS String)` on concat operands is redundant.
+- `SupportsNullIf => false` -- YQL has no `NULLIF` builtin; the `CASE WHEN a = b THEN NULL ELSE a END` form is kept instead of folding to `NULLIF`.
 - `SupportsNullInColumn` returns `false`.
 
 ### Member translator (`YdbMemberTranslator`)
@@ -112,7 +151,7 @@ Quarter date-add uses `DateTime::ShiftMonths` with `increment * 3` (`YdbMemberTr
 
 All four overrides resolve to `CurrentUtcTimestamp()` or unsupported; there is no fallback to `CURRENT_TIMESTAMP`.
 
-`DateTime::TimeOfDay` is used for `TranslateDateTimeTruncationToTime` (returns `Interval`-typed result).
+`DateTime::TimeOfDay` is used for `TranslateDateTimeTruncationToTime` (returns `Interval`-typed result). `TranslateMakeDateTime` builds a YQL timestamp/date from constructor parts by assembling the conventional `'yyyy-MM-dd HH:mm:ss[.fff]'` text (zero-padding each component via `Unicode::Substring(CAST(100/1000 + x AS String), ...)`, which also keeps the expression out of client-side constant folding) and `CAST`ing it -- the string->Datetime/Timestamp rewrite in `YdbSqlExpressionConvertVisitor.ConvertConversion` owns the actual ISO parsing, so the format lives in one place. `TranslateDateTimeTruncationToDate` truncates via `DateTime::Split` -> `DateTime::StartOfDay` -> `DateTime::MakeTimestamp` rather than a `CAST(Timestamp AS Date AS Timestamp)` round-trip, because `SqlCastExpression.IsMandatory` doesn't survive the remote LinqService serialization boundary and the round-trip would collapse (silently skipping truncation) only on the remote side.
 
 String functions: `PadLeft` -- `String::LeftPad`; `Replace` -- `Unicode::ReplaceAll`; `String.Join` emits `AGGREGATE_LIST` + `Unicode::JoinFromList` with complex ORDER BY simulation via `ListSort`+key-lambda+`ListMap`. `ListConcat`+`AsList`+`ListNotNull` handle `CONCAT_WS`.
 
@@ -128,11 +167,15 @@ Guid-to-string -- `CAST AS Utf8`. `Guid.NewGuid()` is commented out (would gener
 
 `SqlTypesTranslation.ConvertBit` throws `NotSupportedException`. `SqlTypesTranslation.ConvertDateOnly` (under `#if SUPPORTS_DATEONLY`) also throws `NotSupportedException("52")` (`YdbMemberTranslator.cs:423-428`).
 
+**Window functions (`YdbWindowFunctionsMemberTranslator`):** a nested `WindowFunctionsMemberTranslator` override (`YdbMemberTranslator.cs:784-799`), wired via `CreateWindowFunctionsMemberTranslator()`. Validated against `ydbplatform/local-ydb`: only `ROWS` frames are accepted (`IsFrameRangeSupported`, `IsFrameGroupsSupported`, `IsFrameExclusionSupported` all `false`); `PERCENTILE_CONT`/`PERCENTILE_DISC` unsupported (`IsPercentileContSupported`/`IsPercentileDiscSupported` `false`); `IGNORE`/`RESPECT NULLS` works for `FIRST_VALUE`/`LAST_VALUE`/`NTH_VALUE` (`IsValueNullTreatmentSupported = true`) but not `LEAD`/`LAG`; `LEAD`/`LAG` accept only value+offset, no default-value argument (`IsLeadLagDefaultSupported = false`); there is no `NTH_VALUE ... FROM LAST`.
+
 ### Bulk copy (`YdbBulkCopy`)
 
 `YdbBulkCopy` (`Internal/DataProvider/Ydb/YdbBulkCopy.cs:18`) extends `BasicBulkCopy`.
 
 Default bulk copy type (from `YdbOptions.BulkCopyType`) is `BulkCopyType.ProviderSpecific`. The provider-specific path calls `YdbProviderAdapter.BeginBulkCopy` which wraps `YdbConnection.BeginBulkUpsertImport(tableName, columnNames, cancellationToken)` -- this returns `IBulkUpsertImporter`. Rows are streamed through `IBulkUpsertImporter.AddRowAsync` and periodically flushed via `FlushAsync` every `MaxBatchSize` rows (default 10,000). Values are passed as provider-typed `DbParameter.Value` objects (not re-serialised as strings). If no unwrapped provider connection is available, falls back to `MultipleRowsCopy1`.
+
+`ProviderSpecificCopy`/`ProviderSpecificCopyAsync` also fall back to `MultipleRowsCopy`/`MultipleRowsCopyAsync` (row-by-row `INSERT`) whenever a transaction is already open on the connection -- YDB's `BulkUpsert` API cannot run inside an active transaction and takes no transaction argument; mirrors `InformixBulkCopy`'s handling of the same constraint.
 
 ### Retry policy (area-unique)
 
@@ -143,7 +186,7 @@ Default bulk copy type (from `YdbOptions.BulkCopyType`) is `BulkCopyType.Provide
 Default parameters mirror the YDB SDK defaults: 10 attempts; fast backoff base 5 ms, cap 500 ms; slow backoff base 50 ms, cap 5000 ms; idempotence disabled.
 
 `GetNextDelay` overrides base-class logic: for YDB-typed exceptions it dispatches on the status code name (string comparison, no hard SDK dependency):
-- `BadSession`/`SessionBusy` -- 0 ms.
+- `BadSession`/`SessionBusy`/`SessionExpired` -- 0 ms.
 - `Aborted`/`Undetermined` -- Full Jitter (fast parameters).
 - `Unavailable`/`ClientTransportUnknown`/`ClientTransportUnavailable` -- Equal Jitter (fast).
 - `Overloaded`/`ClientTransportResourceExhausted` -- Equal Jitter (slow).
@@ -155,7 +198,9 @@ Default parameters mirror the YDB SDK defaults: 10 attempts; fast backoff base 5
 
 `YdbMappingSchema` (`Internal/DataProvider/Ydb/YdbMappingSchema.cs:15`) extends `LockedMappingSchema`.
 
-Key constants: `DEFAULT_DECIMAL_PRECISION = 22`, `DEFAULT_DECIMAL_SCALE = 9`, `DEFAULT_TIMEZONE = "GMT"`.
+Key constants: `DEFAULT_DECIMAL_PRECISION = 22`, `DEFAULT_DECIMAL_SCALE = 9`, `DEFAULT_TIMEZONE = "GMT"`, `MAX_DECIMAL_PRECISION = 35` -- YQL rejects `Decimal` with precision above 35 (`Decimal(36,*)` -> type-annotation error).
+
+`GetCommonDecimalType(x, y)` (`YdbMappingSchema.cs:31`) widens two Decimal `DbDataType`s to a common precision/scale (max integer digits, max scale, capped at 35, preserving the integer part in full) so YQL constructs requiring identical Decimal types on both sides -- e.g. `MIN_OF`/`MAX_OF` in `YdbMemberTranslator.TranslateMinMax` -- can align mismatched operands without overflow.
 
 Type literal formats:
 - Integers: suffix-typed (`0ut` = UInt8, `0t` = Int8, `0s` = Int16, `0us` = UInt16, bare = Int32, `0u` = UInt32, `0l` = Int64, `0ul` = UInt64).
@@ -193,14 +238,17 @@ The provider-specific decimal wire encoding in `YdbProviderAdapter.MakeDecimalFr
 |---|---|---|
 | `YdbDataProvider` | `Internal/DataProvider/Ydb/YdbDataProvider.cs` | Main provider, `DynamicDataProviderBase<YdbProviderAdapter>` |
 | `YdbProviderAdapter` | `Internal/DataProvider/Ydb/YdbProviderAdapter.cs` | Dynamic driver loader; loads `Ydb.Sdk` + `Ydb.Protos` |
+| `YdbSchemaProvider` | `Internal/DataProvider/Ydb/YdbSchemaProvider.cs` | ADO-`GetSchema`-based schema introspection (Tables/Columns/PK via gRPC describe) |
 | `YdbSqlBuilder` | `Internal/DataProvider/Ydb/YdbSqlBuilder.cs` | YQL SQL emission, backtick quoting, CTE-as-assignment, `ConcatStyle.Pipes`, `NULLS FIRST/LAST` |
-| `YdbSqlOptimizer` | `Internal/DataProvider/Ydb/YdbSqlOptimizer.cs` | Scalar-subquery--CTE promotion, alias fixups, literal coercion |
-| `YdbSqlExpressionConvertVisitor` | `Internal/DataProvider/Ydb/YdbSqlExpressionConvertVisitor.cs` | Expression rewrites for YQL specifics |
-| `YdbMappingSchema` | `Internal/DataProvider/Ydb/YdbMappingSchema.cs` | Literal generators for all YDB types |
+| `YdbSqlOptimizer` | `Internal/DataProvider/Ydb/YdbSqlOptimizer.cs` | Scalar-subquery--CTE promotion (delegates to `YdbScalarSubQueryToCteVisitor`), alias fixups, literal coercion |
+| `YdbScalarSubQueryToCteVisitor` | `Internal/DataProvider/Ydb/YdbScalarSubQueryToCteVisitor.cs` | Pooled, position-classifying visitor lifting scalar subqueries to CTEs |
+| `YdbSqlExpressionConvertVisitor` | `Internal/DataProvider/Ydb/YdbSqlExpressionConvertVisitor.cs` | Expression rewrites for YQL specifics (CAST rewrites, bitwise/decimal alignment, row-valued IN) |
+| `YdbMappingSchema` | `Internal/DataProvider/Ydb/YdbMappingSchema.cs` | Literal generators for all YDB types; common-Decimal-type widening |
 | `YdbBulkCopy` | `Internal/DataProvider/Ydb/YdbBulkCopy.cs` | `IBulkUpsertImporter`-based native bulk upsert |
 | `YdbRetryPolicy` | `Internal/DataProvider/Ydb/YdbRetryPolicy.cs` | Full/Equal Jitter retry; mirrors YDB SDK defaults |
 | `YdbTransientExceptionDetector` | `Internal/DataProvider/Ydb/YdbTransientExceptionDetector.cs` | Reflection-based YDB exception inspector (no hard SDK dep) |
 | `YdbMemberTranslator` | `Internal/DataProvider/Ydb/Translation/YdbMemberTranslator.cs` | LINQ member--YQL function translation |
+| `YdbWindowFunctionsMemberTranslator` | `Internal/DataProvider/Ydb/Translation/YdbMemberTranslator.cs` (nested) | Window-function capability flags (ROWS-only frames, no PERCENTILE_CONT/DISC) |
 | `YdbOptions` | `DataProvider/Ydb/YdbOptions.cs` | Provider options: bulk copy type, decimal notation |
 | `YdbTools` | `DataProvider/Ydb/YdbTools.cs` | Public-surface static factory + pool management |
 | `YdbHints` | `DataProvider/Ydb/YdbHints.cs` | YQL query hints |
@@ -216,7 +264,9 @@ The provider-specific decimal wire encoding in `YdbProviderAdapter.MakeDecimalFr
 | `Internal/DataProvider/Ydb/YdbDataProvider.cs` | Main provider class |
 | `Internal/DataProvider/Ydb/YdbSqlBuilder.cs` | YQL SQL builder |
 | `Internal/DataProvider/Ydb/YdbSqlOptimizer.cs` | SQL optimizer |
+| `Internal/DataProvider/Ydb/YdbScalarSubQueryToCteVisitor.cs` | Scalar-subquery-to-CTE rewrite visitor (extracted from optimizer) |
 | `Internal/DataProvider/Ydb/YdbProviderAdapter.cs` | Dynamic adapter / driver wrapper |
+| `Internal/DataProvider/Ydb/YdbSchemaProvider.cs` | Schema introspection (new) |
 | `Internal/DataProvider/Ydb/YdbMappingSchema.cs` | Type mapping + literal generation |
 | `Internal/DataProvider/Ydb/YdbBulkCopy.cs` | Bulk upsert implementation |
 | `Internal/DataProvider/Ydb/YdbSqlExpressionConvertVisitor.cs` | Expression conversion |
@@ -242,20 +292,20 @@ The provider-specific decimal wire encoding in `YdbProviderAdapter.MakeDecimalFr
 
 ## Known issues / debt
 
-- **`GetSchemaProvider()` not implemented.** `YdbDataProvider.GetSchemaProvider()` throws `NotImplementedException` (`YdbDataProvider.cs:109`). Schema introspection is absent -- no `YdbSchemaProvider.cs` exists.
-- **Correlated subqueries not supported.** `SupportedCorrelatedSubqueriesLevel = 0` and `IsSupportedSimpleCorrelatedSubqueries = false`; the optimizer promotes scalar correlated sub-queries to CTEs, but multi-column or deeply nested correlated patterns have no fallback.
+- **Schema provider has narrow coverage.** `YdbSchemaProvider` (new) reads tables/columns via ADO `GetSchema` and PKs via a gRPC describe call, but `GetForeignKeys` always returns empty (YDB has no FKs) and `GetDataTypes` always returns an empty list -- type resolution is a private name->`(DataType,Type)` map, not a queryable provider catalog.
+- **Correlated subqueries not supported.** `SupportedCorrelatedSubqueriesLevel = 0` and `IsSupportedSimpleCorrelatedSubqueries = false`; the optimizer promotes scalar correlated sub-queries to CTEs via `YdbScalarSubQueryToCteVisitor`, but multi-column or deeply nested correlated patterns have no fallback.
 - **`OFFSET` without `LIMIT` not supported.** Tracked in YDB issue 11258. No workaround available (the CH `LIMIT big_num, X` workaround is documented as not working for YDB).
-- **Retry policy is opt-in.** `YdbRetryPolicy` is not wired automatically by `YdbDataProvider`; callers must register it explicitly via `DataOptions.UseRetryPolicy(new YdbRetryPolicy())`. A TODO comment in `YdbProviderAdapter.cs:27` notes the intent to add provider-specific retry with `IsTransientWhenIdempotent` support.
+- **Retry policy is opt-in.** `YdbRetryPolicy` is not wired automatically by `YdbDataProvider`; callers must register it explicitly via `DataOptions.UseRetryPolicy(new YdbRetryPolicy())`. A TODO comment in `YdbProviderAdapter.cs` notes the intent to add provider-specific retry with `IsTransientWhenIdempotent` support.
 - **`BeginTransaction(TxMode)` not supported.** YDB's extended transaction modes (snapshot, online RO, stale RO) are not exposed. Only Serializable read-write is used.
-- **`YdbStruct` not implemented.** A `TODO: YdbStruct` comment in `YdbProviderAdapter.cs:66` indicates struct support is absent.
+- **`YdbStruct` not implemented.** A `TODO: YdbStruct` comment in `YdbProviderAdapter.cs` indicates struct support is absent.
 - **`Guid.NewGuid()` translation commented out.** `YdbMemberTranslator.cs` notes that `RandomUuid` generates the same UUID for all invocations in a single query.
 - **`String.Join` ORDER BY with string DESC is partially restricted.** The translator falls back to no-ORDER when the pattern is unsupported (e.g., string DESC on a non-first key).
-- **`DateTimeOffset` truncation methods throw.** `TranslateDateTimeOffsetTruncationToDate` and `TranslateDateTimeOffsetTruncationToTime` throw `NotSupportedException` (`YdbMemberTranslator.cs:438`, `:444`). Date-part extraction for `DateTimeOffset` is supported (delegates to `DateTime::` functions).
-- **`TranslateNow` returns null.** Local-time `DateTime.Now` / `Sql.GetDate()` is explicitly unsupported (`YdbMemberTranslator.cs:467`); YDB has no local-time server clock. UTC variants (`UtcNow`, `ServerNow`, `ZonedUtcNow`) all resolve to `CurrentUtcTimestamp()`.
+- **`DateTimeOffset` truncation methods throw.** `TranslateDateTimeOffsetTruncationToDate` and `TranslateDateTimeOffsetTruncationToTime` throw `NotSupportedException` (`YdbMemberTranslator.cs:438`, `:444`). Date-part extraction for `DateTimeOffset` is supported (delegates to `DateTime::` functions); truncation for plain `DateTime` is supported (`TranslateDateTimeTruncationToDate`/`ToTime`).
 - **`SqlTypesTranslation.ConvertBit` throws `NotSupportedException`. `SqlTypesTranslation.ConvertDateOnly` (under `#if SUPPORTS_DATEONLY`) also throws `NotSupportedException("52")` (`YdbMemberTranslator.cs:423-428`).** Mapping `SqlTypes.SqlBoolean` is not implemented.
 - **`SqlTypesTranslation.ConvertDateOnly` throws `NotSupportedException`.**  Under `#if SUPPORTS_DATEONLY`, `ConvertDateOnly` throws `NotSupportedException("52")` (`YdbMemberTranslator.cs:423-428`).
 - **`modulo` operator commented out.** The `%` rewrite for decimal types in `YdbSqlExpressionConvertVisitor` is commented out; the comment suggests correctness concerns remain.
 - **`TrimStart`/`TrimEnd` with non-constant `trimChars` falls back to client-side eval.** `TranslateRegexTrim` returns `null` when `trimChars` is not a compile-time-constant `SqlValue<string>` -- the RE2 pattern must be a static literal for the YDB query planner.
+- **Window-frame support restricted to ROWS.** `YdbWindowFunctionsMemberTranslator` rejects RANGE/GROUPS frames and frame EXCLUDE, and `PERCENTILE_CONT`/`PERCENTILE_DISC`; `LEAD`/`LAG` has no default-value argument and there is no `NTH_VALUE ... FROM LAST`.
 
 ## Inbound / outbound dependencies
 
@@ -264,11 +314,11 @@ The provider-specific decimal wire encoding in `YdbProviderAdapter.MakeDecimalFr
 - `YdbRetryPolicy` is consumed by user code via `DataOptions`.
 
 **Outbound:**
-- `Internal/DataProvider/DataProviderBase` / `DynamicDataProviderBase` -- INTERNAL-API area.
+- `Internal/DataProvider/DataProviderBase` / `DynamicDataProviderBase`, `SchemaProviderBase` -- INTERNAL-API area.
 - `BasicSqlBuilder`, `BasicSqlOptimizer`, `SqlExpressionConvertVisitor` -- SQL-PROVIDER area.
 - `BasicBulkCopy`, `BulkCopyReader` -- INTERNAL-API area.
 - `RetryPolicyBase` (`Data/RetryPolicy/`) -- INFRA area.
-- `ProviderMemberTranslatorDefault` -- INTERNAL-API area.
+- `ProviderMemberTranslatorDefault`, `WindowFunctionsMemberTranslator` -- INTERNAL-API area.
 - `TypeMapper` (`Internal/Expressions/Types/TypeMapper`) -- INTERNAL-API area.
 - `Ydb.Sdk` assembly (dynamically loaded at runtime -- not a compile-time reference).
 - `Ydb.Protos` assembly (dynamically loaded at runtime -- decimal wire encoding only).
@@ -276,17 +326,19 @@ The provider-specific decimal wire encoding in `YdbProviderAdapter.MakeDecimalFr
 ## See also
 
 - [SQL-PROVIDER area](../SQL-PROVIDER/INDEX.md) -- `BasicSqlBuilder`, `BasicSqlOptimizer` base classes.
-- [INTERNAL-API area](../INTERNAL-API/INDEX.md) -- `DynamicDataProviderBase`, `BasicBulkCopy`, `TypeMapper`, `MemberTranslatorBase`.
+- [INTERNAL-API area](../INTERNAL-API/INDEX.md) -- `DynamicDataProviderBase`, `BasicBulkCopy`, `TypeMapper`, `MemberTranslatorBase`, `SchemaProviderBase`.
 - [INFRA area](../INFRA/INDEX.md) -- `RetryPolicyBase`, retry policy infrastructure.
 - [architecture/interceptors.md](../../architecture/interceptors.md) -- retry policy wiring via `DataOptions`.
 
 <details><summary>Coverage</summary>
 
-**Tier 1 -- read in full (13/13):**
+**Tier 1 -- read in full (15/15):**
 - `Internal/DataProvider/Ydb/YdbDataProvider.cs`
 - `Internal/DataProvider/Ydb/YdbSqlBuilder.cs`
 - `Internal/DataProvider/Ydb/YdbSqlOptimizer.cs`
+- `Internal/DataProvider/Ydb/YdbScalarSubQueryToCteVisitor.cs`
 - `Internal/DataProvider/Ydb/YdbProviderAdapter.cs`
+- `Internal/DataProvider/Ydb/YdbSchemaProvider.cs`
 - `Internal/DataProvider/Ydb/YdbMappingSchema.cs`
 - `Internal/DataProvider/Ydb/YdbBulkCopy.cs`
 - `Internal/DataProvider/Ydb/YdbSqlExpressionConvertVisitor.cs`
@@ -322,4 +374,21 @@ The provider-specific decimal wire encoding in `YdbProviderAdapter.MakeDecimalFr
 - `Internal/DataProvider/Ydb/YdbDataProvider.cs` -- added `IsSupportedSimpleCorrelatedSubqueries = false` flag (line 55); `SetParameter` now also handles `DataType.Single`, `DataType.Double`, `DataType.DecFloat`, and `DataType.Decimal` numeric coercions; DateTime UTC-normalization switch now explicitly covers `DataType.Date32`/`DateTime64`/`Timestamp64` in addition to `Date`/`DateTime`/`DateTime2`.
 - `Internal/DataProvider/Ydb/YdbSqlBuilder.cs` -- added `CanSkipRootAliases` override returning `false` (line 100); `BuildOrderByClause` now emits `NULLS FIRST`/`NULLS LAST` when `NullsPosition != Sql.NullsPosition.None` (lines 544-549).
 - `Internal/DataProvider/Ydb/Translation/YdbMemberTranslator.cs` -- `SqlTypesTranslation.ConvertDateOnly` added (under `#if SUPPORTS_DATEONLY`), throws `NotSupportedException("52")`; `TranslatePow` now casts non-float/double operands to `double` and back; `WithSort` in `TranslateStringJoin` rewritten to tuple-based sort key encoding with `ListSort`+key-lambda (`ListReverse` for string DESC first key), `ListUniq` for DISTINCT before sort; quarter date-add uses `DateTime::ShiftMonths` * 3 then `DateTime::MakeDatetime`.
+
+**Read (this run -- delta sha 36ee4f82f):**
+- `Internal/DataProvider/Ydb/YdbSchemaProvider.cs` -- new file. Implements `SchemaProviderBase`: `GetTables`/`GetColumns` via ADO `GetSchema("Tables"/"Columns")`, `GetPrimaryKeys` via `YdbProviderAdapter.GetPrimaryKeys` (gRPC describe), `GetForeignKeys` always empty, `GetDataTypes` always empty (private `_typeMap` drives `GetDataType`/`GetSystemType`). Directly contradicts the prior INDEX.md's "no YdbSchemaProvider.cs exists" / "GetSchemaProvider() throws NotImplementedException" claims -- corrected in place, see AUDIT-NOTE.
+- `Internal/DataProvider/Ydb/YdbScalarSubQueryToCteVisitor.cs` -- new file. Extracts the scalar-subquery-to-CTE rewrite previously described inline under `YdbSqlOptimizer.MoveScalarSubQueriesToCte` into a dedicated pooled `QueryElementVisitor` with explicit position classification (Scalar/Wrapped/Excluded), an equality-comparison-to-IN rewrite, and CTE dedup via `ISqlExpressionEqualityComparer`.
+- `Internal/DataProvider/Ydb/YdbSqlOptimizer.cs` -- `MoveScalarSubQueriesToCte` now delegates to `YdbScalarSubQueryToCteVisitor.Pool`; also now walks `SqlUpdateStatement.Update` and pre-existing CTE bodies (previously undocumented).
+- `Internal/DataProvider/Ydb/YdbDataProvider.cs` -- added flags: `IsSubQueryOrderBySupported`, `IsUnionAllOrderBySupported`, `IsOrderByAggregateFunctionSupported = false`, `IsDistinctSetOperationsSupported = false`, `DefaultNullsOrdering = Smallest`, `RowConstructorSupport`, `SupportsPredicatesComparison = true`, `IsDistinctFromSupported = true`, `IsSupportsJoinWithoutCondition = false`. `GetSchemaProvider()` now returns `new YdbSchemaProvider()` instead of throwing (see AUDIT-NOTE). `SetParameter`'s DateTime-normalization switch now also covers `DataType.DateTimeOffset`.
+- `Internal/DataProvider/Ydb/YdbSqlBuilder.cs` -- added `IsSqlValuesTableValueTypeRequired`, `SupportsColumnAliasesInScalarSource => false`, `BuildSelectClause`/`BuildEmptyValuesFrom` dummy-FROM handling, `BuildSql` CTE-name pre-registration, `BuildFromClause` UPDATE skip, `BuildInListPredicate` NULL-in-list handling (LikeClr/LikeSql semantics), full `BuildDataTypeFromDataType` DDL type-name switch. `BuildSqlCastExpression`'s `Unwrap(...)` wrapping is now conditional on non-nullability rather than unconditional (see AUDIT-NOTE).
+- `Internal/DataProvider/Ydb/YdbSqlExpressionConvertVisitor.cs` -- added `ConvertSqlUnaryExpression` (unsigned-cast for bitwise negation), `AlignFloatingDecimal` (mixed float/Decimal arithmetic), `ConvertSqlFunction` (Math::Floor/Ceil/Trunc Decimal routing), a substantial `ConvertConversion` override (string->Datetime/Timestamp ISO rewrite, string->Interval split-and-sum, float->Decimal via string, Decimal->int via Double), `VisitInSubQueryPredicate` (row-valued IN tuple folding), `ConcatRequiresExplicitStringCast => false`, `SupportsNullIf => false`.
+- `Internal/DataProvider/Ydb/Translation/YdbMemberTranslator.cs` -- added nested `YdbWindowFunctionsMemberTranslator` (window-frame/percentile/null-treatment capability flags) wired via `CreateWindowFunctionsMemberTranslator()`; added `TranslateMakeDateTime` (constructor-parts -> ISO string -> CAST) and `TranslateDateTimeTruncationToDate` (Split/StartOfDay/MakeTimestamp chain) on the nested `DateFunctionsTranslator`.
+- `Internal/DataProvider/Ydb/YdbBulkCopy.cs` -- no structural change; confirmed the transaction-open fallback to row-by-row `MultipleRowsCopy` (mirrors `InformixBulkCopy`), now documented explicitly.
+- `Internal/DataProvider/Ydb/YdbMappingSchema.cs` -- added `MAX_DECIMAL_PRECISION = 35` constant and `GetCommonDecimalType(x, y)` (common-Decimal-type widening for `MIN_OF`/`MAX_OF`).
+- `Internal/DataProvider/Ydb/YdbProviderAdapter.cs` -- added schema-provider primary-key wrapper chain (`ISession`, `IDriver`, `YdbSchema.DescribeTable` via `[WrappedBindingFlags]`, `YdbTableDescription`, `DescribeTableSettings`) and `GetPrimaryKeys(DbConnection, IEnumerable<string>)`, backing the new `YdbSchemaProvider`.
+- `Internal/DataProvider/Ydb/YdbRetryPolicy.cs` -- `SessionExpired` added alongside `BadSession`/`SessionBusy` in the 0 ms delay bucket.
+- `Internal/DataProvider/Ydb/YdbTransientExceptionDetector.cs` -- no change; `ShouldRetryOn`'s idempotent-retry code list already included `SessionExpired`.
+- `DataProvider/Ydb/YdbTools.cs` -- no change from prior description.
+- `DataProvider/Ydb/YdbHints.cs` -- no change from prior description (`QueryHint` overloads, `Unique`/`Distinct` constants, `--+ hint(...)` builder).
+- `DataProvider/Ydb/IYdbSpecificQueryable.cs`, `DataProvider/Ydb/IYdbSpecificTable.cs`, `DataProvider/Ydb/YdbSpecificExtensions.cs` -- re-confirmed, no change (marker interfaces / `AsYdb<T>` extensions).
 </details>

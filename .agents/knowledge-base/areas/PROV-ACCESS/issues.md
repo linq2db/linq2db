@@ -2,19 +2,20 @@
 area: PROV-ACCESS
 kind: issues
 sources: [gh-issues, gh-prs, gh-discussions]
-confidence: medium
-last_verified: 2026-06-15
-last_verified_sha: b3340aa9ded15ffc626983fd202e6399daa081ca
+confidence: high
+last_verified: 2026-07-06
+last_verified_sha: d3061c6d7315303a86dfdd67bb7728d4736f6506
 ---
 
 # PROV-ACCESS -- GitHub themes
 
 ## Open themes
 
-- **VS2022 64-bit incompatibility** -- OLE DB / ODBC drivers in 64-bit environment. Access requires 32-bit drivers on VS2022 (64-bit IDE). #3344, #5311.
+- **Schema generation and model quality** -- T4 scaffold issues affecting MS Access models. Context class names embed full file paths instead of derived names (#3191); association names default to random GUIDs instead of derived back-reference names (#2331); schema build errors on Refresh in LINQPad with ACE provider (#5235).
 
 ## Resolved themes
 
+- **VS2022 64-bit incompatibility** -- OLE DB / ODBC drivers in 64-bit environment. Access requires 32-bit drivers on VS2022 (64-bit IDE) (#3344, #5311).
 - **Boolean / string type mapping** -- Access CHAR/STRING columns mapped to C# bool via ValueConverter; parameter wrapping losses on UPDATE SET (#5519, #5520). Schema read ACE database fixes (#1119).
 - **Schema discovery and FK relationships** -- AccessSchemaProvider issues with foreign keys, multiple association names without user-defined names (#593, #2331). Fixed via schema option DisableForeignKeySchemaLoad (#1907).
 - **Query translation specifics** -- LIKE wildcard escaping differences, Single() producing TOP 2, association-alias resolution (#1925, #2022, #2557), parameter limits (64KB SQL, 767 max params).
@@ -29,15 +30,15 @@ last_verified_sha: b3340aa9ded15ffc626983fd202e6399daa081ca
 
 ## Stats
 
-- Open issues: 1
+- Open issues: 3
 - Closed issues: 22
-- Open PRs: 0
-- Total PRs: 5
-- Discussions: 4
-- Last fetched: 2026-06-15
+- Open PRs: 2
+- Total PRs: 13
+- Discussions: 4 (all closed)
+- Last fetched: 2026-07-06
 
 <details><summary>Coverage</summary>
 
-- Index entries scanned: 32 (23 issues + 5 PRs + 4 discussions)
-- Themes extracted: 7
+- Index entries scanned: 42 (25 issues + 13 PRs + 4 discussions)
+- Themes extracted: 1 (open) + 8 (resolved)
 </details>

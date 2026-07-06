@@ -3,41 +3,43 @@ area: PROV-POSTGRES
 kind: area-index
 sources: [code]
 confidence: medium
-last_verified: 2026-06-14
-last_verified_sha: b3340aa9ded15ffc626983fd202e6399daa081ca
+last_verified: 2026-07-05
+last_verified_sha: 36ee4f82f06eaf242b052ade8c87121d251a6165
 coverage_tier_1: 11/11
-coverage_tier_2: 16/16
+coverage_tier_2: 19/19
 ---
 
 # PROV-POSTGRES
 
-PostgreSQL provider. Single ADO.NET dependency: **Npgsql** (loaded dynamically). Covers PostgreSQL 9.2 through 18+. All public API lives in `LinqToDB.DataProvider.PostgreSQL`; all implementation lives in `LinqToDB.Internal.DataProvider.PostgreSQL`.
+PostgreSQL provider. Single ADO.NET dependency: **Npgsql** (loaded dynamically). Covers PostgreSQL 9.2 through 19+. All public API lives in `LinqToDB.DataProvider.PostgreSQL`; all implementation lives in `LinqToDB.Internal.DataProvider.PostgreSQL`.
 
 ## Subsystems
 
 ### Version matrix
 
-Six concrete sealed subclasses of `PostgreSQLDataProvider` are defined in `PostgreSQLDataProvider.cs:23--28`, one per supported dialect:
+Seven concrete sealed subclasses of `PostgreSQLDataProvider` are defined in `PostgreSQLDataProvider.cs:24--30`, one per supported dialect:
 
 | Class | ProviderName constant | Key capabilities unlocked |
 |---|---|---|
 | `PostgreSQLDataProvider92` | `PostgreSQL92` | baseline; no `APPLY` join, no upsert |
 | `PostgreSQLDataProvider93` | `PostgreSQL93` | `APPLY` join; no upsert |
 | `PostgreSQLDataProvider95` | `PostgreSQL95` | upsert (`ON CONFLICT`) |
-| `PostgreSQLDataProvider13` | `PostgreSQL13` | `gen_random_uuid()`, v13 member translator |
-| `PostgreSQLDataProvider15` | `PostgreSQL15` | `MERGE` statement (`PostgreSQLSql15Builder`) |
-| `PostgreSQLDataProvider18` | `PostgreSQL18` | `OUTPUT`/`RETURNING` via special table (`OutputInsertUseSpecialTable` etc.) |
+| `PostgreSQLDataProvider13` | `PostgreSQL13` | `gen_random_uuid()`, v13 member translator, `AS [NOT] MATERIALIZED` CTE hint (`PostgreSQL13SqlBuilder`) |
+| `PostgreSQLDataProvider15` | `PostgreSQL15` | `MERGE` statement (`PostgreSQLSql15Builder`); `IsUpsertWithMergeLoweringSupported` |
+| `PostgreSQLDataProvider18` | `PostgreSQL18` | `OUTPUT`/`RETURNING` via special table; native `uuidv7()` (`PostgreSQL18MemberTranslator`) |
+| `PostgreSQLDataProvider19` | `PostgreSQL19` | Window `IGNORE`/`RESPECT NULLS` on value/offset functions (`PostgreSQL19MemberTranslator`) |
 
-`PostgreSQLDataProvider` constructor sets `SqlProviderFlags` version-conditionally: `IsApplyJoinSupported` is false only for v92; `IsInsertOrUpdateSupported` is false for v92 and v93; `OutputDeleteUseSpecialTable` and siblings require v18+. `Source/LinqToDB/Internal/DataProvider/PostgreSQL/PostgreSQLDataProvider.cs:43--57`.
+`PostgreSQLDataProvider` constructor sets `SqlProviderFlags` version-conditionally: `IsApplyJoinSupported` is false only for v92; `IsInsertOrUpdateSupported` is false for v92 and v93; `OutputDeleteUseSpecialTable` and siblings require v18+; `IsUpsertWithMergeLoweringSupported` requires v15+ (below v15, Upsert configurations that need MERGE lowering fail with `Error_Upsert_MergeLowering_NotSupported`). `Source/LinqToDB/Internal/DataProvider/PostgreSQL/PostgreSQLDataProvider.cs:45--72`.
 
 ### SQL builder hierarchy
 
-Two classes -- much narrower than SqlServer's nine-version stack:
+Three classes:
 
-- `PostgreSQLSqlBuilder` -- base for all versions. Handles `RETURNING` for identity, `LIMIT`/`OFFSET`, `LATERAL` joins, identifier quoting, `SERIAL`/`SMALLSERIAL`/`BIGSERIAL` for `CREATE TABLE`, `ON CONFLICT` for upsert, PostgreSQL-flavored cast syntax (`::type`), `RECURSIVE` CTE keyword, sequence `nextval(...)` expressions. File: `PostgreSQLSqlBuilder.cs`. As of PR #5504, the builder declares `ConcatStyle => ConcatBuildStyle.Pipes` (`PostgreSQLSqlBuilder.cs:41`), delegating string concatenation to the base `BasicSqlBuilder` `SqlConcatExpression` path rather than handling `+` -> `||` conversion in the expression visitor.
+- `PostgreSQLSqlBuilder` -- base for all versions. Handles `RETURNING` for identity, `LIMIT`/`OFFSET`, `LATERAL` joins, identifier quoting, `SERIAL`/`SMALLSERIAL`/`BIGSERIAL` for `CREATE TABLE`, `ON CONFLICT` for upsert, PostgreSQL-flavored cast syntax (`::type`), `RECURSIVE` CTE keyword, sequence `nextval(...)` expressions. File: `PostgreSQLSqlBuilder.cs`. As of PR #5504, the builder declares `ConcatStyle => ConcatBuildStyle.Pipes` (`PostgreSQLSqlBuilder.cs:43`), delegating string concatenation to the base `BasicSqlBuilder` `SqlConcatExpression` path rather than handling `+` -> `||` conversion in the expression visitor. `SupportsMaterializedCteHint` defaults to `false` here (`PostgreSQLSqlBuilder.cs:41`) -- `AS [NOT] MATERIALIZED` requires PostgreSQL 12+, which pre-v13 providers do not have.
+- `PostgreSQL13SqlBuilder` -- v13+ only, selected by `PostgreSQLDataProvider.CreateSqlBuilder`. Overrides `SupportsMaterializedCteHint => true` (`PostgreSQL13SqlBuilder.cs:24`), enabling the `AS [NOT] MATERIALIZED` CTE hint. `v13` is the lowest `PostgreSQLVersion` enum entry `>= 12` (PostgreSQL added the hint in 12), per the file header comment (`PostgreSQL13SqlBuilder.cs:7--10`); support lives in the builder *type* rather than a runtime `Version` check so it stays consistent when SQL is built remotely via LinqService. File: `PostgreSQL13SqlBuilder.cs`.
 - `PostgreSQLSql15Builder` -- v15+ only. Overrides `BuildInsertOrUpdateQuery` to emit `MERGE` via `BuildInsertOrUpdateQueryAsMerge` instead of `ON CONFLICT`. File: `PostgreSQLSql15Builder.cs:24--27`.
 
-`PostgreSQLDataProvider.CreateSqlBuilder` always instantiates `PostgreSQLSqlBuilder` regardless of version (`PostgreSQLDataProvider.cs:261`); the v15 builder is **not** used from `CreateSqlBuilder` here -- the v15 `DataProvider` class would need to override `CreateSqlBuilder` to use it. Review note: `PostgreSQLSql15Builder` exists but `PostgreSQLDataProvider15` still inherits the base `CreateSqlBuilder` which returns the base builder. The Merge partial (`PostgreSQLSqlBuilder.Merge.cs`) contains `BuildMergeOperationDeleteBySource` and `BuildMergeOperationUpdateBySource` annotated "available since PGSQL17" -- these are enabled in the base builder class to allow per-query dialect negotiation without requiring a version-specific builder.
+**Correction (this delta):** `PostgreSQLDataProvider.CreateSqlBuilder` (`PostgreSQLDataProvider.cs:260--265`) now branches on `Version >= PostgreSQLVersion.v13`, returning `PostgreSQL13SqlBuilder` for v13+ and the base `PostgreSQLSqlBuilder` below it -- the prior claim here that `CreateSqlBuilder` *always* returns the base builder regardless of version is no longer accurate. The branch exists for the CTE-materialization-hint builder above, not for `PostgreSQLSql15Builder`: `PostgreSQL13SqlBuilder` extends `PostgreSQLSqlBuilder` directly, not `PostgreSQLSql15Builder`. So the underlying known issue still holds -- `PostgreSQLSql15Builder`'s `MERGE` override remains unreachable from `CreateSqlBuilder` for any version, v15 included; `PostgreSQLDataProvider15` still does not override `CreateSqlBuilder` itself, so it inherits the (now version-branching) base implementation, which never returns `PostgreSQLSql15Builder`. The Merge partial (`PostgreSQLSqlBuilder.Merge.cs`) contains `BuildMergeOperationDeleteBySource` and `BuildMergeOperationUpdateBySource` annotated "available since PGSQL17" -- these are enabled in the base builder class to allow per-query dialect negotiation without requiring a version-specific builder.
 
 The `PostgreSQLSqlBuilder.Merge.cs` partial also defines `IsSqlValuesTableValueTypeRequired`, which forces explicit type annotation on the first row of a `VALUES` table for `long`, `float`, `double`, `decimal`, `NULL`-only columns, and JSON/JSONB columns (`PostgreSQLSqlBuilder.Merge.cs:16--37`).
 
@@ -50,7 +52,7 @@ Controlled by `PostgreSQLIdentifierQuoteMode` (public enum, `PostgreSQLIdentifie
 - `Needed` -- quote only for reserved words and whitespace.
 - `Auto` (default) -- quote for reserved words, prohibited characters, and **uppercase letters** (critical for case-folding behavior; PostgreSQL folds unquoted identifiers to lowercase).
 
-Logic is in `PostgreSQLSqlBuilder.Convert` (`PostgreSQLSqlBuilder.cs:153--208`). Parameter names use `:name` syntax (colon prefix, not `@`).
+Logic is in `PostgreSQLSqlBuilder.Convert` (`PostgreSQLSqlBuilder.cs:163--218`). Parameter names use `:name` syntax (colon prefix, not `@`).
 
 ### NpgsqlProviderAdapter
 
@@ -64,11 +66,11 @@ Singleton (`NpgsqlProviderAdapter.GetInstance()`, locked double-check, `NpgsqlPr
 
 ### Provider detection
 
-`PostgreSQLProviderDetector` extends `ProviderDetectorBase<Provider, PostgreSQLVersion>` (`PostgreSQLProviderDetector.cs:10`). Six `Lazy<IDataProvider>` statics, one per version. Detection order:
+`PostgreSQLProviderDetector` extends `ProviderDetectorBase<Provider, PostgreSQLVersion>` (`PostgreSQLProviderDetector.cs:10`). Seven `Lazy<IDataProvider>` statics, one per version (`_postgreSQLDataProvider19` added this delta). Detection order:
 
 1. Exact `ProviderName.*` string match.
-2. Configuration string contains version number substring (e.g. `"15"`, `"16"`, `"17"` -> v15).
-3. `AutoDetectProvider` = true -> `DetectServerVersion` reads `connection.PostgreSqlVersion` from the live connection wrapper and pattern-matches on `Major`/`Minor` (`PostgreSQLProviderDetector.cs:105--116`).
+2. Configuration string contains version number substring (e.g. `"15"`, `"16"`, `"17"` -> v15; `"18"` -> v18; `"19"` -> v19).
+3. `AutoDetectProvider` = true -> `DetectServerVersion` reads `connection.PostgreSqlVersion` from the live connection wrapper and pattern-matches on `Major`/`Minor`, now leading with `{ Major: >= 19 } => PostgreSQLVersion.v19` (`PostgreSQLProviderDetector.cs:111--123`).
 4. Fallback to `DefaultVersion` = `v92`.
 
 ### Mapping schema
@@ -76,26 +78,28 @@ Singleton (`NpgsqlProviderAdapter.GetInstance()`, locked double-check, `NpgsqlPr
 `PostgreSQLMappingSchema` (`LockedMappingSchema`, `PostgreSQLMappingSchema.cs`) registers:
 
 - Column name comparison: `OrdinalIgnoreCase` (matches PostgreSQL's case-insensitive catalog).
-- Value-to-SQL converters for `bool` (native `TRUE`/`FALSE`), `string`, `char`, `byte[]` (hex-escaped `E'\\x...'::bytea`), `Guid` (`'...'::uuid`), `DateTime` (inline `'...'::timestamp` or `'...'::date`), `DateTimeOffset` (`'...'::timestamptz`, microsecond precision, added PR #5467), `BigInteger`.
+- Value-to-SQL converters for `bool` (native `TRUE`/`FALSE`), `string`, `char`, `byte[]` (hex-escaped `E'\x...'::bytea`), `Guid` (`'...'::uuid`), `DateTime` (inline `'...'::timestamp` or `'...'::date`), `DateTimeOffset` (`'...'::timestamptz`, microsecond precision, added PR #5467), `BigInteger`.
 - Float/double special values: `NaN`, `Infinity` quoted and cast (`'NaN'::float4`, `'NaN'::float8`).
 - Unsigned integer workarounds: `ushort` -> `int`, `uint` -> `long`, `ulong` -> `decimal(20,0)`.
 - Native array types registered as scalars (enables correct query cache keying and parameter detection): all primitive CLR arrays, `List<T>`, `IReadOnlyList<T>` for ~20 element types.
-- Six per-version sealed subclasses (`PostgreSQL92MappingSchema` ... `PostgreSQL18MappingSchema`) extend from `NpgsqlProviderAdapter.GetInstance().MappingSchema` and the base `PostgreSQLMappingSchema.Instance` (`PostgreSQLMappingSchema.cs:194--205`).
+- Seven per-version sealed subclasses (`PostgreSQL92MappingSchema` ... `PostgreSQL19MappingSchema`) extend from `NpgsqlProviderAdapter.GetInstance().MappingSchema` and the base `PostgreSQLMappingSchema.Instance` (`PostgreSQLMappingSchema.cs:202--214`; `PostgreSQL19MappingSchema` added this delta).
+
+**Note:** `PostgreSQLDataProvider.GetMappingSchema` (`PostgreSQLDataProvider.cs:602--613`) has no explicit `PostgreSQLVersion.v13` arm -- v13 providers fall through to `_` and receive `PostgreSQL95MappingSchema`, not the dedicated `PostgreSQL13MappingSchema` class defined above. See Known issues.
 
 The `TIMESTAMPTZ_FORMAT` constant (`'...'::timestamptz`, `PostgreSQLMappingSchema.cs:26/31`) formats `DateTimeOffset` values with microsecond precision and timezone offset. `BuildDateTimeOffset` (`PostgreSQLMappingSchema.cs:163--166`) applies it via `AppendFormat`. This was absent before PR #5467 -- `DateTimeOffset` had no registered converter and fell through to a default path.
 
 ### Parameter type resolution
 
-`PostgreSQLDataProvider.SetParameter` handles two special cases before delegating to base (`PostgreSQLDataProvider.cs:303--315`):
+`PostgreSQLDataProvider.SetParameter` handles two special cases before delegating to base (`PostgreSQLDataProvider.cs:305--317`):
 
 1. `IDictionary` with `DataType.Undefined` -> promoted to `DataType.Dictionary` (maps to `hstore`).
-2. `DateTime`/`DateTimeOffset` normalization: when `NormalizeTimestampData` is true, `DateTimeOffset` is converted to UTC, and `DateTime` gets `DateTimeKind` adjusted to match `timestamp` vs `timestamptz` expectations introduced in Npgsql 6 (`PostgreSQLDataProvider.cs:275--300`).
+2. `DateTime`/`DateTimeOffset` normalization: when `NormalizeTimestampData` is true, `DateTimeOffset` is converted to UTC, and `DateTime` gets `DateTimeKind` adjusted to match `timestamp` vs `timestamptz` expectations introduced in Npgsql 6 (`PostgreSQLDataProvider.cs:277--303`).
 
 `SetParameterType` maps `DataType` -> `NpgsqlDbType` and calls `Adapter.SetDbType(param, type)`. If the provider parameter is not available (wrapped connection), falls back to `DbType`.
 
-`GetNativeType(string? dbType)` (`PostgreSQLDataProvider.cs:444--598`) normalizes type name aliases (e.g. `int4` -> `integer`, `timestamptz` -> `timestamp with time zone`), detects array `[]` suffix and range type names, and returns the correct `NpgsqlDbType` with flags composed via `ApplyDbTypeFlags`.
+`GetNativeType(string? dbType)` (`PostgreSQLDataProvider.cs:446--600`) normalizes type name aliases (e.g. `int4` -> `integer`, `timestamptz` -> `timestamp with time zone`), detects array `[]` suffix and range type names, and returns the correct `NpgsqlDbType` with flags composed via `ApplyDbTypeFlags`.
 
-`SetProviderField` for reading `DateTimeOffset` from `DateTime` reader columns is now scoped to `"timestamp with time zone"` columns only and uses `rd.GetFieldValue<DateTimeOffset>(i)` directly (`PostgreSQLDataProvider.cs:70`). The prior `ConvertDateTimeToDateTimeOffset` helper -- which clamped `DateTime.Min/Max` to avoid offset failures for +/-infinity values -- was removed in PR #5467. Agents verifying infinity handling in `timestamptz` columns should note this removal.
+`SetProviderField` for reading `DateTimeOffset` from `DateTime` reader columns is scoped to `"timestamp with time zone"` columns only and uses `rd.GetFieldValue<DateTimeOffset>(i)` directly (`PostgreSQLDataProvider.cs:80`). The prior `ConvertDateTimeToDateTimeOffset` helper -- which clamped `DateTime.Min/Max` to avoid offset failures for +/-infinity values -- was removed in PR #5467. Agents verifying infinity handling in `timestamptz` columns should note this removal.
 
 ### Bulk copy
 
@@ -131,12 +135,14 @@ The `TIMESTAMPTZ_FORMAT` constant (`'...'::timestamptz`, `PostgreSQLMappingSchem
 
 ### Member translators
 
-Two classes in `Translation/`:
+Four classes in `Translation/`, forming a linear inheritance chain `PostgreSQLMemberTranslator` -> `PostgreSQL13MemberTranslator` -> `PostgreSQL18MemberTranslator` -> `PostgreSQL19MemberTranslator`:
 
-- `PostgreSQLMemberTranslator` -- baseline. Inner classes: `DateFunctionsTranslator` (`EXTRACT`-based date parts, `date_trunc`, interval arithmetic), `MathMemberTranslator` (custom `RoundAwayFromZero` without `ROUND` for non-bankers rounding), `StringMemberTranslator` (`STRING_AGG` for `string.Join`, supports `DISTINCT`, `ORDER BY`, `FILTER`), `GuidMemberTranslator` (cast to `VarChar(36)`), `PostgreSQLAggregateFunctionsMemberTranslator` (marks `IsFilterSupported = true`), `SqlTypesTranslation`.
-- `PostgreSQL13MemberTranslator` -- extends base; overrides `TranslateNewGuidMethod` to use `gen_random_uuid()` (available v13+) instead of falling back to UUID v4 via extension (`PostgreSQL13MemberTranslator.cs:11--17`).
+- `PostgreSQLMemberTranslator` -- baseline. Inner classes: `DateFunctionsTranslator` (`EXTRACT`-based date parts, `date_trunc`, interval arithmetic), `MathMemberTranslator` (custom `RoundAwayFromZero` without `ROUND` for non-bankers rounding), `StringMemberTranslator` (`STRING_AGG` for `string.Join`, supports `DISTINCT`, `ORDER BY`, `FILTER`), `GuidMemberTranslator` (cast to `VarChar(36)`), `PostgreSQLAggregateFunctionsMemberTranslator` (marks `IsFilterSupported = true`), `SqlTypesTranslation`, and `PostgreSQLWindowFunctionsMemberTranslator` (`PostgreSQLMemberTranslator.cs:450--461`) -- sets `IsWindowFilterSupported`, `IsOrderedSetFilterSupported`, `IsHypotheticalSetSupported`, `IsVarianceSupported`, `IsVarianceBareSupported`, `IsCorrelationSupported`, and `IsLinearRegressionSupported` all `true` (PostgreSQL supports the full statistical/regression window-function set under standard SQL names), selected via `CreateWindowFunctionsMemberTranslator` override (`PostgreSQLMemberTranslator.cs:463--466`).
+- `PostgreSQL13MemberTranslator` -- extends base; overrides `TranslateNewGuidMethod` to use `gen_random_uuid()` (available v13+) instead of falling back to UUID v4 via extension (`PostgreSQL13MemberTranslator.cs:11--15`).
+- `PostgreSQL18MemberTranslator` -- extends `PostgreSQL13MemberTranslator`; overrides `TranslateNewGuid7Method` to emit the built-in `uuidv7()` server function (available since PostgreSQL 18), backing `Guid` v7 generation (`PostgreSQL18MemberTranslator.cs:12--16`).
+- `PostgreSQL19MemberTranslator` -- extends `PostgreSQL18MemberTranslator`; overrides `CreateWindowFunctionsMemberTranslator` to return a nested `PostgreSQL19WindowFunctionsMemberTranslator` (itself extending `PostgreSQLWindowFunctionsMemberTranslator`) with `IsLeadLagNullTreatmentSupported = true` and `IsValueNullTreatmentSupported = true` (`PostgreSQL19MemberTranslator.cs:11--20`). This enables SQL-standard `RESPECT`/`IGNORE NULLS` on value/offset window functions (`FIRST_VALUE`/`LAST_VALUE`/`NTH_VALUE`, `LEAD`/`LAG`), emitted after the argument list per `BasicSqlBuilder`'s default `WindowNullsPlacement.AfterClose`.
 
-Selected via `CreateMemberTranslator` in `PostgreSQLDataProvider`: `>= v13` -> `PostgreSQL13MemberTranslator`, else `PostgreSQLMemberTranslator` (`PostgreSQLDataProvider.cs:88--94`).
+Selected via `CreateMemberTranslator` in `PostgreSQLDataProvider`: `>= v19` -> `PostgreSQL19MemberTranslator`, `>= v18` -> `PostgreSQL18MemberTranslator`, `>= v13` -> `PostgreSQL13MemberTranslator`, else -> `PostgreSQLMemberTranslator` (`PostgreSQLDataProvider.cs:98--107`).
 
 #### DateTime/DateTimeOffset translation (updated PR #5467, PR #5517)
 
@@ -165,7 +171,7 @@ Selected via `CreateMemberTranslator` in `PostgreSQLDataProvider`: `>= v13` -> `
 - Queries `SHOW server_version_num` on connect to branch version-conditional SQL (v9.3 materialized views, v10 `IDENTITY` columns, v11 procedure `prokind`).
 - Excludes `pg_catalog` and `information_schema` from schema lists automatically.
 - `GetTables`: base `information_schema.tables` query plus `UNION ALL pg_matviews` for v9.3+; excludes partitioned child tables via `pg_inherits` left join.
-- `GetColumns`: deep `pg_catalog` query detecting custom enums (`typtype = 'e'`) and custom ranges (`typtype = 'r'`); `IsIdentity` detected from `attidentity` (v10+) or `DEFAULT` containing `nextval`.
+- `GetColumns`: deep `pg_catalog` query detecting custom enums (`typtype = 'e'`) and custom ranges (`typtype = 'r'`); `IsIdentity` is `true` when native `attidentity` (v10+) reports `'a'`/`'d'`, OR (no native identity on the table AND the column is the table's chosen serial-style fallback). The fallback picks one `DEFAULT nextval(...)` column per table via a windowed `MIN(...) OVER (PARTITION BY TableID)`, preferring a primary-key column when one of the `nextval(...)` defaults is on the PK, otherwise the first such column by ordinal (`PostgreSQLSchemaProvider.cs:288--436`). This intentionally reports at most one linq2db-identity candidate per table even when several columns have `nextval(...)` defaults.
 - `GetProcedures`: pre-v11 uses `proisagg`/`proretset`; v11+ uses `prokind` (`'f'`/`'p'`/`'a'`/`'w'`).
 - `GetSystemType`: recurses for array types (`[]` suffix), maps built-in range/multirange type names to `NpgsqlRange<T>` and `List<NpgsqlRange<T>>`.
 
@@ -175,7 +181,7 @@ Selected via `CreateMemberTranslator` in `PostgreSQLDataProvider`: `>= v13` -> `
 
 - Lock modes: `FOR UPDATE`, `FOR NO KEY UPDATE`, `FOR SHARE`, `FOR KEY SHARE`.
 - Modifiers: `NOWAIT`, `SKIP LOCKED`.
-- `SubQueryTableHintExtensionBuilder`: emits the hint fragment; comments out `FOR NO KEY UPDATE` / `FOR KEY SHARE` on v92 (not supported, `PostgreSQLHints.cs:36--38`); suppresses `SKIP LOCKED` on v92/v93 (`PostgreSQLHints.cs:58--63`).
+- `SubQueryTableHintExtensionBuilder`: emits the hint fragment; comments out `FOR NO KEY UPDATE` / `FOR KEY SHARE` on v92 (not supported, `PostgreSQLHints.cs:36--37`); suppresses `SKIP LOCKED` unless the mapping schema's `ConfigurationList` reports v95/v13/v15/v18/v19 (`PostgreSQLHints.cs:56--63`; the `PostgreSQL19` arm was added this delta).
 - `PostgreSQLHints.generated.cs`: T4-generated typed overloads (`ForUpdateHint`, `ForUpdateNoWaitHint`, `ForUpdateSkipLockedHint`, ...), one per hint x modifier combination (12 methods).
 
 ### Public extensions
@@ -192,15 +198,16 @@ Selected via `CreateMemberTranslator` in `PostgreSQLDataProvider`: `>= v13` -> `
 
 ### Registration
 
-`PostgreSQLTools` (public static class, `PostgreSQLTools.cs`): `GetDataProvider`, `CreateDataConnection` (three overloads), `ResolvePostgreSQL` (path/assembly overloads). `PostgreSQLFactory` (internal, `PostgreSQLFactory.cs`): config-file `DataProviderFactoryBase` mapping version strings to `PostgreSQLVersion` enum values.
+`PostgreSQLTools` (public static class, `PostgreSQLTools.cs`): `GetDataProvider`, `CreateDataConnection` (three overloads), `ResolvePostgreSQL` (path/assembly overloads). `PostgreSQLFactory` (internal, `PostgreSQLFactory.cs`): config-file `DataProviderFactoryBase` mapping version strings to `PostgreSQLVersion` enum values (includes `"18" => v18` and `"19" => v19` as of this delta).
 
 ## Key types
 
 | Type | File | Role |
 |---|---|---|
-| `PostgreSQLDataProvider` (abstract) | `PostgreSQLDataProvider.cs` | Core provider; 6 sealed subclasses |
+| `PostgreSQLDataProvider` (abstract) | `PostgreSQLDataProvider.cs` | Core provider; 7 sealed subclasses |
 | `PostgreSQLSqlBuilder` | `PostgreSQLSqlBuilder.cs` | SQL generation for all versions |
-| `PostgreSQLSql15Builder` | `PostgreSQLSql15Builder.cs` | MERGE override for v15+ |
+| `PostgreSQL13SqlBuilder` | `PostgreSQL13SqlBuilder.cs` | v13+ CTE `AS [NOT] MATERIALIZED` hint builder |
+| `PostgreSQLSql15Builder` | `PostgreSQLSql15Builder.cs` | MERGE override for v15+ (unreachable, see Known issues) |
 | `PostgreSQLSqlBuilder` (Merge partial) | `PostgreSQLSqlBuilder.Merge.cs` | MERGE operations, VALUES table typing |
 | `PostgreSQLSqlOptimizer` | `PostgreSQLSqlOptimizer.cs` | Statement rewrite: DELETE/UPDATE/OUTPUT |
 | `PostgreSQLSqlExpressionConvertVisitor` | `PostgreSQLSqlExpressionConvertVisitor.cs` | Operator/function mapping, type coercion |
@@ -211,8 +218,10 @@ Selected via `CreateMemberTranslator` in `PostgreSQLDataProvider`: `>= v13` -> `
 | `PostgreSQLSchemaProvider` | `PostgreSQLSchemaProvider.cs` | pg_catalog introspection |
 | `PostgreSQLMemberTranslator` | `Translation/PostgreSQLMemberTranslator.cs` | LINQ->SQL function mapping |
 | `PostgreSQL13MemberTranslator` | `Translation/PostgreSQL13MemberTranslator.cs` | `gen_random_uuid()` override |
+| `PostgreSQL18MemberTranslator` | `Translation/PostgreSQL18MemberTranslator.cs` | `uuidv7()` override |
+| `PostgreSQL19MemberTranslator` | `Translation/PostgreSQL19MemberTranslator.cs` | Window `RESPECT`/`IGNORE NULLS` override |
 | `PostgreSQLOptions` | `PostgreSQLOptions.cs` | BulkCopyType, NormalizeTimestampData, IdentifierQuoteMode |
-| `PostgreSQLVersion` | `PostgreSQLVersion.cs` | Dialect enum: AutoDetect, v92--v18 |
+| `PostgreSQLVersion` | `PostgreSQLVersion.cs` | Dialect enum: AutoDetect, v92--v19 |
 | `PostgreSQLIdentifierQuoteMode` | `PostgreSQLIdentifierQuoteMode.cs` | None / Quote / Needed / Auto |
 | `PostgreSQLHints` | `PostgreSQLHints.cs` + `.generated.cs` | Row-level locking hints |
 | `PostgreSQLExtensions` | `PostgreSQLExtensions.cs` | Array ops, UNNEST, generate_series, system fns |
@@ -237,16 +246,19 @@ Selected via `CreateMemberTranslator` in `PostgreSQLDataProvider`: `>= v13` -> `
 | `Internal/.../PostgreSQLMappingSchema.cs` | Type converters, array registration, per-version subclasses |
 | `Internal/.../PostgreSQLBulkCopy.cs` | Binary COPY strategy |
 
-### Tier 2 (read in full -- 16 files)
+### Tier 2 (read in full -- 19 files)
 
 | File | Notes |
 |---|---|
-| `Internal/.../PostgreSQLSql15Builder.cs` | v15 MERGE builder |
+| `Internal/.../PostgreSQL13SqlBuilder.cs` | v13+ CTE materialization hint (new file this delta) |
+| `Internal/.../PostgreSQLSql15Builder.cs` | v15 MERGE builder (unreachable, see Known issues) |
 | `Internal/.../PostgreSQLSqlBuilder.Merge.cs` | MERGE operations partial |
 | `Internal/.../PostgreSQLSqlExpressionConvertVisitor.cs` | Expression transforms (updated PR #5504) |
 | `Internal/.../PostgreSQLSchemaProvider.cs` | pg_catalog schema introspection |
-| `Internal/.../Translation/PostgreSQLMemberTranslator.cs` | Baseline member translator (updated PR #5467, PR #5517, PR #5504, PR #5515) |
+| `Internal/.../Translation/PostgreSQLMemberTranslator.cs` | Baseline member translator (updated PR #5467, PR #5517, PR #5504, PR #5515; window-fn translator confirmed this delta) |
 | `Internal/.../Translation/PostgreSQL13MemberTranslator.cs` | v13 UUID override |
+| `Internal/.../Translation/PostgreSQL18MemberTranslator.cs` | v18 `uuidv7()` override (new file this delta) |
+| `Internal/.../Translation/PostgreSQL19MemberTranslator.cs` | v19 window null-treatment override (new file this delta) |
 | `Internal/.../PostgreSQLSpecificQueryable.cs` | Marker wrapper |
 | `Internal/.../PostgreSQLSpecificTable.cs` | Marker wrapper |
 | `DataProvider/.../PostgreSQLHints.cs` | Locking hints + builder |
@@ -277,10 +289,11 @@ Selected via `CreateMemberTranslator` in `PostgreSQLDataProvider`: `>= v13` -> `
 
 ## Known issues / debt
 
-- `PostgreSQLSql15Builder` exists but `PostgreSQLDataProvider.CreateSqlBuilder` always instantiates `PostgreSQLSqlBuilder` regardless of version (`PostgreSQLDataProvider.cs:261`). The v15 builder's `MERGE` override is therefore unreachable through the normal builder creation path unless a subclass overrides `CreateSqlBuilder`. The MERGE partial in the base builder (`PostgreSQLSqlBuilder.Merge.cs`) provides `MERGE` support directly from the base class -- this appears to be intentional (comment "we enable MERGE in base pgsql builder class intentionally"), but the v15 builder's role is ambiguous.
-- `TODO` in `PostgreSQLSqlBuilder.Convert`: identifier quoting does not handle embedded double-quotes in identifiers or surrogate pairs (`PostgreSQLSqlBuilder.cs:155--157`).
-- `float(N)` precision mapping in `GetNativeType` has a copy-paste error: both `precision 1--24` and `25--53` branches assign `"real"` instead of `"double precision"` for the second range (`PostgreSQLDataProvider.cs:556--560`).
-- `NpgsqlCidr` type handling has TFM-conditional branches (`#if NET8_0_OR_GREATER`) with hardcoded assembly-qualified type strings for older TFMs (`PostgreSQLSchemaProvider.cs:128--134`).
+- `PostgreSQLSql15Builder` exists but is unreachable through the normal builder creation path: `PostgreSQLDataProvider.CreateSqlBuilder` (`PostgreSQLDataProvider.cs:260--265`) now branches by version (added this delta, for the unrelated `PostgreSQL13SqlBuilder` CTE-hint concern -- see SQL builder hierarchy above), but neither branch constructs `PostgreSQLSql15Builder`, and `PostgreSQLDataProvider15` does not override `CreateSqlBuilder` itself. The v15 builder's `MERGE` override (`BuildInsertOrUpdateQuery` via `BuildInsertOrUpdateQueryAsMerge`) is therefore still dead code, same as before this delta -- only the previously-documented *reason* ("always instantiates the base builder regardless of version") is now stale and has been corrected above. The MERGE partial in the base builder (`PostgreSQLSqlBuilder.Merge.cs`) provides `MERGE` support directly from the base class -- this appears to be intentional (comment "we enable MERGE in base pgsql builder class intentionally"), but the v15 builder's role remains ambiguous.
+- `PostgreSQLDataProvider.GetMappingSchema` (`PostgreSQLDataProvider.cs:602--613`) has no `PostgreSQLVersion.v13` arm in its switch expression -- v13 providers fall through to the `_` default and receive `PostgreSQL95MappingSchema`, not the dedicated `PostgreSQL13MappingSchema` sealed class defined alongside the other six per-version mapping schemas (`PostgreSQLMappingSchema.cs:208`). Same shape as the `PostgreSQLSql15Builder` issue above: a version-specific type exists but the dispatch point does not select it. Practical consequence: a v13-configured connection's `MappingSchema.ConfigurationList` reports `ProviderName.PostgreSQL95` instead of `ProviderName.PostgreSQL13` -- code that branches on `ConfigurationList.Contains(ProviderName.PostgreSQL13, ...)` (e.g. the `SubQueryTableHintExtensionBuilder` SkipLocked check in `PostgreSQLHints.cs`) would miss a v13 connection on that specific check, though in the observed `PostgreSQLHints.cs` case the same `||` chain also checks `ProviderName.PostgreSQL95`, so the visible behavior happens to still be correct there by coincidence. (Found this delta.)
+- `TODO` in `PostgreSQLSqlBuilder.Convert`: identifier quoting does not handle embedded double-quotes in identifiers or surrogate pairs (`PostgreSQLSqlBuilder.cs:165--167`).
+- `float(N)` precision mapping in `GetNativeType` has a copy-paste error: both `precision 1--24` and `25--53` branches assign `"real"` instead of `"double precision"` for the second range (`PostgreSQLDataProvider.cs:558--561`).
+- `NpgsqlCidr` type handling has TFM-conditional branches (`#if NET8_0_OR_GREATER`) with hardcoded assembly-qualified type strings for older TFMs (`PostgreSQLSchemaProvider.cs:127--134`).
 - `ConvertDateTimeToDateTimeOffset` helper removed in PR #5467: the helper clamped `DateTime.Min/Max` to `DateTimeOffset.Min/Max` to avoid offset arithmetic failures when Npgsql returns +/-infinity as `DateTime.MinValue`/`MaxValue`. The replacement (`rd.GetFieldValue<DateTimeOffset>(i)` scoped to `"timestamp with time zone"`) may surface that edge case differently; watch for regressions on infinity-valued `timestamptz` columns.
 
 ## See also
@@ -293,10 +306,32 @@ Selected via `CreateMemberTranslator` in `PostgreSQLDataProvider`: `>= v13` -> `
 <details><summary>Coverage</summary>
 
 - Tier 1 (11/11 read this run)
-- Tier 2 (16/16 read this run)
+- Tier 2 (19/19 read this run)
 - Tier 3 (1 file -- counted, not read)
 
-### Delta reads (this run -- delta)
+### Delta reads (this run -- PostgreSQL 19 support + CTE materialization hint)
+
+Changed files verified against current SHA `36ee4f82f06eaf242b052ade8c87121d251a6165`:
+
+- `Source/LinqToDB/DataProvider/PostgreSQL/PostgreSQLVersion.cs` -- read in full; added `v19` enum value ("PostgreSQL 19+ SQL dialect").
+- `Source/LinqToDB/Internal/DataProvider/PostgreSQL/PostgreSQLDataProvider.cs` -- read in full; added sealed `PostgreSQLDataProvider19` (line 30); `CreateMemberTranslator` gained `>= v19`/`>= v18` arms ahead of the existing `>= v13` arm (lines 98--107); `CreateSqlBuilder` (lines 260--265) now branches `Version >= v13` between `PostgreSQL13SqlBuilder` and the base `PostgreSQLSqlBuilder` -- corrects the prior INDEX claim that it always returned the base builder (see SQL builder hierarchy + Known issues); `GetProviderName` and `GetMappingSchema` both gained `v19` arms; confirmed `GetMappingSchema` still has no `v13` arm (new known issue, see below); float(N) copy-paste bug at lines 558--561 still present.
+- `Source/LinqToDB/Internal/DataProvider/PostgreSQL/PostgreSQLSqlBuilder.cs` -- read in full; added `SupportsMaterializedCteHint => false` override (line 41) with a comment pointing at the new `PostgreSQL13SqlBuilder` for v13+; `ConcatStyle` shifted to line 43.
+- `Source/LinqToDB/Internal/DataProvider/PostgreSQL/PostgreSQL13SqlBuilder.cs` -- **new file**; read in full. `PostgreSQL13SqlBuilder : PostgreSQLSqlBuilder`, overrides `SupportsMaterializedCteHint => true` for the `AS [NOT] MATERIALIZED` CTE hint (PostgreSQL 12+). New Tier-2 file.
+- `Source/LinqToDB/Internal/DataProvider/PostgreSQL/PostgreSQLMappingSchema.cs` -- read in full; added sealed `PostgreSQL19MappingSchema` (line 214). Confirmed `PostgreSQL13MappingSchema` (line 208) is a pre-existing sealed class not selected by `PostgreSQLDataProvider.GetMappingSchema`'s switch (new known issue).
+- `Source/LinqToDB/Internal/DataProvider/PostgreSQL/PostgreSQLProviderDetector.cs` -- read in full; added `_postgreSQLDataProvider19` static, a `ConfigurationString.Contains("19")` branch, a `PostgreSQLVersion.v19` arm in `GetDataProvider`, and a `{ Major: >= 19 }` arm (checked first) in `DetectServerVersion`.
+- `Source/LinqToDB/Internal/DataProvider/PostgreSQL/PostgreSQLSchemaProvider.cs` -- read in full; `GetColumns`'s identity-detection query is more elaborate than previously documented (windowed sequence-default fallback with primary-key tie-break) -- documentation updated in Schema provider subsystem; no v19-specific changes found.
+- `Source/LinqToDB/Internal/DataProvider/PostgreSQL/Translation/PostgreSQLMemberTranslator.cs` -- read in full; contains `PostgreSQLWindowFunctionsMemberTranslator` inner class + `CreateWindowFunctionsMemberTranslator` override (lines 450--466), not previously documented in this INDEX. `DateFunctionsTranslator`/`StringMemberTranslator` bodies confirmed unchanged from prior delta reads.
+- `Source/LinqToDB/Internal/DataProvider/PostgreSQL/Translation/PostgreSQL13MemberTranslator.cs` -- read in full; unchanged (`gen_random_uuid()` override, matches prior documentation).
+- `Source/LinqToDB/Internal/DataProvider/PostgreSQL/Translation/PostgreSQL18MemberTranslator.cs` -- **new file**; read in full. `PostgreSQL18MemberTranslator : PostgreSQL13MemberTranslator`, overrides `TranslateNewGuid7Method` to emit `uuidv7()`. New Tier-2 file.
+- `Source/LinqToDB/Internal/DataProvider/PostgreSQL/Translation/PostgreSQL19MemberTranslator.cs` -- **new file**; read in full. `PostgreSQL19MemberTranslator : PostgreSQL18MemberTranslator`, overrides `CreateWindowFunctionsMemberTranslator` to enable `IsLeadLagNullTreatmentSupported`/`IsValueNullTreatmentSupported` for window `IGNORE`/`RESPECT NULLS`. New Tier-2 file.
+- `Source/LinqToDB/DataProvider/PostgreSQL/PostgreSQLFactory.cs` -- read in full; version-string switch gained `"18" => v18` and `"19" => v19` arms.
+- `Source/LinqToDB/DataProvider/PostgreSQL/PostgreSQLHints.cs` -- read in full; the `SKIP LOCKED` suppression check's `ConfigurationList.Contains(...)` OR-chain gained a `ProviderName.PostgreSQL19` arm.
+
+Cross-checked but not in `changedFiles` (read to verify the `CreateSqlBuilder` correction above): `Source/LinqToDB/Internal/DataProvider/PostgreSQL/PostgreSQLSql15Builder.cs` -- unchanged; still a sibling of `PostgreSQL13SqlBuilder` (both extend `PostgreSQLSqlBuilder` directly), still not selected by `CreateSqlBuilder` for any version.
+
+Tier count change: Tier 2 grew from 16/16 to 19/19 (three new files: `PostgreSQL13SqlBuilder.cs`, `Translation/PostgreSQL18MemberTranslator.cs`, `Translation/PostgreSQL19MemberTranslator.cs`). Tier 1 unchanged at 11/11 (no new files match the `kb-areas.md` Tier-1 anchor list).
+
+### Delta reads (previous run -- delta)
 
 Changed files verified against current SHA b3340aa9ded15ffc626983fd202e6399daa081ca:
 

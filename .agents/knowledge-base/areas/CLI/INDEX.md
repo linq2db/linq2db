@@ -3,8 +3,8 @@ area: CLI
 kind: area-index
 sources: [code]
 confidence: high
-last_verified: 2026-06-01
-last_verified_sha: 2e67bafc9bfc8ae8ba573b93bde8671d9920c95d
+last_verified: 2026-07-05
+last_verified_sha: 36ee4f82f06eaf242b052ade8c87121d251a6165
 coverage_tier_1: 14/14
 coverage_tier_2: 11/11
 ---
@@ -13,7 +13,7 @@ coverage_tier_2: 11/11
 
 `dotnet-linq2db` -- the scaffolding dotnet tool. Invoked as `dotnet linq2db <command>` or `dotnet-linq2db <command>`. Ships as the `linq2db.cli` NuGet package (package type: `DotnetTool`). Targets `net8.0`, `net9.0`, `net10.0`.
 
-Assembly name is `dotnet-linq2db` (set by `<AssemblyName>` in `LinqToDB.CLI.csproj:5`). The project uses `PackAsTool=true` with `ToolPackageRuntimeIdentifiers` in the csproj SDK-pack pipeline (a .NET 10 SDK feature). This replaces the prior approach of a custom `.nuspec` file and a `MultiArchPublish` MSBuild target. `dotnet pack` now produces a thin pointer package plus one sub-package per RID; `dotnet tool install -g linq2db.cli` selects the sub-package matching the user's SDK architecture. RIDs covered: `win-x64`, `win-x86`, `win-arm64`, `linux-x64`, `linux-arm64`, `osx-arm64`, `osx-x64` (`LinqToDB.CLI.csproj:17,34`). Installation requires .NET 10 SDK; runtime requires .NET 8+.
+Assembly name is `dotnet-linq2db` (set by `<AssemblyName>` in `LinqToDB.CLI.csproj:5`). The project uses `PackAsTool=true` with `ToolPackageRuntimeIdentifiers` in the csproj SDK-pack pipeline (a .NET 10 SDK feature). This replaces the prior approach of a custom `.nuspec` file and a `MultiArchPublish` MSBuild target. `dotnet pack` now produces a thin pointer package plus one sub-package per RID; `dotnet tool install -g linq2db.cli` selects the sub-package matching the SDK architecture. RIDs covered: `win-x64`, `win-x86`, `win-arm64`, `linux-x64`, `linux-arm64`, `osx-arm64`, `osx-x64` (`LinqToDB.CLI.csproj:17,34`). Installation requires .NET 10 SDK; runtime requires .NET 8+.
 
 ## Subsystems
 
@@ -34,9 +34,9 @@ Assembly name is `dotnet-linq2db` (set by `<AssemblyName>` in `LinqToDB.CLI.cspr
 ### ScaffoldCommand (5-file partial class)
 
 - `ScaffoldCommand.cs` -- registers all ~80 options into four `OptionCategory` groups.
-- `ScaffoldCommand.Options.cs` -- option static fields. `General.Provider` is a required `StringEnumCliOption` over `DatabaseType` (16 values: Access, DB2, Firebird, Informix, SQLServer, MySQL, Oracle, PostgreSQL, SqlCe, SQLite, Sybase, SapHana, ClickHouseMySql, ClickHouseHttp, ClickHouseTcp, DuckDB). `DatabaseType` is a private enum at `ScaffoldCommand.Options.cs:1933`; `DuckDB` added at line 1951.
+- `ScaffoldCommand.Options.cs` -- option static fields. `General.Provider` is a required `StringEnumCliOption` over `DatabaseType` (17 values: Access, DB2, Firebird, Informix, SQLServer, MySQL, Oracle, PostgreSQL, SqlCe, SQLite, Sybase, SapHana, ClickHouseMySql, ClickHouseHttp, ClickHouseTcp, DuckDB, Ydb). `DatabaseType` is a private enum at `ScaffoldCommand.Options.cs:1913`; `DuckDB` at line 1931, `Ydb` at line 1932. The `--provider` `StringEnumOption` list (`ScaffoldCommand.Options.cs:93-109`) carries a matching `Ydb` entry with description "YDB".
 - `ScaffoldCommand.Configuration.cs` -- `ProcessScaffoldOptions(options)` builds a `ScaffoldOptions` object.
-- `ScaffoldCommand.Execute.cs` -- `Execute` override: processes settings, handles `--architecture` restart, opens a `DataConnection`, then calls `Scaffold(...)`. Provider-specific connection setup: `ProviderName.DuckDB` requires no special setup (falls through the `break` case alongside ClickHouse and SQL Server at `ScaffoldCommand.Execute.cs:185-190`). The `DatabaseType.DuckDB` -> `ProviderName.DuckDB` mapping is at line 66. Architecture restart spawns a child process from the same assembly directory.
+- `ScaffoldCommand.Execute.cs` -- `Execute` override: processes settings, handles `--architecture` restart, opens a `DataConnection`, then calls `Scaffold(...)`. Provider-specific connection setup: `ProviderName.DuckDB` and `ProviderName.Ydb` both require no special setup (fall through the `break` case alongside ClickHouse and SQL Server at `ScaffoldCommand.Execute.cs:186-192`). The `DatabaseType.DuckDB` -> `ProviderName.DuckDB` mapping is at line 66; `DatabaseType.Ydb` -> `ProviderName.Ydb` at line 67. Architecture restart spawns a child process from the same assembly directory.
 - `ScaffoldCommand.Interceptors.cs` -- interceptor loading. T4 path: `PreprocessTemplate` uses `Mono.TextTemplating.TemplateGenerator`, then Roslyn `CSharpCompilation` compiles in-memory. Assembly path: `Assembly.LoadFrom` + `DependencyContext`-based resolver.
 
 ### Option type system (`CommandLine/Options/`)
@@ -83,7 +83,7 @@ Assembly name is `dotnet-linq2db` (set by `<AssemblyName>` in `LinqToDB.CLI.cspr
 - **Core `LinqToDB`** -- `DataConnection`, `DataOptions`, `ProviderName`, provider-specific types.
 - **Mono.TextTemplating** -- T4 parsing.
 - **Microsoft.CodeAnalysis.CSharp** -- Roslyn in-memory compilation.
-- All provider ADO.NET packages bundled in the tool (SQLite, SqlClient, Firebird, MySqlConnector, Oracle.ManagedDataAccess.Core, Npgsql, AdoNetCore.AseClient, ODBC, OleDb, ClickHouse.Driver, Octonica.ClickHouseClient, DuckDB.NET.Data.Full) -- except IBM DB2/Informix and SAP HANA (too large).
+- All provider ADO.NET packages bundled in the tool (SQLite, SqlClient, Firebird, MySqlConnector, Oracle.ManagedDataAccess.Core, Npgsql, AdoNetCore.AseClient, ODBC, OleDb, ClickHouse.Driver, Octonica.ClickHouseClient, DuckDB.NET.Data.Full, Ydb.Sdk) -- except IBM DB2/Informix and SAP HANA (too large).
 
 **Inbound:** standalone tool; no other source project references `LinqToDB.CLI`.
 
@@ -91,7 +91,7 @@ Assembly name is `dotnet-linq2db` (set by `<AssemblyName>` in `LinqToDB.CLI.cspr
 
 - `ScaffoldCommand.Interceptors.cs:56,138,139` -- unconditional debug log lines marked `// TODO: Verbose logging`.
 - `HelpCommand.cs:185,312` -- workaround for `Console.BufferWidth` exception (issue #3612).
-- `ScaffoldCommand.Execute.cs:147` -- file name collision/deduplication deferred.
+- `ScaffoldCommand.Execute.cs:148` -- file name collision/deduplication deferred (`// TODO: add file name normalization/deduplication?`).
 - Architecture restart only works on Windows; `--architecture` silently ignored on Linux/macOS.
 - IBM DB2 and Informix providers intentionally excluded from the tool package due to size.
 
@@ -121,5 +121,10 @@ Assembly name is `dotnet-linq2db` (set by `<AssemblyName>` in `LinqToDB.CLI.cspr
 - `readme.md` -- updated install section: `.NET 10 SDK required`, 32-bit vs 64-bit guidance, per-RID install/update/switch examples.
 - `DotnetToolSettings.xml` -- DELETED (SDK-pack migration; was Tier-2).
 - `linq2db.cli.nuspec` -- DELETED (SDK-pack migration; was Tier-2).
+
+**Read (this run -- delta, sha 36ee4f82f):**
+- `CommandLine/Commands/ScaffoldCommand.Execute.cs` -- added `DatabaseType.Ydb -> ProviderName.Ydb` mapping (line 67, alongside the existing DuckDB mapping); `GetConnection`'s no-special-setup `break` case group (`ScaffoldCommand.Execute.cs:186-192`) extended with `ProviderName.Ydb` alongside `ClickHouseMySql`/`ClickHouseDriver`/`ClickHouseOctonica`/`SqlServer`/`DuckDB` -- YDB needs no auto-detect flag, no assembly probing, no bitness check.
+- `CommandLine/Commands/ScaffoldCommand.Options.cs` -- `DatabaseType` enum gained a `Ydb` member (`ScaffoldCommand.Options.cs:1932`, after `DuckDB`); the `--provider` `StringEnumOption` list gained a matching `Ydb` / "YDB" entry (`ScaffoldCommand.Options.cs:109`). Provider count 16 -> 17.
+- `LinqToDB.CLI.csproj` -- added a `Ydb.Sdk` `PackageReference` to the bundled-providers item group (`LinqToDB.CLI.csproj:74`), so the CLI tool now ships the YDB ADO.NET driver alongside the other bundled providers.
 
 </details>

@@ -3,8 +3,8 @@ area: REMOTE-CLIENT
 kind: area-index
 sources: [code]
 confidence: high
-last_verified: 2026-06-01
-last_verified_sha: 2e67bafc9bfc8ae8ba573b93bde8671d9920c95d
+last_verified: 2026-07-05
+last_verified_sha: 36ee4f82f06eaf242b052ade8c87121d251a6165
 coverage_tier_1: 9/9
 coverage_tier_2: 4/4
 ---
@@ -65,7 +65,7 @@ In-tree contracts and base implementations for the linq2db remote-execution faci
 **Remote wrapper types.** Three nested sealed classes wrap server-resolved service types with per-type `MemoryCache`-based caches, each keyed by the resolved `Type` and bound to `Common.Configuration.Linq.CacheSlidingExpiration`:
 
 - `RemoteMemberTranslator` (`:151`) -- wraps `IMemberTranslator`; delegates `Translate`.
-- `RemoteMemberConverter` (`:177`) -- wraps `IMemberConverter`; delegates `Convert`.
+- `RemoteMemberConverter` (`:177`) -- wraps `IMemberConverter`; delegates `Convert(expression, context, out handled)`, where `context` is an `IConvertContext` (`Source/LinqToDB/Internal/DataProvider/Translation/IConvertContext.cs:8`) exposing `DataOptions` for the conversion.
 - `RemoteDmlService` (`:203`) -- wraps `IDmlService`; delegates `IsTableNotFoundException`.
 
 All three are instantiated via `ActivatorExt.CreateInstance<T>(resolvedType)` and cached so instances sharing the same resolved type share one wrapper.
@@ -92,7 +92,7 @@ All three are instantiated via `ActivatorExt.CreateInstance<T>(resolvedType)` an
 4. Deserialize the response.
 5. Wrap in a `RemoteDataReader` (internal), exposed as `IDataReaderAsync`.
 
-Synchronous variants are shims over `SafeAwaiter.Run(…Async)` (`.QueryRunner.cs:145--149`). `GetSqlText()` reconstructs the full SQL locally without a request (`.QueryRunner.cs:51--125`).
+Synchronous variants are shims over `SafeAwaiter.Run(...Async)` (`.QueryRunner.cs:145--149`). `GetSqlText()` reconstructs the full SQL locally without a request (`.QueryRunner.cs:51--125`).
 
 ### Interceptors (partial)
 
@@ -180,4 +180,7 @@ Synchronous variants are shims over `SafeAwaiter.Run(…Async)` (`.QueryRunner.c
 
 Read (this run -- delta):
   - `Source/LinqToDB/Remote/RemoteDataContextBase.cs` -- no structural changes relative to build-time read; delta-confirmed: `IInfrastructure<IServiceProvider>` / `InitServiceProvider` pattern (`:83--104`), `Lock _guard` (`:81`), `RemoteMemberTranslator` / `RemoteMemberConverter` / `RemoteDmlService` nested wrappers (`:151`,`:177`,`:203`), `_sqlBuilders` cache key precise form (`:462--465`), `_sqlOptimizers` cache key (`:502`), `UseOptions` / `UseMappingSchema` scoped-override methods (`:755`,`:780`), `DisposeClient` / `DisposeClientAsync` (`:582--596`), and line-number corrections throughout.
+
+Read (this run -- delta):
+  - `Source/LinqToDB/Remote/RemoteDataContextBase.cs` -- `RemoteMemberConverter.Convert` (`:199--200`) gained a new `IConvertContext context` parameter, matching the updated `IMemberConverter.Convert(Expression, IConvertContext, out bool)` signature (`Source/LinqToDB/Internal/DataProvider/Translation/IMemberConverter.cs:15`); the wrapper forwards `context` unchanged. `IConvertContext` (`Source/LinqToDB/Internal/DataProvider/Translation/IConvertContext.cs:8`) exposes `DataOptions` for options that affect a conversion (e.g. legacy-analytic `ORDER BY` NULLS-ordering defaults). Confirmed via `git diff` against the prior `last_verified_sha` that this 2-line replacement is the only change in the file -- no other line number shifted, all other citations in this INDEX re-verified unchanged at the new sha.
 </details>

@@ -3,10 +3,10 @@ area: MAPPING
 kind: area-index
 sources: [code]
 confidence: high
-last_verified: 2026-06-14
-last_verified_sha: b3340aa9ded15ffc626983fd202e6399daa081ca
+last_verified: 2026-07-05
+last_verified_sha: 36ee4f82f06eaf242b052ade8c87121d251a6165
 coverage_tier_1: 3/3
-coverage_tier_2: 43/43
+coverage_tier_2: 44/44
 ---
 
 # MAPPING -- POCO <-> table/column metadata + the per-context conversion graph
@@ -25,10 +25,11 @@ coverage_tier_2: 43/43
 | Type | Role | File |
 |---|---|---|
 | `MappingSchema` | Per-context registry: attribute lookup, conversion graph, scalar-type table, `EntityDescriptor` cache | `MappingSchema.cs` |
-| `EntityDescriptor` | Per-type table: name parts, columns, associations, inheritance, dynamic columns, query filter | `EntityDescriptor.cs` |
+| `EntityDescriptor` | Per-type table: name parts, columns, associations, inheritance, dynamic columns, query filters | `EntityDescriptor.cs` |
 | `ColumnDescriptor` | Per-column: storage, DataType/DbType/Length/Precision/Scale, IsIdentity/IsPrimaryKey/CanBeNull, value converter, lambda factories for `GetDbValueLambda` / `GetDbParamLambda` / `GetProviderValue` | `ColumnDescriptor.cs` |
 | `AssociationDescriptor` | Per-association: this/other keys, predicate or query expression, storage, alias, nullability inference | `AssociationDescriptor.cs` |
 | `InheritanceMapping` | Discriminator value -> concrete `Type` + reference to discriminator `ColumnDescriptor` | `InheritanceMapping.cs` |
+| `EntityQueryFilter` | Descriptor for one named, keyed query filter (predicate or `IQueryable`-transform delegate); `EntityDescriptor.QueryFilters` is the ordered, AND-combined set assembled from `[QueryFilter]` attributes | `EntityQueryFilter.cs` |
 | `MappingAttribute` (abstract) | Base class for every mapping attribute; carries `Configuration` (provider name filter) and `GetObjectID()` (mapping-schema config-id contributor) | `MappingAttribute.cs` |
 | `FluentMappingBuilder` / `EntityMappingBuilder<T>` / `PropertyMappingBuilder<T,P>` | Lambda-driven attribute synthesis; `Build()` registers a `FluentMetadataReader` (in `Internal.Mapping`) on the schema | `FluentMappingBuilder.cs`, `EntityMappingBuilder.cs`, `PropertyMappingBuilder.cs` |
 | `ValueToSqlConverter` | Per-type `Action<StringBuilder, DbDataType, DataOptions, object>` table for inlining literals into SQL (used by SQL-PROVIDER builders for constants/scalars); implements `IEquatable<ValueToSqlConverter>` | `ValueToSqlConverter.cs` |
@@ -52,8 +53,8 @@ coverage_tier_2: 43/43
 
 ### Tier 2 (read; mapping attributes + descriptors + builders + value-conversion plumbing)
 
-- Descriptors / interfaces: `AssociationDescriptor.cs`, `InheritanceMapping.cs`, `IColumnChangeDescriptor.cs`, `IEntityChangeDescriptor.cs`, `IGenericInfoProvider.cs`, `IValueConverter.cs`, `IToSqlConverter.cs`, `MappingAttribute.cs`, `MapValue.cs`
-- Mapping attributes: `TableAttribute.cs`, `ColumnAttribute.cs`, `ColumnAliasAttribute.cs`, `NotColumnAttribute.cs`, `PrimaryKeyAttribute.cs`, `IdentityAttribute.cs`, `AssociationAttribute.cs`, `InheritanceMappingAttribute.cs`, `DataTypeAttribute.cs`, `NullableAttribute.cs`, `NotNullAttribute.cs`, `ScalarTypeAttribute.cs`, `SequenceNameAttribute.cs`, `MapValueAttribute.cs`, `DynamicColumnsStoreAttribute.cs`, `DynamicColumnAccessorAttribute.cs`, `OptimisticLockPropertyAttribute.cs`, `OptimisticLockPropertyBaseAttribute.cs`, `QueryFilterAttribute.cs`, `ResultSetIndexAttribute.cs`, `ServerSideOnlyAttribute.cs`, `IsQueryableAttribute.cs`, `SkipBaseAttribute.cs`, `SkipValuesByListAttribute.cs`, `SkipValuesOnInsertAttribute.cs`, `SkipValuesOnUpdateAttribute.cs`, `SqlQueryDependentAttribute.cs`, `SqlQueryDependentParamsAttribute.cs` (**[Obsolete] as of PR #5526 -- scheduled for v7 removal**), `ValueConverterAttribute.cs`
+- Descriptors / interfaces: `AssociationDescriptor.cs`, `EntityQueryFilter.cs`, `InheritanceMapping.cs`, `IColumnChangeDescriptor.cs`, `IEntityChangeDescriptor.cs`, `IGenericInfoProvider.cs`, `IValueConverter.cs`, `IToSqlConverter.cs`, `MappingAttribute.cs`, `MapValue.cs`
+- Mapping attributes: `TableAttribute.cs`, `ColumnAttribute.cs`, `ColumnAliasAttribute.cs`, `NotColumnAttribute.cs`, `PrimaryKeyAttribute.cs`, `IdentityAttribute.cs`, `AssociationAttribute.cs`, `InheritanceMappingAttribute.cs`, `DataTypeAttribute.cs`, `NullableAttribute.cs`, `NotNullAttribute.cs`, `ScalarTypeAttribute.cs`, `SequenceNameAttribute.cs`, `MapValueAttribute.cs`, `DynamicColumnsStoreAttribute.cs`, `DynamicColumnAccessorAttribute.cs`, `OptimisticLockPropertyAttribute.cs`, `OptimisticLockPropertyBaseAttribute.cs`, `QueryFilterAttribute.cs` (**named/keyed filters, `AllowMultiple = true`**), `ResultSetIndexAttribute.cs`, `ServerSideOnlyAttribute.cs`, `IsQueryableAttribute.cs`, `SkipBaseAttribute.cs`, `SkipValuesByListAttribute.cs`, `SkipValuesOnInsertAttribute.cs`, `SkipValuesOnUpdateAttribute.cs`, `SqlQueryDependentAttribute.cs`, `SqlQueryDependentParamsAttribute.cs` (**[Obsolete] as of PR #5526 -- scheduled for v7 removal**), `ValueConverterAttribute.cs`
 - Fluent builder: `FluentMappingBuilder.cs`, `EntityMappingBuilder.cs`, `PropertyMappingBuilder.cs`
 - Value layer: `ValueConverter.cs`, `ValueConverterFunc.cs`, `ValueToSqlConverter.cs`, `DefaultValue.cs`, `ConversionType.cs`, `SkipModification.cs`, `VersionBehavior.cs`
 
@@ -73,19 +74,19 @@ Constructed via `new MappingSchema(string? configuration, params MappingSchema[]
 
 ### 2. `EntityDescriptor` construction
 
-`EntityDescriptor.Init` (`EntityDescriptor.cs:164-297`) is the single hot path that produces an entity column/association set:
+`EntityDescriptor.Init` (`EntityDescriptor.cs:278-410`) is the single hot path that produces an entity column/association set:
 
 1. Reads `[Table]` from the schema -> seeds `Name = SqlObjectName(name, server, database, schema)`, `TableOptions`, `IsColumnAttributeRequired`.
-2. Reads `[QueryFilter]` for a soft-delete-style ambient filter (`QueryFilterLambda` / `QueryFilterFunc`).
+2. Calls `InitQueryFilters` (`EntityDescriptor.cs:190-276`), which builds `EntityDescriptor.QueryFilters` (`EntityDescriptor.cs:166-184`) -- an ordered set of *named* filters. `[QueryFilter]` now allows multiple instances per entity (`QueryFilterAttribute.cs:17-30`, `FilterKey` addresses each one); `InitQueryFilters` walks the type hierarchy base->derived (`ApplyHierarchy` local function) and applies each class's own attributes in declaration order, so a derived class's entry overwrites an inherited entry under the same key, and an attribute whose `FilterLambda`/`FilterFunc` are both `null` tombstones (removes) an inherited entry. All surviving entries are AND-combined at query time. `QueryFilterLambda` / `QueryFilterFunc` remain as legacy single-slot accessors mirroring the empty-string (default) key's entry.
 3. `InitializeDynamicColumnsAccessors` (`EntityDescriptor.cs:488-665`) inspects `[DynamicColumnsStore]` / `[DynamicColumnAccessor]` and synthesises three lambdas -- getter, setter, and a storage-initializer that lazily news the `Dictionary<string,object>` on first write. These are persisted on `EntityDescriptor` so the LINQ side can compile them into materializers.
 4. Iterates `TypeAccessor.Members` (concat with `MappingSchema.GetDynamicColumns(ObjectType)`):
    - `[Association]` -> constructs `AssociationDescriptor` from the attribute keys / predicate / query / storage / setter.
    - `[Column]` -> for each `ColumnAttribute` with distinct `MemberName`, either constructs a `ColumnDescriptor` directly or queues a class-level redirect (the `attrs` list, used when `MemberName` resolves a nested path like "Residence.Street"). See `SetColumn` (`EntityDescriptor.cs:299-328`).
-   - No column attribute, but `MappingSchema.IsScalarType(member.Type)` is true OR the member has `[Identity]` / `[PrimaryKey]` -> still creates a `ColumnDescriptor` (implicit-mapping path; suppressed by `IsColumnAttributeRequired`).
+   - No column attribute, but `MappingSchema.IsScalarType(member.Type)` is true OR the member has `[Identity]` / `[PrimaryKey]` -> still creates a `ColumnDescriptor` (implicit-mapping path; suppressed by `IsColumnAttributeRequired`) -- except explicit interface implementation members (name contains `.`, e.g. `ITuple.Length` on a `ValueTuple`), which are skipped as infrastructure, not data columns (`EntityDescriptor.cs:367-370`).
    - `[ColumnAlias]` -> registered in `_aliases`.
    - `[ExpressionMethod(IsColumn = true)]` -> tracked in `CalculatedMembers`.
 5. Type-level `[Column]` attributes are applied last (`EntityDescriptor.cs:283-291`), letting class-level overrides win over member-level ones for the same path.
-6. `InitInheritanceMapping` (`EntityDescriptor.cs:349-428`) collects `[InheritanceMapping]` attrs, recursively builds child `EntityDescriptor`s via `MappingSchema.GetEntityDescriptor`, picks the column flagged `IsDiscriminator = true`, and sorts most-specific first.
+6. `InitInheritanceMapping` (`EntityDescriptor.cs:462-588`) collects `[InheritanceMapping]` attrs, recursively builds child `EntityDescriptor`s via `MappingSchema.GetEntityDescriptor`, picks the column flagged `IsDiscriminator = true`, and sorts most-specific first. Sibling columns are merged by **member identity** (`AlreadyMapped`, `MemberInfo.EqualsTo`, `EntityDescriptor.cs:496-508`), not by name alone: a same-named-but-distinct member from a sibling TPH type is kept apart in `InheritanceSiblingColumns` (internal, `EntityDescriptor.cs:141-148`) rather than dropped, and if it shares a physical column name with an already-merged column it is registered on that column via `ColumnDescriptor.AddValueSibling` (`EntityDescriptor.cs:518-546`) -- see subsystem 3 for how the write side consumes this.
 
 `EntityDescriptor` instances are cached per `(Type, schemaConfigId)` in `EntityDescriptorsCache` (`MappingSchema.cs:1835-1857`). Cache invalidation is implicit -- `ResetID` bumps `ConfigurationID`, and the next `GetEntityDescriptor` call sees a cache miss.
 
@@ -93,12 +94,14 @@ Constructed via `new MappingSchema(string? configuration, params MappingSchema[]
 
 Constructor (`ColumnDescriptor.cs:32-148`) resolves column metadata from three sources in priority order: explicit `ColumnAttribute` properties, the schema `GetDataType(MemberType)` / `GetUnderlyingDataType`, then per-member fallbacks (`[DataType]`, `[Nullable]`, nullability annotations, `[PrimaryKey]`, `[Sequence]`, `[ValueConverter]`, `[Skip*]`).
 
-Lazily-compiled lambda factories (`ColumnDescriptor.cs:507-802`):
+`GetDbDataType(completeDataType)` (`ColumnDescriptor.cs:414-430`) resolves the DB type from `ValueConverter?.ToProviderExpression.Body.Type` when a `[ValueConverter]` is present (`:427`), rather than from `MemberType` -- a converter-backed member with no DB type of its own (e.g. an F# `decimal option`) picks up the provider type of its *converted* value instead of failing to resolve.
+
+Lazily-compiled lambda factories (`ColumnDescriptor.cs:518-856`):
 
 - `GetOriginalValueLambda()` -- `obj => obj.Member`, the raw extractor without conversion.
-- `GetDbParamLambda()` -- full pipeline: extractor -> discriminator-default substitution -> `ApplyConversions(getterExpr, dbDataType, includingEnum: true)`. The `static ApplyConversions` (`ColumnDescriptor.cs:661-760`) is the canonical CLR value -> provider value pipeline (type-prep converter -> user `IValueConverter` -> registered `T -> DataParameter` lambda, with enum->underlying fallback). Reused by EXPR-TRANS for inline expression rewrites.
+- `GetDbParamLambda()` -- full pipeline: extractor -> discriminator-default substitution -> `ApplyConversions(getterExpr, dbDataType, includingEnum: true)`. The `static ApplyConversions` (`ColumnDescriptor.cs:668-767`) is the canonical CLR value -> provider value pipeline (type-prep converter -> user `IValueConverter` -> registered `T -> DataParameter` lambda, with enum->underlying fallback). Reused by EXPR-TRANS for inline expression rewrites.
 - `GetDbValueLambda()` -- same but unwraps `DataParameter.Value`.
-- `GetProviderValue(object)` -- compiles `GetDbValueLambda` into a `Func<object,object>`, cached in `_getter`.
+- `GetProviderValue(object)` -- compiles `GetDbValueLambda` into a `Func<object,object>`, cached in `_getter`. For inheritance-mapped columns (`HasInheritanceMapping`), the cast target widens from the concrete entity type to the member's *declaring* type when that declaring type is shared by multiple concrete subtypes (`ColumnDescriptor.cs:805-812`) -- otherwise a base-typed (mixed) insert would exclude sibling subtypes and write the default for them. The compiled getter then checks `TypeIs(obj, entityType)`: on a match it reads the member directly, otherwise it walks any registered value siblings (`AddValueSibling`, `ColumnDescriptor.cs:781-788`) via a `TypeIs` chain, reading the sibling member whose declaring type matches the row's runtime type, falling back to `GetDefaultDbValueExpression()` (`ColumnDescriptor.cs:795-856`). Declaring-type widening and the value-sibling chain are mutually exclusive on a given physical column in current TPH models -- flagged as a revisit-then item at `ColumnDescriptor.cs:825-831` if a future mapping ever needs both.
 
 ### 4. Type-conversion graph (`GetConverter` / `SetConvertExpression`)
 
@@ -122,13 +125,13 @@ Dispatch in `TryConvertImpl` (`ValueToSqlConverter.cs:188-239`) is fast-path: fo
 
 ### 6. Fluent builder
 
-`FluentMappingBuilder` accumulates `Type -> List<MappingAttribute>` and `MemberInfo -> List<MappingAttribute>`; `Build()` packages them into a `FluentMetadataReader` pushed onto the schema reader chain via `MappingSchema.AddMetadataReader`. `EntityMappingBuilder<TEntity>` / `PropertyMappingBuilder<TEntity,TProperty>` synthesise attribute objects from member-accessor expressions. `EntityMappingBuilder.SetAttribute` (`EntityMappingBuilder.cs:638-686`) is the merge operation.
+`FluentMappingBuilder` accumulates `Type -> List<MappingAttribute>` and `MemberInfo -> List<MappingAttribute>`; `Build()` packages them into a `FluentMetadataReader` pushed onto the schema reader chain via `MappingSchema.AddMetadataReader`. `EntityMappingBuilder<TEntity>` / `PropertyMappingBuilder<TEntity,TProperty>` synthesise attribute objects from member-accessor expressions. `EntityMappingBuilder.SetAttribute` (`EntityMappingBuilder.cs:725-753`) is the merge operation. `EntityMappingBuilder<TEntity>.HasQueryFilter` (`EntityMappingBuilder.cs:509-651`) has keyless overloads (targeting the `DefaultQueryFilterKey = ""` slot) and keyed overloads (`HasQueryFilter(string filterKey, ...)`) that each emit a `QueryFilterAttribute { FilterKey = filterKey, ... }`; passing a `null` filter/filterFunc to a keyed overload emits a key-only tombstone attribute that `EntityDescriptor.InitQueryFilters` uses to remove an inherited entry.
 
 ## Interactions
 
 - **METADATA -> MAPPING.** `Source/LinqToDB/Metadata/**` provides `IMetadataReader`. `MappingSchema.AddMetadataReader` (`MappingSchema.cs:1162-1183`) prepends a reader; `_cache`/`_firstOnlyCache` memoise per-`(type, member, attrType)` filtered-by-`ConfigurationList` results.
 - **MAPPING -> EXPR-TRANS.** Translation looks up `dataContext.MappingSchema.GetEntityDescriptor(type)`; `EntityDescriptor.this[memberName]` and `FindColumnDescriptor(MemberInfo)` are the lookup APIs.
-- **MAPPING -> LINQ.** Materialization compiles column readers from `ColumnDescriptor.GetDbDataType` + `FromDatabase` converters, and uses `EntityDescriptor.InheritanceMapping` for discriminator dispatch.
+- **MAPPING -> LINQ.** Materialization compiles column readers from `ColumnDescriptor.GetDbDataType` + `FromDatabase` converters, and uses `EntityDescriptor.InheritanceMapping` for discriminator dispatch. `EntityDescriptor.QueryFilters` (keyed, AND-combined) is read by `IgnoreFiltersBuilder` / `FilterIgnoreScope` (`Internal.Linq.Builder`, see [LINQ area](../LINQ/INDEX.md)) to apply or selectively suppress filters per query.
 - **MAPPING -> DATA.** `DataConnection`/`DataParameter` paths call `ColumnDescriptor.GetDbParamLambda()` (or static `ApplyConversions`) at execution time.
 - **MAPPING -> SQL-PROVIDER.** SQL builders consume `MappingSchema.ValueToSqlConverter` and `GetDataType` / `ColumnDescriptor.DataType` / `DbType`.
 
@@ -136,7 +139,7 @@ Dispatch in `TryConvertImpl` (`ValueToSqlConverter.cs:188-239`) is fast-path: fo
 
 ### Inbound (who reads MAPPING)
 
-- `LinqToDB.Internal.Linq.Builder.*` -- entity descriptor lookup, association resolution, column reader compilation.
+- `LinqToDB.Internal.Linq.Builder.*` -- entity descriptor lookup, association resolution, column reader compilation, keyed query-filter application (`IgnoreFiltersBuilder`, `FilterIgnoreScope`).
 - `LinqToDB.Data.*` -- parameter binding via `ColumnDescriptor.GetDbParamLambda`.
 - `LinqToDB.Internal.SqlProvider.*` -- `ValueToSqlConverter`; `GetDataType` for type rendering.
 - `LinqToDB.Concurrency.ConcurrencyExtensions` -- `OptimisticLockPropertyAttribute`.
@@ -159,6 +162,7 @@ Dispatch in `TryConvertImpl` (`ValueToSqlConverter.cs:188-239`) is fast-path: fo
 - **`ConfigurationID` recomputation cost.** `ResetID` clears `_configurationID`; the next read re-hashes every layer (O(layers)).
 - **`SetDefaultValue` enum branch lazily mutates `Schemas[0]` from inside `GetDefaultValue`** (`MappingSchema.cs:243-274`); same pattern in `GetCanBeNull` (`:300-331`).
 - **`SqlQueryDependentParamsAttribute` is deprecated** (`SqlQueryDependentParamsAttribute.cs:27`). Marked `[Obsolete]` in PR #5526; scheduled for removal in v7. Its `ExpressionsEqual<TContext>` / `SplitExpression` overrides are unsafe when the parameter expression captures outer-scope transparent identifiers in multi-level eager-loaded projections (issue #5154). The default structural cache-compare path now covers the intended use cases.
+- **TPH sibling-column value writing assumes declaring-type widening and value-siblings are mutually exclusive** (`ColumnDescriptor.cs:825-831`). A future mapping that combines both on one physical column (an inherited member shared by all subtypes *and* distinct value-sibling members) would make the value-sibling branch unreachable, silently writing the default for non-primary sibling rows. Not yet hit by any model; flagged in-code as a revisit-then item.
 
 ## See also
 
@@ -166,7 +170,7 @@ Dispatch in `TryConvertImpl` (`ValueToSqlConverter.cs:188-239`) is fast-path: fo
 - [`code-design.md`](../../code-design.md) -- public-API contract.
 - [METADATA area](../METADATA/INDEX.md) -- sources of `MappingAttribute` instances.
 - [EXPR-TRANS area](../EXPR-TRANS/INDEX.md) -- primary consumer of `EntityDescriptor` / `ColumnDescriptor`.
-- [LINQ area](../LINQ/INDEX.md) -- materialization / column-reader compilation site.
+- [LINQ area](../LINQ/INDEX.md) -- materialization / column-reader compilation site; also the keyed query-filter application site (`IgnoreFiltersBuilder`).
 
 ## Pointers
 
@@ -175,12 +179,14 @@ Dispatch in `TryConvertImpl` (`ValueToSqlConverter.cs:188-239`) is fast-path: fo
 - Adding a per-column knob? Add a property to `ColumnAttribute`, an accessor on `ColumnDescriptor`, read it during the ctor -- the Has*() pattern distinguishes user-set from type-default.
 - Wrong DataType / nullability? Walk the precedence in `ColumnDescriptor` ctor; for nullability `[Column].CanBeNull` -> `[Nullable]` -> NRT analysis -> `IsIdentity` -> schema `GetCanBeNull` (`ColumnDescriptor.cs:150-166`).
 - Touching `EntityDescriptor.Init`? The two-pass member-then-type ordering is load-bearing.
+- Adding a keyed query filter? Use `EntityMappingBuilder<T>.HasQueryFilter(filterKey, ...)`; passing `filter: null`/`filterFunc: null` removes (tombstones) a previously-registered key. The empty string is the default (anonymous) slot mirrored by `EntityDescriptor.QueryFilterLambda` / `QueryFilterFunc`.
+- Touching TPH sibling-column writes? `ColumnDescriptor.AddValueSibling` / `GetProviderValue`'s declaring-type-widening logic assume the two paths never combine on one physical column (`ColumnDescriptor.cs:825-831`) -- verify that invariant still holds before changing either.
 
 <details><summary>Coverage</summary>
 
 Tier 1: 3/3 visited (read in full): `MappingSchema.cs`, `EntityDescriptor.cs`, `ColumnDescriptor.cs`.
 
-Tier 2: 43/43 visited. Two files read partially (repetitive registration code): `ValueToSqlConverter.cs`, `PropertyMappingBuilder.cs`. All others read in full.
+Tier 2: 44/44 visited. One file read partially (repetitive registration code): `ValueToSqlConverter.cs`. All others read in full, including `EntityQueryFilter.cs` (new file, added this run) and `PropertyMappingBuilder.cs` (now read in full).
 
 Tier 3: 0/0.
 
@@ -190,5 +196,13 @@ Read (prior run -- delta):
 Read (this run -- delta):
 - `Source/LinqToDB/Mapping/MappingSchema.cs` -- `MappingSchema` now implements `IEquatable<MappingSchema>` (equality by `ConfigurationID`, `MappingSchema.cs:1941-1963`); `_syncRoot` field changed from `object` to `System.Threading.Lock` (net9+, `:190`); `ConfigurationList` and `ColumnNameComparer` use C# 14 `field` keyword for lazy init (`:1411`, `:1808`); constructor single-base fast-path uses list pattern + array spread (`:141-156`); `GetConverter` inner lookup extracted to local function `TryFindExistingConversion` (`:1003-1024`); public helpers `GenerateSafeConvert` (`:780-813`) and `GenerateConvertedValueExpression` (`:815-829`) confirmed present.
 - `Source/LinqToDB/Mapping/ValueToSqlConverter.cs` -- `ValueToSqlConverter` now implements `IEquatable<ValueToSqlConverter>` (`:331-351`); `SetDefaults` covers the full primitive + SqlTypes suite including `bool`/`char`/all numerics/`SqlBoolean`..`SqlGuid`/`DateOnly` (`:41-77`), broader than prior description; `SetConverter` accepts `null` to remove a converter (`:254-289`); `CanConvert(DbDataType, DataOptions, object?)` check-only overload added (`:183-186`); `TryConvertImpl` dispatches primitives via cached per-type delegate fields for zero-dictionary-lookup fast path (`:200-224`).
+
+Read (this run -- delta):
+- `Source/LinqToDB/Mapping/ColumnDescriptor.cs` -- `GetDbDataType` now resolves the DB type from `ValueConverter.ToProviderExpression.Body.Type` when a `[ValueConverter]` is present (`:427`), instead of always from `MemberType`; new `_valueSiblings` field + `internal AddValueSibling(ColumnDescriptor)` (`:781-788`); `GetProviderValue` widens the cast target to the member's declaring type for inheritance-mapped columns shared across concrete subtypes (`:805-812`) and, on a `TypeIs` miss, walks registered value siblings via a `TypeIs` chain before falling back to the column default (`:817-848`) -- see MAPPING subsystem 3.
+- `Source/LinqToDB/Mapping/EntityDescriptor.cs` -- `QueryFilterLambda`/`QueryFilterFunc` are now legacy single-slot mirrors of a new keyed `QueryFilters` (`IReadOnlyList<EntityQueryFilter>`) built by new `InitQueryFilters` (`:190-276`), which walks the type hierarchy base->derived and AND-combines named `[QueryFilter]` entries (derived overwrites/tombstones inherited by key); `Init`'s implicit-mapping branch now skips explicit interface implementation members, e.g. `ITuple.Length` (`:367-370`); `InitInheritanceMapping` merges sibling TPH columns by member identity (`AlreadyMapped`, `:496-508`) instead of by name alone, tracks unmerged same-named siblings in new internal `InheritanceSiblingColumns` (`:141-148`), and wires same-physical-column siblings onto the merged column via `ColumnDescriptor.AddValueSibling` (`:518-546`).
+- `Source/LinqToDB/Mapping/EntityMappingBuilder.cs` -- `HasQueryFilter` overload set gains a `filterKey` parameter (new internal `DefaultQueryFilterKey = ""` const, `:509`); keyed overloads (`:579-651`) emit `QueryFilterAttribute { FilterKey, FilterLambda/FilterFunc }`, and passing a `null` filter/filterFunc to a keyed overload emits a key-only tombstone attribute; the pre-existing keyless overloads now delegate to the keyed ones with `DefaultQueryFilterKey`.
+- `Source/LinqToDB/Mapping/EntityQueryFilter.cs` -- new file. Sealed `EntityQueryFilter` class (`FilterKey`, `FilterLambda`, `FilterFunc`) is the runtime record for one named filter entry, constructed by `EntityDescriptor.InitQueryFilters` from `QueryFilterAttribute` instances.
+- `Source/LinqToDB/Mapping/PropertyMappingBuilder.cs` -- `IsExpression<TR>` now rebases the lambda's parameter from `TEntity` to the member's `ReflectedType` when the property lives on a nested/complex type (e.g. `c => c.Address.Postcode`), so materialization-time substitution binds to the correct root instead of throwing in `ExposeExpressionVisitor.ConvertMemberExpression`.
+- `Source/LinqToDB/Mapping/QueryFilterAttribute.cs` -- new `FilterKey` property (`:17-30`) identifies a named filter slot (empty/`null` = default slot); `GetObjectID()` length-prefixes `FilterKey` in the id string (`:52-57`) so a key containing `.` can't collide with segment boundaries; XML doc updated to describe multiple-instance (`AllowMultiple = true`), AND-combined, keyed filters.
 
 </details>

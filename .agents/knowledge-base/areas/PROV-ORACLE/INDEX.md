@@ -3,8 +3,8 @@ area: PROV-ORACLE
 kind: area-index
 sources: [code]
 confidence: high
-last_verified: 2026-06-14
-last_verified_sha: b3340aa9ded15ffc626983fd202e6399daa081ca
+last_verified: 2026-07-05
+last_verified_sha: 36ee4f82f06eaf242b052ade8c87121d251a6165
 coverage_tier_1: 12/12
 coverage_tier_2: 20/20
 ---
@@ -79,7 +79,7 @@ BasicSqlBuilder<OracleOptions>
 - `ShouldBuildWhere` -- skips v11's ROWNUM injection for SELECT queries; v12+ uses native pagination.
 - `CanSkipRootAliases` -- false when TAKE/SKIP present (issue #2785).
 
-**`OracleSqlBuilderBase.Merge.cs`** configures Oracle MERGE specifics: `FakeTable = "dual"`, `FakeTableSchema = "sys"`, `IsValuesSyntaxSupported = false`, `SupportsColumnAliasesInSource = false`; overrides `BuildMergeInto`, `BuildMergeOperationInsert`, `BuildMergeOperationUpdate`, `BuildMergeOperationUpdateWithDelete` with Oracle `WHEN MATCHED` / `WHEN NOT MATCHED` syntax.
+**`OracleSqlBuilderBase.Merge.cs`** configures Oracle MERGE specifics: `FakeTable = "dual"`, `FakeTableSchema = "sys"`, `IsValuesSyntaxSupported = false`, `SupportsColumnAliasesInSource = false`, `IsUpsertUpdateWhereAfterSet = true` -- added this delta; Oracle only accepts `WHEN MATCHED THEN UPDATE SET ... WHERE cond`, not `WHEN MATCHED AND cond THEN UPDATE SET ...` (`OracleSqlBuilderBase.Merge.cs:24-26`); overrides `BuildMergeInto`, `BuildMergeOperationInsert`, `BuildMergeOperationUpdate`, `BuildMergeOperationUpdateWithDelete` with Oracle `WHEN MATCHED` / `WHEN NOT MATCHED` syntax.
 
 ### SQL optimizer hierarchy
 
@@ -159,10 +159,10 @@ Known limitation: ODP.NET bulk copy fails when any column name requires quoting.
 ### Mapping schema
 
 `OracleMappingSchema` (`OracleMappingSchema.cs`) extends `LockedMappingSchema`. Six concrete subclasses cover the 3 providers x 2 versions matrix (e.g. `Native11MappingSchema`, `ManagedMappingSchema`). Key mappings:
-- `Guid` -> `DataType.Guid` -> `Raw(16)` in DDL, serialized as `HEXTORAW('...')`.
-- `DateTime` -> `TO_DATE(..., 'YYYY-MM-DD HH24:MI:SS')` literal.
-- `DateTime2` -> `TIMESTAMP 'yyyy-MM-dd HH:mm:ss[.fff...]'` with precision 0--7.
-- `DateTimeOffset` -> `TIMESTAMP 'yyyy...' +00:00'`.
+- `Guid` -> `DataType.Guid` -> `Raw(16)` in DDL, serialized as `HEXTORAW(...)`.
+- `DateTime` -> `TO_DATE(..., YYYY-MM-DD HH24:MI:SS)` literal.
+- `DateTime2` -> `TIMESTAMP yyyy-MM-dd HH:mm:ss[.fff...]` with precision 0--7.
+- `DateTimeOffset` -> `TIMESTAMP yyyy... +00:00`.
 - `float` / `double` NaN/Infinity -> `BINARY_FLOAT_NAN`, `BINARY_FLOAT_INFINITY`, etc.
 - `decimal` -> `Number(28, 10)` default.
 - `string` default -> `VarChar(255)`.
@@ -183,19 +183,19 @@ On runtimes supporting `SUPPORTS_COMPOSITE_FORMAT` (net8+), format strings for D
 
 ### Member translator
 
-`OracleMemberTranslator` (`Translation/OracleMemberTranslator.cs`) extends `ProviderMemberTranslatorDefault`. Full translator content read in prior delta run (PR #5467, PR #5517) and re-read in this delta run (PR #5504, PR #5515):
+`OracleMemberTranslator` (`Translation/OracleMemberTranslator.cs`) extends `ProviderMemberTranslatorDefault`. Full translator content read in prior delta run (PR #5467, PR #5517) and re-read in this delta run (PR #5504, PR #5515), and re-read again in this delta run:
 
 **`DateFunctionsTranslator`** -- extends `DateFunctionsTranslatorBase`:
-- `TranslateDateTimeDatePart` -- `YEAR`/`MONTH`/`DAY`/`HOUR`/`MINUTE`/`SECOND` via `EXTRACT(<part> FROM {0})`; `Quarter` via `TO_NUMBER(TO_CHAR(dt,'Q'))`; `DayOfYear` via `TO_NUMBER(TO_CHAR(dt,'DDD'))`; `Week` via `TO_NUMBER(TO_CHAR(dt,'WW'))`; `Millisecond` via `TO_NUMBER(TO_CHAR(dt,'FF')) / 1000`; `WeekDay` via `TRUNC`/`IW` arithmetic (`OracleMemberTranslator.cs:60-118`).
+- `TranslateDateTimeDatePart` -- `YEAR`/`MONTH`/`DAY`/`HOUR`/`MINUTE`/`SECOND` via `EXTRACT(part FROM {0})`; `Quarter` via `TO_NUMBER(TO_CHAR(dt,Q))`; `DayOfYear` via `TO_NUMBER(TO_CHAR(dt,DDD))`; `Week` via `TO_NUMBER(TO_CHAR(dt,WW))`; `Millisecond` via `TO_NUMBER(TO_CHAR(dt,FF)) / 1000`; `WeekDay` via `TRUNC`/`IW` arithmetic (`OracleMemberTranslator.cs:60-118`).
 - `TranslateDateTimeOffsetDatePart` -- delegates to `TranslateDateTimeDatePart` (`OracleMemberTranslator.cs:121-124`).
-- `TranslateDateTimeDateAdd` -- uses `INTERVAL '1' YEAR|MONTH|DAY|HOUR|MINUTE|SECOND` multiplication (`OracleMemberTranslator.cs:126-153`).
-- `TranslateMakeDateTime` -- builds `TO_TIMESTAMP(concat_expr, 'YYYY-MM-DD HH24:MI:SS.FF3')` via `LPad`-padded string parts (`OracleMemberTranslator.cs:155-209`).
-- `TranslateDateTimeTruncationToTime` -- `TO_CHAR(dt, 'HH24:MI:SS')` (`OracleMemberTranslator.cs:212-221`).
-- `TranslateDateTimeTruncationToDate` -- `TRUNC(dt)` (no format mask; truncates to day boundary) (`OracleMemberTranslator.cs:224-231`). This is the fix from PR #5517: the prior `ConvertConversion` path used `Trunc(x,'DD')` with an explicit format; the translator now uses bare `TRUNC` without a format argument. Note: `ConvertConversion` in `OracleSqlExpressionConvertVisitor.cs:282-283` still emits `Trunc(x,'DD')` for explicit cast-to-date paths (i.e. `CAST(datetime AS date)`) -- the two paths are distinct.
+- `TranslateDateTimeDateAdd` -- uses `INTERVAL 1 YEAR|MONTH|DAY|HOUR|MINUTE|SECOND` multiplication (`OracleMemberTranslator.cs:126-153`).
+- `TranslateMakeDateTime` -- builds `TO_TIMESTAMP(concat_expr, YYYY-MM-DD HH24:MI:SS.FF3)` via `LPad`-padded string parts (`OracleMemberTranslator.cs:155-209`).
+- `TranslateDateTimeTruncationToTime` -- `TO_CHAR(dt, HH24:MI:SS)` (`OracleMemberTranslator.cs:212-221`).
+- `TranslateDateTimeTruncationToDate` -- `TRUNC(dt)` (no format mask; truncates to day boundary) (`OracleMemberTranslator.cs:224-231`). This is the fix from PR #5517: the prior `ConvertConversion` path used `Trunc(x,DD)` with an explicit format; the translator now uses bare `TRUNC` without a format argument. Note: `ConvertConversion` in `OracleSqlExpressionConvertVisitor.cs:282-283` still emits `Trunc(x,DD)` for explicit cast-to-date paths (i.e. `CAST(datetime AS date)`) -- the two paths are distinct.
 - `TranslateNow` -- emits `LOCALTIMESTAMP` (session time zone, `DateTime` typed) (`OracleMemberTranslator.cs:240-245`).
 - `TranslateUtcNow` -- emits `SYS_EXTRACT_UTC(SYSTIMESTAMP)` (`DateTime` typed) (`OracleMemberTranslator.cs:233-238`). Note: `SYSTIMESTAMP` is passed as a fragment, not a function call.
 - `TranslateZonedNow` -- emits `CURRENT_TIMESTAMP` (`DateTimeOffset` typed) (`OracleMemberTranslator.cs:247-250`).
-- `TranslateZonedUtcNow` -- emits `SYSTIMESTAMP AT TIME ZONE 'UTC'` (`DateTimeOffset` typed) (`OracleMemberTranslator.cs:252-255`).
+- `TranslateZonedUtcNow` -- emits `SYSTIMESTAMP AT TIME ZONE UTC` (`DateTimeOffset` typed) (`OracleMemberTranslator.cs:252-255`).
 
 **`OracleMathMemberTranslator`** -- extends `MathMemberTranslatorBase`:
 - `Math.Max` -> `GREATEST(x, y)` (`OracleMemberTranslator.cs:260-267`).
@@ -205,20 +205,22 @@ On runtimes supporting `SUPPORTS_COMPOSITE_FORMAT` (net8+), format strings for D
 - `Guid.ToString()` -> `LOWER(SUBSTR(RAWTOHEX(g),7,2)||SUBSTR(...,5,2)||...)` -- 8-group UUID format via byte-order-reversed hex slices, wrapped in null-check `CASE` (`OracleMemberTranslator.cs:290-327`).
 
 **`OracleStringMemberTranslator`** -- extends `StringMemberTranslatorBase`:
-- **`TranslateTrimStart`** -- emits `LTRIM(value)` / `LTRIM(value, trimChars)` with `ParametersNullabilityType.Nullable` (`OracleMemberTranslator.cs:337-345`). Added by PR #5515. Marked nullable because Oracle LTRIM/RTRIM can yield `''` which Oracle treats as NULL, so the result is nullable even when both inputs are non-null.
+- **`TranslateTrimStart`** -- emits `LTRIM(value)` / `LTRIM(value, trimChars)` with `ParametersNullabilityType.Nullable` (`OracleMemberTranslator.cs:337-345`). Added by PR #5515. Marked nullable because Oracle LTRIM/RTRIM can yield an empty string which Oracle treats as NULL, so the result is nullable even when both inputs are non-null.
 - **`TranslateTrimEnd`** -- emits `RTRIM(value)` / `RTRIM(value, trimChars)` with `ParametersNullabilityType.Nullable` (`OracleMemberTranslator.cs:347-355`). Added by PR #5515. Same nullability rationale as `TranslateTrimStart`.
 - **`TranslateStringJoin`** -- emits LISTAGG aggregate or plain concat depending on `withoutSeparator` parameter (`OracleMemberTranslator.cs:357-463`). Reworked by PR #5504:
-  - `withoutSeparator=true` (i.e. `string.Concat` / no separator): calls `ConfigureConcat`, which emits a plain `SqlConcatExpression` (rendered as `v1 || v2 || ...` via `ConcatStyle.Pipes`). Avoids `ConfigureConcatWsEmulation`'s `Coalesce(v,'')` wrapping, which is a no-op on Oracle (`''` = NULL) and causes ORA-12704 charset mismatches.
+  - `withoutSeparator=true` (i.e. `string.Concat` / no separator): calls `ConfigureConcat`, which emits a plain `SqlConcatExpression` (rendered as `v1 || v2 || ...` via `ConcatStyle.Pipes`). Avoids the `Coalesce`-based emulation, which is a no-op on Oracle (empty string equals NULL) and causes ORA-12704 charset mismatches.
   - `withoutSeparator=false` (i.e. `string.Join` with separator): calls `ConfigureConcatWsEmulation` with `wrapByCoalesce: false` and a `SUBSTR(valuesExpr, LENGTH(separator)+1)` lambda to strip the separator prefix. The LISTAGG-based aggregate path (DISTINCT modifier, filter-condition CASE, NVARCHAR->VARCHAR cast, `WITHIN GROUP (ORDER BY value)`) is used for aggregation contexts. The `IsWithinGroupRequired` property (virtual, `true` by default) controls whether `WITHIN GROUP` is always appended.
-- **`TranslateIsNullOrWhiteSpace`** -- emits `LTRIM(value, 'WHITESPACES') IS NULL` (single predicate, no `value IS NULL` disjunct needed because Oracle's empty-string-as-NULL identity means a fully-whitespace `LTRIM` result is already NULL) (`OracleMemberTranslator.cs:466-476`). Uses `ParametersNullabilityType.Nullable` on the `LTRIM` call.
+- **`TranslateIsNullOrWhiteSpace`** -- emits `LTRIM(value, WHITESPACES) IS NULL` (single predicate, no `value IS NULL` disjunct needed because Oracle treats empty string as NULL, so a fully-whitespace `LTRIM` result is already NULL) (`OracleMemberTranslator.cs:466-476`). Uses `ParametersNullabilityType.Nullable` on the `LTRIM` call.
 - `String.Join` -> `LISTAGG(value, separator) WITHIN GROUP (ORDER BY value)` aggregate. Handles `DISTINCT` modifier, filter conditions (via CASE for non-GROUP BY contexts), NVARCHAR->VARCHAR cast (LISTAGG does not accept NVARCHAR) (`OracleMemberTranslator.cs:330-401`).
 
-**`TranslateNewGuidMethod`** (on `OracleMemberTranslator` directly): `Guid.NewGuid()` -> `Sys_Guid()` (non-pure function) (`OracleMemberTranslator.cs:279-284`).
+**`TranslateNewGuidMethod`** (on `OracleMemberTranslator` directly): `Guid.NewGuid()` -> `Sys_Guid()` (non-pure function) (`OracleMemberTranslator.cs:279-282`).
 
 **`SqlTypesTranslation`**:
 - `Sql.Money` -> `Decimal(19,4)` (`OracleMemberTranslator.cs:43-44`).
 - `Sql.SmallMoney` -> `Decimal(10,4)` (`OracleMemberTranslator.cs:46-47`).
 - `Sql.NVarChar(n)` -> `VarChar2(n)` (`OracleMemberTranslator.cs:49-55`).
+
+**`OracleWindowFunctionsMemberTranslator`** -- extends `WindowFunctionsMemberTranslator`, wired in via `CreateWindowFunctionsMemberTranslator` override (both added this delta, `OracleMemberTranslator.cs:477-504`). Enables the Oracle window-function surface with standard SQL names: `IsKeepSupported`, `IsLeadLagNullTreatmentSupported`, `IsValueNullTreatmentSupported`, `IsNthValueFromSupported`, `IsAggregateDistinctSupported`, `IsVarianceSupported`, `IsVarianceBareSupported`, `IsCorrelationSupported`, `IsLinearRegressionSupported`, `IsMedianSupported`, `IsOrderedSetWindowedSupported` (group and windowed `PERCENTILE_CONT`/`PERCENTILE_DISC` forms), and `IsHypotheticalSetSupported` (hypothetical-set `RANK`/`DENSE_RANK`/`PERCENT_RANK`/`CUME_DIST`) are all `true`. `IsFrameGroupsSupported` and `IsFrameExclusionSupported` are `false` -- Oracle window frames do not support `GROUPS` mode or frame `EXCLUDE`. `TranslateRatioToReport` delegates to the shared `TranslateRatioToReportNative` helper rather than a bespoke Oracle expression.
 
 ## Key types
 
@@ -255,7 +257,7 @@ On runtimes supporting `SUPPORTS_COMPOSITE_FORMAT` (net8+), format strings for D
 | `OracleBulkCopy` | 4-strategy bulk insert |
 | `OracleSchemaProvider` | Dictionary-view-based schema discovery |
 | `OracleExtensions` (internal static) | `HasInconsistentCharset` / `FixCharset` helpers |
-| `OracleMemberTranslator` | LINQ member -> Oracle SQL function translation |
+| `OracleMemberTranslator` | LINQ member -> Oracle SQL function translation (incl. nested `OracleWindowFunctionsMemberTranslator`) |
 | `OracleSpecificTable<T>` / `OracleSpecificQueryable<T>` | Internal implementations of public interfaces |
 
 ## Oracle-specific features
@@ -267,7 +269,7 @@ Oracle 11g has no `IDENTITY` columns. `OracleSqlBuilderBase` models identity via
 2. On `CREATE TABLE` with an identity field, `CommandCount` returns 3 and `BuildCommand` emits two extra commands: `CREATE SEQUENCE SIDENTITY_<table>` and `CREATE OR REPLACE TRIGGER TIDENTITY_<table> BEFORE INSERT ... SELECT seq.NEXTVAL INTO :NEW.<col> FROM dual` (`OracleSqlBuilderBase.cs:492-531`).
 3. After insert, `BuildGetIdentity` emits `RETURNING <field> INTO :IDENTITY_PARAMETER`.
 
-Oracle 12c+ supports `GENERATED ALWAYS AS IDENTITY`. The schema provider reads `IDENTITY_COLUMN = 'YES'` for v12+.
+Oracle 12c+ supports `GENERATED ALWAYS AS IDENTITY`. The schema provider reads `IDENTITY_COLUMN = YES` for v12+.
 
 ### Pagination
 
@@ -276,15 +278,15 @@ Oracle 12c+ supports `GENERATED ALWAYS AS IDENTITY`. The schema provider reads `
 
 ### Empty string = NULL
 
-Oracle treats `''` as NULL. `OracleSqlExpressionConvertVisitor.ConvertExprExprPredicate` rewrites any comparison against `''` to the appropriate null-handling form for the full comparison operator set: `= ''` -> `IS NULL`; `<> ''` -> `IS NOT NULL`; `> ''` -> `IS NOT NULL`; `<= ''` -> `IS NULL`; `>= ''` -> always-true `1=1`; `< ''` -> always-false `1=0`. `Oracle11SqlOptimizer.IsParameterDependedElement` marks text-type parameters as query-plan-dependent when comparing to empty-string values.
+Oracle treats empty string as NULL. `OracleSqlExpressionConvertVisitor.ConvertExprExprPredicate` rewrites any comparison against an empty string to the appropriate null-handling form for the full comparison operator set: `Equal` -> `IS NULL`; `NotEqual` -> `IS NOT NULL`; `Greater` -> `IS NOT NULL`; `LessOrEqual` -> `IS NULL`; `GreaterOrEqual` -> always-true `1=1`; `Less` -> always-false `1=0`. `Oracle11SqlOptimizer.IsParameterDependedElement` marks text-type parameters as query-plan-dependent when comparing to empty-string values.
 
 ### String concatenation (`SqlConcatExpression`)
 
-PR #5504 introduced native `SqlConcatExpression` support. `OracleSqlBuilderBase.ConcatStyle` returns `ConcatBuildStyle.Pipes`, directing the base builder to emit `v1 || v2 || ...`. `OracleSqlExpressionConvertVisitor.ConvertConcat` overrides the base to skip the `Coalesce(x,'')` null-guard wrap: on Oracle `''` IS NULL so the wrap is a no-op, and additionally causes ORA-12704 character-set errors when NVARCHAR operands are involved. `ConcatRequiresExplicitStringCast` returns `false` since `||` auto-coerces. `OracleStringMemberTranslator.TranslateStringJoin` uses `ConfigureConcat` (plain concat, no separator stripping) when `withoutSeparator=true`, and `ConfigureConcatWsEmulation` with `wrapByCoalesce: false` plus a `SUBSTR`-based prefix-strip lambda when a separator is present.
+PR #5504 introduced native `SqlConcatExpression` support. `OracleSqlBuilderBase.ConcatStyle` returns `ConcatBuildStyle.Pipes`, directing the base builder to emit `v1 || v2 || ...`. `OracleSqlExpressionConvertVisitor.ConvertConcat` overrides the base to skip the `Coalesce(x,empty-string)` null-guard wrap: on Oracle empty string is NULL so the wrap is a no-op, and additionally causes ORA-12704 character-set errors when NVARCHAR operands are involved. `ConcatRequiresExplicitStringCast` returns `false` since `||` auto-coerces. `OracleStringMemberTranslator.TranslateStringJoin` uses `ConfigureConcat` (plain concat, no separator stripping) when `withoutSeparator=true`, and `ConfigureConcatWsEmulation` with `wrapByCoalesce: false` plus a `SUBSTR`-based prefix-strip lambda when a separator is present.
 
 ### MERGE
 
-Oracle invented the MERGE statement (SQL:2003 origin). `OracleSqlBuilderBase.Merge.cs` emits standard `MERGE INTO ... USING ... ON ... WHEN MATCHED THEN UPDATE ... WHEN NOT MATCHED THEN INSERT ...` with optional `DELETE WHERE` clause. `INSERT OR UPDATE` maps to MERGE via `BuildInsertOrUpdateQueryAsMerge(..., "FROM SYS.DUAL")`.
+Oracle invented the MERGE statement (SQL:2003 origin). `OracleSqlBuilderBase.Merge.cs` emits standard `MERGE INTO ... USING ... ON ... WHEN MATCHED THEN UPDATE ... WHEN NOT MATCHED THEN INSERT ...` with optional `DELETE WHERE` clause. `INSERT OR UPDATE` maps to MERGE via `BuildInsertOrUpdateQueryAsMerge(..., FROM SYS.DUAL)`. `IsUpsertUpdateWhereAfterSet = true` (added this delta) enforces the `WHEN MATCHED THEN UPDATE SET ... WHERE cond` clause ordering that Oracle requires -- the base builder alternate `WHEN MATCHED AND cond THEN UPDATE SET ...` shape is not accepted by Oracle parser.
 
 ### Multi-table INSERT
 
@@ -292,7 +294,7 @@ Oracle supports `INSERT ALL ... SELECT * FROM dual` and `INSERT FIRST ... SELECT
 
 ### XML table
 
-`OracleTools.OracleXmlTable<T>` serialises a .NET `IEnumerable<T>` to an XML string in the format `<t><r><c0>...</c0>...</r></t>` and passes it via a parameter. The `OracleXmlTableAttribute` (a `Sql.TableExpressionAttribute`) rewrites the table expression to `XmlTable('/t/r' PASSING XmlType({param}) COLUMNS col1 TYPE path 'c0', ...)` at query-building time (`OracleTools.OracleXmlTable.cs:114-179`).
+`OracleTools.OracleXmlTable<T>` serialises a .NET `IEnumerable<T>` to an XML string in the format `<t><r><c0>...</c0>...</r></t>` and passes it via a parameter. The `OracleXmlTableAttribute` (a `Sql.TableExpressionAttribute`) rewrites the table expression to `XmlTable(/t/r PASSING XmlType({param}) COLUMNS col1 TYPE path c0, ...)` at query-building time (`OracleTools.OracleXmlTable.cs:114-179`).
 
 ### Global temporary tables
 
@@ -300,7 +302,7 @@ Oracle supports `INSERT ALL ... SELECT * FROM dual` and `INSERT FIRST ... SELECT
 
 ### Char/NChar charset mixing
 
-Oracle raises errors when mixing CHAR/VARCHAR2 and NCHAR/NVARCHAR2 in set operations, CASE expressions, COALESCE, and VALUES. `OracleExtensions.HasInconsistentCharset` detects this (`OracleExtensions.cs:11`); `OracleExtensions.FixCharset` wraps the CHAR side with `TO_NCHAR(...)` or `CAST(... AS NCHAR)` (`OracleExtensions.cs:31-43`). Called from `ConvertCoalesce`, `ConvertSqlCondition`, `ConvertSqlCaseExpression`, `VisitSqlValuesTable`, and `FixSetOperationValues`. Note: `ConvertConcat` explicitly skips the `Coalesce(x,'')` wrap precisely to avoid triggering this mismatch on NVARCHAR concat operands.
+Oracle raises errors when mixing CHAR/VARCHAR2 and NCHAR/NVARCHAR2 in set operations, CASE expressions, COALESCE, and VALUES. `OracleExtensions.HasInconsistentCharset` detects this (`OracleExtensions.cs:11`); `OracleExtensions.FixCharset` wraps the CHAR side with `TO_NCHAR(...)` or `CAST(... AS NCHAR)` (`OracleExtensions.cs:31-43`). Called from `ConvertCoalesce`, `ConvertSqlCondition`, `ConvertSqlCaseExpression`, `VisitSqlValuesTable`, and `FixSetOperationValues`. Note: `ConvertConcat` explicitly skips the `Coalesce` wrap precisely to avoid triggering this mismatch on NVARCHAR concat operands.
 
 ### Provider-specific parameter handling
 
@@ -313,12 +315,13 @@ Oracle raises errors when mixing CHAR/VARCHAR2 and NCHAR/NVARCHAR2 in set operat
 
 ### `SqlProviderFlags` notable settings
 
-(`OracleDataProvider.cs:37-60`)
+(`OracleDataProvider.cs:37-64`)
 - `IsUpdateFromSupported = false` -- Oracle has no `UPDATE ... FROM`.
 - `SupportedCorrelatedSubqueriesLevel = 1` -- one level of correlation allowed.
 - `DoesProviderTreatsEmptyStringAsNull = true`.
 - `SupportsBooleanType = false` (TODO: retest for Oracle 23ai).
 - `MaxInListValuesCount = 1000` -- Oracle IN-list limit.
+- `MaxColumnCount = 1000` -- caps columns per query; added this delta (`OracleDataProvider.cs:64`).
 - `IsApplyJoinSupported = true` only for v12+.
 - `IsColumnSubqueryShouldNotContainParentIsNotNull` and `IsColumnSubqueryWithParentReferenceAndTakeSupported` differ by version (`OracleDataProvider.cs:47-48`).
 
@@ -362,7 +365,7 @@ Oracle raises errors when mixing CHAR/VARCHAR2 and NCHAR/NVARCHAR2 in set operat
 | `Source/LinqToDB/Internal/DataProvider/Oracle/OracleSqlExpressionConvertVisitor.cs` | Read -- empty-string/bitwise/cast/concat rewrites |
 | `Source/LinqToDB/Internal/DataProvider/Oracle/OracleSchemaProvider.cs` | Read (partial -- first 300 lines) |
 | `Source/LinqToDB/Internal/DataProvider/Oracle/OracleExtensions.cs` | Read -- charset helpers |
-| `Source/LinqToDB/Internal/DataProvider/Oracle/Translation/OracleMemberTranslator.cs` | Read (full -- multiple delta runs; all sub-translators inspected including TrimStart/TrimEnd, reworked TranslateStringJoin, and TranslateIsNullOrWhiteSpace) |
+| `Source/LinqToDB/Internal/DataProvider/Oracle/Translation/OracleMemberTranslator.cs` | Read (full -- multiple delta runs; all sub-translators inspected including TrimStart/TrimEnd, reworked TranslateStringJoin, TranslateIsNullOrWhiteSpace, and the new `OracleWindowFunctionsMemberTranslator`) |
 | `Source/LinqToDB/Internal/DataProvider/Oracle/OracleSpecificQueryable.cs` | Read -- sealed impl |
 | `Source/LinqToDB/Internal/DataProvider/Oracle/OracleSpecificTable.cs` | Read -- sealed impl |
 
@@ -372,7 +375,7 @@ Oracle raises errors when mixing CHAR/VARCHAR2 and NCHAR/NVARCHAR2 in set operat
 
 ## Known issues / debt
 
-1. **`Oracle11ParametersNormalizer` always used regardless of version.** `OracleDataProvider.GetQueryParameterNormalizer` hardcodes `Oracle11ParametersNormalizer` (30-char limit). `Oracle122ParametersNormalizer` exists but is never activated. See issue [#4219](https://github.com/linq2db/linq2db/issues/4219) and TODO at `OracleDataProvider.cs:195`. Note: `CreateIdentifierService` (added this delta) IS version-aware, using 30 for v11 and 128 for v12+ -- the gap is specifically in the query-parameter normalizer path.
+1. **`Oracle11ParametersNormalizer` always used regardless of version.** `OracleDataProvider.GetQueryParameterNormalizer` hardcodes `Oracle11ParametersNormalizer` (30-char limit). `Oracle122ParametersNormalizer` exists but is never activated. See issue [#4219](https://github.com/linq2db/linq2db/issues/4219) and TODO at `OracleDataProvider.cs:195`. Note: `CreateIdentifierService` (added in a prior delta) IS version-aware, using 30 for v11 and 128 for v12+ -- the gap is specifically in the query-parameter normalizer path.
 
 2. **`SupportsBooleanType = false` awaiting Oracle 23ai retest.** `OracleDataProvider.cs:52` has a TODO -- Oracle 23ai introduced a native `BOOLEAN` type; the flag has not been updated.
 
@@ -410,11 +413,11 @@ Oracle raises errors when mixing CHAR/VARCHAR2 and NCHAR/NVARCHAR2 in set operat
 
 Delta run (sha 4a478ff14):
 - Read: `Source/LinqToDB/Internal/DataProvider/Oracle/OracleBulkCopy.cs` (full -- includes `MultipleRowsConvertToParameter` static lambda forcing Text/NText/Binary/VarBinary values to parameters)
-- Read: `Source/LinqToDB/Internal/DataProvider/Oracle/Translation/OracleMemberTranslator.cs` (full -- previously partial; PR #5467 now-virtual split and PR #5517 `TranslateDateTimeTruncationToDate` use bare `TRUNC` instead of `Trunc(x,'DD')`)
+- Read: `Source/LinqToDB/Internal/DataProvider/Oracle/Translation/OracleMemberTranslator.cs` (full -- previously partial; PR #5467 now-virtual split and PR #5517 `TranslateDateTimeTruncationToDate` use bare `TRUNC` instead of `Trunc(x,DD)`)
 
 Read (this run -- delta, sha 2e67bafc9):
 - `Source/LinqToDB/Internal/DataProvider/Oracle/OracleSqlBuilderBase.cs` -- `ConcatStyle` property added returning `ConcatBuildStyle.Pipes` (PR #5504); rest of file unchanged from prior build-time read.
-- `Source/LinqToDB/Internal/DataProvider/Oracle/OracleSqlExpressionConvertVisitor.cs` -- two new members added by PR #5504: `ConcatRequiresExplicitStringCast` returns `false` (Oracle `||` auto-coerces), and `ConvertConcat` skips the base `Coalesce(x,'')` wrap to avoid no-op semantics and ORA-12704 charset mismatches on NVARCHAR operands.
+- `Source/LinqToDB/Internal/DataProvider/Oracle/OracleSqlExpressionConvertVisitor.cs` -- two new members added by PR #5504: `ConcatRequiresExplicitStringCast` returns `false` (Oracle `||` auto-coerces), and `ConvertConcat` skips the base `Coalesce` wrap to avoid no-op semantics and ORA-12704 charset mismatches on NVARCHAR operands.
 - `Source/LinqToDB/Internal/DataProvider/Oracle/Translation/OracleMemberTranslator.cs` -- `OracleStringMemberTranslator` gained `TranslateTrimStart` / `TranslateTrimEnd` overrides (PR #5515, `ParametersNullabilityType.Nullable` because LTRIM/RTRIM can produce empty = NULL on Oracle) and `TranslateStringJoin` was reworked (PR #5504): `withoutSeparator=true` routes through `ConfigureConcat` (plain `||` emission); `withoutSeparator=false` routes through `ConfigureConcatWsEmulation` with `wrapByCoalesce: false` and a `SUBSTR`-based separator-strip lambda.
 
 Read (this run -- delta, sha b3340aa9):
@@ -423,7 +426,12 @@ Read (this run -- delta, sha b3340aa9):
 - `Source/LinqToDB/Internal/DataProvider/Oracle/OracleDataProvider.cs` -- added `CreateIdentifierService()` override returning `IdentifierServiceSimple(Version <= OracleVersion.v11 ? 30 : 128)` at line 116-119; this is the version-aware identifier-length service (distinct from `GetQueryParameterNormalizer` which still hardcodes 30-char limit).
 - `Source/LinqToDB/Internal/DataProvider/Oracle/OracleMappingSchema.cs` -- added `#if SUPPORTS_COMPOSITE_FORMAT` blocks caching format strings as `CompositeFormat` instances for net8+ performance; added `OracleRemoteMappingSchema` inner class and `GetRemoteMappingSchema(Type)` static helper for LinqService remoting path.
 - `Source/LinqToDB/Internal/DataProvider/Oracle/OracleProviderDetector.cs` -- added explicit version-string detection for Oracle 18, 19, and 21 (all mapped to `OracleVersion.v12`) at lines 52-54.
-- `Source/LinqToDB/Internal/DataProvider/Oracle/OracleSqlExpressionConvertVisitor.cs` -- expanded `ConvertExprExprPredicate` to handle the full operator set against empty string (not just Equal/NotEqual); added `ConvertSqlExpression` override for `To_Number(To_Char(... 'FF'))` millisecond fragment normalization; added `ConvertSqlFunction` override mapping `CharIndex` to Oracle `InStr`.
-- `Source/LinqToDB/Internal/DataProvider/Oracle/Translation/OracleMemberTranslator.cs` -- added `TranslateIsNullOrWhiteSpace` override to `OracleStringMemberTranslator` emitting `LTRIM(value, 'WHITESPACES') IS NULL`.
+- `Source/LinqToDB/Internal/DataProvider/Oracle/OracleSqlExpressionConvertVisitor.cs` -- expanded `ConvertExprExprPredicate` to handle the full operator set against empty string (not just Equal/NotEqual); added `ConvertSqlExpression` override for `To_Number(To_Char(... FF))` millisecond fragment normalization; added `ConvertSqlFunction` override mapping `CharIndex` to Oracle `InStr`.
+- `Source/LinqToDB/Internal/DataProvider/Oracle/Translation/OracleMemberTranslator.cs` -- added `TranslateIsNullOrWhiteSpace` override to `OracleStringMemberTranslator` emitting `LTRIM(value, WHITESPACES) IS NULL`.
+
+Read (this run -- delta, sha 36ee4f82f):
+- `Source/LinqToDB/Internal/DataProvider/Oracle/OracleDataProvider.cs` -- added `SqlProviderFlags.MaxColumnCount = 1000` alongside the pre-existing `MaxInListValuesCount` setting; no other substantive changes since the `b3340aa9` delta read.
+- `Source/LinqToDB/Internal/DataProvider/Oracle/OracleSqlBuilderBase.Merge.cs` -- added `IsUpsertUpdateWhereAfterSet => true` override: Oracle MERGE only accepts `WHEN MATCHED THEN UPDATE SET ... WHERE cond`, not `WHEN MATCHED AND cond THEN UPDATE SET ...`.
+- `Source/LinqToDB/Internal/DataProvider/Oracle/Translation/OracleMemberTranslator.cs` -- added `OracleWindowFunctionsMemberTranslator` (extends `WindowFunctionsMemberTranslator`) plus the `CreateWindowFunctionsMemberTranslator` override wiring it in; enables the Oracle full statistical/regression/ordered-set/hypothetical-set window-function surface (variance, correlation, linear regression, median, `KEEP`, `LEAD`/`LAG`/`VALUE` null-treatment, `NTH_VALUE FROM`, aggregate `DISTINCT`, windowed `PERCENTILE_CONT`/`DISC`, hypothetical-set `RANK` family) while excluding `GROUPS` frame mode and frame `EXCLUDE`; `TranslateRatioToReport` delegates to `TranslateRatioToReportNative`. Also includes a cosmetic no-op simplification of `TranslateNewGuidMethod` (inlined the local variable, no behavior change).
 
 </details>

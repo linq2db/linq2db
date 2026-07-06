@@ -3,8 +3,8 @@ area: PROV-SQLSERVER
 kind: area-index
 sources: [code]
 confidence: high
-last_verified: 2026-06-15
-last_verified_sha: b3340aa9ded15ffc626983fd202e6399daa081ca
+last_verified: 2026-07-05
+last_verified_sha: 36ee4f82f06eaf242b052ade8c87121d251a6165
 coverage_tier_1: 11/11
 coverage_tier_2: 47/47
 ---
@@ -64,6 +64,7 @@ SQL Server provider for linq2db. Covers two ADO.NET client packages (`System.Dat
 `SqlServerDataProvider` (`Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerDataProvider.cs:52`) -- `abstract`, extends [`DynamicDataProviderBase<SqlServerProviderAdapter>`](../INTERNAL-API/INDEX.md). 18 concrete `sealed` subclasses are in the same file, one per (version x client-package). Constructor responsibilities:
 
 - Sets `SqlProviderFlags`: `IsApplyJoinSupported`, `IsCommonTableExpressionsSupported`, `OutputDeleteUseSpecialTable`, `OutputInsertUseSpecialTable`, `OutputUpdateUseSpecialTables`, `OutputMergeUseSpecialTables`, `TakeHintsSupported = Percent|WithTies`, `IsDistinctFromSupported = Version >= v2022`, `SupportsBooleanType = false`, `IsUpdateTakeSupported = true`, `IsRowNumberWithoutOrderBySupported = false`.
+- New in this delta -- additional constructor-set flags not previously catalogued (`Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerDataProvider.cs:66--89`): `AcceptsOuterExpressionInAggregate = false`; `IsCTESupportsOrdering = false`; `MaxColumnCount = 4096` (SQL Server's per-SELECT column limit -- the `CteUnion` carrier is a SELECT body, so the per-table/view limit of 1024 would wrongly abandon `CteUnion` for 1025--4096-column carriers, per inline comment at `:79--81`); `DefaultNullsOrdering = NullsDefaultOrdering.Smallest` (SQL Server sorts `NULL` as the smallest value); `IsInsertOrUpdateWithPredicateSupported = Version > v2005` and `IsUpsertWithMergeLoweringSupported = Version > v2005` -- SQL Server 2005 emits `InsertOrUpdate` as `UPDATE` + `IF @@ROWCOUNT=0 INSERT` (single statement, no room for an extra predicate on the UPDATE branch) and predates `MERGE` (introduced 2008), so synthesized MERGE lowering for bulk/SkipInsert/InsertWhen/non-PK-match Upsert isn't available pre-2008 (`:84--89`).
 - Registers `char`/`nchar` trimming; `SqlChars`, `SqlBinary`, `SqlBoolean`, etc. via `SetProviderField` (`Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerDataProvider.cs:100--114`).
 - When `SqlJsonType != null` (MicrosoftDataSqlClient + new enough version), registers JSON reader (`Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerDataProvider.cs:116--127`).
 - When `SqlVectorType != null`, registers `SqlVector<float>` and `float[]` readers. New in this delta: reader expressions are registered for both `FieldType = byte[]` and `FieldType = SqlVectorType` to handle the SqlClient 6.x-vs-7.0.1+ field-type change -- SqlClient 6.x reports vector columns as `FieldType=byte[]`; 7.0.1+ reports `SqlVector<T>` (`Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerDataProvider.cs:139--143`).
@@ -71,6 +72,7 @@ SQL Server provider for linq2db. Covers two ADO.NET client packages (`System.Dat
 - `CreateMemberTranslator()` dispatches by `Version`: >=v2022->SqlServer2022MemberTranslator, >=v2017->SqlServer2017MemberTranslator, >=v2016->SqlServer2016MemberTranslator, >=v2012->SqlServer2012MemberTranslator, >=v2008->SqlServer2008MemberTranslator, v2005->SqlServer2005MemberTranslator, else->SqlServerMemberTranslator (`Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerDataProvider.cs:259--270`).
 - `CreateSqlBuilder()` switches on `Version` to instantiate the per-version builder (`Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerDataProvider.cs:273--288`).
 - `SetParameter` handles `DateTimeOffset`->`DateTime` for SmallDateTime/DateTime, `DateTimeOffset` precision for DateTime2/DateTimeOffset/Date, `DateOnly`->`DateTime` (`SUPPORTS_DATEONLY`), decimal precision clamping, `DataType.Structured` for TVP, `DataType.Vector32`/`Vector16` conversion, JSON/`SqlJson` conversion for v2025+ (`Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerDataProvider.cs:319--580`).
+- New in this delta -- `SetParameterType` override (`Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerDataProvider.cs:603--670`) maps `DbDataType` to a provider-specific `SqlDbType` (preferred) or generic ADO.NET `DbType` (fallback): `Date`->`SqlDbType.DateTime` on v2005 else `SqlDbType.Date`; `Json`->`Adapter.JsonDbType` for v2025+; `Vector16`/`Vector32`->`Adapter.VectorDbType`; `DateTimeOffset`/`DateTime2` fall back to `DbType.DateTime` on v2005 else `DbType.DateTimeOffset`/`DbType.DateTime2`.
 - UDT support: `AddUdtType(Type, string, ...)` registers name<->type mappings into `_udtTypeNames`/`_udtTypes`; `GetUdtTypeByName` resolves by name.
 - BulkCopy: lazily instantiates `SqlServerBulkCopy` and delegates; reads `SqlServerOptions.Default.BulkCopyType` when options say `Default` (`Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerDataProvider.cs:688--732`).
 
@@ -160,6 +162,8 @@ The translator chain follows the version-order inheritance: `SqlServerMemberTran
 - `SqlServerStringMemberTranslator` -- `REPLICATE`-based `LPad`; pre-2017 `string.Join` emulation via `SUBSTRING` of concat (`Source/LinqToDB/Internal/DataProvider/SqlServer/Translation/SqlServerMemberTranslator.cs:237--260`). `TrimStart`/`TrimEnd` with `trimChars != null` returns `null` (not supported pre-2022) (`Source/LinqToDB/Internal/DataProvider/SqlServer/Translation/SqlServerMemberTranslator.cs:202--215`).
 - `TranslateNewGuidMethod` emits `NewID()`.
 
+New in this delta -- `CreateGuidMemberTranslator` returns `GuidMemberTranslator`; its `TranslateGuildToString` emits `LOWER(CAST(<guid> AS char(36)))` (`Source/LinqToDB/Internal/DataProvider/SqlServer/Translation/SqlServerMemberTranslator.cs:279--293`). `CreateSqlTypesTranslator` returns `SqlTypesTranslation`, mapping `DateTimeOffset` sql-type conversions to `DataType.DateTime` (`:41--45`). `SqlServerStringMemberTranslator.TranslateIsNullOrWhiteSpace` emits `{value} IS NULL OR {value} NOT LIKE N'%[^WHITESPACES]%'` (`:262--270`).
+
 New in this delta -- `SqlServerStringMemberTranslator.TranslateStringJoin` `withoutSeparator` path (PR #5504): when `withoutSeparator=true`, calls `ConfigureConcat` (wraps by coalesce); when `withoutSeparator=false`, calls `ConfigureConcatWsEmulation` with a `SUBSTRING`-based extractor that strips the leading separator. Previously the `withoutSeparator` distinction was absent (`Source/LinqToDB/Internal/DataProvider/SqlServer/Translation/SqlServerMemberTranslator.cs:237--260`).
 
 | Translator | Extends | Key additions vs parent |
@@ -176,6 +180,15 @@ New in this delta -- `SqlServer2017MemberTranslator.TranslateStringJoin` `withou
 New in this delta -- `SqlServer2022MemberTranslator` adds `SqlServer2022StringMemberTranslator` (PR #5515): overrides `TranslateTrimStart` and `TranslateTrimEnd`. When `trimChars == null`, falls back to the base (LTRIM/RTRIM without arguments). When `trimChars` is provided, emits `LTRIM(value, trimChars)` / `RTRIM(value, trimChars)` using the SQL Server 2022 two-argument forms (`Source/LinqToDB/Internal/DataProvider/SqlServer/Translation/SqlServer2022MemberTranslator.cs:44--65`). Pre-2022 (base `SqlServerStringMemberTranslator`) returns `null` for any `trimChars != null` call.
 
 The `preserveDbType=true` flag on the 2008 `DATE` cast (PR #5517) prevents the SQL generator from re-applying the column's original `DbType` over the `CAST(x AS DATE)` result -- without it, `DateTime.Date` on a `DateTime2` column would emit `CAST(x AS DATE)` but then have the `DATE` type overridden back to `DateTime2` by the column's metadata.
+
+### Window function member translators
+
+Each member translator's `CreateWindowFunctionsMemberTranslator()` override selects a window-function translator whose capability flags gate which `OVER(...)` constructs the version supports:
+
+- `SqlServerMemberTranslator.CreateWindowFunctionsMemberTranslator` (base, used by v2005/v2008 -- neither `SqlServer2005MemberTranslator` nor `SqlServer2008MemberTranslator` overrides it) returns `SqlServerPre2012WindowFunctionsMemberTranslator`, which disables `IsLeadLagSupported`, `IsFirstLastValueSupported`, `IsPercentRankSupported`, `IsCumeDistSupported`, `IsNthValueSupported`, `IsAggregateWindowFunctionsSupported`, `IsFrameRowsSupported`, `IsFrameRangeSupported`, `IsFrameGroupsSupported`, `IsFrameExclusionSupported`, `IsPercentileContSupported`, `IsPercentileDiscSupported` -- aggregate window functions are rejected even though 2005/2008 technically support them without `ORDER BY`/frames, because the translator always emits an `ORDER BY` inside `OVER`, which SQL Server only allows for aggregates starting at 2012 (`Source/LinqToDB/Internal/DataProvider/SqlServer/Translation/SqlServerMemberTranslator.cs:295--316`, `:339--343`).
+- `SqlServer2012MemberTranslator.CreateWindowFunctionsMemberTranslator` (new in this delta) returns `SqlServerWindowFunctionsMemberTranslator` (`Source/LinqToDB/Internal/DataProvider/SqlServer/Translation/SqlServer2012MemberTranslator.cs:44--47`): enables ordered-set windowed `PERCENTILE_CONT`/`PERCENTILE_DISC` (`IsOrderedSetWindowedSupported = true`) and bare/variance statistical aggregates (`IsVarianceBareSupported`, `IsVarianceSupported = true`) but names them SQL Server's non-standard spellings -- `StdDevFunctionName`/`StdDevSampFunctionName` both map to `STDEV`, `StdDevPopFunctionName` to `STDEVP`, `VarianceFunctionName`/`VarSampFunctionName` both map to `VAR`, `VarPopFunctionName` to `VARP` -- and still disables `IsNthValueSupported`, `IsFrameGroupsSupported`, `IsFrameExclusionSupported`, `IsPercentileContSupported`/`IsPercentileDiscSupported` (the non-windowed ordered-set forms) (`Source/LinqToDB/Internal/DataProvider/SqlServer/Translation/SqlServerMemberTranslator.cs:318--337`).
+- `SqlServer2022MemberTranslator.CreateWindowFunctionsMemberTranslator` (new in this delta) returns `SqlServer2022WindowFunctionsMemberTranslator`, extending the 2012+ translator with `IsLeadLagNullTreatmentSupported = true` and `IsValueNullTreatmentSupported = true` -- SQL Server 2022 added the `IGNORE NULLS`/`RESPECT NULLS` clause for `FIRST_VALUE`, `LAST_VALUE`, `LAG`, `LEAD`. `NTH_VALUE` stays unsupported, so the `FROM LAST` variant is moot (`Source/LinqToDB/Internal/DataProvider/SqlServer/Translation/SqlServer2022MemberTranslator.cs:67--78`).
+
 ### Bulk copy
 
 `SqlServerBulkCopy` (`Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerBulkCopy.cs:16`) extends [`BasicBulkCopy`](../INTERNAL-API/INDEX.md):
@@ -252,7 +265,8 @@ The `preserveDbType=true` flag on the 2008 `DATE` cast (PR #5517) prevents the S
 | `SqlServerSqlExpressionConvertVisitor` | `Internal/DataProvider/SqlServer/SqlServerSqlExpressionConvertVisitor.cs` | Expression conversion; NText/Text cast for concat; case-sensitive LIKE; float %; decimal precision |
 | `SqlServer2008MemberTranslator` | `Internal/DataProvider/SqlServer/Translation/SqlServer2008MemberTranslator.cs` | DATE truncation via CAST; SYSUTCDATETIME(); ZonedUtcNow via CAST |
 | `SqlServer2016MemberTranslator` | `Internal/DataProvider/SqlServer/Translation/SqlServer2016MemberTranslator.cs` | ZonedUtcNow via `SYSDATETIMEOFFSET() AT TIME ZONE 'UTC'` |
-| `SqlServer2022MemberTranslator` | `Internal/DataProvider/SqlServer/Translation/SqlServer2022MemberTranslator.cs` | GREATEST/LEAST; LTRIM/RTRIM with explicit trim chars (PR #5515) |
+| `SqlServer2022MemberTranslator` | `Internal/DataProvider/SqlServer/Translation/SqlServer2022MemberTranslator.cs` | GREATEST/LEAST; LTRIM/RTRIM with explicit trim chars (PR #5515); adds `SqlServer2022WindowFunctionsMemberTranslator` (IGNORE/RESPECT NULLS) |
+| `SqlServerWindowFunctionsMemberTranslator` / `SqlServerPre2012WindowFunctionsMemberTranslator` (nested) | `Internal/DataProvider/SqlServer/Translation/SqlServerMemberTranslator.cs` | Window-function capability-flag hierarchy: pre-2012 disables aggregate/frame windows; 2012+ enables STDEV/VAR naming + windowed percentile |
 ## Files (Tier 1 / Tier 2)
 
 **Tier 1** (11 files, all visited):
@@ -301,6 +315,7 @@ The `preserveDbType=true` flag on the 2008 `DATE` cast (PR #5517) prevents the S
 - The inheritance chain for builders (2005->2008->2012->2014->2016->2017->2019->2022->2025) causes near-duplicate MERGE logic in both `SqlServer2008SqlBuilder.Merge.cs` and `SqlServer2012SqlBuilder.Merge.cs`. The `SqlServer2012SqlBuilder.Merge.cs` itself notes: TODO: both 2008 and 2012 builders inherit from same base class which leads to duplicate builder logic (`Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServer2012SqlBuilder.Merge.cs:8`).
 - `SqlFn` covers many T-SQL functions with the older `[Sql.Expression]` pattern; new functions (STRING_AGG, GREATEST, LEAST, DATETRUNC) are now added via member translators, creating two parallel extension points.
 - `SqlServer2025SqlExpressionConvertVisitor` and `SqlServer2025SqlOptimizer` were added as new files (this delta) but were previously not explicitly present -- prior to this delta, v2025+Microsoft directly used `SqlServer2022SqlOptimizer`. The new classes are minimal but provide the correct extension point for future 2025-specific expression transformations.
+- The pre-2012 window-function translator (`SqlServerPre2012WindowFunctionsMemberTranslator`) conservatively rejects aggregate window functions (`SUM`/`AVG`/`MIN`/`MAX`/`COUNT` OVER) entirely on 2005/2008, even though the SQL standard allows them without `ORDER BY`/frames -- the translator always emits `ORDER BY` inside `OVER`, and finer-grained flags to distinguish "aggregate window with ORDER BY" from "aggregate window without ORDER BY" don't exist yet.
 
 ## See also
 
@@ -313,6 +328,7 @@ The `preserveDbType=true` flag on the 2008 `DATE` cast (PR #5517) prevents the S
 
 - `SqlConcatExpression` AST node and `ConcatBuildStyle` enum live in the SQL-PROVIDER area; the v2025 `Pipes` style is the first SQL Server dialect to use non-`+` concat.
 - `StringMemberTranslatorBase.ConfigureConcat` / `ConfigureConcatWsEmulation` (base-class helpers) control the `withoutSeparator` branching used in all `TranslateStringJoin` overrides.
+- `WindowFunctionsMemberTranslator` base class (shared across providers) defines the capability-flag surface (`IsLeadLagNullTreatmentSupported`, `IsValueNullTreatmentSupported`, `IsOrderedSetWindowedSupported`, etc.) that each SQL Server-version nested translator overrides.
 <details><summary>Coverage</summary>
 
 - Tier 1 (visited / total): 11 / 11
@@ -352,5 +368,11 @@ Read (this run -- delta):
 - Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerProviderDetector.cs -- confirmed: 18 lazy singletons (9 SDC + 9 MDC, including v2025); DetectServerVersion secondary fallback: when compatibility_level < 90, maps major version number (9->v2005 .. 16->v2022, _->v2025)
 - Source/LinqToDB/Internal/DataProvider/SqlServer/Translation/SqlServer2017MemberTranslator.cs -- confirmed: withoutSeparator=true branch calls c.HasSequenceIndex(0), withoutSeparator=false calls c.HasSequenceIndex(1).TranslateArguments(0); separator uses factory.Value(valueType, string.Empty) when withoutSeparator
 - Source/LinqToDB/Internal/DataProvider/SqlServer/Translation/SqlServerMemberTranslator.cs -- confirmed: SqlServerStringMemberTranslator.TranslateStringJoin branches on withoutSeparator; TranslateTrimStart/TranslateTrimEnd return null when trimChars != null
+
+Read (this run -- delta):
+- Source/LinqToDB/Internal/DataProvider/SqlServer/SqlServerDataProvider.cs -- new flags in ctor not previously catalogued (AcceptsOuterExpressionInAggregate, IsCTESupportsOrdering, MaxColumnCount=4096, DefaultNullsOrdering=Smallest, IsInsertOrUpdateWithPredicateSupported/IsUpsertWithMergeLoweringSupported gated on Version>v2005); new SetParameterType override (DbType/SqlDbType mapping incl. Json/Vector16/Vector32)
+- Source/LinqToDB/Internal/DataProvider/SqlServer/Translation/SqlServer2012MemberTranslator.cs -- CreateWindowFunctionsMemberTranslator returns SqlServerWindowFunctionsMemberTranslator (previously undocumented window-function subsystem)
+- Source/LinqToDB/Internal/DataProvider/SqlServer/Translation/SqlServer2022MemberTranslator.cs -- SqlServer2022WindowFunctionsMemberTranslator adds IsLeadLagNullTreatmentSupported/IsValueNullTreatmentSupported for IGNORE/RESPECT NULLS (SQL Server 2022 NULL-treatment clause)
+- Source/LinqToDB/Internal/DataProvider/SqlServer/Translation/SqlServerMemberTranslator.cs -- full window-function translator hierarchy documented (SqlServerPre2012WindowFunctionsMemberTranslator, SqlServerWindowFunctionsMemberTranslator with STDEV/VAR naming); CreateGuidMemberTranslator/GuidMemberTranslator.TranslateGuildToString; CreateSqlTypesTranslator/SqlTypesTranslation; TranslateIsNullOrWhiteSpace
 
 </details>

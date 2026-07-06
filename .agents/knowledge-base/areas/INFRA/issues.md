@@ -3,8 +3,8 @@ area: INFRA
 kind: issues
 sources: [gh-issues, gh-prs, gh-discussions]
 confidence: medium
-last_verified: 2026-06-15
-last_verified_sha: b3340aa9ded15ffc626983fd202e6399daa081ca
+last_verified: 2026-07-06
+last_verified_sha: df84c7784
 ---
 
 # INFRA -- GitHub themes
@@ -34,10 +34,10 @@ last_verified_sha: b3340aa9ded15ffc626983fd202e6399daa081ca
 - Open PRs: 0
 - Total PRs: 7
 - Discussions: 0
-- Last fetched: 2026-06-15
+- Last fetched: 2026-07-06
 
 <details><summary>Coverage</summary>
 
-- Index entries scanned: 40 (33 issues + 7 PRs + 0 discussions)
-- Themes extracted: 4
+- Index entries scanned: 0 (0 issues + 0 PRs + 0 discussions)
+- Themes extracted: 0
 </details>

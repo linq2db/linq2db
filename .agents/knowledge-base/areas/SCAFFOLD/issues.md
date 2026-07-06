@@ -3,22 +3,17 @@ area: SCAFFOLD
 kind: issues
 sources: [gh-issues, gh-prs, gh-discussions]
 confidence: high
-last_verified: 2026-05-08
-last_verified_sha: d52a4ed0e83317cc11b2ef3d41ddf4ba70acf415
+last_verified: 2026-07-06
+last_verified_sha: d3061c6d7315303a86dfdd67bb7728d4736f6506
 ---
 
-# SCAFFOLD — GitHub themes
+# SCAFFOLD -- GitHub themes
 
 ## Open themes
 
-- **scaffold** — 6 open issues share this keyword. Sample: #3603, #3749, #3765, #4096, #4282, #4718.
-- **scaffolding** — 6 open issues share this keyword. Sample: #3501, #3957, #4447, #4606, #4695, #4901.
-- **mappings** — 3 open issues share this keyword. Sample: #3739, #3765, #4606.
-- **procedure** — 3 open issues share this keyword. Sample: #3621, #3765, #4718.
-- **tool** — 3 open issues share this keyword. Sample: #3957, #4606, #4874.
-- **name** — 3 open issues share this keyword. Sample: #3191, #4606, #4695.
-- **stored** — 3 open issues share this keyword. Sample: #3621, #4447, #4718.
-- **file** — 3 open issues share this keyword. Sample: #3957, #4096, #3191.
+- **scaffold** -- 6 open items share this keyword. Sample: #3603, #3749, #4096, #4282, #4713, #4901.
+- **tool** -- 3 open items share this keyword. Sample: #3749, #4282, #5620.
+- **file** -- 3 open items share this keyword. Sample: #3749, #4096, #4713.
 
 ## Resolved themes
 
@@ -26,22 +21,23 @@ last_verified_sha: d52a4ed0e83317cc11b2ef3d41ddf4ba70acf415
 
 ## Active discussions
 
-- [Linq2Db.Cli scaffold for ClickHouse](https://github.com/linq2db/linq2db/discussions/5089) — [Q&A] Description
-- [Scaffolding TypeScript support](https://github.com/linq2db/linq2db/discussions/5148) — [Q&A] @MaceWindu looking for new scaffolding tool - looks great )
-- [Is there an option to generate Context in a separate folder from generated entities?](https://github.com/linq2db/linq2db/discussions/5374) — [Q&A] I'd like to generate the context in the separate project/folder from generated entities. Is that possible? I couldn't find an option for that in the scaffold docs.
-- [Version 6 migration Q&A](https://github.com/linq2db/linq2db/discussions/5023) — [General] Place to discuss Linq To DB 6 migration issues/questions
+- [T4 template generator issue for Guid newid()](https://github.com/linq2db/linq2db/discussions/3105) -- [Q&A] I have table that contains guid using newid(). After I generated entities automatically, guid shows null after inserting/updating data.
+- [Define FK relationships in T4 .tt file?](https://github.com/linq2db/linq2db/discussions/3369) -- [Q&A] I'm working against a legacy database that I'm not really interested in modifying. There are a couple of relationships that aren't defined in the DB scheme but I want the T4 system to generate them anyway.
+- [Change column type in T4 model generation](https://github.com/linq2db/linq2db/discussions/3638) -- [General] I was wondering if it was possible to change the column type from decimal to float in the T4 template model generation in order to have the corresponding class with double and not decimal on specific columns.
+- [How to add Configuration value to ColumnAttribute](https://github.com/linq2db/linq2db/discussions/3648) -- [General] How to add Configuration value to ColumnAttribute while generate model classes with T4?
+- [Linq2db CLI Scaffolding getters and setters for a property](https://github.com/linq2db/linq2db/discussions/3680) -- [Q&A] How should we handle getters and setters in the generated scaffolding properties?
 
 ## Stats
 
-- Open issues: 27
-- Closed issues: 75
+- Open issues: 13
+- Closed issues: 77
 - Open PRs: 0
 - Total PRs: 51
 - Discussions: 14
-- Last fetched: 2026-05-08
+- Last fetched: 2026-07-06
 
 <details><summary>Coverage</summary>
 
-- Index entries scanned: 167 (102 issues + 51 PRs + 14 discussions)
-- Themes extracted: 0
+- Index entries scanned: 78 (13 open issues + 51 PRs + 14 discussions)
+- Themes extracted: 3
 </details>

@@ -3,8 +3,8 @@ area: EFCORE
 kind: area-index
 sources: [code]
 confidence: high
-last_verified: 2026-06-15
-last_verified_sha: b3340aa9ded15ffc626983fd202e6399daa081ca
+last_verified: 2026-07-05
+last_verified_sha: 36ee4f82f06eaf242b052ade8c87121d251a6165
 coverage_tier_1: 1/2
 coverage_tier_2: 24/24
 ---
@@ -27,10 +27,10 @@ Four `.csproj` files share one `.props` file (`LinqToDB.EntityFrameworkCore.prop
 All four reference `LinqToDB.csproj` (project reference) plus `Microsoft.EntityFrameworkCore.Relational` (package reference, version from `Directory.Build.props` except EF9 which overrides to 9.0.0). The shared `.props` also wires up `PublicAPI/PublicAPI.*.txt` as `AdditionalFiles` for the Roslyn API-compat analyzer. `NoWarn=EF1001` suppresses warnings about use of EF internal APIs.
 
 Per-EF branches appear throughout the source as `#if EF31 ... #else ... #endif` blocks. The most significant divergences:
-- `ReflectionMethods.cs`: `FromSqlOnQueryableMethodInfo` (EF31 only), `GetServiceProviderHashCode` return type (`long` in EF31, `int` later), `AsSplitQueryMethodInfo`/`AsSingleQueryMethodInfo` absent in EF31, `ShouldUseSameServiceProvider` absent in EF31.
-- `EFCoreMetadataReader.cs`: `GetAttributes(Type)` uses `et.GetTableName()` directly in EF31 vs `StoreObjectIdentifier.Create` in EF8+; `FindDiscriminatorProperty()` vs `GetDiscriminatorProperty()`; annotation provider type is `IMigrationsAnnotationProvider` (EF31) vs `IRelationalAnnotationProvider` (EF8+); `IDiagnosticsLogger` and `DatabaseDependencies` injected only in EF8+; multi-filter via `et.GetDeclaredQueryFilters()` used in EF10; many-to-many skip navigation support (`#if !EF31` throughout `EFCoreMetadataReader.ManyToMany.cs`).
+- `ReflectionMethods.cs`: `FromSqlOnQueryableMethodInfo` (EF31 only), `GetServiceProviderHashCode` return type (`long` in EF31, `int` later), `AsSplitQueryMethodInfo`/`AsSingleQueryMethodInfo` absent in EF31, `ShouldUseSameServiceProvider` absent in EF31, `IgnoreQueryFiltersByKeyMethodInfo` (EF10 only) reflecting the keyed `IgnoreQueryFilters(IReadOnlyCollection<string>)` overload.
+- `EFCoreMetadataReader.cs`: `GetAttributes(Type)` uses `et.GetTableName()` directly in EF31 vs `StoreObjectIdentifier.Create` in EF8+; `FindDiscriminatorProperty()` vs `GetDiscriminatorProperty()`; annotation provider type is `IMigrationsAnnotationProvider` (EF31) vs `IRelationalAnnotationProvider` (EF8+); `IDiagnosticsLogger` and `DatabaseDependencies` injected only in EF8+; multi-filter via `et.GetDeclaredQueryFilters()` used in EF10, each named filter's `queryFilter.Key` threaded into `QueryFilterAttribute.FilterKey` (`null` for the single un-keyed EF8/9/31 filter); many-to-many skip navigation support (`#if !EF31` throughout `EFCoreMetadataReader.ManyToMany.cs`).
 - `LinqToDBForEFToolsDataConnection.cs`: change-tracker snap uses `Snapshot.Empty` (EF8+) vs `ValueBuffer.Empty` (EF31).
-- `TransformExpressionVisitor.cs`: `QueryRootExpression`-based dispatch (EF8+) handles `FromSqlQueryRootExpression`, temporal table root expressions; EF31 falls through to `VisitConstant`/`FromSqlOnQueryable`.
+- `TransformExpressionVisitor.cs`: `QueryRootExpression`-based dispatch (EF8+) handles `FromSqlQueryRootExpression`, temporal table root expressions; EF31 falls through to `VisitConstant`/`FromSqlOnQueryable`; EF10 adds a keyed-filter-removal branch (`IgnoreQueryFiltersByKeyMethodInfo` -> `Methods.LinqToDB.IgnoreFiltersByKey`).
 
 ## Key types
 
@@ -65,7 +65,7 @@ Provider detection chain: `GetDataProvider` checks `DataOptions.ConnectionOption
 
 EF provider name -> linq2db `ProviderName` mapping: SqlServer, Pomelo/Devart MySql, Npgsql/Devart PostgreSQL, Sqlite/Devart, Firebird, IBM DB2LUW, Devart Oracle, Jet (Access), SqlServerCompact (SqlCe). Not supported (documented TODO): Informix, SAP HANA, Sybase, ClickHouse.
 
-`CreateLinqToDBDataProvider` dispatches on `LinqToDBProviderInfo.ProviderName`. SQL Server always uses `Microsoft.Data.SqlClient`; SQLite resolves to `SQLiteProvider.Microsoft`. Default SQL Server / PostgreSQL versions are `AutoDetect`. Added version cases: `SqlServerVersion.v2025` (`ProviderName.SqlServer2025`), `PostgreSQLVersion.v18` (`ProviderName.PostgreSQL18`), `FirebirdVersion.v4`/`v5`, `MySqlVersion.MariaDB10` (routes to `MySqlProvider.MySqlConnector`).
+`CreateLinqToDBDataProvider` dispatches on `LinqToDBProviderInfo.ProviderName`. SQL Server always uses `Microsoft.Data.SqlClient`; SQLite resolves to `SQLiteProvider.Microsoft`. Default SQL Server / PostgreSQL versions are `AutoDetect`. Added version cases: `SqlServerVersion.v2025` (`ProviderName.SqlServer2025`), `PostgreSQLVersion.v18` (`ProviderName.PostgreSQL18`), `PostgreSQLVersion.v19` (`ProviderName.PostgreSQL19`), `FirebirdVersion.v4`/`v5`, `MySqlVersion.MariaDB10` (routes to `MySqlProvider.MySqlConnector`).
 
 `DefineConvertors` / `CreateMappingSchema`: iterates all EF entity CLR types, uses `IValueConverterSelector.Select` to import EF value converters into `MappingSchema`. Npgsql enum label mappings get special treatment.
 
@@ -75,7 +75,7 @@ EF provider name -> linq2db `ProviderName` mapping: SqlServer, Pomelo/Devart MyS
 
 `internal sealed partial class`, implements `IMetadataReader`. Bridges EF `IModel` into linq2db's `MappingAttribute` model.
 
-`GetAttributes(Type)`: emits `TableAttribute`, `QueryFilterAttribute` (EF `GetQueryFilter()` / `GetDeclaredQueryFilters()` for EF10+), `InheritanceMappingAttribute`. For EF8+, when `type` is an `EfJoinTable<,,>` marker, returns only a `TableAttribute` for the join entity's store object -- bypasses normal entity lookup. Query filter rewrite replaces `DbContext`-typed sub-expressions. Falls back to `[Table]` annotation if entity not in model. EF8+: table-name resolution goes through private `GetStoreObjectIdentifier(IEntityType)` (`EFCoreMetadataReader.cs:644`), which tries `StoreObjectType.Table` then falls back to `StoreObjectType.View` (handles view-mapped entities).
+`GetAttributes(Type)`: emits `TableAttribute`, `QueryFilterAttribute` (EF `GetQueryFilter()` / `GetDeclaredQueryFilters()` for EF10+ -- each EF10 named filter's `queryFilter.Key` carried onto `QueryFilterAttribute.FilterKey`, `null` for the single un-keyed EF8/9/31 filter), `InheritanceMappingAttribute`. For EF8+, when `type` is an `EfJoinTable<,,>` marker, returns only a `TableAttribute` for the join entity's store object -- bypasses normal entity lookup. Query filter rewrite replaces `DbContext`-typed sub-expressions. Falls back to `[Table]` annotation if entity not in model. EF8+: table-name resolution goes through private `GetStoreObjectIdentifier(IEntityType)` (`EFCoreMetadataReader.cs:643`), which tries `StoreObjectType.Table` then falls back to `StoreObjectType.View` (handles view-mapped entities).
 
 `GetAttributes(Type, MemberInfo)`: emits `ColumnAttribute`, identity detection, `ValueConverterAttribute`, `AssociationAttribute` from EF navigation FKs. For EF8+, also emits `AssociationAttribute` with `QueryExpression` for many-to-many skip navigations (`GetSkipNavigations()`) via `BuildManyToManyQueryExpression`. For `EfJoinTable<,,>` marker types, delegates to `BuildJoinColumnAttribute` for `DynamicColumnInfo` members. `HasSpanTypes`/`IsSpan` guard skips `Span<T>`/`ReadOnlySpan<T>` members. `ConvertToExpressionAttribute` serializes EF `SqlExpression` trees to linq2db `{0}`/`{1}` placeholders; `UnwrapConverted` strips a top-level COALESCE null-guard wrapper before serialization. Special Npgsql `PgBinaryExpression` operator-type mapping. `Sql.FunctionAttribute` emission via `IModel.GetDbFunctions()` and `[DbFunctionAttribute]`.
 
@@ -103,7 +103,7 @@ Implements `IAsyncQueryProvider` (EF), `IQueryProviderAsync` (linq2db), `IQuerya
 
 ### Expression rewriting: `TransformExpressionVisitor`
 
-Extends `ExpressionVisitorBase`. Entry: `Transform(IDataContext?, IModel?, Expression)`. Key rewrites: `EntityQueryable<T>`/`DbSet<T>` -> `GetTable<T>`; `QueryRootExpression` (EF8+) -> `FromSql<T>` / temporal-table hints; `Include`/`ThenInclude` -> `LoadWith`/`ThenLoad*`; `IgnoreQueryFilters` -> `IgnoreFilters`; `AsNoTracking*`/`AsTracking` toggle `Tracking`; `TagWith` -> `TagQuery`; `AsSplitQuery`/`AsSingleQuery` (EF8+) stripped; `EF.Property<T>` -> `Sql.Ext.Property<T>`; `[NotParameterized]` params wrapped in `Sql.ToSql`. `CanBeValuatedVisitor` tests client-evaluability.
+Extends `ExpressionVisitorBase`. Entry: `Transform(IDataContext?, IModel?, Expression)`. Key rewrites: `EntityQueryable<T>`/`DbSet<T>` -> `GetTable<T>`; `QueryRootExpression` (EF8+) -> `FromSql<T>` / temporal-table hints; `Include`/`ThenInclude` -> `LoadWith`/`ThenLoad*`; `IgnoreQueryFilters` -> `IgnoreFilters`; `IgnoreQueryFilters(IReadOnlyCollection<string>)` (EF10 keyed overload) -> `IgnoreFiltersByKey`, short-circuited to a no-op when the (constant, `[NotParameterized]`) key collection is null/empty; `AsNoTracking*`/`AsTracking` toggle `Tracking`; `TagWith` -> `TagQuery`; `AsSplitQuery`/`AsSingleQuery` (EF8+) stripped; `EF.Property<T>` -> `Sql.Ext.Property<T>`; `[NotParameterized]` params wrapped in `Sql.ToSql`. `CanBeValuatedVisitor` tests client-evaluability.
 
 ### Data connection: `LinqToDBForEFToolsDataConnection`
 
@@ -140,8 +140,8 @@ Cache of reflected `MethodInfo`/`ConstructorInfo` for EF and linq2db methods use
 
 1. **Initialization** -- `LinqToDBForEFTools.InitializeInternal` hooks `LinqExtensions.ProcessSourceQueryable` and sets `ExtensionsAdapter`. Once per app domain via `Lazy<bool>`.
 2. **Provider resolution** -- `GetDataProvider` -> `GetLinqToDBProviderInfo` (3-source merge) -> `CreateLinqToDBDataProvider`.
-3. **Metadata bridging** -- `EFCoreMetadataReader` translates `IModel` into `MappingAttribute[]`. View-mapped entities via `GetStoreObjectIdentifier` (EF8+); span members skipped; COALESCE wrappers stripped by `UnwrapConverted`. Many-to-many skip navigations emit `AssociationAttribute` with `QueryExpression` via `BuildManyToManyQueryExpression`; join-table markers (`EfJoinTable<,,>`) are materialized as dynamic-column tables.
-4. **Expression transformation** -- `TransformExpressionVisitor` rewrites EF nodes to linq2db equivalents.
+3. **Metadata bridging** -- `EFCoreMetadataReader` translates `IModel` into `MappingAttribute[]`. View-mapped entities via `GetStoreObjectIdentifier` (EF8+); span members skipped; COALESCE wrappers stripped by `UnwrapConverted`. Query filters carry a `FilterKey` (EF10 named filters, `queryFilter.Key`; `null` pre-EF10). Many-to-many skip navigations emit `AssociationAttribute` with `QueryExpression` via `BuildManyToManyQueryExpression`; join-table markers (`EfJoinTable<,,>`) are materialized as dynamic-column tables.
+4. **Expression transformation** -- `TransformExpressionVisitor` rewrites EF nodes to linq2db equivalents, including EF10's keyed `IgnoreQueryFilters(IReadOnlyCollection<string>)` -> `IgnoreFiltersByKey`.
 5. **Change tracking** -- `LinqToDBForEFToolsDataConnection` attaches loaded entities to EF's `IStateManager`.
 6. **Options DI** -- `LinqToDBOptionsExtension` + `LinqToDBContextOptionsBuilder` store `DataOptions` in EF's `DbContextOptions` chain.
 
@@ -196,6 +196,7 @@ Cache of reflected `MethodInfo`/`ConstructorInfo` for EF and linq2db methods use
 
 - Many-to-many association query expression entry: `EFCoreMetadataReader.ManyToMany.cs` -> `BuildManyToManyQueryExpression` -> emitted as `AssociationAttribute.QueryExpression` on skip navigation members.
 - Join-table marker type: `Internal/EfJoinTable.cs` -- `EfJoinTable<TThis, TOther, TJoin>` -- `[DynamicColumnsStore]` on `Values`.
+- EF10 named/keyed query filters: `EFCoreMetadataReader.GetAttributes(Type)` (`FilterKey` on `QueryFilterAttribute`) <-> `TransformExpressionVisitor.VisitMethodCall`'s `IgnoreQueryFiltersByKeyMethodInfo` branch -> `Methods.LinqToDB.IgnoreFiltersByKey`.
 
 <details><summary>Coverage</summary>
 
@@ -218,4 +219,10 @@ Read (this run -- delta):
   - `Internal/EfJoinTable.cs` (new) -- `EfJoinTable<TThis, TOther, TJoin>` marker with `[DynamicColumnsStore] IDictionary<string, object> Values`; EF8+ only.
   - `LinqToDBForEFToolsDataConnection.cs` -- no structural changes; existing INDEX.md description confirmed accurate.
   - `LinqToDBForEFToolsImplDefault.cs` -- added provider version cases: `SqlServer2025` -> `SqlServerVersion.v2025`; `PostgreSQL18` -> `PostgreSQLVersion.v18`; `Firebird4`/`Firebird5`; `MariaDB10` -> `MySqlVersion.MariaDB10` / `MySqlProvider.MySqlConnector`. `EnableChangeTracker` confirmed as virtual instance property (default `true`).
+
+Read (this run -- delta):
+  - `EFCoreMetadataReader.cs` -- `TransformFilter` local function now takes a `filterKey` parameter; the EF10 `GetDeclaredQueryFilters()` loop passes `queryFilter.Key`, the EF8/9/31 single-filter `GetQueryFilter()` path passes `null`; both feed `QueryFilterAttribute.FilterKey` (supports EF10 named/multi query filters). Dead duplicate `switch(operand)` block confirmed still at line 898 (unchanged).
+  - `Internal/ReflectionMethods.cs` -- added `IgnoreQueryFiltersByKeyMethodInfo` (`#if EF10` only), reflecting the keyed `IQueryable<T>.IgnoreQueryFilters(IReadOnlyCollection<string>)` overload via `MemberHelper.MethodOfGeneric`.
+  - `Internal/TransformExpressionVisitor.cs` -- `VisitMethodCall` gained an `#if EF10` branch for `ReflectionMethods.IgnoreQueryFiltersByKeyMethodInfo`: evaluates the constant (`[NotParameterized]`) key-collection argument via `EvaluateExpression<IReadOnlyCollection<string>>()`, short-circuits to `Visit(node.Arguments[0])` when null/empty (mirrors EF's own no-op semantics for an empty filter-key set), otherwise rewrites to `Methods.LinqToDB.IgnoreFiltersByKey.MakeGenericMethod(...)` with the keys array-converted (`Enumerable.ToArray`) and a trailing empty `Type[]` (the keyed overload's `params Type[]` isn't expanded by `Expression.Call`).
+  - `LinqToDBForEFToolsImplDefault.cs` -- added `ProviderName.PostgreSQL19 -> CreatePostgreSqlProvider(PostgreSQLVersion.v19, ...)` to the `CreateLinqToDBDataProvider` dispatch switch (alongside the existing `PostgreSQL18` case).
 </details>

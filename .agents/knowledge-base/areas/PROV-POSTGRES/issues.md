@@ -3,48 +3,55 @@ area: PROV-POSTGRES
 kind: issues
 sources: [gh-issues, gh-prs, gh-discussions]
 confidence: high
-last_verified: 2026-06-15
-last_verified_sha: b3340aa9ded15ffc626983fd202e6399daa081ca
+last_verified: 2026-07-06
+last_verified_sha: d3061c6d7315303a86dfdd67bb7728d4736f6506
 ---
 
 # PROV-POSTGRES -- GitHub themes
 
 ## Open themes
 
-- **Npgsql version compatibility & driver upgrades** -- Ongoing cycle of supporting new Npgsql major versions (8, 9) and PostgreSQL server releases (15–18). Recent wins: version detection via connection, BigInteger support, cache miss fixes in UNNEST/GenerateSeries (#4719, #4309, #5484, #5470).
+- **Schema handling & identifier quoting** -- Scaffold generation, case-sensitivity mismatches, quoted identifier tracking, and multi-schema edge cases remain high-friction areas. Issues span T4 template instructions, EF integration attribute support, and incorrect type resolution (bigserial, dblink function schema discovery). (#1864, #4671, #3501, #4695, #4708, #3203, #4444, #5086, #4707)
 
-- **Type mapping for PostgreSQL-native types** -- JSON/JSONB, enum, custom scalar types (ltree, pgvector) remain underserved. Users struggle with custom type registration and mapping interceptors (#4707, #4856, #3869, #5505, #4818).
+- **Type mapping for PostgreSQL-native types** -- JSON/JSONB, enums, custom scalar types (ltree, pgvector), and range types (tstzrange) lack complete mapping interceptor support. Users struggle with Contains operator translation, jsonpath queries, and ServerSideOnly function interaction. (#4044, #3869, #4915, #5505, #4915, #2796)
 
-- **Bulk copy & upsert completeness** -- BulkCopy has grown timeout support and IgnoreConflicts option, but edge cases linger: KeepIdentity sequence update, transaction handling, MERGE/WithOutput coverage (#5395, #5377, #4702, #4615, #4934).
+- **Bulk copy & upsert completeness** -- BulkCopy edge cases persist: CheckConstraints option ignored, KeepIdentity failing to update sequences, and syntax errors on constraint-free operations. MERGE/UPSERT API surface gaps remain. (#1140, #4615, #4702)
 
-- **Schema handling & identifier quoting** -- Case-sensitivity mismatch, quoted identifiers in scaffold and mapping (#4286, #4708, #3447). Occasional regressions in UPDATE FROM generation (#3649, #3186).
+- **Array & UNNEST support** -- Array type mapping for enums/custom types, UNNEST translation completeness, and query performance regressions (6× slowdown on FromSqlScalar with arrays) are active blockers. (#341, #1660, #4643, #4915, #5480 *recently fixed*)
 
-- **Performance regressions & query cache misses** -- FromSqlScalar mapper compilation per call (6x slowdown), correlations lost in subqueries over unnest/from-sql, deferred evaluation cliffs (#5480, #5285, #5169, #4812).
+- **Npgsql version compatibility & driver upgrades** -- Prepared transaction disabling in EntityFrameworkCore + Npgsql 8+, NpgsqlDataSource integration gaps, and range type mapping to modern Npgsql APIs. (#4877, #2796, #5248)
+
+- **FTS & PostgreSQL extensions** -- Full-text search translation and other PostgreSQL-specific extensions remain unimplemented. (#1811)
+
+- **InsertWithOutput API for PostgreSQL** -- Users seeking UpdateWithOutput-style semantics on INSERT operations. CTE-based strategies may unlock this capability via materialization trade-off. (#5679)
 
 ## Resolved themes
 
-- **RETURNING clause support** -- Full support for OUTPUT-style RETURNING across INSERT/UPDATE/DELETE, including MergeWithOutput (#3328, #4934).
-- **PostgreSQL 15, 16, 17 version support** -- Steadily tracked via scaffold & compatibility work (#3705, #4271, #4681, #5005).
-- **Enum type mapping** -- Core enum support in place, though edge cases with untyped values or binary operations still surface (#3461, #4049, #4945, #5416, #5286).
-- **Array & unnest support** -- UNNEST translation and array parameter handling core, with recent cache-miss optimizations (#5470, #5484).
+- **FromSqlScalar performance regression** -- Mapper compiled per call (6× slowdown); fixed in recent optimization pass (#5480).
+- **JSONB mapping with computed columns** -- ServerSideOnly functions on JSONB now work correctly (#5505).
+- **F# option type nullability** -- Mapping F# int option None to 0 instead of NULL fixed (#4646).
+- **Order by NULLS LAST** -- Full support for explicit NULL ordering (#2068).
+- **CTE MATERIALIZED** -- PostgreSQL 12+ MATERIALIZED keyword now supported (#5323).
+- **String-to-JSONB Contains** -- Operator translation now respects case behavior (#5347).
 
 ## Active discussions
 
-- [NpgsqlDataSource support (AutoDetect server version, passwordless connection string)](https://github.com/linq2db/linq2db/issues/5248) — [General] Future integration with Npgsql 8+ native pooling and modern connection patterns.
-- [Missing InsertOrActionWithOutput methods](https://github.com/linq2db/linq2db/issues/4824) — [Q&A] Gap in merge/upsert API surface for PostgreSQL.
-- [Postgresql: jsonb jsonpath querying support](https://github.com/linq2db/linq2db/issues/3869) — [Enhancement] Native @> / @@ operator translation for JSONB.
+- [Idea for adding Postgres InsertWithOutput support](https://github.com/linq2db/linq2db/discussions/5679) -- [Ideas] Using INSERT in CTE to enable InsertWithOutput for PostgreSQL despite materialization penalty.
+- [Invalid SQL generated through UpdateWithOutput() for PostgreSQL and SQLite](https://github.com/linq2db/linq2db/discussions/4996) -- [Q&A] DELETED tuple leakage into RETURNING clause edge case.
+- [Postgres naming -- lower case](https://github.com/linq2db/linq2db/discussions/4952) -- [Q&A] Case-sensitivity and automatic identifier folding during mapping.
+- [Change the schema for all tables/entities in a connection](https://github.com/linq2db/linq2db/discussions/4845) -- [Q&A] Per-connection schema override patterns.
 
 ## Stats
 
-- Open issues: 24
-- Closed issues: 189
-- Open PRs: 1
-- Total PRs: 85
+- Open issues: 45
+- Closed issues: 191
+- Open PRs: 2
+- Total PRs: 86
 - Discussions: 30
-- Last fetched: 2026-06-15
+- Last fetched: 2026-07-06
 
 <details><summary>Coverage</summary>
 
-- Index entries scanned: 328 (213 issues + 85 PRs + 30 discussions)
-- Themes extracted: 5
+- Index entries scanned: 363 (45 issues + 2 open PRs + 86 total PRs + 30 discussions)
+- Themes extracted: 7
 </details>

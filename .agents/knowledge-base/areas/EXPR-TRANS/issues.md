@@ -3,8 +3,8 @@ area: EXPR-TRANS
 kind: issues
 sources: [gh-issues, gh-prs, gh-discussions]
 confidence: high
-last_verified: 2026-06-15
-last_verified_sha: b3340aa9ded15ffc626983fd202e6399daa081ca
+last_verified: 2026-07-06
+last_verified_sha: d3061c6d7315303a86dfdd67bb7728d4736f6506
 ---
 
 # EXPR-TRANS -- GitHub themes
@@ -43,7 +43,7 @@ last_verified_sha: b3340aa9ded15ffc626983fd202e6399daa081ca
 - Open PRs: 8 (EXPR-TRANS focused)
 - Total PRs: 29 EXPR-TRANS (8 open, 21 merged)
 - Discussions: 68
-- Last fetched: 2026-06-15
+- Last fetched: 2026-07-06
 
 <details><summary>Coverage</summary>
 

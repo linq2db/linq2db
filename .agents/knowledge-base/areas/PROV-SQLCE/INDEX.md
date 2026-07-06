@@ -3,8 +3,8 @@ area: PROV-SQLCE
 kind: area-index
 sources: [code]
 confidence: high
-last_verified: 2026-06-15
-last_verified_sha: b3340aa9ded15ffc626983fd202e6399daa081ca
+last_verified: 2026-07-05
+last_verified_sha: 36ee4f82f06eaf242b052ade8c87121d251a6165
 coverage_tier_1: 11/11
 coverage_tier_2: 10/10
 ---
@@ -26,7 +26,7 @@ SQL Server Compact Edition (SQL CE 4.0) is a single-version, single-driver, file
 | `SqlCeSchemaProvider` | `Internal/DataProvider/SqlCe/SqlCeSchemaProvider.cs` | `SchemaProviderBase` override; queries `INFORMATION_SCHEMA` views directly via `GetSchema()` and raw SQL; no stored-proc introspection |
 | `SqlCeDmlService` | `Internal/DataProvider/SqlCe/SqlCeDmlService.cs` | `DmlServiceBase` override; detects `DB_E_NOTABLE` (0x80040E37) for table-not-found via HResult or message fallback |
 | `SqlCeSqlExpressionConvertVisitor` | `Internal/DataProvider/SqlCe/SqlCeSqlExpressionConvertVisitor.cs` | `SqlExpressionConvertVisitor` override; handles `%` modulo cast, `LEN` LENGTH workaround, case-sensitive string predicates via `Convert(VARBINARY,...)`, datetime conversions |
-| `SqlCeMemberTranslator` | `Internal/DataProvider/SqlCe/Translation/SqlCeMemberTranslator.cs` | `ProviderMemberTranslatorDefault` override; assembles date/math/string/guid/aggregate sub-translators; includes `Now`/`ServerNow`/`ZonedNow` and date-truncation overrides (PR #5467, #5517); `NewID()` non-pure function; `IsNullOrWhiteSpace` chained-REPLACE emulation |
+| `SqlCeMemberTranslator` | `Internal/DataProvider/SqlCe/Translation/SqlCeMemberTranslator.cs` | `ProviderMemberTranslatorDefault` override; assembles date/math/string/guid/aggregate/window sub-translators; includes `Now`/`ServerNow`/`ZonedNow` and date-truncation overrides (PR #5467, #5517); `NewID()` non-pure function; `IsNullOrWhiteSpace` chained-REPLACE emulation |
 | `SqlCeTools` | `DataProvider/SqlCe/SqlCeTools.cs` | Public static entry point; `GetDataProvider()`, `CreateDataConnection()`, `CreateDatabase()` (via `SqlCeEngine`), `DropDatabase()`, provider detection |
 | `SqlCeOptions` | `DataProvider/SqlCe/SqlCeOptions.cs` | `DataProviderOptions<SqlCeOptions>` record; `BulkCopyType` (default `MultipleRows`), `InlineFunctionParameters` (SQL CE 3.0 workaround) |
 | `SqlCeHints` | `DataProvider/SqlCe/SqlCeHints.cs` + `.generated.cs` | Table hints: `HoldLock`, `NoLock`, `PagLock`, `RowLock`, `TabLock`, `UpdLock`, `XLock`, `Index`; `WithIndex()` for named index hints |
@@ -65,7 +65,7 @@ A `SqlDecimal` -> `decimal` workaround (`ConvertToDecimal`, `SqlCeProviderAdapte
 1. **`CorrectSkipAndColumns`** (`SqlCeSqlOptimizer.cs:96-153`): If a query has `SKIP` but no `ORDER BY`, injects a default ORDER BY on the first non-aggregate column (or first table field). If GROUP BY is present with no SELECT columns, injects `SELECT 1` (CE rejects `SELECT *` on grouped queries).
 2. **`CorrectFunctionParameters`** (`SqlCeSqlOptimizer.cs:155-195`): When `InlineFunctionParameters = true` (SQL CE 3.0 compat), marks all `SqlParameter` values inside `SqlFunction` and `SqlCoalesceExpression` as non-query-parameters (forced inline literals).
 3. **`CorrectBooleanComparison`** (`SqlCeSqlOptimizer.cs:202-224`): Rewrites `IsTrue(subquery-with-one-column)` -> `EXISTS(subquery with WHERE column IS TRUE)`. CE has no boolean column type.
-4. **`FinalizeUpdate`** (`SqlCeSqlOptimizer.cs:48-94`): Detects UPDATE-JOINs and throws `LinqToDBException("SqlCe does not support UPDATE query with JOIN.")` unless the query only touches one table. `GetAlternativeDelete` is applied for DELETE statements.
+4. **`FinalizeUpdate`** (`SqlCeSqlOptimizer.cs:48-95`): Detects UPDATE-JOINs and throws `LinqToDBException("SqlCe does not support UPDATE query with JOIN.")` unless the query only touches one table. `GetAlternativeDelete` is applied for DELETE statements. The single-table alias reassignment now guards with `is SqlTable updateTable` (`SqlCeSqlOptimizer.cs:82-83`) since `SqlUpdateClause.Table` is typed `ISqlNamedTable?` and `Alias` is a `SqlTable`-only member (delta sha `36ee4f82f`).
 
 `SqlCeSqlExpressionConvertVisitor` handles expression-level rewrites:
 - `%` on non-integer type -> cast left operand to `int` first (`SqlCeSqlExpressionConvertVisitor.cs:28-47`).
@@ -118,7 +118,8 @@ In `SqlCeDataProvider.BulkCopy` (`SqlCeDataProvider.cs:163-198`), if `BulkCopyTy
 - **String**: `SqlCeStringMemberTranslator` -- `LPAD` via `REPLICATE + concatenation`; `String.Join` via `CONCAT_WS` emulation with `SUBSTRING` trim; `TrimStart`/`TrimEnd` whitespace-only (custom trim chars return `null`); `string.Concat` via `ConfigureConcat(wrapByCoalesce: true)`; `IsNullOrWhiteSpace` via chained `REPLACE` over 25 Unicode whitespace codepoints (`SqlCeMemberTranslator.cs:325-338`).
 - **Guid**: `GuidMemberTranslator` -- `ToString()` -> `LOWER(CAST(x AS char(36)))`.
 - **Aggregate**: `SqlCeAggregateFunctionsMemberTranslator` -- `IsCountDistinctSupported = false`, `IsAggregationDistinctSupported = false`.
-- **`NewGuid`**: overridden at `SqlCeMemberTranslator` level (`SqlCeMemberTranslator.cs:342-348`) -- emits `NewID()` as a non-pure function (`NonPureFunction`).
+- **`NewGuid`**: overridden at `SqlCeMemberTranslator` level (`SqlCeMemberTranslator.cs:342-346`) -- emits `NewID()` as a non-pure function (`NonPureFunction`).
+- **Window functions**: `SqlCeWindowFunctionsMemberTranslator` (nested class) overrides `IsWindowFunctionsSupported` to `false`; wired via a `CreateWindowFunctionsMemberTranslator()` override (`SqlCeMemberTranslator.cs:370-378`, delta sha `36ee4f82f`) -- mirrors `SqlProviderFlags.IsWindowFunctionsSupported = false` at the translator layer (base `WindowFunctionsMemberTranslator` default is `true`).
 
 **Delta -- PR #5467 (`d779808a2`):** `DateFunctionsTranslator` now overrides three `Now`-family methods:
 - `TranslateNow` (`SqlCeMemberTranslator.cs:232-237`): emits `GetDate()` with `ParametersNullabilityType.NotNullable`. Previously, `Now` translation fell through to the base class default (`CURRENT_TIMESTAMP`).
@@ -133,7 +134,7 @@ In `SqlCeDataProvider.BulkCopy` (`SqlCeDataProvider.cs:163-198`), if `BulkCopyTy
 
 ### Provider flags summary
 
-Set in `SqlCeDataProvider` constructor (`SqlCeDataProvider.cs:31-39`):
+Set in `SqlCeDataProvider` constructor (`SqlCeDataProvider.cs:32-44`):
 
 | Flag | Value | Consequence |
 |---|---|---|
@@ -141,12 +142,13 @@ Set in `SqlCeDataProvider` constructor (`SqlCeDataProvider.cs:31-39`):
 | `IsCountSubQuerySupported` | `false` | COUNT inside subquery not allowed |
 | `IsApplyJoinSupported` | `true` | CROSS/OUTER APPLY supported |
 | `IsInsertOrUpdateSupported` | `false` | No MERGE/UPSERT |
+| `IsUpsertWithMergeLoweringSupported` | `false` | No MERGE-lowering fallback for Upsert configurations (bulk source, non-PK match, conditional Insert, SkipInsert); surfaces `Error_Upsert_MergeLowering_NotSupported` (delta sha `36ee4f82f`) |
 | `IsDistinctSetOperationsSupported` | `false` | UNION/INTERSECT/EXCEPT DISTINCT not supported |
 | `IsUpdateFromSupported` | `false` | No UPDATE ... FROM |
 | `SupportsBooleanType` | `false` | No BIT column in boolean context |
 | `IsWindowFunctionsSupported` | `false` | No OVER() |
 | `IsOrderByAggregateFunctionSupported` | `false` | No ORDER BY in aggregate |
-| `DefaultNullsOrdering` | `Smallest` | NULL sorts as the smallest value (`SqlCeDataProvider.cs:39`) |
+| `DefaultNullsOrdering` | `Smallest` | NULL sorts as the smallest value (`SqlCeDataProvider.cs:42`) |
 | `TableOptions` | `None` | No temp tables, no IF NOT EXISTS |
 
 ## Files (Tier 1 / Tier 2)
@@ -184,7 +186,7 @@ Set in `SqlCeDataProvider` constructor (`SqlCeDataProvider.cs:31-39`):
 
 **Inbound:** `ProviderName.SqlCe`, `SqlCeTools.ProviderDetector`, `SqlCeFactory`. Tests reference `SqlCeDataProvider`.
 
-**Outbound:** `BasicSqlBuilder`, `BasicSqlOptimizer`, `BasicBulkCopy`, `SqlExpressionConvertVisitor`, `ProviderMemberTranslatorDefault`, `DateFunctionsTranslatorBase`, `StringMemberTranslatorBase` (`ConfigureConcat`, `ConfigureConcatWsEmulation`), `SchemaProviderBase`, `DmlServiceBase`, `DynamicDataProviderBase<T>`, `TypeMapper`, `DataTools.CreateFileDatabase/DropFileDatabase`. Runtime: `System.Data.SqlServerCe`.
+**Outbound:** `BasicSqlBuilder`, `BasicSqlOptimizer`, `BasicBulkCopy`, `SqlExpressionConvertVisitor`, `ProviderMemberTranslatorDefault`, `DateFunctionsTranslatorBase`, `StringMemberTranslatorBase` (`ConfigureConcat`, `ConfigureConcatWsEmulation`), `WindowFunctionsMemberTranslator`, `SchemaProviderBase`, `DmlServiceBase`, `DynamicDataProviderBase<T>`, `TypeMapper`, `DataTools.CreateFileDatabase/DropFileDatabase`. Runtime: `System.Data.SqlServerCe`.
 
 ## Known issues / debt
 
@@ -222,5 +224,10 @@ Read (this run -- delta sha `b3340aa9`):
 - `SqlCeOptions.cs` -- no changes from prior documentation; `BulkCopyType`/`InlineFunctionParameters` fields, `Equals`/`GetHashCode` via `ConfigurationID`, confirmed current
 - `SqlCeDataProvider.cs` -- added `DefaultNullsOrdering = NullsDefaultOrdering.Smallest` flag at line 39 (NULL sorts as smallest); not previously documented in flags table
 - `SqlCeMemberTranslator.cs` -- added `TranslateIsNullOrWhiteSpace` override in `SqlCeStringMemberTranslator` (lines 325-338): chains REPLACE calls over 25 Unicode whitespace codepoints; added `TranslateNewGuidMethod` override at `SqlCeMemberTranslator` level (lines 342-348): emits `NewID()` as `NonPureFunction`
+
+Read (this run -- delta sha `36ee4f82f`):
+- `SqlCeDataProvider.cs` -- added `SqlProviderFlags.IsUpsertWithMergeLoweringSupported = false` (line 38), with inline comment: SQL CE has no MERGE statement, so Upsert configurations requiring MERGE lowering surface `Error_Upsert_MergeLowering_NotSupported` instead of attempting a MERGE-based rewrite. Not previously in flags table.
+- `SqlCeSqlOptimizer.cs` -- `FinalizeUpdate`'s alias-reassignment narrowed from unconditional `updateStatement.Update.Table.Alias = "$F"` to `if (updateStatement.Update.Table is SqlTable updateTable) updateTable.Alias = "$F";` (lines 82-83) -- `SqlUpdateClause.Table` is now typed `ISqlNamedTable?`, and `Alias` is a `SqlTable`-only member; the guard is required to type-check. No behavioral change on the reachable path (the enclosing branch already narrows the source to `SqlTable`).
+- `SqlCeMemberTranslator.cs` -- `TranslateNewGuidMethod` simplified (removed intermediate `timePart` local, direct `return`; no behavior change). Added `SqlCeWindowFunctionsMemberTranslator` inner class (extends `WindowFunctionsMemberTranslator`) overriding `IsWindowFunctionsSupported` to `false`, plus a `CreateWindowFunctionsMemberTranslator` override wiring it in (lines 370-378) -- mirrors the existing `SqlProviderFlags.IsWindowFunctionsSupported = false` at the translator layer; base class default for the flag is `true`.
 
 </details>

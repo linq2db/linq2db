@@ -3,18 +3,27 @@ area: PROV-SQLSERVER
 kind: issues
 sources: [gh-issues, gh-prs, gh-discussions]
 confidence: high
-last_verified: 2026-06-15
-last_verified_sha: b3340aa9ded15ffc626983fd202e6399daa081ca
+last_verified: 2026-07-06
+last_verified_sha: d3061c6d7315303a86dfdd67bb7728d4736f6506
 ---
 
-# PROV-SQLSERVER — GitHub themes
+# PROV-SQLSERVER -- GitHub themes
 
 ## Open themes
 
-- **Schema generation / scaffolding** -- Two open requests (#4195, #449) surface scaffolding limitations: Azure SQL Edge lacks CLR support (required by ASSEMBLYPROPERTY enum), and table-valued functions (UDFs) require manual T4 template work. Sample: #4195, #449.
-- **SQL Server-specific optimizations** -- #3314 requests ISNULL() optimization; ISNULL calculates parameters only once, while COALESCE expands to CASE and risks double evaluation on complex subqueries.
-- **String concatenation (Sql.Concat)** -- #1916 requests native SQL.Concat() function mapping to SQL Server's CONCAT() (available since 2012); currently translates to string concatenation operator or CASE-based COALESCE.
-- **Bulk copy enhancements** -- #1178 suggests BulkCopy API improvements for performance use cases.
+- **Scaffolding and schema generation gaps** -- Four open requests (#449, #4195, #4606, #4831) surface scaffolding limitations: table-valued functions (TVFs/UDFs) not discovered (#449), Azure SQL Edge CLR feature gap blocking schema import (#4195), database-name parameter not applied (#4606), and reserved-word-named views/tables causing code-generation errors (#4831). Core gap: the T4 schema provider needs extended coverage for TVF discovery, conditional CLR feature gating for Azure SQL Edge, and generated-code identifier sanitization.
+
+- **EFCore integration gaps** -- Multiple open issues (#3174, #4640, #4656, #4665) surface feature-parity gaps: EFCore shadow properties not carried to temp tables (#3174), JSON columns returning null in MERGE operations (#4640), temporal query JOINs unsupported (#4656), and NetTopologySuite spatial-type mapping incomplete (#4665). All involve EFCore-to-linq2db mapping translation gaps or provider-feature exposure.
+
+- **BulkCopy limitations** -- Two open issues (#1178, #4663) request BulkCopy improvements: #1178 requests API enhancements for performance tuning, and #4663 reports BulkCopy failure with EFCore complex properties (structured type mapping not propagated to bulk-copy column inference).
+
+- **Temporary table type safety** -- #3174 and #4659 surface temp table gaps: shadow property omission and incorrect type inference for primitive-typed temp tables (TempTable<string> not recognized as a string type by IN predicate).
+
+- **SQL string optimization** -- #1916 requests native CONCAT() function mapping (available since SQL Server 2012) instead of the current `+` operator concatenation.
+
+- **Recursive CTE and projection type stability** -- #2451 and #5680 surface CTE issues: #2451 reports type-mismatch errors when recursive CTE branches emit different precisions (NVARCHAR(50) vs NVARCHAR(MAX)), and #5680 (open PR) fixes a silent column-drop when projection members carry object-typed references.
+
+- **Type handling (decimal, string)** -- #4177 (open PR) addresses string.Length mapping for SQL CE, and #5605 (open draft PR) adds SqlServer decimal overflow fallback via SqlDecimal.
 
 ## Resolved themes
 
@@ -26,16 +35,16 @@ No active discussions for PROV-SQLSERVER.
 
 ## Stats
 
-- Open issues: 5
+- Open issues: 15
 - Closed issues: 1
-- Open PRs: 0
-- Total PRs: 0
+- Open PRs: 4
+- Total PRs: 4
 - Discussions: 0
-- Last fetched: 2026-06-15
+- Last fetched: 2026-07-06
 
 <details><summary>Coverage</summary>
 
-- Index entries scanned: 6 (6 issues + 0 PRs + 0 discussions)
-- Themes extracted: 4 open + 1 resolved
+- Index entries scanned: 20 (15 issues + 4 PRs + 0 discussions)
+- Themes extracted: 7 open + 1 resolved
 
 </details>

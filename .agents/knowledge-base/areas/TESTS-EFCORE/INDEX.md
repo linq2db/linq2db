@@ -3,8 +3,8 @@ area: TESTS-EFCORE
 kind: area-index
 sources: [code]
 confidence: medium
-last_verified: 2026-06-15
-last_verified_sha: b3340aa9ded15ffc626983fd202e6399daa081ca
+last_verified: 2026-07-05
+last_verified_sha: 36ee4f82f06eaf242b052ade8c87121d251a6165
 coverage_tier_1: 0/0
 coverage_tier_2: 157/194
 ---
@@ -20,7 +20,7 @@ EFCore integration test suite. Four `.csproj` files (`Tests.EntityFrameworkCore.
 | `Tests.EntityFrameworkCore.EF3.csproj` | `net462` | `LinqToDB.EntityFrameworkCore.EF3.csproj` | Pins `Npgsql` 4.1.14 override for transitive vuln |
 | `Tests.EntityFrameworkCore.EF8.csproj` | (see props) | `LinqToDB.EntityFrameworkCore.EF8.csproj` | |
 | `Tests.EntityFrameworkCore.EF9.csproj` | (see props) | `LinqToDB.EntityFrameworkCore.EF9.csproj` | |
-| `Tests.EntityFrameworkCore.EF10.csproj` | `net10.0` | `LinqToDB.EntityFrameworkCore.EF10.csproj` | Removes `Pomelo.EntityFrameworkCore.MySql` (unsupported on EF10) |
+| `Tests.EntityFrameworkCore.EF10.csproj` | `net10.0` | `LinqToDB.EntityFrameworkCore.EF10.csproj` | Removes `Pomelo.EntityFrameworkCore.MySql` (unsupported on EF10); defines `EF10` compile constant (`DefineConstants>EF10;$(DefineConstants)`), enabling `#if EF10` guards for EF10-only test behavior (e.g. named query filters in `NorthwindContextBase`) |
 
 The shared `Tests.EntityFrameworkCore.props` (`Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.props`) sets:
 - `AssemblyName` = `linq2db.EntityFrameworkCore.Tests`, `RootNamespace` = `LinqToDB.EntityFrameworkCore.Tests`
@@ -29,7 +29,7 @@ The shared `Tests.EntityFrameworkCore.props` (`Tests/EntityFrameworkCore/Tests.E
 
 `#if EF8`-gated source file: `Tests/FSharpTests.cs` -- active only from EF8 onwards.
 
-`AssemblyInfo.TestProgress.cs` -- applies `[assembly: TestProgressReporter]` to all EF csproj variants; opt-in live progress heartbeat for long runs, enabled by the `LINQ2DB_TEST_PROGRESS` environment variable.
+`AssemblyInfo.TestProgress.cs` -- applies `[assembly: TestProgressReporter]` to all EF csproj variants; opt-in live progress heartbeat for long runs, enabled by the `--test-progress` CLI option (see `.agents/docs/testing.md` -> *Monitoring a long run*; no longer an environment variable -- PR #5621 replaced the earlier `LINQ2DB_TEST_PROGRESS` env-var mechanism).
 
 ## Subsystems
 
@@ -50,7 +50,7 @@ EFCore-specific provider-selection attributes and test utilities.
 
 ### Test base classes (`Tests/EntityFrameworkCore/`)
 
-- `ContextTestBase<TContext>` (`Tests/EntityFrameworkCore/ContextTestBase.cs`) -- `abstract class` extending `TestBase` (TESTS-INFRA), parameterized on `TContext : DbContext`. Key method: `CreateContext(provider, optionsSetter?, optionsBuilderSetter?)` -- builds `DbContextOptionsBuilder<TContext>`, calls `ProviderSetup()` to wire the EF provider, calls `UseLinqToDB()` when `optionsSetter` is set, then constructs the context. On first call per `connectionString × TContext`, calls `EnsureDeleted()` + `EnsureCreated()` + `OnDatabaseCreated()` to initialize the schema. Uses `TestContextTracker.LastContexts` (static `Dictionary<string, Type>`) to avoid reinitializing databases across tests.
+- `ContextTestBase<TContext>` (`Tests/EntityFrameworkCore/ContextTestBase.cs`) -- `abstract class` extending `TestBase` (TESTS-INFRA), parameterized on `TContext : DbContext`. Key method: `CreateContext(provider, optionsSetter?, optionsBuilderSetter?)` -- builds `DbContextOptionsBuilder<TContext>`, calls `ProviderSetup()` to wire the EF provider, calls `UseLinqToDB()` when `optionsSetter` is set, then constructs the context. On first call per `connectionString x TContext`, calls `EnsureDeleted()` + `EnsureCreated()` + `OnDatabaseCreated()` to initialize the schema. Uses `TestContextTracker.LastContexts` (static `Dictionary<string, Type>`) to avoid reinitializing databases across tests.
 
   `ProviderSetup()` dispatches on `provider` to `optionsBuilder.UseNpgsql()`, `.UseMySql()`, `.UseSqlite()`, or `.UseSqlServer()`. Always calls `UseLinqToDB()` for PostgreSQL with `UseMappingSchema(NodaTimeSupport)`. Pomelo (`AllMySql`) is excluded when `#if NET10_0`.
 
@@ -62,7 +62,7 @@ EFCore-specific provider-selection attributes and test utilities.
 
 | Fixture | Base context | Key coverage |
 |---|---|---|
-| `ToolsTests` | `NorthwindContextTestBase` | Core bridge API: `ToLinqToDB()`, `CreateLinqToDBConnection()`, `Include`/`ThenInclude`, change tracker, `TagWith`, temporal tables, `FromSqlRaw/Interpolated`, `SetUpdate`, DML, async methods |
+| `ToolsTests` | `NorthwindContextTestBase` | Core bridge API: `ToLinqToDB()`, `CreateLinqToDBConnection()`, `Include`/`ThenInclude`, change tracker, `TagWith`, temporal tables, `FromSqlRaw/Interpolated`, `SetUpdate`, DML, async methods, EF10 named query filters (`HasQueryFilter(name, ...)` / `IgnoreQueryFilters([key])`, `#if EF10`-gated) |
 | `IssueTests` | `ContextTestBase<IssueContextBase>` | Regression tests for EFCore-specific GitHub issues (numbered: Issue73, 117, 321, 340, 4624...5585 etc.) |
 | `ManyToManyTests` | `ContextTestBase<ManyToManyContextBase>` | M:N translation coverage across 8 structural variants: implicit single-key, explicit with payload, composite-key, self-referencing, two distinct pairs between same entities, two implicit pairs (unsupported -- expects error), field-mapped key, shadow key; `#if !NETFRAMEWORK` |
 | `SqlTransparentExpressionTests` | none (`TestFixture` direct) | Standalone regression: verifies `SqlTransparentExpression` cctor does not throw `TypeInitializationException` (PR #5546); uses reflection to forcibly run the class constructor via `RuntimeHelpers.RunClassConstructor` |
@@ -209,7 +209,7 @@ Per-provider `ForMappingContext` subclasses (`Npgsql/`, `Pomelo/`, `SQLite/`, `S
 - `Issue5355LicenseProfile` -- `Id int` (never generated), `License string`; seeds two profiles via `HasData`.
 - `Issue5355Customer` -- extends `Issue5355CustomerBase : IIssue5355Profile`; `Name string`; FK to `Issue5355LicenseProfile`; seeds three customers via `HasData`.
 - `Issue5388Task` -- `Id int`, `IsArchived bool`; `IsArchived` stored as `smallint` via `HasConversion<short>()`. No `DbSet<>` -- registered model-only via `modelBuilder.Entity<Issue5388Task>()`.
-- `Issue5547CustomerShare` -- `Id int`, `CustomerId int`, FK to `Issue5355Customer`; seeds three rows (one per customer) via `HasData`. Added in this delta -- used by `Issue5547_ContainsThroughQueryableShapes` to exercise transparent-identifier navigation paths through `Select(s => s.Customer)`.
+- `Issue5547CustomerShare` -- `Id int`, `CustomerId int`, FK to `Issue5355Customer`; seeds three rows (one per customer) via `HasData`. Added in a prior delta -- used by `Issue5547_ContainsThroughQueryableShapes` to exercise transparent-identifier navigation paths through `Select(s => s.Customer)`.
 - `Issue5585Customer` / `Issue5585CustomerShare` / `Issue5585User` -- `#if !NETFRAMEWORK`; three-entity M:N cluster: `Customer` 1:N `CustomerShare`, `CustomerShare` M:N `User` (via implicit join configured with `UsingEntity`); seeds 2 customers, 3 shares, 2 users; used by `Issue5585_ManyToManyDirectAny` and `Issue5585_ManyToManyNestedAny` in `IssueTests`.
 - `BulkCopyIdentityTable` -- `Id int`, `Value int`; not registered in `IssueContextBase` model at all -- accessed via `db.GetTable<BulkCopyIdentityTable>()` through the linq2db bridge.
 
@@ -232,7 +232,7 @@ The 8 M:N scenarios and their entity sets:
 | 4. Self-referencing | `MmPerson` M:N `MmPerson` (Friends / FriendsOf) via `MmFriendship` | Self-ref with two discriminated nav collections |
 | 5. Two distinct pairs | `MmUser` M:N `MmTeam` via both `MmMembership` (Teams) and `MmLeadership` (LedTeams) | Same entity pair, two separate join tables |
 | 6. Two implicit pairs (unsupported) | `MmDoc` M:N `MmLabel` (Primary + Secondary) | Expected to throw "implicit many-to-many" error in linq2db |
-| 7. Field-mapped key | `MmAccount` (private `AccountId` field, renamed `account_id_col`) M:N `MmRole` | EF field-mapped key; no CLR property |
+| 7. Field-mapped key | `MmAccount` (private `AccountId` field, renamed `account_id_col`) M:N `MmRole` | EF field-mapped key; no CLR property; unused-field warning suppressed via `CS0169`/`CS0649`/`CA1823` (Release-mode analyzer fix, PR #5615) |
 | 8. Shadow key | `MmArticle` M:N `MmTag` (shadow `TagId`, renamed `tag_id_col`) | EF shadow property key; no CLR member |
 
 #### Models/NpgSqlEntities -- entity detail
@@ -289,7 +289,7 @@ Parallel to `Models/Shared` but for `ConvertorTests`; key difference is `IdValue
 | `EFDataSourcesAttribute` | `Tests/EntityFrameworkCore/Utilities/EFDataSourcesAttribute.cs` | NUnit parameter source: all EF-capable user providers (exclusion mode) |
 | `EFIncludeDataSourcesAttribute` | `Tests/EntityFrameworkCore/Utilities/EFIncludeDataSourcesAttribute.cs` | NUnit parameter source: intersection of listed + EF-capable providers |
 | `TestContextTracker` | `Tests/EntityFrameworkCore/ContextTestBase.cs` | Static `Dictionary<connectionString, Type>` -- DB-init idempotency guard |
-| `NorthwindContextBase` | `Tests/EntityFrameworkCore/Models/Northwind/NorthwindContext.cs` | `DbContext` with full Northwind `DbSet`s, `QueryFilter` on `Product`, `ISoftDelete` global filter |
+| `NorthwindContextBase` | `Tests/EntityFrameworkCore/Models/Northwind/NorthwindContext.cs` | `DbContext` with full Northwind `DbSet`s, `QueryFilter` on `Product`, `ISoftDelete` global filter. `#if EF10`: both upgrade to **named** filters (`HasQueryFilter("ProductIdFilter", ...)` + `HasQueryFilter("NotDiscontinued", ...)` on `Product`; `HasQueryFilter("SoftDeleteFilter", ...)` for the soft-delete base filter) so multiple named filters coexist and can be selectively disabled via `IgnoreQueryFilters([key])`; pre-EF10 keeps single-anonymous-filter semantics (a later `HasQueryFilter` call replaces the earlier one) |
 | `IssueContextBase` | `Tests/EntityFrameworkCore/Models/IssueModel/IssueContextBase.cs` | `DbContext` for regression tests; holds ~37 `DbSet`s across all tracked issues |
 | `TestInterceptor` | `Tests/EntityFrameworkCore/Interceptors/TestInterceptor.cs` | Base class for all test interceptors; `HasInterceptorBeenInvoked` + `ResetInvocations()` |
 | `TestEfCoreAndLinqToDBComboInterceptor` | `Tests/EntityFrameworkCore/Interceptors/TestEfCoreAndLinqToDBComboInterceptor.cs` | Implements both linq2db `ICommandInterceptor` and EF `IDbCommandInterceptor` |
@@ -522,6 +522,18 @@ There are no declared Tier-1 files for this area (row says `(none)`). See AUDIT-
 | `Models/IssueModel/IssueEntities.cs` | Added `Issue5547CustomerShare` sealed class (`Id`, `CustomerId`, `Customer Issue5355Customer`) |
 | `Tests/IssueTests.cs` | Added `Issue5547_ContainsThroughQueryableShapes`: parameterized by `Issue5547QueryableShape` enum (5 values); calls `FilterIssue5355License` on source shaped as direct DbSet, `Select(s => s.Customer)`, where-then-select, select-then-where, or select-distinct; exercises transparent-identifier paths through the linq2db bridge |
 | `Tests/SqlTransparentExpressionTests.cs` | New fixture (PR #5546): single test `TypeInitializerDoesNotThrow` -- reflects into `EFCoreMetadataReader.SqlTransparentExpression` nested type and calls `RuntimeHelpers.RunClassConstructor` to force cctor; guards against `TypeInitializationException` from a wrong constructor signature in the static field initializer (silent on desktop CLR due to `beforefieldinit`, fatal on Mono/Android AOT) |
+Read (this run -- delta at sha b3340aa9):
+- `AssemblyInfo.TestProgress.cs` (new: `[assembly: TestProgressReporter]` for all EF csproj assemblies; opt-in live progress heartbeat)
+- `Models/IssueModel/IssueContextBase.cs` (re-read: added `DbSet<Issue5585Customer/Share/User>` `#if !NETFRAMEWORK`; `OnModelCreating` for all three with M:N `UsingEntity` and `HasData` seeds)
+- `Models/IssueModel/IssueEntities.cs` (re-read: added `Issue5585CustomerBase`, `Issue5585Customer`, `Issue5585CustomerShare`, `Issue5585User` in `#region Issue 5585`)
+- `Models/ManyToMany/ManyToManyContextBase.cs` (new: 16 DbSets, 8 M:N scenario configs, `#if !NETFRAMEWORK`)
+- `Models/ManyToMany/ManyToManyEntities.cs` (new: 20+ entity and join-table classes for all 8 scenarios, `#if !NETFRAMEWORK`)
+- `Models/ManyToMany/Pomelo/ManyToManyContext.cs` (new: trivial Pomelo subcontext)
+- `Models/ManyToMany/PostgreSQL/ManyToManyContext.cs` (new: trivial PostgreSQL subcontext)
+- `Models/ManyToMany/SQLServer/ManyToManyContext.cs` (new: trivial SQL Server subcontext)
+- `Models/ManyToMany/SQLite/ManyToManyContext.cs` (new: trivial SQLite subcontext)
+- `Tests/IssueTests.cs` (re-read: added `Issue5585_ManyToManyDirectAny`, `Issue5585_ManyToManyNestedAny`, both `#if !NETFRAMEWORK`)
+- `Tests/ManyToManyTests.cs` (new: `ManyToManyTests` fixture with ~30 tests across 8 M:N scenarios, `#if !NETFRAMEWORK`)
 
 ## Inbound / outbound dependencies
 
@@ -541,7 +553,7 @@ There are no declared Tier-1 files for this area (row says `(none)`). See AUDIT-
 
 ## Known issues / debt
 
-- The 4 csprojs share source but have no shared `DefineConstants` contract analogous to `EF31`/`EF8`/`EF9`/`EF10` in the production EFCORE area. Per-version test differences are handled by `#if NETFRAMEWORK` and `#if NET8_0_OR_GREATER` guards rather than EF-version symbols, making EF-version-specific test behaviour less obvious.
+- Only `Tests.EntityFrameworkCore.EF10.csproj` now defines an EF-version `DefineConstants` symbol (`EF10;$(DefineConstants)`, added alongside EF10 named-query-filter support in `NorthwindContextBase`/`ToolsTests`); `EF3`/`EF8`/`EF9` csprojs still have no matching symbol, so the `DefineConstants` contract analogous to the production EFCORE area (`EF31`/`EF8`/`EF9`/`EF10`) remains incomplete. Per-version test differences outside the new `#if EF10` guards are still handled by `#if NETFRAMEWORK` / `#if NET8_0_OR_GREATER` rather than EF-version symbols.
 - `TestContextTracker.LastContexts` is a static `Dictionary<string, Type>` (not thread-safe, no locking). Multiple `TContext` types sharing a connection string will cause spurious re-initializations; the first test to run for a given `connectionString` wins.
 - `CustomContextIssueTests` manually invalidates `TestContextTracker.LastContexts` by removing its connection string on every `GetConnectionString()` call, forcing schema recreation on each test. This is intentional but fragile if test ordering changes.
 - `InheritanceTests.TestInheritanceBulkCopy` has a workaround `try { x = CreateContext(); } catch { x = CreateContext(); }` for an Npgsql EFCore bug (#3671). The bug may be resolved upstream; the workaround should be rechecked.
@@ -602,7 +614,7 @@ Read (run 3 -- delta at sha 4a478ff1):
 - `Tests/IssueTests.cs` (re-read: Issue5355_ContainsViaIEnumerableInGenericMethod, Issue5355_ContainsViaArrayInGenericMethod, ConstantAndValueConversion, BulkCopy_Sequence_AsIdentity, FilterIssue5355License extension)
 
 Read (this run -- delta at sha 2e67bafc):
-- `Models/IssueModel/IssueContextBase.cs` (re-read: added `DbSet<Issue5547CustomerShare>`; `OnModelCreating` for `Issue5547CustomerShare` with FK to `Issue5355Customer` and 3 seeded rows)
+- `Models/IssueModel/IssueContextBase.cs` (re-read: added `DbSet<Issue5547CustomerShare>`; added `OnModelCreating` for `Issue5547CustomerShare` with FK to `Issue5355Customer` and 3 seeded rows)
 - `Models/IssueModel/IssueEntities.cs` (re-read: added `Issue5547CustomerShare` sealed class with `Id`, `CustomerId`, `Customer Issue5355Customer` nav)
 - `Tests/IssueTests.cs` (re-read: added `Issue5547_ContainsThroughQueryableShapes` parameterized by 5-value `Issue5547QueryableShape` enum; exercises transparent-identifier navigation through `FilterIssue5355License`)
 - `Tests/SqlTransparentExpressionTests.cs` (new file: `TypeInitializerDoesNotThrow` -- reflects `EFCoreMetadataReader.SqlTransparentExpression` nested type; forces cctor via `RuntimeHelpers.RunClassConstructor`; guards PR #5546 regression)
@@ -618,4 +630,10 @@ Read (this run -- delta at sha b3340aa9):
 - `Models/ManyToMany/SQLite/ManyToManyContext.cs` (new: trivial SQLite subcontext)
 - `Tests/IssueTests.cs` (re-read: added `Issue5585_ManyToManyDirectAny`, `Issue5585_ManyToManyNestedAny`, both `#if !NETFRAMEWORK`)
 - `Tests/ManyToManyTests.cs` (new: `ManyToManyTests` fixture with ~30 tests across 8 M:N scenarios, `#if !NETFRAMEWORK`)
+Read (this run -- delta at sha 36ee4f82):
+- `AssemblyInfo.TestProgress.cs` (updated comment: opt-in mechanism changed from the `LINQ2DB_TEST_PROGRESS` environment variable to the `--test-progress` CLI option per PR #5621; corrected the matching claim in ## Multi-EF csproj layout)
+- `Models/ManyToMany/ManyToManyEntities.cs` (re-read: `MmAccount.AccountId` pragma-suppression list gained `CA1823` per PR #5615 Release-mode analyzer fix; no structural change; noted in the scenario-7 table row)
+- `Models/Northwind/NorthwindContext.cs` (re-read: added `#if EF10` named-query-filter branches on `Product` (`ProductIdFilter`/`NotDiscontinued`) and on the `ISoftDelete` base filter (`SoftDeleteFilter`), enabling multiple coexisting filters selectively disabled via `IgnoreQueryFilters([key])`; pre-EF10 single-anonymous-filter path unchanged)
+- `Tests.EntityFrameworkCore.EF10.csproj` (added `<DefineConstants>EF10;$(DefineConstants)</DefineConstants>`; first EF-version compile symbol among the 4 test csprojs -- corrected the matching claim in ## Known issues / debt)
+- `Tests/ToolsTests.cs` (added 4 `#if EF10`-gated tests: `TestNamedQueryFilter_AppliesAll`, `TestIgnoreQueryFilters_ByKey`, `TestIgnoreQueryFilters_All_StillWorks`, `TestIgnoreQueryFilters_Empty_IsNoOp`, all `[ActiveIssue(#4669, AllMySql)]`-gated; exercise the new named-filter behavior in `NorthwindContextBase`)
 </details>

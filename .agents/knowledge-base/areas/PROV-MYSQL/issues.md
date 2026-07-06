@@ -3,18 +3,19 @@ area: PROV-MYSQL
 kind: issues
 sources: [gh-issues, gh-prs, gh-discussions]
 confidence: high
-last_verified: 2026-06-15
-last_verified_sha: b3340aa9ded15ffc626983fd202e6399daa081ca
+last_verified: 2026-07-06
+last_verified_sha: d3061c6d7315303a86dfdd67bb7728d4736f6506
 ---
 
 # PROV-MYSQL -- GitHub themes
 
 ## Open themes
 
-- **UPSERT / ON DUPLICATE KEY UPDATE** -- MySQL lacks native MERGE; bulk upsert must route through `INSERT ... ON DUPLICATE KEY UPDATE`. Two requests (#5278, #1480) ask for explicit Merge API support or multi-row INSERT variant. Workaround: inline row values or iterate inserts.
-- **Bulk UPDATE** -- #1259 requests bulk update for MySQL. Current pattern is iterated updates; no batch-by-batch equivalent to bulk insert.
-- **Connection / transaction lifecycle** -- #3431 (RetryingDataConnection rejects re-open), #5118 (LoadWith starts transaction on read-only query). Indicates tension between connection reuse, implicit transaction scope, and provider quirks.
-- **Connection string / initialization** -- #3313 (T4 timeout on scaffold), #3422 (MySql.Data.KeyNotFoundException), #4123 (MariaDB vs MySQL dialect). Suggests fragile provider detection or dialect-selection UX when mixing MySql.Data / MySqlConnector and MySQL 5.7 / 8.0 / MariaDB versions.
+- **Type Mapping & Schema Handling** -- Issues with mapping MySQL types (enum → varchar, bit(1) → bool, UUID support) and schema generation. Recurs across multiple MySQL versions and mappings libraries. (#3223, #3554, #86)
+- **Bulk Operations Gap** -- Bulk INSERT works, but bulk UPDATE unsupported; BulkCopy has issues with custom GuidFormat in binary modes. (#1259, #4354)
+- **UPSERT / ON DUPLICATE KEY UPDATE** -- MySQL lacks MERGE; bulk upsert must route through INSERT ... ON DUPLICATE KEY UPDATE. Explicit API support requested (#5278). Related: #1480.
+- **Connection / Initialization** -- Connection reuse, retry logic, and T4 model generation show stress points. RetryingDataConnection rejects re-open (#3431); T4 scaffold timeouts on large schemas (#3313).
+- **Critical Error: Unresolved Exception** -- #4669 hits UnreachableException in EFCore MySql translation path; may indicate cross-provider integration fragility.
 
 ## Resolved themes
 
@@ -33,16 +34,16 @@ last_verified_sha: b3340aa9ded15ffc626983fd202e6399daa081ca
 
 ## Stats
 
-- Open issues: 6
+- Open issues: 9
 - Closed issues: 60
 - Open PRs: 0
-- Total PRs: 44
+- Total PRs: 0
 - Discussions: 6
-- Last fetched: 2026-06-15
+- Last fetched: 2026-07-06
 
 <details><summary>Coverage</summary>
 
-- Index entries scanned: 116 (66 issues + 44 PRs + 6 discussions)
-- Themes extracted: 4 open + 3 resolved
+- Index entries scanned: 69 (9 issues + 0 PRs + 6 discussions)
+- Themes extracted: 5 open + 3 resolved
 
 </details>

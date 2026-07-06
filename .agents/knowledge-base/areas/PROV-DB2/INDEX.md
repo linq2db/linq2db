@@ -3,8 +3,8 @@ area: PROV-DB2
 kind: area-index
 sources: [code]
 confidence: high
-last_verified: 2026-06-14
-last_verified_sha: b3340aa9ded15ffc626983fd202e6399daa081ca
+last_verified: 2026-07-05
+last_verified_sha: 36ee4f82f06eaf242b052ade8c87121d251a6165
 coverage_tier_1: 11/11
 coverage_tier_2: 11/11
 ---
@@ -35,7 +35,7 @@ IBM i (iSeries) is **not** covered here; see third-party [`linq2db4iSeries`](htt
 | `DB2DataProvider` (abstract) | `Internal/DataProvider/DB2/DB2DataProvider.cs` | Core provider base; registers provider fields, sets `SqlProviderFlags`, dispatches bulk copy |
 | `DB2LUWDataProvider` | same file:19 | Concrete sealed provider for LUW |
 | `DB2zOSDataProvider` | same file:20 | Concrete sealed provider for z/OS |
-| `DB2SqlBuilderBase` (abstract, partial) | `Internal/DataProvider/DB2/DB2SqlBuilderBase.cs` | SQL emission base; paging, identity, temp tables, object names, parameter wrapping; `ConcatStyle = Pipes` for `||`-based string concat |
+| `DB2SqlBuilderBase` (abstract, partial) | `Internal/DataProvider/DB2/DB2SqlBuilderBase.cs` | SQL emission base; paging, identity, temp tables, object names, parameter wrapping; `ConcatStyle = Pipes` for `||`-based string concat; per-function `IGNORE NULLS` placement for window functions (`GetWindowNullsPlacement`) and typed-NULL padding for `LAG`/`LEAD` (`BuildSqlExtendedFunction`) |
 | `DB2SqlBuilderBase` (Merge partial) | `Internal/DataProvider/DB2/DB2SqlBuilderBase.Merge.cs` | `IsSqlValuesTableValueTypeRequired` -- typed-NULL enforcement for VALUES tables |
 | `DB2LUWSqlBuilder` | `Internal/DataProvider/DB2/DB2LUWSqlBuilder.cs` | LUW overrides: table functions (`TABLE(name)`), package-qualified names, `VARBINARY` max 32672 |
 | `DB2zOSSqlBuilder` | `Internal/DataProvider/DB2/DB2zOSSqlBuilder.cs` | z/OS override: `VARBINARY` max 32704; `DateTimeOffset` -> `TIMESTAMP WITH TIME ZONE` |
@@ -46,7 +46,7 @@ IBM i (iSeries) is **not** covered here; see third-party [`linq2db4iSeries`](htt
 | `DB2ProviderDetector` | `Internal/DataProvider/DB2/DB2ProviderDetector.cs` | Auto-detect via `eServerType == DB2_390 -> zOS`; fall-through from Informix guarded |
 | `DB2BulkCopy` | `Internal/DataProvider/DB2/DB2BulkCopy.cs` | Provider-specific + multi-row path; z/OS multi-row uses `SYSIBM.SYSDUMMY1` source clause |
 | `DB2BulkCopyShared` | `Internal/DataProvider/DB2/DB2BulkCopyShared.cs` | **`public static`** -- shared impl used by `linq2db4iSeries`; sets `KeepIdentity` / `TableLock` flags |
-| `DB2MemberTranslator` | `Internal/DataProvider/DB2/Translation/DB2MemberTranslator.cs` | LUW member translations: date parts, date add/truncate, `LISTAGG`, `GREATEST`/`LEAST`, GUID-to-string via hex + substr; `TranslateNow` returns null; `withoutSeparator` join uses concat aggregate; LISTAGG NULLS FIRST/LAST emulated via leading CASE sort key |
+| `DB2MemberTranslator` | `Internal/DataProvider/DB2/Translation/DB2MemberTranslator.cs` | LUW member translations: date parts, date add/truncate, `LISTAGG`, `GREATEST`/`LEAST`, GUID-to-string via hex + substr; `TranslateNow` returns null; `withoutSeparator` join uses concat aggregate; LISTAGG NULLS FIRST/LAST emulated via leading CASE sort key; `DB2WindowFunctionsMemberTranslator` maps `Sql.Window.StdDev`/`Variance` to `STDDEV_SAMP`/`VAR_SAMP` (DB2's bare `STDDEV`/`VARIANCE` are population forms) |
 | `DB2zOSMemberTranslator` | `Internal/DataProvider/DB2/Translation/DB2zOSMemberTranslator.cs` | z/OS member translations: extends `DB2MemberTranslator`; overrides `CreateDateMemberTranslator()` to emit `CURRENT TIMESTAMP WITH TIME ZONE` for `TranslateServerNow` |
 | `DB2LUWSchemaProvider` | `Internal/DataProvider/DB2/DB2LUWSchemaProvider.cs` | Queries `SYSCAT.*`; ADO.NET `GetSchema("DataTypes")` for type map |
 | `DB2zOSSchemaProvider` | `Internal/DataProvider/DB2/DB2zOSSchemaProvider.cs` | Queries `SYSIBM.SYS*`; static `GetDataTypes` list; FK resolution via `SYSIBM.SYSRELS + SYSFOREIGNKEYS` |
@@ -84,31 +84,31 @@ The adapter wraps `DB2Connection.eServerType` (type `DB2ServerTypes`) for server
 ## SQL dialect features
 
 ### Paging
-`DB2SqlBuilderBase` emits `OFFSET {0} ROWS` / `FETCH NEXT {0} ROWS ONLY` with `OffsetFirst = true`. `Source/LinqToDB/Internal/DataProvider/DB2/DB2SqlBuilderBase.cs:144`
+`DB2SqlBuilderBase` emits `OFFSET {0} ROWS` / `FETCH NEXT {0} ROWS ONLY` with `OffsetFirst = true`. `Source/LinqToDB/Internal/DataProvider/DB2/DB2SqlBuilderBase.cs:187`
 
 Commented-out fallback (`ROW_NUMBER`-based) exists in `DB2SqlOptimizer.TransformStatement` for older LUW 9/10 (pre-OFFSET). `Source/LinqToDB/Internal/DataProvider/DB2/DB2SqlOptimizer.cs:19` -- not active; enabling it requires version tracking to be introduced first.
 
 ### IDENTITY columns
-`GENERATED ALWAYS AS IDENTITY` in `BuildCreateTableIdentityAttribute1`. `Source/LinqToDB/Internal/DataProvider/DB2/DB2SqlBuilderBase.cs:252`
+`GENERATED ALWAYS AS IDENTITY` in `BuildCreateTableIdentityAttribute1`. `Source/LinqToDB/Internal/DataProvider/DB2/DB2SqlBuilderBase.cs:295`
 
-LUW wraps the INSERT in `SELECT ... FROM NEW TABLE (...)` to retrieve the generated value. z/OS issues `SELECT IDENTITY_VAL_LOCAL() FROM SYSIBM.SYSDUMMY1` as a separate command (`CommandCount` -> 2 if identity field not found). `Source/LinqToDB/Internal/DataProvider/DB2/DB2SqlBuilderBase.cs:37`
+LUW wraps the INSERT in `SELECT ... FROM NEW TABLE (...)` to retrieve the generated value. z/OS issues `SELECT IDENTITY_VAL_LOCAL() FROM SYSIBM.SYSDUMMY1` as a separate command (`CommandCount` -> 2 if identity field not found). `Source/LinqToDB/Internal/DataProvider/DB2/DB2SqlBuilderBase.cs:80`
 
-TRUNCATE with `ResetIdentity` emits `ALTER TABLE ... ALTER <col> RESTART WITH 1` per identity column. `Source/LinqToDB/Internal/DataProvider/DB2/DB2SqlBuilderBase.cs:57`
+TRUNCATE with `ResetIdentity` emits `ALTER TABLE ... ALTER <col> RESTART WITH 1` per identity column. `Source/LinqToDB/Internal/DataProvider/DB2/DB2SqlBuilderBase.cs:102`
 
 ### MERGE / INSERT OR UPDATE
-`BuildInsertOrUpdateQuery` delegates to `BuildInsertOrUpdateQueryAsMerge` with the dummy source `FROM SYSIBM.SYSDUMMY1 FETCH FIRST 1 ROW ONLY`. `Source/LinqToDB/Internal/DataProvider/DB2/DB2SqlBuilderBase.cs:237`
+`BuildInsertOrUpdateQuery` delegates to `BuildInsertOrUpdateQueryAsMerge` with the dummy source `FROM SYSIBM.SYSDUMMY1 FETCH FIRST 1 ROW ONLY`. `Source/LinqToDB/Internal/DataProvider/DB2/DB2SqlBuilderBase.cs:280`
 
 ### Temp tables
-- `IsLocalTemporary*` -> `DECLARE GLOBAL TEMPORARY TABLE` with `SESSION` schema prefix. `Source/LinqToDB/Internal/DataProvider/DB2/DB2SqlBuilderBase.cs:342`
+- `IsLocalTemporary*` -> `DECLARE GLOBAL TEMPORARY TABLE` with `SESSION` schema prefix. `Source/LinqToDB/Internal/DataProvider/DB2/DB2SqlBuilderBase.cs:310`
 - `IsGlobalTemporaryStructure` -> `CREATE GLOBAL TEMPORARY TABLE`.
-- Automatically appends `ON COMMIT DELETE ROWS` (transaction scope) or `ON COMMIT PRESERVE ROWS`. `Source/LinqToDB/Internal/DataProvider/DB2/DB2SqlBuilderBase.cs:407`
-- PRIMARY KEY constraints are silently suppressed on temp tables (DB2 does not support them). `Source/LinqToDB/Internal/DataProvider/DB2/DB2SqlBuilderBase.cs:416`
+- Automatically appends `ON COMMIT DELETE ROWS` (transaction scope) or `ON COMMIT PRESERVE ROWS`. `Source/LinqToDB/Internal/DataProvider/DB2/DB2SqlBuilderBase.cs:449`
+- PRIMARY KEY constraints are silently suppressed on temp tables (DB2 does not support them). `Source/LinqToDB/Internal/DataProvider/DB2/DB2SqlBuilderBase.cs:457`
 
 ### DROP / CREATE IF EXISTS
-Both use `BEGIN DECLARE CONTINUE HANDLER FOR SQLSTATE '<code>' BEGIN END; EXECUTE IMMEDIATE '...'; END` blocks. DROP: SQLSTATE `42704`; CREATE: SQLSTATE `42710`. `Source/LinqToDB/Internal/DataProvider/DB2/DB2SqlBuilderBase.cs:315`
+Both use `BEGIN DECLARE CONTINUE HANDLER FOR SQLSTATE '<code>' BEGIN END; EXECUTE IMMEDIATE '...'; END` blocks. DROP: SQLSTATE `42704` (`Source/LinqToDB/Internal/DataProvider/DB2/DB2SqlBuilderBase.cs:368`); CREATE: SQLSTATE `42710` (`Source/LinqToDB/Internal/DataProvider/DB2/DB2SqlBuilderBase.cs:420`).
 
 ### SELECT without FROM
-Redirected to `FROM SYSIBM.SYSDUMMY1` (single-row dummy table). `Source/LinqToDB/Internal/DataProvider/DB2/DB2SqlBuilderBase.cs:136`
+Redirected to `FROM SYSIBM.SYSDUMMY1` (single-row dummy table). `Source/LinqToDB/Internal/DataProvider/DB2/DB2SqlBuilderBase.cs:175`
 
 ### CTEs
 `CteFirst = false` -- WITH clause after the SELECT keyword in standard DB2 position. Supported: `IsCommonTableExpressionsSupported = true`. Recursive CTE join-with-condition not supported (`IsRecursiveCTEJoinWithConditionSupported = false`). `Source/LinqToDB/Internal/DataProvider/DB2/DB2DataProvider.cs:38`
@@ -145,7 +145,8 @@ DB2 ignores parameter type information in SELECT column positions. `DB2SqlOptimi
 - Timestamp literal format: `yyyy-MM-dd-HH.mm.ss.ffffff` (DB2's non-ISO separator)
 - z/OS `DateTimeOffset` literal format: `yyyy-MM-dd-HH.mm.ss.ffffffzzz` (precision-aware, timezone offset suffix), handled by `DB2zOSMappingSchema.ConvertDateTimeOffsetToSql`. `Source/LinqToDB/Internal/DataProvider/DB2/DB2MappingSchema.cs:279`
 - Binary literal: `BX'hexstring'`
-- `sbyte`/`byte` parameters promoted to `Int16` in `SetParameter`. `Source/LinqToDB/Internal/DataProvider/DB2/DB2DataProvider.cs:127`
+- `sbyte`/`byte` parameters promoted to `Int16` in `SetParameter`. `Source/LinqToDB/Internal/DataProvider/DB2/DB2DataProvider.cs:151`
+- `DECFLOAT` (`DB2DecimalFloatType`) can hold IEEE special values (`Infinity`/`-Infinity`/`NaN`/`sNaN`) that the default decimal reader (`GetDecimal`) cannot convert. `DB2DataProvider` registers a `ReaderExpressions` entry keyed on `DataTypeName == "DECFLOAT"` that reads the raw `DB2DecimalFloat` via `GetDB2DecimalFloatReaderMethod`; `DB2ProviderAdapter.RegisterDecimalFloatConverters` then converts `DB2DecimalFloat.ToString()` per target CLR type -- double/float keep the special value, decimal/integral targets get `default`/`null`. See issue #5663. `Source/LinqToDB/Internal/DataProvider/DB2/DB2DataProvider.cs:87`, `Source/LinqToDB/Internal/DataProvider/DB2/DB2ProviderAdapter.cs:155`
 
 ### Member translations
 - Date parts: `EXTRACT(part FROM ...)` for Year/Month/Day/Hour/Minute/Second; `To_Number(To_Char(..., 'Q'))` for Quarter; `Microsecond/1000` for Millisecond
@@ -159,7 +160,14 @@ DB2 ignores parameter type information in SELECT column positions. `DB2SqlOptimi
 - LUW `DateTime.Now`: not translated -- `TranslateNow` returns null. `Source/LinqToDB/Internal/DataProvider/DB2/Translation/DB2MemberTranslator.cs:269`
 - LUW/z/OS `DateTime.UtcNow`: `CURRENT TIMESTAMP - CURRENT TIMEZONE`. `Source/LinqToDB/Internal/DataProvider/DB2/Translation/DB2MemberTranslator.cs:274`
 - z/OS server now (`DateTimeOffset.Now` / `TranslateServerNow`): `CURRENT TIMESTAMP WITH TIME ZONE` via `DB2zOSMemberTranslator.ZOsDateFunctionsTranslator`. `Source/LinqToDB/Internal/DataProvider/DB2/Translation/DB2zOSMemberTranslator.cs:18`
-- `DB2DataProvider.CreateMemberTranslator()` dispatches `DB2zOSMemberTranslator` for z/OS, `DB2MemberTranslator` for LUW. `Source/LinqToDB/Internal/DataProvider/DB2/DB2DataProvider.cs:107`
+- `DB2DataProvider.CreateMemberTranslator()` dispatches `DB2zOSMemberTranslator` for z/OS, `DB2MemberTranslator` for LUW. `Source/LinqToDB/Internal/DataProvider/DB2/DB2DataProvider.cs:128`
+
+### Window functions
+`DB2SqlBuilderBase.GetWindowNullsPlacement` differentiates null-treatment placement per function: `FIRST_VALUE`/`LAST_VALUE`/`LAG`/`LEAD` take it as a quoted string argument (`FUNC(.., 'IGNORE NULLS')`); `NTH_VALUE` uses the standard after-close keyword (`NTH_VALUE(e, n) IGNORE NULLS`). `Source/LinqToDB/Internal/DataProvider/DB2/DB2SqlBuilderBase.cs:30`
+
+`BuildSqlExtendedFunction` pads `LAG`/`LEAD` calls that have `NullTreatment = Ignore` and fewer than 3 arguments: adds the default offset (`1`) if missing, then a typed `CAST(NULL AS <type>)` in the default-value slot -- DB2 rejects an untyped `NULL` default with `SQL0418N`. `Source/LinqToDB/Internal/DataProvider/DB2/DB2SqlBuilderBase.cs:35`
+
+`DB2WindowFunctionsMemberTranslator` (`Internal/DataProvider/DB2/Translation/DB2MemberTranslator.cs:463`) declares the supported window-function surface: frame `GROUPS`/exclusion not supported; `LAG`/`LEAD`/`VALUE`/`NTH_VALUE` null-treatment supported; full statistical/regression set supported (`STDDEV`, `VARIANCE`, `CORR`, linear regression, `MEDIAN`). Bare `STDDEV`/`VARIANCE` in DB2 docs are the *population* forms, so `Sql.Window.StdDev`/`Variance` (sample semantics) map to the explicit sample names `STDDEV_SAMP`/`VAR_SAMP` rather than the bare names. `TranslateRatioToReport` uses the shared native `RATIO_TO_REPORT` emission (`TranslateRatioToReportNative`). `Source/LinqToDB/Internal/DataProvider/DB2/Translation/DB2MemberTranslator.cs:485`
 
 ## Bulk copy
 
@@ -190,7 +198,7 @@ DB2 ignores parameter type information in SELECT column positions. `DB2SqlOptimi
 
 ## Provider flags (shared)
 
-`Source/LinqToDB/Internal/DataProvider/DB2/DB2DataProvider.cs:30`
+`Source/LinqToDB/Internal/DataProvider/DB2/DB2DataProvider.cs:32`
 
 | Flag | Value |
 |---|---|
@@ -209,6 +217,7 @@ DB2 ignores parameter type information in SELECT column positions. `DB2SqlOptimi
 | `SupportsPredicatesComparison` | `true` |
 | `IsRecursiveCTEJoinWithConditionSupported` | `false` |
 | `IsOrderByAggregateSubquerySupported` | `false` |
+| `MaxColumnCount` | `1012` (DB2's per-SELECT column cap for `CteUnion` eager-loading carrier projections; not validated against a live DB2 engine) |
 | `IsUpdateTakeSupported` | LUW only |
 | `IsUpdateSkipTakeSupported` | LUW only |
 | `RowConstructorSupport` | Equality, Comparisons, Update, UpdateLiteral, Overlaps, Between |
@@ -221,14 +230,14 @@ DB2 ignores parameter type information in SELECT column positions. `DB2SqlOptimi
 
 | File | Role |
 |---|---|
-| `Internal/DataProvider/DB2/DB2DataProvider.cs` | Provider base + concrete LUW/zOS sealed types |
-| `Internal/DataProvider/DB2/DB2SqlBuilderBase.cs` | SQL emission base |
+| `Internal/DataProvider/DB2/DB2DataProvider.cs` | Provider base + concrete LUW/zOS sealed types; DECFLOAT special-value reader override; `MaxColumnCount` flag |
+| `Internal/DataProvider/DB2/DB2SqlBuilderBase.cs` | SQL emission base; window-function null-treatment placement (`GetWindowNullsPlacement`, `BuildSqlExtendedFunction`) |
 | `Internal/DataProvider/DB2/DB2SqlOptimizer.cs` | Statement rewrite + parameter wrapping |
 | `DataProvider/DB2/DB2Tools.cs` | Public registration entry point |
 | `DataProvider/DB2/DB2Version.cs` | Server-family enum |
 | `DataProvider/DB2/DB2Options.cs` | Provider options record |
 | `DataProvider/DB2/DB2IdentifierQuoteMode.cs` | Identifier quoting enum |
-| `Internal/DataProvider/DB2/DB2ProviderAdapter.cs` | ADO.NET dynamic adapter |
+| `Internal/DataProvider/DB2/DB2ProviderAdapter.cs` | ADO.NET dynamic adapter; DECFLOAT special-value converters (issue #5663) |
 | `Internal/DataProvider/DB2/DB2ProviderDetector.cs` | Auto-detection via `eServerType` |
 | `Internal/DataProvider/DB2/DB2MappingSchema.cs` | Type mapping + literal converters |
 | `Internal/DataProvider/DB2/DB2BulkCopy.cs` | Bulk copy orchestration |
@@ -241,7 +250,7 @@ DB2 ignores parameter type information in SELECT column positions. `DB2SqlOptimi
 | `Internal/DataProvider/DB2/DB2LUWSqlBuilder.cs` | LUW dialect overrides |
 | `Internal/DataProvider/DB2/DB2zOSSqlBuilder.cs` | z/OS dialect overrides + `DateTimeOffset` -> `TIMESTAMP WITH TIME ZONE` |
 | `Internal/DataProvider/DB2/DB2SqlExpressionConvertVisitor.cs` | Expression-level SQL conversions; `ConcatRequiresExplicitStringCast = false` (PR #5504) |
-| `Internal/DataProvider/DB2/Translation/DB2MemberTranslator.cs` | LUW LINQ member -> SQL function translations; `withoutSeparator` join uses concat aggregate (PR #5504); TrimStart/TrimEnd from base (PR #5515); LISTAGG NULLS FIRST/LAST emulated via CASE sort key |
+| `Internal/DataProvider/DB2/Translation/DB2MemberTranslator.cs` | LUW LINQ member -> SQL function translations; `withoutSeparator` join uses concat aggregate (PR #5504); TrimStart/TrimEnd from base (PR #5515); LISTAGG NULLS FIRST/LAST emulated via CASE sort key; `DB2WindowFunctionsMemberTranslator` for statistical/regression window functions |
 | `Internal/DataProvider/DB2/Translation/DB2zOSMemberTranslator.cs` | z/OS overrides: `CURRENT TIMESTAMP WITH TIME ZONE` for server now (added SHA `4a478ff1`) |
 | `Internal/DataProvider/DB2/DB2LUWSchemaProvider.cs` | LUW schema introspection via `SYSCAT.*` |
 | `Internal/DataProvider/DB2/DB2zOSSchemaProvider.cs` | z/OS schema introspection via `SYSIBM.SYS*` |
@@ -266,9 +275,10 @@ DB2 ignores parameter type information in SELECT column positions. `DB2SqlOptimi
 1. **ROW_NUMBER paging disabled** -- `DB2SqlOptimizer.TransformStatement` has commented-out code for LUW 9/10 `ROW_NUMBER`-based pagination (needed when OFFSET is unavailable). Enabling it requires adding version tracking to the DB2 provider (analogous to `DB2Version.LUW_9` etc.). `Source/LinqToDB/Internal/DataProvider/DB2/DB2SqlOptimizer.cs:19`
 2. **Async bulk copy is sync under the hood** -- `ProviderSpecificCopyAsync` drains `IAsyncEnumerable` into a synchronous enumerator before calling `WriteToServer`. IBM's `DB2BulkCopy` does not expose an async `WriteToServerAsync`. `Source/LinqToDB/Internal/DataProvider/DB2/DB2BulkCopy.cs:80`
 3. **FK column matching in LUW schema provider** -- `GetForeignKeys` resolves column names by string-prefix matching on the space-separated `FK_COLNAMES`/`PK_COLNAMES` from `SYSCAT.REFERENCES`, ordered by longest-name-first. This heuristic can mis-match if column names are substrings of each other.
-4. **`BuildParameter` TODO** -- comment in `DB2SqlBuilderBase.BuildParameter` notes it is a copy of Firebird's implementation and a `SqlProviderFlags` refactor would deduplicate it. `Source/LinqToDB/Internal/DataProvider/DB2/DB2SqlBuilderBase.cs:429`
-5. **`DB2DateTimeType` optional** -- adapter loads `DB2DateTime` as optional (comment: "not sure if still actual"). `Source/LinqToDB/Internal/DataProvider/DB2/DB2ProviderAdapter.cs:174`
+4. **`BuildParameter` TODO** -- comment in `DB2SqlBuilderBase.BuildParameter` notes it is a copy of Firebird's implementation and a `SqlProviderFlags` refactor would deduplicate it. `Source/LinqToDB/Internal/DataProvider/DB2/DB2SqlBuilderBase.cs:472`
+5. **`DB2DateTimeType` optional** -- adapter loads `DB2DateTime` as optional (comment: "not sure if still actual"). `Source/LinqToDB/Internal/DataProvider/DB2/DB2ProviderAdapter.cs:254`
 6. **`DB2TimeSpanType` optional obsolete** -- loaded with `obsolete: true`; recent IBM providers include it as an `[Obsolete]` stub. Not mapped in `DB2DataProvider`.
+7. **`MaxColumnCount = 1012` unvalidated** -- caps how wide a `CteUnion` eager-loading carrier projection can grow before falling back to `KeyedQuery`. The value is a not-yet-validated guess for DB2's per-SELECT column limit; verify against the target edition's documented limit before relying on it. `Source/LinqToDB/Internal/DataProvider/DB2/DB2DataProvider.cs:47`
 
 ## See also
 
@@ -301,5 +311,11 @@ Read (this run -- delta, SHA b3340aa9):
 - Source/LinqToDB/DataProvider/DB2/DB2Options.cs -- no functional changes; confirmed BulkCopyType/IdentifierQuoteMode defaults and IEquatable impl unchanged
 - Source/LinqToDB/Internal/DataProvider/DB2/DB2DataProvider.cs -- added flags: IsNullsOrderingSupported=true, DefaultNullsOrdering=Largest (NULL sorts largest), CalculateSupportedCorrelatedLevelWithAggregateQueries=true, IsOrderByAggregateSubquerySupported=false; provider flags table updated
 - Source/LinqToDB/Internal/DataProvider/DB2/Translation/DB2MemberTranslator.cs -- LISTAGG WITHIN GROUP now emulates NULLS FIRST/LAST via leading CASE sort key (DB2 rejects NULLS token in WITHIN GROUP ORDER BY with SQL0109N); uses QueryHelper.MatchesNaturalNullsPosition with NullsDefaultOrdering.Largest to skip emulation when natural order matches
+
+Read (this run -- delta, SHA 36ee4f82):
+- Source/LinqToDB/Internal/DataProvider/DB2/DB2DataProvider.cs -- added `SqlProviderFlags.MaxColumnCount = 1012` (CteUnion eager-loading carrier-projection cap, not validated against a live DB2 engine); added a `ReaderExpressions` override keyed on `DataTypeName == "DECFLOAT"` routing to `GetDB2DecimalFloatReaderMethod` so DECFLOAT special values bypass the default decimal reader (issue #5663); corrected downstream citations shifted by the `DB2SqlBuilderBase.cs` insertion (`CreateMemberTranslator` dispatch :107 -> :128; sbyte/byte promotion :127 -> :151; provider-flags block :30 -> :32)
+- Source/LinqToDB/Internal/DataProvider/DB2/DB2ProviderAdapter.cs -- added `RegisterDecimalFloatConverters` + nested `DecimalFloatConverters` class converting `DB2DecimalFloat.ToString()` IEEE tokens (`NaN`/`Infinity`/`-Infinity`/`sNaN`) per target CLR type: double/float keep the special value, decimal/integral targets get `default` (non-nullable) or `null` (nullable); corrected `DB2DateTimeType` comment citation (:174 -> :254)
+- Source/LinqToDB/Internal/DataProvider/DB2/DB2SqlBuilderBase.cs -- added `GetWindowNullsPlacement` (per-function `IGNORE NULLS` placement: string-argument for FIRST_VALUE/LAST_VALUE/LAG/LEAD, after-close keyword for NTH_VALUE) and `BuildSqlExtendedFunction` override (pads LAG/LEAD with a typed `CAST(NULL AS <type>)` default to avoid DB2's `SQL0418N` untyped-NULL rejection); this ~43-line insertion shifted every subsequent citation in the file, corrected throughout the Paging/IDENTITY/MERGE/Temp-tables/DROP-CREATE/SELECT-without-FROM/BuildParameter subsections
+- Source/LinqToDB/Internal/DataProvider/DB2/Translation/DB2MemberTranslator.cs -- added `DB2WindowFunctionsMemberTranslator` (frame GROUPS/exclusion unsupported; LAG/LEAD/VALUE/NTH_VALUE null-treatment supported; full statistical/regression set supported; bare STDDEV/VARIANCE are DB2's population forms so `Sql.Window.StdDev`/`Variance` map to `STDDEV_SAMP`/`VAR_SAMP`; `TranslateRatioToReport` uses the shared native emission) and the `CreateWindowFunctionsMemberTranslator` override wiring it in
 
 </details>

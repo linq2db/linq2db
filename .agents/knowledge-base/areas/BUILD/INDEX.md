@@ -3,10 +3,10 @@ area: BUILD
 kind: area-index
 sources: [code]
 confidence: high
-last_verified: 2026-06-15
-last_verified_sha: b3340aa9ded15ffc626983fd202e6399daa081ca
+last_verified: 2026-07-05
+last_verified_sha: 36ee4f82f06eaf242b052ade8c87121d251a6165
 coverage_tier_1: 3/4
-coverage_tier_2: 83/83
+coverage_tier_2: 93/93
 ---
 
 # BUILD
@@ -24,11 +24,11 @@ This area has no C# types. Its artifacts are MSBuild/YAML/shell configuration fi
 | File | Role |
 |---|---|
 | `Directory.Build.props` | Global MSBuild anchor: TFMs, version numbers, feature flags, analyzer gating, polyfills, NuGet metadata, assembly signing. Imported by every project in the solution. |
-| `global.json` | SDK pin: .NET 10.0, `rollForward: minor`, `allowPrerelease: false`. |
+| `global.json` | SDK pin: .NET 10.0, `rollForward: minor`, `allowPrerelease: false`. Also pins the `dotnet test` CLI to the `Microsoft.Testing.Platform` (MTP) native runner via `"test": {"runner": "Microsoft.Testing.Platform"}` (added this run). |
 | `linq2db.slnx` | Solution file (VS 2022 XML format). Lists all projects across 7 folders. |
 | `Build/BannedSymbols.txt` | **MISSING** -- the actual banned-API list is at `Source/BannedSymbols.txt`. |
 
-**Tier 2 (all read):** `Build/Azure/pipelines/*.yml` (3 top-level + 8 templates), `Build/Azure/scripts/*.ps1` (3 existing + 1 added: `verify-nuget-sizes.ps1`) + `*.sh` (43), `.github/ISSUE_TEMPLATE/*.yml` (13), `.github/copilot-instructions.md` (added prior run), `Data/Create Scripts/DuckDB.sql` (new, PR #5451), `.editorconfig` (root), `Build/Azure/scripts/db2.provider.sh`, `Build/Azure/scripts/mac.db2.provider.sh`.
+**Tier 2 (all read):** `Build/Azure/pipelines/*.yml` (3 top-level + 8 templates), `Build/Azure/scripts/*.ps1` (5: `verify-nuget-sizes.ps1`, `ensure-baselines-branch.ps1` (new this run), 3 pre-existing) + `*.sh` (46: 43 pre-existing + `pgsql19.sh`, `mac.pgsql19.sh`, `ydb.sh` (new this run)), `.github/ISSUE_TEMPLATE/*.yml` (13), `.github/copilot-instructions.md`, `Data/Create Scripts/DuckDB.sql`, `.editorconfig` (root), `Build/Azure/scripts/db2.provider.sh`, `Build/Azure/scripts/mac.db2.provider.sh`, `Build/Azure/net{80,90,100}/{duckdb,pgsql19,ydb}.json` (9: 3 pre-existing duckdb + 6 new this run), `Build/Azure/README.md`.
 
 ## Subsystems
 
@@ -103,9 +103,9 @@ The root `.editorconfig` governs the full analyzer diagnostic severity catalog f
 
 `Meziantou.Polyfill` is configured via `<MeziantouPolyfill_IncludedPolyfills>`. Polyfills span: `System.Diagnostics.CodeAnalysis`, `HashCode`, `Index`/`Range`, `System.Threading.Lock`, `ArgumentNullException.ThrowIfNull`, `ArgumentException.ThrowIfNullOrEmpty/WhiteSpace`, `ArgumentOutOfRangeException.ThrowIf*`, `ObjectDisposedException.ThrowIf`, `Enum.GetNames<T>`, `AsyncEnumerable.FirstAsync/SingleAsync/ToArrayAsync/ToListAsync`.
 
-### `global.json` -- SDK pin
+### `global.json` -- SDK pin and test runner
 
-`sdk.version: "10.0.200"`, `rollForward: "minor"`, `allowPrerelease: false`. (Bumped from `10.0.0` in prior delta.)
+`sdk.version: "10.0.200"`, `rollForward: "minor"`, `allowPrerelease: false` (unchanged this run). Adds `"test": { "runner": "Microsoft.Testing.Platform" }` -- pins the `dotnet test` CLI to the MTP-native test host instead of legacy VSTest. This is the switch that makes the CI-side MTP argument changes (see "CI test invocation" subsystem below) apply to local `dotnet test` invocations too, not just the direct-executable path CI now uses.
 
 ### Solution shape (`linq2db.slnx`)
 
@@ -126,28 +126,63 @@ Four build configurations: `Azure`, `Debug`, `Release`, `Testing`. Key project f
 |---|---|---|
 | `Build/Azure/pipelines/build.yml` | All PRs | Compile-only check |
 | `Build/Azure/pipelines/default.yml` | Push to `master`/`release`; PRs to `release` | Full pipeline |
-| `Build/Azure/pipelines/testing.yml` | Manual (`/azp run test-<db>` bot commands) | Test-only: builds for tests, then runs per-`db_filter` subset. Supports `test-duckdb` -> `[duckdb.all]` filter (added PR #5451). |
+| `Build/Azure/pipelines/testing.yml` | Manual (`/azp run test-<db>` bot commands) | Test-only: builds for tests, then runs per-`db_filter` subset. Supports `test-duckdb` -> `[duckdb.all]` and `test-ydb` -> `[ydb.all]` filters (`ydb` mapping added this run). |
+
+`Build/Azure/README.md` documents the `/azp run` command catalog and the per-database/TFM test matrix table; this run adds the `/azp run test-ydb` line and a `PostgreSQL 19` + `YDB` row to both the OS/TFM support matrix and the `ProviderName`/`TestProvName` reference table.
 
 ### Azure Pipelines: build job (`build-job.yml`)
 
-Build pool image: `windows-2025` (updated from `windows-2022`). `timeoutInMinutes: 120`. Key steps:
+Build pool image: `windows-2025`. `timeoutInMinutes: 120`. Key steps:
 
 - Installs .NET SDK 9.x then 10.x via `UseDotNet@2`.
 - `PublishSingleFile` smoke test: publishes `Tests.SingleFile.csproj` as win-x64 self-contained single file and executes it; guards against `Assembly.Location` / `File.Exists` regressions in provider detectors (PR #5488).
-- Publishes test binaries for NETFX, net8.0, net9.0, net10.0 (x86 and x64); includes EF Core 3/8/9/10 tests.
+- Publishes test binaries for NETFX, net8.0, net9.0, net10.0 (x86 and x64); includes EF Core 3/8/9/10 tests. The EF3 net462 x64 publish now pins an explicit `-a x64` RID (comment: SQLitePCLRaw's net4x native target only ships the x86 `e_sqlite3`, which an x64 EF test process can't load without the RID pin).
+- Copies `.runsettings` alongside each published test app (`main` and `efcore`, all TFM/arch combos) -- comment: "MTP does not auto-discover it, NUnit honors it via `--settings` (`AssemblySelectLimit`)" (added this run, part of the MTP migration).
+- The x86 stub MSBuild property passed to `dotnet publish` for `Tests/Linq/Tests.csproj` is renamed from `/p:DB2STUB=True` to `/p:X86STUBS=True` (broader-scoped name; the underlying stub source is `Tests/Base/X86Stubs/DB2Stubs.cs` -- see TESTS area for consumer-side detail).
 - Builds and packs for NuGet on Release configuration; publishes nugets and LINQPad LPX artifacts.
 - Creates GitHub Release draft (via `gh`) when building the release branch.
 
+### CI test invocation: `dotnet test` -> Microsoft Testing Platform (MTP) native execution
+
+All three OS test-workflow templates (`test-workflow-linux.yml`, `test-workflow-macos.yml`, `test-workflow-windows.yml`) replace `dotnet test <dll> -f <tfm> -l trx $(extra) --blame-hang-timeout 5m` with direct execution of the published test host: `dotnet ./net{8,9,10}.0/{main,efcore}/x64/linq2db*.Tests.dll ...` on Linux/macOS, and the bare `.exe` (no `dotnet` prefix) on Windows, e.g. `net10.0\main\x64\linq2db.Tests.exe`. The new MTP-native argument set is `--filter "TestCategory != SkipCI" --settings <path>\.runsettings --report-trx --report-trx-filename <tfm>-<suite>-<arch>.trx --results-directory TestResults --hangdump --hangdump-timeout 5m`, replacing VSTest's `-f <tfm> -l trx --blame-hang-timeout 5m`.
+
+The `$(extra)` variable (`--arch x86` / `--arch x64`, previously injected per Access matrix entry in `test-matrix.yml`) is removed entirely -- per-architecture selection now comes from the publish output path (`.../x86/` vs `.../x64/`), not a `dotnet test` CLI flag. `test-matrix.yml`'s `extra` parameter documentation comment and all three `extra: --arch x86`/`--arch x64` entries (Access x86/x64 jobs) are deleted.
+
+All three templates also add a `DownloadPipelineArtifact@2` step for `$(artifact_test_scripts)` earlier in the sequence (before the baselines-branch self-heal step, see below), and drop the old later duplicate download of the same artifact.
+
+`build-vars.yml` adds `test_retry_args: '--retry-failed-tests 2 --retry-failed-tests-max-tests 5'` for crash/resource-unstable providers (Access, Oracle). MTP re-runs only the failed tests in-process on a flaky failure, so a single flaky test no longer trips `retryCountOnTaskFailure` into re-running the whole ~50-min test leg; the max-tests cap skips retry on mass failures (real breakage, not flakiness). The retry-path script blocks in each `test-workflow-*.yml` append `$(test_retry_args)` to the MTP invocation.
+
+### Baselines branch creation (`Build/Azure/scripts/ensure-baselines-branch.ps1`, new this run)
+
+Extracted from an inline `PowerShell@2` script previously embedded directly in `test-jobs.yml`'s `create_baselines_branch` job. Same `linq2db.baselines` repo create/rebase logic, now parameterized (`-Branch`, `-PrId`, `-BaselinesMaster`, `-BaseHash`, `-Rebase`, `-EmitOutputs`) and shared by two callers:
+
+- **Central** (`create_baselines_branch`, once per run): `-PrId "$(source_pr_id)" -BaselinesMaster "$(baselines_master)" -Rebase -EmitOutputs`. Creates the branch if missing, rebases it onto `baselines_master` when it already exists but is behind, and exports `baselines_branch` / `baselines_head` / `baselines_new_branch` as task-output variables.
+- **Self-heal** (`test_windows_job` / `test_linux_job` / `test_macos_job`, one new step each, before their `baselines` clone): `-Branch "$(baselines_branch)" -BaselinesMaster "$(baselines_master)" -BaseHash "$(baselines_head)"`. Re-creates the branch at the recorded `baselines_head` hash if a prior completed run already deleted it via empty-branch cleanup -- without this, an Azure Pipelines "rerun failed jobs" restart fails because `create_baselines_branch` is not re-run on a partial restart and its branch was already removed by `create_baselines_pr` (referenced incident: build 21555).
+
+Branch creation is race-tolerant: when several test jobs self-heal a missing branch concurrently, only one wins the `git/refs` POST; the losers re-query and proceed once they see the branch created by a sibling job.
+
+`test-jobs.yml` also adds `baselines_head` as a second job-output variable (alongside the pre-existing `baselines_branch`) for all three OS jobs, so the self-heal steps can read it.
+
 ### Azure Pipelines: test matrix (`test-matrix.yml`, `test-jobs.yml`)
 
-The `test-matrix.yml` template defines ~38 test matrix entries spanning: SQLite (Win/Linux/macOS, all TFMs); Access (MDB, ACE x86, ACE x64 disabled, Windows); SQL CE (Windows); MySQL/MariaDB; PostgreSQL 13--18; SQL Server 2005--2025; Sybase ASE 16; Oracle 11g--23c; Firebird 2.5--5.0; DB2 LUW 11.5; Informix 14.10; SAP HANA 2; ClickHouse (Driver/MySql); **DuckDB (Win/Linux/macOS; net8.0/9.0/10.0 only; no setup script required)**.
+The `test-matrix.yml` template defines ~40 test matrix entries spanning: SQLite (Win/Linux/macOS, all TFMs); Access (MDB, ACE x86, ACE x64 disabled, Windows); SQL CE (Windows); MySQL/MariaDB; PostgreSQL 13--19; SQL Server 2005--2025; Sybase ASE 16; Oracle 11g--23c; Firebird 2.5--5.0; DB2 LUW 11.5; Informix 14.10; SAP HANA 2; ClickHouse (Driver/MySql); DuckDB (Win/Linux/macOS; net8.0/9.0/10.0 only; no setup script required); **YDB** (Linux/macOS; net8.0/9.0/10.0 only).
 
 New entries since prior build run:
-- **PostgreSQL 18** (`pgsql18`): Linux + macOS; net8/9/10 only; uses `pgsql18.sh` / `mac.pgsql18.sh` scripts.
-- **SQL Server 2025** (`SqlServer2025`): Win/Linux/macOS; all TFMs; uses `sqlserver.2025.cmd` / `sqlserver.2025.sh` scripts.
-- **SqlServer2019Extras** (`SqlServer2019Extras`): Win/Linux/macOS; all TFMs; config `sqlserver.extras`; enabled by `[sqlserver.all]` or `[sqlserver.2019]` filters -- separate job because SQL Server 2019 run is too large for one job.
+- **PostgreSQL 19** (`pgsql19`): Linux + macOS; net8/9/10 only; uses `pgsql19.sh` / `mac.pgsql19.sh` scripts; enabled by `[all]` or `[postgresql.all]` filters. Docker image tag is `postgres:19beta1` (pre-release build).
+- **YDB** (`YDB`): Linux + macOS (docker installed on the macOS runner); net8/9/10 only; both OSes share the same `ydb.sh` setup script (no separate `mac.ydb.sh`); filter token `[ydb.all]`; new `/azp run test-ydb` pipeline definition maps to it in `testing.yml`.
+- (from prior run, retained) **PostgreSQL 18** (`pgsql18`), **SQL Server 2025** (`SqlServer2025`), **SqlServer2019Extras** (`SqlServer2019Extras`).
 
-DuckDB uses file-based storage (`Data/TestData.duckdb`), so no container startup script is needed. Config files `Build/Azure/net{80,90,100}/duckdb.json` each activate provider `DuckDB`. Filter token: `[duckdb.all]`; pipeline definition: `test-duckdb`.
+`test-jobs.yml`'s inline baselines-branch `PowerShell@2` script (the large ls-remote/create/rebase block) is replaced by a call to `Build/Azure/scripts/ensure-baselines-branch.ps1` (see subsystem above); the `create_baselines_branch` job now downloads `$(artifact_test_scripts)` first via `DownloadPipelineArtifact@2`, then invokes the script with `-PrId "$(source_pr_id)" -BaselinesMaster "$(baselines_master)" -Rebase -EmitOutputs`. The `extra` matrix-entry property (Access x86/x64 `--arch` flags) is removed -- see the MTP subsystem above.
+
+DuckDB and YDB both use file-based/container-only storage without a Windows job; config files `Build/Azure/net{80,90,100}/{duckdb,ydb}.json` each activate their respective provider (`DuckDB` / `YDB`). PostgreSQL 19 similarly gets `Build/Azure/net{80,90,100}/pgsql19.json`, each `{"NET{80,90,100}.Azure": {"Providers": ["PostgreSQL.19"]}}`.
+
+### PostgreSQL 19 and YDB test container setup (`Build/Azure/scripts/pgsql19.sh`, `mac.pgsql19.sh`, `ydb.sh`, all new this run)
+
+- `pgsql19.sh` (Linux): `docker run -d --name pgsql -e POSTGRES_PASSWORD=... -p 5432:5432 ... postgres:19beta1`, polls up to 100 retries (1s apart) via `psql -U postgres -c '\l'` grepping for the `testdata` database, creating it each retry until present.
+- `mac.pgsql19.sh` (macOS): same `postgres:19beta1` image with a named volume (`pgdb:/var/run/postgresql`) and container hostname `-h pgsql`; polls unconditionally until `psql -U postgres -c '\l'` succeeds, then creates `testdata` once (no retry loop on the create step, unlike the Linux variant).
+- `ydb.sh` (shared Linux + macOS): `docker run -d --name ydb -p 2136:2136 -e YDB_FEATURE_FLAGS=enable_temp_tables ydbplatform/local-ydb:latest`; polls up to 50 retries (5s apart) via `docker logs ydb` grepping for the startup marker string `"Table profiles were not loaded"`.
+
+Both new provider setups follow the same docker-run + log/psql-poll pattern already used by `db2.provider.sh` and the other `scripts/*.sh` container bootstraps in this area.
 
 ### DuckDB test schema (`Data/Create Scripts/DuckDB.sql`)
 
@@ -163,7 +198,7 @@ Added after the 6.3.0 release-publish job hit HTTP 413 on `linq2db.cli.6.3.0.nup
 
 ### DB2 provider setup scripts (`Build/Azure/scripts/db2.provider.sh`, `Build/Azure/scripts/mac.db2.provider.sh`)
 
-Both scripts are now TFM-aware. They detect the active TFM from the directory path and select the correct `Net.IBM.Data.Db2-lnx` / `Net.IBM.Data.Db2-osx` package version:
+Both scripts are TFM-aware. They detect the active TFM from the directory path and select the correct `Net.IBM.Data.Db2-lnx` / `Net.IBM.Data.Db2-osx` package version:
 
 - net10.0: `DB2_PKG_VERSION=10.0.0.100`
 - net8.0 / net9.0: `DB2_PKG_VERSION=9.0.0.400`
@@ -197,6 +232,8 @@ Instructs Copilot to ignore intentional formatting differences (column-aligned c
 - **Access ACE x64 disabled.** Due to dotnet/runtime#46187.
 - **ClickHouse Octonica always disabled.**
 - **DuckDB no netfx support.** Does not support .NET Framework.
+- **PostgreSQL 19 CI job targets a pre-release Docker image.** Both `pgsql19.sh` and `mac.pgsql19.sh` pin `postgres:19beta1`; expect a tag swap once PostgreSQL 19 reaches GA.
+- **YDB and PostgreSQL 19 have no netfx/Windows job.** Same pattern as DuckDB -- Linux/macOS + net8/9/10 only, no Windows test-matrix entry.
 
 ## See also
 
@@ -213,23 +250,27 @@ Instructs Copilot to ignore intentional formatting differences (column-aligned c
   - linq2db.slnx -- read in full
   - Build/BannedSymbols.txt -- MISSING on disk
   - Source/BannedSymbols.txt -- read in full (actual location)
-- Tier 2 (visited / total): 83 / 83 (100%)
+- Tier 2 (visited / total): 93 / 93 (100%)
   - Read (prior run, delta): Build/Azure/net{80,90,100}/duckdb.json; test-matrix.yml (DuckDB entry); testing.yml (test-duckdb filter); Directory.Build.props (EnforceCodeStyleInBuild Release-only, DuckDB DatabasePackageTags); Directory.Packages.props (DuckDB.NET.Data.Full); DataProviders.json (DuckDB entry); Tests/linq2db.Providers.props (DuckDB ref); Data/Create Scripts/DuckDB.sql (new)
   - Read (prior run -- delta 2): Build/Azure/scripts/verify-nuget-sizes.ps1 (ADDED); Build/Azure/pipelines/templates/nuget-job.yml; Directory.Build.props (version 6.3.0 -> 6.4.0); global.json (SDK pin 10.0.0 -> 10.0.200); Directory.Packages.props (DuckDB.NET.Data.Full 1.5.2, Npgsql 10.0.2); linq2db.slnx; Source/BannedSymbols.txt; .github/copilot-instructions.md
+  - Read (prior run -- delta 3): `.editorconfig` (full Meziantou.Analyzer 3.0.85 catalog); `Build/Azure/pipelines/build.yml` / `default.yml` (no structural change); `build-job.yml` (windows-2025 pool, PublishSingleFile smoke test, EF10 publish steps); `test-matrix.yml` (PostgreSQL 18, SQL Server 2025, SqlServer2019Extras entries); `test-workflow-linux.yml` / `test-workflow-macos.yml` / `test-workflow-windows.yml` (structure baseline, NET10 x86 steps); `db2.provider.sh` / `mac.db2.provider.sh` (TFM-aware version split); `Directory.Packages.props` (per-TFM DB2 versions, Npgsql/DuckDB/BenchmarkDotNet/FSharp.Core/NUnit3TestAdapter/Meziantou.Analyzer/SourceLink bumps); `linq2db.slnx` (Tests.SingleFile project added)
   - Read (this run -- delta):
-    - `.editorconfig` -- full Meziantou.Analyzer 3.0.85 diagnostic catalog; MA0008--MA0200 all individually configured with rationale comments; test-file overrides for ~60 rules; ReSharper far-alignment properties preserved.
-    - `Build/Azure/pipelines/build.yml` -- no structural changes; `with_analyzers: false` still present.
-    - `Build/Azure/pipelines/default.yml` -- no structural changes confirmed.
-    - `Build/Azure/pipelines/templates/build-job.yml` -- build pool updated windows-2022 -> windows-2025; PublishSingleFile smoke test step added (Tests.SingleFile, net10.0 win-x64); EF10 publish steps added for both x86 and x64.
-    - `Build/Azure/pipelines/templates/test-matrix.yml` -- PostgreSQL 18 entry added (pgsql18); SQL Server 2025 entry added; SqlServer2019Extras job added (separate from SqlServer2019 due to run size); DuckDB entry confirmed unchanged.
-    - `Build/Azure/pipelines/templates/test-workflow-linux.yml` -- structure unchanged; --blame-hang-timeout 5m confirmed on all dotnet test invocations.
-    - `Build/Azure/pipelines/templates/test-workflow-macos.yml` -- structure unchanged; docker installed via brew install colima docker.
-    - `Build/Azure/pipelines/templates/test-workflow-windows.yml` -- NET 10 x86 test steps added; EF10 x86 steps added; all TFMs now have x86/x64 coverage.
-    - `Build/Azure/scripts/db2.provider.sh` -- TFM-aware version split: net10.0 -> 10.0.0.100, others -> 9.0.0.400; uses wget+unzip (nuget install deprecated); sets PATH and LD_LIBRARY_PATH for DB2 CLI.
-    - `Build/Azure/scripts/mac.db2.provider.sh` -- same TFM-aware version split as linux; osx variant lacks PATH export (handled differently on macOS).
-    - `Directory.Packages.props` -- Net.IBM.Data.Db2* split to per-TFM versions (9.0.0.400 pre-net10 / 10.0.0.100 net10.0); Npgsql/Npgsql.NodaTime 10.0.2 (net8+); DuckDB.NET.Data.Full 1.5.2; SourceGear.sqlite3 3.50.4.5; BenchmarkDotNet 0.15.8; FSharp.Core 10.1.300; NUnit3TestAdapter 6.2.0; Meziantou.Analyzer 3.0.85; Microsoft.SourceLink.GitHub 10.0.300.
-    - `linq2db.slnx` -- Tests.SingleFile project added (excluded from Azure/Release/Testing configs); .agents/agents/ folder entries expanded; no new production source projects.
+    - `Build/Azure/README.md` -- adds `/azp run test-ydb` line; adds PostgreSQL 19 row (OS/TFM matrix + `ProviderName.PostgreSQL19` reference row); adds YDB row (OS/TFM matrix + `ProviderName.Ydb` reference row).
+    - `Build/Azure/net100/pgsql19.json`, `Build/Azure/net80/pgsql19.json`, `Build/Azure/net90/pgsql19.json` -- new provider-activation configs, each `{"NET{80,90,100}.Azure": {"Providers": ["PostgreSQL.19"]}}`.
+    - `Build/Azure/net100/ydb.json`, `Build/Azure/net80/ydb.json`, `Build/Azure/net90/ydb.json` -- new provider-activation configs, each `{"NET{80,90,100}.Azure": {"Providers": ["YDB"]}}`.
+    - `Build/Azure/pipelines/templates/build-job.yml` -- copies `.runsettings` next to each published test app (MTP does not auto-discover it); renames x86 stub property `DB2STUB` -> `X86STUBS`; EF3 net462 x64 publish now pins explicit `-a x64` RID (SQLitePCLRaw native-asset comment).
+    - `Build/Azure/pipelines/templates/build-vars.yml` -- adds `test_retry_args: '--retry-failed-tests 2 --retry-failed-tests-max-tests 5'` for MTP in-process failed-test retry.
+    - `Build/Azure/pipelines/templates/test-jobs.yml` -- inline baselines-branch PowerShell script replaced by a call to `ensure-baselines-branch.ps1`; downloads `$(artifact_test_scripts)` earlier (before the baselines step); drops the `extra` variable passthrough for all three OS jobs; adds `baselines_head` job-output variable alongside `baselines_branch`.
+    - `Build/Azure/pipelines/templates/test-matrix.yml` -- adds `PostgreSQL19` matrix entry (Linux+macOS, net8/9/10, `pgsql19.sh`/`mac.pgsql19.sh`) and `YDB` matrix entry (Linux+macOS, net8/9/10, `ydb.sh`); removes the `extra` parameter doc-comment and all `extra: --arch x86`/`--arch x64` Access-entry properties.
+    - `Build/Azure/pipelines/templates/test-workflow-linux.yml` -- switches all `dotnet test <dll> -f <tfm> -l trx $(extra) --blame-hang-timeout 5m` invocations to direct MTP host execution (`dotnet ./<tfm>/{main,efcore}/x64/linq2db*.Tests.dll ... --settings .../.runsettings --report-trx ... --hangdump --hangdump-timeout 5m [$(test_retry_args)]`); adds `DownloadPipelineArtifact` for test scripts earlier + a new "Ensure test baselines branch" self-heal step (`ensure-baselines-branch.ps1`) before the baselines clone; removes the old later duplicate scripts-artifact download.
+    - `Build/Azure/pipelines/templates/test-workflow-macos.yml` -- same MTP invocation switch + self-heal step + download reordering as the linux template.
+    - `Build/Azure/pipelines/templates/test-workflow-windows.yml` -- same MTP invocation switch (bare `.exe`, no `dotnet` prefix, e.g. `net10.0\main\x64\linq2db.Tests.exe`) + self-heal step + download reordering; covers netfx x86/x64 and net8/9/10 x86/x64 legs.
+    - `Build/Azure/pipelines/testing.yml` -- adds `test-ydb` -> `[ydb.all]` `db_filter` mapping alongside the existing `test-duckdb`/`test-clickhouse`/etc. mappings.
+    - `Build/Azure/scripts/ensure-baselines-branch.ps1` -- NEW; factors the baselines-branch create/rebase logic out of `test-jobs.yml` into a shared, parameterized script with a central create/rebase mode (`-Rebase -EmitOutputs`) and a per-job self-heal mode (`-BaseHash`); addresses a "rerun failed jobs" restart failure referencing build 21555.
+    - `Build/Azure/scripts/mac.pgsql19.sh`, `Build/Azure/scripts/pgsql19.sh` -- NEW; docker container setup for PostgreSQL 19 (`postgres:19beta1` image), poll-and-create the `testdata` database.
+    - `Build/Azure/scripts/ydb.sh` -- NEW; docker container setup for YDB (`ydbplatform/local-ydb:latest`, `YDB_FEATURE_FLAGS=enable_temp_tables`), polls container logs for the "Table profiles were not loaded" startup marker.
+    - `global.json` -- adds `"test": {"runner": "Microsoft.Testing.Platform"}`; SDK version/rollForward unchanged (`10.0.200`, `minor`, `false`).
 - Tier 3 (skipped, logged): 0
-  - Build/Azure/{net80,net90,net100,netfx}/*.json (150+ files) -- Tier-3 test data
+  - Build/Azure/{net80,net90,net100,netfx}/*.json (150+ files, minus the 9 provider-activation configs now called out by name above) -- Tier-3 test data
   - Build/Azure/scripts/*.cmd -- Tier 3
 </details>
