@@ -85,7 +85,7 @@ namespace LinqToDB.Remote
 					// Alias the prepared statement - the one actually rendered. PrepareStatementForSql can
 					// produce new nodes, and the alias context is keyed to the nodes it visits, so aliasing
 					// query.Statement (pre-prepare) would leave the rendered nodes unresolved.
-					AliasesHelper.PrepareQueryAndAliases(new IdentifierServiceSimple(128), statement, query.Aliases, out var aliases);
+					AliasesHelper.PrepareQueryAndAliases(new IdentifierServiceSimple(128), statement, out var aliases);
 
 					sqlBuilder.BuildSql(i, statement, sqlStringBuilder.Value, optimizationContext, aliases, null);
 

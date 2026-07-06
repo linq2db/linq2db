@@ -209,6 +209,30 @@ namespace LinqToDB
 		}
 
 		/// <summary>
+		/// With <see cref="ImplicitCollectionLoading.Throw"/>, an implicit eager load (a collection projected in a <c>Select</c> without
+		/// being explicitly requested) throws <see cref="LinqToDBException"/> at build time. The guard is bypassed
+		/// by an explicit <c>LoadWith</c>/<c>ThenLoad</c> (that collection only) or a root
+		/// <c>WithUnionLoadStrategy</c>/<c>WithKeyedLoadStrategy</c>/<c>WithSeparateLoadStrategy</c> marker (whole
+		/// query). Default: <see cref="ImplicitCollectionLoading.Allow"/>.
+		/// </summary>
+		[Pure]
+		public static LinqOptions WithImplicitCollectionLoading(this LinqOptions options, ImplicitCollectionLoading implicitCollectionLoading)
+		{
+			return options with { ImplicitCollectionLoading = implicitCollectionLoading };
+		}
+
+		/// <summary>
+		/// Sets the default <see cref="EagerLoadingStrategy"/> used for all LoadWith/ThenLoad eager-loading
+		/// operations when no per-query strategy is set via <c>WithUnionLoadStrategy</c>, <c>WithKeyedLoadStrategy</c>, or <c>WithSeparateLoadStrategy</c>.
+		/// Default: <see cref="EagerLoadingStrategy.Default"/>.
+		/// </summary>
+		[Pure]
+		public static LinqOptions WithDefaultEagerLoadingStrategy(this LinqOptions options, EagerLoadingStrategy eagerLoadingStrategy)
+		{
+			return options with { DefaultEagerLoadingStrategy = eagerLoadingStrategy };
+		}
+
+		/// <summary>
 		/// Used to disable LINQ expressions caching for queries.
 		/// This cache reduces time, required for query parsing but have several side-effects:
 		/// <para />
@@ -507,6 +531,30 @@ namespace LinqToDB
 		public static DataOptions UseGuardGrouping(this DataOptions options, bool guardGrouping)
 		{
 			return options.WithOptions<LinqOptions>(o => o with { GuardGrouping = guardGrouping });
+		}
+
+		/// <summary>
+		/// With <see cref="ImplicitCollectionLoading.Throw"/>, an implicit eager load (a collection projected in a <c>Select</c> without
+		/// being explicitly requested) throws <see cref="LinqToDBException"/> at build time. The guard is bypassed
+		/// by an explicit <c>LoadWith</c>/<c>ThenLoad</c> (that collection only) or a root
+		/// <c>WithUnionLoadStrategy</c>/<c>WithKeyedLoadStrategy</c>/<c>WithSeparateLoadStrategy</c> marker (whole
+		/// query). Default: <see cref="ImplicitCollectionLoading.Allow"/>.
+		/// </summary>
+		[Pure]
+		public static DataOptions UseImplicitCollectionLoading(this DataOptions options, ImplicitCollectionLoading implicitCollectionLoading)
+		{
+			return options.WithOptions<LinqOptions>(o => o with { ImplicitCollectionLoading = implicitCollectionLoading });
+		}
+
+		/// <summary>
+		/// Sets the default <see cref="EagerLoadingStrategy"/> used for all LoadWith/ThenLoad eager-loading
+		/// operations when no per-query strategy is set via <c>WithUnionLoadStrategy</c>, <c>WithKeyedLoadStrategy</c>, or <c>WithSeparateLoadStrategy</c>.
+		/// Default: <see cref="EagerLoadingStrategy.Default"/>.
+		/// </summary>
+		[Pure]
+		public static DataOptions UseDefaultEagerLoadingStrategy(this DataOptions options, EagerLoadingStrategy eagerLoadingStrategy)
+		{
+			return options.WithOptions<LinqOptions>(o => o with { DefaultEagerLoadingStrategy = eagerLoadingStrategy });
 		}
 
 		/// <summary>

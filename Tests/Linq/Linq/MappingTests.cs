@@ -1288,7 +1288,6 @@ namespace Tests.Linq
 			Assert.That(result[0].SomeColumn, Is.EqualTo("value"));
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4437")]
 		public void Issue4437Test2([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
@@ -1307,14 +1306,40 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(new Issue4437Record[] { new("value") });
 
+			// Constructor materialization is unified with the LINQ path: the mapped column name (some_column) is
+			// authoritative, so a result column aliased to the member name does not bind and the parameter stays
+			// at its default. Select the mapped column name (Issue4437Test2) to populate it.
 			var result = db.Query<Issue4437Record>("select some_column as SomeColumn from test4437").ToArray();
 
 			Assert.That(result, Has.Length.EqualTo(1));
-			Assert.That(result[0].SomeColumn, Is.EqualTo("value"));
+			Assert.That(result[0].SomeColumn, Is.Null);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4437")]
+		public void Issue4437Test4([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(new Issue4437VcRecord[] { new(true) });
+
+			var result = db.Query<Issue4437VcRecord>("select some_column from test4437vc").ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(1));
+			Assert.That(result[0].SomeColumn, Is.True);
 		}
 
 		[Table("test4437")]
 		sealed record Issue4437Record([property: Column("some_column")] string SomeColumn);
+
+		[Table("test4437vc")]
+		sealed record Issue4437VcRecord(
+			[property: Column("some_column", DataType = DataType.VarChar, Length = 1), ValueConverter(ConverterType = typeof(Issue4437BoolConverter))] bool SomeColumn);
+
+		sealed class Issue4437BoolConverter : ValueConverter<bool, string>
+		{
+			public Issue4437BoolConverter() : base(v => v ? "Y" : "N", p => p == "Y", true)
+			{
+			}
+		}
 		#endregion
 
 		#region Issue 1833
@@ -1540,8 +1565,6 @@ namespace Tests.Linq
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955")]
 		public void MappingTypingByConstant_FromQuery_UInt64([DataSources(TestProvName.AllAccess)] string context, [Values] bool inline, [Values(null, 1ul)] ulong? first)
 		{
-			using var _ = inline && context.IsAnyOf(TestProvName.AllPostgreSQL) ? new DisableBaseline("TODO: https://github.com/linq2db/linq2db/issues/5169") : null;
-
 			using var db = GetDataContext(context);
 			db.InlineParameters = inline;
 

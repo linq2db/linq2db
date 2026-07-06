@@ -4,6 +4,19 @@ uid: contributing
 
 # Contributing guide
 
+## Cloning on Windows: the `.claude` symlink
+
+AI coding-agent instructions live under `.agents/` (a single source shared by Claude Code, GitHub Copilot, and OpenAI Codex). Because Claude Code discovers its skills / subagents / hooks / settings under `.claude/`, the repository tracks **`.claude` as a symlink to `.agents/`**.
+
+On **Windows**, git only materializes that symlink when symlink support is enabled. Without it the working tree gets `.claude` as a tiny text file containing `.agents`, and Claude Code tooling silently stops working (everything else — build, tests — is unaffected, since all paths reference `.agents/` directly). Before cloning, enable **both**:
+
+- **Developer Mode** (*Settings → Privacy & security → For developers*), or run git elevated, so the OS permits symlink creation.
+- `git config --global core.symlinks true` (or pass `-c core.symlinks=true` to `git clone`).
+
+If you already cloned without these, enable them and run `git checkout -- .claude` from the repo root to replace the placeholder with the real symlink. As a fallback when Developer Mode is unavailable, create a directory junction manually — `cmd /c mklink /J .claude .agents` from the repo root (local-only; git may show it as a pending change, which can be ignored).
+
+macOS / Linux materialize the symlink with no extra configuration.
+
 ## Project structure
 
 ### Solution and folder structure

@@ -1880,21 +1880,20 @@ namespace Tests.Linq
 			// System.Data.SqlClient
 			// Microsoft.Data.SqlClient
 			// SqlCe
-			using (var db = GetDataContext(context, interceptor: SequentialAccessCommandInterceptor.Instance, suppressSequentialAccess: true, optimizeForSequentialAccess: true))
-			{
-				var q = db.Person
-					.Select(p => new
-					{
-						FirstName  = p.FirstName,
-						ID         = p.ID,
-						IDNullable = Sql.ToNullable(p.ID),
-						LastName   = p.LastName,
-						FullName   = $"{p.FirstName} {p.LastName}"
-					});
+			using var db = GetDataContext(context, interceptor: SequentialAccessCommandInterceptor.Instance, suppressSequentialAccess: true, optimizeForSequentialAccess: true);
 
-				foreach (var p in q.ToArray())
-					Assert.That(p.FullName, Is.EqualTo($"{p.FirstName} {p.LastName}"));
-			}
+			var q = db.Person
+				.Select(p => new
+				{
+					FirstName  = p.FirstName,
+					ID         = p.ID,
+					IDNullable = Sql.ToNullable(p.ID),
+					LastName   = p.LastName,
+					FullName   = $"{p.FirstName} {p.LastName}"
+				});
+
+			foreach (var p in q.ToArray())
+				Assert.That(p.FullName, Is.EqualTo($"{p.FirstName} {p.LastName}"));
 		}
 
 		[Test]
@@ -1902,18 +1901,17 @@ namespace Tests.Linq
 		{
 			// fields read out-of-order, multiple times and with different types
 			// suppressSequentialAccess: true to avoid interceptor added twice
-			using (var db = GetDataContext(context, interceptor: SequentialAccessCommandInterceptor.Instance, suppressSequentialAccess: true, optimizeForSequentialAccess: true))
-			{
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(InheritanceParent[0].GetType(), Is.EqualTo(typeof(InheritanceParentBase)));
-					Assert.That(InheritanceParent[1].GetType(), Is.EqualTo(typeof(InheritanceParent1)));
-					Assert.That(InheritanceParent[2].GetType(), Is.EqualTo(typeof(InheritanceParent2)));
-				}
+			using var db = GetDataContext(context, interceptor: SequentialAccessCommandInterceptor.Instance, suppressSequentialAccess: true, optimizeForSequentialAccess: true);
 
-				AreEqual(InheritanceParent, db.InheritanceParent);
-				AreEqual(InheritanceChild, db.InheritanceChild);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(InheritanceParent[0].GetType(), Is.EqualTo(typeof(InheritanceParentBase)));
+				Assert.That(InheritanceParent[1].GetType(), Is.EqualTo(typeof(InheritanceParent1)));
+				Assert.That(InheritanceParent[2].GetType(), Is.EqualTo(typeof(InheritanceParent2)));
 			}
+
+			AreEqual(InheritanceParent, db.InheritanceParent);
+			AreEqual(InheritanceChild, db.InheritanceChild);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/pull/5639 - a non-sequential materialization plan cached for a configuration must not be reused by a SequentialAccess context sharing that configuration")]
@@ -1940,8 +1938,6 @@ namespace Tests.Linq
 		public void Issue4520Test([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-
-			using var _ = context.IsAnyOf(TestProvName.AllYdb) ? new DisableBaseline("https://github.com/linq2db/linq2db/issues/5169 - remote/direct derived-table alias numbering divergence") : null;
 
 			db.Types2
 				.Where(i => i.ID == 1)

@@ -12,6 +12,8 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.Linq
 {
 	[TestFixture]
@@ -1020,6 +1022,10 @@ namespace Tests.Linq
 		[Test]
 		public void ParallelExecutionDoesNotCorruptAliases([IncludeDataSources(false, TestProvName.AllPostgreSQL, TestProvName.AllSQLite)] string context)
 		{
+			// CA1846: net462 has no span-based int.Parse overload, so Substring is required (the rule fires only on the modern TFMs).
+			// MA0173: the Interlocked.CompareExchange below captures the first thrown exception; it is not lazy initialization.
+#pragma warning disable CA1846 // Prefer 'AsSpan' over 'Substring'
+#pragma warning disable MA0173 // Use LazyInitializer.EnsureInitialize
 			using var _ = new DisableBaseline("raw SQL + concurrency stress");
 
 			var fields = typeof(AliasRaceRow).GetFields();
@@ -1043,7 +1049,7 @@ namespace Tests.Linq
 
 			void Worker()
 			{
-				for (var i = 0; i < 64 && error == null && Volatile.Read(ref bad) == 0; i++)
+				for (var i = 0; i < 64 && Volatile.Read(ref error) == null && Volatile.Read(ref bad) == 0; i++)
 				{
 					try
 					{
@@ -1071,8 +1077,10 @@ namespace Tests.Linq
 			foreach (var t in threads) t.Start();
 			foreach (var t in threads) t.Join();
 
-			Assert.That(error, Is.Null, () => $"concurrent execution threw: {error}");
-			Assert.That(bad,   Is.Zero, "a concurrent execution returned a corrupted alias mapping (wrong column value)");
+			error.ShouldBeNull($"concurrent execution threw: {error}");
+			bad.ShouldBe(0, "a concurrent execution returned a corrupted alias mapping (wrong column value)");
+#pragma warning restore MA0173
+#pragma warning restore CA1846
 		}
 	}
 }

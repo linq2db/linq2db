@@ -405,5 +405,44 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 				return toLower;
 			}
 		}
+
+		protected class InformixWindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
+		{
+			protected override bool IsNthValueSupported             => false;
+			protected override bool IsFrameGroupsSupported          => false;
+			protected override bool IsFrameExclusionSupported       => false;
+			protected override bool IsPercentileContSupported       => false;
+			protected override bool IsPercentileDiscSupported       => false;
+			protected override bool IsLeadLagNullTreatmentSupported => true;
+			protected override bool IsValueNullTreatmentSupported   => true;
+			// Sample-vs-population on Informix is non-obvious — verified empirically against IDS 14 (Informix.DB2
+			// connection), because the published docs are self-contradictory (they label STDEV/VARIANCE as the
+			// "population" estimate yet quote an N-1 sample formula):
+			//   STDEV / STDDEV / VARIANCE  -> POPULATION (N divisor). The *documented* STDEV/VARIANCE included: the
+			//                                 engine returns the population value regardless of the doc's N-1 wording.
+			//   STDDEV_SAMP / STDDEV_POP   -> sample / population respectively; both run (undocumented, but accepted).
+			//   VAR_SAMP / VAR_POP         -> rejected with a syntax error — no sample-variance function exists at all.
+			// Sql.Window.StdDev/Variance are the *sample* statistics, so:
+			//   - StdDev maps to STDDEV_SAMP. The documented STDEV returns the population value here, so it cannot be
+			//     used; STDDEV_SAMP is undocumented but is the only Informix form that yields the sample result.
+			//   - Variance has no sample form at all (VAR_SAMP errors, bare VARIANCE/documented variance is
+			//     population), so TranslateVariance below rejects it at translation time.
+			// StdDevSamp/StdDevPop (the explicit APIs) stay enabled via IsStdDevSupported; VarPop/VarSamp stay gated
+			// via IsVarianceSupported; CORR/COVAR/REGR_*/MEDIAN are not implemented.
+			protected override bool   IsVarianceBareSupported       => true;
+			protected override bool   IsStdDevSupported             => true;
+			protected override string StdDevFunctionName            => "STDDEV_SAMP";
+
+			// Informix has no sample-variance function (VAR_SAMP is a syntax error; bare VARIANCE is population), so
+			// the sample-only Sql.Window.Variance API cannot be honoured — reject it at translation time rather than
+			// silently returning a population value.
+			public override Expression? TranslateVariance(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+				=> translationContext.CreateErrorExpression(methodCall, LinqToDB.Internal.Common.ErrorHelper.Error_WindowFunction_Variance, methodCall.Type);
+		}
+
+		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()
+		{
+			return new InformixWindowFunctionsMemberTranslator();
+		}
 	}
 }

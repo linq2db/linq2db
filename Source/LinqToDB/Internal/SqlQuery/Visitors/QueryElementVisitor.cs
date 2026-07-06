@@ -87,6 +87,76 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		#region Query element VisitSqlXXX methods
 
 		/// <summary>
+		/// Visitor for <see cref="SqlCteField"/> definition from <see cref="CteClause"/>.
+		/// </summary>
+		protected internal virtual IQueryElement VisitSqlCteField(SqlCteField element)
+		{
+			switch (GetVisitMode(element))
+			{
+				case VisitMode.ReadOnly:
+				{
+					Visit(element.Column);
+					break;
+				}
+				case VisitMode.Modify:
+				{
+					element.Column = (SqlColumn?)Visit(element.Column);
+					break;
+				}
+				case VisitMode.Transform:
+				{
+					var column = (SqlColumn?)Visit(element.Column);
+
+					if (ShouldReplace(element) || !ReferenceEquals(element.Column, column))
+					{
+						var newField = new SqlCteField(element)
+						{
+							Column = column,
+						};
+
+						return NotifyReplaced(newField, element);
+					}
+
+					break;
+				}
+				default:
+					return ThrowInvalidVisitModeException();
+			}
+
+			return element;
+		}
+
+		/// <summary>
+		/// Visitor for <see cref="SqlCteTableField"/> reference.
+		/// </summary>
+		protected internal virtual IQueryElement VisitSqlCteTableField(SqlCteTableField element)
+		{
+			switch (GetVisitMode(element))
+			{
+				case VisitMode.ReadOnly:
+					break;
+
+				case VisitMode.Modify:
+				{
+					if (element.CteField != null)
+						element.CteField = (SqlCteField?)Visit(element.CteField);
+					break;
+				}
+
+				case VisitMode.Transform:
+				{
+					// Transform handled in VisitSqlCteTable which clones fields
+					break;
+				}
+
+				default:
+					return ThrowInvalidVisitModeException();
+			}
+
+			return element;
+		}
+
+		/// <summary>
 		/// Main <see cref="CteClause"/> visitor is <see cref="VisitCteClause"/> and called for it from <see cref="SqlWithClause"/>.
 		/// This by-ref visitor used for references from <see cref="SqlCteTable"/>.
 		/// </summary>
@@ -116,15 +186,14 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 				case VisitMode.Transform:
 				{
-					var body = (SelectQuery?)Visit(element.Body);
+					var body      = (SelectQuery?)Visit(element.Body);
+					var newFields = VisitElements(element.Fields, VisitMode.Transform);
 
-					if (ShouldReplace(element) || !ReferenceEquals(element.Body, body))
+					if (ShouldReplace(element) || !ReferenceEquals(element.Body, body) || !ReferenceEquals(element.Fields, newFields))
 					{
-						var clonedFields = CopyFields(element.Fields);
-
 						var newCte = new CteClause(
 							body,
-							clonedFields,
+							newFields,
 							element.ObjectType,
 							element.IsRecursive,
 							element.Name);
@@ -159,6 +228,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					VisitElements(element.OrderBy, VisitMode.ReadOnly);
 					Visit(element.FrameClause);
 					Visit(element.Filter);
+					Visit(element.KeepClause);
 					break;
 				}
 				case VisitMode.Modify:
@@ -168,7 +238,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						VisitElements(element.WithinGroup, VisitMode.Modify),
 						VisitElements(element.PartitionBy, VisitMode.Modify),
 						VisitElements(element.OrderBy, VisitMode.Modify),
-						(SqlSearchCondition?)Visit(element.Filter), (SqlFrameClause?)Visit(element.FrameClause));
+						(SqlSearchCondition?)Visit(element.Filter),
+						(SqlFrameClause?)Visit(element.FrameClause),
+						(SqlKeepClause?)Visit(element.KeepClause));
 					break;
 				}
 				case VisitMode.Transform:
@@ -179,6 +251,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					var orderBy     = VisitElements(element.OrderBy, VisitMode.Transform);
 					var frameClause = (SqlFrameClause?)Visit(element.FrameClause);
 					var filter      = (SqlSearchCondition?)Visit(element.Filter);
+					var keepClause  = (SqlKeepClause?)Visit(element.KeepClause);
 
 					if (ShouldReplace(element)                             ||
 						!ReferenceEquals(element.Arguments, arguments)     ||
@@ -186,7 +259,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						!ReferenceEquals(element.PartitionBy, partitionBy) ||
 						!ReferenceEquals(element.OrderBy, orderBy)         ||
 						!ReferenceEquals(element.FrameClause, frameClause) ||
-						!ReferenceEquals(element.Filter, filter))
+						!ReferenceEquals(element.Filter, filter)           ||
+						!ReferenceEquals(element.KeepClause, keepClause))
 					{
 						return NotifyReplaced(new SqlExtendedFunction(
 							dbDataType : element.Type,
@@ -201,7 +275,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 							filter : filter,
 							isAggregate: element.IsAggregate,
 							canBeAffectedByOrderBy: element.CanBeAffectedByOrderBy,
-							frameClause : frameClause), element);
+							frameClause : frameClause,
+							keepClause : keepClause,
+							nullTreatment : element.NullTreatment,
+							fromPosition : element.FromPosition,
+							isWindowFunction: element.IsWindowFunction), element);
 					}
 
 					break;
@@ -278,9 +356,36 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return element;
 		}
 
-		/// <summary>
-		/// Visitor for <see cref="SqlFrameClause"/>.
-		/// </summary>
+		protected internal virtual IQueryElement VisitSqlKeepClause(SqlKeepClause element)
+		{
+			switch (GetVisitMode(element))
+			{
+				case VisitMode.ReadOnly:
+				{
+					VisitElements(element.OrderBy, VisitMode.ReadOnly);
+					break;
+				}
+				case VisitMode.Modify:
+				{
+					element.Modify(VisitElements(element.OrderBy, VisitMode.Modify)!);
+					break;
+				}
+				case VisitMode.Transform:
+				{
+					var orderBy = VisitElements(element.OrderBy, VisitMode.Transform);
+
+					if (ShouldReplace(element) || !ReferenceEquals(element.OrderBy, orderBy))
+						return NotifyReplaced(new SqlKeepClause(element.Type, orderBy!), element);
+
+					break;
+				}
+				default:
+					return ThrowInvalidVisitModeException();
+			}
+
+			return element;
+		}
+
 		protected internal virtual IQueryElement VisitSqlFrameClause(SqlFrameClause element)
 		{
 			switch (GetVisitMode(element))
@@ -305,7 +410,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 					if (ShouldReplace(element) || !ReferenceEquals(element.Start, start) || !ReferenceEquals(element.End, end))
 					{
-						return NotifyReplaced(new SqlFrameClause(element.FrameType, start, end), element);
+						return NotifyReplaced(new SqlFrameClause(element.FrameType, start, end, element.Exclusion), element);
 					}
 
 					break;
@@ -660,7 +765,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					    element.SqlQueryExtensions != ext)
 					{
 						return NotifyReplaced(
-							new SqlCreateTableStatement(table)
+							new SqlDropTableStatement(table)
 							{
 								Tag                = tag,
 								SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList(),
@@ -923,8 +1028,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					element.Tag         = (SqlComment?)Visit(element.Tag);
 					element.With        = (SqlWithClause?)Visit(element.With);
 					element.SelectQuery = (SelectQuery?)Visit(element.SelectQuery);
-					element.Table       = (SqlTable?)Visit(element.Table);
-					element.Top         = (ISqlExpression?)Visit(element.Table);
+					element.Table       = (ISqlNamedTable?)Visit(element.Table);
+					element.Top         = (ISqlExpression?)Visit(element.Top);
 					element.Output      = (SqlOutputClause?)Visit(element.Output);
 
 					VisitElements(element.SqlQueryExtensions, VisitMode.Modify);
@@ -936,7 +1041,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					var tag         = (SqlComment?)Visit(element.Tag);
 					var with        = (SqlWithClause?)Visit(element.With);
 					var selectQuery = (SelectQuery?)Visit(element.SelectQuery);
-					var table       = (SqlTable?)Visit(element.Table);
+					var table       = (ISqlNamedTable?)Visit(element.Table);
 					var top         = (ISqlExpression?)Visit(element.Top);
 					var output      = (SqlOutputClause?)Visit(element.Output);
 					var ext         = VisitElements(element.SqlQueryExtensions, VisitMode.Transform);
@@ -1244,7 +1349,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 				case VisitMode.Modify:
 				{
-					var outputTable   = (SqlTable?)Visit(element.OutputTable);
+					var outputTable   = (ISqlNamedTable?)Visit(element.OutputTable);
 
 					VisitElements(element.OutputColumns, VisitMode.Modify);
 
@@ -1259,7 +1364,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 				case VisitMode.Transform:
 				{
-					var outputTable   = (SqlTable?)Visit(element.OutputTable);
+					var outputTable   = (ISqlNamedTable?)Visit(element.OutputTable);
 					var outputColumns = VisitElements(element.OutputColumns, VisitMode.Transform);
 					var outputItems   = element.HasOutputItems ? VisitElements(element.OutputItems, VisitMode.Transform) : null;
 
@@ -1415,7 +1520,14 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						element.Cte != clause  ||
 						element.SqlQueryExtensions != ext)
 					{
-						var newFields = CopyFields(element.Fields);
+						var newFields = CopyCteTableFields(element.Fields);
+
+						// update CteField references in fields
+						foreach (var sqlCteTableField in newFields)
+						{
+							sqlCteTableField.CteField = (SqlCteField?)Visit(sqlCteTableField.CteField);
+						}
+
 						var newTable = new SqlCteTable(element, newFields, clause)
 						{
 							SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList(),
@@ -1797,7 +1909,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 				case VisitMode.Modify:
 				{
-					var table = (SqlTable?)Visit(element.Table);
+					var table = (ISqlNamedTable?)Visit(element.Table);
 					var ts    = (SqlTableSource?)Visit(element.TableSource);
 
 					VisitElements(element.Items, VisitMode.Modify);
@@ -1809,10 +1921,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 				case VisitMode.Transform:
 				{
-					var table = (SqlTable?)Visit(element.Table);
+					var table = (ISqlNamedTable?)Visit(element.Table);
 					var ts    = (SqlTableSource?)Visit(element.TableSource);
 					var items = VisitElements(element.Items, VisitMode.Transform);
-					var keys  = VisitElements(element.Keys, VisitMode.Transform);
+					var keys  = VisitElements(element.Keys,  VisitMode.Transform);
 
 					if (ShouldReplace(element)                    ||
 					    !ReferenceEquals(element.Table, table)    ||
@@ -3259,7 +3371,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				case VisitMode.ReadOnly:
 				{
 					Visit(element.Expression);
-					Visit(Visit(element.FromType));
+					Visit(element.FromType);
 					break;
 				}
 				case VisitMode.Modify:
@@ -3454,6 +3566,38 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				var oldField = fields[i];
 				var newField = newFields[i] = new SqlField(oldField);
+				NotifyReplaced(newField, oldField);
+			}
+
+			return newFields;
+		}
+
+		/// <summary>
+		/// Creates copy of <see cref="SqlCteTableField"/> and call <see cref="NotifyReplaced(IQueryElement, IQueryElement)"/> for each.
+		/// </summary>
+		protected IReadOnlyList<SqlCteTableField> CopyCteTableFields(IReadOnlyList<SqlCteTableField> fields)
+		{
+			var newFields = new SqlCteTableField[fields.Count];
+			for (var i = 0; i < fields.Count; i++)
+			{
+				var oldField    = fields[i];
+				var newField    = newFields[i] = new SqlCteTableField(oldField);
+				NotifyReplaced(newField, oldField);
+			}
+
+			return newFields;
+		}
+
+		/// <summary>
+		/// Creates copy of <see cref="SqlCteField"/> and call <see cref="NotifyReplaced(IQueryElement, IQueryElement)"/> for each.
+		/// </summary>
+		protected IReadOnlyList<SqlCteField> CopyCteFields(IReadOnlyList<SqlCteField> fields)
+		{
+			var newFields = new SqlCteField[fields.Count];
+			for (var i = 0; i < fields.Count; i++)
+			{
+				var oldField = fields[i];
+				var newField = newFields[i] = new SqlCteField(oldField);
 				NotifyReplaced(newField, oldField);
 			}
 
