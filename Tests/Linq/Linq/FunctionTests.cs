@@ -466,6 +466,66 @@ namespace Tests.Linq
 			Assert.That(db.LastQuery, Does.Contain("ORDER"));
 		}
 
+		// Version nibble of a GUID is the first hex digit of its third group (canonical layout),
+		// i.e. index 12 of the dash-less "N" form. Works on every TFM (Guid.Version is net9+ only).
+		static int GuidVersion(Guid guid) => Convert.ToInt32(guid.ToString("N").Substring(12, 1), 16);
+
+		// Providers with a native server-side UUIDv7 generator. Sql.AsSql forces the value into SQL,
+		// so the emitted function call is deterministic and the baseline captures it — that baseline
+		// is the SQL-generation assertion that the right server function is used. The returned value
+		// itself is non-deterministic, so only its version is asserted.
+		[Test]
+		public void NewGuid7_Native([IncludeDataSources(true, TestProvName.AllClickHouse, TestProvName.AllDuckDB, TestProvName.AllMariaDB, TestProvName.AllPostgreSQL18Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var guid = (from p in db.Types select Sql.AsSql(Sql.NewGuid7())).First();
+
+			Assert.That(guid, Is.Not.EqualTo(Guid.Empty));
+			Assert.That(GuidVersion(guid), Is.EqualTo(7));
+		}
+
+		// Providers without a native generator fall back to client-side generation, embedding a
+		// random literal in the SQL — non-deterministic, so the baseline is disabled.
+		[Test]
+		public void NewGuid7_Emulated([DataSources(TestProvName.AllClickHouse, TestProvName.AllDuckDB, TestProvName.AllMariaDB, TestProvName.AllPostgreSQL18Plus)] string context)
+		{
+			using (new DisableBaseline("Non-deterministic UUIDv7 value"))
+			using (var db = GetDataContext(context))
+			{
+				var guid = (from p in db.Types select Sql.AsSql(Sql.NewGuid7())).First();
+
+				Assert.That(guid, Is.Not.EqualTo(Guid.Empty));
+				Assert.That(GuidVersion(guid), Is.EqualTo(7));
+			}
+		}
+
+#if NET9_0_OR_GREATER
+		[Test]
+		public void CreateVersion7_Native([IncludeDataSources(true, TestProvName.AllClickHouse, TestProvName.AllDuckDB, TestProvName.AllMariaDB, TestProvName.AllPostgreSQL18Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var guid = (from p in db.Types select Sql.AsSql(Guid.CreateVersion7())).First();
+
+			Assert.That(guid, Is.Not.EqualTo(Guid.Empty));
+			Assert.That(guid.Version, Is.EqualTo(7));
+		}
+
+		[Test]
+		public void CreateVersion7_Emulated([DataSources(TestProvName.AllClickHouse, TestProvName.AllDuckDB, TestProvName.AllMariaDB, TestProvName.AllPostgreSQL18Plus)] string context)
+		{
+			using (new DisableBaseline("Non-deterministic UUIDv7 value"))
+			using (var db = GetDataContext(context))
+			{
+				var guid = (from p in db.Types select Sql.AsSql(Guid.CreateVersion7())).First();
+
+				Assert.That(guid, Is.Not.EqualTo(Guid.Empty));
+				Assert.That(guid.Version, Is.EqualTo(7));
+			}
+		}
+#endif
+
 		[Test]
 		public void CustomFunc([DataSources] string context)
 		{

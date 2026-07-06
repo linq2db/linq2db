@@ -104,8 +104,15 @@ namespace Tests.Linq
 			FSharp.WhereTest.LoadSinglesWithPatient(db);
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/195")]
 		public void LoadSingleWithOptions([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.WhereTest.LoadSingleWithOptions(db);
+		}
+
+		[Test(Description = "Explicit MappingSchema option-type registration still works alongside UseFSharp auto-mapping")]
+		public void LoadSingleWithExplicitOptionsMapping([DataSources] string context)
 		{
 			var ms = FSharp.MappingSchema.Initialize();
 
@@ -113,13 +120,58 @@ namespace Tests.Linq
 			FSharp.WhereTest.LoadSingleWithOptions(db);
 		}
 
-		[ActiveIssue]
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/195")]
-		public void BuiltInOptionsHandling([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4646")]
+		public void Issue4646_OptionRoundtrip([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
+			FSharp.Issue4646.TestOptionRoundtrip(db);
+		}
 
-			FSharp.WhereTest.LoadSingleWithOptions(db);
+		[Test(Description = "Auto 'T option mapping must not override an explicit fluent DataType on an option column (#195 follow-up)")]
+		public void OptionMapping_ExplicitDataTypePreserved([DataSources] string context)
+		{
+			var ms = FSharp.OptionMappingPrecedence.BuildExplicitSchema();
+
+			using var db = GetDataContext(context, ms);
+			FSharp.OptionMappingPrecedence.VerifyExplicitDataTypePreserved(db);
+		}
+
+		[Test(Description = "Nullable<_> element option must not produce Nullable<Nullable<_>> (#195)")]
+		public void Option_NullableElementRoundtrip([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.OptionTypes.TestNullableElementOptionRoundtrip(db);
+		}
+
+		[Test(Description = "F# struct value-options ('T voption) are auto-mapped like reference options (#195)")]
+		public void Option_ValueOptionRoundtrip([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.OptionTypes.TestValueOptionRoundtrip(db);
+		}
+
+		[Test(Description = "Auto 'decimal option' mapping resolves provider-faithful precision/scale - no scale truncation (#195)")]
+		public void Option_DecimalRoundtrip([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.OptionTypes.TestDecimalOptionRoundtrip(db);
+		}
+
+		[Test(Description = "An option over a complex/entity element is not auto-scalarized; only scalar-element options are (#195)")]
+		public void Option_ComplexElementNotScalarized([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.OptionTypes.VerifyComplexElementOptionNotScalarized(db);
+		}
+
+		[ActiveIssue("F# option auto-mapping gate (IsScalarOption) consults MappingSchema.Default, so an option over a type that is scalar only in the user/provider schema is not auto-mapped")]
+		[Test(Description = "An option over a type that is scalar only in the user/provider schema (not MappingSchema.Default) must still auto-map (#195)")]
+		public void Option_CustomScalarElementMapped([DataSources] string context)
+		{
+			var ms = FSharp.OptionTypes.BuildCustomScalarSchema();
+
+			using var db = GetDataContext(context, ms);
+			FSharp.OptionTypes.VerifyCustomScalarOptionMapped(db);
 		}
 
 		[Test]

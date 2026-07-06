@@ -45,6 +45,14 @@ namespace LinqToDB.Internal.DataProvider.DuckDB.Translation
 			return factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "uuid");
 		}
 
+		// uuidv7() requires DuckDB 1.3.0+. DuckDB has no version-dialect split in linq2db, so it is
+		// emitted unconditionally (older DuckDB versions predate practical support).
+		protected override ISqlExpression? TranslateNewGuid7Method(ITranslationContext translationContext, TranslationFlags translationFlags)
+		{
+			var factory = translationContext.ExpressionFactory;
+			return factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "uuidv7");
+		}
+
 		protected class SqlTypesTranslation : SqlTypesTranslationDefault
 		{
 			protected override Expression? ConvertMoney(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)

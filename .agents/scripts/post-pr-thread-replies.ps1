@@ -1,0 +1,232 @@
+#!/usr/bin/env pwsh
+<#
+Post replies to N PR review-comment threads and resolve each thread, in one
+allowlisted pwsh call. Two API hops per item:
+
+  1. POST repos/{o}/{r}/pulls/{n}/comments/{commentId}/replies   — the reply
+  2. GraphQL `resolveReviewThread(input:{threadId})`             — the resolve
+
+Why this wrapper exists
+-----------------------
+Bulk thread cleanup (a typical Copilot review with N stale claims) otherwise
+requires 2N raw `gh api` calls plus per-call body-encoding handling. Routing
+each reply through `--input <json-file>` avoids the `gh api -f body=@<file>`
+literal-string trap (and the stdin-pipe encoding mangling that `_shared.ps1`
+documents). The script also gracefully reports per-item failures so a partial
+outage doesn't lose track of what landed.
+
+Ordering caveat (one pending review per PR)
+-------------------------------------------
+Each reply is a REST `POST .../comments/{commentId}/replies`. GitHub allows only
+ONE pending review per user per PR, so if the caller has a freshly-created PENDING
+draft review on the same PR, every reply here fails with HTTP 422
+`user_id can only have one pending review per pull request`. When a run both posts
+a draft review (post-pr-review.ps1) and disposes threads, call THIS script FIRST,
+before creating the draft. If the draft already exists, post replies only after the
+user submits it. See .agents/docs/review-orchestration.md -> submit-all mode.
+
+Contract
+--------
+
+Input — two forms (preferred first)
+-----------------------------------
+
+(1) Manifest file (preferred — single allowlist-friendly command line):
+
+      pwsh -NoProfile -File .agents/scripts/post-pr-thread-replies.ps1 -ManifestFile .build/.agents/pr5503-thread-replies.json
+
+    The manifest file contains exactly the same JSON shape as the stdin form below.
+
+(2) Stdin JSON (legacy, still accepted — heredoc form).
+
+JSON manifest shape:
+  {
+    "owner": "linq2db",                       // optional, default "linq2db"
+    "repo":  "linq2db",                       // optional, default "linq2db"
+    "pr":    5451,                            // required, positive int
+    "items": [
+      {
+        "threadId":  "PRRT_kwDOAB09RM549FlA", // required, GraphQL node ID
+        "commentId": 3037904273,              // required, REST comment ID (positive int)
+        "body":      "Fixed at HEAD - ...",   // required, non-empty markdown
+        "resolve":   true,                    // optional, default true; set false to only reply
+        "unresolve": false                    // optional, default false; when true, unresolve
+                                              //   the thread instead of resolving (overrides `resolve`).
+                                              //   Use when a thread was resolved by someone other than
+                                              //   the current user but the underlying claim is Still actual.
+      },
+      ...
+    ]
+  }
+
+Output (stdout, JSON):
+  {
+    "ok": true,                               // false if any item failed
+    "items": [
+      {
+        "threadId":  "...",
+        "commentId": 3037904273,
+        "ok":        true,
+        "replyId":   3213692186,              // present only on successful reply
+        "resolved":  true,                    // post-mutation thread state: true when the thread is
+                                              //   currently resolved, false when currently unresolved.
+                                              //   On the `unresolve: true` path a successful unresolve
+                                              //   yields resolved=false (by design, not a failure).
+                                              //   Present only when a resolve / unresolve was requested
+                                              //   (resolve=true or unresolve=true on the item).
+        "error":     "..."                    // present only when ok=false
+      },
+      ...
+    ],
+    "summary": { "total": 11, "ok": 11, "failed": 0 }
+  }
+
+Exit codes:
+  0 = every item posted reply + (optional) resolve cleanly
+  1 = hard error (bad input)
+  2 = at least one item failed; output identifies which so the caller can retry
+#>
+
+param([string]$ManifestFile)
+
+$global:ScriptBaseName = 'post-pr-thread-replies'
+. "$PSScriptRoot/_shared.ps1"
+
+$m = Read-ManifestFromFileOrStdin -ManifestFile $ManifestFile
+
+# --- input validation ---
+
+$owner = if ($m.owner) { [string]$m.owner } else { 'linq2db' }
+$repo  = if ($m.repo)  { [string]$m.repo }  else { 'linq2db' }
+
+if (-not (Test-IsInteger $m.pr) -or [long]$m.pr -le 0) {
+    Exit-WithError 'pr (positive integer) required'
+}
+$pr = [int]$m.pr
+
+if (-not $m.items -or $m.items.Count -eq 0) {
+    Exit-WithError 'items (non-empty array) required'
+}
+
+$workDir = '.build/.agents'
+[void][System.IO.Directory]::CreateDirectory($workDir)
+
+$resolveQuery   = 'mutation($threadId: ID!) { resolveReviewThread(input: {threadId: $threadId}) { thread { isResolved } } }'
+$unresolveQuery = 'mutation($threadId: ID!) { unresolveReviewThread(input: {threadId: $threadId}) { thread { isResolved } } }'
+
+$results = New-Object System.Collections.Generic.List[object]
+$failedCount = 0
+
+for ($i = 0; $i -lt $m.items.Count; $i++) {
+    $item = $m.items[$i]
+    $idx  = $i + 1
+
+    # Per-item validation; record but don't throw — keep going so a single bad
+    # entry doesn't abort the rest of the batch.
+    if (-not (Test-IsInteger $item.commentId) -or [long]$item.commentId -le 0) {
+        $results.Add([pscustomobject]@{
+            ok = $false; error = "items[$idx]: commentId (positive integer) required"
+        })
+        $failedCount++
+        continue
+    }
+    if (-not $item.threadId -or -not ($item.threadId -is [string]) -or $item.threadId.Length -eq 0) {
+        $results.Add([pscustomobject]@{
+            ok = $false; commentId = [long]$item.commentId
+            error = "items[$idx]: threadId (non-empty string) required"
+        })
+        $failedCount++
+        continue
+    }
+    if (-not $item.body -or -not ($item.body -is [string]) -or $item.body.Length -eq 0) {
+        $results.Add([pscustomobject]@{
+            ok = $false; commentId = [long]$item.commentId; threadId = [string]$item.threadId
+            error = "items[$idx]: body (non-empty string) required"
+        })
+        $failedCount++
+        continue
+    }
+
+    $commentId = [long]$item.commentId
+    $threadId  = [string]$item.threadId
+    $body      = [string]$item.body
+    # unresolve overrides resolve. If neither set, default to resolve.
+    $shouldUnresolve = if ($null -ne $item.unresolve) { [bool]$item.unresolve } else { $false }
+    $shouldResolve   = if ($shouldUnresolve) { $false }
+                       elseif ($null -eq $item.resolve) { $true }
+                       else { [bool]$item.resolve }
+
+    # 1) POST reply via JSON file (avoids -f body=@file trap and stdin mangling).
+    $payloadPath = Join-Path $workDir "post-pr-thread-replies-$pr-$commentId.json"
+    $payloadJson = ([pscustomobject]@{ body = $body } | ConvertTo-Json -Depth 100 -Compress)
+    $utf8NoBom   = [System.Text.UTF8Encoding]::new($false)
+    [System.IO.File]::WriteAllText($payloadPath, $payloadJson, $utf8NoBom)
+
+    $endpoint = "repos/$owner/$repo/pulls/$pr/comments/$commentId/replies"
+    $replyResult = Invoke-GhJson -ArgumentList @('api', '--method', 'POST', $endpoint, '--input', $payloadPath)
+    if (-not $replyResult.ok) {
+        $results.Add([pscustomobject]@{
+            ok = $false; commentId = $commentId; threadId = $threadId
+            error = "reply failed: $($replyResult.error)"
+        })
+        $failedCount++
+        continue
+    }
+    $replyId = if ($replyResult.data.id) { [long]$replyResult.data.id } else { 0L }
+
+    # 2) Resolve / unresolve thread via GraphQL (when requested).
+    if (-not $shouldResolve -and -not $shouldUnresolve) {
+        # Reply-only path — no mutation requested, so don't emit `resolved`.
+        # The header doc's contract is "Present only when a resolve /
+        # unresolve was requested"; emitting `resolved=false` here would
+        # mislead callers into thinking the thread is currently unresolved
+        # when in fact we haven't observed its state.
+        $results.Add([pscustomobject]@{
+            ok = $true; commentId = $commentId; threadId = $threadId; replyId = $replyId
+        })
+        continue
+    }
+
+    $mutationQuery = if ($shouldUnresolve) { $unresolveQuery } else { $resolveQuery }
+    $resolveResult = Invoke-GhJson -ArgumentList @('api', 'graphql', '-f', "query=$mutationQuery", '-F', "threadId=$threadId")
+    if (-not $resolveResult.ok) {
+        $verb = if ($shouldUnresolve) { 'unresolve' } else { 'resolve' }
+        # Mutation failed — actual thread state is unknown (we didn't follow
+        # up with a GET). Omit `resolved` rather than emit $false, so a
+        # caller treating the field as post-mutation `isResolved` can't
+        # infer the wrong state from a failed call. The `ok=false` + error
+        # message already signal something went wrong.
+        $results.Add([pscustomobject]@{
+            ok = $false; commentId = $commentId; threadId = $threadId; replyId = $replyId
+            error = "$verb failed: $($resolveResult.error)"
+        })
+        $failedCount++
+        continue
+    }
+
+    $isResolved = $false
+    try {
+        $isResolved = if ($shouldUnresolve) {
+            [bool]$resolveResult.data.data.unresolveReviewThread.thread.isResolved
+        } else {
+            [bool]$resolveResult.data.data.resolveReviewThread.thread.isResolved
+        }
+    } catch { }
+
+    $results.Add([pscustomobject]@{
+        ok = $true; commentId = $commentId; threadId = $threadId; replyId = $replyId
+        resolved = $isResolved
+    })
+}
+
+$totalCount = $results.Count
+$okCount    = $totalCount - $failedCount
+
+Write-JsonOutput ([pscustomobject]@{
+    ok      = ($failedCount -eq 0)
+    items   = $results
+    summary = [pscustomobject]@{ total = $totalCount; ok = $okCount; failed = $failedCount }
+})
+
+if ($failedCount -gt 0) { exit 2 }
+exit 0

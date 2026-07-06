@@ -5,138 +5,232 @@
     <BuildType Name="Release" />
     <BuildType Name="Testing" />
   </Configurations>
-  <Folder Name="/.claude/">
+  <Folder Name="/.agents/">
+    <File Path="AGENTS.md" />
     <File Path="CLAUDE.md" />
-    <File Path=".claude/settings.local.json" />
+    <File Path=".agents/settings.local.json" />
   </Folder>
-  <Folder Name="/.claude/agents/">
-    <File Path=".claude/agents/baselines-reviewer.md" />
-    <File Path=".claude/agents/code-reviewer.md" />
-    <File Path=".claude/agents/kb-architect.md" />
-    <File Path=".claude/agents/kb-github-curator.md" />
-    <File Path=".claude/agents/kb-historian.md" />
-    <File Path=".claude/agents/kb-issue-detector.md" />
-    <File Path=".claude/agents/kb-research.md" />
-    <File Path=".claude/agents/test-runner.md" />
-    <File Path=".claude/agents/test-writer.md" />
+  <Folder Name="/.agents/agents/">
+    <File Path=".agents/agents/baselines-reviewer.md" />
+    <File Path=".agents/agents/code-reviewer.md" />
+    <File Path=".agents/agents/kb-architect.md" />
+    <File Path=".agents/agents/kb-github-curator.md" />
+    <File Path=".agents/agents/kb-historian.md" />
+    <File Path=".agents/agents/kb-issue-detector.md" />
+    <File Path=".agents/agents/kb-research.md" />
+    <File Path=".agents/agents/test-runner.md" />
+    <File Path=".agents/agents/test-writer.md" />
   </Folder>
-  <Folder Name="/.claude/agents/_shared/">
-    <File Path=".claude/agents/_shared/kb-protocol.md" />
+  <Folder Name="/.agents/agents/_shared/">
+    <File Path=".agents/agents/_shared/kb-protocol.md" />
   </Folder>
-  <Folder Name="/.claude/docs/">
-    <File Path=".claude/docs/agent-rules.md" />
-    <File Path=".claude/docs/api-surface-classification.md" />
-    <File Path=".claude/docs/architecture.md" />
-    <File Path=".claude/docs/audit-claude-checks.md" />
-    <File Path=".claude/docs/baselines-repo-layout.md" />
-    <File Path=".claude/docs/ci-tests.md" />
-    <File Path=".claude/docs/claude-setup.md" />
-    <File Path=".claude/docs/code-design.md" />
-    <File Path=".claude/docs/github-review-api.md" />
-    <File Path=".claude/docs/issue-search.md" />
-    <File Path=".claude/docs/kb-architecture.md" />
-    <File Path=".claude/docs/kb-areas.md" />
-    <File Path=".claude/docs/kb-build-steps.md" />
-    <File Path=".claude/docs/kb-coverage-tiers.md" />
-    <File Path=".claude/docs/kb-issue-categories.md" />
-    <File Path=".claude/docs/kb-refresh-cursors.md" />
-    <File Path=".claude/docs/kb-selection-grammar.md" />
-    <File Path=".claude/docs/pr-context-prep.md" />
-    <File Path=".claude/docs/pr-resolver.md" />
-    <File Path=".claude/docs/predecessor-bltoolkit.md" />
-    <File Path=".claude/docs/review-conventions.md" />
-    <File Path=".claude/docs/review-orchestration.md" />
-    <File Path=".claude/docs/review-posting.md" />
-    <File Path=".claude/docs/script-authoring.md" />
-    <File Path=".claude/docs/test-databases.md" />
-    <File Path=".claude/docs/test-review-checklist.md" />
-    <File Path=".claude/docs/testing.md" />
-    <File Path=".claude/docs/windows-gotchas.md" />
-    <File Path=".claude/docs/worktree.md" />
+  <Folder Name="/.agents/docs/">
+    <File Path=".agents/docs/adding-provider-version.md" />
+    <File Path=".agents/docs/agent-evals.md" />
+    <File Path=".agents/docs/agent-guardrails.md" />
+    <File Path=".agents/docs/agent-rules.md" />
+    <File Path=".agents/docs/analyzer-rules.md" />
+    <File Path=".agents/docs/api-surface-classification.md" />
+    <File Path=".agents/docs/architecture.md" />
+    <File Path=".agents/docs/audit-agents-checks.md" />
+    <File Path=".agents/docs/baselines-repo-layout.md" />
+    <File Path=".agents/docs/bug-investigation.md" />
+    <File Path=".agents/docs/ci-tests.md" />
+    <File Path=".agents/docs/claude-setup.md" />
+    <File Path=".agents/docs/code-design.md" />
+    <File Path=".agents/docs/definition-of-done.md" />
+    <File Path=".agents/docs/github-authoring.md" />
+    <File Path=".agents/docs/github-review-api.md" />
+    <File Path=".agents/docs/issue-labels.md" />
+    <File Path=".agents/docs/issue-search.md" />
+    <File Path=".agents/docs/kb-architecture.md" />
+    <File Path=".agents/docs/kb-areas.md" />
+    <File Path=".agents/docs/kb-build-steps.md" />
+    <File Path=".agents/docs/kb-coverage-tiers.md" />
+    <File Path=".agents/docs/kb-issue-categories.md" />
+    <File Path=".agents/docs/kb-refresh-cursors.md" />
+    <File Path=".agents/docs/kb-selection-grammar.md" />
+    <File Path=".agents/docs/maintaining-the-corpus.md" />
+    <File Path=".agents/docs/msbuild-override.md" />
+    <File Path=".agents/docs/pr-and-push.md" />
+    <File Path=".agents/docs/pr-context-prep.md" />
+    <File Path=".agents/docs/pr-resolver.md" />
+    <File Path=".agents/docs/predecessor-bltoolkit.md" />
+    <File Path=".agents/docs/query-cache-mechanics.md" />
+    <File Path=".agents/docs/review-bot-claim-audit.md" />
+    <File Path=".agents/docs/review-conventions.md" />
+    <File Path=".agents/docs/review-orchestration.md" />
+    <File Path=".agents/docs/review-posting.md" />
+    <File Path=".agents/docs/script-authoring.md" />
+    <File Path=".agents/docs/test-databases.md" />
+    <File Path=".agents/docs/test-review-checklist.md" />
+    <File Path=".agents/docs/testing.md" />
+    <File Path=".agents/docs/windows-dev-gotchas.md" />
+    <File Path=".agents/docs/windows-gotchas.md" />
+    <File Path=".agents/docs/worktree.md" />
   </Folder>
-  <Folder Name="/.claude/hooks/">
-    <File Path=".claude/hooks/cleanup-docker-session.ps1" />
-    <File Path=".claude/hooks/track-docker-start.ps1" />
+  <Folder Name="/.agents/docs/release/">
+    <File Path=".agents/docs/release/branch-and-pr.md" />
+    <File Path=".agents/docs/release/external-repos.md" />
+    <File Path=".agents/docs/release/first-run-todos.md" />
+    <File Path=".agents/docs/release/linqpad-test-checklist.md" />
+    <File Path=".agents/docs/release/nuget-package-notes.md" />
+    <File Path=".agents/docs/release/overview.md" />
+    <File Path=".agents/docs/release/provider-db-init.md" />
   </Folder>
-  <Folder Name="/.claude/scripts/">
-    <File Path=".claude/scripts/_shared.ps1" />
-    <File Path=".claude/scripts/apply-verify-writes.ps1" />
-    <File Path=".claude/scripts/azp-build-failures.ps1" />
-    <File Path=".claude/scripts/azp-run.ps1" />
-    <File Path=".claude/scripts/baselines-diff.ps1" />
-    <File Path=".claude/scripts/diff-baselines.ps1" />
-    <File Path=".claude/scripts/diff-reader.ps1" />
-    <File Path=".claude/scripts/edit-gh-comment.ps1" />
-    <File Path=".claude/scripts/kb-audit-citations.ps1" />
-    <File Path=".claude/scripts/kb-coverage-backfill.ps1" />
-    <File Path=".claude/scripts/kb-fetch-commits.ps1" />
-    <File Path=".claude/scripts/kb-fetch-github.ps1" />
-    <File Path=".claude/scripts/kb-fetch-wiki.ps1" />
-    <File Path=".claude/scripts/kb-search.ps1" />
-    <File Path=".claude/scripts/kb-state.ps1" />
-    <File Path=".claude/scripts/post-pr-review.ps1" />
-    <File Path=".claude/scripts/post-pr-thread-replies.ps1" />
-    <File Path=".claude/scripts/pr-body-edit.ps1" />
-    <File Path=".claude/scripts/pr-context.ps1" />
-    <File Path=".claude/scripts/snap-baselines.ps1" />
-    <File Path=".claude/scripts/verify-lines.ps1" />
+  <Folder Name="/.agents/hooks/">
+    <File Path=".agents/hooks/cleanup-docker-session.ps1" />
+    <File Path=".agents/hooks/track-docker-start.ps1" />
+    <File Path=".agents/hooks/track-kb-usage.js" />
+    <File Path=".agents/hooks/track-session-start.js" />
   </Folder>
-  <Folder Name="/.claude/skills/api-baselines/">
-    <File Path=".claude/skills/api-baselines/SKILL.md" />
+  <Folder Name="/.agents/rules/">
+    <File Path=".agents/rules/cross-cutting-core.md" />
   </Folder>
-  <Folder Name="/.claude/skills/audit-claude/">
-    <File Path=".claude/skills/audit-claude/SKILL.md" />
+  <Folder Name="/.agents/scripts/">
+    <File Path=".agents/scripts/_shared.ps1" />
+    <File Path=".agents/scripts/amend-branch-commit.ps1" />
+    <File Path=".agents/scripts/analyzer-profile-build.ps1" />
+    <File Path=".agents/scripts/analyzer-profile-report.ps1" />
+    <File Path=".agents/scripts/apply-verify-writes.ps1" />
+    <File Path=".agents/scripts/azp-build-failures.ps1" />
+    <File Path=".agents/scripts/azp-run.ps1" />
+    <File Path=".agents/scripts/baselines-diff.ps1" />
+    <File Path=".agents/scripts/carry-curation.ps1" />
+    <File Path=".agents/scripts/close-stale-baselines.ps1" />
+    <File Path=".agents/scripts/diff-baselines.ps1" />
+    <File Path=".agents/scripts/diff-reader.ps1" />
+    <File Path=".agents/scripts/dismiss-stale-reviews.ps1" />
+    <File Path=".agents/scripts/edit-gh-comment.ps1" />
+    <File Path=".agents/scripts/extract-agent-output.ps1" />
+    <File Path=".agents/scripts/fuget-api-diff.ps1" />
+    <File Path=".agents/scripts/kb-audit-citations.ps1" />
+    <File Path=".agents/scripts/kb-coverage-backfill.ps1" />
+    <File Path=".agents/scripts/kb-fetch-commits.ps1" />
+    <File Path=".agents/scripts/kb-fetch-github.ps1" />
+    <File Path=".agents/scripts/kb-fetch-wiki.ps1" />
+    <File Path=".agents/scripts/kb-search.ps1" />
+    <File Path=".agents/scripts/kb-state.ps1" />
+    <File Path=".agents/scripts/kb-usage-audit.ps1" />
+    <File Path=".agents/scripts/linqpad-local-push.ps1" />
+    <File Path=".agents/scripts/milestone-consistency.ps1" />
+    <File Path=".agents/scripts/post-pr-review.ps1" />
+    <File Path=".agents/scripts/post-pr-thread-replies.ps1" />
+    <File Path=".agents/scripts/pr-body-edit.ps1" />
+    <File Path=".agents/scripts/pr-context.ps1" />
+    <File Path=".agents/scripts/release-deps-discover.ps1" />
+    <File Path=".agents/scripts/release-milestone-audit.ps1" />
+    <File Path=".agents/scripts/release-notes-audit.ps1" />
+    <File Path=".agents/scripts/release-notes-draft.ps1" />
+    <File Path=".agents/scripts/release-nuget-verify.ps1" />
+    <File Path=".agents/scripts/release-prefetch.ps1" />
+    <File Path=".agents/scripts/release-publicapi-reconcile.ps1" />
+    <File Path=".agents/scripts/release-state.ps1" />
+    <File Path=".agents/scripts/release-test-cli-scaffold.ps1" />
+    <File Path=".agents/scripts/remove-worktree-locked.ps1" />
+    <File Path=".agents/scripts/snap-baselines.ps1" />
+    <File Path=".agents/scripts/test-status.ps1" />
+    <File Path=".agents/scripts/verify-lines.ps1" />
+    <File Path=".agents/scripts/wait-for-review.ps1" />
   </Folder>
-  <Folder Name="/.claude/skills/chores/">
-    <File Path=".claude/skills/chores/SKILL.md" />
+  <Folder Name="/.agents/skills/api-baselines/">
+    <File Path=".agents/skills/api-baselines/SKILL.md" />
   </Folder>
-  <Folder Name="/.claude/skills/create-issue/">
-    <File Path=".claude/skills/create-issue/SKILL.md" />
+  <Folder Name="/.agents/skills/audit-agents/">
+    <File Path=".agents/skills/audit-agents/SKILL.md" />
   </Folder>
-  <Folder Name="/.claude/skills/find-issues/">
-    <File Path=".claude/skills/find-issues/SKILL.md" />
+  <Folder Name="/.agents/skills/chores/">
+    <File Path=".agents/skills/chores/SKILL.md" />
   </Folder>
-  <Folder Name="/.claude/skills/fix-issue/">
-    <File Path=".claude/skills/fix-issue/SKILL.md" />
+  <Folder Name="/.agents/skills/copilot-loop/">
+    <File Path=".agents/skills/copilot-loop/SKILL.md" />
   </Folder>
-  <Folder Name="/.claude/skills/kb-ask/">
-    <File Path=".claude/skills/kb-ask/SKILL.md" />
+  <Folder Name="/.agents/skills/create-issue/">
+    <File Path=".agents/skills/create-issue/SKILL.md" />
   </Folder>
-  <Folder Name="/.claude/skills/kb-build/">
-    <File Path=".claude/skills/kb-build/SKILL.md" />
+  <Folder Name="/.agents/skills/enable-disabled-test/">
+    <File Path=".agents/skills/enable-disabled-test/SKILL.md" />
   </Folder>
-  <Folder Name="/.claude/skills/kb-issues/">
-    <File Path=".claude/skills/kb-issues/SKILL.md" />
+  <Folder Name="/.agents/skills/find-issues/">
+    <File Path=".agents/skills/find-issues/SKILL.md" />
   </Folder>
-  <Folder Name="/.claude/skills/kb-refresh/">
-    <File Path=".claude/skills/kb-refresh/SKILL.md" />
+  <Folder Name="/.agents/skills/fix-issue/">
+    <File Path=".agents/skills/fix-issue/SKILL.md" />
   </Folder>
-  <Folder Name="/.claude/skills/kb-status/">
-    <File Path=".claude/skills/kb-status/SKILL.md" />
+  <Folder Name="/.agents/skills/kb-ask/">
+    <File Path=".agents/skills/kb-ask/SKILL.md" />
   </Folder>
-  <Folder Name="/.claude/skills/merge-duplicates/">
-    <File Path=".claude/skills/merge-duplicates/SKILL.md" />
+  <Folder Name="/.agents/skills/kb-build/">
+    <File Path=".agents/skills/kb-build/SKILL.md" />
   </Folder>
-  <Folder Name="/.claude/skills/review-pr/">
-    <File Path=".claude/skills/review-pr/SKILL.md" />
+  <Folder Name="/.agents/skills/kb-issues/">
+    <File Path=".agents/skills/kb-issues/SKILL.md" />
   </Folder>
-  <Folder Name="/.claude/skills/session-reflect/">
-    <File Path=".claude/skills/session-reflect/SKILL.md" />
+  <Folder Name="/.agents/skills/kb-refresh/">
+    <File Path=".agents/skills/kb-refresh/SKILL.md" />
   </Folder>
-  <Folder Name="/.claude/skills/test/">
-    <File Path=".claude/skills/test/SKILL.md" />
+  <Folder Name="/.agents/skills/kb-status/">
+    <File Path=".agents/skills/kb-status/SKILL.md" />
   </Folder>
-  <Folder Name="/.claude/skills/test-providers/">
-    <File Path=".claude/skills/test-providers/SKILL.md" />
+  <Folder Name="/.agents/skills/merge-duplicates/">
+    <File Path=".agents/skills/merge-duplicates/SKILL.md" />
   </Folder>
-  <Folder Name="/.claude/skills/update-slnx/">
-    <File Path=".claude/skills/update-slnx/SKILL.md" />
+  <Folder Name="/.agents/skills/profile-analyzers/">
+    <File Path=".agents/skills/profile-analyzers/SKILL.md" />
   </Folder>
-  <Folder Name="/.claude/skills/verify-review/">
-    <File Path=".claude/skills/verify-review/SKILL.md" />
+  <Folder Name="/.agents/skills/release/">
+    <File Path=".agents/skills/release/SKILL.md" />
   </Folder>
-  <Folder Name="/.claude/skills/version-bump/">
-    <File Path=".claude/skills/version-bump/SKILL.md" />
+  <Folder Name="/.agents/skills/release-deps/">
+    <File Path=".agents/skills/release-deps/SKILL.md" />
+  </Folder>
+  <Folder Name="/.agents/skills/release-milestone-check/">
+    <File Path=".agents/skills/release-milestone-check/SKILL.md" />
+  </Folder>
+  <Folder Name="/.agents/skills/release-notes/">
+    <File Path=".agents/skills/release-notes/SKILL.md" />
+  </Folder>
+  <Folder Name="/.agents/skills/release-notes-validate/">
+    <File Path=".agents/skills/release-notes-validate/SKILL.md" />
+  </Folder>
+  <Folder Name="/.agents/skills/release-postpublish/">
+    <File Path=".agents/skills/release-postpublish/SKILL.md" />
+  </Folder>
+  <Folder Name="/.agents/skills/release-publicapi/">
+    <File Path=".agents/skills/release-publicapi/SKILL.md" />
+  </Folder>
+  <Folder Name="/.agents/skills/release-publish/">
+    <File Path=".agents/skills/release-publish/SKILL.md" />
+  </Folder>
+  <Folder Name="/.agents/skills/release-test-matrix/">
+    <File Path=".agents/skills/release-test-matrix/SKILL.md" />
+  </Folder>
+  <Folder Name="/.agents/skills/release-verify/">
+    <File Path=".agents/skills/release-verify/SKILL.md" />
+  </Folder>
+  <Folder Name="/.agents/skills/review-pr/">
+    <File Path=".agents/skills/review-pr/SKILL.md" />
+  </Folder>
+  <Folder Name="/.agents/skills/session-reflect/">
+    <File Path=".agents/skills/session-reflect/SKILL.md" />
+  </Folder>
+  <Folder Name="/.agents/skills/test/">
+    <File Path=".agents/skills/test/SKILL.md" />
+  </Folder>
+  <Folder Name="/.agents/skills/test-progress/">
+    <File Path=".agents/skills/test-progress/SKILL.md" />
+  </Folder>
+  <Folder Name="/.agents/skills/test-providers/">
+    <File Path=".agents/skills/test-providers/SKILL.md" />
+  </Folder>
+  <Folder Name="/.agents/skills/update-slnx/">
+    <File Path=".agents/skills/update-slnx/SKILL.md" />
+  </Folder>
+  <Folder Name="/.agents/skills/verify-review/">
+    <File Path=".agents/skills/verify-review/SKILL.md" />
+  </Folder>
+  <Folder Name="/.agents/skills/version-bump/">
+    <File Path=".agents/skills/version-bump/SKILL.md" />
   </Folder>
   <Folder Name="/.github/">
     <File Path=".github/CODEOWNERS" />
