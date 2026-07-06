@@ -1,9 +1,11 @@
 module Tests.FSharp.OptionTypes
 
 open System
+open System.Net
 open LinqToDB
 open LinqToDB.Mapping
 open NUnit.Framework
+open Shouldly
 open Tests
 
 // https://github.com/linq2db/linq2db/issues/195
@@ -153,4 +155,52 @@ let VerifyCustomScalarOptionNotMapped (db : IDataContext) =
         ed.Columns
         |> Seq.tryFind (fun c -> c.MemberName = "Value")
         |> Option.bind (fun c -> Option.ofObj c.ValueConverter)
-    Assert.That(converter, Is.EqualTo None)
+    converter.ShouldBe(None)
+
+// https://github.com/linq2db/linq2db/issues/5675 (Tests #7)
+// Precedence for the newly-broadened case: OptionMappingPrecedence pins that an explicit fluent DataType
+// survives for a MappingSchema.Default-scalar element ('string option'), but the schema-aware gate now also
+// auto-maps options whose element is scalar ONLY via schema registration (MyId). This pins that an explicit
+// fluent mapping still wins for THAT element too: the option carries a plain [<Column>] (whose DataType-less
+// attribute the lower-priority auto reader also supplies), plus a fluent VarChar override - the explicit
+// DataType must be preserved rather than shadowed by the auto-scalarization.
+[<NoComparison>]
+[<Table("CustomScalarPrecedenceTable")>]
+type CustomScalarPrecedenceRow =
+    { [<PrimaryKey; Column>] Id    : int
+      [<Column>]             Value : MyId option }
+
+// Registers MyId as a scalar (so 'MyId option' is auto-map eligible) and explicitly maps Value to VarChar.
+let BuildCustomScalarExplicitColumnSchema () =
+    let ms = BuildCustomScalarSchema ()
+    let mb = FluentMappingBuilder(ms)
+    mb.Entity<CustomScalarPrecedenceRow>().Property(fun e -> e.Value).HasDataType(DataType.VarChar) |> ignore
+    mb.Build() |> ignore
+    ms
+
+let VerifyCustomScalarExplicitDataTypePreserved (db : IDataContext) =
+    let ed  = db.MappingSchema.GetEntityDescriptor(typeof<CustomScalarPrecedenceRow>)
+    let col = ed.Columns |> Seq.find (fun c -> c.MemberName = "Value")
+    // Explicit fluent DataType wins over the broadened auto-scalarization's DataType-less ColumnAttribute...
+    col.DataType.ShouldBe(DataType.VarChar)
+    // ...and the option is still recognised as a scalar column (auto value converter supplies None <-> NULL).
+    col.ValueConverter.ShouldNotBeNull() |> ignore
+
+// https://github.com/linq2db/linq2db/issues/5675 (Tests #2)
+// Provider-native scalar element: IPAddress is scalar only because the PostgreSQL provider layer registers it
+// (PostgreSQLMappingSchema.AddScalarType(typeof<IPAddress>, ...)), never in MappingSchema.Default. This asserts
+// metadata mapping (not a DDL round-trip): the schema-aware gate resolves scalar-ness against the active
+// provider-inclusive schema, so under a PostgreSQL context 'IPAddress option' must be recognised as a scalar
+// column carrying the auto value converter - the case no contained fix could reach, since the element's
+// scalar-ness comes from the provider layer and no schema is passed to GetDataContext.
+[<NoComparison>]
+[<Table("OptionIPAddressTable", IsColumnAttributeRequired = false)>]
+type IPAddressOptionRow =
+    { [<PrimaryKey>] Id    : int
+      Value               : IPAddress option }
+
+let VerifyProviderNativeScalarOptionMapped (db : IDataContext) =
+    let ed = db.MappingSchema.GetEntityDescriptor(typeof<IPAddressOptionRow>)
+    match ed.Columns |> Seq.tryFind (fun c -> c.MemberName = "Value") with
+    | Some c -> c.ValueConverter.ShouldNotBeNull() |> ignore
+    | None   -> Assert.Fail("IPAddress option column was not mapped - the provider-native scalar was not recognised by the schema-aware gate")

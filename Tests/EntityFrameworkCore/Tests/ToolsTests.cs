@@ -264,8 +264,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			var col = ms.GetAttribute<ColumnAttribute>(typeof(Product),
 				MemberHelper.MemberOf<Product>(p => p.QuantityPerUnit));
 
-			Assert.That(col, Is.Not.Null);
-			Assert.That(col!.DataType, Is.EqualTo(DataType.VarChar));
+			col.ShouldNotBeNull();
+			col!.DataType.ShouldBe(DataType.VarChar);
 		}
 
 		[Test]

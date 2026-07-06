@@ -15,6 +15,8 @@ using LinqToDB.Metadata;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.Mapping
 {
 	public class MappingSchemaTests : TestBase
@@ -362,16 +364,13 @@ namespace Tests.Mapping
 			var derived = new MappingSchema(baseMs);
 			derived.AddScalarType(typeof(BorrowProbeElement), DataType.Int32);
 
-			using (Assert.EnterMultipleScope())
-			{
-				// derived registered BorrowProbeElement, so its schema-aware reader must report BorrowGatedType
-				// scalar. Without the re-bind the borrowed aggregator would consult baseMs (no registration) and
-				// this would be false - the regression this pins.
-				Assert.That(derived.IsScalarType(typeof(BorrowGatedType)), Is.True);
+			// derived registered BorrowProbeElement, so its schema-aware reader must report BorrowGatedType
+			// scalar. Without the re-bind the borrowed aggregator would consult baseMs (no registration) and
+			// this would be false - the regression this pins.
+			derived.IsScalarType(typeof(BorrowGatedType)).ShouldBeTrue();
 
-				// baseMs never registered BorrowProbeElement, so BorrowGatedType stays non-scalar there (control).
-				Assert.That(baseMs.IsScalarType(typeof(BorrowGatedType)), Is.False);
-			}
+			// baseMs never registered BorrowProbeElement, so BorrowGatedType stays non-scalar there (control).
+			baseMs.IsScalarType(typeof(BorrowGatedType)).ShouldBeFalse();
 		}
 
 		enum Enum1

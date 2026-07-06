@@ -191,6 +191,22 @@ namespace Tests.Linq
 			FSharp.OptionTypes.VerifyCustomScalarOptionNotMapped(dbB);
 		}
 
+		[Test(Description = "An explicit fluent DataType on an option over a user-scalar element (MyId, scalar only via schema registration) survives the schema-aware broadening: the explicit mapping wins over auto-scalarization, complementing OptionMapping_ExplicitDataTypePreserved which covers the Default-scalar element (#5675 Tests #7)")]
+		public void Option_CustomScalarExplicitDataTypePreserved([DataSources] string context)
+		{
+			var ms = FSharp.OptionTypes.BuildCustomScalarExplicitColumnSchema();
+
+			using var db = GetDataContext(context, ms);
+			FSharp.OptionTypes.VerifyCustomScalarExplicitDataTypePreserved(db);
+		}
+
+		[Test(Description = "An option over a provider-native scalar element (IPAddress, scalar only via the PostgreSQL provider layer, not MappingSchema.Default) auto-maps as a scalar column - the schema-aware gate resolves scalar-ness against the active provider-inclusive schema (#5675 Tests #2)")]
+		public void Option_ProviderNativeScalarElementMapped([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.OptionTypes.VerifyProviderNativeScalarOptionMapped(db);
+		}
+
 		[Test]
 		public void LoadSingleCLIMutable([DataSources] string context)
 		{
