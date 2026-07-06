@@ -130,6 +130,11 @@ LinqToDB.LinqOptions.Deconstruct(out bool PreloadGroups, out bool IgnoreEmptyUpd
 LinqToDB.LinqOptions.Deconstruct(out bool preloadGroups, out bool ignoreEmptyUpdate, out bool generateExpressionTest, out bool traceMapperExpression, out bool concatenateOrderBy, out bool optimizeJoins, out LinqToDB.CompareNulls compareNulls, out bool guardGrouping, out bool disableQueryCache, out System.TimeSpan? cacheSlidingExpiration, out bool preferApply, out bool keepDistinctOrdered, out bool parameterizeTakeSkip, out bool enableContextSchemaEdit, out bool preferExistsForScalar) -> void
 *REMOVED*LinqToDB.LinqOptions.LinqOptions(bool PreloadGroups = false, bool IgnoreEmptyUpdate = false, bool GenerateExpressionTest = false, bool TraceMapperExpression = false, bool ConcatenateOrderBy = false, bool OptimizeJoins = true, LinqToDB.CompareNulls CompareNulls = LinqToDB.CompareNulls.LikeClr, bool GuardGrouping = true, bool DisableQueryCache = false, System.TimeSpan? CacheSlidingExpiration = null, bool PreferApply = true, bool KeepDistinctOrdered = true, bool ParameterizeTakeSkip = true, bool EnableContextSchemaEdit = false, bool PreferExistsForScalar = false) -> void
 *REMOVED*LinqToDB.LinqOptions.Deconstruct(out bool PreloadGroups, out bool IgnoreEmptyUpdate, out bool GenerateExpressionTest, out bool TraceMapperExpression, out bool ConcatenateOrderBy, out bool OptimizeJoins, out LinqToDB.CompareNulls CompareNulls, out bool GuardGrouping, out bool DisableQueryCache, out System.TimeSpan? CacheSlidingExpiration, out bool PreferApply, out bool KeepDistinctOrdered, out bool ParameterizeTakeSkip, out bool EnableContextSchemaEdit, out bool PreferExistsForScalar) -> void
+static LinqToDB.Internal.DataProvider.AliasesHelper.PrepareQueryAndAliases(LinqToDB.Internal.DataProvider.IIdentifierService! identifierService, LinqToDB.Internal.SqlQuery.SqlStatement! statement, out LinqToDB.Internal.SqlQuery.AliasesContext! newAliasContext) -> void
+*REMOVED*LinqToDB.Internal.Linq.QueryInfo.Aliases.get -> LinqToDB.Internal.SqlQuery.AliasesContext?
+*REMOVED*LinqToDB.Internal.Linq.QueryInfo.Aliases.set -> void
+*REMOVED*LinqToDB.Internal.SqlQuery.AliasesContext.IsAliased(LinqToDB.Internal.SqlQuery.IQueryElement! element) -> bool
+*REMOVED*static LinqToDB.Internal.DataProvider.AliasesHelper.PrepareQueryAndAliases(LinqToDB.Internal.DataProvider.IIdentifierService! identifierService, LinqToDB.Internal.SqlQuery.SqlStatement! statement, LinqToDB.Internal.SqlQuery.AliasesContext? prevAliasContext, out LinqToDB.Internal.SqlQuery.AliasesContext! newAliasContext) -> void
 static LinqToDB.Sql.NewGuid7() -> System.Guid
 LinqToDB.Internal.DataProvider.MySql.Translation.MariaDBMemberTranslator
 LinqToDB.Internal.DataProvider.MySql.Translation.MariaDBMemberTranslator.MariaDBMemberTranslator() -> void
@@ -1081,3 +1086,7 @@ LinqToDB.Mapping.EntityMappingBuilder<TEntity>.HasQueryFilter(string! filterKey,
 LinqToDB.Mapping.EntityMappingBuilder<TEntity>.HasQueryFilter<TDataContext>(string! filterKey, System.Func<System.Linq.IQueryable<TEntity>!, TDataContext, System.Linq.IQueryable<TEntity>!>? filterFunc) -> LinqToDB.Mapping.EntityMappingBuilder<TEntity>!
 static LinqToDB.LinqExtensions.IgnoreFilters<TSource>(this System.Linq.IQueryable<TSource>! source, System.Collections.Generic.IEnumerable<string!>! filterKeys, params System.Type![]! entityTypes) -> System.Linq.IQueryable<TSource>!
 static readonly LinqToDB.Internal.Reflection.Methods.LinqToDB.IgnoreFiltersByKey -> System.Reflection.MethodInfo!
+virtual LinqToDB.Internal.SqlProvider.BasicSqlBuilder.RequiresUniqueRootColumnNames.get -> bool
+override LinqToDB.Internal.DataProvider.Access.AccessSqlBuilderBase.RequiresUniqueRootColumnNames.get -> bool
+override LinqToDB.Internal.DataProvider.SqlCe.SqlCeSqlBuilder.RequiresUniqueRootColumnNames.get -> bool
+*REMOVED*override LinqToDB.Internal.DataProvider.SqlCe.SqlCeSqlBuilder.CanSkipRootAliases(LinqToDB.Internal.SqlQuery.SqlStatement! statement) -> bool

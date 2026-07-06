@@ -68,8 +68,6 @@ namespace LinqToDB.Remote
 
 				for (var i = 0; i < commandCount; i++)
 				{
-					AliasesHelper.PrepareQueryAndAliases(new IdentifierServiceSimple(128), query.Statement, query.Aliases, out var aliases);
-
 					var optimizationContext = new OptimizationContext(
 						_evaluationContext,
 						DataContext.Options,
@@ -83,6 +81,11 @@ namespace LinqToDB.Remote
 						parametersNormalizerFactory : static () => NoopQueryParametersNormalizer.Instance);
 
 					var statement = query.Statement.PrepareStatementForSql(optimizationContext);
+
+					// Alias the prepared statement - the one actually rendered. PrepareStatementForSql can
+					// produce new nodes, and the alias context is keyed to the nodes it visits, so aliasing
+					// query.Statement (pre-prepare) would leave the rendered nodes unresolved.
+					AliasesHelper.PrepareQueryAndAliases(new IdentifierServiceSimple(128), statement, out var aliases);
 
 					sqlBuilder.BuildSql(i, statement, sqlStringBuilder.Value, optimizationContext, aliases, null);
 
