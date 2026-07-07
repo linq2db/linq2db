@@ -266,9 +266,6 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 #endif
 			}
 
-			if (dataType.DataType == DataType.Undefined && value is string @string && @string.Length >= 4000)
-				dataType = dataType.WithDataType(DataType.NText);
-
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 

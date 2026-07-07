@@ -9,6 +9,14 @@ namespace LinqToDB.DataProvider
 	/// </summary>
 	public readonly struct DataProviderParameterContext
 	{
+		/// <summary>
+		/// Initializes a new instance of the <see cref="DataProviderParameterContext"/> struct.
+		/// </summary>
+		/// <param name="name">The parameter name.</param>
+		/// <param name="dbDataType">The database type of the parameter.</param>
+		/// <param name="value">The parameter value.</param>
+		/// <param name="direction">The parameter direction, or <see langword="null"/> for the provider default.</param>
+		/// <param name="isDbDataTypeExplicit">Whether the database type was explicitly specified.</param>
 		public DataProviderParameterContext(
 			string              name,
 			DbDataType          dbDataType,

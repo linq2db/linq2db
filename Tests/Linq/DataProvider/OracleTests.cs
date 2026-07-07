@@ -503,6 +503,29 @@ namespace Tests.DataProvider
 				p.OracleDbType.ShouldBe(OracleDbType.Varchar2);
 		}
 
+		[Test]
+		public void LongStringParameterExplicitTypeNotPromotedTest([IncludeDataSources(TestProvName.AllOracle)] string context)
+		{
+			var parameterInterceptor = new SaveAndSkipCommandInterceptor();
+
+			using var conn  = GetDataContext(context, o => o.UseInterceptor(parameterInterceptor));
+			using var table = conn.CreateLocalTable<BlobsTable>();
+
+			var tableName = table.GetTableName();
+
+			var value = "LongStringValue".PadRight(50000, '1');
+
+			// explicit non-NCLOB type must not be promoted to NCLOB even past the default threshold
+			conn.Execute(
+				$"INSERT INTO {tableName} (\"Id\", \"NClob\") VALUES (1, :p)",
+				new DataParameter { Name = "p", DataType = DataType.VarChar, Value = value });
+
+			parameterInterceptor.Parameters.Length.ShouldBe(1);
+
+			if (parameterInterceptor.Parameters[0] is OracleParameter p)
+				p.OracleDbType.ShouldBe(OracleDbType.Varchar2);
+		}
+
 		[Test, Ignore("TODO: needs to implement providing parameter type in LINQ expressions")]
 		public void LongStringParameterLinqTest([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
