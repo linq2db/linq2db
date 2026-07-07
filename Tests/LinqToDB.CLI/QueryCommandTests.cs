@@ -92,6 +92,33 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task QueryRejectsMissingExplicitProviderLocationFile()
+		{
+			var result = await RunCli("query", "--provider", "SQLite", "--provider-location", "missing\\provider.dll", "--connection-string", "Data Source=:memory:", "--sql", "select 1 as Value");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.EqualTo(-3));
+				Assert.That(result.Output,   Is.Empty);
+				Assert.That(result.Error,    Does.Contain("Provider assembly 'missing\\provider.dll' not found."));
+			}
+		}
+
+		[Test]
+		public async Task QueryRejectsDB2ProviderLocationWithoutDB2Factory()
+		{
+			var providerLocation = typeof(QueryCommandTests).Assembly.Location;
+			var result           = await RunCli("query", "--provider", "DB2", "--provider-location", providerLocation, "--connection-string", "Server=localhost:50000;Database=testdb;UID=db2inst1;PWD=Password12!", "--sql", "select 1 from SYSIBM.SYSDUMMY1");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.EqualTo(-3));
+				Assert.That(result.Output,   Is.Empty);
+				Assert.That(result.Error,    Does.Contain($"Provider assembly '{providerLocation}' doesn't contain DB2Factory type."));
+			}
+		}
+
+		[Test]
 		public async Task QueryAcceptsSql()
 		{
 			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql", "select 1 as Value");
@@ -881,6 +908,63 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task QueryResolvesEnvironmentVariablesInProviderLocationPath()
+		{
+			var environment      = new TestCliEnvironment();
+			var providerLocation = typeof(QueryCommandTests).Assembly.Location;
+			var providerDir      = Path.GetDirectoryName(providerLocation)!;
+
+			environment.EnvironmentVariables.Add("PROVIDER_DIR", providerDir);
+
+			var result = await RunCli(environment, "query", "--provider", "SQLite", "--provider-location", "%PROVIDER_DIR%\\" + Path.GetFileName(providerLocation), "--connection-string", "Data Source=:memory:", "--sql", "select 1 as Value");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.Zero);
+				Assert.That(result.Output,   Does.Contain("\"Value\":\"1\""));
+				Assert.That(result.Error,    Is.Empty);
+			}
+		}
+
+		[Test]
+		public async Task QueryRejectsMissingEnvironmentVariableInProviderLocationPath()
+		{
+			var result = await RunCli("query", "--provider", "SQLite", "--provider-location", "%PROVIDER_DIR%\\provider.dll", "--connection-string", "Data Source=:memory:", "--sql", "select 1 as Value");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.EqualTo(-1));
+				Assert.That(result.Output,   Is.Empty);
+				Assert.That(result.Error,    Does.Contain("Environment variable 'PROVIDER_DIR' referenced by option '--provider-location' is not set."));
+			}
+		}
+
+		[Test]
+		public async Task QueryRejectsMissingEnvironmentVariableInConfigProviderLocationPath()
+		{
+			var environment = new TestCliEnvironment();
+
+			environment.Files.Add("config\\query.json", """
+				{
+					"default": {
+						"provider": "SQLite",
+						"providerLocation": "%PROVIDER_DIR%\\provider.dll",
+						"connectionString": "Data Source=:memory:"
+					}
+				}
+				""");
+
+			var result = await RunCli(environment, "query", "--config", "config\\query.json", "--sql", "select 1 as Value");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.EqualTo(-1));
+				Assert.That(result.Output,   Is.Empty);
+				Assert.That(result.Error,    Does.Contain("Environment variable 'PROVIDER_DIR' referenced by option '--provider-location' is not set."));
+			}
+		}
+
+		[Test]
 		public async Task QueryRejectsMissingEnvironmentVariableInPath()
 		{
 			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql-file", "%QUERY_DIR%\\query.sql");
@@ -1335,6 +1419,7 @@ namespace Tests.LinqToDB.CLI
 				Assert.That(result.Output,   Does.Contain("--profile"));
 				Assert.That(result.Output,   Does.Contain("--provider"));
 				Assert.That(result.Output,   Does.Contain("--provider-location"));
+				Assert.That(result.Output,   Does.Contain("dependencies must be available next to it or through normal application probing"));
 				Assert.That(result.Output,   Does.Contain("--connection-string"));
 				Assert.That(result.Output,   Does.Contain("--connection-string-env"));
 				Assert.That(result.Output,   Does.Contain("--user"));

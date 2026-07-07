@@ -5,7 +5,9 @@ namespace LinqToDB.CommandLine
 	/// </summary>
 	/// <param name="Profile">Selected configuration profile name.</param>
 	/// <param name="Provider">linq2db provider name.</param>
-	/// <param name="ProviderLocation">Optional path to external provider assembly, e.g. IBM.Data.Db2.dll for DB2.</param>
+	/// <param name="ProviderLocation">
+	/// Optional path to external provider assembly. Provider dependencies must be available next to it or through normal application probing.
+	/// </param>
 	/// <param name="ConnectionString">
 	/// Final database connection string after command line/profile merge and user/password formatting.
 	/// </param>

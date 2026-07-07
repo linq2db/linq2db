@@ -38,7 +38,7 @@
 	},
 	"MySql": {
 		"provider"        : "MySql",
-		"providerLocation": "%NUGET_PACKAGES%\\mysql.data\\9.4.0\\lib\\net8.0\\MySql.Data.dll",
+		"providerLocation": "..\\..\\.build\\bin\\Tests\\net10.0\\MySql.Data.dll",
 		"connectionString": "Server=localhost;Port=3306;Database=testdata;Uid=root;Pwd=root;charset=utf8mb4;Allow User Variables=True;"
 	},
 	"MySqlConnector": {

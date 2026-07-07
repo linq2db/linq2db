@@ -32,6 +32,8 @@ Connection settings:
 - `--provider <provider>` is the linq2db provider name.
 - `--provider-location <path>` loads an external ADO.NET provider assembly before the query provider is resolved. Use it when the provider is not bundled with `linq2db.cli` or when a specific provider assembly version must be supplied by the user.
 - Loading an external assembly only makes it available to the process; compatibility with the selected linq2db provider and any provider dependencies remains the user's responsibility.
+- External provider dependencies must be available next to the specified provider assembly or through normal application probing. The command does not scan the user's NuGet package cache to find missing dependencies.
+- During external provider loading, the provider assembly directory can be used as the current directory so providers that resolve native files relative to the process directory can initialize.
 - DB2 provider assemblies are not bundled because of package size. For DB2, install the matching IBM provider package separately and pass the path to `IBM.Data.Db2.dll` with `--provider-location` or `providerLocation` in the configuration profile.
 - `--connection-string <connection-string>` is the database connection string.
 - `--user <user>` and `--password <password>` are optional values for connection string formatting.
@@ -101,8 +103,10 @@ Output:
 - `--output-file <file>` writes command output to a file.
 - Existing output files are not replaced by default. Use `--overwrite` only when the user explicitly wants to replace the file.
 - When `--output-file` is not specified, output is written to stdout.
+- Output is streamed while rows are read. If the command is cancelled or fails after the output file is opened, the file can contain partial output.
 - Query output reads database values using .NET `DbDataReader.GetProviderSpecificValue` and serializes them as strings using invariant culture and provider-specific safe formatting. Binary values are emitted using SQL-style hexadecimal notation like `0x010203`. `NULL` values are emitted as JSON `null`.
-- Provider-specific output formatting has special handling validated for SQL Server, Oracle, PostgreSQL, and DuckDB provider-specific types. The command still uses `DbDataReader.GetProviderSpecificValue` for all providers and falls back to invariant string conversion, but additional provider-specific formatting rules should be added incrementally as provider behavior is tested.
+- Provider-specific reader behavior has been validated for SQL Server, Oracle, DB2, Informix, PostgreSQL, SAP HANA, Sybase, YDB, DuckDB, SQLite, Access ODBC, Firebird, MySQL, MariaDB, and ClickHouse provider families in the main test suite.
+- Special provider-specific output formatting currently covers SQL Server, Oracle, DB2, Firebird, PostgreSQL, DuckDB, and MySQL/MariaDB wide decimal values. Other validated providers use `DbDataReader.GetProviderSpecificValue` with invariant fallback formatting unless a type-specific rule is added.
 - For `json` output, projected column names must be unique because rows are emitted as JSON objects. The agent is responsible for adding explicit SQL aliases when a query could produce duplicate names.
 - Duplicate column names are rejected for `json` output. Use explicit aliases or switch to duplicate-safe `json-table` output when column metadata and duplicate names must be preserved.
 - `json-table` output contains `rowCount`, `truncated`, `columns`, and `rows`. Each column has `ordinal`, `name`, `fieldType`, `providerSpecificFieldType`, and `dataTypeName`; rows are arrays of string or null values.

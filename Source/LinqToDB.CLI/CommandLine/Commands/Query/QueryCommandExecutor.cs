@@ -90,6 +90,8 @@ namespace LinqToDB.CommandLine
 		readonly ICliEnvironment      _environment = environment;
 		readonly QueryCommandSettings _settings    = settings;
 
+		const string OracleBFilePlaceholder = "<BFILE>";
+
 		public async ValueTask<int> Execute(CancellationToken cancellationToken)
 		{
 			cancellationToken.ThrowIfCancellationRequested();
@@ -286,7 +288,7 @@ namespace LinqToDB.CommandLine
 										// operation, so avoid reader value APIs for it.
 										//
 										case QueryActualFieldType.OracleBFile:
-											row[i] = "<BFILE>";
+											row[i] = OracleBFilePlaceholder;
 											continue;
 
 										// MySQL wide DECIMAL values can overflow inside regular reader null checks.
@@ -564,7 +566,7 @@ namespace LinqToDB.CommandLine
 
 			switch (actualFieldType)
 			{
-				case QueryActualFieldType.OracleBFile : return "<BFILE>";
+				case QueryActualFieldType.OracleBFile : return OracleBFilePlaceholder;
 				case QueryActualFieldType.MySqlDecimal: return ReadMySqlDecimalAsString(reader, ordinal);
 			}
 

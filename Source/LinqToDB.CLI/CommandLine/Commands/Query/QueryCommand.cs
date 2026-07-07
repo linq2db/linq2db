@@ -26,7 +26,7 @@ namespace LinqToDB.CommandLine
 		static readonly CliOption _config              = new StringCliOption("config",                null, false, false, "path to query configuration file; supports %NAME% and ${NAME} environment variable expansion");
 		static readonly CliOption _profile             = new StringCliOption("profile",               null, false, false, "configuration profile name");
 		static readonly CliOption _provider            = new StringCliOption("provider",              null, false, false, "linq2db provider name");
-		static readonly CliOption _providerLocation    = new StringCliOption("provider-location",     'l',  false, false, "path to external database provider assembly, e.g. IBM.Data.Db2.dll for DB2; supports %NAME% and ${NAME} environment variable expansion");
+		static readonly CliOption _providerLocation    = new StringCliOption("provider-location",     'l',  false, false, "path to external database provider assembly; dependencies must be available next to it or through normal application probing; supports %NAME% and ${NAME} environment variable expansion");
 		static readonly CliOption _connectionString    = new StringCliOption("connection-string",     null, false, false, "database connection string; use {0} for user and {1} for password placeholders; configure provider-specific connection timeout here");
 		static readonly CliOption _connectionStringEnv = new StringCliOption("connection-string-env", null, false, false, "environment variable with database connection string");
 		static readonly CliOption _user                = new StringCliOption("user",                  null, false, false, "database user name for connection string formatting");

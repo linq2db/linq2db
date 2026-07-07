@@ -20,7 +20,7 @@ namespace LinqToDB.CommandLine
 		public string? Provider         { get; private set; }
 
 		/// <summary>
-		/// Optional path to external provider assembly. For DB2 this is a path to IBM.Data.Db2.dll from Net.IBM.Data.Db2 package.
+		/// Optional path to external provider assembly. Provider dependencies must be available next to it or through normal application probing.
 		/// </summary>
 		public string? ProviderLocation { get; private set; }
 

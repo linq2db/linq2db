@@ -1,7 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.Data.Common;
-using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Runtime.Loader;
@@ -49,6 +47,9 @@ namespace LinqToDB.CommandLine
 
 			try
 			{
+				// Some external providers resolve native binaries and dependent assemblies relative to
+				// the process current directory instead of the managed provider assembly path.
+				//
 				if (!string.IsNullOrEmpty(providerDirectory))
 					Environment.CurrentDirectory = providerDirectory;
 
@@ -112,40 +113,10 @@ namespace LinqToDB.CommandLine
 						return LoadFromAssemblyPath(assemblyPath);
 				}
 
-				var nugetAssemblyPath = FindNuGetAssemblyPath(assemblyName);
+				var applicationAssemblyPath = Path.Combine(AppContext.BaseDirectory, assemblyName.Name + ".dll");
 
-				return nugetAssemblyPath != null ? LoadFromAssemblyPath(nugetAssemblyPath) : null;
-			}
-
-			static string? FindNuGetAssemblyPath(AssemblyName assemblyName)
-			{
-				if (assemblyName.Name == null)
-					return null;
-
-				var nugetPackages = Environment.GetEnvironmentVariable("NUGET_PACKAGES");
-
-				if (string.IsNullOrEmpty(nugetPackages))
-					nugetPackages = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".nuget", "packages");
-
-				var packageDirectory = Path.Combine(nugetPackages, assemblyName.Name.ToLowerInvariant());
-
-				if (!Directory.Exists(packageDirectory))
-					return null;
-
-				var versionDirectories = Directory.GetDirectories(packageDirectory);
-
-				Array.Sort(versionDirectories, static (left, right) => string.Compare(Path.GetFileName(right), Path.GetFileName(left), StringComparison.OrdinalIgnoreCase));
-
-				foreach (var versionDirectory in versionDirectories)
-				{
-					foreach (var targetFramework in GetCompatibleTargetFrameworks())
-					{
-						var assemblyPath = Path.Combine(versionDirectory, "lib", targetFramework, assemblyName.Name + ".dll");
-
-						if (IsMatchingAssembly(assemblyPath, assemblyName))
-							return assemblyPath;
-					}
-				}
+				if (IsMatchingAssembly(applicationAssemblyPath, assemblyName))
+					return LoadFromAssemblyPath(applicationAssemblyPath);
 
 				return null;
 			}
@@ -158,15 +129,6 @@ namespace LinqToDB.CommandLine
 				var candidateAssemblyName = AssemblyName.GetAssemblyName(assemblyPath);
 
 				return AssemblyName.ReferenceMatchesDefinition(requestedAssemblyName, candidateAssemblyName);
-			}
-
-			static IEnumerable<string> GetCompatibleTargetFrameworks()
-			{
-				for (var version = Environment.Version.Major; version >= 5; version--)
-					yield return string.Create(CultureInfo.InvariantCulture, $"net{version}.0");
-
-				yield return "netstandard2.1";
-				yield return "netstandard2.0";
 			}
 		}
 	}
