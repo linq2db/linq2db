@@ -64,12 +64,13 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 				.Append('\'');
 		}
 
-		// milliseconds are always rendered as 3 digits: the shape strftime('%f') produces and all
-		// existing linq2db-written data has. Sub-millisecond ticks are appended only when present:
-		// truncating them would lose data on write and break comparisons against values stored at
-		// full precision — comparison operands are normalized via strftime, which rounds to the
-		// nearest millisecond, so a truncated operand can normalize one millisecond below the
-		// same instant stored untruncated
+		// Always 3 millisecond digits, plus sub-millisecond digits only when present.
+		// Not fewer digits (".5"): strftime('%f') emits exactly 3 digits and existing
+		// linq2db-written data stores exactly 3, and raw-text comparisons (e.g. the unwrapped
+		// column side of an IN-list predicate) need those shapes to match.
+		// Not truncated (".123" for ".1236"): comparison operands are normalized via strftime,
+		// which rounds to the nearest millisecond — stored ".1236" normalizes to ".124" while a
+		// truncated ".123" stays ".123", so the same instant compares unequal.
 		internal static string FormatDateTime(DateTime value)
 		{
 			var result = value.ToString("yyyy-MM-dd HH:mm:ss.fff", DateTimeFormatInfo.InvariantInfo);
