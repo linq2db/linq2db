@@ -19,6 +19,8 @@ using LinqToDB.Tools.Activity;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 using Tests.Model;
 
 using Binary = System.Data.Linq.Binary;
@@ -879,6 +881,83 @@ namespace Tests.DataProvider
 		{
 			[PrimaryKey] public DateTime DateTime { get; set; }
 			[Column] public int Field { get; set; }
+		}
+
+		[Test(Description = "DateTime values must round-trip without losing sub-millisecond ticks")]
+		public void DateTimeRoundTripsSubMillisecondTicks([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool inline)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<DateTimePrecisionTable>();
+			db.InlineParameters = inline;
+
+			// whole-second and .5s values exercise the no-sub-millisecond path (".000" and ".500");
+			// 50 ticks (".000005") exercises sub-millisecond zero-padding
+			var wholeSecond = new DateTime(2020, 2, 29, 17, 54, 55);
+			var halfSecond  = wholeSecond.AddMilliseconds(500);
+			var fiftyTicks  = wholeSecond.AddTicks(50);
+			db.Insert(new DateTimePrecisionTable() { Id = 1, DateTime = TestData.DateTime });
+			db.Insert(new DateTimePrecisionTable() { Id = 2, DateTime = wholeSecond });
+			db.Insert(new DateTimePrecisionTable() { Id = 3, DateTime = halfSecond });
+			db.Insert(new DateTimePrecisionTable() { Id = 4, DateTime = fiftyTicks });
+
+			tb.Single(r => r.Id == 1).DateTime.ShouldBe(TestData.DateTime);
+			tb.Single(r => r.Id == 2).DateTime.ShouldBe(wholeSecond);
+			tb.Single(r => r.Id == 3).DateTime.ShouldBe(halfSecond);
+			tb.Single(r => r.Id == 4).DateTime.ShouldBe(fiftyTicks);
+		}
+
+		[Test(Description = "DateTimeOffset literals must round-trip without losing sub-millisecond ticks")]
+		public void DateTimeOffsetRoundTripsSubMillisecondTicks([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<DateTimeOffsetPrecisionTable>();
+			// inline only: DateTimeOffset parameters are not rendered by linq2db (SetParameter handles DateTime only)
+			db.InlineParameters = true;
+
+			var wholeSecond    = new DateTimeOffset(2020, 2, 29, 17, 9, 55, TimeSpan.Zero);
+			var nonZeroOffset  = new DateTimeOffset(2020, 2, 29, 17, 9, 55, 123, TimeSpan.FromHours(5)).AddTicks(1234);
+			db.Insert(new DateTimeOffsetPrecisionTable() { Id = 1, DateTimeOffset = TestData.DateTimeOffsetUtc });
+			db.Insert(new DateTimeOffsetPrecisionTable() { Id = 2, DateTimeOffset = wholeSecond });
+			db.Insert(new DateTimeOffsetPrecisionTable() { Id = 3, DateTimeOffset = nonZeroOffset });
+
+			tb.Single(r => r.Id == 1).DateTimeOffset.ShouldBe(TestData.DateTimeOffsetUtc);
+			tb.Single(r => r.Id == 2).DateTimeOffset.ShouldBe(wholeSecond);
+			tb.Single(r => r.Id == 3).DateTimeOffset.ShouldBe(nonZeroOffset);
+		}
+
+		[Test(Description = "Comparisons against values stored at full precision (e.g. by Microsoft.Data.Sqlite) must not misclassify rows: SQLite's date parser rounds to the nearest millisecond, so millisecond-truncated parameter rendering disagrees with full-precision stored text")]
+		public void DateTimeComparisonsAgreeWithProviderWrittenValues([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var tb = db.CreateLocalTable<DateTimePrecisionTable>();
+
+			// sub-millisecond part >= 0.5ms: SQLite rounds it up to the next millisecond
+			var subMillisecond = new DateTime(2020, 2, 29, 17, 54, 55).AddTicks(6500);
+			var wholeSecond    = new DateTime(2020, 2, 29, 17, 54, 55);
+			db.Execute("INSERT INTO [DateTimePrecisionTable]([Id], [DateTime]) VALUES(1, '2020-02-29 17:54:55.00065')");
+			db.Execute("INSERT INTO [DateTimePrecisionTable]([Id], [DateTime]) VALUES(2, '2020-02-29 17:54:55')");
+
+			tb.Count(r => r.DateTime == subMillisecond).ShouldBe(1);
+			tb.Count(r => r.DateTime > subMillisecond).ShouldBe(0);
+			tb.Count(r => r.DateTime < subMillisecond).ShouldBe(1);
+
+			tb.Count(r => r.DateTime == wholeSecond).ShouldBe(1);
+			tb.Count(r => r.DateTime > wholeSecond).ShouldBe(1);
+			tb.Count(r => r.DateTime < wholeSecond).ShouldBe(0);
+		}
+
+		[Table]
+		sealed class DateTimePrecisionTable
+		{
+			[PrimaryKey] public int Id { get; set; }
+			[Column] public DateTime DateTime { get; set; }
+		}
+
+		[Table]
+		sealed class DateTimeOffsetPrecisionTable
+		{
+			[PrimaryKey] public int Id { get; set; }
+			[Column] public DateTimeOffset DateTimeOffset { get; set; }
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2099")]

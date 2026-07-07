@@ -287,7 +287,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 			if (value is DateTime dt)
 			{
-				value = dt.ToString("yyyy-MM-dd HH:mm:ss.fff", DateTimeFormatInfo.InvariantInfo);
+				value = SQLiteMappingSchema.FormatDateTime(dt);
 				if (string.Equals(Name, ProviderName.SQLiteClassic, StringComparison.Ordinal))
 					dataType = dataType.WithDataType(DataType.VarChar);
 			}

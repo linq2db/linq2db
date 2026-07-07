@@ -11,15 +11,11 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 {
 	public sealed class SQLiteMappingSchema : LockedMappingSchema
 	{
-		internal const string DATE_FORMAT_RAW                   = "yyyy-MM-dd";
+		internal const string DATE_FORMAT_RAW = "yyyy-MM-dd";
 #if SUPPORTS_COMPOSITE_FORMAT
-		private static readonly CompositeFormat DATE_FORMAT           = CompositeFormat.Parse("'{0:yyyy-MM-dd}'");
-		private static readonly CompositeFormat DATETIME_FORMAT       = CompositeFormat.Parse("'{0:yyyy-MM-dd HH:mm:ss.fff}'");
-		private static readonly CompositeFormat DATETIMEOFFSET_FORMAT = CompositeFormat.Parse("'{0:yyyy-MM-dd HH:mm:ss.fffzzz}'");
+		private static readonly CompositeFormat DATE_FORMAT = CompositeFormat.Parse("'{0:yyyy-MM-dd}'");
 #else
-		private  const string DATE_FORMAT           = "'{0:yyyy-MM-dd}'";
-		private  const string DATETIME_FORMAT       = "'{0:yyyy-MM-dd HH:mm:ss.fff}'";
-		private  const string DATETIMEOFFSET_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.fffzzz}'";
+		private const string DATE_FORMAT = "'{0:yyyy-MM-dd}'";
 #endif
 
 		SQLiteMappingSchema() : base(ProviderName.SQLite)
@@ -68,24 +64,38 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 				.Append('\'');
 		}
 
+		// milliseconds are always rendered as 3 digits: the shape strftime('%f') produces and all
+		// existing linq2db-written data has. Sub-millisecond ticks are appended only when present:
+		// truncating them would lose data on write and break comparisons against values stored at
+		// full precision — comparison operands are normalized via strftime, which rounds to the
+		// nearest millisecond, so a truncated operand can normalize one millisecond below the
+		// same instant stored untruncated
+		internal static string FormatDateTime(DateTime value)
+		{
+			var result = value.ToString("yyyy-MM-dd HH:mm:ss.fff", DateTimeFormatInfo.InvariantInfo);
+
+			var subMillisecondTicks = (int)(value.Ticks % TimeSpan.TicksPerMillisecond);
+			if (subMillisecondTicks != 0)
+				result += subMillisecondTicks.ToString("D4", CultureInfo.InvariantCulture).TrimEnd('0');
+
+			return result;
+		}
+
 		static void ConvertDateTimeToSql(StringBuilder stringBuilder, SqlDataType dataType, DateTime value)
 		{
-#if SUPPORTS_COMPOSITE_FORMAT
-			CompositeFormat format;
-#else
-			string format;
-#endif
 			if (dataType.Type.DataType == DataType.Date)
-				format = DATE_FORMAT;
+				stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value);
 			else
-				format = DATETIME_FORMAT;
-
-			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value);
+				stringBuilder.Append('\'').Append(FormatDateTime(value)).Append('\'');
 		}
 
 		static void ConvertDateTimeOffsetToSql(StringBuilder stringBuilder, DateTimeOffset value)
 		{
-			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATETIMEOFFSET_FORMAT, value);
+			stringBuilder
+				.Append('\'')
+				.Append(FormatDateTime(value.DateTime))
+				.Append(value.ToString("zzz", CultureInfo.InvariantCulture))
+				.Append('\'');
 		}
 
 #if SUPPORTS_DATEONLY
