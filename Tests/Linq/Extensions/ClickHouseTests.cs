@@ -193,60 +193,82 @@ namespace Tests.Extensions
 				.ShouldContain(" " + ClickHouseHints.Table.Final);
 		}
 
+		static (AsofTrade[] trades, AsofQuote[] quotes) GetAsofData() =>
+		(
+			[
+				new AsofTrade { ID = 1, Symbol = "A", Time = new DateTime(2020, 1, 1, 9, 0, 15) },
+			],
+			[
+				new AsofQuote { ID = 1, Symbol = "A", Time = new DateTime(2020, 1, 1, 9, 0,  0) },
+				new AsofQuote { ID = 2, Symbol = "A", Time = new DateTime(2020, 1, 1, 9, 0, 10) },
+			]
+		);
+
 		[Test]
-		public void AsOfJoinHintSqlGeneration([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		public void AsOfJoinHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
-			var q = db.GetTable<AsofTrade>()
+			var (tradeData, quoteData) = GetAsofData();
+			using var trades = db.CreateLocalTable(tradeData);
+			using var quotes = db.CreateLocalTable(quoteData);
+
+			var res = trades
 				.Join(
-					db.GetTable<AsofQuote>().AsClickHouse().JoinAsOfHint(),
+					quotes.AsClickHouse().JoinAsOfHint(),
 					SqlJoinType.Left,
 					(trade, quote) => trade.Symbol == quote.Symbol && trade.Time >= quote.Time,
-					(trade, quote) => new { trade.ID, QuoteID = quote.ID });
+					(trade, quote) => new { trade.ID, QuoteID = quote.ID })
+				.ToList();
 
-			var sql = q.ToSqlQuery().Sql;
-
-			sql.ShouldContain("LEFT ASOF JOIN");
-			sql.ShouldContain(" >= ");
+			Assert.That(LastQuery, Contains.Substring("LEFT ASOF JOIN"));
+			// ASOF picks the latest quote at or before the trade time (9:00:15) -> quote ID 2 (9:00:10).
+			res.ShouldHaveSingleItem().QuoteID.ShouldBe(2);
 		}
 
 		[Test]
-		public void ObsoleteAllAsOfJoinHintSqlGeneration([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		public void ObsoleteAllAsOfJoinHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
+
+			var (tradeData, quoteData) = GetAsofData();
+			using var trades = db.CreateLocalTable(tradeData);
+			using var quotes = db.CreateLocalTable(quoteData);
 
 #pragma warning disable CS0618 // Type or member is obsolete
-			var q = db.GetTable<AsofTrade>()
+			var res = trades
 				.Join(
-					db.GetTable<AsofQuote>().AsClickHouse().JoinAllAsOfHint(),
+					quotes.AsClickHouse().JoinAllAsOfHint(),
 					SqlJoinType.Left,
 					(trade, quote) => trade.Symbol == quote.Symbol && trade.Time >= quote.Time,
-					(trade, quote) => new { trade.ID, QuoteID = quote.ID });
+					(trade, quote) => new { trade.ID, QuoteID = quote.ID })
+				.ToList();
 #pragma warning restore CS0618 // Type or member is obsolete
 
-			var sql = q.ToSqlQuery().Sql;
-
-			sql.ShouldContain("LEFT ASOF JOIN");
-			sql.ShouldContain(" >= ");
+			// Deprecated AllAsOf alias re-points to the standalone ASOF hint.
+			Assert.That(LastQuery, Contains.Substring("LEFT ASOF JOIN"));
+			res.ShouldHaveSingleItem().QuoteID.ShouldBe(2);
 		}
 
 		[Test]
-		public void GlobalAsOfJoinHintSqlGeneration([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		public void GlobalAsOfJoinHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
-			var q = db.GetTable<AsofTrade>()
+			var (tradeData, quoteData) = GetAsofData();
+			using var trades = db.CreateLocalTable(tradeData);
+			using var quotes = db.CreateLocalTable(quoteData);
+
+			var res = trades
 				.Join(
-					db.GetTable<AsofQuote>().AsClickHouse().JoinGlobalAsOfHint(),
+					quotes.AsClickHouse().JoinGlobalAsOfHint(),
 					SqlJoinType.Left,
 					(trade, quote) => trade.Symbol == quote.Symbol && trade.Time >= quote.Time,
-					(trade, quote) => new { trade.ID, QuoteID = quote.ID });
+					(trade, quote) => new { trade.ID, QuoteID = quote.ID })
+				.ToList();
 
-			var sql = q.ToSqlQuery().Sql;
-
-			sql.ShouldContain("GLOBAL LEFT ASOF JOIN");
-			sql.ShouldContain(" >= ");
+			Assert.That(LastQuery, Contains.Substring("GLOBAL LEFT ASOF JOIN"));
+			res.ShouldHaveSingleItem().QuoteID.ShouldBe(2);
 		}
 	}
 }
