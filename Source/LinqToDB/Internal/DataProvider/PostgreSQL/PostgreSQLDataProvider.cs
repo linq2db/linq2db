@@ -27,6 +27,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 	sealed class PostgreSQLDataProvider13 : PostgreSQLDataProvider { public PostgreSQLDataProvider13() : base(ProviderName.PostgreSQL13, PostgreSQLVersion.v13) {} }
 	sealed class PostgreSQLDataProvider15 : PostgreSQLDataProvider { public PostgreSQLDataProvider15() : base(ProviderName.PostgreSQL15, PostgreSQLVersion.v15) {} }
 	sealed class PostgreSQLDataProvider18 : PostgreSQLDataProvider { public PostgreSQLDataProvider18() : base(ProviderName.PostgreSQL18, PostgreSQLVersion.v18) {} }
+	sealed class PostgreSQLDataProvider19 : PostgreSQLDataProvider { public PostgreSQLDataProvider19() : base(ProviderName.PostgreSQL19, PostgreSQLVersion.v19) {} }
 #pragma warning restore MA0048 // File name must match type name
 
 	public abstract class PostgreSQLDataProvider : DynamicDataProviderBase<NpgsqlProviderAdapter>
@@ -103,6 +104,8 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		{
 			return Version switch
 			{
+				>= PostgreSQLVersion.v19 => new PostgreSQL19MemberTranslator(),
+				>= PostgreSQLVersion.v18 => new PostgreSQL18MemberTranslator(),
 				>= PostgreSQLVersion.v13 => new PostgreSQL13MemberTranslator(),
 				_ => new PostgreSQLMemberTranslator(),
 			};
@@ -241,6 +244,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		{
 			return version switch
 			{
+				PostgreSQLVersion.v19 => ProviderName.PostgreSQL19,
 				PostgreSQLVersion.v18 => ProviderName.PostgreSQL18,
 				PostgreSQLVersion.v13 => ProviderName.PostgreSQL13,
 				PostgreSQLVersion.v15 => ProviderName.PostgreSQL15,
@@ -604,6 +608,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		{
 			return version switch
 			{
+				PostgreSQLVersion.v19 => new PostgreSQLMappingSchema.PostgreSQL19MappingSchema(),
 				PostgreSQLVersion.v18 => new PostgreSQLMappingSchema.PostgreSQL18MappingSchema(),
 				PostgreSQLVersion.v15 => new PostgreSQLMappingSchema.PostgreSQL15MappingSchema(),
 				PostgreSQLVersion.v92 => new PostgreSQLMappingSchema.PostgreSQL92MappingSchema(),

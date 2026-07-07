@@ -621,10 +621,12 @@ namespace LinqToDB
 		[Sql.Extension("FIRST_VALUE({expr}){_}{modifier?}", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, Configuration = PN.SqlServer2022, ServerSideOnly = true, CanBeNull = true)]
 		[Sql.Extension("FIRST_VALUE({expr}){_}{modifier?}", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, Configuration = PN.SqlServer2025, ServerSideOnly = true, CanBeNull = true)]
 		[Sql.Extension("FIRST_VALUE({expr}){_}{modifier?}", TokenName = FunctionToken, BuilderType = typeof(ForceApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, Configuration = PN.ClickHouse, ServerSideOnly = true, CanBeNull = true)]
+		[Sql.Extension("FIRST_VALUE({expr}){_}{modifier?}", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, Configuration = PN.PostgreSQL19, ServerSideOnly = true, CanBeNull = true)]
 		[Sql.Extension("FIRST_VALUE({expr}{_}{modifier?})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true, CanBeNull = true)]
 		public static IAggregateFunctionSelfContained<T> FirstValue<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr, [SqlQueryDependent] Sql.Nulls nulls)
 			=> throw new ServerSideOnlyException(nameof(FirstValue));
 
+		[Sql.Extension("LAG({expr}){_}{modifier?}", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, Configuration = PN.PostgreSQL19, ServerSideOnly = true, CanBeNull = true)]
 		[Sql.Extension("LAG({expr}{_}{modifier?})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true, CanBeNull = true)]
 		public static IAnalyticFunctionWithoutWindow<T> Lag<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr, [SqlQueryDependent] Sql.Nulls nulls)
 			=> throw new ServerSideOnlyException(nameof(Lag));
@@ -642,6 +644,7 @@ namespace LinqToDB
 			=> throw new ServerSideOnlyException(nameof(Lag));
 
 		[Sql.Extension("LAG({expr}{_}{modifier?}, {offset}, {default})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true, CanBeNull = true)]
+		[Sql.Extension("LAG({expr}, {offset}, {default}){_}{modifier?}", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true, CanBeNull = true, Configuration = PN.PostgreSQL19)]
 		[Sql.Extension("LAG({expr}, {offset}, {default}{_}{modifier?})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true, CanBeNull = true, Configuration = ProviderName.DuckDB)]
 		public static IAnalyticFunctionWithoutWindow<T> Lag<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr, [SqlQueryDependent] Sql.Nulls nulls, [ExprParameter] int offset, [ExprParameter] T @default)
 			=> throw new ServerSideOnlyException(nameof(Lag));
@@ -649,11 +652,13 @@ namespace LinqToDB
 		[Sql.Extension("LAST_VALUE({expr}){_}{modifier?}", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, Configuration = PN.SqlServer2022, ServerSideOnly = true, CanBeNull = true)]
 		[Sql.Extension("LAST_VALUE({expr}){_}{modifier?}", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, Configuration = PN.SqlServer2025, ServerSideOnly = true, CanBeNull = true)]
 		[Sql.Extension("LAST_VALUE({expr}){_}{modifier?}", TokenName = FunctionToken, BuilderType = typeof(ForceApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, Configuration = PN.ClickHouse, ServerSideOnly = true, CanBeNull = true)]
+		[Sql.Extension("LAST_VALUE({expr}){_}{modifier?}", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, Configuration = PN.PostgreSQL19, ServerSideOnly = true, CanBeNull = true)]
 		[Sql.Extension("LAST_VALUE({expr}{_}{modifier?})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true, CanBeNull = true)]
 		public static IAggregateFunctionSelfContained<T> LastValue<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr, [SqlQueryDependent] Sql.Nulls nulls)
 			=> throw new ServerSideOnlyException(nameof(LastValue));
 
-		[Sql.Extension("LEAD({expr}{_}{modifier?})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true, CanBeNull = true)]
+		[Sql.Extension("LEAD({expr}){_}{modifier?}", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, Configuration = PN.PostgreSQL19, ServerSideOnly = true, CanBeNull = true)]
+		[Sql.Extension("LEAD({expr}{_}{modifier?})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true, CanBeNull = true)]
 		public static IAnalyticFunctionWithoutWindow<T> Lead<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr, [SqlQueryDependent] Sql.Nulls nulls)
 			=> throw new ServerSideOnlyException(nameof(Lead));
 
@@ -669,6 +674,7 @@ namespace LinqToDB
 		public static IAnalyticFunctionWithoutWindow<T> Lead<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr, [ExprParameter] int offset, [ExprParameter] T @default)
 			=> throw new ServerSideOnlyException(nameof(Lead));
 
+		[Sql.Extension("LEAD({expr}, {offset}, {default}){_}{modifier?}", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true, CanBeNull = true, Configuration = PN.PostgreSQL19)]
 		[Sql.Extension("LEAD({expr}{_}{modifier?}, {offset}, {default})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true, CanBeNull = true)]
 		public static IAnalyticFunctionWithoutWindow<T> Lead<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr, [SqlQueryDependent] Sql.Nulls nulls, [ExprParameter] int offset, [ExprParameter] T @default)
 			=> throw new ServerSideOnlyException(nameof(Lead));
