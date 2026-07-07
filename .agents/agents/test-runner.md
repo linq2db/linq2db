@@ -53,7 +53,7 @@ Container availability is **not** checked here (that's `/test-providers`' job): 
 | EFCore EF9 tests | `Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF9.csproj` | `NET90` (net9.0) |
 | EFCore EF10 tests | `Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF10.csproj` | `NET100` (net10.0) |
 
-A single invocation may span multiple targets; run them sequentially (most test DBs — SQL Server especially — don't survive parallel EF3/EF8/EF9/EF10 runs because they share database names like `TestData2016MS`).
+A single invocation may span multiple targets.
 
 ### Default to Playground + net10.0 for main-test runs
 
@@ -141,5 +141,4 @@ Rules:
 - Do not run tests in `Release` config unless the caller explicitly sets `config: "Release"`.
 - Do not prompt the user. Unclear input or a provider mismatch is an error the caller resolves.
 - Do not skip log lines. If the log is very long, still read it fully — the first failure's setup lines are usually the root cause, not the final summary.
-- Do not run multiple targets in parallel. EF3/EF8/EF9/EF10 against SQL Server share database names; parallel runs corrupt state.
 - Never kill processes by broad pattern. If a run is blocked by a file lock (`CS2012`, `Access denied`, a DLL "used by another process"), do **not** run `pkill -f dotnet`, `Stop-Process -Name dotnet`, or `taskkill /IM dotnet.exe` — a machine-wide kill terminates the user's other builds / IDEs / agents and is never authorized. Either abort with a `blocked` status carrying the lock detail, or clear it narrowly: `dotnet build-server shutdown` (VBCSCompiler / MSBuild server), or `Stop-Process -Id <pid>` for the **specific** PID named in the lock message (see [`../docs/windows-dev-gotchas.md`](../docs/windows-dev-gotchas.md) → *Iterative-build gotchas*).

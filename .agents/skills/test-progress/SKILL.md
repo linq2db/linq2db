@@ -27,7 +27,7 @@ The file lands at `.build/.agents/test-progress.<tfm>.<pid>.json` (one per TFM /
 
    Relay its one-line output (state, completed/total, pass/fail/skip, rate, elapsed, ETA, current test). If it reports no heartbeat file, say so — either no run has started, or the run was launched without `--test-progress` (unusual for a Claude-launched run).
 2. Add `-Raw` if the user wants the full JSON, or `-Path <file>` to target a specific run's heartbeat.
-3. For a parallel per-provider run, each process writes its own `.build/.agents/test-progress.<tfm>.<pid>.json`; point `-Path` at the one you want to watch.
+3. Each run writes a heartbeat named `.build/.agents/test-progress.<tfm>.<pid>.json`; when more than one run is active (e.g. different TFMs), point `-Path` at the one you want to watch.
 
 ## Don'ts
 
