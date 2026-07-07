@@ -8,7 +8,6 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.ExceptionServices;
 using System.Runtime.CompilerServices;
-using System.Runtime.Loader;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
@@ -20,7 +19,6 @@ using FirebirdSql.Data.Types;
 
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
-using LinqToDB.DataProvider.DB2;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider.MySql;
 using LinqToDB.Internal.DataProvider.PostgreSQL;
@@ -121,7 +119,7 @@ namespace LinqToDB.CommandLine
 
 			try
 			{
-				if (!LoadExternalProvider())
+				if (!ExternalProviderLoader.LoadExternalProvider(_environment, _settings.Provider, _settings.ProviderLocation))
 					return StatusCodes.EXPECTED_ERROR;
 
 				// Create data provider for the specified database provider and connection string.
@@ -288,7 +286,7 @@ namespace LinqToDB.CommandLine
 										// operation, so avoid reader value APIs for it.
 										//
 										case QueryActualFieldType.OracleBFile:
-											row[i] = "BFILE";
+											row[i] = "<BFILE>";
 											continue;
 
 										// MySQL wide DECIMAL values can overflow inside regular reader null checks.
@@ -365,161 +363,6 @@ namespace LinqToDB.CommandLine
 				await _environment.Error.WriteLineAsync($"Query execution failed: {ex.Message}").ConfigureAwait(false);
 				return StatusCodes.EXPECTED_ERROR;
 			}
-		}
-
-		bool LoadExternalProvider()
-		{
-			if (_settings.ProviderLocation == null)
-			{
-				if (IsDB2FamilyProvider(_settings.Provider))
-				{
-					_environment.Error.WriteLine(
-						"""
-						Cannot locate IBM.Data.Db2.dll provider assembly.
-						Due to huge size of it, we don't include Net.IBM.Data.Db2 provider into installation.
-						You need to install it manually and specify provider path using '--provider-location <path_to_assembly>' option.
-						Provider could be downloaded from:
-						- for Windows: https://www.nuget.org/packages/Net.IBM.Data.Db2
-						- for Linux: https://www.nuget.org/packages/Net.IBM.Data.Db2-lnx
-						- for macOS: https://www.nuget.org/packages/Net.IBM.Data.Db2-osx
-						""");
-					return false;
-				}
-
-				return true;
-			}
-
-			if (!_environment.FileExists(_settings.ProviderLocation))
-			{
-				_environment.Error.WriteLine($"Provider assembly '{_settings.ProviderLocation}' not found.");
-				return false;
-			}
-
-			var currentDirectory = Environment.CurrentDirectory;
-			var providerLocation = Path.GetFullPath(_settings.ProviderLocation);
-			var providerDirectory = Path.GetDirectoryName(providerLocation);
-
-			try
-			{
-				if (!string.IsNullOrEmpty(providerDirectory))
-					Environment.CurrentDirectory = providerDirectory;
-
-				var assembly = new ExternalProviderLoadContext(providerDirectory).LoadFromAssemblyPath(providerLocation);
-
-				if (IsDB2FamilyProvider(_settings.Provider))
-				{
-					DB2Tools.AutoDetectProvider = true;
-
-					var factory = FindProviderFactory(assembly, "DB2Factory");
-
-					if (factory == null)
-					{
-						_environment.Error.WriteLine($"Provider assembly '{_settings.ProviderLocation}' doesn't contain DB2Factory type.");
-						return false;
-					}
-
-					DbProviderFactories.RegisterFactory("IBM.Data.DB2", factory);
-				}
-			}
-			finally
-			{
-				Environment.CurrentDirectory = currentDirectory;
-			}
-
-			return true;
-		}
-
-		sealed class ExternalProviderLoadContext(string? providerDirectory) : AssemblyLoadContext(isCollectible: false)
-		{
-			protected override Assembly? Load(AssemblyName assemblyName)
-			{
-				if (!string.IsNullOrEmpty(providerDirectory))
-				{
-					var assemblyPath = Path.Combine(providerDirectory, assemblyName.Name + ".dll");
-
-					if (IsMatchingAssembly(assemblyPath, assemblyName))
-						return LoadFromAssemblyPath(assemblyPath);
-				}
-
-				var nugetAssemblyPath = FindNuGetAssemblyPath(assemblyName);
-
-				return nugetAssemblyPath != null ? LoadFromAssemblyPath(nugetAssemblyPath) : null;
-			}
-
-			static string? FindNuGetAssemblyPath(AssemblyName assemblyName)
-			{
-				if (assemblyName.Name == null)
-					return null;
-
-				var nugetPackages = Environment.GetEnvironmentVariable("NUGET_PACKAGES");
-
-				if (string.IsNullOrEmpty(nugetPackages))
-					nugetPackages = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".nuget", "packages");
-
-				var packageDirectory = Path.Combine(nugetPackages, assemblyName.Name.ToLowerInvariant());
-
-				if (!Directory.Exists(packageDirectory))
-					return null;
-
-				var versionDirectories = Directory.GetDirectories(packageDirectory);
-
-				Array.Sort(versionDirectories, static (left, right) => string.Compare(Path.GetFileName(right), Path.GetFileName(left), StringComparison.OrdinalIgnoreCase));
-
-				foreach (var versionDirectory in versionDirectories)
-				{
-					foreach (var targetFramework in GetCompatibleTargetFrameworks())
-					{
-						var assemblyPath = Path.Combine(versionDirectory, "lib", targetFramework, assemblyName.Name + ".dll");
-
-						if (IsMatchingAssembly(assemblyPath, assemblyName))
-							return assemblyPath;
-					}
-				}
-
-				return null;
-			}
-
-			static bool IsMatchingAssembly(string assemblyPath, AssemblyName requestedAssemblyName)
-			{
-				if (!File.Exists(assemblyPath))
-					return false;
-
-				var candidateAssemblyName = AssemblyName.GetAssemblyName(assemblyPath);
-
-				return AssemblyName.ReferenceMatchesDefinition(requestedAssemblyName, candidateAssemblyName);
-			}
-
-			static IEnumerable<string> GetCompatibleTargetFrameworks()
-			{
-				for (var version = Environment.Version.Major; version >= 5; version--)
-					yield return string.Create(CultureInfo.InvariantCulture, $"net{version}.0");
-
-				yield return "netstandard2.1";
-				yield return "netstandard2.0";
-			}
-		}
-
-		static Type? FindProviderFactory(Assembly assembly, string factoryTypeName)
-		{
-			foreach (var type in assembly.GetTypes())
-			{
-				if (string.Equals(type.Name, factoryTypeName, StringComparison.Ordinal)
-					&& typeof(DbProviderFactory).IsAssignableFrom(type))
-				{
-					return type;
-				}
-			}
-
-			return null;
-		}
-
-		static bool IsDB2FamilyProvider(string provider)
-		{
-			return string.Equals(provider, ProviderName.DB2,     StringComparison.OrdinalIgnoreCase)
-				|| string.Equals(provider, ProviderName.DB2LUW,  StringComparison.OrdinalIgnoreCase)
-				|| string.Equals(provider, ProviderName.DB2zOS,  StringComparison.OrdinalIgnoreCase)
-				|| string.Equals(provider, ProviderName.Informix,    StringComparison.OrdinalIgnoreCase)
-				|| string.Equals(provider, ProviderName.InformixDB2, StringComparison.OrdinalIgnoreCase);
 		}
 
 		static string? GetLockTimeoutCommand(IDataProvider dataProvider, int? timeout)
