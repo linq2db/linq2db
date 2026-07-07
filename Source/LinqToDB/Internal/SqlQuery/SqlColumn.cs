@@ -76,6 +76,13 @@ namespace LinqToDB.Internal.SqlQuery
 			return current;
 		}
 
+		/// <summary>
+		/// The raw / un-finalized column alias - the explicitly set <see cref="RawAlias"/>, or one
+		/// derived from <see cref="Expression"/>. For non-render use (optimizers, expression builders,
+		/// diagnostics). In a SQL builder, read the finalized alias via
+		/// <c>AliasesContext.GetColumnAlias(this)</c> instead: finalized names live in the context, not
+		/// on the node (enforced by the <c>LINQ2DB0001</c> analyzer).
+		/// </summary>
 		public string? Alias
 		{
 			get => RawAlias ?? GetAlias(Expression);

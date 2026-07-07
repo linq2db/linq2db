@@ -1,0 +1,131 @@
+{
+  "schema": 1,
+  "areas": {
+    "TESTS-LINQ": {
+      "deferred_at": "2026-07-06",
+      "deferred_at_sha": "",
+      "files": [
+        {
+          "path": "Tests/Linq/Linq/WindowFunctionsTests.Count.cs",
+          "reason": "new this delta; same Sql.Window.<Fn> + [ThrowsForProvider(ErrorHelper.Error_WindowFunction_*)] pattern as 4 sampled siblings (Combinations/Corr/HypotheticalSet/RegrSlope)"
+        },
+        {
+          "path": "Tests/Linq/Linq/WindowFunctionsTests.CovarPop.cs",
+          "reason": "new this delta; same formulaic pattern as sampled siblings"
+        },
+        {
+          "path": "Tests/Linq/Linq/WindowFunctionsTests.CovarSamp.cs",
+          "reason": "new this delta; same formulaic pattern as sampled siblings"
+        },
+        {
+          "path": "Tests/Linq/Linq/WindowFunctionsTests.Equality.cs",
+          "reason": "new this delta; same formulaic pattern as sampled siblings"
+        },
+        {
+          "path": "Tests/Linq/Linq/WindowFunctionsTests.Filter.cs",
+          "reason": "new this delta; same formulaic pattern as sampled siblings"
+        },
+        {
+          "path": "Tests/Linq/Linq/WindowFunctionsTests.FirstValue.cs",
+          "reason": "new this delta; same formulaic pattern as sampled siblings"
+        },
+        {
+          "path": "Tests/Linq/Linq/WindowFunctionsTests.FrameExclusion.cs",
+          "reason": "new this delta; same formulaic pattern as sampled siblings"
+        },
+        {
+          "path": "Tests/Linq/Linq/WindowFunctionsTests.Keep.cs",
+          "reason": "new this delta; same formulaic pattern as sampled siblings"
+        },
+        {
+          "path": "Tests/Linq/Linq/WindowFunctionsTests.Lag.cs",
+          "reason": "new this delta; same formulaic pattern as sampled siblings"
+        },
+        {
+          "path": "Tests/Linq/Linq/WindowFunctionsTests.LastValue.cs",
+          "reason": "new this delta; same formulaic pattern as sampled siblings"
+        },
+        {
+          "path": "Tests/Linq/Linq/WindowFunctionsTests.Lead.cs",
+          "reason": "new this delta; same formulaic pattern as sampled siblings"
+        },
+        {
+          "path": "Tests/Linq/Linq/WindowFunctionsTests.Median.cs",
+          "reason": "new this delta; same formulaic pattern as sampled siblings"
+        },
+        {
+          "path": "Tests/Linq/Linq/WindowFunctionsTests.NthValue.cs",
+          "reason": "new this delta; same formulaic pattern as sampled siblings"
+        },
+        {
+          "path": "Tests/Linq/Linq/WindowFunctionsTests.PercentileDisc.cs",
+          "reason": "new this delta; same formulaic pattern as sampled siblings"
+        },
+        {
+          "path": "Tests/Linq/Linq/WindowFunctionsTests.RatioToReport.cs",
+          "reason": "new this delta; same formulaic pattern as sampled siblings"
+        },
+        {
+          "path": "Tests/Linq/Linq/WindowFunctionsTests.RegrAvgX.cs",
+          "reason": "new this delta; same formulaic pattern as sampled siblings"
+        },
+        {
+          "path": "Tests/Linq/Linq/WindowFunctionsTests.RegrAvgY.cs",
+          "reason": "new this delta; same formulaic pattern as sampled siblings"
+        },
+        {
+          "path": "Tests/Linq/Linq/WindowFunctionsTests.RegrCount.cs",
+          "reason": "new this delta; same formulaic pattern as sampled siblings"
+        },
+        {
+          "path": "Tests/Linq/Linq/WindowFunctionsTests.RegrIntercept.cs",
+          "reason": "new this delta; same formulaic pattern as sampled siblings"
+        },
+        {
+          "path": "Tests/Linq/Linq/WindowFunctionsTests.RegrR2.cs",
+          "reason": "new this delta; same formulaic pattern as sampled siblings"
+        },
+        {
+          "path": "Tests/Linq/Linq/WindowFunctionsTests.RegrSXX.cs",
+          "reason": "new this delta; same formulaic pattern as sampled siblings"
+        },
+        {
+          "path": "Tests/Linq/Linq/WindowFunctionsTests.RegrSXY.cs",
+          "reason": "new this delta; same formulaic pattern as sampled siblings"
+        },
+        {
+          "path": "Tests/Linq/Linq/WindowFunctionsTests.RegrSYY.cs",
+          "reason": "new this delta; same formulaic pattern as sampled siblings"
+        },
+        {
+          "path": "Tests/Linq/Linq/WindowFunctionsTests.StdDev.cs",
+          "reason": "new this delta; same formulaic pattern as sampled siblings"
+        },
+        {
+          "path": "Tests/Linq/Linq/WindowFunctionsTests.StdDevPop.cs",
+          "reason": "new this delta; same formulaic pattern as sampled siblings"
+        },
+        {
+          "path": "Tests/Linq/Linq/WindowFunctionsTests.StdDevSamp.cs",
+          "reason": "new this delta; same formulaic pattern as sampled siblings"
+        },
+        {
+          "path": "Tests/Linq/Linq/WindowFunctionsTests.Variance.cs",
+          "reason": "new this delta; same formulaic pattern as sampled siblings"
+        },
+        {
+          "path": "Tests/Linq/Linq/WindowFunctionsTests.VarPop.cs",
+          "reason": "new this delta; same formulaic pattern as sampled siblings"
+        },
+        {
+          "path": "Tests/Linq/Linq/WindowFunctionsTests.VarSamp.cs",
+          "reason": "new this delta; same formulaic pattern as sampled siblings"
+        },
+        {
+          "path": "Tests/Linq/Update/UpsertTests.ApiParametersValidation.cs",
+          "reason": "new this delta; not individually read -- same ApiParametersValidation shape as 3 sampled Upsert siblings (Single/Enumerable/Queryable) and EntityDmlApiParametersValidationTests.cs"
+        }
+      ]
+    }
+  }
+}
