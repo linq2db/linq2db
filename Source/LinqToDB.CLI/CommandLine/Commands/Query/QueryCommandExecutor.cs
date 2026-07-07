@@ -14,14 +14,14 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
+using DuckDB.NET.Native;
+
 using FirebirdSql.Data.Types;
 
-using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.DB2;
 using LinqToDB.Internal.Common;
-using LinqToDB.Internal.DataProvider.Firebird;
 using LinqToDB.Internal.DataProvider.MySql;
 using LinqToDB.Internal.DataProvider.PostgreSQL;
 using LinqToDB.Internal.DataProvider.SQLite;
@@ -29,6 +29,8 @@ using LinqToDB.Internal.DataProvider.SqlServer;
 
 using Microsoft.Data.SqlTypes;
 using Microsoft.SqlServer.Types;
+
+using NpgsqlTypes;
 
 using Oracle.ManagedDataAccess.Types;
 
@@ -84,6 +86,7 @@ namespace LinqToDB.CommandLine
 			FirebirdDecFloat,
 			FirebirdZonedDateTime,
 			FirebirdZonedTime,
+			NpgsqlRange,
 		}
 
 		readonly ICliEnvironment      _environment = environment;
@@ -370,13 +373,16 @@ namespace LinqToDB.CommandLine
 			{
 				if (IsDB2FamilyProvider(_settings.Provider))
 				{
-					_environment.Error.WriteLine(@"Cannot locate IBM.Data.Db2.dll provider assembly.
-Due to huge size of it, we don't include Net.IBM.Data.Db2 provider into installation.
-You need to install it manually and specify provider path using '--provider-location <path_to_assembly>' option.
-Provider could be downloaded from:
-- for Windows: https://www.nuget.org/packages/Net.IBM.Data.Db2
-- for Linux: https://www.nuget.org/packages/Net.IBM.Data.Db2-lnx
-- for macOS: https://www.nuget.org/packages/Net.IBM.Data.Db2-osx");
+					_environment.Error.WriteLine(
+						"""
+						Cannot locate IBM.Data.Db2.dll provider assembly.
+						Due to huge size of it, we don't include Net.IBM.Data.Db2 provider into installation.
+						You need to install it manually and specify provider path using '--provider-location <path_to_assembly>' option.
+						Provider could be downloaded from:
+						- for Windows: https://www.nuget.org/packages/Net.IBM.Data.Db2
+						- for Linux: https://www.nuget.org/packages/Net.IBM.Data.Db2-lnx
+						- for macOS: https://www.nuget.org/packages/Net.IBM.Data.Db2-osx
+						""");
 					return false;
 				}
 
@@ -573,16 +579,16 @@ Provider could be downloaded from:
 				if (i > 0)
 					await output.WriteAsync(",".AsMemory(), cancellationToken).ConfigureAwait(false);
 
-				await output.WriteAsync("{\"ordinal\":".AsMemory(), cancellationToken).ConfigureAwait(false);
+				await output.WriteAsync("{\"ordinal\":".AsMemory(),   cancellationToken).ConfigureAwait(false);
 				await output.WriteAsync(columns[i].Ordinal.ToString(CultureInfo.InvariantCulture).AsMemory(), cancellationToken).ConfigureAwait(false);
-				await output.WriteAsync(",\"name\":".AsMemory(), cancellationToken).ConfigureAwait(false);
-				await WriteJsonString(output, columns[i].Name, cancellationToken).ConfigureAwait(false);
+				await output.WriteAsync(",\"name\":".AsMemory(),      cancellationToken).ConfigureAwait(false);
+				await WriteJsonString  (output, columns[i].Name,      cancellationToken).ConfigureAwait(false);
 				await output.WriteAsync(",\"fieldType\":".AsMemory(), cancellationToken).ConfigureAwait(false);
-				await WriteJsonString(output, columns[i].FieldType, cancellationToken).ConfigureAwait(false);
+				await WriteJsonString  (output, columns[i].FieldType, cancellationToken).ConfigureAwait(false);
 				await output.WriteAsync(",\"providerSpecificFieldType\":".AsMemory(), cancellationToken).ConfigureAwait(false);
-				await WriteJsonString(output, columns[i].ProviderSpecificFieldType, cancellationToken).ConfigureAwait(false);
+				await WriteJsonString  (output, columns[i].ProviderSpecificFieldType, cancellationToken).ConfigureAwait(false);
 				await output.WriteAsync(",\"dataTypeName\":".AsMemory(), cancellationToken).ConfigureAwait(false);
-				await WriteJsonString(output, columns[i].DataTypeName, cancellationToken).ConfigureAwait(false);
+				await WriteJsonString  (output, columns[i].DataTypeName, cancellationToken).ConfigureAwait(false);
 				await output.WriteAsync("}".AsMemory(), cancellationToken).ConfigureAwait(false);
 			}
 
@@ -688,6 +694,7 @@ Provider could be downloaded from:
 				_ when providerSpecificType == typeof(FbDecFloat)         => QueryActualFieldType.FirebirdDecFloat,
 				_ when providerSpecificType == typeof(FbZonedDateTime)    => QueryActualFieldType.FirebirdZonedDateTime,
 				_ when providerSpecificType == typeof(FbZonedTime)        => QueryActualFieldType.FirebirdZonedTime,
+				_ when providerSpecificType.IsGenericType && providerSpecificType.GetGenericTypeDefinition() == typeof(NpgsqlRange<>) => QueryActualFieldType.NpgsqlRange,
 				_ when IsProviderSpecificType(providerSpecificType, "IBM.Data.DB2Types.DB2Binary")    => QueryActualFieldType.DB2Binary,
 				_ when IsProviderSpecificType(providerSpecificType, "IBM.Data.DB2Types.DB2Blob")      => QueryActualFieldType.DB2Blob,
 				_ when IsProviderSpecificType(providerSpecificType, "IBM.Data.DB2Types.DB2Clob")      => QueryActualFieldType.DB2Clob,
@@ -712,11 +719,11 @@ Provider could be downloaded from:
 		{
 			object value;
 
-			if (actualFieldType == QueryActualFieldType.OracleBFile)
-				return "<BFILE>";
-
-			if (actualFieldType == QueryActualFieldType.MySqlDecimal)
-				return ReadMySqlDecimalAsString(reader, ordinal);
+			switch (actualFieldType)
+			{
+				case QueryActualFieldType.OracleBFile : return "<BFILE>";
+				case QueryActualFieldType.MySqlDecimal: return ReadMySqlDecimalAsString(reader, ordinal);
+			}
 
 			try
 			{
@@ -776,6 +783,7 @@ Provider could be downloaded from:
 				QueryActualFieldType.FirebirdDecFloat   => FormatFirebirdDecFloat((FbDecFloat)value),
 				QueryActualFieldType.FirebirdZonedDateTime => FormatFirebirdZonedDateTime((FbZonedDateTime)value),
 				QueryActualFieldType.FirebirdZonedTime  => FormatFirebirdZonedTime((FbZonedTime)value),
+				QueryActualFieldType.NpgsqlRange        => FormatNpgsqlRange(value),
 				_                                       => ConvertValueToString(value),
 			};
 		}
@@ -787,6 +795,10 @@ Provider could be downloaded from:
 				null                  => null,
 				string stringValue    => stringValue,
 				byte[] bytes          => ConvertBytesToString(bytes),
+				Stream stream        => ConvertStreamToString(stream),
+				DuckDBDateOnly date   => FormatDuckDBDateOnly(date),
+				DuckDBTimeOnly time   => FormatDuckDBTimeOnly(time),
+				DuckDBTimestamp time  => FormatDuckDBTimestamp(time),
 				DateOnly date         => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
 				TimeOnly time         => time.ToString("HH:mm:ss.fffffff", CultureInfo.InvariantCulture),
 				ITuple tuple         => ConvertTupleToString(tuple),
@@ -798,6 +810,17 @@ Provider could be downloaded from:
 		static string ConvertBytesToString(byte[] bytes)
 		{
 			return "0x" + Convert.ToHexString(bytes);
+		}
+
+		static string ConvertStreamToString(Stream stream)
+		{
+			if (stream.CanSeek)
+				stream.Position = 0;
+
+			using var memory = new MemoryStream();
+
+			stream.CopyTo(memory);
+			return ConvertBytesToString(memory.ToArray());
 		}
 
 		static bool IsDateDataType(string dataTypeName)
@@ -906,6 +929,71 @@ Provider could be downloaded from:
 		static string FormatFirebirdTimeZone(string timeZone, TimeSpan? offset)
 		{
 			return offset?.ToString("c", CultureInfo.InvariantCulture) ?? timeZone;
+		}
+
+		static string FormatDuckDBDateOnly(DuckDBDateOnly value)
+		{
+			if (value.IsPositiveInfinity) return "infinity";
+			if (value.IsNegativeInfinity) return "-infinity";
+
+			return string.Create(CultureInfo.InvariantCulture, $"{value.Year:D4}-{value.Month:D2}-{value.Day:D2}");
+		}
+
+		static string FormatDuckDBTimeOnly(DuckDBTimeOnly value)
+		{
+			return string.Create(CultureInfo.InvariantCulture, $"{value.Hour:D2}:{value.Min:D2}:{value.Sec:D2}.{value.Microsecond:D6}0");
+		}
+
+		static string FormatDuckDBTimestamp(DuckDBTimestamp value)
+		{
+			if (value.IsPositiveInfinity) return "infinity";
+			if (value.IsNegativeInfinity) return "-infinity";
+
+			return FormatDuckDBDateOnly(value.Date) + "T" + FormatDuckDBTimeOnly(value.Time);
+		}
+
+		static string FormatNpgsqlRange(object value)
+		{
+			var type    = value.GetType();
+			var isEmpty = (bool)GetProviderSpecificPropertyValue(value, "IsEmpty");
+
+			if (isEmpty)
+				return "empty";
+
+			var lowerBoundInfinite    = (bool)GetProviderSpecificPropertyValue(value, "LowerBoundInfinite");
+			var upperBoundInfinite    = (bool)GetProviderSpecificPropertyValue(value, "UpperBoundInfinite");
+			var lowerBoundIsInclusive = (bool)GetProviderSpecificPropertyValue(value, "LowerBoundIsInclusive");
+			var upperBoundIsInclusive = (bool)GetProviderSpecificPropertyValue(value, "UpperBoundIsInclusive");
+			var lowerBound            = lowerBoundInfinite ? null : type.GetProperty("LowerBound", BindingFlags.Public | BindingFlags.Instance)!.GetValue(value);
+			var upperBound            = upperBoundInfinite ? null : type.GetProperty("UpperBound", BindingFlags.Public | BindingFlags.Instance)!.GetValue(value);
+			var output                = new StringBuilder();
+
+			output.Append(lowerBoundIsInclusive ? '[' : '(');
+
+			if (!lowerBoundInfinite)
+				output.Append(ConvertRangeBoundToString(lowerBound));
+
+			output.Append(',');
+
+			if (!upperBoundInfinite)
+				output.Append(ConvertRangeBoundToString(upperBound));
+
+			output.Append(upperBoundIsInclusive ? ']' : ')');
+			return output.ToString();
+		}
+
+		static string? ConvertRangeBoundToString(object? value)
+		{
+			return value switch
+			{
+				null                    => null,
+				DateOnly date           => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+				DateTime dateTime       => dateTime.ToString("O", CultureInfo.InvariantCulture),
+				DateTimeOffset dateTime => dateTime.ToString("O", CultureInfo.InvariantCulture),
+				TimeOnly time           => time.ToString("HH:mm:ss.fffffff", CultureInfo.InvariantCulture),
+				TimeSpan time           => time.ToString("c", CultureInfo.InvariantCulture),
+				_                       => Convert.ToString(value, CultureInfo.InvariantCulture),
+			};
 		}
 
 		static string ConvertByteArrayToString(byte[] bytes)

@@ -8,9 +8,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data.SqlTypes;
 using System.Globalization;
+using System.IO;
 using System.Runtime.CompilerServices;
 
 using ClickHouse.Driver.Numerics;
+using DuckDB.NET.Native;
 using FirebirdSql.Data.Types;
 using IBM.Data.DB2Types;
 using LinqToDB;
@@ -18,6 +20,8 @@ using LinqToDB.Data;
 
 using Microsoft.Data.SqlTypes;
 using Microsoft.SqlServer.Types;
+
+using NpgsqlTypes;
 
 using NUnit.Framework;
 using Oracle.ManagedDataAccess.Types;
@@ -165,6 +169,152 @@ namespace Tests.DataProvider
 				AssertReadMatrix(conn, "CAST('text' AS VARCHAR(10)) FROM systables WHERE tabid = 1"                         , typeof(string)  , typeof(string)  , "text");
 				AssertReadMatrix(conn, "DATE('2024-01-02') FROM systables WHERE tabid = 1"                                  , typeof(DateTime), typeof(DateTime), "2024-01-02");
 				AssertReadMatrix(conn, "DATETIME(2024-01-02 03:04:05.12345) YEAR TO FRACTION(5) FROM systables WHERE tabid = 1", typeof(DateTime), typeof(DateTime), "2024-01-02T03:04:05.1234500");
+			}
+		}
+
+		[Test]
+		public void PostgreSQLProviderSpecificReadMatrix([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using var conn = GetDataConnection(context);
+
+			using (Assert.EnterMultipleScope())
+			{
+				AssertReadMatrix(conn, "CAST(true AS boolean)"                                                        , typeof(bool)                  , typeof(bool)                  , "true");
+				AssertReadMatrix(conn, "CAST(123 AS integer)"                                                        , typeof(int)                   , typeof(int)                   , "123");
+				AssertReadMatrix(conn, "CAST(1234567890123 AS bigint)"                                               , typeof(long)                  , typeof(long)                  , "1234567890123");
+				AssertReadMatrix(conn, "CAST(123.45 AS numeric(10,2))"                                               , typeof(decimal)               , typeof(decimal)               , "123.45");
+				AssertReadMatrix(conn, "CAST(1.25 AS real)"                                                         , typeof(float)                 , typeof(float)                 , "1.25");
+				AssertReadMatrix(conn, "CAST(1.25 AS double precision)"                                             , typeof(double)                , typeof(double)                , "1.25");
+				AssertReadMatrix(conn, "CAST('text' AS varchar(10))"                                                , typeof(string)                , typeof(string)                , "text");
+				AssertReadMatrix(conn, "CAST('2024-01-02' AS date)"                                                 , typeof(DateOnly)              , typeof(DateOnly)              , "2024-01-02");
+				AssertReadMatrix(conn, "CAST('03:04:05.123456' AS time)"                                            , typeof(TimeOnly)              , typeof(TimeOnly)              , "03:04:05.1234560");
+				AssertReadMatrix(conn, "CAST('2024-01-02 03:04:05.123456' AS timestamp)"                           , typeof(DateTime)              , typeof(DateTime)              , "2024-01-02T03:04:05.1234560");
+				AssertReadMatrix(conn, "CAST('1 day 02:03:04.123456' AS interval)"                                  , typeof(TimeSpan)              , typeof(TimeSpan)              , "1.02:03:04.1234560");
+				AssertReadMatrix(conn, "CAST('\\x3039' AS bytea)"                                                   , typeof(byte[])                , typeof(byte[])                , "0x3039");
+				AssertReadMatrix(conn, "CAST('01234567-89ab-cdef-0123-456789abcdef' AS uuid)"                      , typeof(Guid)                  , typeof(Guid)                  , "01234567-89ab-cdef-0123-456789abcdef");
+				AssertReadMatrix(conn, "CAST('1.2.3.4' AS inet)"                                                    , typeof(System.Net.IPAddress)  , typeof(System.Net.IPAddress)  , "1.2.3.4");
+				AssertReadMatrix(conn, "point(1, 2)"                                                                , typeof(NpgsqlPoint)           , typeof(NpgsqlPoint)           , "(1,2)");
+				AssertReadMatrix(conn, "lseg(point(1,2), point(3,4))"                                               , typeof(NpgsqlLSeg)            , typeof(NpgsqlLSeg)            , "[(1,2),(3,4)]");
+				AssertReadMatrix(conn, "box(point(1,2), point(3,4))"                                                , typeof(NpgsqlBox)             , typeof(NpgsqlBox)             , "(3,4),(1,2)");
+				AssertReadMatrix(conn, "CAST('[(1,2),(3,4)]' AS path)"                                             , typeof(NpgsqlPath)            , typeof(NpgsqlPath)            , "[(1,2),(3,4)]");
+				AssertReadMatrix(conn, "CAST('((1,2),(3,4),(5,6))' AS polygon)"                                    , typeof(NpgsqlPolygon)         , typeof(NpgsqlPolygon)         , "[(1,2),(3,4),(5,6)]");
+				AssertReadMatrix(conn, "circle(point(1,2), 3)"                                                     , typeof(NpgsqlCircle)          , typeof(NpgsqlCircle)          , "<(1,2),3>");
+				AssertReadMatrix(conn, "line(point(1,2), point(3,4))"                                              , typeof(NpgsqlLine)            , typeof(NpgsqlLine)            , "{1,-1,1}");
+				AssertReadMatrix(conn, "int4range(1, 5, '[)')"                                                     , typeof(NpgsqlRange<int>)      , typeof(NpgsqlRange<int>)      , "[1,5)");
+				AssertReadMatrix(conn, "numrange(1.1, 5.5, '[)')"                                                  , typeof(NpgsqlRange<decimal>)  , typeof(NpgsqlRange<decimal>)  , "[1.1,5.5)");
+				AssertReadMatrix(conn, "daterange(date '2024-01-01', date '2024-02-01', '[)')"                    , typeof(NpgsqlRange<DateOnly>), typeof(NpgsqlRange<DateOnly>), "[2024-01-01,2024-02-01)", providerSpecificOnly: true);
+				AssertReadMatrix(conn, "ARRAY[1,2,3]::integer[]"                                                  , typeof(Array)                 , typeof(Array)                 , "[1,2,3]");
+			}
+		}
+
+		[Test]
+		public void SapHanaProviderSpecificReadMatrix([IncludeDataSources(TestProvName.AllSapHana)] string context)
+		{
+			using var conn = GetDataConnection(context);
+
+			using (Assert.EnterMultipleScope())
+			{
+				AssertReadMatrix(conn, "CAST(123 AS INTEGER) FROM dummy"                                , typeof(int)     , typeof(int)     , "123");
+				AssertReadMatrix(conn, "CAST(1234567890123 AS BIGINT) FROM dummy"                      , typeof(long)    , typeof(long)    , "1234567890123");
+				AssertReadMatrix(conn, "CAST(123.45 AS DECIMAL(10,2)) FROM dummy"                      , typeof(decimal) , typeof(decimal) , "123.45");
+				AssertReadMatrix(conn, "CAST(1.25 AS REAL) FROM dummy"                                 , typeof(float)   , typeof(float)   , "1.25");
+				AssertReadMatrix(conn, "CAST(1.25 AS DOUBLE) FROM dummy"                               , typeof(double)  , typeof(double)  , "1.25");
+				AssertReadMatrix(conn, "CAST('text' AS VARCHAR(10)) FROM dummy"                        , typeof(string)  , typeof(string)  , "text");
+				AssertReadMatrix(conn, "CAST('2024-01-02' AS DATE) FROM dummy"                         , typeof(DateTime), typeof(DateTime), "2024-01-02");
+				AssertReadMatrix(conn, "CAST('03:04:05' AS TIME) FROM dummy"                           , typeof(TimeSpan), typeof(TimeSpan), "03:04:05");
+				AssertReadMatrix(conn, "CAST('2024-01-02 03:04:05.123456' AS TIMESTAMP) FROM dummy"    , typeof(DateTime), typeof(DateTime), "2024-01-02T03:04:05.1234560");
+				AssertReadMatrix(conn, "CAST(x'3039' AS BLOB) FROM dummy"                              , typeof(byte[])  , typeof(byte[])  , "0x3039");
+			}
+		}
+
+		[Test]
+		public void SybaseProviderSpecificReadMatrix([IncludeDataSources(TestProvName.AllSybase)] string context)
+		{
+			using var conn = GetDataConnection(context);
+
+			using (Assert.EnterMultipleScope())
+			{
+				AssertReadMatrix(conn, "CAST(123 AS INT)"                         , typeof(int)     , typeof(int)     , "123");
+				AssertReadMatrix(conn, "CAST(1234567890123 AS BIGINT)"            , typeof(long)    , typeof(long)    , "1234567890123");
+				AssertReadMatrix(conn, "CAST(123.45 AS DECIMAL(10,2))"            , typeof(decimal) , typeof(decimal) , "123.45");
+				AssertReadMatrix(conn, "CAST(1.25 AS REAL)"                       , typeof(float)   , typeof(float)   , "1.25");
+				AssertReadMatrix(conn, "CAST(1.25 AS FLOAT)"                      , typeof(double)  , typeof(double)  , "1.25");
+				AssertReadMatrix(conn, "CAST('text' AS VARCHAR(10))"              , typeof(string)  , typeof(string)  , "text");
+				AssertReadMatrix(conn, "CAST('2024-01-02' AS DATE)"               , typeof(DateTime), typeof(DateTime), "2024-01-02");
+				AssertReadMatrix(conn, "CAST('03:04:05' AS TIME)"                 , typeof(DateTime), typeof(DateTime), "1900-01-01T03:04:05.0000000");
+				AssertReadMatrix(conn, "CAST('2024-01-02 03:04:05.123' AS DATETIME)", typeof(DateTime), typeof(DateTime), "2024-01-02T03:04:05.1230000");
+				AssertReadMatrix(conn, "CAST(0x3039 AS BINARY(2))"                , typeof(byte[])  , typeof(byte[])  , "0x3039");
+			}
+		}
+
+		[Test]
+		public void YdbProviderSpecificReadMatrix([IncludeDataSources(TestProvName.AllYdb)] string context)
+		{
+			using var conn = GetDataConnection(context);
+
+			using (Assert.EnterMultipleScope())
+			{
+				AssertReadMatrix(conn, "CAST(123 AS Int32)"                                      , typeof(int)     , typeof(int)     , "123");
+				AssertReadMatrix(conn, "CAST(1234567890123 AS Int64)"                            , typeof(long)    , typeof(long)    , "1234567890123");
+				AssertReadMatrix(conn, "CAST(1.25 AS Double)"                                    , typeof(double)  , typeof(double)  , "1.25");
+				AssertReadMatrix(conn, "CAST('text' AS Utf8)"                                    , typeof(string)  , typeof(string)  , "text");
+				AssertReadMatrix(conn, "CAST(Date('2024-01-02') AS Date)"                        , typeof(DateTime), typeof(DateTime), "2024-01-02");
+				AssertReadMatrix(conn, "CAST(Datetime('2024-01-02T03:04:05Z') AS Datetime)"      , typeof(DateTime), typeof(DateTime), "2024-01-02T03:04:05.0000000");
+				AssertReadMatrix(conn, "CAST(Timestamp('2024-01-02T03:04:05.123456Z') AS Timestamp)", typeof(DateTime), typeof(DateTime), "2024-01-02T03:04:05.1234560");
+			}
+		}
+
+		[Test]
+		public void DuckDBProviderSpecificReadMatrix([IncludeDataSources(TestProvName.AllDuckDB)] string context)
+		{
+			using var conn = GetDataConnection(context);
+
+			using (Assert.EnterMultipleScope())
+			{
+				AssertReadMatrix(conn, "CAST(123 AS INTEGER)"                         , typeof(int)                  , typeof(int)     , "123");
+				AssertReadMatrix(conn, "CAST(1234567890123 AS BIGINT)"                , typeof(long)                 , typeof(long)    , "1234567890123");
+				AssertReadMatrix(conn, "CAST(123.45 AS DECIMAL(10,2))"                , typeof(decimal)              , typeof(decimal) , "123.45");
+				AssertReadMatrix(conn, "CAST(1.25 AS REAL)"                           , typeof(float)                , typeof(float)   , "1.25");
+				AssertReadMatrix(conn, "CAST(1.25 AS DOUBLE)"                         , typeof(double)               , typeof(double)  , "1.25");
+				AssertReadMatrix(conn, "CAST('text' AS VARCHAR(10))"                  , typeof(string)               , typeof(string)  , "text");
+				AssertReadMatrix(conn, "CAST('2024-01-02' AS DATE)"                   , typeof(DuckDBDateOnly)       , typeof(DateOnly), "2024-01-02");
+				AssertReadMatrix(conn, "CAST('03:04:05' AS TIME)"                     , typeof(DuckDBTimeOnly)       , typeof(TimeOnly), "03:04:05.0000000");
+				AssertReadMatrix(conn, "CAST('2024-01-02 03:04:05.123456' AS TIMESTAMP)", typeof(DuckDBTimestamp)    , typeof(DateTime), "2024-01-02T03:04:05.1234560");
+				AssertReadMatrix(conn, "from_hex('3039')"                             , typeof(UnmanagedMemoryStream), typeof(UnmanagedMemoryStream), "0x3039");
+			}
+		}
+
+		[Test]
+		public void SQLiteProviderSpecificReadMatrix([IncludeDataSources(ProviderName.SQLiteMS)] string context)
+		{
+			using var conn = GetDataConnection(context);
+
+			using (Assert.EnterMultipleScope())
+			{
+				AssertReadMatrix(conn, "CAST(123 AS INTEGER)"                  , typeof(long)  , typeof(long)  , "123");
+				AssertReadMatrix(conn, "CAST(1234567890123 AS INTEGER)"        , typeof(long)  , typeof(long)  , "1234567890123");
+				AssertReadMatrix(conn, "CAST(1.25 AS REAL)"                    , typeof(double), typeof(double), "1.25");
+				AssertReadMatrix(conn, "CAST('text' AS TEXT)"                  , typeof(string), typeof(string), "text");
+				AssertReadMatrix(conn, "date('2024-01-02')"                    , typeof(string), typeof(string), "2024-01-02");
+				AssertReadMatrix(conn, "time('03:04:05')"                      , typeof(string), typeof(string), "03:04:05");
+				AssertReadMatrix(conn, "datetime('2024-01-02 03:04:05')"       , typeof(string), typeof(string), "2024-01-02 03:04:05");
+				AssertReadMatrix(conn, "x'3039'"                               , typeof(byte[]), typeof(byte[]), "0x3039");
+			}
+		}
+
+		[Test]
+		public void AccessOdbcProviderSpecificReadMatrix([IncludeDataSources(TestProvName.AllAccessOdbc)] string context)
+		{
+			using var conn = GetDataConnection(context);
+
+			using (Assert.EnterMultipleScope())
+			{
+				AssertReadMatrix(conn, "CBOOL(1)"           , typeof(short)   , typeof(short)   , "-1");
+				AssertReadMatrix(conn, "CINT(123)"          , typeof(short)   , typeof(short)   , "123");
+				AssertReadMatrix(conn, "CLNG(1234567)"      , typeof(int)     , typeof(int)     , "1234567");
+				AssertReadMatrix(conn, "CDBL(1.25)"         , typeof(double)  , typeof(double)  , "1.25");
+				AssertReadMatrix(conn, "CSTR('text')"       , typeof(string)  , typeof(string)  , "text");
+				AssertReadMatrix(conn, "CDATE('2024-01-02')", typeof(DateTime), typeof(DateTime), "2024-01-02T00:00:00.0000000");
 			}
 		}
 
@@ -433,15 +583,22 @@ namespace Tests.DataProvider
 				SqlGuid sqlGuid               => sqlGuid.Value.ToString("D"),
 				Guid guid                     => guid.ToString("D"),
 				SqlBinary sqlBinary           => ConvertBytesToString(sqlBinary.Value),
+				DuckDBDateOnly date           => FormatDuckDBDateOnly(date),
+				DuckDBTimeOnly time           => FormatDuckDBTimeOnly(time),
+				DuckDBTimestamp timestamp     => FormatDuckDBTimestamp(timestamp),
 				OracleBinary oracleBinary     => ConvertBytesToString(oracleBinary.Value),
 				OracleBlob oracleBlob         => ConvertBytesToString(oracleBlob.Value),
 				OracleClob oracleClob         => oracleClob.Value,
 				OracleXmlType oracleXmlType   => oracleXmlType.Value,
 				OracleBFile                   => "<BFILE>",
+				Stream stream                 => ConvertStreamToString(stream),
 				byte[] bytes                  => dataTypeName.StartsWith("Array(", StringComparison.OrdinalIgnoreCase) ? ConvertByteArrayToString(bytes) : ConvertBytesToString(bytes),
 				SqlXml sqlXml                 => sqlXml.Value,
 				SqlVector<float> vector       => ConvertVectorToString(vector.Memory.ToArray()),
 				SqlVector<Half> vector        => ConvertVectorToString(vector.Memory.ToArray()),
+				NpgsqlRange<int> range        => FormatNpgsqlRange(range),
+				NpgsqlRange<decimal> range    => FormatNpgsqlRange(range),
+				NpgsqlRange<DateOnly> range   => FormatNpgsqlRange(range),
 				ITuple tuple                  => ConvertTupleToString(tuple),
 				IEnumerable sequence          => ConvertSequenceToString(sequence),
 				_                             => Convert.ToString(value, CultureInfo.InvariantCulture),
@@ -486,9 +643,80 @@ namespace Tests.DataProvider
 			return offset?.ToString("c", CultureInfo.InvariantCulture) ?? timeZone;
 		}
 
+		static string FormatDuckDBDateOnly(DuckDBDateOnly value)
+		{
+			if (value.IsPositiveInfinity)
+				return "infinity";
+			if (value.IsNegativeInfinity)
+				return "-infinity";
+
+			return string.Create(CultureInfo.InvariantCulture, $"{value.Year:D4}-{value.Month:D2}-{value.Day:D2}");
+		}
+
+		static string FormatDuckDBTimeOnly(DuckDBTimeOnly value)
+		{
+			return string.Create(CultureInfo.InvariantCulture, $"{value.Hour:D2}:{value.Min:D2}:{value.Sec:D2}.{value.Microsecond:D6}0");
+		}
+
+		static string FormatDuckDBTimestamp(DuckDBTimestamp value)
+		{
+			if (value.IsPositiveInfinity)
+				return "infinity";
+			if (value.IsNegativeInfinity)
+				return "-infinity";
+
+			return FormatDuckDBDateOnly(value.Date) + "T" + FormatDuckDBTimeOnly(value.Time);
+		}
+
+		static string FormatNpgsqlRange<T>(NpgsqlRange<T> value)
+		{
+			if (value.IsEmpty)
+				return "empty";
+
+			var output = new System.Text.StringBuilder();
+
+			output.Append(value.LowerBoundIsInclusive ? '[' : '(');
+
+			if (!value.LowerBoundInfinite)
+				output.Append(ConvertRangeBoundToString(value.LowerBound));
+
+			output.Append(',');
+
+			if (!value.UpperBoundInfinite)
+				output.Append(ConvertRangeBoundToString(value.UpperBound));
+
+			output.Append(value.UpperBoundIsInclusive ? ']' : ')');
+			return output.ToString();
+		}
+
+		static string? ConvertRangeBoundToString(object? value)
+		{
+			return value switch
+			{
+				null                    => null,
+				DateOnly date           => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+				DateTime dateTime       => dateTime.ToString("O", CultureInfo.InvariantCulture),
+				DateTimeOffset dateTime => dateTime.ToString("O", CultureInfo.InvariantCulture),
+				TimeOnly time           => time.ToString("HH:mm:ss.fffffff", CultureInfo.InvariantCulture),
+				TimeSpan time           => time.ToString("c", CultureInfo.InvariantCulture),
+				_                       => Convert.ToString(value, CultureInfo.InvariantCulture),
+			};
+		}
+
 		static string ConvertBytesToString(byte[] bytes)
 		{
 			return "0x" + Convert.ToHexString(bytes);
+		}
+
+		static string ConvertStreamToString(Stream stream)
+		{
+			if (stream.CanSeek)
+				stream.Position = 0;
+
+			using var memory = new MemoryStream();
+
+			stream.CopyTo(memory);
+			return ConvertBytesToString(memory.ToArray());
 		}
 
 		static string ConvertByteArrayToString(byte[] bytes)
