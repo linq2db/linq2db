@@ -68,6 +68,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public MappingSchema MappingSchema => BuildContext?.MappingSchema ?? Builder.MappingSchema;
 		public DataOptions DataOptions => Builder.DataOptions;
+		public TranslationProviderFlags ProviderFlags => Builder.TranslationProviderFlags;
 
 		ContextRefExpression? FoundRoot { get; set; }
 
@@ -1410,7 +1411,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var table = SequenceHelper.GetTableOrCteContext(Builder, expr);
 			if (table != null)
 			{
-				var allPlaceholder = CreatePlaceholder(table.SqlTable.All, expr);
+				var allPlaceholder = CreatePlaceholder(table.NamedTable.All, expr);
 				translated = allPlaceholder;
 				return true;
 			}
@@ -1762,8 +1763,14 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var modifier = associationRoot.BuildContext.TranslationModifier;
 
+			// If the parent rows are already narrowed to the association's declaring (derived) type via
+			// OfType, the discriminator predicate is already applied — tell the association builder
+			// to skip adding a redundant one.
+			var parentExactType       = associationDescriptor.GetParentElementType();
+			var parentAlreadyFiltered = (table as TableBuilder.TableContext)?.FilteredByOfType?.Exists(t => parentExactType.IsAssignableFrom(t)) == true;
+
 			var association = AssociationHelper.BuildAssociationQuery(Builder, rootContext, memberInfo,
-				associationDescriptor, notNullCheck, !associationDescriptor.IsList, modifier, loadWith, ref isOptional);
+				associationDescriptor, notNullCheck, !associationDescriptor.IsList, modifier, loadWith, parentAlreadyFiltered, ref isOptional);
 
 			associationExpression = association;
 
@@ -2467,6 +2474,13 @@ namespace LinqToDB.Internal.Linq.Builder
 				};
 			}
 
+			if (node.MarkerType == MarkerType.ExplicitEagerLoad)
+			{
+				// Preserve the marker around the built eager-load (and visit the inner so the collection
+				// reaches HandleSubquery) — ImplicitEagerLoadGuardVisitor reads it during eager-load processing.
+				return node.Update(Visit(node.InnerExpression));
+			}
+
 			// MarkerType.AggregationFallback or MarkerType.None
 			return node;
 		}
@@ -2662,7 +2676,14 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			_disableSubqueries.Push(traversed);
 			_disableSubqueries.Push(node);
-			var ctx = GetSubQuery(node, onContext, out var isSequence, out var errorMessage);
+			IBuildContext? ctx;
+			bool           isSequence;
+			string?        errorMessage;
+			using (Builder.IsolateOrderBy())
+			{
+				ctx = GetSubQuery(node, onContext, out isSequence, out errorMessage);
+			}
+
 			_disableSubqueries.Pop();
 			_disableSubqueries.Pop();
 
@@ -4641,15 +4662,25 @@ namespace LinqToDB.Internal.Linq.Builder
 				case ExpressionType.Constant:
 				{
 					var origValue = ((ConstantExpression)value).Value;
+
+					// Comparing an enum to null is a null check, not a value comparison. Mapping null to the
+					// enum's underlying default (e.g. 0) would pollute the SQL and turn the check into a value
+					// filter that drops rows whose enum equals that default — see issue #5666. Emit IS [NOT] NULL.
+					if (origValue == null)
+					{
+						var operandSql = (Visit(operand) as SqlPlaceholderExpression)?.Sql;
+						if (operandSql == null)
+							return null;
+
+						return new SqlPredicate.IsNull(operandSql, op == SqlPredicate.Operator.NotEqual);
+					}
+
 					var mapValue  = origValue;
 
-					if (origValue != null)
+					foreach (var enumVal in MappingSchema.GetMapValues(type.UnwrapNullableType())!)
 					{
-						foreach (var enumVal in MappingSchema.GetMapValues(type.UnwrapNullableType())!)
-						{
-							if (origValue.Equals(enumVal.OrigValue) && enumVal.MapValues.Length > 0)
-								mapValue = enumVal.MapValues[0].Value;
-						}
+						if (origValue.Equals(enumVal.OrigValue) && enumVal.MapValues.Length > 0)
+							mapValue = enumVal.MapValues[0].Value;
 					}
 
 					SqlValue sqlvalue;
@@ -4746,6 +4777,16 @@ namespace LinqToDB.Internal.Linq.Builder
 					case QueryElementType.SqlField:
 					{
 						var fld = (SqlField)e;
+						context.DataType  = fld.Type.DataType;
+						context.DbType    = fld.Type.DbType;
+						context.Length    = fld.Type.Length;
+						context.Precision = fld.Type.Precision;
+						context.Scale     = fld.Type.Scale;
+						return true;
+					}
+					case QueryElementType.SqlCteTableField:
+					{
+						var fld = (SqlCteTableField)e;
 						context.DataType  = fld.Type.DataType;
 						context.DbType    = fld.Type.DbType;
 						context.Length    = fld.Type.Length;
@@ -4989,7 +5030,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			foreach (var m in mapping)
 			{
-				var field = tableContext.SqlTable.FindFieldByMemberName(tableContext.InheritanceMapping[m.i].DiscriminatorName) ?? throw new LinqToDBException($"Field {tableContext.InheritanceMapping[m.i].DiscriminatorName} not found in table {tableContext.SqlTable}");
+				var field = tableContext.SqlTable.FindFieldByMemberName(tableContext.InheritanceMapping[m.i].DiscriminatorName) ?? throw new LinqToDBException($"Field {tableContext.InheritanceMapping[m.i].DiscriminatorName} not found in table {tableContext.NamedTable}");
 				var ttype = field.ColumnDescriptor.MemberAccessor.TypeAccessor.Type;
 				var obj   = expression.Expression;
 
@@ -5252,6 +5293,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			public MappingSchema MappingSchema => CurrentContext?.MappingSchema ?? throw new InvalidOperationException();
 			public DataOptions   DataOptions   => Builder.DataOptions;
 
+			public TranslationProviderFlags ProviderFlags => Builder.TranslationProviderFlags;
+
 			public SelectQuery CurrentSelectQuery => CurrentContext?.SelectQuery ?? throw new InvalidOperationException();
 
 			public SqlPlaceholderExpression CreatePlaceholder(SelectQuery selectQuery, ISqlExpression sqlExpression, Expression basedOn)
@@ -5425,15 +5468,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			    or UnaryExpression
 			    or BinaryExpression)
 			{
-				// Skip translation if there is a placeholder in the expression. It means that we already tried to translate, but it is failed.
-				// don't skip for binary/unary expressions with Method as we could create them during translation
-				if (memberExpression is not (BinaryExpression { Method: not null } or UnaryExpression { Method: not null })
-				    && null != memberExpression.Find(e => e is SqlPlaceholderExpression))
-				{
-					translated = null;
-					return false;
-				}
-
 				if (context?.SelectQuery != null)
 				{
 					if (GetAlreadyTranslated(context.SelectQuery, memberExpression, out translated))

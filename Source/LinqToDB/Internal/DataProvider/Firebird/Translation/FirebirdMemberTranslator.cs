@@ -374,10 +374,8 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
 		{
-			var factory  = translationContext.ExpressionFactory;
-			var timePart = factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "Gen_Uuid");
-
-			return timePart;
+			var factory = translationContext.ExpressionFactory;
+			return factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "Gen_Uuid");
 		}
 
 		/// <summary>
@@ -414,6 +412,33 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 			{
 				return TranslateGuidToString(guidExpr, translationContext.ExpressionFactory);
 			}
+		}
+
+		protected class Firebird25WindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
+		{
+			protected override bool IsWindowFunctionsSupported => false;
+		}
+
+		protected class FirebirdWindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
+		{
+			protected override bool IsPercentRankSupported    => false;
+			protected override bool IsCumeDistSupported       => false;
+			protected override bool IsNTileSupported          => false;
+			// NTH_VALUE and NTH_VALUE FROM FIRST/LAST are supported from Firebird 3.
+			// IGNORE/RESPECT NULLS is NOT supported (Firebird rejects the IGNORE token).
+			protected override bool IsNthValueSupported       => true;
+			protected override bool IsNthValueFromSupported   => true;
+			protected override bool IsFrameRowsSupported      => false;
+			protected override bool IsFrameRangeSupported     => false;
+			protected override bool IsFrameGroupsSupported    => false;
+			protected override bool IsFrameExclusionSupported => false;
+			protected override bool IsPercentileContSupported => false;
+			protected override bool IsPercentileDiscSupported => false;
+		}
+
+		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()
+		{
+			return new FirebirdWindowFunctionsMemberTranslator();
 		}
 
 	}
