@@ -83,6 +83,7 @@ Notes:
 - The four EFCore projects each have a single TFM, so `-f <tfm>` is redundant for them. Include `-f <tfm>` only for `Tests/Linq/Tests.csproj` (multi-TFM).
 - `-p:TestingPlatformCaptureOutput=false` when `verbosity: "detailed"` (shows the test app's console / SQL-dump output).
 - Don't pipe output to `head`/`tail` — read the whole log. Per `testing.md`: NUnit and `dotnet test` interleave relevant info across the log; setup exceptions can come well before the assertion, and stack traces may be truncated if you skim.
+- **Run `dotnet test` to completion within your turn — never launch it in the background and return early.** If the overall run is long, the *caller* manages backgrounding at the Agent level; your job is to block on the `dotnet test` process and report real parsed pass/fail counts. Ending the turn while the run is still executing (returning "still running / awaiting completion" with no counts) forces the caller to resume you via SendMessage and wastes a round-trip. When judging progress, note the heartbeat at `.build/.agents/test-progress.*.json` can belong to a prior / full-suite run — a filtered run of a handful of tests showing an `N/10595`-style total is the tell; verify the file's pid / recency before trusting it as this run's progress.
 
 ## Output format
 
