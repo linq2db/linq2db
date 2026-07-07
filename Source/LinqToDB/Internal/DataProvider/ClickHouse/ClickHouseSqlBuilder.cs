@@ -542,6 +542,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 					h = h[(ClickHouseHints.Join.Global.Length + 1)..];
 				}
+
 				switch (join.JoinType)
 				{
 					case JoinType.Inner when SqlProviderFlags.IsCrossJoinSupported && condition.Predicates.IsNullOrEmpty() :

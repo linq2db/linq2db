@@ -326,7 +326,7 @@ namespace Tests.DataProvider
 					Is.EqualTo(new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, TimeZoneInfo.Local.GetUtcOffset(new DateTime(2012, 12, 12, 12, 12, 12)))));
 
 				// no idea how/why it works that way. In any case it is not a good idea to map TS to DT
-				var expected = 
+				var expected =
 #if !NETFRAMEWORK
 					context.IsAnyOf(TestProvName.AllOracleManaged)
 						? new DateTime(2012, 12, 12, 17, 12, 12, 12)
