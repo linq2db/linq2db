@@ -418,7 +418,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 									}
 								}
 
-								var suffix = BuildAggregateNullsOrderBy(factory, info.OrderBySql, info.IsNullFiltered, NullsDefaultOrdering.Largest);
+								var suffix = BuildAggregateNullsOrderBy(factory, info.OrderBySql, info.IsNullFiltered, translationContext.ProviderFlags.DefaultNullsOrdering);
 
 								SqlSearchCondition? filterCondition = null;
 
@@ -445,6 +445,24 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 
 				return builder.Build(translationContext, methodCall, isExpression: translationFlags.HasFlag(TranslationFlags.Expression));
 			}
+		}
+
+		protected class PostgreSQLWindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
+		{
+			protected override bool IsWindowFilterSupported     => true;
+			protected override bool IsOrderedSetFilterSupported => true;
+			// PostgreSQL supports hypothetical-set RANK/DENSE_RANK/PERCENT_RANK/CUME_DIST.
+			protected override bool IsHypotheticalSetSupported  => true;
+			// PostgreSQL supports the full statistical/regression window-function set with standard SQL names.
+			protected override bool IsVarianceSupported         => true;
+			protected override bool IsVarianceBareSupported     => true;
+			protected override bool IsCorrelationSupported      => true;
+			protected override bool IsLinearRegressionSupported => true;
+		}
+
+		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()
+		{
+			return new PostgreSQLWindowFunctionsMemberTranslator();
 		}
 	}
 }

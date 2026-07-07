@@ -181,6 +181,22 @@ namespace LinqToDB
 	///   <item><see cref="UpsertEmulationPolicy.Throw"/> — reject it with <see cref="LinqToDBException"/> at build time.</item>
 	/// </list>
 	/// </param>
+	/// <param name="DefaultEagerLoadingStrategy">
+	/// Specifies the default <see cref="EagerLoadingStrategy"/> used for all LoadWith/ThenLoad eager-loading
+	/// operations when no per-query strategy is set via <c>WithUnionLoadStrategy</c>, <c>WithKeyedLoadStrategy</c>, or <c>WithSeparateLoadStrategy</c>.
+	/// Default value: <see cref="EagerLoadingStrategy.Default"/>.
+	/// </param>
+	/// <param name="ImplicitCollectionLoading">
+	/// With <see cref="LinqToDB.ImplicitCollectionLoading.Throw"/>, a query that triggers an implicit eager load — a collection projected
+	/// in a <c>Select</c> without being explicitly requested — throws <see cref="LinqToDBException"/> at
+	/// build time; with <see cref="LinqToDB.ImplicitCollectionLoading.Allow"/> (the default) it is loaded as usual.
+	/// <para>
+	/// The guard is bypassed when the eager load is explicit: <c>LoadWith</c>/<c>ThenLoad</c> allows that
+	/// one collection (other unmarked collections in the same query still throw), while a root
+	/// <c>WithUnionLoadStrategy</c>/<c>WithKeyedLoadStrategy</c>/<c>WithSeparateLoadStrategy</c> marker opts
+	/// the whole query in.
+	/// </para>
+	/// </param>
 	/// <param name="OptimizeForSequentialAccess">
 	/// Enables mapping expression to be compatible with <see cref="System.Data.CommandBehavior.SequentialAccess"/> behavior.
 	/// Note that it doesn't switch linq2db to use <see cref="System.Data.CommandBehavior.SequentialAccess"/> behavior for
@@ -191,30 +207,32 @@ namespace LinqToDB
 	(
 		// TODO: Remove in v7
 		[property: Obsolete("This API doesn't have effect anymore and will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
-		bool         PreloadGroups                       = false,
-		bool         IgnoreEmptyUpdate                   = false,
-		bool         GenerateExpressionTest              = false,
-		bool         TraceMapperExpression               = false,
-		bool         ConcatenateOrderBy                  = false,
-		bool         OptimizeJoins                       = true,
-		CompareNulls CompareNulls                        = CompareNulls.LikeClr,
-		bool         GuardGrouping                       = true,
-		bool         DisableQueryCache                   = false,
-		TimeSpan?    CacheSlidingExpiration              = default,
+		bool                      PreloadGroups               = false,
+		bool                      IgnoreEmptyUpdate           = false,
+		bool                      GenerateExpressionTest      = false,
+		bool                      TraceMapperExpression       = false,
+		bool                      ConcatenateOrderBy          = false,
+		bool                      OptimizeJoins               = true,
+		CompareNulls              CompareNulls                = CompareNulls.LikeClr,
+		bool                      GuardGrouping               = true,
+		bool                      DisableQueryCache           = false,
+		TimeSpan?                 CacheSlidingExpiration      = default,
 		// TODO: Remove in v7
 		[property: Obsolete("This API doesn't have effect anymore and will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
-		bool         PreferApply                         = true,
+		bool                      PreferApply                 = true,
 		// TODO: Remove in v7
 		[property: Obsolete("This API doesn't have effect anymore and will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
-		bool         KeepDistinctOrdered     = true,
-		bool         ParameterizeTakeSkip    = true,
-		bool         EnableContextSchemaEdit = false,
-		bool         PreferExistsForScalar   = default,
-		bool         PreferClientCalculation = default,
-		UpsertEmulationPolicy UpsertEmulationPolicy = UpsertEmulationPolicy.Allow,
-		bool         OptimizeForSequentialAccess = false,
-		bool         OptimizeDuplicateParameters         = false,
-		bool         OptimizeDuplicatePropertyParameters = true
+		bool                      KeepDistinctOrdered         = true,
+		bool                      ParameterizeTakeSkip        = true,
+		bool                      EnableContextSchemaEdit     = false,
+		bool                      PreferExistsForScalar       = default,
+		bool                      PreferClientCalculation     = default,
+		UpsertEmulationPolicy     UpsertEmulationPolicy       = UpsertEmulationPolicy.Allow,
+		EagerLoadingStrategy      DefaultEagerLoadingStrategy = EagerLoadingStrategy.Default,
+		ImplicitCollectionLoading ImplicitCollectionLoading   = ImplicitCollectionLoading.Allow,
+		bool                      OptimizeForSequentialAccess = false,
+		bool                      OptimizeDuplicateParameters         = false,
+		bool                      OptimizeDuplicatePropertyParameters = true
 		// If you add another parameter here, don't forget to update
 		// LinqOptions copy constructor and IConfigurationID.ConfigurationID.
 	)
@@ -244,6 +262,8 @@ namespace LinqToDB
 			PreferExistsForScalar               = original.PreferExistsForScalar;
 			PreferClientCalculation             = original.PreferClientCalculation;
 			UpsertEmulationPolicy               = original.UpsertEmulationPolicy;
+			DefaultEagerLoadingStrategy         = original.DefaultEagerLoadingStrategy;
+			ImplicitCollectionLoading           = original.ImplicitCollectionLoading;
 			OptimizeForSequentialAccess         = original.OptimizeForSequentialAccess;
 			OptimizeDuplicateParameters         = original.OptimizeDuplicateParameters;
 			OptimizeDuplicatePropertyParameters = original.OptimizeDuplicatePropertyParameters;
@@ -251,7 +271,7 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Binary-compatibility overload of the record's positional constructor — mirrors the
-		/// public ctor signature as it was before <see cref="UpsertEmulationPolicy"/> was added,
+		/// public ctor signature as it was before <see cref="UpsertEmulationPolicy"/> and the later options were added,
 		/// so assemblies compiled against the previous linq2db release continue to load.
 		/// </summary>
 		// TODO: remove in v7 (binary-compat shim — drop together with the matching Deconstruct overload).
@@ -284,7 +304,7 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Binary-compatibility overload of the record's <c>Deconstruct</c> — mirrors the
-		/// method signature as it was before <see cref="UpsertEmulationPolicy"/> was added.
+		/// method signature as it was before <see cref="UpsertEmulationPolicy"/> and the later options were added.
 		/// </summary>
 		// TODO: remove in v7 (binary-compat shim — drop together with the matching constructor overload).
 		[EditorBrowsable(EditorBrowsableState.Never)]
@@ -310,7 +330,7 @@ namespace LinqToDB
 				out concatenateOrderBy, out optimizeJoins, out compareNulls, out guardGrouping, out disableQueryCache,
 				out cacheSlidingExpiration, out preferApply, out keepDistinctOrdered, out parameterizeTakeSkip,
 				out enableContextSchemaEdit, out preferExistsForScalar,
-				out _, out _, out _, out _, out _);
+				out _, out _, out _, out _, out _, out _, out _);
 		}
 
 		int? _configurationID;
@@ -336,6 +356,8 @@ namespace LinqToDB
 						.Add(PreferExistsForScalar)
 						.Add(PreferClientCalculation)
 						.Add((int)UpsertEmulationPolicy)
+						.Add((int)DefaultEagerLoadingStrategy)
+						.Add((int)ImplicitCollectionLoading)
 						.Add(OptimizeForSequentialAccess)
 						.Add(OptimizeDuplicateParameters)
 						.Add(OptimizeDuplicatePropertyParameters)

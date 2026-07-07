@@ -1,0 +1,156 @@
+using System.Linq;
+
+using LinqToDB;
+using LinqToDB.Internal.Common;
+
+using NUnit.Framework;
+
+namespace Tests.Linq
+{
+	partial class WindowFunctionsTests
+	{
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_LeadLag)]
+		public void LeadSimple([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
+				from t in table
+				select new
+				{
+					Id   = t.Id,
+					Lead = Sql.Window.Lead(t.IntValue, w => w.OrderBy(t.Id)),
+				};
+
+				_ = query.ToList();
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_LeadLag)]
+		public void LeadWithOffset([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
+				from t in table
+				select new
+				{
+					Id   = t.Id,
+					Lead = Sql.Window.Lead(t.IntValue, 2, w => w.OrderBy(t.Id)),
+				};
+
+				_ = query.ToList();
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_LeadLag)]
+		[ThrowsForProvider(typeof(LinqToDBException), ProviderName.Ydb, TestProvName.AllMariaDB, ErrorMessage = ErrorHelper.Error_WindowFunction_LeadLagDefault)]
+		public void LeadWithOffsetAndDefault([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
+				from t in table
+				select new
+				{
+					Id   = t.Id,
+					Lead = Sql.Window.Lead(t.IntValue, 2, 0, w => w.OrderBy(t.Id)),
+				};
+
+				_ = query.ToList();
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_LeadLag)]
+		public void LeadWithPartition([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
+				from t in table
+				select new
+				{
+					Id   = t.Id,
+					Lead = Sql.Window.Lead(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id)),
+				};
+
+				_ = query.ToList();
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_LeadLag)]
+		public void LeadWithDefineWindow([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
+				from t in table
+				let wnd = Sql.Window.DefineWindow(w => w.PartitionBy(t.CategoryId).OrderBy(t.Id))
+				select new
+				{
+					Id   = t.Id,
+					Lead = Sql.Window.Lead(t.IntValue, w => w.UseWindow(wnd)),
+				};
+
+				_ = query.ToList();
+		}
+
+		// IGNORE NULLS for LEAD/LAG is supported by Oracle, DB2, Informix and SQL Server 2022+.
+		// (YDB supports it for value functions but not LEAD/LAG; it is not in the test provider matrix.)
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_LeadLag)]
+		[ThrowsForProvider(typeof(LinqToDBException),
+			TestProvName.AllPostgreSQL18Minus, TestProvName.AllMySql8Plus, TestProvName.AllSQLite, TestProvName.AllClickHouse,
+			TestProvName.AllFirebird3Plus, TestProvName.AllSapHana,
+			TestProvName.AllSqlServer2012, TestProvName.AllSqlServer2014, TestProvName.AllSqlServer2016, TestProvName.AllSqlServer2017, TestProvName.AllSqlServer2019,
+			ProviderName.Ydb,
+			ErrorMessage = ErrorHelper.Error_WindowFunction_NullTreatment)]
+		public void LeadIgnoreNulls([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
+				from t in table
+				select new
+				{
+					Id   = t.Id,
+					Lead = Sql.Window.Lead(t.IntValue, w => w.IgnoreNulls().PartitionBy(t.CategoryId).OrderBy(t.Id)),
+				};
+
+				_ = query.ToList();
+		}
+
+		// RESPECT NULLS is the SQL default; it emits nothing and is never gated, so it behaves like a plain LEAD.
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_LeadLag)]
+		public void LeadRespectNulls([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
+				from t in table
+				select new
+				{
+					Id   = t.Id,
+					Lead = Sql.Window.Lead(t.IntValue, w => w.RespectNulls().PartitionBy(t.CategoryId).OrderBy(t.Id)),
+				};
+
+				_ = query.ToList();
+		}
+	}
+}

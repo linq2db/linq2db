@@ -1,6 +1,8 @@
-# Copilot Pull Request Review Rules
+# GitHub Copilot Instructions
 
-## Formatting rules
+**Canonical contributor rules live in [`AGENTS.md`](../AGENTS.md) at the repository root** — read it for build, test, conventions, branching, commit/publish discipline, GitHub authoring etiquette, and security rules. The notes below are Copilot-specific additions for pull-request review.
+
+## Pull request review — formatting
 
 When performing a code review, **ignore minor or intentional formatting differences**, including:
 - column-aligned code (table-like alignment),
@@ -15,11 +17,10 @@ When performing a code review, **comment on formatting only when it is clearly p
 - indentation that is clearly broken (e.g., half-indented blocks or accidental deep indentation),
 - mixed tabs and spaces *when it creates visibly misaligned code*.
 
-In this repository, **always use tabs-only leading indentation in modified files and never introduce leading spaces**. **Any leading spaces are considered incorrect.** **Always preserve tabs-only leading indentation in modified files; never introduce leading spaces in test files.**
+## Indentation
 
-## Indentation Rules
 - Respect the repository's `.editorconfig` for indentation rules.
 
-## Testing Guidelines
+## Testing
 
 - Use Shouldly for assertions in tests instead of NUnit Assert.

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Linq.Expressions;
@@ -779,6 +779,28 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 						type),
 				};
 			}
+		}
+
+		protected class YdbWindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
+		{
+			// YDB window-function support, validated against ydbplatform/local-ydb:
+			// only ROWS frames are accepted — RANGE, GROUPS and frame EXCLUDE are rejected by the engine;
+			// PERCENTILE_CONT / PERCENTILE_DISC are unsupported. IGNORE/RESPECT NULLS works for
+			// FIRST_VALUE/LAST_VALUE/NTH_VALUE but not LEAD/LAG, and there is no NTH_VALUE FROM LAST.
+			// FILTER, KEEP, DISTINCT-in-window and ordered-set FILTER inherit the base 'unsupported' defaults.
+			protected override bool IsFrameRangeSupported         => false;
+			protected override bool IsFrameGroupsSupported        => false;
+			protected override bool IsFrameExclusionSupported     => false;
+			protected override bool IsPercentileContSupported     => false;
+			protected override bool IsPercentileDiscSupported     => false;
+			protected override bool IsValueNullTreatmentSupported => true;
+			// LEAD/LAG accept value + offset only — the default-value argument is rejected.
+			protected override bool IsLeadLagDefaultSupported     => false;
+		}
+
+		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()
+		{
+			return new YdbWindowFunctionsMemberTranslator();
 		}
 	}
 }
