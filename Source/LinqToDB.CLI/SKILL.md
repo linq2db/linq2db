@@ -17,6 +17,7 @@ Primary scenarios:
 - Inspect schema and data shape before changing code, such as checking nullable values, enum-like columns, outliers, orphaned records, duplicates, and migration readiness.
 - Compare expected business rules in code with actual persisted data to find data quality issues or rule drift.
 - Generate documentation or diagnostics from database-backed facts, such as row counts, reference-data coverage, lookup values, and examples of real records.
+- Provide a portable database access path for environments where an MCP database server is unavailable, not allowed, or too expensive to deploy, such as enterprise or restricted corporate environments.
 
 Required command-line input:
 

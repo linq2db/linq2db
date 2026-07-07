@@ -97,13 +97,13 @@ Status: completed
 
 Stop serializing provider values directly.
 
-- [x] Add `QueryProviderSpecificFieldKind`.
-- [x] Add centralized `QueryFieldKindMap`.
+- [x] Add `QueryActualFieldType`.
+- [x] Keep actual field type detection close to query output metadata creation.
 - [x] Read provider-specific field type once per column.
 - [x] Add central `ReadFieldAsString(...)`.
 - [x] Use one conversion path for JSON and CSV.
 - [x] Emit JSON values as strings or null.
-- [x] Convert bytes to base64.
+- [x] Convert bytes to SQL-style hexadecimal strings (`0x...`).
 - [x] Convert dates with round-trip format.
 - [x] Handle SQL Server `SqlDecimal` without CLR decimal overflow.
 - [x] Add conversion tests for primitive, binary, date/time, null, and `SqlDecimal`.
@@ -203,29 +203,29 @@ Done when: `dotnet linq2db skill` accurately reflects command behavior.
 
 ## Phase 13: Provider-Specific Type Coverage
 
-Status: pending
+Status: completed
 
 Expand provider-specific value conversion beyond SQL Server.
 
-- [ ] Keep one provider-specific conversion validation test file in the main test assembly.
-- [ ] Validate provider-specific read and string conversion behavior for each provider family before adding special handling.
-- [ ] Add conversion handling only for provider-specific types that need it.
-- [ ] Document provider-specific conversion coverage and limitations.
-- [ ] Keep standard CLR type conversion in the shared query output path.
+- [x] Keep one provider-specific conversion validation test file in the main test assembly.
+- [x] Validate provider-specific read and string conversion behavior for provider families covered in this PR.
+- [x] Add conversion handling only for provider-specific types that need it.
+- [x] Document provider-specific conversion coverage and limitations.
+- [x] Keep standard CLR type conversion in the shared query output path.
 
-Done when: provider-specific output conversion is validated beyond the current SQL Server-focused coverage.
+Done when: provider-specific output conversion is validated beyond the original SQL Server-focused coverage.
 
 ## Phase 14: PR Body Final Pass
 
-Status: pending
+Status: completed
 
 Keep PR description aligned with actual implementation.
 
-- [ ] Update Summary.
-- [ ] Update Why.
-- [ ] Update Scenarios.
-- [ ] Update Guardrail model.
-- [ ] Update Testing.
-- [ ] Mention follow-ups explicitly if any planned items are deferred.
+- [x] Update Summary.
+- [x] Update Why.
+- [x] Update Scenarios.
+- [x] Update Guardrail model.
+- [x] Update Testing.
+- [x] Mention follow-ups explicitly if any planned items are deferred.
 
 Done when: PR body describes the shipped behavior, not the original rough plan.

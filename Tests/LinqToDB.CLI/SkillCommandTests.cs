@@ -32,6 +32,7 @@ namespace Tests.LinqToDB.CLI
 				Assert.That(result.Output,   Does.Contain("an agent can analyze your code together with data from your database"));
 				Assert.That(result.Output,   Does.Contain("Prepare regression tests for bugs found in real data"));
 				Assert.That(result.Output,   Does.Contain("Support synchronous development of code and a development database"));
+				Assert.That(result.Output,   Does.Contain("environments where an MCP database server is unavailable, not allowed, or too expensive to deploy"));
 				Assert.That(result.Output,   Does.Contain("An agent MUST ask the user for explicit confirmation before executing any unsafe SQL operation."));
 				Assert.That(result.Output,   Does.Contain("Default policy is guarded mode"));
 				Assert.That(result.Output,   Does.Contain("result-set-oriented database inspection command"));
