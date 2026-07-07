@@ -22,6 +22,8 @@ This is the **Claude-Code-specific operational overlay**, auto-imported by `CLAU
 
 When switching off `infra/agents-curation` to a working branch (feature/\*, issue/\*, etc.), pull the latest curation `.agents/` state into the new branch as **uncommitted** modifications (`git fetch origin infra/agents-curation` → `git checkout origin/infra/agents-curation -- .agents/`) so the agent isn't running against stale `.agents/`. **Never commit those carried-over diffs on a working branch** — stage with explicit pathspecs only, never `git add .`/`-A`; `.agents/` is only committed on `infra/agents-curation` itself. `master` / `release` are exempt. Full rule (staging discipline, push-time verification, save-back path): [`worktree.md`](worktree.md) → *Carrying `.agents/` curation across branch switches*.
 
+**The `infra/agents-curation` working tree is volatile — the user curates it in parallel.** When the primary clone sits on `infra/agents-curation`, an *uncommitted* `.agents/` edit you apply (e.g. from `/session-reflect` or `/audit-agents`) can be silently wiped by the user's concurrent commit / working-tree reset — a `/session-reflect` `testing.md` edit was lost this way. So: after applying a curation edit, don't assume it persists — either commit it in the same turn (when the user asked you to) or re-verify it survived; and when the user is actively curating in parallel, prefer *proposing* the edit for them to fold in over leaving it uncommitted in the shared tree.
+
 ### Bash command rules
 
 Each Bash tool call must be a single command — the user may have a PreToolUse hook that rejects compound calls, and the permission system evaluates them as one opaque string anyway:
@@ -41,6 +43,7 @@ Split chained work into separate tool calls — parallel when independent, seque
 | Read a file (full or sliced) | `Read` (`offset` / `limit`) | `cat`, `head`, `tail`, `less` |
 | Find files by name / glob | `Glob` | `find`, `ls -R`, `fd` |
 | Edit a file | `Edit` / `Write` | `sed -i`, `awk -i`, redirect-into-file |
+| Check-and-read a possibly-absent file | `Read` (returns a clean "does not exist" error you can branch on) | `test -f X && cat X` (compound → hook-rejected; recurred on the `docker-session-started.txt` check) |
 
 Reserve Bash for `git`, `gh`, `dotnet`, `pwsh`, helper scripts under `.agents/scripts/`.
 
