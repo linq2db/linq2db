@@ -139,14 +139,6 @@
   <Folder Name="/.claude/skills/version-bump/">
     <File Path=".claude/skills/version-bump/SKILL.md" />
   </Folder>
-  <Folder Name="/.codex/" />
-  <Folder Name="/.codex/skills/" />
-  <Folder Name="/.codex/skills/compatibility/">
-    <File Path=".codex/skills/compatibility/SKILL.md" />
-  </Folder>
-  <Folder Name="/.codex/skills/test/">
-    <File Path=".codex/skills/test/SKILL.md" />
-  </Folder>
   <Folder Name="/.github/">
     <File Path=".github/CODEOWNERS" />
     <File Path=".github/copilot-instructions.md" />

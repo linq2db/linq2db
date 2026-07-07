@@ -24,12 +24,25 @@ namespace LinqToDB.DataProvider.Oracle
 	/// This flag is added for backward compatibility and not recommended for use with new applications.
 	/// </param>
 	/// <param name="MaxStringParameterLength">
-	/// Maximum string parameter length for regular string parameters, aligned with Oracle MAX_STRING_SIZE semantics.
+	/// <para>
+	/// Maximum string length threshold, measured in .NET characters, for regular string parameter binding.
 	/// Undefined string parameters with length greater than or equal to this value are bound as NCLOB.
+	/// </para>
+	/// <para>
+	/// The default value is 4000, which corresponds to Oracle's default MAX_STRING_SIZE limit
+	/// for VARCHAR2 values in the common single-byte case.
+	/// </para>
+	/// <para>
+	/// This setting is a user-configurable heuristic and does not perform byte-exact validation
+	/// against the database character set.
+	/// </para>
+	/// <para>
 	/// Set to <see langword="null"/> to disable automatic NCLOB inference.
+	/// </para>
+	/// <para>
 	/// See Oracle documentation for VARCHAR2 limits:
 	/// <see href="https://docs.oracle.com/en/database/oracle/oracle-database/23/sqlrf/Data-Types.html"/>.
-	/// Default value: 4000.
+	/// </para>
 	/// </param>
 	public sealed record OracleOptions
 	(

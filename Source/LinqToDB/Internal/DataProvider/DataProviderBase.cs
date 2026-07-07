@@ -374,7 +374,7 @@ namespace LinqToDB.Internal.DataProvider
 			var parameter = command.CreateParameter();
 			var dataType  = InferParameterDataType(dataConnection, context.DbDataType, context.Value);
 
-			if (context.Direction  != null) parameter.Direction =       context.Direction.Value;
+			if (context.Direction  != null) parameter.Direction = context.Direction.Value;
 
 			if (context.IsDbDataTypeExplicit)
 			{

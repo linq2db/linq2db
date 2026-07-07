@@ -448,9 +448,70 @@ namespace Tests.DataProvider
 			conn.Execute($"INSERT INTO {tableName} (\"Id\", \"NClob\") VALUES (2, TO_NCLOB(:p))", new DataParameter { Name = "p", DbType = "NClob", Value = value });
 			conn.Execute($"INSERT INTO {tableName} (\"Id\", \"NClob\") VALUES (3, :p)",           new DataParameter { Name = "p", Value = value });
 
-			Assert.That(conn.Execute<int>($"SELECT LENGTH(\"NClob\") FROM {tableName} WHERE \"Id\" = 1"), Is.EqualTo(value.Length));
-			Assert.That(conn.Execute<int>($"SELECT LENGTH(\"NClob\") FROM {tableName} WHERE \"Id\" = 2"), Is.EqualTo(value.Length));
-			Assert.That(conn.Execute<int>($"SELECT LENGTH(\"NClob\") FROM {tableName} WHERE \"Id\" = 3"), Is.EqualTo(value.Length));
+			conn.Execute<int>($"SELECT LENGTH(\"NClob\") FROM {tableName} WHERE \"Id\" = 1").ShouldBe(value.Length);
+			conn.Execute<int>($"SELECT LENGTH(\"NClob\") FROM {tableName} WHERE \"Id\" = 2").ShouldBe(value.Length);
+			conn.Execute<int>($"SELECT LENGTH(\"NClob\") FROM {tableName} WHERE \"Id\" = 3").ShouldBe(value.Length);
+		}
+
+		sealed class ParameterTestCommandInterceptor : CommandInterceptor
+		{
+			public DbParameterCollection Parameters = null!;
+
+			public override DbCommand CommandInitialized(CommandEventData eventData, DbCommand command)
+			{
+				Parameters = command.Parameters;
+				return base.CommandInitialized(eventData, command);
+			}
+		}
+
+		[Test]
+		public void LongStringParameterCustomThresholdTest([IncludeDataSources(TestProvName.AllOracle)] string context)
+		{
+			var parameterInterceptor = new ParameterTestCommandInterceptor();
+
+			using var conn  = GetDataContext(context, o => o
+				.WithOptions<OracleOptions>(oo => oo with { MaxStringParameterLength = 10 })
+				.UseInterceptor(parameterInterceptor)
+			);
+			using var table = conn.CreateLocalTable<BlobsTable>();
+
+			var tableName = table.GetTableName();
+
+			var value = "LongStringValue"; // length >= 10
+
+			conn.Execute(
+				$"INSERT INTO {tableName} (\"Id\", \"NClob\") VALUES (1, :p)",
+				new DataParameter { Name = "p", Value = value });
+
+			parameterInterceptor.Parameters.Count.ShouldBe(1);
+			((OracleParameter)parameterInterceptor.Parameters[0]).OracleDbType.ShouldBe(OracleDbType.NClob);
+
+			conn.Execute<int>($"SELECT LENGTH(\"NClob\") FROM {tableName} WHERE \"Id\" = 1").ShouldBe(value.Length);
+		}
+
+		[Test]
+		public void LongStringParameterNClobInferenceDisabledTest([IncludeDataSources(TestProvName.AllOracle)] string context)
+		{
+			var parameterInterceptor = new ParameterTestCommandInterceptor();
+
+			using var conn  = GetDataContext(context, o => o
+				.WithOptions<OracleOptions>(oo => oo with { MaxStringParameterLength = null })
+				.UseInterceptor(parameterInterceptor)
+			);
+			using var table = conn.CreateLocalTable<BlobsTable>();
+
+			var tableName = table.GetTableName();
+
+			var value = "LongStringValue".PadRight(10000, '1');
+
+			conn.Execute(
+				$"INSERT INTO {tableName} (\"Id\", \"NClob\") VALUES (1, :p)",
+				new DataParameter { Name = "p", Value = value });
+
+			parameterInterceptor.Parameters.Count.ShouldBe(1);
+			((OracleParameter)parameterInterceptor.Parameters[0]).OracleDbType.ShouldBe(OracleDbType.Varchar2);
+
+			conn.Execute<int>($"SELECT LENGTH(\"NClob\") FROM {tableName} WHERE \"Id\" = 1").ShouldBe(value.Length);
 		}
 
 		[Test, Ignore("TODO: needs to implement providing parameter type in LINQ expressions")]
@@ -463,7 +524,7 @@ namespace Tests.DataProvider
 
 			table.Insert(() => new BlobsTable { Id = 1, NClob = ToNClob(value) });
 
-			Assert.That(table.Where(r => r.Id == 1).Select(r => r.NClob!.Length).Single(), Is.EqualTo(value.Length));
+			table.Where(r => r.Id == 1).Select(r => r.NClob!.Length).Single().ShouldBe(value.Length);
 		}
 
 		[Sql.Expression("TO_NCLOB({0})", ServerSideOnly = true)]
