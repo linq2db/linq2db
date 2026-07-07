@@ -633,9 +633,10 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				// expression: sorting by a bare alias there is ambiguous when a joined table shares the name.
 				if (selectQuery.Select.IsDistinct || !selectQuery.GroupBy.IsEmpty)
 				{
-					var col = selectQuery.Select.Columns.Find(c => c.Expression.Equals(item.Expression));
-					if (col?.Alias != null)
-						orderExpression = new SqlFragment(col.Alias);
+					var col      = selectQuery.Select.Columns.Find(c => c.Expression.Equals(item.Expression));
+					var colAlias = col != null ? AliasesContext.GetColumnAlias(col) : null;
+					if (colAlias != null)
+						orderExpression = new SqlFragment(colAlias);
 				}
 
 				BuildExpressionForOrderBy(orderExpression);

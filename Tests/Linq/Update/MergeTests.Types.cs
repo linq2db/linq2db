@@ -647,7 +647,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void TestTypesInsertByMerge([MergeDataContextSource(TestProvName.AllInformix, TestProvName.AllSybase)] string context)
 		{
-			using var _ = context.IsAnyOf(TestProvName.AllPostgreSQL) ? new DisableBaseline("TODO: https://github.com/linq2db/linq2db/issues/5169") : null;
+			using var _ = context.IsAnyOf(TestProvName.AllPostgreSQL) ? new DisableBaseline("https://github.com/linq2db/linq2db/issues/5169 - PostgreSQL remote/direct MERGE-source parameter dedup/naming divergence (value_2/value_3 vs value/value_2)") : null;
 
 			var isIDS = IsIDSProvider(context);
 

@@ -235,7 +235,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 						first = false;
 						AppendIndent();
-						Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
+						Convert(StringBuilder, AliasesContext.GetFieldName(field), ConvertType.NameToQueryField);
 					}
 				}
 
@@ -327,7 +327,7 @@ namespace LinqToDB.Internal.SqlProvider
 						if (RequiresConstantColumnAliases || i == 0)
 						{
 							StringBuilder.Append(" AS ");
-							Convert(StringBuilder, sourceFields[fieldIndex].PhysicalName, ConvertType.NameToQueryField);
+							Convert(StringBuilder, AliasesContext.GetFieldName(sourceFields[fieldIndex]), ConvertType.NameToQueryField);
 						}
 					}
 				}
@@ -369,7 +369,7 @@ namespace LinqToDB.Internal.SqlProvider
 					if (!SupportsColumnAliasesInSource)
 					{
 						StringBuilder.Append(' ');
-						Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
+						Convert(StringBuilder, AliasesContext.GetFieldName(field), ConvertType.NameToQueryField);
 					}
 				}
 			}

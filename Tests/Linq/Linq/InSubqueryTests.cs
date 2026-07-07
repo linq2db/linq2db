@@ -85,8 +85,6 @@ namespace Tests.Linq
 		[Test]
 		public void InTest2([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
-			using var _ = context.IsAnyOf(TestProvName.AllClickHouse, TestProvName.AllYdb) ? new DisableBaseline("TODO: https://github.com/linq2db/linq2db/issues/5169") : null;
-
 			using var db = GetDataContext(context, preferExists, compareNullsAsValues);
 
 			var query =
@@ -384,8 +382,6 @@ namespace Tests.Linq
 		[Test]
 		public void Null_In_Null_Test1([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
-			using var _ = context.IsAnyOf(TestProvName.AllClickHouse, TestProvName.AllYdb) ? new DisableBaseline("TODO: https://github.com/linq2db/linq2db/issues/5169") : null;
-
 			using var db = GetDataContext(context, o => o
 				.UsePreferExistsForScalar(preferExists)
 				.UseCompareNulls(compareNullsAsValues ? CompareNulls.LikeClr : CompareNulls.LikeSql)
@@ -402,8 +398,6 @@ namespace Tests.Linq
 		[Test]
 		public void Null_In_Null_Test2([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
-			using var _ = context.IsAnyOf(TestProvName.AllClickHouse, TestProvName.AllYdb) ? new DisableBaseline("TODO: https://github.com/linq2db/linq2db/issues/5169") : null;
-
 			using var db = GetDataContext(context, preferExists, compareNullsAsValues);
 
 			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3, null }.Select((i, idx) => new TestRecordNullable { PK = idx, ID = i }));
@@ -449,9 +443,6 @@ namespace Tests.Linq
 		[Test]
 		public void Null_NotIn_Null_Test1([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
-			using var _  = context.IsAnyOf(TestProvName.AllClickHouse) ? new DisableBaseline("TODO: https://github.com/linq2db/linq2db/issues/5169") : null;
-			using var __ = context.IsAnyOf(TestProvName.AllYdb) ? new DisableBaseline("https://github.com/linq2db/linq2db/issues/5169 - YDB: remote/direct path numbers a derived-table alias differently (t2 vs t1) for the NotIn+null shape; SQL otherwise identical") : null;
-
 			using var db = GetDataContext(context, preferExists, compareNullsAsValues);
 
 			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3, 4, 5, null }.Select((i, idx) => new TestRecordNullable { PK = idx, ID = i }));
@@ -478,8 +469,6 @@ namespace Tests.Linq
 		[Test]
 		public void Null_NotIn_Null_Test3([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
-			using var _ = context.IsAnyOf(TestProvName.AllYdb) ? new DisableBaseline("https://github.com/linq2db/linq2db/issues/5169 - YDB: remote/direct path numbers a derived-table alias differently (t2 vs t1) for the NotIn+null shape; SQL otherwise identical") : null;
-
 			using var db = GetDataContext(context, preferExists, compareNullsAsValues);
 
 			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3, 4, 5, null }.Select((i, idx) => new TestRecordNullable { PK = idx, ID = i }));
