@@ -115,7 +115,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		public static AliasesContext PrepareStepAliases(IServiceProvider serviceProvider, SqlStatement statement)
 		{
-			AliasesHelper.PrepareQueryAndAliases(serviceProvider.GetRequiredService<IIdentifierService>(), statement, null, out var aliases);
+			AliasesHelper.PrepareQueryAndAliases(serviceProvider.GetRequiredService<IIdentifierService>(), statement, out var aliases);
 			return aliases;
 		}
 

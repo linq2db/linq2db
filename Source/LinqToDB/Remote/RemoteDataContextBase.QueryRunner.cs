@@ -67,8 +67,6 @@ namespace LinqToDB.Remote
 
 				using var sqlStringBuilder = Pools.StringBuilder.Allocate();
 
-				AliasesHelper.PrepareQueryAndAliases(new IdentifierServiceSimple(128), query.Statement, query.Aliases, out var aliases);
-
 				var optimizationContext = new OptimizationContext(
 					_evaluationContext,
 					DataContext.Options,
@@ -82,6 +80,11 @@ namespace LinqToDB.Remote
 					parametersNormalizerFactory : static () => NoopQueryParametersNormalizer.Instance);
 
 				var statement = query.Statement.PrepareStatementForSql(optimizationContext);
+
+				// Alias the prepared statement - PrepareStatementForSql can produce new nodes, and the alias
+				// context is keyed to the nodes it visits, so aliasing query.Statement (pre-prepare) would leave
+				// the rendered nodes unresolved. Mirrors the direct runner and master's remote aliasing fix.
+				AliasesHelper.PrepareQueryAndAliases(new IdentifierServiceSimple(128), statement, out var aliases);
 
 				// Build + plan the same scenario the server will execute so the remote SQL text reflects the real grouped
 				// commands (identity SELECT, truncate reset, gated upsert steps, combined batches) rather than just the base
