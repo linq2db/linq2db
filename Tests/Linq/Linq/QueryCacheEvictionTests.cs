@@ -62,6 +62,25 @@ namespace Tests.Linq
 			return query;
 		}
 
+		static readonly Type[] SpreadResultTypes =
+		{
+			typeof(int), typeof(long), typeof(double), typeof(string),
+			typeof(float), typeof(decimal), typeof(byte), typeof(short),
+		};
+
+		// Populates `count` entries spread across 8 result types. Each result type is a distinct bucket
+		// key (ChainHash is identical for Constant<int>, but ResultType is part of the key), so the total
+		// entry count can exceed a small cap while every bucket stays well under BucketCap = 16.
+		static void PopulateSpread(QueryCache cache, DataConnection db, int count)
+		{
+			for (var i = 0; i < count; i++)
+			{
+				var resultType = SpreadResultTypes[i % SpreadResultTypes.Length];
+				var query      = (Query)Activator.CreateInstance(typeof(Query<>).MakeGenericType(resultType), db)!;
+				cache.TryAdd(resultType, db, query, Expr(i), QueryFlags.None);
+			}
+		}
+
 		// ---- Eviction tests -----------------------------------------------------------
 
 		[Test]
@@ -71,7 +90,8 @@ namespace Tests.Linq
 
 			var cache = new QueryCache
 			{
-				IdleTimeoutOverride = TimeSpan.FromMilliseconds(20),
+				IdleTimeoutOverride           = TimeSpan.FromMilliseconds(20),
+				MemoryPressureEvictionEnabled = false, // isolate from the sweep's memory-pressure backstop
 			};
 
 			AddStub(cache, db, seed: 1);
@@ -103,7 +123,10 @@ namespace Tests.Linq
 
 			var cache = new QueryCache
 			{
-				IdleTimeoutOverride = TimeSpan.FromMilliseconds(50),
+				IdleTimeoutOverride           = TimeSpan.FromMilliseconds(50),
+				// The memory-pressure backstop runs inside SweepGlobal; disable it here so a constrained
+				// runner reporting high GC load can't trim the single hot entry out from under this test.
+				MemoryPressureEvictionEnabled = false,
 			};
 
 			AddStub(cache, db, seed: 1);
@@ -150,8 +173,9 @@ namespace Tests.Linq
 
 			var cache = new QueryCache
 			{
-				IdleTimeoutOverride = TimeSpan.FromHours(1),
-				MaxEntriesOverride  = 50,
+				IdleTimeoutOverride           = TimeSpan.FromHours(1),
+				MaxEntriesOverride            = 50,
+				MemoryPressureEvictionEnabled = false, // isolate the cap-trim assertion from the pressure backstop
 			};
 
 			// Spread adds across multiple ResultType values. Each ResultType produces a
@@ -307,6 +331,224 @@ namespace Tests.Linq
 
 			cache.CountEntries().ShouldBe(0,
 				"MaxEntriesOverride = 0 should reject all adds");
+		}
+
+		// ---- Memory-pressure eviction tests -------------------------------------------
+
+		[Test]
+		public void MemoryPressureTrim_RemovesColdestFraction()
+		{
+			using var db = NewContext();
+
+			var cache = new QueryCache
+			{
+				IdleTimeoutOverride = TimeSpan.FromHours(1),
+				MaxEntriesOverride  = 10000, // keep the count cap out of the way
+			};
+
+			PopulateSpread(cache, db, 100);
+			cache.ApproximateEntryCount.ShouldBe(100L, "sanity: workload should populate 100 entries");
+
+			cache.TrimForMemoryPressureNow(0.5);
+
+			cache.ApproximateEntryCount.ShouldBe(50L, "half of the entries should be trimmed");
+		}
+
+		[Test]
+		public void MemoryPressureTrim_PreservesHotEntries()
+		{
+			using var db = NewContext();
+
+			var cache = new QueryCache
+			{
+				IdleTimeoutOverride           = TimeSpan.FromHours(1),
+				MaxEntriesOverride            = 10000,
+				// Drive the trim explicitly below; keep the bake sweep from trimming on its own.
+				MemoryPressureEvictionEnabled = false,
+			};
+
+			// A dozen cold entries in the int bucket.
+			for (var i = 0; i < 12; i++)
+				AddStub(cache, db, seed: i);
+
+			// One hot entry in its own (long) bucket: hammer it, then bake the hit-rate / extended
+			// deadline in with a sweep so it sorts as the warmest entry.
+			var hot = (Query)Activator.CreateInstance(typeof(Query<>).MakeGenericType(typeof(long)), db)!;
+			cache.TryAdd(typeof(long), db, hot, Expr(0), QueryFlags.None);
+			cache.TrySimulateHits(typeof(long), db, Expr(0), QueryFlags.None, hits: 1000);
+			cache.RunSweepNow();
+
+			// Trim almost everything: the coldest 12 (the int bucket) go, the hot entry stays.
+			cache.TrimForMemoryPressureNow(0.9);
+
+			cache.CountEntriesInBucket(typeof(long), db, Expr(0), QueryFlags.None)
+				.ShouldBe(1, "the hot entry should survive an aggressive trim");
+			cache.CountEntries().ShouldBe(1, "only the hot entry should remain");
+		}
+
+		[Test]
+		public void Compact_PublicApi_TrimsRequestedFraction()
+		{
+			using var db = NewContext();
+
+			var cache = new QueryCache
+			{
+				IdleTimeoutOverride = TimeSpan.FromHours(1),
+				MaxEntriesOverride  = 10000,
+			};
+
+			PopulateSpread(cache, db, 100);
+
+			cache.Compact(0.25);
+
+			cache.ApproximateEntryCount.ShouldBe(75L, "Compact(0.25) should remove a quarter of the entries");
+		}
+
+		[Test]
+		public void MemoryPressureTrim_FractionOne_ClearsAll()
+		{
+			using var db = NewContext();
+
+			var cache = new QueryCache
+			{
+				IdleTimeoutOverride = TimeSpan.FromHours(1),
+				MaxEntriesOverride  = 10000,
+			};
+
+			PopulateSpread(cache, db, 40);
+
+			cache.TrimForMemoryPressureNow(1.0);
+
+			cache.ShouldSatisfyAllConditions(
+				c => c.CountEntries()       .ShouldBe(0),
+				c => c.BucketCount          .ShouldBe(0),
+				c => c.ApproximateEntryCount.ShouldBe(0L));
+		}
+
+		[Test]
+		public void MemoryPressureTrim_PredicatePath_TrimsOnSweep()
+		{
+			using var db = NewContext();
+
+			var cache = new QueryCache
+			{
+				IdleTimeoutOverride    = TimeSpan.FromHours(1),
+				MaxEntriesOverride     = 10000,
+				MemoryPressureOverride = () => true, // cross-platform "memory is high" signal
+			};
+
+			PopulateSpread(cache, db, 100);
+
+			// The periodic backstop lives inside SweepGlobal; the predicate makes it fire deterministically.
+			cache.RunSweepNow();
+
+			cache.ApproximateEntryCount.ShouldBe(50L,
+				"the memory-pressure predicate should drive the sweep backstop to trim the default half");
+		}
+
+		[Test]
+		public void MemoryPressureTrim_Disabled_NoOp()
+		{
+			using var db = NewContext();
+
+			var cache = new QueryCache
+			{
+				IdleTimeoutOverride           = TimeSpan.FromHours(1),
+				MaxEntriesOverride            = 10000,
+				MemoryPressureEvictionEnabled = false,
+				MemoryPressureOverride        = () => true, // would trim if the feature were enabled
+			};
+
+			PopulateSpread(cache, db, 100);
+
+			cache.RunSweepNow();
+			cache.RunMemoryPressureCheckNow(nativeHigh: true);
+
+			cache.ApproximateEntryCount.ShouldBe(100L, "disabled memory-pressure eviction must not trim");
+		}
+
+		[Test]
+		public void MemoryPressureTrim_FractionOverride_Respected()
+		{
+			using var db = NewContext();
+
+			var cache = new QueryCache
+			{
+				IdleTimeoutOverride                = TimeSpan.FromHours(1),
+				MaxEntriesOverride                 = 10000,
+				MemoryPressureTrimFractionOverride = 0.25,
+			};
+
+			PopulateSpread(cache, db, 100);
+
+			cache.RunMemoryPressureCheckNow(nativeHigh: true);
+
+			cache.ApproximateEntryCount.ShouldBe(75L,
+				"the fraction override (0.25) should trim a quarter on a pressure event");
+		}
+
+		[Test]
+		public void MemoryPressureTrim_EmptyCache_DoesNotThrow()
+		{
+			using var db = NewContext();
+
+			var cache = new QueryCache();
+
+			// Trimming an empty cache must be a safe no-op — an exception on any of these fails the test.
+			cache.TrimForMemoryPressureNow(0.5);
+			cache.Compact(0.5);
+			cache.RunMemoryPressureCheckNow(nativeHigh: true);
+
+			cache.CountEntries().ShouldBe(0);
+		}
+
+		[Test]
+		public void MemoryPressureTrim_Gen2CallbackPath_TrimsAsync()
+		{
+			using var db = NewContext();
+
+			var cache = new QueryCache
+			{
+				IdleTimeoutOverride    = TimeSpan.FromHours(1),
+				MaxEntriesOverride     = 10000,
+				MemoryPressureOverride = () => true, // force the gate so the real async path is deterministic
+			};
+
+			PopulateSpread(cache, db, 100);
+
+			// Fire the real Gen2 callback: OnGen2Gc -> QueueGlobalMaintenance -> thread-pool sweep -> trim.
+			cache.FireGen2CallbackNow();
+
+			// The trim lands on the thread pool; poll until it completes (bounded).
+			var sw = System.Diagnostics.Stopwatch.StartNew();
+			while (sw.ElapsedMilliseconds < 2000 && cache.ApproximateEntryCount > 50L)
+				Thread.Sleep(5);
+
+			cache.ApproximateEntryCount.ShouldBeLessThanOrEqualTo(50L,
+				"the Gen2 callback should asynchronously trim ~half under pressure");
+			cache.ApproximateEntryCount.ShouldBeGreaterThan(0L, "the hot half should remain");
+		}
+
+		[Test]
+		public void MemoryPressureTrim_ThrowingProbe_IsSwallowed()
+		{
+			using var db = NewContext();
+
+			var cache = new QueryCache
+			{
+				IdleTimeoutOverride    = TimeSpan.FromHours(1),
+				MaxEntriesOverride     = 10000,
+				MemoryPressureOverride = () => throw new InvalidOperationException("probe boom"),
+			};
+
+			PopulateSpread(cache, db, 10);
+
+			// The probe throws every time it is invoked; the shared PressureDetected gate (used by both the
+			// sweep worker and this hook) must swallow it and treat it as "not under pressure". With the
+			// native signal injected false, nothing is trimmed and no exception escapes.
+			cache.RunMemoryPressureCheckNow(nativeHigh: false);
+
+			cache.ApproximateEntryCount.ShouldBe(10L, "a throwing probe must be swallowed and must not trim");
 		}
 	}
 }

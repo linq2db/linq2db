@@ -78,6 +78,8 @@
 		<DefineConstants Condition=" $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0')) ">SUPPORTS_REGEX_GENERATORS;$(DefineConstants)</DefineConstants>
 		<!--(u)int128 types-->
 		<DefineConstants Condition=" $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0')) ">SUPPORTS_INT128;$(DefineConstants)</DefineConstants>
+		<!--GC.GetGCMemoryInfo() / GCMemoryInfo.MemoryLoadBytes + HighMemoryLoadThresholdBytes-->
+		<DefineConstants Condition=" $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0')) ">SUPPORTS_GC_MEMORY_INFO;$(DefineConstants)</DefineConstants>
 
 		<ArtifactsPath>$(MSBuildThisFileDirectory).build</ArtifactsPath>
 		<ArtifactsPivots>$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)</ArtifactsPivots>
