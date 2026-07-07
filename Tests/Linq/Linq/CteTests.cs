@@ -1106,13 +1106,15 @@ namespace Tests.Linq
 
 			var result = allRelevant.ToList();
 
-			// CTE columns PartId/RootPartId/HierarchyLevel must survive so the recursion and the outer
-			// join resolve correctly. Expected (RootPartId, joined Part.Id) pairs for the hierarchy:
-			//   roots: (1,1) (2,2) (3,3); 1->2: (1,2); 2->3: (2,3); 1->2->3: (1,3)
+			// CTE columns PartId/RootPartId/RootPartSortField must survive so the recursion and the outer
+			// join resolve correctly. RootPartSortField is the object-typed member that triggers #5457, so
+			// its round-tripped value is asserted too (each row carries its root Part's Name).
+			// Expected (RootPartId, joined Part.Id, RootPartSortField) tuples for the hierarchy:
+			//   roots: (1,1,"A") (2,2,"B") (3,3,"C"); 1->2: (1,2,"A"); 2->3: (2,3,"B"); 1->2->3: (1,3,"A")
 			result
-				.Select(x => (x.RootPartId, x.me.Id))
-				.OrderBy(x => x)
-				.ShouldBe(new[] { (1, 1), (1, 2), (1, 3), (2, 2), (2, 3), (3, 3) });
+				.Select(x => (x.RootPartId, x.me.Id, SortField: (string)x.RootPartSortField!))
+				.OrderBy(x => (x.RootPartId, x.Id))
+				.ShouldBe(new[] { (1, 1, "A"), (1, 2, "A"), (1, 3, "A"), (2, 2, "B"), (2, 3, "B"), (3, 3, "C") });
 		}
 
 		class NestingA
