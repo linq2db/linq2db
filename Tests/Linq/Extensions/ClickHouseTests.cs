@@ -230,5 +230,23 @@ namespace Tests.Extensions
 			sql.ShouldContain("LEFT ASOF JOIN");
 			sql.ShouldContain(" >= ");
 		}
+
+		[Test]
+		public void GlobalAsOfJoinHintSqlGeneration([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q = db.GetTable<AsofTrade>()
+				.Join(
+					db.GetTable<AsofQuote>().AsClickHouse().JoinGlobalAsOfHint(),
+					SqlJoinType.Left,
+					(trade, quote) => trade.Symbol == quote.Symbol && trade.Time >= quote.Time,
+					(trade, quote) => new { trade.ID, QuoteID = quote.ID });
+
+			var sql = q.ToSqlQuery().Sql;
+
+			sql.ShouldContain("GLOBAL LEFT ASOF JOIN");
+			sql.ShouldContain(" >= ");
+		}
 	}
 }
