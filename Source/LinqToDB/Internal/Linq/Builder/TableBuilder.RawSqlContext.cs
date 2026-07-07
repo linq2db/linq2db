@@ -48,6 +48,12 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			isScalar ??= builder.MappingSchema.IsScalarType(entityType);
 
+			// TEMP DIAG (Issue1742, uncommitted-intent): a raw-SQL FromSql over a *class* type built as scalar
+			// is the anomaly behind the parallel `column t1.value does not exist` failure. Log it so CI shows
+			// whether ScalarResult<int> is misclassified scalar at build time (vs. inheriting a cached scalar table).
+			if (isScalar.Value && entityType is { IsPrimitive: false, IsEnum: false } && entityType != typeof(string))
+				System.Console.Error.WriteLine($"RAWSQLDIAG anomalous-scalar-build type={entityType.FullName} tid={System.Environment.CurrentManagedThreadId}");
+
 			var formatArg = methodCall.Arguments[1];
 
 			PrepareRawSqlArguments(formatArg,
