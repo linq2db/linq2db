@@ -27,6 +27,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 
 		IDataContext                      _dataContext         = default!;
 		IMemberConverter                  _memberConverter     = default!;
+		IConvertContext                   _convertContext      = default!;
 		ExpressionTreeOptimizationContext _optimizationContext = default!;
 		object?[]?                        _parameterValues;
 		bool                              _optimizeConditions;
@@ -53,6 +54,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 			_compactBinary       = compactBinary;
 			_isSingleConvert     = isSingleConvert;
 			_memberConverter     = ((IInfrastructure<IServiceProvider>)dataContext).Instance.GetRequiredService<IMemberConverter>();
+			_convertContext      = new ConvertContext(dataContext.Options);
 
 			return Visit(expression);
 		}
@@ -61,6 +63,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 		{
 			_dataContext         = default!;
 			_memberConverter     = default!;
+			_convertContext      = default!;
 			_optimizationContext = default!;
 			_optimizeConditions  = default;
 			_compactBinary       = false;
@@ -84,7 +87,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 
 		protected override Expression VisitMethodCall(MethodCallExpression node)
 		{
-			var convertedMember = _memberConverter.Convert(node, out var handled);
+			var convertedMember = _memberConverter.Convert(node, _convertContext, out var handled);
 			if (handled && !ReferenceEquals(node, convertedMember))
 			{
 				return Visit(convertedMember);
@@ -495,7 +498,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 
 		protected override Expression VisitMember(MemberExpression node)
 		{
-			var convertedMember = _memberConverter.Convert(node, out var handled);
+			var convertedMember = _memberConverter.Convert(node, _convertContext, out var handled);
 			if (handled && !ReferenceEquals(node, convertedMember))
 			{
 				return Visit(convertedMember);
@@ -762,7 +765,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 		{
 			if (node.Method != null)
 			{
-				var convertedMember = _memberConverter.Convert(node, out var handled);
+				var convertedMember = _memberConverter.Convert(node, _convertContext, out var handled);
 				if (handled && !ReferenceEquals(node, convertedMember))
 				{
 					return Visit(convertedMember);
@@ -801,7 +804,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 		{
 			if (node.Method != null)
 			{
-				var convertedMember = _memberConverter.Convert(node, out var handled);
+				var convertedMember = _memberConverter.Convert(node, _convertContext, out var handled);
 				if (handled && !ReferenceEquals(node, convertedMember))
 				{
 					return Visit(convertedMember);

@@ -14,45 +14,56 @@ namespace LinqToDB.Internal.DataProvider
 
 		#region Aliases
 
-		public static void PrepareQueryAndAliases(IIdentifierService identifierService, SqlStatement statement, AliasesContext? prevAliasContext, out AliasesContext newAliasContext)
+		public static void PrepareQueryAndAliases(IIdentifierService identifierService, SqlStatement statement, out AliasesContext newAliasContext)
 		{
 			using var visitor = _aliasesVisitorPool.Allocate();
 
-			newAliasContext = visitor.Value.SetAliases(identifierService, statement, prevAliasContext);
+			newAliasContext = visitor.Value.SetAliases(identifierService, statement);
 		}
 
 		sealed class AliasesVisitor : SqlQueryVisitor
 		{
 			IIdentifierService _identifierService = default!;
-			AliasesContext?    _prevAliases;
 
 			AliasesContext           _newAliases = default!;
 			HashSet<string>          _allAliases = default!;
 			HashSet<SqlTableSource>? _tablesVisited;
+			SelectQuery?             _rootSelectQuery;
 
 			public AliasesVisitor() : base(VisitMode.ReadOnly, null)
 			{
 			}
 
-			public AliasesContext SetAliases(IIdentifierService identifierService, SqlStatement statement, AliasesContext? prevAliases)
+			public AliasesContext SetAliases(IIdentifierService identifierService, SqlStatement statement)
 			{
 				_identifierService = identifierService;
 				_newAliases        = new();
 				_allAliases        = new(StringComparer.OrdinalIgnoreCase);
 				_tablesVisited     = default;
-				_prevAliases       = prevAliases;
+				_rootSelectQuery   = statement.SelectQuery;
 
 				Visit(statement);
 
 				if (_tablesVisited != null)
 				{
-					Utils.MakeUniqueNames(_tablesVisited,
+					// Uniquify per distinct SourceID, not per SqlTableSource object. One logical source can be
+					// wrapped by several SqlTableSource instances sharing a SourceID (a correlated reference / a
+					// CTE reference resolves to a different wrapper than the FROM clause). Finalized table
+					// aliases are keyed by SourceID, so processing the same SourceID twice makes the second
+					// occurrence collide with the alias the first just set and spuriously suffixes it (t1 -> t1_1).
+					// That self-collision is non-deterministic across the direct vs remote paths, because the
+					// number of wrappers differs after the serialize/deserialize round-trip (#5169).
+					var distinctSources = _tablesVisited
+						.GroupBy(ts => ts.SourceID)
+						.Select(g => g.First());
+
+					Utils.MakeUniqueNames(distinctSources,
 						_allAliases,
 						(n, a) => !a!.Contains(n) && IsValidAlias(n),
 						GetCurrentAlias,
 						(ts, n, a) =>
 						{
-							ts.Alias = n;
+							_newAliases.SetTableAlias(ts, n);
 						},
 						ts =>
 						{
@@ -64,10 +75,13 @@ namespace LinqToDB.Internal.DataProvider
 
 				string GetCurrentAlias(SqlTableSource tableSource)
 				{
-					return tableSource.Alias switch
+					// Read the current alias through the context so already-finalized nested table
+					// sources are honoured (non-mutating: names live in the context, not the node).
+					var current = _newAliases.GetTableAlias(tableSource);
+					return current switch
 					{
-						"$F" or "$" => tableSource.Alias,
-						_ => TruncateAlias(tableSource.Alias ?? string.Empty),
+						"$F" or "$" => current,
+						_ => TruncateAlias(current ?? string.Empty),
 					};
 				}
 
@@ -80,31 +94,9 @@ namespace LinqToDB.Internal.DataProvider
 				_newAliases        = default!;
 				_allAliases        = default!;
 				_tablesVisited     = default;
-				_prevAliases       = null;
+				_rootSelectQuery   = null;
 
 				base.Cleanup();
-			}
-
-			public override IQueryElement? Visit(IQueryElement? element)
-			{
-				if (element != null && _prevAliases != null && _prevAliases.IsAliased(element))
-				{
-					// Copy aliased from previous run
-					//
-					_newAliases.RegisterAliased(element);
-
-					// Remember already used aliases from previous run
-					if (element.ElementType == QueryElementType.TableSource)
-					{
-						var alias = ((SqlTableSource)element).Alias;
-						if (!string.IsNullOrEmpty(alias))
-							_allAliases.Add(alias!);
-					}
-
-					return element;
-				}
-
-				return base.Visit(element);
 			}
 
 			string TruncateAlias(string identifier)
@@ -129,6 +121,23 @@ namespace LinqToDB.Internal.DataProvider
 				return true;
 			}
 
+			// Seed used to uniquify a select column's alias. For a bare entity-field column in the ROOT
+			// select, seed from the field's physical column name instead of its member-name alias: the
+			// result-set column then keeps its physical name, which is what raw-SQL by-name entity mapping
+			// resolves on (providers that force root aliases - SqlCe / YDB - otherwise rename it to the
+			// member name and break the mapping). The uniquifier still suffixes genuine duplicates, so the
+			// "no duplicate root column names" rule those providers enforce stays satisfied (#5599).
+			// An explicit member rename of a bare field at the root (new { Alias = t.Field }) is
+			// indistinguishable from an implicit member alias in the AST, so it normalizes to the physical
+			// name too; safe because result materialization is ordinal, not by-name (#5657).
+			string? GetColumnAliasSeed(SelectQuery selectQuery, SqlColumn column)
+			{
+				if (ReferenceEquals(selectQuery, _rootSelectQuery) && column.Expression is SqlField field)
+					return field.PhysicalName;
+
+				return _newAliases.GetColumnAlias(column);
+			}
+
 			protected internal override IQueryElement VisitSqlTableLikeSource(SqlTableLikeSource element)
 			{
 				base.VisitSqlTableLikeSource(element);
@@ -138,7 +147,7 @@ namespace LinqToDB.Internal.DataProvider
 					null,
 					(n, a) => IsValidAlias(n),
 					f => TruncateAlias(f.PhysicalName),
-					(f, n, a) => { f.PhysicalName = n; },
+					(f, n, a) => { _newAliases.SetFieldName(f, n); },
 					f =>
 					{
 						var a = TruncateAlias(f.PhysicalName);
@@ -152,7 +161,7 @@ namespace LinqToDB.Internal.DataProvider
 				if (element.SourceQuery != null)
 				{
 					for (var i = 0; i < element.SourceFields.Count; i++)
-						element.SourceQuery.Select.Columns[i].Alias = element.SourceFields[i].PhysicalName;
+						_newAliases.SetColumnAlias(element.SourceQuery.Select.Columns[i], _newAliases.GetFieldName(element.SourceFields[i]));
 
 					_newAliases.RegisterAliased(element.SourceQuery);
 				}
@@ -171,7 +180,8 @@ namespace LinqToDB.Internal.DataProvider
 					f => TruncateAlias(f.Name),
 					(f, n, a) =>
 					{
-						f.Name = n;
+						_newAliases.SetFieldName(f, n);
+						// do not touch name
 					},
 					f =>
 					{
@@ -189,15 +199,16 @@ namespace LinqToDB.Internal.DataProvider
 				{
 					for (var i = 0; i < element.Fields.Count; i++)
 					{
-						var field = element.Fields[i];
+						var field     = element.Fields[i];
+						var fieldName = _newAliases.GetFieldName(field);
 
-						element.Body.Select.Columns[i].Alias = field.Name;
+						_newAliases.SetColumnAlias(element.Body.Select.Columns[i], fieldName);
 
 						if (element.Body.HasSetOperators)
 						{
 							foreach (var setOperator in element.Body.SetOperators)
 							{
-								setOperator.SelectQuery.Select.Columns[i].Alias = field.Name;
+								_newAliases.SetColumnAlias(setOperator.SelectQuery.Select.Columns[i], fieldName);
 							}
 						}
 					}
@@ -213,9 +224,6 @@ namespace LinqToDB.Internal.DataProvider
 			protected internal override IQueryElement VisitSqlCteTable(SqlCteTable element)
 			{
 				base.VisitSqlCteTable(element);
-
-				// SqlCteTableField.Name delegates to CteField.Name automatically,
-				// so no manual sync needed.
 
 				_newAliases.RegisterAliased(element);
 
@@ -241,15 +249,15 @@ namespace LinqToDB.Internal.DataProvider
 						selectQuery.Select.Columns.Where(c => !string.Equals(c.Alias, "*", StringComparison.Ordinal)),
 						null,
 						(n, a) => IsValidAlias(n),
-						c => TruncateAlias(c.Alias ?? string.Empty),
+						c => TruncateAlias(GetColumnAliasSeed(selectQuery, c) ?? string.Empty),
 						(c, n, a) =>
 						{
 							a?.Add(n);
-							c.Alias = n;
+							_newAliases.SetColumnAlias(c, n);
 						},
 						c =>
 						{
-							var a = TruncateAlias(c.Alias ?? string.Empty);
+							var a = TruncateAlias(_newAliases.GetColumnAlias(c) ?? string.Empty);
 							return string.IsNullOrEmpty(a)
 								? "c1"
 								: a + (a!.EndsWith('_') ? string.Empty : "_") + "1";
@@ -260,12 +268,13 @@ namespace LinqToDB.Internal.DataProvider
 					{
 						for (var i = 0; i < selectQuery.Select.Columns.Count; i++)
 						{
-							var col = selectQuery.Select.Columns[i];
+							var col      = selectQuery.Select.Columns[i];
+							var colAlias = _newAliases.GetColumnAlias(col);
 
 							foreach (var t in selectQuery.SetOperators)
 							{
 								var union = t.SelectQuery.Select;
-								union.Columns[i].Alias = col.Alias;
+								_newAliases.SetColumnAlias(union.Columns[i], colAlias);
 							}
 						}
 					}
