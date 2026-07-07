@@ -459,6 +459,14 @@ namespace LinqToDB.Data
 
 				var result = new List<(string, IReadOnlyList<SqlParameter>, int)>();
 
+				// Convert+alias upfront (then render with no build-time re-convert) so the AliasesContext is built over the
+				// final nodes and references (e.g. an eager-grouping JOIN key) resolve — but only when EVERY statement in the
+				// group is non-parameter-dependent, because a combined command shares one parameter scope/context. Run the
+				// parameter-dependence WALK, not just the flag (only GetCommand sets the flag, and only for the main query):
+				// a child carrying a Rows==null VALUES table is parameter-dependent and must render with its values.
+				var convertAll = statements.All(s => !s.IsParameterDependent
+					&& !sqlOptimizer.IsParameterDependent(NullabilityContext.NonQuery, dataConnection.MappingSchema, s, options));
+
 				using var sb = Pools.StringBuilder.Allocate();
 
 				var i = 0;
@@ -466,7 +474,7 @@ namespace LinqToDB.Data
 				while (i < statements.Count)
 				{
 					// Each command has its OWN parameter scope (fresh normalizer), so names are uniquified per command.
-					var optimizationContext = ScenarioCommandRenderer.CreateRenderContext(dataConnection, sqlOptimizer, factory, parameterValues);
+					var optimizationContext = ScenarioCommandRenderer.CreateRenderContext(dataConnection, sqlOptimizer, factory, parameterValues, convertAll);
 
 					optimizationContext.ShareParametersByAccessor = true;
 
@@ -477,9 +485,14 @@ namespace LinqToDB.Data
 					// Always at least one statement per command; then keep appending until the SQL reaches the length cap.
 					while (i < statements.Count && (count == 0 || sb.Value.Length < maxCommandLength))
 					{
-						var aliases = ScenarioCommandRenderer.PrepareStepAliases(serviceProvider, statements[i]);
+						var statement = statements[i];
 
-						ScenarioCommandRenderer.AppendConcatenatedStatement(sb.Value, sqlBuilder, optimizationContext, statements[i], aliases, count == 0, 0);
+						if (convertAll)
+							statement = optimizationContext.OptimizeAndConvertAll(statement, NullabilityContext.GetContext(statement.SelectQuery));
+
+						var aliases = ScenarioCommandRenderer.PrepareStepAliases(serviceProvider, statement);
+
+						ScenarioCommandRenderer.AppendConcatenatedStatement(sb.Value, sqlBuilder, optimizationContext, statement, aliases, count == 0, 0);
 
 						count++;
 						i++;

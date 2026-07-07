@@ -126,17 +126,20 @@ namespace LinqToDB.Internal.SqlProvider
 		/// length-split concatenated command); the caller sets <see cref="OptimizationContext.ShareParametersByAccessor"/>
 		/// when several statements share one scope.
 		/// </summary>
-		internal static OptimizationContext CreateRenderContext(DataConnection dataConnection, ISqlOptimizer sqlOptimizer, ISqlExpressionFactory factory, IReadOnlyParameterValues? parameterValues) =>
+		internal static OptimizationContext CreateRenderContext(DataConnection dataConnection, ISqlOptimizer sqlOptimizer, ISqlExpressionFactory factory, IReadOnlyParameterValues? parameterValues, bool optimizeAndConvertAll) =>
 			new(
-				new EvaluationContext(parameterValues),
+				// Converting-all upfront must NOT pass parameter values (baking this run's values into a cached statement
+				// would make a re-run reuse them). The parameter-dependent path keeps the values so render-time evaluation
+				// works — e.g. a VALUES table's BuildRows enumerating its source collection. Mirrors DataConnection.QueryRunner.GetCommand.
+				new EvaluationContext(optimizeAndConvertAll ? null : parameterValues),
 				dataConnection.Options,
 				dataConnection.DataProvider.SqlProviderFlags,
 				dataConnection.MappingSchema,
-				sqlOptimizer.CreateOptimizerVisitor(false),
-				sqlOptimizer.CreateConvertVisitor(false),
+				sqlOptimizer.CreateOptimizerVisitor(optimizeAndConvertAll),
+				sqlOptimizer.CreateConvertVisitor(optimizeAndConvertAll),
 				factory,
 				dataConnection.DataProvider.SqlProviderFlags.IsParameterOrderDependent,
-				isAlreadyOptimizedAndConverted : false,
+				isAlreadyOptimizedAndConverted : optimizeAndConvertAll,
 				parametersNormalizerFactory    : dataConnection.DataProvider.GetQueryParameterNormalizer);
 
 		/// <summary>
@@ -250,18 +253,32 @@ namespace LinqToDB.Internal.SqlProvider
 
 			for (var i = 0; i < statements.Count; i++)
 			{
+				var statement = statements[i];
+
+				// Convert+alias upfront (then render with no build-time re-convert) only when the statement is NOT
+				// parameter-dependent, so the AliasesContext is built over the final nodes and references (e.g. an
+				// eager-grouping JOIN key) resolve. Run the parameter-dependence WALK, not just the flag: the flag is
+				// only set by GetCommand for the main query, so an eager child (e.g. one carrying a Rows==null VALUES
+				// table, whose rows are enumerated at render) would otherwise look non-dependent and lose its values.
+				// Each DbBatch statement is its own command/scope, so the decision is per statement.
+				var convertAll = !statement.IsParameterDependent
+					&& !sqlOptimizer.IsParameterDependent(NullabilityContext.NonQuery, dataConnection.MappingSchema, statement, options);
+
 				// Fresh normalizer per statement => each statement's parameters are named independently.
-				var optimizationContext = CreateRenderContext(dataConnection, sqlOptimizer, factory, parameterValues);
+				var optimizationContext = CreateRenderContext(dataConnection, sqlOptimizer, factory, parameterValues, convertAll);
 
 				sb.Value.Length = 0;
 
-				var aliases = PrepareStepAliases(serviceProvider, statements[i]);
+				if (convertAll)
+					statement = optimizationContext.OptimizeAndConvertAll(statement, NullabilityContext.GetContext(statement.SelectQuery));
+
+				var aliases = PrepareStepAliases(serviceProvider, statement);
 
 #if BUGCHECK
 				RenderDiagnostics.BuildSqlCount++;
 #endif
 				using (ActivityService.Start(ActivityID.BuildSql))
-					sqlBuilder.BuildSql(statements[i], sb.Value, optimizationContext, aliases, null, 0);
+					sqlBuilder.BuildSql(statement, sb.Value, optimizationContext, aliases, null, 0);
 
 				result[i] = new CommandWithParameters(sb.Value.ToString(), optimizationContext.GetParameters());
 			}
