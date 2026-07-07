@@ -6,7 +6,8 @@
 			"PostgreSQL.15",
 			"PostgreSQL.16",
 			"PostgreSQL.17",
-			"PostgreSQL.18"
+			"PostgreSQL.18",
+			"PostgreSQL.19"
 		]
 	}
 }
