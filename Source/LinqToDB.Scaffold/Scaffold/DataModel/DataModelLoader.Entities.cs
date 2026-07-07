@@ -162,9 +162,6 @@ namespace LinqToDB.Scaffold
 
 		bool ShouldUseGetSqlDecimal(Column column, TypeMapping typeMapping)
 		{
-			const int ClrDecimalPrecision = 29;
-			const int ClrDecimalScale     = 28;
-
 			if (!_options.DataModel.GenerateSqlServerDecimalOverflowProtection)
 				return false;
 
@@ -174,7 +171,7 @@ namespace LinqToDB.Scaffold
 			if (!_languageProvider.TypeEqualityComparerWithoutNRT.Equals(typeMapping.CLRType, WellKnownTypes.System.Decimal))
 				return false;
 
-			return column.Type.Precision > ClrDecimalPrecision || column.Type.Scale > ClrDecimalScale;
+			return SqlServerDecimalOverflow.ExceedsClrLimits(column.Type.Precision, column.Type.Scale);
 		}
 
 		/// <summary>

@@ -9,7 +9,8 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 		public static decimal ConvertSqlDecimal(SqlDecimal value)
 		{
-			if (value.Precision > ClrPrecision)
+			// A 29-digit value can exceed decimal.MaxValue (~7.9E28), so precision 29 is not guaranteed to fit and may still be salvageable by scale reduction.
+			if (value.Precision >= ClrPrecision)
 			{
 				for (var scale = Math.Min((int)value.Scale, 28); scale >= 0; scale--)
 				{

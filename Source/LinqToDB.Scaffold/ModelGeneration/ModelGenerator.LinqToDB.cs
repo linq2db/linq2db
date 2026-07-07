@@ -6,6 +6,7 @@ using System.Text;
 
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Scaffold.Internal;
 using LinqToDB.SqlQuery;
 
 #pragma warning disable CA1861
@@ -564,12 +565,9 @@ namespace LinqToDB.Tools.ModelGeneration
 
 					static bool ShouldUseGetSqlDecimal(IColumn column)
 					{
-						const int ClrDecimalPrecision = 29;
-						const int ClrDecimalScale     = 28;
-
 						return
-							string.Equals(column.BuildType(), "decimal", StringComparison.Ordinal) &&
-							(column.Precision > ClrDecimalPrecision || column.Scale > ClrDecimalScale);
+							column.BuildType() is "decimal" or "decimal?" &&
+							SqlServerDecimalOverflow.ExceedsClrLimits(column.Precision, column.Scale);
 					}
 
 					// PK.

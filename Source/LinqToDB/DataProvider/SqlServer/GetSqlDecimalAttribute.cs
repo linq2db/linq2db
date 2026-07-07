@@ -13,6 +13,9 @@ namespace LinqToDB.DataProvider.SqlServer
 	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, Inherited = true, AllowMultiple = true)]
 	public sealed class GetSqlDecimalAttribute : ValueConverterAttribute
 	{
+		/// <summary>
+		/// Initializes a new instance of the <see cref="GetSqlDecimalAttribute"/> class, configured to read SQL Server <see cref="decimal"/> values through the provider-specific <see cref="SqlDecimal"/> reader.
+		/// </summary>
 		public GetSqlDecimalAttribute()
 		{
 			Configuration  = ProviderName.SqlServer;
