@@ -777,13 +777,11 @@ namespace Tests.LinqToDB.CLI
 		public async Task QueryResolvesConfigRelativePathsFromConfigDirectory()
 		{
 			var environment = new TestCliEnvironment();
-			var providerLocation = Path.GetRelativePath("config", typeof(DataConnection).Assembly.Location);
 
-			environment.Files.Add("config\\query.json", $$"""
+			environment.Files.Add("config\\query.json", """
 				{
 					"default": {
 						"provider": "SQLite",
-						"providerLocation": "{{providerLocation.Replace("\\", "\\\\")}}",
 						"connectionString": "Data Source=:memory:",
 						"output": "csv",
 						"outputFile": "query.csv"
@@ -833,29 +831,27 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
-		public async Task QueryAcceptsProviderLocationFromConfigProfile()
+		public async Task QueryResolvesConfigRelativeProviderLocationFromConfigDirectory()
 		{
 			var environment = new TestCliEnvironment();
-			var providerDirectory = Path.GetDirectoryName(typeof(DataConnection).Assembly.Location)!;
-			var config      = AddConfigFile(environment, """
+
+			environment.Files.Add("config\\query.json", """
 				{
 					"default": {
 						"provider": "SQLite",
-						"providerLocation": "%PROVIDER_ROOT%\\linq2db.dll",
+						"providerLocation": "providers\\MySql.Data.dll",
 						"connectionString": "Data Source=:memory:"
 					}
 				}
 				""");
 
-			environment.EnvironmentVariables.Add("PROVIDER_ROOT", providerDirectory);
-
-			var result = await RunCli(environment, "query", "--config", config, "--sql", "select 1 as Value");
+			var result = await RunCli(environment, "query", "--config", "config\\query.json", "--sql", "select 1 as Value");
 
 			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("\"Value\":\"1\""));
-				Assert.That(result.Error,    Is.Empty);
+				Assert.That(result.ExitCode, Is.EqualTo(-3));
+				Assert.That(result.Output,   Is.Empty);
+				Assert.That(result.Error,    Does.Contain("Provider assembly 'config\\providers\\MySql.Data.dll' not found."));
 			}
 		}
 
