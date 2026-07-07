@@ -65,12 +65,14 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 		}
 
 		// Always 3 millisecond digits, plus sub-millisecond digits only when present.
+		// The output is exact: .NET's ".fff" truncates rather than rounds, so the appended
+		// ticks are precisely the digits it dropped.
 		// Not fewer digits (".5"): strftime('%f') emits exactly 3 digits and existing
 		// linq2db-written data stores exactly 3, and raw-text comparisons (e.g. the unwrapped
 		// column side of an IN-list predicate) need those shapes to match.
-		// Not truncated (".123" for ".1236"): comparison operands are normalized via strftime,
-		// which rounds to the nearest millisecond — stored ".1236" normalizes to ".124" while a
-		// truncated ".123" stays ".123", so the same instant compares unequal.
+		// Not plain ".fff" (".123" for ".1236"): SQLite normalizes comparison operands via
+		// strftime, which rounds to the nearest millisecond — stored ".1236" normalizes to
+		// ".124" while a truncated ".123" stays ".123", so the same instant compares unequal.
 		internal static string FormatDateTime(DateTime value)
 		{
 			var result = value.ToString("yyyy-MM-dd HH:mm:ss.fff", DateTimeFormatInfo.InvariantInfo);
