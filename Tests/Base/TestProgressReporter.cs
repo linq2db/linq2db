@@ -18,10 +18,10 @@ namespace Tests
 	/// <para>
 	/// Opt-in: the reporter is a no-op unless the <c>--test-progress</c> command-line option is passed (see
 	/// <see cref="TestCommandLine"/>). A bare <c>--test-progress</c> writes the file to
-	/// <c>&lt;repoRoot&gt;/.build/.claude/test-progress.&lt;tfm&gt;.&lt;pid&gt;.json</c>; <c>--test-progress &lt;dir|*.json&gt;</c>
+	/// <c>&lt;repoRoot&gt;/.build/.agents/test-progress.&lt;tfm&gt;.&lt;pid&gt;.json</c>; <c>--test-progress &lt;dir|*.json&gt;</c>
 	/// uses that path instead.
 	/// </para>
-	/// See <c>.claude/docs/testing.md</c> → "Monitoring a long run".
+	/// See <c>.agents/docs/testing.md</c> → "Monitoring a long run".
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Assembly)]
 	public sealed class TestProgressReporterAttribute : NUnitAttribute, ITestAction
@@ -207,7 +207,7 @@ namespace Tests
 					return env;
 			}
 
-			return Path.Combine(FindRepoRoot(), ".build", ".claude", fileName);
+			return Path.Combine(FindRepoRoot(), ".build", ".agents", fileName);
 		}
 
 		static bool IsDisabledValue(string? value)

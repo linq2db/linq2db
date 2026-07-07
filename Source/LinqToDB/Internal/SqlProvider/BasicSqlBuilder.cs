@@ -48,9 +48,15 @@ namespace LinqToDB.Internal.SqlProvider
 			QueryName          = parentBuilder.QueryName;
 			TableIDs           = parentBuilder.TableIDs ??= new(StringComparer.Ordinal);
 			NullabilityContext = parentBuilder.NullabilityContext;
+			// Nested builders (subqueries, CTE bodies, set-operation parts) must share the parent's
+			// finalized aliases: names live in this context, not on the AST nodes, so a fresh empty
+			// context would make every name resolve to its raw node value.
+			AliasesContext     = parentBuilder.AliasesContext;
 		}
 
-		public AliasesContext      AliasesContext      { get; protected set; } = null!;
+		// Default to an empty context (all accessors fall back to the node's own value) so that any
+		// SQL-rendering path that runs before BuildSql assigns the real one still resolves names.
+		public AliasesContext      AliasesContext      { get; protected set; } = new();
 		public OptimizationContext OptimizationContext { get; protected set; } = null!;
 		public MappingSchema       MappingSchema       { get;                }
 		public StringBuilder       StringBuilder       { get; set;           } = null!;
@@ -105,7 +111,63 @@ namespace LinqToDB.Internal.SqlProvider
 		/// </summary>
 		protected virtual bool IsOverRequiredWithinGroup => false;
 
-		protected virtual bool CanSkipRootAliases(SqlStatement statement) => true;
+		protected virtual bool CanSkipRootAliases(SqlStatement statement)
+		{
+			// Providers whose final SELECT can't carry two columns with the same name - SqlCe / YDB reject
+			// it at the server, Access' reader can't map the duplicate back by name so a raw
+			// ToSqlQuery -> Query<T> round-trip returns defaults - must emit final aliases when the root
+			// SELECT has a name collision, so the aliasing-pass-uniquified names (PersonID / PersonID_1) are
+			// rendered. Non-colliding selects are unaffected. #5599 / #5657.
+			if (RequiresUniqueRootColumnNames && RootSelectHasDuplicateColumnNames(statement))
+				return false;
+
+			return true;
+		}
+
+		/// <summary>
+		/// <see langword="true" /> when the provider's final SELECT cannot contain two columns that render
+		/// with the same result-set name. Such providers force final aliases for a root column-name
+		/// collision (see <see cref="CanSkipRootAliases"/>) instead of skipping root aliases.
+		/// </summary>
+		protected virtual bool RequiresUniqueRootColumnNames => false;
+
+		// True when the root SELECT projects two columns that render with the same result-set name: bare
+		// fields sharing a physical column name (e.g. `select new { p.ID, d.PersonID }` where both map to
+		// PersonID), or a derived-subquery column colliding with such a field (e.g. the same name reached via
+		// `db.Doctor.Select(x => x.PersonID).AsSubQuery()` joined to a table exposing PersonID). The aliasing
+		// pass already uniquified the collision in the context (PersonID / PersonID_1); this detects it so
+		// CanSkipRootAliases can force those aliases to be emitted for providers that can't tolerate duplicate
+		// result-column names.
+		bool RootSelectHasDuplicateColumnNames(SqlStatement statement)
+		{
+			var select = statement.SelectQuery?.Select;
+			if (select is null || select.Columns.Count < 2)
+				return false;
+
+			HashSet<string>? names = null;
+			foreach (var column in select.Columns)
+			{
+				// The result-set name a column renders with when its alias is skipped: a bare field renders
+				// its finalized field name, a reference to a sub-query / derived-table column renders that
+				// column's finalized alias. Computed columns render without a usable name and carry unique
+				// synthetic aliases, so they never collide by name.
+				var name = column.Expression switch
+				{
+					SqlFieldBase field => AliasesContext.GetFieldName(field),
+					SqlColumn nested   => AliasesContext.GetColumnAlias(nested),
+					_                  => null,
+				};
+
+				if (!string.IsNullOrEmpty(name))
+				{
+					names ??= new(StringComparer.OrdinalIgnoreCase);
+					if (!names.Add(name!))
+						return true;
+				}
+			}
+
+			return false;
+		}
 
 		/// <summary>
 		/// Placement of the optional <c>WHERE &lt;predicate&gt;</c> that guards the UPDATE branch of
@@ -251,7 +313,7 @@ namespace LinqToDB.Internal.SqlProvider
 						var sqlBuilder = ((BasicSqlBuilder)CreateSqlBuilder());
 						sqlBuilder.BuildSql(commandNumber,
 							new SqlSelectStatement(union.SelectQuery) { ParentStatement = statement }, sb,
-							optimizationContext, indent, 
+							optimizationContext, indent,
 							aliasMode, NullabilityContext);
 						MergeSqlBuilderData(sqlBuilder);
 					}
@@ -721,7 +783,7 @@ namespace LinqToDB.Internal.SqlProvider
 								StringBuilder.AppendLine(Comma);
 							firstField = false;
 							AppendIndent();
-							Convert(StringBuilder, field.Name, ConvertType.NameToQueryField);
+							Convert(StringBuilder, AliasesContext.GetFieldName(field), ConvertType.NameToQueryField);
 						}
 
 						--Indent;
@@ -738,7 +800,7 @@ namespace LinqToDB.Internal.SqlProvider
 							if (!firstField)
 								StringBuilder.Append(InlineComma);
 							firstField = false;
-							Convert(StringBuilder, field.Name, ConvertType.NameToQueryField);
+							Convert(StringBuilder, AliasesContext.GetFieldName(field), ConvertType.NameToQueryField);
 						}
 
 						StringBuilder.AppendLine(")");
@@ -843,8 +905,24 @@ namespace LinqToDB.Internal.SqlProvider
 
 			var select = ConvertElement(selectQuery.Select);
 
-			foreach (var col in select.Columns)
+			// ConvertElement can rebuild the Select into fresh SqlColumn instances (parameter-dependent
+			// queries re-run the per-element convert at build time, after aliasing). Synthetic column
+			// aliases live in the object-identity-keyed AliasesContext, not on the node, so they must be
+			// read from the original aliased columns - the rebuilt copies were never registered, so
+			// GetColumnAlias would miss them and drop the alias. The build-time convert is value-level: it
+			// refines column expressions but must not add or remove projected columns, so the i-th rebuilt
+			// column maps 1:1 onto the i-th original. Enforce that invariant - a count mismatch would
+			// silently mis-map aliases and emit wrong SQL.
+			var aliasColumns = selectQuery.Select.Columns;
+
+			if (aliasColumns.Count != select.Columns.Count)
+				throw new InvalidOperationException(
+					$"SQL builder convert must not change the SELECT column set (was {aliasColumns.Count}, became {select.Columns.Count}); column aliasing cannot be resolved.");
+
+			for (var i = 0; i < select.Columns.Count; i++)
 			{
+				var col = select.Columns[i];
+
 				if (!first)
 					StringBuilder.AppendLine(Comma);
 
@@ -852,14 +930,15 @@ namespace LinqToDB.Internal.SqlProvider
 
 				var addAlias = true;
 				var expr     = (ISqlExpression)Optimize(col.Expression, reducePredicates: true);
+				var colAlias = AliasesContext.GetColumnAlias(aliasColumns[i]);
 
 				AppendIndent();
-				BuildColumnExpression(selectQuery, expr, col.Alias, ref addAlias);
+				BuildColumnExpression(selectQuery, expr, colAlias, ref addAlias);
 
-				if (!AliasMode.HasFlag(ColumnAliasMode.SkipAlias) && addAlias && !string.IsNullOrEmpty(col.Alias))
+				if (!AliasMode.HasFlag(ColumnAliasMode.SkipAlias) && addAlias && !string.IsNullOrEmpty(colAlias))
 				{
 					StringBuilder.Append(" as ");
-					Convert(StringBuilder, col.Alias!, ConvertType.NameToQueryFieldAlias);
+					Convert(StringBuilder, colAlias!, ConvertType.NameToQueryFieldAlias);
 				}
 			}
 
@@ -1288,7 +1367,7 @@ namespace LinqToDB.Internal.SqlProvider
 			AliasMode = ColumnAliasMode.None;
 
 			var table       = insertOrUpdate.Insert.Into;
-			var targetAlias = ConvertInline(insertOrUpdate.SelectQuery.From.Tables[0].Alias!, ConvertType.NameToQueryTableAlias);
+			var targetAlias = ConvertInline(AliasesContext.GetTableAlias(insertOrUpdate.SelectQuery.From.Tables[0])!, ConvertType.NameToQueryTableAlias);
 			var sourceAlias = ConvertInline(GetTempAliases(1, "s")[0],                        ConvertType.NameToQueryTableAlias);
 			var keys        = insertOrUpdate.Update.Keys;
 
@@ -1429,7 +1508,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 			AppendIndent().AppendLine("WHERE");
 
-			var alias = ConvertInline(insertOrUpdate.SelectQuery.From.Tables[0].Alias!, ConvertType.NameToQueryTableAlias);
+			var alias = ConvertInline(AliasesContext.GetTableAlias(insertOrUpdate.SelectQuery.From.Tables[0])!, ConvertType.NameToQueryTableAlias);
 			var exprs = insertOrUpdate.Update.Keys;
 
 			Indent++;
@@ -1853,7 +1932,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected virtual void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
 		{
-			if (selectQuery.From.Tables.Count == 0 || string.Equals(selectQuery.From.Tables[0].Alias, "$F", StringComparison.Ordinal))
+			if (selectQuery.From.Tables.Count == 0 || string.Equals(AliasesContext.GetTableAlias(selectQuery.From.Tables[0]), "$F", StringComparison.Ordinal))
 				return;
 
 			AppendIndent();
@@ -2072,7 +2151,7 @@ namespace LinqToDB.Internal.SqlProvider
 						StringBuilder.Append(Comma).Append(' ');
 
 					first = false;
-					Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
+					Convert(StringBuilder, AliasesContext.GetFieldName(field), ConvertType.NameToQueryField);
 				}
 
 				StringBuilder.Append(')');
@@ -2092,7 +2171,7 @@ namespace LinqToDB.Internal.SqlProvider
 				else
 					BuildExpression(new SqlValue(field.Type, null));
 				StringBuilder.Append(' ');
-				Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
+				Convert(StringBuilder, AliasesContext.GetFieldName(field), ConvertType.NameToQueryField);
 			}
 
 			BuildEmptyValuesFrom();
@@ -3159,10 +3238,11 @@ namespace LinqToDB.Internal.SqlProvider
 				case QueryElementType.SqlCteTableField:
 				{
 					var cteTableField = (SqlCteTableField)expr;
+					var fieldName     = AliasesContext.GetFieldName(cteTableField);
 
 					if (_disableAlias)
 					{
-						Convert(StringBuilder, cteTableField.Name, ConvertType.NameToQueryField);
+						Convert(StringBuilder, fieldName, ConvertType.NameToQueryField);
 						break;
 					}
 
@@ -3198,7 +3278,7 @@ namespace LinqToDB.Internal.SqlProvider
 								throw new LinqToDBException($"Table {cteTableField.Table} should have an alias.");
 
 							addAlias =
-								!string.Equals(alias, cteTableField.Name, StringComparison.Ordinal)
+								!string.Equals(alias, fieldName, StringComparison.Ordinal)
 								|| !AliasMode.HasFlag(ColumnAliasMode.CompareFieldNames);
 
 							StringBuilder
@@ -3206,18 +3286,19 @@ namespace LinqToDB.Internal.SqlProvider
 						}
 					}
 
-					Convert(StringBuilder, cteTableField.Name, ConvertType.NameToQueryField);
+					Convert(StringBuilder, fieldName, ConvertType.NameToQueryField);
 
 					break;
 				}
 
 				case QueryElementType.SqlField:
 				{
-					var field = (SqlField)expr;
+					var field     = (SqlField)expr;
+					var fieldName = AliasesContext.GetFieldName(field);
 
 					if (_disableAlias)
 					{
-						Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
+						Convert(StringBuilder, fieldName, ConvertType.NameToQueryField);
 						break;
 					}
 
@@ -3273,7 +3354,7 @@ namespace LinqToDB.Internal.SqlProvider
 								throw new LinqToDBException($"Table {field.Table} should have an alias.");
 
 							addAlias =
-								!string.Equals(alias, field.PhysicalName, StringComparison.Ordinal)
+								!string.Equals(alias, fieldName, StringComparison.Ordinal)
 								|| !AliasMode.HasFlag(ColumnAliasMode.CompareFieldNames);
 
 							StringBuilder
@@ -3284,7 +3365,7 @@ namespace LinqToDB.Internal.SqlProvider
 					if (field == field.Table?.All)
 						StringBuilder.Append('*');
 					else
-						Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
+						Convert(StringBuilder, fieldName, ConvertType.NameToQueryField);
 
 					if (suffixName != null)
 						BuildObjectNameSuffix(StringBuilder, suffixName.Value, true);
@@ -3294,14 +3375,15 @@ namespace LinqToDB.Internal.SqlProvider
 
 				case QueryElementType.Column:
 				{
-					var column = (SqlColumn)expr;
+					var column      = (SqlColumn)expr;
+					var columnAlias = AliasesContext.GetColumnAlias(column);
 
 #if DEBUG
 					var sql = Statement.SqlText;
 #endif
 					if (_disableAlias)
 					{
-						Convert(StringBuilder, column.Alias!, ConvertType.NameToQueryField);
+						Convert(StringBuilder, columnAlias!, ConvertType.NameToQueryField);
 						break;
 					}
 
@@ -3333,12 +3415,12 @@ namespace LinqToDB.Internal.SqlProvider
 						throw new LinqToDBException($"Table `{column.Parent}` should have an alias.");
 
 					addAlias =
-						!string.Equals(alias, column.Alias, StringComparison.Ordinal)
+						!string.Equals(alias, columnAlias, StringComparison.Ordinal)
 						|| !AliasMode.HasFlag(ColumnAliasMode.CompareFieldNames);
 
 					Convert(StringBuilder, tableAlias, ConvertType.NameToQueryTableAlias);
 					StringBuilder.Append('.');
-					Convert(StringBuilder, column.Alias!, ConvertType.NameToQueryField);
+					Convert(StringBuilder, columnAlias!, ConvertType.NameToQueryField);
 
 					break;
 				}
@@ -4485,8 +4567,9 @@ namespace LinqToDB.Internal.SqlProvider
 			{
 				case QueryElementType.TableSource:
 				{
-					var ts    = (SqlTableSource)table;
-					var alias = string.IsNullOrEmpty(ts.Alias) ? GetTableAlias(ts.Source) : ts.Alias;
+					var ts      = (SqlTableSource)table;
+					var tsAlias = AliasesContext.GetTableAlias(ts);
+					var alias   = string.IsNullOrEmpty(tsAlias) ? GetTableAlias(ts.Source) : tsAlias;
 					return alias is not ("$" or "$F") ? alias : null;
 				}
 				case QueryElementType.SqlTable:
