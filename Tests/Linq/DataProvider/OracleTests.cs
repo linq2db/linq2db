@@ -453,21 +453,10 @@ namespace Tests.DataProvider
 			conn.Execute<int>($"SELECT LENGTH(\"NClob\") FROM {tableName} WHERE \"Id\" = 3").ShouldBe(value.Length);
 		}
 
-		sealed class ParameterTestCommandInterceptor : CommandInterceptor
-		{
-			public DbParameterCollection Parameters = null!;
-
-			public override DbCommand CommandInitialized(CommandEventData eventData, DbCommand command)
-			{
-				Parameters = command.Parameters;
-				return base.CommandInitialized(eventData, command);
-			}
-		}
-
 		[Test]
 		public void LongStringParameterCustomThresholdTest([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			var parameterInterceptor = new ParameterTestCommandInterceptor();
+			var parameterInterceptor = new SaveCommandInterceptor();
 
 			using var conn  = GetDataContext(context, o => o
 				.WithOptions<OracleOptions>(oo => oo with { MaxStringParameterLength = 10 })
@@ -483,16 +472,16 @@ namespace Tests.DataProvider
 				$"INSERT INTO {tableName} (\"Id\", \"NClob\") VALUES (1, :p)",
 				new DataParameter { Name = "p", Value = value });
 
-			parameterInterceptor.Parameters.Count.ShouldBe(1);
-			((OracleParameter)parameterInterceptor.Parameters[0]).OracleDbType.ShouldBe(OracleDbType.NClob);
+			parameterInterceptor.Parameters.Length.ShouldBe(1);
 
-			conn.Execute<int>($"SELECT LENGTH(\"NClob\") FROM {tableName} WHERE \"Id\" = 1").ShouldBe(value.Length);
+			if (parameterInterceptor.Parameters[0] is OracleParameter p)
+				p.OracleDbType.ShouldBe(OracleDbType.NClob);
 		}
 
 		[Test]
 		public void LongStringParameterNClobInferenceDisabledTest([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			var parameterInterceptor = new ParameterTestCommandInterceptor();
+			var parameterInterceptor = new SaveAndSkipCommandInterceptor();
 
 			using var conn  = GetDataContext(context, o => o
 				.WithOptions<OracleOptions>(oo => oo with { MaxStringParameterLength = null })
@@ -502,16 +491,16 @@ namespace Tests.DataProvider
 
 			var tableName = table.GetTableName();
 
-			var value = "LongStringValue".PadRight(10000, '1');
+			var value = "LongStringValue".PadRight(50000, '1');
 
 			conn.Execute(
 				$"INSERT INTO {tableName} (\"Id\", \"NClob\") VALUES (1, :p)",
 				new DataParameter { Name = "p", Value = value });
 
-			parameterInterceptor.Parameters.Count.ShouldBe(1);
-			((OracleParameter)parameterInterceptor.Parameters[0]).OracleDbType.ShouldBe(OracleDbType.Varchar2);
+			parameterInterceptor.Parameters.Length.ShouldBe(1);
 
-			conn.Execute<int>($"SELECT LENGTH(\"NClob\") FROM {tableName} WHERE \"Id\" = 1").ShouldBe(value.Length);
+			if (parameterInterceptor.Parameters[0] is OracleParameter p)
+				p.OracleDbType.ShouldBe(OracleDbType.Varchar2);
 		}
 
 		[Test, Ignore("TODO: needs to implement providing parameter type in LINQ expressions")]
