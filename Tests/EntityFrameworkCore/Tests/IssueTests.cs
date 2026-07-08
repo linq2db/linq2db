@@ -1066,6 +1066,29 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			}
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5364")]
+		public void TempTableSurvivesAcrossCommands([EFDataSources] string provider)
+		{
+			// #5364 fix-scope guard: the explicit CreateLinqToDBContext() must keep its connection
+			// open across commands (SQL temp tables are connection-scoped), even after the implicit
+			// ToLinqToDB() path is changed to release the connection per query.
+			using var ctx = CreateContext(provider);
+			using var db  = ctx.CreateLinqToDBContext();
+
+			var data = new[]
+			{
+				new IdentityTable() { Name = "Bar" },
+				new IdentityTable() { Name = "Baz" },
+			};
+
+			using var table = db.CreateTempTable(data);          // command 1: create + populate
+
+			table.Count().ShouldBe(2);                           // command 2: separate query on the same connection
+
+			table.OrderBy(e => e.Id).Select(e => e.Name).ToArray()
+				.ShouldBe(new[] { "Bar", "Baz" });               // command 3
+		}
+
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5355")]
 		public void Issue5355_ContainsViaIEnumerableInGenericMethod([EFDataSources] string provider)
 		{
