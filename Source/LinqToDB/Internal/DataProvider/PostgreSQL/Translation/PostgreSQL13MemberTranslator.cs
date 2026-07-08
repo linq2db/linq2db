@@ -10,10 +10,8 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 	{
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
 		{
-			var factory  = translationContext.ExpressionFactory;
-			var timePart = factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "gen_random_uuid");
-
-			return timePart;
+			var factory = translationContext.ExpressionFactory;
+			return factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "gen_random_uuid");
 		}
 	}
 }

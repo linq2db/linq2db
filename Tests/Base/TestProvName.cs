@@ -95,12 +95,15 @@ namespace Tests
 		public const string AllPostgreSQL13Plus  = $"{ProviderName.PostgreSQL13},{PostgreSQL14},{AllPostgreSQL15Plus}";
 		public const string AllPostgreSQL15Plus  = $"{ProviderName.PostgreSQL15},{PostgreSQL16},{AllPostgreSQL17Plus}";
 		public const string AllPostgreSQL17Plus  = $"{PostgreSQL17},{AllPostgreSQL18Plus}";
-		public const string AllPostgreSQL18Plus  = ProviderName.PostgreSQL18;
+		public const string AllPostgreSQL18Plus  = $"{ProviderName.PostgreSQL18},{AllPostgreSQL19Plus}";
+		public const string AllPostgreSQL19Plus  = ProviderName.PostgreSQL19;
 		public const string AllPostgreSQL        = $"{AllPostgreSQL9},{AllPostgreSQL10Plus}";
 		public const string AllPostgreSQL12Minus = $"{AllPostgreSQL9},{PostgreSQL10},{PostgreSQL11},{PostgreSQL12}";
 		public const string AllPostgreSQL14Minus = $"{AllPostgreSQL12Minus},{ProviderName.PostgreSQL13},{PostgreSQL14}";
 		public const string AllPostgreSQL15Minus = $"{AllPostgreSQL14Minus},{ProviderName.PostgreSQL15}";
 		public const string AllPostgreSQL16Minus = $"{AllPostgreSQL15Minus},{PostgreSQL16}";
+		public const string AllPostgreSQL17Minus = $"{AllPostgreSQL16Minus},{PostgreSQL17}";
+		public const string AllPostgreSQL18Minus = $"{AllPostgreSQL17Minus},{ProviderName.PostgreSQL18}";
 		#endregion
 
 		#region Firebird

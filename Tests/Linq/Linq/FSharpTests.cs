@@ -1,4 +1,6 @@
-﻿using LinqToDB;
+﻿using System.Threading.Tasks;
+
+using LinqToDB;
 using LinqToDB.Data;
 
 using NUnit.Framework;
@@ -102,8 +104,15 @@ namespace Tests.Linq
 			FSharp.WhereTest.LoadSinglesWithPatient(db);
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/195")]
 		public void LoadSingleWithOptions([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.WhereTest.LoadSingleWithOptions(db);
+		}
+
+		[Test(Description = "Explicit MappingSchema option-type registration still works alongside UseFSharp auto-mapping")]
+		public void LoadSingleWithExplicitOptionsMapping([DataSources] string context)
 		{
 			var ms = FSharp.MappingSchema.Initialize();
 
@@ -111,13 +120,58 @@ namespace Tests.Linq
 			FSharp.WhereTest.LoadSingleWithOptions(db);
 		}
 
-		[ActiveIssue]
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/195")]
-		public void BuiltInOptionsHandling([DataSources] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4646")]
+		public void Issue4646_OptionRoundtrip([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
+			FSharp.Issue4646.TestOptionRoundtrip(db);
+		}
 
-			FSharp.WhereTest.LoadSingleWithOptions(db);
+		[Test(Description = "Auto 'T option mapping must not override an explicit fluent DataType on an option column (#195 follow-up)")]
+		public void OptionMapping_ExplicitDataTypePreserved([DataSources] string context)
+		{
+			var ms = FSharp.OptionMappingPrecedence.BuildExplicitSchema();
+
+			using var db = GetDataContext(context, ms);
+			FSharp.OptionMappingPrecedence.VerifyExplicitDataTypePreserved(db);
+		}
+
+		[Test(Description = "Nullable<_> element option must not produce Nullable<Nullable<_>> (#195)")]
+		public void Option_NullableElementRoundtrip([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.OptionTypes.TestNullableElementOptionRoundtrip(db);
+		}
+
+		[Test(Description = "F# struct value-options ('T voption) are auto-mapped like reference options (#195)")]
+		public void Option_ValueOptionRoundtrip([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.OptionTypes.TestValueOptionRoundtrip(db);
+		}
+
+		[Test(Description = "Auto 'decimal option' mapping resolves provider-faithful precision/scale - no scale truncation (#195)")]
+		public void Option_DecimalRoundtrip([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.OptionTypes.TestDecimalOptionRoundtrip(db);
+		}
+
+		[Test(Description = "An option over a complex/entity element is not auto-scalarized; only scalar-element options are (#195)")]
+		public void Option_ComplexElementNotScalarized([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.OptionTypes.VerifyComplexElementOptionNotScalarized(db);
+		}
+
+		[ActiveIssue("F# option auto-mapping gate (IsScalarOption) consults MappingSchema.Default, so an option over a type that is scalar only in the user/provider schema is not auto-mapped")]
+		[Test(Description = "An option over a type that is scalar only in the user/provider schema (not MappingSchema.Default) must still auto-map (#195)")]
+		public void Option_CustomScalarElementMapped([DataSources] string context)
+		{
+			var ms = FSharp.OptionTypes.BuildCustomScalarSchema();
+
+			using var db = GetDataContext(context, ms);
+			FSharp.OptionTypes.VerifyCustomScalarOptionMapped(db);
 		}
 
 		[Test]
@@ -246,12 +300,67 @@ namespace Tests.Linq
 			FSharp.Issue4132.Issue4132Test1(db);
 		}
 
-		[ActiveIssue(5598, Configuration = TestProvName.AllYdb, Details = "F# {record with ...} update emits every column (incl. the PK) instead of only the changed one; YDB rejects assigning a PK column in SET")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4132")]
 		public void Issue4132Test2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			FSharp.Issue4132.Issue4132Test2(db);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5598")]
+		public void Issue5598_UpdateSetsOnlyChangedColumn([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+			FSharp.Issue5598.UpdateSetsOnlyChangedColumn(db, true);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5598")]
+		public void Issue5598_UpdateSetsOnlyChangedColumnYdb([IncludeDataSources(false, TestProvName.AllYdb)] string context)
+		{
+			using var db = GetDataConnection(context);
+			FSharp.Issue5598.UpdateSetsOnlyChangedColumn(db, false);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5598")]
+		public async Task Issue5598_UpdateSetsOnlyChangedColumnAsync([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+			await FSharp.Issue5598.UpdateSetsOnlyChangedColumnAsync(db, true);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5598")]
+		public async Task Issue5598_UpdateSetsOnlyChangedColumnAsyncYdb([IncludeDataSources(false, TestProvName.AllYdb)] string context)
+		{
+			using var db = GetDataConnection(context);
+			await FSharp.Issue5598.UpdateSetsOnlyChangedColumnAsync(db, false);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5598")]
+		public void Issue5598_UpdateSetsOnlyChangedColumnNoPredicate([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+			FSharp.Issue5598.UpdateSetsOnlyChangedColumnNoPredicate(db, true);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5598")]
+		public void Issue5598_UpdateSetsOnlyChangedColumnNoPredicateYdb([IncludeDataSources(false, TestProvName.AllYdb)] string context)
+		{
+			using var db = GetDataConnection(context);
+			FSharp.Issue5598.UpdateSetsOnlyChangedColumnNoPredicate(db, false);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5598")]
+		public void Issue5598_UpdateNoOpExcludesPrimaryKey([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+			FSharp.Issue5598.UpdateNoOpExcludesPrimaryKey(db, true);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5598")]
+		public void Issue5598_UpdateNoOpExcludesPrimaryKeyYdb([IncludeDataSources(false, TestProvName.AllYdb)] string context)
+		{
+			using var db = GetDataConnection(context);
+			FSharp.Issue5598.UpdateNoOpExcludesPrimaryKey(db, false);
 		}
 
 		[ActiveIssue]

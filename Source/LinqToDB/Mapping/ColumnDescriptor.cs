@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
@@ -417,7 +418,13 @@ namespace LinqToDB.Mapping
 			DbDataType? dbDataType = null;
 
 			if (completeDataType && dataType == DataType.Undefined)
-				dbDataType = CalculateDbDataType(MappingSchema, systemType);
+				// When a ValueConverter is present, resolve the DB type from the converter's *provider* type
+				// against this descriptor's (active, provider-inclusive) MappingSchema rather than the member
+				// type - so e.g. an F# 'decimal option' (provider type Nullable<decimal>) picks up the
+				// provider's decimal(18,10) and 'string option' the provider's preferred string type. The
+				// member type often has no DB type of its own (the converter is what maps it to a column).
+				// Falls back to the member type when there is no converter.
+				dbDataType = CalculateDbDataType(MappingSchema, ValueConverter?.ToProviderExpression.Body.Type ?? systemType);
 
 			return new DbDataType(systemType, dbDataType?.DataType ?? dataType, DbType ?? dbDataType?.DbType, Length ?? dbDataType?.Length, Precision ?? dbDataType?.Precision, Scale ?? dbDataType?.Scale);
 		}
@@ -771,6 +778,15 @@ namespace LinqToDB.Mapping
 			return ApplyConversions(MappingSchema, getterExpr, dbDataType, ValueConverter, includingEnum, CanBeNull);
 		}
 
+		List<ColumnDescriptor>? _valueSiblings;
+
+		/// <summary>
+		/// Registers another inheritance-mapped column that maps a distinct member to the same physical
+		/// column as this one. Lets <see cref="GetProviderValue"/> read the value from the member matching
+		/// the row's runtime type, so inserts of a base-typed (mixed) source write shared columns correctly.
+		/// </summary>
+		internal void AddValueSibling(ColumnDescriptor sibling) => (_valueSiblings ??= new()).Add(sibling);
+
 		/// <summary>
 		/// Extracts column value, converted to database type, from entity object.
 		/// </summary>
@@ -782,15 +798,53 @@ namespace LinqToDB.Mapping
 			{
 				var objParam      = Expression.Parameter(typeof(object), "obj");
 
-				var objExpression = Expression.Convert(objParam, MemberAccessor.TypeAccessor.Type);
+				// A column inherited from an abstract intermediate type is owned by the member's declaring
+				// type, which every concrete subtype shares. Guarding/casting by the single concrete entity
+				// type would exclude sibling subtypes, so a base-typed (mixed) insert would write the default
+				// for them. Widen to the declaring type for inheritance-mapped columns.
+				var entityType    = MemberAccessor.TypeAccessor.Type;
+				if (HasInheritanceMapping
+					&& MemberAccessor.MemberInfo.DeclaringType is { } declaringType
+					&& declaringType != entityType
+					&& declaringType.IsAssignableFrom(entityType))
+				{
+					entityType = declaringType;
+				}
+
+				var objExpression = Expression.Convert(objParam, entityType);
 				var getterExpr    = InternalExtensions.ApplyLambdaToExpression(GetDbValueLambda(), objExpression);
 
 				if (HasInheritanceMapping)
 				{
+					// The column value belongs to a specific entity type. When several sibling types map
+					// distinct members to the same physical column, pick the value from the member matching
+					// the row's runtime type; for any other type write the default. Without this, a
+					// base-typed (mixed) insert writes the default for every non-primary sibling row.
+					Expression elseExpr = GetDefaultDbValueExpression();
+
+					// The value-sibling chain below is only reached when TypeIs(obj, entityType) is false.
+					// Declaring-type widening above and the sibling chain are mutually exclusive on a given
+					// physical column in current TPH models: a shared column is reached either via one
+					// inherited (widened) member or via distinct sibling members, never both. If a future
+					// mapping ever targets one physical column with both an inherited shared member (which
+					// widens entityType so TypeIs is true for all subtypes) AND value-siblings, this branch
+					// becomes unreachable and those sibling rows would write the default — revisit then.
+					if (_valueSiblings != null)
+					{
+						foreach (var sibling in _valueSiblings)
+						{
+							var siblingType = sibling.MemberAccessor.TypeAccessor.Type;
+							var siblingExpr = InternalExtensions.ApplyLambdaToExpression(
+								sibling.GetDbValueLambda(), Expression.Convert(objParam, siblingType));
+
+							elseExpr = Expression.Condition(Expression.TypeIs(objParam, siblingType), siblingExpr, elseExpr);
+						}
+					}
+
 					// Additional check that column member belong to proper entity
 					//
-					getterExpr = Expression.Condition(Expression.TypeIs(objParam, MemberAccessor.TypeAccessor.Type),
-						getterExpr, GetDefaultDbValueExpression());
+					getterExpr = Expression.Condition(Expression.TypeIs(objParam, entityType),
+						getterExpr, elseExpr);
 				}
 
 				var getterLambda = Expression.Lambda<Func<object, object>>(Expression.Convert(getterExpr, typeof(object)), objParam);

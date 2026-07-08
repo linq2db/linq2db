@@ -34,6 +34,12 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		protected override void BuildMergeStatement(SqlMergeStatement merge)     => throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
 		protected override void BuildParameter(SqlParameter parameter) => throw new LinqToDBException($"Parameters not supported for {Name} provider");
 
+		// ClickHouse value window functions (FIRST_VALUE/LAST_VALUE/NTH_VALUE) skip NULLs by default, so RESPECT
+		// NULLS must be emitted explicitly to get null-respecting behavior. LEAD/LAG default to RESPECT and reject
+		// the RESPECT NULLS keyword ("Function lead does not support RESPECT NULLS"), so they are excluded.
+		protected override bool WindowFunctionRespectNullsRequired(SqlExtendedFunction extendedFunction)
+			=> extendedFunction.FunctionName is "FIRST_VALUE" or "LAST_VALUE" or "NTH_VALUE";
+
         #region Identifiers
 
         public override StringBuilder BuildObjectName(
@@ -535,17 +541,6 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 						return base.BuildJoinType(join, condition);
 
 					h = h[(ClickHouseHints.Join.Global.Length + 1)..];
-				}
-				else if (h.StartsWith(ClickHouseHints.Join.All, StringComparison.Ordinal))
-				{
-					StringBuilder
-						.Append(ClickHouseHints.Join.All)
-						.Append(' ');
-
-					if (string.Equals(h, ClickHouseHints.Join.All, StringComparison.Ordinal))
-						return base.BuildJoinType(join, condition);
-
-					h = h[(ClickHouseHints.Join.All.Length + 1)..];
 				}
 
 				switch (join.JoinType)

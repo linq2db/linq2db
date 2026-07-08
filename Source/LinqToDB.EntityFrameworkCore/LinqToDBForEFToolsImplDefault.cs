@@ -193,6 +193,7 @@ namespace LinqToDB.EntityFrameworkCore
 				ProviderName.PostgreSQL13                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v13, connectionInfo.ConnectionString, connectionInfo.Connection, connectionInfo.Transaction),
 				ProviderName.PostgreSQL15                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v15, connectionInfo.ConnectionString, connectionInfo.Connection, connectionInfo.Transaction),
 				ProviderName.PostgreSQL18                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v18, connectionInfo.ConnectionString, connectionInfo.Connection, connectionInfo.Transaction),
+				ProviderName.PostgreSQL19                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v19, connectionInfo.ConnectionString, connectionInfo.Connection, connectionInfo.Transaction),
 
 				ProviderName.SQLite or ProviderName.SQLiteMS                              => SQLiteTools.GetDataProvider(SQLiteProvider.Microsoft, connectionInfo.ConnectionString, connectionInfo.Connection, connectionInfo.Transaction),
 

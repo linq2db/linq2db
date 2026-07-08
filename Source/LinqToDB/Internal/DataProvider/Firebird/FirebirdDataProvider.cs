@@ -108,6 +108,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 				>= FirebirdVersion.v6 => new Firebird6MemberTranslator(),
 				>= FirebirdVersion.v5 => new Firebird5MemberTranslator(),
 				>= FirebirdVersion.v4 => new Firebird4MemberTranslator(),
+				FirebirdVersion.v25   => new Firebird25MemberTranslator(),
 				_                     => new FirebirdMemberTranslator(),
 			};
 		}

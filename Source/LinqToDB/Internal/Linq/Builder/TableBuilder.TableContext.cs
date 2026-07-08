@@ -29,8 +29,21 @@ namespace LinqToDB.Internal.Linq.Builder
 			public          EntityDescriptor EntityDescriptor;
 
 			public Type            ObjectType   { get; set; }
-			public SqlTable        SqlTable     { get; set; }
+			public ISqlNamedTable  NamedTable     => SqlTable;
+			public SqlTable        SqlTable        { get; set; }
 			public LoadWithEntity? LoadWithRoot { get; set; }
+
+			List<Type>? _filteredByOfType;
+
+			/// <summary>
+			/// TPH types this context's rows have already been narrowed to via <c>OfType</c>/<c>Cast</c>
+			/// (the discriminator predicate is already applied to the query), or <see langword="null"/> when
+			/// none. Used to avoid emitting a redundant discriminator on associations declared on a derived
+			/// type. Lazily allocated — inheritance/OfType is rare, so most contexts never allocate it.
+			/// </summary>
+			public List<Type>? FilteredByOfType => _filteredByOfType;
+
+			public void AddFilteredByOfType(Type type) => (_filteredByOfType ??= new()).Add(type);
 
 			public bool IsSubQuery { get; }
 
@@ -292,10 +305,15 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				return new TableContext(TranslationModifier, Builder, MappingSchema, context.CloneElement(SelectQuery), context.CloneElement(SqlTable), IsOptional)
+				var cloned = new TableContext(TranslationModifier, Builder, MappingSchema, context.CloneElement(SelectQuery), context.CloneElement(SqlTable), IsOptional)
 				{
 					LoadWithRoot = LoadWithRoot,
 				};
+
+				if (_filteredByOfType != null)
+					cloned._filteredByOfType = [.._filteredByOfType];
+
+				return cloned;
 			}
 
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)
@@ -469,7 +487,8 @@ namespace LinqToDB.Internal.Linq.Builder
 									{
 										foreach (var mm in MappingSchema.GetEntityDescriptor(mapping.Type, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated).Columns)
 										{
-											if (mm.MemberAccessor.MemberInfo.EqualsTo(memberExpression.Member))
+											if (mm.MemberAccessor.MemberInfo.EqualsTo(memberExpression.Member)
+												&& string.Equals(mm.ColumnName, field.PhysicalName, StringComparison.Ordinal))
 												return field;
 										}
 									}

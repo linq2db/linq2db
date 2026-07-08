@@ -117,9 +117,6 @@ type DeeplyComplexPerson = {
 
 
 
-// Remember to apply these to make option types work
-// .AddScalarType(typeof<string option>,          None, LinqToDB.DataType.NVarChar)
-// .SetConvertExpression<Option<_>,_>( fun x -> if x.IsSome then x.Value else None )
 [<Table("Person", IsColumnAttributeRequired=false)>]
 type PersonWithOptions =
     { [<SequenceName(ProviderName.Firebird, "PersonID")>]
