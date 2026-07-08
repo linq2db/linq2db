@@ -1488,6 +1488,41 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task QueryAcceptsCommandLineImpersonateModeSystemCode()
+		{
+			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--impersonate-mode", "8", "--sql", "select 1 as Id");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.Zero);
+				Assert.That(result.Output,   Is.EqualTo("""[{"Id":"1"}]"""));
+			}
+		}
+
+		[Test]
+		public async Task QueryAcceptsConfigImpersonateModeSystemCode()
+		{
+			var environment = new TestCliEnvironment();
+			var config      = AddConfigFile(environment, """
+				{
+					"default": {
+						"provider": "SQLite",
+						"connectionString": "Data Source=:memory:",
+						"impersonateMode": 8
+					}
+				}
+				""");
+
+			var result = await RunCli(environment, "query", "--config", config, "--sql", "select 1 as Id");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.Zero);
+				Assert.That(result.Output,   Is.EqualTo("""[{"Id":"1"}]"""));
+			}
+		}
+
+		[Test]
 		public async Task QueryHelpShowsSqlInputOptions()
 		{
 			var result = await RunCli("help", "query");
@@ -1512,6 +1547,7 @@ namespace Tests.LinqToDB.CLI
 				Assert.That(result.Output,   Does.Contain("--impersonate-mode"));
 				Assert.That(result.Output,   Does.Contain("Windows impersonation logon mode"));
 				Assert.That(result.Output,   Does.Contain("network-cleartext"));
+				Assert.That(result.Output,   Does.Contain("system code for network cleartext logon"));
 				Assert.That(result.Output,   Does.Contain("--command-timeout"));
 				Assert.That(result.Output,   Does.Contain("--lock-timeout"));
 				Assert.That(result.Output,   Does.Contain("--max-rows"));

@@ -31,6 +31,7 @@ namespace Tests.LinqToDB.CLI
 				Assert.That(result.Output,   Does.Contain("Value precedence is: command-line literal, command-line environment variable option"));
 				Assert.That(result.Output,   Does.Contain("`--impersonate` enables Windows-only database access impersonation using the same resolved `user` and `password` values"));
 				Assert.That(result.Output,   Does.Contain("`--impersonate-mode` selects the Windows `LogonUser` mode"));
+				Assert.That(result.Output,   Does.Contain("system code `8`"));
 				Assert.That(result.Output,   Does.Contain("`--impersonate` runs the whole database loop under one impersonation token"));
 				Assert.That(result.Output,   Does.Contain("Configuration files, SQL files, provider assembly files, output files, stdout, and stderr writers are opened by the original process account"));
 				Assert.That(result.Output,   Does.Contain("an agent can analyze your code together with data from your database"));

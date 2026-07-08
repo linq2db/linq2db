@@ -80,7 +80,11 @@ namespace LinqToDB.CommandLine
 			new StringEnumOption(true,  true,  "network-cleartext", "network cleartext logon; default"),
 			new StringEnumOption(false, false, "interactive",       "interactive logon"),
 			new StringEnumOption(false, false, "network",           "network logon"),
-			new StringEnumOption(false, false, "new-credentials",   "new credentials logon"));
+			new StringEnumOption(false, false, "new-credentials",   "new credentials logon"),
+			new StringEnumOption(false, false, "2",                 "system code for interactive logon"),
+			new StringEnumOption(false, false, "3",                 "system code for network logon"),
+			new StringEnumOption(false, false, "8",                 "system code for network cleartext logon"),
+			new StringEnumOption(false, false, "9",                 "system code for new credentials logon"));
 
 		public static CliCommand Instance { get; } = new QueryCommand();
 
@@ -309,19 +313,19 @@ namespace LinqToDB.CommandLine
 
 		static WindowsImpersonationMode? ParseImpersonateMode(string? value)
 		{
-			if (value == null || string.Equals(value, "network-cleartext", StringComparison.OrdinalIgnoreCase))
-				return WindowsImpersonationMode.NetworkCleartext;
-
-			if (string.Equals(value, "interactive", StringComparison.OrdinalIgnoreCase))
-				return WindowsImpersonationMode.Interactive;
-
-			if (string.Equals(value, "network", StringComparison.OrdinalIgnoreCase))
-				return WindowsImpersonationMode.Network;
-
-			if (string.Equals(value, "new-credentials", StringComparison.OrdinalIgnoreCase))
-				return WindowsImpersonationMode.NewCredentials;
-
-			return null;
+			return value?.ToLower(CultureInfo.InvariantCulture) switch
+			{
+				null                => WindowsImpersonationMode.NetworkCleartext,
+				"8"                 => WindowsImpersonationMode.NetworkCleartext,
+				"network-cleartext" => WindowsImpersonationMode.NetworkCleartext,
+				"2"                 => WindowsImpersonationMode.Interactive,
+				"interactive"       => WindowsImpersonationMode.Interactive,
+				"3"                 => WindowsImpersonationMode.Network,
+				"network"           => WindowsImpersonationMode.Network,
+				"9"                 => WindowsImpersonationMode.NewCredentials,
+				"new-credentials"   => WindowsImpersonationMode.NewCredentials,
+				_                   => null,
+			};
 		}
 
 		static int? ParseTimeout(ICliEnvironment environment, CliOption option, string value)

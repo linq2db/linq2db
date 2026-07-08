@@ -234,8 +234,20 @@ namespace LinqToDB.CommandLine
 						break;
 					case "impersonateMode":
 					case "impersonate-mode":
-						if (!TryGetString(fileName, profileName, property, out value, out error))
+						if (property.Value.ValueKind == JsonValueKind.Number)
+						{
+							if (!property.Value.TryGetInt32(out var numericValue))
+							{
+								error = $"Configuration file '{fileName}' profile '{profileName}' property '{property.Name}' has unknown value '{property.Value}'.";
+								return false;
+							}
+
+							value = numericValue.ToString(CultureInfo.InvariantCulture);
+						}
+						else if (!TryGetString(fileName, profileName, property, out value, out error))
+						{
 							return false;
+						}
 
 						if (!IsValidImpersonateMode(value))
 						{
@@ -344,7 +356,11 @@ namespace LinqToDB.CommandLine
 			return string.Equals(value, "network-cleartext", StringComparison.OrdinalIgnoreCase)
 				|| string.Equals(value, "interactive", StringComparison.OrdinalIgnoreCase)
 				|| string.Equals(value, "network", StringComparison.OrdinalIgnoreCase)
-				|| string.Equals(value, "new-credentials", StringComparison.OrdinalIgnoreCase);
+				|| string.Equals(value, "new-credentials", StringComparison.OrdinalIgnoreCase)
+				|| string.Equals(value, "2", StringComparison.Ordinal)
+				|| string.Equals(value, "3", StringComparison.Ordinal)
+				|| string.Equals(value, "8", StringComparison.Ordinal)
+				|| string.Equals(value, "9", StringComparison.Ordinal);
 		}
 
 		static bool TryGetString(string fileName, string profileName, JsonProperty property, out string? value, out string? error)
