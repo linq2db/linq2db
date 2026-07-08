@@ -1,4 +1,11 @@
-﻿namespace LinqToDB.CommandLine
+using System;
+
+using LinqToDB.CommandLine.Commands;
+using LinqToDB.CommandLine.Options;
+using LinqToDB.CommandLine.Commands.Skill;
+using LinqToDB.CommandLine.Commands.Query;
+
+namespace LinqToDB.CommandLine
 {
 	/// <summary>
 	/// CLI return codes.

@@ -1,6 +1,9 @@
-﻿using System.Text.Json;
+using System;
+using System.Text.Json;
 
-namespace LinqToDB.CommandLine
+using LinqToDB.CommandLine.Commands;
+
+namespace LinqToDB.CommandLine.Options
 {
 	/// <summary>
 	/// Base type for CLI command option.

@@ -1,4 +1,9 @@
-namespace LinqToDB.CommandLine
+using System;
+
+using LinqToDB.CommandLine;
+using LinqToDB.CommandLine.Options;
+
+namespace LinqToDB.CommandLine.Commands.QueryExecution
 {
 	/// <summary>
 	/// Fully resolved query command settings passed to execution logic.
@@ -23,9 +28,8 @@ namespace LinqToDB.CommandLine
 	/// <param name="AllowUnsafeSql">Command-line confirmation for unsafe SQL execution.</param>
 	/// <param name="Impersonate">Run the database loop under resolved Windows <see cref="User"/>/<see cref="Password"/> credentials after file resources are opened.</param>
 	/// <param name="ImpersonateMode">Windows logon mode used for impersonation.</param>
-	/// <param name="Sql">SQL query text from command line.</param>
-	/// <param name="SqlFile">Path to command-line SQL file.</param>
-	internal sealed record QueryCommandSettings(
+	/// <param name="Sql">Resolved SQL query text.</param>
+	internal sealed record QueryExecutionSettings(
 		string             Profile,
 		string             Provider,
 		string?            ProviderLocation,
@@ -42,6 +46,5 @@ namespace LinqToDB.CommandLine
 		bool               AllowUnsafeSql,
 		bool               Impersonate,
 		WindowsImpersonationMode ImpersonateMode,
-		string?            Sql,
-		string?            SqlFile);
+		string             Sql);
 }

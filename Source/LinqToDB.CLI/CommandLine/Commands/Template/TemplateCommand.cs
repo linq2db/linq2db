@@ -1,10 +1,14 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace LinqToDB.CommandLine
+using LinqToDB.CommandLine;
+using LinqToDB.CommandLine.Commands;
+using LinqToDB.CommandLine.Options;
+
+namespace LinqToDB.CommandLine.Commands.Template
 {
 	/// <summary>
 	/// Template command implementation.

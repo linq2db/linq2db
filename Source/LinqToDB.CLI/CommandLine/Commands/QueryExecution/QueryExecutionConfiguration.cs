@@ -3,14 +3,17 @@ using System.Globalization;
 using System.IO;
 using System.Text.Json;
 
-namespace LinqToDB.CommandLine
+using LinqToDB.CommandLine;
+using LinqToDB.CommandLine.Options;
+
+namespace LinqToDB.CommandLine.Commands.QueryExecution
 {
 	/// <summary>
 	/// Query command configuration loaded from JSON profile file.
 	/// The root object contains a required profile named "default" and optional named profiles.
 	/// Named profiles inherit values from the "default" profile because it is applied first.
 	/// </summary>
-	internal sealed class QueryCommandConfiguration
+	internal sealed class QueryExecutionConfiguration
 	{
 		private const string DefaultProfileName = "default";
 
@@ -95,7 +98,7 @@ namespace LinqToDB.CommandLine
 		/// </summary>
 		public string? OutputFile       { get; private set; }
 
-		public static bool TryLoad(ICliEnvironment environment, string fileName, string profileName, out QueryCommandConfiguration? configuration, out string? error)
+		public static bool TryLoad(ICliEnvironment environment, string fileName, string profileName, out QueryExecutionConfiguration? configuration, out string? error)
 		{
 			configuration = null;
 
@@ -137,7 +140,7 @@ namespace LinqToDB.CommandLine
 					return false;
 				}
 
-				var result = new QueryCommandConfiguration();
+				var result = new QueryExecutionConfiguration();
 
 				if (!result.ApplyProfile(fileName, DefaultProfileName, defaultProfile, out error))
 					return false;
@@ -427,19 +430,19 @@ namespace LinqToDB.CommandLine
 		{
 			if (string.Equals(value, "deny", StringComparison.OrdinalIgnoreCase))
 			{
-				unsafeSqlPolicy = global::LinqToDB.CommandLine.UnsafeSqlPolicy.Deny;
+				unsafeSqlPolicy = Commands.QueryExecution.UnsafeSqlPolicy.Deny;
 				return true;
 			}
 
 			if (string.Equals(value, "confirm", StringComparison.OrdinalIgnoreCase))
 			{
-				unsafeSqlPolicy = global::LinqToDB.CommandLine.UnsafeSqlPolicy.Confirm;
+				unsafeSqlPolicy = Commands.QueryExecution.UnsafeSqlPolicy.Confirm;
 				return true;
 			}
 
 			if (string.Equals(value, "allow", StringComparison.OrdinalIgnoreCase))
 			{
-				unsafeSqlPolicy = global::LinqToDB.CommandLine.UnsafeSqlPolicy.Allow;
+				unsafeSqlPolicy = Commands.QueryExecution.UnsafeSqlPolicy.Allow;
 				return true;
 			}
 

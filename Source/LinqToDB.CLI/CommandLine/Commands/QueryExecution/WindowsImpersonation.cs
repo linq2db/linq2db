@@ -4,9 +4,12 @@ using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Security.Principal;
 
+using LinqToDB.CommandLine;
+using LinqToDB.CommandLine.Options;
+
 using Microsoft.Win32.SafeHandles;
 
-namespace LinqToDB.CommandLine
+namespace LinqToDB.CommandLine.Commands.QueryExecution
 {
 	static class WindowsImpersonation
 	{

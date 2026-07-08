@@ -1,4 +1,9 @@
-namespace LinqToDB.CommandLine
+using System;
+
+using LinqToDB.CommandLine;
+using LinqToDB.CommandLine.Options;
+
+namespace LinqToDB.CommandLine.Commands.QueryExecution
 {
 	internal sealed record SqlGuardResult(bool IsAllowed, string? Error)
 	{

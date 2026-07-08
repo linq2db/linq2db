@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.CommandLine;
+using LinqToDB.CommandLine.Commands.QueryExecution;
 using LinqToDB.Data;
 
 using NUnit.Framework;

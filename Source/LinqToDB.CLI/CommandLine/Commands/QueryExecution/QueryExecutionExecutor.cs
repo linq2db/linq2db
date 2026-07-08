@@ -17,6 +17,8 @@ using DuckDB.NET.Native;
 
 using FirebirdSql.Data.Types;
 
+using LinqToDB.CommandLine;
+using LinqToDB.CommandLine.Options;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.Internal.Common;
@@ -32,15 +34,14 @@ using NpgsqlTypes;
 
 using Oracle.ManagedDataAccess.Types;
 
-namespace LinqToDB.CommandLine
+namespace LinqToDB.CommandLine.Commands.QueryExecution
 {
 	/// <summary>
 	/// Query command execution logic.
 	/// </summary>
-	sealed class QueryCommandExecutor(ICliEnvironment environment, QueryCommandSettings settings)
+	sealed class QueryExecutionExecutor(QueryExecutionSettings settings)
 	{
 		sealed record QueryOutputColumn(int Ordinal, string Name, string FieldType, string ProviderSpecificFieldType, string DataTypeName, QueryActualFieldType ActualFieldType);
-		sealed record QueryExecutionResult(int StatusCode, string? Error, bool Truncated);
 
 		enum QueryActualFieldType
 		{
@@ -88,42 +89,20 @@ namespace LinqToDB.CommandLine
 			NpgsqlRange,
 		}
 
-		readonly ICliEnvironment      _environment = environment;
-		readonly QueryCommandSettings _settings    = settings;
+		readonly QueryExecutionSettings _settings    = settings;
 
 		const string OracleBFilePlaceholder = "<BFILE>";
 
-		public async ValueTask<int> Execute(CancellationToken cancellationToken)
+		public async ValueTask<QueryExecutionResult> Execute(TextWriter outputWriter, CancellationToken cancellationToken)
 		{
 			cancellationToken.ThrowIfCancellationRequested();
 
-			// Get user-provided SQL text from command line or file.
-			//
-			string sql;
-
-			if (_settings.Sql != null)
-			{
-				sql = _settings.Sql;
-			}
-			else if (_settings.SqlFile != null)
-			{
-				if (!_environment.FileExists(_settings.SqlFile))
-				{
-					await _environment.Error.WriteLineAsync($"SQL file '{_settings.SqlFile}' not found.").ConfigureAwait(false);
-					return StatusCodes.EXPECTED_ERROR;
-				}
-
-				sql = _environment.ReadAllText(_settings.SqlFile);
-			}
-			else
-			{
-				throw new InvalidOperationException("Either SQL text or SQL file must be specified.");
-			}
+			var sql = _settings.Sql;
 
 			try
 			{
-				if (!ExternalProviderLoader.LoadExternalProvider(_environment, _settings.Provider, _settings.ProviderLocation))
-					return StatusCodes.EXPECTED_ERROR;
+				if (!ExternalProviderLoader.LoadExternalProvider(_settings.Provider, _settings.ProviderLocation, out var error))
+					return new QueryExecutionResult(StatusCodes.EXPECTED_ERROR, error, false);
 
 				// Create data provider for the specified database provider and connection string.
 				//
@@ -131,8 +110,7 @@ namespace LinqToDB.CommandLine
 
 				if (dataProvider == null)
 				{
-					await _environment.Error.WriteLineAsync($"Cannot create database provider: {_settings.Provider}").ConfigureAwait(false);
-					return StatusCodes.EXPECTED_ERROR;
+					return new QueryExecutionResult(StatusCodes.EXPECTED_ERROR, $"Cannot create database provider: {_settings.Provider}", false);
 				}
 
 				// Validate that user-provided SQL contains a single statement.
@@ -141,8 +119,7 @@ namespace LinqToDB.CommandLine
 
 				if (!singleStatementResult.IsAllowed)
 				{
-					await _environment.Error.WriteLineAsync(singleStatementResult.Error).ConfigureAwait(false);
-					return StatusCodes.EXPECTED_ERROR;
+					return new QueryExecutionResult(StatusCodes.EXPECTED_ERROR, singleStatementResult.Error, false);
 				}
 
 				// Validate that user-provided SQL is allowed by the configured unsafe SQL policy.
@@ -154,20 +131,10 @@ namespace LinqToDB.CommandLine
 					if (!guardResult.IsAllowed && !(_settings.UnsafeSqlPolicy == UnsafeSqlPolicy.Confirm && _settings.AllowUnsafeSql))
 					{
 						if (_settings.UnsafeSqlPolicy == UnsafeSqlPolicy.Confirm)
-							await _environment.Error.WriteLineAsync($"Unsafe SQL requires '--allow-unsafe-sql': {guardResult.Error}").ConfigureAwait(false);
-						else
-							await _environment.Error.WriteLineAsync(guardResult.Error).ConfigureAwait(false);
+							return new QueryExecutionResult(StatusCodes.EXPECTED_ERROR, $"Unsafe SQL requires '--allow-unsafe-sql': {guardResult.Error}", false);
 
-						return StatusCodes.EXPECTED_ERROR;
+						return new QueryExecutionResult(StatusCodes.EXPECTED_ERROR, guardResult.Error, false);
 					}
-				}
-
-				// Check if the output file already exists and the overwrite option is not specified.
-				//
-				if (_settings is { OutputFile: not null, Overwrite: false } && _environment.FileExists(_settings.OutputFile))
-				{
-					await _environment.Error.WriteLineAsync($"Output file '{_settings.OutputFile}' already exists. Use '--overwrite' to replace it.").ConfigureAwait(false);
-					return StatusCodes.EXPECTED_ERROR;
 				}
 
 				// Configure linq2db connection options for the resolved provider and connection string.
@@ -177,43 +144,15 @@ namespace LinqToDB.CommandLine
 				if (_settings.CommandTimeout > 0)
 					dataOptions = dataOptions.UseCommandTimeout(_settings.CommandTimeout);
 
-				// Open the output writer before optional impersonation so file access stays under the original process account.
+				// Run the whole database pipeline under one impersonation token when requested.
 				//
-				var outputWriter        = _settings.OutputFile != null ? _environment.CreateTextWriter(_settings.OutputFile) : _environment.Out;
-				var disposeOutputWriter = _settings.OutputFile != null;
-
-				try
-				{
-					// Run the whole database pipeline under one impersonation token when requested.
-					//
-					var result = _settings.Impersonate
-						? WindowsImpersonation.Run(
-							_settings.User!,
-							_settings.Password!,
-							_settings.ImpersonateMode,
-							() => ExecuteDatabaseLoop(dataOptions, dataProvider, sql, outputWriter, cancellationToken).GetAwaiter().GetResult())
-						: await ExecuteDatabaseLoop(dataOptions, dataProvider, sql, outputWriter, cancellationToken).ConfigureAwait(false);
-
-					if (result.Error != null)
-					{
-						await _environment.Error.WriteLineAsync(result.Error).ConfigureAwait(false);
-						return result.StatusCode;
-					}
-
-					if (result.Truncated && !string.Equals(_settings.Output, "json-table", StringComparison.OrdinalIgnoreCase))
-					{
-						// JSON table carries truncation in-band; other formats report it through stderr.
-						//
-						await _environment.Error.WriteLineAsync($"Query result truncated to {_settings.MaxRows.ToString(CultureInfo.InvariantCulture)} row(s). Use '--max-rows' to change the limit.").ConfigureAwait(false);
-					}
-
-					return result.StatusCode;
-				}
-				finally
-				{
-					if (disposeOutputWriter)
-						await outputWriter.DisposeAsync().ConfigureAwait(false);
-				}
+				return _settings.Impersonate
+					? WindowsImpersonation.Run(
+						_settings.User!,
+						_settings.Password!,
+						_settings.ImpersonateMode,
+						() => ExecuteDatabaseLoop(dataOptions, dataProvider, sql, outputWriter, cancellationToken).GetAwaiter().GetResult())
+					: await ExecuteDatabaseLoop(dataOptions, dataProvider, sql, outputWriter, cancellationToken).ConfigureAwait(false);
 			}
 			catch (OperationCanceledException)
 			{
@@ -221,8 +160,7 @@ namespace LinqToDB.CommandLine
 			}
 			catch (Exception ex)
 			{
-				await _environment.Error.WriteLineAsync($"Query execution failed: {ex.Message}").ConfigureAwait(false);
-				return StatusCodes.EXPECTED_ERROR;
+				return new QueryExecutionResult(StatusCodes.EXPECTED_ERROR, $"Query execution failed: {ex.Message}", false);
 			}
 		}
 

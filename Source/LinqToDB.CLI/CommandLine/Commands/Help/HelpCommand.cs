@@ -5,9 +5,12 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.CommandLine;
+using LinqToDB.CommandLine.Commands;
+using LinqToDB.CommandLine.Options;
 using LinqToDB.Naming;
 
-namespace LinqToDB.CommandLine
+namespace LinqToDB.CommandLine.Commands.Help
 {
 	/// <summary>
 	/// Help command implementation.

@@ -5,7 +5,11 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace LinqToDB.CommandLine
+using LinqToDB.CommandLine;
+using LinqToDB.CommandLine.Commands;
+using LinqToDB.CommandLine.Options;
+
+namespace LinqToDB.CommandLine.Commands.Skill
 {
 	/// <summary>
 	/// Prints agent-oriented Markdown instructions for linq2db CLI usage.

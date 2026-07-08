@@ -1,4 +1,13 @@
-﻿namespace LinqToDB.CommandLine
+using System;
+
+using LinqToDB.CommandLine.Commands;
+using LinqToDB.CommandLine.Commands.Help;
+using LinqToDB.CommandLine.Commands.Query;
+using LinqToDB.CommandLine.Commands.Scaffold;
+using LinqToDB.CommandLine.Commands.Skill;
+using LinqToDB.CommandLine.Commands.Template;
+
+namespace LinqToDB.CommandLine
 {
 	/// <summary>
 	/// CLI controller for current utility.

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.IO;
@@ -7,6 +7,9 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.CodeModel;
+using LinqToDB.CommandLine;
+using LinqToDB.CommandLine.Options;
+
 using LinqToDB.Data;
 using LinqToDB.DataProvider.DB2;
 using LinqToDB.DataProvider.Oracle;
@@ -16,7 +19,7 @@ using LinqToDB.Naming;
 using LinqToDB.Scaffold;
 using LinqToDB.Schema;
 
-namespace LinqToDB.CommandLine
+namespace LinqToDB.CommandLine.Commands.Scaffold
 {
 	partial class ScaffoldCommand : CliCommand
 	{

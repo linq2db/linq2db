@@ -1,6 +1,11 @@
 using System;
 using System.IO;
 
+using LinqToDB.CommandLine.Options;
+using LinqToDB.CommandLine.Commands.Skill;
+using LinqToDB.CommandLine.Commands.Query;
+using LinqToDB.CommandLine.Commands;
+
 namespace LinqToDB.CommandLine
 {
 	internal sealed class SystemCliEnvironment : ICliEnvironment

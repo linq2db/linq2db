@@ -1,9 +1,11 @@
-﻿using System.Collections.Generic;
+using System;
+using System.Collections.Generic;
 using System.Text.Json;
 
+using LinqToDB.CommandLine.Commands;
 using LinqToDB.Naming;
 
-namespace LinqToDB.CommandLine
+namespace LinqToDB.CommandLine.Options
 {
 	/// <summary>
 	/// Code identifier normalization/generation options. Not supported in CLI (JSON only).
@@ -104,7 +106,7 @@ namespace LinqToDB.CommandLine
 								errorDetails = $"pluralization : unknown value: '{pluralizationValue}'";
 								return null;
 						}
-						
+
 						break;
 					case "prefix"                          :
 						if (property.Value.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined)
@@ -147,7 +149,7 @@ namespace LinqToDB.CommandLine
 								errorDetails = $"transformation : unknown value: '{transformationValue}'";
 								return null;
 						}
-						
+
 						break;
 					case "pluralize_if_ends_with_word_only":
 						if (property.Value.ValueKind == JsonValueKind.True)

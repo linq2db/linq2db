@@ -1,8 +1,13 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+
+using LinqToDB.CommandLine.Options;
+using LinqToDB.CommandLine.Commands.Skill;
+using LinqToDB.CommandLine.Commands.Query;
+using LinqToDB.CommandLine.Commands;
 
 namespace LinqToDB.CommandLine
 {

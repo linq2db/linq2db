@@ -1,90 +1,22 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace LinqToDB.CommandLine
+using LinqToDB.CommandLine;
+using LinqToDB.CommandLine.Commands;
+using LinqToDB.CommandLine.Commands.QueryExecution;
+using LinqToDB.CommandLine.Options;
+
+namespace LinqToDB.CommandLine.Commands.Query
 {
 	/// <summary>
 	/// Query command descriptor and CLI option processing.
 	/// </summary>
 	sealed class QueryCommand : CliCommand
 	{
-		const string DefaultProfileName = "default";
-		const int    DefaultMaxRows     = 1000;
-		const string MissingEnvironmentVariable = "\u0000";
-
-		static readonly OptionCategory _configurationOptions = new (1, "Configuration", "Configuration options", "configuration");
-		static readonly OptionCategory _connectionOptions    = new (2, "Connection",    "Connection options",    "connection");
-		static readonly OptionCategory _guardOptions         = new (3, "Guardrails",    "SQL guardrail options", "guardrails");
-		static readonly OptionCategory _outputOptions        = new (4, "Output",        "Output options",        "output");
-		static readonly OptionCategory _inputOptions         = new (5, "Input",         "SQL input options",     "input");
-
-		static readonly CliOption _config              = new StringCliOption("config",                null, false, false, "path to query configuration file; supports %NAME% and ${NAME} environment variable expansion");
-		static readonly CliOption _profile             = new StringCliOption("profile",               null, false, false, "configuration profile name");
-		static readonly CliOption _provider            = new StringCliOption("provider",              null, false, false, "linq2db provider name");
-		static readonly CliOption _providerLocation    = new StringCliOption("provider-location",     'l',  false, false, "path to external database provider assembly; dependencies must be available next to it or through normal application probing; supports %NAME% and ${NAME} environment variable expansion");
-		static readonly CliOption _connectionString    = new StringCliOption("connection-string",     null, false, false, "database connection string; use {0} for user and {1} for password placeholders; configure provider-specific connection timeout here");
-		static readonly CliOption _connectionStringEnv = new StringCliOption("connection-string-env", null, false, false, "environment variable with database connection string");
-		static readonly CliOption _user                = new StringCliOption("user",                  null, false, false, "database user name for connection string formatting");
-		static readonly CliOption _userEnv             = new StringCliOption("user-env",              null, false, false, "environment variable with database user name");
-		static readonly CliOption _password            = new StringCliOption("password",              null, false, false, "database password for connection string formatting");
-		static readonly CliOption _passwordEnv         = new StringCliOption("password-env",          null, false, false, "environment variable with database password");
-		static readonly CliOption _commandTimeout      = new StringCliOption("command-timeout",       null, false, false, "SQL command timeout in seconds; 0 disables the option");
-		static readonly CliOption _lockTimeout         = new StringCliOption("lock-timeout",          null, false, false, "provider-specific lock wait timeout in seconds; 0 disables the option");
-		static readonly CliOption _maxRows             = new StringCliOption("max-rows",              null, false, false, "maximum number of result rows to read; 0 disables the limit");
-		static readonly CliOption _outputFile          = new StringCliOption("output-file",           null, false, false, "path to file for command output; supports %NAME% and ${NAME} environment variable expansion");
-		static readonly CliOption _sql                 = new StringCliOption("sql",                   null, false, false, "single user-provided SQL query text to execute");
-		static readonly CliOption _sqlFile             = new StringCliOption("sql-file",              null, false, false, "path to file with single user-provided SQL query text to execute; supports %NAME% and ${NAME} environment variable expansion");
-
-		static readonly CliOption _overwrite      = new BooleanCliOption("overwrite", null, false, "replace existing output file", null, null, null, false, false);
-		static readonly CliOption _impersonate    = new BooleanCliOption("impersonate", null, false, "on Windows, run database access under resolved user/password credentials; file and configuration access uses the original process account", null, null, null, false, false);
-		static readonly CliOption _allowUnsafeSql = new BooleanCliOption(
-			"allow-unsafe-sql",
-			null,
-			false,
-			"confirm unsafe SQL execution when configuration unsafeSql policy is confirm; ask the user before using this option",
-			null,
-			null,
-			null,
-			false,
-			false);
-
-		static readonly CliOption _output = new StringEnumCliOption(
-			"output",
-			null,
-			false,
-			false,
-			"output format",
-			null,
-			null,
-			null,
-			false,
-			new StringEnumOption(true,  true,  "json",       "JSON output"),
-			new StringEnumOption(false, false, "json-table", "JSON table output"),
-			new StringEnumOption(false, false, "csv",        "CSV output"));
-
-		static readonly CliOption _impersonateMode = new StringEnumCliOption(
-			"impersonate-mode",
-			null,
-			false,
-			false,
-			"Windows impersonation logon mode",
-			null,
-			null,
-			null,
-			false,
-			new StringEnumOption(true,  true,  "network-cleartext", "network cleartext logon; default"),
-			new StringEnumOption(false, false, "interactive",       "interactive logon"),
-			new StringEnumOption(false, false, "network",           "network logon"),
-			new StringEnumOption(false, false, "new-credentials",   "new credentials logon"),
-			new StringEnumOption(false, false, "2",                 "system code for interactive logon"),
-			new StringEnumOption(false, false, "3",                 "system code for network logon"),
-			new StringEnumOption(false, false, "8",                 "system code for network cleartext logon"),
-			new StringEnumOption(false, false, "9",                 "system code for new credentials logon"));
+		static readonly OptionCategory _inputOptions = new(5, "Input", "SQL input options", "input");
 
 		public static CliCommand Instance { get; } = new QueryCommand();
 
@@ -112,27 +44,27 @@ namespace LinqToDB.CommandLine
 						"executes specified read-oriented SQL query and writes CSV result to file"),
 				])
 		{
-			AddOption(_configurationOptions, _config);
-			AddOption(_configurationOptions, _profile);
-			AddOption(_connectionOptions,    _provider);
-			AddOption(_connectionOptions,    _providerLocation);
-			AddOption(_connectionOptions,    _connectionString);
-			AddOption(_connectionOptions,    _connectionStringEnv);
-			AddOption(_connectionOptions,    _user);
-			AddOption(_connectionOptions,    _userEnv);
-			AddOption(_connectionOptions,    _password);
-			AddOption(_connectionOptions,    _passwordEnv);
-			AddOption(_connectionOptions,    _impersonate);
-			AddOption(_connectionOptions,    _impersonateMode);
-			AddOption(_connectionOptions,    _commandTimeout);
-			AddOption(_connectionOptions,    _lockTimeout);
-			AddOption(_guardOptions,         _allowUnsafeSql);
-			AddOption(_outputOptions,        _output);
-			AddOption(_outputOptions,        _outputFile);
-			AddOption(_outputOptions,        _overwrite);
-			AddOption(_outputOptions,        _maxRows);
+			AddOption(QueryExecutionCliOptions.ConfigurationOptions, QueryExecutionCliOptions.Config);
+			AddOption(QueryExecutionCliOptions.ConfigurationOptions, QueryExecutionCliOptions.Profile);
+			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.Provider);
+			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.ProviderLocation);
+			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.ConnectionString);
+			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.ConnectionStringEnv);
+			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.User);
+			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.UserEnv);
+			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.Password);
+			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.PasswordEnv);
+			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.Impersonate);
+			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.ImpersonateMode);
+			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.CommandTimeout);
+			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.LockTimeout);
+			AddOption(QueryExecutionCliOptions.GuardOptions,         QueryExecutionCliOptions.AllowUnsafeSql);
+			AddOption(QueryExecutionCliOptions.OutputOptions,        QueryExecutionCliOptions.Output);
+			AddOption(QueryExecutionCliOptions.OutputOptions,        QueryExecutionCliOptions.OutputFile);
+			AddOption(QueryExecutionCliOptions.OutputOptions,        QueryExecutionCliOptions.Overwrite);
+			AddOption(QueryExecutionCliOptions.OutputOptions,        QueryExecutionCliOptions.MaxRows);
 
-			AddMutuallyExclusiveOptions(_inputOptions, _sql, _sqlFile);
+			AddMutuallyExclusiveOptions(_inputOptions, QueryExecutionCliOptions.Sql, QueryExecutionCliOptions.SqlFile);
 		}
 
 		public override async ValueTask<int> Execute(
@@ -143,10 +75,10 @@ namespace LinqToDB.CommandLine
 			IReadOnlyCollection<string>    unknownArgs,
 			CancellationToken              cancellationToken)
 		{
-			var settings = ProcessOptions(environment, options);
+			var settings = ProcessOptions(environment, options, out var errorStatusCode);
 
 			if (settings == null)
-				return StatusCodes.INVALID_ARGUMENTS;
+				return errorStatusCode;
 
 			if (options.Count > 0)
 			{
@@ -156,284 +88,96 @@ namespace LinqToDB.CommandLine
 				throw new InvalidOperationException($"Not all options handled by {Name} command");
 			}
 
-			var executor = new QueryCommandExecutor(environment, settings);
-
-			return await executor.Execute(cancellationToken).ConfigureAwait(false);
-		}
-
-		/// <summary>
-		/// Applies query option precedence: command line values override selected profile values, selected profile
-		/// values override the default profile values, and built-in defaults are applied last.
-		/// SQL text and SQL file are command-line only options and are not loaded from configuration profiles.
-		/// </summary>
-		QueryCommandSettings? ProcessOptions(ICliEnvironment environment, Dictionary<CliOption, object?> options)
-		{
-			options.Remove(_config,              out var config);
-			options.Remove(_profile,             out var profile);
-			options.Remove(_provider,            out var provider);
-			options.Remove(_providerLocation,    out var providerLocation);
-			options.Remove(_connectionString,    out var connectionString);
-			options.Remove(_connectionStringEnv, out var connectionStringEnv);
-			options.Remove(_user,                out var user);
-			options.Remove(_userEnv,             out var userEnv);
-			options.Remove(_password,            out var password);
-			options.Remove(_passwordEnv,         out var passwordEnv);
-			options.Remove(_impersonate,         out var impersonate);
-			options.Remove(_impersonateMode,     out var impersonateMode);
-			options.Remove(_commandTimeout,      out var commandTimeout);
-			options.Remove(_lockTimeout,         out var lockTimeout);
-			options.Remove(_allowUnsafeSql,      out var allowUnsafeSql);
-			options.Remove(_output,              out var output);
-			options.Remove(_outputFile,          out var outputFile);
-			options.Remove(_overwrite,           out var overwrite);
-			options.Remove(_maxRows,             out var maxRows);
-			options.Remove(_sql,                 out var sql);
-			options.Remove(_sqlFile,             out var sqlFile);
-
-			var profileName = (string?)profile ?? DefaultProfileName;
-
-			QueryCommandConfiguration? configuration = null;
-			if (profile != null && config == null)
+			if (settings is { OutputFile: not null, Overwrite: false } && environment.FileExists(settings.OutputFile))
 			{
-				environment.Error.WriteLine($"Option '--{_profile.Name}' requires option '--{_config.Name}'.");
-				return null;
+				await environment.Error.WriteLineAsync($"Output file '{settings.OutputFile}' already exists. Use '--overwrite' to replace it.").ConfigureAwait(false);
+				return StatusCodes.EXPECTED_ERROR;
 			}
 
-			var configFileName = ResolvePath(environment, _config, (string?)config);
-
-			if (string.Equals(configFileName, MissingEnvironmentVariable, StringComparison.Ordinal))
-				return null;
-
-			if (configFileName != null && !QueryCommandConfiguration.TryLoad(environment, configFileName, profileName, out configuration, out var error))
-			{
-				environment.Error.WriteLine(error);
-				return null;
-			}
-
-			var configDirectory = configFileName != null ? Path.GetDirectoryName(configFileName) : null;
-			var providerName         = (string?)provider ?? configuration?.Provider;
-			var providerLocationPath = providerLocation != null
-				? ResolvePath(environment, _providerLocation, (string)providerLocation)
-				: ResolvePath(environment, _providerLocation, configuration?.ProviderLocation, configDirectory);
-			var connectionStringText = GetConfiguredValue(environment, _connectionString, (string?)connectionString, (string?)connectionStringEnv, configuration?.ConnectionString, configuration?.ConnectionStringEnv);
-			var userName             = GetConfiguredValue(environment, _user,             (string?)user,             (string?)userEnv,             configuration?.User,             configuration?.UserEnv);
-			var passwordText         = GetConfiguredValue(environment, _password,         (string?)password,         (string?)passwordEnv,         configuration?.Password,         configuration?.PasswordEnv);
-			var commandTimeoutValue  = (string?)commandTimeout != null ? ParseTimeout(environment, _commandTimeout,  (string)commandTimeout) :     configuration?.CommandTimeout;
-			var lockTimeoutValue     = (string?)lockTimeout    != null ? ParseTimeout(environment, _lockTimeout,     (string)lockTimeout)    :     configuration?.LockTimeout;
-			var maxRowsValue         = (string?)maxRows        != null ? ParseRowCount(environment, _maxRows,        (string)maxRows)        :     configuration?.MaxRows ?? DefaultMaxRows;
-			var outputFormat         = (string?)output ?? configuration?.Output ?? "json";
-			var outputFileName       = outputFile != null
-				? ResolvePath(environment, _outputFile, (string)outputFile)
-				: ResolvePath(environment, _outputFile, configuration?.OutputFile, configDirectory);
-			var overwriteOutputFile  = (bool?)overwrite ?? false;
-			var impersonateValue     = (bool?)impersonate ?? configuration?.Impersonate ?? false;
-			var impersonateModeValue = ParseImpersonateMode((string?)impersonateMode ?? configuration?.ImpersonateMode);
-			var unsafeSqlPolicy      = configuration?.UnsafeSqlPolicy ?? UnsafeSqlPolicy.Deny;
-			var allowUnsafeSqlValue  = (bool?)allowUnsafeSql ?? false;
-			var querySql             = (string?)sql;
-			var querySqlFile         = ResolvePath(environment, _sqlFile, (string?)sqlFile);
-
-			if (commandTimeoutValue < 0 || lockTimeoutValue < 0 || maxRowsValue < 0)
-				return null;
-
-			if (impersonateModeValue == null)
-			{
-				environment.Error.WriteLine($"Option '--{_impersonateMode.Name}' has unknown value '{(string?)impersonateMode ?? configuration?.ImpersonateMode}'.");
-				return null;
-			}
-
-			if (string.Equals(connectionStringText, MissingEnvironmentVariable, StringComparison.Ordinal) ||
-			    string.Equals(userName,             MissingEnvironmentVariable, StringComparison.Ordinal) ||
-			    string.Equals(passwordText,         MissingEnvironmentVariable, StringComparison.Ordinal) ||
-			    string.Equals(providerLocationPath, MissingEnvironmentVariable, StringComparison.Ordinal) ||
-			    string.Equals(outputFileName,       MissingEnvironmentVariable, StringComparison.Ordinal) ||
-			    string.Equals(querySqlFile,         MissingEnvironmentVariable, StringComparison.Ordinal))
-				return null;
-
-			if (providerName == null)
-			{
-				environment.Error.WriteLine($"Option '--{_provider.Name}' must be specified.");
-				return null;
-			}
-
-			if (connectionStringText == null)
-			{
-				environment.Error.WriteLine($"Option '--{_connectionString.Name}' must be specified.");
-				return null;
-			}
+			// Open the output writer before optional impersonation so file access stays under the original process account.
+			//
+			var outputWriter        = settings.OutputFile != null ? environment.CreateTextWriter(settings.OutputFile) : environment.Out;
+			var disposeOutputWriter = settings.OutputFile != null;
 
 			try
 			{
-				connectionStringText = string.Format(CultureInfo.InvariantCulture, connectionStringText, userName, passwordText);
-			}
-			catch (FormatException ex)
-			{
-				environment.Error.WriteLine($"Invalid connection string format: {ex.Message} Use '{{0}}' for user, '{{1}}' for password, and escape literal braces as '{{{{' and '}}}}'.");
-				return null;
-			}
+				var result = await new QueryExecutionExecutor(settings).Execute(outputWriter, cancellationToken).ConfigureAwait(false);
 
-			if (allowUnsafeSqlValue && unsafeSqlPolicy == UnsafeSqlPolicy.Deny)
-			{
-				environment.Error.WriteLine($"Option '--{_allowUnsafeSql.Name}' cannot be used because unsafe SQL policy is 'deny'.");
-				return null;
-			}
-
-			if (impersonateValue && (userName == null || passwordText == null))
-			{
-				environment.Error.WriteLine($"Option '--{_impersonate.Name}' requires resolved '--{_user.Name}' and '--{_password.Name}' values.");
-				return null;
-			}
-
-			if (querySql == null && querySqlFile == null)
-			{
-				environment.Error.WriteLine($"Either '--{_sql.Name}' or '--{_sqlFile.Name}' option must be specified.");
-				return null;
-			}
-
-			return new QueryCommandSettings(
-				profileName,
-				providerName,
-				providerLocationPath,
-				userName,
-				passwordText,
-				connectionStringText,
-				commandTimeoutValue,
-				lockTimeoutValue,
-				maxRowsValue,
-				outputFormat,
-				outputFileName,
-				overwriteOutputFile,
-				unsafeSqlPolicy,
-				allowUnsafeSqlValue,
-				impersonateValue,
-				impersonateModeValue.Value,
-				querySql,
-				querySqlFile);
-		}
-
-		static WindowsImpersonationMode? ParseImpersonateMode(string? value)
-		{
-			return value?.ToLower(CultureInfo.InvariantCulture) switch
-			{
-				null                => WindowsImpersonationMode.NetworkCleartext,
-				"8"                 => WindowsImpersonationMode.NetworkCleartext,
-				"network-cleartext" => WindowsImpersonationMode.NetworkCleartext,
-				"2"                 => WindowsImpersonationMode.Interactive,
-				"interactive"       => WindowsImpersonationMode.Interactive,
-				"3"                 => WindowsImpersonationMode.Network,
-				"network"           => WindowsImpersonationMode.Network,
-				"9"                 => WindowsImpersonationMode.NewCredentials,
-				"new-credentials"   => WindowsImpersonationMode.NewCredentials,
-				_                   => null,
-			};
-		}
-
-		static int? ParseTimeout(ICliEnvironment environment, CliOption option, string value)
-		{
-			if (int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out var timeout) && timeout >= 0)
-				return timeout;
-
-			environment.Error.WriteLine($"Option '--{option.Name}' must be a non-negative integer number of seconds.");
-			return -1;
-		}
-
-		static string? GetConfiguredValue(ICliEnvironment environment, CliOption option, string? commandLineValue, string? commandLineEnvironmentVariableName, string? configurationValue, string? configurationEnvironmentVariableName)
-		{
-			if (commandLineValue != null)
-				return commandLineValue;
-
-			if (commandLineEnvironmentVariableName != null)
-				return GetEnvironmentValue(environment, option, commandLineEnvironmentVariableName);
-
-			if (configurationValue != null)
-				return configurationValue;
-
-			if (configurationEnvironmentVariableName != null)
-				return GetEnvironmentValue(environment, option, configurationEnvironmentVariableName);
-
-			return null;
-		}
-
-		static string? GetEnvironmentValue(ICliEnvironment environment, CliOption option, string environmentVariableName)
-		{
-			var value = environment.GetEnvironmentVariable(environmentVariableName);
-
-			if (value != null)
-				return value;
-
-			environment.Error.WriteLine($"Environment variable '{environmentVariableName}' specified for option '--{option.Name}' is not set.");
-			return MissingEnvironmentVariable;
-		}
-
-		static string? ResolvePath(ICliEnvironment environment, CliOption option, string? path, string? baseDirectory = null)
-		{
-			if (path == null)
-				return null;
-
-			var result = new StringBuilder(path.Length);
-
-			for (var i = 0; i < path.Length; i++)
-			{
-				if (path[i] == '%')
+				if (result.Error != null)
 				{
-					var end = path.IndexOf('%', i + 1);
-
-					if (end > i + 1)
-					{
-						if (!TryAppendEnvironmentValue(environment, option, path.Substring(i + 1, end - i - 1), result))
-							return MissingEnvironmentVariable;
-
-						i = end;
-						continue;
-					}
+					await environment.Error.WriteLineAsync(result.Error).ConfigureAwait(false);
+					return result.StatusCode;
 				}
 
-				if (path[i] == '$' && i + 1 < path.Length && path[i + 1] == '{')
+				if (result.Truncated && !string.Equals(settings.Output, "json-table", StringComparison.OrdinalIgnoreCase))
 				{
-					var end = path.IndexOf('}', i + 2);
-
-					if (end > i + 2)
-					{
-						if (!TryAppendEnvironmentValue(environment, option, path.Substring(i + 2, end - i - 2), result))
-							return MissingEnvironmentVariable;
-
-						i = end;
-						continue;
-					}
+					// JSON table carries truncation in-band; other formats report it through stderr.
+					//
+					await environment.Error.WriteLineAsync($"Query result truncated to {settings.MaxRows.ToString(CultureInfo.InvariantCulture)} row(s). Use '--max-rows' to change the limit.").ConfigureAwait(false);
 				}
 
-				result.Append(path[i]);
+				return result.StatusCode;
 			}
-
-			var resolvedPath = result.ToString();
-
-			if (!string.IsNullOrEmpty(baseDirectory) && !Path.IsPathRooted(resolvedPath))
-				resolvedPath = Path.Combine(baseDirectory, resolvedPath);
-
-			return resolvedPath;
-		}
-
-		static bool TryAppendEnvironmentValue(ICliEnvironment environment, CliOption option, string name, StringBuilder result)
-		{
-			var value = environment.GetEnvironmentVariable(name);
-
-			if (value == null)
+			finally
 			{
-				environment.Error.WriteLine($"Environment variable '{name}' referenced by option '--{option.Name}' is not set.");
-				return false;
+				if (disposeOutputWriter)
+					await outputWriter.DisposeAsync().ConfigureAwait(false);
 			}
-
-			result.Append(value);
-			return true;
 		}
 
-		static int ParseRowCount(ICliEnvironment environment, CliOption option, string value)
+		static QueryExecutionSettings? ProcessOptions(ICliEnvironment environment, Dictionary<CliOption, object?> options, out int errorStatusCode)
 		{
-			if (int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out var rowCount) && rowCount >= 0)
-				return rowCount;
+			options.Remove(QueryExecutionCliOptions.Config,              out var config);
+			options.Remove(QueryExecutionCliOptions.Profile,             out var profile);
+			options.Remove(QueryExecutionCliOptions.Provider,            out var provider);
+			options.Remove(QueryExecutionCliOptions.ProviderLocation,    out var providerLocation);
+			options.Remove(QueryExecutionCliOptions.ConnectionString,    out var connectionString);
+			options.Remove(QueryExecutionCliOptions.ConnectionStringEnv, out var connectionStringEnv);
+			options.Remove(QueryExecutionCliOptions.User,                out var user);
+			options.Remove(QueryExecutionCliOptions.UserEnv,             out var userEnv);
+			options.Remove(QueryExecutionCliOptions.Password,            out var password);
+			options.Remove(QueryExecutionCliOptions.PasswordEnv,         out var passwordEnv);
+			options.Remove(QueryExecutionCliOptions.Impersonate,         out var impersonate);
+			options.Remove(QueryExecutionCliOptions.ImpersonateMode,     out var impersonateMode);
+			options.Remove(QueryExecutionCliOptions.CommandTimeout,      out var commandTimeout);
+			options.Remove(QueryExecutionCliOptions.LockTimeout,         out var lockTimeout);
+			options.Remove(QueryExecutionCliOptions.AllowUnsafeSql,      out var allowUnsafeSql);
+			options.Remove(QueryExecutionCliOptions.Output,              out var output);
+			options.Remove(QueryExecutionCliOptions.OutputFile,          out var outputFile);
+			options.Remove(QueryExecutionCliOptions.Overwrite,           out var overwrite);
+			options.Remove(QueryExecutionCliOptions.MaxRows,             out var maxRows);
+			options.Remove(QueryExecutionCliOptions.Sql,                 out var sql);
+			options.Remove(QueryExecutionCliOptions.SqlFile,             out var sqlFile);
 
-			environment.Error.WriteLine($"Option '--{option.Name}' must be a non-negative integer row count.");
-			return -1;
+			var values = new QueryExecutionOptionValues(
+				(string?)config,
+				(string?)profile,
+				(string?)provider,
+				(string?)providerLocation,
+				(string?)connectionString,
+				(string?)connectionStringEnv,
+				(string?)user,
+				(string?)userEnv,
+				(string?)password,
+				(string?)passwordEnv,
+				(bool?)impersonate,
+				(string?)impersonateMode,
+				(string?)commandTimeout,
+				(string?)lockTimeout,
+				(string?)maxRows,
+				(string?)output,
+				(string?)outputFile,
+				(bool?)overwrite ?? false,
+				(bool?)allowUnsafeSql ?? false,
+				(string?)sql,
+				(string?)sqlFile,
+				"json");
+
+			var resolver = new QueryExecutionSettingsResolver(environment);
+			var settings = resolver.Resolve(values);
+
+			errorStatusCode = resolver.ErrorStatusCode;
+			return settings;
 		}
 	}
 }

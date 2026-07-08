@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
 
-namespace LinqToDB.CommandLine
+using LinqToDB.CommandLine;
+using LinqToDB.CommandLine.Options;
+
+namespace LinqToDB.CommandLine.Commands.QueryExecution
 {
 	internal static class GenericReadOnlySqlGuard
 	{

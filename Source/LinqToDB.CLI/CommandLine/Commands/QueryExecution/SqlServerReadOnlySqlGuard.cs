@@ -1,9 +1,13 @@
+using System;
 using System.IO;
 using System.Linq;
 
+using LinqToDB.CommandLine;
+using LinqToDB.CommandLine.Options;
+
 using Microsoft.SqlServer.TransactSql.ScriptDom;
 
-namespace LinqToDB.CommandLine
+namespace LinqToDB.CommandLine.Commands.QueryExecution
 {
 	internal static class SqlServerReadOnlySqlGuard
 	{

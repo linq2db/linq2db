@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Globalization;
@@ -7,6 +7,8 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
 
+using LinqToDB.CommandLine;
+using LinqToDB.CommandLine.Options;
 using LinqToDB.Internal.Common;
 using LinqToDB.Scaffold;
 using LinqToDB.Tools;
@@ -19,7 +21,7 @@ using Microsoft.Extensions.DependencyModel.Resolution;
 
 using Mono.TextTemplating;
 
-namespace LinqToDB.CommandLine
+namespace LinqToDB.CommandLine.Commands.Scaffold
 {
 	partial class ScaffoldCommand : CliCommand
 	{

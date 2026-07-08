@@ -1,4 +1,9 @@
-namespace LinqToDB.CommandLine
+using System;
+
+using LinqToDB.CommandLine;
+using LinqToDB.CommandLine.Options;
+
+namespace LinqToDB.CommandLine.Commands.QueryExecution
 {
 	enum WindowsImpersonationMode
 	{

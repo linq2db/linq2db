@@ -1,8 +1,10 @@
 using System;
 
+using LinqToDB.CommandLine.Options;
+using LinqToDB.CommandLine;
 using LinqToDB.DataProvider;
 
-namespace LinqToDB.CommandLine
+namespace LinqToDB.CommandLine.Commands.QueryExecution
 {
 	internal static class ReadOnlySqlGuard
 	{

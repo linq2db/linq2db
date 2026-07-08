@@ -4,23 +4,27 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.Loader;
 
+using LinqToDB.CommandLine;
+using LinqToDB.CommandLine.Options;
+
 using LinqToDB.DataProvider.DB2;
 
-namespace LinqToDB.CommandLine
+namespace LinqToDB.CommandLine.Commands.QueryExecution
 {
 	/// <summary>
 	/// Handles loading of external database provider assemblies.
 	/// </summary>
 	static class ExternalProviderLoader
 	{
-		public static bool LoadExternalProvider(ICliEnvironment environment, string provider, string? providerLocation)
+		public static bool LoadExternalProvider(string provider, string? providerLocation, out string? error)
 		{
+			error = null;
+
 			if (providerLocation == null)
 			{
 				if (IsDB2FamilyProvider(provider))
 				{
-					environment.Error.WriteLine(
-						"""
+					error = """
 						Cannot locate IBM.Data.Db2.dll provider assembly.
 						Due to huge size of it, we don't include Net.IBM.Data.Db2 provider into installation.
 						You need to install it manually and specify provider path using '--provider-location <path_to_assembly>' option.
@@ -28,16 +32,16 @@ namespace LinqToDB.CommandLine
 						- for Windows: https://www.nuget.org/packages/Net.IBM.Data.Db2
 						- for Linux: https://www.nuget.org/packages/Net.IBM.Data.Db2-lnx
 						- for macOS: https://www.nuget.org/packages/Net.IBM.Data.Db2-osx
-						""");
+						""";
 					return false;
 				}
 
 				return true;
 			}
 
-			if (!environment.FileExists(providerLocation))
+			if (!File.Exists(providerLocation))
 			{
-				environment.Error.WriteLine($"Provider assembly '{providerLocation}' not found.");
+				error = $"Provider assembly '{providerLocation}' not found.";
 				return false;
 			}
 
@@ -63,7 +67,7 @@ namespace LinqToDB.CommandLine
 
 					if (factory == null)
 					{
-						environment.Error.WriteLine($"Provider assembly '{providerLocation}' doesn't contain DB2Factory type.");
+						error = $"Provider assembly '{providerLocation}' doesn't contain DB2Factory type.";
 						return false;
 					}
 

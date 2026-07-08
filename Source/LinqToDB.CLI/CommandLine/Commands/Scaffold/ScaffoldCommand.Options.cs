@@ -1,15 +1,17 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
 
+using LinqToDB.CommandLine;
+using LinqToDB.CommandLine.Options;
 using LinqToDB.DataModel;
 using LinqToDB.Metadata;
 using LinqToDB.Naming;
 using LinqToDB.Scaffold;
 
-namespace LinqToDB.CommandLine
+namespace LinqToDB.CommandLine.Commands.Scaffold
 {
 	partial class ScaffoldCommand : CliCommand
 	{

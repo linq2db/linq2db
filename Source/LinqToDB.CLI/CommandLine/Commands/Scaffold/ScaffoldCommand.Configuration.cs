@@ -1,14 +1,16 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 using LinqToDB.CodeModel;
+using LinqToDB.CommandLine;
+using LinqToDB.CommandLine.Options;
 using LinqToDB.DataModel;
 using LinqToDB.Metadata;
 using LinqToDB.Naming;
 using LinqToDB.Scaffold;
 using LinqToDB.Schema;
 
-namespace LinqToDB.CommandLine
+namespace LinqToDB.CommandLine.Commands.Scaffold
 {
 	partial class ScaffoldCommand : CliCommand
 	{
@@ -226,7 +228,7 @@ namespace LinqToDB.CommandLine
 		/// </summary>
 		/// <param name="options">All specified options.</param>
 		/// <param name="settings">Schema settings to configure.</param>
-		private static void ProcessSchemaOptions(Dictionary<CliOption, object?> options, Scaffold.SchemaOptions settings)
+		private static void ProcessSchemaOptions(Dictionary<CliOption, object?> options, global::LinqToDB.Scaffold.SchemaOptions settings)
 		{
 			// objects to load
 			if (options.Remove(SchemaOptions.LoadedObjects, out var value))
