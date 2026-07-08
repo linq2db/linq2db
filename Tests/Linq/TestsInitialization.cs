@@ -132,6 +132,16 @@ public class TestsInitialization
 		// required for tests expectations
 		ClickHouseOptions.Default = ClickHouseOptions.Default with { UseStandardCompatibleAggregates = true };
 
+		// Cap the process-wide query cache to bound test-process memory. The CI NETFX legs run two
+		// SQL Server versions' full suites in a single process and were hitting OutOfMemoryException;
+		// the default cap is 10000 entries but a full run only produces ~1700 distinct queries, so a
+		// small cap trims retained compiled-query memory with no correctness impact. Overridable via
+		// the L2DB_TEST_QUERYCACHE env var for tuning.
+		{
+			var qcMax = Environment.GetEnvironmentVariable("L2DB_TEST_QUERYCACHE") is { } qcMaxStr && int.TryParse(qcMaxStr, out var n) ? n : 100;
+			LinqToDB.Internal.Linq.QueryCache.Default.MaxEntriesOverride = qcMax;
+		}
+
 		// uncomment it to run tests with SeqentialAccess command behavior
 		//LinqToDB.Common.Configuration.OptimizeForSequentialAccess = true;
 		//DbCommandProcessorExtensions.Instance = new SequentialAccessCommandProcessor();
