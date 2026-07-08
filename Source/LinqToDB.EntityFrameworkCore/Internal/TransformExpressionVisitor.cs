@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB.Extensions;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Reflection;
@@ -25,6 +26,8 @@ namespace LinqToDB.EntityFrameworkCore.Internal
 	/// </summary>
 	public class TransformExpressionVisitor : ExpressionVisitorBase
 	{
+		internal static ObjectPool<TransformExpressionVisitor> Pool = new(() => new TransformExpressionVisitor(), v => v.Cleanup(), 100);
+
 		static readonly char[]                  _nameSeparator = ['.'];
 
 		protected CanBeValuatedVisitor CanBeValuatedVisitor = new();
