@@ -401,6 +401,13 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.DataProvider.AliasesHelper.PrepareQueryAndAliases(LinqToDB.Internal.DataProvider.IIdentifierService,LinqToDB.Internal.SqlQuery.SqlStatement,LinqToDB.Internal.SqlQuery.AliasesContext,LinqToDB.Internal.SqlQuery.AliasesContext@)</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.DataProvider.DatabaseSpecificQueryable`1.#ctor(System.Linq.IQueryable{`0})</Target>
     <Left>lib/net10.0/linq2db.dll</Left>
     <Right>lib/net10.0/linq2db.dll</Right>
@@ -674,6 +681,20 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.Linq.QueryInfo.get_Aliases</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.Linq.QueryInfo.set_Aliases(LinqToDB.Internal.SqlQuery.AliasesContext)</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildSql(System.Int32,LinqToDB.Internal.SqlQuery.SqlStatement,System.Text.StringBuilder,LinqToDB.Internal.SqlProvider.OptimizationContext,System.Int32,System.Boolean,LinqToDB.Internal.SqlQuery.NullabilityContext)</Target>
     <Left>lib/net10.0/linq2db.dll</Left>
     <Right>lib/net10.0/linq2db.dll</Right>
@@ -738,6 +759,13 @@
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.ConvertSqlExtendedFunction(LinqToDB.SqlQuery.SqlExtendedFunction)</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.SqlQuery.AliasesContext.IsAliased(LinqToDB.Internal.SqlQuery.IQueryElement)</Target>
     <Left>lib/net10.0/linq2db.dll</Left>
     <Right>lib/net10.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
@@ -1178,6 +1206,13 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.DataProvider.AliasesHelper.PrepareQueryAndAliases(LinqToDB.Internal.DataProvider.IIdentifierService,LinqToDB.Internal.SqlQuery.SqlStatement,LinqToDB.Internal.SqlQuery.AliasesContext,LinqToDB.Internal.SqlQuery.AliasesContext@)</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.DataProvider.DatabaseSpecificQueryable`1.#ctor(System.Linq.IQueryable{`0})</Target>
     <Left>lib/net462/linq2db.dll</Left>
     <Right>lib/net462/linq2db.dll</Right>
@@ -1451,6 +1486,20 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.Linq.QueryInfo.get_Aliases</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.Linq.QueryInfo.set_Aliases(LinqToDB.Internal.SqlQuery.AliasesContext)</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildSql(System.Int32,LinqToDB.Internal.SqlQuery.SqlStatement,System.Text.StringBuilder,LinqToDB.Internal.SqlProvider.OptimizationContext,System.Int32,System.Boolean,LinqToDB.Internal.SqlQuery.NullabilityContext)</Target>
     <Left>lib/net462/linq2db.dll</Left>
     <Right>lib/net462/linq2db.dll</Right>
@@ -1515,6 +1564,13 @@
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.ConvertSqlExtendedFunction(LinqToDB.SqlQuery.SqlExtendedFunction)</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.SqlQuery.AliasesContext.IsAliased(LinqToDB.Internal.SqlQuery.IQueryElement)</Target>
     <Left>lib/net462/linq2db.dll</Left>
     <Right>lib/net462/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
@@ -1955,6 +2011,13 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.DataProvider.AliasesHelper.PrepareQueryAndAliases(LinqToDB.Internal.DataProvider.IIdentifierService,LinqToDB.Internal.SqlQuery.SqlStatement,LinqToDB.Internal.SqlQuery.AliasesContext,LinqToDB.Internal.SqlQuery.AliasesContext@)</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.DataProvider.DatabaseSpecificQueryable`1.#ctor(System.Linq.IQueryable{`0})</Target>
     <Left>lib/net8.0/linq2db.dll</Left>
     <Right>lib/net8.0/linq2db.dll</Right>
@@ -2228,6 +2291,20 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.Linq.QueryInfo.get_Aliases</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.Linq.QueryInfo.set_Aliases(LinqToDB.Internal.SqlQuery.AliasesContext)</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildSql(System.Int32,LinqToDB.Internal.SqlQuery.SqlStatement,System.Text.StringBuilder,LinqToDB.Internal.SqlProvider.OptimizationContext,System.Int32,System.Boolean,LinqToDB.Internal.SqlQuery.NullabilityContext)</Target>
     <Left>lib/net8.0/linq2db.dll</Left>
     <Right>lib/net8.0/linq2db.dll</Right>
@@ -2292,6 +2369,13 @@
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.ConvertSqlExtendedFunction(LinqToDB.SqlQuery.SqlExtendedFunction)</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.SqlQuery.AliasesContext.IsAliased(LinqToDB.Internal.SqlQuery.IQueryElement)</Target>
     <Left>lib/net8.0/linq2db.dll</Left>
     <Right>lib/net8.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
@@ -2732,6 +2816,13 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.DataProvider.AliasesHelper.PrepareQueryAndAliases(LinqToDB.Internal.DataProvider.IIdentifierService,LinqToDB.Internal.SqlQuery.SqlStatement,LinqToDB.Internal.SqlQuery.AliasesContext,LinqToDB.Internal.SqlQuery.AliasesContext@)</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.DataProvider.DatabaseSpecificQueryable`1.#ctor(System.Linq.IQueryable{`0})</Target>
     <Left>lib/net9.0/linq2db.dll</Left>
     <Right>lib/net9.0/linq2db.dll</Right>
@@ -3005,6 +3096,20 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.Linq.QueryInfo.get_Aliases</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.Linq.QueryInfo.set_Aliases(LinqToDB.Internal.SqlQuery.AliasesContext)</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildSql(System.Int32,LinqToDB.Internal.SqlQuery.SqlStatement,System.Text.StringBuilder,LinqToDB.Internal.SqlProvider.OptimizationContext,System.Int32,System.Boolean,LinqToDB.Internal.SqlQuery.NullabilityContext)</Target>
     <Left>lib/net9.0/linq2db.dll</Left>
     <Right>lib/net9.0/linq2db.dll</Right>
@@ -3069,6 +3174,13 @@
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.ConvertSqlExtendedFunction(LinqToDB.SqlQuery.SqlExtendedFunction)</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.SqlQuery.AliasesContext.IsAliased(LinqToDB.Internal.SqlQuery.IQueryElement)</Target>
     <Left>lib/net9.0/linq2db.dll</Left>
     <Right>lib/net9.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
@@ -3521,6 +3633,13 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.DataProvider.AliasesHelper.PrepareQueryAndAliases(LinqToDB.Internal.DataProvider.IIdentifierService,LinqToDB.Internal.SqlQuery.SqlStatement,LinqToDB.Internal.SqlQuery.AliasesContext,LinqToDB.Internal.SqlQuery.AliasesContext@)</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.DataProvider.DatabaseSpecificQueryable`1.#ctor(System.Linq.IQueryable{`0})</Target>
     <Left>lib/netstandard2.0/linq2db.dll</Left>
     <Right>lib/netstandard2.0/linq2db.dll</Right>
@@ -3794,6 +3913,20 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.Linq.QueryInfo.get_Aliases</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.Linq.QueryInfo.set_Aliases(LinqToDB.Internal.SqlQuery.AliasesContext)</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildSql(System.Int32,LinqToDB.Internal.SqlQuery.SqlStatement,System.Text.StringBuilder,LinqToDB.Internal.SqlProvider.OptimizationContext,System.Int32,System.Boolean,LinqToDB.Internal.SqlQuery.NullabilityContext)</Target>
     <Left>lib/netstandard2.0/linq2db.dll</Left>
     <Right>lib/netstandard2.0/linq2db.dll</Right>
@@ -3858,6 +3991,13 @@
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.ConvertSqlExtendedFunction(LinqToDB.SqlQuery.SqlExtendedFunction)</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.SqlQuery.AliasesContext.IsAliased(LinqToDB.Internal.SqlQuery.IQueryElement)</Target>
     <Left>lib/netstandard2.0/linq2db.dll</Left>
     <Right>lib/netstandard2.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
