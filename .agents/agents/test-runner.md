@@ -134,6 +134,7 @@ Rules:
 
 - Always include `callLog[]` (every `dotnet test` invocation).
 - Failures carry the NUnit-reported error message verbatim, plus the top stack frame if present. Do not paraphrase.
+- **Attribute each failure to the correct fully-qualified test name, and never classify an expected exception as a failure.** A broad filter (e.g. `~TestGuid`) matches many methods across classes (`FirebirdTests.TestGuid`, `ConcurrencyTests.TestGuid`, `DataTypesTests.TestGuid`, …); tie each error to the method whose SQL actually threw — don't guess from the substring. A test using `[ThrowsForProvider]`/`[ThrowsWhen]` that reports *"Required exception was thrown"* **passed** — report it as a pass, not a failure. Getting these wrong sent the caller optimising the wrong path for several rounds (FB6 Guid work): when the caller needs certainty, quote the verbatim SQL statement that threw and the exact NUnit outcome per test, and let the caller map SQL↔test rather than asserting the mapping yourself.
 
 ## Don'ts
 
