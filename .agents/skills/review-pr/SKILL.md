@@ -96,7 +96,7 @@ Carry the confirmed scope forward into the `code-reviewer` briefing (step 6) as 
 
 **Question 2 — baselines opt-out.** Default is include. Answers:
 - `y` (or empty) — spawn `baselines-reviewer` in step 6 as usual.
-- `n` — skip the `baselines-reviewer` spawn entirely. Step 6 runs `code-reviewer` alone; the `## Baselines` section in step 8 is replaced with a single line `Baselines review skipped per user request.` and none of the per-group rendering applies. Use this when the PR has no baseline changes, or when the user has already reviewed them separately and wants to save a subagent run.
+- `n` — skip the `baselines-reviewer` spawn entirely. Step 6 runs `code-reviewer` alone; the `## Baselines` section in step 8 is replaced with a single line `Baselines review skipped per user request.` and none of the per-group rendering applies. Use this when the PR has no baseline changes, or when the user has already reviewed them separately and wants to save a subagent run. Determine "no baseline changes" by checking the `baselines/pr_<n>` branch (see [`baselines-repo-layout.md`](../../docs/baselines-repo-layout.md)), never from the absence of the `linq2dbot` "baselines changed" PR comment — that comment lags CI and is absent while CI is still running (the branch and baselines PR may not exist yet even though the run will produce them).
 
 ### 5. Compute the ID-continuation floor
 

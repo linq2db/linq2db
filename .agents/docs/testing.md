@@ -364,6 +364,8 @@ Use `query.ToSqlQuery().Sql` to see a query's SQL without running it. `IQueryabl
 
 Many tests compare emitted SQL against a stored baseline file. Baselines live **outside the main repo** under the path configured by `BaselinesPath` in `UserDataProviders.json` → `MyConnectionStrings`. With `BaselinesPath` set, a mismatched test overwrites the baseline with the new SQL; subsequent runs compare against the updated file. With `BaselinesPath` unset, baselines are neither written nor compared.
 
+Baseline capture is **not** gated on `AssertQuery` / `GetSql`. Emitted SQL is captured at the harness level (`Tests/Base/BaselinesWriter.cs`) for any query a test executes through `GetDataContext`, so a plain `GetDataContext` + `ToList()` + `ShouldBe` test with no `AssertQuery` call still writes `.sql` baselines. Never infer "no baselines" from the assertion style — check the baselines output.
+
 ### When a substring assertion is vacuous — prefer baselines for shape-changing fixes
 
 A `ToSqlQuery().Sql.ShouldContain` / `ShouldNotContain("COALESCE")`-style assertion only guards a fix if the substring actually differs pre/post on the providers the test runs on. Two normalizations silently defeat it:
