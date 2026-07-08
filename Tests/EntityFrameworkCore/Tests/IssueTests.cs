@@ -1041,6 +1041,31 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			using var db = ctx.CreateLinqToDBConnection();
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5364")]
+		public async ValueTask TestImplicitConnectionManagement([EFDataSources] string provider)
+		{
+			// Reproduces #5364: the implicit ToLinqToDB() path opens the EF connection but never
+			// closes it (the DataConnection it creates is never disposed). Contexts are kept alive
+			// in a list so GC/finalization can't mask the leak; each leaked connection stays checked
+			// out of the pool, so past Max Pool Size (default 100) the next query throws.
+			var contexts = new List<IssueContextBase>();
+
+			try
+			{
+				for (var i = 0; i < 300; i++)
+				{
+					var ctx = CreateContext(provider);
+					contexts.Add(ctx);
+					_ = await ctx.Masters.ToListAsyncLinqToDB();
+				}
+			}
+			finally
+			{
+				foreach (var ctx in contexts)
+					ctx.Dispose();
+			}
+		}
+
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5355")]
 		public void Issue5355_ContainsViaIEnumerableInGenericMethod([EFDataSources] string provider)
 		{
