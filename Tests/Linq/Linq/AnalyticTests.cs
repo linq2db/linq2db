@@ -496,7 +496,9 @@ namespace Tests.Linq
 				Assert.Fail("Missing assertion");
 		}
 
-		[Test]
+		// NonParallelizable: asserts exact GetCacheMissCount deltas, which read the process-global
+		// Query<T>.CacheMissCount; a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void TestFirstValueOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllDuckDB, TestProvName.AllPostgreSQL19Plus)] string context, [Values(Sql.Nulls.Ignore, Sql.Nulls.None)] Sql.Nulls nulls, [Values(1, 2)]int iteration)
 		{
 			using var db = GetDataContext(context);
