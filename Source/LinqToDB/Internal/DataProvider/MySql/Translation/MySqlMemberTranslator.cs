@@ -320,7 +320,7 @@ namespace LinqToDB.Internal.DataProvider.MySql.Translation
 										// NULLS LAST  => "(expr IS NULL)"     (non-null = 0 sorts first, null = 1 sorts last)
 										// NULLS FIRST => "(expr IS NOT NULL)"  (null = 0 sorts first)
 										if (info.OrderBySql[i].nulls != Sql.NullsPosition.None
-											&& !QueryHelper.MatchesNaturalNullsPosition(NullsDefaultOrdering.Smallest, info.OrderBySql[i].nulls, info.OrderBySql[i].desc))
+											&& !QueryHelper.MatchesNaturalNullsPosition(translationContext.ProviderFlags.DefaultNullsOrdering, info.OrderBySql[i].nulls, info.OrderBySql[i].desc))
 										{
 											sb.Value.Append('(').Append('{').Append(i).Append('}')
 												.Append(info.OrderBySql[i].nulls == Sql.NullsPosition.Last ? " IS NULL" : " IS NOT NULL")
@@ -359,6 +359,16 @@ namespace LinqToDB.Internal.DataProvider.MySql.Translation
 				ConfigureConcatWs(builder, nullValuesAsEmptyString, isNullableResult, withoutSeparator: withoutSeparator);
 
 				return builder.Build(translationContext, methodCall, isExpression: translationFlags.HasFlag(TranslationFlags.Expression));
+			}
+
+			// {value} IS NULL OR {value} NOT RLIKE '[^WHITESPACES]'
+			public override ISqlExpression? TranslateIsNullOrWhiteSpace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value)
+			{
+				var factory   = translationContext.ExpressionFactory;
+				var pattern   = factory.Value(factory.GetDbDataType(typeof(string)), $"[^{WHITESPACES}]");
+				var predicate = factory.LikePredicate(value, isNot: true, pattern, escape: null, functionName: "RLIKE");
+
+				return WrapIsNullOrWhiteSpaceResult(translationContext, value, predicate);
 			}
 		}
 
@@ -400,10 +410,29 @@ namespace LinqToDB.Internal.DataProvider.MySql.Translation
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
 		{
-			var factory  = translationContext.ExpressionFactory;
-			var timePart = factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "Uuid");
+			var factory = translationContext.ExpressionFactory;
+			return factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "Uuid");
+		}
 
-			return timePart;
+		protected class MySqlWindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
+		{
+			protected override bool   IsFrameGroupsSupported    => false;
+			protected override bool   IsFrameExclusionSupported => false;
+			protected override bool   IsPercentileContSupported => false;
+			protected override bool   IsPercentileDiscSupported => false;
+			// MySQL 8 / MariaDB expose STDDEV/VARIANCE as window functions, but bare STDDEV/VARIANCE are the
+			// *population* forms — MySQL docs state they are synonyms for STDDEV_POP/VAR_POP. Sql.Window.StdDev/Variance
+			// are the sample statistics, so map them to the documented sample names STDDEV_SAMP/VAR_SAMP. COVAR/CORR/REGR
+			// not supported.
+			protected override bool   IsVarianceSupported       => true;
+			protected override bool   IsVarianceBareSupported   => true;
+			protected override string StdDevFunctionName        => "STDDEV_SAMP";
+			protected override string VarianceFunctionName      => "VAR_SAMP";
+		}
+
+		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()
+		{
+			return new MySqlWindowFunctionsMemberTranslator();
 		}
 	}
 }

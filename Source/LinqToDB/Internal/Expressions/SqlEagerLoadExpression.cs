@@ -18,9 +18,7 @@ namespace LinqToDB.Internal.Expressions
 		public override string ToString()
 		{
 			if (Predicate != null)
-			{
 				return $"Eager({SequenceExpression} AND {Predicate})::{Type.Name}";
-			}
 
 			return $"Eager({SequenceExpression})::{Type.Name}";
 		}
@@ -105,9 +103,7 @@ namespace LinqToDB.Internal.Expressions
 		public SqlEagerLoadExpression AppendPredicate(Expression predicate)
 		{
 			if (Predicate != null)
-			{
 				predicate = AndAlso(Predicate, predicate);
-			}
 
 			return new SqlEagerLoadExpression(SequenceExpression, predicate);
 		}

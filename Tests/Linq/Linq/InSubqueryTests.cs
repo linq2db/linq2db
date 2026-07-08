@@ -69,7 +69,6 @@ namespace Tests.Linq
 
 		#endregion
 
-		[YdbCteAsSource]
 		[Test]
 		public void InTest([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
@@ -83,12 +82,9 @@ namespace Tests.Linq
 			AssertTest(query, preferExists);
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void InTest2([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
-			using var _ = context.IsAnyOf(TestProvName.AllClickHouse) ? new DisableBaseline("TODO: https://github.com/linq2db/linq2db/issues/5169") : null;
-
 			using var db = GetDataContext(context, preferExists, compareNullsAsValues);
 
 			var query =
@@ -100,7 +96,6 @@ namespace Tests.Linq
 			AssertTest(query, true);
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void InConstTest([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
@@ -128,7 +123,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void InWithSkipTest([DataSources(TestProvName.AllSybase, TestProvName.AllAccess, TestProvName.AllSQLite)] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
+		public void InWithSkipTest([DataSources(TestProvName.AllSybase, TestProvName.AllAccess, TestProvName.AllSQLite, TestProvName.AllYdb)] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
 			using var db = GetDataContext(context, preferExists, compareNullsAsValues);
 
@@ -195,7 +190,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void ContainsTest([DataSources(TestProvName.AllAccess)] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
@@ -214,7 +208,6 @@ namespace Tests.Linq
 				Assert.That(LastQuery, Is.Not.Contains("EXISTS").And.Contains(" IN "));
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void ContainsExprTest([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
@@ -230,7 +223,6 @@ namespace Tests.Linq
 			AssertTest(query, preferExists);
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void ContainsNullTest([DataSources] string context, [Values] bool preferExists)
 		{
@@ -309,7 +301,6 @@ namespace Tests.Linq
 			public int? GV { get; set; }
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void NotNull_In_NotNull_Test([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
@@ -323,7 +314,6 @@ namespace Tests.Linq
 			AssertTest(query, preferExists);
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void NotNull_NotIn_NotNull_Test([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
@@ -337,7 +327,6 @@ namespace Tests.Linq
 			AssertTest(query, preferExists);
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void Null_In_NotNull_Test([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
@@ -351,7 +340,6 @@ namespace Tests.Linq
 			AssertTest(query, preferExists);
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void Null_NotIn_NotNull_Test1([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
@@ -365,7 +353,6 @@ namespace Tests.Linq
 			AssertTest(query, preferExists);
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void Null_NotIn_NotNull_Test2([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
@@ -379,7 +366,6 @@ namespace Tests.Linq
 			AssertTest(query, preferExists);
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void NotNull_In_Null_Test([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
@@ -393,12 +379,9 @@ namespace Tests.Linq
 			AssertTest(query, preferExists);
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void Null_In_Null_Test1([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
-			using var _ = context.IsAnyOf(TestProvName.AllClickHouse) ? new DisableBaseline("TODO: https://github.com/linq2db/linq2db/issues/5169") : null;
-
 			using var db = GetDataContext(context, o => o
 				.UsePreferExistsForScalar(preferExists)
 				.UseCompareNulls(compareNullsAsValues ? CompareNulls.LikeClr : CompareNulls.LikeSql)
@@ -412,12 +395,9 @@ namespace Tests.Linq
 			AssertTest(query, true);
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void Null_In_Null_Test2([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
-			using var _ = context.IsAnyOf(TestProvName.AllClickHouse) ? new DisableBaseline("TODO: https://github.com/linq2db/linq2db/issues/5169") : null;
-
 			using var db = GetDataContext(context, preferExists, compareNullsAsValues);
 
 			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3, null }.Select((i, idx) => new TestRecordNullable { PK = idx, ID = i }));
@@ -428,7 +408,6 @@ namespace Tests.Linq
 			AssertTest(query, true);
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void Null_In_Null_Test3([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
@@ -442,7 +421,6 @@ namespace Tests.Linq
 			AssertTest(query, true);
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void Null_In_Null_Aggregation([DataSources] string context)
 		{
@@ -462,12 +440,9 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void Null_NotIn_Null_Test1([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
-			using var _ = context.IsAnyOf(TestProvName.AllClickHouse) ? new DisableBaseline("TODO: https://github.com/linq2db/linq2db/issues/5169") : null;
-
 			using var db = GetDataContext(context, preferExists, compareNullsAsValues);
 
 			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3, 4, 5, null }.Select((i, idx) => new TestRecordNullable { PK = idx, ID = i }));
@@ -478,7 +453,6 @@ namespace Tests.Linq
 			AssertTest(query, true);
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void Null_NotIn_Null_Test2([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
@@ -492,7 +466,6 @@ namespace Tests.Linq
 			AssertTest(query, true);
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void Null_NotIn_Null_Test3([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{

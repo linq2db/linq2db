@@ -1281,11 +1281,14 @@ namespace LinqToDB.Internal.SqlProvider
 		/// When <see langword="true"/> (default), <see cref="ConvertConcat"/> wraps every non-string
 		/// operand in an explicit <c>CAST(... AS VARCHAR(N))</c> before adding it to the concat chain.
 		/// Required for providers whose concat operator is <c>+</c> (SQL Server pre-2025, SqlCe,
-		/// Sybase ASE, Access) — SQL-standard data-type precedence would otherwise try to coerce
-		/// string operands to the non-string side's type. Providers whose final concat operator is
-		/// <c>||</c> (PostgreSQL / Oracle / SQLite / SAP HANA / DuckDB / Firebird / DB2 / Informix /
+		/// Access) — SQL-standard data-type precedence would otherwise try to coerce
+		/// string operands to the non-string side's type. Most providers whose final concat operator
+		/// is <c>||</c> (PostgreSQL / Oracle / SQLite / SAP HANA / DuckDB / Firebird / DB2 / Informix /
 		/// SQL Server 2025+) or <c>CONCAT(...)</c> function (MySQL / ClickHouse) auto-coerce
 		/// non-string operands and override this to <see langword="false"/> for cleaner SQL.
+		/// Sybase ASE is the exception: it emits <c>||</c> but keeps this <see langword="true"/>,
+		/// since ASE requires an explicit <c>convert()</c> for non-character operands under both
+		/// <c>+</c> and <c>||</c>.
 		/// </summary>
 		protected virtual bool ConcatRequiresExplicitStringCast => true;
 
@@ -1749,7 +1752,7 @@ namespace LinqToDB.Internal.SqlProvider
 			{
 				var unwrapped = QueryHelper.UnwrapNullablity(expr);
 
-				var wrap = includeFields && unwrapped.ElementType is QueryElementType.Column or QueryElementType.SqlField;
+				var wrap = includeFields && unwrapped.ElementType is QueryElementType.Column or QueryElementType.SqlField or QueryElementType.SqlCteTableField;
 				if (!wrap && unwrapped.IsPredicate())
 				{
 					if (unwrapped.TryEvaluateExpression(EvaluationContext, out var res))

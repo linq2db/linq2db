@@ -27,9 +27,9 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 
 		IDataContext                      _dataContext         = default!;
 		IMemberConverter                  _memberConverter     = default!;
+		IConvertContext                   _convertContext      = default!;
 		ExpressionTreeOptimizationContext _optimizationContext = default!;
 		object?[]?                        _parameterValues;
-		bool                              _includeConvert;
 		bool                              _optimizeConditions;
 		bool                              _compactBinary;
 		bool                              _isSingleConvert;
@@ -43,19 +43,18 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 			ExpressionTreeOptimizationContext           optimizationContext,
 			object?[]?                                  parameterValues,
 			Expression                                  expression,
-			bool                                        includeConvert,
 			bool                                        optimizeConditions,
 			bool                                        compactBinary,
 			bool                                        isSingleConvert)
 		{
 			_dataContext         = dataContext;
-			_includeConvert      = includeConvert;
 			_optimizationContext = optimizationContext;
 			_parameterValues     = parameterValues;
 			_optimizeConditions  = optimizeConditions;
 			_compactBinary       = compactBinary;
 			_isSingleConvert     = isSingleConvert;
 			_memberConverter     = ((IInfrastructure<IServiceProvider>)dataContext).Instance.GetRequiredService<IMemberConverter>();
+			_convertContext      = new ConvertContext(dataContext.Options);
 
 			return Visit(expression);
 		}
@@ -63,8 +62,8 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 		public override void Cleanup()
 		{
 			_dataContext         = default!;
-			_includeConvert      = default;
 			_memberConverter     = default!;
+			_convertContext      = default!;
 			_optimizationContext = default!;
 			_optimizeConditions  = default;
 			_compactBinary       = false;
@@ -88,7 +87,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 
 		protected override Expression VisitMethodCall(MethodCallExpression node)
 		{
-			var convertedMember = _memberConverter.Convert(node, out var handled);
+			var convertedMember = _memberConverter.Convert(node, _convertContext, out var handled);
 			if (handled && !ReferenceEquals(node, convertedMember))
 			{
 				return Visit(convertedMember);
@@ -141,13 +140,10 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 				return convertedQuery;
 			}
 
-			if (_includeConvert)
+			var newNode = ConvertMethod(node);
+			if (newNode != null)
 			{
-				var newNode = ConvertMethod(node);
-				if (newNode != null)
-				{
-					return Visit(newNode);
-				}
+				return Visit(newNode);
 			}
 
 			var dependentParameters = SqlQueryDependentAttributeHelper.GetQueryDependentAttributes(node.Method);
@@ -472,17 +468,27 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 		{
 			if (_optimizeConditions)
 			{
-				var test    = Visit(node.Test);
-				var ifTrue  = Visit(node.IfTrue);
-				var ifFalse = Visit(node.IfFalse);
+				// Evaluate Test first and short-circuit to the chosen branch when it resolves
+				// to a literal bool. This preserves C# ?: short-circuit semantics through expose:
+				// the un-taken branch never gets visited, so closure-only subexpressions like
+				// `null!.Length > 50` (which would NRE under eager evaluation) are skipped.
+				var test = Visit(node.Test);
 
 				if (IsCompilable(test))
 				{
 					if (EvaluateExpression(test) is bool testValue)
 					{
-						return Visit(testValue ? ifTrue : ifFalse);
+						return Visit(testValue ? node.IfTrue : node.IfFalse);
 					}
 				}
+
+				if (IsCompilable(node))
+				{
+					return node.Update(test, node.IfTrue, node.IfFalse);
+				}
+
+				var ifTrue  = Visit(node.IfTrue);
+				var ifFalse = Visit(node.IfFalse);
 
 				return node.Update(test, ifTrue, ifFalse);
 			}
@@ -492,7 +498,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 
 		protected override Expression VisitMember(MemberExpression node)
 		{
-			var convertedMember = _memberConverter.Convert(node, out var handled);
+			var convertedMember = _memberConverter.Convert(node, _convertContext, out var handled);
 			if (handled && !ReferenceEquals(node, convertedMember))
 			{
 				return Visit(convertedMember);
@@ -579,12 +585,9 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 				return convertedQuery;
 			}
 
-			if (_includeConvert)
-			{
-				var converted = ConvertMemberAccess(node);
-				if (converted != null)
-					return Visit(converted);
-			}
+			var memberMapping = ConvertMemberAccess(node);
+			if (memberMapping != null)
+				return Visit(memberMapping);
 
 			if (typeof(IDataContext).IsSameOrParentOf(node.Type))
 			{
@@ -762,7 +765,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 		{
 			if (node.Method != null)
 			{
-				var convertedMember = _memberConverter.Convert(node, out var handled);
+				var convertedMember = _memberConverter.Convert(node, _convertContext, out var handled);
 				if (handled && !ReferenceEquals(node, convertedMember))
 				{
 					return Visit(convertedMember);
@@ -801,7 +804,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 		{
 			if (node.Method != null)
 			{
-				var convertedMember = _memberConverter.Convert(node, out var handled);
+				var convertedMember = _memberConverter.Convert(node, _convertContext, out var handled);
 				if (handled && !ReferenceEquals(node, convertedMember))
 				{
 					return Visit(convertedMember);
@@ -837,13 +840,10 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 				}
 			}
 
-			if (_includeConvert)
+			var convertedBinary = ConvertBinary(node);
+			if (convertedBinary != null)
 			{
-				var converted = ConvertBinary(node);
-				if (converted != null)
-				{
-					return Visit(converted);
-				}
+				return Visit(convertedBinary);
 			}
 
 			if (_compactBinary)
@@ -867,12 +867,9 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 
 		protected override Expression VisitNew(NewExpression node)
 		{
-			if (_includeConvert)
-			{
-				var newNode = ConvertNew(node);
-				if (newNode != null)
-					return Visit(newNode);
-			}
+			var newNode = ConvertNew(node);
+			if (newNode != null)
+				return Visit(newNode);
 
 			return base.VisitNew(node);
 		}
@@ -907,57 +904,6 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 			}
 
 			return null;
-		}
-
-		protected override Expression VisitBlock(BlockExpression node)
-		{
-			// TODO: in future should be moved to LinqToDB.FSharp if we will introduce pluggable ExposeVisitor to handle F# quirks
-
-			// F# 10.1 could generate unnecessary block like:
-			// { var x = expr1; return new type(x, expr2) }
-			// instead of
-			// new type(expr1, expr2)
-
-			// try to embed variables if:
-			// 1. block items are: N assignments to variables + result expression
-
-			if (node.Variables.Count > 0
-				&& node.Variables.Count + 1 == node.Expressions.Count
-				&& node.Result == node.Expressions[^1])
-			{
-				var result = node.Result;
-				var simplified = true;
-
-				for (var i = node.Expressions.Count - 2; i >= 0; i--)
-				{
-					if (node.Expressions[i] is not BinaryExpression
-						{
-							NodeType: ExpressionType.Assign,
-							Method: null,
-							Left: ParameterExpression variable,
-							Right: { } value,
-						}
-						// external variable/parameter
-						|| !node.Variables.Contains(variable)
-						// self-reference
-						|| value.GetCount(variable, static (variable, n) => n == variable) != 0
-						// 1: replace var only if it used exactly once to avoid unwanted side-effects
-						// 0: because F# defines unused variables, we should also accept count = 0
-						// potentially it could be dangerous, but ppl just shouldn't write code like that
-						|| result.GetCount(variable, static (variable, n) => n == variable) > 1)
-					{
-						simplified = false;
-						break;
-					}
-
-					result = result.Replace(variable, value);
-				}
-
-				if (simplified)
-					return Visit(result);
-			}
-
-			return base.VisitBlock(node);
 		}
 
 		#region Helper methods

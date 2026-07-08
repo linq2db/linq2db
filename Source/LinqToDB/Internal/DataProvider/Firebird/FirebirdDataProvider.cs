@@ -54,6 +54,14 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			SqlProviderFlags.IsUpdateSkipTakeSupported = true;
 			SqlProviderFlags.IsDistinctFromSupported   = true;
 
+			// Firebird 2.5 MERGE has no WHEN MATCHED [AND <cond>] form (added in Firebird 3),
+			// and no UPDATE SET ... WHERE form either. For single-item Upsert.Update.When we must
+			// route through the 3-query alt-path (SetIfExistsUpdateElseInsert); for Upsert
+			// configurations that require MERGE lowering with a predicate we surface a descriptive
+			// Error_Upsert_MergeWithPredicate_NotSupported instead of emitting invalid SQL.
+			SqlProviderFlags.IsInsertOrUpdateWithPredicateSupported = Version > FirebirdVersion.v25;
+			SqlProviderFlags.IsUpsertMergeWithPredicateSupported    = Version > FirebirdVersion.v25;
+
 			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel = 2;
 
 			SetCharField("CHAR", (r,i) => r.GetString(i).TrimEnd(' '));
@@ -96,6 +104,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 		{
 			return Version switch
 			{
+				FirebirdVersion.v25   => new Firebird25MemberTranslator(),
 				>= FirebirdVersion.v5 => new Firebird5MemberTranslator(),
 				>= FirebirdVersion.v4 => new Firebird4MemberTranslator(),
 				_                     => new FirebirdMemberTranslator(),

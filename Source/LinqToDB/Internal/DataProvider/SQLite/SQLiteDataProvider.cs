@@ -51,6 +51,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			SqlProviderFlags.IsDistinctFromSupported           = true; // since 3.39.0
 			SqlProviderFlags.SupportsPredicatesComparison      = true;
 			SqlProviderFlags.DefaultMultiQueryIsolationLevel   = IsolationLevel.Serializable;
+			SqlProviderFlags.MaxColumnCount                    = 2000;
 
 			// This is commented, because runtime for SDS 2 has this flag disabled
 			// and there is no value in supporting it for v1 as it doesn't add any additional value
@@ -63,6 +64,10 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			//SqlProviderFlags.IsUpdateSkipTakeSupported = Provider == SQLiteProvider.System;
 
 			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel = null;
+
+			// SQLite has no MERGE statement. Upsert configurations that require MERGE lowering
+			// surface a descriptive error via Error_Upsert_MergeLowering_NotSupported.
+			SqlProviderFlags.IsUpsertWithMergeLoweringSupported = false;
 
 			// 3.15.0
 			SqlProviderFlags.RowConstructorSupport = RowFeature.Equality        | RowFeature.Comparisons | RowFeature.UpdateLiteral |

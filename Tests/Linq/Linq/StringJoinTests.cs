@@ -156,9 +156,40 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		sealed class NameHolder
+		{
+			public string? Name { get; set; }
+		}
+
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllMariaDB, TestProvName.AllMySql57, TestProvName.AllDB2], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
-		public void JoinWithGroupingOrdered([DataSources(ProviderName.Ydb, TestProvName.AllSqlServer2016Plus, TestProvName.AllOracle)] string context)
+		public void JoinWithGroupingAndUnsupportedMethodMemberInit([DataSources(TestProvName.AllOracle)] string context)
+		{
+			var       data  = SampleClass.GenerateDataUniqueId();
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			// Uses MemberInitExpression in Select (new NameHolder { ... }) rather than anonymous type
+			var query = from t in table
+				group t by t.Id
+				into g
+				select new
+				{
+					Id          = g.Key,
+					Nullable    = string.Join(", ", g.OrderBy(x => x.NotNullableValue).Select(x => new NameHolder { Name = x.NullableValue }).Select(h => h.Name).Take(2)),
+					NotNullable = string.Join(", ", g.OrderBy(x => x.NotNullableValue).Select(x => x.NotNullableValue).Take(2)),
+				}
+				into s
+				orderby s.Id
+				select s;
+
+			AssertQuery(query);
+		}
+
+		[ThrowsRequiresCorrelatedSubquery]
+		[Test]
+		public void JoinWithGroupingOrdered([DataSources(TestProvName.AllYdb, TestProvName.AllSqlServer2016Plus, TestProvName.AllOracle)] string context)
 		{
 			var       data  = SampleClass.GenerateDataNotUniqueId();
 			using var db    = GetDataContext(context);
@@ -412,6 +443,13 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(data);
 
+			// YDB: the remote (LinqService) path renders the mandatory same-type CAST(Unicode::GetLength(...) AS Int32)
+			// as bare Unicode::GetLength(...), while direct access emits Unwrap(CAST(... AS Int32)). The result is
+			// identical; the cast node is dropped before the server-side builder only on the remote path. To investigate.
+			using var _ = context.IsAnyOf(TestProvName.AllYdb)
+				? new DisableBaseline("https://github.com/linq2db/linq2db/issues/5169 - YDB remote/direct CAST(Unicode::GetLength AS Int32) elision divergence (result-neutral)")
+				: null;
+
 			var query =
 				from t in table
 				select Sql.AsSql(string.Join(", ", new[] { t.NullableValue, t.NotNullableValue, t.VarcharValue, t.NVarcharValue }.Where(x => x != null).Where(x => x!.Contains("A"))));
@@ -440,7 +478,7 @@ namespace Tests.Linq
 
 		[ThrowsCannotBeConverted(TestProvName.AllAccess, TestProvName.AllSqlServer2016Minus, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase)]
 		[Test]
-		public void StringJoinAssociationSubqueryUpdate1([DataSources(ProviderName.Ydb, TestProvName.AllClickHouse, TestProvName.AllMySql57)] string context)
+		public void StringJoinAssociationSubqueryUpdate1([DataSources(TestProvName.AllYdb, TestProvName.AllClickHouse, TestProvName.AllMySql57)] string context)
 		{
 			var       data  = SampleClass.GenerateDataUniqueId();
 			using var db    = GetDataContext(context);
@@ -465,7 +503,7 @@ namespace Tests.Linq
 
 		[ThrowsCannotBeConverted(TestProvName.AllAccess, TestProvName.AllSqlServer2016Minus, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase)]
 		[Test]
-		public void StringJoinAssociationSubqueryUpdate2([DataSources(ProviderName.Ydb, TestProvName.AllClickHouse, TestProvName.AllMySql57)] string context)
+		public void StringJoinAssociationSubqueryUpdate2([DataSources(TestProvName.AllYdb, TestProvName.AllClickHouse, TestProvName.AllMySql57)] string context)
 		{
 			var       data  = SampleClass.GenerateDataUniqueId();
 			using var db    = GetDataContext(context);

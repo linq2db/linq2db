@@ -83,6 +83,7 @@ namespace Tests.xUpdate
 
 		[Obsolete("Remove test after API removed")]
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void UpdateTestWhereOld(
 			[DataSources(TestProvName.AllMySql, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllClickHouse)]
 			string context)
@@ -132,6 +133,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void UpdateTestWhere(
 			[DataSources(TestProvName.AllMySql, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllClickHouse)]
 			string context)
@@ -181,6 +183,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void UpdateTestJoin(
 			[DataSources(ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllClickHouse)]
 			string context)
@@ -281,6 +284,7 @@ namespace Tests.xUpdate
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_UpdateWithTopOrderBy)]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql, ErrorMessage = ErrorHelper.MySql.Error_SkipInUpdate)]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void UpdateTestJoinSkipTake(
 			[DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse, ProviderName.SqlCe)]
 			string context)
@@ -329,6 +333,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void UpdateTestJoinTake(
 			[DataSources(TestProvName.AllAccess, TestProvName.AllSqlServer2005, TestProvName.AllMySql, TestProvName.AllClickHouse, ProviderName.SqlCe)]
 			string context)
@@ -377,6 +382,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void UpdateTestAssociation(
 			[DataSources(ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllClickHouse)]
 			string context)
@@ -399,6 +405,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void UpdateTestAssociationAsUpdatable(
 			[DataSources(ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllClickHouse)]
 			string context)
@@ -424,6 +431,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void UpdateTestAssociationSimple(
 			[DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)]
 			string context)
@@ -454,6 +462,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void UpdateTestAssociationSimpleAsUpdatable(
 			[DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)]
 			string context)
@@ -506,6 +515,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void UpdateParentTableFromChild(
 			[DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)]
 			string context)
@@ -609,6 +619,7 @@ namespace Tests.xUpdate
 
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.ClickHouse.Error_CorrelatedUpdate)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5413")]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void UpdateFromSubqueryShouldBeOptimized([DataSources(TestProvName.AllSqlCe)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -657,6 +668,7 @@ namespace Tests.xUpdate
 
 		[Obsolete("Remove test after API removed")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2330")]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void Issue2330TestOld([DataSources(TestProvName.AllClickHouse, ProviderName.SqlCe)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -675,6 +687,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2330")]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void Issue2330Test([DataSources(TestProvName.AllClickHouse, ProviderName.SqlCe)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -697,6 +710,7 @@ namespace Tests.xUpdate
 		[ActiveIssue(Configurations = [ TestProvName.AllSqlServer, TestProvName.AllSQLite, ProviderName.SqlCe, TestProvName.AllPostgreSQL, TestProvName.AllOracle11, TestProvName.AllMySql, TestProvName.AllClickHouse, TestProvName.AllAccess, TestProvName.AllDuckDB ])]
 		[Obsolete("Remove test after API removed")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2815")]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void Issue2815Test1([DataSources(false)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -727,6 +741,7 @@ namespace Tests.xUpdate
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2815")]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.ClickHouse.Error_CorrelatedUpdate)]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void Issue2815Test2([DataSources(false, ProviderName.SqlCe, TestProvName.AllAccess)] string context)
 		{
 			using var db = GetDataContext(context);

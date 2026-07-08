@@ -341,7 +341,7 @@ namespace Tests.xUpdate
 			}
 		};
 
-		[ActiveIssue(Configurations = new[] { TestProvName.Oracle21DevartDirect })]
+		[ActiveIssue(Configurations = new[] { TestProvName.Oracle21DevartDirect, TestProvName.AllYdb }, Details = "YDB: strict-decimal facet mismatch (Decimal(22,9)) plus Date/Time conversion gaps (Timestamp->Date, Interval->Int64). (YDB: linq2db #5591, #5593)")]
 		[Test]
 		public void TestMergeTypes([DataSources(true)] string context)
 		{
@@ -647,7 +647,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void TestTypesInsertByMerge([MergeDataContextSource(TestProvName.AllInformix, TestProvName.AllSybase)] string context)
 		{
-			using var _ = context.IsAnyOf(TestProvName.AllPostgreSQL) ? new DisableBaseline("TODO: https://github.com/linq2db/linq2db/issues/5169") : null;
+			using var _ = context.IsAnyOf(TestProvName.AllPostgreSQL) ? new DisableBaseline("https://github.com/linq2db/linq2db/issues/5169 - PostgreSQL remote/direct MERGE-source parameter dedup/naming divergence (value_2/value_3 vs value/value_2)") : null;
 
 			var isIDS = IsIDSProvider(context);
 

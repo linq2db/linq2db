@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -621,8 +622,6 @@ namespace Tests.Linq
 		[Test]
 		public void InsertFromSelectWithNullableFilter([DataSources] string context)
 		{
-			using var _ = context.IsAnyOf(ProviderName.SqlCe) ? new DisableBaseline("TODO: https://github.com/linq2db/linq2db/issues/5169") : null;
-
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(InsertIssueTest.TestData);
 
@@ -884,6 +883,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5193")]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void IncorrectNesting_Workaround([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -900,6 +900,101 @@ namespace Tests.Linq
 			var filterQuery = t3.Where(thing => !thingHasDeletedState.Compile()(thing));
 
 			filterQuery.Select(thing => thing.Id).ToList();
+		}
+
+		#endregion
+
+		#region Alias finalization correctness with parameter-dependent + correlated subquery
+
+		[Table("IssueAliasBugT1")]
+		sealed class AliasBugOuter
+		{
+			[PrimaryKey] public int Id    { get; set; }
+			[Column]     public int Value { get; set; }
+		}
+
+		[Table("IssueAliasBugT2")]
+		sealed class AliasBugInner
+		{
+			[PrimaryKey] public int Id    { get; set; }
+			[Column]     public int OutId { get; set; }
+			[Column]     public int Cnt   { get; set; }
+		}
+
+		// Behavior pin for PR #5657 alias finalization.
+		// Parameter-dependent queries (nullable-param WHERE) set IsParameterDependent = true, which means
+		// the build-time ConvertElement(selectQuery.Select) runs in BuildColumns after aliasing.
+		// Verifies that correlated field references inside a scalar subquery still resolve to the correct
+		// outer-table alias after that build-time convert pass.
+		[Test]
+		[ThrowsRequiresCorrelatedSubquery]
+		public void AliasBug5657_ParameterDependentWithCorrelatedSubquery([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var outer = db.CreateLocalTable<AliasBugOuter>();
+			using var inner = db.CreateLocalTable<AliasBugInner>();
+
+			outer.Insert(() => new AliasBugOuter { Id = 1, Value = 10 });
+			outer.Insert(() => new AliasBugOuter { Id = 2, Value = 20 });
+			inner.Insert(() => new AliasBugInner { Id = 1, OutId = 1, Cnt = 3 });
+			inner.Insert(() => new AliasBugInner { Id = 2, OutId = 1, Cnt = 5 });
+			inner.Insert(() => new AliasBugInner { Id = 3, OutId = 2, Cnt = 7 });
+
+			int? minValue = 15;
+
+			var result =
+				(from o in outer
+				 where o.Value >= minValue
+				 select new
+				 {
+					 o.Id,
+					 o.Value,
+					 InnerCount = inner.Where(i => i.OutId == o.Id).Count()
+				 }).ToArray();
+
+			result.Length.ShouldBe(1);
+			result[0].Id.ShouldBe(2);
+			result[0].InnerCount.ShouldBe(1);
+		}
+
+		// Same shape with a derived inner table (GroupBy forces a nested SelectQuery inside the scalar subquery).
+		// The GroupBy turns the scalar correlated subquery into a derived-table (OUTER/LATERAL) join: YDB /
+		// ClickHouse can express it and return correct results (unlike the simple form they reject), while
+		// Sybase rejects the OUTER/LATERAL join it lowers to (a different limitation than the simple form's
+		// correlated-subquery rejection).
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		public void AliasBug5657_ParameterDependentWithCorrelatedDerivedSubquery([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var outer = db.CreateLocalTable<AliasBugOuter>();
+			using var inner = db.CreateLocalTable<AliasBugInner>();
+
+			outer.Insert(() => new AliasBugOuter { Id = 1, Value = 10 });
+			outer.Insert(() => new AliasBugOuter { Id = 2, Value = 20 });
+			inner.Insert(() => new AliasBugInner { Id = 1, OutId = 1, Cnt = 3 });
+			inner.Insert(() => new AliasBugInner { Id = 2, OutId = 1, Cnt = 5 });
+			inner.Insert(() => new AliasBugInner { Id = 3, OutId = 2, Cnt = 7 });
+
+			int? minValue = 15;
+
+			var result =
+				(from o in outer
+				 where o.Value >= minValue
+				 select new
+				 {
+					 o.Id,
+					 o.Value,
+					 SumCnt = inner
+						.Where(i => i.OutId == o.Id)
+						.GroupBy(i => i.OutId)
+						.Select(g => g.Sum(x => x.Cnt))
+						.FirstOrDefault()
+				 }).ToArray();
+
+			result.Length.ShouldBe(1);
+			result[0].Id.ShouldBe(2);
+			result[0].SumCnt.ShouldBe(7);
 		}
 
 		#endregion

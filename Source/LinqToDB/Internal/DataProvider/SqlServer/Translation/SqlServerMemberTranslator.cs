@@ -258,14 +258,22 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 
 				return builder.Build(translationContext, methodCall, isExpression: translationFlags.HasFlag(TranslationFlags.Expression));
 			}
+
+			// {value} IS NULL OR {value} NOT LIKE N'%[^WHITESPACES]%'
+			public override ISqlExpression? TranslateIsNullOrWhiteSpace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value)
+			{
+				var factory   = translationContext.ExpressionFactory;
+				var pattern   = factory.Value(new DbDataType(typeof(string), DataType.NVarChar), $"%[^{WHITESPACES}]%");
+				var predicate = factory.LikePredicate(value, true, pattern);
+
+				return WrapIsNullOrWhiteSpaceResult(translationContext, value, predicate);
+			}
 		}
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
 		{
-			var factory  = translationContext.ExpressionFactory;
-			var timePart = factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "NewID");
-
-			return timePart;
+			var factory = translationContext.ExpressionFactory;
+			return factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "NewID");
 		}
 
 		protected class GuidMemberTranslator : GuidMemberTranslatorBase
@@ -282,6 +290,56 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 
 				return lower;
 			}
+		}
+
+		protected class SqlServerPre2012WindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
+		{
+			// SQL Server 2005/2008 supports ROW_NUMBER, RANK, DENSE_RANK, NTILE natively
+			// but not LEAD/LAG, FIRST_VALUE/LAST_VALUE, NTH_VALUE, frames, or statistical functions.
+			// Aggregate window functions (SUM/AVG/MIN/MAX/COUNT OVER) are technically supported without
+			// ORDER BY/frames on 2005/2008, but are rejected here because the translator always emits an
+			// ORDER BY inside OVER — and ORDER BY inside OVER is only allowed for aggregates starting with
+			// SQL Server 2012. Without finer-grained flags this conservative rejection avoids emitting SQL
+			// that would fail at runtime on 2005/2008.
+			protected override bool IsLeadLagSupported                  => false;
+			protected override bool IsFirstLastValueSupported           => false;
+			protected override bool IsPercentRankSupported              => false;
+			protected override bool IsCumeDistSupported                 => false;
+			protected override bool IsNthValueSupported                 => false;
+			protected override bool IsAggregateWindowFunctionsSupported => false;
+			protected override bool IsFrameRowsSupported                => false;
+			protected override bool IsFrameRangeSupported               => false;
+			protected override bool IsFrameGroupsSupported              => false;
+			protected override bool IsFrameExclusionSupported           => false;
+			protected override bool IsPercentileContSupported           => false;
+			protected override bool IsPercentileDiscSupported           => false;
+		}
+
+		protected class SqlServerWindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
+		{
+			protected override bool IsNthValueSupported           => false;
+			protected override bool IsFrameGroupsSupported        => false;
+			protected override bool IsFrameExclusionSupported     => false;
+			protected override bool IsPercentileContSupported     => false;
+			protected override bool IsPercentileDiscSupported     => false;
+			// SQL Server (2012+) supports PERCENTILE_CONT/DISC only in the windowed (OVER) form, not the GROUP BY ordered-set form.
+			protected override bool IsOrderedSetWindowedSupported => true;
+			// SQL Server (2012+) spells the statistical aggregates STDEV/STDEVP/VAR/VARP, not the standard STDDEV*/VAR* names;
+			// pre-2012 has no window aggregates and stays gated by SqlServerPre2012WindowFunctionsMemberTranslator.
+			protected override bool IsVarianceBareSupported       => true;
+			protected override bool IsVarianceSupported           => true;
+			protected override string StdDevFunctionName          => "STDEV";
+			protected override string StdDevPopFunctionName       => "STDEVP";
+			protected override string StdDevSampFunctionName      => "STDEV";
+			protected override string VarianceFunctionName        => "VAR";
+			protected override string VarPopFunctionName          => "VARP";
+			protected override string VarSampFunctionName         => "VAR";
+		}
+
+		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()
+		{
+			// Base SqlServerMemberTranslator is used for SQL Server 2008
+			return new SqlServerPre2012WindowFunctionsMemberTranslator();
 		}
 	}
 }

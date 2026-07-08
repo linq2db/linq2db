@@ -596,8 +596,87 @@ namespace LinqToDB.Internal.SqlProvider
 		public bool IsSubqueryJoinOnOuterReferenceSupported { get; set; } = true;
 
 		/// <summary>
+		/// Indicates that the provider's native <c>InsertOrUpdate</c> emission can honor an additional
+		/// predicate applied to the UPDATE branch (used by <c>Upsert(...).Update(v =&gt; v.When(...))</c>).
+		/// When <see langword="false"/>, Upsert with a <c>.When</c> predicate is routed through the
+		/// alternative 3-query <c>SELECT → UPDATE → INSERT</c> orchestration instead of the native path.
+		/// <para>
+		/// Set to <see langword="false"/> for engines whose single-statement insert-or-update shape
+		/// cannot carry an UPDATE-branch predicate:
+		/// <list type="bullet">
+		///   <item>MySQL / MariaDB — <c>INSERT ... ON DUPLICATE KEY UPDATE</c> has no WHERE clause.</item>
+		///   <item>SAP Sybase ASE — emulated via <c>IF @@ROWCOUNT = 0 INSERT</c>, no UPDATE-branch predicate.</item>
+		///   <item>SQL Server 2005 — pre-MERGE; emulated via <c>IF @@ROWCOUNT = 0 INSERT</c>.</item>
+		/// </list>
+		/// </para>
+		/// Default (set by <see cref="DataProviderBase"/>): <see langword="true"/>.
+		/// </summary>
+		[DataMember(Order = 71), DefaultValue(true)]
+		public bool IsInsertOrUpdateWithPredicateSupported { get; set; } = true;
+
+		/// <summary>
+		/// Indicates that the provider supports the synthesized two-branch <c>MERGE</c> shape linq2db
+		/// emits when <c>Upsert(...)</c> cannot be lowered to the native InsertOrUpdate path — i.e. for
+		/// bulk sources, non-PK match, conditional <c>Insert(i =&gt; i.When(...))</c>, or
+		/// <c>SkipInsert()</c> / <c>SkipUpdate()</c>. When <see langword="false"/> and the Upsert
+		/// configuration requires MERGE lowering, <see cref="LinqToDBException"/> is thrown with a
+		/// descriptive message.
+		/// <para>
+		/// Set to <see langword="false"/> for SAP HANA — its <c>MERGE</c> dialect lacks the
+		/// <c>WHEN NOT MATCHED THEN INSERT</c> branch that the ANSI shape requires.
+		/// </para>
+		/// Default (set by <see cref="DataProviderBase"/>): <see langword="true"/>.
+		/// </summary>
+		[DataMember(Order = 72), DefaultValue(true)]
+		public bool IsUpsertWithMergeLoweringSupported { get; set; } = true;
+
+		/// <summary>
+		/// Indicates that the provider's MERGE dialect supports predicates on the <c>WHEN MATCHED</c>
+		/// and <c>WHEN NOT MATCHED</c> clauses (either as <c>WHEN MATCHED AND &lt;cond&gt;</c> or
+		/// <c>WHEN MATCHED THEN UPDATE SET … WHERE &lt;cond&gt;</c>). When <see langword="false"/> and
+		/// an Upsert configuration with <c>Insert(i =&gt; i.When(...))</c> or
+		/// <c>Update(v =&gt; v.When(...))</c> is routed through MERGE lowering,
+		/// <see cref="LinqToDBException"/> is thrown with a descriptive message.
+		/// <para>
+		/// Set to <see langword="false"/> for Firebird 2.5 — its MERGE predates Firebird 3 which added
+		/// <c>WHEN [NOT] MATCHED [AND &lt;cond&gt;]</c> syntax, and it has no <c>UPDATE … WHERE</c>
+		/// form inside MERGE either.
+		/// </para>
+		/// Default (set by <see cref="DataProviderBase"/>): <see langword="true"/>.
+		/// </summary>
+		[DataMember(Order = 73), DefaultValue(true)]
+		public bool IsUpsertMergeWithPredicateSupported { get; set; } = true;
+
+		/// <summary>
+		/// Indicates that the provider's native single-statement <c>InsertOrUpdate</c> shape applies one
+		/// value-list to both the INSERT and UPDATE branches and cannot honor per-branch <c>SET</c>
+		/// divergence. When <see langword="true"/> and the Upsert configuration produces different
+		/// expressions for the same column on the INSERT vs UPDATE branch (typically via
+		/// <c>Insert(i =&gt; …)</c> / <c>Update(v =&gt; …)</c> per-branch overrides, or per-branch
+		/// <c>Ignore</c>), the runtime transparently falls back to the alternative
+		/// <c>UPDATE → INSERT</c> emulation so the per-branch divergence is preserved.
+		/// <para>
+		/// Set to <see langword="true"/> for SAP HANA — its <c>UPSERT … WITH PRIMARY KEY</c> statement
+		/// uses one VALUES list for both branches.
+		/// </para>
+		/// Default (set by <see cref="DataProviderBase"/>): <see langword="false"/>.
+		/// </summary>
+		[DataMember(Order = 74), DefaultValue(false)]
+		public bool IsInsertOrUpdateRequiresAlignedBranches { get; set; }
+
+		/// <summary>
+		/// Maximum number of columns in a single SELECT list enforced by linq2db when building CteUnion
+		/// eager-loading queries. When the estimated column count of the combined UNION ALL projection
+		/// exceeds this limit the strategy falls back to individual preamble queries.
+		/// <c>0</c> means no limit is enforced.
+		/// Default: <c>0</c>.
+		/// </summary>
+		[DataMember(Order = 76), DefaultValue(0)]
+		public int MaxColumnCount { get; set; }
+
+		/// <summary>
 		/// Provider renders <c>NULLS FIRST</c> / <c>NULLS LAST</c> natively in <c>ORDER BY</c> (and window
-		/// <c>OVER(ORDER BY …)</c>). When <see langword="false"/> (the default), <see cref="Sql.NullsPosition"/>
+		/// <c>OVER (ORDER BY …)</c>). When <see langword="false"/> (the default), <see cref="Sql.NullsPosition"/>
 		/// is emulated via a <c>CASE WHEN &lt;expr&gt; IS NULL THEN …</c> sort key.
 		/// </summary>
 		[DataMember(Order = 69), DefaultValue(false)]
@@ -612,6 +691,15 @@ namespace LinqToDB.Internal.SqlProvider
 		/// </summary>
 		[DataMember(Order = 70), DefaultValue(NullsDefaultOrdering.Unknown)]
 		public NullsDefaultOrdering DefaultNullsOrdering { get; set; }
+
+		/// <summary>
+		/// Provider supports the <c>SELECT DISTINCT ON (expr, ...)</c> syntax (PostgreSQL, DuckDB): one row per
+		/// distinct ON-expression tuple, choosing the row that sorts first under the query <c>ORDER BY</c> (which
+		/// must begin with the ON expressions). When <see langword="false"/> (the default), <c>DistinctBy</c> falls
+		/// back to <c>ROW_NUMBER()</c> / <c>OUTER APPLY</c> emulation.
+		/// </summary>
+		[DataMember(Order = 75)]
+		public bool IsDistinctOnSupported { get; set; }
 
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
@@ -704,8 +792,14 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsSimpleCoalesceSupported                            .GetHashCode()
 				^ IsSubqueryExpressionInsidePredicateSupported         .GetHashCode()
 				^ IsSubqueryJoinOnOuterReferenceSupported              .GetHashCode()
+				^ IsInsertOrUpdateWithPredicateSupported               .GetHashCode()
+				^ IsUpsertWithMergeLoweringSupported                   .GetHashCode()
+				^ IsUpsertMergeWithPredicateSupported                  .GetHashCode()
+				^ IsInsertOrUpdateRequiresAlignedBranches              .GetHashCode()
+				^ MaxColumnCount                                       .GetHashCode()
 				^ IsNullsOrderingSupported                             .GetHashCode()
 				^ DefaultNullsOrdering                                 .GetHashCode()
+				^ IsDistinctOnSupported                                .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => StringComparer.Ordinal.GetHashCode(flag) ^ hash);
 	}
 
@@ -779,8 +873,14 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsSubqueryExpressionInsidePredicateSupported          == other.IsSubqueryExpressionInsidePredicateSupported
 				&& IsSubqueryJoinOnOuterReferenceSupported               == other.IsSubqueryJoinOnOuterReferenceSupported
 				&& IsTakeWithInAllAnySomeSubquerySupported               == other.IsTakeWithInAllAnySomeSubquerySupported
+				&& IsInsertOrUpdateWithPredicateSupported                == other.IsInsertOrUpdateWithPredicateSupported
+				&& IsUpsertWithMergeLoweringSupported                    == other.IsUpsertWithMergeLoweringSupported
+				&& IsUpsertMergeWithPredicateSupported                   == other.IsUpsertMergeWithPredicateSupported
+				&& IsInsertOrUpdateRequiresAlignedBranches               == other.IsInsertOrUpdateRequiresAlignedBranches
+				&& MaxColumnCount                                        == other.MaxColumnCount
 				&& IsNullsOrderingSupported                              == other.IsNullsOrderingSupported
 				&& DefaultNullsOrdering                                  == other.DefaultNullsOrdering
+				&& IsDistinctOnSupported                                 == other.IsDistinctOnSupported
 				&& CustomFlags.SetEquals(other.CustomFlags);
 		}
 		#endregion

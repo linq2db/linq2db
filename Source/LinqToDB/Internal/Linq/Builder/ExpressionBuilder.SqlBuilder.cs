@@ -16,6 +16,7 @@ using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Expressions.ExpressionVisitors;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Interceptors;
+using LinqToDB.Internal.Mapping;
 using LinqToDB.Internal.Reflection;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Internal.SqlQuery.Visitors;
@@ -235,7 +236,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			using var visitor = _exposeVisitorPool.Allocate();
 
-			var result = visitor.Value.ExposeExpression(DataContext, _optimizationContext, ParameterValues, expression, includeConvert : true, optimizeConditions : false, compactBinary : false, isSingleConvert: true);
+			var result = visitor.Value.ExposeExpression(DataContext, _optimizationContext, ParameterValues, expression, optimizeConditions : false, compactBinary : false, isSingleConvert: true);
 
 			return result;
 		}
@@ -369,6 +370,11 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			var result = _optimizationContext.CanBeEvaluatedOnClient(expr);
 			return result;
+		}
+
+		internal bool IsServerSideOnly(Expression expr)
+		{
+			return _optimizationContext.IsServerSideOnly(expr);
 		}
 
 		Expression? _currentlyTestingForTranslation;
@@ -780,16 +786,14 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			foreach (var m in mapping)
 			{
-				var field = table.SqlTable.FindFieldByMemberName(table.InheritanceMapping[m.i].DiscriminatorName) ?? throw new LinqToDBException($"Field {table.InheritanceMapping[m.i].DiscriminatorName} not found in table {table.SqlTable}");
+				var field = table.SqlTable.FindFieldByMemberName(table.InheritanceMapping[m.i].DiscriminatorName) ?? throw new LinqToDBException($"Field {table.InheritanceMapping[m.i].DiscriminatorName} not found in table {table.NamedTable}");
 				var ttype = field.ColumnDescriptor.MemberAccessor.TypeAccessor.Type;
 				var obj   = expression.Expression;
 
 				if (obj.Type != ttype)
 					obj = Expression.Convert(expression.Expression, ttype);
 
-				var memberInfo = ttype.GetMemberEx(field.ColumnDescriptor.MemberInfo) ?? throw new InvalidOperationException();
-
-				var left = Expression.MakeMemberAccess(obj, memberInfo);
+				var left = field.ColumnDescriptor.GetMemberAccessExpression(obj);
 				var code = m.m.Code;
 
 				if (code == null)
@@ -1134,12 +1138,22 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public void PushDisabledQueryFilters(Type[] disabledFilters)
 		{
-			PushTranslationModifier(GetTranslationModifier().WithIgnoreQueryFilters(disabledFilters), true);
+			PushTranslationModifier(GetTranslationModifier().WithIgnoreQueryFilterScope(new FilterIgnoreScope(null, disabledFilters)), true);
+		}
+
+		public void PushDisabledQueryFilters(string[] filterKeys, Type[] entityTypes)
+		{
+			PushTranslationModifier(GetTranslationModifier().WithIgnoreQueryFilterScope(new FilterIgnoreScope(filterKeys, entityTypes)), true);
 		}
 
 		public bool IsFilterDisabled(Type entityType)
 		{
 			return GetTranslationModifier().IsFilterDisabled(entityType);
+		}
+
+		public bool IsFilterDisabled(Type entityType, string filterKey)
+		{
+			return GetTranslationModifier().IsFilterDisabled(entityType, filterKey);
 		}
 
 		public void PopDisabledFilter()

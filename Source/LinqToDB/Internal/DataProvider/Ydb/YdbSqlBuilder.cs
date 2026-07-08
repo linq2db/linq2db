@@ -33,7 +33,24 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 		protected override ISqlBuilder CreateSqlBuilder() => new YdbSqlBuilder(this, _providerOptions);
 
+		// YDB can't infer a type for VALUES cells in two cases: a numeric literal in the first row
+		// (it may pick a narrower type than the column) and a column whose cells are all untyped NULL
+		// (the derived column becomes nullType and fails when projected). Emit CAST(value AS <type>)
+		// for those, mirroring the PostgreSQL builder.
+		protected override bool IsSqlValuesTableValueTypeRequired(SqlValuesTable source, IReadOnlyList<List<ISqlExpression>> rows, int row, int column)
+		{
+			if (row == 0 && rows[0][column] is SqlValue { Value: long or float or double or decimal })
+				return true;
+
+			return row < 0
+				|| (row == 0 && rows.All(r => r[column] is SqlValue { Value: null }));
+		}
+
 		protected override ConcatBuildStyle ConcatStyle => ConcatBuildStyle.Pipes;
+
+		// YQL allows a derived column list only on VALUES, not on a scalar/raw-SQL subquery source
+		// (SupportsColumnAliasesInSource stays true so VALUES columns keep their names).
+		protected override bool SupportsColumnAliasesInScalarSource => false;
 
 		protected override string LimitFormat(SelectQuery selectQuery) => "LIMIT {0}";
 		protected override string OffsetFormat(SelectQuery selectQuery) => "OFFSET {0} ";
@@ -157,9 +174,11 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				case DataType.Date32     : StringBuilder.Append("Date32");       break;
 				case DataType.DateTime   : StringBuilder.Append("Datetime");     break;
 				case DataType.DateTime64 : StringBuilder.Append("Datetime64");   break;
-				case DataType.DateTime2  : StringBuilder.Append("Timestamp");    break;
+				case DataType.DateTime2
+					or DataType.DateTimeOffset: StringBuilder.Append("Timestamp"); break;
 				case DataType.Timestamp64: StringBuilder.Append("Timestamp64");  break;
-				case DataType.Interval   : StringBuilder.Append("Interval");     break;
+				case DataType.Interval
+					or DataType.Time     : StringBuilder.Append("Interval");     break;
 				case DataType.Interval64 : StringBuilder.Append("Interval64");   break;
 
 				//Tz types not supported as column types
@@ -167,7 +186,9 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				case DataType.DateTimeTz : StringBuilder.Append(forCreateTable ? "Datetime"  : "TzDatetime");  break;
 				case DataType.DateTime2Tz: StringBuilder.Append(forCreateTable ? "Timestamp" : "TzTimestamp"); break;
 
-				case DataType.Decimal:
+				case DataType.Decimal
+					or DataType.Money
+					or DataType.SmallMoney:
 				{
 					if (_providerOptions.UseParametrizedDecimal)
 					{
@@ -288,7 +309,49 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			addAlias = true;
 		}
 
+		protected override void BuildSelectClause(SelectQuery selectQuery)
+		{
+			// YQL rejects a WHERE without a FROM ("Filtering is not allowed without FROM"). For a
+			// from-less constant query that still has a filter, supply a one-row dummy source (YQL has no
+			// DUAL). Mirrors MySql57SqlBuilder, which emits "FROM DUAL" for the same reason.
+			if (selectQuery.From.Tables.Count == 0 && !selectQuery.Where.IsEmpty)
+			{
+				AppendIndent().Append("SELECT").AppendLine();
+				BuildColumns(selectQuery);
+				AppendIndent().Append("FROM (SELECT 1) AS dual").AppendLine();
+			}
+			else
+				base.BuildSelectClause(selectQuery);
+		}
+
+		// An empty-values source is "SELECT <typed nulls> WHERE 1 = 0"; YQL rejects a WHERE without a FROM
+		// and has no DUAL, so project over a one-row dummy source (mirrors BuildSelectClause above).
+		protected override void BuildEmptyValuesFrom() => StringBuilder.Append(" FROM (SELECT 1) AS dual");
+
 		protected override bool IsCteColumnListSupported => false;
+
+		protected override void BuildSql(
+			int                 commandNumber,
+			SqlStatement        statement,
+			StringBuilder       sb,
+			OptimizationContext optimizationContext,
+			int                 indent,
+			ColumnAliasMode     aliasMode,
+			NullabilityContext? nullabilityContext)
+		{
+			// YDB CTEs are named query variables ($name) that share the parameter-name bucket;
+			// reserve all CTE names up front (by registering them with the parameter normalizer) so
+			// parameter names generated during the build can't collide with a CTE variable name
+			// (resolves the conflict noted in BasicSqlOptimizer.FinalizeCte).
+			if (commandNumber == 0 && statement is SqlStatementWithQueryBase { With.Clauses.Count: > 0 } withQuery)
+			{
+				foreach (var cte in withQuery.With.Clauses)
+					if (!string.IsNullOrEmpty(cte.Name))
+						optimizationContext.NormalizeParameterName(cte.Name);
+			}
+
+			base.BuildSql(commandNumber, statement, sb, optimizationContext, indent, aliasMode, nullabilityContext);
+		}
 
 		protected override void BuildWithClause(SqlWithClause? with)
 		{
@@ -297,8 +360,6 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 			foreach (var cte in with.Clauses)
 			{
-				// TODO: we should ensure that cte name doesn't conflict with parameter name
-				// see BasicSqlOptimizer.FinalizeCte
 				BuildObjectName(StringBuilder, new(cte.Name!), ConvertType.NameToCteName, true, TableOptions.NotSet);
 				StringBuilder.Append(" = ");
 
@@ -396,6 +457,14 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 			var dbDataType = QueryHelper.GetDbDataType(predicate.Expr1, MappingSchema);
 
+			// YQL forbids a NULL literal in an IN list, so strip the NULLs and recreate their null
+			// semantics explicitly. Under CompareNulls.LikeClr a NULL in the list matches NULL rows
+			// (rendered as IS NULL). Under LikeSql it follows SQL three-valued logic: a NULL never adds
+			// a match to IN, and a NULL anywhere in a NOT IN makes the predicate UNKNOWN for every row
+			// (empty result). (Under LikeClr the all-NULL case is normally already lowered to IS NULL
+			// upstream; the IsNull branch below stays as a defensive fallback.)
+			var likeClrNulls = DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr;
+
 			var hasNull = false;
 			for (var i = items.Count - 1; i >= 0; i--)
 			{
@@ -408,9 +477,17 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				items.RemoveAt(i);
 			}
 
+			if (hasNull && !likeClrNulls && predicate.IsNot)
+			{
+				// LikeSql: `x NOT IN (..., NULL)` is UNKNOWN for every row.
+				BuildPredicate(SqlPredicate.MakeBool(false));
+				return;
+			}
+
 			if (items.Count == 0)
 			{
-				BuildPredicate(new SqlPredicate.IsNull(predicate.Expr1, predicate.IsNot));
+				// LikeClr: NULL matches NULL rows. LikeSql: `x IN (NULL, ...)` is never true.
+				BuildPredicate(likeClrNulls ? new SqlPredicate.IsNull(predicate.Expr1, predicate.IsNot) : SqlPredicate.MakeBool(false));
 				return;
 			}
 
@@ -437,13 +514,24 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			}
 
 			// 'x IN (...) OR x IS NULL'
-			if (hasNull)
+			var addedNullCheck = false;
+			if (hasNull && likeClrNulls)
 			{
+				// LikeClr: a NULL in the list matches NULL rows. (LikeSql drops it: `x IN (1, NULL)` ≡ `x IN (1)`.)
 				StringBuilder.Append(predicate.IsNot ? " AND " : " OR ");
 				BuildPredicate(new SqlPredicate.IsNull(predicate.Expr1, predicate.IsNot));
+				addedNullCheck = true;
+			}
+			else if (!hasNull && predicate.WithNull == true && predicate.Expr1.ShouldCheckForNull(NullabilityContext))
+			{
+				// C# Contains semantics: when the tested expression itself is NULL it must still
+				// match (NOT IN) / not match (IN), which SQL three-valued logic wouldn't do on its own.
+				StringBuilder.Append(" OR ");
+				BuildPredicate(new SqlPredicate.IsNull(predicate.Expr1, false));
+				addedNullCheck = true;
 			}
 
-			if (bucketIndex > 1 || hasNull)
+			if (bucketIndex > 1 || addedNullCheck)
 			{
 				StringBuilder.Insert(startLen, '(').Append(')');
 			}
@@ -496,9 +584,19 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 		protected override void BuildSqlCastExpression(SqlCastExpression castExpression)
 		{
-			StringBuilder.Append("Unwrap(");
-			base.BuildSqlCastExpression(castExpression);
-			StringBuilder.Append(')');
+			// YQL CAST yields an Optional<T>; Unwrap() coerces it to the non-optional T. Wrapping a
+			// nullable cast throws "Failed to unwrap empty optional" at runtime when the value is NULL,
+			// so only Unwrap when the cast cannot be null.
+			if (castExpression.CanBeNullable(NullabilityContext))
+			{
+				base.BuildSqlCastExpression(castExpression);
+			}
+			else
+			{
+				StringBuilder.Append("Unwrap(");
+				base.BuildSqlCastExpression(castExpression);
+				StringBuilder.Append(')');
+			}
 		}
 
 		protected override void BuildOrderByClause(SelectQuery selectQuery)
@@ -530,10 +628,16 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				var item            = nonConstant[i];
 				var orderExpression = item.Expression;
 
-				// this looks like a bug in YDB. If sort expression present in select with alias - you can sort by alias name only
-				var col = selectQuery.Select.Columns.Find(c => c.Expression.Equals(item.Expression));
-				if (col?.Alias != null)
-					orderExpression = new SqlFragment(col.Alias);
+				// Once DISTINCT/GROUP BY reshapes the output, YQL can't reference a source column in
+				// ORDER BY - sort by the select alias instead. For a plain query keep the qualified
+				// expression: sorting by a bare alias there is ambiguous when a joined table shares the name.
+				if (selectQuery.Select.IsDistinct || !selectQuery.GroupBy.IsEmpty)
+				{
+					var col      = selectQuery.Select.Columns.Find(c => c.Expression.Equals(item.Expression));
+					var colAlias = col != null ? AliasesContext.GetColumnAlias(col) : null;
+					if (colAlias != null)
+						orderExpression = new SqlFragment(colAlias);
+				}
 
 				BuildExpressionForOrderBy(orderExpression);
 

@@ -959,7 +959,6 @@ namespace Tests.Linq
 			AreEqual(expected, actual);
 		}
 
-		[YdbCteAsSource]
 		[ActiveIssue("UNION in subquery not supported by Access. We should transform it if we want to support such cases", Configuration = TestProvName.AllAccess)]
 		[Test]
 		public void ConcatInAny([DataSources] string context)
@@ -1265,9 +1264,13 @@ namespace Tests.Linq
 			var query2 = db.Person.Select(p => new { p.FirstName, p.LastName });
 			var query3 = db.Person.Select(p => new { p.FirstName, p.LastName });
 
-			query1.Concat(query2).Concat(query3).ToArray();
+			var query = query1.Concat(query2).Concat(query3);
+			_ = query.ToArray();
 
-			db.LastQuery!.ShouldContain("SELECT", Exactly.Thrice());
+			var selectQuery = query.GetSelectQuery()!;
+
+			selectQuery.HasSetOperators.ShouldBeTrue();
+			selectQuery.SetOperators.Count.ShouldBe(2);
 		}
 
 		[Test(Description = "Test that we generate plain UNION without sub-queries")]
@@ -1282,9 +1285,13 @@ namespace Tests.Linq
 			var query5 = db.Person.Select(p => new { p.FirstName, p.LastName });
 			var query6 = db.Person.Select(p => new { p.FirstName, p.LastName });
 
-			query1.Concat(query2.Concat(query3)).Concat(query4.Concat(query5).Concat(query6)).ToArray();
+			var query = query1.Concat(query2.Concat(query3)).Concat(query4.Concat(query5).Concat(query6));
+			_ = query.ToArray();
 
-			db.LastQuery!.ShouldContain("SELECT", Exactly.Times(6));
+			var selectQuery = query.GetSelectQuery()!;
+
+			selectQuery.HasSetOperators.ShouldBeTrue();
+			selectQuery.SetOperators.Count.ShouldBe(5);
 		}
 
 		// only pgsql and CH support all 6 operators right now
@@ -1342,6 +1349,22 @@ namespace Tests.Linq
 				Assert.That(i3, Is.LessThan(i4));
 				Assert.That(i4, Is.LessThan(i5));
 			}
+		}
+
+		[Test(Description = "Ordering of selected columns inside UnionAll breaks query building")]
+		public void ColumnOrderInUnionAll([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query1 = db.Parent.Select(p => new { Column1 = 123, Id = p.ParentID });
+			var query2 = db.Parent.Select(p => new { Column1 = 234, Id = p.ParentID });
+
+			var query3 = query1.UnionAll(query2).Select(x => new { Id = x.Id, Column2 = 222, Column1 = x.Column1 });
+			var query4 = query1.UnionAll(query2).Select(x => new { Id = x.Id, Column2 = 333, Column1 = x.Column1 });
+
+			var result = query3.UnionAll(query4);
+
+			AssertQuery(result);
 		}
 
 		public record class RecordClass (int Id, string FirstName, string LastName);

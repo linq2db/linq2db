@@ -15,6 +15,11 @@ namespace LinqToDB.Internal.DataProvider.Translation
 {
 	public class StringMemberTranslatorBase : MemberTranslatorBase
 	{
+		// Per Unicode v13 — every White_Space codepoint
+		protected const string WHITESPACES       = "\x09\x0A\x0B\x0C\x0D\x20\x85\xA0\x1680\x2000\x2001\x2002\x2003\x2004\x2005\x2006\x2007\x2008\x2009\x200A\x2028\x2029\x202F\x205F\x3000";
+		protected const string ASCII_WHITESPACES = "\x09\x0A\x0B\x0C\x0D\x20\x85\xA0";
+		protected const string WHITESPACES_REGEX = "\x09|\x0A|\x0B|\x0C|\x0D|\x20|\x85|\xA0|\x1680|\x2000|\x2001|\x2002|\x2003|\x2004|\x2005|\x2006|\x2007|\x2008|\x2009|\x200A|\x2028|\x2029|\x202F|\x205F|\x3000";
+
 		public StringMemberTranslatorBase()
 		{
 			Registration.RegisterMethod(() => Sql.Like(null, null), TranslateLike);
@@ -26,6 +31,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			Registration.RegisterMethod(() => Sql.Replace("", "", ""), TranslateSqlReplace);
 			Registration.RegisterMethod(() => Sql.Replace("", (char?)null, null), TranslateSqlReplace);
 			Registration.RegisterMember(() => "".Length, TranslateLength);
+
+			Registration.RegisterMethod(() => "".CompareTo(""), TranslateCompareTo);
+			Registration.RegisterMethod(() => "".CompareTo(1),  TranslateCompareTo);
 
 			// ReSharper disable ReturnValueOfPureMethodIsNotUsed
 			Registration.RegisterMethod(() => "".Replace("", ""), TranslateStringReplace);
@@ -42,6 +50,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			Registration.RegisterMethod(() => "".TrimEnd  (),    TranslateStringTrimEnd);
 			Registration.RegisterMethod(() => "".TrimEnd  (' '), TranslateStringTrimEnd);
 #endif
+
+			Registration.RegisterMethod(() => string.IsNullOrWhiteSpace(null), TranslateStringIsNullOrWhiteSpace);
 
 			Registration.RegisterMethod(() => string.Join(string.Empty, Enumerable.Empty<string?>()),  TranslateStringJoin);
 			Registration.RegisterMethod(() => string.Join(string.Empty, Array.Empty<string?>()),       TranslateStringJoin);
@@ -313,6 +323,32 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, resultSql, methodCall);
 		}
 
+		Expression? TranslateCompareTo(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			if (methodCall.Object == null)
+				return null;
+
+			if (translationContext.CanBeEvaluatedOnClient(methodCall))
+				return null;
+
+			using var disposable = translationContext.UsingTypeFromExpression(methodCall.Object);
+
+			if (!translationContext.TranslateToSqlExpression(methodCall.Object, out var left))
+				return translationContext.CreateErrorExpression(methodCall.Object, type: methodCall.Type);
+
+			// The CompareTo(object) overload compares against the argument's string form:
+			// string.CompareTo(object) throws for a non-string value, so the comparison is defined
+			// over arg.ToString() (matching the legacy member mapping).
+			var argument = methodCall.Arguments[0];
+			if (argument.Type != typeof(string))
+				argument = Expression.Call(argument, Methods.System.Object_ToString);
+
+			if (!translationContext.TranslateToSqlExpression(argument, out var right))
+				return translationContext.CreateErrorExpression(methodCall.Arguments[0], type: methodCall.Type);
+
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, new SqlCompareToExpression(left, right), methodCall);
+		}
+
 		private Expression? TranslateStringPadLeft(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
 			if (methodCall.Object == null)
@@ -356,6 +392,28 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		Expression? TranslateStringTrimEnd(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
 			return TranslateStringTrim(translationContext, methodCall, translationFlags, isStart: false);
+		}
+
+		Expression? TranslateStringIsNullOrWhiteSpace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			if (translationFlags.HasFlag(TranslationFlags.Expression) && translationContext.CanBeEvaluatedOnClient(methodCall))
+				return null;
+
+			using var disposable = translationContext.UsingTypeFromExpression(methodCall.Arguments[0]);
+
+			if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[0], out var translatedValue))
+			{
+				if (translationFlags.HasFlag(TranslationFlags.Expression))
+					return null;
+
+				return translationContext.CreateErrorExpression(methodCall.Arguments[0], type: methodCall.Type);
+			}
+
+			var resultSql = TranslateIsNullOrWhiteSpace(translationContext, methodCall, translationFlags, translatedValue);
+			if (resultSql == null)
+				return null;
+
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, resultSql, methodCall);
 		}
 
 		Expression? TranslateStringTrim(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool isStart)
@@ -987,6 +1045,38 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				return factory.Function(valueType, "RTRIM", value);
 
 			return factory.Function(valueType, "RTRIM", value, trimChars);
+		}
+
+		public virtual ISqlExpression? TranslateIsNullOrWhiteSpace(
+			ITranslationContext  translationContext,
+			MethodCallExpression methodCall,
+			TranslationFlags     translationFlags,
+			ISqlExpression       value)
+		{
+			var factory     = translationContext.ExpressionFactory;
+			var valueType   = factory.GetDbDataType(value);
+			var literalType = factory.GetDbDataType(typeof(string));
+
+			var trimmed   = factory.Function(valueType, "LTRIM", value, factory.Value(literalType, WHITESPACES));
+			var predicate = factory.Equal(trimmed, factory.Value(literalType, string.Empty));
+
+			return WrapIsNullOrWhiteSpaceResult(translationContext, value, predicate);
+		}
+
+		/// <summary>
+		/// Wraps an <c>IsNullOrWhiteSpace</c>-shape predicate with an <c>IS NULL OR …</c> branch.
+		/// Per-provider <see cref="TranslateIsNullOrWhiteSpace"/> overrides build the
+		/// empty-after-trim predicate in provider-specific syntax and call this helper to attach
+		/// the null check. The IS NULL branch is emitted unconditionally — SQL optimizers fold
+		/// it away when the value is provably non-nullable.
+		/// </summary>
+		protected ISqlExpression WrapIsNullOrWhiteSpaceResult(ITranslationContext translationContext, ISqlExpression value, ISqlPredicate predicate)
+		{
+			var factory = translationContext.ExpressionFactory;
+
+			return factory.SearchCondition(isOr: true)
+				.Add(factory.IsNull(value))
+				.Add(predicate);
 		}
 	}
 }

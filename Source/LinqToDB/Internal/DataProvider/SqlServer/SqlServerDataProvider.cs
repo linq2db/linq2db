@@ -76,7 +76,17 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			SqlProviderFlags.IsUpdateTakeSupported              = true;
 			SqlProviderFlags.IsDistinctFromSupported            = Version >= SqlServerVersion.v2022;
 			SqlProviderFlags.SupportsBooleanType                = false;
+			// SQL Server's per-SELECT column limit is 4096 (the CteUnion carrier is a SELECT body);
+			// 1024 is the per-table/view limit, which would abandon CteUnion for 1025-4096-column carriers.
+			SqlProviderFlags.MaxColumnCount                     = 4096;
 			SqlProviderFlags.DefaultNullsOrdering               = NullsDefaultOrdering.Smallest; // SQL Server sorts NULL as the smallest value
+
+			// SqlServer 2005 emits InsertOrUpdate as UPDATE + IF @@ROWCOUNT=0 INSERT (single statement);
+			// it can't carry an extra predicate on the UPDATE branch. 2008+ go through MERGE which can.
+			// SqlServer 2005 also predates MERGE (introduced in 2008), so synthesized MERGE lowering
+			// for bulk/SkipInsert/InsertWhen/non-PK-match Upsert isn't an option.
+			SqlProviderFlags.IsInsertOrUpdateWithPredicateSupported = Version > SqlServerVersion.v2005;
+			SqlProviderFlags.IsUpsertWithMergeLoweringSupported     = Version > SqlServerVersion.v2005;
 
 			SetCharField("char", (r, i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("nchar", (r, i) => r.GetString(i).TrimEnd(' '));

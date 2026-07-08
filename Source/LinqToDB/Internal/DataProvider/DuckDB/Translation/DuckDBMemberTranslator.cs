@@ -13,14 +13,44 @@ namespace LinqToDB.Internal.DataProvider.DuckDB.Translation
 {
 	public class DuckDBMemberTranslator : ProviderMemberTranslatorDefault
 	{
-		protected override IMemberTranslator CreateSqlTypesTranslator()     => new SqlTypesTranslation();
-		protected override IMemberTranslator CreateDateMemberTranslator()   => new DateFunctionsTranslator();
-		protected override IMemberTranslator CreateStringMemberTranslator() => new StringMemberTranslator();
+		protected override IMemberTranslator  CreateSqlTypesTranslator()             => new SqlTypesTranslation();
+		protected override IMemberTranslator  CreateDateMemberTranslator()           => new DateFunctionsTranslator();
+		protected override IMemberTranslator  CreateStringMemberTranslator()         => new StringMemberTranslator();
+		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator() => new DuckDBWindowFunctionsMemberTranslator();
+
+		protected class DuckDBWindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
+		{
+			// DuckDB supports IGNORE NULLS for LEAD/LAG/FIRST_VALUE/LAST_VALUE/NTH_VALUE (modifier inside the
+			// parentheses, after the last argument). It does not support NTH_VALUE FROM FIRST/LAST.
+			protected override bool IsLeadLagNullTreatmentSupported => true;
+			protected override bool IsValueNullTreatmentSupported   => true;
+			// DuckDB natively supports FILTER (WHERE ...) on aggregate window functions, so emit it directly
+			// rather than emulating via CASE WHEN.
+			protected override bool IsWindowFilterSupported         => true;
+			// DuckDB supports DISTINCT in window aggregates: e.g. SUM(DISTINCT x) OVER (...).
+			protected override bool IsAggregateDistinctSupported    => true;
+			// DuckDB supports FILTER (WHERE ...) on ordered-set aggregates (PERCENTILE_CONT/DISC WITHIN GROUP).
+			protected override bool IsOrderedSetFilterSupported     => true;
+			// DuckDB supports the full statistical/regression window-function set with standard SQL names.
+			protected override bool IsVarianceSupported             => true;
+			protected override bool IsVarianceBareSupported         => true;
+			protected override bool IsCorrelationSupported          => true;
+			protected override bool IsLinearRegressionSupported     => true;
+			protected override bool IsMedianSupported               => true;
+		}
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
 		{
 			var factory = translationContext.ExpressionFactory;
 			return factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "uuid");
+		}
+
+		// uuidv7() requires DuckDB 1.3.0+. DuckDB has no version-dialect split in linq2db, so it is
+		// emitted unconditionally (older DuckDB versions predate practical support).
+		protected override ISqlExpression? TranslateNewGuid7Method(ITranslationContext translationContext, TranslationFlags translationFlags)
+		{
+			var factory = translationContext.ExpressionFactory;
+			return factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "uuidv7");
 		}
 
 		protected class SqlTypesTranslation : SqlTypesTranslationDefault
@@ -165,26 +195,33 @@ namespace LinqToDB.Internal.DataProvider.DuckDB.Translation
 				var factory = translationContext.ExpressionFactory;
 				var dbDataType = factory.GetDbDataType(typeof(DateTime));
 
-				return factory.NotNullExpression(dbDataType, "CURRENT_TIMESTAMP");
+				// Use the now() function form rather than the CURRENT_TIMESTAMP keyword: DuckDB's
+				// ON CONFLICT ... DO UPDATE SET binder parses the bare keyword as a column reference
+				// (Binder Error: ... does not have a column named "CURRENT_TIMESTAMP"). now() is the
+				// DuckDB-equivalent (TIMESTAMP WITH TIME ZONE) and binds correctly in every context.
+				return factory.Function(dbDataType, "now");
 			}
 
 			protected override ISqlExpression? TranslateNow(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
 				var factory = translationContext.ExpressionFactory;
 				var dbDataType = factory.GetDbDataType(typeof(DateTime));
-				return factory.NotNullExpression(dbDataType, "LOCALTIMESTAMP");
+				// current_localtimestamp() function form, not the bare LOCALTIMESTAMP keyword: the keyword
+				// is parsed as a column reference inside ON CONFLICT ... DO UPDATE SET. Returns a plain
+				// TIMESTAMP (local time, no time zone), matching the LOCALTIMESTAMP keyword's semantics.
+				return factory.Function(dbDataType, "current_localtimestamp");
 			}
 
 			protected override ISqlExpression? TranslateZonedNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
 			{
 				var factory = translationContext.ExpressionFactory;
-				return factory.NotNullExpression(dbDataType, "CURRENT_TIMESTAMP");
+				return factory.Function(dbDataType, "now");
 			}
 
 			protected override ISqlExpression? TranslateZonedUtcNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
 			{
 				var factory = translationContext.ExpressionFactory;
-				return factory.NotNullExpression(dbDataType, "CURRENT_TIMESTAMP AT TIME ZONE 'UTC'");
+				return factory.NotNullExpression(dbDataType, "{0} AT TIME ZONE 'UTC'", factory.Function(dbDataType, "now"));
 			}
 		}
 
@@ -234,7 +271,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB.Translation
 									}
 								}
 
-								var suffix = BuildAggregateNullsOrderBy(factory, info.OrderBySql, info.IsNullFiltered, NullsDefaultOrdering.AlwaysLast);
+								var suffix = BuildAggregateNullsOrderBy(factory, info.OrderBySql, info.IsNullFiltered, translationContext.ProviderFlags.DefaultNullsOrdering);
 
 								SqlSearchCondition? filterCondition = null;
 

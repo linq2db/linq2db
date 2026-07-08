@@ -48,9 +48,15 @@ namespace LinqToDB.Internal.SqlProvider
 			QueryName          = parentBuilder.QueryName;
 			TableIDs           = parentBuilder.TableIDs ??= new(StringComparer.Ordinal);
 			NullabilityContext = parentBuilder.NullabilityContext;
+			// Nested builders (subqueries, CTE bodies, set-operation parts) must share the parent's
+			// finalized aliases: names live in this context, not on the AST nodes, so a fresh empty
+			// context would make every name resolve to its raw node value.
+			AliasesContext     = parentBuilder.AliasesContext;
 		}
 
-		public AliasesContext      AliasesContext      { get; protected set; } = null!;
+		// Default to an empty context (all accessors fall back to the node's own value) so that any
+		// SQL-rendering path that runs before BuildSql assigns the real one still resolves names.
+		public AliasesContext      AliasesContext      { get; protected set; } = new();
 		public OptimizationContext OptimizationContext { get; protected set; } = null!;
 		public MappingSchema       MappingSchema       { get;                }
 		public StringBuilder       StringBuilder       { get; set;           } = null!;
@@ -100,12 +106,80 @@ namespace LinqToDB.Internal.SqlProvider
 		public virtual bool WrapJoinCondition => false;
 
 		/// <summary>
-		/// <see langword="true" /> if provider requires <c>OVER()</c> clause to be present in window function <c>WITHIN GROUP</c>.
+		/// <see langword="true" /> if provider requires <c>OVER ()</c> clause to be present in window function <c>WITHIN GROUP</c>.
 		/// Currently only SQL Server
 		/// </summary>
 		protected virtual bool IsOverRequiredWithinGroup => false;
 
-		protected virtual bool CanSkipRootAliases(SqlStatement statement) => true;
+		protected virtual bool CanSkipRootAliases(SqlStatement statement)
+		{
+			// Providers whose final SELECT can't carry two columns with the same name - SqlCe / YDB reject
+			// it at the server, Access' reader can't map the duplicate back by name so a raw
+			// ToSqlQuery -> Query<T> round-trip returns defaults - must emit final aliases when the root
+			// SELECT has a name collision, so the aliasing-pass-uniquified names (PersonID / PersonID_1) are
+			// rendered. Non-colliding selects are unaffected. #5599 / #5657.
+			if (RequiresUniqueRootColumnNames && RootSelectHasDuplicateColumnNames(statement))
+				return false;
+
+			return true;
+		}
+
+		/// <summary>
+		/// <see langword="true" /> when the provider's final SELECT cannot contain two columns that render
+		/// with the same result-set name. Such providers force final aliases for a root column-name
+		/// collision (see <see cref="CanSkipRootAliases"/>) instead of skipping root aliases.
+		/// </summary>
+		protected virtual bool RequiresUniqueRootColumnNames => false;
+
+		// True when the root SELECT projects two columns that render with the same result-set name: bare
+		// fields sharing a physical column name (e.g. `select new { p.ID, d.PersonID }` where both map to
+		// PersonID), or a derived-subquery column colliding with such a field (e.g. the same name reached via
+		// `db.Doctor.Select(x => x.PersonID).AsSubQuery()` joined to a table exposing PersonID). The aliasing
+		// pass already uniquified the collision in the context (PersonID / PersonID_1); this detects it so
+		// CanSkipRootAliases can force those aliases to be emitted for providers that can't tolerate duplicate
+		// result-column names.
+		bool RootSelectHasDuplicateColumnNames(SqlStatement statement)
+		{
+			var select = statement.SelectQuery?.Select;
+			if (select is null || select.Columns.Count < 2)
+				return false;
+
+			HashSet<string>? names = null;
+			foreach (var column in select.Columns)
+			{
+				// The result-set name a column renders with when its alias is skipped: a bare field renders
+				// its finalized field name, a reference to a sub-query / derived-table column renders that
+				// column's finalized alias. Computed columns render without a usable name and carry unique
+				// synthetic aliases, so they never collide by name.
+				var name = column.Expression switch
+				{
+					SqlFieldBase field => AliasesContext.GetFieldName(field),
+					SqlColumn nested   => AliasesContext.GetColumnAlias(nested),
+					_                  => null,
+				};
+
+				if (!string.IsNullOrEmpty(name))
+				{
+					names ??= new(StringComparer.OrdinalIgnoreCase);
+					if (!names.Add(name!))
+						return true;
+				}
+			}
+
+			return false;
+		}
+
+		/// <summary>
+		/// Placement of the optional <c>WHERE &lt;predicate&gt;</c> that guards the UPDATE branch of
+		/// an <c>InsertOrUpdate</c>-as-MERGE rendering:
+		/// <list type="bullet">
+		///   <item><see langword="false" /> (default, SQL Server / PostgreSQL 15+) — emits
+		///     <c>WHEN MATCHED AND &lt;predicate&gt; THEN UPDATE SET …</c>.</item>
+		///   <item><see langword="true" /> (Oracle) — emits
+		///     <c>WHEN MATCHED THEN UPDATE SET … WHERE &lt;predicate&gt;</c>.</item>
+		/// </list>
+		/// </summary>
+		protected virtual bool IsUpsertUpdateWhereAfterSet => false;
 
 		#endregion
 
@@ -239,7 +313,7 @@ namespace LinqToDB.Internal.SqlProvider
 						var sqlBuilder = ((BasicSqlBuilder)CreateSqlBuilder());
 						sqlBuilder.BuildSql(commandNumber,
 							new SqlSelectStatement(union.SelectQuery) { ParentStatement = statement }, sb,
-							optimizationContext, indent, 
+							optimizationContext, indent,
 							aliasMode, NullabilityContext);
 						MergeSqlBuilderData(sqlBuilder);
 					}
@@ -709,7 +783,7 @@ namespace LinqToDB.Internal.SqlProvider
 								StringBuilder.AppendLine(Comma);
 							firstField = false;
 							AppendIndent();
-							Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
+							Convert(StringBuilder, AliasesContext.GetFieldName(field), ConvertType.NameToQueryField);
 						}
 
 						--Indent;
@@ -726,7 +800,7 @@ namespace LinqToDB.Internal.SqlProvider
 							if (!firstField)
 								StringBuilder.Append(InlineComma);
 							firstField = false;
-							Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
+							Convert(StringBuilder, AliasesContext.GetFieldName(field), ConvertType.NameToQueryField);
 						}
 
 						StringBuilder.AppendLine(")");
@@ -773,12 +847,44 @@ namespace LinqToDB.Internal.SqlProvider
 			StartStatementQueryExtensions(selectQuery);
 
 			if (selectQuery.Select.IsDistinct)
-				StringBuilder.Append(" DISTINCT");
+				BuildDistinctModifier(selectQuery);
 
 			BuildSkipFirst(selectQuery);
 
 			StringBuilder.AppendLine();
 			BuildColumns(selectQuery);
+		}
+
+		/// <summary>
+		/// Emits the <c>DISTINCT</c> modifier. Overridden by providers that support <c>DISTINCT ON (...)</c>
+		/// (see <see cref="SqlProviderFlags.IsDistinctOnSupported"/>); the base emits a plain <c>DISTINCT</c>.
+		/// </summary>
+		protected virtual void BuildDistinctModifier(SelectQuery selectQuery)
+		{
+			StringBuilder.Append(" DISTINCT");
+		}
+
+		/// <summary>
+		/// Renders the <c>ON (expr, ...)</c> part of a <c>DISTINCT ON</c> clause. Called from a
+		/// <see cref="BuildDistinctModifier"/> override on providers that support the syntax, right after the
+		/// <c>DISTINCT</c> keyword. Expressions are rendered exactly as in <c>ORDER BY</c> so the leading-prefix
+		/// match PostgreSQL/DuckDB require holds.
+		/// </summary>
+		protected void BuildDistinctOnExpressions(SelectQuery selectQuery)
+		{
+			var select = ConvertElement(selectQuery.Select);
+			if (select.DistinctOn is not { Count: > 0 } onExpressions)
+				return;
+
+			StringBuilder.Append(" ON (");
+			for (var i = 0; i < onExpressions.Count; i++)
+			{
+				if (i > 0)
+					StringBuilder.Append(InlineComma);
+				BuildExpressionForOrderBy(onExpressions[i]);
+			}
+
+			StringBuilder.Append(')');
 		}
 
 		protected virtual void StartStatementQueryExtensions(SelectQuery? selectQuery)
@@ -799,8 +905,24 @@ namespace LinqToDB.Internal.SqlProvider
 
 			var select = ConvertElement(selectQuery.Select);
 
-			foreach (var col in select.Columns)
+			// ConvertElement can rebuild the Select into fresh SqlColumn instances (parameter-dependent
+			// queries re-run the per-element convert at build time, after aliasing). Synthetic column
+			// aliases live in the object-identity-keyed AliasesContext, not on the node, so they must be
+			// read from the original aliased columns - the rebuilt copies were never registered, so
+			// GetColumnAlias would miss them and drop the alias. The build-time convert is value-level: it
+			// refines column expressions but must not add or remove projected columns, so the i-th rebuilt
+			// column maps 1:1 onto the i-th original. Enforce that invariant - a count mismatch would
+			// silently mis-map aliases and emit wrong SQL.
+			var aliasColumns = selectQuery.Select.Columns;
+
+			if (aliasColumns.Count != select.Columns.Count)
+				throw new InvalidOperationException(
+					$"SQL builder convert must not change the SELECT column set (was {aliasColumns.Count}, became {select.Columns.Count}); column aliasing cannot be resolved.");
+
+			for (var i = 0; i < select.Columns.Count; i++)
 			{
+				var col = select.Columns[i];
+
 				if (!first)
 					StringBuilder.AppendLine(Comma);
 
@@ -808,14 +930,15 @@ namespace LinqToDB.Internal.SqlProvider
 
 				var addAlias = true;
 				var expr     = (ISqlExpression)Optimize(col.Expression, reducePredicates: true);
+				var colAlias = AliasesContext.GetColumnAlias(aliasColumns[i]);
 
 				AppendIndent();
-				BuildColumnExpression(selectQuery, expr, col.Alias, ref addAlias);
+				BuildColumnExpression(selectQuery, expr, colAlias, ref addAlias);
 
-				if (!AliasMode.HasFlag(ColumnAliasMode.SkipAlias) && addAlias && !string.IsNullOrEmpty(col.Alias))
+				if (!AliasMode.HasFlag(ColumnAliasMode.SkipAlias) && addAlias && !string.IsNullOrEmpty(colAlias))
 				{
 					StringBuilder.Append(" as ");
-					Convert(StringBuilder, col.Alias!, ConvertType.NameToQueryFieldAlias);
+					Convert(StringBuilder, colAlias!, ConvertType.NameToQueryFieldAlias);
 				}
 			}
 
@@ -1032,7 +1155,11 @@ namespace LinqToDB.Internal.SqlProvider
 				{
 					AppendIndent()
 						.Append("INTO ");
-					BuildObjectName(StringBuilder, new(output.OutputTable.TableName.Name), ConvertType.NameToQueryTable, true, output.OutputTable.TableOptions);
+
+					BuildObjectName(StringBuilder, new(output.OutputTable.TableName.Name), ConvertType.NameToQueryTable,
+						escape : true,
+						tableOptions : output.OutputTable is SqlTable sqlTable ? sqlTable.TableOptions : TableOptions.NotSet);
+
 					StringBuilder
 						.AppendLine();
 
@@ -1218,6 +1345,16 @@ namespace LinqToDB.Internal.SqlProvider
 				Indent--;
 
 				StringBuilder.AppendLine();
+
+				if (insertOrUpdate.UpdateWhere is { Predicates.Count: > 0 })
+				{
+					AppendIndent().AppendLine("WHERE");
+					Indent++;
+					AppendIndent();
+					BuildSearchCondition(Precedence.Unknown, insertOrUpdate.UpdateWhere, wrapCondition: true);
+					Indent--;
+					StringBuilder.AppendLine();
+				}
 			}
 			else
 			{
@@ -1230,7 +1367,7 @@ namespace LinqToDB.Internal.SqlProvider
 			AliasMode = ColumnAliasMode.None;
 
 			var table       = insertOrUpdate.Insert.Into;
-			var targetAlias = ConvertInline(insertOrUpdate.SelectQuery.From.Tables[0].Alias!, ConvertType.NameToQueryTableAlias);
+			var targetAlias = ConvertInline(AliasesContext.GetTableAlias(insertOrUpdate.SelectQuery.From.Tables[0])!, ConvertType.NameToQueryTableAlias);
 			var sourceAlias = ConvertInline(GetTempAliases(1, "s")[0],                        ConvertType.NameToQueryTableAlias);
 			var keys        = insertOrUpdate.Update.Keys;
 
@@ -1300,11 +1437,34 @@ namespace LinqToDB.Internal.SqlProvider
 
 			if (insertOrUpdate.Update.Items.Count > 0)
 			{
-				AppendIndent().AppendLine("WHEN MATCHED THEN");
+				var hasUpdateWhere = insertOrUpdate.UpdateWhere is { Predicates.Count: > 0 };
+
+				AppendIndent();
+
+				if (hasUpdateWhere && !IsUpsertUpdateWhereAfterSet)
+				{
+					// SQL Server / PG 15+ style: WHEN MATCHED AND <cond> THEN UPDATE SET ...
+					StringBuilder.Append("WHEN MATCHED AND ");
+					BuildSearchCondition(Precedence.Unknown, insertOrUpdate.UpdateWhere!, wrapCondition: false);
+					StringBuilder.AppendLine(" THEN");
+				}
+				else
+				{
+					StringBuilder.AppendLine("WHEN MATCHED THEN");
+				}
 
 				Indent++;
 				AppendIndent().AppendLine("UPDATE ");
 				BuildUpdateSet(insertOrUpdate.SelectQuery, insertOrUpdate.Update);
+
+				if (hasUpdateWhere && IsUpsertUpdateWhereAfterSet)
+				{
+					// Oracle / DB2 / Firebird style: WHEN MATCHED THEN UPDATE SET ... WHERE <cond>
+					AppendIndent().Append("WHERE ");
+					BuildSearchCondition(Precedence.Unknown, insertOrUpdate.UpdateWhere!, wrapCondition: false);
+					StringBuilder.AppendLine();
+				}
+
 				Indent--;
 			}
 
@@ -1322,6 +1482,15 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected void BuildInsertOrUpdateQueryAsUpdateInsert(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
+			// This emitter's UPDATE-then-IF-ROWCOUNT=0-INSERT shape cannot honor an UPDATE predicate:
+			// AND-ing the predicate into the UPDATE's WHERE would conflate "predicate rejected the match"
+			// with "row missing" and incorrectly trigger the INSERT branch (duplicate-key violation).
+			// Callers routing through Upsert.Update.When on such providers must use the 3-query
+			// SetIfExistsUpdateElseInsert orchestration instead. If this invariant is ever broken,
+			// fail loudly rather than silently drop the user's predicate.
+			if (insertOrUpdate.UpdateWhere is { Predicates.Count: > 0 })
+				throw new LinqToDBException(ErrorHelper.Error_Internal_UpdateInsertEmitter_CannotEmitUpdatePredicate);
+
 			BuildTag(insertOrUpdate);
 
 			var buildUpdate = insertOrUpdate.Update.Items.Count > 0;
@@ -1339,7 +1508,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 			AppendIndent().AppendLine("WHERE");
 
-			var alias = ConvertInline(insertOrUpdate.SelectQuery.From.Tables[0].Alias!, ConvertType.NameToQueryTableAlias);
+			var alias = ConvertInline(AliasesContext.GetTableAlias(insertOrUpdate.SelectQuery.From.Tables[0])!, ConvertType.NameToQueryTableAlias);
 			var exprs = insertOrUpdate.Update.Keys;
 
 			Indent++;
@@ -1763,7 +1932,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected virtual void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
 		{
-			if (selectQuery.From.Tables.Count == 0 || string.Equals(selectQuery.From.Tables[0].Alias, "$F", StringComparison.Ordinal))
+			if (selectQuery.From.Tables.Count == 0 || string.Equals(AliasesContext.GetTableAlias(selectQuery.From.Tables[0]), "$F", StringComparison.Ordinal))
 				return;
 
 			AppendIndent();
@@ -1899,7 +2068,7 @@ namespace LinqToDB.Internal.SqlProvider
 					if (appendParentheses)
 						AppendIndent().Append(')');
 
-					if (rawSqlTable.IsScalar && alias != null && SupportsColumnAliasesInSource && buildAlias != false)
+					if (rawSqlTable.IsScalar && alias != null && SupportsColumnAliasesInScalarSource && buildAlias != false)
 					{
 						StringBuilder.Append(' ');
 						BuildObjectName(StringBuilder, new(alias), ConvertType.NameToQueryFieldAlias, true, TableOptions.NotSet);
@@ -1933,15 +2102,16 @@ namespace LinqToDB.Internal.SqlProvider
 		protected virtual void BuildSqlValuesTable(SqlValuesTable valuesTable, string alias, out bool aliasBuilt)
 		{
 			valuesTable = ConvertElement(valuesTable);
-			var rows = valuesTable.BuildRows(OptimizationContext.EvaluationContext);
-			if (rows?.Count > 0)
+			var rows    = valuesTable.BuildRows(OptimizationContext.EvaluationContext);
+			var isEmpty = !(rows?.Count > 0);
+			if (!isEmpty)
 			{
 				StringBuilder.Append(OpenParens);
 
 				if (IsValuesSyntaxSupported)
-					BuildValues(valuesTable, rows);
+					BuildValues(valuesTable, rows!);
 				else
-					BuildValuesAsSelectsUnion(valuesTable.Fields, valuesTable, rows);
+					BuildValuesAsSelectsUnion(valuesTable.Fields, valuesTable, rows!);
 
 				StringBuilder.Append(')');
 			}
@@ -1957,18 +2127,20 @@ namespace LinqToDB.Internal.SqlProvider
 			aliasBuilt = IsValuesSyntaxSupported;
 			if (aliasBuilt)
 			{
-				BuildSqlValuesAlias(valuesTable, alias);
+				// The empty source renders as a scalar SELECT (... WHERE 1 = 0) whose columns are already
+				// named, so its derived column list follows the scalar-source rule, not the VALUES rule.
+				BuildSqlValuesAlias(valuesTable, alias, isEmpty ? SupportsColumnAliasesInScalarSource : SupportsColumnAliasesInSource);
 			}
 		}
 
-		private void BuildSqlValuesAlias(SqlValuesTable valuesTable, string alias)
+		private void BuildSqlValuesAlias(SqlValuesTable valuesTable, string alias, bool supportsColumnAliases)
 		{
 			valuesTable = ConvertElement(valuesTable);
 			StringBuilder.Append(' ');
 
 			BuildObjectName(StringBuilder, new(alias), ConvertType.NameToQueryFieldAlias, true, TableOptions.NotSet);
 
-			if (SupportsColumnAliasesInSource)
+			if (supportsColumnAliases)
 			{
 				StringBuilder.Append(OpenParens);
 
@@ -1979,7 +2151,7 @@ namespace LinqToDB.Internal.SqlProvider
 						StringBuilder.Append(Comma).Append(' ');
 
 					first = false;
-					Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
+					Convert(StringBuilder, AliasesContext.GetFieldName(field), ConvertType.NameToQueryField);
 				}
 
 				StringBuilder.Append(')');
@@ -1999,17 +2171,27 @@ namespace LinqToDB.Internal.SqlProvider
 				else
 					BuildExpression(new SqlValue(field.Type, null));
 				StringBuilder.Append(' ');
-				Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
+				Convert(StringBuilder, AliasesContext.GetFieldName(field), ConvertType.NameToQueryField);
 			}
 
+			BuildEmptyValuesFrom();
+
+			StringBuilder
+				.Append(" WHERE 1 = 0");
+		}
+
+		/// <summary>
+		/// Appends the optional FROM clause for an empty-values source (a <c>SELECT ... WHERE 1 = 0</c>).
+		/// Defaults to the provider's <see cref="FakeTable"/>; providers that reject a WHERE without a FROM
+		/// and have no DUAL-like table override this to supply a one-row dummy source.
+		/// </summary>
+		protected virtual void BuildEmptyValuesFrom()
+		{
 			if (FakeTable != null)
 			{
 				StringBuilder.Append(" FROM ");
 				BuildFakeTableName();
 			}
-
-			StringBuilder
-				.Append(" WHERE 1 = 0");
 		}
 
 		protected void BuildTableName(SqlTableSource ts, bool buildName, bool buildAlias)
@@ -3053,13 +3235,70 @@ namespace LinqToDB.Internal.SqlProvider
 		{
 			switch (expr.ElementType)
 			{
-				case QueryElementType.SqlField:
+				case QueryElementType.SqlCteTableField:
 				{
-					var field = (SqlField)expr;
+					var cteTableField = (SqlCteTableField)expr;
+					var fieldName     = AliasesContext.GetFieldName(cteTableField);
 
 					if (_disableAlias)
 					{
-						Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
+						Convert(StringBuilder, fieldName, ConvertType.NameToQueryField);
+						break;
+					}
+
+					if (buildTableName && cteTableField.Table != null)
+					{
+						var ts = Statement.SelectQuery?.GetTableSource(cteTableField.Table);
+
+						if (ts == null)
+						{
+							var current = Statement;
+
+							do
+							{
+								ts = current.GetTableSource(cteTableField.Table, out _);
+								if (ts != null)
+									break;
+								current = current.ParentStatement;
+							}
+							while (current != null);
+						}
+
+						if (ts != null)
+						{
+							var table = GetTableAlias(ts);
+							var len   = StringBuilder.Length;
+
+							if (table != null)
+								Convert(StringBuilder, table, ConvertType.NameToQueryTableAlias);
+							else
+								StringBuilder.Append(GetPhysicalTableName(cteTableField.Table, null, ignoreTableExpression: true));
+
+							if (len == StringBuilder.Length)
+								throw new LinqToDBException($"Table {cteTableField.Table} should have an alias.");
+
+							addAlias =
+								!string.Equals(alias, fieldName, StringComparison.Ordinal)
+								|| !AliasMode.HasFlag(ColumnAliasMode.CompareFieldNames);
+
+							StringBuilder
+								.Append('.');
+						}
+					}
+
+					Convert(StringBuilder, fieldName, ConvertType.NameToQueryField);
+
+					break;
+				}
+
+				case QueryElementType.SqlField:
+				{
+					var field     = (SqlField)expr;
+					var fieldName = AliasesContext.GetFieldName(field);
+
+					if (_disableAlias)
+					{
+						Convert(StringBuilder, fieldName, ConvertType.NameToQueryField);
 						break;
 					}
 
@@ -3115,7 +3354,7 @@ namespace LinqToDB.Internal.SqlProvider
 								throw new LinqToDBException($"Table {field.Table} should have an alias.");
 
 							addAlias =
-								!string.Equals(alias, field.PhysicalName, StringComparison.Ordinal)
+								!string.Equals(alias, fieldName, StringComparison.Ordinal)
 								|| !AliasMode.HasFlag(ColumnAliasMode.CompareFieldNames);
 
 							StringBuilder
@@ -3126,7 +3365,7 @@ namespace LinqToDB.Internal.SqlProvider
 					if (field == field.Table?.All)
 						StringBuilder.Append('*');
 					else
-						Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
+						Convert(StringBuilder, fieldName, ConvertType.NameToQueryField);
 
 					if (suffixName != null)
 						BuildObjectNameSuffix(StringBuilder, suffixName.Value, true);
@@ -3136,14 +3375,15 @@ namespace LinqToDB.Internal.SqlProvider
 
 				case QueryElementType.Column:
 				{
-					var column = (SqlColumn)expr;
+					var column      = (SqlColumn)expr;
+					var columnAlias = AliasesContext.GetColumnAlias(column);
 
 #if DEBUG
 					var sql = Statement.SqlText;
 #endif
 					if (_disableAlias)
 					{
-						Convert(StringBuilder, column.Alias!, ConvertType.NameToQueryField);
+						Convert(StringBuilder, columnAlias!, ConvertType.NameToQueryField);
 						break;
 					}
 
@@ -3175,12 +3415,12 @@ namespace LinqToDB.Internal.SqlProvider
 						throw new LinqToDBException($"Table `{column.Parent}` should have an alias.");
 
 					addAlias =
-						!string.Equals(alias, column.Alias, StringComparison.Ordinal)
+						!string.Equals(alias, columnAlias, StringComparison.Ordinal)
 						|| !AliasMode.HasFlag(ColumnAliasMode.CompareFieldNames);
 
 					Convert(StringBuilder, tableAlias, ConvertType.NameToQueryTableAlias);
 					StringBuilder.Append('.');
-					Convert(StringBuilder, column.Alias!, ConvertType.NameToQueryField);
+					Convert(StringBuilder, columnAlias!, ConvertType.NameToQueryField);
 
 					break;
 				}
@@ -3351,8 +3591,42 @@ namespace LinqToDB.Internal.SqlProvider
 			BuildTypedExpression(castExpression.ToType, castExpression.Expression);
 		}
 
+		/// <summary>How the <c>IGNORE NULLS</c> modifier of a value/offset window function is emitted relative to the argument list.</summary>
+		protected enum WindowNullsPlacement
+		{
+			/// <summary>Keyword after the closing parenthesis: <c>FUNC(args) IGNORE NULLS</c> (Oracle, SQL Server 2022+, Informix).</summary>
+			AfterClose,
+			/// <summary>Keyword inside the parentheses, after the last argument: <c>FUNC(..., expr IGNORE NULLS)</c> (DuckDB).</summary>
+			AfterLastArgument,
+			/// <summary>Quoted string as the last argument: <c>FUNC(args, 'IGNORE NULLS')</c> (DB2).</summary>
+			StringArgument,
+		}
+
+		/// <summary>
+		/// Returns where the <c>IGNORE NULLS</c> modifier is emitted for the given value/offset window function.
+		/// Defaults to <see cref="WindowNullsPlacement.AfterClose"/>; providers override for non-standard placement.
+		/// </summary>
+		protected virtual WindowNullsPlacement GetWindowNullsPlacement(SqlExtendedFunction extendedFunction)
+			=> WindowNullsPlacement.AfterClose;
+
+		/// <summary>
+		/// When <see langword="true"/> for the given function, that value window function defaults to IGNORE NULLS on
+		/// this provider, so an explicit <c>RESPECT NULLS</c> token must be emitted for null-respecting behavior (e.g.
+		/// ClickHouse FIRST_VALUE/LAST_VALUE/NTH_VALUE). Most providers default to RESPECT NULLS, so the token is
+		/// omitted; functions that reject the token (e.g. ClickHouse LEAD/LAG) must return <see langword="false"/>.
+		/// </summary>
+		protected virtual bool WindowFunctionRespectNullsRequired(SqlExtendedFunction extendedFunction) => false;
+
 		protected virtual void BuildSqlExtendedFunction(SqlExtendedFunction extendedFunction)
 		{
+			var nullsPlacement = GetWindowNullsPlacement(extendedFunction);
+			var nullsToken     = extendedFunction.NullTreatment switch
+			{
+				Sql.Nulls.Ignore                                                            => "IGNORE NULLS",
+				Sql.Nulls.Respect when WindowFunctionRespectNullsRequired(extendedFunction) => "RESPECT NULLS",
+				_                                                                           => null,
+			};
+
 			StringBuilder.Append(extendedFunction.FunctionName);
 			StringBuilder.Append('(');
 
@@ -3387,15 +3661,42 @@ namespace LinqToDB.Internal.SqlProvider
 						StringBuilder.Append(' ');
 						BuildExpression(argument.Suffix);
 					}
+
+					// NULLS treatment emitted inside the parentheses after the last argument: as a keyword (DuckDB)
+					// or as a quoted string argument (DB2).
+					if (nullsToken != null && i == extendedFunction.Arguments.Count - 1)
+					{
+						if (nullsPlacement == WindowNullsPlacement.AfterLastArgument)
+							StringBuilder.Append(' ').Append(nullsToken);
+						else if (nullsPlacement == WindowNullsPlacement.StringArgument)
+							StringBuilder.Append(", '").Append(nullsToken).Append('\'');
+					}
 				}
 			}
 
 			StringBuilder.Append(')');
 
+			// Function-level modifiers for value/offset functions: FUNC(args) [FROM FIRST|LAST] [IGNORE|RESPECT NULLS].
+			// FROM FIRST is the SQL default and is not emitted. RESPECT NULLS is emitted only where the provider
+			// needs it explicitly (WindowFunctionsRespectNullsRequired); elsewhere it is the default and omitted.
+			if (extendedFunction.FromPosition == Sql.From.Last)
+				StringBuilder.Append(" FROM LAST");
+
+			if (nullsToken != null && nullsPlacement == WindowNullsPlacement.AfterClose)
+				StringBuilder.Append(' ').Append(nullsToken);
+
 			if (extendedFunction.WithinGroup?.Count > 0)
 			{
 				StringBuilder.Append(" WITHIN GROUP (");
 				BuildOrderBy(extendedFunction.WithinGroup!);
+				StringBuilder.Append(')');
+			}
+
+			if (extendedFunction.KeepClause != null)
+			{
+				StringBuilder.Append(" KEEP (DENSE_RANK ");
+				StringBuilder.Append(extendedFunction.KeepClause.Type == SqlKeepClause.KeepType.First ? "FIRST " : "LAST ");
+				BuildOrderBy(extendedFunction.KeepClause.OrderBy);
 				StringBuilder.Append(')');
 			}
 
@@ -3406,9 +3707,10 @@ namespace LinqToDB.Internal.SqlProvider
 				StringBuilder.Append(')');
 			}
 
-			if (extendedFunction.PartitionBy?.Count > 0     || 
+			if (extendedFunction.IsWindowFunction           ||
+			    extendedFunction.PartitionBy?.Count > 0     ||
 			    extendedFunction.OrderBy?.Count     > 0     ||
-			    extendedFunction.FrameClause        != null || 
+			    extendedFunction.FrameClause        != null ||
 			    (extendedFunction.WithinGroup?.Count > 0 && IsOverRequiredWithinGroup && extendedFunction.IsWindowFunction))
 			{
 				StringBuilder.Append(" OVER (");
@@ -3463,7 +3765,7 @@ namespace LinqToDB.Internal.SqlProvider
 							break;
 						case SqlFrameBoundary.FrameBoundaryType.Offset:
 							BuildExpression(frame.Start.Offset!);
-							StringBuilder.Append(" PRECEDING");
+							StringBuilder.Append(frame.Start.IsPreceding ? " PRECEDING" : " FOLLOWING");
 							break;
 						default:
 							throw new InvalidOperationException($"Unexpected window frame boundary type: {frame.Start.BoundaryType}");
@@ -3481,10 +3783,27 @@ namespace LinqToDB.Internal.SqlProvider
 							break;
 						case SqlFrameBoundary.FrameBoundaryType.Offset:
 							BuildExpression(frame.End.Offset!);
-							StringBuilder.Append(" FOLLOWING");
+							StringBuilder.Append(frame.End.IsPreceding ? " PRECEDING" : " FOLLOWING");
 							break;
 						default:
 							throw new InvalidOperationException($"Unexpected window frame boundary type: {frame.End.BoundaryType}");
+					}
+
+					switch (frame.Exclusion)
+					{
+						case SqlFrameClause.FrameExclusionKind.None:
+							break;
+						case SqlFrameClause.FrameExclusionKind.CurrentRow:
+							StringBuilder.Append(" EXCLUDE CURRENT ROW");
+							break;
+						case SqlFrameClause.FrameExclusionKind.Group:
+							StringBuilder.Append(" EXCLUDE GROUP");
+							break;
+						case SqlFrameClause.FrameExclusionKind.Ties:
+							StringBuilder.Append(" EXCLUDE TIES");
+							break;
+						default:
+							throw new InvalidOperationException($"Unexpected frame exclusion: {frame.Exclusion}");
 					}
 				}
 
@@ -3507,7 +3826,7 @@ namespace LinqToDB.Internal.SqlProvider
 						&& orderItem.Expression.CanBeNullable(NullabilityContext)
 						&& !QueryHelper.MatchesNaturalNullsPosition(SqlProviderFlags.DefaultNullsOrdering, orderItem.NullsPosition, orderItem.IsDescending);
 
-					// Emulate NULLS positioning inside OVER(...)/WITHIN GROUP for providers without native support
+					// Emulate NULLS positioning inside OVER (...)/WITHIN GROUP for providers without native support
 					// by prepending a CASE sort key. OVER ordering has no select-list constraint, so this is safe here.
 					if (hasNulls && !SqlProviderFlags.IsNullsOrderingSupported)
 					{
@@ -3638,7 +3957,7 @@ namespace LinqToDB.Internal.SqlProvider
 				}
 				case SqlAnchor.AnchorKindEnum.TableSource:
 				{
-					if (anchor.SqlExpression is not SqlField { Table: { } fieldTable })
+					if (anchor.SqlExpression is not SqlFieldBase { NamedTable: { } fieldTable })
 						throw new LinqToDBException("Cannot find Table or Column associated with expression");
 
 					var ts = Statement.GetTableSource(fieldTable, out var noAlias);
@@ -3656,7 +3975,7 @@ namespace LinqToDB.Internal.SqlProvider
 				}
 				case SqlAnchor.AnchorKindEnum.TableName:
 				{
-					if (anchor.SqlExpression is not SqlField { Table: { } fieldTable })
+					if (anchor.SqlExpression is not SqlFieldBase { NamedTable: { } fieldTable })
 						throw new LinqToDBException("Cannot find Table or Column associated with expression");
 
 					BuildPhysicalTable(fieldTable, null);
@@ -3664,7 +3983,7 @@ namespace LinqToDB.Internal.SqlProvider
 				}
 				case SqlAnchor.AnchorKindEnum.TableAsSelfColumn:
 				{
-					if (anchor.SqlExpression is not SqlField { Table: { } fieldTable })
+					if (anchor.SqlExpression is not SqlFieldBase { NamedTable: { } fieldTable })
 						throw new LinqToDBException("Cannot find Table or Column associated with expression");
 
 					var table = FindTable(fieldTable);
@@ -3677,13 +3996,15 @@ namespace LinqToDB.Internal.SqlProvider
 				}
 				case SqlAnchor.AnchorKindEnum.TableAsSelfColumnOrField:
 				{
-					if (anchor.SqlExpression is not SqlField { Table: { } fieldTable } sqlField)
+					if (anchor.SqlExpression is not SqlFieldBase { NamedTable: { } fieldTable })
 						throw new LinqToDBException("Cannot find Table or Column associated with expression");
 
 					if (FindTable(fieldTable) is not { } table)
 						throw new LinqToDBException("Cannot find table.");
 
-					if (sqlField == fieldTable.All)
+					if (anchor.SqlExpression is SqlField sqlField
+						&& (   (fieldTable is SqlTable    sqlTable && sqlField == sqlTable.All)
+						    || (fieldTable is SqlCteTable cte      && sqlField == cte     .All)))
 					{
 						BuildExpression(new SqlField(table, table.TableName.Name));
 					}
@@ -3704,18 +4025,18 @@ namespace LinqToDB.Internal.SqlProvider
 
 			_disableAlias = saveDisableAlias;
 
-			SqlTable? FindTable(ISqlTableSource tableSource)
+			ISqlNamedTable? FindTable(ISqlTableSource tableSource)
 			{
-				if (tableSource is SqlTable table)
-					return table;
+				if (tableSource is ISqlNamedTable named)
+					return named;
 
 				var currentTable = tableSource;
 				while (currentTable is SelectQuery { From.Tables.Count: 1 } sc)
 				{
 					currentTable = sc.From.Tables[0].Source;
-					if (currentTable is SqlTable st)
+					if (currentTable is ISqlNamedTable nested)
 					{
-						return st;
+						return nested;
 					}
 				}
 
@@ -3902,9 +4223,9 @@ namespace LinqToDB.Internal.SqlProvider
 		/// </summary>
 		protected enum ConcatBuildStyle
 		{
-			/// <summary><c>a + b + c</c> — SQL Server pre-2025, SqlCe, Sybase ASE, Access.</summary>
+			/// <summary><c>a + b + c</c> — SQL Server pre-2025, SqlCe, Access.</summary>
 			Plus,
-			/// <summary><c>a || b || c</c> — ANSI-SQL standard; PostgreSQL, Oracle, SQLite, DB2, Firebird, Informix, SAP HANA, DuckDB, SQL Server 2025+.</summary>
+			/// <summary><c>a || b || c</c> — ANSI-SQL standard; PostgreSQL, Oracle, SQLite, DB2, Firebird, Informix, SAP HANA, DuckDB, Sybase ASE, SQL Server 2025+.</summary>
 			Pipes,
 			/// <summary><c>CONCAT(a, b, c)</c> — MySQL, ClickHouse.</summary>
 			Function,
@@ -4246,14 +4567,19 @@ namespace LinqToDB.Internal.SqlProvider
 			{
 				case QueryElementType.TableSource:
 				{
-					var ts    = (SqlTableSource)table;
-					var alias = string.IsNullOrEmpty(ts.Alias) ? GetTableAlias(ts.Source) : ts.Alias;
+					var ts      = (SqlTableSource)table;
+					var tsAlias = AliasesContext.GetTableAlias(ts);
+					var alias   = string.IsNullOrEmpty(tsAlias) ? GetTableAlias(ts.Source) : tsAlias;
 					return alias is not ("$" or "$F") ? alias : null;
 				}
 				case QueryElementType.SqlTable:
-				case QueryElementType.SqlCteTable:
 				{
 					var alias = ((SqlTable)table).Alias;
+					return alias is not ("$" or "$F") ? alias : null;
+				}
+				case QueryElementType.SqlCteTable:
+				{
+					var alias = ((SqlCteTable)table).Alias;
 					return alias is not ("$" or "$F") ? alias : null;
 				}
 				case QueryElementType.SqlRawSqlTable:
@@ -4345,6 +4671,8 @@ namespace LinqToDB.Internal.SqlProvider
 					return GetPhysicalTableName(((SqlTableSource)table).Source, alias, withoutSuffix: withoutSuffix);
 
 				case QueryElementType.SqlCteTable:
+					return BuildObjectName(new(), ((SqlCteTable)table).TableName, ConvertType.NameToCteName, true, TableOptions.NotSet, withoutSuffix: withoutSuffix).ToString();
+
 				case QueryElementType.SqlRawSqlTable:
 					return BuildObjectName(new(), ((SqlTable)table).TableName, ConvertType.NameToCteName, true, TableOptions.NotSet, withoutSuffix: withoutSuffix).ToString();
 

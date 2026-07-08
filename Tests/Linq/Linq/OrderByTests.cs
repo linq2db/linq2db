@@ -5,6 +5,7 @@ using System.Linq;
 using LinqToDB;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -463,8 +464,10 @@ namespace Tests.Linq
 		public void Min3([DataSources(TestProvName.AllSybase, TestProvName.AllInformix)] string context)
 		{
 			using var db = GetDataContext(context);
+			// OrderBy(Value1).Take(3) has a tie at Value1=1 (ParentID 1 and 7), so the surviving 3rd row -
+			// and thus Min(ParentID) - is 1 or 2 depending on how the provider breaks the tie; both are valid.
 			Assert.That(
-				db.Parent.OrderBy(p => p.Value1).Take(3).Min(p => p.ParentID), Is.EqualTo(Parent.OrderBy(p => p.Value1).Take(3).Min(p => p.ParentID)));
+				db.Parent.OrderBy(p => p.Value1).Take(3).Min(p => p.ParentID), Is.EqualTo(1).Or.EqualTo(2));
 		}
 
 		[Test]
@@ -682,7 +685,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void EnableConstantExpressionInOrderByTest([DataSources(ProviderName.Ydb, ProviderName.SqlCe)] string context, [Values] bool enableConstantExpressionInOrderBy)
+		public void EnableConstantExpressionInOrderByTest([DataSources(TestProvName.AllYdb, ProviderName.SqlCe)] string context, [Values] bool enableConstantExpressionInOrderBy)
 		{
 			using var db  = GetDataContext(context, o => o.UseEnableConstantExpressionInOrderBy(enableConstantExpressionInOrderBy));
 
@@ -703,7 +706,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void EnableConstantExpressionInOrderByTest2([DataSources(ProviderName.Ydb, ProviderName.SqlCe)] string context, [Values] bool enableConstantExpressionInOrderBy)
+		public void EnableConstantExpressionInOrderByTest2([DataSources(TestProvName.AllYdb, ProviderName.SqlCe)] string context, [Values] bool enableConstantExpressionInOrderBy)
 		{
 			using var db  = GetDataContext(context, o => o.UseEnableConstantExpressionInOrderBy(enableConstantExpressionInOrderBy));
 
@@ -724,7 +727,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void EnableConstantExpressionInOrderByTest3([DataSources(ProviderName.Ydb, ProviderName.SqlCe)] string context, [Values] bool enableConstantExpressionInOrderBy)
+		public void EnableConstantExpressionInOrderByTest3([DataSources(TestProvName.AllYdb, ProviderName.SqlCe)] string context, [Values] bool enableConstantExpressionInOrderBy)
 		{
 			using var db  = GetDataContext(context, o => o.UseEnableConstantExpressionInOrderBy(enableConstantExpressionInOrderBy));
 
@@ -792,6 +795,7 @@ namespace Tests.Linq
 
 		sealed class NullsTable
 		{
+			[PrimaryKey]
 			public int  Id    { get; set; }
 			public int  Grp   { get; set; }
 			public int? Value { get; set; }

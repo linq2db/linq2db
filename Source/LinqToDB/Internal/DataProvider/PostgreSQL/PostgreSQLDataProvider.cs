@@ -27,6 +27,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 	sealed class PostgreSQLDataProvider13 : PostgreSQLDataProvider { public PostgreSQLDataProvider13() : base(ProviderName.PostgreSQL13, PostgreSQLVersion.v13) {} }
 	sealed class PostgreSQLDataProvider15 : PostgreSQLDataProvider { public PostgreSQLDataProvider15() : base(ProviderName.PostgreSQL15, PostgreSQLVersion.v15) {} }
 	sealed class PostgreSQLDataProvider18 : PostgreSQLDataProvider { public PostgreSQLDataProvider18() : base(ProviderName.PostgreSQL18, PostgreSQLVersion.v18) {} }
+	sealed class PostgreSQLDataProvider19 : PostgreSQLDataProvider { public PostgreSQLDataProvider19() : base(ProviderName.PostgreSQL19, PostgreSQLVersion.v19) {} }
 #pragma warning restore MA0048 // File name must match type name
 
 	public abstract class PostgreSQLDataProvider : DynamicDataProviderBase<NpgsqlProviderAdapter>
@@ -52,12 +53,18 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			SqlProviderFlags.IsUnionAllOrderBySupported        = true;
 			SqlProviderFlags.IsAllSetOperationsSupported       = true;
 			SqlProviderFlags.IsDistinctFromSupported           = true;
+			SqlProviderFlags.IsDistinctOnSupported             = true;
 			SqlProviderFlags.SupportsPredicatesComparison      = true;
+			SqlProviderFlags.MaxColumnCount                    = 1600;
 
 			SqlProviderFlags.OutputDeleteUseSpecialTable  = version >= PostgreSQLVersion.v18;
 			SqlProviderFlags.OutputInsertUseSpecialTable  = version >= PostgreSQLVersion.v18;
 			SqlProviderFlags.OutputUpdateUseSpecialTables = version >= PostgreSQLVersion.v18;
 			SqlProviderFlags.OutputMergeUseSpecialTables  = version >= PostgreSQLVersion.v18;
+
+			// PostgreSQL added MERGE in v15. For earlier versions Upsert configurations that require
+			// MERGE lowering surface a descriptive error via Error_Upsert_MergeLowering_NotSupported.
+			SqlProviderFlags.IsUpsertWithMergeLoweringSupported = version >= PostgreSQLVersion.v15;
 
 			SqlProviderFlags.RowConstructorSupport = RowFeature.Equality        | RowFeature.Comparisons |
 			                                         RowFeature.CompareToSelect | RowFeature.In | RowFeature.IsNull |
@@ -92,6 +99,8 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		{
 			return Version switch
 			{
+				>= PostgreSQLVersion.v19 => new PostgreSQL19MemberTranslator(),
+				>= PostgreSQLVersion.v18 => new PostgreSQL18MemberTranslator(),
 				>= PostgreSQLVersion.v13 => new PostgreSQL13MemberTranslator(),
 				_ => new PostgreSQLMemberTranslator(),
 			};
@@ -230,6 +239,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		{
 			return version switch
 			{
+				PostgreSQLVersion.v19 => ProviderName.PostgreSQL19,
 				PostgreSQLVersion.v18 => ProviderName.PostgreSQL18,
 				PostgreSQLVersion.v13 => ProviderName.PostgreSQL13,
 				PostgreSQLVersion.v15 => ProviderName.PostgreSQL15,
@@ -249,7 +259,9 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
-			return new PostgreSQLSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
+			return Version >= PostgreSQLVersion.v13
+				? new PostgreSQL13SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags)
+				: new PostgreSQLSqlBuilder  (this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
@@ -591,6 +603,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		{
 			return version switch
 			{
+				PostgreSQLVersion.v19 => new PostgreSQLMappingSchema.PostgreSQL19MappingSchema(),
 				PostgreSQLVersion.v18 => new PostgreSQLMappingSchema.PostgreSQL18MappingSchema(),
 				PostgreSQLVersion.v15 => new PostgreSQLMappingSchema.PostgreSQL15MappingSchema(),
 				PostgreSQLVersion.v92 => new PostgreSQLMappingSchema.PostgreSQL92MappingSchema(),

@@ -15,6 +15,12 @@ namespace LinqToDB.Internal.SqlProvider
 		protected virtual bool SupportsColumnAliasesInSource => true;
 
 		/// <summary>
+		/// If true, provider supports column aliases after the alias of a scalar/raw-SQL subquery source
+		/// (as opposed to a VALUES source). Defaults to <see cref="SupportsColumnAliasesInSource"/>.
+		/// </summary>
+		protected virtual bool SupportsColumnAliasesInScalarSource => SupportsColumnAliasesInSource;
+
+		/// <summary>
 		/// If true, provider require column aliases for each  column.
 		/// E.g. as table_alias (column_alias1, column_alias2).
 		/// </summary>
@@ -229,7 +235,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 						first = false;
 						AppendIndent();
-						Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
+						Convert(StringBuilder, AliasesContext.GetFieldName(field), ConvertType.NameToQueryField);
 					}
 				}
 
@@ -321,7 +327,7 @@ namespace LinqToDB.Internal.SqlProvider
 						if (RequiresConstantColumnAliases || i == 0)
 						{
 							StringBuilder.Append(" AS ");
-							Convert(StringBuilder, sourceFields[fieldIndex].PhysicalName, ConvertType.NameToQueryField);
+							Convert(StringBuilder, AliasesContext.GetFieldName(sourceFields[fieldIndex]), ConvertType.NameToQueryField);
 						}
 					}
 				}
@@ -363,7 +369,7 @@ namespace LinqToDB.Internal.SqlProvider
 					if (!SupportsColumnAliasesInSource)
 					{
 						StringBuilder.Append(' ');
-						Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
+						Convert(StringBuilder, AliasesContext.GetFieldName(field), ConvertType.NameToQueryField);
 					}
 				}
 			}

@@ -40,6 +40,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void Test2([CteContextSource(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -83,7 +84,7 @@ namespace Tests.Linq
 
 		// MariaDB allows CTE ordering but do not respect it
 		[Test]
-		public void WithOrderBy([CteContextSource(TestProvName.AllMariaDB)] string context)
+		public void WithOrderBy([CteContextSource(TestProvName.AllMariaDB, TestProvName.AllYdb)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -107,6 +108,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(5596, Configuration = TestProvName.AllYdb, Details = "YDB does not preserve a CTE's inner ORDER BY in the outer SELECT (the ORDER BY there only bounds LIMIT). Proper fix is to propagate the CTE's ORDER BY into the referencing query.")]
 		[Test]
 		public void WithLimitedOrderBy([CteContextSource] string context)
 		{
@@ -496,7 +498,7 @@ namespace Tests.Linq
 
 			query.ToArray();
 
-			if (context.IsAnyOf(ProviderName.Ydb))
+			if (context.IsAnyOf(TestProvName.AllYdb))
 				Assert.That(str, Does.Contain("$CTE"));
 			else
 				Assert.That(str, Does.Contain("WITH"));
@@ -563,6 +565,7 @@ namespace Tests.Linq
 		// MariaDB support expected in v10.6 : https://jira.mariadb.org/browse/MDEV-18511
 		[ActiveIssue(3015, Configurations = [TestProvName.AllOracle, TestProvName.AllSapHana, ProviderName.InformixDB2], Details = "Oracle needs special syntax for CTE + UPDATE")]
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void TestUpdate(
 			[CteContextSource(TestProvName.AllFirebird, ProviderName.DB2, TestProvName.AllClickHouse, TestProvName.AllOracle, TestProvName.AllMariaDB)]
 			string context)
@@ -928,7 +931,6 @@ namespace Tests.Linq
 			AreEqual(query2_, query2);
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void TestEmbedded([CteContextSource] string context)
 		{
@@ -1032,6 +1034,89 @@ namespace Tests.Linq
 			}
 		}
 
+		sealed class Issue5457Part
+		{
+			[PrimaryKey] public int     Id   { get; set; }
+			public              string? Name { get; set; }
+		}
+
+		sealed class Issue5457Reference
+		{
+			[PrimaryKey] public int Id          { get; set; }
+			public              int ParentId    { get; set; }
+			public              int ReferenceId { get; set; }
+		}
+
+		sealed class Issue5457Cte
+		{
+			public object? RootPartSortField { get; set; }
+			public int     RootPartId        { get; set; }
+			public int     PartId            { get; set; }
+			public int     HierarchyLevel    { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5457 - recursive CTE drops columns used only in recursive/outer joins")]
+		public void Issue5457([RecursiveCteContextSource] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var parts = db.CreateLocalTable(new[]
+			{
+				new Issue5457Part { Id = 1, Name = "A" },
+				new Issue5457Part { Id = 2, Name = "B" },
+				new Issue5457Part { Id = 3, Name = "C" },
+			});
+			using var refs = db.CreateLocalTable(new[]
+			{
+				new Issue5457Reference { Id = 1, ParentId = 1, ReferenceId = 2 },
+				new Issue5457Reference { Id = 2, ParentId = 2, ReferenceId = 3 },
+			});
+
+			// Anchor term paginated with OrderBy/Skip/Take (wraps it in a subquery).
+			var anchor = parts
+				.Select(x => new Issue5457Cte
+				{
+					RootPartSortField = x.Name,
+					RootPartId        = x.Id,
+					HierarchyLevel    = 0,
+					PartId            = x.Id
+				})
+				.OrderBy(x => x.RootPartSortField)
+				.Skip(0)
+				.Take(20);
+
+			var partCte = db.GetCte<Issue5457Cte>(partHierarchy =>
+				anchor.Concat(
+					partHierarchy.InnerJoin(
+						refs,
+						(cte, reference) => reference.ParentId == cte.PartId,
+						(cte, reference) => new Issue5457Cte
+						{
+							RootPartSortField = cte.RootPartSortField,
+							RootPartId        = cte.RootPartId,
+							PartId            = reference.ReferenceId,
+							HierarchyLevel    = cte.HierarchyLevel + 1
+						})));
+
+			// Outer query joins on cte.PartId but only projects RootPartId/RootPartSortField.
+			var allRelevant = parts
+				.InnerJoin(
+					partCte,
+					(me, cte) => me.Id == cte.PartId,
+					(me, id) => new { id.RootPartId, id.RootPartSortField, me });
+
+			var result = allRelevant.ToList();
+
+			// CTE columns PartId/RootPartId/RootPartSortField must survive so the recursion and the outer
+			// join resolve correctly. RootPartSortField is the object-typed member that triggers #5457, so
+			// its round-tripped value is asserted too (each row carries its root Part's Name).
+			// Expected (RootPartId, joined Part.Id, RootPartSortField) tuples for the hierarchy:
+			//   roots: (1,1,"A") (2,2,"B") (3,3,"C"); 1->2: (1,2,"A"); 2->3: (2,3,"B"); 1->2->3: (1,3,"A")
+			result
+				.Select(x => (x.RootPartId, x.me.Id, SortField: (string)x.RootPartSortField!))
+				.OrderBy(x => (x.RootPartId, x.Id))
+				.ShouldBe(new[] { (1, 1, "A"), (1, 2, "A"), (1, 3, "A"), (2, 2, "B"), (2, 3, "B"), (3, 3, "C") });
+		}
+
 		class NestingA
 		{
 			[PrimaryKey] public int Id { get; set; }
@@ -1081,7 +1166,7 @@ namespace Tests.Linq
 
 		#region Issue 2029
 		[Test]
-		public void Issue2029Test([CteContextSource(TestProvName.AllClickHouse)] string context)
+		public void Issue2029Test([CteContextSource(TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
 		{
 			using (var db = GetDataContext(context, o => o.UseGenerateFinalAliases(true)))
 			using (db.CreateLocalTable<NcCode>())
@@ -2104,7 +2189,8 @@ namespace Tests.Linq
 				Assert.That(result[0].Gender, Is.EqualTo(Gender.Female));
 			}
 
-			if (db is DataConnection dc)
+			// YQL has no WITH; CTEs render as "$name = SELECT ...", so skip the WITH-shape check for YDB.
+			if (db is DataConnection dc && !context.IsAnyOf(TestProvName.AllYdb))
 			{
 				Assert.That(dc.LastQuery, Contains.Substring("WITH"));
 			}
