@@ -39,7 +39,7 @@ namespace Tests.Linq
 		[Test]
 		public void OptimizeDuplicateParameters_DefaultKeepsCurrentBehavior([DataSources(TestProvName.AllClickHouse)] string context)
 		{
-			using var db = GetDataContext(context, o => o.UseOptimizeDuplicateParameters(false));
+			using var db = GetDataContext(context);
 
 			var value = "str";
 
