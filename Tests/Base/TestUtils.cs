@@ -198,25 +198,28 @@ namespace Tests
 
 			public override void Dispose()
 			{
-				if (DataContext is DataConnection dc && dc.DataProvider.Name.Contains(ProviderName.Firebird))
-				{
-					FirebirdTools.ClearAllPools();
-				}
+				// Scoped pool clear (FirebirdTools.ClearPool): after dropping the temp table, evict only THIS
+				// database's pooled connection so its metadata reference is released for the next DDL. Unlike the
+				// former process-wide ClearAllPools, it leaves other Firebird databases' pools alone — which is
+				// what makes running the FB 2.5/3/4/5 suites concurrently safe (each is a distinct connection string).
+				var fbConnection = DataContext is DataConnection dc && dc.DataProvider.Name.Contains(ProviderName.Firebird) ? dc.Connection : null;
 
 				DataContext.Close();
-				FirebirdTools.ClearAllPools();
+
+				if (fbConnection != null)
+					FirebirdTools.ClearPool(fbConnection);
+
 				base.Dispose();
 			}
 
 			public override async ValueTask DisposeAsync()
 			{
-				if (DataContext is DataConnection dc && dc.DataProvider.Name.Contains(ProviderName.Firebird))
-				{
-					FirebirdTools.ClearAllPools();
-				}
+				var fbConnection = DataContext is DataConnection dc && dc.DataProvider.Name.Contains(ProviderName.Firebird) ? dc.Connection : null;
 
 				await DataContext.CloseAsync();
-				FirebirdTools.ClearAllPools();
+
+				if (fbConnection != null)
+					FirebirdTools.ClearPool(fbConnection);
 
 				await base.DisposeAsync();
 			}
@@ -253,8 +256,14 @@ namespace Tests
 		{
 			if (db.ConfigurationString?.IsAnyOf(TestProvName.AllFirebird) == true)
 			{
+				var fbConnection = db is DataConnection dc ? dc.Connection : null;
+
 				db.Close();
-				FirebirdTools.ClearAllPools();
+
+				if (fbConnection != null)
+					FirebirdTools.ClearPool(fbConnection);
+				else
+					FirebirdTools.ClearAllPools();
 			}
 		}
 

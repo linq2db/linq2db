@@ -1,4 +1,6 @@
 #nullable enable
+LinqToDB.Internal.DataProvider.Firebird.FirebirdProviderAdapter.ClearPool.get -> System.Action<System.Data.Common.DbConnection!>!
+static LinqToDB.DataProvider.Firebird.FirebirdTools.ClearPool(System.Data.Common.DbConnection! connection) -> void
 const LinqToDB.DataProvider.ClickHouse.ClickHouseHints.Join.GlobalAll = "GLOBAL ALL" -> string!
 static LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinGlobalAllHint<TSource>(this LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificQueryable<TSource>! query) -> LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificQueryable<TSource>!
 static LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinGlobalAllHint<TSource>(this LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificTable<TSource>! table) -> LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificTable<TSource>!

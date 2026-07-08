@@ -61,5 +61,13 @@ namespace LinqToDB.DataProvider.Firebird
 		#endregion
 
 		public static void ClearAllPools() => FirebirdProviderAdapter.Instance.ClearAllPools();
+
+		/// <summary>
+		/// Clears the connection pool associated with the given connection's connection string.
+		/// Unlike <see cref="ClearAllPools"/> (which evicts every Firebird pool process-wide), this only
+		/// affects the pool for <paramref name="connection"/>'s connection string, leaving connections for
+		/// other databases/servers untouched.
+		/// </summary>
+		public static void ClearPool(DbConnection connection) => FirebirdProviderAdapter.Instance.ClearPool(connection);
 	}
 }
