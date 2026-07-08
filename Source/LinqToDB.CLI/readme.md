@@ -75,11 +75,16 @@ To invoke tool use `dotnet-linq2db <PARAMETERS>` or `dotnet linq2db <PARAMETERS>
 Available commands:
 
 - `dotnet linq2db help`: prints general help
-- `dotnet linq2db help scaffold`: prints help for `scaffold` command
+- `dotnet linq2db help <command>`: prints help for a specific command
 - `dotnet linq2db scaffold <options>`: performs database model scaffolding
 - `dotnet linq2db template [-o template_path]`: creates base T4 template file for scaffolding customization code
+- `dotnet linq2db query <options>`: executes a single read-oriented SQL query and writes JSON, JSON table, or CSV output
+- `dotnet linq2db mcp <options>`: runs a STDIO Model Context Protocol server exposing the `linq2db_query` tool
+- `dotnet linq2db skill`: prints agent-oriented CLI usage instructions
 
-For list of available options, use `dotnet linq2db help scaffold` command.
+For MCP-capable agent hosts, `mcp` is the intended integration mode. Use `query` for lighter direct invocation when MCP is unavailable, not allowed by policy, or not needed for a specific environment.
+
+For list of available options, use `dotnet linq2db help <command>` command.
 
 ### Usage Examples
 

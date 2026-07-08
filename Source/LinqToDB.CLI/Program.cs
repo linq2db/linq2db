@@ -12,13 +12,13 @@ namespace LinqToDB.Tools
 		{
 			using var cancellation = new CancellationTokenSource();
 
-			ConsoleCancelEventHandler cancelHandler = (_, e) =>
+			void CancelHandler(object? sender, ConsoleCancelEventArgs e)
 			{
 				e.Cancel = true;
 				cancellation.Cancel();
-			};
+			}
 
-			Console.CancelKeyPress += cancelHandler;
+			Console.CancelKeyPress += CancelHandler;
 
 			try
 			{
@@ -41,12 +41,12 @@ namespace LinqToDB.Tools
 				}
 
 				await Console.Error.WriteLineAsync($"{ex.StackTrace}").ConfigureAwait(false);
-				
+
 				return StatusCodes.INTERNAL_ERROR;
 			}
 			finally
 			{
-				Console.CancelKeyPress -= cancelHandler;
+				Console.CancelKeyPress -= CancelHandler;
 			}
 		}
 	}

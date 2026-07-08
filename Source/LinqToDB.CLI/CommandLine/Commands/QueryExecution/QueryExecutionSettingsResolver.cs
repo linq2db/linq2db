@@ -59,7 +59,9 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			var outputFormat         = values.Output ?? configuration?.Output ?? values.DefaultOutput;
 			var outputFileName       = values.OutputFile != null
 				? ResolvePath(QueryExecutionCliOptions.OutputFile, values.OutputFile)
-				: ResolvePath(QueryExecutionCliOptions.OutputFile, configuration?.OutputFile, configDirectory);
+				: values.UseConfiguredOutputFile
+					? ResolvePath(QueryExecutionCliOptions.OutputFile, configuration?.OutputFile, configDirectory)
+					: null;
 			var impersonateValue     = values.Impersonate ?? configuration?.Impersonate ?? false;
 			var impersonateModeValue = ParseImpersonateMode(values.ImpersonateMode ?? configuration?.ImpersonateMode);
 			var unsafeSqlPolicy      = configuration?.UnsafeSqlPolicy ?? UnsafeSqlPolicy.Deny;
@@ -72,6 +74,12 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			if (impersonateModeValue == null)
 			{
 				_environment.Error.WriteLine($"Option '--{QueryExecutionCliOptions.ImpersonateMode.Name}' has unknown value '{values.ImpersonateMode ?? configuration?.ImpersonateMode}'.");
+				return null;
+			}
+
+			if (!IsKnownOutputFormat(outputFormat))
+			{
+				_environment.Error.WriteLine($"Option '--{QueryExecutionCliOptions.Output.Name}' has unknown value '{outputFormat}'.");
 				return null;
 			}
 
@@ -170,6 +178,13 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				"new-credentials"   => WindowsImpersonationMode.NewCredentials,
 				_                   => null,
 			};
+		}
+
+		static bool IsKnownOutputFormat(string value)
+		{
+			return string.Equals(value, "json",       StringComparison.OrdinalIgnoreCase)
+				|| string.Equals(value, "json-table", StringComparison.OrdinalIgnoreCase)
+				|| string.Equals(value, "csv",        StringComparison.OrdinalIgnoreCase);
 		}
 
 		int? ParseTimeout(CliOption option, string value)

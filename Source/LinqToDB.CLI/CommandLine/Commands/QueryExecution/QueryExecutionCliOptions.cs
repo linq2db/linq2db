@@ -59,6 +59,20 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			new StringEnumOption(false, false, "json-table", "JSON table output"),
 			new StringEnumOption(false, false, "csv",        "CSV output"));
 
+		public static readonly CliOption McpOutput = new StringEnumCliOption(
+			"output",
+			null,
+			false,
+			false,
+			"output format",
+			null,
+			null,
+			null,
+			false,
+			new StringEnumOption(false, false, "json",       "JSON output"),
+			new StringEnumOption(true,  true,  "json-table", "JSON table output"),
+			new StringEnumOption(false, false, "csv",        "CSV output"));
+
 		public static readonly CliOption ImpersonateMode = new StringEnumCliOption(
 			"impersonate-mode",
 			null,

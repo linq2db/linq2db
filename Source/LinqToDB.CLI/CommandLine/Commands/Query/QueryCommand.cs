@@ -167,6 +167,7 @@ namespace LinqToDB.CommandLine.Commands.Query
 				(string?)maxRows,
 				(string?)output,
 				(string?)outputFile,
+				true,
 				(bool?)overwrite ?? false,
 				(bool?)allowUnsafeSql ?? false,
 				(string?)sql,

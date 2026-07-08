@@ -26,6 +26,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		string? MaxRows,
 		string? Output,
 		string? OutputFile,
+		bool    UseConfiguredOutputFile,
 		bool    Overwrite,
 		bool    AllowUnsafeSql,
 		string? Sql,

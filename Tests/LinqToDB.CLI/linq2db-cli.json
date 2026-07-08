@@ -50,7 +50,7 @@
 		"connectionString": "Server=localhost;Port=3316;Database=testdata;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;SslMode=Disabled;AllowLoadLocalInfile=true;"
 	},
 	"Oracle": {
-		"provider"        : "Oracle.19.Managed",
+		"provider"        : "Oracle.Managed",
 		"connectionString": "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1531))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=system;Password=password;"
 	},
 	"PostgreSQL": {

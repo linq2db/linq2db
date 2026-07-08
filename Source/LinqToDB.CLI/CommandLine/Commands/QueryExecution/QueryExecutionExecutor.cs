@@ -110,7 +110,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 
 				if (dataProvider == null)
 				{
-					return new QueryExecutionResult(StatusCodes.EXPECTED_ERROR, $"Cannot create database provider: {_settings.Provider}", false);
+					return new QueryExecutionResult(StatusCodes.EXPECTED_ERROR, CreateProviderCreationError(_settings.Provider), false);
 				}
 
 				// Validate that user-provided SQL contains a single statement.
@@ -282,6 +282,29 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 
 				await dataConnection.DisposeAsync().AsTask().ConfigureAwait(false);
 			}
+		}
+
+		static string CreateProviderCreationError(string provider)
+		{
+			var suggestion = TryGetProviderNameSuggestion(provider);
+
+			if (suggestion != null)
+			{
+				return $"Cannot create database provider '{provider}'. Provider name '{provider}' looks like a test data source alias. linq2db CLI expects a provider name registered by linq2db itself; use '{suggestion}' or another canonical provider name in CLI configuration.";
+			}
+
+			return $"Cannot create database provider '{provider}'. Verify that the configured provider name is a linq2db provider name, not a test data source alias, and that any required provider assembly was loaded with '--provider-location'.";
+		}
+
+		static string? TryGetProviderNameSuggestion(string provider)
+		{
+			if (provider.StartsWith("Oracle.", StringComparison.OrdinalIgnoreCase)
+				&& provider.EndsWith(".Managed", StringComparison.OrdinalIgnoreCase))
+			{
+				return "Oracle.Managed";
+			}
+
+			return null;
 		}
 
 		QueryOutputColumn[] ReadOutputColumns(DbDataReader reader)

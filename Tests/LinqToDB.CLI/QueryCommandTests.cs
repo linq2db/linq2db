@@ -92,6 +92,21 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task QueryReportsProviderAliasSuggestion()
+		{
+			var result = await RunCli("query", "--provider", "Oracle.19.Managed", "--connection-string", "Data Source=localhost/XE;User Id=test;Password=test", "--sql", "select 1 from dual");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.EqualTo(-3));
+				Assert.That(result.Output,   Is.Empty);
+				Assert.That(result.Error,    Does.Contain("Cannot create database provider 'Oracle.19.Managed'."));
+				Assert.That(result.Error,    Does.Contain("looks like a test data source alias"));
+				Assert.That(result.Error,    Does.Contain("Oracle.Managed"));
+			}
+		}
+
+		[Test]
 		public async Task QueryRejectsMissingProviderLocationForInformixDB2Provider()
 		{
 			var result = await RunCli("query", "--provider", "Informix.DB2", "--connection-string", "Server=localhost:9189;Database=testdatadb2;userid=informix;password=in4mix", "--sql", "select 1 as Value from systables where tabid = 1");

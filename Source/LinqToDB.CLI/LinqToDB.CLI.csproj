@@ -58,6 +58,9 @@
 
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
 		<PackageReference Include="Microsoft.Extensions.DependencyModel" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Console" />
+		<PackageReference Include="ModelContextProtocol" />
 		<PackageReference Include="Mono.TextTemplating" />
 
 		<!--providers-->

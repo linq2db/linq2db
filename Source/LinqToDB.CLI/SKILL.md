@@ -7,6 +7,7 @@ Use `dotnet linq2db` to run linq2db command-line tools.
 Use `dotnet linq2db query` to execute a read-oriented SQL query against a database supported by linq2db.
 `query` is a result-set-oriented database inspection command. It is intended for `SELECT` and other read-oriented SQL that returns rows for analysis. It is not a general DDL/DML command runner.
 The core value proposition is that an agent can analyze your code together with data from your database.
+For agent hosts that support MCP, prefer `dotnet linq2db mcp` for an integrated tool surface. Use `query` for lighter direct tool invocation when MCP is unavailable, not allowed by policy, or not needed for a specific environment.
 
 Primary scenarios:
 
@@ -17,7 +18,7 @@ Primary scenarios:
 - Inspect schema and data shape before changing code, such as checking nullable values, enum-like columns, outliers, orphaned records, duplicates, and migration readiness.
 - Compare expected business rules in code with actual persisted data to find data quality issues or rule drift.
 - Generate documentation or diagnostics from database-backed facts, such as row counts, reference-data coverage, lookup values, and examples of real records.
-- Provide a portable database access path for environments where an MCP database server is unavailable, not allowed, or too expensive to deploy, such as enterprise or restricted corporate environments.
+- Provide a portable direct database access path for environments where an MCP database server is unavailable, not allowed, or not needed, such as enterprise or restricted corporate environments.
 
 Required command-line input:
 
@@ -31,6 +32,7 @@ Required command-line input:
 Connection settings:
 
 - `--provider <provider>` is the linq2db provider name.
+- Provider names must be names registered by linq2db itself, not test data source aliases from linq2db test configuration. For example, use `Oracle.Managed` in CLI configuration instead of a test alias like `Oracle.19.Managed`.
 - `--provider-location <path>` loads an external ADO.NET provider assembly before the query provider is resolved. Use it when the provider is not bundled with `linq2db.cli` or when a specific provider assembly version must be supplied by the user.
 - Loading an external assembly only makes it available to the process; compatibility with the selected linq2db provider and any provider dependencies remains the user's responsibility.
 - External provider dependencies must be available next to the specified provider assembly or through normal application probing. The command does not scan the user's NuGet package cache to find missing dependencies.
@@ -181,6 +183,64 @@ dotnet linq2db query --config query.json --profile uat --user readonly_user --pa
 dotnet linq2db query --config query.json --profile uat --output json-table --sql "select p.Id, o.Id from Person p join Orders o on o.PersonId = p.Id"
 dotnet linq2db query --config query.json --profile uat --max-rows 100 --sql "select * from Person"
 ```
+
+## MCP STDIO Command
+
+Use `dotnet linq2db mcp` to run a STDIO Model Context Protocol server exposing the shared query executor as the `linq2db_query` tool.
+This is the preferred integration mode for MCP-capable agent hosts because it keeps server configuration at startup and exposes query execution through a typed tool call.
+
+MCP transport rules:
+
+- The server reads newline-delimited JSON-RPC messages from stdin.
+- The server writes only valid MCP JSON-RPC messages to stdout.
+- Logging and diagnostics go to stderr.
+- Do not write banners, progress, query diagnostics, or raw query output directly to stdout while the MCP server is running.
+
+The `mcp` command uses the same connection/configuration option model as `query`, but SQL input is supplied through the MCP tool call instead of startup CLI arguments.
+
+Startup/config boundary:
+
+- `--config <file>` and `--profile <name>` select the configuration profile used by default.
+- `--provider`, `--provider-location`, `--connection-string`, `--connection-string-env`, `--user`, `--user-env`, `--password`, `--password-env`, `--impersonate`, `--impersonate-mode`, `--command-timeout`, and `--lock-timeout` are startup/config settings.
+- `--max-rows` and `--output` can set startup defaults for tool calls.
+- `--sql`, `--sql-file`, `--output-file`, `--overwrite`, and `--allow-unsafe-sql` are not startup options for `mcp`.
+- `outputFile` from a configuration profile is ignored by MCP tool calls so results are returned through the MCP response content instead of written to files.
+
+Tool-call boundary:
+
+- `sql` is required and contains the single SQL statement to execute.
+- `profile` optionally selects a different profile from the startup `--config` file.
+- `maxRows` optionally overrides the startup/config row limit.
+- `output` optionally overrides the startup/config output format.
+- `allowUnsafeSql` confirms unsafe SQL only when the selected configuration profile uses `unsafeSql: "confirm"`.
+- Provider, connection string, credentials, impersonation, provider assembly location, and timeout setup are not accepted through MCP tool input.
+
+The MCP default output format is `json-table`, which preserves duplicate column names and carries `rowCount` and `truncated` in-band. The existing `query` command keeps `json` as its default.
+
+Example MCP host registration:
+
+```json
+{
+  "mcpServers": {
+    "linq2db": {
+      "command": "dotnet",
+      "args": [
+        "linq2db",
+        "mcp",
+        "--config",
+        "C:\\path\\to\\linq2db-query.json",
+        "--profile",
+        "dev"
+      ],
+      "env": {
+        "LINQ2DB_QUERY_PASSWORD": "secret"
+      }
+    }
+  }
+}
+```
+
+Agent confirmation rules for unsafe SQL are the same as for `query`. Tools are model-controlled; the host/client or agent workflow must obtain human confirmation before any unsafe operation is requested.
 
 ## Scaffold Command
 
