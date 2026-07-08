@@ -1,11 +1,6 @@
 using System;
 using System.IO;
 
-using LinqToDB.CommandLine.Options;
-using LinqToDB.CommandLine.Commands.Skill;
-using LinqToDB.CommandLine.Commands.Query;
-using LinqToDB.CommandLine.Commands;
-
 namespace LinqToDB.CommandLine
 {
 	internal interface ICliEnvironment
@@ -19,6 +14,7 @@ namespace LinqToDB.CommandLine
 		string ReadAllText(string path);
 		void WriteAllText(string path, string contents);
 		TextWriter CreateTextWriter(string path);
+		void CreateDirectory(string path);
 		string? GetEnvironmentVariable(string name);
 	}
 }

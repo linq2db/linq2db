@@ -1,11 +1,6 @@
 using System;
 using System.IO;
 
-using LinqToDB.CommandLine.Options;
-using LinqToDB.CommandLine.Commands.Skill;
-using LinqToDB.CommandLine.Commands.Query;
-using LinqToDB.CommandLine.Commands;
-
 namespace LinqToDB.CommandLine
 {
 	internal sealed class SystemCliEnvironment : ICliEnvironment
@@ -52,6 +47,11 @@ namespace LinqToDB.CommandLine
 		public TextWriter CreateTextWriter(string path)
 		{
 			return File.CreateText(path);
+		}
+
+		public void CreateDirectory(string path)
+		{
+			Directory.CreateDirectory(path);
 		}
 
 		public string? GetEnvironmentVariable(string name)

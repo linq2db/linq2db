@@ -1587,6 +1587,10 @@ namespace Tests.LinqToDB.CLI
 				return new TestFileWriter(contents => Files[path] = contents);
 			}
 
+			public void CreateDirectory(string path)
+			{
+			}
+
 			public string? GetEnvironmentVariable(string name)
 			{
 				return EnvironmentVariables.GetValueOrDefault(name);

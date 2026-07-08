@@ -79,6 +79,7 @@ Available commands:
 - `dotnet linq2db scaffold <options>`: performs database model scaffolding
 - `dotnet linq2db template [-o template_path]`: creates base T4 template file for scaffolding customization code
 - `dotnet linq2db query <options>`: executes a single read-oriented SQL query and writes JSON, JSON table, or CSV output
+- `dotnet linq2db config-init <options>`: creates or updates a query/MCP JSON configuration profile
 - `dotnet linq2db mcp <options>`: runs a STDIO Model Context Protocol server exposing `linq2db_info`, `linq2db_query`, and `linq2db_skill`
 - `dotnet linq2db skill`: prints agent-oriented CLI usage instructions
 

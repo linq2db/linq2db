@@ -1,6 +1,7 @@
 using System;
 
 using LinqToDB.CommandLine.Commands;
+using LinqToDB.CommandLine.Commands.ConfigInit;
 using LinqToDB.CommandLine.Commands.Help;
 using LinqToDB.CommandLine.Commands.Mcp;
 using LinqToDB.CommandLine.Commands.Query;
@@ -19,6 +20,7 @@ namespace LinqToDB.CommandLine
 			: base(HelpCommand.Instance)
 		{
 			AddCommand(HelpCommand.Instance);
+			AddCommand(ConfigInitCommand.Instance);
 			AddCommand(McpCommand.Instance);
 			AddCommand(QueryCommand.Instance);
 			AddCommand(SkillCommand.Skill);

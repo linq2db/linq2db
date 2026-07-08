@@ -206,33 +206,77 @@ Configuration profiles:
 - Command-line values override profile values.
 - `unsafeSql` can be set only in configuration profiles.
 
+## Config Init Command
+
+Use `dotnet linq2db config-init` to create or update a query/MCP configuration file.
+It is an onboarding helper, not a general JSON editor.
+When it writes a file, it emits normalized pretty JSON and does not preserve existing formatting or comments.
+
+Defaults:
+
+- Default config path is `.agents/linq2db-query.json`.
+- Default profile is `default`.
+- `config-init` creates the `.agents` directory when the default path is used.
+- Initialized profiles include editable default values for `maxRows`, `output`, and `unsafeSql`.
+- The default initialized output is `json-table`, which is suitable for MCP and duplicate-safe query output.
+
+Required input:
+
+- `--provider <provider>`.
+- Exactly one of `--connection-string <connection-string>` or `--connection-string-env <name>`.
+
+Supported initialization options:
+
+- `--config <file>`.
+- `--profile <name>`.
+- `--description <text>`.
+- `--provider <provider>`.
+- `--provider-location <path>`.
+- `--connection-string <connection-string>`.
+- `--connection-string-env <name>`.
+- `--max-rows <count>`.
+- `--output json|json-table|csv`.
+- `--unsafe-sql deny|confirm|allow`.
+- `--if-exists error|replace|skip`.
+
+Advanced profile fields such as `user`, `password`, `impersonate`, `commandTimeout`, `lockTimeout`, and `outputFile` are intentionally not exposed by `config-init`; edit the JSON manually when those fields are needed.
+
+Examples:
+
+```bash
+dotnet linq2db config-init --provider SQLite --connection-string "Data Source=data.db"
+dotnet linq2db config-init --config query.json --profile dev --description "Development database" --provider SqlServer --connection-string-env LINQ2DB_DEV_CONNECTION
+dotnet linq2db config-init --config query.json --profile db2-dev --provider DB2 --provider-location "C:\providers\IBM.Data.Db2.dll" --connection-string-env LINQ2DB_DB2_CONNECTION
+```
+
 Parameter surface:
 
-| Parameter | CLI option | `query` CLI | Config profile | `mcp` startup CLI | MCP tool API | Values |
-|---|---|---:|---:|---:|---:|---|
-| `description` | n/a | no | yes | no | no | non-secret profile description returned by `linq2db_info` |
-| `config` | `--config` | yes | no | yes | no | path; supports `%NAME%` and `${NAME}` |
-| `profile` | `--profile` | yes | no | yes | yes | profile name from config |
-| `provider` | `--provider` | yes | yes | yes | no | linq2db provider name |
-| `providerLocation` | `--provider-location` | yes | yes | yes | no | path; supports `%NAME%` and `${NAME}` |
-| `connectionString` | `--connection-string` | yes | yes | yes | no | connection string; `{0}` user and `{1}` password placeholders are supported |
-| `connectionStringEnv` | `--connection-string-env` | yes | yes | yes | no | environment variable name |
-| `user` | `--user` | yes | yes | yes | no | string |
-| `userEnv` | `--user-env` | yes | yes | yes | no | environment variable name |
-| `password` | `--password` | yes | yes | yes | no | string |
-| `passwordEnv` | `--password-env` | yes | yes | yes | no | environment variable name |
-| `impersonate` | `--impersonate` | yes | yes | yes | no | boolean; JSON `true` or `false` in config |
-| `impersonateMode` | `--impersonate-mode` | yes | yes | yes | no | `network-cleartext`, `interactive`, `network`, `new-credentials`, or system codes `8`, `2`, `3`, `9` |
-| `commandTimeout` | `--command-timeout` | yes | yes | yes | no | non-negative integer seconds; `0` disables the option |
-| `lockTimeout` | `--lock-timeout` | yes | yes | yes | no | non-negative integer seconds; `0` disables the option |
-| `maxRows` | `--max-rows` | yes | yes | yes | yes | non-negative integer row count; `0` disables the limit |
-| `output` | `--output` | yes | yes | yes | yes | `query`: `json`, `json-table`, or `csv`; `mcp`: `json` or `json-table`; `query` default is `json`, `mcp` default is `json-table` |
-| `outputFile` | `--output-file` | yes | yes | no | no | path; supports `%NAME%` and `${NAME}` |
-| `overwrite` | `--overwrite` | yes | no | no | no | boolean CLI flag |
-| `unsafeSql` | n/a | no | config-only | no | no | `deny`, `confirm`, or `allow`; default is `deny` |
-| `allowUnsafeSql` | `--allow-unsafe-sql` | yes | no | no | yes | boolean confirmation for `unsafeSql: "confirm"` |
-| `sql` | `--sql` | yes | no | no | yes | single SQL statement text |
-| `sqlFile` | `--sql-file` | yes | no | no | no | path; supports `%NAME%` and `${NAME}` |
+| Parameter | CLI option | `query` CLI | Config profile | `config-init` CLI | `mcp` startup CLI | MCP tool API | Values |
+|---|---|---:|---:|---:|---:|---:|---|
+| `description` | `--description` | no | yes | yes | no | no | non-secret profile description returned by `linq2db_info` |
+| `config` | `--config` | yes | no | yes | yes | no | path; supports `%NAME%` and `${NAME}` for query/MCP execution; `config-init` writes `.agents/linq2db-query.json` by default |
+| `profile` | `--profile` | yes | no | yes | yes | yes | profile name from config |
+| `provider` | `--provider` | yes | yes | yes | yes | no | linq2db provider name |
+| `providerLocation` | `--provider-location` | yes | yes | yes | yes | no | path; supports `%NAME%` and `${NAME}` for query/MCP execution |
+| `connectionString` | `--connection-string` | yes | yes | yes | yes | no | connection string; `{0}` user and `{1}` password placeholders are supported |
+| `connectionStringEnv` | `--connection-string-env` | yes | yes | yes | yes | no | environment variable name |
+| `user` | `--user` | yes | yes | no | yes | no | string |
+| `userEnv` | `--user-env` | yes | yes | no | yes | no | environment variable name |
+| `password` | `--password` | yes | yes | no | yes | no | string |
+| `passwordEnv` | `--password-env` | yes | yes | no | yes | no | environment variable name |
+| `impersonate` | `--impersonate` | yes | yes | no | yes | no | boolean; JSON `true` or `false` in config |
+| `impersonateMode` | `--impersonate-mode` | yes | yes | no | yes | no | `network-cleartext`, `interactive`, `network`, `new-credentials`, or system codes `8`, `2`, `3`, `9` |
+| `commandTimeout` | `--command-timeout` | yes | yes | no | yes | no | non-negative integer seconds; `0` disables the option |
+| `lockTimeout` | `--lock-timeout` | yes | yes | no | yes | no | non-negative integer seconds; `0` disables the option |
+| `maxRows` | `--max-rows` | yes | yes | yes | yes | yes | non-negative integer row count; `0` disables the limit |
+| `output` | `--output` | yes | yes | yes | yes | yes | `query` and `config-init`: `json`, `json-table`, or `csv`; `mcp`: `json` or `json-table`; `query` default is `json`, MCP/config-init default is `json-table` |
+| `outputFile` | `--output-file` | yes | yes | no | no | no | path; supports `%NAME%` and `${NAME}` |
+| `overwrite` | `--overwrite` | yes | no | no | no | no | boolean CLI flag |
+| `unsafeSql` | `--unsafe-sql` | no | config-only | yes | no | no | `deny`, `confirm`, or `allow`; default is `deny` |
+| `ifExists` | `--if-exists` | no | no | yes | no | no | `error`, `replace`, or `skip`; default is `error` |
+| `allowUnsafeSql` | `--allow-unsafe-sql` | yes | no | no | no | yes | boolean confirmation for `unsafeSql: "confirm"` |
+| `sql` | `--sql` | yes | no | no | no | yes | single SQL statement text |
+| `sqlFile` | `--sql-file` | yes | no | no | no | no | path; supports `%NAME%` and `${NAME}` |
 
 Example configuration:
 

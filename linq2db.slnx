@@ -621,9 +621,7 @@
     <File Path="Source/BannedSymbols.txt" />
     <File Path="Source/Directory.Build.props" />
     <Project Path="Source/CodeGenerators/CodeGenerators.csproj" />
-    <Project Path="Source/LinqToDB.CLI/LinqToDB.CLI.csproj">
-      <Build Solution="Testing|*" Project="false" />
-    </Project>
+    <Project Path="Source/LinqToDB.CLI/LinqToDB.CLI.csproj" />
     <Project Path="Source/LinqToDB.Compat/LinqToDB.Compat.csproj">
       <Build Solution="Testing|*" Project="false" />
     </Project>
