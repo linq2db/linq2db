@@ -1,4 +1,7 @@
 #nullable enable
+const LinqToDB.DataProvider.ClickHouse.ClickHouseHints.Join.GlobalAll = "GLOBAL ALL" -> string!
+static LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinGlobalAllHint<TSource>(this LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificQueryable<TSource>! query) -> LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificQueryable<TSource>!
+static LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinGlobalAllHint<TSource>(this LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificTable<TSource>! table) -> LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificTable<TSource>!
 LinqToDB.DataProvider.PostgreSQL.PostgreSQLVersion.v19 = 7 -> LinqToDB.DataProvider.PostgreSQL.PostgreSQLVersion
 const LinqToDB.ProviderName.PostgreSQL19 = "PostgreSQL.19" -> string!
 LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLMappingSchema.PostgreSQL19MappingSchema
