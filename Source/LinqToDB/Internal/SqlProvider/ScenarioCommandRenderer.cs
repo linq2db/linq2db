@@ -38,7 +38,22 @@ namespace LinqToDB.Internal.SqlProvider
 	/// A null <see cref="Concat"/> or a null <see cref="Batch"/> element means "render fresh this run" (parameter-dependent);
 	/// a null <see cref="Batch"/> array means the command is not batch-eligible.
 	/// </summary>
-	sealed record PreparedCommand(IReadOnlyList<int> StepIndexes, CommandWithParameters? Concat, CommandWithParameters?[]? Batch);
+	sealed record PreparedCommand(IReadOnlyList<int> StepIndexes, CommandWithParameters? Concat, CommandWithParameters?[]? Batch)
+	{
+		/// <summary>
+		/// Forwarded-parameter slots for this command, resolved once at assembly time. Empty unless a step forwards an
+		/// earlier step's result into one of its parameters. Because the position is precomputed, execution needs no
+		/// <see cref="SqlParameter"/> AST node — so a non-parameter-dependent cache can drop its statement.
+		/// </summary>
+		public IReadOnlyList<ForwardedSlot> ForwardedSlots { get; init; } = [];
+	}
+
+	/// <summary>
+	/// Forwarding resolved to a position: bind the physical command's parameter at <see cref="TargetPosition"/> from the
+	/// unified result of scenario step <see cref="SourceStepIndex"/>. Resolved from <c>SqlStepParameterBinding.Target</c>'s
+	/// index in the command's parameter list, replacing the execution-time node-identity match.
+	/// </summary>
+	readonly record struct ForwardedSlot(int SourceStepIndex, int TargetPosition);
 
 	/// <summary>
 	/// The render cache for a compiled query's command scenario: the logical <see cref="SqlCommandScenario"/> + its

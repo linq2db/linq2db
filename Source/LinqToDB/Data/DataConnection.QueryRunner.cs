@@ -323,7 +323,10 @@ namespace LinqToDB.Data
 					var preparedCommands = new PreparedCommand[plan.Groups.Count];
 
 					for (var g = 0; g < plan.Groups.Count; g++)
-						preparedCommands[g] = new PreparedCommand(plan.Groups[g].StepIndexes, commands[g], batchCommands?[g]);
+						preparedCommands[g] = new PreparedCommand(plan.Groups[g].StepIndexes, commands[g], batchCommands?[g])
+						{
+							ForwardedSlots = ResolveForwardedSlots(scenario, plan.Groups[g], commands[g]),
+						};
 
 					var prepared = new PreparedScenario(scenario, plan, preparedCommands, WasBatch: false);
 
@@ -359,36 +362,59 @@ namespace LinqToDB.Data
 				return p;
 			}
 
-			// Forwarding: bind each of the step's forwarded parameters (its value comes from an earlier step's result,
-			// not the client) on the already-initialized command. The SqlParameter AST node is immutable/shared, so we
-			// locate its per-execution DbParameter by position (its index in the command's SqlParameter list) rather
-			// than by name (which providers may normalize).
-			static void ApplyForwardedParameters(ExecutionPreparedQuery executionQuery, int commandIndex, SqlCommandStep step, SqlCommandExecutionContext context)
+			// Resolves each step's forwarded parameter bindings to positions in the command's parameter list, once at
+			// assembly time, so ApplyForwardedParameters consults no SqlParameter AST node at execution (letting a
+			// non-parameter-dependent cache drop its statement). Empty unless a step forwards an earlier step's result.
+			static IReadOnlyList<ForwardedSlot> ResolveForwardedSlots(SqlCommandScenario scenario, SqlCommandGroup group, CommandWithParameters? concat)
 			{
-				if (step.ParameterBindings.Count == 0)
+				if (concat == null)
+					return [];
+
+				List<ForwardedSlot>? slots = null;
+
+				var sqlParameters = concat.SqlParameters;
+
+				foreach (var stepIndex in group.StepIndexes)
+				{
+					var bindings = scenario.Steps[stepIndex].ParameterBindings;
+
+					for (var b = 0; b < bindings.Count; b++)
+					{
+						var binding = bindings[b];
+
+						for (var k = 0; k < sqlParameters.Count; k++)
+						{
+							if (ReferenceEquals(sqlParameters[k], binding.Target))
+							{
+								(slots ??= new()).Add(new ForwardedSlot(binding.SourceStepIndex, k));
+								break;
+							}
+						}
+					}
+				}
+
+				return slots ?? (IReadOnlyList<ForwardedSlot>)[];
+			}
+
+			// Forwarding: bind each of the command's forwarded parameters (its value comes from an earlier step's result,
+			// not the client) on the already-initialized command. Positions were resolved at assembly by
+			// ResolveForwardedSlots, so no SqlParameter AST node is consulted here.
+			static void ApplyForwardedParameters(ExecutionPreparedQuery executionQuery, int commandIndex, SqlCommandExecutionContext context)
+			{
+				var slots = executionQuery.PreparedQuery.Prepared.Commands[commandIndex].ForwardedSlots;
+
+				if (slots.Count == 0)
 					return;
 
-				var sqlParameters = executionQuery.PreparedQuery.Prepared.Commands[commandIndex].Concat!.SqlParameters;
-				var dbParameters  = executionQuery.CommandsParameters[commandIndex];
+				var dbParameters = executionQuery.CommandsParameters[commandIndex];
 
 				if (dbParameters == null)
 					return;
 
-				foreach (var binding in step.ParameterBindings)
+				foreach (var slot in slots)
 				{
-					var index = -1;
-
-					for (var k = 0; k < sqlParameters.Count; k++)
-					{
-						if (ReferenceEquals(sqlParameters[k], binding.Target))
-						{
-							index = k;
-							break;
-						}
-					}
-
-					if (index >= 0 && index < dbParameters.Length)
-						dbParameters[index].Value = context.GetResult(binding.SourceStepIndex) ?? DBNull.Value;
+					if (slot.TargetPosition < dbParameters.Length)
+						dbParameters[slot.TargetPosition].Value = context.GetResult(slot.SourceStepIndex) ?? DBNull.Value;
 				}
 			}
 
@@ -647,7 +673,7 @@ namespace LinqToDB.Data
 
 				InitCommand(dataConnection, executionQuery, commandIndex);
 
-				ApplyForwardedParameters(executionQuery, commandIndex, step, context);
+				ApplyForwardedParameters(executionQuery, commandIndex, context);
 
 				if (step.OnError == SqlStepOnError.Ignore)
 				{
@@ -911,7 +937,7 @@ namespace LinqToDB.Data
 
 				InitCommand(dataConnection, executionQuery, commandIndex);
 
-				ApplyForwardedParameters(executionQuery, commandIndex, step, context);
+				ApplyForwardedParameters(executionQuery, commandIndex, context);
 
 				if (step.OnError == SqlStepOnError.Ignore)
 				{
