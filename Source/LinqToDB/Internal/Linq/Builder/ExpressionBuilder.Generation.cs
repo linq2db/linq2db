@@ -34,6 +34,20 @@ namespace LinqToDB.Internal.Linq.Builder
 			protected override Expression ExposeCalculatedColumn(Expression memberAccess)
 				=> Builder.ConvertExpressionTree(memberAccess);
 
+			protected override bool ShouldBuildCalculatedColumns(Expression constructionRoot, ProjectFlags flags, FullEntityPurpose purpose)
+			{
+				// Calculated columns are expanded only for table-backed full-entity materialization, matching the
+				// NotifyEntityCreated boundary in TryConstructFullEntity. Keys projections and non-Default purposes
+				// (Insert/Update) don't materialize calculated columns.
+				if (purpose != FullEntityPurpose.Default)
+					return false;
+
+				if (flags.HasFlag(ProjectFlags.Keys))
+					return false;
+
+				return SequenceHelper.GetTableContext(Builder, constructionRoot) != null;
+			}
+
 			public override Expression? TryConstructFullEntity(SqlGenericConstructorExpression constructorExpression, Type constructType, ProjectFlags flags, bool checkInheritance, out string? error)
 			{
 				var constructed = base.TryConstructFullEntity(constructorExpression, constructType, flags, checkInheritance, out error);

@@ -32,11 +32,12 @@ namespace LinqToDB.Internal.Linq.Builder
 		}
 
 		protected SqlGenericConstructorExpression BuildGenericFromMembers(
-			IReadOnlyCollection<ColumnDescriptor> columns, ProjectFlags flags, Expression currentPath, int level,
+			IReadOnlyCollection<ColumnDescriptor> columns, ProjectFlags flags, Expression currentPath, Expression constructionRoot, int level,
 			FullEntityPurpose purpose)
 		{
 			var members          = new List<SqlGenericConstructorExpression.Assignment>();
 			var entityDescriptor = MappingSchema.GetEntityDescriptor(currentPath.Type);
+			var buildCalculated  = ShouldBuildCalculatedColumns(constructionRoot, flags, purpose);
 
 			// A calculated column (ExpressionMethodAttribute.IsColumn=true) may also be mapped as a physical
 			// column — e.g. fluent .Property(e => e.X).HasAttribute(new ExpressionMethodAttribute(...) { IsColumn = true }),
@@ -49,15 +50,18 @@ namespace LinqToDB.Internal.Linq.Builder
 			// descriptor but NOT their CalculatedMembers, so a calculated member declared on a subtype would
 			// otherwise leak through as a stray column read — union the derived types' calculated members too.
 			HashSet<MemberInfo>? calculatedMembers = null;
-			if (entityDescriptor.HasCalculatedMembers)
-				calculatedMembers = entityDescriptor.CalculatedMembers!.Select(m => m.MemberInfo).ToHashSet(MemberInfoComparer.Instance);
-
-			foreach (var inheritance in entityDescriptor.InheritanceMapping)
+			if (buildCalculated)
 			{
-				var derivedDescriptor = MappingSchema.GetEntityDescriptor(inheritance.Type);
-				if (derivedDescriptor.HasCalculatedMembers)
-					(calculatedMembers ??= new HashSet<MemberInfo>(MemberInfoComparer.Instance))
-						.UnionWith(derivedDescriptor.CalculatedMembers!.Select(m => m.MemberInfo));
+				if (entityDescriptor.HasCalculatedMembers)
+					calculatedMembers = entityDescriptor.CalculatedMembers!.Select(m => m.MemberInfo).ToHashSet(MemberInfoComparer.Instance);
+
+				foreach (var inheritance in entityDescriptor.InheritanceMapping)
+				{
+					var derivedDescriptor = MappingSchema.GetEntityDescriptor(inheritance.Type);
+					if (derivedDescriptor.HasCalculatedMembers)
+						(calculatedMembers ??= new HashSet<MemberInfo>(MemberInfoComparer.Instance))
+							.UnionWith(derivedDescriptor.CalculatedMembers!.Select(m => m.MemberInfo));
+				}
 			}
 
 			var checkForKey = flags.HasFlag(ProjectFlags.Keys) && columns.Any(c => c.IsPrimaryKey);
@@ -204,7 +208,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						var newColumns = columns.Where(c => c.MemberName.StartsWith(prefix, StringComparison.Ordinal)).ToList();
 						var newPath    = MakeAssignExpression(currentPath, memberInfo, column);
 
-						assignExpression = BuildGenericFromMembers(newColumns, flags, newPath, level + 1, purpose);
+						assignExpression = BuildGenericFromMembers(newColumns, flags, newPath, constructionRoot, level + 1, purpose);
 					}
 					else
 					{
@@ -216,7 +220,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 			}
 
-			if (!flags.HasFlag(ProjectFlags.Keys) && purpose == FullEntityPurpose.Default)
+			if (buildCalculated)
 			{
 				// currentPath may have been converted to an inheritance subtype while resolving a flattened
 				// (dotted-MemberName) column above, so re-resolve the descriptor here instead of reusing the
@@ -344,7 +348,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				? entityDescriptor.Columns
 				: (IReadOnlyCollection<ColumnDescriptor>)entityDescriptor.Columns.Concat(entityDescriptor.InheritanceSiblingColumns).ToList();
 
-			var generic = BuildGenericFromMembers(columns, flags, refExpression, 0, purpose);
+			var generic = BuildGenericFromMembers(columns, flags, refExpression, refExpression, 0, purpose);
 
 			return generic;
 		}
@@ -413,10 +417,18 @@ namespace LinqToDB.Internal.Linq.Builder
 		}
 
 		/// <summary>
-		/// Expands a calculated column's <see cref="ExpressionMethodAttribute"/> substitution body.
-		/// Base implementation leaves the member access untouched (used by reader-based construction,
-		/// which never routed calculated columns through the expose visitor); the query-building
-		/// constructor overrides this to run <c>ConvertExpressionTree</c> on just this member access.
+		/// Whether calculated columns (<see cref="ExpressionMethodAttribute"/> with <c>IsColumn = true</c>) should be
+		/// expanded for the current construction. Defaults to <c>false</c>, so non-query construction paths (e.g.
+		/// reader-based materialization from raw SQL in <c>RecordReaderBuilder</c>) never process calculated columns.
+		/// The query-building constructor overrides this to opt in only for table-backed full-entity materialization.
+		/// </summary>
+		protected virtual bool ShouldBuildCalculatedColumns(Expression constructionRoot, ProjectFlags flags, FullEntityPurpose purpose) => false;
+
+		/// <summary>
+		/// Expands a calculated column's <see cref="ExpressionMethodAttribute"/> substitution body. Only invoked when
+		/// <see cref="ShouldBuildCalculatedColumns"/> returns <c>true</c> (i.e. from the query-building constructor,
+		/// which overrides this to run <c>ConvertExpressionTree</c> on the member access). The base implementation is
+		/// an inert fallback that returns the access unchanged.
 		/// </summary>
 		protected virtual Expression ExposeCalculatedColumn(Expression memberAccess) => memberAccess;
 
