@@ -56,6 +56,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 			SQL                = table.SQL;
 			Parameters         = parameters;
+			IsScalar           = table.IsScalar;
 		}
 
 		public override QueryElementType ElementType  => QueryElementType.SqlRawSqlTable;
