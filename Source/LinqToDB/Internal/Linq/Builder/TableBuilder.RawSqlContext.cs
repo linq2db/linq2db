@@ -52,7 +52,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			// is the anomaly behind the parallel `column t1.value does not exist` failure. Log it so CI shows
 			// whether ScalarResult<int> is misclassified scalar at build time (vs. inheriting a cached scalar table).
 			if (isScalar.Value && entityType is { IsPrimitive: false, IsEnum: false } && entityType != typeof(string))
-				System.Console.Error.WriteLine($"RAWSQLDIAG anomalous-scalar-build type={entityType.FullName} tid={System.Environment.CurrentManagedThreadId}");
+				System.Console.Error.WriteLine($"RAWSQLDIAG anomalous-scalar-build type={entityType.FullName}");
 
 			var formatArg = methodCall.Arguments[1];
 
