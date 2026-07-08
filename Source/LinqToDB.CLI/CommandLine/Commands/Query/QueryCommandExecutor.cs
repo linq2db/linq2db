@@ -40,6 +40,7 @@ namespace LinqToDB.CommandLine
 	sealed class QueryCommandExecutor(ICliEnvironment environment, QueryCommandSettings settings)
 	{
 		sealed record QueryOutputColumn(int Ordinal, string Name, string FieldType, string ProviderSpecificFieldType, string DataTypeName, QueryActualFieldType ActualFieldType);
+		sealed record QueryExecutionResult(int StatusCode, string? Error, bool Truncated);
 
 		enum QueryActualFieldType
 		{
@@ -176,185 +177,43 @@ namespace LinqToDB.CommandLine
 				if (_settings.CommandTimeout > 0)
 					dataOptions = dataOptions.UseCommandTimeout(_settings.CommandTimeout);
 
-				// Open a connection and apply optional provider-specific session setup before user SQL execution.
+				// Open the output writer before optional impersonation so file access stays under the original process account.
 				//
-				var dataConnection = new DataConnection(dataOptions);
+				var outputWriter        = _settings.OutputFile != null ? _environment.CreateTextWriter(_settings.OutputFile) : _environment.Out;
+				var disposeOutputWriter = _settings.OutputFile != null;
 
-				await using (dataConnection.ConfigureAwait(false))
+				try
 				{
-					var lockTimeoutCommand = GetLockTimeoutCommand(dataProvider, _settings.LockTimeout);
-
-					if (lockTimeoutCommand != null)
-						await dataConnection.ExecuteAsync(lockTimeoutCommand, cancellationToken).ConfigureAwait(false);
-
-					// Execute user-provided SQL and get a data reader for the result set.
+					// Run the whole database pipeline under one impersonation token when requested.
 					//
-					var dataReader = await dataConnection.ExecuteReaderAsync(sql, cancellationToken).ConfigureAwait(false);
+					var result = _settings.Impersonate
+						? WindowsImpersonation.Run(
+							_settings.User!,
+							_settings.Password!,
+							_settings.ImpersonateMode,
+							() => ExecuteDatabaseLoop(dataOptions, dataProvider, sql, outputWriter, cancellationToken).GetAwaiter().GetResult())
+						: await ExecuteDatabaseLoop(dataOptions, dataProvider, sql, outputWriter, cancellationToken).ConfigureAwait(false);
 
-					await using (dataReader.ConfigureAwait(false))
+					if (result.Error != null)
 					{
-						var reader = dataReader.Reader;
-
-						if (reader == null)
-						{
-							await _environment.Error.WriteLineAsync("Query didn't return data reader.").ConfigureAwait(false);
-							return StatusCodes.EXPECTED_ERROR;
-						}
-
-						// Read the column metadata from the data reader and create output column definitions.
-						//
-						var columns = new QueryOutputColumn[reader.FieldCount];
-
-						for (var i = 0; i < columns.Length; i++)
-						{
-							Type? providerSpecificType;
-
-							try
-							{
-								providerSpecificType = reader.GetProviderSpecificFieldType(i);
-							}
-							catch (NotSupportedException)
-							{
-								providerSpecificType = reader.GetFieldType(i);
-							}
-
-							providerSpecificType ??= reader.GetFieldType(i) ?? typeof(object);
-
-							columns[i] = CreateOutputColumn(reader, i, providerSpecificType);
-						}
-
-						// Validate that the output format is compatible with the column metadata.
-						//
-						if (string.Equals(_settings.Output, "json", StringComparison.OrdinalIgnoreCase))
-						{
-							var duplicateColumnName = GetDuplicateColumnName(columns);
-
-							if (duplicateColumnName != null)
-							{
-								await _environment.Error.WriteLineAsync($"JSON output requires unique column names. Duplicate column name '{duplicateColumnName}' found. Use explicit SQL aliases for duplicate columns or switch to json-table output when duplicate-safe column metadata is needed.").ConfigureAwait(false);
-								return StatusCodes.EXPECTED_ERROR;
-							}
-						}
-
-						// Read rows from the data reader and write them directly to the output stream.
-						//
-						var outputWriter        = _settings.OutputFile != null ? _environment.CreateTextWriter(_settings.OutputFile) : _environment.Out;
-						var disposeOutputWriter = _settings.OutputFile != null;
-						var rowCount            = 0;
-						var truncated           = false;
-
-						try
-						{
-							// Write the output header based on the specified output format.
-							//
-							switch (_settings.Output)
-							{
-								case "csv":
-									// CSV output starts with a header row.
-									//
-									await WriteCsvHeader(outputWriter, columns, cancellationToken).ConfigureAwait(false);
-									break;
-								case "json-table":
-									// JSON table output starts with column metadata and then streams rows.
-									//
-									await WriteJsonTableStart(outputWriter, columns, cancellationToken).ConfigureAwait(false);
-									break;
-								default:
-									// Regular JSON output is an array of row objects.
-									//
-									await outputWriter.WriteAsync("[".AsMemory(), cancellationToken).ConfigureAwait(false);
-									break;
-							}
-
-							while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
-							{
-								// Stop reading after the configured row limit and report truncation.
-								//
-								if (_settings.MaxRows > 0 && rowCount >= _settings.MaxRows)
-								{
-									truncated = true;
-									break;
-								}
-
-								// Read one result row as normalized string values.
-								//
-								var row = new string?[columns.Length];
-
-								for (var i = 0; i < columns.Length; i++)
-								{
-									switch (columns[i].ActualFieldType)
-									{
-										// Oracle BFILE is an external file locator. Even IsDBNull can trigger a file/LOB
-										// operation, so avoid reader value APIs for it.
-										//
-										case QueryActualFieldType.OracleBFile:
-											row[i] = OracleBFilePlaceholder;
-											continue;
-
-										// MySQL wide DECIMAL values can overflow inside regular reader null checks.
-										// The native GetMySqlDecimal path does its own best-effort null handling.
-										//
-										case QueryActualFieldType.MySqlDecimal:
-											row[i] = ReadFieldAsString(reader, columns[i].ActualFieldType, i);
-											continue;
-									}
-
-									if (await reader.IsDBNullAsync(i, cancellationToken).ConfigureAwait(false))
-										continue;
-
-									row[i] = ReadFieldAsString(reader, columns[i].ActualFieldType, i);
-								}
-
-								// Write the row using the selected output format.
-								//
-								switch (_settings.Output)
-								{
-									case "csv":
-										await WriteCsvRow(outputWriter, row, cancellationToken).ConfigureAwait(false);
-										break;
-									case "json-table":
-										await WriteJsonTableRow(outputWriter, row, rowCount, cancellationToken).ConfigureAwait(false);
-										break;
-									default:
-										await WriteJsonRow(outputWriter, columns, row, rowCount, cancellationToken).ConfigureAwait(false);
-										break;
-								}
-
-								rowCount++;
-							}
-
-							// Close the selected output format.
-							//
-							switch (_settings.Output)
-							{
-								case "json-table":
-									await WriteJsonTableEnd(outputWriter, rowCount, truncated, cancellationToken).ConfigureAwait(false);
-									break;
-								case "csv":
-									break;
-								default:
-									await outputWriter.WriteAsync("]".AsMemory(), cancellationToken).ConfigureAwait(false);
-									break;
-							}
-
-							await outputWriter.FlushAsync(cancellationToken).ConfigureAwait(false);
-						}
-						finally
-						{
-							if (disposeOutputWriter)
-								await outputWriter.DisposeAsync().ConfigureAwait(false);
-						}
-
-						if (truncated && !string.Equals(_settings.Output, "json-table", StringComparison.OrdinalIgnoreCase))
-						{
-							// JSON table carries truncation in-band; other formats report it through stderr.
-							//
-							await _environment.Error.WriteLineAsync($"Query result truncated to {_settings.MaxRows.ToString(CultureInfo.InvariantCulture)} row(s). Use '--max-rows' to change the limit.").ConfigureAwait(false);
-						}
+						await _environment.Error.WriteLineAsync(result.Error).ConfigureAwait(false);
+						return result.StatusCode;
 					}
-				}
 
-				return StatusCodes.SUCCESS;
+					if (result.Truncated && !string.Equals(_settings.Output, "json-table", StringComparison.OrdinalIgnoreCase))
+					{
+						// JSON table carries truncation in-band; other formats report it through stderr.
+						//
+						await _environment.Error.WriteLineAsync($"Query result truncated to {_settings.MaxRows.ToString(CultureInfo.InvariantCulture)} row(s). Use '--max-rows' to change the limit.").ConfigureAwait(false);
+					}
+
+					return result.StatusCode;
+				}
+				finally
+				{
+					if (disposeOutputWriter)
+						await outputWriter.DisposeAsync().ConfigureAwait(false);
+				}
 			}
 			catch (OperationCanceledException)
 			{
@@ -365,6 +224,183 @@ namespace LinqToDB.CommandLine
 				await _environment.Error.WriteLineAsync($"Query execution failed: {ex.Message}").ConfigureAwait(false);
 				return StatusCodes.EXPECTED_ERROR;
 			}
+		}
+
+		async Task<QueryExecutionResult> ExecuteDatabaseLoop(DataOptions dataOptions, IDataProvider dataProvider, string sql, TextWriter outputWriter, CancellationToken cancellationToken)
+		{
+			// Open a connection and apply optional provider-specific session setup before user SQL execution.
+			//
+			var dataConnection = new DataConnection(dataOptions);
+			DataReaderAsync? dataReader = null;
+
+			try
+			{
+				var lockTimeoutCommand = GetLockTimeoutCommand(dataProvider, _settings.LockTimeout);
+
+				if (lockTimeoutCommand != null)
+					await dataConnection.ExecuteAsync(lockTimeoutCommand, cancellationToken).ConfigureAwait(false);
+
+				// Execute user-provided SQL and get a data reader for the result set.
+				//
+				dataReader = await dataConnection.ExecuteReaderAsync(sql, cancellationToken).ConfigureAwait(false);
+
+				var reader = dataReader.Reader;
+
+				if (reader == null)
+					return new QueryExecutionResult(StatusCodes.EXPECTED_ERROR, "Query didn't return data reader.", false);
+
+				// Read the column metadata from the data reader and create output column definitions.
+				//
+				var columns = ReadOutputColumns(reader);
+
+				// Validate that the output format is compatible with the column metadata.
+				//
+				if (string.Equals(_settings.Output, "json", StringComparison.OrdinalIgnoreCase))
+				{
+					var duplicateColumnName = GetDuplicateColumnName(columns);
+
+					if (duplicateColumnName != null)
+						return new QueryExecutionResult(StatusCodes.EXPECTED_ERROR, $"JSON output requires unique column names. Duplicate column name '{duplicateColumnName}' found. Use explicit SQL aliases for duplicate columns or switch to json-table output when duplicate-safe column metadata is needed.", false);
+				}
+
+				var rowCount  = 0;
+				var truncated = false;
+
+				// Write the output header based on the specified output format.
+				//
+				switch (_settings.Output)
+				{
+					case "csv":
+						// CSV output starts with a header row.
+						//
+						await WriteCsvHeader(outputWriter, columns, cancellationToken).ConfigureAwait(false);
+						break;
+					case "json-table":
+						// JSON table output starts with column metadata and then streams rows.
+						//
+						await WriteJsonTableStart(outputWriter, columns, cancellationToken).ConfigureAwait(false);
+						break;
+					default:
+						// Regular JSON output is an array of row objects.
+						//
+						await outputWriter.WriteAsync("[".AsMemory(), cancellationToken).ConfigureAwait(false);
+						break;
+				}
+
+				while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+				{
+					// Stop reading after the configured row limit and report truncation.
+					//
+					if (_settings.MaxRows > 0 && rowCount >= _settings.MaxRows)
+					{
+						truncated = true;
+						break;
+					}
+
+					// Read one result row as normalized string values.
+					//
+					var row = await ReadRow(reader, columns, cancellationToken).ConfigureAwait(false);
+
+					// Write the row using the selected output format.
+					//
+					switch (_settings.Output)
+					{
+						case "csv":
+							await WriteCsvRow(outputWriter, row, cancellationToken).ConfigureAwait(false);
+							break;
+						case "json-table":
+							await WriteJsonTableRow(outputWriter, row, rowCount, cancellationToken).ConfigureAwait(false);
+							break;
+						default:
+							await WriteJsonRow(outputWriter, columns, row, rowCount, cancellationToken).ConfigureAwait(false);
+							break;
+					}
+
+					rowCount++;
+				}
+
+				// Close the selected output format.
+				//
+				switch (_settings.Output)
+				{
+					case "json-table":
+						await WriteJsonTableEnd(outputWriter, rowCount, truncated, cancellationToken).ConfigureAwait(false);
+						break;
+					case "csv":
+						break;
+					default:
+						await outputWriter.WriteAsync("]".AsMemory(), cancellationToken).ConfigureAwait(false);
+						break;
+				}
+
+				await outputWriter.FlushAsync(cancellationToken).ConfigureAwait(false);
+
+				return new QueryExecutionResult(StatusCodes.SUCCESS, null, truncated);
+			}
+			finally
+			{
+				if (dataReader != null)
+					await dataReader.DisposeAsync().AsTask().ConfigureAwait(false);
+
+				await dataConnection.DisposeAsync().AsTask().ConfigureAwait(false);
+			}
+		}
+
+		QueryOutputColumn[] ReadOutputColumns(DbDataReader reader)
+		{
+			var columns = new QueryOutputColumn[reader.FieldCount];
+
+			for (var i = 0; i < columns.Length; i++)
+			{
+				Type? providerSpecificType;
+
+				try
+				{
+					providerSpecificType = reader.GetProviderSpecificFieldType(i);
+				}
+				catch (NotSupportedException)
+				{
+					providerSpecificType = reader.GetFieldType(i);
+				}
+
+				providerSpecificType ??= reader.GetFieldType(i) ?? typeof(object);
+
+				columns[i] = CreateOutputColumn(reader, i, providerSpecificType);
+			}
+
+			return columns;
+		}
+
+		static async Task<string?[]> ReadRow(DbDataReader reader, QueryOutputColumn[] columns, CancellationToken cancellationToken)
+		{
+			var row = new string?[columns.Length];
+
+			for (var i = 0; i < columns.Length; i++)
+			{
+				switch (columns[i].ActualFieldType)
+				{
+					// Oracle BFILE is an external file locator. Even IsDBNull can trigger a file/LOB
+					// operation, so avoid reader value APIs for it.
+					//
+					case QueryActualFieldType.OracleBFile:
+						row[i] = OracleBFilePlaceholder;
+						continue;
+
+					// MySQL wide DECIMAL values can overflow inside regular reader null checks.
+					// The native GetMySqlDecimal path does its own best-effort null handling.
+					//
+					case QueryActualFieldType.MySqlDecimal:
+						row[i] = ReadFieldAsString(reader, columns[i].ActualFieldType, i);
+						continue;
+				}
+
+				if (await reader.IsDBNullAsync(i, cancellationToken).ConfigureAwait(false))
+					continue;
+
+				row[i] = ReadFieldAsString(reader, columns[i].ActualFieldType, i);
+			}
+
+			return row;
 		}
 
 		static string? GetLockTimeoutCommand(IDataProvider dataProvider, int? timeout)

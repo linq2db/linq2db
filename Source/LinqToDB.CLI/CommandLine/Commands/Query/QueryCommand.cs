@@ -41,6 +41,7 @@ namespace LinqToDB.CommandLine
 		static readonly CliOption _sqlFile             = new StringCliOption("sql-file",              null, false, false, "path to file with single user-provided SQL query text to execute; supports %NAME% and ${NAME} environment variable expansion");
 
 		static readonly CliOption _overwrite      = new BooleanCliOption("overwrite", null, false, "replace existing output file", null, null, null, false, false);
+		static readonly CliOption _impersonate    = new BooleanCliOption("impersonate", null, false, "on Windows, run database access under resolved user/password credentials; file and configuration access uses the original process account", null, null, null, false, false);
 		static readonly CliOption _allowUnsafeSql = new BooleanCliOption(
 			"allow-unsafe-sql",
 			null,
@@ -65,6 +66,21 @@ namespace LinqToDB.CommandLine
 			new StringEnumOption(true,  true,  "json",       "JSON output"),
 			new StringEnumOption(false, false, "json-table", "JSON table output"),
 			new StringEnumOption(false, false, "csv",        "CSV output"));
+
+		static readonly CliOption _impersonateMode = new StringEnumCliOption(
+			"impersonate-mode",
+			null,
+			false,
+			false,
+			"Windows impersonation logon mode",
+			null,
+			null,
+			null,
+			false,
+			new StringEnumOption(true,  true,  "network-cleartext", "network cleartext logon; default"),
+			new StringEnumOption(false, false, "interactive",       "interactive logon"),
+			new StringEnumOption(false, false, "network",           "network logon"),
+			new StringEnumOption(false, false, "new-credentials",   "new credentials logon"));
 
 		public static CliCommand Instance { get; } = new QueryCommand();
 
@@ -102,6 +118,8 @@ namespace LinqToDB.CommandLine
 			AddOption(_connectionOptions,    _userEnv);
 			AddOption(_connectionOptions,    _password);
 			AddOption(_connectionOptions,    _passwordEnv);
+			AddOption(_connectionOptions,    _impersonate);
+			AddOption(_connectionOptions,    _impersonateMode);
 			AddOption(_connectionOptions,    _commandTimeout);
 			AddOption(_connectionOptions,    _lockTimeout);
 			AddOption(_guardOptions,         _allowUnsafeSql);
@@ -156,6 +174,8 @@ namespace LinqToDB.CommandLine
 			options.Remove(_userEnv,             out var userEnv);
 			options.Remove(_password,            out var password);
 			options.Remove(_passwordEnv,         out var passwordEnv);
+			options.Remove(_impersonate,         out var impersonate);
+			options.Remove(_impersonateMode,     out var impersonateMode);
 			options.Remove(_commandTimeout,      out var commandTimeout);
 			options.Remove(_lockTimeout,         out var lockTimeout);
 			options.Remove(_allowUnsafeSql,      out var allowUnsafeSql);
@@ -202,6 +222,8 @@ namespace LinqToDB.CommandLine
 				? ResolvePath(environment, _outputFile, (string)outputFile)
 				: ResolvePath(environment, _outputFile, configuration?.OutputFile, configDirectory);
 			var overwriteOutputFile  = (bool?)overwrite ?? false;
+			var impersonateValue     = (bool?)impersonate ?? configuration?.Impersonate ?? false;
+			var impersonateModeValue = ParseImpersonateMode((string?)impersonateMode ?? configuration?.ImpersonateMode);
 			var unsafeSqlPolicy      = configuration?.UnsafeSqlPolicy ?? UnsafeSqlPolicy.Deny;
 			var allowUnsafeSqlValue  = (bool?)allowUnsafeSql ?? false;
 			var querySql             = (string?)sql;
@@ -209,6 +231,12 @@ namespace LinqToDB.CommandLine
 
 			if (commandTimeoutValue < 0 || lockTimeoutValue < 0 || maxRowsValue < 0)
 				return null;
+
+			if (impersonateModeValue == null)
+			{
+				environment.Error.WriteLine($"Option '--{_impersonateMode.Name}' has unknown value '{(string?)impersonateMode ?? configuration?.ImpersonateMode}'.");
+				return null;
+			}
 
 			if (string.Equals(connectionStringText, MissingEnvironmentVariable, StringComparison.Ordinal) ||
 			    string.Equals(userName,             MissingEnvironmentVariable, StringComparison.Ordinal) ||
@@ -246,6 +274,12 @@ namespace LinqToDB.CommandLine
 				return null;
 			}
 
+			if (impersonateValue && (userName == null || passwordText == null))
+			{
+				environment.Error.WriteLine($"Option '--{_impersonate.Name}' requires resolved '--{_user.Name}' and '--{_password.Name}' values.");
+				return null;
+			}
+
 			if (querySql == null && querySqlFile == null)
 			{
 				environment.Error.WriteLine($"Either '--{_sql.Name}' or '--{_sqlFile.Name}' option must be specified.");
@@ -256,6 +290,8 @@ namespace LinqToDB.CommandLine
 				profileName,
 				providerName,
 				providerLocationPath,
+				userName,
+				passwordText,
 				connectionStringText,
 				commandTimeoutValue,
 				lockTimeoutValue,
@@ -265,8 +301,27 @@ namespace LinqToDB.CommandLine
 				overwriteOutputFile,
 				unsafeSqlPolicy,
 				allowUnsafeSqlValue,
+				impersonateValue,
+				impersonateModeValue.Value,
 				querySql,
 				querySqlFile);
+		}
+
+		static WindowsImpersonationMode? ParseImpersonateMode(string? value)
+		{
+			if (value == null || string.Equals(value, "network-cleartext", StringComparison.OrdinalIgnoreCase))
+				return WindowsImpersonationMode.NetworkCleartext;
+
+			if (string.Equals(value, "interactive", StringComparison.OrdinalIgnoreCase))
+				return WindowsImpersonationMode.Interactive;
+
+			if (string.Equals(value, "network", StringComparison.OrdinalIgnoreCase))
+				return WindowsImpersonationMode.Network;
+
+			if (string.Equals(value, "new-credentials", StringComparison.OrdinalIgnoreCase))
+				return WindowsImpersonationMode.NewCredentials;
+
+			return null;
 		}
 
 		static int? ParseTimeout(ICliEnvironment environment, CliOption option, string value)

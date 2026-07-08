@@ -8,6 +8,8 @@ namespace LinqToDB.CommandLine
 	/// <param name="ProviderLocation">
 	/// Optional path to external provider assembly. Provider dependencies must be available next to it or through normal application probing.
 	/// </param>
+	/// <param name="User">Resolved user value used for connection string formatting and optional Windows impersonation.</param>
+	/// <param name="Password">Resolved password value used for connection string formatting and optional Windows impersonation.</param>
 	/// <param name="ConnectionString">
 	/// Final database connection string after command line/profile merge and user/password formatting.
 	/// </param>
@@ -19,12 +21,16 @@ namespace LinqToDB.CommandLine
 	/// <param name="Overwrite">Allow replacing existing output file.</param>
 	/// <param name="UnsafeSqlPolicy">Unsafe SQL execution policy resolved from configuration profiles.</param>
 	/// <param name="AllowUnsafeSql">Command-line confirmation for unsafe SQL execution.</param>
+	/// <param name="Impersonate">Run the database loop under resolved Windows <see cref="User"/>/<see cref="Password"/> credentials after file resources are opened.</param>
+	/// <param name="ImpersonateMode">Windows logon mode used for impersonation.</param>
 	/// <param name="Sql">SQL query text from command line.</param>
 	/// <param name="SqlFile">Path to command-line SQL file.</param>
 	internal sealed record QueryCommandSettings(
 		string             Profile,
 		string             Provider,
 		string?            ProviderLocation,
+		string?            User,
+		string?            Password,
 		string             ConnectionString,
 		int?               CommandTimeout,
 		int?               LockTimeout,
@@ -34,6 +40,8 @@ namespace LinqToDB.CommandLine
 		bool               Overwrite,
 		UnsafeSqlPolicy    UnsafeSqlPolicy,
 		bool               AllowUnsafeSql,
+		bool               Impersonate,
+		WindowsImpersonationMode ImpersonateMode,
 		string?            Sql,
 		string?            SqlFile);
 }

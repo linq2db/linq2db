@@ -46,6 +46,12 @@ Connection settings:
 - Use `{0}` in the connection string for the user value and `{1}` for the password value.
 - Escape literal braces in connection strings as `{{` and `}}`.
 - Connection timeout is intentionally not exposed as a separate query command option. It is provider-specific and must be configured in the connection string using the selected provider's supported keywords.
+- `--impersonate` enables Windows-only database access impersonation using the same resolved `user` and `password` values.
+- `--impersonate-mode` selects the Windows `LogonUser` mode: `network-cleartext` (default), `interactive`, `network`, or `new-credentials`.
+- `--impersonate` runs the whole database loop under one impersonation token: connection creation/opening, provider-specific session setup, command execution, reader metadata, row reads, output formatting, and reader/connection disposal.
+- Configuration files, SQL files, provider assembly files, output files, stdout, and stderr writers are opened by the original process account before the impersonated database loop starts.
+- `--impersonate` requires resolved `user` and `password` values. Use `--user-env` and `--password-env` or configuration `userEnv` and `passwordEnv` when credentials must not be written as literals.
+- Windows impersonation uses network credentials intended for database access. It is not supported on Linux or macOS.
 
 Configuration profiles:
 
@@ -68,6 +74,8 @@ Example configuration:
     "maxRows"          : 1000,
     "unsafeSql"       : "deny",
     "output"          : "json",
+    "impersonate"     : false,
+    "impersonateMode" : "network-cleartext",
     "passwordEnv"     : "LINQ2DB_QUERY_PASSWORD"
   },
   "uat": {

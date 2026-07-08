@@ -65,6 +65,18 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task QueryImpersonateRequiresUserAndPassword()
+		{
+			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--impersonate", "--sql", "select 1");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.EqualTo(-1));
+				Assert.That(result.Error,    Does.Contain("Option '--impersonate' requires resolved '--user' and '--password' values."));
+			}
+		}
+
+		[Test]
 		public async Task QueryRejectsMissingProviderLocation()
 		{
 			var result = await RunCli("query", "--provider", "DB2", "--connection-string", "Server=localhost:50000;Database=testdb;UID=db2inst1;PWD=Password12!", "--sql", "select 1 from SYSIBM.SYSDUMMY1");
@@ -1407,6 +1419,75 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task QueryConfigImpersonateRequiresUserAndPassword()
+		{
+			var environment = new TestCliEnvironment();
+			var config      = AddConfigFile(environment, """
+				{
+					"default": {
+						"provider": "SQLite",
+						"connectionString": "Data Source=:memory:",
+						"impersonate": true
+					}
+				}
+				""");
+
+			var result = await RunCli(environment, "query", "--config", config, "--sql", "select 1");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.EqualTo(-1));
+				Assert.That(result.Error,    Does.Contain("Option '--impersonate' requires resolved '--user' and '--password' values."));
+			}
+		}
+
+		[Test]
+		public async Task QueryRejectsInvalidConfigImpersonate()
+		{
+			var environment = new TestCliEnvironment();
+			var config      = AddConfigFile(environment, """
+				{
+					"default": {
+						"provider": "SQLite",
+						"connectionString": "Data Source=:memory:",
+						"impersonate": 1
+					}
+				}
+				""");
+
+			var result = await RunCli(environment, "query", "--config", config, "--sql", "select 1");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.EqualTo(-1));
+				Assert.That(result.Error,    Does.Contain($"Configuration file '{config}' profile 'default' property 'impersonate' must be boolean."));
+			}
+		}
+
+		[Test]
+		public async Task QueryRejectsInvalidConfigImpersonateMode()
+		{
+			var environment = new TestCliEnvironment();
+			var config      = AddConfigFile(environment, """
+				{
+					"default": {
+						"provider": "SQLite",
+						"connectionString": "Data Source=:memory:",
+						"impersonateMode": "bad-mode"
+					}
+				}
+				""");
+
+			var result = await RunCli(environment, "query", "--config", config, "--sql", "select 1");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.EqualTo(-1));
+				Assert.That(result.Error,    Does.Contain($"Configuration file '{config}' profile 'default' property 'impersonateMode' has unknown value 'bad-mode'."));
+			}
+		}
+
+		[Test]
 		public async Task QueryHelpShowsSqlInputOptions()
 		{
 			var result = await RunCli("help", "query");
@@ -1426,6 +1507,11 @@ namespace Tests.LinqToDB.CLI
 				Assert.That(result.Output,   Does.Contain("--user-env"));
 				Assert.That(result.Output,   Does.Contain("--password"));
 				Assert.That(result.Output,   Does.Contain("--password-env"));
+				Assert.That(result.Output,   Does.Contain("--impersonate"));
+				Assert.That(result.Output,   Does.Contain("run database access under resolved user/password credentials"));
+				Assert.That(result.Output,   Does.Contain("--impersonate-mode"));
+				Assert.That(result.Output,   Does.Contain("Windows impersonation logon mode"));
+				Assert.That(result.Output,   Does.Contain("network-cleartext"));
 				Assert.That(result.Output,   Does.Contain("--command-timeout"));
 				Assert.That(result.Output,   Does.Contain("--lock-timeout"));
 				Assert.That(result.Output,   Does.Contain("--max-rows"));

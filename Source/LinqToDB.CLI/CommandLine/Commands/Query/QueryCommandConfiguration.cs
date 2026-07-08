@@ -56,6 +56,16 @@ namespace LinqToDB.CommandLine
 		public string? PasswordEnv      { get; private set; }
 
 		/// <summary>
+		/// Run database access operations under resolved Windows <see cref="User"/>/<see cref="Password"/> credentials.
+		/// </summary>
+		public bool?   Impersonate      { get; private set; }
+
+		/// <summary>
+		/// Windows impersonation logon mode.
+		/// </summary>
+		public string? ImpersonateMode  { get; private set; }
+
+		/// <summary>
 		/// Optional query command timeout in seconds. Value <c>0</c> disables the option.
 		/// </summary>
 		public int?    CommandTimeout   { get; private set; }
@@ -216,6 +226,25 @@ namespace LinqToDB.CommandLine
 
 						PasswordEnv = value;
 						break;
+					case "impersonate":
+						if (!TryParseBoolean(fileName, profileName, property, out var booleanValue, out error))
+							return false;
+
+						Impersonate = booleanValue;
+						break;
+					case "impersonateMode":
+					case "impersonate-mode":
+						if (!TryGetString(fileName, profileName, property, out value, out error))
+							return false;
+
+						if (!IsValidImpersonateMode(value))
+						{
+							error = $"Configuration file '{fileName}' profile '{profileName}' property '{property.Name}' has unknown value '{value}'.";
+							return false;
+						}
+
+						ImpersonateMode = value!.ToLowerInvariant();
+						break;
 					case "commandTimeout":
 					case "command-timeout":
 						if (!TryParseTimeout(fileName, profileName, property, out var timeout, out error))
@@ -279,6 +308,43 @@ namespace LinqToDB.CommandLine
 
 			error = null;
 			return true;
+		}
+
+		static bool TryParseBoolean(string fileName, string profileName, JsonProperty property, out bool? result, out string? error)
+		{
+			if (property.Value.ValueKind == JsonValueKind.True)
+			{
+				result = true;
+				error  = null;
+				return true;
+			}
+
+			if (property.Value.ValueKind == JsonValueKind.False)
+			{
+				result = false;
+				error  = null;
+				return true;
+			}
+
+			if (property.Value.ValueKind == JsonValueKind.String
+				&& bool.TryParse(property.Value.GetString(), out var parsedValue))
+			{
+				result = parsedValue;
+				error  = null;
+				return true;
+			}
+
+			result = null;
+			error  = $"Configuration file '{fileName}' profile '{profileName}' property '{property.Name}' must be boolean.";
+			return false;
+		}
+
+		static bool IsValidImpersonateMode(string? value)
+		{
+			return string.Equals(value, "network-cleartext", StringComparison.OrdinalIgnoreCase)
+				|| string.Equals(value, "interactive", StringComparison.OrdinalIgnoreCase)
+				|| string.Equals(value, "network", StringComparison.OrdinalIgnoreCase)
+				|| string.Equals(value, "new-credentials", StringComparison.OrdinalIgnoreCase);
 		}
 
 		static bool TryGetString(string fileName, string profileName, JsonProperty property, out string? value, out string? error)
