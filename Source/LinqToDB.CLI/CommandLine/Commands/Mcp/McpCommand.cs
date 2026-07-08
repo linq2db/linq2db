@@ -75,6 +75,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 
 			var builder = Host.CreateApplicationBuilder([]);
 
+			builder.Logging.SetMinimumLevel(LogLevel.Warning);
 			builder.Logging.AddConsole(consoleOptions =>
 			{
 				consoleOptions.LogToStandardErrorThreshold = LogLevel.Trace;

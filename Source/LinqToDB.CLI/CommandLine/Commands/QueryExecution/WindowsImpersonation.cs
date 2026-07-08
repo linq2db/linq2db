@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Security.Principal;
+using System.Threading.Tasks;
 
 using LinqToDB.CommandLine;
 using LinqToDB.CommandLine.Options;
@@ -21,6 +22,14 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		const int Logon32ProviderWinnt50       = 3;
 
 		public static T Run<T>(string user, string password, WindowsImpersonationMode mode, Func<T> action)
+		{
+			if (!OperatingSystem.IsWindows())
+				throw new PlatformNotSupportedException("Windows impersonation is supported only on Windows.");
+
+			return RunWindows(user, password, mode, action);
+		}
+
+		public static Task<T> RunAsync<T>(string user, string password, WindowsImpersonationMode mode, Func<Task<T>> action)
 		{
 			if (!OperatingSystem.IsWindows())
 				throw new PlatformNotSupportedException("Windows impersonation is supported only on Windows.");

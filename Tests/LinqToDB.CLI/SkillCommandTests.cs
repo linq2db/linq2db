@@ -31,9 +31,12 @@ namespace Tests.LinqToDB.CLI
 				Assert.That(result.Output,   Does.Contain("Value precedence is: command-line literal, command-line environment variable option"));
 				Assert.That(result.Output,   Does.Contain("Parameter surface"));
 				Assert.That(result.Output,   Does.Contain("| Parameter | CLI option | `query` CLI | Config profile | `mcp` startup CLI | MCP tool API | Values |"));
+				Assert.That(result.Output,   Does.Contain("| `description` | n/a | no | yes | no | no | non-secret profile description returned by `linq2db_info` |"));
 				Assert.That(result.Output,   Does.Contain("| `unsafeSql` | n/a | no | config-only | no | no | `deny`, `confirm`, or `allow`; default is `deny` |"));
-				Assert.That(result.Output,   Does.Contain("| `output` | `--output` | yes | yes | yes | yes | `json`, `json-table`, or `csv`; `query` default is `json`, `mcp` default is `json-table` |"));
+				Assert.That(result.Output,   Does.Contain("| `output` | `--output` | yes | yes | yes | yes | `query`: `json`, `json-table`, or `csv`; `mcp`: `json` or `json-table`; `query` default is `json`, `mcp` default is `json-table` |"));
 				Assert.That(result.Output,   Does.Contain("| `impersonateMode` | `--impersonate-mode` | yes | yes | yes | no | `network-cleartext`, `interactive`, `network`, `new-credentials`, or system codes `8`, `2`, `3`, `9` |"));
+				Assert.That(result.Output,   Does.Contain("The MCP server exposes `linq2db_info`"));
+				Assert.That(result.Output,   Does.Contain("Configuration profile `description` values are returned by `linq2db_info`"));
 				Assert.That(result.Output,   Does.Contain("`--impersonate` enables Windows-only database access impersonation using the same resolved `user` and `password` values"));
 				Assert.That(result.Output,   Does.Contain("`--impersonate-mode` selects the Windows `LogonUser` mode"));
 				Assert.That(result.Output,   Does.Contain("system code `8`"));

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text.Json;
@@ -16,6 +17,11 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 	internal sealed class QueryExecutionConfiguration
 	{
 		private const string DefaultProfileName = "default";
+
+		/// <summary>
+		/// Optional non-secret profile description for agents and humans.
+		/// </summary>
+		public string? Description      { get; private set; }
 
 		/// <summary>
 		/// linq2db provider name.
@@ -164,6 +170,69 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			}
 		}
 
+		public static bool TryLoadProfileNames(ICliEnvironment environment, string fileName, out IReadOnlyList<string> profileNames, out string? error)
+		{
+			profileNames = [];
+
+			if (!TryLoadJson(environment, fileName, out var json, out error))
+				return false;
+
+			using (json)
+			{
+				if (!json.RootElement.TryGetProperty(DefaultProfileName, out _))
+				{
+					error = $"Configuration file '{fileName}' doesn't contain '{DefaultProfileName}' profile.";
+					return false;
+				}
+
+				var names = new List<string>();
+
+				foreach (var profile in json.RootElement.EnumerateObject())
+					names.Add(profile.Name);
+
+				profileNames = names;
+				error        = null;
+				return true;
+			}
+		}
+
+		static bool TryLoadJson(ICliEnvironment environment, string fileName, out JsonDocument json, out string? error)
+		{
+			json = null!;
+
+			if (!environment.FileExists(fileName))
+			{
+				error = $"Configuration file '{fileName}' not found.";
+				return false;
+			}
+
+			try
+			{
+				json = JsonDocument.Parse(
+					environment.ReadAllText(fileName),
+					new JsonDocumentOptions
+					{
+						CommentHandling     = JsonCommentHandling.Skip,
+						AllowTrailingCommas = true,
+					});
+			}
+			catch (JsonException ex)
+			{
+				error = $"Configuration file '{fileName}' is not valid JSON: {ex.Message}";
+				return false;
+			}
+
+			if (json.RootElement.ValueKind != JsonValueKind.Object)
+			{
+				json.Dispose();
+				error = $"Configuration file '{fileName}' must contain JSON object as root element.";
+				return false;
+			}
+
+			error = null;
+			return true;
+		}
+
 		private bool ApplyProfile(string fileName, string profileName, JsonElement profile, out string? error)
 		{
 			if (profile.ValueKind != JsonValueKind.Object)
@@ -176,8 +245,14 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			{
 				switch (property.Name)
 				{
-					case "provider":
+					case "description":
 						if (!TryGetString(fileName, profileName, property, out var value, out error))
+							return false;
+
+						Description = value;
+						break;
+					case "provider":
+						if (!TryGetString(fileName, profileName, property, out value, out error))
 							return false;
 
 						Provider = value;

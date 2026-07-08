@@ -22,19 +22,79 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 		readonly McpQueryStartupOptions _startupOptions = startupOptions;
 
 		[McpServerTool(
-			Name        = "linq2db_query",
-			Title       = "Execute linq2db SQL query",
+			Name        = "linq2db_info",
+			Title       = "Get linq2db query configuration",
 			ReadOnly    = true,
 			Idempotent  = true,
-			OpenWorld   = true,
+			OpenWorld   = false,
 			Destructive = false)]
-		[Description("Executes a single read-oriented SQL query using linq2db CLI startup configuration.")]
+		[Description("""
+			Returns non-secret linq2db MCP query configuration information.
+
+			Use this tool before generating SQL when available profiles, selected providers, SQL dialects, default output format, row limits, or unsafe SQL policy are unknown.
+
+			This tool never returns connection strings, passwords, provider assembly paths, impersonation credentials, or environment variable values.
+			""")]
+		public CallToolResult Info(CancellationToken cancellationToken = default)
+		{
+			return new McpInfoTool(_startupOptions).Info(cancellationToken);
+		}
+
+		[McpServerTool(
+			Name        = "linq2db_query",
+			Title       = "Execute linq2db SQL query",
+			OpenWorld   = true)]
+		[Description("""
+			Executes one SQL statement against a database configured by linq2db CLI MCP startup options or query configuration profiles.
+
+			The SQL dialect is determined by the selected profile/provider. Call linq2db_info first if available profiles, providers, or SQL dialects are unknown.
+
+			Use this tool for read-oriented database inspection, diagnostics, schema/data exploration, row counts, sample records, data-quality checks, and investigation workflows that require live database facts.
+
+			Multiple SQL statements are always rejected. SQL safety validation is a guardrail, not a security boundary.
+
+			The tool cannot accept provider names, connection strings, passwords, provider assembly paths, or impersonation credentials. Those are configured only at MCP server startup or in trusted configuration profiles.
+
+			Do not use this tool for INSERT, UPDATE, DELETE, MERGE, DDL, stored procedure execution, administrative commands, or other write/destructive operations unless the user explicitly approved that exact operation and the selected profile allows unsafe SQL confirmation.
+			""")]
 		public async Task<CallToolResult> Query(
-			[Description("Single SQL query text to execute. Multiple SQL statements are rejected.")]                       string  sql,
-			[Description("Optional configuration profile override. Requires startup --config.")]                           string? profile = null,
-			[Description("Optional maximum number of result rows to read. Use 0 to disable the limit.")]                   int?    maxRows = null,
-			[Description("Optional output format override: json, json-table, or csv.")]                                    string? output  = null,
-			[Description("Confirms unsafe SQL execution when the selected configuration profile uses unsafeSql=confirm.")] bool    allowUnsafeSql = false,
+			[Description("""
+				Single SQL statement to execute.
+
+				Use provider-appropriate SQL syntax based on the selected profile's dialect. Call linq2db_info first if the dialect is unknown.
+
+				Prefer SELECT or WITH queries for inspection. Multiple statements are rejected.
+
+				Use explicit column aliases for expressions and joins because json output requires unique column names.
+				""")] string sql,
+			[Description("""
+				Optional configuration profile override.
+
+				Use only a profile name returned by linq2db_info or explicitly provided by the user. Do not invent profile names.
+
+				If omitted, the MCP server startup profile or default profile is used.
+				Requires MCP server startup with --config.
+				""")] string? profile = null,
+			[Description("""
+				Optional maximum number of result rows to read.
+
+				Use a small value for exploratory queries. Use 0 only when the user explicitly needs the full result set.
+				""")] int? maxRows = null,
+			[Description("""
+				Optional output format override.
+
+				Allowed values: json, json-table.
+
+				Use json-table by default when column metadata, duplicate column names, expressions, or joins are involved.
+				Use json only when object-shaped rows with unique column names are preferred.
+				""")] string? output = null,
+			[Description("""
+				Unsafe SQL confirmation flag.
+
+				Set this to true only after explicit user approval for this exact SQL operation.
+				This flag is honored only when the selected profile uses unsafeSql=confirm.
+				Never set this flag for normal read-only inspection queries.
+				""")] bool allowUnsafeSql = false,
 			CancellationToken cancellationToken = default)
 		{
 			var errorWriter = new StringWriter(CultureInfo.InvariantCulture);
@@ -45,6 +105,9 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 
 			if (settings == null)
 				return CreateErrorResult(errorWriter.ToString());
+
+			if (!IsMcpOutputFormat(settings.Output))
+				return CreateErrorResult("MCP query execution supports only 'json' and 'json-table' output.");
 
 			using var resultWriter = new StringWriter(CultureInfo.InvariantCulture);
 			var result = await new QueryExecutionExecutor(settings).Execute(resultWriter, cancellationToken).ConfigureAwait(false);
@@ -84,6 +147,12 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 				sql,
 				null,
 				"json-table");
+		}
+
+		static bool IsMcpOutputFormat(string output)
+		{
+			return string.Equals(output, "json",       StringComparison.OrdinalIgnoreCase)
+				|| string.Equals(output, "json-table", StringComparison.OrdinalIgnoreCase);
 		}
 
 		static CallToolResult CreateErrorResult(string message)

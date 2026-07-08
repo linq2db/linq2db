@@ -147,11 +147,11 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				// Run the whole database pipeline under one impersonation token when requested.
 				//
 				return _settings.Impersonate
-					? WindowsImpersonation.Run(
+					? await WindowsImpersonation.RunAsync(
 						_settings.User!,
 						_settings.Password!,
 						_settings.ImpersonateMode,
-						() => ExecuteDatabaseLoop(dataOptions, dataProvider, sql, outputWriter, cancellationToken).GetAwaiter().GetResult())
+						() => ExecuteDatabaseLoop(dataOptions, dataProvider, sql, outputWriter, cancellationToken)).ConfigureAwait(false)
 					: await ExecuteDatabaseLoop(dataOptions, dataProvider, sql, outputWriter, cancellationToken).ConfigureAwait(false);
 			}
 			catch (OperationCanceledException)

@@ -68,6 +68,7 @@ Parameter surface:
 
 | Parameter | CLI option | `query` CLI | Config profile | `mcp` startup CLI | MCP tool API | Values |
 |---|---|---:|---:|---:|---:|---|
+| `description` | n/a | no | yes | no | no | non-secret profile description returned by `linq2db_info` |
 | `config` | `--config` | yes | no | yes | no | path; supports `%NAME%` and `${NAME}` |
 | `profile` | `--profile` | yes | no | yes | yes | profile name from config |
 | `provider` | `--provider` | yes | yes | yes | no | linq2db provider name |
@@ -83,7 +84,7 @@ Parameter surface:
 | `commandTimeout` | `--command-timeout` | yes | yes | yes | no | non-negative integer seconds; `0` disables the option |
 | `lockTimeout` | `--lock-timeout` | yes | yes | yes | no | non-negative integer seconds; `0` disables the option |
 | `maxRows` | `--max-rows` | yes | yes | yes | yes | non-negative integer row count; `0` disables the limit |
-| `output` | `--output` | yes | yes | yes | yes | `json`, `json-table`, or `csv`; `query` default is `json`, `mcp` default is `json-table` |
+| `output` | `--output` | yes | yes | yes | yes | `query`: `json`, `json-table`, or `csv`; `mcp`: `json` or `json-table`; `query` default is `json`, `mcp` default is `json-table` |
 | `outputFile` | `--output-file` | yes | yes | no | no | path; supports `%NAME%` and `${NAME}` |
 | `overwrite` | `--overwrite` | yes | no | no | no | boolean CLI flag |
 | `unsafeSql` | n/a | no | config-only | no | no | `deny`, `confirm`, or `allow`; default is `deny` |
@@ -96,6 +97,7 @@ Example configuration:
 ```json
 {
   "default": {
+    "description"     : "Use SQL Server T-SQL syntax. Prefer dbo schema qualification.",
     "provider"        : "SqlServer",
     "connectionString": "Server=.;Database=Test;User Id={0};Password={1};TrustServerCertificate=True",
     "commandTimeout"   : 30,
@@ -216,6 +218,16 @@ dotnet linq2db query --config query.json --profile uat --max-rows 100 --sql "sel
 Use `dotnet linq2db mcp` to run a STDIO Model Context Protocol server exposing the shared query executor as the `linq2db_query` tool.
 This is the preferred integration mode for MCP-capable agent hosts because it keeps server configuration at startup and exposes query execution through a typed tool call.
 
+### MCP runtime discovery
+
+The MCP server exposes `linq2db_info` so models can discover available profiles and SQL dialects before generating SQL.
+
+Use `linq2db_info` before `linq2db_query` when the active provider or dialect is unknown.
+
+`linq2db_info` returns only non-secret configuration metadata. It never returns connection strings, passwords, provider assembly paths, impersonation credentials, or environment variable values.
+
+Configuration profile `description` values are returned by `linq2db_info`. Use them for non-secret profile guidance, such as provider-specific SQL hints or schema conventions.
+
 MCP transport rules:
 
 - The server reads newline-delimited JSON-RPC messages from stdin.
@@ -238,7 +250,7 @@ Tool-call boundary:
 - `sql` is required and contains the single SQL statement to execute.
 - `profile` optionally selects a different profile from the startup `--config` file.
 - `maxRows` optionally overrides the startup/config row limit.
-- `output` optionally overrides the startup/config output format.
+- `output` optionally overrides the startup/config output format. MCP supports only `json` and `json-table`.
 - `allowUnsafeSql` confirms unsafe SQL only when the selected configuration profile uses `unsafeSql: "confirm"`.
 - Provider, connection string, credentials, impersonation, provider assembly location, and timeout setup are not accepted through MCP tool input.
 

@@ -24,15 +24,141 @@ namespace Tests.LinqToDB.CLI
 			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(response["error"], Is.Null);
-				Assert.That(response["result"]?["tools"]?.AsArray().Count, Is.EqualTo(1));
+				Assert.That(response["result"]?["tools"]?.AsArray().Count, Is.EqualTo(2));
 
-				var tool = response["result"]!["tools"]![0]!;
+				var queryTool = FindTool(response, "linq2db_query");
+				var infoTool  = FindTool(response, "linq2db_info");
+				var queryInputSchema = queryTool["inputSchema"]!.ToJsonString();
+				var queryProperties  = queryTool["inputSchema"]!["properties"]!.AsObject();
 
-				Assert.That((string?)tool["name"], Is.EqualTo("linq2db_query"));
-				Assert.That((string?)tool["description"], Does.Contain("Executes a single read-oriented SQL query"));
-				Assert.That((bool?)tool["annotations"]?["readOnlyHint"], Is.True);
-				Assert.That((bool?)tool["annotations"]?["destructiveHint"], Is.False);
-				Assert.That(tool["inputSchema"]?["required"]?.AsArray().ToJsonString(), Does.Contain("sql"));
+				Assert.That((string?)queryTool["description"], Does.Contain("Call linq2db_info first"));
+				Assert.That((bool?)queryTool["annotations"]?["openWorldHint"], Is.True);
+				Assert.That(queryTool["annotations"]?["readOnlyHint"], Is.Null);
+				Assert.That(queryTool["annotations"]?["idempotentHint"], Is.Null);
+				Assert.That(queryTool["annotations"]?["destructiveHint"], Is.Null);
+				Assert.That(queryTool["inputSchema"]?["required"]?.AsArray().ToJsonString(), Does.Contain("sql"));
+				Assert.That(queryInputSchema, Does.Contain("allowUnsafeSql"));
+				Assert.That(queryProperties.ContainsKey("provider"), Is.False);
+				Assert.That(queryProperties.ContainsKey("connectionString"), Is.False);
+				Assert.That(queryProperties.ContainsKey("password"), Is.False);
+				Assert.That(queryProperties.ContainsKey("providerLocation"), Is.False);
+
+				Assert.That((string?)infoTool["description"], Does.Contain("Returns non-secret linq2db MCP query configuration information"));
+				Assert.That((bool?)infoTool["annotations"]?["readOnlyHint"], Is.True);
+				Assert.That((bool?)infoTool["annotations"]?["idempotentHint"], Is.True);
+				Assert.That((bool?)infoTool["annotations"]?["openWorldHint"], Is.False);
+				Assert.That((bool?)infoTool["annotations"]?["destructiveHint"], Is.False);
+			}
+		}
+
+		[Test]
+		public async Task McpInfoReturnsStartupProfile()
+		{
+			await using var server = await McpServerProcess.Start("--provider", "SQLite.MS", "--connection-string", "Data Source=secret.db;Password=hidden");
+
+			await server.Initialize();
+			var response = await server.CallTool("linq2db_info", new JsonObject());
+			var info     = ReadToolJson(response);
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(response["error"], Is.Null);
+				Assert.That(response["result"]?["isError"], Is.Null);
+				Assert.That((string?)info["server"]?["name"], Is.EqualTo("linq2db.cli"));
+				Assert.That((string?)info["server"]?["command"], Is.EqualTo("mcp"));
+				Assert.That((string?)info["defaultProfile"], Is.EqualTo("startup"));
+				Assert.That((string?)info["profiles"]?[0]?["name"], Is.EqualTo("startup"));
+				Assert.That((string?)info["profiles"]?[0]?["provider"], Is.EqualTo("SQLite.MS"));
+				Assert.That((string?)info["profiles"]?[0]?["dialect"], Is.EqualTo("SQLite"));
+				Assert.That((string?)info["profiles"]?[0]?["defaultOutput"], Is.EqualTo("json-table"));
+				Assert.That((int?)info["profiles"]?[0]?["maxRows"], Is.EqualTo(1000));
+				Assert.That((string?)info["profiles"]?[0]?["unsafeSqlPolicy"], Is.EqualTo("deny"));
+				Assert.That((bool?)info["profiles"]?[0]?["impersonationEnabled"], Is.False);
+				Assert.That(info["supportedOutputFormats"]?.AsArray().ToJsonString(), Does.Contain("json-table"));
+				Assert.That((bool?)info["rules"]?["singleStatementOnly"], Is.True);
+				Assert.That(info.ToJsonString(), Does.Not.Contain("secret.db"));
+				Assert.That(info.ToJsonString(), Does.Not.Contain("hidden"));
+				Assert.That(info["profiles"]?[0]?.AsObject().ContainsKey("connectionString"), Is.False);
+				Assert.That(info["profiles"]?[0]?.AsObject().ContainsKey("password"), Is.False);
+				Assert.That(info["profiles"]?[0]?.AsObject().ContainsKey("providerLocation"), Is.False);
+			}
+		}
+
+		[Test]
+		public async Task McpInfoReturnsConfigProfiles()
+		{
+			var config = Path.Combine(TestContext.CurrentContext.WorkDirectory, $"mcp-query-{Guid.NewGuid():N}.json");
+			await File.WriteAllTextAsync(config, """
+				{
+					"default": {
+						"description": "Use SQLite syntax for local development queries.",
+						"provider": "SQLite",
+						"connectionString": "Data Source=dev-secret.db",
+						"maxRows": 1000,
+						"unsafeSql": "deny"
+					},
+					"sqlserver": {
+						"description": "Use T-SQL syntax. Prefer dbo schema qualification.",
+						"provider": "SqlServer",
+						"connectionStringEnv": "LINQ2DB_SQLSERVER_CONNECTION",
+						"maxRows": 500,
+						"unsafeSql": "confirm",
+						"impersonate": true
+					}
+				}
+				""").ConfigureAwait(false);
+
+			await using var server = await McpServerProcess.Start("--config", config, "--profile", "sqlserver", "--output", "json-table");
+
+			await server.Initialize();
+			var response = await server.CallTool("linq2db_info", new JsonObject());
+			var info     = ReadToolJson(response);
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(response["error"], Is.Null);
+				Assert.That((string?)info["defaultProfile"], Is.EqualTo("sqlserver"));
+				Assert.That(info["profiles"]?.AsArray().Count, Is.EqualTo(2));
+
+				var defaultProfile = FindProfile(info, "default");
+				var sqlServer      = FindProfile(info, "sqlserver");
+
+				Assert.That((string?)defaultProfile["description"], Does.Contain("SQLite syntax"));
+				Assert.That((string?)defaultProfile["provider"], Is.EqualTo("SQLite"));
+				Assert.That((string?)defaultProfile["dialect"], Is.EqualTo("SQLite"));
+				Assert.That((string?)defaultProfile["defaultOutput"], Is.EqualTo("json-table"));
+				Assert.That((int?)defaultProfile["maxRows"], Is.EqualTo(1000));
+				Assert.That((string?)defaultProfile["unsafeSqlPolicy"], Is.EqualTo("deny"));
+
+				Assert.That((string?)sqlServer["description"], Does.Contain("T-SQL"));
+				Assert.That((string?)sqlServer["provider"], Is.EqualTo("SqlServer"));
+				Assert.That((string?)sqlServer["dialect"], Is.EqualTo("SQL Server T-SQL"));
+				Assert.That((int?)sqlServer["maxRows"], Is.EqualTo(500));
+				Assert.That((string?)sqlServer["unsafeSqlPolicy"], Is.EqualTo("confirm"));
+				Assert.That((bool?)sqlServer["impersonationEnabled"], Is.True);
+
+				Assert.That(info.ToJsonString(), Does.Not.Contain("dev-secret.db"));
+				Assert.That(info.ToJsonString(), Does.Not.Contain("LINQ2DB_SQLSERVER_CONNECTION"));
+				Assert.That(defaultProfile.ContainsKey("connectionString"), Is.False);
+				Assert.That(defaultProfile.ContainsKey("connectionStringEnv"), Is.False);
+				Assert.That(sqlServer.ContainsKey("connectionString"), Is.False);
+				Assert.That(sqlServer.ContainsKey("connectionStringEnv"), Is.False);
+			}
+		}
+
+		[Test]
+		public async Task McpInfoReturnsToolErrorForMissingConfig()
+		{
+			await using var server = await McpServerProcess.Start("--config", "missing-query-config.json");
+
+			await server.Initialize();
+			var response = await server.CallTool("linq2db_info", new JsonObject());
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(response["error"], Is.Null);
+				Assert.That((bool?)response["result"]?["isError"], Is.True);
+				Assert.That((string?)response["result"]?["content"]?[0]?["text"], Does.Contain("Cannot load linq2db query configuration"));
 			}
 		}
 
@@ -58,6 +184,8 @@ namespace Tests.LinqToDB.CLI
 				Assert.That(contentText, Does.Contain("\"rowCount\":1"));
 				Assert.That(contentText, Does.Contain("\"truncated\":false"));
 			}
+
+			server.ExpectNoStandardError();
 		}
 
 		[Test]
@@ -164,6 +292,56 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task McpRejectsCsvToolOutput()
+		{
+			await using var server = await McpServerProcess.Start("--provider", "SQLite", "--connection-string", "Data Source=:memory:");
+
+			await server.Initialize();
+			var response = await server.CallTool("linq2db_query", new JsonObject
+			{
+				["output"] = "csv",
+				["sql"]    = "select 1 as Value",
+			});
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(response["error"], Is.Null);
+				Assert.That((bool?)response["result"]?["isError"], Is.True);
+				Assert.That((string?)response["result"]?["content"]?[0]?["text"], Does.Contain("MCP query execution supports only 'json' and 'json-table' output."));
+			}
+		}
+
+		[Test]
+		public async Task McpRejectsCsvConfigOutput()
+		{
+			var config = Path.Combine(TestContext.CurrentContext.WorkDirectory, $"mcp-query-{Guid.NewGuid():N}.json");
+			await File.WriteAllTextAsync(config, """
+				{
+					"default": {
+						"provider": "SQLite",
+						"connectionString": "Data Source=:memory:",
+						"output": "csv"
+					}
+				}
+				""").ConfigureAwait(false);
+
+			await using var server = await McpServerProcess.Start("--config", config);
+
+			await server.Initialize();
+			var response = await server.CallTool("linq2db_query", new JsonObject
+			{
+				["sql"] = "select 1 as Value",
+			});
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(response["error"], Is.Null);
+				Assert.That((bool?)response["result"]?["isError"], Is.True);
+				Assert.That((string?)response["result"]?["content"]?[0]?["text"], Does.Contain("MCP query execution supports only 'json' and 'json-table' output."));
+			}
+		}
+
+		[Test]
 		public async Task McpRejectsUnknownTool()
 		{
 			await using var server = await McpServerProcess.Start();
@@ -228,6 +406,7 @@ namespace Tests.LinqToDB.CLI
 				Assert.That(result.Output, Does.Contain("--config"));
 				Assert.That(result.Output, Does.Contain("--provider"));
 				Assert.That(result.Output, Does.Contain("--max-rows"));
+				Assert.That(result.Output, Does.Not.Contain("CSV output"));
 				Assert.That(result.Output, Does.Not.Contain("--sql"));
 				Assert.That(result.Output, Does.Not.Contain("--output-file"));
 				Assert.That(result.Output, Does.Not.Contain("--allow-unsafe-sql"));
@@ -245,6 +424,52 @@ namespace Tests.LinqToDB.CLI
 				Assert.That(result.Output, Is.Empty);
 				Assert.That(result.Error, Does.Contain("Unrecognized option: --sql"));
 			}
+		}
+
+		[Test]
+		public async Task McpRejectsCsvStartupOutput()
+		{
+			var result = await RunCliProcess("mcp", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--output", "csv");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.ExitCode, Is.EqualTo(-1));
+				Assert.That(result.Output, Is.Empty);
+				Assert.That(result.Error, Does.Contain("Cannot parse option value (--output csv): unknown value 'csv'"));
+			}
+		}
+
+		static JsonObject FindTool(JsonObject response, string name)
+		{
+			foreach (var tool in response["result"]!["tools"]!.AsArray())
+			{
+				if ((string?)tool?["name"] == name)
+					return tool!.AsObject();
+			}
+
+			throw new InvalidOperationException($"Tool '{name}' not found.");
+		}
+
+		static JsonObject ReadToolJson(JsonObject response)
+		{
+			var contentText = (string?)response["result"]?["content"]?[0]?["text"];
+
+			if (contentText == null)
+				throw new InvalidOperationException("MCP tool response doesn't contain text content.");
+
+			return JsonNode.Parse(contentText)?.AsObject()
+				?? throw new InvalidOperationException("MCP tool response text content is not a JSON object.");
+		}
+
+		static JsonObject FindProfile(JsonObject info, string name)
+		{
+			foreach (var profile in info["profiles"]!.AsArray())
+			{
+				if ((string?)profile?["name"] == name)
+					return profile!.AsObject();
+			}
+
+			throw new InvalidOperationException($"Profile '{name}' not found.");
 		}
 
 		static async Task<CliProcessResult> RunCliProcess(params string[] arguments)
@@ -281,12 +506,15 @@ namespace Tests.LinqToDB.CLI
 		sealed class McpServerProcess : IAsyncDisposable
 		{
 			readonly Process          _process;
+			readonly Task<string>     _standardErrorTask;
 			readonly List<JsonObject> _stdoutMessages = new();
-			int _nextId = 1;
+			int  _nextId = 1;
+			bool _expectNoStandardError;
 
-			McpServerProcess(Process process)
+			McpServerProcess(Process process, Task<string> standardErrorTask)
 			{
-				_process = process;
+				_process           = process;
+				_standardErrorTask = standardErrorTask;
 			}
 
 			public static async Task<McpServerProcess> Start(params string[] arguments)
@@ -313,11 +541,16 @@ namespace Tests.LinqToDB.CLI
 				var process = Process.Start(startInfo) ?? throw new InvalidOperationException("Cannot start MCP server process.");
 				process.StandardInput.AutoFlush = true;
 
-				var server = new McpServerProcess(process);
+				var server = new McpServerProcess(process, process.StandardError.ReadToEndAsync());
 
 				await Task.Yield();
 
 				return server;
+			}
+
+			public void ExpectNoStandardError()
+			{
+				_expectNoStandardError = true;
 			}
 
 			public async Task Initialize()
@@ -387,7 +620,7 @@ namespace Tests.LinqToDB.CLI
 
 				if (line == null)
 				{
-					var error = await _process.StandardError.ReadToEndAsync().ConfigureAwait(false);
+					var error = await _standardErrorTask.ConfigureAwait(false);
 					throw new InvalidOperationException($"MCP server closed stdout before response. stderr: {error}");
 				}
 
@@ -428,6 +661,9 @@ namespace Tests.LinqToDB.CLI
 						Assert.That((string?)message["jsonrpc"], Is.EqualTo("2.0"));
 						Assert.That(message["result"] != null || message["error"] != null, Is.True);
 					}
+
+					if (_expectNoStandardError)
+						Assert.That(await _standardErrorTask.ConfigureAwait(false), Is.Empty);
 
 					_process.Dispose();
 				}

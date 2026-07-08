@@ -84,6 +84,8 @@ Available commands:
 
 For MCP-capable agent hosts, `mcp` is the intended integration mode. Use `query` for lighter direct invocation when MCP is unavailable, not allowed by policy, or not needed for a specific environment.
 
+The MCP server exposes `linq2db_info` for non-secret runtime discovery of available profiles, providers, SQL dialects, defaults, and safety rules. Use it before `linq2db_query` when the active provider or dialect is unknown.
+
 For list of available options, use `dotnet linq2db help <command>` command.
 
 ### Usage Examples

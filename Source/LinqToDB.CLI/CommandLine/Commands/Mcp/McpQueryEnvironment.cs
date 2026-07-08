@@ -29,12 +29,12 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 
 		public void WriteAllText(string path, string contents)
 		{
-			_inner.WriteAllText(path, contents);
+			throw new NotSupportedException("MCP query execution does not support file output.");
 		}
 
 		public TextWriter CreateTextWriter(string path)
 		{
-			return _inner.CreateTextWriter(path);
+			throw new NotSupportedException("MCP query execution does not support file output.");
 		}
 
 		public string? GetEnvironmentVariable(string name)
