@@ -3393,8 +3393,8 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 
-			if (db is DataConnection { DataProvider: FirebirdDataProvider } dc)
-				FirebirdTools.ClearPool(dc.Connection);
+			if (db is DataConnection { DataProvider: FirebirdDataProvider } dc && dc.TryGetDbConnection() is { } cn)
+				FirebirdTools.ClearPool(cn);
 		}
 	}
 }

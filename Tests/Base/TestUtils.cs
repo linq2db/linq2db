@@ -202,7 +202,7 @@ namespace Tests
 				// database's pooled connection so its metadata reference is released for the next DDL. Unlike the
 				// former process-wide ClearAllPools, it leaves other Firebird databases' pools alone — which is
 				// what makes running the FB 2.5/3/4/5 suites concurrently safe (each is a distinct connection string).
-				var fbConnection = DataContext is DataConnection dc && dc.DataProvider.Name.Contains(ProviderName.Firebird) ? dc.Connection : null;
+				var fbConnection = DataContext is DataConnection dc && dc.DataProvider.Name.Contains(ProviderName.Firebird) ? dc.TryGetDbConnection() : null;
 
 				DataContext.Close();
 
@@ -214,7 +214,7 @@ namespace Tests
 
 			public override async ValueTask DisposeAsync()
 			{
-				var fbConnection = DataContext is DataConnection dc && dc.DataProvider.Name.Contains(ProviderName.Firebird) ? dc.Connection : null;
+				var fbConnection = DataContext is DataConnection dc && dc.DataProvider.Name.Contains(ProviderName.Firebird) ? dc.TryGetDbConnection() : null;
 
 				await DataContext.CloseAsync();
 
@@ -256,7 +256,7 @@ namespace Tests
 		{
 			if (db.ConfigurationString?.IsAnyOf(TestProvName.AllFirebird) == true)
 			{
-				var fbConnection = db is DataConnection dc ? dc.Connection : null;
+				var fbConnection = db is DataConnection dc ? dc.TryGetDbConnection() : null;
 
 				db.Close();
 
