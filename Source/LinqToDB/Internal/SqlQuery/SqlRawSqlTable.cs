@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Linq;
 
 using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.Mapping;
@@ -45,18 +44,22 @@ namespace LinqToDB.Internal.SqlQuery
 			IsScalar   = isScalar;
 		}
 
-		public SqlRawSqlTable(SqlRawSqlTable table, ISqlExpression[] parameters)
-			: base(table.ObjectType, null, table.TableName)
+		internal SqlRawSqlTable(
+			string?          alias,
+			Type             objectType,
+			SqlField[]       fields,
+			string           sql,
+			bool             isScalar,
+			ISqlExpression[] parameters)
+			: base(objectType, null, new(string.Empty))
 		{
-			Alias              = table.Alias;
+			Alias        = alias;
+			SqlTableType = SqlTableType.RawSql;
+			SQL          = sql;
+			IsScalar     = isScalar;
+			Parameters   = parameters;
 
-			SequenceAttributes = table.SequenceAttributes;
-
-			AddRange(table.Fields.Select(f => new SqlField(f)));
-
-			SQL                = table.SQL;
-			Parameters         = parameters;
-			IsScalar           = table.IsScalar;
+			AddRange(fields);
 		}
 
 		public override QueryElementType ElementType  => QueryElementType.SqlRawSqlTable;
