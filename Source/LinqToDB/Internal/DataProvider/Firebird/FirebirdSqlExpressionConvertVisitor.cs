@@ -213,6 +213,20 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 		protected override ISqlExpression WrapColumnExpression(ISqlExpression expr)
 		{
+			// Read a Guid as its canonical text form via UUID_TO_CHAR. A Guid is stored / produced as
+			// CHAR(16) CHARACTER SET OCTETS (GEN_UUID, and how ConvertGuidToSql writes it); reading those raw
+			// bytes back fails under a non-NONE connection charset ("Malformed string", SQLSTATE 22000) because
+			// the client transliterates the column to the connection charset during fetch. The ASCII text form
+			// is charset-independent. This only rewrites projected (read) columns — predicates and keys keep the
+			// indexable binary form, and writes stay binary — and round-trips because UUID_TO_CHAR of the stored
+			// network-order bytes yields the value's canonical string.
+			if (expr.SystemType?.ToUnderlying() == typeof(Guid)
+				&& QueryHelper.GetDbDataType(expr, MappingSchema).DataType is not (DataType.Char or DataType.NChar or DataType.VarChar or DataType.NVarChar))
+			{
+				var textType = MappingSchema.GetDbDataType(typeof(string)).WithDataType(DataType.Char).WithLength(36);
+				return new SqlFunction(textType, "UUID_TO_CHAR", expr);
+			}
+
 			if (expr is SqlValue
 				{
 					Value: uint or long or ulong or float or double or decimal,

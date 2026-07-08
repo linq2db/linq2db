@@ -36,6 +36,9 @@ namespace Tests.Linq
 			};
 		}
 
+		// Firebird 6 rejects binding a Guid/binary parameter to a CHAR(16) OCTETS column with "Malformed string"
+		// (FbClient 10.3.4 / FB6-snapshot limitation, not reproducible below the client — see FB6 Guid write tracking).
+		[ActiveIssue(Configurations = new[] { ProviderName.Firebird6 })]
 		[Test]
 		public void TestGuid([DataSources(false)] string context)
 		{

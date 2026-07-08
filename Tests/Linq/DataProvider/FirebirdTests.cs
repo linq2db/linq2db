@@ -323,6 +323,9 @@ namespace Tests.DataProvider
 			}
 		}
 
+		// Firebird 6 rejects binding a Guid parameter to a CHAR(16) OCTETS column with "Malformed string"
+		// (FbClient 10.3.4 / FB6-snapshot limitation, not reproducible below the client — see FB6 Guid write tracking).
+		[ActiveIssue(Configurations = new[] { ProviderName.Firebird6 })]
 		[Test]
 		public void TestGuid2([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
@@ -338,6 +341,82 @@ namespace Tests.DataProvider
 				t => t.ID == dt.ID,
 				t => new LinqDataTypes2 { GuidValue = dt.GuidValue });
 		}
+
+		#region Guid representations
+
+		// Firebird represents a Guid two ways: the binary CHAR(16) CHARACTER SET OCTETS form (the default Guid
+		// mapping, and what GEN_UUID returns) and a textual CHAR(38) form (DataType.NChar/Char). This set covers
+		// both across literal, parameter, server-generated and column round-trip. Reads of the binary form go
+		// through UUID_TO_CHAR (FirebirdSqlExpressionConvertVisitor.WrapColumnExpression) so they are independent
+		// of the connection/database charset. Writing a binary Guid *parameter* to an OCTETS column fails on
+		// Firebird 6's UTF8-default database with "Malformed string" (an FbClient 10.3.4 / FB6-snapshot limitation
+		// below linq2db), so the binary parameter / round-trip cases are gated for Firebird 6; the textual form,
+		// binary literals and server-generated values are unaffected.
+
+		[Table("FbGuidBinary")]
+		sealed class GuidBinaryRepr
+		{
+			[PrimaryKey] public int  Id    { get; set; }
+			[Column]     public Guid Value { get; set; } // CHAR(16) CHARACTER SET OCTETS
+		}
+
+		[Table("FbGuidText")]
+		sealed class GuidTextRepr
+		{
+			[PrimaryKey]                                     public int  Id    { get; set; }
+			[Column(DataType = DataType.NChar, Length = 38)] public Guid Value { get; set; } // CHAR(38) textual
+		}
+
+		static readonly Guid GuidReprValue = new("6f9619ff-8b86-d011-b42d-00c04fc964ff");
+
+		// Binary Guid as an inline SQL literal (X'...') and as a server-generated value (GEN_UUID). Both are read
+		// back through UUID_TO_CHAR; neither binds a client parameter, so both work on Firebird 6.
+		[Test]
+		public void GuidBinary_LiteralAndGenerated([IncludeDataSources(TestProvName.AllFirebird)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db.Select(() => Sql.AsSql(GuidReprValue)).ShouldBe(GuidReprValue);
+			db.Select(() => Sql.AsSql(Sql.NewGuid())).ShouldNotBe(Guid.Empty);
+		}
+
+		// Binary Guid passed as a client parameter.
+		[ActiveIssue(Configurations = new[] { ProviderName.Firebird6 })] // FB6 binary-Guid parameter "Malformed string"
+		[Test]
+		public void GuidBinary_Parameter([IncludeDataSources(TestProvName.AllFirebird)] string context)
+		{
+			using var db    = GetDataContext(context);
+			var       value = GuidReprValue;
+
+			db.Select(() => Sql.AsSql(value)).ShouldBe(value);
+		}
+
+		// Binary Guid round-trip through a CHAR(16) OCTETS column.
+		[ActiveIssue(Configurations = new[] { ProviderName.Firebird6 })] // FB6 binary-Guid parameter "Malformed string"
+		[Test]
+		public void GuidBinary_Column([IncludeDataSources(TestProvName.AllFirebird)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<GuidBinaryRepr>();
+
+			db.Insert(new GuidBinaryRepr { Id = 1, Value = GuidReprValue });
+
+			tb.Single().Value.ShouldBe(GuidReprValue);
+		}
+
+		// Textual Guid (CHAR(38)) as a column round-trip — charset-safe, works on all Firebird versions.
+		[Test]
+		public void GuidText_Column([IncludeDataSources(TestProvName.AllFirebird)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<GuidTextRepr>();
+
+			db.Insert(new GuidTextRepr { Id = 1, Value = GuidReprValue });
+
+			tb.Single().Value.ShouldBe(GuidReprValue);
+		}
+
+		#endregion
 
 		[Test]
 		public void TestXml([IncludeDataSources(TestProvName.AllFirebird)] string context)
