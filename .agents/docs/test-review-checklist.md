@@ -23,6 +23,10 @@ Tighten the substring, anchor it (`StartsWith` / `EndsWith`), or invert (`Should
 
 Cross-check the linked issue's reported provider against the test's `[DataSources(...)]` / `[IncludeDataSources(...)]` / `[ExcludeDataSources(...)]` filter. If the issue is reported for provider P and P is excluded (or not included), flag as MAJ regardless of whether the test passes in CI — the regression test isn't covering the regression's actual platform. Same applies when the issue's repro pattern (e.g. `OrderBy + GroupBy` or `Sum + nullable`) is missing from the test method body.
 
+### "Fails on provider X's CI leg" needs proof X actually runs
+
+Before flagging that a `[DataSources]`/`[IncludeDataSources]`-parameterized test will fail on — or must exclude — provider X, confirm X is *actually exercised* in CI (or locally), not merely listed in `DataProviders.json`. A listing is not an active test leg: a provider can be present in the file but never run, so a "this `ShouldBe(1)` breaks the X leg, add X to the exclusion list" finding is moot — and worse, adding the exclusion disables a case that was silently passing. Verify the leg runs before raising the MAJ. (Surfaced on PR #5493: a "native Informix isn't excluded → red CI leg" MAJ was rejected — Informix/IDS isn't run on CI or locally.)
+
 ### Test member matches its name
 
 When the test is named `TrimEndN` / `OrderByDesc` / `XyzAsync`, the LINQ projection inside should actually call `TrimEnd` / `OrderByDescending` / the `Async` variant. Mismatches make the test pass while not exercising the new path. Read the test body and confirm the method-under-test name appears at least once.
