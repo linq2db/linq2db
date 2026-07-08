@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.Common;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -59,13 +60,40 @@ namespace LinqToDB.Internal.SqlProvider
 
 	/// <summary>
 	/// The render cache for a compiled query's command scenario: the logical <see cref="SqlCommandScenario"/> + its
-	/// physical-command <see cref="SqlCommandGroupPlan"/> + the per-command rendered templates. Shared by the DML runner
-	/// (stored on <c>QueryInfo.CommandCache</c>) and the combined eager-loading executor, so both bind DbParameters to
+	/// physical-command <see cref="SqlCommandGroupPlan"/> + the per-command rendered templates. Used
+	/// (stored on <c>QueryInfo.EagerCommandCache</c>) by the combined eager-loading executor (the main-query path uses the statement-free <see cref="PreparedQuery"/> instead), binding DbParameters to
 	/// cached SQL instead of re-rendering. <see cref="WasBatch"/> records which backend the templates were rendered for so a
 	/// run whose <c>CanUseDbBatch</c> differs re-renders instead of binding a wrong-shaped cache (eager); DML fills both
 	/// forms and ignores it.
 	/// </summary>
 	sealed record PreparedScenario(SqlCommandScenario Scenario, SqlCommandGroupPlan Plan, PreparedCommand[] Commands, bool WasBatch);
+
+	/// <summary>
+	/// Statement-free per-step facts the scenario interpreter needs at execution (kind, error policy, gate, OUT-parameter
+	/// metadata) — the projection of <see cref="SqlCommandStep"/> that carries NO <see cref="SqlStatement"/>. Lets a
+	/// <see cref="PreparedQuery"/> drive execution after the statement graph has been dropped.
+	/// </summary>
+	sealed record ExecutionStep(SqlStepKind Kind, SqlStepOnError OnError, SqlStepCondition? RunIf, string? OutParameterName, DbType OutParameterDbType);
+
+	/// <summary>
+	/// The Phase-R render cache: everything the scenario interpreter needs to execute a compiled query, with NO
+	/// <see cref="SqlStatement"/> retained. <see cref="Steps"/> are the statement-free step facts; <see cref="Commands"/>
+	/// are the rendered physical commands (each covering a contiguous run of steps, replacing the separate
+	/// <c>SqlCommandGroupPlan</c>); <see cref="OutcomeSteps"/> are the candidate outcome step indices. Replaces
+	/// <see cref="PreparedScenario"/> on the main-query path (<c>QueryInfo.Prepared</c>). The eager path still uses
+	/// <see cref="PreparedScenario"/> until it migrates (a later stage).
+	/// </summary>
+	abstract record PreparedQuery(ExecutionStep[] Steps, IReadOnlyList<int> OutcomeSteps, PreparedCommand[] Commands, bool WasBatch);
+
+	/// <summary>
+	/// A fully-rendered <see cref="PreparedQuery"/>: every <see cref="PreparedCommand"/> slot is materialized (concat
+	/// always; batch for batch-eligible groups when the connection can batch), so execution never re-renders and needs
+	/// no <see cref="SqlStatement"/>. That the statement is gone is guaranteed by the <em>type</em> — a
+	/// <see cref="BakedQuery"/> carries no structural graph. A non-parameter-dependent query bakes once and is cached; a
+	/// parameter-dependent query bakes per execution (its render is parameter-value specific) and is not cached.
+	/// </summary>
+	sealed record BakedQuery(ExecutionStep[] Steps, IReadOnlyList<int> OutcomeSteps, PreparedCommand[] Commands, bool WasBatch)
+		: PreparedQuery(Steps, OutcomeSteps, Commands, WasBatch);
 
 	/// <summary>
 	/// The memoized <b>structural</b> (parameter-independent) artifact for a compiled query, produced once by Phase S
@@ -145,6 +173,24 @@ namespace LinqToDB.Internal.SqlProvider
 			}
 
 			return finalized == null ? scenario : scenario with { Steps = finalized };
+		}
+
+		/// <summary>
+		/// Projects a scenario's steps to the statement-free <see cref="ExecutionStep"/> facts the interpreter needs, so a
+		/// <see cref="BakedQuery"/> can drive execution without retaining the <see cref="SqlStatement"/> graph.
+		/// </summary>
+		public static ExecutionStep[] ProjectExecutionSteps(SqlCommandScenario scenario)
+		{
+			var steps  = scenario.Steps;
+			var result = new ExecutionStep[steps.Count];
+
+			for (var i = 0; i < steps.Count; i++)
+			{
+				var s = steps[i];
+				result[i] = new ExecutionStep(s.Kind, s.OnError, s.RunIf, s.OutParameterName, s.OutParameterDbType);
+			}
+
+			return result;
 		}
 
 		/// <summary>

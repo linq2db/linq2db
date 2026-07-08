@@ -29,17 +29,16 @@ namespace LinqToDB.Internal.Linq
 		public bool            IsContinuousRun { get; set; }
 		public DataOptions?    DataOptions     { get; set; }
 
-		// Render caches (unified PreparedScenario type). CommandCache is the main query's rendered commands (DML / the
-		// single SELECT), the typed replacement for the untyped Context slot (kept for its shipped IQueryContext contract
-		// but no longer carrying the cache). EagerCommandCache is the SEPARATE combined eager-loading scenario (detail +
-		// main): a LoadWith query uses BOTH on the same QueryInfo — the eager executor for its data and GetCommand for
-		// ToString/GetSqlText — so they must not share one slot.
-		internal PreparedScenario? CommandCache      { get; set; }
+		// Render caches. Prepared is the main query's rendered commands (DML / the single SELECT) as a statement-free
+		// PreparedQuery (BakedQuery). EagerCommandCache is the SEPARATE combined eager-loading scenario (detail + main),
+		// still a PreparedScenario until the eager path migrates: a LoadWith query uses BOTH on the same QueryInfo — the
+		// eager executor for its data and GetCommand for ToString/GetSqlText — so they must not share one slot.
+		internal PreparedQuery?    Prepared          { get; set; }
 		internal PreparedScenario? EagerCommandCache { get; set; }
 
 		// Phase S structural artifact (parameter-independent): the memoized optimize+convert+alias+scenario+plan for the
-		// MAIN statement, built once under Monitor.Enter and reused across executions (and, from Stage 5, by the eager
-		// path). Distinct from CommandCache, which holds the rendered (Phase R) commands.
+		// MAIN statement, built once under Monitor.Enter and reused across executions (and, from a later stage, by the
+		// eager path). Distinct from Prepared, which holds the rendered (Phase R) commands.
 		internal QueryStructure? Structure { get; set; }
 	}
 }

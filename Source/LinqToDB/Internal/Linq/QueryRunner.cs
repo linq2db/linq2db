@@ -1054,7 +1054,7 @@ namespace LinqToDB.Internal.Linq
 					// One shared group-plan walk: self-executing harvester singletons run their own query; each combined group
 					// runs as one command; the main-carrying group hands back its open reader, which the caller streams below.
 					mainReader = DataConnection.QueryRunner.RunGroups(
-						dataConnection, scenario.Steps, groups,
+						dataConnection, ScenarioCommandRenderer.ProjectExecutionSteps(scenario), groups,
 						(group, groupIndex) => commandByGroup[groupIndex]!,
 						group => scenario.Steps[group.StepIndexes[0]].Kind == SqlStepKind.SelfExecuting,
 						(stepIndex, groupIndex) => context.SetResult(stepIndex, _harvesters[stepIndex].Harvest(_dataContext, _expressions, context, reader: null)),
@@ -1085,7 +1085,7 @@ namespace LinqToDB.Internal.Linq
 				try
 				{
 					mainReader = await DataConnection.QueryRunner.RunGroupsAsync(
-						dataConnection, scenario.Steps, groups,
+						dataConnection, ScenarioCommandRenderer.ProjectExecutionSteps(scenario), groups,
 						(group, groupIndex) => commandByGroup[groupIndex]!,
 						group => scenario.Steps[group.StepIndexes[0]].Kind == SqlStepKind.SelfExecuting,
 						async (stepIndex, groupIndex) => context.SetResult(stepIndex, await _harvesters[stepIndex].HarvestAsync(_dataContext, _expressions, context, null, cancellationToken).ConfigureAwait(false)),
