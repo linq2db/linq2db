@@ -152,6 +152,8 @@ Per `review-orchestration.md` → **Spawning the subagents in parallel**. This s
 
 When **count ≤ 5**, spawn a single `code-reviewer` with `focus: "all"` and the regular ID-continuation floor from step 5 — multi-pass cost (3× opus invocations) isn't worth it for small PRs.
 
+**Reframe Pass B when the PR has no SQL surface.** Pass B's `sql-and-provider` charter is empty for a PR touching none of `Source/LinqToDB/DataProvider/*`, `SqlProvider/*`, or `SqlQuery/*` (pure infra: cache, GC, threading, options plumbing). Rather than waste the pass, brief it against the PR's actual cross-cutting axis — platform / cross-TFM behavior (feature-flag macros, per-TFM BCL API availability, finalizer / `#if NETFRAMEWORK` guards), threading / concurrency, or GC — keeping the same ID window `[floor+100, floor+199]`. (Surfaced on PR #5681, a QueryCache memory-pressure feature with zero SQL.)
+
 All passes share the same `writeDir: .build/.agents/pr<n>` so the on-disk diff cache is populated once. Each `code-reviewer` briefing carries: `mode: initial`; **confirmed scope** from step 4 (absent only when the user explicitly opted out via `skip`); the assigned `focus`; the per-severity ID window (or the floor for single-pass).
 
 **`baselines-reviewer`:** `mode: initial`. **Skip this spawn entirely** when the user answered `n` to step 4's question 2. When fired, it runs in parallel with the code-reviewer passes — 1, 2, or 4 agents total in one assistant turn.
