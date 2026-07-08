@@ -98,6 +98,7 @@ namespace Tests
 		public const string AllPostgreSQL18Plus  = $"{ProviderName.PostgreSQL18},{AllPostgreSQL19Plus}";
 		public const string AllPostgreSQL19Plus  = ProviderName.PostgreSQL19;
 		public const string AllPostgreSQL        = $"{AllPostgreSQL9},{AllPostgreSQL10Plus}";
+		public const string AllPostgreSQL93Minus = $"{ProviderName.PostgreSQL92},{ProviderName.PostgreSQL93}";
 		public const string AllPostgreSQL12Minus = $"{AllPostgreSQL9},{PostgreSQL10},{PostgreSQL11},{PostgreSQL12}";
 		public const string AllPostgreSQL14Minus = $"{AllPostgreSQL12Minus},{ProviderName.PostgreSQL13},{PostgreSQL14}";
 		public const string AllPostgreSQL15Minus = $"{AllPostgreSQL14Minus},{ProviderName.PostgreSQL15}";

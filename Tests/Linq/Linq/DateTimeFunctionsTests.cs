@@ -1008,7 +1008,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AddDaysFromColumnPositive([DataSources(TestProvName.AllInformix)] string context)
+		// PostgreSQL 9.4+ (make_interval)
+		public void AddDaysFromColumnPositive([DataSources(TestProvName.AllInformix, TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 				db.Insert(new LinqDataTypes { ID = 5000, SmallIntValue = 2, DateTimeValue = new DateTime(2018, 01, 03) });
@@ -1025,7 +1026,8 @@ namespace Tests.Linq
 			}
 
 		[Test]
-		public void AddDaysFromColumnNegative([DataSources(TestProvName.AllInformix)] string context)
+		// PostgreSQL 9.4+ (make_interval)
+		public void AddDaysFromColumnNegative([DataSources(TestProvName.AllInformix, TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 				db.Insert(new LinqDataTypes { ID = 5000, SmallIntValue = -2, DateTimeValue = new DateTime(2018, 01, 03) });
@@ -1308,7 +1310,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AddDaysFromColumnPositiveExpression([DataSources(TestProvName.AllInformix)] string context)
+		// PostgreSQL 9.4+ (make_interval)
+		public void AddDaysFromColumnPositiveExpression([DataSources(TestProvName.AllInformix, TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			var part1 = 4;
 			var part2 = 4;
@@ -1328,7 +1331,8 @@ namespace Tests.Linq
 			}
 
 		[Test]
-		public void AddDaysFromColumnNegativeExpression([DataSources(TestProvName.AllInformix)] string context)
+		// PostgreSQL 9.4+ (make_interval)
+		public void AddDaysFromColumnNegativeExpression([DataSources(TestProvName.AllInformix, TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			var part1 = 4;
 			var part2 = 4;
@@ -1602,7 +1606,8 @@ namespace Tests.Linq
 		#region MakeDateTime
 
 		[Test]
-		public void MakeDateTime([DataSources] string context)
+		// PostgreSQL 9.4+ (make_timestamp)
+		public void MakeDateTime([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 				AreEqual(
@@ -1611,7 +1616,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MakeDateTimeParameters([DataSources] string context)
+		// PostgreSQL 9.4+ (make_timestamp)
+		public void MakeDateTimeParameters([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			var year = 2010;
 			using var db = GetDataContext(context);
@@ -1621,7 +1627,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MakeDateTimeParametersMonth([DataSources] string context, [Values(1, 10)] int month)
+		// PostgreSQL 9.4+ (make_timestamp)
+		public void MakeDateTimeParametersMonth([DataSources(TestProvName.AllPostgreSQL93Minus)] string context, [Values(1, 10)] int month)
 		{
 			using var db = GetDataContext(context);
 				AreEqual(
@@ -1630,7 +1637,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NewDateTime1([DataSources] string context)
+		// PostgreSQL 9.4+ (make_timestamp)
+		public void NewDateTime1([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 				AreEqual(
@@ -1639,7 +1647,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NewDateTime2([DataSources] string context)
+		// PostgreSQL 9.4+ (make_timestamp)
+		public void NewDateTime2([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 				AreEqual(
@@ -1648,7 +1657,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MakeDateTime2([DataSources] string context)
+		// PostgreSQL 9.4+ (make_timestamp)
+		public void MakeDateTime2([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 				AreEqual(
@@ -1657,7 +1667,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NewDateTime3([DataSources] string context)
+		// PostgreSQL 9.4+ (make_timestamp)
+		public void NewDateTime3([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 				AreEqual(
@@ -1666,7 +1677,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NewDateTime4([DataSources] string context)
+		// PostgreSQL 9.4+ (make_timestamp)
+		public void NewDateTime4([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 				AreEqual(
@@ -1675,7 +1687,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NewDateTime5([DataSources] string context)
+		// PostgreSQL 9.4+ (make_timestamp)
+		public void NewDateTime5([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 				AreEqual(

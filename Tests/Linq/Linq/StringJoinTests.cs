@@ -189,7 +189,8 @@ namespace Tests.Linq
 
 		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
-		public void JoinWithGroupingOrdered([DataSources(TestProvName.AllYdb, TestProvName.AllSqlServer2016Plus, TestProvName.AllOracle)] string context)
+		// PostgreSQL 9.4+ (FILTER clause)
+		public void JoinWithGroupingOrdered([DataSources(TestProvName.AllYdb, TestProvName.AllSqlServer2016Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			var       data  = SampleClass.GenerateDataNotUniqueId();
 			using var db    = GetDataContext(context);
@@ -342,7 +343,8 @@ namespace Tests.Linq
 
 		[ThrowsCannotBeConverted(TestProvName.AllAccess, TestProvName.AllSqlServer2016Minus, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase)]
 		[Test]
-		public void JoinAggregateExecuteFiltered([DataSources(true)] string context)
+		// PostgreSQL 9.4+ (FILTER clause)
+		public void JoinAggregateExecuteFiltered([DataSources(true, TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			var       data  = SampleClass.GenerateDataUniqueId();
 			using var db    = GetDataContext(context);
