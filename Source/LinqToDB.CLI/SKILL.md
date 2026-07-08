@@ -64,6 +64,33 @@ Configuration profiles:
 - Command-line values override profile values.
 - `unsafeSql` can be set only in configuration profiles.
 
+Parameter surface:
+
+| Parameter | CLI option | `query` CLI | Config profile | `mcp` startup CLI | MCP tool API | Values |
+|---|---|---:|---:|---:|---:|---|
+| `config` | `--config` | yes | no | yes | no | path; supports `%NAME%` and `${NAME}` |
+| `profile` | `--profile` | yes | no | yes | yes | profile name from config |
+| `provider` | `--provider` | yes | yes | yes | no | linq2db provider name |
+| `providerLocation` | `--provider-location` | yes | yes | yes | no | path; supports `%NAME%` and `${NAME}` |
+| `connectionString` | `--connection-string` | yes | yes | yes | no | connection string; `{0}` user and `{1}` password placeholders are supported |
+| `connectionStringEnv` | `--connection-string-env` | yes | yes | yes | no | environment variable name |
+| `user` | `--user` | yes | yes | yes | no | string |
+| `userEnv` | `--user-env` | yes | yes | yes | no | environment variable name |
+| `password` | `--password` | yes | yes | yes | no | string |
+| `passwordEnv` | `--password-env` | yes | yes | yes | no | environment variable name |
+| `impersonate` | `--impersonate` | yes | yes | yes | no | boolean; JSON `true` or `false` in config |
+| `impersonateMode` | `--impersonate-mode` | yes | yes | yes | no | `network-cleartext`, `interactive`, `network`, `new-credentials`, or system codes `8`, `2`, `3`, `9` |
+| `commandTimeout` | `--command-timeout` | yes | yes | yes | no | non-negative integer seconds; `0` disables the option |
+| `lockTimeout` | `--lock-timeout` | yes | yes | yes | no | non-negative integer seconds; `0` disables the option |
+| `maxRows` | `--max-rows` | yes | yes | yes | yes | non-negative integer row count; `0` disables the limit |
+| `output` | `--output` | yes | yes | yes | yes | `json`, `json-table`, or `csv`; `query` default is `json`, `mcp` default is `json-table` |
+| `outputFile` | `--output-file` | yes | yes | no | no | path; supports `%NAME%` and `${NAME}` |
+| `overwrite` | `--overwrite` | yes | no | no | no | boolean CLI flag |
+| `unsafeSql` | n/a | no | config-only | no | no | `deny`, `confirm`, or `allow`; default is `deny` |
+| `allowUnsafeSql` | `--allow-unsafe-sql` | yes | no | no | yes | boolean confirmation for `unsafeSql: "confirm"` |
+| `sql` | `--sql` | yes | no | no | yes | single SQL statement text |
+| `sqlFile` | `--sql-file` | yes | no | no | no | path; supports `%NAME%` and `${NAME}` |
+
 Example configuration:
 
 ```json
