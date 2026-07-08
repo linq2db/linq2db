@@ -29,6 +29,25 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 
 		static readonly string[] _supportedOutputFormats = ["json", "json-table"];
 
+		static readonly McpSupportedProviderInfo[] _supportedProviders =
+		[
+			new("SQL Server",     ["SqlServer"],                         "SQL Server T-SQL",           true,  null),
+			new("SQLite",         ["SQLite", "SQLite.MS"],               "SQLite",                     true,  null),
+			new("PostgreSQL",     ["PostgreSQL"],                        "PostgreSQL",                 true,  null),
+			new("MySQL",          ["MySql"],                             "MySQL",                      true,  null),
+			new("MariaDB",        ["MariaDB"],                           "MariaDB",                    true,  null),
+			new("Oracle Managed", ["Oracle.Managed", "Oracle"],         "Oracle SQL",                 true,  null),
+			new("Firebird",       ["Firebird"],                          "Firebird SQL",               true,  null),
+			new("Sybase ASE",     ["Sybase", "Sybase.Managed", "ASE"], "Sybase ASE T-SQL",           true,  null),
+			new("ODBC",           ["ODBC", "Odbc"],                     "ODBC provider-specific SQL", true,  "Requires the matching ODBC driver to be installed on the host."),
+			new("OLE DB",         ["OLEDB", "OleDb"],                   "OLE DB provider-specific SQL", true, "Requires the matching OLE DB provider to be installed on the host."),
+			new("ClickHouse",     ["ClickHouse.Driver", "ClickHouse.Octonica", "ClickHouse.MySql"], "ClickHouse SQL", true, null),
+			new("DuckDB",         ["DuckDB"],                            "DuckDB SQL",                 true,  null),
+			new("YDB",            ["YDB"],                               "YDB SQL",                    true,  null),
+			new("IBM DB2",        ["DB2", "DB2.LUW", "DB2.z/OS"],      "IBM DB2 SQL",                false, "Requires providerLocation pointing to IBM.Data.Db2.dll from the Net.IBM.Data.Db2 package."),
+			new("IBM Informix",   ["Informix", "Informix.DB2"],         "Informix SQL",               false, "Requires providerLocation pointing to IBM.Data.Db2.dll from the Net.IBM.Data.Db2 package."),
+		];
+
 		readonly McpQueryStartupOptions _startupOptions = startupOptions;
 
 		public CallToolResult Info(CancellationToken cancellationToken = default)
@@ -36,20 +55,22 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 			var environment = new McpQueryEnvironment(TextWriter.Null);
 			var profiles    = new List<McpProfileInfo>();
 			string defaultProfile;
+			bool defaultProfileUsable;
 
 			if (_startupOptions.Config == null)
 			{
 				defaultProfile = StartupProfileName;
 
-				var profile = CreateProfileInfo(StartupProfileName, null, 1, out var error);
+				var profileInfo = CreateProfileInfo(StartupProfileName, null, 1, out var error);
 
 				if (error != null)
 					return CreateErrorResult(error);
 
-				if (profile == null)
+				if (profileInfo == null)
 					return CreateErrorResult("Cannot load linq2db query configuration: provider is not configured.");
 
-				profiles.Add(profile);
+				profiles.Add(profileInfo);
+				defaultProfileUsable = true;
 			}
 			else
 			{
@@ -66,17 +87,19 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 					if (!QueryExecutionConfiguration.TryLoad(environment, _startupOptions.Config, profileName, out var configuration, out error))
 						return CreateErrorResult($"Cannot load linq2db query configuration: {error}");
 
-					var profile = CreateProfileInfo(profileName, configuration, profileNames.Count, out error);
+					var profileInfo = CreateProfileInfo(profileName, configuration, profileNames.Count, out error);
 
 					if (error != null)
 						return CreateErrorResult(error);
 
-					if (profile != null)
-						profiles.Add(profile);
+					if (profileInfo != null)
+						profiles.Add(profileInfo);
 				}
 
 				if (profiles.Count == 0)
 					return CreateErrorResult("Cannot load linq2db query configuration: no configured profiles with provider were found.");
+
+				defaultProfileUsable = ContainsProfile(profiles, defaultProfile);
 			}
 
 			return new CallToolResult
@@ -93,7 +116,9 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 								command = "mcp",
 							},
 							defaultProfile,
+							defaultProfileUsable,
 							profiles,
+							supportedProviders = _supportedProviders,
 							supportedOutputFormats = _supportedOutputFormats,
 							rules = new
 							{
@@ -190,6 +215,17 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 			return false;
 		}
 
+		static bool ContainsProfile(IReadOnlyList<McpProfileInfo> profiles, string name)
+		{
+			foreach (var profile in profiles)
+			{
+				if (string.Equals(profile.Name, name, StringComparison.Ordinal))
+					return true;
+			}
+
+			return false;
+		}
+
 		static bool IsProvider(string providerName, string family)
 		{
 			return string.Equals(providerName, family, StringComparison.OrdinalIgnoreCase)
@@ -214,5 +250,12 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 			int     MaxRows,
 			string  UnsafeSqlPolicy,
 			bool    ImpersonationEnabled);
+
+		sealed record McpSupportedProviderInfo(
+			string   Name,
+			string[] ProviderNames,
+			string   Dialect,
+			bool     Bundled,
+			string?  Notes);
 	}
 }

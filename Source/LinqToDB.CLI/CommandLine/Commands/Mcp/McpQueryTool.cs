@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 using LinqToDB.CommandLine;
 using LinqToDB.CommandLine.Commands.QueryExecution;
+using LinqToDB.CommandLine.Commands.Skill;
 
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
@@ -31,7 +32,9 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 		[Description("""
 			Returns non-secret linq2db MCP query configuration information.
 
-			Use this tool before generating SQL when available profiles, selected providers, SQL dialects, default output format, row limits, or unsafe SQL policy are unknown.
+			Use this tool before generating SQL when supported database providers, available profiles, selected providers, SQL dialects, default output format, row limits, or unsafe SQL policy are unknown.
+
+			Use linq2db_skill for the full linq2db CLI/MCP usage guide, including supported providers and external provider loading instructions.
 
 			This tool never returns connection strings, passwords, provider assembly paths, impersonation credentials, or environment variable values.
 			""")]
@@ -41,13 +44,35 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 		}
 
 		[McpServerTool(
+			Name        = "linq2db_skill",
+			Title       = "Get linq2db CLI skill",
+			ReadOnly    = true,
+			Idempotent  = true,
+			OpenWorld   = false,
+			Destructive = false)]
+		[Description("""
+			Returns the full embedded linq2db CLI agent skill as Markdown.
+
+			Use this tool when detailed guidance is needed for linq2db query execution, MCP usage, configuration profiles, supported database providers, provider names, external provider loading, SQL safety rules, output formats, row limits, timeouts, impersonation, or agent responsibilities.
+
+			This tool returns documentation only. It does not access a database, read configuration, read environment variables, or return secrets.
+			""")]
+		public CallToolResult Skill(CancellationToken cancellationToken = default)
+		{
+			return new CallToolResult
+			{
+				Content = [new TextContentBlock { Text = SkillResource.ReadMarkdown() }],
+			};
+		}
+
+		[McpServerTool(
 			Name        = "linq2db_query",
 			Title       = "Execute linq2db SQL query",
 			OpenWorld   = true)]
 		[Description("""
 			Executes one SQL statement against a database configured by linq2db CLI MCP startup options or query configuration profiles.
 
-			The SQL dialect is determined by the selected profile/provider. Call linq2db_info first if available profiles, providers, or SQL dialects are unknown.
+			The SQL dialect is determined by the selected profile/provider. Call linq2db_info first if available profiles, providers, or SQL dialects are unknown. Call linq2db_skill when detailed linq2db CLI/MCP usage guidance is needed.
 
 			Use this tool for read-oriented database inspection, diagnostics, schema/data exploration, row counts, sample records, data-quality checks, and investigation workflows that require live database facts.
 

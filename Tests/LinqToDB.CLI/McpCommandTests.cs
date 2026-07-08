@@ -7,7 +7,11 @@ using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 
 using NUnit.Framework;
-using NUnit.Framework.Constraints;
+
+using Shouldly;
+
+#nullable enable annotations
+#nullable disable warnings
 
 namespace Tests.LinqToDB.CLI
 {
@@ -22,34 +26,86 @@ namespace Tests.LinqToDB.CLI
 			await server.Initialize();
 			var response = await server.SendRequest("tools/list", new JsonObject());
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(response["error"], Is.Null);
-				Assert.That(response["result"]?["tools"]?.AsArray().Count, Is.EqualTo(2));
+				(response["error"]).ShouldBeNull();
+				(response["result"]?["tools"]?.AsArray().Count).ShouldBe(3);
 
 				var queryTool = FindTool(response, "linq2db_query");
 				var infoTool  = FindTool(response, "linq2db_info");
+				var skillTool = FindTool(response, "linq2db_skill");
+
 				var queryInputSchema = queryTool["inputSchema"]!.ToJsonString();
 				var queryProperties  = queryTool["inputSchema"]!["properties"]!.AsObject();
 
-				Assert.That((string?)queryTool["description"], Does.Contain("Call linq2db_info first"));
-				Assert.That((bool?)queryTool["annotations"]?["openWorldHint"], Is.True);
-				Assert.That(queryTool["annotations"]?["readOnlyHint"], Is.Null);
-				Assert.That(queryTool["annotations"]?["idempotentHint"], Is.Null);
-				Assert.That(queryTool["annotations"]?["destructiveHint"], Is.Null);
-				Assert.That(queryTool["inputSchema"]?["required"]?.AsArray().ToJsonString(), Does.Contain("sql"));
-				Assert.That(queryInputSchema, Does.Contain("allowUnsafeSql"));
-				Assert.That(queryProperties.ContainsKey("provider"), Is.False);
-				Assert.That(queryProperties.ContainsKey("connectionString"), Is.False);
-				Assert.That(queryProperties.ContainsKey("password"), Is.False);
-				Assert.That(queryProperties.ContainsKey("providerLocation"), Is.False);
+				((string?)queryTool["description"]).ShouldContain("Call linq2db_info first");
+				((string?)queryTool["description"]).ShouldContain("Call linq2db_skill");
+				((bool?)queryTool["annotations"]?["openWorldHint"]).ShouldBe(true);
+				(queryTool["annotations"]?["readOnlyHint"]).ShouldBeNull();
+				(queryTool["annotations"]?["idempotentHint"]).ShouldBeNull();
+				(queryTool["annotations"]?["destructiveHint"]).ShouldBeNull();
+				(queryTool["inputSchema"]?["required"]?.AsArray().ToJsonString()).ShouldContain("sql");
+				(queryInputSchema).ShouldContain("allowUnsafeSql");
+				(queryProperties.ContainsKey("provider")).ShouldBe(false);
+				(queryProperties.ContainsKey("connectionString")).ShouldBe(false);
+				(queryProperties.ContainsKey("password")).ShouldBe(false);
+				(queryProperties.ContainsKey("providerLocation")).ShouldBe(false);
 
-				Assert.That((string?)infoTool["description"], Does.Contain("Returns non-secret linq2db MCP query configuration information"));
-				Assert.That((bool?)infoTool["annotations"]?["readOnlyHint"], Is.True);
-				Assert.That((bool?)infoTool["annotations"]?["idempotentHint"], Is.True);
-				Assert.That((bool?)infoTool["annotations"]?["openWorldHint"], Is.False);
-				Assert.That((bool?)infoTool["annotations"]?["destructiveHint"], Is.False);
+				((string?)infoTool["description"]).ShouldContain("Returns non-secret linq2db MCP query configuration information");
+				((string?)infoTool["description"]).ShouldContain("Use linq2db_skill");
+				((bool?)  infoTool["annotations"]?["readOnlyHint"]).ShouldBe(true);
+				((bool?)  infoTool["annotations"]?["idempotentHint"]).ShouldBe(true);
+				((bool?)  infoTool["annotations"]?["openWorldHint"]).ShouldBe(false);
+				((bool?)  infoTool["annotations"]?["destructiveHint"]).ShouldBe(false);
+				(infoTool["inputSchema"]?["properties"]?.AsObject().Count).ShouldBe(0);
+				(infoTool["inputSchema"]?["required"]).ShouldBeNull();
+
+				((string?)skillTool["description"]).ShouldContain("Returns the full embedded linq2db CLI agent skill as Markdown");
+				((bool?)skillTool["annotations"]?["readOnlyHint"]).ShouldBe(true);
+				((bool?)skillTool["annotations"]?["idempotentHint"]).ShouldBe(true);
+				((bool?)skillTool["annotations"]?["openWorldHint"]).ShouldBe(false);
+				((bool?)skillTool["annotations"]?["destructiveHint"]).ShouldBe(false);
+				(skillTool["inputSchema"]?["properties"]?.AsObject().Count).ShouldBe(0);
+				(skillTool["inputSchema"]?["required"]).ShouldBeNull();
 			}
+		}
+
+		[Test]
+		public async Task McpSkillReturnsEmbeddedSkillMarkdown()
+		{
+			await using var server = await McpServerProcess.Start("--provider", "SQLite", "--connection-string", "Data Source=secret-skill.db;Password=hidden");
+
+			await server.Initialize();
+			var response  = await server.CallTool("linq2db_skill", new JsonObject());
+			var skillText = (string?)response["result"]?["content"]?[0]?["text"];
+
+			{
+				(response["error"]).ShouldBeNull();
+				(response["result"]?["isError"]).ShouldBeNull();
+				skillText.ShouldNotBeNull();
+				skillText.Length.ShouldBeGreaterThan(1000);
+				(skillText).ShouldStartWith("# linq2db CLI Agent Skill");
+				(skillText).ShouldNotContain("secret-skill.db");
+				(skillText).ShouldNotContain("hidden");
+			}
+
+			server.ExpectNoStandardError();
+		}
+
+		[Test]
+		public async Task McpSkillDoesNotRequireValidDatabaseConfiguration()
+		{
+			await using var server = await McpServerProcess.Start("--provider", "SQLite", "--connection-string", "Data Source=missing-skill.db;Password=secret");
+
+			await server.Initialize();
+			var response = await server.CallTool("linq2db_skill", new JsonObject());
+
+			{
+				(response["error"]).ShouldBeNull();
+				(response["result"]?["isError"]).ShouldBeNull();
+				((string?)response["result"]?["content"]?[0]?["text"]).ShouldContain("Use `dotnet linq2db mcp`");
+			}
+
+			server.ExpectNoStandardError();
 		}
 
 		[Test]
@@ -61,27 +117,33 @@ namespace Tests.LinqToDB.CLI
 			var response = await server.CallTool("linq2db_info", new JsonObject());
 			var info     = ReadToolJson(response);
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(response["error"], Is.Null);
-				Assert.That(response["result"]?["isError"], Is.Null);
-				Assert.That((string?)info["server"]?["name"], Is.EqualTo("linq2db.cli"));
-				Assert.That((string?)info["server"]?["command"], Is.EqualTo("mcp"));
-				Assert.That((string?)info["defaultProfile"], Is.EqualTo("startup"));
-				Assert.That((string?)info["profiles"]?[0]?["name"], Is.EqualTo("startup"));
-				Assert.That((string?)info["profiles"]?[0]?["provider"], Is.EqualTo("SQLite.MS"));
-				Assert.That((string?)info["profiles"]?[0]?["dialect"], Is.EqualTo("SQLite"));
-				Assert.That((string?)info["profiles"]?[0]?["defaultOutput"], Is.EqualTo("json-table"));
-				Assert.That((int?)info["profiles"]?[0]?["maxRows"], Is.EqualTo(1000));
-				Assert.That((string?)info["profiles"]?[0]?["unsafeSqlPolicy"], Is.EqualTo("deny"));
-				Assert.That((bool?)info["profiles"]?[0]?["impersonationEnabled"], Is.False);
-				Assert.That(info["supportedOutputFormats"]?.AsArray().ToJsonString(), Does.Contain("json-table"));
-				Assert.That((bool?)info["rules"]?["singleStatementOnly"], Is.True);
-				Assert.That(info.ToJsonString(), Does.Not.Contain("secret.db"));
-				Assert.That(info.ToJsonString(), Does.Not.Contain("hidden"));
-				Assert.That(info["profiles"]?[0]?.AsObject().ContainsKey("connectionString"), Is.False);
-				Assert.That(info["profiles"]?[0]?.AsObject().ContainsKey("password"), Is.False);
-				Assert.That(info["profiles"]?[0]?.AsObject().ContainsKey("providerLocation"), Is.False);
+				(response["error"]).ShouldBeNull();
+				(response["result"]?["isError"]).ShouldBeNull();
+				((string?)info["server"]?["name"]).ShouldBe("linq2db.cli");
+				((string?)info["server"]?["command"]).ShouldBe("mcp");
+				((string?)info["defaultProfile"]).ShouldBe("startup");
+				((bool?)info["defaultProfileUsable"]).ShouldBe(true);
+				((string?)info["profiles"]?[0]?["name"]).ShouldBe("startup");
+				((string?)info["profiles"]?[0]?["provider"]).ShouldBe("SQLite.MS");
+				((string?)info["profiles"]?[0]?["dialect"]).ShouldBe("SQLite");
+				((string?)info["profiles"]?[0]?["defaultOutput"]).ShouldBe("json-table");
+				((int?)info["profiles"]?[0]?["maxRows"]).ShouldBe(1000);
+				((string?)info["profiles"]?[0]?["unsafeSqlPolicy"]).ShouldBe("deny");
+				((bool?)info["profiles"]?[0]?["impersonationEnabled"]).ShouldBe(false);
+				(info["supportedOutputFormats"]?.AsArray().ToJsonString()).ShouldContain("json-table");
+				(info["supportedProviders"]?.AsArray().ToJsonString()).ShouldContain("SQL Server");
+				(info["supportedProviders"]?.AsArray().ToJsonString()).ShouldContain("IBM DB2");
+				(info["supportedProviders"]?.AsArray().ToJsonString()).ShouldContain("IBM Informix");
+				(info["supportedProviders"]?.AsArray().ToJsonString()).ShouldContain("IBM.Data.Db2.dll");
+				((bool?)FindSupportedProvider(info, "IBM DB2")["bundled"]).ShouldBe(false);
+				(FindSupportedProvider(info, "IBM DB2")["providerNames"]?.AsArray().ToJsonString()).ShouldContain("DB2");
+				((bool?)info["rules"]?["singleStatementOnly"]).ShouldBe(true);
+				(info.ToJsonString()).ShouldNotContain("secret.db");
+				(info.ToJsonString()).ShouldNotContain("hidden");
+				(info["profiles"]?[0]?.AsObject().ContainsKey("connectionString")).ShouldBe(false);
+				(info["profiles"]?[0]?.AsObject().ContainsKey("password")).ShouldBe(false);
+				(info["profiles"]?[0]?.AsObject().ContainsKey("providerLocation")).ShouldBe(false);
 			}
 		}
 
@@ -114,27 +176,60 @@ namespace Tests.LinqToDB.CLI
 			var response = await server.CallTool("linq2db_info", new JsonObject());
 			var info     = ReadToolJson(response);
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(response["error"], Is.Null);
-				Assert.That((string?)info["defaultProfile"], Is.EqualTo("sqlserver"));
-				Assert.That(info["profiles"]?.AsArray().Count, Is.EqualTo(1));
+				(response["error"]).ShouldBeNull();
+				((string?)info["defaultProfile"]).ShouldBe("sqlserver");
+				((bool?)info["defaultProfileUsable"]).ShouldBe(true);
+				(info["profiles"]?.AsArray().Count).ShouldBe(1);
 
 				var sqlServer      = FindProfile(info, "sqlserver");
 
-				Assert.That(ContainsProfile(info, "default"), Is.False);
+				(ContainsProfile(info, "default")).ShouldBe(false);
 
-				Assert.That((string?)sqlServer["description"], Does.Contain("T-SQL"));
-				Assert.That((string?)sqlServer["provider"], Is.EqualTo("SqlServer"));
-				Assert.That((string?)sqlServer["dialect"], Is.EqualTo("SQL Server T-SQL"));
-				Assert.That((int?)sqlServer["maxRows"], Is.EqualTo(500));
-				Assert.That((string?)sqlServer["unsafeSqlPolicy"], Is.EqualTo("confirm"));
-				Assert.That((bool?)sqlServer["impersonationEnabled"], Is.True);
+				((string?)sqlServer["description"]).ShouldContain("T-SQL");
+				((string?)sqlServer["provider"]).ShouldBe("SqlServer");
+				((string?)sqlServer["dialect"]).ShouldBe("SQL Server T-SQL");
+				((int?)sqlServer["maxRows"]).ShouldBe(500);
+				((string?)sqlServer["unsafeSqlPolicy"]).ShouldBe("confirm");
+				((bool?)sqlServer["impersonationEnabled"]).ShouldBe(true);
 
-				Assert.That(info.ToJsonString(), Does.Not.Contain("dev-secret.db"));
-				Assert.That(info.ToJsonString(), Does.Not.Contain("LINQ2DB_SQLSERVER_CONNECTION"));
-				Assert.That(sqlServer.ContainsKey("connectionString"), Is.False);
-				Assert.That(sqlServer.ContainsKey("connectionStringEnv"), Is.False);
+				(info.ToJsonString()).ShouldNotContain("dev-secret.db");
+				(info.ToJsonString()).ShouldNotContain("LINQ2DB_SQLSERVER_CONNECTION");
+				(sqlServer.ContainsKey("connectionString")).ShouldBe(false);
+				(sqlServer.ContainsKey("connectionStringEnv")).ShouldBe(false);
+			}
+		}
+
+		[Test]
+		public async Task McpInfoMarksDefaultProfileUnusableWhenDefaultHasNoProvider()
+		{
+			var config = Path.Combine(TestContext.CurrentContext.WorkDirectory, $"mcp-query-{Guid.NewGuid():N}.json");
+			await File.WriteAllTextAsync(config, """
+				{
+					"default": {
+						"description": "Base profile only.",
+						"maxRows": 100
+					},
+					"sqlite": {
+						"provider": "SQLite",
+						"connectionString": "Data Source=:memory:"
+					}
+				}
+				""").ConfigureAwait(false);
+
+			await using var server = await McpServerProcess.Start("--config", config);
+
+			await server.Initialize();
+			var response = await server.CallTool("linq2db_info", new JsonObject());
+			var info     = ReadToolJson(response);
+
+			{
+				(response["error"]).ShouldBeNull();
+				(response["result"]?["isError"]).ShouldBeNull();
+				((string?)info["defaultProfile"]).ShouldBe("default");
+				((bool?)info["defaultProfileUsable"]).ShouldBe(false);
+				(ContainsProfile(info, "default")).ShouldBe(false);
+				(ContainsProfile(info, "sqlite")).ShouldBe(true);
 			}
 		}
 
@@ -163,16 +258,15 @@ namespace Tests.LinqToDB.CLI
 			var response = await server.CallTool("linq2db_info", new JsonObject());
 			var info     = ReadToolJson(response);
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(response["error"], Is.Null);
-				Assert.That(response["result"]?["isError"], Is.Null);
-				Assert.That(ContainsProfile(info, "default"), Is.False);
-				Assert.That(ContainsProfile(info, "sqlite"), Is.True);
-				Assert.That(ContainsProfile(info, "incomplete"), Is.False);
+				(response["error"]).ShouldBeNull();
+				(response["result"]?["isError"]).ShouldBeNull();
+				(ContainsProfile(info, "default")).ShouldBe(false);
+				(ContainsProfile(info, "sqlite")).ShouldBe(true);
+				(ContainsProfile(info, "incomplete")).ShouldBe(false);
 			}
 
-			server.ExpectStandardError(Does.Contain("Configuration profile 'incomplete' doesn't configure provider"));
+			server.ExpectStandardError("Configuration profile 'incomplete' doesn't configure provider");
 		}
 
 		[Test]
@@ -192,14 +286,13 @@ namespace Tests.LinqToDB.CLI
 			await server.Initialize();
 			var response = await server.CallTool("linq2db_info", new JsonObject());
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(response["error"], Is.Null);
-				Assert.That((bool?)response["result"]?["isError"], Is.True);
-				Assert.That((string?)response["result"]?["content"]?[0]?["text"], Does.Contain("no configured profiles with provider"));
+				(response["error"]).ShouldBeNull();
+				((bool?)response["result"]?["isError"]).ShouldBe(true);
+				((string?)response["result"]?["content"]?[0]?["text"]).ShouldContain("no configured profiles with provider");
 			}
 
-			server.ExpectStandardError(Does.Contain("Configuration profile 'default' doesn't configure provider"));
+			server.ExpectStandardError("Configuration profile 'default' doesn't configure provider");
 		}
 
 		[Test]
@@ -210,11 +303,10 @@ namespace Tests.LinqToDB.CLI
 			await server.Initialize();
 			var response = await server.CallTool("linq2db_info", new JsonObject());
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(response["error"], Is.Null);
-				Assert.That((bool?)response["result"]?["isError"], Is.True);
-				Assert.That((string?)response["result"]?["content"]?[0]?["text"], Does.Contain("Cannot load linq2db query configuration"));
+				(response["error"]).ShouldBeNull();
+				((bool?)response["result"]?["isError"]).ShouldBe(true);
+				((string?)response["result"]?["content"]?[0]?["text"]).ShouldContain("Cannot load linq2db query configuration");
 			}
 		}
 
@@ -231,14 +323,13 @@ namespace Tests.LinqToDB.CLI
 
 			var contentText = (string?)response["result"]?["content"]?[0]?["text"];
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(response["error"], Is.Null);
-				Assert.That(response["result"]?["isError"], Is.Null);
-				Assert.That(contentText, Does.Contain("\"columns\""));
-				Assert.That(contentText, Does.Contain("\"rows\":[[\"1\"]]"));
-				Assert.That(contentText, Does.Contain("\"rowCount\":1"));
-				Assert.That(contentText, Does.Contain("\"truncated\":false"));
+				(response["error"]).ShouldBeNull();
+				(response["result"]?["isError"]).ShouldBeNull();
+				(contentText).ShouldContain("\"columns\"");
+				(contentText).ShouldContain("\"rows\":[[\"1\"]]");
+				(contentText).ShouldContain("\"rowCount\":1");
+				(contentText).ShouldContain("\"truncated\":false");
 			}
 
 			server.ExpectNoStandardError();
@@ -255,11 +346,10 @@ namespace Tests.LinqToDB.CLI
 				["sql"] = "drop table Person",
 			});
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(response["error"], Is.Null);
-				Assert.That((bool?)response["result"]?["isError"], Is.True);
-				Assert.That((string?)response["result"]?["content"]?[0]?["text"], Does.Contain("Query is not read-only"));
+				(response["error"]).ShouldBeNull();
+				((bool?)response["result"]?["isError"]).ShouldBe(true);
+				((string?)response["result"]?["content"]?[0]?["text"]).ShouldContain("Query is not read-only");
 			}
 		}
 
@@ -274,11 +364,10 @@ namespace Tests.LinqToDB.CLI
 				["sql"] = "select 1; select 2",
 			});
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(response["error"], Is.Null);
-				Assert.That((bool?)response["result"]?["isError"], Is.True);
-				Assert.That((string?)response["result"]?["content"]?[0]?["text"], Does.Contain("Only single SQL statement is allowed."));
+				(response["error"]).ShouldBeNull();
+				((bool?)response["result"]?["isError"]).ShouldBe(true);
+				((string?)response["result"]?["content"]?[0]?["text"]).ShouldContain("Only single SQL statement is allowed.");
 			}
 		}
 
@@ -293,13 +382,12 @@ namespace Tests.LinqToDB.CLI
 				["sql"] = "select 1 from dual",
 			});
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(response["error"], Is.Null);
-				Assert.That((bool?)response["result"]?["isError"], Is.True);
-				Assert.That((string?)response["result"]?["content"]?[0]?["text"], Does.Contain("Cannot create database provider 'Oracle.19.Managed'."));
-				Assert.That((string?)response["result"]?["content"]?[0]?["text"], Does.Contain("looks like a test data source alias"));
-				Assert.That((string?)response["result"]?["content"]?[0]?["text"], Does.Contain("Oracle.Managed"));
+				(response["error"]).ShouldBeNull();
+				((bool?)response["result"]?["isError"]).ShouldBe(true);
+				((string?)response["result"]?["content"]?[0]?["text"]).ShouldContain("Cannot create database provider 'Oracle.19.Managed'.");
+				((string?)response["result"]?["content"]?[0]?["text"]).ShouldContain("looks like a test data source alias");
+				((string?)response["result"]?["content"]?[0]?["text"]).ShouldContain("Oracle.Managed");
 			}
 		}
 
@@ -317,12 +405,11 @@ namespace Tests.LinqToDB.CLI
 
 			var contentText = (string?)response["result"]?["content"]?[0]?["text"];
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(response["error"], Is.Null);
-				Assert.That(contentText, Does.Contain("\"rowCount\":2"));
-				Assert.That(contentText, Does.Contain("\"truncated\":false"));
-				Assert.That(contentText, Does.Contain("\"2\""));
+				(response["error"]).ShouldBeNull();
+				(contentText).ShouldContain("\"rowCount\":2");
+				(contentText).ShouldContain("\"truncated\":false");
+				(contentText).ShouldContain("\"2\"");
 			}
 		}
 
@@ -339,11 +426,10 @@ namespace Tests.LinqToDB.CLI
 
 			var contentText = (string?)response["result"]?["content"]?[0]?["text"];
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(response["error"], Is.Null);
-				Assert.That(contentText, Does.Contain("\"name\":\"Value\""));
-				Assert.That(contentText, Does.Contain("\"rows\":[[\"1\",\"2\"]]"));
+				(response["error"]).ShouldBeNull();
+				(contentText).ShouldContain("\"name\":\"Value\"");
+				(contentText).ShouldContain("\"rows\":[[\"1\",\"2\"]]");
 			}
 		}
 
@@ -359,11 +445,10 @@ namespace Tests.LinqToDB.CLI
 				["sql"]    = "select 1 as Value",
 			});
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(response["error"], Is.Null);
-				Assert.That((bool?)response["result"]?["isError"], Is.True);
-				Assert.That((string?)response["result"]?["content"]?[0]?["text"], Does.Contain("MCP query execution supports only 'json' and 'json-table' output."));
+				(response["error"]).ShouldBeNull();
+				((bool?)response["result"]?["isError"]).ShouldBe(true);
+				((string?)response["result"]?["content"]?[0]?["text"]).ShouldContain("MCP query execution supports only 'json' and 'json-table' output.");
 			}
 		}
 
@@ -389,11 +474,10 @@ namespace Tests.LinqToDB.CLI
 				["sql"] = "select 1 as Value",
 			});
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(response["error"], Is.Null);
-				Assert.That((bool?)response["result"]?["isError"], Is.True);
-				Assert.That((string?)response["result"]?["content"]?[0]?["text"], Does.Contain("MCP query execution supports only 'json' and 'json-table' output."));
+				(response["error"]).ShouldBeNull();
+				((bool?)response["result"]?["isError"]).ShouldBe(true);
+				((string?)response["result"]?["content"]?[0]?["text"]).ShouldContain("MCP query execution supports only 'json' and 'json-table' output.");
 			}
 		}
 
@@ -405,10 +489,9 @@ namespace Tests.LinqToDB.CLI
 			await server.Initialize();
 			var response = await server.CallTool("unknown_tool", new JsonObject());
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(response["result"], Is.Null);
-				Assert.That(response["error"], Is.Not.Null);
+				(response["result"]).ShouldBeNull();
+				(response["error"]).ShouldNotBeNull();
 			}
 		}
 
@@ -440,11 +523,10 @@ namespace Tests.LinqToDB.CLI
 				["sql"]     = "select 1 as Value union all select 2",
 			});
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(response["error"], Is.Null);
-				Assert.That((string?)response["result"]?["content"]?[0]?["text"], Does.Contain("\"rowCount\":2"));
-				Assert.That((string?)response["result"]?["content"]?[0]?["text"], Does.Contain("\"2\""));
+				(response["error"]).ShouldBeNull();
+				((string?)response["result"]?["content"]?[0]?["text"]).ShouldContain("\"rowCount\":2");
+				((string?)response["result"]?["content"]?[0]?["text"]).ShouldContain("\"2\"");
 			}
 		}
 
@@ -453,19 +535,18 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCliProcess("help", "mcp");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output, Does.Contain("dotnet linq2db mcp <options>"));
-				Assert.That(result.Output, Does.Contain("run STDIO MCP server"));
-				Assert.That(result.Output, Does.Contain("default: json-table"));
-				Assert.That(result.Output, Does.Contain("--config"));
-				Assert.That(result.Output, Does.Contain("--provider"));
-				Assert.That(result.Output, Does.Contain("--max-rows"));
-				Assert.That(result.Output, Does.Not.Contain("CSV output"));
-				Assert.That(result.Output, Does.Not.Contain("--sql"));
-				Assert.That(result.Output, Does.Not.Contain("--output-file"));
-				Assert.That(result.Output, Does.Not.Contain("--allow-unsafe-sql"));
+				(result.ExitCode).ShouldBe(0);
+				(result.Output).ShouldContain("dotnet linq2db mcp <options>");
+				(result.Output).ShouldContain("run STDIO MCP server");
+				(result.Output).ShouldContain("default: json-table");
+				(result.Output).ShouldContain("--config");
+				(result.Output).ShouldContain("--provider");
+				(result.Output).ShouldContain("--max-rows");
+				(result.Output).ShouldNotContain("CSV output");
+				(result.Output).ShouldNotContain("--sql");
+				(result.Output).ShouldNotContain("--output-file");
+				(result.Output).ShouldNotContain("--allow-unsafe-sql");
 			}
 		}
 
@@ -474,11 +555,10 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCliProcess("mcp", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql", "select 1");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-1));
-				Assert.That(result.Output, Is.Empty);
-				Assert.That(result.Error, Does.Contain("Unrecognized option: --sql"));
+				(result.ExitCode).ShouldBe(-1);
+				(result.Output).ShouldBeEmpty();
+				(result.Error).ShouldContain("Unrecognized option: --sql");
 			}
 		}
 
@@ -487,11 +567,10 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCliProcess("mcp", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--output", "csv");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-1));
-				Assert.That(result.Output, Is.Empty);
-				Assert.That(result.Error, Does.Contain("Cannot parse option value (--output csv): unknown value 'csv'"));
+				(result.ExitCode).ShouldBe(-1);
+				(result.Output).ShouldBeEmpty();
+				(result.Error).ShouldContain("Cannot parse option value (--output csv): unknown value 'csv'");
 			}
 		}
 
@@ -539,6 +618,17 @@ namespace Tests.LinqToDB.CLI
 			return false;
 		}
 
+		static JsonObject FindSupportedProvider(JsonObject info, string name)
+		{
+			foreach (var provider in info["supportedProviders"]!.AsArray())
+			{
+				if ((string?)provider?["name"] == name)
+					return provider!.AsObject();
+			}
+
+			throw new InvalidOperationException($"Supported provider '{name}' not found.");
+		}
+
 		static async Task<CliProcessResult> RunCliProcess(params string[] arguments)
 		{
 			var cliAssembly = Path.Combine(AppContext.BaseDirectory, "dotnet-linq2db.dll");
@@ -575,8 +665,9 @@ namespace Tests.LinqToDB.CLI
 			readonly Process          _process;
 			readonly Task<string>     _standardErrorTask;
 			readonly List<JsonObject> _stdoutMessages = new();
-			int         _nextId = 1;
-			Constraint? _standardErrorExpectation;
+			int     _nextId = 1;
+			bool    _expectNoStandardError;
+			string? _standardErrorExpectation;
 
 			McpServerProcess(Process process, Task<string> standardErrorTask)
 			{
@@ -617,12 +708,12 @@ namespace Tests.LinqToDB.CLI
 
 			public void ExpectNoStandardError()
 			{
-				_standardErrorExpectation = Is.Empty;
+				_expectNoStandardError = true;
 			}
 
-			public void ExpectStandardError(Constraint expectation)
+			public void ExpectStandardError(string expectedText)
 			{
-				_standardErrorExpectation = expectation;
+				_standardErrorExpectation = expectedText;
 			}
 
 			public async Task Initialize()
@@ -730,12 +821,15 @@ namespace Tests.LinqToDB.CLI
 
 					foreach (var message in _stdoutMessages)
 					{
-						Assert.That((string?)message["jsonrpc"], Is.EqualTo("2.0"));
-						Assert.That(message["result"] != null || message["error"] != null, Is.True);
+						((string?)message["jsonrpc"]).ShouldBe("2.0");
+						(message["result"] != null || message["error"] != null).ShouldBe(true);
 					}
 
+					if (_expectNoStandardError)
+						(await _standardErrorTask.ConfigureAwait(false)).ShouldBeEmpty();
+
 					if (_standardErrorExpectation != null)
-						Assert.That(await _standardErrorTask.ConfigureAwait(false), _standardErrorExpectation);
+						(await _standardErrorTask.ConfigureAwait(false)).ShouldContain(_standardErrorExpectation);
 
 					_process.Dispose();
 				}

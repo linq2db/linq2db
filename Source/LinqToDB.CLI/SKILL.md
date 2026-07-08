@@ -55,6 +55,148 @@ Connection settings:
 - `--impersonate` requires resolved `user` and `password` values. Use `--user-env` and `--password-env` or configuration `userEnv` and `passwordEnv` when credentials must not be written as literals.
 - Windows impersonation uses network credentials intended for database access. It is not supported on Linux or macOS.
 
+## Supported Database Providers
+
+`dotnet linq2db query` and `dotnet linq2db mcp` execute SQL through linq2db database providers.
+
+The CLI can use provider/runtime dependencies bundled with the CLI package and selected externally loaded providers. Use linq2db provider names, not test data source aliases from linq2db tests.
+
+`linq2db_info` returns a compact `supportedProviders` list with provider names, dialects, whether the provider runtime is bundled, and external-provider notes.
+
+### Supported provider families
+
+- SQL Server
+- SQLite
+- PostgreSQL
+- MySQL / MariaDB
+- Oracle Managed
+- Firebird
+- Sybase ASE
+- ODBC
+- OLE DB
+- ClickHouse
+- DuckDB
+- YDB
+- IBM DB2, external provider assembly required
+- IBM Informix, external provider assembly required
+
+### Bundled provider families
+
+The CLI package includes provider/runtime dependencies for these provider families:
+
+- SQL Server
+- SQLite
+- PostgreSQL
+- MySQL / MariaDB
+- Oracle Managed
+- Firebird
+- Sybase ASE
+- ODBC
+- OLE DB
+- ClickHouse
+- DuckDB
+- YDB
+
+Provider-specific behavior still depends on installed native/runtime dependencies where applicable. Some providers, such as ODBC and OLE DB, are bridge providers and their SQL syntax and runtime requirements depend on the selected driver.
+
+### External provider loading
+
+Some providers are not bundled because of package size, licensing, or deployment constraints.
+
+Use `--provider-location` or `providerLocation` to load an external ADO.NET provider assembly.
+
+Known external-provider scenario:
+
+- DB2 / Informix through `IBM.Data.Db2.dll`
+
+Example:
+
+```bash
+dotnet linq2db query \
+  --provider DB2 \
+  --provider-location "C:\providers\IBM.Data.Db2.dll" \
+  --connection-string "Server=localhost:50000;Database=testdb;UID=user;PWD=password" \
+  --sql "select * from SYSIBM.SYSDUMMY1"
+```
+
+For MCP:
+
+```json
+{
+  "mcpServers": {
+    "linq2db": {
+      "command": "dotnet",
+      "args": [
+        "linq2db",
+        "mcp",
+        "--config",
+        "query.json",
+        "--profile",
+        "db2-dev"
+      ]
+    }
+  }
+}
+```
+
+Config profile:
+
+```json
+{
+  "db2-dev": {
+    "provider": "DB2",
+    "providerLocation": "C:\\providers\\IBM.Data.Db2.dll",
+    "connectionStringEnv": "LINQ2DB_DB2_CONNECTION",
+    "unsafeSql": "deny"
+  }
+}
+```
+
+External provider dependencies must be available next to the specified provider assembly or through normal application probing. The CLI does not scan the user's NuGet package cache.
+
+### Provider Names
+
+Use linq2db provider names.
+
+Do not use test data source aliases from linq2db tests.
+
+Examples:
+
+| Use | Do not use |
+| --- | --- |
+| `Oracle.Managed` | `Oracle.19.Managed` |
+| `SqlServer` | test-specific SQL Server source aliases |
+| `PostgreSQL` | test-specific PostgreSQL source aliases |
+
+If provider resolution fails and the name looks like a test data source alias, use the corresponding linq2db provider name instead.
+
+## SQL Dialects
+
+`linq2db_query` and `dotnet linq2db query` execute raw SQL. The SQL syntax must match the selected database provider.
+
+Use `linq2db_info` to discover the selected profile's provider and dialect before generating SQL.
+
+Typical dialect families:
+
+| Provider family | Dialect |
+| --- | --- |
+| SQL Server | SQL Server T-SQL |
+| SQLite | SQLite |
+| PostgreSQL | PostgreSQL |
+| MySQL / MariaDB | MySQL / MariaDB |
+| Oracle Managed | Oracle SQL |
+| Firebird | Firebird SQL |
+| DB2 | IBM DB2 SQL |
+| Informix | Informix SQL |
+| ClickHouse | ClickHouse SQL |
+| DuckDB | DuckDB SQL |
+| Sybase ASE | Sybase ASE T-SQL |
+| ODBC | Provider-specific SQL |
+| OLE DB | Provider-specific SQL |
+| YDB | YDB SQL |
+
+Do not assume one dialect's row limiting, identifier quoting, date/time functions, or metadata syntax works for another provider.
+
 Configuration profiles:
 
 - Use `--config <file>` to load query settings from a JSON configuration file.
@@ -218,11 +360,31 @@ dotnet linq2db query --config query.json --profile uat --max-rows 100 --sql "sel
 Use `dotnet linq2db mcp` to run a STDIO Model Context Protocol server exposing the shared query executor as the `linq2db_query` tool.
 This is the preferred integration mode for MCP-capable agent hosts because it keeps server configuration at startup and exposes query execution through a typed tool call.
 
+The MCP server exposes these tools:
+
+- `linq2db_info` returns non-secret runtime configuration, profiles, providers, dialects, and safety rules.
+- `linq2db_query` executes one SQL statement using the selected profile/provider.
+- `linq2db_skill` returns this full skill document.
+
+Recommended model workflow:
+
+1. Call `linq2db_info` when available profiles, active profile, provider, or SQL dialect are unknown.
+2. Generate provider-appropriate SQL for the selected dialect.
+3. Call `linq2db_query` with one SQL statement.
+4. Use `json-table` when joins, duplicate column names, expressions, or column metadata are involved.
+5. Call `linq2db_skill` when detailed usage guidance is needed.
+
+Do not pass provider names, connection strings, passwords, provider assembly paths, or impersonation credentials to `linq2db_query`. Those values are configured at MCP server startup or in trusted configuration profiles.
+
 ### MCP runtime discovery
 
 The MCP server exposes `linq2db_info` so models can discover available profiles and SQL dialects before generating SQL.
 
 Use `linq2db_info` before `linq2db_query` when the active provider or dialect is unknown.
+
+If `linq2db_info` returns `defaultProfileUsable: false`, the selected startup/default profile cannot execute queries directly. In that case, choose one of the returned `profiles` and pass its `name` as the `profile` argument to `linq2db_query`.
+
+Use `linq2db_skill` for the full linq2db CLI/MCP usage guide, including supported providers and external provider loading instructions.
 
 `linq2db_info` returns only non-secret configuration metadata. It never returns connection strings, passwords, provider assembly paths, impersonation credentials, or environment variable values.
 

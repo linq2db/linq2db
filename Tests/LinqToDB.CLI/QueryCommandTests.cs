@@ -10,6 +10,11 @@ using LinqToDB.Data;
 
 using NUnit.Framework;
 
+using Shouldly;
+
+#nullable enable annotations
+#nullable disable warnings
+
 #pragma warning disable JSON002 // Allow JSON in test code for config file content.
 
 namespace Tests.LinqToDB.CLI
@@ -22,10 +27,9 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-1));
-				Assert.That(result.Error,    Does.Contain("Either '--sql' or '--sql-file' option must be specified."));
+				(result.ExitCode).ShouldBe(-1);
+				(result.Error).ShouldContain("Either '--sql' or '--sql-file' option must be specified.");
 			}
 		}
 
@@ -34,10 +38,9 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql", "select 1", "--sql-file", "query.sql");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-1));
-				Assert.That(result.Error,    Does.Contain("Option '--sql-file' conflicts with other option(s): --sql"));
+				(result.ExitCode).ShouldBe(-1);
+				(result.Error).ShouldContain("Option '--sql-file' conflicts with other option(s): --sql");
 			}
 		}
 
@@ -46,10 +49,9 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCli("query", "--connection-string", "Data Source=:memory:", "--sql", "select 1");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-1));
-				Assert.That(result.Error,    Does.Contain("Option '--provider' must be specified."));
+				(result.ExitCode).ShouldBe(-1);
+				(result.Error).ShouldContain("Option '--provider' must be specified.");
 			}
 		}
 
@@ -58,10 +60,9 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCli("query", "--provider", "SQLite", "--sql", "select 1");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-1));
-				Assert.That(result.Error,    Does.Contain("Option '--connection-string' must be specified."));
+				(result.ExitCode).ShouldBe(-1);
+				(result.Error).ShouldContain("Option '--connection-string' must be specified.");
 			}
 		}
 
@@ -70,10 +71,9 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--impersonate", "--sql", "select 1");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-1));
-				Assert.That(result.Error,    Does.Contain("Option '--impersonate' requires resolved '--user' and '--password' values."));
+				(result.ExitCode).ShouldBe(-1);
+				(result.Error).ShouldContain("Option '--impersonate' requires resolved '--user' and '--password' values.");
 			}
 		}
 
@@ -82,12 +82,11 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCli("query", "--provider", "DB2", "--connection-string", "Server=localhost:50000;Database=testdb;UID=db2inst1;PWD=Password12!", "--sql", "select 1 from SYSIBM.SYSDUMMY1");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-3));
-				Assert.That(result.Error,    Does.Contain("Cannot locate IBM.Data.Db2.dll provider assembly."));
-				Assert.That(result.Error,    Does.Contain("Due to huge size of it, we don't include Net.IBM.Data.Db2 provider into installation."));
-				Assert.That(result.Error,    Does.Contain("--provider-location <path_to_assembly>"));
+				(result.ExitCode).ShouldBe(-3);
+				(result.Error).ShouldContain("Cannot locate IBM.Data.Db2.dll provider assembly.");
+				(result.Error).ShouldContain("Due to huge size of it, we don't include Net.IBM.Data.Db2 provider into installation.");
+				(result.Error).ShouldContain("--provider-location <path_to_assembly>");
 			}
 		}
 
@@ -96,13 +95,12 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCli("query", "--provider", "Oracle.19.Managed", "--connection-string", "Data Source=localhost/XE;User Id=test;Password=test", "--sql", "select 1 from dual");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-3));
-				Assert.That(result.Output,   Is.Empty);
-				Assert.That(result.Error,    Does.Contain("Cannot create database provider 'Oracle.19.Managed'."));
-				Assert.That(result.Error,    Does.Contain("looks like a test data source alias"));
-				Assert.That(result.Error,    Does.Contain("Oracle.Managed"));
+				(result.ExitCode).ShouldBe(-3);
+				(result.Output).ShouldBeEmpty();
+				(result.Error).ShouldContain("Cannot create database provider 'Oracle.19.Managed'.");
+				(result.Error).ShouldContain("looks like a test data source alias");
+				(result.Error).ShouldContain("Oracle.Managed");
 			}
 		}
 
@@ -111,11 +109,10 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCli("query", "--provider", "Informix.DB2", "--connection-string", "Server=localhost:9189;Database=testdatadb2;userid=informix;password=in4mix", "--sql", "select 1 as Value from systables where tabid = 1");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-3));
-				Assert.That(result.Error,    Does.Contain("Cannot locate IBM.Data.Db2.dll provider assembly."));
-				Assert.That(result.Error,    Does.Contain("--provider-location <path_to_assembly>"));
+				(result.ExitCode).ShouldBe(-3);
+				(result.Error).ShouldContain("Cannot locate IBM.Data.Db2.dll provider assembly.");
+				(result.Error).ShouldContain("--provider-location <path_to_assembly>");
 			}
 		}
 
@@ -124,11 +121,10 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCli("query", "--provider", "SQLite", "--provider-location", "missing\\provider.dll", "--connection-string", "Data Source=:memory:", "--sql", "select 1 as Value");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-3));
-				Assert.That(result.Output,   Is.Empty);
-				Assert.That(result.Error,    Does.Contain("Provider assembly 'missing\\provider.dll' not found."));
+				(result.ExitCode).ShouldBe(-3);
+				(result.Output).ShouldBeEmpty();
+				(result.Error).ShouldContain("Provider assembly 'missing\\provider.dll' not found.");
 			}
 		}
 
@@ -138,11 +134,10 @@ namespace Tests.LinqToDB.CLI
 			var providerLocation = typeof(QueryCommandTests).Assembly.Location;
 			var result           = await RunCli("query", "--provider", "DB2", "--provider-location", providerLocation, "--connection-string", "Server=localhost:50000;Database=testdb;UID=db2inst1;PWD=Password12!", "--sql", "select 1 from SYSIBM.SYSDUMMY1");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-3));
-				Assert.That(result.Output,   Is.Empty);
-				Assert.That(result.Error,    Does.Contain($"Provider assembly '{providerLocation}' doesn't contain DB2Factory type."));
+				(result.ExitCode).ShouldBe(-3);
+				(result.Output).ShouldBeEmpty();
+				(result.Error).ShouldContain($"Provider assembly '{providerLocation}' doesn't contain DB2Factory type.");
 			}
 		}
 
@@ -151,11 +146,10 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql", "select 1 as Value");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("\"Value\":\"1\""));
-				Assert.That(result.Error,    Is.Empty);
+				(result.ExitCode).ShouldBe(0);
+				(result.Output).ShouldContain("\"Value\":\"1\"");
+				(result.Error).ShouldBeEmpty();
 			}
 		}
 
@@ -164,10 +158,9 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql", "update Person set Name = 'test'");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-3));
-				Assert.That(result.Error,    Does.Contain("Query is not read-only: token 'UPDATE' is not allowed."));
+				(result.ExitCode).ShouldBe(-3);
+				(result.Error).ShouldContain("Query is not read-only: token 'UPDATE' is not allowed.");
 			}
 		}
 
@@ -176,10 +169,9 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql", "drop table Person");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-3));
-				Assert.That(result.Error,    Does.Contain("Query is not read-only: token 'DROP' is not allowed."));
+				(result.ExitCode).ShouldBe(-3);
+				(result.Error).ShouldContain("Query is not read-only: token 'DROP' is not allowed.");
 			}
 		}
 
@@ -188,10 +180,9 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql", "call DoWork()");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-3));
-				Assert.That(result.Error,    Does.Contain("Query is not read-only: token 'CALL' is not allowed."));
+				(result.ExitCode).ShouldBe(-3);
+				(result.Error).ShouldContain("Query is not read-only: token 'CALL' is not allowed.");
 			}
 		}
 
@@ -200,10 +191,9 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql", "select 1; select 2");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-3));
-				Assert.That(result.Error,    Does.Contain("Only single SQL statement is allowed."));
+				(result.ExitCode).ShouldBe(-3);
+				(result.Error).ShouldContain("Only single SQL statement is allowed.");
 			}
 		}
 
@@ -223,10 +213,9 @@ namespace Tests.LinqToDB.CLI
 
 			var result = await RunCli(environment, "query", "--config", config, "--sql", "select 1; drop table Person");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-3));
-				Assert.That(result.Error,    Does.Contain("Only single SQL statement is allowed."));
+				(result.ExitCode).ShouldBe(-3);
+				(result.Error).ShouldContain("Only single SQL statement is allowed.");
 			}
 		}
 
@@ -235,10 +224,9 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--allow-unsafe-sql", "--sql", "select 1");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-1));
-				Assert.That(result.Error,    Does.Contain("Option '--allow-unsafe-sql' cannot be used because unsafe SQL policy is 'deny'."));
+				(result.ExitCode).ShouldBe(-1);
+				(result.Error).ShouldContain("Option '--allow-unsafe-sql' cannot be used because unsafe SQL policy is 'deny'.");
 			}
 		}
 
@@ -258,10 +246,9 @@ namespace Tests.LinqToDB.CLI
 
 			var result = await RunCli(environment, "query", "--config", config, "--sql", "drop table Person");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-3));
-				Assert.That(result.Error,    Does.Contain("Unsafe SQL requires '--allow-unsafe-sql'"));
+				(result.ExitCode).ShouldBe(-3);
+				(result.Error).ShouldContain("Unsafe SQL requires '--allow-unsafe-sql'");
 			}
 		}
 
@@ -281,11 +268,10 @@ namespace Tests.LinqToDB.CLI
 
 			var result = await RunCli(environment, "query", "--config", config, "--allow-unsafe-sql", "--sql", "drop table Person");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-3));
-				Assert.That(result.Error,    Does.Contain("Query execution failed"));
-				Assert.That(result.Error,    Does.Not.Contain("token 'DROP' is not allowed"));
+				(result.ExitCode).ShouldBe(-3);
+				(result.Error).ShouldContain("Query execution failed");
+				(result.Error).ShouldNotContain("token 'DROP' is not allowed");
 			}
 		}
 
@@ -305,11 +291,10 @@ namespace Tests.LinqToDB.CLI
 
 			var result = await RunCli(environment, "query", "--config", config, "--sql", "drop table Person");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-3));
-				Assert.That(result.Error,    Does.Contain("Query execution failed"));
-				Assert.That(result.Error,    Does.Not.Contain("token 'DROP' is not allowed"));
+				(result.ExitCode).ShouldBe(-3);
+				(result.Error).ShouldContain("Query execution failed");
+				(result.Error).ShouldNotContain("token 'DROP' is not allowed");
 			}
 		}
 
@@ -318,11 +303,10 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql", "select 'drop table' as Value -- update table");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("\"Value\":\"drop table\""));
-				Assert.That(result.Error,    Is.Empty);
+				(result.ExitCode).ShouldBe(0);
+				(result.Output).ShouldContain("\"Value\":\"drop table\"");
+				(result.Error).ShouldBeEmpty();
 			}
 		}
 
@@ -333,7 +317,7 @@ namespace Tests.LinqToDB.CLI
 
 			var result = ReadOnlySqlGuard.Validate(provider, "select 1 as Value");
 
-			Assert.That(result.IsAllowed, Is.True);
+			(result.IsAllowed).ShouldBe(true);
 		}
 
 		[Test]
@@ -343,10 +327,9 @@ namespace Tests.LinqToDB.CLI
 
 			var result = ReadOnlySqlGuard.Validate(provider, "update dbo.Person set Name = 'test'");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.IsAllowed, Is.False);
-				Assert.That(result.Error,  Does.Contain("UpdateStatement"));
+				(result.IsAllowed).ShouldBe(false);
+				(result.Error).ShouldContain("UpdateStatement");
 			}
 		}
 
@@ -357,10 +340,9 @@ namespace Tests.LinqToDB.CLI
 
 			var result = ReadOnlySqlGuard.Validate(provider, "exec dbo.DoWork");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.IsAllowed, Is.False);
-				Assert.That(result.Error,  Does.Contain("EXECUTE is not allowed"));
+				(result.IsAllowed).ShouldBe(false);
+				(result.Error).ShouldContain("EXECUTE is not allowed");
 			}
 		}
 
@@ -371,10 +353,9 @@ namespace Tests.LinqToDB.CLI
 
 			var result = ReadOnlySqlGuard.Validate(provider, "select * into dbo.NewPerson from dbo.Person");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.IsAllowed, Is.False);
-				Assert.That(result.Error,  Does.Contain("SELECT INTO is not allowed"));
+				(result.IsAllowed).ShouldBe(false);
+				(result.Error).ShouldContain("SELECT INTO is not allowed");
 			}
 		}
 
@@ -404,11 +385,10 @@ namespace Tests.LinqToDB.CLI
 
 			var result = await RunCli(environment, "query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql-file", "query.sql");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("\"Value\":\"test\""));
-				Assert.That(result.Error,    Is.Empty);
+				(result.ExitCode).ShouldBe(0);
+				(result.Output).ShouldContain("\"Value\":\"test\"");
+				(result.Error).ShouldBeEmpty();
 			}
 		}
 
@@ -422,11 +402,10 @@ namespace Tests.LinqToDB.CLI
 
 			var result = await RunCli(environment, "query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql-file", "%QUERY_DIR%\\query.sql");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("\"Value\":\"test\""));
-				Assert.That(result.Error,    Is.Empty);
+				(result.ExitCode).ShouldBe(0);
+				(result.Output).ShouldContain("\"Value\":\"test\"");
+				(result.Error).ShouldBeEmpty();
 			}
 		}
 
@@ -435,10 +414,9 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql-file", "query.sql");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-3));
-				Assert.That(result.Error,    Does.Contain("SQL file 'query.sql' not found."));
+				(result.ExitCode).ShouldBe(-3);
+				(result.Error).ShouldContain("SQL file 'query.sql' not found.");
 			}
 		}
 
@@ -447,10 +425,9 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCli("query", "--profile", "uat", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql", "select 1");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-1));
-				Assert.That(result.Error,    Does.Contain("Option '--profile' requires option '--config'."));
+				(result.ExitCode).ShouldBe(-1);
+				(result.Error).ShouldContain("Option '--profile' requires option '--config'.");
 			}
 		}
 
@@ -460,12 +437,11 @@ namespace Tests.LinqToDB.CLI
 			var environment = new TestCliEnvironment();
 			var result      = await RunCli(environment, "query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--output", "csv", "--output-file", "query.csv", "--sql", "select 1 as Value");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Is.Empty);
-				Assert.That(result.Error,    Is.Empty);
-				Assert.That(environment.Files["query.csv"], Is.EqualTo($"Value{Environment.NewLine}1{Environment.NewLine}"));
+				(result.ExitCode).ShouldBe(0);
+				(result.Output).ShouldBeEmpty();
+				(result.Error).ShouldBeEmpty();
+				(environment.Files["query.csv"]).ShouldBe($"Value{Environment.NewLine}1{Environment.NewLine}");
 			}
 		}
 
@@ -478,12 +454,11 @@ namespace Tests.LinqToDB.CLI
 
 			var result = await RunCli(environment, "query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--output", "csv", "--output-file", "${OUTPUT_DIR}\\query.csv", "--sql", "select 1 as Value");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Is.Empty);
-				Assert.That(result.Error,    Is.Empty);
-				Assert.That(environment.Files["output\\query.csv"], Is.EqualTo($"Value{Environment.NewLine}1{Environment.NewLine}"));
+				(result.ExitCode).ShouldBe(0);
+				(result.Output).ShouldBeEmpty();
+				(result.Error).ShouldBeEmpty();
+				(environment.Files["output\\query.csv"]).ShouldBe($"Value{Environment.NewLine}1{Environment.NewLine}");
 			}
 		}
 
@@ -493,12 +468,11 @@ namespace Tests.LinqToDB.CLI
 			var environment = new TestCliEnvironment();
 			var result      = await RunCli(environment, "query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--output", "csv", "--output-file", "query.csv", "--sql", "select 'a,b' as [Comma,Name], 'a\"b' as QuoteValue, 'a' || char(10) || 'b' as MultilineValue, '' as EmptyValue, null as NullValue");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Is.Empty);
-				Assert.That(result.Error,    Is.Empty);
-				Assert.That(environment.Files["query.csv"], Is.EqualTo($"\"Comma,Name\",QuoteValue,MultilineValue,EmptyValue,NullValue{Environment.NewLine}\"a,b\",\"a\"\"b\",\"a\nb\",\"\",{Environment.NewLine}"));
+				(result.ExitCode).ShouldBe(0);
+				(result.Output).ShouldBeEmpty();
+				(result.Error).ShouldBeEmpty();
+				(environment.Files["query.csv"]).ShouldBe($"\"Comma,Name\",QuoteValue,MultilineValue,EmptyValue,NullValue{Environment.NewLine}\"a,b\",\"a\"\"b\",\"a\nb\",\"\",{Environment.NewLine}");
 			}
 		}
 
@@ -511,12 +485,11 @@ namespace Tests.LinqToDB.CLI
 
 			var result = await RunCli(environment, "query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--output", "csv", "--output-file", "query.csv", "--sql", "select 1 as Value");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-3));
-				Assert.That(result.Error,    Does.Contain("Output file 'query.csv' already exists."));
-				Assert.That(result.Error,    Does.Contain("--overwrite"));
-				Assert.That(environment.Files["query.csv"], Is.EqualTo("existing"));
+				(result.ExitCode).ShouldBe(-3);
+				(result.Error).ShouldContain("Output file 'query.csv' already exists.");
+				(result.Error).ShouldContain("--overwrite");
+				(environment.Files["query.csv"]).ShouldBe("existing");
 			}
 		}
 
@@ -529,12 +502,11 @@ namespace Tests.LinqToDB.CLI
 
 			var result = await RunCli(environment, "query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--output", "csv", "--output-file", "query.csv", "--overwrite", "--sql", "select 1 as Value");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Is.Empty);
-				Assert.That(result.Error,    Is.Empty);
-				Assert.That(environment.Files["query.csv"], Is.EqualTo($"Value{Environment.NewLine}1{Environment.NewLine}"));
+				(result.ExitCode).ShouldBe(0);
+				(result.Output).ShouldBeEmpty();
+				(result.Error).ShouldBeEmpty();
+				(environment.Files["query.csv"]).ShouldBe($"Value{Environment.NewLine}1{Environment.NewLine}");
 			}
 		}
 
@@ -543,13 +515,12 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql", "select 1 as Value, 2 as Value");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-3));
-				Assert.That(result.Error,    Does.Contain("JSON output requires unique column names."));
-				Assert.That(result.Error,    Does.Contain("Duplicate column name 'Value' found."));
-				Assert.That(result.Error,    Does.Contain("Use explicit SQL aliases"));
-				Assert.That(result.Error,    Does.Contain("json-table"));
+				(result.ExitCode).ShouldBe(-3);
+				(result.Error).ShouldContain("JSON output requires unique column names.");
+				(result.Error).ShouldContain("Duplicate column name 'Value' found.");
+				(result.Error).ShouldContain("Use explicit SQL aliases");
+				(result.Error).ShouldContain("json-table");
 			}
 		}
 
@@ -558,12 +529,11 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql", "select 1 as Value1, 2 as Value2");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("\"Value1\":\"1\""));
-				Assert.That(result.Output,   Does.Contain("\"Value2\":\"2\""));
-				Assert.That(result.Error,    Is.Empty);
+				(result.ExitCode).ShouldBe(0);
+				(result.Output).ShouldContain("\"Value1\":\"1\"");
+				(result.Output).ShouldContain("\"Value2\":\"2\"");
+				(result.Error).ShouldBeEmpty();
 			}
 		}
 
@@ -572,22 +542,21 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--output", "json-table", "--sql", "select 1 as Value, 2 as Value");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("\"rowCount\":1"));
-				Assert.That(result.Output,   Does.Contain("\"truncated\":false"));
-				Assert.That(result.Output,   Does.Contain("\"columns\":["));
-				Assert.That(result.Output,   Does.Contain("\"ordinal\":0"));
-				Assert.That(result.Output,   Does.Contain("\"ordinal\":1"));
-				Assert.That(result.Output,   Does.Contain("\"name\":\"Value\""));
-				Assert.That(result.Output,   Does.Contain("\"fieldType\":\"System.Int64\""));
-				Assert.That(result.Output,   Does.Contain("\"providerSpecificFieldType\":\"System.Int64\""));
-				Assert.That(result.Output,   Does.Contain("\"dataTypeName\":\"INTEGER\""));
-				Assert.That(result.Output,   Does.Contain("\"rows\":["));
-				Assert.That(result.Output,   Does.Contain("\"1\""));
-				Assert.That(result.Output,   Does.Contain("\"2\""));
-				Assert.That(result.Error,    Is.Empty);
+				(result.ExitCode).ShouldBe(0);
+				(result.Output).ShouldContain("\"rowCount\":1");
+				(result.Output).ShouldContain("\"truncated\":false");
+				(result.Output).ShouldContain("\"columns\":[");
+				(result.Output).ShouldContain("\"ordinal\":0");
+				(result.Output).ShouldContain("\"ordinal\":1");
+				(result.Output).ShouldContain("\"name\":\"Value\"");
+				(result.Output).ShouldContain("\"fieldType\":\"System.Int64\"");
+				(result.Output).ShouldContain("\"providerSpecificFieldType\":\"System.Int64\"");
+				(result.Output).ShouldContain("\"dataTypeName\":\"INTEGER\"");
+				(result.Output).ShouldContain("\"rows\":[");
+				(result.Output).ShouldContain("\"1\"");
+				(result.Output).ShouldContain("\"2\"");
+				(result.Error).ShouldBeEmpty();
 			}
 		}
 
@@ -607,13 +576,12 @@ namespace Tests.LinqToDB.CLI
 
 			var result = await RunCli(environment, "query", "--config", config, "--sql", "select 1 as Value");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("\"rowCount\":1"));
-				Assert.That(result.Output,   Does.Contain("\"columns\":["));
-				Assert.That(result.Output,   Does.Contain("\"rows\":["));
-				Assert.That(result.Error,    Is.Empty);
+				(result.ExitCode).ShouldBe(0);
+				(result.Output).ShouldContain("\"rowCount\":1");
+				(result.Output).ShouldContain("\"columns\":[");
+				(result.Output).ShouldContain("\"rows\":[");
+				(result.Error).ShouldBeEmpty();
 			}
 		}
 
@@ -623,12 +591,11 @@ namespace Tests.LinqToDB.CLI
 			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql", "with recursive c(Value) as (select 1 union all select Value + 1 from c where Value < 1001) select Value from c");
 			var rowCount = result.Output.Split("\"Value\":", StringSplitOptions.None).Length - 1;
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(rowCount,        Is.EqualTo(1000));
-				Assert.That(result.Error,    Does.Contain("Query result truncated to 1000 row(s)."));
-				Assert.That(result.Error,    Does.Contain("--max-rows"));
+				(result.ExitCode).ShouldBe(0);
+				(rowCount).ShouldBe(1000);
+				(result.Error).ShouldContain("Query result truncated to 1000 row(s).");
+				(result.Error).ShouldContain("--max-rows");
 			}
 		}
 
@@ -637,12 +604,11 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--max-rows", "1", "--sql", "select 1 as Value union all select 2 as Value");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("\"Value\":\"1\""));
-				Assert.That(result.Output,   Does.Not.Contain("\"Value\":\"2\""));
-				Assert.That(result.Error,    Does.Contain("Query result truncated to 1 row(s)."));
+				(result.ExitCode).ShouldBe(0);
+				(result.Output).ShouldContain("\"Value\":\"1\"");
+				(result.Output).ShouldNotContain("\"Value\":\"2\"");
+				(result.Error).ShouldContain("Query result truncated to 1 row(s).");
 			}
 		}
 
@@ -651,12 +617,11 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--max-rows", "0", "--sql", "select 1 as Value union all select 2 as Value");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("\"Value\":\"1\""));
-				Assert.That(result.Output,   Does.Contain("\"Value\":\"2\""));
-				Assert.That(result.Error,    Is.Empty);
+				(result.ExitCode).ShouldBe(0);
+				(result.Output).ShouldContain("\"Value\":\"1\"");
+				(result.Output).ShouldContain("\"Value\":\"2\"");
+				(result.Error).ShouldBeEmpty();
 			}
 		}
 
@@ -676,12 +641,11 @@ namespace Tests.LinqToDB.CLI
 
 			var result = await RunCli(environment, "query", "--config", config, "--sql", "select 1 as Value union all select 2 as Value");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("\"Value\":\"1\""));
-				Assert.That(result.Output,   Does.Not.Contain("\"Value\":\"2\""));
-				Assert.That(result.Error,    Does.Contain("Query result truncated to 1 row(s)."));
+				(result.ExitCode).ShouldBe(0);
+				(result.Output).ShouldContain("\"Value\":\"1\"");
+				(result.Output).ShouldNotContain("\"Value\":\"2\"");
+				(result.Error).ShouldContain("Query result truncated to 1 row(s).");
 			}
 		}
 
@@ -701,12 +665,11 @@ namespace Tests.LinqToDB.CLI
 
 			var result = await RunCli(environment, "query", "--config", config, "--sql", "select 1 as Value union all select 2 as Value");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("\"Value\":\"1\""));
-				Assert.That(result.Output,   Does.Contain("\"Value\":\"2\""));
-				Assert.That(result.Error,    Is.Empty);
+				(result.ExitCode).ShouldBe(0);
+				(result.Output).ShouldContain("\"Value\":\"1\"");
+				(result.Output).ShouldContain("\"Value\":\"2\"");
+				(result.Error).ShouldBeEmpty();
 			}
 		}
 
@@ -715,10 +678,9 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--max-rows", "-1", "--sql", "select 1");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-1));
-				Assert.That(result.Error,    Does.Contain("Option '--max-rows' must be a non-negative integer row count."));
+				(result.ExitCode).ShouldBe(-1);
+				(result.Error).ShouldContain("Option '--max-rows' must be a non-negative integer row count.");
 			}
 		}
 
@@ -738,10 +700,9 @@ namespace Tests.LinqToDB.CLI
 
 			var result = await RunCli(environment, "query", "--config", config, "--sql", "select 1");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-1));
-				Assert.That(result.Error,    Does.Contain($"Configuration file '{config}' profile 'default' property 'maxRows' must be a non-negative integer row count."));
+				(result.ExitCode).ShouldBe(-1);
+				(result.Error).ShouldContain($"Configuration file '{config}' profile 'default' property 'maxRows' must be a non-negative integer row count.");
 			}
 		}
 
@@ -750,14 +711,13 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--output", "json-table", "--max-rows", "1", "--sql", "select 1 as Value union all select 2 as Value");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("\"rowCount\":1"));
-				Assert.That(result.Output,   Does.Contain("\"truncated\":true"));
-				Assert.That(result.Output,   Does.Contain("\"1\""));
-				Assert.That(result.Output,   Does.Not.Contain("\"2\""));
-				Assert.That(result.Error,    Is.Empty);
+				(result.ExitCode).ShouldBe(0);
+				(result.Output).ShouldContain("\"rowCount\":1");
+				(result.Output).ShouldContain("\"truncated\":true");
+				(result.Output).ShouldContain("\"1\"");
+				(result.Output).ShouldNotContain("\"2\"");
+				(result.Error).ShouldBeEmpty();
 			}
 		}
 
@@ -766,11 +726,10 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--command-timeout", "30", "--lock-timeout", "5", "--sql", "select 1 as Value");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("\"Value\":\"1\""));
-				Assert.That(result.Error,    Is.Empty);
+				(result.ExitCode).ShouldBe(0);
+				(result.Output).ShouldContain("\"Value\":\"1\"");
+				(result.Error).ShouldBeEmpty();
 			}
 		}
 
@@ -779,11 +738,10 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--command-timeout", "0", "--lock-timeout", "0", "--sql", "select 1 as Value");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("\"Value\":\"1\""));
-				Assert.That(result.Error,    Is.Empty);
+				(result.ExitCode).ShouldBe(0);
+				(result.Output).ShouldContain("\"Value\":\"1\"");
+				(result.Error).ShouldBeEmpty();
 			}
 		}
 
@@ -792,10 +750,9 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--command-timeout", "slow", "--sql", "select 1");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-1));
-				Assert.That(result.Error,    Does.Contain("Option '--command-timeout' must be a non-negative integer number of seconds."));
+				(result.ExitCode).ShouldBe(-1);
+				(result.Error).ShouldContain("Option '--command-timeout' must be a non-negative integer number of seconds.");
 			}
 		}
 
@@ -819,12 +776,11 @@ namespace Tests.LinqToDB.CLI
 
 			var result = await RunCli(environment, "query", "--config", config, "--sql", "select 1");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Is.Empty);
-				Assert.That(result.Error,    Is.Empty);
-				Assert.That(environment.Files["query.csv"], Is.EqualTo($"1{Environment.NewLine}1{Environment.NewLine}"));
+				(result.ExitCode).ShouldBe(0);
+				(result.Output).ShouldBeEmpty();
+				(result.Error).ShouldBeEmpty();
+				(environment.Files["query.csv"]).ShouldBe($"1{Environment.NewLine}1{Environment.NewLine}");
 			}
 		}
 
@@ -846,13 +802,12 @@ namespace Tests.LinqToDB.CLI
 
 			var result = await RunCli(environment, "query", "--config", "config\\query.json", "--sql", "select 1");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Is.Empty);
-				Assert.That(result.Error,    Is.Empty);
-				Assert.That(environment.Files["config\\query.csv"], Is.EqualTo($"1{Environment.NewLine}1{Environment.NewLine}"));
-				Assert.That(environment.Files.ContainsKey("query.csv"), Is.False);
+				(result.ExitCode).ShouldBe(0);
+				(result.Output).ShouldBeEmpty();
+				(result.Error).ShouldBeEmpty();
+				(environment.Files["config\\query.csv"]).ShouldBe($"1{Environment.NewLine}1{Environment.NewLine}");
+				(environment.Files.ContainsKey("query.csv")).ShouldBe(false);
 			}
 		}
 
@@ -874,14 +829,13 @@ namespace Tests.LinqToDB.CLI
 
 			var result = await RunCli(environment, "query", "--config", "config\\query.json", "--output-file", "cli.csv", "--sql", "select 1");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Is.Empty);
-				Assert.That(result.Error,    Is.Empty);
-				Assert.That(environment.Files["cli.csv"], Is.EqualTo($"1{Environment.NewLine}1{Environment.NewLine}"));
-				Assert.That(environment.Files.ContainsKey("config\\cli.csv"), Is.False);
-				Assert.That(environment.Files.ContainsKey("config\\config.csv"), Is.False);
+				(result.ExitCode).ShouldBe(0);
+				(result.Output).ShouldBeEmpty();
+				(result.Error).ShouldBeEmpty();
+				(environment.Files["cli.csv"]).ShouldBe($"1{Environment.NewLine}1{Environment.NewLine}");
+				(environment.Files.ContainsKey("config\\cli.csv")).ShouldBe(false);
+				(environment.Files.ContainsKey("config\\config.csv")).ShouldBe(false);
 			}
 		}
 
@@ -902,11 +856,10 @@ namespace Tests.LinqToDB.CLI
 
 			var result = await RunCli(environment, "query", "--config", "config\\query.json", "--sql", "select 1 as Value");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-3));
-				Assert.That(result.Output,   Is.Empty);
-				Assert.That(result.Error,    Does.Contain("Provider assembly 'config\\providers\\MySql.Data.dll' not found."));
+				(result.ExitCode).ShouldBe(-3);
+				(result.Output).ShouldBeEmpty();
+				(result.Error).ShouldContain("Provider assembly 'config\\providers\\MySql.Data.dll' not found.");
 			}
 		}
 
@@ -927,11 +880,10 @@ namespace Tests.LinqToDB.CLI
 
 			var result = await RunCli(environment, "query", "--config", "${CONFIG_DIR}\\query.json", "--sql", "select 1 as Value");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("\"Value\":\"1\""));
-				Assert.That(result.Error,    Is.Empty);
+				(result.ExitCode).ShouldBe(0);
+				(result.Output).ShouldContain("\"Value\":\"1\"");
+				(result.Error).ShouldBeEmpty();
 			}
 		}
 
@@ -946,11 +898,10 @@ namespace Tests.LinqToDB.CLI
 
 			var result = await RunCli(environment, "query", "--provider", "SQLite", "--provider-location", "%PROVIDER_DIR%\\" + Path.GetFileName(providerLocation), "--connection-string", "Data Source=:memory:", "--sql", "select 1 as Value");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("\"Value\":\"1\""));
-				Assert.That(result.Error,    Is.Empty);
+				(result.ExitCode).ShouldBe(0);
+				(result.Output).ShouldContain("\"Value\":\"1\"");
+				(result.Error).ShouldBeEmpty();
 			}
 		}
 
@@ -959,11 +910,10 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCli("query", "--provider", "SQLite", "--provider-location", "%PROVIDER_DIR%\\provider.dll", "--connection-string", "Data Source=:memory:", "--sql", "select 1 as Value");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-1));
-				Assert.That(result.Output,   Is.Empty);
-				Assert.That(result.Error,    Does.Contain("Environment variable 'PROVIDER_DIR' referenced by option '--provider-location' is not set."));
+				(result.ExitCode).ShouldBe(-1);
+				(result.Output).ShouldBeEmpty();
+				(result.Error).ShouldContain("Environment variable 'PROVIDER_DIR' referenced by option '--provider-location' is not set.");
 			}
 		}
 
@@ -984,11 +934,10 @@ namespace Tests.LinqToDB.CLI
 
 			var result = await RunCli(environment, "query", "--config", "config\\query.json", "--sql", "select 1 as Value");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-1));
-				Assert.That(result.Output,   Is.Empty);
-				Assert.That(result.Error,    Does.Contain("Environment variable 'PROVIDER_DIR' referenced by option '--provider-location' is not set."));
+				(result.ExitCode).ShouldBe(-1);
+				(result.Output).ShouldBeEmpty();
+				(result.Error).ShouldContain("Environment variable 'PROVIDER_DIR' referenced by option '--provider-location' is not set.");
 			}
 		}
 
@@ -997,10 +946,9 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql-file", "%QUERY_DIR%\\query.sql");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-1));
-				Assert.That(result.Error,    Does.Contain("Environment variable 'QUERY_DIR' referenced by option '--sql-file' is not set."));
+				(result.ExitCode).ShouldBe(-1);
+				(result.Error).ShouldContain("Environment variable 'QUERY_DIR' referenced by option '--sql-file' is not set.");
 			}
 		}
 
@@ -1020,10 +968,9 @@ namespace Tests.LinqToDB.CLI
 
 			var result = await RunCli(environment, "query", "--config", config, "--sql", "select 1");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-1));
-				Assert.That(result.Error,    Does.Contain($"Configuration file '{config}' profile 'default' property 'commandTimeout' must be a non-negative integer number of seconds."));
+				(result.ExitCode).ShouldBe(-1);
+				(result.Error).ShouldContain($"Configuration file '{config}' profile 'default' property 'commandTimeout' must be a non-negative integer number of seconds.");
 			}
 		}
 
@@ -1048,11 +995,10 @@ namespace Tests.LinqToDB.CLI
 
 			var result = await RunCli(environment, "query", "--config", config, "--profile", "uat", "--sql-file", "query.sql");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("\"Value\":\"2\""));
-				Assert.That(result.Error,    Is.Empty);
+				(result.ExitCode).ShouldBe(0);
+				(result.Output).ShouldContain("\"Value\":\"2\"");
+				(result.Error).ShouldBeEmpty();
 			}
 		}
 
@@ -1077,12 +1023,11 @@ namespace Tests.LinqToDB.CLI
 
 			var result = await RunCli(environment, "query", "--config", config, "--profile", "uat", "--sql", "select 1");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Is.Empty);
-				Assert.That(result.Error,    Is.Empty);
-				Assert.That(environment.Files["default.csv"], Does.Contain("\"1\":\"1\""));
+				(result.ExitCode).ShouldBe(0);
+				(result.Output).ShouldBeEmpty();
+				(result.Error).ShouldBeEmpty();
+				(environment.Files["default.csv"]).ShouldContain("\"1\":\"1\"");
 			}
 		}
 
@@ -1106,12 +1051,11 @@ namespace Tests.LinqToDB.CLI
 
 			var result = await RunCli(environment, "query", "--config", config, "--profile", "uat", "--connection-string", "Data Source=:memory:", "--output", "json", "--output-file", "cli.json", "--sql", "select 1 as Value");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Is.Empty);
-				Assert.That(result.Error,    Is.Empty);
-				Assert.That(environment.Files["cli.json"], Does.Contain("\"Value\":\"1\""));
+				(result.ExitCode).ShouldBe(0);
+				(result.Output).ShouldBeEmpty();
+				(result.Error).ShouldBeEmpty();
+				(environment.Files["cli.json"]).ShouldContain("\"Value\":\"1\"");
 			}
 		}
 
@@ -1120,11 +1064,10 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source={0}", "--user", ":memory:", "--password", "ignored", "--sql", "select 1 as Value");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("\"Value\":\"1\""));
-				Assert.That(result.Error,    Is.Empty);
+				(result.ExitCode).ShouldBe(0);
+				(result.Output).ShouldContain("\"Value\":\"1\"");
+				(result.Error).ShouldBeEmpty();
 			}
 		}
 
@@ -1133,14 +1076,13 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source={memory};Mode=Memory;Cache=Shared", "--sql", "select 1 as Value");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-1));
-				Assert.That(result.Error,    Does.Contain("Invalid connection string format:"));
-				Assert.That(result.Error,    Does.Contain("{0}"));
-				Assert.That(result.Error,    Does.Contain("{1}"));
-				Assert.That(result.Error,    Does.Contain("{{"));
-				Assert.That(result.Error,    Does.Contain("}}"));
+				(result.ExitCode).ShouldBe(-1);
+				(result.Error).ShouldContain("Invalid connection string format:");
+				(result.Error).ShouldContain("{0}");
+				(result.Error).ShouldContain("{1}");
+				(result.Error).ShouldContain("{{");
+				(result.Error).ShouldContain("}}");
 			}
 		}
 
@@ -1149,11 +1091,10 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source={{memory}};Mode=Memory;Cache=Shared", "--sql", "select 1 as Value");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("\"Value\":\"1\""));
-				Assert.That(result.Error,    Is.Empty);
+				(result.ExitCode).ShouldBe(0);
+				(result.Output).ShouldContain("\"Value\":\"1\"");
+				(result.Error).ShouldBeEmpty();
 			}
 		}
 
@@ -1174,11 +1115,10 @@ namespace Tests.LinqToDB.CLI
 
 			var result = await RunCli(environment, "query", "--config", config, "--sql", "select 1 as Value");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("\"Value\":\"1\""));
-				Assert.That(result.Error,    Is.Empty);
+				(result.ExitCode).ShouldBe(0);
+				(result.Output).ShouldContain("\"Value\":\"1\"");
+				(result.Error).ShouldBeEmpty();
 			}
 		}
 
@@ -1191,11 +1131,10 @@ namespace Tests.LinqToDB.CLI
 
 			var result = await RunCli(environment, "query", "--provider", "SQLite", "--connection-string-env", "LINQ2DB_QUERY_CONNECTION", "--sql", "select 1 as Value");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("\"Value\":\"1\""));
-				Assert.That(result.Error,    Is.Empty);
+				(result.ExitCode).ShouldBe(0);
+				(result.Output).ShouldContain("\"Value\":\"1\"");
+				(result.Error).ShouldBeEmpty();
 			}
 		}
 
@@ -1208,11 +1147,10 @@ namespace Tests.LinqToDB.CLI
 
 			var result = await RunCli(environment, "query", "--provider", "SQLite", "--connection-string", "Data Source={0}", "--user-env", "LINQ2DB_QUERY_USER", "--sql", "select 1 as Value");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("\"Value\":\"1\""));
-				Assert.That(result.Error,    Is.Empty);
+				(result.ExitCode).ShouldBe(0);
+				(result.Output).ShouldContain("\"Value\":\"1\"");
+				(result.Error).ShouldBeEmpty();
 			}
 		}
 
@@ -1225,11 +1163,10 @@ namespace Tests.LinqToDB.CLI
 
 			var result = await RunCli(environment, "query", "--provider", "SQLite", "--connection-string", "Data Source={1}", "--password-env", "LINQ2DB_QUERY_PASSWORD", "--sql", "select 1 as Value");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("\"Value\":\"1\""));
-				Assert.That(result.Error,    Is.Empty);
+				(result.ExitCode).ShouldBe(0);
+				(result.Output).ShouldContain("\"Value\":\"1\"");
+				(result.Error).ShouldBeEmpty();
 			}
 		}
 
@@ -1238,10 +1175,9 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source={1}", "--password-env", "LINQ2DB_QUERY_PASSWORD", "--sql", "select 1 as Value");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-1));
-				Assert.That(result.Error,    Does.Contain("Environment variable 'LINQ2DB_QUERY_PASSWORD' specified for option '--password' is not set."));
+				(result.ExitCode).ShouldBe(-1);
+				(result.Error).ShouldContain("Environment variable 'LINQ2DB_QUERY_PASSWORD' specified for option '--password' is not set.");
 			}
 		}
 
@@ -1260,11 +1196,10 @@ namespace Tests.LinqToDB.CLI
 
 			var result = await RunCli(environment, "query", "--config", config, "--connection-string", "Data Source=:memory:", "--sql", "select 1 as Value");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("\"Value\":\"1\""));
-				Assert.That(result.Error,    Is.Empty);
+				(result.ExitCode).ShouldBe(0);
+				(result.Output).ShouldContain("\"Value\":\"1\"");
+				(result.Error).ShouldBeEmpty();
 			}
 		}
 
@@ -1285,11 +1220,10 @@ namespace Tests.LinqToDB.CLI
 
 			var result = await RunCli(environment, "query", "--config", config, "--sql", "select 1 as Value");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("\"Value\":\"1\""));
-				Assert.That(result.Error,    Is.Empty);
+				(result.ExitCode).ShouldBe(0);
+				(result.Output).ShouldContain("\"Value\":\"1\"");
+				(result.Error).ShouldBeEmpty();
 			}
 		}
 
@@ -1313,11 +1247,10 @@ namespace Tests.LinqToDB.CLI
 
 			var result = await RunCli(environment, "query", "--config", config, "--sql", "select 1 as Value");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("\"Value\":\"1\""));
-				Assert.That(result.Error,    Is.Empty);
+				(result.ExitCode).ShouldBe(0);
+				(result.Output).ShouldContain("\"Value\":\"1\"");
+				(result.Error).ShouldBeEmpty();
 			}
 		}
 
@@ -1336,10 +1269,9 @@ namespace Tests.LinqToDB.CLI
 
 			var result = await RunCli(environment, "query", "--config", config);
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-1));
-				Assert.That(result.Error,    Does.Contain("Either '--sql' or '--sql-file' option must be specified."));
+				(result.ExitCode).ShouldBe(-1);
+				(result.Error).ShouldContain("Either '--sql' or '--sql-file' option must be specified.");
 			}
 		}
 
@@ -1358,10 +1290,9 @@ namespace Tests.LinqToDB.CLI
 
 			var result = await RunCli(environment, "query", "--config", config, "--profile", "uat", "--sql", "select 1");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-1));
-				Assert.That(result.Error,    Does.Contain($"Configuration file '{config}' doesn't contain 'uat' profile."));
+				(result.ExitCode).ShouldBe(-1);
+				(result.Error).ShouldContain($"Configuration file '{config}' doesn't contain 'uat' profile.");
 			}
 		}
 
@@ -1381,10 +1312,9 @@ namespace Tests.LinqToDB.CLI
 
 			var result = await RunCli(environment, "query", "--config", config, "--sql-file", "query.sql");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-1));
-				Assert.That(result.Error,    Does.Contain($"Configuration file '{config}' profile 'default' contains unknown property 'sql'."));
+				(result.ExitCode).ShouldBe(-1);
+				(result.Error).ShouldContain($"Configuration file '{config}' profile 'default' contains unknown property 'sql'.");
 			}
 		}
 
@@ -1404,10 +1334,9 @@ namespace Tests.LinqToDB.CLI
 
 			var result = await RunCli(environment, "query", "--config", config, "--sql", "select 1");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-1));
-				Assert.That(result.Error,    Does.Contain($"Configuration file '{config}' profile 'default' property 'output' has unknown value 'xml'."));
+				(result.ExitCode).ShouldBe(-1);
+				(result.Error).ShouldContain($"Configuration file '{config}' profile 'default' property 'output' has unknown value 'xml'.");
 			}
 		}
 
@@ -1427,10 +1356,9 @@ namespace Tests.LinqToDB.CLI
 
 			var result = await RunCli(environment, "query", "--config", config, "--sql", "select 1");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-1));
-				Assert.That(result.Error,    Does.Contain($"Configuration file '{config}' profile 'default' property 'unsafeSql' has unknown value 'prompt'."));
+				(result.ExitCode).ShouldBe(-1);
+				(result.Error).ShouldContain($"Configuration file '{config}' profile 'default' property 'unsafeSql' has unknown value 'prompt'.");
 			}
 		}
 
@@ -1450,10 +1378,9 @@ namespace Tests.LinqToDB.CLI
 
 			var result = await RunCli(environment, "query", "--config", config, "--sql", "select 1");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-1));
-				Assert.That(result.Error,    Does.Contain("Option '--impersonate' requires resolved '--user' and '--password' values."));
+				(result.ExitCode).ShouldBe(-1);
+				(result.Error).ShouldContain("Option '--impersonate' requires resolved '--user' and '--password' values.");
 			}
 		}
 
@@ -1473,10 +1400,9 @@ namespace Tests.LinqToDB.CLI
 
 			var result = await RunCli(environment, "query", "--config", config, "--sql", "select 1");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-1));
-				Assert.That(result.Error,    Does.Contain($"Configuration file '{config}' profile 'default' property 'impersonate' must be boolean."));
+				(result.ExitCode).ShouldBe(-1);
+				(result.Error).ShouldContain($"Configuration file '{config}' profile 'default' property 'impersonate' must be boolean.");
 			}
 		}
 
@@ -1496,10 +1422,9 @@ namespace Tests.LinqToDB.CLI
 
 			var result = await RunCli(environment, "query", "--config", config, "--sql", "select 1");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.EqualTo(-1));
-				Assert.That(result.Error,    Does.Contain($"Configuration file '{config}' profile 'default' property 'impersonateMode' has unknown value 'bad-mode'."));
+				(result.ExitCode).ShouldBe(-1);
+				(result.Error).ShouldContain($"Configuration file '{config}' profile 'default' property 'impersonateMode' has unknown value 'bad-mode'.");
 			}
 		}
 
@@ -1508,10 +1433,9 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--impersonate-mode", "8", "--sql", "select 1 as Id");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Is.EqualTo("""[{"Id":"1"}]"""));
+				(result.ExitCode).ShouldBe(0);
+				(result.Output).ShouldBe("""[{"Id":"1"}]""");
 			}
 		}
 
@@ -1531,10 +1455,9 @@ namespace Tests.LinqToDB.CLI
 
 			var result = await RunCli(environment, "query", "--config", config, "--sql", "select 1 as Id");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Is.EqualTo("""[{"Id":"1"}]"""));
+				(result.ExitCode).ShouldBe(0);
+				(result.Output).ShouldBe("""[{"Id":"1"}]""");
 			}
 		}
 
@@ -1543,52 +1466,51 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCli("help", "query");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("dotnet linq2db query <options>"));
-				Assert.That(result.Output,   Does.Contain("--config"));
-				Assert.That(result.Output,   Does.Contain("--profile"));
-				Assert.That(result.Output,   Does.Contain("--provider"));
-				Assert.That(result.Output,   Does.Contain("--provider-location"));
-				Assert.That(result.Output,   Does.Contain("dependencies must be available next to it or through normal application probing"));
-				Assert.That(result.Output,   Does.Contain("--connection-string"));
-				Assert.That(result.Output,   Does.Contain("--connection-string-env"));
-				Assert.That(result.Output,   Does.Contain("--user"));
-				Assert.That(result.Output,   Does.Contain("--user-env"));
-				Assert.That(result.Output,   Does.Contain("--password"));
-				Assert.That(result.Output,   Does.Contain("--password-env"));
-				Assert.That(result.Output,   Does.Contain("--impersonate"));
-				Assert.That(result.Output,   Does.Contain("run database access under resolved user/password credentials"));
-				Assert.That(result.Output,   Does.Contain("--impersonate-mode"));
-				Assert.That(result.Output,   Does.Contain("Windows impersonation logon mode"));
-				Assert.That(result.Output,   Does.Contain("network-cleartext"));
-				Assert.That(result.Output,   Does.Contain("system code for network cleartext logon"));
-				Assert.That(result.Output,   Does.Contain("--command-timeout"));
-				Assert.That(result.Output,   Does.Contain("--lock-timeout"));
-				Assert.That(result.Output,   Does.Contain("--max-rows"));
-				Assert.That(result.Output,   Does.Contain("--allow-unsafe-sql"));
-				Assert.That(result.Output,   Does.Contain("ask the user before using this option"));
-				Assert.That(result.Output,   Does.Contain("agents can analyze code together with live database data"));
-				Assert.That(result.Output,   Does.Contain("--output"));
-				Assert.That(result.Output,   Does.Contain("--output-file"));
-				Assert.That(result.Output,   Does.Contain("--overwrite"));
-				Assert.That(result.Output,   Does.Contain("json-table"));
-				Assert.That(result.Output,   Does.Contain("--sql"));
-				Assert.That(result.Output,   Does.Contain("--sql-file"));
-				Assert.That(result.Output,   Does.Contain("single user-provided SQL query text"));
-				Assert.That(result.Output,   Does.Contain("configure provider-specific connection timeout here"));
-				Assert.That(result.Output,   Does.Contain("SQL command timeout in seconds; 0 disables the option"));
-				Assert.That(result.Output,   Does.Contain("provider-specific lock wait timeout in seconds; 0 disables the option"));
-				Assert.That(result.Output,   Does.Contain("maximum number of result rows to read; 0 disables the limit"));
-				Assert.That(result.Output,   Does.Contain("Examples:"));
-				Assert.That(result.Output,   Does.Contain("dotnet linq2db query --provider SQLite --connection-string \"Data Source=data.db\" --sql \"select * from Person\""));
-				Assert.That(result.Output,   Does.Contain("dotnet linq2db query --provider SQLite --connection-string \"Data Source=data.db\" --sql-file query.sql"));
-				Assert.That(result.Output,   Does.Contain("dotnet linq2db query --config query.json --profile uat --command-timeout 30 --sql-file query.sql"));
-				Assert.That(result.Output,   Does.Contain("dotnet linq2db query --config query.json --profile uat --user readonly --password secret --sql-file query.sql"));
-				Assert.That(result.Output,   Does.Contain("dotnet linq2db query --config query.json --profile uat --output json-table --sql \"select p.Id, o.Id from Person p join Orders o on o.PersonId = p.Id\""));
-				Assert.That(result.Output,   Does.Contain("dotnet linq2db query --provider DB2 --provider-location \"C:\\path\\to\\IBM.Data.Db2.dll\" --connection-string \"Server=localhost:50000;Database=testdb;UID=db2inst1;PWD=Password12!\" --sql \"select * from SYSIBM.SYSDUMMY1\""));
-				Assert.That(result.Output,   Does.Contain("dotnet linq2db query --provider SQLite --connection-string \"Data Source=data.db\" --output csv --output-file result.csv --sql \"select * from Person\""));
+				(result.ExitCode).ShouldBe(0);
+				(result.Output).ShouldContain("dotnet linq2db query <options>");
+				(result.Output).ShouldContain("--config");
+				(result.Output).ShouldContain("--profile");
+				(result.Output).ShouldContain("--provider");
+				(result.Output).ShouldContain("--provider-location");
+				(result.Output).ShouldContain("dependencies must be available next to it or through normal application probing");
+				(result.Output).ShouldContain("--connection-string");
+				(result.Output).ShouldContain("--connection-string-env");
+				(result.Output).ShouldContain("--user");
+				(result.Output).ShouldContain("--user-env");
+				(result.Output).ShouldContain("--password");
+				(result.Output).ShouldContain("--password-env");
+				(result.Output).ShouldContain("--impersonate");
+				(result.Output).ShouldContain("run database access under resolved user/password credentials");
+				(result.Output).ShouldContain("--impersonate-mode");
+				(result.Output).ShouldContain("Windows impersonation logon mode");
+				(result.Output).ShouldContain("network-cleartext");
+				(result.Output).ShouldContain("system code for network cleartext logon");
+				(result.Output).ShouldContain("--command-timeout");
+				(result.Output).ShouldContain("--lock-timeout");
+				(result.Output).ShouldContain("--max-rows");
+				(result.Output).ShouldContain("--allow-unsafe-sql");
+				(result.Output).ShouldContain("ask the user before using this option");
+				(result.Output).ShouldContain("agents can analyze code together with live database data");
+				(result.Output).ShouldContain("--output");
+				(result.Output).ShouldContain("--output-file");
+				(result.Output).ShouldContain("--overwrite");
+				(result.Output).ShouldContain("json-table");
+				(result.Output).ShouldContain("--sql");
+				(result.Output).ShouldContain("--sql-file");
+				(result.Output).ShouldContain("single user-provided SQL query text");
+				(result.Output).ShouldContain("configure provider-specific connection timeout here");
+				(result.Output).ShouldContain("SQL command timeout in seconds; 0 disables the option");
+				(result.Output).ShouldContain("provider-specific lock wait timeout in seconds; 0 disables the option");
+				(result.Output).ShouldContain("maximum number of result rows to read; 0 disables the limit");
+				(result.Output).ShouldContain("Examples:");
+				(result.Output).ShouldContain("dotnet linq2db query --provider SQLite --connection-string \"Data Source=data.db\" --sql \"select * from Person\"");
+				(result.Output).ShouldContain("dotnet linq2db query --provider SQLite --connection-string \"Data Source=data.db\" --sql-file query.sql");
+				(result.Output).ShouldContain("dotnet linq2db query --config query.json --profile uat --command-timeout 30 --sql-file query.sql");
+				(result.Output).ShouldContain("dotnet linq2db query --config query.json --profile uat --user readonly --password secret --sql-file query.sql");
+				(result.Output).ShouldContain("dotnet linq2db query --config query.json --profile uat --output json-table --sql \"select p.Id, o.Id from Person p join Orders o on o.PersonId = p.Id\"");
+				(result.Output).ShouldContain("dotnet linq2db query --provider DB2 --provider-location \"C:\\path\\to\\IBM.Data.Db2.dll\" --connection-string \"Server=localhost:50000;Database=testdb;UID=db2inst1;PWD=Password12!\" --sql \"select * from SYSIBM.SYSDUMMY1\"");
+				(result.Output).ShouldContain("dotnet linq2db query --provider SQLite --connection-string \"Data Source=data.db\" --output csv --output-file result.csv --sql \"select * from Person\"");
 			}
 		}
 
@@ -1597,13 +1519,12 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCli("help");
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result.ExitCode, Is.Zero);
-				Assert.That(result.Output,   Does.Contain("dotnet linq2db query <options> : execute read-oriented SQL query so agents can analyze code together with live database data"));
-				Assert.That(result.Output,   Does.Contain("dotnet linq2db scaffold <options> : generate database data model classes from database schema"));
-				Assert.That(result.Output,   Does.Contain("dotnet linq2db query --provider SQLite --connection-string \"Data Source=data.db\" --sql \"select * from Person\""));
-				Assert.That(result.Output,   Does.Contain("execute read-oriented SQL query against SQLite database and write JSON result to console"));
+				(result.ExitCode).ShouldBe(0);
+				(result.Output).ShouldContain("dotnet linq2db query <options> : execute read-oriented SQL query so agents can analyze code together with live database data");
+				(result.Output).ShouldContain("dotnet linq2db scaffold <options> : generate database data model classes from database schema");
+				(result.Output).ShouldContain("dotnet linq2db query --provider SQLite --connection-string \"Data Source=data.db\" --sql \"select * from Person\"");
+				(result.Output).ShouldContain("execute read-oriented SQL query against SQLite database and write JSON result to console");
 			}
 		}
 

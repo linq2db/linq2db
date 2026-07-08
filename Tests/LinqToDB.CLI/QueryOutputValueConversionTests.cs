@@ -7,6 +7,11 @@ using LinqToDB.CommandLine.Commands.QueryExecution;
 
 using NUnit.Framework;
 
+using Shouldly;
+
+#nullable enable annotations
+#nullable disable warnings
+
 namespace Tests.LinqToDB.CLI
 {
 	[TestFixture]
@@ -36,25 +41,24 @@ namespace Tests.LinqToDB.CLI
 
 			using var reader = table.CreateDataReader();
 
-			Assert.That(reader.Read(), Is.True);
+			(reader.Read()).ShouldBe(true);
 
-			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(ReadFieldAsString(reader, "None",      0), Is.EqualTo("text"));
-				Assert.That(ReadFieldAsString(reader, "Boolean",   1), Is.EqualTo("true"));
-				Assert.That(ReadFieldAsString(reader, "None",      2), Is.EqualTo("42"));
-				Assert.That(ReadFieldAsString(reader, "None",      3), Is.EqualTo("42000000000"));
-				Assert.That(ReadFieldAsString(reader, "None",      4), Is.EqualTo("123.45"));
-				Assert.That(ReadFieldAsString(reader, "Double",    5), Is.EqualTo("1.25"));
-				Assert.That(ReadFieldAsString(reader, "Date",      6), Is.EqualTo("2026-07-05"));
-				Assert.That(ReadFieldAsString(reader, "DateTime",  6), Is.EqualTo("2026-07-05T12:34:56.0000000"));
-				Assert.That(ReadFieldAsString(reader, "TimeSpan",  7), Is.EqualTo("12:34:56"));
-				Assert.That(ReadFieldAsString(reader, "None",      8), Is.EqualTo("01234567-89ab-cdef-0123-456789abcdef"));
-				Assert.That(ReadFieldAsString(reader, "Bytes",     9), Is.EqualTo("0x010203"));
-				Assert.That(ReadFieldAsString(reader, "ByteArray", 9), Is.EqualTo("[1,2,3]"));
-				Assert.That(ReadFieldAsString(reader, "None",      10), Is.EqualTo("03:04:05.1230000"));
+				(ReadFieldAsString(reader, "None",      0)).ShouldBe("text");
+				(ReadFieldAsString(reader, "Boolean",   1)).ShouldBe("true");
+				(ReadFieldAsString(reader, "None",      2)).ShouldBe("42");
+				(ReadFieldAsString(reader, "None",      3)).ShouldBe("42000000000");
+				(ReadFieldAsString(reader, "None",      4)).ShouldBe("123.45");
+				(ReadFieldAsString(reader, "Double",    5)).ShouldBe("1.25");
+				(ReadFieldAsString(reader, "Date",      6)).ShouldBe("2026-07-05");
+				(ReadFieldAsString(reader, "DateTime",  6)).ShouldBe("2026-07-05T12:34:56.0000000");
+				(ReadFieldAsString(reader, "TimeSpan",  7)).ShouldBe("12:34:56");
+				(ReadFieldAsString(reader, "None",      8)).ShouldBe("01234567-89ab-cdef-0123-456789abcdef");
+				(ReadFieldAsString(reader, "Bytes",     9)).ShouldBe("0x010203");
+				(ReadFieldAsString(reader, "ByteArray", 9)).ShouldBe("[1,2,3]");
+				(ReadFieldAsString(reader, "None",      10)).ShouldBe("03:04:05.1230000");
 
-				Assert.That(reader.IsDBNull(11), Is.True);
+				(reader.IsDBNull(11)).ShouldBe(true);
 			}
 		}
 

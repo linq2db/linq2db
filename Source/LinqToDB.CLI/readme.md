@@ -79,12 +79,12 @@ Available commands:
 - `dotnet linq2db scaffold <options>`: performs database model scaffolding
 - `dotnet linq2db template [-o template_path]`: creates base T4 template file for scaffolding customization code
 - `dotnet linq2db query <options>`: executes a single read-oriented SQL query and writes JSON, JSON table, or CSV output
-- `dotnet linq2db mcp <options>`: runs a STDIO Model Context Protocol server exposing the `linq2db_query` tool
+- `dotnet linq2db mcp <options>`: runs a STDIO Model Context Protocol server exposing `linq2db_info`, `linq2db_query`, and `linq2db_skill`
 - `dotnet linq2db skill`: prints agent-oriented CLI usage instructions
 
 For MCP-capable agent hosts, `mcp` is the intended integration mode. Use `query` for lighter direct invocation when MCP is unavailable, not allowed by policy, or not needed for a specific environment.
 
-The MCP server exposes `linq2db_info` for non-secret runtime discovery of available profiles, providers, SQL dialects, defaults, and safety rules. Use it before `linq2db_query` when the active provider or dialect is unknown.
+The MCP server exposes `linq2db_info` for non-secret runtime discovery of available profiles, providers, SQL dialects, defaults, and safety rules. Use it before `linq2db_query` when the active provider or dialect is unknown. Use `linq2db_skill` when detailed CLI/MCP guidance, supported provider notes, or safety rules are needed.
 
 For list of available options, use `dotnet linq2db help <command>` command.
 
