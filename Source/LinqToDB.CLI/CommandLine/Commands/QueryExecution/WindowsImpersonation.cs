@@ -34,7 +34,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			if (!OperatingSystem.IsWindows())
 				throw new PlatformNotSupportedException("Windows impersonation is supported only on Windows.");
 
-			return RunWindows(user, password, mode, action);
+			return RunWindowsAsync(user, password, mode, action);
 		}
 
 		[SupportedOSPlatform("windows")]
@@ -48,6 +48,19 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 
 			using (token)
 				return WindowsIdentity.RunImpersonated(token, action);
+		}
+
+		[SupportedOSPlatform("windows")]
+		static async Task<T> RunWindowsAsync<T>(string user, string password, WindowsImpersonationMode mode, Func<Task<T>> action)
+		{
+			SplitUserName(user, out var domain, out var userName);
+			GetLogonOptions(mode, out var logonType, out var logonProvider);
+
+			if (!LogonUser(userName, domain, password, logonType, logonProvider, out var token))
+				throw new Win32Exception(Marshal.GetLastWin32Error(), "Windows impersonation logon failed.");
+
+			using (token)
+				return await WindowsIdentity.RunImpersonated(token, action).ConfigureAwait(false);
 		}
 
 		static void GetLogonOptions(WindowsImpersonationMode mode, out int logonType, out int logonProvider)

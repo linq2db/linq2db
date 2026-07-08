@@ -54,7 +54,7 @@ namespace LinqToDB.CommandLine.Commands.ConfigInit
 			false,
 			false,
 			"output format to write to the initialized profile",
-			null,
+			"Configuration profiles are shared by query and MCP. The query command supports json, json-table, and csv. The MCP linq2db_query tool supports only json and json-table; when a profile uses csv, MCP calls must override output to json-table or json.",
 			null,
 			null,
 			false,
@@ -89,7 +89,7 @@ namespace LinqToDB.CommandLine.Commands.ConfigInit
 				true,
 				false,
 				"<options>",
-				"create or update a query/MCP configuration profile",
+				"create or update a query/MCP configuration profile; generated profiles intentionally include maxRows, output, and unsafeSql for manual editing",
 				[
 					new("dotnet linq2db config-init --provider SQLite --connection-string \"Data Source=data.db\"",
 						"creates .agents/linq2db-query.json with the default profile"),
@@ -97,6 +97,8 @@ namespace LinqToDB.CommandLine.Commands.ConfigInit
 						"adds a dev profile that reads its connection string from an environment variable"),
 					new("dotnet linq2db config-init --config query.json --profile dev --provider PostgreSQL --connection-string-env LINQ2DB_DEV_CONNECTION --if-exists replace",
 						"replaces an existing dev profile"),
+					new("dotnet linq2db config-init --config query.json --profile export --provider SQLite --connection-string \"Data Source=data.db\" --output csv",
+						"creates a shared query/MCP profile with CSV as the query command default; MCP calls must override output to json-table or json"),
 				])
 		{
 			AddOption(QueryExecutionCliOptions.ConfigurationOptions, QueryExecutionCliOptions.Config);

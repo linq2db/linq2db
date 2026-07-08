@@ -87,6 +87,10 @@ For MCP-capable agent hosts, `mcp` is the intended integration mode. Use `query`
 
 The MCP server exposes `linq2db_info` for non-secret runtime discovery of available profiles, providers, SQL dialects, defaults, and safety rules. Use it before `linq2db_query` when the active provider or dialect is unknown. Use `linq2db_skill` when detailed CLI/MCP guidance, supported provider notes, or safety rules are needed.
 
+`config-init` writes common editable settings (`maxRows`, `output`, and `unsafeSql`) into every created profile intentionally. This makes generated profiles self-explanatory and easier to edit manually. Named profiles still inherit missing values from `default` when those values are removed manually.
+
+Configuration profiles are shared by `query` and `mcp`. The `query` command supports `json`, `json-table`, and `csv`. The MCP `linq2db_query` tool supports only `json` and `json-table`; if a selected profile has `output: "csv"`, MCP calls must pass `output: "json-table"` or `output: "json"` explicitly, or the profile should be adjusted for MCP usage.
+
 For list of available options, use `dotnet linq2db help <command>` command.
 
 ### Usage Examples

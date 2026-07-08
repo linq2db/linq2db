@@ -27,6 +27,7 @@ Required command-line input:
 - Exactly one of `--sql` or `--sql-file` must be specified.
 - SQL text is command-line only and cannot be provided by configuration profiles.
 - Path options support `%NAME%` and `${NAME}` environment variable expansion. This applies to `--config`, `--sql-file`, `--output-file`, and `--provider-location` or `providerLocation` from configuration.
+- Literal `user` values also support `%NAME%` and `${NAME}` environment variable expansion. This can be used for local machine-qualified Windows users such as `%COMPUTERNAME%\linq2db_cli_svc`.
 - Referenced environment variables in path options must exist.
 
 Connection settings:
@@ -40,6 +41,7 @@ Connection settings:
 - DB2 provider assemblies are not bundled because of package size. For DB2, install the matching IBM provider package separately and pass the path to `IBM.Data.Db2.dll` with `--provider-location` or `providerLocation` in the configuration profile.
 - `--connection-string <connection-string>` is the database connection string.
 - `--user <user>` and `--password <password>` are optional values for connection string formatting.
+- `--user <user>` and configuration `user` support `%NAME%` and `${NAME}` environment variable expansion. Password literals do not use environment variable expansion; use `--password-env` or `passwordEnv` for secrets.
 - `--connection-string-env <name>`, `--user-env <name>`, and `--password-env <name>` read those values from environment variables.
 - Configuration profiles can use `connectionStringEnv`, `userEnv`, and `passwordEnv` for the same purpose.
 - Value precedence is: command-line literal, command-line environment variable option, selected profile literal, selected profile environment variable option, inherited default profile literal or environment variable option.
@@ -219,6 +221,8 @@ Defaults:
 - `config-init` creates the `.agents` directory when the default path is used.
 - Initialized profiles include editable default values for `maxRows`, `output`, and `unsafeSql`.
 - The default initialized output is `json-table`, which is suitable for MCP and duplicate-safe query output.
+- `config-init` writes common editable settings (`maxRows`, `output`, and `unsafeSql`) into every created profile intentionally. This makes generated profiles self-explanatory and easier to edit manually.
+- Named profiles still inherit missing values from `default` when those values are removed manually.
 
 Required input:
 
@@ -241,6 +245,11 @@ Supported initialization options:
 
 Advanced profile fields such as `user`, `password`, `impersonate`, `commandTimeout`, `lockTimeout`, and `outputFile` are intentionally not exposed by `config-init`; edit the JSON manually when those fields are needed.
 
+Configuration profiles are shared by `query` and `mcp`.
+The `query` command supports `json`, `json-table`, and `csv`.
+The MCP `linq2db_query` tool supports only `json` and `json-table`.
+If the selected profile has `output: "csv"`, MCP calls must pass `output: "json-table"` or `output: "json"` explicitly, or the profile should be adjusted for MCP usage.
+
 Examples:
 
 ```bash
@@ -260,7 +269,7 @@ Parameter surface:
 | `providerLocation` | `--provider-location` | yes | yes | yes | yes | no | path; supports `%NAME%` and `${NAME}` for query/MCP execution |
 | `connectionString` | `--connection-string` | yes | yes | yes | yes | no | connection string; `{0}` user and `{1}` password placeholders are supported |
 | `connectionStringEnv` | `--connection-string-env` | yes | yes | yes | yes | no | environment variable name |
-| `user` | `--user` | yes | yes | no | yes | no | string |
+| `user` | `--user` | yes | yes | no | yes | no | string; supports `%NAME%` and `${NAME}` expansion |
 | `userEnv` | `--user-env` | yes | yes | no | yes | no | environment variable name |
 | `password` | `--password` | yes | yes | no | yes | no | string |
 | `passwordEnv` | `--password-env` | yes | yes | no | yes | no | environment variable name |
@@ -326,6 +335,8 @@ Output:
 - `--output json` writes JSON output. This is the default and preferred format for agents.
 - `--output json-table` writes a duplicate-safe JSON object with column metadata and rows as arrays.
 - `--output csv` writes CSV output.
+- Configuration profiles can store `json`, `json-table`, or `csv` because profiles are shared by `query` and `mcp`.
+- MCP tool calls support only `json` and `json-table`. Use `linq2db_info` to check `defaultOutputSupportedByMcp` before relying on a profile's default output in MCP mode.
 - `--output-file <file>` writes command output to a file.
 - Existing output files are not replaced by default. Use `--overwrite` only when the user explicitly wants to replace the file.
 - When `--output-file` is not specified, output is written to stdout.
@@ -433,6 +444,11 @@ Use `linq2db_skill` for the full linq2db CLI/MCP usage guide, including supporte
 `linq2db_info` returns only non-secret configuration metadata. It never returns connection strings, passwords, provider assembly paths, impersonation credentials, or environment variable values.
 
 Configuration profile `description` values are returned by `linq2db_info`. Use them for non-secret profile guidance, such as provider-specific SQL hints or schema conventions.
+
+Each returned profile includes `defaultOutput` and `defaultOutputSupportedByMcp`.
+If `defaultOutputSupportedByMcp` is `false`, call `linq2db_query` with explicit `output: "json-table"` or `output: "json"`.
+Top-level `supportedOutputFormats` lists MCP tool-call output formats.
+Top-level `queryCommandOutputFormats` lists direct `query` command output formats.
 
 MCP transport rules:
 

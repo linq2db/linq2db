@@ -86,5 +86,25 @@
 	"Access.Odbc": {
 		"provider"        : "Access.Odbc",
 		"connectionString": "Driver={{Microsoft Access Driver (*.mdb, *.accdb)}};Dbq=Data\\TestData.ODBC.mdb;ExtendedAnsiSQL=1"
+	},
+
+	"impersonation-network-cleartext": {
+		"description"     : "Impersonation smoke: SQL Server should see %COMPUTERNAME%\\linq2db_cli_svc as SUSER_SNAME().",
+		"provider"        : "SqlServer",
+		"connectionString": "Server=localhost;Database=master;Integrated Security=true;TrustServerCertificate=true",
+		"user"            : "${COMPUTERNAME}\\linq2db_cli_svc",
+		"passwordEnv"     : "TEST_IMPERSONATION_USER_PASSWORD",
+		"impersonate"     : true,
+		"impersonateMode" : "network-cleartext"
+	},
+
+	"impersonation-new-credentials": {
+		"description"     : "Impersonation smoke: SQL Server should still see the current process login with new-credentials mode.",
+		"provider"        : "SqlServer",
+		"connectionString": "Server=localhost;Database=master;Integrated Security=true;TrustServerCertificate=true",
+		"user"            : "%COMPUTERNAME%\\linq2db_cli_svc",
+		"passwordEnv"     : "TEST_IMPERSONATION_USER_PASSWORD",
+		"impersonate"     : true,
+		"impersonateMode" : "new-credentials"
 	}
 }

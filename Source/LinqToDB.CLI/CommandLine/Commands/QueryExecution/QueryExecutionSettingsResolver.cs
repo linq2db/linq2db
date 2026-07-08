@@ -51,7 +51,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				? ResolvePath(QueryExecutionCliOptions.ProviderLocation, values.ProviderLocation)
 				: ResolvePath(QueryExecutionCliOptions.ProviderLocation, configuration?.ProviderLocation, configDirectory);
 			var connectionStringText = GetConfiguredValue(QueryExecutionCliOptions.ConnectionString, values.ConnectionString, values.ConnectionStringEnv, configuration?.ConnectionString, configuration?.ConnectionStringEnv);
-			var userName             = GetConfiguredValue(QueryExecutionCliOptions.User,             values.User,             values.UserEnv,             configuration?.User,             configuration?.UserEnv);
+			var userName             = GetConfiguredExpandableValue(QueryExecutionCliOptions.User, values.User, values.UserEnv, configuration?.User, configuration?.UserEnv);
 			var passwordText         = GetConfiguredValue(QueryExecutionCliOptions.Password,         values.Password,         values.PasswordEnv,         configuration?.Password,         configuration?.PasswordEnv);
 			var commandTimeoutValue  = values.CommandTimeout != null ? ParseTimeout(QueryExecutionCliOptions.CommandTimeout, values.CommandTimeout) : configuration?.CommandTimeout;
 			var lockTimeoutValue     = values.LockTimeout    != null ? ParseTimeout(QueryExecutionCliOptions.LockTimeout,    values.LockTimeout)    : configuration?.LockTimeout;
@@ -213,6 +213,23 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			return null;
 		}
 
+		string? GetConfiguredExpandableValue(CliOption option, string? commandValue, string? commandEnvironmentVariableName, string? configurationValue, string? configurationEnvironmentVariableName)
+		{
+			if (commandValue != null)
+				return ResolveEnvironmentVariables(option, commandValue);
+
+			if (commandEnvironmentVariableName != null)
+				return GetEnvironmentValue(option, commandEnvironmentVariableName);
+
+			if (configurationValue != null)
+				return ResolveEnvironmentVariables(option, configurationValue);
+
+			if (configurationEnvironmentVariableName != null)
+				return GetEnvironmentValue(option, configurationEnvironmentVariableName);
+
+			return null;
+		}
+
 		string? GetEnvironmentValue(CliOption option, string environmentVariableName)
 		{
 			var value = _environment.GetEnvironmentVariable(environmentVariableName);
@@ -229,47 +246,58 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			if (path == null)
 				return null;
 
-			var result = new StringBuilder(path.Length);
+			var resolvedPath = ResolveEnvironmentVariables(option, path);
 
-			for (var i = 0; i < path.Length; i++)
-			{
-				if (path[i] == '%')
-				{
-					var end = path.IndexOf('%', i + 1);
-
-					if (end > i + 1)
-					{
-						if (!TryAppendEnvironmentValue(option, path.Substring(i + 1, end - i - 1), result))
-							return MissingEnvironmentVariable;
-
-						i = end;
-						continue;
-					}
-				}
-
-				if (path[i] == '$' && i + 1 < path.Length && path[i + 1] == '{')
-				{
-					var end = path.IndexOf('}', i + 2);
-
-					if (end > i + 2)
-					{
-						if (!TryAppendEnvironmentValue(option, path.Substring(i + 2, end - i - 2), result))
-							return MissingEnvironmentVariable;
-
-						i = end;
-						continue;
-					}
-				}
-
-				result.Append(path[i]);
-			}
-
-			var resolvedPath = result.ToString();
+			if (resolvedPath == null || string.Equals(resolvedPath, MissingEnvironmentVariable, StringComparison.Ordinal))
+				return resolvedPath;
 
 			if (!string.IsNullOrEmpty(baseDirectory) && !Path.IsPathRooted(resolvedPath))
 				resolvedPath = Path.Combine(baseDirectory, resolvedPath);
 
 			return resolvedPath;
+		}
+
+		string? ResolveEnvironmentVariables(CliOption option, string? value)
+		{
+			if (value == null)
+				return null;
+
+			var result = new StringBuilder(value.Length);
+
+			for (var i = 0; i < value.Length; i++)
+			{
+				if (value[i] == '%')
+				{
+					var end = value.IndexOf('%', i + 1);
+
+					if (end > i + 1)
+					{
+						if (!TryAppendEnvironmentValue(option, value.Substring(i + 1, end - i - 1), result))
+							return MissingEnvironmentVariable;
+
+						i = end;
+						continue;
+					}
+				}
+
+				if (value[i] == '$' && i + 1 < value.Length && value[i + 1] == '{')
+				{
+					var end = value.IndexOf('}', i + 2);
+
+					if (end > i + 2)
+					{
+						if (!TryAppendEnvironmentValue(option, value.Substring(i + 2, end - i - 2), result))
+							return MissingEnvironmentVariable;
+
+						i = end;
+						continue;
+					}
+				}
+
+				result.Append(value[i]);
+			}
+
+			return result.ToString();
 		}
 
 		bool TryAppendEnvironmentValue(CliOption option, string name, StringBuilder result)

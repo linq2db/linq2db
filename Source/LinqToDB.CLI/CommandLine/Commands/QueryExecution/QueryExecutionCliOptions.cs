@@ -21,7 +21,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		public static readonly CliOption ProviderLocation    = new StringCliOption("provider-location",     'l',  false, false, "path to external database provider assembly; dependencies must be available next to it or through normal application probing; supports %NAME% and ${NAME} environment variable expansion");
 		public static readonly CliOption ConnectionString    = new StringCliOption("connection-string",     null, false, false, "database connection string; use {0} for user and {1} for password placeholders; configure provider-specific connection timeout here");
 		public static readonly CliOption ConnectionStringEnv = new StringCliOption("connection-string-env", null, false, false, "environment variable with database connection string");
-		public static readonly CliOption User                = new StringCliOption("user",                  null, false, false, "database user name for connection string formatting");
+		public static readonly CliOption User                = new StringCliOption("user",                  null, false, false, "database user name for connection string formatting; supports %NAME% and ${NAME} environment variable expansion");
 		public static readonly CliOption UserEnv             = new StringCliOption("user-env",              null, false, false, "environment variable with database user name");
 		public static readonly CliOption Password            = new StringCliOption("password",              null, false, false, "database password for connection string formatting");
 		public static readonly CliOption PasswordEnv         = new StringCliOption("password-env",          null, false, false, "environment variable with database password");

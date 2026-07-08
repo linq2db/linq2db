@@ -15,7 +15,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 	/// <summary>
 	/// Non-secret MCP query configuration discovery logic.
 	/// </summary>
-	sealed class McpInfoTool(McpQueryStartupOptions startupOptions)
+	sealed class McpInfoTool(McpQueryStartupOptions startupOptions, TextWriter diagnostics)
 	{
 		const string StartupProfileName = "startup";
 		const string DefaultProfileName = "default";
@@ -27,7 +27,8 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 			PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
 		};
 
-		static readonly string[] _supportedOutputFormats = ["json", "json-table"];
+		static readonly string[] _supportedOutputFormats     = ["json", "json-table"];
+		static readonly string[] _queryCommandOutputFormats  = ["json", "json-table", "csv"];
 
 		static readonly McpSupportedProviderInfo[] _supportedProviders =
 		[
@@ -49,6 +50,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 		];
 
 		readonly McpQueryStartupOptions _startupOptions = startupOptions;
+		readonly TextWriter             _diagnostics    = diagnostics;
 
 		public CallToolResult Info(CancellationToken cancellationToken = default)
 		{
@@ -120,6 +122,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 							profiles,
 							supportedProviders = _supportedProviders,
 							supportedOutputFormats = _supportedOutputFormats,
+							queryCommandOutputFormats = _queryCommandOutputFormats,
 							rules = new
 							{
 								singleStatementOnly                         = true,
@@ -153,7 +156,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 			if (provider == null)
 			{
 				if (!string.Equals(name, DefaultProfileName, StringComparison.Ordinal) || profileCount == 1)
-					Console.Error.WriteLine($"Configuration profile '{name}' doesn't configure provider and will not be returned by linq2db_info.");
+					_diagnostics.WriteLine($"Configuration profile '{name}' doesn't configure provider and will not be returned by linq2db_info.");
 
 				return null;
 			}
@@ -165,6 +168,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 				provider,
 				GetDialectName(provider),
 				output,
+				IsMcpOutputFormat(output),
 				maxRows,
 				(configuration?.UnsafeSqlPolicy ?? UnsafeSqlPolicy.Deny).ToString().ToLowerInvariant(),
 				impersonate);
@@ -226,6 +230,12 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 			return false;
 		}
 
+		static bool IsMcpOutputFormat(string output)
+		{
+			return string.Equals(output, "json",       StringComparison.OrdinalIgnoreCase)
+				|| string.Equals(output, "json-table", StringComparison.OrdinalIgnoreCase);
+		}
+
 		static bool IsProvider(string providerName, string family)
 		{
 			return string.Equals(providerName, family, StringComparison.OrdinalIgnoreCase)
@@ -247,6 +257,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 			string  Provider,
 			string  Dialect,
 			string  DefaultOutput,
+			bool    DefaultOutputSupportedByMcp,
 			int     MaxRows,
 			string  UnsafeSqlPolicy,
 			bool    ImpersonationEnabled);

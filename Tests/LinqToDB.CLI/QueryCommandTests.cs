@@ -1155,6 +1155,53 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task QueryExpandsEnvironmentVariablesInUser()
+		{
+			var environment = new TestCliEnvironment();
+			var config      = AddConfigFile(environment, """
+				{
+					"default": {
+						"provider": "SQLite",
+						"connectionString": "Data Source={0}",
+						"user": "%LINQ2DB_QUERY_DATABASE%"
+					}
+				}
+				""");
+
+			environment.EnvironmentVariables.Add("LINQ2DB_QUERY_DATABASE", ":memory:");
+
+			var result = await RunCli(environment, "query", "--config", config, "--sql", "select 1 as Value");
+
+			{
+				(result.ExitCode).ShouldBe(0);
+				(result.Output).ShouldContain("\"Value\":\"1\"");
+				(result.Error).ShouldBeEmpty();
+			}
+		}
+
+		[Test]
+		public async Task QueryReportsMissingEnvironmentVariableReferencedByUser()
+		{
+			var environment = new TestCliEnvironment();
+			var config      = AddConfigFile(environment, """
+				{
+					"default": {
+						"provider": "SQLite",
+						"connectionString": "Data Source={0}",
+						"user": "%LINQ2DB_QUERY_DATABASE%"
+					}
+				}
+				""");
+
+			var result = await RunCli(environment, "query", "--config", config, "--sql", "select 1 as Value");
+
+			{
+				(result.ExitCode).ShouldBe(-1);
+				(result.Error).ShouldContain("Environment variable 'LINQ2DB_QUERY_DATABASE' referenced by option '--user' is not set.");
+			}
+		}
+
+		[Test]
 		public async Task QueryReadsPasswordFromEnvironmentVariable()
 		{
 			var environment = new TestCliEnvironment();

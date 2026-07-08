@@ -128,10 +128,13 @@ namespace Tests.LinqToDB.CLI
 				((string?)info["profiles"]?[0]?["provider"]).ShouldBe("SQLite.MS");
 				((string?)info["profiles"]?[0]?["dialect"]).ShouldBe("SQLite");
 				((string?)info["profiles"]?[0]?["defaultOutput"]).ShouldBe("json-table");
+				((bool?)info["profiles"]?[0]?["defaultOutputSupportedByMcp"]).ShouldBe(true);
 				((int?)info["profiles"]?[0]?["maxRows"]).ShouldBe(1000);
 				((string?)info["profiles"]?[0]?["unsafeSqlPolicy"]).ShouldBe("deny");
 				((bool?)info["profiles"]?[0]?["impersonationEnabled"]).ShouldBe(false);
 				(info["supportedOutputFormats"]?.AsArray().ToJsonString()).ShouldContain("json-table");
+				(info["supportedOutputFormats"]?.AsArray().ToJsonString()).ShouldNotContain("csv");
+				(info["queryCommandOutputFormats"]?.AsArray().ToJsonString()).ShouldContain("csv");
 				(info["supportedProviders"]?.AsArray().ToJsonString()).ShouldContain("SQL Server");
 				(info["supportedProviders"]?.AsArray().ToJsonString()).ShouldContain("IBM DB2");
 				(info["supportedProviders"]?.AsArray().ToJsonString()).ShouldContain("IBM Informix");
@@ -189,6 +192,7 @@ namespace Tests.LinqToDB.CLI
 				((string?)sqlServer["description"]).ShouldContain("T-SQL");
 				((string?)sqlServer["provider"]).ShouldBe("SqlServer");
 				((string?)sqlServer["dialect"]).ShouldBe("SQL Server T-SQL");
+				((bool?)sqlServer["defaultOutputSupportedByMcp"]).ShouldBe(true);
 				((int?)sqlServer["maxRows"]).ShouldBe(500);
 				((string?)sqlServer["unsafeSqlPolicy"]).ShouldBe("confirm");
 				((bool?)sqlServer["impersonationEnabled"]).ShouldBe(true);
@@ -293,6 +297,37 @@ namespace Tests.LinqToDB.CLI
 			}
 
 			server.ExpectStandardError("Configuration profile 'default' doesn't configure provider");
+		}
+
+		[Test]
+		public async Task McpInfoMarksCsvProfileOutputUnsupportedByMcp()
+		{
+			var config = Path.Combine(TestContext.CurrentContext.WorkDirectory, $"mcp-query-{Guid.NewGuid():N}.json");
+			await File.WriteAllTextAsync(config, """
+				{
+					"default": {
+						"provider": "SQLite",
+						"connectionString": "Data Source=:memory:",
+						"output": "csv"
+					}
+				}
+				""").ConfigureAwait(false);
+
+			await using var server = await McpServerProcess.Start("--config", config);
+
+			await server.Initialize();
+			var response = await server.CallTool("linq2db_info", new JsonObject());
+			var info     = ReadToolJson(response);
+
+			{
+				(response["error"]).ShouldBeNull();
+				(response["result"]?["isError"]).ShouldBeNull();
+				((string?)info["profiles"]?[0]?["defaultOutput"]).ShouldBe("csv");
+				((bool?)info["profiles"]?[0]?["defaultOutputSupportedByMcp"]).ShouldBe(false);
+				(info["supportedOutputFormats"]?.AsArray().ToJsonString()).ShouldNotContain("csv");
+				(info["queryCommandOutputFormats"]?.AsArray().ToJsonString()).ShouldContain("csv");
+				(info.ToJsonString()).ShouldNotContain("Data Source=:memory:");
+			}
 		}
 
 		[Test]
@@ -449,6 +484,8 @@ namespace Tests.LinqToDB.CLI
 				(response["error"]).ShouldBeNull();
 				((bool?)response["result"]?["isError"]).ShouldBe(true);
 				((string?)response["result"]?["content"]?[0]?["text"]).ShouldContain("MCP query execution supports only 'json' and 'json-table' output.");
+				((string?)response["result"]?["content"]?[0]?["text"]).ShouldContain("output='csv'");
+				((string?)response["result"]?["content"]?[0]?["text"]).ShouldContain("Pass output='json-table' or output='json'");
 			}
 		}
 
@@ -478,6 +515,8 @@ namespace Tests.LinqToDB.CLI
 				(response["error"]).ShouldBeNull();
 				((bool?)response["result"]?["isError"]).ShouldBe(true);
 				((string?)response["result"]?["content"]?[0]?["text"]).ShouldContain("MCP query execution supports only 'json' and 'json-table' output.");
+				((string?)response["result"]?["content"]?[0]?["text"]).ShouldContain("output='csv'");
+				((string?)response["result"]?["content"]?[0]?["text"]).ShouldContain("Pass output='json-table' or output='json'");
 			}
 		}
 
