@@ -135,8 +135,14 @@ namespace LinqToDB.Internal.SqlProvider
 				dataConnection.Options,
 				dataConnection.DataProvider.SqlProviderFlags,
 				dataConnection.MappingSchema,
-				sqlOptimizer.CreateOptimizerVisitor(optimizeAndConvertAll),
-				sqlOptimizer.CreateConvertVisitor(optimizeAndConvertAll),
+				// ALWAYS Transform (non-mutating) mode, even when converting all upfront. Unlike GetCommand — which runs its
+				// upfront convert once under Monitor.Enter(query) and caches the result, so it can safely use in-place Modify
+				// mode — the eager render cache is populated by several concurrent first-run threads over the SAME shared
+				// scenario statement. A Modify-mode convert would mutate that shared statement in place on multiple threads at
+				// once ("Collection was modified; enumeration operation may not execute"). Transform produces a fresh converted
+				// statement per render, leaving the shared one untouched; aliasing then runs over that fresh copy.
+				sqlOptimizer.CreateOptimizerVisitor(false),
+				sqlOptimizer.CreateConvertVisitor(false),
 				factory,
 				dataConnection.DataProvider.SqlProviderFlags.IsParameterOrderDependent,
 				isAlreadyOptimizedAndConverted : optimizeAndConvertAll,
