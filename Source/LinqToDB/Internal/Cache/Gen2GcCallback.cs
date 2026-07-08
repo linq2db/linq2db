@@ -25,7 +25,13 @@ namespace LinqToDB.Internal.Cache
 		{
 			_callback = callback;
 			_handle   = GCHandle.Alloc(target, GCHandleType.Weak);
-			GC.ReRegisterForFinalize(this);
+
+			// Do NOT call GC.ReRegisterForFinalize here. A finalizable object is already registered for
+			// finalization at allocation; re-registering in the ctor double-registers it, and on .NET
+			// Framework the finalizer then runs twice at process shutdown — the first pass frees _handle,
+			// the second reads the freed handle (GCHandle.Target throws "Handle is not initialized"), an
+			// unhandled finalizer-thread exception that crashes the process. The finalizer re-registers
+			// itself for the next Gen2 GC; that is the only place re-registration belongs.
 		}
 
 		/// <summary>
@@ -39,6 +45,11 @@ namespace LinqToDB.Internal.Cache
 #pragma warning disable MA0055 // Do not use finalizer
 		~Gen2GcCallback()
 		{
+			// Resilient to being finalized more than once (per the GC.ReRegisterForFinalize contract):
+			// once the handle has been freed there is nothing left to do, and reading Target would throw.
+			if (!_handle.IsAllocated)
+				return;
+
 			var target = _handle.Target;   // weak: null once the target has been collected
 
 			if (target == null)
