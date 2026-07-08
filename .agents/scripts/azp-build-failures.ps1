@@ -18,6 +18,12 @@ Invoke directly via the PowerShell tool (preferred), NOT wrapped in Bash:
 Output: single JSON document on stdout with per-task failures and on-disk
 log paths. Logs are persisted under -WriteDir for follow-up Read / Grep.
 
+Each task carries `reportedFailedTotal` (parsed from the runner's "failed: N"
+summary line) and `truncated` (true when the captured failures[] were capped at
+-MaxFailuresPerTask below the reported total). When `truncated` is true, the
+failures[] list is a prefix — re-run with a higher -MaxFailuresPerTask, or Grep
+the persisted log, before reporting a failure count as complete.
+
 When the build failed for a non-test reason (e.g. a compile error in a
 "Build …" step), there are no `Tests *` task failures to parse; the result then
 carries a `buildFailures` array instead — each failed Task's name plus its
@@ -140,11 +146,24 @@ $tasks = foreach ($t in $failedTasks) {
         }
     }
 
+    # The runner prints a per-dll "Test run summary" block with a "failed: N" line.
+    # Parse it so the caller can tell a full list from one truncated at MaxFailuresPerTask
+    # (the failures[] loop stops at the cap; a bare count of 20 is otherwise indistinguishable
+    # from a genuine 20). Sum across dlls in case a task runs more than one.
+    $reportedFailed = 0
+    foreach ($line in $lines) {
+        $clean = [regex]::Replace($line, "\x1b\[[0-9;]*m", "") -replace '^\s*\S+Z\s+', ''
+        $fm = [regex]::Match($clean, '^\s*failed:\s*(?<n>\d+)\s*$')
+        if ($fm.Success) { $reportedFailed += [int]$fm.Groups['n'].Value }
+    }
+
     [pscustomobject]@{
-        name     = $t.name
-        logUrl   = $logUrl
-        logPath  = $logPath
-        failures = $failures
+        name                = $t.name
+        logUrl              = $logUrl
+        logPath             = $logPath
+        reportedFailedTotal = $reportedFailed
+        truncated           = ($reportedFailed -gt $failures.Count)
+        failures            = $failures
     }
 }
 

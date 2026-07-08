@@ -12,7 +12,9 @@ When CLAUDE.md / a SKILL / `agent-rules.md` mentions a specific script or doc pa
 2. **If `Read` errors with "file not found"**, then trust the Glob result and proceed without it.
 3. **Don't reimplement a documented-but-Glob-missing helper.** The reimplementation usually misses guardrails the original encodes (verification, encoding-safety, body-file discipline). Surfaced 2026-05-10: `.agents/scripts/azp-run.ps1` was reimplemented manually after Glob missed it.
 
-Glob is fine for discovery patterns (`Source/**/*.cs`); the trap is only when the documentation has already named a specific path and Glob "doesn't find" it.
+Glob is fine for discovery patterns (`Source/**/*.cs`) in the primary clone; the trap is when the documentation has already named a specific path and Glob "doesn't find" it — or when globbing inside a worktree (next).
+
+**Worktree paths are a second Glob blind spot — even for discovery patterns.** `Glob` with a `path` argument pointing at a linked `git worktree` (e.g. `path: "C:\GitHub\<clone>.<slug>"`) can return "No files found" for files that exist there — including plain discovery patterns like `Source/**/*.xml`, not just documentation-named single paths. Confirmed on #5687: `Glob("Source/**/CompatibilitySuppressions.xml", path=<worktree>)` returned empty while the same pattern in the primary clone found both files, and a direct `Read` of the worktree file succeeded. When globbing inside a worktree comes back empty, `Read` a known path (or run the glob in the primary clone and map the relative path across) before concluding the files are absent.
 
 ## Permission-friendly Bash patterns
 
