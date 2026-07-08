@@ -41,10 +41,13 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 			{
 				defaultProfile = StartupProfileName;
 
-				var profile = CreateProfileInfo(StartupProfileName, null, out var error);
+				var profile = CreateProfileInfo(StartupProfileName, null, 1, out var error);
 
 				if (error != null)
 					return CreateErrorResult(error);
+
+				if (profile == null)
+					return CreateErrorResult("Cannot load linq2db query configuration: provider is not configured.");
 
 				profiles.Add(profile);
 			}
@@ -63,13 +66,17 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 					if (!QueryExecutionConfiguration.TryLoad(environment, _startupOptions.Config, profileName, out var configuration, out error))
 						return CreateErrorResult($"Cannot load linq2db query configuration: {error}");
 
-					var profile = CreateProfileInfo(profileName, configuration, out error);
+					var profile = CreateProfileInfo(profileName, configuration, profileNames.Count, out error);
 
 					if (error != null)
 						return CreateErrorResult(error);
 
-					profiles.Add(profile);
+					if (profile != null)
+						profiles.Add(profile);
 				}
+
+				if (profiles.Count == 0)
+					return CreateErrorResult("Cannot load linq2db query configuration: no configured profiles with provider were found.");
 			}
 
 			return new CallToolResult
@@ -106,7 +113,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 			};
 		}
 
-		McpProfileInfo CreateProfileInfo(string name, QueryExecutionConfiguration? configuration, out string? error)
+		McpProfileInfo? CreateProfileInfo(string name, QueryExecutionConfiguration? configuration, int profileCount, out string? error)
 		{
 			error = null;
 
@@ -120,8 +127,10 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 
 			if (provider == null)
 			{
-				error = "Cannot load linq2db query configuration: provider is not configured.";
-				return null!;
+				if (!string.Equals(name, DefaultProfileName, StringComparison.Ordinal) || profileCount == 1)
+					Console.Error.WriteLine($"Configuration profile '{name}' doesn't configure provider and will not be returned by linq2db_info.");
+
+				return null;
 			}
 
 			error = null;

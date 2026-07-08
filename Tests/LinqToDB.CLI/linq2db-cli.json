@@ -7,14 +7,17 @@
 		"output"         : "json-table"
 	},
 	"ClickHouse.Octonica": {
+		"description"     : "ClickHouse Octonica provider",
 		"provider"        : "ClickHouse.Octonica",
 		"connectionString": "Host=localhost;Port=9000;Database=testdb1;User=testuser;Password=testuser"
 	},
 	"ClickHouse.Driver": {
+		"description"     : "ClickHouse Driver provider",
 		"provider"        : "ClickHouse.Driver",
 		"connectionString": "Host=localhost;Port=8123;Database=testdb2;Username=testuser;Password=testuser;UseSession=true;ReadStringsAsByteArrays=false"
 	},
 	"ClickHouse.MySql": {
+		"description"     : "ClickHouse MySql provider",
 		"provider"        : "ClickHouse.MySql",
 		"connectionString": "Host=localhost;Port=9004;Database=testdb3;Username=testuser;Password=testuser;Pooling=false;"
 	},

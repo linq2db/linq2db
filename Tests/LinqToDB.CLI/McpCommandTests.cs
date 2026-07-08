@@ -7,6 +7,7 @@ using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 
 using NUnit.Framework;
+using NUnit.Framework.Constraints;
 
 namespace Tests.LinqToDB.CLI
 {
@@ -92,7 +93,6 @@ namespace Tests.LinqToDB.CLI
 				{
 					"default": {
 						"description": "Use SQLite syntax for local development queries.",
-						"provider": "SQLite",
 						"connectionString": "Data Source=dev-secret.db",
 						"maxRows": 1000,
 						"unsafeSql": "deny"
@@ -118,17 +118,11 @@ namespace Tests.LinqToDB.CLI
 			{
 				Assert.That(response["error"], Is.Null);
 				Assert.That((string?)info["defaultProfile"], Is.EqualTo("sqlserver"));
-				Assert.That(info["profiles"]?.AsArray().Count, Is.EqualTo(2));
+				Assert.That(info["profiles"]?.AsArray().Count, Is.EqualTo(1));
 
-				var defaultProfile = FindProfile(info, "default");
 				var sqlServer      = FindProfile(info, "sqlserver");
 
-				Assert.That((string?)defaultProfile["description"], Does.Contain("SQLite syntax"));
-				Assert.That((string?)defaultProfile["provider"], Is.EqualTo("SQLite"));
-				Assert.That((string?)defaultProfile["dialect"], Is.EqualTo("SQLite"));
-				Assert.That((string?)defaultProfile["defaultOutput"], Is.EqualTo("json-table"));
-				Assert.That((int?)defaultProfile["maxRows"], Is.EqualTo(1000));
-				Assert.That((string?)defaultProfile["unsafeSqlPolicy"], Is.EqualTo("deny"));
+				Assert.That(ContainsProfile(info, "default"), Is.False);
 
 				Assert.That((string?)sqlServer["description"], Does.Contain("T-SQL"));
 				Assert.That((string?)sqlServer["provider"], Is.EqualTo("SqlServer"));
@@ -139,11 +133,73 @@ namespace Tests.LinqToDB.CLI
 
 				Assert.That(info.ToJsonString(), Does.Not.Contain("dev-secret.db"));
 				Assert.That(info.ToJsonString(), Does.Not.Contain("LINQ2DB_SQLSERVER_CONNECTION"));
-				Assert.That(defaultProfile.ContainsKey("connectionString"), Is.False);
-				Assert.That(defaultProfile.ContainsKey("connectionStringEnv"), Is.False);
 				Assert.That(sqlServer.ContainsKey("connectionString"), Is.False);
 				Assert.That(sqlServer.ContainsKey("connectionStringEnv"), Is.False);
 			}
+		}
+
+		[Test]
+		public async Task McpInfoWarnsForNamedProfileWithoutProvider()
+		{
+			var config = Path.Combine(TestContext.CurrentContext.WorkDirectory, $"mcp-query-{Guid.NewGuid():N}.json");
+			await File.WriteAllTextAsync(config, """
+				{
+					"default": {
+						"description": "Base profile only."
+					},
+					"sqlite": {
+						"provider": "SQLite",
+						"connectionString": "Data Source=:memory:"
+					},
+					"incomplete": {
+						"description": "This profile intentionally misses provider."
+					}
+				}
+				""").ConfigureAwait(false);
+
+			await using var server = await McpServerProcess.Start("--config", config);
+
+			await server.Initialize();
+			var response = await server.CallTool("linq2db_info", new JsonObject());
+			var info     = ReadToolJson(response);
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(response["error"], Is.Null);
+				Assert.That(response["result"]?["isError"], Is.Null);
+				Assert.That(ContainsProfile(info, "default"), Is.False);
+				Assert.That(ContainsProfile(info, "sqlite"), Is.True);
+				Assert.That(ContainsProfile(info, "incomplete"), Is.False);
+			}
+
+			server.ExpectStandardError(Does.Contain("Configuration profile 'incomplete' doesn't configure provider"));
+		}
+
+		[Test]
+		public async Task McpInfoReturnsToolErrorForOnlyDefaultProfileWithoutProvider()
+		{
+			var config = Path.Combine(TestContext.CurrentContext.WorkDirectory, $"mcp-query-{Guid.NewGuid():N}.json");
+			await File.WriteAllTextAsync(config, """
+				{
+					"default": {
+						"description": "Base profile only."
+					}
+				}
+				""").ConfigureAwait(false);
+
+			await using var server = await McpServerProcess.Start("--config", config);
+
+			await server.Initialize();
+			var response = await server.CallTool("linq2db_info", new JsonObject());
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(response["error"], Is.Null);
+				Assert.That((bool?)response["result"]?["isError"], Is.True);
+				Assert.That((string?)response["result"]?["content"]?[0]?["text"], Does.Contain("no configured profiles with provider"));
+			}
+
+			server.ExpectStandardError(Does.Contain("Configuration profile 'default' doesn't configure provider"));
 		}
 
 		[Test]
@@ -472,6 +528,17 @@ namespace Tests.LinqToDB.CLI
 			throw new InvalidOperationException($"Profile '{name}' not found.");
 		}
 
+		static bool ContainsProfile(JsonObject info, string name)
+		{
+			foreach (var profile in info["profiles"]!.AsArray())
+			{
+				if ((string?)profile?["name"] == name)
+					return true;
+			}
+
+			return false;
+		}
+
 		static async Task<CliProcessResult> RunCliProcess(params string[] arguments)
 		{
 			var cliAssembly = Path.Combine(AppContext.BaseDirectory, "dotnet-linq2db.dll");
@@ -508,8 +575,8 @@ namespace Tests.LinqToDB.CLI
 			readonly Process          _process;
 			readonly Task<string>     _standardErrorTask;
 			readonly List<JsonObject> _stdoutMessages = new();
-			int  _nextId = 1;
-			bool _expectNoStandardError;
+			int         _nextId = 1;
+			Constraint? _standardErrorExpectation;
 
 			McpServerProcess(Process process, Task<string> standardErrorTask)
 			{
@@ -550,7 +617,12 @@ namespace Tests.LinqToDB.CLI
 
 			public void ExpectNoStandardError()
 			{
-				_expectNoStandardError = true;
+				_standardErrorExpectation = Is.Empty;
+			}
+
+			public void ExpectStandardError(Constraint expectation)
+			{
+				_standardErrorExpectation = expectation;
 			}
 
 			public async Task Initialize()
@@ -662,8 +734,8 @@ namespace Tests.LinqToDB.CLI
 						Assert.That(message["result"] != null || message["error"] != null, Is.True);
 					}
 
-					if (_expectNoStandardError)
-						Assert.That(await _standardErrorTask.ConfigureAwait(false), Is.Empty);
+					if (_standardErrorExpectation != null)
+						Assert.That(await _standardErrorTask.ConfigureAwait(false), _standardErrorExpectation);
 
 					_process.Dispose();
 				}
