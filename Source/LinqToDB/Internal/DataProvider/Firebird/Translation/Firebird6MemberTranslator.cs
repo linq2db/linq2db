@@ -1,3 +1,4 @@
+using System;
 using System.Linq.Expressions;
 
 using LinqToDB.Internal.DataProvider.Translation;
@@ -16,6 +17,19 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 		protected override IMemberTranslator CreateStringMemberTranslator()
 		{
 			return new Firebird6StringMemberTranslator();
+		}
+
+		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()
+		{
+			return new Firebird6WindowFunctionsMemberTranslator();
+		}
+
+		// Firebird 6 adds a version argument to GEN_UUID (default 4); GEN_UUID(7) produces a
+		// time-ordered RFC 9562 UUIDv7 server-side.
+		protected override ISqlExpression? TranslateNewGuid7Method(ITranslationContext translationContext, TranslationFlags translationFlags)
+		{
+			var factory = translationContext.ExpressionFactory;
+			return factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "Gen_Uuid", factory.Value(factory.GetDbDataType(typeof(int)), 7));
 		}
 
 		protected class Firebird6MathMemberTranslator : MathMemberTranslatorBase
@@ -40,6 +54,17 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 		protected class Firebird6StringMemberTranslator : Firebird5StringMemberTranslator
 		{
 			protected override bool IsWithinGroupSupported => true;
+		}
+
+		// Firebird 6 adds: the GROUPS frame unit and frame EXCLUDE clause (frames themselves date to FB 4),
+		// and the SQL-standard ordered-set aggregates PERCENTILE_CONT/PERCENTILE_DISC (WITHIN GROUP form only —
+		// Firebird has no windowed OVER form, so IsOrderedSetWindowedSupported stays off).
+		protected class Firebird6WindowFunctionsMemberTranslator : Firebird5WindowFunctionsMemberTranslator
+		{
+			protected override bool IsFrameGroupsSupported    => true;
+			protected override bool IsFrameExclusionSupported => true;
+			protected override bool IsPercentileContSupported => true;
+			protected override bool IsPercentileDiscSupported => true;
 		}
 	}
 }
