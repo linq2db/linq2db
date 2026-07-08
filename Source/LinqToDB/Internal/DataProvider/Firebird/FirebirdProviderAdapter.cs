@@ -75,6 +75,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 			ClearAllPools = typeMapper.BuildAction(typeMapper.MapActionLambda(() => FbConnection.ClearAllPools()));
 			ClearPool     = typeMapper.BuildAction<DbConnection>(typeMapper.MapActionLambda((FbConnection connection) => FbConnection.ClearPool(connection)));
+			ClearPoolByConnectionString = typeMapper.BuildAction<string>(typeMapper.MapActionLambda((string connectionString) => FbConnection.ClearPool(connectionString)));
 
 			IsDateOnlySupported = assembly.GetName().Version >= MinDateOnlyVersion;
 
@@ -118,8 +119,9 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 		public Action<DbParameter, FbDbType> SetDbType { get; }
 		public Func<DbParameter  , FbDbType> GetDbType { get; }
 
-		public Action               ClearAllPools { get; }
-		public Action<DbConnection> ClearPool     { get; }
+		public Action               ClearAllPools               { get; }
+		public Action<DbConnection> ClearPool                   { get; }
+		public Action<string>       ClearPoolByConnectionString { get; }
 
 		public bool IsDateOnlySupported { get; }
 
@@ -147,8 +149,9 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 		{
 			public FbConnection(string connectionString) => throw new NotSupportedException();
 
-			public static void ClearAllPools()                     => throw new NotSupportedException();
-			public static void ClearPool(FbConnection connection)  => throw new NotSupportedException();
+			public static void ClearAllPools()                        => throw new NotSupportedException();
+			public static void ClearPool(FbConnection connection)     => throw new NotSupportedException();
+			public static void ClearPool(string connectionString)     => throw new NotSupportedException();
 		}
 
 		[Wrapper]
