@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Runtime.InteropServices;
 using System.Text;
 
 using LinqToDB.Data;
@@ -53,6 +54,7 @@ namespace LinqToDB.Internal.SqlProvider
 	/// unified result of scenario step <see cref="SourceStepIndex"/>. Resolved from <c>SqlStepParameterBinding.Target</c>'s
 	/// index in the command's parameter list, replacing the execution-time node-identity match.
 	/// </summary>
+	[StructLayout(LayoutKind.Auto)]
 	readonly record struct ForwardedSlot(int SourceStepIndex, int TargetPosition);
 
 	/// <summary>
@@ -64,6 +66,23 @@ namespace LinqToDB.Internal.SqlProvider
 	/// forms and ignores it.
 	/// </summary>
 	sealed record PreparedScenario(SqlCommandScenario Scenario, SqlCommandGroupPlan Plan, PreparedCommand[] Commands, bool WasBatch);
+
+	/// <summary>
+	/// The memoized <b>structural</b> (parameter-independent) artifact for a compiled query, produced once by Phase S
+	/// (<see cref="ScenarioCommandRenderer.PrepareStructure"/>): the whole-query optimize+convert (with a null
+	/// <see cref="EvaluationContext"/>), aliasing, command-scenario build, synthetic-step finalization and physical
+	/// grouping. Immutable and safe to memoize on <c>QueryInfo.Structure</c> and share across executions; the
+	/// parameter-value-level build-time convert is deferred to the per-execution render (Phase R). This is distinct from
+	/// <see cref="PreparedScenario"/>, which is the <em>rendered</em> (Phase R) physical commands.
+	/// <see cref="MainStatement"/> is the optimized+converted main statement (the one <see cref="Aliases"/> is keyed to),
+	/// retained so the render can reuse the main statement's aliases instead of re-aliasing it.
+	/// </summary>
+	sealed record QueryStructure(
+		SqlCommandScenario  Scenario,
+		SqlCommandGroupPlan Plan,
+		SqlStatement        MainStatement,
+		AliasesContext      Aliases,
+		bool                IsParameterDependent);
 
 #if BUGCHECK
 	/// <summary>
@@ -126,6 +145,53 @@ namespace LinqToDB.Internal.SqlProvider
 			}
 
 			return finalized == null ? scenario : scenario with { Steps = finalized };
+		}
+
+		/// <summary>
+		/// Phase S — the parameter-independent structural prepare, run once per query and memoized on
+		/// <c>QueryInfo.Structure</c>. Runs the whole-query optimize+convert through <paramref name="optimizationContext"/>
+		/// (the caller supplies a null-<see cref="EvaluationContext"/> structural context for a cacheable query, or the
+		/// shared render context for a parameter-dependent one), then aliases the corrected statement, builds the command
+		/// scenario, finalizes synthetic steps and plans the physical groups. The whole-query convert must run <b>before</b>
+		/// aliasing: a conversion that restructures the AST (e.g. IN-&gt;EXISTS clones its sub-query) creates nodes the
+		/// alias context must see, so deferring it corrupts aliases. Parameter-value-level refinements are NOT applied here
+		/// (they need real values and would bake this run's values into a memoized structure); the per-execution build-time
+		/// convert (Phase R render, <c>isAlreadyOptimizedAndConverted:false</c>) applies them.
+		/// </summary>
+		public static QueryStructure PrepareStructure(
+			DataConnection      dataConnection,
+			DataOptions         options,
+			SqlStatement        statement,
+			OptimizationContext optimizationContext,
+			bool                isParameterDependent)
+		{
+			var sqlOptimizer    = dataConnection.DataProvider.GetSqlOptimizer(options);
+			var serviceProvider = ((IInfrastructure<IServiceProvider>)dataConnection.DataProvider).Instance;
+
+			var nullability = NullabilityContext.GetContext(statement.SelectQuery);
+			statement = optimizationContext.OptimizeAndConvertAll(statement, nullability);
+
+			// correct aliases if needed
+			AliasesHelper.PrepareQueryAndAliases(serviceProvider.GetRequiredService<IIdentifierService>(), statement, out var aliases);
+
+			var dmlService = serviceProvider.GetRequiredService<IDmlService>();
+			var scenario   = dmlService.BuildCommandScenario(statement, dataConnection.DataProvider.SqlProviderFlags, optimizationContext.Factory);
+
+			// BuildCommandScenario always returns a scenario now (DmlServiceBase supplies a default single-step one);
+			// a custom IDmlService returning null is a contract violation.
+			if (scenario == null)
+				throw new InvalidOperationException($"'{dmlService.GetType().Name}.BuildCommandScenario' returned null; it must always produce a scenario.");
+
+			// The DML service builds synthetic step statements (identity SELECT, the InsertOrReplace/Upsert
+			// UPDATE/INSERT/SELECT emulation) after the main statement was finalized, so they miss provider
+			// finalization — run it now so per-provider transforms apply (e.g. SqlCe rewrites its UPDATE into the
+			// alias-free form it accepts). Steps reusing the already-finalized main statement are skipped.
+			scenario = FinalizeScenarioSteps(scenario, statement, sqlOptimizer, options, dataConnection.MappingSchema);
+
+			// Plan: group the scenario's steps into physical commands (round-trips), size-aware.
+			var plan = dmlService.PlanScenario(scenario, dataConnection.DataProvider.SqlProviderFlags);
+
+			return new QueryStructure(scenario, plan, statement, aliases, isParameterDependent);
 		}
 
 		public static AliasesContext PrepareStepAliases(IServiceProvider serviceProvider, SqlStatement statement)

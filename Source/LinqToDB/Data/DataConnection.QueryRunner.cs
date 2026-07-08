@@ -214,6 +214,9 @@ namespace LinqToDB.Data
 					var sqlBuilder   = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema, options);
 					var factory      = sqlOptimizer.CreateSqlExpressionFactory(dataConnection.MappingSchema, options);
 
+					var flags           = dataConnection.DataProvider.SqlProviderFlags;
+					var serviceProvider = ((IInfrastructure<IServiceProvider>)dataConnection.DataProvider).Instance;
+
 					// custom query handling
 					var preprocessContext = new EvaluationContext(parameterValues);
 					var newSql            = dataConnection.ProcessQuery(statement, preprocessContext);
@@ -233,80 +236,82 @@ namespace LinqToDB.Data
 						}
 					}
 
-					using var sb = Pools.StringBuilder.Allocate();
-
 					var optimizeAndConvertAll = !continuousRun && !statement.IsParameterDependent;
-					// Non-parameter-dependent, first-run queries may be optimized/converted in place (Modify
-					// mode) and their built commands cached/reused. Parameter-dependent / continuous-run
-					// queries must stay non-mutating (Transform mode) and rebuild per execution. NOTE: the
-					// convert pass itself now runs unconditionally before aliasing (below) regardless of this
-					// flag; the flag selects visitor mutability, command caching, and (via
-					// isAlreadyOptimizedAndConverted) whether the per-element build-time convert still runs.
 
-					var optimizeVisitor = sqlOptimizer.CreateOptimizerVisitor(optimizeAndConvertAll);
-					var convertVisitor  = sqlOptimizer.CreateConvertVisitor(optimizeAndConvertAll);
+					// ── Phase S — structural prepare (parameter-independent), memoized on QueryInfo.Structure ─────
+					// The whole-query optimize+convert runs before aliasing (a conversion that restructures the AST,
+					// e.g. IN->EXISTS, creates nodes the alias context must see; deferring it is the alias-corruption
+					// bug). It does NOT apply parameter-value refinements (e.g. narrowing an InsertOrUpdate SET cast, or
+					// provider conversions like ClickHouse bitAnd) - those need real values and would bake this run's
+					// values into a memoized structure; the per-element build-time convert re-applies them during the
+					// render below (isAlreadyOptimizedAndConverted:false). See ScenarioCommandRenderer.PrepareStructure.
+					//
+					// Non-parameter-dependent queries prepare the structure ONCE with a null EvaluationContext in Modify
+					// mode, memoize it on QueryInfo.Structure, and render on a SEPARATE null-context (no build-time
+					// re-convert). Parameter-dependent / continuous-run queries prepare with parameter values in Transform
+					// (non-mutating) mode on ONE context shared with the render, and are NOT memoized - they rebuild per
+					// execution (Stage 4 introduces their per-execution BuildSql-only reuse).
+					QueryStructure      structure;
+					OptimizationContext renderContext;
 
-					// do not pass parameter values to the evaluation context when optimising whole query.
-					var evaluationContext = new EvaluationContext(optimizeAndConvertAll ? null: parameterValues);
-
-					var optimizationContext = new OptimizationContext(evaluationContext, options,
-						dataConnection.DataProvider.SqlProviderFlags,
-						dataConnection.MappingSchema,
-						optimizeVisitor,
-						convertVisitor,
-						factory,
-						dataConnection.DataProvider.SqlProviderFlags.IsParameterOrderDependent,
-						isAlreadyOptimizedAndConverted : optimizeAndConvertAll,
-						parametersNormalizerFactory : dataConnection.DataProvider.GetQueryParameterNormalizer);
-
-					// Optimize+convert the whole statement before aliasing, unconditionally. Any conversion
-					// that restructures the AST (e.g. IN->EXISTS clones its sub-query) must run before the
-					// aliasing pass: the alias context is keyed to the nodes it visits, so nodes created
-					// after aliasing carry SourceIDs it never recorded and the SQL builder can't resolve
-					// their aliases. Parameter-dependent queries previously deferred conversion into BuildSql
-					// (after aliasing) - that was the alias-corruption bug. Mirrors the remote runner, which
-					// already prepares-then-aliases. This upfront pass does not cover every localized
-					// refinement the per-element build-time convert applies (e.g. narrowing an InsertOrUpdate
-					// SET-value cast to the target column's DbDataType, or provider expression conversions
-					// like ClickHouse bitAnd); so parameter-dependent queries keep isAlreadyOptimizedAndConverted
-					// false (above) and re-run that convert in BuildSql. That is safe because their visitors are
-					// non-mutating (Transform mode), so the build-time pass produces new nodes without mutating
-					// the shared cached statement - it cannot reintroduce the aliasing race.
+					if (optimizeAndConvertAll)
 					{
-						var nullability = NullabilityContext.GetContext(statement.SelectQuery);
-						statement = optimizationContext.OptimizeAndConvertAll(statement, nullability);
+						if (query is QueryInfo { Structure: { } cachedStructure })
+						{
+							structure = cachedStructure;
+						}
+						else
+						{
+							// Phase-S structural context: null EvaluationContext (parameter-independent), Modify mode (this
+							// statement is the query's own, prepared once under Monitor.Enter). Discarded after Phase S.
+							var structureContext = new OptimizationContext(
+								new EvaluationContext(null),
+								options,
+								flags,
+								dataConnection.MappingSchema,
+								sqlOptimizer.CreateOptimizerVisitor(true),
+								sqlOptimizer.CreateConvertVisitor(true),
+								factory,
+								flags.IsParameterOrderDependent,
+								isAlreadyOptimizedAndConverted : true,
+								parametersNormalizerFactory    : dataConnection.DataProvider.GetQueryParameterNormalizer);
+
+							structure = ScenarioCommandRenderer.PrepareStructure(dataConnection, options, statement, structureContext, isParameterDependent : false);
+
+							if (query is QueryInfo queryInfoStructure)
+								queryInfoStructure.Structure = structure;
+						}
+
+						// Phase-R render context: null EvaluationContext, no build-time re-convert (structure is already
+						// fully converted). Its own parameter normalizer collects this command's parameters during BuildSql.
+						renderContext = ScenarioCommandRenderer.CreateRenderContext(dataConnection, sqlOptimizer, factory, parameterValues, optimizeAndConvertAll : true);
+					}
+					else
+					{
+						// ONE context drives BOTH the structural convert and the render (byte-identical to the
+						// pre-redesign single-context path): Transform (non-mutating) visitors keep the shared statement
+						// untouched, and BuildSql re-runs the build-time convert (isAlreadyOptimizedAndConverted:false) to
+						// apply this run's parameter-value refinements.
+						var singleContext = new OptimizationContext(
+							new EvaluationContext(parameterValues),
+							options,
+							flags,
+							dataConnection.MappingSchema,
+							sqlOptimizer.CreateOptimizerVisitor(false),
+							sqlOptimizer.CreateConvertVisitor(false),
+							factory,
+							flags.IsParameterOrderDependent,
+							isAlreadyOptimizedAndConverted : false,
+							parametersNormalizerFactory    : dataConnection.DataProvider.GetQueryParameterNormalizer);
+
+						structure     = ScenarioCommandRenderer.PrepareStructure(dataConnection, options, statement, singleContext, isParameterDependent : true);
+						renderContext = singleContext;
 					}
 
-					// correct aliases if needed
-					var serviceProvider = ((IInfrastructure<IServiceProvider>)dataConnection.DataProvider).Instance;
-					// Alias fresh every execution. Non-parameter-dependent queries reach this block only on the
-					// first execution, then cache their built commands (below) and short-circuit on subsequent
-					// runs, so they never re-alias. Parameter-dependent / continuous-run queries don't cache; they
-					// re-reach this point every execution and rebuild the statement via OptimizeAndConvertAll in
-					// Transform mode, producing fresh node identities. Fresh aliasing is deterministic for a given
-					// statement shape, so it is both stable across executions and identical to the remote rendering
-					// (which always aliases fresh server-side over a freshly deserialized statement).
-					AliasesHelper.PrepareQueryAndAliases(serviceProvider.GetRequiredService<IIdentifierService>(), statement, out var aliases);
-
-					var dmlService = serviceProvider.GetRequiredService<IDmlService>();
-					var scenario   = dmlService.BuildCommandScenario(statement, dataConnection.DataProvider.SqlProviderFlags, factory);
-
-					// BuildCommandScenario always returns a scenario now (DmlServiceBase supplies a default single-step one);
-					// a custom IDmlService returning null is a contract violation.
-					if (scenario == null)
-						throw new InvalidOperationException($"'{dmlService.GetType().Name}.BuildCommandScenario' returned null; it must always produce a scenario.");
-
-					// The DML service builds synthetic step statements (identity SELECT, the InsertOrReplace/Upsert
-					// UPDATE/INSERT/SELECT emulation) after the main statement was finalized, so they miss provider
-					// finalization — run it now so per-provider transforms apply (e.g. SqlCe rewrites its UPDATE into the
-					// alias-free form it accepts). Steps reusing the already-finalized main statement are skipped.
-					scenario = ScenarioCommandRenderer.FinalizeScenarioSteps(scenario, statement, sqlOptimizer, options, dataConnection.MappingSchema);
-
-					// Plan FIRST: group the scenario's steps into physical commands (round-trips), size-aware.
-					var plan = dmlService.PlanScenario(scenario, dataConnection.DataProvider.SqlProviderFlags);
+					using var sb = Pools.StringBuilder.Allocate();
 
 					// Render each group as one concat command (shared with the remote GetSqlText path).
-					var commands = ScenarioCommandRenderer.RenderScenarioGroups(scenario, plan, statement, aliases, sqlBuilder, optimizationContext, serviceProvider, sb.Value, startIndent);
+					var commands = ScenarioCommandRenderer.RenderScenarioGroups(structure.Scenario, structure.Plan, structure.MainStatement, structure.Aliases, sqlBuilder, renderContext, serviceProvider, sb.Value, startIndent);
 
 					CommandWithParameters[]?[]? batchCommands = null;
 
@@ -315,20 +320,20 @@ namespace LinqToDB.Data
 					// execution binds DbParameters per run instead of re-rendering the SQL each time - only when the connection can
 					// actually batch (UseDbBatch on, no command interceptor), else the concat command (Concat) is used.
 					if (optimizeAndConvertAll && dataConnection.CanUseDbBatch)
-						batchCommands = RenderBatchTemplates(dataConnection, scenario, plan);
+						batchCommands = RenderBatchTemplates(dataConnection, structure.Scenario, structure.Plan);
 #endif
 
 					// Assemble the unified per-command cache: one PreparedCommand per group, carrying its concat form and,
 					// when batch-eligible, the per-statement DbBatch templates. WasBatch is eager-only (DML fills both forms).
-					var preparedCommands = new PreparedCommand[plan.Groups.Count];
+					var preparedCommands = new PreparedCommand[structure.Plan.Groups.Count];
 
-					for (var g = 0; g < plan.Groups.Count; g++)
-						preparedCommands[g] = new PreparedCommand(plan.Groups[g].StepIndexes, commands[g], batchCommands?[g])
+					for (var g = 0; g < structure.Plan.Groups.Count; g++)
+						preparedCommands[g] = new PreparedCommand(structure.Plan.Groups[g].StepIndexes, commands[g], batchCommands?[g])
 						{
-							ForwardedSlots = ResolveForwardedSlots(scenario, plan.Groups[g], commands[g]),
+							ForwardedSlots = ResolveForwardedSlots(structure.Scenario, structure.Plan.Groups[g], commands[g]),
 						};
 
-					var prepared = new PreparedScenario(scenario, plan, preparedCommands, WasBatch: false);
+					var prepared = new PreparedScenario(structure.Scenario, structure.Plan, preparedCommands, WasBatch: false);
 
 					if (optimizeAndConvertAll)
 					{
@@ -338,7 +343,7 @@ namespace LinqToDB.Data
 
 					query.IsContinuousRun = true;
 
-					return new PreparedQuery(prepared, statement, dataConnection.GetNextCommandHints(!forGetSqlText));
+					return new PreparedQuery(prepared, structure.MainStatement, dataConnection.GetNextCommandHints(!forGetSqlText));
 				}
 				finally
 				{

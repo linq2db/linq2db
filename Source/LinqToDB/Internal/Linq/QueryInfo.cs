@@ -36,5 +36,10 @@ namespace LinqToDB.Internal.Linq
 		// ToString/GetSqlText — so they must not share one slot.
 		internal PreparedScenario? CommandCache      { get; set; }
 		internal PreparedScenario? EagerCommandCache { get; set; }
+
+		// Phase S structural artifact (parameter-independent): the memoized optimize+convert+alias+scenario+plan for the
+		// MAIN statement, built once under Monitor.Enter and reused across executions (and, from Stage 5, by the eager
+		// path). Distinct from CommandCache, which holds the rendered (Phase R) commands.
+		internal QueryStructure? Structure { get; set; }
 	}
 }
