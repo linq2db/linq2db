@@ -73,9 +73,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		// PostgreSQL 13+ (CTE AS MATERIALIZED)
+		// PostgreSQL 12+ (CTE AS MATERIALIZED)
 		public void AsCte_Materialized_EmitsKeyword(
-			[IncludeDataSources(true, TestProvName.AllPostgreSQL13Plus, TestProvName.AllSQLite, TestProvName.AllClickHouse, TestProvName.AllDuckDB)] string context)
+			[IncludeDataSources(true, TestProvName.AllPostgreSQL12Plus, TestProvName.AllSQLite, TestProvName.AllClickHouse, TestProvName.AllDuckDB)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -93,9 +93,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		// PostgreSQL 13+ (CTE AS NOT MATERIALIZED)
+		// PostgreSQL 12+ (CTE AS NOT MATERIALIZED)
 		public void AsCte_NotMaterialized_EmitsKeyword(
-			[IncludeDataSources(true, TestProvName.AllPostgreSQL13Plus, TestProvName.AllSQLite, TestProvName.AllDuckDB)] string context)
+			[IncludeDataSources(true, TestProvName.AllPostgreSQL12Plus, TestProvName.AllSQLite, TestProvName.AllDuckDB)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -207,9 +207,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		// PostgreSQL 13+ (CTE AS NOT MATERIALIZED)
+		// PostgreSQL 12+ (CTE AS NOT MATERIALIZED)
 		public void AsCte_Builder_IsMaterialized_Overwrite(
-			[IncludeDataSources(true, TestProvName.AllPostgreSQL13Plus, TestProvName.AllSQLite, TestProvName.AllDuckDB)] string context)
+			[IncludeDataSources(true, TestProvName.AllPostgreSQL12Plus, TestProvName.AllSQLite, TestProvName.AllDuckDB)] string context)
 		{
 			// Repeated IsMaterialized calls overwrite — the last one wins.
 			using var db = GetDataContext(context);
