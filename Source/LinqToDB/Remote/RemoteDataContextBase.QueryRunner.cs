@@ -76,7 +76,6 @@ namespace LinqToDB.Remote
 					sqlOptimizer.CreateConvertVisitor(false),
 					factory,
 					isParameterOrderDepended : flags.IsParameterOrderDependent,
-					isAlreadyOptimizedAndConverted : true,
 					parametersNormalizerFactory : static () => NoopQueryParametersNormalizer.Instance);
 
 				var statement = query.Statement.PrepareStatementForSql(optimizationContext);

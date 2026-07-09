@@ -42,7 +42,6 @@ namespace Tests.Linq
 					convertVisitor : sqlOptimizer.CreateConvertVisitor(false), 
 					factory : factory,
 					isParameterOrderDepended : false,
-					isAlreadyOptimizedAndConverted : false,
 					parametersNormalizerFactory : connection.DataProvider.GetQueryParameterNormalizer
 				),
 				aliases : new AliasesContext(), nullabilityContext : null);

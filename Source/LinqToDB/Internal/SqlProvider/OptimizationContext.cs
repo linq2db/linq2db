@@ -40,7 +40,6 @@ namespace LinqToDB.Internal.SqlProvider
 			SqlExpressionConvertVisitor      convertVisitor,
 			ISqlExpressionFactory            factory,
 			bool                             isParameterOrderDepended,
-			bool                             isAlreadyOptimizedAndConverted,
 			Func<IQueryParametersNormalizer> parametersNormalizerFactory)
 		{
 			EvaluationContext              = evaluationContext;
@@ -51,13 +50,11 @@ namespace LinqToDB.Internal.SqlProvider
 			ConvertVisitor                 = convertVisitor;
 			Factory                        = factory;
 			IsParameterOrderDependent      = isParameterOrderDepended;
-			IsAlreadyOptimizedAndConverted = isAlreadyOptimizedAndConverted;
 			_parametersNormalizerFactory   = parametersNormalizerFactory;
 		}
 
 		public EvaluationContext     EvaluationContext              { get; }
 		public bool                  IsParameterOrderDependent      { get; }
-		public bool                  IsAlreadyOptimizedAndConverted { get; }
 		public ISqlExpressionFactory Factory                        { get; }
 
 		public bool HasParameters() => _actualParameters?.Count > 0;
@@ -212,27 +209,12 @@ namespace LinqToDB.Internal.SqlProvider
 			var newElement = OptimizerVisitor.Optimize(EvaluationContext, nullabilityContext, null, DataOptions, MappingSchema, element, visitQueries : true, reducePredicates: false);
 			var result     = (T)ConvertVisitor.Convert(this, nullabilityContext, newElement, visitQueries : true);
 
-			// TEST (Step 2 probe): reduce predicates over the final converted structure (so the builder need not reduce at
-			// render), then a plain optimize pass to collapse the redundant TRUE the reduce can leave behind.
+			// Reduce predicates over the final converted structure so the builder renders without an optimizer pass
+			// (the builder is a pure renderer). The reduce can leave a redundant TRUE (e.g. `AND 1 = 1`) behind, so a
+			// plain optimize pass follows to collapse it.
 			var reduceNullability = result is SqlStatement stmt ? NullabilityContext.GetContext(stmt.SelectQuery) : nullabilityContext;
 			result = (T)OptimizerVisitor.Optimize(EvaluationContext, reduceNullability, null, DataOptions, MappingSchema, result, visitQueries : true, reducePredicates: true);
 			result = (T)OptimizerVisitor.Optimize(EvaluationContext, reduceNullability, null, DataOptions, MappingSchema, result, visitQueries : true, reducePredicates: false);
-
-			return result;
-		}
-
-		[return: NotNullIfNotNull(nameof(element))]
-		public T? OptimizeAndConvert<T>(T? element, NullabilityContext nullabilityContext)
-			where T : class, IQueryElement
-		{
-			if (IsAlreadyOptimizedAndConverted)
-				return element;
-
-			if (element == null)
-				return null;
-
-			var newElement = OptimizerVisitor.Optimize(EvaluationContext, nullabilityContext, null, DataOptions, MappingSchema, element, visitQueries : false, reducePredicates : false);
-			var result     = (T)ConvertVisitor.Convert(this, nullabilityContext, newElement, false);
 
 			return result;
 		}

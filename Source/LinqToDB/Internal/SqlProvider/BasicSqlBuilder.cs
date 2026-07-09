@@ -2402,7 +2402,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected virtual bool ShouldBuildWhere(SelectQuery selectQuery, out SqlSearchCondition condition)
 		{
-			condition = PrepareSearchCondition(selectQuery.Where.SearchCondition);
+			condition = selectQuery.Where.SearchCondition;
 
 			return !condition.IsTrue;
 		}
@@ -2494,7 +2494,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected virtual void BuildHavingClause(SelectQuery selectQuery)
 		{
-			var condition = PrepareSearchCondition(selectQuery.Having.SearchCondition);
+			var condition = selectQuery.Having.SearchCondition;
 			if (condition.IsTrue)
 				return;
 
@@ -2687,8 +2687,6 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected virtual void BuildSearchCondition(SqlSearchCondition condition, bool wrapCondition)
 		{
-			condition = PrepareSearchCondition(condition);
-
 			var len = StringBuilder.Length;
 			var parentPrecedence = condition.Precedence;
 
@@ -3113,11 +3111,6 @@ namespace LinqToDB.Internal.SqlProvider
 				if (multipleParts)
 					StringBuilder.Insert(len, '(').Append(')');
 			}
-		}
-
-		protected SqlSearchCondition PrepareSearchCondition(SqlSearchCondition searchCondition)
-		{
-			return searchCondition;
 		}
 
 		protected void BuildPredicate(int parentPrecedence, int precedence, ISqlPredicate predicate)

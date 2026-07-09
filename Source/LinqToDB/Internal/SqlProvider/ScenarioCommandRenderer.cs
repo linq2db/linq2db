@@ -201,8 +201,8 @@ namespace LinqToDB.Internal.SqlProvider
 		/// scenario, finalizes synthetic steps and plans the physical groups. The whole-query convert must run <b>before</b>
 		/// aliasing: a conversion that restructures the AST (e.g. IN-&gt;EXISTS clones its sub-query) creates nodes the
 		/// alias context must see, so deferring it corrupts aliases. Parameter-value-level refinements are NOT applied here
-		/// (they need real values and would bake this run's values into a memoized structure); the per-execution build-time
-		/// convert (Phase R render, <c>isAlreadyOptimizedAndConverted:false</c>) applies them.
+		/// (they need real values and would bake this run's values into a memoized structure); for a parameter-dependent
+		/// query the per-run whole-query convert (with values) applies them instead.
 		/// </summary>
 		public static QueryStructure PrepareStructure(
 			DataConnection      dataConnection,
@@ -272,10 +272,6 @@ namespace LinqToDB.Internal.SqlProvider
 				sqlOptimizer.CreateConvertVisitor(false),
 				factory,
 				dataConnection.DataProvider.SqlProviderFlags.IsParameterOrderDependent,
-				// Every render path now hands the builder an already-converted statement (its caller always runs
-				// OptimizeAndConvertAll / PrepareStructure), so the builder never re-converts per element. The
-				// optimizeAndConvertAll flag only decides whether this run's parameter values are passed (above).
-				isAlreadyOptimizedAndConverted : true,
 				parametersNormalizerFactory    : dataConnection.DataProvider.GetQueryParameterNormalizer);
 
 		/// <summary>
