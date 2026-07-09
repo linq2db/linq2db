@@ -92,6 +92,7 @@ namespace LinqToDB.EntityFrameworkCore
 				ArgumentNullException.ThrowIfNull(value);
 				_implementation = value;
 				_metadataReaders.Clear();
+				_mappingSchemas .Clear();
 				_defaultMetadataReader = new Lazy<IMetadataReader?>(() => Implementation.CreateMetadataReader(null, null));
 			}
 		}
@@ -100,12 +101,15 @@ namespace LinqToDB.EntityFrameworkCore
 
 		static Lazy<IMetadataReader?> _defaultMetadataReader;
 
+		static readonly ConcurrentDictionary<(object ModelKey, DataOptions? DataOptions, bool Tracking), MappingSchema> _mappingSchemas = new();
+
 		/// <summary>
 		/// Clears internal caches
 		/// </summary>
 		public static void ClearCaches()
 		{
 			_metadataReaders.Clear();
+			_mappingSchemas .Clear();
 			Implementation.ClearCaches();
 			Query.ClearCaches();
 		}
@@ -222,12 +226,37 @@ namespace LinqToDB.EntityFrameworkCore
 			IInfrastructure<IServiceProvider>? accessor,
 			DataOptions? dataOptions)
 		{
+			// Share one mapping schema — and therefore one ConfigurationID — across DbContext
+			// instances of the same model, keyed on EF's own model-cache key. A fresh IModel per
+			// context (pooled contexts, EnableServiceProviderCaching(false), multiple internal
+			// service providers) would otherwise yield a fresh schema identity and the linq2db
+			// query cache would miss on every context.
+			if (accessor is DbContext context)
+			{
+				var factory = context.GetService<IModelCacheKeyFactory>();
+#if EF31
+				var modelKey = factory.Create(context);
+#else
+				var modelKey = factory.Create(context, false);
+#endif
+
+				return _mappingSchemas.GetOrAdd(
+					(modelKey, dataOptions, EnableChangeTracker),
+					static (_, state) => BuildMappingSchema(state.model, state.accessor, state.dataOptions),
+					(model, accessor, dataOptions));
+			}
+
+			return BuildMappingSchema(model, accessor, dataOptions);
+		}
+
+		static MappingSchema BuildMappingSchema(IModel model, IInfrastructure<IServiceProvider>? accessor, DataOptions? dataOptions)
+		{
 			var converterSelector = accessor?.GetService<IValueConverterSelector>();
-			var mappingSource = accessor?.GetService<IRelationalTypeMappingSource>();
-			
+			var mappingSource     = accessor?.GetService<IRelationalTypeMappingSource>();
+
 			return Implementation.GetMappingSchema(model, mappingSource, GetMetadataReader(model, accessor), converterSelector, dataOptions);
 		}
-		
+
 		/// <summary>
 		/// Creates mapping schema using provided EF Core data model.
 		/// </summary>
