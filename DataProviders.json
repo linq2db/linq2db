@@ -77,16 +77,22 @@
 			"Access.Jet.Odbc.Data"  : {                                      "ConnectionString": "Driver={Microsoft Access Driver (*.mdb)};Dbq=Database\\TestData.ODBC.mdb;ExtendedAnsiSQL=1;"                                                         },
 			"SqlCe"                 : {                                      "ConnectionString": "Data Source=Database\\TestData.sdf"                                                                                                                  },
 			"SqlCe.Data"            : {                                      "ConnectionString": "Data Source=Database\\Data\\TestData.sdf"                                                                                                            },
-			"SQLite.Classic"        : { "Provider": "SQLite",                "ConnectionString": "Data Source=Database/TestData.sqlite"                                                                                                                },
-			"SQLite.Classic.MPU"    : { "Provider": "SQLite.Classic.MPU",    "ConnectionString": "Data Source=Database/TestData.MiniProfiler.Unmapped.sqlite"                                                                                          },
-			"SQLite.Classic.MPM"    : { "Provider": "SQLite.Classic.MPM",    "ConnectionString": "Data Source=Database/TestData.MiniProfiler.Mapped.sqlite"                                                                                            },
+			// SQLite/DuckDB default to shared-cache in-memory databases: much faster than the on-disk
+			// files (no per-commit fsync) and seeded fresh each run by a_CreateData. A keep-alive
+			// connection per DB is opened in TestsInitialization (see TestInMemoryDatabases). This
+			// requires the CreateDatabase seeding to run, so use a full run or the /test skill (which
+			// injects it); a filtered run that skips seeding sees an empty DB. Point a config back at its
+			// "Data Source=Database/..." file if you need an inspectable on-disk DB.
+			"SQLite.Classic"        : { "Provider": "SQLite",                "ConnectionString": "FullUri=file:testdata_cl?mode=memory&cache=shared"                                                                                                    },
+			"SQLite.Classic.MPU"    : { "Provider": "SQLite.Classic.MPU",    "ConnectionString": "FullUri=file:testdata_mpu?mode=memory&cache=shared"                                                                                                   },
+			"SQLite.Classic.MPM"    : { "Provider": "SQLite.Classic.MPM",    "ConnectionString": "FullUri=file:testdata_mpm?mode=memory&cache=shared"                                                                                                   },
 			"SQLite.Classic.Data"   : { "Provider": "SQLite.Classic",        "ConnectionString": "Data Source=Database/Data/TestData.sqlite"                                                                                                           },
-			"SQLite.MS"             : { "Provider": "SQLite.MS",             "ConnectionString": "Data Source=Database/TestData.MS.sqlite"                                                                                                             },
+			"SQLite.MS"             : { "Provider": "SQLite.MS",             "ConnectionString": "Data Source=testdata_ms;Mode=Memory;Cache=Shared"                                                                                                     },
 			"SQLite.MS.Data"        : { "Provider": "Microsoft.Data.Sqlite", "ConnectionString": "Data Source=Database/Data/TestData.MS.sqlite"                                                                                                        },
-			"Northwind.SQLite"      : { "Provider": "System.Data.SQLite",    "ConnectionString": "Data Source=Database/Northwind.sqlite"                                                                                                               },
-			"Northwind.SQLite.MS"   : { "Provider": "SQLite.Microsoft",      "ConnectionString": "Data Source=Database/Northwind.MS.sqlite"                                                                                                            },
+			"Northwind.SQLite"      : { "Provider": "System.Data.SQLite",    "ConnectionString": "FullUri=file:northwind_cl?mode=memory&cache=shared"                                                                                                   },
+			"Northwind.SQLite.MS"   : { "Provider": "SQLite.Microsoft",      "ConnectionString": "Data Source=northwind_ms;Mode=Memory;Cache=Shared"                                                                                                    },
 			"TestNoopProvider"      : { "Provider": "TestNoopProvider",      "ConnectionString": "TestNoopProvider"                                                                                                                                    },
-			"DuckDB"                : { "Provider": "DuckDB",                "ConnectionString": "Data Source=Database/TestData.duckdb"                                                                                                                }
+			"DuckDB"                : { "Provider": "DuckDB",                "ConnectionString": "Data Source=:memory:?cache=shared"                                                                                                                   }
 		}
 	},
 

@@ -205,9 +205,9 @@ public class TestsInitialization
 			TestContext.Progress.WriteLine($"[parallel] not installed; dispatcher is {TestExecutionContext.CurrentContext.Dispatcher?.GetType().Name ?? "null"}");
 		}
 
-		// Open keep-alive connections for any SQLite provider configured with an in-memory connection
-		// string (CI), before a_CreateData seeds them. No-op for the normal file-based setup.
-		SetupSqliteInMemory();
+		// Set up in-memory databases (SQLite/DuckDB) for any provider configured with an in-memory
+		// connection string (CI), before a_CreateData seeds them. No-op for the normal file-based setup.
+		SetupInMemoryDatabases();
 	}
 
 	private void RegisterSqlCEFactory()
@@ -226,31 +226,36 @@ public class TestsInitialization
 #endif
 	}
 
-	// SQLite CI jobs run against shared-cache in-memory databases (connection strings in
-	// Build/Azure/*/sqlite.json) to avoid the per-commit filesystem sync that dominates the on-disk
-	// SQLite run. A shared-cache in-memory DB lives only while at least one connection to it is open,
-	// but linq2db opens/closes a connection per query, so without an anchor the DB is destroyed the
-	// moment a query completes. We open one keep-alive connection per in-memory SQLite DB before
-	// a_CreateData seeds it and hold it for the whole run. Auto-activates per config only when its
-	// connection string is in-memory; a complete no-op for the normal file-based (dev) setup.
-	static readonly System.Collections.Generic.List<DbConnection> _sqliteInMemoryKeepAlive = new();
+	// Route SQLite/DuckDB CI runs to in-memory databases (connection strings in Build/Azure/*/sqlite.json
+	// and duckdb.json) to avoid the per-commit filesystem sync that dominates their on-disk runs. Both use
+	// a shared-cache in-memory connection string (SQLite ...cache=shared, DuckDB :memory:?cache=shared)
+	// that is shared across all connections, so each only needs one keep-alive connection held open for
+	// the run (the DB is destroyed once its last connection closes) — registered in TestInMemoryDatabases.
+	// Auto-activates per config only when its connection string is in-memory; a complete no-op for the
+	// normal file-based (dev) setup.
+	static void SetupInMemoryDatabases()
+	{
+		SetupSqliteInMemory();
+#if !NETFRAMEWORK
+		SetupDuckDBInMemory();
+#endif
+	}
 
 	static void SetupSqliteInMemory()
 	{
-		// The SQLite configs the CI job enables. `classic` picks the ADO provider (System.Data.SQLite
-		// vs Microsoft.Data.Sqlite). Northwind ships as a committed binary with no SQL seed script, so
-		// a_CreateData can't seed it; load it into the in-memory DB via the SQLite online-backup API.
-		var configs = new (string name, bool classic, string? northwindFile)[]
+		// The SQLite configs the CI job enables, each with its committed on-disk source file. `classic`
+		// picks the ADO provider (System.Data.SQLite vs Microsoft.Data.Sqlite).
+		var configs = new (string name, bool classic, string sourceFile)[]
 		{
-			("SQLite.Classic",      true,  null),
-			("SQLite.Classic.MPU",  true,  null),
-			("SQLite.Classic.MPM",  true,  null),
-			("SQLite.MS",           false, null),
+			("SQLite.Classic",      true,  "TestData.sqlite"),
+			("SQLite.Classic.MPU",  true,  "TestData.MiniProfiler.Unmapped.sqlite"),
+			("SQLite.Classic.MPM",  true,  "TestData.MiniProfiler.Mapped.sqlite"),
+			("SQLite.MS",           false, "TestData.MS.sqlite"),
 			("Northwind.SQLite",    true,  "Northwind.sqlite"),
 			("Northwind.SQLite.MS", false, "Northwind.MS.sqlite"),
 		};
 
-		foreach (var (name, classic, northwindFile) in configs)
+		foreach (var (name, classic, sourceFile) in configs)
 		{
 			string cs;
 			try { cs = LinqToDB.Data.DataConnection.GetConnectionString(name); }
@@ -263,11 +268,14 @@ public class TestsInitialization
 				? new System.Data.SQLite.SQLiteConnection(cs)
 				: new Microsoft.Data.Sqlite.SqliteConnection(cs);
 			keep.Open();
-			_sqliteInMemoryKeepAlive.Add(keep);
+			TestInMemoryDatabases.AddKeepAlive(keep);
 
-			if (northwindFile != null)
+			// Preload the in-memory DB from its committed on-disk file via the SQLite online-backup API,
+			// so a filtered run (which skips the a_CreateData seeding) still has tables and data. Full
+			// runs re-seed TestData on top; Northwind (no SQL seed script) is only ever loaded this way.
+			var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Database", sourceFile);
+			if (File.Exists(path))
 			{
-				var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Database", northwindFile);
 				if (classic)
 				{
 					using var src = new System.Data.SQLite.SQLiteConnection($"Data Source={path};Read Only=True");
@@ -286,11 +294,31 @@ public class TestsInitialization
 		}
 	}
 
+#if !NETFRAMEWORK
+	static void SetupDuckDBInMemory()
+	{
+		string cs;
+		try { cs = LinqToDB.Data.DataConnection.GetConnectionString("DuckDB"); }
+		catch { return; }
+
+		if (cs == null || cs.IndexOf(":memory:", StringComparison.OrdinalIgnoreCase) < 0)
+			return; // file-based -> nothing to do
+
+		// A DuckDB shared-cache in-memory database (Data Source=:memory:?cache=shared) is shared by every
+		// connection using the same string — exactly like SQLite — so we only need to hold one master
+		// connection open; the database is destroyed once its last connection closes.
+		var master = new DuckDB.NET.Data.DuckDBConnection(cs);
+		master.Open();
+		TestInMemoryDatabases.AddKeepAlive(master);
+
+		TestContext.Progress.WriteLine($"[duckdb-inmemory] keep-alive open ({cs})");
+	}
+#endif
+
 	[OneTimeTearDown]
 	public void TestAssemblyTeardown()
 	{
-		foreach (var c in _sqliteInMemoryKeepAlive)
-			try { c.Dispose(); } catch { /* best effort */ }
+		TestInMemoryDatabases.DisposeAll();
 
 		ParallelDiag.Dump();
 
