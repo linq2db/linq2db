@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -198,16 +199,10 @@ namespace Tests
 
 			public override void Dispose()
 			{
-				// Scoped pool clear (FirebirdTools.ClearPool): after dropping the temp table, evict only THIS
-				// database's pooled connection so its metadata reference is released for the next DDL. Unlike the
-				// former process-wide ClearAllPools, it leaves other Firebird databases' pools alone — which is
-				// what makes running the FB 2.5/3/4/5 suites concurrently safe (each is a distinct connection string).
 				var fbConnection = DataContext is DataConnection dc && dc.DataProvider.Name.Contains(ProviderName.Firebird) ? dc.TryGetDbConnection() : null;
 
 				DataContext.Close();
-
-				if (fbConnection != null)
-					FirebirdTools.ClearPool(fbConnection);
+				ClearFirebirdPool(DataContext, fbConnection);
 
 				base.Dispose();
 			}
@@ -217,9 +212,7 @@ namespace Tests
 				var fbConnection = DataContext is DataConnection dc && dc.DataProvider.Name.Contains(ProviderName.Firebird) ? dc.TryGetDbConnection() : null;
 
 				await DataContext.CloseAsync();
-
-				if (fbConnection != null)
-					FirebirdTools.ClearPool(fbConnection);
+				ClearFirebirdPool(DataContext, fbConnection);
 
 				await base.DisposeAsync();
 			}
@@ -259,12 +252,21 @@ namespace Tests
 				var fbConnection = db is DataConnection dc ? dc.TryGetDbConnection() : null;
 
 				db.Close();
-
-				if (fbConnection != null)
-					FirebirdTools.ClearPool(fbConnection);
-				else
-					FirebirdTools.ClearAllPools();
+				ClearFirebirdPool(db, fbConnection);
 			}
+		}
+
+		// Firebird serializes DDL against object references: after dropping a temp table, the closed-but-pooled
+		// connection keeps a reference that fails the next CREATE/DROP ("object TABLE is in use"). Evict only
+		// THIS database's pool — by the live connection when we have one (direct path), else by its connection
+		// string (remote/LinqService path, where DataContext is not a DataConnection). Never ClearAllPools: it is
+		// process-wide and would tear down the connections other concurrently-running Firebird versions are using.
+		static void ClearFirebirdPool(IDataContext dataContext, DbConnection? connection)
+		{
+			if (connection != null)
+				FirebirdTools.ClearPool(connection);
+			else if (dataContext.ConfigurationString is { } configuration)
+				FirebirdTools.ClearPool(DataConnection.GetConnectionString(configuration.StripRemote()));
 		}
 
 		public static Version GetSqliteVersion(DataConnection db)
