@@ -62,6 +62,8 @@ namespace LinqToDB.Benchmarks.Queries
 		DataConnection _db      = null!;
 		Entity         _entity  = null!;
 		int[]          _inList  = null!;
+		string         _namePart = null!;
+		DateTime       _fromDate;
 
 		// Trigger LINQ translation + render (GetCommand) + cache lookup without executing on the mock;
 		// return SQL length so the JIT can't elide the call.
@@ -93,6 +95,8 @@ namespace LinqToDB.Benchmarks.Queries
 			_db     = new DataConnection(new DataOptions().UseConnection(SQLiteTools.GetDataProvider(SQLiteProvider.Microsoft), _cn));
 			_entity = new Entity { Id = 1, Name = "x", Value = 42, Created = new DateTime(2020, 1, 1) };
 			_inList = Enumerable.Range(0, 16).ToArray();
+			_namePart = "x";
+			_fromDate = new DateTime(2000, 1, 1);
 
 			Query.ClearCaches();
 		}
@@ -144,6 +148,37 @@ namespace LinqToDB.Benchmarks.Queries
 				total += Render(_db.GetTable<Entity>().Where(x => _inList.Contains(x.Id)));
 
 			return total;
+		}
+
+		// === Complex parameter-value-dependent query: correlated subquery + join + two IN-lists (one nested) + LIKE +
+		// date parameter + ordering. A large SelectQuery graph whose structure depends on parameter values — the
+		// memory-acceptance basis for the two-pass-convert POC (a trivial IN-list does not reveal the per-run rebuild
+		// cost). Every render re-runs the parameter-value convert (param path), so this measures that per-run cost. ===
+		[Benchmark]
+		public int Render_ComplexParam()
+		{
+			var total = 0;
+
+			for (var i = 0; i < Iterations; i++)
+				total += Render(BuildComplexParam());
+
+			return total;
+		}
+
+		// Heavy parameter-dependent query used by Render_ComplexParam.
+		IQueryable<Entity> BuildComplexParam()
+		{
+			var t = _db.GetTable<Entity>();
+
+			return
+				from e in t
+				join e2 in t on e.Value equals e2.Value
+				where _inList.Contains(e.Id)
+					&& e.Name!.Contains(_namePart)
+					&& e2.Created > _fromDate
+					&& t.Any(x => x.Value == e.Value && x.Id != e.Id && _inList.Contains(x.Value))
+				orderby e.Name, e2.Value descending
+				select e;
 		}
 
 		// === Cold prepare: DistinctCount structurally-distinct non-parameter-dependent queries (cache miss + full build each) ===
@@ -209,6 +244,7 @@ namespace LinqToDB.Benchmarks.Queries
 				("Execute_Select",        () => b.Execute_Select()),
 				("Execute_Insert",        () => b.Execute_Insert()),
 				("Render_ValueDependent", () => b.Render_ValueDependent()),
+				("Render_ComplexParam",   () => b.Render_ComplexParam()),
 				("Prepare_Cold",          () => b.Prepare_Cold()),
 			};
 

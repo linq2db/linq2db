@@ -289,10 +289,14 @@ namespace LinqToDB.Data
 					}
 					else
 					{
-						// ONE context drives BOTH the structural convert and the render (byte-identical to the
-						// pre-redesign single-context path): Transform (non-mutating) visitors keep the shared statement
-						// untouched, and BuildSql re-runs the build-time convert (isAlreadyOptimizedAndConverted:false) to
-						// apply this run's parameter-value refinements.
+						// POC (decouple builder from optimizer, milestone 1): ONE context drives the whole-query
+						// optimize+convert (PrepareStructure → OptimizeAndConvertAll, which ignores isAlready) AND the render.
+						// The whole-query convert applies this run's parameter-value refinements (IN-list expansion,
+						// null-fold, TAKE/SKIP) up front, so the builder renders WITHOUT a per-element re-convert
+						// (isAlreadyOptimizedAndConverted:true). The render context still keeps the parameter values so
+						// render-time evaluation works (IN-list / VALUES BuildRows). Transform (non-mutating) visitors keep
+						// the shared statement untouched; the per-run structure is not cached (no baking-into-cache risk).
+						// Was isAlready:false (builder re-ran the convert per element during BuildSql).
 						var singleContext = new OptimizationContext(
 							new EvaluationContext(parameterValues),
 							options,
@@ -302,7 +306,7 @@ namespace LinqToDB.Data
 							sqlOptimizer.CreateConvertVisitor(false),
 							factory,
 							flags.IsParameterOrderDependent,
-							isAlreadyOptimizedAndConverted : false,
+							isAlreadyOptimizedAndConverted : true,
 							parametersNormalizerFactory    : dataConnection.DataProvider.GetQueryParameterNormalizer);
 
 						structure     = ScenarioCommandRenderer.PrepareStructure(dataConnection, options, statement, singleContext, isParameterDependent : true);
