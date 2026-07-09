@@ -51,7 +51,7 @@ Use [`.agents/scripts/azp-build-failures.ps1`](../scripts/azp-build-failures.ps1
 pwsh -NoProfile -File .agents/scripts/azp-build-failures.ps1 -BuildId <n>
 ```
 
-Output: JSON with `{ buildId, logsDir, failedTaskCount, tasks: [{ name, logUrl, logPath, failures: [{ test, errorMessage }] }] }`. Logs persist under `.build/.agents/azp-<n>/` for follow-up `Read` / `Grep`. When the build is red for a **non-test** reason (compile error in a `Build …` step, restore failure), `failedTaskCount` is `0` and a `buildFailures: [{ name, issues: [message…] }]` array carries the actual `CSxxxx`/`MSBxxxx` messages from the timeline — don't read `failedTaskCount: 0` as "nothing failed".
+Output: JSON with `{ buildId, logsDir, failedTaskCount, tasks: [{ name, logUrl, logPath, failures: [{ test, errorMessage }] }] }`. Logs persist under `.build/.agents/azp-<n>/` for follow-up `Read` / `Grep`. When the build is red for a **non-test** reason (compile error in a `Build …` step, restore failure, or a `Command line` step wrapping `dotnet build`/`publish`), `failedTaskCount` is `0` and a `buildFailures: [{ name, issues, logPath, errors }]` array carries the failure — don't read `failedTaskCount: 0` as "nothing failed". Note the timeline `issues` are often only a generic wrapper (`Cmd.exe exited with code '1'`) for `Command line` steps; the real `CSxxxx`/`MAxxxx`/`MSBxxxx` message is in the fetched task log (`logPath`) and parsed into `errors[]`, so read those, not just `issues`.
 
 Resolve `<n>` (the Azure DevOps build ID) from the PR's check-runs:
 
