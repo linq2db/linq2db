@@ -272,7 +272,10 @@ namespace LinqToDB.Internal.SqlProvider
 				sqlOptimizer.CreateConvertVisitor(false),
 				factory,
 				dataConnection.DataProvider.SqlProviderFlags.IsParameterOrderDependent,
-				isAlreadyOptimizedAndConverted : optimizeAndConvertAll,
+				// Every render path now hands the builder an already-converted statement (its caller always runs
+				// OptimizeAndConvertAll / PrepareStructure), so the builder never re-converts per element. The
+				// optimizeAndConvertAll flag only decides whether this run's parameter values are passed (above).
+				isAlreadyOptimizedAndConverted : true,
 				parametersNormalizerFactory    : dataConnection.DataProvider.GetQueryParameterNormalizer);
 
 		/// <summary>
@@ -402,8 +405,8 @@ namespace LinqToDB.Internal.SqlProvider
 
 				sb.Value.Length = 0;
 
-				if (convertAll)
-					statement = optimizationContext.OptimizeAndConvertAll(statement, NullabilityContext.GetContext(statement.SelectQuery));
+				// Always convert upfront (parameter-dependent statements too) so the builder never re-converts per element.
+				statement = optimizationContext.OptimizeAndConvertAll(statement, NullabilityContext.GetContext(statement.SelectQuery));
 
 				var aliases = PrepareStepAliases(serviceProvider, statement);
 

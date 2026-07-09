@@ -540,8 +540,8 @@ namespace LinqToDB.Data
 					{
 						var statement = statements[i];
 
-						if (convertAll)
-							statement = optimizationContext.OptimizeAndConvertAll(statement, NullabilityContext.GetContext(statement.SelectQuery));
+						// Always convert upfront (parameter-dependent statements too) so the builder never re-converts per element.
+						statement = optimizationContext.OptimizeAndConvertAll(statement, NullabilityContext.GetContext(statement.SelectQuery));
 
 						var aliases = ScenarioCommandRenderer.PrepareStepAliases(serviceProvider, statement);
 
