@@ -1066,6 +1066,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			}
 		}
 
+		// PostgreSQL identity-column temp tables are a separate known limitation (#4333), same as Issue4333Test above.
+		[ActiveIssue(TestProvName.AllPostgreSQL)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5364")]
 		public void TempTableSurvivesAcrossCommands([EFDataSources] string provider)
 		{
