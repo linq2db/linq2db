@@ -418,7 +418,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		/// <summary>
 		/// Whether calculated columns (<see cref="ExpressionMethodAttribute"/> with <c>IsColumn = true</c>) should be
-		/// expanded for the current construction. Defaults to <c>false</c>, so non-query construction paths (e.g.
+		/// expanded for the current construction. Defaults to <see langword="false"/>, so non-query construction paths (e.g.
 		/// reader-based materialization from raw SQL in <c>RecordReaderBuilder</c>) never process calculated columns.
 		/// The query-building constructor overrides this to opt in only for table-backed full-entity materialization.
 		/// </summary>
@@ -426,7 +426,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		/// <summary>
 		/// Expands a calculated column's <see cref="ExpressionMethodAttribute"/> substitution body. Only invoked when
-		/// <see cref="ShouldBuildCalculatedColumns"/> returns <c>true</c> (i.e. from the query-building constructor,
+		/// <see cref="ShouldBuildCalculatedColumns"/> returns <see langword="true"/> (i.e. from the query-building constructor,
 		/// which overrides this to run <c>ConvertExpressionTree</c> on the member access). The base implementation is
 		/// an inert fallback that returns the access unchanged.
 		/// </summary>
