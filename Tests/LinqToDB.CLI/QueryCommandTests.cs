@@ -23,6 +23,17 @@ namespace Tests.LinqToDB.CLI
 	public sealed class QueryCommandTests
 	{
 		[Test]
+		public async Task QueryReportsUnrecognizedArgument()
+		{
+			var result = await RunCli("query", "extra");
+
+			{
+				(result.ExitCode).ShouldBe(-1);
+				(result.Error).ShouldContain("Unrecognized argument: extra");
+			}
+		}
+
+		[Test]
 		public async Task QueryRequiresSqlOrSqlFile()
 		{
 			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:");

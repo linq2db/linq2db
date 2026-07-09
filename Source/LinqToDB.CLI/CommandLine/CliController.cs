@@ -150,10 +150,10 @@ namespace LinqToDB.CommandLine
 				}
 				else
 				{
-					hasErrors = true;
 					if (!hasErrors || !reportFirstErrorOnly)
 						environment.Error.WriteLine("Unrecognized argument: {0}", args[i]);
 					unknownArgs.Add(args[i]);
+					hasErrors = true;
 				}
 
 				if (option != null)
