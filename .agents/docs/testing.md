@@ -114,6 +114,10 @@ dotnet test --project Tests/Linq/Tests.csproj -f net10.0 --settings .runsettings
 
 `--provider` replaces the active main-test provider set (`TestConfiguration.UserProviders`) with exactly the names given, so **any provider with a connection string defined in `DataProviders.json` / `UserDataProviders.json` runs without editing the enabled-providers list** — it need not be enabled. (EF Core test runs instead intersect their curated `EFProviders` list, so `--provider` can only narrow EF runs to supported providers, never add an unsupported one.) Connection strings still come from those files; a `--provider` name with no connection logs a warning and fails to connect. An absent option leaves behavior unchanged (the providers enabled in `UserDataProviders.json` run).
 
+**Multiple providers: comma- (or space-) separate them** — `--provider Firebird.5,PostgreSQL.18` (or `--provider Firebird.5 PostgreSQL.18`) runs both.
+
+**To exercise the remote (LinqService) path, pass the BASE provider name, not the `.LinqService` suffix.** `DataSourcesBaseAttribute` auto-appends a `<provider>.LinqService` case for every base provider (unless `.runsettings` sets `DisableRemoteContext` / `NoLinqService`), so `--provider Firebird.5` runs **both** the direct `Firebird.5` and the remote `Firebird.5.LinqService` cases. Passing `--provider Firebird.5.LinqService` double-suffixes it to `Firebird.5.LinqService.LinqService`, which has no connection string → those cases silently don't run (you'll see only `CreateDatabase` execute). This is also why `test-runner`, given a `.LinqService` provider name, comes back green-but-empty.
+
 ### Running providers in parallel
 
 Each provider config maps to a distinct database, so runs scoped to **distinct** providers don't collide and can run concurrently. Two cautions, both from the standing single-session rule:
@@ -132,6 +136,8 @@ dotnet build Tests/Linq/Tests.csproj -c Debug -f net10.0
 ```
 
 Each process writes its own `.build/.agents/test-progress.<tfm>.<pid>.json`; poll them with `/test-progress` or `test-status.ps1`. The runner's native filter flag is `--filter` (the same `FullyQualifiedName~` syntax), confirmed via `--help`.
+
+**Firebird temp-table teardown must scope its pool clear — never `FirebirdTools.ClearAllPools()`.** Firebird needs the pooled connection evicted after a temp-table drop (its lingering metadata reference otherwise fails the next DDL with `object TABLE … is in use` / `lock conflict on no wait transaction`). But `ClearAllPools()` is **process-wide** across every connection string, so under parallel execution it tears down the connections other concurrently-running Firebird versions (2.5/3/4/5, each a distinct connection string) are actively using. Use the scoped `FirebirdTools.ClearPool(connection)` (direct path) or `ClearPool(connectionString)` (remote/LinqService path, where the context isn't a `DataConnection` — resolve via `GetConnectionString(config.StripRemote())`); `TestUtils.ClearFirebirdPool` is the shared helper. (PR #5689.)
 
 ## Database initialization
 
