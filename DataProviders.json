@@ -75,8 +75,10 @@
 			"Access.Jet.OleDb.Data" : {                                      "ConnectionString": "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=Database\\Data\\TestData.mdb;Locale Identifier=1033;Jet OLEDB:Engine Type=5;Persist Security Info=True" },
 			"Access.Jet.Odbc"       : {                                      "ConnectionString": "Driver={Microsoft Access Driver (*.mdb)};Dbq=Database\\TestData.ODBC.mdb;ExtendedAnsiSQL=1;"                                                         },
 			"Access.Jet.Odbc.Data"  : {                                      "ConnectionString": "Driver={Microsoft Access Driver (*.mdb)};Dbq=Database\\TestData.ODBC.mdb;ExtendedAnsiSQL=1;"                                                         },
-			"SqlCe"                 : {                                      "ConnectionString": "Data Source=Database\\TestData.sdf"                                                                                                                  },
-			"SqlCe.Data"            : {                                      "ConnectionString": "Data Source=Database\\Data\\TestData.sdf"                                                                                                            },
+			// Flush Interval=1000 (max): batch committed-transaction flushes instead of every 10s -> ~15%
+			// faster full SqlCe suite. Durability is traded for speed, which is fine for tests.
+			"SqlCe"                 : {                                      "ConnectionString": "Data Source=Database\\TestData.sdf;Flush Interval=1000"                                                                                              },
+			"SqlCe.Data"            : {                                      "ConnectionString": "Data Source=Database\\Data\\TestData.sdf;Flush Interval=1000"                                                                                        },
 			// SQLite/DuckDB default to shared-cache in-memory databases: much faster than the on-disk
 			// files (no per-commit fsync) and seeded fresh each run by a_CreateData. A keep-alive
 			// connection per DB is opened in TestsInitialization (see TestInMemoryDatabases). This
