@@ -1109,3 +1109,4 @@ virtual LinqToDB.Internal.SqlProvider.BasicSqlBuilder.RequiresUniqueRootColumnNa
 override LinqToDB.Internal.DataProvider.Access.AccessSqlBuilderBase.RequiresUniqueRootColumnNames.get -> bool
 override LinqToDB.Internal.DataProvider.SqlCe.SqlCeSqlBuilder.RequiresUniqueRootColumnNames.get -> bool
 *REMOVED*override LinqToDB.Internal.DataProvider.SqlCe.SqlCeSqlBuilder.CanSkipRootAliases(LinqToDB.Internal.SqlQuery.SqlStatement! statement) -> bool
+*REMOVED*LinqToDB.Internal.SqlQuery.SqlRawSqlTable.SqlRawSqlTable(LinqToDB.Internal.SqlQuery.SqlRawSqlTable! table, LinqToDB.Internal.SqlQuery.ISqlExpression![]! parameters) -> void
