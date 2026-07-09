@@ -104,7 +104,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupBy1([DataSources(TestProvName.AllClickHouse)] string context)
+		// PostgreSQL 9.4+ (FILTER clause)
+		public void GroupBy1([DataSources(TestProvName.AllClickHouse, TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -130,7 +131,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupBy102([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		// PostgreSQL 9.4+ (FILTER clause)
+		public void GroupBy102([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse, TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -155,7 +157,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupBy103([DataSources(TestProvName.AllClickHouse)] string context)
+		// PostgreSQL 9.4+ (FILTER clause)
+		public void GroupBy103([DataSources(TestProvName.AllClickHouse, TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -168,7 +171,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupBy21([DataSources(TestProvName.AllClickHouse)] string context)
+		// PostgreSQL 9.4+ (FILTER clause)
+		public void GroupBy21([DataSources(TestProvName.AllClickHouse, TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			var n = 1;
 
@@ -187,7 +191,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupBy22([DataSources(TestProvName.AllClickHouse)] string context)
+		// PostgreSQL 9.4+ (FILTER clause)
+		public void GroupBy22([DataSources(TestProvName.AllClickHouse, TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			var n = 1;
 
@@ -206,7 +211,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupBy23([DataSources(ProviderName.SqlCe, TestProvName.AllOracle, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		// PostgreSQL 9.4+ (FILTER clause)
+		public void GroupBy23([DataSources(ProviderName.SqlCe, TestProvName.AllOracle, TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -223,7 +229,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupBy3([DataSources(TestProvName.AllClickHouse)] string context)
+		// PostgreSQL 9.4+ (FILTER clause)
+		public void GroupBy3([DataSources(TestProvName.AllClickHouse, TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -259,7 +266,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupBy5([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		// PostgreSQL 9.4+ (FILTER clause)
+		public void GroupBy5([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse, TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -354,7 +362,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByWhere201([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		// PostgreSQL 9.4+ (FILTER clause)
+		public void GroupByWhere201([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse, TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -369,7 +378,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByWhere202([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		// PostgreSQL 9.4+ (FILTER clause)
+		public void GroupByWhere202([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse, TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -384,7 +394,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByWhere203([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		// PostgreSQL 9.4+ (FILTER clause)
+		public void GroupByWhere203([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse, TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(

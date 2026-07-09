@@ -15,6 +15,7 @@ namespace Tests.Linq
 		// ordered group. Native on Oracle and PostgreSQL; throws elsewhere.
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException),
+			TestProvName.AllPostgreSQL93Minus,
 			TestProvName.AllSqlServer2008Minus, TestProvName.AllSqlServer2012Plus, TestProvName.AllSQLite, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllClickHouse,
 			TestProvName.AllFirebird3Plus, TestProvName.AllSapHana, TestProvName.AllInformix, ProviderName.Ydb, TestProvName.AllDuckDB, TestProvName.AllDB2,
 			ErrorMessage = ErrorHelper.Error_WindowFunction_HypotheticalSet)]
@@ -44,6 +45,7 @@ namespace Tests.Linq
 		// Hypothetical-set DENSE_RANK(value) WITHIN GROUP (ORDER BY key): the rank the value would have (no gaps).
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException),
+			TestProvName.AllPostgreSQL93Minus,
 			TestProvName.AllSqlServer2008Minus, TestProvName.AllSqlServer2012Plus, TestProvName.AllSQLite, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllClickHouse,
 			TestProvName.AllFirebird3Plus, TestProvName.AllSapHana, TestProvName.AllInformix, ProviderName.Ydb, TestProvName.AllDuckDB, TestProvName.AllDB2,
 			ErrorMessage = ErrorHelper.Error_WindowFunction_HypotheticalSet)]
@@ -73,6 +75,7 @@ namespace Tests.Linq
 		// Hypothetical-set PERCENT_RANK(value) WITHIN GROUP (ORDER BY key): the relative rank (0..1) the value would have.
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException),
+			TestProvName.AllPostgreSQL93Minus,
 			TestProvName.AllSqlServer2008Minus, TestProvName.AllSqlServer2012Plus, TestProvName.AllSQLite, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllClickHouse,
 			TestProvName.AllFirebird3Plus, TestProvName.AllSapHana, TestProvName.AllInformix, ProviderName.Ydb, TestProvName.AllDuckDB, TestProvName.AllDB2,
 			ErrorMessage = ErrorHelper.Error_WindowFunction_HypotheticalSet)]
@@ -102,6 +105,7 @@ namespace Tests.Linq
 		// Hypothetical-set CUME_DIST(value) WITHIN GROUP (ORDER BY key): the cumulative distribution (0..1) of the value.
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException),
+			TestProvName.AllPostgreSQL93Minus,
 			TestProvName.AllSqlServer2008Minus, TestProvName.AllSqlServer2012Plus, TestProvName.AllSQLite, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllClickHouse,
 			TestProvName.AllFirebird3Plus, TestProvName.AllSapHana, TestProvName.AllInformix, ProviderName.Ydb, TestProvName.AllDuckDB, TestProvName.AllDB2,
 			ErrorMessage = ErrorHelper.Error_WindowFunction_HypotheticalSet)]
