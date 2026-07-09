@@ -603,7 +603,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			if (selectQuery.OrderBy.Items.Count == 0)
 				return;
 
-			var orderBy = ConvertElement(selectQuery.OrderBy);
+			var orderBy = selectQuery.OrderBy;
 
 			var nonConstant =
 				orderBy.Items.TrueForAll(i => !QueryHelper.IsConstantFast(i.Expression))

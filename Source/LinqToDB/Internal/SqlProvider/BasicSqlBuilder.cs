@@ -222,13 +222,6 @@ namespace LinqToDB.Internal.SqlProvider
 		#region Helpers
 
 		[return: NotNullIfNotNull(nameof(element))]
-		public T? ConvertElement<T>(T? element)
-			where T : class, IQueryElement
-		{
-			return OptimizationContext.OptimizeAndConvert(element, NullabilityContext);
-		}
-
-		[return: NotNullIfNotNull(nameof(element))]
 		public IQueryElement? Optimize(IQueryElement? element, bool reducePredicates)
 		{
 			if (element == null)
@@ -857,7 +850,7 @@ namespace LinqToDB.Internal.SqlProvider
 		/// </summary>
 		protected void BuildDistinctOnExpressions(SelectQuery selectQuery)
 		{
-			var select = ConvertElement(selectQuery.Select);
+			var select = selectQuery.Select;
 			if (select.DistinctOn is not { Count: > 0 } onExpressions)
 				return;
 
@@ -888,9 +881,9 @@ namespace LinqToDB.Internal.SqlProvider
 
 			var first = true;
 
-			var select = ConvertElement(selectQuery.Select);
+			var select = selectQuery.Select;
 
-			// ConvertElement can rebuild the Select into fresh SqlColumn instances (parameter-dependent
+			// The whole-query convert can rebuild the Select into fresh SqlColumn instances (parameter-dependent
 			// queries re-run the per-element convert at build time, after aliasing). Synthetic column
 			// aliases live in the object-identity-keyed AliasesContext, not on the node, so they must be
 			// read from the original aliased columns - the rebuilt copies were never registered, so
@@ -1054,7 +1047,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 				BuildExpression(expr.Column, updateClause.TableSource != null, true, false);
 
-				var updateSet = ConvertElement(expr);
+				var updateSet = expr;
 
 				if (updateSet.Expression != null)
 				{
@@ -1103,8 +1096,6 @@ namespace LinqToDB.Internal.SqlProvider
 		{
 			if (output?.HasOutput == true)
 			{
-				output = ConvertElement(output);
-
 				AppendIndent()
 					.AppendLine(OutputKeyword);
 
@@ -1263,7 +1254,7 @@ namespace LinqToDB.Internal.SqlProvider
 						first = false;
 
 						AppendIndent();
-						BuildExpression(ConvertElement(expr).Expression!);
+						BuildExpression(expr.Expression!);
 					}
 
 					Indent--;
@@ -1319,7 +1310,7 @@ namespace LinqToDB.Internal.SqlProvider
 						StringBuilder.AppendLine(Comma);
 					first = false;
 
-					var updateItem = ConvertElement(expr);
+					var updateItem = expr;
 
 					AppendIndent();
 					BuildExpression(updateItem.Column, false, true);
@@ -2086,7 +2077,6 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected virtual void BuildSqlValuesTable(SqlValuesTable valuesTable, string alias, out bool aliasBuilt)
 		{
-			valuesTable = ConvertElement(valuesTable);
 			var rows    = valuesTable.BuildRows(OptimizationContext.EvaluationContext);
 			var isEmpty = !(rows?.Count > 0);
 			if (!isEmpty)
@@ -2120,7 +2110,6 @@ namespace LinqToDB.Internal.SqlProvider
 
 		private void BuildSqlValuesAlias(SqlValuesTable valuesTable, string alias, bool supportsColumnAliases)
 		{
-			valuesTable = ConvertElement(valuesTable);
 			StringBuilder.Append(' ');
 
 			BuildObjectName(StringBuilder, new(alias), ConvertType.NameToQueryFieldAlias, true, TableOptions.NotSet);
@@ -2315,7 +2304,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 				foreach (var ext in sqlQueryExtensions!)
 				{
-					var convertedExt = ConvertElement(ext);
+					var convertedExt = ext;
 					if (convertedExt.BuilderType != null)
 					{
 						var extensionBuilder = GetExtensionBuilder(convertedExt.BuilderType!);
@@ -2346,7 +2335,7 @@ namespace LinqToDB.Internal.SqlProvider
 			Indent++;
 			AppendIndent();
 
-			var condition = ConvertElement(join.Condition);
+			var condition = join.Condition;
 			var buildOn   = BuildJoinType (join, condition);
 
 			if (IsNestedJoinParenthesisRequired && join.Table.Joins.Count != 0)
@@ -2548,7 +2537,7 @@ namespace LinqToDB.Internal.SqlProvider
 			if (selectQuery.OrderBy.Items.Count == 0)
 				return;
 
-			var orderBy = ConvertElement(selectQuery.OrderBy);
+			var orderBy = selectQuery.OrderBy;
 
 			IReadOnlyList<SqlOrderByItem> nonConstant = orderBy.Items.TrueForAll(i => !QueryHelper.IsConstantFast(i.Expression))
 				? orderBy.Items
@@ -3149,7 +3138,7 @@ namespace LinqToDB.Internal.SqlProvider
 			if (_binaryOptimized > 0)
 				return searchCondition;
 
-			var condition = ConvertElement(searchCondition);
+			var condition = searchCondition;
 			var optimized = Optimize(condition, reducePredicates: true);
 
 			if (optimized is SqlSearchCondition optimizedCondition)
@@ -4057,7 +4046,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 				for (var i = 0; i < values.Length; i++)
 				{
-					var value = ConvertElement(parameters[i]);
+					var value = parameters[i];
 
 					values[i] = WithStringBuilderBuildExpression(precedence, value);
 				}

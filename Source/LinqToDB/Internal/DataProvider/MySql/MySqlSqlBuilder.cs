@@ -380,7 +380,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 					AppendIndent();
 					BuildExpression(expr.Column, false, true);
 					StringBuilder.Append(" = ");
-					var convertedExpr = ConvertElement(expr.Expression!);
+					var convertedExpr = expr.Expression!;
 					BuildExpression(convertedExpr, false, true);
 				}
 
