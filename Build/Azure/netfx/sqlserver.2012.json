@@ -1,8 +1,6 @@
 {
-	"NET100.Azure": {
+	"NETFX.Azure": {
 		"Providers": [
-			"SqlServer.2008",
-			"SqlServer.2008.MS",
 			"SqlServer.2012",
 			"SqlServer.2012.MS"
 		]

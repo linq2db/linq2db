@@ -1,8 +1,8 @@
 {
 	"NET90.Azure": {
 		"Providers": [
-			"DB2",
-			"Informix.DB2"
+			"SqlServer.2014",
+			"SqlServer.2014.MS"
 		]
 	}
 }

@@ -251,10 +251,12 @@ jobs:
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
             enabled: false
 
-        - name: SqlServer2008_2012
-          title: SQL Server 2008 + 2012
-          config_win: sqlserver.2008_2012
-          script_win_global: sqlserver.2008_2012.cmd
+# 2008-2016 run one version per job: batching two versions in a single netfx process
+# exhausts memory (unbounded per-MappingSchema attribute cache), so keep them separate.
+        - name: SqlServer2008
+          title: SQL Server 2008
+          config_win: sqlserver.2008
+          script_win_global: sqlserver.2008.cmd
           enable_os_windows: true
           enable_os_ubuntu: false
           enable_os_macos: false
@@ -267,10 +269,42 @@ jobs:
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
             enabled: false
 
-        - name: SqlServer2014_2016
-          title: SQL Server 2014 + 2016
-          config_win: sqlserver.2014_2016
-          script_win_global: sqlserver.2014_2016.cmd
+        - name: SqlServer2012
+          title: SQL Server 2012
+          config_win: sqlserver.2012
+          script_win_global: sqlserver.2012.cmd
+          enable_os_windows: true
+          enable_os_ubuntu: false
+          enable_os_macos: false
+          enable_fw_netfx: true
+          enable_fw_net80: true
+          enable_fw_net90: true
+          enable_fw_net100: true
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
+            enabled: false
+
+        - name: SqlServer2014
+          title: SQL Server 2014
+          config_win: sqlserver.2014
+          script_win_global: sqlserver.2014.cmd
+          enable_os_windows: true
+          enable_os_ubuntu: false
+          enable_os_macos: false
+          enable_fw_netfx: true
+          enable_fw_net80: true
+          enable_fw_net90: true
+          enable_fw_net100: true
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
+            enabled: false
+
+        - name: SqlServer2016
+          title: SQL Server 2016
+          config_win: sqlserver.2016
+          script_win_global: sqlserver.2016.cmd
           enable_os_windows: true
           enable_os_ubuntu: false
           enable_os_macos: false
@@ -374,26 +408,6 @@ jobs:
           ${{ if not(contains(parameters.db_filter, '[metrics]')) }}:
             enabled: false
 
-# Sybase ASE
-        - name: Sybase
-          title: Sybase ASE 16
-          config_linux: sybase
-          config_macos: sybase
-          script_linux_global: sybase.sh
-          script_macos_global: sybase.sh
-          install_docker_macos: true
-          enable_os_windows: false
-          enable_os_ubuntu: true
-          enable_os_macos: true
-          enable_fw_netfx: false
-          enable_fw_net80: true
-          enable_fw_net90: true
-          enable_fw_net100: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sybase.ase.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sybase.ase.all]'))) }}:
-            enabled: false
-
 # Oracle
         - name: Oracle1112
           title: Oracle 11g + 12c
@@ -475,13 +489,14 @@ jobs:
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[firebird.all]'))) }}:
             enabled: false
 
-# DB2 / Informix
-        - name: DB2Informix
-          title: DB2 LUW 11.5 + Informix 14.10
-          config_linux: db2informix
-          config_macos: db2informix
-          script_linux_global: db2informix.sh
-          script_macos_global: mac.db2informix.sh
+# DB2 / Informix / Sybase / YDB - fast providers merged into one job (distinct ports, no conflict)
+# to save CI agent capacity. DB2 keeps its native-driver local scripts.
+        - name: DB2InformixSybaseYDB
+          title: DB2 + Informix + Sybase + YDB
+          config_linux: fastdbs
+          config_macos: fastdbs
+          script_linux_global: fastdbs.sh
+          script_macos_global: fastdbs.sh
           script_linux_local: db2.provider.sh
           script_macos_local: mac.db2.provider.sh
           install_docker_macos: true
@@ -492,9 +507,9 @@ jobs:
           enable_fw_net80: true
           enable_fw_net90: true
           enable_fw_net100: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[db2.all]'), contains(parameters.db_filter, '[informix.all]')) }}:
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[db2.all]'), contains(parameters.db_filter, '[informix.all]'), contains(parameters.db_filter, '[sybase.ase.all]'), contains(parameters.db_filter, '[ydb.all]')) }}:
             enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[db2.all]'), contains(parameters.db_filter, '[informix.all]'))) }}:
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[db2.all]'), contains(parameters.db_filter, '[informix.all]'), contains(parameters.db_filter, '[sybase.ase.all]'), contains(parameters.db_filter, '[ydb.all]'))) }}:
             enabled: false
 
 # SAP HANA
@@ -562,24 +577,4 @@ jobs:
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[duckdb.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[duckdb.all]'))) }}:
-            enabled: false
-
-# YDB
-        - name: YDB
-          title: YDB
-          config_linux: ydb
-          config_macos: ydb
-          script_linux_global: ydb.sh
-          script_macos_global: ydb.sh
-          install_docker_macos: true
-          enable_os_windows: false
-          enable_os_ubuntu: true
-          enable_os_macos: true
-          enable_fw_netfx: false
-          enable_fw_net80: true
-          enable_fw_net90: true
-          enable_fw_net100: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[ydb.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[ydb.all]'))) }}:
             enabled: false

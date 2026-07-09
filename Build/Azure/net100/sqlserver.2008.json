@@ -1,8 +1,8 @@
 {
 	"NET100.Azure": {
 		"Providers": [
-			"DB2",
-			"Informix.DB2"
+			"SqlServer.2008",
+			"SqlServer.2008.MS"
 		]
 	}
 }

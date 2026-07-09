@@ -8,8 +8,15 @@ docker ps -a
 
 for c in mssql2017 mssql2019; do
     echo "Waiting for $c to accept connections"
+    retries=0
     until docker exec $c /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P Password12! -Q "SELECT 1"; do
         sleep 1
+        retries=`expr $retries + 1`
+        if [ $retries -gt 120 ]; then
+            >&2 echo "Failed to wait for $c to start."
+            docker logs $c
+            exit 1
+        fi;
     done
     echo "$c is operational"
     docker exec $c /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P Password12! -Q 'CREATE DATABASE TestData;'

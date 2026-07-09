@@ -12,15 +12,25 @@ steps:
 - task: CmdLine@2
   inputs:
     script: |
-      # 1Gb
-      sudo apt-get remove -y '^llvm-.*'
-      # 10Gb
-      sudo rm -rf /usr/local/lib/android
-      df -h
-      # frees ~7Gb
-      echo remove .ghcup
-      sudo rm -rf /usr/local/.ghcup/
-      df -h
+      # Free disk space so large-DB jobs (Oracle 21/23) fit. Each step logs the space it actually
+      # freed (avail before -> after) so we can drop any that isn't worth the time it costs.
+      avail() { df --output=avail -m / | tail -1 | tr -d ' '; }
+      report() { local a=$(avail); echo ">>> $2: freed $(( a - $1 )) MB (avail now $a MB)"; }
+
+      b=$(avail); sudo apt-get remove -y '^llvm-.*';        report $b "remove llvm (~1Gb est)"
+      b=$(avail); sudo rm -rf /usr/local/lib/android;       report $b "remove android (~10Gb est)"
+      b=$(avail); sudo rm -rf /usr/local/.ghcup/;           report $b "remove ghcup (~7Gb est)"
+      b=$(avail); sudo rm -rf /opt/hostedtoolcache/CodeQL;  report $b "remove CodeQL (~5-6Gb est, unused)"
+      b=$(avail); sudo rm -rf /usr/share/swift;             report $b "remove swift (~1.5-2Gb est, unused)"
+      b=$(avail); sudo rm -rf /usr/lib/jvm;                 report $b "remove jvm (~1-2Gb est, unused)"
+      # docker image prune runs before any DB container exists (safe); it also prints its own
+      # "Total reclaimed space" line in addition to the avail delta below.
+      b=$(avail); sudo docker image prune -af;              report $b "docker image prune (~3-4Gb est)"
+      b=$(avail); sudo apt-get clean;                       report $b "apt clean"
+      df -h /
+      # ~2-3Gb more from preinstalled .NET (we install our own via UseDotNet@2). Left commented:
+      # only enable if the system `dotnet` is confirmed unused, as removing it breaks all legs.
+      # b=$(avail); sudo rm -rf /usr/share/dotnet;          report $b "remove dotnet (~2-3Gb est)"
   displayName: Cleanup Junk
 
 - task: DownloadPipelineArtifact@2

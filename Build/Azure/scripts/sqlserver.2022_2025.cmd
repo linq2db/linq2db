@@ -19,13 +19,15 @@ set max=100
 set /a max=max-1
 if %max% EQU 0 goto fail
 sleep 1
-docker exec mssql2025 sqlcmd -S localhost -U sa -P Password12! -Q "SELECT 1"
+rem SQL Server 2025 image ships mssql-tools18 sqlcmd, which defaults to encrypted
+rem connections and rejects the self-signed cert without -C (trust server certificate).
+docker exec mssql2025 sqlcmd -S localhost -U sa -P Password12! -Q "SELECT 1" -C
 if %errorlevel% NEQ 0 goto repeat2025
 
 docker exec mssql2022 sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestData;"
 docker exec mssql2022 sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestDataMS;"
-docker exec mssql2025 sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestData;"
-docker exec mssql2025 sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestDataMS;"
+docker exec mssql2025 sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestData;" -C
+docker exec mssql2025 sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestDataMS;" -C
 
 goto:eof
 
