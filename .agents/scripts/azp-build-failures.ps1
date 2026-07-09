@@ -69,7 +69,7 @@ catch {
 }
 
 $failedTasks = @($timeline.records |
-    Where-Object { $_.type -eq 'Task' -and $_.result -eq 'failed' -and $_.name -like 'Tests *' -and $_.log })
+    Where-Object { $_.type -eq 'Task' -and $_.result -eq 'failed' -and ($_.name -like 'Tests *' -or $_.name -like 'EF.Core Tests *') -and $_.log })
 
 if ($failedTasks.Count -eq 0) {
     # No failed *test* tasks. A build can still be red for a non-test reason (a
