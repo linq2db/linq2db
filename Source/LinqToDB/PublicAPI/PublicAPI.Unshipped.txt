@@ -1094,3 +1094,5 @@ override LinqToDB.Internal.DataProvider.Access.AccessSqlBuilderBase.RequiresUniq
 override LinqToDB.Internal.DataProvider.SqlCe.SqlCeSqlBuilder.RequiresUniqueRootColumnNames.get -> bool
 *REMOVED*override LinqToDB.Internal.DataProvider.SqlCe.SqlCeSqlBuilder.CanSkipRootAliases(LinqToDB.Internal.SqlQuery.SqlStatement! statement) -> bool
 *REMOVED*LinqToDB.Internal.SqlQuery.SqlRawSqlTable.SqlRawSqlTable(LinqToDB.Internal.SqlQuery.SqlRawSqlTable! table, LinqToDB.Internal.SqlQuery.ISqlExpression![]! parameters) -> void
+static LinqToDB.Common.Configuration.MappingAttributesCacheMaxEntriesPerSchema.get -> int
+static LinqToDB.Common.Configuration.MappingAttributesCacheMaxEntriesPerSchema.set -> void

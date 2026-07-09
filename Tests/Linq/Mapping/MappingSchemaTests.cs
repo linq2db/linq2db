@@ -2,6 +2,7 @@
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -13,6 +14,8 @@ using LinqToDB.Mapping;
 using LinqToDB.Metadata;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.Mapping
 {
@@ -397,5 +400,100 @@ namespace Tests.Mapping
 
 			Task.WaitAll(tasks);
 		}
+
+		#region Issue 5692 - MappingAttributesCache unbounded growth
+
+		sealed class CacheProbeEntity
+		{
+			[Column, PrimaryKey, Identity] public int     Id   { get; set; }
+			[Column]                       public string? Name { get; set; }
+		}
+
+		// MappingAttributesCache is internal (no InternalsVisibleTo), so inspect its private dictionaries by reflection.
+		static object GetAttributeCache(MappingSchema ms)
+		{
+			var field = typeof(MappingSchema).GetField("_cache", BindingFlags.NonPublic | BindingFlags.Instance)
+				?? throw new InvalidOperationException("MappingSchema._cache field not found");
+
+			return field.GetValue(ms)!;
+		}
+
+		static int GetCachedEntryCount(MappingSchema ms)
+		{
+			var cache = GetAttributeCache(ms);
+			var field = cache.GetType().GetField("_cache", BindingFlags.NonPublic | BindingFlags.Instance)
+				?? throw new InvalidOperationException("MappingAttributesCache._cache field not found");
+
+			return ((System.Collections.ICollection)field.GetValue(cache)!).Count;
+		}
+
+		static void SetCacheMaxEntries(MappingSchema ms, int value)
+		{
+			var cache = GetAttributeCache(ms);
+			cache.GetType().GetField("_maxEntries", BindingFlags.NonPublic | BindingFlags.Instance)!.SetValue(cache, value);
+		}
+
+		static void ResetCache(MappingSchema ms)
+		{
+			var cache = GetAttributeCache(ms);
+			cache.GetType().GetMethod("ClearCaches", BindingFlags.NonPublic | BindingFlags.Instance)!.Invoke(cache, null);
+		}
+
+		[Test]
+		public void MappingAttributesCache_SkipsAnonymousTypes()
+		{
+			var ms = new MappingSchema();
+
+			var anon1 = new { Id = 1, Name = "a"          };
+			var anon2 = new { X  = 1.0, Y = 2, Z = "z"     };
+
+			var before = GetCachedEntryCount(ms);
+
+			foreach (var type in new[] { anon1.GetType(), anon2.GetType() })
+			{
+				ms.GetAttributes<ColumnAttribute>(type).ShouldBeEmpty();
+
+				foreach (var m in type.GetProperties())
+				{
+					ms.GetAttributes<ColumnAttribute>     (type, m).ShouldBeEmpty();
+					ms.GetAttributes<AssociationAttribute>(type, m).ShouldBeEmpty();
+				}
+			}
+
+			// The regression guard: anonymous-type lookups must not add cache entries (the unbounded source in #5692).
+			GetCachedEntryCount(ms).ShouldBe(before);
+
+			// Sanity: a named, mapped entity still resolves its attributes and IS cached.
+			var idProp = typeof(CacheProbeEntity).GetProperty(nameof(CacheProbeEntity.Id))!;
+			ms.GetAttributes<ColumnAttribute>(typeof(CacheProbeEntity), idProp).ShouldNotBeEmpty();
+			GetCachedEntryCount(ms).ShouldBeGreaterThan(before);
+		}
+
+		[Test]
+		public void MappingAttributesCache_EnforcesEntryBound()
+		{
+			var ms = new MappingSchema();
+
+			// Shrink the bound on this isolated schema's cache and start from a clean slate
+			// (avoids mutating the process-global Configuration flag, so the test is parallel-safe).
+			SetCacheMaxEntries(ms, 3);
+			ResetCache(ms);
+
+			var idProp = typeof(CacheProbeEntity).GetProperty(nameof(CacheProbeEntity.Id))!;
+
+			// Each distinct attribute type is a separate cache key for the same member.
+			ms.GetAttributes<ColumnAttribute>    (typeof(CacheProbeEntity), idProp);
+			ms.GetAttributes<PrimaryKeyAttribute>(typeof(CacheProbeEntity), idProp);
+			ms.GetAttributes<IdentityAttribute>  (typeof(CacheProbeEntity), idProp);
+
+			GetCachedEntryCount(ms).ShouldBe(3);
+
+			// The 4th entry crosses the bound → the cache is cleared and repopulated on demand.
+			ms.GetAttributes<AssociationAttribute>(typeof(CacheProbeEntity), idProp);
+
+			GetCachedEntryCount(ms).ShouldBeLessThan(4);
+		}
+
+		#endregion
 	}
 }
