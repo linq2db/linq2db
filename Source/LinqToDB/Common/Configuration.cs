@@ -135,9 +135,9 @@ namespace LinqToDB.Common
 		/// <summary>
 		/// Approximate upper bound on the number of cached mapping-attribute lookups kept per <see cref="LinqToDB.Mapping.MappingSchema"/> instance.
 		/// Once a schema's attribute cache exceeds this bound it is cleared and repopulated on demand, protecting long-lived,
-		/// multi-configuration processes from unbounded growth. Anonymous / projection types are never cached regardless of this value.
+		/// multi-configuration processes from unbounded growth. Anonymous types are never cached regardless of this value.
 		/// Set to <c>0</c> (or a negative value) to disable the bound entirely (unbounded, pre-6.5.0 behavior).
-		/// The value is read once when each schema is created, so set it at startup before mapping schemas are built.
+		/// The value is read on each cache check, so a change takes effect for all schemas, including <see cref="LinqToDB.Mapping.MappingSchema.Default"/>.
 		/// Default value: 100000.
 		/// </summary>
 		public static int MappingAttributesCacheMaxEntriesPerSchema { get; set; } = 100_000;

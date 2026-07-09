@@ -23,11 +23,11 @@ namespace LinqToDB.Internal.Mapping
 		readonly Func<Type?, ICustomAttributeProvider, MappingAttribute[]> _attributesGetter;
 
 		// Defensive bound against unbounded growth: an approximate cap on the number of cached entries in this
-		// (per-schema) cache. When exceeded, all three dictionaries are cleared and repopulated on demand.
-		// Captured once at construction from LinqToDB.Common.Configuration.MappingAttributesCacheMaxEntriesPerSchema; <= 0 disables it.
-		readonly int _maxEntries;
-		int          _entries;
-		int          _clearing;
+		// (per-schema) cache. When exceeded, all three dictionaries are cleared and repopulated on demand. The bound is
+		// read live from LinqToDB.Common.Configuration.MappingAttributesCacheMaxEntriesPerSchema (see MaybeTrim), so a
+		// change applies to already-built schemas (e.g. MappingSchema.Default) too; a value <= 0 disables it.
+		int _entries;
+		int _clearing;
 
 		/// <param name="attributesGetter">Raw attribute getter delegate for cache misses.</param>
 		public MappingAttributesCache(Func<Type?, ICustomAttributeProvider, MappingAttribute[]> attributesGetter)
@@ -35,7 +35,6 @@ namespace LinqToDB.Internal.Mapping
 			_attributesGetter                 = attributesGetter;
 			_getMappingAttributesInternal     = GetMappingAttributesInternal;
 			_getMappingAttributesTreeInternal = GetMappingAttributesTreeInternal;
-			_maxEntries                       = LinqToDB.Common.Configuration.MappingAttributesCacheMaxEntriesPerSchema;
 		}
 
 		MappingAttribute[]? GetMappingAttributesInternal(CacheKey key)
@@ -136,9 +135,9 @@ namespace LinqToDB.Internal.Mapping
 
 		/// <summary>
 		/// Determines whether a lookup for the given <paramref name="source"/> / <paramref name="sourceOwner"/> may be cached.
-		/// Anonymous / compiler-generated types are minted per query shape (one per distinct projection), so caching
-		/// them grows the schema caches without bound. Such types also carry no mapping attributes, so the result is
-		/// always empty and callers short-circuit to an empty array instead of caching it.
+		/// Anonymous types are minted per query shape (one per distinct projection), so caching them grows the schema
+		/// caches without bound. They also carry no mapping attributes, so the result is always empty and callers
+		/// short-circuit to an empty array instead of caching it.
 		/// </summary>
 		static bool IsCacheableKey(ICustomAttributeProvider source, Type? sourceOwner)
 		{
@@ -160,7 +159,9 @@ namespace LinqToDB.Internal.Mapping
 		/// </summary>
 		void MaybeTrim()
 		{
-			if (_maxEntries > 0 && Volatile.Read(ref _entries) > _maxEntries)
+			var maxEntries = LinqToDB.Common.Configuration.MappingAttributesCacheMaxEntriesPerSchema;
+
+			if (maxEntries > 0 && Volatile.Read(ref _entries) > maxEntries)
 				ClearCaches();
 		}
 

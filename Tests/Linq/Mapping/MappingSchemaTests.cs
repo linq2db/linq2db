@@ -427,16 +427,10 @@ namespace Tests.Mapping
 			return ((System.Collections.ICollection)field.GetValue(cache)!).Count;
 		}
 
-		static void SetCacheMaxEntries(MappingSchema ms, int value)
+		static void SetEntryCounter(MappingSchema ms, int value)
 		{
 			var cache = GetAttributeCache(ms);
-			cache.GetType().GetField("_maxEntries", BindingFlags.NonPublic | BindingFlags.Instance)!.SetValue(cache, value);
-		}
-
-		static void ResetCache(MappingSchema ms)
-		{
-			var cache = GetAttributeCache(ms);
-			cache.GetType().GetMethod("ClearCaches", BindingFlags.NonPublic | BindingFlags.Instance)!.Invoke(cache, null);
+			cache.GetType().GetField("_entries", BindingFlags.NonPublic | BindingFlags.Instance)!.SetValue(cache, value);
 		}
 
 		[Test]
@@ -472,26 +466,20 @@ namespace Tests.Mapping
 		[Test]
 		public void MappingAttributesCache_EnforcesEntryBound()
 		{
-			var ms = new MappingSchema();
-
-			// Shrink the bound on this isolated schema's cache and start from a clean slate
-			// (avoids mutating the process-global Configuration flag, so the test is parallel-safe).
-			SetCacheMaxEntries(ms, 3);
-			ResetCache(ms);
-
+			var ms     = new MappingSchema();
 			var idProp = typeof(CacheProbeEntity).GetProperty(nameof(CacheProbeEntity.Id))!;
 
-			// Each distinct attribute type is a separate cache key for the same member.
-			ms.GetAttributes<ColumnAttribute>    (typeof(CacheProbeEntity), idProp);
+			// Prime one real entry, then push the approximate counter up to the configured bound
+			// (mutating only this isolated instance's counter, so the test stays parallel-safe).
+			ms.GetAttributes<ColumnAttribute>(typeof(CacheProbeEntity), idProp);
+			GetCachedEntryCount(ms).ShouldBeGreaterThan(0);
+
+			SetEntryCounter(ms, Configuration.MappingAttributesCacheMaxEntriesPerSchema);
+
+			// The next distinct lookup increments the counter past the bound → the cache is cleared.
 			ms.GetAttributes<PrimaryKeyAttribute>(typeof(CacheProbeEntity), idProp);
-			ms.GetAttributes<IdentityAttribute>  (typeof(CacheProbeEntity), idProp);
 
-			GetCachedEntryCount(ms).ShouldBe(3);
-
-			// The 4th entry crosses the bound → the cache is cleared and repopulated on demand.
-			ms.GetAttributes<AssociationAttribute>(typeof(CacheProbeEntity), idProp);
-
-			GetCachedEntryCount(ms).ShouldBeLessThan(4);
+			GetCachedEntryCount(ms).ShouldBe(0);
 		}
 
 		#endregion
