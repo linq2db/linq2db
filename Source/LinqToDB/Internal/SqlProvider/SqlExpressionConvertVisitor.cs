@@ -228,7 +228,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 			if (!ReferenceEquals(newResult, result))
 			{
-				result = Visit(Optimize(newResult));
+				result = Visit(Optimize(NotifyReplaced(newResult, result)));
 			}
 
 			return result;
@@ -318,7 +318,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 			if (!ReferenceEquals(newPredicate, predicate))
 			{
-				newPredicate = Optimize(newPredicate);
+				newPredicate = Optimize(NotifyReplaced(newPredicate, predicate));
 				newPredicate = Visit(newPredicate);
 			}
 
@@ -340,7 +340,7 @@ namespace LinqToDB.Internal.SqlProvider
 				],
 				new SqlValue(-1));
 
-			return Visit(Optimize(caseExpression));
+			return Visit(Optimize(NotifyReplaced(caseExpression, element)));
 		}
 
 		protected internal override IQueryElement VisitIsDistinctPredicate(SqlPredicate.IsDistinct predicate)
@@ -358,7 +358,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 				if (!ReferenceEquals(converted, predicate))
 				{
-					return Visit(Optimize(converted));
+					return Visit(Optimize(NotifyReplaced(converted, predicate)));
 				}
 			}
 
@@ -416,7 +416,7 @@ namespace LinqToDB.Internal.SqlProvider
 				var newPredicate = ConvertRowExprExpr(predicate, EvaluationContext);
 				if (!ReferenceEquals(newPredicate, predicate))
 				{
-					return Visit(Optimize(newPredicate));
+					return Visit(Optimize(NotifyReplaced(newPredicate, predicate)));
 				}
 			}
 
@@ -555,7 +555,7 @@ namespace LinqToDB.Internal.SqlProvider
 				var converted = ConvertRowInList(predicate);
 				if (!ReferenceEquals(converted, predicate))
 				{
-					converted = (ISqlPredicate)Optimize(converted);
+					converted = (ISqlPredicate)Optimize(NotifyReplaced(converted, predicate));
 					converted = (ISqlPredicate)Visit(converted);
 					return converted;
 				}
@@ -875,7 +875,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 			newElement = ConvertSqlFunction(element);
 			if (!ReferenceEquals(newElement, element))
-				return Visit(Optimize(newElement));
+				return Visit(Optimize(NotifyReplaced(newElement, element)));
 
 			return element;
 		}
@@ -889,7 +889,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 			newElement = ConvertSqlExtendedFunction(element);
 			if (!ReferenceEquals(newElement, element))
-				return Visit(Optimize(newElement));
+				return Visit(Optimize(NotifyReplaced(newElement, element)));
 
 			return element;
 		}
@@ -916,7 +916,7 @@ namespace LinqToDB.Internal.SqlProvider
 			newElement = ConvertSqlExpression(element);
 			if (!ReferenceEquals(newElement, element))
 			{
-				newElement = Visit(Optimize(newElement));
+				newElement = Visit(Optimize(NotifyReplaced(newElement, element)));
 			}
 
 			return newElement;
@@ -932,7 +932,7 @@ namespace LinqToDB.Internal.SqlProvider
 			newElement = ConvertLikePredicate(predicate);
 			if (!ReferenceEquals(newElement, predicate))
 			{
-				newElement = Visit(Optimize(newElement));
+				newElement = Visit(Optimize(NotifyReplaced(newElement, predicate)));
 			}
 
 			return newElement;
@@ -948,7 +948,7 @@ namespace LinqToDB.Internal.SqlProvider
 			newElement = ConvertSqlBinaryExpression(element);
 			if (!ReferenceEquals(newElement, element))
 			{
-				newElement = Visit(Optimize(newElement));
+				newElement = Visit(Optimize(NotifyReplaced(newElement, element)));
 			}
 
 			return newElement;
@@ -964,7 +964,7 @@ namespace LinqToDB.Internal.SqlProvider
 			newElement = ConvertSqlUnaryExpression(element);
 			if (!ReferenceEquals(newElement, element))
 			{
-				newElement = Visit(Optimize(newElement));
+				newElement = Visit(Optimize(NotifyReplaced(newElement, element)));
 			}
 
 			return newElement;
@@ -980,7 +980,7 @@ namespace LinqToDB.Internal.SqlProvider
 			newElement = element.GetSqlExpression(EvaluationContext);
 			if (!ReferenceEquals(newElement, element))
 			{
-				newElement = Visit(Optimize(newElement));
+				newElement = Visit(Optimize(NotifyReplaced(newElement, element)));
 			}
 
 			return newElement;
@@ -996,7 +996,7 @@ namespace LinqToDB.Internal.SqlProvider
 			newElement = element.GetSqlExpression(EvaluationContext);
 			if (!ReferenceEquals(newElement, element))
 			{
-				newElement = Visit(Optimize(newElement));
+				newElement = Visit(Optimize(NotifyReplaced(newElement, element)));
 			}
 
 			return newElement;
@@ -1011,7 +1011,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 			if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.Between) && QueryHelper.UnwrapNullablity(predicate.Expr1) is SqlRowExpression)
 			{
-				return Visit(Optimize(ConvertBetweenPredicate(predicate)));
+				return Visit(Optimize(NotifyReplaced(ConvertBetweenPredicate(predicate), predicate)));
 			}
 
 			return newElement;
@@ -1143,7 +1143,11 @@ namespace LinqToDB.Internal.SqlProvider
 			var converted = ConvertConversion(element);
 			if (!ReferenceEquals(converted, element))
 			{
-				return Visit(Optimize(converted));
+				// Register the conversion so it is written into the transformation cache: otherwise only the
+				// base operand-reconstruction is recorded and a second Visit of the same cast (e.g. an
+				// InsertOrUpdate's projection column and its SET clause carry the same cast) is served the
+				// un-converted reconstruction from the cache instead of this refined result.
+				return Visit(Optimize(NotifyReplaced(converted, element)));
 			}
 
 			return element;
@@ -1162,7 +1166,7 @@ namespace LinqToDB.Internal.SqlProvider
 			var converted = ConvertCoalesce(element);
 
 			if (!ReferenceEquals(converted, element))
-				return Visit(Optimize(converted));
+				return Visit(Optimize(NotifyReplaced(converted, element)));
 
 			return element;
 		}
@@ -1176,7 +1180,7 @@ namespace LinqToDB.Internal.SqlProvider
 			var converted = ConvertConcat(element);
 
 			if (!ReferenceEquals(converted, element))
-				return Visit(Optimize(converted));
+				return Visit(Optimize(NotifyReplaced(converted, element)));
 
 			return element;
 		}
