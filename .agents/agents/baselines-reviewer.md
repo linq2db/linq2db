@@ -32,11 +32,11 @@ Follow `.agents/docs/agent-rules.md` → **Bash command rules** for shell conven
 
 ## Procedure
 
-1. **Trust the skill's briefing.** The skill has already `fetch`ed the clone. If the briefing says the baselines branch is missing, emit the "no baselines" output immediately.
+1. **Fetch, don't trust a stale clone.** Pass `"fetch": true` in the manifest (below) so the script fetches `origin` before resolving the branch. The local baselines clone is frequently *not* current with the PR's `baselines/pr_<n>` branch — it exists on the remote but was never fetched locally, yielding a false `branch_missing`. Only treat `branch_missing` as the "no baselines" case *after* that fetch. (Surfaced on PR #5378: the reviewer trusted a stale clone and reported `no_baselines` for a branch that existed remotely; a manual `git -C ../linq2db.baselines fetch origin baselines/pr_5378` + three-dot diff then showed 59 added / real modified baselines.)
 2. One batch call to pull everything:
    ```
    pwsh -NoProfile -File .agents/scripts/baselines-diff.ps1 <<'EOF'
-   { "pr": <pr_number> }
+   { "pr": <pr_number>, "fetch": true }
    EOF
    ```
    Default `baselinesPath` is `../linq2db.baselines`, default `branch` is `baselines/pr_<pr>`, default per-file `maxDiffBytes` is `16384`. Output fields:
