@@ -134,25 +134,6 @@ namespace LinqToDB.Internal.Mapping
 		}
 
 		/// <summary>
-		/// Determines whether a lookup for the given <paramref name="source"/> / <paramref name="sourceOwner"/> may be cached.
-		/// Anonymous types are minted per query shape (one per distinct projection), so caching them grows the schema
-		/// caches without bound. They also carry no mapping attributes, so the result is always empty and callers
-		/// short-circuit to an empty array instead of caching it.
-		/// </summary>
-		static bool IsCacheableKey(ICustomAttributeProvider source, Type? sourceOwner)
-		{
-			if (sourceOwner is not null && sourceOwner.IsAnonymous())
-				return false;
-
-			return source switch
-			{
-				Type       t => !t.IsAnonymous(),
-				MemberInfo m => m.ReflectedType?.IsAnonymous() != true && m.DeclaringType?.IsAnonymous() != true,
-				_            => true,
-			};
-		}
-
-		/// <summary>
 		/// Enforces the approximate per-schema entry bound: once the number of cached entries exceeds
 		/// <see cref="LinqToDB.Common.Configuration.MappingAttributesCacheMaxEntriesPerSchema"/>, clears the caches so they are
 		/// repopulated on demand. A bound of <c>0</c> or less disables the check.
@@ -197,9 +178,6 @@ namespace LinqToDB.Internal.Mapping
 		public T[] GetMappingAttributes<T>(ICustomAttributeProvider source)
 			where T : MappingAttribute
 		{
-			if (!IsCacheableKey(source, null))
-				return [];
-
 			// GetMappingAttributesInternal is not generic to avoid delegate allocation on each call
 			var attrs = (T[]?)_cache.GetOrAdd(new(typeof(T), new(source, null)), _getMappingAttributesInternal) ?? [];
 
@@ -221,9 +199,6 @@ namespace LinqToDB.Internal.Mapping
 		public T[] GetMappingAttributes<T>(Type sourceOwner, ICustomAttributeProvider source)
 			where T : MappingAttribute
 		{
-			if (!IsCacheableKey(source, sourceOwner))
-				return [];
-
 			// GetMappingAttributesInternal is not generic to avoid delegate allocation on each call
 			var attrs = (T[]?)_cache.GetOrAdd(new(typeof(T), new(source, sourceOwner)), _getMappingAttributesInternal) ?? [];
 

@@ -434,36 +434,6 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void MappingAttributesCache_SkipsAnonymousTypes()
-		{
-			var ms = new MappingSchema();
-
-			var anon1 = new { Id = 1, Name = "a"          };
-			var anon2 = new { X  = 1.0, Y = 2, Z = "z"     };
-
-			var before = GetCachedEntryCount(ms);
-
-			foreach (var type in new[] { anon1.GetType(), anon2.GetType() })
-			{
-				ms.GetAttributes<ColumnAttribute>(type).ShouldBeEmpty();
-
-				foreach (var m in type.GetProperties())
-				{
-					ms.GetAttributes<ColumnAttribute>     (type, m).ShouldBeEmpty();
-					ms.GetAttributes<AssociationAttribute>(type, m).ShouldBeEmpty();
-				}
-			}
-
-			// The regression guard: anonymous-type lookups must not add cache entries (the unbounded source in #5692).
-			GetCachedEntryCount(ms).ShouldBe(before);
-
-			// Sanity: a named, mapped entity still resolves its attributes and IS cached.
-			var idProp = typeof(CacheProbeEntity).GetProperty(nameof(CacheProbeEntity.Id))!;
-			ms.GetAttributes<ColumnAttribute>(typeof(CacheProbeEntity), idProp).ShouldNotBeEmpty();
-			GetCachedEntryCount(ms).ShouldBeGreaterThan(before);
-		}
-
-		[Test]
 		public void MappingAttributesCache_EnforcesEntryBound()
 		{
 			var ms     = new MappingSchema();
