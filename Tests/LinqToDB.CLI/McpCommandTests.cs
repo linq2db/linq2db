@@ -166,6 +166,12 @@ namespace Tests.LinqToDB.CLI
 				((bool?)FindSupportedProvider(info, "IBM DB2")["bundled"]).ShouldBe(false);
 				(FindSupportedProvider(info, "IBM DB2")["providerNames"]?.AsArray().ToJsonString()).ShouldContain("DB2");
 				((bool?)info["rules"]?["singleStatementOnly"]).ShouldBe(true);
+				((bool?)info["rules"]?["sqlGuardIsSecurityBoundary"]).ShouldBe(false);
+				((string?)info["rules"]?["sqlGuardWarning"]).ShouldContain("not a security boundary");
+				((string?)info["rules"]?["sqlGuardWarning"]).ShouldContain("restricted database accounts");
+				((bool?)info["rules"]?["providerInputAllowedInToolCall"]).ShouldBe(false);
+				((bool?)info["rules"]?["connectionStringInputAllowedInToolCall"]).ShouldBe(false);
+				((bool?)info["rules"]?["credentialsInputAllowedInToolCall"]).ShouldBe(false);
 				(info.ToJsonString()).ShouldNotContain("secret.db");
 				(info.ToJsonString()).ShouldNotContain("hidden");
 				(info["profiles"]?[0]?.AsObject().ContainsKey("connectionString")).ShouldBe(false);

@@ -129,6 +129,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 								multipleStatementsRejected                  = true,
 								readOrientedByDefault                       = true,
 								sqlGuardIsSecurityBoundary                  = false,
+								sqlGuardWarning                             = "SQL validation is a best-effort guardrail, not a security boundary. Use restricted database accounts as the primary protection.",
 								providerInputAllowedInToolCall              = false,
 								connectionStringInputAllowedInToolCall      = false,
 								credentialsInputAllowedInToolCall           = false,
