@@ -39,8 +39,8 @@ namespace LinqToDB.Benchmarks.Queries
 			{
 				AddJob(Job.Default
 					.WithToolchain(InProcessEmitToolchain.Instance)
-					.WithWarmupCount  (3)
-					.WithIterationCount(5));
+					.WithWarmupCount  (6)
+					.WithIterationCount(20));
 				AddDiagnoser(MemoryDiagnoser.Default);
 				AddExporter (MarkdownExporter.GitHub);
 			}
