@@ -79,17 +79,20 @@ Available commands:
 - `dotnet linq2db scaffold <options>`: performs database model scaffolding
 - `dotnet linq2db template [-o template_path]`: creates base T4 template file for scaffolding customization code
 - `dotnet linq2db query <options>`: executes a single read-oriented SQL query and writes JSON, JSON table, or CSV output
+- `dotnet linq2db schema <options>`: reads provider-aware database object metadata and writes JSON output
 - `dotnet linq2db config-init <options>`: creates or updates a query/MCP JSON configuration profile
-- `dotnet linq2db mcp <options>`: runs a STDIO Model Context Protocol server exposing `linq2db_info`, `linq2db_query`, and `linq2db_skill`
+- `dotnet linq2db mcp <options>`: runs a STDIO Model Context Protocol server exposing `linq2db_info`, `linq2db_schema`, `linq2db_query`, and `linq2db_skill`
 - `dotnet linq2db skill`: prints agent-oriented CLI usage instructions
 
 For MCP-capable agent hosts, `mcp` is the intended integration mode. Use `query` for lighter direct invocation when MCP is unavailable, not allowed by policy, or not needed for a specific environment.
 
-The MCP server exposes `linq2db_info` for non-secret runtime discovery of available profiles, providers, SQL dialects, defaults, and safety rules. Use it before `linq2db_query` when the active provider or dialect is unknown. Use `linq2db_skill` when detailed CLI/MCP guidance, supported provider notes, or safety rules are needed.
+The MCP server exposes `linq2db_info` for non-secret runtime discovery of available profiles, providers, SQL dialects, defaults, and safety rules. Use `linq2db_schema` to inspect tables, views, columns, keys, relationships, schemas, and catalogs before generating SQL. Use `linq2db_query` to execute one concrete SQL statement. Use `linq2db_skill` when detailed CLI/MCP guidance, supported provider notes, or safety rules are needed.
+
+`schema` returns database object metadata through linq2db schema providers. It does not accept SQL text, does not read table data, does not modify the database, and does not return procedures or functions. Use `--filter-schema`, `--filter-catalog`, and `--filter-table` to narrow large schema output. Filter options accept comma-separated values or repeated CLI options; MCP uses `filterSchemas`, `filterCatalogs`, and `filterTables` arrays. Table filters are exact by default and support `regex:`/`rx:` prefixes for regular expressions.
 
 `config-init` writes common editable settings (`maxRows`, `output`, and `unsafeSql`) into every created profile intentionally. This makes generated profiles self-explanatory and easier to edit manually. Named profiles still inherit missing values from `default` when those values are removed manually.
 
-Configuration profiles are shared by `query` and `mcp`. The `query` command supports `json`, `json-table`, and `csv`. The MCP `linq2db_query` tool supports only `json` and `json-table`; if a selected profile has `output: "csv"`, MCP calls must pass `output: "json-table"` or `output: "json"` explicitly, or the profile should be adjusted for MCP usage.
+Configuration profiles are shared by `query`, `schema`, and `mcp`. The `query` command supports `json`, `json-table`, and `csv`. The `schema` command outputs JSON only. The MCP `linq2db_query` tool supports only `json` and `json-table`; if a selected profile has `output: "csv"`, MCP calls must pass `output: "json-table"` or `output: "json"` explicitly, or the profile should be adjusted for MCP usage.
 
 For list of available options, use `dotnet linq2db help <command>` command.
 

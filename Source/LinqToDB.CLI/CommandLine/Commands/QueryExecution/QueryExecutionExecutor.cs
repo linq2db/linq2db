@@ -18,6 +18,7 @@ using DuckDB.NET.Native;
 using FirebirdSql.Data.Types;
 
 using LinqToDB.CommandLine;
+using LinqToDB.CommandLine.Commands.Connection;
 using LinqToDB.CommandLine.Options;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
@@ -101,58 +102,15 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 
 			try
 			{
-				if (!ExternalProviderLoader.LoadExternalProvider(_settings.Provider, _settings.ProviderLocation, out var error))
-					return new QueryExecutionResult(StatusCodes.EXPECTED_ERROR, error, false);
+				var result = await ConnectionExecution.RunAsync(
+					CreateConnectionSettings(),
+					(dataOptions, dataProvider, token) => ExecuteValidatedDatabaseLoop(dataOptions, dataProvider, sql, outputWriter, token),
+					cancellationToken).ConfigureAwait(false);
 
-				// Create data provider for the specified database provider and connection string.
-				//
-				var dataProvider = DataConnection.GetDataProvider(_settings.Provider, _settings.ConnectionString);
+				if (result.Error != null)
+					return new QueryExecutionResult(result.StatusCode, result.Error, false);
 
-				if (dataProvider == null)
-				{
-					return new QueryExecutionResult(StatusCodes.EXPECTED_ERROR, CreateProviderCreationError(_settings.Provider), false);
-				}
-
-				// Validate that user-provided SQL contains a single statement.
-				//
-				var singleStatementResult = ReadOnlySqlGuard.ValidateSingleStatement(dataProvider, sql);
-
-				if (!singleStatementResult.IsAllowed)
-				{
-					return new QueryExecutionResult(StatusCodes.EXPECTED_ERROR, singleStatementResult.Error, false);
-				}
-
-				// Validate that user-provided SQL is allowed by the configured unsafe SQL policy.
-				//
-				if (_settings.UnsafeSqlPolicy != UnsafeSqlPolicy.Allow)
-				{
-					var guardResult = ReadOnlySqlGuard.Validate(dataProvider, sql);
-
-					if (!guardResult.IsAllowed && !(_settings.UnsafeSqlPolicy == UnsafeSqlPolicy.Confirm && _settings.AllowUnsafeSql))
-					{
-						if (_settings.UnsafeSqlPolicy == UnsafeSqlPolicy.Confirm)
-							return new QueryExecutionResult(StatusCodes.EXPECTED_ERROR, $"Unsafe SQL requires '--allow-unsafe-sql': {guardResult.Error}", false);
-
-						return new QueryExecutionResult(StatusCodes.EXPECTED_ERROR, guardResult.Error, false);
-					}
-				}
-
-				// Configure linq2db connection options for the resolved provider and connection string.
-				//
-				var dataOptions = new DataOptions().UseConnectionString(dataProvider, _settings.ConnectionString);
-
-				if (_settings.CommandTimeout > 0)
-					dataOptions = dataOptions.UseCommandTimeout(_settings.CommandTimeout);
-
-				// Run the whole database pipeline under one impersonation token when requested.
-				//
-				return _settings.Impersonate
-					? await WindowsImpersonation.RunAsync(
-						_settings.User!,
-						_settings.Password!,
-						_settings.ImpersonateMode,
-						() => ExecuteDatabaseLoop(dataOptions, dataProvider, sql, outputWriter, cancellationToken)).ConfigureAwait(false)
-					: await ExecuteDatabaseLoop(dataOptions, dataProvider, sql, outputWriter, cancellationToken).ConfigureAwait(false);
+				return result.Value!;
 			}
 			catch (OperationCanceledException)
 			{
@@ -162,6 +120,46 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			{
 				return new QueryExecutionResult(StatusCodes.EXPECTED_ERROR, $"Query execution failed: {ex.Message}", false);
 			}
+		}
+
+		ConnectionSettings CreateConnectionSettings()
+		{
+			return new ConnectionSettings(
+				_settings.Profile,
+				_settings.Provider,
+				_settings.ProviderLocation,
+				_settings.User,
+				_settings.Password,
+				_settings.ConnectionString,
+				_settings.CommandTimeout,
+				_settings.LockTimeout,
+				_settings.Impersonate,
+				_settings.ImpersonateMode,
+				null,
+				null);
+		}
+
+		Task<QueryExecutionResult> ExecuteValidatedDatabaseLoop(DataOptions dataOptions, IDataProvider dataProvider, string sql, TextWriter outputWriter, CancellationToken cancellationToken)
+		{
+			var singleStatementResult = ReadOnlySqlGuard.ValidateSingleStatement(dataProvider, sql);
+
+			if (!singleStatementResult.IsAllowed)
+				return Task.FromResult(new QueryExecutionResult(StatusCodes.EXPECTED_ERROR, singleStatementResult.Error, false));
+
+			if (_settings.UnsafeSqlPolicy != UnsafeSqlPolicy.Allow)
+			{
+				var guardResult = ReadOnlySqlGuard.Validate(dataProvider, sql);
+
+				if (!guardResult.IsAllowed && !(_settings.UnsafeSqlPolicy == UnsafeSqlPolicy.Confirm && _settings.AllowUnsafeSql))
+				{
+					if (_settings.UnsafeSqlPolicy == UnsafeSqlPolicy.Confirm)
+						return Task.FromResult(new QueryExecutionResult(StatusCodes.EXPECTED_ERROR, $"Unsafe SQL requires '--allow-unsafe-sql': {guardResult.Error}", false));
+
+					return Task.FromResult(new QueryExecutionResult(StatusCodes.EXPECTED_ERROR, guardResult.Error, false));
+				}
+			}
+
+			return ExecuteDatabaseLoop(dataOptions, dataProvider, sql, outputWriter, cancellationToken);
 		}
 
 		async Task<QueryExecutionResult> ExecuteDatabaseLoop(DataOptions dataOptions, IDataProvider dataProvider, string sql, TextWriter outputWriter, CancellationToken cancellationToken)
@@ -282,29 +280,6 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 
 				await dataConnection.DisposeAsync().AsTask().ConfigureAwait(false);
 			}
-		}
-
-		static string CreateProviderCreationError(string provider)
-		{
-			var suggestion = TryGetProviderNameSuggestion(provider);
-
-			if (suggestion != null)
-			{
-				return $"Cannot create database provider '{provider}'. Provider name '{provider}' looks like a test data source alias. linq2db CLI expects a provider name registered by linq2db itself; use '{suggestion}' or another canonical provider name in CLI configuration.";
-			}
-
-			return $"Cannot create database provider '{provider}'. Verify that the configured provider name is a linq2db provider name, not a test data source alias, and that any required provider assembly was loaded with '--provider-location'.";
-		}
-
-		static string? TryGetProviderNameSuggestion(string provider)
-		{
-			if (provider.StartsWith("Oracle.", StringComparison.OrdinalIgnoreCase)
-				&& provider.EndsWith(".Managed", StringComparison.OrdinalIgnoreCase))
-			{
-				return "Oracle.Managed";
-			}
-
-			return null;
 		}
 
 		QueryOutputColumn[] ReadOutputColumns(DbDataReader reader)

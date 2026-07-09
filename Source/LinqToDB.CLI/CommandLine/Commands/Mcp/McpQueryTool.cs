@@ -6,7 +6,9 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.CommandLine;
+using LinqToDB.CommandLine.Commands.Connection;
 using LinqToDB.CommandLine.Commands.QueryExecution;
+using LinqToDB.CommandLine.Commands.SchemaInspection;
 using LinqToDB.CommandLine.Commands.Skill;
 
 using ModelContextProtocol.Protocol;
@@ -34,6 +36,8 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 
 			Use this tool before generating SQL when supported database providers, available profiles, selected providers, SQL dialects, default output format, row limits, or unsafe SQL policy are unknown.
 
+			Use linq2db_schema to inspect database objects for a selected profile.
+
 			Use linq2db_skill for the full linq2db CLI/MCP usage guide, including supported providers and external provider loading instructions.
 
 			This tool never returns connection strings, passwords, provider assembly paths, impersonation credentials, or environment variable values.
@@ -53,7 +57,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 		[Description("""
 			Returns the full embedded linq2db CLI agent skill as Markdown.
 
-			Use this tool when detailed guidance is needed for linq2db query execution, MCP usage, configuration profiles, supported database providers, provider names, external provider loading, SQL safety rules, output formats, row limits, timeouts, impersonation, or agent responsibilities.
+			Use this tool when detailed guidance is needed for linq2db query execution, MCP usage, schema inspection, configuration profiles, supported database providers, provider names, external provider loading, SQL safety rules, output formats, row limits, timeouts, impersonation, or agent responsibilities.
 
 			This tool returns documentation only. It does not access a database, read configuration, read environment variables, or return secrets.
 			""")]
@@ -66,13 +70,91 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 		}
 
 		[McpServerTool(
+			Name        = "linq2db_schema",
+			Title       = "Get database schema",
+			ReadOnly    = true,
+			Idempotent  = true,
+			OpenWorld   = true,
+			Destructive = false)]
+		[Description("""
+			Returns provider-independent database schema metadata for the selected linq2db query/MCP profile.
+
+			Use this tool before generating SQL when table names, column names, keys, relationships, schemas, or catalogs are unknown.
+
+			This tool reads database metadata only. It does not read table data, execute user-provided SQL, modify schema, or return secrets.
+
+			Procedures and functions are not supported.
+
+			Provider, connection string, credentials, impersonation, provider assembly location, and timeout setup are configured only at MCP server startup or in trusted configuration profiles.
+			""")]
+		public async Task<CallToolResult> Schema(
+			[Description("""
+				Optional configuration profile override.
+
+				Use only a profile name returned by linq2db_info or explicitly provided by the user. Do not invent profile names.
+
+				If omitted, the MCP server startup profile or default profile is used.
+				Requires MCP server startup with --config.
+				""")]                                                                             string?   profile                     = null,
+			[Description("Prefer provider-specific .NET types in schema metadata.")]              bool?     preferProviderSpecificTypes = null,
+			[Description("Read table and view metadata.")]                                        bool?     getTables                   = null,
+			[Description("Read foreign key metadata.")]                                           bool?     getForeignKeys              = null,
+			[Description("Map char(1) metadata to string instead of char.")]                      bool?     generateChar1AsString       = null,
+			[Description("Ignore SQL Server temporal history tables when provider supports it.")] bool?     ignoreSystemHistoryTables   = null,
+			[Description("Default schema name.")]                                                 string?   defaultSchema               = null,
+			[Description("Optional schema name filters. Exact names only.")]                      string[]? filterSchemas              = null,
+			[Description("Optional catalog name filters. Exact names only.")]                     string[]? filterCatalogs             = null,
+			[Description("Optional table or view name filters. Matches name, schema.name, or catalog.schema.name. Use regex: or rx: prefix for regular expressions.")] string[]? filterTables = null,
+			CancellationToken cancellationToken = default)
+		{
+			var errorWriter        = new StringWriter(CultureInfo.InvariantCulture);
+			var environment        = new McpQueryEnvironment(errorWriter);
+			var connectionResolver = new ConnectionSettingsResolver(environment);
+			var connection         = connectionResolver.Resolve(CreateConnectionOptionValues(profile));
+
+			if (connection == null)
+				return CreateErrorResult(errorWriter.ToString());
+
+			var settings = new SchemaInspectionSettingsResolver(environment).Resolve(
+				connection,
+				new SchemaInspectionOptionValues(
+					profile,
+					preferProviderSpecificTypes,
+					getTables,
+					getForeignKeys,
+					generateChar1AsString,
+					ignoreSystemHistoryTables,
+					defaultSchema,
+					filterSchemas,
+					filterCatalogs,
+					filterTables,
+					null,
+					null,
+					false));
+
+			if (settings == null)
+				return CreateErrorResult(errorWriter.ToString());
+
+			using var resultWriter = new StringWriter(CultureInfo.InvariantCulture);
+			var result = await new SchemaInspectionExecutor(settings).Execute(resultWriter, cancellationToken).ConfigureAwait(false);
+
+			if (result.Error != null)
+				return CreateErrorResult(result.Error);
+
+			return new CallToolResult
+			{
+				Content = [new TextContentBlock { Text = resultWriter.ToString() }],
+			};
+		}
+
+		[McpServerTool(
 			Name        = "linq2db_query",
 			Title       = "Execute linq2db SQL query",
 			OpenWorld   = true)]
 		[Description("""
 			Executes one SQL statement against a database configured by linq2db CLI MCP startup options or query configuration profiles.
 
-			The SQL dialect is determined by the selected profile/provider. Call linq2db_info first if available profiles, providers, or SQL dialects are unknown. Call linq2db_skill when detailed linq2db CLI/MCP usage guidance is needed.
+			The SQL dialect is determined by the selected profile/provider. Call linq2db_info first if available profiles, providers, or SQL dialects are unknown. Call linq2db_schema before generating SQL when table names, column names, keys, or relationships are unknown. Call linq2db_skill when detailed linq2db CLI/MCP usage guidance is needed.
 
 			Use this tool for read-oriented database inspection, diagnostics, schema/data exploration, row counts, sample records, data-quality checks, and investigation workflows that require live database facts.
 
@@ -172,6 +254,25 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 				sql,
 				null,
 				"json-table");
+		}
+
+		ConnectionOptionValues CreateConnectionOptionValues(string? profile)
+		{
+			return new ConnectionOptionValues(
+				_startupOptions.Config,
+				profile ?? _startupOptions.Profile,
+				_startupOptions.Provider,
+				_startupOptions.ProviderLocation,
+				_startupOptions.ConnectionString,
+				_startupOptions.ConnectionStringEnv,
+				_startupOptions.User,
+				_startupOptions.UserEnv,
+				_startupOptions.Password,
+				_startupOptions.PasswordEnv,
+				_startupOptions.Impersonate,
+				_startupOptions.ImpersonateMode,
+				_startupOptions.CommandTimeout,
+				_startupOptions.LockTimeout);
 		}
 
 		static bool IsMcpOutputFormat(string output)

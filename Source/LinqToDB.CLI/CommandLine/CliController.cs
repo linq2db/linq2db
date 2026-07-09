@@ -158,7 +158,7 @@ namespace LinqToDB.CommandLine
 
 				if (option != null)
 				{
-					if (cliOptions.ContainsKey(option))
+					if (cliOptions.ContainsKey(option) && !option.AllowMultiple)
 					{
 						if (!hasErrors || !reportFirstErrorOnly)
 							environment.Error.WriteLine("Duplicate option: {0}", args[i]);
@@ -213,7 +213,10 @@ namespace LinqToDB.CommandLine
 							hasErrors = true;
 						}
 
-						cliOptions.Add(option, value);
+						if (option.AllowMultiple && cliOptions.TryGetValue(option, out var existingValue) && existingValue is string[] existingValues && value is string[] newValues)
+							cliOptions[option] = existingValues.Concat(newValues).ToArray();
+						else
+							cliOptions.Add(option, value);
 					}
 				}
 			}

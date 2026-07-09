@@ -6,6 +6,9 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 
+using LinqToDB;
+using LinqToDB.Data;
+
 using NUnit.Framework;
 
 using Shouldly;
@@ -28,14 +31,16 @@ namespace Tests.LinqToDB.CLI
 
 			{
 				(response["error"]).ShouldBeNull();
-				(response["result"]?["tools"]?.AsArray().Count).ShouldBe(3);
+				(response["result"]?["tools"]?.AsArray().Count).ShouldBe(4);
 
 				var queryTool = FindTool(response, "linq2db_query");
 				var infoTool  = FindTool(response, "linq2db_info");
+				var schemaTool = FindTool(response, "linq2db_schema");
 				var skillTool = FindTool(response, "linq2db_skill");
 
 				var queryInputSchema = queryTool["inputSchema"]!.ToJsonString();
 				var queryProperties  = queryTool["inputSchema"]!["properties"]!.AsObject();
+				var schemaProperties = schemaTool["inputSchema"]!["properties"]!.AsObject();
 
 				((string?)queryTool["description"]).ShouldContain("Call linq2db_info first");
 				((string?)queryTool["description"]).ShouldContain("Call linq2db_skill");
@@ -51,6 +56,7 @@ namespace Tests.LinqToDB.CLI
 				(queryProperties.ContainsKey("providerLocation")).ShouldBe(false);
 
 				((string?)infoTool["description"]).ShouldContain("Returns non-secret linq2db MCP query configuration information");
+				((string?)infoTool["description"]).ShouldContain("Use linq2db_schema");
 				((string?)infoTool["description"]).ShouldContain("Use linq2db_skill");
 				((bool?)  infoTool["annotations"]?["readOnlyHint"]).ShouldBe(true);
 				((bool?)  infoTool["annotations"]?["idempotentHint"]).ShouldBe(true);
@@ -58,6 +64,24 @@ namespace Tests.LinqToDB.CLI
 				((bool?)  infoTool["annotations"]?["destructiveHint"]).ShouldBe(false);
 				(infoTool["inputSchema"]?["properties"]?.AsObject().Count).ShouldBe(0);
 				(infoTool["inputSchema"]?["required"]).ShouldBeNull();
+
+				((string?)schemaTool["description"]).ShouldContain("Returns provider-independent database schema metadata");
+				((string?)schemaTool["description"]).ShouldContain("Procedures and functions are not supported");
+				((bool?)schemaTool["annotations"]?["readOnlyHint"]).ShouldBe(true);
+				((bool?)schemaTool["annotations"]?["idempotentHint"]).ShouldBe(true);
+				((bool?)schemaTool["annotations"]?["openWorldHint"]).ShouldBe(true);
+				((bool?)schemaTool["annotations"]?["destructiveHint"]).ShouldBe(false);
+				schemaProperties.ContainsKey("provider").ShouldBe(false);
+				schemaProperties.ContainsKey("connectionString").ShouldBe(false);
+				schemaProperties.ContainsKey("password").ShouldBe(false);
+				schemaProperties.ContainsKey("providerLocation").ShouldBe(false);
+				schemaProperties.ContainsKey("sql").ShouldBe(false);
+				schemaProperties.ContainsKey("outputFile").ShouldBe(false);
+				schemaProperties.ContainsKey("filterTables").ShouldBe(true);
+				schemaProperties.ContainsKey("excludeTables").ShouldBe(false);
+				schemaProperties.ContainsKey("includeTables").ShouldBe(false);
+				schemaProperties.ContainsKey("getProcedures").ShouldBe(false);
+				schemaProperties.ContainsKey("useSchemaOnly").ShouldBe(false);
 
 				((string?)skillTool["description"]).ShouldContain("Returns the full embedded linq2db CLI agent skill as Markdown");
 				((bool?)skillTool["annotations"]?["readOnlyHint"]).ShouldBe(true);
@@ -469,6 +493,46 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task McpSchemaReturnsSqliteMetadata()
+		{
+			var database = CreateSqliteDatabase();
+
+			try
+			{
+				await using var server = await McpServerProcess.Start("--provider", "SQLite", "--connection-string", $"Data Source={database};Pooling=False");
+
+				await server.Initialize();
+				var response = await server.CallTool("linq2db_schema", new JsonObject
+				{
+					["getForeignKeys"] = false,
+					["filterTables"] = new JsonArray("main.Orders"),
+				});
+				var schema = ReadToolJson(response);
+				var orders = FindSchemaTable(schema, "Orders");
+
+				{
+					(response["error"]).ShouldBeNull();
+					(response["result"]?["isError"]).ShouldBeNull();
+					((string?)schema["provider"]).ShouldBe("SQLite");
+					((string?)schema["dialect"]).ShouldBe("SQLite");
+					((bool?)schema["options"]?["getProcedures"]).ShouldBe(false);
+					((bool?)schema["options"]?["getForeignKeys"]).ShouldBe(false);
+					((string?)schema["options"]?["filterTables"]?[0]).ShouldBe("main.Orders");
+					schema["tables"]!.AsArray().Count.ShouldBe(1);
+					orders["columns"]!.AsArray().Count.ShouldBe(3);
+					orders["foreignKeys"]!.AsArray().Count.ShouldBe(0);
+					(response.ToJsonString()).ShouldNotContain("Data Source=");
+				}
+
+				server.ExpectNoStandardError();
+			}
+			finally
+			{
+				File.Delete(database);
+			}
+		}
+
+		[Test]
 		public async Task McpRejectsCsvToolOutput()
 		{
 			await using var server = await McpServerProcess.Start("--provider", "SQLite", "--connection-string", "Data Source=:memory:");
@@ -633,6 +697,52 @@ namespace Tests.LinqToDB.CLI
 
 			return JsonNode.Parse(contentText)?.AsObject()
 				?? throw new InvalidOperationException("MCP tool response text content is not a JSON object.");
+		}
+
+		static JsonObject FindSchemaTable(JsonObject schema, string name)
+		{
+			foreach (var table in schema["tables"]!.AsArray())
+			{
+				if ((string?)table?["name"] == name)
+					return table!.AsObject();
+			}
+
+			throw new InvalidOperationException($"Table '{name}' not found.");
+		}
+
+		static string CreateSqliteDatabase()
+		{
+			var fileName = Path.Combine(TestContext.CurrentContext.WorkDirectory, $"mcp-schema-{Guid.NewGuid():N}.db");
+
+			var dataProvider = DataConnection.GetDataProvider("SQLite", $"Data Source={fileName};Pooling=False");
+			using var db     = new DataConnection(new DataOptions().UseConnectionString(dataProvider, $"Data Source={fileName};Pooling=False"));
+
+			db.Execute("""
+				create table Customers
+				(
+					Id   integer not null primary key,
+					Name text    not null
+				)
+				""");
+
+			db.Execute("""
+				create table Orders
+				(
+					Id         integer not null primary key,
+					CustomerId integer not null references Customers(Id),
+					Amount     decimal(10, 2) null
+				)
+				""");
+
+			db.Execute("""
+				create table ChildOrders
+				(
+					Id      integer not null primary key,
+					OrderId integer not null references Orders(Id)
+				)
+				""");
+
+			return fileName;
 		}
 
 		static JsonObject FindProfile(JsonObject info, string name)

@@ -9,6 +9,12 @@ Use `dotnet linq2db query` to execute a read-oriented SQL query against a databa
 The core value proposition is that an agent can analyze your code together with data from your database.
 For agent hosts that support MCP, prefer `dotnet linq2db mcp` for an integrated tool surface. Use `query` for lighter direct tool invocation when MCP is unavailable, not allowed by policy, or not needed for a specific environment.
 
+When database structure is unknown, inspect metadata before generating SQL:
+
+1. Use `linq2db_info` to discover profiles, providers, dialects, defaults, and safety rules.
+2. Use `linq2db_schema` or `dotnet linq2db schema` to inspect database objects.
+3. Use `linq2db_query` or `dotnet linq2db query` to execute one concrete SQL statement.
+
 Primary scenarios:
 
 - Analyze application code together with live database data to investigate performance bottlenecks, data distribution issues, slow workflows, or suspicious production-like behavior.
@@ -171,6 +177,62 @@ Examples:
 | `PostgreSQL` | test-specific PostgreSQL source aliases |
 
 If provider resolution fails and the name looks like a test data source alias, use the corresponding linq2db provider name instead.
+
+## Schema Command
+
+Use `dotnet linq2db schema` to return database object metadata through linq2db schema providers.
+The command is intended for safe SQL generation and database inspection by agents.
+
+`schema` returns tables, views when available, columns, primary keys, and foreign keys when requested and returned by the provider.
+It does not accept SQL text, does not read table data, does not modify the database, and does not return procedures or functions.
+
+Connection and profile settings use the same trusted startup/config boundary as `query`: `--config`, `--profile`, `--provider`, `--provider-location`, `--connection-string`, `--connection-string-env`, `--user`, `--user-env`, `--password`, `--password-env`, `--impersonate`, `--impersonate-mode`, and `--command-timeout`.
+
+Schema options:
+
+- `--prefer-provider-specific-types true|false`
+- `--get-tables true|false`
+- `--get-foreign-keys true|false`
+- `--generate-char1-as-string true|false`
+- `--ignore-system-history-tables true|false`
+- `--default-schema <schema>`
+- `--filter-schema <schema>`; repeat or comma-separate for multiple values
+- `--filter-catalog <catalog>`; repeat or comma-separate for multiple values
+- `--filter-table <table>`; repeat or comma-separate for multiple values; matches table name, `schema.table`, or `catalog.schema.table`
+- `--filter-table regex:<pattern>` or `--filter-table rx:<pattern>`; regular expression table filter
+
+Filters are positive-only. Omitted filters mean no restriction for that dimension.
+Multiple values can be provided either as comma-separated CLI values or by repeating the same CLI option.
+MCP `linq2db_schema` uses arrays: `filterSchemas`, `filterCatalogs`, and `filterTables`.
+Values inside one filter dimension are combined with OR; different filter dimensions narrow the result together.
+Table filters are exact, case-insensitive matches unless the value starts with `regex:` or `rx:`.
+
+Output:
+
+- `schema` outputs JSON only.
+- `--output json` is accepted for explicitness.
+- `csv` and `json-table` are not supported because schema metadata is graph-shaped, not tabular query output.
+- `--output-file <file>` writes schema JSON to a file.
+- Existing output files are not replaced by default. Use `--overwrite` only when the user explicitly wants to replace the file.
+
+Effective schema options are returned in the JSON result so agents can understand which metadata was requested and which metadata was intentionally omitted.
+
+Procedures and functions are intentionally unsupported:
+
+- Do not request procedure metadata from `schema`.
+- Do not infer that a database has no procedures or functions from `schema` output.
+- Use a future dedicated routine-inspection workflow if routine metadata is needed.
+
+Examples:
+
+```bash
+dotnet linq2db schema --provider SQLite --connection-string "Data Source=data.db"
+dotnet linq2db schema --config query.json --profile dev --filter-schema dbo
+dotnet linq2db schema --config query.json --profile dev --filter-table dbo.Customer,dbo.Order
+dotnet linq2db schema --config query.json --profile dev --filter-table dbo.Customer --filter-table dbo.Order
+dotnet linq2db schema --config query.json --profile dev --filter-table "Person,rx:^Child"
+dotnet linq2db schema --config query.json --profile dev --get-foreign-keys false --output-file schema.json
+```
 
 ## SQL Dialects
 
@@ -412,24 +474,28 @@ dotnet linq2db query --config query.json --profile uat --max-rows 100 --sql "sel
 
 ## MCP STDIO Command
 
-Use `dotnet linq2db mcp` to run a STDIO Model Context Protocol server exposing the shared query executor as the `linq2db_query` tool.
+Use `dotnet linq2db mcp` to run a STDIO Model Context Protocol server exposing shared schema and query tools.
 This is the preferred integration mode for MCP-capable agent hosts because it keeps server configuration at startup and exposes query execution through a typed tool call.
 
 The MCP server exposes these tools:
 
 - `linq2db_info` returns non-secret runtime configuration, profiles, providers, dialects, and safety rules.
+- `linq2db_schema` returns provider-independent database object metadata for the selected profile.
 - `linq2db_query` executes one SQL statement using the selected profile/provider.
 - `linq2db_skill` returns this full skill document.
 
 Recommended model workflow:
 
 1. Call `linq2db_info` when available profiles, active profile, provider, or SQL dialect are unknown.
-2. Generate provider-appropriate SQL for the selected dialect.
-3. Call `linq2db_query` with one SQL statement.
-4. Use `json-table` when joins, duplicate column names, expressions, or column metadata are involved.
-5. Call `linq2db_skill` when detailed usage guidance is needed.
+2. Call `linq2db_schema` when table names, column names, keys, relationships, schemas, or catalogs are unknown.
+3. Generate provider-appropriate SQL for the selected dialect.
+4. Call `linq2db_query` with one SQL statement.
+5. Use `json-table` when joins, duplicate column names, expressions, or column metadata are involved.
+6. Call `linq2db_skill` when detailed usage guidance is needed.
 
-Do not pass provider names, connection strings, passwords, provider assembly paths, or impersonation credentials to `linq2db_query`. Those values are configured at MCP server startup or in trusted configuration profiles.
+Do not pass provider names, connection strings, passwords, provider assembly paths, or impersonation credentials to `linq2db_schema` or `linq2db_query`. Those values are configured at MCP server startup or in trusted configuration profiles.
+
+`linq2db_schema` reads database metadata only. It does not accept SQL text, does not read table data, does not modify schema, and does not return procedures or functions.
 
 ### MCP runtime discovery
 
