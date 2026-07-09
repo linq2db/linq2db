@@ -212,6 +212,12 @@ namespace LinqToDB.Internal.SqlProvider
 			var newElement = OptimizerVisitor.Optimize(EvaluationContext, nullabilityContext, null, DataOptions, MappingSchema, element, visitQueries : true, reducePredicates: false);
 			var result     = (T)ConvertVisitor.Convert(this, nullabilityContext, newElement, visitQueries : true);
 
+			// TEST (Step 2 probe): reduce predicates over the final converted structure (so the builder need not reduce at
+			// render), then a plain optimize pass to collapse the redundant TRUE the reduce can leave behind.
+			var reduceNullability = result is SqlStatement stmt ? NullabilityContext.GetContext(stmt.SelectQuery) : nullabilityContext;
+			result = (T)OptimizerVisitor.Optimize(EvaluationContext, reduceNullability, null, DataOptions, MappingSchema, result, visitQueries : true, reducePredicates: true);
+			result = (T)OptimizerVisitor.Optimize(EvaluationContext, reduceNullability, null, DataOptions, MappingSchema, result, visitQueries : true, reducePredicates: false);
+
 			return result;
 		}
 

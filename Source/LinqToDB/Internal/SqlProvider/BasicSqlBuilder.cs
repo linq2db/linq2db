@@ -77,7 +77,6 @@ namespace LinqToDB.Internal.SqlProvider
 		#region Build Flags
 
 		bool _disableAlias;
-		int  _binaryOptimized;
 
 		#endregion
 
@@ -218,19 +217,6 @@ namespace LinqToDB.Internal.SqlProvider
 			SkipAlias         = 1 << 0,
 			CompareFieldNames = 1 << 1,
 		}
-
-		#region Helpers
-
-		[return: NotNullIfNotNull(nameof(element))]
-		public IQueryElement? Optimize(IQueryElement? element, bool reducePredicates)
-		{
-			if (element == null)
-				return null;
-
-			return OptimizationContext.Optimize(element, NullabilityContext, reducePredicates);
-		}
-
-		#endregion
 
 		#region BuildSql
 
@@ -907,7 +893,7 @@ namespace LinqToDB.Internal.SqlProvider
 				first = false;
 
 				var addAlias = true;
-				var expr     = (ISqlExpression)Optimize(col.Expression, reducePredicates: true);
+				var expr     = col.Expression;
 				var colAlias = AliasesContext.GetColumnAlias(aliasColumns[i]);
 
 				AppendIndent();
@@ -2512,8 +2498,6 @@ namespace LinqToDB.Internal.SqlProvider
 			if (condition.IsTrue)
 				return;
 
-			++_binaryOptimized;
-
 			AppendIndent();
 
 			StringBuilder.Append("HAVING").AppendLine();
@@ -2524,8 +2508,6 @@ namespace LinqToDB.Internal.SqlProvider
 			Indent--;
 
 			StringBuilder.AppendLine();
-
-			--_binaryOptimized;
 		}
 
 		#endregion
@@ -3135,41 +3117,16 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected SqlSearchCondition PrepareSearchCondition(SqlSearchCondition searchCondition)
 		{
-			if (_binaryOptimized > 0)
-				return searchCondition;
-
-			var condition = searchCondition;
-			var optimized = Optimize(condition, reducePredicates: true);
-
-			if (optimized is SqlSearchCondition optimizedCondition)
-				condition = optimizedCondition;
-			else
-				condition = new SqlSearchCondition().Add((ISqlPredicate)optimized);
-
-			return condition;
+			return searchCondition;
 		}
 
 		protected void BuildPredicate(int parentPrecedence, int precedence, ISqlPredicate predicate)
 		{
-			if (_binaryOptimized == 0)
-			{
-				var optimized = Optimize(predicate, reducePredicates: true);
-				if (!ReferenceEquals(optimized, predicate))
-				{
-					predicate  = (ISqlPredicate)optimized;
-					precedence = GetPrecedence(predicate);
-				}
-			}
-
-			++_binaryOptimized;
-
 			var wrap = Wrap(precedence, parentPrecedence);
 
 			if (wrap) StringBuilder.Append('(');
 			BuildPredicate(predicate);
 			if (wrap) StringBuilder.Append(')');
-
-			--_binaryOptimized;
 		}
 
 		protected virtual void BuildLikePredicate(SqlPredicate.Like predicate)

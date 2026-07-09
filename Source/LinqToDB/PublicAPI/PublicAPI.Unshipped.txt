@@ -1091,3 +1091,4 @@ override LinqToDB.Internal.DataProvider.Access.AccessSqlBuilderBase.RequiresUniq
 override LinqToDB.Internal.DataProvider.SqlCe.SqlCeSqlBuilder.RequiresUniqueRootColumnNames.get -> bool
 *REMOVED*override LinqToDB.Internal.DataProvider.SqlCe.SqlCeSqlBuilder.CanSkipRootAliases(LinqToDB.Internal.SqlQuery.SqlStatement! statement) -> bool
 *REMOVED*LinqToDB.Internal.SqlProvider.BasicSqlBuilder.ConvertElement<T>(T? element) -> T?
+*REMOVED*LinqToDB.Internal.SqlProvider.BasicSqlBuilder.Optimize(LinqToDB.Internal.SqlQuery.IQueryElement? element, bool reducePredicates) -> LinqToDB.Internal.SqlQuery.IQueryElement?
