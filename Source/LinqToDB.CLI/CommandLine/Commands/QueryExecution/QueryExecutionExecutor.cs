@@ -157,9 +157,29 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 
 					return Task.FromResult(new QueryExecutionResult(StatusCodes.EXPECTED_ERROR, guardResult.Error, false));
 				}
+
+				if (!guardResult.IsAllowed)
+					WriteUnsafeSqlDiagnostic("confirm");
+			}
+			else
+			{
+				var guardResult = ReadOnlySqlGuard.Validate(dataProvider, sql);
+
+				if (!guardResult.IsAllowed)
+					WriteUnsafeSqlDiagnostic("allow");
 			}
 
 			return ExecuteDatabaseLoop(dataOptions, dataProvider, sql, outputWriter, cancellationToken);
+
+			void WriteUnsafeSqlDiagnostic(string mode)
+			{
+				_settings.DiagnosticWriter.WriteLine(
+					"Executing unsafe SQL because profile '{0}' uses unsafeSql={1}{2}. Provider: {3}.",
+					_settings.Profile,
+					mode,
+					string.Equals(mode, "confirm", StringComparison.Ordinal) ? " and explicit confirmation was provided" : "",
+					_settings.Provider);
+			}
 		}
 
 		async Task<QueryExecutionResult> ExecuteDatabaseLoop(DataOptions dataOptions, IDataProvider dataProvider, string sql, TextWriter outputWriter, CancellationToken cancellationToken)

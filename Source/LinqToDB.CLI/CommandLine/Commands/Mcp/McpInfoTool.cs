@@ -6,6 +6,7 @@ using System.IO;
 using System.Text.Json;
 using System.Threading;
 
+using LinqToDB.CommandLine.Commands.Connection;
 using LinqToDB.CommandLine.Commands.QueryExecution;
 
 using ModelContextProtocol.Protocol;
@@ -169,7 +170,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 				name,
 				configuration?.Description,
 				provider,
-				GetDialectName(provider),
+				ProviderDialectCatalog.GetDialect(provider),
 				output,
 				IsMcpOutputFormat(output),
 				maxRows,
@@ -187,28 +188,6 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 
 			error = "Cannot load linq2db query configuration: option '--max-rows' must be a non-negative integer row count.";
 			return -1;
-		}
-
-		static string GetDialectName(string providerName)
-		{
-			if (IsProvider(providerName, "SqlServer"))  return "SQL Server T-SQL";
-			if (IsProvider(providerName, "SQLite"))     return "SQLite";
-			if (IsProvider(providerName, "PostgreSQL")) return "PostgreSQL";
-			if (IsProvider(providerName, "MySql"))      return "MySQL";
-			if (IsProvider(providerName, "MariaDB"))    return "MariaDB";
-			if (IsProvider(providerName, "Oracle"))     return "Oracle SQL";
-			if (IsProvider(providerName, "Firebird"))   return "Firebird SQL";
-			if (IsProvider(providerName, "DB2"))        return "IBM DB2 SQL";
-			if (IsProvider(providerName, "Informix"))   return "Informix SQL";
-			if (IsProvider(providerName, "ClickHouse")) return "ClickHouse SQL";
-			if (IsProvider(providerName, "DuckDB"))     return "DuckDB SQL";
-			if (IsProvider(providerName, "Sybase") || string.Equals(providerName, "ASE", StringComparison.OrdinalIgnoreCase)) return "Sybase ASE T-SQL";
-			if (IsProvider(providerName, "Access"))     return "Microsoft Access SQL";
-			if (IsProvider(providerName, "ODBC") || IsProvider(providerName, "Odbc")) return "ODBC provider-specific SQL";
-			if (IsProvider(providerName, "OLEDB") || IsProvider(providerName, "OleDb")) return "OLE DB provider-specific SQL";
-			if (IsProvider(providerName, "YDB"))        return "YDB SQL";
-
-			return "provider-specific SQL";
 		}
 
 		static bool Contains(IReadOnlyList<string> values, string value)
@@ -237,12 +216,6 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 		{
 			return string.Equals(output, "json",       StringComparison.OrdinalIgnoreCase)
 				|| string.Equals(output, "json-table", StringComparison.OrdinalIgnoreCase);
-		}
-
-		static bool IsProvider(string providerName, string family)
-		{
-			return string.Equals(providerName, family, StringComparison.OrdinalIgnoreCase)
-				|| providerName.StartsWith(family + ".", StringComparison.OrdinalIgnoreCase);
 		}
 
 		static CallToolResult CreateErrorResult(string message)

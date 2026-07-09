@@ -92,6 +92,8 @@ The MCP server exposes `linq2db_info` for non-secret runtime discovery of availa
 
 `config-init` writes common editable settings (`maxRows`, `output`, and `unsafeSql`) into every created profile intentionally. This makes generated profiles self-explanatory and easier to edit manually. Named profiles still inherit missing values from `default` when those values are removed manually.
 
+When `config-init` writes an existing configuration file, it rewrites it as normalized JSON and does not preserve comments or custom formatting.
+
 Configuration profiles are shared by `query`, `schema`, and `mcp`. The `query` command supports `json`, `json-table`, and `csv`. The `schema` command outputs JSON only. The MCP `linq2db_query` tool supports only `json` and `json-table`; if a selected profile has `output: "csv"`, MCP calls must pass `output: "json-table"` or `output: "json"` explicitly, or the profile should be adjusted for MCP usage.
 
 For list of available options, use `dotnet linq2db help <command>` command.

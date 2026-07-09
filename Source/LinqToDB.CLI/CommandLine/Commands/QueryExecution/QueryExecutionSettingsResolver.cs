@@ -109,6 +109,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				values.Overwrite,
 				unsafeSqlPolicy,
 				values.AllowUnsafeSql,
+				_environment.Error,
 				connectionSettings.Impersonate,
 				connectionSettings.ImpersonateMode,
 				querySql!);

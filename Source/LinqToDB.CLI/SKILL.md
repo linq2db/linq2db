@@ -218,6 +218,7 @@ Output:
 - Existing output files are not replaced by default. Use `--overwrite` only when the user explicitly wants to replace the file.
 
 Effective schema options are returned in the JSON result so agents can understand which metadata was requested and which metadata was intentionally omitted.
+Foreign keys are returned inside each table object as `foreignKeys`; there is no separate top-level foreign-key list.
 
 Procedures and functions are intentionally unsupported:
 
@@ -428,6 +429,7 @@ Guardrails:
 - The query command accepts exactly one user-provided SQL statement per invocation. This restriction applies to SQL text passed through `--sql` or `--sql-file`.
 - The CLI may execute provider-specific setup commands internally, such as lock timeout configuration, before executing the user-provided SQL. Those internal commands are not part of the user SQL contract.
 - User-provided SQL must contain exactly one statement. Multiple user-provided statements are rejected even when unsafe SQL is allowed.
+- A single-statement contract keeps result formatting predictable and avoids ambiguous multi-result or partially unsafe batches.
 - Single-statement user SQL is a hard command contract for all providers. SQL Server is checked with ScriptDom AST; other providers currently use a generic best-effort validator until provider-specific parsers are added.
 - If an agent needs to execute several independent operations, it should run several separate `query` commands.
 - Multi-statement workflows that rely on session state, such as temporary tables, are not supported yet.
@@ -441,6 +443,7 @@ Guardrails:
 - `unsafeSql: "confirm"` allows unsafe SQL only when `--allow-unsafe-sql` is specified.
 - `unsafeSql: "allow"` allows unsafe SQL without confirmation.
 - Use `confirm` or `allow` only in trusted development profiles.
+- When unsafe SQL is actually executed, the command writes a diagnostic notice to stderr without including SQL text or credentials.
 - The read-only SQL guard is a guardrail, not a security boundary. If an agent can edit the configuration file, it can change configuration-based unsafe SQL policy.
 - All safety measures in this command are best-effort guardrails intended to help avoid agent mistakes; they are not absolute protection for a database.
 - The strongest protection against agent mistakes is to execute SQL using a database account with limited permissions appropriate for the task. For read-only agent queries, prefer a read-only account. For development workflows that need DDL/DML, prefer a dedicated disposable database or a restricted development account.

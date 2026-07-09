@@ -281,6 +281,7 @@ namespace Tests.LinqToDB.CLI
 
 			{
 				(result.ExitCode).ShouldBe(-3);
+				(result.Error).ShouldContain("Executing unsafe SQL because profile 'default' uses unsafeSql=confirm and explicit confirmation was provided. Provider: SQLite.");
 				(result.Error).ShouldContain("Query execution failed");
 				(result.Error).ShouldNotContain("token 'DROP' is not allowed");
 			}
@@ -304,6 +305,7 @@ namespace Tests.LinqToDB.CLI
 
 			{
 				(result.ExitCode).ShouldBe(-3);
+				(result.Error).ShouldContain("Executing unsafe SQL because profile 'default' uses unsafeSql=allow. Provider: SQLite.");
 				(result.Error).ShouldContain("Query execution failed");
 				(result.Error).ShouldNotContain("token 'DROP' is not allowed");
 			}
@@ -1180,6 +1182,32 @@ namespace Tests.LinqToDB.CLI
 				""");
 
 			environment.EnvironmentVariables.Add("LINQ2DB_QUERY_DATABASE", ":memory:");
+
+			var result = await RunCli(environment, "query", "--config", config, "--sql", "select 1 as Value");
+
+			{
+				(result.ExitCode).ShouldBe(0);
+				(result.Output).ShouldContain("\"Value\":\"1\"");
+				(result.Error).ShouldBeEmpty();
+			}
+		}
+
+		[Test]
+		public async Task QueryExpandsRepeatedEnvironmentVariablesInUser()
+		{
+			var environment = new TestCliEnvironment();
+			var config      = AddConfigFile(environment, """
+				{
+					"default": {
+						"provider": "SQLite",
+						"connectionString": "Data Source={0}",
+						"user": "%LINQ2DB_QUERY_DATABASE_PREFIX%%LINQ2DB_QUERY_DATABASE_SUFFIX%"
+					}
+				}
+				""");
+
+			environment.EnvironmentVariables.Add("LINQ2DB_QUERY_DATABASE_PREFIX", ":mem");
+			environment.EnvironmentVariables.Add("LINQ2DB_QUERY_DATABASE_SUFFIX", "ory:");
 
 			var result = await RunCli(environment, "query", "--config", config, "--sql", "select 1 as Value");
 

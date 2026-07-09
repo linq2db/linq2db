@@ -213,6 +213,8 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 			if (settings == null)
 				return CreateErrorResult(errorWriter.ToString());
 
+			settings = settings with { DiagnosticWriter = Console.Error };
+
 			if (!IsMcpOutputFormat(settings.Output))
 				return CreateErrorResult($"MCP query execution supports only 'json' and 'json-table' output. The selected profile resolves output='{settings.Output}'. Pass output='json-table' or output='json' in the tool call, or update the profile for MCP usage.");
 

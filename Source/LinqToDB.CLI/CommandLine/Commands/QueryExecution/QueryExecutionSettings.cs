@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 
 using LinqToDB.CommandLine;
 using LinqToDB.CommandLine.Options;
@@ -26,6 +27,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 	/// <param name="Overwrite">Allow replacing existing output file.</param>
 	/// <param name="UnsafeSqlPolicy">Unsafe SQL execution policy resolved from configuration profiles.</param>
 	/// <param name="AllowUnsafeSql">Command-line confirmation for unsafe SQL execution.</param>
+	/// <param name="DiagnosticWriter">Diagnostic writer for non-result execution notices.</param>
 	/// <param name="Impersonate">Run the database loop under resolved Windows <see cref="User"/>/<see cref="Password"/> credentials after file resources are opened.</param>
 	/// <param name="ImpersonateMode">Windows logon mode used for impersonation.</param>
 	/// <param name="Sql">Resolved SQL query text.</param>
@@ -44,6 +46,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		bool               Overwrite,
 		UnsafeSqlPolicy    UnsafeSqlPolicy,
 		bool               AllowUnsafeSql,
+		TextWriter         DiagnosticWriter,
 		bool               Impersonate,
 		WindowsImpersonationMode ImpersonateMode,
 		string             Sql);

@@ -202,6 +202,11 @@ namespace Tests.LinqToDB.CLI
 						"maxRows": 500,
 						"unsafeSql": "confirm",
 						"impersonate": true
+					},
+					"mysqlconnector": {
+						"description": "Use MySQL syntax with MySqlConnector provider.",
+						"provider": "MySqlConnector",
+						"connectionStringEnv": "LINQ2DB_MYSQL_CONNECTION"
 					}
 				}
 				""").ConfigureAwait(false);
@@ -216,9 +221,10 @@ namespace Tests.LinqToDB.CLI
 				(response["error"]).ShouldBeNull();
 				((string?)info["defaultProfile"]).ShouldBe("sqlserver");
 				((bool?)info["defaultProfileUsable"]).ShouldBe(true);
-				(info["profiles"]?.AsArray().Count).ShouldBe(1);
+				(info["profiles"]?.AsArray().Count).ShouldBe(2);
 
 				var sqlServer      = FindProfile(info, "sqlserver");
+				var mySqlConnector = FindProfile(info, "mysqlconnector");
 
 				(ContainsProfile(info, "default")).ShouldBe(false);
 
@@ -230,8 +236,12 @@ namespace Tests.LinqToDB.CLI
 				((string?)sqlServer["unsafeSqlPolicy"]).ShouldBe("confirm");
 				((bool?)sqlServer["impersonationEnabled"]).ShouldBe(true);
 
+				((string?)mySqlConnector["provider"]).ShouldBe("MySqlConnector");
+				((string?)mySqlConnector["dialect"]).ShouldBe("MySQL");
+
 				(info.ToJsonString()).ShouldNotContain("dev-secret.db");
 				(info.ToJsonString()).ShouldNotContain("LINQ2DB_SQLSERVER_CONNECTION");
+				(info.ToJsonString()).ShouldNotContain("LINQ2DB_MYSQL_CONNECTION");
 				(sqlServer.ContainsKey("connectionString")).ShouldBe(false);
 				(sqlServer.ContainsKey("connectionStringEnv")).ShouldBe(false);
 			}
@@ -419,6 +429,38 @@ namespace Tests.LinqToDB.CLI
 				((bool?)response["result"]?["isError"]).ShouldBe(true);
 				((string?)response["result"]?["content"]?[0]?["text"]).ShouldContain("Query is not read-only");
 			}
+		}
+
+		[Test]
+		public async Task McpLogsUnsafeSqlExecutionToStandardError()
+		{
+			var config = Path.Combine(TestContext.CurrentContext.WorkDirectory, $"mcp-query-{Guid.NewGuid():N}.json");
+			await File.WriteAllTextAsync(config, """
+				{
+					"default": {
+						"provider": "SQLite",
+						"connectionString": "Data Source=:memory:",
+						"unsafeSql": "confirm"
+					}
+				}
+				""").ConfigureAwait(false);
+
+			await using var server = await McpServerProcess.Start("--config", config);
+
+			await server.Initialize();
+			var response = await server.CallTool("linq2db_query", new JsonObject
+			{
+				["sql"]            = "drop table Person",
+				["allowUnsafeSql"] = true,
+			});
+
+			{
+				(response["error"]).ShouldBeNull();
+				((bool?)response["result"]?["isError"]).ShouldBe(true);
+				((string?)response["result"]?["content"]?[0]?["text"]).ShouldContain("Query execution failed");
+			}
+
+			server.ExpectStandardError("Executing unsafe SQL because profile 'default' uses unsafeSql=confirm and explicit confirmation was provided. Provider: SQLite.");
 		}
 
 		[Test]

@@ -12,7 +12,7 @@ namespace LinqToDB.CommandLine.Commands.Connection
 			if (IsProvider(providerName, "SqlServer"))  return "SQL Server T-SQL";
 			if (IsProvider(providerName, "SQLite"))     return "SQLite";
 			if (IsProvider(providerName, "PostgreSQL")) return "PostgreSQL";
-			if (IsProvider(providerName, "MySql"))      return "MySQL";
+			if (IsProvider(providerName, "MySql") || IsProvider(providerName, "MySqlConnector")) return "MySQL";
 			if (IsProvider(providerName, "MariaDB"))    return "MariaDB";
 			if (IsProvider(providerName, "Oracle"))     return "Oracle SQL";
 			if (IsProvider(providerName, "Firebird"))   return "Firebird SQL";
@@ -20,7 +20,7 @@ namespace LinqToDB.CommandLine.Commands.Connection
 			if (IsProvider(providerName, "Informix"))   return "Informix SQL";
 			if (IsProvider(providerName, "ClickHouse")) return "ClickHouse SQL";
 			if (IsProvider(providerName, "DuckDB"))     return "DuckDB SQL";
-			if (IsProvider(providerName, "Sybase") || string.Equals(providerName, "ASE", StringComparison.OrdinalIgnoreCase)) return "Sybase ASE T-SQL";
+			if (IsProvider(providerName, "Sybase") || IsProvider(providerName, "ASE")) return "Sybase ASE T-SQL";
 			if (IsProvider(providerName, "Access"))     return "Microsoft Access SQL";
 			if (IsProvider(providerName, "ODBC") || IsProvider(providerName, "Odbc")) return "ODBC provider-specific SQL";
 			if (IsProvider(providerName, "OLEDB") || IsProvider(providerName, "OleDb")) return "OLE DB provider-specific SQL";
@@ -31,7 +31,8 @@ namespace LinqToDB.CommandLine.Commands.Connection
 
 		static bool IsProvider(string providerName, string value)
 		{
-			return providerName.StartsWith(value, StringComparison.OrdinalIgnoreCase);
+			return string.Equals(providerName, value, StringComparison.OrdinalIgnoreCase)
+				|| providerName.StartsWith(value + ".", StringComparison.OrdinalIgnoreCase);
 		}
 	}
 }
