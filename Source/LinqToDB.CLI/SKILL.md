@@ -206,6 +206,7 @@ Multiple values can be provided either as comma-separated CLI values or by repea
 MCP `linq2db_schema` uses arrays: `filterSchemas`, `filterCatalogs`, and `filterTables`.
 Values inside one filter dimension are combined with OR; different filter dimensions narrow the result together.
 Table filters are exact, case-insensitive matches unless the value starts with `regex:` or `rx:`.
+Regex table filters use a bounded match timeout and return an expected error if a pattern times out.
 
 Output:
 
