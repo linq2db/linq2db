@@ -94,6 +94,7 @@ Before reporting a task as infeasible ("can't bisect", "can't build", "runtime t
 - `UserDataProviders.json` (root) and a sibling `linq2db` clone's `UserDataProviders.json` (alongside this clone, e.g. `../linq2db/UserDataProviders.json`) for connection strings
 - Existing skills (`/test`, `/test-providers`) for workflow coverage
 - `/kb-ask` or `areas/<AREA>/` for prior context on the subsystem (known issues, decisions, patterns) before declaring something unknown or infeasible — see *Consult the knowledge base* above
+- Investigating a **red CI run**'s per-test failures → `.agents/scripts/azp-build-failures.ps1 -BuildId <n>` (see [`ci-tests.md`](ci-tests.md) → *Reading failed CI test runs*). It does the timeline + parallel `/logs/<id>` fetch + per-failure parse in one call — don't hand-roll the Azure `timeline` + log curl-and-grep flow.
 
 When the capability exists but the runtime cost is real, surface the cost and let the user decide.
 
