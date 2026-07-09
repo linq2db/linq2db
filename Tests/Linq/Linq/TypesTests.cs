@@ -449,7 +449,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateTimeArray1([DataSources] string context)
+		// PostgreSQL 9.4+ (make_timestamp)
+		public void DateTimeArray1([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(

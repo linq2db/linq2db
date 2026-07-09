@@ -1282,7 +1282,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void WhereDateTimeTest1([DataSources] string context)
+		// PostgreSQL 9.4+ (make_timestamp)
+		public void WhereDateTimeTest1([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -1295,7 +1296,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void WhereDateTimeTest2([DataSources] string context)
+		// PostgreSQL 9.4+ (make_timestamp)
+		public void WhereDateTimeTest2([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -1308,7 +1310,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void WhereDateTimeTest3([DataSources] string context)
+		// PostgreSQL 9.4+ (make_timestamp)
+		public void WhereDateTimeTest3([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -1321,7 +1324,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void WhereDateTimeTest4([DataSources] string context)
+		// PostgreSQL 9.4+ (make_timestamp)
+		public void WhereDateTimeTest4([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -1334,7 +1338,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void WhereDateTimeTest5([DataSources] string context)
+		// PostgreSQL 9.4+ (make_timestamp)
+		public void WhereDateTimeTest5([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -1347,7 +1352,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void WhereDateTimeTest6([DataSources] string context)
+		// PostgreSQL 9.4+ (make_timestamp)
+		public void WhereDateTimeTest6([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -2501,6 +2507,7 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
+		// PostgreSQL 9.4+ (make_timestamp)
 		public void PredicateOptimization_Subquery([DataSources(
 			TestProvName.AllOracle,
 			TestProvName.AllSybase,
@@ -2510,7 +2517,8 @@ namespace Tests.Linq
 			TestProvName.AllDB2,
 			// yep, it works in older versions...
 			TestProvName.AllFirebird5Plus,
-			TestProvName.AllClickHouse)] string context)
+			TestProvName.AllClickHouse,
+			TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 
