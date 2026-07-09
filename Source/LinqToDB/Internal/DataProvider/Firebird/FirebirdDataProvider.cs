@@ -77,9 +77,12 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			SetToType<DbDataReader, byte[], string>("VARCHAR", (r, i) => r.GetFieldValue<byte[]>(i));
 			SetToType<DbDataReader, Binary, string>("VARCHAR", (r, i) => new Binary(r.GetFieldValue<byte[]>(i)));
 
-			_sqlOptimizer = Version >= FirebirdVersion.v3
-				? new Firebird3SqlOptimizer(SqlProviderFlags)
-				: new FirebirdSqlOptimizer(SqlProviderFlags);
+			_sqlOptimizer = Version switch
+			{
+				>= FirebirdVersion.v6 => new Firebird6SqlOptimizer(SqlProviderFlags),
+				>= FirebirdVersion.v3 => new Firebird3SqlOptimizer(SqlProviderFlags),
+				_                     => new FirebirdSqlOptimizer(SqlProviderFlags),
+			};
 		}
 
 		static DateTime GetDateTime(DateTime value)
