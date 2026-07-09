@@ -533,6 +533,35 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task McpSchemaReportsRegexFilterTimeout()
+		{
+			var database = CreateSqliteDatabase();
+
+			try
+			{
+				await using var server = await McpServerProcess.Start("--provider", "SQLite", "--connection-string", $"Data Source={database};Pooling=False");
+
+				await server.Initialize();
+				var response = await server.CallTool("linq2db_schema", new JsonObject
+				{
+					["filterTables"] = new JsonArray("rx:^(a+)+$"),
+				});
+
+				{
+					(response["error"]).ShouldBeNull();
+					((bool?)response["result"]?["isError"]).ShouldBe(true);
+					((string?)response["result"]?["content"]?[0]?["text"]).ShouldContain("Table filter regex '^(a+)+$' timed out");
+				}
+
+				server.ExpectNoStandardError();
+			}
+			finally
+			{
+				File.Delete(database);
+			}
+		}
+
+		[Test]
 		public async Task McpRejectsCsvToolOutput()
 		{
 			await using var server = await McpServerProcess.Start("--provider", "SQLite", "--connection-string", "Data Source=:memory:");
@@ -741,6 +770,9 @@ namespace Tests.LinqToDB.CLI
 					OrderId integer not null references Orders(Id)
 				)
 				""");
+
+			var longName = new string('a', 512) + "b";
+			db.Execute($"create table \"{longName}\" (Id integer not null primary key)");
 
 			return fileName;
 		}

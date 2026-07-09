@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
@@ -24,6 +25,8 @@ namespace LinqToDB.CommandLine.Commands.SchemaInspection
 			WriteIndented        = false,
 		};
 
+		static readonly TimeSpan _regexTimeout = TimeSpan.FromMilliseconds(250);
+
 		readonly SchemaInspectionSettings _settings = settings;
 
 		public async ValueTask<SchemaInspectionResult> Execute(TextWriter outputWriter, CancellationToken cancellationToken)
@@ -46,6 +49,10 @@ namespace LinqToDB.CommandLine.Commands.SchemaInspection
 			catch (OperationCanceledException)
 			{
 				throw;
+			}
+			catch (RegexMatchTimeoutException ex)
+			{
+				return new SchemaInspectionResult(StatusCodes.EXPECTED_ERROR, $"Schema inspection failed: Table filter regex '{ex.Pattern}' timed out after {((int)ex.MatchTimeout.TotalMilliseconds).ToString(CultureInfo.InvariantCulture)} ms.");
 			}
 			catch (Exception ex)
 			{
@@ -108,7 +115,7 @@ namespace LinqToDB.CommandLine.Commands.SchemaInspection
 
 					if (regexPattern != null)
 					{
-						var regex = new Regex(regexPattern, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+						var regex = new Regex(regexPattern, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, _regexTimeout);
 						predicates[i] = names =>
 						{
 							foreach (var name in names)

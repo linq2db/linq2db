@@ -154,6 +154,30 @@ namespace Tests.LinqToDB.CLI
 			}
 		}
 
+		[Test]
+		public async Task SchemaReportsRegexFilterTimeout()
+		{
+			var database = CreateSqliteDatabase();
+
+			try
+			{
+				var result = await RunCliProcess(
+					"schema",
+					"--provider", "SQLite",
+					"--connection-string", $"Data Source={database};Pooling=False",
+					"--filter-table", "rx:^(a+)+$");
+
+				{
+					(result.ExitCode).ShouldBe(-3);
+					(result.Error).ShouldContain("Table filter regex '^(a+)+$' timed out");
+				}
+			}
+			finally
+			{
+				File.Delete(database);
+			}
+		}
+
 		static bool ContainsTable(JsonObject schema, string name)
 		{
 			foreach (var table in schema["tables"]!.AsArray())
@@ -207,6 +231,9 @@ namespace Tests.LinqToDB.CLI
 					OrderId integer not null references Orders(Id)
 				)
 				""");
+
+			var longName = new string('a', 512) + "b";
+			db.Execute($"create table \"{longName}\" (Id integer not null primary key)");
 
 			return fileName;
 		}

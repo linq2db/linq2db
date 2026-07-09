@@ -13,6 +13,8 @@ namespace LinqToDB.CommandLine.Commands.SchemaInspection
 	{
 		const string DefaultOutput = "json";
 
+		static readonly TimeSpan _regexTimeout = TimeSpan.FromMilliseconds(250);
+
 		readonly ICliEnvironment _environment = environment;
 
 		public int ErrorStatusCode { get; private set; } = StatusCodes.INVALID_ARGUMENTS;
@@ -68,7 +70,7 @@ namespace LinqToDB.CommandLine.Commands.SchemaInspection
 
 				try
 				{
-					_ = new Regex(pattern, RegexOptions.CultureInvariant);
+					_ = new Regex(pattern, RegexOptions.CultureInvariant, _regexTimeout);
 				}
 				catch (ArgumentException ex)
 				{
