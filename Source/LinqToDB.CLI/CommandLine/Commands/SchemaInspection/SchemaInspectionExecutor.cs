@@ -25,8 +25,6 @@ namespace LinqToDB.CommandLine.Commands.SchemaInspection
 			WriteIndented        = false,
 		};
 
-		static readonly TimeSpan _regexTimeout = TimeSpan.FromMilliseconds(250);
-
 		readonly SchemaInspectionSettings _settings = settings;
 
 		public async ValueTask<SchemaInspectionResult> Execute(TextWriter outputWriter, CancellationToken cancellationToken)
@@ -115,7 +113,7 @@ namespace LinqToDB.CommandLine.Commands.SchemaInspection
 
 					if (regexPattern != null)
 					{
-						var regex = new Regex(regexPattern, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, _regexTimeout);
+						var regex = new Regex(regexPattern, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, SchemaFilterConstants.RegexTimeout);
 						predicates[i] = names =>
 						{
 							foreach (var name in names)

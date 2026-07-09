@@ -55,6 +55,7 @@ Connection settings:
 - The final connection string is always produced with `string.Format(connectionString, user, password)`.
 - Use `{0}` in the connection string for the user value and `{1}` for the password value.
 - Escape literal braces in connection strings as `{{` and `}}`.
+- `{0}` and `{1}` placeholder values are inserted raw. Use trusted startup/config sources for `user` and `password`; when values contain connection-string special characters such as `;`, `=`, `{`, or `}`, apply quoting supported by the selected ADO.NET provider.
 - Connection timeout is intentionally not exposed as a separate query command option. It is provider-specific and must be configured in the connection string using the selected provider's supported keywords.
 - `--impersonate` enables Windows-only database access impersonation using the same resolved `user` and `password` values.
 - `--impersonate-mode` selects the Windows `LogonUser` mode: `network-cleartext` (default, system code `8`), `interactive` (`2`), `network` (`3`), or `new-credentials` (`9`).

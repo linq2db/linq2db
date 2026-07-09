@@ -3,6 +3,7 @@ using System.Data.Common;
 using System.IO;
 using System.Reflection;
 using System.Runtime.Loader;
+using System.Threading;
 
 using LinqToDB.CommandLine;
 using LinqToDB.CommandLine.Options;
@@ -16,6 +17,8 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 	/// </summary>
 	static class ExternalProviderLoader
 	{
+		static readonly Lock _loadLock = new();
+
 		public static bool LoadExternalProvider(string provider, string? providerLocation, out string? error)
 		{
 			error = null;
@@ -45,38 +48,41 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				return false;
 			}
 
-			var currentDirectory     = Environment.CurrentDirectory;
-			var providerLocationPath = Path.GetFullPath(providerLocation);
-			var providerDirectory    = Path.GetDirectoryName(providerLocationPath);
-
-			try
+			lock (_loadLock)
 			{
-				// Some external providers resolve native binaries and dependent assemblies relative to
-				// the process current directory instead of the managed provider assembly path.
-				//
-				if (!string.IsNullOrEmpty(providerDirectory))
-					Environment.CurrentDirectory = providerDirectory;
+				var currentDirectory     = Environment.CurrentDirectory;
+				var providerLocationPath = Path.GetFullPath(providerLocation);
+				var providerDirectory    = Path.GetDirectoryName(providerLocationPath);
 
-				var assembly = new ExternalProviderLoadContext(providerDirectory).LoadFromAssemblyPath(providerLocationPath);
-
-				if (IsDB2FamilyProvider(provider))
+				try
 				{
-					DB2Tools.AutoDetectProvider = true;
+					// Some external providers resolve native binaries and dependent assemblies relative to
+					// the process current directory instead of the managed provider assembly path.
+					//
+					if (!string.IsNullOrEmpty(providerDirectory))
+						Environment.CurrentDirectory = providerDirectory;
 
-					var factory = FindProviderFactory(assembly, "DB2Factory");
+					var assembly = new ExternalProviderLoadContext(providerDirectory).LoadFromAssemblyPath(providerLocationPath);
 
-					if (factory == null)
+					if (IsDB2FamilyProvider(provider))
 					{
-						error = $"Provider assembly '{providerLocation}' doesn't contain DB2Factory type.";
-						return false;
-					}
+						DB2Tools.AutoDetectProvider = true;
 
-					DbProviderFactories.RegisterFactory("IBM.Data.DB2", factory);
+						var factory = FindProviderFactory(assembly, "DB2Factory");
+
+						if (factory == null)
+						{
+							error = $"Provider assembly '{providerLocation}' doesn't contain DB2Factory type.";
+							return false;
+						}
+
+						DbProviderFactories.RegisterFactory("IBM.Data.DB2", factory);
+					}
 				}
-			}
-			finally
-			{
-				Environment.CurrentDirectory = currentDirectory;
+				finally
+				{
+					Environment.CurrentDirectory = currentDirectory;
+				}
 			}
 
 			return true;

@@ -169,6 +169,9 @@ namespace Tests.LinqToDB.CLI
 				((bool?)info["rules"]?["sqlGuardIsSecurityBoundary"]).ShouldBe(false);
 				((string?)info["rules"]?["sqlGuardWarning"]).ShouldContain("not a security boundary");
 				((string?)info["rules"]?["sqlGuardWarning"]).ShouldContain("restricted database accounts");
+				((bool?)info["rules"]?["connectionStringPlaceholdersEscaped"]).ShouldBe(false);
+				((string?)info["rules"]?["connectionStringPlaceholderWarning"]).ShouldContain("raw user/password values");
+				((string?)info["rules"]?["connectionStringPlaceholderWarning"]).ShouldContain("trusted startup/config sources");
 				((bool?)info["rules"]?["providerInputAllowedInToolCall"]).ShouldBe(false);
 				((bool?)info["rules"]?["connectionStringInputAllowedInToolCall"]).ShouldBe(false);
 				((bool?)info["rules"]?["credentialsInputAllowedInToolCall"]).ShouldBe(false);
