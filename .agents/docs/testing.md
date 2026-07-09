@@ -118,6 +118,15 @@ dotnet test --project Tests/Linq/Tests.csproj -f net10.0 --settings .runsettings
 
 **To exercise the remote (LinqService) path, pass the BASE provider name, not the `.LinqService` suffix.** `DataSourcesBaseAttribute` auto-appends a `<provider>.LinqService` case for every base provider (unless `.runsettings` sets `DisableRemoteContext` / `NoLinqService`), so `--provider Firebird.5` runs **both** the direct `Firebird.5` and the remote `Firebird.5.LinqService` cases. Passing `--provider Firebird.5.LinqService` double-suffixes it to `Firebird.5.LinqService.LinqService`, which has no connection string → those cases silently don't run (you'll see only `CreateDatabase` execute). This is also why `test-runner`, given a `.LinqService` provider name, comes back green-but-empty.
 
+### Running EF Core tests locally
+
+The `/test` skill targets the Playground / Linq projects only — the EF Core integration tests are separate and run by hand.
+
+- **Per-EF-version projects.** `Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF10.csproj` (plus `EF9` / `EF8` for EF Core 9 / 8, and `EF3` for EF Core 3.1 — netfx-only). Build the one you need: `dotnet build Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF10.csproj -c Debug`.
+- **MTP exe, run directly.** These are `OutputType Exe` (Microsoft.Testing.Platform + NUnit runner), so run the built executable, not `dotnet test`: `.build/bin/Tests.EntityFrameworkCore.EF10/Debug/net10.0/linq2db.EntityFrameworkCore.Tests.exe --filter "FullyQualifiedName~MyTest"`. Filter with `--filter` (VSTest-style `FullyQualifiedName~` / `Name~`); the NUnit MTP runner rejects `--treenode-filter`.
+- **SQLite needs no container.** `--provider SQLite.MS` runs the SQLite-capable EF tests against a file / `:memory:` DB created via EF `EnsureCreated` — no docker. Other EF providers need their DBs like the main suite. (EF projects intersect their curated `EFProviders` set, so `--provider` only narrows.)
+- **In a worktree, use absolute paths.** The Bash tool's cwd is always the *primary* clone, and `cd <worktree> && dotnet …` is hook-rejected (no `&&`). Pass the absolute worktree csproj / exe path to `dotnet build` / the test exe instead.
+
 ### Running providers in parallel
 
 Each provider config maps to a distinct database, so runs scoped to **distinct** providers don't collide and can run concurrently. Two cautions, both from the standing single-session rule:
