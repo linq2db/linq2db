@@ -1117,6 +1117,4 @@ LinqToDB.Internal.Common.ObjectPool<T>.RentedElement.RentedElement() -> void
 LinqToDB.Internal.Common.ObjectPool<T>.RentedElement.RentedElement(LinqToDB.Internal.Common.ObjectPool<T!>! pool, T! value) -> void
 readonly LinqToDB.Internal.Common.ObjectPool<T>.RentedElement.Value -> T!
 ~LinqToDB.Internal.Common.ObjectPool<T>.Allocate() -> LinqToDB.Internal.Common.ObjectPool<T>.RentedElement
-LinqToDB.Internal.Mapping.LockedMappingSchema.LockedMappingSchema(string? configuration, params LinqToDB.Mapping.MappingSchema![]! schemas) -> void
-*REMOVED*LinqToDB.Internal.Mapping.LockedMappingSchema.LockedMappingSchema(string! configuration, params LinqToDB.Mapping.MappingSchema![]! schemas) -> void
 *REMOVED*LinqToDB.Internal.SqlQuery.SqlRawSqlTable.SqlRawSqlTable(LinqToDB.Internal.SqlQuery.SqlRawSqlTable! table, LinqToDB.Internal.SqlQuery.ISqlExpression![]! parameters) -> void
