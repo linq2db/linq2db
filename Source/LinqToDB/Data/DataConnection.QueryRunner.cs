@@ -350,7 +350,13 @@ namespace LinqToDB.Data
 					if (optimizeAndConvertAll)
 					{
 						if (query is QueryInfo queryInfo)
-							queryInfo.Prepared = prepared;
+						{
+							queryInfo.Prepared  = prepared;
+							// The BakedQuery is statement-free; drop the memoized structure so the SqlStatement/Aliases graph
+							// it holds becomes collectible - the intended memory win. Structure's only reader is shadowed by
+							// the Prepared early-return at method entry, so it is dead weight once the query is cached.
+							queryInfo.Structure = null;
+						}
 					}
 
 					query.IsContinuousRun = true;

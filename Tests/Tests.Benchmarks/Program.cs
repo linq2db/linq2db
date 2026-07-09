@@ -29,6 +29,16 @@ namespace LinqToDB.Benchmarks
 				return;
 			}
 
+			// Manual render-pipeline benchmark runner (branch-vs-master). Tag the run via the
+			// RENDER_BENCH_TAG env var. Usage: manual-render [iterations] [warmups]
+			if (args.Length > 0 && args[0] == "manual-render")
+			{
+				var iters   = args.Length > 1 && int.TryParse(args[1], out var n) ? n : 20;
+				var warmups = args.Length > 2 && int.TryParse(args[2], out var w) ? w : 5;
+				RenderPipelineBenchmark.RunManually(warmups, iters);
+				return;
+			}
+
 			//if (args.Length == 0)
 			//{
 			//	//	var b1 = new FetchGraphBenchmark();
