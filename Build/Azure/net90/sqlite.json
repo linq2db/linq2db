@@ -1,4 +1,4 @@
-﻿{
+{
 	"NET90.Azure": {
 		"Providers": [
 			// not sqlite, but should go somewhere
@@ -9,6 +9,17 @@
 			"Northwind.SQLite.MS",
 			"SQLite.Classic.MPU",
 			"SQLite.Classic.MPM"
-		]
+		],
+		// CI runs SQLite against shared-cache in-memory DBs (no filesystem sync). A keep-alive
+		// connection per DB is opened in TestsInitialization before seeding; Northwind is loaded from
+		// its committed file via the SQLite backup API. Dev/DataProviders.json runs stay file-based.
+		"Connections": {
+			"SQLite.Classic":      { "Provider": "SQLite",             "ConnectionString": "FullUri=file:testdata_cl?mode=memory&cache=shared"  },
+			"SQLite.Classic.MPU":  { "Provider": "SQLite.Classic.MPU", "ConnectionString": "FullUri=file:testdata_mpu?mode=memory&cache=shared" },
+			"SQLite.Classic.MPM":  { "Provider": "SQLite.Classic.MPM", "ConnectionString": "FullUri=file:testdata_mpm?mode=memory&cache=shared" },
+			"SQLite.MS":           { "Provider": "SQLite.MS",          "ConnectionString": "Data Source=testdata_ms;Mode=Memory;Cache=Shared"   },
+			"Northwind.SQLite":    { "Provider": "System.Data.SQLite", "ConnectionString": "FullUri=file:northwind_cl?mode=memory&cache=shared"  },
+			"Northwind.SQLite.MS": { "Provider": "SQLite.Microsoft",   "ConnectionString": "Data Source=northwind_ms;Mode=Memory;Cache=Shared"   }
+		}
 	}
 }

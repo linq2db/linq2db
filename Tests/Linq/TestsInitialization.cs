@@ -204,6 +204,10 @@ public class TestsInitialization
 		{
 			TestContext.Progress.WriteLine($"[parallel] not installed; dispatcher is {TestExecutionContext.CurrentContext.Dispatcher?.GetType().Name ?? "null"}");
 		}
+
+		// Open keep-alive connections for any SQLite provider configured with an in-memory connection
+		// string (CI), before a_CreateData seeds them. No-op for the normal file-based setup.
+		SetupSqliteInMemory();
 	}
 
 	private void RegisterSqlCEFactory()
@@ -222,9 +226,72 @@ public class TestsInitialization
 #endif
 	}
 
+	// SQLite CI jobs run against shared-cache in-memory databases (connection strings in
+	// Build/Azure/*/sqlite.json) to avoid the per-commit filesystem sync that dominates the on-disk
+	// SQLite run. A shared-cache in-memory DB lives only while at least one connection to it is open,
+	// but linq2db opens/closes a connection per query, so without an anchor the DB is destroyed the
+	// moment a query completes. We open one keep-alive connection per in-memory SQLite DB before
+	// a_CreateData seeds it and hold it for the whole run. Auto-activates per config only when its
+	// connection string is in-memory; a complete no-op for the normal file-based (dev) setup.
+	static readonly System.Collections.Generic.List<DbConnection> _sqliteInMemoryKeepAlive = new();
+
+	static void SetupSqliteInMemory()
+	{
+		// The SQLite configs the CI job enables. `classic` picks the ADO provider (System.Data.SQLite
+		// vs Microsoft.Data.Sqlite). Northwind ships as a committed binary with no SQL seed script, so
+		// a_CreateData can't seed it; load it into the in-memory DB via the SQLite online-backup API.
+		var configs = new (string name, bool classic, string? northwindFile)[]
+		{
+			("SQLite.Classic",      true,  null),
+			("SQLite.Classic.MPU",  true,  null),
+			("SQLite.Classic.MPM",  true,  null),
+			("SQLite.MS",           false, null),
+			("Northwind.SQLite",    true,  "Northwind.sqlite"),
+			("Northwind.SQLite.MS", false, "Northwind.MS.sqlite"),
+		};
+
+		foreach (var (name, classic, northwindFile) in configs)
+		{
+			string cs;
+			try { cs = LinqToDB.Data.DataConnection.GetConnectionString(name); }
+			catch { continue; }
+
+			if (cs == null || cs.IndexOf("memory", StringComparison.OrdinalIgnoreCase) < 0)
+				continue; // file-based -> nothing to keep alive
+
+			DbConnection keep = classic
+				? new System.Data.SQLite.SQLiteConnection(cs)
+				: new Microsoft.Data.Sqlite.SqliteConnection(cs);
+			keep.Open();
+			_sqliteInMemoryKeepAlive.Add(keep);
+
+			if (northwindFile != null)
+			{
+				var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Database", northwindFile);
+				if (classic)
+				{
+					using var src = new System.Data.SQLite.SQLiteConnection($"Data Source={path};Read Only=True");
+					src.Open();
+					src.BackupDatabase((System.Data.SQLite.SQLiteConnection)keep, "main", "main", -1, null, 0);
+				}
+				else
+				{
+					using var src = new Microsoft.Data.Sqlite.SqliteConnection($"Data Source={path};Mode=ReadOnly");
+					src.Open();
+					src.BackupDatabase((Microsoft.Data.Sqlite.SqliteConnection)keep);
+				}
+			}
+
+			TestContext.Progress.WriteLine($"[sqlite-inmemory] keep-alive open for {name} ({cs})");
+		}
+	}
+
 	[OneTimeTearDown]
 	public void TestAssemblyTeardown()
 	{
+		foreach (var c in _sqliteInMemoryKeepAlive)
+			try { c.Dispose(); } catch { /* best effort */ }
+
 		ParallelDiag.Dump();
 
 		if (_doMetrics)
