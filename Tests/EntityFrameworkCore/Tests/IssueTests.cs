@@ -1041,13 +1041,24 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			using var db = ctx.CreateLinqToDBConnection();
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/5364")]
-		public async ValueTask TestImplicitConnectionManagement([EFDataSources] string provider)
+		public enum ImplicitLeakPath
 		{
-			// Reproduces #5364: the implicit ToLinqToDB() path opens the EF connection but never
-			// closes it (the DataConnection it creates is never disposed). Contexts are kept alive
-			// in a list so GC/finalization can't mask the leak; each leaked connection stays checked
-			// out of the pool, so past Max Pool Size (default 100) the next query throws.
+			ToLinqToDB,
+			GetTable,
+			ToLinqToDBTable
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5364")]
+		public void TestImplicitConnectionManagement([EFDataSources] string provider, [Values] ImplicitLeakPath path)
+		{
+			// Reproduces #5364 for every implicit ToLinqToDB() entry point that creates a linq2db
+			// DataConnection and abandons it (never disposed): the connection stays checked out of the
+			// pool. Contexts are held alive so GC/finalization can't mask the leak; past Max Pool Size
+			// (default 100) the next command throws. After the fix each path sets CloseAfterUse, so the
+			// connection is released per command.
+			// Baseline capture is disabled: the loop emits 300 identical statements with no diagnostic value.
+			using var noBaseline = new DisableBaseline("connection-leak stress: 300 identical commands");
+
 			var contexts = new List<IssueContextBase>();
 
 			try
@@ -1056,7 +1067,13 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				{
 					var ctx = CreateContext(provider);
 					contexts.Add(ctx);
-					_ = await ctx.Masters.ToListAsyncLinqToDB();
+
+					switch (path)
+					{
+						case ImplicitLeakPath.ToLinqToDB     : _ = ctx.Masters.ToLinqToDB().ToList();      break;
+						case ImplicitLeakPath.GetTable       : _ = ctx.GetTable<Master>().ToList();        break;
+						case ImplicitLeakPath.ToLinqToDBTable: _ = ctx.Masters.ToLinqToDBTable().ToList(); break;
+					}
 				}
 			}
 			finally
