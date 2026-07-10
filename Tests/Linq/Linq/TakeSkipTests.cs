@@ -731,7 +731,7 @@ namespace Tests.Linq
 			Assert.Throws<LinqToDBException>(() => db.Parent.Take(10, TakeHints.Percent).ToList());
 		}
 
-		[ActiveIssue("YDB 26.1.1.20: server optimizer assertion (dq_opt_phy_finalizing.cpp:540 'requirement false failed') on a LEFT JOIN of two LIMIT-ed UNION ALL subqueries; regression from the release's Shuffle Elimination. TODO: replace with the filed https://github.com/ydb-platform/ydb/issues/<n> link.", Configuration = TestProvName.AllYdb)]
+		[ActiveIssue("https://github.com/ydb-platform/ydb/issues/46197", Configuration = TestProvName.AllYdb, Details = "YDB 26.1.1.20 server optimizer assertion (dq_opt_phy_finalizing.cpp:540 'requirement false failed') on a LEFT JOIN of two LIMIT-ed UNION ALL subqueries; regression from the release's Shuffle Elimination.")]
 		[Test]
 		public void TakeSkipJoin([DataSources(TestProvName.AllSybase)] string context, [Values] bool withParameters)
 		{
