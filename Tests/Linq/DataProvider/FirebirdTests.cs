@@ -323,9 +323,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		// Firebird 6 rejects binding a Guid parameter to a CHAR(16) OCTETS column with "Malformed string"
-		// (FbClient 10.3.4 / FB6-snapshot limitation, not reproducible below the client — see FB6 Guid write tracking).
-		[ActiveIssue(Configurations = new[] { ProviderName.Firebird6 })]
+		[ActiveIssue(Configurations = new[] { ProviderName.Firebird6 }, Details = "Firebird 6 rejects binding a Guid parameter to a CHAR(16) OCTETS column with 'Malformed string' on a UTF8-default database (FbClient 10.3.4 / FB6 prerelease 6.0.0.2068 limitation below linq2db, not reproducible below the client). Re-check when a newer Firebird 6 is released.")]
 		[Test]
 		public void TestGuid2([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
@@ -381,7 +379,7 @@ namespace Tests.DataProvider
 		}
 
 		// Binary Guid passed as a client parameter.
-		[ActiveIssue(Configurations = new[] { ProviderName.Firebird6 })] // FB6 binary-Guid parameter "Malformed string"
+		[ActiveIssue(Configurations = new[] { ProviderName.Firebird6 }, Details = "Firebird 6 rejects binding a binary Guid parameter to a CHAR(16) OCTETS column with 'Malformed string' (FbClient 10.3.4 / FB6 prerelease 6.0.0.2068 limitation below linq2db). Re-check when a newer Firebird 6 is released.")]
 		[Test]
 		public void GuidBinary_Parameter([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
@@ -392,7 +390,7 @@ namespace Tests.DataProvider
 		}
 
 		// Binary Guid round-trip through a CHAR(16) OCTETS column.
-		[ActiveIssue(Configurations = new[] { ProviderName.Firebird6 })] // FB6 binary-Guid parameter "Malformed string"
+		[ActiveIssue(Configurations = new[] { ProviderName.Firebird6 }, Details = "Firebird 6 rejects binding a binary Guid parameter to a CHAR(16) OCTETS column with 'Malformed string' (FbClient 10.3.4 / FB6 prerelease 6.0.0.2068 limitation below linq2db). Re-check when a newer Firebird 6 is released.")]
 		[Test]
 		public void GuidBinary_Column([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{

@@ -304,9 +304,7 @@ namespace Tests.Linq
 			}
 		}
 
-		// Firebird 6 rejects binding a Guid parameter to a CHAR(16) OCTETS column with "Malformed string"
-		// (FbClient 10.3.4 / FB6-snapshot limitation, not reproducible below the client — see FB6 Guid write tracking).
-		[ActiveIssue(Configurations = new[] { ProviderName.Firebird6 })]
+		[ActiveIssue(Configurations = new[] { ProviderName.Firebird6 }, Details = "Firebird 6 rejects binding a Guid parameter to a CHAR(16) OCTETS column with 'Malformed string' on a UTF8-default database (FbClient 10.3.4 / FB6 prerelease 6.0.0.2068 limitation below linq2db, not reproducible below the client). Re-check when a newer Firebird 6 is released.")]
 		[Test]
 		public void TestGuid([DataSources] string context)
 		{
@@ -463,9 +461,7 @@ namespace Tests.Linq
 		}
 
 		// https://github.com/ClickHouse/ClickHouse/issues/38790
-		// Firebird 6: binding a byte[] parameter to a CHAR(16) OCTETS column fails "Malformed string"
-		// (FbClient 10.3.4 / FB6-snapshot limitation, not reproducible below the client — see FB6 Guid write tracking).
-		[ActiveIssue(Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.Firebird6 })]
+		[ActiveIssue(Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.Firebird6 }, Details = "Firebird 6 rejects binding a byte[] parameter to a CHAR(16) OCTETS column with 'Malformed string' (FbClient 10.3.4 / FB6 prerelease 6.0.0.2068 limitation below linq2db). Re-check when a newer Firebird 6 is released.")]
 		[Test]
 		public void TestGuidBinary([DataSources(TestProvName.AllInformix)] string context)
 		{
@@ -545,9 +541,7 @@ namespace Tests.Linq
 			}
 		}
 
-		// Firebird 6 rejects binding a Guid parameter to a CHAR(16) OCTETS column with "Malformed string"
-		// (FbClient 10.3.4 / FB6-snapshot limitation, not reproducible below the client — see FB6 Guid write tracking).
-		[ActiveIssue(Configurations = new[] { ProviderName.Firebird6 })]
+		[ActiveIssue(Configurations = new[] { ProviderName.Firebird6 }, Details = "Firebird 6 rejects binding a Guid parameter to a CHAR(16) OCTETS column with 'Malformed string' on a UTF8-default database (FbClient 10.3.4 / FB6 prerelease 6.0.0.2068 limitation below linq2db, not reproducible below the client). Re-check when a newer Firebird 6 is released.")]
 		[Test]
 		public async ValueTask TestTestGuidAsync([DataSources] string context)
 		{
