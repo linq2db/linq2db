@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<!-- Analyzer tests are DB-free and provider-independent; single TFM (overrides Tests multi-TFM).
+		     net8.0 (lowest supported) so the linq2db build the harness loads matches the Net80 reference pack
+		     used to compile test snippets (a higher ref pack trips CS1705). -->
+		<TargetFramework>net8.0</TargetFramework>
+		<TargetFrameworks></TargetFrameworks>
+
+		<OutputType>Exe</OutputType>
+		<EnableNUnitRunner>true</EnableNUnitRunner>
+		<RootNamespace>Tests.Analyzers</RootNamespace>
+		<AssemblyName>linq2db.Tests.Analyzers</AssemblyName>
+
+		<IsPackable>false</IsPackable>
+		<GenerateDocumentationFile>false</GenerateDocumentationFile>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="NUnit" />
+		<PackageReference Include="NUnit3TestAdapter" />
+		<PackageReference Include="Microsoft.Testing.Platform.MSBuild" />
+		<PackageReference Include="Microsoft.Testing.Extensions.TrxReport" />
+		<PackageReference Include="Shouldly" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing" />
+		<!-- Pin the testing SDK's transitive Roslyn (whose floor is an ancient netfx-only 1.0.1) up to the
+		     modern 4.8 line so it restores for net10.0 (avoids NU1701). Matches the analyzer's Roslyn baseline. -->
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" />
+
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- Analyzer + code-fix under test, and linq2db itself so Sql.Ext / Sql.Window symbols resolve in test snippets. -->
+		<ProjectReference Include="..\..\Source\LinqToDB.Analyzers\LinqToDB.Analyzers.csproj" />
+		<ProjectReference Include="..\..\Source\LinqToDB.Analyzers.CodeFixes\LinqToDB.Analyzers.CodeFixes.csproj" />
+		<ProjectReference Include="..\..\Source\LinqToDB\LinqToDB.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- Not an NUnit/baseline provider test; drop the Tests-wide banned-symbols list. -->
+		<AdditionalFiles Remove="..\BannedSymbols.txt" />
+	</ItemGroup>
+
+</Project>
