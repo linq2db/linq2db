@@ -470,5 +470,12 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			Assert.That(FSharp.OptionQueryTests.VOptionIsNone(db), Is.EqualTo(1));
 		}
+
+		[Test(Description = "F# single-case DU column round-trips and equality translates to SQL")]
+		public void DuQuery_EqualsLiteral([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			Assert.That(FSharp.DuQueryTests.EqualsLiteral(db), Is.EqualTo(1));
+		}
 	}
 }

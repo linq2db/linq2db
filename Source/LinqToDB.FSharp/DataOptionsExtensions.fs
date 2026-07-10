@@ -10,6 +10,7 @@ type Methods() =
     static let optionMappingSchema =
         let ms = MappingSchema()
         ms.AddMetadataReader(FSharpOptionMetadataReader())
+        ms.AddMetadataReader(FSharpSingleCaseUnionMetadataReader())
         ms
 
     /// <summary>Enables support for F#-specific features.</summary>
