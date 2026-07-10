@@ -77,8 +77,15 @@ try {
     Add-IscsiVirtualDiskTargetMapping -TargetName $targetName -Path $vdiskPath -ErrorAction Stop
     Note 'target_map' 'OK'
 
-    # 5. loopback connect
-    New-IscsiTargetPortal -TargetPortalAddress 127.0.0.1 -ErrorAction Stop | Out-Null
+    # 4b. Firewall prerequisite -- Server 2025 ships the 'iSCSI Service' firewall group disabled,
+    #     so the loopback connect to 127.0.0.1:3260 is refused (the "Connection Failed" the first
+    #     probe hit at Connect-IscsiTarget). Enable it before connecting.
+    try   { Enable-NetFirewallRule -DisplayGroup 'iSCSI Service' -ErrorAction Stop; Note 'fw_iscsi_enabled' 'OK' }
+    catch { Note 'fw_iscsi_enabled' "skip: $($_.Exception.Message)" }
+
+    # 5. loopback connect (explicit portal port + discovery refresh before fetching the target IQN)
+    New-IscsiTargetPortal -TargetPortalAddress 127.0.0.1 -TargetPortalPortNumber 3260 -ErrorAction Stop | Out-Null
+    Update-IscsiTargetPortal -TargetPortalAddress 127.0.0.1 -ErrorAction SilentlyContinue
     $tgt = Get-IscsiTarget -ErrorAction Stop | Where-Object { $_.NodeAddress -like "*$targetName*" } | Select-Object -First 1
     if ($null -eq $tgt) { throw 'target not discovered on loopback portal' }
     $tgtNode = $tgt.NodeAddress
