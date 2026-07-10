@@ -22,6 +22,7 @@ namespace Tests.UserTests
 			public Binary? Binary { get; set; }
 		}
 
+		[ActiveIssue(Configurations = new[] { ProviderName.Firebird6 }, Details = "Firebird 6 fails reading a native VARBINARY(10) column with 'string right truncation, expected length 2, actual 3' — the insert succeeds, the SELECT/fetch throws. FB6 prerelease 6.0.0.2068 / FbClient 10.3.4; re-check when a newer Firebird 6 is released.")]
 		[Test]
 		public void TestBinary([DataSources] string context, [Values] bool inlineParameters)
 		{

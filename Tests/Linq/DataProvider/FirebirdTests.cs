@@ -46,6 +46,7 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[ActiveIssue(Configurations = new[] { ProviderName.Firebird6 }, Details = "Firebird 6 raises a server 'internal error' (SQLSTATE XX000) reading a column from the AllTypes table. FB6 prerelease 6.0.0.2068 / FbClient 10.3.4; re-check when a newer Firebird 6 is released.")]
 		[Test]
 		public void TestDataTypes([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
