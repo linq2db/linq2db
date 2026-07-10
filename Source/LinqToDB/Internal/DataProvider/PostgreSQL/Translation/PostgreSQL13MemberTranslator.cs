@@ -6,7 +6,7 @@ using LinqToDB.Linq.Translation;
 
 namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 {
-	public class PostgreSQL13MemberTranslator : PostgreSQLMemberTranslator
+	public class PostgreSQL13MemberTranslator : PostgreSQL11MemberTranslator
 	{
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
 		{

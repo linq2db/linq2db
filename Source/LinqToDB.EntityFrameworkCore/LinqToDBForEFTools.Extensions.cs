@@ -20,6 +20,8 @@ namespace LinqToDB.EntityFrameworkCore
 #pragma warning disable CA2000 // Dispose objects before losing scope
 			var dc = CreateLinqToDBContext(context);
 #pragma warning restore CA2000 // Dispose objects before losing scope
+			// #5364: this implicit context is never disposed — release the EF connection per command.
+			dc.CloseAfterUse = true;
 			return dc.GetTable<T>();
 		}
 
