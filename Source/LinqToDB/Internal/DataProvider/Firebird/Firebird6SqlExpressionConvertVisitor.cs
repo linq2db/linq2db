@@ -11,6 +11,12 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 		{
 		}
 
+		// True while visiting a data-modification statement (INSERT / UPDATE / MERGE / INSERT-OR-UPDATE).
+		// The UUID_TO_CHAR read-wrap below only matters for values fetched to the client; columns read inside
+		// a modification statement stay server-side and feed a binary Guid write target, so they must not be
+		// wrapped there — see WrapColumnExpression.
+		bool _insideModificationStatement;
+
 		protected override ISqlExpression WrapColumnExpression(ISqlExpression expr)
 		{
 			// Read a Guid as its canonical text form via UUID_TO_CHAR. A Guid is stored / produced as
@@ -19,7 +25,15 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			// SQLSTATE 22000) because the client transliterates the column to the connection charset during
 			// fetch. The ASCII text form is charset-independent. Only Firebird 6 needs this — earlier versions
 			// fetch the binary form without transliteration, so the wrap stays scoped to this visitor.
-			if (expr.SystemType?.ToUnderlying() == typeof(Guid)
+			//
+			// Skip the wrap inside a modification statement: there the column is not fetched to the client but
+			// feeds a write target (MERGE source -> target, INSERT ... SELECT, a scalar subquery in INSERT
+			// VALUES, UPDATE SET from a column). UUID_TO_CHAR turns the CHAR(16) OCTETS value into CHAR(36),
+			// which the server then rejects writing back into a BINARY(16) column ("string right truncation,
+			// expected length 16, actual 36"). The server-side value never crosses the wire, so it needs no
+			// charset-independent form.
+			if (!_insideModificationStatement
+				&& expr.SystemType?.ToUnderlying() == typeof(Guid)
 				&& QueryHelper.GetDbDataType(expr, MappingSchema).DataType is not (DataType.Char or DataType.NChar or DataType.VarChar or DataType.NVarChar))
 			{
 				var textType = MappingSchema.GetDbDataType(typeof(string)).WithDataType(DataType.Char).WithLength(36);
@@ -27,6 +41,62 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			}
 
 			return base.WrapColumnExpression(expr);
+		}
+
+		protected internal override IQueryElement VisitSqlInsertStatement(SqlInsertStatement element)
+		{
+			var save = _insideModificationStatement;
+			_insideModificationStatement = true;
+			try
+			{
+				return base.VisitSqlInsertStatement(element);
+			}
+			finally
+			{
+				_insideModificationStatement = save;
+			}
+		}
+
+		protected internal override IQueryElement VisitSqlUpdateStatement(SqlUpdateStatement element)
+		{
+			var save = _insideModificationStatement;
+			_insideModificationStatement = true;
+			try
+			{
+				return base.VisitSqlUpdateStatement(element);
+			}
+			finally
+			{
+				_insideModificationStatement = save;
+			}
+		}
+
+		protected internal override IQueryElement VisitSqlInsertOrUpdateStatement(SqlInsertOrUpdateStatement element)
+		{
+			var save = _insideModificationStatement;
+			_insideModificationStatement = true;
+			try
+			{
+				return base.VisitSqlInsertOrUpdateStatement(element);
+			}
+			finally
+			{
+				_insideModificationStatement = save;
+			}
+		}
+
+		protected internal override IQueryElement VisitSqlMergeStatement(SqlMergeStatement element)
+		{
+			var save = _insideModificationStatement;
+			_insideModificationStatement = true;
+			try
+			{
+				return base.VisitSqlMergeStatement(element);
+			}
+			finally
+			{
+				_insideModificationStatement = save;
+			}
 		}
 
 		protected internal override IQueryElement VisitSqlParameter(SqlParameter sqlParameter)
