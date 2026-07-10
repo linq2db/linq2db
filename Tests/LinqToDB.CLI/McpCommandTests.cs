@@ -45,11 +45,12 @@ namespace Tests.LinqToDB.CLI
 				((string?)queryTool["description"]).ShouldContain("Call linq2db_info first");
 				((string?)queryTool["description"]).ShouldContain("Call linq2db_skill");
 				((bool?)queryTool["annotations"]?["openWorldHint"]).ShouldBe(true);
-				(queryTool["annotations"]?["readOnlyHint"]).ShouldBeNull();
-				(queryTool["annotations"]?["idempotentHint"]).ShouldBeNull();
-				(queryTool["annotations"]?["destructiveHint"]).ShouldBeNull();
+				((bool?)queryTool["annotations"]?["readOnlyHint"]).ShouldBe(true);
+				((bool?)queryTool["annotations"]?["idempotentHint"]).ShouldBe(false);
+				((bool?)queryTool["annotations"]?["destructiveHint"]).ShouldBe(false);
 				(queryTool["inputSchema"]?["required"]?.AsArray().ToJsonString()).ShouldContain("sql");
-				(queryInputSchema).ShouldContain("allowUnsafeSql");
+				(queryInputSchema).ShouldNotContain("allowUnsafeSql");
+				(queryInputSchema).ShouldNotContain("allowExecute");
 				(queryProperties.ContainsKey("provider")).ShouldBe(false);
 				(queryProperties.ContainsKey("connectionString")).ShouldBe(false);
 				(queryProperties.ContainsKey("password")).ShouldBe(false);
@@ -90,6 +91,33 @@ namespace Tests.LinqToDB.CLI
 				((bool?)skillTool["annotations"]?["destructiveHint"]).ShouldBe(false);
 				(skillTool["inputSchema"]?["properties"]?.AsObject().Count).ShouldBe(0);
 				(skillTool["inputSchema"]?["required"]).ShouldBeNull();
+				ContainsTool(response, "linq2db_execute").ShouldBe(false);
+			}
+		}
+
+		[Test]
+		public async Task McpListsExecuteToolWhenEnabled()
+		{
+			await using var server = await McpServerProcess.Start("--enable-execute-tool");
+
+			await server.Initialize();
+			var response = await server.SendRequest("tools/list", new JsonObject());
+
+			{
+				(response["error"]).ShouldBeNull();
+				(response["result"]?["tools"]?.AsArray().Count).ShouldBe(5);
+
+				var executeTool = FindTool(response, "linq2db_execute");
+
+				((string?)executeTool["description"]).ShouldContain("explicit user approval");
+				((bool?)executeTool["annotations"]?["readOnlyHint"]).ShouldBe(false);
+				((bool?)executeTool["annotations"]?["idempotentHint"]).ShouldBe(false);
+				((bool?)executeTool["annotations"]?["openWorldHint"]).ShouldBe(true);
+				((bool?)executeTool["annotations"]?["destructiveHint"]).ShouldBe(true);
+
+				var executeInputSchema = executeTool["inputSchema"]!.ToJsonString();
+				executeInputSchema.ShouldNotContain("allowUnsafeSql");
+				executeInputSchema.ShouldNotContain("allowExecute");
 			}
 		}
 
@@ -146,6 +174,7 @@ namespace Tests.LinqToDB.CLI
 				(response["result"]?["isError"]).ShouldBeNull();
 				((string?)info["server"]?["name"]).ShouldBe("linq2db.cli");
 				((string?)info["server"]?["command"]).ShouldBe("mcp");
+				((bool?)info["server"]?["executeToolEnabled"]).ShouldBe(false);
 				((string?)info["defaultProfile"]).ShouldBe("startup");
 				((bool?)info["defaultProfileUsable"]).ShouldBe(true);
 				((string?)info["profiles"]?[0]?["name"]).ShouldBe("startup");
@@ -154,7 +183,7 @@ namespace Tests.LinqToDB.CLI
 				((string?)info["profiles"]?[0]?["defaultOutput"]).ShouldBe("json-table");
 				((bool?)info["profiles"]?[0]?["defaultOutputSupportedByMcp"]).ShouldBe(true);
 				((int?)info["profiles"]?[0]?["maxRows"]).ShouldBe(1000);
-				((string?)info["profiles"]?[0]?["unsafeSqlPolicy"]).ShouldBe("deny");
+				((bool?)info["profiles"]?[0]?["enableExecute"]).ShouldBe(false);
 				((bool?)info["profiles"]?[0]?["impersonationEnabled"]).ShouldBe(false);
 				(info["supportedOutputFormats"]?.AsArray().ToJsonString()).ShouldContain("json-table");
 				(info["supportedOutputFormats"]?.AsArray().ToJsonString()).ShouldNotContain("csv");
@@ -193,14 +222,14 @@ namespace Tests.LinqToDB.CLI
 						"description": "Use SQLite syntax for local development queries.",
 						"connectionString": "Data Source=dev-secret.db",
 						"maxRows": 1000,
-						"unsafeSql": "deny"
+						"enableExecute": false
 					},
 					"sqlserver": {
 						"description": "Use T-SQL syntax. Prefer dbo schema qualification.",
 						"provider": "SqlServer",
 						"connectionStringEnv": "LINQ2DB_SQLSERVER_CONNECTION",
 						"maxRows": 500,
-						"unsafeSql": "confirm",
+						"enableExecute": true,
 						"impersonate": true
 					},
 					"mysqlconnector": {
@@ -233,7 +262,7 @@ namespace Tests.LinqToDB.CLI
 				((string?)sqlServer["dialect"]).ShouldBe("SQL Server T-SQL");
 				((bool?)sqlServer["defaultOutputSupportedByMcp"]).ShouldBe(true);
 				((int?)sqlServer["maxRows"]).ShouldBe(500);
-				((string?)sqlServer["unsafeSqlPolicy"]).ShouldBe("confirm");
+				((bool?)sqlServer["enableExecute"]).ShouldBe(true);
 				((bool?)sqlServer["impersonationEnabled"]).ShouldBe(true);
 
 				((string?)mySqlConnector["provider"]).ShouldBe("MySqlConnector");
@@ -414,7 +443,7 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
-		public async Task McpReturnsToolErrorForUnsafeSql()
+		public async Task McpQueryReturnsToolErrorForWriteSql()
 		{
 			await using var server = await McpServerProcess.Start("--provider", "SQLite", "--connection-string", "Data Source=:memory:");
 
@@ -432,35 +461,80 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
-		public async Task McpLogsUnsafeSqlExecutionToStandardError()
+		public async Task McpExecuteToolIsUnavailableByDefault()
+		{
+			await using var server = await McpServerProcess.Start("--provider", "SQLite", "--connection-string", "Data Source=:memory:");
+
+			await server.Initialize();
+			var response = await server.CallTool("linq2db_execute", new JsonObject
+			{
+				["sql"] = "drop table Person",
+			});
+
+			{
+				(response["result"]).ShouldBeNull();
+				(response["error"]).ShouldNotBeNull();
+			}
+		}
+
+		[Test]
+		public async Task McpExecuteRequiresProfileEnableExecute()
 		{
 			var config = Path.Combine(TestContext.CurrentContext.WorkDirectory, $"mcp-query-{Guid.NewGuid():N}.json");
 			await File.WriteAllTextAsync(config, """
 				{
 					"default": {
 						"provider": "SQLite",
-						"connectionString": "Data Source=:memory:",
-						"unsafeSql": "confirm"
+						"connectionString": "Data Source=:memory:"
 					}
 				}
 				""").ConfigureAwait(false);
 
-			await using var server = await McpServerProcess.Start("--config", config);
+			await using var server = await McpServerProcess.Start("--config", config, "--enable-execute-tool");
 
 			await server.Initialize();
-			var response = await server.CallTool("linq2db_query", new JsonObject
+			var response = await server.CallTool("linq2db_execute", new JsonObject
 			{
-				["sql"]            = "drop table Person",
-				["allowUnsafeSql"] = true,
+				["sql"] = "drop table Person",
 			});
 
 			{
 				(response["error"]).ShouldBeNull();
 				((bool?)response["result"]?["isError"]).ShouldBe(true);
-				((string?)response["result"]?["content"]?[0]?["text"]).ShouldContain("Query execution failed");
+				((string?)response["result"]?["content"]?[0]?["text"]).ShouldContain("Profile 'default' doesn't enable execute mode.");
+			}
+		}
+
+		[Test]
+		public async Task McpExecuteRunsWriteSqlWhenEnabled()
+		{
+			var database = CreateSqliteDatabase();
+			var config   = Path.Combine(TestContext.CurrentContext.WorkDirectory, $"mcp-query-{Guid.NewGuid():N}.json");
+			await File.WriteAllTextAsync(config, $$"""
+				{
+					"default": {
+						"provider": "SQLite",
+						"connectionString": "Data Source={{database.Replace("\\", "\\\\", StringComparison.Ordinal)}};Pooling=False",
+						"enableExecute": true
+					}
+				}
+				""").ConfigureAwait(false);
+
+			await using var server = await McpServerProcess.Start("--config", config, "--enable-execute-tool");
+
+			await server.Initialize();
+			var response = await server.CallTool("linq2db_execute", new JsonObject
+			{
+				["sql"] = "update Customers set Name = 'updated' where Id = 1",
+			});
+
+			{
+				(response["error"]).ShouldBeNull();
+				(response["result"]?["isError"]).ShouldBeNull();
+				((string?)response["result"]?["content"]?[0]?["text"]).ShouldContain("\"recordsAffected\":1");
 			}
 
-			server.ExpectStandardError("Executing unsafe SQL because profile 'default' uses unsafeSql=confirm and explicit confirmation was provided. Provider: SQLite.");
+			server.ExpectStandardError("Executing write-capable SQL because profile 'default' has enableExecute=true. Provider: SQLite.");
 		}
 
 		[Test]
@@ -768,6 +842,17 @@ namespace Tests.LinqToDB.CLI
 			throw new InvalidOperationException($"Tool '{name}' not found.");
 		}
 
+		static bool ContainsTool(JsonObject response, string name)
+		{
+			foreach (var tool in response["result"]!["tools"]!.AsArray())
+			{
+				if ((string?)tool?["name"] == name)
+					return true;
+			}
+
+			return false;
+		}
+
 		static JsonObject ReadToolJson(JsonObject response)
 		{
 			var contentText = (string?)response["result"]?["content"]?[0]?["text"];
@@ -804,6 +889,8 @@ namespace Tests.LinqToDB.CLI
 					Name text    not null
 				)
 				""");
+
+			db.Execute("insert into Customers (Id, Name) values (1, 'original')");
 
 			db.Execute("""
 				create table Orders

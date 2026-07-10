@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -8,48 +9,29 @@ using LinqToDB.CommandLine.Commands;
 using LinqToDB.CommandLine.Commands.QueryExecution;
 using LinqToDB.CommandLine.Options;
 
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-
-using ModelContextProtocol.Server;
-
-namespace LinqToDB.CommandLine.Commands.Mcp
+namespace LinqToDB.CommandLine.Commands.Execute
 {
 	/// <summary>
-	/// MCP STDIO server command descriptor and startup option processing.
+	/// Execute command descriptor and CLI option processing.
 	/// </summary>
-	sealed class McpCommand : CliCommand
+	sealed class ExecuteCommand : CliCommand
 	{
-		static readonly OptionCategory _toolOptions = new(4, "Tools", "Tool registration options", "tools");
+		static readonly OptionCategory _inputOptions = new(5, "Input", "SQL input options", "input");
 
-		static readonly CliOption _enableExecuteTool = new BooleanCliOption(
-			"enable-execute-tool",
-			null,
-			false,
-			"register the write-capable linq2db_execute MCP tool; execution still requires profile enableExecute=true",
-			null,
-			null,
-			null,
-			false,
-			false);
+		public static CliCommand Instance { get; } = new ExecuteCommand();
 
-		public static CliCommand Instance { get; } = new McpCommand();
-
-		McpCommand()
+		ExecuteCommand()
 			: base(
-				"mcp",
+				"execute",
 				true,
 				false,
 				"<options>",
-				"run STDIO MCP server exposing read-oriented SQL query execution as a model-controlled tool",
+				"execute write-capable SQL statement using a trusted profile with enableExecute set",
 				[
-					new("dotnet linq2db mcp --config query.json --profile dev",
-						"starts MCP server using connection settings from specified configuration profile"),
-					new("dotnet linq2db mcp --provider SQLite --connection-string \"Data Source=data.db\"",
-						"starts MCP server with direct SQLite connection settings"),
-					new("dotnet linq2db mcp --config query.json --profile dev --max-rows 100 --output json-table",
-						"starts MCP server with default result limit and output format for tool calls"),
+					new("dotnet linq2db execute --config query.json --profile dev --sql \"update Person set Name = 'x' where Id = 1\"",
+						"executes a write-capable SQL statement only when the selected profile has enableExecute set to true"),
+					new("dotnet linq2db execute --config query.json --profile dev --sql-file migration.sql --output json-table",
+						"executes a single SQL statement from file and writes JSON table output"),
 				])
 		{
 			AddOption(QueryExecutionCliOptions.ConfigurationOptions, QueryExecutionCliOptions.Config);
@@ -66,9 +48,12 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.ImpersonateMode);
 			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.CommandTimeout);
 			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.LockTimeout);
-			AddOption(QueryExecutionCliOptions.OutputOptions,        QueryExecutionCliOptions.McpOutput);
+			AddOption(QueryExecutionCliOptions.OutputOptions,        QueryExecutionCliOptions.Output);
+			AddOption(QueryExecutionCliOptions.OutputOptions,        QueryExecutionCliOptions.OutputFile);
+			AddOption(QueryExecutionCliOptions.OutputOptions,        QueryExecutionCliOptions.Overwrite);
 			AddOption(QueryExecutionCliOptions.OutputOptions,        QueryExecutionCliOptions.MaxRows);
-			AddOption(_toolOptions,                                 _enableExecuteTool);
+
+			AddMutuallyExclusiveOptions(_inputOptions, QueryExecutionCliOptions.Sql, QueryExecutionCliOptions.SqlFile);
 		}
 
 		public override async ValueTask<int> Execute(
@@ -79,7 +64,10 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 			IReadOnlyCollection<string>    unknownArgs,
 			CancellationToken              cancellationToken)
 		{
-			var startupOptions = ProcessOptions(options);
+			var settings = ProcessOptions(environment, options, out var errorStatusCode);
+
+			if (settings == null)
+				return errorStatusCode;
 
 			if (options.Count > 0)
 			{
@@ -89,27 +77,40 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 				throw new InvalidOperationException($"Not all options handled by {Name} command");
 			}
 
-			var builder = Host.CreateApplicationBuilder([]);
-
-			builder.Logging.SetMinimumLevel(LogLevel.Warning);
-			builder.Logging.AddConsole(consoleOptions =>
+			if (settings is { OutputFile: not null, Overwrite: false } && environment.FileExists(settings.OutputFile))
 			{
-				consoleOptions.LogToStandardErrorThreshold = LogLevel.Trace;
-			});
+				await environment.Error.WriteLineAsync($"Output file '{settings.OutputFile}' already exists. Use '--overwrite' to replace it.").ConfigureAwait(false);
+				return StatusCodes.EXPECTED_ERROR;
+			}
 
-			var mcpServerBuilder = builder.Services
-				.AddMcpServer()
-				.WithStdioServerTransport()
-				.WithTools(new McpQueryTool(startupOptions));
+			var outputWriter        = settings.OutputFile != null ? environment.CreateTextWriter(settings.OutputFile) : environment.Out;
+			var disposeOutputWriter = settings.OutputFile != null;
 
-			if (startupOptions.EnableExecuteTool)
-				mcpServerBuilder.WithTools(new McpExecuteTool(startupOptions));
+			try
+			{
+				var result = await new QueryExecutionExecutor(settings).Execute(outputWriter, cancellationToken).ConfigureAwait(false);
 
-			await builder.Build().RunAsync(cancellationToken).ConfigureAwait(false);
-			return StatusCodes.SUCCESS;
+				if (result.Error != null)
+				{
+					await environment.Error.WriteLineAsync(result.Error).ConfigureAwait(false);
+					return result.StatusCode;
+				}
+
+				if (result.Truncated && !string.Equals(settings.Output, "json-table", StringComparison.OrdinalIgnoreCase))
+				{
+					await environment.Error.WriteLineAsync($"Query result truncated to {settings.MaxRows.ToString(CultureInfo.InvariantCulture)} row(s). Use '--max-rows' to change the limit.").ConfigureAwait(false);
+				}
+
+				return result.StatusCode;
+			}
+			finally
+			{
+				if (disposeOutputWriter)
+					await outputWriter.DisposeAsync().ConfigureAwait(false);
+			}
 		}
 
-		static McpQueryStartupOptions ProcessOptions(Dictionary<CliOption, object?> options)
+		static QueryExecutionSettings? ProcessOptions(ICliEnvironment environment, Dictionary<CliOption, object?> options, out int errorStatusCode)
 		{
 			options.Remove(QueryExecutionCliOptions.Config,              out var config);
 			options.Remove(QueryExecutionCliOptions.Profile,             out var profile);
@@ -125,11 +126,14 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 			options.Remove(QueryExecutionCliOptions.ImpersonateMode,     out var impersonateMode);
 			options.Remove(QueryExecutionCliOptions.CommandTimeout,      out var commandTimeout);
 			options.Remove(QueryExecutionCliOptions.LockTimeout,         out var lockTimeout);
-			options.Remove(QueryExecutionCliOptions.McpOutput,           out var output);
+			options.Remove(QueryExecutionCliOptions.Output,              out var output);
+			options.Remove(QueryExecutionCliOptions.OutputFile,          out var outputFile);
+			options.Remove(QueryExecutionCliOptions.Overwrite,           out var overwrite);
 			options.Remove(QueryExecutionCliOptions.MaxRows,             out var maxRows);
-			options.Remove(_enableExecuteTool,                           out var enableExecuteTool);
+			options.Remove(QueryExecutionCliOptions.Sql,                 out var sql);
+			options.Remove(QueryExecutionCliOptions.SqlFile,             out var sqlFile);
 
-			return new McpQueryStartupOptions(
+			var values = new QueryExecutionOptionValues(
 				(string?)config,
 				(string?)profile,
 				(string?)provider,
@@ -146,7 +150,19 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 				(string?)lockTimeout,
 				(string?)maxRows,
 				(string?)output,
-				(bool?)enableExecuteTool ?? false);
+				(string?)outputFile,
+				true,
+				(bool?)overwrite ?? false,
+				QueryExecutionMode.Execute,
+				(string?)sql,
+				(string?)sqlFile,
+				"json-table");
+
+			var resolver = new QueryExecutionSettingsResolver(environment);
+			var settings = resolver.Resolve(values);
+
+			errorStatusCode = resolver.ErrorStatusCode;
+			return settings;
 		}
 	}
 }

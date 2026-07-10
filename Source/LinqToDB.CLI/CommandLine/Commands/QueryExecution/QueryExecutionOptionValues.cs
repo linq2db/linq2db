@@ -28,7 +28,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		string? OutputFile,
 		bool    UseConfiguredOutputFile,
 		bool    Overwrite,
-		bool    AllowUnsafeSql,
+		QueryExecutionMode Mode,
 		string? Sql,
 		string? SqlFile,
 		string  DefaultOutput);

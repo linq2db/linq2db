@@ -25,8 +25,8 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 	/// <param name="Output">Query output format.</param>
 	/// <param name="OutputFile">Optional output file path. When not specified, output is written to stdout.</param>
 	/// <param name="Overwrite">Allow replacing existing output file.</param>
-	/// <param name="UnsafeSqlPolicy">Unsafe SQL execution policy resolved from configuration profiles.</param>
-	/// <param name="AllowUnsafeSql">Command-line confirmation for unsafe SQL execution.</param>
+	/// <param name="Mode">SQL execution contract selected by command or MCP tool adapter.</param>
+	/// <param name="EnableExecute">Allow write-capable SQL execution for the selected profile.</param>
 	/// <param name="DiagnosticWriter">Diagnostic writer for non-result execution notices.</param>
 	/// <param name="Impersonate">Run the database loop under resolved Windows <see cref="User"/>/<see cref="Password"/> credentials after file resources are opened.</param>
 	/// <param name="ImpersonateMode">Windows logon mode used for impersonation.</param>
@@ -44,8 +44,8 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		string             Output,
 		string?            OutputFile,
 		bool               Overwrite,
-		UnsafeSqlPolicy    UnsafeSqlPolicy,
-		bool               AllowUnsafeSql,
+		QueryExecutionMode Mode,
+		bool               EnableExecute,
 		TextWriter         DiagnosticWriter,
 		bool               Impersonate,
 		WindowsImpersonationMode ImpersonateMode,

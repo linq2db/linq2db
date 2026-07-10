@@ -2,6 +2,7 @@ using System;
 
 using LinqToDB.CommandLine.Commands;
 using LinqToDB.CommandLine.Commands.ConfigInit;
+using LinqToDB.CommandLine.Commands.Execute;
 using LinqToDB.CommandLine.Commands.Help;
 using LinqToDB.CommandLine.Commands.Mcp;
 using LinqToDB.CommandLine.Commands.Query;
@@ -22,6 +23,7 @@ namespace LinqToDB.CommandLine
 		{
 			AddCommand(HelpCommand.Instance);
 			AddCommand(ConfigInitCommand.Instance);
+			AddCommand(ExecuteCommand.Instance);
 			AddCommand(McpCommand.Instance);
 			AddCommand(QueryCommand.Instance);
 			AddCommand(SchemaCommand.Instance);

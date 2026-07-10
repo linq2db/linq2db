@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB;
 using LinqToDB.CommandLine;
 using LinqToDB.CommandLine.Commands.QueryExecution;
 using LinqToDB.Data;
@@ -209,7 +210,7 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
-		public async Task QueryRejectsMultipleStatementsEvenWhenUnsafeSqlAllowed()
+		public async Task QueryRejectsMultipleStatementsEvenWhenExecuteEnabled()
 		{
 			var environment = new TestCliEnvironment();
 			var config      = AddConfigFile(environment, """
@@ -217,7 +218,7 @@ namespace Tests.LinqToDB.CLI
 					"default": {
 						"provider": "SQLite",
 						"connectionString": "Data Source=:memory:",
-						"unsafeSql": "allow"
+						"enableExecute": true
 					}
 				}
 				""");
@@ -231,18 +232,65 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
-		public async Task QueryRejectsUnsafeSqlConfirmationWhenUnsafeSqlPolicyDenies()
+		public async Task QueryRejectsAllowUnsafeSqlOption()
 		{
 			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--allow-unsafe-sql", "--sql", "select 1");
 
 			{
 				(result.ExitCode).ShouldBe(-1);
-				(result.Error).ShouldContain("Option '--allow-unsafe-sql' cannot be used because unsafe SQL policy is 'deny'.");
+				(result.Error).ShouldContain("Unrecognized option: --allow-unsafe-sql");
 			}
 		}
 
 		[Test]
-		public async Task QueryConfirmUnsafeSqlPolicyRequiresUnsafeSqlConfirmation()
+		public async Task ExecuteRequiresProfileEnableExecute()
+		{
+			var environment = new TestCliEnvironment();
+			var config      = AddConfigFile(environment, """
+				{
+					"default": {
+						"provider": "SQLite",
+						"connectionString": "Data Source=:memory:"
+					}
+				}
+				""");
+
+			var result = await RunCli(environment, "execute", "--config", config, "--sql", "drop table Person");
+
+			{
+				(result.ExitCode).ShouldBe(-1);
+				(result.Error).ShouldContain("Profile 'default' doesn't enable execute mode.");
+			}
+		}
+
+		[Test]
+		public async Task ExecuteRunsWriteSqlWhenProfileEnablesExecute()
+		{
+			var environment = new TestCliEnvironment();
+			var database    = CreateSqliteDatabase();
+			var config      = AddConfigFile(environment, """
+				{
+					"default": {
+						"provider": "SQLite",
+						"connectionString": "Data Source=%DATABASE%;Pooling=False",
+						"enableExecute": true
+					}
+				}
+				""".Replace("%DATABASE%", database.Replace("\\", "\\\\", StringComparison.Ordinal), StringComparison.Ordinal));
+
+			var result = await RunCli(environment, "execute", "--config", config, "--output", "json-table", "--sql", "update Person set Name = 'updated' where Id = 1");
+
+			{
+				(result.ExitCode).ShouldBe(0);
+				(result.Output).ShouldContain("\"columns\":[]");
+				(result.Output).ShouldContain("\"rows\":[]");
+				(result.Output).ShouldContain("\"recordsAffected\":1");
+				(result.Error).ShouldContain("Executing write-capable SQL because profile 'default' has enableExecute=true. Provider: SQLite.");
+			}
+		}
+
+		[Test]
+		public async Task ExecuteRejectsMultipleStatements()
 		{
 			var environment = new TestCliEnvironment();
 			var config      = AddConfigFile(environment, """
@@ -250,64 +298,16 @@ namespace Tests.LinqToDB.CLI
 					"default": {
 						"provider": "SQLite",
 						"connectionString": "Data Source=:memory:",
-						"unsafeSql": "confirm"
+						"enableExecute": true
 					}
 				}
 				""");
 
-			var result = await RunCli(environment, "query", "--config", config, "--sql", "drop table Person");
+			var result = await RunCli(environment, "execute", "--config", config, "--sql", "select 1; drop table Person");
 
 			{
 				(result.ExitCode).ShouldBe(-3);
-				(result.Error).ShouldContain("Unsafe SQL requires '--allow-unsafe-sql'");
-			}
-		}
-
-		[Test]
-		public async Task QueryConfirmUnsafeSqlPolicyAllowsUnsafeSqlWithConfirmation()
-		{
-			var environment = new TestCliEnvironment();
-			var config      = AddConfigFile(environment, """
-				{
-					"default": {
-						"provider": "SQLite",
-						"connectionString": "Data Source=:memory:",
-						"unsafeSql": "confirm"
-					}
-				}
-				""");
-
-			var result = await RunCli(environment, "query", "--config", config, "--allow-unsafe-sql", "--sql", "drop table Person");
-
-			{
-				(result.ExitCode).ShouldBe(-3);
-				(result.Error).ShouldContain("Executing unsafe SQL because profile 'default' uses unsafeSql=confirm and explicit confirmation was provided. Provider: SQLite.");
-				(result.Error).ShouldContain("Query execution failed");
-				(result.Error).ShouldNotContain("token 'DROP' is not allowed");
-			}
-		}
-
-		[Test]
-		public async Task QueryAllowUnsafeSqlPolicyAllowsUnsafeSqlWithoutConfirmation()
-		{
-			var environment = new TestCliEnvironment();
-			var config      = AddConfigFile(environment, """
-				{
-					"default": {
-						"provider": "SQLite",
-						"connectionString": "Data Source=:memory:",
-						"unsafeSql": "allow"
-					}
-				}
-				""");
-
-			var result = await RunCli(environment, "query", "--config", config, "--sql", "drop table Person");
-
-			{
-				(result.ExitCode).ShouldBe(-3);
-				(result.Error).ShouldContain("Executing unsafe SQL because profile 'default' uses unsafeSql=allow. Provider: SQLite.");
-				(result.Error).ShouldContain("Query execution failed");
-				(result.Error).ShouldNotContain("token 'DROP' is not allowed");
+				(result.Error).ShouldContain("Only single SQL statement is allowed.");
 			}
 		}
 
@@ -1427,7 +1427,7 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
-		public async Task QueryRejectsUnknownConfigUnsafeSql()
+		public async Task QueryRejectsLegacyConfigUnsafeSql()
 		{
 			var environment = new TestCliEnvironment();
 			var config      = AddConfigFile(environment, """
@@ -1435,7 +1435,7 @@ namespace Tests.LinqToDB.CLI
 					"default": {
 						"provider": "SQLite",
 						"connectionString": "Data Source=:memory:",
-						"unsafeSql": "prompt"
+						"unsafeSql": "deny"
 					}
 				}
 				""");
@@ -1444,7 +1444,7 @@ namespace Tests.LinqToDB.CLI
 
 			{
 				(result.ExitCode).ShouldBe(-1);
-				(result.Error).ShouldContain($"Configuration file '{config}' profile 'default' property 'unsafeSql' has unknown value 'prompt'.");
+				(result.Error).ShouldContain($"Configuration file '{config}' profile 'default' contains unknown property 'unsafeSql'.");
 			}
 		}
 
@@ -1575,8 +1575,7 @@ namespace Tests.LinqToDB.CLI
 				(result.Output).ShouldContain("--command-timeout");
 				(result.Output).ShouldContain("--lock-timeout");
 				(result.Output).ShouldContain("--max-rows");
-				(result.Output).ShouldContain("--allow-unsafe-sql");
-				(result.Output).ShouldContain("ask the user before using this option");
+				(result.Output).ShouldNotContain("--allow-unsafe-sql");
 				(result.Output).ShouldContain("agents can analyze code together with live database data");
 				(result.Output).ShouldContain("--output");
 				(result.Output).ShouldContain("--output-file");
@@ -1608,10 +1607,30 @@ namespace Tests.LinqToDB.CLI
 			{
 				(result.ExitCode).ShouldBe(0);
 				(result.Output).ShouldContain("dotnet linq2db query <options> : execute read-oriented SQL query so agents can analyze code together with live database data");
+				(result.Output).ShouldContain("dotnet linq2db execute <options> : execute write-capable SQL statement using a trusted profile with enableExecute set");
 				(result.Output).ShouldContain("dotnet linq2db scaffold <options> : generate database data model classes from database schema");
 				(result.Output).ShouldContain("dotnet linq2db query --provider SQLite --connection-string \"Data Source=data.db\" --sql \"select * from Person\"");
 				(result.Output).ShouldContain("execute read-oriented SQL query against SQLite database and write JSON result to console");
 			}
+		}
+
+		private static string CreateSqliteDatabase()
+		{
+			var fileName     = Path.Combine(TestContext.CurrentContext.WorkDirectory, $"query-{Guid.NewGuid():N}.db");
+			var dataProvider = DataConnection.GetDataProvider("SQLite", $"Data Source={fileName};Pooling=False");
+			using var db     = new DataConnection(new DataOptions().UseConnectionString(dataProvider, $"Data Source={fileName};Pooling=False"));
+
+			db.Execute("""
+				create table Person
+				(
+					Id   integer not null primary key,
+					Name text    not null
+				)
+				""");
+
+			db.Execute("insert into Person (Id, Name) values (1, 'original')");
+
+			return fileName;
 		}
 
 		private static string AddConfigFile(TestCliEnvironment environment, string content)

@@ -53,7 +53,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				: values.UseConfiguredOutputFile
 					? connectionResolver.ResolvePath(QueryExecutionCliOptions.OutputFile, configuration?.OutputFile, connectionSettings.ConfigDirectory)
 					: null;
-			var unsafeSqlPolicy      = configuration?.UnsafeSqlPolicy ?? UnsafeSqlPolicy.Deny;
+			var enableExecute        = configuration?.EnableExecute ?? false;
 			var querySql             = values.Sql;
 			var querySqlFile         = connectionResolver.ResolvePath(QueryExecutionCliOptions.SqlFile, values.SqlFile);
 
@@ -70,9 +70,9 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			    string.Equals(querySqlFile,         MissingEnvironmentVariable, StringComparison.Ordinal))
 				return null;
 
-			if (values.AllowUnsafeSql && unsafeSqlPolicy == UnsafeSqlPolicy.Deny)
+			if (values.Mode == QueryExecutionMode.Execute && !enableExecute)
 			{
-				_environment.Error.WriteLine($"Option '--{QueryExecutionCliOptions.AllowUnsafeSql.Name}' cannot be used because unsafe SQL policy is 'deny'.");
+				_environment.Error.WriteLine($"Profile '{connectionSettings.Profile}' doesn't enable execute mode. Set enableExecute to true in the trusted configuration profile before using write-capable SQL execution.");
 				return null;
 			}
 
@@ -107,8 +107,8 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				outputFormat,
 				outputFileName,
 				values.Overwrite,
-				unsafeSqlPolicy,
-				values.AllowUnsafeSql,
+				values.Mode,
+				enableExecute,
 				_environment.Error,
 				connectionSettings.Impersonate,
 				connectionSettings.ImpersonateMode,

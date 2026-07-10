@@ -115,8 +115,9 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 						{
 							server = new
 							{
-								name    = "linq2db.cli",
-								command = "mcp",
+								name               = "linq2db.cli",
+								command            = "mcp",
+								executeToolEnabled = _startupOptions.EnableExecuteTool,
 							},
 							defaultProfile,
 							defaultProfileUsable,
@@ -126,17 +127,20 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 							queryCommandOutputFormats = _queryCommandOutputFormats,
 							rules = new
 							{
-								singleStatementOnly                         = true,
-								multipleStatementsRejected                  = true,
-								readOrientedByDefault                       = true,
-								sqlGuardIsSecurityBoundary                  = false,
-								sqlGuardWarning                             = "SQL validation is a best-effort guardrail, not a security boundary. Use restricted database accounts as the primary protection.",
-								connectionStringPlaceholdersEscaped          = false,
-								connectionStringPlaceholderWarning           = "Connection string {0}/{1} placeholders are formatted with raw user/password values. Use trusted startup/config sources and provider-supported connection string quoting for special characters.",
-								providerInputAllowedInToolCall              = false,
-								connectionStringInputAllowedInToolCall      = false,
-								credentialsInputAllowedInToolCall           = false,
-								providerLocationInputAllowedInToolCall      = false,
+								singleStatementOnly                            = true,
+								multipleStatementsRejected                     = true,
+								readOrientedByDefault                          = true,
+								queryToolReadOnly                              = true,
+								executeToolDisabledByDefault                   = true,
+								executeRequiresProfileEnableExecute            = true,
+								sqlGuardIsSecurityBoundary                     = false,
+								sqlGuardWarning                                = "SQL validation is a best-effort guardrail, not a security boundary. Use restricted database accounts as the primary protection.",
+								connectionStringPlaceholdersEscaped            = false,
+								connectionStringPlaceholderWarning             = "Connection string {0}/{1} placeholders are formatted with raw user/password values. Use trusted startup/config sources and provider-supported connection string quoting for special characters.",
+								providerInputAllowedInToolCall                 = false,
+								connectionStringInputAllowedInToolCall         = false,
+								credentialsInputAllowedInToolCall              = false,
+								providerLocationInputAllowedInToolCall         = false,
 								impersonationCredentialsInputAllowedInToolCall = false,
 							},
 						}, _jsonSerializerOptions),
@@ -149,10 +153,11 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 		{
 			error = null;
 
-			var provider    = _startupOptions.Provider ?? configuration?.Provider;
-			var output      = _startupOptions.Output ?? configuration?.Output ?? DefaultOutput;
-			var maxRows     = _startupOptions.MaxRows != null ? ParseRowCount(_startupOptions.MaxRows, out error) : configuration?.MaxRows ?? DefaultMaxRows;
-			var impersonate = _startupOptions.Impersonate ?? configuration?.Impersonate ?? false;
+			var provider      = _startupOptions.Provider ?? configuration?.Provider;
+			var output        = _startupOptions.Output ?? configuration?.Output ?? DefaultOutput;
+			var maxRows       = _startupOptions.MaxRows != null ? ParseRowCount(_startupOptions.MaxRows, out error) : configuration?.MaxRows ?? DefaultMaxRows;
+			var enableExecute = configuration?.EnableExecute ?? false;
+			var impersonate   = _startupOptions.Impersonate ?? configuration?.Impersonate ?? false;
 
 			if (error != null)
 				return null!;
@@ -174,7 +179,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 				output,
 				IsMcpOutputFormat(output),
 				maxRows,
-				(configuration?.UnsafeSqlPolicy ?? UnsafeSqlPolicy.Deny).ToString().ToLowerInvariant(),
+				enableExecute,
 				impersonate);
 		}
 
@@ -235,7 +240,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 			string  DefaultOutput,
 			bool    DefaultOutputSupportedByMcp,
 			int     MaxRows,
-			string  UnsafeSqlPolicy,
+			bool    EnableExecute,
 			bool    ImpersonationEnabled);
 
 		sealed record McpSupportedProviderInfo(

@@ -139,47 +139,29 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				null);
 		}
 
-		Task<QueryExecutionResult> ExecuteValidatedDatabaseLoop(DataOptions dataOptions, IDataProvider dataProvider, string sql, TextWriter outputWriter, CancellationToken cancellationToken)
+		async Task<QueryExecutionResult> ExecuteValidatedDatabaseLoop(DataOptions dataOptions, IDataProvider dataProvider, string sql, TextWriter outputWriter, CancellationToken cancellationToken)
 		{
 			var singleStatementResult = ReadOnlySqlGuard.ValidateSingleStatement(dataProvider, sql);
 
 			if (!singleStatementResult.IsAllowed)
-				return Task.FromResult(new QueryExecutionResult(StatusCodes.EXPECTED_ERROR, singleStatementResult.Error, false));
+				return new QueryExecutionResult(StatusCodes.EXPECTED_ERROR, singleStatementResult.Error, false);
 
-			if (_settings.UnsafeSqlPolicy != UnsafeSqlPolicy.Allow)
+			if (_settings.Mode == QueryExecutionMode.Query)
 			{
 				var guardResult = ReadOnlySqlGuard.Validate(dataProvider, sql);
 
-				if (!guardResult.IsAllowed && !(_settings.UnsafeSqlPolicy == UnsafeSqlPolicy.Confirm && _settings.AllowUnsafeSql))
-				{
-					if (_settings.UnsafeSqlPolicy == UnsafeSqlPolicy.Confirm)
-						return Task.FromResult(new QueryExecutionResult(StatusCodes.EXPECTED_ERROR, $"Unsafe SQL requires '--allow-unsafe-sql': {guardResult.Error}", false));
-
-					return Task.FromResult(new QueryExecutionResult(StatusCodes.EXPECTED_ERROR, guardResult.Error, false));
-				}
-
 				if (!guardResult.IsAllowed)
-					WriteUnsafeSqlDiagnostic("confirm");
+					return new QueryExecutionResult(StatusCodes.EXPECTED_ERROR, guardResult.Error, false);
 			}
 			else
 			{
-				var guardResult = ReadOnlySqlGuard.Validate(dataProvider, sql);
-
-				if (!guardResult.IsAllowed)
-					WriteUnsafeSqlDiagnostic("allow");
+				await _settings.DiagnosticWriter.WriteLineAsync(
+					string.Create(
+						CultureInfo.InvariantCulture,
+						$"Executing write-capable SQL because profile '{_settings.Profile}' has enableExecute=true. Provider: {_settings.Provider}.")).ConfigureAwait(false);
 			}
 
-			return ExecuteDatabaseLoop(dataOptions, dataProvider, sql, outputWriter, cancellationToken);
-
-			void WriteUnsafeSqlDiagnostic(string mode)
-			{
-				_settings.DiagnosticWriter.WriteLine(
-					"Executing unsafe SQL because profile '{0}' uses unsafeSql={1}{2}. Provider: {3}.",
-					_settings.Profile,
-					mode,
-					string.Equals(mode, "confirm", StringComparison.Ordinal) ? " and explicit confirmation was provided" : "",
-					_settings.Provider);
-			}
+			return await ExecuteDatabaseLoop(dataOptions, dataProvider, sql, outputWriter, cancellationToken).ConfigureAwait(false);
 		}
 
 		async Task<QueryExecutionResult> ExecuteDatabaseLoop(DataOptions dataOptions, IDataProvider dataProvider, string sql, TextWriter outputWriter, CancellationToken cancellationToken)
@@ -275,12 +257,14 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 					rowCount++;
 				}
 
+				var recordsAffected = GetRecordsAffected(reader);
+
 				// Close the selected output format.
 				//
 				switch (_settings.Output)
 				{
 					case "json-table":
-						await WriteJsonTableEnd(outputWriter, rowCount, truncated, cancellationToken).ConfigureAwait(false);
+						await WriteJsonTableEnd(outputWriter, rowCount, truncated, recordsAffected, cancellationToken).ConfigureAwait(false);
 						break;
 					case "csv":
 						break;
@@ -387,6 +371,20 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			return null;
 		}
 
+		static int? GetRecordsAffected(DbDataReader reader)
+		{
+			try
+			{
+				var recordsAffected = reader.RecordsAffected;
+
+				return recordsAffected == -1 ? null : recordsAffected;
+			}
+			catch (NotSupportedException)
+			{
+				return null;
+			}
+		}
+
 		static async Task WriteJsonRow(TextWriter output, QueryOutputColumn[] columns, string?[] row, int rowIndex, CancellationToken cancellationToken)
 		{
 			if (rowIndex > 0)
@@ -450,12 +448,18 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			await output.WriteAsync("]".AsMemory(), cancellationToken).ConfigureAwait(false);
 		}
 
-		static async Task WriteJsonTableEnd(TextWriter output, int rowCount, bool truncated, CancellationToken cancellationToken)
+		static async Task WriteJsonTableEnd(TextWriter output, int rowCount, bool truncated, int? recordsAffected, CancellationToken cancellationToken)
 		{
 			await output.WriteAsync("],\"rowCount\":".AsMemory(), cancellationToken).ConfigureAwait(false);
 			await output.WriteAsync(rowCount.ToString(CultureInfo.InvariantCulture).AsMemory(), cancellationToken).ConfigureAwait(false);
 			await output.WriteAsync(",\"truncated\":".AsMemory(), cancellationToken).ConfigureAwait(false);
 			await output.WriteAsync((truncated ? "true" : "false").AsMemory(), cancellationToken).ConfigureAwait(false);
+			if (recordsAffected != null)
+			{
+				await output.WriteAsync(",\"recordsAffected\":".AsMemory(), cancellationToken).ConfigureAwait(false);
+				await output.WriteAsync(recordsAffected.Value.ToString(CultureInfo.InvariantCulture).AsMemory(), cancellationToken).ConfigureAwait(false);
+			}
+
 			await output.WriteAsync("}".AsMemory(), cancellationToken).ConfigureAwait(false);
 		}
 

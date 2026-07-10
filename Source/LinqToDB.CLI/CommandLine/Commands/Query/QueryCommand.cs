@@ -58,7 +58,6 @@ namespace LinqToDB.CommandLine.Commands.Query
 			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.ImpersonateMode);
 			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.CommandTimeout);
 			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.LockTimeout);
-			AddOption(QueryExecutionCliOptions.GuardOptions,         QueryExecutionCliOptions.AllowUnsafeSql);
 			AddOption(QueryExecutionCliOptions.OutputOptions,        QueryExecutionCliOptions.Output);
 			AddOption(QueryExecutionCliOptions.OutputOptions,        QueryExecutionCliOptions.OutputFile);
 			AddOption(QueryExecutionCliOptions.OutputOptions,        QueryExecutionCliOptions.Overwrite);
@@ -141,7 +140,6 @@ namespace LinqToDB.CommandLine.Commands.Query
 			options.Remove(QueryExecutionCliOptions.ImpersonateMode,     out var impersonateMode);
 			options.Remove(QueryExecutionCliOptions.CommandTimeout,      out var commandTimeout);
 			options.Remove(QueryExecutionCliOptions.LockTimeout,         out var lockTimeout);
-			options.Remove(QueryExecutionCliOptions.AllowUnsafeSql,      out var allowUnsafeSql);
 			options.Remove(QueryExecutionCliOptions.Output,              out var output);
 			options.Remove(QueryExecutionCliOptions.OutputFile,          out var outputFile);
 			options.Remove(QueryExecutionCliOptions.Overwrite,           out var overwrite);
@@ -169,7 +167,7 @@ namespace LinqToDB.CommandLine.Commands.Query
 				(string?)outputFile,
 				true,
 				(bool?)overwrite ?? false,
-				(bool?)allowUnsafeSql ?? false,
+				QueryExecutionMode.Query,
 				(string?)sql,
 				(string?)sqlFile,
 				"json");

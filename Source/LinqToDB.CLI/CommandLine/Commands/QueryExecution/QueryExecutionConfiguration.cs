@@ -90,9 +90,9 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		public int?    MaxRows          { get; private set; }
 
 		/// <summary>
-		/// Unsafe SQL execution policy. This value is intentionally available only from configuration profiles.
+		/// Allow write-capable SQL execution for this profile. This value is intentionally available only from configuration profiles.
 		/// </summary>
-		public UnsafeSqlPolicy? UnsafeSqlPolicy { get; private set; }
+		public bool?   EnableExecute   { get; private set; }
 
 		/// <summary>
 		/// Query output format.
@@ -356,18 +356,12 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 
 						MaxRows = maxRows;
 						break;
-					case "unsafeSql":
-					case "unsafe-sql":
-						if (!TryGetString(fileName, profileName, property, out value, out error))
+					case "enableExecute":
+					case "enable-execute":
+						if (!TryParseBoolean(fileName, profileName, property, out var enableExecute, out error))
 							return false;
 
-						if (!TryParseUnsafeSqlPolicy(value, out var unsafeSqlPolicy))
-						{
-							error = $"Configuration file '{fileName}' profile '{profileName}' property '{property.Name}' has unknown value '{value}'.";
-							return false;
-						}
-
-						UnsafeSqlPolicy = unsafeSqlPolicy;
+						EnableExecute = enableExecute;
 						break;
 					case "output":
 						if (!TryGetString(fileName, profileName, property, out value, out error))
@@ -498,30 +492,6 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 
 			rowCount = null;
 			error    = $"Configuration file '{fileName}' profile '{profileName}' property '{property.Name}' must be a non-negative integer row count.";
-			return false;
-		}
-
-		static bool TryParseUnsafeSqlPolicy(string? value, out UnsafeSqlPolicy unsafeSqlPolicy)
-		{
-			if (string.Equals(value, "deny", StringComparison.OrdinalIgnoreCase))
-			{
-				unsafeSqlPolicy = Commands.QueryExecution.UnsafeSqlPolicy.Deny;
-				return true;
-			}
-
-			if (string.Equals(value, "confirm", StringComparison.OrdinalIgnoreCase))
-			{
-				unsafeSqlPolicy = Commands.QueryExecution.UnsafeSqlPolicy.Confirm;
-				return true;
-			}
-
-			if (string.Equals(value, "allow", StringComparison.OrdinalIgnoreCase))
-			{
-				unsafeSqlPolicy = Commands.QueryExecution.UnsafeSqlPolicy.Allow;
-				return true;
-			}
-
-			unsafeSqlPolicy = default;
 			return false;
 		}
 	}

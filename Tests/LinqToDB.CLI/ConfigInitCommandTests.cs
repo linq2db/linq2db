@@ -39,7 +39,7 @@ namespace Tests.LinqToDB.CLI
 				profile.GetProperty("connectionString").GetString().ShouldBe("Data Source=data.db");
 				profile.GetProperty("maxRows").GetInt32().ShouldBe(1000);
 				profile.GetProperty("output").GetString().ShouldBe("json-table");
-				profile.GetProperty("unsafeSql").GetString().ShouldBe("deny");
+				profile.GetProperty("enableExecute").GetBoolean().ShouldBe(false);
 			}
 		}
 
@@ -66,9 +66,7 @@ namespace Tests.LinqToDB.CLI
 				"--max-rows",
 				"42",
 				"--output",
-				"csv",
-				"--unsafe-sql",
-				"confirm");
+				"csv");
 
 			{
 				(result.ExitCode).ShouldBe(0);
@@ -78,7 +76,7 @@ namespace Tests.LinqToDB.CLI
 				var defaultProfile = json.RootElement.GetProperty("default");
 				defaultProfile.GetProperty("maxRows").GetInt32().ShouldBe(1000);
 				defaultProfile.GetProperty("output").GetString().ShouldBe("json-table");
-				defaultProfile.GetProperty("unsafeSql").GetString().ShouldBe("deny");
+				defaultProfile.GetProperty("enableExecute").GetBoolean().ShouldBe(false);
 
 				var profile = json.RootElement.GetProperty("dev");
 				profile.GetProperty("description").GetString().ShouldBe("Development database");
@@ -87,7 +85,7 @@ namespace Tests.LinqToDB.CLI
 				profile.GetProperty("connectionStringEnv").GetString().ShouldBe("LINQ2DB_DEV_CONNECTION");
 				profile.GetProperty("maxRows").GetInt32().ShouldBe(42);
 				profile.GetProperty("output").GetString().ShouldBe("csv");
-				profile.GetProperty("unsafeSql").GetString().ShouldBe("confirm");
+				profile.GetProperty("enableExecute").GetBoolean().ShouldBe(false);
 			}
 		}
 

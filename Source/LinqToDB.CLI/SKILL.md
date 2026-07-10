@@ -15,6 +15,8 @@ When database structure is unknown, inspect metadata before generating SQL:
 2. Use `linq2db_schema` or `dotnet linq2db schema` to inspect database objects.
 3. Use `linq2db_query` or `dotnet linq2db query` to execute one concrete SQL statement.
 
+Use `linq2db_execute` or `dotnet linq2db execute` only after explicit user approval for a write-capable operation.
+
 Primary scenarios:
 
 - Analyze application code together with live database data to investigate performance bottlenecks, data distribution issues, slow workflows, or suspicious production-like behavior.
@@ -156,7 +158,7 @@ Config profile:
     "provider": "DB2",
     "providerLocation": "C:\\providers\\IBM.Data.Db2.dll",
     "connectionStringEnv": "LINQ2DB_DB2_CONNECTION",
-    "unsafeSql": "deny"
+    "enableExecute": false
   }
 }
 ```
@@ -271,7 +273,7 @@ Configuration profiles:
 - If `--profile` is omitted, the `default` profile is used.
 - Named profiles inherit missing values from the `default` profile.
 - Command-line values override profile values.
-- `unsafeSql` can be set only in configuration profiles.
+- `enableExecute` can be set only in configuration profiles and defaults to `false`.
 
 ## Config Init Command
 
@@ -284,9 +286,9 @@ Defaults:
 - Default config path is `.agents/linq2db-query.json`.
 - Default profile is `default`.
 - `config-init` creates the `.agents` directory when the default path is used.
-- Initialized profiles include editable default values for `maxRows`, `output`, and `unsafeSql`.
+- Initialized profiles include editable default values for `maxRows`, `output`, and `enableExecute`.
 - The default initialized output is `json-table`, which is suitable for MCP and duplicate-safe query output.
-- `config-init` writes common editable settings (`maxRows`, `output`, and `unsafeSql`) into every created profile intentionally. This makes generated profiles self-explanatory and easier to edit manually.
+- `config-init` writes common editable settings (`maxRows`, `output`, and `enableExecute`) into every created profile intentionally. This makes generated profiles self-explanatory and easier to edit manually.
 - Named profiles still inherit missing values from `default` when those values are removed manually.
 
 Required input:
@@ -305,7 +307,6 @@ Supported initialization options:
 - `--connection-string-env <name>`.
 - `--max-rows <count>`.
 - `--output json|json-table|csv`.
-- `--unsafe-sql deny|confirm|allow`.
 - `--if-exists error|replace|skip`.
 
 Advanced profile fields such as `user`, `password`, `impersonate`, `commandTimeout`, `lockTimeout`, and `outputFile` are intentionally not exposed by `config-init`; edit the JSON manually when those fields are needed.
@@ -325,32 +326,32 @@ dotnet linq2db config-init --config query.json --profile db2-dev --provider DB2 
 
 Parameter surface:
 
-| Parameter | CLI option | `query` CLI | Config profile | `config-init` CLI | `mcp` startup CLI | MCP tool API | Values |
-|---|---|---:|---:|---:|---:|---:|---|
-| `description` | `--description` | no | yes | yes | no | no | non-secret profile description returned by `linq2db_info` |
-| `config` | `--config` | yes | no | yes | yes | no | path; supports `%NAME%` and `${NAME}` for query/MCP execution; `config-init` writes `.agents/linq2db-query.json` by default |
-| `profile` | `--profile` | yes | no | yes | yes | yes | profile name from config |
-| `provider` | `--provider` | yes | yes | yes | yes | no | linq2db provider name |
-| `providerLocation` | `--provider-location` | yes | yes | yes | yes | no | path; supports `%NAME%` and `${NAME}` for query/MCP execution |
-| `connectionString` | `--connection-string` | yes | yes | yes | yes | no | connection string; `{0}` user and `{1}` password placeholders are supported |
-| `connectionStringEnv` | `--connection-string-env` | yes | yes | yes | yes | no | environment variable name |
-| `user` | `--user` | yes | yes | no | yes | no | string; supports `%NAME%` and `${NAME}` expansion |
-| `userEnv` | `--user-env` | yes | yes | no | yes | no | environment variable name |
-| `password` | `--password` | yes | yes | no | yes | no | string |
-| `passwordEnv` | `--password-env` | yes | yes | no | yes | no | environment variable name |
-| `impersonate` | `--impersonate` | yes | yes | no | yes | no | boolean; JSON `true` or `false` in config |
-| `impersonateMode` | `--impersonate-mode` | yes | yes | no | yes | no | `network-cleartext`, `interactive`, `network`, `new-credentials`, or system codes `8`, `2`, `3`, `9` |
-| `commandTimeout` | `--command-timeout` | yes | yes | no | yes | no | non-negative integer seconds; `0` disables the option |
-| `lockTimeout` | `--lock-timeout` | yes | yes | no | yes | no | non-negative integer seconds; `0` disables the option |
-| `maxRows` | `--max-rows` | yes | yes | yes | yes | yes | non-negative integer row count; `0` disables the limit |
-| `output` | `--output` | yes | yes | yes | yes | yes | `query` and `config-init`: `json`, `json-table`, or `csv`; `mcp`: `json` or `json-table`; `query` default is `json`, MCP/config-init default is `json-table` |
-| `outputFile` | `--output-file` | yes | yes | no | no | no | path; supports `%NAME%` and `${NAME}` |
-| `overwrite` | `--overwrite` | yes | no | no | no | no | boolean CLI flag |
-| `unsafeSql` | `--unsafe-sql` | no | config-only | yes | no | no | `deny`, `confirm`, or `allow`; default is `deny` |
-| `ifExists` | `--if-exists` | no | no | yes | no | no | `error`, `replace`, or `skip`; default is `error` |
-| `allowUnsafeSql` | `--allow-unsafe-sql` | yes | no | no | no | yes | boolean confirmation for `unsafeSql: "confirm"` |
-| `sql` | `--sql` | yes | no | no | no | yes | single SQL statement text |
-| `sqlFile` | `--sql-file` | yes | no | no | no | no | path; supports `%NAME%` and `${NAME}` |
+| Parameter | CLI option | `query` CLI | `execute` CLI | Config profile | `config-init` CLI | `mcp` startup CLI | MCP tool API | Values |
+|---|---|---:|---:|---:|---:|---:|---:|---|
+| `description` | `--description` | no | no | yes | yes | no | no | non-secret profile description returned by `linq2db_info` |
+| `config` | `--config` | yes | yes | no | yes | yes | no | path; supports `%NAME%` and `${NAME}` for query/MCP execution; `config-init` writes `.agents/linq2db-query.json` by default |
+| `profile` | `--profile` | yes | yes | no | yes | yes | yes | profile name from config |
+| `provider` | `--provider` | yes | yes | yes | yes | yes | no | linq2db provider name |
+| `providerLocation` | `--provider-location` | yes | yes | yes | yes | yes | no | path; supports `%NAME%` and `${NAME}` for query/MCP execution |
+| `connectionString` | `--connection-string` | yes | yes | yes | yes | yes | no | connection string; `{0}` user and `{1}` password placeholders are supported |
+| `connectionStringEnv` | `--connection-string-env` | yes | yes | yes | yes | yes | no | environment variable name |
+| `user` | `--user` | yes | yes | yes | no | yes | no | string; supports `%NAME%` and `${NAME}` expansion |
+| `userEnv` | `--user-env` | yes | yes | yes | no | yes | no | environment variable name |
+| `password` | `--password` | yes | yes | yes | no | yes | no | string |
+| `passwordEnv` | `--password-env` | yes | yes | yes | no | yes | no | environment variable name |
+| `impersonate` | `--impersonate` | yes | yes | yes | no | yes | no | boolean; JSON `true` or `false` in config |
+| `impersonateMode` | `--impersonate-mode` | yes | yes | yes | no | yes | no | `network-cleartext`, `interactive`, `network`, `new-credentials`, or system codes `8`, `2`, `3`, `9` |
+| `commandTimeout` | `--command-timeout` | yes | yes | yes | no | yes | no | non-negative integer seconds; `0` disables the option |
+| `lockTimeout` | `--lock-timeout` | yes | yes | yes | no | yes | no | non-negative integer seconds; `0` disables the option |
+| `maxRows` | `--max-rows` | yes | yes | yes | yes | yes | yes | non-negative integer row count; `0` disables the limit |
+| `output` | `--output` | yes | yes | yes | yes | yes | yes | `query`, `execute`, and `config-init`: `json`, `json-table`, or `csv`; `mcp`: `json` or `json-table`; `query` default is `json`, MCP/config-init/execute default is `json-table` |
+| `outputFile` | `--output-file` | yes | yes | yes | no | no | no | path; supports `%NAME%` and `${NAME}` |
+| `overwrite` | `--overwrite` | yes | yes | no | no | no | no | boolean CLI flag |
+| `enableExecute` | n/a | no | required | yes | default only | no | no | boolean; default is `false`; required for `execute` and `linq2db_execute` |
+| `enableExecuteTool` | `--enable-execute-tool` | no | no | no | no | yes | no | boolean MCP startup flag; registers `linq2db_execute`; profile `enableExecute` is still required |
+| `ifExists` | `--if-exists` | no | no | no | yes | no | no | `error`, `replace`, or `skip`; default is `error` |
+| `sql` | `--sql` | yes | yes | no | no | no | yes | single SQL statement text |
+| `sqlFile` | `--sql-file` | yes | yes | no | no | no | no | path; supports `%NAME%` and `${NAME}` |
 
 Example configuration:
 
@@ -363,18 +364,17 @@ Example configuration:
     "commandTimeout"   : 30,
     "lockTimeout"      : 5,
     "maxRows"          : 1000,
-    "unsafeSql"       : "deny",
+    "enableExecute"    : false,
     "output"          : "json",
     "impersonate"     : false,
     "impersonateMode" : "network-cleartext",
     "passwordEnv"     : "LINQ2DB_QUERY_PASSWORD"
   },
   "uat": {
-    "unsafeSql": "confirm",
-    "user"     : "readonly_user"
+    "user": "readonly_user"
   },
   "dev": {
-    "unsafeSql": "allow"
+    "enableExecute": true
   }
 }
 ```
@@ -424,28 +424,20 @@ Result limits:
 
 Guardrails:
 
-- Default policy is guarded mode: unsafe SQL is rejected unless configuration explicitly allows it.
-- Guarded mode can be relaxed only by creating a configuration profile with `unsafeSql: "confirm"` or `unsafeSql: "allow"`.
-- The query command accepts exactly one user-provided SQL statement per invocation. This restriction applies to SQL text passed through `--sql` or `--sql-file`.
+- `query` and `linq2db_query` are read-only by contract.
+- `execute` and `linq2db_execute` are write-capable by contract.
+- User-provided SQL must contain exactly one statement. This restriction applies to SQL text passed through `--sql`, `--sql-file`, or MCP tool input.
 - The CLI may execute provider-specific setup commands internally, such as lock timeout configuration, before executing the user-provided SQL. Those internal commands are not part of the user SQL contract.
-- User-provided SQL must contain exactly one statement. Multiple user-provided statements are rejected even when unsafe SQL is allowed.
-- A single-statement contract keeps result formatting predictable and avoids ambiguous multi-result or partially unsafe batches.
+- A single-statement contract keeps result formatting predictable and avoids ambiguous multi-result or partially destructive batches.
 - Single-statement user SQL is a hard command contract for all providers. SQL Server is checked with ScriptDom AST; other providers currently use a generic best-effort validator until provider-specific parsers are added.
-- If an agent needs to execute several independent operations, it should run several separate `query` commands.
+- If an agent needs to execute several independent operations, it should run several separate command or tool calls.
 - Multi-statement workflows that rely on session state, such as temporary tables, are not supported yet.
-- The query command is intended for read-oriented SQL that returns a result set.
-- DML, DDL, and `EXEC` are rejected before execution unless unsafe SQL is explicitly allowed.
-- `unsafeSql` only controls the read-only guardrail. It does not change the `query` command contract into a general DDL/DML execution workflow.
-- General DDL/DML execution belongs to a future dedicated `execute` workflow.
-- SQL Server queries are validated using the SQL Server ScriptDom parser.
-- Other providers use a generic read-only validator.
-- `unsafeSql: "deny"` rejects unsafe SQL. This is the default.
-- `unsafeSql: "confirm"` allows unsafe SQL only when `--allow-unsafe-sql` is specified.
-- `unsafeSql: "allow"` allows unsafe SQL without confirmation.
-- Use `confirm` or `allow` only in trusted development profiles.
-- When unsafe SQL is actually executed, the command writes a diagnostic notice to stderr without including SQL text or credentials.
-- The read-only SQL guard is a guardrail, not a security boundary. If an agent can edit the configuration file, it can change configuration-based unsafe SQL policy.
-- All safety measures in this command are best-effort guardrails intended to help avoid agent mistakes; they are not absolute protection for a database.
+- `query` is intended for read-oriented SQL. DML, DDL, `EXEC`, procedure calls, transaction control, permission changes, and administrative commands are rejected before execution.
+- If the SQL guard cannot confidently classify SQL as read-only, `query` rejects it.
+- `execute` requires the selected configuration profile to set `enableExecute` to `true`.
+- `linq2db_execute` is not registered by default. Start MCP with `--enable-execute-tool` to publish it, and still use a profile with `enableExecute: true`.
+- When write-capable SQL is executed, the command writes a diagnostic notice to stderr without including SQL text or credentials.
+- The read-only SQL guard is a guardrail, not a security boundary. Use restricted database accounts as the primary protection.
 - The strongest protection against agent mistakes is to execute SQL using a database account with limited permissions appropriate for the task. For read-only agent queries, prefer a read-only account. For development workflows that need DDL/DML, prefer a dedicated disposable database or a restricted development account.
 
 Agent responsibility:
@@ -457,12 +449,10 @@ Agent responsibility:
 
 Agent confirmation rule:
 
-- An agent MUST ask the user for explicit confirmation before executing any unsafe SQL operation.
-- Unsafe operations include DML, DDL, `EXEC`, procedure calls, multiple statements, or any SQL intended to modify schema, data, permissions, configuration, or server state.
-- Multiple statements still cannot be executed by this command; split them into separate command invocations.
-- This requirement applies even when the selected configuration profile has `unsafeSql: "allow"`.
-- Do not create or modify configuration to enable unsafe SQL unless the user explicitly asks for that configuration change.
-- When confirmation is granted for a single unsafe execution and the profile uses `unsafeSql: "confirm"`, pass `--allow-unsafe-sql`.
+- An agent MUST ask the user for explicit confirmation before using `execute` or `linq2db_execute`.
+- Write-capable operations include DML, DDL, `EXEC`, procedure calls, transaction control, permission changes, administrative commands, or any SQL intended to modify schema, data, permissions, configuration, or server state.
+- Multiple statements still cannot be executed; split them into separate command or tool calls.
+- Do not create or modify configuration to set `enableExecute: true` unless the user explicitly asks for that configuration change.
 
 Common examples:
 
@@ -477,6 +467,26 @@ dotnet linq2db query --config query.json --profile uat --output json-table --sql
 dotnet linq2db query --config query.json --profile uat --max-rows 100 --sql "select * from Person"
 ```
 
+## Execute Command
+
+Use `dotnet linq2db execute` for write-capable SQL after explicit user approval.
+
+`execute` uses the same provider loading, connection resolution, impersonation, command timeout, lock timeout, row limiting, and output formatting path as `query`.
+
+Differences from `query`:
+
+- `execute` requires the selected configuration profile to set `enableExecute` to `true`.
+- There is no per-call execute confirmation option. The command name plus trusted profile setting are the capability boundary.
+- Direct provider/connection CLI options can still override profile connection settings, but they do not enable execution by themselves.
+- Multiple SQL statements are still rejected.
+- `json-table` is the recommended output because it carries `recordsAffected` when the provider returns it.
+
+Example:
+
+```bash
+dotnet linq2db execute --config query.json --profile dev --sql "update Person set Name = 'x' where Id = 1"
+```
+
 ## MCP STDIO Command
 
 Use `dotnet linq2db mcp` to run a STDIO Model Context Protocol server exposing shared schema and query tools.
@@ -486,7 +496,8 @@ The MCP server exposes these tools:
 
 - `linq2db_info` returns non-secret runtime configuration, profiles, providers, dialects, and safety rules.
 - `linq2db_schema` returns provider-independent database object metadata for the selected profile.
-- `linq2db_query` executes one SQL statement using the selected profile/provider.
+- `linq2db_query` executes one read-only SQL statement using the selected profile/provider.
+- `linq2db_execute` executes one write-capable SQL statement when the server was started with `--enable-execute-tool` and the selected profile has `enableExecute: true`.
 - `linq2db_skill` returns this full skill document.
 
 Recommended model workflow:
@@ -496,9 +507,10 @@ Recommended model workflow:
 3. Generate provider-appropriate SQL for the selected dialect.
 4. Call `linq2db_query` with one SQL statement.
 5. Use `json-table` when joins, duplicate column names, expressions, or column metadata are involved.
-6. Call `linq2db_skill` when detailed usage guidance is needed.
+6. Use `linq2db_execute` only after explicit user approval for a write-capable operation.
+7. Call `linq2db_skill` when detailed usage guidance is needed.
 
-Do not pass provider names, connection strings, passwords, provider assembly paths, or impersonation credentials to `linq2db_schema` or `linq2db_query`. Those values are configured at MCP server startup or in trusted configuration profiles.
+Do not pass provider names, connection strings, passwords, provider assembly paths, or impersonation credentials to `linq2db_schema`, `linq2db_query`, or `linq2db_execute`. Those values are configured at MCP server startup or in trusted configuration profiles.
 
 `linq2db_schema` reads database metadata only. It does not accept SQL text, does not read table data, does not modify schema, and does not return procedures or functions.
 
@@ -535,7 +547,8 @@ Startup/config boundary:
 - `--config <file>` and `--profile <name>` select the configuration profile used by default.
 - `--provider`, `--provider-location`, `--connection-string`, `--connection-string-env`, `--user`, `--user-env`, `--password`, `--password-env`, `--impersonate`, `--impersonate-mode`, `--command-timeout`, and `--lock-timeout` are startup/config settings.
 - `--max-rows` and `--output` can set startup defaults for tool calls.
-- `--sql`, `--sql-file`, `--output-file`, `--overwrite`, and `--allow-unsafe-sql` are not startup options for `mcp`.
+- `--enable-execute-tool` registers the write-capable `linq2db_execute` tool. It is off by default.
+- `--sql`, `--sql-file`, `--output-file`, and `--overwrite` are not startup options for `mcp`.
 - `outputFile` from a configuration profile is ignored by MCP tool calls so results are returned through the MCP response content instead of written to files.
 
 Tool-call boundary:
@@ -544,10 +557,9 @@ Tool-call boundary:
 - `profile` optionally selects a different profile from the startup `--config` file.
 - `maxRows` optionally overrides the startup/config row limit.
 - `output` optionally overrides the startup/config output format. MCP supports only `json` and `json-table`.
-- `allowUnsafeSql` confirms unsafe SQL only when the selected configuration profile uses `unsafeSql: "confirm"`.
 - Provider, connection string, credentials, impersonation, provider assembly location, and timeout setup are not accepted through MCP tool input.
 
-The MCP default output format is `json-table`, which preserves duplicate column names and carries `rowCount` and `truncated` in-band. The existing `query` command keeps `json` as its default.
+The MCP default output format is `json-table`, which preserves duplicate column names and carries `rowCount`, `truncated`, and `recordsAffected` in-band when available. The existing `query` command keeps `json` as its default.
 
 Example MCP host registration:
 
@@ -572,7 +584,9 @@ Example MCP host registration:
 }
 ```
 
-Agent confirmation rules for unsafe SQL are the same as for `query`. Tools are model-controlled; the host/client or agent workflow must obtain human confirmation before any unsafe operation is requested.
+To publish write-capable execution, add `--enable-execute-tool` to MCP startup args and use a trusted profile with `enableExecute: true`.
+
+Tools are model-controlled; the host/client or agent workflow must obtain human confirmation before any write-capable operation is requested.
 
 ## Scaffold Command
 
@@ -608,4 +622,4 @@ cmd.exe:
 mkdir ".\.agents\skills\linq2db-cli" 2>nul & dotnet linq2db skill > ".\.agents\skills\linq2db-cli\SKILL.md"
 ```
 
-Keep this document synchronized with command behavior. When a command option, configuration rule, unsafe SQL policy, or agent workflow changes, update `SKILL.md` and the `skill` command tests in the same change.
+Keep this document synchronized with command behavior. When a command option, configuration rule, execute policy, or agent workflow changes, update `SKILL.md` and the `skill` command tests in the same change.

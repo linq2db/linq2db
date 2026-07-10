@@ -78,7 +78,8 @@ Available commands:
 - `dotnet linq2db help <command>`: prints help for a specific command
 - `dotnet linq2db scaffold <options>`: performs database model scaffolding
 - `dotnet linq2db template [-o template_path]`: creates base T4 template file for scaffolding customization code
-- `dotnet linq2db query <options>`: executes a single read-oriented SQL query and writes JSON, JSON table, or CSV output
+- `dotnet linq2db query <options>`: executes a single read-only SQL query and writes JSON, JSON table, or CSV output
+- `dotnet linq2db execute <options>`: executes a single write-capable SQL statement when the selected trusted profile has `enableExecute` set to `true`
 - `dotnet linq2db schema <options>`: reads provider-aware database object metadata and writes JSON output
 - `dotnet linq2db config-init <options>`: creates or updates a query/MCP JSON configuration profile
 - `dotnet linq2db mcp <options>`: runs a STDIO Model Context Protocol server exposing `linq2db_info`, `linq2db_schema`, `linq2db_query`, and `linq2db_skill`
@@ -86,11 +87,11 @@ Available commands:
 
 For MCP-capable agent hosts, `mcp` is the intended integration mode. Use `query` for lighter direct invocation when MCP is unavailable, not allowed by policy, or not needed for a specific environment.
 
-The MCP server exposes `linq2db_info` for non-secret runtime discovery of available profiles, providers, SQL dialects, defaults, and safety rules. Use `linq2db_schema` to inspect tables, views, columns, keys, relationships, schemas, and catalogs before generating SQL. Use `linq2db_query` to execute one concrete SQL statement. Use `linq2db_skill` when detailed CLI/MCP guidance, supported provider notes, or safety rules are needed.
+The MCP server exposes `linq2db_info` for non-secret runtime discovery of available profiles, providers, SQL dialects, defaults, and safety rules. Use `linq2db_schema` to inspect tables, views, columns, keys, relationships, schemas, and catalogs before generating SQL. Use `linq2db_query` to execute one concrete read-only SQL statement. Use `linq2db_execute` only after explicit approval for write-capable SQL; it is disabled by default and requires MCP startup with `--enable-execute-tool` plus profile `enableExecute: true`. Use `linq2db_skill` when detailed CLI/MCP guidance, supported provider notes, or safety rules are needed.
 
 `schema` returns database object metadata through linq2db schema providers. It does not accept SQL text, does not read table data, does not modify the database, and does not return procedures or functions. Use `--filter-schema`, `--filter-catalog`, and `--filter-table` to narrow large schema output. Filter options accept comma-separated values or repeated CLI options; MCP uses `filterSchemas`, `filterCatalogs`, and `filterTables` arrays. Table filters are exact by default and support `regex:`/`rx:` prefixes for regular expressions; regex matches use a bounded timeout and report an expected error on timeout.
 
-`config-init` writes common editable settings (`maxRows`, `output`, and `unsafeSql`) into every created profile intentionally. This makes generated profiles self-explanatory and easier to edit manually. Named profiles still inherit missing values from `default` when those values are removed manually.
+`config-init` writes common editable settings (`maxRows`, `output`, and `enableExecute`) into every created profile intentionally. This makes generated profiles self-explanatory and easier to edit manually. Named profiles still inherit missing values from `default` when those values are removed manually.
 
 When `config-init` writes an existing configuration file, it rewrites it as normalized JSON and does not preserve comments or custom formatting.
 

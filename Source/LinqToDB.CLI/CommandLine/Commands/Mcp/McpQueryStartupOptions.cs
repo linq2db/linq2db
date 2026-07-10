@@ -21,5 +21,6 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 		string? CommandTimeout,
 		string? LockTimeout,
 		string? MaxRows,
-		string? Output);
+		string? Output,
+		bool    EnableExecuteTool);
 }

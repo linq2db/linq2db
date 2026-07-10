@@ -22,7 +22,6 @@ namespace LinqToDB.CommandLine.Commands.ConfigInit
 		const string DefaultConfigPath   = ".agents/linq2db-query.json";
 		const int    DefaultMaxRows      = 1000;
 		const string DefaultOutput       = "json-table";
-		const string DefaultUnsafeSql    = "deny";
 
 		static readonly OptionCategory _profileOptions = new(2, "Profile", "Profile settings", "profile");
 		static readonly OptionCategory _existsOptions  = new(5, "Existing profile", "Existing profile behavior", "existingProfile");
@@ -33,20 +32,6 @@ namespace LinqToDB.CommandLine.Commands.ConfigInit
 			false,
 			false,
 			"non-secret profile description returned by MCP linq2db_info");
-
-		static readonly CliOption _unsafeSql = new StringEnumCliOption(
-			"unsafe-sql",
-			null,
-			false,
-			false,
-			"unsafe SQL policy to write to the initialized profile",
-			null,
-			null,
-			null,
-			false,
-			new StringEnumOption(true,  true,  "deny",    "reject unsafe SQL"),
-			new StringEnumOption(false, false, "confirm", "require explicit confirmation"),
-			new StringEnumOption(false, false, "allow",   "allow unsafe SQL"));
 
 		static readonly CliOption _output = new StringEnumCliOption(
 			"output",
@@ -89,7 +74,7 @@ namespace LinqToDB.CommandLine.Commands.ConfigInit
 				true,
 				false,
 				"<options>",
-				"create or update a query/MCP configuration profile; generated profiles intentionally include maxRows, output, and unsafeSql for manual editing",
+				"create or update a query/MCP configuration profile; generated profiles intentionally include maxRows, output, and enableExecute for manual editing",
 				[
 					new("dotnet linq2db config-init --provider SQLite --connection-string \"Data Source=data.db\"",
 						"creates .agents/linq2db-query.json with the default profile"),
@@ -110,7 +95,6 @@ namespace LinqToDB.CommandLine.Commands.ConfigInit
 			AddOption(QueryExecutionCliOptions.ConnectionOptions, QueryExecutionCliOptions.ConnectionStringEnv);
 			AddOption(QueryExecutionCliOptions.OutputOptions,     _output);
 			AddOption(QueryExecutionCliOptions.OutputOptions,     QueryExecutionCliOptions.MaxRows);
-			AddOption(QueryExecutionCliOptions.GuardOptions,      _unsafeSql);
 			AddOption(_existsOptions,                            _ifExists);
 		}
 
@@ -131,7 +115,6 @@ namespace LinqToDB.CommandLine.Commands.ConfigInit
 			options.Remove(QueryExecutionCliOptions.ConnectionStringEnv, out var connectionStringEnv);
 			options.Remove(_output,                                      out var output);
 			options.Remove(QueryExecutionCliOptions.MaxRows,             out var maxRows);
-			options.Remove(_unsafeSql,                                  out var unsafeSql);
 			options.Remove(_ifExists,                                   out var ifExists);
 
 			if (options.Count > 0)
@@ -152,7 +135,6 @@ namespace LinqToDB.CommandLine.Commands.ConfigInit
 				(string?)connectionStringEnv,
 				(string?)output ?? DefaultOutput,
 				(string?)maxRows,
-				(string?)unsafeSql ?? DefaultUnsafeSql,
 				(string?)ifExists ?? "error");
 
 			if (!Validate(environment, values, out var maxRowsValue))
@@ -280,9 +262,9 @@ namespace LinqToDB.CommandLine.Commands.ConfigInit
 		{
 			return new JsonObject
 			{
-				["maxRows"]   = DefaultMaxRows,
-				["output"]    = DefaultOutput,
-				["unsafeSql"] = DefaultUnsafeSql,
+				["maxRows"]       = DefaultMaxRows,
+				["output"]        = DefaultOutput,
+				["enableExecute"] = false,
 			};
 		}
 
@@ -303,9 +285,9 @@ namespace LinqToDB.CommandLine.Commands.ConfigInit
 			else
 				profile["connectionStringEnv"] = values.ConnectionStringEnv;
 
-			profile["maxRows"]   = maxRows;
-			profile["output"]    = values.Output;
-			profile["unsafeSql"] = values.UnsafeSql;
+			profile["maxRows"]       = maxRows;
+			profile["output"]        = values.Output;
+			profile["enableExecute"] = false;
 
 			return profile;
 		}
@@ -320,7 +302,6 @@ namespace LinqToDB.CommandLine.Commands.ConfigInit
 			string? ConnectionStringEnv,
 			string  Output,
 			string? MaxRows,
-			string  UnsafeSql,
 			string  IfExists);
 	}
 }

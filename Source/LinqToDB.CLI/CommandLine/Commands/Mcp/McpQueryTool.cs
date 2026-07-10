@@ -34,7 +34,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 		[Description("""
 			Returns non-secret linq2db MCP query configuration information.
 
-			Use this tool before generating SQL when supported database providers, available profiles, selected providers, SQL dialects, default output format, row limits, or unsafe SQL policy are unknown.
+			Use this tool before generating SQL when supported database providers, available profiles, selected providers, SQL dialects, default output format, row limits, or execute availability are unknown.
 
 			Use linq2db_schema to inspect database objects for a selected profile.
 
@@ -149,20 +149,23 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 
 		[McpServerTool(
 			Name        = "linq2db_query",
-			Title       = "Execute linq2db SQL query",
-			OpenWorld   = true)]
+			Title       = "Execute read-only linq2db SQL query",
+			ReadOnly    = true,
+			Idempotent  = false,
+			OpenWorld   = true,
+			Destructive = false)]
 		[Description("""
-			Executes one SQL statement against a database configured by linq2db CLI MCP startup options or query configuration profiles.
+			Executes one read-only SQL statement against a database configured by linq2db CLI MCP startup options or query configuration profiles.
 
 			The SQL dialect is determined by the selected profile/provider. Call linq2db_info first if available profiles, providers, or SQL dialects are unknown. Call linq2db_schema before generating SQL when table names, column names, keys, or relationships are unknown. Call linq2db_skill when detailed linq2db CLI/MCP usage guidance is needed.
 
 			Use this tool for read-oriented database inspection, diagnostics, schema/data exploration, row counts, sample records, data-quality checks, and investigation workflows that require live database facts.
 
-			Multiple SQL statements are always rejected. SQL safety validation is a guardrail, not a security boundary.
+			Multiple SQL statements are always rejected. If the SQL guard cannot classify a statement as read-only, the tool rejects it.
 
 			The tool cannot accept provider names, connection strings, passwords, provider assembly paths, or impersonation credentials. Those are configured only at MCP server startup or in trusted configuration profiles.
 
-			Do not use this tool for INSERT, UPDATE, DELETE, MERGE, DDL, stored procedure execution, administrative commands, or other write/destructive operations unless the user explicitly approved that exact operation and the selected profile allows unsafe SQL confirmation.
+			Do not use this tool for INSERT, UPDATE, DELETE, MERGE, DDL, stored procedure execution, administrative commands, or other write/destructive operations. Use linq2db_execute only when it is available and the user explicitly approved the exact write-capable operation.
 			""")]
 		public async Task<CallToolResult> Query(
 			[Description("""
@@ -195,18 +198,11 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 				Use json-table by default when column metadata, duplicate column names, expressions, or joins are involved.
 				Use json only when object-shaped rows with unique column names are preferred.
 				""")] string? output = null,
-			[Description("""
-				Unsafe SQL confirmation flag.
-
-				Set this to true only after explicit user approval for this exact SQL operation.
-				This flag is honored only when the selected profile uses unsafeSql=confirm.
-				Never set this flag for normal read-only inspection queries.
-				""")] bool allowUnsafeSql = false,
 			CancellationToken cancellationToken = default)
 		{
 			var errorWriter = new StringWriter(CultureInfo.InvariantCulture);
 			var environment = new McpQueryEnvironment(errorWriter);
-			var values      = CreateOptionValues(sql, profile, maxRows, output, allowUnsafeSql);
+			var values      = CreateOptionValues(sql, profile, maxRows, output);
 			var resolver    = new QueryExecutionSettingsResolver(environment);
 			var settings    = resolver.Resolve(values);
 
@@ -230,7 +226,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 			};
 		}
 
-		QueryExecutionOptionValues CreateOptionValues(string sql, string? profile, int? maxRows, string? output, bool allowUnsafeSql)
+		QueryExecutionOptionValues CreateOptionValues(string sql, string? profile, int? maxRows, string? output)
 		{
 			return new QueryExecutionOptionValues(
 				_startupOptions.Config,
@@ -252,7 +248,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 				null,
 				false,
 				false,
-				allowUnsafeSql,
+				QueryExecutionMode.Query,
 				sql,
 				null,
 				"json-table");

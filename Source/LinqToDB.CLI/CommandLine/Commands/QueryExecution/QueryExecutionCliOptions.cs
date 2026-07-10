@@ -12,8 +12,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 	{
 		public static readonly OptionCategory ConfigurationOptions = new(1, "Configuration", "Configuration options", "configuration");
 		public static readonly OptionCategory ConnectionOptions    = new(2, "Connection",    "Connection options",    "connection");
-		public static readonly OptionCategory GuardOptions         = new(3, "Guardrails",    "SQL guardrail options", "guardrails");
-		public static readonly OptionCategory OutputOptions        = new(4, "Output",        "Output options",        "output");
+		public static readonly OptionCategory OutputOptions        = new(3, "Output",        "Output options",        "output");
 
 		public static readonly CliOption Config              = new StringCliOption("config",                null, false, false, "path to query configuration file; supports %NAME% and ${NAME} environment variable expansion");
 		public static readonly CliOption Profile             = new StringCliOption("profile",               null, false, false, "configuration profile name");
@@ -34,16 +33,6 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 
 		public static readonly CliOption Overwrite      = new BooleanCliOption("overwrite", null, false, "replace existing output file", null, null, null, false, false);
 		public static readonly CliOption Impersonate    = new BooleanCliOption("impersonate", null, false, "on Windows, run database access under resolved user/password credentials; file and configuration access uses the original process account", null, null, null, false, false);
-		public static readonly CliOption AllowUnsafeSql = new BooleanCliOption(
-			"allow-unsafe-sql",
-			null,
-			false,
-			"confirm unsafe SQL execution when configuration unsafeSql policy is confirm; ask the user before using this option",
-			null,
-			null,
-			null,
-			false,
-			false);
 
 		public static readonly CliOption Output = new StringEnumCliOption(
 			"output",
