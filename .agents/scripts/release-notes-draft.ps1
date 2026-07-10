@@ -419,6 +419,27 @@ function Splice-VersionSection {
     return [pscustomobject]@{ text = $text; action = $action }
 }
 
+# Extract existing deep-dive blocks (<!-- rn:deepdive:#n --> + #### heading + body) from the
+# current version section. Deep-dive *bodies* live only in the wiki — they are never stored in the
+# PR draft comments, so `harvest` can't supply them. A full-section regenerate from a manifest that
+# omits them would silently delete them; Do-ApplyWiki carries these forward.
+function Get-ExistingDeepDives {
+    param([string]$PageText, [string]$Ver)
+    $text = $PageText.Replace("`r`n", "`n")
+    $verRx = [regex]::Escape($Ver)
+    $m = [regex]::Match($text, "(?m)^###?\s+Release\s+$verRx\b.*$")
+    if (-not $m.Success) { return @() }
+    $after = [regex]::Match($text.Substring($m.Index + $m.Length), '(?m)^###?\s+Release\s+\S')
+    $end = if ($after.Success) { $m.Index + $m.Length + $after.Index } else { $text.Length }
+    $section = $text.Substring($m.Index, $end - $m.Index)
+    $out = @()
+    $rx = [regex]'(?s)<!-- rn:deepdive:#(?<pr>\d+) -->\n#### (?<h>.+?)\n(?<body>.*?)(?=\n<!-- rn:deepdive:#|\z)'
+    foreach ($dm in $rx.Matches($section)) {
+        $out += [pscustomobject]@{ pr = [int]$dm.Groups['pr'].Value; heading = $dm.Groups['h'].Value.Trim(); body = $dm.Groups['body'].Value.Trim("`n") }
+    }
+    return $out
+}
+
 # -- actions -----------------------------------------------------------------
 
 function Do-Find {
@@ -526,7 +547,14 @@ function Do-ApplyWiki {
     if (-not (Test-Path -LiteralPath $pagePath)) { Exit-WithError "wiki page not found: $pagePath" }
     $pageText = [System.IO.File]::ReadAllText($pagePath, [System.Text.UTF8Encoding]::new($false))
 
-    $section = Build-VersionSection -Ver $ver -PrBullets $m.prBullets -DeepDives $m.deepDives
+    # Carry forward deep-dives already published in the live section that the manifest omits — their
+    # bodies exist only in the wiki (never in draft comments), so a manifest-only regenerate would drop them.
+    $manifestDeepDives = @($m.deepDives)
+    $manifestDdPrs     = @($manifestDeepDives | ForEach-Object { [int]$_.pr })
+    $carriedDeepDives  = @(Get-ExistingDeepDives -PageText $pageText -Ver $ver | Where-Object { $manifestDdPrs -notcontains [int]$_.pr })
+    $mergedDeepDives   = @($manifestDeepDives + $carriedDeepDives)
+
+    $section = Build-VersionSection -Ver $ver -PrBullets $m.prBullets -DeepDives $mergedDeepDives
     $spliced = Splice-VersionSection -PageText $pageText -Ver $ver -Section $section
     [System.IO.File]::WriteAllText($pagePath, $spliced.text, [System.Text.UTF8Encoding]::new($false))
 
@@ -536,7 +564,8 @@ function Do-ApplyWiki {
 
     Write-JsonOutput ([ordered]@{
         ok = $true; action = 'apply-wiki'; page = $page; sectionAction = $spliced.action
-        diffPath = $diffPath; bulletCount = @($m.prBullets).Count; deepDiveCount = @($m.deepDives).Count
+        diffPath = $diffPath; bulletCount = @($m.prBullets).Count; deepDiveCount = @($mergedDeepDives).Count
+        carriedForwardDeepDives = @($carriedDeepDives).Count
         clone = $clone
     })
 }
