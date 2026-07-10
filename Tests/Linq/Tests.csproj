@@ -34,6 +34,9 @@
 		<!-- T4 support -->
 		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
 
+		<None Update="Extensions\ClickHouseTests.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="ClickHouseTests.generated.cs" />
+		<Compile Update="Extensions\ClickHouseTests.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="ClickHouseTests.tt" />
+
 		<None Update="Extensions\MySqlTests.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="MySqlTests.generated.cs" />
 		<Compile Update="Extensions\MySqlTests.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="MySqlTests.tt" />
 
