@@ -182,11 +182,18 @@ namespace LinqToDB.CodeModel
 		protected override void Visit(CodeLambda method)
 		{
 			// F# lambda: fun p1 p2 -> body
-			Write("fun ");
-			WriteDelimitedList(method.Parameters, p => Visit(p.Name), " ", false);
+			// Parenthesize the lambda: as a call argument, an unparenthesized `fun x -> a, b` would be parsed
+			// by F# as a lambda returning the tuple (a, b) rather than two arguments.
+			Write("(fun ");
+			// a parameterless F# lambda is `fun () -> ...`, not `fun -> ...`
+			if (method.Parameters.Count == 0)
+				Write("()");
+			else
+				WriteDelimitedList(method.Parameters, p => Visit(p.Name), " ", false);
 			Write(" -> ");
 
 			WriteMethodBodyExpression(method.Body);
+			Write(")");
 		}
 
 		protected override void Visit(CodeMember expression)
@@ -301,6 +308,22 @@ namespace LinqToDB.CodeModel
 
 		protected override void Visit(CodeReference reference)
 		{
+			// static field/property references must be qualified with the declaring type in F# (C# allows
+			// unqualified access within the class). Example: the context mapping schema referenced from the
+			// primary constructor's base call.
+			var isStatic = reference.Referenced switch
+			{
+				CodeProperty p => p.Attributes.HasFlag(Modifiers.Static),
+				CodeField    f => f.Attributes.HasFlag(Modifiers.Static),
+				_              => false,
+			};
+
+			if (isStatic && _currentType?.Name != null)
+			{
+				WriteIdentifier(_currentType.Name.Name);
+				Write('.');
+			}
+
 			Visit(reference.Referenced.Name);
 		}
 
@@ -487,22 +510,32 @@ namespace LinqToDB.CodeModel
 
 			WriteCustomAttributes(property.CustomAttributes, false);
 
-			Write("member ");
-			WriteAccessibility(property.Attributes);
-			Write("this.");
-			Visit(property.Name);
+			// auto-property: no getter/setter bodies. F# expresses these with `member val` and requires an
+			// initializer, so emit the property initializer if present, otherwise Unchecked.defaultof<_>.
+			var isAuto = property.Getter == null && property.Setter == null;
 
-			if (property.HasSetter)
+			if (isAuto)
 			{
-				// mutable auto-property
+				Write(property.Attributes.HasFlag(Modifiers.Static) ? "static member val " : "member val ");
+				WriteAccessibility(property.Attributes);
+				Visit(property.Name);
 				Write(" : ");
 				Visit(property.Type);
-				Write(" with get, set");
+				Write(" = ");
+				if (property.Initializer != null)
+					Visit(property.Initializer);
+				else
+					Write("Unchecked.defaultof<_>");
+				Write(property.HasSetter ? " with get, set" : " with get");
 				WriteLine();
 			}
 			else
 			{
-				// read-only computed property
+				// computed property with a getter body
+				Write("member ");
+				WriteAccessibility(property.Attributes);
+				Write("this.");
+				Visit(property.Name);
 				Write(" =");
 				WriteMethodBodyBlock(property.Getter, false);
 			}
@@ -551,7 +584,18 @@ namespace LinqToDB.CodeModel
 				_fileImports = null;
 			}
 
-			WriteMemberGroups(@namespace.Members);
+			// F# forbids nested type definitions, so every type - including result-set records that the
+			// scaffolder nests inside the extensions class - is emitted flat at namespace level. `namespace rec`
+			// makes declaration order irrelevant, and intra-class references stay unqualified so they resolve to
+			// the lifted top-level type.
+			var first = true;
+			foreach (var type in EnumerateAllClasses(@namespace.Members))
+			{
+				if (!first)
+					WriteLine();
+				first = false;
+				Visit(type);
+			}
 
 			_currentScope.RemoveRange(_currentScope.Count - @namespace.Name.Count, @namespace.Name.Count);
 		}
@@ -642,11 +686,23 @@ namespace LinqToDB.CodeModel
 						break;
 				}
 
+				var hasCtorBody = primaryCtor?.Body != null && primaryCtor.Body.Items.Count > 0;
+
 				if (primaryCtor != null)
 				{
 					Write(" (");
 					WriteDelimitedList(primaryCtor.Parameters, ", ", false);
 					Write(")");
+					// `do` bindings in the primary constructor reference the instance, which requires a self
+					// identifier on the type declaration
+					if (hasCtorBody)
+						Write(" as this");
+				}
+				else
+				{
+					// F# requires a primary constructor for `member val` auto-properties (e.g. proc/function
+					// result classes, which are generated as classes rather than records)
+					Write(" ()");
 				}
 
 				WriteLine(" =");
@@ -945,6 +1001,10 @@ namespace LinqToDB.CodeModel
 			var first = true;
 			foreach (var group in groups)
 			{
+				// nested type definitions are lifted to namespace level (see Visit(CodeNamespace)); skip them here
+				if (group is ClassGroup)
+					continue;
+
 				if (!group.IsEmpty)
 				{
 					if (first)
@@ -953,6 +1013,34 @@ namespace LinqToDB.CodeModel
 						WriteLine();
 
 					Visit(group);
+				}
+			}
+		}
+
+		/// <summary>
+		/// Recursively enumerates every type defined in the given member groups, including types nested inside
+		/// other types or regions. F# does not allow nested type definitions, so all of them are emitted flat at
+		/// namespace level.
+		/// </summary>
+		private static IEnumerable<CodeClass> EnumerateAllClasses(IEnumerable<IMemberGroup> groups)
+		{
+			foreach (var group in groups)
+			{
+				if (group is ClassGroup classGroup)
+				{
+					foreach (var @class in classGroup.Members)
+					{
+						yield return @class;
+
+						foreach (var nested in EnumerateAllClasses(@class.Members))
+							yield return nested;
+					}
+				}
+				else if (group is RegionGroup regionGroup)
+				{
+					foreach (var region in regionGroup.Members)
+						foreach (var nested in EnumerateAllClasses(region.Members))
+							yield return nested;
 				}
 			}
 		}
@@ -1181,7 +1269,10 @@ namespace LinqToDB.CodeModel
 
 						while (!_languageProvider.FullNameEqualityComparer.Equals(remainingName, scope))
 						{
-							if (!scopedNames[scope].Contains(currentName))
+							// A scope may be absent from the map when a type was lifted out of its original
+							// (nested) position - e.g. proc result records moved to namespace level for F#. Treat a
+							// missing scope as "no conflict": the lifted type is top-level and needs no qualifier.
+							if (!scopedNames.TryGetValue(scope, out var scopeNames) || !scopeNames.Contains(currentName))
 							{
 								if (scope.Count == 0)
 									break;

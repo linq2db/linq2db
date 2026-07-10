@@ -91,11 +91,14 @@ namespace LinqToDB.CommandLine
 				settings.DataModel.HasUntypedOptionsConstructor = false;
 				settings.DataModel.HasTypedOptionsConstructor  = true;
 
-				// TODO(#1553): stored procedures / functions and additional (non-default) schemas are not yet
-				// emitted correctly for F# - they require nested result-set records to be lifted to module level
-				// (F# forbids nested type definitions), `member val` auto-properties + `as this` for schema
-				// context wiring, and task { } for async procedure methods. Until then F# generation targets the
-				// tables/views/associations/Find core (the default object set).
+				// async stored-procedure methods use C#-style await; F# async is a computation-expression model
+				// (task { ... }) not yet emitted, so only synchronous procedure methods are generated for F#
+				settings.DataModel.GenerateProcedureAsync = false;
+				settings.DataModel.GenerateProcedureSync  = true;
+
+				// TODO(#1553): additional (non-default) schemas emitted as schema-context types are not yet fully
+				// supported for F# (member val initialization vs constructor `do`-binding ordering); scaffold a
+				// single (default) schema for F# until that is addressed.
 			}
 
 			// process remaining utility-specific (general) options

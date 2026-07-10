@@ -71,88 +71,88 @@ type AllType =
 [<System.Runtime.CompilerServices.Extension>]
 type ExtensionMethods =
     [<System.Runtime.CompilerServices.Extension>]
-    static member Find (table : ITable<AllType>, id : int64) : AllType = table.FirstOrDefault(fun e -> e.Id = id)
+    static member Find (table : ITable<AllType>, id : int64) : AllType = table.FirstOrDefault((fun e -> e.Id = id))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindQuery (table : ITable<AllType>, id : int64) : IQueryable<AllType> = table.Where(fun e -> e.Id = id)
+    static member FindQuery (table : ITable<AllType>, id : int64) : IQueryable<AllType> = table.Where((fun e -> e.Id = id))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAllType (db : TestDataDB, id : int64) : AllType = db.GetTable<AllType>().FirstOrDefault(fun e -> e.Id = id)
+    static member FindAllType (db : TestDataDB, id : int64) : AllType = db.GetTable<AllType>().FirstOrDefault((fun e -> e.Id = id))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAllTypeQuery (db : TestDataDB, id : int64) : IQueryable<AllType> = db.GetTable<AllType>().Where(fun e -> e.Id = id)
+    static member FindAllTypeQuery (db : TestDataDB, id : int64) : IQueryable<AllType> = db.GetTable<AllType>().Where((fun e -> e.Id = id))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member Find (table : ITable<Doctor>, personId : int64) : Doctor = table.FirstOrDefault(fun e -> e.PersonId = personId)
+    static member Find (table : ITable<Doctor>, personId : int64) : Doctor = table.FirstOrDefault((fun e -> e.PersonId = personId))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindQuery (table : ITable<Doctor>, personId : int64) : IQueryable<Doctor> = table.Where(fun e -> e.PersonId = personId)
+    static member FindQuery (table : ITable<Doctor>, personId : int64) : IQueryable<Doctor> = table.Where((fun e -> e.PersonId = personId))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindDoctor (db : TestDataDB, personId : int64) : Doctor = db.GetTable<Doctor>().FirstOrDefault(fun e -> e.PersonId = personId)
+    static member FindDoctor (db : TestDataDB, personId : int64) : Doctor = db.GetTable<Doctor>().FirstOrDefault((fun e -> e.PersonId = personId))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindDoctorQuery (db : TestDataDB, personId : int64) : IQueryable<Doctor> = db.GetTable<Doctor>().Where(fun e -> e.PersonId = personId)
+    static member FindDoctorQuery (db : TestDataDB, personId : int64) : IQueryable<Doctor> = db.GetTable<Doctor>().Where((fun e -> e.PersonId = personId))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member Find (table : ITable<FkTestPosition>, company : int64, department : int64, positionId : int64) : FkTestPosition = table.FirstOrDefault(fun e -> e.Company = company && e.Department = department && e.PositionId = positionId)
+    static member Find (table : ITable<FkTestPosition>, company : int64, department : int64, positionId : int64) : FkTestPosition = table.FirstOrDefault((fun e -> e.Company = company && e.Department = department && e.PositionId = positionId))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindQuery (table : ITable<FkTestPosition>, company : int64, department : int64, positionId : int64) : IQueryable<FkTestPosition> = table.Where(fun e -> e.Company = company && e.Department = department && e.PositionId = positionId)
+    static member FindQuery (table : ITable<FkTestPosition>, company : int64, department : int64, positionId : int64) : IQueryable<FkTestPosition> = table.Where((fun e -> e.Company = company && e.Department = department && e.PositionId = positionId))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindFkTestPosition (db : TestDataDB, company : int64, department : int64, positionId : int64) : FkTestPosition = db.GetTable<FkTestPosition>().FirstOrDefault(fun e -> e.Company = company && e.Department = department && e.PositionId = positionId)
+    static member FindFkTestPosition (db : TestDataDB, company : int64, department : int64, positionId : int64) : FkTestPosition = db.GetTable<FkTestPosition>().FirstOrDefault((fun e -> e.Company = company && e.Department = department && e.PositionId = positionId))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindFkTestPositionQuery (db : TestDataDB, company : int64, department : int64, positionId : int64) : IQueryable<FkTestPosition> = db.GetTable<FkTestPosition>().Where(fun e -> e.Company = company && e.Department = department && e.PositionId = positionId)
+    static member FindFkTestPositionQuery (db : TestDataDB, company : int64, department : int64, positionId : int64) : IQueryable<FkTestPosition> = db.GetTable<FkTestPosition>().Where((fun e -> e.Company = company && e.Department = department && e.PositionId = positionId))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member Find (table : ITable<Patient>, personId : int64) : Patient = table.FirstOrDefault(fun e -> e.PersonId = personId)
+    static member Find (table : ITable<Patient>, personId : int64) : Patient = table.FirstOrDefault((fun e -> e.PersonId = personId))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindQuery (table : ITable<Patient>, personId : int64) : IQueryable<Patient> = table.Where(fun e -> e.PersonId = personId)
+    static member FindQuery (table : ITable<Patient>, personId : int64) : IQueryable<Patient> = table.Where((fun e -> e.PersonId = personId))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindPatient (db : TestDataDB, personId : int64) : Patient = db.GetTable<Patient>().FirstOrDefault(fun e -> e.PersonId = personId)
+    static member FindPatient (db : TestDataDB, personId : int64) : Patient = db.GetTable<Patient>().FirstOrDefault((fun e -> e.PersonId = personId))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindPatientQuery (db : TestDataDB, personId : int64) : IQueryable<Patient> = db.GetTable<Patient>().Where(fun e -> e.PersonId = personId)
+    static member FindPatientQuery (db : TestDataDB, personId : int64) : IQueryable<Patient> = db.GetTable<Patient>().Where((fun e -> e.PersonId = personId))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member Find (table : ITable<Person>, personId : int64) : Person = table.FirstOrDefault(fun e -> e.PersonId = personId)
+    static member Find (table : ITable<Person>, personId : int64) : Person = table.FirstOrDefault((fun e -> e.PersonId = personId))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindQuery (table : ITable<Person>, personId : int64) : IQueryable<Person> = table.Where(fun e -> e.PersonId = personId)
+    static member FindQuery (table : ITable<Person>, personId : int64) : IQueryable<Person> = table.Where((fun e -> e.PersonId = personId))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindPerson (db : TestDataDB, personId : int64) : Person = db.GetTable<Person>().FirstOrDefault(fun e -> e.PersonId = personId)
+    static member FindPerson (db : TestDataDB, personId : int64) : Person = db.GetTable<Person>().FirstOrDefault((fun e -> e.PersonId = personId))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindPersonQuery (db : TestDataDB, personId : int64) : IQueryable<Person> = db.GetTable<Person>().Where(fun e -> e.PersonId = personId)
+    static member FindPersonQuery (db : TestDataDB, personId : int64) : IQueryable<Person> = db.GetTable<Person>().Where((fun e -> e.PersonId = personId))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member Find (table : ITable<PrimaryKeyTable>, id : int64) : PrimaryKeyTable = table.FirstOrDefault(fun e -> e.Id = id)
+    static member Find (table : ITable<PrimaryKeyTable>, id : int64) : PrimaryKeyTable = table.FirstOrDefault((fun e -> e.Id = id))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindQuery (table : ITable<PrimaryKeyTable>, id : int64) : IQueryable<PrimaryKeyTable> = table.Where(fun e -> e.Id = id)
+    static member FindQuery (table : ITable<PrimaryKeyTable>, id : int64) : IQueryable<PrimaryKeyTable> = table.Where((fun e -> e.Id = id))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindPrimaryKeyTable (db : TestDataDB, id : int64) : PrimaryKeyTable = db.GetTable<PrimaryKeyTable>().FirstOrDefault(fun e -> e.Id = id)
+    static member FindPrimaryKeyTable (db : TestDataDB, id : int64) : PrimaryKeyTable = db.GetTable<PrimaryKeyTable>().FirstOrDefault((fun e -> e.Id = id))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindPrimaryKeyTableQuery (db : TestDataDB, id : int64) : IQueryable<PrimaryKeyTable> = db.GetTable<PrimaryKeyTable>().Where(fun e -> e.Id = id)
+    static member FindPrimaryKeyTableQuery (db : TestDataDB, id : int64) : IQueryable<PrimaryKeyTable> = db.GetTable<PrimaryKeyTable>().Where((fun e -> e.Id = id))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member Find (table : ITable<TestIdentity>, id : int64) : TestIdentity = table.FirstOrDefault(fun e -> e.Id = id)
+    static member Find (table : ITable<TestIdentity>, id : int64) : TestIdentity = table.FirstOrDefault((fun e -> e.Id = id))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindQuery (table : ITable<TestIdentity>, id : int64) : IQueryable<TestIdentity> = table.Where(fun e -> e.Id = id)
+    static member FindQuery (table : ITable<TestIdentity>, id : int64) : IQueryable<TestIdentity> = table.Where((fun e -> e.Id = id))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindTestIdentity (db : TestDataDB, id : int64) : TestIdentity = db.GetTable<TestIdentity>().FirstOrDefault(fun e -> e.Id = id)
+    static member FindTestIdentity (db : TestDataDB, id : int64) : TestIdentity = db.GetTable<TestIdentity>().FirstOrDefault((fun e -> e.Id = id))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindTestIdentityQuery (db : TestDataDB, id : int64) : IQueryable<TestIdentity> = db.GetTable<TestIdentity>().Where(fun e -> e.Id = id)
+    static member FindTestIdentityQuery (db : TestDataDB, id : int64) : IQueryable<TestIdentity> = db.GetTable<TestIdentity>().Where((fun e -> e.Id = id))
 
 
 [<Table("Child")>]
