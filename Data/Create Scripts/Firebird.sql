@@ -16,6 +16,19 @@ SELECT 1 FROM rdb$database
 COMMIT;
 -- SKIP Firebird.2.5 END
 
+-- Firebird 6 introduces SQL-standard schemas; the schema-qualified test tables (e.g. TableWithDataAndSchema
+-- in [Table(Schema = "TestSchema")]) need the schema to exist. Quoted so the case matches the mapped name
+-- (Firebird6SqlBuilder emits "TestSchema"). Earlier Firebird versions have no schemas and skip this.
+-- SKIP Firebird.2.5 BEGIN
+-- SKIP Firebird.3 BEGIN
+-- SKIP Firebird.4 BEGIN
+-- SKIP Firebird.5 BEGIN
+CREATE SCHEMA IF NOT EXISTS "TestSchema";       COMMIT;
+-- SKIP Firebird.5 END
+-- SKIP Firebird.4 END
+-- SKIP Firebird.3 END
+-- SKIP Firebird.2.5 END
+
 DROP PROCEDURE "AddIssue792Record";             COMMIT;
 DROP PROCEDURE "Person_SelectByKey";            COMMIT;
 DROP PROCEDURE "Person_SelectAll";              COMMIT;

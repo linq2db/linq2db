@@ -230,6 +230,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 				case ConvertType.NameToCteName         :
 				case ConvertType.NameToProcedure       :
 				case ConvertType.NameToPackage         :
+				case ConvertType.NameToSchema          : // Firebird 6 only (earlier versions never emit a schema qualifier)
 				case ConvertType.SequenceName          :
 					if (ProviderOptions.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Quote ||
 					   (ProviderOptions.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && !IsValidIdentifier(value)))
