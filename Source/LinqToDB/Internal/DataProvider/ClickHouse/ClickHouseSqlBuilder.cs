@@ -397,7 +397,9 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 		protected override void BuildOffsetLimit(SelectQuery selectQuery)
 		{
-			SqlOptimizer.ConvertSkipTake(NullabilityContext, MappingSchema, DataOptions, selectQuery, OptimizationContext, out var takeExpr, out var skipExpr);
+			// TAKE/SKIP resolved during render-prep (see ScenarioCommandRenderer.ResolveSkipTake).
+			var takeExpr = selectQuery.Select.TakeValue;
+			var skipExpr = selectQuery.Select.SkipValue;
 
 			if (takeExpr != null || skipExpr != null)
 			{

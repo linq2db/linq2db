@@ -193,6 +193,114 @@ namespace LinqToDB.Internal.SqlProvider
 			return newQuery;
 		}
 
+		protected internal override IQueryElement VisitSqlSelectClause(SqlSelectClause element)
+		{
+			var result = base.VisitSqlSelectClause(element);
+
+			// Finalize paging (TAKE/SKIP) into render-ready form as part of the whole-query convert, so the SQL builder
+			// renders it without calling the optimizer.
+			if (result is not SqlSelectClause select || (select.TakeValue == null && select.SkipValue == null))
+				return result;
+
+			var (take, skip) = ResolveSkipTakeValues(select, element.SelectQuery);
+
+			if (ReferenceEquals(take, select.TakeValue) && ReferenceEquals(skip, select.SkipValue))
+				return result;
+
+			// Write the resolved values back respecting the visit mode. GetVisitMode returns Modify once base has
+			// replaced this clause with a fresh instance during a Transform pass (see SqlQueryVisitor.GetVisitMode),
+			// so the Modify case covers both a real Modify convert and an already-cloned clause we own; only an
+			// unchanged, still-shared clause reaches the Transform case and needs a fresh instance.
+			switch (GetVisitMode(element))
+			{
+				case VisitMode.Modify:
+				{
+					select.TakeValue = take;
+					select.SkipValue = skip;
+
+					return select;
+				}
+
+				case VisitMode.Transform:
+				{
+					// base returned the shared source clause unchanged — build a new one instead of mutating it
+					// (mirroring base's reconstruction, which re-parents the columns).
+					var newColumns = new SqlColumn[element.Columns.Count];
+
+					for (var i = 0; i < newColumns.Length; i++)
+					{
+						var column = element.Columns[i];
+						newColumns[i] = new SqlColumn(element.SelectQuery, column.Expression, column.RawAlias);
+						NotifyReplaced(newColumns[i], column);
+					}
+
+					var distinctOn = element.DistinctOn != null ? new List<ISqlExpression>(element.DistinctOn) : null;
+
+					return NotifyReplaced(
+						new SqlSelectClause(element.IsDistinct, distinctOn, take, element.TakeHints, skip, newColumns) { OptimizeDistinct = element.OptimizeDistinct },
+						element);
+				}
+
+				default:
+					// ReadOnly (not used by the convert visitor) — do not alter the tree.
+					return result;
+			}
+		}
+
+		/// <summary>
+		/// Computes the render-ready TAKE/SKIP for <paramref name="select"/> without mutating it: optimizes each value, then
+		/// per provider flags either evaluates it to a literal (<see cref="SqlValue"/>) or mints a <c>take</c>/<c>skip</c>
+		/// <see cref="SqlParameter"/>. A value/parameter is already resolved and returned unchanged (repeated visits are idempotent).
+		/// </summary>
+		(ISqlExpression? take, ISqlExpression? skip) ResolveSkipTakeValues(SqlSelectClause select, SelectQuery selectQuery)
+		{
+			var nullability = NullabilityContext.GetContext(selectQuery);
+
+			var takeExpr = OptimizationContext.Optimize(select.TakeValue, nullability, false);
+			var skipExpr = OptimizationContext.Optimize(select.SkipValue, nullability, false);
+
+			if (takeExpr != null)
+			{
+				var supportsParameter = SqlProviderFlags.GetAcceptsTakeAsParameterFlag(selectQuery);
+
+				if (supportsParameter)
+				{
+					if (takeExpr.ElementType is not QueryElementType.SqlParameter and not QueryElementType.SqlValue)
+					{
+						var takeValue = takeExpr.EvaluateExpression(EvaluationContext)!;
+						takeExpr = new SqlParameter(new DbDataType(takeValue.GetType()), "take", takeValue)
+						{
+							IsQueryParameter = DataOptions.LinqOptions.ParameterizeTakeSkip && !QueryHelper.NeedParameterInlining(takeExpr),
+						};
+					}
+				}
+				else if (takeExpr.ElementType != QueryElementType.SqlValue)
+					takeExpr = new SqlValue(takeExpr.EvaluateExpression(EvaluationContext)!);
+			}
+
+			if (skipExpr != null)
+			{
+				var supportsParameter = SqlProviderFlags.GetIsSkipSupportedFlag(select.TakeValue)
+										&& SqlProviderFlags.AcceptsTakeAsParameter;
+
+				if (supportsParameter)
+				{
+					if (skipExpr.ElementType is not QueryElementType.SqlParameter and not QueryElementType.SqlValue)
+					{
+						var skipValue = skipExpr.EvaluateExpression(EvaluationContext)!;
+						skipExpr = new SqlParameter(new DbDataType(skipValue.GetType()), "skip", skipValue)
+						{
+							IsQueryParameter = DataOptions.LinqOptions.ParameterizeTakeSkip && !QueryHelper.NeedParameterInlining(skipExpr),
+						};
+					}
+				}
+				else if (skipExpr.ElementType != QueryElementType.SqlValue)
+					skipExpr = new SqlValue(skipExpr.EvaluateExpression(EvaluationContext)!);
+			}
+
+			return (takeExpr, skipExpr);
+		}
+
 		protected internal override IQueryElement VisitExprPredicate(SqlPredicate.Expr predicate)
 		{
 			var result = base.VisitExprPredicate(predicate);

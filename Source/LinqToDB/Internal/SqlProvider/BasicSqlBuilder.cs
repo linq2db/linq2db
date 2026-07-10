@@ -319,7 +319,10 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected virtual void BuildSqlBuilder(SelectQuery selectQuery, int indent, ColumnAliasMode aliasMode)
 		{
-			SqlOptimizer.ConvertSkipTake(NullabilityContext, MappingSchema, DataOptions, selectQuery, OptimizationContext, out var takeExpr, out var skipExpr);
+			// TAKE/SKIP were resolved into Select.TakeValue/SkipValue during render-prep (ScenarioCommandRenderer.ResolveSkipTake),
+			// so the builder reads them directly instead of calling the optimizer at render.
+			var takeExpr = selectQuery.Select.TakeValue;
+			var skipExpr = selectQuery.Select.SkipValue;
 
 			if (!SqlProviderFlags.GetIsSkipSupportedFlag(takeExpr)
 				&& skipExpr != null)
@@ -2601,7 +2604,10 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected virtual void BuildSkipFirst(SelectQuery selectQuery)
 		{
-			SqlOptimizer.ConvertSkipTake(NullabilityContext, MappingSchema, DataOptions, selectQuery, OptimizationContext, out var takeExpr, out var skipExpr);
+			// TAKE/SKIP were resolved into Select.TakeValue/SkipValue during render-prep (ScenarioCommandRenderer.ResolveSkipTake),
+			// so the builder reads them directly instead of calling the optimizer at render.
+			var takeExpr = selectQuery.Select.TakeValue;
+			var skipExpr = selectQuery.Select.SkipValue;
 
 			if (SkipFirst && NeedSkip(takeExpr, skipExpr) && SkipFormat != null)
 				StringBuilder.Append(' ').AppendFormat(
@@ -2639,7 +2645,10 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected virtual void BuildOffsetLimit(SelectQuery selectQuery)
 		{
-			SqlOptimizer.ConvertSkipTake(NullabilityContext, MappingSchema, DataOptions, selectQuery, OptimizationContext, out var takeExpr, out var skipExpr);
+			// TAKE/SKIP were resolved into Select.TakeValue/SkipValue during render-prep (ScenarioCommandRenderer.ResolveSkipTake),
+			// so the builder reads them directly instead of calling the optimizer at render.
+			var takeExpr = selectQuery.Select.TakeValue;
+			var skipExpr = selectQuery.Select.SkipValue;
 
 			var doSkip = NeedSkip(takeExpr, skipExpr) && OffsetFormat(selectQuery) != null;
 			var doTake = NeedTake(takeExpr)           && LimitFormat(selectQuery)  != null;
