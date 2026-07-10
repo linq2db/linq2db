@@ -78,6 +78,22 @@ JSON file example:
 					false);
 
 			/// <summary>
+			/// Target language option.
+			/// </summary>
+			public static readonly CliOption TargetLanguage = new StringEnumCliOption(
+					"target-language",
+					null,
+					false,
+					false,
+					"target language for generated code",
+					"Selects the language of generated data model code. F# generation emits idiomatic records with option-typed nullable columns and requires the consuming project to call DataOptions.UseFSharp() (from the linq2db.FSharp package).",
+					null,
+					null,
+					false,
+					new (true,  true,  "c#", "C# (default)"),
+					new (false, false, "f#", "F# (records)"));
+
+			/// <summary>
 			/// Database provider option.
 			/// </summary>
 			public static readonly CliOption Provider = new StringEnumCliOption(

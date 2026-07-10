@@ -28,10 +28,26 @@ namespace LinqToDB.CommandLine
 			// processed on controller level already
 			options.Remove(General.Import);
 
+			// target language selection
+			options.Remove(General.TargetLanguage, out var languageValue);
+			var language = (string?)languageValue == "f#" ? LanguageProviders.FSharp : LanguageProviders.CSharp;
+
+			// F# is emitted through the AST code path only; the T4 template mode is C#-only
+			if (language == LanguageProviders.FSharp
+				&& options.TryGetValue(General.OptionsTemplate, out var templateValue) && templateValue is "t4")
+			{
+				await Console.Error.WriteLineAsync("F# generation (--target-language f#) is not supported together with the T4 template mode (-t t4).").ConfigureAwait(false);
+				return StatusCodes.INVALID_ARGUMENTS;
+			}
+
 			// scaffold settings object initialization
 			var settings = ProcessScaffoldOptions(options);
 			if (settings == null)
 				return StatusCodes.INVALID_ARGUMENTS;
+
+			// F# uses a single generated file (no partial types, order-sensitive compilation)
+			if (language == LanguageProviders.FSharp)
+				settings.CodeGeneration.ClassPerFile = false;
 
 			// process remaining utility-specific (general) options
 
@@ -100,11 +116,12 @@ namespace LinqToDB.CommandLine
 			}
 
 			// perform scaffolding
-			return Scaffold(settings, interceptors, provider, providerLocation, connectionString, additionalConnectionString, output, overwrite);
+			return Scaffold(settings, language, interceptors, provider, providerLocation, connectionString, additionalConnectionString, output, overwrite);
 		}
 
 		private int Scaffold(
 			ScaffoldOptions       settings,
+			ILanguageProvider     language,
 			ScaffoldInterceptors? interceptors,
 			string                provider,
 			string?               providerLocation,
@@ -118,8 +135,6 @@ namespace LinqToDB.CommandLine
 			if (dc == null)
 				return StatusCodes.EXPECTED_ERROR;
 
-			var language = LanguageProviders.CSharp;
-
 			var legacyProvider   = new LegacySchemaProvider(dc, settings.Schema, language);
 			ISchemaProvider      schemaProvider       = legacyProvider;
 			ITypeMappingProvider typeMappingsProvider = legacyProvider;
@@ -131,7 +146,7 @@ namespace LinqToDB.CommandLine
 				typeMappingsProvider     = new AggregateTypeMappingsProvider(legacyProvider, secondLegacyProvider);
 			}
 
-			var generator  = new Scaffolder(LanguageProviders.CSharp, HumanizerNameConverter.Instance, settings, interceptors);
+			var generator  = new Scaffolder(language, HumanizerNameConverter.Instance, settings, interceptors);
 			var dataModel  = generator.LoadDataModel(schemaProvider, typeMappingsProvider);
 			var sqlBuilder = dc.DataProvider.CreateSqlBuilder(dc.MappingSchema, dc.Options);
 			var files      = generator.GenerateCodeModel(
