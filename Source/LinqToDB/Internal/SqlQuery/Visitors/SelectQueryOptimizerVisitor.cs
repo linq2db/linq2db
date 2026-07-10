@@ -1577,6 +1577,29 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 				var toCheck = QueryHelper.EnumerateAccessibleSources(sql).ToList();
 
+				// Hoist correlated SELECT projections to the outer query. A column whose expression references
+				// only outer sources (e.g. a group aggregate projected through a `.First()` apply body) cannot
+				// remain in the apply body once it becomes a plain join - it would reference a sibling derived
+				// table out of scope. Redirect every reference to such a column to its underlying outer expression
+				// and drop the column, mirroring the column inlining done in OptimizeJoinSubQueries. Sound only for
+				// CrossApply (-> INNER JOIN): the joined row exists only when matched, so the hoisted outer value
+				// is always correct. OuterApply/Full/Right (-> LEFT/FULL/RIGHT JOIN) must keep the projection NULL
+				// when there is no matching row, so they are left untouched.
+				if (joinTable.JoinType == JoinType.CrossApply)
+				{
+					for (var hi = sql.Select.Columns.Count - 1; hi >= 0; hi--)
+					{
+						var hoistColumn = sql.Select.Columns[hi];
+
+						if (QueryHelper.IsDependsOnOuterSources(hoistColumn.Expression, currentSources: toCheck)
+							&& !QueryHelper.IsDependsOnSources(hoistColumn.Expression, toCheck))
+						{
+							NotifyReplaced(hoistColumn.Expression, hoistColumn);
+							sql.Select.Columns.RemoveAt(hi);
+						}
+					}
+				}
+
 				for (int i = 0; i < searchCondition.Count; i++)
 				{
 					var predicate = searchCondition[i];
@@ -2053,7 +2076,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 				if (containsWindowFunction)
 				{
-					if (subQuery.Select.HasModifier || subQuery.HasSetOperators || (parentQuery.HasWhere && subQuery.HasWhere) || subQuery.HasGroupBy)
+					if (subQuery.Select.HasModifier || subQuery.HasSetOperators || (parentQuery.HasWhere && subQuery.HasWhere)
+							|| (subQuery.HasGroupBy && parentQuery is not { Select.HasModifier: false, HasWhere: false, HasGroupBy: false, HasHaving: false, From.Tables: [{ Joins.Count: 0 }] }))
 					{
 						// not allowed to break window
 						return false;

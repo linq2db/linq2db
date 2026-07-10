@@ -1808,6 +1808,44 @@ namespace LinqToDB
 			return currentSource.Provider.CreateQuery<TSource>(expr);
 		}
 
+		/// <summary>
+		/// Disables named query filters in current query, identified by filter key and optionally scoped to entity
+		/// types. A filter is disabled when its key is listed and its entity type matches; an empty
+		/// <paramref name="entityTypes"/> list means "any entity type".
+		/// <para>
+		/// An empty <paramref name="filterKeys"/> list disables nothing (mirroring EF Core's
+		/// <c>IgnoreQueryFilters(IEnumerable&lt;string&gt;)</c>). Use the parameterless
+		/// <see cref="IgnoreFilters{TSource}(System.Linq.IQueryable{TSource}, System.Type[])"/> to disable every filter.
+		/// </para>
+		/// </summary>
+		/// <typeparam name="TSource">Source query record type.</typeparam>
+		/// <param name="source">Source query.</param>
+		/// <param name="filterKeys">Filter keys to disable. An empty list disables nothing.</param>
+		/// <param name="entityTypes">Optional entity types the disable is scoped to. Empty means "any entity type".</param>
+		/// <returns>Query with the specified named filters disabled.</returns>
+		[LinqTunnel]
+		[Pure]
+		public static IQueryable<TSource> IgnoreFilters<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] IEnumerable<string> filterKeys, [SqlQueryDependent] params Type[] entityTypes)
+		{
+			ArgumentNullException.ThrowIfNull(source);
+
+			var keys  = filterKeys?.ToArray() ?? [];
+			var types = entityTypes           ?? [];
+
+			// An empty key list is a documented no-op (mirroring EF Core); skip injecting the call so it
+			// doesn't create a distinct translation modifier / query-cache entry for a query that filters identically.
+			if (keys.Length == 0)
+				return source;
+
+			var currentSource = source.ProcessIQueryable();
+
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(IgnoreFilters, source, keys, types), currentSource.Expression, Expression.Constant(keys), Expression.Constant(types));
+
+			return currentSource.Provider.CreateQuery<TSource>(expr);
+		}
+
 		#endregion
 
 		#region Tests

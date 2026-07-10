@@ -21,58 +21,75 @@ namespace LinqToDB.DataProvider.ClickHouse
 	GenerateJoinHint("Semi",        "SEMI");
 	GenerateJoinHint("Anti",        "ANTI");
 	GenerateJoinHint("Any",         "ANY");
+	GenerateJoinHint("All",         "ALL");
 	GenerateJoinHint("AsOf",        "ASOF");
+
 	GenerateJoinHint("Global",      "GLOBAL");
 	GenerateJoinHint("GlobalOuter", "GLOBAL OUTER");
 	GenerateJoinHint("GlobalSemi",  "GLOBAL SEMI");
 	GenerateJoinHint("GlobalAnti",  "GLOBAL ANTI");
 	GenerateJoinHint("GlobalAny",   "GLOBAL ANY");
+	GenerateJoinHint("GlobalAll",   "GLOBAL ALL");
 	GenerateJoinHint("GlobalAsOf",  "GLOBAL ASOF");
-	GenerateJoinHint("All",         "ALL");
-	GenerateJoinHint("AllOuter",    "ALL OUTER");
-	GenerateJoinHint("AllSemi",     "ALL SEMI");
-	GenerateJoinHint("AllAnti",     "ALL ANTI");
-	GenerateJoinHint("AllAny",      "ALL ANY");
-	GenerateJoinHint("AllAsOf",     "ALL ASOF");
+
+	GenerateJoinHint("AllOuter",    null, "Outer");
+	GenerateJoinHint("AllSemi",     null, "Semi");
+	GenerateJoinHint("AllAnti",     null, "Anti");
+	GenerateJoinHint("AllAny",      null, "Any");
+	GenerateJoinHint("AllAsOf",     null, "AsOf");
 #>
 	}
 }
 <#+
-void GenerateJoinHint(string hint, string sqlHint = null)
+void GenerateJoinHint(string hint, string sqlHint = null, string useInstead = null)
 {
 #>
 		/// <summary>
+<#+ if (useInstead != null) { #>
+		/// Adds the same ClickHouse join hint as <c>Join<#= useInstead #>Hint</c>. This method is deprecated.
+<#+ } else { #>
 		/// Adds a ClickHouse <c><#= sqlHint ?? hint #></c> join hint.
+<#+ } #>
 		/// </summary>
 		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+<#+ if (useInstead != null) { #>
+		[Obsolete("TODO: remove in v7. This API is based on an incorrect ClickHouse join hint model and works incorrectly. Use Join<#= useInstead #>Hint instead.")]
+<#+ } #>
 		[ExpressionMethod(nameof(Join<#= hint #>HintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> Join<#= hint #>Hint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
 		{
-			return query.JoinHint(Join.<#= hint #>);
+			return query.JoinHint(Join.<#= useInstead ?? hint #>);
 		}
 
 		static Expression<Func<IClickHouseSpecificQueryable<TSource>,IClickHouseSpecificQueryable<TSource>>> Join<#= hint #>HintImpl<TSource>()
 			where TSource : notnull
 		{
-			return query => query.JoinHint(Join.<#= hint #>);
+			return query => query.JoinHint(Join.<#= useInstead ?? hint #>);
 		}
 
 		/// <summary>
+<#+	if (useInstead != null) { #>
+		/// Adds the same ClickHouse join hint as <c>Join<#= useInstead #>Hint</c>. This method is deprecated.
+<#+	} else { #>
 		/// Adds a ClickHouse <c><#= sqlHint ?? hint #></c> join hint.
+<#+	} #>
 		/// </summary>
 		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+<#+ if (useInstead != null) { #>
+		[Obsolete("TODO: remove in v7. This API is based on an incorrect ClickHouse join hint model and works incorrectly. Use Join<#= useInstead #>Hint instead.")]
+<#+ } #>
 		[ExpressionMethod(nameof(Join<#= hint #>TableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> Join<#= hint #>Hint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
 		{
-			return table.JoinHint(Join.<#= hint #>);
+			return table.JoinHint(Join.<#= useInstead ?? hint #>);
 		}
 
 		static Expression<Func<IClickHouseSpecificTable<TSource>,IClickHouseSpecificTable<TSource>>> Join<#= hint #>TableHintImpl<TSource>()
 			where TSource : notnull
 		{
-			return table => table.JoinHint(Join.<#= hint #>);
+			return table => table.JoinHint(Join.<#= useInstead ?? hint #>);
 		}
 
 <#+

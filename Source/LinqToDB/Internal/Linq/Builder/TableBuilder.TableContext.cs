@@ -33,6 +33,18 @@ namespace LinqToDB.Internal.Linq.Builder
 			public SqlTable        SqlTable        { get; set; }
 			public LoadWithEntity? LoadWithRoot { get; set; }
 
+			List<Type>? _filteredByOfType;
+
+			/// <summary>
+			/// TPH types this context's rows have already been narrowed to via <c>OfType</c>/<c>Cast</c>
+			/// (the discriminator predicate is already applied to the query), or <see langword="null"/> when
+			/// none. Used to avoid emitting a redundant discriminator on associations declared on a derived
+			/// type. Lazily allocated — inheritance/OfType is rare, so most contexts never allocate it.
+			/// </summary>
+			public List<Type>? FilteredByOfType => _filteredByOfType;
+
+			public void AddFilteredByOfType(Type type) => (_filteredByOfType ??= new()).Add(type);
+
 			public bool IsSubQuery { get; }
 
 			#endregion
@@ -225,9 +237,10 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					if (path.Type.IsAssignableFrom(ElementType) || ElementType.IsAssignableFrom(path.Type))
 					{
+						// Calculated columns (ExpressionMethodAttribute.IsColumn=true) are expanded during
+						// full-entity construction (EntityConstructor.ExposeCalculatedColumn); IsColumn=false
+						// expression-methods are intentionally left as plain column reads here — see #5540.
 						Expression fullEntity = Builder.BuildFullEntityExpression(MappingSchema, path, ElementType, flags);
-						// Entity can contain calculated columns which should be exposed
-						fullEntity = Builder.ConvertExpressionTree(fullEntity);
 
 						if (fullEntity.Type != path.Type)
 							fullEntity = Expression.Convert(fullEntity, path.Type);
@@ -293,10 +306,15 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				return new TableContext(TranslationModifier, Builder, MappingSchema, context.CloneElement(SelectQuery), context.CloneElement(SqlTable), IsOptional)
+				var cloned = new TableContext(TranslationModifier, Builder, MappingSchema, context.CloneElement(SelectQuery), context.CloneElement(SqlTable), IsOptional)
 				{
 					LoadWithRoot = LoadWithRoot,
 				};
+
+				if (_filteredByOfType != null)
+					cloned._filteredByOfType = [.._filteredByOfType];
+
+				return cloned;
 			}
 
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)
@@ -470,7 +488,8 @@ namespace LinqToDB.Internal.Linq.Builder
 									{
 										foreach (var mm in MappingSchema.GetEntityDescriptor(mapping.Type, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated).Columns)
 										{
-											if (mm.MemberAccessor.MemberInfo.EqualsTo(memberExpression.Member))
+											if (mm.MemberAccessor.MemberInfo.EqualsTo(memberExpression.Member)
+												&& string.Equals(mm.ColumnName, field.PhysicalName, StringComparison.Ordinal))
 												return field;
 										}
 									}

@@ -27,4 +27,6 @@ packages/
 .build/
 **/launchSettings.json
 /notes/architect-ai-docs.md
+/.agents/settings.local.json
 /.claude/settings.local.json
+Source/LinqToDB/.claude/

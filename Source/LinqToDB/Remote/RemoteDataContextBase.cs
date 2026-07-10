@@ -196,8 +196,8 @@ namespace LinqToDB.Remote
 					});
 			}
 
-			public Expression Convert(Expression expression, out bool handled)
-				=> ProviderConverter.Convert(expression, out handled);
+			public Expression Convert(Expression expression, IConvertContext context, out bool handled)
+				=> ProviderConverter.Convert(expression, context, out handled);
 		}
 
 		sealed class RemoteDmlService : IDmlService
