@@ -62,6 +62,8 @@ namespace LinqToDB.EntityFrameworkCore
 					?? throw new LinqToDBForEFToolsException("Can not evaluate current context from query");
 
 				var dc = CreateLinqToDBContext(context);
+				// #5364: implicit context is never disposed — release the EF connection per command.
+				dc.CloseAfterUse = true;
 				var newExpression = queryable.Expression;
 
 				var result = instantiator.MakeGenericMethod(queryable.ElementType)
@@ -366,20 +368,17 @@ namespace LinqToDB.EntityFrameworkCore
 		/// <param name="context">EF Core database context.</param>
 		/// <param name="transaction">Transaction instance.</param>
 		/// <returns>Linq To DB data context.</returns>
-		public static IDataContext CreateLinqToDBContext(this DbContext context,
-			IDbContextTransaction? transaction = null)
+		public static IDataContext CreateLinqToDBContext(this DbContext context, IDbContextTransaction? transaction = null)
 		{
 			ArgumentNullException.ThrowIfNull(context);
 
 			var info    = GetEFProviderInfo(context);
 			var options = context.GetLinqToDBOptions() ?? new DataOptions();
-			options     = options.UseAdditionalMappingSchema(GetMappingSchema(context.Model, context, options));
+			options = options.UseAdditionalMappingSchema(GetMappingSchema(context.Model, context, options));
 
-			DataConnection? dc = null;
+			transaction ??= context.Database.CurrentTransaction;
 
-			transaction     ??= context.Database.CurrentTransaction;
-			var dbTransaction = transaction?.GetDbTransaction() ?? info.Transaction;
-
+			var dbTransaction  = transaction?.GetDbTransaction() ?? info.Transaction;
 			var connectionInfo = GetConnectionInfo(info, dbTransaction);
 			var provider       = GetDataProvider(options, info, connectionInfo);
 			var logger         = CreateLogger(info.Options);
@@ -387,37 +386,13 @@ namespace LinqToDB.EntityFrameworkCore
 
 			if (dbTransaction != null)
 			{
-				// TODO: we need API for testing current connection
-				// if (provider.IsCompatibleConnection(dbTransaction.Connection))
 				options = options.UseTransaction(provider, dbTransaction);
-				dc = new LinqToDBForEFToolsDataConnection(context, options, context.Model, TransformExpression);
+				return new LinqToDBForEFToolsDataConnection(context, options, context.Model, TransformExpression);
 			}
 
-			if (dc == null)
-			{
-				var dbConnection = context.Database.GetDbConnection();
-				// TODO: we need API for testing current connection
-				options = options.UseConnection(provider, dbConnection);
-				if (true /*provider.IsCompatibleConnection(dbConnection)*/)
-					dc = new LinqToDBForEFToolsDataConnection(context, options, context.Model, TransformExpression);
-				else
-				{
-					/*
-					// special case when we have to create data connection by itself
-					var dataContext = new LinqToDBForEFToolsDataContext(context, provider, connectionInfo.ConnectionString, context.Model, TransformExpression);
-
-					if (mappingSchema != null)
-						dataContext.MappingSchema = mappingSchema;
-
-					if (logger != null)
-						dataContext.OnTraceConnection = t => Implementation.LogConnectionTrace(t, logger);
-
-					return dataContext;
-					*/
-				}
-			}
-
-			return dc;
+			var dbConnection = context.Database.GetDbConnection();
+			options = options.UseConnection(provider, dbConnection);
+			return new LinqToDBForEFToolsDataConnection(context, options, context.Model, TransformExpression);
 		}
 
 		/// <summary>
@@ -568,6 +543,11 @@ namespace LinqToDB.EntityFrameworkCore
 #pragma warning disable CA2000 // Dispose objects before losing scope
 			var dc = CreateLinqToDBContext(context);
 #pragma warning restore CA2000 // Dispose objects before losing scope
+
+			// #5364: this implicit context is never disposed, so release the EF connection after
+			// each command (as EF Core itself does) instead of holding it open until dispose.
+			// Only closes what linq2db actually opened, so an ambient transaction is unaffected.
+			dc.CloseAfterUse = true;
 
 			return new LinqToDBForEFQueryProvider<T>(dc, query.Expression);
 		}
