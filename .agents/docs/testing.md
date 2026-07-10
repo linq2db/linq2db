@@ -86,6 +86,16 @@ After the file exists, `/test-providers` is the supported way to enable / disabl
 
 `UserDataProviders.json` has a top-level section per target framework (`NETFX`, `NETBASE`, `NET80`, `NET90`, `NET100`), each with its own `Providers` array. To enable a provider for a test run, uncomment it in the section matching your `-f` flag — `NETFX` only affects `net462` runs, `NET100` only affects `net10.0` runs, etc. Editing the wrong section silently does nothing.
 
+### How CI resolves test config (`Build/Azure/*.json`) vs local
+
+Local runs read `UserDataProviders.json`. **CI does not** — each Azure job copies `Build/Azure/net{80,90,100}/<config>.json` (e.g. `sqlite.json`, `duckdb.json`) into `UserDataProviders.json` (see `Build/Azure/pipelines/templates/test-workflow-*.yml`), while the tracked root `DataProviders.json` is the base. `SettingsReader.Deserialize` (`Tests/Base/Tools/SettingsReader.cs`) merges the two **first-writer-wins** — the copied CI config's `Connections` keys win, the base only fills in what's missing — and resolves `BasedOn` chains: `NET*.Azure` → `AzureConnectionStrings` → `CommonConnectionStrings`.
+
+Consequences:
+
+- A `CommonConnectionStrings` edit in `DataProviders.json` flows to **both** local dev *and* CI (both inherit it). To change a provider **only** in CI, add a `Connections` override to the Build/Azure job file — don't rely on editing `DataProviders.json` alone (and don't duplicate a string into both when the base already supplies it).
+- `BaselinesPath` is set only in `AzureConnectionStrings`, so baseline capture/compare is **CI-only**; local runs don't diff baselines unless you set it yourself.
+- **A test-config mode that breaks filtered/local runs (`dotnet test --filter …`, which skips the `a_CreateData` seed) must not become the tracked default.** Scope the risky mode to a CI-only Build/Azure override and keep the dev default safe — or fix the underlying limitation. (#5698: DuckDB shared in-memory can't be preloaded from its committed file — `COPY FROM DATABASE` fails on FK ordering — so it's CI-only, full-suite-seeded; SQLite preloads via the backup API, so its in-memory default is filtered-run-safe.)
+
 ### Container-backed providers
 
 Most non-file providers (SAP HANA, most Oracle versions, PostgreSQL, MySQL, DB2, Informix, ClickHouse, SQL Server 2017+) connect to local docker containers. Start the needed container(s) before running tests — e.g. `docker start hana2 oracle11`. SAP HANA in particular takes several minutes after container start before its internal HDB database finishes warm-up; tests that run immediately after `docker start hana2` may hit "connection refused".
