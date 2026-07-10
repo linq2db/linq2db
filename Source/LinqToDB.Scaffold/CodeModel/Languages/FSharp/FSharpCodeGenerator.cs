@@ -78,6 +78,9 @@ namespace LinqToDB.CodeModel
 		private IType? _currentType;
 		// indicates that the enclosing type is an F# record, so properties are emitted as record fields
 		private bool   _currentIsRecord;
+		// indicates that the enclosing type is a static class rendered as an [<Extension>] type, so methods
+		// are emitted as `[<Extension>] static member` rather than instance members
+		private bool   _currentIsExtensionType;
 		// file imports, emitted after the `namespace` declaration (F# requires namespace before `open`)
 		private IReadOnlyList<CodeImport>? _fileImports;
 
@@ -304,14 +307,20 @@ namespace LinqToDB.CodeModel
 
 			WriteCustomAttributes(method.CustomAttributes, false);
 
-			// F# member/function declaration.
-			// Static/extension methods are expected to be emitted inside a module by the model generator;
-			// instance methods are emitted as 'member this.Name'.
-			var isStatic = method.Attributes.HasFlag(Modifiers.Static);
-
-			if (isStatic)
+			// F# member declaration. Inside an [<Extension>] type, C#-style extension methods are rendered as
+			// `[<Extension>] static member` so they remain callable as instance methods (e.g. table.Find(pk))
+			// from both F# and C#. Other static methods are plain `static member`; instance methods use
+			// `member this.`.
+			if (_currentIsExtensionType && method.Attributes.HasFlag(Modifiers.Extension))
 			{
-				Write("let ");
+				WriteLine("[<System.Runtime.CompilerServices.Extension>]");
+				Write("static member ");
+				WriteAccessibility(method.Attributes);
+				WriteIdentifier(method.Name.Name);
+			}
+			else if (method.Attributes.HasFlag(Modifiers.Static))
+			{
+				Write("static member ");
 				WriteAccessibility(method.Attributes);
 				WriteIdentifier(method.Name.Name);
 			}
@@ -352,11 +361,9 @@ namespace LinqToDB.CodeModel
 			Write(" : ");
 			Visit(parameter.Type);
 
-			if (parameter.DefaultValue != null)
-			{
-				// F# optional parameters use a different mechanism; not emitted by the F# model path
-				throw new NotImplementedException("Default parameter values are not supported by F# code generator");
-			}
+			// C# default parameter values (e.g. CancellationToken = default) have no direct F# member-parameter
+			// equivalent; the parameter is emitted as required. The produced method is fully usable, callers just
+			// pass the argument explicitly.
 		}
 
 		protected override void Visit(CodeXmlComment doc)
@@ -547,12 +554,17 @@ namespace LinqToDB.CodeModel
 
 		protected override void Visit(CodeClass @class)
 		{
-			var isRecord = @class.Attributes.HasFlag(Modifiers.Record);
+			var isRecord        = @class.Attributes.HasFlag(Modifiers.Record);
+			// a static (non-record) class is rendered as an F# [<Extension>] type holding static members
+			var isExtensionType = !isRecord && @class.Attributes.HasFlag(Modifiers.Static);
 
 			if (@class.XmlDoc != null)
 				Visit(@class.XmlDoc);
 
 			WriteCustomAttributes(@class.CustomAttributes, false);
+
+			if (isExtensionType)
+				WriteLine("[<System.Runtime.CompilerServices.Extension>]");
 
 			Write("type ");
 			WriteAccessibility(@class.Attributes);
@@ -560,10 +572,12 @@ namespace LinqToDB.CodeModel
 
 			_currentScope.Add(@class.Name);
 
-			var oldType         = _currentType;
-			var oldIsRecord     = _currentIsRecord;
-			_currentType        = @class.Type;
-			_currentIsRecord    = isRecord;
+			var oldType             = _currentType;
+			var oldIsRecord         = _currentIsRecord;
+			var oldIsExtensionType  = _currentIsExtensionType;
+			_currentType            = @class.Type;
+			_currentIsRecord        = isRecord;
+			_currentIsExtensionType = isExtensionType;
 
 			if (isRecord)
 			{
@@ -590,6 +604,14 @@ namespace LinqToDB.CodeModel
 							Visit(group);
 				}
 
+				DecreaseIdent();
+			}
+			else if (isExtensionType)
+			{
+				// static class -> F# [<Extension>] type holding static (extension) members
+				WriteLine(" =");
+				IncreaseIdent();
+				WriteMemberGroups(@class.Members);
 				DecreaseIdent();
 			}
 			else
@@ -653,8 +675,9 @@ namespace LinqToDB.CodeModel
 
 			WriteLine();
 
-			_currentIsRecord = oldIsRecord;
-			_currentType     = oldType;
+			_currentIsExtensionType = oldIsExtensionType;
+			_currentIsRecord        = oldIsRecord;
+			_currentType            = oldType;
 
 			_currentScope.RemoveAt(_currentScope.Count - 1);
 		}
@@ -1065,7 +1088,11 @@ namespace LinqToDB.CodeModel
 
 			RenderTypeName(type, nameOverride, typeOnlyContext);
 
-			if (nullable)
+			// Wrap nullable *scalar* types in `option` (idiomatic F#, auto-mapped by linq2db.FSharp's
+			// UseFSharp option support). Nullable reference types that are NOT scalar - entity associations,
+			// byte[], obj, method return types - are left as plain nullable references, because option over a
+			// non-scalar element is not auto-mapped and an entity/array option would not round-trip.
+			if (nullable && (type.IsValueType || _languageProvider.GetAlias(type) == "string"))
 				Write(" option");
 		}
 

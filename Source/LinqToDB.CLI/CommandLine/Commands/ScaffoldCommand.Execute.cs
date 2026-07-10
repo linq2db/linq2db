@@ -58,7 +58,8 @@ namespace LinqToDB.CommandLine
 				// they will be re-enabled one by one as the F# code generator gains support for each
 				// (Find methods as module functions, records' structural equality, associations as record
 				// fields, a single primary constructor). Until then, restrict F# to the record + context core.
-				settings.DataModel.GenerateFindExtensions            = LinqToDB.DataModel.FindTypes.None;
+				// F# records are structurally value-equal already, so the C#-style IEquatable comparer is not
+				// emitted (it would conflict with the compiler-generated equality)
 				settings.DataModel.GenerateIEquatable                = false;
 				// associations become extra record fields with [<Association>] attributes (namespace rec covers
 				// the mutual references); association *extension* methods remain gated off for now
