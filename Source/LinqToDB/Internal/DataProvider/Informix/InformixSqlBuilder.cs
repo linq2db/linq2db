@@ -40,13 +40,13 @@ namespace LinqToDB.Internal.DataProvider.Informix
 		protected override void BuildSql(
 			SqlStatement statement,
 			StringBuilder sb,
-			OptimizationContext optimizationContext,
+			ISqlBuilderRenderContext renderContext,
 			int indent,
 			ColumnAliasMode aliasMode,
 			NullabilityContext? nullabilityContext
 		)
 		{
-			base.BuildSql(statement, sb, optimizationContext, indent, aliasMode, nullabilityContext);
+			base.BuildSql(statement, sb, renderContext, indent, aliasMode, nullabilityContext);
 
 			sb
 				.Replace("NULL IS NOT NULL", "1=0")
@@ -348,7 +348,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			// TODO: refactor. Code similar to DB2/Firebird logic
 			if (parameter.NeedsCast && BuildStep != Step.TypedExpression)
 			{
-				var paramValue = parameter.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
+				var paramValue = parameter.GetParameterValue(RenderContext.EvaluationContext.ParameterValues);
 
 				var dbDataType = paramValue.DbDataType;
 
@@ -390,7 +390,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			// IFX doesn't support `NULL [NOT] IN`
 			if (predicate.Expr1 is SqlParameter { IsQueryParameter: false } parameter)
 			{
-				var paramValue = parameter.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
+				var paramValue = parameter.GetParameterValue(RenderContext.EvaluationContext.ParameterValues);
 				if (paramValue.ProviderValue == null)
 				{
 					var nullExpr = new SqlCastExpression(new SqlValue(paramValue.DbDataType, null), paramValue.DbDataType, null, isMandatory: true);
@@ -406,7 +406,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			// IFX doesn't support `NULL [NOT] IN`
 			if (predicate.Expr1 is SqlParameter { IsQueryParameter: false } parameter)
 			{
-				var paramValue = parameter.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
+				var paramValue = parameter.GetParameterValue(RenderContext.EvaluationContext.ParameterValues);
 				if (paramValue.ProviderValue == null)
 				{
 					var nullExpr = new SqlCastExpression(new SqlValue(paramValue.DbDataType, null), paramValue.DbDataType, null, isMandatory: true);

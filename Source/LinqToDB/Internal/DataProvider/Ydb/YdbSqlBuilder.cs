@@ -331,12 +331,12 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		protected override bool IsCteColumnListSupported => false;
 
 		protected override void BuildSql(
-			SqlStatement        statement,
-			StringBuilder       sb,
-			OptimizationContext optimizationContext,
-			int                 indent,
-			ColumnAliasMode     aliasMode,
-			NullabilityContext? nullabilityContext)
+			SqlStatement             statement,
+			StringBuilder            sb,
+			ISqlBuilderRenderContext renderContext,
+			int                      indent,
+			ColumnAliasMode          aliasMode,
+			NullabilityContext?      nullabilityContext)
 		{
 			// YDB CTEs are named query variables ($name) that share the parameter-name bucket;
 			// reserve all CTE names up front (by registering them with the parameter normalizer) so
@@ -346,10 +346,10 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			{
 				foreach (var cte in withQuery.With.Clauses)
 					if (!string.IsNullOrEmpty(cte.Name))
-						optimizationContext.NormalizeParameterName(cte.Name);
+						renderContext.NormalizeParameterName(cte.Name);
 			}
 
-			base.BuildSql(statement, sb, optimizationContext, indent, aliasMode, nullabilityContext);
+			base.BuildSql(statement, sb, renderContext, indent, aliasMode, nullabilityContext);
 		}
 
 		protected override void BuildWithClause(SqlWithClause? with)
@@ -411,12 +411,12 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		protected override void BuildInListPredicate(SqlPredicate.InList predicate)
 		{
 			static List<object?>? TryMaterializeItems(
-				OptimizationContext           opt,
+				ISqlBuilderRenderContext      renderContext,
 				IReadOnlyList<ISqlExpression> values)
 			{
 				if (values is [SqlParameter pr])
 				{
-					var pv = pr.GetParameterValue(opt.EvaluationContext.ParameterValues).ProviderValue;
+					var pv = pr.GetParameterValue(renderContext.EvaluationContext.ParameterValues).ProviderValue;
 					switch (pv)
 					{
 						case string:
@@ -437,7 +437,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 							tmp.Add(sv.Value);
 							break;
 						case SqlParameter sp:
-							tmp.Add(sp.GetParameterValue(opt.EvaluationContext.ParameterValues).ProviderValue);
+							tmp.Add(sp.GetParameterValue(renderContext.EvaluationContext.ParameterValues).ProviderValue);
 							break;
 						default:
 							return null;
@@ -447,7 +447,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				return tmp;
 			}
 
-			var items = TryMaterializeItems(OptimizationContext, predicate.Values);
+			var items = TryMaterializeItems(RenderContext, predicate.Values);
 			if (items == null)
 			{
 				base.BuildInListPredicate(predicate);

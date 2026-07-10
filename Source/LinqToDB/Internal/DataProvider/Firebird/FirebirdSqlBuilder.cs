@@ -271,7 +271,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 		{
 			if (parameter.NeedsCast && BuildStep != Step.TypedExpression)
 			{
-				var paramValue = parameter.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
+				var paramValue = parameter.GetParameterValue(RenderContext.EvaluationContext.ParameterValues);
 
 				var dbDataType = paramValue.DbDataType;
 
@@ -659,7 +659,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 					case SqlParameter param:
 					{
 						typeRequired = true;
-						var paramValue = param.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
+						var paramValue = param.GetParameterValue(RenderContext.EvaluationContext.ParameterValues);
 						providerValue = paramValue.ProviderValue;
 						isClientValue = true;
 						break;
@@ -703,7 +703,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 					dataType = CorrectDecimalFacets(dataType, val);
 				else if (value is SqlParameter param)
 				{
-					var paramValue = param.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
+					var paramValue = param.GetParameterValue(RenderContext.EvaluationContext.ParameterValues);
 
 					if (paramValue.ProviderValue is decimal decValue)
 						dataType = CorrectDecimalFacets(dataType, decValue);

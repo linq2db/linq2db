@@ -188,7 +188,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 		protected override void BuildSqlValuesTable(SqlValuesTable valuesTable, string alias, out bool aliasBuilt)
 		{
-			var rows = valuesTable.BuildRows(OptimizationContext.EvaluationContext);
+			var rows = valuesTable.BuildRows(RenderContext.EvaluationContext);
 
 			if (rows.Count == 0)
 			{

@@ -232,7 +232,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 		{
 			if (parameter.NeedsCast && BuildStep != Step.TypedExpression)
 			{
-				var paramValue = parameter.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
+				var paramValue = parameter.GetParameterValue(RenderContext.EvaluationContext.ParameterValues);
 
 				var saveStep = BuildStep;
 				BuildStep = Step.TypedExpression;

@@ -438,7 +438,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		protected override void BuildCteBody(SelectQuery selectQuery)
 		{
 			var sqlBuilder = (ClickHouseSqlBuilder)CreateSqlBuilder();
-			sqlBuilder.BuildSql(new SqlSelectStatement(selectQuery), StringBuilder, OptimizationContext, Indent, ColumnAliasMode.None, null);
+			sqlBuilder.BuildSql(new SqlSelectStatement(selectQuery), StringBuilder, RenderContext, Indent, ColumnAliasMode.None, null);
 		}
 
 		protected override void BuildInsertQuery(SqlStatement statement, SqlInsertClause insertClause, bool addAlias)

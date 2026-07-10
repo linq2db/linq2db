@@ -56,13 +56,13 @@ namespace LinqToDB.Internal.SqlProvider
 
 		// Default to an empty context (all accessors fall back to the node's own value) so that any
 		// SQL-rendering path that runs before BuildSql assigns the real one still resolves names.
-		public AliasesContext      AliasesContext      { get; protected set; } = new();
-		public OptimizationContext OptimizationContext { get; protected set; } = null!;
-		public MappingSchema       MappingSchema       { get;                }
-		public StringBuilder       StringBuilder       { get; set;           } = null!;
-		public SqlProviderFlags    SqlProviderFlags    { get;                }
-		public DataOptions         DataOptions         { get;                }
-		public NullabilityContext  NullabilityContext  { get; set; }
+		public AliasesContext           AliasesContext      { get; protected set; } = new();
+		public ISqlBuilderRenderContext RenderContext       { get; protected set; } = null!;
+		public MappingSchema            MappingSchema       { get;                }
+		public StringBuilder            StringBuilder       { get; set;           } = null!;
+		public SqlProviderFlags         SqlProviderFlags    { get;                }
+		public DataOptions              DataOptions         { get;                }
+		public NullabilityContext       NullabilityContext  { get; set; }
 
 		protected IDataProvider?      DataProvider;
 		protected ValueToSqlConverter ValueToSqlConverter => MappingSchema.ValueToSqlConverter;
@@ -220,7 +220,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		#region BuildSql
 
-		public void BuildSql(SqlStatement statement, StringBuilder sb, OptimizationContext optimizationContext, AliasesContext aliases, NullabilityContext? nullabilityContext,
+		public void BuildSql(SqlStatement statement, StringBuilder sb, ISqlBuilderRenderContext renderContext, AliasesContext aliases, NullabilityContext? nullabilityContext,
 			int startIndent = 0)
 		{
 			AliasesContext = aliases;
@@ -229,7 +229,7 @@ namespace LinqToDB.Internal.SqlProvider
 			if (!DataOptions.SqlOptions.GenerateFinalAliases && CanSkipRootAliases(statement))
 				columnAliasMode |= ColumnAliasMode.SkipAlias;
 
-			BuildSql(statement, sb, optimizationContext, startIndent, columnAliasMode, nullabilityContext: nullabilityContext);
+			BuildSql(statement, sb, renderContext, startIndent, columnAliasMode, nullabilityContext: nullabilityContext);
 		}
 
 		protected virtual void BuildSetOperation(SetOperation operation, StringBuilder sb)
@@ -251,7 +251,7 @@ namespace LinqToDB.Internal.SqlProvider
 		protected virtual void BuildSql(
 			SqlStatement statement,
 			StringBuilder sb,
-			OptimizationContext optimizationContext,
+			ISqlBuilderRenderContext renderContext,
 			int indent,
 			ColumnAliasMode aliasMode,
 			NullabilityContext? nullabilityContext
@@ -259,7 +259,7 @@ namespace LinqToDB.Internal.SqlProvider
 		{
 			Statement           = statement;
 			StringBuilder       = sb;
-			OptimizationContext = optimizationContext;
+			RenderContext       = renderContext;
 			Indent              = indent;
 			AliasMode           = aliasMode;
 
@@ -280,7 +280,7 @@ namespace LinqToDB.Internal.SqlProvider
 					var sqlBuilder = ((BasicSqlBuilder)CreateSqlBuilder());
 					sqlBuilder.BuildSql(
 						new SqlSelectStatement(union.SelectQuery) { ParentStatement = statement }, sb,
-						optimizationContext, indent,
+						renderContext, indent,
 						aliasMode, NullabilityContext);
 					MergeSqlBuilderData(sqlBuilder);
 				}
@@ -330,7 +330,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
 			sqlBuilder.BuildSql(
-				new SqlSelectStatement(selectQuery) { ParentStatement = Statement }, StringBuilder, OptimizationContext, indent, aliasMode, NullabilityContext);
+				new SqlSelectStatement(selectQuery) { ParentStatement = Statement }, StringBuilder, RenderContext, indent, aliasMode, NullabilityContext);
 			MergeSqlBuilderData(sqlBuilder);
 		}
 
@@ -479,7 +479,7 @@ namespace LinqToDB.Internal.SqlProvider
 			{ ParentStatement = deleteStatement, With = deleteStatement.WithClause };
 
 			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
-			sqlBuilder.BuildSql(selectStatement, StringBuilder, OptimizationContext, AliasesContext, NullabilityContext, Indent);
+			sqlBuilder.BuildSql(selectStatement, StringBuilder, RenderContext, AliasesContext, NullabilityContext, Indent);
 			MergeSqlBuilderData(sqlBuilder);
 
 			--Indent;
@@ -536,7 +536,7 @@ namespace LinqToDB.Internal.SqlProvider
 		protected virtual void BuildCteBody(SelectQuery selectQuery)
 		{
 			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
-			sqlBuilder.BuildSql(new SqlSelectStatement(selectQuery), StringBuilder, OptimizationContext, Indent, AliasMode, NullabilityContext);
+			sqlBuilder.BuildSql(new SqlSelectStatement(selectQuery), StringBuilder, RenderContext, Indent, AliasMode, NullabilityContext);
 			MergeSqlBuilderData(sqlBuilder);
 		}
 
@@ -2066,7 +2066,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected virtual void BuildSqlValuesTable(SqlValuesTable valuesTable, string alias, out bool aliasBuilt)
 		{
-			var rows    = valuesTable.BuildRows(OptimizationContext.EvaluationContext);
+			var rows    = valuesTable.BuildRows(RenderContext.EvaluationContext);
 			var isEmpty = !(rows?.Count > 0);
 			if (!isEmpty)
 			{
@@ -2931,7 +2931,7 @@ namespace LinqToDB.Internal.SqlProvider
 			// Handle x.In(IEnumerable variable)
 			if (values is [SqlParameter pr])
 			{
-				var prValue = pr.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues).ProviderValue;
+				var prValue = pr.GetParameterValue(RenderContext.EvaluationContext.ParameterValues).ProviderValue;
 				switch (prValue)
 				{
 					case null:
@@ -3067,7 +3067,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 					if (checkNull)
 					{
-						if (val is ISqlExpression sqlExpr && sqlExpr.TryEvaluateExpression(OptimizationContext.EvaluationContext, out var evaluated))
+						if (val is ISqlExpression sqlExpr && sqlExpr.TryEvaluateExpression(RenderContext.EvaluationContext, out var evaluated))
 							val = evaluated;
 
 						if (val == null)
@@ -3449,7 +3449,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 					if (inlining)
 					{
-						var paramValue = parm.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
+						var paramValue = parm.GetParameterValue(RenderContext.EvaluationContext.ParameterValues);
 						if (!TryConvertParameterToSql(paramValue))
 							inlining = false;
 					}
@@ -3991,7 +3991,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected virtual void BuildParameter(SqlParameter parameter)
 		{
-			var newParm = OptimizationContext.AddParameter(parameter);
+			var newParm = RenderContext.AddParameter(parameter);
 			Convert(StringBuilder, newParm.Name!, ConvertType.NameToQueryParameter);
 		}
 

@@ -90,7 +90,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 		protected override void BuildSql(
 			SqlStatement statement,
 			StringBuilder sb,
-			OptimizationContext optimizationContext,
+			ISqlBuilderRenderContext renderContext,
 			int indent,
 			ColumnAliasMode aliasMode,
 			NullabilityContext? nullabilityContext
@@ -98,7 +98,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 		{
 			Statement           = statement;
 			StringBuilder       = sb;
-			OptimizationContext = optimizationContext;
+			RenderContext       = renderContext;
 			Indent              = indent;
 			AliasMode           = aliasMode;
 
@@ -122,7 +122,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 				AppendIndent().Append('\t').AppendLine(OpenParens);
 			}
 
-			base.BuildSql(statement, sb, optimizationContext, indent, aliasMode, nullabilityContext);
+			base.BuildSql(statement, sb, renderContext, indent, aliasMode, nullabilityContext);
 
 			if (identityField != null)
 				sb.AppendLine("\t)");
@@ -439,7 +439,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 		{
 			if (parameter.NeedsCast && BuildStep != Step.TypedExpression)
 			{
-				var paramValue = parameter.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
+				var paramValue = parameter.GetParameterValue(RenderContext.EvaluationContext.ParameterValues);
 
 				var dbDataType = paramValue.DbDataType;
 				// temporary guard against cast to unknown type (Variant)
