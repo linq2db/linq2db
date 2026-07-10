@@ -101,6 +101,17 @@ steps:
   condition: and(variables.title, variables.psscript_global, succeeded())
   displayName: Execute Global PowerShell Setup Script
 
+# Diagnostic RAM disk probe (actions/runner-images#7193): only on the SqlCE job
+# (the sole job using sqlce.ps1). continueOnError + the script's own exit 0 keep it
+# from ever failing the leg. Remove once viability is decided.
+- task: PowerShell@2
+  inputs:
+    filePath: '$(System.DefaultWorkingDirectory)/scripts/ramdisk-probe.ps1'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
+  condition: and(variables.title, eq(variables.psscript_global, 'sqlce.ps1'), succeeded())
+  continueOnError: true
+  displayName: 'RAM disk iSCSI probe (diagnostic)'
+
 - task: DownloadPipelineArtifact@2
   inputs:
     artifactName: $(artifact_test_netfx_binaries)
