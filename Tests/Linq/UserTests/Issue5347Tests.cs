@@ -81,7 +81,8 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestContainsMemberTranslator([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		// PostgreSQL 9.4+ (jsonb)
+		public void TestContainsMemberTranslator([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context)
 		{
 			using var db = GetDataContext(context, o => o.UseMemberTranslator(new ContainsMemberTranslator()));
 

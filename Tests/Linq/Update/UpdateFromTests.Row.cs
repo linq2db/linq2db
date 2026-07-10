@@ -21,7 +21,8 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateFromSubqueryRowCorrelatedValues([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
+		// PostgreSQL 9.5+ (multi-column UPDATE ... = (SELECT ...))
+		public void UpdateFromSubqueryRowCorrelatedValues([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllPostgreSQL95Plus, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -104,7 +105,8 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateFromSubqueryRowSingle([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle12Plus, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
+		// PostgreSQL 9.5+ (multi-column UPDATE ... = (SELECT ...))
+		public void UpdateFromSubqueryRowSingle([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle12Plus, TestProvName.AllPostgreSQL95Plus, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table1 = db.CreateLocalTable<NewEntities>();
@@ -129,7 +131,8 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateFromSubqueryRowSingleOrDefault([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle12Plus, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
+		// PostgreSQL 9.5+ (multi-column UPDATE ... = (SELECT ...))
+		public void UpdateFromSubqueryRowSingleOrDefault([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle12Plus, TestProvName.AllPostgreSQL95Plus, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table1 = db.CreateLocalTable<NewEntities>();
@@ -154,7 +157,8 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateFromSubqueryRowFirst([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle12Plus, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
+		// PostgreSQL 9.5+ (multi-column UPDATE ... = (SELECT ...))
+		public void UpdateFromSubqueryRowFirst([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle12Plus, TestProvName.AllPostgreSQL95Plus, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table1 = db.CreateLocalTable<NewEntities>();
@@ -179,7 +183,8 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateFromScalarSettersSharingSubquery([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle12Plus, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
+		// PostgreSQL 9.5+ (multi-column UPDATE ... = (SELECT ...))
+		public void UpdateFromScalarSettersSharingSubquery([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle12Plus, TestProvName.AllPostgreSQL95Plus, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table1 = db.CreateLocalTable<NewEntities>();
@@ -304,7 +309,8 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateFromScalarSettersSharingSubqueryPostgreSql([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		// PostgreSQL 9.5+ (multi-column UPDATE ... = (SELECT ...))
+		public void UpdateFromScalarSettersSharingSubqueryPostgreSql([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table1 = db.CreateLocalTable<NewEntities>();
@@ -351,7 +357,8 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateFromSubqueryRowFirstOrDefault([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle12Plus, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
+		// PostgreSQL 9.5+ (multi-column UPDATE ... = (SELECT ...))
+		public void UpdateFromSubqueryRowFirstOrDefault([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle12Plus, TestProvName.AllPostgreSQL95Plus, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table1 = db.CreateLocalTable<NewEntities>();
@@ -460,7 +467,8 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateFromSubqueryRowOnPostgreSQL([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		// PostgreSQL 9.5+ (multi-column UPDATE ... = (SELECT ...))
+		public void UpdateFromSubqueryRowOnPostgreSQL([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table1 = db.CreateLocalTable<NewEntities>();
