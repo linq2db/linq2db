@@ -18,5 +18,5 @@ namespace LinqToDB.CommandLine.Commands.SchemaInspection
 		string[]? FilterTables,
 		string?   Output,
 		string?   OutputFile,
-		bool Overwrite);
+		bool      Overwrite);
 }

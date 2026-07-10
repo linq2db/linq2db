@@ -60,6 +60,7 @@ namespace LinqToDB.CommandLine.Options
 			}
 
 			errorDetails = null;
+
 			return result;
 		}
 
@@ -87,10 +88,12 @@ namespace LinqToDB.CommandLine.Options
 				}
 
 				errorDetails = null;
+
 				return result;
 			}
 
 			errorDetails = $"object expected but got '{rawValue.ValueKind}'";
+
 			return null;
 		}
 	}

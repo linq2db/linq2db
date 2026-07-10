@@ -45,17 +45,17 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			if (connectionSettings == null)
 				return null;
 
-			var configuration = connectionSettings.Configuration;
-			var maxRowsValue  = values.MaxRows != null ? ParseRowCount(QueryExecutionCliOptions.MaxRows, values.MaxRows) : configuration?.MaxRows ?? DefaultMaxRows;
-			var outputFormat  = values.Output ?? configuration?.Output ?? values.DefaultOutput;
-			var outputFileName       = values.OutputFile != null
+			var configuration  = connectionSettings.Configuration;
+			var maxRowsValue   = values.MaxRows != null ? ParseRowCount(QueryExecutionCliOptions.MaxRows, values.MaxRows) : configuration?.MaxRows ?? DefaultMaxRows;
+			var outputFormat   = values.Output ?? configuration?.Output ?? values.DefaultOutput;
+			var outputFileName = values.OutputFile != null
 				? connectionResolver.ResolvePath(QueryExecutionCliOptions.OutputFile, values.OutputFile)
 				: values.UseConfiguredOutputFile
 					? connectionResolver.ResolvePath(QueryExecutionCliOptions.OutputFile, configuration?.OutputFile, connectionSettings.ConfigDirectory)
 					: null;
-			var enableExecute        = configuration?.EnableExecute ?? false;
-			var querySql             = values.Sql;
-			var querySqlFile         = connectionResolver.ResolvePath(QueryExecutionCliOptions.SqlFile, values.SqlFile);
+			var enableExecute  = configuration?.EnableExecute ?? false;
+			var querySql       = values.Sql;
+			var querySqlFile   = connectionResolver.ResolvePath(QueryExecutionCliOptions.SqlFile, values.SqlFile);
 
 			if (maxRowsValue < 0)
 				return null;
@@ -66,9 +66,11 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				return null;
 			}
 
-			if (string.Equals(outputFileName,       MissingEnvironmentVariable, StringComparison.Ordinal) ||
-			    string.Equals(querySqlFile,         MissingEnvironmentVariable, StringComparison.Ordinal))
+			if (string.Equals(outputFileName, MissingEnvironmentVariable, StringComparison.Ordinal) ||
+				string.Equals(querySqlFile,   MissingEnvironmentVariable, StringComparison.Ordinal))
+			{
 				return null;
+			}
 
 			if (values.Mode == QueryExecutionMode.Execute && !enableExecute)
 			{

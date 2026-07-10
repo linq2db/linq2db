@@ -88,15 +88,9 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 
 					switch (property.Name)
 					{
-						case "title":
-							title = property.Value.GetString()!;
-							break;
-						case "description":
-							description = property.Value.GetString()!;
-							break;
-						case "instructions":
-							userInstructions = property.Value.GetString();
-							break;
+						case "title"       : title            = property.Value.GetString()!; break;
+						case "description" : description      = property.Value.GetString()!; break;
+						case "instructions": userInstructions = property.Value.GetString();  break;
 					}
 				}
 
@@ -106,6 +100,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 
 				configuration = new McpServerConfiguration(title, description, instructions);
 				error         = null;
+
 				return true;
 			}
 		}

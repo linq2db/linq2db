@@ -17,9 +17,7 @@ using DuckDB.NET.Native;
 
 using FirebirdSql.Data.Types;
 
-using LinqToDB.CommandLine;
 using LinqToDB.CommandLine.Commands.Connection;
-using LinqToDB.CommandLine.Options;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.Internal.Common;
@@ -133,9 +131,9 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				_settings.ConnectionString,
 				_settings.CommandTimeout,
 				_settings.LockTimeout,
+				null,
 				_settings.Impersonate,
 				_settings.ImpersonateMode,
-				null,
 				null);
 		}
 
@@ -243,15 +241,9 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 					//
 					switch (_settings.Output)
 					{
-						case "csv":
-							await WriteCsvRow(outputWriter, row, cancellationToken).ConfigureAwait(false);
-							break;
-						case "json-table":
-							await WriteJsonTableRow(outputWriter, row, rowCount, cancellationToken).ConfigureAwait(false);
-							break;
-						default:
-							await WriteJsonRow(outputWriter, columns, row, rowCount, cancellationToken).ConfigureAwait(false);
-							break;
+						case "csv"       : await WriteCsvRow      (outputWriter, row,                    cancellationToken).ConfigureAwait(false); break;
+						case "json-table": await WriteJsonTableRow(outputWriter, row,          rowCount, cancellationToken).ConfigureAwait(false); break;
+						default          : await WriteJsonRow     (outputWriter, columns, row, rowCount, cancellationToken).ConfigureAwait(false); break;
 					}
 
 					rowCount++;
@@ -263,14 +255,9 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				//
 				switch (_settings.Output)
 				{
-					case "json-table":
-						await WriteJsonTableEnd(outputWriter, rowCount, truncated, recordsAffected, cancellationToken).ConfigureAwait(false);
-						break;
-					case "csv":
-						break;
-					default:
-						await outputWriter.WriteAsync("]".AsMemory(), cancellationToken).ConfigureAwait(false);
-						break;
+					case "json-table": await WriteJsonTableEnd(outputWriter, rowCount, truncated, recordsAffected, cancellationToken).ConfigureAwait(false); break;
+					case "csv"       : break;
+					default          : await outputWriter.WriteAsync("]".AsMemory(), cancellationToken).ConfigureAwait(false); break;
 				}
 
 				await outputWriter.FlushAsync(cancellationToken).ConfigureAwait(false);
@@ -585,47 +572,47 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 
 			return actualFieldType switch
 			{
-				QueryActualFieldType.Boolean            => value is SqlBoolean sqlBoolean ? sqlBoolean.Value ? "true" : "false" : ((bool)value) ? "true" : "false",
-				QueryActualFieldType.Double             => (value is SqlDouble sqlDouble ? sqlDouble.Value : (double)value).ToString("R", CultureInfo.InvariantCulture),
-				QueryActualFieldType.Single             => (value is SqlSingle sqlSingle ? sqlSingle.Value : (float)value).ToString("R", CultureInfo.InvariantCulture),
-				QueryActualFieldType.Date               => FormatDate(value),
-				QueryActualFieldType.DateTime           => (value is SqlDateTime sqlDateTime ? sqlDateTime.Value : (DateTime)value).ToString("O", CultureInfo.InvariantCulture),
-				QueryActualFieldType.DateTimeOffset     => ((DateTimeOffset)value).ToString("O", CultureInfo.InvariantCulture),
-				QueryActualFieldType.TimeSpan           => ((TimeSpan)value).ToString("c", CultureInfo.InvariantCulture),
-				QueryActualFieldType.Guid               => (value is SqlGuid sqlGuid ? sqlGuid.Value : (Guid)value).ToString("D"),
-				QueryActualFieldType.Bytes              => ConvertBytesToString((byte[])value),
-				QueryActualFieldType.ByteArray          => ConvertByteArrayToString((byte[])value),
-				QueryActualFieldType.SqlBinary          => ConvertBytesToString(((SqlBinary)value).Value),
-				QueryActualFieldType.SqlBytes           => ConvertBytesToString(((SqlBytes)value).Value),
-				QueryActualFieldType.SqlChars           => new string(((SqlChars)value).Value),
-				QueryActualFieldType.SqlString          => ((SqlString)value).Value,
-				QueryActualFieldType.SqlXml             => ((SqlXml)value).Value,
-				QueryActualFieldType.SqlVectorFloat     => ConvertVectorToString(((SqlVector<float>)value).Memory.ToArray()),
-				QueryActualFieldType.SqlVectorHalf      => ConvertVectorToString(((SqlVector<Half>) value).Memory.ToArray()),
-				QueryActualFieldType.SqlHierarchyId     => ((SqlHierarchyId)value).ToString(),
-				QueryActualFieldType.SqlGeometry        => ((SqlGeometry)value).ToString(),
-				QueryActualFieldType.SqlGeography       => ((SqlGeography)value).ToString(),
-				QueryActualFieldType.OracleBinary       => ConvertBytesToString(((OracleBinary)value).Value),
-				QueryActualFieldType.OracleBlob         => ConvertBytesToString(((OracleBlob)value).Value),
-				QueryActualFieldType.OracleClob         => ((OracleClob)value).Value,
-				QueryActualFieldType.OracleXmlType      => ((OracleXmlType)value).Value,
-				QueryActualFieldType.OracleDate         => FormatDate(((OracleDate)value).Value),
-				QueryActualFieldType.OracleTimeStamp    => FormatOracleTimeStamp((OracleTimeStamp)value),
-				QueryActualFieldType.OracleTimeStampTZ  => FormatOracleTimeStampTZ((OracleTimeStampTZ)value),
-				QueryActualFieldType.OracleTimeStampLTZ => FormatOracleTimeStampLTZ((OracleTimeStampLTZ)value),
-				QueryActualFieldType.DB2Binary          => ConvertBytesToString((byte[])GetProviderSpecificPropertyValue(value, "Value")),
-				QueryActualFieldType.DB2Blob            => ConvertBytesToString((byte[])GetProviderSpecificPropertyValue(value, "Value")),
-				QueryActualFieldType.DB2Clob            => (string)GetProviderSpecificPropertyValue(value, "Value"),
-				QueryActualFieldType.DB2Date            => FormatDate((DateTime)GetProviderSpecificPropertyValue(value, "Value")),
-				QueryActualFieldType.DB2Time            => ((TimeSpan)GetProviderSpecificPropertyValue(value, "Value")).ToString("c", CultureInfo.InvariantCulture),
-				QueryActualFieldType.DB2TimeStamp       => ((DateTime)GetProviderSpecificPropertyValue(value, "Value")).ToString("O", CultureInfo.InvariantCulture),
-				QueryActualFieldType.DB2Xml             => (string)GetProviderSpecificMethodValue(value, "GetString"),
-				QueryActualFieldType.MySqlDecimal       => Convert.ToString(value, CultureInfo.InvariantCulture),
-				QueryActualFieldType.FirebirdDecFloat   => FormatFirebirdDecFloat((FbDecFloat)value),
+				QueryActualFieldType.Boolean               => value is SqlBoolean sqlBoolean ? sqlBoolean.Value ? "true" : "false" : ((bool)value) ? "true" : "false",
+				QueryActualFieldType.Double                => (value is SqlDouble sqlDouble ? sqlDouble.Value : (double)value).ToString("R", CultureInfo.InvariantCulture),
+				QueryActualFieldType.Single                => (value is SqlSingle sqlSingle ? sqlSingle.Value : (float)value).ToString("R", CultureInfo.InvariantCulture),
+				QueryActualFieldType.Date                  => FormatDate(value),
+				QueryActualFieldType.DateTime              => (value is SqlDateTime sqlDateTime ? sqlDateTime.Value : (DateTime)value).ToString("O", CultureInfo.InvariantCulture),
+				QueryActualFieldType.DateTimeOffset        => ((DateTimeOffset)value).ToString("O", CultureInfo.InvariantCulture),
+				QueryActualFieldType.TimeSpan              => ((TimeSpan)value).ToString("c", CultureInfo.InvariantCulture),
+				QueryActualFieldType.Guid                  => (value is SqlGuid sqlGuid ? sqlGuid.Value : (Guid)value).ToString("D"),
+				QueryActualFieldType.Bytes                 => ConvertBytesToString((byte[])value),
+				QueryActualFieldType.ByteArray             => ConvertByteArrayToString((byte[])value),
+				QueryActualFieldType.SqlBinary             => ConvertBytesToString(((SqlBinary)value).Value),
+				QueryActualFieldType.SqlBytes              => ConvertBytesToString(((SqlBytes)value).Value),
+				QueryActualFieldType.SqlChars              => new string(((SqlChars)value).Value),
+				QueryActualFieldType.SqlString             => ((SqlString)value).Value,
+				QueryActualFieldType.SqlXml                => ((SqlXml)value).Value,
+				QueryActualFieldType.SqlVectorFloat        => ConvertVectorToString(((SqlVector<float>)value).Memory.ToArray()),
+				QueryActualFieldType.SqlVectorHalf         => ConvertVectorToString(((SqlVector<Half>) value).Memory.ToArray()),
+				QueryActualFieldType.SqlHierarchyId        => ((SqlHierarchyId)value).ToString(),
+				QueryActualFieldType.SqlGeometry           => ((SqlGeometry)value).ToString(),
+				QueryActualFieldType.SqlGeography          => ((SqlGeography)value).ToString(),
+				QueryActualFieldType.OracleBinary          => ConvertBytesToString(((OracleBinary)value).Value),
+				QueryActualFieldType.OracleBlob            => ConvertBytesToString(((OracleBlob)value).Value),
+				QueryActualFieldType.OracleClob            => ((OracleClob)value).Value,
+				QueryActualFieldType.OracleXmlType         => ((OracleXmlType)value).Value,
+				QueryActualFieldType.OracleDate            => FormatDate(((OracleDate)value).Value),
+				QueryActualFieldType.OracleTimeStamp       => FormatOracleTimeStamp((OracleTimeStamp)value),
+				QueryActualFieldType.OracleTimeStampTZ     => FormatOracleTimeStampTZ((OracleTimeStampTZ)value),
+				QueryActualFieldType.OracleTimeStampLTZ    => FormatOracleTimeStampLTZ((OracleTimeStampLTZ)value),
+				QueryActualFieldType.DB2Binary             => ConvertBytesToString((byte[])GetProviderSpecificPropertyValue(value, "Value")),
+				QueryActualFieldType.DB2Blob               => ConvertBytesToString((byte[])GetProviderSpecificPropertyValue(value, "Value")),
+				QueryActualFieldType.DB2Clob               => (string)GetProviderSpecificPropertyValue(value, "Value"),
+				QueryActualFieldType.DB2Date               => FormatDate((DateTime)GetProviderSpecificPropertyValue(value, "Value")),
+				QueryActualFieldType.DB2Time               => ((TimeSpan)GetProviderSpecificPropertyValue(value, "Value")).ToString("c", CultureInfo.InvariantCulture),
+				QueryActualFieldType.DB2TimeStamp          => ((DateTime)GetProviderSpecificPropertyValue(value, "Value")).ToString("O", CultureInfo.InvariantCulture),
+				QueryActualFieldType.DB2Xml                => (string)GetProviderSpecificMethodValue(value, "GetString"),
+				QueryActualFieldType.MySqlDecimal          => Convert.ToString(value, CultureInfo.InvariantCulture),
+				QueryActualFieldType.FirebirdDecFloat      => FormatFirebirdDecFloat((FbDecFloat)value),
 				QueryActualFieldType.FirebirdZonedDateTime => FormatFirebirdZonedDateTime((FbZonedDateTime)value),
-				QueryActualFieldType.FirebirdZonedTime  => FormatFirebirdZonedTime((FbZonedTime)value),
-				QueryActualFieldType.NpgsqlRange        => FormatNpgsqlRange(value),
-				_                                       => ConvertValueToString(value),
+				QueryActualFieldType.FirebirdZonedTime     => FormatFirebirdZonedTime((FbZonedTime)value),
+				QueryActualFieldType.NpgsqlRange           => FormatNpgsqlRange(value),
+				_                                          => ConvertValueToString(value),
 			};
 		}
 
@@ -633,18 +620,18 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		{
 			return value switch
 			{
-				null                  => null,
-				string stringValue    => stringValue,
-				byte[] bytes          => ConvertBytesToString(bytes),
+				null                 => null,
+				string stringValue   => stringValue,
+				byte[] bytes         => ConvertBytesToString(bytes),
 				Stream stream        => ConvertStreamToString(stream),
-				DuckDBDateOnly date   => FormatDuckDBDateOnly(date),
-				DuckDBTimeOnly time   => FormatDuckDBTimeOnly(time),
-				DuckDBTimestamp time  => FormatDuckDBTimestamp(time),
-				DateOnly date         => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-				TimeOnly time         => time.ToString("HH:mm:ss.fffffff", CultureInfo.InvariantCulture),
+				DuckDBDateOnly date  => FormatDuckDBDateOnly(date),
+				DuckDBTimeOnly time  => FormatDuckDBTimeOnly(time),
+				DuckDBTimestamp time => FormatDuckDBTimestamp(time),
+				DateOnly date        => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+				TimeOnly time        => time.ToString("HH:mm:ss.fffffff", CultureInfo.InvariantCulture),
 				ITuple tuple         => ConvertTupleToString(tuple),
 				IEnumerable sequence => ConvertSequenceToString(sequence),
-				_                     => Convert.ToString(value, CultureInfo.InvariantCulture),
+				_                    => Convert.ToString(value, CultureInfo.InvariantCulture),
 			};
 		}
 
@@ -661,20 +648,21 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			using var memory = new MemoryStream();
 
 			stream.CopyTo(memory);
+
 			return ConvertBytesToString(memory.ToArray());
 		}
 
 		static bool IsDateDataType(string dataTypeName)
 		{
-			return string.Equals(dataTypeName, "Date", StringComparison.OrdinalIgnoreCase)
-				|| string.Equals(dataTypeName, "Date32", StringComparison.OrdinalIgnoreCase)
-				|| string.Equals(dataTypeName, "Nullable(Date)", StringComparison.OrdinalIgnoreCase)
+			return string.Equals(dataTypeName, "Date",             StringComparison.OrdinalIgnoreCase)
+				|| string.Equals(dataTypeName, "Date32",           StringComparison.OrdinalIgnoreCase)
+				|| string.Equals(dataTypeName, "Nullable(Date)",   StringComparison.OrdinalIgnoreCase)
 				|| string.Equals(dataTypeName, "Nullable(Date32)", StringComparison.OrdinalIgnoreCase);
 		}
 
 		static bool IsMySqlDecimalDataType(string dataTypeName)
 		{
-			return string.Equals(dataTypeName, "Decimal", StringComparison.OrdinalIgnoreCase)
+			return string.Equals(dataTypeName, "Decimal",    StringComparison.OrdinalIgnoreCase)
 				|| string.Equals(dataTypeName, "NewDecimal", StringComparison.OrdinalIgnoreCase);
 		}
 
@@ -719,9 +707,9 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		{
 			return value switch
 			{
-				DateOnly date     => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+				DateOnly date     => date.    ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
 				DateTime dateTime => dateTime.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-				_                 => Convert.ToString(value, CultureInfo.InvariantCulture)!,
+				_                 => Convert. ToString(value,        CultureInfo.InvariantCulture)!,
 			};
 		}
 
@@ -828,12 +816,12 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			return value switch
 			{
 				null                    => null,
-				DateOnly date           => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-				DateTime dateTime       => dateTime.ToString("O", CultureInfo.InvariantCulture),
-				DateTimeOffset dateTime => dateTime.ToString("O", CultureInfo.InvariantCulture),
-				TimeOnly time           => time.ToString("HH:mm:ss.fffffff", CultureInfo.InvariantCulture),
-				TimeSpan time           => time.ToString("c", CultureInfo.InvariantCulture),
-				_                       => Convert.ToString(value, CultureInfo.InvariantCulture),
+				DateOnly date           => date.    ToString("yyyy-MM-dd",       CultureInfo.InvariantCulture),
+				DateTime dateTime       => dateTime.ToString("O",                CultureInfo.InvariantCulture),
+				DateTimeOffset dateTime => dateTime.ToString("O",                CultureInfo.InvariantCulture),
+				TimeOnly time           => time.    ToString("HH:mm:ss.fffffff", CultureInfo.InvariantCulture),
+				TimeSpan time           => time.    ToString("c",                CultureInfo.InvariantCulture),
+				_                       => Convert. ToString(value,              CultureInfo.InvariantCulture),
 			};
 		}
 
@@ -852,6 +840,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			}
 
 			output.Append(']');
+
 			return output.ToString();
 		}
 
@@ -870,6 +859,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			}
 
 			output.Append(')');
+
 			return output.ToString();
 		}
 
@@ -910,6 +900,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				output.Append(openBracket);
 
 			output.Append(closeBracket);
+
 			return output.ToString();
 		}
 
@@ -972,6 +963,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			}
 
 			output.Append(']');
+
 			return output.ToString();
 		}
 

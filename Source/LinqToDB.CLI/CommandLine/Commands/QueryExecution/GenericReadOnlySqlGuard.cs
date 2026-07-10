@@ -46,12 +46,11 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				return singleStatementResult;
 
 			foreach (var token in tokens)
-			{
 				if (_forbiddenTokens.Contains(token))
 					return SqlGuardResult.Rejected($"Query is not read-only: token '{token}' is not allowed.");
-			}
 
 			var firstToken = tokens[0];
+
 			if (!string.Equals(firstToken, "SELECT", StringComparison.OrdinalIgnoreCase)
 				&& !string.Equals(firstToken, "WITH", StringComparison.OrdinalIgnoreCase))
 			{

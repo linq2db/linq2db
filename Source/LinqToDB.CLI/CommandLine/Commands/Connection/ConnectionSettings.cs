@@ -8,16 +8,16 @@ namespace LinqToDB.CommandLine.Commands.Connection
 	/// Fully resolved trusted database connection settings shared by query and schema execution.
 	/// </summary>
 	internal sealed record ConnectionSettings(
-		string Profile,
-		string Provider,
+		string  Profile,
+		string  Provider,
 		string? ProviderLocation,
 		string? User,
 		string? Password,
-		string ConnectionString,
-		int? CommandTimeout,
-		int? LockTimeout,
-		bool Impersonate,
-		WindowsImpersonationMode ImpersonateMode,
+		string  ConnectionString,
+		int?    CommandTimeout,
+		int?    LockTimeout,
 		string? ConfigDirectory,
+		bool    Impersonate,
+		WindowsImpersonationMode     ImpersonateMode,
 		QueryExecutionConfiguration? Configuration);
 }

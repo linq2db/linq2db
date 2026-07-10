@@ -102,8 +102,8 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 			[Description("Map char(1) metadata to string instead of char.")]                      bool?     generateChar1AsString       = null,
 			[Description("Ignore SQL Server temporal history tables when provider supports it.")] bool?     ignoreSystemHistoryTables   = null,
 			[Description("Default schema name.")]                                                 string?   defaultSchema               = null,
-			[Description("Optional schema name filters. Exact names only.")]                      string[]? filterSchemas              = null,
-			[Description("Optional catalog name filters. Exact names only.")]                     string[]? filterCatalogs             = null,
+			[Description("Optional schema name filters. Exact names only.")]                      string[]? filterSchemas               = null,
+			[Description("Optional catalog name filters. Exact names only.")]                     string[]? filterCatalogs              = null,
 			[Description("Optional table or view name filters. Matches name, schema.name, or catalog.schema.name. Use regex: or rx: prefix for regular expressions.")] string[]? filterTables = null,
 			CancellationToken cancellationToken = default)
 		{
@@ -136,6 +136,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 				return CreateErrorResult(errorWriter.ToString());
 
 			using var resultWriter = new StringWriter(CultureInfo.InvariantCulture);
+
 			var result = await new SchemaInspectionExecutor(settings).Execute(resultWriter, cancellationToken).ConfigureAwait(false);
 
 			if (result.Error != null)
@@ -215,6 +216,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 				return CreateErrorResult($"MCP query execution supports only 'json' and 'json-table' output. The selected profile resolves output='{settings.Output}'. Pass output='json-table' or output='json' in the tool call, or update the profile for MCP usage.");
 
 			using var resultWriter = new StringWriter(CultureInfo.InvariantCulture);
+
 			var result = await new QueryExecutionExecutor(settings).Execute(resultWriter, cancellationToken).ConfigureAwait(false);
 
 			if (result.Error != null)

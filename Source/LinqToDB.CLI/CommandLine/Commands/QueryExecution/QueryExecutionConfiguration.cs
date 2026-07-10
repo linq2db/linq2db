@@ -436,13 +436,13 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		static bool IsValidImpersonateMode(string? value)
 		{
 			return string.Equals(value, "network-cleartext", StringComparison.OrdinalIgnoreCase)
-				|| string.Equals(value, "interactive", StringComparison.OrdinalIgnoreCase)
-				|| string.Equals(value, "network", StringComparison.OrdinalIgnoreCase)
-				|| string.Equals(value, "new-credentials", StringComparison.OrdinalIgnoreCase)
-				|| string.Equals(value, "2", StringComparison.Ordinal)
-				|| string.Equals(value, "3", StringComparison.Ordinal)
-				|| string.Equals(value, "8", StringComparison.Ordinal)
-				|| string.Equals(value, "9", StringComparison.Ordinal);
+				|| string.Equals(value, "interactive",       StringComparison.OrdinalIgnoreCase)
+				|| string.Equals(value, "network",           StringComparison.OrdinalIgnoreCase)
+				|| string.Equals(value, "new-credentials",   StringComparison.OrdinalIgnoreCase)
+				|| string.Equals(value, "2",                 StringComparison.Ordinal)
+				|| string.Equals(value, "3",                 StringComparison.Ordinal)
+				|| string.Equals(value, "8",                 StringComparison.Ordinal)
+				|| string.Equals(value, "9",                 StringComparison.Ordinal);
 		}
 
 		static bool TryGetString(string fileName, string profileName, JsonProperty property, out string? value, out string? error)

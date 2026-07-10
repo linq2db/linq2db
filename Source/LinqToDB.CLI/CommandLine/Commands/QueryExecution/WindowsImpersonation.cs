@@ -40,7 +40,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		[SupportedOSPlatform("windows")]
 		static T RunWindows<T>(string user, string password, WindowsImpersonationMode mode, Func<T> action)
 		{
-			SplitUserName(user, out var domain, out var userName);
+			SplitUserName  (user, out var domain,    out var userName);
 			GetLogonOptions(mode, out var logonType, out var logonProvider);
 
 			if (!LogonUser(userName, domain, password, logonType, logonProvider, out var token))
@@ -53,7 +53,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		[SupportedOSPlatform("windows")]
 		static async Task<T> RunWindowsAsync<T>(string user, string password, WindowsImpersonationMode mode, Func<Task<T>> action)
 		{
-			SplitUserName(user, out var domain, out var userName);
+			SplitUserName  (user, out var domain,    out var userName);
 			GetLogonOptions(mode, out var logonType, out var logonProvider);
 
 			if (!LogonUser(userName, domain, password, logonType, logonProvider, out var token))

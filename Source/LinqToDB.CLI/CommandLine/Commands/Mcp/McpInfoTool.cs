@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Threading;
+using System.Xml.Linq;
 
 using LinqToDB.CommandLine.Commands.Connection;
 using LinqToDB.CommandLine.Commands.QueryExecution;
@@ -33,21 +35,21 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 
 		static readonly McpSupportedProviderInfo[] _supportedProviders =
 		[
-			new("SQL Server",     ["SqlServer"],                         "SQL Server T-SQL",           true,  null),
-			new("SQLite",         ["SQLite", "SQLite.MS"],               "SQLite",                     true,  null),
-			new("PostgreSQL",     ["PostgreSQL"],                        "PostgreSQL",                 true,  null),
-			new("MySQL",          ["MySql"],                             "MySQL",                      true,  null),
-			new("MariaDB",        ["MariaDB"],                           "MariaDB",                    true,  null),
-			new("Oracle Managed", ["Oracle.Managed", "Oracle"],         "Oracle SQL",                 true,  null),
-			new("Firebird",       ["Firebird"],                          "Firebird SQL",               true,  null),
-			new("Sybase ASE",     ["Sybase", "Sybase.Managed", "ASE"], "Sybase ASE T-SQL",           true,  null),
-			new("ODBC",           ["ODBC", "Odbc"],                     "ODBC provider-specific SQL", true,  "Requires the matching ODBC driver to be installed on the host."),
-			new("OLE DB",         ["OLEDB", "OleDb"],                   "OLE DB provider-specific SQL", true, "Requires the matching OLE DB provider to be installed on the host."),
+			new("SQL Server",     ["SqlServer"],                       "SQL Server T-SQL",             true,  null),
+			new("SQLite",         ["SQLite", "SQLite.MS"],             "SQLite",                       true,  null),
+			new("PostgreSQL",     ["PostgreSQL"],                      "PostgreSQL",                   true,  null),
+			new("MySQL",          ["MySql"],                           "MySQL",                        true,  null),
+			new("MariaDB",        ["MariaDB"],                         "MariaDB",                      true,  null),
+			new("Oracle Managed", ["Oracle.Managed", "Oracle"],        "Oracle SQL",                   true,  null),
+			new("Firebird",       ["Firebird"],                        "Firebird SQL",                 true,  null),
+			new("Sybase ASE",     ["Sybase", "Sybase.Managed", "ASE"], "Sybase ASE T-SQL",             true,  null),
+			new("ODBC",           ["ODBC", "Odbc"],                    "ODBC provider-specific SQL",   true,  "Requires the matching ODBC driver to be installed on the host."),
+			new("OLE DB",         ["OLEDB", "OleDb"],                  "OLE DB provider-specific SQL", true, "Requires the matching OLE DB provider to be installed on the host."),
 			new("ClickHouse",     ["ClickHouse.Driver", "ClickHouse.Octonica", "ClickHouse.MySql"], "ClickHouse SQL", true, null),
-			new("DuckDB",         ["DuckDB"],                            "DuckDB SQL",                 true,  null),
-			new("YDB",            ["YDB"],                               "YDB SQL",                    true,  null),
-			new("IBM DB2",        ["DB2", "DB2.LUW", "DB2.z/OS"],      "IBM DB2 SQL",                false, "Requires providerLocation pointing to IBM.Data.Db2.dll from the Net.IBM.Data.Db2 package."),
-			new("IBM Informix",   ["Informix", "Informix.DB2"],         "Informix SQL",               false, "Requires providerLocation pointing to IBM.Data.Db2.dll from the Net.IBM.Data.Db2 package."),
+			new("DuckDB",         ["DuckDB"],                          "DuckDB SQL",                   true,  null),
+			new("YDB",            ["YDB"],                             "YDB SQL",                      true,  null),
+			new("IBM DB2",        ["DB2", "DB2.LUW", "DB2.z/OS"],      "IBM DB2 SQL",                  false, "Requires providerLocation pointing to IBM.Data.Db2.dll from the Net.IBM.Data.Db2 package."),
+			new("IBM Informix",   ["Informix", "Informix.DB2"],        "Informix SQL",                 false, "Requires providerLocation pointing to IBM.Data.Db2.dll from the Net.IBM.Data.Db2 package."),
 		];
 
 		readonly McpQueryStartupOptions _startupOptions = startupOptions;
@@ -57,8 +59,9 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 		{
 			var environment = new McpQueryEnvironment(TextWriter.Null);
 			var profiles    = new List<McpProfileInfo>();
+
 			string defaultProfile;
-			bool defaultProfileUsable;
+			bool   defaultProfileUsable;
 
 			if (_startupOptions.Config == null)
 			{
@@ -73,6 +76,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 					return CreateErrorResult("Cannot load linq2db query configuration: provider is not configured.");
 
 				profiles.Add(profileInfo);
+
 				defaultProfileUsable = true;
 			}
 			else
@@ -82,7 +86,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 
 				defaultProfile = _startupOptions.Profile ?? DefaultProfileName;
 
-				if (!Contains(profileNames, defaultProfile))
+				if (!profileNames.Any(item => string.Equals(item, defaultProfile, StringComparison.Ordinal)))
 					return CreateErrorResult($"Cannot load linq2db query configuration: profile '{defaultProfile}' not found.");
 
 				foreach (var profileName in profileNames)
@@ -102,7 +106,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 				if (profiles.Count == 0)
 					return CreateErrorResult("Cannot load linq2db query configuration: no configured profiles with provider were found.");
 
-				defaultProfileUsable = ContainsProfile(profiles, defaultProfile);
+				defaultProfileUsable = profiles.Exists(profile => string.Equals(profile.Name, defaultProfile, StringComparison.Ordinal));
 			}
 
 			return new CallToolResult
@@ -153,11 +157,11 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 		{
 			error = null;
 
-			var provider      = _startupOptions.Provider ?? configuration?.Provider;
-			var output        = _startupOptions.Output ?? configuration?.Output ?? DefaultOutput;
-			var maxRows       = _startupOptions.MaxRows != null ? ParseRowCount(_startupOptions.MaxRows, out error) : configuration?.MaxRows ?? DefaultMaxRows;
+			var provider      = _startupOptions.Provider     ?? configuration?.Provider;
+			var output        = _startupOptions.Output       ?? configuration?.Output ?? DefaultOutput;
 			var enableExecute = configuration?.EnableExecute ?? false;
-			var impersonate   = _startupOptions.Impersonate ?? configuration?.Impersonate ?? false;
+			var impersonate   = _startupOptions.Impersonate  ?? configuration?.Impersonate ?? false;
+			var maxRows       = _startupOptions.MaxRows != null ? ParseRowCount(_startupOptions.MaxRows, out error) : configuration?.MaxRows ?? DefaultMaxRows;
 
 			if (error != null)
 				return null!;
@@ -181,40 +185,18 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 				maxRows,
 				enableExecute,
 				impersonate);
-		}
 
-		static int ParseRowCount(string value, out string? error)
-		{
-			if (int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out var rowCount) && rowCount >= 0)
+			static int ParseRowCount(string value, out string? error)
 			{
-				error = null;
-				return rowCount;
+				if (int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out var rowCount) && rowCount >= 0)
+				{
+					error = null;
+					return rowCount;
+				}
+
+				error = "Cannot load linq2db query configuration: option '--max-rows' must be a non-negative integer row count.";
+				return -1;
 			}
-
-			error = "Cannot load linq2db query configuration: option '--max-rows' must be a non-negative integer row count.";
-			return -1;
-		}
-
-		static bool Contains(IReadOnlyList<string> values, string value)
-		{
-			foreach (var item in values)
-			{
-				if (string.Equals(item, value, StringComparison.Ordinal))
-					return true;
-			}
-
-			return false;
-		}
-
-		static bool ContainsProfile(IReadOnlyList<McpProfileInfo> profiles, string name)
-		{
-			foreach (var profile in profiles)
-			{
-				if (string.Equals(profile.Name, name, StringComparison.Ordinal))
-					return true;
-			}
-
-			return false;
 		}
 
 		static bool IsMcpOutputFormat(string output)

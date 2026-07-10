@@ -86,20 +86,15 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			}
 
 			return true;
-		}
 
-		static Type? FindProviderFactory(Assembly assembly, string factoryTypeName)
-		{
-			foreach (var type in assembly.GetTypes())
+			static Type? FindProviderFactory(Assembly assembly, string factoryTypeName)
 			{
-				if (string.Equals(type.Name, factoryTypeName, StringComparison.Ordinal)
-					&& typeof(DbProviderFactory).IsAssignableFrom(type))
-				{
-					return type;
-				}
-			}
+				foreach (var type in assembly.GetTypes())
+					if (string.Equals(type.Name, factoryTypeName, StringComparison.Ordinal) && typeof(DbProviderFactory).IsAssignableFrom(type))
+						return type;
 
-			return null;
+				return null;
+			}
 		}
 
 		static bool IsDB2FamilyProvider(string provider)

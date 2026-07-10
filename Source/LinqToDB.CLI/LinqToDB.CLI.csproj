@@ -1,7 +1,7 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<RootNamespace>LinqToDB.CLI</RootNamespace>
+		<RootNamespace>LinqToDB.CommandLine</RootNamespace>
 		<AssemblyName>dotnet-linq2db</AssemblyName>
 		<TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
 		<TargetFrameworks Condition="'$(Configuration)'=='Testing'">net10.0</TargetFrameworks>
@@ -51,8 +51,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<EmbeddedResource Include="Template.tt" />
-		<EmbeddedResource Include="SKILL.md" />
+		<EmbeddedResource Include="Template.tt" LogicalName="LinqToDB.CLI.Template.tt" />
+		<EmbeddedResource Include="SKILL.md"     LogicalName="LinqToDB.CLI.SKILL.md"   />
 
 		<ProjectReference Include="..\LinqToDB.Scaffold\LinqToDB.Scaffold.csproj" />
 

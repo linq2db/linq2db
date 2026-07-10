@@ -64,7 +64,9 @@ namespace LinqToDB.CommandLine.Options
 				foreach (var element in rawValue.EnumerateArray())
 				{
 					if (element.ValueKind == JsonValueKind.String)
+					{
 						filter.AddName(null, element.GetString()!);
+					}
 					else if (element.ValueKind == JsonValueKind.Object)
 					{
 						var hasSchema  = false;
@@ -162,10 +164,12 @@ namespace LinqToDB.CommandLine.Options
 				}
 
 				errorDetails = null;
+
 				return filter;
 			}
 
 			errorDetails = $"array expected but '{rawValue.ValueKind}' provided";
+
 			return null;
 		}
 	}

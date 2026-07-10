@@ -31,8 +31,8 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		public static readonly CliOption Sql                 = new StringCliOption("sql",                   null, false, false, "single user-provided SQL query text to execute");
 		public static readonly CliOption SqlFile             = new StringCliOption("sql-file",              null, false, false, "path to file with single user-provided SQL query text to execute; supports %NAME% and ${NAME} environment variable expansion");
 
-		public static readonly CliOption Overwrite      = new BooleanCliOption("overwrite", null, false, "replace existing output file", null, null, null, false, false);
-		public static readonly CliOption Impersonate    = new BooleanCliOption("impersonate", null, false, "on Windows, run database access under resolved user/password credentials; file and configuration access uses the original process account", null, null, null, false, false);
+		public static readonly CliOption Overwrite           = new BooleanCliOption("overwrite",   null, false, "replace existing output file", null, null, null, false, false);
+		public static readonly CliOption Impersonate         = new BooleanCliOption("impersonate", null, false, "on Windows, run database access under resolved user/password credentials; file and configuration access uses the original process account", null, null, null, false, false);
 
 		public static readonly CliOption Output = new StringEnumCliOption(
 			"output",

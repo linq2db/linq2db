@@ -79,6 +79,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 				return CreateErrorResult($"MCP execute supports only 'json' and 'json-table' output. The selected profile resolves output='{settings.Output}'. Pass output='json-table' or output='json' in the tool call, or update the profile for MCP usage.");
 
 			using var resultWriter = new StringWriter(CultureInfo.InvariantCulture);
+
 			var result = await new QueryExecutionExecutor(settings).Execute(resultWriter, cancellationToken).ConfigureAwait(false);
 
 			if (result.Error != null)

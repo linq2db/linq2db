@@ -14,10 +14,12 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		public static SqlGuardResult Validate(string sql)
 		{
 			var scriptResult = ParseScript(sql, out var script);
+
 			if (!scriptResult.IsAllowed)
 				return scriptResult;
 
 			var singleStatementResult = ValidateSingleStatement(script!, out var statements);
+
 			if (!singleStatementResult.IsAllowed)
 				return singleStatementResult;
 
@@ -36,6 +38,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		public static SqlGuardResult ValidateSingleStatement(string sql)
 		{
 			var scriptResult = ParseScript(sql, out var script);
+
 			if (!scriptResult.IsAllowed)
 				return scriptResult;
 
@@ -44,7 +47,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 
 		private static SqlGuardResult ParseScript(string sql, out TSqlScript? script)
 		{
-			var parser = new TSql180Parser(false);
+			var parser   = new TSql180Parser(false);
 			var fragment = parser.Parse(new StringReader(sql), out var errors);
 
 			if (errors.Count > 0)
@@ -60,6 +63,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			}
 
 			script = parsedScript;
+
 			return SqlGuardResult.Allowed;
 		}
 
@@ -78,7 +82,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			return selectStatement.ScriptTokenStream
 				.Skip(selectStatement.FirstTokenIndex)
 				.Take(selectStatement.LastTokenIndex - selectStatement.FirstTokenIndex + 1)
-				.Any(token => token.TokenType == TSqlTokenType.Into);
+				.Any (token => token.TokenType == TSqlTokenType.Into);
 		}
 	}
 }

@@ -22,7 +22,7 @@ namespace LinqToDB.CommandLine.Commands.Connection
 			if (IsProvider(providerName, "DuckDB"))     return "DuckDB SQL";
 			if (IsProvider(providerName, "Sybase") || IsProvider(providerName, "ASE")) return "Sybase ASE T-SQL";
 			if (IsProvider(providerName, "Access"))     return "Microsoft Access SQL";
-			if (IsProvider(providerName, "ODBC") || IsProvider(providerName, "Odbc")) return "ODBC provider-specific SQL";
+			if (IsProvider(providerName, "ODBC")  || IsProvider(providerName, "Odbc"))  return "ODBC provider-specific SQL";
 			if (IsProvider(providerName, "OLEDB") || IsProvider(providerName, "OleDb")) return "OLE DB provider-specific SQL";
 			if (IsProvider(providerName, "YDB"))        return "YDB SQL";
 

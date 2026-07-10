@@ -287,7 +287,7 @@ namespace LinqToDB.CommandLine.Commands.Help
 			if (option is StringEnumCliOption enumStringOption)
 			{
 				environment.Out.WriteLine("{0}   supported values:", indent);
-				var maxValueWidth = enumStringOption.Values.Select(_ => _.Value.Length).Max();
+				var maxValueWidth = enumStringOption.Values.Select(e => e.Value.Length).Max();
 
 				foreach (var value in enumStringOption.Values)
 					environment.Out.WriteLine("{0}{0}   {1}{3} : {2}", indent, value.Value, value.Help, new string(' ', maxValueWidth - value.Value.Length));
@@ -316,10 +316,9 @@ namespace LinqToDB.CommandLine.Commands.Help
 				// split long text into lines manually and prepend each line with help indent for nicer formatting
 				// TODO: dunno wether it works on linux/macos, not tested yet
 				var lines = option.DetailedHelp.Split("\r\n");
-				for (var i = 0; i < lines.Length; i++)
-				{
-					var line = lines[i];
 
+				foreach (var line in lines)
+				{
 					var lineWidth            = consoleWidth - indent.Length - 1;
 					var incompleteLineLength = line.Length % lineWidth;
 					var partsCount           = line.Length / lineWidth + (incompleteLineLength > 0 ? 1 : 0);
@@ -327,8 +326,8 @@ namespace LinqToDB.CommandLine.Commands.Help
 					for (var j = 0; j < partsCount; j++)
 					{
 						var part = line.Substring(
-									j * lineWidth,
-									j == partsCount - 1 && incompleteLineLength > 0 ? incompleteLineLength : lineWidth);
+							j * lineWidth,
+							j == partsCount - 1 && incompleteLineLength > 0 ? incompleteLineLength : lineWidth);
 
 						environment.Out.Write(indent);
 						environment.Out.WriteLine(part);
@@ -384,14 +383,15 @@ namespace LinqToDB.CommandLine.Commands.Help
 
 			printJsonProperty(indent, "pluralize_if_ends_with_word_only", options.PluralizeOnlyIfLastWordIsText ? "true" : "false");
 			printJsonProperty(indent, "ignore_all_caps", options.DontCaseAllCaps ? "true" : "false");
+
 			if (options.MaxUpperCaseWordLength > 1)
 				printJsonProperty(indent, "max_uppercase_word_length", options.MaxUpperCaseWordLength.ToString(CultureInfo.InvariantCulture));
 
 			environment.Out.WriteLine("{0}            }}", indent);
 
-			void printJsonProperty(string padding, string optionName, string value)
+			void printJsonProperty(string padding, string optionName, string val)
 			{
-				environment.Out.WriteLine("{0}                \"{1}\"{3}: {2},", padding, optionName, value, new string(' ', "pluralize_if_ends_with_word_only".Length - optionName.Length));
+				environment.Out.WriteLine("{0}                \"{1}\"{3}: {2},", padding, optionName, val, new string(' ', "pluralize_if_ends_with_word_only".Length - optionName.Length));
 			}
 		}
 

@@ -74,6 +74,7 @@ namespace LinqToDB.CommandLine.Options
 				}
 
 				errorDetails = null;
+
 				return values.ToArray();
 
 			}
@@ -87,6 +88,7 @@ namespace LinqToDB.CommandLine.Options
 			}
 
 			errorDetails = $"string expected but got '{rawValue.ValueKind}'";
+
 			return null;
 		}
 	}

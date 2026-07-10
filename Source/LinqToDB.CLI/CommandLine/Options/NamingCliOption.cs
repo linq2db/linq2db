@@ -50,7 +50,7 @@ namespace LinqToDB.CommandLine.Options
 				return null;
 			}
 
-			var properties = new HashSet<string>(System.StringComparer.Ordinal);
+			var properties = new HashSet<string>(StringComparer.Ordinal);
 
 			var options = new NormalizationOptions();
 

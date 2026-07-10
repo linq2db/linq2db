@@ -3,7 +3,6 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 
-using LinqToDB.CommandLine;
 using LinqToDB.CommandLine.Commands.QueryExecution;
 using LinqToDB.CommandLine.Options;
 
@@ -28,7 +27,8 @@ namespace LinqToDB.CommandLine.Commands.Connection
 			var profileName = values.Profile ?? DefaultProfileName;
 
 			QueryExecutionConfiguration? configuration = null;
-			if (values.Profile != null && values.Config == null)
+
+			if (values is { Profile: not null, Config: null })
 			{
 				_environment.Error.WriteLine($"Option '--{QueryExecutionCliOptions.Profile.Name}' requires option '--{QueryExecutionCliOptions.Config.Name}'.");
 				return null;
@@ -50,9 +50,9 @@ namespace LinqToDB.CommandLine.Commands.Connection
 			var providerLocation    = values.ProviderLocation != null
 				? ResolvePath(QueryExecutionCliOptions.ProviderLocation, values.ProviderLocation)
 				: ResolvePath(QueryExecutionCliOptions.ProviderLocation, configuration?.ProviderLocation, configDirectory);
-			var connectionString    = GetConfiguredValue(QueryExecutionCliOptions.ConnectionString, values.ConnectionString, values.ConnectionStringEnv, configuration?.ConnectionString, configuration?.ConnectionStringEnv);
-			var user                = GetConfiguredExpandableValue(QueryExecutionCliOptions.User, values.User, values.UserEnv, configuration?.User, configuration?.UserEnv);
-			var password            = GetConfiguredValue(QueryExecutionCliOptions.Password, values.Password, values.PasswordEnv, configuration?.Password, configuration?.PasswordEnv);
+			var connectionString    = GetConfiguredValue          (QueryExecutionCliOptions.ConnectionString, values.ConnectionString, values.ConnectionStringEnv, configuration?.ConnectionString, configuration?.ConnectionStringEnv);
+			var user                = GetConfiguredExpandableValue(QueryExecutionCliOptions.User,             values.User,             values.UserEnv,             configuration?.User,             configuration?.UserEnv);
+			var password            = GetConfiguredValue          (QueryExecutionCliOptions.Password,         values.Password,         values.PasswordEnv,         configuration?.Password,         configuration?.PasswordEnv);
 			var commandTimeout      = values.CommandTimeout != null ? ParseTimeout(QueryExecutionCliOptions.CommandTimeout, values.CommandTimeout) : configuration?.CommandTimeout;
 			var lockTimeout         = values.LockTimeout    != null ? ParseTimeout(QueryExecutionCliOptions.LockTimeout,    values.LockTimeout)    : configuration?.LockTimeout;
 			var impersonate         = values.Impersonate ?? configuration?.Impersonate ?? false;
@@ -110,10 +110,56 @@ namespace LinqToDB.CommandLine.Commands.Connection
 				connectionString,
 				commandTimeout,
 				lockTimeout,
+				configDirectory,
 				impersonate,
 				impersonateMode.Value,
-				configDirectory,
 				configuration);
+
+			string? GetConfiguredExpandableValue(CliOption option, string? commandValue, string? commandEnvironmentVariableName, string? configurationValue, string? configurationEnvironmentVariableName)
+			{
+				if (commandValue                         != null) return ResolveEnvironmentVariables(option, commandValue);
+				if (commandEnvironmentVariableName       != null) return GetEnvironmentValue        (option, commandEnvironmentVariableName);
+				if (configurationValue                   != null) return ResolveEnvironmentVariables(option, configurationValue);
+				if (configurationEnvironmentVariableName != null) return GetEnvironmentValue        (option, configurationEnvironmentVariableName);
+
+				return null;
+			}
+
+			string? GetConfiguredValue(CliOption option, string? commandValue, string? commandEnvironmentVariableName, string? configurationValue, string? configurationEnvironmentVariableName)
+			{
+				if (commandValue                         != null) return commandValue;
+				if (commandEnvironmentVariableName       != null) return GetEnvironmentValue(option, commandEnvironmentVariableName);
+				if (configurationValue                   != null) return configurationValue;
+				if (configurationEnvironmentVariableName != null) return GetEnvironmentValue(option, configurationEnvironmentVariableName);
+
+				return null;
+			}
+
+			static WindowsImpersonationMode? ParseImpersonateMode(string? value)
+			{
+				return value?.ToLower(CultureInfo.InvariantCulture) switch
+				{
+					null                => WindowsImpersonationMode.NetworkCleartext,
+					"8"                 => WindowsImpersonationMode.NetworkCleartext,
+					"network-cleartext" => WindowsImpersonationMode.NetworkCleartext,
+					"2"                 => WindowsImpersonationMode.Interactive,
+					"interactive"       => WindowsImpersonationMode.Interactive,
+					"3"                 => WindowsImpersonationMode.Network,
+					"network"           => WindowsImpersonationMode.Network,
+					"9"                 => WindowsImpersonationMode.NewCredentials,
+					"new-credentials"   => WindowsImpersonationMode.NewCredentials,
+					_                   => null,
+				};
+			}
+
+			int? ParseTimeout(CliOption option, string value)
+			{
+				if (int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out var timeout) && timeout >= 0)
+					return timeout;
+
+				_environment.Error.WriteLine($"Option '--{option.Name}' must be a non-negative integer number of seconds.");
+				return -1;
+			}
 		}
 
 		public string? ResolvePath(CliOption option, string? path, string? baseDirectory = null)
@@ -132,67 +178,7 @@ namespace LinqToDB.CommandLine.Commands.Connection
 			return resolvedPath;
 		}
 
-		static WindowsImpersonationMode? ParseImpersonateMode(string? value)
-		{
-			return value?.ToLower(CultureInfo.InvariantCulture) switch
-			{
-				null                => WindowsImpersonationMode.NetworkCleartext,
-				"8"                 => WindowsImpersonationMode.NetworkCleartext,
-				"network-cleartext" => WindowsImpersonationMode.NetworkCleartext,
-				"2"                 => WindowsImpersonationMode.Interactive,
-				"interactive"       => WindowsImpersonationMode.Interactive,
-				"3"                 => WindowsImpersonationMode.Network,
-				"network"           => WindowsImpersonationMode.Network,
-				"9"                 => WindowsImpersonationMode.NewCredentials,
-				"new-credentials"   => WindowsImpersonationMode.NewCredentials,
-				_                   => null,
-			};
-		}
-
-		int? ParseTimeout(CliOption option, string value)
-		{
-			if (int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out var timeout) && timeout >= 0)
-				return timeout;
-
-			_environment.Error.WriteLine($"Option '--{option.Name}' must be a non-negative integer number of seconds.");
-			return -1;
-		}
-
-		string? GetConfiguredValue(CliOption option, string? commandValue, string? commandEnvironmentVariableName, string? configurationValue, string? configurationEnvironmentVariableName)
-		{
-			if (commandValue != null)
-				return commandValue;
-
-			if (commandEnvironmentVariableName != null)
-				return GetEnvironmentValue(option, commandEnvironmentVariableName);
-
-			if (configurationValue != null)
-				return configurationValue;
-
-			if (configurationEnvironmentVariableName != null)
-				return GetEnvironmentValue(option, configurationEnvironmentVariableName);
-
-			return null;
-		}
-
-		string? GetConfiguredExpandableValue(CliOption option, string? commandValue, string? commandEnvironmentVariableName, string? configurationValue, string? configurationEnvironmentVariableName)
-		{
-			if (commandValue != null)
-				return ResolveEnvironmentVariables(option, commandValue);
-
-			if (commandEnvironmentVariableName != null)
-				return GetEnvironmentValue(option, commandEnvironmentVariableName);
-
-			if (configurationValue != null)
-				return ResolveEnvironmentVariables(option, configurationValue);
-
-			if (configurationEnvironmentVariableName != null)
-				return GetEnvironmentValue(option, configurationEnvironmentVariableName);
-
-			return null;
-		}
-
-		string? GetEnvironmentValue(CliOption option, string environmentVariableName)
+		string GetEnvironmentValue(CliOption option, string environmentVariableName)
 		{
 			var value = _environment.GetEnvironmentVariable(environmentVariableName);
 
@@ -200,6 +186,7 @@ namespace LinqToDB.CommandLine.Commands.Connection
 				return value;
 
 			_environment.Error.WriteLine($"Environment variable '{environmentVariableName}' specified for option '--{option.Name}' is not set.");
+
 			return MissingEnvironmentVariable;
 		}
 
@@ -218,7 +205,7 @@ namespace LinqToDB.CommandLine.Commands.Connection
 
 					if (end > i + 1)
 					{
-						if (!TryAppendEnvironmentValue(option, value.Substring(i + 1, end - i - 1), result))
+						if (!TryAppendEnvironmentValue(option, _environment, value.Substring(i + 1, end - i - 1), result))
 							return MissingEnvironmentVariable;
 
 						i = end;
@@ -232,7 +219,7 @@ namespace LinqToDB.CommandLine.Commands.Connection
 
 					if (end > i + 2)
 					{
-						if (!TryAppendEnvironmentValue(option, value.Substring(i + 2, end - i - 2), result))
+						if (!TryAppendEnvironmentValue(option, _environment, value.Substring(i + 2, end - i - 2), result))
 							return MissingEnvironmentVariable;
 
 						i = end;
@@ -244,20 +231,20 @@ namespace LinqToDB.CommandLine.Commands.Connection
 			}
 
 			return result.ToString();
-		}
 
-		bool TryAppendEnvironmentValue(CliOption option, string name, StringBuilder result)
-		{
-			var value = _environment.GetEnvironmentVariable(name);
-
-			if (value == null)
+			static bool TryAppendEnvironmentValue(CliOption option, ICliEnvironment environment, string name, StringBuilder result)
 			{
-				_environment.Error.WriteLine($"Environment variable '{name}' referenced by option '--{option.Name}' is not set.");
-				return false;
-			}
+				var value = environment.GetEnvironmentVariable(name);
 
-			result.Append(value);
-			return true;
+				if (value == null)
+				{
+					environment.Error.WriteLine($"Environment variable '{name}' referenced by option '--{option.Name}' is not set.");
+					return false;
+				}
+
+				result.Append(value);
+				return true;
+			}
 		}
 	}
 }

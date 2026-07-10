@@ -58,6 +58,7 @@ namespace LinqToDB.CommandLine.Options
 						{
 							values.Add(value.Value);
 							found = true;
+
 							break;
 						}
 					}
@@ -70,6 +71,7 @@ namespace LinqToDB.CommandLine.Options
 				}
 
 				errorDetails = null;
+
 				return values.ToArray();
 			}
 			else
@@ -84,6 +86,7 @@ namespace LinqToDB.CommandLine.Options
 				}
 
 				errorDetails = $"unknown value '{rawValue}'";
+
 				return null;
 			}
 		}
@@ -105,8 +108,8 @@ namespace LinqToDB.CommandLine.Options
 						}
 
 						var stringValue = element.GetString()!;
+						var found       = false;
 
-						var found = false;
 						foreach (var value in Values)
 						{
 							if (string.Equals(stringValue, value.Value, CaseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase))
@@ -125,10 +128,12 @@ namespace LinqToDB.CommandLine.Options
 					}
 
 					errorDetails = null;
+
 					return values.ToArray();
 				}
 
 				errorDetails = $"array expected but got '{rawValue.ValueKind}'";
+
 				return null;
 			}
 			else
@@ -147,10 +152,12 @@ namespace LinqToDB.CommandLine.Options
 					}
 
 					errorDetails = $"unknown value '{stringValue}'";
+
 					return null;
 				}
 
 				errorDetails = $"string expected but got '{rawValue.ValueKind}'";
+
 				return null;
 			}
 		}
