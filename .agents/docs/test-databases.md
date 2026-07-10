@@ -175,6 +175,8 @@ Oracle 18+ images are large and add very little test value until per-version dia
 
 **Picking a version.** Single container exposes all three linq2db ClickHouse test providers (`Client` / `MySql` / `Octonica`). Run all three by default — they share one container, so the cost is the same as running one.
 
+**Synchronous mutations in the test env.** ClickHouse `UPDATE`/`DELETE` compile to asynchronous `ALTER TABLE … UPDATE`/`DELETE` **mutations** (default `mutations_sync=0`), and ClickHouse does **not** report affected-row counts (hence `SqlProviderFlags.IsAffectedRowsCountSupported=false`). Both the CI (`Build/Azure/scripts/clickhouse.sh`) and local (`Data/Setup Scripts/clickhouse.cmd`) setup patch `<mutations_sync>1</mutations_sync>` into the server config, so in the test env a mutation completes before the statement returns — **write-then-read tests are deterministic**. A real-world caller on the default config can still read pre-mutation state, so any read-after-write feature (e.g. `UpdateOptimisticWithRefresh`'s no-rowcount verify path, #5643) is best-effort on ClickHouse outside the tuned test config.
+
 ## YDB
 
 | Provider | Provider IDs | Setup script | Container | Image | Pref |
