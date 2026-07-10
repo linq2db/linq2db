@@ -570,6 +570,12 @@ namespace LinqToDB.CodeModel
 			if (isExtensionType)
 				WriteLine("[<System.Runtime.CompilerServices.Extension>]");
 
+			// entity records can contain non-comparable fields (obj, byte[], collection/entity associations);
+			// F# would otherwise try to derive structural comparison and fail (FS1178). Structural equality is
+			// retained; ordering is not meaningful for entities.
+			if (isRecord)
+				WriteLine("[<NoComparison>]");
+
 			Write("type ");
 			WriteAccessibility(@class.Attributes);
 			Visit(@class.Name);

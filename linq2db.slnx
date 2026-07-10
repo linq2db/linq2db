@@ -702,6 +702,7 @@
       <Build Solution="Testing|*" Project="false" />
     </Project>
     <Project Path="Tests/FSharp/Tests.FSharp.fsproj" />
+    <Project Path="Tests/FSharp.Scaffold/Tests.FSharp.Scaffold.fsproj" />
     <Project Path="Tests/Linq/Tests.csproj" />
     <Project Path="Tests/Model/Tests.Model.csproj" />
     <Project Path="Tests/Tests.Benchmarks/linq2db.Benchmarks.csproj">

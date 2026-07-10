@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Compile-only regression gate for the CLI scaffolder's F# output (issue #1553).
+    The committed .fs files are produced by the CLI scaffold command with the F# target language and must
+    compile against linq2db + linq2db.FSharp. CI detects generator regressions when this project fails to
+    build (mirrors the C# Tests.T4 baseline mechanism). Regenerate the baselines after generator changes.
+  -->
+
+  <PropertyGroup>
+    <AssemblyName>linq2db.Tests.FSharp.Scaffold</AssemblyName>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>9</LangVersion>
+    <WarningLevel>5</WarningLevel>
+    <!-- generated F# uses classic nullable references (FirstOrDefault-style APIs); it is not annotated for
+         F# 9 nullness, so nullness checking is disabled for this baseline gate (see #1553 follow-up) -->
+    <Nullable>disable</Nullable>
+    <IsPackable>false</IsPackable>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- one generated file per (provider, options) baseline; F# requires explicit ordered compile items -->
+    <Compile Include="TestDataDB.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Source\LinqToDB\LinqToDB.csproj" />
+    <ProjectReference Include="..\..\Source\LinqToDB.FSharp\LinqToDB.FSharp.fsproj" />
+    <PackageReference Include="FSharp.Core" />
+  </ItemGroup>
+
+</Project>
