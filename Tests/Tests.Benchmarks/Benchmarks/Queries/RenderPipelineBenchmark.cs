@@ -64,6 +64,8 @@ namespace LinqToDB.Benchmarks.Queries
 		int[]          _inList  = null!;
 		string         _namePart = null!;
 		DateTime       _fromDate;
+		int            _take;
+		int            _skip;
 
 		// Trigger LINQ translation + render (GetCommand) + cache lookup without executing on the mock;
 		// return SQL length so the JIT can't elide the call.
@@ -97,6 +99,8 @@ namespace LinqToDB.Benchmarks.Queries
 			_inList = Enumerable.Range(0, 16).ToArray();
 			_namePart = "x";
 			_fromDate = new DateTime(2000, 1, 1);
+			_take     = 10;
+			_skip     = 5;
 
 			Query.ClearCaches();
 		}
@@ -150,6 +154,20 @@ namespace LinqToDB.Benchmarks.Queries
 			return total;
 		}
 
+		// === Minimal parameterized SKIP/TAKE paging: ordered table + Skip/Take over parameters. Isolates the per-run
+		// TAKE/SKIP resolution (moved into the convert visitor) with almost no other render cost, so the branch-vs-baseline
+		// delta reflects the resolution itself rather than being diluted by a heavy query. ===
+		[Benchmark]
+		public int Render_SkipTake()
+		{
+			var total = 0;
+
+			for (var i = 0; i < Iterations; i++)
+				total += Render(_db.GetTable<Entity>().OrderBy(x => x.Id).Skip(_skip).Take(_take));
+
+			return total;
+		}
+
 		// === Complex parameter-value-dependent query: correlated subquery + join + two IN-lists (one nested) + LIKE +
 		// date parameter + ordering. A large SelectQuery graph whose structure depends on parameter values — the
 		// memory-acceptance basis for the two-pass-convert POC (a trivial IN-list does not reveal the per-run rebuild
@@ -165,12 +183,14 @@ namespace LinqToDB.Benchmarks.Queries
 			return total;
 		}
 
-		// Heavy parameter-dependent query used by Render_ComplexParam.
+		// Heavy parameter-dependent query used by Render_ComplexParam: correlated subquery + join + two IN-lists (one
+		// nested) + LIKE + date param + ordering + parameterized SKIP/TAKE paging (so it also exercises the per-run
+		// TAKE/SKIP resolution moved into the convert visitor).
 		IQueryable<Entity> BuildComplexParam()
 		{
 			var t = _db.GetTable<Entity>();
 
-			return
+			return (
 				from e in t
 				join e2 in t on e.Value equals e2.Value
 				where _inList.Contains(e.Id)
@@ -178,7 +198,8 @@ namespace LinqToDB.Benchmarks.Queries
 					&& e2.Created > _fromDate
 					&& t.Any(x => x.Value == e.Value && x.Id != e.Id && _inList.Contains(x.Value))
 				orderby e.Name, e2.Value descending
-				select e;
+				select e)
+				.Skip(_skip).Take(_take);
 		}
 
 		// === Cold prepare: DistinctCount structurally-distinct non-parameter-dependent queries (cache miss + full build each) ===
@@ -244,6 +265,7 @@ namespace LinqToDB.Benchmarks.Queries
 				("Execute_Select",        () => b.Execute_Select()),
 				("Execute_Insert",        () => b.Execute_Insert()),
 				("Render_ValueDependent", () => b.Render_ValueDependent()),
+				("Render_SkipTake",       () => b.Render_SkipTake()),
 				("Render_ComplexParam",   () => b.Render_ComplexParam()),
 				("Prepare_Cold",          () => b.Prepare_Cold()),
 			};
