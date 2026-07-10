@@ -157,8 +157,11 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			// any FbParameter.Charset incl. Octets/None) fails "Malformed string" (SQLSTATE 22000) when the value
 			// hits a matching row. Earlier versions keep the binary binding (they have no CHAR_TO_UUID wrap).
 			if (Version >= FirebirdVersion.v6
-				&& (dataType.SystemType == typeof(Guid) || dataType.SystemType == typeof(Guid?)))
+				&& (dataType.SystemType == typeof(Guid) || dataType.SystemType == typeof(Guid?))
+				&& dataType.DataType is not (DataType.Char or DataType.NChar or DataType.VarChar or DataType.NVarChar))
 			{
+				// only the octets-mapped Guid (the CHAR_TO_UUID-wrapped parameter) is rebound; a Guid mapped
+				// to a text column keeps its existing string binding.
 				if (value is Guid g)
 					value = g.ToString();
 

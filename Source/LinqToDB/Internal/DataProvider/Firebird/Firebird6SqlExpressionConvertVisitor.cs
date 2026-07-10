@@ -39,7 +39,8 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			// the Guid value to a VARCHAR string on v6+). Inline Guid constants stay SqlValue (emitted as an
 			// X'..' literal, which works), so only bound parameters are rewritten here.
 			if (sqlParameter.IsQueryParameter
-				&& sqlParameter.Type.SystemType.ToUnderlying() == typeof(Guid))
+				&& sqlParameter.Type.SystemType.ToUnderlying() == typeof(Guid)
+				&& sqlParameter.Type.DataType is not (DataType.Char or DataType.NChar or DataType.VarChar or DataType.NVarChar))
 			{
 				// CHAR_TO_UUID supplies the octets typing; the parameter itself must not be cast to the Guid
 				// column type (BINARY(16)) — it is bound as a VARCHAR string, so an inner CAST AS BINARY(16)
