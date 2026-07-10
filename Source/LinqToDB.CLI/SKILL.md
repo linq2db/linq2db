@@ -357,6 +357,11 @@ Example configuration:
 
 ```json
 {
+  "mcp": {
+    "title": "linq2db Development Databases",
+    "description": "Databases used for linq2db development and provider testing.",
+    "instructions": "Use this server only for linq2db development, diagnostics, and provider compatibility testing."
+  },
   "default": {
     "description"     : "Use SQL Server T-SQL syntax. Prefer dbo schema qualification.",
     "provider"        : "SqlServer",
@@ -378,6 +383,23 @@ Example configuration:
   }
 }
 ```
+
+The optional top-level `mcp` section describes this configured MCP server instance during initialization:
+
+- `title` is its human-readable display name.
+- `description` identifies the databases or application domain served by this instance.
+- `instructions` supplies additional instance-specific guidance that MCP hosts can add to the model context. It is appended to the built-in server instructions rather than replacing them.
+- `mcp` is a reserved section name, is not a profile, and is not returned in the `linq2db_info` profile list.
+- `config-init` preserves an existing `mcp` section but does not create or modify it.
+
+Without an `mcp` section, the server identifies itself as `linq2db Database Tools` and describes its provider-aware schema and SQL capabilities. Built-in instructions direct agents through `linq2db_info`, `linq2db_schema`, and read-only `linq2db_query`; recommend `linq2db_skill` for the full usage guide; and restrict `linq2db_execute` to explicitly approved operations when that tool is available.
+
+Keep MCP host registration and linq2db server configuration separate:
+
+- The MCP host registration name, `command`, `args`, and `env` control how a server process is started.
+- The file passed through `--config` contains the server's `mcp` identity and its database profiles.
+- Use a separate configuration file and server registration for each project or database group that needs distinct model context.
+- Do not combine unrelated projects into one server merely because they use the same linq2db CLI executable.
 
 Timeouts:
 
@@ -479,7 +501,7 @@ Differences from `query`:
 - There is no per-call execute confirmation option. The command name plus trusted profile setting are the capability boundary.
 - Direct provider/connection CLI options can still override profile connection settings, but they do not enable execution by themselves.
 - Multiple SQL statements are still rejected.
-- `json-table` is the recommended output because it carries `recordsAffected` when the provider returns it.
+- `recordsAffected` is reported only in `json-table` output, and only when the provider returns it; `json` and `csv` output never include it. `json-table` is the recommended output for `execute` for this reason.
 
 Example:
 
@@ -541,6 +563,7 @@ MCP transport rules:
 - Do not write banners, progress, query diagnostics, or raw query output directly to stdout while the MCP server is running.
 
 The `mcp` command uses the same connection/configuration option model as `query`, but SQL input is supplied through the MCP tool call instead of startup CLI arguments.
+When the configuration contains a top-level `mcp` section, its `title`, `description`, and `instructions` identify the purpose of this specific server instance in the MCP initialization response. This allows multiple registered linq2db MCP servers to describe different application or database domains.
 
 Startup/config boundary:
 
@@ -561,28 +584,58 @@ Tool-call boundary:
 
 The MCP default output format is `json-table`, which preserves duplicate column names and carries `rowCount`, `truncated`, and `recordsAffected` in-band when available. The existing `query` command keeps `json` as its default.
 
+MCP host configuration schemas vary. The following example uses the `servers`/`type` form; hosts that use `mcpServers` express the same `command`, `args`, and `env` values under that key.
+
 Example MCP host registration:
 
 ```json
 {
-  "mcpServers": {
-    "linq2db": {
-      "command": "dotnet",
+  "servers": {
+    "ERP Databases": {
+      "type": "stdio",
+      "command": "dotnet-linq2db",
       "args": [
-        "linq2db",
         "mcp",
         "--config",
-        "C:\\path\\to\\linq2db-query.json",
-        "--profile",
-        "dev"
+        "C:\\mcp\\erp.json"
       ],
       "env": {
-        "LINQ2DB_QUERY_PASSWORD": "secret"
+        "ERP_CONNECTION_STRING": "..."
+      }
+    },
+    "Analytics Databases": {
+      "type": "stdio",
+      "command": "dotnet-linq2db",
+      "args": [
+        "mcp",
+        "--config",
+        "C:\\mcp\\analytics.json"
+      ],
+      "env": {
+        "ANALYTICS_CONNECTION_STRING": "..."
       }
     }
   }
 }
 ```
+
+`C:\mcp\erp.json` can identify the ERP project and contain its related profiles:
+
+```json
+{
+  "mcp": {
+    "title": "ERP Databases",
+    "description": "Operational databases for the ERP project.",
+    "instructions": "Use this server only for ERP development and diagnostics. Inspect the selected database schema before generating SQL."
+  },
+  "default": {
+    "provider": "SqlServer",
+    "connectionStringEnv": "ERP_CONNECTION_STRING"
+  }
+}
+```
+
+The analytics server should use a separate `analytics.json` with its own `mcp` metadata, profiles, and environment-variable names. Both registrations can launch the same executable; their config files give the resulting server instances different scope and guidance.
 
 To publish write-capable execution, add `--enable-execute-tool` to MCP startup args and use a trusted profile with `enableExecute: true`.
 

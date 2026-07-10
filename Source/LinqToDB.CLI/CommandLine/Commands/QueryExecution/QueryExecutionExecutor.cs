@@ -118,7 +118,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			}
 			catch (Exception ex)
 			{
-				return new QueryExecutionResult(StatusCodes.EXPECTED_ERROR, $"Query execution failed: {ex.Message}", false);
+				return new QueryExecutionResult(StatusCodes.EXPECTED_ERROR, $"SQL execution failed: {ex.Message}", false);
 			}
 		}
 
@@ -185,7 +185,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				var reader = dataReader.Reader;
 
 				if (reader == null)
-					return new QueryExecutionResult(StatusCodes.EXPECTED_ERROR, "Query didn't return data reader.", false);
+					return new QueryExecutionResult(StatusCodes.EXPECTED_ERROR, "SQL execution didn't return a data reader.", false);
 
 				// Read the column metadata from the data reader and create output column definitions.
 				//

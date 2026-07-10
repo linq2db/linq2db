@@ -17,6 +17,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 	internal sealed class QueryExecutionConfiguration
 	{
 		private const string DefaultProfileName = "default";
+		private const string McpSectionName      = "mcp";
 
 		/// <summary>
 		/// Optional non-secret profile description for agents and humans.
@@ -108,6 +109,12 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		{
 			configuration = null;
 
+			if (string.Equals(profileName, McpSectionName, StringComparison.Ordinal))
+			{
+				error = $"Configuration profile name '{McpSectionName}' is reserved for MCP server configuration.";
+				return false;
+			}
+
 			if (!environment.FileExists(fileName))
 			{
 				error = $"Configuration file '{fileName}' not found.";
@@ -188,7 +195,10 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				var names = new List<string>();
 
 				foreach (var profile in json.RootElement.EnumerateObject())
-					names.Add(profile.Name);
+				{
+					if (!string.Equals(profile.Name, McpSectionName, StringComparison.Ordinal))
+						names.Add(profile.Name);
+				}
 
 				profileNames = names;
 				error        = null;

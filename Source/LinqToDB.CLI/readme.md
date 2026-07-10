@@ -97,6 +97,28 @@ When `config-init` writes an existing configuration file, it rewrites it as norm
 
 Configuration profiles are shared by `query`, `schema`, and `mcp`. The `query` command supports `json`, `json-table`, and `csv`. The `schema` command outputs JSON only. The MCP `linq2db_query` tool supports only `json` and `json-table`; if a selected profile has `output: "csv"`, MCP calls must pass `output: "json-table"` or `output: "json"` explicitly, or the profile should be adjusted for MCP usage.
 
+An optional top-level `mcp` section can set instance-specific `title`, `description`, and `instructions` returned during MCP initialization. Use it to distinguish servers registered for different application or database domains. The `mcp` section is not a connection profile; `config-init` preserves it but does not create or modify it.
+
+When the section is omitted, the server uses a default title and description for linq2db database tools. It also supplies built-in instructions for the `linq2db_info` → `linq2db_schema` → `linq2db_query` workflow, points agents to `linq2db_skill` for the full guide, and limits `linq2db_execute` guidance to explicitly approved operations. Configured `instructions` are appended to those built-in instructions; configured `title` and `description` replace their defaults.
+
+The MCP host configuration and linq2db configuration have different roles. The host registration defines the visible registration name, executable, arguments, and environment variables. The file passed using `--config` defines the server identity returned during initialization and the database profiles available through that server.
+
+```json
+{
+  "mcp": {
+    "title": "Audiobooks Database",
+    "description": "Application database containing audiobooks, authors, narrators, users, and listening history.",
+    "instructions": "Use this server for Audiobooks application data analysis. Inspect the schema before writing queries."
+  },
+  "default": {
+    "provider": "PostgreSQL",
+    "connectionStringEnv": "AUDIOBOOKS_CONNECTION_STRING"
+  }
+}
+```
+
+For multiple projects or database groups, register the same CLI executable more than once and pass a different config file to each process. For example, an enterprise environment could register `ERP Databases` with `--config C:\mcp\erp.json` and `Analytics Databases` with `--config C:\mcp\analytics.json`. Each file should have its own top-level `mcp` metadata and only the profiles relevant to that project. This gives agents a clear project boundary while reusing the same linq2db CLI installation.
+
 For list of available options, use `dotnet linq2db help <command>` command.
 
 ### Usage Examples

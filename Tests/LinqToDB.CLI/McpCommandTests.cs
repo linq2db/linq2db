@@ -96,6 +96,24 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task McpInitializeReturnsDefaultServerMetadata()
+		{
+			await using var server = await McpServerProcess.Start();
+
+			var response = await server.Initialize();
+
+			{
+				(response["error"]).ShouldBeNull();
+				((string?)response["result"]?["serverInfo"]?["name"]).ShouldBe("linq2db.cli");
+				((string?)response["result"]?["serverInfo"]?["title"]).ShouldBe("linq2db Database Tools");
+				((string?)response["result"]?["serverInfo"]?["description"]).ShouldContain("database schema inspection");
+				((string?)response["result"]?["instructions"]).ShouldContain("Call linq2db_info first");
+				((string?)response["result"]?["instructions"]).ShouldContain("Call linq2db_skill for the full linq2db CLI/MCP usage guide");
+				((string?)response["result"]?["instructions"]).ShouldContain("Use linq2db_execute only when it is available");
+			}
+		}
+
+		[Test]
 		public async Task McpListsExecuteToolWhenEnabled()
 		{
 			await using var server = await McpServerProcess.Start("--enable-execute-tool");
@@ -118,6 +136,49 @@ namespace Tests.LinqToDB.CLI
 				var executeInputSchema = executeTool["inputSchema"]!.ToJsonString();
 				executeInputSchema.ShouldNotContain("allowUnsafeSql");
 				executeInputSchema.ShouldNotContain("allowExecute");
+			}
+		}
+
+		[TestCase(
+			"linq2db Development Databases",
+			"Databases used for linq2db development and provider testing.",
+			"Use this server only for linq2db development, diagnostics, and provider compatibility testing.")]
+		[TestCase(
+			"Audiobooks Database",
+			"Application database containing audiobooks, authors, narrators, users, and listening history.",
+			"Use this server for Audiobooks application data analysis. Inspect the schema before writing queries.")]
+		public async Task McpInitializeReturnsConfiguredServerMetadata(string title, string description, string instructions)
+		{
+			var config = Path.Combine(TestContext.CurrentContext.WorkDirectory, $"mcp-server-{Guid.NewGuid():N}.json");
+			await File.WriteAllTextAsync(config, $$"""
+				{
+					"mcp": {
+						"title": {{JsonSerializer.Serialize(title)}},
+						"description": {{JsonSerializer.Serialize(description)}},
+						"instructions": {{JsonSerializer.Serialize(instructions)}}
+					},
+					"default": {
+						"provider": "SQLite",
+						"connectionString": "Data Source=:memory:"
+					}
+				}
+				""").ConfigureAwait(false);
+
+			await using var server = await McpServerProcess.Start("--config", config);
+
+			var initializeResponse = await server.Initialize();
+			var infoResponse       = await server.CallTool("linq2db_info", new JsonObject());
+			var info               = ReadToolJson(infoResponse);
+
+			{
+				(initializeResponse["error"]).ShouldBeNull();
+				((string?)initializeResponse["result"]?["serverInfo"]?["name"]).ShouldBe("linq2db.cli");
+				((string?)initializeResponse["result"]?["serverInfo"]?["title"]).ShouldBe(title);
+				((string?)initializeResponse["result"]?["serverInfo"]?["description"]).ShouldBe(description);
+				((string?)initializeResponse["result"]?["instructions"]).ShouldContain("Call linq2db_skill for the full linq2db CLI/MCP usage guide");
+				((string?)initializeResponse["result"]?["instructions"]).ShouldEndWith(instructions);
+				(info["profiles"]?.AsArray().Count).ShouldBe(1);
+				((string?)info["profiles"]?[0]?["name"]).ShouldBe("default");
 			}
 		}
 
@@ -1035,9 +1096,9 @@ namespace Tests.LinqToDB.CLI
 				_standardErrorExpectation = expectedText;
 			}
 
-			public async Task Initialize()
+			public async Task<JsonObject> Initialize()
 			{
-				await SendRequest("initialize", new JsonObject
+				var response = await SendRequest("initialize", new JsonObject
 				{
 					["protocolVersion"] = "2025-06-18",
 					["capabilities"]    = new JsonObject(),
@@ -1049,6 +1110,7 @@ namespace Tests.LinqToDB.CLI
 				}).ConfigureAwait(false);
 
 				await SendNotification("notifications/initialized", new JsonObject()).ConfigureAwait(false);
+				return response;
 			}
 
 			public Task<JsonObject> CallTool(string name, JsonObject arguments)

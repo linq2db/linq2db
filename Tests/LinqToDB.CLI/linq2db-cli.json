@@ -1,4 +1,9 @@
 {
+	"mcp": {
+		"title"          : "linq2db Development Databases",
+		"description"    : "Databases used for linq2db development and provider testing.",
+		"instructions"   : "Use this server only for linq2db development, diagnostics, and provider compatibility testing."
+	},
 	"default": {
 		"commandTimeout" : 30,
 		"lockTimeout"    : 5,

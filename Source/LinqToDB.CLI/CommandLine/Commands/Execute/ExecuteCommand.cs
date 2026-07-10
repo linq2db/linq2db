@@ -98,7 +98,7 @@ namespace LinqToDB.CommandLine.Commands.Execute
 
 				if (result.Truncated && !string.Equals(settings.Output, "json-table", StringComparison.OrdinalIgnoreCase))
 				{
-					await environment.Error.WriteLineAsync($"Query result truncated to {settings.MaxRows.ToString(CultureInfo.InvariantCulture)} row(s). Use '--max-rows' to change the limit.").ConfigureAwait(false);
+					await environment.Error.WriteLineAsync($"Execution result truncated to {settings.MaxRows.ToString(CultureInfo.InvariantCulture)} row(s). Use '--max-rows' to change the limit.").ConfigureAwait(false);
 				}
 
 				return result.StatusCode;

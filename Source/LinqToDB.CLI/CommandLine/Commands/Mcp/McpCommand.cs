@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 
 using LinqToDB.CommandLine;
 using LinqToDB.CommandLine.Commands;
+using LinqToDB.CommandLine.Commands.Connection;
 using LinqToDB.CommandLine.Commands.QueryExecution;
 using LinqToDB.CommandLine.Options;
 
@@ -12,6 +13,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
+using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 
 namespace LinqToDB.CommandLine.Commands.Mcp
@@ -89,6 +91,14 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 				throw new InvalidOperationException($"Not all options handled by {Name} command");
 			}
 
+			var configFileName = new ConnectionSettingsResolver(environment).ResolvePath(QueryExecutionCliOptions.Config, startupOptions.Config);
+
+			if (!McpServerConfiguration.TryLoad(environment, configFileName, out var serverConfiguration, out var error))
+			{
+				await environment.Error.WriteLineAsync(error).ConfigureAwait(false);
+				return StatusCodes.INVALID_ARGUMENTS;
+			}
+
 			var builder = Host.CreateApplicationBuilder([]);
 
 			builder.Logging.SetMinimumLevel(LogLevel.Warning);
@@ -98,7 +108,17 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 			});
 
 			var mcpServerBuilder = builder.Services
-				.AddMcpServer()
+				.AddMcpServer(serverOptions =>
+				{
+					serverOptions.ServerInfo = new Implementation
+					{
+						Name        = "linq2db.cli",
+						Title       = serverConfiguration.Title,
+						Version     = GetType().Assembly.GetName().Version?.ToString() ?? "unknown",
+						Description = serverConfiguration.Description,
+					};
+					serverOptions.ServerInstructions = serverConfiguration.Instructions;
+				})
 				.WithStdioServerTransport()
 				.WithTools(new McpQueryTool(startupOptions));
 

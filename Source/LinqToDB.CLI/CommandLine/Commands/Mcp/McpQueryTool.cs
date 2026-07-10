@@ -149,7 +149,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 
 		[McpServerTool(
 			Name        = "linq2db_query",
-			Title       = "Execute read-only linq2db SQL query",
+			Title       = "Execute read-only SQL query",
 			ReadOnly    = true,
 			Idempotent  = false,
 			OpenWorld   = true,

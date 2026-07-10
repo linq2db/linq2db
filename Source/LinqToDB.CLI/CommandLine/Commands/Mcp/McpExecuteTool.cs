@@ -22,7 +22,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 
 		[McpServerTool(
 			Name        = "linq2db_execute",
-			Title       = "Execute write-capable linq2db SQL statement",
+			Title       = "Execute write-capable SQL statement",
 			ReadOnly    = false,
 			Idempotent  = false,
 			OpenWorld   = true,
@@ -60,7 +60,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 
 				Allowed values: json, json-table.
 
-				Use json-table by default because it can report recordsAffected when the provider returns it.
+				recordsAffected is reported only in json-table output, and only when the provider returns it; json output never includes it. Use json-table by default for this reason.
 				""")] string? output = null,
 			CancellationToken cancellationToken = default)
 		{

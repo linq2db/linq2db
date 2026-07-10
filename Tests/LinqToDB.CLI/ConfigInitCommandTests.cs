@@ -95,6 +95,9 @@ namespace Tests.LinqToDB.CLI
 			var environment = new TestCliEnvironment();
 			environment.Files["query.json"] = """
 				{
+				  "mcp": {
+				    "title": "Existing MCP server"
+				  },
 				  "default": {
 				    "provider": "SQLite",
 				    "connectionString": "Data Source=default.db"
@@ -113,8 +116,21 @@ namespace Tests.LinqToDB.CLI
 				(result.Error).ShouldBeEmpty();
 
 				using var json = JsonDocument.Parse(environment.Files["query.json"]);
+				json.RootElement.GetProperty("mcp").GetProperty("title").GetString().ShouldBe("Existing MCP server");
 				json.RootElement.GetProperty("old").GetProperty("connectionString").GetString().ShouldBe("Data Source=old.db");
 				json.RootElement.GetProperty("dev").GetProperty("connectionString").GetString().ShouldBe("Data Source=dev.db");
+			}
+		}
+
+		[Test]
+		public async Task ConfigInitRejectsReservedMcpProfileName()
+		{
+			var result = await RunCli(new TestCliEnvironment(), "config-init", "--profile", "mcp", "--provider", "SQLite", "--connection-string", "Data Source=data.db");
+
+			{
+				(result.ExitCode).ShouldBe(-1);
+				(result.Output).ShouldBeEmpty();
+				(result.Error).ShouldContain("Configuration profile name 'mcp' is reserved for MCP server configuration.");
 			}
 		}
 
