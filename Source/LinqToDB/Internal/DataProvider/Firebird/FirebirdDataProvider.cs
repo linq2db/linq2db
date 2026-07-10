@@ -152,6 +152,19 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
+			// Firebird 6: Guid parameters are wrapped in CHAR_TO_UUID(...) by Firebird6SqlExpressionConvertVisitor,
+			// so bind the value as its canonical 36-char text. Any binary/octets binding (FbDbType.Guid, byte[],
+			// any FbParameter.Charset incl. Octets/None) fails "Malformed string" (SQLSTATE 22000) when the value
+			// hits a matching row. Earlier versions keep the binary binding (they have no CHAR_TO_UUID wrap).
+			if (Version >= FirebirdVersion.v6
+				&& (dataType.SystemType == typeof(Guid) || dataType.SystemType == typeof(Guid?)))
+			{
+				if (value is Guid g)
+					value = g.ToString();
+
+				dataType = new DbDataType(typeof(string), DataType.VarChar, null, 36);
+			}
+
 #if SUPPORTS_DATEONLY
 			if (!Adapter.IsDateOnlySupported && value is DateOnly d)
 			{
