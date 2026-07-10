@@ -62,6 +62,8 @@ namespace LinqToDB.EntityFrameworkCore
 					?? throw new LinqToDBForEFToolsException("Can not evaluate current context from query");
 
 				var dc = CreateLinqToDBContext(context);
+				// #5364: implicit context is never disposed — release the EF connection per command.
+				dc.CloseAfterUse = true;
 				var newExpression = queryable.Expression;
 
 				var result = instantiator.MakeGenericMethod(queryable.ElementType)
@@ -539,6 +541,11 @@ namespace LinqToDB.EntityFrameworkCore
 #pragma warning disable CA2000 // Dispose objects before losing scope
 			var dc = CreateLinqToDBContext(context);
 #pragma warning restore CA2000 // Dispose objects before losing scope
+
+			// #5364: this implicit context is never disposed, so release the EF connection after
+			// each command (as EF Core itself does) instead of holding it open until dispose.
+			// Only closes what linq2db actually opened, so an ambient transaction is unaffected.
+			dc.CloseAfterUse = true;
 
 			return new LinqToDBForEFQueryProvider<T>(dc, query.Expression);
 		}
