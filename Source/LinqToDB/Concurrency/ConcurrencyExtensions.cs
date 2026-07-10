@@ -110,7 +110,10 @@ namespace LinqToDB.Concurrency
 		/// <typeparam name="T">Entity type.</typeparam>
 		/// <param name="dc">Database context.</param>
 		/// <param name="obj">Entity instance to update.</param>
-		/// <returns>Number of updated records.</returns>
+		/// <returns>
+		/// Number of updated records. On providers that do not report affected rows (e.g. ClickHouse) the count is
+		/// always <c>0</c>, so it cannot be used to detect an optimistic-concurrency failure on those providers.
+		/// </returns>
 		public static int UpdateOptimistic<T>(this IDataContext dc, T obj)
 			where T : class
 		{
@@ -128,7 +131,10 @@ namespace LinqToDB.Concurrency
 		/// <param name="dc">Database context.</param>
 		/// <param name="obj">Entity instance to update.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
-		/// <returns>Number of updated records.</returns>
+		/// <returns>
+		/// Number of updated records. On providers that do not report affected rows (e.g. ClickHouse) the count is
+		/// always <c>0</c>, so it cannot be used to detect an optimistic-concurrency failure on those providers.
+		/// </returns>
 		public static Task<int> UpdateOptimisticAsync<T>(this IDataContext dc, T obj, CancellationToken cancellationToken = default)
 			where T : class
 		{
@@ -145,7 +151,10 @@ namespace LinqToDB.Concurrency
 		/// <typeparam name="T">Entity type.</typeparam>
 		/// <param name="source">Table source with optional filtering applied.</param>
 		/// <param name="obj">Entity instance to update.</param>
-		/// <returns>Number of updated records.</returns>
+		/// <returns>
+		/// Number of updated records. On providers that do not report affected rows (e.g. ClickHouse) the count is
+		/// always <c>0</c>, so it cannot be used to detect an optimistic-concurrency failure on those providers.
+		/// </returns>
 		public static int UpdateOptimistic<T>(this IQueryable<T> source, T obj)
 			where T : class
 		{
@@ -165,7 +174,10 @@ namespace LinqToDB.Concurrency
 		/// <param name="source">Table source with optional filtering applied.</param>
 		/// <param name="obj">Entity instance to update.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
-		/// <returns>Number of updated records.</returns>
+		/// <returns>
+		/// Number of updated records. On providers that do not report affected rows (e.g. ClickHouse) the count is
+		/// always <c>0</c>, so it cannot be used to detect an optimistic-concurrency failure on those providers.
+		/// </returns>
 		public static Task<int> UpdateOptimisticAsync<T>(this IQueryable<T> source, T obj, CancellationToken cancellationToken = default)
 			where T : class
 		{
@@ -184,11 +196,15 @@ namespace LinqToDB.Concurrency
 		/// <typeparam name="T">Entity type.</typeparam>
 		/// <param name="dc">Database context.</param>
 		/// <param name="obj">Entity instance to delete.</param>
-		/// <returns>Number of deleted records.</returns>
+		/// <returns>
+		/// Number of deleted records. On providers that do not report affected rows (e.g. ClickHouse) the count is
+		/// always <c>0</c>, so it cannot be used to detect an optimistic-concurrency failure on those providers.
+		/// </returns>
 		public static int DeleteOptimistic<T>(this IDataContext dc, T obj)
 			where T : class
 		{
 			ArgumentNullException.ThrowIfNull(dc);
+			ArgumentNullException.ThrowIfNull(obj);
 
 			return dc.GetTable<T>().WhereKeyOptimistic(obj).Delete();
 		}
@@ -201,11 +217,15 @@ namespace LinqToDB.Concurrency
 		/// <param name="dc">Database context.</param>
 		/// <param name="obj">Entity instance to delete.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
-		/// <returns>Number of deleted records.</returns>
+		/// <returns>
+		/// Number of deleted records. On providers that do not report affected rows (e.g. ClickHouse) the count is
+		/// always <c>0</c>, so it cannot be used to detect an optimistic-concurrency failure on those providers.
+		/// </returns>
 		public static Task<int> DeleteOptimisticAsync<T>(this IDataContext dc, T obj, CancellationToken cancellationToken = default)
 			where T : class
 		{
 			ArgumentNullException.ThrowIfNull(dc);
+			ArgumentNullException.ThrowIfNull(obj);
 
 			return dc.GetTable<T>().WhereKeyOptimistic(obj).DeleteAsync(cancellationToken);
 		}
@@ -217,10 +237,16 @@ namespace LinqToDB.Concurrency
 		/// <typeparam name="T">Entity type.</typeparam>
 		/// <param name="source">Table source with optional filtering applied.</param>
 		/// <param name="obj">Entity instance to delete.</param>
-		/// <returns>Number of deleted records.</returns>
+		/// <returns>
+		/// Number of deleted records. On providers that do not report affected rows (e.g. ClickHouse) the count is
+		/// always <c>0</c>, so it cannot be used to detect an optimistic-concurrency failure on those providers.
+		/// </returns>
 		public static int DeleteOptimistic<T>(this IQueryable<T> source, T obj)
 			where T : class
 		{
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(obj);
+
 			return source.WhereKeyOptimistic(obj).Delete();
 		}
 
@@ -232,10 +258,16 @@ namespace LinqToDB.Concurrency
 		/// <param name="source">Table source with optional filtering applied.</param>
 		/// <param name="obj">Entity instance to delete.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
-		/// <returns>Number of deleted records.</returns>
+		/// <returns>
+		/// Number of deleted records. On providers that do not report affected rows (e.g. ClickHouse) the count is
+		/// always <c>0</c>, so it cannot be used to detect an optimistic-concurrency failure on those providers.
+		/// </returns>
 		public static Task<int> DeleteOptimisticAsync<T>(this IQueryable<T> source, T obj, CancellationToken cancellationToken = default)
 			where T : class
 		{
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(obj);
+
 			return source.WhereKeyOptimistic(obj).DeleteAsync(cancellationToken);
 		}
 
