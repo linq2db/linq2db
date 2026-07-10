@@ -57,6 +57,18 @@ try {
     }
     Note 'iscsi_target_install_secs' ([math]::Round(($sw.Elapsed - $t0).TotalSeconds, 1))
 
+    # MS iSCSI Target Server refuses loopback sessions to its own targets by default
+    # (documented limitation -- the "Connection Failed" the last two probes hit at connect).
+    # AllowLoopBack overrides it; the flag is read at service start, so set it BEFORE starting
+    # WinTarget and restart the service so a fresh-installed/auto-started instance honors it.
+    try {
+        New-Item -Path 'HKLM:\Software\Microsoft\iSCSI Target' -Force -ErrorAction SilentlyContinue | Out-Null
+        Set-ItemProperty -Path 'HKLM:\Software\Microsoft\iSCSI Target' -Name 'AllowLoopBack' -Value 1 -Type DWord -ErrorAction Stop
+        Note 'allow_loopback_set' 'OK'
+    }
+    catch { Note 'allow_loopback_set' "skip: $($_.Exception.Message)" }
+
+    Restart-Service -Name WinTarget -Force -ErrorAction SilentlyContinue   # re-read AllowLoopBack if already up
     Start-Service -Name WinTarget -ErrorAction SilentlyContinue     # iSCSI Target Server
     Set-Service   -Name MSiSCSI -StartupType Automatic -ErrorAction SilentlyContinue
     Start-Service -Name MSiSCSI -ErrorAction SilentlyContinue       # initiator
@@ -83,15 +95,32 @@ try {
     try   { Enable-NetFirewallRule -DisplayGroup 'iSCSI Service' -ErrorAction Stop; Note 'fw_iscsi_enabled' 'OK' }
     catch { Note 'fw_iscsi_enabled' "skip: $($_.Exception.Message)" }
 
-    # 5. loopback connect (explicit portal port + discovery refresh before fetching the target IQN)
-    New-IscsiTargetPortal -TargetPortalAddress 127.0.0.1 -TargetPortalPortNumber 3260 -ErrorAction Stop | Out-Null
-    Update-IscsiTargetPortal -TargetPortalAddress 127.0.0.1 -ErrorAction SilentlyContinue
-    $tgt = Get-IscsiTarget -ErrorAction Stop | Where-Object { $_.NodeAddress -like "*$targetName*" } | Select-Object -First 1
-    if ($null -eq $tgt) { throw 'target not discovered on loopback portal' }
-    $tgtNode = $tgt.NodeAddress
-    Connect-IscsiTarget -NodeAddress $tgtNode -IsPersistent $false -ErrorAction Stop | Out-Null
-    $connected = $true
-    Note 'iscsi_connect' 'OK'
+    # 5. connect -- try loopback first (now that AllowLoopBack is set), then fall back to the
+    #    agent's private 10.x interface IP (the IP is per-run, so discover it, never hardcode).
+    $portals = @('127.0.0.1')
+    $privIp  = Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue |
+               Where-Object { $_.IPAddress -like '10.*' } |
+               Select-Object -First 1 -ExpandProperty IPAddress
+    if ($privIp) { $portals += $privIp }
+
+    foreach ($portal in $portals) {
+        try {
+            New-IscsiTargetPortal -TargetPortalAddress $portal -TargetPortalPortNumber 3260 -ErrorAction Stop | Out-Null
+            Update-IscsiTargetPortal -TargetPortalAddress $portal -ErrorAction SilentlyContinue
+            $tgt = Get-IscsiTarget -ErrorAction Stop | Where-Object { $_.NodeAddress -like "*$targetName*" } | Select-Object -First 1
+            if ($null -eq $tgt) { throw 'target not discovered' }
+            $tgtNode = $tgt.NodeAddress
+            Connect-IscsiTarget -NodeAddress $tgtNode -IsPersistent $false -ErrorAction Stop | Out-Null
+            $connected = $true
+            Note 'iscsi_connect_via' $portal
+            break
+        }
+        catch {
+            Note "connect_fail_$portal" $_.Exception.Message
+            Remove-IscsiTargetPortal -TargetPortalAddress $portal -Confirm:$false -ErrorAction SilentlyContinue
+        }
+    }
+    if (-not $connected) { throw 'all portals failed to connect' }
     Start-Sleep -Seconds 3
 
     # 6. bring disk online + format NTFS
