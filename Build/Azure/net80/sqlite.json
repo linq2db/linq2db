@@ -7,14 +7,6 @@
 			"Northwind.SQLite",
 			"SQLite.MS",
 			"Northwind.SQLite.MS"
-		],
-		"Connections": {
-			// CI runs SQLite against shared-cache in-memory DBs (no per-commit filesystem sync); a keep-alive
-			// connection per DB is opened in TestsInitialization, Northwind loaded via the SQLite backup API.
-			"SQLite.Classic":      { "Provider": "SQLite",             "ConnectionString": "FullUri=file:testdata_cl?mode=memory&cache=shared" },
-			"SQLite.MS":           { "Provider": "SQLite.MS",          "ConnectionString": "Data Source=testdata_ms;Mode=Memory;Cache=Shared"  },
-			"Northwind.SQLite":    { "Provider": "System.Data.SQLite", "ConnectionString": "FullUri=file:northwind_cl?mode=memory&cache=shared" },
-			"Northwind.SQLite.MS": { "Provider": "SQLite.Microsoft",   "ConnectionString": "Data Source=northwind_ms;Mode=Memory;Cache=Shared" }
-		}
+		]
 	}
 }
