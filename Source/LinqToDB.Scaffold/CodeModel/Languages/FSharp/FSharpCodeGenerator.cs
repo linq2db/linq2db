@@ -65,9 +65,10 @@ namespace LinqToDB.CodeModel
 			"recursive", "sealed" , "tailcall" , "trait"    , "virtual" , "volatile",
 		};
 
-		private readonly bool                                                                   _useNRT;
 		private readonly List<CodeIdentifier>                                                   _currentScope = new();
 #pragma warning disable IDE0052 // Remove unread private members
+		// F# has no nullable reference types; the NRT flag is accepted for interface parity but not used
+		private readonly bool                                                                   _useNRT;
 		private readonly IReadOnlyDictionary<CodeIdentifier, ISet<IEnumerable<CodeIdentifier>>> _knownTypes;
 #pragma warning restore IDE0052 // Remove unread private members
 		private readonly ILanguageProvider                                                      _languageProvider;
@@ -219,7 +220,7 @@ namespace LinqToDB.CodeModel
 			// literal instead - the produced value is identical.
 			var rendered = BuildFragment(() => Visit(nameOf.Expression));
 			var dot      = rendered.LastIndexOf('.');
-			var name     = (dot >= 0 ? rendered.Substring(dot + 1) : rendered).Replace("`", "");
+			var name     = (dot >= 0 ? rendered.Substring(dot + 1) : rendered).Replace("`", "", StringComparison.Ordinal);
 
 			Write('"');
 			Write(name);
@@ -277,7 +278,10 @@ namespace LinqToDB.CodeModel
 			if (comment.Inline)
 			{
 				Write("(* ");
+				// string.Join(char, ...) is unavailable on netstandard2.0, use the string-separator overload
+#pragma warning disable MA0089
 				Write(string.Join(" ", SplitByNewLine(comment.Text)));
+#pragma warning restore MA0089
 				Write(" *)");
 			}
 			else
@@ -1092,7 +1096,7 @@ namespace LinqToDB.CodeModel
 			// UseFSharp option support). Nullable reference types that are NOT scalar - entity associations,
 			// byte[], obj, method return types - are left as plain nullable references, because option over a
 			// non-scalar element is not auto-mapped and an entity/array option would not round-trip.
-			if (nullable && (type.IsValueType || _languageProvider.GetAlias(type) == "string"))
+			if (nullable && (type.IsValueType || string.Equals(_languageProvider.GetAlias(type), "string", StringComparison.Ordinal)))
 				Write(" option");
 		}
 

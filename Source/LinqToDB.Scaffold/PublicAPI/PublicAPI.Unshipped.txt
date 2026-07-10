@@ -1,1 +1,3 @@
-﻿#nullable enable
+#nullable enable
+LinqToDB.CodeModel.Modifiers.Record = 16384 -> LinqToDB.CodeModel.Modifiers
+static LinqToDB.CodeModel.LanguageProviders.FSharp.get -> LinqToDB.CodeModel.ILanguageProvider!

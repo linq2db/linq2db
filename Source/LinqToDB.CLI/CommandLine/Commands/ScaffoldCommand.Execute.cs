@@ -30,7 +30,7 @@ namespace LinqToDB.CommandLine
 
 			// target language selection
 			options.Remove(General.TargetLanguage, out var languageValue);
-			var language = (string?)languageValue == "f#" ? LanguageProviders.FSharp : LanguageProviders.CSharp;
+			var language = string.Equals((string?)languageValue, "f#", StringComparison.Ordinal) ? LanguageProviders.FSharp : LanguageProviders.CSharp;
 
 			// F# is emitted through the AST code path only; the T4 template mode is C#-only
 			if (language == LanguageProviders.FSharp
@@ -68,7 +68,7 @@ namespace LinqToDB.CommandLine
 				settings.CodeGeneration.ClassPerFile = false;
 
 				// F# does not allow TAB indentation (FS1161); use spaces
-				if (settings.CodeGeneration.Indent == "\t")
+				if (string.Equals(settings.CodeGeneration.Indent, "\t", StringComparison.Ordinal))
 					settings.CodeGeneration.Indent = "    ";
 
 				// TODO(#1553): incremental F# parity. These C#-shaped features are not yet emitted for F#;
