@@ -273,6 +273,23 @@ namespace Tests.Analyzers
 		}
 
 		[Test]
+		public Task DoesNotOfferFixWhenNullableDoubleWouldNotFitSlot()
+		{
+			// Sql.Window.Median returns double?, which an int? slot won't accept — the fix must not be offered
+			// (the legacy chain returns int here). The diagnostic still reports.
+			const string source = """
+				using LinqToDB;
+
+				class C
+				{
+					int? M(int x) => {|LINQ2DB1001:Sql.Ext.Median(x).Over().PartitionBy(x).ToValue()|};
+				}
+				""";
+
+			return Verify.VerifyAsync(source, source);
+		}
+
+		[Test]
 		public Task ConvertsInsideExpressionTree()
 			=> Verify.VerifyAsync(
 				"""

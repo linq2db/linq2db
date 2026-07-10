@@ -43,6 +43,15 @@ namespace LinqToDB.Analyzers.CodeFixes
 		// Windowed ordered-set aggregates: WITHIN GROUP (ORDER BY ...) OVER (PARTITION BY ...).
 		static readonly HashSet<string> WindowedOrderedSetFunctions = new(StringComparer.Ordinal) { "PercentileCont", "PercentileDisc" };
 
+		// Functions whose Sql.Window overloads return double? (vs the legacy chain's TR slot type).
+		static readonly HashSet<string> NullableDoubleReturning = new(StringComparer.Ordinal)
+		{
+			"Median", "RatioToReport", "PercentileCont", "PercentileDisc",
+			"StdDev", "StdDevPop", "StdDevSamp", "Variance", "VarPop", "VarSamp",
+			"CovarPop", "CovarSamp", "Corr",
+			"RegrSlope", "RegrIntercept", "RegrCount", "RegrR2", "RegrAvgX", "RegrAvgY", "RegrSXX", "RegrSYY", "RegrSXY",
+		};
+
 		// Every function this rewriter can convert (union of the uniform families and the special-shape ones).
 		static readonly HashSet<string> ConvertibleFunctions = new(StringComparer.Ordinal)
 		{
@@ -119,7 +128,7 @@ namespace LinqToDB.Analyzers.CodeFixes
 							}
 
 							return BuildFromRoot(
-								toValueInvocation, inv, ma, method, sawOver,
+								toValueInvocation, model, inv, ma, method, sawOver,
 								partitionArgs, orderClauses, keepSeen, isKeepFirst, keepOrderClauses, withinGroupOrderClauses,
 								frameSeen, frameIsRange, frameStart, frameStartValue, frameEnd, frameEndValue);
 						}
@@ -229,6 +238,7 @@ namespace LinqToDB.Analyzers.CodeFixes
 
 		static ExpressionSyntax? BuildFromRoot(
 			InvocationExpressionSyntax toValueInvocation,
+			SemanticModel model,
 			InvocationExpressionSyntax rootInvocation,
 			MemberAccessExpressionSyntax rootAccess,
 			IMethodSymbol rootMethod,
@@ -242,6 +252,12 @@ namespace LinqToDB.Analyzers.CodeFixes
 
 			// Plain aggregate without OVER has no Sql.Window equivalent; unknown/irregular functions bail.
 			if (!sawOver || !ConvertibleFunctions.Contains(functionName))
+				return null;
+
+			// The Sql.Window statistical / median / ratio / percentile functions return double?, which the legacy
+			// ToValue<TR>() slot may not accept (e.g. an explicit `double`/`int?` local or return). Only offer the
+			// fix when double? fits the target — or the context is type-inferred (anonymous member / var) and re-infers.
+			if (NullableDoubleReturning.Contains(functionName) && !NullableDoubleFitsTarget(toValueInvocation, model))
 				return null;
 
 			// Split the root call's arguments into positional value args and the special modifier args
@@ -436,6 +452,38 @@ namespace LinqToDB.Analyzers.CodeFixes
 				var method = (i == 0 ? "OrderBy" : "ThenBy") + (natural[i].IsDescending ? "Desc" : "");
 				steps.Add(new Step(method, natural[i].Args));
 			}
+		}
+
+		// True when double? is acceptable at the expression's position: the target type takes double? implicitly,
+		// the target is unknown, or the context imposes no target type (anonymous member / var — it re-infers).
+		static bool NullableDoubleFitsTarget(ExpressionSyntax expression, SemanticModel model)
+		{
+			if (IsTypeInferredContext(expression))
+				return true;
+
+			var target = model.GetTypeInfo(expression).ConvertedType;
+			if (target is null)
+				return true;
+
+			var doubleType     = model.Compilation.GetSpecialType(SpecialType.System_Double);
+			var nullableDouble = model.Compilation.GetSpecialType(SpecialType.System_Nullable_T).Construct(doubleType);
+
+			var conversion = model.Compilation.ClassifyConversion(nullableDouble, target);
+			return conversion.IsImplicit || conversion.IsIdentity;
+		}
+
+		static bool IsTypeInferredContext(ExpressionSyntax expression)
+		{
+			var parent = expression.Parent;
+			while (parent is ParenthesizedExpressionSyntax parenthesized)
+				parent = parenthesized.Parent;
+
+			return parent switch
+			{
+				AnonymousObjectMemberDeclaratorSyntax => true,
+				EqualsValueClauseSyntax { Parent: VariableDeclaratorSyntax { Parent: VariableDeclarationSyntax { Type.IsVar: true } } } => true,
+				_ => false,
+			};
 		}
 
 		static string? EnumMemberName(ExpressionSyntax expression)
