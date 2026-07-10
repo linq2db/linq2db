@@ -447,17 +447,42 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 			}
 		}
 
+		// Window-function capability baseline for PostgreSQL 9.2/9.3. The statistical/regression window set
+		// (VAR_POP/VAR_SAMP/STDDEV*/CORR/COVAR/REGR_*) has been usable as window functions since 8.4, but
+		// FILTER, ordered-set / hypothetical-set WITHIN GROUP aggregates (9.4+) and the frame GROUPS mode /
+		// EXCLUDE clause (11+) are enabled by the version-specific tiers below.
 		protected class PostgreSQLWindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
 		{
-			protected override bool IsWindowFilterSupported     => true;
-			protected override bool IsOrderedSetFilterSupported => true;
-			// PostgreSQL supports hypothetical-set RANK/DENSE_RANK/PERCENT_RANK/CUME_DIST.
-			protected override bool IsHypotheticalSetSupported  => true;
 			// PostgreSQL supports the full statistical/regression window-function set with standard SQL names.
 			protected override bool IsVarianceSupported         => true;
 			protected override bool IsVarianceBareSupported     => true;
 			protected override bool IsCorrelationSupported      => true;
 			protected override bool IsLinearRegressionSupported => true;
+			// Ordered-set (WITHIN GROUP) aggregates PERCENTILE_CONT/PERCENTILE_DISC were added in PostgreSQL 9.4.
+			protected override bool IsPercentileContSupported   => false;
+			protected override bool IsPercentileDiscSupported   => false;
+			// Frame GROUPS mode and the frame EXCLUDE clause were added in PostgreSQL 11.
+			protected override bool IsFrameGroupsSupported      => false;
+			protected override bool IsFrameExclusionSupported   => false;
+		}
+
+		// PostgreSQL 9.5+ tier: 9.4 introduced FILTER (WHERE ...), ordered-set (WITHIN GROUP) and hypothetical-set
+		// aggregates; v95 is the lowest dialect entry >= 9.4.
+		protected class PostgreSQL95WindowFunctionsMemberTranslator : PostgreSQLWindowFunctionsMemberTranslator
+		{
+			protected override bool IsWindowFilterSupported     => true;
+			protected override bool IsOrderedSetFilterSupported => true;
+			protected override bool IsPercentileContSupported   => true;
+			protected override bool IsPercentileDiscSupported   => true;
+			// PostgreSQL supports hypothetical-set RANK/DENSE_RANK/PERCENT_RANK/CUME_DIST.
+			protected override bool IsHypotheticalSetSupported  => true;
+		}
+
+		// PostgreSQL 11+ tier: adds the frame GROUPS mode and the frame EXCLUDE clause.
+		protected class PostgreSQL11WindowFunctionsMemberTranslator : PostgreSQL95WindowFunctionsMemberTranslator
+		{
+			protected override bool IsFrameGroupsSupported    => true;
+			protected override bool IsFrameExclusionSupported => true;
 		}
 
 		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()
