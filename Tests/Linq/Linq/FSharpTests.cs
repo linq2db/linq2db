@@ -428,5 +428,47 @@ namespace Tests.Linq
 		{
 			FSharp.Issue5428.TestWindow(GetConnectionString(context));
 		}
+
+		[Test(Description = "F# option .IsSome in a query predicate translates to IS NOT NULL")]
+		public void OptionQuery_IsSome([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			Assert.That(FSharp.OptionQueryTests.IsSome(db), Is.EqualTo(2));
+		}
+
+		[Test(Description = "F# option .IsNone in a query predicate translates to IS NULL")]
+		public void OptionQuery_IsNone([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			Assert.That(FSharp.OptionQueryTests.IsNone(db), Is.EqualTo(1));
+		}
+
+		[Test(Description = "F# option .Value in a query predicate translates to the underlying value")]
+		public void OptionQuery_Value([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			Assert.That(FSharp.OptionQueryTests.Value(db), Is.EqualTo(1));
+		}
+
+		[Test(Description = "F# option .Value in a projection translates to the underlying column")]
+		public void OptionQuery_ValueProjection([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			Assert.That(FSharp.OptionQueryTests.ValueProjection(db), Is.EqualTo(2));
+		}
+
+		[Test(Description = "F# voption .IsSome in a query predicate translates to IS NOT NULL")]
+		public void OptionQuery_VOptionIsSome([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			Assert.That(FSharp.OptionQueryTests.VOptionIsSome(db), Is.EqualTo(1));
+		}
+
+		[Test(Description = "F# voption .IsNone in a query predicate translates to IS NULL")]
+		public void OptionQuery_VOptionIsNone([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			Assert.That(FSharp.OptionQueryTests.VOptionIsNone(db), Is.EqualTo(1));
+		}
 	}
 }
