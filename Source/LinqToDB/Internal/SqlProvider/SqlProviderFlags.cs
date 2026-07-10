@@ -665,8 +665,18 @@ namespace LinqToDB.Internal.SqlProvider
 		public bool IsInsertOrUpdateRequiresAlignedBranches { get; set; }
 
 		/// <summary>
+		/// Maximum number of columns in a single SELECT list enforced by linq2db when building CteUnion
+		/// eager-loading queries. When the estimated column count of the combined UNION ALL projection
+		/// exceeds this limit the strategy falls back to individual preamble queries.
+		/// <c>0</c> means no limit is enforced.
+		/// Default: <c>0</c>.
+		/// </summary>
+		[DataMember(Order = 76), DefaultValue(0)]
+		public int MaxColumnCount { get; set; }
+
+		/// <summary>
 		/// Provider renders <c>NULLS FIRST</c> / <c>NULLS LAST</c> natively in <c>ORDER BY</c> (and window
-		/// <c>OVER(ORDER BY …)</c>). When <see langword="false"/> (the default), <see cref="Sql.NullsPosition"/>
+		/// <c>OVER (ORDER BY …)</c>). When <see langword="false"/> (the default), <see cref="Sql.NullsPosition"/>
 		/// is emulated via a <c>CASE WHEN &lt;expr&gt; IS NULL THEN …</c> sort key.
 		/// </summary>
 		[DataMember(Order = 69), DefaultValue(false)]
@@ -683,13 +693,22 @@ namespace LinqToDB.Internal.SqlProvider
 		public NullsDefaultOrdering DefaultNullsOrdering { get; set; }
 
 		/// <summary>
+		/// Provider supports the <c>SELECT DISTINCT ON (expr, ...)</c> syntax (PostgreSQL, DuckDB): one row per
+		/// distinct ON-expression tuple, choosing the row that sorts first under the query <c>ORDER BY</c> (which
+		/// must begin with the ON expressions). When <see langword="false"/> (the default), <c>DistinctBy</c> falls
+		/// back to <c>ROW_NUMBER()</c> / <c>OUTER APPLY</c> emulation.
+		/// </summary>
+		[DataMember(Order = 75)]
+		public bool IsDistinctOnSupported { get; set; }
+
+		/// <summary>
 		/// Provider supports single-row <c>UPDATE … OUTPUT</c> / <c>RETURNING</c> of the new (post-update) values.
 		/// Used by <see cref="LinqToDB.Concurrency.ConcurrencyExtensions"/>'s <c>UpdateOptimisticWithRefresh</c> overloads
 		/// to read the regenerated optimistic-lock value back in the same statement; when <see langword="false"/> the
 		/// value is read with a follow-up <c>SELECT</c> instead.
 		/// Default: <see langword="false"/>.
 		/// </summary>
-		[DataMember(Order = 75), DefaultValue(false)]
+		[DataMember(Order = 77), DefaultValue(false)]
 		public bool IsUpdateOutputSupported { get; set; }
 
 		/// <summary>
@@ -699,7 +718,7 @@ namespace LinqToDB.Internal.SqlProvider
 		/// read-back cannot be gated on it (it is performed best-effort instead).
 		/// Default: <see langword="true"/>.
 		/// </summary>
-		[DataMember(Order = 76), DefaultValue(true)]
+		[DataMember(Order = 78), DefaultValue(true)]
 		public bool IsAffectedRowsCountSupported { get; set; } = true;
 
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
@@ -797,8 +816,10 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsUpsertWithMergeLoweringSupported                   .GetHashCode()
 				^ IsUpsertMergeWithPredicateSupported                  .GetHashCode()
 				^ IsInsertOrUpdateRequiresAlignedBranches              .GetHashCode()
+				^ MaxColumnCount                                       .GetHashCode()
 				^ IsNullsOrderingSupported                             .GetHashCode()
 				^ DefaultNullsOrdering                                 .GetHashCode()
+				^ IsDistinctOnSupported                                .GetHashCode()
 				^ IsUpdateOutputSupported                              .GetHashCode()
 				^ IsAffectedRowsCountSupported                         .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => StringComparer.Ordinal.GetHashCode(flag) ^ hash);
@@ -878,8 +899,10 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsUpsertWithMergeLoweringSupported                    == other.IsUpsertWithMergeLoweringSupported
 				&& IsUpsertMergeWithPredicateSupported                   == other.IsUpsertMergeWithPredicateSupported
 				&& IsInsertOrUpdateRequiresAlignedBranches               == other.IsInsertOrUpdateRequiresAlignedBranches
+				&& MaxColumnCount                                        == other.MaxColumnCount
 				&& IsNullsOrderingSupported                              == other.IsNullsOrderingSupported
 				&& DefaultNullsOrdering                                  == other.DefaultNullsOrdering
+				&& IsDistinctOnSupported                                 == other.IsDistinctOnSupported
 				&& IsUpdateOutputSupported                               == other.IsUpdateOutputSupported
 				&& IsAffectedRowsCountSupported                          == other.IsAffectedRowsCountSupported
 				&& CustomFlags.SetEquals(other.CustomFlags);

@@ -24,9 +24,12 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 	sealed class PostgreSQLDataProvider92 : PostgreSQLDataProvider { public PostgreSQLDataProvider92() : base(ProviderName.PostgreSQL92, PostgreSQLVersion.v92) {} }
 	sealed class PostgreSQLDataProvider93 : PostgreSQLDataProvider { public PostgreSQLDataProvider93() : base(ProviderName.PostgreSQL93, PostgreSQLVersion.v93) {} }
 	sealed class PostgreSQLDataProvider95 : PostgreSQLDataProvider { public PostgreSQLDataProvider95() : base(ProviderName.PostgreSQL95, PostgreSQLVersion.v95) {} }
+	sealed class PostgreSQLDataProvider11 : PostgreSQLDataProvider { public PostgreSQLDataProvider11() : base(ProviderName.PostgreSQL11, PostgreSQLVersion.v11) {} }
+	sealed class PostgreSQLDataProvider12 : PostgreSQLDataProvider { public PostgreSQLDataProvider12() : base(ProviderName.PostgreSQL12, PostgreSQLVersion.v12) {} }
 	sealed class PostgreSQLDataProvider13 : PostgreSQLDataProvider { public PostgreSQLDataProvider13() : base(ProviderName.PostgreSQL13, PostgreSQLVersion.v13) {} }
 	sealed class PostgreSQLDataProvider15 : PostgreSQLDataProvider { public PostgreSQLDataProvider15() : base(ProviderName.PostgreSQL15, PostgreSQLVersion.v15) {} }
 	sealed class PostgreSQLDataProvider18 : PostgreSQLDataProvider { public PostgreSQLDataProvider18() : base(ProviderName.PostgreSQL18, PostgreSQLVersion.v18) {} }
+	sealed class PostgreSQLDataProvider19 : PostgreSQLDataProvider { public PostgreSQLDataProvider19() : base(ProviderName.PostgreSQL19, PostgreSQLVersion.v19) {} }
 #pragma warning restore MA0048 // File name must match type name
 
 	public abstract class PostgreSQLDataProvider : DynamicDataProviderBase<NpgsqlProviderAdapter>
@@ -52,7 +55,9 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			SqlProviderFlags.IsUnionAllOrderBySupported        = true;
 			SqlProviderFlags.IsAllSetOperationsSupported       = true;
 			SqlProviderFlags.IsDistinctFromSupported           = true;
+			SqlProviderFlags.IsDistinctOnSupported             = true;
 			SqlProviderFlags.SupportsPredicatesComparison      = true;
+			SqlProviderFlags.MaxColumnCount                    = 1600;
 
 			SqlProviderFlags.OutputDeleteUseSpecialTable  = version >= PostgreSQLVersion.v18;
 			SqlProviderFlags.OutputInsertUseSpecialTable  = version >= PostgreSQLVersion.v18;
@@ -97,7 +102,11 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		{
 			return Version switch
 			{
+				>= PostgreSQLVersion.v19 => new PostgreSQL19MemberTranslator(),
+				>= PostgreSQLVersion.v18 => new PostgreSQL18MemberTranslator(),
 				>= PostgreSQLVersion.v13 => new PostgreSQL13MemberTranslator(),
+				>= PostgreSQLVersion.v11 => new PostgreSQL11MemberTranslator(),
+				>= PostgreSQLVersion.v95 => new PostgreSQL95MemberTranslator(),
 				_ => new PostgreSQLMemberTranslator(),
 			};
 		}
@@ -235,9 +244,12 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		{
 			return version switch
 			{
+				PostgreSQLVersion.v19 => ProviderName.PostgreSQL19,
 				PostgreSQLVersion.v18 => ProviderName.PostgreSQL18,
-				PostgreSQLVersion.v13 => ProviderName.PostgreSQL13,
 				PostgreSQLVersion.v15 => ProviderName.PostgreSQL15,
+				PostgreSQLVersion.v13 => ProviderName.PostgreSQL13,
+				PostgreSQLVersion.v12 => ProviderName.PostgreSQL12,
+				PostgreSQLVersion.v11 => ProviderName.PostgreSQL11,
 				PostgreSQLVersion.v92 => ProviderName.PostgreSQL92,
 				PostgreSQLVersion.v93 => ProviderName.PostgreSQL93,
 				_                     => ProviderName.PostgreSQL95,
@@ -254,7 +266,9 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
-			return new PostgreSQLSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
+			return Version >= PostgreSQLVersion.v12
+				? new PostgreSQL12SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags)
+				: new PostgreSQLSqlBuilder  (this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
@@ -596,6 +610,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		{
 			return version switch
 			{
+				PostgreSQLVersion.v19 => new PostgreSQLMappingSchema.PostgreSQL19MappingSchema(),
 				PostgreSQLVersion.v18 => new PostgreSQLMappingSchema.PostgreSQL18MappingSchema(),
 				PostgreSQLVersion.v15 => new PostgreSQLMappingSchema.PostgreSQL15MappingSchema(),
 				PostgreSQLVersion.v92 => new PostgreSQLMappingSchema.PostgreSQL92MappingSchema(),

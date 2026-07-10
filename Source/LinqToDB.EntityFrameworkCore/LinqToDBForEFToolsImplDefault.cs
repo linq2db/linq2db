@@ -190,9 +190,12 @@ namespace LinqToDB.EntityFrameworkCore
 				ProviderName.PostgreSQL92                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v92, connectionInfo.ConnectionString, connectionInfo.Connection, connectionInfo.Transaction),
 				ProviderName.PostgreSQL93                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v93, connectionInfo.ConnectionString, connectionInfo.Connection, connectionInfo.Transaction),
 				ProviderName.PostgreSQL95                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v95, connectionInfo.ConnectionString, connectionInfo.Connection, connectionInfo.Transaction),
+				ProviderName.PostgreSQL11                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v11, connectionInfo.ConnectionString, connectionInfo.Connection, connectionInfo.Transaction),
+				ProviderName.PostgreSQL12                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v12, connectionInfo.ConnectionString, connectionInfo.Connection, connectionInfo.Transaction),
 				ProviderName.PostgreSQL13                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v13, connectionInfo.ConnectionString, connectionInfo.Connection, connectionInfo.Transaction),
 				ProviderName.PostgreSQL15                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v15, connectionInfo.ConnectionString, connectionInfo.Connection, connectionInfo.Transaction),
 				ProviderName.PostgreSQL18                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v18, connectionInfo.ConnectionString, connectionInfo.Connection, connectionInfo.Transaction),
+				ProviderName.PostgreSQL19                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v19, connectionInfo.ConnectionString, connectionInfo.Connection, connectionInfo.Transaction),
 
 				ProviderName.SQLite or ProviderName.SQLiteMS                              => SQLiteTools.GetDataProvider(SQLiteProvider.Microsoft, connectionInfo.ConnectionString, connectionInfo.Connection, connectionInfo.Transaction),
 

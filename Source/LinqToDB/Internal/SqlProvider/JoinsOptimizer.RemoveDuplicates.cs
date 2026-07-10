@@ -596,6 +596,14 @@ namespace LinqToDB.Internal.SqlProvider
 				return false;
 			}
 
+			if (field1 is SqlCteTableField cteField1)
+			{
+				if (field2 is SqlCteTableField cteField2)
+					return ReferenceEquals(cteField1.CteField, cteField2.CteField);
+
+				return false;
+			}
+
 			return ReferenceEquals(field1, field2);
 		}
 

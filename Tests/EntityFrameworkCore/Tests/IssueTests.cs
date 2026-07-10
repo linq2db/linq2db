@@ -428,7 +428,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			var fm = new FluentMappingBuilder();
 			fm.Entity<Issue155Table>()
 				.Property(e => e.LinkedFrom)
-				.HasAttribute(new ExpressionMethodAttribute((IDataContext db, Issue155Table e) => db.GetTable<Issue155Table>().Where(r => Sql.Ext.PostgreSQL().ValueIsEqualToAny(e.Id, r.Linked)).ArrayAggregate(r => r.Id, Sql.AggregateModifier.Distinct).ToValue()));
+				.HasAttribute(new ExpressionMethodAttribute((IDataContext db, Issue155Table e) => db.GetTable<Issue155Table>().Where(r => Sql.Ext.PostgreSQL().ValueIsEqualToAny(e.Id, r.Linked)).ArrayAggregate(r => r.Id, Sql.AggregateModifier.Distinct).ToValue()) { IsColumn = true });
 			db.AddMappingSchema(fm.Build().MappingSchema);
 
 			var result = db.GetTable<Issue155Table>().Where(e => e.Id == 1).Single();

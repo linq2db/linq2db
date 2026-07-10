@@ -27,6 +27,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 
 		IDataContext                      _dataContext         = default!;
 		IMemberConverter                  _memberConverter     = default!;
+		IConvertContext                   _convertContext      = default!;
 		ExpressionTreeOptimizationContext _optimizationContext = default!;
 		object?[]?                        _parameterValues;
 		bool                              _optimizeConditions;
@@ -53,6 +54,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 			_compactBinary       = compactBinary;
 			_isSingleConvert     = isSingleConvert;
 			_memberConverter     = ((IInfrastructure<IServiceProvider>)dataContext).Instance.GetRequiredService<IMemberConverter>();
+			_convertContext      = new ConvertContext(dataContext.Options);
 
 			return Visit(expression);
 		}
@@ -61,6 +63,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 		{
 			_dataContext         = default!;
 			_memberConverter     = default!;
+			_convertContext      = default!;
 			_optimizationContext = default!;
 			_optimizeConditions  = default;
 			_compactBinary       = false;
@@ -84,7 +87,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 
 		protected override Expression VisitMethodCall(MethodCallExpression node)
 		{
-			var convertedMember = _memberConverter.Convert(node, out var handled);
+			var convertedMember = _memberConverter.Convert(node, _convertContext, out var handled);
 			if (handled && !ReferenceEquals(node, convertedMember))
 			{
 				return Visit(convertedMember);
@@ -495,7 +498,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 
 		protected override Expression VisitMember(MemberExpression node)
 		{
-			var convertedMember = _memberConverter.Convert(node, out var handled);
+			var convertedMember = _memberConverter.Convert(node, _convertContext, out var handled);
 			if (handled && !ReferenceEquals(node, convertedMember))
 			{
 				return Visit(convertedMember);
@@ -762,7 +765,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 		{
 			if (node.Method != null)
 			{
-				var convertedMember = _memberConverter.Convert(node, out var handled);
+				var convertedMember = _memberConverter.Convert(node, _convertContext, out var handled);
 				if (handled && !ReferenceEquals(node, convertedMember))
 				{
 					return Visit(convertedMember);
@@ -801,7 +804,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 		{
 			if (node.Method != null)
 			{
-				var convertedMember = _memberConverter.Convert(node, out var handled);
+				var convertedMember = _memberConverter.Convert(node, _convertContext, out var handled);
 				if (handled && !ReferenceEquals(node, convertedMember))
 				{
 					return Visit(convertedMember);
@@ -901,57 +904,6 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 			}
 
 			return null;
-		}
-
-		protected override Expression VisitBlock(BlockExpression node)
-		{
-			// TODO: in future should be moved to LinqToDB.FSharp if we will introduce pluggable ExposeVisitor to handle F# quirks
-
-			// F# 10.1 could generate unnecessary block like:
-			// { var x = expr1; return new type(x, expr2) }
-			// instead of
-			// new type(expr1, expr2)
-
-			// try to embed variables if:
-			// 1. block items are: N assignments to variables + result expression
-
-			if (node.Variables.Count > 0
-				&& node.Variables.Count + 1 == node.Expressions.Count
-				&& node.Result == node.Expressions[^1])
-			{
-				var result = node.Result;
-				var simplified = true;
-
-				for (var i = node.Expressions.Count - 2; i >= 0; i--)
-				{
-					if (node.Expressions[i] is not BinaryExpression
-						{
-							NodeType: ExpressionType.Assign,
-							Method: null,
-							Left: ParameterExpression variable,
-							Right: { } value,
-						}
-						// external variable/parameter
-						|| !node.Variables.Contains(variable)
-						// self-reference
-						|| value.GetCount(variable, static (variable, n) => n == variable) != 0
-						// 1: replace var only if it used exactly once to avoid unwanted side-effects
-						// 0: because F# defines unused variables, we should also accept count = 0
-						// potentially it could be dangerous, but ppl just shouldn't write code like that
-						|| result.GetCount(variable, static (variable, n) => n == variable) > 1)
-					{
-						simplified = false;
-						break;
-					}
-
-					result = result.Replace(variable, value);
-				}
-
-				if (simplified)
-					return Visit(result);
-			}
-
-			return base.VisitBlock(node);
 		}
 
 		#region Helper methods
