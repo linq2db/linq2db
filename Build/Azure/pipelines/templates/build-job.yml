@@ -78,6 +78,26 @@ jobs:
     inputs:
       script: |
         ECHO ON
+        FOR %%f IN (net8.0 net9.0 net10.0) DO (
+            .build\bin\Tests.LinqToDB.CLI\$(test_configuration)\%%f\linq2db.CLI.Tests.exe --filter "TestCategory != SkipCI" --settings .runsettings --report-trx --report-trx-filename cli-%%f.trx --results-directory CliTestResults --hangdump --hangdump-timeout 5m
+            if %errorlevel% neq 0 exit /b %errorlevel%
+            )
+    displayName: Run CLI Tests
+    condition: and(succeeded(), ${{ parameters.with_tests }})
+
+  - task: PublishTestResults@2
+    inputs:
+      testRunner: VsTest
+      testResultsFiles: 'CliTestResults/*.trx'
+      testRunTitle: 'linq2db CLI'
+      failTaskOnMissingResultsFile: true
+    displayName: Publish CLI Test Results
+    condition: and(succeededOrFailed(), ${{ parameters.with_tests }})
+
+  - task: CmdLine@2
+    inputs:
+      script: |
+        ECHO ON
         REM publish main and ef.core tests for all TFMs (without architecture!)
         FOR %%f IN ($(netfx_tfm) net8.0 net9.0 net10.0) DO (
             dotnet publish Tests/Linq/Tests.csproj -f %%f -c $(test_configuration) -o .build/publish/Tests/$(test_configuration)/%%f_x64
