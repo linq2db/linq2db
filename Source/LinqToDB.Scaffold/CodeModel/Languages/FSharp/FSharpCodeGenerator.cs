@@ -78,6 +78,8 @@ namespace LinqToDB.CodeModel
 		private IType? _currentType;
 		// indicates that the enclosing type is an F# record, so properties are emitted as record fields
 		private bool   _currentIsRecord;
+		// file imports, emitted after the `namespace` declaration (F# requires namespace before `open`)
+		private IReadOnlyList<CodeImport>? _fileImports;
 
 		public FSharpCodeGenerator(
 			ILanguageProvider                                                      languageProvider,
@@ -131,12 +133,12 @@ namespace LinqToDB.CodeModel
 
 		protected override void Visit(CodeFile file)
 		{
-			// hardcoded sequence with newline spacers
 			VisitList(file.Header);
 			WriteLine();
-			VisitList(file.Imports);
-			WriteLine();
 
+			// F# requires the `namespace` declaration before any `open` statements, so imports are emitted by
+			// the namespace visitor rather than here.
+			_fileImports = file.Imports;
 			VisitList(file);
 		}
 
@@ -496,9 +498,8 @@ namespace LinqToDB.CodeModel
 			if (property.CustomAttributes.Count > 0)
 				Write(' ');
 
-			if (property.HasSetter)
-				Write("mutable ");
-
+			// record fields are immutable; linq2db materializes F# records via their primary constructor
+			// (FSharpEntityBindingInterceptor). A [<CLIMutable>]/mutable toggle is future work.
 			Visit(property.Name);
 			Write(" : ");
 			Visit(property.Type);
@@ -522,6 +523,15 @@ namespace LinqToDB.CodeModel
 			WriteDelimitedList(@namespace.Name, ".", false);
 			WriteLine();
 			WriteLine();
+
+			// emit file-level imports right after the namespace declaration
+			if (_fileImports != null)
+			{
+				VisitList(_fileImports);
+				WriteLine();
+				_fileImports = null;
+			}
+
 			WriteMemberGroups(@namespace.Members);
 
 			_currentScope.RemoveRange(_currentScope.Count - @namespace.Name.Count, @namespace.Name.Count);
@@ -554,10 +564,10 @@ namespace LinqToDB.CodeModel
 				WriteLine("{");
 				IncreaseIdent();
 
-				// emit all record fields (column properties) across property groups
+				// emit all record fields (column properties) across property groups; each field emits its own
+				// terminating newline, so VisitList (not WriteNewLineDelimitedList) keeps them tight
 				foreach (var group in @class.Members.OfType<PropertyGroup>())
-					WriteNewLineDelimitedList(group.Members);
-				WriteLine();
+					VisitList(group.Members);
 
 				DecreaseIdent();
 				WriteLine("}");
@@ -574,8 +584,29 @@ namespace LinqToDB.CodeModel
 			}
 			else
 			{
-				// plain class; inheritance and members. Primary constructor / DataConnection wiring is shaped
-				// by the F# model path and completed in a follow-up.
+				// F# class: pull the (single) constructor into the primary-constructor position and render
+				// `inherit Base(args)` from its base-call arguments. Additional constructors are gated off for
+				// F# by the model path for now (a single typed-options constructor is generated).
+				CodeConstructor? primaryCtor = null;
+				foreach (var ctorGroup in @class.Members.OfType<ConstructorGroup>())
+				{
+					foreach (var ctor in ctorGroup.Members)
+					{
+						primaryCtor = ctor;
+						break;
+					}
+
+					if (primaryCtor != null)
+						break;
+				}
+
+				if (primaryCtor != null)
+				{
+					Write(" (");
+					WriteDelimitedList(primaryCtor.Parameters, ", ", false);
+					Write(")");
+				}
+
 				WriteLine(" =");
 				IncreaseIdent();
 
@@ -583,10 +614,29 @@ namespace LinqToDB.CodeModel
 				{
 					Write("inherit ");
 					Visit(@class.Inherits);
+					if (primaryCtor != null && primaryCtor.BaseArguments.Count > 0)
+					{
+						Write("(");
+						WriteDelimitedList(primaryCtor.BaseArguments, ", ", false);
+						Write(")");
+					}
+
 					WriteLine();
 				}
 
-				WriteMemberGroups(@class.Members);
+				// constructor body statements (initializers) rendered as `do` bindings
+				if (primaryCtor?.Body != null && primaryCtor.Body.Items.Count > 0)
+				{
+					foreach (var stmt in primaryCtor.Body.Items)
+					{
+						Write("do ");
+						Visit(stmt);
+						WriteLine();
+					}
+				}
+
+				// render members except constructors (already rendered as the primary constructor)
+				WriteMemberGroups(@class.Members.Where(g => g is not ConstructorGroup).ToList());
 
 				DecreaseIdent();
 			}
@@ -616,7 +666,8 @@ namespace LinqToDB.CodeModel
 
 		protected override void Visit(PropertyGroup group)
 		{
-			WriteNewLineDelimitedList(group.Members);
+			// each property emits its own terminating newline
+			VisitList(group.Members);
 		}
 
 		protected override void Visit(MethodGroup group)

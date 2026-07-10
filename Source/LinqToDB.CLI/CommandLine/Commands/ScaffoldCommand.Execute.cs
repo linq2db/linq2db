@@ -47,7 +47,31 @@ namespace LinqToDB.CommandLine
 
 			// F# uses a single generated file (no partial types, order-sensitive compilation)
 			if (language == LanguageProviders.FSharp)
+			{
 				settings.CodeGeneration.ClassPerFile = false;
+
+				// F# does not allow TAB indentation (FS1161); use spaces
+				if (settings.CodeGeneration.Indent == "\t")
+					settings.CodeGeneration.Indent = "    ";
+
+				// TODO(#1553): incremental F# parity. These C#-shaped features are not yet emitted for F#;
+				// they will be re-enabled one by one as the F# code generator gains support for each
+				// (Find methods as module functions, records' structural equality, associations as record
+				// fields, a single primary constructor). Until then, restrict F# to the record + context core.
+				settings.DataModel.GenerateFindExtensions            = LinqToDB.DataModel.FindTypes.None;
+				settings.DataModel.GenerateIEquatable                = false;
+				settings.DataModel.GenerateAssociations              = false;
+				settings.DataModel.GenerateAssociationExtensions     = false;
+				settings.DataModel.GenerateInitDataContextMethod     = false;
+				settings.DataModel.GenerateStaticInitDataContextMethod = false;
+				settings.DataModel.EntityClassIsPartial              = false;
+
+				// single primary constructor (typed options) for the data context
+				settings.DataModel.HasDefaultConstructor       = false;
+				settings.DataModel.HasConfigurationConstructor = false;
+				settings.DataModel.HasUntypedOptionsConstructor = false;
+				settings.DataModel.HasTypedOptionsConstructor  = true;
+			}
 
 			// process remaining utility-specific (general) options
 
