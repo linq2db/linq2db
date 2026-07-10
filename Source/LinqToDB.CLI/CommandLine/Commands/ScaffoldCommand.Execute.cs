@@ -40,6 +40,23 @@ namespace LinqToDB.CommandLine
 				return StatusCodes.INVALID_ARGUMENTS;
 			}
 
+			// reject options that don't apply to the selected target language (fail fast, don't silently ignore)
+			if (language == LanguageProviders.FSharp)
+			{
+				var hasUnsupported = false;
+				foreach (var specified in options.Keys)
+				{
+					if (!specified.Languages.HasFlag(TargetLanguages.FSharp))
+					{
+						await Console.Error.WriteLineAsync($"Option '--{specified.Name}' is not supported for target language F#.").ConfigureAwait(false);
+						hasUnsupported = true;
+					}
+				}
+
+				if (hasUnsupported)
+					return StatusCodes.INVALID_ARGUMENTS;
+			}
+
 			// scaffold settings object initialization
 			var settings = ProcessScaffoldOptions(options);
 			if (settings == null)

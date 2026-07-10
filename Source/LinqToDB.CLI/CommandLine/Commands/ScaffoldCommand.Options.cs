@@ -238,7 +238,8 @@ Customization using compiled assembly has several requirements:
 					null,
 					null,
 					_defaultOptions.CodeGeneration.EnableNullableReferenceTypes,
-					_t4ModeOptions.CodeGeneration.EnableNullableReferenceTypes);
+					_t4ModeOptions.CodeGeneration.EnableNullableReferenceTypes)
+					{ Languages = TargetLanguages.CSharp };
 
 			/// <summary>
 			/// Code indent string option.
@@ -526,7 +527,8 @@ If you don't specify some property, CLI will use default value for current optio
 					null,
 					null,
 					_defaultOptions.DataModel.EntityClassIsPartial,
-					_t4ModeOptions.DataModel.EntityClassIsPartial);
+					_t4ModeOptions.DataModel.EntityClassIsPartial)
+					{ Languages = TargetLanguages.CSharp };
 
 			/// <summary>
 			/// Generate <see cref="DataType"/> values on entity columns mappings option.
@@ -657,7 +659,8 @@ static class CustomFluentExtensions
 					null,
 					null,
 					_defaultOptions.DataModel.GenerateInitDataContextMethod,
-					_t4ModeOptions.DataModel.GenerateInitDataContextMethod);
+					_t4ModeOptions.DataModel.GenerateInitDataContextMethod)
+					{ Languages = TargetLanguages.CSharp };
 
 			/// <summary>
 			/// Generate StaticInitDataContext partial method on data context class option.
@@ -671,7 +674,8 @@ static class CustomFluentExtensions
 					null,
 					null,
 					_defaultOptions.DataModel.GenerateStaticInitDataContextMethod,
-					_t4ModeOptions.DataModel.GenerateStaticInitDataContextMethod);
+					_t4ModeOptions.DataModel.GenerateStaticInitDataContextMethod)
+					{ Languages = TargetLanguages.CSharp };
 
 			/// <summary>
 			/// Default data context contructor generation option.
