@@ -42,7 +42,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 				true,
 				false,
 				"<options>",
-				"run STDIO MCP server exposing read-oriented SQL query execution as a model-controlled tool",
+				"run STDIO MCP server exposing read-oriented SQL query execution and optional write-capable execution as model-controlled tools",
 				[
 					new("dotnet linq2db mcp --config query.json --profile dev",
 						"starts MCP server using connection settings from specified configuration profile"),
