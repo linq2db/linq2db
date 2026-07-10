@@ -210,9 +210,17 @@ namespace LinqToDB.CodeModel
 
 		protected override void Visit(CodeNameOf nameOf)
 		{
-			Write("nameof(");
-			Visit(nameOf.Expression);
-			Write(")");
+			// F# nameof() cannot reference an instance member through its declaring type
+			// (e.g. nameof(Person.PersonId)) and is not accepted in attribute-argument position, which is where
+			// the scaffolder uses it (association ThisKey/OtherKey). Emit the equivalent compile-time string
+			// literal instead - the produced value is identical.
+			var rendered = BuildFragment(() => Visit(nameOf.Expression));
+			var dot      = rendered.LastIndexOf('.');
+			var name     = (dot >= 0 ? rendered.Substring(dot + 1) : rendered).Replace("`", "");
+
+			Write('"');
+			Write(name);
+			Write('"');
 		}
 
 		protected override void Visit(CodeRegion region)
@@ -564,20 +572,22 @@ namespace LinqToDB.CodeModel
 				WriteLine("{");
 				IncreaseIdent();
 
-				// emit all record fields (column properties) across property groups; each field emits its own
-				// terminating newline, so VisitList (not WriteNewLineDelimitedList) keeps them tight
-				foreach (var group in @class.Members.OfType<PropertyGroup>())
-					VisitList(group.Members);
+				// emit every record field, including association fields nested inside regions, into the record
+				// body (F# records require all fields inside the { } block). Each field emits its own newline.
+				foreach (var property in @class.Members.EnumerateMembers<PropertyGroup, CodeProperty>())
+					Visit(property);
 
 				DecreaseIdent();
 				WriteLine("}");
 
-				// emit remaining (non-property) members as record members
-				var otherGroups = @class.Members.Where(g => g is not PropertyGroup).ToList();
-				if (otherGroups.Any(g => !g.IsEmpty))
+				// method members (e.g. custom equality) are rendered after the field block as record members
+				var methodGroups = @class.Members.EnumerateMemberGroups<MethodGroup>().ToList();
+				if (methodGroups.Exists(static g => !g.IsEmpty))
 				{
 					WriteLine();
-					WriteMemberGroups(otherGroups);
+					foreach (var group in methodGroups)
+						if (!group.IsEmpty)
+							Visit(group);
 				}
 
 				DecreaseIdent();

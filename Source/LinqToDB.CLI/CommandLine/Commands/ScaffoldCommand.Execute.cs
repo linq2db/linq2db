@@ -60,7 +60,8 @@ namespace LinqToDB.CommandLine
 				// fields, a single primary constructor). Until then, restrict F# to the record + context core.
 				settings.DataModel.GenerateFindExtensions            = LinqToDB.DataModel.FindTypes.None;
 				settings.DataModel.GenerateIEquatable                = false;
-				settings.DataModel.GenerateAssociations              = false;
+				// associations become extra record fields with [<Association>] attributes (namespace rec covers
+				// the mutual references); association *extension* methods remain gated off for now
 				settings.DataModel.GenerateAssociationExtensions     = false;
 				settings.DataModel.GenerateInitDataContextMethod     = false;
 				settings.DataModel.GenerateStaticInitDataContextMethod = false;
