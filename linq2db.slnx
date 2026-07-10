@@ -6,14 +6,14 @@
     <BuildType Name="Testing" />
   </Configurations>
   <Folder Name="/.agents/">
+    <File Path="AGENTS.md" />
+    <File Path="CLAUDE.md" />
+    <File Path=".agents/settings.local.json" />
     <File Path=".agents/linq2db-skill-roadmap.md" />
     <File Path=".agents/black-box-test-scenarios.md" />
     <File Path=".agents/black-box-docs-test-prompt.md" />
     <File Path=".agents/Build-LinqToDBExpert.ps1" />
     <File Path=".agents/knowledge-pack-maintenance.md" />
-  </Folder>
-    <File Path="CLAUDE.md" />
-    <File Path=".agents/settings.local.json" />
   </Folder>
   <Folder Name="/.agents/agents/">
     <File Path=".agents/agents/baselines-reviewer.md" />

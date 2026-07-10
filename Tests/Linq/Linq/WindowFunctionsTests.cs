@@ -5,6 +5,8 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+#pragma warning disable NUnit1028
+
 namespace Tests.Linq
 {
 	[TestFixture]

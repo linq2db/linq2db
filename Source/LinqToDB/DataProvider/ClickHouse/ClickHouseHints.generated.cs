@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 // Generated.
 //
 using System;
@@ -147,11 +147,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		/// <summary>
-		/// Adds a ClickHouse <c>ASOF</c> join hint.
-		/// </summary>
-		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		/// Adds a ClickHouse <c>ALL</c> join hint.
 		/// </summary>
+		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(JoinAllHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinAllHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -168,6 +166,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>ALL</c> join hint.
 		/// </summary>
+		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(JoinAllTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinAllHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
@@ -184,6 +183,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>ASOF</c> join hint.
 		/// </summary>
+		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[ExpressionMethod(nameof(JoinAsOfHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinAsOfHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -385,14 +385,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		/// <summary>
-		/// Adds a ClickHouse <c>GLOBAL ASOF</c> join hint.
 		/// Adds a ClickHouse <c>GLOBAL ALL</c> join hint.
 		/// </summary>
-		[ExpressionMethod(nameof(JoinGlobalAsOfHintImpl))]
-		public static IClickHouseSpecificQueryable<TSource> JoinGlobalAsOfHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
-		[ExpressionMethod(nameof(JoinGlobalAsOfHintImpl))]
-		public static IClickHouseSpecificQueryable<TSource> JoinGlobalAsOfHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 		[ExpressionMethod(nameof(JoinGlobalAllHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinGlobalAllHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -407,14 +402,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		/// <summary>
-		/// Adds a ClickHouse <c>GLOBAL ASOF</c> join hint.
 		/// Adds a ClickHouse <c>GLOBAL ALL</c> join hint.
 		/// </summary>
-		[ExpressionMethod(nameof(JoinGlobalAsOfTableHintImpl))]
-		public static IClickHouseSpecificTable<TSource> JoinGlobalAsOfHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
-		[ExpressionMethod(nameof(JoinGlobalAsOfTableHintImpl))]
-		public static IClickHouseSpecificTable<TSource> JoinGlobalAsOfHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 		[ExpressionMethod(nameof(JoinGlobalAllTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinGlobalAllHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
@@ -429,14 +419,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		/// <summary>
-		/// Adds a ClickHouse <c>ALL</c> join hint.
 		/// Adds a ClickHouse <c>GLOBAL ASOF</c> join hint.
 		/// </summary>
-		[ExpressionMethod(nameof(JoinAllHintImpl))]
-		public static IClickHouseSpecificQueryable<TSource> JoinAllHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
-		[ExpressionMethod(nameof(JoinAllHintImpl))]
-		public static IClickHouseSpecificQueryable<TSource> JoinAllHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 		[ExpressionMethod(nameof(JoinGlobalAsOfHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinGlobalAsOfHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -451,14 +436,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		/// <summary>
-		/// Adds a ClickHouse <c>ALL</c> join hint.
 		/// Adds a ClickHouse <c>GLOBAL ASOF</c> join hint.
 		/// </summary>
-		[ExpressionMethod(nameof(JoinAllTableHintImpl))]
-		public static IClickHouseSpecificTable<TSource> JoinAllHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
-		[ExpressionMethod(nameof(JoinAllTableHintImpl))]
-		public static IClickHouseSpecificTable<TSource> JoinAllHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 		[ExpressionMethod(nameof(JoinGlobalAsOfTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinGlobalAsOfHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
@@ -473,11 +453,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		/// <summary>
-		/// Adds a ClickHouse <c>ALL OUTER</c> join hint.
-		/// </summary>
-		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		/// Adds the same ClickHouse join hint as <c>JoinOuterHint</c>. This method is deprecated.
 		/// </summary>
+		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[Obsolete("TODO: remove in v7. This API is based on an incorrect ClickHouse join hint model and works incorrectly. Use JoinOuterHint instead.")]
 		[ExpressionMethod(nameof(JoinAllOuterHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinAllOuterHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
@@ -493,11 +471,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		/// <summary>
-		/// Adds a ClickHouse <c>ALL OUTER</c> join hint.
-		/// </summary>
-		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		/// Adds the same ClickHouse join hint as <c>JoinOuterHint</c>. This method is deprecated.
 		/// </summary>
+		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[Obsolete("TODO: remove in v7. This API is based on an incorrect ClickHouse join hint model and works incorrectly. Use JoinOuterHint instead.")]
 		[ExpressionMethod(nameof(JoinAllOuterTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinAllOuterHint<TSource>(this IClickHouseSpecificTable<TSource> table)
@@ -513,11 +489,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		/// <summary>
-		/// Adds a ClickHouse <c>ALL SEMI</c> join hint.
-		/// </summary>
-		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		/// Adds the same ClickHouse join hint as <c>JoinSemiHint</c>. This method is deprecated.
 		/// </summary>
+		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[Obsolete("TODO: remove in v7. This API is based on an incorrect ClickHouse join hint model and works incorrectly. Use JoinSemiHint instead.")]
 		[ExpressionMethod(nameof(JoinAllSemiHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinAllSemiHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
@@ -533,11 +507,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		/// <summary>
-		/// Adds a ClickHouse <c>ALL SEMI</c> join hint.
-		/// </summary>
-		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		/// Adds the same ClickHouse join hint as <c>JoinSemiHint</c>. This method is deprecated.
 		/// </summary>
+		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[Obsolete("TODO: remove in v7. This API is based on an incorrect ClickHouse join hint model and works incorrectly. Use JoinSemiHint instead.")]
 		[ExpressionMethod(nameof(JoinAllSemiTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinAllSemiHint<TSource>(this IClickHouseSpecificTable<TSource> table)
@@ -553,11 +525,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		/// <summary>
-		/// Adds a ClickHouse <c>ALL ANTI</c> join hint.
-		/// </summary>
-		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		/// Adds the same ClickHouse join hint as <c>JoinAntiHint</c>. This method is deprecated.
 		/// </summary>
+		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[Obsolete("TODO: remove in v7. This API is based on an incorrect ClickHouse join hint model and works incorrectly. Use JoinAntiHint instead.")]
 		[ExpressionMethod(nameof(JoinAllAntiHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinAllAntiHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
@@ -573,11 +543,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		/// <summary>
-		/// Adds a ClickHouse <c>ALL ANTI</c> join hint.
-		/// </summary>
-		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		/// Adds the same ClickHouse join hint as <c>JoinAntiHint</c>. This method is deprecated.
 		/// </summary>
+		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[Obsolete("TODO: remove in v7. This API is based on an incorrect ClickHouse join hint model and works incorrectly. Use JoinAntiHint instead.")]
 		[ExpressionMethod(nameof(JoinAllAntiTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinAllAntiHint<TSource>(this IClickHouseSpecificTable<TSource> table)
@@ -593,11 +561,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		/// <summary>
-		/// Adds a ClickHouse <c>ALL ANY</c> join hint.
-		/// </summary>
-		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		/// Adds the same ClickHouse join hint as <c>JoinAnyHint</c>. This method is deprecated.
 		/// </summary>
+		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[Obsolete("TODO: remove in v7. This API is based on an incorrect ClickHouse join hint model and works incorrectly. Use JoinAnyHint instead.")]
 		[ExpressionMethod(nameof(JoinAllAnyHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinAllAnyHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
@@ -613,11 +579,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		/// <summary>
-		/// Adds a ClickHouse <c>ALL ANY</c> join hint.
-		/// </summary>
-		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		/// Adds the same ClickHouse join hint as <c>JoinAnyHint</c>. This method is deprecated.
 		/// </summary>
+		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[Obsolete("TODO: remove in v7. This API is based on an incorrect ClickHouse join hint model and works incorrectly. Use JoinAnyHint instead.")]
 		[ExpressionMethod(nameof(JoinAllAnyTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinAllAnyHint<TSource>(this IClickHouseSpecificTable<TSource> table)
@@ -633,11 +597,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		/// <summary>
-		/// Adds a ClickHouse <c>ALL ASOF</c> join hint.
-		/// </summary>
-		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		/// Adds the same ClickHouse join hint as <c>JoinAsOfHint</c>. This method is deprecated.
 		/// </summary>
+		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[Obsolete("TODO: remove in v7. This API is based on an incorrect ClickHouse join hint model and works incorrectly. Use JoinAsOfHint instead.")]
 		[ExpressionMethod(nameof(JoinAllAsOfHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinAllAsOfHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
@@ -653,11 +615,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		/// <summary>
-		/// Adds a ClickHouse <c>ALL ASOF</c> join hint.
-		/// </summary>
-		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		/// Adds the same ClickHouse join hint as <c>JoinAsOfHint</c>. This method is deprecated.
 		/// </summary>
+		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
 		[Obsolete("TODO: remove in v7. This API is based on an incorrect ClickHouse join hint model and works incorrectly. Use JoinAsOfHint instead.")]
 		[ExpressionMethod(nameof(JoinAllAsOfTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinAllAsOfHint<TSource>(this IClickHouseSpecificTable<TSource> table)
