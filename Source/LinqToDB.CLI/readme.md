@@ -115,3 +115,22 @@ Scaffold configs (response files) are convenient in many ways:
 - you can store scaffolding options for your project in source control and share with other developers
 - with many options it is hard to work with command line
 - some options not available from CLI or hard to use due to CLI nature (e.g. various issues with escaping of parameters)
+
+### Target language (C# / F#)
+
+Use the `--target-language` option to select the language of the generated data model (`c#` is the default):
+
+`dotnet linq2db scaffold -p SQLite -c "Data Source=c:\Databases\MyDatabase.sqlite" --target-language f#`
+
+F# generation emits idiomatic code:
+
+- entities as records with mapping attributes on fields;
+- nullable scalar columns as `'T option`;
+- a single generated `.fs` file per run (F# has no partial types and uses order-sensitive compilation).
+
+Generated F# records rely on the `linq2db.FSharp` package: the consuming application must call
+`DataOptions.UseFSharp()` so that records and `option`-typed columns materialize correctly.
+
+Some options apply to C# only (for example `--nrt` and the partial-class / partial-method options); the
+`help scaffold` output shows a `Supported in:` line for such options, and specifying one together with
+`--target-language f#` is rejected. F# generation is not available in T4 template mode (`-t t4`).
