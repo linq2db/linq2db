@@ -30,7 +30,7 @@ namespace Tests.Linq
 		[Test]
 		public void IgnoreConflictsTest([IncludeDataSources(
 			TestProvName.AllMySql,
-			TestProvName.AllPostgreSQL,
+			TestProvName.AllPostgreSQL95Plus, // ON CONFLICT is PostgreSQL 9.5+
 			TestProvName.AllSQLite,
 			TestProvName.AllDuckDB)] string context)
 		{
@@ -67,7 +67,7 @@ namespace Tests.Linq
 		[Test]
 		public async Task IgnoreConflictsTestAsync([IncludeDataSources(
 			TestProvName.AllMySql,
-			TestProvName.AllPostgreSQL,
+			TestProvName.AllPostgreSQL95Plus, // ON CONFLICT is PostgreSQL 9.5+
 			TestProvName.AllSQLite,
 			TestProvName.AllDuckDB)] string context)
 		{

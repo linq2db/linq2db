@@ -1,6 +1,29 @@
 #nullable enable
-LinqToDB.DataProvider.PostgreSQL.PostgreSQLVersion.v19 = 7 -> LinqToDB.DataProvider.PostgreSQL.PostgreSQLVersion
+LinqToDB.Internal.DataProvider.Firebird.FirebirdProviderAdapter.ClearPool.get -> System.Action<System.Data.Common.DbConnection!>!
+LinqToDB.Internal.DataProvider.Firebird.FirebirdProviderAdapter.ClearPoolByConnectionString.get -> System.Action<string!>!
+static LinqToDB.DataProvider.Firebird.FirebirdTools.ClearPool(System.Data.Common.DbConnection! connection) -> void
+static LinqToDB.DataProvider.Firebird.FirebirdTools.ClearPool(string! connectionString) -> void
+const LinqToDB.DataProvider.ClickHouse.ClickHouseHints.Join.GlobalAll = "GLOBAL ALL" -> string!
+static LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinGlobalAllHint<TSource>(this LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificQueryable<TSource>! query) -> LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificQueryable<TSource>!
+static LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinGlobalAllHint<TSource>(this LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificTable<TSource>! table) -> LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificTable<TSource>!
+LinqToDB.DataProvider.PostgreSQL.PostgreSQLVersion.v11 = 4 -> LinqToDB.DataProvider.PostgreSQL.PostgreSQLVersion
+LinqToDB.DataProvider.PostgreSQL.PostgreSQLVersion.v12 = 5 -> LinqToDB.DataProvider.PostgreSQL.PostgreSQLVersion
+LinqToDB.DataProvider.PostgreSQL.PostgreSQLVersion.v13 = 6 -> LinqToDB.DataProvider.PostgreSQL.PostgreSQLVersion
+LinqToDB.DataProvider.PostgreSQL.PostgreSQLVersion.v15 = 7 -> LinqToDB.DataProvider.PostgreSQL.PostgreSQLVersion
+LinqToDB.DataProvider.PostgreSQL.PostgreSQLVersion.v18 = 8 -> LinqToDB.DataProvider.PostgreSQL.PostgreSQLVersion
+LinqToDB.DataProvider.PostgreSQL.PostgreSQLVersion.v19 = 9 -> LinqToDB.DataProvider.PostgreSQL.PostgreSQLVersion
+*REMOVED*LinqToDB.DataProvider.PostgreSQL.PostgreSQLVersion.v13 = 4 -> LinqToDB.DataProvider.PostgreSQL.PostgreSQLVersion
+*REMOVED*LinqToDB.DataProvider.PostgreSQL.PostgreSQLVersion.v15 = 5 -> LinqToDB.DataProvider.PostgreSQL.PostgreSQLVersion
+*REMOVED*LinqToDB.DataProvider.PostgreSQL.PostgreSQLVersion.v18 = 6 -> LinqToDB.DataProvider.PostgreSQL.PostgreSQLVersion
+const LinqToDB.ProviderName.PostgreSQL11 = "PostgreSQL.11" -> string!
+const LinqToDB.ProviderName.PostgreSQL12 = "PostgreSQL.12" -> string!
 const LinqToDB.ProviderName.PostgreSQL19 = "PostgreSQL.19" -> string!
+LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQL11MemberTranslator
+LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQL11MemberTranslator.PostgreSQL11MemberTranslator() -> void
+override LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQL11MemberTranslator.CreateWindowFunctionsMemberTranslator() -> LinqToDB.Linq.Translation.IMemberTranslator?
+LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQL95MemberTranslator
+LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQL95MemberTranslator.PostgreSQL95MemberTranslator() -> void
+override LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQL95MemberTranslator.CreateWindowFunctionsMemberTranslator() -> LinqToDB.Linq.Translation.IMemberTranslator?
 LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLMappingSchema.PostgreSQL19MappingSchema
 LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLMappingSchema.PostgreSQL19MappingSchema.PostgreSQL19MappingSchema() -> void
 LinqToDB.Internal.SqlProvider.OptimizationContext.NormalizeParameterName(string? name) -> string?
@@ -1099,3 +1122,12 @@ virtual LinqToDB.Internal.SqlProvider.BasicSqlBuilder.RequiresUniqueRootColumnNa
 override LinqToDB.Internal.DataProvider.Access.AccessSqlBuilderBase.RequiresUniqueRootColumnNames.get -> bool
 override LinqToDB.Internal.DataProvider.SqlCe.SqlCeSqlBuilder.RequiresUniqueRootColumnNames.get -> bool
 *REMOVED*override LinqToDB.Internal.DataProvider.SqlCe.SqlCeSqlBuilder.CanSkipRootAliases(LinqToDB.Internal.SqlQuery.SqlStatement! statement) -> bool
+LinqToDB.Internal.Common.ObjectPool<T>
+LinqToDB.Internal.Common.ObjectPool<T>.ObjectPool(System.Func<T!>! factory, System.Action<T!>! cleanup, int size) -> void
+LinqToDB.Internal.Common.ObjectPool<T>.RentedElement
+LinqToDB.Internal.Common.ObjectPool<T>.RentedElement.Dispose() -> void
+LinqToDB.Internal.Common.ObjectPool<T>.RentedElement.RentedElement() -> void
+LinqToDB.Internal.Common.ObjectPool<T>.RentedElement.RentedElement(LinqToDB.Internal.Common.ObjectPool<T!>! pool, T! value) -> void
+readonly LinqToDB.Internal.Common.ObjectPool<T>.RentedElement.Value -> T!
+~LinqToDB.Internal.Common.ObjectPool<T>.Allocate() -> LinqToDB.Internal.Common.ObjectPool<T>.RentedElement
+*REMOVED*LinqToDB.Internal.SqlQuery.SqlRawSqlTable.SqlRawSqlTable(LinqToDB.Internal.SqlQuery.SqlRawSqlTable! table, LinqToDB.Internal.SqlQuery.ISqlExpression![]! parameters) -> void

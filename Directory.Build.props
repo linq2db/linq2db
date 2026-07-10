@@ -172,6 +172,7 @@
 		<Polyfill>$(Polyfill)|M:System.Linq.AsyncEnumerable.SingleOrDefaultAsync``1(System.Collections.Generic.IAsyncEnumerable{``0},System.Threading.CancellationToken)</Polyfill>
 		<Polyfill>$(Polyfill)|M:System.Linq.AsyncEnumerable.ToArrayAsync``1(System.Collections.Generic.IAsyncEnumerable{``0},System.Threading.CancellationToken)</Polyfill>
 		<Polyfill>$(Polyfill)|M:System.Linq.AsyncEnumerable.ToListAsync``1(System.Collections.Generic.IAsyncEnumerable{``0},System.Threading.CancellationToken)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.Linq.Enumerable.ToHashSet``1(System.Collections.Generic.IEnumerable{``0},System.Collections.Generic.IEqualityComparer{``0})</Polyfill>
 		<Polyfill>$(Polyfill)|M:System.ObjectDisposedException.ThrowIf(System.Boolean,System.Object)</Polyfill>
 		<Polyfill>$(Polyfill)|M:System.ObjectDisposedException.ThrowIf(System.Boolean,System.Type)</Polyfill>
 		<Polyfill>$(Polyfill)|M:System.OperatingSystem.IsLinux</Polyfill>
