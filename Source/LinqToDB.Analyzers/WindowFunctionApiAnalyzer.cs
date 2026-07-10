@@ -67,22 +67,39 @@ namespace LinqToDB.Analyzers
 			});
 		}
 
-		// Walk the fluent receiver chain back to the Sql.Ext.<Fn>(...) root and return <Fn>.
-		// Handles both instance builder links (Instance set) and the extension-method root
-		// (receiver in Instance or, in reduced form, in the first argument).
-		static string? GetRootFunctionName(IInvocationOperation invocation)
+		// Walk the fluent receiver chain back to the Sql.Ext.<Fn>(...) root and return <Fn>. The chain mixes
+		// method calls (.Over(), .PartitionBy(), .ToValue()) with property accesses (.Range/.Between/.CurrentRow
+		// frame builders), so descend through both. The deepest invocation is the root function; its receiver
+		// is the Sql.Ext field access (instance member) or, for the extension-method root, its first argument.
+		static string? GetRootFunctionName(IInvocationOperation toValue)
 		{
-			var current = invocation;
+			IOperation current       = toValue;
+			string?    rootCandidate = null;
 
 			while (true)
 			{
-				var receiver = current.Instance
-					?? (current.TargetMethod.IsExtensionMethod && current.Arguments.Length > 0 ? current.Arguments[0].Value : null);
+				IOperation? receiver;
 
-				if (receiver is IInvocationOperation inner)
-					current = inner;
-				else
-					return current.TargetMethod.Name;
+				switch (current)
+				{
+					case IInvocationOperation invocation:
+						rootCandidate = invocation.TargetMethod.Name;
+						receiver      = invocation.Instance
+							?? (invocation.TargetMethod.IsExtensionMethod && invocation.Arguments.Length > 0 ? invocation.Arguments[0].Value : null);
+						break;
+
+					case IPropertyReferenceOperation property:
+						receiver = property.Instance;
+						break;
+
+					default:
+						return rootCandidate;
+				}
+
+				if (receiver is null)
+					return rootCandidate;
+
+				current = receiver;
 			}
 		}
 	}
