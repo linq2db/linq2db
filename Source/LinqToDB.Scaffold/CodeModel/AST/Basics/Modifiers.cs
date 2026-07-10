@@ -77,5 +77,10 @@ namespace LinqToDB.CodeModel
 		/// <c><see langword="virtual"/></c> attribute on type members.
 		/// </summary>
 		Virtual   = 0x2000,
+		/// <summary>
+		/// Marks a type as a record. Only honored by language generators that have a distinct record syntax
+		/// (e.g. F# emits <c>type X = { ... }</c>); ignored by the C# generator.
+		/// </summary>
+		Record    = 0x4000,
 	}
 }
