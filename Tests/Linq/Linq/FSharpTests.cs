@@ -363,7 +363,6 @@ namespace Tests.Linq
 			FSharp.Issue5598.UpdateNoOpExcludesPrimaryKey(db, false);
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1813")]
 		public void Issue1813Test1([DataSources] string context)
 		{
@@ -385,7 +384,7 @@ namespace Tests.Linq
 			FSharp.Issue1813.Issue1813Test3(db);
 		}
 
-		[ActiveIssue]
+		[ActiveIssue("F# chained groupJoin+DefaultIfEmpty nests the 2nd join inside the 1st's SelectMany, losing the 1st DefaultIfEmpty's outer-join semantics: emits INNER JOIN LATERAL (drops unmatched rows) on LATERAL providers, untranslatable on SQLite (#1813 group B - core)")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1813")]
 		public void Issue1813Test4([DataSources] string context)
 		{
@@ -393,7 +392,6 @@ namespace Tests.Linq
 			FSharp.Issue1813.Issue1813Test4(db);
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1813")]
 		public void Issue1813Test5([DataSources] string context)
 		{
@@ -401,7 +399,6 @@ namespace Tests.Linq
 			FSharp.Issue1813.Issue1813Test5(db);
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1813")]
 		public void Issue1813Test6([DataSources] string context)
 		{
@@ -409,7 +406,6 @@ namespace Tests.Linq
 			FSharp.Issue1813.Issue1813Test6(db);
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1813")]
 		public void Issue1813Test7([DataSources] string context)
 		{
