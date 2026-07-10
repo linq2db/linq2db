@@ -1041,6 +1041,73 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			using var db = ctx.CreateLinqToDBConnection();
 		}
 
+		public enum ImplicitLeakPath
+		{
+			ToLinqToDB,
+			GetTable,
+			ToLinqToDBTable
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5364")]
+		public void TestImplicitConnectionManagement([EFDataSources] string provider, [Values] ImplicitLeakPath path)
+		{
+			// Reproduces #5364 for every implicit ToLinqToDB() entry point that creates a linq2db
+			// DataConnection and abandons it (never disposed): the connection stays checked out of the
+			// pool. Contexts are held alive so GC/finalization can't mask the leak; past Max Pool Size
+			// (default 100) the next command throws. After the fix each path sets CloseAfterUse, so the
+			// connection is released per command.
+			// Baseline capture is disabled: the loop emits 300 identical statements with no diagnostic value.
+			using var noBaseline = new DisableBaseline("connection-leak stress: 300 identical commands");
+
+			var contexts = new List<IssueContextBase>();
+
+			try
+			{
+				for (var i = 0; i < 300; i++)
+				{
+					var ctx = CreateContext(provider);
+					contexts.Add(ctx);
+
+					switch (path)
+					{
+						case ImplicitLeakPath.ToLinqToDB     : _ = ctx.Masters.ToLinqToDB().ToList();      break;
+						case ImplicitLeakPath.GetTable       : _ = ctx.GetTable<Master>().ToList();        break;
+						case ImplicitLeakPath.ToLinqToDBTable: _ = ctx.Masters.ToLinqToDBTable().ToList(); break;
+					}
+				}
+			}
+			finally
+			{
+				foreach (var ctx in contexts)
+					ctx.Dispose();
+			}
+		}
+
+		// PostgreSQL identity-column temp tables are a separate known limitation (#4333), same as Issue4333Test above.
+		[ActiveIssue(TestProvName.AllPostgreSQL)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5364")]
+		public void TempTableSurvivesAcrossCommands([EFDataSources] string provider)
+		{
+			// #5364 fix-scope guard: the explicit CreateLinqToDBContext() must keep its connection
+			// open across commands (SQL temp tables are connection-scoped), even after the implicit
+			// ToLinqToDB() path is changed to release the connection per query.
+			using var ctx = CreateContext(provider);
+			using var db  = ctx.CreateLinqToDBContext();
+
+			var data = new[]
+			{
+				new IdentityTable() { Name = "Bar" },
+				new IdentityTable() { Name = "Baz" },
+			};
+
+			using var table = db.CreateTempTable(data);          // command 1: create + populate
+
+			table.Count().ShouldBe(2);                           // command 2: separate query on the same connection
+
+			table.OrderBy(e => e.Id).Select(e => e.Name).ToArray()
+				.ShouldBe(new[] { "Bar", "Baz" });               // command 3
+		}
+
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5355")]
 		public void Issue5355_ContainsViaIEnumerableInGenericMethod([EFDataSources] string provider)
 		{
