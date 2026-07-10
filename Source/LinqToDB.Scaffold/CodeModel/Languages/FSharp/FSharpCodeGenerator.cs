@@ -735,14 +735,31 @@ namespace LinqToDB.CodeModel
 
 		protected override void Visit(CodeNew expression)
 		{
-			// F# object construction: TypeName(args)
+			// F# object construction: TypeName(args). C# object initializers (`new T { Prop = v }`) are rendered
+			// as named-argument / property-setter syntax inside the constructor call: TypeName(Prop = v, ...).
 			Visit(expression.Type);
 			Write('(');
-			WriteDelimitedList(expression.Parameters, ", ", false);
-			Write(')');
 
-			if (expression.Initializers.Count > 0)
-				throw new NotImplementedException("Object initializers are not supported by F# code generator");
+			var first = true;
+			foreach (var parameter in expression.Parameters)
+			{
+				if (!first)
+					Write(", ");
+				first = false;
+				Visit(parameter);
+			}
+
+			foreach (var initializer in expression.Initializers)
+			{
+				if (!first)
+					Write(", ");
+				first = false;
+				Visit(initializer.LValue);
+				Write(" = ");
+				Visit(initializer.RValue);
+			}
+
+			Write(')');
 		}
 
 		protected override void Visit          (CodeAssignmentStatement  statement ) => WriteAssignment(statement );
