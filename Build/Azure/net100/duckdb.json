@@ -2,6 +2,11 @@
 	"NET100.Azure": {
 		"Providers": [
 			"DuckDB"
-		]
+		],
+		"Connections": {
+			// CI runs DuckDB against a shared-cache in-memory DB (no per-commit fsync); one keep-alive
+			// connection is held open in TestsInitialization for the run.
+			"DuckDB": { "Provider": "DuckDB", "ConnectionString": "Data Source=:memory:?cache=shared" }
+		}
 	}
 }
