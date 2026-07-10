@@ -75,4 +75,14 @@ Review comments: lead with `**<Severity> · <ID>**`, state the finding, state th
 
 **Avoid the AI-text tells.** The terse, fact-led style above already steers clear of the patterns now widely read as machine-written, but watch for them explicitly in longer prose (PR bodies, release notes): over-uniform paragraph structure, an em-dash in every other sentence, the "not X, but Y" cadence on repeat, and a wall of evenly-weighted bullets. Vary the rhythm and lead with the concrete fact. This is a credibility note, not a detector-gaming exercise — the goal is prose a maintainer reads as written by someone who did the work, not output to launder.
 
+### Bug repros for external / upstream projects
+
+When filing an issue on an **external** project's tracker (e.g. a provider engine like `ydb-platform/ydb`), the SQL repro must be **self-contained and anonymized**:
+
+- Include the `CREATE TABLE` (+ a minimal seed `INSERT`/`UPSERT`) so the maintainer can paste-and-run without any linq2db-specific schema.
+- Anonymize identifiers — generic table/column names (`t`, `id`, `v`), not the internal test schema (`LinqDataTypes.SmallIntValue`, etc.).
+- Confirm the anonymized script actually reproduces before posting (an optimizer crash can be data-dependent — seed rows and run it; an empty table may not trigger it).
+
+This is stricter than an internal linq2db issue, where referencing test names / existing tables is fine.
+
 The first-party provider-behavior verification rule (XML docs / source comments / agent-prose claims about how a provider translates a member) lives in [`agent-rules.md`](agent-rules.md) → *Agent Guardrails*. It applies to code-authoring content too, not just GitHub posts.
