@@ -24,7 +24,7 @@ namespace LinqToDB.Scaffold
 		/// Enables generation of Database name in mappings (for tables, views, procedures and functions).
 		/// <list type="bullet">
 		/// <item>Default: <see langword="false"/></item>
-		/// <item>In T4 compability mode: <see langword="false"/></item>
+		/// <item>In T4 compatibility mode: <see langword="false"/></item>
 		/// </list>
 		/// </summary>
 		public bool IncludeDatabaseName { get; set; }
@@ -33,7 +33,7 @@ namespace LinqToDB.Scaffold
 		/// Enables generation of Schema name for default schemas in mappings (for tables, views, procedures and functions).
 		/// <list type="bullet">
 		/// <item>Default: <see langword="false"/></item>
-		/// <item>In T4 compability mode: <see langword="true" /></item>
+		/// <item>In T4 compatibility mode: <see langword="true" /></item>
 		/// </list>
 		/// </summary>
 		public bool GenerateDefaultSchema { get; set; }
@@ -42,7 +42,7 @@ namespace LinqToDB.Scaffold
 		/// Specifies type of generated metadata source.
 		/// <list type="bullet">
 		/// <item>Default: <see cref="MetadataSource.Attributes"/></item>
-		/// <item>In T4 compability mode: <see cref="MetadataSource.Attributes"/></item>
+		/// <item>In T4 compatibility mode: <see cref="MetadataSource.Attributes"/></item>
 		/// </list>
 		/// </summary>
 		public MetadataSource Metadata { get; set; } = MetadataSource.Attributes;
@@ -55,7 +55,7 @@ namespace LinqToDB.Scaffold
 		/// Current limitaion - type cannot be generic.
 		/// <list type="bullet">
 		/// <item>Default: <see langword="null"/></item>
-		/// <item>In T4 compability mode: <see langword="null"/></item>
+		/// <item>In T4 compatibility mode: <see langword="null"/></item>
 		/// </list>
 		/// </summary>
 		public string? BaseEntityClass { get; set; }
@@ -64,7 +64,7 @@ namespace LinqToDB.Scaffold
 		/// Enables partial class modifier applied to entity mapping classes.
 		/// <list type="bullet">
 		/// <item>Default: <see langword="false"/></item>
-		/// <item>In T4 compability mode: <see langword="true" /></item>
+		/// <item>In T4 compatibility mode: <see langword="true" /></item>
 		/// </list>
 		/// </summary>
 		public bool EntityClassIsPartial { get; set; }
@@ -73,7 +73,7 @@ namespace LinqToDB.Scaffold
 		/// Gets or sets name generation and normalization rules for entity column properties.
 		/// <list type="bullet">
 		/// <item>Default: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/></item>
-		/// <item>In T4 compability mode: <see cref="NameCasing.T4CompatNonPluralized"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <see cref="NormalizationOptions.MaxUpperCaseWordLength"/>=2</item>
+		/// <item>In T4 compatibility mode: <see cref="NameCasing.T4CompatNonPluralized"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <see cref="NormalizationOptions.MaxUpperCaseWordLength"/>=2</item>
 		/// </list>
 		/// </summary>
 		public NormalizationOptions EntityColumnPropertyNameOptions { get; set; } = new() { Casing = NameCasing.Pascal, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None };
@@ -82,7 +82,7 @@ namespace LinqToDB.Scaffold
 		/// Gets or sets name generation and normalization rules for entity classes.
 		/// <list type="bullet">
 		/// <item>Default: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <see cref="Pluralization.Singular"/>, <c>PluralizeOnlyIfLastWordIsText = true</c></item>
-		/// <item>In T4 compability mode: <see cref="NameCasing.T4CompatNonPluralized"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <see cref="Pluralization.Singular"/>, <c>PluralizeOnlyIfLastWordIsText = true</c></item>
+		/// <item>In T4 compatibility mode: <see cref="NameCasing.T4CompatNonPluralized"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <see cref="Pluralization.Singular"/>, <c>PluralizeOnlyIfLastWordIsText = true</c></item>
 		/// </list>
 		/// </summary>
 		public NormalizationOptions EntityClassNameOptions { get; set; } = new() { Casing = NameCasing.Pascal, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.Singular, PluralizeOnlyIfLastWordIsText = true };
@@ -91,7 +91,7 @@ namespace LinqToDB.Scaffold
 		/// Gets or sets name generation and normalization rules for entity table access property in data context class.
 		/// <list type="bullet">
 		/// <item>Default: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <see cref="Pluralization.PluralIfLongerThanOne"/>, <c>PluralizeOnlyIfLastWordIsText = true</c></item>
-		/// <item>In T4 compability mode: <see cref="NameCasing.T4CompatPluralized"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <see cref="Pluralization.PluralIfLongerThanOne"/>, <c>PluralizeOnlyIfLastWordIsText = true</c></item>
+		/// <item>In T4 compatibility mode: <see cref="NameCasing.T4CompatPluralized"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <see cref="Pluralization.PluralIfLongerThanOne"/>, <c>PluralizeOnlyIfLastWordIsText = true</c></item>
 		/// </list>
 		/// </summary>
 		public NormalizationOptions EntityContextPropertyNameOptions { get; set; } = new() { Casing = NameCasing.Pascal, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.PluralIfLongerThanOne, PluralizeOnlyIfLastWordIsText = true };
@@ -100,7 +100,7 @@ namespace LinqToDB.Scaffold
 		/// Gets or sets custom name generator for entity class name.
 		/// <list type="bullet">
 		/// <item>Default: not set</item>
-		/// <item>In T4 compability mode: not set</item>
+		/// <item>In T4 compatibility mode: not set</item>
 		/// </list>
 		/// </summary>
 		public Func<TableLikeObject, string?>? EntityClassNameProvider { get; set; }
@@ -109,7 +109,7 @@ namespace LinqToDB.Scaffold
 		/// Gets or sets custom name generator for data context property name to access entity table.
 		/// <list type="bullet">
 		/// <item>Default: not set</item>
-		/// <item>In T4 compability mode: not set</item>
+		/// <item>In T4 compatibility mode: not set</item>
 		/// </list>
 		/// </summary>
 		public Func<TableLikeObject, string?>? EntityContextPropertyNameProvider { get; set; }
@@ -118,7 +118,7 @@ namespace LinqToDB.Scaffold
 		/// Enables generation of <see cref="DataType"/> enum value for entity column mapping.
 		/// <list type="bullet">
 		/// <item>Default: <see langword="false"/></item>
-		/// <item>In T4 compability mode: <see langword="false"/></item>
+		/// <item>In T4 compatibility mode: <see langword="false"/></item>
 		/// </list>
 		/// </summary>
 		public bool GenerateDataType { get; set; }
@@ -127,7 +127,7 @@ namespace LinqToDB.Scaffold
 		/// Enables generation of database type name for entity column mapping.
 		/// <list type="bullet">
 		/// <item>Default: <see langword="false"/></item>
-		/// <item>In T4 compability mode: <see langword="false"/></item>
+		/// <item>In T4 compatibility mode: <see langword="false"/></item>
 		/// </list>
 		/// </summary>
 		public bool GenerateDbType { get; set; }
@@ -136,7 +136,7 @@ namespace LinqToDB.Scaffold
 		/// Enables generation of database type length for entity column mapping.
 		/// <list type="bullet">
 		/// <item>Default: <see langword="false"/></item>
-		/// <item>In T4 compability mode: <see langword="false"/></item>
+		/// <item>In T4 compatibility mode: <see langword="false"/></item>
 		/// </list>
 		/// </summary>
 		public bool GenerateLength { get; set; }
@@ -145,7 +145,7 @@ namespace LinqToDB.Scaffold
 		/// Enables generation of database type precision for entity column mapping.
 		/// <list type="bullet">
 		/// <item>Default: <see langword="false"/></item>
-		/// <item>In T4 compability mode: <see langword="false"/></item>
+		/// <item>In T4 compatibility mode: <see langword="false"/></item>
 		/// </list>
 		/// </summary>
 		public bool GeneratePrecision { get; set; }
@@ -154,7 +154,7 @@ namespace LinqToDB.Scaffold
 		/// Enables generation of database type scale for entity column mapping.
 		/// <list type="bullet">
 		/// <item>Default: <see langword="false"/></item>
-		/// <item>In T4 compability mode: <see langword="false"/></item>
+		/// <item>In T4 compatibility mode: <see langword="false"/></item>
 		/// </list>
 		/// </summary>
 		public bool GenerateScale { get; set; }
@@ -164,7 +164,7 @@ namespace LinqToDB.Scaffold
 		/// with precision or scale outside of CLR <see cref="decimal"/> limits.
 		/// <list type="bullet">
 		/// <item>Default: <see langword="false"/></item>
-		/// <item>In T4 compability mode: <see langword="false"/></item>
+		/// <item>In T4 compatibility mode: <see langword="false"/></item>
 		/// </list>
 		/// </summary>
 		public bool GenerateSqlServerDecimalOverflowProtection { get; set; }
@@ -174,7 +174,7 @@ namespace LinqToDB.Scaffold
 		/// Except <c>EntityMappingBuilder</c> parameter, method takes second null parameter of entity type (could be generic).
 		/// <list type="bullet">
 		/// <item>Default: <c>empty</c></item>
-		/// <item>In T4 compability mode: <c>empty</c></item>
+		/// <item>In T4 compatibility mode: <c>empty</c></item>
 		/// </list>
 		/// </summary>
 		public IReadOnlyCollection<string>? FluentEntityTypeHelpers { get; set; } = [];
@@ -186,7 +186,7 @@ namespace LinqToDB.Scaffold
 		/// Includes database name, data source and server version values if available from schema provider for current database.
 		/// <list type="bullet">
 		/// <item>Default: <see langword="false"/></item>
-		/// <item>In T4 compability mode: <see langword="false"/></item>
+		/// <item>In T4 compatibility mode: <see langword="false"/></item>
 		/// </list>
 		/// </summary>
 		public bool IncludeDatabaseInfo { get; set; }
@@ -195,7 +195,7 @@ namespace LinqToDB.Scaffold
 		/// Enables generation of default data context constructor.
 		/// <list type="bullet">
 		/// <item>Default: <see langword="true" /></item>
-		/// <item>In T4 compability mode: <see langword="true" /></item>
+		/// <item>In T4 compatibility mode: <see langword="true" /></item>
 		/// </list>
 		/// </summary>
 		public bool HasDefaultConstructor { get; set; } = true;
@@ -204,7 +204,7 @@ namespace LinqToDB.Scaffold
 		/// Enables generation of data context constructor with <c>(<see cref="string"/> configurationName)</c> parameter.
 		/// <list type="bullet">
 		/// <item>Default: <see langword="true" /></item>
-		/// <item>In T4 compability mode: <see langword="true" /></item>
+		/// <item>In T4 compatibility mode: <see langword="true" /></item>
 		/// </list>
 		/// </summary>
 		public bool HasConfigurationConstructor { get; set; } = true;
@@ -213,7 +213,7 @@ namespace LinqToDB.Scaffold
 		/// Enables generation of data context constructor with non-generic <c>(<see cref="DataOptions"/> options)</c> parameter.
 		/// <list type="bullet">
 		/// <item>Default: <see langword="false"/></item>
-		/// <item>In T4 compability mode: <see langword="true" /></item>
+		/// <item>In T4 compatibility mode: <see langword="true" /></item>
 		/// </list>
 		/// </summary>
 		public bool HasUntypedOptionsConstructor { get; set; }
@@ -223,7 +223,7 @@ namespace LinqToDB.Scaffold
 		/// where <c>T</c> is generated data context class.
 		/// <list type="bullet">
 		/// <item>Default: <see langword="true" /></item>
-		/// <item>In T4 compability mode: <see langword="true" /></item>
+		/// <item>In T4 compatibility mode: <see langword="true" /></item>
 		/// </list>
 		/// </summary>
 		public bool HasTypedOptionsConstructor { get; set; } = true;
@@ -233,7 +233,7 @@ namespace LinqToDB.Scaffold
 		/// If database name not provided by schema provider, <c>"MyDataContext"</c> used as name.
 		/// <list type="bullet">
 		/// <item>Default: not set</item>
-		/// <item>In T4 compability mode: not set</item>
+		/// <item>In T4 compatibility mode: not set</item>
 		/// </list>
 		/// </summary>
 		public string? ContextClassName { get; set; }
@@ -242,7 +242,7 @@ namespace LinqToDB.Scaffold
 		/// Gets or sets the modifier of data context class. When not set, public will be used. Context class is always partial.
 		/// <list type="bullet">
 		/// <item>Default: not set</item>
-		/// <item>In T4 compability mode: not set</item>
+		/// <item>In T4 compatibility mode: not set</item>
 		/// </list>
 		/// </summary>
 		public Modifiers? ContextClassModifier { get; set; }
@@ -253,7 +253,7 @@ namespace LinqToDB.Scaffold
 		/// or <see cref="DataContext"/> classes or classes, derived from them.
 		/// <list type="bullet">
 		/// <item>Default: not set</item>
-		/// <item>In T4 compability mode: not set</item>
+		/// <item>In T4 compatibility mode: not set</item>
 		/// </list>
 		/// </summary>
 		public string? BaseContextClass { get; set; }
@@ -262,7 +262,7 @@ namespace LinqToDB.Scaffold
 		/// Gets or sets name generation and normalization rules for data context class name when name not provided by user but generated automatically.
 		/// <list type="bullet">
 		/// <item>Default: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/></item>
-		/// <item>In T4 compability mode:  <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/></item>
+		/// <item>In T4 compatibility mode:  <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/></item>
 		/// </list>
 		/// </summary>
 		public NormalizationOptions DataContextClassNameOptions { get; set; } = new() { Casing = NameCasing.Pascal, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None };
@@ -271,7 +271,7 @@ namespace LinqToDB.Scaffold
 		/// Enables generation of InitDataContext partial method on data context class.
 		/// <list type="bullet">
 		/// <item>Default: <see langword="true" /></item>
-		/// <item>In T4 compability mode: <see langword="true" /></item>
+		/// <item>In T4 compatibility mode: <see langword="true" /></item>
 		/// </list>
 		/// </summary>
 		public bool GenerateInitDataContextMethod { get; set; } = true;
@@ -280,7 +280,7 @@ namespace LinqToDB.Scaffold
 		/// Enables generation of StaticInitDataContext partial method on data context class. Method will be called from static constructor as a last init step and will force generation of static constructor.
 		/// <list type="bullet">
 		/// <item>Default: <see langword="false"/></item>
-		/// <item>In T4 compability mode: <see langword="false"/></item>
+		/// <item>In T4 compatibility mode: <see langword="false"/></item>
 		/// </list>
 		/// </summary>
 		public bool GenerateStaticInitDataContextMethod { get; set; }
@@ -291,7 +291,7 @@ namespace LinqToDB.Scaffold
 		/// Gets or sets name generation and normalization rules for assocation from foreign key source entity side.
 		/// <list type="bullet">
 		/// <item>Default: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.Association"/></item>
-		/// <item>In T4 compability mode: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.Association"/></item>
+		/// <item>In T4 compatibility mode: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.Association"/></item>
 		/// </list>
 		/// </summary>
 		public NormalizationOptions SourceAssociationPropertyNameOptions { get; set; } = new() { Casing = NameCasing.Pascal, Transformation = NameTransformation.Association, Pluralization = Pluralization.None };
@@ -300,7 +300,7 @@ namespace LinqToDB.Scaffold
 		/// Gets or sets name generation and normalization rules for assocation from foreign key target entity side with singular cardinality.
 		/// <list type="bullet">
 		/// <item>Default: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.Association"/></item>
-		/// <item>In T4 compability mode: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.Association"/></item>
+		/// <item>In T4 compatibility mode: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.Association"/></item>
 		/// </list>
 		/// </summary>
 		public NormalizationOptions TargetSingularAssociationPropertyNameOptions { get; set; } = new() { Casing = NameCasing.Pascal, Transformation = NameTransformation.Association, Pluralization = Pluralization.None };
@@ -309,7 +309,7 @@ namespace LinqToDB.Scaffold
 		/// Gets or sets name generation and normalization rules for assocation from foreign key target entity side with multiple cardinality.
 		/// <list type="bullet">
 		/// <item>Default: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.Association"/>, <see cref="Pluralization.PluralIfLongerThanOne"/></item>
-		/// <item>In T4 compability mode: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.Association"/>, <see cref="Pluralization.PluralIfLongerThanOne"/></item>
+		/// <item>In T4 compatibility mode: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.Association"/>, <see cref="Pluralization.PluralIfLongerThanOne"/></item>
 		/// </list>
 		/// </summary>
 		public NormalizationOptions TargetMultipleAssociationPropertyNameOptions { get; set; } = new() { Casing = NameCasing.Pascal, Transformation = NameTransformation.Association, Pluralization = Pluralization.PluralIfLongerThanOne };
@@ -318,7 +318,7 @@ namespace LinqToDB.Scaffold
 		/// Enables generation of associations for foreign keys as entity properties.
 		/// <list type="bullet">
 		/// <item>Default: <see langword="true" /></item>
-		/// <item>In T4 compability mode: <see langword="true" /></item>
+		/// <item>In T4 compatibility mode: <see langword="true" /></item>
 		/// </list>
 		/// </summary>
 		public bool GenerateAssociations { get; set; } = true;
@@ -327,7 +327,7 @@ namespace LinqToDB.Scaffold
 		/// Enables generation of associations for foreign keys as extension methods (with entity as extended type).
 		/// <list type="bullet">
 		/// <item>Default: <see langword="false"/></item>
-		/// <item>In T4 compability mode: <see langword="false"/></item>
+		/// <item>In T4 compatibility mode: <see langword="false"/></item>
 		/// </list>
 		/// </summary>
 		public bool GenerateAssociationExtensions { get; set; }
@@ -337,7 +337,7 @@ namespace LinqToDB.Scaffold
 		/// Otherwise see <see cref="AssociationCollectionType"/> setting.
 		/// <list type="bullet">
 		/// <item>Default: <see langword="false"/></item>
-		/// <item>In T4 compability mode: <see langword="false"/></item>
+		/// <item>In T4 compatibility mode: <see langword="false"/></item>
 		/// </list>
 		/// </summary>
 		public bool AssociationCollectionAsArray { get; set; }
@@ -350,7 +350,7 @@ namespace LinqToDB.Scaffold
 		/// Option ignored if <see cref="AssociationCollectionType"/> set to <see langword="true" />.
 		/// <list type="bullet">
 		/// <item>Default: not set</item>
-		/// <item>In T4 compability mode: not set</item>
+		/// <item>In T4 compatibility mode: not set</item>
 		/// </list>
 		/// </summary>
 		public string? AssociationCollectionType { get; set; }
@@ -361,7 +361,7 @@ namespace LinqToDB.Scaffold
 		/// Enables reuse of generated entity mapping class and stored procedure or table function return record type, when record mappings match known entity mappings (record has same set of columns by name and type including nullability as entity).
 		/// <list type="bullet">
 		/// <item>Default: <see langword="true" /></item>
-		/// <item>In T4 compability mode: <see langword="true" /></item>
+		/// <item>In T4 compatibility mode: <see langword="true" /></item>
 		/// </list>
 		/// </summary>
 		public bool MapProcedureResultToEntity { get; set; } = true;
@@ -370,7 +370,7 @@ namespace LinqToDB.Scaffold
 		/// Gets or sets name generation and normalization rules for stored procedures and functions method parameters.
 		/// <list type="bullet">
 		/// <item>Default: <see cref="NameCasing.CamelCase"/>, <see cref="NameTransformation.SplitByUnderscore"/></item>
-		/// <item>In T4 compability mode: <see cref="NameCasing.CamelCase"/>, <see cref="NameTransformation.SplitByUnderscore"/></item>
+		/// <item>In T4 compatibility mode: <see cref="NameCasing.CamelCase"/>, <see cref="NameTransformation.SplitByUnderscore"/></item>
 		/// </list>
 		/// </summary>
 		public NormalizationOptions ProcedureParameterNameOptions { get; set; } = new() { Casing = NameCasing.CamelCase, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None };
@@ -379,7 +379,7 @@ namespace LinqToDB.Scaffold
 		/// Gets or sets name generation and normalization rules for stored procedures and functions method names.
 		/// <list type="bullet">
 		/// <item>Default: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/></item>
-		/// <item>In T4 compability mode: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/></item>
+		/// <item>In T4 compatibility mode: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/></item>
 		/// </list>
 		/// </summary>
 		public NormalizationOptions ProcedureNameOptions { get; set; } = new() { Casing = NameCasing.Pascal, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None };
@@ -388,7 +388,7 @@ namespace LinqToDB.Scaffold
 		/// Gets or sets name generation and normalization rules for mapping class for result tuple value of scalar function.
 		/// <list type="bullet">
 		/// <item>Default: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <c>Suffix = "Result"</c></item>
-		/// <item>In T4 compability mode: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <c>Suffix = "Result"</c></item>
+		/// <item>In T4 compatibility mode: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <c>Suffix = "Result"</c></item>
 		/// </list>
 		/// </summary>
 		public NormalizationOptions FunctionTupleResultClassNameOptions { get; set; } = new() { Casing = NameCasing.Pascal, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None, Suffix = "Result" };
@@ -397,7 +397,7 @@ namespace LinqToDB.Scaffold
 		/// Gets or sets name generation and normalization rules for field properies of result tuple value mapping class of scalar function.
 		/// <list type="bullet">
 		/// <item>Default: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/></item>
-		/// <item>In T4 compability mode: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/></item>
+		/// <item>In T4 compatibility mode: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/></item>
 		/// </list>
 		/// </summary>
 		public NormalizationOptions FunctionTupleResultPropertyNameOptions { get; set; } = new() { Casing = NameCasing.Pascal, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None };
@@ -406,7 +406,7 @@ namespace LinqToDB.Scaffold
 		/// Gets or sets name generation and normalization rules for custom mapping class for result record of stored procedure or table function.
 		/// <list type="bullet">
 		/// <item>Default: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <c>Suffix = "Result"</c></item>
-		/// <item>In T4 compability mode: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <c>Suffix = "Result"</c></item>
+		/// <item>In T4 compatibility mode: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <c>Suffix = "Result"</c></item>
 		/// </list>
 		/// </summary>
 		public NormalizationOptions ProcedureResultClassNameOptions { get; set; } = new() { Casing = NameCasing.Pascal, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None, Suffix = "Result" };
@@ -414,7 +414,7 @@ namespace LinqToDB.Scaffold
 		/// Gets or sets name generation and normalization rules for custom mapping class for async stored procedure results wrapper for procedure with multiple returns.
 		/// <list type="bullet">
 		/// <item>Default: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <c>Suffix = "Results"</c></item>
-		/// <item>In T4 compability mode: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <c>Suffix = "Results"</c></item>
+		/// <item>In T4 compatibility mode: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <c>Suffix = "Results"</c></item>
 		/// </list>
 		/// </summary>
 		public NormalizationOptions AsyncProcedureResultClassNameOptions { get; set; } = new() { Casing = NameCasing.Pascal, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None, Suffix = "Results" };
@@ -422,7 +422,7 @@ namespace LinqToDB.Scaffold
 		/// Gets or sets name generation and normalization rules for custom mapping class properties for async stored procedure results wrapper for procedure with multiple returns.
 		/// <list type="bullet">
 		/// <item>Default: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/></item>
-		/// <item>In T4 compability mode: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/></item>
+		/// <item>In T4 compatibility mode: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/></item>
 		/// </list>
 		/// </summary>
 		public NormalizationOptions AsyncProcedureResultClassPropertiesNameOptions { get; set; } = new() { Casing = NameCasing.Pascal, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None };
@@ -430,7 +430,7 @@ namespace LinqToDB.Scaffold
 		/// Gets or sets name generation and normalization rules for column properties of custom mapping class for result record of stored procedure or table function.
 		/// <list type="bullet">
 		/// <item>Default: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/></item>
-		/// <item>In T4 compability mode: <see cref="NameCasing.None"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <see cref="NormalizationOptions.MaxUpperCaseWordLength"/>=2</item>
+		/// <item>In T4 compatibility mode: <see cref="NameCasing.None"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <see cref="NormalizationOptions.MaxUpperCaseWordLength"/>=2</item>
 		/// </list>
 		/// </summary>
 		public NormalizationOptions ProcedureResultColumnPropertyNameOptions { get; set; } = new() { Casing = NameCasing.Pascal, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None };
@@ -440,7 +440,7 @@ namespace LinqToDB.Scaffold
 		/// Otherwise <see cref="IQueryable{T}"/> type used.
 		/// <list type="bullet">
 		/// <item>Default: <see langword="false"/></item>
-		/// <item>In T4 compability mode: <see langword="true" /></item>
+		/// <item>In T4 compatibility mode: <see langword="true" /></item>
 		/// </list>
 		/// </summary>
 		public bool TableFunctionReturnsTable { get; set; }
@@ -449,7 +449,7 @@ namespace LinqToDB.Scaffold
 		/// Enables generation of error if stored procedure or table function schema load failed.
 		/// <list type="bullet">
 		/// <item>Default: <see langword="false"/></item>
-		/// <item>In T4 compability mode: <see langword="false"/></item>
+		/// <item>In T4 compatibility mode: <see langword="false"/></item>
 		/// </list>
 		/// </summary>
 		public bool GenerateProceduresSchemaError { get; set; }
@@ -461,7 +461,7 @@ namespace LinqToDB.Scaffold
 		/// table function must have return result set.
 		/// <list type="bullet">
 		/// <item>Default: <see langword="false"/></item>
-		/// <item>In T4 compability mode: <see langword="true" /></item>
+		/// <item>In T4 compatibility mode: <see langword="true" /></item>
 		/// </list>
 		/// </summary>
 		public bool SkipProceduresWithSchemaErrors { get; set; }
@@ -471,7 +471,7 @@ namespace LinqToDB.Scaffold
 		/// Otherwise <see cref="IEnumerable{T}"/> type used.
 		/// <list type="bullet">
 		/// <item>Default: <see langword="false"/></item>
-		/// <item>In T4 compability mode: <see langword="false"/></item>
+		/// <item>In T4 compatibility mode: <see langword="false"/></item>
 		/// </list>
 		/// </summary>
 		public bool GenerateProcedureResultAsList { get; set; }
@@ -480,7 +480,7 @@ namespace LinqToDB.Scaffold
 		/// Enables generation of database type name in stored procedure parameter mapping.
 		/// <list type="bullet">
 		/// <item>Default: <see langword="false"/></item>
-		/// <item>In T4 compability mode: <see langword="false"/></item>
+		/// <item>In T4 compatibility mode: <see langword="false"/></item>
 		/// </list>
 		/// </summary>
 		public bool GenerateProcedureParameterDbType { get; set; }
@@ -489,7 +489,7 @@ namespace LinqToDB.Scaffold
 		/// Enables generation of sync version of stored procedure mapping.
 		/// <list type="bullet">
 		/// <item>Default: <see langword="true" /></item>
-		/// <item>In T4 compability mode: <see langword="true" /></item>
+		/// <item>In T4 compatibility mode: <see langword="true" /></item>
 		/// </list>
 		/// </summary>
 		public bool GenerateProcedureSync { get; set; } = true;
@@ -498,7 +498,7 @@ namespace LinqToDB.Scaffold
 		/// Enables generation of async version of stored procedure mapping.
 		/// <list type="bullet">
 		/// <item>Default: <see langword="true" /></item>
-		/// <item>In T4 compability mode: <see langword="false"/></item>
+		/// <item>In T4 compatibility mode: <see langword="false"/></item>
 		/// </list>
 		/// </summary>
 		public bool GenerateProcedureAsync { get; set; } = true;
@@ -509,7 +509,7 @@ namespace LinqToDB.Scaffold
 		/// Gets or sets name generation and normalization rules for wrapper class for non-default schema (when <see cref="GenerateSchemaAsType"/> option enabled).
 		/// <list type="bullet">
 		/// <item>Default: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <c>Suffix = "Schema"</c></item>
-		/// <item>In T4 compability mode: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <c>Suffix = "Schema"</c></item>
+		/// <item>In T4 compatibility mode: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <c>Suffix = "Schema"</c></item>
 		/// </list>
 		/// </summary>
 		public NormalizationOptions SchemaClassNameOptions { get; set; } = new() { Casing = NameCasing.Pascal, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None, Suffix = "Schema" };
@@ -518,7 +518,7 @@ namespace LinqToDB.Scaffold
 		/// Gets or sets name generation and normalization rules for non-default schema data context class accessor property on main data context (when <see cref="GenerateSchemaAsType"/> option enabled).
 		/// <list type="bullet">
 		/// <item>Default: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/></item>
-		/// <item>In T4 compability mode: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/></item>
+		/// <item>In T4 compatibility mode: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/></item>
 		/// </list>
 		/// </summary>
 		public NormalizationOptions SchemaPropertyNameOptions { get; set; } = new() { Casing = NameCasing.Pascal, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None };
@@ -527,7 +527,7 @@ namespace LinqToDB.Scaffold
 		/// Enables generation of context for entities and procedures/functions from non-default schemas in separate context-like class.
 		/// <list type="bullet">
 		/// <item>Default: <see langword="true" /></item>
-		/// <item>In T4 compability mode: <see langword="false"/></item>
+		/// <item>In T4 compatibility mode: <see langword="false"/></item>
 		/// </list>
 		/// </summary>
 		public bool GenerateSchemaAsType { get; set; } = true;
@@ -536,7 +536,7 @@ namespace LinqToDB.Scaffold
 		/// Enables generation of <see cref="IEquatable{T}"/> interface implementation on entity classes with primary key.
 		/// <list type="bullet">
 		/// <item>Default: <see langword="false"/></item>
-		/// <item>In T4 compability mode: <see langword="false"/></item>
+		/// <item>In T4 compatibility mode: <see langword="false"/></item>
 		/// </list>
 		/// </summary>
 		public bool GenerateIEquatable { get; set; }
@@ -545,7 +545,7 @@ namespace LinqToDB.Scaffold
 		/// Provides base names for schema wrapper class and main data context property for additional schemas (when <see cref="GenerateSchemaAsType"/> option set).
 		/// <list type="bullet">
 		/// <item>Default: empty</item>
-		/// <item>In T4 compability mode: empty</item>
+		/// <item>In T4 compatibility mode: empty</item>
 		/// </list>
 		/// </summary>
 		public IDictionary<string, string> SchemaMap { get; } = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -556,7 +556,7 @@ namespace LinqToDB.Scaffold
 		/// Enables generation of extension methods to access entity by primary key value (using name Find/FindAsync/FindQuery for generated method).
 		/// <list type="bullet">
 		/// <item>Default: <c><see cref="FindTypes.FindByPkOnTable"/> | <see cref="FindTypes.FindAsyncByPkOnTable"/></c></item>
-		/// <item>In T4 compability mode: <see cref="FindTypes.FindByPkOnTable"/></item>
+		/// <item>In T4 compatibility mode: <see cref="FindTypes.FindByPkOnTable"/></item>
 		/// </list>
 		/// </summary>
 		public FindTypes GenerateFindExtensions { get; set; } = FindTypes.FindByPkOnTable | FindTypes.FindAsyncByPkOnTable;
@@ -565,7 +565,7 @@ namespace LinqToDB.Scaffold
 		/// Specifies order of primary key column parameters in Find method for entity with composite primary key.
 		/// <list type="bullet">
 		/// <item>Default: <see langword="true" /></item>
-		/// <item>In T4 compability mode: <see langword="false"/></item>
+		/// <item>In T4 compatibility mode: <see langword="false"/></item>
 		/// </list>
 		/// </summary>
 		public bool OrderFindParametersByColumnOrdinal { get; set; } = true;
@@ -574,7 +574,7 @@ namespace LinqToDB.Scaffold
 		/// Gets or sets name generation and normalization rules for Find entity extension method parameters.
 		/// <list type="bullet">
 		/// <item>Default: <see cref="NameCasing.CamelCase"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <c>DontCaseAllCaps = false</c></item>
-		/// <item>In T4 compability mode: <see cref="NameCasing.CamelCase"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <c>DontCaseAllCaps = false</c></item>
+		/// <item>In T4 compatibility mode: <see cref="NameCasing.CamelCase"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <c>DontCaseAllCaps = false</c></item>
 		/// </list>
 		/// </summary>
 		public NormalizationOptions FindParameterNameOptions { get; set; } = new() { Casing = NameCasing.CamelCase, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None, DontCaseAllCaps = false };

@@ -67,7 +67,7 @@ namespace Tests.Scaffold
 			var source = GenerateSource(
 				options,
 				SqlServerDatabaseOptions.Instance,
-				new Column("SafeDecimal"   , null, new DatabaseType("decimal", null, 29,  0), true, true, true, 0),
+				new Column("SafeDecimal"   , null, new DatabaseType("decimal", null, 28,  0), true, true, true, 0),
 				new Column("LargePrecision", null, new DatabaseType("decimal", null, 38, 35), true, true, true, 1));
 
 			Assert.That(source, Does.Contain("GetSqlDecimal"));

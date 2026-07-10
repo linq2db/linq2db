@@ -7,8 +7,6 @@
 		<TestProject>false</TestProject>
 		<IsTestProject>false</IsTestProject>
 		<IsTestable>false</IsTestable>
-		<IsTestingPlatformApplication>false</IsTestingPlatformApplication>
-		<DisableTestingPlatformServerCapability>true</DisableTestingPlatformServerCapability>
 	</PropertyGroup>
 
 	<ItemGroup>

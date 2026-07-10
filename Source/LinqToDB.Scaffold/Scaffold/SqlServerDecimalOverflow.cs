@@ -1,7 +1,7 @@
 namespace LinqToDB.Scaffold.Internal
 {
 	/// <summary>
-	/// Shared detection of SQL Server <c>decimal</c> columns whose precision/scale can exceed CLR <see cref="decimal"/> limits,
+	/// Shared detection of SQL Server <see langword="decimal"/> columns whose precision/scale can exceed CLR <see langword="decimal"/> limits,
 	/// used by both the scaffold data-model loader and the T4 model generator so the boundary stays defined in one place.
 	/// </summary>
 	static class SqlServerDecimalOverflow
@@ -13,7 +13,7 @@ namespace LinqToDB.Scaffold.Internal
 
 		/// <summary>
 		/// Returns <see langword="true"/> when a decimal column with the given <paramref name="precision"/> and
-		/// <paramref name="scale"/> is not guaranteed to fit CLR <see cref="decimal"/>.
+		/// <paramref name="scale"/> is not guaranteed to fit CLR <see langword="decimal"/>.
 		/// </summary>
 		public static bool ExceedsClrLimits(int? precision, int? scale)
 			=> precision >= ClrDecimalPrecision || scale > ClrDecimalScale;
