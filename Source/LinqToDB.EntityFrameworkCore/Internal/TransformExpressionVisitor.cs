@@ -26,7 +26,7 @@ namespace LinqToDB.EntityFrameworkCore.Internal
 	/// </summary>
 	public class TransformExpressionVisitor : ExpressionVisitorBase
 	{
-		internal static ObjectPool<TransformExpressionVisitor> Pool = new(() => new TransformExpressionVisitor(), v => v.Cleanup(), 100);
+		internal static readonly ObjectPool<TransformExpressionVisitor> Pool = new(() => new TransformExpressionVisitor(), v => v.Cleanup(), 100);
 
 		static readonly char[]                  _nameSeparator = ['.'];
 
