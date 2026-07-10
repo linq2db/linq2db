@@ -384,7 +384,6 @@ namespace Tests.Linq
 			FSharp.Issue1813.Issue1813Test3(db);
 		}
 
-		[ActiveIssue("F# chained groupJoin+DefaultIfEmpty nests the 2nd join inside the 1st's SelectMany, losing the 1st DefaultIfEmpty's outer-join semantics: emits INNER JOIN LATERAL (drops unmatched rows) on LATERAL providers, untranslatable on SQLite (#1813 group B - core)")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1813")]
 		public void Issue1813Test4([DataSources] string context)
 		{

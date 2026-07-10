@@ -18,6 +18,11 @@ open LinqToDB.Internal.Reflection
 ///     the plain `Quote(lambda)` a C# `y => ...` would emit, with the free vars replaced by the captured outer
 ///     value-expressions. Without this the translator's UnwrapLambda casts the raw MethodCallExpression to
 ///     LambdaExpression and throws (issue #1813).
+///   * flattens the nested bind F# emits for chained `groupJoin ... into g; for x in g.DefaultIfEmpty()` -
+///       X.SelectMany(a => a.grp.DefaultIfEmpty().GroupJoin(...).tail, (a, r) => r)
+///     into the flat C#-equivalent chain X.SelectMany(a => a.grp.DefaultIfEmpty(), (a, x) => new(a, x)).GroupJoin(...).tail
+///     so the leading DefaultIfEmpty becomes a LEFT JOIN instead of being buried in a correlated subquery
+///     (rendered as INNER JOIN LATERAL, dropping rows, or untranslatable without LATERAL) - issue #1813.
 ///   * inlines the unnecessary block F# emits for record construction
 ///       { var x = expr1; new type(x, expr2) }  ->  new type(expr1, expr2)
 ///   * turns an F# record-copy update (`q.Update(p, fun r -> { r with Field = v })`) into the explicit
@@ -233,9 +238,114 @@ type private FSharpRewriteVisitor(mappingSchema: MappingSchema) =
             // before this rewrite existed), so only genuinely-matching F# quotation predicates are transformed.
             with _ -> None
 
+    // Unwrap a Quote'd lambda argument (Queryable methods) or return a bare lambda (Enumerable methods).
+    member private _.AsLambda (e: Expression) : LambdaExpression =
+        match e with
+        | :? UnaryExpression as u when u.NodeType = ExpressionType.Quote -> u.Operand :?> LambdaExpression
+        | :? LambdaExpression as l                                       -> l
+        | other                                                          -> other :?> LambdaExpression
+
+    // Flatten the nested bind F# emits for chained `groupJoin ... into g; for x in g.DefaultIfEmpty()`:
+    //   X.SelectMany(a => a.<grp>.DefaultIfEmpty().GroupJoin(...).<tail>, (a, r) => r)
+    // becomes the flat, C#-equivalent chain
+    //   X.SelectMany(a => a.<grp>.DefaultIfEmpty(), (a, x) => AnonObj(a, x)).GroupJoin(...).<tail>
+    // so the leading DefaultIfEmpty translates to a LEFT JOIN instead of being buried in a correlated
+    // enumerable subquery (which linq2db renders as INNER JOIN LATERAL - dropping unmatched rows - or cannot
+    // translate at all on providers without LATERAL). The hoisted tail operators, which F# emits as
+    // Enumerable.* over the group, are re-expressed as Queryable.* so they translate at the top level. One
+    // level per call; the visitor re-processes the result, so N chained joins normalize recursively (#1813).
+    member private this.TryFlattenNestedGroupJoin (node: MethodCallExpression) : Expression option =
+        if node.Method.Name <> "SelectMany" || node.Arguments.Count <> 3 then None
+        else
+        try
+            let res = this.AsLambda node.Arguments.[2]
+            // result selector must be the identity `(a, r) => r` (F#'s `for x in g.DefaultIfEmpty()` bind)
+            if res.Parameters.Count <> 2 || not (obj.ReferenceEquals(res.Body, res.Parameters.[1])) then None
+            else
+                let source = node.Arguments.[0]
+                let coll   = this.AsLambda node.Arguments.[1]
+                let a      = coll.Parameters.[0]
+
+                // locate the GroupJoin whose source is `a.<member>.DefaultIfEmpty()`
+                let rec findGj (e: Expression) : MethodCallExpression option =
+                    match e with
+                    | :? MethodCallExpression as mc ->
+                        let sourcedFromA =
+                            match mc.Arguments.[0] with
+                            | :? MethodCallExpression as dfe when dfe.Method.Name = "DefaultIfEmpty" && dfe.Arguments.Count >= 1 ->
+                                match dfe.Arguments.[0] with
+                                | :? MemberExpression as me -> obj.ReferenceEquals(me.Expression, a)
+                                | _                         -> false
+                            | _ -> false
+                        if   mc.Method.Name = "GroupJoin" && mc.Arguments.Count = 5 && sourcedFromA then Some mc
+                        elif mc.Arguments.Count >= 1                                                then findGj mc.Arguments.[0]
+                        else None
+                    | _ -> None
+
+                match findGj coll.Body with
+                | None -> None
+                | Some g ->
+                    let leftJoinSeq = g.Arguments.[0]                          // a.<member>.DefaultIfEmpty()
+                    let xType       = g.Method.GetGenericArguments().[0]       // element of leftJoinSeq
+                    let x           = Expression.Parameter(xType, "x")
+                    let pairType    = a.Type.GetGenericTypeDefinition().MakeGenericType([| a.Type; xType |])
+                    let pairCtor    = pairType.GetConstructors() |> Array.find (fun c -> c.GetParameters().Length = 2)
+
+                    // flat left join: X.SelectMany(a => leftJoinSeq, (a, x) => AnonObj(a, x))
+                    let flatMethod  = Methods.Queryable.SelectManyProjection.MakeGenericMethod(a.Type, xType, pairType)
+                    let collLambda  = Expression.Lambda(leftJoinSeq, [| a |])
+                    let resLambda   = Expression.Lambda(Expression.New(pairCtor, [| (a :> Expression); (x :> Expression) |]), [| a; x |])
+                    let flatSM      = Expression.Call(flatMethod, source, Expression.Quote collLambda, Expression.Quote resLambda) :> Expression
+
+                    // rebuild the GroupJoin over the pair sequence as Queryable, remapping a -> p.Item1, x -> p.Item2
+                    let p           = Expression.Parameter(pairType, "p")
+                    let pItem1      = Expression.Property(p, "Item1") :> Expression
+                    let pItem2      = Expression.Property(p, "Item2") :> Expression
+                    let ko          = this.AsLambda g.Arguments.[2]
+                    let ki          = this.AsLambda g.Arguments.[3]
+                    let kr          = this.AsLambda g.Arguments.[4]
+                    let ko'         = Expression.Lambda(ko.Body.Replace(a, pItem1).Replace(ko.Parameters.[0], pItem2), [| p |])
+                    let kr'         = Expression.Lambda(kr.Body.Replace(a, pItem1).Replace(kr.Parameters.[0], pItem2), [| p; kr.Parameters.[1] |])
+                    let gjArgs      = g.Method.GetGenericArguments()
+                    let gjMethod    = Methods.Queryable.GroupJoin.MakeGenericMethod(pairType, gjArgs.[1], gjArgs.[2], gjArgs.[3])
+                    let gPrime      = Expression.Call(gjMethod, flatSM, g.Arguments.[1], Expression.Quote ko', Expression.Quote ki, Expression.Quote kr') :> Expression
+
+                    // re-express an Enumerable.* tail operator (over the group) as its Queryable.* counterpart
+                    let toQueryable (mc: MethodCallExpression) (newSource: Expression) : Expression =
+                        let def  = mc.Method.GetGenericMethodDefinition()
+                        let qDef =
+                            if   def = Methods.Enumerable.SelectManyProjection then Methods.Queryable.SelectManyProjection
+                            elif def = Methods.Enumerable.SelectManySimple     then Methods.Queryable.SelectManySimple
+                            elif def = Methods.Enumerable.GroupJoin            then Methods.Queryable.GroupJoin
+                            elif def = Methods.Enumerable.Select               then Methods.Queryable.Select
+                            elif def = Methods.Enumerable.Where                then Methods.Queryable.Where
+                            else failwith "unsupported tail operator"
+                        let qMethod = qDef.MakeGenericMethod(mc.Method.GetGenericArguments())
+                        let args    =
+                            [| for i in 0 .. mc.Arguments.Count - 1 ->
+                                 if i = 0 then newSource
+                                 else match mc.Arguments.[i] with
+                                      | :? LambdaExpression as l -> Expression.Quote l :> Expression
+                                      | other                    -> other |]
+                        Expression.Call(qMethod, args) :> Expression
+
+                    // rethread the tail (everything wrapping the GroupJoin) onto gPrime, converting each op to Queryable
+                    let rec requery (e: Expression) : Expression =
+                        if obj.ReferenceEquals(e, g) then gPrime
+                        else
+                            match e with
+                            | :? MethodCallExpression as mc when mc.Arguments.Count >= 1 -> toQueryable mc (requery mc.Arguments.[0])
+                            | _ -> failwith "unexpected tail shape"
+
+                    Some (this.Visit (requery coll.Body) |> nonNull)
+        with _ -> None
+
     override this.VisitMethodCall(node: MethodCallExpression) =
         match this.TryReduceFSharpQuotation node with
         | Some reduced -> reduced
+        | None ->
+        match this.TryFlattenNestedGroupJoin node with
+        | Some flattened -> flattened
         | None ->
             let visited = base.VisitMethodCall node
             match visited with

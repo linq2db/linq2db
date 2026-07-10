@@ -142,11 +142,16 @@ let Issue1813Test4(db : IDataContext) =
 
     let result = query.Take(90) |> Seq.toArray
 
-    Assert.That(result, Has.Length.EqualTo(4))
-    Assert.That(result[0], Is.EqualTo( ({TradeValid.Id=1; DealNumber=2;ParcelGroupID=3;ParcelID=4}, {NominationValid.Id=1; DeliveryDealNumber=2;DeliveryParcelGroup=3;DeliveryParcelID=4; ReceiptDealNumber=9;ReceiptParcelGroup=9;ReceiptParcelID=9}, null) ) )
-    Assert.That(result[0], Is.EqualTo( ({TradeValid.Id=2; DealNumber=3;ParcelGroupID=4;ParcelID=5}, null, {NominationValid.Id=2; DeliveryDealNumber=9;DeliveryParcelGroup=9;DeliveryParcelID=9; ReceiptDealNumber=3;ReceiptParcelGroup=4;ReceiptParcelID=5}) ) )
-    Assert.That(result[0], Is.EqualTo( ({TradeValid.Id=3; DealNumber=5;ParcelGroupID=6;ParcelID=7}, {NominationValid.Id=3; DeliveryDealNumber=8;DeliveryParcelGroup=6;DeliveryParcelID=9; ReceiptDealNumber=3;ReceiptParcelGroup=4;ReceiptParcelID=5}, {NominationValid.Id=4; DeliveryDealNumber=2;DeliveryParcelGroup=3;DeliveryParcelID=4; ReceiptDealNumber=8;ReceiptParcelGroup=6;ReceiptParcelID=9}) ) )
-    Assert.That(result[0], Is.EqualTo( ({TradeValid.Id=4; DealNumber=8;ParcelGroupID=6;ParcelID=9}, null, null) ) )
+    // trade LEFT JOIN nom (Delivery) then LEFT JOIN nom (Receipt); x = Delivery match, y = Receipt match.
+    // Same result set as Test5 (join order does not change it): 6 rows. Compared order-tolerantly within a trade.
+    let key (n: NominationValid | null) = match n with | null -> 0 | nn -> nn.Id
+    let actual =
+        result
+        |> Array.map (fun (tr, x, y) -> sprintf "%d-%d-%d" tr.Id (key x) (key y))
+        |> Array.sort
+        |> String.concat ","
+
+    Assert.That(actual, Is.EqualTo "1-1-0,1-4-0,2-0-2,2-0-3,3-0-0,4-3-4")
 
 let Issue1813Test5(db : IDataContext) =
     use table1 = db.CreateLocalTable<TradeValid>()
