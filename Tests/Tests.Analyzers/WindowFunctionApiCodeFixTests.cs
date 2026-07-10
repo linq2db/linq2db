@@ -157,6 +157,122 @@ namespace Tests.Analyzers
 				""");
 
 		[Test]
+		public Task Keep()
+			=> Verify.VerifyAsync(
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					int M(int x) => {|LINQ2DB1001:Sql.Ext.Min(x).KeepFirst().OrderBy(x).Over().PartitionBy(x).ToValue()|};
+				}
+				""",
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					int M(int x) => Sql.Window.Min(x, f => f.KeepFirst().OrderBy(x).PartitionBy(x));
+				}
+				""");
+
+		[Test]
+		public Task Median()
+			=> Verify.VerifyAsync(
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					object? M(int x) => {|LINQ2DB1001:Sql.Ext.Median(x).Over().PartitionBy(x).ToValue()|};
+				}
+				""",
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					object? M(int x) => Sql.Window.Median(x, f => f.PartitionBy(x));
+				}
+				""");
+
+		[Test]
+		public Task RatioToReport()
+			=> Verify.VerifyAsync(
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					object? M(int x) => {|LINQ2DB1001:Sql.Ext.RatioToReport<double>(x).Over().PartitionBy(x).ToValue()|};
+				}
+				""",
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					object? M(int x) => Sql.Window.RatioToReport(x, f => f.PartitionBy(x));
+				}
+				""");
+
+		[Test]
+		public Task PercentileContWindowed()
+			=> Verify.VerifyAsync(
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					object? M(int x) => {|LINQ2DB1001:Sql.Ext.PercentileCont<double>(0.5).WithinGroup.OrderBy(x).Over().PartitionBy(x).ToValue()|};
+				}
+				""",
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					object? M(int x) => Sql.Window.PercentileCont(0.5, f => f.OrderBy(x).PartitionBy(x));
+				}
+				""");
+
+		[Test]
+		public Task PercentileDiscWindowed()
+			=> Verify.VerifyAsync(
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					object? M(int x) => {|LINQ2DB1001:Sql.Ext.PercentileDisc<double>(0.5).WithinGroup.OrderByDesc(x).Over().PartitionBy(x).ToValue()|};
+				}
+				""",
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					object? M(int x) => Sql.Window.PercentileDisc(0.5, f => f.OrderByDesc(x).PartitionBy(x));
+				}
+				""");
+
+		[Test]
+		public Task DoesNotOfferFixForGroupFormPercentile()
+		{
+			// WITHIN GROUP without OVER (the ordered-set group form) has no Sql.Window equivalent: reported, not fixed.
+			const string source = """
+				using LinqToDB;
+
+				class C
+				{
+					object? M(int x) => {|LINQ2DB1001:Sql.Ext.PercentileCont<double>(0.5).WithinGroup.OrderBy(x).ToValue()|};
+				}
+				""";
+
+			return Verify.VerifyAsync(source, source);
+		}
+
+		[Test]
 		public Task ConvertsInsideExpressionTree()
 			=> Verify.VerifyAsync(
 				"""

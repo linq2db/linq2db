@@ -30,8 +30,20 @@ namespace LinqToDB.Analyzers.CodeFixes
 			"RegrSlope", "RegrIntercept", "RegrCount", "RegrR2", "RegrAvgX", "RegrAvgY", "RegrSXX", "RegrSYY", "RegrSXY",
 		};
 
-		// Functions this rewriter converts. Irregular OVER shapes (Median/RatioToReport partition-only, windowed
-		// PercentileCont/Disc via WITHIN GROUP, KEEP) are intentionally excluded for now — they bail to no-fix.
+		// Aggregates that may take an Oracle KEEP (KeepFirst/KeepLast) modifier.
+		static readonly HashSet<string> KeepableFunctions = new(StringComparer.Ordinal)
+		{
+			"Sum", "Average", "Min", "Max", "Count", "LongCount",
+			"StdDev", "StdDevPop", "StdDevSamp", "Variance", "VarPop", "VarSamp",
+		};
+
+		// Functions whose OVER carries PARTITION BY only (order / frame are ignored).
+		static readonly HashSet<string> PartitionOnlyFunctions = new(StringComparer.Ordinal) { "Median", "RatioToReport" };
+
+		// Windowed ordered-set aggregates: WITHIN GROUP (ORDER BY ...) OVER (PARTITION BY ...).
+		static readonly HashSet<string> WindowedOrderedSetFunctions = new(StringComparer.Ordinal) { "PercentileCont", "PercentileDisc" };
+
+		// Every function this rewriter can convert (union of the uniform families and the special-shape ones).
 		static readonly HashSet<string> ConvertibleFunctions = new(StringComparer.Ordinal)
 		{
 			"RowNumber", "Rank", "DenseRank", "PercentRank", "CumeDist", "NTile",
@@ -41,22 +53,42 @@ namespace LinqToDB.Analyzers.CodeFixes
 			"RegrSlope", "RegrIntercept", "RegrCount", "RegrR2", "RegrAvgX", "RegrAvgY", "RegrSXX", "RegrSYY", "RegrSXY",
 			"Lead", "Lag",
 			"FirstValue", "LastValue", "NthValue",
+			"Median", "RatioToReport", "PercentileCont", "PercentileDisc",
 		};
+
+		sealed class OrderClause
+		{
+			public bool               IsDescending;
+			public ArgumentListSyntax Args = null!;
+		}
+
+		// One fluent step in the rebuilt builder lambda: a method call (Args != null) or a property access (Args == null).
+		readonly struct Step
+		{
+			public Step(string name, ArgumentListSyntax? args) { Name = name; Args = args; }
+			public string              Name { get; }
+			public ArgumentListSyntax? Args { get; }
+		}
 
 		public static ExpressionSyntax? TryRewrite(InvocationExpressionSyntax toValueInvocation, SemanticModel model, CancellationToken cancellationToken)
 		{
 			if (toValueInvocation.Expression is not MemberAccessExpressionSyntax toValueAccess)
 				return null;
 
-			// Collected, in ToValue -> root order (reversed to natural order before building).
-			var orderSegments = new List<(bool IsThen, bool IsDesc, ArgumentListSyntax Args)>();
+			// Collected walking ToValue -> root; ordering lists are reversed to natural order before building.
+			var orderClauses    = new List<OrderClause>();
+			List<OrderClause>? keepOrderClauses       = null;
+			List<OrderClause>? withinGroupOrderClauses = null;
+
 			ArgumentListSyntax? partitionArgs = null;
 
-			var    sawOver          = false;
-			var    frameSeen        = false;
-			var    frameIsRange     = false;
-			string? frameStart      = null;
-			string? frameEnd        = null;
+			var    sawOver     = false;
+			var    keepSeen    = false;
+			var    isKeepFirst = false;
+			var    frameSeen   = false;
+			var    frameIsRange = false;
+			string? frameStart = null;
+			string? frameEnd   = null;
 			ArgumentSyntax? frameStartValue = null;
 			ArgumentSyntax? frameEndValue   = null;
 
@@ -73,12 +105,22 @@ namespace LinqToDB.Analyzers.CodeFixes
 
 						var name = ma.Name.Identifier.Text;
 
-						// Root analytic function reached (declared directly on the AnalyticFunctions class).
+						// KeepFirst/KeepLast and the root analytic function are all declared on the AnalyticFunctions class.
 						if (IsAnalyticFunctionsClass(method.ContainingType))
 						{
+							if (name is "KeepFirst" or "KeepLast")
+							{
+								keepSeen        = true;
+								isKeepFirst     = string.Equals(name, "KeepFirst", StringComparison.Ordinal);
+								keepOrderClauses = orderClauses;              // orders collected so far belong to KEEP
+								orderClauses     = new List<OrderClause>();
+								current          = ma.Expression;
+								continue;
+							}
+
 							return BuildFromRoot(
-								toValueInvocation, inv, ma, method,
-								sawOver, partitionArgs, orderSegments,
+								toValueInvocation, inv, ma, method, sawOver,
+								partitionArgs, orderClauses, keepSeen, isKeepFirst, keepOrderClauses, withinGroupOrderClauses,
 								frameSeen, frameIsRange, frameStart, frameStartValue, frameEnd, frameEndValue);
 						}
 
@@ -94,7 +136,7 @@ namespace LinqToDB.Analyzers.CodeFixes
 								partitionArgs = inv.ArgumentList;
 								break;
 							case "OrderBy" or "OrderByDesc" or "ThenBy" or "ThenByDesc":
-								orderSegments.Add((name.StartsWith("Then", StringComparison.Ordinal), name.EndsWith("Desc", StringComparison.Ordinal), inv.ArgumentList));
+								orderClauses.Add(new OrderClause { IsDescending = name.EndsWith("Desc", StringComparison.Ordinal), Args = inv.ArgumentList });
 								break;
 							case "ValuePreceding" or "ValueFollowing":
 							{
@@ -105,8 +147,7 @@ namespace LinqToDB.Analyzers.CodeFixes
 								break;
 							}
 							default:
-								// KeepFirst/KeepLast, Filter, ListAgg, and anything unrecognized: no mechanical conversion.
-								return null;
+								return null; // Filter, ListAgg, and anything unrecognized: no mechanical conversion
 						}
 
 						current = ma.Expression;
@@ -132,7 +173,10 @@ namespace LinqToDB.Analyzers.CodeFixes
 							case "Between" or "And":
 								break; // markers
 							case "WithinGroup":
-								return null; // ordered-set (percentile) — not handled here
+								// Ordered-set: the OrderBy collected so far is the WITHIN GROUP order, not the OVER order.
+								withinGroupOrderClauses = orderClauses;
+								orderClauses            = new List<OrderClause>();
+								break;
 							case "UnboundedPreceding" or "UnboundedFollowing" or "CurrentRow":
 								frameSeen = true;
 								ApplyFrameBoundary(symbol.ContainingType, name, null, ref frameStart, ref frameStartValue, ref frameEnd, ref frameEndValue);
@@ -153,7 +197,6 @@ namespace LinqToDB.Analyzers.CodeFixes
 			return null;
 		}
 
-		// Maps a legacy boundary onto the new IBoundaryPart member, using the declaring interface to tell start from end.
 		static void ApplyFrameBoundary(
 			INamedTypeSymbol containingType, string legacyName, ArgumentSyntax? value,
 			ref string? frameStart, ref ArgumentSyntax? frameStartValue,
@@ -191,7 +234,8 @@ namespace LinqToDB.Analyzers.CodeFixes
 			IMethodSymbol rootMethod,
 			bool sawOver,
 			ArgumentListSyntax? partitionArgs,
-			List<(bool IsThen, bool IsDesc, ArgumentListSyntax Args)> orderSegments,
+			List<OrderClause> orderClauses,
+			bool keepSeen, bool isKeepFirst, List<OrderClause>? keepOrderClauses, List<OrderClause>? withinGroupOrderClauses,
 			bool frameSeen, bool frameIsRange, string? frameStart, ArgumentSyntax? frameStartValue, string? frameEnd, ArgumentSyntax? frameEndValue)
 		{
 			var functionName = rootAccess.Name.Identifier.Text;
@@ -216,9 +260,8 @@ namespace LinqToDB.Analyzers.CodeFixes
 				{
 					case "AggregateModifier":
 						var mod = EnumMemberName(rootArgs[i].Expression);
-						if (mod is null) return null;                 // non-literal modifier — can't map safely
+						if (mod is null) return null;
 						if (string.Equals(mod, "Distinct", StringComparison.Ordinal)) distinct = "Distinct";
-						// All / None are the SQL default -> dropped
 						break;
 					case "Nulls":
 						var nulls = EnumMemberName(rootArgs[i].Expression);
@@ -233,30 +276,75 @@ namespace LinqToDB.Analyzers.CodeFixes
 						if (string.Equals(from, "Last",  StringComparison.Ordinal)) fromPosition = "FromLast";
 						break;
 					case "NullsPosition":
-						break; // not used at the function level
+						break;
 					default:
 						valueArgs.Add(rootArgs[i]);
 						break;
 				}
 			}
 
-			// A frame is only valid on aggregate/value/statistical functions; otherwise bail to the legacy pipeline.
-			if (frameSeen && (frameStart is null || !FrameableFunctions.Contains(functionName)))
-				return null;
+			// Assemble the ordered builder steps for whichever function shape this is.
+			var steps = new List<Step>();
 
-			orderSegments.Reverse();
+			if (keepSeen)
+			{
+				// KEEP: f.KeepFirst()/KeepLast().OrderBy(...)[.ThenBy...].PartitionBy(...)   (order is mandatory)
+				if (!KeepableFunctions.Contains(functionName) || keepOrderClauses is not { Count: > 0 })
+					return null;
 
-			// --- Build the builder lambda body with placeholder args, format the scaffold, then splice originals. ---
+				steps.Add(new Step(isKeepFirst ? "KeepFirst" : "KeepLast", SyntaxFactory.ArgumentList()));
+				AddOrderSteps(steps, keepOrderClauses);
+				if (partitionArgs is not null)
+					steps.Add(new Step("PartitionBy", partitionArgs));
+			}
+			else if (PartitionOnlyFunctions.Contains(functionName))
+			{
+				// Median / RatioToReport: OVER carries PARTITION BY only (order / frame ignored).
+				if (valueArgs.Count == 0)
+					return null;
+				if (partitionArgs is not null)
+					steps.Add(new Step("PartitionBy", partitionArgs));
+			}
+			else if (WindowedOrderedSetFunctions.Contains(functionName))
+			{
+				// PercentileCont/Disc: f.OrderBy(k)[.ThenBy...].PartitionBy(...). The within-group order is mandatory;
+				// the group form (no OVER) already bailed above via !sawOver.
+				if (valueArgs.Count == 0 || withinGroupOrderClauses is not { Count: > 0 })
+					return null;
+
+				// PercentileCont takes a single ordering key; only PercentileDisc allows several.
+				if (string.Equals(functionName, "PercentileCont", StringComparison.Ordinal) && withinGroupOrderClauses.Count > 1)
+					return null;
+
+				AddOrderSteps(steps, withinGroupOrderClauses);
+				if (partitionArgs is not null)
+					steps.Add(new Step("PartitionBy", partitionArgs));
+			}
+			else
+			{
+				// Uniform families: [Distinct][From][Nulls][PartitionBy][order...][frame].
+				if (frameSeen && (frameStart is null || !FrameableFunctions.Contains(functionName)))
+					return null;
+
+				if (distinct      is not null) steps.Add(new Step("Distinct",      SyntaxFactory.ArgumentList()));
+				if (fromPosition  is not null) steps.Add(new Step(fromPosition,    SyntaxFactory.ArgumentList()));
+				if (nullTreatment is not null) steps.Add(new Step(nullTreatment,   SyntaxFactory.ArgumentList()));
+				if (partitionArgs is not null) steps.Add(new Step("PartitionBy",   partitionArgs));
+
+				AddOrderSteps(steps, orderClauses);
+			}
+
+			// --- Emit: build the scaffold with placeholder args, format it, then splice the originals back in. ---
 			var placeholders = new Dictionary<string, SyntaxNode>(StringComparer.Ordinal);
 			var counter      = 0;
 
-			string NextPlaceholderId() => "__l2db_" + counter++.ToString(CultureInfo.InvariantCulture);
+			string NextId() => "__l2db_" + counter++.ToString(CultureInfo.InvariantCulture);
 
 			ArgumentListSyntax Placeholderize(ArgumentListSyntax original)
 			{
 				var args = original.Arguments.Select(a =>
 				{
-					var id = NextPlaceholderId();
+					var id = NextId();
 					placeholders[id] = a.Expression;
 					return a.WithExpression(SyntaxFactory.IdentifierName(id));
 				});
@@ -265,49 +353,35 @@ namespace LinqToDB.Analyzers.CodeFixes
 
 			ArgumentSyntax PlaceholderizeArg(ArgumentSyntax original)
 			{
-				var id = NextPlaceholderId();
+				var id = NextId();
 				placeholders[id] = original.Expression;
 				return original.WithExpression(SyntaxFactory.IdentifierName(id));
 			}
 
 			ExpressionSyntax body = SyntaxFactory.IdentifierName("f");
 
-			ExpressionSyntax Call(string method, ArgumentListSyntax args)
-				=> SyntaxFactory.InvocationExpression(SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, body, SyntaxFactory.IdentifierName(method)), args);
+			foreach (var step in steps)
+				body = step.Args is null
+					? SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, body, SyntaxFactory.IdentifierName(step.Name))
+					: SyntaxFactory.InvocationExpression(SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, body, SyntaxFactory.IdentifierName(step.Name)), Placeholderize(step.Args));
 
-			ExpressionSyntax Prop(string name)
-				=> SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, body, SyntaxFactory.IdentifierName(name));
-
-			if (distinct      is not null) body = Call(distinct,      SyntaxFactory.ArgumentList());
-			if (fromPosition  is not null) body = Call(fromPosition,  SyntaxFactory.ArgumentList());
-			if (nullTreatment is not null) body = Call(nullTreatment, SyntaxFactory.ArgumentList());
-
-			if (partitionArgs is not null)
-				body = Call("PartitionBy", Placeholderize(partitionArgs));
-
-			foreach (var (_, isDesc, args) in orderSegments)
+			if (frameSeen && !keepSeen && !PartitionOnlyFunctions.Contains(functionName) && !WindowedOrderedSetFunctions.Contains(functionName))
 			{
-				// First ordering uses OrderBy/OrderByDesc; subsequent ones ThenBy/ThenByDesc.
-				var isFirst = ReferenceEquals(args, orderSegments[0].Args);
-				var method  = (isFirst ? "OrderBy" : "ThenBy") + (isDesc ? "Desc" : "");
-				body = Call(method, Placeholderize(args));
-			}
+				ExpressionSyntax Prop(string name) => SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, body, SyntaxFactory.IdentifierName(name));
 
-			if (frameSeen)
-			{
 				body = Prop(frameIsRange ? "RangeBetween" : "RowsBetween");
 				body = frameStartValue is not null
-					? Call(frameStart!, SyntaxFactory.ArgumentList(SyntaxFactory.SingletonSeparatedList(PlaceholderizeArg(frameStartValue))))
+					? SyntaxFactory.InvocationExpression((MemberAccessExpressionSyntax)Prop(frameStart!), SyntaxFactory.ArgumentList(SyntaxFactory.SingletonSeparatedList(PlaceholderizeArg(frameStartValue))))
 					: Prop(frameStart!);
 				body = Prop("And");
 				var endMember = frameEnd ?? "CurrentRow"; // single-boundary legacy form -> ... And CurrentRow
 				body = frameEndValue is not null
-					? Call(endMember, SyntaxFactory.ArgumentList(SyntaxFactory.SingletonSeparatedList(PlaceholderizeArg(frameEndValue))))
+					? SyntaxFactory.InvocationExpression((MemberAccessExpressionSyntax)Prop(endMember), SyntaxFactory.ArgumentList(SyntaxFactory.SingletonSeparatedList(PlaceholderizeArg(frameEndValue))))
 					: Prop(endMember);
 			}
 
 			// Sql.Window.<Fn>(<valueArgs>, f => <body>) — reuse the user's Sql qualifier from `<Sql>.Ext`.
-			var sqlQualifier = ((MemberAccessExpressionSyntax)rootAccess.Expression).Expression; // the `Sql` (or `LinqToDB.Sql`) part
+			var sqlQualifier = ((MemberAccessExpressionSyntax)rootAccess.Expression).Expression;
 			var windowAccess = SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
 				SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, sqlQualifier.WithoutTrivia(), SyntaxFactory.IdentifierName("Window")),
 				SyntaxFactory.IdentifierName(functionName));
@@ -321,16 +395,12 @@ namespace LinqToDB.Analyzers.CodeFixes
 
 			ExpressionSyntax newExpression = SyntaxFactory.InvocationExpression(windowAccess, SyntaxFactory.ArgumentList(SyntaxFactory.SeparatedList(callArgs)));
 
-			// Format the freshly-built scaffold, then splice the original argument subtrees back in (restoring their
-			// trivia — e.g. comments on arguments).
 			newExpression = newExpression.NormalizeWhitespace();
 			newExpression = newExpression.ReplaceNodes(
 				newExpression.DescendantNodes().OfType<IdentifierNameSyntax>().Where(n => placeholders.ContainsKey(n.Identifier.Text)),
 				(original, _) => placeholders[original.Identifier.Text]);
 
-			// Preserve the whole expression's outer (leading/trailing) trivia, and salvage any comments that lived
-			// on the original chain's scaffolding (between calls) so the rewrite loses no comment. Comments already
-			// inside a reused argument subtree are kept in place, so they're excluded here to avoid duplication.
+			// Preserve outer trivia and salvage any comments that lived on the original chain's scaffolding so none is lost.
 			var firstToken = toValueInvocation.GetFirstToken();
 			var lastToken  = toValueInvocation.GetLastToken();
 
@@ -356,7 +426,18 @@ namespace LinqToDB.Analyzers.CodeFixes
 			return newExpression.WithTrailingTrivia(SyntaxFactory.TriviaList(trailing));
 		}
 
-		// The simple member name of an enum literal like `Sql.AggregateModifier.Distinct` (-> "Distinct"); null if not a plain member access.
+		// Appends OrderBy/ThenBy(+Desc) steps: the first ordering uses OrderBy, subsequent ones ThenBy.
+		static void AddOrderSteps(List<Step> steps, List<OrderClause> clauses)
+		{
+			var natural = Enumerable.Reverse(clauses).ToList(); // collected ToValue->root; natural order is the reverse
+
+			for (var i = 0; i < natural.Count; i++)
+			{
+				var method = (i == 0 ? "OrderBy" : "ThenBy") + (natural[i].IsDescending ? "Desc" : "");
+				steps.Add(new Step(method, natural[i].Args));
+			}
+		}
+
 		static string? EnumMemberName(ExpressionSyntax expression)
 			=> expression is MemberAccessExpressionSyntax ma ? ma.Name.Identifier.Text : null;
 
