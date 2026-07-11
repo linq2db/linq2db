@@ -677,6 +677,194 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return element;
 		}
 
+		protected internal virtual IQueryElement VisitSqlUnpivotTable(SqlUnpivotTable element)
+		{
+			switch (GetVisitMode(element))
+			{
+				case VisitMode.ReadOnly:
+				{
+					Visit(element.PivotSource);
+
+					foreach (var item in element.Items)
+						foreach (var column in item.Columns)
+							Visit(column);
+
+					break;
+				}
+				case VisitMode.Modify:
+				{
+					element.PivotSource = (ISqlTableSource)Visit(element.PivotSource)!;
+
+					foreach (var item in element.Items)
+						for (var i = 0; i < item.Columns.Count; i++)
+							item.Columns[i] = (ISqlExpression)Visit(item.Columns[i])!;
+
+					break;
+				}
+				case VisitMode.Transform:
+				{
+					var source = (ISqlTableSource)Visit(element.PivotSource)!;
+
+					var itemsChanged = false;
+					var newItems     = new List<SqlUnpivotItem>(element.Items.Count);
+
+					foreach (var item in element.Items)
+					{
+						var columnsChanged = false;
+						var newColumns     = new ISqlExpression[item.Columns.Count];
+
+						for (var i = 0; i < item.Columns.Count; i++)
+						{
+							newColumns[i]   = (ISqlExpression)Visit(item.Columns[i])!;
+							columnsChanged |= !ReferenceEquals(newColumns[i], item.Columns[i]);
+						}
+
+						itemsChanged |= columnsChanged;
+						newItems.Add(columnsChanged ? new SqlUnpivotItem(item.Label, newColumns) : item);
+					}
+
+					if (ShouldReplace(element) || !ReferenceEquals(element.PivotSource, source) || itemsChanged)
+					{
+						var oldFields = element.OutputFields;
+						var newFields = CopyFields(oldFields);
+						var newTable  = new SqlUnpivotTable(element.SourceID, source, element.IncludeNulls);
+
+						var map = new Dictionary<SqlField, SqlField>(oldFields.Count);
+						for (var i = 0; i < oldFields.Count; i++)
+						{
+							newTable.AddField(newFields[i]);
+							map[oldFields[i]] = newFields[i];
+						}
+
+						newTable.NameField = map[element.NameField];
+
+						foreach (var valueField in element.ValueFields)
+							newTable.ValueFields.Add(map[valueField]);
+
+						newTable.Items.AddRange(newItems);
+
+						return NotifyReplaced(newTable, element);
+					}
+
+					break;
+				}
+				default:
+					return ThrowInvalidVisitModeException();
+			}
+
+			return element;
+		}
+
+		protected internal virtual IQueryElement VisitSqlPivotTable(SqlPivotTable element)
+		{
+			switch (GetVisitMode(element))
+			{
+				case VisitMode.ReadOnly:
+				{
+					Visit(element.PivotSource);
+
+					foreach (var agg in element.Aggregates)
+					{
+						Visit(agg.Value);
+
+						foreach (var forColumn in agg.ForColumns)
+							Visit(forColumn);
+
+						foreach (var value in agg.Values)
+							foreach (var forValue in value.ForValues)
+								Visit(forValue);
+					}
+
+					break;
+				}
+				case VisitMode.Modify:
+				{
+					element.PivotSource = (ISqlTableSource)Visit(element.PivotSource)!;
+
+					foreach (var agg in element.Aggregates)
+					{
+						agg.Value = (ISqlExpression)Visit(agg.Value)!;
+
+						for (var i = 0; i < agg.ForColumns.Count; i++)
+							agg.ForColumns[i] = (ISqlExpression)Visit(agg.ForColumns[i])!;
+
+						foreach (var value in agg.Values)
+							for (var i = 0; i < value.ForValues.Count; i++)
+								value.ForValues[i] = (ISqlExpression)Visit(value.ForValues[i])!;
+					}
+
+					break;
+				}
+				case VisitMode.Transform:
+				{
+					var source            = (ISqlTableSource)Visit(element.PivotSource)!;
+					var aggregatesChanged = false;
+					var newAggregates     = new List<SqlPivotAggregate>(element.Aggregates.Count);
+
+					foreach (var agg in element.Aggregates)
+					{
+						var newValue = (ISqlExpression)Visit(agg.Value)!;
+						var changed  = !ReferenceEquals(newValue, agg.Value);
+
+						var newForColumns = new ISqlExpression[agg.ForColumns.Count];
+						for (var i = 0; i < agg.ForColumns.Count; i++)
+						{
+							newForColumns[i] = (ISqlExpression)Visit(agg.ForColumns[i])!;
+							changed         |= !ReferenceEquals(newForColumns[i], agg.ForColumns[i]);
+						}
+
+						var newAgg = new SqlPivotAggregate(agg.AggregationName, newValue, newForColumns);
+
+						foreach (var value in agg.Values)
+						{
+							var newForValues = new ISqlExpression[value.ForValues.Count];
+							for (var i = 0; i < value.ForValues.Count; i++)
+							{
+								newForValues[i] = (ISqlExpression)Visit(value.ForValues[i])!;
+								changed        |= !ReferenceEquals(newForValues[i], value.ForValues[i]);
+							}
+
+							newAgg.Values.Add(new SqlPivotValue(newForValues, value.OutputField));
+						}
+
+						aggregatesChanged |= changed;
+						newAggregates.Add(newAgg);
+					}
+
+					if (ShouldReplace(element) || !ReferenceEquals(element.PivotSource, source) || aggregatesChanged)
+					{
+						var oldFields = element.OutputFields;
+						var newFields = CopyFields(oldFields);
+						var newTable  = new SqlPivotTable(element.SourceID, source);
+
+						var map = new Dictionary<SqlField, SqlField>(oldFields.Count);
+						for (var i = 0; i < oldFields.Count; i++)
+						{
+							newTable.AddField(newFields[i]);
+							map[oldFields[i]] = newFields[i];
+						}
+
+						foreach (var keyField in element.KeyFields)
+							newTable.KeyFields.Add(map[keyField]);
+
+						foreach (var agg in newAggregates)
+							foreach (var value in agg.Values)
+								value.OutputField = map[value.OutputField];
+
+						newTable.Aggregates.AddRange(newAggregates);
+
+						return NotifyReplaced(newTable, element);
+					}
+
+					break;
+				}
+				default:
+					return ThrowInvalidVisitModeException();
+			}
+
+			return element;
+		}
+
 		protected internal virtual IQueryElement VisitSqlTruncateTableStatement(SqlTruncateTableStatement element)
 		{
 			switch (GetVisitMode(element))

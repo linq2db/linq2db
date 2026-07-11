@@ -88,6 +88,11 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			SqlProviderFlags.IsInsertOrUpdateWithPredicateSupported = Version > SqlServerVersion.v2005;
 			SqlProviderFlags.IsUpsertWithMergeLoweringSupported     = Version > SqlServerVersion.v2005;
 
+			// PIVOT/UNPIVOT available since SQL Server 2005 (the minimum modelled version), single-FOR /
+			// single-value only — composite-FOR and multi-value unpivot are lowered to CASE / UNION ALL.
+			SqlProviderFlags.IsPivotSupported                       = true;
+			SqlProviderFlags.IsUnpivotSupported                     = true;
+
 			SetCharField("char", (r, i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("nchar", (r, i) => r.GetString(i).TrimEnd(' '));
 			SetCharFieldToType<char>("char", DataTools.GetCharExpression);

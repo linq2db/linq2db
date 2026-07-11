@@ -1122,3 +1122,80 @@ LinqToDB.Internal.Common.ObjectPool<T>.RentedElement.RentedElement(LinqToDB.Inte
 readonly LinqToDB.Internal.Common.ObjectPool<T>.RentedElement.Value -> T!
 ~LinqToDB.Internal.Common.ObjectPool<T>.Allocate() -> LinqToDB.Internal.Common.ObjectPool<T>.RentedElement
 *REMOVED*LinqToDB.Internal.SqlQuery.SqlRawSqlTable.SqlRawSqlTable(LinqToDB.Internal.SqlQuery.SqlRawSqlTable! table, LinqToDB.Internal.SqlQuery.ISqlExpression![]! parameters) -> void
+LinqToDB.IPivotBuilder<TSource>
+LinqToDB.IPivotBuilder<TSource>.Avg<TValue, TFor>(System.Linq.Expressions.Expression<System.Func<TSource, TValue>!>! value, System.Linq.Expressions.Expression<System.Func<TSource, TFor>!>! forColumn, TFor forValue) -> double?
+LinqToDB.IPivotBuilder<TSource>.Count<TValue, TFor>(System.Linq.Expressions.Expression<System.Func<TSource, TValue>!>! value, System.Linq.Expressions.Expression<System.Func<TSource, TFor>!>! forColumn, TFor forValue) -> int
+LinqToDB.IPivotBuilder<TSource>.Key.get -> TSource
+LinqToDB.IPivotBuilder<TSource>.Max<TValue, TFor>(System.Linq.Expressions.Expression<System.Func<TSource, TValue>!>! value, System.Linq.Expressions.Expression<System.Func<TSource, TFor>!>! forColumn, TFor forValue) -> TValue
+LinqToDB.IPivotBuilder<TSource>.Min<TValue, TFor>(System.Linq.Expressions.Expression<System.Func<TSource, TValue>!>! value, System.Linq.Expressions.Expression<System.Func<TSource, TFor>!>! forColumn, TFor forValue) -> TValue
+LinqToDB.IPivotBuilder<TSource>.Sum<TValue, TFor>(System.Linq.Expressions.Expression<System.Func<TSource, TValue>!>! value, System.Linq.Expressions.Expression<System.Func<TSource, TFor>!>! forColumn, TFor forValue) -> TValue
+LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsMultiColumnPivotSupported.get -> bool
+LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsMultiColumnPivotSupported.set -> void
+LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsMultiValueUnpivotSupported.get -> bool
+LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsMultiValueUnpivotSupported.set -> void
+LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsPivotSupported.get -> bool
+LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsPivotSupported.set -> void
+LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsUnpivotSupported.get -> bool
+LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsUnpivotSupported.set -> void
+LinqToDB.Internal.SqlQuery.QueryElementType.SqlPivotTable = 84 -> LinqToDB.Internal.SqlQuery.QueryElementType
+LinqToDB.Internal.SqlQuery.QueryElementType.SqlUnpivotTable = 85 -> LinqToDB.Internal.SqlQuery.QueryElementType
+LinqToDB.Internal.SqlQuery.SqlPivotAggregate
+LinqToDB.Internal.SqlQuery.SqlPivotAggregate.AggregationName.get -> string!
+LinqToDB.Internal.SqlQuery.SqlPivotAggregate.ForColumns.get -> System.Collections.Generic.List<LinqToDB.Internal.SqlQuery.ISqlExpression!>!
+LinqToDB.Internal.SqlQuery.SqlPivotAggregate.SqlPivotAggregate(string! aggregationName, LinqToDB.Internal.SqlQuery.ISqlExpression! value, System.Collections.Generic.IEnumerable<LinqToDB.Internal.SqlQuery.ISqlExpression!>! forColumns) -> void
+LinqToDB.Internal.SqlQuery.SqlPivotAggregate.Value.get -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+LinqToDB.Internal.SqlQuery.SqlPivotAggregate.Values.get -> System.Collections.Generic.List<LinqToDB.Internal.SqlQuery.SqlPivotValue!>!
+LinqToDB.Internal.SqlQuery.SqlPivotTable
+LinqToDB.Internal.SqlQuery.SqlPivotTable.Aggregates.get -> System.Collections.Generic.List<LinqToDB.Internal.SqlQuery.SqlPivotAggregate!>!
+LinqToDB.Internal.SqlQuery.SqlPivotTable.KeyFields.get -> System.Collections.Generic.List<LinqToDB.Internal.SqlQuery.SqlField!>!
+LinqToDB.Internal.SqlQuery.SqlPivotTable.SqlPivotTable(LinqToDB.Internal.SqlQuery.ISqlTableSource! source) -> void
+LinqToDB.Internal.SqlQuery.SqlPivotTableBase
+LinqToDB.Internal.SqlQuery.SqlPivotTableBase.AddField(LinqToDB.Internal.SqlQuery.SqlField! field) -> void
+LinqToDB.Internal.SqlQuery.SqlPivotTableBase.OutputFields.get -> System.Collections.Generic.List<LinqToDB.Internal.SqlQuery.SqlField!>!
+LinqToDB.Internal.SqlQuery.SqlPivotTableBase.PivotSource.get -> LinqToDB.Internal.SqlQuery.ISqlTableSource!
+LinqToDB.Internal.SqlQuery.SqlPivotTableBase.SqlPivotTableBase(LinqToDB.Internal.SqlQuery.ISqlTableSource! source) -> void
+LinqToDB.Internal.SqlQuery.SqlPivotTableBase.SqlPivotTableBase(int id, LinqToDB.Internal.SqlQuery.ISqlTableSource! source) -> void
+LinqToDB.Internal.SqlQuery.SqlPivotValue
+LinqToDB.Internal.SqlQuery.SqlPivotValue.ForValues.get -> System.Collections.Generic.List<LinqToDB.Internal.SqlQuery.ISqlExpression!>!
+LinqToDB.Internal.SqlQuery.SqlPivotValue.OutputField.get -> LinqToDB.Internal.SqlQuery.SqlField!
+LinqToDB.Internal.SqlQuery.SqlPivotValue.SqlPivotValue(System.Collections.Generic.IEnumerable<LinqToDB.Internal.SqlQuery.ISqlExpression!>! forValues, LinqToDB.Internal.SqlQuery.SqlField! outputField) -> void
+LinqToDB.Internal.SqlQuery.SqlTableType.Pivot = 8 -> LinqToDB.Internal.SqlQuery.SqlTableType
+LinqToDB.Internal.SqlQuery.SqlTableType.Unpivot = 9 -> LinqToDB.Internal.SqlQuery.SqlTableType
+LinqToDB.Internal.SqlQuery.SqlUnpivotItem
+LinqToDB.Internal.SqlQuery.SqlUnpivotItem.Columns.get -> System.Collections.Generic.List<LinqToDB.Internal.SqlQuery.ISqlExpression!>!
+LinqToDB.Internal.SqlQuery.SqlUnpivotItem.Label.get -> string!
+LinqToDB.Internal.SqlQuery.SqlUnpivotItem.SqlUnpivotItem(string! label, System.Collections.Generic.IEnumerable<LinqToDB.Internal.SqlQuery.ISqlExpression!>! columns) -> void
+LinqToDB.Internal.SqlQuery.SqlUnpivotTable
+LinqToDB.Internal.SqlQuery.SqlUnpivotTable.IncludeNulls.get -> bool
+LinqToDB.Internal.SqlQuery.SqlUnpivotTable.Items.get -> System.Collections.Generic.List<LinqToDB.Internal.SqlQuery.SqlUnpivotItem!>!
+LinqToDB.Internal.SqlQuery.SqlUnpivotTable.NameField.get -> LinqToDB.Internal.SqlQuery.SqlField!
+LinqToDB.Internal.SqlQuery.SqlUnpivotTable.SqlUnpivotTable(LinqToDB.Internal.SqlQuery.ISqlTableSource! source, bool includeNulls) -> void
+LinqToDB.Internal.SqlQuery.SqlUnpivotTable.ValueFields.get -> System.Collections.Generic.List<LinqToDB.Internal.SqlQuery.SqlField!>!
+LinqToDB.UnpivotNulls
+LinqToDB.UnpivotNulls.ExcludeNulls = 0 -> LinqToDB.UnpivotNulls
+LinqToDB.UnpivotNulls.IncludeNulls = 1 -> LinqToDB.UnpivotNulls
+override LinqToDB.Internal.SqlQuery.SqlPivotTable.Accept(LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor! visitor) -> LinqToDB.Internal.SqlQuery.IQueryElement!
+override LinqToDB.Internal.SqlQuery.SqlPivotTable.ElementType.get -> LinqToDB.Internal.SqlQuery.QueryElementType
+override LinqToDB.Internal.SqlQuery.SqlPivotTable.GetElementHashCode() -> int
+override LinqToDB.Internal.SqlQuery.SqlPivotTable.SqlTableType.get -> LinqToDB.Internal.SqlQuery.SqlTableType
+override LinqToDB.Internal.SqlQuery.SqlPivotTable.ToString(LinqToDB.Internal.SqlQuery.QueryElementTextWriter! writer) -> LinqToDB.Internal.SqlQuery.QueryElementTextWriter!
+override LinqToDB.Internal.SqlQuery.SqlPivotTableBase.All.get -> LinqToDB.Internal.SqlQuery.SqlField!
+override LinqToDB.Internal.SqlQuery.SqlPivotTableBase.CanBeNullable(LinqToDB.Internal.SqlQuery.NullabilityContext! nullability) -> bool
+override LinqToDB.Internal.SqlQuery.SqlPivotTableBase.Equals(LinqToDB.Internal.SqlQuery.ISqlExpression! other, System.Func<LinqToDB.Internal.SqlQuery.ISqlExpression!, LinqToDB.Internal.SqlQuery.ISqlExpression!, bool>! comparer) -> bool
+override LinqToDB.Internal.SqlQuery.SqlPivotTableBase.Equals(LinqToDB.Internal.SqlQuery.ISqlExpression? other) -> bool
+override LinqToDB.Internal.SqlQuery.SqlPivotTableBase.GetKeys(bool allIfEmpty) -> System.Collections.Generic.IList<LinqToDB.Internal.SqlQuery.ISqlExpression!>!
+override LinqToDB.Internal.SqlQuery.SqlPivotTableBase.Precedence.get -> int
+override LinqToDB.Internal.SqlQuery.SqlPivotTableBase.Source.get -> LinqToDB.Internal.SqlQuery.ISqlTableSource!
+override LinqToDB.Internal.SqlQuery.SqlPivotTableBase.SystemType.get -> System.Type!
+override LinqToDB.Internal.SqlQuery.SqlUnpivotTable.Accept(LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor! visitor) -> LinqToDB.Internal.SqlQuery.IQueryElement!
+override LinqToDB.Internal.SqlQuery.SqlUnpivotTable.ElementType.get -> LinqToDB.Internal.SqlQuery.QueryElementType
+override LinqToDB.Internal.SqlQuery.SqlUnpivotTable.GetElementHashCode() -> int
+override LinqToDB.Internal.SqlQuery.SqlUnpivotTable.SqlTableType.get -> LinqToDB.Internal.SqlQuery.SqlTableType
+override LinqToDB.Internal.SqlQuery.SqlUnpivotTable.ToString(LinqToDB.Internal.SqlQuery.QueryElementTextWriter! writer) -> LinqToDB.Internal.SqlQuery.QueryElementTextWriter!
+static LinqToDB.LinqExtensions.Pivot<TSource, TResult>(this System.Linq.IQueryable<TSource>! source, System.Linq.Expressions.Expression<System.Func<LinqToDB.IPivotBuilder<TSource>!, TResult>!>! pivot) -> System.Linq.IQueryable<TResult>!
+static LinqToDB.LinqExtensions.Unpivot<TSource, TValue, TResult>(this System.Linq.IQueryable<TSource>! source, LinqToDB.UnpivotNulls nulls, System.Linq.Expressions.Expression<System.Func<TSource, string!, TValue, TResult>!>! resultSelector, System.Linq.Expressions.Expression<System.Func<TSource, TValue>!>! column, params System.Linq.Expressions.Expression<System.Func<TSource, TValue>!>![]! columns) -> System.Linq.IQueryable<TResult>!
+static LinqToDB.LinqExtensions.Unpivot<TSource, TValue, TResult>(this System.Linq.IQueryable<TSource>! source, System.Linq.Expressions.Expression<System.Func<TSource, string!, TValue, TResult>!>! resultSelector, System.Linq.Expressions.Expression<System.Func<TSource, TValue>!>! column, params System.Linq.Expressions.Expression<System.Func<TSource, TValue>!>![]! columns) -> System.Linq.IQueryable<TResult>!
+virtual LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildPivotTable(LinqToDB.Internal.SqlQuery.SqlPivotTable! pivot) -> void
+virtual LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildUnpivotTable(LinqToDB.Internal.SqlQuery.SqlUnpivotTable! unpivot) -> void
+virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlPivotTable(LinqToDB.Internal.SqlQuery.SqlPivotTable! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
+virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlUnpivotTable(LinqToDB.Internal.SqlQuery.SqlUnpivotTable! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
