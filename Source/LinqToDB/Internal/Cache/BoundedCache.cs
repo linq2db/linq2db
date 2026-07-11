@@ -47,19 +47,30 @@ namespace LinqToDB.Internal.Cache
 				CacheRegistry.Register(this);
 		}
 
-		static ICache<TKey,TValue> Build(int capacity, TimeSpan? ttl, CacheEvictionPolicy policy)
+		static ICache<TKey,TValue> Build(int capacity, TimeSpan? expireAfterAccess, CacheEvictionPolicy policy)
 		{
-			return policy switch
-			{
-				CacheEvictionPolicy.Lfu => new ConcurrentLfu<TKey,TValue>(capacity),
-				_ when ttl.HasValue     => new ConcurrentTLru<TKey,TValue>(capacity, ttl.Value),
-				_                       => new ConcurrentLru<TKey,TValue>(capacity),
-			};
+			if (policy == CacheEvictionPolicy.Lfu)
+				return new ConcurrentLfu<TKey,TValue>(capacity);
+
+			// Sliding expiration (reset on access) matches the retired MemoryCache clone's SlidingExpiration;
+			// it needs the builder — the ConcurrentTLru direct ctor is expire-after-write, not sliding.
+			if (expireAfterAccess.HasValue)
+				return new ConcurrentLruBuilder<TKey,TValue>()
+					.WithCapacity(capacity)
+					.WithExpireAfterAccess(expireAfterAccess.Value)
+					.Build();
+
+			return new ConcurrentLru<TKey,TValue>(capacity);
 		}
 
 		/// <summary>Returns the cached value, creating and caching it via <paramref name="valueFactory"/> on a miss.</summary>
 		public TValue GetOrAdd(TKey key, Func<TKey,TValue> valueFactory)
 			=> _cache.GetOrAdd(key, valueFactory);
+
+		/// <summary>Returns the cached value, creating it via <paramref name="valueFactory"/> on a miss. The
+		/// <paramref name="factoryArgument"/> lets callers pass state without allocating a closure per call.</summary>
+		public TValue GetOrAdd<TArg>(TKey key, Func<TKey,TArg,TValue> valueFactory, TArg factoryArgument)
+			=> _cache.GetOrAdd(key, valueFactory, factoryArgument);
 
 		/// <summary>Attempts to get the value for <paramref name="key"/> without creating it.</summary>
 		public bool TryGet(TKey key, out TValue value)
