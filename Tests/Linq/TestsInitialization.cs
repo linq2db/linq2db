@@ -261,7 +261,7 @@ public class TestsInitialization
 			try { cs = LinqToDB.Data.DataConnection.GetConnectionString(name); }
 			catch { continue; }
 
-			if (cs == null || cs.IndexOf("memory", StringComparison.OrdinalIgnoreCase) < 0)
+			if (cs == null || cs.IndexOf("mode=memory", StringComparison.OrdinalIgnoreCase) < 0)
 				continue; // file-based -> nothing to keep alive
 
 			DbConnection keep = classic
@@ -303,6 +303,12 @@ public class TestsInitialization
 
 		if (cs == null || cs.IndexOf(":memory:", StringComparison.OrdinalIgnoreCase) < 0)
 			return; // file-based -> nothing to do
+
+		// DuckDB in-memory is CI-only (the tracked DataProviders.json default stays file-based). Unlike
+		// SQLite, DuckDB can't preload the in-memory DB from its committed on-disk file (COPY FROM DATABASE
+		// fails on FK ordering), so the shared in-memory catalog is only ever seeded by a_CreateData. CI
+		// always runs the full suite, so a_CreateData seeds it first; a filtered run against an in-memory
+		// DuckDB would see an empty DB — which is why the default is left file-based for local/filtered runs.
 
 		// A DuckDB shared-cache in-memory database (Data Source=:memory:?cache=shared) is shared by every
 		// connection using the same string — exactly like SQLite — so we only need to hold one master

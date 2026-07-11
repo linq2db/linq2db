@@ -217,8 +217,13 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 #endif
 					case var _ when provider.IsAnyOf(TestProvName.AllSQLite):
 					{
+						// EF tests use their own per-TFM DB file. The SQLite base connection string may be
+						// in-memory (CI, see DataProviders.json), but this assembly has no in-memory keep-alive
+						// anchor (that lives in Tests.Linq), so force a file DB regardless of the base mode.
 						var cnb = new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder(connectionString);
 						cnb.DataSource = $"sqlite.{provider}.{DB_SUFFIX}.db";
+						cnb.Mode       = Microsoft.Data.Sqlite.SqliteOpenMode.ReadWriteCreate;
+						cnb.Cache      = Microsoft.Data.Sqlite.SqliteCacheMode.Default;
 						connectionString = cnb.ConnectionString;
 						break;
 					}
