@@ -6,9 +6,8 @@ namespace LinqToDB.Internal.Cache
 {
 	/// <summary>
 	/// Central registry of every live linq2db cache. A cache joins the registry at construction
-	/// (see <see cref="BoundedCache{TKey,TValue}"/> / <see cref="WeakCache{TKey,TValue}"/>), which makes
-	/// "clear all caches" and cache diagnostics <b>provably total</b>: there is no per-type clearer
-	/// to wire up and none to forget.
+	/// (see <see cref="BoundedCache{TKey,TValue}"/>), which makes "clear all caches" and cache
+	/// diagnostics <b>provably total</b>: there is no per-type clearer to wire up and none to forget.
 	/// </summary>
 	/// <remarks>
 	/// Process-static caches register strongly (<see cref="Register{T}"/>); caches whose lifetime is

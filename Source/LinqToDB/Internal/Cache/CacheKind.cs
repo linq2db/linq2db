@@ -8,8 +8,5 @@ namespace LinqToDB.Internal.Cache
 
 		/// <summary>A bounded, size-capped work cache (compiled delegates, descriptors, detected versions, ...).</summary>
 		BoundedWork,
-
-		/// <summary>A weak-keyed cache whose entries are reclaimed by the GC when the key becomes collectible.</summary>
-		WeakKeyed,
 	}
 }

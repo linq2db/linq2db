@@ -1144,7 +1144,6 @@ LinqToDB.Internal.Linq.QueryCache.TotalMisses.get -> long
 LinqToDB.Internal.Cache.CacheKind
 LinqToDB.Internal.Cache.CacheKind.BoundedWork = 1 -> LinqToDB.Internal.Cache.CacheKind
 LinqToDB.Internal.Cache.CacheKind.Query = 0 -> LinqToDB.Internal.Cache.CacheKind
-LinqToDB.Internal.Cache.CacheKind.WeakKeyed = 2 -> LinqToDB.Internal.Cache.CacheKind
 LinqToDB.Internal.Cache.CacheStatistics
 LinqToDB.Internal.Cache.CacheStatistics.Capacity.get -> long?
 LinqToDB.Internal.Cache.CacheStatistics.Count.get -> long
