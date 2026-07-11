@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Expressions;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Linq;
 
@@ -79,6 +81,80 @@ namespace LinqToDB
 				columnsArray);
 
 			return currentSource.Provider.CreateQuery<TResult>(expr);
+		}
+
+		/// <summary>
+		/// Multi-value UNPIVOT (two value columns per group): rotates named groups of two columns into rows.
+		/// Each group contributes one output row per source row carrying the group's name and the two column
+		/// values. Lowered to a portable <c>UNION ALL</c> derived table on every provider; NULL rows are kept.
+		/// </summary>
+		/// <typeparam name="TSource">Source table record type.</typeparam>
+		/// <typeparam name="TValue">Common type of the unpivoted columns.</typeparam>
+		/// <typeparam name="TResult">Result record type.</typeparam>
+		/// <param name="source">Source query.</param>
+		/// <param name="resultSelector">Projection over the source row, the group name, and the two column values.</param>
+		/// <param name="groups">The named column groups; each contributes one output row per source row.</param>
+		[Pure, LinqTunnel]
+		public static IQueryable<TResult> Unpivot<TSource, TValue, TResult>(
+			this            IQueryable<TSource>                                        source,
+			[InstantHandle] Expression<Func<TSource, string, TValue, TValue, TResult>> resultSelector,
+			[InstantHandle] params (string name, Expression<Func<TSource, TValue>> column1, Expression<Func<TSource, TValue>> column2)[] groups)
+		{
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(resultSelector);
+			ArgumentNullException.ThrowIfNull(groups);
+
+			return BuildMultiValueUnpivot<TSource, TResult>(source, resultSelector,
+				groups.Select(static g => (g.name, new LambdaExpression[] { g.column1, g.column2 })).ToArray());
+		}
+
+		/// <summary>
+		/// Multi-value UNPIVOT (three value columns per group): rotates named groups of three columns into rows.
+		/// Lowered to a portable <c>UNION ALL</c> derived table on every provider; NULL rows are kept.
+		/// </summary>
+		/// <typeparam name="TSource">Source table record type.</typeparam>
+		/// <typeparam name="TValue">Common type of the unpivoted columns.</typeparam>
+		/// <typeparam name="TResult">Result record type.</typeparam>
+		/// <param name="source">Source query.</param>
+		/// <param name="resultSelector">Projection over the source row, the group name, and the three column values.</param>
+		/// <param name="groups">The named column groups; each contributes one output row per source row.</param>
+		[Pure, LinqTunnel]
+		public static IQueryable<TResult> Unpivot<TSource, TValue, TResult>(
+			this            IQueryable<TSource>                                                source,
+			[InstantHandle] Expression<Func<TSource, string, TValue, TValue, TValue, TResult>> resultSelector,
+			[InstantHandle] params (string name, Expression<Func<TSource, TValue>> column1, Expression<Func<TSource, TValue>> column2, Expression<Func<TSource, TValue>> column3)[] groups)
+		{
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(resultSelector);
+			ArgumentNullException.ThrowIfNull(groups);
+
+			return BuildMultiValueUnpivot<TSource, TResult>(source, resultSelector,
+				groups.Select(static g => (g.name, new LambdaExpression[] { g.column1, g.column2, g.column3 })).ToArray());
+		}
+
+		static IQueryable<TResult> BuildMultiValueUnpivot<TSource, TResult>(
+			IQueryable<TSource>                                     source,
+			LambdaExpression                                        resultSelector,
+			IReadOnlyList<(string name, LambdaExpression[] columns)> groups)
+		{
+			IQueryable<TResult>? result = null;
+
+			foreach (var (name, columns) in groups)
+			{
+				var rowParam = Expression.Parameter(typeof(TSource), "row");
+
+				var args = new Expression[columns.Length + 2];
+				args[0] = rowParam;
+				args[1] = Expression.Constant(name);
+				for (var i = 0; i < columns.Length; i++)
+					args[i + 2] = columns[i].GetBody(rowParam);
+
+				var branch = source.Select(Expression.Lambda<Func<TSource, TResult>>(resultSelector.GetBody(args), rowParam));
+
+				result = result == null ? branch : result.Concat(branch);
+			}
+
+			return result!;
 		}
 	}
 }

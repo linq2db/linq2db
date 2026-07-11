@@ -216,6 +216,49 @@ namespace Tests.Linq
 			result[2].Y2000.ShouldBe(5m);
 		}
 
+		[Table]
+		sealed class QuarterAmounts
+		{
+			[Column] public string   Category { get; set; } = null!;
+			[Column] public int      Year     { get; set; }
+			[Column] public int      Quarter  { get; set; }
+			[Column] public decimal? Amount   { get; set; }
+
+			public static readonly QuarterAmounts[] Data =
+			{
+				new() { Category = "A", Year = 2000, Quarter = 1, Amount = 10m },
+				new() { Category = "A", Year = 2000, Quarter = 2, Amount = 20m },
+				new() { Category = "A", Year = 2010, Quarter = 1, Amount = 30m },
+				new() { Category = "B", Year = 2000, Quarter = 1, Amount = 5m  },
+			};
+		}
+
+		[Test]
+		public void PivotCompositeFor([IncludeDataSources(TestProvName.AllSQLite, ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(QuarterAmounts.Data);
+
+			// Composite (multi-column) FOR: pivot on (Year, Quarter).
+			var result = t
+				.Pivot(p => new
+				{
+					p.Key.Category,
+					Y2000Q1 = p.Sum(x => x.Amount, x => new { x.Year, x.Quarter }, new { Year = 2000, Quarter = 1 }),
+					Y2000Q2 = p.Sum(x => x.Amount, x => new { x.Year, x.Quarter }, new { Year = 2000, Quarter = 2 }),
+				})
+				.OrderBy(r => r.Category)
+				.ToArray();
+
+			// A: Q1=10, Q2=20; B: Q1=5, Q2=null
+			result.Length.ShouldBe(2);
+			result[0].Category.ShouldBe("A");
+			result[0].Y2000Q1.ShouldBe(10m);
+			result[0].Y2000Q2.ShouldBe(20m);
+			result[1].Category.ShouldBe("B");
+			result[1].Y2000Q1.ShouldBe(5m);
+		}
+
 		[Test]
 		public void PivotThenWhereAndProject([IncludeDataSources(ProviderName.DuckDB, TestProvName.AllSqlServer)] string context)
 		{
@@ -240,6 +283,48 @@ namespace Tests.Linq
 			result[0].Y2010.ShouldBe(20m);
 			result[1].Category.ShouldBe("B");
 			result[1].Y2010.ShouldBe(15m);
+		}
+
+		[Table]
+		sealed class MonthlySales
+		{
+			[Column] public int      Id  { get; set; }
+			[Column] public decimal? Jan { get; set; }
+			[Column] public decimal? Feb { get; set; }
+			[Column] public decimal? Mar { get; set; }
+			[Column] public decimal? Apr { get; set; }
+			[Column] public decimal? May { get; set; }
+			[Column] public decimal? Jun { get; set; }
+
+			public static readonly MonthlySales[] Data =
+			{
+				new() { Id = 1, Jan = 10m, Feb = 20m, Mar = 30m, Apr = 40m, May = 50m, Jun = 60m },
+			};
+		}
+
+		[Test]
+		public void UnpivotMultiValue([IncludeDataSources(true, TestProvName.AllSQLite, ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(MonthlySales.Data);
+
+			// Multi-value UNPIVOT: two column-groups of three columns each -> two rows with three value columns.
+			var result = t
+				.Unpivot(
+					(row, quarter, m1, m2, m3) => new { row.Id, Quarter = quarter, M1 = m1, M2 = m2, M3 = m3 },
+					("Q1", x => x.Jan, x => x.Feb, x => x.Mar),
+					("Q2", x => x.Apr, x => x.May, x => x.Jun))
+				.OrderBy(r => r.Quarter)
+				.ToArray();
+
+			result.Length.ShouldBe(2);
+			result[0].Quarter.ShouldBe("Q1");
+			result[0].M1.ShouldBe(10m);
+			result[0].M2.ShouldBe(20m);
+			result[0].M3.ShouldBe(30m);
+			result[1].Quarter.ShouldBe("Q2");
+			result[1].M1.ShouldBe(40m);
+			result[1].M3.ShouldBe(60m);
 		}
 	}
 }

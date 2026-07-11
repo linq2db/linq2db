@@ -136,9 +136,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			var forColLam = marker.Arguments[1].UnwrapLambda();
 			var forValue  = marker.Arguments[2].EvaluateExpression();
 
-			var rowParam = Expression.Parameter(sourceType, "row");
-			var forBody  = ReplaceParameter(forColLam, rowParam);
-			var predicate = Expression.Equal(forBody, Expression.Constant(forValue, forBody.Type));
+			var rowParam  = Expression.Parameter(sourceType, "row");
+			var forBody   = ReplaceParameter(forColLam, rowParam);
+			var predicate = BuildForEqualityPredicate(forBody, forValue);
 
 			if (string.Equals(function, "Count", StringComparison.Ordinal))
 			{
@@ -189,6 +189,28 @@ namespace LinqToDB.Internal.Linq.Builder
 				default:
 					throw new LinqToDBException($"Unsupported pivot aggregate '{function}'.");
 			}
+		}
+
+		// Equality against the FOR value: a single comparison, or an AND of per-member comparisons for a
+		// composite (anonymous-type) FOR — e.g. row.Year == 2000 AND row.Quarter == 1.
+		static Expression BuildForEqualityPredicate(Expression forBody, object? forValue)
+		{
+			if (forBody is NewExpression { Members: { } members } newFor && members.Count > 0)
+			{
+				var          constant  = Expression.Constant(forValue);
+				Expression?  predicate = null;
+
+				for (var i = 0; i < newFor.Arguments.Count; i++)
+				{
+					var expected = ConvertIfNeeded(Expression.PropertyOrField(constant, members[i].Name), newFor.Arguments[i].Type);
+					var equals   = Expression.Equal(newFor.Arguments[i], expected);
+					predicate    = predicate == null ? equals : Expression.AndAlso(predicate, equals);
+				}
+
+				return predicate!;
+			}
+
+			return Expression.Equal(forBody, Expression.Constant(forValue, forBody.Type));
 		}
 
 		static Type MakeNullable(Type type)
@@ -357,7 +379,15 @@ namespace LinqToDB.Internal.Linq.Builder
 						var forColumn = mc.Arguments[1].UnwrapLambda();
 						var forValue  = mc.Arguments[2].EvaluateExpression();
 
-						AddAggregate(aggregates, mc.Method.Name.ToUpperInvariant(), GetMemberName(value), GetMemberName(forColumn), value.Body.Type, member, forValue);
+						var valueName = TryGetSimpleMemberName(value);
+						var forName   = TryGetSimpleMemberName(forColumn);
+
+						// Composite (anonymous-type) FOR or a non-simple value selector is not eligible for the
+						// v1 native path — return empty so the caller lowers to conditional aggregation.
+						if (valueName == null || forName == null)
+							return new List<AggregateSpec>();
+
+						AddAggregate(aggregates, mc.Method.Name.ToUpperInvariant(), valueName, forName, value.Body.Type, member, forValue);
 					}
 				}
 			}
@@ -388,12 +418,12 @@ namespace LinqToDB.Internal.Linq.Builder
 			existing.Values.Add(new PivotValueSpec { ForValue = forValue, OutputMember = outputMember });
 		}
 
-		static string GetMemberName(LambdaExpression lambda)
+		static string? TryGetSimpleMemberName(LambdaExpression lambda)
 		{
 			var body = lambda.Body;
 			while (body is UnaryExpression { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked } u)
 				body = u.Operand;
-			return body is MemberExpression m ? m.Member.Name : throw new LinqToDBException("Pivot value/FOR selector must be a simple member access.");
+			return body is MemberExpression m ? m.Member.Name : null;
 		}
 
 		sealed class AggregateSpec
