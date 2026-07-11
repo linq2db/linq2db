@@ -304,18 +304,45 @@ public class TestsInitialization
 		if (cs == null || cs.IndexOf(":memory:", StringComparison.OrdinalIgnoreCase) < 0)
 			return; // file-based -> nothing to do
 
-		// DuckDB in-memory is CI-only (the tracked DataProviders.json default stays file-based). Unlike
-		// SQLite, DuckDB can't preload the in-memory DB from its committed on-disk file (COPY FROM DATABASE
-		// fails on FK ordering), so the shared in-memory catalog is only ever seeded by a_CreateData. CI
-		// always runs the full suite, so a_CreateData seeds it first; a filtered run against an in-memory
-		// DuckDB would see an empty DB — which is why the default is left file-based for local/filtered runs.
-
 		// A DuckDB shared-cache in-memory database (Data Source=:memory:?cache=shared) is shared by every
 		// connection using the same string — exactly like SQLite — so we only need to hold one master
 		// connection open; the database is destroyed once its last connection closes.
 		var master = new DuckDB.NET.Data.DuckDBConnection(cs);
 		master.Open();
 		TestInMemoryDatabases.AddKeepAlive(master);
+
+		// Preload from the committed on-disk file so a filtered run (which skips a_CreateData) still has
+		// tables and data. DuckDB can't COPY FROM DATABASE (it inserts child rows before parents, hitting
+		// an FK violation), so round-trip via EXPORT/IMPORT DATABASE, which loads schema -> data ->
+		// constraints in phases and preserves sequence values. Full runs re-seed on top (create drops first).
+		var srcFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Database", "TestData.duckdb");
+		if (File.Exists(srcFile))
+		{
+			var work = Path.Combine(Path.GetTempPath(), $"l2db-duckdb-{Guid.NewGuid():N}.duckdb");
+			var dump = Path.Combine(Path.GetTempPath(), $"l2db-duckdb-{Guid.NewGuid():N}");
+			try
+			{
+				// export off a copy so the committed file is never opened writable
+				File.Copy(srcFile, work, true);
+				using (var fileDb = new DuckDB.NET.Data.DuckDBConnection($"Data Source={work.Replace('\\', '/')}"))
+				{
+					fileDb.Open();
+					using var ec = fileDb.CreateCommand();
+					ec.CommandText = $"EXPORT DATABASE '{dump.Replace('\\', '/')}' (FORMAT PARQUET)";
+					ec.ExecuteNonQuery();
+				}
+
+				using var ic = master.CreateCommand();
+				ic.CommandText = $"IMPORT DATABASE '{dump.Replace('\\', '/')}'";
+				ic.ExecuteNonQuery();
+				TestContext.Progress.WriteLine($"[duckdb-inmemory] preloaded from {srcFile}");
+			}
+			finally
+			{
+				try { File.Delete(work); } catch { /* best effort */ }
+				try { if (Directory.Exists(dump)) Directory.Delete(dump, true); } catch { /* best effort */ }
+			}
+		}
 
 		TestContext.Progress.WriteLine($"[duckdb-inmemory] keep-alive open ({cs})");
 	}
