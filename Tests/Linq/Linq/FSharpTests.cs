@@ -127,6 +127,20 @@ namespace Tests.Linq
 			FSharp.Issue4646.TestOptionRoundtrip(db);
 		}
 
+		[Test(Description = "linq2db round-trips the CLI scaffolder's generated F# record shape (#1553)")]
+		public void GeneratedShape_EntityRoundtrip([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.GeneratedModel.TestGeneratedEntityRoundtrip(db);
+		}
+
+		[Test(Description = "the scaffolder's generated DataConnection context (DataOptions<T> ctor + GetTable member) works at runtime (#1553)")]
+		public void GeneratedShape_ContextTableAccess([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+			FSharp.GeneratedModel.TestGeneratedContextTableAccess(db);
+		}
+
 		[Test(Description = "Auto 'T option mapping must not override an explicit fluent DataType on an option column (#195 follow-up)")]
 		public void OptionMapping_ExplicitDataTypePreserved([DataSources] string context)
 		{
