@@ -70,17 +70,27 @@ namespace LinqToDB.Internal.Cache
 		/// <summary>Returns the cached value, creating it via <paramref name="valueFactory"/> on a miss. The
 		/// <paramref name="factoryArgument"/> lets callers pass state without allocating a closure per call.</summary>
 		public TValue GetOrAdd<TArg>(TKey key, Func<TKey,TArg,TValue> valueFactory, TArg factoryArgument)
+			// BitFaster's closure-free GetOrAdd(key, factory, arg) overload ships only on its net6.0+ assembly;
+			// net462/netstandard2.0 consume the netstandard2.0 assembly, which lacks it — fall back to a closure.
+#if NET6_0_OR_GREATER
 			=> _cache.GetOrAdd(key, valueFactory, factoryArgument);
+#else
+			=> _cache.GetOrAdd(key, k => valueFactory(k, factoryArgument));
+#endif
 
 		/// <summary>Derived-key variant: the concrete <paramref name="key"/> (a subtype of <typeparamref name="TKey"/>)
 		/// is passed to the factory strongly-typed, while the cache is keyed by it as <typeparamref name="TKey"/>.
-		/// The <paramref name="factoryArgument"/> avoids a per-call closure.</summary>
+		/// The <paramref name="factoryArgument"/> avoids a per-call closure on net6.0+.</summary>
 		public TValue GetOrAdd<TDerivedKey,TArg>(TDerivedKey key, TArg factoryArgument, Func<TDerivedKey,TArg,TValue> valueFactory)
 			where TDerivedKey : TKey
+#if NET6_0_OR_GREATER
 			=> _cache.GetOrAdd(
 				key,
 				static (_, state) => state.valueFactory(state.key, state.factoryArgument),
 				(key, factoryArgument, valueFactory));
+#else
+			=> _cache.GetOrAdd(key, _ => valueFactory(key, factoryArgument));
+#endif
 
 		/// <summary>Attempts to get the value for <paramref name="key"/> without creating it.</summary>
 		public bool TryGet(TKey key, out TValue value)

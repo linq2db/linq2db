@@ -2,9 +2,8 @@
 
 using JetBrains.Annotations;
 
-using LinqToDB.Data;
+using LinqToDB.Internal.Cache;
 using LinqToDB.Internal.Linq;
-using LinqToDB.Mapping;
 
 namespace LinqToDB.Linq
 {
@@ -19,9 +18,12 @@ namespace LinqToDB.Linq
 		/// </summary>
 		public static void ClearAllCaches()
 		{
+			// Every linq2db cache self-registers with CacheRegistry at construction, so this clears them all —
+			// including caches (remote services, provider-version detection, serialization converters, combined
+			// mapping schemas) that were previously unreachable from here. Query.ClearCaches() additionally drains
+			// the legacy CacheCleaners queue (IdentifierBuilder, MemberCache, ...) that predates the registry.
+			CacheRegistry.ClearAll();
 			Query.ClearCaches();
-			MappingSchema.ClearCache();
-			CommandInfo.ClearObjectReaderCache();
 		}
 	}
 }
