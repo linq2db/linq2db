@@ -6,6 +6,11 @@ Mirrors the `RunCliTool()` calls in `Tests/Tests.T4/Cli/*.tt` but invokes
 Studio and across all providers in parallel. Owned by `/release-test-matrix`
 track 4.7 (CLI scaffold).
 
+This script covers the C# scaffold output only. F# output (--target-language f#,
+issue #1553) has its own single-file-per-provider layout + option set and does not
+fit this row matrix; it is regenerated + compile-gated separately via
+`Tests/FSharp.Scaffold/generate.ps1` (see /release-test-matrix track 4.7 -> "F# baselines").
+
 Layout (mirrored from CLI.ttinclude + each `<Template>.tt`):
 
   Template  | Mode     | Rows | extraOptions
