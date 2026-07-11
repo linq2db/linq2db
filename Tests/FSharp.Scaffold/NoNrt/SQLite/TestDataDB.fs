@@ -5,8 +5,7 @@
 // </auto-generated>
 // ---------------------------------------------------------------------------------------------------
 
-
-namespace rec Tests.FSharp.Scaffold.SQLite
+namespace rec Tests.FSharp.Scaffold.NoNrt.SQLite
 
 open LinqToDB
 open LinqToDB.Async
@@ -65,264 +64,264 @@ type AllType =
         [<Column("ncharDataType", DataType = DataType.NVarChar, DbType = "nchar(20)", Length = 20)>] NcharDataType : string option // nchar(20)
         [<Column("nvarcharDataType", DataType = DataType.NVarChar, DbType = "nvarchar(20)", Length = 20)>] NvarcharDataType : string option // nvarchar(20)
         [<Column("ntextDataType", DataType = DataType.NVarChar, DbType = "ntext")>] NtextDataType : string option // ntext
-        [<Column("binaryDataType", DataType = DataType.VarBinary, DbType = "binary")>] BinaryDataType : byte[] | null // binary
-        [<Column("varbinaryDataType", DataType = DataType.VarBinary, DbType = "varbinary")>] VarbinaryDataType : byte[] | null // varbinary
-        [<Column("imageDataType", DataType = DataType.VarBinary, DbType = "image")>] ImageDataType : byte[] | null // image
+        [<Column("binaryDataType", DataType = DataType.VarBinary, DbType = "binary")>] BinaryDataType : byte[] // binary
+        [<Column("varbinaryDataType", DataType = DataType.VarBinary, DbType = "varbinary")>] VarbinaryDataType : byte[] // varbinary
+        [<Column("imageDataType", DataType = DataType.VarBinary, DbType = "image")>] ImageDataType : byte[] // image
         [<Column("uniqueidentifierDataType", DataType = DataType.Guid, DbType = "uniqueidentifier")>] UniqueidentifierDataType : Guid option // uniqueidentifier
-        [<Column("objectDataType", DataType = DataType.Variant, DbType = "Object")>] ObjectDataType : obj | null // Object
+        [<Column("objectDataType", DataType = DataType.Variant, DbType = "Object")>] ObjectDataType : obj // Object
     }
 
 
 [<System.Runtime.CompilerServices.Extension>]
 type ExtensionMethods =
     [<System.Runtime.CompilerServices.Extension>]
-    static member Find (table : ITable<AllType>, id : int64) : AllType | null = table.FirstOrDefault((fun e -> e.Id = id))
+    static member Find (table : ITable<AllType>, id : int64) : AllType = table.FirstOrDefault((fun e -> e.Id = id))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<AllType>, id : int64, cancellationToken : CancellationToken) : Task<AllType | null> = table.FirstOrDefaultAsync((fun e -> e.Id = id), cancellationToken)
+    static member FindAsync (table : ITable<AllType>, id : int64, cancellationToken : CancellationToken) : Task<AllType> = table.FirstOrDefaultAsync((fun e -> e.Id = id), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<AllType>, id : int64) : IQueryable<AllType> = table.Where((fun e -> e.Id = id))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member Find (table : ITable<AllType>, record : AllType) : AllType | null = table.FirstOrDefault((fun e -> e.Id = record.Id))
+    static member Find (table : ITable<AllType>, record : AllType) : AllType = table.FirstOrDefault((fun e -> e.Id = record.Id))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<AllType>, record : AllType, cancellationToken : CancellationToken) : Task<AllType | null> = table.FirstOrDefaultAsync((fun e -> e.Id = record.Id), cancellationToken)
+    static member FindAsync (table : ITable<AllType>, record : AllType, cancellationToken : CancellationToken) : Task<AllType> = table.FirstOrDefaultAsync((fun e -> e.Id = record.Id), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<AllType>, record : AllType) : IQueryable<AllType> = table.Where((fun e -> e.Id = record.Id))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAllType (db : TestDataDB, id : int64) : AllType | null = db.GetTable<AllType>().FirstOrDefault((fun e -> e.Id = id))
+    static member FindAllType (db : TestDataDB, id : int64) : AllType = db.GetTable<AllType>().FirstOrDefault((fun e -> e.Id = id))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAllTypeAsync (db : TestDataDB, id : int64, cancellationToken : CancellationToken) : Task<AllType | null> = db.GetTable<AllType>().FirstOrDefaultAsync((fun e -> e.Id = id), cancellationToken)
+    static member FindAllTypeAsync (db : TestDataDB, id : int64, cancellationToken : CancellationToken) : Task<AllType> = db.GetTable<AllType>().FirstOrDefaultAsync((fun e -> e.Id = id), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindAllTypeQuery (db : TestDataDB, id : int64) : IQueryable<AllType> = db.GetTable<AllType>().Where((fun e -> e.Id = id))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member Find (db : TestDataDB, record : AllType) : AllType | null = db.GetTable<AllType>().FirstOrDefault((fun e -> e.Id = record.Id))
+    static member Find (db : TestDataDB, record : AllType) : AllType = db.GetTable<AllType>().FirstOrDefault((fun e -> e.Id = record.Id))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (db : TestDataDB, record : AllType, cancellationToken : CancellationToken) : Task<AllType | null> = db.GetTable<AllType>().FirstOrDefaultAsync((fun e -> e.Id = record.Id), cancellationToken)
+    static member FindAsync (db : TestDataDB, record : AllType, cancellationToken : CancellationToken) : Task<AllType> = db.GetTable<AllType>().FirstOrDefaultAsync((fun e -> e.Id = record.Id), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (db : TestDataDB, record : AllType) : IQueryable<AllType> = db.GetTable<AllType>().Where((fun e -> e.Id = record.Id))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member Find (table : ITable<Doctor>, personId : int64) : Doctor | null = table.FirstOrDefault((fun e -> e.PersonId = personId))
+    static member Find (table : ITable<Doctor>, personId : int64) : Doctor = table.FirstOrDefault((fun e -> e.PersonId = personId))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<Doctor>, personId : int64, cancellationToken : CancellationToken) : Task<Doctor | null> = table.FirstOrDefaultAsync((fun e -> e.PersonId = personId), cancellationToken)
+    static member FindAsync (table : ITable<Doctor>, personId : int64, cancellationToken : CancellationToken) : Task<Doctor> = table.FirstOrDefaultAsync((fun e -> e.PersonId = personId), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<Doctor>, personId : int64) : IQueryable<Doctor> = table.Where((fun e -> e.PersonId = personId))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member Find (table : ITable<Doctor>, record : Doctor) : Doctor | null = table.FirstOrDefault((fun e -> e.PersonId = record.PersonId))
+    static member Find (table : ITable<Doctor>, record : Doctor) : Doctor = table.FirstOrDefault((fun e -> e.PersonId = record.PersonId))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<Doctor>, record : Doctor, cancellationToken : CancellationToken) : Task<Doctor | null> = table.FirstOrDefaultAsync((fun e -> e.PersonId = record.PersonId), cancellationToken)
+    static member FindAsync (table : ITable<Doctor>, record : Doctor, cancellationToken : CancellationToken) : Task<Doctor> = table.FirstOrDefaultAsync((fun e -> e.PersonId = record.PersonId), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<Doctor>, record : Doctor) : IQueryable<Doctor> = table.Where((fun e -> e.PersonId = record.PersonId))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindDoctor (db : TestDataDB, personId : int64) : Doctor | null = db.GetTable<Doctor>().FirstOrDefault((fun e -> e.PersonId = personId))
+    static member FindDoctor (db : TestDataDB, personId : int64) : Doctor = db.GetTable<Doctor>().FirstOrDefault((fun e -> e.PersonId = personId))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindDoctorAsync (db : TestDataDB, personId : int64, cancellationToken : CancellationToken) : Task<Doctor | null> = db.GetTable<Doctor>().FirstOrDefaultAsync((fun e -> e.PersonId = personId), cancellationToken)
+    static member FindDoctorAsync (db : TestDataDB, personId : int64, cancellationToken : CancellationToken) : Task<Doctor> = db.GetTable<Doctor>().FirstOrDefaultAsync((fun e -> e.PersonId = personId), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindDoctorQuery (db : TestDataDB, personId : int64) : IQueryable<Doctor> = db.GetTable<Doctor>().Where((fun e -> e.PersonId = personId))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member Find (db : TestDataDB, record : Doctor) : Doctor | null = db.GetTable<Doctor>().FirstOrDefault((fun e -> e.PersonId = record.PersonId))
+    static member Find (db : TestDataDB, record : Doctor) : Doctor = db.GetTable<Doctor>().FirstOrDefault((fun e -> e.PersonId = record.PersonId))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (db : TestDataDB, record : Doctor, cancellationToken : CancellationToken) : Task<Doctor | null> = db.GetTable<Doctor>().FirstOrDefaultAsync((fun e -> e.PersonId = record.PersonId), cancellationToken)
+    static member FindAsync (db : TestDataDB, record : Doctor, cancellationToken : CancellationToken) : Task<Doctor> = db.GetTable<Doctor>().FirstOrDefaultAsync((fun e -> e.PersonId = record.PersonId), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (db : TestDataDB, record : Doctor) : IQueryable<Doctor> = db.GetTable<Doctor>().Where((fun e -> e.PersonId = record.PersonId))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member Find (table : ITable<FkTestPosition>, company : int64, department : int64, positionId : int64) : FkTestPosition | null = table.FirstOrDefault((fun e -> e.Company = company && e.Department = department && e.PositionId = positionId))
+    static member Find (table : ITable<FkTestPosition>, company : int64, department : int64, positionId : int64) : FkTestPosition = table.FirstOrDefault((fun e -> e.Company = company && e.Department = department && e.PositionId = positionId))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<FkTestPosition>, company : int64, department : int64, positionId : int64, cancellationToken : CancellationToken) : Task<FkTestPosition | null> = table.FirstOrDefaultAsync((fun e -> e.Company = company && e.Department = department && e.PositionId = positionId), cancellationToken)
+    static member FindAsync (table : ITable<FkTestPosition>, company : int64, department : int64, positionId : int64, cancellationToken : CancellationToken) : Task<FkTestPosition> = table.FirstOrDefaultAsync((fun e -> e.Company = company && e.Department = department && e.PositionId = positionId), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<FkTestPosition>, company : int64, department : int64, positionId : int64) : IQueryable<FkTestPosition> = table.Where((fun e -> e.Company = company && e.Department = department && e.PositionId = positionId))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member Find (table : ITable<FkTestPosition>, record : FkTestPosition) : FkTestPosition | null = table.FirstOrDefault((fun e -> e.Company = record.Company && e.Department = record.Department && e.PositionId = record.PositionId))
+    static member Find (table : ITable<FkTestPosition>, record : FkTestPosition) : FkTestPosition = table.FirstOrDefault((fun e -> e.Company = record.Company && e.Department = record.Department && e.PositionId = record.PositionId))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<FkTestPosition>, record : FkTestPosition, cancellationToken : CancellationToken) : Task<FkTestPosition | null> = table.FirstOrDefaultAsync((fun e -> e.Company = record.Company && e.Department = record.Department && e.PositionId = record.PositionId), cancellationToken)
+    static member FindAsync (table : ITable<FkTestPosition>, record : FkTestPosition, cancellationToken : CancellationToken) : Task<FkTestPosition> = table.FirstOrDefaultAsync((fun e -> e.Company = record.Company && e.Department = record.Department && e.PositionId = record.PositionId), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<FkTestPosition>, record : FkTestPosition) : IQueryable<FkTestPosition> = table.Where((fun e -> e.Company = record.Company && e.Department = record.Department && e.PositionId = record.PositionId))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindFkTestPosition (db : TestDataDB, company : int64, department : int64, positionId : int64) : FkTestPosition | null = db.GetTable<FkTestPosition>().FirstOrDefault((fun e -> e.Company = company && e.Department = department && e.PositionId = positionId))
+    static member FindFkTestPosition (db : TestDataDB, company : int64, department : int64, positionId : int64) : FkTestPosition = db.GetTable<FkTestPosition>().FirstOrDefault((fun e -> e.Company = company && e.Department = department && e.PositionId = positionId))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindFkTestPositionAsync (db : TestDataDB, company : int64, department : int64, positionId : int64, cancellationToken : CancellationToken) : Task<FkTestPosition | null> = db.GetTable<FkTestPosition>().FirstOrDefaultAsync((fun e -> e.Company = company && e.Department = department && e.PositionId = positionId), cancellationToken)
+    static member FindFkTestPositionAsync (db : TestDataDB, company : int64, department : int64, positionId : int64, cancellationToken : CancellationToken) : Task<FkTestPosition> = db.GetTable<FkTestPosition>().FirstOrDefaultAsync((fun e -> e.Company = company && e.Department = department && e.PositionId = positionId), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindFkTestPositionQuery (db : TestDataDB, company : int64, department : int64, positionId : int64) : IQueryable<FkTestPosition> = db.GetTable<FkTestPosition>().Where((fun e -> e.Company = company && e.Department = department && e.PositionId = positionId))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member Find (db : TestDataDB, record : FkTestPosition) : FkTestPosition | null = db.GetTable<FkTestPosition>().FirstOrDefault((fun e -> e.Company = record.Company && e.Department = record.Department && e.PositionId = record.PositionId))
+    static member Find (db : TestDataDB, record : FkTestPosition) : FkTestPosition = db.GetTable<FkTestPosition>().FirstOrDefault((fun e -> e.Company = record.Company && e.Department = record.Department && e.PositionId = record.PositionId))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (db : TestDataDB, record : FkTestPosition, cancellationToken : CancellationToken) : Task<FkTestPosition | null> = db.GetTable<FkTestPosition>().FirstOrDefaultAsync((fun e -> e.Company = record.Company && e.Department = record.Department && e.PositionId = record.PositionId), cancellationToken)
+    static member FindAsync (db : TestDataDB, record : FkTestPosition, cancellationToken : CancellationToken) : Task<FkTestPosition> = db.GetTable<FkTestPosition>().FirstOrDefaultAsync((fun e -> e.Company = record.Company && e.Department = record.Department && e.PositionId = record.PositionId), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (db : TestDataDB, record : FkTestPosition) : IQueryable<FkTestPosition> = db.GetTable<FkTestPosition>().Where((fun e -> e.Company = record.Company && e.Department = record.Department && e.PositionId = record.PositionId))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member Find (table : ITable<Patient>, personId : int64) : Patient | null = table.FirstOrDefault((fun e -> e.PersonId = personId))
+    static member Find (table : ITable<Patient>, personId : int64) : Patient = table.FirstOrDefault((fun e -> e.PersonId = personId))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<Patient>, personId : int64, cancellationToken : CancellationToken) : Task<Patient | null> = table.FirstOrDefaultAsync((fun e -> e.PersonId = personId), cancellationToken)
+    static member FindAsync (table : ITable<Patient>, personId : int64, cancellationToken : CancellationToken) : Task<Patient> = table.FirstOrDefaultAsync((fun e -> e.PersonId = personId), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<Patient>, personId : int64) : IQueryable<Patient> = table.Where((fun e -> e.PersonId = personId))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member Find (table : ITable<Patient>, record : Patient) : Patient | null = table.FirstOrDefault((fun e -> e.PersonId = record.PersonId))
+    static member Find (table : ITable<Patient>, record : Patient) : Patient = table.FirstOrDefault((fun e -> e.PersonId = record.PersonId))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<Patient>, record : Patient, cancellationToken : CancellationToken) : Task<Patient | null> = table.FirstOrDefaultAsync((fun e -> e.PersonId = record.PersonId), cancellationToken)
+    static member FindAsync (table : ITable<Patient>, record : Patient, cancellationToken : CancellationToken) : Task<Patient> = table.FirstOrDefaultAsync((fun e -> e.PersonId = record.PersonId), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<Patient>, record : Patient) : IQueryable<Patient> = table.Where((fun e -> e.PersonId = record.PersonId))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindPatient (db : TestDataDB, personId : int64) : Patient | null = db.GetTable<Patient>().FirstOrDefault((fun e -> e.PersonId = personId))
+    static member FindPatient (db : TestDataDB, personId : int64) : Patient = db.GetTable<Patient>().FirstOrDefault((fun e -> e.PersonId = personId))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindPatientAsync (db : TestDataDB, personId : int64, cancellationToken : CancellationToken) : Task<Patient | null> = db.GetTable<Patient>().FirstOrDefaultAsync((fun e -> e.PersonId = personId), cancellationToken)
+    static member FindPatientAsync (db : TestDataDB, personId : int64, cancellationToken : CancellationToken) : Task<Patient> = db.GetTable<Patient>().FirstOrDefaultAsync((fun e -> e.PersonId = personId), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindPatientQuery (db : TestDataDB, personId : int64) : IQueryable<Patient> = db.GetTable<Patient>().Where((fun e -> e.PersonId = personId))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member Find (db : TestDataDB, record : Patient) : Patient | null = db.GetTable<Patient>().FirstOrDefault((fun e -> e.PersonId = record.PersonId))
+    static member Find (db : TestDataDB, record : Patient) : Patient = db.GetTable<Patient>().FirstOrDefault((fun e -> e.PersonId = record.PersonId))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (db : TestDataDB, record : Patient, cancellationToken : CancellationToken) : Task<Patient | null> = db.GetTable<Patient>().FirstOrDefaultAsync((fun e -> e.PersonId = record.PersonId), cancellationToken)
+    static member FindAsync (db : TestDataDB, record : Patient, cancellationToken : CancellationToken) : Task<Patient> = db.GetTable<Patient>().FirstOrDefaultAsync((fun e -> e.PersonId = record.PersonId), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (db : TestDataDB, record : Patient) : IQueryable<Patient> = db.GetTable<Patient>().Where((fun e -> e.PersonId = record.PersonId))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member Find (table : ITable<Person>, personId : int64) : Person | null = table.FirstOrDefault((fun e -> e.PersonId = personId))
+    static member Find (table : ITable<Person>, personId : int64) : Person = table.FirstOrDefault((fun e -> e.PersonId = personId))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<Person>, personId : int64, cancellationToken : CancellationToken) : Task<Person | null> = table.FirstOrDefaultAsync((fun e -> e.PersonId = personId), cancellationToken)
+    static member FindAsync (table : ITable<Person>, personId : int64, cancellationToken : CancellationToken) : Task<Person> = table.FirstOrDefaultAsync((fun e -> e.PersonId = personId), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<Person>, personId : int64) : IQueryable<Person> = table.Where((fun e -> e.PersonId = personId))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member Find (table : ITable<Person>, record : Person) : Person | null = table.FirstOrDefault((fun e -> e.PersonId = record.PersonId))
+    static member Find (table : ITable<Person>, record : Person) : Person = table.FirstOrDefault((fun e -> e.PersonId = record.PersonId))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<Person>, record : Person, cancellationToken : CancellationToken) : Task<Person | null> = table.FirstOrDefaultAsync((fun e -> e.PersonId = record.PersonId), cancellationToken)
+    static member FindAsync (table : ITable<Person>, record : Person, cancellationToken : CancellationToken) : Task<Person> = table.FirstOrDefaultAsync((fun e -> e.PersonId = record.PersonId), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<Person>, record : Person) : IQueryable<Person> = table.Where((fun e -> e.PersonId = record.PersonId))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindPerson (db : TestDataDB, personId : int64) : Person | null = db.GetTable<Person>().FirstOrDefault((fun e -> e.PersonId = personId))
+    static member FindPerson (db : TestDataDB, personId : int64) : Person = db.GetTable<Person>().FirstOrDefault((fun e -> e.PersonId = personId))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindPersonAsync (db : TestDataDB, personId : int64, cancellationToken : CancellationToken) : Task<Person | null> = db.GetTable<Person>().FirstOrDefaultAsync((fun e -> e.PersonId = personId), cancellationToken)
+    static member FindPersonAsync (db : TestDataDB, personId : int64, cancellationToken : CancellationToken) : Task<Person> = db.GetTable<Person>().FirstOrDefaultAsync((fun e -> e.PersonId = personId), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindPersonQuery (db : TestDataDB, personId : int64) : IQueryable<Person> = db.GetTable<Person>().Where((fun e -> e.PersonId = personId))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member Find (db : TestDataDB, record : Person) : Person | null = db.GetTable<Person>().FirstOrDefault((fun e -> e.PersonId = record.PersonId))
+    static member Find (db : TestDataDB, record : Person) : Person = db.GetTable<Person>().FirstOrDefault((fun e -> e.PersonId = record.PersonId))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (db : TestDataDB, record : Person, cancellationToken : CancellationToken) : Task<Person | null> = db.GetTable<Person>().FirstOrDefaultAsync((fun e -> e.PersonId = record.PersonId), cancellationToken)
+    static member FindAsync (db : TestDataDB, record : Person, cancellationToken : CancellationToken) : Task<Person> = db.GetTable<Person>().FirstOrDefaultAsync((fun e -> e.PersonId = record.PersonId), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (db : TestDataDB, record : Person) : IQueryable<Person> = db.GetTable<Person>().Where((fun e -> e.PersonId = record.PersonId))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member Find (table : ITable<PrimaryKeyTable>, id : int64) : PrimaryKeyTable | null = table.FirstOrDefault((fun e -> e.Id = id))
+    static member Find (table : ITable<PrimaryKeyTable>, id : int64) : PrimaryKeyTable = table.FirstOrDefault((fun e -> e.Id = id))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<PrimaryKeyTable>, id : int64, cancellationToken : CancellationToken) : Task<PrimaryKeyTable | null> = table.FirstOrDefaultAsync((fun e -> e.Id = id), cancellationToken)
+    static member FindAsync (table : ITable<PrimaryKeyTable>, id : int64, cancellationToken : CancellationToken) : Task<PrimaryKeyTable> = table.FirstOrDefaultAsync((fun e -> e.Id = id), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<PrimaryKeyTable>, id : int64) : IQueryable<PrimaryKeyTable> = table.Where((fun e -> e.Id = id))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member Find (table : ITable<PrimaryKeyTable>, record : PrimaryKeyTable) : PrimaryKeyTable | null = table.FirstOrDefault((fun e -> e.Id = record.Id))
+    static member Find (table : ITable<PrimaryKeyTable>, record : PrimaryKeyTable) : PrimaryKeyTable = table.FirstOrDefault((fun e -> e.Id = record.Id))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<PrimaryKeyTable>, record : PrimaryKeyTable, cancellationToken : CancellationToken) : Task<PrimaryKeyTable | null> = table.FirstOrDefaultAsync((fun e -> e.Id = record.Id), cancellationToken)
+    static member FindAsync (table : ITable<PrimaryKeyTable>, record : PrimaryKeyTable, cancellationToken : CancellationToken) : Task<PrimaryKeyTable> = table.FirstOrDefaultAsync((fun e -> e.Id = record.Id), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<PrimaryKeyTable>, record : PrimaryKeyTable) : IQueryable<PrimaryKeyTable> = table.Where((fun e -> e.Id = record.Id))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindPrimaryKeyTable (db : TestDataDB, id : int64) : PrimaryKeyTable | null = db.GetTable<PrimaryKeyTable>().FirstOrDefault((fun e -> e.Id = id))
+    static member FindPrimaryKeyTable (db : TestDataDB, id : int64) : PrimaryKeyTable = db.GetTable<PrimaryKeyTable>().FirstOrDefault((fun e -> e.Id = id))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindPrimaryKeyTableAsync (db : TestDataDB, id : int64, cancellationToken : CancellationToken) : Task<PrimaryKeyTable | null> = db.GetTable<PrimaryKeyTable>().FirstOrDefaultAsync((fun e -> e.Id = id), cancellationToken)
+    static member FindPrimaryKeyTableAsync (db : TestDataDB, id : int64, cancellationToken : CancellationToken) : Task<PrimaryKeyTable> = db.GetTable<PrimaryKeyTable>().FirstOrDefaultAsync((fun e -> e.Id = id), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindPrimaryKeyTableQuery (db : TestDataDB, id : int64) : IQueryable<PrimaryKeyTable> = db.GetTable<PrimaryKeyTable>().Where((fun e -> e.Id = id))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member Find (db : TestDataDB, record : PrimaryKeyTable) : PrimaryKeyTable | null = db.GetTable<PrimaryKeyTable>().FirstOrDefault((fun e -> e.Id = record.Id))
+    static member Find (db : TestDataDB, record : PrimaryKeyTable) : PrimaryKeyTable = db.GetTable<PrimaryKeyTable>().FirstOrDefault((fun e -> e.Id = record.Id))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (db : TestDataDB, record : PrimaryKeyTable, cancellationToken : CancellationToken) : Task<PrimaryKeyTable | null> = db.GetTable<PrimaryKeyTable>().FirstOrDefaultAsync((fun e -> e.Id = record.Id), cancellationToken)
+    static member FindAsync (db : TestDataDB, record : PrimaryKeyTable, cancellationToken : CancellationToken) : Task<PrimaryKeyTable> = db.GetTable<PrimaryKeyTable>().FirstOrDefaultAsync((fun e -> e.Id = record.Id), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (db : TestDataDB, record : PrimaryKeyTable) : IQueryable<PrimaryKeyTable> = db.GetTable<PrimaryKeyTable>().Where((fun e -> e.Id = record.Id))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member Find (table : ITable<TestIdentity>, id : int64) : TestIdentity | null = table.FirstOrDefault((fun e -> e.Id = id))
+    static member Find (table : ITable<TestIdentity>, id : int64) : TestIdentity = table.FirstOrDefault((fun e -> e.Id = id))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<TestIdentity>, id : int64, cancellationToken : CancellationToken) : Task<TestIdentity | null> = table.FirstOrDefaultAsync((fun e -> e.Id = id), cancellationToken)
+    static member FindAsync (table : ITable<TestIdentity>, id : int64, cancellationToken : CancellationToken) : Task<TestIdentity> = table.FirstOrDefaultAsync((fun e -> e.Id = id), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<TestIdentity>, id : int64) : IQueryable<TestIdentity> = table.Where((fun e -> e.Id = id))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member Find (table : ITable<TestIdentity>, record : TestIdentity) : TestIdentity | null = table.FirstOrDefault((fun e -> e.Id = record.Id))
+    static member Find (table : ITable<TestIdentity>, record : TestIdentity) : TestIdentity = table.FirstOrDefault((fun e -> e.Id = record.Id))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (table : ITable<TestIdentity>, record : TestIdentity, cancellationToken : CancellationToken) : Task<TestIdentity | null> = table.FirstOrDefaultAsync((fun e -> e.Id = record.Id), cancellationToken)
+    static member FindAsync (table : ITable<TestIdentity>, record : TestIdentity, cancellationToken : CancellationToken) : Task<TestIdentity> = table.FirstOrDefaultAsync((fun e -> e.Id = record.Id), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (table : ITable<TestIdentity>, record : TestIdentity) : IQueryable<TestIdentity> = table.Where((fun e -> e.Id = record.Id))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindTestIdentity (db : TestDataDB, id : int64) : TestIdentity | null = db.GetTable<TestIdentity>().FirstOrDefault((fun e -> e.Id = id))
+    static member FindTestIdentity (db : TestDataDB, id : int64) : TestIdentity = db.GetTable<TestIdentity>().FirstOrDefault((fun e -> e.Id = id))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindTestIdentityAsync (db : TestDataDB, id : int64, cancellationToken : CancellationToken) : Task<TestIdentity | null> = db.GetTable<TestIdentity>().FirstOrDefaultAsync((fun e -> e.Id = id), cancellationToken)
+    static member FindTestIdentityAsync (db : TestDataDB, id : int64, cancellationToken : CancellationToken) : Task<TestIdentity> = db.GetTable<TestIdentity>().FirstOrDefaultAsync((fun e -> e.Id = id), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindTestIdentityQuery (db : TestDataDB, id : int64) : IQueryable<TestIdentity> = db.GetTable<TestIdentity>().Where((fun e -> e.Id = id))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member Find (db : TestDataDB, record : TestIdentity) : TestIdentity | null = db.GetTable<TestIdentity>().FirstOrDefault((fun e -> e.Id = record.Id))
+    static member Find (db : TestDataDB, record : TestIdentity) : TestIdentity = db.GetTable<TestIdentity>().FirstOrDefault((fun e -> e.Id = record.Id))
 
     [<System.Runtime.CompilerServices.Extension>]
-    static member FindAsync (db : TestDataDB, record : TestIdentity, cancellationToken : CancellationToken) : Task<TestIdentity | null> = db.GetTable<TestIdentity>().FirstOrDefaultAsync((fun e -> e.Id = record.Id), cancellationToken)
+    static member FindAsync (db : TestDataDB, record : TestIdentity, cancellationToken : CancellationToken) : Task<TestIdentity> = db.GetTable<TestIdentity>().FirstOrDefaultAsync((fun e -> e.Id = record.Id), cancellationToken)
 
     [<System.Runtime.CompilerServices.Extension>]
     static member FindQuery (db : TestDataDB, record : TestIdentity) : IQueryable<TestIdentity> = db.GetTable<TestIdentity>().Where((fun e -> e.Id = record.Id))
@@ -423,7 +422,7 @@ type LinqDataType =
         [<Column("DateTimeValue2", DataType = DataType.DateTime2, DbType = "datetime2")>] DateTimeValue2 : DateTime option // datetime2
         [<Column("BoolValue", DataType = DataType.Boolean, DbType = "boolean")>] BoolValue : bool option // boolean
         [<Column("GuidValue", DataType = DataType.Guid, DbType = "uniqueidentifier")>] GuidValue : Guid option // uniqueidentifier
-        [<Column("BinaryValue", DataType = DataType.VarBinary, DbType = "binary(5000)", Length = 5000)>] BinaryValue : byte[] | null // binary(5000)
+        [<Column("BinaryValue", DataType = DataType.VarBinary, DbType = "binary(5000)", Length = 5000)>] BinaryValue : byte[] // binary(5000)
         [<Column("SmallIntValue", DataType = DataType.Int16, DbType = "smallint")>] SmallIntValue : int16 option // smallint
         [<Column("IntValue", DataType = DataType.Int32, DbType = "INT")>] IntValue : int option // INT
         [<Column("BigIntValue", DataType = DataType.Int64, DbType = "bigint")>] BigIntValue : int64 option // bigint
@@ -465,11 +464,11 @@ type Person =
         /// <summary>
         /// FK_Doctor_0 backreference
         /// </summary>
-        [<Association(ThisKey = "PersonId", OtherKey = "PersonId")>] Doctor : Doctor | null
+        [<Association(ThisKey = "PersonId", OtherKey = "PersonId")>] Doctor : Doctor
         /// <summary>
         /// FK_Patient_0 backreference
         /// </summary>
-        [<Association(ThisKey = "PersonId", OtherKey = "PersonId")>] Patient : Patient | null
+        [<Association(ThisKey = "PersonId", OtherKey = "PersonId")>] Patient : Patient
     }
 
 
@@ -527,7 +526,7 @@ type TestMerge1 =
         [<Column("FieldFloat", DataType = DataType.Double, DbType = "FLOAT(24)")>] FieldFloat : float option // FLOAT(24)
         [<Column("FieldDouble", DataType = DataType.Double, DbType = "FLOAT(53)")>] FieldDouble : float option // FLOAT(53)
         [<Column("FieldDateTime", DataType = DataType.DateTime2, DbType = "DATETIME")>] FieldDateTime : DateTime option // DATETIME
-        [<Column("FieldBinary", DataType = DataType.VarBinary, DbType = "VARBINARY(20)", Length = 20)>] FieldBinary : byte[] | null // VARBINARY(20)
+        [<Column("FieldBinary", DataType = DataType.VarBinary, DbType = "VARBINARY(20)", Length = 20)>] FieldBinary : byte[] // VARBINARY(20)
         [<Column("FieldGuid", DataType = DataType.Guid, DbType = "UNIQUEIDENTIFIER")>] FieldGuid : Guid option // UNIQUEIDENTIFIER
         [<Column("FieldDate", DataType = DataType.Date, DbType = "DATE")>] FieldDate : DateTime option // DATE
         [<Column("FieldEnumString", DataType = DataType.NVarChar, DbType = "VARCHAR(20)", Length = 20)>] FieldEnumString : string option // VARCHAR(20)
@@ -554,7 +553,7 @@ type TestMerge2 =
         [<Column("FieldFloat", DataType = DataType.Double, DbType = "FLOAT(24)")>] FieldFloat : float option // FLOAT(24)
         [<Column("FieldDouble", DataType = DataType.Double, DbType = "FLOAT(53)")>] FieldDouble : float option // FLOAT(53)
         [<Column("FieldDateTime", DataType = DataType.DateTime2, DbType = "DATETIME")>] FieldDateTime : DateTime option // DATETIME
-        [<Column("FieldBinary", DataType = DataType.VarBinary, DbType = "VARBINARY(20)", Length = 20)>] FieldBinary : byte[] | null // VARBINARY(20)
+        [<Column("FieldBinary", DataType = DataType.VarBinary, DbType = "VARBINARY(20)", Length = 20)>] FieldBinary : byte[] // VARBINARY(20)
         [<Column("FieldGuid", DataType = DataType.Guid, DbType = "UNIQUEIDENTIFIER")>] FieldGuid : Guid option // UNIQUEIDENTIFIER
         [<Column("FieldDate", DataType = DataType.Date, DbType = "DATE")>] FieldDate : DateTime option // DATE
         [<Column("FieldEnumString", DataType = DataType.NVarChar, DbType = "VARCHAR(20)", Length = 20)>] FieldEnumString : string option // VARCHAR(20)
@@ -585,11 +584,11 @@ type AllTypesView =
         [<Column("ncharDataType", DataType = DataType.NVarChar, DbType = "nchar(20)", Length = 20)>] NcharDataType : string option // nchar(20)
         [<Column("nvarcharDataType", DataType = DataType.NVarChar, DbType = "nvarchar(20)", Length = 20)>] NvarcharDataType : string option // nvarchar(20)
         [<Column("ntextDataType", DataType = DataType.NVarChar, DbType = "ntext")>] NtextDataType : string option // ntext
-        [<Column("binaryDataType", DataType = DataType.VarBinary, DbType = "binary")>] BinaryDataType : byte[] | null // binary
-        [<Column("varbinaryDataType", DataType = DataType.VarBinary, DbType = "varbinary")>] VarbinaryDataType : byte[] | null // varbinary
-        [<Column("imageDataType", DataType = DataType.VarBinary, DbType = "image")>] ImageDataType : byte[] | null // image
+        [<Column("binaryDataType", DataType = DataType.VarBinary, DbType = "binary")>] BinaryDataType : byte[] // binary
+        [<Column("varbinaryDataType", DataType = DataType.VarBinary, DbType = "varbinary")>] VarbinaryDataType : byte[] // varbinary
+        [<Column("imageDataType", DataType = DataType.VarBinary, DbType = "image")>] ImageDataType : byte[] // image
         [<Column("uniqueidentifierDataType", DataType = DataType.Guid, DbType = "uniqueidentifier")>] UniqueidentifierDataType : Guid option // uniqueidentifier
-        [<Column("objectDataType", DataType = DataType.Variant, DbType = "Object")>] ObjectDataType : obj | null // Object
+        [<Column("objectDataType", DataType = DataType.Variant, DbType = "Object")>] ObjectDataType : obj // Object
         [<Column("Number", DataType = DataType.Int64, DbType = "INTEGER")>] Number : int64 option // INTEGER
     }
 

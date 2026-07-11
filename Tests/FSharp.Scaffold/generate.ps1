@@ -68,9 +68,9 @@ if (-not $SQLiteConnection)     { $SQLiteConnection     = "Data Source=" + (Join
 if (-not $PostgreSQLConnection) { $PostgreSQLConnection = CN $PostgreSQLConnectionName }
 if (-not $SqlServerConnection)  { $SqlServerConnection  = CN $SqlServerConnectionName }
 
-# options shared by every provider baseline. --nrt and the partial/init-context options are C#-only
-# (the CLI rejects them for F#); association-extensions / IEquatable / init methods are forced off for
-# F# internally, so they're omitted here rather than passed-and-overridden.
+# options shared by every provider baseline. The partial/init-context options are C#-only (the CLI
+# rejects them for F#); association-extensions / IEquatable / init methods are forced off for F#
+# internally, so they're omitted here rather than passed-and-overridden. --nrt is set per mode below.
 $commonOptions = @(
     '--objects', 'table,view,foreign-key,stored-procedure,scalar-function,table-function,aggregate-function',
     '--find-methods', 'sync-pk-table,async-pk-table,query-pk-table,sync-pk-context,async-pk-context,query-pk-context,sync-entity-table,async-entity-table,query-entity-table,sync-entity-context,async-entity-context,query-entity-context',
@@ -109,9 +109,23 @@ function Invoke-Scaffold {
     if ($LASTEXITCODE -ne 0) { throw "Scaffolding failed for $Provider" }
 }
 
-Invoke-Scaffold -Provider 'SQLite'     -Connection $SQLiteConnection     -Namespace 'Tests.FSharp.Scaffold.SQLite'     -OutputSubfolder 'SQLite'
-Invoke-Scaffold -Provider 'PostgreSQL' -Connection $PostgreSQLConnection -Namespace 'Tests.FSharp.Scaffold.PostgreSQL' -OutputSubfolder 'PostgreSQL'
-Invoke-Scaffold -Provider 'SQLServer'  -Connection $SqlServerConnection  -Namespace 'Tests.FSharp.Scaffold.SqlServer'  -OutputSubfolder 'SqlServer' `
-    -ExtraOptions @('--mssql-enable-return-value-parameter', 'true')
+# each provider is scaffolded twice - once per nullness mode - for both-mode coverage:
+#   --nrt true  -> <Provider>/       (ns Tests.FSharp.Scaffold.<Provider>)       compiled by Tests.FSharp.Scaffold.fsproj      (<Nullable>enable</Nullable>)
+#   --nrt false -> NoNrt/<Provider>/ (ns Tests.FSharp.Scaffold.NoNrt.<Provider>) compiled by Tests.FSharp.Scaffold.NoNrt.fsproj (<Nullable>disable</Nullable>)
+$providers = @(
+    @{ Provider = 'SQLite';     Sub = 'SQLite';     Connection = $SQLiteConnection;     Extra = @() }
+    @{ Provider = 'PostgreSQL'; Sub = 'PostgreSQL'; Connection = $PostgreSQLConnection; Extra = @() }
+    @{ Provider = 'SQLServer';  Sub = 'SqlServer';  Connection = $SqlServerConnection;  Extra = @('--mssql-enable-return-value-parameter', 'true') }
+)
 
-Write-Host 'Done. Review the git diff and build Tests.FSharp.Scaffold.fsproj to validate.'
+foreach ($p in $providers) {
+    Invoke-Scaffold -Provider $p.Provider -Connection $p.Connection `
+        -Namespace "Tests.FSharp.Scaffold.$($p.Sub)" -OutputSubfolder $p.Sub `
+        -ExtraOptions (@('--nrt', 'true') + $p.Extra)
+
+    Invoke-Scaffold -Provider $p.Provider -Connection $p.Connection `
+        -Namespace "Tests.FSharp.Scaffold.NoNrt.$($p.Sub)" -OutputSubfolder (Join-Path 'NoNrt' $p.Sub) `
+        -ExtraOptions (@('--nrt', 'false') + $p.Extra)
+}
+
+Write-Host 'Done. Review the git diff and build Tests.FSharp.Scaffold.fsproj + Tests.FSharp.Scaffold.NoNrt.fsproj to validate.'

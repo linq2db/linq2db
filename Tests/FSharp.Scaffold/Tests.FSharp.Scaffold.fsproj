@@ -1,10 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!--
-    Compile-only regression gate for the CLI scaffolder's F# output (issue #1553).
-    The committed .fs files are produced by the CLI scaffold command with the F# target language and must
-    compile against linq2db + linq2db.FSharp. CI detects generator regressions when this project fails to
-    build (mirrors the C# Tests.T4 baseline mechanism). Regenerate the baselines after generator changes.
+    Compile-only regression gate for the CLI scaffolder's F# output (issue #1553) - NRT-enabled variant.
+    The committed .fs files are produced by scaffolding with target-language f# and nrt=true, and must compile
+    under F# 9 nullness (Nullable=enable): nullable reference members carry a `| null` annotation. The
+    nullness-disabled (nrt=false) variant is Tests.FSharp.Scaffold.NoNrt.fsproj; the two together give both-mode
+    coverage. CI detects generator regressions when either project fails to build. Regenerate both via
+    generate.ps1.
   -->
 
   <PropertyGroup>
@@ -12,9 +14,8 @@
     <TargetFramework>net10.0</TargetFramework>
     <LangVersion>9</LangVersion>
     <WarningLevel>5</WarningLevel>
-    <!-- generated F# uses classic nullable references (FirstOrDefault-style APIs); it is not annotated for
-         F# 9 nullness, so nullness checking is disabled for this baseline gate (see #1553 follow-up) -->
-    <Nullable>disable</Nullable>
+    <!-- F# 9 nullness on: the nrt=true baselines must be nullness-clean -->
+    <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
   </PropertyGroup>
