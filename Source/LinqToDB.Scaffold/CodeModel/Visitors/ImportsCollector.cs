@@ -52,6 +52,12 @@ namespace LinqToDB.CodeModel
 		{
 			VisitList(method.CustomAttributes);
 
+			// F# emits the lambda's delegate type explicitly (e.g. Func<DbDataReader, _>(fun r -> ...)) to
+			// disambiguate overload resolution, so that type's namespace must be imported. C# writes the
+			// lambda bare (dataReader => ...) and never names the delegate type, so it needs no such import.
+			if (ReferenceEquals(_languageProvider, LanguageProviders.FSharp))
+				CollectTypeImports(method.TargetType);
+
 			if (!method.CanOmmitTypes)
 				VisitList(method.Parameters);
 

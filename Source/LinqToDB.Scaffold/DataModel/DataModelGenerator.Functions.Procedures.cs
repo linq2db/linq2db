@@ -371,7 +371,13 @@ namespace LinqToDB.DataModel
 										[],
 										initializers)));
 
-					queryProcTypeArgs = [];
+					// C# infers the QueryProc<T> type argument from the mapper lambda's return type, so it is
+					// omitted. F# cannot: an un-annotated call is ambiguous between the objectReader:Func<..>
+					// and template:T overloads (both match a Func value), so emit the explicit type argument to
+					// pin T = result type and eliminate the template overloads (FS0041).
+					queryProcTypeArgs = ReferenceEquals(context.LanguageProvider, LanguageProviders.FSharp)
+						? new[] { returnElementType! }
+						: [];
 				}
 				else
 				{
@@ -470,7 +476,13 @@ namespace LinqToDB.DataModel
 					var properties         = resultClassBuilder.Properties(true);
 					var initializers       = new CodeAssignmentStatement[parameterRebinds.Length + 1];
 
-					asyncResult.MainResult.Type = returnType;
+					// F# does not implicitly widen, so the wrapper's result property type must match the value
+					// assigned to it exactly. generateToList materializes the result to a List<T> (it must be
+					// consumed before the output parameters are populated), whereas returnType is IEnumerable<T>;
+					// C# tolerates the implicit List->IEnumerable conversion, F# rejects it (FS3172).
+					asyncResult.MainResult.Type = generateToList && ReferenceEquals(context.LanguageProvider, LanguageProviders.FSharp)
+						? WellKnownTypes.System.Collections.Generic.List(returnElementType!)
+						: returnType;
 					var prop                    = context.DefineProperty(properties, asyncResult.MainResult);
 					initializers[0]             = context.AST.Assign(prop.Property.Reference, result);
 

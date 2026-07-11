@@ -181,6 +181,18 @@ namespace LinqToDB.CodeModel
 
 		protected override void Visit(CodeLambda method)
 		{
+			// When the lambda targets a Func/Action delegate, wrap it in an explicit delegate construction
+			// (e.g. System.Func<_, _>(fun x -> ...)). F# does not implicitly convert a lambda to a delegate
+			// during overload resolution, so an unwrapped lambda leaves calls with delegate-vs-template
+			// overloads (IDataContext.QueryProc/QueryProcAsync) ambiguous (FS0041). Expression<>-targeted
+			// lambdas are left bare - F# auto-quotes those into LINQ expression trees.
+			var wrapInDelegate = IsDelegateType(method.TargetType);
+
+			if (wrapInDelegate)
+			{
+				RenderType(method.TargetType, null, true);
+			}
+
 			// F# lambda: fun p1 p2 -> body
 			// Parenthesize the lambda: as a call argument, an unparenthesized `fun x -> a, b` would be parsed
 			// by F# as a lambda returning the tuple (a, b) rather than two arguments.
@@ -194,6 +206,14 @@ namespace LinqToDB.CodeModel
 
 			WriteMethodBodyExpression(method.Body);
 			Write(")");
+		}
+
+		// Func<...>/Action<...> delegate types (System namespace). Used to decide when a lambda must be
+		// wrapped in an explicit delegate construction for F# overload resolution (see Visit(CodeLambda)).
+		private static bool IsDelegateType(IType type)
+		{
+			var name = type.Name?.Name;
+			return name is "Func" or "Action";
 		}
 
 		protected override void Visit(CodeMember expression)
