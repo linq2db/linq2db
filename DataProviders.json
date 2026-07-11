@@ -86,7 +86,7 @@
 			"Northwind.SQLite"      : { "Provider": "System.Data.SQLite",    "ConnectionString": "FullUri=file:northwind_cl?mode=memory&cache=shared"                                                                                                  },
 			"Northwind.SQLite.MS"   : { "Provider": "SQLite.Microsoft",      "ConnectionString": "Data Source=northwind_ms;Mode=Memory;Cache=Shared"                                                                                                   },
 			"TestNoopProvider"      : { "Provider": "TestNoopProvider",      "ConnectionString": "TestNoopProvider"                                                                                                                                    },
-			"DuckDB"                : { "Provider": "DuckDB",                "ConnectionString": "Data Source=Database/TestData.duckdb"                                                                                                                }
+			"DuckDB"                : { "Provider": "DuckDB",                "ConnectionString": "Data Source=:memory:?cache=shared"                                                                                                             }
 		}
 	},
 
