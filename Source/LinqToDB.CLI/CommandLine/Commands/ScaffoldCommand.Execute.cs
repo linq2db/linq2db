@@ -91,11 +91,6 @@ namespace LinqToDB.CommandLine
 				settings.DataModel.HasUntypedOptionsConstructor = false;
 				settings.DataModel.HasTypedOptionsConstructor  = true;
 
-				// async stored-procedure methods use C#-style await; F# async is a computation-expression model
-				// (task { ... }) not yet emitted, so only synchronous procedure methods are generated for F#
-				settings.DataModel.GenerateProcedureAsync = false;
-				settings.DataModel.GenerateProcedureSync  = true;
-
 				// TODO(#1553): additional (non-default) schemas emitted as schema-context types are not yet fully
 				// supported for F# (member val initialization vs constructor `do`-binding ordering); scaffold a
 				// single (default) schema for F# until that is addressed.

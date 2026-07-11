@@ -378,15 +378,27 @@ namespace LinqToDB.CodeModel
 
 			Write(" =");
 
-			WriteMethodBodyBlock(method.Body, method.ReturnType == null);
+			// async methods (Task-returning) are rendered with an F# `task { }` computation expression;
+			// `await`ed calls become `let!`/`return!` bindings
+			if (method.Attributes.HasFlag(Modifiers.Async))
+				WriteTaskBody(method.Body);
+			else
+				WriteMethodBodyBlock(method.Body, method.ReturnType == null);
 		}
 
 		protected override void Visit(CodeParameter parameter)
 		{
-			// F# parameter: name : type
+			// F# parameter: name : type. out/ref parameters (e.g. sync stored procedures with output
+			// parameters) are rendered as byref<T>, which supports the `param <- value` mutation the body uses.
+			var byRef = parameter.Direction is CodeParameterDirection.Out or CodeParameterDirection.Ref;
+
 			Visit(parameter.Name);
 			Write(" : ");
+			if (byRef)
+				Write("byref<");
 			Visit(parameter.Type);
+			if (byRef)
+				Write(">");
 
 			// C# default parameter values (e.g. CancellationToken = default) have no direct F# member-parameter
 			// equivalent; the parameter is emitted as required. The produced method is fully usable, callers just
@@ -823,7 +835,9 @@ namespace LinqToDB.CodeModel
 		private            void WriteAssignment(CodeAssignmentBase       assignment)
 		{
 			Visit(assignment.LValue);
-			Write(" <- ");
+			// a variable declaration (`let mutable x`) is initialized with `=`; assignment to an existing
+			// target is mutation with `<-`
+			Write(assignment.LValue is CodeVariable ? " = " : " <- ");
 			Visit(assignment.RValue);
 		}
 
@@ -1160,6 +1174,100 @@ namespace LinqToDB.CodeModel
 			}
 
 			DecreaseIdent();
+		}
+
+		/// <summary>
+		/// Renders an async method body as an F# <c>task { }</c> computation expression, translating
+		/// <c>await</c>ed calls to <c>let!</c> / <c>return!</c> bindings.
+		/// </summary>
+		private void WriteTaskBody(CodeBlock? statements)
+		{
+			WriteLine();
+			IncreaseIdent();
+			WriteLine("task {");
+			IncreaseIdent();
+
+			if (statements != null)
+			{
+				foreach (var statement in statements.Items)
+				{
+					WriteTrivia(statement.Before);
+					WriteTaskStatement(statement);
+					WriteLine();
+					WriteTrivia(statement.After);
+				}
+			}
+
+			DecreaseIdent();
+			WriteLine("}");
+			DecreaseIdent();
+		}
+
+		/// <summary>
+		/// Renders a single statement inside a <c>task { }</c> computation expression.
+		/// </summary>
+		private void WriteTaskStatement(ICodeStatement statement)
+		{
+			switch (statement)
+			{
+				// `var x = await task;` -> `let! x = task`
+				case CodeAssignmentStatement { RValue: CodeAwaitExpression await } assign:
+					Write("let! ");
+					WriteBindingTarget(assign.LValue);
+					Write(" = ");
+					Visit(await.Task);
+					break;
+
+				// `var x = value;` -> `let mutable x = value` (variable declaration)
+				case CodeAssignmentStatement { LValue: CodeVariable variable } varAssign:
+					Write("let mutable ");
+					Visit(variable.Name);
+					Write(" = ");
+					Visit(varAssign.RValue);
+					break;
+
+				// assignment to an existing target -> mutation
+				case CodeAssignmentStatement assign:
+					Visit(assign.LValue);
+					Write(" <- ");
+					Visit(assign.RValue);
+					break;
+
+				// `await task;` -> `do! task`
+				case CodeAwaitStatement awaitStatement:
+					Write("do! ");
+					Visit(awaitStatement.Task);
+					break;
+
+				case CodeReturn { Expression: CodeAwaitExpression returnAwait }:
+					Write("return! ");
+					Visit(returnAwait.Task);
+					break;
+
+				case CodeReturn { Expression: { } returnExpression }:
+					Write("return ");
+					Visit(returnExpression);
+					break;
+
+				case CodeReturn:
+					Write("return ()");
+					break;
+
+				default:
+					Visit(statement);
+					break;
+			}
+		}
+
+		/// <summary>
+		/// Renders the target of a <c>let!</c> binding: a declared variable emits just its name.
+		/// </summary>
+		private void WriteBindingTarget(ILValue target)
+		{
+			if (target is CodeVariable variable)
+				Visit(variable.Name);
+			else
+				Visit(target);
 		}
 
 		/// <summary>
