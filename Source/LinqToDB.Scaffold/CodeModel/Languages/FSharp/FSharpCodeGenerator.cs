@@ -66,9 +66,9 @@ namespace LinqToDB.CodeModel
 		};
 
 		private readonly List<CodeIdentifier>                                                   _currentScope = new();
-#pragma warning disable IDE0052 // Remove unread private members
-		// F# has no nullable reference types; the NRT flag is accepted for interface parity but not used
+		// when true, nullable reference types are rendered with an F# 9 `| null` annotation (--nrt)
 		private readonly bool                                                                   _useNRT;
+#pragma warning disable IDE0052 // Remove unread private members
 		private readonly IReadOnlyDictionary<CodeIdentifier, ISet<IEnumerable<CodeIdentifier>>> _knownTypes;
 #pragma warning restore IDE0052 // Remove unread private members
 		private readonly ILanguageProvider                                                      _languageProvider;
@@ -117,7 +117,8 @@ namespace LinqToDB.CodeModel
 			switch (pragma.PragmaType)
 			{
 				case PragmaType.NullableEnable:
-					// F# has no nullable reference types; nothing to emit
+					// F# 9 nullness is a project-level setting (<Nullable>enable</Nullable>), not a file-level
+					// directive like C#'s `#nullable enable` - the `| null` annotations are emitted inline; nothing here
 					break;
 				case PragmaType.DisableWarning:
 					WriteUnindented("#nowarn");
@@ -1053,8 +1054,16 @@ namespace LinqToDB.CodeModel
 
 		protected override void Visit(CodeSuppressNull expression)
 		{
-			// F# has no NRT suppression operator
-			Visit(expression.Value);
+			// F# 9 nullness: Unchecked.nonNull is the pure-suppression analogue of C#'s `!` (asserts non-null
+			// with no runtime check). Without NRT there is no nullness to suppress, so render the value as-is.
+			if (_useNRT)
+			{
+				Write("Unchecked.nonNull(");
+				Visit(expression.Value);
+				Write(')');
+			}
+			else
+				Visit(expression.Value);
 		}
 
 		protected override void Visit     (CodeThrowStatement  statement ) => WriteThrow(statement );
@@ -1448,11 +1457,17 @@ namespace LinqToDB.CodeModel
 			RenderTypeName(type, nameOverride, typeOnlyContext);
 
 			// Wrap nullable *scalar* types in `option` (idiomatic F#, auto-mapped by linq2db.FSharp's
-			// UseFSharp option support). Nullable reference types that are NOT scalar - entity associations,
-			// byte[], obj, method return types - are left as plain nullable references, because option over a
-			// non-scalar element is not auto-mapped and an entity/array option would not round-trip.
-			if (nullable && (type.IsValueType || string.Equals(_languageProvider.GetAlias(type), "string", StringComparison.Ordinal)))
-				Write(" option");
+			// UseFSharp option support) in both NRT modes. Nullable reference types that are NOT scalar -
+			// entity associations, byte[], obj, method return types - are not option-wrapped (option over a
+			// non-scalar element is not auto-mapped and an entity/array option would not round-trip); they get
+			// an F# 9 `| null` annotation when NRT is enabled, and stay plain references otherwise.
+			if (nullable)
+			{
+				if (type.IsValueType || string.Equals(_languageProvider.GetAlias(type), "string", StringComparison.Ordinal))
+					Write(" option");
+				else if (_useNRT)
+					Write(" | null");
+			}
 		}
 
 		private void RenderTypeName(IType type, CodeIdentifier? nameOverride, bool typeOnlyContext)

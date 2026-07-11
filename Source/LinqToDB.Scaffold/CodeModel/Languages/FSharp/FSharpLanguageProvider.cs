@@ -66,7 +66,8 @@ namespace LinqToDB.CodeModel
 		IEqualityComparer<IType>                       ILanguageProvider.TypeEqualityComparerWithNRT       => _typeEqualityComparerWithNRT;
 		IEqualityComparer<IType>                       ILanguageProvider.TypeEqualityComparerWithoutNRT    => _typeEqualityComparerWithoutNRT;
 		ITypeParser                                    ILanguageProvider.TypeParser                        => _typeParser;
-		bool                                           ILanguageProvider.NRTSupported                      => false;
+		// F# 9 nullness: the generator emits `| null` on nullable reference types when --nrt is enabled.
+		bool                                           ILanguageProvider.NRTSupported                      => true;
 		string[]                                       ILanguageProvider.MissingXmlCommentWarnCodes        => _xmlDocWarnings;
 		string                                         ILanguageProvider.FileExtension                     => "fs";
 		CodeBuilder                                    ILanguageProvider.ASTBuilder                        => _builder;
@@ -121,8 +122,8 @@ namespace LinqToDB.CodeModel
 				this,
 				newLine,
 				indent,
-				// F# has no nullable reference types; option types are used instead
-				false,
+				// when enabled, nullable reference types are emitted with an F# 9 `| null` annotation
+				useNRT,
 				knownTypes,
 				scopedNames,
 				scopedTypes);

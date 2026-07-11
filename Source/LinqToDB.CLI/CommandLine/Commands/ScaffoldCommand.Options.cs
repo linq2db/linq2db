@@ -233,13 +233,12 @@ Customization using compiled assembly has several requirements:
 					"nrt",
 					null,
 					false,
-					"enable generation of nullable reference type annotations",
+					"enable generation of nullable reference type annotations (C# `?` / F# `| null`)",
 					null,
 					null,
 					null,
 					_defaultOptions.CodeGeneration.EnableNullableReferenceTypes,
-					_t4ModeOptions.CodeGeneration.EnableNullableReferenceTypes)
-					{ Languages = TargetLanguages.CSharp };
+					_t4ModeOptions.CodeGeneration.EnableNullableReferenceTypes);
 
 			/// <summary>
 			/// Code indent string option.
