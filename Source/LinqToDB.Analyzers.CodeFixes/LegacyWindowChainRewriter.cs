@@ -7,6 +7,7 @@ using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Operations;
 
 namespace LinqToDB.Analyzers.CodeFixes
 {
@@ -125,7 +126,7 @@ namespace LinqToDB.Analyzers.CodeFixes
 							}
 
 							return BuildFromRoot(
-								toValueInvocation, model, inv, ma, method, sawOver,
+								toValueInvocation, model, inv, ma, sawOver,
 								partitionArgs, orderClauses, keepSeen, isKeepFirst, keepOrderClauses, withinGroupOrderClauses,
 								frameSeen, frameIsRange, frameStart, frameStartValue, frameEnd, frameEndValue);
 						}
@@ -238,7 +239,6 @@ namespace LinqToDB.Analyzers.CodeFixes
 			SemanticModel model,
 			InvocationExpressionSyntax rootInvocation,
 			MemberAccessExpressionSyntax rootAccess,
-			IMethodSymbol rootMethod,
 			bool sawOver,
 			ArgumentListSyntax? partitionArgs,
 			List<OrderClause> orderClauses,
@@ -252,32 +252,41 @@ namespace LinqToDB.Analyzers.CodeFixes
 				return null;
 
 			// Split the root call's arguments into positional value args and the special modifier args
-			// (AggregateModifier / Nulls / From / NullsPosition) that become builder calls.
-			var valueArgs   = new List<ArgumentSyntax>();
+			// (AggregateModifier / Nulls / From / NullsPosition) that become builder calls. Map each written
+			// argument to its parameter through the semantic model rather than by source position: C# named
+			// arguments can be reordered, so a positional match would misclassify a modifier as a value arg (or
+			// vice-versa). IInvocationOperation.Arguments preserves source order, so the value args are collected
+			// with their parameter ordinal and re-sorted into declaration order — the order Sql.Window expects.
+			var valueArgsByOrdinal = new List<(int Ordinal, ArgumentSyntax Arg)>();
 			string? distinct = null, nullTreatment = null, fromPosition = null;
 
-			var rootArgs   = rootInvocation.ArgumentList.Arguments;
-			var parameters = rootMethod.Parameters; // reduced extension method: excludes the 'this' receiver
+			if (model.GetOperation(rootInvocation) is not IInvocationOperation rootOperation)
+				return null;
 
-			for (var i = 0; i < rootArgs.Count; i++)
+			foreach (var argument in rootOperation.Arguments)
 			{
-				var paramType = i < parameters.Length ? parameters[i].Type.Name : null;
+				// Only arguments the caller actually wrote map to a value slot / builder step; skip compiler-
+				// supplied defaults and params-array synthesis (and anything without a resolved parameter).
+				if (argument.ArgumentKind != ArgumentKind.Explicit
+					|| argument.Parameter is null
+					|| argument.Syntax is not ArgumentSyntax argSyntax)
+					continue;
 
-				switch (paramType)
+				switch (argument.Parameter.Type.Name)
 				{
 					case "AggregateModifier":
-						var mod = EnumMemberName(rootArgs[i].Expression);
+						var mod = EnumMemberName(argSyntax.Expression);
 						if (mod is null) return null;
 						if (string.Equals(mod, "Distinct", StringComparison.Ordinal)) distinct = "Distinct";
 						break;
 					case "Nulls":
-						var nulls = EnumMemberName(rootArgs[i].Expression);
+						var nulls = EnumMemberName(argSyntax.Expression);
 						if (nulls is null) return null;
 						if (string.Equals(nulls, "Ignore",  StringComparison.Ordinal)) nullTreatment = "IgnoreNulls";
 						if (string.Equals(nulls, "Respect", StringComparison.Ordinal)) nullTreatment = "RespectNulls";
 						break;
 					case "From":
-						var from = EnumMemberName(rootArgs[i].Expression);
+						var from = EnumMemberName(argSyntax.Expression);
 						if (from is null) return null;
 						if (string.Equals(from, "First", StringComparison.Ordinal)) fromPosition = "FromFirst";
 						if (string.Equals(from, "Last",  StringComparison.Ordinal)) fromPosition = "FromLast";
@@ -285,10 +294,14 @@ namespace LinqToDB.Analyzers.CodeFixes
 					case "NullsPosition":
 						break;
 					default:
-						valueArgs.Add(rootArgs[i]);
+						// Emitted positionally in Sql.Window arg order — drop any name-colon so a reordered
+						// named call doesn't carry a now-wrong parameter name into the rewritten call.
+						valueArgsByOrdinal.Add((argument.Parameter.Ordinal, argSyntax.NameColon is null ? argSyntax : argSyntax.WithNameColon(null)));
 						break;
 				}
 			}
+
+			var valueArgs = valueArgsByOrdinal.OrderBy(t => t.Ordinal).Select(t => t.Arg).ToList();
 
 			// Assemble the ordered builder steps for whichever function shape this is.
 			var steps = new List<Step>();
@@ -459,21 +472,28 @@ namespace LinqToDB.Analyzers.CodeFixes
 		}
 
 		// True when the rewritten Sql.Window call's return type is accepted at the original expression's position:
-		// it converts implicitly to the target slot, the target is unknown, or the context imposes no target type
-		// (anonymous member / var — it re-infers). The rewritten expression is bound speculatively at the original
-		// position so the check covers every family without enumerating per-function return types.
+		// it converts implicitly to the target slot, the target is unknown, or the context infers its type from the
+		// expression and the rewritten type is identical to the legacy one. The rewritten expression is bound
+		// speculatively at the original position so the check covers every family without enumerating return types.
 		static bool ReturnTypeFitsTarget(ExpressionSyntax legacyExpression, ExpressionSyntax rewritten, SemanticModel model)
 		{
+			var newType = model.GetSpeculativeTypeInfo(legacyExpression.SpanStart, rewritten, SpeculativeBindingOption.BindAsExpression).Type;
+			if (newType is null || newType.TypeKind == TypeKind.Error)
+				return false;
+
+			// A type-inferred context (var initializer / anonymous-object member) imposes no explicit slot to
+			// narrow into, but the inferred type follows the expression's own type — so a family whose Sql.Window
+			// return type differs from the legacy ToValue() slot (e.g. NTile: int -> long) would silently change
+			// the inferred variable's type. Only treat the rewrite as a no-op when the two types are identical.
 			if (IsTypeInferredContext(legacyExpression))
-				return true;
+			{
+				var legacyType = model.GetTypeInfo(legacyExpression).Type;
+				return legacyType is not null && SymbolEqualityComparer.Default.Equals(legacyType, newType);
+			}
 
 			var target = model.GetTypeInfo(legacyExpression).ConvertedType;
 			if (target is null || target.TypeKind == TypeKind.Error)
 				return true;
-
-			var newType = model.GetSpeculativeTypeInfo(legacyExpression.SpanStart, rewritten, SpeculativeBindingOption.BindAsExpression).Type;
-			if (newType is null || newType.TypeKind == TypeKind.Error)
-				return false;
 
 			var conversion = model.Compilation.ClassifyConversion(newType, target);
 			return conversion.IsImplicit || conversion.IsIdentity;

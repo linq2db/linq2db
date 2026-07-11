@@ -650,5 +650,95 @@ namespace Tests.Analyzers
 					}
 				}
 				""");
+
+		[Test]
+		public Task LagReordersNamedValueArguments()
+			// Named arguments can be written out of declaration order. The value args must be emitted in the order
+			// Sql.Window.Lag expects (expr, offset, default) — not source order — or offset/default would silently
+			// swap into a compiling-but-wrong call.
+			=> Verify.VerifyAsync(
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					int M(int x) => {|LINQ2DB1001:Sql.Ext.Lag(x, @default: 0, offset: 1).Over().OrderBy(x).ToValue()|};
+				}
+				""",
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					int M(int x) => Sql.Window.Lag(x, 1, 0, f => f.OrderBy(x));
+				}
+				""");
+
+		[Test]
+		public Task AggregateModifierAsReorderedNamedArgument()
+			// The modifier arg is classified by its parameter, not its position: a named modifier written before the
+			// value arg is still recognized as the aggregate modifier (and the value arg is emitted positionally).
+			=> Verify.VerifyAsync(
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					int M(int x) => {|LINQ2DB1001:Sql.Ext.Count(modifier: Sql.AggregateModifier.Distinct, expr: x).Over().PartitionBy(x).OrderBy(x).ToValue()|};
+				}
+				""",
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					int M(int x) => Sql.Window.Count(x, f => f.Distinct().PartitionBy(x).OrderBy(x));
+				}
+				""");
+
+		[Test]
+		public Task PreservesCommentOnChainScaffolding()
+			// A comment living on an intermediate chain token (here inside .Over()) is neither leading trivia of the
+			// statement nor part of a spliced value arg, so it travels the salvage path: collected off the old chain
+			// and re-attached as trailing trivia so no comment is dropped.
+			=> Verify.VerifyAsync(
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					long M(int x) => {|LINQ2DB1001:Sql.Ext.RowNumber().Over(/* keep */).OrderBy(x).ToValue()|};
+				}
+				""",
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					long M(int x) => Sql.Window.RowNumber(f => f.OrderBy(x)) /* keep */;
+				}
+				""");
+
+		[Test]
+		public Task DoesNotOfferFixForNTileInInferredContextThatWouldWiden()
+		{
+			// A `var` slot has no explicit target to narrow into, but its inferred type follows the expression: the
+			// legacy NTile ToValue() is int while Sql.Window.NTile returns long, so the fix would silently widen `r`
+			// from int to long. The declaration alone compiles, but a downstream int consumer would break — so the
+			// fix is withheld (the diagnostic still reports).
+			const string source = """
+				using LinqToDB;
+
+				class C
+				{
+					void M(int x)
+					{
+						var r = {|LINQ2DB1001:Sql.Ext.NTile(4).Over().OrderBy(x).ToValue()|};
+					}
+				}
+				""";
+
+			return Verify.VerifyAsync(source, source);
+		}
 	}
 }
