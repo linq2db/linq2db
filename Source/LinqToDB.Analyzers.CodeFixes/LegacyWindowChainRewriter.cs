@@ -14,7 +14,7 @@ namespace LinqToDB.Analyzers.CodeFixes
 	/// Rewrites a legacy <c>Sql.Ext.&lt;Fn&gt;(...)...Over()...ToValue()</c> chain into the equivalent
 	/// <c>Sql.Window.&lt;Fn&gt;(&lt;args&gt;, f =&gt; f....)</c> call. Mirrors the internal
 	/// <c>LegacyMemberConverterBase.TryConvertAnalyticFunction</c> mapping, but at the syntax level so the fix
-	/// can preserve the user's argument expressions (and their trivia) verbatim. Returns <c>null</c> when the
+	/// can preserve the user's argument expressions (and their trivia) verbatim. Returns <see langword="null"/> when the
 	/// chain has no direct mechanical <c>Sql.Window</c> equivalent (the diagnostic then stays without a fix).
 	/// </summary>
 	internal static class LegacyWindowChainRewriter
