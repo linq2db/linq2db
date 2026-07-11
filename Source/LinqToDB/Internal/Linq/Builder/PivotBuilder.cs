@@ -59,15 +59,28 @@ namespace LinqToDB.Internal.Linq.Builder
 						keyMembers.Add(keyMember.Member);
 			}
 
-			if (keyMembers.Count != 1)
-				throw new LinqToDBException("The portable Pivot fallback currently supports exactly one grouping key (p.Key.<member>). Use a provider with native PIVOT for more complex shapes.");
+			if (keyMembers.Count == 0)
+				throw new LinqToDBException("A Pivot projection must reference at least one grouping key (p.Key.<member>).");
 
-			var rowParam    = Expression.Parameter(sourceType, "row");
-			var keySelector = Expression.Lambda(Expression.MakeMemberAccess(rowParam, keyMembers[0]), rowParam);
-			var keyType     = keySelector.Body.Type;
+			var rowParam       = Expression.Parameter(sourceType, "row");
+			var keyMemberExprs = keyMembers.Select(m => (Expression)Expression.MakeMemberAccess(rowParam, m)).ToArray();
 
+			// GROUP BY key: a single member directly, or a ValueTuple of the members for a composite key.
+			var keyBody = keyMembers.Count == 1
+				? keyMemberExprs[0]
+				: Expression.New(MakeValueTupleType(keyMemberExprs.Select(e => e.Type).ToArray()).GetConstructors()[0], keyMemberExprs);
+
+			var keySelector  = Expression.Lambda(keyBody, rowParam);
+			var keyType      = keyBody.Type;
 			var groupingType = typeof(IGrouping<,>).MakeGenericType(keyType, sourceType);
 			var gParam       = Expression.Parameter(groupingType, "g");
+			var gKey         = Expression.Property(gParam, "Key");
+
+			// Access a key member on g.Key: the value itself for a single key, or g.Key.ItemN for a ValueTuple.
+			Expression KeyAccess(MemberInfo member)
+				=> keyMembers.Count == 1
+					? gKey
+					: Expression.Field(gKey, "Item" + (keyMembers.IndexOf(member) + 1).ToString(CultureInfo.InvariantCulture));
 
 			// Rebuild the projection over the grouping: keys → g.Key, aggregate markers → conditional aggregate.
 			var newArgs = new Expression[newExpr.Arguments.Count];
@@ -75,9 +88,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				var unwrapped = Unwrap(newExpr.Arguments[i]);
 
-				if (unwrapped is MemberExpression { Expression: MemberExpression { Member.Name: "Key" } })
+				if (unwrapped is MemberExpression { Expression: MemberExpression { Member.Name: "Key" } } keyMember)
 				{
-					newArgs[i] = ConvertIfNeeded(Expression.Property(gParam, "Key"), newExpr.Arguments[i].Type);
+					newArgs[i] = ConvertIfNeeded(KeyAccess(keyMember.Member), newExpr.Arguments[i].Type);
 					continue;
 				}
 
@@ -103,6 +116,18 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			return projected;
 		}
+
+		static Type MakeValueTupleType(Type[] types) => types.Length switch
+		{
+			1 => typeof(ValueTuple<>)      .MakeGenericType(types),
+			2 => typeof(ValueTuple<,>)     .MakeGenericType(types),
+			3 => typeof(ValueTuple<,,>)    .MakeGenericType(types),
+			4 => typeof(ValueTuple<,,,>)   .MakeGenericType(types),
+			5 => typeof(ValueTuple<,,,,>)  .MakeGenericType(types),
+			6 => typeof(ValueTuple<,,,,,>) .MakeGenericType(types),
+			7 => typeof(ValueTuple<,,,,,,>).MakeGenericType(types),
+			_ => throw new LinqToDBException("The portable Pivot fallback supports at most 7 grouping keys."),
+		};
 
 		static Expression BuildConditionalAggregate(MethodCallExpression marker, Type sourceType, ParameterExpression gParam, Type resultType)
 		{

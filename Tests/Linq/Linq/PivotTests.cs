@@ -146,5 +146,100 @@ namespace Tests.Linq
 					sql.ShouldContain("PIVOT");
 			}
 		}
+
+		[Test]
+		public void PivotMultiAggregate([IncludeDataSources(TestProvName.AllSQLite, ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.Data);
+
+			var result = t
+				.Pivot(p => new
+				{
+					p.Key.Category,
+					Sum2000 = p.Sum  (x => x.Amount, x => x.Year, 2000),
+					Cnt2000 = p.Count(x => x.Amount, x => x.Year, 2000),
+				})
+				.OrderBy(r => r.Category)
+				.ToArray();
+
+			result.Length.ShouldBe(2);
+			result[0].Category.ShouldBe("A");
+			result[0].Sum2000.ShouldBe(10m);
+			result[0].Cnt2000.ShouldBe(1);
+		}
+
+		[Table]
+		sealed class RegionSales
+		{
+			[Column] public string   Category { get; set; } = null!;
+			[Column] public string   Region   { get; set; } = null!;
+			[Column] public int      Year     { get; set; }
+			[Column] public decimal? Amount   { get; set; }
+
+			public static readonly RegionSales[] Data =
+			{
+				new() { Category = "A", Region = "EU", Year = 2000, Amount = 10m },
+				new() { Category = "A", Region = "EU", Year = 2010, Amount = 20m },
+				new() { Category = "A", Region = "US", Year = 2000, Amount = 3m  },
+				new() { Category = "B", Region = "EU", Year = 2000, Amount = 5m  },
+			};
+		}
+
+		[Test]
+		public void PivotCompositeKey([IncludeDataSources(TestProvName.AllSQLite, ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(RegionSales.Data);
+
+			var result = t
+				.Pivot(p => new
+				{
+					p.Key.Category,
+					p.Key.Region,
+					Y2000 = p.Sum(x => x.Amount, x => x.Year, 2000),
+					Y2010 = p.Sum(x => x.Amount, x => x.Year, 2010),
+				})
+				.OrderBy(r => r.Category)
+				.ThenBy(r => r.Region)
+				.ToArray();
+
+			// groups: (A,EU) Y2000=10 Y2010=20; (A,US) Y2000=3; (B,EU) Y2000=5
+			result.Length.ShouldBe(3);
+			result[0].Category.ShouldBe("A");
+			result[0].Region.ShouldBe("EU");
+			result[0].Y2000.ShouldBe(10m);
+			result[0].Y2010.ShouldBe(20m);
+			result[1].Region.ShouldBe("US");
+			result[1].Y2000.ShouldBe(3m);
+			result[2].Category.ShouldBe("B");
+			result[2].Y2000.ShouldBe(5m);
+		}
+
+		[Test]
+		public void PivotThenWhereAndProject([IncludeDataSources(ProviderName.DuckDB, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.Data);
+
+			// Where on a pivoted column + a projection that drops another pivoted column — stresses column pruning.
+			var result = t
+				.Pivot(p => new
+				{
+					p.Key.Category,
+					Y2000 = p.Sum(x => x.Amount, x => x.Year, 2000),
+					Y2010 = p.Sum(x => x.Amount, x => x.Year, 2010),
+				})
+				.Where(r => r.Y2010 >= 15)
+				.Select(r => new { r.Category, r.Y2010 })
+				.OrderBy(r => r.Category)
+				.ToArray();
+
+			result.Length.ShouldBe(2);
+			result[0].Category.ShouldBe("A");
+			result[0].Y2010.ShouldBe(20m);
+			result[1].Category.ShouldBe("B");
+			result[1].Y2010.ShouldBe(15m);
+		}
 	}
 }
