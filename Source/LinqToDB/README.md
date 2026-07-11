@@ -227,12 +227,17 @@ to the NuGet package directory (e.g. via MCP filesystem tools or the NuGet globa
 | `skills/linq2db/docs/agent-antipatterns.md` | Operational anti-patterns with `// WRONG` / `// CORRECT` code examples |
 | `skills/linq2db/docs/provider-capabilities.md` | SQL feature support matrix per provider (MERGE, CTE, bulk copy, OUTPUT, etc.) |
 | `skills/linq2db/docs/provider-setup.md` | Provider configuration reference (ProviderName constants, UseXxx methods, NuGet packages) |
+| `skills/linq2db/docs/mapping.md` | Mapping attributes, fluent mapping, generated DDL metadata, value converters |
+| `skills/linq2db/docs/crud/*.md` | SELECT, INSERT, UPDATE, DELETE, UPSERT, MERGE, and bulk-copy guides |
+| `skills/linq2db/docs/query-cte.md` | CTE query composition |
+| `skills/linq2db/docs/query-temp-tables.md` | Temporary table workflows |
 | `skills/linq2db/docs/api.md` | API discovery rules and curated extract entries for exact package-version member lookup |
 | `skills/linq2db/docs/hints.md` | Query, table, join, subquery, provider-specific, and MERGE hint guidance |
 | `skills/linq2db/docs/hints-api-map.md` | Reverse lookup from concrete provider SQL hints to typed provider-specific APIs |
 | `skills/linq2db/docs/translatable-methods.md` | Standard .NET methods translated to SQL (String, Math, DateTime, Nullable, casts, Sql.*) |
 | `skills/linq2db/docs/configuration.md` | DataOptions patterns: connection setup, logging, retry, interceptors, member translators |
 | `skills/linq2db/docs/custom-sql.md` | Custom SQL translation: `[Sql.Expression]`, `[Sql.Function]`, `[ExpressionMethod]`, provider-specific overloads |
+| `skills/linq2db/docs/interceptors.md` | Interceptor extension points and safe usage |
 
 Online copies may exist on the repository `master` branch, but they can describe a different version.
 For installed-package API decisions, agents should use the bundled files above unless package-local

@@ -36,6 +36,10 @@ function Read-Utf8File([string] $Path) {
 	return [System.IO.File]::ReadAllText($Path, [System.Text.UTF8Encoding]::new($false, $true))
 }
 
+function Get-FileSha256([string] $Path) {
+	return (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLowerInvariant()
+}
+
 function Clean-Text([string] $Text) {
 	if ([string]::IsNullOrWhiteSpace($Text)) {
 		return ''
@@ -625,6 +629,25 @@ $includedDocs = @(
 	$bundles.Values | ForEach-Object { $_ }
 ) | ForEach-Object { $_ } | Sort-Object
 
+$expectedDocs = @('SKILL.md', '../../LinqToDB/README.md') + @(
+	Get-ChildItem -LiteralPath (Join-Path $sourceRoot 'docs') -Recurse -File -Filter '*.md' |
+		ForEach-Object {
+			$relative = [System.IO.Path]::GetRelativePath($sourceRoot, $_.FullName).Replace('\', '/')
+			return $relative
+		}
+)
+$missingDocs = @($expectedDocs | Sort-Object -Unique | Where-Object { $includedDocs -notcontains $_ })
+if ($missingDocs.Count -gt 0) {
+	throw "Knowledge bundle map does not include source docs:`n$($missingDocs -join "`n")"
+}
+
+$sourceHashes = [ordered]@{}
+foreach ($doc in $includedDocs) {
+	$fullPath = Join-Path $sourceRoot ($doc.Replace('/', '\'))
+	$sourceHashes[$doc] = Get-FileSha256 $fullPath
+}
+$sourceHashes['linq2db.xml'] = Get-FileSha256 $XmlDocPath
+
 $manifest = [ordered]@{
 	generated_at      = (Get-Date).ToString('s')
 	prompt_source     = Get-RepoRelativePath $maintenancePath
@@ -634,6 +657,7 @@ $manifest = [ordered]@{
 	upload_files      = $uploadFiles
 	xml_member_count  = $xmlDoc.MemberCount
 	included_docs     = $includedDocs
+	source_hashes     = $sourceHashes
 }
 
 $manifestJson = $manifest | ConvertTo-Json -Depth 8

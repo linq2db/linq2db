@@ -20,14 +20,14 @@
 
 | What you need to do | Go to |
 |---|---|
-| Query / read data - filtering, projection, ordering, pagination, associations | [`docs/crud-select.md`](crud-select.md) |
-| Insert from a C# object, expression, or fluent column-by-column builder | [`docs/crud-insert-values.md`](crud-insert-values.md) |
-| `INSERT … SELECT` - copy or archive rows from a query, with JOINs or projections | [`docs/crud-insert-select.md`](crud-insert-select.md) |
-| Upsert - insert-or-update semantics (`InsertOrReplace`, `InsertOrUpdate`) | [`docs/crud-upsert.md`](crud-upsert.md) |
-| Update rows - full entity or partial expression-based update | [`docs/crud-update.md`](crud-update.md) |
-| Delete rows - by entity or by predicate | [`docs/crud-delete.md`](crud-delete.md) |
+| Query / read data - filtering, projection, ordering, pagination, associations | [`docs/crud/crud-select.md`](crud-select.md) |
+| Insert from a C# object, expression, or fluent column-by-column builder | [`docs/crud/crud-insert-values.md`](crud-insert-values.md) |
+| `INSERT … SELECT` - copy or archive rows from a query, with JOINs or projections | [`docs/crud/crud-insert-select.md`](crud-insert-select.md) |
+| Upsert - insert-or-update semantics (`InsertOrReplace`, `InsertOrUpdate`) | [`docs/crud/crud-upsert.md`](crud-upsert.md) |
+| Update rows - full entity or partial expression-based update | [`docs/crud/crud-update.md`](crud-update.md) |
+| Delete rows - by entity or by predicate | [`docs/crud/crud-delete.md`](crud-delete.md) |
 | Bulk copy / batch insert - `BulkCopy` / `BulkCopyAsync` | [`docs/crud/crud-bulkcopy.md`](crud-bulkcopy.md) |
-| MERGE - SQL MERGE statement via `Merge` LINQ extension | [`docs/crud-merge.md`](crud-merge.md) |
+| MERGE - SQL MERGE statement via `Merge` LINQ extension | [`docs/crud/crud-merge.md`](crud-merge.md) |
 
 ---
 

@@ -18,12 +18,6 @@ namespace LinqToDB
 	/// </summary>
 	/// <remarks>
 	/// <para>
-	/// AI/LLM agents using this NuGet package should first read package-local
-	/// <c>skills/linq2db/SKILL.md</c>, <c>README.md</c>, and <c>skills/linq2db/docs/api.md</c>; use
-	/// <c>skills/linq2db/docs/*.md</c> for task-specific guidance before proposing code.
-	/// </para>
-	///
-	/// <para>
 	/// <see cref="DataOptions"/> is a structured container of option groups
 	/// (e.g., LINQ, SQL, connection, retry policy, bulk copy, context behavior)
 	/// that together define how queries and commands are processed.

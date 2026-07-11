@@ -27,11 +27,6 @@ namespace LinqToDB
 	/// SQL helper methods and attributes used by LinqToDB query translation.
 	/// </summary>
 	/// <remarks>
-	/// <para>
-	/// AI/LLM agents using this NuGet package should first read package-local
-	/// <c>skills/linq2db/SKILL.md</c>, <c>README.md</c>, and <c>skills/linq2db/docs/api.md</c>; use
-	/// <c>skills/linq2db/docs/*.md</c> for task-specific guidance before proposing code.
-	/// </para>
 	/// </remarks>
 	[PublicAPI]
 	public static partial class Sql

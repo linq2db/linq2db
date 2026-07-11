@@ -225,28 +225,30 @@ docs/ai-tags.md
 
 # Additional Documentation
 
-The following files are included in the NuGet package:
+The NuGet package contains the following skill documents. Treat this list as package navigation,
+not as a completeness claim for every linq2db feature.
 
-docs/ai-tags.md
-Specification of `<ai-tags />` format and generated AI metadata semantics.
-
-docs/architecture.md
-This document.
-
-docs/agent-antipatterns.md
-Operational anti-patterns with code examples - common mistakes and how to avoid them.
-
-docs/provider-capabilities.md
-Provider capability matrix - which SQL features (MERGE, CTEs, window functions, OUTPUT/RETURNING, etc.) are supported per provider.
-
-docs/translatable-methods.md
-Reference list of standard .NET methods (String, Math, DateTime, Nullable, etc.) that LinqToDB translates to SQL, plus the Sql.* helper API.
-
-docs/configuration.md
-DataOptions configuration patterns and extensibility points: connection setup, tracing/logging, retry policies, interceptors, member translators.
-
-docs/custom-sql.md
-Custom SQL translation guide: mapping C# methods to SQL via `[Sql.Expression]`, `[Sql.Function]`, and `[ExpressionMethod]`; provider-specific overloads; supported and unsupported extension points.
+| File | Purpose |
+|---|---|
+| `SKILL.md` | Canonical agent entry point and routing rules. |
+| `docs/coverage.md` | Covered and not-yet-covered topics. |
+| `docs/api.md` | Generated public API search/discovery index. |
+| `docs/architecture.md` | This architecture overview. |
+| `docs/agent-antipatterns.md` | Operational anti-patterns with code examples. |
+| `docs/ai-tags.md` | `<ai-tags />` schema and generated AI metadata semantics. |
+| `docs/configuration.md` | `DataOptions`, tracing/logging, retry policies, interceptors, member translators. |
+| `docs/mapping.md` | Mapping attributes, fluent mapping, generated DDL metadata, value converters. |
+| `docs/provider-setup.md` | Provider setup methods, `ProviderName` constants, driver packages. |
+| `docs/provider-capabilities.md` | Provider SQL feature support matrix. |
+| `docs/crud/crud.md` | CRUD routing index. |
+| `docs/crud/*.md` | SELECT, INSERT, UPDATE, DELETE, UPSERT, MERGE, and bulk-copy guides. |
+| `docs/query-cte.md` | CTE query composition. |
+| `docs/query-temp-tables.md` | Temporary table workflows. |
+| `docs/hints.md` | Hint API rules and fallback order. |
+| `docs/hints-api-map.md` | Reverse lookup from SQL hint/directive text to typed provider helper. |
+| `docs/custom-sql.md` | Custom SQL translation via `[Sql.Expression]`, `[Sql.Function]`, and `[ExpressionMethod]`. |
+| `docs/translatable-methods.md` | Standard .NET methods and `Sql.*` helpers translated to SQL. |
+| `docs/interceptors.md` | Interceptor extension points and safe usage. |
 
 These files are version-aligned with the NuGet package.
 

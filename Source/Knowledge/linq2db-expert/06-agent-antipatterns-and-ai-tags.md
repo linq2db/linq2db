@@ -581,7 +581,24 @@ Defaults example (applies to member tags in the same documented API surface unle
 | `hint-type` | `HintType` | Hint scope/type for hint-bearing APIs. |
 
 `<ai-tags-defaults />` uses the same keys and controlled values as `<ai-tags />`.
-Generated docs display both as `AI-Tags` / defaults metadata.
+Generated docs display both as `AI metadata` / defaults metadata.
+
+## Coverage policy
+
+Do not treat `<ai-tags />` as mandatory for every public member.
+Use it on API surfaces where compact machine-readable routing materially helps agents:
+
+- DML terminal and builder APIs;
+- deferred query-composition APIs;
+- provider-specific hints and SQL directives;
+- configuration APIs;
+- connection/execution APIs;
+- raw SQL/custom SQL APIs;
+- APIs that execute SQL immediately, change generated SQL semantics, or alter provider setup.
+
+For overload families, tag representative overloads or all overloads when the metadata differs by
+receiver, execution timing, scope, or result shape. Avoid adding duplicate metadata mechanically when
+the surrounding type-level/default metadata is already sufficient for discovery.
 
 ## Controlled values (current baseline)
 

@@ -53,6 +53,7 @@ Every provider requires a separate ADO.NET driver NuGet package:
 | Oracle | `UseOracle(...)` | `Oracle.ManagedDataAccess.Core` |
 | ClickHouse | `UseClickHouse(...)` | `ClickHouse.Driver` |
 | DB2 | `UseDB2(...)` | `Net.IBM.Data.Db2` |
+| DuckDB | `UseDuckDB(...)` | `DuckDB.NET.Data.Full` |
 | Firebird | `UseFirebird(...)` | `FirebirdSql.Data.FirebirdClient` |
 | Sybase / SAP ASE | `UseAse(...)` | `AdoNetCore.AseClient` |
 

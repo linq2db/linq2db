@@ -46,12 +46,6 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Field
 - Summary: Controls behavior of Linq To DB, when it cannot load by type name on query deserialization: - if - will be thrown; - if false - type load error will be ignored. Default value: false.
 
-## LinqToDB.Common.Configuration.OptimizeForSequentialAccess
-
-- XML member: `F:LinqToDB.Common.Configuration.OptimizeForSequentialAccess`
-- Kind: Field
-- Summary: Enables mapping expression to be compatible with behavior. Note that it doesn't switch linq2db to use behavior for queries, so this optimization could be used for too. Default value: false.
-
 ## LinqToDB.Common.Configuration.SqlServer.UseSchemaOnlyToGetSchema
 
 - XML member: `F:LinqToDB.Common.Configuration.SqlServer.UseSchemaOnlyToGetSchema`
@@ -574,6 +568,18 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Field
 - Summary: Use automatic detection of dialect by asking PostgreSQL server for version.
 
+## LinqToDB.DataProvider.PostgreSQL.PostgreSQLVersion.v11
+
+- XML member: `F:LinqToDB.DataProvider.PostgreSQL.PostgreSQLVersion.v11`
+- Kind: Field
+- Summary: PostgreSQL 11+ SQL dialect (window-frame GROUPS mode, frame EXCLUDE, RANGE value-offset).
+
+## LinqToDB.DataProvider.PostgreSQL.PostgreSQLVersion.v12
+
+- XML member: `F:LinqToDB.DataProvider.PostgreSQL.PostgreSQLVersion.v12`
+- Kind: Field
+- Summary: PostgreSQL 12+ SQL dialect (CTE AS [NOT] MATERIALIZED).
+
 ## LinqToDB.DataProvider.PostgreSQL.PostgreSQLVersion.v13
 
 - XML member: `F:LinqToDB.DataProvider.PostgreSQL.PostgreSQLVersion.v13`
@@ -591,6 +597,12 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `F:LinqToDB.DataProvider.PostgreSQL.PostgreSQLVersion.v18`
 - Kind: Field
 - Summary: PostgreSQL 18+ SQL dialect.
+
+## LinqToDB.DataProvider.PostgreSQL.PostgreSQLVersion.v19
+
+- XML member: `F:LinqToDB.DataProvider.PostgreSQL.PostgreSQLVersion.v19`
+- Kind: Field
+- Summary: PostgreSQL 19+ SQL dialect.
 
 ## LinqToDB.DataProvider.PostgreSQL.PostgreSQLVersion.v92
 
@@ -807,6 +819,18 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `F:LinqToDB.DataProvider.Sybase.SybaseProvider.Unmanaged`
 - Kind: Field
 - Summary: Unmanaged provider from SAP (Sybase.AdoNet45.AseClient.dll).
+
+## LinqToDB.DataProvider.Ydb.YdbHints.Distinct
+
+- XML member: `F:LinqToDB.DataProvider.Ydb.YdbHints.Distinct`
+- Kind: Field
+- Summary: Name of the YDB distinct query hint.
+
+## LinqToDB.DataProvider.Ydb.YdbHints.Unique
+
+- XML member: `F:LinqToDB.DataProvider.Ydb.YdbHints.Unique`
+- Kind: Field
+- Summary: Name of the YDB unique query hint.
 
 ## LinqToDB.DataType.Array
 
@@ -1306,6 +1330,36 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Field
 - Summary: Yandex YSON type.
 
+## LinqToDB.EagerLoadingStrategy.CteUnion
+
+- XML member: `F:LinqToDB.EagerLoadingStrategy.CteUnion`
+- Kind: Field
+- Summary: CteUnion strategy: when two or more child associations at the same level use , their preamble queries are combined into a single UNION ALL query with a wide carrier tuple. This reduces round-trips (e.g., two children: 3 → 1 SELECT). Column slots are reused across branches when the nullable CLR type matches. Remaps to when the current provider does not support CTEs; if the CteUnion batch cannot be formed (e.g., only one child association is present or the carrier exceeds MaxColumnCount) the whole strategy falls back through and finally .
+
+## LinqToDB.EagerLoadingStrategy.Default
+
+- XML member: `F:LinqToDB.EagerLoadingStrategy.Default`
+- Kind: Field
+- Summary: Default strategy: issues a pre-query using SELECT DISTINCT on the full parent entity joined to child rows via SelectMany. This is the existing behaviour.
+
+## LinqToDB.EagerLoadingStrategy.KeyedQuery
+
+- XML member: `F:LinqToDB.EagerLoadingStrategy.KeyedQuery`
+- Kind: Field
+- Summary: KeyedQuery strategy: the main query results are buffered, distinct parent keys are extracted client-side, and child records are loaded in a single batch query using WHERE key IN (...) or a VALUES table join. Useful when parent entities have many/wide columns, since the child preamble carries only keys rather than the full parent entity.
+
+## LinqToDB.ImplicitCollectionLoading.Allow
+
+- XML member: `F:LinqToDB.ImplicitCollectionLoading.Allow`
+- Kind: Field
+- Summary: Implicit collection loading is allowed: a collection projected in a Select without an explicit eager-load request is loaded as usual. This is the default.
+
+## LinqToDB.ImplicitCollectionLoading.Throw
+
+- XML member: `F:LinqToDB.ImplicitCollectionLoading.Throw`
+- Kind: Field
+- Summary: Implicit collection loading is rejected: such a query throws at build time. Request the load explicitly with LoadWith/ThenLoad, or opt the whole query in with a With*LoadStrategy marker.
+
 ## LinqToDB.Internal.Cache.EvictionReason.Capacity
 
 - XML member: `F:LinqToDB.Internal.Cache.EvictionReason.Capacity`
@@ -1462,11 +1516,107 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Field
 - Summary: Materialization mapper expression build.
 
+## LinqToDB.Internal.Linq.Builder.EagerLoadFallbackReason.BatchCacheMiss
+
+- XML member: `F:LinqToDB.Internal.Linq.Builder.EagerLoadFallbackReason.BatchCacheMiss`
+- Kind: Field
+- Summary: CteUnion: the batch succeeded for some eager loads but did not include this one (e.g. a branch with zero detail placeholders was skipped).
+
+## LinqToDB.Internal.Linq.Builder.EagerLoadFallbackReason.ComplexParentReference
+
+- XML member: `F:LinqToDB.Internal.Linq.Builder.EagerLoadFallbackReason.ComplexParentReference`
+- Kind: Field
+- Summary: KeyedQuery: the child references a parent expression that can't be expressed as a VALUES key (e.g. Contains / Any on a parent collection, or a parent ref used only in a projection).
+
+## LinqToDB.Internal.Linq.Builder.EagerLoadFallbackReason.KeyTypeMismatch
+
+- XML member: `F:LinqToDB.Internal.Linq.Builder.EagerLoadFallbackReason.KeyTypeMismatch`
+- Kind: Field
+- Summary: Branches in the batch have non-matching key types — UNION ALL requires a uniform key shape.
+
+## LinqToDB.Internal.Linq.Builder.EagerLoadFallbackReason.MaxColumnCountExceeded
+
+- XML member: `F:LinqToDB.Internal.Linq.Builder.EagerLoadFallbackReason.MaxColumnCountExceeded`
+- Kind: Field
+- Summary: Carrier ValueTuple width would exceed the provider's MaxColumnCount.
+
+## LinqToDB.Internal.Linq.Builder.EagerLoadFallbackReason.NestedBatchNotSupported
+
+- XML member: `F:LinqToDB.Internal.Linq.Builder.EagerLoadFallbackReason.NestedBatchNotSupported`
+- Kind: Field
+- Summary: Nested CTE batch (called with non-empty previousKeys) — CteUnion only handles top-level batches.
+
+## LinqToDB.Internal.Linq.Builder.EagerLoadFallbackReason.NestedCorrelationNotFound
+
+- XML member: `F:LinqToDB.Internal.Linq.Builder.EagerLoadFallbackReason.NestedCorrelationNotFound`
+- Kind: Field
+- Summary: CteUnion: a nested eager load's correlation columns could not be detected, so the nested branch CTE can't be built.
+
+## LinqToDB.Internal.Linq.Builder.EagerLoadFallbackReason.NoBranches
+
+- XML member: `F:LinqToDB.Internal.Linq.Builder.EagerLoadFallbackReason.NoBranches`
+- Kind: Field
+- Summary: All candidate branches were filtered out before or during construction.
+
+## LinqToDB.Internal.Linq.Builder.EagerLoadFallbackReason.NoEagerLoads
+
+- XML member: `F:LinqToDB.Internal.Linq.Builder.EagerLoadFallbackReason.NoEagerLoads`
+- Kind: Field
+- Summary: No SqlEagerLoadExpression nodes found — strategy not applicable to the input.
+
+## LinqToDB.Internal.Linq.Builder.EagerLoadFallbackReason.None
+
+- XML member: `F:LinqToDB.Internal.Linq.Builder.EagerLoadFallbackReason.None`
+- Kind: Field
+- Summary: No fallback recorded (success path or the field was never set).
+
+## LinqToDB.Internal.Linq.Builder.ExpressionBuilder._eagerLoadState
+
+- XML member: `F:LinqToDB.Internal.Linq.Builder.ExpressionBuilder._eagerLoadState`
+- Kind: Field
+- Summary: Committed eager-load state from the most recent successful call. Consumed (nulled out) by when it wires up buffer materialization or the CteUnion streaming path.
+
+## LinqToDB.Internal.Linq.Builder.ExpressionBuilder._inEagerLoadProcessing
+
+- XML member: `F:LinqToDB.Internal.Linq.Builder.ExpressionBuilder._inEagerLoadProcessing`
+- Kind: Field
+- Summary: Set while eager-load processing recursively builds a preamble sub-query, so the nested calls skip the ImplicitCollectionLoading guard — those loads were already validated on the top-level query.
+
 ## LinqToDB.Internal.Linq.Builder.ExpressionBuilder._sequenceExpressions
 
 - XML member: `F:LinqToDB.Internal.Linq.Builder.ExpressionBuilder._sequenceExpressions`
 - Kind: Field
 - Summary: Contains information from which expression sequence were built. Used for Eager Loading.
+
+## LinqToDB.Internal.Linq.Builder.ExpressionBuilder.EagerLoadState.CteUnionInfo
+
+- XML member: `F:LinqToDB.Internal.Linq.Builder.ExpressionBuilder.EagerLoadState.CteUnionInfo`
+- Kind: Field
+- Summary: Phase-2 info populated by ProcessCteUnionBatch for the single-query CteUnion mode.
+
+## LinqToDB.Internal.Linq.Builder.ExpressionBuilder.EagerLoadState.FallbackReason
+
+- XML member: `F:LinqToDB.Internal.Linq.Builder.ExpressionBuilder.EagerLoadState.FallbackReason`
+- Kind: Field
+- Summary: Reason this attempt failed (if it failed). Set by strategy entry points before they return null; left at on success. Recorded into by the dispatcher when an attempt is discarded — diagnostic-only, the dispatcher does not branch on this value.
+
+## LinqToDB.Internal.Linq.Builder.ExpressionBuilder.EagerLoadState.HasCteUnionQuery
+
+- XML member: `F:LinqToDB.Internal.Linq.Builder.ExpressionBuilder.EagerLoadState.HasCteUnionQuery`
+- Kind: Field
+- Summary: True when holds a single-query CteUnion setup.
+
+## LinqToDB.Internal.Linq.Builder.ExpressionBuilder.EagerLoadState.HasKeyedQueryPreambles
+
+- XML member: `F:LinqToDB.Internal.Linq.Builder.ExpressionBuilder.EagerLoadState.HasKeyedQueryPreambles`
+- Kind: Field
+- Summary: Set by ProcessEagerLoadingKeyedQuery to signal BuildQuery that buffer materialization is needed.
+
+## LinqToDB.Internal.Linq.Builder.ExpressionBuilder.EagerLoadState.QueryFinalizedRequested
+
+- XML member: `F:LinqToDB.Internal.Linq.Builder.ExpressionBuilder.EagerLoadState.QueryFinalizedRequested`
+- Kind: Field
+- Summary: True when a strategy requested that _query.IsFinalized be set on commit. Populated mid-attempt (e.g. by CteUnion batching); only applied to the real query once decides the attempt succeeded.
 
 ## LinqToDB.Internal.Linq.Builder.ProjectFlags.ExtractProjection
 
@@ -1516,17 +1666,11 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Field
 - Summary: Body of Expression<Func<object?, object?>>
 
-## LinqToDB.Internal.Linq.Query<T>.QueryCache.CacheMissCount
+## LinqToDB.Internal.Linq.QueryCache.Default
 
-- XML member: `F:LinqToDB.Internal.Linq.Query`1.QueryCache.CacheMissCount`
+- XML member: `F:LinqToDB.Internal.Linq.QueryCache.Default`
 - Kind: Field
-- Summary: Count of queries which has not been found in cache.
-
-## LinqToDB.Internal.Linq.Query<T>.QueryCache.CacheSize
-
-- XML member: `F:LinqToDB.Internal.Linq.Query`1.QueryCache.CacheSize`
-- Kind: Field
-- Summary: LINQ query max cache size (per entity type).
+- Summary: Process-wide default cache used by .
 
 ## LinqToDB.Internal.Linq.QueryCacheCompareInfo.ComparisionFunctions
 
@@ -1545,6 +1689,12 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `F:LinqToDB.Internal.Linq.QueryFlags.ExpandedQuery`
 - Kind: Field
 - Summary: Indicates that query contains expression, which have been expanded
+
+## LinqToDB.Internal.Linq.QueryFlags.HasEntityServiceInterceptor
+
+- XML member: `F:LinqToDB.Internal.Linq.QueryFlags.HasEntityServiceInterceptor`
+- Kind: Field
+- Summary: Bit set when the data context provides an . Materialization may invoke entity-creation callbacks, so the cached query plan is sensitive to it.
 
 ## LinqToDB.Internal.Linq.QueryFlags.InlineParameters
 
@@ -1779,6 +1929,24 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `F:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.ConcatBuildStyle.Plus`
 - Kind: Field
 - Summary: a + b + c — SQL Server pre-2025, SqlCe, Access.
+
+## LinqToDB.Internal.SqlProvider.BasicSqlBuilder.WindowNullsPlacement.AfterClose
+
+- XML member: `F:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.WindowNullsPlacement.AfterClose`
+- Kind: Field
+- Summary: Keyword after the closing parenthesis: FUNC(args) IGNORE NULLS (Oracle, SQL Server 2022+, Informix).
+
+## LinqToDB.Internal.SqlProvider.BasicSqlBuilder.WindowNullsPlacement.AfterLastArgument
+
+- XML member: `F:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.WindowNullsPlacement.AfterLastArgument`
+- Kind: Field
+- Summary: Keyword inside the parentheses, after the last argument: FUNC(..., expr IGNORE NULLS) (DuckDB).
+
+## LinqToDB.Internal.SqlProvider.BasicSqlBuilder.WindowNullsPlacement.StringArgument
+
+- XML member: `F:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.WindowNullsPlacement.StringArgument`
+- Kind: Field
+- Summary: Quoted string as the last argument: FUNC(args, 'IGNORE NULLS') (DB2).
 
 ## LinqToDB.Internal.SqlProvider.ConvertType.ExceptionToErrorMessage
 
@@ -2701,6 +2869,18 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Field
 - Summary: PostgreSQL 9.2- data provider. Used as configuration name for PostgreSQL mapping schema .
 
+## LinqToDB.ProviderName.PostgreSQL11
+
+- XML member: `F:LinqToDB.ProviderName.PostgreSQL11`
+- Kind: Field
+- Summary: PostgreSQL 11+ data provider.
+
+## LinqToDB.ProviderName.PostgreSQL12
+
+- XML member: `F:LinqToDB.ProviderName.PostgreSQL12`
+- Kind: Field
+- Summary: PostgreSQL 12+ data provider.
+
 ## LinqToDB.ProviderName.PostgreSQL13
 
 - XML member: `F:LinqToDB.ProviderName.PostgreSQL13`
@@ -2718,6 +2898,12 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `F:LinqToDB.ProviderName.PostgreSQL18`
 - Kind: Field
 - Summary: PostgreSQL 18+ data provider.
+
+## LinqToDB.ProviderName.PostgreSQL19
+
+- XML member: `F:LinqToDB.ProviderName.PostgreSQL19`
+- Kind: Field
+- Summary: PostgreSQL 19+ data provider.
 
 ## LinqToDB.ProviderName.PostgreSQL92
 
@@ -3256,6 +3442,18 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `F:LinqToDB.TempTable`1.TotalCopied`
 - Kind: Field
 - Summary: Gets total number of records, inserted into table using BulkCopy.
+
+## LinqToDB.UpsertEmulationPolicy.Allow
+
+- XML member: `F:LinqToDB.UpsertEmulationPolicy.Allow`
+- Kind: Field
+- Summary: Perform the emulated multi-statement fallback (default). The statements run as independent commands; wrap the call in a transaction if atomicity is required.
+
+## LinqToDB.UpsertEmulationPolicy.Throw
+
+- XML member: `F:LinqToDB.UpsertEmulationPolicy.Throw`
+- Kind: Field
+- Summary: Reject the emulated fallback: throw at build time instead.
 
 ## LinqToDB.Async.AsyncExtensions.AsAsyncEnumerable<T>
 
@@ -9650,6 +9848,12 @@ Generated directly from the current package XML documentation. Use XML member id
   - `optionSetter`: configuration callback.
 - Returns: New options instance with applied changes.
 
+## LinqToDB.DataOptionsExtensions.UseDefaultEagerLoadingStrategy
+
+- XML member: `M:LinqToDB.DataOptionsExtensions.UseDefaultEagerLoadingStrategy(LinqToDB.DataOptions,LinqToDB.EagerLoadingStrategy)`
+- Kind: Method
+- Summary: Sets the default used for all LoadWith/ThenLoad eager-loading operations when no per-query strategy is set via WithUnionLoadStrategy, WithKeyedLoadStrategy, or WithSeparateLoadStrategy. Default: .
+
 ## LinqToDB.DataOptionsExtensions.UseDefaultNullsPosition
 
 - XML member: `M:LinqToDB.DataOptionsExtensions.UseDefaultNullsPosition(LinqToDB.DataOptions,LinqToDB.Sql.NullsPosition)`
@@ -9788,6 +9992,12 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.DataOptionsExtensions.UseIgnoreEmptyUpdate(LinqToDB.DataOptions,System.Boolean)`
 - Kind: Method
 - Summary: Controls behavior of linq2db when there is no updateable fields in Update query: - if - query not executed and Update operation returns 0 as number of affected records; - if - will be thrown. Default value: .
+
+## LinqToDB.DataOptionsExtensions.UseImplicitCollectionLoading
+
+- XML member: `M:LinqToDB.DataOptionsExtensions.UseImplicitCollectionLoading(LinqToDB.DataOptions,LinqToDB.ImplicitCollectionLoading)`
+- Kind: Method
+- Summary: With , an implicit eager load (a collection projected in a Select without being explicitly requested) throws at build time. The guard is bypassed by an explicit LoadWith/ThenLoad (that collection only) or a root WithUnionLoadStrategy/WithKeyedLoadStrategy/WithSeparateLoadStrategy marker (whole query). Default: .
 
 ## LinqToDB.DataOptionsExtensions.UseInformix
 
@@ -9960,6 +10170,12 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Method
 - Summary: Defines entity descriptor creation callback to use with DataOptions.
 
+## LinqToDB.DataOptionsExtensions.UseOptimizeForSequentialAccess
+
+- XML member: `M:LinqToDB.DataOptionsExtensions.UseOptimizeForSequentialAccess(LinqToDB.DataOptions,System.Boolean)`
+- Kind: Method
+- Summary: Enables mapping expression to be compatible with behavior. Note that it doesn't switch linq2db to use behavior for queries, so this optimization could be used for too. Default value: .
+
 ## LinqToDB.DataOptionsExtensions.UseOptimizeJoins
 
 - XML member: `M:LinqToDB.DataOptionsExtensions.UseOptimizeJoins(LinqToDB.DataOptions,System.Boolean)`
@@ -10067,6 +10283,12 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.DataOptionsExtensions.UsePreferApply(LinqToDB.DataOptions,System.Boolean)`
 - Kind: Method
 - Summary: Used to generate CROSS APPLY or OUTER APPLY if possible. Default value: .
+
+## LinqToDB.DataOptionsExtensions.UsePreferClientCalculation
+
+- XML member: `M:LinqToDB.DataOptionsExtensions.UsePreferClientCalculation(LinqToDB.DataOptions,System.Boolean)`
+- Kind: Method
+- Summary: When enabled, computed expressions in the final projection are calculated on the client during materialization instead of being translated into additional SQL columns. Expressions that prefer or require server-side evaluation (for example, members or methods mapped with or ) are still translated to SQL. Default value: .
 
 ## LinqToDB.DataOptionsExtensions.UsePreferExistsForScalar
 
@@ -10313,6 +10535,27 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Method
 - Summary: Defines data provider and transaction to use with DataOptions.
 
+## LinqToDB.DataOptionsExtensions.UseYdb
+
+- XML member: `M:LinqToDB.DataOptionsExtensions.UseYdb(LinqToDB.DataOptions,System.Func{LinqToDB.DataProvider.Ydb.YdbOptions,LinqToDB.DataProvider.Ydb.YdbOptions})`
+- Kind: Method
+- Summary: Configure YDB connection.
+- Parameters:
+  - `options`: Instance of .
+  - `optionSetter`: Optional configuration callback.
+- Returns: New options instance with applied changes.
+
+## LinqToDB.DataOptionsExtensions.UseYdb
+
+- XML member: `M:LinqToDB.DataOptionsExtensions.UseYdb(LinqToDB.DataOptions,System.String,System.Func{LinqToDB.DataProvider.Ydb.YdbOptions,LinqToDB.DataProvider.Ydb.YdbOptions})`
+- Kind: Method
+- Summary: Configure YDB connection.
+- Parameters:
+  - `options`: Instance of .
+  - `connectionString`: YDB connection string.
+  - `optionSetter`: Optional configuration callback.
+- Returns: New options instance with applied changes.
+
 ## LinqToDB.DataOptionsExtensions.WithAfterConnectionOpened
 
 - XML member: `M:LinqToDB.DataOptionsExtensions.WithAfterConnectionOpened(LinqToDB.Data.ConnectionOptions,System.Action{System.Data.Common.DbConnection},System.Func{System.Data.Common.DbConnection,System.Threading.CancellationToken,System.Threading.Tasks.Task})`
@@ -10433,6 +10676,12 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Method
 - Summary: Sets DbTransaction option.
 
+## LinqToDB.DataOptionsExtensions.WithDefaultEagerLoadingStrategy
+
+- XML member: `M:LinqToDB.DataOptionsExtensions.WithDefaultEagerLoadingStrategy(LinqToDB.LinqOptions,LinqToDB.EagerLoadingStrategy)`
+- Kind: Method
+- Summary: Sets the default used for all LoadWith/ThenLoad eager-loading operations when no per-query strategy is set via WithUnionLoadStrategy, WithKeyedLoadStrategy, or WithSeparateLoadStrategy. Default: .
+
 ## LinqToDB.DataOptionsExtensions.WithDefaultNullsPosition
 
 - XML member: `M:LinqToDB.DataOptionsExtensions.WithDefaultNullsPosition(LinqToDB.SqlOptions,LinqToDB.Sql.NullsPosition)`
@@ -10512,6 +10761,12 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Method
 - Summary: Controls behavior of linq2db when there is no updateable fields in Update query: - if - query not executed and Update operation returns 0 as number of affected records; - if - will be thrown. Default value: .
 
+## LinqToDB.DataOptionsExtensions.WithImplicitCollectionLoading
+
+- XML member: `M:LinqToDB.DataOptionsExtensions.WithImplicitCollectionLoading(LinqToDB.LinqOptions,LinqToDB.ImplicitCollectionLoading)`
+- Kind: Method
+- Summary: With , an implicit eager load (a collection projected in a Select without being explicitly requested) throws at build time. The guard is bypassed by an explicit LoadWith/ThenLoad (that collection only) or a root WithUnionLoadStrategy/WithKeyedLoadStrategy/WithSeparateLoadStrategy marker (whole query). Default: .
+
 ## LinqToDB.DataOptionsExtensions.WithKeepDistinctOrdered
 
 - XML member: `M:LinqToDB.DataOptionsExtensions.WithKeepDistinctOrdered(LinqToDB.LinqOptions,System.Boolean)`
@@ -10587,6 +10842,12 @@ Generated directly from the current package XML documentation. Use XML member id
   - `onTrace`: Callback, may not be called depending on the trace level.
 - Returns: The builder instance so calls can be chained.
 
+## LinqToDB.DataOptionsExtensions.WithOptimizeForSequentialAccess
+
+- XML member: `M:LinqToDB.DataOptionsExtensions.WithOptimizeForSequentialAccess(LinqToDB.LinqOptions,System.Boolean)`
+- Kind: Method
+- Summary: Enables mapping expression to be compatible with behavior. Note that it doesn't switch linq2db to use behavior for queries, so this optimization could be used for too. Default value: .
+
 ## LinqToDB.DataOptionsExtensions.WithOptimizeJoins
 
 - XML member: `M:LinqToDB.DataOptionsExtensions.WithOptimizeJoins(LinqToDB.LinqOptions,System.Boolean)`
@@ -10604,6 +10865,12 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.DataOptionsExtensions.WithPreferApply(LinqToDB.LinqOptions,System.Boolean)`
 - Kind: Method
 - Summary: Used to generate CROSS APPLY or OUTER APPLY if possible. Default value: .
+
+## LinqToDB.DataOptionsExtensions.WithPreferClientCalculation
+
+- XML member: `M:LinqToDB.DataOptionsExtensions.WithPreferClientCalculation(LinqToDB.LinqOptions,System.Boolean)`
+- Kind: Method
+- Summary: When enabled, computed expressions in the final projection are calculated on the client during materialization instead of being translated into additional SQL columns. Expressions that prefer or require server-side evaluation (for example, members or methods mapped with or ) are still translated to SQL. Default value: .
 
 ## LinqToDB.DataOptionsExtensions.WithPreferExistsForScalar
 
@@ -10802,42 +11069,42 @@ Generated directly from the current package XML documentation. Use XML member id
 
 - XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllAntiHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificQueryable{``0})`
 - Kind: Method
-- Summary: Adds a ClickHouse ALL ANTI join hint.
+- Summary: Adds the same ClickHouse join hint as JoinAntiHint. This method is deprecated.
 - AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllAntiHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllAntiHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificTable{``0})`
 - Kind: Method
-- Summary: Adds a ClickHouse ALL ANTI join hint.
+- Summary: Adds the same ClickHouse join hint as JoinAntiHint. This method is deprecated.
 - AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllAnyHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllAnyHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificQueryable{``0})`
 - Kind: Method
-- Summary: Adds a ClickHouse ALL ANY join hint.
+- Summary: Adds the same ClickHouse join hint as JoinAnyHint. This method is deprecated.
 - AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllAnyHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllAnyHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificTable{``0})`
 - Kind: Method
-- Summary: Adds a ClickHouse ALL ANY join hint.
+- Summary: Adds the same ClickHouse join hint as JoinAnyHint. This method is deprecated.
 - AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllAsOfHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllAsOfHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificQueryable{``0})`
 - Kind: Method
-- Summary: Adds a ClickHouse ALL ASOF join hint.
+- Summary: Adds the same ClickHouse join hint as JoinAsOfHint. This method is deprecated.
 - AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllAsOfHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllAsOfHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificTable{``0})`
 - Kind: Method
-- Summary: Adds a ClickHouse ALL ASOF join hint.
+- Summary: Adds the same ClickHouse join hint as JoinAsOfHint. This method is deprecated.
 - AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllHint<T>
@@ -10858,28 +11125,28 @@ Generated directly from the current package XML documentation. Use XML member id
 
 - XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllOuterHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificQueryable{``0})`
 - Kind: Method
-- Summary: Adds a ClickHouse ALL OUTER join hint.
+- Summary: Adds the same ClickHouse join hint as JoinOuterHint. This method is deprecated.
 - AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllOuterHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllOuterHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificTable{``0})`
 - Kind: Method
-- Summary: Adds a ClickHouse ALL OUTER join hint.
+- Summary: Adds the same ClickHouse join hint as JoinOuterHint. This method is deprecated.
 - AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllSemiHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllSemiHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificQueryable{``0})`
 - Kind: Method
-- Summary: Adds a ClickHouse ALL SEMI join hint.
+- Summary: Adds the same ClickHouse join hint as JoinSemiHint. This method is deprecated.
 - AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllSemiHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllSemiHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificTable{``0})`
 - Kind: Method
-- Summary: Adds a ClickHouse ALL SEMI join hint.
+- Summary: Adds the same ClickHouse join hint as JoinSemiHint. This method is deprecated.
 - AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAntiHint<T>
@@ -10922,6 +11189,20 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAsOfHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificTable{``0})`
 - Kind: Method
 - Summary: Adds a ClickHouse ASOF join hint.
+- AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+
+## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinGlobalAllHint<T>
+
+- XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinGlobalAllHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificQueryable{``0})`
+- Kind: Method
+- Summary: Adds a ClickHouse GLOBAL ALL join hint.
+- AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+
+## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinGlobalAllHint<T>
+
+- XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinGlobalAllHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificTable{``0})`
+- Kind: Method
+- Summary: Adds a ClickHouse GLOBAL ALL join hint.
 - AI metadata: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinGlobalAntiHint<T>
@@ -11206,6 +11487,86 @@ Generated directly from the current package XML documentation. Use XML member id
   - `BulkCopyType`: Default bulk copy mode, used for Firebird by methods, if mode is not specified explicitly. Default value: .
   - `IdentifierQuoteMode`: Specifies how identifiers like table and field names should be quoted. Default value: .
   - `IsLiteralEncodingSupported`: Specifies that Firebird supports literal encoding. Available from version 2.5 and could be used for Dialect 1 databases.
+
+## LinqToDB.DataProvider.Firebird.FirebirdTools.ClearAllPools
+
+- XML member: `M:LinqToDB.DataProvider.Firebird.FirebirdTools.ClearAllPools`
+- Kind: Method
+- Summary: Clears every Firebird connection pool process-wide (all connection strings). See / for a scoped alternative that leaves other databases' pools untouched.
+
+## LinqToDB.DataProvider.Firebird.FirebirdTools.ClearPool
+
+- XML member: `M:LinqToDB.DataProvider.Firebird.FirebirdTools.ClearPool(System.Data.Common.DbConnection)`
+- Kind: Method
+- Summary: Clears the connection pool associated with the given connection's connection string. Unlike (which evicts every Firebird pool process-wide), this only affects the pool for 's connection string, leaving connections for other databases/servers untouched.
+- Parameters:
+  - `connection`: Connection whose connection-string pool should be cleared.
+
+## LinqToDB.DataProvider.Firebird.FirebirdTools.ClearPool
+
+- XML member: `M:LinqToDB.DataProvider.Firebird.FirebirdTools.ClearPool(System.String)`
+- Kind: Method
+- Summary: Clears the connection pool for the given connection string. Same scoping as , but keyed by the connection string directly (no live connection object required).
+- Parameters:
+  - `connectionString`: Connection string whose pool should be cleared.
+
+## LinqToDB.DataProvider.Firebird.FirebirdTools.CreateDataConnection
+
+- XML member: `M:LinqToDB.DataProvider.Firebird.FirebirdTools.CreateDataConnection(System.Data.Common.DbConnection,LinqToDB.DataProvider.Firebird.FirebirdVersion)`
+- Kind: Method
+- Summary: Creates object using provided connection object.
+- Parameters:
+  - `connection`: Connection instance.
+  - `version`: Firebird dialect version.
+- Returns: instance.
+
+## LinqToDB.DataProvider.Firebird.FirebirdTools.CreateDataConnection
+
+- XML member: `M:LinqToDB.DataProvider.Firebird.FirebirdTools.CreateDataConnection(System.Data.Common.DbTransaction,LinqToDB.DataProvider.Firebird.FirebirdVersion)`
+- Kind: Method
+- Summary: Creates object using provided transaction object.
+- Parameters:
+  - `transaction`: Transaction instance.
+  - `version`: Firebird dialect version.
+- Returns: instance.
+
+## LinqToDB.DataProvider.Firebird.FirebirdTools.CreateDataConnection
+
+- XML member: `M:LinqToDB.DataProvider.Firebird.FirebirdTools.CreateDataConnection(System.String,LinqToDB.DataProvider.Firebird.FirebirdVersion)`
+- Kind: Method
+- Summary: Creates object using provided Firebird connection string.
+- Parameters:
+  - `connectionString`: Connection string.
+  - `version`: Firebird dialect version.
+- Returns: instance.
+
+## LinqToDB.DataProvider.Firebird.FirebirdTools.GetDataProvider
+
+- XML member: `M:LinqToDB.DataProvider.Firebird.FirebirdTools.GetDataProvider(LinqToDB.DataProvider.Firebird.FirebirdVersion,System.String,System.Data.Common.DbConnection,System.Data.Common.DbTransaction)`
+- Kind: Method
+- Summary: Returns the Firebird for the requested (or auto-detected) dialect version.
+- Parameters:
+  - `version`: Firebird dialect version.
+  - `connectionString`: Optional connection string, used for version auto-detection.
+  - `connection`: Optional connection, used for version auto-detection.
+  - `transaction`: Optional transaction, used for version auto-detection.
+- Returns: Firebird data provider instance.
+
+## LinqToDB.DataProvider.Firebird.FirebirdTools.ResolveFirebird
+
+- XML member: `M:LinqToDB.DataProvider.Firebird.FirebirdTools.ResolveFirebird(System.Reflection.Assembly)`
+- Kind: Method
+- Summary: Registers the specified Firebird ADO.NET client assembly (FirebirdSql.Data.FirebirdClient) for resolution.
+- Parameters:
+  - `assembly`: The Firebird client assembly.
+
+## LinqToDB.DataProvider.Firebird.FirebirdTools.ResolveFirebird
+
+- XML member: `M:LinqToDB.DataProvider.Firebird.FirebirdTools.ResolveFirebird(System.String)`
+- Kind: Method
+- Summary: Registers an assembly resolver that loads the Firebird ADO.NET client assembly (FirebirdSql.Data.FirebirdClient) from the specified path.
+- Parameters:
+  - `path`: Path to the folder or file containing the Firebird client assembly.
 
 ## LinqToDB.DataProvider.IDataProvider.ExecuteScope
 
@@ -18475,14 +18836,19 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.DataProvider.Ydb.YdbHints.QueryHint``1(LinqToDB.DataProvider.Ydb.IYdbSpecificQueryable{``0},System.String,System.String[])`
 - Kind: Method
 - Summary: Generic query-hint injector for YDB/YQL.
-- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Ydb.YdbHints.QueryHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.Ydb.YdbHints.QueryHint``1(System.Linq.IQueryable{``0},System.String,System.String[])`
 - Kind: Method
-- Summary: Adds a YDB query hint.
-- AI metadata: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- Summary: Adds a query hint to a generated query.
+- Type parameters:
+  - `TSource`: Table record mapping class.
+- Parameters:
+  - `source`: Query source.
+  - `hint`: SQL text, added as a database specific hint to generated query.
+  - `values`: Hint parameters.
+- Returns: Query source with hints.
 
 ## LinqToDB.DataProvider.Ydb.YdbHints.UniqueHint<T>
 
@@ -18507,6 +18873,28 @@ Generated directly from the current package XML documentation. Use XML member id
   - `BulkCopyType`: Default bulk copy mode for YDB. Default value: .
   - `UseParametrizedDecimal`: Use Decimal(p, s) type name instead of Decimal. Default value: .
 
+## LinqToDB.DataProvider.Ydb.YdbSpecificExtensions.AsYdb<T>
+
+- XML member: `M:LinqToDB.DataProvider.Ydb.YdbSpecificExtensions.AsYdb``1(LinqToDB.ITable{``0})`
+- Kind: Method
+- Summary: Marks the table as a YDB-specific table, enabling YDB table/query extension methods on it.
+- Type parameters:
+  - `TSource`: Table record type.
+- Parameters:
+  - `table`: Table-like query source.
+- Returns: YDB-specific table source.
+
+## LinqToDB.DataProvider.Ydb.YdbSpecificExtensions.AsYdb<T>
+
+- XML member: `M:LinqToDB.DataProvider.Ydb.YdbSpecificExtensions.AsYdb``1(System.Linq.IQueryable{``0})`
+- Kind: Method
+- Summary: Marks the query as a YDB-specific query, enabling YDB query extension methods on it.
+- Type parameters:
+  - `TSource`: Query record type.
+- Parameters:
+  - `source`: Query source.
+- Returns: YDB-specific query source.
+
 ## LinqToDB.DataProvider.Ydb.YdbTools.ClearAllPools
 
 - XML member: `M:LinqToDB.DataProvider.Ydb.YdbTools.ClearAllPools`
@@ -18518,6 +18906,60 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.DataProvider.Ydb.YdbTools.ClearPool(System.Data.Common.DbConnection)`
 - Kind: Method
 - Summary: Clear connection pool for connection's connection string.
+
+## LinqToDB.DataProvider.Ydb.YdbTools.CreateDataConnection
+
+- XML member: `M:LinqToDB.DataProvider.Ydb.YdbTools.CreateDataConnection(System.Data.Common.DbConnection)`
+- Kind: Method
+- Summary: Creates instance that uses YDB data provider and the provided connection.
+- Parameters:
+  - `connection`: YDB connection instance.
+- Returns: New instance.
+
+## LinqToDB.DataProvider.Ydb.YdbTools.CreateDataConnection
+
+- XML member: `M:LinqToDB.DataProvider.Ydb.YdbTools.CreateDataConnection(System.Data.Common.DbTransaction)`
+- Kind: Method
+- Summary: Creates instance that uses YDB data provider and the provided transaction.
+- Parameters:
+  - `transaction`: YDB transaction instance.
+- Returns: New instance.
+
+## LinqToDB.DataProvider.Ydb.YdbTools.CreateDataConnection
+
+- XML member: `M:LinqToDB.DataProvider.Ydb.YdbTools.CreateDataConnection(System.String)`
+- Kind: Method
+- Summary: Creates instance that uses YDB data provider and the provided connection string.
+- Parameters:
+  - `connectionString`: YDB connection string.
+- Returns: New instance.
+
+## LinqToDB.DataProvider.Ydb.YdbTools.GetDataProvider
+
+- XML member: `M:LinqToDB.DataProvider.Ydb.YdbTools.GetDataProvider(System.String,System.Data.Common.DbConnection,System.Data.Common.DbTransaction)`
+- Kind: Method
+- Summary: Returns YDB data provider instance.
+- Parameters:
+  - `connectionString`: Connection string (not used for provider detection; YDB exposes a single provider).
+  - `connection`: Connection instance (not used for provider detection).
+  - `transaction`: Transaction instance (not used for provider detection).
+- Returns: YDB data provider instance.
+
+## LinqToDB.DataProvider.Ydb.YdbTools.ResolveYdb
+
+- XML member: `M:LinqToDB.DataProvider.Ydb.YdbTools.ResolveYdb(System.Reflection.Assembly)`
+- Kind: Method
+- Summary: Registers the provided YDB ADO.NET provider assembly for use with Linq To DB.
+- Parameters:
+  - `assembly`: YDB provider assembly.
+
+## LinqToDB.DataProvider.Ydb.YdbTools.ResolveYdb
+
+- XML member: `M:LinqToDB.DataProvider.Ydb.YdbTools.ResolveYdb(System.String)`
+- Kind: Method
+- Summary: Loads and registers YDB ADO.NET provider assembly for use with Linq To DB from the specified path.
+- Parameters:
+  - `path`: Path to the directory or file with the YDB provider assembly.
 
 ## LinqToDB.ExpressionMethodAttribute.Constructor
 
@@ -19865,24 +20307,6 @@ Generated directly from the current package XML documentation. Use XML member id
   - `sb`: The to append to
   - `bytes`: The byte array to append in hex
 
-## LinqToDB.Internal.Common.Tools.GetFileName
-
-- XML member: `M:LinqToDB.Internal.Common.Tools.GetFileName(System.Reflection.Assembly)`
-- Kind: Method
-- Summary: Returns original path to assembly file.
-- Parameters:
-  - `assembly`: Assembly.
-- Returns: Assembly file path.
-
-## LinqToDB.Internal.Common.Tools.GetPath
-
-- XML member: `M:LinqToDB.Internal.Common.Tools.GetPath(System.Reflection.Assembly)`
-- Kind: Method
-- Summary: Returns path to original directory with provided assembly.
-- Parameters:
-  - `assembly`: Assembly.
-- Returns: Assembly directory path.
-
 ## LinqToDB.Internal.Common.Tools.IsNullOrEmpty
 
 - XML member: `M:LinqToDB.Internal.Common.Tools.IsNullOrEmpty(System.Collections.ICollection)`
@@ -19891,6 +20315,16 @@ Generated directly from the current package XML documentation. Use XML member id
 - Parameters:
   - `array`: Collection to check.
 - Returns: if collection is null or contains no elements, otherwise.
+
+## LinqToDB.Internal.Common.Tools.IsProviderAssemblyPresent
+
+- XML member: `M:LinqToDB.Internal.Common.Tools.IsProviderAssemblyPresent(System.String)`
+- Kind: Method
+- Summary: Determines whether a provider backend assembly with the given simple name is present — that is, it is already loaded, can be loaded via , or its .dll is physically deployed next to the linq2db assembly.
+- Remarks: As a side effect this may load into the current context. The file-existence fallback is intentionally disabled under PublishSingleFile deployments (where is empty) and never probes the current working directory — that current-directory fallback was the original single-file detection bug (linq2db#5488).
+- Parameters:
+  - `assemblyName`: Simple name of the provider assembly to look for.
+- Returns: if the assembly is loaded, loadable, or deployed next to linq2db.
 
 ## LinqToDB.Internal.Common.Tools.WhitespaceRegex
 
@@ -20440,6 +20874,24 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Method
 - Summary: Tries to load and register spatial types using provided path to types assembly (Microsoft.SqlServer.Types). Also check https://linq2db.github.io/articles/FAQ.html#how-can-i-use-sql-server-spatial-types for additional required configuration steps.
 
+## LinqToDB.Internal.DataProvider.Translation.ConvertContext.Constructor
+
+- XML member: `M:LinqToDB.Internal.DataProvider.Translation.ConvertContext.#ctor(LinqToDB.DataOptions)`
+- Kind: Method
+- Summary: Default implementation.
+
+## LinqToDB.Internal.DataProvider.Translation.IMemberConverter.Convert
+
+- XML member: `M:LinqToDB.Internal.DataProvider.Translation.IMemberConverter.Convert(System.Linq.Expressions.Expression,LinqToDB.Internal.DataProvider.Translation.IConvertContext,System.Boolean@)`
+- Kind: Method
+- Summary: Converts , using for options that affect the conversion.
+
+## LinqToDB.Internal.DataProvider.Translation.LegacyMemberConverterBase.TryConvertAnalyticFunction
+
+- XML member: `M:LinqToDB.Internal.DataProvider.Translation.LegacyMemberConverterBase.TryConvertAnalyticFunction(System.Linq.Expressions.MethodCallExpression,LinqToDB.Internal.DataProvider.Translation.IConvertContext)`
+- Kind: Method
+- Summary: Tries to convert old Sql.Ext.*().Over().PartitionBy().OrderBy().ToValue() chains to the new Sql.Window.* API. Returns null if the chain is not an analytic function chain.
+
 ## LinqToDB.Internal.DataProvider.Translation.MemberTranslatorBase.TranslateNoRequiredExpression
 
 - XML member: `M:LinqToDB.Internal.DataProvider.Translation.MemberTranslatorBase.TranslateNoRequiredExpression(LinqToDB.Linq.Translation.ITranslationContext,System.Linq.Expressions.Expression,LinqToDB.Linq.Translation.TranslationFlags,System.Boolean)`
@@ -20524,11 +20976,29 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Method
 - Summary: Catches all string-typed binary `Add` / `AddChecked` expressions (`a + b` where the result type is string), regardless of operand types. C# `string + obj` treats null as empty string while SQL `||` propagates NULL — for each operand we rewrite non-string operands to `.ToString()` calls (so ordinary translation produces a string-typed SQL expression / CAST), translate to SQL, and wrap each side with `COALESCE(..., '')`.
 
+## LinqToDB.Internal.DataProvider.Translation.StringMemberTranslatorBase.WrapIsNullOrWhiteSpaceResult
+
+- XML member: `M:LinqToDB.Internal.DataProvider.Translation.StringMemberTranslatorBase.WrapIsNullOrWhiteSpaceResult(LinqToDB.Linq.Translation.ITranslationContext,LinqToDB.Internal.SqlQuery.ISqlExpression,LinqToDB.Internal.SqlQuery.ISqlPredicate)`
+- Kind: Method
+- Summary: Wraps an IsNullOrWhiteSpace-shape predicate with an IS NULL OR … branch. Per-provider overrides build the empty-after-trim predicate in provider-specific syntax and call this helper to attach the null check. The IS NULL branch is emitted unconditionally — SQL optimizers fold it away when the value is provably non-nullable.
+
 ## LinqToDB.Internal.DataProvider.UniqueParametersNormalizer.MakeValidName
 
 - XML member: `M:LinqToDB.Internal.DataProvider.UniqueParametersNormalizer.MakeValidName(System.String)`
 - Kind: Method
 - Summary: Method should validate name characters and remove or replace invalid characters. Default implementation removes all characters except ASCII letters/digits and underscore.
+
+## LinqToDB.Internal.DataProvider.Ydb.YdbMappingSchema.GetCommonDecimalType
+
+- XML member: `M:LinqToDB.Internal.DataProvider.Ydb.YdbMappingSchema.GetCommonDecimalType(LinqToDB.DbDataType,LinqToDB.DbDataType)`
+- Kind: Method
+- Summary: Returns a Decimal whose precision/scale can hold either or — taking the larger integer-digit count and the larger scale. When the two together exceed , the integer part is preserved in full and only fractional (scale) digits are dropped, so large values never overflow. Used to align two Decimal operands for YQL constructs that require both arguments to share the exact same type (e.g. MIN_OF/MAX_OF).
+
+## LinqToDB.Internal.DataProvider.Ydb.YdbProviderAdapter.GetPrimaryKeys
+
+- XML member: `M:LinqToDB.Internal.DataProvider.Ydb.YdbProviderAdapter.GetPrimaryKeys(System.Data.Common.DbConnection,System.Collections.Generic.IEnumerable{System.String})`
+- Kind: Method
+- Summary: Returns the ordered primary-key column names per table, read from the open connection's gRPC table description. The driver is resolved once for the whole batch. Used by (YDB exposes no PK metadata via SQL or the ADO schema collections).
 
 ## LinqToDB.Internal.DataProvider.Ydb.YdbRetryPolicy.Constructor
 
@@ -20920,6 +21390,30 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.Internal.Expressions.Types.TypeWrapper.PropertySetter``2(System.Linq.Expressions.Expression{System.Func{``0,``1}})`
 - Kind: Method
 - Summary: Creates property setter expression from property getter. Limitation: property should have getter.
+
+## LinqToDB.Internal.Expressions.WindowFunctionHelpers.BuildAggregateWithKeep
+
+- XML member: `M:LinqToDB.Internal.Expressions.WindowFunctionHelpers.BuildAggregateWithKeep(System.Reflection.MethodInfo,System.Linq.Expressions.Expression,System.Boolean,System.Linq.Expressions.Expression[],System.ValueTuple{System.Linq.Expressions.Expression,System.Boolean,LinqToDB.Sql.NullsPosition}[])`
+- Kind: Method
+- Summary: Builds an aggregate window function with KEEP (DENSE_RANK FIRST/LAST) clause.
+
+## LinqToDB.Internal.Expressions.WindowFunctionHelpers.BuildAggregateWithKeep
+
+- XML member: `M:LinqToDB.Internal.Expressions.WindowFunctionHelpers.BuildAggregateWithKeep(System.String,System.Linq.Expressions.Expression,System.Boolean,System.Linq.Expressions.Expression[],System.ValueTuple{System.Linq.Expressions.Expression,System.Boolean,LinqToDB.Sql.NullsPosition}[])`
+- Kind: Method
+- Summary: Builds a KEEP (DENSE_RANK FIRST/LAST) aggregate window function for the named legacy single-argument aggregate (Sum/Average/Min/Max and the statistical aggregates). Returns for functions that have no single-argument KEEP form, so the caller can decide how to handle them.
+
+## LinqToDB.Internal.Expressions.WindowFunctionHelpers.FindConcreteOverload
+
+- XML member: `M:LinqToDB.Internal.Expressions.WindowFunctionHelpers.FindConcreteOverload(System.Reflection.MethodInfo,System.Type)`
+- Kind: Method
+- Summary: Finds the concrete overload of a non-generic window function (Sum, Avg, Min, Max) matching the argument type.
+
+## LinqToDB.Internal.Expressions.WindowFunctionHelpers.WindowFrameSpec.Constructor
+
+- XML member: `M:LinqToDB.Internal.Expressions.WindowFunctionHelpers.WindowFrameSpec.#ctor(System.Boolean,System.String,System.Linq.Expressions.Expression,System.String,System.Linq.Expressions.Expression)`
+- Kind: Method
+- Summary: Describes a converted window frame: ROWS/RANGE plus its start and end boundaries. / are the member names — "Unbounded", "CurrentRow", "ValuePreceding", or "ValueFollowing"; the matching value is the offset expression for the Value* members and otherwise.
 
 ## LinqToDB.Internal.Extensions.MappingExtensions.IsCollectionType
 
@@ -21363,11 +21857,134 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Method
 - Summary: Converts expression to new one if needed.
 
+## LinqToDB.Internal.Linq.Builder.DistinctByBuilder.BuildOrderByLambda
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.DistinctByBuilder.BuildOrderByLambda(System.Linq.Expressions.Expression,System.Type)`
+- Kind: Method
+- Summary: Wraps a prepared body captured by as a lambda usable by WindowFunctionHelpers.ApplyOrderBy. The body's s are left intact — they resolve through the surrounding build chain at SQL-generation time. The lambda parameter is unused.
+
+## LinqToDB.Internal.Linq.Builder.EntityBuilderConfig.Constructor
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.EntityBuilderConfig.#ctor(System.Linq.Expressions.ParameterExpression)`
+- Kind: Method
+- Summary: Parsed state of a single entity-builder configure-chain — the body of an Expression<Func<I*Builder<T>, I*Builder<T>>> for any of: standalone Insert (), standalone Update (), Upsert INSERT branch (), Upsert UPDATE branch ().
+- Remarks: and are populated only by Upsert-branch chains — the standalone / don't expose those methods, so the parser leaves them at their defaults.
+
+## LinqToDB.Internal.Linq.Builder.EntityBuilderParser.Canonicalise
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.EntityBuilderParser.Canonicalise(System.Linq.Expressions.LambdaExpression,System.Linq.Expressions.ParameterExpression)`
+- Kind: Method
+- Summary: Rewrite a field-selector lambda x => x.Col so its body references the shared . Two field selectors that referred to different source parameters now produce structurally-equal expressions, so can match them.
+
+## LinqToDB.Internal.Linq.Builder.EntityBuilderParser.IsEntityBuilderShape
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.EntityBuilderParser.IsEntityBuilderShape(System.Linq.Expressions.MethodCallExpression,System.Type)`
+- Kind: Method
+- Summary: True when is the entity-builder 3-arg shape (ITable<T>, T, Expression<Func<TBuilder, TBuilder>>) where TBuilder's open generic is .
+
+## LinqToDB.Internal.Linq.Builder.EntityBuilderParser.Parse
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.EntityBuilderParser.Parse(System.Linq.Expressions.LambdaExpression,System.Linq.Expressions.ParameterExpression)`
+- Kind: Method
+- Summary: Parse the body of a configure-lambda. Recognises Set / Ignore / When / DoNothing; throws on any other method name. Standalone callers ignore the When / DoNothing fields on the result since the standalone interfaces don't expose those at compile time.
+
+## LinqToDB.Internal.Linq.Builder.EntityConstructorBase.ExposeCalculatedColumn
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.EntityConstructorBase.ExposeCalculatedColumn(System.Linq.Expressions.Expression)`
+- Kind: Method
+- Summary: Expands a calculated column's substitution body. Only invoked when returns (i.e. from the query-building constructor, which overrides this to run ConvertExpressionTree on the member access). The base implementation is an inert fallback that returns the access unchanged.
+
+## LinqToDB.Internal.Linq.Builder.EntityConstructorBase.ShouldBuildCalculatedColumns
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.EntityConstructorBase.ShouldBuildCalculatedColumns(System.Linq.Expressions.Expression,LinqToDB.Internal.Linq.Builder.ProjectFlags,LinqToDB.Internal.Linq.Builder.EntityConstructorBase.FullEntityPurpose)`
+- Kind: Method
+- Summary: Whether calculated columns ( with IsColumn = true) should be expanded for the current construction. Defaults to , so non-query construction paths (e.g. reader-based materialization from raw SQL in RecordReaderBuilder) never process calculated columns. The query-building constructor overrides this to opt in only for table-backed full-entity materialization.
+
+## LinqToDB.Internal.Linq.Builder.EntityInsertBuilder.IsEntityInsertShape
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.EntityInsertBuilder.IsEntityInsertShape(System.Linq.Expressions.MethodCallExpression)`
+- Kind: Method
+- Summary: True when is the entity-builder shape (ITable<T>, T, Expression<Func<IEntityInsertSpec<T>, IEntityInsertSpec<T>>>).
+
+## LinqToDB.Internal.Linq.Builder.EntitySetterBuilder.BuildBindings
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.EntitySetterBuilder.BuildBindings(System.Type,System.Collections.Generic.List{System.ValueTuple{System.String[],LinqToDB.Mapping.ColumnDescriptor,System.Linq.Expressions.Expression}},System.Int32)`
+- Kind: Method
+- Summary: Build the member-binding list for a from the collected (column-path, value) items, grouping nested complex columns ([Column("Db", "Sub.Field")]) into s so the leaf is bound on its own sub-object type rather than (invalidly) on the entity root. A flat column becomes a ; columns sharing a prefix segment recurse one level deeper. turns a into a nested constructor (no Expression.New on the sub-object), and UpdateBuilder.ParseSet recurses through the nested constructor to map each leaf to its column.
+
+## LinqToDB.Internal.Linq.Builder.EntitySetterBuilder.BuildInsertSetter
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.EntitySetterBuilder.BuildInsertSetter(System.Type,LinqToDB.Mapping.EntityDescriptor,System.Linq.Expressions.ParameterExpression,System.Collections.Generic.IReadOnlyList{System.ValueTuple{System.Linq.Expressions.Expression,System.Linq.Expressions.LambdaExpression}},System.Collections.Generic.IReadOnlyList{System.Linq.Expressions.Expression})`
+- Kind: Method
+- Summary: Build s => new T { Col1 = v1, Col2 = v2, ... }. Whole-object defaults from the source row, with user Set overrides overlaid and Ignored / columns omitted.
+- Remarks: The body is emitted as rather than MemberInit(New(T), …) so the entity type does not need a public parameterless constructor. Expression.New(Type) validates that requirement at expression-tree construction time, which would break positional records / DTOs with non-default ctors. Downstream ParseGenericConstructor / ParseSetter already accept directly.
+
+## LinqToDB.Internal.Linq.Builder.EntitySetterBuilder.BuildUpdateSetter
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.EntitySetterBuilder.BuildUpdateSetter(System.Type,LinqToDB.Mapping.EntityDescriptor,System.Linq.Expressions.ParameterExpression,System.Collections.Generic.IReadOnlyList{System.ValueTuple{System.Linq.Expressions.Expression,System.Linq.Expressions.LambdaExpression}},System.Collections.Generic.IReadOnlyList{System.Linq.Expressions.Expression},System.Collections.Generic.HashSet{System.Linq.Expressions.Expression})`
+- Kind: Method
+- Summary: Build (t, s) => new T { Col1 = v1, Col2 = v2, ... }. Skips PK, , ignored, and (when supplied) match-key columns. Match-key columns are excluded so MERGE's UPDATE SET doesn't try to overwrite the ON-clause columns (Oracle ORA-38104, pointless self-assign elsewhere) — pass for standalone Update where match is the table's primary key.
+- Remarks: See for why the body is emitted as instead of MemberInit(New(T), …).
+
+## LinqToDB.Internal.Linq.Builder.EntitySetterBuilder.FindOverride
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.EntitySetterBuilder.FindOverride(System.Linq.Expressions.Expression,System.Collections.Generic.IReadOnlyList{System.ValueTuple{System.Linq.Expressions.Expression,System.Linq.Expressions.LambdaExpression}})`
+- Kind: Method
+- Summary: Find the user-provided Set(field, value) override for . Later entries win — append branch overrides after root overrides so the branch wins.
+
+## LinqToDB.Internal.Linq.Builder.EntitySetterBuilder.InstantiateSetter
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.EntitySetterBuilder.InstantiateSetter(System.Linq.Expressions.LambdaExpression,System.Linq.Expressions.Expression,System.Linq.Expressions.Expression)`
+- Kind: Method
+- Summary: Bind a user-provided setter lambda's parameters to in-scope expressions and return its body. Supported arities: 0 params — context-free (() => …); returns body unchanged.1 param — source row (s => …); binds to .2 params — (t, s) => …; binds first to , second to .
+
+## LinqToDB.Internal.Linq.Builder.EntitySetterBuilder.IsIgnored
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.EntitySetterBuilder.IsIgnored(System.Linq.Expressions.Expression,System.Collections.Generic.IReadOnlyList{System.Linq.Expressions.Expression})`
+- Kind: Method
+- Summary: True if appears in by structural equality.
+
+## LinqToDB.Internal.Linq.Builder.EntitySetterBuilder.SplitMemberPath
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.EntitySetterBuilder.SplitMemberPath(System.String)`
+- Kind: Method
+- Summary: Member-name path split on '.', dropping empty segments so a storage-style leading-dot MemberName (e.g. ".Building") collapses to a single root-level segment — the flat behaviour it had before nested grouping.
+
+## LinqToDB.Internal.Linq.Builder.EntityUpdateBuilder.IsEntityUpdateShape
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.EntityUpdateBuilder.IsEntityUpdateShape(System.Linq.Expressions.MethodCallExpression)`
+- Kind: Method
+- Summary: True when is the entity-builder shape (ITable<T>, T, Expression<Func<IEntityUpdateSpec<T>, IEntityUpdateSpec<T>>>).
+
+## LinqToDB.Internal.Linq.Builder.ExpressionBuilder.AccessValueTupleField
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.ExpressionBuilder.AccessValueTupleField(System.Linq.Expressions.Expression,System.Int32)`
+- Kind: Method
+- Summary: Accesses Item{position+1} field of a ValueTuple expression. Handles nesting via Rest for position >= 7.
+
+## LinqToDB.Internal.Linq.Builder.ExpressionBuilder.BuildCteUnionDetailExtractors<T>
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.ExpressionBuilder.BuildCteUnionDetailExtractors``1(LinqToDB.Internal.Linq.Builder.ExpressionBuilder.CteUnionBranch[],System.Int32[][],System.Int32)`
+- Kind: Method
+- Summary: Builds the per-branch detail extractors that reconstruct each child detail from a carrier ValueTuple slot, resolving any nested preamble lookups. Shared by the preamble (BuildCteUnionPreamble) and inline (SetupCteUnionQuery) execution modes.
+
 ## LinqToDB.Internal.Linq.Builder.ExpressionBuilder.CanBeEvaluatedOnClient
 
 - XML member: `M:LinqToDB.Internal.Linq.Builder.ExpressionBuilder.CanBeEvaluatedOnClient(System.Linq.Expressions.Expression)`
 - Kind: Method
 - Summary: Check if could be evaluated on client side.
+
+## LinqToDB.Internal.Linq.Builder.ExpressionBuilder.CollectSimpleBinaryDependencies
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.ExpressionBuilder.CollectSimpleBinaryDependencies(LinqToDB.Internal.Linq.Builder.IBuildContext,System.Linq.Expressions.Expression,System.Collections.Generic.HashSet{System.Linq.Expressions.Expression},System.Collections.Generic.HashSet{System.Linq.Expressions.Expression})`
+- Kind: Method
+- Summary: Visits the expression and marks dependencies that appear as operands of simple binary comparison operators (Equal, GreaterThan, etc.). Dependencies found in other contexts (method calls, subqueries) are NOT marked.
+
+## LinqToDB.Internal.Linq.Builder.ExpressionBuilder.CompleteEagerLoadingExpressions
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.ExpressionBuilder.CompleteEagerLoadingExpressions(System.Linq.Expressions.Expression,LinqToDB.Internal.Linq.Builder.IBuildContext,System.Linq.Expressions.ParameterExpression,System.Collections.Generic.List{LinqToDB.Internal.Linq.Preamble}@,System.Linq.Expressions.Expression[],System.Func{System.Linq.Expressions.Expression,System.Linq.Expressions.Expression}@)`
+- Kind: Method
+- Summary: Processes all nodes in , applying the resolved strategy (CteUnion → KeyedQuery → Default). If any expression cannot be handled by the current strategy the entire set retries with the next strategy in the chain — ensuring all eager loads use a consistent strategy.
 
 ## LinqToDB.Internal.Linq.Builder.ExpressionBuilder.Equal
 
@@ -21379,6 +21996,42 @@ Generated directly from the current package XML documentation. Use XML member id
   - `left`: 
   - `right`: 
 
+## LinqToDB.Internal.Linq.Builder.ExpressionBuilder.FinalizeProjection<T>
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.ExpressionBuilder.FinalizeProjection``1(LinqToDB.Internal.Linq.Builder.IBuildContext,System.Linq.Expressions.Expression,System.Linq.Expressions.ParameterExpression,System.Collections.Generic.List{LinqToDB.Internal.Linq.Preamble}@,System.Linq.Expressions.Expression[])`
+- Kind: Method
+- Summary: Finalizes the query projection: resolves constructors, processes eager loads, and applies the strategy-determined finalizer (e.g. ToColumns for Default/KeyedQuery, identity for CteUnion).
+
+## LinqToDB.Internal.Linq.Builder.ExpressionBuilder.FindChildFkExpression
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.ExpressionBuilder.FindChildFkExpression(System.Linq.Expressions.Expression,System.Linq.Expressions.Expression)`
+- Kind: Method
+- Summary: Finds the child FK expression from a pure equality like childFK == parentKey by matching the parentKey side against . Does NOT descend into OrElse/Or nodes — Contains optimization only works when the equality is the sole/AND-conjunction predicate connecting parent and child.
+
+## LinqToDB.Internal.Linq.Builder.ExpressionBuilder.HasOnlyEqualityKeyReferences
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.ExpressionBuilder.HasOnlyEqualityKeyReferences(System.Linq.Expressions.Expression,System.Linq.Expressions.Expression)`
+- Kind: Method
+- Summary: Returns when every reference to in appears as an operand of an binary (i.e. each occurrence will be rewritten by the Contains transform). Returns when at least one reference appears in a non-equality context (e.g. >, >=, method-call argument): such references would survive the rewrite and leave an unresolved parent-key reference in the child query, so the caller must fall back to the SelectMany + VALUES JOIN path.
+
+## LinqToDB.Internal.Linq.Builder.ExpressionBuilder.HasOnlySimpleFilterDependencies
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.ExpressionBuilder.HasOnlySimpleFilterDependencies(LinqToDB.Internal.Linq.Builder.IBuildContext,System.Linq.Expressions.Expression,System.Linq.Expressions.Expression,System.Collections.Generic.HashSet{System.Linq.Expressions.Expression},System.Linq.Expressions.Expression[])`
+- Kind: Method
+- Summary: Checks that all parent dependencies appear exclusively inside simple binary comparison expressions (==, >, >=, <, <=, !=) within the child's filter predicates (Where lambdas and association predicate). Returns (= fall back to Default) when: A dependency appears only in a projection, not in a filter.A dependency appears in a complex filter expression (e.g., .Contains(), .Any(), subqueries referencing parent navigation collections).
+
+## LinqToDB.Internal.Linq.Builder.ExpressionBuilder.IKeyedQueryKeysPreamble.SetKeysFromBuffer
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.ExpressionBuilder.IKeyedQueryKeysPreamble.SetKeysFromBuffer(System.Object,System.Collections.IList)`
+- Kind: Method
+- Summary: Extract distinct keys from the buffer into the per-execution holder, keyed by the given execution's results array.
+
+## LinqToDB.Internal.Linq.Builder.ExpressionBuilder.IsolateOrderBy
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.ExpressionBuilder.IsolateOrderBy`
+- Kind: Method
+- Summary: Save the current OrderBy state and clear it so an independent sub-sequence build (subquery, set-operation side, join inner, SelectMany collection) cannot pollute the outer state. Caller disposes the returned scope to restore.
+
 ## LinqToDB.Internal.Linq.Builder.ExpressionBuilder.IsSupportedSubquery
 
 - XML member: `M:LinqToDB.Internal.Linq.Builder.ExpressionBuilder.IsSupportedSubquery(LinqToDB.Internal.Linq.Builder.IBuildContext,LinqToDB.Internal.Linq.Builder.IBuildContext,System.String@)`
@@ -21386,6 +22039,96 @@ Generated directly from the current package XML documentation. Use XML member id
 - Summary: Checks that provider can handle limitation inside subquery. This function is tightly coupled with
 - Parameters:
   - `context`: 
+
+## LinqToDB.Internal.Linq.Builder.ExpressionBuilder.ProcessCteUnionBatch
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.ExpressionBuilder.ProcessCteUnionBatch(System.Linq.Expressions.Expression,LinqToDB.Internal.Linq.Builder.IBuildContext,System.Linq.Expressions.ParameterExpression,System.Collections.Generic.List{LinqToDB.Internal.Linq.Preamble},System.Linq.Expressions.Expression[],LinqToDB.Internal.Linq.Builder.ExpressionBuilder.EagerLoadState)`
+- Kind: Method
+- Summary: Batch-processes all CteUnion eager loads in an expression tree into a single UNION ALL query. Returns a mapping from each eager load's sequence expression to its preamble access expression, or null if batch processing is not possible.
+
+## LinqToDB.Internal.Linq.Builder.ExpressionBuilder.ProcessEagerLoadingKeyedQuery
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.ExpressionBuilder.ProcessEagerLoadingKeyedQuery(LinqToDB.Internal.Linq.Builder.IBuildContext,LinqToDB.Internal.Expressions.SqlEagerLoadExpression,System.Linq.Expressions.ParameterExpression,System.Collections.Generic.List{LinqToDB.Internal.Linq.Preamble},System.Linq.Expressions.Expression[],LinqToDB.Internal.Linq.Builder.ExpressionBuilder.EagerLoadState)`
+- Kind: Method
+- Summary: KeyedQuery strategy: joins child records to a local key collection (VALUES table) instead of re-querying the parent table. Keys are provided at runtime through a populated by a key-extraction preamble. Inner eager loads within the child query fall back to Default strategy.
+
+## LinqToDB.Internal.Linq.Builder.ExpressionBuilder.RegisterOrderBy
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.ExpressionBuilder.RegisterOrderBy(System.Linq.Expressions.Expression,System.Boolean,LinqToDB.Sql.NullsPosition,System.Boolean)`
+- Kind: Method
+- Summary: Records an OrderBy clause as it's processed by so eager-load strategies (e.g. CteUnion) can recover user-visible ordering when building parent CTEs.
+
+## LinqToDB.Internal.Linq.Builder.ExpressionBuilder.RemapOrderByThroughSelect
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.ExpressionBuilder.RemapOrderByThroughSelect(System.Collections.Generic.List{System.ValueTuple{System.Linq.Expressions.LambdaExpression,System.Boolean}},System.Linq.Expressions.LambdaExpression)`
+- Kind: Method
+- Summary: Remaps OrderBy lambdas (in entity-type terms) through a Select projection so they reference members of the projected type. E.g., (Department d => d.Id) through Select(d => new { d.Id, d.Name }) becomes (AnonymousType p => p.Id).
+
+## LinqToDB.Internal.Linq.Builder.ExpressionBuilder.RemoveOrderByEntries
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.ExpressionBuilder.RemoveOrderByEntries(System.Func{System.Linq.Expressions.Expression,System.Boolean})`
+- Kind: Method
+- Summary: Remove captured OrderBy entries matching . Used by to drop entries that don't survive a Distinct projection, so downstream eager-load strategies don't try to use them.
+
+## LinqToDB.Internal.Linq.Builder.ExpressionBuilder.ReplaceLeakedSubqueries
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.ExpressionBuilder.ReplaceLeakedSubqueries(System.Linq.Expressions.Expression)`
+- Kind: Method
+- Summary: Detects raw sub-queries that survived projection building — typically a Context<T>.GetTable()... chain left inside a client-side lambda body (e.g. a ToDictionary / ToList value selector that references an outer table). These would later fail cryptically (ArgumentException: must be reducible node on CTE providers, ArgumentNullException: dataContext on providers without CTE support). Wraps each leaked root in so the standard error path (SequenceHelper.HasError → query.ErrorExpression → CreateException) surfaces a consistent .
+
+## LinqToDB.Internal.Linq.Builder.ExpressionBuilder.ResolveOrderByItems
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.ExpressionBuilder.ResolveOrderByItems(LinqToDB.Internal.Linq.Builder.IBuildContext)`
+- Kind: Method
+- Summary: Re-resolves each captured OrderBy body through so the bodies become stable -based expressions anchored to concrete SQL columns, instead of transient s that may not survive AST cloning. Called by builders (e.g. ) at the moment their inner sequence is finalized, before any later code consumes the captured state.
+
+## LinqToDB.Internal.Linq.Builder.ExpressionBuilder.ResolveStrategy
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.ExpressionBuilder.ResolveStrategy(LinqToDB.Internal.Linq.Builder.IBuildContext)`
+- Kind: Method
+- Summary: Resolves the effective from the build context and global options. is transparently remapped to when the current provider does not support CTEs or window functions.
+
+## LinqToDB.Internal.Linq.Builder.ExpressionBuilder.SetKeyExtractorFromBuffer<T1,T2>
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.ExpressionBuilder.SetKeyExtractorFromBuffer``2(LinqToDB.Internal.Linq.Builder.ExpressionBuilder.KeyedQueryKeysPreamble{``1},System.Linq.Expressions.Expression,System.Collections.Generic.Dictionary{System.Int32,System.Int32})`
+- Kind: Method
+- Summary: Builds and sets the BufferKeyExtractor on a KeyedQueryKeysPreamble. The extractor takes a buffer row (TBuffer as object) and returns TKey.
+
+## LinqToDB.Internal.Linq.Builder.ExpressionBuilder.SetRunQueryWithCteUnion<T>
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.ExpressionBuilder.SetRunQueryWithCteUnion``1(LinqToDB.Internal.Linq.Query{``0},LinqToDB.Internal.Linq.Builder.IBuildContext,System.Linq.Expressions.Expression,System.Collections.Generic.List{LinqToDB.Internal.Linq.Preamble},System.Int32,System.Linq.Expressions.ParameterExpression,LinqToDB.Internal.Linq.Builder.ExpressionBuilder.CteUnionPhase2Info)`
+- Kind: Method
+- Summary: Phase 2: Called from BuildQuery. Replaces the main query's GetResultEnumerable with a streaming iterator over the UNION ALL result.
+
+## LinqToDB.Internal.Linq.Builder.ExpressionBuilder.SetRunQueryWithKeyedQueryBuffer<T>
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.ExpressionBuilder.SetRunQueryWithKeyedQueryBuffer``1(LinqToDB.Internal.Linq.Query{``0},LinqToDB.Internal.Linq.Builder.IBuildContext,System.Linq.Expressions.Expression,System.Collections.Generic.List{LinqToDB.Internal.Linq.Preamble},System.Int32)`
+- Kind: Method
+- Summary: Sets up buffer materialization: the main SQL runs once as a preamble producing ValueTuple rows, keys are extracted client-side, and the main query iterates the buffer to reconstruct T. Called from BuildQuery when the committed is true.
+
+## LinqToDB.Internal.Linq.Builder.ExpressionBuilder.UnwrapOrderingToSelect
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.ExpressionBuilder.UnwrapOrderingToSelect(System.Linq.Expressions.Expression)`
+- Kind: Method
+- Summary: Unwraps OrderBy/ThenBy/OrderByDescending/ThenByDescending calls to find the underlying Select call. Returns the Select MethodCallExpression and the chain of ordering operations to re-apply.
+
+## LinqToDB.Internal.Linq.Builder.ExpressionBuilder.WrapTerminalSelectWithEnvelope
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.ExpressionBuilder.WrapTerminalSelectWithEnvelope(System.Linq.Expressions.Expression,System.Linq.Expressions.MemberExpression,System.Type,System.Type,System.Type)`
+- Kind: Method
+- Summary: When the FK is not in the final projected type (stripped by a terminal Select), modifies that Select to wrap its body in KeyDetailEnvelope using the FK from the pre-projection entity parameter.
+
+## LinqToDB.Internal.Linq.Builder.ExpressionBuildVisitor.MappedFunctionAllowsClientCalculation
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.ExpressionBuildVisitor.MappedFunctionAllowsClientCalculation(System.Reflection.MethodInfo)`
+- Kind: Method
+- Summary: A method may be pulled client-side (under ) only when it is a mapped function — i.e. it carries an . Structural LINQ methods (e.g. aggregates) have no attribute and must keep translating to SQL.
+
+## LinqToDB.Internal.Linq.Builder.ExpressionBuildVisitor.PreferClientCalculation
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.ExpressionBuildVisitor.PreferClientCalculation(System.Linq.Expressions.Expression)`
+- Kind: Method
+- Summary: When is enabled, computed expressions in the final projection are left client-side instead of being forced into SQL columns. Anything that prefers or requires server-side evaluation (per Builder.PreferServerSide) and set projections () still go to SQL.
 
 ## LinqToDB.Internal.Linq.Builder.ExpressionTreeOptimizationContext.CanBeEvaluatedOnClient
 
@@ -21422,6 +22165,13 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Method
 - Summary: Sets an annotation on the object being built. Keys should come from a well-known names class (e.g. ); values should be primitives that serialize cleanly and hash stably.
 
+## LinqToDB.Internal.Linq.Builder.IBuildContext.SetElementSelection<T>
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.IBuildContext.SetElementSelection``1(LinqToDB.Internal.Linq.Query{``0})`
+- Kind: Method
+- Summary: Configures element-selection delegates (Query<T>.GetElement and Query<T>.GetElementAsync) on the query so that scalar operators (First/FirstOrDefault/Single/SingleOrDefault, sync and async) get the correct cardinality semantics on top of query.GetResultEnumerable. Default implementation is a no-op — only contexts that produce scalar results override it.
+- Remarks: Called by code paths that install their own GetResultEnumerable (the eager-loading buffer / CteUnion strategies) so the cardinality rules stay shared between normal and eager-loading execution.
+
 ## LinqToDB.Internal.Linq.Builder.ParametersContext.RegisterDynamicExpressionAccessor
 
 - XML member: `M:LinqToDB.Internal.Linq.Builder.ParametersContext.RegisterDynamicExpressionAccessor(System.Linq.Expressions.Expression,LinqToDB.IDataContext,LinqToDB.Mapping.MappingSchema,LinqToDB.Internal.Linq.QueryCacheCompareInfo.ExpressionAccessorFunc)`
@@ -21432,6 +22182,60 @@ Generated directly from the current package XML documentation. Use XML member id
   - `dataContext`: DataContext which is used to execute .
   - `accessorFunc`: Function, which will used for retrieving current expression during cache comparison.
 - Returns: Result of execution of accessorFunc
+
+## LinqToDB.Internal.Linq.Builder.TranslationModifier.IsFilterDisabled
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.TranslationModifier.IsFilterDisabled(System.Type,System.String)`
+- Kind: Method
+- Summary: Per-key disable check used when iterating an entity's named filters. A filter is disabled when at least one registered scope matches both the key and the entity-type dimensions.
+
+## LinqToDB.Internal.Linq.Builder.TranslationModifier.IsFilterDisabled
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.TranslationModifier.IsFilterDisabled(System.Type)`
+- Kind: Method
+- Summary: Whole-entity disable check — returns when at least one registered scope disables every filter on (i.e. the scope is unconstrained on the key dimension and matches the type). Preserves the legacy single-arg IsFilterDisabled(Type) shape that the DML / DDL builders rely on as a fast-out.
+
+## LinqToDB.Internal.Linq.Builder.TranslationModifier.WithIgnoreQueryFilters
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.TranslationModifier.WithIgnoreQueryFilters(System.Type[])`
+- Kind: Method
+- Summary: Back-compat helper. Pushes a scope {Keys = null, Types = ignoreQueryFilters} on the stack.
+
+## LinqToDB.Internal.Linq.Builder.UpsertBuilder.BuildAsMerge
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.UpsertBuilder.BuildAsMerge(LinqToDB.Internal.Linq.Builder.ExpressionBuilder,LinqToDB.Internal.Linq.Builder.BuildInfo,LinqToDB.Internal.Linq.Builder.UpsertBuilder.UpsertConfig,System.Type,System.Boolean,System.Linq.Expressions.Expression,System.Linq.Expressions.Expression,LinqToDB.Mapping.EntityDescriptor,System.Collections.Generic.List{System.Linq.Expressions.Expression})`
+- Kind: Method
+- Summary: Build the upsert via the existing Merge pipeline. We synthesize an Expression tree equivalent to table.Merge() .Using(new[] { item }) .On((t, s) => matchCondition) [.InsertWhenNotMatchedAnd(insertPredicate, s => new TTarget { ... })] [.UpdateWhenMatchedAnd(updatePredicate, (t, s) => new TTarget { ... })] .Merge() and hand it to . The existing MergeBuilder dispatchers pick up each call, produce a , and let per-provider SQL builders emit the right MERGE dialect.
+
+## LinqToDB.Internal.Linq.Builder.UpsertBuilder.BuildDefaultPkMatchLambda
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.UpsertBuilder.BuildDefaultPkMatchLambda(System.Type,LinqToDB.Mapping.EntityDescriptor)`
+- Kind: Method
+- Summary: Build (t, s) => t.Pk1 == s.Pk1 && t.Pk2 == s.Pk2 && ... from the PK columns.
+
+## LinqToDB.Internal.Linq.Builder.UpsertBuilder.MergeBranch
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.UpsertBuilder.MergeBranch(LinqToDB.Internal.Linq.Builder.EntityBuilderConfig,LinqToDB.Internal.Linq.Builder.UpsertBuilder.UpsertConfig,System.Boolean)`
+- Kind: Method
+- Summary: Copy a parsed branch into the corresponding side of the Upsert . on the insert branch implies ; on the update branch, .
+
+## LinqToDB.Internal.Linq.Builder.UpsertBuilder.RebaseRoot
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.UpsertBuilder.RebaseRoot(System.Linq.Expressions.Expression,System.Linq.Expressions.ParameterExpression,System.Linq.Expressions.ParameterExpression)`
+- Kind: Method
+- Summary: Rewrite replacing with .
+
+## LinqToDB.Internal.Linq.Builder.UpsertBuilder.TryGetPathRoot
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.UpsertBuilder.TryGetPathRoot(System.Linq.Expressions.Expression,System.Linq.Expressions.Expression@)`
+- Kind: Method
+- Summary: If (after peeling Convert) is a chain of nodes ending at a , returns that root parameter and the full chain expression via . Otherwise returns .
+
+## LinqToDB.Internal.Linq.Builder.UpsertBuilder.TryParseMatchColumns
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.UpsertBuilder.TryParseMatchColumns(System.Linq.Expressions.LambdaExpression,System.Linq.Expressions.ParameterExpression)`
+- Kind: Method
+- Summary: Parse a .Match((t, s) => t.Col1 == s.Col1 && t.Nested.Col2 == s.Nested.Col2) lambda body into the list of target-side member-access paths, canonicalised against . Returns when the body does not decompose into a conjunction of 'target.Path == source.Path' equalities where both sides are the same member path rooted at the lambda's target and source parameters respectively.
 
 ## LinqToDB.Internal.Linq.ExpressionCacheManager.BuildQueryCacheCompareInfo
 
@@ -21599,23 +22403,54 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Method
 - Summary: Empties LINQ query cache for entity type.
 
-## LinqToDB.Internal.Linq.Query<T>.QueryCache.Clear
+## LinqToDB.Internal.Linq.QueryCache.ClearAll
 
-- XML member: `M:LinqToDB.Internal.Linq.Query`1.QueryCache.Clear`
+- XML member: `M:LinqToDB.Internal.Linq.QueryCache.ClearAll`
 - Kind: Method
-- Summary: Empties LINQ query cache.
+- Summary: Empties the entire cache.
 
-## LinqToDB.Internal.Linq.Query<T>.QueryCache.Find
+## LinqToDB.Internal.Linq.QueryCache.ClearForType
 
-- XML member: `M:LinqToDB.Internal.Linq.Query`1.QueryCache.Find(LinqToDB.IDataContext,LinqToDB.Internal.Linq.IQueryExpressions,LinqToDB.Internal.Linq.QueryFlags,System.Boolean)`
+- XML member: `M:LinqToDB.Internal.Linq.QueryCache.ClearForType(System.Type)`
 - Kind: Method
-- Summary: Search for query in cache and of found, try to move it to better position in cache.
+- Summary: Empties the cache for entries of the given result type.
 
-## LinqToDB.Internal.Linq.Query<T>.QueryCache.TryAdd
+## LinqToDB.Internal.Linq.QueryCache.ComputeChainHash
 
-- XML member: `M:LinqToDB.Internal.Linq.Query`1.QueryCache.TryAdd(LinqToDB.IDataContext,LinqToDB.Internal.Linq.Query{`0},LinqToDB.Internal.Linq.IQueryExpressions,LinqToDB.Internal.Linq.QueryFlags)`
+- XML member: `M:LinqToDB.Internal.Linq.QueryCache.ComputeChainHash(System.Linq.Expressions.Expression)`
 - Kind: Method
-- Summary: Adds query to cache if it is not cached already.
+- Summary: Walks the LINQ source chain from for up to 8 levels and hashes each method/member identity.
+
+## LinqToDB.Internal.Linq.QueryCache.EffectiveTimeoutTicks
+
+- XML member: `M:LinqToDB.Internal.Linq.QueryCache.EffectiveTimeoutTicks(System.Int32,System.Int64)`
+- Kind: Method
+- Summary: Effective idle timeout in stopwatch ticks. Tiers: < 5/hr => 1x base < 50/hr => 4x base < 500/hr => 12x base >= 500/hr => 24x base
+
+## LinqToDB.Internal.Linq.QueryCache.GetMissCount
+
+- XML member: `M:LinqToDB.Internal.Linq.QueryCache.GetMissCount(System.Type)`
+- Kind: Method
+- Summary: Counts queries that missed the cache, per result type, to mirror the legacy Query<T>.CacheMissCount surface.
+
+## LinqToDB.Internal.Linq.QueryCache.TryAdd
+
+- XML member: `M:LinqToDB.Internal.Linq.QueryCache.TryAdd(System.Type,LinqToDB.IDataContext,LinqToDB.Internal.Linq.Query,LinqToDB.Internal.Linq.IQueryExpressions,LinqToDB.Internal.Linq.QueryFlags)`
+- Kind: Method
+- Summary: Adds to the cache if no equivalent non-expired entry exists. Expired entries in the destination bucket are removed before adding.
+
+## LinqToDB.Internal.Linq.QueryCache.TryFind
+
+- XML member: `M:LinqToDB.Internal.Linq.QueryCache.TryFind(System.Type,LinqToDB.IDataContext,LinqToDB.Internal.Linq.IQueryExpressions,LinqToDB.Internal.Linq.QueryFlags,LinqToDB.Internal.Linq.Query@,LinqToDB.Internal.Linq.IQueryExpressions@)`
+- Kind: Method
+- Summary: Looks up a cached query that matches the supplied under .
+- Returns: if a match was found; and are populated with the cached query and the matched expression container. on miss.
+
+## LinqToDB.Internal.Linq.QueryRunner.SetIfExistsUpdateElseInsert
+
+- XML member: `M:LinqToDB.Internal.Linq.QueryRunner.SetIfExistsUpdateElseInsert(LinqToDB.Internal.Linq.Query)`
+- Kind: Method
+- Summary: Three-query orchestration used when an Upsert(...) with .Update(v => v.When(cond)) has to run against a provider that supports neither MERGE nor ON CONFLICT and therefore falls back to . Query 0: scalar SELECT 1 over the match-key WHERE. Returns non-null iff the row exists.Query 1: UPDATE guarded by keys AND when. Runs only if Q0 returned a row. May affect zero rows when the predicate rejects — that is the correct outcome.Query 2: INSERT. Runs only if Q0 returned no row. This avoids the classic UPDATE-then-@@ROWCOUNT==0 pitfall where a predicate-rejected UPDATE falsely triggers INSERT and violates the unique-key. Atomicity: the three statements run as independent commands. Under concurrent writers the caller may observe either a duplicate-key error (Q0 saw no row, another session inserted between Q0 and Q2) or a silent zero-affected UPDATE (Q0 saw a row, another session deleted it between Q0 and Q1). Callers that need atomicity must wrap the Upsert call in their own transaction. This matches the behavior of the existing two-query fallback used by InsertOrReplace.
 
 ## LinqToDB.Internal.Logging.LoggingExtensions.GetTraceSwitch
 
@@ -21636,6 +22471,13 @@ Generated directly from the current package XML documentation. Use XML member id
   - `message`: Message text.
   - `category`: Message category.
   - `level`: Trace level.
+
+## LinqToDB.Internal.Mapping.ColumnDescriptorExtensions.GetMemberAccessExpression
+
+- XML member: `M:LinqToDB.Internal.Mapping.ColumnDescriptorExtensions.GetMemberAccessExpression(LinqToDB.Mapping.ColumnDescriptor,System.Linq.Expressions.Expression)`
+- Kind: Method
+- Summary: Builds a member-access expression from to the CLR member this column is mapped to, following the dot-path in when the mapping is nested (e.g. o => o.Sub.Field).
+- Remarks: Unlike , the result has no null-check block wrapping intermediate reference-type members, so it is suitable for SQL conversion. When 's CLR type doesn't match the column's entity root (e.g. Merge().Using<TSource>() with TSource ≠ TTarget), the column's leaf member is looked up on the instance type by name. Dynamic columns ([DynamicColumnsStore] / Sql.Property<T>) resolve to a Sql.Property<T>(instance, name) call regardless of 's type — the raw dynamic-column getter throws "Dynamic column getter is not to be called" and isn't SQL-convertible, whereas the Sql.Property shape both converts to a column reference and structurally matches a user x => Sql.Property<T>(x, name) selector after canonicalisation.
 
 ## LinqToDB.Internal.Mapping.DynamicColumnInfo.Constructor
 
@@ -21828,6 +22670,24 @@ Generated directly from the current package XML documentation. Use XML member id
   - `forCreateTable`: 
   - `canBeNull`: Type could store NULL values (could be used for column table type generation or for databases with explicit typee nullability like ClickHouse).
 
+## LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildDistinctModifier
+
+- XML member: `M:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildDistinctModifier(LinqToDB.Internal.SqlQuery.SelectQuery)`
+- Kind: Method
+- Summary: Emits the DISTINCT modifier. Overridden by providers that support DISTINCT ON (...) (see ); the base emits a plain DISTINCT.
+
+## LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildDistinctOnExpressions
+
+- XML member: `M:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildDistinctOnExpressions(LinqToDB.Internal.SqlQuery.SelectQuery)`
+- Kind: Method
+- Summary: Renders the ON (expr, ...) part of a DISTINCT ON clause. Called from a override on providers that support the syntax, right after the DISTINCT keyword. Expressions are rendered exactly as in ORDER BY so the leading-prefix match PostgreSQL/DuckDB require holds.
+
+## LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildEmptyValuesFrom
+
+- XML member: `M:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildEmptyValuesFrom`
+- Kind: Method
+- Summary: Appends the optional FROM clause for an empty-values source (a SELECT ... WHERE 1 = 0). Defaults to the provider's ; providers that reject a WHERE without a FROM and have no DUAL-like table override this to supply a one-row dummy source.
+
 ## LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildFieldTableAlias
 
 - XML member: `M:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildFieldTableAlias(LinqToDB.Internal.SqlQuery.SqlField)`
@@ -21839,6 +22699,12 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildMergeTerminator(LinqToDB.Internal.SqlQuery.NullabilityContext,LinqToDB.Internal.SqlQuery.SqlMergeStatement)`
 - Kind: Method
 - Summary: Allows to add text after generated merge command. E.g. to specify command terminator if provider requires it.
+
+## LinqToDB.Internal.SqlProvider.BasicSqlBuilder.GetWindowNullsPlacement
+
+- XML member: `M:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.GetWindowNullsPlacement(LinqToDB.Internal.SqlQuery.SqlExtendedFunction)`
+- Kind: Method
+- Summary: Returns where the IGNORE NULLS modifier is emitted for the given value/offset window function. Defaults to ; providers override for non-standard placement.
 
 ## LinqToDB.Internal.SqlProvider.BasicSqlBuilder.IsSqlValuesTableValueTypeRequired
 
@@ -21863,6 +22729,12 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.SuppressCteAsKeyword(LinqToDB.Internal.SqlQuery.CteClause)`
 - Kind: Method
 - Summary: Lets a provider replace the default AS keyword emitted between the CTE header and body, for example to emit AS MATERIALIZED via .
+
+## LinqToDB.Internal.SqlProvider.BasicSqlBuilder.WindowFunctionRespectNullsRequired
+
+- XML member: `M:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.WindowFunctionRespectNullsRequired(LinqToDB.Internal.SqlQuery.SqlExtendedFunction)`
+- Kind: Method
+- Summary: When for the given function, that value window function defaults to IGNORE NULLS on this provider, so an explicit RESPECT NULLS token must be emitted for null-respecting behavior (e.g. ClickHouse FIRST_VALUE/LAST_VALUE/NTH_VALUE). Most providers default to RESPECT NULLS, so the token is omitted; functions that reject the token (e.g. ClickHouse LEAD/LAG) must return .
 
 ## LinqToDB.Internal.SqlProvider.BasicSqlOptimizer.CorrectUpdateTable
 
@@ -21968,6 +22840,12 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Method
 - Summary: Moves nested joins to upper level.
 
+## LinqToDB.Internal.SqlProvider.OptimizationContext.NormalizeParameterName
+
+- XML member: `M:LinqToDB.Internal.SqlProvider.OptimizationContext.NormalizeParameterName(System.String)`
+- Kind: Method
+- Summary: Normalizes through the query parameters name normalizer, registers it as used, and returns the resulting collision-free name.
+
 ## LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.ConvertConversion
 
 - XML member: `M:LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.ConvertConversion(LinqToDB.Internal.SqlQuery.SqlCastExpression)`
@@ -21988,6 +22866,24 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.RemoveNullValues(LinqToDB.Internal.SqlQuery.SqlCoalesceExpression)`
 - Kind: Method
 - Summary: Removes NULL-literal operands from a COALESCE operand list — a literal NULL can never be the value COALESCE returns, so it is redundant. Returns the sole surviving operand when only one remains, a reduced over the survivors when several remain, or the last operand when every operand is a NULL literal. Returns unchanged when it has no NULL-literal operands. Shared so providers that fold COALESCE into a native construct (Informix Nvl, Access IIF) apply the same normalization the base does before folding; otherwise a no-op guard such as Coalesce(x, NULL) folds to Nvl(x, NULL) / IIF(x IS NULL, NULL, x) (issue #5531).
+
+## LinqToDB.Internal.SqlQuery.AliasesContext.GetColumnAlias
+
+- XML member: `M:LinqToDB.Internal.SqlQuery.AliasesContext.GetColumnAlias(LinqToDB.Internal.SqlQuery.SqlColumn)`
+- Kind: Method
+- Summary: Effective column alias: the finalized alias recorded by the aliasing pass, otherwise derived from the column's expression - resolving sub-expression aliases through this context so finalized names are honoured (mirrors SqlColumn's own derivation, but context-aware). This is the crux of non-mutating aliasing: derivation must read finalized names, not stale nodes.
+
+## LinqToDB.Internal.SqlQuery.AliasesContext.GetFieldName
+
+- XML member: `M:LinqToDB.Internal.SqlQuery.AliasesContext.GetFieldName(LinqToDB.Internal.SqlQuery.SqlExpressionBase)`
+- Kind: Method
+- Summary: Effective field physical name: the finalized name recorded by the aliasing pass (for derived-table / CTE source fields), otherwise the field's own physical name - for a table field, the finalized name of its definition field for a CTE reference field (), or the delegated Name for a CTE definition field ().
+
+## LinqToDB.Internal.SqlQuery.AliasesContext.GetTableAlias
+
+- XML member: `M:LinqToDB.Internal.SqlQuery.AliasesContext.GetTableAlias(LinqToDB.Internal.SqlQuery.SqlTableSource)`
+- Kind: Method
+- Summary: Effective table-source alias: the finalized alias recorded by the aliasing pass, otherwise derived from the node - resolving a nested table source through this context so finalized names are honoured (mirrors SqlTableSource's own derivation, but context-aware).
 
 ## LinqToDB.Internal.SqlQuery.DebugStringExtensions.DebugAppendUniqueId<T>
 
@@ -22159,10 +23055,20 @@ Generated directly from the current package XML documentation. Use XML member id
 
 - XML member: `M:LinqToDB.Internal.SqlQuery.QueryHelper.ExtractSqlTable(LinqToDB.Internal.SqlQuery.ISqlExpression)`
 - Kind: Method
-- Summary: Returns SqlTable from specific expression. Usually from SqlColumn. Conversion is ignored.
+- Summary: Returns ISqlNamedTable from specific expression. Usually from SqlColumn. Conversion is ignored.
 - Parameters:
   - `expression`: 
-- Returns: SqlTable instance associated with expression
+- Returns: ISqlNamedTable instance associated with expression
+
+## LinqToDB.Internal.SqlQuery.QueryHelper.GetColumnDescriptor
+
+- XML member: `M:LinqToDB.Internal.SqlQuery.QueryHelper.GetColumnDescriptor(LinqToDB.Internal.SqlQuery.ISqlExpression,System.Collections.Generic.HashSet{LinqToDB.Internal.SqlQuery.IQueryElement})`
+- Kind: Method
+- Summary: Returns for .
+- Parameters:
+  - `expr`: Tested SQL Expression.
+  - `alreadyVisitedElements`: Set of already visited elements to avoid infinite recursion.
+- Returns: Associated column descriptor or .
 
 ## LinqToDB.Internal.SqlQuery.QueryHelper.GetColumnDescriptor
 
@@ -22366,6 +23272,11 @@ Generated directly from the current package XML documentation. Use XML member id
 
 ## LinqToDB.Internal.SqlQuery.SelectQueryExtensions.get_HasJoins
 
+- XML member: `M:LinqToDB.Internal.SqlQuery.SelectQueryExtensions.get_HasJoins(LinqToDB.Internal.SqlQuery.SelectQuery)`
+- Kind: Method
+
+## LinqToDB.Internal.SqlQuery.SelectQueryExtensions.get_HasJoins
+
 - XML member: `M:LinqToDB.Internal.SqlQuery.SelectQueryExtensions.get_HasJoins(LinqToDB.Internal.SqlQuery.SqlJoinedTable)`
 - Kind: Method
 
@@ -22541,6 +23452,18 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Method
 - Summary: Resets visitor to initial state.
 
+## LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.CopyCteFields
+
+- XML member: `M:LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.CopyCteFields(System.Collections.Generic.IReadOnlyList{LinqToDB.Internal.SqlQuery.SqlCteField})`
+- Kind: Method
+- Summary: Creates copy of and call for each.
+
+## LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.CopyCteTableFields
+
+- XML member: `M:LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.CopyCteTableFields(System.Collections.Generic.IReadOnlyList{LinqToDB.Internal.SqlQuery.SqlCteTableField})`
+- Kind: Method
+- Summary: Creates copy of and call for each.
+
 ## LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.CopyFields
 
 - XML member: `M:LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.CopyFields(System.Collections.Generic.IReadOnlyList{LinqToDB.Internal.SqlQuery.SqlField})`
@@ -22637,9 +23560,21 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Method
 - Summary: Used to visit columns as references in other expressions. Actual visit of table column happens in .
 
+## LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlCteField
+
+- XML member: `M:LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlCteField(LinqToDB.Internal.SqlQuery.SqlCteField)`
+- Kind: Method
+- Summary: Visitor for definition from .
+
+## LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlCteTableField
+
+- XML member: `M:LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlCteTableField(LinqToDB.Internal.SqlQuery.SqlCteTableField)`
+- Kind: Method
+- Summary: Visitor for reference.
+
 ## LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlExtendedFunction
 
-- XML member: `M:LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlExtendedFunction(LinqToDB.SqlQuery.SqlExtendedFunction)`
+- XML member: `M:LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlExtendedFunction(LinqToDB.Internal.SqlQuery.SqlExtendedFunction)`
 - Kind: Method
 - Summary: Visitor for .
 
@@ -22648,12 +23583,6 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlFieldReference(LinqToDB.Internal.SqlQuery.SqlField)`
 - Kind: Method
 - Summary: Visitor for reference from query expressions.
-
-## LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlFrameClause
-
-- XML member: `M:LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlFrameClause(LinqToDB.SqlQuery.SqlFrameClause)`
-- Kind: Method
-- Summary: Visitor for .
 
 ## LinqToDB.Internal.SqlQuery.Visitors.SelectQueryOptimizerVisitor.CorrectLeftJoins
 
@@ -22669,6 +23598,42 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Method
 - Summary: Returns when the query has clauses (WHERE, GROUP BY, HAVING, DISTINCT/TOP) that apply to the entire result set and would break semantics if set operators were flattened through it.
 
+## LinqToDB.Internal.SqlQuery.Visitors.SelectQueryOptimizerVisitor.OptimizeUnions
+
+- XML member: `M:LinqToDB.Internal.SqlQuery.Visitors.SelectQueryOptimizerVisitor.OptimizeUnions(LinqToDB.Internal.SqlQuery.SelectQuery)`
+- Kind: Method
+- Summary: Dispatcher for the three independent set-operator flattening transformations. Each sub- transformation is idempotent on its own, so we can OR their "modified" flags — the outer loop re-runs us until nothing changes.
+
+## LinqToDB.Internal.SqlQuery.Visitors.SelectQueryOptimizerVisitor.TryBuildOuterColumnIndexes
+
+- XML member: `M:LinqToDB.Internal.SqlQuery.Visitors.SelectQueryOptimizerVisitor.TryBuildOuterColumnIndexes(System.Collections.Generic.IReadOnlyList{LinqToDB.Internal.SqlQuery.SqlColumn},System.Collections.Generic.Dictionary{LinqToDB.Internal.SqlQuery.ISqlExpression,System.Int32}@)`
+- Kind: Method
+- Summary: Builds a map from each outer column's to its position in . Returns (and a map) when two outer columns share the same underlying expression - flattening would silently collapse them, so the caller must bail out instead.
+
+## LinqToDB.Internal.SqlQuery.Visitors.SelectQueryOptimizerVisitor.TryCoalescePeerSetOperators
+
+- XML member: `M:LinqToDB.Internal.SqlQuery.Visitors.SelectQueryOptimizerVisitor.TryCoalescePeerSetOperators(LinqToDB.Internal.SqlQuery.SelectQuery)`
+- Kind: Method
+- Summary: Pattern: A op (B op C) where the right-hand operand itself has set operators using the same operation. Flattens to A op B op C. No barrier check is needed here because we do not collapse the operand's body — the operand's (with any WHERE / GROUP BY etc.) remains as the first leg of the flattened chain; only its trailing are moved up as siblings.
+
+## LinqToDB.Internal.SqlQuery.Visitors.SelectQueryOptimizerVisitor.TryLiftSetOperatorsFromOperandFromSubquery
+
+- XML member: `M:LinqToDB.Internal.SqlQuery.Visitors.SelectQueryOptimizerVisitor.TryLiftSetOperatorsFromOperandFromSubquery(LinqToDB.Internal.SqlQuery.SelectQuery)`
+- Kind: Method
+- Summary: Pattern: A op (SELECT ... FROM (B op C) x) — an operand is a thin projection over a set-operation subquery. Lifts the inner set operators up to the outer chain, after reordering their columns to match the operand's projection. Safety: the operand's body must have no barrier clauses (otherwise dropping the wrapper would change semantics), its sub-operators must all share a single operation matching the surrounding operator, and for non-UnionAll operations the column widths must agree (UnionAll can synthesise constants for missing columns; other operations cannot, because every column is significant for INTERSECT/EXCEPT/UNION).
+
+## LinqToDB.Internal.SqlQuery.Visitors.SelectQueryOptimizerVisitor.TryLiftSetOperatorsFromSoleFromSubquery
+
+- XML member: `M:LinqToDB.Internal.SqlQuery.Visitors.SelectQueryOptimizerVisitor.TryLiftSetOperatorsFromSoleFromSubquery(LinqToDB.Internal.SqlQuery.SelectQuery)`
+- Kind: Method
+- Summary: Pattern: SELECT ... FROM (A op B op C) x where the outer query is a thin projection with no barrier clauses. Promotes the subquery's set operators into the outer query so the extra wrapping select is eliminated. Safety: requires (a) no barrier clauses (WHERE / GROUP BY / HAVING / modifiers) on the outer, (b) no ORDER BY when the outer has no set operators of its own, (c) operator- compatibility with the surrounding set context (), and (d) all of the subquery's operators sharing a single operation. Associativity of compatible set operations (A op B op C) guarantees that promoting the legs does not change the result — the operator joining the last lifted leg with the outer's existing first operator (if any) is operation by construction.
+
+## LinqToDB.Internal.SqlQuery.Visitors.SelectQueryOptimizerVisitor.TryReorderSetColumns
+
+- XML member: `M:LinqToDB.Internal.SqlQuery.Visitors.SelectQueryOptimizerVisitor.TryReorderSetColumns(System.Collections.Generic.Dictionary{LinqToDB.Internal.SqlQuery.ISqlExpression,System.Int32},LinqToDB.Internal.SqlQuery.SelectQuery,LinqToDB.Internal.SqlQuery.SetOperation)`
+- Kind: Method
+- Summary: Reorders (and, for , trims/augments) the columns of and every one of its legs so that column i corresponds to the expression whose target position is i in . Returns — leaving the query untouched — when the requested layout cannot be realized: a target expression is missing from and the operation forbids synthesis (non-UnionAll) or the expression is not a constant;a leg has fewer columns than for a non-UnionAll operation (legs must be aligned). Runs in O(N + M·L) where N is the setQuery column count, M is the target column count, and L is the number of set-operator legs — linear per column, no in-place shuffling.
+
 ## LinqToDB.Internal.SqlQuery.Visitors.SqlQueryColumnOptimizerVisitor.Constructor
 
 - XML member: `M:LinqToDB.Internal.SqlQuery.Visitors.SqlQueryColumnOptimizerVisitor.#ctor`
@@ -22677,9 +23642,27 @@ Generated directly from the current package XML documentation. Use XML member id
 
 ## LinqToDB.Internal.SqlQuery.Visitors.SqlQueryColumnOptimizerVisitor.OptimizeColumns
 
-- XML member: `M:LinqToDB.Internal.SqlQuery.Visitors.SqlQueryColumnOptimizerVisitor.OptimizeColumns(LinqToDB.Internal.SqlQuery.IQueryElement)`
+- XML member: `M:LinqToDB.Internal.SqlQuery.Visitors.SqlQueryColumnOptimizerVisitor.OptimizeColumns(LinqToDB.Internal.SqlQuery.IQueryElement,LinqToDB.Mapping.MappingSchema)`
 - Kind: Method
 - Summary: Optimizes column usage in two passes: Pass 1: Collect all column references (no modifications) Pass 2: Remove unused columns (modify)
+
+## LinqToDB.Internal.SqlQuery.Visitors.SqlQueryOrderByOptimizer.AllOrderColumnsAreGroupingKeys
+
+- XML member: `M:LinqToDB.Internal.SqlQuery.Visitors.SqlQueryOrderByOptimizer.AllOrderColumnsAreGroupingKeys(LinqToDB.Internal.SqlQuery.SelectQuery,LinqToDB.Internal.SqlQuery.ISqlExpression)`
+- Kind: Method
+- Summary: Returns when every column/field referenced by is one of the grouping keys of . In that case the expression is a function of the grouping keys, so it can be ordered above the GROUP BY. Restricted to a plain GROUP BY - ROLLUP/CUBE/GROUPING SETS emit super-aggregate rows where ordering by a key is not well-defined.
+
+## LinqToDB.Internal.SqlQuery.Visitors.SqlQueryOrderByOptimizer.AllOrderColumnsProducedByDistinct
+
+- XML member: `M:LinqToDB.Internal.SqlQuery.Visitors.SqlQueryOrderByOptimizer.AllOrderColumnsProducedByDistinct(LinqToDB.Internal.SqlQuery.SelectQuery,LinqToDB.Internal.SqlQuery.ISqlExpression)`
+- Kind: Method
+- Summary: Returns when every column/field referenced by is produced as an output column of the DISTINCT . In that case the expression is functionally determined by the DISTINCT projection, so it can be ordered above the DISTINCT and exposed as an additional output column without changing which rows are kept.
+
+## LinqToDB.Internal.SqlQuery.Visitors.SqlQueryOrderByOptimizer.CollectReferencedColumns
+
+- XML member: `M:LinqToDB.Internal.SqlQuery.Visitors.SqlQueryOrderByOptimizer.CollectReferencedColumns(LinqToDB.Internal.SqlQuery.ISqlExpression)`
+- Kind: Method
+- Summary: Collects the / leaf references of without descending into their definitions.
 
 ## LinqToDB.Internal.SqlQuery.Visitors.SqlQueryVisitor.AddReplacements
 
@@ -22746,7 +23729,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.Linq.Expressions.MapBinary(System.Linq.Expressions.ExpressionType,System.Type,System.Type,System.Linq.Expressions.LambdaExpression)`
 - Kind: Method
 - Summary: Maps specific to another during SQL generation.
-- Remarks: Note that method is not thread safe and has to be used only in Application's initialization section.
+- Remarks: Registration is thread-safe; for predictable results configure mappings during application initialization, before queries are executed.
 - Parameters:
   - `nodeType`: NodeType of BinaryExpression which needs mapping.
   - `leftType`: Exact type of member.
@@ -22758,7 +23741,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.Linq.Expressions.MapBinary(System.String,System.Linq.Expressions.ExpressionType,System.Type,System.Type,System.Linq.Expressions.LambdaExpression)`
 - Kind: Method
 - Summary: Maps specific BinaryExpression to another Lambda expression during SQL generation.
-- Remarks: Note that method is not thread safe and has to be used only in Application's initialization section.
+- Remarks: Registration is thread-safe; for predictable results configure mappings during application initialization, before queries are executed.
 - Parameters:
   - `providerName`: Name of database provider to use with this connection. class for list of providers.
   - `nodeType`: NodeType of BinaryExpression which needs mapping.
@@ -22771,7 +23754,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.Linq.Expressions.MapBinary``3(System.Linq.Expressions.Expression{System.Func{``0,``1,``2}},System.Linq.Expressions.Expression{System.Func{``0,``1,``2}})`
 - Kind: Method
 - Summary: Maps specific to another during SQL generation.
-- Remarks: Note that method is not thread safe and has to be used only in Application's initialization section.
+- Remarks: Registration is thread-safe; for predictable results configure mappings during application initialization, before queries are executed.
 - Type parameters:
   - `TLeft`: Exact type of member.
   - `TRight`: Exact type of member.
@@ -22785,7 +23768,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.Linq.Expressions.MapBinary``3(System.String,System.Linq.Expressions.Expression{System.Func{``0,``1,``2}},System.Linq.Expressions.Expression{System.Func{``0,``1,``2}})`
 - Kind: Method
 - Summary: Maps specific to another during SQL generation.
-- Remarks: Note that method is not thread safe and has to be used only in Application's initialization section.
+- Remarks: Registration is thread-safe; for predictable results configure mappings during application initialization, before queries are executed.
 - Type parameters:
   - `TLeft`: Exact type of member.
   - `TRight`: Exact type of member.
@@ -22812,6 +23795,120 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.Linq.IAsQueryableExceptBuilder`1.Except(System.Linq.Expressions.Expression{System.Func{`0,System.Object}}[])`
 - Kind: Method
 - Summary: Flips the chosen mode for the listed members: under the listed members are inlined as literals; under they are rendered as parameters. Selectors are member-access chains rooted at the row, e.g. p => p.Id or p => p.Address.Zip. An empty member list is a no-op.
+
+## LinqToDB.Linq.IEntityInsertSpec<T1,T2>.Ignore<T>
+
+- XML member: `M:LinqToDB.Linq.IEntityInsertSpec`2.Ignore``1(System.Linq.Expressions.Expression{System.Func{`0,``0}})`
+- Kind: Method
+- Summary: Excludes a target column from the INSERT statement.
+
+## LinqToDB.Linq.IEntityInsertSpec<T1,T2>.Set<T>
+
+- XML member: `M:LinqToDB.Linq.IEntityInsertSpec`2.Set``1(System.Linq.Expressions.Expression{System.Func{`0,``0}},System.Linq.Expressions.Expression{System.Func{``0}})`
+- Kind: Method
+- Summary: Sets a target column's value during INSERT from a context-free expression.
+
+## LinqToDB.Linq.IEntityInsertSpec<T1,T2>.Set<T>
+
+- XML member: `M:LinqToDB.Linq.IEntityInsertSpec`2.Set``1(System.Linq.Expressions.Expression{System.Func{`0,``0}},System.Linq.Expressions.Expression{System.Func{`0,``0}})`
+- Kind: Method
+- Summary: Sets a target column's value during INSERT from the source row.
+
+## LinqToDB.Linq.IEntityUpdateSpec<T1,T2>.Ignore<T>
+
+- XML member: `M:LinqToDB.Linq.IEntityUpdateSpec`2.Ignore``1(System.Linq.Expressions.Expression{System.Func{`0,``0}})`
+- Kind: Method
+- Summary: Excludes a target column from the UPDATE statement.
+
+## LinqToDB.Linq.IEntityUpdateSpec<T1,T2>.Set<T>
+
+- XML member: `M:LinqToDB.Linq.IEntityUpdateSpec`2.Set``1(System.Linq.Expressions.Expression{System.Func{`0,``0}},System.Linq.Expressions.Expression{System.Func{``0}})`
+- Kind: Method
+- Summary: Sets a target column's value during UPDATE from a context-free expression.
+
+## LinqToDB.Linq.IEntityUpdateSpec<T1,T2>.Set<T>
+
+- XML member: `M:LinqToDB.Linq.IEntityUpdateSpec`2.Set``1(System.Linq.Expressions.Expression{System.Func{`0,``0}},System.Linq.Expressions.Expression{System.Func{`0,``0}})`
+- Kind: Method
+- Summary: Sets a target column's value during UPDATE from the source row.
+
+## LinqToDB.Linq.IEntityUpdateSpec<T1,T2>.Set<T>
+
+- XML member: `M:LinqToDB.Linq.IEntityUpdateSpec`2.Set``1(System.Linq.Expressions.Expression{System.Func{`0,``0}},System.Linq.Expressions.Expression{System.Func{`0,`0,``0}})`
+- Kind: Method
+- Summary: Sets a target column's value during UPDATE from both the current target row and the source row.
+
+## LinqToDB.Linq.IUpsertInsertSpec<T>.DoNothing
+
+- XML member: `M:LinqToDB.Linq.IUpsertInsertSpec`1.DoNothing`
+- Kind: Method
+- Summary: Marks the INSERT branch as explicitly empty.
+
+## LinqToDB.Linq.IUpsertInsertSpec<T>.When
+
+- XML member: `M:LinqToDB.Linq.IUpsertInsertSpec`1.When(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}})`
+- Kind: Method
+- Summary: Adds a source-row predicate: insert only when the predicate holds (WHEN NOT MATCHED AND …).
+
+## LinqToDB.Linq.IUpsertSpec<T>.Ignore<T>
+
+- XML member: `M:LinqToDB.Linq.IUpsertSpec`1.Ignore``1(System.Linq.Expressions.Expression{System.Func{`0,``0}})`
+- Kind: Method
+- Summary: Excludes a target column from both INSERT and UPDATE.
+
+## LinqToDB.Linq.IUpsertSpec<T>.Insert
+
+- XML member: `M:LinqToDB.Linq.IUpsertSpec`1.Insert(System.Linq.Expressions.Expression{System.Func{LinqToDB.Linq.IUpsertInsertSpec{`0},LinqToDB.Linq.IUpsertInsertSpec{`0}}})`
+- Kind: Method
+- Summary: Configures the INSERT branch.
+
+## LinqToDB.Linq.IUpsertSpec<T>.Match
+
+- XML member: `M:LinqToDB.Linq.IUpsertSpec`1.Match(System.Linq.Expressions.Expression{System.Func{`0,`0,System.Boolean}})`
+- Kind: Method
+- Summary: Defines the key-equality used to match source rows to target rows: a conjunction of equality comparisons between target and source member paths — e.g. (t, s) => t.Id == s.Id or (t, s) => t.TenantId == s.TenantId && t.ExternalId == s.ExternalId. This is not a general boolean predicate; use the branch .When(...) predicates for conditional INSERT/UPDATE logic. When omitted, the target table's primary key is used (same as today's InsertOrUpdate). Columns referenced by the match identify the row and are excluded from the UPDATE branch's SET list.
+
+## LinqToDB.Linq.IUpsertSpec<T>.Set<T>
+
+- XML member: `M:LinqToDB.Linq.IUpsertSpec`1.Set``1(System.Linq.Expressions.Expression{System.Func{`0,``0}},System.Linq.Expressions.Expression{System.Func{``0}})`
+- Kind: Method
+- Summary: Sets a target column's value for both INSERT and UPDATE branches from a context-free expression.
+
+## LinqToDB.Linq.IUpsertSpec<T>.Set<T>
+
+- XML member: `M:LinqToDB.Linq.IUpsertSpec`1.Set``1(System.Linq.Expressions.Expression{System.Func{`0,``0}},System.Linq.Expressions.Expression{System.Func{`0,``0}})`
+- Kind: Method
+- Summary: Sets a target column's value for both INSERT and UPDATE branches from the source row.
+
+## LinqToDB.Linq.IUpsertSpec<T>.SkipInsert
+
+- XML member: `M:LinqToDB.Linq.IUpsertSpec`1.SkipInsert`
+- Kind: Method
+- Summary: Skips the INSERT branch entirely — UPDATE-IF-EXISTS semantics.
+
+## LinqToDB.Linq.IUpsertSpec<T>.SkipUpdate
+
+- XML member: `M:LinqToDB.Linq.IUpsertSpec`1.SkipUpdate`
+- Kind: Method
+- Summary: Skips the UPDATE branch entirely — INSERT-IF-NOT-EXISTS semantics.
+
+## LinqToDB.Linq.IUpsertSpec<T>.Update
+
+- XML member: `M:LinqToDB.Linq.IUpsertSpec`1.Update(System.Linq.Expressions.Expression{System.Func{LinqToDB.Linq.IUpsertUpdateSpec{`0},LinqToDB.Linq.IUpsertUpdateSpec{`0}}})`
+- Kind: Method
+- Summary: Configures the UPDATE branch.
+
+## LinqToDB.Linq.IUpsertUpdateSpec<T>.DoNothing
+
+- XML member: `M:LinqToDB.Linq.IUpsertUpdateSpec`1.DoNothing`
+- Kind: Method
+- Summary: Marks the UPDATE branch as explicitly empty.
+
+## LinqToDB.Linq.IUpsertUpdateSpec<T>.When
+
+- XML member: `M:LinqToDB.Linq.IUpsertUpdateSpec`1.When(System.Linq.Expressions.Expression{System.Func{`0,`0,System.Boolean}})`
+- Kind: Method
+- Summary: Adds a target/source-row predicate: update only when the predicate holds (WHEN MATCHED AND …).
 
 ## LinqToDB.Linq.LinqException.Constructor
 
@@ -22921,6 +24018,15 @@ Generated directly from the current package XML documentation. Use XML member id
 - Summary: Forces expression cache to compare expressions by value, not by reference.
 - Parameters:
   - `expression`: 
+
+## LinqToDB.Linq.Translation.TranslationProviderFlags.Constructor
+
+- XML member: `M:LinqToDB.Linq.Translation.TranslationProviderFlags.#ctor(LinqToDB.Internal.SqlQuery.NullsDefaultOrdering,System.Boolean)`
+- Kind: Method
+- Summary: Initializes a new .
+- Parameters:
+  - `defaultNullsOrdering`: The provider's natural NULL placement when no NULLS FIRST/NULLS LAST is specified.
+  - `isNullsOrderingSupported`: Whether the provider supports the NULLS FIRST/NULLS LAST keyword in ORDER BY.
 
 ## LinqToDB.LinqExtensions.AggregateExecute<T1,T2>
 
@@ -23550,6 +24656,19 @@ Generated directly from the current package XML documentation. Use XML member id
 
 ## LinqToDB.LinqExtensions.IgnoreFilters<T>
 
+- XML member: `M:LinqToDB.LinqExtensions.IgnoreFilters``1(System.Linq.IQueryable{``0},System.Collections.Generic.IEnumerable{System.String},System.Type[])`
+- Kind: Method
+- Summary: Disables named query filters in current query, identified by filter key and optionally scoped to entity types. A filter is disabled when its key is listed and its entity type matches; an empty list means "any entity type". An empty list disables nothing (mirroring EF Core's IgnoreQueryFilters(IEnumerable<string>)). Use the parameterless to disable every filter.
+- Type parameters:
+  - `TSource`: Source query record type.
+- Parameters:
+  - `source`: Source query.
+  - `filterKeys`: Filter keys to disable. An empty list disables nothing.
+  - `entityTypes`: Optional entity types the disable is scoped to. Empty means "any entity type".
+- Returns: Query with the specified named filters disabled.
+
+## LinqToDB.LinqExtensions.IgnoreFilters<T>
+
 - XML member: `M:LinqToDB.LinqExtensions.IgnoreFilters``1(System.Linq.IQueryable{``0},System.Type[])`
 - Kind: Method
 - Summary: Disables Query Filters in current query.
@@ -23651,6 +24770,19 @@ Generated directly from the current package XML documentation. Use XML member id
 
 ## LinqToDB.LinqExtensions.Insert<T>
 
+- XML member: `M:LinqToDB.LinqExtensions.Insert``1(LinqToDB.ITable{``0},``0,System.Linq.Expressions.Expression{System.Func{LinqToDB.Linq.IEntityInsertSpec{``0},LinqToDB.Linq.IEntityInsertSpec{``0}}})`
+- Kind: Method
+- Summary: Inserts a single entity into the target table, configured by a fluent builder. Whole-object defaults are written from ; user-supplied .Set overrides and .Ignore exclusions overlay on top.
+- Type parameters:
+  - `T`: Target table record type.
+- Parameters:
+  - `target`: Target table.
+  - `item`: Entity to insert.
+  - `configure`: Fluent configuration expression.
+- Returns: Number of affected records.
+
+## LinqToDB.LinqExtensions.Insert<T>
+
 - XML member: `M:LinqToDB.LinqExtensions.Insert``1(LinqToDB.ITable{``0},System.Linq.Expressions.Expression{System.Func{``0}})`
 - Kind: Method
 - Summary: Inserts single record into target table.
@@ -23703,6 +24835,20 @@ Generated directly from the current package XML documentation. Use XML member id
   - `setter`: Inserted record constructor expression. Expression supports only target table record new expression with field initializers.
 - Returns: Number of affected records.
 - AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+
+## LinqToDB.LinqExtensions.InsertAsync<T>
+
+- XML member: `M:LinqToDB.LinqExtensions.InsertAsync``1(LinqToDB.ITable{``0},``0,System.Linq.Expressions.Expression{System.Func{LinqToDB.Linq.IEntityInsertSpec{``0},LinqToDB.Linq.IEntityInsertSpec{``0}}},System.Threading.CancellationToken)`
+- Kind: Method
+- Summary: Asynchronously inserts a single entity into the target table, configured by a fluent builder.
+- Type parameters:
+  - `T`: Target table record type.
+- Parameters:
+  - `target`: Target table.
+  - `item`: Entity to insert.
+  - `configure`: Fluent configuration expression.
+  - `token`: Optional asynchronous operation cancellation token.
+- Returns: Task yielding the number of affected records.
 
 ## LinqToDB.LinqExtensions.InsertAsync<T>
 
@@ -24870,7 +26016,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.LinqExtensions.LoadWith``2(System.Linq.IQueryable{``0},System.Linq.Expressions.Expression{System.Func{``0,``1}},System.Linq.Expressions.Expression{System.Func{System.Linq.IQueryable{``1},System.Linq.IQueryable{``1}}})`
 - Kind: Method
 - Summary: Specifies associations that should be loaded for each loaded record from current table. All associations, specified in expression, will be loaded. Take into account that use of this method could require multiple queries to load all requested associations. parameter could be used to define additional association loading logic like filters or loading of more associations.
-- Remarks: See for SQL semantics and provider contract.
+- Remarks: When the underlying query is not a linq2db query (for example a plain in-memory such as Enumerable.Empty<T>().AsQueryable()), the eager-load directive is ignored and the query is returned unchanged as a passthrough — mirroring EF Core Include behavior.
 - Type parameters:
   - `TEntity`: Type of entity being queried.
   - `TProperty`: Type of the related entity to be included.
@@ -24885,7 +26031,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.LinqExtensions.LoadWith``2(System.Linq.IQueryable{``0},System.Linq.Expressions.Expression{System.Func{``0,``1}})`
 - Kind: Method
 - Summary: Specifies associations that should be loaded for each loaded record from current table. All associations, specified in expression, will be loaded. Take into account that use of this method could require multiple queries to load all requested associations.
-- Remarks: Execution is deferred and the method is composable. The navigation loading directive affects SQL semantics and is emitted according to provider rules.
+- Remarks: When the underlying query is not a linq2db query (for example a plain in-memory such as Enumerable.Empty<T>().AsQueryable()), the eager-load directive is ignored and the query is returned unchanged as a passthrough — mirroring EF Core Include behavior.
 - Type parameters:
   - `TEntity`: Type of entity being queried.
   - `TProperty`: Type of the related entity to be included.
@@ -24900,7 +26046,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.LinqExtensions.LoadWith``2(System.Linq.IQueryable{``0},System.Linq.Expressions.Expression{System.Func{``0,System.Collections.Generic.IEnumerable{``1}}},System.Linq.Expressions.Expression{System.Func{System.Linq.IQueryable{``1},System.Linq.IQueryable{``1}}})`
 - Kind: Method
 - Summary: Specifies associations that should be loaded for each loaded record from current table. All associations, specified in expression, will be loaded. Take into account that use of this method could require multiple queries to load all requested associations. parameter could be used to define additional association loading logic like filters or loading of more associations.
-- Remarks: See for SQL semantics and provider contract.
+- Remarks: When the underlying query is not a linq2db query (for example a plain in-memory such as Enumerable.Empty<T>().AsQueryable()), the eager-load directive is ignored and the query is returned unchanged as a passthrough — mirroring EF Core Include behavior.
 - Type parameters:
   - `TEntity`: Type of entity being queried.
   - `TProperty`: Type of the related entity to be included.
@@ -25823,7 +26969,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.LinqExtensions.ThenLoad``3(LinqToDB.ILoadWithQueryable{``0,``1},System.Linq.Expressions.Expression{System.Func{``1,``2}},System.Linq.Expressions.Expression{System.Func{System.Linq.IQueryable{``2},System.Linq.IQueryable{``2}}})`
 - Kind: Method
 - Summary: Specifies associations that should be loaded for parent association, loaded by previous LoadWith/ThenLoad call in chain. All associations, specified in expression, will be loaded. Take into account that use of this method could require multiple queries to load all requested associations. parameter could be used to define additional association loading logic like filters or loading of more associations.
-- Remarks: See for SQL semantics and provider contract.
+- Remarks: When the underlying query is not a linq2db query (for example a plain in-memory such as Enumerable.Empty<T>().AsQueryable()), the eager-load directive is ignored and the query is returned unchanged as a passthrough — mirroring EF Core Include behavior.
 - Type parameters:
   - `TEntity`: Type of entity being queried.
   - `TPreviousProperty`: Type of parent association.
@@ -25839,7 +26985,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.LinqExtensions.ThenLoad``3(LinqToDB.ILoadWithQueryable{``0,``1},System.Linq.Expressions.Expression{System.Func{``1,``2}})`
 - Kind: Method
 - Summary: Specifies associations that should be loaded for parent association, loaded by previous LoadWith/ThenLoad call in chain. All associations, specified in expression, will be loaded. Take into account that use of this method could require multiple queries to load all requested associations.
-- Remarks: See for SQL semantics and provider contract.
+- Remarks: When the underlying query is not a linq2db query (for example a plain in-memory such as Enumerable.Empty<T>().AsQueryable()), the eager-load directive is ignored and the query is returned unchanged as a passthrough — mirroring EF Core Include behavior.
 - Type parameters:
   - `TEntity`: Type of entity being queried.
   - `TPreviousProperty`: Type of parent association.
@@ -25854,7 +27000,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.LinqExtensions.ThenLoad``3(LinqToDB.ILoadWithQueryable{``0,``1},System.Linq.Expressions.Expression{System.Func{``1,System.Collections.Generic.IEnumerable{``2}}},System.Linq.Expressions.Expression{System.Func{System.Linq.IQueryable{``2},System.Linq.IQueryable{``2}}})`
 - Kind: Method
 - Summary: Specifies associations that should be loaded for parent association, loaded by previous LoadWith/ThenLoad call in chain. All associations, specified in expression, will be loaded. Take into account that use of this method could require multiple queries to load all requested associations. parameter could be used to define additional association loading logic like filters or loading of more associations.
-- Remarks: See for SQL semantics and provider contract.
+- Remarks: When the underlying query is not a linq2db query (for example a plain in-memory such as Enumerable.Empty<T>().AsQueryable()), the eager-load directive is ignored and the query is returned unchanged as a passthrough — mirroring EF Core Include behavior.
 - Type parameters:
   - `TEntity`: Type of entity being queried.
   - `TPreviousProperty`: Type of parent association.
@@ -25870,7 +27016,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.LinqExtensions.ThenLoad``3(LinqToDB.ILoadWithQueryable{``0,System.Collections.Generic.IEnumerable{``1}},System.Linq.Expressions.Expression{System.Func{``1,``2}},System.Linq.Expressions.Expression{System.Func{System.Linq.IQueryable{``2},System.Linq.IQueryable{``2}}})`
 - Kind: Method
 - Summary: Specifies associations that should be loaded for parent association, loaded by previous LoadWith/ThenLoad call in chain. All associations, specified in expression, will be loaded. Take into account that use of this method could require multiple queries to load all requested associations. parameter could be used to define additional association loading logic like filters or loading of more associations.
-- Remarks: See for SQL semantics and provider contract.
+- Remarks: When the underlying query is not a linq2db query (for example a plain in-memory such as Enumerable.Empty<T>().AsQueryable()), the eager-load directive is ignored and the query is returned unchanged as a passthrough — mirroring EF Core Include behavior.
 - Type parameters:
   - `TEntity`: Type of entity being queried.
   - `TPreviousProperty`: Type of parent association.
@@ -25886,7 +27032,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.LinqExtensions.ThenLoad``3(LinqToDB.ILoadWithQueryable{``0,System.Collections.Generic.IEnumerable{``1}},System.Linq.Expressions.Expression{System.Func{``1,``2}})`
 - Kind: Method
 - Summary: Specifies associations that should be loaded for parent association, loaded by previous LoadWith/ThenLoad call in chain. All associations, specified in expression, will be loaded. Take into account that use of this method could require multiple queries to load all requested associations.
-- Remarks: See for SQL semantics and provider contract.
+- Remarks: When the underlying query is not a linq2db query (for example a plain in-memory such as Enumerable.Empty<T>().AsQueryable()), the eager-load directive is ignored and the query is returned unchanged as a passthrough — mirroring EF Core Include behavior.
 - Type parameters:
   - `TEntity`: Type of entity being queried.
   - `TPreviousProperty`: Type of parent association.
@@ -25901,7 +27047,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.LinqExtensions.ThenLoad``3(LinqToDB.ILoadWithQueryable{``0,System.Collections.Generic.IEnumerable{``1}},System.Linq.Expressions.Expression{System.Func{``1,System.Collections.Generic.IEnumerable{``2}}},System.Linq.Expressions.Expression{System.Func{System.Linq.IQueryable{``2},System.Linq.IQueryable{``2}}})`
 - Kind: Method
 - Summary: Specifies associations that should be loaded for parent association, loaded by previous LoadWith/ThenLoad call in chain. All associations, specified in expression, will be loaded. Take into account that use of this method could require multiple queries to load all requested associations. parameter could be used to define additional association loading logic like filters or loading of more associations.
-- Remarks: See for SQL semantics and provider contract.
+- Remarks: When the underlying query is not a linq2db query (for example a plain in-memory such as Enumerable.Empty<T>().AsQueryable()), the eager-load directive is ignored and the query is returned unchanged as a passthrough — mirroring EF Core Include behavior.
 - Type parameters:
   - `TEntity`: Type of entity being queried.
   - `TPreviousProperty`: Type of parent association.
@@ -26043,6 +27189,19 @@ Generated directly from the current package XML documentation. Use XML member id
 
 ## LinqToDB.LinqExtensions.Update<T>
 
+- XML member: `M:LinqToDB.LinqExtensions.Update``1(LinqToDB.ITable{``0},``0,System.Linq.Expressions.Expression{System.Func{LinqToDB.Linq.IEntityUpdateSpec{``0},LinqToDB.Linq.IEntityUpdateSpec{``0}}})`
+- Kind: Method
+- Summary: Updates a single entity in the target table by primary-key match, configured by a fluent builder. Whole-object defaults (every non-PK, non-skip-on-update column) are written from ; user-supplied .Set overrides and .Ignore exclusions overlay on top.
+- Type parameters:
+  - `T`: Target table record type. Must declare at least one primary-key column.
+- Parameters:
+  - `target`: Target table.
+  - `item`: Entity to update. Its PK columns identify the row to update.
+  - `configure`: Fluent configuration expression.
+- Returns: Number of affected records.
+
+## LinqToDB.LinqExtensions.Update<T>
+
 - XML member: `M:LinqToDB.LinqExtensions.Update``1(LinqToDB.Linq.IUpdatable{``0})`
 - Kind: Method
 - Summary: Executes update operation for already configured update query.
@@ -26099,6 +27258,20 @@ Generated directly from the current package XML documentation. Use XML member id
   - `target`: Target table selection expression.
   - `setter`: Update expression. Uses record from source query as parameter. Expression supports only target table record new expression with field initializers.
 - Returns: Number of updated records.
+
+## LinqToDB.LinqExtensions.UpdateAsync<T>
+
+- XML member: `M:LinqToDB.LinqExtensions.UpdateAsync``1(LinqToDB.ITable{``0},``0,System.Linq.Expressions.Expression{System.Func{LinqToDB.Linq.IEntityUpdateSpec{``0},LinqToDB.Linq.IEntityUpdateSpec{``0}}},System.Threading.CancellationToken)`
+- Kind: Method
+- Summary: Asynchronously updates a single entity in the target table by primary-key match, configured by a fluent builder.
+- Type parameters:
+  - `T`: Target table record type. Must declare at least one primary-key column.
+- Parameters:
+  - `target`: Target table.
+  - `item`: Entity to update.
+  - `configure`: Fluent configuration expression.
+  - `token`: Optional asynchronous operation cancellation token.
+- Returns: Task yielding the number of affected records.
 
 ## LinqToDB.LinqExtensions.UpdateAsync<T>
 
@@ -26896,6 +28069,84 @@ Generated directly from the current package XML documentation. Use XML member id
 - Returns: A task that completes with the number of affected target records.
 - AI metadata: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
+## LinqToDB.LinqExtensions.Upsert<T>
+
+- XML member: `M:LinqToDB.LinqExtensions.Upsert``1(LinqToDB.ITable{``0},``0,System.Linq.Expressions.Expression{System.Func{LinqToDB.Linq.IUpsertSpec{``0},LinqToDB.Linq.IUpsertSpec{``0}}})`
+- Kind: Method
+- Summary: Performs an Upsert (insert-or-update) of a single entity into the target table, configured by a fluent builder.
+- Remarks: The expression tree composes a small fluent chain. Available knobs: .Match((t, s) => t.Col == s.Col && …) — key-equality of target/source member paths, not a general predicate; defaults to the target table's primary key when omitted.Root-level .Set(col, value) / .Ignore(col) — apply to both the INSERT and UPDATE branches..Insert(i => i.Set(…).Ignore(…).When(s => pred)) — INSERT-branch configuration. .DoNothing() on the branch skips INSERT..Update(v => v.Set(…).Ignore(…).When((t, s) => pred)) — UPDATE-branch configuration. .DoNothing() on the branch skips UPDATE..SkipInsert() — UPDATE-only: matched rows updated, unmatched rows not inserted..SkipUpdate() — INSERT-only: unmatched rows inserted, matched rows left alone. Columns without a .Set override are written from the matching member on . .Ignore(col) drops a column from the branch it's declared in (both branches when declared at the root). Depending on the provider's capabilities and the configured chain, the operation is emitted as a native single-statement upsert, a MERGE, or — where neither is expressible — an emulated multi-statement SELECT → UPDATE → INSERT fallback (not atomic unless wrapped in a transaction). A configuration the provider cannot express throws at build time; use to reject the emulated fallback as well.
+- Type parameters:
+  - `T`: Target table record type.
+- Parameters:
+  - `target`: Target table.
+  - `item`: Entity to upsert.
+  - `configure`: Fluent configuration expression.
+- Returns: Number of affected records.
+
+## LinqToDB.LinqExtensions.Upsert<T>
+
+- XML member: `M:LinqToDB.LinqExtensions.Upsert``1(LinqToDB.ITable{``0},``0)`
+- Kind: Method
+- Summary: Performs an Upsert (insert-or-update) of a single entity into the target table. Equivalent to Upsert(target, item, u => u): all mapped target columns are written from ; the match condition is the target table's primary key.
+- Type parameters:
+  - `T`: Target table record type.
+- Parameters:
+  - `target`: Target table.
+  - `item`: Entity to upsert.
+- Returns: Number of affected records.
+
+## LinqToDB.LinqExtensions.Upsert<T>
+
+- XML member: `M:LinqToDB.LinqExtensions.Upsert``1(LinqToDB.ITable{``0},System.Collections.Generic.IEnumerable{``0},System.Linq.Expressions.Expression{System.Func{LinqToDB.Linq.IUpsertSpec{``0},LinqToDB.Linq.IUpsertSpec{``0}}})`
+- Kind: Method
+- Summary: Performs an Upsert of every element in into the target table, configured by a fluent builder.
+
+## LinqToDB.LinqExtensions.Upsert<T>
+
+- XML member: `M:LinqToDB.LinqExtensions.Upsert``1(LinqToDB.ITable{``0},System.Linq.IQueryable{``0},System.Linq.Expressions.Expression{System.Func{LinqToDB.Linq.IUpsertSpec{``0},LinqToDB.Linq.IUpsertSpec{``0}}})`
+- Kind: Method
+- Summary: Performs an Upsert of every row produced by into the target table, configured by a fluent builder.
+
+## LinqToDB.LinqExtensions.UpsertAsync<T>
+
+- XML member: `M:LinqToDB.LinqExtensions.UpsertAsync``1(LinqToDB.ITable{``0},``0,System.Linq.Expressions.Expression{System.Func{LinqToDB.Linq.IUpsertSpec{``0},LinqToDB.Linq.IUpsertSpec{``0}}},System.Threading.CancellationToken)`
+- Kind: Method
+- Summary: Asynchronously performs an Upsert (insert-or-update) of a single entity into the target table, configured by a fluent builder.
+- Remarks: See for the configure-chain reference.
+- Type parameters:
+  - `T`: Target table record type.
+- Parameters:
+  - `target`: Target table.
+  - `item`: Entity to upsert.
+  - `configure`: Fluent configuration expression.
+  - `token`: Optional asynchronous operation cancellation token.
+- Returns: Task yielding the number of affected records.
+
+## LinqToDB.LinqExtensions.UpsertAsync<T>
+
+- XML member: `M:LinqToDB.LinqExtensions.UpsertAsync``1(LinqToDB.ITable{``0},``0,System.Threading.CancellationToken)`
+- Kind: Method
+- Summary: Asynchronously performs an Upsert (insert-or-update) of a single entity into the target table. Equivalent to UpsertAsync(target, item, u => u).
+- Type parameters:
+  - `T`: Target table record type.
+- Parameters:
+  - `target`: Target table.
+  - `item`: Entity to upsert.
+  - `token`: Optional asynchronous operation cancellation token.
+- Returns: Task yielding the number of affected records.
+
+## LinqToDB.LinqExtensions.UpsertAsync<T>
+
+- XML member: `M:LinqToDB.LinqExtensions.UpsertAsync``1(LinqToDB.ITable{``0},System.Collections.Generic.IEnumerable{``0},System.Linq.Expressions.Expression{System.Func{LinqToDB.Linq.IUpsertSpec{``0},LinqToDB.Linq.IUpsertSpec{``0}}},System.Threading.CancellationToken)`
+- Kind: Method
+- Summary: Asynchronously performs an Upsert of every element in into the target table.
+
+## LinqToDB.LinqExtensions.UpsertAsync<T>
+
+- XML member: `M:LinqToDB.LinqExtensions.UpsertAsync``1(LinqToDB.ITable{``0},System.Linq.IQueryable{``0},System.Linq.Expressions.Expression{System.Func{LinqToDB.Linq.IUpsertSpec{``0},LinqToDB.Linq.IUpsertSpec{``0}}},System.Threading.CancellationToken)`
+- Kind: Method
+- Summary: Asynchronously performs an Upsert of every row produced by into the target table.
+
 ## LinqToDB.LinqExtensions.Using<T1,T2>
 
 - XML member: `M:LinqToDB.LinqExtensions.Using``2(LinqToDB.Linq.IMergeableUsing{``0},System.Collections.Generic.IEnumerable{``1})`
@@ -27062,6 +28313,28 @@ Generated directly from the current package XML documentation. Use XML member id
 - Returns: Table-like query source with table hints.
 - AI metadata: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
+## LinqToDB.LinqExtensions.WithKeyedLoadStrategy<T>
+
+- XML member: `M:LinqToDB.LinqExtensions.WithKeyedLoadStrategy``1(System.Linq.IQueryable{``0})`
+- Kind: Method
+- Summary: Marks this query to use the KeyedQuery eager loading strategy. The main query results are buffered, distinct parent keys are extracted client-side, and child records are loaded in a single batch query using WHERE key IN (...) or a VALUES table join. Applied to the root query; the strategy propagates to all contained child collections. Fallback behavior (whole-query): if any eager-loaded child in the query cannot be expressed with the KeyedQuery strategy — for example a child projection that references non-key parent fields (CompanyName = c.Name inside a child Select) — the entire eager-loading set for the query falls back to the Default strategy. Fallback is per-query, not per-child. An explicit per-query marker takes precedence over the global default. When more than one marker is applied to the same query, the outermost (last-applied) marker wins and inner markers are ignored; e.g. q.WithKeyedLoadStrategy().Where(...).WithUnionLoadStrategy() uses .
+- Type parameters:
+  - `T`: Element type of the collection.
+- Parameters:
+  - `source`: The root query to mark.
+- Returns: unchanged at runtime (translation-time marker only).
+
+## LinqToDB.LinqExtensions.WithSeparateLoadStrategy<T>
+
+- XML member: `M:LinqToDB.LinqExtensions.WithSeparateLoadStrategy``1(System.Linq.IQueryable{``0})`
+- Kind: Method
+- Summary: Eager-loads each of the query's child collections via its own dedicated pre-query (one query per association), fetching the full parent entity on the parent side of the join. Applied to the root query; the strategy propagates to all contained child collections. Equivalent to . Consider instead when the parent entity has many columns. An explicit per-query marker takes precedence over the global default. When more than one marker is applied to the same query, the outermost (last-applied) marker wins and inner markers are ignored; e.g. q.WithKeyedLoadStrategy().Where(...).WithUnionLoadStrategy() uses .
+- Type parameters:
+  - `T`: Element type of the root query.
+- Parameters:
+  - `source`: The root query to mark.
+- Returns: unchanged at runtime (translation-time marker only).
+
 ## LinqToDB.LinqExtensions.WithTableExpression<T>
 
 - XML member: `M:LinqToDB.LinqExtensions.WithTableExpression``1(LinqToDB.ITable{``0},System.String)`
@@ -27076,9 +28349,20 @@ Generated directly from the current package XML documentation. Use XML member id
 - Returns: Table-like query source with the overridden table source expression.
 - AI metadata: Group=Configuration; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
+## LinqToDB.LinqExtensions.WithUnionLoadStrategy<T>
+
+- XML member: `M:LinqToDB.LinqExtensions.WithUnionLoadStrategy``1(System.Linq.IQueryable{``0})`
+- Kind: Method
+- Summary: Combines the query's collection eager loads into a single CTE + UNION ALL query, reducing the total number of round-trips to the database. Applied to the root query; the strategy propagates to all contained child collections. Requires the target database to support Common Table Expressions; when CTEs are unavailable the whole-query eager-loading set falls back to . An explicit per-query marker takes precedence over the global default. When more than one marker is applied to the same query, the outermost (last-applied) marker wins and inner markers are ignored; e.g. q.WithKeyedLoadStrategy().Where(...).WithUnionLoadStrategy() uses .
+- Type parameters:
+  - `T`: Element type of the root query.
+- Parameters:
+  - `source`: The root query to mark.
+- Returns: unchanged at runtime (translation-time marker only).
+
 ## LinqToDB.LinqOptions.Constructor
 
-- XML member: `M:LinqToDB.LinqOptions.#ctor(System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,LinqToDB.CompareNulls,System.Boolean,System.Boolean,System.Nullable{System.TimeSpan},System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean)`
+- XML member: `M:LinqToDB.LinqOptions.#ctor(System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,LinqToDB.CompareNulls,System.Boolean,System.Boolean,System.Nullable{System.TimeSpan},System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,LinqToDB.UpsertEmulationPolicy,LinqToDB.EagerLoadingStrategy,LinqToDB.ImplicitCollectionLoading,System.Boolean)`
 - Kind: Method
 - Parameters:
   - `PreloadGroups`: Controls how group data for LINQ queries ended with GroupBy will be loaded: - if - group data will be loaded together with main query, resulting in 1 + N queries, where N - number of groups; - if - group data will be loaded when you call enumerator for specific group . Default value: .
@@ -27096,6 +28380,23 @@ Generated directly from the current package XML documentation. Use XML member id
   - `ParameterizeTakeSkip`: Enables Take/Skip parameterization. Default value: .
   - `EnableContextSchemaEdit`: If , user could add new mappings to context mapping schemas (). Otherwise, will be generated on locked mapping schema edit attempt. It is not recommended to enable this option as it has performance implications. Proper approach is to create single instance once, configure mappings for it and use this instance for all context instances. Default value: .
   - `PreferExistsForScalar`: If , EXISTS operator will be generated instead of IN operator for scalar values. SELECT Value FROM MyEntity e WHERE EXISTS(SELECT * FROM MyEntity2 e2 WHERE e2.Value = e.Value) vs SELECT Value FROM MyEntity e WHERE Value IN (SELECT Value FROM MyEntity2 e2) Default value: .
+  - `PreferClientCalculation`: When enabled, computed expressions in the final projection (arithmetic, conditionals, unary operations, and mapped members/methods that do not prefer server-side evaluation) are calculated on the client during materialization instead of being translated into additional SQL columns. Real database columns, already-built subqueries, and expressions that prefer or require server-side evaluation (for example, members or methods mapped with or ) are still translated to SQL. Default value: .
+  - `UpsertEmulationPolicy`: Controls what happens when an Upsert cannot be expressed as a native single-statement upsert or MERGE for the target provider and would fall back to an emulated multi-statement SELECT → UPDATE → INSERT sequence (the three statements run as independent commands — wrap the call in a transaction if atomicity is required). (default) — perform the emulated fallback. — reject it with at build time.
+  - `DefaultEagerLoadingStrategy`: Specifies the default used for all LoadWith/ThenLoad eager-loading operations when no per-query strategy is set via WithUnionLoadStrategy, WithKeyedLoadStrategy, or WithSeparateLoadStrategy. Default value: .
+  - `ImplicitCollectionLoading`: With , a query that triggers an implicit eager load — a collection projected in a Select without being explicitly requested — throws at build time; with (the default) it is loaded as usual. The guard is bypassed when the eager load is explicit: LoadWith/ThenLoad allows that one collection (other unmarked collections in the same query still throw), while a root WithUnionLoadStrategy/WithKeyedLoadStrategy/WithSeparateLoadStrategy marker opts the whole query in.
+  - `OptimizeForSequentialAccess`: Enables mapping expression to be compatible with behavior. Note that it doesn't switch linq2db to use behavior for queries, so this optimization could be used for too. Default value: .
+
+## LinqToDB.LinqOptions.Constructor
+
+- XML member: `M:LinqToDB.LinqOptions.#ctor(System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,LinqToDB.CompareNulls,System.Boolean,System.Boolean,System.Nullable{System.TimeSpan},System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean)`
+- Kind: Method
+- Summary: Binary-compatibility overload of the record's positional constructor — mirrors the public ctor signature as it was before and the later options were added, so assemblies compiled against the previous linq2db release continue to load.
+
+## LinqToDB.LinqOptions.Deconstruct
+
+- XML member: `M:LinqToDB.LinqOptions.Deconstruct(System.Boolean@,System.Boolean@,System.Boolean@,System.Boolean@,System.Boolean@,System.Boolean@,LinqToDB.CompareNulls@,System.Boolean@,System.Boolean@,System.Nullable{System.TimeSpan}@,System.Boolean@,System.Boolean@,System.Boolean@,System.Boolean@,System.Boolean@)`
+- Kind: Method
+- Summary: Binary-compatibility overload of the record's Deconstruct — mirrors the method signature as it was before and the later options were added.
 
 ## LinqToDB.LinqToDBException.Constructor
 
@@ -27362,6 +28663,12 @@ Generated directly from the current package XML documentation. Use XML member id
   - `columnAttribute`: Column attribute, from which descriptor data should be extracted.
   - `memberAccessor`: Column mapping member accessor.
   - `hasInheritanceMapping`: Owning entity included in inheritance mapping.
+
+## LinqToDB.Mapping.ColumnDescriptor.AddValueSibling
+
+- XML member: `M:LinqToDB.Mapping.ColumnDescriptor.AddValueSibling(LinqToDB.Mapping.ColumnDescriptor)`
+- Kind: Method
+- Summary: Registers another inheritance-mapped column that maps a distinct member to the same physical column as this one. Lets read the value from the member matching the row's runtime type, so inserts of a base-typed (mixed) source write shared columns correctly.
 
 ## LinqToDB.Mapping.ColumnDescriptor.ApplyConversions
 
@@ -27761,7 +29068,7 @@ Generated directly from the current package XML documentation. Use XML member id
 
 - XML member: `M:LinqToDB.Mapping.EntityMappingBuilder`1.HasQueryFilter(System.Func{System.Linq.IQueryable{`0},LinqToDB.IDataContext,System.Linq.IQueryable{`0}})`
 - Kind: Method
-- Summary: Specifies a LINQ function that will automatically be applied to any queries targeting this entity type.
+- Summary: Specifies a LINQ function that will automatically be applied to any queries targeting this entity type. Targets the default (anonymous) filter slot.
 - Parameters:
   - `filterFunc`: Function which corrects input IQueryable.
 - Returns: The same builder instance so that multiple configuration calls can be chained.
@@ -27770,7 +29077,7 @@ Generated directly from the current package XML documentation. Use XML member id
 
 - XML member: `M:LinqToDB.Mapping.EntityMappingBuilder`1.HasQueryFilter(System.Linq.Expressions.Expression{System.Func{`0,LinqToDB.IDataContext,System.Boolean}})`
 - Kind: Method
-- Summary: Specifies a LINQ predicate expression that will automatically be applied to any queries targeting this entity type.
+- Summary: Specifies a LINQ predicate expression that will automatically be applied to any queries targeting this entity type. Targets the default (anonymous) filter slot — equivalent to the keyed overload called with an empty filter key.
 - Parameters:
   - `filter`: The LINQ predicate expression.
 - Returns: The same builder instance so that multiple configuration calls can be chained.
@@ -27779,16 +29086,46 @@ Generated directly from the current package XML documentation. Use XML member id
 
 - XML member: `M:LinqToDB.Mapping.EntityMappingBuilder`1.HasQueryFilter(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}})`
 - Kind: Method
-- Summary: Specifies a LINQ predicate expression that will automatically be applied to any queries targeting this entity type.
+- Summary: Specifies a LINQ predicate expression that will automatically be applied to any queries targeting this entity type. Targets the default (anonymous) filter slot.
 - Parameters:
   - `filter`: The LINQ predicate expression.
+- Returns: The same builder instance so that multiple configuration calls can be chained.
+
+## LinqToDB.Mapping.EntityMappingBuilder<T>.HasQueryFilter
+
+- XML member: `M:LinqToDB.Mapping.EntityMappingBuilder`1.HasQueryFilter(System.String,System.Func{System.Linq.IQueryable{`0},LinqToDB.IDataContext,System.Linq.IQueryable{`0}})`
+- Kind: Method
+- Summary: Specifies a named LINQ function that will automatically be applied to any queries targeting this entity type. Passing as removes the previously registered entry under .
+- Parameters:
+  - `filterKey`: Filter identifier. An empty string targets the anonymous (default) filter slot.
+  - `filterFunc`: Function which corrects input IQueryable, or to remove the named entry.
+- Returns: The same builder instance so that multiple configuration calls can be chained.
+
+## LinqToDB.Mapping.EntityMappingBuilder<T>.HasQueryFilter
+
+- XML member: `M:LinqToDB.Mapping.EntityMappingBuilder`1.HasQueryFilter(System.String,System.Linq.Expressions.Expression{System.Func{`0,LinqToDB.IDataContext,System.Boolean}})`
+- Kind: Method
+- Summary: Specifies a named LINQ predicate expression that will automatically be applied to any queries targeting this entity type. Any number of filter keys may coexist on the same entity and are AND-combined at query time. Passing as removes the previously registered entry under .
+- Parameters:
+  - `filterKey`: Filter identifier. An empty string targets the anonymous (default) filter slot.
+  - `filter`: LINQ predicate expression, or to remove the named entry.
+- Returns: The same builder instance so that multiple configuration calls can be chained.
+
+## LinqToDB.Mapping.EntityMappingBuilder<T>.HasQueryFilter
+
+- XML member: `M:LinqToDB.Mapping.EntityMappingBuilder`1.HasQueryFilter(System.String,System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}})`
+- Kind: Method
+- Summary: Specifies a named LINQ predicate expression that will automatically be applied to any queries targeting this entity type. Passing as removes the previously registered entry under .
+- Parameters:
+  - `filterKey`: Filter identifier. An empty string targets the anonymous (default) filter slot.
+  - `filter`: LINQ predicate expression, or to remove the named entry.
 - Returns: The same builder instance so that multiple configuration calls can be chained.
 
 ## LinqToDB.Mapping.EntityMappingBuilder<T>.HasQueryFilter<T>
 
 - XML member: `M:LinqToDB.Mapping.EntityMappingBuilder`1.HasQueryFilter``1(System.Func{System.Linq.IQueryable{`0},``0,System.Linq.IQueryable{`0}})`
 - Kind: Method
-- Summary: Specifies a LINQ function that will automatically be applied to any queries targeting this entity type.
+- Summary: Specifies a LINQ function that will automatically be applied to any queries targeting this entity type. Targets the default (anonymous) filter slot.
 - Parameters:
   - `filterFunc`: The LINQ predicate expression.
 - Returns: The same builder instance so that multiple configuration calls can be chained.
@@ -27797,9 +29134,29 @@ Generated directly from the current package XML documentation. Use XML member id
 
 - XML member: `M:LinqToDB.Mapping.EntityMappingBuilder`1.HasQueryFilter``1(System.Linq.Expressions.Expression{System.Func{`0,``0,System.Boolean}})`
 - Kind: Method
-- Summary: Specifies a LINQ predicate expression that will automatically be applied to any queries targeting this entity type.
+- Summary: Specifies a LINQ predicate expression that will automatically be applied to any queries targeting this entity type. Targets the default (anonymous) filter slot.
 - Parameters:
   - `filter`: The LINQ predicate expression.
+- Returns: The same builder instance so that multiple configuration calls can be chained.
+
+## LinqToDB.Mapping.EntityMappingBuilder<T>.HasQueryFilter<T>
+
+- XML member: `M:LinqToDB.Mapping.EntityMappingBuilder`1.HasQueryFilter``1(System.String,System.Func{System.Linq.IQueryable{`0},``0,System.Linq.IQueryable{`0}})`
+- Kind: Method
+- Summary: Specifies a named LINQ function with a custom parameter that will automatically be applied to any queries targeting this entity type. Passing as removes the previously registered entry under .
+- Parameters:
+  - `filterKey`: Filter identifier. An empty string targets the anonymous (default) filter slot.
+  - `filterFunc`: Function which corrects input IQueryable, or to remove the named entry.
+- Returns: The same builder instance so that multiple configuration calls can be chained.
+
+## LinqToDB.Mapping.EntityMappingBuilder<T>.HasQueryFilter<T>
+
+- XML member: `M:LinqToDB.Mapping.EntityMappingBuilder`1.HasQueryFilter``1(System.String,System.Linq.Expressions.Expression{System.Func{`0,``0,System.Boolean}})`
+- Kind: Method
+- Summary: Specifies a named LINQ predicate expression with a custom parameter that will automatically be applied to any queries targeting this entity type. Passing as removes the previously registered entry under .
+- Parameters:
+  - `filterKey`: Filter identifier. An empty string targets the anonymous (default) filter slot.
+  - `filter`: LINQ predicate expression, or to remove the named entry.
 - Returns: The same builder instance so that multiple configuration calls can be chained.
 
 ## LinqToDB.Mapping.EntityMappingBuilder<T>.HasSchemaName
@@ -27913,6 +29270,16 @@ Generated directly from the current package XML documentation. Use XML member id
 - Parameters:
   - `func`: Column mapping property or field getter expression.
 - Returns: Returns fluent property mapping builder.
+
+## LinqToDB.Mapping.EntityQueryFilter.Constructor
+
+- XML member: `M:LinqToDB.Mapping.EntityQueryFilter.#ctor(System.String,System.Linq.Expressions.LambdaExpression,System.Delegate)`
+- Kind: Method
+- Summary: Creates a new filter descriptor.
+- Parameters:
+  - `filterKey`: Filter identifier. An empty string addresses the default (anonymous) slot.
+  - `filterLambda`: Predicate-style filter Expression<Func<TEntity, TDataContext, bool>>, or .
+  - `filterFunc`: Function-style filter Func<IQueryable<TEntity>, TDataContext, IQueryable<TEntity>>, or .
 
 ## LinqToDB.Mapping.FluentMappingBuilder.Constructor
 
@@ -29836,6 +31203,12 @@ Generated directly from the current package XML documentation. Use XML member id
   - `collation`: Collation name to check.
 - Returns: False if invalid characters found, else true.
 
+## LinqToDB.Sql.NewGuid7
+
+- XML member: `M:LinqToDB.Sql.NewGuid7`
+- Kind: Method
+- Summary: Returns a version 7 (time-ordered, RFC 9562) . For providers with a native UUIDv7 function (PostgreSQL 18+, ClickHouse, DuckDB, MariaDB) the call is translated to it; on all other providers the value is generated client-side. The server function is emitted for those providers unconditionally, without probing the connected server version.
+
 ## LinqToDB.Sql.Ordinal<T>
 
 - XML member: `M:LinqToDB.Sql.Ordinal``1(``0)`
@@ -30038,6 +31411,12 @@ Generated directly from the current package XML documentation. Use XML member id
 - Parameters:
   - `EnableConstantExpressionInOrderBy`: If , linq2db will allow any constant expressions in ORDER BY clause. Default value: .
   - `GenerateFinalAliases`: Indicates whether SQL Builder should generate aliases for final projection. It is not required for correct query processing but simplifies SQL analysis. Default value: . For the query var query = from child in db.Child select new { TrackId = child.ChildID, }; When property is SELECT [child].[ChildID] as [TrackId] FROM [Child] [child] Otherwise alias will be removed SELECT [child].[ChildID] FROM [Child] [child]
+
+## LinqToDB.SqlQuery.SqlFrameBoundary.Equals
+
+- XML member: `M:LinqToDB.SqlQuery.SqlFrameBoundary.Equals(LinqToDB.SqlQuery.SqlFrameBoundary,System.Func{LinqToDB.Internal.SqlQuery.ISqlExpression,LinqToDB.Internal.SqlQuery.ISqlExpression,System.Boolean})`
+- Kind: Method
+- Summary: Structurally compares this boundary with , using to compare the offset expressions.
 
 ## LinqToDB.SqlQuery.SqlObjectName.Constructor
 
@@ -30452,6 +31831,1039 @@ Generated directly from the current package XML documentation. Use XML member id
   - `cancellationToken`: Asynchronous operation cancellation token.
 - Returns: Returns new collection of identity fields initialized or if entity had no identity columns.
 
+## LinqToDB.WindowFunctionBuilder.Average
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Average(LinqToDB.Sql.IWindowFunction,System.Byte,System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL AVG() window function. Computes the average within the window frame.
+- Remarks: Syntax:Sql.Window.Average(expr, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.C# usage: var query = from t in db.Table select new { Avg1 = Sql.Window.Average(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Avg2 = Sql.Window.Average(t.Salary, f => f.Filter(t.IsActive).OrderBy(t.Date)), Avg3 = Sql.Window.Average(t.Salary, f => f.OrderBy(t.Date).RowsBetween.ValuePreceding(3).And.CurrentRow), }; Generated SQL: SELECT AVG(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), AVG(CASE WHEN t.IsActive THEN t.Salary ELSE NULL END) OVER (ORDER BY t.Date), AVG(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN 3 PRECEDING AND CURRENT ROW) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Average
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Average(LinqToDB.Sql.IWindowFunction,System.Decimal,System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL AVG() window function. Computes the average within the window frame.
+- Remarks: Syntax:Sql.Window.Average(expr, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.C# usage: var query = from t in db.Table select new { Avg1 = Sql.Window.Average(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Avg2 = Sql.Window.Average(t.Salary, f => f.Filter(t.IsActive).OrderBy(t.Date)), Avg3 = Sql.Window.Average(t.Salary, f => f.OrderBy(t.Date).RowsBetween.ValuePreceding(3).And.CurrentRow), }; Generated SQL: SELECT AVG(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), AVG(CASE WHEN t.IsActive THEN t.Salary ELSE NULL END) OVER (ORDER BY t.Date), AVG(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN 3 PRECEDING AND CURRENT ROW) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Average
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Average(LinqToDB.Sql.IWindowFunction,System.Double,System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL AVG() window function. Computes the average within the window frame.
+- Remarks: Syntax:Sql.Window.Average(expr, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.C# usage: var query = from t in db.Table select new { Avg1 = Sql.Window.Average(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Avg2 = Sql.Window.Average(t.Salary, f => f.Filter(t.IsActive).OrderBy(t.Date)), Avg3 = Sql.Window.Average(t.Salary, f => f.OrderBy(t.Date).RowsBetween.ValuePreceding(3).And.CurrentRow), }; Generated SQL: SELECT AVG(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), AVG(CASE WHEN t.IsActive THEN t.Salary ELSE NULL END) OVER (ORDER BY t.Date), AVG(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN 3 PRECEDING AND CURRENT ROW) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Average
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Average(LinqToDB.Sql.IWindowFunction,System.Int16,System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL AVG() window function. Computes the average within the window frame.
+- Remarks: Syntax:Sql.Window.Average(expr, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.C# usage: var query = from t in db.Table select new { Avg1 = Sql.Window.Average(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Avg2 = Sql.Window.Average(t.Salary, f => f.Filter(t.IsActive).OrderBy(t.Date)), Avg3 = Sql.Window.Average(t.Salary, f => f.OrderBy(t.Date).RowsBetween.ValuePreceding(3).And.CurrentRow), }; Generated SQL: SELECT AVG(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), AVG(CASE WHEN t.IsActive THEN t.Salary ELSE NULL END) OVER (ORDER BY t.Date), AVG(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN 3 PRECEDING AND CURRENT ROW) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Average
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Average(LinqToDB.Sql.IWindowFunction,System.Int32,System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL AVG() window function. Computes the average within the window frame.
+- Remarks: Syntax:Sql.Window.Average(expr, f => f.[Distinct()][.Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.Use .Distinct() for AVG(DISTINCT x) OVER (...). DISTINCT in a window aggregate is not supported by most providers; where unsupported it throws a descriptive exception at query-translation time.C# usage: var query = from t in db.Table select new { Avg1 = Sql.Window.Average(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Avg2 = Sql.Window.Average(t.Salary, f => f.Filter(t.IsActive).OrderBy(t.Date)), Avg3 = Sql.Window.Average(t.Salary, f => f.OrderBy(t.Date).RowsBetween.ValuePreceding(3).And.CurrentRow), Avg4 = Sql.Window.Average(t.Salary, f => f.Distinct().PartitionBy(t.Dept)), }; Generated SQL: SELECT AVG(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), AVG(CASE WHEN t.IsActive THEN t.Salary ELSE NULL END) OVER (ORDER BY t.Date), AVG(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN 3 PRECEDING AND CURRENT ROW), AVG(DISTINCT t.Salary) OVER (PARTITION BY t.Dept) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Average
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Average(LinqToDB.Sql.IWindowFunction,System.Int64,System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL AVG() window function. Computes the average within the window frame.
+- Remarks: Syntax:Sql.Window.Average(expr, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.C# usage: var query = from t in db.Table select new { Avg1 = Sql.Window.Average(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Avg2 = Sql.Window.Average(t.Salary, f => f.Filter(t.IsActive).OrderBy(t.Date)), Avg3 = Sql.Window.Average(t.Salary, f => f.OrderBy(t.Date).RowsBetween.ValuePreceding(3).And.CurrentRow), }; Generated SQL: SELECT AVG(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), AVG(CASE WHEN t.IsActive THEN t.Salary ELSE NULL END) OVER (ORDER BY t.Date), AVG(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN 3 PRECEDING AND CURRENT ROW) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Average
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Average(LinqToDB.Sql.IWindowFunction,System.Nullable{System.Byte},System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL AVG() window function. Computes the average within the window frame.
+- Remarks: Syntax:Sql.Window.Average(expr, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.C# usage: var query = from t in db.Table select new { Avg1 = Sql.Window.Average(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Avg2 = Sql.Window.Average(t.Salary, f => f.Filter(t.IsActive).OrderBy(t.Date)), Avg3 = Sql.Window.Average(t.Salary, f => f.OrderBy(t.Date).RowsBetween.ValuePreceding(3).And.CurrentRow), }; Generated SQL: SELECT AVG(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), AVG(CASE WHEN t.IsActive THEN t.Salary ELSE NULL END) OVER (ORDER BY t.Date), AVG(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN 3 PRECEDING AND CURRENT ROW) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Average
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Average(LinqToDB.Sql.IWindowFunction,System.Nullable{System.Decimal},System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL AVG() window function. Computes the average within the window frame.
+- Remarks: Syntax:Sql.Window.Average(expr, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.C# usage: var query = from t in db.Table select new { Avg1 = Sql.Window.Average(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Avg2 = Sql.Window.Average(t.Salary, f => f.Filter(t.IsActive).OrderBy(t.Date)), Avg3 = Sql.Window.Average(t.Salary, f => f.OrderBy(t.Date).RowsBetween.ValuePreceding(3).And.CurrentRow), }; Generated SQL: SELECT AVG(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), AVG(CASE WHEN t.IsActive THEN t.Salary ELSE NULL END) OVER (ORDER BY t.Date), AVG(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN 3 PRECEDING AND CURRENT ROW) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Average
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Average(LinqToDB.Sql.IWindowFunction,System.Nullable{System.Double},System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL AVG() window function. Computes the average within the window frame.
+- Remarks: Syntax:Sql.Window.Average(expr, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.C# usage: var query = from t in db.Table select new { Avg1 = Sql.Window.Average(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Avg2 = Sql.Window.Average(t.Salary, f => f.Filter(t.IsActive).OrderBy(t.Date)), Avg3 = Sql.Window.Average(t.Salary, f => f.OrderBy(t.Date).RowsBetween.ValuePreceding(3).And.CurrentRow), }; Generated SQL: SELECT AVG(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), AVG(CASE WHEN t.IsActive THEN t.Salary ELSE NULL END) OVER (ORDER BY t.Date), AVG(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN 3 PRECEDING AND CURRENT ROW) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Average
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Average(LinqToDB.Sql.IWindowFunction,System.Nullable{System.Int16},System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL AVG() window function. Computes the average within the window frame.
+- Remarks: Syntax:Sql.Window.Average(expr, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.C# usage: var query = from t in db.Table select new { Avg1 = Sql.Window.Average(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Avg2 = Sql.Window.Average(t.Salary, f => f.Filter(t.IsActive).OrderBy(t.Date)), Avg3 = Sql.Window.Average(t.Salary, f => f.OrderBy(t.Date).RowsBetween.ValuePreceding(3).And.CurrentRow), }; Generated SQL: SELECT AVG(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), AVG(CASE WHEN t.IsActive THEN t.Salary ELSE NULL END) OVER (ORDER BY t.Date), AVG(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN 3 PRECEDING AND CURRENT ROW) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Average
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Average(LinqToDB.Sql.IWindowFunction,System.Nullable{System.Int32},System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL AVG() window function. Computes the average within the window frame.
+- Remarks: Syntax:Sql.Window.Average(expr, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.C# usage: var query = from t in db.Table select new { Avg1 = Sql.Window.Average(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Avg2 = Sql.Window.Average(t.Salary, f => f.Filter(t.IsActive).OrderBy(t.Date)), Avg3 = Sql.Window.Average(t.Salary, f => f.OrderBy(t.Date).RowsBetween.ValuePreceding(3).And.CurrentRow), }; Generated SQL: SELECT AVG(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), AVG(CASE WHEN t.IsActive THEN t.Salary ELSE NULL END) OVER (ORDER BY t.Date), AVG(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN 3 PRECEDING AND CURRENT ROW) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Average
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Average(LinqToDB.Sql.IWindowFunction,System.Nullable{System.Int64},System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL AVG() window function. Computes the average within the window frame.
+- Remarks: Syntax:Sql.Window.Average(expr, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.C# usage: var query = from t in db.Table select new { Avg1 = Sql.Window.Average(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Avg2 = Sql.Window.Average(t.Salary, f => f.Filter(t.IsActive).OrderBy(t.Date)), Avg3 = Sql.Window.Average(t.Salary, f => f.OrderBy(t.Date).RowsBetween.ValuePreceding(3).And.CurrentRow), }; Generated SQL: SELECT AVG(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), AVG(CASE WHEN t.IsActive THEN t.Salary ELSE NULL END) OVER (ORDER BY t.Date), AVG(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN 3 PRECEDING AND CURRENT ROW) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Average
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Average(LinqToDB.Sql.IWindowFunction,System.Nullable{System.Single},System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL AVG() window function. Computes the average within the window frame.
+- Remarks: Syntax:Sql.Window.Average(expr, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.C# usage: var query = from t in db.Table select new { Avg1 = Sql.Window.Average(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Avg2 = Sql.Window.Average(t.Salary, f => f.Filter(t.IsActive).OrderBy(t.Date)), Avg3 = Sql.Window.Average(t.Salary, f => f.OrderBy(t.Date).RowsBetween.ValuePreceding(3).And.CurrentRow), }; Generated SQL: SELECT AVG(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), AVG(CASE WHEN t.IsActive THEN t.Salary ELSE NULL END) OVER (ORDER BY t.Date), AVG(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN 3 PRECEDING AND CURRENT ROW) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Average
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Average(LinqToDB.Sql.IWindowFunction,System.Single,System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL AVG() window function. Computes the average within the window frame.
+- Remarks: Syntax:Sql.Window.Average(expr, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.C# usage: var query = from t in db.Table select new { Avg1 = Sql.Window.Average(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Avg2 = Sql.Window.Average(t.Salary, f => f.Filter(t.IsActive).OrderBy(t.Date)), Avg3 = Sql.Window.Average(t.Salary, f => f.OrderBy(t.Date).RowsBetween.ValuePreceding(3).And.CurrentRow), }; Generated SQL: SELECT AVG(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), AVG(CASE WHEN t.IsActive THEN t.Salary ELSE NULL END) OVER (ORDER BY t.Date), AVG(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN 3 PRECEDING AND CURRENT ROW) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Corr<T1,T2>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Corr``2(LinqToDB.Sql.IWindowFunction,``0,``1,System.Func{LinqToDB.WindowFunctionBuilder.IBivariateAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates the SQL CORR() window function — the correlation coefficient of the two value pairs within the window.
+- Remarks: Syntax:Sql.Window.Corr(expr1, expr2, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.Generated SQL:CORR(expr1, expr2) OVER (...)
+
+## LinqToDB.WindowFunctionBuilder.Count
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Count(LinqToDB.Sql.IWindowFunction,System.Func{LinqToDB.WindowFunctionBuilder.IOFilterOPartitionOOrderOFrameFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL COUNT(*) window function. Use the Count(expr, ...) overload for COUNT(expr).
+- Remarks: Syntax:Sql.Window.Count(f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.C# usage: var query = from t in db.Table select new { Total = Sql.Window.Count(f => f.PartitionBy(t.Dept).OrderBy(t.Id)), Running = Sql.Window.Count(f => f.OrderBy(t.Id).RowsBetween.Unbounded.And.CurrentRow), Filt = Sql.Window.Count(f => f.Filter(t.Value > 10).PartitionBy(t.Dept).OrderBy(t.Id)), }; Generated SQL (PostgreSQL): SELECT COUNT(*) OVER (PARTITION BY t.Dept ORDER BY t.Id), COUNT(*) OVER (ORDER BY t.Id ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW), COUNT(*) FILTER (WHERE t.Value > 10) OVER (PARTITION BY t.Dept ORDER BY t.Id) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Count
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Count(LinqToDB.Sql.IWindowFunction,System.Object,System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL COUNT(expr) window function. Use .Distinct() for COUNT(DISTINCT expr).
+- Remarks: Syntax:Sql.Window.Count(expr, f => f.[Distinct()][.Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.DISTINCT in a window aggregate is not supported by most providers; where unsupported it throws a descriptive exception at query-translation time.C# usage: var query = from t in db.Table select new { NonNull = Sql.Window.Count(t.NullableValue, f => f.PartitionBy(t.Dept).OrderBy(t.Id)), Distinct = Sql.Window.Count(t.Value, f => f.Distinct().PartitionBy(t.Dept)), }; Generated SQL: SELECT COUNT(t.NullableValue) OVER (PARTITION BY t.Dept ORDER BY t.Id), COUNT(DISTINCT t.Value) OVER (PARTITION BY t.Dept) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.CovarPop<T1,T2>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.CovarPop``2(LinqToDB.Sql.IWindowFunction,``0,``1,System.Func{LinqToDB.WindowFunctionBuilder.IBivariateAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates the SQL COVAR_POP() window function — the population covariance of the two value pairs within the window.
+- Remarks: Syntax:Sql.Window.CovarPop(expr1, expr2, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.Generated SQL:COVAR_POP(expr1, expr2) OVER (...)
+
+## LinqToDB.WindowFunctionBuilder.CovarSamp<T1,T2>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.CovarSamp``2(LinqToDB.Sql.IWindowFunction,``0,``1,System.Func{LinqToDB.WindowFunctionBuilder.IBivariateAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates the SQL COVAR_SAMP() window function — the sample covariance of the two value pairs within the window.
+- Remarks: Syntax:Sql.Window.CovarSamp(expr1, expr2, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.Generated SQL:COVAR_SAMP(expr1, expr2) OVER (...)
+
+## LinqToDB.WindowFunctionBuilder.CumeDist
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.CumeDist(LinqToDB.Sql.IWindowFunction,System.Func{LinqToDB.WindowFunctionBuilder.IOPartitionROrderFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL CUME_DIST() window function. Returns the cumulative distribution (0 to 1).
+- Remarks: Syntax:Sql.Window.CumeDist(f => f.[PartitionBy(...)].OrderBy(...)[.ThenBy(...)])May not be supported by all database providers (e.g. ClickHouse).C# usage: var query = from t in db.Table select new { CD = Sql.Window.CumeDist(f => f.PartitionBy(t.Dept).OrderBy(t.Salary)), }; Generated SQL: SELECT CUME_DIST() OVER (PARTITION BY t.Dept ORDER BY t.Salary) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.CumeDist<T1,T2>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.CumeDist``2(System.Collections.Generic.IEnumerable{``0},System.Object,System.Func{``0,LinqToDB.WindowFunctionBuilder.IOnlyOrderByPart,LinqToDB.WindowFunctionBuilder.IDefinedFunction{``1}})`
+- Kind: Method
+- Summary: Generates the SQL hypothetical-set CUME_DIST() aggregate — the cumulative distribution, a value in (0, 1] giving the fraction of rows ordering at or before the given value, it would have in the ordered group.
+- Remarks: Syntax:source.CumeDist(value, (e, f) => f.OrderBy(e.Column)[.Filter(...)])Native on Oracle and PostgreSQL; throws a descriptive exception at query-translation time on other providers.C# usage: var query = from t in db.Table group t by t.Dept into g select new { g.Key, CumeDist = g.CumeDist(1000, (e, f) => f.OrderBy(e.Salary)), }; Generated SQL: SELECT t.Dept, CUME_DIST(1000) WITHIN GROUP (ORDER BY t.Salary) FROM Table t GROUP BY t.Dept
+
+## LinqToDB.WindowFunctionBuilder.CumeDist<T1,T2>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.CumeDist``2(System.Collections.Generic.IEnumerable{``0},System.Object,System.Object,System.Func{``0,LinqToDB.WindowFunctionBuilder.IMultipleOrderByPart,LinqToDB.WindowFunctionBuilder.IDefinedFunction{``1}})`
+- Kind: Method
+- Summary: Generates the SQL hypothetical-set CUME_DIST() aggregate over two ordering keys — the cumulative distribution (a value in (0, 1]) the given values would have in the doubly-ordered group.
+- Remarks: Syntax:source.CumeDist(value1, value2, (e, f) => f.OrderBy(e.Key1).ThenBy(e.Key2)[.Filter(...)])Native on Oracle and PostgreSQL; throws a descriptive exception at query-translation time on other providers.C# usage: var query = from t in db.Table group t by t.Dept into g select new { g.Key, CumeDist = g.CumeDist(1000, 2000, (e, f) => f.OrderBy(e.Salary).ThenBy(e.Bonus)), }; Generated SQL: SELECT t.Dept, CUME_DIST(1000, 2000) WITHIN GROUP (ORDER BY t.Salary, t.Bonus) FROM Table t GROUP BY t.Dept
+
+## LinqToDB.WindowFunctionBuilder.DefineWindow
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.DefineWindow(LinqToDB.Sql.IWindowFunction,System.Func{LinqToDB.WindowFunctionBuilder.IWindowBuilder,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Defines a reusable window specification that can be shared across multiple window function calls via UseWindow.
+- Remarks: May not be supported by all database providers.C# usage: var query = from t in db.Table let wnd = Sql.Window.DefineWindow(f => f.PartitionBy(t.Dept).OrderBy(t.Date)) select new { RN = Sql.Window.RowNumber(f => f.UseWindow(wnd)), Sum = Sql.Window.Sum(t.Salary, f => f.UseWindow(wnd)), Lag = Sql.Window.Lag(t.Salary, f => f.UseWindow(wnd)), };
+
+## LinqToDB.WindowFunctionBuilder.DenseRank
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.DenseRank(LinqToDB.Sql.IWindowFunction,System.Func{LinqToDB.WindowFunctionBuilder.IOPartitionROrderFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL DENSE_RANK() window function. Returns the rank without gaps for ties.
+- Remarks: Syntax:Sql.Window.DenseRank(f => f.[PartitionBy(...)].OrderBy(...)[.ThenBy(...)])May not be supported by all database providers.C# usage: var query = from t in db.Table select new { DR = Sql.Window.DenseRank(f => f.PartitionBy(t.Dept).OrderBy(t.Salary)), }; Generated SQL: SELECT DENSE_RANK() OVER (PARTITION BY t.Dept ORDER BY t.Salary) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.DenseRank<T1,T2>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.DenseRank``2(System.Collections.Generic.IEnumerable{``0},System.Object,System.Func{``0,LinqToDB.WindowFunctionBuilder.IOnlyOrderByPart,LinqToDB.WindowFunctionBuilder.IDefinedFunction{``1}})`
+- Kind: Method
+- Summary: Generates the SQL hypothetical-set DENSE_RANK() aggregate — the rank the given value would have (no gaps after ties) if inserted into the ordered group.
+- Remarks: Syntax:source.DenseRank(value, (e, f) => f.OrderBy(e.Column)[.Filter(...)])Native on Oracle and PostgreSQL; throws a descriptive exception at query-translation time on other providers.C# usage: var query = from t in db.Table group t by t.Dept into g select new { g.Key, DenseRank = g.DenseRank(1000, (e, f) => f.OrderBy(e.Salary)), }; Generated SQL: SELECT t.Dept, DENSE_RANK(1000) WITHIN GROUP (ORDER BY t.Salary) FROM Table t GROUP BY t.Dept
+
+## LinqToDB.WindowFunctionBuilder.DenseRank<T1,T2>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.DenseRank``2(System.Collections.Generic.IEnumerable{``0},System.Object,System.Object,System.Func{``0,LinqToDB.WindowFunctionBuilder.IMultipleOrderByPart,LinqToDB.WindowFunctionBuilder.IDefinedFunction{``1}})`
+- Kind: Method
+- Summary: Generates the SQL hypothetical-set DENSE_RANK() aggregate over two ordering keys — the rank the given values would have (no gaps after ties) in the doubly-ordered group.
+- Remarks: Syntax:source.DenseRank(value1, value2, (e, f) => f.OrderBy(e.Key1).ThenBy(e.Key2)[.Filter(...)])Native on Oracle and PostgreSQL; throws a descriptive exception at query-translation time on other providers.C# usage: var query = from t in db.Table group t by t.Dept into g select new { g.Key, DenseRank = g.DenseRank(1000, 2000, (e, f) => f.OrderBy(e.Salary).ThenBy(e.Bonus)), }; Generated SQL: SELECT t.Dept, DENSE_RANK(1000, 2000) WITHIN GROUP (ORDER BY t.Salary, t.Bonus) FROM Table t GROUP BY t.Dept
+
+## LinqToDB.WindowFunctionBuilder.FirstValue<T>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.FirstValue``1(LinqToDB.Sql.IWindowFunction,``0,System.Func{LinqToDB.WindowFunctionBuilder.IValueFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL FIRST_VALUE() window function. Returns the first value in the frame.
+- Remarks: Syntax:Sql.Window.FirstValue(expr, f => f.[IgnoreNulls()].[PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])May not be supported by all database providers. Does not support the FILTER clause.Use .IgnoreNulls() for FIRST_VALUE(x) IGNORE NULLS (skips NULLs). Supported only where the provider allows it; otherwise a translation-time error is thrown.C# usage: var query = from t in db.Table select new { First1 = Sql.Window.FirstValue(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), First2 = Sql.Window.FirstValue(t.Salary, f => f.OrderBy(t.Date).RowsBetween.Unbounded.And.CurrentRow), }; Generated SQL: SELECT FIRST_VALUE(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), FIRST_VALUE(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.IBoundaryPart<T>.ValueFollowing
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.IBoundaryPart`1.ValueFollowing(System.Object)`
+- Kind: Method
+- Summary: Specifies an N FOLLOWING value offset boundary. Valid at either the start or the end of the frame.
+- Remarks: Syntax:<offset> FOLLOWINGC# usage: // ROWS BETWEEN 1 FOLLOWING AND 3 FOLLOWING Sql.Window.Sum(t.Value, f => f.OrderBy(t.Id).RowsBetween.ValueFollowing(1).And.ValueFollowing(3)) Generated SQL: SUM(t.Value) OVER (ORDER BY t.Id ROWS BETWEEN 1 FOLLOWING AND 3 FOLLOWING)
+
+## LinqToDB.WindowFunctionBuilder.IBoundaryPart<T>.ValuePreceding
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.IBoundaryPart`1.ValuePreceding(System.Object)`
+- Kind: Method
+- Summary: Specifies an N PRECEDING value offset boundary. Valid at either the start or the end of the frame.
+- Remarks: Syntax:<offset> PRECEDINGC# usage: // ROWS BETWEEN 5 PRECEDING AND 2 PRECEDING Sql.Window.Sum(t.Value, f => f.OrderBy(t.Id).RowsBetween.ValuePreceding(5).And.ValuePreceding(2)) Generated SQL: SUM(t.Value) OVER (ORDER BY t.Id ROWS BETWEEN 5 PRECEDING AND 2 PRECEDING)
+
+## LinqToDB.WindowFunctionBuilder.IDefinedRangeFrameFunction.ExcludeCurrentRow
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.IDefinedRangeFrameFunction.ExcludeCurrentRow`
+- Kind: Method
+- Summary: Adds EXCLUDE CURRENT ROW to the frame clause. May not be supported by all providers.
+
+## LinqToDB.WindowFunctionBuilder.IDefinedRangeFrameFunction.ExcludeGroup
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.IDefinedRangeFrameFunction.ExcludeGroup`
+- Kind: Method
+- Summary: Adds EXCLUDE GROUP to the frame clause. May not be supported by all providers.
+
+## LinqToDB.WindowFunctionBuilder.IDefinedRangeFrameFunction.ExcludeTies
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.IDefinedRangeFrameFunction.ExcludeTies`
+- Kind: Method
+- Summary: Adds EXCLUDE TIES to the frame clause. May not be supported by all providers.
+
+## LinqToDB.WindowFunctionBuilder.IDistinctPart<T>.Distinct
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.IDistinctPart`1.Distinct`
+- Kind: Method
+- Summary: Adds the DISTINCT aggregate modifier — e.g. SUM(DISTINCT x) OVER (...). Not supported by every provider.
+
+## LinqToDB.WindowFunctionBuilder.IFilterPart<T>.Filter
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.IFilterPart`1.Filter(System.Boolean)`
+- Kind: Method
+- Summary: Adds a FILTER (WHERE ...) clause. Natively supported by PostgreSQL and DuckDB; emulated via CASE WHEN on other providers.
+
+## LinqToDB.WindowFunctionBuilder.IFramePartFunction.GroupsBetweenValues
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.IFramePartFunction.GroupsBetweenValues(System.Object,System.Object)`
+- Kind: Method
+- Summary: Shortcut for the common GROUPS BETWEEN <preceding> PRECEDING AND <following> FOLLOWING frame. May not be supported by all providers.
+- Remarks: Syntax:GROUPS BETWEEN <preceding> PRECEDING AND <following> FOLLOWINGC# usage: Sql.Window.Sum(t.Value, f => f.OrderBy(t.Id).GroupsBetweenValues(1, 2)) Generated SQL: SUM(t.Value) OVER (ORDER BY t.Id GROUPS BETWEEN 1 PRECEDING AND 2 FOLLOWING)
+
+## LinqToDB.WindowFunctionBuilder.IFramePartFunction.RangeBetweenValues
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.IFramePartFunction.RangeBetweenValues(System.Object,System.Object)`
+- Kind: Method
+- Summary: Shortcut for the common RANGE BETWEEN <preceding> PRECEDING AND <following> FOLLOWING frame.
+- Remarks: Syntax:RANGE BETWEEN <preceding> PRECEDING AND <following> FOLLOWINGC# usage: Sql.Window.Sum(t.Value, f => f.OrderBy(t.Id).RangeBetweenValues(1, 2)) Generated SQL: SUM(t.Value) OVER (ORDER BY t.Id RANGE BETWEEN 1 PRECEDING AND 2 FOLLOWING)
+
+## LinqToDB.WindowFunctionBuilder.IFramePartFunction.RowsBetweenValues
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.IFramePartFunction.RowsBetweenValues(System.Object,System.Object)`
+- Kind: Method
+- Summary: Shortcut for the common ROWS BETWEEN <preceding> PRECEDING AND <following> FOLLOWING frame.
+- Remarks: Syntax:ROWS BETWEEN <preceding> PRECEDING AND <following> FOLLOWINGC# usage: Sql.Window.Sum(t.Value, f => f.OrderBy(t.Id).RowsBetweenValues(1, 2)) Generated SQL: SUM(t.Value) OVER (ORDER BY t.Id ROWS BETWEEN 1 PRECEDING AND 2 FOLLOWING)
+
+## LinqToDB.WindowFunctionBuilder.IFromPart<T>.FromFirst
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.IFromPart`1.FromFirst`
+- Kind: Method
+- Summary: Adds FROM FIRST — counts position from the first row of the frame. The SQL default; emits nothing.
+
+## LinqToDB.WindowFunctionBuilder.IFromPart<T>.FromLast
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.IFromPart`1.FromLast`
+- Kind: Method
+- Summary: Adds FROM LAST — counts position from the last row of the frame. Not supported by every provider.
+
+## LinqToDB.WindowFunctionBuilder.IKeepPart<T>.KeepFirst
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.IKeepPart`1.KeepFirst`
+- Kind: Method
+- Summary: Adds KEEP (DENSE_RANK FIRST ORDER BY ...) clause. Aggregates over the first-ranked group. Chain with .OrderBy(...)[.ThenBy(...)][.PartitionBy(...)].
+
+## LinqToDB.WindowFunctionBuilder.IKeepPart<T>.KeepLast
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.IKeepPart`1.KeepLast`
+- Kind: Method
+- Summary: Adds KEEP (DENSE_RANK LAST ORDER BY ...) clause. Aggregates over the last-ranked group. Chain with .OrderBy(...)[.ThenBy(...)][.PartitionBy(...)].
+
+## LinqToDB.WindowFunctionBuilder.IMultipleOrderByPart.OrderBy<T>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.IMultipleOrderByPart.OrderBy``1(``0,LinqToDB.Sql.NullsPosition)`
+- Kind: Method
+- Summary: Specifies the first ORDER BY column with NULLS position for the WITHIN GROUP clause.
+
+## LinqToDB.WindowFunctionBuilder.IMultipleOrderByPart.OrderBy<T>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.IMultipleOrderByPart.OrderBy``1(``0)`
+- Kind: Method
+- Summary: Specifies the first ORDER BY column for the WITHIN GROUP clause.
+
+## LinqToDB.WindowFunctionBuilder.IMultipleOrderByPart.OrderByDesc<T>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.IMultipleOrderByPart.OrderByDesc``1(``0,LinqToDB.Sql.NullsPosition)`
+- Kind: Method
+- Summary: Specifies the first ORDER BY column (descending) with NULLS position for the WITHIN GROUP clause.
+
+## LinqToDB.WindowFunctionBuilder.IMultipleOrderByPart.OrderByDesc<T>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.IMultipleOrderByPart.OrderByDesc``1(``0)`
+- Kind: Method
+- Summary: Specifies the first ORDER BY column (descending) for the WITHIN GROUP clause.
+
+## LinqToDB.WindowFunctionBuilder.IMultipleThenByPart<T>.ThenBy
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.IMultipleThenByPart`1.ThenBy(System.Object,LinqToDB.Sql.NullsPosition)`
+- Kind: Method
+- Summary: Adds an additional ORDER BY column with NULLS position.
+
+## LinqToDB.WindowFunctionBuilder.IMultipleThenByPart<T>.ThenBy
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.IMultipleThenByPart`1.ThenBy(System.Object)`
+- Kind: Method
+- Summary: Adds an additional ORDER BY column.
+
+## LinqToDB.WindowFunctionBuilder.IMultipleThenByPart<T>.ThenByDesc
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.IMultipleThenByPart`1.ThenByDesc(System.Object,LinqToDB.Sql.NullsPosition)`
+- Kind: Method
+- Summary: Adds an additional ORDER BY column (descending) with NULLS position.
+
+## LinqToDB.WindowFunctionBuilder.IMultipleThenByPart<T>.ThenByDesc
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.IMultipleThenByPart`1.ThenByDesc(System.Object)`
+- Kind: Method
+- Summary: Adds an additional ORDER BY column (descending).
+
+## LinqToDB.WindowFunctionBuilder.INullTreatmentPart<T>.IgnoreNulls
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.INullTreatmentPart`1.IgnoreNulls`
+- Kind: Method
+- Summary: Adds IGNORE NULLS — the function skips NULL values. Not supported by every provider.
+
+## LinqToDB.WindowFunctionBuilder.INullTreatmentPart<T>.RespectNulls
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.INullTreatmentPart`1.RespectNulls`
+- Kind: Method
+- Summary: Adds RESPECT NULLS — the SQL default. Provided for explicitness; emits nothing on providers where it is the default.
+
+## LinqToDB.WindowFunctionBuilder.IOnlyOrderByPart.OrderBy<T>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.IOnlyOrderByPart.OrderBy``1(``0,LinqToDB.Sql.NullsPosition)`
+- Kind: Method
+- Summary: Specifies the single ORDER BY column with NULLS position for the WITHIN GROUP clause.
+
+## LinqToDB.WindowFunctionBuilder.IOnlyOrderByPart.OrderBy<T>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.IOnlyOrderByPart.OrderBy``1(``0)`
+- Kind: Method
+- Summary: Specifies the single ORDER BY column for the WITHIN GROUP clause.
+
+## LinqToDB.WindowFunctionBuilder.IOnlyOrderByPart.OrderByDesc<T>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.IOnlyOrderByPart.OrderByDesc``1(``0,LinqToDB.Sql.NullsPosition)`
+- Kind: Method
+- Summary: Specifies the single ORDER BY column (descending) with NULLS position for the WITHIN GROUP clause.
+
+## LinqToDB.WindowFunctionBuilder.IOnlyOrderByPart.OrderByDesc<T>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.IOnlyOrderByPart.OrderByDesc``1(``0)`
+- Kind: Method
+- Summary: Specifies the single ORDER BY column (descending) for the WITHIN GROUP clause.
+
+## LinqToDB.WindowFunctionBuilder.IOrderByPart<T>.OrderBy
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.IOrderByPart`1.OrderBy(System.Object,LinqToDB.Sql.NullsPosition)`
+- Kind: Method
+- Summary: Adds an ORDER BY column ASC [NULLS FIRST|LAST] clause. NULLS ordering is emulated on providers that don't support it natively.
+
+## LinqToDB.WindowFunctionBuilder.IOrderByPart<T>.OrderBy
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.IOrderByPart`1.OrderBy(System.Object)`
+- Kind: Method
+- Summary: Adds an ORDER BY column ASC clause.
+
+## LinqToDB.WindowFunctionBuilder.IOrderByPart<T>.OrderByDesc
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.IOrderByPart`1.OrderByDesc(System.Object,LinqToDB.Sql.NullsPosition)`
+- Kind: Method
+- Summary: Adds an ORDER BY column DESC [NULLS FIRST|LAST] clause. NULLS ordering is emulated on providers that don't support it natively.
+
+## LinqToDB.WindowFunctionBuilder.IOrderByPart<T>.OrderByDesc
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.IOrderByPart`1.OrderByDesc(System.Object)`
+- Kind: Method
+- Summary: Adds an ORDER BY column DESC clause.
+
+## LinqToDB.WindowFunctionBuilder.IOrderedSetWindowMultiOrder.OrderBy<T>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.IOrderedSetWindowMultiOrder.OrderBy``1(``0,LinqToDB.Sql.NullsPosition)`
+- Kind: Method
+- Summary: Specifies the first WITHIN GROUP ORDER BY column with NULLS position.
+
+## LinqToDB.WindowFunctionBuilder.IOrderedSetWindowMultiOrder.OrderBy<T>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.IOrderedSetWindowMultiOrder.OrderBy``1(``0)`
+- Kind: Method
+- Summary: Specifies the first WITHIN GROUP ORDER BY column.
+
+## LinqToDB.WindowFunctionBuilder.IOrderedSetWindowMultiOrder.OrderByDesc<T>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.IOrderedSetWindowMultiOrder.OrderByDesc``1(``0,LinqToDB.Sql.NullsPosition)`
+- Kind: Method
+- Summary: Specifies the first WITHIN GROUP ORDER BY column (descending) with NULLS position.
+
+## LinqToDB.WindowFunctionBuilder.IOrderedSetWindowMultiOrder.OrderByDesc<T>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.IOrderedSetWindowMultiOrder.OrderByDesc``1(``0)`
+- Kind: Method
+- Summary: Specifies the first WITHIN GROUP ORDER BY column (descending).
+
+## LinqToDB.WindowFunctionBuilder.IOrderedSetWindowSingleOrder.OrderBy<T>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.IOrderedSetWindowSingleOrder.OrderBy``1(``0,LinqToDB.Sql.NullsPosition)`
+- Kind: Method
+- Summary: Specifies the single WITHIN GROUP ORDER BY column with NULLS position.
+
+## LinqToDB.WindowFunctionBuilder.IOrderedSetWindowSingleOrder.OrderBy<T>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.IOrderedSetWindowSingleOrder.OrderBy``1(``0)`
+- Kind: Method
+- Summary: Specifies the single WITHIN GROUP ORDER BY column.
+
+## LinqToDB.WindowFunctionBuilder.IOrderedSetWindowSingleOrder.OrderByDesc<T>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.IOrderedSetWindowSingleOrder.OrderByDesc``1(``0,LinqToDB.Sql.NullsPosition)`
+- Kind: Method
+- Summary: Specifies the single WITHIN GROUP ORDER BY column (descending) with NULLS position.
+
+## LinqToDB.WindowFunctionBuilder.IOrderedSetWindowSingleOrder.OrderByDesc<T>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.IOrderedSetWindowSingleOrder.OrderByDesc``1(``0)`
+- Kind: Method
+- Summary: Specifies the single WITHIN GROUP ORDER BY column (descending).
+
+## LinqToDB.WindowFunctionBuilder.IOrderedSetWindowThenBy<T>.ThenBy
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.IOrderedSetWindowThenBy`1.ThenBy(System.Object,LinqToDB.Sql.NullsPosition)`
+- Kind: Method
+- Summary: Adds an additional WITHIN GROUP ORDER BY column with NULLS position.
+
+## LinqToDB.WindowFunctionBuilder.IOrderedSetWindowThenBy<T>.ThenBy
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.IOrderedSetWindowThenBy`1.ThenBy(System.Object)`
+- Kind: Method
+- Summary: Adds an additional WITHIN GROUP ORDER BY column.
+
+## LinqToDB.WindowFunctionBuilder.IOrderedSetWindowThenBy<T>.ThenByDesc
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.IOrderedSetWindowThenBy`1.ThenByDesc(System.Object,LinqToDB.Sql.NullsPosition)`
+- Kind: Method
+- Summary: Adds an additional WITHIN GROUP ORDER BY column (descending) with NULLS position.
+
+## LinqToDB.WindowFunctionBuilder.IOrderedSetWindowThenBy<T>.ThenByDesc
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.IOrderedSetWindowThenBy`1.ThenByDesc(System.Object)`
+- Kind: Method
+- Summary: Adds an additional WITHIN GROUP ORDER BY column (descending).
+
+## LinqToDB.WindowFunctionBuilder.IPartitionPart<T>.PartitionBy
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.IPartitionPart`1.PartitionBy(System.Object[])`
+- Kind: Method
+- Summary: Adds a PARTITION BY clause with one or more partition expressions.
+
+## LinqToDB.WindowFunctionBuilder.IThenOrderPart<T>.ThenBy
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.IThenOrderPart`1.ThenBy(System.Object,LinqToDB.Sql.NullsPosition)`
+- Kind: Method
+- Summary: Adds an additional ORDER BY column with NULLS position.
+
+## LinqToDB.WindowFunctionBuilder.IThenOrderPart<T>.ThenBy
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.IThenOrderPart`1.ThenBy(System.Object)`
+- Kind: Method
+- Summary: Adds an additional ORDER BY column.
+
+## LinqToDB.WindowFunctionBuilder.IThenOrderPart<T>.ThenByDesc
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.IThenOrderPart`1.ThenByDesc(System.Object,LinqToDB.Sql.NullsPosition)`
+- Kind: Method
+- Summary: Adds an additional ORDER BY column (descending) with NULLS position.
+
+## LinqToDB.WindowFunctionBuilder.IThenOrderPart<T>.ThenByDesc
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.IThenOrderPart`1.ThenByDesc(System.Object)`
+- Kind: Method
+- Summary: Adds an additional ORDER BY column (descending).
+
+## LinqToDB.WindowFunctionBuilder.IUseWindow<T>.UseWindow
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.IUseWindow`1.UseWindow(LinqToDB.WindowFunctionBuilder.IDefinedWindow)`
+- Kind: Method
+- Summary: References a window definition created by . Allows sharing a single window specification across multiple function calls.
+
+## LinqToDB.WindowFunctionBuilder.Lag<T>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Lag``1(LinqToDB.Sql.IWindowFunction,``0,System.Func{LinqToDB.WindowFunctionBuilder.ILeadLagFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL LAG() window function. Accesses a value from a preceding row.
+- Remarks: Syntax:Sql.Window.Lag(expr, [offset, [default,]] f => f.[PartitionBy(...)].OrderBy(...)[.ThenBy(...)])May not be supported by all database providers.C# usage: var query = from t in db.Table select new { Prev = Sql.Window.Lag(t.Value, f => f.OrderBy(t.Date)), Back2 = Sql.Window.Lag(t.Value, 2, f => f.OrderBy(t.Date)), Safe = Sql.Window.Lag(t.Value, 1, 0, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), }; Generated SQL: SELECT LAG(t.Value) OVER (ORDER BY t.Date), LAG(t.Value, 2) OVER (ORDER BY t.Date), LAG(t.Value, 1, 0) OVER (PARTITION BY t.Dept ORDER BY t.Date) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Lag<T>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Lag``1(LinqToDB.Sql.IWindowFunction,``0,System.Int32,``0,System.Func{LinqToDB.WindowFunctionBuilder.ILeadLagFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL LAG() window function. Accesses a value from a preceding row.
+- Remarks: Syntax:Sql.Window.Lag(expr, [offset, [default,]] f => f.[PartitionBy(...)].OrderBy(...)[.ThenBy(...)])May not be supported by all database providers.C# usage: var query = from t in db.Table select new { Prev = Sql.Window.Lag(t.Value, f => f.OrderBy(t.Date)), Back2 = Sql.Window.Lag(t.Value, 2, f => f.OrderBy(t.Date)), Safe = Sql.Window.Lag(t.Value, 1, 0, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), }; Generated SQL: SELECT LAG(t.Value) OVER (ORDER BY t.Date), LAG(t.Value, 2) OVER (ORDER BY t.Date), LAG(t.Value, 1, 0) OVER (PARTITION BY t.Dept ORDER BY t.Date) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Lag<T>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Lag``1(LinqToDB.Sql.IWindowFunction,``0,System.Int32,System.Func{LinqToDB.WindowFunctionBuilder.ILeadLagFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL LAG() window function. Accesses a value from a preceding row.
+- Remarks: Syntax:Sql.Window.Lag(expr, [offset, [default,]] f => f.[PartitionBy(...)].OrderBy(...)[.ThenBy(...)])May not be supported by all database providers.C# usage: var query = from t in db.Table select new { Prev = Sql.Window.Lag(t.Value, f => f.OrderBy(t.Date)), Back2 = Sql.Window.Lag(t.Value, 2, f => f.OrderBy(t.Date)), Safe = Sql.Window.Lag(t.Value, 1, 0, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), }; Generated SQL: SELECT LAG(t.Value) OVER (ORDER BY t.Date), LAG(t.Value, 2) OVER (ORDER BY t.Date), LAG(t.Value, 1, 0) OVER (PARTITION BY t.Dept ORDER BY t.Date) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.LastValue<T>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.LastValue``1(LinqToDB.Sql.IWindowFunction,``0,System.Func{LinqToDB.WindowFunctionBuilder.IValueFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL LAST_VALUE() window function. Returns the last value in the frame.
+- Remarks: Syntax:Sql.Window.LastValue(expr, f => f.[PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])May not be supported by all database providers. Does not support the FILTER clause.C# usage: var query = from t in db.Table select new { // Use UNBOUNDED FOLLOWING to get the true last value in partition Last = Sql.Window.LastValue(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date).RowsBetween.Unbounded.And.Unbounded), }; Generated SQL: SELECT LAST_VALUE(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Lead<T>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Lead``1(LinqToDB.Sql.IWindowFunction,``0,System.Func{LinqToDB.WindowFunctionBuilder.ILeadLagFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL LEAD() window function. Accesses a value from a subsequent row.
+- Remarks: Syntax:Sql.Window.Lead(expr, [offset, [default,]] f => f.[PartitionBy(...)].OrderBy(...)[.ThenBy(...)])May not be supported by all database providers.C# usage: var query = from t in db.Table select new { Next = Sql.Window.Lead(t.Value, f => f.OrderBy(t.Date)), Skip2 = Sql.Window.Lead(t.Value, 2, f => f.OrderBy(t.Date)), Safe = Sql.Window.Lead(t.Value, 1, 0, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), }; Generated SQL: SELECT LEAD(t.Value) OVER (ORDER BY t.Date), LEAD(t.Value, 2) OVER (ORDER BY t.Date), LEAD(t.Value, 1, 0) OVER (PARTITION BY t.Dept ORDER BY t.Date) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Lead<T>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Lead``1(LinqToDB.Sql.IWindowFunction,``0,System.Int32,``0,System.Func{LinqToDB.WindowFunctionBuilder.ILeadLagFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL LEAD() window function. Accesses a value from a subsequent row.
+- Remarks: Syntax:Sql.Window.Lead(expr, [offset, [default,]] f => f.[PartitionBy(...)].OrderBy(...)[.ThenBy(...)])May not be supported by all database providers.C# usage: var query = from t in db.Table select new { Next = Sql.Window.Lead(t.Value, f => f.OrderBy(t.Date)), Skip2 = Sql.Window.Lead(t.Value, 2, f => f.OrderBy(t.Date)), Safe = Sql.Window.Lead(t.Value, 1, 0, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), }; Generated SQL: SELECT LEAD(t.Value) OVER (ORDER BY t.Date), LEAD(t.Value, 2) OVER (ORDER BY t.Date), LEAD(t.Value, 1, 0) OVER (PARTITION BY t.Dept ORDER BY t.Date) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Lead<T>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Lead``1(LinqToDB.Sql.IWindowFunction,``0,System.Int32,System.Func{LinqToDB.WindowFunctionBuilder.ILeadLagFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL LEAD() window function. Accesses a value from a subsequent row.
+- Remarks: Syntax:Sql.Window.Lead(expr, [offset, [default,]] f => f.[PartitionBy(...)].OrderBy(...)[.ThenBy(...)])May not be supported by all database providers.C# usage: var query = from t in db.Table select new { Next = Sql.Window.Lead(t.Value, f => f.OrderBy(t.Date)), Skip2 = Sql.Window.Lead(t.Value, 2, f => f.OrderBy(t.Date)), Safe = Sql.Window.Lead(t.Value, 1, 0, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), }; Generated SQL: SELECT LEAD(t.Value) OVER (ORDER BY t.Date), LEAD(t.Value, 2) OVER (ORDER BY t.Date), LEAD(t.Value, 1, 0) OVER (PARTITION BY t.Dept ORDER BY t.Date) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.LongCount
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.LongCount(LinqToDB.Sql.IWindowFunction,System.Func{LinqToDB.WindowFunctionBuilder.IOFilterOPartitionOOrderOFrameFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL COUNT(*) window function returning a 64-bit count. Use the LongCount(expr, ...) overload for COUNT(expr).
+- Remarks: Syntax:Sql.Window.LongCount(f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])Identical SQL to (COUNT(*)), returning .
+
+## LinqToDB.WindowFunctionBuilder.LongCount
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.LongCount(LinqToDB.Sql.IWindowFunction,System.Object,System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL COUNT(expr) window function returning a 64-bit count. Use .Distinct() for COUNT(DISTINCT expr).
+- Remarks: Syntax:Sql.Window.LongCount(expr, f => f.[Distinct()][.Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])Identical SQL to (COUNT(expr)), returning .
+
+## LinqToDB.WindowFunctionBuilder.Max
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Max(LinqToDB.Sql.IWindowFunction,System.Byte,System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL MAX() window function. Returns the maximum value within the window frame.
+- Remarks: Syntax:Sql.Window.Max(expr, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.C# usage: var query = from t in db.Table select new { Max1 = Sql.Window.Max(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Max2 = Sql.Window.Max(t.Salary, f => f.OrderBy(t.Date).RowsBetween.Unbounded.And.CurrentRow), }; Generated SQL: SELECT MAX(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), MAX(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Max
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Max(LinqToDB.Sql.IWindowFunction,System.Decimal,System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL MAX() window function. Returns the maximum value within the window frame.
+- Remarks: Syntax:Sql.Window.Max(expr, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.C# usage: var query = from t in db.Table select new { Max1 = Sql.Window.Max(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Max2 = Sql.Window.Max(t.Salary, f => f.OrderBy(t.Date).RowsBetween.Unbounded.And.CurrentRow), }; Generated SQL: SELECT MAX(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), MAX(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Max
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Max(LinqToDB.Sql.IWindowFunction,System.Double,System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL MAX() window function. Returns the maximum value within the window frame.
+- Remarks: Syntax:Sql.Window.Max(expr, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.C# usage: var query = from t in db.Table select new { Max1 = Sql.Window.Max(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Max2 = Sql.Window.Max(t.Salary, f => f.OrderBy(t.Date).RowsBetween.Unbounded.And.CurrentRow), }; Generated SQL: SELECT MAX(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), MAX(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Max
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Max(LinqToDB.Sql.IWindowFunction,System.Int16,System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL MAX() window function. Returns the maximum value within the window frame.
+- Remarks: Syntax:Sql.Window.Max(expr, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.C# usage: var query = from t in db.Table select new { Max1 = Sql.Window.Max(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Max2 = Sql.Window.Max(t.Salary, f => f.OrderBy(t.Date).RowsBetween.Unbounded.And.CurrentRow), }; Generated SQL: SELECT MAX(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), MAX(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Max
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Max(LinqToDB.Sql.IWindowFunction,System.Int32,System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL MAX() window function. Returns the maximum value within the window frame.
+- Remarks: Syntax:Sql.Window.Max(expr, f => f.[Distinct()][.Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.Use .Distinct() for MAX(DISTINCT x) OVER (...). DISTINCT in a window aggregate is not supported by most providers; where unsupported it throws a descriptive exception at query-translation time.C# usage: var query = from t in db.Table select new { Max1 = Sql.Window.Max(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Max2 = Sql.Window.Max(t.Salary, f => f.OrderBy(t.Date).RowsBetween.Unbounded.And.CurrentRow), Max3 = Sql.Window.Max(t.Salary, f => f.Distinct().PartitionBy(t.Dept)), }; Generated SQL: SELECT MAX(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), MAX(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW), MAX(DISTINCT t.Salary) OVER (PARTITION BY t.Dept) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Max
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Max(LinqToDB.Sql.IWindowFunction,System.Int64,System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL MAX() window function. Returns the maximum value within the window frame.
+- Remarks: Syntax:Sql.Window.Max(expr, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.C# usage: var query = from t in db.Table select new { Max1 = Sql.Window.Max(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Max2 = Sql.Window.Max(t.Salary, f => f.OrderBy(t.Date).RowsBetween.Unbounded.And.CurrentRow), }; Generated SQL: SELECT MAX(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), MAX(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Max
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Max(LinqToDB.Sql.IWindowFunction,System.Nullable{System.Byte},System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL MAX() window function. Returns the maximum value within the window frame.
+- Remarks: Syntax:Sql.Window.Max(expr, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.C# usage: var query = from t in db.Table select new { Max1 = Sql.Window.Max(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Max2 = Sql.Window.Max(t.Salary, f => f.OrderBy(t.Date).RowsBetween.Unbounded.And.CurrentRow), }; Generated SQL: SELECT MAX(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), MAX(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Max
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Max(LinqToDB.Sql.IWindowFunction,System.Nullable{System.Decimal},System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL MAX() window function. Returns the maximum value within the window frame.
+- Remarks: Syntax:Sql.Window.Max(expr, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.C# usage: var query = from t in db.Table select new { Max1 = Sql.Window.Max(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Max2 = Sql.Window.Max(t.Salary, f => f.OrderBy(t.Date).RowsBetween.Unbounded.And.CurrentRow), }; Generated SQL: SELECT MAX(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), MAX(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Max
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Max(LinqToDB.Sql.IWindowFunction,System.Nullable{System.Double},System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL MAX() window function. Returns the maximum value within the window frame.
+- Remarks: Syntax:Sql.Window.Max(expr, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.C# usage: var query = from t in db.Table select new { Max1 = Sql.Window.Max(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Max2 = Sql.Window.Max(t.Salary, f => f.OrderBy(t.Date).RowsBetween.Unbounded.And.CurrentRow), }; Generated SQL: SELECT MAX(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), MAX(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Max
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Max(LinqToDB.Sql.IWindowFunction,System.Nullable{System.Int16},System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL MAX() window function. Returns the maximum value within the window frame.
+- Remarks: Syntax:Sql.Window.Max(expr, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.C# usage: var query = from t in db.Table select new { Max1 = Sql.Window.Max(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Max2 = Sql.Window.Max(t.Salary, f => f.OrderBy(t.Date).RowsBetween.Unbounded.And.CurrentRow), }; Generated SQL: SELECT MAX(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), MAX(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Max
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Max(LinqToDB.Sql.IWindowFunction,System.Nullable{System.Int32},System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL MAX() window function. Returns the maximum value within the window frame.
+- Remarks: Syntax:Sql.Window.Max(expr, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.C# usage: var query = from t in db.Table select new { Max1 = Sql.Window.Max(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Max2 = Sql.Window.Max(t.Salary, f => f.OrderBy(t.Date).RowsBetween.Unbounded.And.CurrentRow), }; Generated SQL: SELECT MAX(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), MAX(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Max
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Max(LinqToDB.Sql.IWindowFunction,System.Nullable{System.Int64},System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL MAX() window function. Returns the maximum value within the window frame.
+- Remarks: Syntax:Sql.Window.Max(expr, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.C# usage: var query = from t in db.Table select new { Max1 = Sql.Window.Max(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Max2 = Sql.Window.Max(t.Salary, f => f.OrderBy(t.Date).RowsBetween.Unbounded.And.CurrentRow), }; Generated SQL: SELECT MAX(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), MAX(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Max
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Max(LinqToDB.Sql.IWindowFunction,System.Nullable{System.Single},System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL MAX() window function. Returns the maximum value within the window frame.
+- Remarks: Syntax:Sql.Window.Max(expr, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.C# usage: var query = from t in db.Table select new { Max1 = Sql.Window.Max(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Max2 = Sql.Window.Max(t.Salary, f => f.OrderBy(t.Date).RowsBetween.Unbounded.And.CurrentRow), }; Generated SQL: SELECT MAX(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), MAX(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Max
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Max(LinqToDB.Sql.IWindowFunction,System.Single,System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL MAX() window function. Returns the maximum value within the window frame.
+- Remarks: Syntax:Sql.Window.Max(expr, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.C# usage: var query = from t in db.Table select new { Max1 = Sql.Window.Max(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Max2 = Sql.Window.Max(t.Salary, f => f.OrderBy(t.Date).RowsBetween.Unbounded.And.CurrentRow), }; Generated SQL: SELECT MAX(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), MAX(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Median<T>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Median``1(LinqToDB.Sql.IWindowFunction,``0,System.Func{LinqToDB.WindowFunctionBuilder.IOPartitionFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates the SQL MEDIAN() window function — the median (50th percentile, continuous) of the values within the window.
+- Remarks: Syntax:Sql.Window.Median(expr, f => f.[PartitionBy(...)])Native on Oracle, DB2, DuckDB and MariaDB; throws a descriptive exception at query-translation time elsewhere. Its OVER clause carries PARTITION BY only (no ORDER BY or frame).C# usage: Sql.Window.Median(t.Value, f => f.PartitionBy(t.Dept)) Generated SQL (Oracle): MEDIAN(t.Value) OVER (PARTITION BY t.Dept)
+
+## LinqToDB.WindowFunctionBuilder.Min
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Min(LinqToDB.Sql.IWindowFunction,System.Byte,System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL MIN() window function. Returns the minimum value within the window frame.
+- Remarks: Syntax:Sql.Window.Min(expr, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.C# usage: var query = from t in db.Table select new { Min1 = Sql.Window.Min(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Min2 = Sql.Window.Min(t.Salary, f => f.OrderBy(t.Date).RowsBetween.Unbounded.And.CurrentRow), }; Generated SQL: SELECT MIN(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), MIN(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Min
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Min(LinqToDB.Sql.IWindowFunction,System.Decimal,System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL MIN() window function. Returns the minimum value within the window frame.
+- Remarks: Syntax:Sql.Window.Min(expr, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.C# usage: var query = from t in db.Table select new { Min1 = Sql.Window.Min(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Min2 = Sql.Window.Min(t.Salary, f => f.OrderBy(t.Date).RowsBetween.Unbounded.And.CurrentRow), }; Generated SQL: SELECT MIN(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), MIN(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Min
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Min(LinqToDB.Sql.IWindowFunction,System.Double,System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL MIN() window function. Returns the minimum value within the window frame.
+- Remarks: Syntax:Sql.Window.Min(expr, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.C# usage: var query = from t in db.Table select new { Min1 = Sql.Window.Min(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Min2 = Sql.Window.Min(t.Salary, f => f.OrderBy(t.Date).RowsBetween.Unbounded.And.CurrentRow), }; Generated SQL: SELECT MIN(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), MIN(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Min
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Min(LinqToDB.Sql.IWindowFunction,System.Int16,System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL MIN() window function. Returns the minimum value within the window frame.
+- Remarks: Syntax:Sql.Window.Min(expr, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.C# usage: var query = from t in db.Table select new { Min1 = Sql.Window.Min(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Min2 = Sql.Window.Min(t.Salary, f => f.OrderBy(t.Date).RowsBetween.Unbounded.And.CurrentRow), }; Generated SQL: SELECT MIN(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), MIN(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Min
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Min(LinqToDB.Sql.IWindowFunction,System.Int32,System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL MIN() window function. Returns the minimum value within the window frame.
+- Remarks: Syntax:Sql.Window.Min(expr, f => f.[Distinct()][.Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.Use .Distinct() for MIN(DISTINCT x) OVER (...). DISTINCT in a window aggregate is not supported by most providers; where unsupported it throws a descriptive exception at query-translation time.C# usage: var query = from t in db.Table select new { Min1 = Sql.Window.Min(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Min2 = Sql.Window.Min(t.Salary, f => f.OrderBy(t.Date).RowsBetween.Unbounded.And.CurrentRow), Min3 = Sql.Window.Min(t.Salary, f => f.Distinct().PartitionBy(t.Dept)), }; Generated SQL: SELECT MIN(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), MIN(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW), MIN(DISTINCT t.Salary) OVER (PARTITION BY t.Dept) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Min
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Min(LinqToDB.Sql.IWindowFunction,System.Int64,System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL MIN() window function. Returns the minimum value within the window frame.
+- Remarks: Syntax:Sql.Window.Min(expr, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.C# usage: var query = from t in db.Table select new { Min1 = Sql.Window.Min(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Min2 = Sql.Window.Min(t.Salary, f => f.OrderBy(t.Date).RowsBetween.Unbounded.And.CurrentRow), }; Generated SQL: SELECT MIN(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), MIN(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Min
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Min(LinqToDB.Sql.IWindowFunction,System.Nullable{System.Byte},System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL MIN() window function. Returns the minimum value within the window frame.
+- Remarks: Syntax:Sql.Window.Min(expr, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.C# usage: var query = from t in db.Table select new { Min1 = Sql.Window.Min(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Min2 = Sql.Window.Min(t.Salary, f => f.OrderBy(t.Date).RowsBetween.Unbounded.And.CurrentRow), }; Generated SQL: SELECT MIN(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), MIN(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Min
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Min(LinqToDB.Sql.IWindowFunction,System.Nullable{System.Decimal},System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL MIN() window function. Returns the minimum value within the window frame.
+- Remarks: Syntax:Sql.Window.Min(expr, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.C# usage: var query = from t in db.Table select new { Min1 = Sql.Window.Min(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Min2 = Sql.Window.Min(t.Salary, f => f.OrderBy(t.Date).RowsBetween.Unbounded.And.CurrentRow), }; Generated SQL: SELECT MIN(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), MIN(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Min
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Min(LinqToDB.Sql.IWindowFunction,System.Nullable{System.Double},System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL MIN() window function. Returns the minimum value within the window frame.
+- Remarks: Syntax:Sql.Window.Min(expr, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.C# usage: var query = from t in db.Table select new { Min1 = Sql.Window.Min(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Min2 = Sql.Window.Min(t.Salary, f => f.OrderBy(t.Date).RowsBetween.Unbounded.And.CurrentRow), }; Generated SQL: SELECT MIN(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), MIN(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Min
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Min(LinqToDB.Sql.IWindowFunction,System.Nullable{System.Int16},System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL MIN() window function. Returns the minimum value within the window frame.
+- Remarks: Syntax:Sql.Window.Min(expr, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.C# usage: var query = from t in db.Table select new { Min1 = Sql.Window.Min(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Min2 = Sql.Window.Min(t.Salary, f => f.OrderBy(t.Date).RowsBetween.Unbounded.And.CurrentRow), }; Generated SQL: SELECT MIN(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), MIN(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Min
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Min(LinqToDB.Sql.IWindowFunction,System.Nullable{System.Int32},System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL MIN() window function. Returns the minimum value within the window frame.
+- Remarks: Syntax:Sql.Window.Min(expr, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.C# usage: var query = from t in db.Table select new { Min1 = Sql.Window.Min(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Min2 = Sql.Window.Min(t.Salary, f => f.OrderBy(t.Date).RowsBetween.Unbounded.And.CurrentRow), }; Generated SQL: SELECT MIN(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), MIN(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Min
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Min(LinqToDB.Sql.IWindowFunction,System.Nullable{System.Int64},System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL MIN() window function. Returns the minimum value within the window frame.
+- Remarks: Syntax:Sql.Window.Min(expr, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.C# usage: var query = from t in db.Table select new { Min1 = Sql.Window.Min(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Min2 = Sql.Window.Min(t.Salary, f => f.OrderBy(t.Date).RowsBetween.Unbounded.And.CurrentRow), }; Generated SQL: SELECT MIN(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), MIN(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Min
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Min(LinqToDB.Sql.IWindowFunction,System.Nullable{System.Single},System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL MIN() window function. Returns the minimum value within the window frame.
+- Remarks: Syntax:Sql.Window.Min(expr, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.C# usage: var query = from t in db.Table select new { Min1 = Sql.Window.Min(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Min2 = Sql.Window.Min(t.Salary, f => f.OrderBy(t.Date).RowsBetween.Unbounded.And.CurrentRow), }; Generated SQL: SELECT MIN(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), MIN(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Min
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Min(LinqToDB.Sql.IWindowFunction,System.Single,System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL MIN() window function. Returns the minimum value within the window frame.
+- Remarks: Syntax:Sql.Window.Min(expr, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.C# usage: var query = from t in db.Table select new { Min1 = Sql.Window.Min(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Min2 = Sql.Window.Min(t.Salary, f => f.OrderBy(t.Date).RowsBetween.Unbounded.And.CurrentRow), }; Generated SQL: SELECT MIN(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), MIN(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.NthValue<T>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.NthValue``1(LinqToDB.Sql.IWindowFunction,``0,System.Int64,System.Func{LinqToDB.WindowFunctionBuilder.INthValueFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL NTH_VALUE() window function. Returns the value at position in the frame.
+- Remarks: Syntax:Sql.Window.NthValue(expr, n, f => f.[FromLast()].[IgnoreNulls()].[PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])May not be supported by all database providers (e.g. SQL Server). Does not support the FILTER clause.Use .FromLast() and/or .IgnoreNulls() (in that order) for NTH_VALUE(x, n) FROM LAST IGNORE NULLS. Each is supported only where the provider allows it; otherwise a translation-time error is thrown.C# usage: var query = from t in db.Table select new { Second = Sql.Window.NthValue(t.Salary, 2L, f => f.PartitionBy(t.Dept).OrderBy(t.Date).RowsBetween.Unbounded.And.Unbounded), }; Generated SQL: SELECT NTH_VALUE(t.Salary, 2) OVER (PARTITION BY t.Dept ORDER BY t.Date ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.NTile
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.NTile(LinqToDB.Sql.IWindowFunction,System.Int32,System.Func{LinqToDB.WindowFunctionBuilder.IOPartitionROrderFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL NTILE(n) window function. Distributes rows into groups.
+- Remarks: Syntax:Sql.Window.NTile(n, f => f.[PartitionBy(...)].OrderBy(...)[.ThenBy(...)])May not be supported by all database providers (e.g. ClickHouse, Firebird 3).C# usage: var query = from t in db.Table select new { Quartile = Sql.Window.NTile(4, f => f.PartitionBy(t.Dept).OrderBy(t.Salary)), Tercile = Sql.Window.NTile(3, f => f.OrderBy(t.Score)), }; Generated SQL: SELECT NTILE(4) OVER (PARTITION BY t.Dept ORDER BY t.Salary), NTILE(3) OVER (ORDER BY t.Score) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.PercentileCont<T>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.PercentileCont``1(LinqToDB.Sql.IWindowFunction,System.Double,System.Func{LinqToDB.WindowFunctionBuilder.IOrderedSetWindowSingleOrder,LinqToDB.WindowFunctionBuilder.IDefinedFunction{``0}})`
+- Kind: Method
+- Summary: Generates the SQL PERCENTILE_CONT()windowed ordered-set aggregate: PERCENTILE_CONT(fraction) WITHIN GROUP (ORDER BY key) OVER (PARTITION BY ...).
+- Remarks: Syntax:Sql.Window.PercentileCont(fraction, w => w.OrderBy(key)[.PartitionBy(...)])The windowed form is native on SQL Server, Oracle and MariaDB; PostgreSQL supports only the group form (g.PercentileCont).C# usage: Sql.Window.PercentileCont(0.5, w => w.OrderBy(t.Salary).PartitionBy(t.Dept)) Generated SQL: PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY t.Salary) OVER (PARTITION BY t.Dept)
+
+## LinqToDB.WindowFunctionBuilder.PercentileCont<T1,T2>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.PercentileCont``2(System.Collections.Generic.IEnumerable{``0},System.Double,System.Func{``0,LinqToDB.WindowFunctionBuilder.IOnlyOrderByPart,LinqToDB.WindowFunctionBuilder.IDefinedFunction{``1}})`
+- Kind: Method
+- Summary: Generates SQL PERCENTILE_CONT() ordered-set aggregate. Computes a percentile based on continuous distribution.
+- Remarks: Syntax:source.PercentileCont(fraction, (e, f) => f.OrderBy(e.Column)[.Filter(...)])May not be supported by all database providers (e.g. SQLite, MySQL, ClickHouse).C# usage: var query = from t in db.Table group t by t.Dept into g select new { g.Key, Median = g.PercentileCont(0.5, (e, f) => f.OrderBy(e.Salary)), }; Generated SQL: SELECT t.Dept, PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY t.Salary) FROM Table t GROUP BY t.Dept
+
+## LinqToDB.WindowFunctionBuilder.PercentileDisc<T>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.PercentileDisc``1(LinqToDB.Sql.IWindowFunction,System.Double,System.Func{LinqToDB.WindowFunctionBuilder.IOrderedSetWindowMultiOrder,LinqToDB.WindowFunctionBuilder.IDefinedFunction{``0}})`
+- Kind: Method
+- Summary: Generates the SQL PERCENTILE_DISC()windowed ordered-set aggregate: PERCENTILE_DISC(fraction) WITHIN GROUP (ORDER BY key) OVER (PARTITION BY ...).
+- Remarks: Syntax:Sql.Window.PercentileDisc(fraction, w => w.OrderBy(key)[.ThenBy(...)][.PartitionBy(...)])The windowed form is native on SQL Server, Oracle and MariaDB; PostgreSQL supports only the group form (g.PercentileDisc).C# usage: Sql.Window.PercentileDisc(0.5, w => w.OrderBy(t.Salary).PartitionBy(t.Dept)) Generated SQL: PERCENTILE_DISC(0.5) WITHIN GROUP (ORDER BY t.Salary) OVER (PARTITION BY t.Dept)
+
+## LinqToDB.WindowFunctionBuilder.PercentileDisc<T1,T2>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.PercentileDisc``2(System.Collections.Generic.IEnumerable{``0},System.Double,System.Func{``0,LinqToDB.WindowFunctionBuilder.IMultipleOrderByPart,LinqToDB.WindowFunctionBuilder.IDefinedFunction{``1}})`
+- Kind: Method
+- Summary: Generates SQL PERCENTILE_DISC() ordered-set aggregate. Returns the value at the specified percentile from the sorted set.
+- Remarks: Syntax:source.PercentileDisc(fraction, (e, f) => f.OrderBy(e.Column)[.ThenBy(...)][.Filter(...)])May not be supported by all database providers (e.g. SQLite, MySQL, ClickHouse).C# usage: var query = from t in db.Table group t by t.Dept into g select new { g.Key, Median = g.PercentileDisc(0.5, (e, f) => f.OrderBy(e.Salary)), }; Generated SQL: SELECT t.Dept, PERCENTILE_DISC(0.5) WITHIN GROUP (ORDER BY t.Salary) FROM Table t GROUP BY t.Dept
+
+## LinqToDB.WindowFunctionBuilder.PercentRank
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.PercentRank(LinqToDB.Sql.IWindowFunction,System.Func{LinqToDB.WindowFunctionBuilder.IOPartitionROrderFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL PERCENT_RANK() window function. Returns the relative rank (0 to 1).
+- Remarks: Syntax:Sql.Window.PercentRank(f => f.[PartitionBy(...)].OrderBy(...)[.ThenBy(...)])May not be supported by all database providers (e.g. ClickHouse).C# usage: var query = from t in db.Table select new { PR = Sql.Window.PercentRank(f => f.PartitionBy(t.Dept).OrderBy(t.Salary)), }; Generated SQL: SELECT PERCENT_RANK() OVER (PARTITION BY t.Dept ORDER BY t.Salary) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.PercentRank<T1,T2>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.PercentRank``2(System.Collections.Generic.IEnumerable{``0},System.Object,System.Func{``0,LinqToDB.WindowFunctionBuilder.IOnlyOrderByPart,LinqToDB.WindowFunctionBuilder.IDefinedFunction{``1}})`
+- Kind: Method
+- Summary: Generates the SQL hypothetical-set PERCENT_RANK() aggregate — the relative rank, a value in [0, 1] computed as (rank - 1) / (rowCount - 1), the given value would have in the ordered group.
+- Remarks: Syntax:source.PercentRank(value, (e, f) => f.OrderBy(e.Column)[.Filter(...)])Native on Oracle and PostgreSQL; throws a descriptive exception at query-translation time on other providers.C# usage: var query = from t in db.Table group t by t.Dept into g select new { g.Key, PercentRank = g.PercentRank(1000, (e, f) => f.OrderBy(e.Salary)), }; Generated SQL: SELECT t.Dept, PERCENT_RANK(1000) WITHIN GROUP (ORDER BY t.Salary) FROM Table t GROUP BY t.Dept
+
+## LinqToDB.WindowFunctionBuilder.PercentRank<T1,T2>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.PercentRank``2(System.Collections.Generic.IEnumerable{``0},System.Object,System.Object,System.Func{``0,LinqToDB.WindowFunctionBuilder.IMultipleOrderByPart,LinqToDB.WindowFunctionBuilder.IDefinedFunction{``1}})`
+- Kind: Method
+- Summary: Generates the SQL hypothetical-set PERCENT_RANK() aggregate over two ordering keys — the relative rank (a value in [0, 1]) the given values would have in the doubly-ordered group.
+- Remarks: Syntax:source.PercentRank(value1, value2, (e, f) => f.OrderBy(e.Key1).ThenBy(e.Key2)[.Filter(...)])Native on Oracle and PostgreSQL; throws a descriptive exception at query-translation time on other providers.C# usage: var query = from t in db.Table group t by t.Dept into g select new { g.Key, PercentRank = g.PercentRank(1000, 2000, (e, f) => f.OrderBy(e.Salary).ThenBy(e.Bonus)), }; Generated SQL: SELECT t.Dept, PERCENT_RANK(1000, 2000) WITHIN GROUP (ORDER BY t.Salary, t.Bonus) FROM Table t GROUP BY t.Dept
+
+## LinqToDB.WindowFunctionBuilder.Rank
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Rank(LinqToDB.Sql.IWindowFunction,System.Func{LinqToDB.WindowFunctionBuilder.IOPartitionROrderFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL RANK() window function. Returns the rank of each row, with gaps for ties.
+- Remarks: Syntax:Sql.Window.Rank(f => f.[PartitionBy(...)].OrderBy(...)[.ThenBy(...)])May not be supported by all database providers.C# usage: var query = from t in db.Table select new { Rank1 = Sql.Window.Rank(f => f.PartitionBy(t.Dept).OrderBy(t.Salary)), Rank2 = Sql.Window.Rank(f => f.OrderByDesc(t.Score)), }; Generated SQL: SELECT RANK() OVER (PARTITION BY t.Dept ORDER BY t.Salary), RANK() OVER (ORDER BY t.Score DESC) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Rank<T1,T2>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Rank``2(System.Collections.Generic.IEnumerable{``0},System.Object,System.Func{``0,LinqToDB.WindowFunctionBuilder.IOnlyOrderByPart,LinqToDB.WindowFunctionBuilder.IDefinedFunction{``1}})`
+- Kind: Method
+- Summary: Generates the SQL hypothetical-set RANK() aggregate — the rank the given value would have (with gaps after ties) if inserted into the ordered group.
+- Remarks: Syntax:source.Rank(value, (e, f) => f.OrderBy(e.Column)[.Filter(...)])Native on Oracle and PostgreSQL; throws a descriptive exception at query-translation time on other providers.C# usage: var query = from t in db.Table group t by t.Dept into g select new { g.Key, Rank = g.Rank(1000, (e, f) => f.OrderBy(e.Salary)), }; Generated SQL: SELECT t.Dept, RANK(1000) WITHIN GROUP (ORDER BY t.Salary) FROM Table t GROUP BY t.Dept
+
+## LinqToDB.WindowFunctionBuilder.Rank<T1,T2>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Rank``2(System.Collections.Generic.IEnumerable{``0},System.Object,System.Object,System.Func{``0,LinqToDB.WindowFunctionBuilder.IMultipleOrderByPart,LinqToDB.WindowFunctionBuilder.IDefinedFunction{``1}})`
+- Kind: Method
+- Summary: Generates the SQL hypothetical-set RANK() aggregate over two ordering keys — the rank the given values would have (with gaps after ties) in the doubly-ordered group.
+- Remarks: Syntax:source.Rank(value1, value2, (e, f) => f.OrderBy(e.Key1).ThenBy(e.Key2)[.Filter(...)])Native on Oracle and PostgreSQL; throws a descriptive exception at query-translation time on other providers.C# usage: var query = from t in db.Table group t by t.Dept into g select new { g.Key, Rank = g.Rank(1000, 2000, (e, f) => f.OrderBy(e.Salary).ThenBy(e.Bonus)), }; Generated SQL: SELECT t.Dept, RANK(1000, 2000) WITHIN GROUP (ORDER BY t.Salary, t.Bonus) FROM Table t GROUP BY t.Dept
+
+## LinqToDB.WindowFunctionBuilder.RatioToReport<T>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.RatioToReport``1(LinqToDB.Sql.IWindowFunction,``0,System.Func{LinqToDB.WindowFunctionBuilder.IOPartitionFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates the SQL RATIO_TO_REPORT() window function — the ratio of the value to the sum of the values within the window (expr / SUM(expr) OVER (...)).
+- Remarks: Syntax:Sql.Window.RatioToReport(expr, f => f.[PartitionBy(...)])Emitted natively as RATIO_TO_REPORT on Oracle and DB2; emulated as expr / SUM(expr) OVER (...) on other providers.C# usage: Sql.Window.RatioToReport(t.Value, f => f.PartitionBy(t.Dept)) Generated SQL (Oracle): RATIO_TO_REPORT(t.Value) OVER (PARTITION BY t.Dept)
+
+## LinqToDB.WindowFunctionBuilder.RegrAvgX<T1,T2>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.RegrAvgX``2(LinqToDB.Sql.IWindowFunction,``0,``1,System.Func{LinqToDB.WindowFunctionBuilder.IBivariateAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates the SQL REGR_AVGX() window function — the average of the independent variable () over non-null pairs.
+- Remarks: Syntax:Sql.Window.RegrAvgX(y, x, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.Generated SQL:REGR_AVGX(y, x) OVER (...)
+
+## LinqToDB.WindowFunctionBuilder.RegrAvgY<T1,T2>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.RegrAvgY``2(LinqToDB.Sql.IWindowFunction,``0,``1,System.Func{LinqToDB.WindowFunctionBuilder.IBivariateAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates the SQL REGR_AVGY() window function — the average of the dependent variable () over non-null pairs.
+- Remarks: Syntax:Sql.Window.RegrAvgY(y, x, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.Generated SQL:REGR_AVGY(y, x) OVER (...)
+
+## LinqToDB.WindowFunctionBuilder.RegrCount<T1,T2>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.RegrCount``2(LinqToDB.Sql.IWindowFunction,``0,``1,System.Func{LinqToDB.WindowFunctionBuilder.IBivariateAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates the SQL REGR_COUNT() window function — the number of non-null (, ) pairs within the window.
+- Remarks: Syntax:Sql.Window.RegrCount(y, x, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.Generated SQL:REGR_COUNT(y, x) OVER (...)
+
+## LinqToDB.WindowFunctionBuilder.RegrIntercept<T1,T2>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.RegrIntercept``2(LinqToDB.Sql.IWindowFunction,``0,``1,System.Func{LinqToDB.WindowFunctionBuilder.IBivariateAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates the SQL REGR_INTERCEPT() window function — the y-intercept of the least-squares-fit linear equation of (, ) pairs.
+- Remarks: Syntax:Sql.Window.RegrIntercept(y, x, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.Generated SQL:REGR_INTERCEPT(y, x) OVER (...)
+
+## LinqToDB.WindowFunctionBuilder.RegrR2<T1,T2>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.RegrR2``2(LinqToDB.Sql.IWindowFunction,``0,``1,System.Func{LinqToDB.WindowFunctionBuilder.IBivariateAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates the SQL REGR_R2() window function — the coefficient of determination (R²) of the regression of (, ) pairs.
+- Remarks: Syntax:Sql.Window.RegrR2(y, x, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.Generated SQL:REGR_R2(y, x) OVER (...)
+
+## LinqToDB.WindowFunctionBuilder.RegrSlope<T1,T2>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.RegrSlope``2(LinqToDB.Sql.IWindowFunction,``0,``1,System.Func{LinqToDB.WindowFunctionBuilder.IBivariateAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates the SQL REGR_SLOPE() window function — the slope of the least-squares-fit linear equation of (, ) pairs.
+- Remarks: Syntax:Sql.Window.RegrSlope(y, x, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.Generated SQL:REGR_SLOPE(y, x) OVER (...)
+
+## LinqToDB.WindowFunctionBuilder.RegrSXX<T1,T2>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.RegrSXX``2(LinqToDB.Sql.IWindowFunction,``0,``1,System.Func{LinqToDB.WindowFunctionBuilder.IBivariateAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates the SQL REGR_SXX() window function — the sum of squares of the independent variable () over non-null pairs.
+- Remarks: Syntax:Sql.Window.RegrSXX(y, x, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.Generated SQL:REGR_SXX(y, x) OVER (...)
+
+## LinqToDB.WindowFunctionBuilder.RegrSXY<T1,T2>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.RegrSXY``2(LinqToDB.Sql.IWindowFunction,``0,``1,System.Func{LinqToDB.WindowFunctionBuilder.IBivariateAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates the SQL REGR_SXY() window function — the sum of products of the independent and dependent variables over non-null pairs.
+- Remarks: Syntax:Sql.Window.RegrSXY(y, x, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.Generated SQL:REGR_SXY(y, x) OVER (...)
+
+## LinqToDB.WindowFunctionBuilder.RegrSYY<T1,T2>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.RegrSYY``2(LinqToDB.Sql.IWindowFunction,``0,``1,System.Func{LinqToDB.WindowFunctionBuilder.IBivariateAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates the SQL REGR_SYY() window function — the sum of squares of the dependent variable () over non-null pairs.
+- Remarks: Syntax:Sql.Window.RegrSYY(y, x, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.Generated SQL:REGR_SYY(y, x) OVER (...)
+
+## LinqToDB.WindowFunctionBuilder.RowNumber
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.RowNumber(LinqToDB.Sql.IWindowFunction,System.Func{LinqToDB.WindowFunctionBuilder.IOPartitionROrderFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL ROW_NUMBER() window function. Assigns a unique sequential integer to each row within a partition.
+- Remarks: Syntax:Sql.Window.RowNumber(f => f.[PartitionBy(...)].OrderBy(...)[.ThenBy(...)])May not be supported by all database providers.C# usage: var query = from t in db.Table select new { RN1 = Sql.Window.RowNumber(f => f.PartitionBy(t.Category).OrderBy(t.Id)), RN2 = Sql.Window.RowNumber(f => f.OrderBy(t.Date)), RN3 = Sql.Window.RowNumber(f => f.PartitionBy(t.Dept).OrderBy(t.Date).ThenByDesc(t.Id)), }; Generated SQL: SELECT ROW_NUMBER() OVER (PARTITION BY t.Category ORDER BY t.Id), ROW_NUMBER() OVER (ORDER BY t.Date), ROW_NUMBER() OVER (PARTITION BY t.Dept ORDER BY t.Date, t.Id DESC) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.StdDev<T>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.StdDev``1(LinqToDB.Sql.IWindowFunction,``0,System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates the SQL STDDEV() window function (STDEV() on SQL Server) — the sample standard deviation of values within the window.
+- Remarks: Syntax:Sql.Window.StdDev(expr, f => f.[Distinct()][.Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.C# usage: Sql.Window.StdDev(t.Value, f => f.PartitionBy(t.Dept).OrderBy(t.Date)) Generated SQL (Oracle): STDDEV(t.Value) OVER (PARTITION BY t.Dept ORDER BY t.Date)
+
+## LinqToDB.WindowFunctionBuilder.StdDevPop<T>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.StdDevPop``1(LinqToDB.Sql.IWindowFunction,``0,System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates the SQL STDDEV_POP() window function — the population standard deviation of values within the window.
+- Remarks: Syntax:Sql.Window.StdDevPop(expr, f => f.[Distinct()][.Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.Generated SQL:STDDEV_POP(expr) OVER (...)
+
+## LinqToDB.WindowFunctionBuilder.StdDevSamp<T>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.StdDevSamp``1(LinqToDB.Sql.IWindowFunction,``0,System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates the SQL STDDEV_SAMP() window function — the sample standard deviation of values within the window.
+- Remarks: Syntax:Sql.Window.StdDevSamp(expr, f => f.[Distinct()][.Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.Generated SQL:STDDEV_SAMP(expr) OVER (...)
+
+## LinqToDB.WindowFunctionBuilder.Sum
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Sum(LinqToDB.Sql.IWindowFunction,System.Decimal,System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL SUM() window function. Computes the sum of values within the window frame.
+- Remarks: Syntax:Sql.Window.Sum(expr, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.C# usage: var query = from t in db.Table let wnd = Sql.Window.DefineWindow(f => f.PartitionBy(t.Dept).OrderBy(t.Date)) select new { Sum1 = Sql.Window.Sum(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Sum2 = Sql.Window.Sum(t.Salary, f => f.OrderBy(t.Date).RowsBetween.Unbounded.And.CurrentRow), Sum3 = Sql.Window.Sum(t.Salary, f => f.Filter(t.IsActive).PartitionBy(t.Dept).OrderBy(t.Date)), Sum4 = Sql.Window.Sum(t.Salary, f => f.UseWindow(wnd)), }; Generated SQL (PostgreSQL): SELECT SUM(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), SUM(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW), SUM(t.Salary) FILTER (WHERE t.IsActive) OVER (PARTITION BY t.Dept ORDER BY t.Date), SUM(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Sum
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Sum(LinqToDB.Sql.IWindowFunction,System.Double,System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL SUM() window function. Computes the sum of values within the window frame.
+- Remarks: Syntax:Sql.Window.Sum(expr, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.C# usage: var query = from t in db.Table let wnd = Sql.Window.DefineWindow(f => f.PartitionBy(t.Dept).OrderBy(t.Date)) select new { Sum1 = Sql.Window.Sum(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Sum2 = Sql.Window.Sum(t.Salary, f => f.OrderBy(t.Date).RowsBetween.Unbounded.And.CurrentRow), Sum3 = Sql.Window.Sum(t.Salary, f => f.Filter(t.IsActive).PartitionBy(t.Dept).OrderBy(t.Date)), Sum4 = Sql.Window.Sum(t.Salary, f => f.UseWindow(wnd)), }; Generated SQL (PostgreSQL): SELECT SUM(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), SUM(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW), SUM(t.Salary) FILTER (WHERE t.IsActive) OVER (PARTITION BY t.Dept ORDER BY t.Date), SUM(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Sum
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Sum(LinqToDB.Sql.IWindowFunction,System.Int32,System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL SUM() window function. Computes the sum of values within the window frame.
+- Remarks: Syntax:Sql.Window.Sum(expr, f => f.[Distinct()][.Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.Use .Distinct() for SUM(DISTINCT x) OVER (...). DISTINCT in a window aggregate is not supported by most providers; where unsupported it throws a descriptive exception at query-translation time.C# usage: var query = from t in db.Table let wnd = Sql.Window.DefineWindow(f => f.PartitionBy(t.Dept).OrderBy(t.Date)) select new { Sum1 = Sql.Window.Sum(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Sum2 = Sql.Window.Sum(t.Salary, f => f.OrderBy(t.Date).RowsBetween.Unbounded.And.CurrentRow), Sum3 = Sql.Window.Sum(t.Salary, f => f.Filter(t.IsActive).PartitionBy(t.Dept).OrderBy(t.Date)), Sum4 = Sql.Window.Sum(t.Salary, f => f.UseWindow(wnd)), Sum5 = Sql.Window.Sum(t.Salary, f => f.Distinct().PartitionBy(t.Dept)), }; Generated SQL (PostgreSQL): SELECT SUM(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), SUM(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW), SUM(t.Salary) FILTER (WHERE t.IsActive) OVER (PARTITION BY t.Dept ORDER BY t.Date), SUM(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), SUM(DISTINCT t.Salary) OVER (PARTITION BY t.Dept) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Sum
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Sum(LinqToDB.Sql.IWindowFunction,System.Int64,System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL SUM() window function. Computes the sum of values within the window frame.
+- Remarks: Syntax:Sql.Window.Sum(expr, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.C# usage: var query = from t in db.Table let wnd = Sql.Window.DefineWindow(f => f.PartitionBy(t.Dept).OrderBy(t.Date)) select new { Sum1 = Sql.Window.Sum(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Sum2 = Sql.Window.Sum(t.Salary, f => f.OrderBy(t.Date).RowsBetween.Unbounded.And.CurrentRow), Sum3 = Sql.Window.Sum(t.Salary, f => f.Filter(t.IsActive).PartitionBy(t.Dept).OrderBy(t.Date)), Sum4 = Sql.Window.Sum(t.Salary, f => f.UseWindow(wnd)), }; Generated SQL (PostgreSQL): SELECT SUM(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), SUM(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW), SUM(t.Salary) FILTER (WHERE t.IsActive) OVER (PARTITION BY t.Dept ORDER BY t.Date), SUM(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Sum
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Sum(LinqToDB.Sql.IWindowFunction,System.Nullable{System.Decimal},System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL SUM() window function. Computes the sum of values within the window frame.
+- Remarks: Syntax:Sql.Window.Sum(expr, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.C# usage: var query = from t in db.Table let wnd = Sql.Window.DefineWindow(f => f.PartitionBy(t.Dept).OrderBy(t.Date)) select new { Sum1 = Sql.Window.Sum(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Sum2 = Sql.Window.Sum(t.Salary, f => f.OrderBy(t.Date).RowsBetween.Unbounded.And.CurrentRow), Sum3 = Sql.Window.Sum(t.Salary, f => f.Filter(t.IsActive).PartitionBy(t.Dept).OrderBy(t.Date)), Sum4 = Sql.Window.Sum(t.Salary, f => f.UseWindow(wnd)), }; Generated SQL (PostgreSQL): SELECT SUM(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), SUM(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW), SUM(t.Salary) FILTER (WHERE t.IsActive) OVER (PARTITION BY t.Dept ORDER BY t.Date), SUM(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Sum
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Sum(LinqToDB.Sql.IWindowFunction,System.Nullable{System.Double},System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL SUM() window function. Computes the sum of values within the window frame.
+- Remarks: Syntax:Sql.Window.Sum(expr, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.C# usage: var query = from t in db.Table let wnd = Sql.Window.DefineWindow(f => f.PartitionBy(t.Dept).OrderBy(t.Date)) select new { Sum1 = Sql.Window.Sum(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Sum2 = Sql.Window.Sum(t.Salary, f => f.OrderBy(t.Date).RowsBetween.Unbounded.And.CurrentRow), Sum3 = Sql.Window.Sum(t.Salary, f => f.Filter(t.IsActive).PartitionBy(t.Dept).OrderBy(t.Date)), Sum4 = Sql.Window.Sum(t.Salary, f => f.UseWindow(wnd)), }; Generated SQL (PostgreSQL): SELECT SUM(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), SUM(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW), SUM(t.Salary) FILTER (WHERE t.IsActive) OVER (PARTITION BY t.Dept ORDER BY t.Date), SUM(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Sum
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Sum(LinqToDB.Sql.IWindowFunction,System.Nullable{System.Int32},System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL SUM() window function. Computes the sum of values within the window frame.
+- Remarks: Syntax:Sql.Window.Sum(expr, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.C# usage: var query = from t in db.Table let wnd = Sql.Window.DefineWindow(f => f.PartitionBy(t.Dept).OrderBy(t.Date)) select new { Sum1 = Sql.Window.Sum(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Sum2 = Sql.Window.Sum(t.Salary, f => f.OrderBy(t.Date).RowsBetween.Unbounded.And.CurrentRow), Sum3 = Sql.Window.Sum(t.Salary, f => f.Filter(t.IsActive).PartitionBy(t.Dept).OrderBy(t.Date)), Sum4 = Sql.Window.Sum(t.Salary, f => f.UseWindow(wnd)), }; Generated SQL (PostgreSQL): SELECT SUM(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), SUM(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW), SUM(t.Salary) FILTER (WHERE t.IsActive) OVER (PARTITION BY t.Dept ORDER BY t.Date), SUM(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Sum
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Sum(LinqToDB.Sql.IWindowFunction,System.Nullable{System.Int64},System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL SUM() window function. Computes the sum of values within the window frame.
+- Remarks: Syntax:Sql.Window.Sum(expr, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.C# usage: var query = from t in db.Table let wnd = Sql.Window.DefineWindow(f => f.PartitionBy(t.Dept).OrderBy(t.Date)) select new { Sum1 = Sql.Window.Sum(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Sum2 = Sql.Window.Sum(t.Salary, f => f.OrderBy(t.Date).RowsBetween.Unbounded.And.CurrentRow), Sum3 = Sql.Window.Sum(t.Salary, f => f.Filter(t.IsActive).PartitionBy(t.Dept).OrderBy(t.Date)), Sum4 = Sql.Window.Sum(t.Salary, f => f.UseWindow(wnd)), }; Generated SQL (PostgreSQL): SELECT SUM(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), SUM(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW), SUM(t.Salary) FILTER (WHERE t.IsActive) OVER (PARTITION BY t.Dept ORDER BY t.Date), SUM(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Sum
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Sum(LinqToDB.Sql.IWindowFunction,System.Nullable{System.Single},System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL SUM() window function. Computes the sum of values within the window frame.
+- Remarks: Syntax:Sql.Window.Sum(expr, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.C# usage: var query = from t in db.Table let wnd = Sql.Window.DefineWindow(f => f.PartitionBy(t.Dept).OrderBy(t.Date)) select new { Sum1 = Sql.Window.Sum(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Sum2 = Sql.Window.Sum(t.Salary, f => f.OrderBy(t.Date).RowsBetween.Unbounded.And.CurrentRow), Sum3 = Sql.Window.Sum(t.Salary, f => f.Filter(t.IsActive).PartitionBy(t.Dept).OrderBy(t.Date)), Sum4 = Sql.Window.Sum(t.Salary, f => f.UseWindow(wnd)), }; Generated SQL (PostgreSQL): SELECT SUM(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), SUM(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW), SUM(t.Salary) FILTER (WHERE t.IsActive) OVER (PARTITION BY t.Dept ORDER BY t.Date), SUM(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Sum
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Sum(LinqToDB.Sql.IWindowFunction,System.Single,System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates SQL SUM() window function. Computes the sum of values within the window frame.
+- Remarks: Syntax:Sql.Window.Sum(expr, f => f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])The FILTER clause is natively supported by PostgreSQL and DuckDB. For other providers, it is emulated using CASE WHEN.C# usage: var query = from t in db.Table let wnd = Sql.Window.DefineWindow(f => f.PartitionBy(t.Dept).OrderBy(t.Date)) select new { Sum1 = Sql.Window.Sum(t.Salary, f => f.PartitionBy(t.Dept).OrderBy(t.Date)), Sum2 = Sql.Window.Sum(t.Salary, f => f.OrderBy(t.Date).RowsBetween.Unbounded.And.CurrentRow), Sum3 = Sql.Window.Sum(t.Salary, f => f.Filter(t.IsActive).PartitionBy(t.Dept).OrderBy(t.Date)), Sum4 = Sql.Window.Sum(t.Salary, f => f.UseWindow(wnd)), }; Generated SQL (PostgreSQL): SELECT SUM(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date), SUM(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW), SUM(t.Salary) FILTER (WHERE t.IsActive) OVER (PARTITION BY t.Dept ORDER BY t.Date), SUM(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date) FROM Table t
+
+## LinqToDB.WindowFunctionBuilder.Variance<T>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.Variance``1(LinqToDB.Sql.IWindowFunction,``0,System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates the SQL VARIANCE() window function — the sample variance of values within the window.
+- Remarks: Syntax:Sql.Window.Variance(expr, f => f.[Distinct()][.Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.Generated SQL:VARIANCE(expr) OVER (...)
+
+## LinqToDB.WindowFunctionBuilder.VarPop<T>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.VarPop``1(LinqToDB.Sql.IWindowFunction,``0,System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates the SQL VAR_POP() window function — the population variance of values within the window.
+- Remarks: Syntax:Sql.Window.VarPop(expr, f => f.[Distinct()][.Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.Generated SQL:VAR_POP(expr) OVER (...)
+
+## LinqToDB.WindowFunctionBuilder.VarSamp<T>
+
+- XML member: `M:LinqToDB.WindowFunctionBuilder.VarSamp``1(LinqToDB.Sql.IWindowFunction,``0,System.Func{LinqToDB.WindowFunctionBuilder.IAggregateFinal,LinqToDB.WindowFunctionBuilder.IDefinedFunction})`
+- Kind: Method
+- Summary: Generates the SQL VAR_SAMP() window function — the sample variance of values within the window.
+- Remarks: Syntax:Sql.Window.VarSamp(expr, f => f.[Distinct()][.Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.Generated SQL:VAR_SAMP(expr) OVER (...)
+
 ## LinqToDB.Common.Configuration.BulkCopy.Options
 
 - XML member: `P:LinqToDB.Common.Configuration.BulkCopy.Options`
@@ -30555,6 +32967,13 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Property
 - Summary: Used to generate CROSS APPLY or OUTER APPLY if possible. Default value: .
 
+## LinqToDB.Common.Configuration.Linq.PreferClientCalculation
+
+- XML member: `P:LinqToDB.Common.Configuration.Linq.PreferClientCalculation`
+- Kind: Property
+- Summary: When enabled, computed expressions in the final projection (arithmetic, conditionals, unary operations, and mapped members/methods that do not prefer server-side evaluation) are calculated on the client during materialization instead of being translated into additional SQL columns. Expressions that prefer or require server-side evaluation are still translated to SQL. Default value: .
+- Remarks: This is a process-global default for the context option; prefer setting it per-context via when different contexts (e.g. parallel test lanes) need different values.
+
 ## LinqToDB.Common.Configuration.Linq.PreloadGroups
 
 - XML member: `P:LinqToDB.Common.Configuration.Linq.PreloadGroups`
@@ -30587,6 +33006,13 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Property
 - Summary: Determines the length after which logging of string data in SQL will be truncated. This is to avoid Out-Of-Memory exceptions when getting SqlText from .
 - Remarks: This value defaults to 200. Use a value of -1 to disable and always log full string. Set to 0 to truncate all string data.
+
+## LinqToDB.Common.Configuration.OptimizeForSequentialAccess
+
+- XML member: `P:LinqToDB.Common.Configuration.OptimizeForSequentialAccess`
+- Kind: Property
+- Summary: Enables mapping expression to be compatible with behavior. Note that it doesn't switch linq2db to use behavior for queries, so this optimization could be used for too. Default value: .
+- Remarks: This is a process-global default for the context option; prefer setting it per-context via when different contexts (e.g. parallel test lanes) need different values.
 
 ## LinqToDB.Common.Configuration.QueryTrace.Options
 
@@ -31700,6 +34126,12 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Property
 - Summary: Specifies that Firebird supports literal encoding. Available from version 2.5 and could be used for Dialect 1 databases.
 
+## LinqToDB.DataProvider.Firebird.FirebirdTools.AutoDetectProvider
+
+- XML member: `P:LinqToDB.DataProvider.Firebird.FirebirdTools.AutoDetectProvider`
+- Kind: Property
+- Summary: Gets or sets whether the Firebird dialect is detected automatically by querying the server engine version when it is not specified explicitly.
+
 ## LinqToDB.DataProvider.Informix.InformixOptions.ExplicitFractionalSecondsSeparator
 
 - XML member: `P:LinqToDB.DataProvider.Informix.InformixOptions.ExplicitFractionalSecondsSeparator`
@@ -32651,6 +35083,17 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Property
 - Remarks: Setting is conservative based on https://maxdb.sap.com/doc/7_6/f6/069940ccd42a54e10000000a1550b0/content.htm Possible to be higher in other versions.
 
+## LinqToDB.Internal.DataProvider.Translation.ConvertContext.DataOptions
+
+- XML member: `P:LinqToDB.Internal.DataProvider.Translation.ConvertContext.DataOptions`
+- Kind: Property
+
+## LinqToDB.Internal.DataProvider.Translation.IConvertContext.DataOptions
+
+- XML member: `P:LinqToDB.Internal.DataProvider.Translation.IConvertContext.DataOptions`
+- Kind: Property
+- Summary: Data options for the current query/conversion.
+
 ## LinqToDB.Internal.DataProvider.Ydb.YdbSqlExpressionConvertVisitor.SupportsNullInColumn
 
 - XML member: `P:LinqToDB.Internal.DataProvider.Ydb.YdbSqlExpressionConvertVisitor.SupportsNullInColumn`
@@ -32794,6 +35237,24 @@ Generated directly from the current package XML documentation. Use XML member id
   - `name`: The name of the annotation to find.
 - Returns: The value of the existing annotation if an annotation with the specified name already exists. Otherwise, .
 
+## LinqToDB.Internal.Linq.Builder.EntityBuilderConfig.DoNothing
+
+- XML member: `P:LinqToDB.Internal.Linq.Builder.EntityBuilderConfig.DoNothing`
+- Kind: Property
+- Summary: Set by .Insert(i => i.DoNothing()) or .Update(v => v.DoNothing()) in the Upsert context.
+
+## LinqToDB.Internal.Linq.Builder.EntityBuilderConfig.EntityParameter
+
+- XML member: `P:LinqToDB.Internal.Linq.Builder.EntityBuilderConfig.EntityParameter`
+- Kind: Property
+- Summary: Shared canonicalisation parameter — every field selector is rewritten to use this so structural equality holds.
+
+## LinqToDB.Internal.Linq.Builder.EntityBuilderConfig.When
+
+- XML member: `P:LinqToDB.Internal.Linq.Builder.EntityBuilderConfig.When`
+- Kind: Property
+- Summary: Set by .Insert(i => i.When(...)) or .Update(v => v.When(...)) in the Upsert context.
+
 ## LinqToDB.Internal.Linq.Builder.EnumerableParameterizationConfig.DefaultForceParameter
 
 - XML member: `P:LinqToDB.Internal.Linq.Builder.EnumerableParameterizationConfig.DefaultForceParameter`
@@ -32812,11 +35273,52 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Property
 - Summary: Lambda parameter used as the root for every expression. Null when no overrides.
 
+## LinqToDB.Internal.Linq.Builder.ExpressionBuilder.IKeyedQueryKeysPreamble.ChildPreambleIndex
+
+- XML member: `P:LinqToDB.Internal.Linq.Builder.ExpressionBuilder.IKeyedQueryKeysPreamble.ChildPreambleIndex`
+- Kind: Property
+- Summary: Index of the corresponding KeyedQueryChildPreamble in the preambles list.
+
 ## LinqToDB.Internal.Linq.Builder.ExpressionBuilder.IsRecursiveBuild
 
 - XML member: `P:LinqToDB.Internal.Linq.Builder.ExpressionBuilder.IsRecursiveBuild`
 - Kind: Property
 - Summary: Used internally to avoid RecursiveCTE build failing
+
+## LinqToDB.Internal.Linq.Builder.ExpressionBuilder.KeyedQueryKeysPreamble<T>.BufferKeyExtractor
+
+- XML member: `P:LinqToDB.Internal.Linq.Builder.ExpressionBuilder.KeyedQueryKeysPreamble`1.BufferKeyExtractor`
+- Kind: Property
+- Summary: Set during buffer setup: extracts TKey from a buffer row (ValueTuple cast to object). Null when buffer is not used (fallback to SQL key extraction).
+
+## LinqToDB.Internal.Linq.Builder.ExpressionBuilder.KeyedQueryKeysPreamble<T>.ChildPreambleIndex
+
+- XML member: `P:LinqToDB.Internal.Linq.Builder.ExpressionBuilder.KeyedQueryKeysPreamble`1.ChildPreambleIndex`
+- Kind: Property
+
+## LinqToDB.Internal.Linq.Builder.ExpressionBuilder.KeyedQueryKeysPreamble<T>.MainKeyExpression
+
+- XML member: `P:LinqToDB.Internal.Linq.Builder.ExpressionBuilder.KeyedQueryKeysPreamble`1.MainKeyExpression`
+- Kind: Property
+- Summary: The main key expression (composed of SqlPlaceholderExpressions) used to build BufferKeyExtractor.
+
+## LinqToDB.Internal.Linq.Builder.ExpressionBuilder.LastEagerLoadFallbackChain
+
+- XML member: `P:LinqToDB.Internal.Linq.Builder.ExpressionBuilder.LastEagerLoadFallbackChain`
+- Kind: Property
+- Summary: Strategy attempts that failed (and fell back) before the most recent successful call. Empty when the first attempted strategy succeeded. Diagnostic-only — exposed for tests / traces. Populated in dispatcher order (first failed attempt first).
+
+## LinqToDB.Internal.Linq.Builder.FilterIgnoreScope.Keys
+
+- XML member: `P:LinqToDB.Internal.Linq.Builder.FilterIgnoreScope.Keys`
+- Kind: Property
+- Summary: Filter-key dimension. is the wildcard ("any key"); an empty array means "no keys" (matches nothing). A non-empty array matches only the listed keys.
+
+## LinqToDB.Internal.Linq.Builder.FilterIgnoreScope.Types
+
+- XML member: `P:LinqToDB.Internal.Linq.Builder.FilterIgnoreScope.Types`
+- Kind: Property
+- Summary: Entity-type dimension. or empty means "any type".
 
 ## LinqToDB.Internal.Linq.Builder.IBuildContext.IsOptional
 
@@ -32824,12 +35326,72 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Property
 - Summary: Optional cardinality for associations
 
+## LinqToDB.Internal.Linq.Builder.TableBuilder.TableContext.FilteredByOfType
+
+- XML member: `P:LinqToDB.Internal.Linq.Builder.TableBuilder.TableContext.FilteredByOfType`
+- Kind: Property
+- Summary: TPH types this context's rows have already been narrowed to via OfType/Cast (the discriminator predicate is already applied to the query), or when none. Used to avoid emitting a redundant discriminator on associations declared on a derived type. Lazily allocated — inheritance/OfType is rare, so most contexts never allocate it.
+
+## LinqToDB.Internal.Linq.Builder.UpsertBuilder.UpsertConfig.InsertWhen
+
+- XML member: `P:LinqToDB.Internal.Linq.Builder.UpsertBuilder.UpsertConfig.InsertWhen`
+- Kind: Property
+- Summary: Set by .Insert(i => i.When(s => cond)). Implies MERGE-based lowering.
+
+## LinqToDB.Internal.Linq.Builder.UpsertBuilder.UpsertConfig.SkipInsert
+
+- XML member: `P:LinqToDB.Internal.Linq.Builder.UpsertBuilder.UpsertConfig.SkipInsert`
+- Kind: Property
+- Summary: Set by root SkipInsert() or by Insert(i => i.DoNothing()). Implies MERGE-based lowering (ON CONFLICT can't express "don't insert").
+
+## LinqToDB.Internal.Linq.Builder.UpsertBuilder.UpsertConfig.SkipUpdate
+
+- XML member: `P:LinqToDB.Internal.Linq.Builder.UpsertBuilder.UpsertConfig.SkipUpdate`
+- Kind: Property
+- Summary: Set by root SkipUpdate() or by Update(v => v.DoNothing()).
+
+## LinqToDB.Internal.Linq.Builder.UpsertBuilder.UpsertConfig.UpdateWhen
+
+- XML member: `P:LinqToDB.Internal.Linq.Builder.UpsertBuilder.UpsertConfig.UpdateWhen`
+- Kind: Property
+- Summary: Set by .Update(v => v.When((t, s) => cond)).
+
 ## LinqToDB.Internal.Linq.IExpressionQuery<T>.Expression
 
 - XML member: `P:LinqToDB.Internal.Linq.IExpressionQuery`1.Expression`
 - Kind: Property
 - Summary: Gets the LINQ expression tree that represents the current query.
 - Remarks: This expression is produced by query composition (LINQ operators) and is used by the provider as input for translation and execution.
+
+## LinqToDB.Internal.Linq.Preamble.IsInlined
+
+- XML member: `P:LinqToDB.Internal.Linq.Preamble.IsInlined`
+- Kind: Property
+- Summary: When , this preamble does not execute a separate query and should not trigger an implicit transaction. Used by CteUnion single-query mode where the preamble is a placeholder that resolves data from the main query's result set.
+
+## LinqToDB.Internal.Linq.Query<T>.CacheMissCount
+
+- XML member: `P:LinqToDB.Internal.Linq.Query`1.CacheMissCount`
+- Kind: Property
+- Summary: Count of queries which has not been found in cache.
+
+## LinqToDB.Internal.Linq.QueryCache.IdleTimeoutOverride
+
+- XML member: `P:LinqToDB.Internal.Linq.QueryCache.IdleTimeoutOverride`
+- Kind: Property
+- Summary: Per-instance override for the base idle timeout. When , each new entry captures from the invoking .
+
+## LinqToDB.Internal.Linq.QueryCache.MaxEntriesOverride
+
+- XML member: `P:LinqToDB.Internal.Linq.QueryCache.MaxEntriesOverride`
+- Kind: Property
+- Summary: Per-instance override for the approximate global cache entry cap. When , the cache uses . Set to 0 to prevent new entries from being cached.
+
+## LinqToDB.Internal.Linq.QueryCache.SweepIntervalOverride
+
+- XML member: `P:LinqToDB.Internal.Linq.QueryCache.SweepIntervalOverride`
+- Kind: Property
+- Summary: Per-instance override for the global-sweep interval. When , the cache uses .
 
 ## LinqToDB.Internal.Mapping.MappingSchemaInfo.ConfigurationID
 
@@ -32913,7 +35475,13 @@ Generated directly from the current package XML documentation. Use XML member id
 
 - XML member: `P:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.IsOverRequiredWithinGroup`
 - Kind: Property
-- Summary: if provider requires OVER() clause to be present in window function WITHIN GROUP. Currently only SQL Server
+- Summary: if provider requires OVER () clause to be present in window function WITHIN GROUP. Currently only SQL Server
+
+## LinqToDB.Internal.SqlProvider.BasicSqlBuilder.IsUpsertUpdateWhereAfterSet
+
+- XML member: `P:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.IsUpsertUpdateWhereAfterSet`
+- Kind: Property
+- Summary: Placement of the optional WHERE <predicate> that guards the UPDATE branch of an InsertOrUpdate-as-MERGE rendering: (default, SQL Server / PostgreSQL 15+) — emits WHEN MATCHED AND <predicate> THEN UPDATE SET …. (Oracle) — emits WHEN MATCHED THEN UPDATE SET … WHERE <predicate>.
 
 ## LinqToDB.Internal.SqlProvider.BasicSqlBuilder.IsValuesSyntaxSupported
 
@@ -32932,6 +35500,18 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `P:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.RequiresConstantColumnAliases`
 - Kind: Property
 - Summary: If true, provider require column aliases for each column. E.g. as table_alias (column_alias1, column_alias2).
+
+## LinqToDB.Internal.SqlProvider.BasicSqlBuilder.RequiresUniqueRootColumnNames
+
+- XML member: `P:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.RequiresUniqueRootColumnNames`
+- Kind: Property
+- Summary: when the provider's final SELECT cannot contain two columns that render with the same result-set name. Such providers force final aliases for a root column-name collision (see ) instead of skipping root aliases.
+
+## LinqToDB.Internal.SqlProvider.BasicSqlBuilder.SupportsColumnAliasesInScalarSource
+
+- XML member: `P:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.SupportsColumnAliasesInScalarSource`
+- Kind: Property
+- Summary: If true, provider supports column aliases after the alias of a scalar/raw-SQL subquery source (as opposed to a VALUES source). Defaults to .
 
 ## LinqToDB.Internal.SqlProvider.BasicSqlBuilder.SupportsColumnAliasesInSource
 
@@ -33133,6 +35713,12 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Property
 - Summary: Provider supports correlated DISTINCT FROM directly or through db-specific operator/method (e.g. DECODE, IS, <=>). This doesn't include emulation using INTERSECT. Default
 
+## LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsDistinctOnSupported
+
+- XML member: `P:LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsDistinctOnSupported`
+- Kind: Property
+- Summary: Provider supports the SELECT DISTINCT ON (expr, ...) syntax (PostgreSQL, DuckDB): one row per distinct ON-expression tuple, choosing the row that sorts first under the query ORDER BY (which must begin with the ON expressions). When (the default), DistinctBy falls back to ROW_NUMBER() / OUTER APPLY emulation.
+
 ## LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsDistinctSetOperationsSupported
 
 - XML member: `P:LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsDistinctSetOperationsSupported`
@@ -33151,11 +35737,23 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Property
 - Summary: Indicates that provider requires explicit output parameter for insert with identity queries to get identity from database. Default (set by ): .
 
+## LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsInsertOrUpdateRequiresAlignedBranches
+
+- XML member: `P:LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsInsertOrUpdateRequiresAlignedBranches`
+- Kind: Property
+- Summary: Indicates that the provider's native single-statement InsertOrUpdate shape applies one value-list to both the INSERT and UPDATE branches and cannot honor per-branch SET divergence. When and the Upsert configuration produces different expressions for the same column on the INSERT vs UPDATE branch (typically via Insert(i => …) / Update(v => …) per-branch overrides, or per-branch Ignore), the runtime transparently falls back to the alternative UPDATE → INSERT emulation so the per-branch divergence is preserved. Set to for SAP HANA — its UPSERT … WITH PRIMARY KEY statement uses one VALUES list for both branches. Default (set by ): .
+
 ## LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsInsertOrUpdateSupported
 
 - XML member: `P:LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsInsertOrUpdateSupported`
 - Kind: Property
 - Summary: Indicates support for single-query insert-or-update operation support. Otherwise two separate queries used to emulate operation (update, then insert if nothing found to update). Default (set by ): .
+
+## LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsInsertOrUpdateWithPredicateSupported
+
+- XML member: `P:LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsInsertOrUpdateWithPredicateSupported`
+- Kind: Property
+- Summary: Indicates that the provider's native InsertOrUpdate emission can honor an additional predicate applied to the UPDATE branch (used by Upsert(...).Update(v => v.When(...))). When , Upsert with a .When predicate is routed through the alternative 3-query SELECT → UPDATE → INSERT orchestration instead of the native path. Set to for engines whose single-statement insert-or-update shape cannot carry an UPDATE-branch predicate: MySQL / MariaDB — INSERT ... ON DUPLICATE KEY UPDATE has no WHERE clause.SAP Sybase ASE — emulated via IF @@ROWCOUNT = 0 INSERT, no UPDATE-branch predicate.SQL Server 2005 — pre-MERGE; emulated via IF @@ROWCOUNT = 0 INSERT. Default (set by ): .
 
 ## LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsJoinDerivedTableWithTakeInvalid
 
@@ -33186,7 +35784,7 @@ Generated directly from the current package XML documentation. Use XML member id
 
 - XML member: `P:LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsNullsOrderingSupported`
 - Kind: Property
-- Summary: Provider renders NULLS FIRST / NULLS LAST natively in ORDER BY (and window OVER(ORDER BY …)). When (the default), is emulated via a CASE WHEN <expr> IS NULL THEN … sort key.
+- Summary: Provider renders NULLS FIRST / NULLS LAST natively in ORDER BY (and window OVER (ORDER BY …)). When (the default), is emulated via a CASE WHEN <expr> IS NULL THEN … sort key.
 
 ## LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsOrderByAggregateFunctionSupported
 
@@ -33340,11 +35938,29 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Property
 - Summary: Provider supports TAKE limit for UPDATE query. Default (set by ): .
 
+## LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsUpsertMergeWithPredicateSupported
+
+- XML member: `P:LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsUpsertMergeWithPredicateSupported`
+- Kind: Property
+- Summary: Indicates that the provider's MERGE dialect supports predicates on the WHEN MATCHED and WHEN NOT MATCHED clauses (either as WHEN MATCHED AND <cond> or WHEN MATCHED THEN UPDATE SET … WHERE <cond>). When and an Upsert configuration with Insert(i => i.When(...)) or Update(v => v.When(...)) is routed through MERGE lowering, is thrown with a descriptive message. Set to for Firebird 2.5 — its MERGE predates Firebird 3 which added WHEN [NOT] MATCHED [AND <cond>] syntax, and it has no UPDATE … WHERE form inside MERGE either. Default (set by ): .
+
+## LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsUpsertWithMergeLoweringSupported
+
+- XML member: `P:LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsUpsertWithMergeLoweringSupported`
+- Kind: Property
+- Summary: Indicates that the provider supports the synthesized two-branch MERGE shape linq2db emits when Upsert(...) cannot be lowered to the native InsertOrUpdate path — i.e. for bulk sources, non-PK match, conditional Insert(i => i.When(...)), or SkipInsert() / SkipUpdate(). When and the Upsert configuration requires MERGE lowering, is thrown with a descriptive message. Set to for SAP HANA — its MERGE dialect lacks the WHEN NOT MATCHED THEN INSERT branch that the ANSI shape requires. Default (set by ): .
+
 ## LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsWindowFunctionsSupported
 
 - XML member: `P:LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsWindowFunctionsSupported`
 - Kind: Property
 - Summary: Indicates that provider supports window functions. Default value: .
+
+## LinqToDB.Internal.SqlProvider.SqlProviderFlags.MaxColumnCount
+
+- XML member: `P:LinqToDB.Internal.SqlProvider.SqlProviderFlags.MaxColumnCount`
+- Kind: Property
+- Summary: Maximum number of columns in a single SELECT list enforced by linq2db when building CteUnion eager-loading queries. When the estimated column count of the combined UNION ALL projection exceeds this limit the strategy falls back to individual preamble queries. 0 means no limit is enforced. Default: 0.
 
 ## LinqToDB.Internal.SqlProvider.SqlProviderFlags.MaxInListValuesCount
 
@@ -33428,7 +36044,7 @@ Generated directly from the current package XML documentation. Use XML member id
 
 - XML member: `P:LinqToDB.Internal.SqlQuery.NullabilityContext.NonQuery`
 - Kind: Property
-- Summary: Context for non-select queries of places where we don't know select query.
+- Summary: Creates context for non-select queries or places where we don't know select query. Always returns a new instance to avoid shared mutable state across threads.
 
 ## LinqToDB.Internal.SqlQuery.NullabilityContext.Queries
 
@@ -33461,6 +36077,13 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Property
 - Summary: Determines whether the specified select query includes a HAVING clause with a non-trivial search condition.
 - Returns: if the select query contains a HAVING clause with a condition other than always true; otherwise, .
+
+## LinqToDB.Internal.SqlQuery.SelectQueryExtensions.<G>$2D0526ADB551921D1D0FBD46170AA51F.HasJoins
+
+- XML member: `P:LinqToDB.Internal.SqlQuery.SelectQueryExtensions.<G>$2D0526ADB551921D1D0FBD46170AA51F.HasJoins`
+- Kind: Property
+- Summary: Gets a value indicating whether any table in the query's FROM clause includes one or more join operations.
+- Remarks: Use this property to determine if the select query involves joined tables. This can be useful for query analysis, optimization, or when conditional logic depends on the presence of joins.
 
 ## LinqToDB.Internal.SqlQuery.SelectQueryExtensions.<G>$2D0526ADB551921D1D0FBD46170AA51F.HasNoColumns
 
@@ -33554,11 +36177,47 @@ Generated directly from the current package XML documentation. Use XML member id
 - Summary: Determines whether the specified table source includes any join clauses.
 - Returns: if the table source contains one or more joins; otherwise, .
 
+## LinqToDB.Internal.SqlQuery.SqlColumn.Alias
+
+- XML member: `P:LinqToDB.Internal.SqlQuery.SqlColumn.Alias`
+- Kind: Property
+- Summary: The raw / un-finalized column alias - the explicitly set , or one derived from . For non-render use (optimizers, expression builders, diagnostics). In a SQL builder, read the finalized alias via AliasesContext.GetColumnAlias(this) instead: finalized names live in the context, not on the node (enforced by the LINQ2DB0001 analyzer).
+
 ## LinqToDB.Internal.SqlQuery.SqlConcatExpression.PreserveNull
 
 - XML member: `P:LinqToDB.Internal.SqlQuery.SqlConcatExpression.PreserveNull`
 - Kind: Property
 - Summary: When false, null values replaced with empty string.
+
+## LinqToDB.Internal.SqlQuery.SqlCteField.Column
+
+- XML member: `P:LinqToDB.Internal.SqlQuery.SqlCteField.Column`
+- Kind: Property
+- Summary: Direct reference to the corresponding column in ... Can be null during recursive CTE construction when the body is not yet built.
+
+## LinqToDB.Internal.SqlQuery.SqlCteTableField.CteField
+
+- XML member: `P:LinqToDB.Internal.SqlQuery.SqlCteTableField.CteField`
+- Kind: Property
+- Summary: Direct reference to the corresponding in . All Name/Type/CanBeNullable are derived from this reference.
+
+## LinqToDB.Internal.SqlQuery.SqlCteTableField.Name
+
+- XML member: `P:LinqToDB.Internal.SqlQuery.SqlCteTableField.Name`
+- Kind: Property
+- Summary: Name delegated to CteField.
+
+## LinqToDB.Internal.SqlQuery.SqlCteTableField.Table
+
+- XML member: `P:LinqToDB.Internal.SqlQuery.SqlCteTableField.Table`
+- Kind: Property
+- Summary: Back-reference to the owning .
+
+## LinqToDB.Internal.SqlQuery.SqlCteTableField.Type
+
+- XML member: `P:LinqToDB.Internal.SqlQuery.SqlCteTableField.Type`
+- Kind: Property
+- Summary: Type delegated to CteField; SystemType follows automatically via the base.
 
 ## LinqToDB.Internal.SqlQuery.SqlExtensions.<G>$F24F25D260C9F5E3C5FAF1DA4AEA4D1A.InsertClause
 
@@ -33595,6 +36254,18 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `P:LinqToDB.Internal.SqlQuery.SqlExtensions.<G>$F24F25D260C9F5E3C5FAF1DA4AEA4D1A.OutputClause`
 - Kind: Property
 - Summary: This is internal API and is not intended for use by Linq To DB applications. It may change or be removed without further notice.
+
+## LinqToDB.Internal.SqlQuery.SqlFieldBase.NamedTable
+
+- XML member: `P:LinqToDB.Internal.SqlQuery.SqlFieldBase.NamedTable`
+- Kind: Property
+- Summary: The this field belongs to, if any. Returns for fields bound to a non-named source (e.g. a ).
+
+## LinqToDB.Internal.SqlQuery.SqlInsertOrUpdateStatement.UpdateWhere
+
+- XML member: `P:LinqToDB.Internal.SqlQuery.SqlInsertOrUpdateStatement.UpdateWhere`
+- Kind: Property
+- Summary: Optional predicate attached to the UPDATE branch of an upsert (e.g. the WHERE on ON CONFLICT ... DO UPDATE SET ... WHERE <cond> in PostgreSQL / SQLite, or the WHEN MATCHED AND <cond> in a MERGE-based emitter). when the upsert has no conditional update gate. Populated by UpsertBuilder from .Update(v => v.When(...)).
 
 ## LinqToDB.Internal.SqlQuery.SqlParameter.NeedsCast
 
@@ -33638,6 +36309,18 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Property
 - Summary: Gets extension apply scope/location.
 
+## LinqToDB.Internal.SqlQuery.SqlSelectClause.DistinctOn
+
+- XML member: `P:LinqToDB.Internal.SqlQuery.SqlSelectClause.DistinctOn`
+- Kind: Property
+- Summary: When non-empty, marks the clause as a DISTINCT ON (...) query (PostgreSQL, DuckDB): the listed expressions form the distinct key and, per key, the row that sorts first under the query's ORDER BY (which must begin with these expressions) is kept. Honored only by providers that support DISTINCT ON. Callers that populate this must also set to .
+
+## LinqToDB.Internal.SqlQuery.SqlSelectClause.IsDistinctOn
+
+- XML member: `P:LinqToDB.Internal.SqlQuery.SqlSelectClause.IsDistinctOn`
+- Kind: Property
+- Summary: Returns when carries one or more expressions.
+
 ## LinqToDB.Internal.SqlQuery.SqlStatement.ParentStatement
 
 - XML member: `P:LinqToDB.Internal.SqlQuery.SqlStatement.ParentStatement`
@@ -33649,6 +36332,12 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `P:LinqToDB.Internal.SqlQuery.SqlTable.Expression`
 - Kind: Property
 - Summary: Custom SQL expression format string (used together with ) to transform to custom table expression. Arguments: {0}: {1}: {2+}: arguments from (with index adjusted by 2)
+
+## LinqToDB.Internal.SqlQuery.SqlTableSource.Alias
+
+- XML member: `P:LinqToDB.Internal.SqlQuery.SqlTableSource.Alias`
+- Kind: Property
+- Summary: The raw / un-finalized table-source alias - the stored , or the alias derived from . For non-render use (optimizers, expression builders, diagnostics). In a SQL builder, read the finalized alias via AliasesContext.GetTableAlias(this) instead: finalized names live in the context, not on the node (enforced by the LINQ2DB0001 analyzer).
 
 ## LinqToDB.Internal.SqlQuery.SqlTableSource.UniqueKeys
 
@@ -33734,6 +36423,54 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Property
 - Summary: Aggregate-mode hook: rewrite the per-row value LINQ-expression before SQL translation.
 
+## LinqToDB.Linq.Translation.ITranslationContext.ProviderFlags
+
+- XML member: `P:LinqToDB.Linq.Translation.ITranslationContext.ProviderFlags`
+- Kind: Property
+- Summary: Read-only, translation-relevant subset of the provider's SQL flags (see ).
+
+## LinqToDB.Linq.Translation.TranslationProviderFlags.DefaultNullsOrdering
+
+- XML member: `P:LinqToDB.Linq.Translation.TranslationProviderFlags.DefaultNullsOrdering`
+- Kind: Property
+- Summary: The provider's natural NULL placement when no NULLS FIRST/NULLS LAST is specified.
+
+## LinqToDB.Linq.Translation.TranslationProviderFlags.IsNullsOrderingSupported
+
+- XML member: `P:LinqToDB.Linq.Translation.TranslationProviderFlags.IsNullsOrderingSupported`
+- Kind: Property
+- Summary: Whether the provider supports the NULLS FIRST/NULLS LAST keyword in ORDER BY.
+
+## LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.IsRowNumberNeedsCasting
+
+- XML member: `P:LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.IsRowNumberNeedsCasting`
+- Kind: Property
+- Summary: When , the translated ROW_NUMBER() is wrapped in an explicit CAST to the result type. Providers whose ROW_NUMBER() does not yield the expected numeric type override this to opt in (e.g. ClickHouse). Default: .
+
+## LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.WindowFunctionInformation.FromPosition
+
+- XML member: `P:LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.WindowFunctionInformation.FromPosition`
+- Kind: Property
+- Summary: FROM FIRST / FROM LAST position for NTH_VALUE.
+
+## LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.WindowFunctionInformation.KeepOrderBy
+
+- XML member: `P:LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.WindowFunctionInformation.KeepOrderBy`
+- Kind: Property
+- Summary: ORDER BY keys for the KEEP (DENSE_RANK FIRST/LAST) clause.
+
+## LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.WindowFunctionInformation.KeepType
+
+- XML member: `P:LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.WindowFunctionInformation.KeepType`
+- Kind: Property
+- Summary: KEEP (DENSE_RANK FIRST/LAST) modifier for the aggregate, or when there is no KEEP clause.
+
+## LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.WindowFunctionInformation.NullTreatment
+
+- XML member: `P:LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.WindowFunctionInformation.NullTreatment`
+- Kind: Property
+- Summary: NULL treatment (RESPECT / IGNORE NULLS) for offset and value functions.
+
 ## LinqToDB.LinqExtensions.ProcessSourceQueryable
 
 - XML member: `P:LinqToDB.LinqExtensions.ProcessSourceQueryable`
@@ -33763,6 +36500,12 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `P:LinqToDB.LinqOptions.Default`
 - Kind: Property
 - Summary: Gets default instance.
+
+## LinqToDB.LinqOptions.DefaultEagerLoadingStrategy
+
+- XML member: `P:LinqToDB.LinqOptions.DefaultEagerLoadingStrategy`
+- Kind: Property
+- Summary: Specifies the default used for all LoadWith/ThenLoad eager-loading operations when no per-query strategy is set via WithUnionLoadStrategy, WithKeyedLoadStrategy, or WithSeparateLoadStrategy. Default value: .
 
 ## LinqToDB.LinqOptions.DisableQueryCache
 
@@ -33794,6 +36537,12 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Property
 - Summary: Controls behavior of linq2db when there is no updateable fields in Update query: - if - query not executed and Update operation returns 0 as number of affected records; - if - will be thrown. Default value: .
 
+## LinqToDB.LinqOptions.ImplicitCollectionLoading
+
+- XML member: `P:LinqToDB.LinqOptions.ImplicitCollectionLoading`
+- Kind: Property
+- Summary: With , a query that triggers an implicit eager load — a collection projected in a Select without being explicitly requested — throws at build time; with (the default) it is loaded as usual. The guard is bypassed when the eager load is explicit: LoadWith/ThenLoad allows that one collection (other unmarked collections in the same query still throw), while a root WithUnionLoadStrategy/WithKeyedLoadStrategy/WithSeparateLoadStrategy marker opts the whole query in.
+
 ## LinqToDB.LinqOptions.KeepDistinctOrdered
 
 - XML member: `P:LinqToDB.LinqOptions.KeepDistinctOrdered`
@@ -33804,6 +36553,12 @@ Generated directly from the current package XML documentation. Use XML member id
 
 - XML member: `P:LinqToDB.LinqOptions.LinqToDB#Internal#Options#IOptionSet#Default`
 - Kind: Property
+
+## LinqToDB.LinqOptions.OptimizeForSequentialAccess
+
+- XML member: `P:LinqToDB.LinqOptions.OptimizeForSequentialAccess`
+- Kind: Property
+- Summary: Enables mapping expression to be compatible with behavior. Note that it doesn't switch linq2db to use behavior for queries, so this optimization could be used for too. Default value: .
 
 ## LinqToDB.LinqOptions.OptimizeJoins
 
@@ -33823,6 +36578,12 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Property
 - Summary: Used to generate CROSS APPLY or OUTER APPLY if possible. Default value: .
 
+## LinqToDB.LinqOptions.PreferClientCalculation
+
+- XML member: `P:LinqToDB.LinqOptions.PreferClientCalculation`
+- Kind: Property
+- Summary: When enabled, computed expressions in the final projection (arithmetic, conditionals, unary operations, and mapped members/methods that do not prefer server-side evaluation) are calculated on the client during materialization instead of being translated into additional SQL columns. Real database columns, already-built subqueries, and expressions that prefer or require server-side evaluation (for example, members or methods mapped with or ) are still translated to SQL. Default value: .
+
 ## LinqToDB.LinqOptions.PreferExistsForScalar
 
 - XML member: `P:LinqToDB.LinqOptions.PreferExistsForScalar`
@@ -33840,6 +36601,12 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `P:LinqToDB.LinqOptions.TraceMapperExpression`
 - Kind: Property
 - Summary: Enables logging of generated mapping expression to data connection tracing infrastructure. See for more details. Default value: .
+
+## LinqToDB.LinqOptions.UpsertEmulationPolicy
+
+- XML member: `P:LinqToDB.LinqOptions.UpsertEmulationPolicy`
+- Kind: Property
+- Summary: Controls what happens when an Upsert cannot be expressed as a native single-statement upsert or MERGE for the target provider and would fall back to an emulated multi-statement SELECT → UPDATE → INSERT sequence (the three statements run as independent commands — wrap the call in a transaction if atomicity is required). (default) — perform the emulated fallback. — reject it with at build time.
 
 ## LinqToDB.Mapping.AssociationAttribute.AliasName
 
@@ -34430,6 +37197,12 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Property
 - Summary: For entity descriptor with inheritance mapping gets descriptor of root (base) entity.
 
+## LinqToDB.Mapping.EntityDescriptor.InheritanceSiblingColumns
+
+- XML member: `P:LinqToDB.Mapping.EntityDescriptor.InheritanceSiblingColumns`
+- Kind: Property
+- Summary: Distinct members from sibling TPH types that share a C# member name with an already-merged column. They may map to a different physical column or to the same physical column as another sibling (collapsed to one field in SqlTable). Kept separate to avoid MemberName collision in the merged descriptor and to let per-type entity init reference each subtype's own column.
+
 ## LinqToDB.Mapping.EntityDescriptor.IsColumnAttributeRequired
 
 - XML member: `P:LinqToDB.Mapping.EntityDescriptor.IsColumnAttributeRequired`
@@ -34457,6 +37230,24 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Property
 - Summary: Gets mapping class type.
 
+## LinqToDB.Mapping.EntityDescriptor.QueryFilterFunc
+
+- XML member: `P:LinqToDB.Mapping.EntityDescriptor.QueryFilterFunc`
+- Kind: Property
+- Summary: Function-style filter (legacy single-slot accessor). Equivalent to looking up the entry under the default (anonymous, empty-string) key in .
+
+## LinqToDB.Mapping.EntityDescriptor.QueryFilterLambda
+
+- XML member: `P:LinqToDB.Mapping.EntityDescriptor.QueryFilterLambda`
+- Kind: Property
+- Summary: Predicate-style filter (legacy single-slot accessor). Equivalent to looking up the entry under the default (anonymous, empty-string) key in .
+
+## LinqToDB.Mapping.EntityDescriptor.QueryFilters
+
+- XML member: `P:LinqToDB.Mapping.EntityDescriptor.QueryFilters`
+- Kind: Property
+- Summary: Ordered set of named query filters declared on this entity. The default (anonymous) filter is exposed under the empty-string key; additional entries come from the keyed overloads. Multiple entries are AND-combined when the entity is queried.
+
 ## LinqToDB.Mapping.EntityDescriptor.SkipModificationFlags
 
 - XML member: `P:LinqToDB.Mapping.EntityDescriptor.SkipModificationFlags`
@@ -34480,6 +37271,24 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `P:LinqToDB.Mapping.EntityMappingBuilder`1.Configuration`
 - Kind: Property
 - Summary: Gets mapping schema configuration name, for which this entity builder should be taken into account. for standard configuration names.
+
+## LinqToDB.Mapping.EntityQueryFilter.FilterFunc
+
+- XML member: `P:LinqToDB.Mapping.EntityQueryFilter.FilterFunc`
+- Kind: Property
+- Summary: Function-style filter of shape Func<IQueryable<TEntity>, TDataContext, IQueryable<TEntity>>. when the entry uses the form instead.
+
+## LinqToDB.Mapping.EntityQueryFilter.FilterKey
+
+- XML member: `P:LinqToDB.Mapping.EntityQueryFilter.FilterKey`
+- Kind: Property
+- Summary: Filter identifier. The empty string identifies the default (anonymous) filter slot populated by the keyless HasQueryFilter overloads.
+
+## LinqToDB.Mapping.EntityQueryFilter.FilterLambda
+
+- XML member: `P:LinqToDB.Mapping.EntityQueryFilter.FilterLambda`
+- Kind: Property
+- Summary: Predicate-style filter expression of shape Expression<Func<TEntity, TDataContext, bool>>. when the entry uses the form instead.
 
 ## LinqToDB.Mapping.FluentMappingBuilder.MappingSchema
 
@@ -34667,11 +37476,17 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Property
 - Summary: Filter function of type , where - T1 and TResult are - T2 is
 
+## LinqToDB.Mapping.QueryFilterAttribute.FilterKey
+
+- XML member: `P:LinqToDB.Mapping.QueryFilterAttribute.FilterKey`
+- Kind: Property
+- Summary: Filter identifier used to address the filter individually via the keyed overloads and to selectively disable it via . A or empty value identifies the default (anonymous) filter slot, populated by the non-keyed HasQueryFilter overloads.
+
 ## LinqToDB.Mapping.QueryFilterAttribute.FilterLambda
 
 - XML member: `P:LinqToDB.Mapping.QueryFilterAttribute.FilterLambda`
 - Kind: Property
-- Summary: Filter LambdaExpression. Expression<Func<TEntity, IDataContext, bool>> For example (e, db) => e.IsDeleted == false "/>
+- Summary: Filter LambdaExpression. Expression<Func<TEntity, IDataContext, bool>> For example (e, db) => e.IsDeleted == false
 
 ## LinqToDB.Mapping.ScalarTypeAttribute.IsScalar
 
@@ -35278,7 +38093,7 @@ Generated directly from the current package XML documentation. Use XML member id
 
 - XML member: `P:LinqToDB.Sql.ExpressionAttribute.IsWindowFunction`
 - Kind: Property
-- Summary: If , this expression represents a Window Function Examples would be SUM() OVER(), COUNT() OVER().
+- Summary: If , this expression represents a Window Function Examples would be SUM() OVER (), COUNT() OVER ().
 
 ## LinqToDB.Sql.ExpressionAttribute.Precedence
 
@@ -35410,6 +38225,42 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `P:LinqToDB.TempTable`1.DataContext`
 - Kind: Property
 - Summary: Gets data connection, associated with current table.
+
+## LinqToDB.WindowFunctionBuilder.IBoundaryPart<T>.CurrentRow
+
+- XML member: `P:LinqToDB.WindowFunctionBuilder.IBoundaryPart`1.CurrentRow`
+- Kind: Property
+- Summary: Specifies CURRENT ROW boundary.
+
+## LinqToDB.WindowFunctionBuilder.IBoundaryPart<T>.Unbounded
+
+- XML member: `P:LinqToDB.WindowFunctionBuilder.IBoundaryPart`1.Unbounded`
+- Kind: Property
+- Summary: Specifies UNBOUNDED PRECEDING (start) or UNBOUNDED FOLLOWING (end) boundary.
+
+## LinqToDB.WindowFunctionBuilder.IFramePartFunction.GroupsBetween
+
+- XML member: `P:LinqToDB.WindowFunctionBuilder.IFramePartFunction.GroupsBetween`
+- Kind: Property
+- Summary: Starts a GROUPS BETWEEN frame specification. May not be supported by all providers.
+
+## LinqToDB.WindowFunctionBuilder.IFramePartFunction.RangeBetween
+
+- XML member: `P:LinqToDB.WindowFunctionBuilder.IFramePartFunction.RangeBetween`
+- Kind: Property
+- Summary: Starts a RANGE BETWEEN frame specification. Chain with boundary definitions.
+
+## LinqToDB.WindowFunctionBuilder.IFramePartFunction.RowsBetween
+
+- XML member: `P:LinqToDB.WindowFunctionBuilder.IFramePartFunction.RowsBetween`
+- Kind: Property
+- Summary: Starts a ROWS BETWEEN frame specification. Chain with boundary definitions.
+
+## LinqToDB.WindowFunctionBuilder.IRangePrecedingPartFunction.And
+
+- XML member: `P:LinqToDB.WindowFunctionBuilder.IRangePrecedingPartFunction.And`
+- Kind: Property
+- Summary: Separates start and end boundaries in a BETWEEN ... AND ... frame clause.
 
 ## LinqToDB.Async.AsyncExtensions
 
@@ -35689,7 +38540,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `T:LinqToDB.Data.DataConnection`
 - Kind: Type
 - Summary: Primary implementation for direct database access.
-- Remarks: AI/LLM agents using this NuGet package should first read package-local skills/linq2db/SKILL.md, README.md, and skills/linq2db/docs/api.md; use skills/linq2db/docs/*.md for task-specific guidance before proposing code. represents a configured execution context: provider + mapping + options + database connection. Use when you want a single connection open for the lifetime of the context and direct access to database features. Connection lifetime: The underlying connection is opened on first command execution and remains open until this instance is disposed. The typical usage pattern is short-lived contexts: create → execute queries/commands → dispose (typically with deterministic disposal scope). Dispose the instance to close the connection and release resources. Execution model: LINQ queries are translated from Expression Tree into an internal SQL AST, then into provider-specific SQL text, and executed when enumerated or explicitly materialized. This type does not introduce implicit change tracking or unit-of-work semantics; data modification occurs only via explicit DML APIs. Performance guidance: Construct once and reuse it to create context instances. Reusing stable options enables internal caching and reduces initialization overhead. A common practice is to define a typed context by deriving from and exposing properties for mapped entities. class MyDataConnection : DataConnection { private static readonly DataOptions _options = new DataOptions() .UseSqlServer("connection string"); public MyDataConnection() : base(_options) {} public ITable<MyEntity> MyEntities => GetTable<MyEntity>(); } TransactionScope interaction: When using TransactionScope, the ambient transaction is enlisted when the underlying is physically opened. opens its connection lazily on first command execution, so always create the TransactionScopebefore executing any queries or commands on this instance. If the connection is already open, it will not automatically re-enlist in a new scope. Use for explicit, scope-independent transaction control. See skills/linq2db/docs/agent-antipatterns.md for examples.
+- Remarks: represents a configured execution context: provider + mapping + options + database connection. Use when you want a single connection open for the lifetime of the context and direct access to database features. Connection lifetime: The underlying connection is opened on first command execution and remains open until this instance is disposed. The typical usage pattern is short-lived contexts: create → execute queries/commands → dispose (typically with deterministic disposal scope). Dispose the instance to close the connection and release resources. Execution model: LINQ queries are translated from Expression Tree into an internal SQL AST, then into provider-specific SQL text, and executed when enumerated or explicitly materialized. This type does not introduce implicit change tracking or unit-of-work semantics; data modification occurs only via explicit DML APIs. Performance guidance: Construct once and reuse it to create context instances. Reusing stable options enables internal caching and reduces initialization overhead. A common practice is to define a typed context by deriving from and exposing properties for mapped entities. class MyDataConnection : DataConnection { private static readonly DataOptions _options = new DataOptions() .UseSqlServer("connection string"); public MyDataConnection() : base(_options) {} public ITable<MyEntity> MyEntities => GetTable<MyEntity>(); } TransactionScope interaction: When using TransactionScope, the ambient transaction is enlisted when the underlying is physically opened. opens its connection lazily on first command execution, so always create the TransactionScopebefore executing any queries or commands on this instance. If the connection is already open, it will not automatically re-enlist in a new scope. Use for explicit, scope-independent transaction control. See skills/linq2db/docs/agent-antipatterns.md for examples.
 - AI metadata: Group=Connection; Affects=ExecutionContext; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.Data.DataConnectionTransaction
@@ -35802,14 +38653,14 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `T:LinqToDB.DataExtensions`
 - Kind: Type
 - Summary: Data context extension methods.
-- Remarks: AI/LLM agents using this NuGet package should first read package-local skills/linq2db/SKILL.md, README.md, and skills/linq2db/docs/api.md; use skills/linq2db/docs/*.md for task-specific guidance before proposing code. Common metadata defaults for this API surface: method-level ai-tags elements should specify only behavior-specific fields and override defaults only when needed.
+- Remarks: Common metadata defaults for this API surface: method-level ai-tags elements should specify only behavior-specific fields and override defaults only when needed.
 
 ## LinqToDB.DataOptions
 
 - XML member: `T:LinqToDB.DataOptions`
 - Kind: Type
 - Summary: Composable options graph that configures LinqToDB translation, execution, and materialization behavior.
-- Remarks: AI/LLM agents using this NuGet package should first read package-local skills/linq2db/SKILL.md, README.md, and skills/linq2db/docs/api.md; use skills/linq2db/docs/*.md for task-specific guidance before proposing code. is a structured container of option groups (e.g., LINQ, SQL, connection, retry policy, bulk copy, context behavior) that together define how queries and commands are processed. Use to define reusable configuration presets for creating or instances. Configure options using extension methods that return a new instance; treat instances as immutable values. Options do not open connections or execute commands. Options participate in the full processing pipeline: Expression Tree → SQL AST → SQL text → execution → materialization. Individual option groups may influence different stages of this pipeline. Provider-specific and user-defined option groups are supported. These options become part of the translation and execution contract of the resulting instance. Recommended approach: define a small number of stable presets (per provider or environment) and create short-lived contexts (typically ) from them. Performance guidance: Constructing and composing options may trigger initialization work. For optimal performance, create once and reuse it when creating context instances. static readonly DataOptions Options = new DataOptions(/*...*/); using var db = new DataConnection(Options); // preferred using var db2 = new DataConnection(new DataOptions(/*...*/)); // avoid rebuilding options per usage Temporary per-context overrides: To temporarily change options on an existing data context without constructing a new instance, use or . These return an that fully restores the previous options and internal context state when disposed. using var _ = db.UseOptions(o => o.UseCommandTimeout(30)); // override is active here // disposing _ restores previous options and context state Returns when the resulting options are identical to the current options (no state change needed).
+- Remarks: is a structured container of option groups (e.g., LINQ, SQL, connection, retry policy, bulk copy, context behavior) that together define how queries and commands are processed. Use to define reusable configuration presets for creating or instances. Configure options using extension methods that return a new instance; treat instances as immutable values. Options do not open connections or execute commands. Options participate in the full processing pipeline: Expression Tree → SQL AST → SQL text → execution → materialization. Individual option groups may influence different stages of this pipeline. Provider-specific and user-defined option groups are supported. These options become part of the translation and execution contract of the resulting instance. Recommended approach: define a small number of stable presets (per provider or environment) and create short-lived contexts (typically ) from them. Performance guidance: Constructing and composing options may trigger initialization work. For optimal performance, create once and reuse it when creating context instances. static readonly DataOptions Options = new DataOptions(/*...*/); using var db = new DataConnection(Options); // preferred using var db2 = new DataConnection(new DataOptions(/*...*/)); // avoid rebuilding options per usage Temporary per-context overrides: To temporarily change options on an existing data context without constructing a new instance, use or . These return an that fully restores the previous options and internal context state when disposed. using var _ = db.UseOptions(o => o.UseCommandTimeout(30)); // override is active here // disposing _ restores previous options and context state Returns when the resulting options are identical to the current options (no state change needed).
 - AI metadata: Group=Configuration; Affects=Configuration; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataOptions<T>
@@ -35825,7 +38676,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `T:LinqToDB.DataOptionsExtensions`
 - Kind: Type
 - Summary: Set of extensions for .
-- Remarks: AI/LLM agents using this NuGet package should first read package-local skills/linq2db/SKILL.md, README.md, and skills/linq2db/docs/api.md; use skills/linq2db/docs/*.md for task-specific guidance before proposing code. Extension methods in this type are composable configuration operations that return a new instance. They do not execute database commands.
+- Remarks: Extension methods in this type are composable configuration operations that return a new instance. They do not execute database commands.
 
 ## LinqToDB.DataProvider.Access.AccessOptions
 
@@ -35920,6 +38771,12 @@ Generated directly from the current package XML documentation. Use XML member id
   - `BulkCopyType`: Default bulk copy mode, used for Firebird by methods, if mode is not specified explicitly. Default value: .
   - `IdentifierQuoteMode`: Specifies how identifiers like table and field names should be quoted. Default value: .
   - `IsLiteralEncodingSupported`: Specifies that Firebird supports literal encoding. Available from version 2.5 and could be used for Dialect 1 databases.
+
+## LinqToDB.DataProvider.Firebird.FirebirdTools
+
+- XML member: `T:LinqToDB.DataProvider.Firebird.FirebirdTools`
+- Kind: Type
+- Summary: Firebird ADO.NET provider registration and factory helpers.
 
 ## LinqToDB.DataProvider.Firebird.FirebirdVersion
 
@@ -36158,6 +39015,22 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Type
 - Summary: Sybase ADO.NET provider.
 
+## LinqToDB.DataProvider.Ydb.IYdbSpecificQueryable<T>
+
+- XML member: `T:LinqToDB.DataProvider.Ydb.IYdbSpecificQueryable`1`
+- Kind: Type
+- Summary: YDB-specific query, used as the entry point for YDB query extension methods.
+- Type parameters:
+  - `TSource`: Query record type.
+
+## LinqToDB.DataProvider.Ydb.IYdbSpecificTable<T>
+
+- XML member: `T:LinqToDB.DataProvider.Ydb.IYdbSpecificTable`1`
+- Kind: Type
+- Summary: YDB-specific table, used as the entry point for YDB table extension methods.
+- Type parameters:
+  - `TSource`: Table record type.
+
 ## LinqToDB.DataProvider.Ydb.YdbHints
 
 - XML member: `T:LinqToDB.DataProvider.Ydb.YdbHints`
@@ -36180,11 +39053,17 @@ Generated directly from the current package XML documentation. Use XML member id
   - `BulkCopyType`: Default bulk copy mode for YDB. Default value: .
   - `UseParametrizedDecimal`: Use Decimal(p, s) type name instead of Decimal. Default value: .
 
+## LinqToDB.DataProvider.Ydb.YdbSpecificExtensions
+
+- XML member: `T:LinqToDB.DataProvider.Ydb.YdbSpecificExtensions`
+- Kind: Type
+- Summary: Provides YDB-specific extension methods.
+
 ## LinqToDB.DataProvider.Ydb.YdbTools
 
 - XML member: `T:LinqToDB.DataProvider.Ydb.YdbTools`
 - Kind: Type
-- Summary: Utility methods for working with Linq To DB and YDB, similar to PostgreSQLTools for PostgreSQL.
+- Summary: Utility methods for working with Linq To DB and YDB.
 
 ## LinqToDB.DataType
 
@@ -36197,6 +39076,12 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `T:LinqToDB.DbDataType`
 - Kind: Type
 - Summary: Stores database type attributes.
+
+## LinqToDB.EagerLoadingStrategy
+
+- XML member: `T:LinqToDB.EagerLoadingStrategy`
+- Kind: Type
+- Summary: Specifies the strategy used to execute eager loading (LoadWith/ThenLoad) preamble queries.
 
 ## LinqToDB.ExpressionMethodAttribute
 
@@ -36232,6 +39117,12 @@ Generated directly from the current package XML documentation. Use XML member id
 - Type parameters:
   - `TEntity`: The entity type.
   - `TProperty`: The property type.
+
+## LinqToDB.ImplicitCollectionLoading
+
+- XML member: `T:LinqToDB.ImplicitCollectionLoading`
+- Kind: Type
+- Summary: Controls whether a collection projected without an explicit eager-load request — i.e. without LoadWith/ThenLoad or a WithUnionLoadStrategy/WithKeyedLoadStrategy/WithSeparateLoadStrategy marker — is allowed. Set via .
 
 ## LinqToDB.InsertColumnFilter<T>
 
@@ -36550,6 +39441,12 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Type
 - Summary: Generic implementation of object pooling pattern with predefined pool size limit. The main purpose is that limited number of frequently used objects can be kept in the pool for further recycling. Notes: 1) it is not the goal to keep all returned objects. Pool is not meant for storage. If there is no space in the pool, extra returned objects will be dropped. 2) it is implied that if object was obtained from a pool, the caller will return it back in a relatively short time. Keeping checked out objects for long durations is ok, but reduces usefulness of pooling. Just new up your own. Not returning objects to the pool in not detrimental to the pool's work, but is a bad practice. Rationale: If there is no intent for reusing the object, do not use pool - just use "new".
 
+## LinqToDB.Internal.Common.PassThroughOrderedCollection<T>
+
+- XML member: `T:LinqToDB.Internal.Common.PassThroughOrderedCollection`1`
+- Kind: Type
+- Summary: Internal materialization adapter: wraps an already-ordered and exposes it as without performing any further ordering. Constructed only by ExpressionBuilder's AdjustType, when an eager-loaded child collection must satisfy the shape (so a child sub-query that ends in OrderBy type-checks). The wrapped sequence is already in its final order — the SQL layer drove the ordering — so an in-memory re-sort would be redundant. (the entry point for a chained ThenBy/ThenByDescending) deliberately returns the sequence unchanged: the data is already materialized in its final order, so a tie-break key cannot meaningfully reorder a concrete, fully-ordered sequence. Code that needs a different in-memory ordering of the materialized result should re-sort it explicitly.
+
 ## LinqToDB.Internal.Common.Tools
 
 - XML member: `T:LinqToDB.Internal.Common.Tools`
@@ -36647,6 +39544,18 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Type
 - Summary: Intermediate enum to expose from adapter instead of two incompatible provider-specific enums.
 
+## LinqToDB.Internal.DataProvider.Translation.ConvertContext
+
+- XML member: `T:LinqToDB.Internal.DataProvider.Translation.ConvertContext`
+- Kind: Type
+- Summary: Default implementation.
+
+## LinqToDB.Internal.DataProvider.Translation.IConvertContext
+
+- XML member: `T:LinqToDB.Internal.DataProvider.Translation.IConvertContext`
+- Kind: Type
+- Summary: Context passed to . Exposes the options that influence a member conversion (for example the configured default NULLS ordering used when rewriting legacy analytic ORDER BY chains).
+
 ## LinqToDB.Internal.DataProvider.Translation.IMemberConverter
 
 - XML member: `T:LinqToDB.Internal.DataProvider.Translation.IMemberConverter`
@@ -36731,6 +39640,12 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `T:LinqToDB.Internal.Expressions.Types.TypeWrapper`
 - Kind: Type
 - Summary: Implements base class for typed wrappers over provider-specific type.
+
+## LinqToDB.Internal.Expressions.WindowFunctionHelpers.WindowFrameSpec
+
+- XML member: `T:LinqToDB.Internal.Expressions.WindowFunctionHelpers.WindowFrameSpec`
+- Kind: Type
+- Summary: Describes a converted window frame: ROWS/RANGE plus its start and end boundaries. / are the member names — "Unbounded", "CurrentRow", "ValuePreceding", or "ValueFollowing"; the matching value is the offset expression for the Value* members and otherwise.
 
 ## LinqToDB.Internal.Extensions.ReflectionExtensions.<G>$9DB10D0E7CAA88E7E81DFBF03450ED00.<M>$C536F1CAC83BB465E21380D95EFB9FA1
 
@@ -36820,17 +39735,116 @@ Generated directly from the current package XML documentation. Use XML member id
 - Summary: Default implementation of used during expression translation. Captures configuration chosen by the user so it can be copied onto the emitted .
 - Remarks: Extension methods that live under LinqToDB set provider-specific state by casting to and calling its members.
 
+## LinqToDB.Internal.Linq.Builder.EagerLoadFallbackReason
+
+- XML member: `T:LinqToDB.Internal.Linq.Builder.EagerLoadFallbackReason`
+- Kind: Type
+- Summary: Reason a strategy attempt failed and the dispatcher fell back to the next strategy in the CteUnion → KeyedQuery → Default chain. Set by strategy entry points (ProcessCteUnionBatch / ProcessEagerLoadingKeyedQuery) before returning . Diagnostic-only — the dispatcher does not branch on this value.
+
+## LinqToDB.Internal.Linq.Builder.EntityBuilderConfig
+
+- XML member: `T:LinqToDB.Internal.Linq.Builder.EntityBuilderConfig`
+- Kind: Type
+- Summary: Parsed state of a single entity-builder configure-chain — the body of an Expression<Func<I*Builder<T>, I*Builder<T>>> for any of: standalone Insert (), standalone Update (), Upsert INSERT branch (), Upsert UPDATE branch ().
+- Remarks: and are populated only by Upsert-branch chains — the standalone / don't expose those methods, so the parser leaves them at their defaults.
+
+## LinqToDB.Internal.Linq.Builder.EntityBuilderParser
+
+- XML member: `T:LinqToDB.Internal.Linq.Builder.EntityBuilderParser`
+- Kind: Type
+- Summary: Walks an entity-builder configure-lambda body and populates an . Dispatch is by method-name string so the parser handles every variant of I*Builder<T> uniformly.
+
+## LinqToDB.Internal.Linq.Builder.EntityInsertBuilder
+
+- XML member: `T:LinqToDB.Internal.Linq.Builder.EntityInsertBuilder`
+- Kind: Type
+- Summary: Translates the entity-builder Insert overload Insert<T>(this ITable<T>, T item, Expression<Func<IEntityInsertSpec<T>, IEntityInsertSpec<T>>> configure) into the existing Insert<T>(this ITable<T>, Expression<Func<T>>) shape, then defers to for the actual SQL generation.
+- Remarks: Only the sync method name is registered — the async entry point on embeds the sync method-info into the captured expression tree and dispatches via ExecuteAsync, mirroring the rest of LinqToDB.
+
+## LinqToDB.Internal.Linq.Builder.EntitySetterBuilder
+
+- XML member: `T:LinqToDB.Internal.Linq.Builder.EntitySetterBuilder`
+- Kind: Type
+- Summary: Builds s => new T { ... } / (t, s) => new T { ... } setter lambdas from an 's columns plus user Set / Ignore overlays. Lookups (, ) and the user-lambda parameter substitution helper () are exposed so callers building their own setter shapes (e.g. UpsertBuilder's native ON-CONFLICT envelope path) can reuse them.
+
+## LinqToDB.Internal.Linq.Builder.EntityUpdateBuilder
+
+- XML member: `T:LinqToDB.Internal.Linq.Builder.EntityUpdateBuilder`
+- Kind: Type
+- Summary: Translates the entity-builder Update overload Update<T>(this ITable<T>, T item, Expression<Func<IEntityUpdateSpec<T>, IEntityUpdateSpec<T>>> configure) into the existing Update<T>(this IQueryable<T>, Expression<Func<T, bool>>, Expression<Func<T, T>>) shape with a PK-match predicate. handles the resulting call.
+- Remarks: Only the sync method name is registered — the async entry point on embeds the sync method-info into the captured expression tree and dispatches via ExecuteAsync, mirroring the rest of LinqToDB.
+
 ## LinqToDB.Internal.Linq.Builder.EnumerableParameterizationConfig
 
 - XML member: `T:LinqToDB.Internal.Linq.Builder.EnumerableParameterizationConfig`
 - Kind: Type
 - Summary: Per-column parameter/inline rendering selector for .
 
+## LinqToDB.Internal.Linq.Builder.ExpressionBuilder.BranchInfo
+
+- XML member: `T:LinqToDB.Internal.Linq.Builder.ExpressionBuilder.BranchInfo`
+- Kind: Type
+- Summary: Pass 1 branch metadata collected before root CTE creation.
+
+## LinqToDB.Internal.Linq.Builder.ExpressionBuilder.BufferReconstructionVisitor
+
+- XML member: `T:LinqToDB.Internal.Linq.Builder.ExpressionBuilder.BufferReconstructionVisitor`
+- Kind: Type
+- Summary: Visitor that transforms a finalized mapper expression into a reconstruction expression by replacing SqlPlaceholderExpressions with buffer field access and handling all other custom expression types (SqlAdjustType, SqlReaderIsNull, SqlGenericConstructor, etc.).
+
+## LinqToDB.Internal.Linq.Builder.ExpressionBuilder.CteUnionBranch
+
+- XML member: `T:LinqToDB.Internal.Linq.Builder.ExpressionBuilder.CteUnionBranch`
+- Kind: Type
+- Summary: Pass 2 branch with pre-built CTE and virtual fields.
+
+## LinqToDB.Internal.Linq.Builder.ExpressionBuilder.CteUnionPlaceholderPreamble
+
+- XML member: `T:LinqToDB.Internal.Linq.Builder.ExpressionBuilder.CteUnionPlaceholderPreamble`
+- Kind: Type
+- Summary: Placeholder preamble that reserves a slot. Phase 2 fills it at runtime.
+
+## LinqToDB.Internal.Linq.Builder.ExpressionBuilder.EagerLoadState
+
+- XML member: `T:LinqToDB.Internal.Linq.Builder.ExpressionBuilder.EagerLoadState`
+- Kind: Type
+- Summary: Scoped state for a single eager-loading strategy attempt. A fresh instance is created at the top of each iteration of the strategy-fallback loop in , and on success it is committed to . On failure the instance is discarded — no rollback plumbing required, because nothing outside of CompleteEagerLoadingExpressions can observe it until commit.
+
+## LinqToDB.Internal.Linq.Builder.ExpressionBuilder.IKeyedQueryKeysPreamble
+
+- XML member: `T:LinqToDB.Internal.Linq.Builder.ExpressionBuilder.IKeyedQueryKeysPreamble`
+- Kind: Type
+- Summary: Marker interface for KeyedQueryKeysPreamble, used during buffer setup.
+
+## LinqToDB.Internal.Linq.Builder.ExpressionBuilder.KeyedQueryKeysHolder<T>
+
+- XML member: `T:LinqToDB.Internal.Linq.Builder.ExpressionBuilder.KeyedQueryKeysHolder`1`
+- Kind: Type
+- Summary: Per-execution store for KeyedQuery local key collections, keyed by the container created fresh for each top-level query execution and threaded uniformly through every nested preamble / child / buffer query. This isolates concurrent executions of the same cached query — each writes and reads its own key set under its own container — so callers sharing the cached query cannot clobber each other's keys.
+
+## LinqToDB.Internal.Linq.Builder.ExpressionBuilder.NestedPreambleLookupExpression
+
+- XML member: `T:LinqToDB.Internal.Linq.Builder.ExpressionBuilder.NestedPreambleLookupExpression`
+- Kind: Type
+- Summary: Marker expression used in parent branch detail expressions to represent a nested PreambleResult lookup. Resolved during detail extractor compilation by replacing with the actual childResults array access.
+
 ## LinqToDB.Internal.Linq.Builder.IAnnotatableBuilderInternal
 
 - XML member: `T:LinqToDB.Internal.Linq.Builder.IAnnotatableBuilderInternal`
 - Kind: Type
 - Summary: Internal extension surface for fluent builders that carry an annotation bag. Provider-specific extension methods under reach the annotations through this interface instead of downcasting to the concrete builder implementation, keeping third-party extension authoring symmetric with in-box extensions.
+
+## LinqToDB.Internal.Linq.Builder.ImplicitEagerLoadGuardVisitor
+
+- XML member: `T:LinqToDB.Internal.Linq.Builder.ImplicitEagerLoadGuardVisitor`
+- Kind: Type
+- Summary: Read-only validation pass for the ImplicitCollectionLoading option. Throws when a is reached that is not inside a marker subtree — i.e. an implicit collection projection rather than an explicit LoadWith/ThenLoad load. Everything within a marker is treated as explicit, including a collection nested in a LoadWith/ThenLoad load-function's complex select (the user wrote that projection deliberately).
+
+## LinqToDB.Internal.Linq.Builder.UpsertBuilder
+
+- XML member: `T:LinqToDB.Internal.Linq.Builder.UpsertBuilder`
+- Kind: Type
+- Summary: Translates Upsert / UpsertAsync calls (issue #2558) into either (native ON CONFLICT / UPDATE-INSERT path) or a synthesised Merge expression tree that lowers to . Path selection is driven by the parsed : Bulk source (IEnumerable<T> / IQueryable<T>) → MERGE..SkipInsert(), .Insert(i => i.DoNothing()), .Insert(i => i.When(…)) → MERGE..Match not equal to the target primary key → MERGE.everything else → native .
 
 ## LinqToDB.Internal.Linq.ColumnReaderAttribute
 
@@ -36858,6 +39872,13 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Type
 - Summary: LINQ query object represented by a LINQ expression tree and executed by a LinqToDB query provider.
 - Remarks: is a composable query description: it implements / and carries the LINQ that represents the current query. Deferred execution: building/composing the query does not execute it. Translation and execution happen only when the query is enumerated or explicitly materialized (sync or async) by the underlying provider. Execution boundary: the associated provider translates the expression tree into an internal SQL AST, then generates provider-specific SQL text, executes it, and materializes results. Async support: enables asynchronous execution paths for the same query.
+
+## LinqToDB.Internal.Linq.QueryCache
+
+- XML member: `T:LinqToDB.Internal.Linq.QueryCache`
+- Kind: Type
+- Summary: Global LINQ query cache. Buckets queries by a shallow composite key, then verifies candidates inside each bucket via .
+- Remarks: Lookup is O(1) at the bucket-map level. Inside each bucket, candidates are still verified with the original equality check. Expiration: - Each entry stores its own base timeout, captured from the context that created it. - Each entry stores an explicit expiration deadline. - Cache hits extend the deadline using the current hotness tier. - Sweeps update hit-rate estimates, extend deadlines when an entry has earned a hotter tier, remove expired entries, and optionally trim the cache to a global capacity. - Sweeps never shorten an already-earned deadline. Capacity: - Each bucket is capped by . - Full buckets evict the entry with the earliest expiration deadline, then oldest access time, then lowest hit rate. - The whole cache is also approximately capped by , overridable through . Threading: - owns the bucket map. - Each bucket has its own lock for copy-on-write updates. - is published with volatile semantics. - The global sweep is single-flighted and runs on the thread pool.
 
 ## LinqToDB.Internal.Mapping.DynamicColumnInfo
 
@@ -36938,6 +39959,12 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `T:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.ConcatBuildStyle`
 - Kind: Type
 - Summary: Built-in strategies for emitting a . Providers select one via ; is overridden only when none of the three fits.
+
+## LinqToDB.Internal.SqlProvider.BasicSqlBuilder.WindowNullsPlacement
+
+- XML member: `T:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.WindowNullsPlacement`
+- Kind: Type
+- Summary: How the IGNORE NULLS modifier of a value/offset window function is emitted relative to the argument list.
 
 ## LinqToDB.Internal.SqlProvider.RowFeature
 
@@ -37023,11 +40050,29 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Type
 - Summary: SQL AST node types.
 
+## LinqToDB.Internal.SqlQuery.SqlCteField
+
+- XML member: `T:LinqToDB.Internal.SqlQuery.SqlCteField`
+- Kind: Type
+- Summary: Column definition inside a (stored in ). Represents CTE schema, not a table-bound field reference — runtime references to a CTE's columns go through instead.
+
+## LinqToDB.Internal.SqlQuery.SqlCteTableField
+
+- XML member: `T:LinqToDB.Internal.SqlQuery.SqlCteTableField`
+- Kind: Type
+- Summary: Field in . Delegates Name, Type, CanBeNullable to the referenced .
+
 ## LinqToDB.Internal.SqlQuery.SqlExtensions
 
 - XML member: `T:LinqToDB.Internal.SqlQuery.SqlExtensions`
 - Kind: Type
 - Summary: This is internal API and is not intended for use by Linq To DB applications. It may change or be removed without further notice.
+
+## LinqToDB.Internal.SqlQuery.SqlFieldBase
+
+- XML member: `T:LinqToDB.Internal.SqlQuery.SqlFieldBase`
+- Kind: Type
+- Summary: Abstract base class for table-bound SQL field references: and . Contains common properties shared by field references that are resolved against an .
 
 ## LinqToDB.Internal.SqlQuery.SqlFragment
 
@@ -37051,7 +40096,7 @@ Generated directly from the current package XML documentation. Use XML member id
 
 - XML member: `T:LinqToDB.Internal.SqlQuery.Visitors.SqlNullsOrderingLoweringVisitor`
 - Kind: Type
-- Summary: Lowers on regular ORDER BY items into an explicit CASE WHEN <expr> IS NULL THEN … END sort key for providers that lack native NULLS FIRST / NULLS LAST support. Run before the query optimizer so the emulation key is an ordinary derived order expression and the existing DISTINCT / set-operation / sub-query handling (column promotion, sub-query wrapping) treats it correctly. Window OVER(ORDER BY …) ordering is emulated separately at SQL-build time (it has no select-list constraint), so it is intentionally not touched here.
+- Summary: Lowers on regular ORDER BY items into an explicit CASE WHEN <expr> IS NULL THEN … END sort key for providers that lack native NULLS FIRST / NULLS LAST support. Run before the query optimizer so the emulation key is an ordinary derived order expression and the existing DISTINCT / set-operation / sub-query handling (column promotion, sub-query wrapping) treats it correctly. Window OVER (ORDER BY …) ordering is emulated separately at SQL-build time (it has no select-list constraint), so it is intentionally not touched here.
 
 ## LinqToDB.Internal.SqlQuery.Visitors.SqlQueryColumnOptimizerVisitor
 
@@ -37112,6 +40157,42 @@ Generated directly from the current package XML documentation. Use XML member id
 - Type parameters:
   - `T`: Element type of the source enumerable.
 
+## LinqToDB.Linq.IEntityInsertSpec<T>
+
+- XML member: `T:LinqToDB.Linq.IEntityInsertSpec`1`
+- Kind: Type
+- Summary: Fluent configuration builder for a standalone entity INSERT (table.Insert(item, b => b.Set(…).Ignore(…))). Carries only Set / Ignore; the Upsert-only chain methods When / DoNothing live on and are unreachable from this builder by design.
+- Type parameters:
+  - `TTarget`: Target table record type.
+
+## LinqToDB.Linq.IEntityInsertSpec<T1,T2>
+
+- XML member: `T:LinqToDB.Linq.IEntityInsertSpec`2`
+- Kind: Type
+- Summary: F-bounded base for entity-INSERT-builder fluent chains. Declares the chain methods that are common to standalone Insert () and the Upsert INSERT branch (); each leaf interface substitutes itself as so chain methods return the correct concrete builder type.
+- Remarks: This interface is used only as the receiver type of an expression tree captured by linq2db. The configure expression is parsed by linq2db and is not invoked; implementing this interface is not a supported extension point.
+- Type parameters:
+  - `TTarget`: Target table record type.
+  - `TBuilder`: Concrete leaf builder type (F-bound: must derive from this interface with itself substituted).
+
+## LinqToDB.Linq.IEntityUpdateSpec<T>
+
+- XML member: `T:LinqToDB.Linq.IEntityUpdateSpec`1`
+- Kind: Type
+- Summary: Fluent configuration builder for a standalone entity UPDATE (table.Update(item, b => b.Set(…).Ignore(…))). Carries only Set / Ignore; the Upsert-only chain methods When / DoNothing live on and are unreachable from this builder by design.
+- Type parameters:
+  - `TTarget`: Target table record type.
+
+## LinqToDB.Linq.IEntityUpdateSpec<T1,T2>
+
+- XML member: `T:LinqToDB.Linq.IEntityUpdateSpec`2`
+- Kind: Type
+- Summary: F-bounded base for entity-UPDATE-builder fluent chains. Declares the chain methods that are common to standalone Update () and the Upsert UPDATE branch (); each leaf interface substitutes itself as so chain methods return the correct concrete builder type.
+- Remarks: This interface is used only as the receiver type of an expression tree captured by linq2db. The configure expression is parsed by linq2db and is not invoked; implementing this interface is not a supported extension point.
+- Type parameters:
+  - `TTarget`: Target table record type.
+  - `TBuilder`: Concrete leaf builder type (F-bound: must derive from this interface with itself substituted).
+
 ## LinqToDB.Linq.IMergeable<T1,T2>
 
 - XML member: `T:LinqToDB.Linq.IMergeable`2`
@@ -37147,6 +40228,33 @@ Generated directly from the current package XML documentation. Use XML member id
 - Type parameters:
   - `TTarget`: Target record type.
 
+## LinqToDB.Linq.IUpsertInsertSpec<T>
+
+- XML member: `T:LinqToDB.Linq.IUpsertInsertSpec`1`
+- Kind: Type
+- Summary: Fluent configuration builder for the INSERT branch of an Upsert operation. Inherits Set / Ignore from (with itself substituted as TBuilder, so chain methods return ) and adds the Upsert-only chain methods / , which have no SQL meaning outside MERGE / ON CONFLICT.
+- Remarks: This interface is used only as the receiver type of an expression tree captured by linq2db. The configure expression is parsed by linq2db and is not invoked; implementing this interface is not a supported extension point.
+- Type parameters:
+  - `TTarget`: Target table record type.
+
+## LinqToDB.Linq.IUpsertSpec<T>
+
+- XML member: `T:LinqToDB.Linq.IUpsertSpec`1`
+- Kind: Type
+- Summary: Fluent configuration builder for an Upsert (insert-or-update) operation. Returned to the caller of an Upsert extension method through a configuration lambda.
+- Remarks: This interface is used only as the receiver type of an expression tree captured by linq2db. The configure expression is parsed by linq2db and is not invoked; implementing this interface is not a supported extension point.
+- Type parameters:
+  - `TTarget`: Target table record type.
+
+## LinqToDB.Linq.IUpsertUpdateSpec<T>
+
+- XML member: `T:LinqToDB.Linq.IUpsertUpdateSpec`1`
+- Kind: Type
+- Summary: Fluent configuration builder for the UPDATE branch of an Upsert operation. Inherits Set (3 overloads) / Ignore from (with itself substituted as TBuilder, so chain methods return ) and adds the Upsert-only chain methods / , which have no SQL meaning outside MERGE / ON CONFLICT.
+- Remarks: This interface is used only as the receiver type of an expression tree captured by linq2db. The configure expression is parsed by linq2db and is not invoked; implementing this interface is not a supported extension point.
+- Type parameters:
+  - `TTarget`: Target table record type.
+
 ## LinqToDB.Linq.LinqException
 
 - XML member: `T:LinqToDB.Linq.LinqException`
@@ -37172,12 +40280,18 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Type
 - Summary: Fluent builder to configure aggregate/"plain" aggregation translation using existing BuildAggregationFunction pipeline.
 
+## LinqToDB.Linq.Translation.TranslationProviderFlags
+
+- XML member: `T:LinqToDB.Linq.Translation.TranslationProviderFlags`
+- Kind: Type
+- Summary: Read-only, translation-relevant subset of the provider's SqlProviderFlags, exposed to member translators via . Only the flags member translators need are surfaced here, rather than the whole SqlProviderFlags.
+
 ## LinqToDB.LinqExtensions
 
 - XML member: `T:LinqToDB.LinqExtensions`
 - Kind: Type
 - Summary: LINQ extension methods that define LinqToDB query translation directives, SQL semantics, and command execution APIs.
-- Remarks: AI/LLM agents using this NuGet package should first read package-local skills/linq2db/SKILL.md, README.md, and skills/linq2db/docs/api.md; use skills/linq2db/docs/*.md for task-specific guidance before proposing code. is the primary extension surface for LinqToDB queryables (for example, and ). API groups:Query translation directives: methods that annotate a query or its nodes to influence SQL semantics without forcing immediate execution. These directives are represented in the SQL AST and emitted into SQL text according to provider rules. Navigation loading directives (LoadWith): methods that control association loading and join graph construction (for example, eager loading via navigation paths). These directives affect SQL semantics but do not trigger execution. Data modification APIs (DML): methods that translate to INSERT, UPDATE, or DELETE statements and execute immediately or on enumeration depending on the specific API. Merge APIs: methods that define conditional data modification semantics (INSERT/UPDATE/DELETE branches) represented as a single SQL MERGE statement when supported by the provider. Query and table hints: methods that attach provider-specific hints to queries or tables (for example, WITH (NOLOCK), index hints, join hints). Hint syntax and applicability are provider-defined. Table configuration directives: methods that assign per-query table identifiers or other configuration that influences how a table source is represented in SQL text. Table and query helpers: methods that build or adapt / instances, or provide utility operations used by the translation and DML APIs. Provider contract: availability, supported syntax, and exact SQL semantics are defined by the configured provider. When an API is not supported, behavior is provider-defined.
+- Remarks: is the primary extension surface for LinqToDB queryables (for example, and ). API groups:Query translation directives: methods that annotate a query or its nodes to influence SQL semantics without forcing immediate execution. These directives are represented in the SQL AST and emitted into SQL text according to provider rules. Navigation loading directives (LoadWith): methods that control association loading and join graph construction (for example, eager loading via navigation paths). These directives affect SQL semantics but do not trigger execution. Data modification APIs (DML): methods that translate to INSERT, UPDATE, or DELETE statements and execute immediately or on enumeration depending on the specific API. Merge APIs: methods that define conditional data modification semantics (INSERT/UPDATE/DELETE branches) represented as a single SQL MERGE statement when supported by the provider. Query and table hints: methods that attach provider-specific hints to queries or tables (for example, WITH (NOLOCK), index hints, join hints). Hint syntax and applicability are provider-defined. Table configuration directives: methods that assign per-query table identifiers or other configuration that influences how a table source is represented in SQL text. Table and query helpers: methods that build or adapt / instances, or provide utility operations used by the translation and DML APIs. Provider contract: availability, supported syntax, and exact SQL semantics are defined by the configured provider. When an API is not supported, behavior is provider-defined.
 - AI metadata: Groups=QueryDirectives,NavigationLoading,DML,Merge,Hints,Configuration,Helpers; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.LinqOptions
@@ -37200,6 +40314,11 @@ Generated directly from the current package XML documentation. Use XML member id
   - `ParameterizeTakeSkip`: Enables Take/Skip parameterization. Default value: .
   - `EnableContextSchemaEdit`: If , user could add new mappings to context mapping schemas (). Otherwise, will be generated on locked mapping schema edit attempt. It is not recommended to enable this option as it has performance implications. Proper approach is to create single instance once, configure mappings for it and use this instance for all context instances. Default value: .
   - `PreferExistsForScalar`: If , EXISTS operator will be generated instead of IN operator for scalar values. SELECT Value FROM MyEntity e WHERE EXISTS(SELECT * FROM MyEntity2 e2 WHERE e2.Value = e.Value) vs SELECT Value FROM MyEntity e WHERE Value IN (SELECT Value FROM MyEntity2 e2) Default value: .
+  - `PreferClientCalculation`: When enabled, computed expressions in the final projection (arithmetic, conditionals, unary operations, and mapped members/methods that do not prefer server-side evaluation) are calculated on the client during materialization instead of being translated into additional SQL columns. Real database columns, already-built subqueries, and expressions that prefer or require server-side evaluation (for example, members or methods mapped with or ) are still translated to SQL. Default value: .
+  - `UpsertEmulationPolicy`: Controls what happens when an Upsert cannot be expressed as a native single-statement upsert or MERGE for the target provider and would fall back to an emulated multi-statement SELECT → UPDATE → INSERT sequence (the three statements run as independent commands — wrap the call in a transaction if atomicity is required). (default) — perform the emulated fallback. — reject it with at build time.
+  - `DefaultEagerLoadingStrategy`: Specifies the default used for all LoadWith/ThenLoad eager-loading operations when no per-query strategy is set via WithUnionLoadStrategy, WithKeyedLoadStrategy, or WithSeparateLoadStrategy. Default value: .
+  - `ImplicitCollectionLoading`: With , a query that triggers an implicit eager load — a collection projected in a Select without being explicitly requested — throws at build time; with (the default) it is loaded as usual. The guard is bypassed when the eager load is explicit: LoadWith/ThenLoad allows that one collection (other unmarked collections in the same query still throw), while a root WithUnionLoadStrategy/WithKeyedLoadStrategy/WithSeparateLoadStrategy marker opts the whole query in.
+  - `OptimizeForSequentialAccess`: Enables mapping expression to be compatible with behavior. Note that it doesn't switch linq2db to use behavior for queries, so this optimization could be used for too. Default value: .
 
 ## LinqToDB.LinqToDBException
 
@@ -37290,6 +40409,12 @@ Generated directly from the current package XML documentation. Use XML member id
 - Type parameters:
   - `TEntity`: Entity mapping type.
 
+## LinqToDB.Mapping.EntityQueryFilter
+
+- XML member: `T:LinqToDB.Mapping.EntityQueryFilter`
+- Kind: Type
+- Summary: Describes a single named query filter declared on an entity via one of the overloads (or the keyless equivalents that target the default slot).
+
 ## LinqToDB.Mapping.FluentMappingBuilder
 
 - XML member: `T:LinqToDB.Mapping.FluentMappingBuilder`
@@ -37350,7 +40475,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `T:LinqToDB.Mapping.MappingSchema`
 - Kind: Type
 - Summary: Mapping schema.
-- Remarks: AI/LLM agents using this NuGet package should first read package-local skills/linq2db/SKILL.md, README.md, and skills/linq2db/docs/api.md; use skills/linq2db/docs/*.md for task-specific guidance before proposing code. holds all mapping metadata for a set of types: table names, column names, primary keys, type conversions, value transformations, and custom method-to-SQL mappings. It is the central configuration object for query translation behavior. Lifetime and reuse — performance critical: maintains internal expression compilation caches. Creating a new instance per connection or per request bypasses these caches and causes cumulative performance degradation over time. Configure once at application startup and reuse the same instance for the lifetime of the application. Pass it via when constructing or instances. Anti-pattern — do not do this: // WRONG: creates a new schema on every request — bypasses caches, causes perf degradation using var db = new DataConnection(new DataOptions() .UseSqlServer(connectionString) .UseMappingSchema(new MappingSchema())); Correct pattern: // Configure once at startup static readonly MappingSchema _schema = new MappingSchema(); static readonly DataOptions _options = new DataOptions() .UseSqlServer(connectionString) .UseMappingSchema(_schema); // Reuse per operation using var db = new DataConnection(_options);
+- Remarks: holds all mapping metadata for a set of types: table names, column names, primary keys, type conversions, value transformations, and custom method-to-SQL mappings. It is the central configuration object for query translation behavior. Lifetime and reuse — performance critical: maintains internal expression compilation caches. Creating a new instance per connection or per request bypasses these caches and causes cumulative performance degradation over time. Configure once at application startup and reuse the same instance for the lifetime of the application. Pass it via when constructing or instances. Anti-pattern — do not do this: // WRONG: creates a new schema on every request — bypasses caches, causes perf degradation using var db = new DataConnection(new DataOptions() .UseSqlServer(connectionString) .UseMappingSchema(new MappingSchema())); Correct pattern: // Configure once at startup static readonly MappingSchema _schema = new MappingSchema(); static readonly DataOptions _options = new DataOptions() .UseSqlServer(connectionString) .UseMappingSchema(_schema); // Reuse per operation using var db = new DataConnection(_options);
 
 ## LinqToDB.Mapping.MapValue
 
@@ -37413,7 +40538,7 @@ Generated directly from the current package XML documentation. Use XML member id
 
 - XML member: `T:LinqToDB.Mapping.QueryFilterAttribute`
 - Kind: Type
-- Summary: Contains reference to filter function defined by
+- Summary: Contains reference to filter function defined by or one of its keyed overloads. Multiple instances of this attribute may be applied to the same entity to declare several named filters; at query time the filters are AND-combined unless suppressed by or its keyed counterparts.
 
 ## LinqToDB.Mapping.ResultSetIndexAttribute
 
@@ -37630,7 +40755,6 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `T:LinqToDB.Sql`
 - Kind: Type
 - Summary: SQL helper methods and attributes used by LinqToDB query translation.
-- Remarks: AI/LLM agents using this NuGet package should first read package-local skills/linq2db/SKILL.md, README.md, and skills/linq2db/docs/api.md; use skills/linq2db/docs/*.md for task-specific guidance before proposing code.
 
 ## LinqToDB.Sql.ExpressionAttribute
 
@@ -37766,3 +40890,274 @@ Generated directly from the current package XML documentation. Use XML member id
   - `entity`: Entity instance.
   - `column`: Descriptor of column.
 - Returns: , if column should be included in operation and otherwise.
+
+## LinqToDB.UpsertEmulationPolicy
+
+- XML member: `T:LinqToDB.UpsertEmulationPolicy`
+- Kind: Type
+- Summary: Controls what happens when an Upsert cannot be expressed as a native single-statement upsert or MERGE for the target provider and would fall back to an emulated multi-statement SELECT → UPDATE → INSERT sequence. See .
+
+## LinqToDB.WindowFunctionBuilder
+
+- XML member: `T:LinqToDB.WindowFunctionBuilder`
+- Kind: Type
+- Summary: Provides SQL window function support via a fluent lambda-based API accessed through .
+- Remarks: Not all window functions and clauses are supported by every database provider. An exception with a descriptive message will be thrown at query translation time if the current provider does not support the requested function or clause.The FILTER (WHERE ...) clause is natively supported by PostgreSQL and DuckDB. For other providers, it is automatically emulated using CASE WHEN.NULLS FIRST / NULLS LAST ordering is natively supported by PostgreSQL, Oracle, and Firebird 3+. For other providers, it is automatically emulated.
+
+## LinqToDB.WindowFunctionBuilder.IAggregateFinal
+
+- XML member: `T:LinqToDB.WindowFunctionBuilder.IAggregateFinal`
+- Kind: Type
+- Summary: Builder for aggregate window functions with an argument: COUNT(expr), SUM, AVG, MIN, MAX. Chain: [.Distinct()][.Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...], or .UseWindow(...).Optional DISTINCT aggregate modifier, then the standard aggregate clauses (single-shot Distinct). UseWindow applies a reusable window definition (from DefineWindow) and is an alternative to the inline clauses, not combined with them.
+
+## LinqToDB.WindowFunctionBuilder.IBivariateAggregateFinal
+
+- XML member: `T:LinqToDB.WindowFunctionBuilder.IBivariateAggregateFinal`
+- Kind: Type
+- Summary: Builder for two-argument statistical window aggregates: COVAR_POP/COVAR_SAMP, CORR, REGR_*. Chain: [Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...], or .UseWindow(...).Supports FILTER, frame specification, and UseWindow. Does NOT support DISTINCT or KEEP — neither is valid on two-argument aggregates.
+
+## LinqToDB.WindowFunctionBuilder.IBoundaryPart<T>
+
+- XML member: `T:LinqToDB.WindowFunctionBuilder.IBoundaryPart`1`
+- Kind: Type
+- Summary: Provides frame boundary options: UNBOUNDED, CURRENT ROW, or a directed value offset.
+
+## LinqToDB.WindowFunctionBuilder.IDefinedFunction
+
+- XML member: `T:LinqToDB.WindowFunctionBuilder.IDefinedFunction`
+- Kind: Type
+- Summary: Marker interface indicating the window function definition is complete and can be returned from the builder lambda.
+
+## LinqToDB.WindowFunctionBuilder.IDefinedFunction<T>
+
+- XML member: `T:LinqToDB.WindowFunctionBuilder.IDefinedFunction`1`
+- Kind: Type
+- Summary: Marker interface indicating the window function definition is complete and can be returned from the builder lambda.
+
+## LinqToDB.WindowFunctionBuilder.IDefinedRangeFrameFunction
+
+- XML member: `T:LinqToDB.WindowFunctionBuilder.IDefinedRangeFrameFunction`
+- Kind: Type
+- Summary: Provides optional frame exclusion after the frame boundary specification.
+
+## LinqToDB.WindowFunctionBuilder.IDefinedWindow
+
+- XML member: `T:LinqToDB.WindowFunctionBuilder.IDefinedWindow`
+- Kind: Type
+- Summary: A reusable window definition created by . Pass to UseWindow() to reference it.
+
+## LinqToDB.WindowFunctionBuilder.IDistinctPart<T>
+
+- XML member: `T:LinqToDB.WindowFunctionBuilder.IDistinctPart`1`
+- Kind: Type
+- Summary: Provides the DISTINCT aggregate modifier for aggregate window functions (COUNT(expr)/SUM/AVG/MIN/MAX).
+
+## LinqToDB.WindowFunctionBuilder.IFilterPart<T>
+
+- XML member: `T:LinqToDB.WindowFunctionBuilder.IFilterPart`1`
+- Kind: Type
+- Summary: Provides the FILTER (WHERE ...) clause for aggregate window functions.
+
+## LinqToDB.WindowFunctionBuilder.IFramePartFunction
+
+- XML member: `T:LinqToDB.WindowFunctionBuilder.IFramePartFunction`
+- Kind: Type
+- Summary: Provides frame type selection: ROWS, RANGE, or GROUPS with BETWEEN syntax.
+
+## LinqToDB.WindowFunctionBuilder.IFromPart<T>
+
+- XML member: `T:LinqToDB.WindowFunctionBuilder.IFromPart`1`
+- Kind: Type
+- Summary: Provides the FROM FIRST / FROM LAST modifier for NTH_VALUE.
+
+## LinqToDB.WindowFunctionBuilder.IKeepOrderByRequired
+
+- XML member: `T:LinqToDB.WindowFunctionBuilder.IKeepOrderByRequired`
+- Kind: Type
+- Summary: Builder state after KeepFirst/KeepLast — requires mandatory ORDER BY. Chain: .OrderBy(...)[.ThenBy(...)][.PartitionBy(...)]
+
+## LinqToDB.WindowFunctionBuilder.IKeepPart<T>
+
+- XML member: `T:LinqToDB.WindowFunctionBuilder.IKeepPart`1`
+- Kind: Type
+- Summary: Provides KEEP (DENSE_RANK FIRST/LAST) clause for aggregate window functions. Oracle-specific.
+
+## LinqToDB.WindowFunctionBuilder.IKeepThenByOrPartitionFinal
+
+- XML member: `T:LinqToDB.WindowFunctionBuilder.IKeepThenByOrPartitionFinal`
+- Kind: Type
+- Summary: Builder state after KEEP ORDER BY — allows ThenBy, optional PartitionBy, or completes.
+
+## LinqToDB.WindowFunctionBuilder.ILeadLagFinal
+
+- XML member: `T:LinqToDB.WindowFunctionBuilder.ILeadLagFinal`
+- Kind: Type
+- Summary: Builder for offset window functions: LEAD, LAG. Chain: [.IgnoreNulls()|.RespectNulls()] [UseWindow(wnd)] | [PartitionBy(...)].OrderBy(...)[.ThenBy(...)]Optional null treatment, then mandatory ORDER BY (via the inherited chain).
+
+## LinqToDB.WindowFunctionBuilder.IMultipleOrderByPart
+
+- XML member: `T:LinqToDB.WindowFunctionBuilder.IMultipleOrderByPart`
+- Kind: Type
+- Summary: Provides ORDER BY for ordered-set aggregate functions (e.g. PERCENTILE_DISC) that allow multiple ordering columns.
+
+## LinqToDB.WindowFunctionBuilder.IMultipleThenByPart<T>
+
+- XML member: `T:LinqToDB.WindowFunctionBuilder.IMultipleThenByPart`1`
+- Kind: Type
+- Summary: Provides additional ORDER BY columns after the first one in ordered-set aggregates, plus an optional FILTER (WHERE ...).
+
+## LinqToDB.WindowFunctionBuilder.INthValueFinal
+
+- XML member: `T:LinqToDB.WindowFunctionBuilder.INthValueFinal`
+- Kind: Type
+- Summary: Builder for NTH_VALUE. Optional FROM FIRST/LAST then optional IGNORE/RESPECT NULLS (in SQL order), then the window spec. Chain: [.FromFirst()|.FromLast()] [.IgnoreNulls()|.RespectNulls()] [UseWindow(wnd)] | [PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...]
+
+## LinqToDB.WindowFunctionBuilder.INthValueNullsStep
+
+- XML member: `T:LinqToDB.WindowFunctionBuilder.INthValueNullsStep`
+- Kind: Type
+- Summary: Builder state after FROM FIRST/LAST on NTH_VALUE — allows optional IGNORE/RESPECT NULLS, then the window spec.
+
+## LinqToDB.WindowFunctionBuilder.INullTreatmentPart<T>
+
+- XML member: `T:LinqToDB.WindowFunctionBuilder.INullTreatmentPart`1`
+- Kind: Type
+- Summary: Provides function-level null treatment (IGNORE NULLS / RESPECT NULLS) for value/offset window functions.
+
+## LinqToDB.WindowFunctionBuilder.IOFilterOPartitionOOrderOFrameFinal
+
+- XML member: `T:LinqToDB.WindowFunctionBuilder.IOFilterOPartitionOOrderOFrameFinal`
+- Kind: Type
+- Summary: Builder for aggregate window functions: SUM, AVG, MIN, MAX. Chain: [Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...], or .UseWindow(...).Or with KEEP: [.KeepFirst()|.KeepLast()].OrderBy(...)[.ThenBy(...)][.PartitionBy(...)]All clauses are optional. Supports FILTER, frame specification, UseWindow, and KEEP (Oracle) — UseWindow (a reusable window definition from DefineWindow) and KEEP are alternatives to the inline clauses, not combined with them.
+
+## LinqToDB.WindowFunctionBuilder.IOFrameFinal
+
+- XML member: `T:LinqToDB.WindowFunctionBuilder.IOFrameFinal`
+- Kind: Type
+- Summary: Terminal state after OrderBy in frame-capable chains: allows frame specification or completes.
+
+## LinqToDB.WindowFunctionBuilder.IOnlyOrderByPart
+
+- XML member: `T:LinqToDB.WindowFunctionBuilder.IOnlyOrderByPart`
+- Kind: Type
+- Summary: Provides ORDER BY for ordered-set aggregate functions (e.g. PERCENTILE_CONT) that require exactly one ordering column.
+
+## LinqToDB.WindowFunctionBuilder.IOPartitionFinal
+
+- XML member: `T:LinqToDB.WindowFunctionBuilder.IOPartitionFinal`
+- Kind: Type
+- Summary: State providing PartitionBy only, then completes.
+
+## LinqToDB.WindowFunctionBuilder.IOPartitionOOrderOFrameFinal
+
+- XML member: `T:LinqToDB.WindowFunctionBuilder.IOPartitionOOrderOFrameFinal`
+- Kind: Type
+- Summary: State providing PartitionBy, OrderBy, and frame specification.
+
+## LinqToDB.WindowFunctionBuilder.IOPartitionOOrderOFrameWithWindowFinal
+
+- XML member: `T:LinqToDB.WindowFunctionBuilder.IOPartitionOOrderOFrameWithWindowFinal`
+- Kind: Type
+- Summary: Builder for value window functions: FIRST_VALUE, LAST_VALUE, NTH_VALUE. Chain: [PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...], or .UseWindow(...).Supports frame specification and UseWindow (a reusable window definition from DefineWindow, an alternative to the inline clauses). Does NOT support FILTER clause.
+
+## LinqToDB.WindowFunctionBuilder.IOPartitionROrderFinal
+
+- XML member: `T:LinqToDB.WindowFunctionBuilder.IOPartitionROrderFinal`
+- Kind: Type
+- Summary: Builder for ranking functions: ROW_NUMBER, RANK, DENSE_RANK, PERCENT_RANK, CUME_DIST, NTILE, LEAD, LAG. Chain: [UseWindow(wnd)] | [PartitionBy(...)].OrderBy(...)[.ThenBy(...)]ORDER BY is mandatory. FILTER and frame clauses are not available.
+
+## LinqToDB.WindowFunctionBuilder.IOrderByPart<T>
+
+- XML member: `T:LinqToDB.WindowFunctionBuilder.IOrderByPart`1`
+- Kind: Type
+- Summary: Provides ORDER BY for the window function.
+
+## LinqToDB.WindowFunctionBuilder.IOrderedSetFilter<T>
+
+- XML member: `T:LinqToDB.WindowFunctionBuilder.IOrderedSetFilter`1`
+- Kind: Type
+- Summary: Terminal for ordered-set aggregates (PERCENTILE_CONT/DISC): optionally adds FILTER (WHERE ...) or completes the definition.
+
+## LinqToDB.WindowFunctionBuilder.IOrderedSetWindowMultiOrder
+
+- XML member: `T:LinqToDB.WindowFunctionBuilder.IOrderedSetWindowMultiOrder`
+- Kind: Type
+- Summary: Within-group ORDER BY for a windowed multi-key ordered-set aggregate (Sql.Window.PercentileDisc): the first sort key, then ThenBy/ThenByDesc, then an optional OVER (PARTITION BY ...).
+
+## LinqToDB.WindowFunctionBuilder.IOrderedSetWindowPartition<T>
+
+- XML member: `T:LinqToDB.WindowFunctionBuilder.IOrderedSetWindowPartition`1`
+- Kind: Type
+- Summary: Optional OVER (PARTITION BY ...) for a windowed single-key ordered-set aggregate, then completes.
+
+## LinqToDB.WindowFunctionBuilder.IOrderedSetWindowSingleOrder
+
+- XML member: `T:LinqToDB.WindowFunctionBuilder.IOrderedSetWindowSingleOrder`
+- Kind: Type
+- Summary: Within-group ORDER BY for a windowed single-key ordered-set aggregate (Sql.Window.PercentileCont): the sort key, then an optional OVER (PARTITION BY ...).
+
+## LinqToDB.WindowFunctionBuilder.IOrderedSetWindowThenBy<T>
+
+- XML member: `T:LinqToDB.WindowFunctionBuilder.IOrderedSetWindowThenBy`1`
+- Kind: Type
+- Summary: Additional WITHIN GROUP ORDER BY columns for a windowed ordered-set aggregate, plus an optional OVER (PARTITION BY ...).
+
+## LinqToDB.WindowFunctionBuilder.IOrderOFrameFinal
+
+- XML member: `T:LinqToDB.WindowFunctionBuilder.IOrderOFrameFinal`
+- Kind: Type
+- Summary: State providing OrderBy in frame-capable chains.
+
+## LinqToDB.WindowFunctionBuilder.IOThenPartOFrameFinal
+
+- XML member: `T:LinqToDB.WindowFunctionBuilder.IOThenPartOFrameFinal`
+- Kind: Type
+- Summary: State after OrderBy in frame-capable chains: allows ThenBy, frame specification, or completes.
+
+## LinqToDB.WindowFunctionBuilder.IPartitionPart<T>
+
+- XML member: `T:LinqToDB.WindowFunctionBuilder.IPartitionPart`1`
+- Kind: Type
+- Summary: Provides the PARTITION BY clause.
+
+## LinqToDB.WindowFunctionBuilder.IRangePrecedingPartFunction
+
+- XML member: `T:LinqToDB.WindowFunctionBuilder.IRangePrecedingPartFunction`
+- Kind: Type
+- Summary: Provides the AND separator between start and end frame boundaries.
+
+## LinqToDB.WindowFunctionBuilder.IROrderByPartOThenByPartFinal
+
+- XML member: `T:LinqToDB.WindowFunctionBuilder.IROrderByPartOThenByPartFinal`
+- Kind: Type
+- Summary: State requiring OrderBy, then allows ThenBy. Used after PartitionBy in ranking functions.
+
+## LinqToDB.WindowFunctionBuilder.IThenByPartFinal
+
+- XML member: `T:LinqToDB.WindowFunctionBuilder.IThenByPartFinal`
+- Kind: Type
+- Summary: Terminal state after OrderBy: allows ThenBy or completes the definition.
+
+## LinqToDB.WindowFunctionBuilder.IThenOrderPart<T>
+
+- XML member: `T:LinqToDB.WindowFunctionBuilder.IThenOrderPart`1`
+- Kind: Type
+- Summary: Provides additional ORDER BY columns via ThenBy/ThenByDesc.
+
+## LinqToDB.WindowFunctionBuilder.IUseWindow<T>
+
+- XML member: `T:LinqToDB.WindowFunctionBuilder.IUseWindow`1`
+- Kind: Type
+- Summary: Provides the ability to reference a predefined window definition.
+
+## LinqToDB.WindowFunctionBuilder.IValueFinal
+
+- XML member: `T:LinqToDB.WindowFunctionBuilder.IValueFinal`
+- Kind: Type
+- Summary: Builder for value window functions: FIRST_VALUE, LAST_VALUE. Chain: [.IgnoreNulls()|.RespectNulls()] [UseWindow(wnd)] | [PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...]
+
+## LinqToDB.WindowFunctionBuilder.IWindowBuilder
+
+- XML member: `T:LinqToDB.WindowFunctionBuilder.IWindowBuilder`
+- Kind: Type
+- Summary: Builder interface for . Allows specifying PartitionBy, OrderBy, and frame clauses.

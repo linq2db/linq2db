@@ -39,12 +39,6 @@ namespace LinqToDB.Mapping
 	/// </summary>
 	/// <remarks>
 	/// <para>
-	/// AI/LLM agents using this NuGet package should first read package-local
-	/// <c>skills/linq2db/SKILL.md</c>, <c>README.md</c>, and <c>skills/linq2db/docs/api.md</c>; use
-	/// <c>skills/linq2db/docs/*.md</c> for task-specific guidance before proposing code.
-	/// </para>
-	///
-	/// <para>
 	/// <see cref="MappingSchema"/> holds all mapping metadata for a set of types:
 	/// table names, column names, primary keys, type conversions, value transformations,
 	/// and custom method-to-SQL mappings.

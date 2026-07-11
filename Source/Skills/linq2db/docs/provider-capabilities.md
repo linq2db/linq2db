@@ -30,9 +30,10 @@ See [Notes](#notes) section below for exceptions where the flag is true but the 
 | Access | `ProviderName.Access` | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | ClickHouse | `ProviderName.ClickHouse` | ❌ | ✅ | ✅ | ❌ | ❌ | ⚠️ limited | ✅ native |
 | DB2 | `ProviderName.DB2` | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ⚠️ opt-in |
+| DuckDB | `ProviderName.DuckDB` | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ RETURNING | ✅ native |
 | Firebird | `ProviderName.Firebird` | ✅ | ✅ | ✅ v3+ | ✅ v4+ | ✅ | ✅ RETURNING | ❌ |
 | Informix | `ProviderName.Informix` | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ native |
-| MySQL / MariaDB | `ProviderName.MySql` | ❌ | ✅ v8.0+ | ✅ v8.0+ | ✅ v8.0+ | ✅ | ❌ | ⚠️ opt-in |
+| MySQL / MariaDB | `ProviderName.MySql` | ❌ | ✅ v8.0+ | ✅ v8.0+ | ✅ v8.0+ | ✅ | ❌ MySQL; ⚠️ MariaDB only | ⚠️ opt-in |
 | Oracle | `ProviderName.Oracle` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ RETURNING INTO | ⚠️ opt-in |
 | PostgreSQL | `ProviderName.PostgreSQL` | ✅ v15+ | ✅ | ✅ | ✅ v9.3+ | ✅ v9.5+ | ✅ RETURNING | ⚠️ opt-in |
 | SAP HANA | `ProviderName.SapHana` | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ⚠️ opt-in |
@@ -77,6 +78,10 @@ Ability to return column values from INSERT / UPDATE / DELETE statements.
 Exposed as `LinqExtensions.Output()` / `OutputInto()`.
 SQL Server emits `OUTPUT` into a table variable; other providers use `RETURNING`.
 The exact syntax and supported DML operations vary by provider.
+For combined rows such as MySQL / MariaDB, treat the cell as a family-level warning:
+MySQL does not expose a general `RETURNING` feature, while MariaDB supports `RETURNING`
+only for specific statement/version combinations. Check the CRUD guide for the operation
+you are using.
 
 **Bulk Copy**
 Native provider-level bulk insert, bypassing row-by-row INSERT overhead.
@@ -108,6 +113,9 @@ Other Notes
 - **MariaDB**: shares the `MySql` version flags; MariaDB has added some features
   earlier than MySQL (e.g. window functions since MariaDB 10.2, CTEs since 10.2).
   LinqToDB uses the same flags for both - check your actual server version.
+  `RETURNING` support is statement-specific: `DELETE ... RETURNING` is available on
+  MariaDB 10.0+, while `INSERT ... RETURNING` requires MariaDB 10.5+. Do not infer
+  general MySQL-family `OUTPUT / RETURNING` support from a MariaDB-only case.
 
 - **PostgreSQL MERGE**: requires PostgreSQL 15 or later. The `MERGE` statement was
   standardised and added to PostgreSQL in version 15. Earlier versions will fail at

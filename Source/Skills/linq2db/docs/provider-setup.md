@@ -81,6 +81,7 @@ For tracing, retry policies, interceptors, and member translators see `docs/conf
 | Access | `ProviderName.Access` | `UseAccess(...)` | `System.Data.OleDb` |
 | ClickHouse | `ProviderName.ClickHouse` | `UseClickHouse(...)` | `ClickHouse.Driver` |
 | DB2 | `ProviderName.DB2` | `UseDB2(...)` | `Net.IBM.Data.Db2` |
+| DuckDB | `ProviderName.DuckDB` | `UseDuckDB(...)` | `DuckDB.NET.Data.Full` |
 | Firebird | `ProviderName.Firebird` | `UseFirebird(...)` | `FirebirdSql.Data.FirebirdClient` |
 | Informix | `ProviderName.Informix` | `UseInformix(...)` | ⚠️ see notes |
 | SAP HANA | `ProviderName.SapHana` | `UseSapHana(...)` | ⚠️ see notes |
@@ -241,6 +242,46 @@ IBM.Data.DB.Provider          # .NET Framework
 
 > DB2 for IBM i (iSeries / AS/400) is not supported. Use the community package
 > [`linq2db4iSeries`](https://www.nuget.org/packages/linq2db4iSeries) instead.
+
+---
+
+## DuckDB
+
+**`ProviderName` constants**
+
+| Constant | String value |
+|---|---|
+| `ProviderName.DuckDB` | `"DuckDB"` |
+
+**Configuration**
+
+```csharp
+var options = new DataOptions()
+    .UseDuckDB("Data Source=mydb.duckdb");
+```
+
+**Method signature**
+
+```csharp
+UseDuckDB(string connectionString)
+```
+
+**Provider-specific options**
+
+```csharp
+UseDuckDB(string connectionString,
+          Func<DuckDBOptions, DuckDBOptions>? optionSetter = null)
+```
+
+`DuckDBOptions` currently exposes the default bulk-copy mode. The default is
+`BulkCopyType.ProviderSpecific`, which uses the native DuckDB Appender when possible.
+
+**NuGet packages**
+
+```
+linq2db
+DuckDB.NET.Data.Full
+```
 
 ---
 

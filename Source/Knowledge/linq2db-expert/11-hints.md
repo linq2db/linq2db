@@ -89,6 +89,12 @@ Provider-specific typed hint helpers are not extension methods on plain `ITable<
 `IQueryable<T>`. If the marker call is missing, the code is incomplete even when the helper name is
 correct.
 
+Exception: some provider APIs intentionally expose an additional plain `IQueryable<T>` overload.
+For example, YDB `DistinctHint(...)` and `UniqueHint(...)` have overloads on both
+`IQueryable<T>` and `IYdbSpecificQueryable<T>`. When the generated API/map lists both receivers,
+the plain `IQueryable<T>` overload is valid for that specific helper. Do not generalize this
+exception to other providers or helpers unless the installed package API lists the same receiver.
+
 Conceptual shape, not copy-paste code:
 
 ```text

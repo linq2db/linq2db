@@ -27,12 +27,6 @@ namespace LinqToDB
 	/// Data context extension methods.
 	/// </summary>
 	/// <remarks>
-	/// <para>
-	/// AI/LLM agents using this NuGet package should first read package-local
-	/// <c>skills/linq2db/SKILL.md</c>, <c>README.md</c>, and <c>skills/linq2db/docs/api.md</c>; use
-	/// <c>skills/linq2db/docs/*.md</c> for task-specific guidance before proposing code.
-	/// </para>
-	///
 	/// Common metadata defaults for this API surface:
 	/// method-level <c>ai-tags</c> elements should specify only behavior-specific fields and override
 	/// defaults only when needed.

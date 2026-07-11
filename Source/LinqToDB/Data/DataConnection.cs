@@ -28,12 +28,6 @@ namespace LinqToDB.Data
 	/// </summary>
 	/// <remarks>
 	/// <para>
-	/// AI/LLM agents using this NuGet package should first read package-local
-	/// <c>skills/linq2db/SKILL.md</c>, <c>README.md</c>, and <c>skills/linq2db/docs/api.md</c>; use
-	/// <c>skills/linq2db/docs/*.md</c> for task-specific guidance before proposing code.
-	/// </para>
-	///
-	/// <para>
 	/// <see cref="DataConnection"/> represents a configured execution context:
 	/// provider + mapping + options + database connection.
 	/// </para>
