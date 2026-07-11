@@ -86,6 +86,11 @@ namespace LinqToDB.DataModel
 		/// <param name="context">Model generation context.</param>
 		private static void BuildDataContext(IDataModelGenerationContext context)
 		{
+			// F# emits computed schema-accessor properties (created on access). This avoids an InitSchemas
+			// method whose constructor `do`-binding call would touch the not-yet-initialized `member val`
+			// auto-properties, which F# rejects at runtime (recursive initialization).
+			var isFSharp = ReferenceEquals(context.LanguageProvider, LanguageProviders.FSharp);
+
 			// optional method to initialize references to additional schemas
 			MethodBuilder? initSchemasMethod       = null;
 			// optional region with properties to reference additional schemas
@@ -94,10 +99,11 @@ namespace LinqToDB.DataModel
 			// if we have additional schemas, create region with init method in data context for them
 			if (context.Model.DataContext.AdditionalSchemas.Count > 0)
 			{
-				initSchemasMethod = context.SchemasContextRegion
-					.Methods(false)
-						.New(context.AST.Name(DataModelConstants.SCHEMAS_INIT_METHOD))
-							.SetModifiers(Modifiers.Public);
+				if (!isFSharp)
+					initSchemasMethod = context.SchemasContextRegion
+						.Methods(false)
+							.New(context.AST.Name(DataModelConstants.SCHEMAS_INIT_METHOD))
+								.SetModifiers(Modifiers.Public);
 
 				contextSchemaProperties = context.SchemasContextRegion.Properties(true);
 			}
@@ -115,15 +121,26 @@ namespace LinqToDB.DataModel
 				// add schema reference to data context class
 				var schemaProp = contextSchemaProperties!
 					.New(context.AST.Name(schema.DataContextPropertyName), schemaContextType)
-						.SetModifiers(Modifiers.Public)
-						.Default(true);
+						.SetModifiers(Modifiers.Public);
 
-				initSchemasMethod!
-					.Body()
-						.Append(
-							context.AST.Assign(
-								context.AST.Member(context.ContextReference, schemaProp.Property.Reference),
-								context.AST.New(schemaContextType, context.ContextReference)));
+				if (isFSharp)
+				{
+					// computed get-only property: creates the (lightweight) schema context on access
+					schemaProp
+						.AddGetter()
+							.Append(context.AST.Return(context.AST.New(schemaContextType, context.ContextReference)));
+				}
+				else
+				{
+					schemaProp.Default(true);
+
+					initSchemasMethod!
+						.Body()
+							.Append(
+								context.AST.Assign(
+									context.AST.Member(context.ContextReference, schemaProp.Property.Reference),
+									context.AST.New(schemaContextType, context.ContextReference)));
+				}
 			}
 			
 			// generate associations for all entities after all entity classes generated for both

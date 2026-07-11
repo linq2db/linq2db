@@ -622,6 +622,13 @@ namespace LinqToDB.CodeModel
 
 		protected override void Visit(CodeClass @class)
 		{
+			// per-schema wrapper -> F# module (keeps its types isolated instead of lifted to namespace level)
+			if (@class.Attributes.HasFlag(Modifiers.Module))
+			{
+				WriteModule(@class);
+				return;
+			}
+
 			var isRecord        = @class.Attributes.HasFlag(Modifiers.Record);
 			// a static (non-record) class is rendered as an F# [<Extension>] type holding static members
 			var isExtensionType = !isRecord && @class.Attributes.HasFlag(Modifiers.Static);
@@ -707,15 +714,17 @@ namespace LinqToDB.CodeModel
 				}
 
 				var hasCtorBody = primaryCtor?.Body != null && primaryCtor.Body.Items.Count > 0;
+				// a self identifier is only needed when a `do` binding actually references the instance; an
+				// instance-field mutation renders as `field <- v` (no `this`), so it doesn't require one, and an
+				// unused `as this` is a warning (error under warnings-as-errors)
+				var ctorUsesThis = hasCtorBody && primaryCtor!.Body!.Items.Any(CtorStatementUsesThis);
 
 				if (primaryCtor != null)
 				{
 					Write(" (");
 					WriteDelimitedList(primaryCtor.Parameters, ", ", false);
 					Write(")");
-					// `do` bindings in the primary constructor reference the instance, which requires a self
-					// identifier on the type declaration
-					if (hasCtorBody)
+					if (ctorUsesThis)
 						Write(" as this");
 				}
 				else
@@ -771,6 +780,95 @@ namespace LinqToDB.CodeModel
 			_currentType            = oldType;
 
 			_currentScope.RemoveAt(_currentScope.Count - 1);
+		}
+
+		/// <summary>
+		/// Renders a per-schema wrapper as an F# <c>module rec</c>. F# allows type definitions inside a module
+		/// (unlike inside a class), so the schema's entity/result/context types stay isolated under the module -
+		/// avoiding name collisions between same-named tables in different schemas - while the schema's
+		/// extension methods (Find, functions) are collected into an <c>[&lt;Extension&gt;]</c> type inside it.
+		/// </summary>
+		private void WriteModule(CodeClass @class)
+		{
+			if (@class.XmlDoc != null)
+				Visit(@class.XmlDoc);
+
+			// no `rec` here: the enclosing `namespace rec` already provides recursion, and repeating it warns
+			// (FS3199)
+			Write("module ");
+			Visit(@class.Name);
+			WriteLine(" =");
+			IncreaseIdent();
+
+			_currentScope.Add(@class.Name);
+			var oldType  = _currentType;
+			_currentType = @class.Type;
+
+			// nested type definitions (schema-context class, entity records, result classes)
+			var first = true;
+			foreach (var type in EnumerateAllClasses(@class.Members))
+			{
+				if (!first)
+					WriteLine();
+				first = false;
+				Visit(type);
+			}
+
+			// schema extension methods (Find, functions) collected into one [<Extension>] type
+			var methods = @class.Members.EnumerateMemberGroups<MethodGroup>()
+				.SelectMany(static g => g.Members)
+				.ToList();
+
+			if (methods.Count > 0)
+			{
+				if (!first)
+					WriteLine();
+
+				WriteLine("[<System.Runtime.CompilerServices.Extension>]");
+				Write("type ");
+				WriteIdentifier(DataModelConstants_FSharpSchemaExtensionsType);
+				WriteLine(" =");
+				IncreaseIdent();
+
+				var oldIsExtensionType  = _currentIsExtensionType;
+				_currentIsExtensionType = true;
+
+				var firstMethod = true;
+				foreach (var method in methods)
+				{
+					if (!firstMethod)
+						WriteLine();
+					firstMethod = false;
+					Visit(method);
+				}
+
+				_currentIsExtensionType = oldIsExtensionType;
+				DecreaseIdent();
+			}
+
+			_currentType = oldType;
+			_currentScope.RemoveAt(_currentScope.Count - 1);
+
+			DecreaseIdent();
+			WriteLine();
+		}
+
+		// name of the [<Extension>] type synthesized inside a schema module to hold its extension methods
+		private const string DataModelConstants_FSharpSchemaExtensionsType = "Extensions";
+
+		/// <summary>
+		/// Determines whether a primary-constructor body statement references the instance. An instance-field
+		/// mutation (an assignment to a field of the current instance) is rendered as an unqualified
+		/// <c>field &lt;- v</c> (F# let-bound field), so it does not require an "as this" self identifier;
+		/// anything else does.
+		/// </summary>
+		private static bool CtorStatementUsesThis(ICodeStatement statement)
+		{
+			return statement is not CodeAssignmentStatement
+			{
+				LValue: CodeMember { Instance: CodeThis, Member.Referenced: CodeField field },
+			}
+			|| field.Attributes.HasFlag(Modifiers.Static);
 		}
 
 		protected override void Visit(CodeIdentifier identifier)
@@ -1059,6 +1157,10 @@ namespace LinqToDB.CodeModel
 					foreach (var @class in classGroup.Members)
 					{
 						yield return @class;
+
+						// module wrappers render their own nested types (see WriteModule); don't lift those out
+						if (@class.Attributes.HasFlag(Modifiers.Module))
+							continue;
 
 						foreach (var nested in EnumerateAllClasses(@class.Members))
 							yield return nested;

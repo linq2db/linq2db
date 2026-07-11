@@ -191,18 +191,6 @@ namespace LinqToDB.CommandLine
 
 			var generator  = new Scaffolder(language, HumanizerNameConverter.Instance, settings, interceptors);
 			var dataModel  = generator.LoadDataModel(schemaProvider, typeMappingsProvider);
-
-			// F# generation does not yet fully support additional (non-default) database schemas: the
-			// schema-context field model now renders correctly, but F#'s prohibition on nested type
-			// definitions means same-named tables in different schemas collide when lifted to namespace level.
-			// A per-schema `module` structure is required to isolate them (TODO #1553). Fail fast rather than
-			// emit non-compiling code; restrict the scaffold to a single schema instead.
-			if (language == LanguageProviders.FSharp && dataModel.DataContext.AdditionalSchemas.Count > 0)
-			{
-				Console.Error.WriteLine("F# generation does not yet support additional (non-default) database schemas. Restrict scaffolding to a single schema, e.g. --include-schemas <schema>.");
-				return StatusCodes.EXPECTED_ERROR;
-			}
-
 			var sqlBuilder = dc.DataProvider.CreateSqlBuilder(dc.MappingSchema, dc.Options);
 			var files      = generator.GenerateCodeModel(
 				sqlBuilder,
