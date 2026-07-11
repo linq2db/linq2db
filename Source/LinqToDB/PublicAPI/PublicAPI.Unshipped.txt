@@ -116,6 +116,8 @@ LinqToDB.LinqOptions.UpsertEmulationPolicy.get -> LinqToDB.UpsertEmulationPolicy
 LinqToDB.LinqOptions.UpsertEmulationPolicy.init -> void
 LinqToDB.LinqOptions.OptimizeForSequentialAccess.get -> bool
 LinqToDB.LinqOptions.OptimizeForSequentialAccess.init -> void
+LinqToDB.DataProvider.SqlServer.GetSqlDecimalAttribute
+LinqToDB.DataProvider.SqlServer.GetSqlDecimalAttribute.GetSqlDecimalAttribute() -> void
 static LinqToDB.DataOptionsExtensions.WithOptimizeForSequentialAccess(this LinqToDB.LinqOptions! options, bool optimizeForSequentialAccess) -> LinqToDB.LinqOptions!
 static LinqToDB.DataOptionsExtensions.UseOptimizeForSequentialAccess(this LinqToDB.DataOptions! options, bool optimizeForSequentialAccess) -> LinqToDB.DataOptions!
 static LinqToDB.Common.Configuration.OptimizeForSequentialAccess.get -> bool
