@@ -30,7 +30,32 @@ git -C ../linq2db.wiki sparse-checkout set --no-cone Releases-and-Roadmap.md
 git -C ../linq2db.wiki -c core.protectNTFS=false checkout master
 ```
 
-After this, `git status` is clean and only the sparse page(s) are materialized; `apply-wiki` + commit + push work normally (they never touch the colon-named blob, which stays in the tree untouched). Release-notes usage of the clone: [`release/external-repos.md`](release/external-repos.md).
+After this, `git status` is clean and only the sparse page(s) are materialized; `apply-wiki` + commit + push work normally **for a page already in the sparse set** (they never touch the colon-named blob, which stays in the tree untouched). Release-notes usage of the clone: [`release/external-repos.md`](release/external-repos.md).
+
+**Editing or adding a page that is _not_ already in the sparse set needs one extra step first.** The "works normally" above holds only for a page materialized in the cone (e.g. `Releases-and-Roadmap.md`, which `/release-notes` edits). For any other page — a brand-new rule page, or an existing page you haven't sparse-checked-out — `git add --sparse <page>.md` **clears the `skip-worktree` bit on out-of-cone entries**, so the un-checkout-able colon page immediately shows as a staged deletion and the next `git commit` deletes it. Pushing that commit would delete a live wiki page. Two safe paths:
+
+- **Preventive — bring the page into the cone before touching it:**
+
+  ```
+  git -C ../linq2db.wiki sparse-checkout add <page>.md
+  ```
+
+  then edit / `git add <page>.md` / commit / push normally; the colon blob stays `skip-worktree` and is never staged.
+
+- **Recovery — bad commit already made but not yet pushed.** Rebuild the commit via plumbing so the working tree's missing colon page is never consulted (run as separate calls — the Bash tool doesn't persist shell vars, so capture each printed SHA and substitute it into the next call):
+
+  ```
+  git -C ../linq2db.wiki -c core.protectNTFS=false read-tree origin/master   # index := remote; working tree untouched
+  git -C ../linq2db.wiki hash-object -w <page>.md                            # -> <blob>
+  git -C ../linq2db.wiki update-index --cacheinfo 100644,<blob>,<page>.md
+  git -C ../linq2db.wiki -c core.protectNTFS=false write-tree                # -> <tree>
+  git -C ../linq2db.wiki commit-tree <tree> -p origin/master -F <msg-file>   # -> <commit>
+  git -C ../linq2db.wiki update-ref refs/heads/master <commit>
+  ```
+
+  Verify `git -C ../linq2db.wiki -c core.protectNTFS=false diff --stat origin/master master` shows **only** your page (no colon-page deletion) before `git -C ../linq2db.wiki push origin master`.
+
+**Before creating a wiki page for a task** (e.g. an analyzer descriptor's `helpLinkUri` target), fetch and check whether it already exists — `git -C ../linq2db.wiki fetch origin` then `git -C ../linq2db.wiki ls-tree origin/master <page>.md`. Pages are often authored out-of-band; drafting one that already exists wastes effort and risks overwriting a maintainer's page.
 
 ## `gh ... --body` is banned
 
