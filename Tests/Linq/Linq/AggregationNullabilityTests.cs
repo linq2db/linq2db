@@ -304,6 +304,61 @@ namespace Tests.Linq
 
 		#endregion
 
+		#region #5699 — nullable Sum(lambda) in a subquery keeps NULL semantics
+
+		// Coverage for #5699 (reported symptom could NOT be reproduced). The report showed a
+		// nullable subquery Sum wrapped in COALESCE(...,0), which drops an outer `!= null` guard.
+		// We could not reproduce that on 6.3.0 or master, SQLite or SQL Server — the reporter's
+		// posted repro was incomplete (custom fluent mapping + a `For<T>()` helper not shown).
+		// These tests pin the correct current behavior: a nullable `Sum(x => (decimal?)x.Col)` over
+		// a non-nullable column, summed in a subquery, keeps SQL NULL semantics (no COALESCE), so an
+		// outer `== null` / `!= null` guard stays meaningful. (Note the cast is the Sum lambda
+		// argument — `.Select(x => (decimal?)x).Sum()` takes a different, always-nullable path.)
+
+		// `where billTotal != null` must keep the predicate (COALESCE would make it always-true).
+		[Test]
+		public void Issue5699_NullableSubquerySum_NotNullGuardKept([DataSources(TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var outer = db.CreateLocalTable(Outer.Data);
+			using var inner = db.CreateLocalTable(Inner.Data);
+
+			var query =
+				from o in outer
+				let billTotal = inner.Where(i => i.Group == o.Group).Sum(i => (decimal?)i.DecimalValue)
+				where billTotal != null
+				select o.Id;
+
+			// Only Group 1 (Id = 1) has inner rows -> billTotal non-null; Group 99 -> NULL, excluded.
+			// If billTotal were COALESCE'd to 0 (the reported #5699 symptom), `!= null` would be
+			// always-true, the WHERE would be dropped, and both rows would come back ({ 1, 2 }).
+			query.ToArray().ShouldBe(new[] { 1 });
+		}
+
+		// `where billTotal == null` selects the empty-group row, and no COALESCE is emitted.
+		[Test]
+		public void Issue5699_NullableSubquerySum_IsNullOnEmpty([DataSources(TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var outer = db.CreateLocalTable(Outer.Data);
+			using var inner = db.CreateLocalTable(Inner.Data);
+
+			var query =
+				from o in outer
+				let billTotal = inner.Where(i => i.Group == o.Group).Sum(i => (decimal?)i.DecimalValue)
+				where billTotal == null
+				select o.Id;
+
+			// Group 99 (Id = 2) has no inner rows -> nullable Sum -> NULL. If it were COALESCE'd to 0
+			// (the reported #5699 symptom) this row would be dropped (result would be empty).
+			query.ToArray().ShouldBe(new[] { 2 });
+
+			// nullable result -> no COALESCE wrapping at the SQL level
+			query.ToSqlQuery().Sql.ToUpperInvariant().ShouldNotContain("COALESCE");
+		}
+
+		#endregion
+
 		#region Top-level non-nullable Sum — unchanged (must NOT wrap)
 
 		[Test]
