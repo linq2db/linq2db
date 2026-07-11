@@ -30,7 +30,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void UnpivotExcludeNulls([IncludeDataSources(true, TestProvName.AllSQLite, ProviderName.DuckDB)] string context)
+		public void UnpivotExcludeNulls([IncludeDataSources(true, TestProvName.AllSQLite, ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(QuarterlySales.Data);
@@ -51,7 +51,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void UnpivotIncludeNulls([IncludeDataSources(true, TestProvName.AllSQLite, ProviderName.DuckDB)] string context)
+		public void UnpivotIncludeNulls([IncludeDataSources(true, TestProvName.AllSQLite, ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(QuarterlySales.Data);
@@ -69,7 +69,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void UnpivotEmitsNativeKeyword([IncludeDataSources(ProviderName.DuckDB)] string context)
+		public void UnpivotEmitsNativeKeyword([IncludeDataSources(ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(QuarterlySales.Data);
@@ -113,7 +113,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Pivot([IncludeDataSources(true, TestProvName.AllSQLite, ProviderName.DuckDB)] string context)
+		public void Pivot([IncludeDataSources(true, TestProvName.AllSQLite, ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(CategorySales.Data);
@@ -140,10 +140,10 @@ namespace Tests.Linq
 			if (!context.Contains("LinqService", System.StringComparison.Ordinal))
 			{
 				var sql = LastQuery!.ToUpperInvariant();
-				if (context.Contains("DuckDB", System.StringComparison.Ordinal))
-					sql.ShouldContain("PIVOT");
-				else
+				if (context.Contains("SQLite", System.StringComparison.Ordinal))
 					sql.ShouldNotContain("PIVOT");
+				else
+					sql.ShouldContain("PIVOT");
 			}
 		}
 	}

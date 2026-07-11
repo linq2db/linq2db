@@ -491,6 +491,15 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				BuildTableExtensions(StringBuilder, table, alias, " WITH (", ", ", ")");
 		}
 
+		protected override void BuildPivotInValue(ISqlExpression value)
+		{
+			// SQL Server requires PIVOT IN-list values as quoted identifiers, e.g. IN ([2000], [2010]).
+			if (value is SqlValue { Value: { } literal })
+				StringBuilder.Append(ConvertInline(System.Convert.ToString(literal, System.Globalization.CultureInfo.InvariantCulture)!, ConvertType.NameToQueryField));
+			else
+				base.BuildPivotInValue(value);
+		}
+
 		protected override void BuildTableNameExtensions(SqlTable table)
 		{
 			var ext = table.SqlQueryExtensions?.LastOrDefault(e => e.Scope == Sql.QueryExtensionScope.TableNameHint);

@@ -2190,11 +2190,21 @@ namespace LinqToDB.Internal.SqlProvider
 				{
 					if (j > 0)
 						StringBuilder.Append(", ");
-					BuildExpression(forValues[j], buildTableName: false, checkParentheses: false);
+					BuildPivotInValue(forValues[j]);
 				}
 			}
 
 			StringBuilder.Append("))");
+		}
+
+		/// <summary>
+		/// Renders one value of a native <c>PIVOT (… FOR … IN (…))</c> list. The base emits the value as a
+		/// literal (DuckDB / Oracle); providers that require the values as quoted identifiers (SQL Server:
+		/// <c>IN ([2000], [2010])</c>) override this.
+		/// </summary>
+		protected virtual void BuildPivotInValue(ISqlExpression value)
+		{
+			BuildExpression(value, buildTableName: false, checkParentheses: false);
 		}
 
 		protected virtual void BuildSqlValuesTable(SqlValuesTable valuesTable, string alias, out bool aliasBuilt)

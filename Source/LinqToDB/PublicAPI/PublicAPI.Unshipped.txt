@@ -1199,3 +1199,5 @@ virtual LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildPivotTable(LinqToDB.I
 virtual LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildUnpivotTable(LinqToDB.Internal.SqlQuery.SqlUnpivotTable! unpivot) -> void
 virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlPivotTable(LinqToDB.Internal.SqlQuery.SqlPivotTable! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlUnpivotTable(LinqToDB.Internal.SqlQuery.SqlUnpivotTable! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
+virtual LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildPivotInValue(LinqToDB.Internal.SqlQuery.ISqlExpression! value) -> void
+override LinqToDB.Internal.DataProvider.SqlServer.SqlServerSqlBuilder.BuildPivotInValue(LinqToDB.Internal.SqlQuery.ISqlExpression! value) -> void
