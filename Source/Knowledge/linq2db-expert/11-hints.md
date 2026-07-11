@@ -22,6 +22,11 @@
 >   sets, for example ClickHouse `SETTINGS` or SQL Server `USE HINT`. Use those package-confirmed
 >   provider helpers before plain generic raw-text fallbacks, but do not expect LinqToDB docs to list
 >   every vendor setting or hint value.
+> - Do not jump to a provider-specific open-ended directive family before checking concrete typed
+>   helpers for the requested SQL keyword. For example, for ClickHouse `FINAL`, check `FinalHint`
+>   / `FinalInScopeHint` before suggesting `SettingsHint("final = 1")`.
+>   If no concrete typed helper is found, continue to the provider-specific open-ended family
+>   before falling back to plain generic raw hint APIs.
 > - Use general raw-text hint APIs only when the provider-specific API does not expose the required hint or directive family.
 > - Provider-specific typed helpers require the provider marker first. Do not call a typed helper
 >   directly on plain `ITable<T>` or `IQueryable<T>`; call `AsSqlServer()`, `AsOracle()`,
@@ -148,15 +153,19 @@ provider-specific SQL extensions that the user describes as hints, use this exac
 7. If the exact map lookup has no hit, search the provider `*Hints` XML-doc members directly by
    SQL hint text, provider namespace, receiver type, and likely helper-name fragments.
 8. Prefer the concrete typed/provider-specific helper when it exists.
-9. If no concrete typed helper exists but the map or XML-doc exposes a provider-specific
+9. If the request names a concrete SQL hint/directive keyword, do not choose a provider-specific
+   open-ended directive family until the exact provider + keyword lookup has failed to find a
+   concrete typed helper. Example: ClickHouse `SETTINGS` can express `final = 1`, but a request
+   for ClickHouse `FINAL` must first resolve `FinalHint` / `FinalInScopeHint`.
+10. If no concrete typed helper exists but the map or XML-doc exposes a provider-specific
    open-ended directive family for the requested SQL feature, use that provider helper before
    plain generic raw hint APIs. The current open-ended families are ClickHouse `SettingsHint(...)`
    for `SETTINGS`, SQL Server `OptionUseHint(...)` for `USE HINT`, and Oracle
    `OptParamHint(...)` for `OPT_PARAM`.
-10. Only if no concrete typed provider helper, provider-specific generic family helper, or suitable
+11. Only if no concrete typed provider helper, provider-specific generic family helper, or suitable
    general hint scope exists, consider generic raw hint APIs (`QueryHint`, `TableHint`,
    `TablesInScopeHint`, etc.).
-11. Only after hint APIs fail, consider custom SQL (`Sql.Table`, `[Sql.Expression]`) or
+12. Only after hint APIs fail, consider custom SQL (`Sql.Table`, `[Sql.Expression]`) or
    interceptors. Treat those as last-resort fallbacks.
 
 For questions about applying a table hint to several tables, all tables, or the current query

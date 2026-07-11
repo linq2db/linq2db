@@ -66,12 +66,19 @@ Required use:
    concatenation.
 7. Verify the exact member in `lib/<TFM>/linq2db.xml` before writing code.
 8. Prefer the concrete typed provider-specific helper over generic raw hint APIs.
-9. If no concrete typed helper exists but this map or XML-doc exposes a provider-specific
+9. Prefer the concrete typed provider-specific helper over provider-specific open-ended directive
+   families too. Do not use entries like ClickHouse `SettingsHint`, SQL Server `OptionUseHint`, or
+   Oracle `OptParamHint` for a concrete SQL keyword until the exact provider + keyword lookup has
+   failed to find a concrete typed helper. Example: ClickHouse `FINAL` maps to `FinalHint` /
+   `FinalInScopeHint`; do not answer with `SettingsHint("final = 1")` as the primary route.
+   If no concrete typed helper is found, continue to the provider-specific open-ended family in the
+   next step instead of stopping or claiming that LinqToDB has no usable API path.
+10. If no concrete typed helper exists but this map or XML-doc exposes a provider-specific
    open-ended directive family for the requested SQL feature, use that provider helper before
    plain generic raw hint APIs. A `string` parameter by itself does not make a helper an
    open-ended family; many typed helpers use strings for ordinary operands such as index names,
    query block names, or table-hint values.
-10. Use `QueryHint`, `TableHint`, `TablesInScopeHint`, `Sql.Expression`, raw SQL, or interceptors only when the map and
+11. Use `QueryHint`, `TableHint`, `TablesInScopeHint`, `Sql.Expression`, raw SQL, or interceptors only when the map and
    XML-doc do not expose a suitable typed helper or provider-specific family helper.
 
 When answering, make the selected row visible in prose: name the provider marker, typed helper, and
