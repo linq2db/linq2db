@@ -41,7 +41,9 @@ namespace LinqToDB.Mapping
 	[DebuggerDisplay("{DisplayID}")]
 	public class MappingSchema : IConfigurationID, IEquatable<MappingSchema>
 	{
-		static readonly MemoryCache<(MappingSchema ms1, MappingSchema ms2), MappingSchema> _combinedSchemasCache = new (new ());
+		// NOTE: keyed on MappingSchema references — pins schemas until eviction. Re-keying to stop the pinning is deferred to a later phase.
+		static readonly BoundedCache<(MappingSchema ms1, MappingSchema ms2), MappingSchema> _combinedSchemasCache =
+			new ("MappingSchema.CombinedSchemas", CacheDefaults.WorkCacheCapacity, Common.Configuration.Linq.CacheSlidingExpiration);
 
 		/// <summary>
 		/// Internal API.
@@ -54,13 +56,9 @@ namespace LinqToDB.Mapping
 		{
 			if (ms1.IsLockable && ms2.IsLockable)
 			{
-				return _combinedSchemasCache.GetOrCreate(
+				return _combinedSchemasCache.GetOrAdd(
 					(ms1, ms2),
-					static entry =>
-					{
-						entry.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
-						return new MappingSchema(entry.Key.ms1, entry.Key.ms2);
-					});
+					static key => new MappingSchema(key.ms1, key.ms2));
 			}
 
 			return new MappingSchema(ms1, ms2);
@@ -1833,7 +1831,8 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public static Action<MappingSchema, IEntityChangeDescriptor>? EntityDescriptorCreatedCallback { get; set; }
 
-		private static MemoryCache<(Type entityType, int schemaId),EntityDescriptor> EntityDescriptorsCache { get; } = new (new ());
+		private static BoundedCache<(Type entityType, int schemaId),EntityDescriptor> EntityDescriptorsCache { get; } =
+			new ("MappingSchema.EntityDescriptors", CacheDefaults.WorkCacheCapacity, Common.Configuration.Linq.CacheSlidingExpiration);
 
 		/// <summary>
 		/// Returns mapped entity descriptor.
@@ -1844,16 +1843,15 @@ namespace LinqToDB.Mapping
 		/// <returns>Mapping descriptor.</returns>
 		public EntityDescriptor GetEntityDescriptor(Type type, Action<MappingSchema, IEntityChangeDescriptor>? onEntityDescriptorCreated = null)
 		{
-			var ed = EntityDescriptorsCache.GetOrCreate(
+			var ed = EntityDescriptorsCache.GetOrAdd(
 				(entityType: type, ((IConfigurationID)this).ConfigurationID),
-				(mappingSchema: this, callback: onEntityDescriptorCreated ?? EntityDescriptorCreatedCallback),
-				static (o, context) =>
+				static (key, context) =>
 				{
-					o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
-					var edNew = new EntityDescriptor(context.mappingSchema, o.Key.entityType, context.callback);
+					var edNew = new EntityDescriptor(context.mappingSchema, key.entityType, context.callback);
 					context.callback?.Invoke(context.mappingSchema, edNew);
 					return edNew;
-				});
+				},
+				(mappingSchema: this, callback: onEntityDescriptorCreated ?? EntityDescriptorCreatedCallback));
 
 			return ed;
 		}

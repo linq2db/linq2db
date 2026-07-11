@@ -116,17 +116,14 @@ namespace LinqToDB.Remote
 
 		sealed class RemoteMappingSchema : MappingSchema
 		{
-			static readonly MemoryCache<(string contextIDPrefix, Type mappingSchemaType), MappingSchema> _cache = new (new ());
+			static readonly BoundedCache<(string contextIDPrefix, Type mappingSchemaType), MappingSchema> _cache =
+				new ("RemoteDataContext.MappingSchema", CacheDefaults.WorkCacheCapacity, Common.Configuration.Linq.CacheSlidingExpiration);
 
 			public static MappingSchema GetOrCreate(string contextIDPrefix, Type mappingSchemaType)
 			{
-				return _cache.GetOrCreate(
+				return _cache.GetOrAdd(
 					(contextIDPrefix, mappingSchemaType),
-					static entry =>
-					{
-						entry.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
-						return new RemoteMappingSchema(entry.Key.contextIDPrefix, GetMappingSchema(entry.Key.mappingSchemaType));
-					});
+					static key => new RemoteMappingSchema(key.contextIDPrefix, GetMappingSchema(key.mappingSchemaType)));
 			}
 
 			static readonly string _sqlServerMappingSchemaNamespaceName = typeof(Internal.DataProvider.SqlServer.SqlServerMappingSchema).Namespace!;
@@ -150,19 +147,16 @@ namespace LinqToDB.Remote
 
 		sealed class RemoteMemberTranslator : IMemberTranslator
 		{
-			static readonly MemoryCache<Type, IMemberTranslator> _cache = new (new ());
+			static readonly BoundedCache<Type, IMemberTranslator> _cache =
+				new ("RemoteDataContext.MemberTranslator", CacheDefaults.WorkCacheCapacity, Common.Configuration.Linq.CacheSlidingExpiration);
 
 			public IMemberTranslator ProviderTranslator { get; }
 
 			public static IMemberTranslator GetOrCreate(Type methodCallTranslatorType)
 			{
-				return _cache.GetOrCreate(
+				return _cache.GetOrAdd(
 					methodCallTranslatorType,
-					static entry =>
-					{
-						entry.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
-						return new RemoteMemberTranslator(ActivatorExt.CreateInstance<IMemberTranslator>(entry.Key));
-					});
+					static key => new RemoteMemberTranslator(ActivatorExt.CreateInstance<IMemberTranslator>(key)));
 			}
 
 			RemoteMemberTranslator(IMemberTranslator providerTranslator)
@@ -176,7 +170,8 @@ namespace LinqToDB.Remote
 
 		sealed class RemoteMemberConverter : IMemberConverter
 		{
-			static readonly MemoryCache<Type, IMemberConverter> _cache = new (new ());
+			static readonly BoundedCache<Type, IMemberConverter> _cache =
+				new ("RemoteDataContext.MemberConverter", CacheDefaults.WorkCacheCapacity, Common.Configuration.Linq.CacheSlidingExpiration);
 
 			public RemoteMemberConverter(IMemberConverter providerConverter)
 			{
@@ -187,13 +182,9 @@ namespace LinqToDB.Remote
 
 			public static IMemberConverter GetOrCreate(Type memberConverterType)
 			{
-				return _cache.GetOrCreate(
+				return _cache.GetOrAdd(
 					memberConverterType,
-					static entry =>
-					{
-						entry.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
-						return new RemoteMemberConverter(ActivatorExt.CreateInstance<IMemberConverter>(entry.Key));
-					});
+					static key => new RemoteMemberConverter(ActivatorExt.CreateInstance<IMemberConverter>(key)));
 			}
 
 			public Expression Convert(Expression expression, IConvertContext context, out bool handled)
@@ -202,7 +193,8 @@ namespace LinqToDB.Remote
 
 		sealed class RemoteDmlService : IDmlService
 		{
-			static readonly MemoryCache<Type, IDmlService> _cache = new (new ());
+			static readonly BoundedCache<Type, IDmlService> _cache =
+				new ("RemoteDataContext.DmlService", CacheDefaults.WorkCacheCapacity, Common.Configuration.Linq.CacheSlidingExpiration);
 
 			RemoteDmlService(IDmlService providerService)
 			{
@@ -213,13 +205,9 @@ namespace LinqToDB.Remote
 
 			public static IDmlService GetOrCreate(Type dmlServiceType)
 			{
-				return _cache.GetOrCreate(
+				return _cache.GetOrAdd(
 					dmlServiceType,
-					static entry =>
-					{
-						entry.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
-						return new RemoteDmlService(ActivatorExt.CreateInstance<IDmlService>(entry.Key));
-					});
+					static key => new RemoteDmlService(ActivatorExt.CreateInstance<IDmlService>(key)));
 			}
 
 			public bool IsTableNotFoundException(Exception exception)

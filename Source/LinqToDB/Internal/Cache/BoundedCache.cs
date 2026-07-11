@@ -76,6 +76,10 @@ namespace LinqToDB.Internal.Cache
 		public bool TryGet(TKey key, out TValue value)
 			=> _cache.TryGet(key, out value!);
 
+		/// <summary>Inserts <paramref name="value"/> for <paramref name="key"/>, replacing any existing entry.</summary>
+		public void AddOrUpdate(TKey key, TValue value)
+			=> _cache.AddOrUpdate(key, value);
+
 		/// <summary>Removes the entry for <paramref name="key"/>, if present.</summary>
 		public bool TryRemove(TKey key)
 			=> _cache.TryRemove(key);

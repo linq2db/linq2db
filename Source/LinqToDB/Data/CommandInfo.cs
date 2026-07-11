@@ -1642,7 +1642,8 @@ namespace LinqToDB.Data
 			}
 		}
 
-		static readonly MemoryCache<(Type type, int contextId),Func<object,DataParameter[]>> _parameterReaders = new (new ());
+		static readonly BoundedCache<(Type type, int contextId),Func<object,DataParameter[]>> _parameterReaders =
+			new ("CommandInfo.ParameterReaders", CacheDefaults.WorkCacheCapacity, LinqToDB.Common.Configuration.Linq.CacheSlidingExpiration);
 
 		static readonly PropertyInfo _dataParameterName       = MemberHelper.PropertyOf<DataParameter>(p => p.Name);
 		static readonly PropertyInfo _dataParameterDbDataType = MemberHelper.PropertyOf<DataParameter>(p => p.DbDataType);
@@ -1659,14 +1660,11 @@ namespace LinqToDB.Data
 				case DataParameter   dataParameter  : return new[] { dataParameter };
 			}
 
-			var func = _parameterReaders.GetOrCreate(
+			var func = _parameterReaders.GetOrAdd(
 				(type: parameters.GetType(), ((IConfigurationID)dataConnection).ConfigurationID),
-				dataConnection,
-				static (o, dataConnection) =>
+				static (key, dataConnection) =>
 				{
-					o.SlidingExpiration = dataConnection.Options.LinqOptions.CacheSlidingExpirationOrDefault;
-
-					var type = o.Key.type;
+					var type = key.type;
 					var td   = dataConnection.MappingSchema.GetEntityDescriptor(type, dataConnection.Options.ConnectionOptions.OnEntityDescriptorCreated);
 					var p    = Expression.Parameter(typeof(object), "p");
 					var obj  = Expression.Parameter(type,           "obj");
@@ -1752,7 +1750,8 @@ namespace LinqToDB.Data
 						p);
 
 					return expr.CompileExpression();
-				});
+				},
+				dataConnection);
 
 			return func(parameters);
 		}
@@ -1773,8 +1772,10 @@ namespace LinqToDB.Data
 
 		record struct QueryKey(Type TargetType, Type DbReaderType, int ConfigId, string Sql, string? ExtraKey, bool IsScalar, Type? ScalarSourceType);
 
-		static readonly MemoryCache<QueryKey,Delegate>                                            _objectReaders       = new (new ());
-		static readonly MemoryCache<(Type readerType, Type providerReaderType),LambdaExpression?> _dataReaderConverter = new (new ());
+		static readonly BoundedCache<QueryKey,Delegate> _objectReaders =
+			new ("CommandInfo.ObjectReaders", CacheDefaults.WorkCacheCapacity, LinqToDB.Common.Configuration.Linq.CacheSlidingExpiration);
+		static readonly BoundedCache<(Type readerType, Type providerReaderType),LambdaExpression?> _dataReaderConverter =
+			new ("CommandInfo.DataReaderConverter", CacheDefaults.WorkCacheCapacity, LinqToDB.Common.Configuration.Linq.CacheSlidingExpiration);
 
 		/// <summary>
 		/// Clears global cache of object mapping functions from query results and mapping functions from value to <see cref="DataParameter"/>.
@@ -1807,14 +1808,11 @@ namespace LinqToDB.Data
 
 		static Func<IDataContext,DbDataReader,T> GetObjectReader<T>(DataConnection dataConnection, DbDataReader dataReader, string sql, string? additionalKey)
 		{
-			var func = _objectReaders.GetOrCreate(
+			var func = _objectReaders.GetOrAdd(
 				new QueryKey(typeof(T), dataReader.GetType(), ((IConfigurationID)dataConnection).ConfigurationID, sql, additionalKey, dataReader.FieldCount <= 1, dataReader.FieldCount == 1 ? dataReader.GetFieldType(0) : null),
-				(dataConnection, dataReader),
-				static (e, context) =>
+				static (key, context) =>
 			{
-				e.SlidingExpiration = context.dataConnection.Options.LinqOptions.CacheSlidingExpirationOrDefault;
-
-				if (!e.Key.IsScalar && IsDynamicType(typeof(T)))
+				if (!key.IsScalar && IsDynamicType(typeof(T)))
 				{
 					// dynamic case
 					//
@@ -1825,7 +1823,8 @@ namespace LinqToDB.Data
 
 				return CreateObjectReader<T>(context.dataConnection, context.dataReader, (dc, dr, type, idx, dataContextExpr, dataReaderExpr, conv) =>
 					new ConvertFromDataReaderExpression(type, idx, conv, dataContextExpr, dataReaderExpr, canBeNull: (bool?)null).Reduce(dc, dr));
-			});
+			},
+				(dataConnection, dataReader));
 
 			return (Func<IDataContext, DbDataReader,T>)func;
 		}
@@ -1853,8 +1852,7 @@ namespace LinqToDB.Data
 				new ConvertFromDataReaderExpression(type, idx, conv, dataContextExpr, dataReaderExpr, canBeNull: true).Reduce(dc, slowMode: true));
 			}
 
-			_objectReaders.Set(key, func,
-				new MemoryCacheEntryOptions<QueryKey> { SlidingExpiration = dataConnection.Options.LinqOptions.CacheSlidingExpirationOrDefault });
+			_objectReaders.AddOrUpdate(key, func);
 
 			return (Func<IDataContext, DbDataReader, T>)func;
 		}
@@ -1874,14 +1872,11 @@ namespace LinqToDB.Data
 
 			if (dataConnection.DataProvider.DataReaderType != readerType)
 			{
-				converterExpr = _dataReaderConverter.GetOrCreate(
+				converterExpr = _dataReaderConverter.GetOrAdd(
 					(readerType, dataConnection.DataProvider.DataReaderType),
-					dataConnection,
-					static (o, ctx) =>
+					static (key, ctx) =>
 				{
-					o.SlidingExpiration = ctx.Options.LinqOptions.CacheSlidingExpirationOrDefault;
-
-					var expr = ctx.MappingSchema.GetConvertExpression(o.Key.readerType, typeof(DbDataReader), false, false);
+					var expr = ctx.MappingSchema.GetConvertExpression(key.readerType, typeof(DbDataReader), false, false);
 
 					///// !!!!!
 					if (expr != null)
@@ -1890,7 +1885,8 @@ namespace LinqToDB.Data
 					}
 
 					return expr;
-				});
+				},
+					dataConnection);
 			}
 
 			dataReaderExpr = converterExpr != null ? converterExpr.GetBody(dataReaderExpr) : dataReaderExpr;
@@ -1942,14 +1938,11 @@ namespace LinqToDB.Data
 
 			if (dataConnection.DataProvider.DataReaderType != readerType)
 			{
-				converterExpr = _dataReaderConverter.GetOrCreate(
+				converterExpr = _dataReaderConverter.GetOrAdd(
 					(readerType, dataConnection.DataProvider.DataReaderType),
-					dataConnection,
-					static (o, ctx) =>
+					static (key, ctx) =>
 				{
-					o.SlidingExpiration = ctx.Options.LinqOptions.CacheSlidingExpirationOrDefault;
-
-					var expr = ctx.MappingSchema.GetConvertExpression(o.Key.readerType, typeof(DbDataReader), false, false);
+					var expr = ctx.MappingSchema.GetConvertExpression(key.readerType, typeof(DbDataReader), false, false);
 
 					if (expr != null)
 					{
@@ -1957,7 +1950,8 @@ namespace LinqToDB.Data
 					}
 
 					return expr;
-				});
+				},
+					dataConnection);
 			}
 
 			dataReaderExpr = converterExpr != null ? converterExpr.GetBody(dataReaderExpr) : dataReaderExpr;
