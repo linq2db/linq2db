@@ -43,6 +43,8 @@ Posting is publicly visible and incurs CI cost, so follow the standard confirmat
 
 ## Reading failed CI test runs
 
+**Find *which* pipeline failed with `gh pr checks <n>`, not `gh api commits/<headSha>/check-runs`.** The auto-triggered `build` pipeline (and any pipeline Azure runs against the PR *merge* commit) attaches its check to that merge SHA — a different commit than the PR head — so `gh api repos/linq2db/linq2db/commits/<headSha>/check-runs` can silently omit it. Seen on #5703: the head's `check-runs` listed only `test-all` (all green) while `gh pr checks 5703` showed `build	fail` (buildId 22173, sourceVersion = the Azure merge commit). Treat `gh pr checks <n>` as the authoritative "is CI failing?" list; use the `check-runs` API only to resolve a *specific* named check's `buildId`.
+
 When a CI build fails, the per-task error messages aren't in the GitHub check-runs annotations — they're inside the Azure DevOps build logs. The `dev.azure.com/linq2db` build API is publicly readable (no auth), but the hand-flow is fiddly: hit `/timeline?api-version=7.0` for the JSON list of failed `Task` records, then `/logs/<id>` for each one's raw log, then regex for `Failed <TestName>... Error Message:` blocks.
 
 Use [`.agents/scripts/azp-build-failures.ps1`](../scripts/azp-build-failures.ps1) instead — it does the timeline + parallel log fetch + per-failure parse in one call:

@@ -166,6 +166,8 @@ Authoring contract, parallelism rules, and pwsh-script gotchas live in [`script-
 
 **Prefer the PowerShell tool over `Bash(pwsh -NoProfile -File …)`** when invoking these scripts. Routing the call through Claude Code's PowerShell tool skips the Git-Bash / MSYS layer entirely — no path-mangling on slash-prefixed args, no `\??\C:\…` cygheap races, no quoting differences, no double allowlist hop. Use the Bash wrapper only when you need shell features the PowerShell tool can't express (multi-stage stdin heredoc piped between non-pwsh commands, etc.).
 
+This applies equally to **inline `pwsh -NoProfile -Command "…"` containing `$variables`** — not just `-File`. Bash expands `$c` / `$j` / etc. as its *own* (undefined) variables before pwsh ever sees them, so `pwsh -Command "$c = Get-Content … | ConvertFrom-Json; …"` reaches pwsh as `= Get-Content …` and dies with `The term '=' is not recognized` (hit twice in one session parsing JSON with `ConvertFrom-Json`). Any pwsh needing `$vars` — JSON parsing, multi-statement transforms — must go through the PowerShell tool, never `Bash(pwsh -Command …)`.
+
 ### Temp files
 
 Any skill, subagent, or ad-hoc command that writes a scratch file (JSON for `gh api --input`, generated diffs, intermediate output) must place it under **`.build/.agents/`** (gitignored) — never `%TEMP%` / `/tmp` / an absolute OS temp path. `mkdir -p .build/.agents` before the first write; name files by skill + id (`.build/.agents/review-pr-1234.json`). Cleanup is optional (gitignored dir; the last payload is useful for debugging).
