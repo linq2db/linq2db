@@ -184,7 +184,7 @@ namespace LinqToDB.Internal.Linq
 
 				var ei = cacheDisabled
 					? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schema, tableOptions, type)
-					: Cache<T,int>.QueryCache.GetOrCreate(
+					: Cache<T,int>.QueryCache.GetOrAdd(
 					(
 						operation: "IR",
 						dataContext.ConfigurationID,
@@ -197,9 +197,8 @@ namespace LinqToDB.Internal.Linq
 						queryFlags: dataContext.GetQueryFlags()
 					),
 					(dataContext, entityDescriptor, obj),
-					static (entry, key, context) =>
+					static (key, context) =>
 					{
-						entry.SlidingExpiration = context.dataContext.Options.LinqOptions.CacheSlidingExpirationOrDefault;
 						return CreateQuery(context.dataContext, context.entityDescriptor, context.obj, null, key.tableName, key.serverName, key.databaseName, key.schema, key.tableOptions, key.type);
 					});
 
@@ -233,7 +232,7 @@ namespace LinqToDB.Internal.Linq
 
 					var ei = cacheDisabled
 						? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schema, tableOptions, type)
-						: Cache<T,int>.QueryCache.GetOrCreate(
+						: Cache<T,int>.QueryCache.GetOrAdd(
 							(
 								operation: "IR",
 								dataContext.ConfigurationID,
@@ -246,9 +245,8 @@ namespace LinqToDB.Internal.Linq
 								queryFlags: dataContext.GetQueryFlags()
 							),
 							(dataContext, entityDescriptor, obj),
-							static (entry, key, context) =>
+							static (key, context) =>
 							{
-								entry.SlidingExpiration = context.dataContext.Options.LinqOptions.CacheSlidingExpirationOrDefault;
 								return CreateQuery(context.dataContext, context.entityDescriptor, context.obj, null, key.tableName, key.serverName, key.databaseName, key.schema, key.tableOptions, key.type);
 							});
 

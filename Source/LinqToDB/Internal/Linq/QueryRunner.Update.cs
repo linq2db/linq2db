@@ -30,7 +30,8 @@ namespace LinqToDB.Internal.Linq
 					QueryCache.Clear();
 				}
 
-				internal static MemoryCache<IStructuralEquatable,Query<int>?> QueryCache { get; } = new(new());
+				internal static BoundedCache<IStructuralEquatable,Query<int>?> QueryCache { get; } =
+					new("QueryRunner.Update", CacheDefaults.WorkCacheCapacity, LinqToDB.Common.Configuration.Linq.CacheSlidingExpiration);
 			}
 
 			static Query<int>? CreateQuery(
@@ -136,7 +137,7 @@ namespace LinqToDB.Internal.Linq
 
 				var ei = dataContext.Options.LinqOptions.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Update) || columnFilter != null
 					? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions, type)
-					: Cache.QueryCache.GetOrCreate(
+					: Cache.QueryCache.GetOrAdd(
 						(
 							dataContext.ConfigurationID,
 							columnFilter,
@@ -149,9 +150,8 @@ namespace LinqToDB.Internal.Linq
 							type
 						),
 						(dataContext, entityDescriptor, obj),
-						static (entry, key, context) =>
+						static (key, context) =>
 						{
-							entry.SlidingExpiration = context.dataContext.Options.LinqOptions.CacheSlidingExpirationOrDefault;
 							return CreateQuery(context.dataContext, context.entityDescriptor, context.obj, null, key.tableName, key.serverName, key.databaseName, key.schemaName, key.tableOptions, key.type);
 						});
 
@@ -179,7 +179,7 @@ namespace LinqToDB.Internal.Linq
 
 					var ei = dataContext.Options.LinqOptions.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Update) || columnFilter != null
 						? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions, type)
-						: Cache.QueryCache.GetOrCreate(
+						: Cache.QueryCache.GetOrAdd(
 							(
 								dataContext.ConfigurationID,
 								columnFilter,
@@ -192,9 +192,8 @@ namespace LinqToDB.Internal.Linq
 								queryFlags: dataContext.GetQueryFlags()
 							),
 							(dataContext, entityDescriptor, obj),
-							static (entry, key, context) =>
+							static (key, context) =>
 							{
-								entry.SlidingExpiration = context.dataContext.Options.LinqOptions.CacheSlidingExpirationOrDefault;
 								return CreateQuery(context.dataContext, context.entityDescriptor, context.obj, null, key.tableName, key.serverName, key.databaseName, key.schemaName, key.tableOptions, key.type);
 							});
 

@@ -72,6 +72,16 @@ namespace LinqToDB.Internal.Cache
 		public TValue GetOrAdd<TArg>(TKey key, Func<TKey,TArg,TValue> valueFactory, TArg factoryArgument)
 			=> _cache.GetOrAdd(key, valueFactory, factoryArgument);
 
+		/// <summary>Derived-key variant: the concrete <paramref name="key"/> (a subtype of <typeparamref name="TKey"/>)
+		/// is passed to the factory strongly-typed, while the cache is keyed by it as <typeparamref name="TKey"/>.
+		/// The <paramref name="factoryArgument"/> avoids a per-call closure.</summary>
+		public TValue GetOrAdd<TDerivedKey,TArg>(TDerivedKey key, TArg factoryArgument, Func<TDerivedKey,TArg,TValue> valueFactory)
+			where TDerivedKey : TKey
+			=> _cache.GetOrAdd(
+				key,
+				static (_, state) => state.valueFactory(state.key, state.factoryArgument),
+				(key, factoryArgument, valueFactory));
+
 		/// <summary>Attempts to get the value for <paramref name="key"/> without creating it.</summary>
 		public bool TryGet(TKey key, out TValue value)
 			=> _cache.TryGet(key, out value!);
