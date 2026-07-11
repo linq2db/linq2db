@@ -590,6 +590,40 @@ namespace Tests.Analyzers
 		}
 
 		[Test]
+		public Task DoesNotOfferFixForWindowedListAgg()
+		{
+			// ListAgg is a WITHIN GROUP ordered-set aggregate with no Sql.Window equivalent even in its windowed
+			// (OVER) form — an unrecognized root, reported but not fixed.
+			const string source = """
+				using LinqToDB;
+
+				class C
+				{
+					string M(int x) => {|LINQ2DB1001:Sql.Ext.ListAgg(x).WithinGroup.OrderBy(x).Over().PartitionBy(x).ToValue()|};
+				}
+				""";
+
+			return Verify.VerifyAsync(source, source);
+		}
+
+		[Test]
+		public Task DoesNotOfferFixForFilterChain()
+		{
+			// A FILTER (WHERE ...) clause in the chain has no mechanical Sql.Window equivalent here — reported, not
+			// fixed.
+			const string source = """
+				using LinqToDB;
+
+				class C
+				{
+					long M(int x) => {|LINQ2DB1001:Sql.Ext.RowNumber().Filter(x > 0).Over().OrderBy(x).ToValue()|};
+				}
+				""";
+
+			return Verify.VerifyAsync(source, source);
+		}
+
+		[Test]
 		public Task ConvertsInsideExpressionTree()
 			=> Verify.VerifyAsync(
 				"""
