@@ -13,15 +13,22 @@ Follow [`pr-resolver.md`](pr-resolver.md). The resolver returns the PR **number*
 - `/review-pr`: stop and propose creating one (per `agent-rules.md` → **Pull request rules**).
 - `/verify-review`: stop — there's nothing to verify.
 
-### Re-review at an unchanged HEAD already reviewed by `currentUser`
+### Re-review at an unchanged (or master-merge-only) HEAD already reviewed by `currentUser`
 
-After the context load, if the PR's `headRefOid` equals the `commit_id` of an existing `reviews[]` entry authored by `currentUser`, surface this **before** spawning reviewers — a blind fresh run re-derives near-identical findings and risks posting duplicate threads for findings already open on the PR. Offer the user three paths:
+After the context load, if the PR already carries a `reviews[]` entry authored by `currentUser`, check whether the PR's *own* code actually changed since that review **before** spawning reviewers — a blind fresh run re-derives near-identical findings and risks posting duplicate threads for findings already open on the PR. Two triggers:
+
+- **Exact-SHA match** — `headRefOid` equals the prior review's `commit_id`.
+- **Master-merge-only advance** — `headRefOid` moved, but the advance is only a `Merge branch 'master'` (or equivalent) with the PR's *own* files unchanged. Confirm by diffing the PR's `nameStatus` files between the prior review's `commit_id` and HEAD (`git diff <commit_id> <headRefOid> -- <the PR's changed paths>`) and discarding entries that are pure master churn (unrelated files, or `PublicAPI.Unshipped.txt` / `Directory.Build.props` lines the merge pulled in). If nothing feature-relevant differs, the reviewed code is unchanged even though the SHA moved — the common case the exact-SHA check misses. (Surfaced on PR #5681: HEAD `6e415ef` was a master-merge over the reviewed `cb31dba2`; the feature code was byte-identical, so an exact-SHA check would not have caught it.)
+
+Offer the user three paths:
 
 - **fresh re-review** — run the full pipeline anyway (the user may want a clean pass).
-- **verify open-only** — re-check just the still-open prior findings against HEAD (since HEAD is unchanged, they'll all confirm "still actual"); cheaper, no duplicate threads.
+- **verify open-only** — re-check just the still-open prior findings against HEAD (since the code is unchanged, they'll all confirm "still actual"); cheaper, no duplicate threads.
 - **summarize & stop** — report the current open-findings + CI state, no subagents, no new review.
 
 Carry the choice forward (a fresh re-review still walks `initial`-mode normally). This is orientation, not a hard gate — proceed on the user's pick. (Surfaced on PR #5525: "review 5525" targeted a HEAD identical to the prior `currentUser` review's commit with three findings still open.)
+
+**If `currentUser` already has a PENDING draft review on the PR**, a fresh `post-pr-review.ps1` will collide — GitHub allows only one pending review per user per PR. Surface the delivery choice before posting: **replace** (verify the old review is still `PENDING` via `--jq '{state,submitted_at}'`, then `gh api -X DELETE …/reviews/<id>`, then post fresh — carry over any still-relevant observations from the old draft yourself, since the delete drops them), **append** (add only the new findings as `replyComments[]` / comments onto the existing draft), or **report-only** (hand the findings to the user, no GitHub write). (Surfaced on PR #5681: a pre-existing PENDING draft over unchanged code forced a delete-first replace.)
 
 ### Loading PR context
 
