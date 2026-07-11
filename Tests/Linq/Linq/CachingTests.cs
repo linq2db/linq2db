@@ -6,11 +6,14 @@ using System.Linq.Expressions;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.SqlQuery;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.DataProvider;
 
@@ -123,6 +126,46 @@ namespace Tests.Linq
 			var sql = query.ToSqlQuery().Sql;
 
 			Assert.That(sql, Contains.Substring(funcName).And.Contains(fieldName));
+		}
+
+		[Test]
+		public void QueryCacheMeasurementTracksHitsAndMisses([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
+		{
+			QueryCache.Default.ClearAll();
+
+			using var db = GetDataContext(context);
+
+			var query = db.Parent.Where(p => p.ParentID == -958413871);
+
+			using (var probe = QueryCache.Default.BeginMeasure())
+			{
+				query.ToArray();
+
+				probe.Misses.ShouldBeGreaterThanOrEqualTo(1);
+				probe.Hits.ShouldBe(0);
+
+				query.ToArray();
+
+				probe.Hits.ShouldBeGreaterThanOrEqualTo(1);
+			}
+
+			QueryCache.Default.TotalMisses.ShouldBeGreaterThanOrEqualTo(1);
+
+			var priorCollectHitStatistics = QueryCache.Default.CollectHitStatistics;
+			try
+			{
+				QueryCache.Default.CollectHitStatistics = true;
+
+				var priorTotalHits = QueryCache.Default.TotalHits;
+
+				query.ToArray();
+
+				QueryCache.Default.TotalHits.ShouldBeGreaterThan(priorTotalHits);
+			}
+			finally
+			{
+				QueryCache.Default.CollectHitStatistics = priorCollectHitStatistics;
+			}
 		}
 
 		static IQueryable<T> GetTestTable<T>(IDataContext context,
