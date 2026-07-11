@@ -585,6 +585,20 @@ If you don't specify some property, CLI will use default value for current optio
 					_t4ModeOptions.DataModel.GenerateScale);
 
 			/// <summary>
+			/// Generate SQL Server decimal overflow protection attribute on entity columns mappings option.
+			/// </summary>
+			public static readonly CliOption SqlServerDecimalOverflowProtection = new BooleanCliOption(
+					"sqlserver-decimal-overflow-protection",
+					null,
+					false,
+					"include GetSqlDecimal attribute for SQL Server decimal columns with precision or scale outside CLR decimal limits",
+					null,
+					null,
+					null,
+					_defaultOptions.DataModel.GenerateSqlServerDecimalOverflowProtection,
+					_t4ModeOptions.DataModel.GenerateSqlServerDecimalOverflowProtection);
+
+			/// <summary>
 			/// For fluent mapping generate calls to specified extension methods on each entity builder.
 			/// </summary>
 			public static readonly CliOption FluentEntityTypeHelpers = new StringCliOption(
