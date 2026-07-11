@@ -198,22 +198,30 @@ namespace LinqToDB.CodeModel
 
 		protected override void Visit(CodeMember expression)
 		{
-			if (expression.Type != null)
+			// instance fields are rendered as `let`-bound values in F# and are accessed unqualified (no `this.`)
+			var isInstanceField = expression.Instance is CodeThis
+				&& expression.Member.Referenced is CodeField field
+				&& !field.Attributes.HasFlag(Modifiers.Static);
+
+			if (!isInstanceField)
 			{
-				if (expression.Type.Type.Name == null || _currentType != expression.Type.Type)
+				if (expression.Type != null)
 				{
-					Visit(expression.Type);
+					if (expression.Type.Type.Name == null || _currentType != expression.Type.Type)
+					{
+						Visit(expression.Type);
+						Write('.');
+					}
+				}
+				else if (expression.Instance != null && expression.Instance.ElementType != CodeElementType.This)
+				{
+					Visit(expression.Instance);
 					Write('.');
 				}
-			}
-			else if (expression.Instance != null && expression.Instance.ElementType != CodeElementType.This)
-			{
-				Visit(expression.Instance);
-				Write('.');
-			}
-			else if (expression.Instance != null && expression.Instance.ElementType == CodeElementType.This)
-			{
-				Write("this.");
+				else if (expression.Instance != null && expression.Instance.ElementType == CodeElementType.This)
+				{
+					Write("this.");
+				}
 			}
 
 			Visit(expression.Member);
@@ -734,6 +742,10 @@ namespace LinqToDB.CodeModel
 					WriteLine();
 				}
 
+				// instance fields become `let`-bound values and must precede the constructor `do` bindings
+				foreach (var fieldGroup in @class.Members.OfType<FieldGroup>())
+					VisitList(fieldGroup.Members);
+
 				// constructor body statements (initializers) rendered as `do` bindings
 				if (primaryCtor?.Body != null && primaryCtor.Body.Items.Count > 0)
 				{
@@ -745,8 +757,9 @@ namespace LinqToDB.CodeModel
 					}
 				}
 
-				// render members except constructors (already rendered as the primary constructor)
-				WriteMemberGroups(@class.Members.Where(g => g is not ConstructorGroup).ToList());
+				// render remaining members (constructors are the primary constructor above; field groups are the
+				// `let` bindings above)
+				WriteMemberGroups(@class.Members.Where(g => g is not ConstructorGroup and not FieldGroup).ToList());
 
 				DecreaseIdent();
 			}
@@ -861,16 +874,17 @@ namespace LinqToDB.CodeModel
 				return;
 			}
 
+			// instance field -> `let mutable name : type = value` (F# `let` bindings require an initializer);
+			// the constructor body assigns the real value afterwards
 			Write(field.Attributes.HasFlag(Modifiers.Static) ? "static val mutable " : "let mutable ");
 			Visit(field.Name);
 			Write(" : ");
 			Visit(field.Type);
-
+			Write(" = ");
 			if (field.Initializer != null)
-			{
-				Write(" = ");
 				Visit(field.Initializer);
-			}
+			else
+				Write("Unchecked.defaultof<_>");
 
 			WriteLine();
 		}
