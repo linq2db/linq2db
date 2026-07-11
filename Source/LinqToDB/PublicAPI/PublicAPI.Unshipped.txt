@@ -63,6 +63,18 @@ static LinqToDB.Internal.Expressions.WindowFunctionHelpers.ExtractOrderByPart(Sy
 *REMOVED*static LinqToDB.Internal.Expressions.WindowFunctionHelpers.BuildWindowDefinition(System.Linq.Expressions.Expression![]! partitionBy, (System.Linq.Expressions.Expression! expr, bool descending)[]! orderBy) -> System.Linq.Expressions.Expression!
 *REMOVED*static LinqToDB.Internal.Expressions.WindowFunctionHelpers.ExtractOrderByPart(System.Linq.Expressions.Expression! query, out System.Linq.Expressions.Expression! nonOrderedPart) -> (System.Linq.Expressions.LambdaExpression! lambda, bool isDescending)[]!
 LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.RemoveNullValues(LinqToDB.Internal.SqlQuery.SqlCoalesceExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+LinqToDB.DataProvider.DataProviderParameterContext
+LinqToDB.DataProvider.DataProviderParameterContext.DataProviderParameterContext(string! name, LinqToDB.DbDataType dbDataType, object? value, System.Data.ParameterDirection? direction = null, bool isDbDataTypeExplicit = False) -> void
+LinqToDB.DataProvider.DataProviderParameterContext.DbDataType.get -> LinqToDB.DbDataType
+LinqToDB.DataProvider.DataProviderParameterContext.Direction.get -> System.Data.ParameterDirection?
+LinqToDB.DataProvider.DataProviderParameterContext.IsDbDataTypeExplicit.get -> bool
+LinqToDB.DataProvider.DataProviderParameterContext.Name.get -> string!
+LinqToDB.DataProvider.DataProviderParameterContext.Value.get -> object?
+LinqToDB.DataProvider.IDataProvider.CreateParameter(LinqToDB.Data.DataConnection! dataConnection, System.Data.Common.DbCommand! command, LinqToDB.DataProvider.DataProviderParameterContext context) -> System.Data.Common.DbParameter!
+LinqToDB.DataProvider.Oracle.OracleOptions.Deconstruct(out LinqToDB.Data.BulkCopyType BulkCopyType, out LinqToDB.DataProvider.Oracle.AlternativeBulkCopy AlternativeBulkCopy, out bool DontEscapeLowercaseIdentifiers, out int? MaxStringParameterLength) -> void
+LinqToDB.DataProvider.Oracle.OracleOptions.MaxStringParameterLength.get -> int?
+LinqToDB.DataProvider.Oracle.OracleOptions.MaxStringParameterLength.init -> void
+LinqToDB.DataProvider.Oracle.OracleOptions.OracleOptions(LinqToDB.Data.BulkCopyType BulkCopyType = LinqToDB.Data.BulkCopyType.MultipleRows, LinqToDB.DataProvider.Oracle.AlternativeBulkCopy AlternativeBulkCopy = LinqToDB.DataProvider.Oracle.AlternativeBulkCopy.InsertAll, bool DontEscapeLowercaseIdentifiers = false, int? MaxStringParameterLength = 4000) -> void
 LinqToDB.Internal.SqlQuery.QueryElementType.SqlKeepClause = 81 -> LinqToDB.Internal.SqlQuery.QueryElementType
 LinqToDB.Internal.SqlQuery.SqlExtendedFunction.FromPosition.get -> LinqToDB.Sql.From
 LinqToDB.Internal.SqlQuery.SqlExtendedFunction.NullTreatment.get -> LinqToDB.Sql.Nulls
@@ -104,6 +116,8 @@ LinqToDB.LinqOptions.UpsertEmulationPolicy.get -> LinqToDB.UpsertEmulationPolicy
 LinqToDB.LinqOptions.UpsertEmulationPolicy.init -> void
 LinqToDB.LinqOptions.OptimizeForSequentialAccess.get -> bool
 LinqToDB.LinqOptions.OptimizeForSequentialAccess.init -> void
+LinqToDB.DataProvider.SqlServer.GetSqlDecimalAttribute
+LinqToDB.DataProvider.SqlServer.GetSqlDecimalAttribute.GetSqlDecimalAttribute() -> void
 static LinqToDB.DataOptionsExtensions.WithOptimizeForSequentialAccess(this LinqToDB.LinqOptions! options, bool optimizeForSequentialAccess) -> LinqToDB.LinqOptions!
 static LinqToDB.DataOptionsExtensions.UseOptimizeForSequentialAccess(this LinqToDB.DataOptions! options, bool optimizeForSequentialAccess) -> LinqToDB.DataOptions!
 static LinqToDB.Common.Configuration.OptimizeForSequentialAccess.get -> bool
