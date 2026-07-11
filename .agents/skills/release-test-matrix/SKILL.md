@@ -206,17 +206,18 @@ Use this only when the user wants to validate the CLI as a published nuget (catc
 
 ### F# baselines (#1553)
 
-The CLI also emits F# (`--target-language f#`). Its baselines live in a separate compile-gate project (`Tests/FSharp.Scaffold/`), **not** the `Tests/Tests.T4/Cli/` tree, and regenerate via their own script — the F# target forces one file per provider with a different option set, so it doesn't fit `release-test-cli-scaffold.ps1`'s C# row matrix.
+The CLI also emits F# (`--target-language f#`). Its baselines live in separate compile-gate projects (`Tests/FSharp.Scaffold/`), **not** the `Tests/Tests.T4/Cli/` tree, and regenerate via their own script — the F# target forces one file per provider with a different option set, so it doesn't fit `release-test-cli-scaffold.ps1`'s C# row matrix. Both nullness modes are covered: `--nrt true` (`Tests.FSharp.Scaffold.fsproj`, `<Nullable>enable</Nullable>`) and `--nrt false` (`Tests.FSharp.Scaffold.NoNrt.fsproj`, `<Nullable>disable</Nullable>`).
 
-1. Regenerate (needs the SQLite file DB plus the PostgreSQL + SQL Server containers):
+1. Regenerate both modes (needs the SQLite file DB plus the PostgreSQL + SQL Server containers):
    ```
    pwsh -NoProfile -File Tests/FSharp.Scaffold/generate.ps1
    ```
-2. Validate — build the compile-gate project; a build failure **is** the generator regression:
+2. Validate — build both compile-gate projects; a build failure **is** the generator regression:
    ```
    dotnet build Tests/FSharp.Scaffold/Tests.FSharp.Scaffold.fsproj -c Debug
+   dotnet build Tests/FSharp.Scaffold/Tests.FSharp.Scaffold.NoNrt.fsproj -c Debug
    ```
-3. Confirm zero `git diff` under `Tests/FSharp.Scaffold/<Provider>/` (SQLite, PostgreSQL, SqlServer).
+3. Confirm zero `git diff` under `Tests/FSharp.Scaffold/` (both the `<Provider>/` and `NoNrt/<Provider>/` trees).
 
 Tick `4.7` on a clean diff or user-confirmed-expected diff.
 

@@ -41,7 +41,7 @@ Assembly name is `dotnet-linq2db` (set by `<AssemblyName>` in `LinqToDB.CLI.cspr
 
 ### Option type system (`CommandLine/Options/`)
 
-`CliOption` (abstract record) -- base for all options. Concrete option types: `BooleanCliOption`, `StringCliOption`, `StringEnumCliOption`, `NamingCliOption`, `ObjectNameFilterCliOption`, `StringDictionaryCliOption`, `ImportCliOption`. Carries a `[Flags] TargetLanguages Languages` facet (`CommandLine/Options/TargetLanguages.cs`, default `All`; #1553) — options that don't apply to F# (`--nrt`, `--partial-entities`, `--add-init-context`, `--add-static-init-context`) declare `CSharp` only; `HelpCommand` renders a `Supported in: C#` line when an option isn't `All`, and `ScaffoldCommand.Execute` fail-fast rejects an unsupported option set for the chosen language.
+`CliOption` (abstract record) -- base for all options. Concrete option types: `BooleanCliOption`, `StringCliOption`, `StringEnumCliOption`, `NamingCliOption`, `ObjectNameFilterCliOption`, `StringDictionaryCliOption`, `ImportCliOption`. Carries a `[Flags] TargetLanguages Languages` facet (`CommandLine/Options/TargetLanguages.cs`, default `All`; #1553) — options that don't apply to F# (`--partial-entities`, `--add-init-context`, `--add-static-init-context`) declare `CSharp` only; `HelpCommand` renders a `Supported in: C#` line when an option isn't `All`, and `ScaffoldCommand.Execute` fail-fast rejects an unsupported option set for the chosen language. `--nrt` applies to both languages (C# `?` / F# 9 `| null`).
 
 `OptionType` enum -- `String`, `StringEnum`, `StringDictionary`, `Boolean`, `DatabaseObjectFilter`, `Naming`, `JSONImport`.
 
