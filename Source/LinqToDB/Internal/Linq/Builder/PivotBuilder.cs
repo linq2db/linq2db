@@ -26,8 +26,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			var pivotLambda = methodCall.Arguments[1].UnwrapLambda();
 			var aggregates  = ParseAggregates(pivotLambda);
 
-			// v1 native path: a single aggregate over a single FOR column, on a provider with native PIVOT.
-			if (builder.DataContext.SqlProviderFlags.IsPivotSupported && aggregates is { Count: 1 })
+			// Native path: a single aggregate over a single FOR column (any native-PIVOT provider), or a
+			// composite FOR where the provider supports multi-column PIVOT (Oracle, DuckDB).
+			if (builder.DataContext.SqlProviderFlags.IsPivotSupported
+				&& aggregates is { Count: 1 }
+				&& (aggregates[0].ForColumnMembers.Count == 1 || builder.DataContext.SqlProviderFlags.IsMultiColumnPivotSupported))
 			{
 				var native = TryBuildNative(builder, methodCall, buildInfo, pivotLambda, aggregates[0]);
 				if (native != null)
@@ -239,26 +242,36 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (tableContext?.SqlTable is not { } sourceTable)
 				return null;
 
-			var valueField = sourceTable.Fields.Find(f => string.Equals(f.Name, agg.ValueMember,     StringComparison.Ordinal));
-			var forField   = sourceTable.Fields.Find(f => string.Equals(f.Name, agg.ForColumnMember, StringComparison.Ordinal));
-
-			if (valueField == null || forField == null)
+			var valueField = sourceTable.Fields.Find(f => string.Equals(f.Name, agg.ValueMember, StringComparison.Ordinal));
+			if (valueField == null)
 				return null;
 
+			var forFields = new ISqlExpression[agg.ForColumnMembers.Count];
+			for (var i = 0; i < forFields.Length; i++)
+			{
+				var name  = agg.ForColumnMembers[i];
+				var field = sourceTable.Fields.Find(f => string.Equals(f.Name, name, StringComparison.Ordinal));
+				if (field == null)
+					return null;
+				forFields[i] = field;
+			}
+
+			var composite    = agg.ForColumnMembers.Count > 1;
 			var node         = new SqlPivotTable(sourceTable);
-			var sqlAggregate = new SqlPivotAggregate(agg.Function, valueField, new ISqlExpression[] { forField });
+			var sqlAggregate = new SqlPivotAggregate(agg.Function, valueField, forFields);
 			var valueDbType  = builder.MappingSchema.GetDbDataType(agg.ValueType);
 
 			foreach (var value in agg.Values)
 			{
 				var outputField = new SqlField(valueDbType, value.OutputMember, true)
 				{
-					Table        = node,
-					PhysicalName = FormatPivotValue(value.ForValue),
+					Table = node,
+					// Single FOR: PIVOT names the output column by the value; composite FOR: alias it to the member name.
+					PhysicalName = composite ? value.OutputMember : FormatPivotValue(value.ForValues[0]),
 				};
 
 				node.OutputFields.Add(outputField);
-				sqlAggregate.Values.Add(new SqlPivotValue(new ISqlExpression[] { new SqlValue(value.ForValue!) }, outputField));
+				sqlAggregate.Values.Add(new SqlPivotValue(value.ForValues.Select(static v => (ISqlExpression)new SqlValue(v!)).ToArray(), outputField));
 			}
 
 			node.Aggregates.Add(sqlAggregate);
@@ -317,13 +330,13 @@ namespace LinqToDB.Internal.Linq.Builder
 						continue;
 					}
 
-					// p.Sum/Min/Max/Count/Avg(value, forColumn, forValue) → the generated output column
+					// p.Sum/Min/Max/Count/Avg(...) → the generated output column, matched by the projection member name.
 					if (unwrapped is MethodCallExpression mc
 						&& mc.Method.DeclaringType is { IsGenericType: true } dt
 						&& dt.GetGenericTypeDefinition() == typeof(IPivotBuilder<>))
 					{
-						var forValue = mc.Arguments[2].EvaluateExpression();
-						var value    = aggregate.Values.First(v => Equals((v.ForValues[0] as SqlValue)?.Value, forValue));
+						var memberName = newExpr.Members![i].Name;
+						var value      = aggregate.Values.First(v => string.Equals(v.OutputField.Name, memberName, StringComparison.Ordinal));
 
 						newArgs[i] = ExpressionBuilder.CreatePlaceholder(this, value.OutputField, arg);
 						continue;
@@ -379,15 +392,15 @@ namespace LinqToDB.Internal.Linq.Builder
 						var forColumn = mc.Arguments[1].UnwrapLambda();
 						var forValue  = mc.Arguments[2].EvaluateExpression();
 
-						var valueName = TryGetSimpleMemberName(value);
-						var forName   = TryGetSimpleMemberName(forColumn);
+						var valueName     = TryGetSimpleMemberName(value);
+						var forColMembers = ExtractForColumnMembers(forColumn);
 
-						// Composite (anonymous-type) FOR or a non-simple value selector is not eligible for the
-						// v1 native path — return empty so the caller lowers to conditional aggregation.
-						if (valueName == null || forName == null)
+						// A non-simple value selector or an unrecognized FOR selector is not eligible for the
+						// native path — return empty so the caller lowers to conditional aggregation.
+						if (valueName == null || forColMembers == null)
 							return new List<AggregateSpec>();
 
-						AddAggregate(aggregates, mc.Method.Name.ToUpperInvariant(), valueName, forName, value.Body.Type, member, forValue);
+						AddAggregate(aggregates, mc.Method.Name.ToUpperInvariant(), valueName, forColMembers, value.Body.Type, member, ExtractForValues(forValue, forColMembers));
 					}
 				}
 			}
@@ -395,27 +408,27 @@ namespace LinqToDB.Internal.Linq.Builder
 			return aggregates;
 		}
 
-		static void AddAggregate(List<AggregateSpec> aggregates, string function, string valueMember, string forColumnMember, Type valueType, string outputMember, object? forValue)
+		static void AddAggregate(List<AggregateSpec> aggregates, string function, string valueMember, IReadOnlyList<string> forColumnMembers, Type valueType, string outputMember, IReadOnlyList<object?> forValues)
 		{
 			var existing = aggregates.Find(a =>
 				string.Equals(a.Function, function, StringComparison.Ordinal)
 				&& string.Equals(a.ValueMember, valueMember, StringComparison.Ordinal)
-				&& string.Equals(a.ForColumnMember, forColumnMember, StringComparison.Ordinal));
+				&& a.ForColumnMembers.SequenceEqual(forColumnMembers, StringComparer.Ordinal));
 
 			if (existing == null)
 			{
 				existing = new AggregateSpec
 				{
-					Function        = function,
-					ValueMember     = valueMember,
-					ForColumnMember = forColumnMember,
-					ValueType       = valueType,
-					Values          = new List<PivotValueSpec>(),
+					Function         = function,
+					ValueMember      = valueMember,
+					ForColumnMembers = forColumnMembers,
+					ValueType        = valueType,
+					Values           = new List<PivotValueSpec>(),
 				};
 				aggregates.Add(existing);
 			}
 
-			existing.Values.Add(new PivotValueSpec { ForValue = forValue, OutputMember = outputMember });
+			existing.Values.Add(new PivotValueSpec { ForValues = forValues, OutputMember = outputMember });
 		}
 
 		static string? TryGetSimpleMemberName(LambdaExpression lambda)
@@ -426,19 +439,62 @@ namespace LinqToDB.Internal.Linq.Builder
 			return body is MemberExpression m ? m.Member.Name : null;
 		}
 
+		// FOR column member name(s): a single member, or the members of an anonymous type for a composite FOR.
+		static IReadOnlyList<string>? ExtractForColumnMembers(LambdaExpression forColumn)
+		{
+			var body = forColumn.Body;
+			while (body is UnaryExpression { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked } u)
+				body = u.Operand;
+
+			if (body is MemberExpression single)
+				return new[] { single.Member.Name };
+
+			if (body is NewExpression { Arguments.Count: > 0 } newExpr)
+			{
+				var names = new string[newExpr.Arguments.Count];
+				for (var i = 0; i < newExpr.Arguments.Count; i++)
+				{
+					var arg = newExpr.Arguments[i];
+					while (arg is UnaryExpression { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked } cu)
+						arg = cu.Operand;
+					if (arg is not MemberExpression m)
+						return null;
+					names[i] = m.Member.Name;
+				}
+
+				return names;
+			}
+
+			return null;
+		}
+
+		// FOR value(s): the scalar value for a single FOR, or the per-member values of an anonymous value for a composite FOR.
+		static IReadOnlyList<object?> ExtractForValues(object? forValue, IReadOnlyList<string> memberNames)
+		{
+			if (memberNames.Count == 1)
+				return new[] { forValue };
+
+			var type   = forValue?.GetType();
+			var values = new object?[memberNames.Count];
+			for (var i = 0; i < memberNames.Count; i++)
+				values[i] = type?.GetProperty(memberNames[i])?.GetValue(forValue);
+
+			return values;
+		}
+
 		sealed class AggregateSpec
 		{
-			public required string               Function        { get; init; }
-			public required string               ValueMember     { get; init; }
-			public required string               ForColumnMember { get; init; }
-			public required Type                 ValueType       { get; init; }
-			public required List<PivotValueSpec> Values          { get; init; }
+			public required string               Function         { get; init; }
+			public required string               ValueMember      { get; init; }
+			public required IReadOnlyList<string> ForColumnMembers { get; init; }
+			public required Type                 ValueType        { get; init; }
+			public required List<PivotValueSpec> Values           { get; init; }
 		}
 
 		sealed class PivotValueSpec
 		{
-			public required object? ForValue     { get; init; }
-			public required string  OutputMember { get; init; }
+			public required IReadOnlyList<object?> ForValues    { get; init; }
+			public required string                 OutputMember { get; init; }
 		}
 	}
 }

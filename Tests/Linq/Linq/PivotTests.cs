@@ -257,6 +257,13 @@ namespace Tests.Linq
 			result[0].Y2000Q2.ShouldBe(20m);
 			result[1].Category.ShouldBe("B");
 			result[1].Y2000Q1.ShouldBe(5m);
+
+			// Oracle / DuckDB support a composite (multi-column) FOR natively; SQL Server / SQLite lower to CASE.
+			var sql = LastQuery!.ToUpperInvariant();
+			if (context.Contains("DuckDB", System.StringComparison.Ordinal) || context.Contains("Oracle", System.StringComparison.Ordinal))
+				sql.ShouldContain("PIVOT");
+			else
+				sql.ShouldNotContain("PIVOT");
 		}
 
 		[Test]

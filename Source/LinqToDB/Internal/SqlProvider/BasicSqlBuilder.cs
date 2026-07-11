@@ -2167,15 +2167,23 @@ namespace LinqToDB.Internal.SqlProvider
 				StringBuilder.Append(')');
 			}
 
+			var forColumns = pivot.Aggregates[0].ForColumns;
+			var composite  = forColumns.Count > 1;
+
 			StringBuilder.Append(" FOR ");
 
-			var forColumns = pivot.Aggregates[0].ForColumns;
+			if (composite)
+				StringBuilder.Append('(');
+
 			for (var i = 0; i < forColumns.Count; i++)
 			{
 				if (i > 0)
 					StringBuilder.Append(", ");
 				BuildExpression(forColumns[i], buildTableName: false, checkParentheses: false);
 			}
+
+			if (composite)
+				StringBuilder.Append(')');
 
 			StringBuilder.Append(" IN (");
 
@@ -2185,12 +2193,24 @@ namespace LinqToDB.Internal.SqlProvider
 				if (i > 0)
 					StringBuilder.Append(", ");
 
-				var forValues = values[i].ForValues;
+				var value     = values[i];
+				var forValues = value.ForValues;
+
+				// Composite FOR emits a value tuple with an explicit alias: (v1, v2) AS name.
+				if (composite)
+					StringBuilder.Append('(');
+
 				for (var j = 0; j < forValues.Count; j++)
 				{
 					if (j > 0)
 						StringBuilder.Append(", ");
 					BuildPivotInValue(forValues[j]);
+				}
+
+				if (composite)
+				{
+					StringBuilder.Append(") AS ");
+					BuildExpression(value.OutputField, buildTableName: false, checkParentheses: false);
 				}
 			}
 
