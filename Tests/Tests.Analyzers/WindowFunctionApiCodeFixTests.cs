@@ -290,6 +290,143 @@ namespace Tests.Analyzers
 		}
 
 		[Test]
+		public Task Statistical()
+			// double?-returning statistical family into a double?-accepting (object?) slot: reported and fixed.
+			=> Verify.VerifyAsync(
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					object? M(int x) => {|LINQ2DB1001:Sql.Ext.StdDev<double>(x).Over().PartitionBy(x).OrderBy(x).ToValue()|};
+				}
+				""",
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					object? M(int x) => Sql.Window.StdDev(x, f => f.PartitionBy(x).OrderBy(x));
+				}
+				""");
+
+		[Test]
+		public Task StatisticalFramed()
+			// FrameableFunctions ∩ NullableDoubleReturning: the frame and the double?-fit path together.
+			=> Verify.VerifyAsync(
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					object? M(int x) => {|LINQ2DB1001:Sql.Ext.StdDev<double>(x).Over().PartitionBy(x).OrderBy(x).Rows.Between.UnboundedPreceding.And.CurrentRow.ToValue()|};
+				}
+				""",
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					object? M(int x) => Sql.Window.StdDev(x, f => f.PartitionBy(x).OrderBy(x).RowsBetween.Unbounded.And.CurrentRow);
+				}
+				""");
+
+		[Test]
+		public Task FirstValueWithIgnoreNulls()
+			=> Verify.VerifyAsync(
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					int M(int x) => {|LINQ2DB1001:Sql.Ext.FirstValue(x, Sql.Nulls.Ignore).Over().PartitionBy(x).OrderBy(x).ToValue()|};
+				}
+				""",
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					int M(int x) => Sql.Window.FirstValue(x, f => f.IgnoreNulls().PartitionBy(x).OrderBy(x));
+				}
+				""");
+
+		[Test]
+		public Task NthValueWithFromLastAndIgnoreNulls()
+			// Covers the value-function family plus the From (FromLast) and Nulls (IgnoreNulls) modifier-to-builder paths.
+			=> Verify.VerifyAsync(
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					int M(int x) => {|LINQ2DB1001:Sql.Ext.NthValue(x, 2L, Sql.From.Last, Sql.Nulls.Ignore).Over().OrderBy(x).ToValue()|};
+				}
+				""",
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					int M(int x) => Sql.Window.NthValue(x, 2L, f => f.FromLast().IgnoreNulls().OrderBy(x));
+				}
+				""");
+
+		[Test]
+		public Task LeadWithOffset()
+			=> Verify.VerifyAsync(
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					int M(int x) => {|LINQ2DB1001:Sql.Ext.Lead(x, 1).Over().OrderBy(x).ToValue()|};
+				}
+				""",
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					int M(int x) => Sql.Window.Lead(x, 1, f => f.OrderBy(x));
+				}
+				""");
+
+		[Test]
+		public Task DoesNotOfferFixForPlainAggregateWithoutOver()
+		{
+			// No .Over(): the plain aggregate has no Sql.Window equivalent — reported, not fixed.
+			const string source = """
+				using LinqToDB;
+
+				class C
+				{
+					int M(int x) => {|LINQ2DB1001:Sql.Ext.Sum(x).ToValue()|};
+				}
+				""";
+
+			return Verify.VerifyAsync(source, source);
+		}
+
+		[Test]
+		public Task DoesNotOfferFixForUsingStaticSqlExtRoot()
+		{
+			// `using static LinqToDB.Sql;` makes the root a bare `Ext.<Fn>` (identifier receiver, not `Sql.Ext`).
+			// There's no Sql qualifier to reuse, so the fix bails gracefully — reported, not fixed, no crash.
+			const string source = """
+				using LinqToDB;
+				using static LinqToDB.Sql;
+
+				class C
+				{
+					long M(int x) => {|LINQ2DB1001:Ext.RowNumber().Over().PartitionBy(x).OrderBy(x).ToValue()|};
+				}
+				""";
+
+			return Verify.VerifyAsync(source, source);
+		}
+
+		[Test]
 		public Task ConvertsInsideExpressionTree()
 			=> Verify.VerifyAsync(
 				"""

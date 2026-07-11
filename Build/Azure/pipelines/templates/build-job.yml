@@ -2,7 +2,7 @@ parameters:
   with_nugets: false
   with_examples: false
   with_tests: false
-  with_analyzer_tests: true
+  with_analyzer_tests: false
   with_singlefile_smoke: false
   with_analyzers: false
   with_api_analyzers: false

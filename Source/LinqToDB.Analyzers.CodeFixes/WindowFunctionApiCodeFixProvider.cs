@@ -23,10 +23,13 @@ namespace LinqToDB.Analyzers.CodeFixes
 	{
 		const string Title = "Convert to Sql.Window API";
 
+		/// <inheritdoc/>
 		public override ImmutableArray<string> FixableDiagnosticIds => ImmutableArray.Create(WindowFunctionApiAnalyzer.DiagnosticId);
 
+		/// <inheritdoc/>
 		public override FixAllProvider GetFixAllProvider() => WellKnownFixAllProviders.BatchFixer;
 
+		/// <inheritdoc/>
 		public override async Task RegisterCodeFixesAsync(CodeFixContext context)
 		{
 			var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);

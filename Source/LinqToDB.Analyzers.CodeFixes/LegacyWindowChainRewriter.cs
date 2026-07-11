@@ -84,6 +84,12 @@ namespace LinqToDB.Analyzers.CodeFixes
 			if (toValueInvocation.Expression is not MemberAccessExpressionSyntax toValueAccess)
 				return null;
 
+			// The package carries no linq2db dependency, so it can be installed alongside a linq2db too old to
+			// have the Sql.Window API. WindowFunctionBuilder holds every extension method the rewrite emits; when
+			// it's absent, don't rewrite compiling code into a call to an API that doesn't exist in this compilation.
+			if (model.Compilation.GetTypeByMetadataName("LinqToDB.WindowFunctionBuilder") is null)
+				return null;
+
 			// Collected walking ToValue -> root; ordering lists are reversed to natural order before building.
 			var orderClauses    = new List<OrderClause>();
 			List<OrderClause>? keepOrderClauses       = null;
@@ -397,7 +403,12 @@ namespace LinqToDB.Analyzers.CodeFixes
 			}
 
 			// Sql.Window.<Fn>(<valueArgs>, f => <body>) — reuse the user's Sql qualifier from `<Sql>.Ext`.
-			var sqlQualifier = ((MemberAccessExpressionSyntax)rootAccess.Expression).Expression;
+			// A bare `Ext.<Fn>` root (via `using static LinqToDB.Sql;`) has an identifier receiver, not `<Sql>.Ext`,
+			// so there's no qualifier to reuse — bail to no-fix (the diagnostic still reports).
+			if (rootAccess.Expression is not MemberAccessExpressionSyntax rootQualifierAccess)
+				return null;
+
+			var sqlQualifier = rootQualifierAccess.Expression;
 			var windowAccess = SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
 				SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, sqlQualifier.WithoutTrivia(), SyntaxFactory.IdentifierName("Window")),
 				SyntaxFactory.IdentifierName(functionName));
