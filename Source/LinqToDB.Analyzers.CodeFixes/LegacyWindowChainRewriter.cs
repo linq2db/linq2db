@@ -43,15 +43,6 @@ namespace LinqToDB.Analyzers.CodeFixes
 		// Windowed ordered-set aggregates: WITHIN GROUP (ORDER BY ...) OVER (PARTITION BY ...).
 		static readonly HashSet<string> WindowedOrderedSetFunctions = new(StringComparer.Ordinal) { "PercentileCont", "PercentileDisc" };
 
-		// Functions whose Sql.Window overloads return double? (vs the legacy chain's TR slot type).
-		static readonly HashSet<string> NullableDoubleReturning = new(StringComparer.Ordinal)
-		{
-			"Median", "RatioToReport", "PercentileCont", "PercentileDisc",
-			"StdDev", "StdDevPop", "StdDevSamp", "Variance", "VarPop", "VarSamp",
-			"CovarPop", "CovarSamp", "Corr",
-			"RegrSlope", "RegrIntercept", "RegrCount", "RegrR2", "RegrAvgX", "RegrAvgY", "RegrSXX", "RegrSYY", "RegrSXY",
-		};
-
 		// Every function this rewriter can convert (union of the uniform families and the special-shape ones).
 		static readonly HashSet<string> ConvertibleFunctions = new(StringComparer.Ordinal)
 		{
@@ -260,12 +251,6 @@ namespace LinqToDB.Analyzers.CodeFixes
 			if (!sawOver || !ConvertibleFunctions.Contains(functionName))
 				return null;
 
-			// The Sql.Window statistical / median / ratio / percentile functions return double?, which the legacy
-			// ToValue<TR>() slot may not accept (e.g. an explicit `double`/`int?` local or return). Only offer the
-			// fix when double? fits the target — or the context is type-inferred (anonymous member / var) and re-infers.
-			if (NullableDoubleReturning.Contains(functionName) && !NullableDoubleFitsTarget(toValueInvocation, model))
-				return null;
-
 			// Split the root call's arguments into positional value args and the special modifier args
 			// (AggregateModifier / Nulls / From / NullsPosition) that become builder calls.
 			var valueArgs   = new List<ArgumentSyntax>();
@@ -427,6 +412,12 @@ namespace LinqToDB.Analyzers.CodeFixes
 				newExpression.DescendantNodes().OfType<IdentifierNameSyntax>().Where(n => placeholders.ContainsKey(n.Identifier.Text)),
 				(original, _) => placeholders[original.Identifier.Text]);
 
+			// The Sql.Window overload's return type may differ from the legacy ToValue<TR>() slot (ranking returns
+			// long/double, statistical/percentile families differ), so a mechanical rewrite can be a narrowing
+			// assignment that won't compile. Only offer the fix when the rewritten call's type fits the target slot.
+			if (!ReturnTypeFitsTarget(toValueInvocation, newExpression, model))
+				return null;
+
 			// Preserve outer trivia and salvage any comments that lived on the original chain's scaffolding so none is lost.
 			var firstToken = toValueInvocation.GetFirstToken();
 			var lastToken  = toValueInvocation.GetLastToken();
@@ -465,21 +456,24 @@ namespace LinqToDB.Analyzers.CodeFixes
 			}
 		}
 
-		// True when double? is acceptable at the expression's position: the target type takes double? implicitly,
-		// the target is unknown, or the context imposes no target type (anonymous member / var — it re-infers).
-		static bool NullableDoubleFitsTarget(ExpressionSyntax expression, SemanticModel model)
+		// True when the rewritten Sql.Window call's return type is accepted at the original expression's position:
+		// it converts implicitly to the target slot, the target is unknown, or the context imposes no target type
+		// (anonymous member / var — it re-infers). The rewritten expression is bound speculatively at the original
+		// position so the check covers every family without enumerating per-function return types.
+		static bool ReturnTypeFitsTarget(ExpressionSyntax legacyExpression, ExpressionSyntax rewritten, SemanticModel model)
 		{
-			if (IsTypeInferredContext(expression))
+			if (IsTypeInferredContext(legacyExpression))
 				return true;
 
-			var target = model.GetTypeInfo(expression).ConvertedType;
-			if (target is null)
+			var target = model.GetTypeInfo(legacyExpression).ConvertedType;
+			if (target is null || target.TypeKind == TypeKind.Error)
 				return true;
 
-			var doubleType     = model.Compilation.GetSpecialType(SpecialType.System_Double);
-			var nullableDouble = model.Compilation.GetSpecialType(SpecialType.System_Nullable_T).Construct(doubleType);
+			var newType = model.GetSpeculativeTypeInfo(legacyExpression.SpanStart, rewritten, SpeculativeBindingOption.BindAsExpression).Type;
+			if (newType is null || newType.TypeKind == TypeKind.Error)
+				return false;
 
-			var conversion = model.Compilation.ClassifyConversion(nullableDouble, target);
+			var conversion = model.Compilation.ClassifyConversion(newType, target);
 			return conversion.IsImplicit || conversion.IsIdentity;
 		}
 

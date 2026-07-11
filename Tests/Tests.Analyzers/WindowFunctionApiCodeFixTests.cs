@@ -427,6 +427,151 @@ namespace Tests.Analyzers
 		}
 
 		[Test]
+		public Task NthValueWithFromFirstAndRespectNulls()
+			// Covers the From.First->FromFirst and Nulls.Respect->RespectNulls modifier branches (siblings of the
+			// From.Last/Nulls.Ignore case), which map to distinct builder calls.
+			=> Verify.VerifyAsync(
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					int M(int x) => {|LINQ2DB1001:Sql.Ext.NthValue(x, 2L, Sql.From.First, Sql.Nulls.Respect).Over().OrderBy(x).ToValue()|};
+				}
+				""",
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					int M(int x) => Sql.Window.NthValue(x, 2L, f => f.FromFirst().RespectNulls().OrderBy(x));
+				}
+				""");
+
+		[Test]
+		public Task KeepLast()
+			=> Verify.VerifyAsync(
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					int M(int x) => {|LINQ2DB1001:Sql.Ext.Max(x).KeepLast().OrderBy(x).Over().PartitionBy(x).ToValue()|};
+				}
+				""",
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					int M(int x) => Sql.Window.Max(x, f => f.KeepLast().OrderBy(x).PartitionBy(x));
+				}
+				""");
+
+		[Test]
+		public Task SingleBoundaryFrameNormalizesToCurrentRow()
+			// A single-boundary legacy frame (.Rows.UnboundedPreceding, no .Between...And) normalizes to the explicit
+			// two-boundary Sql.Window form (frameEnd defaults to CurrentRow).
+			=> Verify.VerifyAsync(
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					int M(int x) => {|LINQ2DB1001:Sql.Ext.Sum(x).Over().OrderBy(x).Rows.UnboundedPreceding.ToValue()|};
+				}
+				""",
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					int M(int x) => Sql.Window.Sum(x, f => f.OrderBy(x).RowsBetween.Unbounded.And.CurrentRow);
+				}
+				""");
+
+		[Test]
+		public Task OrderByWithNullsPosition()
+			// The ordering argument list is spliced wholesale, carrying a NullsPosition argument through unchanged.
+			=> Verify.VerifyAsync(
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					long M(int x) => {|LINQ2DB1001:Sql.Ext.RowNumber().Over().OrderBy(x, Sql.NullsPosition.First).ToValue()|};
+				}
+				""",
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					long M(int x) => Sql.Window.RowNumber(f => f.OrderBy(x, Sql.NullsPosition.First));
+				}
+				""");
+
+		[Test]
+		public Task FramedWithValueBoundaries()
+			// Value-bearing frame boundaries splice the user's numeric args (ValuePreceding(3)/ValueFollowing(1))
+			// through placeholders — the trivia-preserving path distinct from the arg-less Unbounded/CurrentRow form.
+			=> Verify.VerifyAsync(
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					int M(int x) => {|LINQ2DB1001:Sql.Ext.Sum(x).Over().OrderBy(x).Rows.Between.ValuePreceding(3).And.ValueFollowing(1).ToValue()|};
+				}
+				""",
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					int M(int x) => Sql.Window.Sum(x, f => f.OrderBy(x).RowsBetween.ValuePreceding(3).And.ValueFollowing(1));
+				}
+				""");
+
+		[Test]
+		public Task NTileIntoWideEnoughSlot()
+			// Sql.Window.NTile returns long; a long slot accepts it, so the fix is offered.
+			=> Verify.VerifyAsync(
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					long M(int x) => {|LINQ2DB1001:Sql.Ext.NTile(4).Over().OrderBy(x).ToValue()|};
+				}
+				""",
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					long M(int x) => Sql.Window.NTile(4, f => f.OrderBy(x));
+				}
+				""");
+
+		[Test]
+		public Task DoesNotOfferFixWhenReturnTypeWouldNotFitSlot()
+		{
+			// Legacy NTile<T> infers T=int here (returns int), but Sql.Window.NTile returns long — rewriting into an
+			// int slot would be a narrowing assignment (CS0266), so the fix is withheld; the diagnostic still reports.
+			const string source = """
+				using LinqToDB;
+
+				class C
+				{
+					int M(int x) => {|LINQ2DB1001:Sql.Ext.NTile(4).Over().OrderBy(x).ToValue()|};
+				}
+				""";
+
+			return Verify.VerifyAsync(source, source);
+		}
+
+		[Test]
 		public Task ConvertsInsideExpressionTree()
 			=> Verify.VerifyAsync(
 				"""
