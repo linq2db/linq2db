@@ -183,6 +183,12 @@ namespace Tests
 				{
 					var sw       = System.Diagnostics.Stopwatch.StartNew();
 					var signaled = CustomTestContext.AwaitDatabaseReady(provider);
+
+					// Backstop: if the wait timed out (no CreateDatabase ever signalled it), release the
+					// other waiters so they don't each pay the full timeout — one wait per provider, not per test.
+					if (!signaled)
+						CustomTestContext.MarkDatabaseReady(provider);
+
 					ParallelDiag.Log($"latch provider={provider} test={test.Name} signaled={signaled} waitedMs={sw.ElapsedMilliseconds}");
 				}
 			}
