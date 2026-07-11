@@ -2,7 +2,6 @@
 
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.Internal.Linq;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -59,12 +58,9 @@ namespace Tests.UserTests
 			public CustomFieldType? Field1 { get; set; }
 		}
 
-		// NonParallelizable: clears the global query cache (Query.ClearCaches) mid-run, which would perturb concurrent cache-counter tests.
-		[Test, NonParallelizable]
+		[Test]
 		public void Test1([DataSources] string context)
 		{
-			Query.ClearCaches();
-
 			var ms = new MappingSchema();
 			ms.SetConvertExpression<string?, CustomFieldType?>(s => CustomFieldType.FromString(s));
 			ms.SetConvertExpression<CustomFieldType, DataParameter>(
@@ -92,12 +88,9 @@ namespace Tests.UserTests
 			AssertDb(db);
 		}
 
-		// NonParallelizable: clears the global query cache (Query.ClearCaches) mid-run, which would perturb concurrent cache-counter tests.
-		[Test, NonParallelizable]
+		[Test]
 		public void Test2([DataSources] string context)
 		{
-			Query.ClearCaches();
-
 			var ms = new MappingSchema();
 
 			ms.SetConvertExpression<string?, CustomFieldType?>(s => CustomFieldType.FromString(s));
@@ -128,12 +121,9 @@ namespace Tests.UserTests
 			AssertDb(db);
 		}
 
-		// NonParallelizable: clears the global query cache (Query.ClearCaches) mid-run, which would perturb concurrent cache-counter tests.
-		[Test, NonParallelizable]
+		[Test]
 		public void Test3([DataSources] string context)
 		{
-			Query.ClearCaches();
-
 			var ms = new MappingSchema();
 
 			ms.SetConvertExpression<string?, CustomFieldType?>(s => CustomFieldType.FromString(s));
@@ -165,8 +155,6 @@ namespace Tests.UserTests
 		[Test]
 		public void TestExpr1([DataSources] string context)
 		{
-			Query.ClearCaches();
-
 			var ms = new MappingSchema();
 			ms.SetConvertExpression<string?, CustomFieldType?>(s => CustomFieldType.FromString(s));
 			ms.SetConvertExpression<CustomFieldType, DataParameter>(
@@ -198,8 +186,6 @@ namespace Tests.UserTests
 		[Test]
 		public void TestExpr2([DataSources] string context)
 		{
-			Query.ClearCaches();
-
 			var ms = new MappingSchema();
 
 			ms.SetConvertExpression<string?, CustomFieldType?>(s => CustomFieldType.FromString(s));
@@ -234,8 +220,6 @@ namespace Tests.UserTests
 		[Test]
 		public void TestExpr3([DataSources] string context)
 		{
-			Query.ClearCaches();
-
 			var ms = new MappingSchema();
 
 			ms.SetConvertExpression<string?, CustomFieldType?>(s => CustomFieldType.FromString(s));

@@ -12,14 +12,14 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue822Tests : TestBase
 	{
-		int? ID1;
-
-		int? ID2;
-
-		// NonParallelizable: mutates shared per-fixture instance fields ID1/ID2 mid-test that the query closures capture; concurrent cases corrupt them.
-		[Test, NonParallelizable]
+		[Test]
 		public void TestWrongValue([DataSources(TestProvName.AllClickHouse)] string context, [Values(1, 2)] int _)
 		{
+			// ID1/ID2 are locals (not fixture fields) so parallel cases don't share state; the query closures
+			// still capture them and linq2db re-reads the value at execution, so mutating before ToList() is #822's point.
+			int? ID1 = null;
+			int? ID2 = null;
+
 			using var db = GetDataContext(context);
 			var query = db.GetTable<LinqDataTypes2>()
 					.Where(_ => GetSource(db, ID1!.Value).Select(r => r.ID).Contains(_.ID));
@@ -39,10 +39,12 @@ namespace Tests.UserTests
 			Assert.That(result[0].ID, Is.EqualTo(4));
 		}
 
-		// NonParallelizable: mutates shared per-fixture instance fields ID1/ID2 mid-test that the query closures capture; concurrent cases corrupt them.
-		[Test, NonParallelizable]
+		[Test]
 		public void TestNullValue([DataSources(TestProvName.AllClickHouse)] string context, [Values(1, 2)] int _)
 		{
+			int? ID1 = null;
+			int? ID2 = null;
+
 			using var db = GetDataContext(context);
 			var query = db.GetTable<LinqDataTypes2>()
 					.Where(_ => GetSource(db, ID1!.Value).Select(r => r.ID).Contains(_.ID));

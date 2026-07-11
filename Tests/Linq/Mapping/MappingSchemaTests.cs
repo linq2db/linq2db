@@ -374,11 +374,11 @@ namespace Tests.Mapping
 			public PkTable? Parent;
 		}
 
-		// NonParallelizable: reads MappingSchema.Default entity-descriptor state; a concurrent Default mutation removes the expected column.
-		[Test, NonParallelizable]
+		[Test]
 		public void DoNotUseComplexAttributes()
 		{
-			var ed = MappingSchema.Default.GetEntityDescriptor(typeof(FkTable));
+			// local schema (not MappingSchema.Default) so a concurrent Default mutation can't perturb the read
+			var ed = new MappingSchema().GetEntityDescriptor(typeof(FkTable));
 			var c  = ed.Columns.Single(_ => _.ColumnName == "ParentId");
 			using (Assert.EnterMultipleScope())
 			{
