@@ -26,8 +26,16 @@ namespace LinqToDB.Internal.Linq.Builder
 			var pivotLambda = methodCall.Arguments[1].UnwrapLambda();
 			var aggregates  = ParseAggregates(pivotLambda);
 
-			// Native path: a single aggregate over a single FOR column (any native-PIVOT provider), or a
-			// composite FOR where the provider supports multi-column PIVOT (Oracle, DuckDB).
+			// Native PIVOT is used only for a SINGLE aggregate (aggregates is { Count: 1 }): either a single FOR
+			// column (any native-PIVOT provider) or a composite FOR where the provider supports multi-column
+			// PIVOT (Oracle, DuckDB).
+			//
+			// Multiple aggregates (e.g. Sum + Count) deliberately fall through to the conditional-aggregation
+			// lowering below and are NOT emitted as native PIVOT. The SQL standard's PIVOT operator accepts a
+			// single aggregate, so a multi-aggregate pivot would require self-joined single-aggregate PIVOT
+			// sub-queries — one full scan of the source per aggregate. The lowering computes every aggregate in
+			// ONE GROUP BY pass (SUM(CASE ...), COUNT(CASE ...), ...) with identical results, so the native form
+			// would be strictly slower (N scans + a self-join vs. one scan) for no benefit.
 			if (builder.DataContext.SqlProviderFlags.IsPivotSupported
 				&& aggregates is { Count: 1 }
 				&& (aggregates[0].ForColumnMembers.Count == 1 || builder.DataContext.SqlProviderFlags.IsMultiColumnPivotSupported))
