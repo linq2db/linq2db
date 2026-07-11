@@ -5,7 +5,6 @@ using System.Reflection;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Diagnosers;
-using BenchmarkDotNet.Exporters;
 using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Toolchains.InProcess.Emit;
 
@@ -37,7 +36,6 @@ namespace LinqToDB.Benchmarks.Mapping
 					.WithWarmupCount  (3)
 					.WithIterationCount(5));
 				AddDiagnoser(MemoryDiagnoser.Default);
-				AddExporter (MarkdownExporter.GitHub);
 			}
 		}
 
