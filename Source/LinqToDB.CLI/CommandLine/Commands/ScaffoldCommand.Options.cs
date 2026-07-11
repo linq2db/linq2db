@@ -78,6 +78,22 @@ JSON file example:
 					false);
 
 			/// <summary>
+			/// Target language option.
+			/// </summary>
+			public static readonly CliOption TargetLanguage = new StringEnumCliOption(
+					"target-language",
+					null,
+					false,
+					false,
+					"target language for generated code",
+					"Selects the language of generated data model code. F# generation emits idiomatic records with option-typed nullable columns and requires the consuming project to call DataOptions.UseFSharp() (from the linq2db.FSharp package).",
+					null,
+					null,
+					false,
+					new (true,  true,  "c#", "C# (default)"),
+					new (false, false, "f#", "F# (records)"));
+
+			/// <summary>
 			/// Database provider option.
 			/// </summary>
 			public static readonly CliOption Provider = new StringEnumCliOption(
@@ -217,7 +233,7 @@ Customization using compiled assembly has several requirements:
 					"nrt",
 					null,
 					false,
-					"enable generation of nullable reference type annotations",
+					"enable generation of nullable reference type annotations (C# `?` / F# `| null`)",
 					null,
 					null,
 					null,
@@ -510,7 +526,8 @@ If you don't specify some property, CLI will use default value for current optio
 					null,
 					null,
 					_defaultOptions.DataModel.EntityClassIsPartial,
-					_t4ModeOptions.DataModel.EntityClassIsPartial);
+					_t4ModeOptions.DataModel.EntityClassIsPartial)
+					{ Languages = TargetLanguages.CSharp };
 
 			/// <summary>
 			/// Generate <see cref="DataType"/> values on entity columns mappings option.
@@ -641,7 +658,8 @@ static class CustomFluentExtensions
 					null,
 					null,
 					_defaultOptions.DataModel.GenerateInitDataContextMethod,
-					_t4ModeOptions.DataModel.GenerateInitDataContextMethod);
+					_t4ModeOptions.DataModel.GenerateInitDataContextMethod)
+					{ Languages = TargetLanguages.CSharp };
 
 			/// <summary>
 			/// Generate StaticInitDataContext partial method on data context class option.
@@ -655,7 +673,8 @@ static class CustomFluentExtensions
 					null,
 					null,
 					_defaultOptions.DataModel.GenerateStaticInitDataContextMethod,
-					_t4ModeOptions.DataModel.GenerateStaticInitDataContextMethod);
+					_t4ModeOptions.DataModel.GenerateStaticInitDataContextMethod)
+					{ Languages = TargetLanguages.CSharp };
 
 			/// <summary>
 			/// Default data context contructor generation option.

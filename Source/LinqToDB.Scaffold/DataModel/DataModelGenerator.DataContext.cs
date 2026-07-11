@@ -129,6 +129,13 @@ namespace LinqToDB.DataModel
 							WellKnownTypes.LinqToDB.Configuration.DataOptions_ConnectionOptions),
 						WellKnownTypes.LinqToDB.Configuration.ConnectionOptions_MappingSchema);
 
+					// In the else arm the schema is known non-null (guarded by the == null check), but F#
+					// nullness does not narrow a re-accessed property the way C# flow analysis does, so suppress
+					// the null there for F# (renders Unchecked.nonNull). C# narrows on its own - leave it raw.
+					var combineExisting = ReferenceEquals(context.LanguageProvider, LanguageProviders.FSharp)
+						? (ICodeExpression)context.AST.SuppressNull(existingSchema)
+						: existingSchema;
+
 					ctor.Base(
 						context.AST.ExtCall(
 							WellKnownTypes.LinqToDB.Configuration.DataOptions,
@@ -142,7 +149,7 @@ namespace LinqToDB.DataModel
 									new CodeTypeReference(WellKnownTypes.LinqToDB.Mapping.MappingSchema),
 									WellKnownTypes.LinqToDB.Mapping.MappingSchema_CombineSchemas,
 									WellKnownTypes.LinqToDB.Mapping.MappingSchema,
-									existingSchema,
+									combineExisting,
 									context.ContextMappingSchema))));
 				}
 				else

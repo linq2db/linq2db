@@ -303,6 +303,16 @@ namespace LinqToDB.CommandLine
 					Console.Out.WriteLine("{0}{0}   {1}", indent, example);
 			}
 
+			// print the languages an option is restricted to (omitted when it applies to all languages)
+			if (option.Languages != TargetLanguages.All)
+			{
+				var languages =
+					option.Languages == TargetLanguages.CSharp ? "C#" :
+					option.Languages == TargetLanguages.FSharp ? "F#" :
+					"C#, F#";
+				Console.Out.WriteLine("{0}   Supported in: {1}", indent, languages);
+			}
+
 			// print detailed option help if provided
 			if (option.DetailedHelp != null)
 			{

@@ -30,6 +30,14 @@ namespace LinqToDB.CommandLine
 		string[]?  JsonExamples)
 	{
 		/// <summary>
+		/// Target languages this option applies to. Defaults to <see cref="TargetLanguages.All"/>.
+		/// Options that don't apply to a language (e.g. NRT or partial-class options for F#) set this to a
+		/// restricted value; the scaffold command rejects such an option when it is set for a target language
+		/// it does not support.
+		/// </summary>
+		public TargetLanguages Languages { get; init; } = TargetLanguages.All;
+
+		/// <summary>
 		/// Parse option value(s) using CLI arguments.
 		/// </summary>
 		/// <param name="command">Option's command descriptor.</param>

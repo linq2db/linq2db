@@ -28,10 +28,69 @@ namespace LinqToDB.CommandLine
 			// processed on controller level already
 			options.Remove(General.Import);
 
+			// target language selection
+			options.Remove(General.TargetLanguage, out var languageValue);
+			var language = string.Equals((string?)languageValue, "f#", StringComparison.Ordinal) ? LanguageProviders.FSharp : LanguageProviders.CSharp;
+
+			// F# is emitted through the AST code path only; the T4 template mode is C#-only
+			if (language == LanguageProviders.FSharp
+				&& options.TryGetValue(General.OptionsTemplate, out var templateValue) && templateValue is "t4")
+			{
+				await Console.Error.WriteLineAsync("F# generation (--target-language f#) is not supported together with the T4 template mode (-t t4).").ConfigureAwait(false);
+				return StatusCodes.INVALID_ARGUMENTS;
+			}
+
+			// reject options that don't apply to the selected target language (fail fast, don't silently ignore)
+			if (language == LanguageProviders.FSharp)
+			{
+				var hasUnsupported = false;
+				foreach (var specified in options.Keys)
+				{
+					if (!specified.Languages.HasFlag(TargetLanguages.FSharp))
+					{
+						await Console.Error.WriteLineAsync($"Option '--{specified.Name}' is not supported for target language F#.").ConfigureAwait(false);
+						hasUnsupported = true;
+					}
+				}
+
+				if (hasUnsupported)
+					return StatusCodes.INVALID_ARGUMENTS;
+			}
+
 			// scaffold settings object initialization
 			var settings = ProcessScaffoldOptions(options);
 			if (settings == null)
 				return StatusCodes.INVALID_ARGUMENTS;
+
+			// F# uses a single generated file (no partial types, order-sensitive compilation)
+			if (language == LanguageProviders.FSharp)
+			{
+				settings.CodeGeneration.ClassPerFile = false;
+
+				// F# does not allow TAB indentation (FS1161); use spaces
+				if (string.Equals(settings.CodeGeneration.Indent, "\t", StringComparison.Ordinal))
+					settings.CodeGeneration.Indent = "    ";
+
+				// TODO(#1553): incremental F# parity. These C#-shaped features are not yet emitted for F#;
+				// they will be re-enabled one by one as the F# code generator gains support for each
+				// (Find methods as module functions, records' structural equality, associations as record
+				// fields, a single primary constructor). Until then, restrict F# to the record + context core.
+				// F# records are structurally value-equal already, so the C#-style IEquatable comparer is not
+				// emitted (it would conflict with the compiler-generated equality)
+				settings.DataModel.GenerateIEquatable                = false;
+				// associations become extra record fields with [<Association>] attributes (namespace rec covers
+				// the mutual references); association *extension* methods remain gated off for now
+				settings.DataModel.GenerateAssociationExtensions     = false;
+				settings.DataModel.GenerateInitDataContextMethod     = false;
+				settings.DataModel.GenerateStaticInitDataContextMethod = false;
+				settings.DataModel.EntityClassIsPartial              = false;
+
+				// single primary constructor (typed options) for the data context
+				settings.DataModel.HasDefaultConstructor       = false;
+				settings.DataModel.HasConfigurationConstructor = false;
+				settings.DataModel.HasUntypedOptionsConstructor = false;
+				settings.DataModel.HasTypedOptionsConstructor  = true;
+			}
 
 			// process remaining utility-specific (general) options
 
@@ -100,11 +159,12 @@ namespace LinqToDB.CommandLine
 			}
 
 			// perform scaffolding
-			return Scaffold(settings, interceptors, provider, providerLocation, connectionString, additionalConnectionString, output, overwrite);
+			return Scaffold(settings, language, interceptors, provider, providerLocation, connectionString, additionalConnectionString, output, overwrite);
 		}
 
 		private int Scaffold(
 			ScaffoldOptions       settings,
+			ILanguageProvider     language,
 			ScaffoldInterceptors? interceptors,
 			string                provider,
 			string?               providerLocation,
@@ -118,8 +178,6 @@ namespace LinqToDB.CommandLine
 			if (dc == null)
 				return StatusCodes.EXPECTED_ERROR;
 
-			var language = LanguageProviders.CSharp;
-
 			var legacyProvider   = new LegacySchemaProvider(dc, settings.Schema, language);
 			ISchemaProvider      schemaProvider       = legacyProvider;
 			ITypeMappingProvider typeMappingsProvider = legacyProvider;
@@ -131,7 +189,7 @@ namespace LinqToDB.CommandLine
 				typeMappingsProvider     = new AggregateTypeMappingsProvider(legacyProvider, secondLegacyProvider);
 			}
 
-			var generator  = new Scaffolder(LanguageProviders.CSharp, HumanizerNameConverter.Instance, settings, interceptors);
+			var generator  = new Scaffolder(language, HumanizerNameConverter.Instance, settings, interceptors);
 			var dataModel  = generator.LoadDataModel(schemaProvider, typeMappingsProvider);
 			var sqlBuilder = dc.DataProvider.CreateSqlBuilder(dc.MappingSchema, dc.Options);
 			var files      = generator.GenerateCodeModel(

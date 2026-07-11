@@ -82,6 +82,9 @@ Notable: `CodeUnary` only supports `Not`; `CodeIdentifier` is mutable with `OnCh
 ### `CodeModel/Languages/CSharp/` (3 files)
 `CSharpLanguageProvider` singleton; `CSharpCodeGenerator` extends `CodeGenerationVisitor<>`, static `KeyWords` set (104); `CSharpNameNormalizationVisitor` fixes `CodeIdentifier` instances in-place.
 
+### `CodeModel/Languages/FSharp/` (3 files, #1553)
+`FSharpLanguageProvider` singleton (`NRTSupported=true`, `FileExtension="fs"`, F# type aliases, case-sensitive comparers); `FSharpCodeGenerator` extends `CodeGenerationVisitor<>` and emits idiomatic F# — `namespace rec` single-file output, records with attribute-decorated fields, `'T option` for nullable scalar columns, `| null` on nullable reference members under `--nrt` (`CodeSuppressNull` renders `Unchecked.nonNull`), module-per-schema for additional schemas, computed schema-accessor properties (no `InitSchemas` — avoids `member val` recursive-init), `task {}` async bodies, `byref<>` out/ref params, `Func<>`-wrapped mapper lambdas + explicit `QueryProc<T>` type args (F# overload-resolution needs both); `FSharpNameNormalizationVisitor`. `DataModelGenerator` gates C#-shaped features off for F# via `ReferenceEquals(LanguageProvider, LanguageProviders.FSharp)`. The `Modifiers.Record`/`Modifiers.Module` AST bits are F#-only markers (C# ignores them).
+
 ### `CodeModel/Visitors/` (8 files)
 `CodeModelVisitor` 42-case dispatch; `NoopCodeModelVisitor`; `CodeGenerationVisitor`; `ConvertCodeModelVisitor`. Concrete: `ImportsCollector`, `NameScopesCollector`, `ProviderSpecificStructsEqualityFixer`.
 
@@ -175,7 +178,7 @@ Concrete generics: `MemberBase`, `MemberGroup<T>`, `Attribute<T>`, `Class<T>`, `
 
 ## Known issues / debt
 
-- **F# and VB.NET not implemented** (`LanguageProviders.cs:9`, issue #1553). `CSharpLanguageProvider` is the only `ILanguageProvider`.
+- **F# implemented (#1553); VB.NET not implemented** (`LanguageProviders.cs`). `CSharpLanguageProvider` and `FSharpLanguageProvider` exist; VB.NET remains the only unimplemented `ILanguageProvider`. F# is CLI/AST-path only (no T4). Some C#-shaped features are gated off for F# pending incremental parity: `IEquatable` comparer (records are value-equal), association *extension* methods, partial types, `InitDataContext`/`StaticInitDataContext` partial hooks.
 - **Logger not yet wired.** `DataModelLoader.MapType:215` and `LegacySchemaProvider.ParseColumn` fall back to `Console.Error.WriteLine`.
 - **PostgreSQL legacy API bug workaround** in `LegacySchemaProvider.ParseSchema:94`.
 - **MySQL schema type-conflict swallowed** in `LegacySchemaProvider.RegisterType`.

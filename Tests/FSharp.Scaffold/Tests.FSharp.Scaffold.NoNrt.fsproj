@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Compile-only regression gate for the CLI scaffolder's F# output (issue #1553) - nullness-disabled variant.
+    The committed .fs files are produced by scaffolding with target-language f# and nrt=false, and must compile
+    with F# 9 nullness OFF (Nullable=disable): nullable reference members are plain, unannotated. The NRT-enabled
+    (nrt=true) variant is Tests.FSharp.Scaffold.fsproj; the two together give both-mode coverage. Regenerate both
+    via generate.ps1.
+  -->
+
+  <PropertyGroup>
+    <AssemblyName>linq2db.Tests.FSharp.Scaffold.NoNrt</AssemblyName>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>9</LangVersion>
+    <WarningLevel>5</WarningLevel>
+    <Nullable>disable</Nullable>
+    <IsPackable>false</IsPackable>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- one generated file per (provider) baseline, distinct namespace (Tests.FSharp.Scaffold.NoNrt.<Provider>)
+         so context names don't collide. Regenerate via generate.ps1. -->
+    <Compile Include="NoNrt\SQLite\TestDataDB.fs" />
+    <Compile Include="NoNrt\PostgreSQL\TestDataDB.fs" />
+    <Compile Include="NoNrt\SqlServer\TestDataDB.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Source\LinqToDB\LinqToDB.csproj" />
+    <ProjectReference Include="..\..\Source\LinqToDB.FSharp\LinqToDB.FSharp.fsproj" />
+    <PackageReference Include="FSharp.Core" />
+    <!-- baselines are generated with prefer-provider-types, so they reference provider-specific CLR
+         types (NpgsqlTypes.*, Microsoft.SqlServer.Types.*) -->
+    <PackageReference Include="Npgsql" />
+    <PackageReference Include="Microsoft.SqlServer.Types" />
+  </ItemGroup>
+
+</Project>

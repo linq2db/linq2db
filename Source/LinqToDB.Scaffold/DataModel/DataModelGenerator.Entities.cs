@@ -45,6 +45,11 @@ namespace LinqToDB.DataModel
 
 			var entityBuilder = context.GetEntityBuilder(entity);
 
+			// F# entities are emitted as records; mark the class so the F# code generator renders record syntax
+			// (the C# generator ignores this modifier).
+			if (ReferenceEquals(context.LanguageProvider, LanguageProviders.FSharp))
+				entityBuilder.SetModifiers(entityBuilder.Type.Attributes | Modifiers.Record);
+
 			// generate colum properties
 			var columnsGroup = entityBuilder.Properties(true);
 			foreach (var columnModel in entity.Columns)
