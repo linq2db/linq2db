@@ -85,5 +85,9 @@ namespace LinqToDB.Metadata
 		/// Contains column ordinal for create table APIs.
 		/// </summary>
 		public int?          Order             { get; set; }
+		/// <summary>
+		/// Generate SQL Server-specific decimal reader converter for this column.
+		/// </summary>
+		public bool          UseGetSqlDecimal  { get; set; }
 	}
 }
