@@ -2120,7 +2120,13 @@ namespace LinqToDB.Internal.SqlProvider
 			if (unpivot.IncludeNulls)
 				StringBuilder.Append("INCLUDE NULLS ");
 
+			var multiValue = unpivot.ValueFields.Count > 1;
+
 			StringBuilder.Append('(');
+
+			// Multi-value: the value columns are a parenthesized tuple, e.g. (M1, M2, M3).
+			if (multiValue)
+				StringBuilder.Append('(');
 
 			for (var i = 0; i < unpivot.ValueFields.Count; i++)
 			{
@@ -2128,6 +2134,9 @@ namespace LinqToDB.Internal.SqlProvider
 					StringBuilder.Append(", ");
 				BuildExpression(unpivot.ValueFields[i], buildTableName: false, checkParentheses: false);
 			}
+
+			if (multiValue)
+				StringBuilder.Append(')');
 
 			StringBuilder.Append(" FOR ");
 			BuildExpression(unpivot.NameField, buildTableName: false, checkParentheses: false);
@@ -2139,11 +2148,22 @@ namespace LinqToDB.Internal.SqlProvider
 					StringBuilder.Append(", ");
 
 				var item = unpivot.Items[i];
+
+				// Multi-value: each group is a parenthesized tuple with an explicit name label, e.g. (Jan, Feb, Mar) AS 'Q1'.
+				if (multiValue)
+					StringBuilder.Append('(');
+
 				for (var j = 0; j < item.Columns.Count; j++)
 				{
 					if (j > 0)
 						StringBuilder.Append(", ");
 					BuildExpression(item.Columns[j], buildTableName: false, checkParentheses: false);
+				}
+
+				if (multiValue)
+				{
+					StringBuilder.Append(") AS ");
+					BuildExpression(new SqlValue(item.Label), buildTableName: false, checkParentheses: false);
 				}
 			}
 

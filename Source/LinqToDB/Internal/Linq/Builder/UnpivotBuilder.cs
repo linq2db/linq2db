@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -12,16 +13,21 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.Linq.Builder
 {
-	[BuildsMethodCall(nameof(LinqExtensions.Unpivot))]
+	[BuildsMethodCall(nameof(LinqExtensions.Unpivot), nameof(LinqExtensions.UnpivotMulti))]
 	sealed class UnpivotBuilder : MethodCallBuilder
 	{
 		public static bool CanBuildMethod(MethodCallExpression call)
 			=> call.IsQueryable
 				&& call.Method.DeclaringType == typeof(LinqExtensions)
-				&& call.Arguments.Count == 5;
+				&& (string.Equals(call.Method.Name, nameof(LinqExtensions.UnpivotMulti), StringComparison.Ordinal)
+					? call.Arguments.Count == 3
+					: call.Arguments.Count == 5);
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
+			if (string.Equals(methodCall.Method.Name, nameof(LinqExtensions.UnpivotMulti), StringComparison.Ordinal))
+				return BuildMultiValue(builder, methodCall, buildInfo);
+
 			var info = UnpivotInfo.Parse(methodCall);
 
 			// Native UNPIVOT keyword where the provider supports it and INCLUDE NULLS matches native default;
@@ -35,6 +41,107 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			return BuildSequenceResult.FromContext(builder.BuildSequence(new BuildInfo(buildInfo, BuildLoweredExpression(info))));
 		}
+
+		#region Multi-value
+
+		static BuildSequenceResult BuildMultiValue(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		{
+			var genericArgs    = methodCall.Method.GetGenericArguments();
+			var sourceType     = genericArgs[0];
+			var valueType      = genericArgs[1];
+			var resultType     = genericArgs[2];
+			var sourceExpr     = methodCall.Arguments[0];
+			var resultSelector = methodCall.Arguments[1].UnwrapLambda();
+			var groups         = ((string name, LambdaExpression[] columns)[])methodCall.Arguments[2].EvaluateExpression()!;
+
+			if (builder.DataContext.SqlProviderFlags.IsMultiValueUnpivotSupported)
+			{
+				var native = TryBuildMultiValueNative(builder, buildInfo, sourceType, valueType, resultSelector, groups);
+				if (native != null)
+					return native.Value;
+			}
+
+			// Portable UNION ALL fallback: one projected SELECT per group.
+			var selectMethod = Methods.Queryable.Select.MakeGenericMethod(sourceType, resultType);
+			var concatMethod = Methods.Queryable.Concat.MakeGenericMethod(resultType);
+
+			Expression? accumulated = null;
+
+			foreach (var (name, columns) in groups)
+			{
+				var rowParam = Expression.Parameter(sourceType, "row");
+				var args     = new Expression[columns.Length + 2];
+				args[0] = rowParam;
+				args[1] = Expression.Constant(name);
+				for (var i = 0; i < columns.Length; i++)
+					args[i + 2] = columns[i].GetBody(rowParam);
+
+				var branch = Expression.Call(selectMethod, sourceExpr, Expression.Quote(Expression.Lambda(resultSelector.GetBody(args), rowParam)));
+				accumulated = accumulated == null ? branch : Expression.Call(concatMethod, accumulated, branch);
+			}
+
+			return BuildSequenceResult.FromContext(builder.BuildSequence(new BuildInfo(buildInfo, accumulated!)));
+		}
+
+		static BuildSequenceResult? TryBuildMultiValueNative(ExpressionBuilder builder, BuildInfo buildInfo, Type sourceType, Type valueType, LambdaExpression resultSelector, (string name, LambdaExpression[] columns)[] groups)
+		{
+			var sourceExpr    = ((MethodCallExpression)buildInfo.Expression).Arguments[0];
+			var sourceContext = builder.BuildSequence(new BuildInfo(buildInfo, sourceExpr, new SelectQuery()));
+			var tableContext  = SequenceHelper.GetTableContext(sourceContext);
+			if (tableContext?.SqlTable is not { } sourceTable)
+				return null;
+
+			var valueCount = groups[0].columns.Length;
+			var node       = new SqlUnpivotTable(sourceTable, includeNulls: false);
+
+			var nameField = new SqlField(builder.MappingSchema.GetDbDataType(typeof(string)), "Name", false) { Table = node };
+			node.NameField = nameField;
+			node.OutputFields.Add(nameField);
+
+			var valueDbType = builder.MappingSchema.GetDbDataType(valueType);
+			var valueFields = new SqlField[valueCount];
+			for (var k = 0; k < valueCount; k++)
+			{
+				var vf = new SqlField(valueDbType, "Value" + (k + 1).ToString(CultureInfo.InvariantCulture), true) { Table = node };
+				valueFields[k] = vf;
+				node.ValueFields.Add(vf);
+				node.OutputFields.Add(vf);
+			}
+
+			foreach (var (name, columns) in groups)
+			{
+				if (columns.Length != valueCount)
+					return null;
+
+				var cols = new ISqlExpression[columns.Length];
+				for (var i = 0; i < columns.Length; i++)
+				{
+					var colName = GetColumnName(columns[i]);
+					var field   = sourceTable.Fields.Find(f => string.Equals(f.Name, colName, StringComparison.Ordinal));
+					if (field == null)
+						return null;
+					cols[i] = field;
+				}
+
+				node.Items.Add(new SqlUnpivotItem(name, cols));
+			}
+
+			var selectQuery = buildInfo.SelectQuery;
+			selectQuery.From.Table(node);
+
+			var contexts = new IBuildContext[valueCount + 2];
+			contexts[0] = new UnpivotRowContext(builder.GetTranslationModifier(), builder, sourceType, selectQuery, node);
+			contexts[1] = new SingleExpressionContext(builder.GetTranslationModifier(), builder, nameField, selectQuery);
+			for (var k = 0; k < valueCount; k++)
+				contexts[k + 2] = new SingleExpressionContext(builder.GetTranslationModifier(), builder, valueFields[k], selectQuery);
+
+			var body       = SequenceHelper.PrepareBody(resultSelector, contexts);
+			var projection = new SelectContext(builder.GetTranslationModifier(), buildInfo.Parent, builder, null, body, selectQuery, buildInfo.IsSubQuery);
+
+			return BuildSequenceResult.FromContext(projection);
+		}
+
+		#endregion
 
 		#region Native
 

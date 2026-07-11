@@ -332,6 +332,16 @@ namespace Tests.Linq
 			result[1].Quarter.ShouldBe("Q2");
 			result[1].M1.ShouldBe(40m);
 			result[1].M3.ShouldBe(60m);
+
+			// Oracle / DuckDB support multi-value UNPIVOT natively; SQL Server / SQLite lower to UNION ALL.
+			if (!context.Contains("LinqService", System.StringComparison.Ordinal))
+			{
+				var sql = LastQuery!.ToUpperInvariant();
+				if (context.Contains("DuckDB", System.StringComparison.Ordinal) || context.Contains("Oracle", System.StringComparison.Ordinal))
+					sql.ShouldContain("UNPIVOT");
+				else
+					sql.ShouldNotContain("UNPIVOT");
+			}
 		}
 	}
 }

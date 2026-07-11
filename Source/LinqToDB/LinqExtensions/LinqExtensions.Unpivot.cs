@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 
 using JetBrains.Annotations;
 
@@ -104,7 +105,7 @@ namespace LinqToDB
 			ArgumentNullException.ThrowIfNull(resultSelector);
 			ArgumentNullException.ThrowIfNull(groups);
 
-			return BuildMultiValueUnpivot<TSource, TResult>(source, resultSelector,
+			return BuildMultiValueUnpivot<TSource, TValue, TResult>(source, resultSelector,
 				groups.Select(static g => (g.name, new LambdaExpression[] { g.column1, g.column2 })).ToArray());
 		}
 
@@ -128,33 +129,37 @@ namespace LinqToDB
 			ArgumentNullException.ThrowIfNull(resultSelector);
 			ArgumentNullException.ThrowIfNull(groups);
 
-			return BuildMultiValueUnpivot<TSource, TResult>(source, resultSelector,
+			return BuildMultiValueUnpivot<TSource, TValue, TResult>(source, resultSelector,
 				groups.Select(static g => (g.name, new LambdaExpression[] { g.column1, g.column2, g.column3 })).ToArray());
 		}
 
-		static IQueryable<TResult> BuildMultiValueUnpivot<TSource, TResult>(
-			IQueryable<TSource>                                     source,
-			LambdaExpression                                        resultSelector,
-			IReadOnlyList<(string name, LambdaExpression[] columns)> groups)
+		static readonly MethodInfo _unpivotMultiMethodInfo =
+			typeof(LinqExtensions).GetMethod(nameof(UnpivotMulti), BindingFlags.Static | BindingFlags.NonPublic)!;
+
+		// Emits the UnpivotMulti marker call; UnpivotBuilder rewrites it to native multi-value UNPIVOT
+		// (Oracle/DuckDB) or a portable UNION ALL derived table.
+		static IQueryable<TResult> BuildMultiValueUnpivot<TSource, TValue, TResult>(
+			IQueryable<TSource>                       source,
+			LambdaExpression                          resultSelector,
+			(string name, LambdaExpression[] columns)[] groups)
 		{
-			IQueryable<TResult>? result = null;
+			var currentSource = source.ProcessIQueryable();
 
-			foreach (var (name, columns) in groups)
-			{
-				var rowParam = Expression.Parameter(typeof(TSource), "row");
+			var expr = Expression.Call(
+				null,
+				_unpivotMultiMethodInfo.MakeGenericMethod(typeof(TSource), typeof(TValue), typeof(TResult)),
+				currentSource.Expression,
+				Expression.Quote(resultSelector),
+				Expression.Constant(groups, typeof((string, LambdaExpression[])[])));
 
-				var args = new Expression[columns.Length + 2];
-				args[0] = rowParam;
-				args[1] = Expression.Constant(name);
-				for (var i = 0; i < columns.Length; i++)
-					args[i + 2] = columns[i].GetBody(rowParam);
-
-				var branch = source.Select(Expression.Lambda<Func<TSource, TResult>>(resultSelector.GetBody(args), rowParam));
-
-				result = result == null ? branch : result.Concat(branch);
-			}
-
-			return result!;
+			return currentSource.Provider.CreateQuery<TResult>(expr);
 		}
+
+		// Query marker for multi-value UNPIVOT — never executed; recognized by UnpivotBuilder.
+		internal static IQueryable<TResult> UnpivotMulti<TSource, TValue, TResult>(
+			IQueryable<TSource>                       source,
+			LambdaExpression                          resultSelector,
+			(string name, LambdaExpression[] columns)[] groups)
+			=> throw new InvalidOperationException("UnpivotMulti is a query marker and must not be invoked directly.");
 	}
 }
