@@ -20,14 +20,23 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- one generated file per (provider, options) baseline; F# requires explicit ordered compile items -->
-    <Compile Include="TestDataDB.fs" />
+    <!-- one generated file per (provider) baseline; F# requires explicit ordered compile items.
+         each file uses a distinct namespace (Tests.FSharp.Scaffold.<Provider>) so the TestDataDB
+         context names don't collide in the single assembly. Regenerate via generate.ps1. -->
+    <Compile Include="SQLite\TestDataDB.fs" />
+    <Compile Include="PostgreSQL\TestDataDB.fs" />
+    <Compile Include="SqlServer\TestDataDB.fs" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\Source\LinqToDB\LinqToDB.csproj" />
     <ProjectReference Include="..\..\Source\LinqToDB.FSharp\LinqToDB.FSharp.fsproj" />
     <PackageReference Include="FSharp.Core" />
+    <!-- baselines are generated with prefer-provider-types, so they reference provider-specific CLR
+         types (NpgsqlTypes.*, Microsoft.SqlServer.Types.*); these packages make them resolve, mirroring
+         what a real F# app scaffolded against these providers must reference -->
+    <PackageReference Include="Npgsql" />
+    <PackageReference Include="Microsoft.SqlServer.Types" />
   </ItemGroup>
 
 </Project>
