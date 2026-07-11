@@ -125,6 +125,11 @@
 		</Compile>
 	</ItemGroup>
 
+	<ItemGroup>
+		<!-- Bounded/LRU/LFU cache primitive backing LinqToDB.Internal.Cache (netstandard2.0 leg pulls System.Threading.Tasks.Extensions transitively). -->
+		<PackageReference Include="BitFaster.Caching" />
+	</ItemGroup>
+
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">
 		<Reference Include="Microsoft.CSharp" />
 		<Reference Include="System.ComponentModel.DataAnnotations" />
