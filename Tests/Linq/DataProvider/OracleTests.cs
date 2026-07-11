@@ -526,22 +526,6 @@ namespace Tests.DataProvider
 				p.OracleDbType.ShouldBe(OracleDbType.Varchar2);
 		}
 
-		[Test, Ignore("TODO: needs to implement providing parameter type in LINQ expressions")]
-		public void LongStringParameterLinqTest([IncludeDataSources(TestProvName.AllOracle)] string context)
-		{
-			using var conn  = GetDataContext(context);
-			using var table = conn.CreateLocalTable<BlobsTable>();
-
-			var value = "LongString".PadRight(50000, '1');
-
-			table.Insert(() => new BlobsTable { Id = 1, NClob = ToNClob(value) });
-
-			table.Where(r => r.Id == 1).Select(r => r.NClob!.Length).Single().ShouldBe(value.Length);
-		}
-
-		[Sql.Expression("TO_NCLOB({0})", ServerSideOnly = true)]
-		static string ToNClob(string value) => throw new ServerSideOnlyException(nameof(ToNClob));
-
 		[Test]
 		public void TestBinary([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
