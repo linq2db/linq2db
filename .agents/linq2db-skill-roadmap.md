@@ -23,7 +23,7 @@ derived artifacts when needed.
 | [x] | API discovery | `Source/Skills/linq2db/docs/api.md` | Critical | Done | General rules for finding exact API members through the generated API index and raw XML-doc confirmation when needed. |
 | [x] | Architecture overview | `Source/Skills/linq2db/docs/architecture.md` | Critical | Done | Core reference; already linked from `SKILL.md`. |
 | [x] | Agent anti-patterns | `Source/Skills/linq2db/docs/agent-antipatterns.md` | Critical | Done | Quick symptom index and wrong/correct examples. |
-| [ ] | AI metadata governance | `Source/Skills/linq2db/docs/ai-tags.md` | High | Partial | Tag vocabulary exists, including hint `HintType`; validator is not planned yet. |
+| [x] | AI metadata governance | `Source/Skills/linq2db/docs/ai-tags.md` | High | Done | Selective coverage policy is documented; generated API and Expert pack generators validate `<ai-tags />` / `<ai-tags-defaults />` keys and controlled values. |
 | [x] | Mapping | `Source/Skills/linq2db/docs/mapping.md` | High | Done | Conventions, attributes, fluent mapping, `MappingSchema`, DDL metadata, `DataType`, `DbType`, conversions, associations. |
 | [ ] | Mapping `Configuration` selector | `Source/Skills/linq2db/docs/mapping-configuration.md` | High | Planned | Attribute/fluent metadata selected by mapping schema configuration names; underused provider- or environment-specific mapping mechanism. |
 | [ ] | Configuration and `DataOptions` | `Source/Skills/linq2db/docs/configuration.md` | High | Existing / needs audit | Includes `UseOptions`; verify coverage against current `DataOptions` APIs later. |

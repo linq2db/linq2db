@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-11T15:57:14",
+  "generated_at": "2026-07-11T16:33:17",
   "prompt_source": ".agents/knowledge-pack-maintenance.md",
   "source_root": "Source/Skills/linq2db",
   "xml_source": ".build/bin/LinqToDB/Release/net10.0/linq2db.xml",
@@ -56,7 +56,7 @@
   "source_hashes": {
     "../../LinqToDB/README.md": "d70458b11e09aac2bd08b46d5b4e05ff452cc95aa5b56c7bd3a3f117783293cc",
     "docs/agent-antipatterns.md": "1b6a33a90a33609229cda8e2c79f20e3565da0acb37a6e2c2b550756e2e57416",
-    "docs/ai-tags.md": "5e0021d74cf12f3c63ad5c9f1f436857eefb5cca7bd7bd29597af7762be73f96",
+    "docs/ai-tags.md": "b0f57d3055c3955e0f6489804e5a52a472e254435a3ff3bcce0b846fc0227cfc",
     "docs/api.md": "8f35add03ca8d5881e504bdb5bfa9631f5cb7d7ea0811671cf0a3a9bed794d5e",
     "docs/architecture.md": "d63379bbaf48b281fb15ec9ae82a25b70be1c9b194663d9793f960a2759c1e2b",
     "docs/configuration.md": "b3edd3c06b21f1ad9567479dcb657c3ac0b4c33c5183e7a33f49833e004e0283",
@@ -72,8 +72,8 @@
     "docs/crud/crud-upsert.md": "4845be12e20b277e29b18e1afa05cbcd7f3dc43b2b8c5023e4f8a946f209b228",
     "docs/crud/crud.md": "a426e026d9832cc0cca064381c804721c210b929e634c81deec95bde51524218",
     "docs/custom-sql.md": "b31fa8989fa38dbc9b3cbb1c48cde7de991bf55f1f4144131cdf868228b4eec3",
-    "docs/hints-api-map.md": "43ba8019b4c89613fea8448d5b9c7729e6d0225f533d6e5eba3e78c2be421382",
-    "docs/hints.md": "0686b94652dbce65f6b43815611c29616c6989af23479339f2dda42c207b9fd9",
+    "docs/hints-api-map.md": "f390324ab050711067201810f730356ddfbba1500205e445d78b72d0d3458671",
+    "docs/hints.md": "905b6f7b079c22d72d72888215892b8494f78bfc3f5c28c6a18d2689aa40c0d9",
     "docs/interceptors.md": "9303c9c7b641c29e941dfa7f1586dc91d3677a082f6984c222ee092372ed5b7e",
     "docs/mapping.md": "b6cb89f8399804fbfd4d69d7a29b5751f3ac1a186b07510896a97fed88c00654",
     "docs/provider-capabilities.md": "ec755c2b96d007cd732e996bc1b06d48993ff941f76ffffb7c8ade6147c65ce4",

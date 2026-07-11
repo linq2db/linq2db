@@ -93,6 +93,8 @@ After changing skill-pack docs or XML documentation:
 6. Search for stale paths such as `Source/LinqToDB/docs`, `Source/LinqToDB/SKILL.md`, `01-agent-guide`, and `02-skill`.
 7. Verify package-local docs still route agents through `skills/linq2db/SKILL.md`.
 8. Verify generated/derived artifacts do not introduce independent API rules or examples.
+9. Treat AI metadata coverage as selective: generator validation must pass, but ordinary public
+   members do not need `<ai-tags />` unless missing metadata weakens agent routing.
 
 ## Solution Items
 

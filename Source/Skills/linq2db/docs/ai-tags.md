@@ -83,6 +83,24 @@ For overload families, tag representative overloads or all overloads when the me
 receiver, execution timing, scope, or result shape. Avoid adding duplicate metadata mechanically when
 the surrounding type-level/default metadata is already sufficient for discovery.
 
+The accepted coverage model is selective, not exhaustive. Missing `<ai-tags />` on an ordinary
+public member is not a documentation defect by itself. It is a defect when the member belongs to a
+routing-critical public API surface and the missing metadata makes agents more likely to confuse:
+
+- immediate execution with deferred query composition;
+- terminal APIs with composable APIs;
+- provider-specific APIs with provider-agnostic APIs;
+- raw SQL/custom SQL APIs with LINQ-translated APIs;
+- hint scopes such as table, query, join, subquery, or tables-in-scope.
+
+When auditing coverage, prefer adding metadata to surfaces that change agent routing decisions over
+mechanically tagging every overload. If a topic guide or generated API search already gives agents a
+clear route, additional duplicate metadata is optional.
+
+The generators validate `<ai-tags />` and `<ai-tags-defaults />` attribute names and controlled
+values. A generator failure means the vocabulary in this file and the authored XML-doc metadata are
+out of sync.
+
 ## Controlled values (current baseline)
 
 ### `Group` / `Groups` values
