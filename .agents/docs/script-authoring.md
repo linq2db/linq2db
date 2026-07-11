@@ -23,6 +23,7 @@ When and *whether* to reach for a script lives in [agent-rules.md](agent-rules.m
 - Invoke as `pwsh -NoProfile -File .agents/scripts/<name>.ps1 -<Param> <value>` from Bash. `-NoProfile` skips user profile load (faster startup, no side effects).
 - Do not write scratch files unless the manifest asks for one. When a caller needs to stream a large body into the script, accept either an inline field (`"body"`) or a file path (`"bodyFile"`) and resolve it server-side.
 - Fan-out parallelism inside a script uses `Start-ThreadJob` or `ForEach-Object -Parallel` — both require PowerShell 7+ and run independent subprocess invocations without adding any Bash-call cost to the caller.
+- **Resolve DB connection strings from config — never hardcode them.** A committed script that needs a provider connection string looks it up **by name** from `DataProviders.json` / `UserDataProviders.json` (walk `MyConnectionStrings` → `LocalConnectionStrings` → `CommonConnectionStrings`, exactly as `release-test-cli-scaffold.ps1`'s `CN()` helper does), rather than inlining a server / port / password. File-DB providers (SQLite / DuckDB / Access) may compose their `Data Source=` path in-script — that's a repo-relative file path, not a secret. (Corrected on #1553: `Tests/FSharp.Scaffold/generate.ps1` hardcoded the PostgreSQL / SQL Server strings.)
 
 ## Gotchas
 
