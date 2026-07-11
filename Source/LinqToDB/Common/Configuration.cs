@@ -154,6 +154,21 @@ namespace LinqToDB.Common
 		// N: supported in options
 
 		/// <summary>
+		/// Settings for linq2db's internal work caches (compiled delegates, descriptors, detected versions, ...).
+		/// </summary>
+		[PublicAPI]
+		public static class Cache
+		{
+			/// <summary>
+			/// Maximum number of entries each process-wide work cache keeps before least-recently-used eviction.
+			/// <see langword="null"/> (default) leaves the work caches effectively unbounded, preserving the
+			/// pre-unification behavior; set a positive value to cap memory. The value is read when each cache is
+			/// first constructed, so set it at application startup.
+			/// </summary>
+			public static int? WorkCacheEntryLimit { get; set; }
+		}
+
+		/// <summary>
 		/// LINQ query settings.
 		/// </summary>
 		[PublicAPI]
