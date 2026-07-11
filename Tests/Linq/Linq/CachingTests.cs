@@ -5,6 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
+using LinqToDB.Extensions;
 using LinqToDB.Data;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.SqlQuery;
@@ -166,6 +167,32 @@ namespace Tests.Linq
 			{
 				QueryCache.Default.CollectHitStatistics = priorCollectHitStatistics;
 			}
+		}
+
+		// #5692 regression: MappingAttributesCache must not cache negative (empty) attribute lookups,
+		// which previously dominated the cache and drove unbounded growth (NETFX multi-config OOM).
+		[Test]
+		public void MappingAttributesCacheDoesNotCacheNegativeLookups()
+		{
+			LinqToDB.Linq.Tools.ClearAllCaches();
+
+			var reader  = new LinqToDB.Metadata.AttributeReader();
+			var members = typeof(System.Uri).GetProperties()
+				.Concat(typeof(System.Text.StringBuilder).GetProperties())
+				.Concat(typeof(System.Version).GetProperties())
+				.ToArray();
+
+			members.Length.ShouldBeGreaterThan(10); // guard: the workload is non-trivial
+
+			// Every probed BCL member carries no mapping attribute — all negative lookups.
+			foreach (var m in members)
+				_ = reader.GetAttributes(m.DeclaringType!, m);
+
+			// Negative results are no longer cached, so the process-static AttributeReader cache stays empty.
+			// Pre-fix this equalled members.Length (every empty lookup was cached).
+			var stats = LinqToDB.Linq.Tools.GetCacheStatistics().First(s => s.Name == "AttributeReader");
+
+			stats.Count.ShouldBe(0);
 		}
 
 		static IQueryable<T> GetTestTable<T>(IDataContext context,

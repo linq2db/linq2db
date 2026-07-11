@@ -1139,6 +1139,19 @@ LinqToDB.Internal.Linq.QueryCache.CollectHitStatistics.get -> bool
 LinqToDB.Internal.Linq.QueryCache.CollectHitStatistics.set -> void
 LinqToDB.Internal.Linq.QueryCache.TotalHits.get -> long
 LinqToDB.Internal.Linq.QueryCache.TotalMisses.get -> long
+LinqToDB.Internal.Cache.CacheKind
+LinqToDB.Internal.Cache.CacheKind.BoundedWork = 1 -> LinqToDB.Internal.Cache.CacheKind
+LinqToDB.Internal.Cache.CacheKind.Query = 0 -> LinqToDB.Internal.Cache.CacheKind
+LinqToDB.Internal.Cache.CacheKind.WeakKeyed = 2 -> LinqToDB.Internal.Cache.CacheKind
+LinqToDB.Internal.Cache.CacheStatistics
+LinqToDB.Internal.Cache.CacheStatistics.Capacity.get -> long?
+LinqToDB.Internal.Cache.CacheStatistics.Count.get -> long
+LinqToDB.Internal.Cache.CacheStatistics.Evictions.get -> long
+LinqToDB.Internal.Cache.CacheStatistics.Hits.get -> long
+LinqToDB.Internal.Cache.CacheStatistics.Kind.get -> LinqToDB.Internal.Cache.CacheKind
+LinqToDB.Internal.Cache.CacheStatistics.Misses.get -> long
+LinqToDB.Internal.Cache.CacheStatistics.Name.get -> string!
+static LinqToDB.Linq.Tools.GetCacheStatistics() -> System.Collections.Generic.IReadOnlyList<LinqToDB.Internal.Cache.CacheStatistics!>!
 LinqToDB.Internal.Linq.QueryCache.CacheMeasurement
 LinqToDB.Internal.Linq.QueryCache.CacheMeasurement.Dispose() -> void
 LinqToDB.Internal.Linq.QueryCache.CacheMeasurement.Hits.get -> long

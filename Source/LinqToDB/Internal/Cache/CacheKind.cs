@@ -1,7 +1,7 @@
 namespace LinqToDB.Internal.Cache
 {
 	/// <summary>Classification of a linq2db cache, used to target clears and to describe diagnostics.</summary>
-	enum CacheKind
+	public enum CacheKind
 	{
 		/// <summary>The LINQ query-plan cache (<see cref="LinqToDB.Internal.Linq.QueryCache"/>).</summary>
 		Query,

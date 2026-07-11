@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 using JetBrains.Annotations;
 
@@ -24,6 +25,21 @@ namespace LinqToDB.Linq
 			// the legacy CacheCleaners queue (IdentifierBuilder, MemberCache, ...) that predates the registry.
 			CacheRegistry.ClearAll();
 			Query.ClearCaches();
+		}
+
+		/// <summary>
+		/// Returns a point-in-time snapshot of every registered linq2db cache's statistics
+		/// (name, kind, entry count, hit/miss/eviction totals, capacity). Intended for diagnostics.
+		/// </summary>
+		public static IReadOnlyList<CacheStatistics> GetCacheStatistics()
+		{
+			var snapshot = CacheRegistry.Snapshot();
+			var result   = new CacheStatistics[snapshot.Count];
+
+			for (var i = 0; i < snapshot.Count; i++)
+				result[i] = new CacheStatistics(snapshot[i]);
+
+			return result;
 		}
 	}
 }
