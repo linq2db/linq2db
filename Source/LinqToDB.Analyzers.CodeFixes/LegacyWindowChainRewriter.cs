@@ -295,8 +295,10 @@ namespace LinqToDB.Analyzers.CodeFixes
 
 			if (keepSeen)
 			{
-				// KEEP: f.KeepFirst()/KeepLast().OrderBy(...)[.ThenBy...].PartitionBy(...)   (order is mandatory)
-				if (!KeepableFunctions.Contains(functionName) || keepOrderClauses is not { Count: > 0 })
+				// KEEP: f.KeepFirst()/KeepLast().OrderBy(...)[.ThenBy...].PartitionBy(...)   (order is mandatory).
+				// A DISTINCT modifier has no equivalent here — the Sql.Window KEEP builder exposes no .Distinct()
+				// (Distinct and Keep are mutually-exclusive states) — so bail rather than drop it and change results.
+				if (!KeepableFunctions.Contains(functionName) || keepOrderClauses is not { Count: > 0 } || distinct is not null)
 					return null;
 
 				steps.Add(new Step(isKeepFirst ? "KeepFirst" : "KeepLast", SyntaxFactory.ArgumentList()));

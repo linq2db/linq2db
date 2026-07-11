@@ -572,6 +572,24 @@ namespace Tests.Analyzers
 		}
 
 		[Test]
+		public Task DoesNotOfferFixForDistinctKeep()
+		{
+			// KEEP has no Sql.Window builder state for DISTINCT (Distinct and Keep are mutually exclusive there), so a
+			// DISTINCT+KEEP chain has no mechanical equivalent — reported, not fixed. Dropping DISTINCT would silently
+			// change the aggregate's result.
+			const string source = """
+				using LinqToDB;
+
+				class C
+				{
+					int M(int x) => {|LINQ2DB1001:Sql.Ext.Sum(x, Sql.AggregateModifier.Distinct).KeepFirst().OrderBy(x).Over().PartitionBy(x).ToValue()|};
+				}
+				""";
+
+			return Verify.VerifyAsync(source, source);
+		}
+
+		[Test]
 		public Task ConvertsInsideExpressionTree()
 			=> Verify.VerifyAsync(
 				"""
