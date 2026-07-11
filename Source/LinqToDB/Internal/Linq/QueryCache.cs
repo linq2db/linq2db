@@ -69,16 +69,9 @@ namespace LinqToDB.Internal.Linq
 
 		void ILinqToDBCache.Clear() => ClearAll();
 
+		// Hits reflect the global counter only when CollectHitStatistics is enabled; otherwise 0.
 		CacheStats ILinqToDBCache.GetStats()
-		{
-			long misses = 0;
-
-			foreach (var pair in _misses)
-				misses += Interlocked.Read(ref pair.Value.Value);
-
-			// Hits are not tracked globally on the hot path; use BeginMeasure() for flow-scoped hit/miss.
-			return new CacheStats("Query", CacheKind.Query, Interlocked.Read(ref _entryCount), Hits: 0, misses, Evictions: 0, ResolveMaxEntries());
-		}
+			=> new("Query", CacheKind.Query, Interlocked.Read(ref _entryCount), TotalHits, TotalMisses, Evictions: 0, ResolveMaxEntries());
 
 		const int  BucketCap              = 16;
 		const int  DefaultMaxEntries      = 10_000;
@@ -94,6 +87,11 @@ namespace LinqToDB.Internal.Linq
 
 		long _lastSweepTicks = Stopwatch.GetTimestamp();
 		long _entryCount;
+
+		// Process-global total hit counter. Only maintained when CollectHitStatistics is enabled — an
+		// unconditional per-hit Interlocked would tax the tuned hot path. Misses (_misses) are always
+		// counted because a miss is an expensive compile, so its counter is free by comparison.
+		long _hits;
 
 		// Incremented by ClearAll. Buckets created under older versions are ignored/removed.
 		long _version;
@@ -120,6 +118,14 @@ namespace LinqToDB.Internal.Linq
 		/// Set to <c>0</c> to prevent new entries from being cached.
 		/// </summary>
 		public int? MaxEntriesOverride { get; set; }
+
+		/// <summary>
+		/// When <see langword="true"/>, the cache maintains a process-global total hit counter
+		/// (<see cref="TotalHits"/>). Off by default: counting every hit adds an atomic write to the
+		/// query hot path, so it is opt-in. Misses (<see cref="TotalMisses"/> / <see cref="GetMissCount"/>)
+		/// are always counted regardless of this flag.
+		/// </summary>
+		public bool CollectHitStatistics { get; set; }
 
 		// Note: dataContext.InlineParameters and the IEntityServiceInterceptor presence are both
 		// encoded in QueryFlags by QueryFlagsHelper.GetQueryFlags, so we don't carry them as
@@ -254,6 +260,30 @@ namespace LinqToDB.Internal.Linq
 		public long GetMissCount(Type resultType)
 			=> _misses.TryGetValue(resultType, out var box) ? Interlocked.Read(ref box.Value) : 0;
 
+		/// <summary>
+		/// Process-global total number of cache hits since the last <see cref="ClearAll"/>.
+		/// Populated only while <see cref="CollectHitStatistics"/> is enabled; otherwise <c>0</c>.
+		/// For flow-scoped, parallel-safe measurement use <see cref="BeginMeasure"/> instead.
+		/// </summary>
+		public long TotalHits => Interlocked.Read(ref _hits);
+
+		/// <summary>
+		/// Process-global total number of cache misses (across all result types) since the last
+		/// <see cref="ClearAll"/>. Always maintained.
+		/// </summary>
+		public long TotalMisses
+		{
+			get
+			{
+				long total = 0;
+
+				foreach (var pair in _misses)
+					total += Interlocked.Read(ref pair.Value.Value);
+
+				return total;
+			}
+		}
+
 		public void IncrementMissCount(Type resultType)
 		{
 			var box = _misses.GetOrAdd(resultType, static _ => new CounterBox());
@@ -364,6 +394,7 @@ namespace LinqToDB.Internal.Linq
 
 			_cache.Clear();
 			_misses.Clear();
+			Interlocked.Exchange(ref _hits, 0);
 
 			// A TryAdd that read the post-first-bump version can commit a bucket after _cache.Clear()
 			// but before this second bump. This bump stamps the cache version past that bucket's, so it
@@ -459,6 +490,9 @@ namespace LinqToDB.Internal.Linq
 						continue;
 
 					RecordAccess(entry, hitNow, countHit: true);
+
+					if (CollectHitStatistics)
+						Interlocked.Increment(ref _hits);
 
 					if (Volatile.Read(ref _activeMeasurementCount) != 0)
 						_activeMeasurement.Value?.RecordHit();
