@@ -1134,3 +1134,8 @@ LinqToDB.Internal.Common.ObjectPool<T>.RentedElement.RentedElement(LinqToDB.Inte
 readonly LinqToDB.Internal.Common.ObjectPool<T>.RentedElement.Value -> T!
 ~LinqToDB.Internal.Common.ObjectPool<T>.Allocate() -> LinqToDB.Internal.Common.ObjectPool<T>.RentedElement
 *REMOVED*LinqToDB.Internal.SqlQuery.SqlRawSqlTable.SqlRawSqlTable(LinqToDB.Internal.SqlQuery.SqlRawSqlTable! table, LinqToDB.Internal.SqlQuery.ISqlExpression![]! parameters) -> void
+LinqToDB.Internal.Linq.QueryCache.BeginMeasure() -> LinqToDB.Internal.Linq.QueryCache.CacheMeasurement!
+LinqToDB.Internal.Linq.QueryCache.CacheMeasurement
+LinqToDB.Internal.Linq.QueryCache.CacheMeasurement.Dispose() -> void
+LinqToDB.Internal.Linq.QueryCache.CacheMeasurement.Hits.get -> long
+LinqToDB.Internal.Linq.QueryCache.CacheMeasurement.Misses.get -> long

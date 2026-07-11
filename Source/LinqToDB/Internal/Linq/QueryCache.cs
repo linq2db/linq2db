@@ -7,6 +7,8 @@ using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using System.Threading;
 
+using LinqToDB.Internal.Cache;
+
 namespace LinqToDB.Internal.Linq
 {
 	/// <summary>
@@ -39,7 +41,7 @@ namespace LinqToDB.Internal.Linq
 	/// - <see cref="Bucket.Entries"/> is published with volatile semantics.
 	/// - The global sweep is single-flighted and runs on the thread pool.
 	/// </remarks>
-	public sealed class QueryCache
+	public sealed class QueryCache : ILinqToDBCache
 	{
 		/// <summary>Process-wide default cache used by <see cref="Query{T}"/>.</summary>
 		public static readonly QueryCache Default = CreateDefault();
@@ -51,7 +53,31 @@ namespace LinqToDB.Internal.Linq
 		{
 			var cache = new QueryCache();
 			Query.CacheCleaners.Enqueue(cache.ClearAll);
+			// Join the unified cache registry so Tools.ClearAllCaches() and cache diagnostics cover the
+			// query cache alongside every other cache. Only Default registers; test-constructed instances
+			// do not, to avoid leaking short-lived caches into the process-static registry.
+			CacheRegistry.Register(cache);
 			return cache;
+		}
+
+		// --- Unified cache-management contract (ILinqToDBCache). Implemented explicitly because
+		//     CacheStats/CacheKind are internal and QueryCache is public — explicit implementation
+		//     keeps them off the public surface while still participating in the registry. ---
+
+		string    ILinqToDBCache.Name => "Query";
+		CacheKind ILinqToDBCache.Kind => CacheKind.Query;
+
+		void ILinqToDBCache.Clear() => ClearAll();
+
+		CacheStats ILinqToDBCache.GetStats()
+		{
+			long misses = 0;
+
+			foreach (var pair in _misses)
+				misses += Interlocked.Read(ref pair.Value.Value);
+
+			// Hits are not tracked globally on the hot path; use BeginMeasure() for flow-scoped hit/miss.
+			return new CacheStats("Query", CacheKind.Query, Interlocked.Read(ref _entryCount), Hits: 0, misses, Evictions: 0, ResolveMaxEntries());
 		}
 
 		const int  BucketCap              = 16;
@@ -232,6 +258,71 @@ namespace LinqToDB.Internal.Linq
 		{
 			var box = _misses.GetOrAdd(resultType, static _ => new CounterBox());
 			Interlocked.Increment(ref box.Value);
+
+			if (Volatile.Read(ref _activeMeasurementCount) != 0)
+				_activeMeasurement.Value?.RecordMiss();
+		}
+
+		// Flow-scoped hit/miss measurement. AsyncLocal so a BeginMeasure() scope only observes the
+		// events raised on its own logical call context — parallel-test-safe and pollution-free,
+		// unlike the process-global GetMissCount / Query<T>.CacheMissCount counter.
+		static readonly AsyncLocal<CacheMeasurement?> _activeMeasurement = new();
+
+		// Cheap production gate: when no measurement scope is active anywhere, the hot path skips the
+		// AsyncLocal read entirely — a volatile int read is far cheaper than AsyncLocal<T>.Value.
+		static int _activeMeasurementCount;
+
+		/// <summary>
+		/// Begins a flow-scoped measurement of cache hits and misses. Only queries executed on the current
+		/// async flow (inside the returned scope) are counted; concurrent work on other flows is invisible.
+		/// Dispose the returned scope to stop measuring.
+		/// </summary>
+		/// <example><code>
+		/// using var probe = QueryCache.Default.BeginMeasure();
+		/// db.GetTable&lt;Foo&gt;().Where(...).ToList();
+		/// // probe.Misses == 1 on first execution, probe.Hits == 1 when the plan is reused
+		/// </code></example>
+		public CacheMeasurement BeginMeasure() => new(_activeMeasurement);
+
+		/// <summary>
+		/// A flow-scoped hit/miss measurement window returned by <see cref="BeginMeasure"/>.
+		/// Counts only cache events raised on the async flow that owns the scope.
+		/// </summary>
+		public sealed class CacheMeasurement : IDisposable
+		{
+			readonly AsyncLocal<CacheMeasurement?> _slot;
+			readonly CacheMeasurement?             _parent;
+
+			long _hits;
+			long _misses;
+			int  _disposed;
+
+			internal CacheMeasurement(AsyncLocal<CacheMeasurement?> slot)
+			{
+				_slot      = slot;
+				_parent    = slot.Value;
+				slot.Value = this;
+				Interlocked.Increment(ref _activeMeasurementCount);
+			}
+
+			/// <summary>Cache hits observed on this flow since the scope began.</summary>
+			public long Hits => Interlocked.Read(ref _hits);
+
+			/// <summary>Cache misses observed on this flow since the scope began.</summary>
+			public long Misses => Interlocked.Read(ref _misses);
+
+			internal void RecordHit()  => Interlocked.Increment(ref _hits);
+			internal void RecordMiss() => Interlocked.Increment(ref _misses);
+
+			/// <summary>Restores the enclosing measurement scope (if any) as the active one.</summary>
+			public void Dispose()
+			{
+				if (Interlocked.Exchange(ref _disposed, 1) != 0)
+					return;
+
+				_slot.Value = _parent;
+				Interlocked.Decrement(ref _activeMeasurementCount);
+			}
 		}
 
 		/// <summary>Empties the cache for entries of the given result type.</summary>
@@ -368,6 +459,9 @@ namespace LinqToDB.Internal.Linq
 						continue;
 
 					RecordAccess(entry, hitNow, countHit: true);
+
+					if (Volatile.Read(ref _activeMeasurementCount) != 0)
+						_activeMeasurement.Value?.RecordHit();
 
 					query              = entry.Query;
 					matchedExpressions = matched;
