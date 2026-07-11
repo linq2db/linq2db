@@ -1,19 +1,19 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
 
+using LinqToDB.Internal.Cache;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.Mapping
 {
-	internal sealed class MappingAttributesCache
+	internal sealed class MappingAttributesCache : ILinqToDBCache
 	{
 		readonly record struct CacheKey(Type AttributeType, Key SourceKey);
 		readonly record struct Key(ICustomAttributeProvider Source, Type? SourceOwner);
 
-		private readonly Func<CacheKey, MappingAttribute[]?> _getMappingAttributesInternal;
 		readonly ConcurrentDictionary<CacheKey, MappingAttribute[]?> _cache = new();
 
 		readonly ConcurrentDictionary<Key, MappingAttribute[]> _noInheritMappingAttributes      = new ();
@@ -21,19 +21,28 @@ namespace LinqToDB.Internal.Mapping
 
 		readonly Func<Type?, ICustomAttributeProvider, MappingAttribute[]> _attributesGetter;
 
+		public string    Name { get; }
+		public CacheKind Kind => CacheKind.BoundedWork;
+
 		/// <param name="attributesGetter">Raw attribute getter delegate for cache misses.</param>
-		public MappingAttributesCache(Func<Type?, ICustomAttributeProvider, MappingAttribute[]> attributesGetter)
+		/// <param name="name">Diagnostic identifier reported to the cache registry.</param>
+		public MappingAttributesCache(Func<Type?, ICustomAttributeProvider, MappingAttribute[]> attributesGetter, string name = "MappingAttributes")
 		{
-			_attributesGetter                 = attributesGetter;
-			_getMappingAttributesInternal     = GetMappingAttributesInternal;
-			_getMappingAttributesTreeInternal = GetMappingAttributesTreeInternal;
+			_attributesGetter = attributesGetter;
+			Name              = name;
 		}
+
+		// Negative (empty-result) lookups are deliberately NOT cached. Most probed
+		// (attributeType x member x owner) combinations carry no mapping attribute, so caching the empties
+		// dominated the cache (~90% of entries) and drove unbounded growth (#5692). Recompute is cheap — the
+		// underlying attribute fetch is cached one layer down (AttributesExtensions) — and infrequent, since
+		// attribute lookups happen during EntityDescriptor construction, which is itself cached.
 
 		MappingAttribute[]? GetMappingAttributesInternal(CacheKey key)
 		{
 			List<MappingAttribute>? results = null;
 
-			foreach (var attr in _orderedInheritMappingAttributes.GetOrAdd(key.SourceKey, _getMappingAttributesTreeInternal))
+			foreach (var attr in GetOrderedInheritMappingAttributes(key.SourceKey))
 				if (key.AttributeType.IsAssignableFrom(attr.GetType()))
 					(results ??= new()).Add(attr);
 
@@ -49,19 +58,36 @@ namespace LinqToDB.Internal.Mapping
 			return null;
 		}
 
-		MappingAttribute[] GetNoInheritMappingAttributes(in Key key)
+		MappingAttribute[] GetOrderedInheritMappingAttributes(in Key sourceKey)
 		{
-			var attrs = _noInheritMappingAttributes.GetOrAdd(key, static (key, attributesGetter) =>
-			{
-				var res = attributesGetter(key.SourceOwner, key.Source);
+			if (_orderedInheritMappingAttributes.TryGetValue(sourceKey, out var cached))
+				return cached;
 
-				return res.Length == 0 ? [] : res;
-			}, _attributesGetter);
+			var tree = GetMappingAttributesTreeInternal(sourceKey);
 
-			return attrs;
+			// Cache only non-empty results (see class note).
+			if (tree.Length != 0)
+				_orderedInheritMappingAttributes.TryAdd(sourceKey, tree);
+
+			return tree;
 		}
 
-		readonly Func<Key, MappingAttribute[]> _getMappingAttributesTreeInternal;
+		MappingAttribute[] GetNoInheritMappingAttributes(in Key key)
+		{
+			if (_noInheritMappingAttributes.TryGetValue(key, out var cached))
+				return cached;
+
+			var res = _attributesGetter(key.SourceOwner, key.Source);
+
+			// Cache only non-empty results (see class note).
+			if (res.Length == 0)
+				return [];
+
+			_noInheritMappingAttributes.TryAdd(key, res);
+
+			return res;
+		}
+
 		MappingAttribute[] GetMappingAttributesTreeInternal(Key key)
 		{
 			var attrs = GetNoInheritMappingAttributes(in key);
@@ -121,6 +147,21 @@ namespace LinqToDB.Internal.Mapping
 			return list?.ToArray() ?? attrs;
 		}
 
+		T[] GetMappingAttributesFromCache<T>(in CacheKey key)
+			where T : MappingAttribute
+		{
+			if (_cache.TryGetValue(key, out var cached))
+				return (T[]?)cached ?? [];
+
+			var result = GetMappingAttributesInternal(key);
+
+			// Cache only non-empty results (see class note).
+			if (result is { Length: > 0 })
+				_cache.TryAdd(key, result);
+
+			return (T[]?)result ?? [];
+		}
+
 		/// <summary>
 		/// Returns a list of mapping attributes applied to a type or type member.
 		/// If there are multiple attributes found, attributes ordered from current to base type in inheritance hierarchy.
@@ -132,10 +173,7 @@ namespace LinqToDB.Internal.Mapping
 		/// or a list with zero (0) elements if no attributes have been applied.</returns>
 		public T[] GetMappingAttributes<T>(ICustomAttributeProvider source)
 			where T : MappingAttribute
-		{
-			// GetMappingAttributesInternal is not generic to avoid delegate allocation on each call
-			return (T[]?)_cache.GetOrAdd(new(typeof(T), new(source, null)), _getMappingAttributesInternal) ?? [];
-		}
+			=> GetMappingAttributesFromCache<T>(new(typeof(T), new(source, null)));
 
 		/// <summary>
 		/// Returns a list of mapping attributes applied to a type or type member.
@@ -149,9 +187,16 @@ namespace LinqToDB.Internal.Mapping
 		/// or a list with zero (0) elements if no attributes have been applied.</returns>
 		public T[] GetMappingAttributes<T>(Type sourceOwner, ICustomAttributeProvider source)
 			where T : MappingAttribute
+			=> GetMappingAttributesFromCache<T>(new(typeof(T), new(source, sourceOwner)));
+
+		public void Clear()
 		{
-			// GetMappingAttributesInternal is not generic to avoid delegate allocation on each call
-			return (T[]?)_cache.GetOrAdd(new(typeof(T), new(source, sourceOwner)), _getMappingAttributesInternal) ?? [];
+			_cache.Clear();
+			_noInheritMappingAttributes.Clear();
+			_orderedInheritMappingAttributes.Clear();
 		}
+
+		public CacheStats GetStats()
+			=> new(Name, Kind, _cache.Count + _noInheritMappingAttributes.Count + _orderedInheritMappingAttributes.Count, Hits: 0, Misses: 0, Evictions: 0, Capacity: null);
 	}
 }

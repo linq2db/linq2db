@@ -1208,7 +1208,7 @@ namespace LinqToDB.Mapping
 
 		private (MappingAttributesCache cache, MappingAttributesCache firstOnlyCache) CreateAttributeCaches()
 		{
-			var cache = new MappingAttributesCache(
+			var cache = CacheRegistry.RegisterScoped(new MappingAttributesCache(
 				(sourceOwner, source) =>
 				{
 					var attrs = sourceOwner != null
@@ -1232,9 +1232,9 @@ namespace LinqToDB.Mapping
 							(list ??= new()).Add(attribute);
 
 					return list == null ? [] : list.ToArray();
-				});
+				}, "MappingSchema.Attributes"));
 
-			var firstOnlyCache = new MappingAttributesCache(
+			var firstOnlyCache = CacheRegistry.RegisterScoped(new MappingAttributesCache(
 				(sourceOwner, source) =>
 				{
 					var attrs = sourceOwner != null
@@ -1260,7 +1260,7 @@ namespace LinqToDB.Mapping
 							(list ??= new()).Add(attribute);
 
 					return list == null ? [] : list.ToArray();
-				});
+				}, "MappingSchema.FirstOnlyAttributes"));
 
 			return (cache, firstOnlyCache);
 		}
