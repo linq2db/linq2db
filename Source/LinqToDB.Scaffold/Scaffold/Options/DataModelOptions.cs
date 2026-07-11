@@ -162,6 +162,7 @@ namespace LinqToDB.Scaffold
 		/// <summary>
 		/// Enables generation of SQL Server-specific <c>GetSqlDecimalAttribute</c> for <see cref="decimal"/> entity columns
 		/// with precision or scale outside of CLR <see cref="decimal"/> limits.
+		/// Reads through the attribute reduce scale to fit and can round least-significant digits; values above <see cref="decimal.MaxValue"/> still throw.
 		/// <list type="bullet">
 		/// <item>Default: <see langword="false"/></item>
 		/// <item>In T4 compatibility mode: <see langword="false"/></item>

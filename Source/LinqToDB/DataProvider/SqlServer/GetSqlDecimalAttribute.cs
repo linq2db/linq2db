@@ -10,6 +10,10 @@ namespace LinqToDB.DataProvider.SqlServer
 	/// <summary>
 	/// Configures SQL Server decimal value materialization through provider-specific <see cref="SqlDecimal"/> reader.
 	/// </summary>
+	/// <remarks>
+	/// A value whose precision exceeds the CLR <see cref="decimal"/> range is read by reducing scale to fit, which can round away
+	/// least-significant digits; a value whose magnitude exceeds <see cref="decimal.MaxValue"/> still throws <see cref="OverflowException"/>.
+	/// </remarks>
 	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, Inherited = true, AllowMultiple = true)]
 	public sealed class GetSqlDecimalAttribute : ValueConverterAttribute
 	{

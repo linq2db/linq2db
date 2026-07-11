@@ -36,6 +36,7 @@ namespace LinqToDB.Tools.ModelGeneration
 		/// <summary>
 		/// Enables generation of the SQL Server-specific <c>GetSqlDecimalAttribute</c> on <see cref="decimal"/> columns
 		/// whose precision or scale can exceed CLR <see cref="decimal"/> limits.
+		/// Reads through the attribute reduce scale to fit and can round least-significant digits; values above <see cref="decimal.MaxValue"/> still throw.
 		/// </summary>
 		public bool   GenerateSqlServerDecimalOverflowProtection { get; set; }
 		public bool?  GenerateLengthProperty                     { get; set; }
@@ -60,7 +61,7 @@ namespace LinqToDB.Tools.ModelGeneration
 		public Func<IColumn,string,string,bool,string> BuildColumnComparison = (c, padding1, padding2, last) => $"\tt.{c.MemberName}{padding1} == {c.MemberName}{(last ? "" : padding2)}{(last ? ");" : " &&")}";
 
 		private protected bool IsSqlServerBuilder()
-			=> SqlBuilder?.GetType().FullName?.StartsWith("LinqToDB.Internal.DataProvider.SqlServer.", StringComparison.Ordinal) == true;
+			=> DataProviderName?.StartsWith(ProviderName.SqlServer, StringComparison.Ordinal) == true;
 
 		IEnumerable<IMethod> GetConstructorsImpl(string? defaultConfiguration, string name, Func<IMethod> methodFactory)
 		{
