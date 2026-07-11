@@ -7,16 +7,22 @@
 # CI's compile of Tests.FSharp.Scaffold.fsproj is the regression gate.
 #
 # Requires the provider databases to be reachable (the same docker containers the test suite uses).
-# Connection strings default to the local test values (see UserDataProviders.json) and can be
-# overridden per provider.
+# Docker-backed connection strings (PostgreSQL, SQL Server) are resolved by name from
+# DataProviders.json / UserDataProviders.json - the same lookup the CLI baseline matrix uses - not
+# hardcoded. SQLite uses the on-disk test DB file (config's SQLite.Classic is an in-memory DB, unusable
+# for scaffolding), matching how the C# release-test-cli-scaffold.ps1 composes it.
 
 [CmdletBinding()]
 param(
-    [string] $SQLiteConnection     = "Data Source=$PSScriptRoot/../../Data/TestData.sqlite",
-    [string] $PostgreSQLConnection = 'Server=localhost;Port=5416;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;',
-    [string] $SqlServerConnection  = 'Server=localhost,1422;Database=TestData;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true',
+    # connection names looked up in DataProviders.json / UserDataProviders.json
+    [string] $PostgreSQLConnectionName = 'PostgreSQL.16',
+    [string] $SqlServerConnectionName  = 'SqlServer.2022',
+    # explicit full connection-string overrides (skip config lookup when set)
+    [string] $PostgreSQLConnection,
+    [string] $SqlServerConnection,
+    [string] $SQLiteConnection,
     # build configuration used to locate/build the CLI
-    [string] $Configuration        = 'Release'
+    [string] $Configuration            = 'Release'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -30,6 +36,37 @@ if (-not (Test-Path $cliDll)) {
     dotnet build $cliProj -c $Configuration -f net10.0
     if ($LASTEXITCODE -ne 0) { throw "CLI build failed" }
 }
+
+# --- Connection-string resolution (mirrors release-test-cli-scaffold.ps1's CN()) ------------------
+# Priority: UserDataProviders.json MyConnectionStrings -> DataProviders.json LocalConnectionStrings
+#           -> DataProviders.json CommonConnectionStrings. Missing keys throw.
+$dpJsonPath = Join-Path $repoRoot 'DataProviders.json'
+if (-not (Test-Path $dpJsonPath)) { throw "DataProviders.json not found at $dpJsonPath" }
+$dpJson = Get-Content $dpJsonPath -Raw | ConvertFrom-Json
+
+$userConns = $null
+$userJsonPath = Join-Path $repoRoot 'UserDataProviders.json'
+if (Test-Path $userJsonPath) {
+    $userJson = Get-Content $userJsonPath -Raw | ConvertFrom-Json
+    if ($userJson.MyConnectionStrings -and $userJson.MyConnectionStrings.Connections) {
+        $userConns = $userJson.MyConnectionStrings.Connections
+    }
+}
+
+function CN([string]$name) {
+    if ($userConns -and $userConns.PSObject.Properties.Match($name).Count -gt 0 -and $userConns.$name.ConnectionString) {
+        return $userConns.$name.ConnectionString
+    }
+    $c = $dpJson.LocalConnectionStrings.Connections.$name
+    if ($c -and $c.ConnectionString) { return $c.ConnectionString }
+    $c = $dpJson.CommonConnectionStrings.Connections.$name
+    if ($c -and $c.ConnectionString) { return $c.ConnectionString }
+    throw "Connection '$name' missing in MyConnectionStrings / LocalConnectionStrings / CommonConnectionStrings"
+}
+
+if (-not $SQLiteConnection)     { $SQLiteConnection     = "Data Source=" + (Join-Path $repoRoot 'Data/TestData.sqlite') }
+if (-not $PostgreSQLConnection) { $PostgreSQLConnection = CN $PostgreSQLConnectionName }
+if (-not $SqlServerConnection)  { $SqlServerConnection  = CN $SqlServerConnectionName }
 
 # options shared by every provider baseline. --nrt and the partial/init-context options are C#-only
 # (the CLI rejects them for F#); association-extensions / IEquatable / init methods are forced off for
