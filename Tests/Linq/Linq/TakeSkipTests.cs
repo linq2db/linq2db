@@ -654,6 +654,10 @@ namespace Tests.Linq
 		public void ElementAtDefault5([DataSources] string context, [Values(2,3)] int idx, [Values] bool withParameters)
 		{
 			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(withParameters));
+			db.Person.ClearCache();
+			// warm the compiled query so the re-run below is a guaranteed cache hit regardless of other
+			// parallel providers' cache activity in the same process.
+			db.Person.OrderBy(p => p.LastName).ElementAtOrDefault(idx);
 			var missCount = db.Person.GetCacheMissCount();
 			Assert.That(
 				db.Person.OrderBy(p => p.LastName).ElementAtOrDefault(idx), Is.EqualTo(Person.OrderBy(p => p.LastName).ElementAtOrDefault(idx)));
@@ -1356,6 +1360,12 @@ namespace Tests.Linq
 		public void SkipTakeCaching([DataSources] string context, [Values(1, 2)] int skip, [Values(1, 2)] int take)
 		{
 			using var db = GetDataContext(context);
+			db.Parent.ClearCache();
+
+			// warm with a baseline combo so the parametrised (skip, take) below reuses the same compiled
+			// query (verifying skip/take are parametrised, not baked into SQL) independent of other
+			// parallel providers' cache activity in the same process.
+			db.Parent.OrderBy(t => t.Value1).Skip(1).Take(1).ToArray();
 
 			var cacheMissCount = db.Parent.GetCacheMissCount();
 

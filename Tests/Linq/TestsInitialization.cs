@@ -134,12 +134,19 @@ public class TestsInitialization
 
 		// Cap the process-wide query cache to bound test-process memory. The CI NETFX legs run two
 		// SQL Server versions' full suites in a single process and were hitting OutOfMemoryException;
-		// the default cap is 10000 entries but a full run only produces ~1700 distinct queries, so a
-		// small cap trims retained compiled-query memory with no correctness impact. Overridable via
-		// the L2DB_TEST_QUERYCACHE env var for tuning.
+		// the default cap is 10000 entries but a full run only produces ~1700 distinct queries.
 		{
-			var qcMax = Environment.GetEnvironmentVariable("L2DB_TEST_QUERYCACHE") is { } qcMaxStr && int.TryParse(qcMaxStr, out var n) ? n : 100;
-			LinqToDB.Internal.Linq.QueryCache.Default.MaxEntriesOverride = qcMax;
+			// net10 legs keep the default cap (10000): a small cap trims freshly-added, low-hit entries
+			// mid-test, breaking the exact-miss-count cache tests on the merged multi-provider legs (e.g.
+			// the 3-provider ClickHouse leg). NETFX stays capped to bound memory. Overridable per leg.
+			int? qcMax = Environment.GetEnvironmentVariable("L2DB_TEST_QUERYCACHE") is { } qcMaxStr && int.TryParse(qcMaxStr, out var n) ? n
+#if NETFRAMEWORK
+				: 100;
+#else
+				: null;
+#endif
+			if (qcMax != null)
+				LinqToDB.Internal.Linq.QueryCache.Default.MaxEntriesOverride = qcMax;
 		}
 
 		// uncomment it to run tests with SeqentialAccess command behavior
