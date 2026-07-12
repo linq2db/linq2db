@@ -20,7 +20,7 @@ namespace Tests.Analyzers
 
 				class C
 				{
-					long M(int x) => {|LINQ2DB1001:Sql.Ext.RowNumber().Over().PartitionBy(x).OrderBy(x).ToValue()|};
+					long M(int x) => {|L2DB1001:Sql.Ext.RowNumber().Over().PartitionBy(x).OrderBy(x).ToValue()|};
 				}
 				""",
 				"""
@@ -40,7 +40,7 @@ namespace Tests.Analyzers
 
 				class C
 				{
-					int M(int x) => {|LINQ2DB1001:Sql.Ext.Sum(x).Over().PartitionBy(x).OrderBy(x).ThenByDesc(x).ToValue()|};
+					int M(int x) => {|L2DB1001:Sql.Ext.Sum(x).Over().PartitionBy(x).OrderBy(x).ThenByDesc(x).ToValue()|};
 				}
 				""",
 				"""
@@ -60,7 +60,7 @@ namespace Tests.Analyzers
 
 				class C
 				{
-					int M(int x) => {|LINQ2DB1001:Sql.Ext.Lag(x, 1, 0).Over().OrderBy(x).ToValue()|};
+					int M(int x) => {|L2DB1001:Sql.Ext.Lag(x, 1, 0).Over().OrderBy(x).ToValue()|};
 				}
 				""",
 				"""
@@ -80,7 +80,7 @@ namespace Tests.Analyzers
 
 				class C
 				{
-					int M(int x) => {|LINQ2DB1001:Sql.Ext.Count().Over().PartitionBy(x).OrderBy(x).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue()|};
+					int M(int x) => {|L2DB1001:Sql.Ext.Count().Over().PartitionBy(x).OrderBy(x).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue()|};
 				}
 				""",
 				"""
@@ -100,7 +100,7 @@ namespace Tests.Analyzers
 
 				class C
 				{
-					int M(int x) => {|LINQ2DB1001:Sql.Ext.Count(x, Sql.AggregateModifier.Distinct).Over().PartitionBy(x).OrderBy(x).ToValue()|};
+					int M(int x) => {|L2DB1001:Sql.Ext.Count(x, Sql.AggregateModifier.Distinct).Over().PartitionBy(x).OrderBy(x).ToValue()|};
 				}
 				""",
 				"""
@@ -122,7 +122,7 @@ namespace Tests.Analyzers
 				{
 					long M(int x) =>
 						// keep this comment
-						{|LINQ2DB1001:Sql.Ext.RowNumber().Over().PartitionBy(x).OrderBy(x).ToValue()|};
+						{|L2DB1001:Sql.Ext.RowNumber().Over().PartitionBy(x).OrderBy(x).ToValue()|};
 				}
 				""",
 				"""
@@ -144,7 +144,7 @@ namespace Tests.Analyzers
 
 				class C
 				{
-					int M(int x) => {|LINQ2DB1001:Sql.Ext.Sum(x /* keep */).Over().PartitionBy(x).OrderBy(x).ToValue()|};
+					int M(int x) => {|L2DB1001:Sql.Ext.Sum(x /* keep */).Over().PartitionBy(x).OrderBy(x).ToValue()|};
 				}
 				""",
 				"""
@@ -164,7 +164,7 @@ namespace Tests.Analyzers
 
 				class C
 				{
-					int M(int x) => {|LINQ2DB1001:Sql.Ext.Min(x).KeepFirst().OrderBy(x).Over().PartitionBy(x).ToValue()|};
+					int M(int x) => {|L2DB1001:Sql.Ext.Min(x).KeepFirst().OrderBy(x).Over().PartitionBy(x).ToValue()|};
 				}
 				""",
 				"""
@@ -184,7 +184,7 @@ namespace Tests.Analyzers
 
 				class C
 				{
-					object? M(int x) => {|LINQ2DB1001:Sql.Ext.Median(x).Over().PartitionBy(x).ToValue()|};
+					object? M(int x) => {|L2DB1001:Sql.Ext.Median(x).Over().PartitionBy(x).ToValue()|};
 				}
 				""",
 				"""
@@ -204,7 +204,7 @@ namespace Tests.Analyzers
 
 				class C
 				{
-					object? M(int x) => {|LINQ2DB1001:Sql.Ext.RatioToReport<double>(x).Over().PartitionBy(x).ToValue()|};
+					object? M(int x) => {|L2DB1001:Sql.Ext.RatioToReport<double>(x).Over().PartitionBy(x).ToValue()|};
 				}
 				""",
 				"""
@@ -224,7 +224,7 @@ namespace Tests.Analyzers
 
 				class C
 				{
-					object? M(int x) => {|LINQ2DB1001:Sql.Ext.PercentileCont<double>(0.5).WithinGroup.OrderBy(x).Over().PartitionBy(x).ToValue()|};
+					object? M(int x) => {|L2DB1001:Sql.Ext.PercentileCont<double>(0.5).WithinGroup.OrderBy(x).Over().PartitionBy(x).ToValue()|};
 				}
 				""",
 				"""
@@ -244,7 +244,7 @@ namespace Tests.Analyzers
 
 				class C
 				{
-					object? M(int x) => {|LINQ2DB1001:Sql.Ext.PercentileDisc<double>(0.5).WithinGroup.OrderByDesc(x).Over().PartitionBy(x).ToValue()|};
+					object? M(int x) => {|L2DB1001:Sql.Ext.PercentileDisc<double>(0.5).WithinGroup.OrderByDesc(x).Over().PartitionBy(x).ToValue()|};
 				}
 				""",
 				"""
@@ -257,15 +257,16 @@ namespace Tests.Analyzers
 				""");
 
 		[Test]
-		public Task DoesNotOfferFixForGroupFormPercentile()
+		public Task DoesNotReportOrFixGroupFormPercentile()
 		{
-			// WITHIN GROUP without OVER (the ordered-set group form) has no Sql.Window equivalent: reported, not fixed.
+			// WITHIN GROUP without OVER is an ordered-set aggregate, not a window function, and has no Sql.Window
+			// equivalent — so (like a plain aggregate) it is neither reported nor fixed.
 			const string source = """
 				using LinqToDB;
 
 				class C
 				{
-					object? M(int x) => {|LINQ2DB1001:Sql.Ext.PercentileCont<double>(0.5).WithinGroup.OrderBy(x).ToValue()|};
+					object? M(int x) => Sql.Ext.PercentileCont<double>(0.5).WithinGroup.OrderBy(x).ToValue();
 				}
 				""";
 
@@ -282,7 +283,7 @@ namespace Tests.Analyzers
 
 				class C
 				{
-					int? M(int x) => {|LINQ2DB1001:Sql.Ext.Median(x).Over().PartitionBy(x).ToValue()|};
+					int? M(int x) => {|L2DB1001:Sql.Ext.Median(x).Over().PartitionBy(x).ToValue()|};
 				}
 				""";
 
@@ -298,7 +299,7 @@ namespace Tests.Analyzers
 
 				class C
 				{
-					object? M(int x) => {|LINQ2DB1001:Sql.Ext.StdDev<double>(x).Over().PartitionBy(x).OrderBy(x).ToValue()|};
+					object? M(int x) => {|L2DB1001:Sql.Ext.StdDev<double>(x).Over().PartitionBy(x).OrderBy(x).ToValue()|};
 				}
 				""",
 				"""
@@ -319,7 +320,7 @@ namespace Tests.Analyzers
 
 				class C
 				{
-					object? M(int x) => {|LINQ2DB1001:Sql.Ext.StdDev<double>(x).Over().PartitionBy(x).OrderBy(x).Rows.Between.UnboundedPreceding.And.CurrentRow.ToValue()|};
+					object? M(int x) => {|L2DB1001:Sql.Ext.StdDev<double>(x).Over().PartitionBy(x).OrderBy(x).Rows.Between.UnboundedPreceding.And.CurrentRow.ToValue()|};
 				}
 				""",
 				"""
@@ -339,7 +340,7 @@ namespace Tests.Analyzers
 
 				class C
 				{
-					int M(int x) => {|LINQ2DB1001:Sql.Ext.FirstValue(x, Sql.Nulls.Ignore).Over().PartitionBy(x).OrderBy(x).ToValue()|};
+					int M(int x) => {|L2DB1001:Sql.Ext.FirstValue(x, Sql.Nulls.Ignore).Over().PartitionBy(x).OrderBy(x).ToValue()|};
 				}
 				""",
 				"""
@@ -360,7 +361,7 @@ namespace Tests.Analyzers
 
 				class C
 				{
-					int M(int x) => {|LINQ2DB1001:Sql.Ext.NthValue(x, 2L, Sql.From.Last, Sql.Nulls.Ignore).Over().OrderBy(x).ToValue()|};
+					int M(int x) => {|L2DB1001:Sql.Ext.NthValue(x, 2L, Sql.From.Last, Sql.Nulls.Ignore).Over().OrderBy(x).ToValue()|};
 				}
 				""",
 				"""
@@ -380,7 +381,7 @@ namespace Tests.Analyzers
 
 				class C
 				{
-					int M(int x) => {|LINQ2DB1001:Sql.Ext.Lead(x, 1).Over().OrderBy(x).ToValue()|};
+					int M(int x) => {|L2DB1001:Sql.Ext.Lead(x, 1).Over().OrderBy(x).ToValue()|};
 				}
 				""",
 				"""
@@ -393,15 +394,15 @@ namespace Tests.Analyzers
 				""");
 
 		[Test]
-		public Task DoesNotOfferFixForPlainAggregateWithoutOver()
+		public Task DoesNotReportOrFixPlainAggregateWithoutOver()
 		{
-			// No .Over(): the plain aggregate has no Sql.Window equivalent — reported, not fixed.
+			// No .Over(): a plain aggregate is not a window function, so it is neither reported nor fixed.
 			const string source = """
 				using LinqToDB;
 
 				class C
 				{
-					int M(int x) => {|LINQ2DB1001:Sql.Ext.Sum(x).ToValue()|};
+					int M(int x) => Sql.Ext.Sum(x).ToValue();
 				}
 				""";
 
@@ -419,7 +420,7 @@ namespace Tests.Analyzers
 
 				class C
 				{
-					long M(int x) => {|LINQ2DB1001:Ext.RowNumber().Over().PartitionBy(x).OrderBy(x).ToValue()|};
+					long M(int x) => {|L2DB1001:Ext.RowNumber().Over().PartitionBy(x).OrderBy(x).ToValue()|};
 				}
 				""";
 
@@ -436,7 +437,7 @@ namespace Tests.Analyzers
 
 				class C
 				{
-					int M(int x) => {|LINQ2DB1001:Sql.Ext.NthValue(x, 2L, Sql.From.First, Sql.Nulls.Respect).Over().OrderBy(x).ToValue()|};
+					int M(int x) => {|L2DB1001:Sql.Ext.NthValue(x, 2L, Sql.From.First, Sql.Nulls.Respect).Over().OrderBy(x).ToValue()|};
 				}
 				""",
 				"""
@@ -456,7 +457,7 @@ namespace Tests.Analyzers
 
 				class C
 				{
-					int M(int x) => {|LINQ2DB1001:Sql.Ext.Max(x).KeepLast().OrderBy(x).Over().PartitionBy(x).ToValue()|};
+					int M(int x) => {|L2DB1001:Sql.Ext.Max(x).KeepLast().OrderBy(x).Over().PartitionBy(x).ToValue()|};
 				}
 				""",
 				"""
@@ -478,7 +479,7 @@ namespace Tests.Analyzers
 
 				class C
 				{
-					int M(int x) => {|LINQ2DB1001:Sql.Ext.Sum(x).Over().OrderBy(x).Rows.UnboundedPreceding.ToValue()|};
+					int M(int x) => {|L2DB1001:Sql.Ext.Sum(x).Over().OrderBy(x).Rows.UnboundedPreceding.ToValue()|};
 				}
 				""",
 				"""
@@ -499,7 +500,7 @@ namespace Tests.Analyzers
 
 				class C
 				{
-					long M(int x) => {|LINQ2DB1001:Sql.Ext.RowNumber().Over().OrderBy(x, Sql.NullsPosition.First).ToValue()|};
+					long M(int x) => {|L2DB1001:Sql.Ext.RowNumber().Over().OrderBy(x, Sql.NullsPosition.First).ToValue()|};
 				}
 				""",
 				"""
@@ -521,7 +522,7 @@ namespace Tests.Analyzers
 
 				class C
 				{
-					int M(int x) => {|LINQ2DB1001:Sql.Ext.Sum(x).Over().OrderBy(x).Rows.Between.ValuePreceding(3).And.ValueFollowing(1).ToValue()|};
+					int M(int x) => {|L2DB1001:Sql.Ext.Sum(x).Over().OrderBy(x).Rows.Between.ValuePreceding(3).And.ValueFollowing(1).ToValue()|};
 				}
 				""",
 				"""
@@ -542,7 +543,7 @@ namespace Tests.Analyzers
 
 				class C
 				{
-					long M(int x) => {|LINQ2DB1001:Sql.Ext.NTile(4).Over().OrderBy(x).ToValue()|};
+					long M(int x) => {|L2DB1001:Sql.Ext.NTile(4).Over().OrderBy(x).ToValue()|};
 				}
 				""",
 				"""
@@ -564,7 +565,7 @@ namespace Tests.Analyzers
 
 				class C
 				{
-					int M(int x) => {|LINQ2DB1001:Sql.Ext.NTile(4).Over().OrderBy(x).ToValue()|};
+					int M(int x) => {|L2DB1001:Sql.Ext.NTile(4).Over().OrderBy(x).ToValue()|};
 				}
 				""";
 
@@ -582,7 +583,7 @@ namespace Tests.Analyzers
 
 				class C
 				{
-					int M(int x) => {|LINQ2DB1001:Sql.Ext.Sum(x, Sql.AggregateModifier.Distinct).KeepFirst().OrderBy(x).Over().PartitionBy(x).ToValue()|};
+					int M(int x) => {|L2DB1001:Sql.Ext.Sum(x, Sql.AggregateModifier.Distinct).KeepFirst().OrderBy(x).Over().PartitionBy(x).ToValue()|};
 				}
 				""";
 
@@ -599,7 +600,7 @@ namespace Tests.Analyzers
 
 				class C
 				{
-					string M(int x) => {|LINQ2DB1001:Sql.Ext.ListAgg(x).WithinGroup.OrderBy(x).Over().PartitionBy(x).ToValue()|};
+					string M(int x) => {|L2DB1001:Sql.Ext.ListAgg(x).WithinGroup.OrderBy(x).Over().PartitionBy(x).ToValue()|};
 				}
 				""";
 
@@ -616,7 +617,7 @@ namespace Tests.Analyzers
 
 				class C
 				{
-					long M(int x) => {|LINQ2DB1001:Sql.Ext.RowNumber().Filter(x > 0).Over().OrderBy(x).ToValue()|};
+					long M(int x) => {|L2DB1001:Sql.Ext.RowNumber().Filter(x > 0).Over().OrderBy(x).ToValue()|};
 				}
 				""";
 
@@ -634,7 +635,7 @@ namespace Tests.Analyzers
 				{
 					void M(IQueryable<int> q, int x)
 					{
-						var r = q.Select(_ => {|LINQ2DB1001:Sql.Ext.RowNumber().Over().OrderBy(x).ToValue()|});
+						var r = q.Select(_ => {|L2DB1001:Sql.Ext.RowNumber().Over().OrderBy(x).ToValue()|});
 					}
 				}
 				""",
@@ -662,7 +663,7 @@ namespace Tests.Analyzers
 
 				class C
 				{
-					int M(int x) => {|LINQ2DB1001:Sql.Ext.Lag(x, @default: 0, offset: 1).Over().OrderBy(x).ToValue()|};
+					int M(int x) => {|L2DB1001:Sql.Ext.Lag(x, @default: 0, offset: 1).Over().OrderBy(x).ToValue()|};
 				}
 				""",
 				"""
@@ -671,6 +672,29 @@ namespace Tests.Analyzers
 				class C
 				{
 					int M(int x) => Sql.Window.Lag(x, 1, 0, f => f.OrderBy(x));
+				}
+				""");
+
+		[Test]
+		public Task NthValueReordersNamedValueArguments()
+			// NthValue interleaves its two value slots (expr, n) with two modifier args (from, nulls). With every
+			// argument named and written out of declaration order, the value args must still be emitted as (expr, n)
+			// — sorted by parameter ordinal, not source order — and the modifiers routed to their builder steps.
+			=> Verify.VerifyAsync(
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					int M(int x) => {|L2DB1001:Sql.Ext.NthValue(n: 2L, expr: x, nulls: Sql.Nulls.Ignore, from: Sql.From.Last).Over().OrderBy(x).ToValue()|};
+				}
+				""",
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					int M(int x) => Sql.Window.NthValue(x, 2L, f => f.FromLast().IgnoreNulls().OrderBy(x));
 				}
 				""");
 
@@ -684,7 +708,7 @@ namespace Tests.Analyzers
 
 				class C
 				{
-					int M(int x) => {|LINQ2DB1001:Sql.Ext.Count(modifier: Sql.AggregateModifier.Distinct, expr: x).Over().PartitionBy(x).OrderBy(x).ToValue()|};
+					int M(int x) => {|L2DB1001:Sql.Ext.Count(modifier: Sql.AggregateModifier.Distinct, expr: x).Over().PartitionBy(x).OrderBy(x).ToValue()|};
 				}
 				""",
 				"""
@@ -693,6 +717,62 @@ namespace Tests.Analyzers
 				class C
 				{
 					int M(int x) => Sql.Window.Count(x, f => f.Distinct().PartitionBy(x).OrderBy(x));
+				}
+				""");
+
+		[Test]
+		public Task ConvertsAggregateModifierReferencedThroughConstAlias()
+			// A DISTINCT modifier referenced through a const alias (a member access whose name is not the canonical
+			// enum-member spelling) must be recognized by its constant value and preserved as .Distinct() — matching
+			// the member name alone would leave `K.D` unrecognized and silently drop DISTINCT from the rewrite.
+			=> Verify.VerifyAsync(
+				"""
+				using LinqToDB;
+
+				static class K
+				{
+					public const Sql.AggregateModifier D = Sql.AggregateModifier.Distinct;
+				}
+
+				class C
+				{
+					int M(int x) => {|L2DB1001:Sql.Ext.Count(x, K.D).Over().PartitionBy(x).OrderBy(x).ToValue()|};
+				}
+				""",
+				"""
+				using LinqToDB;
+
+				static class K
+				{
+					public const Sql.AggregateModifier D = Sql.AggregateModifier.Distinct;
+				}
+
+				class C
+				{
+					int M(int x) => Sql.Window.Count(x, f => f.Distinct().PartitionBy(x).OrderBy(x));
+				}
+				""");
+
+		[Test]
+		public Task DoesNotFixWhenAggregateModifierIsNotCompileTimeConstant()
+			// A modifier supplied through a non-constant expression (here a method parameter) cannot be resolved to a
+			// specific enum member at compile time. Rather than guess, the fix is withheld — the diagnostic reports
+			// but the chain is left unchanged.
+			=> Verify.VerifyAsync(
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					int M(int x, Sql.AggregateModifier m) => {|L2DB1001:Sql.Ext.Count(x, m).Over().PartitionBy(x).OrderBy(x).ToValue()|};
+				}
+				""",
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					int M(int x, Sql.AggregateModifier m) => {|L2DB1001:Sql.Ext.Count(x, m).Over().PartitionBy(x).OrderBy(x).ToValue()|};
 				}
 				""");
 
@@ -707,7 +787,7 @@ namespace Tests.Analyzers
 
 				class C
 				{
-					long M(int x) => {|LINQ2DB1001:Sql.Ext.RowNumber().Over(/* keep */).OrderBy(x).ToValue()|};
+					long M(int x) => {|L2DB1001:Sql.Ext.RowNumber().Over(/* keep */).OrderBy(x).ToValue()|};
 				}
 				""",
 				"""
@@ -718,6 +798,31 @@ namespace Tests.Analyzers
 					long M(int x) => Sql.Window.RowNumber(f => f.OrderBy(x)) /* keep */;
 				}
 				""");
+
+		[Test]
+		public Task PreservesSingleLineCommentOnChainScaffolding()
+			// A single-line comment on the chain scaffolding travels the same salvage path as the block-comment case,
+			// but runs to end of line — the salvaged comment must be line-terminated so the statement's ';' is not
+			// swallowed into it (which would leave the rewritten code without a terminator and stop compiling).
+			=> Verify.VerifyAsync(
+"""
+using LinqToDB;
+
+class C
+{
+	long M(int x) => {|L2DB1001:Sql.Ext.RowNumber().Over() // keep
+		.OrderBy(x).ToValue()|};
+}
+""",
+"""
+using LinqToDB;
+
+class C
+{
+	long M(int x) => Sql.Window.RowNumber(f => f.OrderBy(x)) // keep
+;
+}
+""");
 
 		[Test]
 		public Task DoesNotOfferFixForNTileInInferredContextThatWouldWiden()
@@ -733,7 +838,7 @@ namespace Tests.Analyzers
 				{
 					void M(int x)
 					{
-						var r = {|LINQ2DB1001:Sql.Ext.NTile(4).Over().OrderBy(x).ToValue()|};
+						var r = {|L2DB1001:Sql.Ext.NTile(4).Over().OrderBy(x).ToValue()|};
 					}
 				}
 				""";

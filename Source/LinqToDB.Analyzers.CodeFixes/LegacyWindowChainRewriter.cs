@@ -255,8 +255,8 @@ namespace LinqToDB.Analyzers.CodeFixes
 			// (AggregateModifier / Nulls / From / NullsPosition) that become builder calls. Map each written
 			// argument to its parameter through the semantic model rather than by source position: C# named
 			// arguments can be reordered, so a positional match would misclassify a modifier as a value arg (or
-			// vice-versa). IInvocationOperation.Arguments preserves source order, so the value args are collected
-			// with their parameter ordinal and re-sorted into declaration order — the order Sql.Window expects.
+			// vice-versa). Each argument maps to its parameter, so value args are collected with their parameter
+			// ordinal and sorted into declaration order — the order Sql.Window expects.
 			var valueArgsByOrdinal = new List<(int Ordinal, ArgumentSyntax Arg)>();
 			string? distinct = null, nullTreatment = null, fromPosition = null;
 
@@ -275,18 +275,18 @@ namespace LinqToDB.Analyzers.CodeFixes
 				switch (argument.Parameter.Type.Name)
 				{
 					case "AggregateModifier":
-						var mod = EnumMemberName(argSyntax.Expression);
+						var mod = EnumMemberName(argSyntax.Expression, argument.Parameter.Type, model);
 						if (mod is null) return null;
 						if (string.Equals(mod, "Distinct", StringComparison.Ordinal)) distinct = "Distinct";
 						break;
 					case "Nulls":
-						var nulls = EnumMemberName(argSyntax.Expression);
+						var nulls = EnumMemberName(argSyntax.Expression, argument.Parameter.Type, model);
 						if (nulls is null) return null;
 						if (string.Equals(nulls, "Ignore",  StringComparison.Ordinal)) nullTreatment = "IgnoreNulls";
 						if (string.Equals(nulls, "Respect", StringComparison.Ordinal)) nullTreatment = "RespectNulls";
 						break;
 					case "From":
-						var from = EnumMemberName(argSyntax.Expression);
+						var from = EnumMemberName(argSyntax.Expression, argument.Parameter.Type, model);
 						if (from is null) return null;
 						if (string.Equals(from, "First", StringComparison.Ordinal)) fromPosition = "FromFirst";
 						if (string.Equals(from, "Last",  StringComparison.Ordinal)) fromPosition = "FromLast";
@@ -452,6 +452,10 @@ namespace LinqToDB.Analyzers.CodeFixes
 			{
 				trailing.Add(SyntaxFactory.Space);
 				trailing.Add(comment);
+				// A single-line comment runs to the end of its line; without a terminator the token that follows the
+				// rewritten expression (the statement's ';') would be swallowed into the comment and stop compiling.
+				if (comment.IsKind(SyntaxKind.SingleLineCommentTrivia))
+					trailing.Add(SyntaxFactory.CarriageReturnLineFeed);
 			}
 
 			trailing.AddRange(lastToken.TrailingTrivia);
@@ -513,8 +517,22 @@ namespace LinqToDB.Analyzers.CodeFixes
 			};
 		}
 
-		static string? EnumMemberName(ExpressionSyntax expression)
-			=> expression is MemberAccessExpressionSyntax ma ? ma.Name.Identifier.Text : null;
+		// Resolve the modifier argument to its canonical enum-member name by its compile-time constant *value*, not
+		// its source spelling: a direct `Sql.<Enum>.<Member>`, a const alias (`K.D`), or any other constant-valued
+		// expression all map to the same member. Returns null when the argument is not a compile-time constant (the
+		// caller then declines the fix) so a runtime-computed modifier is never silently mis-rewritten.
+		static string? EnumMemberName(ExpressionSyntax expression, ITypeSymbol enumType, SemanticModel model)
+		{
+			var constant = model.GetConstantValue(expression);
+			if (!constant.HasValue)
+				return null;
+
+			foreach (var member in enumType.GetMembers())
+				if (member is IFieldSymbol { HasConstantValue: true } field && Equals(field.ConstantValue, constant.Value))
+					return field.Name;
+
+			return null;
+		}
 
 		static bool IsAnalyticFunctionsClass(INamedTypeSymbol? type)
 			=> type is { Name: AnalyticFunctionsTypeName };

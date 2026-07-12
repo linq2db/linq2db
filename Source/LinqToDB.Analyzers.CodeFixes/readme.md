@@ -8,9 +8,9 @@ automatic migrations to the current API.
 
 | Id | Severity | Description |
 |----|----------|-------------|
-| [LINQ2DB1001](https://github.com/linq2db/linq2db/wiki/LINQ2DB1001) | Info | Legacy `Sql.Ext` analytic / window-function API is superseded by `Sql.Window`. A code fix migrates convertible chains. |
+| [L2DB1001](https://github.com/linq2db/linq2db/wiki/L2DB1001) | Info | Legacy `Sql.Ext` analytic / window-function API is superseded by `Sql.Window`. A code fix migrates convertible chains. |
 
-### LINQ2DB1001 — migrate `Sql.Ext` window functions to `Sql.Window`
+### L2DB1001 — migrate `Sql.Ext` window functions to `Sql.Window`
 
 ```csharp
 // before
@@ -29,5 +29,5 @@ your comments and formatting. Chains that have no direct `Sql.Window` equivalent
 Adjust severity in `.editorconfig`:
 
 ```ini
-dotnet_diagnostic.LINQ2DB1001.severity = warning
+dotnet_diagnostic.L2DB1001.severity = warning
 ```

@@ -21,7 +21,6 @@
 		<PackageReference Include="NUnit3TestAdapter" />
 		<PackageReference Include="Microsoft.Testing.Platform.MSBuild" />
 		<PackageReference Include="Microsoft.Testing.Extensions.TrxReport" />
-		<PackageReference Include="Shouldly" />
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing" />
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing" />
 		<!-- Pin the testing SDK's transitive Roslyn (whose floor is an ancient netfx-only 1.0.1) up to the

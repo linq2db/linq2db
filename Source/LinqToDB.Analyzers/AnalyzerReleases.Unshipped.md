@@ -5,4 +5,4 @@
 
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
-LINQ2DB1001 | Usage | Info | WindowFunctionApiAnalyzer, [documentation](https://github.com/linq2db/linq2db/wiki/LINQ2DB1001)
+L2DB1001 | Usage | Info | WindowFunctionApiAnalyzer, [documentation](https://github.com/linq2db/linq2db/wiki/L2DB1001)

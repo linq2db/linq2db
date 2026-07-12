@@ -34,23 +34,20 @@ namespace Tests.Analyzers
 		}
 
 		[Test]
-		public Task ReportsPlainAggregateWithoutOver()
+		public Task DoesNotReportPlainAggregateWithoutOver()
 		{
-			// No .Over() — still legacy API, still reported (the code fix simply won't offer a conversion).
+			// No .Over(): a plain aggregate is not a window function and has no Sql.Window migration target, so
+			// the rule must not fire (reporting it would give an unactionable "migrate to Sql.Window" message).
 			const string source = """
 				using LinqToDB;
 
 				class C
 				{
-					int M(int x) => {|#0:Sql.Ext.Sum(x).ToValue()|};
+					int M(int x) => Sql.Ext.Sum(x).ToValue();
 				}
 				""";
 
-			var expected = new DiagnosticResult(WindowFunctionApiAnalyzer.DiagnosticId, DiagnosticSeverity.Info)
-				.WithLocation(0)
-				.WithArguments("Sum");
-
-			return Verify.VerifyAsync(source, expected);
+			return Verify.VerifyAsync(source);
 		}
 
 		[Test]

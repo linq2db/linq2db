@@ -12,7 +12,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace LinqToDB.Analyzers.CodeFixes
 {
 	/// <summary>
-	/// Code fix for <see cref="WindowFunctionApiAnalyzer"/> (LINQ2DB1001): rewrites a mechanically-convertible
+	/// Code fix for <see cref="WindowFunctionApiAnalyzer"/> (L2DB1001): rewrites a mechanically-convertible
 	/// legacy <c>Sql.Ext.&lt;Fn&gt;()...Over()...ToValue()</c> chain to the equivalent <c>Sql.Window.&lt;Fn&gt;(...)</c>
 	/// call, preserving comments and formatting. Chains with no direct <c>Sql.Window</c> equivalent are left
 	/// unchanged (the diagnostic remains, but no fix is offered).
