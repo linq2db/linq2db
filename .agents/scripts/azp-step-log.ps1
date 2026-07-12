@@ -15,6 +15,12 @@ The `dev.azure.com/linq2db` build API is publicly readable (no auth). The script
 A step's log only exists once the step has started; a pending / queued step is
 reported (with its state) but yields no logPath — the script does not fail on it.
 
+Steps that share a name across parallel matrix legs (e.g. a per-leg diagnostic that
+runs on every job) all slugify to the same filename, so the on-disk log is overwritten
+and only the last-matched leg's log survives — the JSON still lists every matched
+record. Fine when any one leg is representative; if you need a *specific* leg's log,
+take that record's log.url from the JSON and fetch it directly.
+
 Invoke directly via the PowerShell tool (preferred), NOT wrapped in Bash:
 
     .agents\scripts\azp-step-log.ps1 -BuildId 22116 -StepName 'RAM disk'

@@ -63,6 +63,10 @@ When a `gh api` call returns HTTP 422 with body `{"errors":["An internal error o
 
 Surfaced 2026-05-06 during PR #5467 review posting against `POST /repos/{o}/{r}/pulls/{n}/reviews`.
 
+### Reading a file's content at a ref (avoid the base64 pipe trap)
+
+To read a file's content at a specific ref / PR, request the raw bytes: `gh api "repos/linq2db/linq2db/contents/<path>?ref=<ref>" -H "Accept: application/vnd.github.raw"` returns the file verbatim, no base64. Reaching for `--jq '.content'` and decoding is the trap — the `contents` API base64-wraps `content` every 60 chars, and piping that into `ForEach-Object` / a decode splits it per line so each fragment decodes to garbage (same pipe-splitting mechanism as the `.body` trap above). If you must decode `.content`, capture it to a variable and strip whitespace before a single decode (`[Convert]::FromBase64String($c -replace '\s','')`); never pipe it line-by-line. (For a ref containing `/` — e.g. `refs/pull/<n>/merge` — the `?ref=` query form works where `git show <ref>:<path>` fails on the slash; see [`agent-rules.md`](agent-rules.md) → *Windows Git Bash gotchas*.)
+
 ### Wording discipline
 
 Issue bodies, PR bodies, review comments, and replies are terse and fact-dense — a record of what changed and why, not a place for framing, apologies, or summaries of what the diff already shows.
