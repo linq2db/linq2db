@@ -269,9 +269,15 @@ this is a real, incidental bug fix, not conversion noise. Full build green acros
 
 ## Cleanup done
 
-- `docs/api.md` regenerated: picked up both the current member set (was stale independent of this
-  migration - 5130 -> 4133 XML members scanned, unrelated codebase drift) and the defaults-merge
-  bug fix as real content changes.
+- `docs/api.md` regenerated: picked up both the current member set and the defaults-merge bug fix
+  as real content changes. **Correction**: the first regeneration pass used
+  `.build/bin/LinqToDB/Testing/net10.0/linq2db.xml`, which turned out to be a stale, never-refreshed
+  artifact (`Testing` config has `GenerateDocumentationFile=false`, so nothing was regenerating it -
+  it silently predated weeks of unrelated development and actually *undercounted* relative to the
+  original stale file, 4133 vs 5130 XML members). Re-regenerated from a genuine
+  `-c Release -t:Rebuild` build: 5142 XML members scanned, 742 members with AI metadata. Caught
+  while investigating why `Configuration.Linq.PreferClientCalculation` (added 2026-06-26) seemed to
+  be missing from generated docs - it wasn't a compiler bug, the XML file was just frozen.
 - Legacy XML `<ai-tags>` path removed from `GenerateApiDocs.ps1`
   (`ValidateAiTagElement`/`FormatAiTagElement`/`ExtractAiTagsFromXml`/the regex fallback are gone).
   Replaced with `AssertNoLegacyAiTagXml`, which throws if the XML-doc form is used again, rather
