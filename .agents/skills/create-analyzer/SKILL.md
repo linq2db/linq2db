@@ -1,6 +1,6 @@
 ---
 name: create-analyzer
-description: Scaffold a new user-facing Roslyn analyzer (and optional code fix) rule in the linq2db.Analyzers package. Adds the DiagnosticAnalyzer to Source/LinqToDB.Analyzers, an optional CodeFixProvider to Source/LinqToDB.Analyzers.CodeFixes, an AnalyzerReleases.Unshipped.md entry with the next LINQ2DB1xxx id, and a Tests/Tests.Analyzers fixture skeleton. Use when the user says "create-analyzer", "/create-analyzer", "add an analyzer rule", or "new linq2db analyzer".
+description: Scaffold a new user-facing Roslyn analyzer (and optional code fix) rule in the linq2db.Analyzers package. Adds the DiagnosticAnalyzer to Source/LinqToDB.Analyzers, an optional CodeFixProvider to Source/LinqToDB.Analyzers.CodeFixes, an AnalyzerReleases.Unshipped.md entry with the next L2DB1xxx id, and a Tests/Tests.Analyzers fixture skeleton. Use when the user says "create-analyzer", "/create-analyzer", "add an analyzer rule", or "new linq2db analyzer".
 ---
 
 # create-analyzer
@@ -13,7 +13,7 @@ When the user asks to add a new user-facing analyzer/code-fix rule. If the `Sour
 
 ## Steps
 
-1. **Pick the id.** Scan `Source/LinqToDB.Analyzers/AnalyzerReleases.{Shipped,Unshipped}.md` for the highest `LINQ2DB1xxx` in use; the new id is the next free number (user-facing rules are `1xxx`; `0xxx` is reserved for internal `CodeGenerators` rules). Confirm the id, title, category, and default severity with the user (Info for "prefer the new API" style rules while the old API is still supported).
+1. **Pick the id.** Scan `Source/LinqToDB.Analyzers/AnalyzerReleases.{Shipped,Unshipped}.md` for the highest `L2DB1xxx` in use; the new id is the next free number. User-facing analyzer-package rules use the short **`L2DB1xxx`** space (first is `L2DB1001`); the internal `CodeGenerators` build-time analyzer keeps its own separate **`LINQ2DB0xxx`** space (e.g. `LINQ2DB0001`) — don't continue that prefix for user-facing rules. Confirm the id, title, category, and default severity with the user (Info for "prefer the new API" style rules while the old API is still supported).
 
 2. **Analyzer.** Add a `sealed class <Name>Analyzer : DiagnosticAnalyzer` to `Source/LinqToDB.Analyzers` — model it on `WindowFunctionApiAnalyzer`: `public const string DiagnosticId`, an `internal static DiagnosticDescriptor Rule` (with `helpLinkUri` to the wiki page), `EnableConcurrentExecution()` + `ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None)`, symbols resolved once in `RegisterCompilationStartAction`, and the narrowest `RegisterOperationAction`/`RegisterSyntaxNodeAction` with a cheap gate first. Honor the performance checklist. Use `ImmutableArray.Create(...)` (not `[...]`) and MA-clean code (Roslyn 4.8 + Meziantou — see the doc's gotchas).
 

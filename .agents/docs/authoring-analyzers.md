@@ -2,7 +2,7 @@
 
 How to add a **shipped, user-facing** Roslyn analyzer + code fix to the `linq2db.Analyzers` NuGet package. This is distinct from [`analyzer-rules.md`](analyzer-rules.md) (which covers the *internal* `.editorconfig` analyzer config enforced on the linq2db source) and from `Source/CodeGenerators` (internal build-only generator + `LINQ2DB0001`, never packaged).
 
-Established on the `feature/analyzers-package-window-rule` work (rule `LINQ2DB1001`, the old→new `Sql.Ext`→`Sql.Window` migration). Read this before writing a new rule; `/create-analyzer` scaffolds from it.
+Established on the `feature/analyzers-package-window-rule` work (rule `L2DB1001`, the old→new `Sql.Ext`→`Sql.Window` migration). Read this before writing a new rule; `/create-analyzer` scaffolds from it.
 
 ## Project layout — two assemblies, one package
 
@@ -25,7 +25,7 @@ Pin the shipped analyzer's Roslyn (`Microsoft.CodeAnalysis.CSharp.Workspaces`, a
 
 ## Diagnostic IDs
 
-Continue the `LINQ2DB` space but reserve **`LINQ2DB1xxx` for user-facing** rules (`0001`–`0999` stay internal, e.g. `CodeGenerators`' `LINQ2DB0001`). First user-facing rule = `LINQ2DB1001`. Record every rule in `AnalyzerReleases.Unshipped.md` (moved to `Shipped.md` at release) — the release-tracking analyzer (RS2000/RS2001) enforces this. Default severity for "prefer the new API" rules is **Info** while the old API is still supported (not `[Obsolete]`).
+User-facing analyzer-package rules use the short **`L2DB1xxx`** id space; the first is **`L2DB1001`**. The internal `CodeGenerators` build-time analyzer keeps its own separate **`LINQ2DB0xxx`** space (e.g. `LINQ2DB0001`) — don't continue that prefix for user-facing rules. Record every rule in `AnalyzerReleases.Unshipped.md` (moved to `Shipped.md` at release — see [`/release-publicapi`](../skills/release-publicapi/SKILL.md) step 8) — the release-tracking analyzer (RS2000/RS2001) enforces this. Default severity for "prefer the new API" rules is **Info** while the old API is still supported (not `[Obsolete]`).
 
 ## Roslyn 4.8 gotchas
 
