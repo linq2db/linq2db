@@ -138,7 +138,16 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				if (!File.Exists(assemblyPath))
 					return false;
 
-				var candidateAssemblyName = AssemblyName.GetAssemblyName(assemblyPath);
+				AssemblyName candidateAssemblyName;
+
+				try
+				{
+					candidateAssemblyName = AssemblyName.GetAssemblyName(assemblyPath);
+				}
+				catch (Exception ex) when (ex is BadImageFormatException or FileLoadException or IOException)
+				{
+					return false;
+				}
 
 				return AssemblyName.ReferenceMatchesDefinition(requestedAssemblyName, candidateAssemblyName);
 			}

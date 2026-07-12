@@ -123,6 +123,23 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task ConfigInitResolvesEnvironmentVariablesInConfigPath()
+		{
+			var environment = new TestCliEnvironment();
+
+			environment.EnvironmentVariables.Add("CONFIG_DIR", "config");
+
+			var result = await RunCli(environment, "config-init", "--config", "${CONFIG_DIR}\\query.json", "--provider", "SQLite", "--connection-string", "Data Source=data.db");
+
+			{
+				(result.ExitCode).ShouldBe(0);
+				(result.Error).ShouldBeEmpty();
+				(result.Output).ShouldContain("Created configuration profile 'default' in 'config\\query.json'.");
+				environment.Files.ShouldContainKey("config\\query.json");
+			}
+		}
+
+		[Test]
 		public async Task ConfigInitRejectsReservedMcpProfileName()
 		{
 			var result = await RunCli(new TestCliEnvironment(), "config-init", "--profile", "mcp", "--provider", "SQLite", "--connection-string", "Data Source=data.db");
@@ -292,6 +309,7 @@ namespace Tests.LinqToDB.CLI
 
 			public Dictionary<string, string> Files { get; } = new(StringComparer.Ordinal);
 			public HashSet<string> Directories { get; } = new(StringComparer.Ordinal);
+			public Dictionary<string, string> EnvironmentVariables { get; } = new(StringComparer.Ordinal);
 
 			public TextWriter Out   => _output;
 			public TextWriter Error => _error;
@@ -328,7 +346,7 @@ namespace Tests.LinqToDB.CLI
 
 			public string? GetEnvironmentVariable(string name)
 			{
-				return null;
+				return EnvironmentVariables.GetValueOrDefault(name);
 			}
 		}
 	}

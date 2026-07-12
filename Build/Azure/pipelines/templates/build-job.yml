@@ -78,9 +78,10 @@ jobs:
     inputs:
       script: |
         ECHO ON
+        setlocal enabledelayedexpansion
         FOR %%f IN (net8.0 net9.0 net10.0) DO (
             .build\bin\Tests.LinqToDB.CLI\$(test_configuration)\%%f\linq2db.CLI.Tests.exe --filter "TestCategory != SkipCI" --settings .runsettings --report-trx --report-trx-filename cli-%%f.trx --results-directory CliTestResults --hangdump --hangdump-timeout 5m
-            if %errorlevel% neq 0 exit /b %errorlevel%
+            if !errorlevel! neq 0 exit /b !errorlevel!
             )
     displayName: Run CLI Tests
     condition: and(succeeded(), ${{ parameters.with_tests }})

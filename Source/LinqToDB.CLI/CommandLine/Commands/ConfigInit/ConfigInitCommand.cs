@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.CommandLine;
+using LinqToDB.CommandLine.Commands.Connection;
 using LinqToDB.CommandLine.Commands.QueryExecution;
 using LinqToDB.CommandLine.Options;
 
@@ -126,7 +127,7 @@ namespace LinqToDB.CommandLine.Commands.ConfigInit
 			}
 
 			var values = new ConfigInitValues(
-				(string?)config ?? DefaultConfigPath,
+				new ConnectionSettingsResolver(environment).ResolvePath(QueryExecutionCliOptions.Config, (string?)config) ?? DefaultConfigPath,
 				(string?)profile ?? DefaultProfileName,
 				(string?)description,
 				(string?)provider,
