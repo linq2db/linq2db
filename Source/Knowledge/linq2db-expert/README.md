@@ -2,7 +2,7 @@
 
 Generated from `.agents/knowledge-pack-maintenance.md`.
 
-Upload only the numbered markdown files (`01-*.md` through `16-*.md`) to Custom GPT Knowledge.
+Upload only the numbered markdown files (`01-*.md` through `17-*.md`) to Custom GPT Knowledge.
 
 Do not upload supporting files such as `README.md`, `MAINTENANCE.md`, `manifest.json`, `bundle-manifest.json`, or `custom-gpt-instructions.md`.
 

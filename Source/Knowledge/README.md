@@ -19,7 +19,7 @@ files should only be reviewed for deterministic regeneration and upload-shape re
 | `Source/Skills/linq2db/SKILL.md` | Canonical entry point for coding agents using the package. |
 | `Source/Skills/linq2db/docs/*.md` | Source-of-truth task guides. Some guides are intentionally partial; check `docs/coverage.md`. |
 | `Source/Knowledge/README.md` | Maintainer-facing overview for generated/assembled knowledge packs. |
-| `Source/Knowledge/linq2db-expert/01-*.md` through `16-*.md` | Versioned Custom GPT upload files generated from the skill pack and XML-doc. |
+| `Source/Knowledge/linq2db-expert/01-*.md` through `17-*.md` | Versioned Custom GPT upload files generated from the skill pack and XML-doc. |
 | `Source/Knowledge/linq2db-expert/*.json` | Generated manifests that describe included source files, source hashes, and upload files. |
 | `.agents/Build-LinqToDBExpert.ps1` | Generator for the versioned Expert knowledge pack. |
 | `.agents/knowledge-pack-maintenance.md` | Detailed maintainer runbook and validation commands. |

@@ -15,6 +15,7 @@ package version they are shipped with.
 | `linq2db/docs/*.md` | Task-focused source-of-truth guides for package users and coding agents. |
 | `linq2db/docs/api.md` | Generated API discovery index from `linq2db.xml`; search it, do not read it sequentially. |
 | `../Knowledge/` | Versioned generated/assembled knowledge packs for hosted assistants; not shipped in NuGet. |
+
 ## Available Skills
 
 - `linq2db/` - AI-friendly documentation for using linq2db.

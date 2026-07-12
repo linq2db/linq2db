@@ -39,7 +39,7 @@ It affects query translation, DML column lists, schema creation, temporary table
 | Cannot modify entity types | Fluent mapping with a shared custom `MappingSchema` |
 | Need reusable custom mapping configuration | `MappingSchema` + `DataOptions.UseMappingSchema(...)` |
 | Need DDL or temporary tables | Explicit column sizes and numeric precision |
-| Need associations | `[Association]` or fluent `.Association(...)`; see future association guide and XML-doc |
+| Need associations | `[Association]` or fluent `.Association(...)`; see [`associations.md`](17-associations.md) |
 
 ---
 
@@ -478,7 +478,8 @@ They do not enable EF-style lazy loading, identity maps, change tracking, or `Sa
 Use associations when relationship metadata should be reusable in query expressions or eager loading.
 Use explicit joins when the relationship is local to one query or when the join shape is clearer.
 
-`LoadWith` / `ThenLoadWith` are explicit eager-loading directives. They are not implicit navigation loading.
+`LoadWith` / `ThenLoad` are explicit eager-loading directives. They are not implicit navigation loading.
+See [`associations.md`](17-associations.md) for relationship metadata, eager loading, and strategy markers.
 
 ---
 

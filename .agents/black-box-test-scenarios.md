@@ -100,13 +100,25 @@ Passing means the agent:
 - q: How do I add an exception interceptor?
 - q: Are interceptors a first-choice API for provider-specific SQL syntax, or a fallback?
 
+## Associations And Eager Loading
+
+- q: How do I map a required many-to-one association from `Order` to `Customer`?
+- q: How do I map a one-to-many association from `Customer` to `Orders` using fluent mapping?
+- q: Does linq2db lazy-load association properties after `ToListAsync()`?
+- q: How do I load `Order.Items.Product.Category` with `LoadWith` / `ThenLoad`?
+- q: How do I filter rows loaded for a collection association?
+- q: What does `CanBeNull = false` change for an association?
+- q: When should I use a predicate association instead of `ThisKey` / `OtherKey`?
+- q: How do I use `WithKeyedLoadStrategy()` for a query with eager-loaded collections?
+- q: What happens if I use `Items[0]` or `First()` inside a `LoadWith` path?
+- q: How do I prevent accidental implicit collection loading in projections?
+
 ## Anti-Patterns And Troubleshooting
 
 - q: Why is filtering after `ToListAsync()` a linq2db anti-pattern?
 - q: Why is sharing one `DataConnection` concurrently unsafe?
 - q: Why can recreating `MappingSchema` per request hurt performance?
 - q: What should I check if a translation fails for a LINQ expression?
-- q: How should I answer if package docs do not cover associations in depth?
 - q: How should I answer if package docs expose an API but do not explain which database tuning strategy to choose?
 - q: How should I distinguish general SQL advice from package-confirmed linq2db API usage?
 
@@ -120,8 +132,12 @@ Passing means the agent:
 
 ## Coverage Boundary
 
-- q: Are associations covered in depth by package-local AI docs?
 - q: Are stored procedures covered in depth by package-local AI docs?
 - q: Are window functions a current documentation priority?
 - q: What should an agent do for an uncovered topic that still has public XML-doc APIs?
+- q: Does this skill cover extension packages such as `LinqToDB.EntityFrameworkCore`, `LinqToDB.Remote.*`, or `LinqToDB.CLI`?
+- q: What should an agent do if the user asks about `CompiledQuery` and there is no dedicated guide?
+- q: What should an agent do if the user asks about metrics or `ActivityService`?
+- q: What should an agent do if the user asks about `UpdateOptimistic` or `OptimisticLockPropertyAttribute`?
+- q: What should an agent do if the user asks about `QuerySql` or `RawSqlString`?
 - q: How should an agent report a documentation failure found during black-box testing?

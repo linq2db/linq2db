@@ -277,6 +277,7 @@ $sourceToOutput = @{
 	'docs/provider-setup.md'             = '07-provider-configuration.md'
 	'docs/configuration.md'              = '07-provider-configuration.md'
 	'docs/mapping.md'                    = '08-mapping.md'
+	'docs/associations.md'               = '17-associations.md'
 	'docs/crud/crud.md'                  = '09-crud-and-merge.md'
 	'docs/crud/crud-select.md'           = '09-crud-and-merge.md'
 	'docs/crud/crud-insert.md'           = '09-crud-and-merge.md'
@@ -606,9 +607,10 @@ $bundles = [ordered]@{
 	'13-custom-sql.md'                     = @('docs/custom-sql.md')
 	'14-translatable-methods.md'           = @('docs/translatable-methods.md')
 	'15-interceptors.md'                   = @('docs/interceptors.md')
+	'17-associations.md'                   = @('docs/associations.md')
 }
 
-$uploadFiles = @($bundles.Keys) + @('16-xml-doc.md')
+$uploadFiles = @(@($bundles.Keys) + @('16-xml-doc.md') | Sort-Object)
 
 if (-not (Test-Path -LiteralPath $OutputRoot)) {
 	New-Item -ItemType Directory -Path $OutputRoot | Out-Null
@@ -669,7 +671,7 @@ $readme = @"
 
 Generated from ``$(Get-RepoRelativePath $maintenancePath)``.
 
-Upload only the numbered markdown files (``01-*.md`` through ``16-*.md``) to Custom GPT Knowledge.
+Upload only the numbered markdown files (``01-*.md`` through ``17-*.md``) to Custom GPT Knowledge.
 
 Do not upload supporting files such as ``README.md``, ``MAINTENANCE.md``, ``manifest.json``, ``bundle-manifest.json``, or ``custom-gpt-instructions.md``.
 

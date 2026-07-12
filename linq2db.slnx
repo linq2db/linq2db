@@ -642,6 +642,7 @@
     <File Path="Source/Knowledge/linq2db-expert/14-translatable-methods.md" />
     <File Path="Source/Knowledge/linq2db-expert/15-interceptors.md" />
     <File Path="Source/Knowledge/linq2db-expert/16-xml-doc.md" />
+    <File Path="Source/Knowledge/linq2db-expert/17-associations.md" />
     <File Path="Source/Knowledge/linq2db-expert/bundle-manifest.json" />
     <File Path="Source/Knowledge/linq2db-expert/custom-gpt-instructions.md" />
     <File Path="Source/Knowledge/linq2db-expert/MAINTENANCE.md" />
@@ -721,6 +722,7 @@
     <File Path="Source/Skills/linq2db/docs/ai-tags.md" />
     <File Path="Source/Skills/linq2db/docs/api.md" />
     <File Path="Source/Skills/linq2db/docs/architecture.md" />
+    <File Path="Source/Skills/linq2db/docs/associations.md" />
     <File Path="Source/Skills/linq2db/docs/configuration.md" />
     <File Path="Source/Skills/linq2db/docs/coverage.md" />
     <File Path="Source/Skills/linq2db/docs/custom-sql.md" />

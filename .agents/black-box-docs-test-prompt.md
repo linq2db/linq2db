@@ -56,6 +56,7 @@ only the files below under the user-provided Expert root, called `<EXPERT_ROOT>`
 - `<EXPERT_ROOT>/14-translatable-methods.md`
 - `<EXPERT_ROOT>/15-interceptors.md`
 - `<EXPERT_ROOT>/16-xml-doc.md`
+- `<EXPERT_ROOT>/17-associations.md`
 
 Do not read source files, tests, build scripts, repository docs outside the package docs, GitHub,
 online documentation, or any files outside the allowlist.

@@ -152,7 +152,7 @@ Compound values (comma-separated) are allowed when a single operation has primar
 - `QueryRoot` - modifies or creates the query root (table name, CTE alias, schema/server qualifier)
 - `QueryStructure` - modifies query structure (subqueries, pagination, ordering, grouping)
 - `QueryCompilation` - affects query compilation or caching behavior (inlining, tagging, options)
-- `JoinGraph` - modifies the join / association loading graph (`LoadWith`, `ThenLoadWith`)
+- `JoinGraph` - modifies the join / association loading graph (`LoadWith`, `ThenLoad`)
 - `SqlSemantics` - modifies SQL runtime semantics (table hints, lock types, query options)
 - `CommandBuilder` - returns a fluent command builder that is not immediately executable
 - `Data` - directly modifies stored data (bulk copy, non-query DML execution)

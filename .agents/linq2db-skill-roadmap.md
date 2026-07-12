@@ -54,11 +54,11 @@ derived artifacts when needed.
 | [ ] | Set operations | `Source/Skills/linq2db/docs/query-set-operations.md` | Medium | Planned | `Concat`, `Union`, `Except`, `Intersect`, provider differences. |
 | [ ] | Projections | `Source/Skills/linq2db/docs/query-projections.md` | High | Planned | DTO projections, computed values, nested projections, materialization traps. |
 | [ ] | Null semantics | `Source/Skills/linq2db/docs/null-semantics.md` | High | Planned | SQL three-valued logic, nullable comparisons, coalesce, provider differences. |
-| [ ] | Associations and eager loading | `Source/Skills/linq2db/docs/associations.md` | High | Next | Separate guide for `[Association]`, fluent associations, `LoadWith`, `ThenLoadWith`, nullability, predicates, and no lazy loading. |
+| [x] | Associations and eager loading | `Source/Skills/linq2db/docs/associations.md` | High | Done | `[Association]`, fluent associations, `LoadWith`, `ThenLoad`, nullability, predicates/query expressions, eager-loading strategies, implicit collection loading guard, and no lazy loading. |
 | [ ] | Inheritance mapping | `Source/Skills/linq2db/docs/inheritance-mapping.md` | Medium | Planned | Discriminators, inheritance attributes, query behavior. |
 | [ ] | Advanced value converters | `Source/Skills/linq2db/docs/value-conversions.md` | Low | Deferred | Only if mapping guide becomes insufficient; would cover `IValueConverter`, null handling, provider types, and reusable converter patterns. |
 | [ ] | Custom mapping metadata | `Source/Skills/linq2db/docs/custom-mapping-metadata.md` | Low | Deferred | Metadata readers and custom mapping attributes; document only if package users have a real extension scenario. |
-| [ ] | Raw SQL | `Source/Skills/linq2db/docs/raw-sql.md` | High | Planned | `FromSql`, SQL queries, parameters, composability boundaries. |
+| [ ] | Raw SQL | `Source/Skills/linq2db/docs/raw-sql.md` | High | Planned | `FromSql`, `QuerySql`, `RawSqlString`, parameters, and composability boundaries. |
 | [ ] | Parameters | `Source/Skills/linq2db/docs/parameters.md` | High | Planned | `DataParameter`, `DataType`, `DbType`, precision, output parameters, and package-confirmed parameterization/inlining behavior. |
 | [ ] | Transactions | `Source/Skills/linq2db/docs/transactions.md` | High | Planned | `DataConnection` transactions, `TransactionScope`, async flow, common mistakes. |
 | [ ] | Connection lifetime | `Source/Skills/linq2db/docs/connection-lifetime.md` | High | Planned | `DataConnection` vs `DataContext`, session state, disposal, pooling assumptions. |
@@ -85,13 +85,18 @@ derived artifacts when needed.
 | [ ] | Async operations | `Source/Skills/linq2db/docs/async.md` | High | Planned | `LinqToDB.Async`, cancellation, streaming/materialization distinctions. |
 | [ ] | Streaming and low-level reads | `Source/Skills/linq2db/docs/data-reader.md` | Medium | Planned | DataReader-style APIs and resource lifetime. |
 | [ ] | Window functions | `Source/Skills/linq2db/docs/window-functions.md` | Low | Deferred | Current API is expected to be superseded by an alternative API; revisit after that API is available. |
+| [ ] | Compiled queries | `Source/Skills/linq2db/docs/compiled-queries.md` | Medium | Planned | `CompiledQuery` hot-path query caching guidance; recognized in coverage but not yet documented in depth. |
+| [ ] | Metrics and activity instrumentation | `Source/Skills/linq2db/docs/metrics.md` | Medium | Planned | `Metrics`, `ActivityService`, `IActivity`, and how this differs from basic SQL tracing/interceptors. |
+| [ ] | Remote data contexts | `Source/Skills/linq2db/docs/remote.md` | Medium | Planned | `RemoteDataContextBase`, `ILinqService`, and `LinqToDB.Remote.*` package boundary guidance. |
 | [ ] | SQL expressions | `Source/Skills/linq2db/docs/sql-expressions.md` | Medium | Planned | `Sql.*` helpers, server-side expressions, custom methods boundary. |
 | [ ] | JSON and XML | `Source/Skills/linq2db/docs/json-xml.md` | Medium | Planned | Provider-specific JSON/XML mappings and functions. |
 | [ ] | Temporal/date-time behavior | `Source/Skills/linq2db/docs/date-time.md` | Medium | Planned | Date/time translation, offsets, provider precision. |
 | [ ] | Identity and sequences | `Source/Skills/linq2db/docs/identity-sequences.md` | Medium | Planned | Identity retrieval, sequences, provider differences. |
-| [ ] | Optimistic concurrency | `Source/Skills/linq2db/docs/concurrency.md` | Medium | Planned | Version columns, conditional updates, no change tracking. |
+| [ ] | Optimistic concurrency | `Source/Skills/linq2db/docs/concurrency.md` | Medium | Planned | `UpdateOptimistic`, `OptimisticLockPropertyAttribute`, version columns, conditional updates, and no change tracking. |
 | [ ] | Table expressions and views | `Source/Skills/linq2db/docs/table-expressions.md` | Medium | Planned | Views, table functions, expression-backed tables. |
 | [ ] | Multi-table DML | `Source/Skills/linq2db/docs/multi-table-dml.md` | Medium | Planned | Provider-specific update/delete shapes. |
+| [ ] | Extension package boundaries | `Source/Skills/linq2db/docs/extension-packages.md` | Low | Planned | Clarify scope for `LinqToDB.EntityFrameworkCore`, `LinqToDB.AspNet`, `LinqToDB.Remote.*`, `LinqToDB.Scaffold`, `LinqToDB.Tools`, `LinqToDB.CLI`, and `LinqToDB.FSharp`. |
+| [ ] | Compatibility namespaces | `Source/Skills/linq2db/docs/compatibility.md` | Low | Deferred | `LinqToDB.Compatibility.*` legacy surface; document only if agents start using it incorrectly. |
 | [ ] | Performance guidance | `Source/Skills/linq2db/docs/performance.md` | Medium | Planned | Query cache, mapping schema reuse, N+1 risks, bulk operations. |
 | [ ] | Testing LinqToDB integrations | `Source/Skills/linq2db/docs/testing-integrations.md` | Low | Planned | Provider test strategy for package users. |
 | [ ] | Troubleshooting | `Source/Skills/linq2db/docs/troubleshooting.md` | High | Planned | Symptom-to-guide index for common errors. |

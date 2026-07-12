@@ -30,6 +30,20 @@ These files define global rules that apply to every operation. Keep them in mind
 | `docs/architecture.md` | Translation pipeline, entry points, connection model |
 | `docs/agent-antipatterns.md` | Common mistakes with WRONG/CORRECT code examples; quick symptom index at the top |
 | `docs/coverage.md` | Covered and not-yet-covered AI documentation areas; use it to decide when generated API lookup or raw XML-doc confirmation is required |
+| `docs/associations.md` | `[Association]`, fluent associations, `LoadWith` / `ThenLoad`, eager-loading strategies, and no-lazy-loading rules |
+
+---
+
+## Package scope
+
+This skill covers the core `linq2db` package. It does not provide dedicated task guides for
+extension packages such as `LinqToDB.EntityFrameworkCore`, `LinqToDB.AspNet`,
+`LinqToDB.Remote.*`, `LinqToDB.Scaffold`, `LinqToDB.Tools`, `LinqToDB.CLI`, or `LinqToDB.FSharp`.
+
+For extension-package questions, use package-local docs/XML-doc from that package when available.
+If this skill is the only available documentation, state that the package-specific guidance is not
+covered here and separate best-effort extension-package guidance from package-confirmed core
+`linq2db` facts.
 
 ---
 
@@ -252,6 +266,7 @@ They may not match this package version. Always use the bundled files below:
 |---|---|
 | `docs/api.md` | API discovery rules and curated extract entries; read before concluding that an API does not exist or before using generic fallbacks |
 | `docs/mapping.md` | Entity mapping, `MappingSchema`, attributes/fluent mapping, schema/DDL-sensitive columns |
+| `docs/associations.md` | Relationship metadata and eager loading - `[Association]`, fluent `.Association(...)`, `LoadWith`, `ThenLoad`, eager-loading strategies |
 | `docs/crud/crud.md` | All CRUD operations - SELECT, INSERT, UPDATE, DELETE, upsert, bulk copy, MERGE; routes to the right guide |
 | `docs/query-cte.md` | CTEs, recursive queries - when `.AsCte()` or `db.GetCte<T>()` is needed |
 | `docs/query-temp-tables.md` | Temporary tables - `TempTable<T>`, `CreateTempTable`, `TableOptions`; requires `DataConnection` |

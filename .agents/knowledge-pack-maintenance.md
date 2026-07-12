@@ -96,6 +96,7 @@ Upload only these numbered markdown files to Custom GPT Knowledge:
 14. `14-translatable-methods.md`
 15. `15-interceptors.md`
 16. `16-xml-doc.md`
+17. `17-associations.md`
 
 Do not upload supporting files. `custom-gpt-instructions.md` goes into the GPT Instructions field.
 The `custom-gpt-instructions.md` file is curated in `Source/Knowledge/linq2db-expert/` and is not generated.
@@ -120,6 +121,7 @@ The `custom-gpt-instructions.md` file is curated in `Source/Knowledge/linq2db-ex
 | `14-translatable-methods.md` | `docs/translatable-methods.md` |
 | `15-interceptors.md` | `docs/interceptors.md` |
 | `16-xml-doc.md` | current `linq2db.xml` parsed directly |
+| `17-associations.md` | `docs/associations.md` |
 
 The hint route must remain visible as separate files:
 
@@ -194,7 +196,7 @@ After preparing the knowledge pack:
 Run these checks after each refresh.
 
 ```powershell
-# exactly 16 uploadable Knowledge files
+# exactly 17 uploadable Knowledge files
 (Get-ChildItem -LiteralPath Source\Knowledge\linq2db-expert -File | Where-Object { $_.Name -match '^\d\d-.*\.md$' } | Measure-Object).Count
 
 # source markdown inputs are represented in bundle-manifest.json
@@ -250,7 +252,7 @@ Get-ChildItem -LiteralPath Source\Knowledge\linq2db-expert -File | Where-Object 
 
 Expected result:
 
-- uploadable count is `16`;
+- uploadable count is `17`;
 - manifest diff is empty;
 - stale-link and mojibake checks return no matches;
 - horizontal-rule run check returns no rows;
@@ -271,7 +273,7 @@ Expected result:
 
 ## Upload Procedure
 
-1. In the Custom GPT editor, replace Knowledge with only the 16 numbered `.md` files.
+1. In the Custom GPT editor, replace Knowledge with only the 17 numbered `.md` files.
 2. Paste `custom-gpt-instructions.md` into the Instructions field and save.
 3. Start a new chat before validation; existing chats can keep stale retrieved context.
 4. Validate with several provider-specific hint questions, for example ClickHouse `FINAL`,

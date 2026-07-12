@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-07-11T16:33:17",
+  "generated_at": "2026-07-11T20:14:50",
   "prompt_source": ".agents/knowledge-pack-maintenance.md",
   "source_root": "Source/Skills/linq2db",
   "xml_source": ".build/bin/LinqToDB/Release/net10.0/linq2db.xml",
-  "upload_file_count": 16,
+  "upload_file_count": 17,
   "upload_files": [
     "01-skill.md",
     "02-coverage.md",
@@ -20,7 +20,8 @@
     "13-custom-sql.md",
     "14-translatable-methods.md",
     "15-interceptors.md",
-    "16-xml-doc.md"
+    "16-xml-doc.md",
+    "17-associations.md"
   ],
   "xml_member_count": 5014,
   "included_docs": [
@@ -29,6 +30,7 @@
     "docs/ai-tags.md",
     "docs/api.md",
     "docs/architecture.md",
+    "docs/associations.md",
     "docs/configuration.md",
     "docs/coverage.md",
     "docs/crud/crud-bulkcopy.md",
@@ -56,11 +58,12 @@
   "source_hashes": {
     "../../LinqToDB/README.md": "d70458b11e09aac2bd08b46d5b4e05ff452cc95aa5b56c7bd3a3f117783293cc",
     "docs/agent-antipatterns.md": "1b6a33a90a33609229cda8e2c79f20e3565da0acb37a6e2c2b550756e2e57416",
-    "docs/ai-tags.md": "b0f57d3055c3955e0f6489804e5a52a472e254435a3ff3bcce0b846fc0227cfc",
+    "docs/ai-tags.md": "489df0f024cea3ebc67edddacaea032e667557059924a20954fad6e626e8df81",
     "docs/api.md": "8f35add03ca8d5881e504bdb5bfa9631f5cb7d7ea0811671cf0a3a9bed794d5e",
     "docs/architecture.md": "d63379bbaf48b281fb15ec9ae82a25b70be1c9b194663d9793f960a2759c1e2b",
+    "docs/associations.md": "7d7ef0ad338b58231ccc1749d6e39e5f5a3a59eee035f3d56ff167f92dac9fa5",
     "docs/configuration.md": "b3edd3c06b21f1ad9567479dcb657c3ac0b4c33c5183e7a33f49833e004e0283",
-    "docs/coverage.md": "897313920d9b830a1dd5d8059a9ec42a7d6ee36fa218d82233730cb71197f47d",
+    "docs/coverage.md": "4b58fc465dd31c1475d2674045433c30e5170c00800dd552b73eaba09850790a",
     "docs/crud/crud-bulkcopy.md": "d3418bf6eefd04072d12aceabf996837b752aa7a50aaf95fa086b01d543730bc",
     "docs/crud/crud-delete.md": "5fe6c8bf6feebc211b4fc26f998b6e8ba97b12b30701f222977f9bb0444e24ee",
     "docs/crud/crud-insert-select.md": "41d55e17e057c5526c3285197370cf068397d4c6af4ee942e5ad05ca64e36fb8",
@@ -75,13 +78,13 @@
     "docs/hints-api-map.md": "f390324ab050711067201810f730356ddfbba1500205e445d78b72d0d3458671",
     "docs/hints.md": "905b6f7b079c22d72d72888215892b8494f78bfc3f5c28c6a18d2689aa40c0d9",
     "docs/interceptors.md": "9303c9c7b641c29e941dfa7f1586dc91d3677a082f6984c222ee092372ed5b7e",
-    "docs/mapping.md": "b6cb89f8399804fbfd4d69d7a29b5751f3ac1a186b07510896a97fed88c00654",
+    "docs/mapping.md": "031a200009a15e6b2d34838be470368efc0e387de89d2cf49bfc04f3fe7aacf2",
     "docs/provider-capabilities.md": "ec755c2b96d007cd732e996bc1b06d48993ff941f76ffffb7c8ade6147c65ce4",
     "docs/provider-setup.md": "8f1ffb97e1f94e34b1a0662a1d9733a6974083b9ea28b040723c186ef7cec4c6",
     "docs/query-cte.md": "6c359cba89307afd2241bc7c998a6e00f6f505cba898df7404b8791c8c42545b",
     "docs/query-temp-tables.md": "695b0e2082b158ae2ef1077a3c69d91f1b97a96348ec83fde399847abb2b3e18",
     "docs/translatable-methods.md": "4d52c86682a13134672dbe26bb2310ee5bebabacb1cc83117b91d5ec422bb596",
-    "SKILL.md": "83881957a642525651e2d90f36558aa0687e97ecb71285486fb0ff36f51e2772",
+    "SKILL.md": "4067d25826fe8dde3e944aeb2f2fbf1143110cfae91b0fe6a844d51cef47fbf1",
     "linq2db.xml": "1420c1adf32a4779f85fc199f614348aa0d2c41016bdca2811c80fd4b86a1d5a"
   }
 }
