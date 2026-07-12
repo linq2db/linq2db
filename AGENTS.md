@@ -52,6 +52,7 @@ Runner, config, patterns, and debugging are in [.agents/docs/testing.md](.agents
 - C# 14, nullable enabled, `TreatWarningsAsErrors=true`. .NET SDK 10 (`global.json`). Analyzers run in **Release only**; banned APIs in `Source/BannedSymbols.txt`.
 - XML docs required on new public types/members.
 - TFMs: `net462`, `netstandard2.0`, `net8.0`–`net10.0`. Feature-flag macros (e.g. `SUPPORTS_SPAN`, `ADO_ASYNC`) live in `Directory.Build.props`.
+- `using System;` is always the first using directive in a `.cs` file, even when that file's code doesn't reference any `System` type — this is an intentional, deliberate convention, not dead code. Never remove it, and don't propose removing it as an "unused using" cleanup.
 
 ### Build gotchas that fast-iteration hides
 
