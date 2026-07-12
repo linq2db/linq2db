@@ -55,6 +55,12 @@ Classify each as Fixed / Inaccurate / Still actual at HEAD. Surface every verdic
 
 Procedure (scope, classification rules, playground-verification protocol, thread dispositions, review-quality-signal log, mid-session re-run): [`review-bot-claim-audit.md`](../../docs/review-bot-claim-audit.md).
 
+### 2c. Check the PR's CI check status
+
+The code-review passes reason over source — they **cannot** see that the PR's own new/changed tests fail at runtime. Before spawning reviewers, run `gh pr checks <n> --repo linq2db/linq2db`. For failing legs, pull per-test failures via `.agents/scripts/azp-build-failures.ps1 -BuildId <n>` (build id from the failing check's Azure URL) and check whether the failing tests live in files the PR adds/modifies. A PR whose **own** new/changed test fails CI is a top-priority finding — fold it into the finding stream at BLK/MAJ and brief the relevant code pass with the concrete failures. Distinguish pre-existing/flaky failures (note, don't attribute) from PR-caused ones.
+
+(Surfaced on #5678: a full review — three `code-reviewer` passes + `baselines-reviewer` — reported the new `ProviderSpecificReaderValueTests` as high-quality/non-vacuous, but it failed CI on ~15 provider jobs (Oracle needing `FROM DUAL`, MySQL 5.7 `CAST … AS DOUBLE`, Firebird 2.5/3, DuckDB, PostgreSQL, DB2); the blocker surfaced only when the user flagged "tests fail." The absent baseline folders for exactly those providers were the corroborating fingerprint — see `baselines-reviewer.md` → *Subset baseline coverage can be a failure fingerprint*.)
+
 ### 3. Target-branch check
 
 Using `pr.baseRefName` from step 2's context output, if it is not `master`, warn the user:
