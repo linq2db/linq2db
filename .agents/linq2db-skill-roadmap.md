@@ -58,7 +58,7 @@ derived artifacts when needed.
 | [ ] | Advanced value converters | `Source/Skills/linq2db/docs/value-conversions.md` | Low | Deferred | Only if mapping guide becomes insufficient; would cover `IValueConverter`, null handling, provider types, and reusable converter patterns. |
 | [ ] | Custom mapping metadata | `Source/Skills/linq2db/docs/custom-mapping-metadata.md` | Low | Deferred | Metadata readers and custom mapping attributes; document only if package users have a real extension scenario. |
 | [x] | Raw SQL | `Source/Skills/linq2db/docs/raw-sql.md` | High | Done | `FromSql`, `FromSqlScalar`, `RawSqlString`, `SetCommand`, `CommandInfo`, `ToSqlQuery`, `QuerySql`, parameters, composability boundaries, and alias placement. |
-| [ ] | Parameters | `Source/Skills/linq2db/docs/parameters.md` | High | Planned | `DataParameter`, `DataType`, `DbType`, precision, output parameters, and package-confirmed parameterization/inlining behavior. |
+| [x] | Parameters | `Source/Skills/linq2db/docs/parameters.md` | High | Done | `DataParameter` factories vs `Create()` type-inference mismatches, output/input-output parameters and the `QueryProc` deferred-execution gotcha, `Sql.Parameter`/`Sql.Constant`/`InlineParameters`/`ToSql`/`AsSql` for forcing parameter-vs-literal, and an explicit "do not invent" rule for automatic parameterization outside those APIs. |
 | [ ] | Transactions | `Source/Skills/linq2db/docs/transactions.md` | High | Planned | `DataConnection` transactions, `TransactionScope`, async flow, common mistakes. |
 | [ ] | Connection lifetime | `Source/Skills/linq2db/docs/connection-lifetime.md` | High | Planned | `DataConnection` vs `DataContext`, session state, disposal, pooling assumptions. |
 | [ ] | Generated SQL inspection | `Source/Skills/linq2db/docs/generated-sql.md` | Medium | Planned | How to inspect SQL, logging hooks, `ToString()` caveats if applicable. |
@@ -110,7 +110,7 @@ guide or turn it into a planned checklist row.
 
 | Topic | Likely target | Note |
 |---|---|---|
-| Parameterization and inlining behavior | `Source/Skills/linq2db/docs/parameters.md` and `Source/Skills/linq2db/docs/generated-sql.md` | Black-box tests show agents may invent claims such as "local variables are inlined" when discussing SQL Server plan/cache issues. Document only package-confirmed APIs and behavior for parameters, constants, inline values, and generated SQL inspection; otherwise require agents to say the package docs do not confirm it. |
+| Generated SQL inspection behavior | `Source/Skills/linq2db/docs/generated-sql.md` | Black-box tests show agents may invent claims such as "local variables are inlined" when discussing SQL Server plan/cache issues. The parameterization/inlining API side (`Sql.Parameter`, `Sql.Constant`, `InlineParameters`, `ToSql`, `AsSql`) is now covered in `docs/parameters.md`, including an explicit "do not invent" rule for behavior outside those APIs. This row is only about the still-missing generated-SQL-inspection guide (how to view/log the actual SQL text, `ToString()` caveats). |
 
 ---
 

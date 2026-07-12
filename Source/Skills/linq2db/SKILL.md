@@ -270,6 +270,7 @@ They may not match this package version. Always use the bundled files below:
 | `docs/query-cte.md` | CTEs, recursive queries - when `.AsCte()` or `db.GetCte<T>()` is needed |
 | `docs/query-temp-tables.md` | Temporary tables - `TempTable<T>`, `CreateTempTable`, `TableOptions`; requires `DataConnection` |
 | `docs/null-semantics.md` | Why generated SQL for a null comparison looks more complex than expected - `CompareNulls`, `Sql.AsNotNull`, `IsDistinctFrom`, `Sql.ToNullable`/`Sql.AsNullable` |
+| `docs/parameters.md` | `DataParameter` construction, output/input-output procedure parameters, and forcing a value to be a bound parameter vs a SQL literal - `Sql.Parameter`, `Sql.Constant`, `InlineParameters` |
 | `docs/hints.md` | Query, table, index, join, subquery, provider-specific, and MERGE hints; before proposing raw SQL, `Sql.Expression`, or interceptors for a hint, check this guide, `docs/hints-api-map.md`, and generated provider `*Hints` API entries |
 | `docs/hints-api-map.md` | Reverse lookup from concrete provider SQL hint text to typed provider-specific helper APIs; use it as a search aid, then verify signatures in `docs/api.md` or raw XML-doc when needed |
 | `docs/translatable-methods.md` | `String` / `Math` / `DateTime` methods in LINQ queries |
