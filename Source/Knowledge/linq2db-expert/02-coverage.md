@@ -28,6 +28,8 @@ These areas have task-focused markdown guidance in this package:
 - raw SQL query roots, raw command execution, and generated SQL inspection;
 - null comparison semantics, `CompareNulls`, and manual nullability control (`AsNotNull`,
   `IsDistinctFrom`, `ToNullable`/`AsNullable`);
+- `DataParameter` construction, output/input-output procedure parameters, and forcing a value to a
+  bound parameter vs a SQL literal (`Sql.Parameter`, `Sql.Constant`, `InlineParameters`);
 - custom SQL expressions and functions;
 - built-in translatable .NET methods;
 - common anti-patterns and symptom-based checks.
