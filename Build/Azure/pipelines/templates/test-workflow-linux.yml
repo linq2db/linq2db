@@ -12,24 +12,28 @@ steps:
 - task: CmdLine@2
   inputs:
     script: |
-      # Free disk space so large-DB jobs (Oracle 21/23) fit. Each step logs the space it actually
-      # freed (avail before -> after) so we can drop any that isn't worth the time it costs.
+      # Free disk space so large-DB jobs (Oracle 21/23) fit. Each step logs the space it
+      # actually freed (avail before -> after); the ~sizes below are measured on build 22224.
+      #
+      # Enabled (each frees >= 1 GB): ~23.6 GB total, takes avail from ~15 GB to ~39 GB.
+      # Disabled (freed < 1 GB, or unsafe) - uncomment if a job needs more headroom:
+      #   apt clean      ~0.1 GB
+      #   remove dotnet  ~2-3 GB  (breaks all legs - system dotnet is used before UseDotNet@2)
       avail() { df --output=avail -m / | tail -1 | tr -d ' '; }
       report() { local a=$(avail); echo ">>> $2: freed $(( a - $1 )) MB (avail now $a MB)"; }
 
-      b=$(avail); sudo apt-get remove -y '^llvm-.*';        report $b "remove llvm (~1Gb est)"
-      b=$(avail); sudo rm -rf /usr/local/lib/android;       report $b "remove android (~10Gb est)"
-      b=$(avail); sudo rm -rf /usr/local/.ghcup/;           report $b "remove ghcup (~7Gb est)"
-      b=$(avail); sudo rm -rf /opt/hostedtoolcache/CodeQL;  report $b "remove CodeQL (~5-6Gb est, unused)"
-      b=$(avail); sudo rm -rf /usr/share/swift;             report $b "remove swift (~1.5-2Gb est, unused)"
-      b=$(avail); sudo rm -rf /usr/lib/jvm;                 report $b "remove jvm (~1-2Gb est, unused)"
+      b=$(avail); sudo apt-get remove -y '^llvm-.*';        report $b "remove llvm (~1.4Gb)"
+      b=$(avail); sudo rm -rf /usr/local/lib/android;       report $b "remove android (~10Gb)"
+      b=$(avail); sudo rm -rf /usr/local/.ghcup/;           report $b "remove ghcup (~3.7Gb)"
+      b=$(avail); sudo rm -rf /opt/hostedtoolcache/CodeQL;  report $b "remove CodeQL (~1.7Gb, unused)"
+      b=$(avail); sudo rm -rf /usr/share/swift;             report $b "remove swift (~3.4Gb, unused)"
+      b=$(avail); sudo rm -rf /usr/lib/jvm;                 report $b "remove jvm (~1.4Gb, unused)"
       # docker image prune runs before any DB container exists (safe); it also prints its own
       # "Total reclaimed space" line in addition to the avail delta below.
-      b=$(avail); sudo docker image prune -af;              report $b "docker image prune (~3-4Gb est)"
-      b=$(avail); sudo apt-get clean;                       report $b "apt clean"
+      b=$(avail); sudo docker image prune -af;              report $b "docker image prune (~1.9Gb)"
       df -h /
-      # ~2-3Gb more from preinstalled .NET (we install our own via UseDotNet@2). Left commented:
-      # only enable if the system `dotnet` is confirmed unused, as removing it breaks all legs.
+      # Disabled - freed < 1 GB or breaks legs; uncomment if a job needs more space:
+      # b=$(avail); sudo apt-get clean;                     report $b "apt clean (~0.1Gb)"
       # b=$(avail); sudo rm -rf /usr/share/dotnet;          report $b "remove dotnet (~2-3Gb est)"
   displayName: Cleanup Junk
 
