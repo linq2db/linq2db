@@ -55,7 +55,9 @@ After this, `git status` is clean and only the sparse page(s) are materialized; 
 
   Verify `git -C ../linq2db.wiki -c core.protectNTFS=false diff --stat origin/master master` shows **only** your page (no colon-page deletion) before `git -C ../linq2db.wiki push origin master`.
 
-**Before creating a wiki page for a task** (e.g. an analyzer descriptor's `helpLinkUri` target), fetch and check whether it already exists — `git -C ../linq2db.wiki fetch origin` then `git -C ../linq2db.wiki ls-tree origin/master <page>.md`. Pages are often authored out-of-band; drafting one that already exists wastes effort and risks overwriting a maintainer's page.
+**Before creating a wiki page for a task** (e.g. an analyzer descriptor's `helpLinkUri` target), fetch and check whether it already exists — `git -C ../linq2db.wiki fetch origin` then `git -C ../linq2db.wiki ls-tree origin/master <page>.md`. Pages are often authored out-of-band; drafting one that already exists wastes effort and risks overwriting a maintainer's page. **A PR body's "post-merge follow-up: create wiki page X" bullet is *not* evidence the page is absent** — such follow-up lists are aspirational and frequently lag the already-authored page. Run the `ls-tree` check before telling the user a page doesn't exist; don't infer its status from PR-body prose (an instance of *fetched content is a claim, verify it*). Corrected on PR #5703, where the `LINQ2DB1001` page existed despite the PR body listing it as a to-do.
+
+**Renaming a wiki page** (e.g. a diagnostic id changed on the PR): after the sparse-checkout above, `git mv --sparse <old>.md <new>.md` — plain `git mv` fails with a "Use the --sparse option" hint because the destination isn't in the sparse set. Then edit + `git -C ../linq2db.wiki add --sparse <new>.md` (the `--sparse` is likewise required), commit, push. Also `git -C ../linq2db.wiki grep -n "<oldId>" HEAD -- "*.md"` first to catch any *other* page linking the old name (the rename would break those links). Done on PR #5703 (`LINQ2DB1001.md` → `L2DB1001.md`, plus its `helpLinkUri`/editorconfig id references).
 
 ## `gh ... --body` is banned
 
