@@ -155,131 +155,23 @@ function GetSummaryText($member) {
 	return $summary
 }
 
-function GetAiTagDisplayName([string] $name) {
-	switch ($name) {
-		'group'         { return 'Group' }
-		'groups'        { return 'Groups' }
-		'execution'     { return 'Execution' }
-		'composability' { return 'Composability' }
-		'affects'       { return 'Affects' }
-		'pipeline'      { return 'Pipeline' }
-		'provider'      { return 'Provider' }
-		'hint-type'     { return 'HintType' }
-		default         { return $name }
+function AssertNoLegacyAiTagXml($member, [string] $memberId) {
+	# The XML-doc <ai-tags />/<ai-tags-defaults /> custom-tag form was fully migrated to
+	# AiTagsAttribute/AiTagsDefaultsAttribute (Source/LinqToDB/Internal/Metadata); see
+	# .agents/ai-tags-attribute-design.md. Nothing should author the XML-doc form anymore - fail loud
+	# rather than silently ignore it, so an accidental old-style tag doesn't quietly do nothing.
+	$found = @($member.SelectNodes('ai-tags | ai-tags-defaults | remarks//ai-tags | remarks//ai-tags-defaults'))
+	if ($found.Count -gt 0) {
+		throw ("{0}: XML-doc <ai-tags />/<ai-tags-defaults /> is no longer supported; use " +
+			"[AiTags(...)] / [AiTagsDefaults(...)] from LinqToDB.Internal.Metadata instead." -f $memberId)
 	}
-}
-
-function GetAllowedAiTagValues([string] $name) {
-	switch ($name) {
-		'group'         { return @('QueryDirectives', 'NavigationLoading', 'Hints', 'DML', 'Merge', 'Helpers', 'Configuration', 'Connection', 'RawSQL', 'Schema') }
-		'groups'        { return @('QueryDirectives', 'NavigationLoading', 'Hints', 'DML', 'Merge', 'Helpers', 'Configuration', 'Connection', 'RawSQL', 'Schema') }
-		'execution'     { return @('Deferred', 'Immediate') }
-		'composability' { return @('Composable', 'Terminal') }
-		'affects'       { return @('DmlStatement', 'DdlStatement', 'QueryRoot', 'QueryStructure', 'QueryCompilation', 'JoinGraph', 'SqlSemantics', 'CommandBuilder', 'Data', 'QueryResult', 'ExecutionContext', 'ConnectionConfiguration', 'Configuration', 'SchemaResult', 'GeneratedSql') }
-		'pipeline'      { return @('ExpressionTree', 'SqlAST', 'SqlText', 'Connection', 'Execution', 'BulkInsert') }
-		'provider'      { return @('ProviderDefined', 'ProviderAgnostic') }
-		'hint-type'     { return @('Table', 'TablesInScope', 'Index', 'Join', 'SubQuery', 'Query', 'Merge', 'TableName') }
-		default         { return $null }
-	}
-}
-
-function ValidateAiTagElement($node, [string] $memberId) {
-	if ($node -eq $null) {
-		return
-	}
-
-	if ($node.Attributes.Count -eq 0) {
-		throw ("{0}: <{1}> must declare at least one attribute." -f $memberId, $node.Name)
-	}
-
-	foreach ($attribute in $node.Attributes) {
-		$name    = $attribute.Name
-		$value   = $attribute.Value.Trim()
-		$allowed = GetAllowedAiTagValues $name
-
-		if ($allowed -eq $null) {
-			throw ("{0}: unknown <{1}> attribute '{2}'." -f $memberId, $node.Name, $name)
-		}
-
-		if ([string]::IsNullOrWhiteSpace($value)) {
-			throw ("{0}: <{1}> attribute '{2}' must not be empty." -f $memberId, $node.Name, $name)
-		}
-
-		$values = if ($name -in @('groups', 'affects', 'pipeline')) { $value.Split(',') } else { @($value) }
-		foreach ($raw in $values) {
-			$item = $raw.Trim()
-			if ([string]::IsNullOrWhiteSpace($item)) {
-				throw ("{0}: <{1}> attribute '{2}' contains an empty value." -f $memberId, $node.Name, $name)
-			}
-
-			if ($allowed -notcontains $item) {
-				throw ("{0}: invalid <{1}> attribute '{2}' value '{3}'." -f $memberId, $node.Name, $name, $item)
-			}
-		}
-	}
-}
-
-function FormatAiTagElement($node) {
-	if ($node -eq $null -or $node.Attributes.Count -eq 0) {
-		return ''
-	}
-
-	$order  = @('group', 'groups', 'hint-type', 'execution', 'composability', 'affects', 'pipeline', 'provider')
-	$parts  = New-Object System.Collections.Generic.List[string]
-	$used   = New-Object System.Collections.Generic.HashSet[string]
-
-	foreach ($name in $order) {
-		$attribute = $node.Attributes[$name]
-		if ($attribute -and -not [string]::IsNullOrWhiteSpace($attribute.Value)) {
-			[void] $parts.Add(('{0}={1}' -f (GetAiTagDisplayName $name), $attribute.Value.Trim()))
-			[void] $used.Add($name)
-		}
-	}
-
-	foreach ($attribute in $node.Attributes) {
-		if (-not $used.Contains($attribute.Name) -and -not [string]::IsNullOrWhiteSpace($attribute.Value)) {
-			[void] $parts.Add(('{0}={1}' -f (GetAiTagDisplayName $attribute.Name), $attribute.Value.Trim()))
-		}
-	}
-
-	if ($parts.Count -eq 0) {
-		return ''
-	}
-
-	return (($parts -join '; ') + ';')
-}
-
-function ExtractAiTagsFromXml($member) {
-	$tagNode = $member.SelectSingleNode('ai-tags')
-	$tags = FormatAiTagElement $tagNode
-	if ($tags) {
-		return CleanText $tags
-	}
-
-	$text = ''
-
-	$remarks = GetXmlNodeText $member 'remarks'
-	if ($remarks) {
-		$text = $remarks
-	}
-
-	if ([string]::IsNullOrWhiteSpace($text)) {
-		$text = $member.InnerText
-	}
-
-	$match = [System.Text.RegularExpressions.Regex]::Match($text, 'AI-Tags:\s*([^\r\n]+)')
-	if (-not $match.Success) {
-		return ''
-	}
-
-	return CleanText $match.Groups[1].Value
 }
 
 #region Attribute-based AI-Tags (AiTagsAttribute / AiTagsDefaultsAttribute)
 #
-# Reads <ai-tags /> / <ai-tags-defaults /> for members migrated from the XML-doc custom-tag form to
-# the internal AiTagsAttribute/AiTagsDefaultsAttribute (Source/LinqToDB/Internal/Metadata). Members
-# not yet migrated fall back to ExtractAiTagsFromXml above. See .agents/ai-tags-attribute-design.md.
+# Reads <ai-tags /> / <ai-tags-defaults /> from AiTagsAttribute/AiTagsDefaultsAttribute
+# (Source/LinqToDB/Internal/Metadata) via CustomAttributeData off the compiled assembly. See
+# .agents/ai-tags-attribute-design.md.
 
 # Canonical display order. Multi-value ([Flags]) fields render in enum declaration order, not in the
 # order a caller happened to combine them - this is a deliberate, accepted behavior change from the
@@ -593,11 +485,11 @@ $manual = [System.Text.RegularExpressions.Regex]::Replace($manual, '(\r?\n\s*---
 $assembly           = [System.Reflection.Assembly]::LoadFrom((Resolve-Path -LiteralPath $AssemblyPath).Path)
 $attributeTagsIndex = BuildAttributeAiTagsIndex $assembly
 
-function ExtractAiTags($member, [string] $id) {
+function ExtractAiTags([string] $id) {
 	if ($attributeTagsIndex.ContainsKey($id)) {
 		return $attributeTagsIndex[$id]
 	}
-	return ExtractAiTagsFromXml $member
+	return ''
 }
 
 $xmlMemberCount   = 0
@@ -609,14 +501,7 @@ foreach ($member in $xml.doc.members.member) {
 	$xmlMemberCount++
 	$id = [string] $member.name
 
-	$tagsInsideRemarks = @($member.SelectNodes('remarks//ai-tags | remarks//ai-tags-defaults'))
-	if ($tagsInsideRemarks.Count -gt 0) {
-		throw ("{0}: <ai-tags /> and <ai-tags-defaults /> must be sibling XML-doc elements, not children of <remarks>." -f $id)
-	}
-
-	foreach ($tagNode in @($member.SelectNodes('ai-tags | ai-tags-defaults'))) {
-		ValidateAiTagElement $tagNode $id
-	}
+	AssertNoLegacyAiTagXml $member $id
 
 	if ($id -notmatch '^[A-Z]:LinqToDB\.') {
 		$externalExcluded++
@@ -633,7 +518,7 @@ foreach ($member in $xml.doc.members.member) {
 		Kind    = GetKind $id
 		Family  = GetFamily $id
 		Summary = GetSummaryText $member
-		Tags    = ExtractAiTags $member $id
+		Tags    = ExtractAiTags $id
 	})
 }
 
@@ -653,7 +538,7 @@ $lines.Add('This section is generated from the package XML documentation and opt
 $lines.Add('It includes consumer-supported `LinqToDB.*` XML-doc members and groups overload families into compact tables instead of repeating one long section per overload.')
 $lines.Add('It intentionally excludes `LinqToDB.Internal.*`; do not use `LinqToDB.Internal.*` APIs in application code even if they are public in the assembly.')
 $lines.Add('Do not read this generated section sequentially. Treat it as a search index: search by task terms, provider name, SQL keyword, member name, receiver type, or AI metadata.')
-$lines.Add('AI metadata is generated from `AiTagsAttribute`/`AiTagsDefaultsAttribute` (or, for not-yet-migrated members, legacy XML-doc `<ai-tags />` elements). It is not human-facing `<remarks>` text.')
+$lines.Add('AI metadata is generated from `AiTagsAttribute`/`AiTagsDefaultsAttribute` (`LinqToDB.Internal.Metadata`). It is not human-facing `<remarks>` text.')
 $lines.Add('Use `Search anchors` lines as the primary discovery surface, then use `lib/<TFM>/linq2db.xml` only when you need exact signatures, parameter docs, remarks, and constraints that are not clear from this extract.')
 $lines.Add('')
 $lines.Add('Missing from this compact section is not proof that an API or overload is absent. Search XML-doc before falling back to generic APIs.')
