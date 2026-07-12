@@ -894,5 +894,39 @@ class C
 					}
 				}
 				""");
+
+		[Test]
+		public Task FixAllConvertsEveryClusteredChain()
+			// Several convertible chains physically close together (one initializer). The testing SDK verifies the
+			// Fix-All path in addition to single fixes; the custom DocumentBasedFixAllProvider must convert them ALL
+			// in one pass. (WellKnownFixAllProviders.BatchFixer dropped the trailing ones here — the edits after the
+			// first go stale against the original tree.)
+			=> Verify.VerifyAsync(
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					object?[] N(int x) => new object?[]
+					{
+						{|L2DB1001:Sql.Ext.RowNumber().Over().OrderBy(x).ToValue()|},
+						{|L2DB1001:Sql.Ext.Rank().Over().OrderBy(x).ToValue()|},
+						{|L2DB1001:Sql.Ext.DenseRank().Over().OrderBy(x).ToValue()|},
+					};
+				}
+				""",
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					object?[] N(int x) => new object?[]
+					{
+						Sql.Window.RowNumber(f => f.OrderBy(x)),
+						Sql.Window.Rank(f => f.OrderBy(x)),
+						Sql.Window.DenseRank(f => f.OrderBy(x)),
+					};
+				}
+				""");
 	}
 }
