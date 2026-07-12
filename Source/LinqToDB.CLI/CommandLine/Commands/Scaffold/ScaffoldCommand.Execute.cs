@@ -90,7 +90,7 @@ namespace LinqToDB.CommandLine.Commands.Scaffold
 			if (options.Count > 0)
 			{
 				foreach (var kvp in options)
-					await Console.Error.WriteLineAsync($"{Name} command miss '{kvp.Key.Name}' option handler").ConfigureAwait(false);
+					await Console.Error.WriteLineAsync($"{Name} command missing '{kvp.Key.Name}' option handler").ConfigureAwait(false);
 
 				// throw exception as it is implementation bug, not bad input or other expected error
 				throw new InvalidOperationException($"Not all options handled by {Name} command");

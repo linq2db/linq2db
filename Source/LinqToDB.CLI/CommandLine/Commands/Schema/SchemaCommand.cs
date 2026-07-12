@@ -76,7 +76,7 @@ namespace LinqToDB.CommandLine.Commands.Schema
 			if (options.Count > 0)
 			{
 				foreach (var kvp in options)
-					await environment.Error.WriteLineAsync($"{Name} command miss '{kvp.Key.Name}' option handler").ConfigureAwait(false);
+					await environment.Error.WriteLineAsync($"{Name} command missing '{kvp.Key.Name}' option handler").ConfigureAwait(false);
 
 				throw new InvalidOperationException($"Not all options handled by {Name} command");
 			}

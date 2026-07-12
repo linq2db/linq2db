@@ -38,7 +38,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 			new("SQL Server",     ["SqlServer"],                       "SQL Server T-SQL",             true,  null),
 			new("SQLite",         ["SQLite", "SQLite.MS"],             "SQLite",                       true,  null),
 			new("PostgreSQL",     ["PostgreSQL"],                      "PostgreSQL",                   true,  null),
-			new("MySQL",          ["MySql"],                           "MySQL",                        true,  null),
+			new("MySQL",          ["MySql", "MySqlConnector"],         "MySQL",                        true,  null),
 			new("MariaDB",        ["MariaDB"],                         "MariaDB",                      true,  null),
 			new("Oracle Managed", ["Oracle.Managed", "Oracle"],        "Oracle SQL",                   true,  null),
 			new("Firebird",       ["Firebird"],                        "Firebird SQL",                 true,  null),
