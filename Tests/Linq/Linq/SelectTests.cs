@@ -1595,7 +1595,8 @@ namespace Tests.Linq
 		[Test]
 		public void OuterApplyTest(
 			[IncludeDataSources(
-				TestProvName.AllPostgreSQL95Plus,
+				// PostgreSQL 9.5 fails with "unknown to text" conversion on this projection
+				TestProvName.AllPostgreSQL10Plus,
 				TestProvName.AllSqlServer2008Plus,
 				TestProvName.AllOracle12Plus,
 				TestProvName.AllMySqlWithApply,
