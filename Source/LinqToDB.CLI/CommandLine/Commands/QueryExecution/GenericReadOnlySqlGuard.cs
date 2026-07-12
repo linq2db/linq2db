@@ -25,7 +25,6 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			"EXECUTE",
 			"GRANT",
 			"INSERT",
-			"INTO",
 			"MERGE",
 			"REINDEX",
 			"RESTORE",
@@ -48,9 +47,26 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			if (!singleStatementResult.IsAllowed)
 				return singleStatementResult;
 
-			foreach (var token in tokens)
+			for (var index = 0; index < tokens.Count; index++)
+			{
+				var token = tokens[index];
+
+				if (string.Equals(token, "INTO", StringComparison.Ordinal))
+				{
+					// A bare "into" table reference right after FROM/JOIN is a read-only identifier
+					// (e.g. "FROM into"); everywhere else INTO marks a write (SELECT ... INTO table,
+					// MySQL's SELECT ... INTO OUTFILE, INSERT INTO which is already forbidden above).
+					var precedingToken = index > 0 ? tokens[index - 1] : null;
+
+					if (precedingToken is "FROM" or "JOIN")
+						continue;
+
+					return SqlGuardResult.Rejected("Query is not read-only: token 'INTO' is not allowed.");
+				}
+
 				if (_forbiddenTokens.Contains(token))
 					return SqlGuardResult.Rejected($"Query is not read-only: token '{token}' is not allowed.");
+			}
 
 			var firstToken = tokens[0];
 

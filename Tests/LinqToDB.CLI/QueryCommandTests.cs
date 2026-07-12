@@ -348,6 +348,18 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task RepeatedNonListMultiValueOptionReportsError()
+		{
+			var result = await RunCli("scaffold", "--schema-class-names", "schema1=SchemaOne", "--schema-class-names", "schema2=SchemaTwo");
+
+			{
+				(result.ExitCode).ShouldBe(-1);
+				(result.Error).ShouldContain("Option '--schema-class-names' does not support merging repeated values");
+				(result.Error).ShouldNotContain("INTERNAL_ERROR");
+			}
+		}
+
+		[Test]
 		public void QueryGuardAllowsSqlServerSelect()
 		{
 			var provider = DataConnection.GetDataProvider("SqlServer", "Server=.;Database=test;Trusted_Connection=True")!;
@@ -393,6 +405,30 @@ namespace Tests.LinqToDB.CLI
 			{
 				(result.IsAllowed).ShouldBe(false);
 				(result.Error).ShouldContain("SELECT INTO is not allowed");
+			}
+		}
+
+		[Test]
+		public void QueryGuardAllowsGenericFromTableNamedInto()
+		{
+			var provider = DataConnection.GetDataProvider("SQLite", "Data Source=:memory:")!;
+
+			{
+				(ReadOnlySqlGuard.Validate(provider, "select * from into").IsAllowed).ShouldBe(true);
+				(ReadOnlySqlGuard.Validate(provider, "select * from Orders join into on 1 = 1").IsAllowed).ShouldBe(true);
+			}
+		}
+
+		[Test]
+		public void QueryGuardRejectsGenericSelectInto()
+		{
+			var provider = DataConnection.GetDataProvider("SQLite", "Data Source=:memory:")!;
+
+			var result = ReadOnlySqlGuard.Validate(provider, "select * into NewTable from Orders");
+
+			{
+				(result.IsAllowed).ShouldBe(false);
+				(result.Error).ShouldContain("token 'INTO' is not allowed");
 			}
 		}
 

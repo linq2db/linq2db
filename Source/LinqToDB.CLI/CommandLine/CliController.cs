@@ -217,9 +217,15 @@ namespace LinqToDB.CommandLine
 							continue;
 
 						if (option.AllowMultiple && cliOptions.TryGetValue(option, out var existingValue) && existingValue is string[] existingValues && value is string[] newValues)
+						{
 							cliOptions[option] = existingValues.Concat(newValues).ToArray();
-						else
-							cliOptions.TryAdd(option, value);
+						}
+						else if (!cliOptions.TryAdd(option, value))
+						{
+							if (!hasErrors || !reportFirstErrorOnly)
+								environment.Error.WriteLine("Option '{0}' does not support merging repeated values", args[i - 1]);
+							hasErrors = true;
+						}
 					}
 				}
 			}
