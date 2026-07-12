@@ -38,6 +38,14 @@ Do not add package usage rules only to external Expert/GPT artifacts. If a rule 
 or agents consuming the package, add it to the skill pack or XML documentation first, then regenerate
 derived artifacts.
 
+## Topics Covered
+
+The Expert pack mirrors the skill pack's topic coverage exactly - it adds no independent topics.
+`Source/Skills/linq2db/docs/coverage.md` is the single source of truth for which LinqToDB topics
+have task-focused guidance; do not maintain a second topic list here. When a new skill doc is added
+and mapped into a bundle (see `.agents/knowledge-pack-maintenance.md` → Source-To-Bundle Mapping),
+no further topic-list update is needed in this file - regenerating the pack is enough.
+
 ## Layout Rules
 
 - Keep `Source/Skills/linq2db/SKILL.md` as the only canonical agent entry point.
