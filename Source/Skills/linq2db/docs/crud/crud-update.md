@@ -31,6 +31,7 @@
 | Scenario | Pattern |
 |---|---|
 | Update a loaded entity by PK | `db.Update(entity)` - section 1 |
+| Update one entity with an optimistic lock column check | `db.UpdateOptimistic(entity)` - see [`concurrency.md`](../concurrency.md) |
 | Update matching rows, all SET assignments known upfront | expression setter `p => new T { ... }` - section 2 |
 | Update matching rows, SET clause built at runtime | `AsUpdatable().Set(...)` - section 4 |
 | Mapping class is an interface | `AsUpdatable().Set(...)` - section 4 |
@@ -227,4 +228,5 @@ int affected = await db.GetTable<Product>()
 
 - [`crud-insert.md`](crud-insert.md) - inserting rows, identity, upsert
 - [`crud-delete.md`](crud-delete.md) - deleting rows
+- [`concurrency.md`](../concurrency.md) - optimistic concurrency for entity update/delete
 - [`provider-capabilities.md`](../provider-capabilities.md) - `OUTPUT / RETURNING` support per provider

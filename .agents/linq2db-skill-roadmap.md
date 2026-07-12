@@ -92,7 +92,7 @@ derived artifacts when needed.
 | [ ] | JSON and XML | `Source/Skills/linq2db/docs/json-xml.md` | Medium | Planned | Provider-specific JSON/XML mappings and functions. |
 | [ ] | Temporal/date-time behavior | `Source/Skills/linq2db/docs/date-time.md` | Medium | Planned | Date/time translation, offsets, provider precision. |
 | [ ] | Identity and sequences | `Source/Skills/linq2db/docs/identity-sequences.md` | Medium | Planned | Identity retrieval, sequences, provider differences. |
-| [ ] | Optimistic concurrency | `Source/Skills/linq2db/docs/concurrency.md` | Medium | Planned | `UpdateOptimistic`, `OptimisticLockPropertyAttribute`, version columns, conditional updates, and no change tracking. |
+| [x] | Optimistic concurrency | `Source/Skills/linq2db/docs/concurrency.md` | Medium | Done | `UpdateOptimistic`, `DeleteOptimistic`, `WhereKeyOptimistic`, `OptimisticLockPropertyAttribute`, `OptimisticLockPropertyBaseAttribute`, `VersionBehavior`, primary-key requirement, and affected-row-count handling. |
 | [ ] | Table expressions and views | `Source/Skills/linq2db/docs/table-expressions.md` | Medium | Planned | Views, table functions, expression-backed tables. |
 | [ ] | Multi-table DML | `Source/Skills/linq2db/docs/multi-table-dml.md` | Medium | Planned | Provider-specific update/delete shapes. |
 | [ ] | Extension package boundaries | `Source/Skills/linq2db/docs/extension-packages.md` | Low | Planned | Clarify scope for `LinqToDB.EntityFrameworkCore`, `LinqToDB.AspNet`, `LinqToDB.Remote.*`, `LinqToDB.Scaffold`, `LinqToDB.Tools`, `LinqToDB.CLI`, and `LinqToDB.FSharp`. |

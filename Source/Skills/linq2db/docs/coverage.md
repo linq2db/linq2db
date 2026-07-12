@@ -18,6 +18,7 @@ These areas have task-focused markdown guidance in this package:
 - mapping basics, `MappingSchema`, attributes/fluent mapping, and DDL-sensitive column metadata;
 - associations, fluent relationship mapping, `LoadWith` / `ThenLoad`, and eager-loading strategies;
 - CRUD routing, select/insert/update/delete/upsert/bulk copy/MERGE;
+- optimistic concurrency for entity update/delete;
 - temporary tables and `CreateTempTable*` overload selection;
 - CTEs and recursive queries;
 - query/table/index/join/subquery/provider-specific hints;
@@ -49,7 +50,6 @@ yet have task-focused package-local AI guidance. For these topics, search `docs/
 - metrics and activity instrumentation: `Metrics`, `ActivityService`, `IActivity`;
 - remote data contexts and service contracts: `RemoteDataContextBase`, `ILinqService`,
   `LinqToDB.Remote.*` packages;
-- optimistic concurrency helpers: `UpdateOptimistic`, `OptimisticLockPropertyAttribute`;
 - compatibility namespaces: `LinqToDB.Compatibility.*` legacy surface;
 - analytic/window functions and string aggregate helpers: recognized, but dedicated guidance is
   deferred while the API shape is expected to evolve.

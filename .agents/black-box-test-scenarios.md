@@ -116,6 +116,18 @@ Passing means the agent:
 - q: What happens if I use `Items[0]` or `First()` inside a `LoadWith` path?
 - q: How do I prevent accidental implicit collection loading in projections?
 
+## Optimistic Concurrency
+
+- q: How do I update one entity using optimistic concurrency?
+- q: How do I configure an integer version column for optimistic updates?
+- q: How do I configure a database-generated rowversion column for optimistic updates?
+- q: How do I delete one entity using optimistic concurrency?
+- q: How do I apply optimistic concurrency through a filtered `IQueryable<T>` source?
+- q: What should I check when `UpdateOptimisticAsync` returns `0`?
+- q: What happens if the entity has no `OptimisticLockPropertyAttribute`?
+- q: Which namespace is required for `UpdateOptimistic` and `DeleteOptimistic`?
+- q: How do I build only the primary-key + optimistic-lock filter without updating immediately?
+
 ## Anti-Patterns And Troubleshooting
 
 - q: Why is filtering after `ToListAsync()` a linq2db anti-pattern?
@@ -141,5 +153,4 @@ Passing means the agent:
 - q: Does this skill cover extension packages such as `LinqToDB.EntityFrameworkCore`, `LinqToDB.Remote.*`, or `LinqToDB.CLI`?
 - q: What should an agent do if the user asks about `CompiledQuery` and there is no dedicated guide?
 - q: What should an agent do if the user asks about metrics or `ActivityService`?
-- q: What should an agent do if the user asks about `UpdateOptimistic` or `OptimisticLockPropertyAttribute`?
 - q: How should an agent report a documentation failure found during black-box testing?

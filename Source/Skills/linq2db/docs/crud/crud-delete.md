@@ -7,6 +7,7 @@
 
 > **You are here if** you need to:
 > - delete a single row by entity
+> - delete one entity with an optimistic lock column check
 > - delete rows matching a query or predicate
 > - receive deleted records back (`OUTPUT / RETURNING`)
 > - redirect OUTPUT into another table
@@ -34,6 +35,9 @@ using var db = new DataConnection(_options);
 
 int affected = await db.DeleteAsync(product);
 ```
+
+For optimistic concurrency checks on entity delete, use `DeleteOptimistic` from
+[`concurrency.md`](../concurrency.md).
 
 ---
 
@@ -120,4 +124,5 @@ int affected = await db.GetTable<Product>()
 
 - [`crud-update.md`](crud-update.md) - updating rows
 - [`crud-insert.md`](crud-insert.md) - inserting rows
+- [`concurrency.md`](../concurrency.md) - optimistic concurrency for entity update/delete
 - [`provider-capabilities.md`](../provider-capabilities.md) - `OUTPUT / RETURNING` support per provider

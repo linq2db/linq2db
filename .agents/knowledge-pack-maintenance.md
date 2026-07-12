@@ -113,7 +113,7 @@ The `custom-gpt-instructions.md` file is curated in `Source/Knowledge/linq2db-ex
 | `06-agent-antipatterns-and-ai-tags.md` | `docs/agent-antipatterns.md`, `docs/ai-tags.md` |
 | `07-provider-configuration.md` | `docs/provider-capabilities.md`, `docs/provider-setup.md`, `docs/configuration.md` |
 | `08-mapping.md` | `docs/mapping.md` |
-| `09-crud-and-merge.md` | `docs/crud/*.md` in source order |
+| `09-crud-and-merge.md` | `docs/crud/*.md` in source order, `docs/concurrency.md` |
 | `10-query-composition.md` | `docs/query-cte.md`, `docs/query-temp-tables.md` |
 | `11-hints.md` | `docs/hints.md` |
 | `12-hints-api-map.md` | `docs/hints-api-map.md` |

@@ -266,6 +266,7 @@ They may not match this package version. Always use the bundled files below:
 | `docs/mapping.md` | Entity mapping, `MappingSchema`, attributes/fluent mapping, schema/DDL-sensitive columns |
 | `docs/associations.md` | Relationship metadata and eager loading - `[Association]`, fluent `.Association(...)`, `LoadWith`, `ThenLoad`, eager-loading strategies |
 | `docs/crud/crud.md` | All CRUD operations - SELECT, INSERT, UPDATE, DELETE, upsert, bulk copy, MERGE; routes to the right guide |
+| `docs/concurrency.md` | Optimistic concurrency for entity update/delete - `UpdateOptimistic`, `DeleteOptimistic`, `WhereKeyOptimistic`, `OptimisticLockPropertyAttribute` |
 | `docs/query-cte.md` | CTEs, recursive queries - when `.AsCte()` or `db.GetCte<T>()` is needed |
 | `docs/query-temp-tables.md` | Temporary tables - `TempTable<T>`, `CreateTempTable`, `TableOptions`; requires `DataConnection` |
 | `docs/hints.md` | Query, table, index, join, subquery, provider-specific, and MERGE hints; before proposing raw SQL, `Sql.Expression`, or interceptors for a hint, check this guide, `docs/hints-api-map.md`, and generated provider `*Hints` API entries |
