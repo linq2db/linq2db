@@ -15,6 +15,9 @@ This document describes how to map application-defined C# methods and properties
 expressions, functions, and fragments so they translate correctly inside LinqToDB
 `IQueryable<T>` expression trees.
 
+If the task is to use application-provided SQL text as a query root, execute command text
+directly, or inspect generated SQL text, use [`raw-sql.md`](raw-sql.md) instead.
+
 ---
 
 ## Extension points overview

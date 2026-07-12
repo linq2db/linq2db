@@ -87,6 +87,9 @@ Passing means the agent:
 - q: How do I map a custom C# method to a SQL expression?
 - q: How do I call a SQL function from a LINQ query using package-confirmed APIs?
 - q: How do I use raw SQL as a query source while preserving parameters?
+- q: How do I execute a raw SQL update command with parameters?
+- q: How do I inspect generated SQL and parameter values for a LINQ query?
+- q: How do I control where linq2db places a generated alias in a `FromSql` query?
 - q: How do I decide whether a method is translated to SQL or evaluated after materialization?
 - q: How do I add provider-specific SQL syntax when no typed linq2db API exists?
 - q: How do I avoid inventing a custom SQL API when the docs only show XML-doc discovery?
@@ -139,5 +142,4 @@ Passing means the agent:
 - q: What should an agent do if the user asks about `CompiledQuery` and there is no dedicated guide?
 - q: What should an agent do if the user asks about metrics or `ActivityService`?
 - q: What should an agent do if the user asks about `UpdateOptimistic` or `OptimisticLockPropertyAttribute`?
-- q: What should an agent do if the user asks about `QuerySql` or `RawSqlString`?
 - q: How should an agent report a documentation failure found during black-box testing?

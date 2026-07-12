@@ -17,6 +17,9 @@ This document describes how to map application-defined C# methods and properties
 expressions, functions, and fragments so they translate correctly inside LinqToDB
 `IQueryable<T>` expression trees.
 
+If the task is to use application-provided SQL text as a query root, execute command text
+directly, or inspect generated SQL text, use [`raw-sql.md`](13-custom-sql.md) instead.
+
 ---
 
 ## Extension points overview
@@ -200,3 +203,252 @@ the exact package XML-doc/API guidance for `[SqlQueryDependent]` instead.
 - [`Sql` API reference](16-xml-doc.md)
 - [Extensible SQL mapping article](https://linq2db.github.io/articles/sql/Sql-Function.html)
 - [Window / analytic functions](https://linq2db.github.io/articles/sql/Window-Functions-(Analytic-Functions).html)
+
+<!-- Generated from: Source/Skills/linq2db/docs/raw-sql.md -->
+
+# Raw SQL
+
+> Before using this guide:
+> - apply global rules from [`SKILL.md`](01-skill.md);
+> - for exact API names/signatures, search [`docs/api.md`](04-api-discovery-and-extract.md) first, then use
+>   `lib/<TFM>/linq2db.xml` when the generated extract is not detailed enough.
+
+Use this guide when a task needs SQL text supplied by the application instead of SQL fully
+generated from a LINQ expression.
+
+Raw SQL APIs have different execution and composition rules. Do not mix them:
+
+| Need | Use | Execution | Composition |
+|---|---|---|---|
+| Raw SQL as a LINQ query root | `FromSql<T>()` | Deferred | Composable when the provider can compose over the supplied SQL |
+| Raw SQL returning one scalar column as a LINQ query root | `FromSqlScalar<T>()` | Deferred | Composable when the provider can compose over the supplied SQL |
+| Execute command text directly | `SetCommand(...).Execute*()` / `Query*()` / `ExecuteReader*()` | Immediate at terminal call | Not a LINQ query |
+| Inspect generated SQL for a LINQ/DML query | `ToSqlQuery(...)` | Immediate SQL generation only | Terminal inspection API |
+| Map a reusable C# method/property to SQL | `[Sql.Expression]`, `[Sql.Function]`, `[ExpressionMethod]` | Depends on query execution | See [`custom-sql.md`](13-custom-sql.md) |
+| Add provider hints/table modifiers | Provider-specific hint helpers first | Depends on hint API | See [`hints.md`](11-hints.md) |
+
+## Raw SQL Query Roots
+
+`FromSql<T>()` creates an `IQueryable<T>` from a raw SQL query. LinqToDB can then compose LINQ
+operators on top when the configured provider supports composition over the supplied SQL.
+
+Prefer the interpolated overload for user values:
+
+```csharp
+using LinqToDB;
+using LinqToDB.Async;
+
+var minTotal = 100m;
+
+var orders = await db.FromSql<Order>(
+        $"SELECT * FROM Sales.Orders WHERE Total >= {minTotal}")
+    .Where(o => o.IsActive)
+    .OrderBy(o => o.Id)
+    .ToListAsync();
+```
+
+The interpolated values are converted to parameters by the `FromSql<T>(IDataContext,
+FormattableString)` overload. Do not build SQL by concatenating user values into the SQL text.
+
+If the SQL text is not interpolated, use placeholders and pass values separately:
+
+```csharp
+using LinqToDB;
+
+var query = db.FromSql<Order>(
+    "SELECT * FROM Sales.Orders WHERE CustomerId = {0}",
+    customerId);
+```
+
+When exact database parameter metadata matters, pass `DataParameter` values:
+
+```csharp
+using LinqToDB;
+using LinqToDB.Data;
+
+var query = db.FromSql<Order>(
+    "SELECT * FROM Sales.Orders WHERE CustomerId = {0}",
+    new DataParameter("@customerId", customerId, DataType.Int32));
+```
+
+## Scalar Raw SQL Query Roots
+
+Use `FromSqlScalar<T>()` when the raw SQL returns a single scalar column and you still need an
+`IQueryable<T>` that can be composed:
+
+```csharp
+using LinqToDB;
+
+var ids =
+    from id in db.FromSqlScalar<int>($"SELECT Id FROM Sales.Orders")
+    where id > minId
+    select id;
+```
+
+XML-doc states that LinqToDB generates an alias named `value` for the scalar value. For providers
+that cannot use the generated wrapper syntax, make the raw SQL provide an alias named `value`.
+
+## Alias Placement
+
+When `FromSql<T>()` SQL needs an explicit position for the generated table alias, use
+`Sql.AliasExpr()`. If the raw SQL contains at least one `Sql.AliasExpr()`, LinqToDB does not append
+an automatic alias elsewhere.
+
+```csharp
+using LinqToDB;
+
+var query = db.FromSql<Order>(
+    $"SELECT * FROM Sales.Orders {Sql.AliasExpr()} WHERE Status = {status}");
+```
+
+This is a LinqToDB mechanism for alias placement in generated SQL. It is not a string placeholder
+for user input.
+
+## Direct Raw SQL Commands
+
+Use `SetCommand(...)` when you want to execute command text directly. It returns a `CommandInfo`
+builder; execution happens only when a terminal method such as `Execute`, `ExecuteAsync`, `Query`,
+`QueryAsync`, `ExecuteReader`, or `ExecuteReaderAsync` is called.
+
+```csharp
+using LinqToDB.Data;
+
+var rows = db.SetCommand(
+        "UPDATE Sales.Orders SET Status = @status WHERE Id = @id",
+        new DataParameter("@status", status),
+        new DataParameter("@id", id))
+    .Execute();
+```
+
+For result sets:
+
+```csharp
+using LinqToDB.Data;
+
+var rows = db.SetCommand(
+        "SELECT Id, Status FROM Sales.Orders WHERE CustomerId = @customerId",
+        new DataParameter("@customerId", customerId))
+    .Query<OrderSummary>()
+    .ToList();
+```
+
+`SetCommand` / `CommandInfo` does not create a LINQ query root. Do not add LINQ operators after
+`Query<T>()` expecting server-side query composition; the raw command has already been executed by
+that terminal method.
+
+## Generated SQL Inspection
+
+Use `ToSqlQuery(...)` when you need to inspect SQL generated by LinqToDB for a LINQ or DML query.
+It returns `QuerySql` with `Sql` and `Parameters`.
+
+```csharp
+using LinqToDB;
+
+var sql = db.GetTable<Order>()
+    .Where(o => o.CustomerId == customerId)
+    .ToSqlQuery();
+
+var text       = sql.Sql;
+var parameters = sql.Parameters;
+```
+
+`ToSqlQuery(...)` is an immediate terminal inspection API. It does not execute the database query,
+and it does not create a reusable raw SQL command by itself.
+
+If `SqlGenerationOptions.InlineParameters` is used, the generated SQL text can inline parameter
+values as literals. Treat that output as diagnostic SQL text, not as a safe way to build executable
+SQL from user values.
+
+## Common Mistakes
+
+### Building SQL by concatenating user values
+
+Wrong:
+
+```csharp
+var query = db.FromSql<Order>(
+    "SELECT * FROM Sales.Orders WHERE CustomerId = " + customerId);
+```
+
+Correct:
+
+```csharp
+var query = db.FromSql<Order>(
+    $"SELECT * FROM Sales.Orders WHERE CustomerId = {customerId}");
+```
+
+or:
+
+```csharp
+var query = db.FromSql<Order>(
+    "SELECT * FROM Sales.Orders WHERE CustomerId = {0}",
+    customerId);
+```
+
+### Using `FromSql<T>()` for immediate command execution
+
+Wrong:
+
+```csharp
+db.FromSql<Order>("UPDATE Sales.Orders SET Status = {0}", status);
+```
+
+Correct:
+
+```csharp
+db.SetCommand(
+        "UPDATE Sales.Orders SET Status = @status",
+        new DataParameter("@status", status))
+    .Execute();
+```
+
+### Using `SetCommand` when server-side LINQ composition is required
+
+Wrong:
+
+```csharp
+var rows = db.SetCommand("SELECT * FROM Sales.Orders")
+    .Query<Order>()
+    .Where(o => o.IsActive);
+```
+
+Correct:
+
+```csharp
+var rows = db.FromSql<Order>("SELECT * FROM Sales.Orders")
+    .Where(o => o.IsActive);
+```
+
+### Treating `QuerySql` as executable command input
+
+Wrong:
+
+```csharp
+var generated = query.ToSqlQuery();
+db.SetCommand(generated.Sql).Execute();
+```
+
+Correct:
+
+```csharp
+var generated = query.ToSqlQuery();
+var sql        = generated.Sql;
+var parameters = generated.Parameters;
+```
+
+Use `QuerySql` for inspection unless a task explicitly requires executing generated SQL text and
+the parameter handling has been verified.
+
+## API Lookup Anchors
+
+Search `docs/api.md` for:
+
+- `FromSql`
+- `FromSqlScalar`
+- `RawSqlString`
+- `SetCommand`
+- `CommandInfo`
+- `ToSqlQuery`
+- `QuerySql`
+- `SqlGenerationOptions`
+- `Sql.AliasExpr`

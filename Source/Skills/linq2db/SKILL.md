@@ -272,6 +272,7 @@ They may not match this package version. Always use the bundled files below:
 | `docs/hints-api-map.md` | Reverse lookup from concrete provider SQL hint text to typed provider-specific helper APIs; use it as a search aid, then verify signatures in `docs/api.md` or raw XML-doc when needed |
 | `docs/translatable-methods.md` | `String` / `Math` / `DateTime` methods in LINQ queries |
 | `docs/provider-capabilities.md` | MERGE, CTE, bulk copy, OUTPUT/RETURNING - check provider support first |
+| `docs/raw-sql.md` | Raw SQL query roots and command execution - `FromSql`, `FromSqlScalar`, `RawSqlString`, `SetCommand`, `CommandInfo`, `ToSqlQuery`, `QuerySql` |
 | `docs/custom-sql.md` | Mapping custom methods to SQL expressions |
 | `docs/interceptors.md` | Choosing and registering interceptors; callback timing and supported use cases |
 | `docs/configuration.md` | Logging, retry, interceptors, `DataOptions` builder |

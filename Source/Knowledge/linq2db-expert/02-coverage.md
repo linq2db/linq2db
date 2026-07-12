@@ -24,6 +24,7 @@ These areas have task-focused markdown guidance in this package:
 - CTEs and recursive queries;
 - query/table/index/join/subquery/provider-specific hints;
 - SQL hint reverse lookup through `docs/hints-api-map.md`;
+- raw SQL query roots, raw command execution, and generated SQL inspection;
 - custom SQL expressions and functions;
 - built-in translatable .NET methods;
 - common anti-patterns and symptom-based checks.
@@ -51,7 +52,6 @@ yet have task-focused package-local AI guidance. For these topics, search `docs/
 - remote data contexts and service contracts: `RemoteDataContextBase`, `ILinqService`,
   `LinqToDB.Remote.*` packages;
 - optimistic concurrency helpers: `UpdateOptimistic`, `OptimisticLockPropertyAttribute`;
-- raw SQL query APIs: `FromSql`, `QuerySql`, `RawSqlString`;
 - compatibility namespaces: `LinqToDB.Compatibility.*` legacy surface;
 - analytic/window functions and string aggregate helpers: recognized, but dedicated guidance is
   deferred while the API shape is expected to evolve.

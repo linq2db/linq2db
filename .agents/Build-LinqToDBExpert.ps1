@@ -293,6 +293,7 @@ $sourceToOutput = @{
 	'docs/hints.md'                      = '11-hints.md'
 	'docs/hints-api-map.md'              = '12-hints-api-map.md'
 	'docs/custom-sql.md'                 = '13-custom-sql.md'
+	'docs/raw-sql.md'                    = '13-custom-sql.md'
 	'docs/translatable-methods.md'       = '14-translatable-methods.md'
 	'docs/interceptors.md'               = '15-interceptors.md'
 }
@@ -604,7 +605,7 @@ $bundles = [ordered]@{
 	'10-query-composition.md'              = @('docs/query-cte.md', 'docs/query-temp-tables.md')
 	'11-hints.md'                          = @('docs/hints.md')
 	'12-hints-api-map.md'                  = @('docs/hints-api-map.md')
-	'13-custom-sql.md'                     = @('docs/custom-sql.md')
+	'13-custom-sql.md'                     = @('docs/custom-sql.md', 'docs/raw-sql.md')
 	'14-translatable-methods.md'           = @('docs/translatable-methods.md')
 	'15-interceptors.md'                   = @('docs/interceptors.md')
 	'17-associations.md'                   = @('docs/associations.md')

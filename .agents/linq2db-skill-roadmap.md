@@ -58,7 +58,7 @@ derived artifacts when needed.
 | [ ] | Inheritance mapping | `Source/Skills/linq2db/docs/inheritance-mapping.md` | Medium | Planned | Discriminators, inheritance attributes, query behavior. |
 | [ ] | Advanced value converters | `Source/Skills/linq2db/docs/value-conversions.md` | Low | Deferred | Only if mapping guide becomes insufficient; would cover `IValueConverter`, null handling, provider types, and reusable converter patterns. |
 | [ ] | Custom mapping metadata | `Source/Skills/linq2db/docs/custom-mapping-metadata.md` | Low | Deferred | Metadata readers and custom mapping attributes; document only if package users have a real extension scenario. |
-| [ ] | Raw SQL | `Source/Skills/linq2db/docs/raw-sql.md` | High | Planned | `FromSql`, `QuerySql`, `RawSqlString`, parameters, and composability boundaries. |
+| [x] | Raw SQL | `Source/Skills/linq2db/docs/raw-sql.md` | High | Done | `FromSql`, `FromSqlScalar`, `RawSqlString`, `SetCommand`, `CommandInfo`, `ToSqlQuery`, `QuerySql`, parameters, composability boundaries, and alias placement. |
 | [ ] | Parameters | `Source/Skills/linq2db/docs/parameters.md` | High | Planned | `DataParameter`, `DataType`, `DbType`, precision, output parameters, and package-confirmed parameterization/inlining behavior. |
 | [ ] | Transactions | `Source/Skills/linq2db/docs/transactions.md` | High | Planned | `DataConnection` transactions, `TransactionScope`, async flow, common mistakes. |
 | [ ] | Connection lifetime | `Source/Skills/linq2db/docs/connection-lifetime.md` | High | Planned | `DataConnection` vs `DataContext`, session state, disposal, pooling assumptions. |
