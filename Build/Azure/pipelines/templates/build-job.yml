@@ -2,6 +2,7 @@ parameters:
   with_nugets: false
   with_examples: false
   with_tests: false
+  with_analyzer_tests: false
   with_singlefile_smoke: false
   with_analyzers: false
   with_api_analyzers: false
@@ -32,6 +33,18 @@ jobs:
       packageType: sdk
       version: 10.x
 
+  # Tests.Analyzers targets net8.0 (to match the Net80 reference pack the Roslyn testing SDK compiles snippets
+  # against); the windows-2025 image no longer ships an x64 .NET 8 runtime, so provision it or the net8.0 test
+  # host fails to launch ("You must install or update .NET"). Runtime only — SDK 10 builds the net8.0 target.
+  - task: UseDotNet@2
+    displayName: 'Use .NET 8 runtime (Tests.Analyzers net8.0 host)'
+    inputs:
+      packageType: runtime
+      version: 8.x
+    # Only when the analyzer tests actually run — testing.yml (the provider matrix) inherits with_analyzer_tests: false
+    # and skips them, so it needn't provision the net8.0 runtime.
+    condition: and(succeeded(), ${{ parameters.with_analyzer_tests }})
+
 # tag version numbers appropriately
   - powershell: echo "##vso[task.setvariable variable=versionSuffix]-dev.$(Build.BuildId)"
     condition: ne(variables['Build.SourceBranchName'], variables['release_branch'])
@@ -48,6 +61,17 @@ jobs:
       arguments: '--configuration Debug'
     displayName: Build Examples (verify)
     condition: and(succeeded(), ${{ parameters.with_examples }})
+
+  # linq2db.Analyzers unit tests — Roslyn analyzer/code-fix tests. DB-free and provider-independent, so they
+  # run here on the build agent rather than in the provider test matrix. Fast (seconds); the MTP NUnit runner
+  # is selected via global.json.
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: test
+      projects: 'Tests/Tests.Analyzers/Tests.Analyzers.csproj'
+      arguments: '--configuration $(test_configuration)'
+    displayName: Run Analyzer Tests
+    condition: and(succeeded(), ${{ parameters.with_analyzer_tests }})
 
   # PublishSingleFile smoke test — regression guard for linq2db/linq2db#5488.
   # Provider detectors must not rely on Assembly.Location / File.Exists heuristics
