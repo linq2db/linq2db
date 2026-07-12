@@ -52,7 +52,7 @@ derived artifacts when needed.
 | [ ] | Ordering and paging | `Source/Skills/linq2db/docs/query-paging.md` | High | Planned | `TakeHints` and provider-specific paging gotchas only - not `OrderBy`/`Skip`/`Take` syntax itself. |
 | [ ] | Set operations | `Source/Skills/linq2db/docs/query-set-operations.md` | Medium | Planned | `Concat`, `Union`, `Except`, `Intersect`, provider differences. |
 | [ ] | Projections | `Source/Skills/linq2db/docs/query-projections.md` | High | Planned | DTO projections, computed values, nested projections, materialization traps. |
-| [ ] | Null semantics | `Source/Skills/linq2db/docs/null-semantics.md` | High | Planned | SQL three-valued logic, nullable comparisons, coalesce, provider differences. |
+| [x] | Null semantics | `Source/Skills/linq2db/docs/null-semantics.md` | High | Done | `CompareNulls` (`LikeClr`/`LikeSql`/`LikeSqlExceptParameters`), literal-null and parameter-null handling, the both-operands-nullable condition for the `OR (... IS NULL AND ...)` expansion, and manual control (`AsNotNull`/`AsNotNullable`, `IsDistinctFrom`/`IsNotDistinctFrom`, `ToNullable`/`ToNotNull`/`ToNotNullable`/`AsNullable`). Coalesce (`??`) translation not covered - add if it comes up. |
 | [x] | Associations and eager loading | `Source/Skills/linq2db/docs/associations.md` | High | Done | `[Association]`, fluent associations, `LoadWith`, `ThenLoad`, nullability, predicates/query expressions, eager-loading strategies, implicit collection loading guard, and no lazy loading. |
 | [ ] | Inheritance mapping | `Source/Skills/linq2db/docs/inheritance-mapping.md` | Medium | Planned | Discriminators, inheritance attributes, query behavior. |
 | [ ] | Advanced value converters | `Source/Skills/linq2db/docs/value-conversions.md` | Low | Deferred | Only if mapping guide becomes insufficient; would cover `IValueConverter`, null handling, provider types, and reusable converter patterns. |
@@ -110,8 +110,6 @@ guide or turn it into a planned checklist row.
 
 | Topic | Likely target | Note |
 |---|---|---|
-| SQL null comparison generation | `Source/Skills/linq2db/docs/null-semantics.md` or `Source/Skills/linq2db/docs/generated-sql.md` | `Field == @p` can generate `Field IS NULL` when the parameter value is `null`; this preserves SQL semantics but may surprise agents inspecting generated SQL. |
-| C# null semantics for nullable object comparisons | `Source/Skills/linq2db/docs/null-semantics.md` | When both compared values can be `null`, generated SQL can include extra null checks to preserve C# equality semantics. Document why the SQL is intentionally more complex. |
 | Parameterization and inlining behavior | `Source/Skills/linq2db/docs/parameters.md` and `Source/Skills/linq2db/docs/generated-sql.md` | Black-box tests show agents may invent claims such as "local variables are inlined" when discussing SQL Server plan/cache issues. Document only package-confirmed APIs and behavior for parameters, constants, inline values, and generated SQL inspection; otherwise require agents to say the package docs do not confirm it. |
 
 ---

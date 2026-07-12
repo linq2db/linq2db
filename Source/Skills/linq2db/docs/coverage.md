@@ -24,6 +24,8 @@ These areas have task-focused markdown guidance in this package:
 - query/table/index/join/subquery/provider-specific hints;
 - SQL hint reverse lookup through `docs/hints-api-map.md`;
 - raw SQL query roots, raw command execution, and generated SQL inspection;
+- null comparison semantics, `CompareNulls`, and manual nullability control (`AsNotNull`,
+  `IsDistinctFrom`, `ToNullable`/`AsNullable`);
 - custom SQL expressions and functions;
 - built-in translatable .NET methods;
 - common anti-patterns and symptom-based checks.

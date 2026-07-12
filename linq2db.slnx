@@ -731,6 +731,7 @@
     <File Path="Source/Skills/linq2db/docs/hints.md" />
     <File Path="Source/Skills/linq2db/docs/interceptors.md" />
     <File Path="Source/Skills/linq2db/docs/mapping.md" />
+    <File Path="Source/Skills/linq2db/docs/null-semantics.md" />
     <File Path="Source/Skills/linq2db/docs/provider-capabilities.md" />
     <File Path="Source/Skills/linq2db/docs/provider-setup.md" />
     <File Path="Source/Skills/linq2db/docs/query-cte.md" />
