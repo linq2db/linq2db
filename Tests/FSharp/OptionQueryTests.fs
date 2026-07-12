@@ -7,16 +7,16 @@ open LinqToDB.Mapping
 
 open Tests
 
-[<Table>]
+[<Table(IsColumnAttributeRequired = false)>]
 type OptRow =
     { [<PrimaryKey>] Id:   int
-      [<Column>]     Name: string option
-      [<Column>]     Age:  int option }
+      Name:                string option
+      Age:                 int option }
 
-[<Table>]
+[<Table(IsColumnAttributeRequired = false)>]
 type VOptRow =
     { [<PrimaryKey>] Id:   int
-      [<Column>]     Name: string voption }
+      Name:                string voption }
 
 let private seed (db: IDataContext) =
     db.Insert({ OptRow.Id = 1; Name = Some "a"; Age = Some 5 }) |> ignore
