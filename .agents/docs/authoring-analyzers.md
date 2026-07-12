@@ -31,6 +31,8 @@ Continue the `LINQ2DB` space but reserve **`LINQ2DB1xxx` for user-facing** rules
 
 The bundled `System.Collections.Immutable` predates `CollectionBuilder`, so `ImmutableArray<T>` **collection expressions (`[x]`) don't compile** — use `ImmutableArray.Create(...)`. `System.Index`/`Range` aren't polyfilled (minimal list) — avoid `[^1]`, use an explicit index. Meziantou runs in Release (inherited via root props), so analyzer/code-fix code must be MA-clean (`string.Equals(…, Ordinal)` not `==`/`!=`, `.ToString(CultureInfo.InvariantCulture)` for int→string, no chained `.Where`).
 
+**Custom `.editorconfig` option keys are looked up lower-cased.** When a rule/code-fix reads its own option via `AnalyzerConfigOptions.TryGetValue`, query the **lower-cased** key — Roslyn lower-cases `.editorconfig` keys on parse (they're case-insensitive), so a key built from a mixed-case rule id (`"linq2db." + DiagnosticId + ".…"` where `DiagnosticId` is `L2DB1001`) won't match unless you `.ToLowerInvariant()` it. The user-facing key stays readable (`linq2db.L2DB1001.apply_fix_on_return_type_mismatch`); only the lookup is lower-cased. See `WindowFunctionApiCodeFixProvider.ApplyOnReturnTypeMismatchOptionKey`. (#5703)
+
 ## Performance checklist (runs on every keystroke, on huge solutions)
 
 - `EnableConcurrentExecution()` + `ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None)`.
