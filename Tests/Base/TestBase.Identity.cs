@@ -74,8 +74,12 @@ namespace Tests
 					case string when provider.IsAnyOf(TestProvName.AllDuckDB):
 						sql = new[]
 						{
+							// Person.PersonID depends on the sequence (DEFAULT NEXTVAL); DuckDB can't drop a
+							// depended-on sequence, so detach the column default, drop+recreate, then reattach.
+							"ALTER TABLE \"Person\" ALTER COLUMN \"PersonID\" DROP DEFAULT",
 							"DROP SEQUENCE IF EXISTS \"Person_PersonID_seq\"",
 							$"CREATE SEQUENCE \"Person_PersonID_seq\" START {lastValue + 1}",
+							"ALTER TABLE \"Person\" ALTER COLUMN \"PersonID\" SET DEFAULT NEXTVAL('\"Person_PersonID_seq\"')",
 						};
 						break;
 					case string prov when prov.IsAnyOf(TestProvName.AllSapHana):
@@ -192,8 +196,13 @@ CREATE COLUMN TABLE ""Person"" (
 					case string when provider.IsAnyOf(TestProvName.AllDuckDB):
 						sql = new[]
 						{
+							// AllTypes.ID depends on the sequence (DEFAULT NEXTVAL), and DuckDB supports neither
+							// ALTER SEQUENCE RESTART nor dropping a depended-on sequence — so detach the column
+							// default, drop+recreate the sequence, then reattach.
+							"ALTER TABLE \"AllTypes\" ALTER COLUMN \"ID\" DROP DEFAULT",
 							"DROP SEQUENCE IF EXISTS \"AllTypes_ID_seq\"",
 							$"CREATE SEQUENCE \"AllTypes_ID_seq\" START {lastValue + 1}",
+							"ALTER TABLE \"AllTypes\" ALTER COLUMN \"ID\" SET DEFAULT NEXTVAL('\"AllTypes_ID_seq\"')",
 						};
 						break;
 					case string prov when prov.IsAnyOf(TestProvName.AllSapHana):
@@ -298,8 +307,12 @@ CREATE COLUMN TABLE ""AllTypes""
 					case string when provider.IsAnyOf(TestProvName.AllDuckDB):
 						sql = new[]
 						{
+							// SequenceTest3.ID depends on the sequence (DEFAULT NEXTVAL); DuckDB can't drop a
+							// depended-on sequence, so detach the column default, drop+recreate, then reattach.
+							"ALTER TABLE \"SequenceTest3\" ALTER COLUMN \"ID\" DROP DEFAULT",
 							"DROP SEQUENCE IF EXISTS sequencetestseq",
 							$"CREATE SEQUENCE sequencetestseq START {lastValue + 1}",
+							"ALTER TABLE \"SequenceTest3\" ALTER COLUMN \"ID\" SET DEFAULT NEXTVAL('SequenceTestSeq')",
 						};
 						break;
 				}

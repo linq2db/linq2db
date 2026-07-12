@@ -60,6 +60,7 @@ namespace LinqToDB.CommandLine
 			AddOption(_dataModelOptions, DataModel.LengthOnTables);
 			AddOption(_dataModelOptions, DataModel.PrecisionOnTables);
 			AddOption(_dataModelOptions, DataModel.ScaleOnTables);
+			AddOption(_dataModelOptions, DataModel.SqlServerDecimalOverflowProtection);
 			AddOption(_dataModelOptions, DataModel.EmitDbInfo);
 			AddOption(_dataModelOptions, DataModel.EmitDefaultConstructor);
 			AddOption(_dataModelOptions, DataModel.EmitConfigurationConstructor);

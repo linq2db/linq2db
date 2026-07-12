@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -1420,12 +1420,57 @@ namespace Tests.DataProvider
 			[Column] public SqlDecimal Decimal3;
 		}
 
+		[Table]
+		sealed class SqlServerGetSqlDecimalAttributeRead
+		{
+			[Column(DataType = DataType.Decimal, Precision = 38, Scale = 30)]
+			[GetSqlDecimal]
+			public decimal Value1;
+
+			[Column(DataType = DataType.Decimal, Precision = 38, Scale = 9)]
+			[GetSqlDecimal]
+			public decimal Value2;
+		}
+
 		[Test]
 		public void OverflowTest2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = GetDataContext(context);
-				var list = db.GetTable<DecimalOverflow2>().ToList();
-			}
+			var list = db.GetTable<DecimalOverflow2>().ToList();
+		}
+
+		[Test]
+		public void GetSqlDecimalAttributeTest([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.SqlServerSequentialAccessMS)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<SqlServerGetSqlDecimalAttributeRead>("SqlServerGetSqlDecimalAttributeRead");
+
+			const string expectedValue1 = "1.234567890123456789012345678901";
+			const string expectedValue2 = "1234567890123456789012.123456789";
+
+			db.Execute($"INSERT INTO [SqlServerGetSqlDecimalAttributeRead] ([Value1], [Value2]) VALUES ({expectedValue1}, {expectedValue2})");
+
+			var values       = table.ToList();
+			var secondRead   = table.ToList();
+			var expectedDec1 = decimal.Parse(expectedValue1, CultureInfo.InvariantCulture);
+			var expectedDec2 = decimal.Parse(expectedValue2, CultureInfo.InvariantCulture);
+
+			values.Count.ShouldBe(1);
+			values[0].Value1.ShouldBe(expectedDec1);
+			values[0].Value2.ShouldBe(expectedDec2);
+			secondRead[0].Value1.ShouldBe(expectedDec1);
+			secondRead[0].Value2.ShouldBe(expectedDec2);
+		}
+
+		[Test]
+		public void SqlDecimalValueOverflowTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var sqlDecimal = db.Execute<SqlDecimal>("SELECT CAST('12345678901234567890123456789.123456789' AS decimal(38, 9))");
+
+			Assert.Throws<OverflowException>(() => _ = sqlDecimal.Value);
+		}
 
 		[Test]
 		public void SelectTableWithHintTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)

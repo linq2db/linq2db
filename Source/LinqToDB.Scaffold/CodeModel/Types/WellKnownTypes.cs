@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using LinqToDB.Async;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Internal.Mapping;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
@@ -45,6 +46,10 @@ namespace LinqToDB.CodeModel
 			/// <see cref="object"/> type descriptor.
 			/// </summary>
 			public static IType Object                    { get; } = Parser.Parse<object>();
+			/// <summary>
+			/// <see cref="decimal"/> type descriptor.
+			/// </summary>
+			public static IType Decimal                   { get; } = Parser.Parse<decimal>();
 			/// <summary>
 			/// <see cref="int"/> type descriptor.
 			/// </summary>
@@ -738,6 +743,17 @@ namespace LinqToDB.CodeModel
 				public static CodeReference ColumnAttribute_Order             { get; } = PropertyOrField((ColumnAttribute a) => a.Order);
 			}
 
+			public static class DataProvider
+			{
+				public static class SqlServer
+				{
+					/// <summary>
+					/// <see cref="global::LinqToDB.DataProvider.SqlServer.GetSqlDecimalAttribute"/> type descriptor.
+					/// </summary>
+					public static IType GetSqlDecimalAttribute { get; } = Parser.Parse<GetSqlDecimalAttribute>();
+				}
+			}
+
 			public static class Data
 			{
 				/// <summary>
@@ -830,7 +846,7 @@ namespace LinqToDB.CodeModel
 				var isNullable = !pi.PropertyType.IsValueType;
 				if (Nullability.TryAnalyzeMember(pi, out var nullable))
 					isNullable = nullable;
-				
+
 				return new CodeExternalPropertyOrField(new CodeIdentifier(member.Name, true), new(Parser.Parse(pi.PropertyType).WithNullability(isNullable))).Reference;
 			}
 

@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 
@@ -9,6 +10,7 @@ namespace LinqToDB.Internal.Expressions
 	public abstract class ExpressionVisitorBase : ExpressionVisitor
 	{
 		readonly StackGuard _guard = new();
+		Func<Expression?, Expression?>? _baseVisit;
 
 		[DebuggerStepThrough]
 		[return: NotNullIfNotNull(nameof(node))]
@@ -17,7 +19,7 @@ namespace LinqToDB.Internal.Expressions
 			if (node == null)
 				return null;
 
-			node = _guard.Enter(base.Visit, node) ?? base.Visit(node);
+			node = _guard.Enter(_baseVisit ??= base.Visit, node) ?? base.Visit(node);
 
 			_guard.Exit();
 
