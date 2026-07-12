@@ -14,8 +14,10 @@ open LinqToDB.Internal.DataProvider.Translation
 /// "'FSharpOption&lt;...&gt;.get_IsSome(x)' could not be converted to SQL". Registered by <c>UseFSharp()</c>.
 /// Matching is done generically in <see cref="TranslateOverrideHandler"/> (the member is generic over the
 /// element type, which the pattern registry can't match for a property).
-type FSharpMemberTranslator() =
+type FSharpMemberTranslator private () =
     inherit MemberTranslatorBase()
+
+    static let _instance = FSharpMemberTranslator()
 
     let isOption (t: Type) =
         t.IsGenericType && (let d = t.GetGenericTypeDefinition() in d = typedefof<_ option> || d = typedefof<_ voption>)
@@ -36,6 +38,11 @@ type FSharpMemberTranslator() =
         match ctx.Translate(operand, TranslationFlags.Sql) with
         | :? SqlPlaceholderExpression as ph -> ph.WithType(valueType)
         | _ -> null
+
+    /// Shared stateless instance, reused across every <c>UseFSharp()</c> call. Member translators are keyed
+    /// by instance identity in the DataContextOptions ConfigurationID (the query-cache key), so a fresh
+    /// instance per call would give every context a distinct id and defeat the query cache.
+    static member Instance = _instance
 
     override _.TranslateOverrideHandler(ctx: ITranslationContext, expr: Expression, _flags: TranslationFlags) : Expression | null =
         match expr with

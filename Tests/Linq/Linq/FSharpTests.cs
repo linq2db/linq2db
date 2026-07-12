@@ -2,8 +2,11 @@
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.FSharp;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.Linq
 {
@@ -476,6 +479,18 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 			Assert.That(FSharp.DuQueryTests.EqualsLiteral(db), Is.EqualTo(1));
+		}
+
+		[Test(Description = "UseFSharp must yield a stable ConfigurationID - the harness applies it to every context, so an unstable id defeats the query cache for all providers (#5704)")]
+		public void UseFSharp_StableConfigurationID()
+		{
+			// Member translators are keyed by instance identity in DataContextOptions' ConfigurationID
+			// (the query-cache key). UseFSharp must reuse one translator instance; a fresh instance per
+			// call gives every context a distinct id, so the query cache never hits.
+			var a = new DataOptions().UseFSharp();
+			var b = new DataOptions().UseFSharp();
+
+			a.ShouldBe(b);
 		}
 	}
 }
