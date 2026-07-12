@@ -333,6 +333,48 @@ namespace Tests.Analyzers
 				""");
 
 		[Test]
+		public Task BivariateStatistical()
+			// two-value-argument statistical family (CovarPop): both value args splice through in declaration order.
+			=> Verify.VerifyAsync(
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					object? M(int x, int y) => {|L2DB1001:Sql.Ext.CovarPop<double>(x, y).Over().PartitionBy(x).OrderBy(x).ToValue()|};
+				}
+				""",
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					object? M(int x, int y) => Sql.Window.CovarPop(x, y, f => f.PartitionBy(x).OrderBy(x));
+				}
+				""");
+
+		[Test]
+		public Task BivariateStatisticalWithThenBy()
+			// second two-value-arg family (RegrSlope) + the plain ascending ThenBy branch of AddOrderSteps.
+			=> Verify.VerifyAsync(
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					object? M(int x, int y) => {|L2DB1001:Sql.Ext.RegrSlope<double>(x, y).Over().PartitionBy(x).OrderBy(x).ThenBy(y).ToValue()|};
+				}
+				""",
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					object? M(int x, int y) => Sql.Window.RegrSlope(x, y, f => f.PartitionBy(x).OrderBy(x).ThenBy(y));
+				}
+				""");
+
+		[Test]
 		public Task FirstValueWithIgnoreNulls()
 			=> Verify.VerifyAsync(
 				"""
