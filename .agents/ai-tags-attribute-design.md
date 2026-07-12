@@ -223,6 +223,14 @@ output stay textually consistent without a T4 tooling dependency). Combined with
 hand-converted pilot: **777 `[AiTags]`/`[AiTagsDefaults]` attribute declarations, 0 remaining
 XML-doc `<ai-tags>` anywhere in `Source/LinqToDB`.**
 
+Confirmed the "convert `.generated.cs` directly instead of re-running T4" shortcut is actually
+sound, not just assumed: installed `dotnet-t4` (`dotnet tool install -g dotnet-t4`, not a repo
+dependency) and regenerated all 7 hint `.generated.cs` files for real from the now-converted `.tt`
+templates. Byte-for-byte identical to the manually-edited versions in every case, aside from the
+UTF-8 BOM the raw `t4` CLI doesn't add (kept intentionally on the manual edits per `.editorconfig`
+`charset = utf-8-bom` for `*.cs`; the repo's checked-in `.generated.cs` already carried it before
+this change too, so `t4`'s own default was never actually what shipped).
+
 Two real bugs found and fixed while building the script (both worth remembering for the next
 regex-over-C#-source script):
 - .NET regex `$` in `(?m)` multiline mode matches just before `\n`, not before `\r\n` - `[ \t]*$`
