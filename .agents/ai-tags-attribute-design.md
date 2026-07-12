@@ -4,10 +4,11 @@ Context: PR #5376. MaceWindu raised (2026-05-30) whether inline `<ai-tags />` in
 right mechanism at all, versus a typed attribute or a sidecar spec. This note captures the decision
 reached while working through the tradeoffs, so it isn't lost between sessions.
 
-Status: **migration complete.** All 777 `<ai-tags>`/`<ai-tags-defaults>` instances converted to
-`AiTagsAttribute`/`AiTagsDefaultsAttribute`; 0 remaining in XML-doc. Still open: `docs/api.md`
-regeneration/staleness, whether to post this as a follow-up in the PR thread, and whether to keep
-the legacy XML-doc fallback path in the generator now that nothing uses it.
+Status: **migration complete, including cleanup.** All 777 `<ai-tags>`/`<ai-tags-defaults>`
+instances converted to `AiTagsAttribute`/`AiTagsDefaultsAttribute`; 0 remaining in XML-doc. The
+legacy XML-doc extraction path in `GenerateApiDocs.ps1` is removed (replaced with a hard error if
+the XML-doc form is ever used again); `docs/api.md` is regenerated and current. Still open: whether
+to post this as a follow-up in the PR thread.
 
 ## Options considered
 
@@ -266,13 +267,19 @@ class's defaults). The new attribute-based `FormatMergedAiTags` implements the m
 this is a real, incidental bug fix, not conversion noise. Full build green across `Testing`/net10.0,
 `Release`/{net10.0, net8.0, net9.0, netstandard2.0, net462}, plus `Tests/Linq/Tests.csproj`.
 
+## Cleanup done
+
+- `docs/api.md` regenerated: picked up both the current member set (was stale independent of this
+  migration - 5130 -> 4133 XML members scanned, unrelated codebase drift) and the defaults-merge
+  bug fix as real content changes.
+- Legacy XML `<ai-tags>` path removed from `GenerateApiDocs.ps1`
+  (`ValidateAiTagElement`/`FormatAiTagElement`/`ExtractAiTagsFromXml`/the regex fallback are gone).
+  Replaced with `AssertNoLegacyAiTagXml`, which throws if the XML-doc form is used again, rather
+  than silently accepting or silently ignoring it.
+- Found and filed separately (not part of this migration, pure pre-existing XML-doc-generation
+  quirk): `LinqToDB.Common.Configuration.Linq.PreferClientCalculation` compiles and exists in the
+  assembly but is absent from the generated `.xml` doc file entirely - task_7ef5137b.
+
 ## Remaining work
 
-1. Decide what to do about the discovered `docs/api.md` staleness (separate from this migration -
-   regenerate and commit, or leave for a dedicated pass). Regenerating now would also surface the
-   defaults-merge fix above as real content changes, not just noise.
-2. Decide whether/when to post this as the promised follow-up to MaceWindu on PR #5376.
-3. Now that migration is complete, decide whether the legacy XML `<ai-tags>` path in
-   `GenerateApiDocs.ps1` (`ValidateAiTagElement`/`FormatAiTagElement`/`ExtractAiTagsFromXml`/the
-   regex fallback) should be deleted, or kept as a permanent fallback for future contributors who
-   might reach for the old XML-doc form out of habit.
+1. Decide whether/when to post this as the promised follow-up to MaceWindu on PR #5376.
