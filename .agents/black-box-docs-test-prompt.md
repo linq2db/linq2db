@@ -32,11 +32,12 @@ under `<SOLUTION_ROOT>`:
 - `<SOLUTION_ROOT>/Source/Skills/linq2db/docs/*.md`
 - `<SOLUTION_ROOT>/Source/Skills/linq2db/docs/**/*.md`
 - `<SOLUTION_ROOT>/Source/Skills/linq2db/docs/api.md`
-- `<SOLUTION_ROOT>/.build/bin/LinqToDB/*/linq2db.xml`
+- `<SOLUTION_ROOT>/.build/bin/LinqToDB/**/linq2db.xml`
 
-The repo-local XML-doc path uses the TFM directly under `LinqToDB`, for example
-`<SOLUTION_ROOT>/.build/bin/LinqToDB/net10.0/linq2db.xml`. Do not insert `Release` or `Debug` into
-that path unless the file actually exists there.
+The repo-local XML-doc path nests under `LinqToDB` by TFM, and sometimes also by configuration -
+for example `<SOLUTION_ROOT>/.build/bin/LinqToDB/net10.0/linq2db.xml` or
+`<SOLUTION_ROOT>/.build/bin/LinqToDB/Release/net10.0/linq2db.xml`. Use whichever of these actually
+exists; do not insert `Release` or `Debug` if only the unconfigured path exists.
 
 If you are testing the converted Expert knowledge pack instead of package-local files, you may read
 only the files below under the user-provided Expert root, called `<EXPERT_ROOT>`:

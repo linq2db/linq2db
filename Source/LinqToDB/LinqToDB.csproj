@@ -17,7 +17,7 @@
 
 	<ItemGroup Label="Nuget">
 		<None Include="README.md" Pack="true" PackagePath="README.md" />
-		<None Include="..\Skills\linq2db\**\*.md" Pack="true" PackagePath="skills\linq2db\%(RecursiveDir)%(Filename)%(Extension)" />
+		<None Include="..\Skills\linq2db\**\*.md" Pack="true" PackagePath="skills/linq2db/%(RecursiveDir)%(Filename)%(Extension)" />
 	</ItemGroup>
 
 	<!-- Opt-in target: pass /p:GenerateAiDocsOnBuild=true to refresh the checked-in skill API extract. -->
