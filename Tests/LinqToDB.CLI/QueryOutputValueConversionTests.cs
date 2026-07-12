@@ -1,6 +1,5 @@
 using System;
 using System.Data;
-using System.Reflection;
 
 using LinqToDB.CommandLine;
 using LinqToDB.CommandLine.Commands.QueryExecution;
@@ -64,13 +63,9 @@ namespace Tests.LinqToDB.CLI
 
 		static string? ReadFieldAsString(DataTableReader reader, string actualFieldTypeName, int ordinal)
 		{
-			var enumType = typeof(QueryExecutionExecutor).GetNestedType("QueryActualFieldType", BindingFlags.NonPublic)
-				?? throw new MissingMemberException(nameof(QueryExecutionExecutor), "QueryActualFieldType");
-			var actualFieldType = Enum.Parse(enumType, actualFieldTypeName);
-			var method = typeof(QueryExecutionExecutor).GetMethod("ReadFieldAsString", BindingFlags.NonPublic | BindingFlags.Static)
-				?? throw new MissingMethodException(nameof(QueryExecutionExecutor), "ReadFieldAsString");
+			var actualFieldType = Enum.Parse<QueryExecutionExecutor.QueryActualFieldType>(actualFieldTypeName);
 
-			return (string?)method.Invoke(null, new[] { reader, actualFieldType, ordinal });
+			return QueryExecutionExecutor.ReadFieldAsString(reader, actualFieldType, ordinal);
 		}
 	}
 }

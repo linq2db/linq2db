@@ -42,7 +42,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 	{
 		sealed record QueryOutputColumn(int Ordinal, string Name, string FieldType, string ProviderSpecificFieldType, string DataTypeName, QueryActualFieldType ActualFieldType);
 
-		enum QueryActualFieldType
+		internal enum QueryActualFieldType
 		{
 			None = 0,
 			Boolean,
@@ -543,7 +543,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				actualFieldType);
 		}
 
-		static string? ReadFieldAsString(DbDataReader reader, QueryActualFieldType actualFieldType, int ordinal)
+		internal static string? ReadFieldAsString(DbDataReader reader, QueryActualFieldType actualFieldType, int ordinal)
 		{
 			object value;
 

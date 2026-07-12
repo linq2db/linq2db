@@ -71,11 +71,12 @@ namespace Tests.LinqToDB.CLI
 					"--connection-string", $"Data Source={database};Pooling=False",
 					"--get-foreign-keys", "true");
 
+				(result.ExitCode).ShouldBe(0);
+				(result.Error).ShouldBeEmpty();
+
 				var schema = JsonNode.Parse(result.Output)!.AsObject();
 
 				{
-					(result.ExitCode).ShouldBe(0);
-					(result.Error).ShouldBeEmpty();
 					((string?)schema["provider"]).ShouldBe("SQLite");
 					((string?)schema["dialect"]).ShouldBe("SQLite");
 					((bool?)schema["options"]?["getProcedures"]).ShouldBe(false);
@@ -108,10 +109,12 @@ namespace Tests.LinqToDB.CLI
 					"--connection-string", $"Data Source={database};Pooling=False",
 					"--filter-table", "main.Orders,rx:^Child");
 
+				(result.ExitCode).ShouldBe(0);
+				(result.Error).ShouldBeEmpty();
+
 				var schema = JsonNode.Parse(result.Output)!.AsObject();
 
 				{
-					(result.ExitCode).ShouldBe(0);
 					((string?)schema["options"]?["filterTables"]?[0]).ShouldBe("main.Orders");
 					((string?)schema["options"]?["filterTables"]?[1]).ShouldBe("rx:^Child");
 					schema["tables"]!.AsArray().Count.ShouldBe(2);
@@ -139,11 +142,13 @@ namespace Tests.LinqToDB.CLI
 					"--connection-string", $"Data Source={database};Pooling=False",
 					"--get-foreign-keys", "false");
 
+				(result.ExitCode).ShouldBe(0);
+				(result.Error).ShouldBeEmpty();
+
 				var schema = JsonNode.Parse(result.Output)!.AsObject();
 				var orders = FindTable(schema, "Orders");
 
 				{
-					(result.ExitCode).ShouldBe(0);
 					((bool?)schema["options"]?["getForeignKeys"]).ShouldBe(false);
 					orders["foreignKeys"]!.AsArray().Count.ShouldBe(0);
 				}
