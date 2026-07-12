@@ -1833,10 +1833,10 @@ Async counterparts (`MergeAsync`) accept the same parameters plus an optional `C
 
 # Optimistic Concurrency
 
-> Before using this guide:
-> - apply global rules from [`SKILL.md`](01-skill.md);
-> - for exact API names/signatures, search [`docs/api.md`](04-api-discovery-and-extract.md) first, then use
->   `lib/<TFM>/linq2db.xml` when the generated extract is not detailed enough.
+> ⚠️ **Stop. This document is incomplete by itself.**
+> Before implementing anything, read [`SKILL.md`](01-skill.md).
+> It contains global rules, required namespaces, architecture constraints, and documentation navigation.
+> Do not continue without reading it.
 
 Use this guide when updating or deleting one entity instance should include its current optimistic
 lock column value in the SQL filter.

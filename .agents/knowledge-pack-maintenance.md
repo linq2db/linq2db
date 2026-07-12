@@ -114,7 +114,7 @@ The `custom-gpt-instructions.md` file is curated in `Source/Knowledge/linq2db-ex
 | `07-provider-configuration.md` | `docs/provider-capabilities.md`, `docs/provider-setup.md`, `docs/configuration.md` |
 | `08-mapping.md` | `docs/mapping.md` |
 | `09-crud-and-merge.md` | `docs/crud/*.md` in source order, `docs/concurrency.md` |
-| `10-query-composition.md` | `docs/query-cte.md`, `docs/query-temp-tables.md` |
+| `10-query-composition.md` | `docs/query-cte.md`, `docs/query-temp-tables.md`, `docs/null-semantics.md` |
 | `11-hints.md` | `docs/hints.md` |
 | `12-hints-api-map.md` | `docs/hints-api-map.md` |
 | `13-custom-sql.md` | `docs/custom-sql.md`, `docs/raw-sql.md` |

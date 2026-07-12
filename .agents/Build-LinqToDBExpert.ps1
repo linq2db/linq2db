@@ -291,6 +291,7 @@ $sourceToOutput = @{
 	'docs/concurrency.md'                = '09-crud-and-merge.md'
 	'docs/query-cte.md'                  = '10-query-composition.md'
 	'docs/query-temp-tables.md'          = '10-query-composition.md'
+	'docs/null-semantics.md'             = '10-query-composition.md'
 	'docs/hints.md'                      = '11-hints.md'
 	'docs/hints-api-map.md'              = '12-hints-api-map.md'
 	'docs/custom-sql.md'                 = '13-custom-sql.md'
@@ -604,7 +605,7 @@ $bundles = [ordered]@{
 		'docs/crud/crud-merge.md',
 		'docs/concurrency.md'
 	)
-	'10-query-composition.md'              = @('docs/query-cte.md', 'docs/query-temp-tables.md')
+	'10-query-composition.md'              = @('docs/query-cte.md', 'docs/query-temp-tables.md', 'docs/null-semantics.md')
 	'11-hints.md'                          = @('docs/hints.md')
 	'12-hints-api-map.md'                  = @('docs/hints-api-map.md')
 	'13-custom-sql.md'                     = @('docs/custom-sql.md', 'docs/raw-sql.md')

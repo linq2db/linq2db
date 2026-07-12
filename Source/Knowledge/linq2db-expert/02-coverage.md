@@ -2,10 +2,10 @@
 
 # AI Documentation Coverage
 
-> Before using this guide:
-> - apply global rules from [`SKILL.md`](01-skill.md);
-> - for exact API names/signatures, search [`docs/api.md`](04-api-discovery-and-extract.md) first, then use
->   `lib/<TFM>/linq2db.xml` when the generated extract is not detailed enough.
+> ⚠️ **Stop. This document is incomplete by itself.**
+> Before implementing anything, read [`SKILL.md`](01-skill.md).
+> It contains global rules, required namespaces, architecture constraints, and documentation navigation.
+> Do not continue without reading it.
 
 This file records which LinqToDB topics have package-local AI guidance and which topics still
 require generated API index lookup or raw XML-doc confirmation.
@@ -26,6 +26,8 @@ These areas have task-focused markdown guidance in this package:
 - query/table/index/join/subquery/provider-specific hints;
 - SQL hint reverse lookup through `docs/hints-api-map.md`;
 - raw SQL query roots, raw command execution, and generated SQL inspection;
+- null comparison semantics, `CompareNulls`, and manual nullability control (`AsNotNull`,
+  `IsDistinctFrom`, `ToNullable`/`AsNullable`);
 - custom SQL expressions and functions;
 - built-in translatable .NET methods;
 - common anti-patterns and symptom-based checks.
