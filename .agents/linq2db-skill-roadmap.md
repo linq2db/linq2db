@@ -47,10 +47,9 @@ derived artifacts when needed.
 | [x] | Hints | `Source/Skills/linq2db/docs/hints.md` | High | Done | General raw-text hints, provider-specific `AsXxx()` typed hint APIs, unsupported provider gaps, safe multi-provider branches, merge hints, generated provider hint `<ai-tags />` via T4 and handwritten provider hint `<ai-tags />` in XML docs. |
 | [x] | Provider hints API map | `Source/Skills/linq2db/docs/hints-api-map.md` | High | Done | Reverse lookup from concrete provider SQL hint text to typed provider-specific helper APIs, generated from XML-doc-shaped source comments. |
 | [x] | Provider hint gaps | `Source/Skills/linq2db/docs/hints.md` | Medium | Done | DB2 optimization guidelines, Firebird `PLAN`, Informix directives, SAP HANA `WITH HINT`, and Sybase dialect hints are documented as unsupported/gap areas; implementation is out of scope. |
-| [ ] | Query composition basics | `Source/Skills/linq2db/docs/query-basics.md` | High | Planned | Deferred execution, `IQueryable`, materialization, client/server boundary. |
-| [ ] | Joins | `Source/Skills/linq2db/docs/query-joins.md` | High | Planned | Inner/left/cross/apply joins, navigation-like joins, provider limitations. |
-| [ ] | Grouping and aggregation | `Source/Skills/linq2db/docs/query-grouping.md` | High | Planned | `GroupBy`, aggregates, HAVING, projection rules. |
-| [ ] | Ordering and paging | `Source/Skills/linq2db/docs/query-paging.md` | High | Planned | `OrderBy`, `Skip`, `Take`, deterministic paging, `TakeHints`. |
+| [ ] | Joins - translation gotchas | `Source/Skills/linq2db/docs/query-joins.md` | High | Planned | Not a LINQ-join syntax tutorial (agents already know that). Navigation-like/association joins, cases that fail to translate, and provider limitations only. |
+| [ ] | Grouping and aggregation | `Source/Skills/linq2db/docs/query-grouping.md` | High | Planned | Translation restrictions and gotchas only (what fails to translate, HAVING/projection limits after `GroupBy`) - not `GroupBy` syntax itself. |
+| [ ] | Ordering and paging | `Source/Skills/linq2db/docs/query-paging.md` | High | Planned | `TakeHints` and provider-specific paging gotchas only - not `OrderBy`/`Skip`/`Take` syntax itself. |
 | [ ] | Set operations | `Source/Skills/linq2db/docs/query-set-operations.md` | Medium | Planned | `Concat`, `Union`, `Except`, `Intersect`, provider differences. |
 | [ ] | Projections | `Source/Skills/linq2db/docs/query-projections.md` | High | Planned | DTO projections, computed values, nested projections, materialization traps. |
 | [ ] | Null semantics | `Source/Skills/linq2db/docs/null-semantics.md` | High | Planned | SQL three-valued logic, nullable comparisons, coalesce, provider differences. |
