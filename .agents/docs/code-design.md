@@ -121,6 +121,8 @@ This rule refines the `/review-pr` classification in [`api-surface-classificatio
 
 Large blocks of the codebase use column-aligned formatting — property declarations line their `{ get; }` up at the same column, constructor parameters line their defaults up at the same column, constant declarations line their `=` up at the same column. This is deliberate house style, not accidental. Preserve it when editing; match the existing alignment of surrounding code rather than reformatting it to a narrower width.
 
+When you *do* edit an aligned block, align each `=` / `=>` to the longest left-hand side **within its contiguous same-kind subgroup** — declarations of one type form a subgroup independent of an adjacent block of another type (a `var` group and a `List<T>?` group align to *different* columns even with no blank line between them), a bare assignment aligns with the variable-declaration block it sits directly above/below, and a `switch`-expression's arms align their `=>` one space past the longest pattern. A lone declaration takes a single space; a group that loses a member re-collapses to the new longest LHS. The common defect is an `=`/`=>` sitting one column off its neighbours — fix it by adding/removing the one space, never by stripping the alignment.
+
 Formatting is only worth flagging when it is clearly broken — three or more consecutive blank lines, mixed tabs and spaces that cause visible misalignment, indentation that doesn't match the enclosing scope. The positive alignment style is never the bug.
 
 ### TODO markers signal deferred cleanup, not bugs

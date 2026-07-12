@@ -165,6 +165,8 @@ When the agent would otherwise make ≥ 3 related `gh` / `git` calls whose outpu
 
 The same rule of three applies one level up: a *procedure* you've hand-run 3+ times across sessions — not just a single call-chain — is a candidate to codify rather than re-derive each time (a script for a mechanical sequence, a skill for a multi-step workflow). Surface the candidate to the user, or route it through `/session-reflect`; don't silently keep repeating it.
 
+A **review finding that names a gap in a repo *procedure* the skills own** — a release / release-prep step, a maintenance workflow — rather than a defect in the PR's code, is addressed by adding the missing step **verbatim to the owning skill** (a curation edit on `infra/agents-curation`), not by a PR code change and not by a loose "post-merge follow-up" note that gets forgotten. Treat it as a curation task even when it surfaced while reviewing a feature PR. (Established on #5703: an "ensure the release procedure handles the `AnalyzerReleases` Unshipped→Shipped transition" review comment became a verbatim step in `/release-publicapi`.)
+
 Authoring contract, parallelism rules, and pwsh-script gotchas live in [`script-authoring.md`](script-authoring.md). Read it before adding or extending a script under `.agents/scripts/`.
 
 **Prefer the PowerShell tool over `Bash(pwsh -NoProfile -File …)`** when invoking these scripts. Routing the call through Claude Code's PowerShell tool skips the Git-Bash / MSYS layer entirely — no path-mangling on slash-prefixed args, no `\??\C:\…` cygheap races, no quoting differences, no double allowlist hop. Use the Bash wrapper only when you need shell features the PowerShell tool can't express (multi-stage stdin heredoc piped between non-pwsh commands, etc.).
