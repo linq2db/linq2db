@@ -2,9 +2,7 @@
 	"NET100.Azure": {
 		"Providers": [
 			"DB2",
-			"Informix.DB2",
-			"Sybase.Managed",
-			"YDB"
+			"Informix.DB2"
 		]
 	}
 }
