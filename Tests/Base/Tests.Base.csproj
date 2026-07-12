@@ -38,7 +38,7 @@
 
 	<ItemGroup Condition=" '$(TargetFramework)' != 'net462' ">
 		<FrameworkReference Include="Microsoft.AspNetCore.App" />
-		
+
 		<PackageReference Include="protobuf-net.Grpc.AspNetCore" />
 		<PackageReference Include="MiniProfiler.Minimal" />
 	</ItemGroup>

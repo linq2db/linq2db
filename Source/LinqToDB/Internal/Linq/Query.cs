@@ -60,7 +60,7 @@ namespace LinqToDB.Internal.Linq
 			if (CompareInfo == null)
 				return false;
 
-			var result = CompareInfo.MainExpression.EqualsTo(expressions.MainExpression, dataContext);
+			var result = CompareInfo.MainExpression.EqualsTo(expressions.MainExpression);
 
 			if (!result)
 				return false;
@@ -75,7 +75,7 @@ namespace LinqToDB.Internal.Linq
 				foreach (var da in CompareInfo.DynamicAccessors)
 				{
 					var current = da.AccessorFunc(dataContext, da.MappingSchema);
-					result = da.Used.EqualsTo(current, dataContext);
+					result = da.Used.EqualsTo(current);
 					if (!result)
 						return false;
 
