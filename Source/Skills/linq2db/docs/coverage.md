@@ -1,9 +1,9 @@
 # AI Documentation Coverage
 
-> Before using this guide:
-> - apply global rules from [`SKILL.md`](../SKILL.md);
-> - for exact API names/signatures, search [`docs/api.md`](api.md) first, then use
->   `lib/<TFM>/linq2db.xml` when the generated extract is not detailed enough.
+> ⚠️ **Stop. This document is incomplete by itself.**
+> Before implementing anything, read [`SKILL.md`](../SKILL.md).
+> It contains global rules, required namespaces, architecture constraints, and documentation navigation.
+> Do not continue without reading it.
 
 This file records which LinqToDB topics have package-local AI guidance and which topics still
 require generated API index lookup or raw XML-doc confirmation.
