@@ -224,12 +224,21 @@ hand-converted pilot: **777 `[AiTags]`/`[AiTagsDefaults]` attribute declarations
 XML-doc `<ai-tags>` anywhere in `Source/LinqToDB`.**
 
 Confirmed the "convert `.generated.cs` directly instead of re-running T4" shortcut is actually
-sound, not just assumed: installed `dotnet-t4` (`dotnet tool install -g dotnet-t4`, not a repo
-dependency) and regenerated all 7 hint `.generated.cs` files for real from the now-converted `.tt`
-templates. Byte-for-byte identical to the manually-edited versions in every case, aside from the
+sound for these 7 templates specifically, not just assumed: installed `dotnet-t4`
+(`dotnet tool install -g dotnet-t4`, not a repo dependency) and regenerated all 7 hint
+`.generated.cs` files for real from the now-converted `.tt` templates via the plain `t4` CLI with no
+extra flags. Byte-for-byte identical to the manually-edited versions in every case, aside from the
 UTF-8 BOM the raw `t4` CLI doesn't add (kept intentionally on the manual edits per `.editorconfig`
 `charset = utf-8-bom` for `*.cs`; the repo's checked-in `.generated.cs` already carried it before
 this change too, so `t4`'s own default was never actually what shipped).
+
+**Scope of this verification is narrow - all 7 hint templates only use
+`<#@ assembly name="System.Core" #>` and `<#@ import #>` of stock BCL namespaces, no
+`<#@ include #>` and no custom/project assembly references.** That's why the bare `t4` CLI could
+resolve them with zero extra `-r`/`-P`/`-u` flags. This does not generalize to a claim that
+`dotnet-t4` can regenerate arbitrary templates elsewhere in the repo (e.g. `LinqToDB.Scaffold` or
+`Tests.T4`, which likely use `<#@ include #>` and reference project assemblies) - those would need
+MSBuild-integrated T4 tooling or explicit reference/include-path flags, untested here.
 
 Two real bugs found and fixed while building the script (both worth remembering for the next
 regex-over-C#-source script):
