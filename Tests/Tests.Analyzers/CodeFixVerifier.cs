@@ -17,7 +17,7 @@ namespace Tests.Analyzers
 		where TAnalyzer : DiagnosticAnalyzer, new()
 		where TCodeFix  : CodeFixProvider, new()
 	{
-		public static Task VerifyAsync(string source, string fixedSource)
+		public static Task VerifyAsync(string source, string fixedSource, string? editorConfig = null)
 		{
 			var test = new CSharpCodeFixTest<TAnalyzer, TCodeFix, DefaultVerifier>
 			{
@@ -29,6 +29,13 @@ namespace Tests.Analyzers
 			var reference = MetadataReference.CreateFromFile(typeof(Sql).Assembly.Location);
 			test.TestState.AdditionalReferences.Add(reference);
 			test.FixedState.AdditionalReferences.Add(reference);
+
+			// Inject an .editorconfig to exercise a code-fix option (default-off behaviors, etc.).
+			if (editorConfig is not null)
+			{
+				test.TestState.AnalyzerConfigFiles.Add(("/.editorconfig", editorConfig));
+				test.FixedState.AnalyzerConfigFiles.Add(("/.editorconfig", editorConfig));
+			}
 
 			return test.RunAsync(CancellationToken.None);
 		}

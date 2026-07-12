@@ -71,7 +71,7 @@ namespace LinqToDB.Analyzers.CodeFixes
 			public ArgumentListSyntax? Args { get; }
 		}
 
-		public static ExpressionSyntax? TryRewrite(InvocationExpressionSyntax toValueInvocation, SemanticModel model, CancellationToken cancellationToken)
+		public static ExpressionSyntax? TryRewrite(InvocationExpressionSyntax toValueInvocation, SemanticModel model, CancellationToken cancellationToken, bool ignoreReturnTypeMismatch = false)
 		{
 			if (toValueInvocation.Expression is not MemberAccessExpressionSyntax toValueAccess)
 				return null;
@@ -128,7 +128,7 @@ namespace LinqToDB.Analyzers.CodeFixes
 							return BuildFromRoot(
 								toValueInvocation, model, inv, ma, sawOver,
 								partitionArgs, orderClauses, keepSeen, isKeepFirst, keepOrderClauses, withinGroupOrderClauses,
-								frameSeen, frameIsRange, frameStart, frameStartValue, frameEnd, frameEndValue);
+								frameSeen, frameIsRange, frameStart, frameStartValue, frameEnd, frameEndValue, ignoreReturnTypeMismatch);
 						}
 
 						if (!IsAnalyticNestedType(method.ContainingType))
@@ -243,7 +243,8 @@ namespace LinqToDB.Analyzers.CodeFixes
 			ArgumentListSyntax? partitionArgs,
 			List<OrderClause> orderClauses,
 			bool keepSeen, bool isKeepFirst, List<OrderClause>? keepOrderClauses, List<OrderClause>? withinGroupOrderClauses,
-			bool frameSeen, bool frameIsRange, string? frameStart, ArgumentSyntax? frameStartValue, string? frameEnd, ArgumentSyntax? frameEndValue)
+			bool frameSeen, bool frameIsRange, string? frameStart, ArgumentSyntax? frameStartValue, string? frameEnd, ArgumentSyntax? frameEndValue,
+			bool ignoreReturnTypeMismatch)
 		{
 			var functionName = rootAccess.Name.Identifier.Text;
 
@@ -429,8 +430,10 @@ namespace LinqToDB.Analyzers.CodeFixes
 
 			// The Sql.Window overload's return type may differ from the legacy ToValue<TR>() slot (ranking returns
 			// long/double, statistical/percentile families differ), so a mechanical rewrite can be a narrowing
-			// assignment that won't compile. Only offer the fix when the rewritten call's type fits the target slot.
-			if (!ReturnTypeFitsTarget(toValueInvocation, newExpression, model))
+			// assignment that won't compile. Only offer the fix when the rewritten call's type fits the target slot —
+			// unless the user opted into applying it regardless (linq2db.L2DB1001.apply_fix_on_return_type_mismatch),
+			// electing to resolve any resulting type error by hand.
+			if (!ignoreReturnTypeMismatch && !ReturnTypeFitsTarget(toValueInvocation, newExpression, model))
 				return null;
 
 			// Preserve outer trivia and salvage any comments that lived on the original chain's scaffolding so none is lost.

@@ -9,6 +9,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace LinqToDB.Analyzers.CodeFixes
 {
@@ -23,6 +24,13 @@ namespace LinqToDB.Analyzers.CodeFixes
 	public sealed class WindowFunctionApiCodeFixProvider : CodeFixProvider
 	{
 		const string Title = "Convert to Sql.Window API";
+
+		// Opt-in (default off): apply the rewrite even when the Sql.Window return type diverges from the legacy
+		// ToValue<TR>() slot, leaving the user to resolve the resulting type error. Off by default so the fix never
+		// turns compiling code into a type error unasked. User-facing form is `linq2db.L2DB1001.apply_fix_on_return_type_mismatch`;
+		// the lookup key is lower-cased because Roslyn lower-cases .editorconfig keys on parse (they are case-insensitive).
+		static readonly string ApplyOnReturnTypeMismatchOptionKey =
+			("linq2db." + WindowFunctionApiAnalyzer.DiagnosticId + ".apply_fix_on_return_type_mismatch").ToLowerInvariant();
 
 		/// <inheritdoc/>
 		public override ImmutableArray<string> FixableDiagnosticIds => ImmutableArray.Create(WindowFunctionApiAnalyzer.DiagnosticId);
@@ -54,7 +62,8 @@ namespace LinqToDB.Analyzers.CodeFixes
 			if (model is null)
 				return;
 
-			var rewritten = LegacyWindowChainRewriter.TryRewrite(invocation, model, context.CancellationToken);
+			var ignoreReturnTypeMismatch = ReadApplyOnReturnTypeMismatch(context.Document, root.SyntaxTree);
+			var rewritten                = LegacyWindowChainRewriter.TryRewrite(invocation, model, context.CancellationToken, ignoreReturnTypeMismatch);
 
 			// Not mechanically convertible — leave the diagnostic in place with no fix.
 			if (rewritten is null)
@@ -75,6 +84,16 @@ namespace LinqToDB.Analyzers.CodeFixes
 			return node as InvocationExpressionSyntax ?? node.FirstAncestorOrSelf<InvocationExpressionSyntax>();
 		}
 
+		// Read the per-file opt-in that applies the rewrite despite a return-type mismatch (default off).
+		static bool ReadApplyOnReturnTypeMismatch(Document document, SyntaxTree tree)
+		{
+			var options = document.Project.AnalyzerOptions.AnalyzerConfigOptionsProvider.GetOptions(tree);
+
+			return options.TryGetValue(ApplyOnReturnTypeMismatchOptionKey, out var value)
+				&& bool.TryParse(value, out var enabled)
+				&& enabled;
+		}
+
 		sealed class WindowChainFixAllProvider : DocumentBasedFixAllProvider
 		{
 			public static readonly WindowChainFixAllProvider Instance = new();
@@ -93,6 +112,8 @@ namespace LinqToDB.Analyzers.CodeFixes
 				if (model is null)
 					return document;
 
+				var ignoreReturnTypeMismatch = ReadApplyOnReturnTypeMismatch(document, root.SyntaxTree);
+
 				// Compute every rewrite against the ORIGINAL tree/model, then apply them together via a single
 				// ReplaceNodes pass — no edit ever sees a tree mutated by another, so none goes stale.
 				var replacements = new Dictionary<SyntaxNode, ExpressionSyntax>();
@@ -104,7 +125,7 @@ namespace LinqToDB.Analyzers.CodeFixes
 					if (invocation is null || replacements.ContainsKey(invocation))
 						continue;
 
-					var rewritten = LegacyWindowChainRewriter.TryRewrite(invocation, model, fixAllContext.CancellationToken);
+					var rewritten = LegacyWindowChainRewriter.TryRewrite(invocation, model, fixAllContext.CancellationToken, ignoreReturnTypeMismatch);
 
 					if (rewritten is not null)
 						replacements[invocation] = rewritten;

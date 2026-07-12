@@ -928,5 +928,40 @@ class C
 					};
 				}
 				""");
+
+		[Test]
+		public Task AppliesReturnTypeMismatchFixWhenOptionEnabled()
+			// With linq2db.L2DB1001.apply_fix_on_return_type_mismatch = true the return-type-fit gate is bypassed, so
+			// the NTile int->long widening in a `var` slot (withheld by default — see DoesNotOfferFixFor...) is applied.
+			// The user opts into resolving any resulting type change themselves; here the rewritten code still compiles.
+			=> Verify.VerifyAsync(
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					void M(int x)
+					{
+						var r = {|L2DB1001:Sql.Ext.NTile(4).Over().OrderBy(x).ToValue()|};
+					}
+				}
+				""",
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					void M(int x)
+					{
+						var r = Sql.Window.NTile(4, f => f.OrderBy(x));
+					}
+				}
+				""",
+				"""
+				root = true
+
+				[*.cs]
+				linq2db.L2DB1001.apply_fix_on_return_type_mismatch = true
+				""");
 	}
 }
