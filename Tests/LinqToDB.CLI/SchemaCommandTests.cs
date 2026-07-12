@@ -262,7 +262,15 @@ namespace Tests.LinqToDB.CLI
 			var outputTask = process.StandardOutput.ReadToEndAsync();
 			var errorTask  = process.StandardError.ReadToEndAsync();
 
-			await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(20)).ConfigureAwait(false);
+			try
+			{
+				await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(20)).ConfigureAwait(false);
+			}
+			catch (TimeoutException)
+			{
+				process.Kill(entireProcessTree: true);
+				throw;
+			}
 
 			return new CliProcessResult(process.ExitCode, await outputTask.ConfigureAwait(false), await errorTask.ConfigureAwait(false));
 		}

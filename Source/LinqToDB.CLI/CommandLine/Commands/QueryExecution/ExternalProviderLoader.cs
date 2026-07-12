@@ -96,8 +96,19 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 
 			static Type? FindProviderFactory(Assembly assembly, string factoryTypeName)
 			{
-				foreach (var type in assembly.GetTypes())
-					if (string.Equals(type.Name, factoryTypeName, StringComparison.Ordinal) && typeof(DbProviderFactory).IsAssignableFrom(type))
+				Type?[] types;
+
+				try
+				{
+					types = assembly.GetTypes();
+				}
+				catch (ReflectionTypeLoadException ex)
+				{
+					types = ex.Types;
+				}
+
+				foreach (var type in types)
+					if (type != null && string.Equals(type.Name, factoryTypeName, StringComparison.Ordinal) && typeof(DbProviderFactory).IsAssignableFrom(type))
 						return type;
 
 				return null;

@@ -8,7 +8,7 @@
 		"commandTimeout" : 30,
 		"lockTimeout"    : 5,
 		"maxRows"        : 10000,
-		"enableExecute"  : true,
+		"enableExecute"  : false,
 		"output"         : "json-table"
 	},
 	"ClickHouse.Octonica": {
