@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -320,6 +321,29 @@ namespace Tests.LinqToDB.CLI
 				(result.ExitCode).ShouldBe(0);
 				(result.Output).ShouldContain("\"Value\":\"drop table\"");
 				(result.Error).ShouldBeEmpty();
+			}
+		}
+
+		[Test]
+		public async Task QueryRejectsMySqlExecutableComments()
+		{
+			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql", "select 1 /*!00000; drop table Person */");
+
+			{
+				(result.ExitCode).ShouldBe(-3);
+				(result.Error).ShouldContain("MySQL executable comments are not allowed");
+			}
+		}
+
+		[Test]
+		public async Task RepeatedMultiValueOptionReportsInvalidSecondValue()
+		{
+			var result = await RunCli("scaffold", "--objects", "table", "--objects", "unknown");
+
+			{
+				(result.ExitCode).ShouldBe(-1);
+				(result.Error).ShouldContain("Cannot parse option value (--objects unknown): unknown value 'unknown'");
+				(result.Error).ShouldNotContain("INTERNAL_ERROR");
 			}
 		}
 
@@ -915,6 +939,23 @@ namespace Tests.LinqToDB.CLI
 				(result.ExitCode).ShouldBe(0);
 				(result.Output).ShouldContain("\"Value\":\"1\"");
 				(result.Error).ShouldBeEmpty();
+			}
+		}
+
+		[Test]
+		public void ExternalProviderAssemblyIsLoadedOncePerPath()
+		{
+			var providerPath = typeof(QueryCommandTests).Assembly.Location;
+
+			ExternalProviderLoader.LoadExternalProvider("SQLite", providerPath, out var firstError).ShouldBe(true);
+			var afterFirstLoad = AppDomain.CurrentDomain.GetAssemblies().Count(assembly => assembly.Location == providerPath);
+
+			ExternalProviderLoader.LoadExternalProvider("SQLite", providerPath, out var secondError).ShouldBe(true);
+
+			{
+				firstError.ShouldBeNull();
+				secondError.ShouldBeNull();
+				AppDomain.CurrentDomain.GetAssemblies().Count(assembly => assembly.Location == providerPath).ShouldBe(afterFirstLoad);
 			}
 		}
 

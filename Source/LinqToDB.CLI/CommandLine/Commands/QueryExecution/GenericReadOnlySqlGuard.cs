@@ -39,6 +39,9 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 
 		public static SqlGuardResult Validate(string sql)
 		{
+			if (sql.Contains("/*!", StringComparison.Ordinal))
+				return SqlGuardResult.Rejected("MySQL executable comments are not allowed in read-only queries.");
+
 			var tokens                = Tokenize(sql);
 			var singleStatementResult = ValidateSingleStatement(tokens);
 

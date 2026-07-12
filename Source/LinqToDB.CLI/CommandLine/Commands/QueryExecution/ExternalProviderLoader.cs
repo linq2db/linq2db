@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Data.Common;
 using System.IO;
 using System.Reflection;
@@ -17,7 +18,8 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 	/// </summary>
 	static class ExternalProviderLoader
 	{
-		static readonly Lock _loadLock = new();
+		static readonly Lock                         _loadLock        = new();
+		static readonly Dictionary<string, Assembly> _loadedAssemblies = new(StringComparer.OrdinalIgnoreCase);
 
 		public static bool LoadExternalProvider(string provider, string? providerLocation, out string? error)
 		{
@@ -42,7 +44,9 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				return true;
 			}
 
-			if (!File.Exists(providerLocation))
+			var providerLocationPath = Path.GetFullPath(providerLocation);
+
+			if (!File.Exists(providerLocationPath))
 			{
 				error = $"Provider assembly '{providerLocation}' not found.";
 				return false;
@@ -50,38 +54,41 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 
 			lock (_loadLock)
 			{
-				var currentDirectory     = Environment.CurrentDirectory;
-				var providerLocationPath = Path.GetFullPath(providerLocation);
-				var providerDirectory    = Path.GetDirectoryName(providerLocationPath);
-
-				try
+				if (!_loadedAssemblies.TryGetValue(providerLocationPath, out var assembly))
 				{
-					// Some external providers resolve native binaries and dependent assemblies relative to
-					// the process current directory instead of the managed provider assembly path.
-					//
-					if (!string.IsNullOrEmpty(providerDirectory))
-						Environment.CurrentDirectory = providerDirectory;
+					var currentDirectory  = Environment.CurrentDirectory;
+					var providerDirectory = Path.GetDirectoryName(providerLocationPath);
 
-					var assembly = new ExternalProviderLoadContext(providerDirectory).LoadFromAssemblyPath(providerLocationPath);
-
-					if (IsDB2FamilyProvider(provider))
+					try
 					{
-						DB2Tools.AutoDetectProvider = true;
+						// Some external providers resolve native binaries and dependent assemblies relative to
+						// the process current directory instead of the managed provider assembly path.
+						//
+						if (!string.IsNullOrEmpty(providerDirectory))
+							Environment.CurrentDirectory = providerDirectory;
 
-						var factory = FindProviderFactory(assembly, "DB2Factory");
-
-						if (factory == null)
-						{
-							error = $"Provider assembly '{providerLocation}' doesn't contain DB2Factory type.";
-							return false;
-						}
-
-						DbProviderFactories.RegisterFactory("IBM.Data.DB2", factory);
+						assembly = new ExternalProviderLoadContext(providerDirectory).LoadFromAssemblyPath(providerLocationPath);
+						_loadedAssemblies.Add(providerLocationPath, assembly);
+					}
+					finally
+					{
+						Environment.CurrentDirectory = currentDirectory;
 					}
 				}
-				finally
+
+				if (IsDB2FamilyProvider(provider))
 				{
-					Environment.CurrentDirectory = currentDirectory;
+					DB2Tools.AutoDetectProvider = true;
+
+					var factory = FindProviderFactory(assembly, "DB2Factory");
+
+					if (factory == null)
+					{
+						error = $"Provider assembly '{providerLocation}' doesn't contain DB2Factory type.";
+						return false;
+					}
+
+					DbProviderFactories.RegisterFactory("IBM.Data.DB2", factory);
 				}
 			}
 

@@ -213,10 +213,13 @@ namespace LinqToDB.CommandLine
 							hasErrors = true;
 						}
 
+						if (value == null)
+							continue;
+
 						if (option.AllowMultiple && cliOptions.TryGetValue(option, out var existingValue) && existingValue is string[] existingValues && value is string[] newValues)
 							cliOptions[option] = existingValues.Concat(newValues).ToArray();
 						else
-							cliOptions.Add(option, value);
+							cliOptions.TryAdd(option, value);
 					}
 				}
 			}

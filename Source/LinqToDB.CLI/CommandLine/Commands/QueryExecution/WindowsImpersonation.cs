@@ -60,7 +60,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				throw new Win32Exception(Marshal.GetLastWin32Error(), "Windows impersonation logon failed.");
 
 			using (token)
-				return await WindowsIdentity.RunImpersonated(token, action).ConfigureAwait(false);
+				return await WindowsIdentity.RunImpersonatedAsync(token, action).ConfigureAwait(false);
 		}
 
 		static void GetLogonOptions(WindowsImpersonationMode mode, out int logonType, out int logonProvider)
