@@ -190,6 +190,7 @@ Walk added / removed / modified `public` and `protected` members under `Source/*
 - Emit an `api_changes` entry `{namespace, symbol, change: "added"|"removed"|"modified", file, line}`.
 - Do **not** classify severity — the skill classifies based on PR milestone (see `.agents/docs/api-surface-classification.md`).
 - **A public `const`'s value is part of its contract.** A changed `const` value (e.g. `"ALL OUTER"` → `"OUTER"`) is a `modified` api_change even when the name and type are unchanged — the value is recorded in `PublicAPI.*.txt` and inlined at every consumer's call site, so changing it is a breaking change for recompiled consumers. Emit a `modified` entry for it.
+- **Roslyn analyzer / code-fix package types are not a user-facing API surface.** In an analyzer package (`Source/LinqToDB.Analyzers*`), the `DiagnosticAnalyzer` / `CodeFixProvider` types and their overrides (`SupportedDiagnostics`, `RegisterCodeFixesAsync`, `FixableDiagnosticIds`, …) are `public` only because the Roslyn host discovers them by reflection via `[DiagnosticAnalyzer]` / `[ExportCodeFixProvider]` — they are never called by consumer code. Do **not** emit them as `api_changes`, and do **not** flag the absence of `PublicAPI.*.txt` / package-baseline tracking on these projects as a gap. The rule's *diagnostics* (id, category, severity, message, code-fix behavior) are the real compatibility surface — review those instead.
 
 Skip `internal`, `private`, `file-local`, and `private protected` members.
 

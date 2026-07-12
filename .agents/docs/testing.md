@@ -41,6 +41,16 @@ The `--provider <Name>` flag (repeatable, comma- or space-separated) **replaces*
 
 **Capture caveat — `Console`/`TestContext.Progress` output is only captured from a test's *body*.** Traces emitted from `[OneTimeSetUp]`/`[OneTimeTearDown]`, a custom `IWorkItemDispatcher`, the LinqService server, or any other non-test thread are **not** reliably surfaced by the console logger — they can come back empty and mislead you into a wrong "this code never ran" conclusion. For those, write the diagnostic to a **file** (e.g. under `AppContext.BaseDirectory`) and `Read` it back. (For live *run progress* — current test, completed/total, pass/fail — rather than engine tracing, use the `LINQ2DB_TEST_PROGRESS` heartbeat instead; see *Monitoring a long run* below.)
 
+## Running the analyzer tests (`Tests/Tests.Analyzers`)
+
+The `linq2db.Analyzers` package tests are a **standalone** project — DB-free, provider-independent, single-TFM `net8.0` (to match the Roslyn testing SDK's Net80 reference pack; a higher pack trips CS1705), MTP host with the NUnit runner. They are **not** covered by the `/test` skill, which selects the Playground / `Tests/Linq` provider projects and injects the `CreateData.CreateDatabase` filter. Run them directly:
+
+```bash
+dotnet test Tests/Tests.Analyzers/Tests.Analyzers.csproj -c Release
+```
+
+Use **Release** — the Meziantou / Roslyn analyzer rules that gate the code-fix project (e.g. MA0154 "use `<see langword>`") run Release-only, so a Debug/Testing run compiles green while CI's Release leg fails. The `net8.0` runtime must be installed locally (the SDK 10 still *builds* the net8.0 target; it's the test *host* that needs the runtime); CI provisions it via the `with_analyzer_tests`-gated `UseDotNet` step in `Build/Azure/pipelines/templates/build-job.yml`. The suite is small and fast (~15s), so filtering is rarely needed — run the whole project.
+
 ## BUGCHECK-gated tests
 
 Test fixtures wrapped in `#if BUGCHECK` (internal-invariant unit tests that drive `#if BUGCHECK`-gated test hooks on the core library — e.g. `QueryCacheEvictionTests` driving `QueryCache.RunSweepNow` / `BucketCount`) only compile in **Debug / Testing / Azure** configurations. `BUGCHECK` is defined in `Source/LinqToDB/LinqToDB.csproj` and mirrored into `Tests/Directory.Build.props` so the test project sees the same symbol. Consequences:

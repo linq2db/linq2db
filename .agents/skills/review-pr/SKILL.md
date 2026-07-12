@@ -87,6 +87,16 @@ Before spawning the reviewers, orient via the knowledge base (skip silently if `
 
 Reserve `/kb-ask` for cross-area synthesis. Orientation only — the diff + current source win. See [`agent-rules.md`](../../docs/agent-rules.md) → *Consult the knowledge base*.
 
+### 3d. Review the rule's documentation page (analyzer / rule PRs)
+
+When the PR adds or changes an analyzer diagnostic rule, review the documentation page the rule points at — the `DiagnosticDescriptor.helpLinkUri` target (typically a `linq2db/linq2db` wiki page such as `wiki/L2DB1001`). The wiki lives in a **separate repo** (not part of the PR diff), so a rule change can ship with a stale or missing doc page unless explicitly checked. Fetch the page (`WebFetch` the raw wiki markdown, e.g. `https://raw.githubusercontent.com/wiki/linq2db/linq2db/<Page>.md`) and confirm:
+
+- the page **exists and resolves** — a shipped `helpLinkUri` that 404s is a finding;
+- its documented behavior **matches the code at PR HEAD** — coverage families, non-fixable shapes, severity, and any `.editorconfig` option keys;
+- the rule id / category / severity are **consistent** across the descriptor, `AnalyzerReleases.*.md`, the packed `readme.md`, and the wiki page.
+
+Surface any mismatch as a finding (a wrong/missing doc page for a user-facing rule is user-facing). Skip this step for non-analyzer PRs.
+
 ### 4. Pre-review confirmation
 
 After the target-branch check passes and the change summary is in hand, ask the user two bundled questions in a single prompt so both answers land in one reply (per `agent-rules.md` → **Batching and user interaction**):
