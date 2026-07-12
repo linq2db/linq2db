@@ -845,5 +845,54 @@ class C
 
 			return Verify.VerifyAsync(source, source);
 		}
+
+		[Test]
+		public Task DoesNotOfferFixForNTileInAnonymousObjectMemberThatWouldWiden()
+		{
+			// An anonymous-object member is type-inferred like a `var` slot: legacy NTile ToValue() is int while
+			// Sql.Window.NTile returns long, so the fix would silently widen the member's inferred type. It is
+			// withheld (the diagnostic still reports).
+			const string source = """
+				using LinqToDB;
+
+				class C
+				{
+					void M(int x)
+					{
+						var r = new { N = {|L2DB1001:Sql.Ext.NTile(4).Over().OrderBy(x).ToValue()|} };
+					}
+				}
+				""";
+
+			return Verify.VerifyAsync(source, source);
+		}
+
+		[Test]
+		public Task OffersFixInVarSlotWhenReturnTypeIsIdentical()
+			// RowNumber returns long in both the legacy ToValue() slot and Sql.Window, so a `var` slot's inferred
+			// type is unchanged by the rewrite — the identical-type inferred-context path offers the fix.
+			=> Verify.VerifyAsync(
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					void M(int x)
+					{
+						var r = {|L2DB1001:Sql.Ext.RowNumber().Over().OrderBy(x).ToValue()|};
+					}
+				}
+				""",
+				"""
+				using LinqToDB;
+
+				class C
+				{
+					void M(int x)
+					{
+						var r = Sql.Window.RowNumber(f => f.OrderBy(x));
+					}
+				}
+				""");
 	}
 }
