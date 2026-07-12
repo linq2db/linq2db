@@ -1045,7 +1045,15 @@ namespace Tests.LinqToDB.CLI
 
 			await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(20)).ConfigureAwait(false);
 
-			return new CliProcessResult(process.ExitCode, await outputTask.ConfigureAwait(false), await errorTask.ConfigureAwait(false));
+			return new CliProcessResult(NormalizeExitCode(process.ExitCode), await outputTask.ConfigureAwait(false), await errorTask.ConfigureAwait(false));
+		}
+
+		static int NormalizeExitCode(int exitCode)
+		{
+			// On non-Windows OSes, a negative process exit code wraps to its unsigned byte
+			// representation (e.g. -1 -> 255); sign-extend the low byte so negative CLI
+			// status codes compare consistently across platforms.
+			return unchecked((sbyte)exitCode);
 		}
 
 		sealed record CliProcessResult(int ExitCode, string Output, string Error);

@@ -1,10 +1,5 @@
 using System;
 
-using LinqToDB.CommandLine.Commands;
-using LinqToDB.CommandLine.Options;
-using LinqToDB.CommandLine.Commands.Skill;
-using LinqToDB.CommandLine.Commands.Query;
-
 namespace LinqToDB.CommandLine
 {
 	/// <summary>
@@ -21,7 +16,7 @@ namespace LinqToDB.CommandLine
 		/// </summary>
 		public const int INVALID_ARGUMENTS = -1;
 		/// <summary>
-		/// Command failed with unhadnled exception.
+		/// Command failed with unhandled exception.
 		/// </summary>
 		public const int INTERNAL_ERROR    = -2;
 		/// <summary>

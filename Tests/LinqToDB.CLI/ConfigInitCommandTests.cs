@@ -140,6 +140,18 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task ConfigInitRejectsMissingEnvironmentVariableInConfigPath()
+		{
+			var result = await RunCli(new TestCliEnvironment(), "config-init", "--config", "%MISSING_CONFIG_INIT_DIR%\\query.json", "--provider", "SQLite", "--connection-string", "Data Source=data.db");
+
+			{
+				(result.ExitCode).ShouldBe(-1);
+				(result.Output).ShouldBeEmpty();
+				(result.Error).ShouldContain("Environment variable 'MISSING_CONFIG_INIT_DIR' referenced by option '--config' is not set.");
+			}
+		}
+
+		[Test]
 		public async Task ConfigInitRejectsReservedMcpProfileName()
 		{
 			var result = await RunCli(new TestCliEnvironment(), "config-init", "--profile", "mcp", "--provider", "SQLite", "--connection-string", "Data Source=data.db");

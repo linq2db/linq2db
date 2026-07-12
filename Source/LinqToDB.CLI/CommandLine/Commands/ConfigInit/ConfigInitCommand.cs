@@ -126,8 +126,15 @@ namespace LinqToDB.CommandLine.Commands.ConfigInit
 				throw new InvalidOperationException($"Not all options handled by {Name} command");
 			}
 
+			var configPath = new ConnectionSettingsResolver(environment).ResolvePath(QueryExecutionCliOptions.Config, (string?)config) ?? DefaultConfigPath;
+
+			// A missing %NAME%/${NAME} expansion already reported its own diagnostic and
+			// returned a sentinel value that can't be used as a real path.
+			if (configPath.Contains('\0', StringComparison.Ordinal))
+				return StatusCodes.INVALID_ARGUMENTS;
+
 			var values = new ConfigInitValues(
-				new ConnectionSettingsResolver(environment).ResolvePath(QueryExecutionCliOptions.Config, (string?)config) ?? DefaultConfigPath,
+				configPath,
 				(string?)profile ?? DefaultProfileName,
 				(string?)description,
 				(string?)provider,
