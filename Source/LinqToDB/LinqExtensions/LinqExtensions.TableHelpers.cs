@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using JetBrains.Annotations;
 
 using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.Metadata;
 using LinqToDB.Internal.Reflection;
 using LinqToDB.Mapping;
 
@@ -43,7 +44,7 @@ namespace LinqToDB
 		/// resolved through <c>Sql.SqlID</c>.
 		/// </para>
 		/// </remarks>
-		/// <ai-tags group="Configuration" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Configuration, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> TableID<T>(this ITable<T> table, [SqlQueryDependent] string? id)
@@ -66,7 +67,7 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The name affects SQL semantics and is emitted into SQL text according to provider rules.
 		/// </remarks>
-		/// <ai-tags group="Configuration" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Configuration, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> TableName<T>(this ITable<T> table, [SqlQueryDependent] string name)
@@ -100,7 +101,7 @@ namespace LinqToDB
 		/// The name affects SQL semantics and is emitted into SQL text according to provider rules.
 		/// </para>
 		/// </remarks>
-		/// <ai-tags group="Configuration" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Configuration, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> DatabaseName<T>(this ITable<T> table, [SqlQueryDependent] string? name)
@@ -127,7 +128,7 @@ namespace LinqToDB
 		/// The name affects SQL semantics and is emitted into SQL text according to provider rules.
 		/// </para>
 		/// </remarks>
-		/// <ai-tags group="Configuration" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Configuration, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> ServerName<T>(this ITable<T> table, [SqlQueryDependent] string? name)
@@ -154,7 +155,7 @@ namespace LinqToDB
 		/// The name affects SQL semantics and is emitted into SQL text according to provider rules.
 		/// </para>
 		/// </remarks>
-		/// <ai-tags group="Configuration" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Configuration, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> SchemaName<T>(this ITable<T> table, [SqlQueryDependent] string? name)
@@ -185,7 +186,7 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The template affects SQL semantics and is emitted into SQL text according to provider rules.
 		/// </remarks>
-		/// <ai-tags group="Configuration" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Configuration, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> WithTableExpression<T>(this ITable<T> table, [SqlQueryDependent] string expression)

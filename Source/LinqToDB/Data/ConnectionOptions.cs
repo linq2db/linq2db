@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using LinqToDB.DataProvider;
 using LinqToDB.Interceptors;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Metadata;
 using LinqToDB.Internal.Options;
 using LinqToDB.Mapping;
 using LinqToDB.Remote;
@@ -22,7 +23,6 @@ namespace LinqToDB.Data
 	/// context-reapplicable connection settings can be changed; connection string, provider, and
 	/// similar creation-time settings are not reconfigured on an already-created context.
 	/// </remarks>
-	/// <ai-tags group="Configuration" affects="ConnectionConfiguration" pipeline="Connection,Execution" provider="ProviderDefined" />
 	/// <param name="ConfigurationString">
 	/// Gets configuration string name to use with <see cref="DataConnection"/> instance.
 	/// </param>
@@ -63,6 +63,7 @@ namespace LinqToDB.Data
 	/// Allows descriptor modification.
 	/// When not specified, application-wide callback <see cref="MappingSchema.EntityDescriptorCreatedCallback"/> called.
 	/// </param>
+	[AiTags(Groups = AiGroup.Configuration, Affects = AiAffects.ConnectionConfiguration, Pipeline = AiPipeline.Connection | AiPipeline.Execution, Provider = AiProvider.ProviderDefined)]
 	public sealed record ConnectionOptions
 	(
 		string?                                         ConfigurationString       = default,

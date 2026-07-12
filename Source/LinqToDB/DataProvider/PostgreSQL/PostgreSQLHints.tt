@@ -10,6 +10,7 @@
 using System;
 using System.Linq.Expressions;
 
+using LinqToDB.Internal.Metadata;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.DataProvider.PostgreSQL
@@ -32,7 +33,7 @@ void GenerateQuery(string hint, string hint2, string sqlHint = null)
 		/// <summary>
 		/// Adds a PostgreSQL <c><#= sqlHint ?? (hint2?.Length == 0 ? hint : hint + " " + hint2) #></c> subquery hint.
 		/// </summary>
-		/// <ai-tags group="Hints" hint-type="SubQuery" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.SubQuery, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(<#= hint #><#= hint2 #>HintImpl))]
 		public static IPostgreSQLSpecificQueryable<TSource> <#= hint #><#= hint2 #>Hint<TSource>(
 			this IPostgreSQLSpecificQueryable<TSource> query,

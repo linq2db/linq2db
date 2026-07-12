@@ -114,7 +114,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// </remarks>
-		/// <ai-tags group="Helpers" execution="Immediate" composability="Terminal" affects="QueryResult" />
+		[AiTags(Groups = AiGroup.Helpers, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.QueryResult)]
 		[Pure]
 		public static T Select<T>(
 							this IDataContext dataContext,
@@ -148,7 +148,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// </remarks>
-		/// <ai-tags group="Helpers" execution="Immediate" composability="Terminal" affects="QueryResult" />
+		[AiTags(Groups = AiGroup.Helpers, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.QueryResult)]
 		[Pure]
 		public static async Task<T> SelectAsync<T>(
 							this IDataContext dataContext,
@@ -204,7 +204,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// </remarks>
-		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement)]
 		public static int InsertOrUpdate<T>(
 							this ITable<T> target,
 			[InstantHandle] Expression<Func<T>> insertSetter,
@@ -242,7 +242,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// </remarks>
-		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement)]
 		public static Task<int> InsertOrUpdateAsync<T>(
 							this ITable<T> target,
 			[InstantHandle] Expression<Func<T>> insertSetter,
@@ -284,7 +284,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// </remarks>
-		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement)]
 		public static int InsertOrUpdate<T>(
 							this ITable<T> target,
 			[InstantHandle] Expression<Func<T>> insertSetter,
@@ -328,7 +328,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// </remarks>
-		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement)]
 		public static Task<int> InsertOrUpdateAsync<T>(
 							this ITable<T> target,
 			[InstantHandle] Expression<Func<T>> insertSetter,
@@ -373,7 +373,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// </remarks>
-		/// <ai-tags group="Helpers" execution="Immediate" composability="Terminal" affects="DdlStatement" pipeline="SqlAST,SqlText" />
+		[AiTags(Groups = AiGroup.Helpers, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DdlStatement, Pipeline = AiPipeline.SqlAST | AiPipeline.SqlText)]
 		public static int Drop<T>(this ITable<T> target, bool throwExceptionIfNotExists = true)
 			where T : notnull
 		{
@@ -411,7 +411,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// </remarks>
-		/// <ai-tags group="Helpers" execution="Immediate" composability="Terminal" affects="DdlStatement" pipeline="SqlAST,SqlText" />
+		[AiTags(Groups = AiGroup.Helpers, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DdlStatement, Pipeline = AiPipeline.SqlAST | AiPipeline.SqlText)]
 		public static async Task<int> DropAsync<T>(
 			this ITable<T> target,
 			bool throwExceptionIfNotExists = true,
@@ -454,7 +454,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// </remarks>
-		/// <ai-tags group="Helpers" execution="Immediate" composability="Terminal" affects="DdlStatement" pipeline="SqlAST,SqlText" />
+		[AiTags(Groups = AiGroup.Helpers, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DdlStatement, Pipeline = AiPipeline.SqlAST | AiPipeline.SqlText)]
 		public static int Truncate<T>(this ITable<T> target, bool resetIdentity = true)
 			where T : notnull
 		{
@@ -481,7 +481,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// </remarks>
-		/// <ai-tags group="Helpers" execution="Immediate" composability="Terminal" affects="DdlStatement" pipeline="SqlAST,SqlText" />
+		[AiTags(Groups = AiGroup.Helpers, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DdlStatement, Pipeline = AiPipeline.SqlAST | AiPipeline.SqlText)]
 		public static Task<int> TruncateAsync<T>(
 			this ITable<T> target,
 			bool resetIdentity = true,
@@ -516,7 +516,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
 		/// </remarks>
-		/// <ai-tags group="QueryDirectives" execution="Deferred" composability="Composable" affects="QueryStructure" />
+		[AiTags(Groups = AiGroup.QueryDirectives, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.QueryStructure)]
 		[LinqTunnel]
 		[Pure]
 		public static IQueryable<TSource> Take<TSource>(
@@ -550,7 +550,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
 		/// </remarks>
-		/// <ai-tags group="QueryDirectives" execution="Deferred" composability="Composable" affects="QueryStructure" />
+		[AiTags(Groups = AiGroup.QueryDirectives, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.QueryStructure)]
 		[LinqTunnel]
 		[Pure]
 		public static IQueryable<TSource> Take<TSource>(
@@ -585,7 +585,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
 		/// </remarks>
-		/// <ai-tags group="QueryDirectives" execution="Deferred" composability="Composable" affects="QueryStructure" />
+		[AiTags(Groups = AiGroup.QueryDirectives, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.QueryStructure)]
 		[LinqTunnel]
 		[Pure]
 		public static IQueryable<TSource> Take<TSource>(
@@ -617,7 +617,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
 		/// </remarks>
-		/// <ai-tags group="QueryDirectives" execution="Deferred" composability="Composable" affects="QueryStructure" />
+		[AiTags(Groups = AiGroup.QueryDirectives, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.QueryStructure)]
 		[LinqTunnel]
 		[Pure]
 		public static IQueryable<TSource> Skip<TSource>(
@@ -649,7 +649,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// </remarks>
-		/// <ai-tags group="Helpers" execution="Immediate" composability="Terminal" affects="QueryResult" />
+		[AiTags(Groups = AiGroup.Helpers, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.QueryResult)]
 		[Pure]
 		public static TSource ElementAt<TSource>(
 					   this IQueryable<TSource> source,
@@ -681,7 +681,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// </remarks>
-		/// <ai-tags group="Helpers" execution="Immediate" composability="Terminal" affects="QueryResult" />
+		[AiTags(Groups = AiGroup.Helpers, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.QueryResult)]
 		[Pure]
 		public static Task<TSource> ElementAtAsync<TSource>(
 					   this IQueryable<TSource> source,
@@ -713,7 +713,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// </remarks>
-		/// <ai-tags group="Helpers" execution="Immediate" composability="Terminal" affects="QueryResult" />
+		[AiTags(Groups = AiGroup.Helpers, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.QueryResult)]
 		[Pure]
 		public static TSource ElementAtOrDefault<TSource>(
 					   this IQueryable<TSource> source,
@@ -743,7 +743,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// </remarks>
-		/// <ai-tags group="Helpers" execution="Immediate" composability="Terminal" affects="QueryResult" />
+		[AiTags(Groups = AiGroup.Helpers, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.QueryResult)]
 		[Pure]
 		public static Task<TSource> ElementAtOrDefaultAsync<TSource>(
 					   this IQueryable<TSource> source,
@@ -783,7 +783,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
 		/// </remarks>
-		/// <ai-tags group="QueryDirectives" execution="Deferred" composability="Composable" affects="QueryStructure" />
+		[AiTags(Groups = AiGroup.QueryDirectives, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.QueryStructure)]
 		[LinqTunnel]
 		[Pure]
 		public static IQueryable<TSource> Having<TSource>(
@@ -819,7 +819,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
 		/// </remarks>
-		/// <ai-tags group="QueryDirectives" execution="Deferred" composability="Composable" affects="QueryStructure" />
+		[AiTags(Groups = AiGroup.QueryDirectives, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.QueryStructure)]
 		[LinqTunnel]
 		[Pure]
 		public static IOrderedQueryable<TSource> ThenOrBy<TSource, TKey>(
@@ -851,7 +851,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
 		/// </remarks>
-		/// <ai-tags group="QueryDirectives" execution="Deferred" composability="Composable" affects="QueryStructure" />
+		[AiTags(Groups = AiGroup.QueryDirectives, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.QueryStructure)]
 		[LinqTunnel]
 		[Pure]
 		public static IOrderedQueryable<TSource> ThenOrByDescending<TSource, TKey>(
@@ -1000,7 +1000,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
 		/// </remarks>
-		/// <ai-tags group="QueryDirectives" execution="Deferred" composability="Composable" affects="QueryStructure" />
+		[AiTags(Groups = AiGroup.QueryDirectives, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.QueryStructure)]
 		[LinqTunnel]
 		[Pure]
 		public static IQueryable<TSource> RemoveOrderBy<TSource>(this IQueryable<TSource> source)
@@ -1031,7 +1031,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
 		/// </remarks>
-		/// <ai-tags group="QueryDirectives" execution="Deferred" composability="Composable" affects="QueryStructure" />
+		[AiTags(Groups = AiGroup.QueryDirectives, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.QueryStructure)]
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TSource> Join<TSource>(
@@ -1069,7 +1069,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
 		/// </remarks>
-		/// <ai-tags group="QueryDirectives" execution="Deferred" composability="Composable" affects="QueryStructure" />
+		[AiTags(Groups = AiGroup.QueryDirectives, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.QueryStructure)]
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TResult> Join<TOuter, TInner, TResult>(
@@ -1296,7 +1296,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
 		/// </remarks>
-		/// <ai-tags group="QueryDirectives" execution="Deferred" composability="Composable" affects="QueryStructure" />
+		[AiTags(Groups = AiGroup.QueryDirectives, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.QueryStructure)]
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TSource> AsCte<TSource>(this IQueryable<TSource> source)
@@ -1323,7 +1323,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
 		/// </remarks>
-		/// <ai-tags group="QueryDirectives" execution="Deferred" composability="Composable" affects="QueryStructure" />
+		[AiTags(Groups = AiGroup.QueryDirectives, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.QueryStructure)]
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TSource> AsCte<TSource>(
@@ -1400,7 +1400,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
 		/// </remarks>
-		/// <ai-tags group="Helpers" execution="Deferred" composability="Composable" affects="QueryRoot" />
+		[AiTags(Groups = AiGroup.Helpers, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.QueryRoot)]
 		public static IQueryable<TElement> AsQueryable<TElement>(
 			this IEnumerable<TElement> source,
 			IDataContext dataContext)
@@ -1435,7 +1435,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
 		/// </remarks>
-		/// <ai-tags group="QueryDirectives" execution="Deferred" composability="Composable" affects="QueryStructure" />
+		[AiTags(Groups = AiGroup.QueryDirectives, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.QueryStructure)]
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TSource> AsSubQuery<TSource>(this IQueryable<TSource> source)
@@ -1484,7 +1484,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
 		/// </remarks>
-		/// <ai-tags group="QueryDirectives" execution="Deferred" composability="Composable" affects="QueryStructure" />
+		[AiTags(Groups = AiGroup.QueryDirectives, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.QueryStructure)]
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TSource> AsSubQuery<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string queryName)
@@ -1541,7 +1541,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
 		/// </remarks>
-		/// <ai-tags group="QueryDirectives" execution="Deferred" composability="Composable" affects="QueryStructure" />
+		[AiTags(Groups = AiGroup.QueryDirectives, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.QueryStructure)]
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TSource> QueryName<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string queryName)
@@ -1597,7 +1597,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
 		/// </remarks>
-		/// <ai-tags group="QueryDirectives" execution="Deferred" composability="Composable" affects="QueryStructure" />
+		[AiTags(Groups = AiGroup.QueryDirectives, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.QueryStructure)]
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TSource> InlineParameters<TSource>(this IQueryable<TSource> source)
@@ -1628,7 +1628,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
 		/// </remarks>
-		/// <ai-tags group="QueryDirectives" execution="Deferred" composability="Composable" affects="QueryStructure" />
+		[AiTags(Groups = AiGroup.QueryDirectives, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.QueryStructure)]
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<IGrouping<TKey, TElement>> DisableGuard<TKey, TElement>(this IQueryable<IGrouping<TKey, TElement>> grouping)
@@ -1660,7 +1660,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
 		/// </remarks>
-		/// <ai-tags group="QueryDirectives" execution="Deferred" composability="Composable" affects="QueryStructure" />
+		[AiTags(Groups = AiGroup.QueryDirectives, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.QueryStructure)]
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TSource> HasUniqueKey<TSource, TKey>(
@@ -1704,7 +1704,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
 		/// </remarks>
-		/// <ai-tags group="Helpers" execution="Deferred" composability="Composable" affects="QueryStructure" />
+		[AiTags(Groups = AiGroup.Helpers, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.QueryStructure)]
 		public static IQueryable<TSource> UnionAll<TSource>(
 			 this IQueryable<TSource> source1,
 				  IEnumerable<TSource> source2)
@@ -1725,7 +1725,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
 		/// </remarks>
-		/// <ai-tags group="Helpers" execution="Deferred" composability="Composable" affects="QueryStructure" />
+		[AiTags(Groups = AiGroup.Helpers, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.QueryStructure)]
 		public static IQueryable<TSource> ExceptAll<TSource>(
 			 this IQueryable<TSource> source1,
 				  IEnumerable<TSource> source2)
@@ -1754,7 +1754,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
 		/// </remarks>
-		/// <ai-tags group="Helpers" execution="Deferred" composability="Composable" affects="QueryStructure" />
+		[AiTags(Groups = AiGroup.Helpers, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.QueryStructure)]
 		public static IQueryable<TSource> IntersectAll<TSource>(
 			 this IQueryable<TSource> source1,
 				  IEnumerable<TSource> source2)
@@ -1787,7 +1787,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
 		/// </remarks>
-		/// <ai-tags group="QueryDirectives" execution="Deferred" composability="Composable" affects="QueryStructure" />
+		[AiTags(Groups = AiGroup.QueryDirectives, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.QueryStructure)]
 		[LinqTunnel]
 		[Pure]
 		public static IQueryable<TSource> IgnoreFilters<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] params Type[] entityTypes)
@@ -1890,7 +1890,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
 		/// </remarks>
-		/// <ai-tags group="QueryDirectives" execution="Deferred" composability="Composable" affects="QueryStructure" />
+		[AiTags(Groups = AiGroup.QueryDirectives, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.QueryStructure)]
 		[LinqTunnel]
 		[Pure]
 		public static IQueryable<TSource> TagQuery<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string tagValue)
@@ -1923,7 +1923,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
 		/// </remarks>
-		/// <ai-tags group="QueryDirectives" execution="Deferred" composability="Composable" affects="QueryStructure" />
+		[AiTags(Groups = AiGroup.QueryDirectives, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.QueryStructure)]
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> TagQuery<T>(this ITable<T> table, [SqlQueryDependent] string tagValue) where T : notnull
@@ -1953,7 +1953,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// </para>
 		/// </remarks>
-		/// <ai-tags group="Helpers" execution="Immediate" composability="Terminal" affects="GeneratedSql" />
+		[AiTags(Groups = AiGroup.Helpers, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.GeneratedSql)]
 		public static QuerySql ToSqlQuery<T>(this IQueryable<T> query, SqlGenerationOptions? options = null)
 		{
 			if (query is LoadWithQueryableBase<T> loadWith)
@@ -1972,7 +1972,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// </remarks>
-		/// <ai-tags group="Helpers" execution="Immediate" composability="Terminal" affects="GeneratedSql" />
+		[AiTags(Groups = AiGroup.Helpers, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.GeneratedSql)]
 		public static QuerySql ToSqlQuery<T>(this IUpdatable<T> query, SqlGenerationOptions? options = null)
 		{
 			var expressionQuery = (IExpressionQuery)((Updatable<T>)query).Query.GetLinqToDBSource();
@@ -1986,7 +1986,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// </remarks>
-		/// <ai-tags group="Helpers" execution="Immediate" composability="Terminal" affects="GeneratedSql" />
+		[AiTags(Groups = AiGroup.Helpers, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.GeneratedSql)]
 		public static QuerySql ToSqlQuery<T>(this IValueInsertable<T> query, SqlGenerationOptions? options = null)
 		{
 			var expressionQuery = (IExpressionQuery)((ValueInsertable<T>)query).Query.GetLinqToDBSource();
@@ -2000,7 +2000,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// </remarks>
-		/// <ai-tags group="Helpers" execution="Immediate" composability="Terminal" affects="GeneratedSql" />
+		[AiTags(Groups = AiGroup.Helpers, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.GeneratedSql)]
 		public static QuerySql ToSqlQuery<TSource, TTarget>(this ISelectInsertable<TSource, TTarget> query, SqlGenerationOptions? options = null)
 		{
 			var expressionQuery = (IExpressionQuery)((SelectInsertable<TSource, TTarget>)query).Query.GetLinqToDBSource();
@@ -2017,7 +2017,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// </para>
 		/// </remarks>
-		/// <ai-tags group="Helpers" execution="Immediate" composability="Terminal" affects="GeneratedSql" />
+		[AiTags(Groups = AiGroup.Helpers, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.GeneratedSql)]
 		public static QuerySql ToSqlQuery<TSource>(this IMultiInsertInto<TSource> query, SqlGenerationOptions? options = null)
 		{
 			var expressionQuery = (IExpressionQuery)((MultiInsertQuery<TSource>)query).Query.GetLinqToDBSource();
@@ -2034,7 +2034,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// </para>
 		/// </remarks>
-		/// <ai-tags group="Helpers" execution="Immediate" composability="Terminal" affects="GeneratedSql" />
+		[AiTags(Groups = AiGroup.Helpers, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.GeneratedSql)]
 		public static QuerySql ToSqlQuery<TSource>(this IMultiInsertElse<TSource> query, SqlGenerationOptions? options = null)
 		{
 			var expressionQuery = (IExpressionQuery)((MultiInsertQuery<TSource>)query).Query.GetLinqToDBSource();
@@ -2051,7 +2051,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// </para>
 		/// </remarks>
-		/// <ai-tags group="Helpers" execution="Immediate" composability="Terminal" affects="GeneratedSql" />
+		[AiTags(Groups = AiGroup.Helpers, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.GeneratedSql)]
 		public static QuerySql ToSqlQuery<TSource, TTarget>(this IMergeable<TSource, TTarget> query, SqlGenerationOptions? options = null)
 		{
 			var expressionQuery = (IExpressionQuery)((MergeQuery<TSource, TTarget>)query).Query.GetLinqToDBSource();
@@ -2066,7 +2066,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// </remarks>
-		/// <ai-tags group="Helpers" execution="Immediate" composability="Terminal" affects="QueryResult" />
+		[AiTags(Groups = AiGroup.Helpers, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.QueryResult)]
 		[Pure]
 		public static TResult AggregateExecute<TSource, TResult>(this IQueryable<TSource> source, Expression<Func<IEnumerable<TSource>, TResult>> aggregate)
 		{
@@ -2088,7 +2088,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// </remarks>
-		/// <ai-tags group="Helpers" execution="Immediate" composability="Terminal" affects="QueryResult" />
+		[AiTags(Groups = AiGroup.Helpers, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.QueryResult)]
 		[Pure]
 		public static Task<TResult> AggregateExecuteAsync<TSource, TResult>(this IQueryable<TSource> source, Expression<Func<IEnumerable<TSource>, TResult>> aggregate, CancellationToken cancellationToken = default)
 		{

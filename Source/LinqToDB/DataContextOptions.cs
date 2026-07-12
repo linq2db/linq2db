@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using LinqToDB.Data;
 using LinqToDB.Interceptors;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Metadata;
 using LinqToDB.Internal.Options;
 using LinqToDB.Linq.Translation;
 using LinqToDB.Remote;
@@ -20,7 +21,6 @@ namespace LinqToDB
 	/// configuration. Use <see cref="IDataContext.UseOptions"/> only for scoped temporary overrides
 	/// on an existing context instance.
 	/// </remarks>
-	/// <ai-tags group="Configuration" affects="Configuration" pipeline="ExpressionTree,SqlAST,SqlText,Execution" provider="ProviderDefined" />
 	/// <param name="CommandTimeout">
 	/// The command timeout in seconds, or <see langword="null"/> if none has been set.
 	/// Negative timeout value means that default timeout will be used.
@@ -33,6 +33,7 @@ namespace LinqToDB
 	/// <param name="MemberTranslators">
 	/// Gets custom member translators used during expression translation.
 	/// </param>
+	[AiTags(Groups = AiGroup.Configuration, Affects = AiAffects.Configuration, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText | AiPipeline.Execution, Provider = AiProvider.ProviderDefined)]
 	public sealed record DataContextOptions
 	(
 		int?                              CommandTimeout    = default,

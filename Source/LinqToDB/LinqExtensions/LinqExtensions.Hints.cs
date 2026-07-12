@@ -5,6 +5,7 @@ using JetBrains.Annotations;
 
 using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.Metadata;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
@@ -25,7 +26,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// See <see cref="TableHint{TSource}(ITable{TSource},string)"/> for SQL semantics and provider contract.
 		/// </remarks>
-		/// <ai-tags group="Hints" hint-type="Table" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Table, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TableHint, typeof(TableSpecHintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.TableHint, typeof(TableSpecHintExtensionBuilder))]
@@ -55,7 +56,7 @@ namespace LinqToDB
 		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// Hint syntax and interpretation are provider-defined.
 		/// </remarks>
-		/// <ai-tags group="Hints" hint-type="Table" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Table, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TableHint, typeof(TableSpecHintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.TableHint, typeof(TableSpecHintExtensionBuilder))]
@@ -85,7 +86,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// See <see cref="TableHint{TSource}(ITable{TSource},string)"/> for SQL semantics and provider contract.
 		/// </remarks>
-		/// <ai-tags group="Hints" hint-type="Table" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Table, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TableHint, typeof(TableSpecHintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.TableHint, typeof(TableSpecHintExtensionBuilder))]
@@ -118,7 +119,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// See <see cref="TableHint{TSource}(ITable{TSource},string)"/> for SQL semantics and provider contract.
 		/// </remarks>
-		/// <ai-tags group="Hints" hint-type="Table" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Table, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TableHint, typeof(TableSpecHintExtensionBuilder), " ", " ")]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.TableHint, typeof(TableSpecHintExtensionBuilder), " ", ", ")]
@@ -157,7 +158,7 @@ namespace LinqToDB
 		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// Hint syntax and interpretation are provider-defined.
 		/// </remarks>
-		/// <ai-tags group="Hints" hint-type="TablesInScope" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.TablesInScope, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TablesInScopeHint, typeof(TableSpecHintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.TablesInScopeHint, typeof(TableSpecHintExtensionBuilder))]
@@ -187,7 +188,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// See <see cref="TablesInScopeHint{TSource}(IQueryable{TSource},string)"/> for SQL semantics and provider contract.
 		/// </remarks>
-		/// <ai-tags group="Hints" hint-type="TablesInScope" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.TablesInScope, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TablesInScopeHint, typeof(TableSpecHintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.TablesInScopeHint, typeof(TableSpecHintExtensionBuilder))]
@@ -219,7 +220,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// See <see cref="TablesInScopeHint{TSource}(IQueryable{TSource},string)"/> for SQL semantics and provider contract.
 		/// </remarks>
-		/// <ai-tags group="Hints" hint-type="TablesInScope" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.TablesInScope, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TablesInScopeHint, typeof(TableSpecHintExtensionBuilder), " ", " ")]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.TablesInScopeHint, typeof(TableSpecHintExtensionBuilder), " ", ", ")]
@@ -258,7 +259,7 @@ namespace LinqToDB
 		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// Hint syntax and interpretation are provider-defined.
 		/// </remarks>
-		/// <ai-tags group="Hints" hint-type="Index" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Index, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.IndexHint, typeof(TableSpecHintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.IndexHint, typeof(HintExtensionBuilder))]
@@ -288,7 +289,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// See <see cref="IndexHint{TSource}(ITable{TSource},string)"/> for SQL semantics and provider contract.
 		/// </remarks>
-		/// <ai-tags group="Hints" hint-type="Index" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Index, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.IndexHint, typeof(TableSpecHintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.IndexHint, typeof(HintWithParameterExtensionBuilder))]
@@ -321,7 +322,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// See <see cref="IndexHint{TSource}(ITable{TSource},string)"/> for SQL semantics and provider contract.
 		/// </remarks>
-		/// <ai-tags group="Hints" hint-type="Index" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Index, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.IndexHint, typeof(TableSpecHintExtensionBuilder), " ", " ")]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.IndexHint, typeof(HintWithParametersExtensionBuilder))]
@@ -360,7 +361,7 @@ namespace LinqToDB
 		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// Hint syntax and interpretation are provider-defined.
 		/// </remarks>
-		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Join, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(Sql.QueryExtensionScope.JoinHint, typeof(NoneExtensionBuilder))]
 		public static IQueryable<TSource> JoinHint<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string hint)
@@ -392,7 +393,7 @@ namespace LinqToDB
 		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// Hint syntax and interpretation are provider-defined.
 		/// </remarks>
-		/// <ai-tags group="Hints" hint-type="SubQuery" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.SubQuery, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.SubQueryHint, typeof(HintExtensionBuilder))]
 		public static IQueryable<TSource> SubQueryHint<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string hint)
@@ -420,7 +421,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// See <see cref="SubQueryHint{TSource}(IQueryable{TSource},string)"/> for SQL semantics and provider contract.
 		/// </remarks>
-		/// <ai-tags group="Hints" hint-type="SubQuery" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.SubQuery, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.SubQueryHint, typeof(HintWithParameterExtensionBuilder))]
 		public static IQueryable<TSource> SubQueryHint<TSource, TParam>(
@@ -453,7 +454,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// See <see cref="SubQueryHint{TSource}(IQueryable{TSource},string)"/> for SQL semantics and provider contract.
 		/// </remarks>
-		/// <ai-tags group="Hints" hint-type="SubQuery" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.SubQuery, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.SubQueryHint, typeof(HintWithParametersExtensionBuilder))]
 		public static IQueryable<TSource> SubQueryHint<TSource, TParam>(
@@ -490,7 +491,7 @@ namespace LinqToDB
 		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// Hint syntax and interpretation are provider-defined.
 		/// </remarks>
-		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Query, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.QueryHint, typeof(HintExtensionBuilder))]
 		public static IQueryable<TSource> QueryHint<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string hint)
@@ -518,7 +519,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// See <see cref="QueryHint{TSource}(IQueryable{TSource},string)"/> for SQL semantics and provider contract.
 		/// </remarks>
-		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Query, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.QueryHint, typeof(HintWithParameterExtensionBuilder))]
 		public static IQueryable<TSource> QueryHint<TSource, TParam>(
@@ -551,7 +552,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// See <see cref="QueryHint{TSource}(IQueryable{TSource},string)"/> for SQL semantics and provider contract.
 		/// </remarks>
-		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Query, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.QueryHint, typeof(HintWithParametersExtensionBuilder), " ")]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.QueryHint, typeof(HintWithParametersExtensionBuilder))]

@@ -10,6 +10,7 @@ using JetBrains.Annotations;
 
 using LinqToDB.Internal.Async;
 using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.Metadata;
 
 namespace LinqToDB
 {
@@ -71,7 +72,7 @@ namespace LinqToDB
 		///   - Materialization / Enumeration  -&gt; execute
 		/// </code>
 		/// </remarks>
-		/// <ai-tags group="NavigationLoading" execution="Deferred" composability="Composable" affects="JoinGraph" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.NavigationLoading, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.JoinGraph, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> LoadWithAsTable<T>(
@@ -207,7 +208,7 @@ namespace LinqToDB
 		/// such as <c>Enumerable.Empty&lt;T&gt;().AsQueryable()</c>), the eager-load directive is ignored and the query
 		/// is returned unchanged as a passthrough — mirroring EF Core <c>Include</c> behavior.
 		/// </remarks>
-		/// <ai-tags group="NavigationLoading" execution="Deferred" composability="Composable" affects="JoinGraph" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.NavigationLoading, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.JoinGraph, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel]
 		[Pure]
 		public static ILoadWithQueryable<TEntity,TProperty> LoadWith<TEntity,TProperty>(

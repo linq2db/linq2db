@@ -398,7 +398,7 @@ namespace LinqToDB.Data
 		/// Executes the SQL command immediately (opens the data reader), then materializes rows
 		/// lazily as the returned sequence is enumerated.
 		/// </remarks>
-		/// <ai-tags execution="Immediate" composability="Terminal" affects="QueryResult" />
+		[AiTags(Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.QueryResult)]
 		public IEnumerable<T> Query<T>()
 		{
 			var dataConnection = GetDataConnection();
@@ -1099,7 +1099,7 @@ namespace LinqToDB.Data
 		/// Executes command and returns number of affected records.
 		/// </summary>
 		/// <returns>Number of records, affected by command execution.</returns>
-		/// <ai-tags execution="Immediate" composability="Terminal" affects="Data" />
+		[AiTags(Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.Data)]
 		public int Execute()
 		{
 			using var m = ActivityService.Start(ActivityID.CommandInfoExecute);
@@ -1252,7 +1252,7 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <typeparam name="T">Resulting value type.</typeparam>
 		/// <returns>Resulting value.</returns>
-		/// <ai-tags execution="Immediate" composability="Terminal" affects="QueryResult" />
+		[AiTags(Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.QueryResult)]
 		public T Execute<T>()
 		{
 			using var m = ActivityService.Start(ActivityID.CommandInfoExecuteT);
@@ -1432,7 +1432,7 @@ namespace LinqToDB.Data
 		/// The command executes immediately; use the returned <see cref="DataReaderAsync"/> to
 		/// iterate rows manually. Dispose the reader when done.
 		/// </remarks>
-		/// <ai-tags execution="Immediate" composability="Terminal" affects="QueryResult" />
+		[AiTags(Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.QueryResult)]
 		public DataReaderAsync ExecuteReader()
 		{
 			var dataConnection = GetDataConnection();

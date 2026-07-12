@@ -4,9 +4,10 @@ Context: PR #5376. MaceWindu raised (2026-05-30) whether inline `<ai-tags />` in
 right mechanism at all, versus a typed attribute or a sidecar spec. This note captures the decision
 reached while working through the tradeoffs, so it isn't lost between sessions.
 
-Status: **decided direction, not yet implemented.** No code changes made. Still open: audit the
-~700 existing `<ai-tags>`/`<ai-tags-defaults>` instances against this shape before converting, and
-decide whether/when to post this as a follow-up in the PR thread.
+Status: **migration complete.** All 777 `<ai-tags>`/`<ai-tags-defaults>` instances converted to
+`AiTagsAttribute`/`AiTagsDefaultsAttribute`; 0 remaining in XML-doc. Still open: `docs/api.md`
+regeneration/staleness, whether to post this as a follow-up in the PR thread, and whether to keep
+the legacy XML-doc fallback path in the generator now that nothing uses it.
 
 ## Options considered
 
@@ -213,13 +214,48 @@ CLR default (`0`/`null`), indistinguishable from "explicitly set to that value."
      (portable-TFM and analyzer gates both pass; `init`-accessor polyfill already available on the
      downlevel TFMs).
 
-## Remaining work before this is real end-to-end
+## Migration complete
+
+`.agents/scripts/Convert-AiTagsToAttributes.ps1` mechanically converted the remaining instances
+across 42 files (35 `.cs` + 7 `.tt` templates; the corresponding 7 `.generated.cs` T4 outputs were
+converted directly with the same transform rather than by re-running T4, so source and generated
+output stay textually consistent without a T4 tooling dependency). Combined with the 7-member
+hand-converted pilot: **777 `[AiTags]`/`[AiTagsDefaults]` attribute declarations, 0 remaining
+XML-doc `<ai-tags>` anywhere in `Source/LinqToDB`.**
+
+Two real bugs found and fixed while building the script (both worth remembering for the next
+regex-over-C#-source script):
+- .NET regex `$` in `(?m)` multiline mode matches just before `\n`, not before `\r\n` - `[ \t]*$`
+  silently failed to match every real (CRLF) file even though it matched hand-typed LF test
+  strings. Fixed with a captured `(\r?)` group re-emitted in the replacement.
+- `<ai-tags />` is not always the last XML-doc tag in a member's comment block (e.g.
+  `<remarks>` → `<ai-tags />` → `<returns>`, or a positional record's `<ai-tags />` followed by
+  several `<param>` tags). Converting in place there splits the `///` block around a C# attribute,
+  which is invalid (CS1587). Fixed with a second pass (`FloatAttributesPastTrailingDocs`) that
+  moves a converted attribute line down past any `///` lines immediately following it, landing it
+  right before the real declaration.
+
+**Verification**, isolating the conversion's effect from the pre-existing `docs/api.md` staleness
+(see below) via `git stash`: ran the generator on the identical current (non-stale) XML doc/assembly
+twice - once with only the 7-member pilot present (740 members still on the XML path) and once with
+the full 777-attribute migration applied. Same member universe both times (`XML members scanned:
+4133`, `API families: 2281` - identical). "Included members with AI metadata" went from 270 to 339,
+and every line in the diff is either a `Group=`→`Groups=` rename or a **strict superset** of the
+previous content (no row lost data, several rows gained fields). Tracked the surplus down: the old
+XML-based `ExtractAiTagsFromXml` never implemented the `<ai-tags-defaults>` merge that
+`docs/ai-tags.md` documents (`CommandInfo.Execute` etc. showed only `Execution=...;
+Composability=...; Affects=...;` before - missing `Groups`/`Pipeline`/`Provider` inherited from the
+class's defaults). The new attribute-based `FormatMergedAiTags` implements the merge correctly, so
+this is a real, incidental bug fix, not conversion noise. Full build green across `Testing`/net10.0,
+`Release`/{net10.0, net8.0, net9.0, netstandard2.0, net462}, plus `Tests/Linq/Tests.csproj`.
+
+## Remaining work
 
 1. Decide what to do about the discovered `docs/api.md` staleness (separate from this migration -
-   regenerate and commit, or leave for a dedicated pass).
-2. Mechanically convert the remaining ~740 instances (script, not by hand) - the 7 done so far were
-   hand-converted to validate the mechanism.
-3. Decide whether/when to post this as the promised follow-up to MaceWindu on PR #5376.
-4. Once migration is complete, consider whether the legacy XML `<ai-tags>` path in
-   `GenerateApiDocs.ps1` (and its `ValidateAiTagElement`/`FormatAiTagElement`/regex-fallback
-   functions) should be deleted, or kept as a permanent fallback.
+   regenerate and commit, or leave for a dedicated pass). Regenerating now would also surface the
+   defaults-merge fix above as real content changes, not just noise.
+2. Decide whether/when to post this as the promised follow-up to MaceWindu on PR #5376.
+3. Now that migration is complete, decide whether the legacy XML `<ai-tags>` path in
+   `GenerateApiDocs.ps1` (`ValidateAiTagElement`/`FormatAiTagElement`/`ExtractAiTagsFromXml`/the
+   regex fallback) should be deleted, or kept as a permanent fallback for future contributors who
+   might reach for the old XML-doc form out of habit.

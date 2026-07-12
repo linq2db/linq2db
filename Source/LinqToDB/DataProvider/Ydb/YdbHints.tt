@@ -11,6 +11,7 @@ using System;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Internal.Metadata;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.DataProvider.Ydb
@@ -25,7 +26,7 @@ namespace LinqToDB.DataProvider.Ydb
 		/// <summary>
 		/// Adds a YDB <c><#= sqlHint ?? name #></c> query hint.
 		/// </summary>
-		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Query, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(<#= name #>HintImpl))]
 		public static IYdbSpecificQueryable<TSource> <#= name #>Hint<TSource>(
 			this IYdbSpecificQueryable<TSource> query,
@@ -44,7 +45,7 @@ namespace LinqToDB.DataProvider.Ydb
 		/// <summary>
 		/// Adds a YDB <c><#= sqlHint ?? name #></c> query hint.
 		/// </summary>
-		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Query, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(<#= name #>HintQImpl))]
 		public static IYdbSpecificQueryable<TSource> <#= name #>Hint<TSource>(
 			this IQueryable<TSource> query,

@@ -41,7 +41,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
-		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static TTarget InsertWithOutput<TTarget>(
 			                this ITable<TTarget>      target,
 			[InstantHandle] Expression<Func<TTarget>> setter)
@@ -81,7 +81,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
-		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static ValueTask<TTarget> InsertWithOutputAsync<TTarget>(
 			                this ITable<TTarget>      target,
 			[InstantHandle] Expression<Func<TTarget>> setter,
@@ -121,7 +121,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
-		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static TTarget InsertWithOutput<TTarget>(
 			                this ITable<TTarget> target,
 			[InstantHandle] TTarget              obj)
@@ -161,7 +161,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
-		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static ValueTask<TTarget> InsertWithOutputAsync<TTarget>(
 			           this ITable<TTarget>   target,
 			[InstantHandle] TTarget           obj,
@@ -204,7 +204,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
-		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static TOutput InsertWithOutput<TTarget,TOutput>(
 			                this ITable<TTarget>              target,
 			[InstantHandle] Expression<Func<TTarget>>         setter,
@@ -250,7 +250,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
-		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static ValueTask<TOutput> InsertWithOutputAsync<TTarget,TOutput>(
 			                this ITable<TTarget>              target,
 			[InstantHandle] Expression<Func<TTarget>>         setter,
@@ -291,7 +291,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
-		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static int InsertWithOutputInto<TTarget>(
 			                this ITable<TTarget>      target,
 			[InstantHandle] Expression<Func<TTarget>> setter,
@@ -331,7 +331,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
-		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static Task<int> InsertWithOutputIntoAsync<TTarget>(
 			                this ITable<TTarget>      target,
 			[InstantHandle] Expression<Func<TTarget>> setter,
@@ -374,7 +374,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
-		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static int InsertWithOutputInto<TTarget,TOutput>(
 			                this ITable<TTarget>              target,
 			[InstantHandle] Expression<Func<TTarget>>         setter,
@@ -421,7 +421,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
-		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static Task<int> InsertWithOutputIntoAsync<TTarget,TOutput>(
 			                this ITable<TTarget>              target,
 			[InstantHandle] Expression<Func<TTarget>>         setter,
@@ -473,7 +473,7 @@ namespace LinqToDB
 		/// Execution is deferred until enumeration and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
-		/// <ai-tags group="DML" execution="Deferred" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Deferred, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static IEnumerable<TTarget> InsertWithOutput<TSource,TTarget>(
 			                this IQueryable<TSource>          source,
 			                ITable<TTarget>                   target,
@@ -518,7 +518,7 @@ namespace LinqToDB
 		/// Execution is deferred until enumeration and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
-		/// <ai-tags group="DML" execution="Deferred" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Deferred, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static IAsyncEnumerable<TTarget> InsertWithOutputAsync<TSource, TTarget>(
 			                this IQueryable<TSource>           source,
 			                ITable<TTarget>                    target,
@@ -564,7 +564,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
-		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		// TODO: Remove in v7
 		[Obsolete("Use overload with IAsyncEnumerable return type. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public static ValueTask<TTarget[]> InsertWithOutputAsync<TSource, TTarget>(
@@ -602,7 +602,7 @@ namespace LinqToDB
 		/// Execution is deferred until enumeration and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
-		/// <ai-tags group="DML" execution="Deferred" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Deferred, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[Pure]
 		public static IEnumerable<TOutput> InsertWithOutput<TSource,TTarget,TOutput>(
 			                this IQueryable<TSource>          source,
@@ -654,7 +654,7 @@ namespace LinqToDB
 		/// Execution is deferred until enumeration and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
-		/// <ai-tags group="DML" execution="Deferred" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Deferred, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static IAsyncEnumerable<TOutput> InsertWithOutputAsync<TSource, TTarget, TOutput>(
 							this IQueryable<TSource> source,
 							ITable<TTarget> target,
@@ -706,7 +706,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
-		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		// TODO: Remove in v7
 		[Obsolete("Use overload with IAsyncEnumerable return type. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public static ValueTask<TOutput[]> InsertWithOutputAsync<TSource, TTarget, TOutput>(
@@ -739,7 +739,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
-		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static int InsertWithOutputInto<TSource,TTarget>(
 			                this IQueryable<TSource>          source,
 			                ITable<TTarget>                   target,
@@ -785,7 +785,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
-		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static Task<int> InsertWithOutputIntoAsync<TSource,TTarget>(
 			                this IQueryable<TSource>          source,
 			                ITable<TTarget>                   target,
@@ -834,7 +834,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
-		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static int InsertWithOutputInto<TSource,TTarget,TOutput>(
 			                this IQueryable<TSource>          source,
 			                ITable<TTarget>                   target,
@@ -887,7 +887,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
-		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static Task<int> InsertWithOutputIntoAsync<TSource,TTarget,TOutput>(
 			                this IQueryable<TSource>          source,
 			                ITable<TTarget>                   target,
@@ -937,7 +937,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
-		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static TTarget InsertWithOutput<TSource,TTarget>(this ISelectInsertable<TSource,TTarget> source)
 		{
 			ArgumentNullException.ThrowIfNull(source);
@@ -972,7 +972,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
-		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static ValueTask<TTarget> InsertWithOutputAsync<TSource,TTarget>(
 			this ISelectInsertable<TSource,TTarget> source,
 			     CancellationToken                  token = default)
@@ -1005,7 +1005,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
-		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static int InsertWithOutputInto<TSource,TTarget>(
 			this ISelectInsertable<TSource,TTarget> source,
 			     ITable<TTarget>                    outputTable)
@@ -1042,7 +1042,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
-		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static Task<int> InsertWithOutputIntoAsync<TSource,TTarget>(
 			this ISelectInsertable<TSource,TTarget> source,
 			     ITable<TTarget>                    outputTable,
@@ -1085,7 +1085,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
-		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static T InsertWithOutput<T>(this IValueInsertable<T> source)
 		{
 			ArgumentNullException.ThrowIfNull(source);
@@ -1120,7 +1120,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
-		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static ValueTask<T> InsertWithOutputAsync<T>(this IValueInsertable<T> source, CancellationToken token = default)
 		{
 			ArgumentNullException.ThrowIfNull(source);
@@ -1157,7 +1157,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
-		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static TOutput InsertWithOutput<T, TOutput>(this IValueInsertable<T> source, Expression<Func<T, TOutput>> outputExpression)
 		{
 			ArgumentNullException.ThrowIfNull(source);
@@ -1197,7 +1197,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
-		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static ValueTask<TOutput> InsertWithOutputAsync<T, TOutput>(
 			this IValueInsertable<T> source,
 			Expression<Func<T, TOutput>> outputExpression,
@@ -1233,7 +1233,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// </remarks>
-		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static int Insert<T>(
 							this ITable<T> target,
 			[InstantHandle] Expression<Func<T>> setter)
@@ -1464,7 +1464,7 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The method defines a DML query that will be executed by a terminal operation.
 		/// </remarks>
-		/// <ai-tags group="DML" execution="Deferred" composability="Composable" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel]
 		[Pure]
 		public static IValueInsertable<T> Into<T>(this IDataContext dataContext, ITable<T> target)
@@ -1493,7 +1493,7 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The method defines a DML query that will be executed by a terminal operation.
 		/// </remarks>
-		/// <ai-tags group="DML" execution="Deferred" composability="Composable" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static IValueInsertable<T> AsValueInsertable<T>(this ITable<T> source)
 			where T : notnull
 		{
@@ -1523,7 +1523,7 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The method defines/extends a DML query that will be executed by a terminal operation.
 		/// </remarks>
-		/// <ai-tags group="DML" execution="Deferred" composability="Composable" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel]
 		[Pure]
 		public static IValueInsertable<T> Value<T, TV>(
@@ -1560,7 +1560,7 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The method defines/extends a DML query that will be executed by a terminal operation.
 		/// </remarks>
-		/// <ai-tags group="DML" execution="Deferred" composability="Composable" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel]
 		[Pure]
 		public static IValueInsertable<T> Value<T, TV>(
@@ -1596,7 +1596,7 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The method defines/extends a DML query that will be executed by a terminal operation.
 		/// </remarks>
-		/// <ai-tags group="DML" execution="Deferred" composability="Composable" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel]
 		[Pure]
 		public static IValueInsertable<T> Value<T, TV>(
@@ -1632,7 +1632,7 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The method defines/extends a DML query that will be executed by a terminal operation.
 		/// </remarks>
-		/// <ai-tags group="DML" execution="Deferred" composability="Composable" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel]
 		[Pure]
 		public static IValueInsertable<T> Value<T, TV>(
@@ -1663,7 +1663,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// </remarks>
-		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static int Insert<T>(this IValueInsertable<T> source)
 		{
 			ArgumentNullException.ThrowIfNull(source);
@@ -1712,7 +1712,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Identity availability and exact behavior are provider-defined.
 		/// </remarks>
-		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[Pure]
 		public static object InsertWithIdentity<T>(this IValueInsertable<T> source)
 		{
@@ -1856,7 +1856,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// </remarks>
-		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static int Insert<TSource, TTarget>(
 							this IQueryable<TSource> source,
 							ITable<TTarget> target,
@@ -1923,7 +1923,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Identity availability and exact behavior are provider-defined.
 		/// </remarks>
-		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static object InsertWithIdentity<TSource, TTarget>(
 							this IQueryable<TSource> source,
 							ITable<TTarget> target,

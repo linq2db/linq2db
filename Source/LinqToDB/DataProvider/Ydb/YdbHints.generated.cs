@@ -5,6 +5,7 @@ using System;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Internal.Metadata;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.DataProvider.Ydb
@@ -15,7 +16,7 @@ namespace LinqToDB.DataProvider.Ydb
 		/// <summary>
 		/// Adds a YDB <c>unique</c> query hint.
 		/// </summary>
-		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Query, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(UniqueHintImpl))]
 		public static IYdbSpecificQueryable<TSource> UniqueHint<TSource>(
 			this IYdbSpecificQueryable<TSource> query,
@@ -34,7 +35,7 @@ namespace LinqToDB.DataProvider.Ydb
 		/// <summary>
 		/// Adds a YDB <c>unique</c> query hint.
 		/// </summary>
-		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Query, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(UniqueHintQImpl))]
 		public static IYdbSpecificQueryable<TSource> UniqueHint<TSource>(
 			this IQueryable<TSource> query,
@@ -54,7 +55,7 @@ namespace LinqToDB.DataProvider.Ydb
 		/// <summary>
 		/// Adds a YDB <c>distinct</c> query hint.
 		/// </summary>
-		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Query, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(DistinctHintImpl))]
 		public static IYdbSpecificQueryable<TSource> DistinctHint<TSource>(
 			this IYdbSpecificQueryable<TSource> query,
@@ -73,7 +74,7 @@ namespace LinqToDB.DataProvider.Ydb
 		/// <summary>
 		/// Adds a YDB <c>distinct</c> query hint.
 		/// </summary>
-		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Query, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(DistinctHintQImpl))]
 		public static IYdbSpecificQueryable<TSource> DistinctHint<TSource>(
 			this IQueryable<TSource> query,

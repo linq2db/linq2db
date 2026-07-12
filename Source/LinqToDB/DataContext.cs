@@ -15,6 +15,7 @@ using LinqToDB.DataProvider;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Infrastructure;
 using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.Metadata;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Mapping;
 using LinqToDB.Metrics;
@@ -59,7 +60,7 @@ namespace LinqToDB
 	/// Dispose the context to release provider resources and connections.
 	/// </para>
 	/// </remarks>
-	/// <ai-tags group="Connection" affects="ExecutionContext" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+	[AiTags(Groups = AiGroup.Connection, Affects = AiAffects.ExecutionContext, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 	[PublicAPI]
 	public partial class DataContext : IDataContext, IInfrastructure<IServiceProvider>
 	{
@@ -615,7 +616,7 @@ namespace LinqToDB
 		/// <param name="level">Transaction isolation level.</param>
 		/// <returns>Database transaction object.</returns>
 		/// <exception cref="InvalidOperationException">Thrown when connection already has a transaction.</exception>
-		/// <ai-tags group="Connection" execution="Immediate" composability="Terminal" pipeline="SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Connection, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Pipeline = AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public virtual DataContextTransaction BeginTransaction(IsolationLevel level)
 		{
 			AssertDisposed();
@@ -633,7 +634,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <returns>Database transaction object.</returns>
 		/// <exception cref="InvalidOperationException">Thrown when connection already has a transaction.</exception>
-		/// <ai-tags group="Connection" execution="Immediate" composability="Terminal" pipeline="SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Connection, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Pipeline = AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public virtual DataContextTransaction BeginTransaction()
 		{
 			AssertDisposed();
@@ -653,7 +654,7 @@ namespace LinqToDB
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Database transaction object.</returns>
 		/// <exception cref="InvalidOperationException">Thrown when connection already has a transaction.</exception>
-		/// <ai-tags group="Connection" execution="Immediate" composability="Terminal" pipeline="SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Connection, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Pipeline = AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public virtual async Task<DataContextTransaction> BeginTransactionAsync(IsolationLevel level, CancellationToken cancellationToken = default)
 		{
 			AssertDisposed();
@@ -672,7 +673,7 @@ namespace LinqToDB
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Database transaction object.</returns>
 		/// <exception cref="InvalidOperationException">Thrown when connection already has a transaction.</exception>
-		/// <ai-tags group="Connection" execution="Immediate" composability="Terminal" pipeline="SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Connection, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Pipeline = AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public virtual async Task<DataContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
 		{
 			AssertDisposed();

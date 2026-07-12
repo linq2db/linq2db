@@ -8,6 +8,7 @@ using JetBrains.Annotations;
 
 using LinqToDB.Internal.DataProvider.SqlServer;
 using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.Metadata;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
@@ -140,7 +141,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <summary>
 		/// Adds a SQL Server index hint.
 		/// </summary>
-		/// <ai-tags group="Hints" hint-type="Index" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Index, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(WithIndexImpl))]
 		public static ISqlServerSpecificTable<TSource> WithIndex<TSource>(this ISqlServerSpecificTable<TSource> table, string indexName)
 			where TSource : notnull
@@ -157,7 +158,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <summary>
 		/// Adds a SQL Server index hint.
 		/// </summary>
-		/// <ai-tags group="Hints" hint-type="Index" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Index, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(WithIndex2Impl))]
 		public static ISqlServerSpecificTable<TSource> WithIndex<TSource>(this ISqlServerSpecificTable<TSource> table, params string[] indexNames)
 			where TSource : notnull
@@ -202,7 +203,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// Adds a SQL Server table hint.
 		/// For all tables already present in the current query scope, use <c>WithForceSeekInScope</c> on <c>ISqlServerSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
-		/// <ai-tags group="Hints" hint-type="Table" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Table, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.TableHint, typeof(WithForceSeekExtensionBuilder))]
 		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
@@ -227,7 +228,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <summary>
 		/// Adds a SQL Server table hint.
 		/// </summary>
-		/// <ai-tags group="Hints" hint-type="Table" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Table, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(WithSpatialWindowMaxCellsImpl))]
 		public static ISqlServerSpecificTable<TSource> WithSpatialWindowMaxCells<TSource>(this ISqlServerSpecificTable<TSource> table, int cells)
 			where TSource : notnull
@@ -266,7 +267,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <summary>
 		/// Adds a SQL Server <c>OPTIMIZE FOR</c> query option.
 		/// </summary>
-		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Query, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.QueryHint, typeof(ParamsExtensionBuilder), "OPTIMIZE FOR")]
 		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
@@ -296,7 +297,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// feature; use this method for SQL Server <c>USE HINT</c> values that do not have
 		/// a dedicated typed helper.
 		/// </remarks>
-		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Query, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 //		[Sql.QueryExtension(ProviderName.SqlServer2016, Sql.QueryExtensionScope.QueryHint, typeof(ParamsExtensionBuilder), "USE HINT")]
 		[Sql.QueryExtension(ProviderName.SqlServer2017, Sql.QueryExtensionScope.QueryHint, typeof(ParamsExtensionBuilder), "USE HINT")]
@@ -353,7 +354,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <c>values</c> argument contains SQL Server table hint names; choose those names
 		/// from SQL Server documentation or existing application requirements.
 		/// </remarks>
-		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Query, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer2008, Sql.QueryExtensionScope.QueryHint, typeof(TableParamsExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.SqlServer2012, Sql.QueryExtensionScope.QueryHint, typeof(TableParamsExtensionBuilder))]
@@ -392,7 +393,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="table">Table-like query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Table-like query source with table hints.</returns>
-		/// <ai-tags group="Hints" hint-type="Table" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Table, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.TableHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
@@ -418,7 +419,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameter">Table hint parameter.</param>
 		/// <returns>Table-like query source with table hints.</returns>
-		/// <ai-tags group="Hints" hint-type="Table" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Table, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.TableHint, typeof(HintWithParameterExtensionBuilder))]
 		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
@@ -447,7 +448,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameters">Table hint parameters.</param>
 		/// <returns>Table-like query source with table hints.</returns>
-		/// <ai-tags group="Hints" hint-type="Table" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Table, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.TableHint, typeof(HintWithParametersExtensionBuilder))]
 		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
@@ -472,7 +473,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <summary>
 		/// Adds a SQL Server table hint.
 		/// </summary>
-		/// <ai-tags group="Hints" hint-type="Table" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Table, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer2012, Sql.QueryExtensionScope.TableHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.SqlServer2014, Sql.QueryExtensionScope.TableHint, typeof(HintExtensionBuilder))]
@@ -527,7 +528,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="source">Query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Query source with join hints.</returns>
-		/// <ai-tags group="Hints" hint-type="TablesInScope" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.TablesInScope, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.TablesInScopeHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,              typeof(NoneExtensionBuilder))]
@@ -554,7 +555,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameter">Table hint parameter.</param>
 		/// <returns>Query source with join hints.</returns>
-		/// <ai-tags group="Hints" hint-type="TablesInScope" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.TablesInScope, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.TablesInScopeHint, typeof(HintWithParameterExtensionBuilder))]
 		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,              typeof(NoneExtensionBuilder))]
@@ -581,7 +582,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameters">Table hint parameters.</param>
 		/// <returns>Query source with join hints.</returns>
-		/// <ai-tags group="Hints" hint-type="TablesInScope" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.TablesInScope, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.TablesInScopeHint, typeof(HintWithParametersExtensionBuilder))]
 		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,              typeof(NoneExtensionBuilder))]
@@ -609,7 +610,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="source">Query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Query source with join hints.</returns>
-		/// <ai-tags group="Hints" hint-type="TablesInScope" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.TablesInScope, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer2012, Sql.QueryExtensionScope.TablesInScopeHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.SqlServer2014, Sql.QueryExtensionScope.TablesInScopeHint, typeof(HintExtensionBuilder))]
@@ -640,7 +641,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="source">Query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Query source with join hints.</returns>
-		/// <ai-tags group="Hints" hint-type="TablesInScope" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.TablesInScope, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer2014, Sql.QueryExtensionScope.TablesInScopeHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.SqlServer2016, Sql.QueryExtensionScope.TablesInScopeHint, typeof(HintExtensionBuilder))]
@@ -674,7 +675,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="table">Table-like query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Query source with join hints.</returns>
-		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Join, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.JoinHint, typeof(NoneExtensionBuilder))]
 		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,     typeof(NoneExtensionBuilder))]
@@ -698,7 +699,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="source">Query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Query source with join hints.</returns>
-		/// <ai-tags group="Hints" hint-type="Join" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Join, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.JoinHint, typeof(NoneExtensionBuilder))]
 		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,     typeof(NoneExtensionBuilder))]
@@ -725,7 +726,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="source">Query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Query source with join hints.</returns>
-		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Query, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.QueryHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
@@ -750,7 +751,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameter">Hint parameter.</param>
 		/// <returns>Query source with join hints.</returns>
-		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Query, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.QueryHint, typeof(HintWithParameterExtensionBuilder))]
 		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
@@ -780,7 +781,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameters">Table hint parameters.</param>
 		/// <returns>Table-like query source with table hints.</returns>
-		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Query, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.QueryHint, typeof(HintWithParametersExtensionBuilder))]
 		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
@@ -808,7 +809,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="source">Query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Query source with join hints.</returns>
-		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Query, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer2019, Sql.QueryExtensionScope.QueryHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.SqlServer2022, Sql.QueryExtensionScope.QueryHint, typeof(HintExtensionBuilder))]
@@ -833,7 +834,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="source">Query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Query source with join hints.</returns>
-		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Query, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer2008, Sql.QueryExtensionScope.QueryHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.SqlServer2012, Sql.QueryExtensionScope.QueryHint, typeof(HintExtensionBuilder))]
@@ -863,7 +864,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="source">Query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Query source with join hints.</returns>
-		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Query, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer2012, Sql.QueryExtensionScope.QueryHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.SqlServer2014, Sql.QueryExtensionScope.QueryHint, typeof(HintExtensionBuilder))]
@@ -892,7 +893,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="source">Query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Query source with join hints.</returns>
-		/// <ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Query, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer2016, Sql.QueryExtensionScope.QueryHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.SqlServer2017, Sql.QueryExtensionScope.QueryHint, typeof(HintExtensionBuilder))]

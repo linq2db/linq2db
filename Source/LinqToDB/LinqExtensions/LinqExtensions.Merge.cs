@@ -9,6 +9,7 @@ using JetBrains.Annotations;
 
 using LinqToDB.Async;
 using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.Metadata;
 using LinqToDB.Internal.Reflection;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
@@ -76,7 +77,7 @@ namespace LinqToDB
 		///   - Terminal*      -&gt; execute/output
 		/// </code>
 		/// </remarks>
-		/// <ai-tags group="Merge" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Merge, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[Pure, LinqTunnel]
 		public static IMergeableUsing<TTarget> Merge<TTarget>(
 			this IQueryable<TTarget> target)
@@ -136,7 +137,7 @@ namespace LinqToDB
 		///   - Terminal*      -&gt; execute/output
 		/// </code>
 		/// </remarks>
-		/// <ai-tags group="Merge" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Merge, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[Pure, LinqTunnel]
 		public static IMergeableUsing<TTarget> Merge<TTarget>(
 			this ITable<TTarget> target)
@@ -198,7 +199,7 @@ namespace LinqToDB
 		///   - Terminal*      -&gt; execute/output
 		/// </code>
 		/// </remarks>
-		/// <ai-tags group="Merge" hint-type="Merge" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Merge, HintType = AiHintType.Merge, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[Pure, LinqTunnel]
 		public static IMergeableUsing<TTarget> Merge<TTarget>(
 			                    this ITable<TTarget> target,
@@ -229,7 +230,7 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The merge definition is represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// </remarks>
-		/// <ai-tags group="Merge" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Merge, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[Pure, LinqTunnel]
 		public static IMergeableOn<TTarget, TSource> MergeInto<TTarget, TSource>(
 			 this IQueryable<TSource> source,
@@ -259,7 +260,7 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The merge definition is represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// </remarks>
-		/// <ai-tags group="Merge" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Merge, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[Pure, LinqTunnel]
 		public static IMergeableOn<TTarget, TSource> MergeInto<TTarget, TSource>(
 			 this IQueryable<TSource> source,
@@ -291,7 +292,7 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The merge definition is represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// </remarks>
-		/// <ai-tags group="Merge" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Merge, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[Pure, LinqTunnel]
 		public static IMergeableOn<TTarget, TSource> MergeInto<TTarget, TSource>(
 			                    this IQueryable<TSource> source,
@@ -324,7 +325,7 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The merge definition is represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// </remarks>
-		/// <ai-tags group="Merge" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Merge, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[Pure, LinqTunnel]
 		public static IMergeableOn<TTarget, TSource> Using<TTarget, TSource>(
 			this IMergeableUsing<TTarget> merge,
@@ -355,7 +356,7 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The merge definition is represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// </remarks>
-		/// <ai-tags group="Merge" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Merge, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[Pure, LinqTunnel]
 		public static IMergeableOn<TTarget, TSource> Using<TTarget, TSource>(
 			this IMergeableUsing<TTarget> merge,
@@ -393,7 +394,7 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The merge definition is represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// </remarks>
-		/// <ai-tags group="Merge" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Merge, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[Pure, LinqTunnel]
 		public static IMergeableOn<TTarget, TTarget> UsingTarget<TTarget>(
 			this IMergeableUsing<TTarget> merge)
@@ -428,7 +429,7 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The merge definition is represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// </remarks>
-		/// <ai-tags group="Merge" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Merge, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[Pure, LinqTunnel]
 		public static IMergeableSource<TTarget, TSource> On<TTarget, TSource, TKey>(
 			                this IMergeableOn<TTarget, TSource>  merge,
@@ -461,7 +462,7 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The merge definition is represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// </remarks>
-		/// <ai-tags group="Merge" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Merge, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[Pure, LinqTunnel]
 		public static IMergeableSource<TTarget, TSource> On<TTarget, TSource>(
 			                this IMergeableOn<TTarget, TSource>           merge,
@@ -490,7 +491,7 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The merge definition is represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// </remarks>
-		/// <ai-tags group="Merge" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Merge, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[Pure, LinqTunnel]
 		public static IMergeableSource<TTarget, TTarget> OnTargetKey<TTarget>(
 			this IMergeableOn<TTarget, TTarget> merge)
@@ -523,7 +524,7 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The merge definition is represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// </remarks>
-		/// <ai-tags group="Merge" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Merge, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TTarget> InsertWhenNotMatched<TTarget>(
 			this IMergeableSource<TTarget, TTarget> merge)
@@ -554,7 +555,7 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The merge definition is represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// </remarks>
-		/// <ai-tags group="Merge" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Merge, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TTarget> InsertWhenNotMatchedAnd<TTarget>(
 			                this IMergeableSource<TTarget, TTarget> merge,
@@ -590,7 +591,7 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The merge definition is represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// </remarks>
-		/// <ai-tags group="Merge" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Merge, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TSource> InsertWhenNotMatched<TTarget, TSource>(
 			                this IMergeableSource<TTarget, TSource> merge,
@@ -628,7 +629,7 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The merge definition is represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// </remarks>
-		/// <ai-tags group="Merge" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Merge, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TSource> InsertWhenNotMatchedAnd<TTarget, TSource>(
 			                this IMergeableSource<TTarget, TSource> merge,
@@ -665,7 +666,7 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The merge definition is represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// </remarks>
-		/// <ai-tags group="Merge" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Merge, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TTarget> UpdateWhenMatched<TTarget>(
 			this IMergeableSource<TTarget, TTarget> merge)
@@ -696,7 +697,7 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The merge definition is represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// </remarks>
-		/// <ai-tags group="Merge" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Merge, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TTarget> UpdateWhenMatchedAnd<TTarget>(
 			                this IMergeableSource<TTarget, TTarget>       merge,
@@ -732,7 +733,7 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The merge definition is represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// </remarks>
-		/// <ai-tags group="Merge" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Merge, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TSource> UpdateWhenMatched<TTarget, TSource>(
 			                this IMergeableSource<TTarget, TSource>           merge,
@@ -770,7 +771,7 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The merge definition is represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// </remarks>
-		/// <ai-tags group="Merge" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Merge, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TSource> UpdateWhenMatchedAnd<TTarget, TSource>(
 			                this IMergeableSource<TTarget, TSource>           merge,
@@ -810,7 +811,7 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The merge definition is represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// </remarks>
-		/// <ai-tags group="Merge" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Merge, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TTarget> UpdateWhenMatchedThenDelete<TTarget>(
 			                this IMergeableSource<TTarget, TTarget>       merge,
@@ -846,7 +847,7 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The merge definition is represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// </remarks>
-		/// <ai-tags group="Merge" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Merge, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TTarget> UpdateWhenMatchedAndThenDelete<TTarget>(
 			                this IMergeableSource<TTarget, TTarget>       merge,
@@ -887,7 +888,7 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The merge definition is represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// </remarks>
-		/// <ai-tags group="Merge" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Merge, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TSource> UpdateWhenMatchedThenDelete<TTarget, TSource>(
 			                this IMergeableSource<TTarget, TSource>          merge,
@@ -930,7 +931,7 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The merge definition is represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// </remarks>
-		/// <ai-tags group="Merge" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Merge, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TSource> UpdateWhenMatchedAndThenDelete<TTarget, TSource>(
 			                this IMergeableSource<TTarget, TSource>          merge,
@@ -970,7 +971,7 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The merge definition is represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// </remarks>
-		/// <ai-tags group="Merge" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Merge, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TSource> DeleteWhenMatched<TTarget, TSource>(
 			this IMergeableSource<TTarget, TSource> merge)
@@ -1001,7 +1002,7 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The merge definition is represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// </remarks>
-		/// <ai-tags group="Merge" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Merge, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TSource> DeleteWhenMatchedAnd<TTarget, TSource>(
 			                this IMergeableSource<TTarget, TSource>       merge,
@@ -1042,7 +1043,7 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The merge definition is represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// </remarks>
-		/// <ai-tags group="Merge" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Merge, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TSource> UpdateWhenNotMatchedBySource<TTarget, TSource>(
 			                this IMergeableSource<TTarget, TSource> merge,
@@ -1081,7 +1082,7 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The merge definition is represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// </remarks>
-		/// <ai-tags group="Merge" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Merge, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TSource> UpdateWhenNotMatchedBySourceAnd<TTarget, TSource>(
 			                this IMergeableSource<TTarget, TSource> merge,
@@ -1120,7 +1121,7 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The merge definition is represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// </remarks>
-		/// <ai-tags group="Merge" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Merge, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TSource> DeleteWhenNotMatchedBySource<TTarget, TSource>(
 			this IMergeableSource<TTarget, TSource> merge)
@@ -1152,7 +1153,7 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The merge definition is represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// </remarks>
-		/// <ai-tags group="Merge" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Merge, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TSource> DeleteWhenNotMatchedBySourceAnd<TTarget, TSource>(
 			                this IMergeableSource<TTarget, TSource> merge,
@@ -1186,7 +1187,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Availability and exact SQL semantics are provider-defined.
 		/// </remarks>
-		/// <ai-tags group="Merge" execution="Immediate" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Merge, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static int Merge<TTarget, TSource>(
 			this IMergeable<TTarget, TSource> merge)
 		{
@@ -1226,7 +1227,7 @@ namespace LinqToDB
 		/// Execution is deferred until enumeration and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
-		/// <ai-tags group="Merge" execution="Deferred" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Merge, Execution = AiExecution.Deferred, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static IEnumerable<TOutput> MergeWithOutput<TTarget,TSource,TOutput>(
 			this IMergeable<TTarget, TSource>                     merge,
 			     Expression<Func<string,TTarget,TTarget,TOutput>> outputExpression)
@@ -1269,7 +1270,7 @@ namespace LinqToDB
 		/// Execution is deferred until enumeration and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
-		/// <ai-tags group="Merge" execution="Deferred" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Merge, Execution = AiExecution.Deferred, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static IEnumerable<TOutput> MergeWithOutput<TTarget,TSource,TOutput>(
 			this IMergeable<TTarget,TSource>                         merge,
 			Expression<Func<string,TTarget,TTarget,TSource,TOutput>> outputExpression)
@@ -1312,7 +1313,7 @@ namespace LinqToDB
 		/// Execution is deferred and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
-		/// <ai-tags group="Merge" execution="Deferred" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Merge, Execution = AiExecution.Deferred, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static IAsyncEnumerable<TOutput> MergeWithOutputAsync<TTarget, TSource, TOutput>(
 			this IMergeable<TTarget,TSource>                 merge,
 			Expression<Func<string,TTarget,TTarget,TOutput>> outputExpression)
@@ -1355,7 +1356,7 @@ namespace LinqToDB
 		/// Execution is deferred and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
-		/// <ai-tags group="Merge" execution="Deferred" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Merge, Execution = AiExecution.Deferred, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static IAsyncEnumerable<TOutput> MergeWithOutputAsync<TTarget,TSource,TOutput>(
 			this IMergeable<TTarget,TSource>                         merge,
 			Expression<Func<string,TTarget,TTarget,TSource,TOutput>> outputExpression)
@@ -1397,7 +1398,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
-		/// <ai-tags group="Merge" execution="Immediate" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Merge, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static int MergeWithOutputInto<TTarget,TSource,TOutput>(
 			this IMergeable<TTarget,TSource>                 merge,
 			ITable<TOutput>                                  outputTable,
@@ -1444,7 +1445,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
-		/// <ai-tags group="Merge" execution="Immediate" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Merge, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static int MergeWithOutputInto<TTarget,TSource,TOutput>(
 			this IMergeable<TTarget,TSource>                         merge,
 			ITable<TOutput>                                          outputTable,
@@ -1492,7 +1493,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
-		/// <ai-tags group="Merge" execution="Immediate" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Merge, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static Task<int> MergeWithOutputIntoAsync<TTarget, TSource, TOutput>(
 			this IMergeable<TTarget, TSource>                merge,
 			ITable<TOutput>                                  outputTable,
@@ -1542,7 +1543,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
-		/// <ai-tags group="Merge" execution="Immediate" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Merge, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static Task<int> MergeWithOutputIntoAsync<TTarget,TSource,TOutput>(
 			this IMergeable<TTarget,TSource>                         merge,
 			ITable<TOutput>                                          outputTable,
@@ -1585,7 +1586,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Availability and exact SQL semantics are provider-defined.
 		/// </remarks>
-		/// <ai-tags group="Merge" execution="Immediate" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Merge, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static Task<int> MergeAsync<TTarget, TSource>(
 			 this IMergeable<TTarget, TSource> merge,
 			               CancellationToken   token = default)
