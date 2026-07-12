@@ -10,6 +10,7 @@ using JetBrains.Annotations;
 
 using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Metadata;
 using LinqToDB.Metrics;
 
 namespace LinqToDB.Data
@@ -43,8 +44,8 @@ namespace LinqToDB.Data
 	///   </item>
 	/// </list>
 	/// </remarks>
-	/// <ai-tags groups="RawSQL,DML" provider="ProviderDefined" />
-	/// <ai-tags-defaults provider="ProviderDefined" />
+	[AiTags(Groups = AiGroup.RawSQL | AiGroup.DML, Provider = AiProvider.ProviderDefined)]
+	[AiTagsDefaults(Provider = AiProvider.ProviderDefined)]
 	[PublicAPI]
 	public static class DataContextExtensions
 	{

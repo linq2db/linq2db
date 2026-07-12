@@ -13,6 +13,7 @@ using LinqToDB.Expressions;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.Linq.Builder;
+using LinqToDB.Internal.Metadata;
 using LinqToDB.Internal.Reflection;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
@@ -95,8 +96,8 @@ namespace LinqToDB
 	/// When an API is not supported, behavior is provider-defined.
 	/// </para>
 	/// </remarks>
-	/// <ai-tags groups="QueryDirectives,NavigationLoading,DML,Merge,Hints,Configuration,Helpers" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
-	/// <ai-tags-defaults pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+	[AiTags(Groups = AiGroup.QueryDirectives | AiGroup.NavigationLoading | AiGroup.DML | AiGroup.Merge | AiGroup.Hints | AiGroup.Configuration | AiGroup.Helpers, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
+	[AiTagsDefaults(Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 	[PublicAPI]
 	public static partial class LinqExtensions
 	{

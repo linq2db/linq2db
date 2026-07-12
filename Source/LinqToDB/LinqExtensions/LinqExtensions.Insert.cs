@@ -12,6 +12,7 @@ using LinqToDB.Async;
 using LinqToDB.Internal.Async;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.Metadata;
 using LinqToDB.Internal.Reflection;
 using LinqToDB.Linq;
 
@@ -1290,7 +1291,9 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Identity availability and exact behavior are provider-defined.
 		/// </remarks>
-		/// <ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal,
+			Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText,
+			Provider = AiProvider.ProviderDefined)]
 		public static object InsertWithIdentity<T>(
 							this ITable<T> target,
 			[InstantHandle] Expression<Func<T>> setter)

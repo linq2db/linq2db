@@ -3,7 +3,14 @@ param(
 	[string] $XmlDocPath,
 
 	[Parameter(Mandatory = $true)]
-	[string] $ApiDocPath
+	[string] $ApiDocPath,
+
+	# Compiled assembly matching $XmlDocPath. Used to read <ai-tags />/<ai-tags-defaults />
+	# from AiTagsAttribute/AiTagsDefaultsAttribute (Source/LinqToDB/Internal/Metadata/AiTagsAttribute.cs).
+	# Members not yet migrated to the attribute still carry XML-doc <ai-tags /> elements; those are
+	# read via the legacy XML path below. Both paths are supported until the migration is complete.
+	[Parameter(Mandatory = $true)]
+	[string] $AssemblyPath
 )
 
 $ErrorActionPreference = 'Stop'
@@ -242,7 +249,7 @@ function FormatAiTagElement($node) {
 	return (($parts -join '; ') + ';')
 }
 
-function ExtractAiTags($member) {
+function ExtractAiTagsFromXml($member) {
 	$tagNode = $member.SelectSingleNode('ai-tags')
 	$tags = FormatAiTagElement $tagNode
 	if ($tags) {
@@ -267,6 +274,242 @@ function ExtractAiTags($member) {
 
 	return CleanText $match.Groups[1].Value
 }
+
+#region Attribute-based AI-Tags (AiTagsAttribute / AiTagsDefaultsAttribute)
+#
+# Reads <ai-tags /> / <ai-tags-defaults /> for members migrated from the XML-doc custom-tag form to
+# the internal AiTagsAttribute/AiTagsDefaultsAttribute (Source/LinqToDB/Internal/Metadata). Members
+# not yet migrated fall back to ExtractAiTagsFromXml above. See .agents/ai-tags-attribute-design.md.
+
+# Canonical display order. Multi-value ([Flags]) fields render in enum declaration order, not in the
+# order a caller happened to combine them - this is a deliberate, accepted behavior change from the
+# free-text XML-doc-attribute era, where value order followed whatever the author typed.
+$attributeTagOrder = @('Groups', 'HintType', 'Execution', 'Composability', 'Affects', 'Pipeline', 'Provider')
+
+function DecodeAttributeTypedValue($typedArg) {
+	$type  = $typedArg.ArgumentType
+	$value = $typedArg.Value
+
+	if (-not $type.IsEnum) {
+		return [string] $value
+	}
+
+	$isFlags = $type.GetCustomAttributes([FlagsAttribute], $false).Count -gt 0
+	if (-not $isFlags) {
+		return [System.Enum]::GetName($type, $value)
+	}
+
+	$names = New-Object System.Collections.Generic.List[string]
+	foreach ($name in [System.Enum]::GetNames($type)) {
+		$enumValue = [int] [System.Enum]::Parse($type, $name)
+		if ($enumValue -ne 0 -and (([int] $value) -band $enumValue) -eq $enumValue) {
+			[void] $names.Add($name)
+		}
+	}
+	return ($names -join ',')
+}
+
+function GetNamedArgumentMap($attributeData) {
+	$map = @{}
+	if ($attributeData -eq $null) {
+		return $map
+	}
+
+	foreach ($arg in $attributeData.NamedArguments) {
+		$map[$arg.MemberName] = DecodeAttributeTypedValue $arg.TypedValue
+	}
+	return $map
+}
+
+function FormatMergedAiTags($ownMap, $defaultsMap) {
+	# Merge rule (ai-tags.md "Defaults merge rules"): start from defaults, apply member-level on top,
+	# member value wins per key, keys absent from the member are inherited from defaults.
+	$merged = @{}
+	foreach ($key in $defaultsMap.Keys) { $merged[$key] = $defaultsMap[$key] }
+	foreach ($key in $ownMap.Keys)      { $merged[$key] = $ownMap[$key] }
+
+	$parts = New-Object System.Collections.Generic.List[string]
+	foreach ($key in $attributeTagOrder) {
+		if ($merged.ContainsKey($key)) {
+			[void] $parts.Add(('{0}={1}' -f $key, $merged[$key]))
+		}
+	}
+
+	if ($parts.Count -eq 0) {
+		return ''
+	}
+	return (($parts -join '; ') + ';')
+}
+
+function GetCustomAttributeDataByName($provider, [string] $attributeTypeName) {
+	$all = [System.Reflection.CustomAttributeData]::GetCustomAttributes($provider)
+	return ($all | Where-Object { $_.AttributeType.Name -eq $attributeTypeName } | Select-Object -First 1)
+}
+
+# Doc-comment-ID computation (MemberInfo -> "T:"/"M:"/"P:"/"F:"/"E:" id string), per the C#
+# documentation-comment ID format (ECMA-334). Covers what linq2db's public surface actually uses:
+# plain/nested/generic types, generic methods and method-level generic-parameter back-references,
+# arrays, by-ref parameters, and generic type instantiations. Deliberately does not attempt pointers
+# or multi-dimensional non-zero-lower-bound arrays - if id computation fails for a member, that
+# member is simply skipped for attribute-based lookup (falls back to XML, or has no AI metadata),
+# never mismatched to the wrong member.
+
+function GetParamTypeDocName([Type] $type) {
+	if ($type.IsByRef) {
+		return (GetParamTypeDocName $type.GetElementType()) + '@'
+	}
+
+	if ($type.IsArray) {
+		if ($type.GetArrayRank() -ne 1) {
+			throw "Multi-dimensional arrays are not supported by GetParamTypeDocName."
+		}
+		return (GetParamTypeDocName $type.GetElementType()) + '[]'
+	}
+
+	if ($type.IsGenericParameter) {
+		if ($type.DeclaringMethod -ne $null) {
+			return ('``{0}' -f $type.GenericParameterPosition)
+		}
+		return ('`{0}' -f $type.GenericParameterPosition)
+	}
+
+	if ($type.IsGenericType -and -not $type.IsGenericTypeDefinition) {
+		$def      = $type.GetGenericTypeDefinition()
+		$baseName = ($def.FullName -replace '\+', '.') -replace '`\d+$', ''
+		$args     = ($type.GetGenericArguments() | ForEach-Object { GetParamTypeDocName $_ }) -join ','
+		return "$baseName{$args}"
+	}
+
+	$name = $type.FullName
+	if ([string]::IsNullOrEmpty($name)) {
+		throw ("Type '{0}' has no FullName (open generic parameter context)." -f $type.Name)
+	}
+	return ($name -replace '\+', '.')
+}
+
+function GetMemberDocId($member) {
+	$declaringType = $member.DeclaringType
+	$typeName      = ($declaringType.FullName -replace '\+', '.')
+
+	if ($member -is [System.Reflection.MethodBase]) {
+		$methodName = if ($member -is [System.Reflection.ConstructorInfo]) { '#ctor' } else { $member.Name }
+
+		$arity = ''
+		if ($member.IsGenericMethod) {
+			$arity = '``{0}' -f $member.GetGenericArguments().Length
+		}
+
+		$params = $member.GetParameters()
+		$paramList = ''
+		if ($params.Length -gt 0) {
+			$paramNames = $params | ForEach-Object { GetParamTypeDocName $_.ParameterType }
+			$paramList = '(' + ($paramNames -join ',') + ')'
+		}
+
+		return "M:$typeName.$methodName$arity$paramList"
+	}
+
+	if ($member -is [System.Reflection.PropertyInfo]) {
+		$params = $member.GetIndexParameters()
+		$paramList = ''
+		if ($params.Length -gt 0) {
+			$paramNames = $params | ForEach-Object { GetParamTypeDocName $_.ParameterType }
+			$paramList = '(' + ($paramNames -join ',') + ')'
+		}
+		return "P:$typeName.$($member.Name)$paramList"
+	}
+
+	if ($member -is [System.Reflection.FieldInfo]) {
+		return "F:$typeName.$($member.Name)"
+	}
+
+	if ($member -is [System.Reflection.EventInfo]) {
+		return "E:$typeName.$($member.Name)"
+	}
+
+	throw ("Unsupported member kind for doc-id computation: {0}" -f $member.GetType().Name)
+}
+
+function BuildAttributeAiTagsIndex([System.Reflection.Assembly] $assembly) {
+	# id -> merged "Key=Value; ...;" string, for every member whose own AiTagsAttribute or whose
+	# declaring type's AiTagsDefaultsAttribute contributes at least one field.
+	$index      = @{}
+	$typeCache  = @{}   # type.FullName -> @{ Own = map; Defaults = map }
+
+	function GetTypeMaps([Type] $type) {
+		$key = $type.FullName
+		if ($typeCache.ContainsKey($key)) {
+			return $typeCache[$key]
+		}
+
+		$own      = GetNamedArgumentMap (GetCustomAttributeDataByName $type 'AiTagsAttribute')
+		$defaults = GetNamedArgumentMap (GetCustomAttributeDataByName $type 'AiTagsDefaultsAttribute')
+		$result   = @{ Own = $own; Defaults = $defaults }
+		$typeCache[$key] = $result
+		return $result
+	}
+
+	try {
+		$assemblyTypes = $assembly.GetTypes()
+	}
+	catch [System.Reflection.ReflectionTypeLoadException] {
+		$assemblyTypes = $_.Exception.Types | Where-Object { $_ -ne $null }
+	}
+
+	foreach ($type in $assemblyTypes) {
+		if (-not $type.IsPublic -and -not $type.IsNestedPublic) {
+			continue
+		}
+
+		$typeMaps = GetTypeMaps $type
+
+		try {
+			$typeId = GetMemberDocId $type
+		}
+		catch {
+			$typeId = $null
+		}
+		if ($typeId -eq $null -and $typeMaps.Own.Count -gt 0) {
+			# Fallback for the type itself (GetMemberDocId only handles member kinds above); types use
+			# the simple "T:Namespace.Name`Arity" form directly.
+			$typeId = "T:$($type.FullName -replace '\+', '.')"
+		}
+		if ($typeMaps.Own.Count -gt 0 -and $typeId) {
+			$formatted = FormatMergedAiTags $typeMaps.Own @{}
+			if ($formatted) { $index[$typeId] = $formatted }
+		}
+
+		$members = @()
+		$members += $type.GetMethods([System.Reflection.BindingFlags]'Public,NonPublic,Instance,Static,DeclaredOnly')
+		$members += $type.GetConstructors([System.Reflection.BindingFlags]'Public,NonPublic,Instance,DeclaredOnly')
+		$members += $type.GetProperties([System.Reflection.BindingFlags]'Public,NonPublic,Instance,Static,DeclaredOnly')
+		$members += $type.GetFields([System.Reflection.BindingFlags]'Public,NonPublic,Instance,Static,DeclaredOnly')
+		$members += $type.GetEvents([System.Reflection.BindingFlags]'Public,NonPublic,Instance,Static,DeclaredOnly')
+
+		foreach ($member in $members) {
+			$ownAttr = GetCustomAttributeDataByName $member 'AiTagsAttribute'
+			if ($ownAttr -eq $null) {
+				continue
+			}
+
+			try {
+				$id = GetMemberDocId $member
+			}
+			catch {
+				continue
+			}
+
+			$ownMap = GetNamedArgumentMap $ownAttr
+			$merged = FormatMergedAiTags $ownMap $typeMaps.Defaults
+			if ($merged) {
+				$index[$id] = $merged
+			}
+		}
+	}
+
+	return $index
+}
+#endregion
 
 function GetKind([string] $id) {
 	switch ($id.Substring(0, 1)) {
@@ -329,6 +572,10 @@ if (-not (Test-Path -LiteralPath $ApiDocPath)) {
 	throw "API documentation file not found: $ApiDocPath"
 }
 
+if (-not (Test-Path -LiteralPath $AssemblyPath)) {
+	throw "Assembly file not found: $AssemblyPath"
+}
+
 $existing    = [System.IO.File]::ReadAllText($ApiDocPath, [System.Text.Encoding]::UTF8)
 $markerIndex = $existing.IndexOf($marker)
 
@@ -342,6 +589,16 @@ else {
 $manual = [System.Text.RegularExpressions.Regex]::Replace($manual, '(\r?\n\s*---\s*)+$', '').TrimEnd()
 
 [xml] $xml = [System.IO.File]::ReadAllText($XmlDocPath, [System.Text.Encoding]::UTF8)
+
+$assembly           = [System.Reflection.Assembly]::LoadFrom((Resolve-Path -LiteralPath $AssemblyPath).Path)
+$attributeTagsIndex = BuildAttributeAiTagsIndex $assembly
+
+function ExtractAiTags($member, [string] $id) {
+	if ($attributeTagsIndex.ContainsKey($id)) {
+		return $attributeTagsIndex[$id]
+	}
+	return ExtractAiTagsFromXml $member
+}
 
 $xmlMemberCount   = 0
 $externalExcluded = 0
@@ -376,7 +633,7 @@ foreach ($member in $xml.doc.members.member) {
 		Kind    = GetKind $id
 		Family  = GetFamily $id
 		Summary = GetSummaryText $member
-		Tags    = ExtractAiTags $member
+		Tags    = ExtractAiTags $member $id
 	})
 }
 
@@ -396,7 +653,7 @@ $lines.Add('This section is generated from the package XML documentation and opt
 $lines.Add('It includes consumer-supported `LinqToDB.*` XML-doc members and groups overload families into compact tables instead of repeating one long section per overload.')
 $lines.Add('It intentionally excludes `LinqToDB.Internal.*`; do not use `LinqToDB.Internal.*` APIs in application code even if they are public in the assembly.')
 $lines.Add('Do not read this generated section sequentially. Treat it as a search index: search by task terms, provider name, SQL keyword, member name, receiver type, or AI metadata.')
-$lines.Add('AI metadata is generated from XML-doc `<ai-tags />` elements. It is not human-facing `<remarks>` text.')
+$lines.Add('AI metadata is generated from `AiTagsAttribute`/`AiTagsDefaultsAttribute` (or, for not-yet-migrated members, legacy XML-doc `<ai-tags />` elements). It is not human-facing `<remarks>` text.')
 $lines.Add('Use `Search anchors` lines as the primary discovery surface, then use `lib/<TFM>/linq2db.xml` only when you need exact signatures, parameter docs, remarks, and constraints that are not clear from this extract.')
 $lines.Add('')
 $lines.Add('Missing from this compact section is not proof that an API or overload is absent. Search XML-doc before falling back to generic APIs.')

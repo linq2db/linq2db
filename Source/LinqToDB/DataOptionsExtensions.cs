@@ -13,6 +13,7 @@ using LinqToDB.Data;
 using LinqToDB.Data.RetryPolicy;
 using LinqToDB.DataProvider;
 using LinqToDB.Interceptors;
+using LinqToDB.Internal.Metadata;
 using LinqToDB.Linq;
 using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
@@ -27,7 +28,7 @@ namespace LinqToDB
 	/// Extension methods in this type are composable configuration operations that return a new <see cref="DataOptions"/> instance.
 	/// They do not execute database commands.
 	/// </remarks>
-	/// <ai-tags-defaults group="Configuration" execution="Immediate" composability="Composable" affects="Configuration" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+	[AiTagsDefaults(Groups = AiGroup.Configuration, Execution = AiExecution.Immediate, Composability = AiComposability.Composable, Affects = AiAffects.Configuration, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 	[PublicAPI]
 	public static partial class DataOptionsExtensions
 	{

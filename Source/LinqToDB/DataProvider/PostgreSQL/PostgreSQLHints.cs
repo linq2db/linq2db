@@ -8,6 +8,7 @@ using JetBrains.Annotations;
 
 using LinqToDB.Internal.DataProvider.PostgreSQL;
 using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.Metadata;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
@@ -82,7 +83,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		/// <c>Sql.TableSpec</c> for table sources marked with <c>TableID</c>. They resolve to the
 		/// generated SQL identifiers for the selected table sources.
 		/// </remarks>
-		/// <ai-tags group="Hints" hint-type="SubQuery" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.SubQuery, Execution = AiExecution.Deferred,
+			Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics,
+			Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.PostgreSQL, Sql.QueryExtensionScope.SubQueryHint, typeof(SubQueryTableHintExtensionBuilder))]
 		[Sql.QueryExtension(null,                    Sql.QueryExtensionScope.None,         typeof(NoneExtensionBuilder))]
@@ -117,7 +120,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		/// <c>Sql.TableSpec</c> for table sources marked with <c>TableID</c>. They resolve to the
 		/// generated SQL identifiers for the selected table sources.
 		/// </remarks>
-		/// <ai-tags group="Hints" hint-type="SubQuery" execution="Deferred" composability="Composable" affects="SqlSemantics" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.SubQuery, Execution = AiExecution.Deferred,
+			Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics,
+			Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.PostgreSQL, Sql.QueryExtensionScope.SubQueryHint, typeof(SubQueryTableHintExtensionBuilder))]
 		[Sql.QueryExtension(null,                    Sql.QueryExtensionScope.None,         typeof(NoneExtensionBuilder))]

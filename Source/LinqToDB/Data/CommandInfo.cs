@@ -31,6 +31,7 @@ using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Interceptors;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.Linq.Builder;
+using LinqToDB.Internal.Metadata;
 using LinqToDB.Mapping;
 using LinqToDB.Metrics;
 using LinqToDB.Reflection;
@@ -83,8 +84,8 @@ namespace LinqToDB.Data
 	/// No LINQ translation occurs; the caller provides SQL text and parameters directly.
 	/// </para>
 	/// </remarks>
-	/// <ai-tags group="RawSQL" provider="ProviderDefined" />
-	/// <ai-tags-defaults group="RawSQL" pipeline="SqlText" provider="ProviderDefined" />
+	[AiTags(Groups = AiGroup.RawSQL, Provider = AiProvider.ProviderDefined)]
+	[AiTagsDefaults(Groups = AiGroup.RawSQL, Pipeline = AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 	[PublicAPI]
 	public class CommandInfo
 	{
