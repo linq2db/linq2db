@@ -27,25 +27,25 @@ When performing a code review, **comment on formatting only when it is clearly p
 
 ## AI Documentation Consistency
 
-The `docs/` directory contains machine-readable references consumed by AI agents. When reviewing a pull request, flag any of the following mismatches as a comment. Do not flag these if the PR already includes a matching update to the relevant document.
+The `Source/Skills/linq2db/docs/` directory contains machine-readable references consumed by AI agents. When reviewing a pull request, flag any of the following mismatches as a comment. Do not flag these if the PR already includes a matching update to the relevant document.
 
 **Provider setup and capabilities**
 
-- **`ProviderName.cs` changed** (constant added, removed, or renamed): verify `docs/provider-setup.md` `ProviderName` constants tables are up to date.
+- **`ProviderName.cs` changed** (constant added, removed, or renamed): verify `Source/Skills/linq2db/docs/provider-setup.md` `ProviderName` constants tables are up to date.
 
-- **`DataOptionsExtensions.Provider.cs` changed** (new or modified `UseXxx` method or parameter): verify `docs/provider-setup.md` method signatures and enum tables reflect the change.
+- **`DataOptionsExtensions.Provider.cs` changed** (new or modified `UseXxx` method or parameter): verify `Source/Skills/linq2db/docs/provider-setup.md` method signatures and enum tables reflect the change.
 
-- **Any `*Version.cs` or `*Provider.cs` enum file changed** (value added or removed): verify the corresponding enum table in `docs/provider-setup.md` is up to date.
+- **Any `*Version.cs` or `*Provider.cs` enum file changed** (value added or removed): verify the corresponding enum table in `Source/Skills/linq2db/docs/provider-setup.md` is up to date.
 
-- **`SqlProviderFlags` changed**, or a provider's SQL builder gained or lost a feature (MERGE, CTE, window functions, APPLY/LATERAL, OUTPUT/RETURNING, bulk copy, upsert): verify `docs/provider-capabilities.md` matrix row for that provider is correct.
+- **`SqlProviderFlags` changed**, or a provider's SQL builder gained or lost a feature (MERGE, CTE, window functions, APPLY/LATERAL, OUTPUT/RETURNING, bulk copy, upsert): verify `Source/Skills/linq2db/docs/provider-capabilities.md` matrix row for that provider is correct.
 
-- **A translator registration changed** in `StringMemberTranslatorBase`, `MathMemberTranslatorBase`, `DateFunctionsTranslatorBase`, `ConvertMemberTranslatorDefault`, or any `*MemberTranslator*.cs` (method added, removed, or renamed): verify `docs/translatable-methods.md` reflects the change (table row added, removed, or updated).
+- **A translator registration changed** in `StringMemberTranslatorBase`, `MathMemberTranslatorBase`, `DateFunctionsTranslatorBase`, `ConvertMemberTranslatorDefault`, or any `*MemberTranslator*.cs` (method added, removed, or renamed): verify `Source/Skills/linq2db/docs/translatable-methods.md` reflects the change (table row added, removed, or updated).
 
-- **`DataOptionsExtensions.cs` changed** — a `UseXxx` method added, removed, or its behavior changed (connection, tracing, retry, interceptors, member translators): verify `docs/configuration.md` reflects the change.
+- **`DataOptionsExtensions.cs` changed** — a `UseXxx` method added, removed, or its behavior changed (connection, tracing, retry, interceptors, member translators): verify `Source/Skills/linq2db/docs/configuration.md` reflects the change.
 
 **AI metadata**
 
-- **`<ai-tags />` or `<ai-tags-defaults />` XML-doc element added or modified**: every attribute and value must match the vocabulary defined in `docs/ai-tags.md` - flag unknown attributes or values for known attributes. Multi-value fields are comma-separated (`affects="DdlStatement,Data"`), not semicolon-separated.
+- **`<ai-tags />` or `<ai-tags-defaults />` XML-doc element added or modified**: every attribute and value must match the vocabulary defined in `Source/Skills/linq2db/docs/ai-tags.md` - flag unknown attributes or values for known attributes. Multi-value fields are comma-separated (`affects="DdlStatement,Data"`), not semicolon-separated.
 
 - **Behaviour of an already-tagged API changes**: if `execution`, `composability`, `affects`, or `pipeline` semantics change in this PR (e.g., a deferred query becomes immediate, or DDL is added or removed), flag that the corresponding `<ai-tags />` metadata needs updating.
 

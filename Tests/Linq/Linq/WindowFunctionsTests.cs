@@ -46,9 +46,7 @@ namespace Tests.Linq
 				return $"Id: {Id}, Name: {Name}, CategoryId: {CategoryId}, Value: {Value}, Timestamp: {Timestamp}";
 			}
 
-#pragma warning disable NUnit1028 // The non-test method is public
-			public static WindowFunctionTestEntity[] Seed()
-#pragma warning restore NUnit1028 // The non-test method is public
+			internal static WindowFunctionTestEntity[] Seed()
 			{
 				return
 				[
