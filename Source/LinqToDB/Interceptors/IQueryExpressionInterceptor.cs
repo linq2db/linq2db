@@ -9,7 +9,7 @@ namespace LinqToDB.Interceptors
 	/// Use it when a query shape must be rewritten at the LINQ expression-tree level before SQL translation begins.
 	/// The method can be called for exposed query expressions, full query expressions, filters, or associations;
 	/// use <see cref="QueryExpressionArgs.ExpressionKind"/> to identify the call site.
-	/// For lower-level SQL-member translation, see <see cref="Linq.Translation.IMemberTranslator"/>.
+	/// For lower-level SQL-member translation, see <see cref="LinqToDB.Linq.Translation.IMemberTranslator"/>.
 	/// </remarks>
 	public interface IQueryExpressionInterceptor : IInterceptor
 	{
