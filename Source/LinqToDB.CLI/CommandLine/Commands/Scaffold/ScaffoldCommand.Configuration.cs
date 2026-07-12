@@ -18,7 +18,7 @@ namespace LinqToDB.CommandLine.Commands.Scaffold
 		/// Configure scaffolder options object.
 		/// </summary>
 		/// <param name="options">CLI options.</param>
-		/// <returns>Scaffold settings or <see langword="null"/> on error.</returns>
+		/// <returns>Scaffold settings.</returns>
 		private static ScaffoldOptions ProcessScaffoldOptions(Dictionary<CliOption, object?> options)
 		{
 			ScaffoldOptions settings;

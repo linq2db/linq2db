@@ -93,6 +93,16 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 
 			var configFileName = new ConnectionSettingsResolver(environment).ResolvePath(QueryExecutionCliOptions.Config, startupOptions.Config);
 
+			if (startupOptions.Config != null && (configFileName == null || !environment.FileExists(configFileName)))
+			{
+				// A missing %NAME%/${NAME} expansion already reported its own diagnostic and
+				// returned a sentinel value that can't be a real path; don't print it verbatim.
+				if (configFileName != null && !configFileName.Contains('\0', StringComparison.Ordinal))
+					await environment.Error.WriteLineAsync($"Configuration file '{configFileName}' not found.").ConfigureAwait(false);
+
+				return StatusCodes.INVALID_ARGUMENTS;
+			}
+
 			if (!McpServerConfiguration.TryLoad(environment, configFileName, out var serverConfiguration, out var error))
 			{
 				await environment.Error.WriteLineAsync(error).ConfigureAwait(false);

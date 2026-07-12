@@ -464,17 +464,27 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
-		public async Task McpInfoReturnsToolErrorForMissingConfig()
+		public async Task McpRejectsMissingConfigAtStartup()
 		{
-			await using var server = await McpServerProcess.Start("--config", "missing-query-config.json");
-
-			await server.Initialize();
-			var response = await server.CallTool("linq2db_info", new JsonObject());
+			var result = await RunCliProcess("mcp", "--config", "missing-query-config.json");
 
 			{
-				(response["error"]).ShouldBeNull();
-				((bool?)response["result"]?["isError"]).ShouldBe(true);
-				((string?)response["result"]?["content"]?[0]?["text"]).ShouldContain("Cannot load linq2db query configuration");
+				(result.ExitCode).ShouldBe(-1);
+				(result.Output).ShouldBeEmpty();
+				(result.Error).ShouldContain("Configuration file 'missing-query-config.json' not found.");
+			}
+		}
+
+		[Test]
+		public async Task McpRejectsMissingEnvironmentVariableInConfigPathAtStartup()
+		{
+			var result = await RunCliProcess("mcp", "--config", "%MISSING_MCP_CONFIG_DIR%\\query.json");
+
+			{
+				(result.ExitCode).ShouldBe(-1);
+				(result.Output).ShouldBeEmpty();
+				(result.Error).ShouldContain("Environment variable 'MISSING_MCP_CONFIG_DIR' referenced by option '--config' is not set.");
+				(result.Error).ShouldNotContain("Configuration file");
 			}
 		}
 
