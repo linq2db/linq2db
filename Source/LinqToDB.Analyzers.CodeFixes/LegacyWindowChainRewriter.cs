@@ -84,15 +84,15 @@ namespace LinqToDB.Analyzers.CodeFixes
 
 			// Collected walking ToValue -> root; ordering lists are reversed to natural order before building.
 			var orderClauses    = new List<OrderClause>();
-			List<OrderClause>? keepOrderClauses       = null;
+			List<OrderClause>? keepOrderClauses        = null;
 			List<OrderClause>? withinGroupOrderClauses = null;
 
 			ArgumentListSyntax? partitionArgs = null;
 
-			var    sawOver     = false;
-			var    keepSeen    = false;
-			var    isKeepFirst = false;
-			var    frameSeen   = false;
+			var    sawOver      = false;
+			var    keepSeen     = false;
+			var    isKeepFirst  = false;
+			var    frameSeen    = false;
 			var    frameIsRange = false;
 			string? frameStart = null;
 			string? frameEnd   = null;
@@ -117,8 +117,8 @@ namespace LinqToDB.Analyzers.CodeFixes
 						{
 							if (name is "KeepFirst" or "KeepLast")
 							{
-								keepSeen        = true;
-								isKeepFirst     = string.Equals(name, "KeepFirst", StringComparison.Ordinal);
+								keepSeen         = true;
+								isKeepFirst      = string.Equals(name, "KeepFirst", StringComparison.Ordinal);
 								keepOrderClauses = orderClauses;              // orders collected so far belong to KEEP
 								orderClauses     = new List<OrderClause>();
 								current          = ma.Expression;
@@ -147,7 +147,7 @@ namespace LinqToDB.Analyzers.CodeFixes
 								break;
 							case "ValuePreceding" or "ValueFollowing":
 							{
-								frameSeen = true;
+								frameSeen    = true;
 								var argCount = inv.ArgumentList.Arguments.Count;
 								var value    = argCount > 0 ? inv.ArgumentList.Arguments[argCount - 1] : null;
 								ApplyFrameBoundary(method.ContainingType, name, value, ref frameStart, ref frameStartValue, ref frameEnd, ref frameEndValue);
@@ -212,10 +212,10 @@ namespace LinqToDB.Analyzers.CodeFixes
 			var mapped = legacyName switch
 			{
 				"UnboundedPreceding" or "UnboundedFollowing" => "Unbounded",
-				"CurrentRow"                                  => "CurrentRow",
-				"ValuePreceding"                              => "ValuePreceding",
-				"ValueFollowing"                              => "ValueFollowing",
-				_                                             => (string?)null,
+				"CurrentRow"                                 => "CurrentRow",
+				"ValuePreceding"                             => "ValuePreceding",
+				"ValueFollowing"                             => "ValueFollowing",
+				_                                            => (string?)null,
 			};
 
 			if (mapped is null)
@@ -259,7 +259,9 @@ namespace LinqToDB.Analyzers.CodeFixes
 			// vice-versa). Each argument maps to its parameter, so value args are collected with their parameter
 			// ordinal and sorted into declaration order — the order Sql.Window expects.
 			var valueArgsByOrdinal = new List<(int Ordinal, ArgumentSyntax Arg)>();
-			string? distinct = null, nullTreatment = null, fromPosition = null;
+			string? distinct      = null;
+			string? nullTreatment = null;
+			string? fromPosition  = null;
 
 			if (model.GetOperation(rootInvocation) is not IInvocationOperation rootOperation)
 				return null;
@@ -349,10 +351,10 @@ namespace LinqToDB.Analyzers.CodeFixes
 				if (frameSeen && (frameStart is null || !FrameableFunctions.Contains(functionName)))
 					return null;
 
-				if (distinct      is not null) steps.Add(new Step("Distinct",      SyntaxFactory.ArgumentList()));
-				if (fromPosition  is not null) steps.Add(new Step(fromPosition,    SyntaxFactory.ArgumentList()));
-				if (nullTreatment is not null) steps.Add(new Step(nullTreatment,   SyntaxFactory.ArgumentList()));
-				if (partitionArgs is not null) steps.Add(new Step("PartitionBy",   partitionArgs));
+				if (distinct      is not null) steps.Add(new Step("Distinct", SyntaxFactory.ArgumentList()));
+				if (fromPosition  is not null) steps.Add(new Step(fromPosition, SyntaxFactory.ArgumentList()));
+				if (nullTreatment is not null) steps.Add(new Step(nullTreatment, SyntaxFactory.ArgumentList()));
+				if (partitionArgs is not null) steps.Add(new Step("PartitionBy", partitionArgs));
 
 				AddOrderSteps(steps, orderClauses);
 			}

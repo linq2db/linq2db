@@ -847,24 +847,24 @@ namespace Tests.Analyzers
 			// but runs to end of line — the salvaged comment must be line-terminated so the statement's ';' is not
 			// swallowed into it (which would leave the rewritten code without a terminator and stop compiling).
 			=> Verify.VerifyAsync(
-"""
-using LinqToDB;
+				"""
+				using LinqToDB;
 
-class C
-{
-	long M(int x) => {|L2DB1001:Sql.Ext.RowNumber().Over() // keep
-		.OrderBy(x).ToValue()|};
-}
-""",
-"""
-using LinqToDB;
+				class C
+				{
+					long M(int x) => {|L2DB1001:Sql.Ext.RowNumber().Over() // keep
+						.OrderBy(x).ToValue()|};
+				}
+				""",
+				"""
+				using LinqToDB;
 
-class C
-{
-	long M(int x) => Sql.Window.RowNumber(f => f.OrderBy(x)) // keep
-;
-}
-""");
+				class C
+				{
+					long M(int x) => Sql.Window.RowNumber(f => f.OrderBy(x)) // keep
+				;
+				}
+				""");
 
 		[Test]
 		public Task DoesNotOfferFixForNTileInInferredContextThatWouldWiden()

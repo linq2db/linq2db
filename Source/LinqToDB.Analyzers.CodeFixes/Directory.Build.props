@@ -5,4 +5,6 @@
 	apply to a Roslyn component). Packs both this assembly and the sibling analyzer assembly into the package.
 	-->
 	<Import Project="$(MSBuildThisFileDirectory)\..\..\Directory.Build.props" />
+	<!-- Shared Roslyn-component settings for both analyzer projects (after root props, so it overrides the multi-TFM list). -->
+	<Import Project="$(MSBuildThisFileDirectory)\..\Analyzers.Common.props" />
 </Project>
