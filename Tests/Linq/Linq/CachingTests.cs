@@ -191,17 +191,23 @@ namespace Tests.Linq
 
 			members.Length.ShouldBeGreaterThan(10); // guard: the workload is non-trivial
 
-			// Every probed BCL member carries no mapping attribute — all negative lookups.
+			// Every probed BCL member carries no mapping attribute — all negative lookups. Measure the
+			// AttributeReader cache growth tightly around the loop rather than its absolute size: pre-fix
+			// each empty lookup was cached (delta >= members.Length), post-fix negatives are not cached
+			// (delta ~0). The tight window minimizes interference from concurrent [Parallelizable] fixtures
+			// adding unrelated positive entries to this process-static cache — an absolute-count assertion
+			// accumulates that concurrent noise across the whole test and can false-fail.
+			// FirstOrDefault: the process-static AttributeReader cache registers lazily on first use, so it
+			// may be absent from the inventory here (count 0) when this test runs in isolation before any
+			// GetAttributes call; the loop below guarantees it is present for the post-read.
+			var before = LinqToDB.Linq.Tools.GetCacheEntryCounts().FirstOrDefault(c => c.Name == "AttributeReader").Count;
+
 			foreach (var m in members)
 				_ = reader.GetAttributes(m.DeclaringType!, m);
 
-			// Negative results are no longer cached. Pre-fix each empty lookup was cached, so the count was
-			// >= members.Length. Asserted with tolerance (not exact 0) because the process-static AttributeReader
-			// cache can pick up a few positive entries from concurrent [Parallelizable] fixtures between the
-			// clear and this read.
-			var stats = LinqToDB.Linq.Tools.GetCacheEntryCounts().First(c => c.Name == "AttributeReader");
+			var after = LinqToDB.Linq.Tools.GetCacheEntryCounts().FirstOrDefault(c => c.Name == "AttributeReader").Count;
 
-			stats.Count.ShouldBeLessThan(members.Length);
+			(after - before).ShouldBeLessThan(members.Length);
 		}
 
 		// #5711 guard: WorkCacheEntryLimit must reject values below BitFaster's minimum capacity (3),
