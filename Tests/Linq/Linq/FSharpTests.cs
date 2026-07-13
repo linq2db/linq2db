@@ -481,6 +481,14 @@ namespace Tests.Linq
 			Assert.That(FSharp.DuQueryTests.EqualsLiteral(db), Is.EqualTo(1));
 		}
 
+		[ActiveIssue("Blocked by #1813 (F# captured-lambda predicate translation, PR #5701): the correlated LEFT JOIN predicate fails to build. Once #5701 lands this exposes a single-case-DU null read materializing UserId 0 instead of null (FSharpSingleCaseUnionSupport converter created with handlesNulls=true but no null branch); fix by passing handlesNulls=false.")]
+		[Test(Description = "F# single-case DU column read as NULL (LEFT JOIN unmatched row) must materialize as null, not a fabricated default")]
+		public void DuQuery_NullReadKey([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			Assert.That(FSharp.DuQueryTests.NullReadKey(db), Is.EqualTo(1));
+		}
+
 		[Test(Description = "UseFSharp must yield a stable ConfigurationID - the harness applies it to every context, so an unstable id defeats the query cache for all providers (#5704)")]
 		public void UseFSharp_StableConfigurationID()
 		{
