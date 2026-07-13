@@ -433,6 +433,30 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public void QueryGuardIgnoresPostgreSqlDollarQuotedStrings()
+		{
+			var provider = DataConnection.GetDataProvider("PostgreSQL", "Host=localhost;Database=test")!;
+
+			{
+				(ReadOnlySqlGuard.Validate(provider, "select $$drop table Person;$$ as Value").IsAllowed).ShouldBe(true);
+				(ReadOnlySqlGuard.Validate(provider, "select $tag$update Person set Name = 'x';$tag$ as Value;").IsAllowed).ShouldBe(true);
+			}
+		}
+
+		[Test]
+		public void QueryGuardRejectsStatementAfterPostgreSqlDollarQuotedString()
+		{
+			var provider = DataConnection.GetDataProvider("PostgreSQL", "Host=localhost;Database=test")!;
+
+			var result = ReadOnlySqlGuard.Validate(provider, "select $tag$drop table Person;$tag$; drop table Person");
+
+			{
+				(result.IsAllowed).ShouldBe(false);
+				(result.Error).ShouldContain("Only single SQL statement is allowed.");
+			}
+		}
+
+		[Test]
 		public void QueryHonorsCancellationToken()
 		{
 			using var cancellation = new CancellationTokenSource();

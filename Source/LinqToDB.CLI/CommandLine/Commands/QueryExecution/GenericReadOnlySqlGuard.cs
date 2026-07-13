@@ -148,6 +148,36 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 
 						break;
 					}
+					case '$':
+					{
+						var delimiterEnd = i + 1;
+
+						if (delimiterEnd < sql.Length && sql[delimiterEnd] != '$')
+						{
+							if (!char.IsLetter(sql[delimiterEnd]) && sql[delimiterEnd] != '_')
+							{
+								i++;
+								break;
+							}
+
+							delimiterEnd++;
+
+							while (delimiterEnd < sql.Length && (char.IsLetterOrDigit(sql[delimiterEnd]) || sql[delimiterEnd] == '_'))
+								delimiterEnd++;
+						}
+
+						if (delimiterEnd >= sql.Length || sql[delimiterEnd] != '$')
+						{
+							i++;
+							break;
+						}
+
+						var delimiter = sql.Substring(i, delimiterEnd - i + 1);
+						var close     = sql.IndexOf(delimiter, delimiterEnd + 1, StringComparison.Ordinal);
+
+						i = close < 0 ? sql.Length : close + delimiter.Length;
+						break;
+					}
 					case '"' or '`' or '[':
 					{
 						var close = current == '[' ? ']' : current;
