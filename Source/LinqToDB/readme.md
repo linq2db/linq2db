@@ -705,6 +705,12 @@ Adjust a rule's severity in `.editorconfig`:
 dotnet_diagnostic.L2DB1001.severity = warning
 ```
 
+Apply the L2DB1001 code fix even when the `Sql.Window` return type diverges from the legacy `ToValue<TR>()` slot (default `false`; when enabled you resolve any resulting type change, e.g. widening `int` to `long`, by hand):
+
+```ini
+linq2db.L2DB1001.apply_fix_on_return_type_mismatch = true
+```
+
 ## MiniProfiler
 
 If you would like to use [MiniProfiler](https://github.com/MiniProfiler/dotnet) or other profiling tool that wraps ADO.NET provider classes, you need to configure our regular `DataConnection` to use wrapped connection.
