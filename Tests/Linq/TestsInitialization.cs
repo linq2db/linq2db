@@ -315,7 +315,18 @@ public class TestsInitialization
 		// connection using the same string — exactly like SQLite — so we only need to hold one master
 		// connection open; the database is destroyed once its last connection closes.
 		var master = new DuckDB.NET.Data.DuckDBConnection(cs);
-		master.Open();
+		try
+		{
+			master.Open();
+		}
+		catch (DllNotFoundException)
+		{
+			// no native duckdb on this leg (e.g. the x86 Access runs, where DuckDB isn't a tested
+			// provider) — skip the in-memory keep-alive rather than failing global OneTimeSetUp.
+			master.Dispose();
+			return;
+		}
+
 		TestInMemoryDatabases.AddKeepAlive(master);
 
 		// Preload from the committed on-disk file so a filtered run (which skips a_CreateData) still has
