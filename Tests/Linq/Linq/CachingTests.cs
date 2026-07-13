@@ -130,6 +130,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[NonParallelizable] // asserts on and toggles process-global QueryCache counters/flags
 		public void QueryCacheMeasurementTracksHitsAndMisses([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
 		{
 			QueryCache.Default.ClearAll();
@@ -179,6 +180,7 @@ namespace Tests.Linq
 		// #5692 regression: MappingAttributesCache must not cache negative (empty) attribute lookups,
 		// which previously dominated the cache and drove unbounded growth (NETFX multi-config OOM).
 		[Test]
+		[NonParallelizable] // calls Tools.ClearAllCaches(), which clears every process-global cache
 		public void MappingAttributesCacheDoesNotCacheNegativeLookups()
 		{
 			LinqToDB.Linq.Tools.ClearAllCaches();
@@ -213,6 +215,7 @@ namespace Tests.Linq
 		// #5711 guard: WorkCacheEntryLimit must reject values below BitFaster's minimum capacity (3),
 		// which would otherwise crash every work cache at construction (TypeInitializationException).
 		[Test]
+		[NonParallelizable] // mutates process-global Configuration.Cache.WorkCacheEntryLimit
 		public void WorkCacheEntryLimitRejectsValuesBelowMinimum()
 		{
 			var prior = LinqToDB.Common.Configuration.Cache.WorkCacheEntryLimit;
