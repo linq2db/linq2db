@@ -714,8 +714,9 @@ namespace LinqToDB.Internal.SqlProvider
 		/// <summary>
 		/// Provider reports the number of affected rows from <c>UPDATE</c> / <c>DELETE</c> execution.
 		/// Used by <see cref="LinqToDB.Concurrency.ConcurrencyExtensions"/>'s <c>UpdateOptimisticWithRefresh</c>
-		/// overloads: when <see langword="false"/> the affected-row count is unreliable, so the SELECT-fallback
-		/// read-back cannot be gated on it (it is performed best-effort instead).
+		/// overloads: when <see langword="false"/> the affected-row count is unreliable, so — unless the provider
+		/// also supports UPDATE <c>OUTPUT</c> / <c>RETURNING</c> — the optimistic-concurrency result cannot be
+		/// reported and the operation throws.
 		/// Default: <see langword="true"/>.
 		/// </summary>
 		[DataMember(Order = 78), DefaultValue(true)]

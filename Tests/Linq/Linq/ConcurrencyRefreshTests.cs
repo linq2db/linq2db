@@ -193,43 +193,29 @@ namespace Tests.Linq
 			Assert.That(record.Stamp, Is.EqualTo(stale), "entity must not be touched on concurrency failure");
 		}
 
-		// Regression for the no-rowcount fallback contract (raised in review): on a provider that reports neither
-		// UPDATE OUTPUT/RETURNING nor affected-row counts (ClickHouse), success is verified by re-reading the written
-		// columns, so the method must still report 1 + refresh on success and 0 + leave the entity unchanged on a
-		// stale-token concurrency failure. YDB reaches the same contract via its OUTPUT/RETURNING path.
+		// Regression for the no-rowcount contract (raised in review): a provider that reports neither
+		// UPDATE OUTPUT/RETURNING nor affected-row counts (ClickHouse) cannot report the optimistic-concurrency
+		// result, so UpdateOptimisticWithRefresh is unsupported and must throw rather than guess best-effort.
+		// (YDB reaches the API via its OUTPUT/RETURNING path and is unaffected.) Gated by capability flags, not
+		// a provider name, so any future no-OUTPUT + no-rowcount provider is covered automatically.
 		[Test]
-		public void UpdateOnNoRowcountProviderReportsResult([DataSources] string context)
+		public void UpdateOnUnsupportedProviderThrows([DataSources] string context)
 		{
-			if (context.SupportsRowcount())
-				Assert.Ignore("Covered by the affected-rows path; this test pins the no-rowcount verification path.");
-
 			using var _  = new DisableBaseline("guid used");
 			using var db = GetDataContext(context, GuidSchema("ConcurrencyRefreshGuid"));
+
+			if (db.SqlProviderFlags.IsUpdateOutputSupported || db.SqlProviderFlags.IsAffectedRowsCountSupported)
+				Assert.Ignore("UpdateOptimisticWithRefresh is unsupported only where the provider reports neither UPDATE OUTPUT/RETURNING nor affected-row counts.");
+
 			using var t  = db.CreateLocalTable<RefreshTable<Guid>>();
 
 			var record = new RefreshTable<Guid> { Id = 1, Stamp = default, Value = "initial" };
 			db.Insert(record);
 			record.Stamp = t.Single().Stamp;
-			var before   = record.Stamp;
 
-			// success: our write is persisted -> stamp refreshed and reported as 1
 			record.Value = "updated";
-			var cnt = db.UpdateOptimisticWithRefresh(record);
 
-			Assert.That(cnt, Is.EqualTo(1));
-			Assert.That(record.Stamp, Is.Not.EqualTo(before));
-			Assert.That(record.Stamp, Is.EqualTo(t.Single().Stamp));
-
-			// stale token: no row matches the optimistic filter -> reported as 0, entity and stored row left unchanged
-			record.Stamp = TestData.Guid1;
-			var stale    = record.Stamp;
-			record.Value = "conflict";
-
-			var cnt2 = db.UpdateOptimisticWithRefresh(record);
-
-			Assert.That(cnt2, Is.Zero);
-			Assert.That(record.Stamp, Is.EqualTo(stale), "entity must not be touched on concurrency failure");
-			Assert.That(t.Single().Value, Is.EqualTo("updated"), "stored row must keep the last successful write");
+			Assert.Throws<LinqToDBException>(() => db.UpdateOptimisticWithRefresh(record));
 		}
 
 		// Guard test: keep SqlProviderFlags.IsUpdateOutputSupported honest. It probes the provider's actual UPDATE

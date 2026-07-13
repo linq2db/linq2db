@@ -301,15 +301,11 @@ namespace LinqToDB.Concurrency
 				.ToArray();
 		}
 
-		// non-lock columns written with known (from obj) values -> usable to verify our write actually persisted
-		private static ColumnDescriptor[] GetComparableColumns<T>(EntityDescriptor ed, Type objType, T obj)
-			where T : class
-		{
-			return ed.Columns
-				.Where(c => !c.IsPrimaryKey && !c.IsIdentity && !c.SkipOnUpdate && !c.ShouldSkip(obj, ed, SkipModification.Update)
-					&& ed.MappingSchema.GetAttribute<OptimisticLockPropertyBaseAttribute>(objType, c.MemberInfo) == null)
-				.ToArray();
-		}
+		private const string UpdateWithRefreshNotSupportedMessage =
+			"UpdateOptimisticWithRefresh requires the provider to support UPDATE OUTPUT / RETURNING " +
+			"(SqlProviderFlags.IsUpdateOutputSupported) or a reliable affected-rows count " +
+			"(SqlProviderFlags.IsAffectedRowsCountSupported); the current provider supports neither, so the " +
+			"optimistic-concurrency result cannot be guaranteed.";
 
 		private static void CopyColumns<T>(ColumnDescriptor[] columns, T from, T to)
 			where T : class
@@ -380,50 +376,23 @@ namespace LinqToDB.Concurrency
 				return refreshed.Count;
 			}
 
+			// No single-statement OUTPUT / RETURNING and no reliable affected-row count (e.g. ClickHouse) -> the
+			// optimistic-concurrency result cannot be reported, so the operation is unsupported for this provider.
+			if (!dc.SqlProviderFlags.IsAffectedRowsCountSupported)
+				throw new LinqToDBException(UpdateWithRefreshNotSupportedMessage);
+
 			var count = updatable.Update();
 
-			if (dc.SqlProviderFlags.IsAffectedRowsCountSupported)
-			{
-				// reliable affected-row count: 0 is a genuine concurrency failure -> leave the entity untouched
-				if (count > 0)
-				{
-					var fresh = FilterByPrimaryKey(dc.GetTable<T>(), obj, ed).Select(LockColumnsSelector<T>(objType, lockColumns)).FirstOrDefault();
-
-					if (fresh != null)
-						CopyColumns(lockColumns, fresh, obj);
-				}
-
-				return count;
-			}
-
-			// No reliable affected-row count (e.g. ClickHouse): count is always 0, so verify success by re-reading the row
-			// filtered by PK AND the values we wrote to the non-lock columns -- a matching row means our write is the
-			// persisted state. Best-effort: on providers whose UPDATE is asynchronous (ClickHouse mutations) the read can
-			// observe pre-update state and report a false concurrency failure. See the method docs.
-			var comparable = GetComparableColumns(ed, objType, obj);
-
-			// nothing deterministic to compare (entity has only PK + lock column) -> best-effort refresh, report raw count
-			if (comparable.Length == 0)
+			// reliable affected-row count: 0 is a genuine concurrency failure -> leave the entity untouched
+			if (count > 0)
 			{
 				var fresh = FilterByPrimaryKey(dc.GetTable<T>(), obj, ed).Select(LockColumnsSelector<T>(objType, lockColumns)).FirstOrDefault();
 
 				if (fresh != null)
 					CopyColumns(lockColumns, fresh, obj);
-
-				return count;
 			}
 
-			var verified = FilterByColumns(FilterByPrimaryKey(dc.GetTable<T>(), obj, ed), obj, comparable)
-				.Select(LockColumnsSelector<T>(objType, lockColumns))
-				.FirstOrDefault();
-
-			if (verified != null)
-			{
-				CopyColumns(lockColumns, verified, obj);
-				return 1;
-			}
-
-			return 0;
+			return count;
 		}
 
 		private static async Task<int> UpdateOptimisticWithRefreshCoreAsync<T>(IQueryable<T> source, IDataContext dc, T obj, CancellationToken cancellationToken)
@@ -450,50 +419,23 @@ namespace LinqToDB.Concurrency
 				return refreshed.Count;
 			}
 
+			// No single-statement OUTPUT / RETURNING and no reliable affected-row count (e.g. ClickHouse) -> the
+			// optimistic-concurrency result cannot be reported, so the operation is unsupported for this provider.
+			if (!dc.SqlProviderFlags.IsAffectedRowsCountSupported)
+				throw new LinqToDBException(UpdateWithRefreshNotSupportedMessage);
+
 			var count = await updatable.UpdateAsync(cancellationToken).ConfigureAwait(false);
 
-			if (dc.SqlProviderFlags.IsAffectedRowsCountSupported)
-			{
-				// reliable affected-row count: 0 is a genuine concurrency failure -> leave the entity untouched
-				if (count > 0)
-				{
-					var fresh = await FilterByPrimaryKey(dc.GetTable<T>(), obj, ed).Select(LockColumnsSelector<T>(objType, lockColumns)).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
-
-					if (fresh != null)
-						CopyColumns(lockColumns, fresh, obj);
-				}
-
-				return count;
-			}
-
-			// No reliable affected-row count (e.g. ClickHouse): count is always 0, so verify success by re-reading the row
-			// filtered by PK AND the values we wrote to the non-lock columns -- a matching row means our write is the
-			// persisted state. Best-effort: on providers whose UPDATE is asynchronous (ClickHouse mutations) the read can
-			// observe pre-update state and report a false concurrency failure. See the method docs.
-			var comparable = GetComparableColumns(ed, objType, obj);
-
-			// nothing deterministic to compare (entity has only PK + lock column) -> best-effort refresh, report raw count
-			if (comparable.Length == 0)
+			// reliable affected-row count: 0 is a genuine concurrency failure -> leave the entity untouched
+			if (count > 0)
 			{
 				var fresh = await FilterByPrimaryKey(dc.GetTable<T>(), obj, ed).Select(LockColumnsSelector<T>(objType, lockColumns)).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
 
 				if (fresh != null)
 					CopyColumns(lockColumns, fresh, obj);
-
-				return count;
 			}
 
-			var verified = await FilterByColumns(FilterByPrimaryKey(dc.GetTable<T>(), obj, ed), obj, comparable)
-				.Select(LockColumnsSelector<T>(objType, lockColumns))
-				.FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
-
-			if (verified != null)
-			{
-				CopyColumns(lockColumns, verified, obj);
-				return 1;
-			}
-
-			return 0;
+			return count;
 		}
 
 		/// <summary>
@@ -505,11 +447,12 @@ namespace LinqToDB.Concurrency
 		/// <param name="dc">Database context.</param>
 		/// <param name="obj">Entity instance to update. Receives the regenerated optimistic-lock value(s) on success.</param>
 		/// <returns>
-		/// Number of updated records. On providers that report affected rows, <c>0</c> indicates a concurrency failure.
-		/// On providers that do not (e.g. ClickHouse), success is verified by re-reading the written columns, so the
-		/// result is best-effort: an in-flight asynchronous update (e.g. a ClickHouse mutation) may be reported as a
-		/// false concurrency failure (<c>0</c>).
+		/// Number of updated records. <c>0</c> indicates an optimistic-concurrency failure; the entity is left untouched.
 		/// </returns>
+		/// <exception cref="LinqToDBException">
+		/// Thrown when the provider supports neither single-statement UPDATE OUTPUT / RETURNING nor a reliable
+		/// affected-rows count (e.g. ClickHouse), so the optimistic-concurrency result cannot be guaranteed.
+		/// </exception>
 		public static int UpdateOptimisticWithRefresh<T>(this IDataContext dc, T obj)
 			where T : class
 		{
@@ -529,11 +472,12 @@ namespace LinqToDB.Concurrency
 		/// <param name="obj">Entity instance to update. Receives the regenerated optimistic-lock value(s) on success.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>
-		/// Number of updated records. On providers that report affected rows, <c>0</c> indicates a concurrency failure.
-		/// On providers that do not (e.g. ClickHouse), success is verified by re-reading the written columns, so the
-		/// result is best-effort: an in-flight asynchronous update (e.g. a ClickHouse mutation) may be reported as a
-		/// false concurrency failure (<c>0</c>).
+		/// Number of updated records. <c>0</c> indicates an optimistic-concurrency failure; the entity is left untouched.
 		/// </returns>
+		/// <exception cref="LinqToDBException">
+		/// Thrown when the provider supports neither single-statement UPDATE OUTPUT / RETURNING nor a reliable
+		/// affected-rows count (e.g. ClickHouse), so the optimistic-concurrency result cannot be guaranteed.
+		/// </exception>
 		public static Task<int> UpdateOptimisticWithRefreshAsync<T>(this IDataContext dc, T obj, CancellationToken cancellationToken = default)
 			where T : class
 		{
@@ -552,11 +496,12 @@ namespace LinqToDB.Concurrency
 		/// <param name="source">Table source with optional filtering applied.</param>
 		/// <param name="obj">Entity instance to update. Receives the regenerated optimistic-lock value(s) on success.</param>
 		/// <returns>
-		/// Number of updated records. On providers that report affected rows, <c>0</c> indicates a concurrency failure.
-		/// On providers that do not (e.g. ClickHouse), success is verified by re-reading the written columns, so the
-		/// result is best-effort: an in-flight asynchronous update (e.g. a ClickHouse mutation) may be reported as a
-		/// false concurrency failure (<c>0</c>).
+		/// Number of updated records. <c>0</c> indicates an optimistic-concurrency failure; the entity is left untouched.
 		/// </returns>
+		/// <exception cref="LinqToDBException">
+		/// Thrown when the provider supports neither single-statement UPDATE OUTPUT / RETURNING nor a reliable
+		/// affected-rows count (e.g. ClickHouse), so the optimistic-concurrency result cannot be guaranteed.
+		/// </exception>
 		public static int UpdateOptimisticWithRefresh<T>(this IQueryable<T> source, T obj)
 			where T : class
 		{
@@ -578,11 +523,12 @@ namespace LinqToDB.Concurrency
 		/// <param name="obj">Entity instance to update. Receives the regenerated optimistic-lock value(s) on success.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>
-		/// Number of updated records. On providers that report affected rows, <c>0</c> indicates a concurrency failure.
-		/// On providers that do not (e.g. ClickHouse), success is verified by re-reading the written columns, so the
-		/// result is best-effort: an in-flight asynchronous update (e.g. a ClickHouse mutation) may be reported as a
-		/// false concurrency failure (<c>0</c>).
+		/// Number of updated records. <c>0</c> indicates an optimistic-concurrency failure; the entity is left untouched.
 		/// </returns>
+		/// <exception cref="LinqToDBException">
+		/// Thrown when the provider supports neither single-statement UPDATE OUTPUT / RETURNING nor a reliable
+		/// affected-rows count (e.g. ClickHouse), so the optimistic-concurrency result cannot be guaranteed.
+		/// </exception>
 		public static Task<int> UpdateOptimisticWithRefreshAsync<T>(this IQueryable<T> source, T obj, CancellationToken cancellationToken = default)
 			where T : class
 		{
