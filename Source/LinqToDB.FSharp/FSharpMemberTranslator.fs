@@ -19,8 +19,7 @@ type FSharpMemberTranslator private () =
 
     static let _instance = FSharpMemberTranslator()
 
-    let isOption (t: Type) =
-        t.IsGenericType && (let d = t.GetGenericTypeDefinition() in d = typedefof<_ option> || d = typedefof<_ voption>)
+    let isOption (t: Type) = FSharpOptionSupport.IsOption t
 
     // IS [NOT] NULL on the operand's column placeholder; declines (null) when the operand isn't a column.
     let translateIsNull (isNot: bool) (ctx: ITranslationContext) (operand: Expression) (basedOn: Expression) : Expression | null =
