@@ -78,11 +78,20 @@ namespace Tests
 
 		public static CustomTestContext Get()
 		{
-			if (CurrentTestId is { } id && _byTest.TryGetValue(id, out var current))
-				return current;
-
+			// On a LinqService server execution flow, _serverProvider (set per-request in
+			// TestLinqService.CreateDataContext, flowing via AsyncLocal through the query execution)
+			// is the authoritative signal and must win over the ambient NUnit CurrentTestId: the
+			// server runs on pooled transport threads (gRPC/Kestrel) whose CurrentTestId can resolve
+			// to a stale or concurrently-running direct test, which would misroute this remote query's
+			// trace into that test's baseline and leave the remote test's own capture short (the
+			// direct-vs-remote baseline mismatch seen under parallel runs). _serverProvider is only
+			// ever set on a genuine server flow, never on a direct/test thread, so checking it first
+			// cannot hijack the direct path.
 			if (_serverProvider.Value is { } provider && _remoteByProvider.TryGetValue(provider, out var remote))
 				return remote;
+
+			if (CurrentTestId is { } id && _byTest.TryGetValue(id, out var current))
+				return current;
 
 			return _shared;
 		}

@@ -1671,7 +1671,8 @@ namespace Tests.Linq
 		/// Tests that we do not have cache hit for similar parameters
 		/// </summary>
 		/// <param name="context"></param>
-		[Test]
+		// NonParallelizable: asserts the exact parameter count of a query rebuilt from process-global query-cache state; a concurrent test's compilation would perturb the plan reused here. Cache-counter category.
+		[Test, NonParallelizable]
 		public void Caching([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
