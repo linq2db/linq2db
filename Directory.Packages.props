@@ -50,6 +50,8 @@
 		<PackageVersion Include="Meziantou.Analyzer"                                    Version="3.0.85"                       />
 		<PackageVersion Include="Meziantou.Polyfill"                                    Version="1.0.130"                      />
 		<PackageVersion Include="Microsoft.CodeAnalysis.Analyzers"                      Version="5.3.0"                        />
+		<!--Shipped analyzer package (linq2db.Analyzers) targets the Roslyn bundled with the LOWEST supported .NET SDK (.NET 8 => Roslyn 4.8) for broad IDE reach; bump only when that SDK is dropped. Kept separate from the 5.3.0 runtime pin below; CentralPackageTransitivePinningEnabled=false so the 4.8 transitive CodeAnalysis assemblies don't clash.-->
+		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces"              Version="4.8.0"                        />
 		<PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers"             Version="3.12.0-beta1.25218.8"         />
 		<PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers"             Version="5.0.0-1.25277.114"            />
 		<PackageVersion Include="Microsoft.SourceLink.GitHub"                           Version="10.0.300"                     />
@@ -162,6 +164,9 @@
 		<PackageVersion Include="NUnit"                                                 Version="4.6.0"                        />
 		<PackageVersion Include="NUnit.Analyzers"                                       Version="4.13.0"                       />
 		<PackageVersion Include="NUnit3TestAdapter"                                     Version="6.2.0"                        />
+		<!--Roslyn analyzer/code-fix unit-test harness for the linq2db.Analyzers test project.-->
+		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing"        Version="1.1.2"                        />
+		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing"         Version="1.1.2"                        />
 
 		<PackageVersion Include="Microsoft.AspNet.OData"                                Version="7.7.9"                        />
 		<PackageVersion Include="Microsoft.AspNetCore.OData"                            Version="9.4.1"                        />
