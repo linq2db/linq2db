@@ -249,7 +249,7 @@ Passing them with other modes or unsupported providers has no effect.
 | `KeepNulls` | Insert `NULL` instead of column default constraint values | SQL Server, SAP/Sybase ASE |
 | `FireTriggers` | Fire insert triggers during bulk insert | Oracle, SQL Server, SAP/Sybase ASE |
 | `UseInternalTransaction` | Wrap bulk insert in an automatic transaction | Oracle, SQL Server, SAP/Sybase ASE |
-| `BulkCopyTimeout` | Operation timeout in seconds | DB2, Informix, MySqlConnector, Oracle, PostgreSQL, SAP HANA, SQL Server, SAP/Sybase ASE |
+| `BulkCopyTimeout` | Operation timeout in seconds | ClickHouse (ClickHouse.Driver), DB2, Informix, MySqlConnector, Oracle, PostgreSQL, SAP HANA, SQL Server, SAP/Sybase ASE |
 | `MaxDegreeOfParallelism` | Number of parallel connections for insert | ClickHouse (ClickHouse.Driver) only |
 | `WithoutSession` | Use a session-less connection for insert | ClickHouse (ClickHouse.Driver) only |
 

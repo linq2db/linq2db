@@ -368,7 +368,8 @@ db.GetTable<Product>()
 Inserts a row and returns the full database-populated record (server-generated identity,
 defaults, computed columns). Maps to `OUTPUT INSERTED` (SQL Server) or `RETURNING` (PostgreSQL, etc.).
 
-**Provider support:** SQL Server 2005+, PostgreSQL, SQLite 3.35+, Firebird 2.5+, MariaDB 10.5+.
+**Provider support:** SQL Server 2005+, PostgreSQL, SQLite 3.35+, Firebird 2.5+, MariaDB 10.5+,
+DuckDB, YDB.
 Check the `OUTPUT / RETURNING` column in [`provider-capabilities.md`](07-provider-configuration.md) before using.
 
 ### Return the full inserted record
@@ -499,7 +500,8 @@ Terminal operations on `ISelectInsertable<TSource, TTarget>`:
 Inserts rows from the source query and streams back the inserted records.
 Returns `IAsyncEnumerable<TTarget>` - enumeration triggers the INSERT.
 
-**Provider support:** SQL Server 2005+, PostgreSQL, SQLite 3.35+, Firebird 2.5+, MariaDB 10.5+.
+**Provider support:** SQL Server 2005+, PostgreSQL, SQLite 3.35+, Firebird 2.5+, MariaDB 10.5+,
+DuckDB, YDB.
 Check the `OUTPUT / RETURNING` column in [`provider-capabilities.md`](07-provider-configuration.md) before using.
 
 ```csharp
@@ -542,18 +544,54 @@ db.GetTable<Product>()
 ## 5. Multi-table insert - `MultiInsert` (Oracle only)
 
 Inserts rows from one source query into multiple target tables in a single Oracle-specific statement.
-Use `.Into(…)` for unconditional insert and `.When(condition, …)` for conditional insert.
+`.Into(…)` (unconditional) and `.When(condition, …)` (conditional) chains are **mutually
+exclusive** - each starts a different fluent state and cannot be mixed. Each chain also has its
+own terminal method.
+
+### Unconditional - `.Into(…)` chain, terminal `.Insert()`
+
+Every row from the source is inserted into every listed target table.
 
 ```csharp
 db.GetTable<SourceEvent>()
     .MultiInsert()
-    .Into(db.GetTable<EventLog>(),    e => new EventLog    { ID = e.ID, Type = e.Type })
+    .Into(db.GetTable<EventLog>(),  e => new EventLog { ID = e.ID, Type = e.Type })
+    .Into(db.GetTable<AuditLog>(),  e => new AuditLog  { ID = e.ID, LoggedAt = Sql.CurrentTimestamp })
+    .Insert();
+```
+
+### Conditional - `.When(…)` chain, terminal `.InsertAll()` or `.InsertFirst()`
+
+Each row is tested against each `.When(condition, target, setter)` branch in order.
+
+`.InsertAll()` inserts into **every** branch whose condition matches (a row can be inserted into
+more than one target table):
+
+```csharp
+db.GetTable<SourceEvent>()
+    .MultiInsert()
     .When(e => e.Type == "order",
         db.GetTable<OrderEvent>(),    e => new OrderEvent  { OrderID = e.RefID })
     .When(e => e.Type == "payment",
         db.GetTable<PaymentEvent>(),  e => new PaymentEvent { Amount = e.Amount })
-    .Insert();
+    .InsertAll();
 ```
+
+`.InsertFirst()` inserts into only the **first** matching branch, optionally falling back to
+`.Else(target, setter)` when no branch matches:
+
+```csharp
+db.GetTable<SourceEvent>()
+    .MultiInsert()
+    .When(e => e.Type == "order",
+        db.GetTable<OrderEvent>(),    e => new OrderEvent  { OrderID = e.RefID })
+    .When(e => e.Type == "payment",
+        db.GetTable<PaymentEvent>(),  e => new PaymentEvent { Amount = e.Amount })
+    .Else(db.GetTable<UnknownEvent>(), e => new UnknownEvent { ID = e.ID })
+    .InsertFirst();
+```
+
+All three terminals (`Insert`, `InsertAll`, `InsertFirst`) have `Async` counterparts.
 
 ---
 
@@ -1343,7 +1381,7 @@ Passing them with other modes or unsupported providers has no effect.
 | `KeepNulls` | Insert `NULL` instead of column default constraint values | SQL Server, SAP/Sybase ASE |
 | `FireTriggers` | Fire insert triggers during bulk insert | Oracle, SQL Server, SAP/Sybase ASE |
 | `UseInternalTransaction` | Wrap bulk insert in an automatic transaction | Oracle, SQL Server, SAP/Sybase ASE |
-| `BulkCopyTimeout` | Operation timeout in seconds | DB2, Informix, MySqlConnector, Oracle, PostgreSQL, SAP HANA, SQL Server, SAP/Sybase ASE |
+| `BulkCopyTimeout` | Operation timeout in seconds | ClickHouse (ClickHouse.Driver), DB2, Informix, MySqlConnector, Oracle, PostgreSQL, SAP HANA, SQL Server, SAP/Sybase ASE |
 | `MaxDegreeOfParallelism` | Number of parallel connections for insert | ClickHouse (ClickHouse.Driver) only |
 | `WithoutSession` | Use a session-less connection for insert | ClickHouse (ClickHouse.Driver) only |
 
@@ -1642,9 +1680,11 @@ At least one operation must be present before calling the terminal.
 .DeleteWhenMatchedAnd((t, s) => t.IsDiscontinued && s.Stock == 0)
 ```
 
-### Update / Delete when not matched by source *(SQL Server only)*
+### Update / Delete when not matched by source *(SQL Server, PostgreSQL 17+)*
 
-These operations fire for rows that exist in the target but have no match in the source:
+These operations fire for rows that exist in the target but have no match in the source.
+Calling one of them against an unsupported provider throws at SQL-generation time (i.e. when the
+query executes, not when the LINQ expression is composed).
 
 ```csharp
 // Mark target rows that disappeared from source as inactive
@@ -1664,7 +1704,9 @@ These operations fire for rows that exist in the target but have no match in the
 
 ### Update-then-delete *(Oracle only)*
 
-Updates matched rows and then immediately deletes the ones that satisfy an additional condition:
+Updates matched rows and then immediately deletes the ones that satisfy an additional condition.
+Calling this against a non-Oracle provider throws at SQL-generation time (i.e. when the query
+executes, not when the LINQ expression is composed).
 
 ```csharp
 // Update all, then delete those with zero stock

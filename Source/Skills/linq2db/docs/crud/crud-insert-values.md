@@ -134,7 +134,8 @@ db.GetTable<Product>()
 Inserts a row and returns the full database-populated record (server-generated identity,
 defaults, computed columns). Maps to `OUTPUT INSERTED` (SQL Server) or `RETURNING` (PostgreSQL, etc.).
 
-**Provider support:** SQL Server 2005+, PostgreSQL, SQLite 3.35+, Firebird 2.5+, MariaDB 10.5+.
+**Provider support:** SQL Server 2005+, PostgreSQL, SQLite 3.35+, Firebird 2.5+, MariaDB 10.5+,
+DuckDB, YDB.
 Check the `OUTPUT / RETURNING` column in [`provider-capabilities.md`](../provider-capabilities.md) before using.
 
 ### Return the full inserted record

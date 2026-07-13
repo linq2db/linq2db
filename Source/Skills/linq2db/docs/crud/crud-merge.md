@@ -251,9 +251,11 @@ At least one operation must be present before calling the terminal.
 .DeleteWhenMatchedAnd((t, s) => t.IsDiscontinued && s.Stock == 0)
 ```
 
-### Update / Delete when not matched by source *(SQL Server only)*
+### Update / Delete when not matched by source *(SQL Server, PostgreSQL 17+)*
 
-These operations fire for rows that exist in the target but have no match in the source:
+These operations fire for rows that exist in the target but have no match in the source.
+Calling one of them against an unsupported provider throws at SQL-generation time (i.e. when the
+query executes, not when the LINQ expression is composed).
 
 ```csharp
 // Mark target rows that disappeared from source as inactive
@@ -273,7 +275,9 @@ These operations fire for rows that exist in the target but have no match in the
 
 ### Update-then-delete *(Oracle only)*
 
-Updates matched rows and then immediately deletes the ones that satisfy an additional condition:
+Updates matched rows and then immediately deletes the ones that satisfy an additional condition.
+Calling this against a non-Oracle provider throws at SQL-generation time (i.e. when the query
+executes, not when the LINQ expression is composed).
 
 ```csharp
 // Update all, then delete those with zero stock

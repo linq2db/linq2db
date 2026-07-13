@@ -86,7 +86,8 @@ Terminal operations on `ISelectInsertable<TSource, TTarget>`:
 Inserts rows from the source query and streams back the inserted records.
 Returns `IAsyncEnumerable<TTarget>` - enumeration triggers the INSERT.
 
-**Provider support:** SQL Server 2005+, PostgreSQL, SQLite 3.35+, Firebird 2.5+, MariaDB 10.5+.
+**Provider support:** SQL Server 2005+, PostgreSQL, SQLite 3.35+, Firebird 2.5+, MariaDB 10.5+,
+DuckDB, YDB.
 Check the `OUTPUT / RETURNING` column in [`provider-capabilities.md`](../provider-capabilities.md) before using.
 
 ```csharp
@@ -129,18 +130,54 @@ db.GetTable<Product>()
 ## 5. Multi-table insert - `MultiInsert` (Oracle only)
 
 Inserts rows from one source query into multiple target tables in a single Oracle-specific statement.
-Use `.Into(…)` for unconditional insert and `.When(condition, …)` for conditional insert.
+`.Into(…)` (unconditional) and `.When(condition, …)` (conditional) chains are **mutually
+exclusive** - each starts a different fluent state and cannot be mixed. Each chain also has its
+own terminal method.
+
+### Unconditional - `.Into(…)` chain, terminal `.Insert()`
+
+Every row from the source is inserted into every listed target table.
 
 ```csharp
 db.GetTable<SourceEvent>()
     .MultiInsert()
-    .Into(db.GetTable<EventLog>(),    e => new EventLog    { ID = e.ID, Type = e.Type })
+    .Into(db.GetTable<EventLog>(),  e => new EventLog { ID = e.ID, Type = e.Type })
+    .Into(db.GetTable<AuditLog>(),  e => new AuditLog  { ID = e.ID, LoggedAt = Sql.CurrentTimestamp })
+    .Insert();
+```
+
+### Conditional - `.When(…)` chain, terminal `.InsertAll()` or `.InsertFirst()`
+
+Each row is tested against each `.When(condition, target, setter)` branch in order.
+
+`.InsertAll()` inserts into **every** branch whose condition matches (a row can be inserted into
+more than one target table):
+
+```csharp
+db.GetTable<SourceEvent>()
+    .MultiInsert()
     .When(e => e.Type == "order",
         db.GetTable<OrderEvent>(),    e => new OrderEvent  { OrderID = e.RefID })
     .When(e => e.Type == "payment",
         db.GetTable<PaymentEvent>(),  e => new PaymentEvent { Amount = e.Amount })
-    .Insert();
+    .InsertAll();
 ```
+
+`.InsertFirst()` inserts into only the **first** matching branch, optionally falling back to
+`.Else(target, setter)` when no branch matches:
+
+```csharp
+db.GetTable<SourceEvent>()
+    .MultiInsert()
+    .When(e => e.Type == "order",
+        db.GetTable<OrderEvent>(),    e => new OrderEvent  { OrderID = e.RefID })
+    .When(e => e.Type == "payment",
+        db.GetTable<PaymentEvent>(),  e => new PaymentEvent { Amount = e.Amount })
+    .Else(db.GetTable<UnknownEvent>(), e => new UnknownEvent { ID = e.ID })
+    .InsertFirst();
+```
+
+All three terminals (`Insert`, `InsertAll`, `InsertFirst`) have `Async` counterparts.
 
 ---
 
