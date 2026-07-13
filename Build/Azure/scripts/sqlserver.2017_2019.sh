@@ -51,11 +51,11 @@ wait_or_recreate() {
 }
 
 docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=Password12!' -p 1417:1433 -h mssql2017 --name=mssql2017 -d linq2db/linq2db:mssql-2017
-docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=Password12!' -p 1419:1433 -h mssql2019 --name=mssql2019 -d linq2db/linq2db:mssql-2019
+docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=Password12!' -p 1419:1433 -h mssql2019 --name=mssql2019 -d linq2db/linq2db:mssql-2019-fts
 docker ps -a
 
 wait_or_recreate mssql2017 1417 linq2db/linq2db:mssql-2017 || exit 1
-wait_or_recreate mssql2019 1419 linq2db/linq2db:mssql-2019 || exit 1
+wait_or_recreate mssql2019 1419 linq2db/linq2db:mssql-2019-fts || exit 1
 
 for c in mssql2017 mssql2019; do
     docker exec $c /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P Password12! -Q 'CREATE DATABASE TestData;'
