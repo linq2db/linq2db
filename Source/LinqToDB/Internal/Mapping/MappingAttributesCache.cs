@@ -9,6 +9,12 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.Mapping
 {
+	// Implements ILinqToDBCache directly instead of composing BoundedCache instances, by design:
+	//  - the #5692 fix requires NOT caching empty results, which BoundedCache.GetOrAdd can't express (it always stores the factory result);
+	//  - keys are metadata-bounded (Type/MemberInfo), so LRU/size eviction would only force reflection recompute with no memory win;
+	//  - the three maps are recursively interdependent (the inheritance-tree walk reads and writes back through them), not independent key->value caches.
+	// ILinqToDBCache gives the registry one scoped registration, an atomic Clear() across all three maps, and an aggregate Count —
+	// management unification without disturbing the bespoke storage (same approach QueryCache takes).
 	internal sealed class MappingAttributesCache : ILinqToDBCache
 	{
 		readonly record struct CacheKey(Type AttributeType, Key SourceKey);
