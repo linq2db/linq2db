@@ -20,21 +20,25 @@ source code.
 
 This document covers two distinct scopes with different completeness guarantees:
 
-**`Sql.*` helpers** - authoritative.
-All public members of the `Sql` static class that translate to SQL are listed in the
-[`Sql.*` helpers](#sql-helpers-sql-specific-functions) section below.
-Absence from that table means the method does not exist in the API.
+**`Sql.*` helpers** - commonly used subset, not exhaustive.
+The [`Sql.*` helpers](#sql-helpers-sql-specific-functions) section below lists the commonly used
+public members of the `Sql` static class that translate to SQL, plus explicit call-outs for a few
+plausible-looking members that do **not** exist (`Sql.In`, `Sql.IsNull`, `Sql.Coalesce`,
+`Sql.Exists`). It does not enumerate niche/metadata helpers (`Sql.Row`, `Sql.Collate`,
+`Sql.GroupBy`/`Sql.Grouping`, `Sql.FieldName`/`Sql.TableName` and similar) or the full trig/rounding
+overload set. To verify whether a specific `Sql.*` member exists, search `docs/api.md` or
+`Source/LinqToDB/Sql/Sql.cs` directly rather than assuming from this table's absence/presence alone.
 
 **Standard .NET methods** (String, Math, DateTime, Nullable, type conversions) - confirmed subset.
-The tables below list the most commonly used registrations, verified against the base translator
-source files. They are not a closed enumeration of every supported overload:
+The tables below list the most commonly used registrations, verified against source. They are not
+a closed enumeration of every supported overload:
 - **Absence from a table does not mean the method is unsupported.**
-- To verify a specific method, search for it in the base translator source files:
-  - `Source/LinqToDB/Internal/DataProvider/Translation/StringMemberTranslatorBase.cs`
-  - `Source/LinqToDB/Internal/DataProvider/Translation/MathMemberTranslatorBase.cs`
-  - `Source/LinqToDB/Internal/DataProvider/Translation/DateFunctionsTranslatorBase.cs` (if present)
-  - `Source/LinqToDB/Internal/DataProvider/Translation/ConvertMemberTranslatorDefault.cs`
-  - `Source/LinqToDB/Internal/DataProvider/Translation/GuidMemberTranslatorBase.cs`
+- Method registrations are split across several places, not one file per category - check all of:
+  - `Source/LinqToDB/Internal/DataProvider/Translation/StringMemberTranslatorBase.cs`,
+    `MathMemberTranslatorBase.cs`, `DateFunctionsTranslatorBase.cs`, `GuidMemberTranslatorBase.cs`
+  - `Source/LinqToDB/Internal/DataProvider/Translation/ConvertMemberTranslatorDefault.cs` (`System.Convert.To*`, `Sql.Convert`/`Sql.ConvertTo<>.From` - not `.Parse` methods)
+  - `Source/LinqToDB/Linq/Expressions.cs` - the legacy expression map; covers `.Parse` methods (mapped to `Sql.ConvertTo<T>.From`), `Math.Floor`/`Math.Ceiling`/`Math.Truncate`, and other entries not yet migrated to the newer translator classes above
+  - `Source/LinqToDB/Internal/Linq/Builder/ExpressionBuildVisitor.cs` - some string methods (e.g. `Contains`/`StartsWith`/`EndsWith`) are hard-coded directly in the expression builder rather than registered in a translator
   - Provider-specific translators under `Source/LinqToDB/Internal/DataProvider/<Provider>/Translation/`
 - If a method has no registration for the active provider, a `LinqToDBException` is thrown at
   query execution time - not at compile time.
@@ -214,17 +218,24 @@ to the equivalent `Sql.ConvertTo<T>.From(s)` cast.
 
 ## Sql.* helpers (SQL-specific functions)
 
-The `Sql` static class exposes functions with no direct .NET equivalent:
+The `Sql` static class exposes functions with no direct .NET equivalent. This table lists the
+commonly used ones - it is **not** a closed enumeration; for niche/metadata helpers (`Sql.Row`,
+`Sql.Collate`, `Sql.GroupBy`/`Sql.Grouping`, `Sql.FieldName`/`Sql.TableName` and friends) search
+`docs/api.md` or `Source/LinqToDB/Sql/Sql.cs` directly.
+
+> `Sql.In`, `Sql.IsNull`, `Sql.Coalesce`, and `Sql.Exists` do **not** exist as members of `Sql` -
+> do not write code that calls them. Use the real equivalents instead:
+> - `x IN (...)` → `value.In(set)` / `value.NotIn(set)` (extension methods on `LinqToDB.SqlExtensions`, not `Sql`)
+> - `ISNULL`/`COALESCE` → the C# `??` operator translates directly to SQL `COALESCE`
+> - `EXISTS (subquery)` → `.Any()` on a subquery translates to `EXISTS`
 
 | Method | Description |
 |---|---|
 | `Sql.Between(x, lo, hi)` | `x BETWEEN lo AND hi` |
-| `Sql.In(x, set)` | `x IN (...)` |
 | `Sql.Like(s, pattern)` | `s LIKE pattern` |
 | `Sql.CurrentTimestamp` | Server-side current timestamp (avoids client parameterization) |
+| `Sql.CurrentTimestampUtc` | Server-side current UTC timestamp |
 | `Sql.GetDate()` | `GETDATE()` / `NOW()` |
-| `Sql.IsNull(x, replacement)` | `ISNULL(x, replacement)` / `COALESCE(x, replacement)` |
-| `Sql.Coalesce(a, b, ...)` | `COALESCE(a, b, ...)` |
 | `Sql.NullIf(x, y)` | `NULLIF(x, y)` |
 | `Sql.DateAdd(part, n, dt)` | `DATEADD(part, n, dt)` |
 | `Sql.DatePart(part, dt)` | `DATEPART(part, dt)` |
@@ -234,20 +245,33 @@ The `Sql` static class exposes functions with no direct .NET equivalent:
 | `Sql.Round(x, digits)` | `ROUND(x, digits)` away-from-zero |
 | `Sql.RoundToEven(x, digits)` | `ROUND(x, digits)` banker's rounding |
 | `Sql.Power(x, y)` | `POWER(x, y)` |
+| `Sql.Sqrt(x)`, `Sql.Exp(x)`, `Sql.Log(x)` / `Sql.Log(newBase, x)`, `Sql.Log10(x)` | Standard math functions |
+| `Sql.Ceiling(x)`, `Sql.Floor(x)`, `Sql.Truncate(x)`, `Sql.Sign(x)` | Rounding/sign functions |
+| `Sql.Sin(x)`, `Sql.Cos(x)`, `Sql.Tan(x)`, `Sql.Cot(x)`, `Sql.Asin(x)`, `Sql.Acos(x)`, `Sql.Atan(x)`, `Sql.Atan2(x, y)`, `Sql.Sinh(x)`, `Sql.Cosh(x)`, `Sql.Tanh(x)`, `Sql.Degrees(x)` | Trigonometric functions |
 | `Sql.Concat(a, b, ...)` | provider native concat operator/function; SQL null handling follows provider rules |
+| `Sql.Substring(s, start, length)` | `SUBSTRING(s, start, length)` |
+| `Sql.Replace(s, old, new)` | `REPLACE(s, old, new)` |
 | `Sql.Left(s, n)` | `LEFT(s, n)` |
 | `Sql.Right(s, n)` | `RIGHT(s, n)` |
 | `Sql.Stuff(s, pos, del, ins)` | `STUFF(s, pos, del, ins)` |
 | `Sql.PadLeft(s, n, ch)` | `LPAD(s, n, ch)` |
 | `Sql.PadRight(s, n, ch)` | `RPAD(s, n, ch)` |
+| `Sql.TrimLeft(s[, ch])` / `Sql.TrimRight(s[, ch])` | `LTRIM(s)` / `RTRIM(s)` |
 | `Sql.Length(s)` | `LEN(s)` / `LENGTH(s)` |
 | `Sql.Reverse(s)` | `REVERSE(s)` |
 | `Sql.Upper(s)` / `Sql.Lower(s)` | `UPPER(s)` / `LOWER(s)` |
 | `Sql.Trim(s)` | `TRIM(s)` |
 | `Sql.CharIndex(sub, s)` | `CHARINDEX(sub, s)` |
-| `Sql.Exists(subquery)` | `EXISTS (subquery)` |
+| `Sql.NewGuid()` / `Sql.NewGuid7()` | New random GUID / UUIDv7 |
+| `Sql.Convert<TTo,TFrom>(...)` / `Sql.ConvertTo<TTo>.From(value)` | Explicit `CAST`/`CONVERT` - see [Type conversions](#type-conversions) above |
+| `Sql.TryConvert<TTo,TFrom>(...)` / `Sql.TryConvertOrDefault<TTo,TFrom>(...)` | `CAST`/`CONVERT` variants that return `null`/a default instead of throwing on failure |
 | `Sql.AsSql(x)` | Forces server-side evaluation of `x` |
 | `Sql.ToSql(x)` | Forces server-side evaluation with inlined literals |
+
+For nullability control (`Sql.AsNotNull`, `Sql.AsNullable`, `Sql.ToNullable`, `Sql.IsDistinctFrom`,
+etc.) see [`docs/null-semantics.md`](null-semantics.md). For forcing a value to a bound parameter
+vs. a SQL literal (`Sql.Parameter`, `Sql.Constant`, `InlineParameters`) see
+[`docs/parameters.md`](parameters.md).
 
 For window / analytic functions (`Sql.Ext.Rank()`, `Sql.Ext.Sum()` etc.) and aggregate
 functions (`Sql.StringAggregate`, `Sql.ConcatStrings`) see the

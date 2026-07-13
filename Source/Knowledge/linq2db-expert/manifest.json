@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-13T00:41:02",
+  "generated_at": "2026-07-13T11:30:37",
   "prompt_source": ".agents/knowledge-pack-maintenance.md",
   "source_root": "Source/Skills/linq2db",
   "xml_source": ".build/bin/LinqToDB/Release/net10.0/linq2db.xml",
@@ -91,7 +91,7 @@
     "docs/query-cte.md": "6c359cba89307afd2241bc7c998a6e00f6f505cba898df7404b8791c8c42545b",
     "docs/query-temp-tables.md": "695b0e2082b158ae2ef1077a3c69d91f1b97a96348ec83fde399847abb2b3e18",
     "docs/raw-sql.md": "9734ed81bef5435b5d931ce6a76bd6688cf6b604b44996c2daf24149ab54a531",
-    "docs/translatable-methods.md": "75253e64cdfb2d8cbd8b19cca7504e2569d27d21cda06ee46432eee1d743572f",
+    "docs/translatable-methods.md": "6d0875c5ae5c031fc1caaf1b802c1ce268ec1078b2b7a7d20543971fc6066287",
     "SKILL.md": "f8291b741be25d2596f29bf47b463d582e2a4718ffedba5d2a4d24582a7084d7",
     "linq2db.xml": "4ba60f26403d8e44d890a28340f8756862f0039ec6db571aa583121f7d0a8b31"
   }
