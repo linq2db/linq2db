@@ -474,6 +474,13 @@ namespace Tests.Linq
 			FSharp.OptionQueryTests.VOptionIsNone(db).ShouldBe(1);
 		}
 
+		[Test(Description = "F# voption .Value in a query predicate translates to the underlying value")]
+		public void OptionQuery_VOptionValue([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.OptionQueryTests.VOptionValue(db).ShouldBe(1);
+		}
+
 		[Test(Description = "F# single-case DU column round-trips and equality translates to SQL")]
 		public void DuQuery_EqualsLiteral([DataSources] string context)
 		{

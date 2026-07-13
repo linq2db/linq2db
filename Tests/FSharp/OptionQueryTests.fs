@@ -62,3 +62,9 @@ let VOptionIsNone (db: IDataContext) =
     use _t = db.CreateLocalTable<VOptRow>()
     seedV db
     (db.GetTable<VOptRow>().Where(fun x -> x.Name.IsNone).ToArray()).Length
+
+// struct voption .Value in a comparison -> underlying-column comparison (row 1)
+let VOptionValue (db: IDataContext) =
+    use _t = db.CreateLocalTable<VOptRow>()
+    seedV db
+    (db.GetTable<VOptRow>().Where(fun x -> x.Name.Value = "a").ToArray()).Length
