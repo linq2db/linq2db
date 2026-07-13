@@ -295,3 +295,31 @@ let Issue1813Test7(db : IDataContext) =
 
     Assert.That(actual, Is.EqualTo "1-0-0,2-2-2,2-2-3,2-3-2,2-3-3,3-0-0,4-4-4")
 
+// Regression pin: a captured interface-typed *local* used inside an F# join predicate translates
+// correctly. Such a local is an ordinary closure capture, not a SubstHelper free variable - those are
+// the outer query range variables, which are always entity reference types - so its type never reaches
+// FSharpRewriteVisitor.CreateSentinel. Confirms the sentinel path's inability to build interface /
+// abstract / Nullable<'T> instances is unreachable through F# query shapes.
+let Issue1813Test8(db : IDataContext) =
+    use table1 = db.CreateLocalTable<Names>()
+    use table2 = db.CreateLocalTable<Addresses>()
+
+    db.Insert({Names.Id=1; Name="name1"}) |> ignore
+    db.Insert({Names.Id=2; Name="name2"}) |> ignore
+    db.Insert({Addresses.Id=1; Text="address"}) |> ignore
+
+    let ids : System.Collections.Generic.IList<int> = System.Collections.Generic.List<int>([1])
+
+    let query = query {
+        for n in db.GetTable<Names>() do
+        for a in db.GetTable<Addresses>().Where(fun a1 -> a1.Id = ids.[0] && n.Id = a1.Id).DefaultIfEmpty() do
+        sortBy n.Id
+        select (n.Id, n.Name, a)
+    }
+
+    let result = query |> Seq.toArray
+
+    Assert.That(result, Has.Length.EqualTo(2))
+    Assert.That(result[0], Is.EqualTo( (1, "name1", {Addresses.Id=1; Text="address"}) ) )
+    Assert.That(result[1], Is.EqualTo( (2, "name2", null) ) )
+
