@@ -1,7 +1,7 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 	<!--
 	Shared settings for the two linq2db.Analyzers Roslyn-component projects (the analyzer and the code-fix
-	package). Imported by each project's Directory.Build.props AFTER the root props, so it overrides the
+	component). Imported by each project's Directory.Build.props AFTER the root props, so it overrides the
 	root's multi-TFM list. Order-safe content only (properties + PackageReference): the `Compile Remove` of
 	the shared compat sources stays in each csproj, because a Directory.Build.props-level import is evaluated
 	before the SDK's default Compile glob and a Remove here would be a no-op.
