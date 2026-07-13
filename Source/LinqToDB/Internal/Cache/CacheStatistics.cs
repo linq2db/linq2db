@@ -23,7 +23,7 @@ namespace LinqToDB.Internal.Cache
 		/// <summary>Classification of the cache.</summary>
 		public CacheKind Kind { get; }
 
-		/// <summary>Current entry count, or <c>-1</c> when the backing store cannot report a size.</summary>
+		/// <summary>Current entry count.</summary>
 		public long Count { get; }
 
 		/// <summary>Total hits since the last clear (may be <c>0</c> when hit-counting is disabled for the cache).</summary>
