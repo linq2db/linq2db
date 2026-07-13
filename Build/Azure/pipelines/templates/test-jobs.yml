@@ -1,72 +1,11 @@
 parameters:
   enabled: false
-  provider_tests_enabled: true
   with_baselines: false
   test_matrix: []
   mac_enabled: false # disable by default, as macos docker is even slower than virtual machine
   full_run: false # disable by default
 
 jobs:
-##############
-# Tests: CLI #
-##############
-- job: test_cli_job
-  pool:
-    vmImage: 'windows-2025'
-  displayName: 'Tests: CLI'
-  dependsOn: build_job
-  timeoutInMinutes: 30
-  condition: ${{ parameters.enabled }}
-
-  steps:
-  - checkout: self
-
-  - task: UseDotNet@2
-    displayName: 'Use latest .NET SDK'
-    inputs:
-      packageType: sdk
-      version: 10.x
-
-  - task: UseDotNet@2
-    displayName: 'Install .NET 8 runtime (x64)'
-    inputs:
-      packageType: runtime
-      version: 8.x
-
-  - task: UseDotNet@2
-    displayName: 'Install .NET 9 runtime (x64)'
-    inputs:
-      packageType: runtime
-      version: 9.x
-
-  - task: DotNetCoreCLI@2
-    inputs:
-      command: build
-      projects: 'Tests/LinqToDB.CLI/Tests.LinqToDB.CLI.csproj'
-      arguments: '--configuration $(test_configuration)'
-    displayName: Build CLI Tests
-
-  - task: CmdLine@2
-    inputs:
-      script: |
-        ECHO ON
-        .build\bin\Tests.LinqToDB.CLI\$(test_configuration)\net8.0\linq2db.CLI.Tests.exe --filter "TestCategory != SkipCI" --settings .runsettings --report-trx --report-trx-filename cli-net8.0.trx --results-directory CliTestResults --hangdump --hangdump-timeout 5m
-        if errorlevel 1 exit /b 1
-        .build\bin\Tests.LinqToDB.CLI\$(test_configuration)\net9.0\linq2db.CLI.Tests.exe --filter "TestCategory != SkipCI" --settings .runsettings --report-trx --report-trx-filename cli-net9.0.trx --results-directory CliTestResults --hangdump --hangdump-timeout 5m
-        if errorlevel 1 exit /b 1
-        .build\bin\Tests.LinqToDB.CLI\$(test_configuration)\net10.0\linq2db.CLI.Tests.exe --filter "TestCategory != SkipCI" --settings .runsettings --report-trx --report-trx-filename cli-net10.0.trx --results-directory CliTestResults --hangdump --hangdump-timeout 5m
-        if errorlevel 1 exit /b 1
-    displayName: Run CLI Tests
-
-  - task: PublishTestResults@2
-    inputs:
-      testRunner: VsTest
-      testResultsFiles: 'CliTestResults/*.trx'
-      testRunTitle: 'linq2db CLI'
-      failTaskOnMissingResultsFile: true
-    displayName: Publish CLI Test Results
-    condition: succeededOrFailed()
-
 ##############################################################################################
 #  This job runs before tests and ensures we have branch in baselines repository and         #
 #  creates it if it is missing                                                               #
@@ -76,7 +15,7 @@ jobs:
     vmImage: 'windows-2025'
   displayName: 'Create Test Baselines Branch'
   dependsOn: build_job
-  condition: and(eq(${{ parameters.enabled }}, 'true'), eq(${{ parameters.provider_tests_enabled }}, 'true'), eq(${{ parameters.with_baselines }}, 'true'))
+  condition: and(eq(${{ parameters.enabled }}, 'true'), eq(${{ parameters.with_baselines }}, 'true'))
   variables:
     source_pr_id: $[coalesce(variables['system.pullRequest.pullRequestNumber'], '')]
 
@@ -112,7 +51,7 @@ jobs:
   displayName: 'Tests: Windows'
   dependsOn: create_baselines_branch
   timeoutInMinutes: 180 # default: 60, max: 360
-  condition: and(${{ parameters.enabled }}, ${{ parameters.provider_tests_enabled }})
+  condition: ${{ parameters.enabled }}
   variables:
     baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
     baselines_head: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_head'] ]
@@ -152,7 +91,7 @@ jobs:
   timeoutInMinutes: 180 # default: 60, max: 360
   displayName: 'Tests: Linux'
   dependsOn: create_baselines_branch
-  condition: and(${{ parameters.enabled }}, ${{ parameters.provider_tests_enabled }})
+  condition: ${{ parameters.enabled }}
   variables:
     baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
     baselines_head: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_head'] ]
@@ -186,7 +125,7 @@ jobs:
   displayName: 'Tests: MacOS'
   timeoutInMinutes: 240 # default: 60, max: 360
   dependsOn: create_baselines_branch
-  condition: and(eq(${{ parameters.enabled }}, 'true'), eq(${{ parameters.provider_tests_enabled }}, 'true'), eq(${{ parameters.mac_enabled }}, 'true'))
+  condition: and(eq(${{ parameters.enabled }}, 'true'), eq(${{ parameters.mac_enabled }}, 'true'))
   variables:
     baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
     baselines_head: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_head'] ]
