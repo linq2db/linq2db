@@ -1,5 +1,6 @@
 parameters:
   enabled: false
+  provider_tests_enabled: true
   with_baselines: false
   mac_enabled: false
   full_run: false # when false, only netfx and latest netX tests executed (linq2db only, efcore tests executed for all TFMs always)
@@ -78,6 +79,7 @@ jobs:
   - template: test-jobs.yml
     parameters:
       enabled: ${{ parameters.enabled }}
+      provider_tests_enabled: ${{ parameters.provider_tests_enabled }}
       with_baselines: ${{ parameters.with_baselines }}
       mac_enabled: ${{ parameters.mac_enabled }}
       full_run: ${{ parameters.full_run }}

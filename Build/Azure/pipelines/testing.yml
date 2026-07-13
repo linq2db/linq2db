@@ -1,3 +1,9 @@
+parameters:
+- name: cli_only
+  displayName: Run CLI tests only
+  type: boolean
+  default: false
+
 variables:
   - template: templates/build-vars.yml
 
@@ -27,6 +33,8 @@ stages:
   - template: templates/test-matrix.yml
     parameters:
       enabled: succeeded()
+      ${{ if eq(parameters.cli_only, true) }}:
+        provider_tests_enabled: false
       with_baselines: true
       mac_enabled: false
       full_run: false
