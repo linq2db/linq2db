@@ -164,6 +164,7 @@ Pre-push build rules are operative in [`AGENTS.md`](../../AGENTS.md) → *Build 
 - **TFM API availability** — `-c Testing` builds net10.0 only and misses `net462`/`netstandard2.0` API gaps; **analyzers are Release-only** (`Testing`/`Debug` skip Roslyn / Meziantou / banned-API). Build a portable TFM and a Release net10.0 before pushing: [`windows-dev-gotchas.md`](windows-dev-gotchas.md) → *TFM API availability* / *Analyzers are Release-only*.
 - **Iterative-build file locks / disk space** (build-server lock, `.build/bin/` accumulation): [`windows-dev-gotchas.md`](windows-dev-gotchas.md) → *Iterative-build gotchas*.
 - **MSBuild override precedence** (env vars don't beat conditional `<PropertyGroup>`; only `-p:` does): [`msbuild-override.md`](msbuild-override.md).
+- **Before deleting a type or member, sweep for references in XML doc-comments and inline comments — not just call sites.** A dangling `<see cref="…"/>` / `<paramref …/>` pointing at a removed type is a **build error** under `TreatWarningsAsErrors` (CS1574 / analyzer), not silent doc rot; a stale inline comment naming the removed symbol is just misleading. Grep the whole worktree for the symbol (code, XML docs, comments) plus `.csproj` (in case of an explicit `<Compile Include>`) before removing it. (Surfaced on #5711 removing the unused `CacheEvictionPolicy` enum — the user explicitly asked to "check it is not referenced in any xml/comments".)
 
 ### PowerShell Core scripts for complex operations
 
