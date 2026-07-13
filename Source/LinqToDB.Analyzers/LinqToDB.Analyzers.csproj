@@ -4,8 +4,8 @@
 		<!--
 		Analyzer assembly only. It must NOT reference Workspaces (RS1038): the analyzer runs on every
 		compilation / keystroke, so it stays Workspaces-free for load time and startup cost. The code fix
-		(which needs Workspaces) lives in the sibling LinqToDB.Analyzers.CodeFixes assembly; both ship in the
-		single linq2db.Analyzers package, packed by that project.
+		(which needs Workspaces) lives in the sibling LinqToDB.Analyzers.CodeFixes assembly; both are bundled
+		into the single linq2db package by Source/LinqToDB/LinqToDB.csproj.
 		(Shared Roslyn-component settings + polyfills live in ..\Analyzers.Common.props.)
 		-->
 		<IsPackable>false</IsPackable>
