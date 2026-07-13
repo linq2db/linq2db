@@ -163,9 +163,10 @@ namespace LinqToDB.Common
 
 			/// <summary>
 			/// Maximum number of entries each process-wide work cache keeps before least-recently-used eviction.
-			/// <see langword="null"/> (default) leaves the work caches effectively unbounded, preserving the
-			/// pre-unification behavior; set a value of at least <c>3</c> to cap memory. The value is read when each
-			/// cache is first constructed, so set it at application startup.
+			/// <see langword="null"/> (default) applies a high built-in cap (100,000 entries) that realistic
+			/// workloads effectively never hit but that still bounds runaway growth; set a value of at least
+			/// <c>3</c> to cap memory more tightly. The value is read when each cache is first constructed, so set
+			/// it at application startup.
 			/// </summary>
 			/// <exception cref="ArgumentOutOfRangeException">Thrown when set to a value less than <c>3</c>.</exception>
 			public static int? WorkCacheEntryLimit
@@ -173,9 +174,9 @@ namespace LinqToDB.Common
 				get => _workCacheEntryLimit;
 				set
 				{
-					// BitFaster's ConcurrentLru/Lfu require a capacity of at least 3.
+					// BitFaster's ConcurrentLru requires a capacity of at least 3.
 					if (value is < 3)
-						throw new ArgumentOutOfRangeException(nameof(value), value, "WorkCacheEntryLimit must be null (unbounded) or at least 3.");
+						throw new ArgumentOutOfRangeException(nameof(value), value, "WorkCacheEntryLimit must be null or at least 3.");
 
 					_workCacheEntryLimit = value;
 				}

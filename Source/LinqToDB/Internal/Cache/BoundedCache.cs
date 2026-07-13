@@ -1,7 +1,6 @@
 using System;
 
 using BitFaster.Caching;
-using BitFaster.Caching.Lfu;
 using BitFaster.Caching.Lru;
 
 namespace LinqToDB.Internal.Cache
@@ -9,8 +8,8 @@ namespace LinqToDB.Internal.Cache
 	/// <summary>
 	/// A bounded, thread-safe cache — the single storage primitive for every linq2db cache whose key space
 	/// is unbounded by runtime input (compiled delegates, descriptors, detected versions, query plans).
-	/// Backed by <see cref="BitFaster.Caching"/> (<see cref="ConcurrentLru{K,V}"/> / <see cref="ConcurrentTLru{K,V}"/> /
-	/// <see cref="ConcurrentLfu{K,V}"/>); self-registers with <see cref="CacheRegistry"/> at construction.
+	/// Backed by <see cref="BitFaster.Caching"/> (<see cref="ConcurrentLru{K,V}"/> / <see cref="ConcurrentTLru{K,V}"/>);
+	/// self-registers with <see cref="CacheRegistry"/> at construction.
 	/// </summary>
 	sealed class BoundedCache<TKey,TValue> : ILinqToDBCache
 		where TKey : notnull
@@ -23,18 +22,16 @@ namespace LinqToDB.Internal.Cache
 		/// <param name="name">Stable identifier for diagnostics, e.g. <c>"CommandInfo.ObjectReaders"</c>.</param>
 		/// <param name="capacity">Maximum number of entries before eviction kicks in.</param>
 		/// <param name="expireAfterAccess">Optional idle timeout; entries not accessed within this window expire.</param>
-		/// <param name="policy">Eviction policy (see <see cref="CacheEvictionPolicy"/>).</param>
 		/// <param name="scoped">When <see langword="true"/>, the registry holds only a weak reference so the cache
 		/// can be collected with its owner; use for per-scope caches. Process-static caches leave this <see langword="false"/>.</param>
 		public BoundedCache(
-			string              name,
-			int                 capacity,
-			TimeSpan?           expireAfterAccess = null,
-			CacheEvictionPolicy policy            = CacheEvictionPolicy.Lru,
-			bool                scoped            = false)
+			string    name,
+			int       capacity,
+			TimeSpan? expireAfterAccess = null,
+			bool      scoped            = false)
 		{
 			Name      = name;
-			_cache    = Build(capacity, expireAfterAccess, policy);
+			_cache    = Build(capacity, expireAfterAccess);
 
 			if (scoped)
 				CacheRegistry.RegisterScoped(this);
@@ -42,13 +39,8 @@ namespace LinqToDB.Internal.Cache
 				CacheRegistry.Register(this);
 		}
 
-		static ICache<TKey,TValue> Build(int capacity, TimeSpan? expireAfterAccess, CacheEvictionPolicy policy)
+		static ICache<TKey,TValue> Build(int capacity, TimeSpan? expireAfterAccess)
 		{
-			if (policy == CacheEvictionPolicy.Lfu)
-				return expireAfterAccess.HasValue
-					? throw new NotSupportedException("CacheEvictionPolicy.Lfu does not support expireAfterAccess.")
-					: new ConcurrentLfu<TKey,TValue>(capacity);
-
 			// Sliding expiration (reset on access) matches the retired MemoryCache clone's SlidingExpiration;
 			// it needs the builder — the ConcurrentTLru direct ctor is expire-after-write, not sliding.
 			if (expireAfterAccess.HasValue)
