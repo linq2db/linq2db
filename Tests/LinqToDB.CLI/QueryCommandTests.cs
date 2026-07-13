@@ -1255,6 +1255,141 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task QueryReadsCredentialsFromWindowsCredentialManager()
+		{
+			var environment = new TestCliEnvironment();
+
+			environment.WindowsCredentials.Add("linq2db/test", (":memory:", "ignored"));
+
+			var result = await RunCli(environment, "query", "--provider", "SQLite", "--connection-string", "Data Source={0}", "--windows-credentials", "linq2db/test", "--sql", "select 1 as Value");
+
+			{
+				(result.ExitCode).ShouldBe(0);
+				(result.Output).ShouldContain("\"Value\":\"1\"");
+				(result.Error).ShouldBeEmpty();
+			}
+		}
+
+		[Test]
+		public async Task QueryReadsCredentialsFromConfigWindowsCredentialManagerTarget()
+		{
+			var environment = new TestCliEnvironment();
+			var config      = AddConfigFile(environment, """
+				{
+					"default": {
+						"provider": "SQLite",
+						"connectionString": "Data Source={0}",
+						"windowsCredentials": "%CREDENTIAL_PREFIX%/test"
+					}
+				}
+				""");
+
+			environment.EnvironmentVariables.Add("CREDENTIAL_PREFIX", "linq2db");
+			environment.WindowsCredentials.Add("linq2db/test", (":memory:", "ignored"));
+
+			var result = await RunCli(environment, "query", "--config", config, "--sql", "select 1 as Value");
+
+			{
+				(result.ExitCode).ShouldBe(0);
+				(result.Output).ShouldContain("\"Value\":\"1\"");
+				(result.Error).ShouldBeEmpty();
+			}
+		}
+
+		[Test]
+		public async Task QueryReportsMissingWindowsCredentialManagerTarget()
+		{
+			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source={0}", "--windows-credentials", "linq2db/missing", "--sql", "select 1 as Value");
+
+			{
+				(result.ExitCode).ShouldBe(-1);
+				(result.Error).ShouldContain("Windows Credential Manager target 'linq2db/missing' was not found for the current Windows account.");
+			}
+		}
+
+		[Test]
+		public async Task QueryRejectsWindowsCredentialManagerWithCommandCredentials()
+		{
+			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source={0}", "--windows-credentials", "linq2db/test", "--user", ":memory:", "--sql", "select 1 as Value");
+
+			{
+				(result.ExitCode).ShouldBe(-1);
+				(result.Error).ShouldContain("Option '--windows-credentials' cannot be combined with '--user', '--user-env', '--password', or '--password-env'.");
+			}
+		}
+
+		[Test]
+		public async Task QueryRejectsConfigWindowsCredentialManagerWithConfigCredentials()
+		{
+			var environment = new TestCliEnvironment();
+			var config      = AddConfigFile(environment, """
+				{
+					"default": {
+						"provider": "SQLite",
+						"connectionString": "Data Source={0}",
+						"windowsCredentials": "linq2db/test",
+						"user": ":memory:"
+					}
+				}
+				""");
+
+			var result = await RunCli(environment, "query", "--config", config, "--sql", "select 1 as Value");
+
+			{
+				(result.ExitCode).ShouldBe(-1);
+				(result.Error).ShouldContain("Configuration property 'windowsCredentials' cannot be combined with 'user', 'userEnv', 'password', or 'passwordEnv'.");
+			}
+		}
+
+		[Test]
+		public async Task QueryRejectsNonStringWindowsCredentialManagerTarget()
+		{
+			var environment = new TestCliEnvironment();
+			var config      = AddConfigFile(environment, """
+				{
+					"default": {
+						"provider": "SQLite",
+						"connectionString": "Data Source=:memory:",
+						"windowsCredentials": true
+					}
+				}
+				""");
+
+			var result = await RunCli(environment, "query", "--config", config, "--sql", "select 1 as Value");
+
+			{
+				(result.ExitCode).ShouldBe(-1);
+				(result.Error).ShouldContain($"Configuration file '{config}' profile 'default' property 'windowsCredentials' must be string.");
+			}
+		}
+
+		[Test]
+		public async Task QueryCommandWindowsCredentialManagerOverridesConfigCredentials()
+		{
+			var environment = new TestCliEnvironment();
+			var config      = AddConfigFile(environment, """
+				{
+					"default": {
+						"provider": "SQLite",
+						"connectionString": "Data Source={0}",
+						"user": "invalid",
+						"password": "invalid"
+					}
+				}
+				""");
+
+			environment.WindowsCredentials.Add("linq2db/test", (":memory:", "ignored"));
+
+			var result = await RunCli(environment, "query", "--config", config, "--windows-credentials", "linq2db/test", "--sql", "select 1 as Value");
+
+			{
+				(result.ExitCode).ShouldBe(0);
+				(result.Output).ShouldContain("\"Value\":\"1\"");
+				(result.Error).ShouldBeEmpty();
+			}
+		}
+
+		[Test]
 		public async Task QueryReadsConnectionStringFromEnvironmentVariable()
 		{
 			var environment = new TestCliEnvironment();
@@ -1685,6 +1820,7 @@ namespace Tests.LinqToDB.CLI
 				(result.Output).ShouldContain("--user-env");
 				(result.Output).ShouldContain("--password");
 				(result.Output).ShouldContain("--password-env");
+				(result.Output).ShouldContain("--windows-credentials");
 				(result.Output).ShouldContain("--impersonate");
 				(result.Output).ShouldContain("run database access under resolved user/password credentials");
 				(result.Output).ShouldContain("--impersonate-mode");
@@ -1782,6 +1918,7 @@ namespace Tests.LinqToDB.CLI
 
 			public Dictionary<string, string> Files { get; } = new(StringComparer.Ordinal);
 			public Dictionary<string, string> EnvironmentVariables { get; } = new(StringComparer.Ordinal);
+			public Dictionary<string, (string User, string Password)> WindowsCredentials { get; } = new(StringComparer.Ordinal);
 
 			public TextWriter Out   => _output;
 			public TextWriter Error => _error;
@@ -1832,6 +1969,22 @@ namespace Tests.LinqToDB.CLI
 			public string? GetEnvironmentVariable(string name)
 			{
 				return EnvironmentVariables.GetValueOrDefault(name);
+			}
+
+			public bool TryGetWindowsCredentials(string target, out string? user, out string? password, out string? error)
+			{
+				if (WindowsCredentials.TryGetValue(target, out var credentials))
+				{
+					user     = credentials.User;
+					password = credentials.Password;
+					error    = null;
+					return true;
+				}
+
+				user     = null;
+				password = null;
+				error    = $"Windows Credential Manager target '{target}' was not found for the current Windows account.";
+				return false;
 			}
 
 			sealed class TestFileWriter(Action<string> save) : StringWriter

@@ -119,6 +119,11 @@ namespace Tests.LinqToDB.CLI
 			{
 				throw new NotSupportedException();
 			}
+
+			public bool TryGetWindowsCredentials(string target, out string? user, out string? password, out string? error)
+			{
+				throw new NotSupportedException();
+			}
 		}
 	}
 }

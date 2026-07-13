@@ -35,6 +35,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				values.UserEnv,
 				values.Password,
 				values.PasswordEnv,
+				values.WindowsCredentials,
 				values.Impersonate,
 				values.ImpersonateMode,
 				values.CommandTimeout,

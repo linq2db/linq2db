@@ -97,6 +97,18 @@ When `config-init` writes an existing configuration file, it rewrites it as norm
 
 Configuration profiles are shared by `query`, `schema`, and `mcp`. The `query` command supports `json`, `json-table`, and `csv`. The `schema` command outputs JSON only. The MCP `linq2db_query` tool supports only `json` and `json-table`; if a selected profile has `output: "csv"`, MCP calls must pass `output: "json-table"` or `output: "json"` explicitly, or the profile should be adjusted for MCP usage.
 
+On Windows, `--windows-credentials <target>` or profile `windowsCredentials` can load both user and password from a generic Windows Credential Manager entry. The target is resolved at trusted CLI/MCP startup or profile resolution and is never exposed as an MCP tool argument. Credential Manager entries are scoped to the Windows account that created them, so an MCP process running under another account cannot read them.
+
+Create a generic credential without placing the password in command-line arguments:
+
+```powershell
+cmdkey /generic:"linq2db/project-a/production" `
+       /user:"DOMAIN\ServiceAccount" `
+       /pass
+```
+
+With `/pass` and no value, `cmdkey` prompts for the password interactively. Use the stored pair in a profile with `"windowsCredentials": "linq2db/project-a/production"`. Do not combine it with `user`, `userEnv`, `password`, or `passwordEnv` in the same effective profile.
+
 CSV output preserves database values without spreadsheet-specific escaping and is intended for machine processing. Do not open CSV containing untrusted values directly in spreadsheet applications, which can interpret values beginning with characters such as `=`, `+`, `-`, or `@` as formulas. Use `json` or `json-table` instead when the data is untrusted or intended for interactive inspection.
 
 An optional top-level `mcp` section can set instance-specific `title`, `description`, and `instructions` returned during MCP initialization. Use it to distinguish servers registered for different application or database domains. The `mcp` section is not a connection profile; `config-init` preserves it but does not create or modify it.

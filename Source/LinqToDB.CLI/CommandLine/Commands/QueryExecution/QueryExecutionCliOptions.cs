@@ -24,6 +24,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		public static readonly CliOption UserEnv             = new StringCliOption("user-env",              null, false, false, "environment variable with database user name");
 		public static readonly CliOption Password            = new StringCliOption("password",              null, false, false, "database password for connection string formatting");
 		public static readonly CliOption PasswordEnv         = new StringCliOption("password-env",          null, false, false, "environment variable with database password");
+		public static readonly CliOption WindowsCredentials  = new StringCliOption("windows-credentials",   null, false, false, "Windows Credential Manager generic credential target containing database user and password; supports %NAME% and ${NAME} environment variable expansion");
 		public static readonly CliOption CommandTimeout      = new StringCliOption("command-timeout",       null, false, false, "SQL command timeout in seconds; 0 disables the option");
 		public static readonly CliOption LockTimeout         = new StringCliOption("lock-timeout",          null, false, false, "provider-specific lock wait timeout in seconds; 0 disables the option");
 		public static readonly CliOption MaxRows             = new StringCliOption("max-rows",              null, false, false, "maximum number of result rows to read; 0 disables the limit");

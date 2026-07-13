@@ -50,9 +50,50 @@ namespace LinqToDB.CommandLine.Commands.Connection
 			var providerLocation    = values.ProviderLocation != null
 				? ResolvePath(QueryExecutionCliOptions.ProviderLocation, values.ProviderLocation)
 				: ResolvePath(QueryExecutionCliOptions.ProviderLocation, configuration?.ProviderLocation, configDirectory);
-			var connectionString    = GetConfiguredValue          (QueryExecutionCliOptions.ConnectionString, values.ConnectionString, values.ConnectionStringEnv, configuration?.ConnectionString, configuration?.ConnectionStringEnv);
-			var user                = GetConfiguredExpandableValue(QueryExecutionCliOptions.User,             values.User,             values.UserEnv,             configuration?.User,             configuration?.UserEnv);
-			var password            = GetConfiguredValue          (QueryExecutionCliOptions.Password,         values.Password,         values.PasswordEnv,         configuration?.Password,         configuration?.PasswordEnv);
+			var connectionString    = GetConfiguredValue(QueryExecutionCliOptions.ConnectionString, values.ConnectionString, values.ConnectionStringEnv, configuration?.ConnectionString, configuration?.ConnectionStringEnv);
+			var windowsCredentials  = values.WindowsCredentials != null
+				? ResolveEnvironmentVariables(QueryExecutionCliOptions.WindowsCredentials, values.WindowsCredentials)
+				: ResolveEnvironmentVariables(QueryExecutionCliOptions.WindowsCredentials, configuration?.WindowsCredentials);
+			string? user;
+			string? password;
+
+			if (values.WindowsCredentials != null)
+			{
+				if (HasCommandCredentials(values))
+				{
+					_environment.Error.WriteLine($"Option '--{QueryExecutionCliOptions.WindowsCredentials.Name}' cannot be combined with '--{QueryExecutionCliOptions.User.Name}', '--{QueryExecutionCliOptions.UserEnv.Name}', '--{QueryExecutionCliOptions.Password.Name}', or '--{QueryExecutionCliOptions.PasswordEnv.Name}'.");
+					return null;
+				}
+			}
+			else if (configuration?.WindowsCredentials != null)
+			{
+				if (HasCommandCredentials(values))
+				{
+					_environment.Error.WriteLine("Configuration property 'windowsCredentials' cannot be combined with command-line user or password options.");
+					return null;
+				}
+
+				if (configuration.User != null || configuration.UserEnv != null || configuration.Password != null || configuration.PasswordEnv != null)
+				{
+					_environment.Error.WriteLine("Configuration property 'windowsCredentials' cannot be combined with 'user', 'userEnv', 'password', or 'passwordEnv'.");
+					return null;
+				}
+			}
+
+			if (windowsCredentials != null && !string.Equals(windowsCredentials, MissingEnvironmentVariable, StringComparison.Ordinal))
+			{
+				if (!_environment.TryGetWindowsCredentials(windowsCredentials, out user, out password, out var credentialError))
+				{
+					_environment.Error.WriteLine(credentialError);
+					return null;
+				}
+			}
+			else
+			{
+				user     = GetConfiguredExpandableValue(QueryExecutionCliOptions.User,     values.User,     values.UserEnv,     configuration?.User,     configuration?.UserEnv);
+				password = GetConfiguredValue          (QueryExecutionCliOptions.Password, values.Password, values.PasswordEnv, configuration?.Password, configuration?.PasswordEnv);
+			}
+
 			var commandTimeout      = values.CommandTimeout != null ? ParseTimeout(QueryExecutionCliOptions.CommandTimeout, values.CommandTimeout) : configuration?.CommandTimeout;
 			var lockTimeout         = values.LockTimeout    != null ? ParseTimeout(QueryExecutionCliOptions.LockTimeout,    values.LockTimeout)    : configuration?.LockTimeout;
 			var impersonate         = values.Impersonate ?? configuration?.Impersonate ?? false;
@@ -70,7 +111,8 @@ namespace LinqToDB.CommandLine.Commands.Connection
 			if (string.Equals(connectionString, MissingEnvironmentVariable, StringComparison.Ordinal) ||
 			    string.Equals(user,             MissingEnvironmentVariable, StringComparison.Ordinal) ||
 			    string.Equals(password,         MissingEnvironmentVariable, StringComparison.Ordinal) ||
-			    string.Equals(providerLocation, MissingEnvironmentVariable, StringComparison.Ordinal))
+			    string.Equals(providerLocation,   MissingEnvironmentVariable, StringComparison.Ordinal) ||
+			    string.Equals(windowsCredentials, MissingEnvironmentVariable, StringComparison.Ordinal))
 				return null;
 
 			if (providerName == null)
@@ -150,6 +192,14 @@ namespace LinqToDB.CommandLine.Commands.Connection
 					"new-credentials"   => WindowsImpersonationMode.NewCredentials,
 					_                   => null,
 				};
+			}
+
+			static bool HasCommandCredentials(ConnectionOptionValues optionValues)
+			{
+				return optionValues.User        != null
+					|| optionValues.UserEnv     != null
+					|| optionValues.Password    != null
+					|| optionValues.PasswordEnv != null;
 			}
 
 			int? ParseTimeout(CliOption option, string value)

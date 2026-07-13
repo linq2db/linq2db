@@ -16,6 +16,7 @@ namespace LinqToDB.CommandLine.Commands.Connection
 		string? UserEnv,
 		string? Password,
 		string? PasswordEnv,
+		string? WindowsCredentials,
 		bool?   Impersonate,
 		string? ImpersonateMode,
 		string? CommandTimeout,

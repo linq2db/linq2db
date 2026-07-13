@@ -32,5 +32,7 @@ namespace LinqToDB.CommandLine
 		void CreateDirectory(string path);
 		/// <summary>Reads an environment variable.</summary>
 		string? GetEnvironmentVariable(string name);
+		/// <summary>Reads a user name and password from a Windows Credential Manager generic credential.</summary>
+		bool TryGetWindowsCredentials(string target, out string? user, out string? password, out string? error);
 	}
 }

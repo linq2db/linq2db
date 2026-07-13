@@ -54,6 +54,7 @@ namespace Tests.LinqToDB.CLI
 				(queryProperties.ContainsKey("provider")).ShouldBe(false);
 				(queryProperties.ContainsKey("connectionString")).ShouldBe(false);
 				(queryProperties.ContainsKey("password")).ShouldBe(false);
+				(queryProperties.ContainsKey("windowsCredentials")).ShouldBe(false);
 				(queryProperties.ContainsKey("providerLocation")).ShouldBe(false);
 
 				((string?)infoTool["description"]).ShouldContain("Returns non-secret linq2db MCP query configuration information");
@@ -76,6 +77,7 @@ namespace Tests.LinqToDB.CLI
 				schemaProperties.ContainsKey("connectionString").ShouldBe(false);
 				schemaProperties.ContainsKey("password").ShouldBe(false);
 				schemaProperties.ContainsKey("providerLocation").ShouldBe(false);
+				schemaProperties.ContainsKey("windowsCredentials").ShouldBe(false);
 				schemaProperties.ContainsKey("sql").ShouldBe(false);
 				schemaProperties.ContainsKey("outputFile").ShouldBe(false);
 				schemaProperties.ContainsKey("filterTables").ShouldBe(true);
@@ -136,6 +138,32 @@ namespace Tests.LinqToDB.CLI
 				var executeInputSchema = executeTool["inputSchema"]!.ToJsonString();
 				executeInputSchema.ShouldNotContain("allowUnsafeSql");
 				executeInputSchema.ShouldNotContain("allowExecute");
+				executeInputSchema.ShouldNotContain("windowsCredentials");
+			}
+		}
+
+		[Test]
+		public async Task McpInfoDoesNotExposeWindowsCredentialManagerTarget()
+		{
+			var config = Path.Combine(TestContext.CurrentContext.WorkDirectory, $"mcp-credential-{Guid.NewGuid():N}.json");
+			await File.WriteAllTextAsync(config, """
+				{
+					"default": {
+						"provider": "SQLite",
+						"connectionString": "Data Source={0}",
+						"windowsCredentials": "linq2db/project-a/production"
+					}
+				}
+				""").ConfigureAwait(false);
+
+			await using var server = await McpServerProcess.Start("--config", config);
+
+			await server.Initialize();
+			var response = await server.CallTool("linq2db_info", new JsonObject());
+
+			{
+				(response["error"]).ShouldBeNull();
+				((string?)response["result"]?["content"]?[0]?["text"]).ShouldNotContain("linq2db/project-a/production");
 			}
 		}
 
@@ -868,6 +896,7 @@ namespace Tests.LinqToDB.CLI
 				(result.Output).ShouldContain("dotnet linq2db mcp <options>");
 				(result.Output).ShouldContain("run STDIO MCP server");
 				(result.Output).ShouldContain("default: json-table");
+				(result.Output).ShouldContain("--windows-credentials");
 				(result.Output).ShouldContain("--config");
 				(result.Output).ShouldContain("--provider");
 				(result.Output).ShouldContain("--max-rows");

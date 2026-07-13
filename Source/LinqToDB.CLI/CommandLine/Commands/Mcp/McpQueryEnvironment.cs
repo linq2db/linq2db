@@ -56,5 +56,10 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 		{
 			return _inner.GetEnvironmentVariable(name);
 		}
+
+		public bool TryGetWindowsCredentials(string target, out string? user, out string? password, out string? error)
+		{
+			return _inner.TryGetWindowsCredentials(target, out user, out password, out error);
+		}
 	}
 }

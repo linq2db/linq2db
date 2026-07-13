@@ -1,6 +1,8 @@
 using System;
 using System.IO;
 
+using LinqToDB.CommandLine.Commands.Connection;
+
 namespace LinqToDB.CommandLine
 {
 	internal sealed class SystemCliEnvironment : ICliEnvironment
@@ -67,6 +69,11 @@ namespace LinqToDB.CommandLine
 		public string? GetEnvironmentVariable(string name)
 		{
 			return Environment.GetEnvironmentVariable(name);
+		}
+
+		public bool TryGetWindowsCredentials(string target, out string? user, out string? password, out string? error)
+		{
+			return WindowsCredentialManager.TryRead(target, out user, out password, out error);
 		}
 	}
 }

@@ -370,6 +370,11 @@ namespace Tests.LinqToDB.CLI
 			{
 				return EnvironmentVariables.GetValueOrDefault(name);
 			}
+
+			public bool TryGetWindowsCredentials(string target, out string? user, out string? password, out string? error)
+			{
+				throw new NotSupportedException();
+			}
 		}
 	}
 }
