@@ -48,10 +48,6 @@ type internal FSharpSingleCaseUnionSupport =
         FSharpSingleCaseUnionSupport.IsSingleCaseUnion t &&
         MappingSchema.Default.IsScalarType(((FSharpType.GetUnionCases(t, true)).[0].GetFields()).[0].PropertyType)
 
-    /// The element (wrapped field) type of a single-case union.
-    static member ElementType(t: Type) =
-        ((FSharpType.GetUnionCases(t, true)).[0].GetFields()).[0].PropertyType
-
     static member GetConverter(unionType: Type) : IValueConverter =
         cache.GetOrAdd(unionType, build)
 
