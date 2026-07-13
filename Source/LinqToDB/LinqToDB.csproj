@@ -25,6 +25,13 @@
 
 		<ProjectReference Include="../CodeGenerators/CodeGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 
+		<!-- Bundle the user-facing Roslyn analyzers + code fixes into the linq2db package (packed below into
+		     analyzers/dotnet/roslyn4.8/cs). ReferenceOutputAssembly="false" so their Roslyn-4.8 closure never
+		     leaks into linq2db's own compile / lib / dependencies; deliberately NO OutputItemType="Analyzer"
+		     (unlike CodeGenerators) so the user-facing rules don't run against linq2db's own source. -->
+		<ProjectReference Include="../LinqToDB.Analyzers/LinqToDB.Analyzers.csproj"                     ReferenceOutputAssembly="false" PrivateAssets="all" />
+		<ProjectReference Include="../LinqToDB.Analyzers.CodeFixes/LinqToDB.Analyzers.CodeFixes.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" />
+
 		<EmbeddedResource Include="Resources\*.txt" />
 
 		<None Update="DataProvider\ClickHouse\ClickHouseHints.tt">
@@ -151,4 +158,20 @@
 		<AdditionalFiles Include="PublicAPI/PublicAPI.*.txt" />
 		<AdditionalFiles Include="PublicAPI/$(TargetFramework)/PublicAPI.*.txt" />
 	</ItemGroup>
+
+	<!-- Pack the bundled analyzer + code-fix assemblies under the Roslyn-version-specific analyzer path so NuGet
+	     delivers them only to hosts running Roslyn >= 4.8 and silently skips them on older IDEs/SDKs (no CS9057
+	     analyzer-version warning, so a consumer's TreatWarningsAsErrors can't break on them). The assemblies are
+	     built via the ProjectReferences above; GetTargetPath resolves each output location regardless of OutputPath. -->
+	<Target Name="_BundleAnalyzersIntoPackage" BeforeTargets="_GetPackageFiles">
+		<MSBuild Projects="..\LinqToDB.Analyzers\LinqToDB.Analyzers.csproj" Targets="GetTargetPath">
+			<Output TaskParameter="TargetOutputs" ItemName="_BundledAnalyzerAssembly" />
+		</MSBuild>
+		<MSBuild Projects="..\LinqToDB.Analyzers.CodeFixes\LinqToDB.Analyzers.CodeFixes.csproj" Targets="GetTargetPath">
+			<Output TaskParameter="TargetOutputs" ItemName="_BundledAnalyzerAssembly" />
+		</MSBuild>
+		<ItemGroup>
+			<None Include="@(_BundledAnalyzerAssembly)" Pack="true" PackagePath="analyzers/dotnet/roslyn4.8/cs" Visible="false" />
+		</ItemGroup>
+	</Target>
 </Project>
