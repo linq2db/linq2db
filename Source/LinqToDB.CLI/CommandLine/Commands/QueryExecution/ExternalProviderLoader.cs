@@ -59,24 +59,8 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			{
 				if (!_loadedAssemblies.TryGetValue(providerLocationPath, out var assembly))
 				{
-					var currentDirectory  = Environment.CurrentDirectory;
-					var providerDirectory = Path.GetDirectoryName(providerLocationPath);
-
-					try
-					{
-						// Some external providers resolve native binaries and dependent assemblies relative to
-						// the process current directory instead of the managed provider assembly path.
-						//
-						if (!string.IsNullOrEmpty(providerDirectory))
-							Environment.CurrentDirectory = providerDirectory;
-
-						assembly = new ExternalProviderLoadContext(providerDirectory).LoadFromAssemblyPath(providerLocationPath);
-						_loadedAssemblies.Add(providerLocationPath, assembly);
-					}
-					finally
-					{
-						Environment.CurrentDirectory = currentDirectory;
-					}
+					assembly = new ExternalProviderLoadContext(providerLocationPath).LoadFromAssemblyPath(providerLocationPath);
+					_loadedAssemblies.Add(providerLocationPath, assembly);
 				}
 
 				if (IsDB2FamilyProvider(provider))
@@ -127,13 +111,28 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				|| string.Equals(provider, ProviderName.InformixDB2, StringComparison.OrdinalIgnoreCase);
 		}
 
-		sealed class ExternalProviderLoadContext(string? providerDirectory) : AssemblyLoadContext(isCollectible: false)
+		sealed class ExternalProviderLoadContext : AssemblyLoadContext
 		{
+			readonly AssemblyDependencyResolver _resolver;
+			readonly string?                    _providerDirectory;
+
+			public ExternalProviderLoadContext(string providerLocationPath)
+				: base(isCollectible: false)
+			{
+				_resolver          = new(providerLocationPath);
+				_providerDirectory = Path.GetDirectoryName(providerLocationPath);
+			}
+
 			protected override Assembly? Load(AssemblyName assemblyName)
 			{
-				if (!string.IsNullOrEmpty(providerDirectory))
+				var resolvedPath = _resolver.ResolveAssemblyToPath(assemblyName);
+
+				if (resolvedPath != null)
+					return LoadFromAssemblyPath(resolvedPath);
+
+				if (!string.IsNullOrEmpty(_providerDirectory))
 				{
-					var assemblyPath = Path.Combine(providerDirectory, assemblyName.Name + ".dll");
+					var assemblyPath = Path.Combine(_providerDirectory, assemblyName.Name + ".dll");
 
 					if (IsMatchingAssembly(assemblyPath, assemblyName))
 						return LoadFromAssemblyPath(assemblyPath);
@@ -145,6 +144,13 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 					return LoadFromAssemblyPath(applicationAssemblyPath);
 
 				return null;
+			}
+
+			protected override nint LoadUnmanagedDll(string unmanagedDllName)
+			{
+				var resolvedPath = _resolver.ResolveUnmanagedDllToPath(unmanagedDllName);
+
+				return resolvedPath == null ? 0 : LoadUnmanagedDllFromPath(resolvedPath);
 			}
 
 			static bool IsMatchingAssembly(string assemblyPath, AssemblyName requestedAssemblyName)

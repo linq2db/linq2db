@@ -981,7 +981,8 @@ namespace Tests.LinqToDB.CLI
 		[Test]
 		public void ExternalProviderAssemblyIsLoadedOncePerPath()
 		{
-			var providerPath = typeof(QueryCommandTests).Assembly.Location;
+			var providerPath     = typeof(QueryCommandTests).Assembly.Location;
+			var currentDirectory = Environment.CurrentDirectory;
 
 			ExternalProviderLoader.LoadExternalProvider("SQLite", providerPath, out var firstError).ShouldBe(true);
 			var afterFirstLoad = AppDomain.CurrentDomain.GetAssemblies().Count(assembly => assembly.Location == providerPath);
@@ -991,6 +992,7 @@ namespace Tests.LinqToDB.CLI
 			{
 				firstError.ShouldBeNull();
 				secondError.ShouldBeNull();
+				Environment.CurrentDirectory.ShouldBe(currentDirectory);
 				AppDomain.CurrentDomain.GetAssemblies().Count(assembly => assembly.Location == providerPath).ShouldBe(afterFirstLoad);
 			}
 		}
