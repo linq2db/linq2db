@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 using JetBrains.Annotations;
 
@@ -28,16 +27,32 @@ namespace LinqToDB.Linq
 		}
 
 		/// <summary>
-		/// Returns a point-in-time snapshot of every registered linq2db cache's statistics
-		/// (name, kind, entry count, hit/miss/eviction totals, capacity). Intended for diagnostics.
+		/// Returns a point-in-time snapshot of the LINQ query-plan cache statistics (hit/miss totals,
+		/// hit rate, cached-plan count). Intended for diagnostics — see <see cref="QueryCacheStatistics"/>.
 		/// </summary>
-		public static IReadOnlyList<CacheStatistics> GetCacheStatistics()
+		/// <remarks>
+		/// Hits are counted only while <see cref="QueryCache.CollectHitStatistics"/> is enabled (off by default,
+		/// as counting every hit adds an atomic write to the query hot path); misses are always counted. For
+		/// flow-scoped, parallel-safe measurement of a specific code path, use <see cref="QueryCache.BeginMeasure"/>.
+		/// </remarks>
+		public static QueryCacheStatistics GetQueryCacheStatistics()
+		{
+			var cache = QueryCache.Default;
+			return new QueryCacheStatistics(cache.TotalHits, cache.TotalMisses, cache.Count);
+		}
+
+		/// <summary>
+		/// Returns the current entry count of every registered linq2db cache (name + count). Intended for
+		/// diagnostics — e.g. confirming caches stay bounded. Hit/miss statistics are query-cache-specific;
+		/// see <see cref="GetQueryCacheStatistics"/> for those.
+		/// </summary>
+		public static IReadOnlyList<CacheEntryCount> GetCacheEntryCounts()
 		{
 			var snapshot = CacheRegistry.Snapshot();
-			var result   = new CacheStatistics[snapshot.Count];
+			var result   = new CacheEntryCount[snapshot.Count];
 
 			for (var i = 0; i < snapshot.Count; i++)
-				result[i] = new CacheStatistics(snapshot[i]);
+				result[i] = new CacheEntryCount(snapshot[i].Name, snapshot[i].Count);
 
 			return result;
 		}

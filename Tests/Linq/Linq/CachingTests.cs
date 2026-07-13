@@ -162,6 +162,13 @@ namespace Tests.Linq
 				query.ToArray();
 
 				QueryCache.Default.TotalHits.ShouldBeGreaterThan(priorTotalHits);
+
+				// Public diagnostics API reflects the same counters.
+				var qcStats = LinqToDB.Linq.Tools.GetQueryCacheStatistics();
+				qcStats.Hits.ShouldBeGreaterThan(0);
+				qcStats.Misses.ShouldBeGreaterThan(0);
+				qcStats.Count.ShouldBeGreaterThan(0);
+				qcStats.HitRate.ShouldBeGreaterThan(0);
 			}
 			finally
 			{
@@ -188,11 +195,13 @@ namespace Tests.Linq
 			foreach (var m in members)
 				_ = reader.GetAttributes(m.DeclaringType!, m);
 
-			// Negative results are no longer cached, so the process-static AttributeReader cache stays empty.
-			// Pre-fix this equalled members.Length (every empty lookup was cached).
-			var stats = LinqToDB.Linq.Tools.GetCacheStatistics().First(s => s.Name == "AttributeReader");
+			// Negative results are no longer cached. Pre-fix each empty lookup was cached, so the count was
+			// >= members.Length. Asserted with tolerance (not exact 0) because the process-static AttributeReader
+			// cache can pick up a few positive entries from concurrent [Parallelizable] fixtures between the
+			// clear and this read.
+			var stats = LinqToDB.Linq.Tools.GetCacheEntryCounts().First(c => c.Name == "AttributeReader");
 
-			stats.Count.ShouldBe(0);
+			stats.Count.ShouldBeLessThan(members.Length);
 		}
 
 		// #5711 guard: WorkCacheEntryLimit must reject values below BitFaster's minimum capacity (3),

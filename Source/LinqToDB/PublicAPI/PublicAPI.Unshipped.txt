@@ -1141,18 +1141,19 @@ LinqToDB.Internal.Linq.QueryCache.CollectHitStatistics.get -> bool
 LinqToDB.Internal.Linq.QueryCache.CollectHitStatistics.set -> void
 LinqToDB.Internal.Linq.QueryCache.TotalHits.get -> long
 LinqToDB.Internal.Linq.QueryCache.TotalMisses.get -> long
-LinqToDB.Internal.Cache.CacheKind
-LinqToDB.Internal.Cache.CacheKind.BoundedWork = 1 -> LinqToDB.Internal.Cache.CacheKind
-LinqToDB.Internal.Cache.CacheKind.Query = 0 -> LinqToDB.Internal.Cache.CacheKind
-LinqToDB.Internal.Cache.CacheStatistics
-LinqToDB.Internal.Cache.CacheStatistics.Capacity.get -> long?
-LinqToDB.Internal.Cache.CacheStatistics.Count.get -> long
-LinqToDB.Internal.Cache.CacheStatistics.Evictions.get -> long
-LinqToDB.Internal.Cache.CacheStatistics.Hits.get -> long
-LinqToDB.Internal.Cache.CacheStatistics.Kind.get -> LinqToDB.Internal.Cache.CacheKind
-LinqToDB.Internal.Cache.CacheStatistics.Misses.get -> long
-LinqToDB.Internal.Cache.CacheStatistics.Name.get -> string!
-static LinqToDB.Linq.Tools.GetCacheStatistics() -> System.Collections.Generic.IReadOnlyList<LinqToDB.Internal.Cache.CacheStatistics!>!
+LinqToDB.Internal.Linq.QueryCache.Count.get -> long
+LinqToDB.Linq.QueryCacheStatistics
+LinqToDB.Linq.QueryCacheStatistics.QueryCacheStatistics() -> void
+LinqToDB.Linq.QueryCacheStatistics.Count.get -> long
+LinqToDB.Linq.QueryCacheStatistics.HitRate.get -> double
+LinqToDB.Linq.QueryCacheStatistics.Hits.get -> long
+LinqToDB.Linq.QueryCacheStatistics.Misses.get -> long
+LinqToDB.Linq.CacheEntryCount
+LinqToDB.Linq.CacheEntryCount.CacheEntryCount() -> void
+LinqToDB.Linq.CacheEntryCount.Count.get -> long
+LinqToDB.Linq.CacheEntryCount.Name.get -> string!
+static LinqToDB.Linq.Tools.GetQueryCacheStatistics() -> LinqToDB.Linq.QueryCacheStatistics
+static LinqToDB.Linq.Tools.GetCacheEntryCounts() -> System.Collections.Generic.IReadOnlyList<LinqToDB.Linq.CacheEntryCount>!
 LinqToDB.Common.Configuration.Cache
 static LinqToDB.Common.Configuration.Cache.WorkCacheEntryLimit.get -> int?
 static LinqToDB.Common.Configuration.Cache.WorkCacheEntryLimit.set -> void

@@ -16,16 +16,14 @@ namespace LinqToDB.Internal.Cache
 		where TKey : notnull
 	{
 		readonly ICache<TKey,TValue> _cache;
-		readonly int                 _capacity;
 
-		public string    Name { get; }
-		public CacheKind Kind { get; }
+		/// <summary>Stable identifier, e.g. <c>"CommandInfo.ObjectReaders"</c> — kept for debugging/diagnostics.</summary>
+		public string Name { get; }
 
 		/// <param name="name">Stable identifier for diagnostics, e.g. <c>"CommandInfo.ObjectReaders"</c>.</param>
 		/// <param name="capacity">Maximum number of entries before eviction kicks in.</param>
 		/// <param name="expireAfterAccess">Optional idle timeout; entries not accessed within this window expire.</param>
 		/// <param name="policy">Eviction policy (see <see cref="CacheEvictionPolicy"/>).</param>
-		/// <param name="kind">Classification reported to the registry (see <see cref="CacheKind"/>).</param>
 		/// <param name="scoped">When <see langword="true"/>, the registry holds only a weak reference so the cache
 		/// can be collected with its owner; use for per-scope caches. Process-static caches leave this <see langword="false"/>.</param>
 		public BoundedCache(
@@ -33,12 +31,9 @@ namespace LinqToDB.Internal.Cache
 			int                 capacity,
 			TimeSpan?           expireAfterAccess = null,
 			CacheEvictionPolicy policy            = CacheEvictionPolicy.Lru,
-			CacheKind           kind              = CacheKind.BoundedWork,
 			bool                scoped            = false)
 		{
 			Name      = name;
-			Kind      = kind;
-			_capacity = capacity;
 			_cache    = Build(capacity, expireAfterAccess, policy);
 
 			if (scoped)
@@ -110,18 +105,5 @@ namespace LinqToDB.Internal.Cache
 		public long Count => _cache.Count;
 
 		public void Clear() => _cache.Clear();
-
-		public CacheStats GetStats()
-		{
-			var metrics = _cache.Metrics;
-
-			if (metrics.HasValue)
-			{
-				var m = metrics.Value!;
-				return new CacheStats(Name, Kind, _cache.Count, m.Hits, m.Misses, m.Evicted, _capacity);
-			}
-
-			return new CacheStats(Name, Kind, _cache.Count, 0, 0, 0, _capacity);
-		}
 	}
 }

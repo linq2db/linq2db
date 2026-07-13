@@ -21,8 +21,11 @@ namespace LinqToDB.Internal.Mapping
 
 		readonly Func<Type?, ICustomAttributeProvider, MappingAttribute[]> _attributesGetter;
 
-		public string    Name { get; }
-		public CacheKind Kind => CacheKind.BoundedWork;
+		/// <summary>Stable identifier — kept for debugging/diagnostics.</summary>
+		public string Name { get; }
+
+		/// <summary>Total number of cached (non-empty) attribute entries across the three lookup maps.</summary>
+		public long Count => _cache.Count + _noInheritMappingAttributes.Count + _orderedInheritMappingAttributes.Count;
 
 		/// <param name="attributesGetter">Raw attribute getter delegate for cache misses.</param>
 		/// <param name="name">Diagnostic identifier reported to the cache registry.</param>
@@ -195,8 +198,5 @@ namespace LinqToDB.Internal.Mapping
 			_noInheritMappingAttributes.Clear();
 			_orderedInheritMappingAttributes.Clear();
 		}
-
-		public CacheStats GetStats()
-			=> new(Name, Kind, _cache.Count + _noInheritMappingAttributes.Count + _orderedInheritMappingAttributes.Count, Hits: 0, Misses: 0, Evictions: 0, Capacity: null);
 	}
 }

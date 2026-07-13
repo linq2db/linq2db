@@ -60,18 +60,15 @@ namespace LinqToDB.Internal.Linq
 			return cache;
 		}
 
-		// --- Unified cache-management contract (ILinqToDBCache). Implemented explicitly because
-		//     CacheStats/CacheKind are internal and QueryCache is public — explicit implementation
-		//     keeps them off the public surface while still participating in the registry. ---
+		// --- Unified cache-management contract (ILinqToDBCache). Name/Clear implemented explicitly to keep
+		//     them off QueryCache's public surface while still participating in the registry; Count is public. ---
 
-		string    ILinqToDBCache.Name => "Query";
-		CacheKind ILinqToDBCache.Kind => CacheKind.Query;
+		string ILinqToDBCache.Name => "Query";
 
 		void ILinqToDBCache.Clear() => ClearAll();
 
-		// Hits reflect the global counter only when CollectHitStatistics is enabled; otherwise 0.
-		CacheStats ILinqToDBCache.GetStats()
-			=> new("Query", CacheKind.Query, Interlocked.Read(ref _entryCount), TotalHits, TotalMisses, Evictions: 0, ResolveMaxEntries());
+		/// <summary>Number of cached query plans (across all buckets).</summary>
+		public long Count => Interlocked.Read(ref _entryCount);
 
 		const int  BucketCap              = 16;
 		const int  DefaultMaxEntries      = 10_000;
