@@ -436,49 +436,49 @@ namespace Tests.Linq
 		public void OptionQuery_IsSome([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			Assert.That(FSharp.OptionQueryTests.IsSome(db), Is.EqualTo(2));
+			FSharp.OptionQueryTests.IsSome(db).ShouldBe(2);
 		}
 
 		[Test(Description = "F# option .IsNone in a query predicate translates to IS NULL")]
 		public void OptionQuery_IsNone([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			Assert.That(FSharp.OptionQueryTests.IsNone(db), Is.EqualTo(1));
+			FSharp.OptionQueryTests.IsNone(db).ShouldBe(1);
 		}
 
 		[Test(Description = "F# option .Value in a query predicate translates to the underlying value")]
 		public void OptionQuery_Value([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			Assert.That(FSharp.OptionQueryTests.Value(db), Is.EqualTo(1));
+			FSharp.OptionQueryTests.Value(db).ShouldBe(1);
 		}
 
 		[Test(Description = "F# option .Value in a projection translates to the underlying column")]
 		public void OptionQuery_ValueProjection([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			Assert.That(FSharp.OptionQueryTests.ValueProjection(db), Is.EqualTo(2));
+			FSharp.OptionQueryTests.ValueProjection(db).ShouldBe(2);
 		}
 
 		[Test(Description = "F# voption .IsSome in a query predicate translates to IS NOT NULL")]
 		public void OptionQuery_VOptionIsSome([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			Assert.That(FSharp.OptionQueryTests.VOptionIsSome(db), Is.EqualTo(1));
+			FSharp.OptionQueryTests.VOptionIsSome(db).ShouldBe(1);
 		}
 
 		[Test(Description = "F# voption .IsNone in a query predicate translates to IS NULL")]
 		public void OptionQuery_VOptionIsNone([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			Assert.That(FSharp.OptionQueryTests.VOptionIsNone(db), Is.EqualTo(1));
+			FSharp.OptionQueryTests.VOptionIsNone(db).ShouldBe(1);
 		}
 
 		[Test(Description = "F# single-case DU column round-trips and equality translates to SQL")]
 		public void DuQuery_EqualsLiteral([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			Assert.That(FSharp.DuQueryTests.EqualsLiteral(db), Is.EqualTo(1));
+			FSharp.DuQueryTests.EqualsLiteral(db).ShouldBe(1);
 		}
 
 		[ActiveIssue("Blocked by #1813 (F# captured-lambda predicate translation, PR #5701): the correlated LEFT JOIN predicate fails to build. Once #5701 lands this exposes a single-case-DU null read materializing UserId 0 instead of null (FSharpSingleCaseUnionSupport converter created with handlesNulls=true but no null branch); fix by passing handlesNulls=false.")]
@@ -486,7 +486,7 @@ namespace Tests.Linq
 		public void DuQuery_NullReadKey([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			Assert.That(FSharp.DuQueryTests.NullReadKey(db), Is.EqualTo(1));
+			FSharp.DuQueryTests.NullReadKey(db).ShouldBe(1);
 		}
 
 		[Test(Description = "UseFSharp must yield a stable ConfigurationID - the harness applies it to every context, so an unstable id defeats the query cache for all providers (#5704)")]
