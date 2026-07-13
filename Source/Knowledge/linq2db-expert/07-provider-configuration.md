@@ -29,16 +29,16 @@ See [Notes](#notes) section below for exceptions where the flag is true but the 
 
 | Provider | `ProviderName` constant | MERGE | CTE | Window Functions | APPLY / LATERAL | Upsert | OUTPUT / RETURNING | Bulk Copy |
 |---|---|:---:|:---:|:---:|:---:|:---:|:---|:---|
-| Access | `ProviderName.Access` | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Access | `ProviderName.Access` | ❌ | ❌ | ❌ | ❌ | ❌¹ | ❌ | ❌ |
 | ClickHouse | `ProviderName.ClickHouse` | ❌ | ✅ | ✅ | ❌ | ❌ | ⚠️ limited | ✅ native |
 | DB2 | `ProviderName.DB2` | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ⚠️ opt-in |
-| DuckDB | `ProviderName.DuckDB` | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ RETURNING | ✅ native |
+| DuckDB | `ProviderName.DuckDB` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ RETURNING | ✅ native |
 | Firebird | `ProviderName.Firebird` | ✅ | ✅ | ✅ v3+ | ✅ v4+ | ✅ | ✅ RETURNING | ❌ |
-| Informix | `ProviderName.Informix` | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ native |
-| MySQL / MariaDB | `ProviderName.MySql` | ❌ | ✅ v8.0+ | ✅ v8.0+ | ✅ v8.0+ | ✅ | ❌ MySQL; ⚠️ MariaDB only | ⚠️ opt-in |
-| Oracle | `ProviderName.Oracle` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ RETURNING INTO | ⚠️ opt-in |
+| Informix | `ProviderName.Informix` | ✅ | ✅ | ✅ | ❌ | ❌¹ | ❌ | ✅ native |
+| MySQL / MariaDB | `ProviderName.MySql` | ❌ | ✅ v8.0+ | ✅ v8.0+ | ✅ MySQL 8.0+ only; ❌ MariaDB | ✅ | ❌ MySQL; ⚠️ MariaDB only | ⚠️ opt-in |
+| Oracle | `ProviderName.Oracle` | ✅ | ✅ | ✅ | ✅ 12c+ | ✅ | ⚠️ `RETURNING INTO` for INSERT identity only | ⚠️ opt-in |
 | PostgreSQL | `ProviderName.PostgreSQL` | ✅ v15+ | ✅ | ✅ | ✅ v9.3+ | ✅ v9.5+ | ✅ RETURNING | ⚠️ opt-in |
-| SAP HANA | `ProviderName.SapHana` | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ⚠️ opt-in |
+| SAP HANA | `ProviderName.SapHana` | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ⚠️ opt-in |
 | SQL Server CE | `ProviderName.SqlCe` | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
 | SQLite | `ProviderName.SQLite` | ❌ | ✅ | ✅ | ❌ | ✅ | ✅ RETURNING v3.35+ | ❌ |
 | SQL Server | `ProviderName.SqlServer` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ OUTPUT | ✅ native |
@@ -73,11 +73,17 @@ Used internally by LinqToDB for correlated subqueries and `LoadWith`.
 `INSERT OR UPDATE` semantics (single statement that inserts or updates).
 Each provider translates the operation to its native syntax (e.g., `ON DUPLICATE KEY UPDATE` for MySQL,
 `ON CONFLICT DO UPDATE` for PostgreSQL/SQLite, `MERGE` for SQL Server/DB2/Oracle/Firebird).
-Exposed as `DataExtensions.InsertOrUpdate()` / `InsertOrReplace()`.
+Exposed as `LinqExtensions.InsertOrUpdate()` / `DataExtensions.InsertOrReplace()` (different classes).
+`¹` on Access/Informix means no native single-statement support - the call still works, LinqToDB
+falls back to a multi-query `SELECT` → `UPDATE`/`INSERT` emulation. Only ClickHouse and YDB
+genuinely throw `LinqToDBException` (see [Notes](#notes)).
 
 **OUTPUT / RETURNING**
 Ability to return column values from INSERT / UPDATE / DELETE statements.
-Exposed as `LinqExtensions.Output()` / `OutputInto()`.
+Exposed per DML verb: `InsertWithOutput()`/`InsertWithOutputInto()`, `UpdateWithOutput()`/
+`UpdateWithOutputInto()`, `DeleteWithOutput()`/`DeleteWithOutputInto()`,
+`MergeWithOutput()`/`MergeWithOutputInto()` (all in `LinqExtensions`, with `Async` variants).
+There is no single generic `Output()`/`OutputInto()` method.
 SQL Server emits `OUTPUT` into a table variable; other providers use `RETURNING`.
 The exact syntax and supported DML operations vary by provider.
 For combined rows such as MySQL / MariaDB, treat the cell as a family-level warning:
@@ -119,9 +125,20 @@ Other Notes
   MariaDB 10.0+, while `INSERT ... RETURNING` requires MariaDB 10.5+. Do not infer
   general MySQL-family `OUTPUT / RETURNING` support from a MariaDB-only case.
 
+- **MariaDB APPLY / LATERAL**: unlike CTEs and window functions, this is a hard
+  `false` for MariaDB at any version, not a version threshold - MariaDB itself does not
+  implement `LATERAL`/`APPLY` (see `MDEV-6373`/`MDEV-19078`). Only MySQL 8.0+ gets this
+  capability.
+
 - **PostgreSQL MERGE**: requires PostgreSQL 15 or later. The `MERGE` statement was
   standardised and added to PostgreSQL in version 15. Earlier versions will fail at
   the database level even though LinqToDB does not block generation.
+
+- **Oracle OUTPUT / RETURNING**: LinqToDB's Oracle builder only emits `RETURNING ... INTO`
+  for retrieving an auto-generated identity value on `INSERT`, using an ODP.NET
+  OUT-bind-variable, not a general result-set-returning clause. The generic
+  `InsertWithOutput()`/`UpdateWithOutput()`/`DeleteWithOutput()`/`MergeWithOutput()` family
+  is not supported against Oracle.
 
 - **ClickHouse**: does not support SQL transactions in the ACID sense;
   `TransactionScope` and `BeginTransaction` may silently succeed or have no effect
