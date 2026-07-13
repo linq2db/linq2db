@@ -488,6 +488,13 @@ namespace Tests.Linq
 			FSharp.DuQueryTests.EqualsLiteral(db).ShouldBe(1);
 		}
 
+		[Test(Description = "F# single-case DU column reads back as the reconstructed union (from-provider converter)")]
+		public void DuQuery_ReadBack([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.DuQueryTests.ReadBack(db).ShouldBe(1);
+		}
+
 		[ActiveIssue("Blocked by #1813 (F# captured-lambda predicate translation, PR #5701): the correlated LEFT JOIN predicate fails to build. Once #5701 lands this exposes a single-case-DU null read materializing UserId 0 instead of null (FSharpSingleCaseUnionSupport converter created with handlesNulls=true but no null branch); fix by passing handlesNulls=false.")]
 		[Test(Description = "F# single-case DU column read as NULL (LEFT JOIN unmatched row) must materialize as null, not a fabricated default")]
 		public void DuQuery_NullReadKey([DataSources] string context)

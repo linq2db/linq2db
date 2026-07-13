@@ -34,6 +34,14 @@ let EqualsLiteral (db: IDataContext) =
     seed db
     (db.GetTable<DuRow>().Where(fun x -> x.Key = UserId 10).ToArray()).Length
 
+// single-case DU column reads back as the reconstructed union (from-provider converter direction).
+// Returns 1 when both rows round-trip to their inserted union values.
+let ReadBack (db: IDataContext) =
+    use _t = db.CreateLocalTable<DuRow>()
+    seed db
+    let keys = db.GetTable<DuRow>().OrderBy(fun x -> x.Id).Select(fun x -> x.Key).ToArray()
+    if keys = [| UserId 10; UserId 20 |] then 1 else 0
+
 // A null-producing read of a single-case-DU column must materialize as null, not a fabricated UserId 0.
 // The LEFT JOIN leaves DuRow.Key NULL for the unmatched outer row (Oid=2, RefId=99), so the converter
 // reads a SQL NULL for that row. Returns the count of null keys (expected 1).
