@@ -292,12 +292,13 @@ namespace LinqToDB.Internal.Linq
 
 		// Flow-scoped hit/miss measurement. AsyncLocal so a BeginMeasure() scope only observes the
 		// events raised on its own logical call context — parallel-test-safe and pollution-free,
-		// unlike the process-global GetMissCount / Query<T>.CacheMissCount counter.
-		static readonly AsyncLocal<CacheMeasurement?> _activeMeasurement = new();
+		// unlike the process-global GetMissCount / Query<T>.CacheMissCount counter. Instance-scoped so a
+		// scope observes only the events raised on the QueryCache it was begun on (production uses Default).
+		readonly AsyncLocal<CacheMeasurement?> _activeMeasurement = new();
 
-		// Cheap production gate: when no measurement scope is active anywhere, the hot path skips the
+		// Cheap production gate: when no measurement scope is active on this cache, the hot path skips the
 		// AsyncLocal read entirely — a volatile int read is far cheaper than AsyncLocal<T>.Value.
-		static int _activeMeasurementCount;
+		int _activeMeasurementCount;
 
 		/// <summary>
 		/// Begins a flow-scoped measurement of cache hits and misses. Only queries executed on the current
@@ -309,7 +310,7 @@ namespace LinqToDB.Internal.Linq
 		/// db.GetTable&lt;Foo&gt;().Where(...).ToList();
 		/// // probe.Misses == 1 on first execution, probe.Hits == 1 when the plan is reused
 		/// </code></example>
-		public CacheMeasurement BeginMeasure() => new(_activeMeasurement);
+		public CacheMeasurement BeginMeasure() => new(this);
 
 		/// <summary>
 		/// A flow-scoped hit/miss measurement window returned by <see cref="BeginMeasure"/>.
@@ -319,17 +320,19 @@ namespace LinqToDB.Internal.Linq
 		{
 			readonly AsyncLocal<CacheMeasurement?> _slot;
 			readonly CacheMeasurement?             _parent;
+			readonly QueryCache                    _owner;
 
 			long _hits;
 			long _misses;
 			int  _disposed;
 
-			internal CacheMeasurement(AsyncLocal<CacheMeasurement?> slot)
+			internal CacheMeasurement(QueryCache owner)
 			{
-				_slot      = slot;
-				_parent    = slot.Value;
-				slot.Value = this;
-				Interlocked.Increment(ref _activeMeasurementCount);
+				_owner      = owner;
+				_slot       = owner._activeMeasurement;
+				_parent     = _slot.Value;
+				_slot.Value = this;
+				Interlocked.Increment(ref owner._activeMeasurementCount);
 			}
 
 			/// <summary>Cache hits observed on this flow since the scope began.</summary>
@@ -348,7 +351,7 @@ namespace LinqToDB.Internal.Linq
 					return;
 
 				_slot.Value = _parent;
-				Interlocked.Decrement(ref _activeMeasurementCount);
+				Interlocked.Decrement(ref _owner._activeMeasurementCount);
 			}
 		}
 
