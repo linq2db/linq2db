@@ -45,8 +45,9 @@ var options = new DataOptions()
 
 ### Existing `DbTransaction`
 ```csharp
+// existingTransaction.Connection supplies the connection - no separate connection parameter
 var options = new DataOptions()
-    .UseTransaction(SqlServerTools.GetDataProvider(), existingConnection, existingTransaction);
+    .UseTransaction(SqlServerTools.GetDataProvider(), existingTransaction);
 ```
 
 ### Connection factory (DI / pooling)
@@ -59,11 +60,14 @@ var options = new DataOptions()
 ### Provider-specific options callback
 ```csharp
 var options = new DataOptions()
-    .UseSqlServer(connectionString, o => o
-        .WithBulkCopyType(SqlServerBulkCopyType.ProviderSpecific));
+    .UseSqlServer(connectionString, o => o with
+    {
+        BulkCopyType = BulkCopyType.ProviderSpecific,
+    });
 ```
-The `optionSetter` overload is available on every `UseXxx` method and exposes
-provider-specific settings (dialect, driver variant, bulk-copy type, etc.).
+The `optionSetter` overload is available on every `UseXxx` method and exposes a provider-specific
+options `record` (e.g. `SqlServerOptions`) for settings like bulk-copy type - use `with` to change
+individual fields, since these are immutable records, not mutable builders.
 
 For tracing, retry policies, interceptors, and member translators see `docs/configuration.md`.
 
@@ -87,7 +91,7 @@ For tracing, retry policies, interceptors, and member translators see `docs/conf
 | SAP HANA | `ProviderName.SapHana` | `UseSapHana(...)` | ⚠️ see notes |
 | SQL Server CE | `ProviderName.SqlCe` | `UseSqlCe(...)` | ⚠️ .NET Framework only |
 | Sybase / SAP ASE | `ProviderName.Sybase` | `UseAse(...)` | `AdoNetCore.AseClient` |
-| YDB | `ProviderName.Ydb` | `YdbTools.CreateDataConnection(...)` ⚠️ no `UseYdb()` - see notes | `Ydb.Sdk` |
+| YDB | `ProviderName.Ydb` | `UseYdb(...)` | `Ydb.Sdk` |
 
 All providers require the `linq2db` NuGet package. The ADO.NET driver is installed separately.
 
@@ -117,11 +121,14 @@ var options = new DataOptions()
 
 ```csharp
 UseAccess(string connectionString,
-          AccessVersion  version  = AccessVersion.AutoDetect,
           AccessProvider provider = AccessProvider.AutoDetect)
 ```
 
-**`AccessVersion` enum**
+`UseAccess` has no `AccessVersion` parameter - the OLE DB/ODBC connection string itself (via its
+`Provider=` value) determines JET vs ACE. To select `AccessVersion` explicitly, use the legacy
+`AccessTools.CreateDataConnection(connectionString, version, provider)` factory instead.
+
+**`AccessVersion` enum** (used by `AccessTools`, not by `UseAccess`)
 
 | Value | Description |
 |---|---|
@@ -486,6 +493,8 @@ linq2db
 Oracle.ManagedDataAccess.Core   # .NET (recommended)
 # OR
 Oracle.ManagedDataAccess        # .NET Framework
+# OR
+Devart.Data.Oracle              # OracleProvider.Devart
 ```
 
 ---
@@ -500,9 +509,12 @@ Oracle.ManagedDataAccess        # .NET Framework
 | `ProviderName.PostgreSQL92` | `"PostgreSQL.9.2"` |
 | `ProviderName.PostgreSQL93` | `"PostgreSQL.9.3"` |
 | `ProviderName.PostgreSQL95` | `"PostgreSQL.9.5"` |
+| `ProviderName.PostgreSQL11` | `"PostgreSQL.11"` |
+| `ProviderName.PostgreSQL12` | `"PostgreSQL.12"` |
 | `ProviderName.PostgreSQL13` | `"PostgreSQL.13"` |
 | `ProviderName.PostgreSQL15` | `"PostgreSQL.15"` |
 | `ProviderName.PostgreSQL18` | `"PostgreSQL.18"` |
+| `ProviderName.PostgreSQL19` | `"PostgreSQL.19"` |
 
 **Configuration**
 
@@ -526,9 +538,12 @@ UsePostgreSQL(string connectionString,
 | `v92` | PostgreSQL 9.2+ dialect |
 | `v93` | PostgreSQL 9.3+ dialect |
 | `v95` | PostgreSQL 9.5+ dialect |
+| `v11` | PostgreSQL 11+ dialect (window-frame GROUPS mode, frame EXCLUDE, RANGE value-offset) |
+| `v12` | PostgreSQL 12+ dialect (CTE `AS [NOT] MATERIALIZED`) |
 | `v13` | PostgreSQL 13+ dialect |
 | `v15` | PostgreSQL 15+ dialect |
 | `v18` | PostgreSQL 18+ dialect |
+| `v19` | PostgreSQL 19+ dialect |
 
 **NuGet packages**
 
@@ -725,8 +740,9 @@ linq2db
 # No NuGet package. System.Data.SqlServerCe.dll is part of the SQL Server CE 3.5/4.0 runtime.
 ```
 
-> ⚠️ SQL Server CE is **.NET Framework only** and is end-of-life. It is not supported on
-> .NET Core / .NET 5+.
+> ⚠️ SQL Server CE is effectively **.NET Framework only** and is end-of-life. linq2db's own SqlCe
+> provider code is not TFM-gated, but `System.Data.SqlServerCe.dll` (the COM/interop driver
+> assembly) only ships for .NET Framework, so it is not usable on .NET Core / .NET 5+.
 
 ---
 
@@ -783,15 +799,23 @@ AdoNetCore.AseClient            # recommended managed provider
 
 **Configuration**
 
-YDB does not have a `UseYdb()` extension method. Use the `YdbTools` factory class instead:
+```csharp
+// Standard pattern, like every other provider
+var options = new DataOptions()
+    .UseYdb("Host=grpcs://localhost:2135;Database=/local");
+```
+
+**Method signature**
 
 ```csharp
-// Option 1 - factory method (returns DataConnection directly)
-using var db = YdbTools.CreateDataConnection("Host=grpcs://localhost:2135;Database=/local");
+UseYdb(string connectionString,
+       Func<YdbOptions, YdbOptions>? optionSetter = null)
+```
 
-// Option 2 - DataOptions (use with DI, DataContext, or pooling)
-var options = new DataOptions()
-    .UseConnectionString(YdbTools.GetDataProvider(), connectionString);
+`YdbTools` also provides a direct factory for one-off connections:
+
+```csharp
+using var db = YdbTools.CreateDataConnection("Host=grpcs://localhost:2135;Database=/local");
 ```
 
 **NuGet packages**

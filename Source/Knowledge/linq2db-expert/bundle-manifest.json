@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-12T21:25:06",
+  "generated_at": "2026-07-12T22:07:49",
   "prompt_source": ".agents/knowledge-pack-maintenance.md",
   "source_root": "Source/Skills/linq2db",
   "xml_source": ".build/bin/LinqToDB/Release/net10.0/linq2db.xml",
@@ -87,7 +87,7 @@
     "docs/null-semantics.md": "dfb1e926dfe7c874e9a40e6d444b3d135949130b928d7ac2f28ab4ad581cfd94",
     "docs/parameters.md": "ac92254c5eb9b6567baf72d196f25ba775dba5755a327947acff7af109a4dd18",
     "docs/provider-capabilities.md": "ec755c2b96d007cd732e996bc1b06d48993ff941f76ffffb7c8ade6147c65ce4",
-    "docs/provider-setup.md": "8f1ffb97e1f94e34b1a0662a1d9733a6974083b9ea28b040723c186ef7cec4c6",
+    "docs/provider-setup.md": "00a49bff171d1cabe6a2849d6f64a4315a986cfa55d3b062f9abb3b2c40253a8",
     "docs/query-cte.md": "6c359cba89307afd2241bc7c998a6e00f6f505cba898df7404b8791c8c42545b",
     "docs/query-temp-tables.md": "695b0e2082b158ae2ef1077a3c69d91f1b97a96348ec83fde399847abb2b3e18",
     "docs/raw-sql.md": "9734ed81bef5435b5d931ce6a76bd6688cf6b604b44996c2daf24149ab54a531",
