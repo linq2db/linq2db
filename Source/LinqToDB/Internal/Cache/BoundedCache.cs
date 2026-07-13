@@ -50,7 +50,9 @@ namespace LinqToDB.Internal.Cache
 		static ICache<TKey,TValue> Build(int capacity, TimeSpan? expireAfterAccess, CacheEvictionPolicy policy)
 		{
 			if (policy == CacheEvictionPolicy.Lfu)
-				return new ConcurrentLfu<TKey,TValue>(capacity);
+				return expireAfterAccess.HasValue
+					? throw new NotSupportedException("CacheEvictionPolicy.Lfu does not support expireAfterAccess.")
+					: new ConcurrentLfu<TKey,TValue>(capacity);
 
 			// Sliding expiration (reset on access) matches the retired MemoryCache clone's SlidingExpiration;
 			// it needs the builder — the ConcurrentTLru direct ctor is expire-after-write, not sliding.
