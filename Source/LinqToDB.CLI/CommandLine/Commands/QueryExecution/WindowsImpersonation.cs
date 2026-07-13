@@ -12,7 +12,10 @@ using Microsoft.Win32.SafeHandles;
 
 namespace LinqToDB.CommandLine.Commands.QueryExecution
 {
-	static class WindowsImpersonation
+	/// <summary>
+	/// Executes operations under a Windows user identity.
+	/// </summary>
+	public static class WindowsImpersonation
 	{
 		const int Logon32LogonInteractive      = 2;
 		const int Logon32LogonNetwork          = 3;
@@ -21,6 +24,9 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		const int Logon32ProviderDefault       = 0;
 		const int Logon32ProviderWinnt50       = 3;
 
+		/// <summary>
+		/// Executes an operation under the specified Windows user identity.
+		/// </summary>
 		public static T Run<T>(string user, string password, WindowsImpersonationMode mode, Func<T> action)
 		{
 			if (!OperatingSystem.IsWindows())
@@ -29,6 +35,9 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			return RunWindows(user, password, mode, action);
 		}
 
+		/// <summary>
+		/// Executes an asynchronous operation under the specified Windows user identity.
+		/// </summary>
 		public static Task<T> RunAsync<T>(string user, string password, WindowsImpersonationMode mode, Func<Task<T>> action)
 		{
 			if (!OperatingSystem.IsWindows())
@@ -40,8 +49,8 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		[SupportedOSPlatform("windows")]
 		static T RunWindows<T>(string user, string password, WindowsImpersonationMode mode, Func<T> action)
 		{
-			SplitUserName  (user, out var domain,    out var userName);
-			GetLogonOptions(mode, out var logonType, out var logonProvider);
+			var (domain, userName)           = SplitUserName  (user);
+			var (logonType, logonProvider)   = GetLogonOptions(mode);
 
 			if (!LogonUser(userName, domain, password, logonType, logonProvider, out var token))
 				throw new Win32Exception(Marshal.GetLastWin32Error(), "Windows impersonation logon failed.");
@@ -53,8 +62,8 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		[SupportedOSPlatform("windows")]
 		static async Task<T> RunWindowsAsync<T>(string user, string password, WindowsImpersonationMode mode, Func<Task<T>> action)
 		{
-			SplitUserName  (user, out var domain,    out var userName);
-			GetLogonOptions(mode, out var logonType, out var logonProvider);
+			var (domain, userName)         = SplitUserName  (user);
+			var (logonType, logonProvider) = GetLogonOptions(mode);
 
 			if (!LogonUser(userName, domain, password, logonType, logonProvider, out var token))
 				throw new Win32Exception(Marshal.GetLastWin32Error(), "Windows impersonation logon failed.");
@@ -63,42 +72,31 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				return await WindowsIdentity.RunImpersonatedAsync(token, action).ConfigureAwait(false);
 		}
 
-		static void GetLogonOptions(WindowsImpersonationMode mode, out int logonType, out int logonProvider)
+		/// <summary>
+		/// Resolves the native Windows logon type and provider for an impersonation mode.
+		/// </summary>
+		public static (int LogonType, int LogonProvider) GetLogonOptions(WindowsImpersonationMode mode)
 		{
-			switch (mode)
+			return mode switch
 			{
-				case WindowsImpersonationMode.Interactive:
-					logonType     = Logon32LogonInteractive;
-					logonProvider = Logon32ProviderDefault;
-					return;
-				case WindowsImpersonationMode.Network:
-					logonType     = Logon32LogonNetwork;
-					logonProvider = Logon32ProviderDefault;
-					return;
-				case WindowsImpersonationMode.NewCredentials:
-					logonType     = Logon32LogonNewCredentials;
-					logonProvider = Logon32ProviderWinnt50;
-					return;
-				default:
-					logonType     = Logon32LogonNetworkCleartext;
-					logonProvider = Logon32ProviderDefault;
-					return;
-			}
+				WindowsImpersonationMode.Interactive    => (Logon32LogonInteractive,      Logon32ProviderDefault),
+				WindowsImpersonationMode.Network        => (Logon32LogonNetwork,          Logon32ProviderDefault),
+				WindowsImpersonationMode.NewCredentials => (Logon32LogonNewCredentials,   Logon32ProviderWinnt50),
+				_                                       => (Logon32LogonNetworkCleartext, Logon32ProviderDefault),
+			};
 		}
 
-		static void SplitUserName(string user, out string? domain, out string userName)
+		/// <summary>
+		/// Splits a Windows user name into optional domain and user-name components.
+		/// </summary>
+		public static (string? Domain, string UserName) SplitUserName(string user)
 		{
 			var separator = user.IndexOf('\\', StringComparison.Ordinal);
 
 			if (separator > 0 && separator + 1 < user.Length)
-			{
-				domain   = user[..separator];
-				userName = user[(separator + 1)..];
-				return;
-			}
+				return (user[..separator], user[(separator + 1)..]);
 
-			domain   = null;
-			userName = user;
+			return (null, user);
 		}
 
 		[DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
