@@ -195,6 +195,29 @@ namespace Tests.Linq
 			stats.Count.ShouldBe(0);
 		}
 
+		// #5711 guard: WorkCacheEntryLimit must reject values below BitFaster's minimum capacity (3),
+		// which would otherwise crash every work cache at construction (TypeInitializationException).
+		[Test]
+		public void WorkCacheEntryLimitRejectsValuesBelowMinimum()
+		{
+			var prior = LinqToDB.Common.Configuration.Cache.WorkCacheEntryLimit;
+			try
+			{
+				Assert.Throws<ArgumentOutOfRangeException>(() => LinqToDB.Common.Configuration.Cache.WorkCacheEntryLimit = 0);
+				Assert.Throws<ArgumentOutOfRangeException>(() => LinqToDB.Common.Configuration.Cache.WorkCacheEntryLimit = 2);
+
+				// null (unbounded) and the minimum are accepted (a throw here fails the test).
+				LinqToDB.Common.Configuration.Cache.WorkCacheEntryLimit = null;
+				LinqToDB.Common.Configuration.Cache.WorkCacheEntryLimit = 3;
+
+				LinqToDB.Common.Configuration.Cache.WorkCacheEntryLimit.ShouldBe(3);
+			}
+			finally
+			{
+				LinqToDB.Common.Configuration.Cache.WorkCacheEntryLimit = prior;
+			}
+		}
+
 		static IQueryable<T> GetTestTable<T>(IDataContext context,
 			string tableName,
 			string databaseName,
