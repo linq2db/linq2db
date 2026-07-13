@@ -10,6 +10,7 @@ using System;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
 
 using NUnit.Framework;
@@ -26,7 +27,7 @@ namespace Tests.Extensions
 	GenerateTableTest("PagLock");
 	GenerateTableTest("ReadCommitted");
 	GenerateTableTest("ReadCommittedLock");
-	GenerateTableTest("ReadPast");
+	GenerateTableTest("ReadPast", isolationLevel: "ReadCommitted");
 	GenerateTableTest("ReadUncommitted");
 	GenerateTableTest("RepeatableRead");
 	GenerateTableTest("RowLock");
@@ -60,13 +61,21 @@ namespace Tests.Extensions
 	}
 }
 <#+
-void GenerateTableTest(string test, string version = "")
+void GenerateTableTest(string test, string version = "", string isolationLevel = null)
 {
+	// When an isolation level is required (e.g. READPAST is only valid under READ COMMITTED /
+	// REPEATABLE READ), pin it with an explicit transaction so the test doesn't inherit a pooled
+	// connection's leftover isolation level, and disable remote/LinqService (the client-side
+	// transaction can't set the remote server connection's isolation level).
+	var remote = isolationLevel == null ? "true" : "false";
 #>
 		[Test]
-		public void With<#= test #>TableTest([IncludeDataSources(true, TestProvName.AllSqlServer<#= version #>)] string context)
+		public void With<#= test #>TableTest([IncludeDataSources(<#= remote #>, TestProvName.AllSqlServer<#= version #>)] string context)
 		{
 			using var db = GetDataContext(context);
+<#+ if (isolationLevel != null) { #>
+			using var tx = ((DataConnection)db).BeginTransaction(System.Data.IsolationLevel.<#= isolationLevel #>);
+<#+ } #>
 
 			var q =
 				from p in db.Parent
@@ -80,9 +89,12 @@ void GenerateTableTest(string test, string version = "")
 		}
 
 		[Test]
-		public void With<#= test #>InScopeTest([IncludeDataSources(true, TestProvName.AllSqlServer<#= version #>)] string context)
+		public void With<#= test #>InScopeTest([IncludeDataSources(<#= remote #>, TestProvName.AllSqlServer<#= version #>)] string context)
 		{
 			using var db = GetDataContext(context);
+<#+ if (isolationLevel != null) { #>
+			using var tx = ((DataConnection)db).BeginTransaction(System.Data.IsolationLevel.<#= isolationLevel #>);
+<#+ } #>
 
 			var q =
 			(
