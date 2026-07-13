@@ -1,8 +1,9 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 	<!--
-	Packable project for the linq2db.Analyzers NuGet. Imports the ROOT props (shared Nuget metadata, version,
-	signing) and NOT Source/Directory.Build.props (Source-tree banned-symbols / PublicAPI / 5-TFM list don't
-	apply to a Roslyn component). Packs both this assembly and the sibling analyzer assembly into the package.
+	Code-fix Roslyn component. Not packable on its own: it is bundled into the linq2db package by
+	Source/LinqToDB/LinqToDB.csproj. Imports the ROOT props (shared build settings) and NOT
+	Source/Directory.Build.props (Source-tree banned-symbols / PublicAPI / 5-TFM list don't apply to a
+	Roslyn component).
 	-->
 	<Import Project="$(MSBuildThisFileDirectory)\..\..\Directory.Build.props" />
 	<!-- Shared Roslyn-component settings for both analyzer projects (after root props, so it overrides the multi-TFM list). -->
