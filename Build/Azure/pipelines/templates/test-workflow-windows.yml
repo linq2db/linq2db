@@ -52,6 +52,22 @@ steps:
     packageType: sdk
     version: 10.x
 
+# Diagnostic: list the heaviest resident processes so we can spot agent background services worth
+# killing to free RAM for the test process (some jobs run near the memory ceiling).
+- task: PowerShell@2
+  inputs:
+    targetType: inline
+    pwsh: true
+    script: |
+      Write-Host ">>> Top memory-consuming processes (WorkingSet > 10 MB):"
+      Get-Process |
+        Where-Object { $_.WorkingSet64 -gt 10MB } |
+        Sort-Object WorkingSet64 -Descending |
+        Select-Object -First 50 Id, @{ n = 'WS(MB)'; e = { [math]::Round($_.WorkingSet64 / 1MB, 1) } }, ProcessName |
+        Format-Table -AutoSize | Out-String -Width 200 | Write-Host
+  displayName: Probe memory (top processes)
+  condition: succeeded()
+
 - task: DownloadPipelineArtifact@2
   inputs:
     artifactName: $(artifact_test_scripts)
