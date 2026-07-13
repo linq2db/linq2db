@@ -105,15 +105,18 @@ var options = new DataOptions()
     });
 ```
 
-`TraceLevel` values:
+`TraceLevel` is `System.Diagnostics.TraceLevel` (not a LinqToDB-defined type). LinqToDB only
+distinguishes `Off` from every other level: `Off` disables the `onTrace`/`WriteTrace` callback
+entirely, while `Error`, `Warning`, `Info`, and `Verbose` all receive the same events - LinqToDB
+itself only ever tags an event `Info` (normal execution steps) or `Error` (an exception occurred);
+it never produces `Warning`- or `Verbose`-tagged events, and `TraceInfo.SqlText` always includes
+the command text and parameter values regardless of the level passed to `UseTracing`. Pick `Info`
+(or any non-`Off` level) to receive tracing; pick `Off` to disable it.
 
 | Level | What is traced |
 |---|---|
 | `Off` | nothing |
-| `Error` | exceptions only |
-| `Warning` | slow queries and exceptions |
-| `Info` | all SQL statements (default recommendation) |
-| `Verbose` | all SQL + parameter values |
+| any other value (`Error`, `Warning`, `Info`, `Verbose`) | all SQL statements + parameter values, and exceptions - LinqToDB does not vary behavior by these four levels |
 
 String-callback overload (for legacy `TraceSwitch`-based setups):
 
@@ -147,87 +150,119 @@ var options = new DataOptions()
     .UseRetryPolicy(new MyRetryPolicy());
 ```
 
-`IRetryPolicy` has a single method: `Execute<TResult>(Func<TResult> operation)`.
+`IRetryPolicy` has four methods to implement: `Execute<TResult>(Func<TResult> operation)`,
+`Execute(Action operation)`, `ExecuteAsync<TResult>(Func<CancellationToken, Task<TResult>> operation, CancellationToken cancellationToken = default)`,
+and `ExecuteAsync(Func<CancellationToken, Task> operation, CancellationToken cancellationToken = default)`.
+
+---
+
+## Configuration via external files
+
+### JSON (`appsettings.json`)
+
+LinqToDB has no built-in JSON-specific configuration API. For a single connection, the standard
+.NET hosting pattern is enough: read a connection string via `IConfiguration`, then pass it to
+`UseConnectionString`.
+
+```csharp
+var connectionString = configuration.GetConnectionString("Default");
+
+var options = new DataOptions()
+    .UseSqlServer(connectionString);
+```
+
+For named-configuration semantics equivalent to `app.config` (multiple connections,
+`DataConnection.DefaultSettings`, `new DataConnection("Name")` / `UseConfiguration("Name")`),
+implement `ILinqToDBSettings` yourself against `IConfiguration` - this is the same
+provider-agnostic seam `LinqToDBSection` implements for XML, and it does not require
+`linq2db.Compat` (that package is specific to reading `System.Configuration.ConfigurationManager`
+XML sections):
+
+```csharp
+public class JsonLinqToDBSettings(IConfiguration configuration) : ILinqToDBSettings
+{
+    public IEnumerable<IDataProviderSettings> DataProviders => [];
+    public string? DefaultConfiguration => "Default";
+    public string? DefaultDataProvider  => null;
+
+    public IEnumerable<IConnectionStringSettings> ConnectionStrings =>
+        configuration.GetSection("ConnectionStrings").GetChildren()
+            .Select(s => new ConnectionStringSettings(s.Key, s.Value!, providerName: "SqlServer"));
+}
+
+DataConnection.DefaultSettings = new JsonLinqToDBSettings(configuration);
+
+using var db = new DataConnection("Default");
+```
+
+Provider-name resolution per connection is application-specific - `appsettings.json`'s
+`ConnectionStrings` section has no standard provider-name field, so map it however the
+application's JSON shape represents it.
+
+### Legacy XML (`app.config` / `web.config`)
+
+`ILinqToDBSettings`, `IConnectionStringSettings`, and the named-configuration API on
+`DataConnection` (`AddConfiguration`, `AddOrSetConfiguration`, `GetConnectionString`,
+`DefaultConfiguration`, `DefaultDataProvider`) are core, provider-agnostic, and work on every TFM -
+without any config file, entries can be registered programmatically:
+
+```csharp
+DataConnection.AddConfiguration("MyDb", "Server=...;...", SqlServerTools.GetDataProvider());
+using var db = new DataConnection("MyDb");
+```
+
+Reading the classic `<linq2db>` / `<connectionStrings>` XML sections from `app.config`/`web.config`
+is a separate concern, backed by `System.Configuration.ConfigurationManager`:
+
+- On **`net462`**, this is already compiled into `linq2db.dll` - `DataConnection.DefaultSettings`
+  lazily resolves to `LinqToDBSection.Instance` automatically, so `app.config` is read with no
+  extra package or startup code.
+- On **`netstandard2.0`/`net8.0`+**, add the **`linq2db.Compat`** NuGet package and opt in
+  explicitly at startup:
+
+```csharp
+using LinqToDB.Configuration;
+DataConnection.DefaultSettings = LinqToDBSection.Instance;
+```
+
+Select a named configuration into a `DataOptions` with `UseConfiguration(string?)`
+(the older `UseConfigurationString` is obsolete, scheduled for removal in v7).
 
 ---
 
 ## Interceptors
 
 Interceptors allow viewing, modifying, or suppressing operations performed by LinqToDB.
-Register with `UseInterceptor(IInterceptor)` or `UseInterceptors(IEnumerable<IInterceptor>)`.
-Multiple calls accumulate; existing interceptors are not replaced.
-
-Available interceptor interfaces:
-
-| Interface | Events |
-|---|---|
-| `ICommandInterceptor` | before/after command creation, before/after execution |
-| `IConnectionInterceptor` | before/after connection open/close |
-| `IDataContextInterceptor` | before/after `DataContext` close, entity created |
-| `IEntityServiceInterceptor` | entity created during materialization |
-| `IExceptionInterceptor` | exception thrown by a command |
-| `IQueryExpressionInterceptor` | LINQ expression tree before translation |
-| `IUnwrapDataObjectInterceptor` | unwrap profiler-wrapped ADO.NET objects |
+Register with `UseInterceptor(IInterceptor)` or `UseInterceptors(IEnumerable<IInterceptor>)`;
+remove with `RemoveInterceptor(instance)`. Multiple calls accumulate; existing interceptors are
+not replaced.
 
 ```csharp
-// Example: log every executed command
-public class LoggingInterceptor : CommandInterceptor
-{
-    public override void AfterExecuteReader(
-        CommandEventData eventData, DbCommand command,
-        CommandBehavior commandBehavior, DbDataReader dataReader)
-    {
-        Console.WriteLine($"Executed: {command.CommandText}");
-    }
-}
-
 var options = new DataOptions()
     .UseSqlServer(connectionString)
     .UseInterceptor(new LoggingInterceptor());
 ```
 
-To remove an interceptor registered in a base `DataOptions`, call `RemoveInterceptor(instance)`.
+For the full list of interceptor interfaces, which events each one covers, and worked examples,
+see [`docs/interceptors.md`](interceptors.md).
 
 ---
 
 ## Custom SQL translation (member translators)
 
-`UseMemberTranslator` registers a custom `IMemberTranslator` that extends how LinqToDB
-translates .NET member expressions to SQL. This is the integration point for adding
-provider-specific SQL functions that are not in the standard `Sql.*` API.
+`UseMemberTranslator(IMemberTranslator)` registers a `DataOptions`-level translator that extends
+how LinqToDB translates .NET member expressions to SQL; remove one with
+`RemoveTranslator(instance)`.
 
 ```csharp
-public class MyTranslator : MemberTranslatorBase
-{
-    public MyTranslator()
-    {
-        Registration.RegisterMethod(
-            (string s) => s.MyCustomMethod(),
-            TranslateMyCustomMethod);
-    }
-
-    Expression? TranslateMyCustomMethod(
-        ITranslationContext ctx, MethodCallExpression call, TranslationFlags flags)
-    {
-        if (!ctx.TranslateToSqlExpression(call.Object!, out var arg))
-            return null;
-        return ctx.CreatePlaceholder(
-            ctx.ExpressionFactory.Function(
-                ctx.ExpressionFactory.GetDbDataType(call.Type),
-                "MY_FUNCTION", arg),
-            call);
-    }
-}
-
 var options = new DataOptions()
     .UseSqlServer(connectionString)
     .UseMemberTranslator(new MyTranslator());
 ```
 
-For simpler cases (no context access needed) use `[Sql.Expression]` or `[Sql.Function]`
-attributes on a static method - see `docs/translatable-methods.md`.
-
-To remove a previously registered translator, call `RemoveTranslator(instance)`.
+For `MyTranslator` implementation patterns, `[Sql.Expression]` / `[Sql.Function]` /
+`[ExpressionMethod]` alternatives, and a caveat about the `IMemberTranslator` implementation
+surface, see [`docs/extensions.md`](extensions.md).
 
 ---
 
@@ -259,7 +294,7 @@ Always use a `using` scope.
 ```csharp
 using var db = new DataConnection(options);
 
-using (db.UseOptions(o => o.UseCommandTimeout(30)))
+using (db.UseOptions<DataContextOptions>(o => o.WithCommandTimeout(30)))
 {
     // Command timeout override is active only inside this block.
     db.GetTable<Product>().ToList();
@@ -283,9 +318,12 @@ Use `UseOptions` for short-lived per-context overrides, not for normal applicati
 For regular configuration, build a reusable `DataOptions` instance once and pass it to each
 `DataConnection` / `DataContext` constructor.
 
-Connection-related overrides are limited: mapping schema and connection interceptors can be
-updated, but connection string, provider name, data provider, and similar connection identity
-settings are not updatable on an already-created context.
+Connection-related overrides are limited: `UseOptions`/`UseConnectionOptions` reapply only mapping
+schema and the connection interceptor. Passing a different `ConnectionString`, `ProviderName`,
+`DataProvider`, `DbConnection`, `DbTransaction`, `DisposeConnection`, `ConnectionFactory`,
+`DataProviderFactory`, or `OnEntityDescriptorCreated` value than the context was created with
+**throws `LinqToDBException`** - these are creation-time identity settings, not silently ignored
+overrides.
 
 `UseMappingSchema(mappingSchema)` is a convenience override for temporarily replacing the context
 mapping schema. It follows the same disposable-scope rule.
@@ -325,5 +363,7 @@ static readonly DataOptions _options = new DataOptions()
 
 - `docs/provider-setup.md` - provider-specific `UseXxx` methods and connection string formats
 - `docs/agent-antipatterns.md` - common mistakes including `MappingSchema` reuse
-- `docs/translatable-methods.md` - standard .NET methods translated to SQL; custom extension via `[Sql.Expression]`
+- `docs/interceptors.md` - full interceptor interface list and worked examples
+- `docs/extensions.md` - `[Sql.Expression]` / `[Sql.Function]` / `[ExpressionMethod]` and `IMemberTranslator`
+- `docs/translatable-methods.md` - standard .NET methods translated to SQL
 - [`DataOptions` API reference](https://linq2db.github.io/api/LinqToDB.DataOptions.html)

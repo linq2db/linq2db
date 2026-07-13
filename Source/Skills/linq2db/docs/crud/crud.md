@@ -37,5 +37,5 @@
 |---|---|
 | Transactions | [`docs/configuration.md`](../configuration.md) - `BeginTransaction`, `TransactionScope` |
 | Schema creation (`CreateTable`) | [`docs/agent-antipatterns.md`](../agent-antipatterns.md) - anti-pattern #10 |
-| Custom SQL functions | [`docs/custom-sql.md`](../custom-sql.md) |
+| Custom SQL functions | [`docs/extensions.md`](../extensions.md) |
 | CTE, OUTPUT / RETURNING | [`docs/provider-capabilities.md`](../provider-capabilities.md) |

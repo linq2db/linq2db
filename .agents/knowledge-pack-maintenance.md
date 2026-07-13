@@ -92,7 +92,7 @@ Upload only these numbered markdown files to Custom GPT Knowledge:
 10. `10-query-composition.md`
 11. `11-hints.md`
 12. `12-hints-api-map.md`
-13. `13-custom-sql.md`
+13. `13-extensions.md`
 14. `14-translatable-methods.md`
 15. `15-interceptors.md`
 16. `16-xml-doc.md`
@@ -117,7 +117,7 @@ The `custom-gpt-instructions.md` file is curated in `Source/Knowledge/linq2db-ex
 | `10-query-composition.md` | `docs/query-cte.md`, `docs/query-temp-tables.md`, `docs/null-semantics.md` |
 | `11-hints.md` | `docs/hints.md` |
 | `12-hints-api-map.md` | `docs/hints-api-map.md` |
-| `13-custom-sql.md` | `docs/custom-sql.md`, `docs/raw-sql.md`, `docs/parameters.md` |
+| `13-extensions.md` | `docs/extensions.md`, `docs/raw-sql.md`, `docs/parameters.md` |
 | `14-translatable-methods.md` | `docs/translatable-methods.md` |
 | `15-interceptors.md` | `docs/interceptors.md` |
 | `16-xml-doc.md` | current `linq2db.xml` parsed directly |

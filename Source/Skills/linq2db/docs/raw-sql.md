@@ -16,7 +16,7 @@ Raw SQL APIs have different execution and composition rules. Do not mix them:
 | Raw SQL returning one scalar column as a LINQ query root | `FromSqlScalar<T>()` | Deferred | Composable when the provider can compose over the supplied SQL |
 | Execute command text directly | `SetCommand(...).Execute*()` / `Query*()` / `ExecuteReader*()` | Immediate at terminal call | Not a LINQ query |
 | Inspect generated SQL for a LINQ/DML query | `ToSqlQuery(...)` | Immediate SQL generation only | Terminal inspection API |
-| Map a reusable C# method/property to SQL | `[Sql.Expression]`, `[Sql.Function]`, `[ExpressionMethod]` | Depends on query execution | See [`custom-sql.md`](custom-sql.md) |
+| Map a reusable C# method/property to SQL | `[Sql.Expression]`, `[Sql.Function]`, `[ExpressionMethod]` | Depends on query execution | See [`extensions.md`](extensions.md) |
 | Add provider hints/table modifiers | Provider-specific hint helpers first | Depends on hint API | See [`hints.md`](hints.md) |
 
 ## Raw SQL Query Roots

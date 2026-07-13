@@ -435,7 +435,7 @@ Use the attribute when mapping belongs with the entity type. Use fluent `.HasCon
 the conversion is configured with a custom `MappingSchema`.
 
 Do not use value converters as query translators for arbitrary .NET methods. If the LINQ query
-contains a method that needs SQL translation, use `docs/custom-sql.md` or member translators
+contains a method that needs SQL translation, use `docs/extensions.md`
 instead.
 
 ---

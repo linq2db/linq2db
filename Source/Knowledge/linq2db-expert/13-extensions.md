@@ -1,6 +1,6 @@
-<!-- Generated from: Source/Skills/linq2db/docs/custom-sql.md -->
+<!-- Generated from: Source/Skills/linq2db/docs/extensions.md -->
 
-# Custom SQL Translation
+# Extension Mechanisms
 
 > ⚠️ **Stop. This document is incomplete by itself.**
 > Before implementing anything, read [`SKILL.md`](01-skill.md).
@@ -12,26 +12,30 @@
 > - use `[Sql.Expression]`, `[Sql.Function]`, or `[ExpressionMethod]`
 > - define provider-specific SQL overloads for the same method
 > - create reusable LINQ query fragments or calculated entity columns
+> - register a `DataOptions`-level custom member translator (`IMemberTranslator`)
 
-This document describes how to map application-defined C# methods and properties to SQL
-expressions, functions, and fragments so they translate correctly inside LinqToDB
-`IQueryable<T>` expression trees.
+This document describes the mechanisms for extending how LinqToDB translates application-defined
+C# code to SQL: attribute-based mapping on individual methods/properties (`[Sql.Expression]`,
+`[Sql.Function]`, `[ExpressionMethod]`) and the `DataOptions`-level `IMemberTranslator` extension
+point.
 
 If the task is to use application-provided SQL text as a query root, execute command text
-directly, or inspect generated SQL text, use [`raw-sql.md`](13-custom-sql.md) instead.
+directly, or inspect generated SQL text, use [`raw-sql.md`](13-extensions.md) instead.
 
 ---
 
 ## Extension points overview
 
-| Attribute | Use case |
+| Mechanism | Use case |
 |---|---|
-| `[Sql.Expression("...")]` | Map to an arbitrary SQL template |
-| `[Sql.Function("name")]` | Map to a standard SQL function call |
+| `[Sql.Expression("...")]` | Map a static method/property to an arbitrary SQL template |
+| `[Sql.Function("name")]` | Map a static method/property to a standard SQL function call |
 | `[ExpressionMethod("helper")]` | Replace a method/property with a LINQ expression tree |
+| `IMemberTranslator` / `UseMemberTranslator` | Register a `DataOptions`-level translator for member/method expressions that attributes cannot annotate (e.g. members of a type you don't own) |
 
-All three attributes are in the `LinqToDB` namespace and can be stacked with a
-`Configuration` argument to provide provider-specific overloads.
+The three attributes are in the `LinqToDB` namespace and can be stacked with a `Configuration`
+argument to provide provider-specific overloads. `IMemberTranslator` is registered separately
+through `DataOptions` - see [Member translators](#member-translators) below.
 
 ---
 
@@ -198,6 +202,60 @@ the exact package XML-doc/API guidance for `[SqlQueryDependent]` instead.
 
 ---
 
+## Member translators
+
+`IMemberTranslator` (`LinqToDB.Linq.Translation`) is a `DataOptions`-level extension point for
+translating .NET member/method expressions to SQL. Prefer the `[Sql.Expression]` / `[Sql.Function]`
+/ `[ExpressionMethod]` attributes above when the target method or property is one you can annotate
+directly - they are simpler and scoped to the member itself. Reach for `IMemberTranslator` only when
+you need to translate members you cannot annotate (e.g. members of a BCL or third-party type) or
+need context-aware translation logic.
+
+Register translators with `UseMemberTranslator(IMemberTranslator)` or
+`UseMemberTranslator(IEnumerable<IMemberTranslator>)`; remove one with
+`RemoveTranslator(IMemberTranslator)`. `DataOptions` is immutable, so each call returns a new
+instance.
+
+```csharp
+public class MyTranslator : MemberTranslatorBase
+{
+    public MyTranslator()
+    {
+        Registration.RegisterMethod(
+            (string s) => s.MyCustomMethod(),
+            TranslateMyCustomMethod);
+    }
+
+    Expression? TranslateMyCustomMethod(
+        ITranslationContext ctx, MethodCallExpression call, TranslationFlags flags)
+    {
+        if (!ctx.TranslateToSqlExpression(call.Object!, out var arg))
+            return null;
+        return ctx.CreatePlaceholder(
+            ctx.ExpressionFactory.Function(
+                ctx.ExpressionFactory.GetDbDataType(call.Type),
+                "MY_FUNCTION", arg),
+            call);
+    }
+}
+
+var options = new DataOptions()
+    .UseSqlServer(connectionString)
+    .UseMemberTranslator(new MyTranslator());
+```
+
+> **Caveat:** the convenient base class shown above (`MemberTranslatorBase`, with its
+> `Registration.RegisterMethod` dispatch) and the SQL node types the example builds
+> (`ISqlExpression`, `SqlPlaceholderExpression`) live in `LinqToDB.Internal.*` namespaces, which are
+> implementation detail, not a supported consumer API (see `SKILL.md`). `IMemberTranslator` itself
+> is public, but as of this writing there is no documented way to implement it usefully without
+> reaching into `LinqToDB.Internal.*`. Track this at
+> [linq2db/linq2db#5716](https://github.com/linq2db/linq2db/issues/5716). Until resolved, treat this
+> example as "how the shipped providers do it internally", not as a supported public pattern - do
+> not present it to a consumer as a stable public API.
+
+---
+
 ## Further reading
 
 - [`Sql` API reference](16-xml-doc.md)
@@ -224,7 +282,7 @@ Raw SQL APIs have different execution and composition rules. Do not mix them:
 | Raw SQL returning one scalar column as a LINQ query root | `FromSqlScalar<T>()` | Deferred | Composable when the provider can compose over the supplied SQL |
 | Execute command text directly | `SetCommand(...).Execute*()` / `Query*()` / `ExecuteReader*()` | Immediate at terminal call | Not a LINQ query |
 | Inspect generated SQL for a LINQ/DML query | `ToSqlQuery(...)` | Immediate SQL generation only | Terminal inspection API |
-| Map a reusable C# method/property to SQL | `[Sql.Expression]`, `[Sql.Function]`, `[ExpressionMethod]` | Depends on query execution | See [`custom-sql.md`](13-custom-sql.md) |
+| Map a reusable C# method/property to SQL | `[Sql.Expression]`, `[Sql.Function]`, `[ExpressionMethod]` | Depends on query execution | See [`extensions.md`](13-extensions.md) |
 | Add provider hints/table modifiers | Provider-specific hint helpers first | Depends on hint API | See [`hints.md`](11-hints.md) |
 
 ## Raw SQL Query Roots

@@ -10028,7 +10028,7 @@ Generated directly from the current package XML documentation. Use XML member id
 
 - XML member: `M:LinqToDB.DataOptionsExtensions.UseMemberTranslator(LinqToDB.DataOptions,LinqToDB.Linq.Translation.IMemberTranslator)`
 - Kind: Method
-- Summary: Adds instance to those registered on the context. Translators can be used to translate .NET member expressions into SQL expressions during query translation. This is the low-level extensibility point behind provider or application-specific method translation. Prefer [Sql.Expression], [Sql.Function], or [ExpressionMethod] for simpler cases; use when you need direct access to translation context and SQL-expression creation. See package-local skills/linq2db/docs/custom-sql.md and skills/linq2db/docs/configuration.md for guidance on choosing between these extension points.
+- Summary: Adds instance to those registered on the context. Translators can be used to translate .NET member expressions into SQL expressions during query translation. This is the low-level extensibility point behind provider or application-specific method translation. Prefer [Sql.Expression], [Sql.Function], or [ExpressionMethod] for simpler cases; use when you need direct access to translation context and SQL-expression creation. See package-local skills/linq2db/docs/extensions.md and skills/linq2db/docs/configuration.md for guidance on choosing between these extension points.
 - Parameters:
   - `options`: 
   - `translator`: 

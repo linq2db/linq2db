@@ -53,7 +53,7 @@ only the files below under the user-provided Expert root, called `<EXPERT_ROOT>`
 - `<EXPERT_ROOT>/10-query-composition.md`
 - `<EXPERT_ROOT>/11-hints.md`
 - `<EXPERT_ROOT>/12-hints-api-map.md`
-- `<EXPERT_ROOT>/13-custom-sql.md`
+- `<EXPERT_ROOT>/13-extensions.md`
 - `<EXPERT_ROOT>/14-translatable-methods.md`
 - `<EXPERT_ROOT>/15-interceptors.md`
 - `<EXPERT_ROOT>/16-xml-doc.md`

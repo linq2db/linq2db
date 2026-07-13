@@ -248,7 +248,7 @@ not as a completeness claim for every linq2db feature.
 | `docs/query-temp-tables.md` | Temporary table workflows. |
 | `docs/hints.md` | Hint API rules and fallback order. |
 | `docs/hints-api-map.md` | Reverse lookup from SQL hint/directive text to typed provider helper. |
-| `docs/custom-sql.md` | Custom SQL translation via `[Sql.Expression]`, `[Sql.Function]`, and `[ExpressionMethod]`. |
+| `docs/extensions.md` | Extension mechanisms - `[Sql.Expression]`, `[Sql.Function]`, `[ExpressionMethod]`, and `IMemberTranslator`. |
 | `docs/translatable-methods.md` | Standard .NET methods and `Sql.*` helpers translated to SQL. |
 | `docs/interceptors.md` | Interceptor extension points and safe usage. |
 

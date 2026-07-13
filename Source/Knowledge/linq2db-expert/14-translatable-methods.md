@@ -272,7 +272,7 @@ to a mapped column inside a query:
 
 To add your own translatable methods, apply `[Sql.Expression("...")]` or
 `[Sql.Function("...")]` to a static method, or use `[ExpressionMethod]` to substitute a
-call with a LINQ expression tree. See `docs/custom-sql.md` for patterns, key properties,
+call with a LINQ expression tree. See `docs/extensions.md` for patterns, key properties,
 provider-specific overloads, and supported extension points.
 For a complete reference see the
 [Extensible SQL mapping article](https://linq2db.github.io/articles/sql/Sql-Function.html).

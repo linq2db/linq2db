@@ -1234,7 +1234,7 @@ namespace LinqToDB
 		/// use <see cref="IMemberTranslator"/> when you need direct access to translation context and SQL-expression creation.
 		/// </para>
 		/// <para>
-		/// See package-local <c>skills/linq2db/docs/custom-sql.md</c> and <c>skills/linq2db/docs/configuration.md</c> for guidance on choosing between these extension points.
+		/// See package-local <c>skills/linq2db/docs/extensions.md</c> and <c>skills/linq2db/docs/configuration.md</c> for guidance on choosing between these extension points.
 		/// </para>
 		/// </summary>
 		/// <param name="options"></param>

@@ -39,7 +39,7 @@
 |---|---|
 | Transactions | [`docs/configuration.md`](07-provider-configuration.md) - `BeginTransaction`, `TransactionScope` |
 | Schema creation (`CreateTable`) | [`docs/agent-antipatterns.md`](06-agent-antipatterns-and-ai-tags.md) - anti-pattern #10 |
-| Custom SQL functions | [`docs/custom-sql.md`](13-custom-sql.md) |
+| Custom SQL functions | [`docs/extensions.md`](13-extensions.md) |
 | CTE, OUTPUT / RETURNING | [`docs/provider-capabilities.md`](07-provider-configuration.md) |
 
 <!-- Generated from: Source/Skills/linq2db/docs/crud/crud-select.md -->

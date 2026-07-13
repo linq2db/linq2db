@@ -1,4 +1,4 @@
-# Custom SQL Translation
+# Extension Mechanisms
 
 > ⚠️ **Stop. This document is incomplete by itself.**
 > Before implementing anything, read [`SKILL.md`](../SKILL.md).
@@ -10,10 +10,12 @@
 > - use `[Sql.Expression]`, `[Sql.Function]`, or `[ExpressionMethod]`
 > - define provider-specific SQL overloads for the same method
 > - create reusable LINQ query fragments or calculated entity columns
+> - register a `DataOptions`-level custom member translator (`IMemberTranslator`)
 
-This document describes how to map application-defined C# methods and properties to SQL
-expressions, functions, and fragments so they translate correctly inside LinqToDB
-`IQueryable<T>` expression trees.
+This document describes the mechanisms for extending how LinqToDB translates application-defined
+C# code to SQL: attribute-based mapping on individual methods/properties (`[Sql.Expression]`,
+`[Sql.Function]`, `[ExpressionMethod]`) and the `DataOptions`-level `IMemberTranslator` extension
+point.
 
 If the task is to use application-provided SQL text as a query root, execute command text
 directly, or inspect generated SQL text, use [`raw-sql.md`](raw-sql.md) instead.
@@ -22,14 +24,16 @@ directly, or inspect generated SQL text, use [`raw-sql.md`](raw-sql.md) instead.
 
 ## Extension points overview
 
-| Attribute | Use case |
+| Mechanism | Use case |
 |---|---|
-| `[Sql.Expression("...")]` | Map to an arbitrary SQL template |
-| `[Sql.Function("name")]` | Map to a standard SQL function call |
+| `[Sql.Expression("...")]` | Map a static method/property to an arbitrary SQL template |
+| `[Sql.Function("name")]` | Map a static method/property to a standard SQL function call |
 | `[ExpressionMethod("helper")]` | Replace a method/property with a LINQ expression tree |
+| `IMemberTranslator` / `UseMemberTranslator` | Register a `DataOptions`-level translator for member/method expressions that attributes cannot annotate (e.g. members of a type you don't own) |
 
-All three attributes are in the `LinqToDB` namespace and can be stacked with a
-`Configuration` argument to provide provider-specific overloads.
+The three attributes are in the `LinqToDB` namespace and can be stacked with a `Configuration`
+argument to provide provider-specific overloads. `IMemberTranslator` is registered separately
+through `DataOptions` - see [Member translators](#member-translators) below.
 
 ---
 
@@ -193,6 +197,60 @@ the exact package XML-doc/API guidance for `[SqlQueryDependent]` instead.
 - Dynamic (runtime-constructed) SQL templates - templates must be compile-time constants.
 - `[Sql.Expression]` on types, constructors, or operators directly - use a static wrapper
   method instead.
+
+---
+
+## Member translators
+
+`IMemberTranslator` (`LinqToDB.Linq.Translation`) is a `DataOptions`-level extension point for
+translating .NET member/method expressions to SQL. Prefer the `[Sql.Expression]` / `[Sql.Function]`
+/ `[ExpressionMethod]` attributes above when the target method or property is one you can annotate
+directly - they are simpler and scoped to the member itself. Reach for `IMemberTranslator` only when
+you need to translate members you cannot annotate (e.g. members of a BCL or third-party type) or
+need context-aware translation logic.
+
+Register translators with `UseMemberTranslator(IMemberTranslator)` or
+`UseMemberTranslator(IEnumerable<IMemberTranslator>)`; remove one with
+`RemoveTranslator(IMemberTranslator)`. `DataOptions` is immutable, so each call returns a new
+instance.
+
+```csharp
+public class MyTranslator : MemberTranslatorBase
+{
+    public MyTranslator()
+    {
+        Registration.RegisterMethod(
+            (string s) => s.MyCustomMethod(),
+            TranslateMyCustomMethod);
+    }
+
+    Expression? TranslateMyCustomMethod(
+        ITranslationContext ctx, MethodCallExpression call, TranslationFlags flags)
+    {
+        if (!ctx.TranslateToSqlExpression(call.Object!, out var arg))
+            return null;
+        return ctx.CreatePlaceholder(
+            ctx.ExpressionFactory.Function(
+                ctx.ExpressionFactory.GetDbDataType(call.Type),
+                "MY_FUNCTION", arg),
+            call);
+    }
+}
+
+var options = new DataOptions()
+    .UseSqlServer(connectionString)
+    .UseMemberTranslator(new MyTranslator());
+```
+
+> **Caveat:** the convenient base class shown above (`MemberTranslatorBase`, with its
+> `Registration.RegisterMethod` dispatch) and the SQL node types the example builds
+> (`ISqlExpression`, `SqlPlaceholderExpression`) live in `LinqToDB.Internal.*` namespaces, which are
+> implementation detail, not a supported consumer API (see `SKILL.md`). `IMemberTranslator` itself
+> is public, but as of this writing there is no documented way to implement it usefully without
+> reaching into `LinqToDB.Internal.*`. Track this at
+> [linq2db/linq2db#5716](https://github.com/linq2db/linq2db/issues/5716). Until resolved, treat this
+> example as "how the shipped providers do it internally", not as a supported public pattern - do
+> not present it to a consumer as a stable public API.
 
 ---
 

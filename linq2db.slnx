@@ -638,7 +638,7 @@
     <File Path="Source/Knowledge/linq2db-expert/10-query-composition.md" />
     <File Path="Source/Knowledge/linq2db-expert/11-hints.md" />
     <File Path="Source/Knowledge/linq2db-expert/12-hints-api-map.md" />
-    <File Path="Source/Knowledge/linq2db-expert/13-custom-sql.md" />
+    <File Path="Source/Knowledge/linq2db-expert/13-extensions.md" />
     <File Path="Source/Knowledge/linq2db-expert/14-translatable-methods.md" />
     <File Path="Source/Knowledge/linq2db-expert/15-interceptors.md" />
     <File Path="Source/Knowledge/linq2db-expert/16-xml-doc.md" />
@@ -726,7 +726,7 @@
     <File Path="Source/Skills/linq2db/docs/concurrency.md" />
     <File Path="Source/Skills/linq2db/docs/configuration.md" />
     <File Path="Source/Skills/linq2db/docs/coverage.md" />
-    <File Path="Source/Skills/linq2db/docs/custom-sql.md" />
+    <File Path="Source/Skills/linq2db/docs/extensions.md" />
     <File Path="Source/Skills/linq2db/docs/hints-api-map.md" />
     <File Path="Source/Skills/linq2db/docs/hints.md" />
     <File Path="Source/Skills/linq2db/docs/interceptors.md" />

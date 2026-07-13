@@ -573,6 +573,6 @@ only for hints that belong to the generated MERGE statement. See `docs/crud/crud
   text to typed provider-specific helper APIs.
 - [`docs/provider-capabilities.md`](provider-capabilities.md) - provider feature support.
 - [`docs/provider-setup.md`](provider-setup.md) - provider selection, dialects, and driver packages.
-- [`docs/custom-sql.md`](custom-sql.md) - custom SQL expressions when hints are not the right tool.
+- [`docs/extensions.md`](extensions.md) - custom SQL expressions when hints are not the right tool.
 - `LinqExtensions.Hints` - XML documentation for general raw hint APIs.
 - Provider namespaces such as `LinqToDB.DataProvider.SqlServer` and `LinqToDB.DataProvider.Oracle` - XML documentation for typed provider-specific hint helpers.

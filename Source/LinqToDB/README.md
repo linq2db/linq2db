@@ -235,8 +235,8 @@ to the NuGet package directory (e.g. via MCP filesystem tools or the NuGet globa
 | `skills/linq2db/docs/hints.md` | Query, table, join, subquery, provider-specific, and MERGE hint guidance |
 | `skills/linq2db/docs/hints-api-map.md` | Reverse lookup from concrete provider SQL hints to typed provider-specific APIs |
 | `skills/linq2db/docs/translatable-methods.md` | Standard .NET methods translated to SQL (String, Math, DateTime, Nullable, casts, Sql.*) |
-| `skills/linq2db/docs/configuration.md` | DataOptions patterns: connection setup, logging, retry, interceptors, member translators |
-| `skills/linq2db/docs/custom-sql.md` | Custom SQL translation: `[Sql.Expression]`, `[Sql.Function]`, `[ExpressionMethod]`, provider-specific overloads |
+| `skills/linq2db/docs/configuration.md` | DataOptions patterns: connection setup, logging, retry, interceptors |
+| `skills/linq2db/docs/extensions.md` | Extension mechanisms: `[Sql.Expression]`, `[Sql.Function]`, `[ExpressionMethod]`, `IMemberTranslator`, provider-specific overloads |
 | `skills/linq2db/docs/interceptors.md` | Interceptor extension points and safe usage |
 
 Online copies may exist on the repository `master` branch, but they can describe a different version.

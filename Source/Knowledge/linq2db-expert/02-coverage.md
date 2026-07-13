@@ -16,7 +16,8 @@ These areas have task-focused markdown guidance in this package:
 
 - provider setup and required ADO.NET driver packages;
 - architecture, translation pipeline, and execution model;
-- configuration, `DataOptions`, logging, retry, interceptors, and member translators;
+- configuration, `DataOptions`, logging, retry, interceptors, and external config files
+  (`app.config`/`web.config` via `linq2db.Compat`, JSON via standard `IConfiguration`);
 - mapping basics, `MappingSchema`, attributes/fluent mapping, and DDL-sensitive column metadata;
 - associations, fluent relationship mapping, `LoadWith` / `ThenLoad`, and eager-loading strategies;
 - CRUD routing, select/insert/update/delete/upsert/bulk copy/MERGE;
@@ -30,7 +31,7 @@ These areas have task-focused markdown guidance in this package:
   `IsDistinctFrom`, `ToNullable`/`AsNullable`);
 - `DataParameter` construction, output/input-output procedure parameters, and forcing a value to a
   bound parameter vs a SQL literal (`Sql.Parameter`, `Sql.Constant`, `InlineParameters`);
-- custom SQL expressions and functions;
+- extension mechanisms: custom SQL expressions/functions and `IMemberTranslator` member translators;
 - built-in translatable .NET methods;
 - common anti-patterns and symptom-based checks.
 
