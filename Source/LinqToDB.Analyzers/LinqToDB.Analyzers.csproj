@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<!--
+		Analyzer assembly only. It must NOT reference Workspaces (RS1038): the analyzer runs on every
+		compilation / keystroke, so it stays Workspaces-free for load time and startup cost. The code fix
+		(which needs Workspaces) lives in the sibling LinqToDB.Analyzers.CodeFixes assembly; both ship in the
+		single linq2db.Analyzers package, packed by that project.
+		(Shared Roslyn-component settings + polyfills live in ..\Analyzers.Common.props.)
+		-->
+		<IsPackable>false</IsPackable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<!-- The shared compat sources target the runtime library (IAsyncDisposable, [module: SkipLocalsInit], …) and aren't needed by a Roslyn component. -->
+		<Compile Remove="$(MSBuildThisFileDirectory)..\..\Source\Shared\*.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- Pin to the Roslyn bundled with the lowest supported SDK (see Directory.Packages.props). -->
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" VersionOverride="4.8.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<AdditionalFiles Include="AnalyzerReleases.Shipped.md" />
+		<AdditionalFiles Include="AnalyzerReleases.Unshipped.md" />
+	</ItemGroup>
+
+</Project>
