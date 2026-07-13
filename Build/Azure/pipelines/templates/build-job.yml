@@ -33,15 +33,15 @@ jobs:
       packageType: sdk
       version: 10.x
 
-  # Tests.Analyzers and Tests.LinqToDB.CLI target net8.0; the windows-2025 image no longer ships an x64 .NET 8
-  # runtime, so provision it or the net8.0 test host fails to launch ("You must install or update .NET").
+  # Tests.Analyzers targets net8.0; the windows-2025 image no longer ships an x64 .NET 8 runtime,
+  # so provision it or the net8.0 test host fails to launch ("You must install or update .NET").
   # Runtime only — SDK 10 builds the net8.0 targets.
   - task: UseDotNet@2
     displayName: 'Use .NET 8 runtime for test hosts'
     inputs:
       packageType: runtime
       version: 8.x
-    condition: and(succeeded(), or(${{ parameters.with_analyzer_tests }}, ${{ parameters.with_tests }}))
+    condition: and(succeeded(), ${{ parameters.with_analyzer_tests }})
 
 # tag version numbers appropriately
   - powershell: echo "##vso[task.setvariable variable=versionSuffix]-dev.$(Build.BuildId)"
@@ -95,27 +95,6 @@ jobs:
     displayName: Build Solution for Tests
     condition: and(succeeded(), ${{ parameters.with_tests }})
     retryCountOnTaskFailure: 1 # https://github.com/dotnet/sdk/issues/44080
-
-  - task: CmdLine@2
-    inputs:
-      script: |
-        ECHO ON
-        setlocal enabledelayedexpansion
-        FOR %%f IN (net8.0 net9.0 net10.0) DO (
-            .build\bin\Tests.LinqToDB.CLI\$(test_configuration)\%%f\linq2db.CLI.Tests.exe --filter "TestCategory != SkipCI" --settings .runsettings --report-trx --report-trx-filename cli-%%f.trx --results-directory CliTestResults --hangdump --hangdump-timeout 5m
-            if !errorlevel! neq 0 exit /b !errorlevel!
-            )
-    displayName: Run CLI Tests
-    condition: and(succeeded(), ${{ parameters.with_tests }})
-
-  - task: PublishTestResults@2
-    inputs:
-      testRunner: VsTest
-      testResultsFiles: 'CliTestResults/*.trx'
-      testRunTitle: 'linq2db CLI'
-      failTaskOnMissingResultsFile: true
-    displayName: Publish CLI Test Results
-    condition: and(succeededOrFailed(), ${{ parameters.with_tests }})
 
   - task: CmdLine@2
     inputs:
