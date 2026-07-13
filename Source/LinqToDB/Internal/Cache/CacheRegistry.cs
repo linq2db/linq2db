@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System.Threading;
 
 namespace LinqToDB.Internal.Cache
 {
@@ -13,12 +14,19 @@ namespace LinqToDB.Internal.Cache
 	/// Process-static caches register strongly (<see cref="Register{T}"/>); caches whose lifetime is
 	/// tied to an owning object (per-<c>MappingSchema</c>, per-provider) register weakly
 	/// (<see cref="RegisterScoped{T}"/>) so the registry never extends the owner's lifetime.
-	/// Dead weak references are pruned lazily during <see cref="ClearAll"/> / <see cref="Snapshot"/>.
+	/// Dead weak references are pruned during <see cref="ClearAll"/> / <see cref="Snapshot"/>, and
+	/// opportunistically during <see cref="RegisterScoped{T}"/> so <c>_weak</c> stays bounded even when
+	/// neither is ever called.
 	/// </remarks>
 	static class CacheRegistry
 	{
+		// Sweep dead wrappers out of _weak every this-many scoped registrations, so a process that never calls
+		// ClearAll/Snapshot doesn't accumulate wrappers for collected owners (e.g. churned MappingSchemas).
+		const  int                                                                 _pruneInterval = 256;
+
 		static readonly ConcurrentDictionary<ILinqToDBCache, byte>                  _strong = new();
 		static readonly ConcurrentDictionary<WeakReference<ILinqToDBCache>, byte>   _weak   = new();
+		static          int                                                        _scopedRegistrations;
 
 		/// <summary>Registers a process-static cache. Returns <paramref name="cache"/> for fluent field init.</summary>
 		public static T Register<T>(T cache)
@@ -34,7 +42,19 @@ namespace LinqToDB.Internal.Cache
 			where T : ILinqToDBCache
 		{
 			_weak.TryAdd(new WeakReference<ILinqToDBCache>(cache), 0);
+
+			if (Interlocked.Increment(ref _scopedRegistrations) % _pruneInterval == 0)
+				PruneDeadWeak();
+
 			return cache;
+		}
+
+		/// <summary>Removes wrappers whose target has been collected, keeping <c>_weak</c> bounded to live caches.</summary>
+		static void PruneDeadWeak()
+		{
+			foreach (var weak in _weak.Keys)
+				if (!weak.TryGetTarget(out _))
+					_weak.TryRemove(weak, out _);
 		}
 
 		/// <summary>Clears every live registered cache and prunes dead weak references.</summary>
