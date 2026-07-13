@@ -16,11 +16,14 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 	/// <summary>
 	/// Handles loading of external database provider assemblies.
 	/// </summary>
-	static class ExternalProviderLoader
+	public static class ExternalProviderLoader
 	{
 		static readonly Lock                         _loadLock        = new();
 		static readonly Dictionary<string, Assembly> _loadedAssemblies = new(StringComparer.OrdinalIgnoreCase);
 
+		/// <summary>
+		/// Loads and registers an external provider assembly when required.
+		/// </summary>
 		public static bool LoadExternalProvider(string provider, string? providerLocation, out string? error)
 		{
 			error = null;

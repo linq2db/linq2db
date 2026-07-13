@@ -6,8 +6,14 @@ using LinqToDB.DataProvider;
 
 namespace LinqToDB.CommandLine.Commands.QueryExecution
 {
-	internal static class ReadOnlySqlGuard
+	/// <summary>
+	/// Validates SQL against the read-only query contract.
+	/// </summary>
+	public static class ReadOnlySqlGuard
 	{
+		/// <summary>
+		/// Validates read-only SQL using provider-specific rules where available.
+		/// </summary>
 		public static SqlGuardResult Validate(IDataProvider provider, string sql)
 		{
 			return IsSqlServerProvider(provider.Name)
@@ -15,6 +21,9 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				: GenericReadOnlySqlGuard.Validate(sql);
 		}
 
+		/// <summary>
+		/// Validates that SQL contains a single statement.
+		/// </summary>
 		public static SqlGuardResult ValidateSingleStatement(IDataProvider provider, string sql)
 		{
 			// Single-statement execution is a hard query command contract. SQL Server gets

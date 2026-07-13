@@ -421,7 +421,8 @@ Output:
 
 - `--output json` writes JSON output. This is the default and preferred format for agents.
 - `--output json-table` writes a duplicate-safe JSON object with column metadata and rows as arrays.
-- `--output csv` writes CSV output.
+- `--output csv` writes database values without spreadsheet-specific escaping and is intended for machine processing.
+- Do not open CSV containing untrusted values directly in spreadsheet applications, which can interpret values beginning with characters such as `=`, `+`, `-`, or `@` as formulas. Use `json` or `json-table` instead for untrusted data or interactive inspection.
 - Configuration profiles can store `json`, `json-table`, or `csv` because profiles are shared by `query` and `mcp`.
 - MCP tool calls support only `json` and `json-table`. Use `linq2db_info` to check `defaultOutputSupportedByMcp` before relying on a profile's default output in MCP mode.
 - `--output-file <file>` writes command output to a file.

@@ -51,6 +51,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<!-- The tool assembly is not a referenceable library API. -->
+		<PackageReference Remove="Microsoft.CodeAnalysis.PublicApiAnalyzers" />
+
 		<EmbeddedResource Include="Template.tt" LogicalName="LinqToDB.CLI.Template.tt" />
 		<EmbeddedResource Include="SKILL.md"     LogicalName="LinqToDB.CLI.SKILL.md"   />
 
@@ -79,7 +82,5 @@
 		<PackageReference Include="Octonica.ClickHouseClient" />
 		<PackageReference Include="DuckDB.NET.Data.Full" />
 		<PackageReference Include="Ydb.Sdk" />
-
-		<AdditionalFiles Include="PublicAPI.*.txt" />
 	</ItemGroup>
 </Project>

@@ -14,7 +14,7 @@ namespace LinqToDB.CommandLine
 	/// <summary>
 	/// Base class for CLI controller.
 	/// </summary>
-	internal abstract class CliController
+	public abstract class CliController
 	{
 		/// <summary>
 		/// Optional default command to execute when unknown or no command specified by caller.
@@ -28,13 +28,13 @@ namespace LinqToDB.CommandLine
 		/// <summary>
 		/// Gets list of supported commands.
 		/// </summary>
-		public IReadOnlyCollection<CliCommand> Commands => _commands.Values;
+		internal IReadOnlyCollection<CliCommand> Commands => _commands.Values;
 
 		/// <summary>
 		/// Creates controller instance.
 		/// </summary>
 		/// <param name="defaultCommand">Optional default command.</param>
-		protected CliController(CliCommand? defaultCommand)
+		private protected CliController(CliCommand? defaultCommand)
 		{
 			_defaultCommand = defaultCommand;
 		}
@@ -43,7 +43,7 @@ namespace LinqToDB.CommandLine
 		/// Register command handler.
 		/// </summary>
 		/// <param name="command">Command to register.</param>
-		protected void AddCommand(CliCommand command)
+		private protected void AddCommand(CliCommand command)
 		{
 			_commands.Add(command.Name, command);
 		}

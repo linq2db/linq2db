@@ -16,8 +16,11 @@ namespace LinqToDB.CommandLine
 	/// <summary>
 	/// CLI controller for current utility.
 	/// </summary>
-	internal sealed class LinqToDBCliController : CliController
+	public sealed class LinqToDBCliController : CliController
 	{
+		/// <summary>
+		/// Creates a controller with all linq2db CLI commands registered.
+		/// </summary>
 		public LinqToDBCliController()
 			: base(HelpCommand.Instance)
 		{

@@ -38,11 +38,14 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 	/// <summary>
 	/// Query command execution logic.
 	/// </summary>
-	sealed class QueryExecutionExecutor(QueryExecutionSettings settings)
+	public sealed class QueryExecutionExecutor
 	{
 		sealed record QueryOutputColumn(int Ordinal, string Name, string FieldType, string ProviderSpecificFieldType, string DataTypeName, QueryActualFieldType ActualFieldType);
 
-		internal enum QueryActualFieldType
+		/// <summary>
+		/// Provider-specific field value conversion mode.
+		/// </summary>
+		public enum QueryActualFieldType
 		{
 			None = 0,
 			Boolean,
@@ -88,11 +91,16 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			NpgsqlRange,
 		}
 
-		readonly QueryExecutionSettings _settings    = settings;
+		readonly QueryExecutionSettings _settings;
 
 		const string OracleBFilePlaceholder = "<BFILE>";
 
-		public async ValueTask<QueryExecutionResult> Execute(TextWriter outputWriter, CancellationToken cancellationToken)
+		internal QueryExecutionExecutor(QueryExecutionSettings settings)
+		{
+			_settings = settings;
+		}
+
+		internal async ValueTask<QueryExecutionResult> Execute(TextWriter outputWriter, CancellationToken cancellationToken)
 		{
 			cancellationToken.ThrowIfCancellationRequested();
 
@@ -543,7 +551,14 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				actualFieldType);
 		}
 
-		internal static string? ReadFieldAsString(DbDataReader reader, QueryActualFieldType actualFieldType, int ordinal)
+		/// <summary>
+		/// Reads and formats a field value for query output.
+		/// </summary>
+		/// <param name="reader">Data reader.</param>
+		/// <param name="actualFieldType">Field value conversion mode.</param>
+		/// <param name="ordinal">Zero-based column ordinal.</param>
+		/// <returns>Formatted field value, or <see langword="null"/> for a database null.</returns>
+		public static string? ReadFieldAsString(DbDataReader reader, QueryActualFieldType actualFieldType, int ordinal)
 		{
 			object value;
 

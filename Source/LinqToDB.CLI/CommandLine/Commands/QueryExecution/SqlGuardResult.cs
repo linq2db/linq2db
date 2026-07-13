@@ -5,11 +5,26 @@ using LinqToDB.CommandLine.Options;
 
 namespace LinqToDB.CommandLine.Commands.QueryExecution
 {
-	internal sealed record SqlGuardResult(bool IsAllowed, string? Error)
+	/// <summary>
+	/// SQL guard validation result.
+	/// </summary>
+	public sealed class SqlGuardResult
 	{
-		public static SqlGuardResult Allowed { get; } = new(true, null);
+		internal static SqlGuardResult Allowed { get; } = new(true, null);
 
-		public static SqlGuardResult Rejected(string error)
+		/// <summary>Indicates whether SQL passed validation.</summary>
+		public bool IsAllowed { get; }
+
+		/// <summary>Validation error, when SQL was rejected.</summary>
+		public string? Error { get; }
+
+		SqlGuardResult(bool isAllowed, string? error)
+		{
+			IsAllowed = isAllowed;
+			Error     = error;
+		}
+
+		internal static SqlGuardResult Rejected(string error)
 		{
 			return new(false, error);
 		}
