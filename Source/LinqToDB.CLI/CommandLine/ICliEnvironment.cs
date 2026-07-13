@@ -24,6 +24,10 @@ namespace LinqToDB.CommandLine
 		void WriteAllText(string path, string contents);
 		/// <summary>Creates a text writer for a file.</summary>
 		TextWriter CreateTextWriter(string path);
+		/// <summary>Moves a file to a destination path.</summary>
+		void MoveFile(string sourcePath, string destinationPath, bool overwrite);
+		/// <summary>Deletes a file.</summary>
+		void DeleteFile(string path);
 		/// <summary>Creates a directory.</summary>
 		void CreateDirectory(string path);
 		/// <summary>Reads an environment variable.</summary>

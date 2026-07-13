@@ -100,6 +100,16 @@ namespace Tests.LinqToDB.CLI
 				throw new NotSupportedException();
 			}
 
+			public void MoveFile(string sourcePath, string destinationPath, bool overwrite)
+			{
+				throw new NotSupportedException();
+			}
+
+			public void DeleteFile(string path)
+			{
+				throw new NotSupportedException();
+			}
+
 			public void CreateDirectory(string path)
 			{
 				throw new NotSupportedException();

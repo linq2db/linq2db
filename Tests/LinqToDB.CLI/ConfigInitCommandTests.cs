@@ -351,6 +351,16 @@ namespace Tests.LinqToDB.CLI
 				return new StringWriter();
 			}
 
+			public void MoveFile(string sourcePath, string destinationPath, bool overwrite)
+			{
+				throw new NotSupportedException();
+			}
+
+			public void DeleteFile(string path)
+			{
+				throw new NotSupportedException();
+			}
+
 			public void CreateDirectory(string path)
 			{
 				Directories.Add(path);

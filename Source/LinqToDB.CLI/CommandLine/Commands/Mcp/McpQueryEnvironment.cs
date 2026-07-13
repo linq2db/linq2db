@@ -37,6 +37,16 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 			throw new NotSupportedException("MCP query execution does not support file output.");
 		}
 
+		public void MoveFile(string sourcePath, string destinationPath, bool overwrite)
+		{
+			throw new NotSupportedException("MCP query execution does not support file output.");
+		}
+
+		public void DeleteFile(string path)
+		{
+			throw new NotSupportedException("MCP query execution does not support file output.");
+		}
+
 		public void CreateDirectory(string path)
 		{
 			_inner.CreateDirectory(path);

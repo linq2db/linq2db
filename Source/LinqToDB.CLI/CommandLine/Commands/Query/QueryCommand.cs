@@ -93,35 +93,33 @@ namespace LinqToDB.CommandLine.Commands.Query
 				return StatusCodes.EXPECTED_ERROR;
 			}
 
-			// Open the output writer before optional impersonation so file access stays under the original process account.
+			// Open the temporary output before optional impersonation so file access stays under the original process account.
 			//
-			var outputWriter        = settings.OutputFile != null ? environment.CreateTextWriter(settings.OutputFile) : environment.Out;
-			var disposeOutputWriter = settings.OutputFile != null;
+			var output = CommandOutput.Create(environment, settings.OutputFile);
+			await using var _ = output.ConfigureAwait(false);
 
-			try
+			var result = await new QueryExecutionExecutor(settings).Execute(output.Writer, cancellationToken).ConfigureAwait(false);
+
+			if (result.Error != null)
 			{
-				var result = await new QueryExecutionExecutor(settings).Execute(outputWriter, cancellationToken).ConfigureAwait(false);
-
-				if (result.Error != null)
-				{
-					await environment.Error.WriteLineAsync(result.Error).ConfigureAwait(false);
-					return result.StatusCode;
-				}
-
-				if (result.Truncated && !string.Equals(settings.Output, "json-table", StringComparison.OrdinalIgnoreCase))
-				{
-					// JSON table carries truncation in-band; other formats report it through stderr.
-					//
-					await environment.Error.WriteLineAsync($"Query result truncated to {settings.MaxRows.ToString(CultureInfo.InvariantCulture)} row(s). Use '--max-rows' to change the limit.").ConfigureAwait(false);
-				}
-
+				await environment.Error.WriteLineAsync(result.Error).ConfigureAwait(false);
 				return result.StatusCode;
 			}
-			finally
+
+			if (!await output.Commit(settings.Overwrite).ConfigureAwait(false))
 			{
-				if (disposeOutputWriter)
-					await outputWriter.DisposeAsync().ConfigureAwait(false);
+				await environment.Error.WriteLineAsync($"Output file '{settings.OutputFile}' already exists. Use '--overwrite' to replace it.").ConfigureAwait(false);
+				return StatusCodes.EXPECTED_ERROR;
 			}
+
+			if (result.Truncated && !string.Equals(settings.Output, "json-table", StringComparison.OrdinalIgnoreCase))
+			{
+				// JSON table carries truncation in-band; other formats report it through stderr.
+				//
+				await environment.Error.WriteLineAsync($"Query result truncated to {settings.MaxRows.ToString(CultureInfo.InvariantCulture)} row(s). Use '--max-rows' to change the limit.").ConfigureAwait(false);
+			}
+
+			return result.StatusCode;
 		}
 
 		static QueryExecutionSettings? ProcessOptions(ICliEnvironment environment, Dictionary<CliOption, object?> options, out int errorStatusCode)

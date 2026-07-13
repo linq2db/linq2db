@@ -584,6 +584,22 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task QueryPreservesExistingOutputFileWhenExecutionFails()
+		{
+			var environment = new TestCliEnvironment();
+
+			environment.Files.Add("query.csv", "existing");
+
+			var result = await RunCli(environment, "query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--output", "csv", "--output-file", "query.csv", "--overwrite", "--sql", "select * from MissingTable");
+
+			{
+				(result.ExitCode).ShouldBe(-3);
+				(environment.Files["query.csv"]).ShouldBe("existing");
+				(environment.Files.Count).ShouldBe(1);
+			}
+		}
+
+		[Test]
 		public async Task QueryJsonRejectsDuplicateColumnNames()
 		{
 			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql", "select 1 as Value, 2 as Value");
@@ -1769,6 +1785,20 @@ namespace Tests.LinqToDB.CLI
 			public TextWriter CreateTextWriter(string path)
 			{
 				return new TestFileWriter(contents => Files[path] = contents);
+			}
+
+			public void MoveFile(string sourcePath, string destinationPath, bool overwrite)
+			{
+				if (!overwrite && Files.ContainsKey(destinationPath))
+					throw new IOException($"File '{destinationPath}' already exists.");
+
+				Files[destinationPath] = Files[sourcePath];
+				Files.Remove(sourcePath);
+			}
+
+			public void DeleteFile(string path)
+			{
+				Files.Remove(path);
 			}
 
 			public void CreateDirectory(string path)
