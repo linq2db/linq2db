@@ -386,7 +386,9 @@ namespace LinqToDB.Concurrency
 			// reliable affected-row count: 0 is a genuine concurrency failure -> leave the entity untouched
 			if (count > 0)
 			{
-				var fresh = FilterByPrimaryKey(dc.GetTable<T>(), obj, ed).Select(LockColumnsSelector<T>(objType, lockColumns)).FirstOrDefault();
+				// read back through source (not dc.GetTable<T>()) so the read-back hits the same table the UPDATE
+				// targeted, honoring any source-level table mapping (e.g. TableName override)
+				var fresh = FilterByPrimaryKey(source, obj, ed).Select(LockColumnsSelector<T>(objType, lockColumns)).FirstOrDefault();
 
 				if (fresh != null)
 					CopyColumns(lockColumns, fresh, obj);
@@ -429,7 +431,9 @@ namespace LinqToDB.Concurrency
 			// reliable affected-row count: 0 is a genuine concurrency failure -> leave the entity untouched
 			if (count > 0)
 			{
-				var fresh = await FilterByPrimaryKey(dc.GetTable<T>(), obj, ed).Select(LockColumnsSelector<T>(objType, lockColumns)).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
+				// read back through source (not dc.GetTable<T>()) so the read-back hits the same table the UPDATE
+				// targeted, honoring any source-level table mapping (e.g. TableName override)
+				var fresh = await FilterByPrimaryKey(source, obj, ed).Select(LockColumnsSelector<T>(objType, lockColumns)).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
 
 				if (fresh != null)
 					CopyColumns(lockColumns, fresh, obj);
