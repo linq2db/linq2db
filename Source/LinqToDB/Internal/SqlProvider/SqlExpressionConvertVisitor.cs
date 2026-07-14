@@ -239,11 +239,18 @@ namespace LinqToDB.Internal.SqlProvider
 			if (ReferenceEquals(take, select.TakeValue) && ReferenceEquals(skip, select.SkipValue))
 				return result;
 
-			// Write the resolved values back respecting the visit mode. GetVisitMode returns Modify once base has
-			// replaced this clause with a fresh instance during a Transform pass (see SqlQueryVisitor.GetVisitMode),
-			// so the Modify case covers both a real Modify convert and an already-cloned clause we own; only an
-			// unchanged, still-shared clause reaches the Transform case and needs a fresh instance.
-			switch (GetVisitMode(element))
+			// Write the resolved values back respecting the visit mode of the clause BASE handed back — not of the one it was
+			// given. GetVisitMode answers "may I mutate this in place", and it says Modify for an element we created: base
+			// registers the fresh clause as ours when it replaces it during a Transform pass, so the resolved TAKE/SKIP go
+			// straight in and the clause keeps the column expressions base just converted. Only an unchanged, still-shared
+			// clause comes back as Transform and needs a fresh instance.
+			//
+			// Asking GetVisitMode(element) was the bug: IsReplaced() means "is this an element WE created", and the ORIGINAL
+			// clause never is — so a Transform pass always fell through to the rebuild branch, which reconstructs the clause
+			// from element.Columns and discards every column expression base had converted. A boolean column folded to a literal
+			// came back out as its raw search condition and rendered as a bare `1 = 1` in the projection — a syntax error on
+			// providers with no boolean type (Sybase, DB2, Informix, Access).
+			switch (GetVisitMode(select))
 			{
 				case VisitMode.Modify:
 				{
