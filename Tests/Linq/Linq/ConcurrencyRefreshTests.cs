@@ -8,6 +8,8 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.Linq
 {
 	[TestFixture]
@@ -54,12 +56,12 @@ namespace Tests.Linq
 			record.Value = "updated";
 			var cnt = db.UpdateOptimisticWithRefresh(record);
 
-			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
+			if (!skipCnt) cnt.ShouldBe(1);
 
 			// the regenerated version is written back onto the entity (issue #4194) ...
-			Assert.That(record.Stamp, Is.Not.EqualTo(before));
+			record.Stamp.ShouldNotBe(before);
 			// ... and matches what's actually stored
-			Assert.That(record.Stamp, Is.EqualTo(t.Single().Stamp));
+			record.Stamp.ShouldBe(t.Single().Stamp);
 		}
 
 		[Test]
@@ -80,10 +82,10 @@ namespace Tests.Linq
 			record.Value = "updated";
 			var cnt = await db.UpdateOptimisticWithRefreshAsync(record);
 
-			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
+			if (!skipCnt) cnt.ShouldBe(1);
 
-			Assert.That(record.Stamp, Is.Not.EqualTo(before));
-			Assert.That(record.Stamp, Is.EqualTo(t.Single().Stamp));
+			record.Stamp.ShouldNotBe(before);
+			record.Stamp.ShouldBe(t.Single().Stamp);
 		}
 
 		[Test]
@@ -104,9 +106,63 @@ namespace Tests.Linq
 			record.Value = "updated";
 			var cnt = t.Where(r => r.Id == 1).UpdateOptimisticWithRefresh(record);
 
-			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
-			Assert.That(record.Stamp, Is.Not.EqualTo(before));
-			Assert.That(record.Stamp, Is.EqualTo(t.Single().Stamp));
+			if (!skipCnt) cnt.ShouldBe(1);
+			record.Stamp.ShouldNotBe(before);
+			record.Stamp.ShouldBe(t.Single().Stamp);
+		}
+
+		[Test]
+		public async Task UpdateViaQueryRefreshesVersionAsync([DataSources] string context)
+		{
+			var skipCnt = !context.SupportsRowcount();
+
+			using var _  = new DisableBaseline("guid used");
+			using var db = GetDataContext(context, GuidSchema("ConcurrencyRefreshGuid"));
+			using var t  = db.CreateLocalTable<RefreshTable<Guid>>();
+
+			var record = new RefreshTable<Guid> { Id = 1, Stamp = default, Value = "initial" };
+			await db.InsertAsync(record);
+			record.Stamp = t.Single().Stamp;
+			var before   = record.Stamp;
+
+			// IQueryable receiver: an extra filter ANDs with the optimistic predicate
+			record.Value = "updated";
+			var cnt = await t.Where(r => r.Id == 1).UpdateOptimisticWithRefreshAsync(record);
+
+			if (!skipCnt) cnt.ShouldBe(1);
+			record.Stamp.ShouldNotBe(before);
+			record.Stamp.ShouldBe(t.Single().Stamp);
+		}
+
+		[Test]
+		public void UpdateViaQueryHonorsSourceTableName([DataSources] string context)
+		{
+			using var db = GetDataContext(context, GuidSchema("ConcurrencyRefreshGuid"));
+
+			// only the SELECT-fallback read-back path is affected: no UPDATE OUTPUT/RETURNING but reliable rowcount (e.g. DuckDB)
+			if (db.SqlProviderFlags.IsUpdateOutputSupported || !db.SqlProviderFlags.IsAffectedRowsCountSupported)
+				Assert.Ignore("Exercises the SELECT-fallback read-back path only.");
+
+			using var _        = new DisableBaseline("guid used");
+			// the entity's default-mapped table carries a row with the same PK but a different value ...
+			using var _default = db.CreateLocalTable<RefreshTable<Guid>>();
+			// ... while the data the caller updates lives in a renamed table it targets via source.TableName(...)
+			using var renamed  = db.CreateLocalTable<RefreshTable<Guid>>("ConcurrencyRefreshRenamed");
+
+			db.Insert(new RefreshTable<Guid> { Id = 1, Stamp = TestData.Guid1, Value = "stale" });
+
+			var record = new RefreshTable<Guid> { Id = 1, Stamp = default, Value = "initial" };
+			db.Insert(record, tableName: "ConcurrencyRefreshRenamed");
+			record.Stamp = renamed.Single().Stamp;
+
+			record.Value = "updated";
+			var cnt = db.GetTable<RefreshTable<Guid>>().TableName("ConcurrencyRefreshRenamed")
+				.Where(r => r.Id == 1)
+				.UpdateOptimisticWithRefresh(record);
+
+			cnt.ShouldBe(1);
+			// the refreshed stamp must come from the RENAMED table actually updated, not the default-named table
+			record.Stamp.ShouldBe(renamed.Single().Stamp);
 		}
 
 		[Test]
@@ -130,10 +186,10 @@ namespace Tests.Linq
 			record.Value = "updated";
 			var cnt = db.UpdateOptimisticWithRefresh(record);
 
-			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
+			if (!skipCnt) cnt.ShouldBe(1);
 
-			Assert.That(record.Stamp, Is.EqualTo(6));
-			Assert.That(record.Stamp, Is.EqualTo(t.Single().Stamp));
+			record.Stamp.ShouldBe(6);
+			record.Stamp.ShouldBe(t.Single().Stamp);
 		}
 
 		[Test]
@@ -162,11 +218,11 @@ namespace Tests.Linq
 			record.Value = "updated";
 			var cnt = db.UpdateOptimisticWithRefresh(record);
 
-			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
+			if (!skipCnt) cnt.ShouldBe(1);
 
 			// rowversion is purely database-generated and only obtainable via OUTPUT / SELECT
-			Assert.That(record.Stamp, Is.Not.EqualTo(before));
-			Assert.That(record.Stamp, Is.EqualTo(t.Single().Stamp));
+			record.Stamp.ShouldNotBe(before);
+			record.Stamp.ShouldBe(t.Single().Stamp);
 		}
 
 		[Test]
@@ -189,8 +245,34 @@ namespace Tests.Linq
 			record.Value = "updated";
 			var cnt = db.UpdateOptimisticWithRefresh(record);
 
-			Assert.That(cnt, Is.Zero);
-			Assert.That(record.Stamp, Is.EqualTo(stale), "entity must not be touched on concurrency failure");
+			cnt.ShouldBe(0);
+			record.Stamp.ShouldBe(stale, "entity must not be touched on concurrency failure");
+		}
+
+		[Test]
+		public void UpdateWithoutLockColumnBehavesLikePlainUpdate([DataSources] string context)
+		{
+			var skipCnt = !context.SupportsRowcount();
+			var ms      = new MappingSchema();
+			new FluentMappingBuilder(ms)
+				.Entity<RefreshTable<int>>()
+					.HasTableName("ConcurrencyRefreshNoLock")
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var t  = db.CreateLocalTable<RefreshTable<int>>();
+
+			var record = new RefreshTable<int> { Id = 1, Stamp = 5, Value = "initial" };
+			db.Insert(record);
+
+			// no optimistic-lock column -> the API must behave like a plain update on every provider,
+			// including no-OUTPUT + no-rowcount ones (must not throw)
+			record.Value = "updated";
+			var cnt = db.UpdateOptimisticWithRefresh(record);
+
+			if (!skipCnt) cnt.ShouldBe(1);
+
+			t.Single(r => r.Id == 1).Value.ShouldBe("updated");
 		}
 
 		// Regression for the no-rowcount contract (raised in review): a provider that reports neither
@@ -215,7 +297,8 @@ namespace Tests.Linq
 
 			record.Value = "updated";
 
-			Assert.Throws<LinqToDBException>(() => db.UpdateOptimisticWithRefresh(record));
+			Action act = () => db.UpdateOptimisticWithRefresh(record);
+			act.ShouldThrow<LinqToDBException>();
 		}
 
 		// Guard test: keep SqlProviderFlags.IsUpdateOutputSupported honest. It probes the provider's actual UPDATE
@@ -229,9 +312,8 @@ namespace Tests.Linq
 
 			var actual = ProbeUpdateOutput(db);
 
-			Assert.That(
-				actual,
-				Is.EqualTo(db.SqlProviderFlags.IsUpdateOutputSupported),
+			actual.ShouldBe(
+				db.SqlProviderFlags.IsUpdateOutputSupported,
 				$"UPDATE OUTPUT support for '{context}' diverged from SqlProviderFlags.IsUpdateOutputSupported; update the provider's flag.");
 		}
 
@@ -261,9 +343,8 @@ namespace Tests.Linq
 
 			var actual = ProbeAffectedRows(db);
 
-			Assert.That(
-				actual,
-				Is.EqualTo(db.SqlProviderFlags.IsAffectedRowsCountSupported),
+			actual.ShouldBe(
+				db.SqlProviderFlags.IsAffectedRowsCountSupported,
 				$"Affected-rows reporting for '{context}' diverged from SqlProviderFlags.IsAffectedRowsCountSupported; update the provider's flag.");
 		}
 
