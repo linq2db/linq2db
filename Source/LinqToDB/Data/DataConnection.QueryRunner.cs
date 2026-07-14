@@ -237,7 +237,12 @@ namespace LinqToDB.Data
 						}
 					}
 
-					var optimizeAndConvertAll = !continuousRun && !statement.IsParameterDependent;
+					// Two independent facts, both required. !continuousRun: this is the query's FIRST preparation and we still
+					// hold Monitor.Enter(query), so the statement is exclusively ours and Modify-mode (mutating) visitors are
+					// safe. !IsParameterDependent: the SQL cannot depend on this run's values, so the structure can be memoized
+					// - which is also why those values must be withheld from the contexts below (baking them into the cached
+					// structure would make a re-run reuse them).
+					var prepareOnce = !continuousRun && !statement.IsParameterDependent;
 
 					// ── Phase S — structural prepare (parameter-independent), memoized on QueryInfo.Structure ─────
 					// The whole-query optimize+convert runs before aliasing (a conversion that restructures the AST,
@@ -255,7 +260,7 @@ namespace LinqToDB.Data
 					QueryStructure      structure;
 					OptimizationContext renderContext;
 
-					if (optimizeAndConvertAll)
+					if (prepareOnce)
 					{
 						if (query is QueryInfo { Structure: { } cachedStructure })
 						{
@@ -276,7 +281,7 @@ namespace LinqToDB.Data
 								flags.IsParameterOrderDependent,
 								parametersNormalizerFactory    : dataConnection.DataProvider.GetQueryParameterNormalizer);
 
-							structure = ScenarioCommandRenderer.PrepareStructure(dataConnection, options, statement, structureContext, isParameterDependent : false);
+							structure = ScenarioCommandRenderer.PrepareStructure(dataConnection, options, statement, structureContext);
 
 							if (query is QueryInfo queryInfoStructure)
 								queryInfoStructure.Structure = structure;
@@ -284,7 +289,7 @@ namespace LinqToDB.Data
 
 						// Phase-R render context: null EvaluationContext, no build-time re-convert (structure is already
 						// fully converted). Its own parameter normalizer collects this command's parameters during BuildSql.
-						renderContext = ScenarioCommandRenderer.CreateRenderContext(dataConnection, sqlOptimizer, factory, parameterValues, optimizeAndConvertAll : true);
+						renderContext = ScenarioCommandRenderer.CreateRenderContext(dataConnection, sqlOptimizer, factory, parameterValues, withholdParameterValues : true);
 					}
 					else
 					{
@@ -306,7 +311,7 @@ namespace LinqToDB.Data
 							flags.IsParameterOrderDependent,
 							parametersNormalizerFactory    : dataConnection.DataProvider.GetQueryParameterNormalizer);
 
-						structure     = ScenarioCommandRenderer.PrepareStructure(dataConnection, options, statement, singleContext, isParameterDependent : true);
+						structure     = ScenarioCommandRenderer.PrepareStructure(dataConnection, options, statement, singleContext);
 						renderContext = singleContext;
 					}
 
@@ -348,7 +353,7 @@ namespace LinqToDB.Data
 
 					// Cache the statement-free BakedQuery for a non-parameter-dependent query; a parameter-dependent one is
 					// rebuilt each run (its render is parameter-value specific), so it is not cached and is collected after use.
-					if (optimizeAndConvertAll)
+					if (prepareOnce)
 					{
 						if (query is QueryInfo queryInfo)
 						{
@@ -509,12 +514,12 @@ namespace LinqToDB.Data
 
 				var result = new List<(string, IReadOnlyList<SqlParameter>, int)>();
 
-				// Convert+alias upfront (then render with no build-time re-convert) so the AliasesContext is built over the
-				// final nodes and references (e.g. an eager-grouping JOIN key) resolve — but only when EVERY statement in the
-				// group is non-parameter-dependent, because a combined command shares one parameter scope/context. Run the
-				// parameter-dependence WALK, not just the flag (only GetCommand sets the flag, and only for the main query):
-				// a child carrying a Rows==null VALUES table is parameter-dependent and must render with its values.
-				var convertAll = statements.All(s => !s.IsParameterDependent
+				// Withhold this run's values only when EVERY statement in the group is value-independent: a combined command
+				// shares ONE parameter scope/context, so a single value-dependent statement means the whole scope must keep
+				// the values. Run the parameter-dependence WALK, not just the flag (only GetCommand sets the flag, and only
+				// for the main query): a child carrying a Rows==null VALUES table is parameter-dependent and must render with
+				// its values.
+				var valueIndependent = statements.All(s => !s.IsParameterDependent
 					&& !sqlOptimizer.IsParameterDependent(NullabilityContext.NonQuery, dataConnection.MappingSchema, s, options));
 
 				using var sb = Pools.StringBuilder.Allocate();
@@ -524,7 +529,7 @@ namespace LinqToDB.Data
 				while (i < statements.Count)
 				{
 					// Each command has its OWN parameter scope (fresh normalizer), so names are uniquified per command.
-					var optimizationContext = ScenarioCommandRenderer.CreateRenderContext(dataConnection, sqlOptimizer, factory, parameterValues, convertAll);
+					var optimizationContext = ScenarioCommandRenderer.CreateRenderContext(dataConnection, sqlOptimizer, factory, parameterValues, withholdParameterValues : valueIndependent);
 
 					optimizationContext.ShareParametersByAccessor = true;
 

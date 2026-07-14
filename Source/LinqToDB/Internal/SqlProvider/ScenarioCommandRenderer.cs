@@ -109,8 +109,7 @@ namespace LinqToDB.Internal.SqlProvider
 		SqlCommandScenario  Scenario,
 		SqlCommandGroupPlan Plan,
 		SqlStatement        MainStatement,
-		AliasesContext      Aliases,
-		bool                IsParameterDependent);
+		AliasesContext      Aliases);
 
 #if BUGCHECK
 	/// <summary>
@@ -208,8 +207,7 @@ namespace LinqToDB.Internal.SqlProvider
 			DataConnection      dataConnection,
 			DataOptions         options,
 			SqlStatement        statement,
-			OptimizationContext optimizationContext,
-			bool                isParameterDependent)
+			OptimizationContext optimizationContext)
 		{
 			var sqlOptimizer    = dataConnection.DataProvider.GetSqlOptimizer(options);
 			var serviceProvider = ((IInfrastructure<IServiceProvider>)dataConnection.DataProvider).Instance;
@@ -237,7 +235,7 @@ namespace LinqToDB.Internal.SqlProvider
 			// Plan: group the scenario's steps into physical commands (round-trips), size-aware.
 			var plan = dmlService.PlanScenario(scenario, dataConnection.DataProvider.SqlProviderFlags);
 
-			return new QueryStructure(scenario, plan, statement, aliases, isParameterDependent);
+			return new QueryStructure(scenario, plan, statement, aliases);
 		}
 
 		public static AliasesContext PrepareStepAliases(IServiceProvider serviceProvider, SqlStatement statement)
@@ -253,12 +251,18 @@ namespace LinqToDB.Internal.SqlProvider
 		/// length-split concatenated command); the caller sets <see cref="OptimizationContext.ShareParametersByAccessor"/>
 		/// when several statements share one scope.
 		/// </summary>
-		internal static OptimizationContext CreateRenderContext(DataConnection dataConnection, ISqlOptimizer sqlOptimizer, ISqlExpressionFactory factory, IReadOnlyParameterValues? parameterValues, bool optimizeAndConvertAll) =>
+		/// <param name="withholdParameterValues">
+		/// Hides this run's parameter values from the context (a null <see cref="EvaluationContext"/>). Pass
+		/// <see langword="true"/> for a value-independent statement: its SQL cannot depend on the values, and the render may be
+		/// reused, so the values must not be baked into it. Pass <see langword="false"/> when the render needs them (e.g. a
+		/// VALUES table whose rows are enumerated at render time).
+		/// </param>
+		internal static OptimizationContext CreateRenderContext(DataConnection dataConnection, ISqlOptimizer sqlOptimizer, ISqlExpressionFactory factory, IReadOnlyParameterValues? parameterValues, bool withholdParameterValues) =>
 			new(
-				// Converting-all upfront must NOT pass parameter values (baking this run's values into a cached statement
-				// would make a re-run reuse them). The parameter-dependent path keeps the values so render-time evaluation
+				// A reusable render must NOT see this run's parameter values: baking them into a cached statement would
+				// make a re-run reuse them. A value-dependent render keeps the values so render-time evaluation
 				// works — e.g. a VALUES table's BuildRows enumerating its source collection. Mirrors DataConnection.QueryRunner.GetCommand.
-				new EvaluationContext(optimizeAndConvertAll ? null : parameterValues),
+				new EvaluationContext(withholdParameterValues ? null : parameterValues),
 				dataConnection.Options,
 				dataConnection.DataProvider.SqlProviderFlags,
 				dataConnection.MappingSchema,
@@ -387,17 +391,17 @@ namespace LinqToDB.Internal.SqlProvider
 			{
 				var statement = statements[i];
 
-				// Convert+alias upfront (then render with no build-time re-convert) only when the statement is NOT
-				// parameter-dependent, so the AliasesContext is built over the final nodes and references (e.g. an
-				// eager-grouping JOIN key) resolve. Run the parameter-dependence WALK, not just the flag: the flag is
+				// Withhold this run's values from a value-independent statement (its SQL cannot depend on them) so the
+				// rendered template stays reusable; a value-dependent one keeps them for render-time evaluation.
+				// Run the parameter-dependence WALK, not just the flag: the flag is
 				// only set by GetCommand for the main query, so an eager child (e.g. one carrying a Rows==null VALUES
 				// table, whose rows are enumerated at render) would otherwise look non-dependent and lose its values.
 				// Each DbBatch statement is its own command/scope, so the decision is per statement.
-				var convertAll = !statement.IsParameterDependent
+				var valueIndependent = !statement.IsParameterDependent
 					&& !sqlOptimizer.IsParameterDependent(NullabilityContext.NonQuery, dataConnection.MappingSchema, statement, options);
 
 				// Fresh normalizer per statement => each statement's parameters are named independently.
-				var optimizationContext = CreateRenderContext(dataConnection, sqlOptimizer, factory, parameterValues, convertAll);
+				var optimizationContext = CreateRenderContext(dataConnection, sqlOptimizer, factory, parameterValues, withholdParameterValues : valueIndependent);
 
 				sb.Value.Length = 0;
 
