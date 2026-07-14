@@ -219,6 +219,21 @@ namespace LinqToDB.Internal.SqlProvider
 			result = (T)OptimizerVisitor.Optimize(EvaluationContext, reduceNullability, null, DataOptions, MappingSchema, result, visitQueries : true, reducePredicates: true);
 			result = (T)OptimizerVisitor.Optimize(EvaluationContext, reduceNullability, null, DataOptions, MappingSchema, result, visitQueries : true, reducePredicates: false);
 
+			// The two passes above can reshape a column expression - a predicate folded to a constant, an IN rewritten to an
+			// EXISTS - into a shape that still needs the provider's projection normalization: the boolean-column wrap only the
+			// convert applies (DB2 `CAST(... AS smallint)`, Informix `::BOOLEAN`, a constant predicate folded to a literal).
+			// The convert ran before them, so re-run it over the settled tree.
+			//
+			// Master got this for free: the builder re-converted each select clause at render (BasicSqlBuilder.ConvertElement,
+			// dropped in c41aec0589). The remote path still does - it converts once on the client and again server-side - which
+			// is why only direct access regressed, as a remote-vs-direct baseline mismatch.
+			//
+			// Reusing TransformationInfoConvert is deliberate. This tree holds the FIRST convert's outputs, which are values in
+			// that map, never keys, so nothing is served stale from it; and because they are flagged as ours, they are refined
+			// in place rather than cloned a second time. Nodes the optimizer minted, or ones shared with the cached statement,
+			// are not ours and go through the normal (non-mutating) transform.
+			result = (T)ConvertVisitor.Convert(this, reduceNullability, result, visitQueries : true);
+
 			return result;
 		}
 
