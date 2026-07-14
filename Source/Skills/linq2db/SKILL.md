@@ -268,6 +268,7 @@ They may not match this package version. Always use the bundled files below:
 | `docs/crud/crud.md` | All CRUD operations - SELECT, INSERT, UPDATE, DELETE, upsert, bulk copy, MERGE; routes to the right guide |
 | `docs/concurrency.md` | Optimistic concurrency for entity update/delete - `UpdateOptimistic`, `DeleteOptimistic`, `WhereKeyOptimistic`, `OptimisticLockPropertyAttribute` |
 | `docs/query-cte.md` | CTEs, recursive queries - when `.AsCte()` or `db.GetCte<T>()` is needed |
+| `docs/query-joins.md` | Fluent `InnerJoin`/`LeftJoin`/`RightJoin`/`FullJoin`/`CrossJoin`, association-driven joins, join translation failures, `RightJoin`/`FullJoin`/`APPLY` provider limitations |
 | `docs/query-temp-tables.md` | Temporary tables - `TempTable<T>`, `CreateTempTable`, `TableOptions`; requires `DataConnection` |
 | `docs/null-semantics.md` | Why generated SQL for a null comparison looks more complex than expected - `CompareNulls`, `Sql.AsNotNull`, `IsDistinctFrom`, `Sql.ToNullable`/`Sql.AsNullable` |
 | `docs/parameters.md` | `DataParameter` construction, output/input-output procedure parameters, and forcing a value to be a bound parameter vs a SQL literal - `Sql.Parameter`, `Sql.Constant`, `InlineParameters` |

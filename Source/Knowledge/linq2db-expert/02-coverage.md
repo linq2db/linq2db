@@ -24,6 +24,8 @@ These areas have task-focused markdown guidance in this package:
 - optimistic concurrency for entity update/delete;
 - temporary tables and `CreateTempTable*` overload selection;
 - CTEs and recursive queries;
+- fluent join extensions, association-driven joins, join translation failures, and
+  `RightJoin`/`FullJoin`/`APPLY` provider limitations;
 - query/table/index/join/subquery/provider-specific hints;
 - SQL hint reverse lookup through `docs/hints-api-map.md`;
 - raw SQL query roots, raw command execution, and generated SQL inspection;

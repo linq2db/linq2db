@@ -736,6 +736,7 @@
     <File Path="Source/Skills/linq2db/docs/provider-capabilities.md" />
     <File Path="Source/Skills/linq2db/docs/provider-setup.md" />
     <File Path="Source/Skills/linq2db/docs/query-cte.md" />
+    <File Path="Source/Skills/linq2db/docs/query-joins.md" />
     <File Path="Source/Skills/linq2db/docs/query-temp-tables.md" />
     <File Path="Source/Skills/linq2db/docs/raw-sql.md" />
     <File Path="Source/Skills/linq2db/docs/translatable-methods.md" />
