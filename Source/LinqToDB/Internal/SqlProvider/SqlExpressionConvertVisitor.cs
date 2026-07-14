@@ -64,6 +64,38 @@ namespace LinqToDB.Internal.SqlProvider
 			IsInsidePredicate = false;
 		}
 
+		protected internal override IQueryElement VisitSqlValuesTable(SqlValuesTable element)
+		{
+			// A client-enumerable values source (a MERGE source built from an in-memory sequence) defers its
+			// rows to render time (SqlValuesTable.BuildRows runs the value builders). Materialize them here in
+			// the whole-query convert - once execution parameter values are available - so the convert converts
+			// each value (e.g. parameterizes the query-parameter values the merge-source type check inspects)
+			// and the builder later renders already-converted rows without converting anything itself.
+			if (element.Rows == null && element.ValueBuilders != null && EvaluationContext.ParameterValues != null)
+			{
+				var materialized = element.BuildRows(EvaluationContext).ToList();
+
+				switch (GetVisitMode(element))
+				{
+					case VisitMode.Modify:
+						element.Rows = materialized;
+						break;
+
+					case VisitMode.Transform:
+					{
+						var rows      = VisitListOfLists(materialized, VisitMode.Transform);
+						var source    = Visit(element.Source) as ISqlExpression;
+						var newFields = CopyFields(element.Fields);
+						var newTable  = new SqlValuesTable(source, element.ValueBuilders, newFields, rows);
+
+						return NotifyReplaced(newTable, element);
+					}
+				}
+			}
+
+			return base.VisitSqlValuesTable(element);
+		}
+
 		[return: NotNullIfNotNull(nameof(element))]
 		public override IQueryElement? Visit(IQueryElement? element)
 		{
