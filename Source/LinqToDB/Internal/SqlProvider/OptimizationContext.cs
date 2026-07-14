@@ -212,6 +212,9 @@ namespace LinqToDB.Internal.SqlProvider
 			// Reduce predicates over the final converted structure so the builder renders without an optimizer pass
 			// (the builder is a pure renderer). The reduce can leave a redundant TRUE (e.g. `AND 1 = 1`) behind, so a
 			// plain optimize pass follows to collapse it.
+			// NOTE: the reduce MUST run over the CONVERTED structure - reducing before the convert breaks null handling
+			// (verified: 37 SQLite failures / 31 baseline mismatches across Null_NotIn_Null, Test_FieldInSubquery,
+			// PredicateOptimization_Subquery, ...). Don't reorder these passes.
 			var reduceNullability = result is SqlStatement stmt ? NullabilityContext.GetContext(stmt.SelectQuery) : nullabilityContext;
 			result = (T)OptimizerVisitor.Optimize(EvaluationContext, reduceNullability, null, DataOptions, MappingSchema, result, visitQueries : true, reducePredicates: true);
 			result = (T)OptimizerVisitor.Optimize(EvaluationContext, reduceNullability, null, DataOptions, MappingSchema, result, visitQueries : true, reducePredicates: false);

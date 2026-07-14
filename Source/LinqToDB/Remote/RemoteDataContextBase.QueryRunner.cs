@@ -91,7 +91,7 @@ namespace LinqToDB.Remote
 				var scenario = dmlService.BuildCommandScenario(statement, flags, factory)
 					?? throw new InvalidOperationException("BuildCommandScenario returned null; it must always produce a scenario.");
 
-				scenario = ScenarioCommandRenderer.FinalizeScenarioSteps(scenario, statement, sqlOptimizer, DataContext.Options, DataContext.MappingSchema);
+				scenario = ScenarioCommandRenderer.FinalizeScenarioSteps(scenario, statement, sqlOptimizer, DataContext.Options, DataContext.MappingSchema, optimizationContext);
 
 				var plan     = dmlService.PlanScenario(scenario, flags);
 				var commands = ScenarioCommandRenderer.RenderScenarioGroups(scenario, plan, statement, aliases, sqlBuilder, optimizationContext, serviceProvider, sqlStringBuilder.Value, 0);

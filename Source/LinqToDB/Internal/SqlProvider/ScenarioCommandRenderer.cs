@@ -135,12 +135,14 @@ namespace LinqToDB.Internal.SqlProvider
 	static class ScenarioCommandRenderer
 	{
 		/// <summary>
-		/// Runs provider finalization on synthetic step statements built by the DML service (identity SELECT, the
-		/// InsertOrReplace/Upsert UPDATE/INSERT/SELECT emulation) after the main statement was finalized, so per-provider
-		/// transforms apply (e.g. SqlCe rewrites its UPDATE into the alias-free form it accepts). Steps reusing the
-		/// already-finalized main statement are skipped.
+		/// Runs provider finalization <b>and</b> the whole-query optimize+convert on the synthetic step statements built by
+		/// the DML service (identity SELECT, the InsertOrReplace/Upsert UPDATE/INSERT/SELECT emulation). Those statements
+		/// are built <b>after</b> the main statement was optimized+converted, so they never received that pass — and since
+		/// the builder is a pure renderer (it no longer optimizes per element), they must get it here. Finalization runs
+		/// first (per-provider transforms, e.g. SqlCe rewrites its UPDATE into the alias-free form it accepts), matching
+		/// the order the main statement went through. Steps reusing the already-prepared main statement are skipped.
 		/// </summary>
-		public static SqlCommandScenario FinalizeScenarioSteps(SqlCommandScenario scenario, SqlStatement mainStatement, ISqlOptimizer sqlOptimizer, DataOptions options, MappingSchema mappingSchema)
+		public static SqlCommandScenario FinalizeScenarioSteps(SqlCommandScenario scenario, SqlStatement mainStatement, ISqlOptimizer sqlOptimizer, DataOptions options, MappingSchema mappingSchema, OptimizationContext optimizationContext)
 		{
 			SqlCommandStep[]? finalized = null;
 
@@ -156,6 +158,11 @@ namespace LinqToDB.Internal.SqlProvider
 					continue;
 
 				var finalStatement = sqlOptimizer.Finalize(mappingSchema, statement, options);
+
+				// The pass the main statement got in PrepareStructure. Without it the emulation's key comparison against a
+				// NULL parameter value stays `x = @p` instead of reducing to `x IS NULL`, so the UPDATE matches no rows and
+				// the emulation falls through to an INSERT that violates the primary key (Informix / Access InsertOrReplace).
+				finalStatement = optimizationContext.OptimizeAndConvertAll(finalStatement, NullabilityContext.GetContext(finalStatement.SelectQuery));
 
 				if (ReferenceEquals(finalStatement, statement))
 					continue;
@@ -227,10 +234,10 @@ namespace LinqToDB.Internal.SqlProvider
 				throw new InvalidOperationException($"'{dmlService.GetType().Name}.BuildCommandScenario' returned null; it must always produce a scenario.");
 
 			// The DML service builds synthetic step statements (identity SELECT, the InsertOrReplace/Upsert
-			// UPDATE/INSERT/SELECT emulation) after the main statement was finalized, so they miss provider
-			// finalization — run it now so per-provider transforms apply (e.g. SqlCe rewrites its UPDATE into the
-			// alias-free form it accepts). Steps reusing the already-finalized main statement are skipped.
-			scenario = FinalizeScenarioSteps(scenario, statement, sqlOptimizer, options, dataConnection.MappingSchema);
+			// UPDATE/INSERT/SELECT emulation) after the main statement was finalized AND optimized+converted above, so
+			// they miss both — run finalization and the whole-query optimize+convert on them now. Steps reusing the
+			// already-prepared main statement are skipped.
+			scenario = FinalizeScenarioSteps(scenario, statement, sqlOptimizer, options, dataConnection.MappingSchema, optimizationContext);
 
 			// Plan: group the scenario's steps into physical commands (round-trips), size-aware.
 			var plan = dmlService.PlanScenario(scenario, dataConnection.DataProvider.SqlProviderFlags);
