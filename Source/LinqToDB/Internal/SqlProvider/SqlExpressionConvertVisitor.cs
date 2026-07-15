@@ -16,22 +16,25 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.SqlProvider
 {
-	public class SqlExpressionConvertVisitor : SqlQueryVisitor
+	/// <summary>
+	/// Lowers the SQL AST into provider-concrete form, and — by deriving from <see cref="SqlExpressionOptimizerVisitor"/> —
+	/// optimizes each node in the same traversal. Every <c>VisitXxx</c> here calls <c>base.VisitXxx</c> first, so a node's
+	/// children are visited and the node is optimized before it is lowered.
+	/// <para>
+	/// That is why the render pipeline needs only ONE pass: <see cref="OptimizationContext.OptimizeAndConvertAll"/> calls
+	/// <see cref="Convert"/> and nothing else. Optimization over the <b>un-lowered</b> AST (the rules that match abstract
+	/// nodes — nested case-conversion collapse, coalesce flattening, <c>SqlCompareToExpression</c>) already happened during
+	/// query build, in <c>SelectQueryOptimizerVisitor</c>.
+	/// </para>
+	/// </summary>
+	public class SqlExpressionConvertVisitor : SqlExpressionOptimizerVisitor
 	{
-		protected bool VisitQueries;
-
-		protected bool IsInsidePredicate { get; private set; }
-
 		protected OptimizationContext OptimizationContext = default!;
-		protected NullabilityContext  NullabilityContext  = default!;
-		protected ISqlExpressionFactory Factory => OptimizationContext.Factory;
 
-		protected EvaluationContext EvaluationContext => OptimizationContext.EvaluationContext;
-		protected DataOptions DataOptions => OptimizationContext.DataOptions;
-		protected MappingSchema MappingSchema => OptimizationContext.MappingSchema;
-		protected SqlProviderFlags SqlProviderFlags => OptimizationContext.SqlProviderFlags;
+		protected ISqlExpressionFactory Factory          => OptimizationContext.Factory;
+		protected SqlProviderFlags      SqlProviderFlags => OptimizationContext.SqlProviderFlags;
 
-		public SqlExpressionConvertVisitor(bool allowModify) : base(allowModify ? VisitMode.Modify : VisitMode.Transform, null)
+		public SqlExpressionConvertVisitor(bool allowModify) : base(allowModify)
 		{
 		}
 
@@ -40,18 +43,24 @@ namespace LinqToDB.Internal.SqlProvider
 		protected virtual bool SupportsDistinctAsExistsIntersect => false;
 		protected virtual bool SupportsNullIf => true;
 
+		/// <summary>
+		/// Optimize-and-lower entry point: the whole render-time pipeline in one traversal.
+		/// </summary>
 		public virtual IQueryElement Convert(OptimizationContext optimizationContext, NullabilityContext nullabilityContext, IQueryElement element, bool visitQueries)
 		{
 			Cleanup();
 
 			OptimizationContext = optimizationContext;
-			NullabilityContext = nullabilityContext;
-			VisitQueries = visitQueries;
-			SetTransformationInfo(optimizationContext.TransformationInfoConvert);
 
-			var newElement = ProcessElement(element);
+			InitState(
+				optimizationContext.EvaluationContext,
+				nullabilityContext,
+				optimizationContext.TransformationInfoConvert,
+				optimizationContext.DataOptions,
+				optimizationContext.MappingSchema,
+				visitQueries);
 
-			return newElement;
+			return ProcessElement(element);
 		}
 
 		public override void Cleanup()
@@ -59,9 +68,6 @@ namespace LinqToDB.Internal.SqlProvider
 			base.Cleanup();
 
 			OptimizationContext = default!;
-			NullabilityContext = default!;
-			VisitQueries = default;
-			IsInsidePredicate = false;
 		}
 
 		protected internal override IQueryElement VisitSqlValuesTable(SqlValuesTable element)
@@ -96,25 +102,8 @@ namespace LinqToDB.Internal.SqlProvider
 			return base.VisitSqlValuesTable(element);
 		}
 
-		[return: NotNullIfNotNull(nameof(element))]
-		public override IQueryElement? Visit(IQueryElement? element)
-		{
-			if (element == null)
-				return element;
-
-			var saveIsInsidePredicate = IsInsidePredicate;
-
-			if (element is not SqlNullabilityExpression and not ISqlPredicate)
-			{
-				IsInsidePredicate = false;
-			}
-
-			var newElement = base.Visit(element);
-
-			IsInsidePredicate = saveIsInsidePredicate;
-
-			return newElement;
-		}
+		// NOTE: the IsInsidePredicate save/restore that used to live in a Visit override here is inherited from
+		// SqlExpressionOptimizerVisitor.Visit — the two were byte-identical apart from the field name.
 
 		protected override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
 		{
@@ -122,12 +111,12 @@ namespace LinqToDB.Internal.SqlProvider
 
 			newElement = WrapBooleanExpression(newElement, includeFields: false, withNull: column.CanBeNullable(NullabilityContext));
 			if (!ReferenceEquals(newElement, expression))
-				expression = (ISqlExpression)Visit(Optimize(newElement));
+				expression = (ISqlExpression)Visit(newElement);
 
 			newElement = WrapColumnExpression(expression);
 			if (!ReferenceEquals(newElement, expression))
 			{
-				expression = (ISqlExpression)Visit(Optimize(newElement));
+				expression = (ISqlExpression)Visit(newElement);
 			}
 
 			return expression;
@@ -216,7 +205,11 @@ namespace LinqToDB.Internal.SqlProvider
 				return selectQuery;
 
 			var saveNullabilityContext = NullabilityContext;
-			NullabilityContext = NullabilityContext.WithJoinSource(selectQuery);
+			// Push the query onto the nullability scope, matching SqlExpressionOptimizerVisitor.VisitSqlQuery. This used to
+			// call WithJoinSource, which is the helper for evaluating a JOIN condition (it excludes the joined source from the
+			// nullable-sources check) — it does not enter a query scope, so `Queries` never grew past the root and every
+			// CanBeNull the convert asked was answered under a different regime than the optimizer's.
+			NullabilityContext = NullabilityContext.WithQuery(selectQuery);
 
 			var newQuery = base.VisitSqlQuery(selectQuery);
 
@@ -444,32 +437,61 @@ namespace LinqToDB.Internal.SqlProvider
 			return element;
 		}
 
+		/// <summary>
+		/// Re-visits <paramref name="element"/>. Kept for source compatibility with provider convert visitors that call it.
+		/// <para>
+		/// This used to spin up a full sub-traversal on the <i>shared</i> optimizer instance (a <c>ProcessElement</c> walk
+		/// plus its <c>Replacer</c> fix-up walk) and the caller then re-visited the same subtree with the convert — three
+		/// traversals where one does. Now that this visitor IS an optimizer, <c>Visit</c> optimizes and lowers in one
+		/// pass, so the whole round-trip collapses to a single re-visit.
+		/// </para>
+		/// </summary>
 		protected IQueryElement Optimize(IQueryElement element)
 		{
-			return OptimizationContext.OptimizerVisitor.Optimize(EvaluationContext, NullabilityContext, OptimizationContext.TransformationInfo, DataOptions, OptimizationContext.MappingSchema, element, VisitQueries, reducePredicates: false);
+			return Visit(element);
 		}
 
 		protected internal override IQueryElement VisitExprExprPredicate(SqlPredicate.ExprExpr predicate)
 		{
-			var saveInsidePredicate = IsInsidePredicate;
-			IsInsidePredicate = true;
-			var newElement          = base.VisitExprExprPredicate(predicate);
-			IsInsidePredicate = saveInsidePredicate;
+			// base is the optimizer: it visits the children and optimizes this node (it also owns the IsInsidePredicate
+			// save/restore, so IsInsidePredicate is back to the enclosing value by the time we read it below).
+			var newElement = base.VisitExprExprPredicate(predicate);
 
 			if (!ReferenceEquals(newElement, predicate))
-			{
-				return Visit(Optimize(newElement));
-			}
+				return Visit(newElement);
 
 			var newPredicate = ConvertExprExprPredicate(predicate);
 
 			if (!ReferenceEquals(newPredicate, predicate))
-			{
-				newPredicate = Optimize(NotifyReplaced(newPredicate, predicate));
-				newPredicate = Visit(newPredicate);
-			}
+				return Visit(NotifyReplaced(newPredicate, predicate));
 
-			return newPredicate;
+			// The CompareNulls null-guard reduce. It is LOWERING, not optimization — it has to see the converted predicate,
+			// which is why it used to run in a separate late pass gated by a `reducePredicates` flag (and why relocating that
+			// pass cost 13 cross-provider regressions). Here it runs in the same traversal, immediately after this node is
+			// converted, and Visit re-enters to lower whatever it rewrites the predicate into.
+			var reduced = ReduceExprExprPredicate(predicate);
+
+			if (!ReferenceEquals(reduced, predicate))
+				return Visit(reduced);
+
+			return predicate;
+		}
+
+		protected internal override IQueryElement VisitIsTruePredicate(SqlPredicate.IsTrue predicate)
+		{
+			var newElement = base.VisitIsTruePredicate(predicate);
+
+			if (newElement is not SqlPredicate.IsTrue isTrue)
+				return newElement;
+
+			// Same story as VisitExprExprPredicate: the null-guard reduce is lowering, so it runs here rather than in the
+			// optimizer, over converted structure.
+			var reduced = ReduceIsTruePredicate(isTrue);
+
+			if (!ReferenceEquals(reduced, isTrue))
+				return Visit(reduced);
+
+			return isTrue;
 		}
 
 		protected internal override IQueryElement VisitSqlCompareToExpression(SqlCompareToExpression element)
@@ -1489,7 +1511,7 @@ namespace LinqToDB.Internal.SqlProvider
 				// infinite re-entry loop: `SqlExpressionOptimizerVisitor.VisitSqlCoalesceExpression`
 				// collapses `Coalesce(non_null, '')` straight back to `non_null` (the '' fallback
 				// is unreachable), so a wrapped non-nullable operand would re-appear as a "naked"
-				// operand on the next `Visit(Optimize(converted))` pass and get wrapped again.
+				// operand on the next `Visit(converted)` pass and get wrapped again.
 				// The remaining idempotence check (`IsConcatCoalesceWrap`) handles nullable
 				// operands whose Coalesce wrap survived the optimizer pass (the base
 				// `VisitSqlCoalesceExpression` lowers it to `SqlFunction("Coalesce", _, '')`).

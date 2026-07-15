@@ -203,36 +203,29 @@ namespace LinqToDB.Internal.SqlProvider
 			_sharedByValue        = null;
 		}
 
+		/// <summary>
+		/// The whole render-time pipeline. <see cref="SqlExpressionConvertVisitor"/> derives from
+		/// <see cref="SqlExpressionOptimizerVisitor"/>, so a single <see cref="SqlExpressionConvertVisitor.Convert"/> traversal
+		/// optimizes, lowers, and runs the CompareNulls null-guard reduce on each node as it passes over it — collapsing what
+		/// used to be four of the old five passes (optimize, convert, reduce, convert). Optimization over the
+		/// <b>un-lowered</b> AST — the rules that only match abstract nodes — already happens during query build in
+		/// <c>SelectQueryOptimizerVisitor</c>, so re-running it here was redundant.
+		/// <para>
+		/// A single optimize sweep follows the convert <b>only when it is needed</b>. The null-guard reduce (or a
+		/// <c>col = col</c> fold) can turn a predicate into a constant <c>TRUE</c> at a leaf <i>after</i> the enclosing AND/OR
+		/// search condition has already run its drop-constant pass — a bottom-up traversal cannot retroactively drop it — so a
+		/// redundant <c>AND 1 = 1</c> can survive the convert. The convert raises <see cref="SqlExpressionOptimizerVisitor.
+		/// FoldedPredicateToConstant"/> when it folds any predicate to a constant; only then does the collapse sweep run. A
+		/// query that folds nothing stays strictly one-pass. The sweep carries no lowering and no reduce, so it is idempotent.
+		/// </para>
+		/// </summary>
 		public T OptimizeAndConvertAll<T>(T element, NullabilityContext nullabilityContext)
 			where T : class, IQueryElement
 		{
-			var newElement = OptimizerVisitor.Optimize(EvaluationContext, nullabilityContext, null, DataOptions, MappingSchema, element, visitQueries : true, reducePredicates: false);
-			var result     = (T)ConvertVisitor.Convert(this, nullabilityContext, newElement, visitQueries : true);
+			var result = (T)ConvertVisitor.Convert(this, nullabilityContext, element, visitQueries : true);
 
-			// Reduce predicates over the final converted structure so the builder renders without an optimizer pass
-			// (the builder is a pure renderer). The reduce can leave a redundant TRUE (e.g. `AND 1 = 1`) behind, so a
-			// plain optimize pass follows to collapse it.
-			// NOTE: the reduce MUST run over the CONVERTED structure - reducing before the convert breaks null handling
-			// (verified: 37 SQLite failures / 31 baseline mismatches across Null_NotIn_Null, Test_FieldInSubquery,
-			// PredicateOptimization_Subquery, ...). Don't reorder these passes.
-			var reduceNullability = result is SqlStatement stmt ? NullabilityContext.GetContext(stmt.SelectQuery) : nullabilityContext;
-			result = (T)OptimizerVisitor.Optimize(EvaluationContext, reduceNullability, null, DataOptions, MappingSchema, result, visitQueries : true, reducePredicates: true);
-			result = (T)OptimizerVisitor.Optimize(EvaluationContext, reduceNullability, null, DataOptions, MappingSchema, result, visitQueries : true, reducePredicates: false);
-
-			// The two passes above can reshape a column expression - a predicate folded to a constant, an IN rewritten to an
-			// EXISTS - into a shape that still needs the provider's projection normalization: the boolean-column wrap only the
-			// convert applies (DB2 `CAST(... AS smallint)`, Informix `::BOOLEAN`, a constant predicate folded to a literal).
-			// The convert ran before them, so re-run it over the settled tree.
-			//
-			// Master got this for free: the builder re-converted each select clause at render (BasicSqlBuilder.ConvertElement,
-			// dropped in c41aec0589). The remote path still does - it converts once on the client and again server-side - which
-			// is why only direct access regressed, as a remote-vs-direct baseline mismatch.
-			//
-			// Reusing TransformationInfoConvert is deliberate. This tree holds the FIRST convert's outputs, which are values in
-			// that map, never keys, so nothing is served stale from it; and because they are flagged as ours, they are refined
-			// in place rather than cloned a second time. Nodes the optimizer minted, or ones shared with the cached statement,
-			// are not ours and go through the normal (non-mutating) transform.
-			result = (T)ConvertVisitor.Convert(this, reduceNullability, result, visitQueries : true);
+			if (ConvertVisitor.FoldedPredicateToConstant)
+				result = (T)OptimizerVisitor.Optimize(EvaluationContext, nullabilityContext, null, DataOptions, MappingSchema, result, visitQueries : true);
 
 			return result;
 		}
