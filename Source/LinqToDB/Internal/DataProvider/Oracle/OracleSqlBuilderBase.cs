@@ -77,7 +77,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		protected override bool ShouldBuildWhere(SelectQuery selectQuery, out SqlSearchCondition condition)
 		{
-			// TAKE/SKIP resolved during render-prep (see ScenarioCommandRenderer.ResolveSkipTake).
+			// TAKE/SKIP resolved during render-prep (see SqlExpressionConvertVisitor.ResolveSkipTakeValues).
 			var takeExpr = selectQuery.Select.TakeValue;
 			var skipEpr  = selectQuery.Select.SkipValue;
 

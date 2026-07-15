@@ -319,7 +319,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected virtual void BuildSqlBuilder(SelectQuery selectQuery, int indent, ColumnAliasMode aliasMode)
 		{
-			// TAKE/SKIP were resolved into Select.TakeValue/SkipValue during render-prep (ScenarioCommandRenderer.ResolveSkipTake),
+			// TAKE/SKIP were resolved into Select.TakeValue/SkipValue during render-prep (SqlExpressionConvertVisitor.ResolveSkipTakeValues),
 			// so the builder reads them directly instead of calling the optimizer at render.
 			var takeExpr = selectQuery.Select.TakeValue;
 			var skipExpr = selectQuery.Select.SkipValue;
@@ -872,20 +872,9 @@ namespace LinqToDB.Internal.SqlProvider
 
 			var select = selectQuery.Select;
 
-			// The whole-query convert can rebuild the Select into fresh SqlColumn instances (parameter-dependent
-			// queries re-run the per-element convert at build time, after aliasing). Synthetic column
-			// aliases live in the object-identity-keyed AliasesContext, not on the node, so they must be
-			// read from the original aliased columns - the rebuilt copies were never registered, so
-			// GetColumnAlias would miss them and drop the alias. The build-time convert is value-level: it
-			// refines column expressions but must not add or remove projected columns, so the i-th rebuilt
-			// column maps 1:1 onto the i-th original. Enforce that invariant - a count mismatch would
-			// silently mis-map aliases and emit wrong SQL.
-			var aliasColumns = selectQuery.Select.Columns;
-
-			if (aliasColumns.Count != select.Columns.Count)
-				throw new InvalidOperationException(
-					$"SQL builder convert must not change the SELECT column set (was {aliasColumns.Count}, became {select.Columns.Count}); column aliasing cannot be resolved.");
-
+			// Column aliases are stored in the object-identity-keyed AliasesContext, not on the SqlColumn node, so each
+			// column's alias is looked up via GetColumnAlias(column) below. The builder renders the AST as-is - the
+			// convert pass ran earlier, in structural prepare - so these columns are never rebuilt here.
 			for (var i = 0; i < select.Columns.Count; i++)
 			{
 				var col = select.Columns[i];
@@ -897,7 +886,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 				var addAlias = true;
 				var expr     = col.Expression;
-				var colAlias = AliasesContext.GetColumnAlias(aliasColumns[i]);
+				var colAlias = AliasesContext.GetColumnAlias(col);
 
 				AppendIndent();
 				BuildColumnExpression(selectQuery, expr, colAlias, ref addAlias);
@@ -2604,7 +2593,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected virtual void BuildSkipFirst(SelectQuery selectQuery)
 		{
-			// TAKE/SKIP were resolved into Select.TakeValue/SkipValue during render-prep (ScenarioCommandRenderer.ResolveSkipTake),
+			// TAKE/SKIP were resolved into Select.TakeValue/SkipValue during render-prep (SqlExpressionConvertVisitor.ResolveSkipTakeValues),
 			// so the builder reads them directly instead of calling the optimizer at render.
 			var takeExpr = selectQuery.Select.TakeValue;
 			var skipExpr = selectQuery.Select.SkipValue;
@@ -2645,7 +2634,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected virtual void BuildOffsetLimit(SelectQuery selectQuery)
 		{
-			// TAKE/SKIP were resolved into Select.TakeValue/SkipValue during render-prep (ScenarioCommandRenderer.ResolveSkipTake),
+			// TAKE/SKIP were resolved into Select.TakeValue/SkipValue during render-prep (SqlExpressionConvertVisitor.ResolveSkipTakeValues),
 			// so the builder reads them directly instead of calling the optimizer at render.
 			var takeExpr = selectQuery.Select.TakeValue;
 			var skipExpr = selectQuery.Select.SkipValue;

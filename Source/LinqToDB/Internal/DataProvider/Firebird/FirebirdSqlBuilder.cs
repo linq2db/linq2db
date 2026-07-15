@@ -74,7 +74,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 		{
 			if (Statement.QueryType is QueryType.Update or QueryType.Delete)
 			{
-				// TAKE/SKIP resolved during render-prep (see ScenarioCommandRenderer.ResolveSkipTake).
+				// TAKE/SKIP resolved during render-prep (see SqlExpressionConvertVisitor.ResolveSkipTakeValues).
 				var takeExpr = selectQuery.Select.TakeValue;
 				var skipExpr = selectQuery.Select.SkipValue;
 

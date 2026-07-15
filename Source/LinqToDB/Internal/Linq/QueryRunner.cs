@@ -1026,6 +1026,14 @@ namespace LinqToDB.Internal.Linq
 				var commandByGroup = new CombinedCommand?[groups.Length];
 				var g              = 0;
 
+				// ORDERING INVARIANT (relied on by every eager strategy): non-combinable steps run FIRST, as singleton
+				// groups in ascending index order, THEN the combined groups (combinable children + main). So a non-combinable
+				// harvester executes before every combinable sibling and must only read result slots that have already run -
+				// its own lower-indexed dependencies. Nested eager loads build first, so they get lower indices and
+				// materialize earlier; a parent harvester always reads its child slots after they are populated. A
+				// non-combinable harvester that read a *combinable* sibling's (higher-lifecycle) slot would find it
+				// unpopulated and silently produce an empty collection - no exception. Any new strategy MUST preserve this
+				// direction (covered by MixedCombinableAndNonCombinable_NestedKeyedUnderCombinable).
 				foreach (var i in _nonCombinableIndexes)
 					groups[g++] = new SqlCommandGroup { StepIndexes = [i] };
 

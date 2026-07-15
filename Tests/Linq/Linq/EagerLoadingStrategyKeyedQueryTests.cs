@@ -637,6 +637,105 @@ namespace Tests.Linq
 			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 		}
 
+		// Mixed combinable + non-combinable eager loads in ONE query, nested variant - the highest-risk path flagged in
+		// review (rests on EagerResultEnumerable.BuildPlan's ORDERING INVARIANT). Under global KeyedQuery, a Department
+		// child that references a parent non-key field (c.Name) falls back to Default (a combinable candidate), but because
+		// its OWN nested Employees load stays KeyedQuery it buffers => that whole harvester is NON-combinable and runs
+		// first. A sibling Department child (also Default via the same fallback, no nested load) stays COMBINABLE and rides
+		// the combined command with the main query. If the plan ever ran a non-combinable harvester against a combinable
+		// sibling's not-yet-populated slot, a child collection would come back empty and AreEqual below would catch it.
+		[Test]
+		public void MixedCombinableAndNonCombinable_NestedKeyedUnderCombinable(
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		{
+			var (companies, departments, employees, _, _) = GenerateHierarchy();
+
+			using var db = GetDataContext(context, o => o.UseDefaultEagerLoadingStrategy(EagerLoadingStrategy.KeyedQuery));
+
+			var counter = new SelectQueryCounter();
+			if (!context.IsRemote()) db.AddInterceptor(counter);
+
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+			using var tEmp = db.CreateLocalTable(employees);
+
+			if (!context.IsRemote()) counter.Count = 0;
+
+			var query =
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					c.Name,
+					// Default fallback (parent non-key ref) + nested KeyedQuery Employees => buffered => NON-combinable
+					DeptsWithEmployees = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							CompanyName = c.Name,
+							Employees   = tEmp
+								.Where(e => e.DepartmentId == d.Id)
+								.OrderBy(e => e.Id)
+								.Select(e => new { e.Id, e.Name })
+								.ToList(),
+						})
+						.ToList(),
+					// Default fallback (parent non-key ref), no nested load => COMBINABLE sibling
+					PlainDepts = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							CompanyName = c.Name,
+						})
+						.ToList(),
+				};
+
+			var result = query.ToList();
+
+			var expected = companies
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					c.Id,
+					c.Name,
+					DeptsWithEmployees = departments
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							CompanyName = c.Name,
+							Employees   = employees
+								.Where(e => e.DepartmentId == d.Id)
+								.OrderBy(e => e.Id)
+								.Select(e => new { e.Id, e.Name })
+								.ToList(),
+						})
+						.ToList(),
+					PlainDepts = departments
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							CompanyName = c.Name,
+						})
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+
+			// Anti-trivial guard: the non-combinable buffered harvester runs its own queries in addition to the combined
+			// command, so a mixed plan is strictly more than a single round-trip (a fully-combined collapse would be 1).
+			if (!context.IsRemote()) counter.Count.ShouldBeGreaterThan(1);
+		}
+
 		[Test]
 		public void Select_KeyedQuery_ChildProjectsParentExpressionFallback(
 			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)

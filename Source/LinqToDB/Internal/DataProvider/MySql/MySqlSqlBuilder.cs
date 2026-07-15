@@ -49,7 +49,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 		protected override void BuildOffsetLimit(SelectQuery selectQuery)
 		{
-			// TAKE/SKIP resolved during render-prep (see ScenarioCommandRenderer.ResolveSkipTake).
+			// TAKE/SKIP resolved during render-prep (see SqlExpressionConvertVisitor.ResolveSkipTakeValues).
 			var takeExpr = selectQuery.Select.TakeValue;
 			var skipExpr = selectQuery.Select.SkipValue;
 

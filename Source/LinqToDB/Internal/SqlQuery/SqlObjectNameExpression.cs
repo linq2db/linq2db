@@ -13,8 +13,13 @@ namespace LinqToDB.Internal.SqlQuery
 	/// carry a correctly-quoted derived name (e.g. an identity sequence <c>SIDENTITY_&lt;table&gt;</c>) whose quoting
 	/// is only available in the SQL builder.
 	/// </summary>
+	/// <remarks>
+	/// Produced server-side during scenario render (never present in a client-serialized statement), so it is
+	/// intentionally not handled by <c>LinqServiceSerializer</c> — remote serialization of it would throw.
+	/// </remarks>
 	public sealed class SqlObjectNameExpression : SqlExpressionBase
 	{
+		/// <summary>Creates an object-name expression for <paramref name="name"/> rendered with <paramref name="convertType"/>.</summary>
 		public SqlObjectNameExpression(SqlObjectName name, ConvertType convertType, TableOptions tableOptions = TableOptions.NotSet)
 		{
 			Name         = name;
@@ -22,8 +27,11 @@ namespace LinqToDB.Internal.SqlQuery
 			TableOptions = tableOptions;
 		}
 
+		/// <summary>The database object name to render.</summary>
 		public SqlObjectName Name         { get; }
+		/// <summary>How the builder should quote/convert <see cref="Name"/> (table, sequence, trigger, …).</summary>
 		public ConvertType   ConvertType  { get; }
+		/// <summary>Table options influencing the rendered name (e.g. temporary-table qualification).</summary>
 		public TableOptions  TableOptions { get; }
 
 		public override QueryElementType ElementType => QueryElementType.SqlObjectNameExpression;

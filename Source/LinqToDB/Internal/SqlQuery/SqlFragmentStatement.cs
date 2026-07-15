@@ -11,13 +11,19 @@ namespace LinqToDB.Internal.SqlQuery
 	/// creation, identity reset). The owning scenario step's <c>Kind</c> decides execution (non-query / scalar); the
 	/// builder renders it generically.
 	/// </summary>
+	/// <remarks>
+	/// Produced server-side during scenario render (never present in a client-serialized statement), so it is
+	/// intentionally not handled by <c>LinqServiceSerializer</c> — remote serialization of it would throw.
+	/// </remarks>
 	public sealed class SqlFragmentStatement : SqlStatement
 	{
+		/// <summary>Creates a fragment statement that renders <paramref name="expression"/> as a full command.</summary>
 		public SqlFragmentStatement(ISqlExpression expression)
 		{
 			Expression = expression;
 		}
 
+		/// <summary>The raw SQL expression rendered as the command body.</summary>
 		public ISqlExpression Expression { get; set; }
 
 		public override QueryType        QueryType   => QueryType.Fragment;

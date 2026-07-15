@@ -42,9 +42,12 @@ namespace Tests.Linq
 			db.Insert(new RcChild { Id = 2, ParentId = 1, Name = "beta"  });
 		}
 
-		// A parameter-dependent detail (string.Contains -> LIKE) re-renders on reuse; caching never renders MORE than the
-		// first run. Combined with StableEagerLoadFullyCached (stable => 0 re-renders), this proves per-command caching:
-		// the stable main is cached while the volatile detail re-renders.
+		// A parameter-dependent detail (string.Contains -> LIKE) forces a re-render on reuse. SQLite renders the combined
+		// eager load as ONE concat command whose cache is all-or-nothing, so a single volatile step re-renders the whole
+		// command - run 2 renders the SAME count as run 1 (hence <=, not <). What this pins: (a) a volatile step DOES
+		// re-render (>= 1) and (b) caching never renders MORE than the first run; its companion StableEagerLoadFullyCached
+		// shows a fully-stable load re-renders nothing (0). Statement-level granularity - a stable main staying cached while
+		// only a volatile sibling re-renders - is a DbBatch-backend property and is not observable on this concat path.
 		[Test]
 		public void ParameterDependentDetailReRenders([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
@@ -77,7 +80,7 @@ namespace Tests.Linq
 			parents.GetCacheMissCount().ShouldBe(afterFirstMiss);                     // run 2 reused it (a cache hit) - precondition
 			run1Renders.ShouldBeGreaterThanOrEqualTo(2);                              // run 1 rendered the main + the detail
 			run2Renders.ShouldBeGreaterThanOrEqualTo(1);                              // the parameter-dependent detail re-rendered
-			run2Renders.ShouldBeLessThanOrEqualTo(run1Renders);                      // caching never renders more
+			run2Renders.ShouldBeLessThanOrEqualTo(run1Renders);                      // concat cache is all-or-nothing: a volatile step re-renders the whole command (== run 1)
 
 			run2.ShouldHaveSingleItem();
 			run2[0].Children.Select(c => c.Name).ShouldBe(new[] { "beta" });          // the LIKE filter actually applied
