@@ -563,6 +563,7 @@ namespace Tests.DataProvider
 				SqlDouble sqlDouble           => sqlDouble.Value.ToString("R", CultureInfo.InvariantCulture),
 				double doubleValue            => doubleValue.ToString("R", CultureInfo.InvariantCulture),
 				string stringValue            => stringValue,
+#if !DB2STUBS
 				DB2Binary db2Binary           => ConvertBytesToString(db2Binary.Value),
 				DB2Blob db2Blob               => ConvertBytesToString(db2Blob.Value),
 				DB2Clob db2Clob               => db2Clob.Value,
@@ -570,6 +571,7 @@ namespace Tests.DataProvider
 				DB2Time db2Time               => db2Time.Value.ToString("c", CultureInfo.InvariantCulture),
 				DB2TimeStamp db2TimeStamp     => db2TimeStamp.Value.ToString("O", CultureInfo.InvariantCulture),
 				DB2Xml db2Xml                 => db2Xml.GetString(),
+#endif
 				FbDecFloat fbDecFloat         => FormatFirebirdDecFloat(fbDecFloat),
 				FbZonedDateTime zonedDateTime => FormatFirebirdZonedDateTime(zonedDateTime),
 				FbZonedTime zonedTime         => FormatFirebirdZonedTime(zonedTime),
