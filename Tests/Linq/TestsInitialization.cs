@@ -167,6 +167,10 @@ public class TestsInitialization
 
 		//custom initialization logic
 		CustomizationSupport.Init();
+
+		// Set up in-memory databases (SQLite/DuckDB) for any provider configured with an in-memory
+		// connection string (CI), before a_CreateData seeds them. No-op for the normal file-based setup.
+		SetupInMemoryDatabases();
 	}
 
 	private void RegisterSqlCEFactory()
@@ -185,9 +189,144 @@ public class TestsInitialization
 #endif
 	}
 
+	// Route SQLite/DuckDB CI runs to in-memory databases (connection strings in Build/Azure/*/sqlite.json
+	// and duckdb.json) to avoid the per-commit filesystem sync that dominates their on-disk runs. Both use
+	// a shared-cache in-memory connection string (SQLite ...cache=shared, DuckDB :memory:?cache=shared)
+	// that is shared across all connections, so each only needs one keep-alive connection held open for
+	// the run (the DB is destroyed once its last connection closes) — registered in TestInMemoryDatabases.
+	// Auto-activates per config only when its connection string is in-memory; a complete no-op for the
+	// normal file-based (dev) setup.
+	static void SetupInMemoryDatabases()
+	{
+		SetupSqliteInMemory();
+#if !NETFRAMEWORK
+		SetupDuckDBInMemory();
+#endif
+	}
+
+	static void SetupSqliteInMemory()
+	{
+		// The SQLite configs the CI job enables, each with its committed on-disk source file. `classic`
+		// picks the ADO provider (System.Data.SQLite vs Microsoft.Data.Sqlite).
+		var configs = new (string name, bool classic, string sourceFile)[]
+		{
+			("SQLite.Classic",      true,  "TestData.sqlite"),
+			("SQLite.Classic.MPU",  true,  "TestData.MiniProfiler.Unmapped.sqlite"),
+			("SQLite.Classic.MPM",  true,  "TestData.MiniProfiler.Mapped.sqlite"),
+			("SQLite.MS",           false, "TestData.MS.sqlite"),
+			("Northwind.SQLite",    true,  "Northwind.sqlite"),
+			("Northwind.SQLite.MS", false, "Northwind.MS.sqlite"),
+		};
+
+		foreach (var (name, classic, sourceFile) in configs)
+		{
+			string cs;
+			try { cs = LinqToDB.Data.DataConnection.GetConnectionString(name); }
+			catch { continue; }
+
+			if (cs == null || cs.IndexOf("mode=memory", StringComparison.OrdinalIgnoreCase) < 0)
+				continue; // file-based -> nothing to keep alive
+
+			DbConnection keep = classic
+				? new System.Data.SQLite.SQLiteConnection(cs)
+				: new Microsoft.Data.Sqlite.SqliteConnection(cs);
+			keep.Open();
+			TestInMemoryDatabases.AddKeepAlive(keep);
+
+			// Preload the in-memory DB from its committed on-disk file via the SQLite online-backup API,
+			// so a filtered run (which skips the a_CreateData seeding) still has tables and data. Full
+			// runs re-seed TestData on top; Northwind (no SQL seed script) is only ever loaded this way.
+			var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Database", sourceFile);
+			if (File.Exists(path))
+			{
+				if (classic)
+				{
+					using var src = new System.Data.SQLite.SQLiteConnection($"Data Source={path};Read Only=True");
+					src.Open();
+					src.BackupDatabase((System.Data.SQLite.SQLiteConnection)keep, "main", "main", -1, null, 0);
+				}
+				else
+				{
+					using var src = new Microsoft.Data.Sqlite.SqliteConnection($"Data Source={path};Mode=ReadOnly");
+					src.Open();
+					src.BackupDatabase((Microsoft.Data.Sqlite.SqliteConnection)keep);
+				}
+			}
+
+			TestContext.Progress.WriteLine($"[sqlite-inmemory] keep-alive open for {name} ({cs})");
+		}
+	}
+
+#if !NETFRAMEWORK
+	static void SetupDuckDBInMemory()
+	{
+		string cs;
+		try { cs = LinqToDB.Data.DataConnection.GetConnectionString("DuckDB"); }
+		catch { return; }
+
+		if (cs == null || cs.IndexOf(":memory:", StringComparison.OrdinalIgnoreCase) < 0)
+			return; // file-based -> nothing to do
+
+		// A DuckDB shared-cache in-memory database (Data Source=:memory:?cache=shared) is shared by every
+		// connection using the same string — exactly like SQLite — so we only need to hold one master
+		// connection open; the database is destroyed once its last connection closes.
+		var master = new DuckDB.NET.Data.DuckDBConnection(cs);
+		try
+		{
+			master.Open();
+		}
+		catch (DllNotFoundException)
+		{
+			// no native duckdb on this leg (e.g. the x86 Access runs, where DuckDB isn't a tested
+			// provider) — skip the in-memory keep-alive rather than failing global OneTimeSetUp.
+			master.Dispose();
+			return;
+		}
+
+		TestInMemoryDatabases.AddKeepAlive(master);
+
+		// Preload from the committed on-disk file so a filtered run (which skips a_CreateData) still has
+		// tables and data. DuckDB can't COPY FROM DATABASE (it inserts child rows before parents, hitting
+		// an FK violation), so round-trip via EXPORT/IMPORT DATABASE, which loads schema -> data ->
+		// constraints in phases and preserves sequence values. Full runs re-seed on top (create drops first).
+		var srcFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Database", "TestData.duckdb");
+		if (File.Exists(srcFile))
+		{
+			var work = Path.Combine(Path.GetTempPath(), $"l2db-duckdb-{Guid.NewGuid():N}.duckdb");
+			var dump = Path.Combine(Path.GetTempPath(), $"l2db-duckdb-{Guid.NewGuid():N}");
+			try
+			{
+				// export off a copy so the committed file is never opened writable
+				File.Copy(srcFile, work, true);
+				using (var fileDb = new DuckDB.NET.Data.DuckDBConnection($"Data Source={work.Replace('\\', '/')}"))
+				{
+					fileDb.Open();
+					using var ec = fileDb.CreateCommand();
+					ec.CommandText = $"EXPORT DATABASE '{dump.Replace('\\', '/')}' (FORMAT PARQUET)";
+					ec.ExecuteNonQuery();
+				}
+
+				using var ic = master.CreateCommand();
+				ic.CommandText = $"IMPORT DATABASE '{dump.Replace('\\', '/')}'";
+				ic.ExecuteNonQuery();
+				TestContext.Progress.WriteLine($"[duckdb-inmemory] preloaded from {srcFile}");
+			}
+			finally
+			{
+				try { File.Delete(work); } catch { /* best effort */ }
+				try { if (Directory.Exists(dump)) Directory.Delete(dump, true); } catch { /* best effort */ }
+			}
+		}
+
+		TestContext.Progress.WriteLine($"[duckdb-inmemory] keep-alive open ({cs})");
+	}
+#endif
+
 	[OneTimeTearDown]
 	public void TestAssemblyTeardown()
 	{
+		TestInMemoryDatabases.DisposeAll();
+
 		if (_doMetrics)
 		{
 			var str = ActivityStatistics.GetReport();

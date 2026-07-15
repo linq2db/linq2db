@@ -326,7 +326,7 @@ namespace Tests.DataProvider
 					Is.EqualTo(new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, TimeZoneInfo.Local.GetUtcOffset(new DateTime(2012, 12, 12, 12, 12, 12)))));
 
 				// no idea how/why it works that way. In any case it is not a good idea to map TS to DT
-				var expected = 
+				var expected =
 #if !NETFRAMEWORK
 					context.IsAnyOf(TestProvName.AllOracleManaged)
 						? new DateTime(2012, 12, 12, 17, 12, 12, 12)
@@ -433,6 +433,97 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<string>(PathThroughSql, DataParameter.Create("p", (string?)null)), Is.Null);
 				Assert.That(conn.Execute<string>(PathThroughSql, new DataParameter { Name = "p", Value = "1" }), Is.EqualTo("1"));
 			}
+		}
+
+		[Test]
+		public void LongStringParameterTest([IncludeDataSources(TestProvName.AllOracle)] string context)
+		{
+			using var conn  = GetDataContext(context);
+			using var table = conn.CreateLocalTable<BlobsTable>();
+
+			var tableName = table.GetTableName();
+			var value     = "LongString".PadRight(50000, '1');
+
+			conn.Execute($"INSERT INTO {tableName} (\"Id\", \"NClob\") VALUES (1, TO_NCLOB(:p))", DataParameter.NText("p", value));
+			conn.Execute($"INSERT INTO {tableName} (\"Id\", \"NClob\") VALUES (2, TO_NCLOB(:p))", new DataParameter { Name = "p", DbType = "NClob", Value = value });
+			conn.Execute($"INSERT INTO {tableName} (\"Id\", \"NClob\") VALUES (3, :p)",           new DataParameter { Name = "p", Value = value });
+
+			conn.Execute<int>($"SELECT LENGTH(\"NClob\") FROM {tableName} WHERE \"Id\" = 1").ShouldBe(value.Length);
+			conn.Execute<int>($"SELECT LENGTH(\"NClob\") FROM {tableName} WHERE \"Id\" = 2").ShouldBe(value.Length);
+			conn.Execute<int>($"SELECT LENGTH(\"NClob\") FROM {tableName} WHERE \"Id\" = 3").ShouldBe(value.Length);
+		}
+
+		[Test]
+		public void LongStringParameterCustomThresholdTest([IncludeDataSources(TestProvName.AllOracle)] string context)
+		{
+			var parameterInterceptor = new SaveCommandInterceptor();
+
+			using var conn  = GetDataContext(context, o => o
+				.WithOptions<OracleOptions>(oo => oo with { MaxStringParameterLength = 10 })
+				.UseInterceptor(parameterInterceptor)
+			);
+			using var table = conn.CreateLocalTable<BlobsTable>();
+
+			var tableName = table.GetTableName();
+
+			var value = "LongStringValue"; // length >= 10
+
+			conn.Execute(
+				$"INSERT INTO {tableName} (\"Id\", \"NClob\") VALUES (1, :p)",
+				new DataParameter { Name = "p", Value = value });
+
+			parameterInterceptor.Parameters.Length.ShouldBe(1);
+
+			if (parameterInterceptor.Parameters[0] is OracleParameter p)
+				p.OracleDbType.ShouldBe(OracleDbType.NClob);
+		}
+
+		[Test]
+		public void LongStringParameterNClobInferenceDisabledTest([IncludeDataSources(TestProvName.AllOracle)] string context)
+		{
+			var parameterInterceptor = new SaveAndSkipCommandInterceptor();
+
+			using var conn  = GetDataContext(context, o => o
+				.WithOptions<OracleOptions>(oo => oo with { MaxStringParameterLength = null })
+				.UseInterceptor(parameterInterceptor)
+			);
+			using var table = conn.CreateLocalTable<BlobsTable>();
+
+			var tableName = table.GetTableName();
+
+			var value = "LongStringValue".PadRight(50000, '1');
+
+			conn.Execute(
+				$"INSERT INTO {tableName} (\"Id\", \"NClob\") VALUES (1, :p)",
+				new DataParameter { Name = "p", Value = value });
+
+			parameterInterceptor.Parameters.Length.ShouldBe(1);
+
+			if (parameterInterceptor.Parameters[0] is OracleParameter p)
+				p.OracleDbType.ShouldBe(OracleDbType.Varchar2);
+		}
+
+		[Test]
+		public void LongStringParameterExplicitTypeNotPromotedTest([IncludeDataSources(TestProvName.AllOracle)] string context)
+		{
+			var parameterInterceptor = new SaveAndSkipCommandInterceptor();
+
+			using var conn  = GetDataContext(context, o => o.UseInterceptor(parameterInterceptor));
+			using var table = conn.CreateLocalTable<BlobsTable>();
+
+			var tableName = table.GetTableName();
+
+			var value = "LongStringValue".PadRight(50000, '1');
+
+			// explicit non-NCLOB type must not be promoted to NCLOB even past the default threshold
+			conn.Execute(
+				$"INSERT INTO {tableName} (\"Id\", \"NClob\") VALUES (1, :p)",
+				new DataParameter { Name = "p", DataType = DataType.VarChar, Value = value });
+
+			parameterInterceptor.Parameters.Length.ShouldBe(1);
+
+			if (parameterInterceptor.Parameters[0] is OracleParameter p)
+				p.OracleDbType.ShouldBe(OracleDbType.Varchar2);
 		}
 
 		[Test]
@@ -1917,6 +2008,35 @@ namespace Tests.DataProvider
 			).ToList();
 
 			Assert.That(list[0].ParentID, Is.EqualTo(2));
+		}
+
+		class RegTestData
+		{
+			[Column(DataType = DataType.VarChar, Length = 30), NotNull] public required string  ID1  { get; set; }
+			[Column(DataType = DataType.VarChar, Length = 30)]          public          string? ID2  { get; set; }
+			[Column, NotNull]                                           public          int     Type { get; set; }
+		}
+
+		[Test]
+		public void XmlTestRegressionTest([IncludeDataSources(TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var data = Enumerable.Range(0, 5000)
+				.Select(i => new RegTestData { ID1 = i.ToString(), Type = i })
+				.ToList();
+
+			var xml = OracleTools.GetXmlData(
+				db.Options,
+				db.MappingSchema,
+				data);
+
+			using var tmp = db.CreateLocalTable<RegTestData>();
+
+			var id2 = "123";
+
+			db.OracleXmlTable<RegTestData>(() => xml)
+				.Insert(tmp, i => new RegTestData { ID1 = i.ID1, ID2 = id2, Type = i.Type });
 		}
 
 #endregion

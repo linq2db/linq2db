@@ -267,9 +267,6 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 #endif
 			}
 
-			if (dataType.DataType == DataType.Undefined && value is string @string && @string.Length >= 4000)
-				dataType = dataType.WithDataType(DataType.NText);
-
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 
@@ -356,6 +353,19 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 				default: base.SetParameterType(dataConnection, parameter, dataType); break;
 			}
+		}
+
+		protected override DbDataType InferParameterDataType(DataConnection dataConnection, DbDataType dbDataType, object? paramValue)
+		{
+			if (dbDataType.DataType == DataType.Undefined &&
+			    paramValue is string value                &&
+			    dataConnection.Options.FindOrDefault(OracleOptions.Default).MaxStringParameterLength is { } maxStringParameterLength &&
+			    value.Length >= maxStringParameterLength)
+			{
+				return dbDataType.WithDataType(DataType.NText);
+			}
+
+			return base.InferParameterDataType(dataConnection, dbDataType, paramValue);
 		}
 
 		#region BulkCopy

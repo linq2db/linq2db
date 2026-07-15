@@ -12,15 +12,29 @@ steps:
 - task: CmdLine@2
   inputs:
     script: |
-      # 1Gb
-      sudo apt-get remove -y '^llvm-.*'
-      # 10Gb
-      sudo rm -rf /usr/local/lib/android
-      df -h
-      # frees ~7Gb
-      echo remove .ghcup
-      sudo rm -rf /usr/local/.ghcup/
-      df -h
+      # Free disk space so large-DB jobs (Oracle 21/23) fit. Each step logs the space it
+      # actually freed (avail before -> after); the ~sizes below are measured on build 22224.
+      #
+      # Enabled (each frees >= 1 GB): ~23.6 GB total, takes avail from ~15 GB to ~39 GB.
+      # Disabled (freed < 1 GB, or unsafe) - uncomment if a job needs more headroom:
+      #   apt clean      ~0.1 GB
+      #   remove dotnet  ~2-3 GB  (breaks all legs - system dotnet is used before UseDotNet@2)
+      avail() { df --output=avail -m / | tail -1 | tr -d ' '; }
+      report() { local a=$(avail); echo ">>> $2: freed $(( a - $1 )) MB (avail now $a MB)"; }
+
+      b=$(avail); sudo apt-get remove -y '^llvm-.*';        report $b "remove llvm (~1.4Gb)"
+      b=$(avail); sudo rm -rf /usr/local/lib/android;       report $b "remove android (~10Gb)"
+      b=$(avail); sudo rm -rf /usr/local/.ghcup/;           report $b "remove ghcup (~3.7Gb)"
+      b=$(avail); sudo rm -rf /opt/hostedtoolcache/CodeQL;  report $b "remove CodeQL (~1.7Gb, unused)"
+      b=$(avail); sudo rm -rf /usr/share/swift;             report $b "remove swift (~3.4Gb, unused)"
+      b=$(avail); sudo rm -rf /usr/lib/jvm;                 report $b "remove jvm (~1.4Gb, unused)"
+      # docker image prune runs before any DB container exists (safe); it also prints its own
+      # "Total reclaimed space" line in addition to the avail delta below.
+      b=$(avail); sudo docker image prune -af;              report $b "docker image prune (~1.9Gb)"
+      df -h /
+      # Disabled - freed < 1 GB or breaks legs; uncomment if a job needs more space:
+      # b=$(avail); sudo apt-get clean;                     report $b "apt clean (~0.1Gb)"
+      # b=$(avail); sudo rm -rf /usr/share/dotnet;          report $b "remove dotnet (~2-3Gb est)"
   displayName: Cleanup Junk
 
 - task: DownloadPipelineArtifact@2
@@ -111,13 +125,7 @@ steps:
   condition: and(variables.title, eq(variables.net80, 'true'), succeeded(), ne(variables.retry, 'true'), ${{ parameters.full_run }})
   displayName: 'Tests (.NET 8): $(title)'
 
-- script: |
-    if [ -d baselines/.git ]; then
-      echo "Reset baselines working tree so a failed/retried attempt does not leak baselines into the commit"
-      git -C baselines reset --hard
-      git -C baselines clean -fdq
-    fi
-    dotnet ./net8.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" --settings ./net8.0/main/x64/.runsettings --report-trx --report-trx-filename net8.0-main-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m $(test_retry_args)
+- script: dotnet ./net8.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" --settings ./net8.0/main/x64/.runsettings --report-trx --report-trx-filename net8.0-main-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m $(test_retry_args)
   condition: and(variables.title, eq(variables.net80, 'true'), succeeded(), eq(variables.retry, 'true'), ${{ parameters.full_run }})
   displayName: 'Tests (.NET 8): $(title)'
   retryCountOnTaskFailure: 2
@@ -164,13 +172,7 @@ steps:
   condition: and(variables.title, eq(variables.net90, 'true'), succeeded(), ne(variables.retry, 'true'), ${{ parameters.full_run }})
   displayName: 'Tests (.NET 9): $(title)'
 
-- script: |
-    if [ -d baselines/.git ]; then
-      echo "Reset baselines working tree so a failed/retried attempt does not leak baselines into the commit"
-      git -C baselines reset --hard
-      git -C baselines clean -fdq
-    fi
-    dotnet ./net9.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" --settings ./net9.0/main/x64/.runsettings --report-trx --report-trx-filename net9.0-main-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m $(test_retry_args)
+- script: dotnet ./net9.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" --settings ./net9.0/main/x64/.runsettings --report-trx --report-trx-filename net9.0-main-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m $(test_retry_args)
   condition: and(variables.title, eq(variables.net90, 'true'), succeeded(), eq(variables.retry, 'true'), ${{ parameters.full_run }})
   displayName: 'Tests (.NET 9): $(title)'
   retryCountOnTaskFailure: 2
@@ -217,13 +219,7 @@ steps:
   condition: and(variables.title, eq(variables.net100, 'true'), succeeded(), ne(variables.retry, 'true'))
   displayName: 'Tests (.NET 10): $(title)'
 
-- script: |
-    if [ -d baselines/.git ]; then
-      echo "Reset baselines working tree so a failed/retried attempt does not leak baselines into the commit"
-      git -C baselines reset --hard
-      git -C baselines clean -fdq
-    fi
-    dotnet ./net10.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" --settings ./net10.0/main/x64/.runsettings --report-trx --report-trx-filename net10.0-main-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m $(test_retry_args)
+- script: dotnet ./net10.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" --settings ./net10.0/main/x64/.runsettings --report-trx --report-trx-filename net10.0-main-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m $(test_retry_args)
   condition: and(variables.title, eq(variables.net100, 'true'), succeeded(), eq(variables.retry, 'true'))
   displayName: 'Tests (.NET 10): $(title)'
   retryCountOnTaskFailure: 2

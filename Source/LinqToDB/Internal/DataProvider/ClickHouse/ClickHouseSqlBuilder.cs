@@ -544,17 +544,6 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 					h = h[(ClickHouseHints.Join.Global.Length + 1)..];
 				}
-				else if (h.StartsWith(ClickHouseHints.Join.All, StringComparison.Ordinal))
-				{
-					StringBuilder
-						.Append(ClickHouseHints.Join.All)
-						.Append(' ');
-
-					if (string.Equals(h, ClickHouseHints.Join.All, StringComparison.Ordinal))
-						return base.BuildJoinType(join, condition);
-
-					h = h[(ClickHouseHints.Join.All.Length + 1)..];
-				}
 
 				switch (join.JoinType)
 				{

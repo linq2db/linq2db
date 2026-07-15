@@ -190,6 +190,8 @@ namespace LinqToDB.EntityFrameworkCore
 				ProviderName.PostgreSQL92                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v92, connectionInfo.ConnectionString, connectionInfo.Connection, connectionInfo.Transaction),
 				ProviderName.PostgreSQL93                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v93, connectionInfo.ConnectionString, connectionInfo.Connection, connectionInfo.Transaction),
 				ProviderName.PostgreSQL95                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v95, connectionInfo.ConnectionString, connectionInfo.Connection, connectionInfo.Transaction),
+				ProviderName.PostgreSQL11                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v11, connectionInfo.ConnectionString, connectionInfo.Connection, connectionInfo.Transaction),
+				ProviderName.PostgreSQL12                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v12, connectionInfo.ConnectionString, connectionInfo.Connection, connectionInfo.Transaction),
 				ProviderName.PostgreSQL13                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v13, connectionInfo.ConnectionString, connectionInfo.Connection, connectionInfo.Transaction),
 				ProviderName.PostgreSQL15                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v15, connectionInfo.ConnectionString, connectionInfo.Connection, connectionInfo.Transaction),
 				ProviderName.PostgreSQL18                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v18, connectionInfo.ConnectionString, connectionInfo.Connection, connectionInfo.Transaction),
@@ -594,8 +596,8 @@ namespace LinqToDB.EntityFrameworkCore
 		/// <returns>Transformed expression.</returns>
 		public virtual Expression TransformExpression(Expression expression, IDataContext? dc, DbContext? ctx, IModel? model, bool isQueryExpression)
 		{
-			var visitor       = new TransformExpressionVisitor();
-			var newExpression = visitor.Transform(dc, model, expression);
+			using var visitor = TransformExpressionVisitor.Pool.Allocate();
+			var newExpression = visitor.Value.Transform(dc, model, expression);
 
 			if (ReferenceEquals(newExpression, expression))
 				return expression;
@@ -606,7 +608,7 @@ namespace LinqToDB.EntityFrameworkCore
 
 				bool tracking;
 
-				if (visitor.Tracking == null)
+				if (visitor.Value.Tracking == null)
 				{
 					if (ctx == null)
 					{
@@ -625,7 +627,7 @@ namespace LinqToDB.EntityFrameworkCore
 					}
 				}
 				else
-					tracking = visitor.Tracking.Value;
+					tracking = visitor.Value.Tracking.Value;
 
 				dataConnection.Tracking = tracking;
 			}

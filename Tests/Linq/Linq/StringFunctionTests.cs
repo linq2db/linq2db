@@ -307,7 +307,7 @@ namespace Tests.Linq
 			using var table = db.CreateLocalTable(data);
 
 			var result = table.Select(t =>
-				new 
+				new
 				{
 					Str = t.Str,
 					Len = t.Str.Length,
@@ -317,8 +317,8 @@ namespace Tests.Linq
 				Assert.That(result.Str, Is.EqualTo(stringValue));
 				Assert.That(result.Len, Is.EqualTo(stringValue.Length));
 			}
-		}		
-		
+		}
+
 
 		static string CorrectValue(string value)
 		{

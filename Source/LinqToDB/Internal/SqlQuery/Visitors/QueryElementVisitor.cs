@@ -1466,7 +1466,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					    element.Parameters != parameters ||
 					    element.SqlQueryExtensions != ext)
 					{
-						var newTable = new SqlRawSqlTable(element, element.Parameters != parameters ? parameters : parameters.ToArray())
+						var newTable = new SqlRawSqlTable(
+							element.Alias,
+							element.ObjectType,
+							element.Fields.Select(f => new SqlField(f)).ToArray(),
+							element.SQL,
+							element.IsScalar,
+							element.Parameters != parameters ? parameters : parameters.ToArray())
 						{
 							SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList(),
 						};

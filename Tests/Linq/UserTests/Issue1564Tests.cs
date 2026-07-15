@@ -38,7 +38,8 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void CteTest1564([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		// PostgreSQL 9.4+ (FILTER clause)
+		public void CteTest1564([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Issue1564Category>())
