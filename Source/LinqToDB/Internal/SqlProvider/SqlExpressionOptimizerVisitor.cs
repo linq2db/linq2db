@@ -21,15 +21,6 @@ namespace LinqToDB.Internal.SqlProvider
 		bool                        _doNotOptimizeNulls;
 
 		/// <summary>
-		/// Set during the pass when a predicate is folded to a constant (the null-guard reduce, a <c>col = col</c> fold, …).
-		/// A bottom-up traversal can produce such a constant at a leaf <i>after</i> the enclosing AND/OR search condition has
-		/// already run its drop-constant pass, leaving a redundant <c>AND 1 = 1</c> the single pass can't retract. The render
-		/// pipeline reads this after <see cref="SqlExpressionConvertVisitor.Convert"/> and only then runs one collapse sweep —
-		/// so queries that fold nothing stay strictly one-pass. Reset by <see cref="Cleanup"/>.
-		/// </summary>
-		public bool FoldedPredicateToConstant { get; protected set; }
-
-		/// <summary>
 		/// Runs the CompareNulls null-guard reduce during an <b>optimize-only</b> pass. Off by default, and
 		/// <see cref="SqlExpressionConvertVisitor"/> never turns it on: the reduce is a lowering step, so on the render path it
 		/// runs in the convert, <i>after</i> a node is lowered. The one caller that needs it here is the aggregation builder
@@ -60,7 +51,6 @@ namespace LinqToDB.Internal.SqlProvider
 		public virtual IQueryElement Optimize(
 			EvaluationContext           evaluationContext,
 			NullabilityContext          nullabilityContext,
-			IVisitorTransformationInfo? transformationInfo,
 			DataOptions                 dataOptions,
 			MappingSchema               mappingSchema,
 			IQueryElement               element,
@@ -68,7 +58,7 @@ namespace LinqToDB.Internal.SqlProvider
 			bool                        reducePredicates = false)
 		{
 			Cleanup();
-			InitState(evaluationContext, nullabilityContext, transformationInfo, dataOptions, mappingSchema, visitQueries);
+			InitState(evaluationContext, nullabilityContext, null, dataOptions, mappingSchema, visitQueries);
 
 			// Deliberately NOT part of InitState: SqlExpressionConvertVisitor.Convert shares InitState and must leave this off
 			// (it reduces after lowering instead). Only an optimize-only pass may turn it on.
@@ -111,7 +101,6 @@ namespace LinqToDB.Internal.SqlProvider
 			MappingSchema       = default!;
 			_allowOptimize      = default;
 			_allowOptimizeList  = default;
-			FoldedPredicateToConstant = default;
 			// Balanced by the save/restore in VisitSqlSearchCondition, so normal flow never leaves it set — but this visitor
 			// instance is shared and pooled, so an exception unwinding out of that scope would latch `true` for every later
 			// query on it, silently suppressing the IS NULL constant fold. Cleanup is the "reset to initial state" contract.
@@ -134,13 +123,6 @@ namespace LinqToDB.Internal.SqlProvider
 			var newElement = base.Visit(element);
 
 			IsInsidePredicate = saveIsInsidePredicate;
-
-			// A non-constant predicate that folds to a constant here (col = col, a null-guard reduce, IS NULL over a
-			// non-nullable, …) may land in an enclosing AND/OR whose drop-constant pass has already run, leaving a redundant
-			// `AND 1 = 1`. Flag it so the render pipeline runs its single collapse sweep; a pass that folds nothing leaves the
-			// flag clear and stays strictly one-pass. Single choke point: every predicate result flows through here.
-			if (newElement is SqlPredicate.TruePredicate or SqlPredicate.FalsePredicate && element is not (SqlPredicate.TruePredicate or SqlPredicate.FalsePredicate))
-				FoldedPredicateToConstant = true;
 
 			return newElement;
 		}
@@ -462,6 +444,10 @@ namespace LinqToDB.Internal.SqlProvider
 								if (element.Predicates.Count == 0)
 									element.Predicates.Add(SqlPredicate.True);
 
+								// RemoveAt shifts the next predicate into slot i; step back so the loop re-examines it instead
+								// of skipping it (else a second adjacent TRUE survives as a residual AND 1 = 1). Matches the
+								// unnesting branch above.
+								--i;
 								continue;
 							}
 
@@ -485,6 +471,8 @@ namespace LinqToDB.Internal.SqlProvider
 								if (element.Predicates.Count == 0)
 									element.Predicates.Add(SqlPredicate.False);
 
+								// See the TRUE branch above: step back so the shifted predicate is not skipped.
+								--i;
 								continue;
 							}
 
@@ -661,6 +649,8 @@ namespace LinqToDB.Internal.SqlProvider
 							continue;
 						}
 
+						var nestedCountBefore = predicate is SqlSearchCondition nestedBefore ? nestedBefore.Predicates.Count : -1;
+
 						var newPredicate = (ISqlPredicate)Visit(predicate);
 
 						if (!ReferenceEquals(newPredicate, predicate))
@@ -674,6 +664,13 @@ namespace LinqToDB.Internal.SqlProvider
 							{
 								newPredicates ??= [.. element.Predicates.Take(i)];
 							}
+						}
+						else if (modify && predicate is SqlSearchCondition nestedAfter && nestedAfter.Predicates.Count != nestedCountBefore)
+						{
+							// A nested SearchCondition reduced IN PLACE under the not-null context keeps the same reference,
+							// so the ReferenceEquals check above misses it; force the parent re-visit so the now-single-element
+							// wrapper gets unnested (reaching the fixed point the double-convert / remote path reaches on its own).
+							modified = true;
 						}
 
 						if (newPredicates != null)

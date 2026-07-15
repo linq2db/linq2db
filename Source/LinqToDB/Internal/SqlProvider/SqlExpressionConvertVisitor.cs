@@ -46,7 +46,7 @@ namespace LinqToDB.Internal.SqlProvider
 		/// <summary>
 		/// Optimize-and-lower entry point: the whole render-time pipeline in one traversal.
 		/// </summary>
-		public virtual IQueryElement Convert(OptimizationContext optimizationContext, NullabilityContext nullabilityContext, IQueryElement element, bool visitQueries)
+		public virtual IQueryElement Convert(OptimizationContext optimizationContext, NullabilityContext nullabilityContext, IQueryElement element)
 		{
 			Cleanup();
 
@@ -58,7 +58,7 @@ namespace LinqToDB.Internal.SqlProvider
 				optimizationContext.TransformationInfoConvert,
 				optimizationContext.DataOptions,
 				optimizationContext.MappingSchema,
-				visitQueries);
+				visitQueries: true);
 
 			return ProcessElement(element);
 		}
@@ -288,8 +288,8 @@ namespace LinqToDB.Internal.SqlProvider
 		{
 			var nullability = NullabilityContext.GetContext(selectQuery);
 
-			var takeExpr = OptimizationContext.Optimize(select.TakeValue, nullability, false);
-			var skipExpr = OptimizationContext.Optimize(select.SkipValue, nullability, false);
+			var takeExpr = OptimizationContext.Optimize(select.TakeValue, nullability);
+			var skipExpr = OptimizationContext.Optimize(select.SkipValue, nullability);
 
 			if (takeExpr != null)
 			{

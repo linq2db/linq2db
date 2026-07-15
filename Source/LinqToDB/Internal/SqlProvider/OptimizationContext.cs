@@ -204,40 +204,27 @@ namespace LinqToDB.Internal.SqlProvider
 		}
 
 		/// <summary>
-		/// The whole render-time pipeline. <see cref="SqlExpressionConvertVisitor"/> derives from
-		/// <see cref="SqlExpressionOptimizerVisitor"/>, so a single <see cref="SqlExpressionConvertVisitor.Convert"/> traversal
-		/// optimizes, lowers, and runs the CompareNulls null-guard reduce on each node as it passes over it — collapsing what
-		/// used to be four of the old five passes (optimize, convert, reduce, convert). Optimization over the
-		/// <b>un-lowered</b> AST — the rules that only match abstract nodes — already happens during query build in
-		/// <c>SelectQueryOptimizerVisitor</c>, so re-running it here was redundant.
-		/// <para>
-		/// A single optimize sweep follows the convert <b>only when it is needed</b>. The null-guard reduce (or a
-		/// <c>col = col</c> fold) can turn a predicate into a constant <c>TRUE</c> at a leaf <i>after</i> the enclosing AND/OR
-		/// search condition has already run its drop-constant pass — a bottom-up traversal cannot retroactively drop it — so a
-		/// redundant <c>AND 1 = 1</c> can survive the convert. The convert raises <see cref="SqlExpressionOptimizerVisitor.
-		/// FoldedPredicateToConstant"/> when it folds any predicate to a constant; only then does the collapse sweep run. A
-		/// query that folds nothing stays strictly one-pass. The sweep carries no lowering and no reduce, so it is idempotent.
-		/// </para>
+		/// The whole render-time pipeline, in one traversal. <see cref="SqlExpressionConvertVisitor"/> derives from
+		/// <see cref="SqlExpressionOptimizerVisitor"/>, so a single <see cref="SqlExpressionConvertVisitor.Convert"/> pass
+		/// optimizes, lowers, and runs the CompareNulls null-guard reduce on each node as it passes over it — collapsing the
+		/// old five passes (optimize, convert, reduce, simplify, convert) to one. Optimization over the <b>un-lowered</b> AST
+		/// (the rules that only match abstract nodes) already happens during query build in <c>SelectQueryOptimizerVisitor</c>,
+		/// so re-running it here was redundant.
 		/// </summary>
 		public T OptimizeAndConvertAll<T>(T element, NullabilityContext nullabilityContext)
 			where T : class, IQueryElement
 		{
-			var result = (T)ConvertVisitor.Convert(this, nullabilityContext, element, visitQueries : true);
-
-			if (ConvertVisitor.FoldedPredicateToConstant)
-				result = (T)OptimizerVisitor.Optimize(EvaluationContext, nullabilityContext, null, DataOptions, MappingSchema, result, visitQueries : true);
-
-			return result;
+			return (T)ConvertVisitor.Convert(this, nullabilityContext, element);
 		}
 
 		[return: NotNullIfNotNull(nameof(element))]
-		public T? Optimize<T>(T? element, NullabilityContext nullabilityContext, bool reducePredicates)
+		public T? Optimize<T>(T? element, NullabilityContext nullabilityContext)
 			where T : class, IQueryElement
 		{
 			if (element == null)
 				return null;
 
-			var newElement = OptimizerVisitor.Optimize(EvaluationContext, nullabilityContext, null, DataOptions, MappingSchema, element, false, reducePredicates);
+			var newElement = OptimizerVisitor.Optimize(EvaluationContext, nullabilityContext, DataOptions, MappingSchema, element, false);
 
 			return (T)newElement;
 		}
