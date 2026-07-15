@@ -96,7 +96,6 @@ namespace LinqToDB.Data
 	/// executing any queries or commands on this instance.
 	/// If the connection is already open, it will not automatically re-enlist in a new scope.
 	/// Use <see cref="BeginTransaction()"/> for explicit, scope-independent transaction control.
-	/// See <c>skills/linq2db/docs/agent-antipatterns.md</c> for examples.
 	/// </para>
 	///
 	/// </remarks>

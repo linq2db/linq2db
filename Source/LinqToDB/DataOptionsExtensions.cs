@@ -1233,9 +1233,6 @@ namespace LinqToDB
 		/// Prefer <c>[Sql.Expression]</c>, <c>[Sql.Function]</c>, or <c>[ExpressionMethod]</c> for simpler cases;
 		/// use <see cref="IMemberTranslator"/> when you need direct access to translation context and SQL-expression creation.
 		/// </para>
-		/// <para>
-		/// See package-local <c>skills/linq2db/docs/extensions.md</c> and <c>skills/linq2db/docs/configuration.md</c> for guidance on choosing between these extension points.
-		/// </para>
 		/// </summary>
 		/// <param name="options"></param>
 		/// <param name="translator"></param>
@@ -1381,7 +1378,6 @@ namespace LinqToDB
 		/// <param name="onTrace">Callback, may not be called depending on the trace level.</param>
 		/// <remarks>
 		/// This is the main diagnostics entry point for inspecting generated SQL and runtime execution behavior.
-		/// Package-local <c>skills/linq2db/docs/configuration.md</c> describes typical tracing patterns.
 		/// </remarks>
 		/// <returns>The builder instance so calls can be chained.</returns>
 		[Pure]

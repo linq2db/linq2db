@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-13T21:13:36",
+  "generated_at": "2026-07-15T10:21:07",
   "prompt_source": ".agents/knowledge-pack-maintenance.md",
   "source_root": "Source/Skills/linq2db",
   "xml_source": ".build/bin/LinqToDB/Release/net10.0/linq2db.xml",
@@ -64,7 +64,7 @@
     "../../LinqToDB/README.md": "1bb680aafa5964b6a29cb5311e5748a663d9e46500df36c64082576a6357a71d",
     "docs/agent-antipatterns.md": "1b6a33a90a33609229cda8e2c79f20e3565da0acb37a6e2c2b550756e2e57416",
     "docs/ai-tags.md": "489df0f024cea3ebc67edddacaea032e667557059924a20954fad6e626e8df81",
-    "docs/api.md": "ca865621cb9dded1c4e42f2834cf64e15bb05879216dee85cef0301d2ceca32e",
+    "docs/api.md": "f468b6c45ff5226bab98d1168f504d6aa759ef36d18c656cb43d20b8533f15e8",
     "docs/architecture.md": "ea0c884d00330a861930cec8d991d992d90bb03a8fa7c5d288afdbb84c9a93b5",
     "docs/associations.md": "7d7ef0ad338b58231ccc1749d6e39e5f5a3a59eee035f3d56ff167f92dac9fa5",
     "docs/concurrency.md": "4df480326c4ae75668975a14c2928105f9fe84c2e777cd65e357792a86f92e12",
@@ -95,6 +95,6 @@
     "docs/raw-sql.md": "9734ed81bef5435b5d931ce6a76bd6688cf6b604b44996c2daf24149ab54a531",
     "docs/translatable-methods.md": "6d0875c5ae5c031fc1caaf1b802c1ce268ec1078b2b7a7d20543971fc6066287",
     "SKILL.md": "a5ae70447469bab657fd4d2dcc560ba76ece8b3c25b8fde4e5a2a71976f282cf",
-    "linq2db.xml": "4ba60f26403d8e44d890a28340f8756862f0039ec6db571aa583121f7d0a8b31"
+    "linq2db.xml": "b0a57acfd2f36c2e746b6dfc0f1d1f57dda44bd536c7e283ebe238458d9f65a2"
   }
 }
