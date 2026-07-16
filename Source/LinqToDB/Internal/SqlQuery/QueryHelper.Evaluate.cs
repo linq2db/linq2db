@@ -155,6 +155,13 @@ namespace LinqToDB.Internal.SqlQuery
 						}
 					}
 
+					// "x = NULL" (an operand IS the NULL literal) is a null check that Reduce rewrites to IS NULL, so it
+					// compares as CLR equality below. "x = <literal>" where x merely EVALUATES to null is a real
+					// comparison and its result is UNKNOWN - surfaced per UnknownAsValue (null preserves UNKNOWN), the
+					// contract IsTrue.WithNull documents and CanBeUnknown reports against.
+					var comparedToNullLiteral = UnwrapNullablity(exprExpr.Expr1) is SqlValue { Value: null }
+						|| UnwrapNullablity(exprExpr.Expr2) is SqlValue { Value: null };
+
 					switch (exprExpr.Operator)
 					{
 						case SqlPredicate.Operator.Equal:
@@ -162,6 +169,10 @@ namespace LinqToDB.Internal.SqlQuery
 							if (value1 == null && value2 == null)
 							{
 								result = true;
+							}
+							else if ((value1 == null || value2 == null) && !comparedToNullLiteral)
+							{
+								result = exprExpr.UnknownAsValue;
 							}
 							else
 							{
@@ -175,6 +186,10 @@ namespace LinqToDB.Internal.SqlQuery
 							if (value1 == null && value2 == null)
 							{
 								result = false;
+							}
+							else if ((value1 == null || value2 == null) && !comparedToNullLiteral)
+							{
+								result = exprExpr.UnknownAsValue;
 							}
 							else
 							{
