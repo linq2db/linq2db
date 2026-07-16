@@ -754,6 +754,7 @@ namespace LinqToDB.Internal.SqlProvider
 		// 3. A AND B AND A => A AND B
 		// 4. A AND !A => false
 		// 4. A OR !A => true
+		// 5. !A AND !B => !(A OR B), !A OR !B => !(A AND B)
 		IQueryElement OptimizeSimilarFlat(SqlSearchCondition element)
 		{
 			if (element.Predicates.Count <= 1)
