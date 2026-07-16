@@ -1084,31 +1084,36 @@ namespace LinqToDB.Internal.Linq
 			// In case of change the logic of this method, DO NOT FORGET to change the sibling GetEnumerator.
 			public async IAsyncEnumerable<T> GetAsyncEnumerable([EnumeratorCancellation] CancellationToken cancellationToken = default)
 			{
-				var context        = new SqlCommandExecutionContext(_harvesters.Length, _parameters);
-				var dataConnection = (DataConnection)_dataContext;
-				var (scenario, groups, commandByGroup) = BuildPlan();
-
-				DataReaderWrapper? mainReader = null;
-
-				try
+				// Mirror the sync GetEnumerator's telemetry scope so async eager materialization emits an enumeration
+				// activity span too (there is no eager-specific async ActivityID; the sync eager path uses GetIEnumerable).
+				await using (ActivityService.StartAndConfigureAwait(ActivityID.GetIEnumerable))
 				{
-					mainReader = await DataConnection.QueryRunner.RunGroupsAsync(
-						dataConnection, ScenarioCommandRenderer.ProjectExecutionSteps(scenario), groups,
-						(group, groupIndex) => commandByGroup[groupIndex]!,
-						group => scenario.Steps[group.StepIndexes[0]].Kind == SqlStepKind.SelfExecuting,
-						async (stepIndex, groupIndex) => context.SetResult(stepIndex, await _harvesters[stepIndex].HarvestAsync(_dataContext, _expressions, context, null, cancellationToken).ConfigureAwait(false)),
-						async (i, dr) => context.SetResult(i, await _harvesters[i].HarvestAsync(_dataContext, _expressions, context, dr, cancellationToken).ConfigureAwait(false)),
-						terminalStepIndex: _harvesters.Length,
-						cancellationToken).ConfigureAwait(false);
+					var context        = new SqlCommandExecutionContext(_harvesters.Length, _parameters);
+					var dataConnection = (DataConnection)_dataContext;
+					var (scenario, groups, commandByGroup) = BuildPlan();
 
-					if (mainReader != null)
-						await foreach (var item in _query.GetResultFromReader!(_dataContext, _expressions, context, mainReader.DataReader!).WithCancellation(cancellationToken).ConfigureAwait(false))
-							yield return item;
-				}
-				finally
-				{
-					if (mainReader != null)
-						await mainReader.DisposeAsync().ConfigureAwait(false);
+					DataReaderWrapper? mainReader = null;
+
+					try
+					{
+						mainReader = await DataConnection.QueryRunner.RunGroupsAsync(
+							dataConnection, ScenarioCommandRenderer.ProjectExecutionSteps(scenario), groups,
+							(group, groupIndex) => commandByGroup[groupIndex]!,
+							group => scenario.Steps[group.StepIndexes[0]].Kind == SqlStepKind.SelfExecuting,
+							async (stepIndex, groupIndex) => context.SetResult(stepIndex, await _harvesters[stepIndex].HarvestAsync(_dataContext, _expressions, context, null, cancellationToken).ConfigureAwait(false)),
+							async (i, dr) => context.SetResult(i, await _harvesters[i].HarvestAsync(_dataContext, _expressions, context, dr, cancellationToken).ConfigureAwait(false)),
+							terminalStepIndex: _harvesters.Length,
+							cancellationToken).ConfigureAwait(false);
+
+						if (mainReader != null)
+							await foreach (var item in _query.GetResultFromReader!(_dataContext, _expressions, context, mainReader.DataReader!).WithCancellation(cancellationToken).ConfigureAwait(false))
+								yield return item;
+					}
+					finally
+					{
+						if (mainReader != null)
+							await mainReader.DisposeAsync().ConfigureAwait(false);
+					}
 				}
 			}
 

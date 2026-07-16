@@ -1764,8 +1764,17 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				var results = ExpressionBuilder.CreateCteUnionBuckets<TKey>(_branchCount, nestedSetIds);
 
-				if (context != null && _harvesterIndex < context.Results.Length)
+				if (context != null)
+				{
+					// The context is always sized to the harvester count (EagerResultEnumerable / Query.GetEagerEnumerable),
+					// so this slot must exist; fail loudly rather than silently dropping the nested-branch results a detail
+					// extractor resolves below.
+					if (_harvesterIndex >= context.Results.Length)
+						throw new InvalidOperationException(
+							"CteUnion harvester slot is outside the execution context - nested-branch results would be lost.");
+
 					context.SetResult(_harvesterIndex, results);
+				}
 
 				if (_nestedProcessingOrder != null)
 				{
@@ -1799,8 +1808,17 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				var results = ExpressionBuilder.CreateCteUnionBuckets<TKey>(_branchCount, nestedSetIds);
 
-				if (context != null && _harvesterIndex < context.Results.Length)
+				if (context != null)
+				{
+					// The context is always sized to the harvester count (EagerResultEnumerable / Query.GetEagerEnumerable),
+					// so this slot must exist; fail loudly rather than silently dropping the nested-branch results a detail
+					// extractor resolves below.
+					if (_harvesterIndex >= context.Results.Length)
+						throw new InvalidOperationException(
+							"CteUnion harvester slot is outside the execution context - nested-branch results would be lost.");
+
 					context.SetResult(_harvesterIndex, results);
+				}
 
 				if (_nestedProcessingOrder != null)
 				{
