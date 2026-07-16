@@ -87,7 +87,7 @@ Execute the **Change summary** and **Baselines clone setup** sections of `.agent
 
 ### 5. Spawn subagents in `verify` mode (parallel)
 
-Per `review-orchestration.md` → **Spawning the two subagents in parallel**. This skill adds only `verify`-mode specifics on top of the common briefing:
+Per `review-orchestration.md` → **Spawning the subagents in parallel**. This skill adds only `verify`-mode specifics on top of the common briefing:
 
 **Refresh the diff cache before spawning (verify-mode only).** A prior `/review-pr` run leaves a `writeDir` cache populated at *that* run's HEAD. Re-run `diff-reader.ps1` for all changed files at current HEAD first, so a subagent whose own `diff-reader` call is denied (background runs can't surface a permission prompt) falls back to a *fresh* cache rather than the stale prior-run one — a stale cache produces false line-level findings (a dropped-then-readded comment surfaced as a NIT on PR #5639). Pairs with the live-blob cross-check in `pr-context-prep.md` → *Cache freshness*.
 
@@ -116,7 +116,7 @@ Edit-in-place of prior review bodies uses GitHub's `PUT` endpoint — see `.agen
 
 ### 7b. Out-of-scope disposition gate
 
-When the verify-mode `code-reviewer` returned a non-empty `out_of_scope_observations[]`, run the per-observation **promote / create-tracking-issue / leave-as-is** gate exactly as [`/review-pr` step 7b](../review-pr/SKILL.md) — a single batched prompt, the user decides each one before the preview. Promoted observations become fresh findings in the new draft review (numbered from the step-3 floor); tracked ones get a `/create-issue` filing and a `— tracked as #<n>` suffix; leave-as-is ones render in the new review's `## Out-of-scope observations` section. Skip when the array is empty.
+When the verify-mode `code-reviewer` returned a non-empty `out_of_scope_observations[]`, run the per-observation **promote / create-tracking-issue / leave-as-is** gate exactly as [`/review-pr` step 7b](../review-pr/SKILL.md) — present and disposition the observations **one-by-one** (one prompt per observation), resolving each before the next; do **not** merge them into a single batched questionnaire unless the user explicitly asks (per `review-orchestration.md` → **interactive mode**, the *never-merge-without-request* rule). The user decides each one before the preview. Promoted observations become fresh findings in the new draft review (numbered from the step-3 floor); tracked ones get a `/create-issue` filing and a `— tracked as #<n>` suffix; leave-as-is ones render in the new review's `## Out-of-scope observations` section. Skip when the array is empty.
 
 ### 8. Preview, then run the mode-choice gate
 

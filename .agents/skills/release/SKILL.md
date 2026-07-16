@@ -48,7 +48,7 @@ Same applies whenever a new sub-skill is added or an existing one materially cha
 2. Otherwise: this is a new release.
    - Fetch open milestones: `gh api repos/linq2db/linq2db/milestones?state=open --jq '.[] | {title, number, open_issues, closed_issues, due_on}'`.
    - Render a numbered list, default to the **lowest-version** milestone whose title parses as `M.m.p`. Ask the user to confirm or pick.
-   - Ask: "any release-specific tasks beyond the standard set (deps / PublicAPI / milestone-check / test-matrix / release-notes)? Free-form, one per line, or 'none'." User-supplied entries become numbered checklist items `6.<n>+` after the standard 0–5.
+   - Ask: "any release-specific tasks beyond the standard set (deps / PublicAPI / milestone-check / test-matrix / release-notes)? Free-form, one per line, or 'none'." User-supplied entries become numbered checklist items `7.<n>` after the standard 0–6.
    - Show the normalized ad-hoc list back for one confirm-or-edit gate.
    - Tell the user: "ready to create branch `release-prep/<ver>` from `origin/master`, plus PR `Release prep <ver>` (draft, assigned to @me, milestone `<ver>`, body = initial checklist). Confirm to proceed."
    - On confirmation:
@@ -99,7 +99,7 @@ Returns per-task `exists` / `ageMinutes` / `sizeBytes`. Useful when resuming a s
 
 ### 3. Render status table
 
-Call `release-state.ps1 -Action render -StateFile <path>`. Output looks like:
+Call `release-state.ps1 -Action render -Version <ver>`. Output looks like:
 
 ```
 Release 6.3.0 — branch release-prep/6.3.0 — PR #5530 — phase: prep
@@ -115,7 +115,8 @@ Release 6.3.0 — branch release-prep/6.3.0 — PR #5530 — phase: prep
         [ ] 4.3 LINQPad 5 (.lpx)
         ...
   [ ] 5. Release-notes validation
-  [ ] 6.1 [ad-hoc] Audit IDataProvider surface for breaking changes
+  [ ] 6. Final verification
+  [ ] 7.1 [ad-hoc] Audit IDataProvider surface for breaking changes
 
 Next: continue task 2 → /release-publicapi
 ```
@@ -126,7 +127,7 @@ Status tokens: `[ ]` open · `[x]` done · `[~]` in progress · `[-]` user-skipp
 
 For each user pick (or the "next recommended" task):
 
-1. **CI probe.** Before dispatching, call `release-state.ps1 -Action ci-probe -StateFile <path> -PrepPR <n>`. The probe runs `gh pr checks <n> --json name,status,conclusion,detailsUrl` and diffs run IDs against `state.ci.lastReportedRunIds[]`. On a **new** failed/cancelled run, fetch top-of-log via `pwsh -NoProfile -File .agents/scripts/azp-build-failures.ps1 -BuildId <buildId>` and surface a compact summary (job name + first failing test/build error). User must acknowledge ("noted" / "investigate" / "ignore for now") before continuing — `release-state.ps1 -Action ci-ack` records the run IDs as reported.
+1. **CI probe.** Before dispatching, call `release-state.ps1 -Action ci-probe -Version <ver> -PrepPR <n>`. The probe runs `gh pr checks <n> --json name,status,conclusion,detailsUrl` and diffs run IDs against `state.ci.lastReportedRunIds[]`. On a **new** failed/cancelled run, fetch top-of-log via `pwsh -NoProfile -File .agents/scripts/azp-build-failures.ps1 -BuildId <buildId>` and surface a compact summary (job name + first failing test/build error). User must acknowledge ("noted" / "investigate" / "ignore for now") before continuing — `release-state.ps1 -Action ci-ack` records the run IDs as reported.
 
 2. **Invoke sub-skill.** Map the pick to the right skill:
 
@@ -150,7 +151,7 @@ For each user pick (or the "next recommended" task):
 
 3. **Wait for sub-skill to complete its loop.** This skill never preempts another skill's interactive flow.
 
-4. **Refresh state.** When the sub-skill returns, call `release-state.ps1 -Action update -StateFile <path>` with the task ID and the sub-skill's status (`done` / `partial` / `skipped` / `aborted`). The script also calls `release-state.ps1 -Action sync-to-pr -StateFile <path> -PrepPR <n>` to push the checklist refresh into the PR body in-place (preserving any non-checklist prose).
+4. **Refresh state.** When the sub-skill returns, call `release-state.ps1 -Action update -Version <ver> -TaskId <id> -Status <status>` with the sub-skill's status (`done` / `partial` / `in-progress` / `skipped` — these are the only accepted values; a sub-skill that bailed out is recorded as `partial` or `open`, with the reason in `-Annotation`). Then call `release-state.ps1 -Action sync-to-pr -Version <ver> -PrepPR <n>` to push the checklist refresh into the PR body in-place (preserving any non-checklist prose).
 
 5. **Re-render table**, loop.
 
@@ -169,7 +170,9 @@ When all standard tasks (0–6) and all ad-hoc tasks are `[x]` or `[-]`:
 
 After prep-PR merge, the orchestrator dispatches to `/release-publish`, then on tag to `/release-postpublish`. Those skills own their own internal steps and gates — this orchestrator only renders the high-level phase + recent-step summary on re-entry.
 
-When a sub-skill in publish or postpublish completes, it calls `release-state.ps1 -Action update -Phase publish|postpublish -Step <key> -Status done` and the orchestrator re-renders.
+When a sub-skill in publish or postpublish completes, it records its step under `state.publish.steps.<key>` / `state.postpublish.steps.<key>` and the orchestrator re-renders.
+
+**No script action manages the phase-step keys.** `release-state.ps1 -Action update` addresses `state.tasks` only (`-TaskId`); `state.publish` / `state.postpublish` are empty placeholders in the schema that nothing writes. Publish-phase step state is maintained by editing `.build/.agents/release-<ver>.json` directly — the same direct-manipulation path `/release-notes-validate` uses for `state.notes.intentionalOmissions[]`. Don't pass `-Phase` / `-Step` to the script; those parameters don't exist and the call will fail.
 
 ## Push semantics rule
 
