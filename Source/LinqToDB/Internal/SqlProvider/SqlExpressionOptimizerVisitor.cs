@@ -203,6 +203,12 @@ namespace LinqToDB.Internal.SqlProvider
 				return boolValue ? element.TrueValue : element.FalseValue;
 			}
 
+			if (element.Condition is SqlPredicate.TruePredicate)
+				return element.TrueValue;
+
+			if (element.Condition is SqlPredicate.FalsePredicate)
+				return element.FalseValue;
+
 			if (element.TrueValue is SqlConditionExpression trueConditional)
 			{
 				if (trueConditional.Condition.Equals(element.Condition, SqlQuery.SqlExtensions.DefaultComparer))

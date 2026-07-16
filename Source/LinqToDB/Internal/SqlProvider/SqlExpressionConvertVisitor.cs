@@ -1302,6 +1302,12 @@ namespace LinqToDB.Internal.SqlProvider
 			return WrapBooleanExpression(newItem, includeFields: false);
 		}
 
+		/// <summary>
+		/// A cast is re-derived on each visit rather than replayed from the transformation map: its conversion is
+		/// frequently lowered and then reduced further, so a replayed intermediate would resurface in its un-reduced form.
+		/// </summary>
+		protected override bool IsReplaceable(IQueryElement element) => element is not SqlCastExpression;
+
 		protected internal override IQueryElement VisitSqlCastExpression(SqlCastExpression element)
 		{
 			var newElement = base.VisitSqlCastExpression(element);

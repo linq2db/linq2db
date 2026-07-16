@@ -59,6 +59,15 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		protected virtual bool ShouldReplace(IQueryElement element) => false;
 
 		/// <summary>
+		/// Whether a previously registered replacement of <paramref name="element"/> may be replayed from the
+		/// transformation map on a later visit. An element whose replacement is lowered or reduced further after it is
+		/// registered would resurface in its un-reduced intermediate form if replayed; such elements return
+		/// <see langword="false"/> in a derived visitor and are re-derived on each visit instead. Defaults to
+		/// <see langword="true"/>.
+		/// </summary>
+		protected virtual bool IsReplaceable(IQueryElement element) => true;
+
+		/// <summary>
 		/// Called by visitor on node replacement in <see cref="VisitMode.Transform"/> mode.
 		/// Descendant visitor could overload it to react to node cloning.
 		/// </summary>
