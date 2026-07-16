@@ -1055,6 +1055,14 @@ namespace LinqToDB.Internal.Linq
 				var dataConnection = (DataConnection)_dataContext;
 				var (scenario, groups, commandByGroup) = BuildPlan();
 
+				// The combined command's single reader is walked across multiple harvest steps, and each step (plus the main
+				// stream below) materializes through a nested query runner. When CloseAfterUse is set - e.g. the EF Core bridge
+				// borrows an external connection and closes it after each use - that nested runner's dispose would Close() the
+				// context and dispose the shared reader mid-walk (NextResult on a closed reader). Suppress it until the reader
+				// is fully consumed, and restore it before the final dispose so the connection is still closed as requested.
+				var closeAfterUse = _dataContext.CloseAfterUse;
+				_dataContext.CloseAfterUse = false;
+
 				DataReaderWrapper? mainReader = null;
 
 				try
@@ -1075,6 +1083,7 @@ namespace LinqToDB.Internal.Linq
 				}
 				finally
 				{
+					_dataContext.CloseAfterUse = closeAfterUse;
 					mainReader?.Dispose();
 				}
 			}
@@ -1091,6 +1100,12 @@ namespace LinqToDB.Internal.Linq
 					var context        = new SqlCommandExecutionContext(_harvesters.Length, _parameters);
 					var dataConnection = (DataConnection)_dataContext;
 					var (scenario, groups, commandByGroup) = BuildPlan();
+
+					// See the sync GetEnumerator: suppress CloseAfterUse while the shared combined reader is walked (each
+					// harvest / the main stream materializes through a nested runner whose dispose would otherwise Close() the
+					// context mid-walk on an external connection), and restore it before the final dispose.
+					var closeAfterUse = _dataContext.CloseAfterUse;
+					_dataContext.CloseAfterUse = false;
 
 					DataReaderWrapper? mainReader = null;
 
@@ -1111,6 +1126,8 @@ namespace LinqToDB.Internal.Linq
 					}
 					finally
 					{
+						_dataContext.CloseAfterUse = closeAfterUse;
+
 						if (mainReader != null)
 							await mainReader.DisposeAsync().ConfigureAwait(false);
 					}
