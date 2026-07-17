@@ -1745,11 +1745,12 @@ namespace LinqToDB.Internal.SqlProvider
 			if (inPredicate.SubQuery.Where.SearchCondition.IsOr)
 				throw new InvalidOperationException("Not expected root SearchCondition.");
 
-			if (GetVisitMode(subQuery) == VisitMode.Transform || subQuery.Where.SearchCondition.IsOr)
-			{
-				subQuery = subQuery.CloneQuery();
-				subQuery.Where.EnsureConjunction();
-			}
+			// This rewrite CLEARS subQuery.Select.Columns and injects correlation predicates into subQuery.Where below.
+			// Cloning was gated on GetVisitMode(subQuery) == Transform, but Modify is not licence: it is also returned for a
+			// subquery this pass created that still SHARES structure with the cached statement, and the writes below then
+			// reach the cache. Always clone — the rewrite is destructive.
+			subQuery = subQuery.CloneQuery();
+			subQuery.Where.EnsureConjunction();
 
 			subQuery = WrapIfNeeded(subQuery);
 
