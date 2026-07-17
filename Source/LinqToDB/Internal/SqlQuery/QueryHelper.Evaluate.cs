@@ -91,6 +91,21 @@ namespace LinqToDB.Internal.SqlQuery
 			return info.Value;
 		}
 
+		/// <summary>
+		/// Whether <paramref name="exprExpr"/> compares against the NULL literal. That is a null check - Reduce rewrites
+		/// it to IS NULL - so it evaluates as CLR equality. An operand that merely evaluates to null makes it a real
+		/// comparison, whose result is UNKNOWN and is surfaced per UnknownAsValue (null preserves UNKNOWN) - the
+		/// contract IsTrue.WithNull documents and CanBeUnknown reports against.
+		/// <para>
+		/// Only called once an operand is known to be null, so the common path does no unwrapping.
+		/// </para>
+		/// </summary>
+		static bool ComparedToNullLiteral(SqlPredicate.ExprExpr exprExpr)
+		{
+			return UnwrapNullablity(exprExpr.Expr1) is SqlValue { Value: null }
+				|| UnwrapNullablity(exprExpr.Expr2) is SqlValue { Value: null };
+		}
+
 		static bool TryEvaluateExpressionInternal(this IQueryElement expr, bool forServer, EvaluationContext context, out object? result)
 		{
 			result = null;
@@ -155,13 +170,6 @@ namespace LinqToDB.Internal.SqlQuery
 						}
 					}
 
-					// "x = NULL" (an operand IS the NULL literal) is a null check that Reduce rewrites to IS NULL, so it
-					// compares as CLR equality below. "x = <literal>" where x merely EVALUATES to null is a real
-					// comparison and its result is UNKNOWN - surfaced per UnknownAsValue (null preserves UNKNOWN), the
-					// contract IsTrue.WithNull documents and CanBeUnknown reports against.
-					var comparedToNullLiteral = UnwrapNullablity(exprExpr.Expr1) is SqlValue { Value: null }
-						|| UnwrapNullablity(exprExpr.Expr2) is SqlValue { Value: null };
-
 					switch (exprExpr.Operator)
 					{
 						case SqlPredicate.Operator.Equal:
@@ -170,7 +178,7 @@ namespace LinqToDB.Internal.SqlQuery
 							{
 								result = true;
 							}
-							else if ((value1 == null || value2 == null) && !comparedToNullLiteral)
+							else if ((value1 == null || value2 == null) && !ComparedToNullLiteral(exprExpr))
 							{
 								result = exprExpr.UnknownAsValue;
 							}
@@ -187,7 +195,7 @@ namespace LinqToDB.Internal.SqlQuery
 							{
 								result = false;
 							}
-							else if ((value1 == null || value2 == null) && !comparedToNullLiteral)
+							else if ((value1 == null || value2 == null) && !ComparedToNullLiteral(exprExpr))
 							{
 								result = exprExpr.UnknownAsValue;
 							}
