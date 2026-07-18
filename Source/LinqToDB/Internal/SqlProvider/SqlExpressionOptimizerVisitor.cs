@@ -158,6 +158,20 @@ namespace LinqToDB.Internal.SqlProvider
 			return false;
 		}
 
+		/// <summary>
+		/// The boolean value of <paramref name="expr"/> for rules that RESTRUCTURE the predicate, which must not depend on a
+		/// query parameter's value: the rendered structure is cached and replayed for later runs with different values.
+		/// <para>
+		/// It also has to answer the same way in every pass. Plain <see cref="QueryHelper.GetBoolValue"/> does not: it reads
+		/// the value whenever one happens to be bound, so the memoized structural prepare (no parameter values) folds nothing
+		/// while the remote path (values bound) folds — and the two render different SQL for the same query.
+		/// </para>
+		/// </summary>
+		protected bool? GetBoolValueNoQueryParameters(ISqlExpression expr)
+		{
+			return expr.HasQueryParameter() ? null : QueryHelper.GetBoolValue(expr, EvaluationContext);
+		}
+
 		#endregion
 
 		protected internal override IQueryElement VisitSqlJoinedTable(SqlJoinedTable element)
@@ -1655,11 +1669,20 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 
 			if (expr.Operator is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual)
 			{
+				// Both `is not SqlParameter` guards below: GetBoolValue returns null for a parameter because its value is
+				// WITHHELD, not because the operand is non-boolean. The memoized structural prepare runs with no parameter
+				// values precisely so this run's value cannot be baked into the cached structure, so the fold must not fire —
+				// but restructuring the parameter into a predicate instead sends the pair down the predicate-vs-predicate
+				// path, which lowers `(A = B) = @p` to an INVERTED comparison where there is no boolean type (Firebird 2.5:
+				// silently wrong rows). Left alone, ConvertExprExprPredicate emits the value-independent
+				// `CASE WHEN A = B THEN 1 ELSE 0 END = @p`, correct for either value and safe to memoize.
+				// HasQueryParameter() is NOT the test here: it asks "must this value never be baked" and is false for an
+				// inlinable parameter, while the question at this point is "could the value be read just now".
 				if (expr.UnknownAsValue == null)
 				{
 					if (expr.Expr2 is ISqlPredicate expr2Predicate)
 					{
-						var boolValue1 = QueryHelper.GetBoolValue(expr.Expr1, EvaluationContext);
+						var boolValue1 = GetBoolValueNoQueryParameters(expr.Expr1);
 						if (boolValue1 != null)
 						{
 							var isNot       = boolValue1.Value != (expr.Operator == SqlPredicate.Operator.Equal);
@@ -1667,7 +1690,7 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 
 							return transformed;
 						}
-						else if (expr.Expr1 is not ISqlPredicate)
+						else if (expr.Expr1 is not ISqlPredicate && QueryHelper.UnwrapNullablity(expr.Expr1) is not SqlParameter)
 						{
 							return new SqlPredicate.ExprExpr(new SqlSearchCondition(false, canBeUnknown: null, new SqlPredicate.Expr(expr.Expr1)), expr.Operator, expr.Expr2, expr.UnknownAsValue);
 						}
@@ -1675,14 +1698,14 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 
 					if (expr.Expr1 is ISqlPredicate expr1Predicate)
 					{
-						var boolValue2 = QueryHelper.GetBoolValue(expr.Expr2, EvaluationContext);
+						var boolValue2 = GetBoolValueNoQueryParameters(expr.Expr2);
 						if (boolValue2 != null)
 						{
 							var isNot       = boolValue2.Value != (expr.Operator == SqlPredicate.Operator.Equal);
 							var transformed = expr1Predicate.MakeNot(isNot);
 							return transformed;
 						}
-						else if (expr.Expr2 is not ISqlPredicate)
+						else if (expr.Expr2 is not ISqlPredicate && QueryHelper.UnwrapNullablity(expr.Expr2) is not SqlParameter)
 						{
 							return new SqlPredicate.ExprExpr(expr.Expr1, expr.Operator, new SqlSearchCondition(false, canBeUnknown: null, new SqlPredicate.Expr(expr.Expr2)), expr.UnknownAsValue);
 						}
