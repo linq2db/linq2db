@@ -71,7 +71,7 @@ pwsh -NoProfile -File .agents/scripts/analyzer-profile-report.ps1 -LogPath .buil
 
 Output: three pretty tables on stdout, plus a one-line diagnostics header (per-analyzer rows / project reports / distinct analyzers).
 
-For programmatic consumption: `-AsJson` returns `{ slowestPairs, busiestAnalyzers, projectTotals, diagnostics }` to stdout (see `-Help`).
+For programmatic consumption: `-AsJson` returns `{ slowestPairs, busiestAnalyzers, projectTotals, diagnostics }` to stdout (see the script's comment header).
 
 ### 4. Present the three rankings
 

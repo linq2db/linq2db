@@ -4,7 +4,7 @@ Common orchestration reused by `/review-pr` and `/verify-review`. Everything in 
 
 ### Permission-prompt discipline
 
-Every Bash call is evaluated against the allowlist in `.agents/settings.local.json`. Pipes, redirects, inline `pwsh -Command`, `cat` / `head` / `tail`, or `ls` on directories whose layout is already documented each fire a prompt. Before writing a helper script to extract data from a JSON file, ask whether `Grep` on the dumped JSON or `Read` on the file would return the same information — the answer is almost always yes. See [`agent-rules.md`](agent-rules.md) → **Permission-friendly Bash patterns** for the full table.
+Every Bash call is evaluated against the allowlist in `.agents/settings.local.json`. Pipes, redirects, inline `pwsh -Command`, `cat` / `head` / `tail`, or `ls` on directories whose layout is already documented each fire a prompt. Before writing a helper script to extract data from a JSON file, ask whether `Grep` on the dumped JSON or `Read` on the file would return the same information — the answer is almost always yes. See [`windows-gotchas.md`](windows-gotchas.md) → **Permission-friendly Bash patterns** for the full table.
 
 ### Resolving the target PR
 

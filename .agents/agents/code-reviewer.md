@@ -91,7 +91,7 @@ Apply each category to every hunk. Not every category fires for every hunk.
 When **`focus`** is `"all"` (the default and the only valid value in `verify` mode), apply every category below. When `focus` names a subset, apply only the listed rules and emit `findings: []` for categories outside the subset:
 
 - **`code-correctness`** — rules 1 (correctness, predicate broadening, equality/hash/wire-ordinal/AST-node propagation), 2 (thread safety), 3 (performance), 7 (style fit), 8 (scope creep), 10 (playground leaks), 11 (code duplication), 14 (inbound auto-execution / agent-config files).
-- **`sql-and-provider`** — rule 4 only (SQL correctness, per-provider fan-out, member translator overrides, mapping schema literals). The per-provider fan-out call budget rises to **0–10 spot reads** of provider files.
+- **`sql-and-provider`** — rules 4 (SQL correctness, per-provider fan-out, member translator overrides, mapping schema literals) and 13 (SQL-construct grammar coverage, when the PR adds/reworks a public API mapping to a SQL-standard construct). The per-provider fan-out call budget rises to **0–10 spot reads** of provider files.
 - **`api-and-test`** — rules 5 (public API preservation + XML-doc presence), 6 (test coverage + new-public-surface test + `DisableBaseline` regression signal + `test-review-checklist.md`), 9 (third-party + first-party claim verification), 12 (feature entry-point consistency). The WebFetch budget rises to **0–5 calls** for rule 9 verification.
 
 `out_of_scope_observations[]` and the flag-and-defer logic from **Architectural decisions** above fire from any focus that hits a trigger. Only `focus: "all"` and `focus: "api-and-test"` emit `api_changes[]` — the other foci emit `api_changes: []`.
