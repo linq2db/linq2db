@@ -161,17 +161,33 @@ namespace LinqToDB.Internal.DataProvider
 
 		protected internal override IQueryElement VisitSqlParameter(SqlParameter sqlParameter)
 		{
-			if (_needCast)
+			var needsCast =
+				_needCast ||
+				sqlParameter.Type.SystemType == typeof(bool) && _wrapFlags.HasFlag(WrapFlags.CastBoolean);
+
+			if (needsCast && !sqlParameter.NeedsCast)
 			{
-				if (!sqlParameter.NeedsCast)
+				// Callers that run this visitor over a statement they own (the provider
+				// FinalizeStatement passes) construct it with VisitMode.Modify and keep the
+				// in-place flip. A caller running inside a Transform-mode convert does not own
+				// the parameter - it still belongs to the cached statement - so there the flag
+				// has to go onto a copy, or it leaks a cast into every later render.
+				if (GetVisitMode(sqlParameter) == VisitMode.Modify)
 				{
 					sqlParameter.NeedsCast = true;
 				}
-			}
+				else
+				{
+					var newParameter = new SqlParameter(sqlParameter.Type, sqlParameter.Name, sqlParameter.Value)
+					{
+						IsQueryParameter = sqlParameter.IsQueryParameter,
+						AccessorId       = sqlParameter.AccessorId,
+						ValueConverter   = sqlParameter.ValueConverter,
+						NeedsCast        = true,
+					};
 
-			if (sqlParameter.Type.SystemType == typeof(bool) && _wrapFlags.HasFlag(WrapFlags.CastBoolean))
-			{
-				sqlParameter.NeedsCast = true;
+					return NotifyReplaced(newParameter, sqlParameter);
+				}
 			}
 
 			return base.VisitSqlParameter(sqlParameter);

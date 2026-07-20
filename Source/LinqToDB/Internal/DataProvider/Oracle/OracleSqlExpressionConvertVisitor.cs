@@ -7,6 +7,7 @@ using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
@@ -172,8 +173,20 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 		{
 			if (MappingSchema.HasInconsistentCharset(element.Expressions))
 			{
+				// Build a new node rather than writing into element.Expressions: on a Transform
+				// pass the element handed to us is the query's cached statement, and a write
+				// there corrupts every later render (and the remote path).
+				var expressions = new ISqlExpression[element.Expressions.Length];
+				var replaced    = false;
+
 				for (var i = 0; i < element.Expressions.Length; i++)
-					element.Expressions[i] = MappingSchema.FixCharset(element.Expressions[i]);
+				{
+					expressions[i] = MappingSchema.FixCharset(element.Expressions[i]);
+					replaced      |= !ReferenceEquals(expressions[i], element.Expressions[i]);
+				}
+
+				if (replaced)
+					return base.ConvertCoalesce(new SqlCoalesceExpression(expressions));
 			}
 
 			return base.ConvertCoalesce(element);
@@ -215,19 +228,57 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		protected internal override IQueryElement VisitSqlValuesTable(SqlValuesTable element)
 		{
+			// A VALUES column mixing VARCHAR2 and NVARCHAR2 rows raises ORA-12704, so the
+			// charset has to be unified per column. Collect the affected columns first, then
+			// apply the fix according to the visit mode - writing straight into element.Rows
+			// corrupts the cached statement on a Transform pass (it is re-rendered on every
+			// execution and by the remote path, so the render that breaks is a later one).
+			List<int>? inconsistent = null;
+
 			if (element.Rows?.Count > 1)
 			{
 				for (var i = 0; i < element.Rows[0].Count; i++)
 				{
 					if (MappingSchema.HasInconsistentCharset(element.Rows.Select(r => r[i])))
-					{
-						foreach (var row in element.Rows)
-							row[i] = MappingSchema.FixCharset(row[i]);
-					}
+						(inconsistent ??= new List<int>()).Add(i);
 				}
 			}
 
-			return base.VisitSqlValuesTable(element);
+			if (inconsistent == null)
+				return base.VisitSqlValuesTable(element);
+
+			switch (GetVisitMode(element))
+			{
+				// Nothing to rewrite when only inspecting.
+				case VisitMode.ReadOnly:
+					return base.VisitSqlValuesTable(element);
+
+				// We own this element, so an in-place fix is licensed.
+				case VisitMode.Modify:
+				{
+					foreach (var row in element.Rows!)
+						foreach (var i in inconsistent)
+							row[i] = MappingSchema.FixCharset(row[i]);
+
+					return base.VisitSqlValuesTable(element);
+				}
+			}
+
+			var newRows = new List<List<ISqlExpression>>(element.Rows!.Count);
+
+			foreach (var row in element.Rows)
+			{
+				var newRow = new List<ISqlExpression>(row);
+
+				foreach (var i in inconsistent)
+					newRow[i] = MappingSchema.FixCharset(newRow[i]);
+
+				newRows.Add(newRow);
+			}
+
+			var newTable = new SqlValuesTable(element.Source, element.ValueBuilders, CopyFields(element.Fields), newRows);
+
+			return NotifyReplaced(base.VisitSqlValuesTable(newTable), element);
 		}
 
 		protected override ISqlExpression ConvertSqlCaseExpression(SqlCaseExpression element)

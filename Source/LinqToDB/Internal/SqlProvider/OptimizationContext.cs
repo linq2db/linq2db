@@ -132,7 +132,26 @@ namespace LinqToDB.Internal.SqlProvider
 			where T : class, IQueryElement
 		{
 			var newElement = OptimizerVisitor.Optimize(EvaluationContext, nullabilityContext, null, DataOptions, MappingSchema, element, visitQueries : true, reducePredicates: false);
-			var result     = (T)ConvertVisitor.Convert(this, nullabilityContext, newElement, visitQueries : true);
+
+#if BUGCHECK
+			// A Transform pass must leave what it is handed untouched. That element is the query's CACHED statement: it is
+			// re-rendered on every execution and by the remote path, so one write reaching it corrupts every later render —
+			// and the render that breaks is the NEXT one, which makes the failure look unrelated to the rule that caused it.
+			// A Modify pass owns its statement, so it is exempt.
+			var before = ConvertVisitor.VisitMode == VisitMode.Transform ? newElement.ToDebugString() : null;
+#endif
+
+			var result = (T)ConvertVisitor.Convert(this, nullabilityContext, newElement, visitQueries : true);
+
+#if BUGCHECK
+			if (before != null)
+			{
+				var after = newElement.ToDebugString();
+
+				if (after != before)
+					throw new InvalidOperationException($"Transform-mode convert mutated the element it was given.{Environment.NewLine}BEFORE:{Environment.NewLine}{before}{Environment.NewLine}AFTER:{Environment.NewLine}{after}");
+			}
+#endif
 
 			return result;
 		}

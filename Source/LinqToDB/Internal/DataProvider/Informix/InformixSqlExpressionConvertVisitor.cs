@@ -256,7 +256,12 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 		protected override IQueryElement ConvertIsDistinctPredicateAsIntersect(SqlPredicate.IsDistinct predicate)
 		{
-			return InformixSqlOptimizer.WrapParameters(base.ConvertIsDistinctPredicateAsIntersect(predicate));
+			// The INTERSECT emulation is a new tree, but its leaf parameters are still the ones
+			// owned by the (cached) statement we were handed - so the wrap has to run in this
+			// visitor's mode, not the Modify default used by the FinalizeStatement callers.
+			return InformixSqlOptimizer.WrapParameters(
+				base.ConvertIsDistinctPredicateAsIntersect(predicate),
+				GetVisitMode(predicate));
 		}
 
 		protected internal override IQueryElement VisitSqlSetExpression(SqlSetExpression element)
@@ -288,10 +293,35 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			var newElement = base.VisitExprPredicate(predicate);
 
 			if (newElement is SqlPredicate.Expr { Expr1: SqlParameter { IsQueryParameter: true, NeedsCast: false, Type.DataType: DataType.Boolean } p })
-				p.NeedsCast = true;
+			{
+				switch (GetVisitMode(predicate))
+				{
+					// The Modify pass owns the whole statement, so flipping the flag is licensed.
+					case VisitMode.Modify:
+						p.NeedsCast = true;
+						break;
+
+					// On a Transform pass the parameter is still the cached statement's own
+					// instance - setting NeedsCast there leaks a cast into every later render.
+					// Put the flag on a copy (carrying accessor/converter identity) and rebuild
+					// the predicate around it.
+					case VisitMode.Transform:
+					{
+						var newParameter = new SqlParameter(p.Type, p.Name, p.Value)
+						{
+							IsQueryParameter = p.IsQueryParameter,
+							AccessorId       = p.AccessorId,
+							ValueConverter   = p.ValueConverter,
+							NeedsCast        = true,
+						};
+
+						return new SqlPredicate.Expr(newParameter);
+					}
+				}
+			}
 
 			return newElement;
-	}
+		}
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
