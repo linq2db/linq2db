@@ -99,6 +99,8 @@ Before reporting a task as infeasible ("can't bisect", "can't build", "runtime t
 
 When the capability exists but the runtime cost is real, surface the cost and let the user decide.
 
+**Diagnose "stuck" as effort vs. capability before escalating.** When your own output falls short, separate the two orthogonal knobs. Skipped verification, abandoned steps, shallow searches, not reading the whole file/log → an *effort* shortfall: do the missing work (and if the user is tuning the harness, higher effort is the lever). Genuine inability to reason about the domain or a subtle bug → a *capability* shortfall: a larger model is the lever. Reach for more effort first — it's the cheaper fix — and a bigger model only for a real capability gap. Higher effort also costs materially more tokens (~7× low→high on the same task), so it's a real trade-off, not a free default.
+
 ### Inferring rules from user input
 
 When the user gives a rule that names a specific package / file / case, treat it as scoped to that case unless they explicitly generalize ("for all X…", "every Y in this family…"). Don't extrapolate to similar-looking cases without asking — "you gave rule X for P; case Q looks similar — same rule, or different?" An extra question is cheap; silent over-generalization costs a redo of every affected case plus a doc revert.
@@ -118,6 +120,8 @@ See [`AGENTS.md`](../../AGENTS.md) → *Consult the knowledge base first*. Defau
 ### Before coding a fix or feature
 
 See [`AGENTS.md`](../../AGENTS.md) → *Working discipline* for the orientation passes (consult the KB for the area + enumerate existing tests before writing code or invoking `test-writer`), *keep digging to the root* (once the user picks "fix" over "gate", don't resurface "just gate it?" or offer to hand off to "the author" while they're driving — build a baseline worktree, instrument, attempt-then-test), *un-gate verification* (verify **every** gated provider — incl. locally-runnable netfx/file-DB ones like SqlCe/Access — don't assume a hard-to-reach one stays broken), and *least-invasive resolution* (exhaust built-in API / `Sql.Extension` / mapping-schema registration before touching cross-cutting core; never interpolate a user value into a SQL string — parameterize).
+
+**Do a blind-spot pass before coding in an unfamiliar subsystem.** Before writing a fix/feature in code you don't know well, explicitly surface what you might be missing — ask what unknown-unknowns the change could hit (edge cases, provider quirks, cross-cutting invariants) or enumerate the assumptions the plan rests on — rather than coding straight from the first read. Cheap insurance against being confidently wrong on unfamiliar ground; complements the KB-consult + enumerate-existing-tests orientation passes above.
 
 **Offer the root-cause alternative even when the user prescribes a mechanical fix.** When the user hands you a specific prescribed approach — especially a mechanical / CI-side / workaround-shaped one — still surface the simpler root-cause alternative (with its trade-offs) as an explicit option before implementing, rather than just executing the prescription. Present their approach first (respecting intent), then the root-cause option, and let them pick. (On #5715 the user prescribed a CI-side baselines-staging fix but, offered a test-harness root-cause gate as the alternative, chose it — *"let's try 2 — I like it"*.)
 

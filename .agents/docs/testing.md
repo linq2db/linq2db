@@ -43,6 +43,17 @@ The `--provider <Name>` flag (repeatable, comma- or space-separated) **replaces*
 
 **Capture caveat — `Console`/`TestContext.Progress` output is only captured from a test's *body*.** Traces emitted from `[OneTimeSetUp]`/`[OneTimeTearDown]`, a custom `IWorkItemDispatcher`, the LinqService server, or any other non-test thread are **not** reliably surfaced by the console logger — they can come back empty and mislead you into a wrong "this code never ran" conclusion. For those, write the diagnostic to a **file** (e.g. under `AppContext.BaseDirectory`) and `Read` it back. (For live *run progress* — current test, completed/total, pass/fail — rather than engine tracing, use the `LINQ2DB_TEST_PROGRESS` heartbeat instead; see *Monitoring a long run* below.)
 
+## Report a test verdict only from an observed artifact
+
+A test verdict must come from something you actually observed — parsed pass/fail counts, the real exception, a captured log line — never from inference that the code "should" pass. "Everything works" is the cheapest continuation when nothing visibly contradicts it, so an unverified success verdict is the default failure mode; guard against it by pinning every verdict to evidence. Use an honest four-way vocabulary and never collapse the last two into an implied pass:
+
+- **Pass** — a run reported non-zero matching tests and all passed (cite the counts). An `Assert.Throws<T>` / `[ThrowsForProvider]` test whose expected exception fired is a **pass**, not a failure.
+- **Fail** — at least one test failed; quote the verbatim NUnit message + top stack frame, attributed to the correct fully-qualified test.
+- **Not tested** — you did not run it (or the filter matched zero tests). Say so plainly; don't imply it passed.
+- **Blocked** — a precondition prevented the run (provider not configured, container down, build error). Report the blocker and what would unblock it.
+
+This is the reporting counterpart to `agent-rules.md` → *Verify test status by execution* and *Before coding a fix or feature* (a red→green demonstration is the bar); `test-runner`'s structured `status` enum (`passed` / `failed` / `none_matched` / `error` / `blocked`) is exactly this vocabulary — relay it verbatim, don't upgrade a `none_matched`/`blocked` into a green claim.
+
 ## Running the analyzer tests (`Tests/Tests.Analyzers`)
 
 The `linq2db.Analyzers` package tests are a **standalone** project — DB-free, provider-independent, single-TFM `net8.0` (to match the Roslyn testing SDK's Net80 reference pack; a higher pack trips CS1705), MTP host with the NUnit runner. They are **not** covered by the `/test` skill, which selects the Playground / `Tests/Linq` provider projects and injects the `CreateData.CreateDatabase` filter. Run them directly:
