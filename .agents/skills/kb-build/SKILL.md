@@ -177,7 +177,8 @@ For step 3 (per-area) and step 11 (per-area roll-up), checkpoint *after each are
 
 For step 5 (history-by-year):
 
-1. Determine year range: `git log --reverse --format=%aI -n 1` for first commit, current year for last.
+1. Determine year range: `git log --max-parents=0 --format=%aI` for the first commit — take the **earliest** line, as this repo has more than one root commit (2011-06-18 and 2012-02-15) — and the current year for last.
+   Do **not** use `git log --reverse --format=%aI -n 1`: git applies `-n` *before* `--reverse`, so it returns the **newest** commit, silently collapsing the year range to the current year.
 2. For each year, fetch commits via `kb-fetch-commits.ps1` with `year: <YYYY>`. Pass the result to `kb-historian` with `mode: "history-by-year"`, `yearRange: [year, year]`.
 3. Apply fences. Checkpoint after each year.
 
@@ -260,7 +261,7 @@ After each step:
 ## Do not
 
 - Run more than one step per turn unless the user opts in. Step boundaries are deliberate pause points.
-- Bypass `kb-state.ps1 apply-fences` for **delta** work — agents emit fenced output, the skill does not write artifacts directly. (Bulk-load bypass per the section above is a documented exception with per-step audit-log entries.)
+- Bypass `kb-state.ps1 apply-fences` for **delta** work — agents emit fenced output, the skill does not write artifacts directly. (Bulk-load bypass per [`kb-build-steps.md`](../../docs/kb-build-steps.md) → *Bulk-load vs delta-refresh* is a documented exception with per-step audit-log entries.)
 - Modify any file outside `.agents/knowledge-base/`, `.agents/docs/kb-areas.md` (step 1 only), or `.build/.agents/`.
 - Re-fetch GitHub content the cursor says is fresh. Trust cursors.
 - Force-promote a step to `done` when its gate failed; the user resolves the failure first.

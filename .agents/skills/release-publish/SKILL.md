@@ -7,7 +7,7 @@ description: Post-prep-merge release publishing flow. Opens the release PR (mast
 
 ## What this skill is (and isn't)
 
-**Is:** the publish phase of release. Six gated steps from prep-PR-merged → release-PR-merged. Every step is its own user-confirmed action — destructive ops on shared repos (force-reset baselines), PR merges, tagging, and nuget publish triggers all require explicit go-aheads.
+**Is:** the publish phase of release. Seven gated steps from prep-PR-merged → release-PR-merged. Every step is its own user-confirmed action — destructive ops on shared repos (force-reset baselines), PR merges, tagging, and nuget publish triggers all require explicit go-aheads.
 
 **Isn't:**
 
@@ -28,7 +28,7 @@ description: Post-prep-merge release publishing flow. Opens the release PR (mast
 
 ## Phase state
 
-The publish phase has 7 ordered steps with no implicit transitions. Each step records into `state.publish.steps.<key>` (managed by `release-state.ps1 -Action update`):
+The publish phase has 7 ordered steps with no implicit transitions. Each step records into `state.publish.steps.<key>` by **direct edit of `.build/.agents/release-<ver>.json`** — `release-state.ps1 -Action update` cannot write these keys (it addresses `state.tasks` via `-TaskId` only, and its `-Status` ValidateSet has no `green`/`paused`). See `/release` step 6:
 
 | Step | Key | Status flow |
 |------|-----|-------------|
@@ -137,12 +137,8 @@ Action:
 CI on the release PR produces prerelease nugets to pipeline artifacts. This step blocks until the user confirms team tests passed.
 
 Action:
-1. Pull the artifact link from the CI build:
-   ```
-   pwsh -NoProfile -File .agents/scripts/azp-build-failures.ps1 -BuildId <buildId>
-   ```
-   (Even when there are no failures, the script's output includes the build's pipeline URL — surface that to user.)
-   Or `gh pr checks <release-pr> --json link` to get the build run, then construct the artifact URL.
+1. Get the build run and its artifact URL: `gh pr checks <release-pr> --json name,link` — the `link` is the pipeline URL to surface to the user.
+   `azp-build-failures.ps1 -BuildId <buildId>` is for *diagnosing failures*, not for links: it emits `{buildId, logsDir, failedTaskCount, tasks[]}` and carries no pipeline/build web URL (only per-task API `logUrl`s), so it has nothing to surface on a green build.
 2. Print:
    > _"Prerelease nugets ready at `<CI artifact URL>`. Notify the team for their custom testing (whatever validation they own outside CI test-all). Reply `tests green, proceed` when ready, or `regression found, paused: <description>` to pause the release."_
 3. Block. Two valid replies:

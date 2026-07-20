@@ -24,7 +24,7 @@ All consequent edits (`.editorconfig` rule disables, `CompatibilitySuppressions.
 
 ## When to run
 
-- Invoked by `/release` step 6 once tasks 0-5 + ad-hoc 6.x are all `[x]` or `[-]`.
+- Invoked by `/release` as task 6 once tasks 0-5 + any ad-hoc `7.x` that doesn't itself need a clean build are all `[x]` or `[-]`.
 - Manually only if the user explicitly asks "verify the release prep" or similar — and only when the prep branch is in a state to merge (otherwise it's premature).
 
 ## Required reading

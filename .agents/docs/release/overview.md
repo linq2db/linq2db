@@ -9,22 +9,23 @@ prep                publish              postpublish
 ─────               ───────              ───────────
 0 Branch +          1 Open release PR    1 Verify nuget publish
   version bump        (master → release)
-1 Deps              2 Reset baselines    2 Docs PR (linq2db.docs)
-                      repo HEAD
-2 PublicAPI         3 Merge baselines    3 GitHub release + tag
-                      PR (CI-generated)    (.lpx artifact)
-3 Milestone         4 Copy + tag         4 Next-version bump PR
-  check               release baselines    + new milestone
+1 Deps              2 Triage stale       2 Docs PR (linq2db.docs)
+                      baselines PRs
+2 PublicAPI         3 Reset baselines    3 GitHub release + tag
+                      master               (.lpx artifact)
+3 Milestone         4 Prerelease nuget   4 Next-version bump PR
+  check               team-test gate       + new milestone
                                            + linq2db.t4models
                                              re-pin
-4 Test matrix       5 Prerelease nuget
-                      team-test gate
-5 Release notes     6 Merge release PR
-6 Final verify
-  (build + analyzer
-   catch-up +
+4 Test matrix       5 Merge release PR
+5 Release notes     6 Merge baselines
+                      PR (CI-generated)
+6 Final verify      7 Copy + tag
+  (build + analyzer    baselines on
+   catch-up +          releases branch
    profile-analyzers
    + api-baselines)
++ ad-hoc 7.x
 ```
 
 ## Skills

@@ -107,7 +107,7 @@ After the file exists, `/test-providers` is the supported way to enable / disabl
 
 ### `Providers` is keyed by TFM
 
-`UserDataProviders.json` has a top-level section per target framework (`NETFX`, `NETBASE`, `NET80`, `NET90`, `NET100`), each with its own `Providers` array. To enable a provider for a test run, uncomment it in the section matching your `-f` flag — `NETFX` only affects `net462` runs, `NET100` only affects `net10.0` runs, etc. Editing the wrong section silently does nothing.
+`UserDataProviders.json` has a top-level section per target framework (`NETFX`, `NET80`, `NET90`, `NET100`), each with its own `Providers` array and each `BasedOn` the shared `MyConnectionStrings` section. To enable a provider for a test run, uncomment it in the section matching your `-f` flag — `NETFX` only affects `net462` runs, `NET100` only affects `net10.0` runs, etc. Editing the wrong section silently does nothing.
 
 ### How CI resolves test config (`Build/Azure/*.json`) vs local
 
@@ -197,7 +197,7 @@ dotnet test --project Tests/Linq/Tests.csproj -f net10.0 --filter "FullyQualifie
 
 If your test modifies data, revert changes to avoid side effects in downstream tests.
 
-**A filtered run that skips `CreateDatabase` can show failures that masquerade as pre-existing / unrelated.** A prior data-mutating test can leave `TestData*.sqlite` with corrupted rows; a later filtered run then reads bad data and fails on tests that have nothing to do with your change. **Stash-and-rerun does not disprove this** — both runs share the same corrupted file, so they fail identically and the comparison looks like "pre-existing". Before concluding "these failures pre-date my change / are unrelated", re-run with `FullyQualifiedName~CreateData.CreateDatabase|` prepended to rebuild the schema. This applies especially when working in a `git worktree`: `/test` targets the main checkout, not the worktree branch, so you run `dotnet test` directly in the worktree and must prepend `CreateDatabase` yourself.
+**A filtered run that skips `CreateDatabase` can show failures that masquerade as pre-existing / unrelated.** A prior data-mutating test can leave `TestData*.sqlite` with corrupted rows; a later filtered run then reads bad data and fails on tests that have nothing to do with your change. **Stash-and-rerun does not disprove this** — both runs share the same corrupted file, so they fail identically and the comparison looks like "pre-existing". Before concluding "these failures pre-date my change / are unrelated", re-run with `FullyQualifiedName~CreateData.CreateDatabase|` prepended to rebuild the schema. This applies especially when working in a `git worktree` — where each worktree has its own `TestData*.sqlite`. `/test` runs against a worktree when you pass `run <filter> worktree <abs-worktree-path>` (it forwards `repoRoot` to `test-runner`), and it injects the `CreateDatabase` prefix for you; don't hand-run `dotnet test` there (see [`worktree.md`](worktree.md) → *Running tests from a worktree*).
 
 ## A test that fails only on NETFX (net462) jobs
 
@@ -314,7 +314,7 @@ When the template emits a SQL predicate (`({0} > 0)`, `{0} IS NULL`, `{0} = {1}`
 static bool IsPositive(int x) => throw new InvalidOperationException();
 ```
 
-Other examples in code: `Tests/Linq/Linq/BooleanTests.cs:725`, `Tests/Linq/Linq/OperatorsTests.cs:128-129`, `Tests/Linq/DataProvider/PostgreSQLTests.cs:2799`.
+Other examples in code: `Tests/Linq/Linq/BooleanTests.cs:726`, `Tests/Linq/Linq/OperatorsTests.cs:128-129`, `Tests/Linq/DataProvider/PostgreSQLTests.cs:2799`.
 
 ### Column nullability is not inferred from C# NRT
 
@@ -376,17 +376,15 @@ Recovery and triage:
 2. Re-read the captured output. The recursion's terminal exception is usually `System.InsufficientExecutionStackException: Too many stack hops (> N). Recursion cannot safely continue.`, thrown from `LinqToDB.Internal.Common.StackGuard.RunOnEmptyStack` — that's linq2db's internal stack-overflow guard re-throwing after the runtime ran out of fresh-thread hops. The top of the truncated stack names the offending visitor method.
 3. The fix is virtually always idempotence: the visitor's transformation must produce a fixed point (a re-entry on the transformed element returns it unchanged) — check whether the rewrite wraps an operand in a shape the next visit pass will fail to recognize as already-wrapped, and add a structural guard.
 
-## LinqService "address already in use" (port 22654)
+## LinqService host startup failures
 
-Remote (`*.LinqService`) test configs spin up an in-process HTTP host on a **fixed port** (`22654`). When many `.LinqService` configs fail at *startup* with `System.IO.IOException : Failed to bind to address https://127.0.0.1:22654: address already in use` while the **non-remote configs of the same tests pass**, it is **not** a code regression — a leaked test-app process from an earlier run is still holding the port. The failure is at host bind, before any query executes, so an entity-construction / SQL change cannot cause it.
+Remote (`*.LinqService`) test configs spin up an in-process HTTP host on a **dynamically probed free port** — `ServerContainerBase.GetFreePort()` asks the OS for an ephemeral port, and `StartHostWithRetry()` re-probes up to 3 times to absorb the probe-to-bind race (`Tests/Base/Remote/ServerContainer/ServerContainerBase.cs:31,91`). Ports are per-slot: one shared host by default, or one per thread when `KeepSamePortBetweenThreads = false`.
 
-Find and stop the orphaned listener:
+Because the port is never fixed, a leaked host from an earlier run **cannot** block a new one, and "address already in use" is no longer an expected failure mode. If a `.LinqService` config fails at host startup while the non-remote configs of the same tests pass, treat it as a real signal and read the actual exception — don't go hunting for an orphaned listener on a hard-coded port.
 
-```
-Get-NetTCPConnection -LocalPort 22654 -State Listen | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
-```
+Stray `testhost` / runaway processes from earlier iterations are still worth clearing (see the section above) — they consume memory, not a fixed port.
 
-Iterating with many back-to-back local `dotnet test` runs is what leaks these hosts; clear the port (or stop stray `testhost` per the section above) before reading `.LinqService` failures as real.
+> Historical note: hosts used to bind a fixed port (`22654`), where the leaked-listener diagnosis was correct. Any recipe keyed to that port number (`Get-NetTCPConnection -LocalPort 22654`) is obsolete.
 
 ## Debugging linq2db translators
 

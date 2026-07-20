@@ -17,7 +17,7 @@ When the user hasn't picked a family and `/test-providers` is asked to propose a
 
 1. **SQLite** — no docker, runs from NuGet packages, always available.
 2. **SQL Server** — prefer `SqlServer.2016` / `SqlServer.2016.MS` (typically reachable via a local non-docker SQL Server Express / Developer instance on the dev machine — zero startup cost). Fall back to docker only if the user explicitly asks for docker, or the local instance is unavailable.
-3. **PostgreSQL** — prefer `PostgreSQL.18` (latest; slim image).
+3. **PostgreSQL** — prefer `PostgreSQL.19` (latest; slim image).
 4. Anything else — propose only if the test specifically requires it.
 
 ## Provider name resolution
@@ -91,7 +91,10 @@ No setup needed. Runs against `Microsoft.Data.Sqlite` (provider ID `SQLite.MS`) 
 
 | Version | Provider IDs | Local non-docker? | Setup script | Container | Image | Pref |
 |---|---|---|---|---|---|---|
-| 2005 | `SqlServer.2005`, `SqlServer.2005.MS` | yes (usually) | `sqlserver2005-win.cmd` | `mssql` | `linq2db/linq2db:win-mssql-2005` | local |
+| 2005 | `SqlServer.2005`, `SqlServer.2005.MS` | yes (usually) | `sqlserver2005-win.cmd` | `sql2005` | `linq2db/linq2db:win-mssql-2005` | local |
+| 2008 | `SqlServer.2008`, `SqlServer.2008.MS` | yes (usually) | `sqlserver2008-win.cmd` | `sql2008` | `linq2db/linq2db:win-mssql-2008` | local |
+| 2012 | `SqlServer.2012`, `SqlServer.2012.MS` | yes (usually) | `sqlserver2012-win.cmd` | `sql2012` | `linq2db/linq2db:win-mssql-2012` | local |
+| 2014 | `SqlServer.2014`, `SqlServer.2014.MS` | yes (usually) | `sqlserver2014-win.cmd` | `sql2014` | `linq2db/linq2db:win-mssql-2014` | local |
 | 2016 | `SqlServer.2016`, `SqlServer.2016.MS` | yes (usually) | `sqlserver2016.cmd` | `sql2016` | `microsoft/mssql-server-2016-express-windows` | **local: 1** |
 | 2017 | `SqlServer.2017`, `SqlServer.2017.MS` | no | `sqlserver2017.cmd` | `sql2017` | `linq2db/linq2db:mssql-2017` | docker: 3 |
 | 2019 | `SqlServer.2019`, `SqlServer.2019.MS` | no | `sqlserver2019.cmd` | `sql2019` | `linq2db/linq2db:mssql-2019-fts` | docker: 2 |
@@ -122,11 +125,12 @@ Postgres images are slim (~150MB) and fast to start, so running multiple dialect
 | 15 | `PostgreSQL.15` | yes | `pgsql15.cmd` | `pgsql15` | `postgres:15` | **default** |
 | 16 | — | no | `pgsql16.cmd` | `pgsql16` | `postgres:16` | on demand |
 | 17 | — | no | `pgsql17.cmd` | `pgsql17` | `postgres:17` | on demand |
-| 18 | `PostgreSQL.18` | yes | `pgsql18.cmd` | `pgsql18` | `postgres:18` | **default (latest)** |
+| 18 | `PostgreSQL.18` | yes | `pgsql18.cmd` | `pgsql18` | `postgres:18` | **default** |
+| 19 | `PostgreSQL.19` | yes | `pgsql19.cmd` | `pgsql19` | `postgres:19` | **default (latest)** |
 
 **Picking a version.**
 - **"Default" rows above** are the dialect anchors — each introduces a new PostgreSQL SQL dialect we target, so running one per row gives full dialect coverage.
-- **Single-version pick** (smallest useful coverage) → `PostgreSQL.18` — latest, slim, most surface.
+- **Single-version pick** (smallest useful coverage) → `PostgreSQL.19` — latest, slim, most surface.
 - **"On demand" rows** exist as containers for ad-hoc reproduction (e.g. a version-specific bug) and aren't wired into `UserDataProviders.json.template`. Use only when the user asks.
 
 Test provider IDs referenced from code are in `Source/LinqToDB/ProviderName.cs`.
@@ -135,8 +139,8 @@ Test provider IDs referenced from code are in `Source/LinqToDB/ProviderName.cs`.
 
 | Flavor | Provider IDs | Setup script | Container | Image |
 |---|---|---|---|---|
-| MySQL latest | `MySql.8.0.MySql.Data`, `MySql.8.0.MySqlConnector` | `mysql.cmd` | `mysql` | `mysql:latest` |
-| MySQL 5.7 | `MySql.5.7.MySql.Data`, `MySql.5.7.MySqlConnector` | `mysql57.cmd` | `mysql57` | `mysql:5.7` |
+| MySQL latest | `MySql.8.0`, `MySqlConnector.8.0` | `mysql.cmd` | `mysql` | `mysql:latest` |
+| MySQL 5.7 | `MySql.5.7`, `MySqlConnector.5.7` | `mysql57.cmd` | `mysql57` | `mysql:5.7` |
 | MariaDB | `MariaDB.11` (plus connector variants) | `mariadb.cmd` | `mariadb` | `mariadb:latest` |
 
 ## Oracle
@@ -207,7 +211,7 @@ Canonical sequence for `/test-providers` to bring a non-SQLite provider's contai
    - **Container running** — use as-is; do not touch.
 3. After tests finish, if the skill initiated startup during this session, ask the user whether to `docker stop <container>`. Default to **leave running** — the user may want follow-up runs.
 
-Ports are fixed per script (see `-p <host>:<guest>` above) and don't need verification — if the container is running, the port is bound.
+Ports are fixed per container and don't need verification — if the container is running, the port is bound. The host:guest mapping isn't listed in this doc; read the `-p <host>:<guest>` flag in the container's `Data/Setup Scripts/<script>.cmd` if you need the number (the connection strings in `UserDataProviders.json` / `DataProviders.json` already carry it).
 
 ## Keeping this doc current
 

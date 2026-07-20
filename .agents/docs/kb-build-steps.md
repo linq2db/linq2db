@@ -66,7 +66,7 @@ The skill never silently advances past a `partial` step.
 
 **Input**: area code; the agent reads `kb-areas.md` for the file list.
 
-**Output**: `areas/<area>/INDEX.md` for each area, plus per-area architecture docs as needed (`architecture/sql-ast.md`, `architecture/expression-translator.md`, `architecture/providers.md`, `architecture/conventions.md`).
+**Output**: `areas/<area>/INDEX.md` for each area, plus global architecture docs as needed (`architecture/sql-ast.md`, `architecture/expression-translator.md`, `architecture/sql-provider.md`, `architecture/interceptors.md`). Cross-area code-style/patterns go to the top-level `conventions/` directory in step 4, not `architecture/`.
 
 **Gate**: per-area Tier-1 100%, Tier-2 ≥90%.
 
@@ -157,7 +157,7 @@ This step is the largest. The skill processes areas in `kb-areas.md` order and c
 
 **Output**: `areas/<area>/tech-debt.md` and `areas/<area>/patterns.md` for each area, populated from cross-source data.
 
-**Gate**: every area has all four sub-files (`INDEX.md`, `issues.md`, `decisions.md`, `tech-debt.md`, `patterns.md`).
+**Gate**: every area has all five sub-files (`INDEX.md`, `issues.md`, `decisions.md`, `tech-debt.md`, `patterns.md`).
 
 ### Step 12 — glossary
 

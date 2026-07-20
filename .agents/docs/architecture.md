@@ -10,9 +10,9 @@ The main flow for translating LINQ to SQL:
 
 3. **SQL Generation** (`Source/LinqToDB/Sql/`) — `Sql.ExpressionAttribute` and `Sql.FunctionAttribute` map C# methods to SQL expressions. Provider-specific overloads allow different SQL per database.
 
-4. **Data Providers** (`Source/LinqToDB/DataProvider/`, `Source/LinqToDB/Internal/DataProvider`) — One subfolder per database (Access, ClickHouse, DB2, Firebird, Informix, MySql, Oracle, PostgreSQL, SQLite, SapHana, SqlCe, SqlServer, Sybase, Ydb). Each implements `IDataProvider` with dialect-specific SQL generation, type mapping, and bulk copy.
+4. **Data Providers** (`Source/LinqToDB/DataProvider/`, `Source/LinqToDB/Internal/DataProvider`) — One subfolder per database (Access, ClickHouse, DB2, DuckDB, Firebird, Informix, MySql, Oracle, PostgreSQL, SQLite, SapHana, SqlCe, SqlServer, Sybase, Ydb). Each implements `IDataProvider` with dialect-specific SQL generation, type mapping, and bulk copy.
 
-5. **Data Access** (`Source/LinqToDB/Data/`) — `DataConnection` (holds connection open until dispose) and `DataContext` (opens/closes per query). `BulkCopy*` classes, `CommandInfo`, retry policies.
+5. **Data Access** (`Source/LinqToDB/Data/`) — `DataConnection` (holds connection open until dispose), `BulkCopy*` classes, `CommandInfo`, retry policies. `DataContext` (opens/closes per query) lives one level up at `Source/LinqToDB/DataContext.cs`, not under `Data/`.
 
 ### Async DML extension methods build the *sync* expression
 
@@ -39,5 +39,10 @@ The async DML extensions (`UpdateAsync` / `InsertAsync` / `DeleteAsync` / … in
 - `Source/LinqToDB.EntityFrameworkCore/` — EF Core integration
 - `Source/LinqToDB.Extensions/` — DI and logging extensions
 - `Source/LinqToDB.FSharp/` — F# support
+- `Source/LinqToDB.Analyzers/` and `Source/LinqToDB.Analyzers.CodeFixes/` — shipping Roslyn analyzer package (e.g. LINQ2DB1001, legacy `Sql.Ext` window API → `Sql.Window`)
+- `Source/LinqToDB.Tools/` — developer tooling (query metrics, mapping validation)
+- `Source/LinqToDB.Compat/` — compatibility shims
+- `Source/LinqToDB.LINQPad/` — LINQPad driver
+- `Source/LinqToDB.Templates/` — T4 templates
 - `Source/LinqToDB.CLI/` and `Source/LinqToDB.Scaffold/` — Database scaffolding CLI tool
 - `Source/LinqToDB.Remote.*` — Remote context implementations (gRPC, SignalR, HttpClient, WCF)

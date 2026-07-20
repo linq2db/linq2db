@@ -90,7 +90,7 @@ Reduce round-trips and preserve the user's attention span.
 
 Before reporting a task as infeasible ("can't bisect", "can't build", "runtime test outside my reach"), do a one-pass environment check:
 
-- `docker ps -a --filter name=<container>` for provider containers — use the **container name** from `test-databases.md` (e.g. `pgsql19`, `sql2022`, `firebird60`), **not** the engine/provider name. `--filter name=postgres` returns nothing even when `pgsql19` exists; when unsure of the exact name, run `docker ps -a` unfiltered.
+- `docker ps -a --filter name=<container>` for provider containers — use the **container name** from `test-databases.md` (e.g. `pgsql19`, `sql2022`, `firebird50`), **not** the engine/provider name. `--filter name=postgres` returns nothing even when `pgsql19` exists; when unsure of the exact name, run `docker ps -a` unfiltered.
 - `Glob` under `.agents/scripts/` for helper scripts wrapping multi-step sequences
 - `UserDataProviders.json` (root) and a sibling `linq2db` clone's `UserDataProviders.json` (alongside this clone, e.g. `../linq2db/UserDataProviders.json`) for connection strings
 - Existing skills (`/test`, `/test-providers`) for workflow coverage
