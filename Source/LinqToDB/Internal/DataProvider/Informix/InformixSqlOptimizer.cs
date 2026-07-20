@@ -154,8 +154,9 @@ namespace LinqToDB.Internal.DataProvider.Informix
 		/// <param name="visitMode">
 		/// Must match ownership of <paramref name="statement"/>. <see cref="VisitMode.Modify"/> is correct only
 		/// when the caller owns it (the <see cref="FinalizeStatement"/> path); a caller running inside a
-		/// Transform-mode convert must pass <see cref="VisitMode.Transform"/>, or the wrap flips NeedsCast on
-		/// the cached statement's own parameters.
+		/// Transform-mode convert must pass <see cref="VisitMode.Transform"/>. The wrap never mutates a parameter
+		/// (it always puts NeedsCast on a copy), but in <see cref="VisitMode.Modify"/> it writes that copy back
+		/// into the parent node in place - which, on a Transform pass, is the cached statement's own node.
 		/// </param>
 		internal static TElement WrapParameters<TElement>(TElement statement, VisitMode visitMode = VisitMode.Modify)
 			where TElement: IQueryElement

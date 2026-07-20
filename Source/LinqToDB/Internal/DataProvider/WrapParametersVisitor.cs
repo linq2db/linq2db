@@ -167,27 +167,20 @@ namespace LinqToDB.Internal.DataProvider
 
 			if (needsCast && !sqlParameter.NeedsCast)
 			{
-				// Callers that run this visitor over a statement they own (the provider
-				// FinalizeStatement passes) construct it with VisitMode.Modify and keep the
-				// in-place flip. A caller running inside a Transform-mode convert does not own
-				// the parameter - it still belongs to the cached statement - so there the flag
-				// has to go onto a copy, or it leaks a cast into every later render.
-				if (GetVisitMode(sqlParameter) == VisitMode.Modify)
+				// Never flip the flag in place. A caller running inside a Transform-mode convert does not
+				// own the parameter - it still belongs to the cached statement - and even when the caller
+				// does own the statement, the instance is shared by every usage of that parameter, so an
+				// in-place flip casts references this wrap was never asked about. The flag goes onto a copy
+				// (carrying accessor/converter identity); the parent picks it up from the return value.
+				var newParameter = new SqlParameter(sqlParameter.Type, sqlParameter.Name, sqlParameter.Value)
 				{
-					sqlParameter.NeedsCast = true;
-				}
-				else
-				{
-					var newParameter = new SqlParameter(sqlParameter.Type, sqlParameter.Name, sqlParameter.Value)
-					{
-						IsQueryParameter = sqlParameter.IsQueryParameter,
-						AccessorId       = sqlParameter.AccessorId,
-						ValueConverter   = sqlParameter.ValueConverter,
-						NeedsCast        = true,
-					};
+					IsQueryParameter = sqlParameter.IsQueryParameter,
+					AccessorId       = sqlParameter.AccessorId,
+					ValueConverter   = sqlParameter.ValueConverter,
+					NeedsCast        = true,
+				};
 
-					return NotifyReplaced(newParameter, sqlParameter);
-				}
+				return newParameter;
 			}
 
 			return base.VisitSqlParameter(sqlParameter);

@@ -294,30 +294,21 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 			if (newElement is SqlPredicate.Expr { Expr1: SqlParameter { IsQueryParameter: true, NeedsCast: false, Type.DataType: DataType.Boolean } p })
 			{
-				switch (GetVisitMode(predicate))
+				// Never flip the flag in place: `p` is reached by navigating into the predicate, so the
+				// predicate's own visit mode says nothing about who owns `p` - on a Transform pass it can
+				// still be the cached statement's instance, and the cast would leak into every later render.
+				// The flag is also needed only for this usage; setting it on the shared instance would put a
+				// cast on every other reference to the same parameter. Always put it on a copy (carrying
+				// accessor/converter identity) and rebuild the predicate around it.
+				var newParameter = new SqlParameter(p.Type, p.Name, p.Value)
 				{
-					// The Modify pass owns the whole statement, so flipping the flag is licensed.
-					case VisitMode.Modify:
-						p.NeedsCast = true;
-						break;
+					IsQueryParameter = p.IsQueryParameter,
+					AccessorId       = p.AccessorId,
+					ValueConverter   = p.ValueConverter,
+					NeedsCast        = true,
+				};
 
-					// On a Transform pass the parameter is still the cached statement's own
-					// instance - setting NeedsCast there leaks a cast into every later render.
-					// Put the flag on a copy (carrying accessor/converter identity) and rebuild
-					// the predicate around it.
-					case VisitMode.Transform:
-					{
-						var newParameter = new SqlParameter(p.Type, p.Name, p.Value)
-						{
-							IsQueryParameter = p.IsQueryParameter,
-							AccessorId       = p.AccessorId,
-							ValueConverter   = p.ValueConverter,
-							NeedsCast        = true,
-						};
-
-						return new SqlPredicate.Expr(newParameter);
-					}
-				}
+				return new SqlPredicate.Expr(newParameter);
 			}
 
 			return newElement;

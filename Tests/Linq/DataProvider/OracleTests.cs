@@ -4510,5 +4510,41 @@ END convert_bool;");
 
 			}
 		}
+
+		#region Coalesce charset
+
+		[Table]
+		sealed class CoalesceCharsetTable
+		{
+			[PrimaryKey]                                        public int     Id     { get; set; }
+			[Column(DataType = DataType.NVarChar, Length = 50)]  public string? NValue { get; set; }
+			[Column(DataType = DataType.VarChar,  Length = 50)]  public string? VValue { get; set; }
+		}
+
+		// OracleSqlExpressionConvertVisitor.ConvertCoalesce unifies the charset of a COALESCE mixing
+		// VARCHAR2 and NVARCHAR2 operands (To_NChar around the VARCHAR2 side). It runs on a Transform
+		// pass over the query's cached statement, so it has to rebuild the node rather than write into
+		// element.Expressions - hence the second execution, which re-renders that same cached statement.
+		[Test]
+		public void CoalesceWithInconsistentCharset([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<CoalesceCharsetTable>();
+
+			db.Insert(new CoalesceCharsetTable { Id = 1, NValue = null,       VValue = "varchar" });
+			db.Insert(new CoalesceCharsetTable { Id = 2, NValue = "nvarchar", VValue = "varchar" });
+
+			string?[] Execute() => table.OrderBy(x => x.Id).Select(x => x.NValue ?? x.VValue).ToArray();
+
+			Execute().ShouldBe(new string?[] { "varchar", "nvarchar" });
+
+			if (db is DataConnection dc)
+				dc.LastQuery!.ShouldContain("To_NChar");
+
+			// Second render of the same cached statement - a mutating convert corrupts it here, not above.
+			Execute().ShouldBe(new string?[] { "varchar", "nvarchar" });
+		}
+
+		#endregion
 	}
 }
