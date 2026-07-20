@@ -151,7 +151,7 @@ For each user pick (or the "next recommended" task):
 
 3. **Wait for sub-skill to complete its loop.** This skill never preempts another skill's interactive flow.
 
-4. **Refresh state.** When the sub-skill returns, call `release-state.ps1 -Action update -Version <ver> -TaskId <id> -Status <status>` with the sub-skill's status (`done` / `partial` / `in-progress` / `skipped` — these are the only accepted values; a sub-skill that bailed out is recorded as `partial` or `open`, with the reason in `-Annotation`). Then call `release-state.ps1 -Action sync-to-pr -Version <ver> -PrepPR <n>` to push the checklist refresh into the PR body in-place (preserving any non-checklist prose).
+4. **Refresh state.** When the sub-skill returns, call `release-state.ps1 -Action update -Version <ver> -TaskId <id> -Status <status>` with the sub-skill's status (`done` / `partial` / `in-progress` / `skipped` / `open` — these are the only accepted values; a sub-skill that bailed out is recorded as `partial` or `open`, with the reason in `-Annotation`). Then call `release-state.ps1 -Action sync-to-pr -Version <ver> -PrepPR <n>` to push the checklist refresh into the PR body in-place (preserving any non-checklist prose).
 
 5. **Re-render table**, loop.
 
