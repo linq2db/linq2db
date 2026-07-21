@@ -71,9 +71,9 @@ namespace LinqToDB.Internal.DataProvider
 		}
 
 		// TAKE/SKIP are modifiers, not value positions: no cast belongs there, and the suppression has to
-		// cover the whole subtree (VisitSqlBinaryExpression and friends read _inModifier). Overriding these
-		// rather than VisitSqlSelectClause leaves the clause traversal - and its visit-mode handling - to
-		// the base, so nothing here writes into a clause this visitor may not own.
+		// cover the whole subtree (VisitSqlBinaryExpression and friends read _inModifier). Hooking the two
+		// modifiers keeps the clause traversal, and with it the visit-mode handling, in the base - this
+		// visitor never writes into a select clause it may not own.
 		protected override ISqlExpression? VisitTake(SqlSelectClause selectClause, ISqlExpression? takeValue)
 		{
 			return VisitModifier(takeValue);
@@ -179,11 +179,11 @@ namespace LinqToDB.Internal.DataProvider
 
 			if (needsCast && !sqlParameter.NeedsCast)
 			{
-				// Never flip the flag in place. A caller running inside a Transform-mode convert does not
-				// own the parameter - it still belongs to the cached statement - and even when the caller
-				// does own the statement, the instance is shared by every usage of that parameter, so an
-				// in-place flip casts references this wrap was never asked about. The flag goes onto a copy
-				// (carrying accessor/converter identity); the parent picks it up from the return value.
+				// The flag goes onto a copy, which the parent picks up from the return value. A caller
+				// running inside a Transform-mode convert does not own the parameter - it still belongs to
+				// the cached statement - and even a caller that owns the statement shares one instance
+				// across every usage of that parameter, so setting the flag on it would cast references
+				// this wrap was never asked about.
 				_castParameters ??= new();
 
 				// AccessorId identifies the accessor a query parameter's value comes from; ParametersContext

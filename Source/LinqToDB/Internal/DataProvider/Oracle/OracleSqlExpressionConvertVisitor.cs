@@ -173,9 +173,9 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 		{
 			if (MappingSchema.HasInconsistentCharset(element.Expressions))
 			{
-				// Build a new node rather than writing into element.Expressions: on a Transform
-				// pass the element handed to us is the query's cached statement, and a write
-				// there corrupts every later render (and the remote path).
+				// The charset fix goes into a new node: on a Transform pass the element handed to
+				// this visitor is the query's cached statement, and a write reaching it corrupts
+				// every later render, including the remote path.
 				var expressions = new ISqlExpression[element.Expressions.Length];
 				var replaced    = false;
 
@@ -228,11 +228,11 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		protected internal override IQueryElement VisitSqlValuesTable(SqlValuesTable element)
 		{
-			// A VALUES column mixing VARCHAR2 and NVARCHAR2 rows raises ORA-12704, so the
-			// charset has to be unified per column. Collect the affected columns first, then
-			// apply the fix according to the visit mode - writing straight into element.Rows
-			// corrupts the cached statement on a Transform pass (it is re-rendered on every
-			// execution and by the remote path, so the render that breaks is a later one).
+			// A VALUES column mixing VARCHAR2 and NVARCHAR2 rows raises ORA-12704, so the charset
+			// has to be unified per column. The affected columns are collected first so the fix can
+			// be applied according to the visit mode: on a Transform pass the element belongs to the
+			// query's cached statement, which is re-rendered on every execution and by the remote
+			// path, so a write reaching it surfaces as a failure in some later render.
 			List<int>? inconsistent = null;
 
 			if (element.Rows?.Count > 1)

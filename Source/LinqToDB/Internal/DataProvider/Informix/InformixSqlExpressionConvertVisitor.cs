@@ -256,12 +256,13 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 		protected override IQueryElement ConvertIsDistinctPredicateAsIntersect(SqlPredicate.IsDistinct predicate)
 		{
-			// The INTERSECT emulation is a new tree, but its leaf parameters are still the ones
-			// owned by the (cached) statement we were handed - so the wrap has to run in this
-			// visitor's mode, not the Modify default used by the FinalizeStatement callers.
+			// The INTERSECT emulation is a new tree, but its leaf expressions still belong to the statement
+			// this visitor was handed, which on a Transform pass is the cached one. The wrap therefore runs
+			// in the traversal's own mode rather than the Modify default the FinalizeStatement callers use,
+			// so that a cast copy is rebuilt into a new parent instead of written into a shared one.
 			return InformixSqlOptimizer.WrapParameters(
 				base.ConvertIsDistinctPredicateAsIntersect(predicate),
-				GetVisitMode(predicate));
+				VisitMode);
 		}
 
 		protected internal override IQueryElement VisitSqlSetExpression(SqlSetExpression element)
@@ -294,12 +295,11 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 			if (newElement is SqlPredicate.Expr { Expr1: SqlParameter { IsQueryParameter: true, NeedsCast: false, Type.DataType: DataType.Boolean } p })
 			{
-				// Never flip the flag in place: `p` is reached by navigating into the predicate, so the
-				// predicate's own visit mode says nothing about who owns `p` - on a Transform pass it can
-				// still be the cached statement's instance, and the cast would leak into every later render.
-				// The flag is also needed only for this usage; setting it on the shared instance would put a
-				// cast on every other reference to the same parameter. Always put it on a copy (carrying
-				// accessor/converter identity) and rebuild the predicate around it.
+				// The flag goes on a copy, and the predicate is rebuilt around it, for two reasons. `p` is
+				// reached by navigating into the predicate, so the predicate's own visit mode says nothing
+				// about who owns `p`: on a Transform pass it can still be the cached statement's instance,
+				// where a cast would leak into every later render. And the flag is wanted only for this
+				// usage - the instance is shared by every reference to that parameter.
 				var newParameter = new SqlParameter(p.Type, p.Name, p.Value)
 				{
 					IsQueryParameter = p.IsQueryParameter,
