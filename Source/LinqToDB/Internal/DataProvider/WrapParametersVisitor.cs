@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Internal.SqlQuery.Visitors;
@@ -12,6 +13,12 @@ namespace LinqToDB.Internal.DataProvider
 		bool      _inInsert;
 		bool      _inInsertOrUpdate;
 		WrapFlags _wrapFlags;
+
+		// One cast copy per source parameter, for the lifetime of a single traversal (every caller
+		// constructs a fresh visitor). Without it a parameter shared across several MERGE clauses
+		// would get a copy per occurrence, and since parameter naming dedupes by object identity
+		// each copy would render its own DECLARE/SET of the same value.
+		Dictionary<object, SqlParameter>? _castParameters;
 
 		[Flags]
 		public enum WrapFlags
@@ -172,13 +179,26 @@ namespace LinqToDB.Internal.DataProvider
 				// does own the statement, the instance is shared by every usage of that parameter, so an
 				// in-place flip casts references this wrap was never asked about. The flag goes onto a copy
 				// (carrying accessor/converter identity); the parent picks it up from the return value.
-				var newParameter = new SqlParameter(sqlParameter.Type, sqlParameter.Name, sqlParameter.Value)
+				_castParameters ??= new();
+
+				// AccessorId identifies the accessor a query parameter's value comes from; ParametersContext
+				// keeps one instance per id, so it is 1:1 with the parameter and additionally unifies copies
+				// an earlier stage may have made. Parameters without an accessor (take/skip, dynamic) carry
+				// their own value, so there the instance itself is the only sound key.
+				var key = sqlParameter.AccessorId is int accessorId ? accessorId : (object)sqlParameter;
+
+				if (!_castParameters.TryGetValue(key, out var newParameter))
 				{
-					IsQueryParameter = sqlParameter.IsQueryParameter,
-					AccessorId       = sqlParameter.AccessorId,
-					ValueConverter   = sqlParameter.ValueConverter,
-					NeedsCast        = true,
-				};
+					newParameter = new SqlParameter(sqlParameter.Type, sqlParameter.Name, sqlParameter.Value)
+					{
+						IsQueryParameter = sqlParameter.IsQueryParameter,
+						AccessorId       = sqlParameter.AccessorId,
+						ValueConverter   = sqlParameter.ValueConverter,
+						NeedsCast        = true,
+					};
+
+					_castParameters.Add(key, newParameter);
+				}
 
 				return newParameter;
 			}
