@@ -1136,3 +1136,8 @@ LinqToDB.Internal.Common.ObjectPool<T>.RentedElement.RentedElement(LinqToDB.Inte
 readonly LinqToDB.Internal.Common.ObjectPool<T>.RentedElement.Value -> T!
 ~LinqToDB.Internal.Common.ObjectPool<T>.Allocate() -> LinqToDB.Internal.Common.ObjectPool<T>.RentedElement
 *REMOVED*LinqToDB.Internal.SqlQuery.SqlRawSqlTable.SqlRawSqlTable(LinqToDB.Internal.SqlQuery.SqlRawSqlTable! table, LinqToDB.Internal.SqlQuery.ISqlExpression![]! parameters) -> void
+virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitTake(LinqToDB.Internal.SqlQuery.SqlSelectClause! selectClause, LinqToDB.Internal.SqlQuery.ISqlExpression? takeValue) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSkip(LinqToDB.Internal.SqlQuery.SqlSelectClause! selectClause, LinqToDB.Internal.SqlQuery.ISqlExpression? skipValue) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.WrapParametersVisitor.VisitTake(LinqToDB.Internal.SqlQuery.SqlSelectClause! selectClause, LinqToDB.Internal.SqlQuery.ISqlExpression? takeValue) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.WrapParametersVisitor.VisitSkip(LinqToDB.Internal.SqlQuery.SqlSelectClause! selectClause, LinqToDB.Internal.SqlQuery.ISqlExpression? skipValue) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+*REMOVED*override LinqToDB.Internal.DataProvider.WrapParametersVisitor.VisitSqlSelectClause(LinqToDB.Internal.SqlQuery.SqlSelectClause! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!

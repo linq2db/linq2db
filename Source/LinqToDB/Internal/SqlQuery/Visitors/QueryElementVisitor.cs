@@ -470,6 +470,23 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return (ISqlExpression)Visit(expression);
 		}
 
+		/// <summary>
+		/// Visit of the TAKE modifier of a select clause. A modifier is not a value position, so a visitor that
+		/// must treat it differently from a column expression overrides this instead of the whole clause.
+		/// </summary>
+		protected virtual ISqlExpression? VisitTake(SqlSelectClause selectClause, ISqlExpression? takeValue)
+		{
+			return (ISqlExpression?)Visit(takeValue);
+		}
+
+		/// <summary>
+		/// Visit of the SKIP modifier of a select clause. See <see cref="VisitTake"/>.
+		/// </summary>
+		protected virtual ISqlExpression? VisitSkip(SqlSelectClause selectClause, ISqlExpression? skipValue)
+		{
+			return (ISqlExpression?)Visit(skipValue);
+		}
+
 		protected internal virtual IQueryElement VisitSqlInlinedSqlExpression(SqlInlinedSqlExpression element)
 		{
 			switch (GetVisitMode(element))
@@ -2161,8 +2178,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				case VisitMode.ReadOnly:
 				{
-					Visit(element.TakeValue);
-					Visit(element.SkipValue);
+					VisitTake(element, element.TakeValue);
+					VisitSkip(element, element.SkipValue);
 
 					if (element.DistinctOn != null)
 						foreach (var on in element.DistinctOn)
@@ -2177,8 +2194,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 				case VisitMode.Modify:
 				{
-					element.TakeValue = (ISqlExpression?)Visit(element.TakeValue);
-					element.SkipValue = (ISqlExpression?)Visit(element.SkipValue);
+					element.TakeValue = VisitTake(element, element.TakeValue);
+					element.SkipValue = VisitSkip(element, element.SkipValue);
 
 					if (element.DistinctOn != null)
 						for (var i = 0; i < element.DistinctOn.Count; i++)
@@ -2193,8 +2210,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 				case VisitMode.Transform:
 				{
-					var take = (ISqlExpression?)Visit(element.TakeValue);
-					var skip = (ISqlExpression?)Visit(element.SkipValue);
+					var take = VisitTake(element, element.TakeValue);
+					var skip = VisitSkip(element, element.SkipValue);
 
 					List<ISqlExpression>? newDistinctOn = null;
 					if (element.DistinctOn != null)

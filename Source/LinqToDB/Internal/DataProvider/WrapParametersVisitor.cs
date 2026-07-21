@@ -70,26 +70,31 @@ namespace LinqToDB.Internal.DataProvider
 			return new NeedCastScope(this, needCast);
 		}
 
-		protected internal override IQueryElement VisitSqlSelectClause(SqlSelectClause element)
+		// TAKE/SKIP are modifiers, not value positions: no cast belongs there, and the suppression has to
+		// cover the whole subtree (VisitSqlBinaryExpression and friends read _inModifier). Overriding these
+		// rather than VisitSqlSelectClause leaves the clause traversal - and its visit-mode handling - to
+		// the base, so nothing here writes into a clause this visitor may not own.
+		protected override ISqlExpression? VisitTake(SqlSelectClause selectClause, ISqlExpression? takeValue)
+		{
+			return VisitModifier(takeValue);
+		}
+
+		protected override ISqlExpression? VisitSkip(SqlSelectClause selectClause, ISqlExpression? skipValue)
+		{
+			return VisitModifier(skipValue);
+		}
+
+		ISqlExpression? VisitModifier(ISqlExpression? expression)
 		{
 			var save = _inModifier;
 
 			using var scope = NeedCast(false);
-			{
-				_inModifier = true;
 
-				element.TakeValue = (ISqlExpression?)Visit(element.TakeValue);
-				element.SkipValue = (ISqlExpression?)Visit(element.SkipValue);
+			_inModifier = true;
+			var result = (ISqlExpression?)Visit(expression);
+			_inModifier = save;
 
-				_inModifier = save;
-			}
-
-			foreach (var column in element.Columns)
-			{
-				column.Expression = VisitSqlColumnExpression(column, column.Expression);
-			}
-
-			return element;
+			return result;
 		}
 
 		protected override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
