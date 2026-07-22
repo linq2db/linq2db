@@ -12,6 +12,8 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 using Tests.Model;
 
 namespace Tests.Linq
@@ -702,7 +704,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4568")]
-		public void SelectCompositePropertyMapped_Class_OnlyRequiredColumns([DataSources] string context)
+		public void SelectCompositePropertyMapped_Class_OnlyRequiredColumns([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using var db    = GetDataContext(context);
 
@@ -712,7 +714,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4568")]
-		public void SelectCompositePropertyMapped_Struct_OnlyRequiredColumns([DataSources] string context)
+		public void SelectCompositePropertyMapped_Struct_OnlyRequiredColumns([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			var ms = new MappingSchema();
 			ms.SetScalarType(typeof(AddressStruct), false);
@@ -722,6 +724,98 @@ namespace Tests.Linq
 			var query = db.GetTable<UserStruct>().Select(u => u.Residence);
 
 			Assert.That(query.GetSelectQuery().Select.Columns, Has.Count.EqualTo(3));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4568")]
+		public void SelectCompositePropertyMapped_Class_Distinct_OnlyRequiredColumns([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.GetTable<User>().Select(u => u.Residence).Distinct();
+
+			query.GetSelectQuery().Select.Columns.Count.ShouldBe(3);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4568")]
+		public void SelectCompositePropertyMapped_Class_Projected_OnlyRequiredColumns([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.GetTable<User>().Select(u => new { Residence = u.Residence });
+
+			query.GetSelectQuery().Select.Columns.Count.ShouldBe(3);
+		}
+
+		public class CoordinateDepth
+		{
+			public int Z1 { get; set; }
+			public int Z2 { get; set; }
+		}
+
+		public class Coordinate
+		{
+			public int               X { get; set; }
+			public int               Y { get; set; }
+			public CoordinateDepth?  Z { get; set; }
+		}
+
+		[Column("x",  "Coord.X")]
+		[Column("y",  "Coord.Y")]
+		[Column("z1", "Coord.Z.Z1")]
+		[Column("z2", "Coord.Z.Z2")]
+		public class NestedCoordEntity
+		{
+			[PrimaryKey] public long Id { get; set; }
+
+			public Coordinate? Coord { get; set; }
+
+			public static readonly NestedCoordEntity[] TestData = new []
+			{
+				new NestedCoordEntity()
+				{
+					Id    = 1,
+					Coord = new Coordinate()
+					{
+						X = 11,
+						Y = 22,
+						Z = new CoordinateDepth() { Z1 = 33, Z2 = 44 }
+					}
+				}
+			};
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4568")]
+		public void SelectNestedCompositeProperty_OnlyRequiredColumns([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var root = db.GetTable<NestedCoordEntity>().Select(t => t.Coord);
+			root.GetSelectQuery().Select.Columns.Count.ShouldBe(4);
+
+			var nested = db.GetTable<NestedCoordEntity>().Select(t => t.Coord!.Z);
+			nested.GetSelectQuery().Select.Columns.Count.ShouldBe(2);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4568")]
+		public void SelectNestedCompositeProperty([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(NestedCoordEntity.TestData);
+
+			var coord = table.Select(t => t.Coord).Single();
+
+			coord.ShouldNotBeNull();
+			coord.X.ShouldBe(11);
+			coord.Y.ShouldBe(22);
+			coord.Z.ShouldNotBeNull();
+			coord.Z.Z1.ShouldBe(33);
+			coord.Z.Z2.ShouldBe(44);
+
+			var depth = table.Select(t => t.Coord!.Z).Single();
+
+			depth.ShouldNotBeNull();
+			depth.Z1.ShouldBe(33);
+			depth.Z2.ShouldBe(44);
 		}
 
 		#region Issue 4139
