@@ -901,7 +901,7 @@ namespace LinqToDB.Internal.SqlProvider
 			// Arguments are value positions, so a predicate passed as one (COUNT(x.Id == 2), LAG(x.Id == 2), ...)
 			// has to be folded into a value, like ORDER BY / PARTITION BY items are.
 			//
-			var wrapped = WrapBooleanExpression(newElement.Expression, includeFields : false);
+			var wrapped = WrapBooleanExpression(newElement.Expression, includeFields : false, forceConvert : !SqlProviderFlags.SupportsPredicateInWindowValuePosition);
 
 			if (!ReferenceEquals(wrapped, newElement.Expression))
 			{
@@ -1182,7 +1182,7 @@ namespace LinqToDB.Internal.SqlProvider
 		{
 			var newItem = base.VisitSqlExtendedFunctionPartition(function, partition);
 
-			return WrapBooleanExpression(newItem, includeFields: false);
+			return WrapBooleanExpression(newItem, includeFields: false, forceConvert: !SqlProviderFlags.SupportsPredicateInWindowValuePosition);
 		}
 
 		protected internal override IQueryElement VisitSqlCastExpression(SqlCastExpression element)

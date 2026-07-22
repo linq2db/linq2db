@@ -115,6 +115,33 @@ namespace Tests.Linq
 
 		// DISTINCT in a window aggregate is supported by Oracle, ClickHouse and DuckDB; on the providers below it is
 		// rejected and gated with a descriptive error.
+		// The argument modifier (DISTINCT) has to survive the boolean fold: the folded value replaces the
+		// argument expression, not the SqlFunctionArgument that carries the modifier.
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException),
+			TestProvName.AllSqlServer, TestProvName.AllPostgreSQL, TestProvName.AllMySql8Plus, TestProvName.AllSQLite,
+			TestProvName.AllFirebird3Plus, TestProvName.AllSapHana, TestProvName.AllDB2, TestProvName.AllInformix, ProviderName.Ydb,
+			ErrorMessage = ErrorHelper.Error_WindowFunction_AggregateDistinct)]
+		public void CountDistinctWithBooleanArg([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var result =
+				(from t in table
+				select new
+				{
+					Id    = t.Id,
+					Count = Sql.Window.Count(t.IntValue == 20, w => w.Distinct().PartitionBy(t.CategoryId)),
+				})
+				.OrderBy(t => t.Id)
+				.ToList();
+
+			// COUNT(DISTINCT <flag>) per category: category 1 holds both flag values, the others only one.
+			result.ShouldAllBe(r => r.Count == (r.Id == 1 || r.Id == 2 || r.Id == 5 || r.Id == 8 || r.Id == 9 ? 2 : 1));
+		}
+
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException),
 			TestProvName.AllSqlServer, TestProvName.AllPostgreSQL, TestProvName.AllMySql8Plus, TestProvName.AllSQLite,

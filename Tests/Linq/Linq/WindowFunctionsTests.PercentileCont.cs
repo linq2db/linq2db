@@ -16,12 +16,14 @@ namespace Tests.Linq
 		// WITHIN GROUP (ORDER BY ...) items are SqlWindowOrderItem, same as OVER (ORDER BY): a boolean sort key
 		// is a value position and has to be folded.
 		//
-		// PostgreSQL and DuckDB are excluded rather than gated: they have a native boolean type, so nothing is
-		// folded there, and PERCENTILE_CONT requires a numeric sort key — percentile_cont(numeric, boolean) /
-		// quantile_cont(BOOLEAN, ...) simply does not exist. That is a provider limitation, not a translation bug.
+		// PostgreSQL, DuckDB and DB2 have a native boolean type, so nothing is folded there, and PERCENTILE_CONT
+		// interpolates and needs a numeric sort key — percentile_cont(numeric, boolean), quantile_cont(BOOLEAN,
+		// ...) and DB2's SQL0214N all reject it. They report that at translation time rather than surfacing the
+		// driver error, so the expectation here is a descriptive exception, not a skip.
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllPostgreSQL93Minus, TestProvName.AllSqlServer2008Minus, TestProvName.AllClickHouse, TestProvName.AllSqlServer2012Plus, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllSQLite, TestProvName.AllFirebird3Plus, TestProvName.AllSapHana, TestProvName.AllInformix, ProviderName.Ydb, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentileCont)]
-		public void PercentileContWithBooleanOrderBy([SupportsAnalyticFunctionsContext(TestProvName.AllPostgreSQL, TestProvName.AllDuckDB)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllPostgreSQL95Plus, TestProvName.AllDuckDB, TestProvName.AllDB2, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentileContBooleanOrderBy)]
+		public void PercentileContWithBooleanOrderBy([SupportsAnalyticFunctionsContext] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 

@@ -24,6 +24,9 @@ namespace LinqToDB.Internal.DataProvider.DuckDB.Translation
 			// parentheses, after the last argument). It does not support NTH_VALUE FROM FIRST/LAST.
 			protected override bool IsLeadLagNullTreatmentSupported => true;
 			protected override bool IsValueNullTreatmentSupported   => true;
+			// quantile_cont (DuckDB's PERCENTILE_CONT) has no BOOLEAN overload:
+			// "No function matches the given name and argument types 'quantile_cont(BOOLEAN, DECIMAL(2,1))'".
+			protected override bool IsPercentileContBooleanOrderBySupported => false;
 			// DuckDB natively supports FILTER (WHERE ...) on aggregate window functions, so emit it directly
 			// rather than emulating via CASE WHEN.
 			protected override bool IsWindowFilterSupported         => true;
