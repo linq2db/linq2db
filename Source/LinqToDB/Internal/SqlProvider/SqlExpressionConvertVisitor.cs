@@ -1472,48 +1472,9 @@ namespace LinqToDB.Internal.SqlProvider
 			};
 		}
 
-		public virtual ISqlExpression ConvertSqlExpression(SqlExpression element)
-		{
-			return element;
-		}
+		public virtual ISqlExpression ConvertSqlExpression(SqlExpression element) => element;
 
-		public virtual ISqlExpression ConvertSqlExtendedFunction(SqlExtendedFunction func)
-		{
-			switch (func.FunctionName)
-			{
-				case "MAX":
-				case "MIN":
-				{
-					if (func.SystemType == typeof(bool) || func.SystemType == typeof(bool?))
-					{
-						// MAX/MIN over a boolean is invalid well beyond the SupportsBooleanType == false set
-						// (MAX(bit), max(boolean), ...), so the flag is folded to 1/0 for every provider and the
-						// function retyped. An argument already folded to a value expression — by
-						// VisitSqlFunctionArgument, or written as a ternary — only needs the retype.
-						//
-						var newFunc = func;
-
-						if (func.Arguments[0].Expression is not SqlConditionExpression and not SqlCaseExpression)
-						{
-							if (func.Arguments[0].Expression is not ISqlPredicate predicate)
-							{
-								predicate = new SqlPredicate.Expr(func.Arguments[0].Expression);
-							}
-
-							var argument = func.Arguments[0].WithExpression(new SqlConditionExpression(predicate, new SqlValue(1), new SqlValue(0)));
-							newFunc = func.WithArguments(new[] { argument }, func.ArgumentsNullability);
-						}
-
-						newFunc = newFunc.WithType(MappingSchema.GetDbDataType(typeof(int)));
-						return newFunc;
-					}
-
-					break;
-				}
-			}
-
-			return func;
-		}
+		public virtual ISqlExpression ConvertSqlExtendedFunction(SqlExtendedFunction func) => func;
 
 		public virtual ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{

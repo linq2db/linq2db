@@ -254,6 +254,14 @@ namespace Tests.Linq
 			min.ShouldBe(Item.Data.Min(i => i.Id == 2));
 			maxTernary.ShouldBe(max);
 			minTernary.ShouldBe(min);
+
+			// A condition whose branches are themselves boolean is NOT a folded predicate — it still needs the
+			// 1/0 fold, or MAX(boolean) / MAX(bit) reaches the provider.
+			var maxCondition = items.Max(i => i.Id == 2 ? i.Name != null : i.Id > 1);
+			var minCondition = items.Min(i => i.Id == 2 ? i.Name != null : i.Id > 1);
+
+			maxCondition.ShouldBe(Item.Data.Max(i => i.Id == 2 ? i.Name != null : i.Id > 1));
+			minCondition.ShouldBe(Item.Data.Min(i => i.Id == 2 ? i.Name != null : i.Id > 1));
 		}
 
 		[Test]

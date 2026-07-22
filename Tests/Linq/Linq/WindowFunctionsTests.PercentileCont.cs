@@ -13,6 +13,34 @@ namespace Tests.Linq
 {
 	partial class WindowFunctionsTests
 	{
+		// WITHIN GROUP (ORDER BY ...) items are SqlWindowOrderItem, same as OVER (ORDER BY): a boolean sort key
+		// is a value position and has to be folded.
+		//
+		// PostgreSQL and DuckDB are excluded rather than gated: they have a native boolean type, so nothing is
+		// folded there, and PERCENTILE_CONT requires a numeric sort key — percentile_cont(numeric, boolean) /
+		// quantile_cont(BOOLEAN, ...) simply does not exist. That is a provider limitation, not a translation bug.
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllPostgreSQL93Minus, TestProvName.AllSqlServer2008Minus, TestProvName.AllClickHouse, TestProvName.AllSqlServer2012Plus, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllSQLite, TestProvName.AllFirebird3Plus, TestProvName.AllSapHana, TestProvName.AllInformix, ProviderName.Ydb, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentileCont)]
+		public void PercentileContWithBooleanOrderBy([SupportsAnalyticFunctionsContext(TestProvName.AllPostgreSQL, TestProvName.AllDuckDB)] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var query =
+				from t in table
+				group t by t.CategoryId into g
+				select new
+				{
+					CategoryId = g.Key,
+					Boolean    = g.PercentileCont(0.5, (e, f) => f.OrderBy(e.IntValue == 20)),
+					NullCheck  = g.PercentileCont(0.5, (e, f) => f.OrderBy(e.NullableIntValue != null)),
+				};
+
+			_ = query.ToList();
+		}
+
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllPostgreSQL93Minus, TestProvName.AllSqlServer2008Minus, TestProvName.AllClickHouse, TestProvName.AllSqlServer2012Plus, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllSQLite, TestProvName.AllFirebird3Plus, TestProvName.AllSapHana, TestProvName.AllInformix, ProviderName.Ydb, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentileCont)]
 		public void PercentileContGrouping([SupportsAnalyticFunctionsContext] string context)
