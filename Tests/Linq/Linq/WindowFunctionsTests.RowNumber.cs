@@ -106,6 +106,28 @@ namespace Tests.Linq
 				_ = query.ToList();
 		}
 
+		// ORDER BY and PARTITION BY are value positions: a boolean expression has to be folded into a value, since
+		// providers without a native boolean type reject a bare predicate there.
+		[Test]
+		public void RowNumberWithBoolean([SupportsAnalyticFunctionsContext] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(WindowFunctionTestEntity.Seed());
+
+			var query = table
+				.Select(x => new
+				{
+					Entity = x,
+					rn1    = Sql.Window.RowNumber(f => f.OrderBy(x.IntValue == 20).ThenBy(x.Id)),
+					rn2    = Sql.Window.RowNumber(f => f.PartitionBy(x.IntValue == 20).OrderBy(x.Id)),
+					rn3    = Sql.Window.RowNumber(f => f.PartitionBy(x.NullableIntValue != null).OrderBy(x.Id)),
+					rn4    = Sql.Window.RowNumber(f => f.PartitionBy(x.CategoryId).OrderBy(x.NullableIntValue != null).ThenBy(x.Id))
+				})
+				.OrderBy(x => x.Entity.Id);
+
+				_ = query.ToList();
+		}
+
 		// Value assertion (not just SQL shape): ROW_NUMBER and SUM OVER (PARTITION BY ...) over deterministic
 		// integer data must compute the expected per-partition rank and total on every supported provider.
 		[Test]

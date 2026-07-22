@@ -236,5 +236,56 @@ namespace Tests.Linq
 			rows.ShouldBeEmpty();
 		}
 
+		// MIN/MAX over a boolean is folded to 1/0 and the function retyped, because MAX(bit) / max(boolean) is
+		// invalid on most providers. The argument may arrive as a bare predicate or already folded to a value
+		// (a ternary): both have to end up as a single CASE, and the result must still read back as a bool.
+		[Test]
+		public void MinMaxOverBooleanExpression([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var items = db.CreateLocalTable(Item.Data);
+
+			var max        = items.Max(i => i.Id == 2);
+			var min        = items.Min(i => i.Id == 2);
+			var maxTernary = items.Max(i => i.Id == 2 ? true : false);
+			var minTernary = items.Min(i => i.Id == 2 ? true : false);
+
+			max.ShouldBe(Item.Data.Max(i => i.Id == 2));
+			min.ShouldBe(Item.Data.Min(i => i.Id == 2));
+			maxTernary.ShouldBe(max);
+			minTernary.ShouldBe(min);
+		}
+
+		[Test]
+		public void MinMaxOverBooleanExpressionGrouped([DataSources] string context)
+		{
+			using var db     = GetDataContext(context);
+			using var values = db.CreateLocalTable(ItemValue.Data);
+
+			var actual = values
+				.GroupBy(v => v.ItemId)
+				.Select(g => new
+				{
+					ItemId = g.Key,
+					Max    = g.Max(v => v.Value == "10"),
+					Min    = g.Min(v => v.Value == "10"),
+				})
+				.OrderBy(r => r.ItemId)
+				.ToList();
+
+			var expected = ItemValue.Data
+				.GroupBy(v => v.ItemId)
+				.Select(g => new
+				{
+					ItemId = g.Key,
+					Max    = g.Max(v => v.Value == "10"),
+					Min    = g.Min(v => v.Value == "10"),
+				})
+				.OrderBy(r => r.ItemId)
+				.ToList();
+
+			actual.ShouldBe(expected);
+		}
+
 	}
 }

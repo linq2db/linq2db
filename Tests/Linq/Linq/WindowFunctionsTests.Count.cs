@@ -5,6 +5,8 @@ using LinqToDB.Internal.Common;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.Linq
 {
 	partial class WindowFunctionsTests
@@ -47,6 +49,31 @@ namespace Tests.Linq
 				};
 
 				_ = query.ToList();
+		}
+
+		// An argument is a value position: a boolean expression has to be folded into a value, since providers
+		// without a native boolean type reject a bare predicate there.
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_AggregateWindowFunctions)]
+		public void CountWithBooleanArg([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var result =
+				(from t in table
+				select new
+				{
+					Id            = t.Id,
+					CountBoolean  = Sql.Window.Count(t.IntValue == 20, w => w.PartitionBy(t.CategoryId)),
+					CountNotNull  = Sql.Window.Count(t.IntValue,       w => w.PartitionBy(t.CategoryId)),
+				})
+				.OrderBy(t => t.Id)
+				.ToList();
+
+			// COUNT(<expr>) counts non-NULL values; neither expression can be NULL, so both count the whole partition.
+			result.ShouldAllBe(r => r.CountBoolean == r.CountNotNull);
 		}
 
 		[Test]
