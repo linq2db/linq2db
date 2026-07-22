@@ -74,7 +74,7 @@ Assembly name is `dotnet-linq2db` (set by `<AssemblyName>` in `LinqToDB.CLI.cspr
 
 **Tier 1** (read in full): `Program.cs`, `CommandLine/CliController.cs`, `CommandLine/LinqToDBCliController.cs`, `CommandLine/StatusCodes.cs`, `CommandLine/Commands/CliCommand.cs`, `CommandLine/Commands/ScaffoldCommand.cs`, `CommandLine/Commands/ScaffoldCommand.Execute.cs`, `CommandLine/Commands/ScaffoldCommand.Interceptors.cs`, `CommandLine/Commands/ScaffoldCommand.Configuration.cs`, `CommandLine/Commands/ScaffoldCommand.Options.cs`, `CommandLine/Options/CliOption.cs`, `T4Host/LinqToDBHost.cs`, `Template.tt`, `LinqToDB.CLI.csproj`.
 
-**Tier 2** (read in full): `HelpCommand.cs`, `TemplateCommand.cs`, `CommandExample.cs`, all `CommandLine/Options/*.cs`, `readme.md`, `PublicAPI.Shipped.txt`, `PublicAPI.Unshipped.txt`. Note: `DotnetToolSettings.xml` and `linq2db.cli.nuspec` were Tier-2 in the prior run; both files have been deleted from the repository as part of the SDK-pack migration.
+**Tier 2** (read in full): `HelpCommand.cs`, `TemplateCommand.cs`, `CommandExample.cs`, all `CommandLine/Options/*.cs`, `readme.md`. Note: `DotnetToolSettings.xml`, `linq2db.cli.nuspec`, and the CLI `PublicAPI.*.txt` files were removed from the repository; the tool assembly is not a referenceable library API.
 
 ## Inbound / outbound dependencies
 
@@ -104,7 +104,7 @@ Assembly name is `dotnet-linq2db` (set by `<AssemblyName>` in `LinqToDB.CLI.cspr
 <details><summary>Coverage</summary>
 
 **Tier 1 -- 14/14 read.**
-**Tier 2 -- 11/11 read.** (denominator reflects current on-disk set; `DotnetToolSettings.xml` and `linq2db.cli.nuspec` deleted -- counted as visited with skip reason: file removed from repo)
+**Tier 2 -- 9/9 read.** (denominator reflects current on-disk set; removed packaging and PublicAPI files are not counted)
 
 **Delta read (prior run -- PR #5451 DuckDB additions):**
 - `ScaffoldCommand.Options.cs` -- `DuckDB` added to `DatabaseType` enum and provider value list; provider count 14 -> 15.
@@ -117,7 +117,6 @@ Assembly name is `dotnet-linq2db` (set by `<AssemblyName>` in `LinqToDB.CLI.cspr
 - `CommandLine/Commands/ScaffoldCommand.Options.cs` -- DuckDB already present; option surface otherwise stable.
 - `CommandLine/Commands/ScaffoldCommand.cs` -- no changes to option registration structure.
 - `LinqToDB.CLI.csproj` -- packaging completely replaced: `PackAsTool=true` + `ToolPackageRuntimeIdentifiers` replaces custom `.nuspec` + `MultiArchPublish` MSBuild target; cross-platform RIDs added (`linux-x64`, `linux-arm64`, `osx-arm64`, `osx-x64`); `DotnetToolSettings.xml` and `linq2db.cli.nuspec` deleted; install now requires .NET 10 SDK, runtime still .NET 8+.
-- `PublicAPI.Shipped.txt` -- `LinqToDBHost` surface only; release-promotion churn.
 - `readme.md` -- updated install section: `.NET 10 SDK required`, 32-bit vs 64-bit guidance, per-RID install/update/switch examples.
 - `DotnetToolSettings.xml` -- DELETED (SDK-pack migration; was Tier-2).
 - `linq2db.cli.nuspec` -- DELETED (SDK-pack migration; was Tier-2).

@@ -1,9 +1,14 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 
-namespace LinqToDB.CommandLine
+using LinqToDB.CommandLine;
+using LinqToDB.CommandLine.Commands;
+using LinqToDB.CommandLine.Options;
+
+namespace LinqToDB.CommandLine.Commands.Template
 {
 	/// <summary>
 	/// Template command implementation.
@@ -47,9 +52,11 @@ namespace LinqToDB.CommandLine
 
 		public override async ValueTask<int> Execute(
 			CliController                  controller,
+			ICliEnvironment                environment,
 			string[]                       rawArgs,
 			Dictionary<CliOption, object?> options,
-			IReadOnlyCollection<string>    unknownArgs)
+			IReadOnlyCollection<string>    unknownArgs,
+			CancellationToken              cancellationToken)
 		{
 			var path     = options.TryGetValue(Output, out var value) ? (string)value! : DEFAULT_PATH;
 			var fullPath = Path.GetFullPath(path);
@@ -65,7 +72,7 @@ namespace LinqToDB.CommandLine
 			using var template = GetType().Assembly.GetManifestResourceStream("LinqToDB.CLI.Template.tt")!;
 			using var file     = File.Create(fullPath);
 
-			await template.CopyToAsync(file).ConfigureAwait(false);
+			await template.CopyToAsync(file, cancellationToken).ConfigureAwait(false);
 
 			return StatusCodes.SUCCESS;
 		}

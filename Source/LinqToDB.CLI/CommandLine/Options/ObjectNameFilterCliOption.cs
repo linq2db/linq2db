@@ -1,6 +1,9 @@
-﻿using System.Text.Json;
+using System;
+using System.Text.Json;
 
-namespace LinqToDB.CommandLine
+using LinqToDB.CommandLine.Commands;
+
+namespace LinqToDB.CommandLine.Options
 {
 	/// <summary>
 	/// Database object filtering by name CLI option.
@@ -61,7 +64,9 @@ namespace LinqToDB.CommandLine
 				foreach (var element in rawValue.EnumerateArray())
 				{
 					if (element.ValueKind == JsonValueKind.String)
+					{
 						filter.AddName(null, element.GetString()!);
+					}
 					else if (element.ValueKind == JsonValueKind.Object)
 					{
 						var hasSchema  = false;
@@ -159,10 +164,12 @@ namespace LinqToDB.CommandLine
 				}
 
 				errorDetails = null;
+
 				return filter;
 			}
 
 			errorDetails = $"array expected but '{rawValue.ValueKind}' provided";
+
 			return null;
 		}
 	}

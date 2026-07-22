@@ -26,6 +26,10 @@ Automatically triggered for all PR commits. Performs build to verify code could 
 
 Runs manually using `/azp run test-all` command from PR comment by team member.
 
+### cli test pipeline
+
+Runs cli tests manually using `/azp run test-cli` command from PR comment by team member.
+
 ### db-specific test pipelines
 
 Those pipelines used to run tests only for specific databases manually by team member. Currently doesn't support execution from external PRs.

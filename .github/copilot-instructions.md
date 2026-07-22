@@ -17,6 +17,10 @@ When performing a code review, **comment on formatting only when it is clearly p
 - indentation that is clearly broken (e.g., half-indented blocks or accidental deep indentation),
 - mixed tabs and spaces *when it creates visibly misaligned code*.
 
+## Using directives
+
+- `using System;` is always the first using directive in every `.cs` file, even when that file's code doesn't reference any `System` type. This is an intentional, deliberate repo convention, not dead code — do not flag it for removal or suggest removing it as an "unused using" cleanup.
+
 ## Indentation
 
 - Respect the repository's `.editorconfig` for indentation rules.

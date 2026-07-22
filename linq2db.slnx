@@ -624,9 +624,7 @@
     <Project Path="Source/CodeGenerators/CodeGenerators.csproj" />
     <Project Path="Source/LinqToDB.Analyzers/LinqToDB.Analyzers.csproj" />
     <Project Path="Source/LinqToDB.Analyzers.CodeFixes/LinqToDB.Analyzers.CodeFixes.csproj" />
-    <Project Path="Source/LinqToDB.CLI/LinqToDB.CLI.csproj">
-      <Build Solution="Testing|*" Project="false" />
-    </Project>
+    <Project Path="Source/LinqToDB.CLI/LinqToDB.CLI.csproj" />
     <Project Path="Source/LinqToDB.Compat/LinqToDB.Compat.csproj">
       <Build Solution="Testing|*" Project="false" />
     </Project>
@@ -705,6 +703,7 @@
       <Build Solution="Testing|*" Project="false" />
     </Project>
     <Project Path="Tests/FSharp/Tests.FSharp.fsproj" />
+    <Project Path="Tests/LinqToDB.CLI/Tests.LinqToDB.CLI.csproj" />
     <Project Path="Tests/Linq/Tests.csproj" />
     <Project Path="Tests/Model/Tests.Model.csproj" />
     <Project Path="Tests/Tests.Analyzers/Tests.Analyzers.csproj" />

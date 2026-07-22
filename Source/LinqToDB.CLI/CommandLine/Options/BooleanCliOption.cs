@@ -1,7 +1,9 @@
-﻿using System;
+using System;
 using System.Text.Json;
 
-namespace LinqToDB.CommandLine
+using LinqToDB.CommandLine.Commands;
+
+namespace LinqToDB.CommandLine.Options
 {
 	/// <summary>
 	/// Boolean CLI option descriptor.

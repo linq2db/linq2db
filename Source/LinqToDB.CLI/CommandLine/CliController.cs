@@ -1,14 +1,20 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+
+using LinqToDB.CommandLine.Options;
+using LinqToDB.CommandLine.Commands.Skill;
+using LinqToDB.CommandLine.Commands.Query;
+using LinqToDB.CommandLine.Commands;
 
 namespace LinqToDB.CommandLine
 {
 	/// <summary>
 	/// Base class for CLI controller.
 	/// </summary>
-	internal abstract class CliController
+	public abstract class CliController
 	{
 		/// <summary>
 		/// Optional default command to execute when unknown or no command specified by caller.
@@ -22,13 +28,13 @@ namespace LinqToDB.CommandLine
 		/// <summary>
 		/// Gets list of supported commands.
 		/// </summary>
-		public IReadOnlyCollection<CliCommand> Commands => _commands.Values;
+		internal IReadOnlyCollection<CliCommand> Commands => _commands.Values;
 
 		/// <summary>
 		/// Creates controller instance.
 		/// </summary>
 		/// <param name="defaultCommand">Optional default command.</param>
-		protected CliController(CliCommand? defaultCommand)
+		private protected CliController(CliCommand? defaultCommand)
 		{
 			_defaultCommand = defaultCommand;
 		}
@@ -37,7 +43,7 @@ namespace LinqToDB.CommandLine
 		/// Register command handler.
 		/// </summary>
 		/// <param name="command">Command to register.</param>
-		protected void AddCommand(CliCommand command)
+		private protected void AddCommand(CliCommand command)
 		{
 			_commands.Add(command.Name, command);
 		}
@@ -49,11 +55,34 @@ namespace LinqToDB.CommandLine
 		/// <returns>Command execution status code.</returns>
 		public virtual ValueTask<int> Execute(string[] args)
 		{
+			return Execute(args, SystemCliEnvironment.Instance, CancellationToken.None);
+		}
+
+		/// <summary>
+		/// Process CLI arguments and invoke corresponding command.
+		/// </summary>
+		/// <param name="args">Raw CLI arguments.</param>
+		/// <param name="environment">CLI runtime environment.</param>
+		/// <returns>Command execution status code.</returns>
+		public virtual ValueTask<int> Execute(string[] args, ICliEnvironment environment)
+		{
+			return Execute(args, environment, CancellationToken.None);
+		}
+
+		/// <summary>
+		/// Process CLI arguments and invoke corresponding command.
+		/// </summary>
+		/// <param name="args">Raw CLI arguments.</param>
+		/// <param name="environment">CLI runtime environment.</param>
+		/// <param name="cancellationToken">Command cancellation token.</param>
+		/// <returns>Command execution status code.</returns>
+		public virtual ValueTask<int> Execute(string[] args, ICliEnvironment environment, CancellationToken cancellationToken)
+		{
 			if (args.Length == 0)
 			{
 				// no arguments specified - invoke default command (if set)
 				if (_defaultCommand != null)
-					return _defaultCommand.Execute(this, args, new Dictionary<CliOption, object?>(), args);
+					return _defaultCommand.Execute(this, environment, args, new Dictionary<CliOption, object?>(), args, cancellationToken);
 
 				return new(StatusCodes.SUCCESS);
 			}
@@ -68,23 +97,23 @@ namespace LinqToDB.CommandLine
 					Dictionary<CliOption, object?>? options = null;
 					if (command.HasOptions)
 					{
-						(options, var hasErrors) = ParseCommandOptions(command, args, unknownArgs, true);
+						(options, var hasErrors) = ParseCommandOptions(environment, command, args, unknownArgs, true);
 						if (hasErrors)
 							return new(StatusCodes.INVALID_ARGUMENTS);
 					}
 
-					return command.Execute(this, args, options ?? new(), unknownArgs);
+					return command.Execute(this, environment, args, options ?? new(), unknownArgs, cancellationToken);
 				}
 			}
 
 			// cannot find matching command - invoke default command (if set)
 			if (_defaultCommand != null)
-				return _defaultCommand.Execute(this, args, new Dictionary<CliOption, object?>(), args);
+				return _defaultCommand.Execute(this, environment, args, new Dictionary<CliOption, object?>(), args, cancellationToken);
 
 			return new(StatusCodes.INVALID_ARGUMENTS);
 		}
 
-		private (Dictionary<CliOption, object?> options, bool hasErrors) ParseCommandOptions(CliCommand command, string[] args, List<string> unknownArgs, bool reportFirstErrorOnly)
+		private (Dictionary<CliOption, object?> options, bool hasErrors) ParseCommandOptions(ICliEnvironment environment, CliCommand command, string[] args, List<string> unknownArgs, bool reportFirstErrorOnly)
 		{
 			var hasErrors          = false;
 			var cliOptions         = new Dictionary<CliOption, object?>();
@@ -104,7 +133,7 @@ namespace LinqToDB.CommandLine
 					{
 						unknownArgs.Add(args[i]);
 						if (!hasErrors || !reportFirstErrorOnly)
-							Console.Error.WriteLine("Unrecognized option: {0}", args[i]);
+							environment.Error.WriteLine("Unrecognized option: {0}", args[i]);
 						hasErrors = true;
 					}
 				}
@@ -115,44 +144,54 @@ namespace LinqToDB.CommandLine
 					{
 						unknownArgs.Add(args[i]);
 						if (!hasErrors || !reportFirstErrorOnly)
-							Console.Error.WriteLine("Unrecognized option: {0}", args[i]);
+							environment.Error.WriteLine("Unrecognized option: {0}", args[i]);
 						hasErrors = true;
 					}
 				}
 				else
 				{
-					hasErrors = true;
 					if (!hasErrors || !reportFirstErrorOnly)
-						Console.Error.WriteLine("Unrecognized argument: {0}", args[i]);
+						environment.Error.WriteLine("Unrecognized argument: {0}", args[i]);
 					unknownArgs.Add(args[i]);
+					hasErrors = true;
 				}
 
 				if (option != null)
 				{
-					if (cliOptions.ContainsKey(option))
+					if (cliOptions.ContainsKey(option) && !option.AllowMultiple)
 					{
 						if (!hasErrors || !reportFirstErrorOnly)
-							Console.Error.WriteLine("Duplicate option: {0}", args[i]);
+							environment.Error.WriteLine("Duplicate option: {0}", args[i]);
 						hasErrors = true;
 					}
 					else if (conflictingOptions.Contains(option))
 					{
 						var incompatibleOptions = command.GetIncompatibleOptions(option)!;
 						if (!hasErrors || !reportFirstErrorOnly)
-							Console.Error.WriteLine("Option '{0}' conflicts with other option(s): {1}", args[i], string.Join(", ", incompatibleOptions.Select(o => $"--{o.Name}")));
+							environment.Error.WriteLine("Option '{0}' conflicts with other option(s): {1}", args[i], string.Join(", ", incompatibleOptions.Select(o => $"--{o.Name}")));
 						hasErrors = true;
 					}
 					else if (!option.AllowInCli)
 					{
 						if (!hasErrors || !reportFirstErrorOnly)
-							Console.Error.WriteLine("Option '{0}' not allowed in command line", args[i]);
+							environment.Error.WriteLine("Option '{0}' not allowed in command line", args[i]);
 						hasErrors = true;
+					}
+					else if (option is BooleanCliOption && (args.Length == i + 1 || args[i + 1].StartsWith('-')))
+					{
+						var incompatibleOptions = command.GetIncompatibleOptions(option);
+						if (incompatibleOptions != null)
+						{
+							foreach (var opt in incompatibleOptions)
+								conflictingOptions.Add(opt);
+						}
+
+						cliOptions.Add(option, true);
 					}
 					else if (args.Length == i + 1)
 					{
-						// currently all options has exactly one argument
 						if (!hasErrors || !reportFirstErrorOnly)
-							Console.Error.WriteLine("Option '{0}' must have value", args[i]);
+							environment.Error.WriteLine("Option '{0}' must have value", args[i]);
 						hasErrors = true;
 					}
 					else
@@ -170,11 +209,23 @@ namespace LinqToDB.CommandLine
 						if (value == null)
 						{
 							if (!hasErrors || !reportFirstErrorOnly)
-								Console.Error.WriteLine("Cannot parse option value ({0} {1}): {2}", args[i - 1], args[i], errorMessage);
+								environment.Error.WriteLine("Cannot parse option value ({0} {1}): {2}", args[i - 1], args[i], errorMessage);
 							hasErrors = true;
 						}
 
-						cliOptions.Add(option, value);
+						if (value == null)
+							continue;
+
+						if (option.AllowMultiple && cliOptions.TryGetValue(option, out var existingValue) && existingValue is string[] existingValues && value is string[] newValues)
+						{
+							cliOptions[option] = existingValues.Concat(newValues).ToArray();
+						}
+						else if (!cliOptions.TryAdd(option, value))
+						{
+							if (!hasErrors || !reportFirstErrorOnly)
+								environment.Error.WriteLine("Option '{0}' does not support merging repeated values", args[i - 1]);
+							hasErrors = true;
+						}
 					}
 				}
 			}
@@ -197,7 +248,7 @@ namespace LinqToDB.CommandLine
 				if (option.Required && !options.ContainsKey(option))
 				{
 					if (!hasErrors || !reportFirstErrorOnly)
-						Console.Error.WriteLine("Required option '{0}' not specified", option.Name);
+						environment.Error.WriteLine("Required option '{0}' not specified", option.Name);
 					hasErrors = true;
 				}
 			}

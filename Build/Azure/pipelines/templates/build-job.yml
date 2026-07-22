@@ -33,16 +33,14 @@ jobs:
       packageType: sdk
       version: 10.x
 
-  # Tests.Analyzers targets net8.0 (to match the Net80 reference pack the Roslyn testing SDK compiles snippets
-  # against); the windows-2025 image no longer ships an x64 .NET 8 runtime, so provision it or the net8.0 test
-  # host fails to launch ("You must install or update .NET"). Runtime only — SDK 10 builds the net8.0 target.
+  # Tests.Analyzers targets net8.0; the windows-2025 image no longer ships an x64 .NET 8 runtime,
+  # so provision it or the net8.0 test host fails to launch ("You must install or update .NET").
+  # Runtime only — SDK 10 builds the net8.0 targets.
   - task: UseDotNet@2
-    displayName: 'Use .NET 8 runtime (Tests.Analyzers net8.0 host)'
+    displayName: 'Use .NET 8 runtime for test hosts'
     inputs:
       packageType: runtime
       version: 8.x
-    # Only when the analyzer tests actually run — testing.yml (the provider matrix) inherits with_analyzer_tests: false
-    # and skips them, so it needn't provision the net8.0 runtime.
     condition: and(succeeded(), ${{ parameters.with_analyzer_tests }})
 
 # tag version numbers appropriately

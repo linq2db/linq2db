@@ -1,4 +1,8 @@
-﻿namespace LinqToDB.CommandLine
+using System;
+
+using LinqToDB.CommandLine.Commands;
+
+namespace LinqToDB.CommandLine.Options
 {
 	/// <summary>
 	/// Defines CLI command options category.

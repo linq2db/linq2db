@@ -72,6 +72,10 @@
 		<!--<PackageVersion Include="Microsoft.CodeAnalysis.CSharp"                         Version="5.3.0"                        />-->
 		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp"                         Version="5.3.0"                        />
 		<PackageVersion Include="Microsoft.Extensions.DependencyModel"                  Version="$(Net10Latest)"               />
+		<PackageVersion Include="Microsoft.Extensions.Hosting"                          Version="$(Net8LatestForNuget)"         Condition="'$(TargetFramework)'=='net8.0'"  />
+		<PackageVersion Include="Microsoft.Extensions.Hosting"                          Version="$(Net9LatestForNuget)"         Condition="'$(TargetFramework)'=='net9.0'"  />
+		<PackageVersion Include="Microsoft.Extensions.Hosting"                          Version="$(Net10LatestForNuget)"        Condition="'$(TargetFramework)'=='net10.0'" />
+		<PackageVersion Include="ModelContextProtocol"                                  Version="1.4.0"                        />
 		<PackageVersion Include="Mono.TextTemplating"                                   Version="3.0.0"                        />
 		<PackageVersion Include="protobuf-net.Grpc"                                     Version="1.2.2"                        />
 		<PackageVersion Include="protobuf-net"                                          Version="3.2.56"                       />
@@ -109,6 +113,7 @@
 		<PackageVersion Include="IBM.Data.DB.Provider"                                  Version="11.5.9000.4"                  />
 		<PackageVersion Include="Microsoft.Data.SqlClient"                              Version="7.0.1"                        />
 		<PackageVersion Include="Microsoft.Data.Sqlite"                                 Version="$(Net10Latest)"               />
+		<PackageVersion Include="Microsoft.SqlServer.TransactSql.ScriptDom"             Version="180.37.3"                     />
 		<PackageVersion Include="Microsoft.SqlServer.Types"                             Version="170.1000.7"                   />
 		<PackageVersion Include="MySqlConnector"                                        Version="2.5.0"                        />
 		<PackageVersion Include="MySql.Data"                                            Version="9.7.0"                        />

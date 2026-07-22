@@ -1,0 +1,63 @@
+parameters:
+  enabled: false
+
+jobs:
+##############
+# Tests: cli #
+##############
+- job: test_cli_job
+  pool:
+    vmImage: 'windows-2025'
+  displayName: 'Tests: cli'
+  dependsOn: build_job
+  timeoutInMinutes: 30
+  condition: ${{ parameters.enabled }}
+
+  steps:
+  - checkout: self
+
+  - task: UseDotNet@2
+    displayName: 'Use latest .NET SDK'
+    inputs:
+      packageType: sdk
+      version: 10.x
+
+  - task: UseDotNet@2
+    displayName: 'Install .NET 8 runtime (x64)'
+    inputs:
+      packageType: runtime
+      version: 8.x
+
+  - task: UseDotNet@2
+    displayName: 'Install .NET 9 runtime (x64)'
+    inputs:
+      packageType: runtime
+      version: 9.x
+
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: build
+      projects: 'Tests/LinqToDB.CLI/Tests.LinqToDB.CLI.csproj'
+      arguments: '--configuration $(test_configuration)'
+    displayName: Build cli tests
+
+  - task: CmdLine@2
+    inputs:
+      script: |
+        ECHO ON
+        .build\bin\Tests.LinqToDB.CLI\$(test_configuration)\net8.0\linq2db.CLI.Tests.exe --filter "TestCategory != SkipCI" --settings .runsettings --report-trx --report-trx-filename cli-net8.0.trx --results-directory CliTestResults --hangdump --hangdump-timeout 5m
+        if errorlevel 1 exit /b 1
+        .build\bin\Tests.LinqToDB.CLI\$(test_configuration)\net9.0\linq2db.CLI.Tests.exe --filter "TestCategory != SkipCI" --settings .runsettings --report-trx --report-trx-filename cli-net9.0.trx --results-directory CliTestResults --hangdump --hangdump-timeout 5m
+        if errorlevel 1 exit /b 1
+        .build\bin\Tests.LinqToDB.CLI\$(test_configuration)\net10.0\linq2db.CLI.Tests.exe --filter "TestCategory != SkipCI" --settings .runsettings --report-trx --report-trx-filename cli-net10.0.trx --results-directory CliTestResults --hangdump --hangdump-timeout 5m
+        if errorlevel 1 exit /b 1
+    displayName: Run cli tests
+
+  - task: PublishTestResults@2
+    inputs:
+      testRunner: VsTest
+      testResultsFiles: 'CliTestResults/*.trx'
+      testRunTitle: 'linq2db cli'
+      failTaskOnMissingResultsFile: true
+    displayName: Publish cli test results
+    condition: succeededOrFailed()

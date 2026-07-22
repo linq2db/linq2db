@@ -1,0 +1,115 @@
+{
+	"mcp": {
+		"title"          : "linq2db Development Databases",
+		"description"    : "Databases used for linq2db development and provider testing.",
+		"instructions"   : "Use this server only for linq2db development, diagnostics, and provider compatibility testing."
+	},
+	"default": {
+		"commandTimeout" : 30,
+		"lockTimeout"    : 5,
+		"maxRows"        : 10000,
+		"enableExecute"  : false,
+		"output"         : "json-table"
+	},
+	"ClickHouse.Octonica": {
+		"description"     : "ClickHouse Octonica provider",
+		"provider"        : "ClickHouse.Octonica",
+		"connectionString": "Host=localhost;Port=9000;Database=testdb1;User=testuser;Password=testuser"
+	},
+	"ClickHouse.Driver": {
+		"description"     : "ClickHouse Driver provider",
+		"provider"        : "ClickHouse.Driver",
+		"connectionString": "Host=localhost;Port=8123;Database=testdb2;Username=testuser;Password=testuser;UseSession=true;ReadStringsAsByteArrays=false"
+	},
+	"ClickHouse.MySql": {
+		"description"     : "ClickHouse MySql provider",
+		"provider"        : "ClickHouse.MySql",
+		"connectionString": "Host=localhost;Port=9004;Database=testdb3;Username=testuser;Password=testuser;Pooling=false;"
+	},
+	"DB2": {
+		"provider"        : "DB2",
+		"providerLocation": "%NUGET_PACKAGES%\\net.ibm.data.db2\\10.0.0.100\\lib\\net10.0\\IBM.Data.Db2.dll",
+		"connectionString": "Server=localhost:50000;Database=testdb;UID=db2inst1;PWD=Password12!"
+	},
+	"Informix": {
+		"provider"        : "Informix.DB2",
+		"providerLocation": "%NUGET_PACKAGES%\\net.ibm.data.db2\\10.0.0.100\\lib\\net10.0\\IBM.Data.Db2.dll",
+		"connectionString": "Server=localhost:9189;Database=testdatadb2;userid=informix;password=in4mix"
+	},
+	"Firebird": {
+		"provider"        : "Firebird",
+		"connectionString": "DataSource=localhost;Port=3050;Database=/firebird/data/testdb50.fdb;User Id=sysdba;Password=masterkey;charset=UTF8;wirecrypt=disabled"
+	},
+	"SQLite": {
+		"provider"        : "SQLite.MS",
+		"connectionString": "Data Source=Data/TestData.MS.sqlite"
+	},
+	"MySql": {
+		"provider"        : "MySql",
+		"providerLocation": "..\\..\\.build\\bin\\Tests\\net10.0\\MySql.Data.dll",
+		"connectionString": "Server=localhost;Port=3306;Database=testdata;Uid=root;Pwd=root;charset=utf8mb4;Allow User Variables=True;"
+	},
+	"MySqlConnector": {
+		"provider"        : "MySqlConnector",
+		"connectionString": "Server=localhost;Port=3306;Database=testdataconnector;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;AllowLoadLocalInfile=true;"
+	},
+	"MariaDB": {
+		"provider"        : "MariaDB",
+		"connectionString": "Server=localhost;Port=3316;Database=testdata;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;SslMode=Disabled;AllowLoadLocalInfile=true;"
+	},
+	"Oracle": {
+		"provider"        : "Oracle.Managed",
+		"connectionString": "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1531))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=system;Password=password;"
+	},
+	"PostgreSQL": {
+		"provider"        : "PostgreSQL",
+		"connectionString": "Server=localhost;Port=5417;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"
+	},
+	"SapHana": {
+		"provider"        : "SapHana.Native",
+		"providerLocation": "..\\..\\.build\\bin\\Tests\\net10.0\\Sap.Data.Hana.Net.v8.0.dll",
+		"connectionString": "Server=localhost:39017;Current Schema=TESTDB;UserID=SYSTEM;Password=Passw0rd;"
+	},
+	"SqlServer": {
+		"user"            : "sa",
+		"password"        : "Password12!",
+		"provider"        : "SqlServer.2025",
+		"connectionString": "Server=localhost,1425;Database=TestData;User Id={0};Password={1};Encrypt=true;TrustServerCertificate=true"
+	},
+	"Sybase": {
+		"provider"        : "Sybase.Managed",
+		"connectionString": "Data Source=localhost;Port=5000;Database=TestDataCore;Uid=sa;Password=myPassword;ConnectionTimeout=300;EnableBulkLoad=1;MinPoolSize=100;MaxPoolSize=200;AnsiNull=1;"
+	},
+	"YDB": {
+		"provider"        : "YDB",
+		"connectionString": "Host=localhost;Port=2136;Database=/local;UseTls=false;DisableDiscovery=true"
+	},
+	"DuckDB": {
+		"provider"        : "DuckDB",
+		"connectionString": "Data Source=Data/TestData.duckdb"
+	},
+	"Access.Odbc": {
+		"provider"        : "Access.Odbc",
+		"connectionString": "Driver={{Microsoft Access Driver (*.mdb, *.accdb)}};Dbq=Data\\TestData.ODBC.mdb;ExtendedAnsiSQL=1"
+	},
+
+	"impersonation-network-cleartext": {
+		"description"     : "Impersonation smoke: SQL Server should see %COMPUTERNAME%\\linq2db_cli_svc as SUSER_SNAME().",
+		"provider"        : "SqlServer",
+		"connectionString": "Server=localhost;Database=master;Integrated Security=true;TrustServerCertificate=true",
+		"user"            : "${COMPUTERNAME}\\linq2db_cli_svc",
+		"passwordEnv"     : "TEST_IMPERSONATION_USER_PASSWORD",
+		"impersonate"     : true,
+		"impersonateMode" : "network-cleartext"
+	},
+
+	"impersonation-new-credentials": {
+		"description"     : "Impersonation smoke: SQL Server should still see the current process login with new-credentials mode.",
+		"provider"        : "SqlServer",
+		"connectionString": "Server=localhost;Database=master;Integrated Security=true;TrustServerCertificate=true",
+		"user"            : "%COMPUTERNAME%\\linq2db_cli_svc",
+		"passwordEnv"     : "TEST_IMPERSONATION_USER_PASSWORD",
+		"impersonate"     : true,
+		"impersonateMode" : "new-credentials"
+	}
+}

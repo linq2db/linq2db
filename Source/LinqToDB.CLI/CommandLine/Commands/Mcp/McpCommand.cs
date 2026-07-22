@@ -1,0 +1,185 @@
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+
+using LinqToDB.CommandLine;
+using LinqToDB.CommandLine.Commands;
+using LinqToDB.CommandLine.Commands.Connection;
+using LinqToDB.CommandLine.Commands.QueryExecution;
+using LinqToDB.CommandLine.Options;
+
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+
+using ModelContextProtocol.Protocol;
+using ModelContextProtocol.Server;
+
+namespace LinqToDB.CommandLine.Commands.Mcp
+{
+	/// <summary>
+	/// MCP STDIO server command descriptor and startup option processing.
+	/// </summary>
+	sealed class McpCommand : CliCommand
+	{
+		static readonly OptionCategory _toolOptions = new(4, "Tools", "Tool registration options", "tools");
+
+		static readonly CliOption _enableExecuteTool = new BooleanCliOption(
+			"enable-execute-tool",
+			null,
+			false,
+			"register the write-capable linq2db_execute MCP tool; execution still requires profile enableExecute=true",
+			null,
+			null,
+			null,
+			false,
+			false);
+
+		public static CliCommand Instance { get; } = new McpCommand();
+
+		McpCommand()
+			: base(
+				"mcp",
+				true,
+				false,
+				"<options>",
+				"run STDIO MCP server exposing read-oriented SQL query execution and optional write-capable execution as model-controlled tools",
+				[
+					new("dotnet linq2db mcp --config query.json --profile dev",
+						"starts MCP server using connection settings from specified configuration profile"),
+					new("dotnet linq2db mcp --provider SQLite --connection-string \"Data Source=data.db\"",
+						"starts MCP server with direct SQLite connection settings"),
+					new("dotnet linq2db mcp --config query.json --profile dev --max-rows 100 --output json-table",
+						"starts MCP server with default result limit and output format for tool calls"),
+				])
+		{
+			AddOption(QueryExecutionCliOptions.ConfigurationOptions, QueryExecutionCliOptions.Config);
+			AddOption(QueryExecutionCliOptions.ConfigurationOptions, QueryExecutionCliOptions.Profile);
+			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.Provider);
+			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.ProviderLocation);
+			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.ConnectionString);
+			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.ConnectionStringEnv);
+			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.User);
+			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.UserEnv);
+			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.Password);
+			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.PasswordEnv);
+			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.WindowsCredentials);
+			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.Impersonate);
+			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.ImpersonateMode);
+			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.CommandTimeout);
+			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.LockTimeout);
+			AddOption(QueryExecutionCliOptions.OutputOptions,        QueryExecutionCliOptions.McpOutput);
+			AddOption(QueryExecutionCliOptions.OutputOptions,        QueryExecutionCliOptions.MaxRows);
+			AddOption(_toolOptions,                                 _enableExecuteTool);
+		}
+
+		public override async ValueTask<int> Execute(
+			CliController                  controller,
+			ICliEnvironment                environment,
+			string[]                       rawArgs,
+			Dictionary<CliOption, object?> options,
+			IReadOnlyCollection<string>    unknownArgs,
+			CancellationToken              cancellationToken)
+		{
+			var startupOptions = ProcessOptions(options);
+
+			if (options.Count > 0)
+			{
+				foreach (var kvp in options)
+					await environment.Error.WriteLineAsync($"{Name} command missing '{kvp.Key.Name}' option handler").ConfigureAwait(false);
+
+				throw new InvalidOperationException($"Not all options handled by {Name} command");
+			}
+
+			var configFileName = new ConnectionSettingsResolver(environment).ResolvePath(QueryExecutionCliOptions.Config, startupOptions.Config);
+
+			if (startupOptions.Config != null && (configFileName == null || !environment.FileExists(configFileName)))
+			{
+				// A missing %NAME%/${NAME} expansion already reported its own diagnostic and
+				// returned a sentinel value that can't be a real path; don't print it verbatim.
+				if (configFileName != null && !configFileName.Contains('\0', StringComparison.Ordinal))
+					await environment.Error.WriteLineAsync($"Configuration file '{configFileName}' not found.").ConfigureAwait(false);
+
+				return StatusCodes.INVALID_ARGUMENTS;
+			}
+
+			if (!McpServerConfiguration.TryLoad(environment, configFileName, out var serverConfiguration, out var error))
+			{
+				await environment.Error.WriteLineAsync(error).ConfigureAwait(false);
+				return StatusCodes.INVALID_ARGUMENTS;
+			}
+
+			var builder = Host.CreateApplicationBuilder([]);
+
+			builder.Logging.SetMinimumLevel(LogLevel.Warning);
+			builder.Logging.AddConsole(consoleOptions =>
+			{
+				consoleOptions.LogToStandardErrorThreshold = LogLevel.Trace;
+			});
+
+			var mcpServerBuilder = builder.Services
+				.AddMcpServer(serverOptions =>
+				{
+					serverOptions.ServerInfo = new Implementation
+					{
+						Name        = "linq2db.cli",
+						Title       = serverConfiguration.Title,
+						Version     = GetType().Assembly.GetName().Version?.ToString() ?? "unknown",
+						Description = serverConfiguration.Description,
+					};
+					serverOptions.ServerInstructions = serverConfiguration.Instructions;
+				})
+				.WithStdioServerTransport()
+				.WithTools(new McpQueryTool(startupOptions));
+
+			if (startupOptions.EnableExecuteTool)
+				mcpServerBuilder.WithTools(new McpExecuteTool(startupOptions));
+
+			await builder.Build().RunAsync(cancellationToken).ConfigureAwait(false);
+			return StatusCodes.SUCCESS;
+		}
+
+		static McpQueryStartupOptions ProcessOptions(Dictionary<CliOption, object?> options)
+		{
+			options.Remove(QueryExecutionCliOptions.Config,              out var config);
+			options.Remove(QueryExecutionCliOptions.Profile,             out var profile);
+			options.Remove(QueryExecutionCliOptions.Provider,            out var provider);
+			options.Remove(QueryExecutionCliOptions.ProviderLocation,    out var providerLocation);
+			options.Remove(QueryExecutionCliOptions.ConnectionString,    out var connectionString);
+			options.Remove(QueryExecutionCliOptions.ConnectionStringEnv, out var connectionStringEnv);
+			options.Remove(QueryExecutionCliOptions.User,                out var user);
+			options.Remove(QueryExecutionCliOptions.UserEnv,             out var userEnv);
+			options.Remove(QueryExecutionCliOptions.Password,            out var password);
+			options.Remove(QueryExecutionCliOptions.PasswordEnv,         out var passwordEnv);
+			options.Remove(QueryExecutionCliOptions.WindowsCredentials,  out var windowsCredentials);
+			options.Remove(QueryExecutionCliOptions.Impersonate,         out var impersonate);
+			options.Remove(QueryExecutionCliOptions.ImpersonateMode,     out var impersonateMode);
+			options.Remove(QueryExecutionCliOptions.CommandTimeout,      out var commandTimeout);
+			options.Remove(QueryExecutionCliOptions.LockTimeout,         out var lockTimeout);
+			options.Remove(QueryExecutionCliOptions.McpOutput,           out var output);
+			options.Remove(QueryExecutionCliOptions.MaxRows,             out var maxRows);
+			options.Remove(_enableExecuteTool,                           out var enableExecuteTool);
+
+			return new McpQueryStartupOptions(
+				(string?)config,
+				(string?)profile,
+				(string?)provider,
+				(string?)providerLocation,
+				(string?)connectionString,
+				(string?)connectionStringEnv,
+				(string?)user,
+				(string?)userEnv,
+				(string?)password,
+				(string?)passwordEnv,
+				(string?)windowsCredentials,
+				(bool?)impersonate,
+				(string?)impersonateMode,
+				(string?)commandTimeout,
+				(string?)lockTimeout,
+				(string?)maxRows,
+				(string?)output,
+				(bool?)enableExecuteTool ?? false);
+		}
+	}
+}

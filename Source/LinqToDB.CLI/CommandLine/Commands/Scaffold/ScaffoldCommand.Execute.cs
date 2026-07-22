@@ -1,11 +1,15 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.IO;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.CodeModel;
+using LinqToDB.CommandLine;
+using LinqToDB.CommandLine.Options;
+
 using LinqToDB.Data;
 using LinqToDB.DataProvider.DB2;
 using LinqToDB.DataProvider.Oracle;
@@ -15,15 +19,17 @@ using LinqToDB.Naming;
 using LinqToDB.Scaffold;
 using LinqToDB.Schema;
 
-namespace LinqToDB.CommandLine
+namespace LinqToDB.CommandLine.Commands.Scaffold
 {
 	partial class ScaffoldCommand : CliCommand
 	{
 		public override async ValueTask<int> Execute(
 			CliController                  controller,
+			ICliEnvironment                environment,
 			string[]                       rawArgs,
 			Dictionary<CliOption, object?> options,
-			IReadOnlyCollection<string>    unknownArgs)
+			IReadOnlyCollection<string>    unknownArgs,
+			CancellationToken              cancellationToken)
 		{
 			// processed on controller level already
 			options.Remove(General.Import);
@@ -84,7 +90,7 @@ namespace LinqToDB.CommandLine
 			if (options.Count > 0)
 			{
 				foreach (var kvp in options)
-					await Console.Error.WriteLineAsync($"{Name} command miss '{kvp.Key.Name}' option handler").ConfigureAwait(false);
+					await Console.Error.WriteLineAsync($"{Name} command missing '{kvp.Key.Name}' option handler").ConfigureAwait(false);
 
 				// throw exception as it is implementation bug, not bad input or other expected error
 				throw new InvalidOperationException($"Not all options handled by {Name} command");
