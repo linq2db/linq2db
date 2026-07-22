@@ -704,7 +704,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4568")]
-		public void SelectCompositePropertyMapped_Class_OnlyRequiredColumns([DataSources] string context)
+		public void SelectCompositePropertyMapped_Class_OnlyRequiredColumns([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using var db    = GetDataContext(context);
 
@@ -714,7 +714,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4568")]
-		public void SelectCompositePropertyMapped_Struct_OnlyRequiredColumns([DataSources] string context)
+		public void SelectCompositePropertyMapped_Struct_OnlyRequiredColumns([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			var ms = new MappingSchema();
 			ms.SetScalarType(typeof(AddressStruct), false);
@@ -727,7 +727,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4568")]
-		public void SelectCompositePropertyMapped_Class_Distinct_OnlyRequiredColumns([DataSources] string context)
+		public void SelectCompositePropertyMapped_Class_Distinct_OnlyRequiredColumns([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -737,7 +737,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4568")]
-		public void SelectCompositePropertyMapped_Class_Projected_OnlyRequiredColumns([DataSources] string context)
+		public void SelectCompositePropertyMapped_Class_Projected_OnlyRequiredColumns([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -785,7 +785,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4568")]
-		public void SelectNestedCompositeProperty_OnlyRequiredColumns([DataSources] string context)
+		public void SelectNestedCompositeProperty_OnlyRequiredColumns([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -797,7 +797,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4568")]
-		public void SelectNestedCompositeProperty([DataSources] string context)
+		public void SelectNestedCompositeProperty([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(NestedCoordEntity.TestData);
