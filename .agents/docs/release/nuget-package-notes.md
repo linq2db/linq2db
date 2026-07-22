@@ -183,8 +183,8 @@ Patterns are wildcard-friendly (`Internal.*`, `*.Internal.*`, `Foo.Bar.IBaz`). T
 
 ## Newtonsoft.Json
 
-- **Update rule:** **Pinned at the current shipping version** (today `13.0.1`). Do not bump even when newer 13.0.x is available, unless flagged vulnerable. Reasoning: shipping with the lowest stable 13.0.x version keeps downstream consumers free of transitive constraints (same intent as runtime-pin policy, but for Newtonsoft specifically since it is referenced from shipping projects).
-- **Last verified:** 2026-05-15 on release 6.3.0
+- **Update rule:** **Pinned at the current shipping version** (`Directory.Packages.props` is authoritative — `13.0.3` as of 6.4.0 prep; this doc previously recorded `13.0.1`, so read the props file rather than trusting the version quoted here). Do not bump even when newer 13.0.x is available, unless flagged vulnerable. Reasoning: shipping with the lowest stable 13.0.x version keeps downstream consumers free of transitive constraints (same intent as runtime-pin policy, but for Newtonsoft specifically since it is referenced from shipping projects). The pin having moved 13.0.1 → 13.0.3 is consistent with the "unless flagged vulnerable" carve-out; the raise itself isn't a rule change.
+- **Last verified:** 2026-07-17 (pin value re-read from `Directory.Packages.props:174`; rule text unchanged since 2026-05-15 / release 6.3.0)
 
 ## NUnit3TestAdapter
 

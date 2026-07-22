@@ -80,7 +80,7 @@ For each `missing` row:
 - User edits the wiki manually. After they confirm done, skill re-runs the audit (step 1) for that row and updates the coverage table.
 
 For each `intentional` row:
-- Skill records `{issue?, pr?, reason}` into `state.notes.intentionalOmissions[]` via `release-state.ps1 -Action update -Version <ver> -TaskId 5 -Annotation` — or by direct manipulation of the state file (the orchestrator's state schema supports this list).
+- Skill records `{issue?, pr?, reason}` into `state.notes.intentionalOmissions[]` by editing `.build/.agents/release-<ver>.json` directly (the orchestrator's state schema carries this list). `release-state.ps1 -Action update` cannot write it — that action addresses `state.tasks` only, and `-Annotation` is a free-text note on a task, not a list append (it also hard-requires `-Status`). To additionally annotate task 5, pass a full call: `release-state.ps1 -Action update -Version <ver> -TaskId 5 -Status in-progress -Annotation '<text>'`.
 - Don't pollute the long-term `.agents/docs/release/` docs with per-release omissions — they're release-specific judgment calls.
 
 ### 4. Re-run + tick
