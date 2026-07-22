@@ -30,7 +30,34 @@ git -C ../linq2db.wiki sparse-checkout set --no-cone Releases-and-Roadmap.md
 git -C ../linq2db.wiki -c core.protectNTFS=false checkout master
 ```
 
-After this, `git status` is clean and only the sparse page(s) are materialized; `apply-wiki` + commit + push work normally (they never touch the colon-named blob, which stays in the tree untouched). Release-notes usage of the clone: [`release/external-repos.md`](release/external-repos.md).
+After this, `git status` is clean and only the sparse page(s) are materialized; `apply-wiki` + commit + push work normally **for a page already in the sparse set** (they never touch the colon-named blob, which stays in the tree untouched). Release-notes usage of the clone: [`release/external-repos.md`](release/external-repos.md).
+
+**Editing or adding a page that is _not_ already in the sparse set needs one extra step first.** The "works normally" above holds only for a page materialized in the cone (e.g. `Releases-and-Roadmap.md`, which `/release-notes` edits). For any other page — a brand-new rule page, or an existing page you haven't sparse-checked-out — `git add --sparse <page>.md` **clears the `skip-worktree` bit on out-of-cone entries**, so the un-checkout-able colon page immediately shows as a staged deletion and the next `git commit` deletes it. Pushing that commit would delete a live wiki page. Two safe paths:
+
+- **Preventive — bring the page into the cone before touching it:**
+
+  ```
+  git -C ../linq2db.wiki sparse-checkout add <page>.md
+  ```
+
+  then edit / `git add <page>.md` / commit / push normally; the colon blob stays `skip-worktree` and is never staged.
+
+- **Recovery — bad commit already made but not yet pushed.** Rebuild the commit via plumbing so the working tree's missing colon page is never consulted (run as separate calls — the Bash tool doesn't persist shell vars, so capture each printed SHA and substitute it into the next call):
+
+  ```
+  git -C ../linq2db.wiki -c core.protectNTFS=false read-tree origin/master   # index := remote; working tree untouched
+  git -C ../linq2db.wiki hash-object -w <page>.md                            # -> <blob>
+  git -C ../linq2db.wiki update-index --cacheinfo 100644,<blob>,<page>.md
+  git -C ../linq2db.wiki -c core.protectNTFS=false write-tree                # -> <tree>
+  git -C ../linq2db.wiki commit-tree <tree> -p origin/master -F <msg-file>   # -> <commit>
+  git -C ../linq2db.wiki update-ref refs/heads/master <commit>
+  ```
+
+  Verify `git -C ../linq2db.wiki -c core.protectNTFS=false diff --stat origin/master master` shows **only** your page (no colon-page deletion) before `git -C ../linq2db.wiki push origin master`.
+
+**Before creating a wiki page for a task** (e.g. an analyzer descriptor's `helpLinkUri` target), fetch and check whether it already exists — `git -C ../linq2db.wiki fetch origin` then `git -C ../linq2db.wiki ls-tree origin/master <page>.md`. Pages are often authored out-of-band; drafting one that already exists wastes effort and risks overwriting a maintainer's page. **A PR body's "post-merge follow-up: create wiki page X" bullet is *not* evidence the page is absent** — such follow-up lists are aspirational and frequently lag the already-authored page. Run the `ls-tree` check before telling the user a page doesn't exist; don't infer its status from PR-body prose (an instance of *fetched content is a claim, verify it*). Corrected on PR #5703, where the `LINQ2DB1001` page existed despite the PR body listing it as a to-do.
+
+**Renaming a wiki page** (e.g. a diagnostic id changed on the PR): after the sparse-checkout above, `git mv --sparse <old>.md <new>.md` — plain `git mv` fails with a "Use the --sparse option" hint because the destination isn't in the sparse set. Then edit + `git -C ../linq2db.wiki add --sparse <new>.md` (the `--sparse` is likewise required), commit, push. Also `git -C ../linq2db.wiki grep -n "<oldId>" HEAD -- "*.md"` first to catch any *other* page linking the old name (the rename would break those links). Done on PR #5703 (`LINQ2DB1001.md` → `L2DB1001.md`, plus its `helpLinkUri`/editorconfig id references).
 
 ## `gh ... --body` is banned
 
@@ -229,6 +256,8 @@ Don't try to outwait a transient disk-space failure or ignore it as "the build m
 **Repeated `dotnet test` cycles against a worktree progressively slow the build until it times out.** Running several `dotnet test` iterations back-to-back on a worktree (e.g. a red→green→regression verification loop) accumulates orphaned `dotnet` / `testhost` child processes — each cancelled or completed MTP run can leave one behind — and the pileup starves later builds until one exceeds the invocation timeout and is SIGTERM'd, surfacing the `MSB4166` *child node exited prematurely* errors above as a side-effect of the cancellation (not a genuine pressure crash). Discriminator from the real MSB4166 case: the earlier runs in the same session built in normal time (~3 min) and only the later ones slow down. Fix: run `dotnet build-server shutdown` between iterations (and, when many have accumulated, `Get-Process dotnet,testhost,csc -ErrorAction SilentlyContinue | Stop-Process -Force`) — a build that timed out at 10 min completed in ~3 min on the very next run after the shutdown. (Surfaced reviewing PR #5555: the 7th consecutive worktree test run timed out; the retry after a build-server shutdown ran normally.)
 
 **A backgrounded build piped to `tail`/`head` reports the pipe's exit code, not the build's.** `dotnet build … | tail -N` run via `run_in_background` surfaces a completion exit code of `0` (tail succeeded) even when the build FAILED — a red build reads as green. Don't trust the notification's exit code on a piped build; `Read` the output file and check for `Build FAILED` / `N Error(s)`. Better: don't pipe at all — let the full output persist and `Read` it (mirrors the "read the whole log, don't pipe to head/tail" rule for test runs in [`../agents/test-runner.md`](../agents/test-runner.md)). Observed verifying a PR's Release build: a failed build (6 `IDE0306` errors) reported `exit code 0` because the pipe's tail succeeded.
+
+**`error MSB4025: The project file could not be loaded. An XML comment cannot contain '--'`** when a `.csproj` / `.fsproj` / `.props` / `.slnx` comment quotes a CLI double-dash option (`--nrt`, `--target-language`). A literal `--` is illegal *inside* an XML `<!-- … -->` comment, so the project file fails to load before any build starts. Reword the comment to drop the dashes (`nrt=true`, `target-language f#`). (Surfaced on #1553 three times writing baseline-gate `.fsproj` comments that referenced the scaffold CLI flags — each `--nrt` / `--target-language` in a comment aborted the load.)
 
 ## TFM API availability (net462 / netstandard2.0)
 

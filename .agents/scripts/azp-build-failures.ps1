@@ -18,10 +18,21 @@ Invoke directly via the PowerShell tool (preferred), NOT wrapped in Bash:
 Output: single JSON document on stdout with per-task failures and on-disk
 log paths. Logs are persisted under -WriteDir for follow-up Read / Grep.
 
+Each task carries `reportedFailedTotal` (parsed from the runner's "failed: N"
+summary line) and `truncated` (true when the captured failures[] were capped at
+-MaxFailuresPerTask below the reported total). When `truncated` is true, the
+failures[] list is a prefix — re-run with a higher -MaxFailuresPerTask, or Grep
+the persisted log, before reporting a failure count as complete.
+
 When the build failed for a non-test reason (e.g. a compile error in a
-"Build …" step), there are no `Tests *` task failures to parse; the result then
-carries a `buildFailures` array instead — each failed Task's name plus its
-timeline error `issues` (the actual CSxxxx / MSBxxxx messages).
+"Build …" step, or a "Command line" step wrapping dotnet build/publish), there
+are no `Tests *` task failures to parse; the result then carries a
+`buildFailures` array instead — each failed Task's name, its timeline error
+`issues`, plus the downloaded `logPath` and a parsed `errors` list. For a
+"Command line" wrapper the timeline `issues` only hold the generic shell exit
+("Cmd.exe exited with code '1'"); the real CSxxxx / MAxxxx / MSBxxxx message
+lives in the task log, which is why the log is fetched and `: error` /
+`##[error]` lines are surfaced in `errors`.
 #>
 
 param(
@@ -42,6 +53,13 @@ New-Item -ItemType Directory -Force -Path $WriteDir | Out-Null
 
 $baseUrl = "https://dev.azure.com/$Org/$Project/_apis/build/builds/$BuildId"
 
+function ConvertTo-Slug {
+    param([string]$Name)
+    $s = $Name.ToLowerInvariant()
+    $s = $s -replace '[^a-z0-9]+', '-'
+    return $s.Trim('-')
+}
+
 # 1. Timeline -> failed Task records that look like test jobs.
 try {
     $timeline = Invoke-RestMethod -Uri "$baseUrl/timeline?api-version=7.0"
@@ -51,19 +69,45 @@ catch {
 }
 
 $failedTasks = @($timeline.records |
-    Where-Object { $_.type -eq 'Task' -and $_.result -eq 'failed' -and $_.name -like 'Tests *' -and $_.log })
+    Where-Object { $_.type -eq 'Task' -and $_.result -eq 'failed' -and ($_.name -like 'Tests *' -or $_.name -like 'EF.Core Tests *') -and $_.log })
 
 if ($failedTasks.Count -eq 0) {
     # No failed *test* tasks. A build can still be red for a non-test reason (a
-    # compile error in a "Build …" step, restore failure, etc.). Surface every
-    # other failed Task record with its timeline error issues so the caller gets
-    # the actual message (e.g. CSxxxx) instead of a misleading "0 failures".
+    # compile error in a "Build …" step, a restore failure, or a "Command line"
+    # step wrapping dotnet build/publish). For a "Command line" wrapper the
+    # timeline `issues` only carry the generic shell exit ("Cmd.exe exited with
+    # code '1'") — the real CSxxxx / MAxxxx / MSBxxxx error is in the task's own
+    # log, not the timeline. So download + parse each failed non-test task's log
+    # too, not just its timeline issues, and return logPath + parsed errors[].
     $buildFailures = @($timeline.records |
-        Where-Object { $_.type -eq 'Task' -and $_.result -eq 'failed' -and $_.issues } |
+        Where-Object { $_.type -eq 'Task' -and $_.result -eq 'failed' -and ($_.issues -or $_.log) } |
         ForEach-Object {
+            $rec    = $_
+            $issues = @($rec.issues | Where-Object { $_.type -eq 'error' } | ForEach-Object { $_.message })
+
+            $logPath = $null
+            $errors  = @()
+            if ($rec.log -and $rec.log.url) {
+                $slug    = ConvertTo-Slug -Name $rec.name
+                $logPath = Join-Path $WriteDir "$slug.log"
+                try {
+                    Invoke-WebRequest -Uri $rec.log.url -OutFile $logPath -UseBasicParsing | Out-Null
+                    $errors = @(Get-Content -LiteralPath $logPath |
+                        ForEach-Object { [regex]::Replace($_, "\x1b\[[0-9;]*m", "") } |
+                        Where-Object { $_ -match ': error ' -or $_ -match '##\[error\]' } |
+                        ForEach-Object { ($_ -replace '^\s*\S+Z\s+', '').Trim() } |
+                        Select-Object -Unique -First $MaxFailuresPerTask)
+                }
+                catch {
+                    [Console]::Error.WriteLine("azp-build-failures: log fetch failed for '$($rec.name)': $_")
+                }
+            }
+
             [pscustomobject]@{
-                name   = $_.name
-                issues = @($_.issues | Where-Object { $_.type -eq 'error' } | ForEach-Object { $_.message })
+                name    = $rec.name
+                issues  = $issues
+                logPath = $logPath
+                errors  = $errors
             }
         })
 
@@ -78,13 +122,6 @@ if ($failedTasks.Count -eq 0) {
 }
 
 # 2. Download each failing task's raw log to disk + parse for failures.
-function ConvertTo-Slug {
-    param([string]$Name)
-    $s = $Name.ToLowerInvariant()
-    $s = $s -replace '[^a-z0-9]+', '-'
-    return $s.Trim('-')
-}
-
 $tasks = foreach ($t in $failedTasks) {
     $logUrl  = $t.log.url
     $slug    = ConvertTo-Slug -Name $t.name
@@ -140,11 +177,24 @@ $tasks = foreach ($t in $failedTasks) {
         }
     }
 
+    # The runner prints a per-dll "Test run summary" block with a "failed: N" line.
+    # Parse it so the caller can tell a full list from one truncated at MaxFailuresPerTask
+    # (the failures[] loop stops at the cap; a bare count of 20 is otherwise indistinguishable
+    # from a genuine 20). Sum across dlls in case a task runs more than one.
+    $reportedFailed = 0
+    foreach ($line in $lines) {
+        $clean = [regex]::Replace($line, "\x1b\[[0-9;]*m", "") -replace '^\s*\S+Z\s+', ''
+        $fm = [regex]::Match($clean, '^\s*failed:\s*(?<n>\d+)\s*$')
+        if ($fm.Success) { $reportedFailed += [int]$fm.Groups['n'].Value }
+    }
+
     [pscustomobject]@{
-        name     = $t.name
-        logUrl   = $logUrl
-        logPath  = $logPath
-        failures = $failures
+        name                = $t.name
+        logUrl              = $logUrl
+        logPath             = $logPath
+        reportedFailedTotal = $reportedFailed
+        truncated           = ($reportedFailed -gt $failures.Count)
+        failures            = $failures
     }
 }
 

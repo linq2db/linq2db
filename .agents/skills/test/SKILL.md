@@ -37,6 +37,8 @@ If the args are ambiguous (e.g. a phrase like "bulk copy identity test" that cou
 
 **Worktree runs.** When the change under test lives in a git worktree (not the primary clone), the caller passes a `worktree <abs-path>` clause anywhere in the args. Thread that path through as `repoRoot` to `test-runner` (step 3.3), and `Read` `UserDataProviders.json` / the target csproj from `<worktree>/…` in steps 3.1–3.2 (not cwd). Env setup for that worktree is `/test-providers … worktree <abs-path>` (the skill seeds and edits the worktree's `UserDataProviders.json`). Full mechanics: [`.agents/docs/worktree.md`](../../docs/worktree.md) → *Running tests from a worktree*.
 
+> **Exception — a PR's *own* newly-added tests.** When the tests under verification are **added by the PR** (absent from the primary clone — e.g. during `/review-pr` fix-verification in a worktree off `origin/pr/<n>`), do **not** delegate to `test-runner`: it reports the fixture missing when pointed at the primary clone, blocks on runner resolution when pointed at the worktree, and can leak detached `dotnet` jobs. Run them yourself per [`.agents/docs/worktree.md`](../../docs/worktree.md) → *Reviewing / verifying a PR's own new tests* (PowerShell tool, `Set-Location <worktree>`, `dotnet test --project … -f net10.0 --filter … --settings .runsettings --provider …`).
+
 ### 1. Resolve intent
 
 Parse args per the table above. On ambiguity or empty args, ask the user (single prompt, numbered options so they can reply with a number).

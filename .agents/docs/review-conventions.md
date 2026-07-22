@@ -23,8 +23,8 @@ Shared vocabulary for `/review-pr` and `/verify-review` and their subagents. Any
 
 Used by `/verify-review` (and by `/review-pr` when it finds prior reviews of its own on the PR).
 
-1. Fetch all reviews on the PR authored by the current GitHub user (`gh api user --jq .login`) plus all their review comments.
-2. Regex-scan every review body and every review comment body for finding IDs.
+1. Fetch all reviews on the PR authored by the current GitHub user (`gh api user --jq .login`) plus all their review comments **and their plain issue comments** (`issueComments[]`) — a self-review summary is sometimes posted as an ordinary PR comment rather than a formal review, and its finding IDs must feed the floor too.
+2. Regex-scan every review body, every review comment body, **and every own issue-comment body** for finding IDs.
 3. Per severity, compute `max(NNN)` across all matches.
 4. The floor for that severity in the next review is `max + 1`. If no prior matches for a severity, floor is `001`.
 
@@ -104,7 +104,7 @@ The review **must** lead with the agentic-review disclaimer block below — it i
 <from baselines-reviewer output, or a single line when skipped / missing>
 ```
 
-The `## Prior-review audit` section is populated from the step-2b audit of prior reviews by **other** authors (bots + humans) — see `review-bot-claim-audit.md`. One line per audited inline thread and per audited review-body-summary claim, prefixed with its verdict (`Fixed` / `Inaccurate` / `Still actual`) and the author. Omit the section entirely when there are no prior reviews from other authors to audit. Still-actual items are also carried into the regular finding stream; cite the assigned finding ID on the audit line so the reader can follow it down.
+The `## Prior-review audit` section is populated from the step-2b audit of prior reviews by **other** authors (bots + humans) — see `review-bot-claim-audit.md`. One line per audited inline thread and per audited review-body-summary claim, prefixed with its verdict (`Fixed` / `Inaccurate` / `Still actual`) and the author. Omit the section entirely when there are no prior reviews from other authors to audit. Still-actual items are also carried into the interactive walk as fixable items (see `review-orchestration.md` → **interactive mode**), so the user can resolve a prior reviewer's open finding in-session. Do **not** re-post another author's finding under a new finding ID (that duplicates their open review) — the audit line is its record; when you surface an *equivalent own* finding, cite its ID on the audit line so the reader can follow it down.
 
 The `## Out-of-scope observations` section is populated from `code-reviewer`'s `out_of_scope_observations[]` output and only appears when that array is non-empty. Entries have no severity, no checkbox, and no line anchor — they are FYI observations about behavior that exists on `master` without the PR, surfaced because a reviewer might find them useful context. See `.agents/agents/code-reviewer.md` → **Scope discipline** for what qualifies.
 

@@ -33,6 +33,7 @@
     <File Path=".agents/docs/api-surface-classification.md" />
     <File Path=".agents/docs/architecture.md" />
     <File Path=".agents/docs/audit-agents-checks.md" />
+    <File Path=".agents/docs/authoring-analyzers.md" />
     <File Path=".agents/docs/baselines-repo-layout.md" />
     <File Path=".agents/docs/bug-investigation.md" />
     <File Path=".agents/docs/ci-tests.md" />
@@ -145,8 +146,14 @@
   <Folder Name="/.agents/skills/copilot-loop/">
     <File Path=".agents/skills/copilot-loop/SKILL.md" />
   </Folder>
+  <Folder Name="/.agents/skills/create-analyzer/">
+    <File Path=".agents/skills/create-analyzer/SKILL.md" />
+  </Folder>
   <Folder Name="/.agents/skills/create-issue/">
     <File Path=".agents/skills/create-issue/SKILL.md" />
+  </Folder>
+  <Folder Name="/.agents/skills/dogfood-analyzer/">
+    <File Path=".agents/skills/dogfood-analyzer/SKILL.md" />
   </Folder>
   <Folder Name="/.agents/skills/enable-disabled-test/">
     <File Path=".agents/skills/enable-disabled-test/SKILL.md" />

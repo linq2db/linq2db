@@ -269,3 +269,8 @@ Patterns are wildcard-friendly (`Internal.*`, `*.Internal.*`, `Foo.Bar.IBaz`). T
   3. After update + verification Release build, observe which new rules raised errors. For each rule that raised errors, ask the user: fix the errors, or disable the rule (set severity = none in `.editorconfig`).
   4. **First-time-this-rule update only:** also catch up on previously-missed rules — audit the analyzer's full rule catalog at the target version against the current `.editorconfig` and enable any missing rules using the same procedure. Do **not** touch rules that were already explicitly enabled or disabled in `.editorconfig`.
 - **Last verified:** 2026-05-15 on release 6.3.0
+
+## Microsoft.CodeAnalysis.CSharp.Workspaces (+ Microsoft.CodeAnalysis.CSharp for the analyzer project)
+
+- **Update rule:** Roslyn baseline for the **shipped** `linq2db.Analyzers` package (NOT the internal 5.3.0 `Microsoft.CodeAnalysis.CSharp` runtime pin used by the linq2db library). **Track the Roslyn bundled with the lowest supported .NET SDK** — today .NET 8 → **4.8.0**. It sets the minimum VS / .NET SDK a consumer needs for the analyzer + code fix to load, so keep it low for IDE reach (mirrors NUnit.Analyzers' broad-reach approach). Only raise it when the lowest supported SDK is dropped; downgrade in a later release if users report their IDE/SDK is too old. Referenced via `VersionOverride` / a dedicated central `<PackageVersion>`, `PrivateAssets="all"`; `CentralPackageTransitivePinningEnabled=false` keeps its transitive CodeAnalysis assemblies from clashing with the 5.3.0 runtime pin. See [`authoring-analyzers.md`](../authoring-analyzers.md).
+- **Last verified:** 2026-07-10 on the linq2db.Analyzers package work

@@ -63,6 +63,10 @@ When a `gh api` call returns HTTP 422 with body `{"errors":["An internal error o
 
 Surfaced 2026-05-06 during PR #5467 review posting against `POST /repos/{o}/{r}/pulls/{n}/reviews`.
 
+### Reading a file's content at a ref (avoid the base64 pipe trap)
+
+To read a file's content at a specific ref / PR, request the raw bytes: `gh api "repos/linq2db/linq2db/contents/<path>?ref=<ref>" -H "Accept: application/vnd.github.raw"` returns the file verbatim, no base64. Reaching for `--jq '.content'` and decoding is the trap — the `contents` API base64-wraps `content` every 60 chars, and piping that into `ForEach-Object` / a decode splits it per line so each fragment decodes to garbage (same pipe-splitting mechanism as the `.body` trap above). If you must decode `.content`, capture it to a variable and strip whitespace before a single decode (`[Convert]::FromBase64String($c -replace '\s','')`); never pipe it line-by-line. (For a ref containing `/` — e.g. `refs/pull/<n>/merge` — the `?ref=` query form works where `git show <ref>:<path>` fails on the slash; see [`agent-rules.md`](agent-rules.md) → *Windows Git Bash gotchas*.)
+
 ### Wording discipline
 
 Issue bodies, PR bodies, review comments, and replies are terse and fact-dense — a record of what changed and why, not a place for framing, apologies, or summaries of what the diff already shows.
@@ -74,5 +78,15 @@ Issue bodies, PR bodies, review comments, and replies are terse and fact-dense �
 Review comments: lead with `**<Severity> · <ID>**`, state the finding, state the fix — no "I noticed that…" / "this might be worth looking at…", the severity label already says "I think this matters". Retraction / correction replies: state what was wrong, the correct reading, one link to evidence — no apologies (the retraction is the apology). Your own prior posts authored by the current `gh` user are editable without this guardrail applying.
 
 **Avoid the AI-text tells.** The terse, fact-led style above already steers clear of the patterns now widely read as machine-written, but watch for them explicitly in longer prose (PR bodies, release notes): over-uniform paragraph structure, an em-dash in every other sentence, the "not X, but Y" cadence on repeat, and a wall of evenly-weighted bullets. Vary the rhythm and lead with the concrete fact. This is a credibility note, not a detector-gaming exercise — the goal is prose a maintainer reads as written by someone who did the work, not output to launder.
+
+### Bug repros for external / upstream projects
+
+When filing an issue on an **external** project's tracker (e.g. a provider engine like `ydb-platform/ydb`), the SQL repro must be **self-contained and anonymized**:
+
+- Include the `CREATE TABLE` (+ a minimal seed `INSERT`/`UPSERT`) so the maintainer can paste-and-run without any linq2db-specific schema.
+- Anonymize identifiers — generic table/column names (`t`, `id`, `v`), not the internal test schema (`LinqDataTypes.SmallIntValue`, etc.).
+- Confirm the anonymized script actually reproduces before posting (an optimizer crash can be data-dependent — seed rows and run it; an empty table may not trigger it).
+
+This is stricter than an internal linq2db issue, where referencing test names / existing tables is fine.
 
 The first-party provider-behavior verification rule (XML docs / source comments / agent-prose claims about how a provider translates a member) lives in [`agent-rules.md`](agent-rules.md) → *Agent Guardrails*. It applies to code-authoring content too, not just GitHub posts.

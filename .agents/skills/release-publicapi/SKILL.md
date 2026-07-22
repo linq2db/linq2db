@@ -9,6 +9,8 @@ description: PublicAPI.Shipped / PublicAPI.Unshipped reconciliation for the rele
 
 **Is:** the per-release PublicAPI shipped/unshipped reconciliation. For every `PublicAPI.Shipped.txt` / `PublicAPI.Unshipped.txt` pair under `Source/`, moves Unshipped entries into Shipped (sorted union), then truncates Unshipped to just the `#nullable enable` directive. Runs across ~36 file pairs spanning multi-TFM (per-`net{TFM}/` subfolder) and single-TFM (flat) layouts.
 
+Also owns the **analyzer release-tracking** move for the `linq2db.Analyzers` package — `AnalyzerReleases.Unshipped.md` → `AnalyzerReleases.Shipped.md` — the same release-time Unshipped→Shipped reconciliation for a different file family (Roslyn's RS2000–RS2002 release tracking). See step 8.
+
 **Isn't:**
 
 - Not [`/api-baselines`](../api-baselines/SKILL.md) — that skill handles `CompatibilitySuppressions.xml` (Microsoft.DotNet.ApiCompat). PublicAPI.*.txt is a different system (Microsoft.CodeAnalysis.PublicApiAnalyzers) tracking the declared public surface. Both run during a release prep, but on independent files.
@@ -102,6 +104,26 @@ Re-run step 1 (build) and step 2 (discover) to confirm zero RS0016/RS0017 after 
    (multi-TFM and flat layouts). Verified zero RS0016/RS0017 post-apply.
    ```
 4. Push on user confirmation (push semantics rule in `/release` Conventions).
+
+### 8. Reconcile AnalyzerReleases.*.md (linq2db.Analyzers package)
+
+The `linq2db.Analyzers` package tracks its shipped rules with Roslyn's release-tracking files — `Source/LinqToDB.Analyzers/AnalyzerReleases.{Shipped,Unshipped}.md`, enforced by the RS2000–RS2002 analyzers. This is a **separate file family** from `PublicAPI.*.txt` (different system, no `release-publicapi-reconcile.ps1` support), but it has the **same release-time Unshipped→Shipped move**, so it belongs in this skill. Do it by hand — it's a handful of rule rows, no script:
+
+1. In `AnalyzerReleases.Shipped.md`, append a release section under the header comment (`; Shipped analyzer releases` + help-link line), moving the tables verbatim from `Unshipped.md`:
+
+       ## Release <version>
+
+       ### New Rules
+
+       Rule ID | Category | Severity | Notes
+       --------|----------|----------|-------
+       <every row from Unshipped.md's "### New Rules" table>
+
+   For a rule whose **severity/category changed** this release, use a `### Changed Rules` table (adds `Old Category | Old Severity` columns); for a **removed/deleted** rule, `### Removed Rules`. Format reference is the ReleaseTrackingAnalyzers help URL linked at the top of both files.
+2. Reset `AnalyzerReleases.Unshipped.md` to just its two header-comment lines (`; Unshipped analyzer release` + the help-link line) — drop the moved tables.
+3. The verify build (step 6) must stay clean of **RS2000/RS2001/RS2002** — the release-tracking analyzers fail the build if the move is inconsistent (e.g. a rule in code but absent from both files, or an Unshipped row not carried to Shipped).
+
+**Skip this step** when `Source/LinqToDB.Analyzers/AnalyzerReleases.Unshipped.md` has no pending rule rows (only the header comment) — the common case, since most releases add no analyzer rules. Stage the two files with the step-7 commit when they do change (`git add Source/LinqToDB.Analyzers/AnalyzerReleases.{Shipped,Unshipped}.md`).
 
 ## Don'ts
 

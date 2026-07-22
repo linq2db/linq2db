@@ -42,6 +42,10 @@ Entity construction must emit each such member **once**: `BuildGenericFromMember
 
 The SQL AST (`Source/LinqToDB/SqlQuery/` and `Source/LinqToDB/Internal/SqlQuery/`), the `IDataProvider` interface, and the translator interfaces under `Source/LinqToDB/Linq/Translation/` are consumed by every database provider in the repo. A fix scoped to one provider or one test shouldn't reshape them — the blast radius is the whole product. When a local task seems to need a cross-cutting change, surface the question explicitly rather than making the change silently.
 
+### Don't grow core builder API for a helper-only fix
+
+A fix scoped to a helper / peripheral API (e.g. `ToSqlQuery`'s by-name `Query<T>` round-trip) must not expand core builder surface (`ISqlBuilder` / `BasicSqlBuilder`) to serve it — threading a new flag/parameter through the shared builder for one convenience path fails the cost/benefit test. If the fix genuinely needs new core surface, drop or narrow it instead. (User call on #5657: an export-scoping `ForGetSqlText` seam on `ISqlBuilder` was rejected — "if we need to add api changes to sqlbuilder then we will not use this fix for helper API"; the peripheral behavior was left as-is.) This is the API-surface counterpart of the general "propose minimal, let the user expand" preference.
+
 ### Companion interfaces to public contracts stay public, in the contract's namespace
 
 An opt-in companion interface extending an existing public contract (e.g. a schema-aware extension of `IMetadataReader`) defaults to **public, in the same namespace as the contract it extends** — not `LinqToDB.Internal.*`, and not `InternalsVisibleTo` (the repo uses none). An extension seam that third parties may implement has no value hidden; it is part of the same contract surface. (User decision on #5675, overriding a proposed `Internal.Metadata` placement: "no value in hiding it".) This does not soften the SQL AST rule below — AST construction types are *not* extension seams and MUST stay in `LinqToDB.Internal.SqlQuery`.
@@ -116,6 +120,8 @@ This rule refines the `/review-pr` classification in [`api-surface-classificatio
 ### Column-aligned formatting is intentional
 
 Large blocks of the codebase use column-aligned formatting — property declarations line their `{ get; }` up at the same column, constructor parameters line their defaults up at the same column, constant declarations line their `=` up at the same column. This is deliberate house style, not accidental. Preserve it when editing; match the existing alignment of surrounding code rather than reformatting it to a narrower width.
+
+When you *do* edit an aligned block, align each `=` / `=>` to the longest left-hand side **within its contiguous same-kind subgroup** — declarations of one type form a subgroup independent of an adjacent block of another type (a `var` group and a `List<T>?` group align to *different* columns even with no blank line between them), a bare assignment aligns with the variable-declaration block it sits directly above/below, and a `switch`-expression's arms align their `=>` one space past the longest pattern. A lone declaration takes a single space; a group that loses a member re-collapses to the new longest LHS. The common defect is an `=`/`=>` sitting one column off its neighbours — fix it by adding/removing the one space, never by stripping the alignment.
 
 Formatting is only worth flagging when it is clearly broken — three or more consecutive blank lines, mixed tabs and spaces that cause visible misalignment, indentation that doesn't match the enclosing scope. The positive alignment style is never the bug.
 

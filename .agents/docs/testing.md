@@ -2,6 +2,8 @@
 
 Tests use **NUnit3** with **Shouldly** assertions (not NUnit Assert), running on **Microsoft.Testing.Platform** (MTP) — selected via `global.json` — not VSTest. Test targets: `net462`, `net8.0`, `net9.0`, `net10.0`. **Always use Debug configuration and prefer `net10.0`** — Release enables Roslyn analyzers and is much slower to build. The full test suite takes ~1 hour or more; avoid running it unless necessary.
 
+**"Not NUnit Assert" covers *value* assertions only.** Use Shouldly (`.ShouldBe`, `.ShouldBeGreaterThan`, …) for value checks, but **exception assertions use NUnit `Assert.Throws<T>` / `Assert.ThrowsAsync<T>`** — Shouldly's `Should.Throw` / `Should.NotThrow` do **not** compile in this repo (`CS0117: 'Should' does not contain a definition for 'Throw'`). For a "does not throw" case, just run the call directly (an unexpected throw fails the test). Also: `Tests/Linq` has **no `InternalsVisibleTo`** for LinqToDB internals — public types under `LinqToDB.Internal.*` (e.g. `QueryCache`, `AttributeReader`) are testable directly, but a genuinely `internal` type (e.g. the `BoundedCache` storage primitive) is inaccessible from tests (`CS0122`); test it through a public API rather than widening its surface or adding IVT.
+
 **Don't prepend a `dotnet build`.** `dotnet test` builds the project automatically if binaries are stale; a standalone `dotnet build` right before `dotnet test` only adds waiting time. If a test run fails with compile errors, fix them and re-run `dotnet test` directly.
 
 Under MTP, `dotnet test` takes the project via `--project` (a solution/filter via `--solution`) — the bare `dotnet test <project>` form is rejected. Always pass `--settings .runsettings` so NUnit honors `AssemblySelectLimit`; otherwise a broad `--filter` can fall back to running the whole assembly.
@@ -40,6 +42,27 @@ The `--provider <Name>` flag (repeatable, comma- or space-separated) **replaces*
 **Instrumenting engine code to trace a divergence.** To find where the SQL build diverges (e.g. a node dropped only on the remote path), add temporary `System.Console.Error.WriteLine("YDBINST:…")` traces at suspect visitor / builder methods, run the targeted test, `grep` the captured output for the marker, then `git restore <source-files>` to revert (confirm `git status -- Source/ Tests/` is clean before committing). **Do not filter SQL-AST nodes by `ToString()` content** (`expr.ToString()?.Contains("GetLength")`) — it does not reliably contain the function/identifier name and silently matches nothing; filter on **structural properties** instead (node type, `IsMandatory`, `ToType`, `cast.Expression is SqlFunction { Name: … }`).
 
 **Capture caveat — `Console`/`TestContext.Progress` output is only captured from a test's *body*.** Traces emitted from `[OneTimeSetUp]`/`[OneTimeTearDown]`, a custom `IWorkItemDispatcher`, the LinqService server, or any other non-test thread are **not** reliably surfaced by the console logger — they can come back empty and mislead you into a wrong "this code never ran" conclusion. For those, write the diagnostic to a **file** (e.g. under `AppContext.BaseDirectory`) and `Read` it back. (For live *run progress* — current test, completed/total, pass/fail — rather than engine tracing, use the `LINQ2DB_TEST_PROGRESS` heartbeat instead; see *Monitoring a long run* below.)
+
+## Report a test verdict only from an observed artifact
+
+A test verdict must come from something you actually observed — parsed pass/fail counts, the real exception, a captured log line — never from inference that the code "should" pass. "Everything works" is the cheapest continuation when nothing visibly contradicts it, so an unverified success verdict is the default failure mode; guard against it by pinning every verdict to evidence. Use an honest four-way vocabulary and never collapse the last two into an implied pass:
+
+- **Pass** — a run reported non-zero matching tests and all passed (cite the counts). An `Assert.Throws<T>` / `[ThrowsForProvider]` test whose expected exception fired is a **pass**, not a failure.
+- **Fail** — at least one test failed; quote the verbatim NUnit message + top stack frame, attributed to the correct fully-qualified test.
+- **Not tested** — you did not run it (or the filter matched zero tests). Say so plainly; don't imply it passed.
+- **Blocked** — a precondition prevented the run (provider not configured, container down, build error). Report the blocker and what would unblock it.
+
+This is the reporting counterpart to `agent-rules.md` → *Verify test status by execution* and *Before coding a fix or feature* (a red→green demonstration is the bar); `test-runner`'s structured `status` enum (`passed` / `failed` / `none_matched` / `error` / `blocked`) is exactly this vocabulary — relay it verbatim, don't upgrade a `none_matched`/`blocked` into a green claim.
+
+## Running the analyzer tests (`Tests/Tests.Analyzers`)
+
+The `linq2db.Analyzers` package tests are a **standalone** project — DB-free, provider-independent, single-TFM `net8.0` (to match the Roslyn testing SDK's Net80 reference pack; a higher pack trips CS1705), MTP host with the NUnit runner. They are **not** covered by the `/test` skill, which selects the Playground / `Tests/Linq` provider projects and injects the `CreateData.CreateDatabase` filter. Run them directly:
+
+```bash
+dotnet test Tests/Tests.Analyzers/Tests.Analyzers.csproj -c Release
+```
+
+Use **Release** — the Meziantou / Roslyn analyzer rules that gate the code-fix project (e.g. MA0154 "use `<see langword>`") run Release-only, so a Debug/Testing run compiles green while CI's Release leg fails. The `net8.0` runtime must be installed locally (the SDK 10 still *builds* the net8.0 target; it's the test *host* that needs the runtime); CI provisions it via the `with_analyzer_tests`-gated `UseDotNet` step in `Build/Azure/pipelines/templates/build-job.yml`. The suite is small and fast (~15s), so filtering is rarely needed — run the whole project.
 
 ## BUGCHECK-gated tests
 
@@ -86,11 +109,23 @@ After the file exists, `/test-providers` is the supported way to enable / disabl
 
 `UserDataProviders.json` has a top-level section per target framework (`NETFX`, `NET80`, `NET90`, `NET100`), each with its own `Providers` array and each `BasedOn` the shared `MyConnectionStrings` section. To enable a provider for a test run, uncomment it in the section matching your `-f` flag — `NETFX` only affects `net462` runs, `NET100` only affects `net10.0` runs, etc. Editing the wrong section silently does nothing.
 
+### How CI resolves test config (`Build/Azure/*.json`) vs local
+
+Local runs read `UserDataProviders.json`. **CI does not** — each Azure job copies `Build/Azure/net{80,90,100}/<config>.json` (e.g. `sqlite.json`, `duckdb.json`) into `UserDataProviders.json` (see `Build/Azure/pipelines/templates/test-workflow-*.yml`), while the tracked root `DataProviders.json` is the base. `SettingsReader.Deserialize` (`Tests/Base/Tools/SettingsReader.cs`) merges the two **first-writer-wins** — the copied CI config's `Connections` keys win, the base only fills in what's missing — and resolves `BasedOn` chains: `NET*.Azure` → `AzureConnectionStrings` → `CommonConnectionStrings`.
+
+Consequences:
+
+- A `CommonConnectionStrings` edit in `DataProviders.json` flows to **both** local dev *and* CI (both inherit it). To change a provider **only** in CI, add a `Connections` override to the Build/Azure job file — don't rely on editing `DataProviders.json` alone (and don't duplicate a string into both when the base already supplies it).
+- `BaselinesPath` is set only in `AzureConnectionStrings`, so baseline capture/compare is **CI-only**; local runs don't diff baselines unless you set it yourself.
+- **A test-config mode that breaks filtered/local runs (`dotnet test --filter …`, which skips the `a_CreateData` seed) must not become the tracked default.** Scope the risky mode to a CI-only Build/Azure override and keep the dev default safe — or fix the underlying limitation. (#5698: DuckDB shared in-memory can't be preloaded from its committed file — `COPY FROM DATABASE` fails on FK ordering — so it's CI-only, full-suite-seeded; SQLite preloads via the backup API, so its in-memory default is filtered-run-safe.)
+
 ### Container-backed providers
 
 Most non-file providers (SAP HANA, most Oracle versions, PostgreSQL, MySQL, DB2, Informix, ClickHouse, SQL Server 2017+) connect to local docker containers. Start the needed container(s) before running tests — e.g. `docker start hana2 oracle11`. SAP HANA in particular takes several minutes after container start before its internal HDB database finishes warm-up; tests that run immediately after `docker start hana2` may hit "connection refused".
 
 File-based providers (SQLite, SqlCe, Access) don't need a container.
+
+**Not netfx-only.** SqlCe and Access — despite being "legacy" providers — run on *every* test TFM (`net462` + `net8.0`/`net9.0`/`net10.0`), enabled in the matching `Providers` bucket. Run their suites on `net10.0` (fast single-TFM), not `net462`. (A bare `pwsh 7` host can't load SqlCe's native engine for ad-hoc probes — see [`windows-gotchas.md`](windows-gotchas.md) — but the test process loads it fine on any TFM.)
 
 ### Provider variant defaults
 
@@ -112,6 +147,21 @@ dotnet test --project Tests/Linq/Tests.csproj -f net10.0 --settings .runsettings
 
 `--provider` replaces the active main-test provider set (`TestConfiguration.UserProviders`) with exactly the names given, so **any provider with a connection string defined in `DataProviders.json` / `UserDataProviders.json` runs without editing the enabled-providers list** — it need not be enabled. (EF Core test runs instead intersect their curated `EFProviders` list, so `--provider` can only narrow EF runs to supported providers, never add an unsupported one.) Connection strings still come from those files; a `--provider` name with no connection logs a warning and fails to connect. An absent option leaves behavior unchanged (the providers enabled in `UserDataProviders.json` run).
 
+**Multiple providers: comma- (or space-) separate them** — `--provider Firebird.5,PostgreSQL.18` (or `--provider Firebird.5 PostgreSQL.18`) runs both.
+
+**To exercise the remote (LinqService) path, pass the BASE provider name, not the `.LinqService` suffix.** `DataSourcesBaseAttribute` auto-appends a `<provider>.LinqService` case for every base provider (unless `.runsettings` sets `DisableRemoteContext` / `NoLinqService`), so `--provider Firebird.5` runs **both** the direct `Firebird.5` and the remote `Firebird.5.LinqService` cases. Passing `--provider Firebird.5.LinqService` double-suffixes it to `Firebird.5.LinqService.LinqService`, which has no connection string → those cases silently don't run (you'll see only `CreateDatabase` execute). This is also why `test-runner`, given a `.LinqService` provider name, comes back green-but-empty.
+
+### Running EF Core tests locally
+
+The `/test` skill targets the Playground / Linq projects only — the EF Core integration tests are separate and run by hand.
+
+- **Per-EF-version projects.** `Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF10.csproj` (plus `EF9` / `EF8` for EF Core 9 / 8, and `EF3` for EF Core 3.1 — netfx-only). Build the one you need: `dotnet build Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF10.csproj -c Debug`.
+- **MTP exe, run directly.** These are `OutputType Exe` (Microsoft.Testing.Platform + NUnit runner), so run the built executable, not `dotnet test`: `.build/bin/Tests.EntityFrameworkCore.EF10/Debug/net10.0/linq2db.EntityFrameworkCore.Tests.exe --filter "FullyQualifiedName~MyTest"`. Filter with `--filter` (VSTest-style `FullyQualifiedName~` / `Name~`); the NUnit MTP runner rejects `--treenode-filter`.
+- **SQLite needs no container.** `--provider SQLite.MS` runs the SQLite-capable EF tests against a file / `:memory:` DB created via EF `EnsureCreated` — no docker. Other EF providers need their DBs like the main suite. (EF projects intersect their curated `EFProviders` set, so `--provider` only narrows.)
+- **EF SQL Server needs the `.MS` variant.** `EFProviders` (`TestConfiguration.cs`) is a curated set — `SQLiteMS`, `AllSqlServer2016PlusMS` (Microsoft.Data.SqlClient only), `AllPostgreSQL13Plus`, `AllMySqlConnector`. `[EFDataSources]` **intersects** `--provider` with it, so a non-`.MS` SQL Server id (`SqlServer.2022`, System.Data.SqlClient) is dropped and the run reports **0 cases as a pass** — a false green, not an error. Use `SqlServer.2022.MS`. A pool-leak repro especially needs a *pooled server* provider (SQLite has no hard pool cap), so this trap can hide the very bug under test.
+- **Suppress baseline capture for loop / stress tests.** `using var _ = new DisableBaseline("reason");` (`Tests/Base/ScopedSettings.cs`) turns off SQL-baseline recording for its scope. Use it for a test that runs the same statement many times (e.g. a 300× connection-leak loop) — otherwise every iteration is captured, bloating the baseline by thousands of identical lines per provider/EF combo.
+- **In a worktree, use absolute paths.** The Bash tool's cwd is always the *primary* clone, and `cd <worktree> && dotnet …` is hook-rejected (no `&&`). Pass the absolute worktree csproj / exe path to `dotnet build` / the test exe instead.
+
 ### Running providers in parallel
 
 Each provider config maps to a distinct database, so runs scoped to **distinct** providers don't collide and can run concurrently. Two cautions, both from the standing single-session rule:
@@ -130,6 +180,8 @@ dotnet build Tests/Linq/Tests.csproj -c Debug -f net10.0
 ```
 
 Each process writes its own `.build/.agents/test-progress.<tfm>.<pid>.json`; poll them with `/test-progress` or `test-status.ps1`. The runner's native filter flag is `--filter` (the same `FullyQualifiedName~` syntax), confirmed via `--help`.
+
+**Firebird temp-table teardown must scope its pool clear — never `FirebirdTools.ClearAllPools()`.** Firebird needs the pooled connection evicted after a temp-table drop (its lingering metadata reference otherwise fails the next DDL with `object TABLE … is in use` / `lock conflict on no wait transaction`). But `ClearAllPools()` is **process-wide** across every connection string, so under parallel execution it tears down the connections other concurrently-running Firebird versions (2.5/3/4/5, each a distinct connection string) are actively using. Use the scoped `FirebirdTools.ClearPool(connection)` (direct path) or `ClearPool(connectionString)` (remote/LinqService path, where the context isn't a `DataConnection` — resolve via `GetConnectionString(config.StripRemote())`); `TestUtils.ClearFirebirdPool` is the shared helper. (PR #5689.)
 
 ## Database initialization
 
@@ -180,12 +232,14 @@ public class MyTest : TestBase
 ```
 
 - `[DataSources]` — runs test for each enabled database provider
+- **Reading a test's provider scope — `[DataSources]` arguments are an *exclude* list, and the remote path is on by default.** `[DataSources(A, B)]` runs the test on every enabled provider *except* A and B, **and** includes each provider's `.LinqService` remote case (the bare `DataSourcesAttribute(params string[])` constructor passes `includeLinqService: true`). `[DataSources(false, A, B)]` is the same exclude set with the remote case suppressed. `[IncludeDataSources(includeLinqService, A, B)]` is the opposite shape — an include *whitelist* (only A, B), with the leading bool controlling the remote case. When judging whether a test covers a provider (e.g. in review), do **not** read the argument list as an include set: `[DataSources(TestProvName.AllMariaDB, TestProvName.AllMySql57)]` *does* run on Oracle, SQL Server, etc., including their `.LinqService` variants. (A #5723 review pass misread this as MySQL/MariaDB-only with no remote path and raised two spurious coverage findings.)
 - `TestBase` — base class providing `GetDataContext()`, `AssertQuery()`, etc.
 - Tests live in `Tests/Linq/` (main tests), `Tests/Base/` (test framework), `Tests/Model/` (model classes)
 - **Provider-specific tests go in that provider's own fixture.** A test exercising one provider's behavior (a YDB CTE-naming quirk, an Oracle row-predicate case) belongs in the provider fixture (`Tests/Linq/DataProvider/YdbTests.cs`, `Issue<N>Tests.cs`) — not prepended to a shared cross-provider fixture (`CteTests`, `WhereTests`). Shared fixtures are for behavior asserted across many providers.
 - **No `#region` blocks or banner comments in test methods.** Don't wrap added tests in a new `#region`, and don't introduce `//----` banner comment blocks. Keep explanatory comments as plain `//` lines **inside** the method body next to the code they describe — and don't relocate existing in-body comments out to the method/attribute level when making an unrelated edit.
 - **Mapping attributes live in the `LinqToDB` root namespace.** `ExpressionMethodAttribute` (and peers) are `LinqToDB.*`, not `LinqToDB.Mapping.*` — a test/playground file needs `using LinqToDB;` in addition to `using LinqToDB.Mapping;`, otherwise `[ExpressionMethod(...)]` fails with `CS0246`. (`ColumnAttribute`, `TableAttribute`, `InheritanceMappingAttribute` are in `LinqToDB.Mapping`.)
 - **Feature-gated test attributes use *exclude* filters, not include whitelists.** An attribute that scopes a run to providers supporting some feature (the `FeatureSources/` attributes, e.g. `SupportsAnalyticFunctionsContext`) should subclass `DataSourcesAttribute` with an `Unsupported` exclude list — like `InsertOrUpdateDataSourcesAttribute` — **not** an `IncludeDataSourcesAttribute` whitelist. Exclude-based means a newly-added provider context is covered automatically (only the genuinely-unsupported providers are listed); a whitelist silently omits every new context until someone remembers to add it. Reuse / convert an existing feature attribute rather than adding a parallel one, and keep per-feature gaps (a provider that supports the feature family but not one function) as `[ThrowsForProvider]` on the individual test, not in the attribute.
+- **EF Core tests only run the `.MS` (Microsoft.Data.SqlClient) SQL Server variants.** `EFIncludeDataSources` / `EFDataSources` intersect the requested providers with `TestConfiguration.EFProviders`, whose SQL Server entry is `AllSqlServer2016PlusMS` — Microsoft.Data.SqlClient only. Passing a `System.Data.SqlClient` name (`SqlServer.2022`) to an EF test — including `test-runner`'s `--provider` — resolves to **zero** variants and reports `none_matched` (not an error), so it silently looks like the test "passed" nothing. Use the `.MS` name (`SqlServer.2022.MS`). The full EF provider scope is `SQLiteMS` + `AllPostgreSQL13Plus` + `AllSqlServer2016PlusMS` (+ `AllMySqlConnector` off net10) — narrower than the plain-linq2db set. (`TestConfiguration.cs` → `EFProviders`.)
 
 ## F# tests
 
@@ -193,6 +247,7 @@ F# regression tests live in `Tests/FSharp/*.fs` (compiled into `Tests.FSharp.fsp
 
 - **Call `nonNull` on nullable-returning members before instance methods.** The F# project has nullness enabled, so a member typed `string | null` (e.g. `DataConnection.LastQuery`) trips `FS3261` ("nullness warning … do not have compatible nullability") — a **warning-as-error** — the moment you call an instance method on it (`.Substring`, `.IndexOf`, …). Bind through the F# 9 `nonNull` helper first: `let sql = nonNull db.LastQuery`. Passing the raw value to an API that accepts `obj`/`object` (e.g. an NUnit `Assert.That(x, constraint)`) does **not** trip it — only instance-member access does. (`nonNull` is the established idiom — `FSharpQueryExpressionInterceptor.fs` uses it.) This is F#-compiler-specific, so the fast `Testing` (net10.0) build **does** catch it — unlike the `net462`/`netstandard2.0` BCL-availability traps.
 - **`task { … }` returns `Task<unit>`; upcast to `Task`** with `:> System.Threading.Tasks.Task` when a C# fixture awaits a non-generic `Task`.
+- **`UseFSharp()` is applied to *every* test context, not just F# tests.** The context builders in `Tests/Base/TestBase.Context.cs` call `.UseFSharp()` on every context they create (direct and LinqService), deliberately — so the whole non-F# suite exercises the F# option/union/translator registration and proves it's harmless for non-F# code. Consequence: **any change to `UseFSharp` (or the mapping schema, interceptors, or member translators it registers) has all-provider blast radius** across the entire matrix, not just `FSharpTests`. In particular it must keep the context's `ConfigurationID` stable across calls — a per-call `new` registration (e.g. `UseMemberTranslator(new …())`) gives every context a distinct id and defeats the query cache, reddening the `Query<T>.CacheMissCount` tests on every provider (#5704). See [`agents/code-reviewer.md`](../agents/code-reviewer.md) rule 1 → *ConfigurationID stability*.
 
 ## Tests that pass but catch nothing
 
@@ -203,6 +258,7 @@ A test that compiles and goes green is not yet a regression guard — it has to 
 - **Mocking the logic away.** Stubbing the component under test so the assertion verifies the mock, not linq2db. Here that shows up as asserting against a hand-built expected object instead of round-tripping through `AssertQuery` / a real `CreateLocalTable<T>`.
 - **Mirroring the implementation.** Deriving the expected value by re-running the same code path under test — or reading the current emitted SQL and pasting it back as the baseline — bakes the current behavior, bugs included, in as "correct".
 - **Trivially-true assertions.** `result.ShouldNotBeNull()`, `count.ShouldBeGreaterThanOrEqualTo(0)`, asserting only that the query *ran* — green regardless of whether the targeted logic is correct. Line coverage built from assertions that can't fail is no coverage at all. Assert the specific value / shape / count the fix changes, not that *something* came back.
+- **Generation-only, never executed.** A test that only asserts on `query.ToSqlQuery().Sql` (or `GetSelectQuery()`) and never calls `.ToList()` / `AssertQuery` never runs the SQL against the DB — it verifies the builder emitted a string, not that the string is valid or returns the right rows. A test must **execute against the database**; generation-only assertion is an *exception* reserved for two cases: (a) the SQL-generation API itself is the subject under test (e.g. `ToSqlQuery` behavior), or (b) the configured provider cannot execute the generated SQL (bespoke tables absent from the test schema, a dialect construct the test DB can't run) — and case (b) is acceptable **only with explicit user acceptance**, noted at the test. Never reach for generation-only assertion just to skip DB/table setup. (When the tables are only test-local, `CreateLocalTable<T>` makes execution self-contained — see the ClickHouse note under *Cross-provider gotchas*.)
 
 Before reporting a test written, state in one line **which input makes it go red** and confirm it would have failed against the pre-fix code. If you can't name that input, it isn't a guard yet. Mutation-score tooling is out of scope; the red→green demonstration required by `agent-rules.md` → *Before coding a fix or feature* is the bar.
 
@@ -225,6 +281,10 @@ Framework note: there is **no property-testing dependency in the repo today**. O
 ### YDB requires a primary key on every table
 
 YDB rejects `CREATE TABLE` without a primary key, so `db.CreateLocalTable<T>()` of a keyless type fails at setup with `Primary key is required for ydb tables` (wrapped in a `Pre type annotation` error). YDB isn't on CI yet, so this surfaces only when running YDB locally. Fix the test's table type by adding `[PrimaryKey]` to a suitable existing column (a non-nullable key such as `Id`, or the single natural-key column); if none fits, add a dedicated PK column. It's a test-data fix, not a provider change.
+
+### ClickHouse: `CreateLocalTable` needs no engine; ASOF runs on Memory tables
+
+ClickHouse `CREATE TABLE` requires an `ENGINE`, but you don't specify one for `db.CreateLocalTable<T>()` — the builder auto-emits `ENGINE = MergeTree() ORDER BY <pk>` when the mapping has a `[PrimaryKey]`, else `ENGINE = Memory()` (`ClickHouseSqlBuilder.BuildEndCreateTableStatement`; there's a `// TODO` for an engine-config API, so custom engines still need raw SQL). So a keyless test type lands on `Memory()`, which is fine for query tests. `LEFT ASOF JOIN` and `GLOBAL LEFT ASOF JOIN` **execute** against Memory-engine local tables on a single-node container, and `CreateLocalTable` works over the LinqService remote context — so ASOF hint tests can (and should) execute rather than assert on `ToSqlQuery().Sql`. Note bespoke test tables (e.g. `AsofTrade`/`AsofQuote`) are **not** in the ClickHouse test schema (unlike the T4-scaffolded `ReplacingMergeTreeTable`), which is why they need `CreateLocalTable` rather than `GetTable<T>`.
 
 ### Affected-rows assertions need `SupportsRowcount`
 
@@ -354,6 +414,8 @@ Use `query.ToSqlQuery().Sql` to see a query's SQL without running it. `IQueryabl
 ## Baselines
 
 Many tests compare emitted SQL against a stored baseline file. Baselines live **outside the main repo** under the path configured by `BaselinesPath` in `UserDataProviders.json` → `MyConnectionStrings`. With `BaselinesPath` set, a mismatched test overwrites the baseline with the new SQL; subsequent runs compare against the updated file. With `BaselinesPath` unset, baselines are neither written nor compared.
+
+Baseline capture is **not** gated on `AssertQuery` / `GetSql`. Emitted SQL is captured at the harness level (`Tests/Base/BaselinesWriter.cs`) for any query a test executes through `GetDataContext`, so a plain `GetDataContext` + `ToList()` + `ShouldBe` test with no `AssertQuery` call still writes `.sql` baselines. Never infer "no baselines" from the assertion style — check the baselines output.
 
 ### When a substring assertion is vacuous — prefer baselines for shape-changing fixes
 
