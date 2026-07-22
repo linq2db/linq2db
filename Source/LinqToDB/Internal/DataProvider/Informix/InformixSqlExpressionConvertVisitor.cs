@@ -293,22 +293,12 @@ namespace LinqToDB.Internal.DataProvider.Informix
 		{
 			var newElement = base.VisitExprPredicate(predicate);
 
-			if (newElement is SqlPredicate.Expr { Expr1: SqlParameter { IsQueryParameter: true, NeedsCast: false, Type.DataType: DataType.Boolean } p })
+			if (newElement is SqlPredicate.Expr { Expr1: SqlParameter { IsQueryParameter: true, Type.DataType: DataType.Boolean } p })
 			{
-				// The flag goes on a copy, and the predicate is rebuilt around it, for two reasons. `p` is
-				// reached by navigating into the predicate, so the predicate's own visit mode says nothing
-				// about who owns `p`: on a Transform pass it can still be the cached statement's instance,
-				// where a cast would leak into every later render. And the flag is wanted only for this
-				// usage - the instance is shared by every reference to that parameter.
-				var newParameter = new SqlParameter(p.Type, p.Name, p.Value)
-				{
-					IsQueryParameter = p.IsQueryParameter,
-					AccessorId       = p.AccessorId,
-					ValueConverter   = p.ValueConverter,
-					NeedsCast        = true,
-				};
-
-				return new SqlPredicate.Expr(newParameter);
+				// The cast marks this usage only - the parameter instance is shared by every reference to it,
+				// and on a Transform pass belongs to the cached statement. `p` is reached by navigating into
+				// the predicate, so the predicate's own visit mode says nothing about who owns it.
+				return new SqlPredicate.Expr(QueryHelper.EnsureMandatoryCast(p, p.Type, GetVisitMode(p) == VisitMode.Modify));
 			}
 
 			return newElement;

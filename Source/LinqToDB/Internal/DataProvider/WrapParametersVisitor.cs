@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Internal.SqlQuery.Visitors;
@@ -12,13 +11,8 @@ namespace LinqToDB.Internal.DataProvider
 		bool      _inModifier;
 		bool      _inInsert;
 		bool      _inInsertOrUpdate;
+		bool      _noCast;
 		WrapFlags _wrapFlags;
-
-		// One cast copy per source parameter, for the lifetime of a single traversal (every caller
-		// constructs a fresh visitor). Without it a parameter shared across several MERGE clauses
-		// would get a copy per occurrence, and since parameter naming dedupes by object identity
-		// each copy would render its own DECLARE/SET of the same value.
-		Dictionary<object, SqlParameter>? _castParameters;
 
 		[Flags]
 		public enum WrapFlags
@@ -109,10 +103,59 @@ namespace LinqToDB.Internal.DataProvider
 			return base.VisitSqlQuery(selectQuery);
 		}
 
+		// The values of an IN list are expanded from the parameter when the command is built. A cast around it
+		// hides the parameter from that expansion, so the whole collection ends up bound as a single value -
+		// which the ADO provider then fails to convert.
+		protected internal override IQueryElement VisitInListPredicate(SqlPredicate.InList predicate)
+		{
+			var save = _noCast;
+			_noCast = true;
+			var result = base.VisitInListPredicate(predicate);
+			_noCast = save;
+
+			return result;
+		}
+
+		// The inlined-expression nodes keep their parameter in a SqlParameter-typed field, and the base visitor
+		// casts the visited result straight back to it, so nothing may be wrapped around a parameter in that
+		// position. The parameter is rendered inline there in any case, which is not a place a cast applies.
+		protected internal override IQueryElement VisitSqlInlinedSqlExpression(SqlInlinedSqlExpression element)
+		{
+			var save = _noCast;
+			_noCast = true;
+			var result = base.VisitSqlInlinedSqlExpression(element);
+			_noCast = save;
+
+			return result;
+		}
+
+		protected internal override IQueryElement VisitSqlInlinedToSqlExpression(SqlInlinedToSqlExpression element)
+		{
+			var save = _noCast;
+			_noCast = true;
+			var result = base.VisitSqlInlinedToSqlExpression(element);
+			_noCast = save;
+
+			return result;
+		}
+
 		protected internal override IQueryElement VisitSqlCastExpression(SqlCastExpression element)
 		{
+			// A cast already occupies this position, so nothing inside it needs another one.
+			var needCast = _needCast;
+
 			using var scope = NeedCast(false);
-			return base.VisitSqlCastExpression(element);
+
+			var newElement = base.VisitSqlCastExpression(element);
+
+			// When this position is one the visitor would have cast, the cast that is already here has to be
+			// mandatory: a non-mandatory one is exactly what the optimizer may fold away, which would leave the
+			// parameter bare in SQL that requires the cast. The operand is read from the visited node, since
+			// visiting is what decides what the cast finally wraps.
+			if (needCast && newElement is SqlCastExpression cast && cast.Expression.ElementType == QueryElementType.SqlParameter)
+				return QueryHelper.EnsureMandatoryCast(cast, cast.ToType, GetVisitMode(cast) == VisitMode.Modify);
+
+			return newElement;
 		}
 
 		protected internal override IQueryElement VisitSqlSetExpression(SqlSetExpression element)
@@ -173,39 +216,21 @@ namespace LinqToDB.Internal.DataProvider
 
 		protected internal override IQueryElement VisitSqlParameter(SqlParameter sqlParameter)
 		{
+			// A non-query parameter is rendered by inlining its value, never as a bound parameter, so it needs
+			// no cast - and some of those literals sit where a cast is not even legal, such as the operand of
+			// an Informix INTERVAL, which the translator marks non-query precisely because it must stay literal.
 			var needsCast =
-				_needCast ||
-				sqlParameter.Type.SystemType == typeof(bool) && _wrapFlags.HasFlag(WrapFlags.CastBoolean);
+				!_noCast &&
+				sqlParameter.IsQueryParameter &&
+				(_needCast ||
+					sqlParameter.Type.SystemType == typeof(bool) && _wrapFlags.HasFlag(WrapFlags.CastBoolean));
 
-			if (needsCast && !sqlParameter.NeedsCast)
+			if (needsCast)
 			{
-				// The flag goes onto a copy, which the parent picks up from the return value. A caller
-				// running inside a Transform-mode convert does not own the parameter - it still belongs to
-				// the cached statement - and even a caller that owns the statement shares one instance
-				// across every usage of that parameter, so setting the flag on it would cast references
-				// this wrap was never asked about.
-				_castParameters ??= new();
-
-				// AccessorId identifies the accessor a query parameter's value comes from; ParametersContext
-				// keeps one instance per id, so it is 1:1 with the parameter and additionally unifies copies
-				// an earlier stage may have made. Parameters without an accessor (take/skip, dynamic) carry
-				// their own value, so there the instance itself is the only sound key.
-				var key = sqlParameter.AccessorId is int accessorId ? accessorId : (object)sqlParameter;
-
-				if (!_castParameters.TryGetValue(key, out var newParameter))
-				{
-					newParameter = new SqlParameter(sqlParameter.Type, sqlParameter.Name, sqlParameter.Value)
-					{
-						IsQueryParameter = sqlParameter.IsQueryParameter,
-						AccessorId       = sqlParameter.AccessorId,
-						ValueConverter   = sqlParameter.ValueConverter,
-						NeedsCast        = true,
-					};
-
-					_castParameters.Add(key, newParameter);
-				}
-
-				return newParameter;
+				// The cast belongs to this usage, not to the parameter: the instance is shared by every
+				// reference to it, so marking the instance would cast positions this wrap was never asked
+				// about - and, on a Transform pass, would write into the cached statement.
+				return QueryHelper.EnsureMandatoryCast(sqlParameter, sqlParameter.Type, GetVisitMode(sqlParameter) == VisitMode.Modify);
 			}
 
 			return base.VisitSqlParameter(sqlParameter);

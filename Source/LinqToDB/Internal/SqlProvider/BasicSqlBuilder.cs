@@ -3588,7 +3588,86 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected virtual void BuildSqlCastExpression(SqlCastExpression castExpression)
 		{
+			// A mandatory cast over a parameter is how a single usage is marked as needing an explicit type,
+			// so the type it renders with is the provider's to decide - several of them derive it from the
+			// value bound for this execution rather than from the node.
+			if (castExpression.IsMandatory && castExpression.Expression is SqlParameter parameter)
+			{
+				var castType = GetParameterCastType(parameter, castExpression.ToType);
+
+				if (castType == null)
+				{
+					BuildExpression(parameter);
+					return;
+				}
+
+				BuildTypedExpression(castType.Value, parameter);
+				return;
+			}
+
 			BuildTypedExpression(castExpression.ToType, castExpression.Expression);
+		}
+
+		/// <summary>
+		/// Type used to render a mandatory cast over <paramref name="parameter"/>, or <see langword="null"/> to
+		/// render the parameter bare. Defaults to <paramref name="requestedType"/>; providers that must state
+		/// exact facets override it, typically via <see cref="GetValueBasedParameterCastType"/>.
+		/// </summary>
+		protected virtual DbDataType? GetParameterCastType(SqlParameter parameter, DbDataType requestedType)
+		{
+			return requestedType;
+		}
+
+		/// <summary>
+		/// Whether <see cref="GetValueBasedParameterCastType"/> resolves an undefined parameter type through the
+		/// mapping schema before inspecting the value.
+		/// </summary>
+		protected virtual bool ParameterCastResolvesUndefinedType => true;
+
+		/// <summary>
+		/// Length above which <see cref="GetValueBasedParameterCastType"/> renders no cast, or <see langword="null"/>
+		/// for no limit.
+		/// </summary>
+		protected virtual int? ParameterCastMaxLength => null;
+
+		/// <summary>
+		/// Whether decimal facets are only filled in where the parameter type leaves them unset, rather than
+		/// always taken from the value.
+		/// </summary>
+		protected virtual bool ParameterCastDecimalNullsOnly => false;
+
+		/// <summary>
+		/// Cast type derived from the value bound to <paramref name="parameter"/> for this execution: length from
+		/// the actual string / byte[], facets from the actual decimal. A statement is re-rendered per execution
+		/// whenever it carries such a cast (see <c>BasicSqlOptimizer.IsParameterDependedElement</c>), which is what
+		/// keeps these facets correct as values change.
+		/// </summary>
+		protected DbDataType? GetValueBasedParameterCastType(SqlParameter parameter)
+		{
+			var paramValue = parameter.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
+			var dbDataType = paramValue.DbDataType;
+
+			if (ParameterCastResolvesUndefinedType && dbDataType.DataType == DataType.Undefined)
+			{
+				// TODO: We should avoid such tricks, proper TypeMapping required
+				dbDataType = MappingSchema.GetDataType(dbDataType.SystemType).Type;
+			}
+
+			if (paramValue.ProviderValue is byte[] bytes)
+				dbDataType = dbDataType.WithLength(bytes.Length);
+			else if (paramValue.ProviderValue is string str)
+				dbDataType = dbDataType.WithLength(str.Length);
+			else if (paramValue.ProviderValue is decimal decValue)
+				dbDataType = CorrectDecimalFacets(dbDataType, decValue, ParameterCastDecimalNullsOnly);
+
+			if (ParameterCastMaxLength is int maxLength && dbDataType.Length > maxLength)
+				return null;
+
+			// temporary guard against cast to unknown type (Variant)
+			if (dbDataType.DataType == DataType.Undefined)
+				return null;
+
+			return dbDataType;
 		}
 
 		/// <summary>How the <c>IGNORE NULLS</c> modifier of a value/offset window function is emitted relative to the argument list.</summary>
@@ -4124,18 +4203,11 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected virtual void BuildTypedExpression(DbDataType dataType, ISqlExpression value)
 		{
-			var saveStep = BuildStep;
-			// TODO: Step.TypedExpression should be removed/reworked as it doesn't work with nested expressions
-			// e.g. see Issue4963 test for Firebird
-			BuildStep = value is SqlParameter ? Step.TypedExpression : BuildStep;
-
 			StringBuilder.Append("CAST(");
 			BuildExpression(value);
 			StringBuilder.Append(" AS ");
 			BuildDataType(dataType, false, value.CanBeNullable(NullabilityContext));
 			StringBuilder.Append(')');
-
-			BuildStep = saveStep;
 		}
 
 		protected virtual void BuildSqlRow(SqlRowExpression expr, bool buildTableName, bool checkParentheses, bool throwExceptionIfTableNotFound)
@@ -4491,7 +4563,6 @@ namespace LinqToDB.Internal.SqlProvider
 			Tag,
 			Output,
 			QueryExtensions,
-			TypedExpression,
 		}
 
 		#endregion

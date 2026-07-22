@@ -88,7 +88,6 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 				if (e is SqlParameter p)
 				{
 					// disable parameters for unsupported types
-					// add explicit type casts to hint binary operator overloads
 
 					var pType   = p.Type.SystemType.UnwrapNullableType();
 					var adapter = DuckDBProviderAdapter.Instance;
@@ -106,18 +105,34 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 					{
 						p.IsQueryParameter = false;
 					}
+				}
+				else if (e is SqlBinaryExpression binary)
+				{
+					// add explicit type casts to hint binary operator overloads - see sql builder cast notes.
+					// The operands are rewritten from here rather than from the SqlParameter case: this converter
+					// registers whatever the callback returns as the replacement for the element it was given, so
+					// returning a cast that wraps the parameter would map the parameter to a node containing
+					// itself, and the replacer would then expand it without end.
+					var expr1 = CastOperand(binary.Expr1);
+					var expr2 = CastOperand(binary.Expr2);
 
-					if (p.IsQueryParameter && visitor.ParentElement?.ElementType is QueryElementType.SqlBinaryExpression)
-					{
-						// see sql builder BuildParameter notes
-						p.NeedsCast = true;
-					}
+					if (!ReferenceEquals(expr1, binary.Expr1) || !ReferenceEquals(expr2, binary.Expr2))
+						return new SqlBinaryExpression(binary.Type, expr1, binary.Operation, expr2, binary.Precedence);
 				}
 
 				return e;
 			}, withStack: true);
 
 			return statement;
+
+			static ISqlExpression CastOperand(ISqlExpression expression)
+			{
+				// The cast marks this operand only - the parameter instance is shared by every reference to it,
+				// so it must not carry the cast itself.
+				return expression is SqlParameter { IsQueryParameter: true } parameter
+					? QueryHelper.EnsureMandatoryCast(parameter, parameter.Type, canModify: false)
+					: expression;
+			}
 		}
 	}
 }

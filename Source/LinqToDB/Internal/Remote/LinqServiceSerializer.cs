@@ -977,7 +977,6 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 
 							Append(elem.Name);
 							Append(elem.IsQueryParameter);
-							Append(elem.NeedsCast);
 							Append(paramValue.DbDataType);
 
 							var value = paramValue.ProviderValue;
@@ -2135,7 +2134,6 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						{
 							var name             = ReadString();
 							var isQueryParameter = ReadBool();
-							var needCast         = ReadBool();
 							var dbDataType       = ReadDbDataType();
 
 							var value            = ReadValue(ReadType()!);
@@ -2143,7 +2141,6 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 							obj = new SqlParameter(dbDataType, name, value)
 							{
 								IsQueryParameter = isQueryParameter,
-								NeedsCast = needCast,
 							};
 
 							break;

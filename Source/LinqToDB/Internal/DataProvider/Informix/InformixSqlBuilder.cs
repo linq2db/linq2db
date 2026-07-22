@@ -304,17 +304,11 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 		protected override void BuildTypedExpression(DbDataType dataType, ISqlExpression value)
 		{
-			var saveStep = BuildStep;
-
-			BuildStep = Step.TypedExpression;
-
 			BuildExpression(Precedence.Primary, value);
 
 			StringBuilder.Append("::");
 
 			BuildDataType(dataType, false, value.CanBeNullable(NullabilityContext));
-
-			BuildStep = saveStep;
 		}
 
 		protected override void BuildCreateTableCommand(SqlTable table)
@@ -368,49 +362,14 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			return ReservedWords.IsReserved(word, ProviderName.Informix);
 		}
 
-		protected override void BuildParameter(SqlParameter parameter)
+		// Informix only fills decimal facets the parameter type leaves unset.
+		protected override bool ParameterCastDecimalNullsOnly => true;
+
+		// Known cases of Informix having parameter typing issues:
+		// - CTE query column
+		protected override DbDataType? GetParameterCastType(SqlParameter parameter, DbDataType requestedType)
 		{
-			// Known cases of Informix having parameter typing issues:
-			// - CTE query column
-			//
-			// TODO: refactor. Code similar to DB2/Firebird logic
-			if (parameter.NeedsCast && BuildStep != Step.TypedExpression)
-			{
-				var paramValue = parameter.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
-
-				var dbDataType = paramValue.DbDataType;
-
-				if (dbDataType.DataType == DataType.Undefined)
-				{
-					dbDataType = MappingSchema.GetDataType(dbDataType.SystemType).Type;
-				}
-
-				if (paramValue.ProviderValue is byte[] bytes)
-				{
-					dbDataType = dbDataType.WithLength(bytes.Length);
-				}
-				else if (paramValue.ProviderValue is string str)
-				{
-					dbDataType = dbDataType.WithLength(str.Length);
-				}
-				else if (paramValue.ProviderValue is decimal d)
-					dbDataType = CorrectDecimalFacets(dbDataType, d, updateNullsOnly: true);
-
-				if (dbDataType.DataType == DataType.Undefined)
-				{
-					base.BuildParameter(parameter);
-					return;
-				}
-
-				var saveStep = BuildStep;
-				BuildStep = Step.TypedExpression;
-				BuildTypedExpression(dbDataType, parameter);
-				BuildStep = saveStep;
-
-				return;
-			}
-
-			base.BuildParameter(parameter);
+			return GetValueBasedParameterCastType(parameter);
 		}
 
 		protected override void BuildInListPredicate(SqlPredicate.InList predicate)

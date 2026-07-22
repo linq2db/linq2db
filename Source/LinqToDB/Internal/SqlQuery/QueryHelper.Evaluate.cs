@@ -333,7 +333,12 @@ namespace LinqToDB.Internal.SqlQuery
 								{
 									result = Convert.ChangeType(result, cast.SystemType, CultureInfo.InvariantCulture);
 								}
-								catch (InvalidCastException)
+								// Any failure to convert just means the cast is not constant-foldable. The reason
+								// varies with the value and the target type - Convert.ChangeType reports an
+								// unsupported conversion, a value it cannot parse (such as the 'Y' Informix
+								// stores for a boolean) and an out-of-range value as three different exceptions -
+								// and none of them says anything beyond "not a constant".
+								catch
 								{
 									return false;
 								}

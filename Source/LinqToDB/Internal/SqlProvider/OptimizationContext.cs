@@ -82,7 +82,6 @@ namespace LinqToDB.Internal.SqlProvider
 					{
 						AccessorId     = parameter.AccessorId,
 						ValueConverter = parameter.ValueConverter,
-						NeedsCast      = parameter.NeedsCast,
 					};
 				}
 

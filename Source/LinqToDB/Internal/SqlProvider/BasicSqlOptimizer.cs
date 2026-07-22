@@ -2132,13 +2132,20 @@ namespace LinqToDB.Internal.SqlProvider
 					var param = (SqlParameter)element;
 					if (!param.IsQueryParameter)
 						return true;
-					if (param.NeedsCast)
-						return true;
 
 					if (param.Type.SystemType.IsNullableOrReferenceType)
 						return true;
 
 					return false;
+				}
+				case QueryElementType.SqlCast:
+				{
+					// A mandatory cast over a parameter is how a usage is marked as needing an explicit type,
+					// and providers derive that type from the value bound for the execution (length of the
+					// actual string, decimal facets). The statement therefore has to be rendered per execution
+					// rather than have its command cached.
+					var cast = (SqlCastExpression)element;
+					return cast.IsMandatory && cast.Expression.ElementType == QueryElementType.SqlParameter;
 				}
 				case QueryElementType.SqlQuery:
 				{

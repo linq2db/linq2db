@@ -257,14 +257,13 @@ namespace LinqToDB.Internal.DataProvider.Access
 		{
 		}
 
-		protected override void BuildParameter(SqlParameter parameter)
+		// Access has no CAST: a parameter that needs an explicit type is wrapped in a conversion function
+		// instead, so the type hook does not apply and the rendering itself is overridden.
+		protected override void BuildSqlCastExpression(SqlCastExpression castExpression)
 		{
-			if (parameter.NeedsCast && BuildStep != Step.TypedExpression)
+			if (castExpression.IsMandatory && castExpression.Expression is SqlParameter parameter)
 			{
 				var paramValue = parameter.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
-
-				var saveStep = BuildStep;
-				BuildStep = Step.TypedExpression;
 
 				// 1. Single parameter loose precision when used with CVar
 				// 2. Only CVar accepts NULL
@@ -273,14 +272,13 @@ namespace LinqToDB.Internal.DataProvider.Access
 				else
 					StringBuilder.Append("CVar(");
 
-				base.BuildParameter(parameter);
+				BuildParameter(parameter);
 				StringBuilder.Append(')');
-				BuildStep = saveStep;
 
 				return;
 			}
 
-			base.BuildParameter(parameter);
+			base.BuildSqlCastExpression(castExpression);
 		}
 
 		protected override bool TryConvertParameterToSql(SqlParameterValue paramValue)

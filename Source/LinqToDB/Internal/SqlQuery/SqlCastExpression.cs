@@ -20,7 +20,7 @@ namespace LinqToDB.Internal.SqlQuery
 		public DbDataType     Type        => ToType;
 		public ISqlExpression Expression  { get; private set; }
 		public SqlDataType?   FromType    { get; private set; }
-		public bool           IsMandatory { get; }
+		public bool           IsMandatory { get; private set; }
 
 		public override int              Precedence  => LinqToDB.SqlQuery.Precedence.Primary;
 		public override Type             SystemType  => ToType.SystemType;
@@ -74,6 +74,15 @@ namespace LinqToDB.Internal.SqlQuery
 			if (IsMandatory)
 				return this;
 			return new SqlCastExpression(Expression, ToType, FromType, true);
+		}
+
+		/// <summary>
+		/// Marks the cast as mandatory in place. Only for a caller that owns this instance
+		/// (<see cref="VisitMode.Modify"/>); otherwise use <see cref="MakeMandatory"/>.
+		/// </summary>
+		public void SetMandatory()
+		{
+			IsMandatory = true;
 		}
 
 		public SqlCastExpression WithExpression(ISqlExpression expression)

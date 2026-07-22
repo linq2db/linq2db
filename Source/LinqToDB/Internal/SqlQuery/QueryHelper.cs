@@ -743,6 +743,12 @@ namespace LinqToDB.Internal.SqlQuery
 				SqlNullabilityExpression { ElementType: QueryElementType.SqlNullabilityExpression, SqlExpression: { } expression } =>
 					IsConstantFast(expression),
 
+				// A cast is as constant as what it wraps - matching IsConstant. Without this, a parameter that
+				// carries a cast stops looking constant, and callers such as the builder's constant ORDER BY
+				// removal start emitting the item instead of dropping it.
+				SqlCastExpression { ElementType: QueryElementType.SqlCast } cast =>
+					IsConstantFast(cast.Expression),
+
 				_ => false,
 			};
 		}
@@ -1732,7 +1738,6 @@ namespace LinqToDB.Internal.SqlQuery
 				var newParam = new SqlParameter(dbDataType, foundParam.Name, value)
 				{
 					IsQueryParameter = foundParam.IsQueryParameter,
-					NeedsCast = foundParam.NeedsCast,
 				};
 
 				return newParam;
@@ -1747,6 +1752,39 @@ namespace LinqToDB.Internal.SqlQuery
 				expr = nullability.SqlExpression;
 
 			return expr;
+		}
+
+		/// <summary>
+		/// Marks a single usage of <paramref name="expression"/> as needing an explicit cast in the generated SQL,
+		/// without touching the expression itself - so a parameter shared by several usages keeps one instance,
+		/// and one DECLARE, while only the positions that need it are cast.
+		/// </summary>
+		/// <param name="canModify">
+		/// Whether the caller owns <paramref name="expression"/>. Only then may an existing cast be promoted in
+		/// place; otherwise a new node is built, since the original may belong to a cached statement.
+		/// </param>
+		/// <remarks>
+		/// An existing cast is promoted rather than wrapped: a second cast would render as <c>CAST(CAST(x))</c>,
+		/// which the optimizer does not collapse (it only folds casts that are not mandatory). Mandatory is what
+		/// keeps the cast alive through <c>SqlExpressionOptimizerVisitor.VisitSqlCastExpression</c>.
+		/// </remarks>
+		public static ISqlExpression EnsureMandatoryCast(ISqlExpression expression, DbDataType toType, bool canModify)
+		{
+			if (expression is SqlCastExpression cast)
+			{
+				if (cast.IsMandatory)
+					return cast;
+
+				if (canModify)
+				{
+					cast.SetMandatory();
+					return cast;
+				}
+
+				return cast.MakeMandatory();
+			}
+
+			return new SqlCastExpression(expression, toType, null, isMandatory: true);
 		}
 
 		public static bool CanBeNullableOrUnknown(this ISqlExpression expr, NullabilityContext nullabilityContext, bool withoutUnknownErased)

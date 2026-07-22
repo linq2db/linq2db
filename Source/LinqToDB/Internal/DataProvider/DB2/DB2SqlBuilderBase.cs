@@ -469,56 +469,14 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			base.BuildCreateTablePrimaryKey(createTable, pkName, fieldNames);
 		}
 
-		// TODO: Copy of Firebird's BuildParameter, looks like we can move such functionality to SqlProviderFlags
-		protected override void BuildParameter(SqlParameter parameter)
+		// DB2 keeps an undefined parameter type undefined - resolving it through the mapping schema would cast
+		// where DB2 historically did not - and states no cast at all beyond the LOB threshold.
+		protected override bool ParameterCastResolvesUndefinedType => false;
+		protected override int? ParameterCastMaxLength             => 32672;
+
+		protected override DbDataType? GetParameterCastType(SqlParameter parameter, DbDataType requestedType)
 		{
-			if (parameter.NeedsCast && BuildStep != Step.TypedExpression)
-			{
-				var paramValue = parameter.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
-
-				var dbDataType = paramValue.DbDataType;
-				// temporary guard against cast to unknown type (Variant)
-				//if (dbDataType.DataType == DataType.Undefined)
-				//{
-				//	base.BuildParameter(parameter);
-				//	return;
-				//}
-
-				var saveStep = BuildStep;
-				BuildStep = Step.TypedExpression;
-
-				if (paramValue.ProviderValue is byte[] bytes)
-				{
-					dbDataType = dbDataType.WithLength(bytes.Length);
-				}
-				else if (paramValue.ProviderValue is string str)
-				{
-					dbDataType = dbDataType.WithLength(str.Length);
-				}
-				else if (paramValue.ProviderValue is decimal d)
-					dbDataType = CorrectDecimalFacets(dbDataType, d);
-
-				if (dbDataType.Length > 32672)
-				{
-					base.BuildParameter(parameter);
-					return;
-				}
-
-				if (dbDataType.DataType != DataType.Undefined)
-				{
-					BuildTypedExpression(dbDataType, parameter);
-				}
-				else
-				{
-					base.BuildParameter(parameter);
-				}
-
-				BuildStep = saveStep;
-
-				return;
-			}
-
-			base.BuildParameter(parameter);
+			return GetValueBasedParameterCastType(parameter);
 		}
 	}
 }

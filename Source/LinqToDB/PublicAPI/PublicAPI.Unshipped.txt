@@ -585,7 +585,6 @@ override LinqToDB.Internal.DataProvider.DuckDB.DuckDBSqlBuilder.BuildGetIdentity
 override LinqToDB.Internal.DataProvider.DuckDB.DuckDBSqlBuilder.BuildInsertOrUpdateQuery(LinqToDB.Internal.SqlQuery.SqlInsertOrUpdateStatement! insertOrUpdate) -> void
 override LinqToDB.Internal.DataProvider.DuckDB.DuckDBSqlBuilder.BuildJoinType(LinqToDB.Internal.SqlQuery.SqlJoinedTable! join, LinqToDB.Internal.SqlQuery.SqlSearchCondition! condition) -> bool
 override LinqToDB.Internal.DataProvider.DuckDB.DuckDBSqlBuilder.BuildObjectName(System.Text.StringBuilder! sb, LinqToDB.SqlQuery.SqlObjectName name, LinqToDB.Internal.SqlProvider.ConvertType objectType = LinqToDB.Internal.SqlProvider.ConvertType.NameToQueryTable, bool escape = true, LinqToDB.TableOptions tableOptions = LinqToDB.TableOptions.NotSet, bool withoutSuffix = false) -> System.Text.StringBuilder!
-override LinqToDB.Internal.DataProvider.DuckDB.DuckDBSqlBuilder.BuildParameter(LinqToDB.Internal.SqlQuery.SqlParameter! parameter) -> void
 override LinqToDB.Internal.DataProvider.DuckDB.DuckDBSqlBuilder.BuildTruncateTableStatement(LinqToDB.Internal.SqlQuery.SqlTruncateTableStatement! truncateTable) -> void
 override LinqToDB.Internal.DataProvider.DuckDB.DuckDBSqlBuilder.ConcatStyle.get -> LinqToDB.Internal.SqlProvider.BasicSqlBuilder.ConcatBuildStyle
 override LinqToDB.Internal.DataProvider.DuckDB.DuckDBSqlBuilder.Convert(System.Text.StringBuilder! sb, string! value, LinqToDB.Internal.SqlProvider.ConvertType convertType) -> System.Text.StringBuilder!
@@ -1141,3 +1140,25 @@ virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSkip(LinqTo
 override LinqToDB.Internal.DataProvider.WrapParametersVisitor.VisitTake(LinqToDB.Internal.SqlQuery.SqlSelectClause! selectClause, LinqToDB.Internal.SqlQuery.ISqlExpression? takeValue) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 override LinqToDB.Internal.DataProvider.WrapParametersVisitor.VisitSkip(LinqToDB.Internal.SqlQuery.SqlSelectClause! selectClause, LinqToDB.Internal.SqlQuery.ISqlExpression? skipValue) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 *REMOVED*override LinqToDB.Internal.DataProvider.WrapParametersVisitor.VisitSqlSelectClause(LinqToDB.Internal.SqlQuery.SqlSelectClause! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
+LinqToDB.Internal.SqlProvider.BasicSqlBuilder.GetValueBasedParameterCastType(LinqToDB.Internal.SqlQuery.SqlParameter! parameter) -> LinqToDB.DbDataType?
+LinqToDB.Internal.SqlQuery.SqlCastExpression.SetMandatory() -> void
+override LinqToDB.Internal.DataProvider.Access.AccessSqlBuilderBase.BuildSqlCastExpression(LinqToDB.Internal.SqlQuery.SqlCastExpression! castExpression) -> void
+override LinqToDB.Internal.DataProvider.DB2.DB2SqlBuilderBase.GetParameterCastType(LinqToDB.Internal.SqlQuery.SqlParameter! parameter, LinqToDB.DbDataType requestedType) -> LinqToDB.DbDataType?
+override LinqToDB.Internal.DataProvider.DB2.DB2SqlBuilderBase.ParameterCastMaxLength.get -> int?
+override LinqToDB.Internal.DataProvider.DB2.DB2SqlBuilderBase.ParameterCastResolvesUndefinedType.get -> bool
+override LinqToDB.Internal.DataProvider.DuckDB.DuckDBSqlBuilder.GetParameterCastType(LinqToDB.Internal.SqlQuery.SqlParameter! parameter, LinqToDB.DbDataType requestedType) -> LinqToDB.DbDataType?
+override LinqToDB.Internal.DataProvider.Firebird.FirebirdSqlBuilder.GetParameterCastType(LinqToDB.Internal.SqlQuery.SqlParameter! parameter, LinqToDB.DbDataType requestedType) -> LinqToDB.DbDataType?
+override LinqToDB.Internal.DataProvider.Informix.InformixSqlBuilder.GetParameterCastType(LinqToDB.Internal.SqlQuery.SqlParameter! parameter, LinqToDB.DbDataType requestedType) -> LinqToDB.DbDataType?
+override LinqToDB.Internal.DataProvider.Informix.InformixSqlBuilder.ParameterCastDecimalNullsOnly.get -> bool
+static LinqToDB.Internal.SqlQuery.QueryHelper.EnsureMandatoryCast(LinqToDB.Internal.SqlQuery.ISqlExpression! expression, LinqToDB.DbDataType toType, LinqToDB.Internal.SqlQuery.Visitors.VisitMode visitMode) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+virtual LinqToDB.Internal.SqlProvider.BasicSqlBuilder.GetParameterCastType(LinqToDB.Internal.SqlQuery.SqlParameter! parameter, LinqToDB.DbDataType requestedType) -> LinqToDB.DbDataType?
+virtual LinqToDB.Internal.SqlProvider.BasicSqlBuilder.ParameterCastDecimalNullsOnly.get -> bool
+virtual LinqToDB.Internal.SqlProvider.BasicSqlBuilder.ParameterCastMaxLength.get -> int?
+virtual LinqToDB.Internal.SqlProvider.BasicSqlBuilder.ParameterCastResolvesUndefinedType.get -> bool
+*REMOVED*LinqToDB.Internal.SqlQuery.SqlParameter.NeedsCast.get -> bool
+*REMOVED*LinqToDB.Internal.SqlQuery.SqlParameter.NeedsCast.set -> void
+*REMOVED*override LinqToDB.Internal.DataProvider.Access.AccessSqlBuilderBase.BuildParameter(LinqToDB.Internal.SqlQuery.SqlParameter! parameter) -> void
+*REMOVED*override LinqToDB.Internal.DataProvider.DB2.DB2SqlBuilderBase.BuildParameter(LinqToDB.Internal.SqlQuery.SqlParameter! parameter) -> void
+*REMOVED*override LinqToDB.Internal.DataProvider.Firebird.FirebirdSqlBuilder.BuildParameter(LinqToDB.Internal.SqlQuery.SqlParameter! parameter) -> void
+*REMOVED*override LinqToDB.Internal.DataProvider.Informix.InformixSqlBuilder.BuildParameter(LinqToDB.Internal.SqlQuery.SqlParameter! parameter) -> void
+*REMOVED*LinqToDB.Internal.SqlProvider.BasicSqlBuilder.Step.TypedExpression = 17 -> LinqToDB.Internal.SqlProvider.BasicSqlBuilder.Step
