@@ -53,8 +53,9 @@ namespace Tests.Linq
 
 		// An argument is a value position: a boolean expression has to be folded into a value, since providers
 		// without a native boolean type reject a bare predicate there.
+		// No ORDER BY, so this is a partition-only aggregate window (COUNT(...) OVER (PARTITION BY ...)), valid
+		// since SQL Server 2005 — unlike CountWithArg above, which is ordered and needs 2012+.
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_AggregateWindowFunctions)]
 		public void CountWithBooleanArg([SupportsAnalyticFunctionsContext] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
