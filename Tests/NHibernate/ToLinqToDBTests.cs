@@ -62,5 +62,24 @@ namespace LinqToDB.NHibernate.Tests
 			names.ShouldHaveSingleItem();
 			names[0].ShouldBe("Alfreds Futterkiste");
 		}
+
+		[Test]
+		public async Task NativeQuery_CoreAsyncRoutesThroughAdapter(
+			[IncludeDataSources(ProviderName.SQLiteClassic, TestProvName.AllSqlServer)] string provider)
+		{
+			var sf = GetSessionFactory(provider);
+
+			using var session = sf.OpenSession();
+
+			// Calling linq2db's AsyncExtensions on a NATIVE NHibernate query routes through the wired
+			// LinqToDBExtensionsAdapter, which delegates to NHibernate's own async (ToListAsync).
+			var names = await LinqToDB.Async.AsyncExtensions.ToListAsync(
+				session.Query<Customer>()
+					.Where (c => c.CustomerId == "ALFKI")
+					.Select(c => c.CompanyName));
+
+			names.ShouldHaveSingleItem();
+			names[0].ShouldBe("Alfreds Futterkiste");
+		}
 	}
 }

@@ -72,8 +72,8 @@ namespace LinqToDB.NHibernate
 				return result;
 			};
 
-			// Phase 5: async ExtensionsAdapter deferred until the async surfaces are re-enabled.
-			// LinqExtensions.ExtensionsAdapter = new LinqToDBExtensionsAdapter();
+			// Route core linq2db async operations over a native NHibernate query to NHibernate's own async.
+			LinqExtensions.ExtensionsAdapter = new LinqToDBExtensionsAdapter();
 
 			return true;
 		}
@@ -502,7 +502,9 @@ namespace LinqToDB.NHibernate
 			// so the whole query runs on the provided context — no second implicit context is spun up.
 			var expression = TransformExpression(query.Expression, dc, session, session.SessionFactory);
 
-			return new LinqToDBForNHibernateQueryProvider<T>(dc, expression);
+			// Return the linq2db ExpressionQuery directly (not the wrapper) so that linq2db's AsyncExtensions
+			// recognises it and executes truly async, instead of falling through to the ExtensionsAdapter.
+			return Internals.CreateExpressionQueryInstance<T>(dc, expression);
 		}
 
 		/// <summary>
@@ -530,7 +532,9 @@ namespace LinqToDB.NHibernate
 			// so the whole query runs on this single context — no second implicit context is spun up.
 			var expression = TransformExpression(query.Expression, dc, session, session.SessionFactory);
 
-			return new LinqToDBForNHibernateQueryProvider<T>(dc, expression);
+			// Return the linq2db ExpressionQuery directly (not the wrapper) so that linq2db's AsyncExtensions
+			// recognises it and executes truly async, instead of falling through to the ExtensionsAdapter.
+			return Internals.CreateExpressionQueryInstance<T>(dc, expression);
 		}
 
 		/// <summary>
