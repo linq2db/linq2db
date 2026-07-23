@@ -12,7 +12,7 @@ namespace LinqToDB.NHibernate
 	/// <summary>
 	/// linq2db NHibernate data connection.
 	/// </summary>
-	public class LinqToDBForNHibernateToolsDataConnection : DataConnection
+	public class LinqToDBForNHibernateToolsDataConnection : DataConnection, IEntityServiceInterceptor
 	{
 		readonly ISession?                                                                _session;
 		readonly Func<Expression, IDataContext, ISession?, ISessionFactory?, Expression>? _transformFunc;
@@ -51,6 +51,9 @@ namespace LinqToDB.NHibernate
 			_session       = session;
 			_transformFunc = transformFunc;
 			AddInterceptor(new ExpressionInterceptor(this));
+
+			if (LinqToDBForNHibernateTools.EnableChangeTracker)
+				AddInterceptor(this);
 		}
 
 		/// <summary>
@@ -64,6 +67,32 @@ namespace LinqToDB.NHibernate
 			if (_transformFunc == null)
 				return expression;
 			return _transformFunc(expression, this, _session, _session?.SessionFactory);
+		}
+
+		/// <summary>
+		/// When change tracking is enabled, attaches an entity materialised by linq2db to the NHibernate
+		/// session so it becomes a managed (persistent) instance — mirroring EF Core's change-tracker attach.
+		/// </summary>
+		/// <param name="eventData">Entity creation event data.</param>
+		/// <param name="entity">Materialised entity.</param>
+		/// <returns>The entity, now associated with the session where possible.</returns>
+		object IEntityServiceInterceptor.EntityCreated(EntityCreatedEventData eventData, object entity)
+		{
+			if (!LinqToDBForNHibernateTools.EnableChangeTracker || !Tracking || _session is not { IsOpen: true })
+				return entity;
+
+			try
+			{
+				if (!_session.Contains(entity))
+					_session.Lock(entity, LockMode.None);
+			}
+			catch (HibernateException)
+			{
+				// A different instance with the same identifier is already associated, or the entity
+				// cannot be locked in the current state — leave it as the materialised instance.
+			}
+
+			return entity;
 		}
 	}
 }
