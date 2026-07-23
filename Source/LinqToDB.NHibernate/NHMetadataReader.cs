@@ -15,7 +15,7 @@ using NHibernate.Persister.Entity;
 using NHibernate.SqlTypes;
 using NHibernate.Type;
 
-namespace LinqToDB.NHibernateExtension
+namespace LinqToDB.NHibernate
 {
 
 	/// <summary>
@@ -374,6 +374,24 @@ namespace LinqToDB.NHibernateExtension
 			public LambdaExpression FromProviderExpression { get; }
 			public LambdaExpression ToProviderExpression   { get; }
 		
+		}
+
+		MappingAttribute[] IMetadataReader.GetAttributes(Type type)
+		{
+			return GetAttributes<TableAttribute>(type).Cast<MappingAttribute>().ToArray();
+		}
+
+		MappingAttribute[] IMetadataReader.GetAttributes(Type type, MemberInfo memberInfo)
+		{
+			var attrs = new List<MappingAttribute>();
+			attrs.AddRange(GetAttributes<ColumnAttribute>(type, memberInfo));
+			attrs.AddRange(GetAttributes<AssociationAttribute>(type, memberInfo));
+			return attrs.ToArray();
+		}
+
+		string IMetadataReader.GetObjectID()
+		{
+			return $".{nameof(NHMetadataReader)}.{(_sessionFactory == null ? 0 : System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(_sessionFactory))}.";
 		}
 
 		public MemberInfo[] GetDynamicColumns(Type type)

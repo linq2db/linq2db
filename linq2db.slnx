@@ -648,6 +648,7 @@
     <Project Path="Source/LinqToDB.LINQPad/LinqToDB.LINQPad.Pack.csproj">
       <Build Solution="Testing|*" Project="false" />
     </Project>
+    <Project Path="Source/LinqToDB.NHibernate/LinqToDB.NHibernate.csproj" />
     <Project Path="Source/LinqToDB.Remote.Grpc/LinqToDB.Remote.Grpc.csproj" />
     <Project Path="Source/LinqToDB.Remote.HttpClient.Client/LinqToDB.Remote.HttpClient.Client.csproj" />
     <Project Path="Source/LinqToDB.Remote.HttpClient.Server/LinqToDB.Remote.HttpClient.Server.csproj" />

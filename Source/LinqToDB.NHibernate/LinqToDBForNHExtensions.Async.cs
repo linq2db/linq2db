@@ -4,16 +4,18 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
-using LinqToDB.NHibernateExtension.Properties;
+using JetBrains.Annotations;
 
-namespace LinqToDB.NHibernateExtension
+using LinqToDB.Async;
+
+namespace LinqToDB.NHibernate
 {
 	// ReSharper disable InvokeAsExtensionMethod
 	/// <summary>
 	/// Provides conflict-less mappings to <see cref="AsyncExtensions"/>.
 	/// </summary>
 	[PublicAPI]
-	public static partial class LinqToDBForNHExtensions
+	public static partial class LinqToDBForNHibernateExtensions
 	{
 		/// <inheritdoc cref="AsyncExtensions.ForEachAsync{TSource}(IQueryable{TSource}, Action{TSource}, CancellationToken)"/>
 		public static Task ForEachAsyncLinqToDB<TSource>(

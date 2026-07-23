@@ -13,17 +13,20 @@ using LinqToDB.Expressions;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.Metadata;
-using LinqToDB.NHibernateExtension.Internal;
-using LinqToDB.NHibernateExtension.Properties;
+using LinqToDB.NHibernate.Internal;
+using JetBrains.Annotations;
+using LinqToDB.Internal.Async;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Linq;
 using NHibernate;
 
-namespace LinqToDB.NHibernateExtension
+namespace LinqToDB.NHibernate
 {
 	/// <summary>
 	/// EF.Core <see cref="DbContext"/> extensions to call LINQ To DB functionality.
 	/// </summary>
 	[PublicAPI]
-	public static partial class LinqToDBForNHTools
+	public static partial class LinqToDBForNHibernateTools
 	{
 		static Lazy<bool> _intialized = new Lazy<bool>(InitializeInternal);
 
@@ -52,7 +55,7 @@ namespace LinqToDB.NHibernateExtension
 
 				var session = Implementation.GetCurrentContext(queryable);
 				if (session == null)
-					throw new LinqToDBForNHToolsException("Can not evaluate current session from query");
+					throw new LinqToDBForNHibernateToolsException("Can not evaluate current session from query");
 
 				var dc = CreateLinqToDbContext(session);
 				var newExpression = queryable.Expression;
@@ -71,12 +74,12 @@ namespace LinqToDB.NHibernateExtension
 			return true;
 		}
 
-		static ILinqToDBForNHTools _implementation = null!;
+		static ILinqToDBForNHibernateTools _implementation = null!;
 
 		/// <summary>
 		/// Gets or sets EF.Core to LINQ To DB integration bridge implementation.
 		/// </summary>
-		public static ILinqToDBForNHTools Implementation
+		public static ILinqToDBForNHibernateTools Implementation
 		{
 			get => _implementation;
 			set
@@ -101,9 +104,9 @@ namespace LinqToDB.NHibernateExtension
 			Query.ClearCaches();
 		}
 
-		static LinqToDBForNHTools()
+		static LinqToDBForNHibernateTools()
 		{
-			Implementation = new LinqToDbForNHToolsImplDefault();
+			Implementation = new LinqToDBForNHibernateToolsImplDefault();
 			Initialize();
 		}
 
@@ -198,7 +201,7 @@ namespace LinqToDB.NHibernateExtension
 			var provider = Implementation.GetDataProvider(info, connectionInfo);
 
 			if (provider == null)
-				throw new LinqToDBForNHToolsException("Can not detect provider from Entity Framework or provider not supported");
+				throw new LinqToDBForNHibernateToolsException("Can not detect provider from Entity Framework or provider not supported");
 
 			return provider;
 		}
@@ -260,7 +263,7 @@ namespace LinqToDB.NHibernateExtension
 				// TODO: we need API for testing current connection
 				/*
 				//if (provider.IsCompatibleConnection(dbTrasaction.Connection))
-					dc = new LinqToDBForNHToolsDataConnection(session, provider, dbTrasaction, TransformExpression);
+					dc = new LinqToDBForNHibernateToolsDataConnection(session, provider, dbTrasaction, TransformExpression);
 			*/
 			}
 
@@ -269,10 +272,10 @@ namespace LinqToDB.NHibernateExtension
 				var dbConnection = session.Connection;
 				// TODO: we need API for testing current connection
 				if (true /*provider.IsCompatibleConnection(dbConnection)*/)
-					dc = new LinqToDBForNHToolsDataConnection(session, provider, dbConnection, TransformExpression);
+					dc = new LinqToDBForNHibernateToolsDataConnection(session, new DataOptions().UseConnection(provider, dbConnection), TransformExpression);
 				else
 				{
-					//dc = new LinqToDBForNHToolsDataConnection(session, provider, connectionInfo.ConnectionString, session.Model, TransformExpression);
+					//dc = new LinqToDBForNHibernateToolsDataConnection(session, provider, connectionInfo.ConnectionString, session.Model, TransformExpression);
 				}
 			}
 
@@ -344,7 +347,7 @@ namespace LinqToDB.NHibernateExtension
 				throw new NotImplementedException();
 				//var dbTransaction = transaction.GetDbTransaction();
 
-				//dc = new LinqToDBForNHToolsDataConnection(session, provider, dbTransaction, session.Model, TransformExpression);
+				//dc = new LinqToDBForNHibernateToolsDataConnection(session, provider, dbTransaction, session.Model, TransformExpression);
 			}
 
 			if (dc == null)
@@ -352,12 +355,12 @@ namespace LinqToDB.NHibernateExtension
 				var dbConnection = session.Connection;
 				// TODO: we need API for testing current connection
 				if (true /*provider.IsCompatibleConnection(dbConnection)*/)
-					dc = new LinqToDBForNHToolsDataConnection(session, provider, dbConnection, TransformExpression);
+					dc = new LinqToDBForNHibernateToolsDataConnection(session, new DataOptions().UseConnection(provider, dbConnection), TransformExpression);
 				else
 				{
 					/*
 					// special case when we have to create data connection by itself
-					var dataContext = new LinqToDBForNHToolsDataContext(session, provider, connectionInfo.ConnectionString, session.Model, TransformExpression);
+					var dataContext = new LinqToDBForNHibernateToolsDataContext(session, provider, connectionInfo.ConnectionString, session.Model, TransformExpression);
 
 					if (mappingSchema != null)
 						dataContext.MappingSchema = mappingSchema;
@@ -396,7 +399,7 @@ namespace LinqToDB.NHibernateExtension
 			var connectionInfo = GetConnectionInfo(info);
 			var dataProvider   = GetDataProvider(info, connectionInfo);
 
-			var dc = new LinqToDBForNHToolsDataConnection(session, dataProvider, connectionInfo.ConnectionString!, TransformExpression);
+			var dc = new LinqToDBForNHibernateToolsDataConnection(session, new DataOptions().UseConnectionString(dataProvider, connectionInfo.ConnectionString!), TransformExpression);
 			/*
 			var logger = CreateLogger(info.Options);
 
@@ -454,12 +457,12 @@ namespace LinqToDB.NHibernateExtension
 			var model          = GetModel(options);
 
 			if (connectionInfo.Connection != null)
-				dc = new LinqToDBForNHToolsDataConnection(null, dataProvider, connectionInfo.Connection, model, TransformExpression);
+				dc = new LinqToDBForNHibernateToolsDataConnection(null, dataProvider, connectionInfo.Connection, model, TransformExpression);
 			else if (connectionInfo.ConnectionString != null)
-				dc = new LinqToDBForNHToolsDataConnection(null, dataProvider, connectionInfo.ConnectionString, model, TransformExpression);
+				dc = new LinqToDBForNHibernateToolsDataConnection(null, dataProvider, connectionInfo.ConnectionString, model, TransformExpression);
 
 			if (dc == null)
-				throw new LinqToDBForNHToolsException($"Can not extract connection information from {nameof(DbContextOptions)}");
+				throw new LinqToDBForNHibernateToolsException($"Can not extract connection information from {nameof(DbContextOptions)}");
 
 			var logger = CreateLogger(info.Options);
 			if (logger != null)
@@ -489,9 +492,9 @@ namespace LinqToDB.NHibernateExtension
 		{
 			var session = Implementation.GetCurrentContext(query);
 			if (session == null)
-				throw new LinqToDBForNHToolsException("Can not evaluate current session from query");
+				throw new LinqToDBForNHibernateToolsException("Can not evaluate current session from query");
 
-			return new LinqToDBForEFQueryProvider<T>(dc, query.Expression);
+			return new LinqToDBForNHibernateQueryProvider<T>(dc, query.Expression);
 		}
 
 		/// <summary>
@@ -509,11 +512,11 @@ namespace LinqToDB.NHibernateExtension
 
 			var session = Implementation.GetCurrentContext(query);
 			if (session == null)
-				throw new LinqToDBForNHToolsException("Can not evaluate current session from query");
+				throw new LinqToDBForNHibernateToolsException("Can not evaluate current session from query");
 
 			var dc = CreateLinqToDbContext(session);
 
-			return new LinqToDBForEFQueryProvider<T>(dc, query.Expression);
+			return new LinqToDBForNHibernateQueryProvider<T>(dc, query.Expression);
 		}
 
 		/// <summary>

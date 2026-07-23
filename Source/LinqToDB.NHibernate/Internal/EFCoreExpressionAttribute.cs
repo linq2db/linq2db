@@ -2,21 +2,21 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 
-namespace LinqToDB.NHibernateExtension.Internal
+namespace LinqToDB.NHibernate.Internal
 {
 	/// <summary>
 	/// Maps linq2db exression.
 	/// </summary>
-	public class EFCoreExpressionAttribute : Sql.ExpressionAttribute
+	public class NHibernateExpressionAttribute : Sql.ExpressionAttribute
 	{
 		/// <summary>
 		/// Creates instance of expression mapper.
 		/// </summary>
 		/// <param name="expression">Mapped expression.</param>
-		public EFCoreExpressionAttribute(string expression) : base(expression)
+		public NHibernateExpressionAttribute(string expression) : base(expression)
 		{
 		}
 

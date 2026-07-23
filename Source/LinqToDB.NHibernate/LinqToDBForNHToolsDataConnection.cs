@@ -1,104 +1,69 @@
 ﻿using System;
-using System.Data;
 using System.Linq.Expressions;
+
+using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.DataProvider;
-using LinqToDB.Linq;
+using LinqToDB.Interceptors;
+
 using NHibernate;
 
-namespace LinqToDB.NHibernateExtension
+namespace LinqToDB.NHibernate
 {
 	/// <summary>
-	/// linq2db EF.Core data connection.
+	/// linq2db NHibernate data connection.
 	/// </summary>
-	public class LinqToDBForNHToolsDataConnection : DataConnection, IExpressionPreprocessor
+	public class LinqToDBForNHibernateToolsDataConnection : DataConnection
 	{
-		readonly ISession? _session;
+		readonly ISession?                                                                _session;
 		readonly Func<Expression, IDataContext, ISession?, ISessionFactory?, Expression>? _transformFunc;
 
-		private Type?          _lastType;
+		sealed class ExpressionInterceptor : IQueryExpressionInterceptor
+		{
+			readonly LinqToDBForNHibernateToolsDataConnection _dataConnection;
+
+			public ExpressionInterceptor(LinqToDBForNHibernateToolsDataConnection dataConnection)
+			{
+				_dataConnection = dataConnection;
+			}
+
+			public Expression ProcessExpression(Expression expression, QueryExpressionArgs args)
+			{
+				return _dataConnection.ProcessExpression(expression, args);
+			}
+		}
 
 		/// <summary>
 		/// Change tracker enable flag.
 		/// </summary>
-		public bool      Tracking { get; set; }
+		public bool Tracking { get; set; }
 
 		/// <summary>
 		/// Creates new instance of data connection.
 		/// </summary>
-		/// <param name="context">EF.Core database context.</param>
-		/// <param name="dataProvider">linq2db database provider.</param>
-		/// <param name="connectionString">Connection string.</param>
-		/// <param name="session">EF.Core data session.</param>
+		/// <param name="session">NHibernate session.</param>
+		/// <param name="options">linq2db data options carrying the provider and the connection or transaction.</param>
 		/// <param name="transformFunc">Expression converter.</param>
-		public LinqToDBForNHToolsDataConnection(
-			ISession?     session,
-			IDataProvider dataProvider,
-			string        connectionString,
-			Func<Expression, IDataContext, ISession?, ISessionFactory?, Expression>? transformFunc) : base(dataProvider, connectionString)
+		public LinqToDBForNHibernateToolsDataConnection(
+			ISession?   session,
+			DataOptions options,
+			Func<Expression, IDataContext, ISession?, ISessionFactory?, Expression>? transformFunc) : base(options)
 		{
-			_session          = session;
-			_transformFunc    = transformFunc;
-			if (LinqToDBForNHTools.EnableChangeTracker)
-				OnEntityCreated += OnEntityCreatedHandler;
+			_session       = session;
+			_transformFunc = transformFunc;
+			AddInterceptor(new ExpressionInterceptor(this));
 		}
 
 		/// <summary>
-		/// Creates new instance of data connection.
-		/// </summary>
-		/// <param name="context">EF.Core database context.</param>
-		/// <param name="dataProvider">linq2db database provider.</param>
-		/// <param name="transaction">Database transaction.</param>
-		/// <param name="session">EF.Core data session.</param>
-		/// <param name="transformFunc">Expression converter.</param>
-		public LinqToDBForNHToolsDataConnection(
-			ISession? session,
-			IDataProvider  dataProvider,
-			IDbTransaction transaction,
-			Func<Expression, IDataContext, ISession?, ISessionFactory?, Expression>? transformFunc
-			) : base(dataProvider, transaction)
-		{
-			_session         = session;
-			_transformFunc   = transformFunc;
-			if (LinqToDBForNHTools.EnableChangeTracker)
-				OnEntityCreated += OnEntityCreatedHandler;
-		}
-
-		/// <summary>
-		/// Creates new instance of data connection.
-		/// </summary>
-		/// <param name="context">EF.Core database context.</param>
-		/// <param name="dataProvider">linq2db database provider.</param>
-		/// <param name="connection">Database connection instance.</param>
-		/// <param name="session">EF.Core data session.</param>
-		/// <param name="transformFunc">Expression converter.</param>
-		public LinqToDBForNHToolsDataConnection(
-			ISession? session,
-			IDataProvider dataProvider,
-			IDbConnection connection,
-			Func<Expression, IDataContext, ISession?, ISessionFactory?, Expression>? transformFunc) : base(dataProvider, connection)
-		{
-			_session         = session;
-			_transformFunc   = transformFunc;
-			if (LinqToDBForNHTools.EnableChangeTracker)
-				OnEntityCreated += OnEntityCreatedHandler;
-		}
-
-		/// <summary>
-		/// Converts expression using convert function, passed to context.
+		/// Converts expression using the transform function passed to the connection.
 		/// </summary>
 		/// <param name="expression">Expression to convert.</param>
+		/// <param name="args">Query expression interception arguments.</param>
 		/// <returns>Converted expression.</returns>
-		public Expression ProcessExpression(Expression expression)
+		public Expression ProcessExpression(Expression expression, QueryExpressionArgs args)
 		{
 			if (_transformFunc == null)
 				return expression;
 			return _transformFunc(expression, this, _session, _session?.SessionFactory);
 		}
-
-		private void OnEntityCreatedHandler(EntityCreatedEventArgs args)
-		{
-		}
-
 	}
 }

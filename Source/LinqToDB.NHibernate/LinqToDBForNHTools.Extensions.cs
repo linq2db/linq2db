@@ -1,6 +1,6 @@
-﻿namespace LinqToDB.NHibernateExtension
+﻿namespace LinqToDB.NHibernate
 {
-	public static partial class LinqToDBForNHTools
+	public static partial class LinqToDBForNHibernateTools
 	{
 	}
 }

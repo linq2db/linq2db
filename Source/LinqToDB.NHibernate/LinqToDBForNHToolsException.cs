@@ -1,16 +1,16 @@
 ﻿using System;
 
-namespace LinqToDB.NHibernateExtension
+namespace LinqToDB.NHibernate
 {
 	/// <summary>
 	/// Exception class for NHibernate to LINQ To DB integration issues.
 	/// </summary>
-	public class LinqToDBForNHToolsException : Exception
+	public class LinqToDBForNHibernateToolsException : Exception
 	{
 		/// <summary>
 		/// Creates new instance of exception.
 		/// </summary>
-		public LinqToDBForNHToolsException()
+		public LinqToDBForNHibernateToolsException()
 		{
 		}
 
@@ -18,7 +18,7 @@ namespace LinqToDB.NHibernateExtension
 		/// Creates new instance of exception.
 		/// </summary>
 		/// <param name="message">Exception message.</param>
-		public LinqToDBForNHToolsException(string message) : base(message)
+		public LinqToDBForNHibernateToolsException(string message) : base(message)
 		{
 		}
 
@@ -27,7 +27,7 @@ namespace LinqToDB.NHibernateExtension
 		/// </summary>
 		/// <param name="message">Exception message.</param>
 		/// <param name="innerException">Original exception.</param>
-		public LinqToDBForNHToolsException(string message, Exception innerException) : base(message, innerException)
+		public LinqToDBForNHibernateToolsException(string message, Exception innerException) : base(message, innerException)
 		{
 		}
 	}

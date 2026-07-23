@@ -2,7 +2,7 @@
 using System.Data.Common;
 using NHibernate;
 
-namespace LinqToDB.NHibernateExtension
+namespace LinqToDB.NHibernate
 {
 	/// <summary>
 	/// Required integration information about underlying database provider, extracted from EF.Core.

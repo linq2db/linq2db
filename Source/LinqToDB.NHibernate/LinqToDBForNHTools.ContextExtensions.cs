@@ -4,12 +4,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using LinqToDB.Data;
 using LinqToDB.Linq;
-using LinqToDB.NHibernateExtension.Properties;
+using JetBrains.Annotations;
 using NHibernate;
 
-namespace LinqToDB.NHibernateExtension
+namespace LinqToDB.NHibernate
 {
-	public static partial class LinqToDBForNHTools
+	public static partial class LinqToDBForNHibernateTools
 	{
 		#region BulkCopy
 

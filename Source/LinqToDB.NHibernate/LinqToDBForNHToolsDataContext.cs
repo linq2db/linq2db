@@ -4,12 +4,12 @@ using LinqToDB.DataProvider;
 using LinqToDB.Linq;
 using NHibernate;
 
-namespace LinqToDB.NHibernateExtension
+namespace LinqToDB.NHibernate
 {
 	/// <summary>
 	/// linq2db NHibernate data session.
 	/// </summary>
-	public class LinqToDBForNHToolsDataContext : DataContext, IExpressionPreprocessor
+	public class LinqToDBForNHibernateToolsDataContext : DataContext, IExpressionPreprocessor
 	{
 		readonly ISession? _session;
 		readonly ISessionFactory _sessionFactory;
@@ -23,7 +23,7 @@ namespace LinqToDB.NHibernateExtension
 		/// <param name="connectionString">Connection string.</param>
 		/// <param name="sessionFactory">NHibernate sessionFactory.</param>
 		/// <param name="transformFunc">Expression converter.</param>
-		public LinqToDBForNHToolsDataContext(
+		public LinqToDBForNHibernateToolsDataContext(
 			ISession?    session,
 			IDataProvider dataProvider,
 			string        connectionString,

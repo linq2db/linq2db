@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.NHibernateExtension
+﻿namespace LinqToDB.NHibernate
 {
 	/// <summary>
 	/// Stores LINQ To DB database provider information.

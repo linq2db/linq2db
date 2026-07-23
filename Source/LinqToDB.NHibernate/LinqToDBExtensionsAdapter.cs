@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using LinqToDB.Async;
 
-namespace LinqToDB.NHibernateExtension
+namespace LinqToDB.NHibernate
 {
 	/// <summary>
 	/// LINQ To DB async extensions adapter to call EF.Core functionality instead of default implementation.

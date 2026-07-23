@@ -6,12 +6,12 @@ using LinqToDB.Mapping;
 using LinqToDB.Metadata;
 using NHibernate;
 
-namespace LinqToDB.NHibernateExtension
+namespace LinqToDB.NHibernate
 {
 	/// <summary>
 	/// Interface for EF.Core - LINQ To DB integration bridge.
 	/// </summary>
-	public interface ILinqToDBForNHTools
+	public interface ILinqToDBForNHibernateTools
 	{
 		/// <summary>
 		/// Clears internal caches

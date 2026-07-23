@@ -5,13 +5,13 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace LinqToDB.NHibernateExtension
+namespace LinqToDB.NHibernate
 {
 	// ReSharper disable InvokeAsExtensionMethod
 	/// <summary>
 	/// Provides conflict-less mappings to <see cref="EntityFrameworkQueryableExtensions"/> extensions.
 	/// </summary>
-	public static partial class LinqToDBForNHExtensions
+	public static partial class LinqToDBForNHibernateExtensions
 	{
 		/// <inheritdoc cref="EntityFrameworkQueryableExtensions.ForEachAsync{T}(IQueryable{T}, Action{T}, CancellationToken)"/>
 		public static Task ForEachAsyncEF<TSource>(

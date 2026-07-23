@@ -5,7 +5,7 @@ using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Common.Internal.Cache;
+using Microsoft.Extensions.Caching.Memory;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.DB2;
@@ -20,20 +20,20 @@ using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 using LinqToDB.Mapping;
 using LinqToDB.Metadata;
-using LinqToDB.NHibernateExtension.Properties;
+using JetBrains.Annotations;
 using LinqToDB.Reflection;
 using LinqToDB.SqlQuery;
 using NHibernate;
 using NHibernate.Engine;
 
-namespace LinqToDB.NHibernateExtension
+namespace LinqToDB.NHibernate
 {
 	// ReSharper disable once ClassWithVirtualMembersNeverInherited.Global
 	/// <summary>
 	/// Default EF.Core - LINQ To DB integration bridge implementation.
 	/// </summary>
 	[PublicAPI]
-	public class LinqToDbForNHToolsImplDefault : ILinqToDBForNHTools
+	public class LinqToDBForNHibernateToolsImplDefault : ILinqToDBForNHibernateTools
 	{
 		class ProviderKey
 		{
@@ -152,7 +152,7 @@ namespace LinqToDB.NHibernateExtension
 		{
 			if (provInfo.ProviderName == null)
 			{
-				throw new LinqToDBForNHToolsException("Can not detect data provider.");
+				throw new LinqToDBForNHibernateToolsException("Can not detect data provider.");
 			}
 
 			switch (provInfo.ProviderName)
@@ -182,7 +182,7 @@ namespace LinqToDB.NHibernateExtension
 					//	return new AccessDataProvider();
 
 			default:
-				throw new LinqToDBForNHToolsException($"Can not instantiate data provider '{provInfo.ProviderName}'.");
+				throw new LinqToDBForNHibernateToolsException($"Can not instantiate data provider '{provInfo.ProviderName}'.");
 			}
 		}
 
@@ -898,7 +898,7 @@ namespace LinqToDB.NHibernateExtension
 					newExpression, Expression.NewArrayInit(typeof(Type)));
 			}
 
-			if (!ignoreTracking && dc is LinqToDBForNHToolsDataConnection dataConnection)
+			if (!ignoreTracking && dc is LinqToDBForNHibernateToolsDataConnection dataConnection)
 			{
 				// ReSharper disable once ConditionIsAlwaysTrueOrFalse
 				dataConnection.Tracking = tracking;
@@ -960,15 +960,15 @@ namespace LinqToDB.NHibernateExtension
 			var queryContextFactoryField = compiler.GetType().GetField("_queryContextFactory", BindingFlags.NonPublic | BindingFlags.Instance);
 
 			if (queryContextFactoryField == null)
-				throw new LinqToDBForNHToolsException($"Can not find private field '{compiler.GetType()}._queryContextFactory' in current EFCore Version.");
+				throw new LinqToDBForNHibernateToolsException($"Can not find private field '{compiler.GetType()}._queryContextFactory' in current EFCore Version.");
 
 			if (!(queryContextFactoryField.GetValue(compiler) is RelationalQueryContextFactory queryContextFactory))
-				throw new LinqToDBForNHToolsException("LinqToDB Tools for EFCore support only Relational Databases.");
+				throw new LinqToDBForNHibernateToolsException("LinqToDB Tools for EFCore support only Relational Databases.");
 
 			var dependenciesProperty = typeof(RelationalQueryContextFactory).GetField("_dependencies", BindingFlags.NonPublic | BindingFlags.Instance);
 
 			if (dependenciesProperty == null)
-				throw new LinqToDBForNHToolsException($"Can not find private property '{nameof(RelationalQueryContextFactory)}._dependencies' in current EFCore Version.");
+				throw new LinqToDBForNHibernateToolsException($"Can not find private property '{nameof(RelationalQueryContextFactory)}._dependencies' in current EFCore Version.");
 
 			var dependencies = (QueryContextDependencies) dependenciesProperty.GetValue(queryContextFactory);
 
@@ -1104,7 +1104,7 @@ namespace LinqToDB.NHibernateExtension
 
 		static Func<MappingSchema, string> _configurationIdGetter;
 
-		static LinqToDbForNHToolsImplDefault()
+		static LinqToDBForNHibernateToolsImplDefault()
 		{
 			var param = Expression.Parameter(typeof(MappingSchema), "ms");
 			var getter = Expression.MakeMemberAccess(param,

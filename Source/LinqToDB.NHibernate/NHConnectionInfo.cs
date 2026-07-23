@@ -1,6 +1,6 @@
 ﻿using System.Data;
 
-namespace LinqToDB.NHibernateExtension
+namespace LinqToDB.NHibernate
 {
 	/// <summary>
 	/// Contains database connectivity information, extracted from EF.Core.

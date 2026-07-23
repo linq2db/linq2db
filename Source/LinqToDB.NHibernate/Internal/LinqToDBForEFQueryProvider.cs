@@ -8,9 +8,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using LinqToDB.Async;
 using LinqToDB.Expressions;
-using LinqToDB.Linq;
+using LinqToDB.Internal.Async;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Linq;
 
-namespace LinqToDB.NHibernateExtension.Internal
+namespace LinqToDB.NHibernate.Internal
 {
 	/// <summary>
 	///     Adapter for <see cref="IAsyncQueryProvider" />
@@ -18,14 +20,14 @@ namespace LinqToDB.NHibernateExtension.Internal
 	///		It may change or be removed without further notice.
 	/// </summary>
 	/// <typeparam name="T">Type of query element.</typeparam>
-	public class LinqToDBForEFQueryProvider<T> : /*IAsyncQueryProvider, */IQueryProviderAsync, IQueryable<T>/*, System.Collections.Generic.IAsyncEnumerable<T>*/
+	public class LinqToDBForNHibernateQueryProvider<T> : /*IAsyncQueryProvider, */IQueryProviderAsync, IQueryable<T>/*, System.Collections.Generic.IAsyncEnumerable<T>*/
 	{
 		/// <summary>
 		/// Creates instance of adapter.
 		/// </summary>
 		/// <param name="dataContext">Data context instance.</param>
 		/// <param name="expression">Query expression.</param>
-		public LinqToDBForEFQueryProvider(IDataContext dataContext, Expression expression)
+		public LinqToDBForNHibernateQueryProvider(IDataContext dataContext, Expression expression)
 		{
 			if (expression == null) throw new ArgumentNullException(nameof(expression));
 			var dataContext1 = dataContext ?? throw new ArgumentNullException(nameof(dataContext));
