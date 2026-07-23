@@ -41,6 +41,11 @@ namespace Tests.Linq
 			{
 				return (m, dc) => dc.GetTable<DetailClass>().Where(d => d.MasterId == m.Id1 && d.MasterId == m.Id2 && d.DetailId % 2 == 0);
 			}
+
+			// Value equality by key so the in-memory AssertQuery reference groups by master the same way
+			// SQL does (by key), rather than by object reference.
+			public override bool Equals(object? obj) => obj is MasterClass other && other.Id1 == Id1 && other.Id2 == Id2;
+			public override int GetHashCode()         => (Id1, Id2).GetHashCode();
 		}
 
 		[Table]
@@ -67,6 +72,9 @@ namespace Tests.Linq
 			[Column][PrimaryKey] public int DetailId { get; set; }
 			[Column] public int? MasterId { get; set; }
 			[Column] public string? DetailValue { get; set; }
+
+			[Association(ThisKey = nameof(MasterId), OtherKey = nameof(MasterClass.Id1))]
+			public MasterClass? Master { get; set; }
 
 			[Association(ThisKey = nameof(DetailId), OtherKey = nameof(SubDetailClass.DetailId))]
 			public SubDetailClass[] SubDetails { get; set; } = null!;
@@ -561,6 +569,48 @@ namespace Tests.Linq
 				};
 
 			var result = masterQuery.ToArray();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4624")]
+		public void TestGroupByEntityKeyEagerLoad([DataSources] string context)
+		{
+			var (masterRecords, detailRecords) = GenerateData();
+
+			using var db = GetDataContext(context);
+			using var master = db.CreateLocalTable(masterRecords);
+			using var detail = db.CreateLocalTable(detailRecords);
+
+			var query =
+				from d in detail.LoadWith(x => x.Master!.Details)
+				group d by d.Master into g
+				select new
+				{
+					g.Key!.Id1,
+					Details = g.Key!.Details.Select(x => x.DetailId).OrderBy(x => x).ToList()
+				};
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4624 - composite group key must not take the entity-key Expand path")]
+		public void TestGroupByCompositeKeyEagerLoad([DataSources] string context)
+		{
+			var (masterRecords, detailRecords) = GenerateData();
+
+			using var db = GetDataContext(context);
+			using var master = db.CreateLocalTable(masterRecords);
+			using var detail = db.CreateLocalTable(detailRecords);
+
+			var query =
+				from d in detail
+				group d by new { d.MasterId } into g
+				select new
+				{
+					g.Key.MasterId,
+					Details = detail.Where(x => x.MasterId == g.Key.MasterId).Select(x => x.DetailId).OrderBy(x => x).ToList()
+				};
+
+			AssertQuery(query);
 		}
 
 		[Test]
