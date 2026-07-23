@@ -22,6 +22,7 @@ using LinqToDB.Internal.Extensions;
 using LinqToDB.Mapping;
 using LinqToDB.Metadata;
 using JetBrains.Annotations;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Reflection;
 using LinqToDB.Reflection;
@@ -1058,18 +1059,10 @@ namespace LinqToDB.NHibernate
 
 		readonly ConcurrentDictionary<Tuple<ISessionFactory?>, Tuple<string, MappingSchema[]>> _mappingSchemas = new();
 
-		static Func<MappingSchema, string> _configurationIdGetter;
-
-		static LinqToDBForNHibernateToolsImplDefault()
-		{
-			var param = Expression.Parameter(typeof(MappingSchema), "ms");
-			var getter = Expression.MakeMemberAccess(param,
-				typeof(MappingSchema).GetProperty("ConfigurationID", BindingFlags.Instance | BindingFlags.NonPublic)!);
-			var lambda = Expression.Lambda<Func<MappingSchema, string>>(getter, param);
-
-			_configurationIdGetter = lambda.Compile();
-
-		}
+		// 6.x: MappingSchema.ConfigurationID is an explicit IConfigurationID member returning int
+		// (not the reflectable non-public property the 2021 code assumed).
+		static readonly Func<MappingSchema, string> _configurationIdGetter =
+			ms => ((IConfigurationID)ms).ConfigurationID.ToString(System.Globalization.CultureInfo.InvariantCulture);
 
 		public void AddMappingSchema(ISessionFactory? sessionFactory, MappingSchema mappingSchema)
 		{

@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<Import Project="Tests.NHibernate.props" />
+
+	<PropertyGroup>
+		<TargetFrameworks>net10.0</TargetFrameworks>
+	</PropertyGroup>
+
+</Project>

@@ -1,0 +1,19 @@
+<Project>
+	<Import Project="..\linq2db.BasicTestProjects.props" />
+
+	<PropertyGroup>
+		<AssemblyName>linq2db.NHibernate.Tests</AssemblyName>
+		<RootNamespace>LinqToDB.NHibernate.Tests</RootNamespace>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Base\Tests.Base.csproj" />
+		<ProjectReference Include="..\..\Source\LinqToDB.NHibernate\LinqToDB.NHibernate.csproj" />
+
+		<PackageReference Include="NHibernate" />
+		<PackageReference Include="FluentNHibernate" />
+		<PackageReference Include="Microsoft.Data.Sqlite" />
+		<PackageReference Include="SourceGear.sqlite3" />
+		<PackageReference Include="Microsoft.Data.SqlClient" />
+	</ItemGroup>
+</Project>
