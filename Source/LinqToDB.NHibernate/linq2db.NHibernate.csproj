@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<Import Project="..\..\Build\linq2db.Default.props" />
+
+	<PropertyGroup>
+		<Description>Allows to execute Linq to DB (linq2db) queries in NHibernate context.</Description>
+		<Title>Linq to DB (linq2db) extensions for NHibernate</Title>
+		<AssemblyTitle>$(Title)</AssemblyTitle>
+
+		<TargetFrameworks>net4.6.1</TargetFrameworks>
+		<RootNamespace>LinqToDB.NHibernateExtension</RootNamespace>
+		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.NHibernate.xml</DocumentationFile>
+
+		<!--EF1001: use of internal EF API-->
+		<NoWarn>EF1001</NoWarn>
+		<LangVersion>latest</LangVersion>
+		<AssemblyName>linq2db.NHibernate</AssemblyName>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="linq2db" Version="3.2.3" />
+		<PackageReference Include="NHibernate" Version="3.2.0.4000" />
+	</ItemGroup>
+
+</Project>

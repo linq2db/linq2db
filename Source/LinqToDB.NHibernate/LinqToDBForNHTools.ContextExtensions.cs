@@ -1,0 +1,266 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using LinqToDB.Data;
+using LinqToDB.Linq;
+using LinqToDB.NHibernateExtension.Properties;
+using NHibernate;
+
+namespace LinqToDB.NHibernateExtension
+{
+	public static partial class LinqToDBForNHTools
+	{
+		#region BulkCopy
+
+		/// <summary>
+		/// Performs bulk insert operation.
+		/// </summary>
+		/// <typeparam name="T">Mapping type of inserted record.</typeparam>
+		/// <param name="context">Database context.</param>
+		/// <param name="options">Operation options.</param>
+		/// <param name="source">Records to insert.</param>
+		/// <returns>Bulk insert operation status.</returns>
+		public static BulkCopyRowsCopied BulkCopy<T>(this ISession session, BulkCopyOptions options, IEnumerable<T> source) where T : class
+		{
+			if (session == null) throw new ArgumentNullException(nameof(session));
+
+			using (var dc = session.CreateLinqToDbConnection())
+			{
+				return dc.BulkCopy(options, source);
+			}
+		}
+
+		/// <summary>
+		/// Performs bulk insert operation.
+		/// </summary>
+		/// <typeparam name="T">Mapping type of inserted record.</typeparam>
+		/// <param name="context">Database context.</param>
+		/// <param name="maxBatchSize">Number of rows in each batch. At the end of each batch, the rows in the batch are sent to the server. </param>
+		/// <param name="source">Records to insert.</param>
+		/// <returns>Bulk insert operation status.</returns>
+		public static BulkCopyRowsCopied BulkCopy<T>(this ISession session, int maxBatchSize, IEnumerable<T> source) where T : class
+		{
+			if (session == null) throw new ArgumentNullException(nameof(session));
+
+			using (var dc = session.CreateLinqToDbConnection())
+			{
+				return dc.BulkCopy(
+					new BulkCopyOptions { MaxBatchSize = maxBatchSize },
+					source);
+			}
+		}
+
+		/// <summary>
+		/// Performs bulk insert operation.
+		/// </summary>
+		/// <typeparam name="T">Mapping type of inserted record.</typeparam>
+		/// <param name="context">Database context.</param>
+		/// <param name="source">Records to insert.</param>
+		/// <returns>Bulk insert operation status.</returns>
+		public static BulkCopyRowsCopied BulkCopy<T>(this ISession session, IEnumerable<T> source) where T : class
+		{
+			if (session == null) throw new ArgumentNullException(nameof(session));
+
+			using (var dc = session.CreateLinqToDbConnection())
+			{
+				return dc.BulkCopy(
+					new BulkCopyOptions(),
+					source);
+			}
+		}
+
+		#endregion
+
+		#region BulkCopyAsync
+
+		/// <summary>Asynchronously performs bulk insert operation.</summary>
+		/// <typeparam name="T">Mapping type of inserted record.</typeparam>
+		/// <param name="context">Database context.</param>
+		/// <param name="options">Operation options.</param>
+		/// <param name="source">Records to insert.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Task with bulk insert operation status.</returns>
+		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
+			this ISession session,
+			BulkCopyOptions options,
+			IEnumerable<T> source,
+			CancellationToken cancellationToken = default)
+			where T : class
+		{
+			if (session == null) throw new ArgumentNullException(nameof(session));
+			if (source  == null) throw new ArgumentNullException(nameof(source));
+
+			using (var dc = session.CreateLinqToDbConnection())
+			{
+				return dc.BulkCopyAsync(options, source, cancellationToken);
+			}
+		}
+
+		/// <summary>Asynchronously performs bulk insert operation.</summary>
+		/// <typeparam name="T">Mapping type of inserted record.</typeparam>
+		/// <param name="context">Database context.</param>
+		/// <param name="maxBatchSize">
+		///     Number of rows in each batch. At the end of each batch, the rows in the batch are sent to
+		///     the server.
+		/// </param>
+		/// <param name="source">Records to insert.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Task with bulk insert operation status.</returns>
+		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
+			this ISession session, 
+			int maxBatchSize,
+			IEnumerable<T> source,
+			CancellationToken cancellationToken = default)
+			where T : class
+		{
+			if (session == null) throw new ArgumentNullException(nameof(session));
+			if (source  == null) throw new ArgumentNullException(nameof(source));
+
+			if (session == null) throw new ArgumentNullException(nameof(session));
+			if (source  == null) throw new ArgumentNullException(nameof(source));
+
+			using (var dc = session.CreateLinqToDbConnection())
+			{
+				return dc.BulkCopyAsync(maxBatchSize, source, cancellationToken);
+			}
+		}
+
+		/// <summary>Asynchronously performs bulk insert operation.</summary>
+		/// <typeparam name="T">Mapping type of inserted record.</typeparam>
+		/// <param name="context">Database context.</param>
+		/// <param name="source">Records to insert.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Task with bulk insert operation status.</returns>
+		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
+			this ISession session, 
+			IEnumerable<T> source,
+			CancellationToken cancellationToken = default)
+			where T : class
+		{
+			if (session == null) throw new ArgumentNullException(nameof(session));
+			if (source  == null) throw new ArgumentNullException(nameof(source));
+
+			using (var dc = session.CreateLinqToDbConnection())
+			{
+				return dc.BulkCopyAsync(source, cancellationToken);
+			}
+		}
+
+		/*
+		/// <summary>Asynchronously performs bulk insert operation.</summary>
+		/// <typeparam name="T">Mapping type of inserted record.</typeparam>
+		/// <param name="context">Database context.</param>
+		/// <param name="options">Operation options.</param>
+		/// <param name="source">Records to insert.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Task with bulk insert operation status.</returns>
+		public static async Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
+			ISession session,
+			BulkCopyOptions options,
+			IAsyncEnumerable<T> source,
+			CancellationToken cancellationToken = default)
+			where T : class
+		{
+			if (session == null) throw new ArgumentNullException(nameof(session));
+			if (source  == null) throw new ArgumentNullException(nameof(source));
+
+			using (var dc = session.CreateLinqToDbConnection())
+			{
+				return await dc.BulkCopyAsync(options, source, cancellationToken);
+			}
+		}
+		*/
+
+		/*
+		/// <summary>Asynchronously performs bulk insert operation.</summary>
+		/// <typeparam name="T">Mapping type of inserted record.</typeparam>
+		/// <param name="context">Database context.</param>
+		/// <param name="maxBatchSize">
+		///     Number of rows in each batch. At the end of each batch, the rows in the batch are sent to
+		///     the server.
+		/// </param>
+		/// <param name="source">Records to insert.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Task with bulk insert operation status.</returns>
+		public static async Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
+			this ISession session,
+			int maxBatchSize,
+			IAsyncEnumerable<T> source,
+			CancellationToken cancellationToken = default)
+			where T : class
+		{
+			if (session == null) throw new ArgumentNullException(nameof(session));
+			if (source  == null) throw new ArgumentNullException(nameof(source));
+
+			using (var dc = session.CreateLinqToDbConnection())
+			{
+				return await dc.BulkCopyAsync(maxBatchSize, source, cancellationToken);
+			}
+		}
+		*/
+
+		/*
+		/// <summary>Asynchronously performs bulk insert operation.</summary>
+		/// <typeparam name="T">Mapping type of inserted record.</typeparam>
+		/// <param name="context">Database context.</param>
+		/// <param name="source">Records to insert.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Task with bulk insert operation status.</returns>
+		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
+			this ISession session,
+			IAsyncEnumerable<T> source,
+			CancellationToken cancellationToken = default)
+			where T : class
+		{
+			if (session == null) throw new ArgumentNullException(nameof(session));
+			if (source  == null) throw new ArgumentNullException(nameof(source));
+
+			using (var dc = session.CreateLinqToDbConnection())
+			{
+				return dc.BulkCopyAsync(source, cancellationToken);
+			}
+		}
+		*/
+
+		#endregion
+
+		#region Value Insertable
+
+		/// <summary>
+		/// Starts LINQ query definition for insert operation.
+		/// </summary>
+		/// <typeparam name="T">Target table mapping class.</typeparam>
+		/// <param name="context">Database context.</param>
+		/// <param name="target">Target table.</param>
+		/// <returns>Insertable source query.</returns>
+		[LinqTunnel]
+		[Pure]
+		public static IValueInsertable<T> Into<T>(this ISession session, ITable<T> target)
+		{
+			if (session == null) throw new ArgumentNullException(nameof(session));
+			if (target == null)  throw new ArgumentNullException(nameof(target));
+
+			return session.CreateLinqToDbConnection().Into(target);
+		}
+
+		#endregion
+
+		#region GetTable
+
+		/// <summary>
+		/// Returns queryable source for specified mapping class for current DBContext, mapped to database table or view.
+		/// </summary>
+		/// <typeparam name="T">Mapping class type.</typeparam>
+		/// <returns>Queryable source.</returns>
+		public static ITable<T> GetTable<T>(this ISession session)
+			where T : class
+		{
+			if (session == null) throw new ArgumentNullException(nameof(session));
+
+			return session.CreateLinqToDbContext().GetTable<T>();
+		}
+		
+		#endregion
+	}
+}
