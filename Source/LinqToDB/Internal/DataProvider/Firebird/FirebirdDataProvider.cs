@@ -21,6 +21,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 	sealed class FirebirdDataProvider3  : FirebirdDataProvider { public FirebirdDataProvider3()  : base(ProviderName.Firebird3,  FirebirdVersion.v3 ) { } }
 	sealed class FirebirdDataProvider4  : FirebirdDataProvider { public FirebirdDataProvider4()  : base(ProviderName.Firebird4,  FirebirdVersion.v4 ) { } }
 	sealed class FirebirdDataProvider5  : FirebirdDataProvider { public FirebirdDataProvider5()  : base(ProviderName.Firebird5,  FirebirdVersion.v5 ) { } }
+	sealed class FirebirdDataProvider6  : FirebirdDataProvider { public FirebirdDataProvider6()  : base(ProviderName.Firebird6,  FirebirdVersion.v6 ) { } }
 #pragma warning restore MA0048 // File name must match type name
 
 	public abstract class FirebirdDataProvider : DynamicDataProviderBase<FirebirdProviderAdapter>
@@ -76,9 +77,12 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			SetToType<DbDataReader, byte[], string>("VARCHAR", (r, i) => r.GetFieldValue<byte[]>(i));
 			SetToType<DbDataReader, Binary, string>("VARCHAR", (r, i) => new Binary(r.GetFieldValue<byte[]>(i)));
 
-			_sqlOptimizer = Version >= FirebirdVersion.v3
-				? new Firebird3SqlOptimizer(SqlProviderFlags)
-				: new FirebirdSqlOptimizer(SqlProviderFlags);
+			_sqlOptimizer = Version switch
+			{
+				>= FirebirdVersion.v6 => new Firebird6SqlOptimizer(SqlProviderFlags),
+				>= FirebirdVersion.v3 => new Firebird3SqlOptimizer(SqlProviderFlags),
+				_                     => new FirebirdSqlOptimizer(SqlProviderFlags),
+			};
 		}
 
 		static DateTime GetDateTime(DateTime value)
@@ -104,9 +108,10 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 		{
 			return Version switch
 			{
-				FirebirdVersion.v25   => new Firebird25MemberTranslator(),
+				>= FirebirdVersion.v6 => new Firebird6MemberTranslator(),
 				>= FirebirdVersion.v5 => new Firebird5MemberTranslator(),
 				>= FirebirdVersion.v4 => new Firebird4MemberTranslator(),
+				FirebirdVersion.v25   => new Firebird25MemberTranslator(),
 				_                     => new FirebirdMemberTranslator(),
 			};
 		}
@@ -121,7 +126,9 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			return Version switch
 			{
 				FirebirdVersion.v3    => new Firebird3SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
-				>= FirebirdVersion.v4 => new Firebird4SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
+				FirebirdVersion.v4    => new Firebird4SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
+				FirebirdVersion.v5    => new Firebird4SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
+				>= FirebirdVersion.v6 => new Firebird6SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
 				_                     => new FirebirdSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
 			};
 		}
@@ -145,6 +152,22 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
+			// Firebird 6: Guid parameters are wrapped in CHAR_TO_UUID(...) by Firebird6SqlExpressionConvertVisitor,
+			// so bind the value as its canonical 36-char text. Any binary/octets binding (FbDbType.Guid, byte[],
+			// any FbParameter.Charset incl. Octets/None) fails "Malformed string" (SQLSTATE 22000) when the value
+			// hits a matching row. Earlier versions keep the binary binding (they have no CHAR_TO_UUID wrap).
+			if (Version >= FirebirdVersion.v6
+				&& (dataType.SystemType == typeof(Guid) || dataType.SystemType == typeof(Guid?))
+				&& dataType.DataType is not (DataType.Char or DataType.NChar or DataType.VarChar or DataType.NVarChar))
+			{
+				// only the octets-mapped Guid (the CHAR_TO_UUID-wrapped parameter) is rebound; a Guid mapped
+				// to a text column keeps its existing string binding.
+				if (value is Guid g)
+					value = g.ToString();
+
+				dataType = new DbDataType(typeof(string), DataType.VarChar, null, 36);
+			}
+
 #if SUPPORTS_DATEONLY
 			if (!Adapter.IsDateOnlySupported && value is DateOnly d)
 			{
@@ -235,6 +258,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 				FirebirdVersion.v3  => new FirebirdMappingSchema.Firebird3MappingSchema (),
 				FirebirdVersion.v4  => new FirebirdMappingSchema.Firebird4MappingSchema (),
 				FirebirdVersion.v5  => new FirebirdMappingSchema.Firebird5MappingSchema (),
+				FirebirdVersion.v6  => new FirebirdMappingSchema.Firebird6MappingSchema (),
 				_                   => new FirebirdMappingSchema.Firebird25MappingSchema(),
 			};
 		}

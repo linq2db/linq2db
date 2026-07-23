@@ -46,6 +46,7 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[ActiveIssue(Configurations = new[] { ProviderName.Firebird6 }, Details = "Firebird 6 raises a server 'internal error' (SQLSTATE XX000) reading a column from the AllTypes table. FB6 prerelease 6.0.0.2068 / FbClient 10.3.4; re-check when a newer Firebird 6 is released.")]
 		[Test]
 		public void TestDataTypes([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
@@ -323,6 +324,7 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[ActiveIssue(Configurations = new[] { ProviderName.Firebird6 }, Details = "Firebird 6 rejects binding a Guid parameter to a CHAR(16) OCTETS column with 'Malformed string' on a UTF8-default database (FbClient 10.3.4 / FB6 prerelease 6.0.0.2068 limitation below linq2db, not reproducible below the client). Re-check when a newer Firebird 6 is released.")]
 		[Test]
 		public void TestGuid2([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
@@ -338,6 +340,82 @@ namespace Tests.DataProvider
 				t => t.ID == dt.ID,
 				t => new LinqDataTypes2 { GuidValue = dt.GuidValue });
 		}
+
+		#region Guid representations
+
+		// Firebird represents a Guid two ways: the binary CHAR(16) CHARACTER SET OCTETS form (the default Guid
+		// mapping, and what GEN_UUID returns) and a textual CHAR(38) form (DataType.NChar/Char). This set covers
+		// both across literal, parameter, server-generated and column round-trip. Reads of the binary form go
+		// through UUID_TO_CHAR (FirebirdSqlExpressionConvertVisitor.WrapColumnExpression) so they are independent
+		// of the connection/database charset. Writing a binary Guid *parameter* to an OCTETS column fails on
+		// Firebird 6's UTF8-default database with "Malformed string" (an FbClient 10.3.4 / FB6-snapshot limitation
+		// below linq2db), so the binary parameter / round-trip cases are gated for Firebird 6; the textual form,
+		// binary literals and server-generated values are unaffected.
+
+		[Table("FbGuidBinary")]
+		sealed class GuidBinaryRepr
+		{
+			[PrimaryKey] public int  Id    { get; set; }
+			[Column]     public Guid Value { get; set; } // CHAR(16) CHARACTER SET OCTETS
+		}
+
+		[Table("FbGuidText")]
+		sealed class GuidTextRepr
+		{
+			[PrimaryKey]                                     public int  Id    { get; set; }
+			[Column(DataType = DataType.NChar, Length = 38)] public Guid Value { get; set; } // CHAR(38) textual
+		}
+
+		static readonly Guid GuidReprValue = new("6f9619ff-8b86-d011-b42d-00c04fc964ff");
+
+		// Binary Guid as an inline SQL literal (X'...') and as a server-generated value (GEN_UUID). Both are read
+		// back through UUID_TO_CHAR; neither binds a client parameter, so both work on Firebird 6.
+		[Test]
+		public void GuidBinary_LiteralAndGenerated([IncludeDataSources(TestProvName.AllFirebird)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db.Select(() => Sql.AsSql(GuidReprValue)).ShouldBe(GuidReprValue);
+			db.Select(() => Sql.AsSql(Sql.NewGuid())).ShouldNotBe(Guid.Empty);
+		}
+
+		// Binary Guid passed as a client parameter.
+		[ActiveIssue(Configurations = new[] { ProviderName.Firebird6 }, Details = "Firebird 6 rejects binding a binary Guid parameter to a CHAR(16) OCTETS column with 'Malformed string' (FbClient 10.3.4 / FB6 prerelease 6.0.0.2068 limitation below linq2db). Re-check when a newer Firebird 6 is released.")]
+		[Test]
+		public void GuidBinary_Parameter([IncludeDataSources(TestProvName.AllFirebird)] string context)
+		{
+			using var db    = GetDataContext(context);
+			var       value = GuidReprValue;
+
+			db.Select(() => Sql.AsSql(value)).ShouldBe(value);
+		}
+
+		// Binary Guid round-trip through a CHAR(16) OCTETS column.
+		[ActiveIssue(Configurations = new[] { ProviderName.Firebird6 }, Details = "Firebird 6 rejects binding a binary Guid parameter to a CHAR(16) OCTETS column with 'Malformed string' (FbClient 10.3.4 / FB6 prerelease 6.0.0.2068 limitation below linq2db). Re-check when a newer Firebird 6 is released.")]
+		[Test]
+		public void GuidBinary_Column([IncludeDataSources(TestProvName.AllFirebird)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<GuidBinaryRepr>();
+
+			db.Insert(new GuidBinaryRepr { Id = 1, Value = GuidReprValue });
+
+			tb.Single().Value.ShouldBe(GuidReprValue);
+		}
+
+		// Textual Guid (CHAR(38)) as a column round-trip — charset-safe, works on all Firebird versions.
+		[Test]
+		public void GuidText_Column([IncludeDataSources(TestProvName.AllFirebird)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<GuidTextRepr>();
+
+			db.Insert(new GuidTextRepr { Id = 1, Value = GuidReprValue });
+
+			tb.Single().Value.ShouldBe(GuidReprValue);
+		}
+
+		#endregion
 
 		[Test]
 		public void TestXml([IncludeDataSources(TestProvName.AllFirebird)] string context)
@@ -859,6 +937,76 @@ namespace Tests.DataProvider
 			Assert.That(sql, Does.Contain("\"DateTimeTZ\" TIMESTAMP WITH TIME ZONE,"));
 			Assert.That(sql, Does.Contain("\"TimeTZ\"     TIME WITH TIME ZONE,"));
 			Assert.That(sql, Does.Contain("\"Int128\"     INT128,"));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5483")]
+		public void TestFb6NativeIfExists([IncludeDataSources(false, TestProvName.AllFirebird6Plus)] string context)
+		{
+			using var db = new TestDataConnection(context);
+
+			db.DropTable<TestDropTable>(throwExceptionIfNotExists: false);
+
+			db.CreateTable<TestDropTable>(tableOptions: TableOptions.CreateIfNotExists);
+			var createSql = db.LastQuery!;
+
+			db.DropTable<TestDropTable>(tableOptions: TableOptions.DropIfExists, throwExceptionIfNotExists: false);
+			var dropSql = db.LastQuery!;
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(createSql, Does.Contain("IF NOT EXISTS").IgnoreCase);
+				Assert.That(createSql, Does.Not.Contain("EXECUTE BLOCK").IgnoreCase);
+				Assert.That(dropSql,   Does.Contain("DROP TABLE IF EXISTS").IgnoreCase);
+				Assert.That(dropSql,   Does.Not.Contain("EXECUTE BLOCK").IgnoreCase);
+			}
+		}
+
+		[Table]
+		sealed class Fb6FeatureRow
+		{
+			[Column]              public int     Id  { get; set; }
+			[Column]              public int     A   { get; set; }
+			[Column]              public int     B   { get; set; }
+			[Column(Length = 50)] public string? Val { get; set; }
+			[Column]              public int     Grp { get; set; }
+		}
+
+		[Test(Description = "https://github.com/FirebirdSQL/firebird/pull/8532")]
+		public void TestFb6GreatestLeast([IncludeDataSources(false, TestProvName.AllFirebird6Plus)] string context)
+		{
+			using var db = new TestDataConnection(context);
+			using var tb = db.CreateLocalTable(new[] { new Fb6FeatureRow { Id = 1, A = 3, B = 7 } });
+
+			var r   = tb.Select(t => new { Mx = Math.Max(t.A, t.B), Mn = Math.Min(t.A, t.B) }).Single();
+			var sql = db.LastQuery!;
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(sql,  Does.Contain("GREATEST").IgnoreCase);
+				Assert.That(sql,  Does.Contain("LEAST").IgnoreCase);
+				Assert.That(r.Mx, Is.EqualTo(7));
+				Assert.That(r.Mn, Is.EqualTo(3));
+			}
+		}
+
+		[Test(Description = "https://github.com/FirebirdSQL/firebird/pull/8689")]
+		public void TestFb6ListAggWithinGroup([IncludeDataSources(false, TestProvName.AllFirebird6Plus)] string context)
+		{
+			using var db = new TestDataConnection(context);
+			using var tb = db.CreateLocalTable(new[]
+			{
+				new Fb6FeatureRow { Id = 1, Val = "b", Grp = 1 },
+				new Fb6FeatureRow { Id = 2, Val = "a", Grp = 1 },
+			});
+
+			var r   = tb.GroupBy(t => t.Grp).Select(g => string.Join(",", g.OrderBy(x => x.Val).Select(x => x.Val))).Single();
+			var sql = db.LastQuery!;
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(sql, Does.Contain("WITHIN GROUP").IgnoreCase);
+				Assert.That(r,   Is.EqualTo("a,b"));
+			}
 		}
 
 		[Test]

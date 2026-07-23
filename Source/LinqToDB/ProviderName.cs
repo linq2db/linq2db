@@ -99,6 +99,11 @@ namespace LinqToDB
 		/// </summary>
 		public const string Firebird5      = "Firebird.5";
 		/// <summary>
+		/// Firebird 6 provider.
+		/// Used as configuration name for Firebird mapping schema <see cref="FirebirdMappingSchema.Firebird6MappingSchema"/>.
+		/// </summary>
+		public const string Firebird6      = "Firebird.6";
+		/// <summary>
 		/// Informix IBM.Data.Informix provider (including IDS provider).
 		/// Used as configuration name for Informix mapping schema <see cref="InformixMappingSchema"/>.
 		/// </summary>

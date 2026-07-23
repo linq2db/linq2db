@@ -204,6 +204,7 @@ namespace LinqToDB.EntityFrameworkCore
 				ProviderName.Firebird3                                                    => FirebirdTools.GetDataProvider(FirebirdVersion.v3, connectionInfo.ConnectionString, connectionInfo.Connection, connectionInfo.Transaction),
 				ProviderName.Firebird4                                                    => FirebirdTools.GetDataProvider(FirebirdVersion.v4, connectionInfo.ConnectionString, connectionInfo.Connection, connectionInfo.Transaction),
 				ProviderName.Firebird5                                                    => FirebirdTools.GetDataProvider(FirebirdVersion.v5, connectionInfo.ConnectionString, connectionInfo.Connection, connectionInfo.Transaction),
+				ProviderName.Firebird6                                                    => FirebirdTools.GetDataProvider(FirebirdVersion.v6, connectionInfo.ConnectionString, connectionInfo.Connection, connectionInfo.Transaction),
 
 				ProviderName.DB2 or ProviderName.DB2LUW                                   => DB2Tools.GetDataProvider(DB2Version.LUW, connectionInfo.ConnectionString, connectionInfo.Connection, connectionInfo.Transaction),
 				ProviderName.DB2zOS                                                       => DB2Tools.GetDataProvider(DB2Version.zOS, connectionInfo.ConnectionString, connectionInfo.Connection, connectionInfo.Transaction),

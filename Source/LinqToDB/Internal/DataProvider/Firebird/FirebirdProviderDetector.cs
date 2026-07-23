@@ -15,6 +15,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 		static readonly Lazy<IDataProvider> _firebirdDataProvider3  = CreateDataProvider<FirebirdDataProvider3 >();
 		static readonly Lazy<IDataProvider> _firebirdDataProvider4  = CreateDataProvider<FirebirdDataProvider4 >();
 		static readonly Lazy<IDataProvider> _firebirdDataProvider5  = CreateDataProvider<FirebirdDataProvider5 >();
+		static readonly Lazy<IDataProvider> _firebirdDataProvider6  = CreateDataProvider<FirebirdDataProvider6 >();
 
 		public override IDataProvider? DetectProvider(ConnectionOptions options)
 		{
@@ -24,6 +25,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 				case ProviderName.Firebird3  : return _firebirdDataProvider3.Value;
 				case ProviderName.Firebird4  : return _firebirdDataProvider4.Value;
 				case ProviderName.Firebird5  : return _firebirdDataProvider5.Value;
+				case ProviderName.Firebird6  : return _firebirdDataProvider6.Value;
 				case ""                      :
 				case null                    :
 					if (options.ConfigurationString?.Contains(ProviderName.Firebird, StringComparison.Ordinal) == true)
@@ -35,6 +37,9 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 					{
 						if (options.ConfigurationString.Contains("2.5", StringComparison.Ordinal) || options.ConfigurationString.Contains("25", StringComparison.Ordinal))
 							return _firebirdDataProvider25.Value;
+
+						if (options.ConfigurationString.Contains('6', StringComparison.Ordinal))
+							return _firebirdDataProvider6.Value;
 
 						if (options.ConfigurationString.Contains('5', StringComparison.Ordinal))
 							return _firebirdDataProvider5.Value;
@@ -75,6 +80,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 				FirebirdVersion.v3         => _firebirdDataProvider3 .Value,
 				FirebirdVersion.v4         => _firebirdDataProvider4 .Value,
 				FirebirdVersion.v5         => _firebirdDataProvider5 .Value,
+				FirebirdVersion.v6         => _firebirdDataProvider6 .Value,
 				_                          => _firebirdDataProvider25.Value,
 			};
 		}
@@ -96,7 +102,8 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 				< 3 => FirebirdVersion.v25,
 				< 4 => FirebirdVersion.v3,
 				< 5 => FirebirdVersion.v4,
-				_ => FirebirdVersion.v5,
+				< 6 => FirebirdVersion.v5,
+				_ => FirebirdVersion.v6,
 			};
 		}
 

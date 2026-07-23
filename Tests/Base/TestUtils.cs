@@ -96,6 +96,10 @@ namespace Tests
 				// YDB test tables live at the database root (no sub-directory) => null means default/no schema
 				case string when context.IsAnyOf(TestProvName.AllYdb)       :
 					return null;
+				// Firebird 6+ has SQL-standard schemas, but test tables are created unqualified => default (PUBLIC)
+				// schema. null (per the contract above) means "default schema, no explicit qualification".
+				case string when context.IsAnyOf(TestProvName.AllFirebird6Plus):
+					return null;
 				case string when context.IsAnyOf(TestProvName.AllInformix)  :
 				case string when context.IsAnyOf(TestProvName.AllOracle)    :
 				case string when context.IsAnyOf(TestProvName.AllPostgreSQL):
