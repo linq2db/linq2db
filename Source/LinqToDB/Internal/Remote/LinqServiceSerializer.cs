@@ -735,6 +735,18 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 					return base.VisitSqlTableLikeSource(element);
 				}
 
+				protected internal override IQueryElement VisitSqlUnpivotTable(SqlUnpivotTable element)
+				{
+					VisitElements(element.OutputFields, VisitMode.ReadOnly);
+					return base.VisitSqlUnpivotTable(element);
+				}
+
+				protected internal override IQueryElement VisitSqlPivotTable(SqlPivotTable element)
+				{
+					VisitElements(element.OutputFields, VisitMode.ReadOnly);
+					return base.VisitSqlPivotTable(element);
+				}
+
 				protected internal override IQueryElement VisitSqlValuesTable(SqlValuesTable element)
 				{
 					VisitElements(element.Fields, VisitMode.ReadOnly);
@@ -1651,6 +1663,65 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 							Append(elem.SourceEnumerable);
 							Append(elem.SourceQuery);
 							Append(elem.SourceFields);
+
+							break;
+						}
+
+					case QueryElementType.SqlUnpivotTable:
+						{
+							var elem = (SqlUnpivotTable)e;
+
+							Append(elem.SourceID);
+							Append(elem.IncludeNulls ? 1 : 0);
+							Append(elem.PivotSource);
+							Append(elem.NameField);
+							Append(elem.OutputFields);
+							Append(elem.ValueFields);
+							Append(elem.Items.Count);
+
+							foreach (var item in elem.Items)
+							{
+								Append(item.Label);
+								Append(item.Columns.Count);
+
+								foreach (var column in item.Columns)
+									Append(column);
+							}
+
+							break;
+						}
+
+					case QueryElementType.SqlPivotTable:
+						{
+							var elem = (SqlPivotTable)e;
+
+							Append(elem.SourceID);
+							Append(elem.PivotSource);
+							Append(elem.OutputFields);
+							Append(elem.KeyFields);
+							Append(elem.Aggregates.Count);
+
+							foreach (var aggregate in elem.Aggregates)
+							{
+								Append(aggregate.AggregationName);
+								Append(aggregate.Value);
+								Append(aggregate.ForColumns.Count);
+
+								foreach (var forColumn in aggregate.ForColumns)
+									Append(forColumn);
+
+								Append(aggregate.Values.Count);
+
+								foreach (var value in aggregate.Values)
+								{
+									Append(value.ForValues.Count);
+
+									foreach (var forValue in value.ForValues)
+										Append(forValue);
+
+									Append(value.OutputField);
+								}
+							}
 
 							break;
 						}
@@ -2877,6 +2948,89 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 							var fields           = ReadArray<SqlField>()!;
 
 							obj = new SqlTableLikeSource(sourceID, enumerableSource, querySource, fields);
+
+							break;
+						}
+
+					case QueryElementType.SqlUnpivotTable:
+						{
+							var sourceID     = ReadInt();
+							var includeNulls = ReadInt() != 0;
+							var pivotSource  = (ISqlTableSource)Read<ISqlExpression>()!;
+							var nameField    = Read<SqlField>()!;
+							var outputFields = ReadArray<SqlField>()!;
+							var valueFields  = ReadArray<SqlField>()!;
+							var itemCount    = ReadInt();
+
+							var unpivot = new SqlUnpivotTable(sourceID, pivotSource, includeNulls) { NameField = nameField };
+
+							foreach (var valueField in valueFields)
+								unpivot.ValueFields.Add(valueField);
+
+							foreach (var outputField in outputFields)
+								unpivot.AddField(outputField);
+
+							for (var i = 0; i < itemCount; i++)
+							{
+								var label    = ReadString()!;
+								var colCount = ReadInt();
+								var columns  = new ISqlExpression[colCount];
+
+								for (var j = 0; j < colCount; j++)
+									columns[j] = Read<ISqlExpression>()!;
+
+								unpivot.Items.Add(new SqlUnpivotItem(label, columns));
+							}
+
+							obj = unpivot;
+
+							break;
+						}
+
+					case QueryElementType.SqlPivotTable:
+						{
+							var sourceID     = ReadInt();
+							var pivotSource  = (ISqlTableSource)Read<ISqlExpression>()!;
+							var outputFields = ReadArray<SqlField>()!;
+							var keyFields    = ReadArray<SqlField>()!;
+							var aggCount     = ReadInt();
+
+							var pivot = new SqlPivotTable(sourceID, pivotSource);
+
+							foreach (var outputField in outputFields)
+								pivot.AddField(outputField);
+
+							foreach (var keyField in keyFields)
+								pivot.KeyFields.Add(keyField);
+
+							for (var i = 0; i < aggCount; i++)
+							{
+								var aggregationName = ReadString()!;
+								var value           = Read<ISqlExpression>()!;
+								var forColumnCount  = ReadInt();
+								var forColumns      = new ISqlExpression[forColumnCount];
+
+								for (var j = 0; j < forColumnCount; j++)
+									forColumns[j] = Read<ISqlExpression>()!;
+
+								var aggregate  = new SqlPivotAggregate(aggregationName, value, forColumns);
+								var valueCount = ReadInt();
+
+								for (var j = 0; j < valueCount; j++)
+								{
+									var forValueCount = ReadInt();
+									var forValues     = new ISqlExpression[forValueCount];
+
+									for (var k = 0; k < forValueCount; k++)
+										forValues[k] = Read<ISqlExpression>()!;
+
+									aggregate.Values.Add(new SqlPivotValue(forValues, Read<SqlField>()!));
+								}
+
+								pivot.Aggregates.Add(aggregate);
+							}
+
+							obj = pivot;
 
 							break;
 						}
