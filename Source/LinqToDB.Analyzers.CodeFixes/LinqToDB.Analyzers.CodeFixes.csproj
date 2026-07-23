@@ -1,21 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<!-- This is the packable project for the linq2db.Analyzers package (analyzer + code-fix assemblies).
+		<!-- Code-fix assembly for the user-facing analyzers. Not packed on its own: it is bundled into the
+		     linq2db package by Source/LinqToDB/LinqToDB.csproj (under analyzers/dotnet/roslyn4.8/cs).
 		     Shared Roslyn-component settings + polyfills live in ..\Analyzers.Common.props. -->
-		<IsPackable>true</IsPackable>
-		<PackageId>linq2db.Analyzers</PackageId>
-		<Title>LINQ to DB Analyzers</Title>
-		<Description>Roslyn analyzers and code fixes for linq2db users: detect legacy API usage and offer automatic migrations to the current API.</Description>
-
-		<!-- Analyzer assemblies ship under analyzers/dotnet/cs, not lib/. -->
-		<IncludeBuildOutput>false</IncludeBuildOutput>
-		<SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
-		<DevelopmentDependency>true</DevelopmentDependency>
-		<NoWarn>$(NoWarn);NU5128</NoWarn>
-
-		<!-- New package: no shipped baseline to validate against. Its public surface is diagnostics, not a tracked API. -->
-		<EnablePackageValidation>false</EnablePackageValidation>
+		<IsPackable>false</IsPackable>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -28,14 +17,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<!-- Build-and-pack the analyzer assembly alongside this code-fix assembly; no dependency leaks (PrivateAssets). -->
+		<!-- Build the analyzer assembly alongside this code-fix assembly; no dependency leaks (PrivateAssets). -->
 		<ProjectReference Include="..\LinqToDB.Analyzers\LinqToDB.Analyzers.csproj" PrivateAssets="all" />
-	</ItemGroup>
-
-	<ItemGroup Label="Analyzer package layout">
-		<None Include="readme.md"                                  Pack="true" PackagePath="\" />
-		<None Include="$(OutputPath)LinqToDB.Analyzers.dll"        Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-		<None Include="$(OutputPath)$(AssemblyName).dll"           Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
 	</ItemGroup>
 
 </Project>

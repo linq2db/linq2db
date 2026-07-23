@@ -27,6 +27,7 @@
   - [Transactions](#transactions)
   - [Merge](#merge)
   - [Window (Analytic) Functions](#window-analytic-functions)
+- [Analyzers](#analyzers)
 - [MiniProfiler](#miniprofiler)
 - [More](#more)
 
@@ -689,6 +690,26 @@ public class DbNorthwind : LinqToDB.Data.DataConnection
 ### Window (Analytic) Functions
 
 [Here](https://linq2db.github.io/articles/sql/Window-Functions-%28Analytic-Functions%29.html) you can read about Window (Analytic) Functions support.
+
+## Analyzers
+
+The package ships Roslyn analyzers and code fixes that flag legacy API usage and offer automatic migrations to the current API. They are bundled with the library, so no extra package reference is needed; they run only in IDEs / SDKs with Roslyn 4.8 or later and are silently skipped on older toolchains.
+
+| Id | Severity | Description |
+|----|----------|-------------|
+| [L2DB1001](https://github.com/linq2db/linq2db/wiki/L2DB1001) | Info | Legacy `Sql.Ext` analytic / window-function API is superseded by `Sql.Window`. A code fix migrates convertible chains. |
+
+Adjust a rule's severity in `.editorconfig`:
+
+```ini
+dotnet_diagnostic.L2DB1001.severity = warning
+```
+
+Apply the L2DB1001 code fix even when the `Sql.Window` return type diverges from the legacy `ToValue<TR>()` slot (default `false`; when enabled you resolve any resulting type change, e.g. widening `int` to `long`, by hand):
+
+```ini
+linq2db.L2DB1001.apply_fix_on_return_type_mismatch = true
+```
 
 ## MiniProfiler
 

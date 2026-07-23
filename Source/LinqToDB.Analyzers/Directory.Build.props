@@ -1,7 +1,7 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 	<!--
 	Deliberately import the ROOT props (shared Nuget metadata, version, signing) and NOT Source/Directory.Build.props:
-	this is a shipped Roslyn analyzer package, so it must not inherit the Source-tree banned-symbols AdditionalFiles,
+	this is a shipped Roslyn analyzer component, so it must not inherit the Source-tree banned-symbols AdditionalFiles,
 	PublicAPI analyzers, or the 5-TFM TargetFrameworks list. The csproj overrides TFM + packaging locally.
 	-->
 	<Import Project="$(MSBuildThisFileDirectory)\..\..\Directory.Build.props" />
