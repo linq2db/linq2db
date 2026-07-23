@@ -63,7 +63,6 @@ namespace LinqToDB.NHibernate.Tests
 		}
 
 		[Test]
-		[Ignore("NHMetadataReader one-to-many key resolution for composite-key elements (OrderDetail PK=OrderID+ProductID) not yet ported to NHibernate 5.7 OneToManyPersister semantics.")]
 		public void AssociationAttribute_OneToMany()
 		{
 			using var sf = BuildSessionFactory();

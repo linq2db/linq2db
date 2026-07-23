@@ -273,8 +273,8 @@ namespace LinqToDB.NHibernate
 										if (collectionMetadata is OneToManyPersister o2m && GetPropertyMap(o2m.ElementType.ReturnedClass, out var elementMap))
 										{
 											var thisKey = string.Join(",",
-												o2m.ElementColumnNames.Select(cn =>
-													FindPropertyNameByColumnName(thisEntityMap, cn).MemberName));
+												thisEntityMap.Properties.Where(p => p.IsPrimaryKey).OrderBy(p => p.PkOrder).Select(p =>
+													p.MemberName));
 											var otherKey = string.Join(",",
 												o2m.KeyColumnNames.Select(cn =>
 													FindPropertyNameByColumnName(elementMap!, cn).MemberName));
