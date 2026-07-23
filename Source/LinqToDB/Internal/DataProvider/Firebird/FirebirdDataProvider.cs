@@ -30,7 +30,6 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 		{
 			Version = version;
 
-			SqlProviderFlags.IsIdentityParameterRequired       = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
 			SqlProviderFlags.IsNullsOrderingSupported          = true;
@@ -115,6 +114,8 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 		{
 			return new IdentifierServiceSimple(Version <= FirebirdVersion.v3 ? 31 : 63);
 		}
+
+		protected override IDmlService CreateDmlService() => new FirebirdDmlService();
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{

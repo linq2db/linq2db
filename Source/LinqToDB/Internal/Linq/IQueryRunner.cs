@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.Data;
+using LinqToDB.Internal.SqlProvider;
 
 namespace LinqToDB.Internal.Linq
 {
@@ -53,10 +54,17 @@ namespace LinqToDB.Internal.Linq
 
 		IQueryExpressions Expressions      { get; }
 		IDataContext      DataContext      { get; }
-		object?[]?        Parameters       { get; }
 		object?[]?        Preambles        { get; }
+
+		/// <summary>
+		/// The execution context wrapping the harvester (eager-load) results, threaded into the row-materialization mapper.
+		/// Backs <see cref="Preambles"/>, which surfaces its results array unchanged.
+		/// </summary>
+		SqlCommandExecutionContext? ExecutionContext { get; }
+
 		Expression?       MapperExpression { get; set; }
 		int               RowsCount        { get; set; }
+		[Obsolete("Query batches are modeled by SqlCommandScenario; QueryNumber is always 0 and will be removed.")]
 		int               QueryNumber      { get; set; }
 	}
 }

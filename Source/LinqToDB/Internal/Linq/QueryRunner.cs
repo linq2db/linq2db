@@ -24,6 +24,7 @@ using LinqToDB.Internal.Interceptors;
 using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Internal.Logging;
 using LinqToDB.Internal.Reflection;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.Metrics;
@@ -274,10 +275,8 @@ namespace LinqToDB.Internal.Linq
 
 			using var m = ActivityService.Start(ActivityID.FinalizeQuery);
 
-			foreach (var sql in query.Queries)
-			{
-				sql.Statement = query.SqlOptimizer.Finalize(query.MappingSchema, sql.Statement, query.DataOptions);
-			}
+			var sql = query.QueryInfo;
+			sql.Statement = query.SqlOptimizer.Finalize(query.MappingSchema, sql.Statement, query.DataOptions);
 
 			query.IsFinalized = true;
 		}
@@ -293,15 +292,20 @@ namespace LinqToDB.Internal.Linq
 			return evaluated.Value;
 		}
 
+		// Folded overload: sources the compiled-query parameters from the context instead of a separate argument.
 		internal static void SetParameters(
-			Query query, IQueryExpressions expressions, IDataContext? parametersContext, object?[]? parameters, SqlParameterValues parameterValues)
+			Query query, IQueryExpressions expressions, IDataContext? parametersContext, SqlParameterValues parameterValues, SqlCommandExecutionContext? context)
+			=> SetParameters(query, expressions, parametersContext, context?.Parameters, parameterValues, context);
+
+		internal static void SetParameters(
+			Query query, IQueryExpressions expressions, IDataContext? parametersContext, object?[]? parameters, SqlParameterValues parameterValues, SqlCommandExecutionContext? context = null)
 		{
 			if (query.ParameterAccessors == null)
 				return;
 
 			foreach (var accessor in query.ParameterAccessors)
 			{
-				var clientValue   = accessor.ClientValueAccessor(expressions, parametersContext, parameters);
+				var clientValue   = accessor.ClientValueAccessor(expressions, parametersContext, parameters, context);
 				var providerValue = clientValue;
 
 				DbDataType? dbDataType = null;
@@ -423,16 +427,13 @@ namespace LinqToDB.Internal.Linq
 			IDataContext?     dataContext,
 			object?[]?        ps);
 
-		static Func<Query,IDataContext,Mapper<T>, IQueryExpressions, object?[]?,object?[]?,int, IResultEnumerable<T>> GetExecuteQuery<T>(
+		static Func<Query,IDataContext,Mapper<T>, IQueryExpressions, SqlCommandExecutionContext?,int, IResultEnumerable<T>> GetExecuteQuery<T>(
 				Query                                                                                                  query,
-				Func<Query,IDataContext,Mapper<T>, IQueryExpressions, object?[]?,object?[]?,int, IResultEnumerable<T>> queryFunc)
+				Func<Query,IDataContext,Mapper<T>, IQueryExpressions, SqlCommandExecutionContext?,int, IResultEnumerable<T>> queryFunc)
 		{
 			FinalizeQuery(query);
 
-			if (query.Queries.Count != 1)
-				throw new InvalidOperationException();
-
-			var selectQuery = query.Queries[0].Statement.SelectQuery!;
+			var selectQuery = query.QueryInfo.Statement.SelectQuery!;
 			var select      = selectQuery.Select;
 
 			if (select.SkipValue != null && !query.SqlProviderFlags.GetIsSkipSupportedFlag(select.TakeValue))
@@ -454,9 +455,9 @@ namespace LinqToDB.Internal.Linq
 
 				var q = queryFunc;
 
-				queryFunc = (qq, db, mapper, expr, ps, preambles, qn) =>
-					new LimitResultEnumerable<T>(q(qq, db, mapper, expr, ps, preambles, qn),
-						EvaluateTakeSkipValue(qq, expr, db, ps, skipValue), null);
+				queryFunc = (qq, db, mapper, expr, harvesters, qn) =>
+					new LimitResultEnumerable<T>(q(qq, db, mapper, expr, harvesters, qn),
+						EvaluateTakeSkipValue(qq, expr, db, harvesters?.Parameters, skipValue), null);
 			}
 
 			return queryFunc;
@@ -467,8 +468,7 @@ namespace LinqToDB.Internal.Linq
 			readonly IDataContext      _dataContext;
 			readonly IQueryExpressions _expressions;
 			readonly Query             _query;
-			readonly object?[]?        _parameters;
-			readonly object?[]?        _preambles;
+			readonly SqlCommandExecutionContext? _harvesters;
 			readonly int               _queryNumber;
 			readonly Mapper<T>         _mapper;
 
@@ -476,16 +476,14 @@ namespace LinqToDB.Internal.Linq
 				IDataContext      dataContext,
 				IQueryExpressions expressions,
 				Query             query,
-				object?[]?        parameters,
-				object?[]?        preambles,
+				SqlCommandExecutionContext? harvesters,
 				int               queryNumber,
 				Mapper<T>         mapper)
 			{
 				_dataContext = dataContext;
 				_expressions = expressions;
 				_query       = query;
-				_parameters  = parameters;
-				_preambles   = preambles;
+				_harvesters  = harvesters;
 				_queryNumber = queryNumber;
 				_mapper      = mapper;
 			}
@@ -494,7 +492,7 @@ namespace LinqToDB.Internal.Linq
 			{
 				using var _      = ActivityService.Start(ActivityID.ExecuteQuery);
 
-				using var runner = _dataContext.GetQueryRunner(_query, _dataContext, _queryNumber, _expressions, _parameters, _preambles);
+				using var runner = _dataContext.GetQueryRunner(_query, _dataContext, _queryNumber, _expressions, _harvesters?.Parameters, _harvesters?.Results);
 				using var dr     = runner.ExecuteReader();
 
 				var dataReader = dr.DataReader!;
@@ -555,7 +553,7 @@ namespace LinqToDB.Internal.Linq
 			{
 				await using (ActivityService.StartAndConfigureAwait(ActivityID.ExecuteQueryAsync))
 				{
-					var runner = _dataContext.GetQueryRunner(_query, _dataContext, _queryNumber, _expressions, _parameters, _preambles);
+					var runner = _dataContext.GetQueryRunner(_query, _dataContext, _queryNumber, _expressions, _harvesters?.Parameters, _harvesters?.Results);
 					await using var _2 = runner.ConfigureAwait(false);
 
 					var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
@@ -620,17 +618,569 @@ namespace LinqToDB.Internal.Linq
 			}
 		}
 
+		// Materializes a query's rows from an externally-opened reader already positioned at its result set (the caller
+		// owns the reader lifetime and advances it with NextResult after enumeration). Mirrors BasicResultEnumerable but
+		// does NOT open its own reader — used by combined multi-result-set eager loading, where N child queries run as
+		// one command and each result set is mapped by its own query's mapper. The runner is created only to give the
+		// mapper its context (DataContext / parameters / RowsCount); its command is never executed.
+		sealed class ExternalReaderResultEnumerable<T> : IResultEnumerable<T>
+		{
+			readonly IDataContext      _dataContext;
+			readonly IQueryExpressions _expressions;
+			readonly Query             _query;
+			readonly SqlCommandExecutionContext? _harvesters;
+			readonly int               _queryNumber;
+			readonly Mapper<T>         _mapper;
+			readonly DbDataReader      _dataReader;
+
+			public ExternalReaderResultEnumerable(
+				IDataContext      dataContext,
+				IQueryExpressions expressions,
+				Query             query,
+				SqlCommandExecutionContext? harvesters,
+				int               queryNumber,
+				Mapper<T>         mapper,
+				DbDataReader      dataReader)
+			{
+				_dataContext = dataContext;
+				_expressions = expressions;
+				_query       = query;
+				_harvesters  = harvesters;
+				_queryNumber = queryNumber;
+				_mapper      = mapper;
+				_dataReader  = dataReader;
+			}
+
+			public IEnumerator<T> GetEnumerator()
+			{
+				using var runner = _dataContext.GetQueryRunner(_query, _dataContext, _queryNumber, _expressions, _harvesters?.Parameters, _harvesters?.Results);
+
+				var dataReader = _dataReader;
+
+				if (dataReader.Read())
+				{
+					DbDataReader origDataReader;
+
+					if (_dataContext is IInterceptable<IUnwrapDataObjectInterceptor> { Interceptor: { } interceptor })
+					{
+						using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
+							origDataReader = interceptor.UnwrapDataReader(_dataContext, dataReader);
+					}
+					else
+					{
+						origDataReader = dataReader;
+					}
+
+					var mapperInfo = _mapper.GetMapperInfo(_dataContext, runner, origDataReader);
+
+					do
+					{
+						var res = _mapper.Map(_dataContext, runner, origDataReader, ref mapperInfo);
+						runner.RowsCount++;
+						yield return res;
+					}
+					while (dataReader.Read());
+				}
+			}
+
+			IEnumerator IEnumerable.GetEnumerator()
+			{
+				return GetEnumerator();
+			}
+
+			public async IAsyncEnumerable<T> GetAsyncEnumerable([EnumeratorCancellation] CancellationToken cancellationToken = default)
+			{
+				var runner = _dataContext.GetQueryRunner(_query, _dataContext, _queryNumber, _expressions, _harvesters?.Parameters, _harvesters?.Results);
+				await using var _2 = runner.ConfigureAwait(false);
+
+				var dataReader = _dataReader;
+
+				cancellationToken.ThrowIfCancellationRequested();
+
+				if (await dataReader.ReadAsync(cancellationToken).ConfigureAwait(false))
+				{
+					DbDataReader origDataReader;
+
+					if (_dataContext is IInterceptable<IUnwrapDataObjectInterceptor> { Interceptor: { } interceptor })
+					{
+						using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
+							origDataReader = interceptor.UnwrapDataReader(_dataContext, dataReader);
+					}
+					else
+					{
+						origDataReader = dataReader;
+					}
+
+					var mapperInfo = _mapper.GetMapperInfo(_dataContext, runner, origDataReader);
+
+					do
+					{
+						var res = _mapper.Map(_dataContext, runner, origDataReader, ref mapperInfo);
+						runner.RowsCount++;
+						yield return res;
+						cancellationToken.ThrowIfCancellationRequested();
+					}
+					while (await dataReader.ReadAsync(cancellationToken).ConfigureAwait(false));
+				}
+			}
+
+			public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+			{
+				return GetAsyncEnumerable(cancellationToken).GetAsyncEnumerator(cancellationToken);
+			}
+		}
+
+		// Runs the main query together with its eager-load child collections, collapsing the combinable children (Default
+		// strategy, IStepMaterializer) and the main into a size-bounded set of multi-result-set commands (N+1 -> 1, a few for
+		// a very large fan-out). Non-combinable harvesters (KeyedQuery / CteUnion / detached / buffer / no-op) run sequentially
+		// FIRST (in index order; they may depend on each other), then the combinable children + main are modelled as a
+		// SqlCommandScenario of Reader steps and grouped by PlanScenario. Each combinable child result set is buffered into
+		// its HarvesterResult; the main result set (always the last step of the last group) streams lazily from that group's
+		// reader, which this enumerable owns. Created only when the provider supports multi-statement batches with multiple
+		// result sets and at least one harvester is combinable (see TryGetCombinedEagerEnumerable); a purely non-combinable
+		// load falls back to the sequential InitHarvesters path.
+		sealed class EagerResultEnumerable<T> : IResultEnumerable<T>
+		{
+			readonly IDataContext      _dataContext;
+			readonly IQueryExpressions _expressions;
+			readonly Query<T>          _query;
+			readonly object?[]?        _parameters;
+			readonly Harvester[]       _harvesters;
+			// Harvester indices partitioned by combinability, in build order. A combinable harvester becomes a combined Reader
+			// step; a non-combinable one becomes a SelfExecuting step. Both keep their harvester index as the scenario step
+			// index (the main query is the last step); combinable + main are the combined groups, self-executing are singletons.
+			readonly int[]             _combinableIndexes;
+			readonly int[]             _nonCombinableIndexes;
+
+			public EagerResultEnumerable(
+				IDataContext      dataContext,
+				IQueryExpressions expressions,
+				Query<T>          query,
+				object?[]?        parameters,
+				Harvester[]        harvesters)
+			{
+				_dataContext = dataContext;
+				_expressions = expressions;
+				_query       = query;
+				_parameters  = parameters;
+				_harvesters  = harvesters;
+
+				var combinable    = new List<int>(harvesters.Length);
+				var nonCombinable = new List<int>(harvesters.Length);
+
+				for (var i = 0; i < harvesters.Length; i++)
+				{
+					if (IsCombinable(harvesters[i]))
+						combinable.Add(i);
+					else
+						nonCombinable.Add(i);
+				}
+
+				_combinableIndexes    = combinable.ToArray();
+				_nonCombinableIndexes = nonCombinable.ToArray();
+			}
+
+			static bool IsCombinable(Harvester harvester)
+				=> harvester is IStepMaterializer { CanCombine: true } materializer && materializer.GetCombinableStatement() != null;
+
+			// Whether any harvester is reader-combinable — the single definition of the combinable predicate, shared by the
+			// ctor's partition and TryGetCombinedEagerEnumerable's gate.
+			internal static bool HasCombinable(Harvester[] harvesters)
+			{
+				foreach (var harvester in harvesters)
+					if (IsCombinable(harvester))
+						return true;
+
+				return false;
+			}
+
+			// Models ALL harvesters + main as one scenario, step index == harvester build index (main last): a combinable child
+			// is a Reader step carrying its rendered statement; a non-combinable (detached / keyed / CteUnion) harvester is a
+			// SelfExecuting step with no statement (it runs its own query through a harvester). Merges every combinable child's
+			// and the main's parameter values into one SqlParameterValues (keyed by SqlParameter node). The unified index lets
+			// the interpreter write and the projection read the same context slot with no translation.
+			(SqlCommandScenario Scenario, SqlParameterValues Values) PrepareScenario()
+			{
+				var mainStepIndex = _harvesters.Length;
+				var steps         = new SqlCommandStep[mainStepIndex + 1];
+				var values        = new SqlParameterValues();
+
+				foreach (var i in _combinableIndexes)
+				{
+					var materializer = (IStepMaterializer)_harvesters[i];
+
+					steps[i] = new SqlCommandStep { Statement = materializer.GetCombinableStatement()!, Kind = SqlStepKind.Reader };
+					materializer.AddCombinableParameterValues(values, _expressions, _dataContext, _parameters);
+				}
+
+				foreach (var i in _nonCombinableIndexes)
+					steps[i] = new SqlCommandStep { Statement = null, Kind = SqlStepKind.SelfExecuting };
+
+				steps[mainStepIndex] = new SqlCommandStep { Statement = _query.QueryInfo.Statement, Kind = SqlStepKind.Reader };
+				SetParameters(_query, _expressions, _dataContext, _parameters, values);
+
+				return (new SqlCommandScenario { Steps = steps, OutcomeSteps = [] }, values);
+			}
+
+			// Renders the combinable children + main into size-bounded combined commands: the steps are chunked by statement
+			// count (below), then each chunk's statements render into one or more commands bounded by SQL length. Each returned
+			// command carries the scenario step indices it covers, so the executor knows which child result sets to buffer and
+			// where the main result set lands (always the last step of the last command). Self-executing steps are not rendered.
+			List<CombinedCommand> BuildCommands(SqlCommandScenario scenario, SqlParameterValues values)
+			{
+				var dataConnection = (DataConnection)_dataContext;
+				var useBatch       = dataConnection.CanUseDbBatch;   // false on frameworks without the DbBatch API
+
+				// Fast path: reuse the per-command cache built for THIS backend and bind this run's DbParameters, re-rendering
+				// only the parameter-dependent (null) batch slots. Skipped when the cache was built for the other backend
+				// (batch and concat shapes are not interchangeable) or is absent (concat with a volatile step).
+				if (_query.QueryInfo.EagerCommandCache is { } cache && cache.WasBatch == useBatch)
+				{
+					var bound = new List<CombinedCommand>(cache.Commands.Length);
+
+					foreach (var command in cache.Commands)
+						bound.Add(BindCommand(dataConnection, command, useBatch, scenario, values));
+
+					return bound;
+				}
+
+				// Per-step parameter-dependence, computed once for this render pass: a volatile step's SQL varies with
+				// parameter values, so its template can't be cached (a stable main is cached while a Contains/LIKE child re-renders).
+				var volatility  = ComputeStepVolatility(dataConnection, scenario);
+				var anyVolatile = false;
+
+				foreach (var v in volatility)
+					if (v)
+					{
+						anyVolatile = true;
+						break;
+					}
+
+				// Combined groups: the combinable children + main, chunked by the provider's per-command statement cap (the
+				// count-split PlanScenario applied to the old combinable-only scenario). Self-executing harvesters are separate
+				// singleton groups (added by BuildPlan), never part of a combined command, so they are excluded here.
+				var maxPerGroup   = Math.Max(1, dataConnection.DataProvider.SqlProviderFlags.MaxStatementsPerCombinedGroup);
+				var combinedSteps = new int[_combinableIndexes.Length + 1];
+
+				Array.Copy(_combinableIndexes, combinedSteps, _combinableIndexes.Length);
+				combinedSteps[_combinableIndexes.Length] = _harvesters.Length;
+
+				var combinedGroups = new List<SqlCommandGroup>();
+
+				for (var start = 0; start < combinedSteps.Length; start += maxPerGroup)
+				{
+					var slice = new int[Math.Min(maxPerGroup, combinedSteps.Length - start)];
+
+					Array.Copy(combinedSteps, start, slice, 0, slice.Length);
+					combinedGroups.Add(new SqlCommandGroup { StepIndexes = slice });
+				}
+
+				var plan = new SqlCommandGroupPlan { Groups = combinedGroups };
+
+				var commands = new List<CombinedCommand>();
+				var prepared = new List<PreparedCommand>();
+
+				foreach (var group in plan.Groups)
+				{
+					var stepIndexes     = group.StepIndexes;
+					var groupStatements = new SqlStatement[stepIndexes.Count];
+
+					for (var k = 0; k < stepIndexes.Count; k++)
+						groupStatements[k] = scenario.Steps[stepIndexes[k]].Statement!;
+
+#if SUPPORTS_DBBATCH
+					// DbBatch: the whole group is one command carrying one isolated-scope statement per step (each its own
+					// DbBatchCommand + parameter scope); no SQL-length split, so it covers every step of the group in order.
+					if (useBatch)
+					{
+						var rendered = ScenarioCommandRenderer.RenderStatementTemplates(dataConnection, groupStatements, values);
+
+						// Run this execution off the freshly-rendered statements (bind all, no re-render).
+						commands.Add(BindCommand(dataConnection, new PreparedCommand(stepIndexes, null, rendered), useBatch, scenario, values));
+
+						// Cache with the parameter-dependent slots nulled so a later run re-renders only those.
+						var slots = new CommandWithParameters?[rendered.Length];
+
+						for (var k = 0; k < rendered.Length; k++)
+							slots[k] = volatility[stepIndexes[k]] ? null : rendered[k];
+
+						prepared.Add(new PreparedCommand(stepIndexes, null, slots));
+
+						continue;
+					}
+#endif
+
+					// Concat path: each length-split batch is one pre-merged (semicolon-concatenated) command. Its shared,
+					// stateful parameter normalizer means a slice can't be half-cached, so the concat cache is all-or-nothing
+					// (stored only when the whole scenario is stable, see the store below); otherwise it re-renders each run.
+					var batches = DataConnection.QueryRunner.RenderCombinedBatchTemplates(dataConnection, groupStatements, values);
+
+					var offset = 0;
+
+					foreach (var (sql, sqlParameters, statementCount) in batches)
+					{
+						var indexes = new int[statementCount];
+
+						for (var k = 0; k < statementCount; k++)
+							indexes[k] = stepIndexes[offset + k];
+
+						var command = new PreparedCommand(indexes, new CommandWithParameters(sql, sqlParameters), null);
+
+						prepared.Add(command);
+						commands.Add(BindCommand(dataConnection, command, useBatch, scenario, values));
+
+						offset += statementCount;
+					}
+				}
+
+				// Cache the per-command templates for this backend so re-enumeration binds DbParameters instead of
+				// re-rendering. Batch caches per-statement (null slots for parameter-dependent steps, re-rendered per run);
+				// concat is all-or-nothing (skipped when any step is volatile — its slices share a parameter scope and can't
+				// be half-cached), matching today's behavior on that fallback path.
+				if (useBatch || !anyVolatile)
+					_query.QueryInfo.EagerCommandCache = new PreparedScenario(scenario, plan, prepared.ToArray(), useBatch);
+
+				return commands;
+			}
+
+			// Binds a cached PreparedCommand to this execution's DbParameter values, producing the command the executor runs.
+			// Shared by the fast (cached) path and the first render. On the batch backend, a null slot is a parameter-dependent
+			// statement re-rendered here in its own isolated scope; concat carries a single, always-present merged command.
+			static CombinedCommand BindCommand(DataConnection dataConnection, PreparedCommand command, bool useBatch, SqlCommandScenario scenario, SqlParameterValues values)
+			{
+				var stepIndexes = command.StepIndexes;
+
+				if (useBatch)
+				{
+					var statements = command.Batch!;
+					var rendered   = new RenderedStatement[statements.Length];
+
+					for (var i = 0; i < statements.Length; i++)
+					{
+						var slot = statements[i];
+
+						if (slot is null)
+						{
+#if SUPPORTS_DBBATCH
+							slot = ScenarioCommandRenderer.RenderStatementTemplates(
+								dataConnection, [scenario.Steps[stepIndexes[i]].Statement!], values)[0];
+#else
+							throw new InvalidOperationException("Eager batch cache slot is null on a non-DbBatch build.");
+#endif
+						}
+
+						rendered[i] = new RenderedStatement(
+							slot.Command,
+							ScenarioCommandRenderer.MaterializeDbParameters(dataConnection, slot.SqlParameters, values));
+					}
+
+					return new CombinedCommand(rendered, stepIndexes, null);
+				}
+
+				// Concat: one pre-merged command, always present (concat is cached only when fully stable).
+				var concat = command.Concat!;
+
+				return new CombinedCommand(
+					[new RenderedStatement(concat.Command, ScenarioCommandRenderer.MaterializeDbParameters(dataConnection, concat.SqlParameters, values))],
+					stepIndexes, null);
+			}
+
+			// Per-step parameter-dependence: a step is volatile when its statement's SQL varies with parameter values, so its
+			// rendered template can't be cached and must be re-rendered each run. Finer than an all-or-nothing scenario check —
+			// a stable main can be cached while a Contains-filtered (LIKE) child re-renders. Each step has a distinct SqlStatement
+			// instance, so per-step evaluation is well-defined. Eager loading bypasses GetCommand's check, so it is done here.
+			static bool[] ComputeStepVolatility(DataConnection dataConnection, SqlCommandScenario scenario)
+			{
+				var options      = dataConnection.Options;
+				var sqlOptimizer = dataConnection.DataProvider.GetSqlOptimizer(options);
+				var steps        = scenario.Steps;
+				var result       = new bool[steps.Count];
+
+				for (var i = 0; i < steps.Count; i++)
+				{
+					// A self-executing step has no rendered SQL, so it is never a cacheable render slot (not volatile here).
+					if (steps[i].Statement is not { } statement)
+					{
+						result[i] = false;
+						continue;
+					}
+
+					result[i] = statement.IsParameterDependent
+						|| sqlOptimizer.IsParameterDependent(NullabilityContext.NonQuery, dataConnection.MappingSchema, statement, options);
+				}
+
+				return result;
+			}
+
+			// Builds the unified execution plan for one enumeration: PrepareScenario + BuildCommands render the combinable
+			// children + main into combined commands, then the RunGroups group list is assembled — a singleton group per
+			// self-executing harvester (index order; they may depend on each other and feed the combinable materializers + main
+			// mapper), followed by one combined group per rendered command (the main-carrying command last). commandByGroup
+			// aligns with the groups: null for a self-executing group, the rendered command for a combined group.
+			(SqlCommandScenario Scenario, SqlCommandGroup[] Groups, CombinedCommand?[] CommandByGroup) BuildPlan()
+			{
+				var (scenario, values) = PrepareScenario();
+				var commands           = BuildCommands(scenario, values);
+
+				var groups         = new SqlCommandGroup[_nonCombinableIndexes.Length + commands.Count];
+				var commandByGroup = new CombinedCommand?[groups.Length];
+				var g              = 0;
+
+				// ORDERING INVARIANT (relied on by every eager strategy): non-combinable steps run FIRST, as singleton
+				// groups in ascending index order, THEN the combined groups (combinable children + main). So a non-combinable
+				// harvester executes before every combinable sibling and must only read result slots that have already run -
+				// its own lower-indexed dependencies. Nested eager loads build first, so they get lower indices and
+				// materialize earlier; a parent harvester always reads its child slots after they are populated. A
+				// non-combinable harvester that read a *combinable* sibling's (higher-lifecycle) slot would find it
+				// unpopulated and silently produce an empty collection - no exception. Any new strategy MUST preserve this
+				// direction (covered by MixedCombinableAndNonCombinable_NestedKeyedUnderCombinable).
+				foreach (var i in _nonCombinableIndexes)
+					groups[g++] = new SqlCommandGroup { StepIndexes = [i] };
+
+				foreach (var command in commands)
+				{
+					groups[g]         = new SqlCommandGroup { StepIndexes = command.StepIndexes };
+					commandByGroup[g] = command;
+					g++;
+				}
+
+				return (scenario, groups, commandByGroup);
+			}
+
+			public IEnumerator<T> GetEnumerator()
+			{
+				using var _ = ActivityService.Start(ActivityID.GetIEnumerable);
+
+				var context        = new SqlCommandExecutionContext(_harvesters.Length, _parameters);
+				var dataConnection = (DataConnection)_dataContext;
+				var (scenario, groups, commandByGroup) = BuildPlan();
+
+				// The combined command's single reader is walked across multiple harvest steps, and each step (plus the main
+				// stream below) materializes through a nested query runner. When CloseAfterUse is set - e.g. the EF Core bridge
+				// borrows an external connection and closes it after each use - that nested runner's dispose would Close() the
+				// context and dispose the shared reader mid-walk (NextResult on a closed reader). Suppress it until the reader
+				// is fully consumed, and restore it before the final dispose so the connection is still closed as requested.
+				var closeAfterUse = _dataContext.CloseAfterUse;
+				_dataContext.CloseAfterUse = false;
+
+				DataReaderWrapper? mainReader = null;
+
+				try
+				{
+					// One shared group-plan walk: self-executing harvester singletons run their own query; each combined group
+					// runs as one command; the main-carrying group hands back its open reader, which the caller streams below.
+					mainReader = DataConnection.QueryRunner.RunGroups(
+						dataConnection, ScenarioCommandRenderer.ProjectExecutionSteps(scenario), groups,
+						(group, groupIndex) => commandByGroup[groupIndex]!,
+						group => scenario.Steps[group.StepIndexes[0]].Kind == SqlStepKind.SelfExecuting,
+						(stepIndex, groupIndex) => context.SetResult(stepIndex, _harvesters[stepIndex].Harvest(_dataContext, _expressions, context, reader: null)),
+						(i, dr) => context.SetResult(i, _harvesters[i].Harvest(_dataContext, _expressions, context, dr)),
+						terminalStepIndex: _harvesters.Length);
+
+					if (mainReader != null)
+						foreach (var item in _query.GetResultFromReader!(_dataContext, _expressions, context, mainReader.DataReader!))
+							yield return item;
+				}
+				finally
+				{
+					_dataContext.CloseAfterUse = closeAfterUse;
+					mainReader?.Dispose();
+				}
+			}
+
+			IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+			// In case of change the logic of this method, DO NOT FORGET to change the sibling GetEnumerator.
+			public async IAsyncEnumerable<T> GetAsyncEnumerable([EnumeratorCancellation] CancellationToken cancellationToken = default)
+			{
+				// Mirror the sync GetEnumerator's telemetry scope so async eager materialization emits an enumeration
+				// activity span too (there is no eager-specific async ActivityID; the sync eager path uses GetIEnumerable).
+				await using (ActivityService.StartAndConfigureAwait(ActivityID.GetIEnumerable))
+				{
+					var context        = new SqlCommandExecutionContext(_harvesters.Length, _parameters);
+					var dataConnection = (DataConnection)_dataContext;
+					var (scenario, groups, commandByGroup) = BuildPlan();
+
+					// See the sync GetEnumerator: suppress CloseAfterUse while the shared combined reader is walked (each
+					// harvest / the main stream materializes through a nested runner whose dispose would otherwise Close() the
+					// context mid-walk on an external connection), and restore it before the final dispose.
+					var closeAfterUse = _dataContext.CloseAfterUse;
+					_dataContext.CloseAfterUse = false;
+
+					DataReaderWrapper? mainReader = null;
+
+					try
+					{
+						mainReader = await DataConnection.QueryRunner.RunGroupsAsync(
+							dataConnection, ScenarioCommandRenderer.ProjectExecutionSteps(scenario), groups,
+							(group, groupIndex) => commandByGroup[groupIndex]!,
+							group => scenario.Steps[group.StepIndexes[0]].Kind == SqlStepKind.SelfExecuting,
+							async (stepIndex, groupIndex) => context.SetResult(stepIndex, await _harvesters[stepIndex].HarvestAsync(_dataContext, _expressions, context, null, cancellationToken).ConfigureAwait(false)),
+							async (i, dr) => context.SetResult(i, await _harvesters[i].HarvestAsync(_dataContext, _expressions, context, dr, cancellationToken).ConfigureAwait(false)),
+							terminalStepIndex: _harvesters.Length,
+							cancellationToken).ConfigureAwait(false);
+
+						if (mainReader != null)
+							await foreach (var item in _query.GetResultFromReader!(_dataContext, _expressions, context, mainReader.DataReader!).WithCancellation(cancellationToken).ConfigureAwait(false))
+								yield return item;
+					}
+					finally
+					{
+						_dataContext.CloseAfterUse = closeAfterUse;
+
+						if (mainReader != null)
+							await mainReader.DisposeAsync().ConfigureAwait(false);
+					}
+				}
+			}
+
+			public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+				=> GetAsyncEnumerable(cancellationToken).GetAsyncEnumerator(cancellationToken);
+		}
+
+		// Returns a combined N+1 -> 1 eager-loading enumerable for the main query, or null when the query can't be
+		// combined (no combinable-reader materializer, no harvesters, provider lacks multi-statement / multi-result-set
+		// support, the main query isn't a single statement, or any harvester isn't combinable) — callers then fall back
+		// to the sequential InitHarvesters + GetResultEnumerable path.
+		internal static IResultEnumerable<T>? TryGetCombinedEagerEnumerable<T>(
+			Query<T> query, IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters)
+		{
+			if (query.GetResultFromReader == null)
+				return null;
+
+			var harvesters = query.HarvestersArray;
+
+			if (harvesters == null || harvesters.Length == 0)
+				return null;
+
+			if (dataContext is not DataConnection dataConnection
+				|| !dataConnection.DataProvider.SqlProviderFlags.IsMultiStatementBatchSupported
+				|| !dataConnection.DataProvider.SqlProviderFlags.IsMultipleResultSetsSupported)
+				return null;
+
+			// Query hints (context QueryHints / one-shot NextQueryHints) are applied AND cleared by the sequential
+			// GetCommand -> GetNextCommandHints path, which the combined executor bypasses. Fall back to sequential when
+			// hints are pending; otherwise the hint is dropped from the eager SQL and a one-shot NextQueryHints leaks onto
+			// the next query.
+			if (dataContext.QueryHints.Count > 0 || dataContext.NextQueryHints.Count > 0)
+				return null;
+
+			if (!EagerResultEnumerable<T>.HasCombinable(harvesters))
+				return null;
+
+			return new EagerResultEnumerable<T>(dataContext, expressions, query, parameters, harvesters);
+		}
+
 		static IResultEnumerable<T> ExecuteQuery<T>(
 			Query             query,
 			IDataContext      dataContext,
 			Mapper<T>         mapper,
 			IQueryExpressions expressions,
-			object?[]?        ps,
-			object?[]?        preambles,
+			SqlCommandExecutionContext? harvesters,
 			int               queryNumber
 		)
 		{
-			return new BasicResultEnumerable<T>(dataContext, expressions, query, ps, preambles, queryNumber, mapper);
+			return new BasicResultEnumerable<T>(dataContext, expressions, query, harvesters, queryNumber, mapper);
 		}
 
 		static void SetRunQuery<T>(
@@ -641,23 +1191,27 @@ namespace LinqToDB.Internal.Linq
 
 			var mapper   = new Mapper<T>(expression);
 
-			query.GetResultEnumerable = (db, expr, ps, preambles) =>
+			query.GetResultEnumerable = (db, expr, harvesters) =>
 			{
 				using var _ = ActivityService.Start(ActivityID.GetIEnumerable);
-				return executeQuery(query, db, mapper, expr, ps, preambles, 0);
+				return executeQuery(query, db, mapper, expr, harvesters, 0);
 			};
+
+			query.GetResultFromReader = (db, expr, harvesters, reader) =>
+				new ExternalReaderResultEnumerable<T>(db, expr, query, harvesters, 0, mapper, reader);
 		}
 
 		static readonly PropertyInfo _dataContextInfo = MemberHelper.PropertyOf<IQueryRunner>(p => p.DataContext);
 		static readonly PropertyInfo _expressionsInfo = MemberHelper.PropertyOf<IQueryRunner>(p => p.Expressions);
-		static readonly PropertyInfo _parametersInfo  = MemberHelper.PropertyOf<IQueryRunner>(p => p.Parameters);
-		static readonly PropertyInfo _preamblesInfo   = MemberHelper.PropertyOf<IQueryRunner>(p => p.Preambles);
+		static readonly PropertyInfo _harvestersInfo  = MemberHelper.PropertyOf<IQueryRunner>(p => p.ExecutionContext);
+		// The compiled-query parameters now live on the execution context; the mapper reads qr.ExecutionContext.Parameters.
+		static readonly PropertyInfo _executionContextParametersInfo = MemberHelper.PropertyOf<SqlCommandExecutionContext>(c => c.Parameters);
 
 		public static readonly PropertyInfo RowsCountInfo   = MemberHelper.PropertyOf<IQueryRunner>(p => p.RowsCount);
 		public static readonly PropertyInfo DataContextInfo = MemberHelper.PropertyOf<IQueryRunner>(p => p.DataContext);
 
 		static Expression<Func<IQueryRunner, DbDataReader, T>> WrapMapper<T>(
-			Expression<Func<IQueryRunner,IDataContext, DbDataReader, IQueryExpressions, object?[]?,object?[]?,T>> expression)
+			Expression<Func<IQueryRunner,IDataContext, DbDataReader, IQueryExpressions, object?[]?,SqlCommandExecutionContext?,T>> expression)
 		{
 			var queryRunnerParam = expression.Parameters[0];
 			var dataReaderParam  = expression.Parameters[2];
@@ -665,22 +1219,28 @@ namespace LinqToDB.Internal.Linq
 			var dataContextVar   = expression.Parameters[1];
 			var expressionVar    = expression.Parameters[3];
 			var parametersVar    = expression.Parameters[4];
-			var preamblesVar     = expression.Parameters[5];
+			var harvestersVar    = expression.Parameters[5];
 
 			var locals = new List<ParameterExpression>();
 			var exprs  = new List<Expression>();
 
 			SetLocal(dataContextVar, _dataContextInfo);
 			SetLocal(expressionVar,  _expressionsInfo);
-			SetLocal(parametersVar,  _parametersInfo);
-			SetLocal(preamblesVar,   _preamblesInfo);
+			// parametersVar is the compiled-query args slot. It is assigned only when the mapper body references it, which
+			// happens iff this is a compiled query — and a compiled query always allocates an execution context (see the
+			// QueryRunnerBase guard), so qr.ExecutionContext is non-null exactly when this two-hop read is emitted.
+			SetLocalSource(parametersVar, Expression.Property(Expression.Property(queryRunnerParam, _harvestersInfo), _executionContextParametersInfo));
+			SetLocal(harvestersVar,  _harvestersInfo);
 
 			void SetLocal(ParameterExpression local, PropertyInfo prop)
+				=> SetLocalSource(local, Expression.Property(queryRunnerParam, prop));
+
+			void SetLocalSource(ParameterExpression local, Expression source)
 			{
 				if (expression.Body.Find(local) != null)
 				{
 					locals.Add(local);
-					exprs. Add(Expression.Assign(local, Expression.Property(queryRunnerParam, prop)));
+					exprs. Add(Expression.Assign(local, source));
 				}
 			}
 
@@ -703,7 +1263,7 @@ namespace LinqToDB.Internal.Linq
 
 		public static void SetRunQuery<T>(
 			Query<T>                                                                                              query,
-			Expression<Func<IQueryRunner,IDataContext,DbDataReader,IQueryExpressions,object?[]?,object?[]?,T>> expression)
+			Expression<Func<IQueryRunner,IDataContext,DbDataReader,IQueryExpressions,object?[]?,SqlCommandExecutionContext?,T>> expression)
 		{
 			var l = WrapMapper(expression);
 
@@ -716,18 +1276,15 @@ namespace LinqToDB.Internal.Linq
 
 		public static void SetRunQuery<T>(
 			Query<T>                                                                                                   query,
-			Expression<Func<IQueryRunner,IDataContext,DbDataReader,IQueryExpressions,object?[]?,object?[]?,object>> expression)
+			Expression<Func<IQueryRunner,IDataContext,DbDataReader,IQueryExpressions,object?[]?,SqlCommandExecutionContext?,object>> expression)
 		{
 			FinalizeQuery(query);
-
-			if (query.Queries.Count != 1)
-				throw new InvalidOperationException();
 
 			var l      = WrapMapper(expression);
 			var mapper = new Mapper<object>(l);
 
-			query.GetElement      = (db, expr, ps, preambles) => ExecuteElement(query, db, mapper, expr, ps, preambles);
-			query.GetElementAsync = (db, expr, ps, preambles, token) => ExecuteElementAsync<object?>(query, db, mapper, expr, ps, preambles, token);
+			query.GetElement      = (db, expr, harvesters) => ExecuteElement(query, db, mapper, expr, harvesters);
+			query.GetElementAsync = (db, expr, harvesters, token) => ExecuteElementAsync<object?>(query, db, mapper, expr, harvesters, token);
 		}
 
 		static T ExecuteElement<T>(
@@ -735,11 +1292,10 @@ namespace LinqToDB.Internal.Linq
 			IDataContext      dataContext,
 			Mapper<T>         mapper,
 			IQueryExpressions expressions,
-			object?[]?        ps,
-			object?[]?        preambles)
+			SqlCommandExecutionContext? harvesters)
 		{
 			using var m      = ActivityService.Start(ActivityID.ExecuteElement);
-			using var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, ps, preambles);
+			using var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, harvesters?.Parameters, harvesters?.Results);
 			using var dr     = runner.ExecuteReader();
 
 			DbDataReader dataReader;
@@ -773,13 +1329,12 @@ namespace LinqToDB.Internal.Linq
 			IDataContext      dataContext,
 			Mapper<object>    mapper,
 			IQueryExpressions expressions,
-			object?[]?        ps,
-			object?[]?        preambles,
+			SqlCommandExecutionContext? harvesters,
 			CancellationToken cancellationToken)
 		{
 			await using (ActivityService.StartAndConfigureAwait(ActivityID.ExecuteElementAsync))
 			{
-				var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, ps, preambles);
+				var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, harvesters?.Parameters, harvesters?.Results);
 				await using var _1 = runner.ConfigureAwait(false);
 
 				var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
@@ -821,17 +1376,14 @@ namespace LinqToDB.Internal.Linq
 		{
 			FinalizeQuery(query);
 
-			if (query.Queries.Count != 1)
-				throw new InvalidOperationException();
-
-			query.GetElement      = (db, expr, ps, preambles) => ScalarQuery(query, db, expr, ps, preambles);
-			query.GetElementAsync = (db, expr, ps, preambles, token) => ScalarQueryAsync(query, db, expr, ps, preambles, token);
+			query.GetElement      = (db, expr, harvesters) => ScalarQuery(query, db, expr, harvesters);
+			query.GetElementAsync = (db, expr, harvesters, token) => ScalarQueryAsync(query, db, expr, harvesters, token);
 		}
 
-		static object? ScalarQuery(Query query, IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
+		static object? ScalarQuery(Query query, IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? harvesters)
 		{
 			using var m      = ActivityService.Start(ActivityID.ExecuteScalar);
-			using var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, parameters, preambles);
+			using var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, harvesters?.Parameters, harvesters?.Results);
 			return runner.ExecuteScalar();
 		}
 
@@ -839,13 +1391,12 @@ namespace LinqToDB.Internal.Linq
 			Query             query,
 			IDataContext      dataContext,
 			IQueryExpressions expressions,
-			object?[]?        ps,
-			object?[]?        preambles,
+			SqlCommandExecutionContext? harvesters,
 			CancellationToken cancellationToken)
 		{
 			await using (ActivityService.StartAndConfigureAwait(ActivityID.ExecuteScalarAsync))
 			{
-				var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, ps, preambles);
+				var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, harvesters?.Parameters, harvesters?.Results);
 				await using (runner.ConfigureAwait(false))
 					return await runner.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
 			}
@@ -859,17 +1410,14 @@ namespace LinqToDB.Internal.Linq
 		{
 			FinalizeQuery(query);
 
-			if (query.Queries.Count != 1)
-				throw new InvalidOperationException();
-
-			query.GetElement      = (db, expr, ps, preambles) => NonQueryQuery(query, db, expr, ps, preambles);
-			query.GetElementAsync = (db, expr, ps, preambles, token) => NonQueryQueryAsync(query, db, expr, ps, preambles, token);
+			query.GetElement      = (db, expr, harvesters) => NonQueryQuery(query, db, expr, harvesters);
+			query.GetElementAsync = (db, expr, harvesters, token) => NonQueryQueryAsync(query, db, expr, harvesters, token);
 		}
 
-		static int NonQueryQuery(Query query, IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
+		static int NonQueryQuery(Query query, IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? harvesters)
 		{
 			using var m      = ActivityService.Start(ActivityID.ExecuteNonQuery);
-			using var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, parameters, preambles);
+			using var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, harvesters?.Parameters, harvesters?.Results);
 			return runner.ExecuteNonQuery();
 		}
 
@@ -877,190 +1425,14 @@ namespace LinqToDB.Internal.Linq
 			Query             query,
 			IDataContext      dataContext,
 			IQueryExpressions expressions,
-			object?[]?        ps,
-			object?[]?        preambles,
+			SqlCommandExecutionContext? harvesters,
 			CancellationToken cancellationToken)
 		{
 			await using (ActivityService.StartAndConfigureAwait(ActivityID.ExecuteNonQueryAsync))
 			{
-				var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, ps, preambles);
+				var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, harvesters?.Parameters, harvesters?.Results);
 				await using (runner.ConfigureAwait(false))
 					return await runner.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
-			}
-		}
-
-		#endregion
-
-		#region NonQueryQuery2
-
-		public static void SetNonQueryQuery2(Query query)
-		{
-			FinalizeQuery(query);
-
-			if (query.Queries.Count != 2)
-				throw new InvalidOperationException();
-
-			query.GetElement      = (db, expr, ps, preambles)        => NonQueryQuery2(query, db, expr, ps, preambles);
-			query.GetElementAsync = (db, expr, ps, preambles, token) => NonQueryQuery2Async(query, db, expr, ps, preambles, token);
-		}
-
-		static int NonQueryQuery2(Query query, IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
-		{
-			using var m      = ActivityService.Start(ActivityID.ExecuteNonQuery2);
-			using var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, parameters, preambles);
-			var       n      = runner.ExecuteNonQuery();
-
-			if (n != 0)
-				return n;
-
-			runner.QueryNumber = 1;
-
-			return runner.ExecuteNonQuery();
-		}
-
-		static async Task<object?> NonQueryQuery2Async(
-			Query             query,
-			IDataContext      dataContext,
-			IQueryExpressions expressions,
-			object?[]?        parameters,
-			object?[]?        preambles,
-			CancellationToken cancellationToken)
-		{
-			await using (ActivityService.StartAndConfigureAwait(ActivityID.ExecuteNonQuery2Async))
-			{
-				var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, parameters, preambles);
-				await using (runner.ConfigureAwait(false))
-				{
-					var n = await runner.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
-
-					if (n != 0)
-						return n;
-
-					runner.QueryNumber = 1;
-
-					return await runner.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
-				}
-			}
-		}
-
-		#endregion
-
-		#region QueryQuery2
-
-		public static void SetQueryQuery2(Query query)
-		{
-			FinalizeQuery(query);
-
-			if (query.Queries.Count != 2)
-				throw new InvalidOperationException();
-
-			query.GetElement      = (db, expr, ps, preambles)        => QueryQuery2(query, db, expr, ps, preambles);
-			query.GetElementAsync = (db, expr, ps, preambles, token) => QueryQuery2Async(query, db, expr, ps, preambles, token);
-		}
-
-		static int QueryQuery2(Query query, IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
-		{
-			using var m      = ActivityService.Start(ActivityID.ExecuteScalarAlternative);
-			using var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, parameters, preambles);
-			var n = runner.ExecuteScalar();
-
-			if (n != null)
-				return 0;
-
-			runner.QueryNumber = 1;
-
-			return runner.ExecuteNonQuery();
-		}
-
-		static async Task<object?> QueryQuery2Async(
-			Query             query,
-			IDataContext      dataContext,
-			IQueryExpressions expressions,
-			object?[]?        parameters,
-			object?[]?        preambles,
-			CancellationToken cancellationToken)
-		{
-			await using (ActivityService.StartAndConfigureAwait(ActivityID.ExecuteScalarAlternativeAsync))
-			{
-				var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, parameters, preambles);
-				await using (runner.ConfigureAwait(false))
-				{
-					var n = await runner.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
-
-					if (n != null)
-						return 0;
-
-					runner.QueryNumber = 1;
-
-					return await runner.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
-				}
-			}
-		}
-
-		#endregion
-
-		#region IfExistsUpdateElseInsert (Upsert .When on providers lacking native MERGE / ON CONFLICT)
-
-		/// <summary>
-		/// Three-query orchestration used when an <c>Upsert(...)</c> with <c>.Update(v =&gt; v.When(cond))</c>
-		/// has to run against a provider that supports neither MERGE nor ON CONFLICT and therefore
-		/// falls back to <see cref="MakeAlternativeInsertOrUpdate"/>.
-		/// <list type="bullet">
-		///   <item>Query 0: scalar SELECT 1 over the match-key WHERE. Returns non-null iff the row exists.</item>
-		///   <item>Query 1: UPDATE guarded by <c>keys AND when</c>. Runs only if Q0 returned a row.
-		///     May affect zero rows when the predicate rejects — that is the correct outcome.</item>
-		///   <item>Query 2: INSERT. Runs only if Q0 returned no row.</item>
-		/// </list>
-		/// This avoids the classic UPDATE-then-<c>@@ROWCOUNT==0</c> pitfall where a predicate-rejected
-		/// UPDATE falsely triggers INSERT and violates the unique-key.
-		/// <para>
-		/// <b>Atomicity:</b> the three statements run as independent commands. Under concurrent writers
-		/// the caller may observe either a duplicate-key error (Q0 saw no row, another session inserted
-		/// between Q0 and Q2) or a silent zero-affected UPDATE (Q0 saw a row, another session deleted
-		/// it between Q0 and Q1). Callers that need atomicity must wrap the <c>Upsert</c> call in their
-		/// own transaction. This matches the behavior of the existing two-query
-		/// <see cref="MakeAlternativeInsertOrUpdate"/> fallback used by <c>InsertOrReplace</c>.
-		/// </para>
-		/// </summary>
-		public static void SetIfExistsUpdateElseInsert(Query query)
-		{
-			FinalizeQuery(query);
-
-			if (query.Queries.Count != 3)
-				throw new InvalidOperationException();
-
-			query.GetElement      = (db, expr, ps, preambles)        => IfExistsUpdateElseInsert(query, db, expr, ps, preambles);
-			query.GetElementAsync = (db, expr, ps, preambles, token) => IfExistsUpdateElseInsertAsync(query, db, expr, ps, preambles, token);
-		}
-
-		static object? IfExistsUpdateElseInsert(Query query, IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
-		{
-			using var m      = ActivityService.Start(ActivityID.ExecuteScalarAlternative);
-			using var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, parameters, preambles);
-			var exists       = runner.ExecuteScalar();
-
-			runner.QueryNumber = exists != null ? 1 : 2;
-			return runner.ExecuteNonQuery();
-		}
-
-		static async Task<object?> IfExistsUpdateElseInsertAsync(
-			Query             query,
-			IDataContext      dataContext,
-			IQueryExpressions expressions,
-			object?[]?        parameters,
-			object?[]?        preambles,
-			CancellationToken cancellationToken)
-		{
-			await using (ActivityService.StartAndConfigureAwait(ActivityID.ExecuteScalarAlternativeAsync))
-			{
-				var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, parameters, preambles);
-				await using (runner.ConfigureAwait(false))
-				{
-					var exists = await runner.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
-
-					runner.QueryNumber = exists != null ? 1 : 2;
-					return await runner.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
-				}
 			}
 		}
 
@@ -1068,11 +1440,11 @@ namespace LinqToDB.Internal.Linq
 
 		#region GetSqlText
 
-		public static IReadOnlyList<QuerySql> GetSqlText(Query query, IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
+		public static IReadOnlyList<QuerySql> GetSqlText(Query query, IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, SqlCommandExecutionContext? harvesters)
 		{
 			using var m      = ActivityService.Start(ActivityID.GetSqlText);
 
-			using var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, parameters, preambles);
+			using var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, parameters, harvesters?.Results);
 			return runner.GetSqlText();
 		}
 

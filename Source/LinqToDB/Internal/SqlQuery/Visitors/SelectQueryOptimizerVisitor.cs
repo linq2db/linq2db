@@ -220,7 +220,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				var before = selectQuery.ToDebugString();
 #endif
 				// only once
-				_expressionOptimizerVisitor.Optimize(_evaluationContext, NullabilityContext.GetContext(selectQuery), null, _dataOptions, _mappingSchema, selectQuery, visitQueries: true, reducePredicates: false);
+				_expressionOptimizerVisitor.Optimize(_evaluationContext, NullabilityContext.GetContext(selectQuery), _dataOptions, _mappingSchema, selectQuery, visitQueries: true, reducePredicates: false);
 			}
 
 			var newQuery = (SelectQuery)base.VisitSqlQuery(selectQuery);
@@ -314,7 +314,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					_expressionOptimizerVisitor.Optimize(
 						_evaluationContext,
 						NullabilityContext.GetContext(selectQuery),
-						transformationInfo: null,
 						_dataOptions,
 						_mappingSchema,
 						selectQuery,
@@ -3737,7 +3736,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				var nullabilityContext = NullabilityContext.GetContext(sq);
 				foreach (var column in sq.Select.Columns)
 				{
-					var optimized = _expressionOptimizerVisitor.Optimize(_evaluationContext, nullabilityContext, null, _dataOptions, _mappingSchema, column.Expression, visitQueries: false, reducePredicates: false);
+					var optimized = _expressionOptimizerVisitor.Optimize(_evaluationContext, nullabilityContext, _dataOptions, _mappingSchema, column.Expression, visitQueries: false, reducePredicates: false);
 
 					if (!ReferenceEquals(optimized, column.Expression))
 					{

@@ -56,13 +56,13 @@ namespace LinqToDB.Internal.SqlProvider
 
 		// Default to an empty context (all accessors fall back to the node's own value) so that any
 		// SQL-rendering path that runs before BuildSql assigns the real one still resolves names.
-		public AliasesContext      AliasesContext      { get; protected set; } = new();
-		public OptimizationContext OptimizationContext { get; protected set; } = null!;
-		public MappingSchema       MappingSchema       { get;                }
-		public StringBuilder       StringBuilder       { get; set;           } = null!;
-		public SqlProviderFlags    SqlProviderFlags    { get;                }
-		public DataOptions         DataOptions         { get;                }
-		public NullabilityContext  NullabilityContext  { get; set; }
+		public AliasesContext           AliasesContext      { get; protected set; } = new();
+		public ISqlBuilderRenderContext RenderContext       { get; protected set; } = null!;
+		public MappingSchema            MappingSchema       { get;                }
+		public StringBuilder            StringBuilder       { get; set;           } = null!;
+		public SqlProviderFlags         SqlProviderFlags    { get;                }
+		public DataOptions              DataOptions         { get;                }
+		public NullabilityContext       NullabilityContext  { get; set; }
 
 		protected IDataProvider?      DataProvider;
 		protected ValueToSqlConverter ValueToSqlConverter => MappingSchema.ValueToSqlConverter;
@@ -77,7 +77,6 @@ namespace LinqToDB.Internal.SqlProvider
 		#region Build Flags
 
 		bool _disableAlias;
-		int  _binaryOptimized;
 
 		#endregion
 
@@ -183,15 +182,6 @@ namespace LinqToDB.Internal.SqlProvider
 
 		#endregion
 
-		#region CommandCount
-
-		public virtual int CommandCount(SqlStatement statement)
-		{
-			return 1;
-		}
-
-		#endregion
-
 		#region Formatting
 		/// <summary>
 		/// Inline comma separator.
@@ -228,29 +218,9 @@ namespace LinqToDB.Internal.SqlProvider
 			CompareFieldNames = 1 << 1,
 		}
 
-		#region Helpers
-
-		[return: NotNullIfNotNull(nameof(element))]
-		public T? ConvertElement<T>(T? element)
-			where T : class, IQueryElement
-		{
-			return OptimizationContext.OptimizeAndConvert(element, NullabilityContext);
-		}
-
-		[return: NotNullIfNotNull(nameof(element))]
-		public IQueryElement? Optimize(IQueryElement? element, bool reducePredicates)
-		{
-			if (element == null)
-				return null;
-
-			return OptimizationContext.Optimize(element, NullabilityContext, reducePredicates);
-		}
-
-		#endregion
-
 		#region BuildSql
 
-		public void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, OptimizationContext optimizationContext, AliasesContext aliases, NullabilityContext? nullabilityContext,
+		public void BuildSql(SqlStatement statement, StringBuilder sb, ISqlBuilderRenderContext renderContext, AliasesContext aliases, NullabilityContext? nullabilityContext,
 			int startIndent = 0)
 		{
 			AliasesContext = aliases;
@@ -259,7 +229,7 @@ namespace LinqToDB.Internal.SqlProvider
 			if (!DataOptions.SqlOptions.GenerateFinalAliases && CanSkipRootAliases(statement))
 				columnAliasMode |= ColumnAliasMode.SkipAlias;
 
-			BuildSql(commandNumber, statement, sb, optimizationContext, startIndent, columnAliasMode, nullabilityContext: nullabilityContext);
+			BuildSql(statement, sb, renderContext, startIndent, columnAliasMode, nullabilityContext: nullabilityContext);
 		}
 
 		protected virtual void BuildSetOperation(SetOperation operation, StringBuilder sb)
@@ -279,10 +249,9 @@ namespace LinqToDB.Internal.SqlProvider
 		}
 
 		protected virtual void BuildSql(
-			int commandNumber,
 			SqlStatement statement,
 			StringBuilder sb,
-			OptimizationContext optimizationContext,
+			ISqlBuilderRenderContext renderContext,
 			int indent,
 			ColumnAliasMode aliasMode,
 			NullabilityContext? nullabilityContext
@@ -290,59 +259,48 @@ namespace LinqToDB.Internal.SqlProvider
 		{
 			Statement           = statement;
 			StringBuilder       = sb;
-			OptimizationContext = optimizationContext;
+			RenderContext       = renderContext;
 			Indent              = indent;
 			AliasMode           = aliasMode;
 
-			if (commandNumber == 0)
+			NullabilityContext = nullabilityContext ?? NullabilityContext.GetContext(statement.SelectQuery);
+			if (statement.SelectQuery != null)
+				NullabilityContext = NullabilityContext.WithQuery(statement.SelectQuery);
+
+			BuildSql();
+
+			if (Statement.SelectQuery is { HasSetOperators: true })
 			{
-				NullabilityContext = nullabilityContext ?? NullabilityContext.GetContext(statement.SelectQuery);
-				if (statement.SelectQuery != null)
-					NullabilityContext = NullabilityContext.WithQuery(statement.SelectQuery);
-
-				BuildSql();
-
-				if (Statement.SelectQuery is { HasSetOperators: true })
+				foreach (var union in Statement.SelectQuery.SetOperators)
 				{
-					foreach (var union in Statement.SelectQuery.SetOperators)
-					{
-						AppendIndent();
-						BuildSetOperation(union.Operation, sb);
-						sb.AppendLine();
+					AppendIndent();
+					BuildSetOperation(union.Operation, sb);
+					sb.AppendLine();
 
-						var sqlBuilder = ((BasicSqlBuilder)CreateSqlBuilder());
-						sqlBuilder.BuildSql(commandNumber,
-							new SqlSelectStatement(union.SelectQuery) { ParentStatement = statement }, sb,
-							optimizationContext, indent,
-							aliasMode, NullabilityContext);
-						MergeSqlBuilderData(sqlBuilder);
-					}
+					var sqlBuilder = ((BasicSqlBuilder)CreateSqlBuilder());
+					sqlBuilder.BuildSql(
+						new SqlSelectStatement(union.SelectQuery) { ParentStatement = statement }, sb,
+						renderContext, indent,
+						aliasMode, NullabilityContext);
+					MergeSqlBuilderData(sqlBuilder);
 				}
-
-				switch (statement.QueryType)
-				{
-					case QueryType.Select:
-					case QueryType.Delete:
-					case QueryType.Update:
-					case QueryType.Insert:
-						BuildStep = Step.QueryExtensions;
-						BuildQueryExtensions(statement);
-						break;
-				}
-
-				FinalizeBuildQuery(statement);
 			}
-			else
+
+			switch (statement.QueryType)
 			{
-				BuildCommand(statement, commandNumber);
+				case QueryType.Select:
+				case QueryType.Delete:
+				case QueryType.Update:
+				case QueryType.Insert:
+					BuildStep = Step.QueryExtensions;
+					BuildQueryExtensions(statement);
+					break;
 			}
+
+			FinalizeBuildQuery(statement);
 		}
 
 		protected virtual void MergeSqlBuilderData(BasicSqlBuilder sqlBuilder)
-		{
-		}
-
-		protected virtual void BuildCommand(SqlStatement statement, int commandNumber)
 		{
 		}
 
@@ -361,15 +319,18 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected virtual void BuildSqlBuilder(SelectQuery selectQuery, int indent, ColumnAliasMode aliasMode)
 		{
-			SqlOptimizer.ConvertSkipTake(NullabilityContext, MappingSchema, DataOptions, selectQuery, OptimizationContext, out var takeExpr, out var skipExpr);
+			// TAKE/SKIP were resolved into Select.TakeValue/SkipValue during render-prep (SqlExpressionConvertVisitor.ResolveSkipTakeValues),
+			// so the builder reads them directly instead of calling the optimizer at render.
+			var takeExpr = selectQuery.Select.TakeValue;
+			var skipExpr = selectQuery.Select.SkipValue;
 
 			if (!SqlProviderFlags.GetIsSkipSupportedFlag(takeExpr)
 				&& skipExpr != null)
 				throw new LinqToDBException(ErrorHelper.Error_Skip_in_Subquery);
 
 			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
-			sqlBuilder.BuildSql(0,
-				new SqlSelectStatement(selectQuery) { ParentStatement = Statement }, StringBuilder, OptimizationContext, indent, aliasMode, NullabilityContext);
+			sqlBuilder.BuildSql(
+				new SqlSelectStatement(selectQuery) { ParentStatement = Statement }, StringBuilder, RenderContext, indent, aliasMode, NullabilityContext);
 			MergeSqlBuilderData(sqlBuilder);
 		}
 
@@ -452,8 +413,14 @@ namespace LinqToDB.Internal.SqlProvider
 				case QueryType.TruncateTable : BuildTruncateTableStatement((SqlTruncateTableStatement)Statement);                                               break;
 				case QueryType.Merge         : BuildMergeStatement((SqlMergeStatement)Statement);                                                               break;
 				case QueryType.MultiInsert   : BuildMultiInsertQuery((SqlMultiInsertStatement)Statement);                                                       break;
+				case QueryType.Fragment      : BuildFragmentStatement((SqlFragmentStatement)Statement);                                                         break;
 				default                      : BuildUnknownQuery();                                                                                             break;
 			}
+		}
+
+		protected virtual void BuildFragmentStatement(SqlFragmentStatement statement)
+		{
+			BuildExpression(statement.Expression);
 		}
 
 		protected void BuildSqlForUnion()
@@ -512,7 +479,7 @@ namespace LinqToDB.Internal.SqlProvider
 			{ ParentStatement = deleteStatement, With = deleteStatement.WithClause };
 
 			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
-			sqlBuilder.BuildSql(0, selectStatement, StringBuilder, OptimizationContext, AliasesContext, NullabilityContext, Indent);
+			sqlBuilder.BuildSql(selectStatement, StringBuilder, RenderContext, AliasesContext, NullabilityContext, Indent);
 			MergeSqlBuilderData(sqlBuilder);
 
 			--Indent;
@@ -569,7 +536,7 @@ namespace LinqToDB.Internal.SqlProvider
 		protected virtual void BuildCteBody(SelectQuery selectQuery)
 		{
 			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
-			sqlBuilder.BuildSql(0, new SqlSelectStatement(selectQuery), StringBuilder, OptimizationContext, Indent, AliasMode, NullabilityContext);
+			sqlBuilder.BuildSql(new SqlSelectStatement(selectQuery), StringBuilder, RenderContext, Indent, AliasMode, NullabilityContext);
 			MergeSqlBuilderData(sqlBuilder);
 		}
 
@@ -872,7 +839,7 @@ namespace LinqToDB.Internal.SqlProvider
 		/// </summary>
 		protected void BuildDistinctOnExpressions(SelectQuery selectQuery)
 		{
-			var select = ConvertElement(selectQuery.Select);
+			var select = selectQuery.Select;
 			if (select.DistinctOn is not { Count: > 0 } onExpressions)
 				return;
 
@@ -903,22 +870,11 @@ namespace LinqToDB.Internal.SqlProvider
 
 			var first = true;
 
-			var select = ConvertElement(selectQuery.Select);
+			var select = selectQuery.Select;
 
-			// ConvertElement can rebuild the Select into fresh SqlColumn instances (parameter-dependent
-			// queries re-run the per-element convert at build time, after aliasing). Synthetic column
-			// aliases live in the object-identity-keyed AliasesContext, not on the node, so they must be
-			// read from the original aliased columns - the rebuilt copies were never registered, so
-			// GetColumnAlias would miss them and drop the alias. The build-time convert is value-level: it
-			// refines column expressions but must not add or remove projected columns, so the i-th rebuilt
-			// column maps 1:1 onto the i-th original. Enforce that invariant - a count mismatch would
-			// silently mis-map aliases and emit wrong SQL.
-			var aliasColumns = selectQuery.Select.Columns;
-
-			if (aliasColumns.Count != select.Columns.Count)
-				throw new InvalidOperationException(
-					$"SQL builder convert must not change the SELECT column set (was {aliasColumns.Count}, became {select.Columns.Count}); column aliasing cannot be resolved.");
-
+			// Column aliases are stored in the object-identity-keyed AliasesContext, not on the SqlColumn node, so each
+			// column's alias is looked up via GetColumnAlias(column) below. The builder renders the AST as-is - the
+			// convert pass ran earlier, in structural prepare - so these columns are never rebuilt here.
 			for (var i = 0; i < select.Columns.Count; i++)
 			{
 				var col = select.Columns[i];
@@ -929,8 +885,8 @@ namespace LinqToDB.Internal.SqlProvider
 				first = false;
 
 				var addAlias = true;
-				var expr     = (ISqlExpression)Optimize(col.Expression, reducePredicates: true);
-				var colAlias = AliasesContext.GetColumnAlias(aliasColumns[i]);
+				var expr     = col.Expression;
+				var colAlias = AliasesContext.GetColumnAlias(col);
 
 				AppendIndent();
 				BuildColumnExpression(selectQuery, expr, colAlias, ref addAlias);
@@ -1069,7 +1025,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 				BuildExpression(expr.Column, updateClause.TableSource != null, true, false);
 
-				var updateSet = ConvertElement(expr);
+				var updateSet = expr;
 
 				if (updateSet.Expression != null)
 				{
@@ -1118,8 +1074,6 @@ namespace LinqToDB.Internal.SqlProvider
 		{
 			if (output?.HasOutput == true)
 			{
-				output = ConvertElement(output);
-
 				AppendIndent()
 					.AppendLine(OutputKeyword);
 
@@ -1278,7 +1232,7 @@ namespace LinqToDB.Internal.SqlProvider
 						first = false;
 
 						AppendIndent();
-						BuildExpression(ConvertElement(expr).Expression!);
+						BuildExpression(expr.Expression!);
 					}
 
 					Indent--;
@@ -1334,7 +1288,7 @@ namespace LinqToDB.Internal.SqlProvider
 						StringBuilder.AppendLine(Comma);
 					first = false;
 
-					var updateItem = ConvertElement(expr);
+					var updateItem = expr;
 
 					AppendIndent();
 					BuildExpression(updateItem.Column, false, true);
@@ -2101,8 +2055,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected virtual void BuildSqlValuesTable(SqlValuesTable valuesTable, string alias, out bool aliasBuilt)
 		{
-			valuesTable = ConvertElement(valuesTable);
-			var rows    = valuesTable.BuildRows(OptimizationContext.EvaluationContext);
+			var rows    = valuesTable.BuildRows(RenderContext.EvaluationContext);
 			var isEmpty = !(rows?.Count > 0);
 			if (!isEmpty)
 			{
@@ -2135,7 +2088,6 @@ namespace LinqToDB.Internal.SqlProvider
 
 		private void BuildSqlValuesAlias(SqlValuesTable valuesTable, string alias, bool supportsColumnAliases)
 		{
-			valuesTable = ConvertElement(valuesTable);
 			StringBuilder.Append(' ');
 
 			BuildObjectName(StringBuilder, new(alias), ConvertType.NameToQueryFieldAlias, true, TableOptions.NotSet);
@@ -2330,7 +2282,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 				foreach (var ext in sqlQueryExtensions!)
 				{
-					var convertedExt = ConvertElement(ext);
+					var convertedExt = ext;
 					if (convertedExt.BuilderType != null)
 					{
 						var extensionBuilder = GetExtensionBuilder(convertedExt.BuilderType!);
@@ -2361,7 +2313,7 @@ namespace LinqToDB.Internal.SqlProvider
 			Indent++;
 			AppendIndent();
 
-			var condition = ConvertElement(join.Condition);
+			var condition = join.Condition;
 			var buildOn   = BuildJoinType (join, condition);
 
 			if (IsNestedJoinParenthesisRequired && join.Table.Joins.Count != 0)
@@ -2442,7 +2394,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected virtual bool ShouldBuildWhere(SelectQuery selectQuery, out SqlSearchCondition condition)
 		{
-			condition = PrepareSearchCondition(selectQuery.Where.SearchCondition);
+			condition = selectQuery.Where.SearchCondition;
 
 			return !condition.IsTrue;
 		}
@@ -2534,11 +2486,9 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected virtual void BuildHavingClause(SelectQuery selectQuery)
 		{
-			var condition = PrepareSearchCondition(selectQuery.Having.SearchCondition);
+			var condition = selectQuery.Having.SearchCondition;
 			if (condition.IsTrue)
 				return;
-
-			++_binaryOptimized;
 
 			AppendIndent();
 
@@ -2550,8 +2500,6 @@ namespace LinqToDB.Internal.SqlProvider
 			Indent--;
 
 			StringBuilder.AppendLine();
-
-			--_binaryOptimized;
 		}
 
 		#endregion
@@ -2563,7 +2511,7 @@ namespace LinqToDB.Internal.SqlProvider
 			if (selectQuery.OrderBy.Items.Count == 0)
 				return;
 
-			var orderBy = ConvertElement(selectQuery.OrderBy);
+			var orderBy = selectQuery.OrderBy;
 
 			IReadOnlyList<SqlOrderByItem> nonConstant = orderBy.Items.TrueForAll(i => !QueryHelper.IsConstantFast(i.Expression))
 				? orderBy.Items
@@ -2645,7 +2593,10 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected virtual void BuildSkipFirst(SelectQuery selectQuery)
 		{
-			SqlOptimizer.ConvertSkipTake(NullabilityContext, MappingSchema, DataOptions, selectQuery, OptimizationContext, out var takeExpr, out var skipExpr);
+			// TAKE/SKIP were resolved into Select.TakeValue/SkipValue during render-prep (SqlExpressionConvertVisitor.ResolveSkipTakeValues),
+			// so the builder reads them directly instead of calling the optimizer at render.
+			var takeExpr = selectQuery.Select.TakeValue;
+			var skipExpr = selectQuery.Select.SkipValue;
 
 			if (SkipFirst && NeedSkip(takeExpr, skipExpr) && SkipFormat != null)
 				StringBuilder.Append(' ').AppendFormat(
@@ -2683,7 +2634,10 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected virtual void BuildOffsetLimit(SelectQuery selectQuery)
 		{
-			SqlOptimizer.ConvertSkipTake(NullabilityContext, MappingSchema, DataOptions, selectQuery, OptimizationContext, out var takeExpr, out var skipExpr);
+			// TAKE/SKIP were resolved into Select.TakeValue/SkipValue during render-prep (SqlExpressionConvertVisitor.ResolveSkipTakeValues),
+			// so the builder reads them directly instead of calling the optimizer at render.
+			var takeExpr = selectQuery.Select.TakeValue;
+			var skipExpr = selectQuery.Select.SkipValue;
 
 			var doSkip = NeedSkip(takeExpr, skipExpr) && OffsetFormat(selectQuery) != null;
 			var doTake = NeedTake(takeExpr)           && LimitFormat(selectQuery)  != null;
@@ -2731,8 +2685,6 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected virtual void BuildSearchCondition(SqlSearchCondition condition, bool wrapCondition)
 		{
-			condition = PrepareSearchCondition(condition);
-
 			var len = StringBuilder.Length;
 			var parentPrecedence = condition.Precedence;
 
@@ -2968,7 +2920,7 @@ namespace LinqToDB.Internal.SqlProvider
 			// Handle x.In(IEnumerable variable)
 			if (values is [SqlParameter pr])
 			{
-				var prValue = pr.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues).ProviderValue;
+				var prValue = pr.GetParameterValue(RenderContext.EvaluationContext.ParameterValues).ProviderValue;
 				switch (prValue)
 				{
 					case null:
@@ -3104,7 +3056,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 					if (checkNull)
 					{
-						if (val is ISqlExpression sqlExpr && sqlExpr.TryEvaluateExpression(OptimizationContext.EvaluationContext, out var evaluated))
+						if (val is ISqlExpression sqlExpr && sqlExpr.TryEvaluateExpression(RenderContext.EvaluationContext, out var evaluated))
 							val = evaluated;
 
 						if (val == null)
@@ -3159,43 +3111,13 @@ namespace LinqToDB.Internal.SqlProvider
 			}
 		}
 
-		protected SqlSearchCondition PrepareSearchCondition(SqlSearchCondition searchCondition)
-		{
-			if (_binaryOptimized > 0)
-				return searchCondition;
-
-			var condition = ConvertElement(searchCondition);
-			var optimized = Optimize(condition, reducePredicates: true);
-
-			if (optimized is SqlSearchCondition optimizedCondition)
-				condition = optimizedCondition;
-			else
-				condition = new SqlSearchCondition().Add((ISqlPredicate)optimized);
-
-			return condition;
-		}
-
 		protected void BuildPredicate(int parentPrecedence, int precedence, ISqlPredicate predicate)
 		{
-			if (_binaryOptimized == 0)
-			{
-				var optimized = Optimize(predicate, reducePredicates: true);
-				if (!ReferenceEquals(optimized, predicate))
-				{
-					predicate  = (ISqlPredicate)optimized;
-					precedence = GetPrecedence(predicate);
-				}
-			}
-
-			++_binaryOptimized;
-
 			var wrap = Wrap(precedence, parentPrecedence);
 
 			if (wrap) StringBuilder.Append('(');
 			BuildPredicate(predicate);
 			if (wrap) StringBuilder.Append(')');
-
-			--_binaryOptimized;
 		}
 
 		protected virtual void BuildLikePredicate(SqlPredicate.Like predicate)
@@ -3466,6 +3388,13 @@ namespace LinqToDB.Internal.SqlProvider
 					break;
 				}
 
+				case QueryElementType.SqlObjectNameExpression:
+				{
+					var e = (SqlObjectNameExpression)expr;
+					BuildObjectName(StringBuilder, e.Name, e.ConvertType, escape: true, e.TableOptions);
+					break;
+				}
+
 				case QueryElementType.SqlFragment:
 				{
 					var e = (SqlFragment)expr;
@@ -3509,7 +3438,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 					if (inlining)
 					{
-						var paramValue = parm.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
+						var paramValue = parm.GetParameterValue(RenderContext.EvaluationContext.ParameterValues);
 						if (!TryConvertParameterToSql(paramValue))
 							inlining = false;
 					}
@@ -4051,7 +3980,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected virtual void BuildParameter(SqlParameter parameter)
 		{
-			var newParm = OptimizationContext.AddParameter(parameter);
+			var newParm = RenderContext.AddParameter(parameter);
 			Convert(StringBuilder, newParm.Name!, ConvertType.NameToQueryParameter);
 		}
 
@@ -4065,7 +3994,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 				for (var i = 0; i < values.Length; i++)
 				{
-					var value = ConvertElement(parameters[i]);
+					var value = parameters[i];
 
 					values[i] = WithStringBuilderBuildExpression(precedence, value);
 				}

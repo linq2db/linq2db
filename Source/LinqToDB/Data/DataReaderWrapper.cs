@@ -37,6 +37,10 @@ namespace LinqToDB.Data
 
 		internal Action<DbCommand>? OnBeforeCommandDispose { get; set; }
 
+		// An extra object disposed after the reader (and command): the DbBatch backing a batched combined command, so
+		// the batch is released with the reader. Disposed asynchronously in DisposeAsync when it is also IAsyncDisposable.
+		internal IDisposable? AdditionalDisposable { get; set; }
+
 		public void Dispose()
 		{
 			if (_disposed)
@@ -61,6 +65,12 @@ namespace LinqToDB.Data
 
 				// if command set, _dataConnection is set too
 				_dataConnection!.DataProvider.DisposeCommand(Command);
+			}
+
+			if (AdditionalDisposable != null)
+			{
+				AdditionalDisposable.Dispose();
+				AdditionalDisposable = null;
 			}
 
 			if (((IDataContext?)_dataConnection)?.CloseAfterUse == true)
@@ -91,6 +101,16 @@ namespace LinqToDB.Data
 
 				// if command set, _dataConnection is set too
 				await _dataConnection!.DataProvider.DisposeCommandAsync(Command).ConfigureAwait(false);
+			}
+
+			if (AdditionalDisposable != null)
+			{
+				if (AdditionalDisposable is IAsyncDisposable asyncDisposable)
+					await asyncDisposable.DisposeAsync().ConfigureAwait(false);
+				else
+					AdditionalDisposable.Dispose();
+
+				AdditionalDisposable = null;
 			}
 
 			if (((IDataContext?)_dataConnection)?.CloseAfterUse == true)

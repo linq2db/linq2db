@@ -1905,6 +1905,12 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						break;
 					}
 
+					case QueryElementType.SqlObjectNameExpression:
+					case QueryElementType.SqlFragmentStatement:
+						// Produced server-side during scenario render; never present in a client-serialized statement.
+						// Make that explicit instead of falling through to the generic "not implemented" message.
+						throw new InvalidOperationException($"{e.ElementType} is produced during server-side render and is not remote-serializable.");
+
 					default:
 						throw new InvalidOperationException($"Serialize not implemented for element {e.ElementType}");
 				}
@@ -3177,6 +3183,10 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 
 						break;
 					}
+
+					case QueryElementType.SqlObjectNameExpression:
+					case QueryElementType.SqlFragmentStatement:
+						throw new InvalidOperationException($"{(QueryElementType)type} is produced during server-side render and is not remote-serializable.");
 
 					default:
 						throw new InvalidOperationException($"Parse not implemented for element {(QueryElementType)type}");

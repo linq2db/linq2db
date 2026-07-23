@@ -22,35 +22,6 @@ namespace LinqToDB.Internal.DataProvider.Access
 		{
 		}
 
-		public override int CommandCount(SqlStatement statement)
-		{
-			return statement switch
-			{
-				SqlTruncateTableStatement { ResetIdentity: true, Table.IdentityFields.Count: var count } => count + 1,
-				SqlTruncateTableStatement                                                                => 1,
-
-				_ => statement.NeedsIdentity ? 2 : 1,
-			};
-		}
-
-		protected override void BuildCommand(SqlStatement statement, int commandNumber)
-		{
-			if (statement is SqlTruncateTableStatement trun)
-			{
-				var field = trun.Table!.IdentityFields[commandNumber - 1];
-
-				StringBuilder.Append("ALTER TABLE ");
-				BuildObjectName(StringBuilder, trun.Table.TableName, ConvertType.NameToQueryTable, true, trun.Table.TableOptions);
-				StringBuilder.Append(" ALTER COLUMN ");
-				Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
-				StringBuilder.AppendLine(" COUNTER(1, 1)");
-			}
-			else
-			{
-				StringBuilder.AppendLine("SELECT @@IDENTITY");
-			}
-		}
-
 		public override    bool IsNestedJoinSupported         => false;
 		public override    bool WrapJoinCondition             => true;
 		protected override bool IsValuesSyntaxSupported       => false;
@@ -261,7 +232,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 		{
 			if (parameter.NeedsCast && BuildStep != Step.TypedExpression)
 			{
-				var paramValue = parameter.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
+				var paramValue = parameter.GetParameterValue(RenderContext.EvaluationContext.ParameterValues);
 
 				var saveStep = BuildStep;
 				BuildStep = Step.TypedExpression;

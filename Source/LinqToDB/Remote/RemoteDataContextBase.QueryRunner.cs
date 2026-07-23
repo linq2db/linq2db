@@ -11,6 +11,7 @@ using LinqToDB.Internal.Common;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.DataProvider;
+using LinqToDB.Internal.Infrastructure;
 using LinqToDB.Internal;
 using LinqToDB.Internal.Remote;
 using LinqToDB.Internal.Async;
@@ -56,68 +57,70 @@ namespace LinqToDB.Remote
 
 			private IReadOnlyList<QuerySql> GetSqlTextImpl()
 			{
-				var query        = Query.Queries[QueryNumber];
-				var sqlBuilder   = DataContext.CreateSqlBuilder();
-				var sqlOptimizer = DataContext.GetSqlOptimizer(DataContext.Options);
-				var factory      = sqlOptimizer.CreateSqlExpressionFactory(DataContext.MappingSchema, DataContext.Options);
-				var commandCount = sqlBuilder.CommandCount(query.Statement);
+				var query           = Query.QueryInfo;
+				var sqlBuilder      = DataContext.CreateSqlBuilder();
+				var sqlOptimizer    = DataContext.GetSqlOptimizer(DataContext.Options);
+				var factory         = sqlOptimizer.CreateSqlExpressionFactory(DataContext.MappingSchema, DataContext.Options);
+				var serviceProvider = ((IInfrastructure<IServiceProvider>)_dataContext).Instance;
+				var dmlService      = serviceProvider.GetRequiredService<IDmlService>();
+				var flags           = DataContext.SqlProviderFlags;
 
 				using var sqlStringBuilder = Pools.StringBuilder.Allocate();
 
-				var queries = new QuerySql[commandCount];
+				var optimizationContext = new OptimizationContext(
+					_evaluationContext,
+					DataContext.Options,
+					flags,
+					DataContext.MappingSchema,
+					sqlOptimizer.CreateOptimizerVisitor(false),
+					sqlOptimizer.CreateConvertVisitor(false),
+					factory,
+					isParameterOrderDepended : flags.IsParameterOrderDependent,
+					parametersNormalizerFactory : static () => NoopQueryParametersNormalizer.Instance);
 
-				for (var i = 0; i < commandCount; i++)
+				var statement = query.Statement.PrepareStatementForSql(optimizationContext);
+
+				// Alias the prepared statement - PrepareStatementForSql can produce new nodes, and the alias
+				// context is keyed to the nodes it visits, so aliasing query.Statement (pre-prepare) would leave
+				// the rendered nodes unresolved. Mirrors the direct runner and master's remote aliasing fix.
+				AliasesHelper.PrepareQueryAndAliases(new IdentifierServiceSimple(128), statement, out var aliases);
+
+				// Build + plan the same scenario the server will execute so the remote SQL text reflects the real grouped
+				// commands (identity SELECT, truncate reset, gated upsert steps, combined batches) rather than just the base
+				// statement. Rendering is shared with the direct runner via ScenarioCommandRenderer.
+				var scenario = dmlService.BuildCommandScenario(statement, flags, factory)
+					?? throw new InvalidOperationException("BuildCommandScenario returned null; it must always produce a scenario.");
+
+				scenario = ScenarioCommandRenderer.FinalizeScenarioSteps(scenario, statement, sqlOptimizer, DataContext.Options, DataContext.MappingSchema, optimizationContext);
+
+				var plan     = dmlService.PlanScenario(scenario, flags);
+				var commands = ScenarioCommandRenderer.RenderScenarioGroups(scenario, plan, statement, aliases, sqlBuilder, optimizationContext, serviceProvider, sqlStringBuilder.Value, 0);
+
+				var queries = new QuerySql[commands.Length];
+
+				for (var i = 0; i < commands.Length; i++)
 				{
-					var optimizationContext = new OptimizationContext(
-						_evaluationContext,
-						DataContext.Options,
-						DataContext.SqlProviderFlags,
-						DataContext.MappingSchema,
-						sqlOptimizer.CreateOptimizerVisitor(false),
-						sqlOptimizer.CreateConvertVisitor(false),
-						factory,
-						isParameterOrderDepended : DataContext.SqlProviderFlags.IsParameterOrderDependent,
-						isAlreadyOptimizedAndConverted : true,
-						parametersNormalizerFactory : static () => NoopQueryParametersNormalizer.Instance);
-
-					var statement = query.Statement.PrepareStatementForSql(optimizationContext);
-
-					// Alias the prepared statement - the one actually rendered. PrepareStatementForSql can
-					// produce new nodes, and the alias context is keyed to the nodes it visits, so aliasing
-					// query.Statement (pre-prepare) would leave the rendered nodes unresolved.
-					AliasesHelper.PrepareQueryAndAliases(new IdentifierServiceSimple(128), statement, out var aliases);
-
-					sqlBuilder.BuildSql(i, statement, sqlStringBuilder.Value, optimizationContext, aliases, null);
+					var command = commands[i];
+					var sql     = command.Command;
 
 					if (i == 0)
 					{
 						var queryHints = DataContext.GetNextCommandHints(false);
 						if (queryHints != null)
-						{
-							var querySql = sqlStringBuilder.Value.ToString();
-
-							querySql = sqlBuilder.ApplyQueryHints(querySql, queryHints);
-
-							sqlStringBuilder.Value.Clear();
-							sqlStringBuilder.Value.Append(querySql);
-						}
+							sql = sqlBuilder.ApplyQueryHints(sql, queryHints);
 					}
 
 					DataParameter[]? parameters = null;
-					var sql                     = sqlStringBuilder.Value.ToString();
 
-					sqlStringBuilder.Value.Length = 0;
-
-					if (optimizationContext.HasParameters())
+					if (command.SqlParameters.Count > 0)
 					{
-						var sqlParameters = optimizationContext.GetParameters();
-						parameters = new DataParameter[sqlParameters.Count];
+						parameters = new DataParameter[command.SqlParameters.Count];
 
-						for (var pIdx = 0; pIdx < sqlParameters.Count; pIdx++)
+						for (var pIdx = 0; pIdx < command.SqlParameters.Count; pIdx++)
 						{
-							var p              = sqlParameters[pIdx];
+							var p              = command.SqlParameters[pIdx];
 							var parameterValue = p.GetParameterValue(_evaluationContext.ParameterValues);
-							parameters[pIdx] = new DataParameter(p.Name, parameterValue.ProviderValue, parameterValue.DbDataType);
+							parameters[pIdx]   = new DataParameter(p.Name, parameterValue.ProviderValue, parameterValue.DbDataType);
 						}
 					}
 
@@ -179,7 +182,7 @@ namespace LinqToDB.Remote
 
 				SetCommand(false);
 
-				var queryContext = Query.Queries[QueryNumber];
+				var queryContext = Query.QueryInfo;
 
 				await _dataContext.PreloadConfigurationInfoAsync(cancellationToken).ConfigureAwait(false);
 
@@ -211,7 +214,7 @@ namespace LinqToDB.Remote
 
 				SetCommand(false);
 
-				var queryContext = Query.Queries[QueryNumber];
+				var queryContext = Query.QueryInfo;
 
 				await _dataContext.PreloadConfigurationInfoAsync(cancellationToken).ConfigureAwait(false);
 
@@ -246,7 +249,7 @@ namespace LinqToDB.Remote
 
 				SetCommand(false);
 
-				var queryContext = Query.Queries[QueryNumber];
+				var queryContext = Query.QueryInfo;
 
 				await _dataContext.PreloadConfigurationInfoAsync(cancellationToken).ConfigureAwait(false);
 

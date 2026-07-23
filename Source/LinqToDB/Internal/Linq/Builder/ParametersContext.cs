@@ -9,6 +9,7 @@ using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Infrastructure;
 using LinqToDB.Internal.Reflection;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
@@ -40,6 +41,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			ExpressionBuilder.QueryExpressionContainerParam,
 			ExpressionConstants.DataContextParam,
 			ExpressionBuilder.ParametersParam,
+			ExpressionBuilder.ExecutionContextParam,
 		};
 
 		public readonly List<ParameterAccessor>           CurrentSqlParameters = new();
@@ -520,7 +522,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			// see #820
 			clientAccessorExpression = CorrectAccessorExpression(clientAccessorExpression, dataContext);
 
-			var clientValueMapper = Expression.Lambda<Func<IQueryExpressions,IDataContext?,object?[]?,object?>>(
+			var clientValueMapper = Expression.Lambda<Func<IQueryExpressions,IDataContext?,object?[]?,SqlCommandExecutionContext?,object?>>(
 				Expression.Convert(clientAccessorExpression, typeof(object)), AccessorParameters);
 
 			var clientValueFunc = clientValueMapper.CompileExpression();

@@ -203,7 +203,7 @@ namespace Tests.Linq
 
 			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 
-			// 1 buffer preamble + 1 child query = 2 SELECT queries
+			// 1 buffer harvester + 1 child query = 2 SELECT queries
 			if (!context.IsRemote()) counter.Count.ShouldBe(2);
 		}
 
@@ -254,7 +254,7 @@ namespace Tests.Linq
 
 			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 
-			// 1 buffer preamble + 2 child queries = 3 SELECT queries
+			// 1 buffer harvester + 2 child queries = 3 SELECT queries
 			if (!context.IsRemote()) counter.Count.ShouldBe(3);
 		}
 
@@ -352,7 +352,7 @@ namespace Tests.Linq
 					.ShouldBe(expected, ComparerBuilder.GetEqualityComparer(expected));
 			}
 
-			// 1 buffer preamble + 1 child query = 2 SELECT queries
+			// 1 buffer harvester + 1 child query = 2 SELECT queries
 			if (!context.IsRemote()) counter.Count.ShouldBe(2);
 		}
 
@@ -398,7 +398,7 @@ namespace Tests.Linq
 
 			AreEqual(expectedDepts, result.Departments, ComparerBuilder.GetEqualityComparer(expectedDepts));
 
-			// 1 buffer preamble + 1 child query = 2 SELECT queries
+			// 1 buffer harvester + 1 child query = 2 SELECT queries
 			if (!context.IsRemote()) counter.Count.ShouldBe(2);
 		}
 
@@ -635,6 +635,105 @@ namespace Tests.Linq
 				.ToList();
 
 			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+		}
+
+		// Mixed combinable + non-combinable eager loads in ONE query, nested variant - the highest-risk path flagged in
+		// review (rests on EagerResultEnumerable.BuildPlan's ORDERING INVARIANT). Under global KeyedQuery, a Department
+		// child that references a parent non-key field (c.Name) falls back to Default (a combinable candidate), but because
+		// its OWN nested Employees load stays KeyedQuery it buffers => that whole harvester is NON-combinable and runs
+		// first. A sibling Department child (also Default via the same fallback, no nested load) stays COMBINABLE and rides
+		// the combined command with the main query. If the plan ever ran a non-combinable harvester against a combinable
+		// sibling's not-yet-populated slot, a child collection would come back empty and AreEqual below would catch it.
+		[Test]
+		public void MixedCombinableAndNonCombinable_NestedKeyedUnderCombinable(
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		{
+			var (companies, departments, employees, _, _) = GenerateHierarchy();
+
+			using var db = GetDataContext(context, o => o.UseDefaultEagerLoadingStrategy(EagerLoadingStrategy.KeyedQuery));
+
+			var counter = new SelectQueryCounter();
+			if (!context.IsRemote()) db.AddInterceptor(counter);
+
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+			using var tEmp = db.CreateLocalTable(employees);
+
+			if (!context.IsRemote()) counter.Count = 0;
+
+			var query =
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					c.Name,
+					// Default fallback (parent non-key ref) + nested KeyedQuery Employees => buffered => NON-combinable
+					DeptsWithEmployees = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							CompanyName = c.Name,
+							Employees   = tEmp
+								.Where(e => e.DepartmentId == d.Id)
+								.OrderBy(e => e.Id)
+								.Select(e => new { e.Id, e.Name })
+								.ToList(),
+						})
+						.ToList(),
+					// Default fallback (parent non-key ref), no nested load => COMBINABLE sibling
+					PlainDepts = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							CompanyName = c.Name,
+						})
+						.ToList(),
+				};
+
+			var result = query.ToList();
+
+			var expected = companies
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					c.Id,
+					c.Name,
+					DeptsWithEmployees = departments
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							CompanyName = c.Name,
+							Employees   = employees
+								.Where(e => e.DepartmentId == d.Id)
+								.OrderBy(e => e.Id)
+								.Select(e => new { e.Id, e.Name })
+								.ToList(),
+						})
+						.ToList(),
+					PlainDepts = departments
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							CompanyName = c.Name,
+						})
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+
+			// Anti-trivial guard: the non-combinable buffered harvester runs its own queries in addition to the combined
+			// command, so a mixed plan is strictly more than a single round-trip (a fully-combined collapse would be 1).
+			if (!context.IsRemote()) counter.Count.ShouldBeGreaterThan(1);
 		}
 
 		[Test]
@@ -1584,10 +1683,10 @@ namespace Tests.Linq
 
 		#region Concurrency — shared cached query must not share per-execution key state
 
-		// Regression for MAJ001: KeyedQueryKeysHolder used to be build-time state baked into the
+		// Regression for MAJ001: the keyed keys were once build-time state baked into the
 		// cached query, so concurrent executions of the same cached query clobbered each other's
 		// key sets — producing empty or cross-loaded child collections. Keys are now isolated per
-		// execution via the preamble-results array, so this must stay green under concurrency.
+		// execution via the harvester-results array, so this must stay green under concurrency.
 		// Scoped to providers whose CreateLocalTable tables are visible across connections.
 		[Test]
 		public async Task KeyedQuery_ConcurrentExecutions_DoNotShareKeyState(
@@ -1676,9 +1775,9 @@ namespace Tests.Linq
 
 		#region Default strategy — runtime-parameter regression
 
-		// Regression: DetachedPreamble and Preamble<TKey,T> in ExpressionBuilder.EagerLoadDefault.cs
-		// used to call query.GetResultEnumerable(…, preambles, preambles) — passing preambles in both
-		// the parameters and preambles slots. Any captured local variable that feeds a SQL parameter on
+		// Regression: DetachedHarvester and Harvester<TKey,T> in ExpressionBuilder.EagerLoadDefault.cs
+		// used to call query.GetResultEnumerable(…, harvesters, harvesters) — passing harvesters in both
+		// the parameters and harvesters slots. Any captured local variable that feeds a SQL parameter on
 		// the detail query arrived as null (or empty) because the real parameters array was never forwarded.
 		// This test ensures that a captured local variable (minId) reaches the detail query correctly.
 		[Test]
@@ -1860,7 +1959,7 @@ namespace Tests.Linq
 			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 
 			// CteUnion (marker won): 1 UNION ALL query loads both child collections.
-			// Non-CTE providers fall back to KeyedQuery: 1 buffer preamble + 2 child queries = 3.
+			// Non-CTE providers fall back to KeyedQuery: 1 buffer harvester + 2 child queries = 3.
 			if (!context.IsRemote()) counter.Count.ShouldBe(!IsCteSupported(context) ? 3 : 1);
 		}
 
@@ -1922,7 +2021,7 @@ namespace Tests.Linq
 		}
 
 		// Inverse order: outer WithKeyedLoadStrategy() beats inner WithUnionLoadStrategy(), so KeyedQuery runs
-		// (1 buffer preamble + 2 child queries = 3) even though SQLite supports CTE — proving the rule is
+		// (1 buffer harvester + 2 child queries = 3) even though SQLite supports CTE — proving the rule is
 		// "outermost wins", not "CteUnion always wins".
 		[Test]
 		public void WithLoadStrategy_LastMarkerWins_OuterKeyedOverInnerUnion(
@@ -1972,7 +2071,7 @@ namespace Tests.Linq
 
 			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 
-			// Outer KeyedQuery won: 1 buffer preamble + 2 child queries = 3.
+			// Outer KeyedQuery won: 1 buffer harvester + 2 child queries = 3.
 			if (!context.IsRemote()) counter.Count.ShouldBe(3);
 		}
 

@@ -74,7 +74,10 @@ namespace Tests
 
 				var expected = File.ReadAllText(fullPath);
 
-				if (expected != baseline)
+				// The combined engine batches statements differently on the direct vs remote path (one combined
+				// command vs separate commands) without changing the SQL; fall back to a grouping-insensitive compare
+				// so that difference is tolerated, while a real SQL divergence still fails.
+				if (expected != baseline && Canonicalize(expected) != Canonicalize(baseline))
 				{
 					File.WriteAllText(fullPath + ".other", baseline, Encoding.UTF8);
 					throw new InvalidOperationException($"Baselines for remote context doesn't match direct access baselines. Test: {test.FullName}");
@@ -85,6 +88,40 @@ namespace Tests
 				_baselines.Add(fullPath, newType);
 				File.WriteAllText(fullPath, baseline, Encoding.UTF8);
 			}
+		}
+
+		// Direct may batch several statements into one command (the combined engine: "SELECT ...;\nSELECT ..."),
+		// while remote runs them as separate commands (each with its own "-- <provider>" trace header). That is a
+		// physical command-grouping difference, not a SQL difference — reduce the trace to just its SQL statement
+		// lines (dropping "-- <provider>" headers, ";" separators, blank lines, and the DECLARE/SET parameter dump)
+		// so remote is compared to direct on the SQL itself, not on how it is batched.
+		static string Canonicalize(string trace)
+		{
+			var sb = new StringBuilder();
+
+			foreach (var raw in trace.Split('\n'))
+			{
+				var line = raw.TrimEnd('\r');
+
+				// Grouping markers + the per-command preamble the direct combined command emits once but the remote
+				// separate commands repeat: blank lines, ";" separators, "-- <provider>" headers, DECLARE/SET params.
+				if (line.Length == 0 || line == ";" || line.StartsWith("-- ", StringComparison.Ordinal))
+					continue;
+
+				if (line.StartsWith("DECLARE @", StringComparison.Ordinal))
+					continue;
+
+				if (line.StartsWith("SET", StringComparison.Ordinal))
+				{
+					var rest = line.AsSpan(3).TrimStart();
+					if (rest.Length > 0 && rest[0] == '@')
+						continue;
+				}
+
+				sb.Append(line).Append('\n');
+			}
+
+			return sb.ToString();
 		}
 
 		private static string NormalizeFileName(string name)

@@ -1,14 +1,340 @@
 ﻿using System;
+using System.Collections.Generic;
+
+using LinqToDB.Internal.DataProvider.Translation;
+using LinqToDB.Internal.Linq.Builder;
+using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Linq.Translation;
 
 namespace LinqToDB.Internal.DataProvider
 {
 	/// <summary>
-	/// Base class for provider-specific <see cref="IDmlService"/> implementations.
-	/// Only providers whose DROP TABLE cannot express "if exists" at the SQL level register one —
-	/// for every other provider the service is absent and suppression is not attempted.
+	/// Base class for provider-specific <see cref="IDmlService"/> implementations. By default
+	/// <see cref="BuildCommandScenario"/> returns a single-step scenario (one statement rendered as one command), or
+	/// the InsertOrReplace/Upsert emulation for those statements; providers override it for identity, truncate-reset,
+	/// etc. <see cref="PlanScenario"/> defaults to all-singleton (sequential) groups.
 	/// </summary>
 	public abstract class DmlServiceBase : IDmlService
 	{
+		/// <summary>
+		/// Builds the command scenario for <paramref name="statement"/>. The base handles the InsertOrReplace / Upsert
+		/// emulation and otherwise returns a single-step <see cref="DefaultScenario"/> (one statement, one command).
+		/// Providers override to build an explicit multi-step scenario (identity retrieval, per-field truncate reset,
+		/// etc.), using <paramref name="factory"/> to construct any synthetic statements (e.g. an identity <c>SELECT</c>),
+		/// and delegate the default case back here via <c>base.BuildCommandScenario(...)</c>.
+		/// </summary>
+		public virtual SqlCommandScenario? BuildCommandScenario(SqlStatement statement, SqlProviderFlags flags, ISqlExpressionFactory factory)
+		{
+			if (statement is SqlInsertOrUpdateStatement insertOrUpdate)
+				return BuildInsertOrUpdateScenario(insertOrUpdate, flags, factory) ?? DefaultScenario(statement);
+
+			return DefaultScenario(statement);
+		}
+
+		/// <summary>
+		/// The trivial scenario for a self-contained statement: one step rendered as one command. The step
+		/// <see cref="SqlCommandStep.Kind"/> is not consulted for a lone simple command — the runner's fast path
+		/// dispatches by the called <c>Execute*</c> method — so <see cref="SqlStepKind.NonQuery"/> is an arbitrary
+		/// placeholder here; <see cref="SqlCommandScenario.OutcomeSteps"/> points at the single step.
+		/// </summary>
+		protected static SqlCommandScenario DefaultScenario(SqlStatement statement) =>
+			new()
+			{
+				Steps        = [new SqlCommandStep { Statement = statement, Kind = SqlStepKind.NonQuery }],
+				OutcomeSteps = [0],
+			};
+
+		/// <summary>
+		/// The two-step identity-insert scenario: the INSERT executed as a non-query, then a scalar SELECT of the
+		/// generated key (<paramref name="identity"/>, e.g. <c>@@IDENTITY</c> / <c>LAST_INSERT_ID()</c>). The SELECT is
+		/// the outcome. Providers differ only in the identity expression; the step shape lives here.
+		/// </summary>
+		protected static SqlCommandScenario IdentitySelectScenario(SqlStatement insert, ISqlExpression identity)
+		{
+			var idSelect = new SqlSelectStatement();
+
+			idSelect.SelectQuery.Select.AddNew(identity);
+
+			return new SqlCommandScenario
+			{
+				Steps =
+				[
+					new SqlCommandStep { Statement = insert,   Kind = SqlStepKind.NonQuery },
+					new SqlCommandStep { Statement = idSelect, Kind = SqlStepKind.Scalar   },
+				],
+				OutcomeSteps = [1],
+			};
+		}
+
+		/// <summary>
+		/// The truncate-with-identity-reset scenario: the TRUNCATE as a non-query (the outcome), followed by one reset
+		/// statement per identity column, built by <paramref name="reset"/>. For providers whose reset is a per-column
+		/// <c>ALTER TABLE …</c> fragment (the template and name quoting differ per provider).
+		/// </summary>
+		protected static SqlCommandScenario PerFieldResetScenario(SqlTruncateTableStatement truncate, Func<SqlField, SqlStatement> reset)
+		{
+			var fields = truncate.Table!.IdentityFields;
+			var steps  = new SqlCommandStep[fields.Count + 1];
+
+			steps[0] = new SqlCommandStep { Statement = truncate, Kind = SqlStepKind.NonQuery };
+
+			for (var i = 0; i < fields.Count; i++)
+				steps[i + 1] = new SqlCommandStep { Statement = reset(fields[i]), Kind = SqlStepKind.NonQuery };
+
+			return new SqlCommandScenario { Steps = steps, OutcomeSteps = [0] };
+		}
+
+		/// <summary>
+		/// Reshapes an InsertOrReplace / Upsert / InsertOrUpdate statement into the UPDATE→INSERT emulation when the
+		/// provider's native single-statement upsert can't honor it (see
+		/// <see cref="UpsertBuilder.WillEmulateInsertOrUpdate"/>); returns <see langword="null"/> to let the builder
+		/// render the native form. Running here — rather than at query-build time — means remote data contexts rebuild
+		/// the same gated scenario server-side from the serialized statement. Three gated shapes, matching the legacy
+		/// orchestration:
+		/// <list type="bullet">
+		///   <item>UPDATE, then INSERT when it affected no rows (Update.Items present, no UPDATE predicate);</item>
+		///   <item>existence-SELECT, then INSERT when absent (Update.Items empty — nothing to update);</item>
+		///   <item>existence-SELECT, then UPDATE when present / INSERT when absent (Upsert.Update.When predicate).</item>
+		/// </list>
+		/// </summary>
+		protected static SqlCommandScenario? BuildInsertOrUpdateScenario(SqlInsertOrUpdateStatement statement, SqlProviderFlags flags, ISqlExpressionFactory factory)
+		{
+			if (!UpsertBuilder.WillEmulateInsertOrUpdate(statement, flags))
+				return null;
+
+			// Reshape a CLONE, never the input. This runs at execution time and — unlike the old build-time emulation —
+			// can run more than once on the same cached / serialized statement; mutating it would leak the match keys
+			// and the UPDATE predicate across executions, and make the remote GetSqlText trace diverge from direct.
+			var work = statement.Clone();
+
+			// The INSERT keeps its own From-less, key-less query, so the keys folded into the shared query below (used by
+			// the UPDATE / existence-SELECT branches) never reach it — it stays a plain INSERT … VALUES.
+			var insertQuery = work.SelectQuery.Clone();
+			insertQuery.From.Tables.Clear();
+
+			var insertStatement = new SqlInsertStatement(insertQuery)
+			{
+				Insert             = work.Insert,
+				Tag                = work.Tag,
+				SqlQueryExtensions = work.SqlQueryExtensions,
+			};
+
+			var wsc = work.SelectQuery.Where.EnsureConjunction();
+
+			foreach (var key in work.Update.Keys)
+				wsc.AddEqual(key.Column, key.Expression!, CompareNulls.LikeSql);
+
+			var intType = factory.GetDbDataType(typeof(int));
+
+			// Common INSERT step for the two existence-SELECT shapes: run only when the row is absent.
+			var insertStep = new SqlCommandStep
+			{
+				Statement = insertStatement,
+				Kind      = SqlStepKind.NonQuery,
+				RunIf     = new SqlStepCondition { Kind = SqlStepConditionKind.ResultIsNull, SourceStepIndex = 0 },
+			};
+
+			// Upsert.Update.When: existence-SELECT gates a keys-AND-predicate UPDATE and the INSERT. The UPDATE may
+			// legitimately affect zero rows (predicate rejected an existing row), so the INSERT is gated on "row
+			// absent" — never on "zero rows updated", which would double-insert when the predicate rejects.
+			if (work.Update.Items.Count > 0 && work.UpdateWhere is { Predicates.Count: > 0 })
+			{
+				var existsSelect = work.SelectQuery.Clone(); // keys only — cloned before the predicate is folded in below
+				existsSelect.Select.Columns.Clear();
+				existsSelect.Select.Columns.Add(new SqlColumn(existsSelect, factory.Expression(intType, "1")));
+
+				var updateSelect = work.SelectQuery; // has keys; add the When predicate for the UPDATE branch only
+				foreach (var predicate in work.UpdateWhere.Predicates)
+					updateSelect.Where.EnsureConjunction().Predicates.Add(predicate);
+
+				return new SqlCommandScenario
+				{
+					Steps =
+					[
+						new SqlCommandStep { Statement = new SqlSelectStatement(existsSelect), Kind = SqlStepKind.Scalar },
+						new SqlCommandStep
+						{
+							Statement = new SqlUpdateStatement(updateSelect)
+							{
+								Update             = work.Update,
+								Tag                = work.Tag,
+								SqlQueryExtensions = work.SqlQueryExtensions,
+							},
+							Kind  = SqlStepKind.NonQuery,
+							RunIf = new SqlStepCondition { Kind = SqlStepConditionKind.ResultIsNotNull, SourceStepIndex = 0 },
+						},
+						insertStep,
+					],
+					OutcomeSteps = [1, 2],
+				};
+			}
+
+			// Update.Items present: UPDATE first, INSERT only if it affected no rows.
+			if (work.Update.Items.Count > 0)
+			{
+				return new SqlCommandScenario
+				{
+					Steps =
+					[
+						new SqlCommandStep
+						{
+							Statement = new SqlUpdateStatement(work.SelectQuery)
+							{
+								Update             = work.Update,
+								Tag                = work.Tag,
+								SqlQueryExtensions = work.SqlQueryExtensions,
+							},
+							Kind = SqlStepKind.NonQuery,
+						},
+						insertStep with { RunIf = new SqlStepCondition { Kind = SqlStepConditionKind.ResultIsZero, SourceStepIndex = 0 } },
+					],
+					OutcomeSteps = [0, 1],
+				};
+			}
+
+			// Update.Items empty (nothing to update): existence-SELECT gates a plain INSERT.
+			work.SelectQuery.Select.Columns.Clear();
+			work.SelectQuery.Select.Columns.Add(new SqlColumn(work.SelectQuery, factory.Expression(intType, "1")));
+
+			return new SqlCommandScenario
+			{
+				Steps =
+				[
+					new SqlCommandStep { Statement = new SqlSelectStatement(work.SelectQuery), Kind = SqlStepKind.Scalar },
+					insertStep,
+				],
+				OutcomeSteps = [1],
+			};
+		}
+
+		/// <summary>
+		/// Plans physical command groups. Without <see cref="SqlProviderFlags.IsMultiStatementBatchSupported"/> — or
+		/// around a gated step (which must be evaluated client-side before it runs) — every step is its own group
+		/// (today's sequential behavior). Otherwise a maximal run of contiguous non-gated steps is combined; a single
+		/// combined command may harvest more than one result-producing step only when
+		/// <see cref="SqlProviderFlags.IsMultipleResultSetsSupported"/> is set — otherwise the run is split so each
+		/// combined group holds at most one result-producing step.
+		/// </summary>
+		public virtual SqlCommandGroupPlan PlanScenario(SqlCommandScenario scenario, SqlProviderFlags flags)
+		{
+			var steps = scenario.Steps;
+
+			if (!flags.IsMultiStatementBatchSupported)
+			{
+				var singletons = new SqlCommandGroup[steps.Count];
+
+				for (var i = 0; i < steps.Count; i++)
+					singletons[i] = new SqlCommandGroup { StepIndexes = [i] };
+
+				return new SqlCommandGroupPlan { Groups = singletons };
+			}
+
+			var multipleResultSets = flags.IsMultipleResultSetsSupported;
+
+			var groups = new List<SqlCommandGroup>();
+			var run    = new List<int>();
+
+			// Emits one physical group for a contiguous slice: combined into a single command when it has a
+			// result-producing step (Scalar/Reader) and more than one step; otherwise one group per step, so a pure
+			// non-query run (e.g. truncate + reset) keeps its per-step rows-affected semantics.
+			void EmitGroup(List<int> slice)
+			{
+				var hasResult = false;
+
+				foreach (var idx in slice)
+				{
+					if (steps[idx].Kind != SqlStepKind.NonQuery)
+					{
+						hasResult = true;
+						break;
+					}
+				}
+
+				if (hasResult && slice.Count > 1)
+				{
+					groups.Add(new SqlCommandGroup { StepIndexes = slice.ToArray() });
+				}
+				else
+				{
+					foreach (var idx in slice)
+						groups.Add(new SqlCommandGroup { StepIndexes = [idx] });
+				}
+			}
+
+			// A run of contiguous non-gated steps forms one combined command. One command can harvest more than one
+			// result-producing step only when the provider returns multiple result sets (NextResult); without that the
+			// run is split so each combined group holds at most one result-producing step (e.g. identity's INSERT +
+			// SELECT), and any additional readers fall into their own commands.
+			void FlushRun()
+			{
+				if (run.Count == 0)
+					return;
+
+				if (multipleResultSets)
+				{
+					// Size-aware: cap how many statements merge into one command so a large fan-out (e.g. an eager load
+					// with many child collections) splits across several round-trips instead of one oversized command.
+					// DML scenarios are tiny (<= a few steps) so this never changes their grouping. Clamp to >= 1: the flag
+					// is public/settable, and a 0 or negative value would make the split loop below spin forever.
+					var maxPerGroup = Math.Max(1, flags.MaxStatementsPerCombinedGroup);
+
+					if (run.Count <= maxPerGroup)
+					{
+						EmitGroup(run);
+					}
+					else
+					{
+						for (var start = 0; start < run.Count; start += maxPerGroup)
+							EmitGroup(run.GetRange(start, Math.Min(maxPerGroup, run.Count - start)));
+					}
+				}
+				else
+				{
+					var slice     = new List<int>();
+					var sawResult = false;
+
+					foreach (var idx in run)
+					{
+						var isResult = steps[idx].Kind != SqlStepKind.NonQuery;
+
+						if (isResult && sawResult)
+						{
+							EmitGroup(slice);
+							slice     = new List<int>();
+							sawResult = false;
+						}
+
+						slice.Add(idx);
+
+						if (isResult)
+							sawResult = true;
+					}
+
+					EmitGroup(slice);
+				}
+
+				run.Clear();
+			}
+
+			for (var i = 0; i < steps.Count; i++)
+			{
+				if (steps[i].RunIf != null)
+				{
+					FlushRun();
+					groups.Add(new SqlCommandGroup { StepIndexes = [i] });
+				}
+				else
+				{
+					run.Add(i);
+				}
+			}
+
+			FlushRun();
+
+			return new SqlCommandGroupPlan { Groups = groups.ToArray() };
+		}
+
 		public bool IsTableNotFoundException(Exception exception)
 		{
 			ArgumentNullException.ThrowIfNull(exception);

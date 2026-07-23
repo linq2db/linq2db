@@ -194,6 +194,15 @@ namespace LinqToDB
 	/// queries, so this optimization could be used for <see cref="System.Data.CommandBehavior.Default"/> too.
 	/// Default value: <see langword="false"/>.
 	/// </param>
+	/// <param name="UseDbBatch">
+	/// When enabled and the provider supports the ADO.NET batching API (<c>DbConnection.CanCreateBatch</c>),
+	/// combined multi-statement execution (for example eager loading run as one round-trip) is sent as a
+	/// <c>DbBatch</c> — each statement carrying its own parameters — instead of one
+	/// semicolon-concatenated command. Falls back to the concatenated command when the provider cannot batch, on target
+	/// frameworks without the API (net462/netstandard2.0), or when an <see cref="LinqToDB.Interceptors.ICommandInterceptor"/>
+	/// is registered (batched commands bypass command interceptors).
+	/// Default value: <see langword="true"/>.
+	/// </param>
 	public sealed record LinqOptions
 	(
 		// TODO: Remove in v7
@@ -221,7 +230,8 @@ namespace LinqToDB
 		UpsertEmulationPolicy     UpsertEmulationPolicy       = UpsertEmulationPolicy.Allow,
 		EagerLoadingStrategy      DefaultEagerLoadingStrategy = EagerLoadingStrategy.Default,
 		ImplicitCollectionLoading ImplicitCollectionLoading   = ImplicitCollectionLoading.Allow,
-		bool                      OptimizeForSequentialAccess = false
+		bool                      OptimizeForSequentialAccess = false,
+		bool                      UseDbBatch                  = true
 		// If you add another parameter here, don't forget to update
 		// LinqOptions copy constructor and IConfigurationID.ConfigurationID.
 	)
@@ -254,6 +264,7 @@ namespace LinqToDB
 			DefaultEagerLoadingStrategy = original.DefaultEagerLoadingStrategy;
 			ImplicitCollectionLoading   = original.ImplicitCollectionLoading;
 			OptimizeForSequentialAccess = original.OptimizeForSequentialAccess;
+			UseDbBatch                  = original.UseDbBatch;
 		}
 
 		/// <summary>
@@ -316,7 +327,7 @@ namespace LinqToDB
 				out concatenateOrderBy, out optimizeJoins, out compareNulls, out guardGrouping, out disableQueryCache,
 				out cacheSlidingExpiration, out preferApply, out keepDistinctOrdered, out parameterizeTakeSkip,
 				out enableContextSchemaEdit, out preferExistsForScalar,
-				out _, out _, out _, out _, out _);
+				out _, out _, out _, out _, out _, out _);
 		}
 
 		int? _configurationID;
@@ -345,6 +356,7 @@ namespace LinqToDB
 						.Add((int)DefaultEagerLoadingStrategy)
 						.Add((int)ImplicitCollectionLoading)
 						.Add(OptimizeForSequentialAccess)
+						.Add(UseDbBatch)
 						.CreateID();
 				}
 

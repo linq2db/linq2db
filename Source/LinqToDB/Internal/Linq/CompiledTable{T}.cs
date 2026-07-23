@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using LinqToDB.Internal.Cache;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Linq.Builder;
+using LinqToDB.Internal.SqlProvider;
 
 namespace LinqToDB.Internal.Linq
 {
@@ -198,7 +199,13 @@ namespace LinqToDB.Internal.Linq
 			var db    = (IDataContext)parameters[0];
 			var query = GetInfo(db, parameters);
 
-			return (T)query.GetElement(db, query.CompiledExpressions!, parameters, preambles)!;
+			// A compiled query always carries its argument array; build a context to carry it (plus any eager-load
+			// preambles) so the mapper and parameter accessors read the compiled args from the context.
+			var context = preambles is null
+				? new SqlCommandExecutionContext(0, parameters)
+				: new SqlCommandExecutionContext(preambles, parameters);
+
+			return (T)query.GetElement(db, query.CompiledExpressions!, context)!;
 		}
 
 		public async Task<T> ExecuteAsync(object[] parameters, object[] preambles)
@@ -206,7 +213,11 @@ namespace LinqToDB.Internal.Linq
 			var db    = (IDataContext)parameters[0];
 			var query = GetInfo(db, parameters);
 
-			return (T)(await query.GetElementAsync(db, query.CompiledExpressions!, parameters, preambles, default).ConfigureAwait(false))!;
+			var context = preambles is null
+				? new SqlCommandExecutionContext(0, parameters)
+				: new SqlCommandExecutionContext(preambles, parameters);
+
+			return (T)(await query.GetElementAsync(db, query.CompiledExpressions!, context, default).ConfigureAwait(false))!;
 		}
 	}
 }

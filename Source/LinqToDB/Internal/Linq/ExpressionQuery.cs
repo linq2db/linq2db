@@ -11,6 +11,7 @@ using LinqToDB.Data;
 using LinqToDB.Internal.Async;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Metrics;
 
@@ -36,7 +37,7 @@ namespace LinqToDB.Internal.Linq
 		internal object?[]? Parameters;
 
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-		internal object?[]? Preambles;
+		internal SqlCommandExecutionContext? Preambles;
 
 		#endregion
 
@@ -53,7 +54,7 @@ namespace LinqToDB.Internal.Linq
 			var expressions = (IQueryExpressions)new RuntimeExpressionsContainer(expression);
 			var info        = GetQuery(ref expressions, true, out var dependsOnParameters);
 
-			if (options?.MultiInsertMode != null && info.Queries[0].Statement is SqlMultiInsertStatement multiInsert)
+			if (options?.MultiInsertMode != null && info.QueryInfo.Statement is SqlMultiInsertStatement multiInsert)
 				multiInsert.InsertType = options.MultiInsertMode.Value;
 
 			if (!dependsOnParameters)
@@ -106,10 +107,18 @@ namespace LinqToDB.Internal.Linq
 			var transaction = await StartLoadTransactionAsync(query, cancellationToken).ConfigureAwait(false);
 			await using var tr = (transaction ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false);
 
-			Preambles = await query.InitPreamblesAsync(DataContext, expressions, Parameters, cancellationToken)
+			if (query.GetEagerElementAsync != null)
+			{
+				var eagerValue = await query.GetEagerElementAsync(DataContext, expressions, Parameters, cancellationToken)
+					.ConfigureAwait(false);
+
+				return (TResult)eagerValue!;
+			}
+
+			Preambles = await query.InitHarvestersAsync(DataContext, expressions, Parameters, cancellationToken)
 				.ConfigureAwait(false);
 
-			var value = await query.GetElementAsync(DataContext, expressions, Parameters, Preambles, cancellationToken)
+			var value = await query.GetElementAsync(DataContext, expressions, Preambles, cancellationToken)
 				.ConfigureAwait(false);
 
 			return (TResult)value!;
@@ -117,9 +126,9 @@ namespace LinqToDB.Internal.Linq
 
 		IDisposable? StartLoadTransaction(Query query)
 		{
-			// Do not start implicit transaction if there is no preambles
+			// Do not start implicit transaction if there is no harvesters
 			//
-			if (!query.IsAnyPreambles())
+			if (!query.IsAnyHarvesters())
 				return null;
 
 			var dc = DataContext switch
@@ -148,9 +157,9 @@ namespace LinqToDB.Internal.Linq
 
 		async Task<IAsyncDisposable?> StartLoadTransactionAsync(Query query, CancellationToken cancellationToken)
 		{
-			// Do not start implicit transaction if there is no preambles
+			// Do not start implicit transaction if there is no harvesters
 			//
-			if (!query.IsAnyPreambles())
+			if (!query.IsAnyHarvesters())
 				return null;
 
 			var dc = DataContext switch
@@ -187,11 +196,11 @@ namespace LinqToDB.Internal.Linq
 			var transaction = await StartLoadTransactionAsync(query, cancellationToken).ConfigureAwait(false);
 			await using var tr = (transaction ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false);
 
-			Preambles = await query.InitPreamblesAsync(DataContext, expressions, Parameters, cancellationToken)
+			Preambles = await query.InitHarvestersAsync(DataContext, expressions, Parameters, cancellationToken)
 				.ConfigureAwait(false);
 
 			return Query<TResult>.GetQuery(DataContext, ref expressions, out _)
-				.GetResultEnumerable(DataContext, expressions, Parameters, Preambles);
+				.GetResultEnumerable(DataContext, expressions, Preambles);
 		}
 
 		public async Task GetForEachAsync(Action<T> action, CancellationToken cancellationToken)
@@ -206,10 +215,10 @@ namespace LinqToDB.Internal.Linq
 			var transaction = await StartLoadTransactionAsync(query, cancellationToken).ConfigureAwait(false);
 			await using var _ = (transaction ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false);
 
-			Preambles = await query.InitPreamblesAsync(DataContext, expressions, Parameters, cancellationToken)
-				.ConfigureAwait(false);
+			var (enumerable, harvesters, combined) = await query.GetEagerEnumerableAsync(DataContext, expressions, Parameters, cancellationToken).ConfigureAwait(false);
 
-			var enumerable = (IAsyncEnumerable<T>)query.GetResultEnumerable(DataContext, expressions, Parameters, Preambles);
+			if (!combined)
+				Preambles = harvesters;
 
 			var enumerator = enumerable.GetAsyncEnumerator(cancellationToken);
 			await using (enumerator.ConfigureAwait(false))
@@ -228,7 +237,7 @@ namespace LinqToDB.Internal.Linq
 			if (!dependsOnParameters)
 				Expression = expressions.MainExpression;
 
-			var enumerable = (IAsyncEnumerable<T>)query.GetResultEnumerable(DataContext, expressions, Parameters, Preambles);
+			var enumerable = (IAsyncEnumerable<T>)query.GetResultEnumerable(DataContext, expressions, Preambles);
 			var enumerator = enumerable.GetAsyncEnumerator(cancellationToken);
 
 			while (await enumerator.MoveNextAsync().ConfigureAwait(false))
@@ -252,11 +261,12 @@ namespace LinqToDB.Internal.Linq
 				var tr = await StartLoadTransactionAsync(query, cancellationToken).ConfigureAwait(false);
 				try
 				{
-					Preambles = await query.InitPreamblesAsync(DataContext, expressions, Parameters, cancellationToken)
-						.ConfigureAwait(false);
-					return Tuple.Create(
-						query.GetResultEnumerable(DataContext, expressions, Parameters, Preambles)
-						.GetAsyncEnumerator(cancellationToken), tr);
+					var (enumerable, harvesters, combined) = await query.GetEagerEnumerableAsync(DataContext, expressions, Parameters, cancellationToken).ConfigureAwait(false);
+
+					if (!combined)
+						Preambles = harvesters;
+
+					return Tuple.Create(enumerable.GetAsyncEnumerator(cancellationToken), tr);
 				}
 				catch
 				{
@@ -313,12 +323,15 @@ namespace LinqToDB.Internal.Linq
 
 			using (StartLoadTransaction(query))
 			{
-				Preambles = query.InitPreambles(DataContext, expressions, Parameters);
+				if (query.GetEagerElement != null)
+					return (TResult)query.GetEagerElement(DataContext, expressions, Parameters)!;
+
+				Preambles = query.InitHarvesters(DataContext, expressions, Parameters);
 
 				var getElement = query.GetElement;
 				if (getElement == null)
 					throw new LinqToDBException("GetElement is not assigned by the context.");
-				return (TResult)getElement(DataContext, expressions, Parameters, Preambles)!;
+				return (TResult)getElement(DataContext, expressions, Preambles)!;
 			}
 		}
 
@@ -331,12 +344,15 @@ namespace LinqToDB.Internal.Linq
 
 			using (StartLoadTransaction(query))
 			{
-				Preambles = query.InitPreambles(DataContext, expressions, Parameters);
+				if (query.GetEagerElement != null)
+					return query.GetEagerElement(DataContext, expressions, Parameters);
+
+				Preambles = query.InitHarvesters(DataContext, expressions, Parameters);
 
 				var getElement = query.GetElement;
 				if (getElement == null)
 					throw new LinqToDBException("GetElement is not assigned by the context.");
-				return getElement(DataContext, expressions, Parameters, Preambles);
+				return getElement(DataContext, expressions, Preambles);
 			}
 		}
 
@@ -355,11 +371,24 @@ namespace LinqToDB.Internal.Linq
 			if (!dependsOnParameters)
 				Expression = expressions.MainExpression;
 
-			using (StartLoadTransaction(query))
+			// The read-consistency transaction must stay open across the (lazy) enumeration, so its ownership is transferred
+			// to the returned enumerator (disposed together with it) instead of being closed here. See EnumeratorWrapper.
+			var transaction = StartLoadTransaction(query);
+			try
 			{
-				Preambles = query.InitPreambles(DataContext, expressions, Parameters);
+				var (enumerable, harvesters, combined) = query.GetEagerEnumerable(DataContext, expressions, Parameters);
 
-				return query.GetResultEnumerable(DataContext, expressions, Parameters, Preambles).GetEnumerator();
+				if (!combined)
+					Preambles = harvesters;
+
+				var enumerator = enumerable.GetEnumerator();
+
+				return transaction == null ? enumerator : new EnumeratorWrapper<T>(enumerator, transaction);
+			}
+			catch
+			{
+				transaction?.Dispose();
+				throw;
 			}
 		}
 
@@ -374,11 +403,24 @@ namespace LinqToDB.Internal.Linq
 			if (!dependsOnParameters)
 				Expression = expressions.MainExpression;
 
-			using (StartLoadTransaction(query))
+			// The read-consistency transaction must stay open across the (lazy) enumeration, so its ownership is transferred
+			// to the returned enumerator (disposed together with it) instead of being closed here. See EnumeratorWrapper.
+			var transaction = StartLoadTransaction(query);
+			try
 			{
-				Preambles = query.InitPreambles(DataContext, expressions, Parameters);
+				var (enumerable, harvesters, combined) = query.GetEagerEnumerable(DataContext, expressions, Parameters);
 
-				return query.GetResultEnumerable(DataContext, expressions, Parameters, Preambles).GetEnumerator();
+				if (!combined)
+					Preambles = harvesters;
+
+				var enumerator = enumerable.GetEnumerator();
+
+				return transaction == null ? enumerator : new EnumeratorWrapper<T>(enumerator, transaction);
+			}
+			catch
+			{
+				transaction?.Dispose();
+				throw;
 			}
 		}
 

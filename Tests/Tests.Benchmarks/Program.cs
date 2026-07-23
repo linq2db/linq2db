@@ -29,6 +29,41 @@ namespace LinqToDB.Benchmarks
 				return;
 			}
 
+			// Manual render-pipeline benchmark runner (branch-vs-master). Tag the run via the
+			// RENDER_BENCH_TAG env var. Usage: manual-render [iterations] [warmups]
+			if (args.Length > 0 && args[0] == "manual-render")
+			{
+				var iters   = args.Length > 1 && int.TryParse(args[1], out var n) ? n : 20;
+				var warmups = args.Length > 2 && int.TryParse(args[2], out var w) ? w : 5;
+				RenderPipelineBenchmark.RunManually(warmups, iters);
+				return;
+			}
+
+			// Manual eager-loading benchmark runner (branch-vs-master), over real in-memory SQLite. Tag the run via
+			// the RENDER_BENCH_TAG env var. Usage: manual-eager [iterations] [warmups]
+			if (args.Length > 0 && args[0] == "manual-eager")
+			{
+				var iters   = args.Length > 1 && int.TryParse(args[1], out var n) ? n : 20;
+				var warmups = args.Length > 2 && int.TryParse(args[2], out var w) ? w : 5;
+				EagerLoadingBenchmark.RunManually(warmups, iters);
+				return;
+			}
+
+			// Rigorous BenchmarkDotNet runs of the pipeline benchmarks, using each class's own [Config] (a single
+			// InProcessEmit job — does NOT spawn child processes, unlike Config.Instance's multi-runtime fan-out).
+			// Usage: bdn-render | bdn-eager
+			if (args.Length > 0 && args[0] == "bdn-render")
+			{
+				BenchmarkRunner.Run<RenderPipelineBenchmark>();
+				return;
+			}
+
+			if (args.Length > 0 && args[0] == "bdn-eager")
+			{
+				BenchmarkRunner.Run<EagerLoadingBenchmark>();
+				return;
+			}
+
 			//if (args.Length == 0)
 			//{
 			//	//	var b1 = new FetchGraphBenchmark();
