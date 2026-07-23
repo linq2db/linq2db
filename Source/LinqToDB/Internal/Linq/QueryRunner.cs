@@ -44,7 +44,8 @@ namespace LinqToDB.Internal.Linq
 				QueryCache.Clear();
 			}
 
-			internal static MemoryCache<IStructuralEquatable,Query<T>> QueryCache { get; } = new(new());
+			internal static BoundedCache<IStructuralEquatable,Query<T>> QueryCache { get; } =
+				new("QueryRunner.Cache<T>", CacheDefaults.WorkCacheCapacity, LinqToDB.Common.Configuration.Linq.CacheSlidingExpiration);
 		}
 
 		public static class Cache<T,TR>
@@ -59,7 +60,8 @@ namespace LinqToDB.Internal.Linq
 				QueryCache.Clear();
 			}
 
-			internal static MemoryCache<IStructuralEquatable,Query<TR>> QueryCache { get; } = new(new());
+			internal static BoundedCache<IStructuralEquatable,Query<TR>> QueryCache { get; } =
+				new("QueryRunner.Cache<T,TR>", CacheDefaults.WorkCacheCapacity, LinqToDB.Common.Configuration.Linq.CacheSlidingExpiration);
 		}
 
 		#region Mapper

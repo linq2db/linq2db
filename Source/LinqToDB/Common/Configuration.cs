@@ -154,6 +154,36 @@ namespace LinqToDB.Common
 		// N: supported in options
 
 		/// <summary>
+		/// Settings for linq2db's internal work caches (compiled delegates, descriptors, detected versions, ...).
+		/// </summary>
+		[PublicAPI]
+		public static class Cache
+		{
+			static int? _workCacheEntryLimit;
+
+			/// <summary>
+			/// Maximum number of entries each process-wide work cache keeps before least-recently-used eviction.
+			/// <see langword="null"/> (default) applies a high built-in cap (100,000 entries) that realistic
+			/// workloads effectively never hit but that still bounds runaway growth; set a value of at least
+			/// <c>3</c> to cap memory more tightly. The value is read when each cache is first constructed, so set
+			/// it at application startup.
+			/// </summary>
+			/// <exception cref="ArgumentOutOfRangeException">Thrown when set to a value less than <c>3</c>.</exception>
+			public static int? WorkCacheEntryLimit
+			{
+				get => _workCacheEntryLimit;
+				set
+				{
+					// BitFaster's ConcurrentLru requires a capacity of at least 3.
+					if (value is < 3)
+						throw new ArgumentOutOfRangeException(nameof(value), value, "WorkCacheEntryLimit must be null or at least 3.");
+
+					_workCacheEntryLimit = value;
+				}
+			}
+		}
+
+		/// <summary>
 		/// LINQ query settings.
 		/// </summary>
 		[PublicAPI]

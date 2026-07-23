@@ -1136,3 +1136,28 @@ LinqToDB.Internal.Common.ObjectPool<T>.RentedElement.RentedElement(LinqToDB.Inte
 readonly LinqToDB.Internal.Common.ObjectPool<T>.RentedElement.Value -> T!
 ~LinqToDB.Internal.Common.ObjectPool<T>.Allocate() -> LinqToDB.Internal.Common.ObjectPool<T>.RentedElement
 *REMOVED*LinqToDB.Internal.SqlQuery.SqlRawSqlTable.SqlRawSqlTable(LinqToDB.Internal.SqlQuery.SqlRawSqlTable! table, LinqToDB.Internal.SqlQuery.ISqlExpression![]! parameters) -> void
+LinqToDB.Internal.Linq.QueryCache.BeginMeasure() -> LinqToDB.Internal.Linq.QueryCache.CacheMeasurement!
+LinqToDB.Internal.Linq.QueryCache.CollectHitStatistics.get -> bool
+LinqToDB.Internal.Linq.QueryCache.CollectHitStatistics.set -> void
+LinqToDB.Internal.Linq.QueryCache.TotalHits.get -> long
+LinqToDB.Internal.Linq.QueryCache.TotalMisses.get -> long
+LinqToDB.Internal.Linq.QueryCache.Count.get -> long
+LinqToDB.Linq.QueryCacheStatistics
+LinqToDB.Linq.QueryCacheStatistics.QueryCacheStatistics() -> void
+LinqToDB.Linq.QueryCacheStatistics.Count.get -> long
+LinqToDB.Linq.QueryCacheStatistics.HitRate.get -> double
+LinqToDB.Linq.QueryCacheStatistics.Hits.get -> long
+LinqToDB.Linq.QueryCacheStatistics.Misses.get -> long
+LinqToDB.Linq.CacheEntryCount
+LinqToDB.Linq.CacheEntryCount.CacheEntryCount() -> void
+LinqToDB.Linq.CacheEntryCount.Count.get -> long
+LinqToDB.Linq.CacheEntryCount.Name.get -> string!
+static LinqToDB.Linq.Tools.GetQueryCacheStatistics() -> LinqToDB.Linq.QueryCacheStatistics
+static LinqToDB.Linq.Tools.GetCacheEntryCounts() -> System.Collections.Generic.IReadOnlyList<LinqToDB.Linq.CacheEntryCount>!
+LinqToDB.Common.Configuration.Cache
+static LinqToDB.Common.Configuration.Cache.WorkCacheEntryLimit.get -> int?
+static LinqToDB.Common.Configuration.Cache.WorkCacheEntryLimit.set -> void
+LinqToDB.Internal.Linq.QueryCache.CacheMeasurement
+LinqToDB.Internal.Linq.QueryCache.CacheMeasurement.Dispose() -> void
+LinqToDB.Internal.Linq.QueryCache.CacheMeasurement.Hits.get -> long
+LinqToDB.Internal.Linq.QueryCache.CacheMeasurement.Misses.get -> long

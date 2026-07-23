@@ -95,7 +95,7 @@ namespace LinqToDB.Internal.Linq
 
 				var ei = dataContext.Options.LinqOptions.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert) || columnFilter != null
 					? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions, type)
-					: Cache<T,int>.QueryCache.GetOrCreate(
+					: Cache<T,int>.QueryCache.GetOrAdd(
 						(
 							operation: 'I',
 							dataContext.ConfigurationID,
@@ -108,9 +108,8 @@ namespace LinqToDB.Internal.Linq
 							queryFlags: dataContext.GetQueryFlags()
 						),
 						(dataContext, entityDescriptor, obj),
-						static (entry, key, context) =>
+						static (key, context) =>
 						{
-							entry.SlidingExpiration = context.dataContext.Options.LinqOptions.CacheSlidingExpirationOrDefault;
 							return CreateQuery(context.dataContext, context.entityDescriptor, context.obj, null, key.tableName, key.serverName, key.databaseName, key.schemaName, key.tableOptions, key.type);
 						});
 
@@ -138,7 +137,7 @@ namespace LinqToDB.Internal.Linq
 
 					var ei = dataContext.Options.LinqOptions.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert) || columnFilter != null
 						? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions, type)
-						: Cache<T,int>.QueryCache.GetOrCreate(
+						: Cache<T,int>.QueryCache.GetOrAdd(
 							(
 								operation: 'I',
 								dataContext.ConfigurationID,
@@ -151,10 +150,9 @@ namespace LinqToDB.Internal.Linq
 								queryFlags: dataContext.GetQueryFlags()
 							),
 							(dataContext, entityDescriptor, obj),
-							static (entry, key, context) =>
+							static (key, context) =>
 							{
-								entry.SlidingExpiration = context.dataContext.Options.LinqOptions.CacheSlidingExpirationOrDefault;
-								return CreateQuery(context.dataContext, context.entityDescriptor, context.obj, null, key.tableName, key.serverName, key.databaseName, key.schemaName, key.tableOptions, key.type);
+									return CreateQuery(context.dataContext, context.entityDescriptor, context.obj, null, key.tableName, key.serverName, key.databaseName, key.schemaName, key.tableOptions, key.type);
 							});
 
 					var result = await ei.GetElementAsync(dataContext, new RuntimeExpressionsContainer(Expression.Constant(obj)), null, null, token).ConfigureAwait(false);

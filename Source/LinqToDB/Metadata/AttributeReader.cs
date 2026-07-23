@@ -3,6 +3,7 @@ using System.Linq;
 using System.Reflection;
 
 using LinqToDB.Extensions;
+using LinqToDB.Internal.Cache;
 using LinqToDB.Internal.Mapping;
 using LinqToDB.Mapping;
 
@@ -10,13 +11,13 @@ namespace LinqToDB.Metadata
 {
 	public class AttributeReader : IMetadataReader
 	{
-		static readonly MappingAttributesCache _cache = new (
+		static readonly MappingAttributesCache _cache = CacheRegistry.Register(new MappingAttributesCache(
 			static (_, source) =>
 			{
 				var res = source.GetAttributes<MappingAttribute>(inherit: false);
 				// API returns object[] for old frameworks and typed array for new
 				return res.Length == 0 ? [] : res is MappingAttribute[] attrRes ? attrRes : res.Cast<MappingAttribute>().ToArray();
-			});
+			}, "AttributeReader"));
 
 		public MappingAttribute[] GetAttributes(Type type)
 			=> _cache.GetMappingAttributes<MappingAttribute>(type);

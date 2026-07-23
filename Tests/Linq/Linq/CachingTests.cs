@@ -5,12 +5,16 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
+using LinqToDB.Extensions;
 using LinqToDB.Data;
+using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.SqlQuery;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.DataProvider;
 
@@ -123,6 +127,113 @@ namespace Tests.Linq
 			var sql = query.ToSqlQuery().Sql;
 
 			Assert.That(sql, Contains.Substring(funcName).And.Contains(fieldName));
+		}
+
+		[Test]
+		[NonParallelizable] // asserts on and toggles process-global QueryCache counters/flags
+		public void QueryCacheMeasurementTracksHitsAndMisses([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
+		{
+			QueryCache.Default.ClearAll();
+
+			using var db = GetDataContext(context);
+
+			var query = db.Parent.Where(p => p.ParentID == -958413871);
+
+			using (var probe = QueryCache.Default.BeginMeasure())
+			{
+				query.ToArray();
+
+				probe.Misses.ShouldBeGreaterThanOrEqualTo(1);
+				probe.Hits.ShouldBe(0);
+
+				query.ToArray();
+
+				probe.Hits.ShouldBeGreaterThanOrEqualTo(1);
+			}
+
+			QueryCache.Default.TotalMisses.ShouldBeGreaterThanOrEqualTo(1);
+
+			var priorCollectHitStatistics = QueryCache.Default.CollectHitStatistics;
+			try
+			{
+				QueryCache.Default.CollectHitStatistics = true;
+
+				var priorTotalHits = QueryCache.Default.TotalHits;
+
+				query.ToArray();
+
+				QueryCache.Default.TotalHits.ShouldBeGreaterThan(priorTotalHits);
+
+				// Public diagnostics API reflects the same counters.
+				var qcStats = LinqToDB.Linq.Tools.GetQueryCacheStatistics();
+				qcStats.Hits.ShouldBeGreaterThan(0);
+				qcStats.Misses.ShouldBeGreaterThan(0);
+				qcStats.Count.ShouldBeGreaterThan(0);
+				qcStats.HitRate.ShouldBeGreaterThan(0);
+			}
+			finally
+			{
+				QueryCache.Default.CollectHitStatistics = priorCollectHitStatistics;
+			}
+		}
+
+		// #5692 regression: MappingAttributesCache must not cache negative (empty) attribute lookups,
+		// which previously dominated the cache and drove unbounded growth (NETFX multi-config OOM).
+		[Test]
+		[NonParallelizable] // calls Tools.ClearAllCaches(), which clears every process-global cache
+		public void MappingAttributesCacheDoesNotCacheNegativeLookups()
+		{
+			LinqToDB.Linq.Tools.ClearAllCaches();
+
+			var reader  = new LinqToDB.Metadata.AttributeReader();
+			var members = typeof(System.Uri).GetProperties()
+				.Concat(typeof(System.Text.StringBuilder).GetProperties())
+				.Concat(typeof(System.Version).GetProperties())
+				.ToArray();
+
+			members.Length.ShouldBeGreaterThan(10); // guard: the workload is non-trivial
+
+			// Every probed BCL member carries no mapping attribute — all negative lookups. Measure the
+			// AttributeReader cache growth tightly around the loop rather than its absolute size: pre-fix
+			// each empty lookup was cached (delta >= members.Length), post-fix negatives are not cached
+			// (delta ~0). The tight window minimizes interference from concurrent [Parallelizable] fixtures
+			// adding unrelated positive entries to this process-static cache — an absolute-count assertion
+			// accumulates that concurrent noise across the whole test and can false-fail.
+			// FirstOrDefault: the process-static AttributeReader cache registers lazily on first use, so it
+			// may be absent from the inventory here (count 0) when this test runs in isolation before any
+			// GetAttributes call; the loop below guarantees it is present for the post-read.
+			var before = LinqToDB.Linq.Tools.GetCacheEntryCounts().FirstOrDefault(c => c.Name == "AttributeReader").Count;
+
+			foreach (var m in members)
+				_ = reader.GetAttributes(m.DeclaringType!, m);
+
+			var after = LinqToDB.Linq.Tools.GetCacheEntryCounts().FirstOrDefault(c => c.Name == "AttributeReader").Count;
+
+			(after - before).ShouldBeLessThan(members.Length);
+		}
+
+		// #5711 guard: WorkCacheEntryLimit must reject values below BitFaster's minimum capacity (3),
+		// which would otherwise crash every work cache at construction (TypeInitializationException).
+		[Test]
+		[NonParallelizable] // mutates process-global Configuration.Cache.WorkCacheEntryLimit
+		public void WorkCacheEntryLimitRejectsValuesBelowMinimum()
+		{
+			var prior = LinqToDB.Common.Configuration.Cache.WorkCacheEntryLimit;
+			try
+			{
+				Assert.Throws<ArgumentOutOfRangeException>(() => LinqToDB.Common.Configuration.Cache.WorkCacheEntryLimit = 0);
+				Assert.Throws<ArgumentOutOfRangeException>(() => LinqToDB.Common.Configuration.Cache.WorkCacheEntryLimit = 2);
+
+				// null (unbounded) and the minimum are accepted (a throw here fails the test).
+				LinqToDB.Common.Configuration.Cache.WorkCacheEntryLimit = null;
+				LinqToDB.Common.Configuration.Cache.WorkCacheEntryLimit = 3;
+
+				LinqToDB.Common.Configuration.Cache.WorkCacheEntryLimit.ShouldBe(3);
+			}
+			finally
+			{
+				LinqToDB.Common.Configuration.Cache.WorkCacheEntryLimit = prior;
+			}
 		}
 
 		static IQueryable<T> GetTestTable<T>(IDataContext context,

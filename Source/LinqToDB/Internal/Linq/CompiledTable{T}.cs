@@ -126,7 +126,7 @@ namespace LinqToDB.Internal.Linq
 			var configurationID = dataContext.ConfigurationID;
 			var dataOptions     = dataContext.Options;
 
-			var result = QueryRunner.Cache<T>.QueryCache.GetOrCreate(
+			var result = QueryRunner.Cache<T>.QueryCache.GetOrAdd(
 				(
 					operation: "CT",
 					configurationID,
@@ -134,10 +134,8 @@ namespace LinqToDB.Internal.Linq
 					queryFlags : dataContext.GetQueryFlags()
 				),
 				(dataContext, lambda: _lambda, dataOptions, parameterValues),
-				static (o, key, ctx) =>
+				static (key, ctx) =>
 				{
-					o.SlidingExpiration = ctx.dataOptions.LinqOptions.CacheSlidingExpirationOrDefault;
-
 					var correctedExpression = key.expression;
 
 					if (key.expression is MethodCallExpression methodCall)

@@ -90,7 +90,7 @@ namespace LinqToDB.Internal.Linq
 
 				var ei = dataOptions.LinqOptions.DisableQueryCache
 					? CreateQuery(dataContext, tableName, serverName, databaseName, schemaName, tableOptions, type)
-					: Cache<T,int>.QueryCache.GetOrCreate(
+					: Cache<T,int>.QueryCache.GetOrAdd(
 						(
 							operation: 'D',
 							dataContext.ConfigurationID,
@@ -103,9 +103,8 @@ namespace LinqToDB.Internal.Linq
 							queryFlags: dataContext.GetQueryFlags()
 						),
 						dataContext,
-						static (entry, key, context) =>
+						static (key, context) =>
 						{
-							entry.SlidingExpiration = context.Options.LinqOptions.CacheSlidingExpirationOrDefault;
 							return CreateQuery(context, key.tableName, key.serverName, key.databaseName, key.schemaName, key.tableOptions, key.type);
 						});
 
@@ -130,7 +129,7 @@ namespace LinqToDB.Internal.Linq
 					var type = GetType<T>(obj!, dataContext);
 					var ei = dataContext.Options.LinqOptions.DisableQueryCache
 						? CreateQuery(dataContext, tableName, serverName, databaseName, schemaName, tableOptions, type)
-						: Cache<T,int>.QueryCache.GetOrCreate(
+						: Cache<T,int>.QueryCache.GetOrAdd(
 							(
 								operation: 'D',
 								dataContext.ConfigurationID,
@@ -143,9 +142,8 @@ namespace LinqToDB.Internal.Linq
 								queryFlags: dataContext.GetQueryFlags()
 							),
 							dataContext,
-							static (entry, key, context) =>
+							static (key, context) =>
 							{
-								entry.SlidingExpiration = context.Options.LinqOptions.CacheSlidingExpirationOrDefault;
 								return CreateQuery(context, key.tableName, key.serverName, key.databaseName, key.schemaName, key.tableOptions, key.type);
 							});
 

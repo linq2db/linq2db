@@ -16,9 +16,12 @@ namespace LinqToDB.Internal.Remote
 	/// </summary>
 	sealed class SerializationConverter
 	{
-		static readonly Type                                                       _stringType            = typeof(string);
-		static readonly MemoryCache<(Type from, int schemaId),Func<object,string>> _serializeConverters   = new (new ());
-		static readonly MemoryCache<(Type to  , int schemaId),Func<string,object>> _deserializeConverters = new (new ());
+		static readonly Type _stringType = typeof(string);
+
+		static readonly BoundedCache<(Type from, int schemaId),Func<object,string>> _serializeConverters =
+			new ("SerializationConverter.Serialize",   CacheDefaults.WorkCacheCapacity, LinqToDB.Common.Configuration.Linq.CacheSlidingExpiration);
+		static readonly BoundedCache<(Type to  , int schemaId),Func<string,object>> _deserializeConverters =
+			new ("SerializationConverter.Deserialize", CacheDefaults.WorkCacheCapacity, LinqToDB.Common.Configuration.Linq.CacheSlidingExpiration);
 
 		public static void ClearCaches()
 		{
@@ -33,13 +36,11 @@ namespace LinqToDB.Internal.Remote
 
 			var from = value.GetType();
 
-			var converter = _serializeConverters.GetOrCreate(
+			var converter = _serializeConverters.GetOrAdd(
 				(from, ((IConfigurationID)ms).ConfigurationID),
-				ms,
-				static (o, ms) =>
+				static (key, ms) =>
 				{
-					var from            = o.Key.from;
-					o.SlidingExpiration = LinqToDB.Common.Configuration.Linq.CacheSlidingExpiration;
+					var from = key.from;
 
 					Type? enumType = null;
 
@@ -69,7 +70,8 @@ namespace LinqToDB.Internal.Remote
 						p);
 
 					return ex.CompileExpression();
-				});
+				},
+				ms);
 
 			return converter(value);
 		}
@@ -84,13 +86,11 @@ namespace LinqToDB.Internal.Remote
 
 			to = to.UnwrapNullableType();
 
-			var converter = _deserializeConverters.GetOrCreate(
+			var converter = _deserializeConverters.GetOrAdd(
 				(to, ((IConfigurationID)ms).ConfigurationID),
-				ms,
-				static (o, ms) =>
+				static (key, ms) =>
 				{
-					var to = o.Key.to;
-					o.SlidingExpiration = LinqToDB.Common.Configuration.Linq.CacheSlidingExpiration;
+					var to = key.to;
 
 					Type? enumType = null;
 
@@ -116,7 +116,8 @@ namespace LinqToDB.Internal.Remote
 						p);
 
 					return ex.CompileExpression();
-				});
+				},
+				ms);
 
 			return converter(value);
 		}

@@ -53,7 +53,8 @@ namespace LinqToDB.Internal.DataProvider
 		public TVersion DefaultVersion     { get; set; }
 		public bool     AutoDetectProvider { get; set; } = true;
 
-		static readonly MemoryCache<string,TVersion?> _providerCache = new(new());
+		static readonly BoundedCache<string,TVersion?> _providerCache =
+			new ("ProviderDetector.Version", CacheDefaults.WorkCacheCapacity, LinqToDB.Common.Configuration.Linq.CacheSlidingExpiration);
 
 		/// <summary>
 		/// Clears provider version cache.
@@ -65,7 +66,7 @@ namespace LinqToDB.Internal.DataProvider
 
 		public bool TryGetCachedServerVersion(string connectionString, out TVersion? version)
 		{
-			return _providerCache.TryGetValue(connectionString, out version);
+			return _providerCache.TryGet(connectionString, out version);
 		}
 
 		/// <summary>
@@ -88,11 +89,9 @@ namespace LinqToDB.Internal.DataProvider
 			if (connectionString == null)
 				throw new InvalidOperationException("Connection string is not provided.");
 
-			var version = _providerCache.GetOrCreate(connectionString, entry =>
+			var version = _providerCache.GetOrAdd(connectionString, key =>
 			{
-				entry.SlidingExpiration = LinqToDB.Common.Configuration.Linq.CacheSlidingExpiration;
-
-				using var conn = CreateConnection(provider, connectionString);
+				using var conn = CreateConnection(provider, key);
 				return DetectVersion(options, conn, null);
 			});
 
