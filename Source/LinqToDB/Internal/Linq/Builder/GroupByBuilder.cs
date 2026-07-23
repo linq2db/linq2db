@@ -377,7 +377,14 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				if (!ExpressionEqualityComparer.Instance.Equals(result, path) && (flags.IsSql() || flags.IsExpression() || flags.IsExtractProjection() || flags.IsExpand()))
 				{
-					result = Builder.BuildSqlExpression(this, result, BuildPurpose.Sql, !flags.IsExpression() ? BuildFlags.ForKeys : BuildFlags.None);
+					// Preserve Expand only for entity keys: navigating an association off an entity group key
+					// (g.Key.Children) needs the key built with associations. Scalar keys must stay Sql so
+					// their eager-load correlation (detail.Where(d => d.X == g.Key)) isn't disturbed.
+					var keyPurpose = flags.IsExpand() && !Builder.MappingSchema.IsScalarType(Body.Type)
+						? BuildPurpose.Expand
+						: BuildPurpose.Sql;
+
+					result = Builder.BuildSqlExpression(this, result, keyPurpose, !flags.IsExpression() ? BuildFlags.ForKeys : BuildFlags.None);
 
 					if (result is SqlErrorExpression)
 						return SqlErrorExpression.EnsureError(result, path.Type);
