@@ -12,6 +12,7 @@ using LinqToDB.Async;
 using LinqToDB.Internal.Async;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.Metadata;
 using LinqToDB.Internal.Reflection;
 using LinqToDB.Linq;
 
@@ -23,21 +24,29 @@ namespace LinqToDB
 		#region Update against ITable<T> target
 
 		/// <summary>
-		/// Executes update-from-source operation against target table.
+		/// Builds an UPDATE statement that targets <paramref name="target"/> and uses <paramref name="source"/> as the driving query.
+		/// Returns per-row output with old/new images when supported by the provider.
 		/// </summary>
 		/// <typeparam name="TSource">Source query record type.</typeparam>
-		/// <typeparam name="TTarget">Target table mapping class.</typeparam>
+		/// <typeparam name="TTarget">Target table mapping type.</typeparam>
 		/// <param name="source">Source data query.</param>
 		/// <param name="target">Target table.</param>
-		/// <param name="setter">Update expression. Uses record from source query as parameter. Expression supports only target table record new expression with field initializers.</param>
-		/// <returns>Deleted and inserted values for every record updated.</returns>
+		/// <param name="setter">
+		/// Update setter expression.
+		/// The parameter is a <typeparamref name="TSource"/> record.
+		/// The expression must be a <typeparamref name="TTarget"/> record constructor (or object initializer) with member initializers.
+		/// </param>
+		/// <returns>A query that yields <see cref="UpdateOutput{T}"/> rows for affected records.</returns>
 		/// <remarks>
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
-		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
+		/// <item>Firebird 2.5+ (prior to version 5 returns only one record; database limitation)</item>
 		/// </list>
+		/// Execution is deferred until enumeration and the method is terminal.
+		/// Output availability and exact semantics are provider-defined.
 		/// </remarks>
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Deferred, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static IEnumerable<UpdateOutput<TTarget>> UpdateWithOutput<TSource,TTarget>(
 			                this IQueryable<TSource>          source,
 			                ITable<TTarget>                   target,
@@ -61,21 +70,29 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Executes update-from-source operation against target table.
+		/// Builds an UPDATE statement that targets <paramref name="target"/> and uses <paramref name="source"/> as the driving query.
+		/// Returns per-row output with old/new images when supported by the provider.
 		/// </summary>
 		/// <typeparam name="TSource">Source query record type.</typeparam>
-		/// <typeparam name="TTarget">Target table mapping class.</typeparam>
+		/// <typeparam name="TTarget">Target table mapping type.</typeparam>
 		/// <param name="source">Source data query.</param>
 		/// <param name="target">Target table.</param>
-		/// <param name="setter">Update expression. Uses record from source query as parameter. Expression supports only target table record new expression with field initializers.</param>
-		/// <returns>Deleted and inserted values for every record updated.</returns>
+		/// <param name="setter">
+		/// Update setter expression.
+		/// The parameter is a <typeparamref name="TSource"/> record.
+		/// The expression must be a <typeparamref name="TTarget"/> record constructor (or object initializer) with member initializers.
+		/// </param>
+		/// <returns>An async sequence that yields <see cref="UpdateOutput{T}"/> rows for affected records.</returns>
 		/// <remarks>
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
-		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
+		/// <item>Firebird 2.5+ (prior to version 5 returns only one record; database limitation)</item>
 		/// </list>
+		/// Execution is deferred until enumeration and the method is terminal.
+		/// Output availability and exact semantics are provider-defined.
 		/// </remarks>
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Deferred, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static IAsyncEnumerable<UpdateOutput<TTarget>> UpdateWithOutputAsync<TSource, TTarget>(
 							this IQueryable<TSource> source,
 							ITable<TTarget> target,
@@ -99,21 +116,11 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Executes update-from-source operation against target table.
+		/// Obsolete: materializes <see cref="UpdateWithOutputAsync{TSource,TTarget}(IQueryable{TSource},ITable{TTarget},Expression{Func{TSource,TTarget}})"/>
+		/// into an array.
 		/// </summary>
-		/// <typeparam name="TSource">Source query record type.</typeparam>
-		/// <typeparam name="TTarget">Target table mapping class.</typeparam>
-		/// <param name="source">Source data query.</param>
-		/// <param name="target">Target table.</param>
-		/// <param name="setter">Update expression. Uses record from source query as parameter. Expression supports only target table record new expression with field initializers.</param>
-		/// <param name="token">Optional asynchronous operation cancellation token.</param>
-		/// <returns>Deleted and inserted values for every record updated.</returns>
 		/// <remarks>
-		/// Database support:
-		/// <list type="bullet">
-		/// <item>SQL Server 2005+</item>
-		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
-		/// </list>
+		/// This overload will be removed in version 7.
 		/// </remarks>
 		// TODO: Remove in v7
 		[Obsolete("Use overload with IAsyncEnumerable return type. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
@@ -128,27 +135,37 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Executes update-from-source operation against target table.
+		/// Builds an UPDATE statement that targets <paramref name="target"/> and uses <paramref name="source"/> as the driving query.
+		/// Projects provider output into <typeparamref name="TOutput"/>.
 		/// </summary>
 		/// <typeparam name="TSource">Source query record type.</typeparam>
-		/// <typeparam name="TTarget">Target table mapping class.</typeparam>
-		/// <typeparam name="TOutput">Output table record type.</typeparam>
+		/// <typeparam name="TTarget">Target table mapping type.</typeparam>
+		/// <typeparam name="TOutput">Output record type.</typeparam>
 		/// <param name="source">Source data query.</param>
 		/// <param name="target">Target table.</param>
-		/// <param name="setter">Update expression. Uses record from source query as parameter. Expression supports only target table record new expression with field initializers.</param>
-		/// <param name="outputExpression">Output record constructor expression.
-		/// Parameters passed are as follows: (<typeparamref name="TSource"/> source, <typeparamref name="TTarget"/> deleted, <typeparamref name="TTarget"/> inserted).
-		/// Expression supports only record new expression with field initializers.</param>
-		/// <returns>Output values from the update statement.</returns>
+		/// <param name="setter">
+		/// Update setter expression.
+		/// The parameter is a <typeparamref name="TSource"/> record.
+		/// The expression must be a <typeparamref name="TTarget"/> record constructor (or object initializer) with member initializers.
+		/// </param>
+		/// <param name="outputExpression">
+		/// Output projection expression.
+		/// Parameters: (<typeparamref name="TSource"/> source, <typeparamref name="TTarget"/> deleted, <typeparamref name="TTarget"/> inserted).
+		/// The expression must be a record constructor (or object initializer) with member initializers.
+		/// </param>
+		/// <returns>A query that yields projected output rows.</returns>
 		/// <remarks>
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
-		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
+		/// <item>Firebird 2.5+ (prior to version 5 returns only one record; database limitation)</item>
 		/// <item>PostgreSQL (v18+ required to access data from <c>deleted</c> table)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
 		/// </list>
+		/// Execution is deferred until enumeration and the method is terminal.
+		/// Output availability and exact semantics are provider-defined.
 		/// </remarks>
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Deferred, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static IEnumerable<TOutput> UpdateWithOutput<TSource,TTarget,TOutput>(
 			                this IQueryable<TSource>                          source,
 			                ITable<TTarget>                                   target,
@@ -175,27 +192,37 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Executes update-from-source operation against target table.
+		/// Builds an UPDATE statement that targets <paramref name="target"/> and uses <paramref name="source"/> as the driving query.
+		/// Projects provider output into <typeparamref name="TOutput"/>.
 		/// </summary>
 		/// <typeparam name="TSource">Source query record type.</typeparam>
-		/// <typeparam name="TTarget">Target table mapping class.</typeparam>
-		/// <typeparam name="TOutput">Output table record type.</typeparam>
+		/// <typeparam name="TTarget">Target table mapping type.</typeparam>
+		/// <typeparam name="TOutput">Output record type.</typeparam>
 		/// <param name="source">Source data query.</param>
 		/// <param name="target">Target table.</param>
-		/// <param name="setter">Update expression. Uses record from source query as parameter. Expression supports only target table record new expression with field initializers.</param>
-		/// <param name="outputExpression">Output record constructor expression.
-		/// Parameters passed are as follows: (<typeparamref name="TSource"/> source, <typeparamref name="TTarget"/> deleted, <typeparamref name="TTarget"/> inserted).
-		/// Expression supports only record new expression with field initializers.</param>
-		/// <returns>Async sequence of records returned by output.</returns>
+		/// <param name="setter">
+		/// Update setter expression.
+		/// The parameter is a <typeparamref name="TSource"/> record.
+		/// The expression must be a <typeparamref name="TTarget"/> record constructor (or object initializer) with member initializers.
+		/// </param>
+		/// <param name="outputExpression">
+		/// Output projection expression.
+		/// Parameters: (<typeparamref name="TSource"/> source, <typeparamref name="TTarget"/> deleted, <typeparamref name="TTarget"/> inserted).
+		/// The expression must be a record constructor (or object initializer) with member initializers.
+		/// </param>
+		/// <returns>Async sequence of projected output rows.</returns>
 		/// <remarks>
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
-		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
+		/// <item>Firebird 2.5+ (prior to version 5 returns only one record; database limitation)</item>
 		/// <item>PostgreSQL (v18+ required to access data from <c>deleted</c> table)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
 		/// </list>
+		/// Execution is deferred until enumeration and the method is terminal.
+		/// Output availability and exact semantics are provider-defined.
 		/// </remarks>
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Deferred, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static IAsyncEnumerable<TOutput> UpdateWithOutputAsync<TSource, TTarget, TOutput>(
 							this IQueryable<TSource> source,
 							ITable<TTarget> target,
@@ -222,27 +249,11 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Executes update-from-source operation against target table.
+		/// Obsolete: materializes <see cref="UpdateWithOutputAsync{TSource,TTarget,TOutput}(IQueryable{TSource},ITable{TTarget},Expression{Func{TSource,TTarget}},Expression{Func{TSource,TTarget,TTarget,TOutput}})"/>
+		/// into an array.
 		/// </summary>
-		/// <typeparam name="TSource">Source query record type.</typeparam>
-		/// <typeparam name="TTarget">Target table mapping class.</typeparam>
-		/// <typeparam name="TOutput">Output table record type.</typeparam>
-		/// <param name="source">Source data query.</param>
-		/// <param name="target">Target table.</param>
-		/// <param name="setter">Update expression. Uses record from source query as parameter. Expression supports only target table record new expression with field initializers.</param>
-		/// <param name="outputExpression">Output record constructor expression.
-		/// Parameters passed are as follows: (<typeparamref name="TSource"/> source, <typeparamref name="TTarget"/> deleted, <typeparamref name="TTarget"/> inserted).
-		/// Expression supports only record new expression with field initializers.</param>
-		/// <param name="token">Optional asynchronous operation cancellation token.</param>
-		/// <returns>Sequence of records returned by output.</returns>
 		/// <remarks>
-		/// Database support:
-		/// <list type="bullet">
-		/// <item>SQL Server 2005+</item>
-		/// <item>Firebird 2.5+ (doesn't support more than one record; database limitation)</item>
-		/// <item>PostgreSQL (v18+ required to access data from <c>deleted</c> table)</item>
-		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
-		/// </list>
+		/// This overload will be removed in version 7.
 		/// </remarks>
 		// TODO: Remove in v7
 		[Obsolete("Use overload with IAsyncEnumerable return type. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
@@ -258,21 +269,29 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Executes update-from-source operation against target table.
+		/// Executes an UPDATE statement that targets <paramref name="target"/> and uses <paramref name="source"/> as the driving query.
+		/// Writes output rows into <paramref name="outputTable"/>.
 		/// </summary>
 		/// <typeparam name="TSource">Source query record type.</typeparam>
-		/// <typeparam name="TTarget">Target table mapping class.</typeparam>
+		/// <typeparam name="TTarget">Target table mapping type.</typeparam>
 		/// <param name="source">Source data query.</param>
 		/// <param name="target">Target table.</param>
-		/// <param name="setter">Update expression. Uses record from source query as parameter. Expression supports only target table record new expression with field initializers.</param>
-		/// <param name="outputTable">Output table.</param>
-		/// <returns>Number of affected records.</returns>
+		/// <param name="setter">
+		/// Update setter expression.
+		/// The parameter is a <typeparamref name="TSource"/> record.
+		/// The expression must be a <typeparamref name="TTarget"/> record constructor (or object initializer) with member initializers.
+		/// </param>
+		/// <param name="outputTable">Table that receives output rows.</param>
+		/// <returns>The number of affected target records.</returns>
 		/// <remarks>
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// </list>
+		/// Execution is immediate and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static int UpdateWithOutputInto<TSource,TTarget>(
 			                this IQueryable<TSource>          source,
 			                ITable<TTarget>                   target,
@@ -299,22 +318,30 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Executes update-from-source operation against target table.
+		/// Executes an UPDATE statement that targets <paramref name="target"/> and uses <paramref name="source"/> as the driving query.
+		/// Writes output rows into <paramref name="outputTable"/>.
 		/// </summary>
 		/// <typeparam name="TSource">Source query record type.</typeparam>
-		/// <typeparam name="TTarget">Target table mapping class.</typeparam>
+		/// <typeparam name="TTarget">Target table mapping type.</typeparam>
 		/// <param name="source">Source data query.</param>
 		/// <param name="target">Target table.</param>
-		/// <param name="setter">Update expression. Uses record from source query as parameter. Expression supports only target table record new expression with field initializers.</param>
-		/// <param name="outputTable">Output table.</param>
+		/// <param name="setter">
+		/// Update setter expression.
+		/// The parameter is a <typeparamref name="TSource"/> record.
+		/// The expression must be a <typeparamref name="TTarget"/> record constructor (or object initializer) with member initializers.
+		/// </param>
+		/// <param name="outputTable">Table that receives output rows.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
-		/// <returns>Number of affected records.</returns>
+		/// <returns>A task that completes with the number of affected target records.</returns>
 		/// <remarks>
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// </list>
+		/// Execution is immediate and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static Task<int> UpdateWithOutputIntoAsync<TSource,TTarget>(
 			                this IQueryable<TSource>          source,
 			                ITable<TTarget>                   target,
@@ -342,25 +369,35 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Executes update-from-source operation against target table.
+		/// Executes an UPDATE statement that targets <paramref name="target"/> and uses <paramref name="source"/> as the driving query.
+		/// Projects provider output into <typeparamref name="TOutput"/> and writes it into <paramref name="outputTable"/>.
 		/// </summary>
 		/// <typeparam name="TSource">Source query record type.</typeparam>
-		/// <typeparam name="TTarget">Target table mapping class.</typeparam>
+		/// <typeparam name="TTarget">Target table mapping type.</typeparam>
 		/// <typeparam name="TOutput">Output table record type.</typeparam>
 		/// <param name="source">Source data query.</param>
 		/// <param name="target">Target table.</param>
-		/// <param name="setter">Update expression. Uses record from source query as parameter. Expression supports only target table record new expression with field initializers.</param>
-		/// <param name="outputTable">Output table.</param>
-		/// <param name="outputExpression">Output record constructor expression.
-		/// Parameters passed are as follows: (<typeparamref name="TSource"/> source, <typeparamref name="TTarget"/> deleted, <typeparamref name="TTarget"/> inserted).
-		/// Expression supports only record new expression with field initializers.</param>
-		/// <returns>Output values from the update statement.</returns>
+		/// <param name="setter">
+		/// Update setter expression.
+		/// The parameter is a <typeparamref name="TSource"/> record.
+		/// The expression must be a <typeparamref name="TTarget"/> record constructor (or object initializer) with member initializers.
+		/// </param>
+		/// <param name="outputTable">Table that receives output rows.</param>
+		/// <param name="outputExpression">
+		/// Output projection expression.
+		/// Parameters: (<typeparamref name="TSource"/> source, <typeparamref name="TTarget"/> deleted, <typeparamref name="TTarget"/> inserted).
+		/// The expression must be a record constructor (or object initializer) with member initializers.
+		/// </param>
+		/// <returns>The number of affected target records.</returns>
 		/// <remarks>
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// </list>
+		/// Execution is immediate and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static int UpdateWithOutputInto<TSource,TTarget,TOutput>(
 			                this IQueryable<TSource>                          source,
 			                ITable<TTarget>                                   target,
@@ -391,26 +428,36 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Executes update-from-source operation against target table.
+		/// Executes an UPDATE statement that targets <paramref name="target"/> and uses <paramref name="source"/> as the driving query.
+		/// Projects provider output into <typeparamref name="TOutput"/> and writes it into <paramref name="outputTable"/>.
 		/// </summary>
 		/// <typeparam name="TSource">Source query record type.</typeparam>
-		/// <typeparam name="TTarget">Target table mapping class.</typeparam>
+		/// <typeparam name="TTarget">Target table mapping type.</typeparam>
 		/// <typeparam name="TOutput">Output table record type.</typeparam>
 		/// <param name="source">Source data query.</param>
 		/// <param name="target">Target table.</param>
-		/// <param name="setter">Update expression. Uses record from source query as parameter. Expression supports only target table record new expression with field initializers.</param>
-		/// <param name="outputTable">Output table.</param>
-		/// <param name="outputExpression">Output record constructor expression.
-		/// Parameters passed are as follows: (<typeparamref name="TSource"/> source, <typeparamref name="TTarget"/> deleted, <typeparamref name="TTarget"/> inserted).
-		/// Expression supports only record new expression with field initializers.</param>
+		/// <param name="setter">
+		/// Update setter expression.
+		/// The parameter is a <typeparamref name="TSource"/> record.
+		/// The expression must be a <typeparamref name="TTarget"/> record constructor (or object initializer) with member initializers.
+		/// </param>
+		/// <param name="outputTable">Table that receives output rows.</param>
+		/// <param name="outputExpression">
+		/// Output projection expression.
+		/// Parameters: (<typeparamref name="TSource"/> source, <typeparamref name="TTarget"/> deleted, <typeparamref name="TTarget"/> inserted).
+		/// The expression must be a record constructor (or object initializer) with member initializers.
+		/// </param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
-		/// <returns>Output values from the update statement.</returns>
+		/// <returns>A task that completes with the number of affected target records.</returns>
 		/// <remarks>
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// </list>
+		/// Execution is immediate and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static Task<int> UpdateWithOutputIntoAsync<TSource,TTarget,TOutput>(
 			                this IQueryable<TSource>                          source,
 			                ITable<TTarget>                                   target,
@@ -446,21 +493,32 @@ namespace LinqToDB
 		#region Update against Expression target
 
 		/// <summary>
-		/// Executes update-from-source operation against target table.
+		/// Builds an UPDATE statement that targets the row selected by <paramref name="target"/> and uses <paramref name="source"/> as the driving query.
+		/// Returns per-row output with old/new images when supported by the provider.
 		/// </summary>
 		/// <typeparam name="TSource">Source query record type.</typeparam>
-		/// <typeparam name="TTarget">Target table mapping class.</typeparam>
+		/// <typeparam name="TTarget">Target table mapping type.</typeparam>
 		/// <param name="source">Source data query.</param>
-		/// <param name="target">Target table.</param>
-		/// <param name="setter">Update expression. Uses record from source query as parameter. Expression supports only target table record new expression with field initializers.</param>
-		/// <returns>Deleted and inserted values for every record updated.</returns>
+		/// <param name="target">
+		/// Target selection expression.
+		/// Provider translates it to a target table reference (or a table expression) for the UPDATE statement.
+		/// </param>
+		/// <param name="setter">
+		/// Update setter expression.
+		/// The parameter is a <typeparamref name="TSource"/> record.
+		/// The expression must be a <typeparamref name="TTarget"/> record constructor (or object initializer) with member initializers.
+		/// </param>
+		/// <returns>A query that yields <see cref="UpdateOutput{T}"/> rows for affected records.</returns>
 		/// <remarks>
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
-		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
+		/// <item>Firebird 2.5+ (prior to version 5 returns only one record; database limitation)</item>
 		/// </list>
+		/// Execution is deferred until enumeration and the method is terminal.
+		/// Output availability and exact semantics are provider-defined.
 		/// </remarks>
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Deferred, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static IEnumerable<UpdateOutput<TTarget>> UpdateWithOutput<TSource,TTarget>(
 			                this IQueryable<TSource>          source,
 			                Expression<Func<TSource,TTarget>> target,
@@ -483,21 +541,32 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Executes update-from-source operation against target table.
+		/// Builds an UPDATE statement that targets the row selected by <paramref name="target"/> and uses <paramref name="source"/> as the driving query.
+		/// Returns per-row output with old/new images when supported by the provider.
 		/// </summary>
 		/// <typeparam name="TSource">Source query record type.</typeparam>
-		/// <typeparam name="TTarget">Target table mapping class.</typeparam>
+		/// <typeparam name="TTarget">Target table mapping type.</typeparam>
 		/// <param name="source">Source data query.</param>
-		/// <param name="target">Target table.</param>
-		/// <param name="setter">Update expression. Uses record from source query as parameter. Expression supports only target table record new expression with field initializers.</param>
-		/// <returns>Deleted and inserted values for every record updated.</returns>
+		/// <param name="target">
+		/// Target selection expression.
+		/// Provider translates it to a target table reference (or a table expression) for the UPDATE statement.
+		/// </param>
+		/// <param name="setter">
+		/// Update setter expression.
+		/// The parameter is a <typeparamref name="TSource"/> record.
+		/// The expression must be a <typeparamref name="TTarget"/> record constructor (or object initializer) with member initializers.
+		/// </param>
+		/// <returns>An async sequence that yields <see cref="UpdateOutput{T}"/> rows for affected records.</returns>
 		/// <remarks>
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
-		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
+		/// <item>Firebird 2.5+ (prior to version 5 returns only one record; database limitation)</item>
 		/// </list>
+		/// Execution is deferred until enumeration and the method is terminal.
+		/// Output availability and exact semantics are provider-defined.
 		/// </remarks>
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Deferred, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static IAsyncEnumerable<UpdateOutput<TTarget>> UpdateWithOutputAsync<TSource, TTarget>(
 							this IQueryable<TSource> source,
 							Expression<Func<TSource, TTarget>> target,
@@ -520,21 +589,11 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Executes update-from-source operation against target table.
+		/// Obsolete: materializes <see cref="UpdateWithOutputAsync{TSource,TTarget}(IQueryable{TSource},Expression{Func{TSource,TTarget}},Expression{Func{TSource,TTarget}})"/>
+		/// into an array.
 		/// </summary>
-		/// <typeparam name="TSource">Source query record type.</typeparam>
-		/// <typeparam name="TTarget">Target table mapping class.</typeparam>
-		/// <param name="source">Source data query.</param>
-		/// <param name="target">Target table.</param>
-		/// <param name="setter">Update expression. Uses record from source query as parameter. Expression supports only target table record new expression with field initializers.</param>
-		/// <param name="token">Optional asynchronous operation cancellation token.</param>
-		/// <returns>Deleted and inserted values for every record updated.</returns>
 		/// <remarks>
-		/// Database support:
-		/// <list type="bullet">
-		/// <item>SQL Server 2005+</item>
-		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
-		/// </list>
+		/// This overload will be removed in version 7.
 		/// </remarks>
 		// TODO: Remove in v7
 		[Obsolete("Use overload with IAsyncEnumerable return type. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
@@ -548,27 +607,40 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Executes update-from-source operation against target table.
+		/// Builds an UPDATE statement that targets the row selected by <paramref name="target"/> and uses <paramref name="source"/> as the driving query.
+		/// Projects provider output into <typeparamref name="TOutput"/>.
 		/// </summary>
 		/// <typeparam name="TSource">Source query record type.</typeparam>
-		/// <typeparam name="TTarget">Target table mapping class.</typeparam>
-		/// <typeparam name="TOutput">Output table record type.</typeparam>
+		/// <typeparam name="TTarget">Target table mapping type.</typeparam>
+		/// <typeparam name="TOutput">Output record type.</typeparam>
 		/// <param name="source">Source data query.</param>
-		/// <param name="target">Target table.</param>
-		/// <param name="setter">Update expression. Uses record from source query as parameter. Expression supports only target table record new expression with field initializers.</param>
-		/// <param name="outputExpression">Output record constructor expression.
-		/// Parameters passed are as follows: (<typeparamref name="TSource"/> source, <typeparamref name="TTarget"/> deleted, <typeparamref name="TTarget"/> inserted).
-		/// Expression supports only record new expression with field initializers.</param>
-		/// <returns>Output values from the update statement.</returns>
+		/// <param name="target">
+		/// Target selection expression.
+		/// Provider translates it to a target table reference (or a table expression) for the UPDATE statement.
+		/// </param>
+		/// <param name="setter">
+		/// Update setter expression.
+		/// The parameter is a <typeparamref name="TSource"/> record.
+		/// The expression must be a <typeparamref name="TTarget"/> record constructor (or object initializer) with member initializers.
+		/// </param>
+		/// <param name="outputExpression">
+		/// Output projection expression.
+		/// Parameters: (<typeparamref name="TSource"/> source, <typeparamref name="TTarget"/> deleted, <typeparamref name="TTarget"/> inserted).
+		/// The expression must be a record constructor (or object initializer) with member initializers.
+		/// </param>
+		/// <returns>A query that yields projected output rows.</returns>
 		/// <remarks>
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
-		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
+		/// <item>Firebird 2.5+ (prior to version 5 returns only one record; database limitation)</item>
 		/// <item>PostgreSQL (v18+ required to access data from <c>deleted</c> table)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
 		/// </list>
+		/// Execution is deferred until enumeration and the method is terminal.
+		/// Output availability and exact semantics are provider-defined.
 		/// </remarks>
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Deferred, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static IEnumerable<TOutput> UpdateWithOutput<TSource,TTarget,TOutput>(
 			                this IQueryable<TSource>                          source,
 			                Expression<Func<TSource,TTarget>>                 target,
@@ -594,27 +666,40 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Executes update-from-source operation against target table.
+		/// Builds an UPDATE statement that targets the row selected by <paramref name="target"/> and uses <paramref name="source"/> as the driving query.
+		/// Projects provider output into <typeparamref name="TOutput"/>.
 		/// </summary>
 		/// <typeparam name="TSource">Source query record type.</typeparam>
-		/// <typeparam name="TTarget">Target table mapping class.</typeparam>
-		/// <typeparam name="TOutput">Output table record type.</typeparam>
+		/// <typeparam name="TTarget">Target table mapping type.</typeparam>
+		/// <typeparam name="TOutput">Output record type.</typeparam>
 		/// <param name="source">Source data query.</param>
-		/// <param name="target">Target table.</param>
-		/// <param name="setter">Update expression. Uses record from source query as parameter. Expression supports only target table record new expression with field initializers.</param>
-		/// <param name="outputExpression">Output record constructor expression.
-		/// Parameters passed are as follows: (<typeparamref name="TSource"/> source, <typeparamref name="TTarget"/> deleted, <typeparamref name="TTarget"/> inserted).
-		/// Expression supports only record new expression with field initializers.</param>
-		/// <returns>Async sequence of records returned by output.</returns>
+		/// <param name="target">
+		/// Target selection expression.
+		/// Provider translates it to a target table reference (or a table expression) for the UPDATE statement.
+		/// </param>
+		/// <param name="setter">
+		/// Update setter expression.
+		/// The parameter is a <typeparamref name="TSource"/> record.
+		/// The expression must be a <typeparamref name="TTarget"/> record constructor (or object initializer) with member initializers.
+		/// </param>
+		/// <param name="outputExpression">
+		/// Output projection expression.
+		/// Parameters: (<typeparamref name="TSource"/> source, <typeparamref name="TTarget"/> deleted, <typeparamref name="TTarget"/> inserted).
+		/// The expression must be a record constructor (or object initializer) with member initializers.
+		/// </param>
+		/// <returns>Async sequence of projected output rows.</returns>
 		/// <remarks>
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
-		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
+		/// <item>Firebird 2.5+ (prior to version 5 returns only one record; database limitation)</item>
 		/// <item>PostgreSQL (v18+ required to access data from <c>deleted</c> table)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
 		/// </list>
+		/// Execution is deferred until enumeration and the method is terminal.
+		/// Output availability and exact semantics are provider-defined.
 		/// </remarks>
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Deferred, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static IAsyncEnumerable<TOutput> UpdateWithOutputAsync<TSource, TTarget, TOutput>(
 							this IQueryable<TSource> source,
 							Expression<Func<TSource, TTarget>> target,
@@ -640,27 +725,11 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Executes update-from-source operation against target table.
+		/// Obsolete: materializes <see cref="UpdateWithOutputAsync{TSource,TTarget,TOutput}(IQueryable{TSource},Expression{Func{TSource,TTarget}},Expression{Func{TSource,TTarget}},Expression{Func{TSource,TTarget,TTarget,TOutput}})"/>
+		/// into an array.
 		/// </summary>
-		/// <typeparam name="TSource">Source query record type.</typeparam>
-		/// <typeparam name="TTarget">Target table mapping class.</typeparam>
-		/// <typeparam name="TOutput">Output table record type.</typeparam>
-		/// <param name="source">Source data query.</param>
-		/// <param name="target">Target table.</param>
-		/// <param name="setter">Update expression. Uses record from source query as parameter. Expression supports only target table record new expression with field initializers.</param>
-		/// <param name="outputExpression">Output record constructor expression.
-		/// Parameters passed are as follows: (<typeparamref name="TSource"/> source, <typeparamref name="TTarget"/> deleted, <typeparamref name="TTarget"/> inserted).
-		/// Expression supports only record new expression with field initializers.</param>
-		/// <param name="token">Optional asynchronous operation cancellation token.</param>
-		/// <returns>Sequence of records returned by output.</returns>
 		/// <remarks>
-		/// Database support:
-		/// <list type="bullet">
-		/// <item>SQL Server 2005+</item>
-		/// <item>Firebird 2.5+ (doesn't support more than one record; database limitation)</item>
-		/// <item>PostgreSQL (v18+ required to access data from <c>deleted</c> table)</item>
-		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
-		/// </list>
+		/// This overload will be removed in version 7.
 		/// </remarks>
 		// TODO: Remove in v7
 		[Obsolete("Use overload with IAsyncEnumerable return type. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
@@ -675,21 +744,32 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Executes update-from-source operation against target table.
+		/// Executes an UPDATE statement that targets the row selected by <paramref name="target"/> and uses <paramref name="source"/> as the driving query.
+		/// Writes output rows into <paramref name="outputTable"/>.
 		/// </summary>
 		/// <typeparam name="TSource">Source query record type.</typeparam>
-		/// <typeparam name="TTarget">Target table mapping class.</typeparam>
+		/// <typeparam name="TTarget">Target table mapping type.</typeparam>
 		/// <param name="source">Source data query.</param>
-		/// <param name="target">Target table.</param>
-		/// <param name="setter">Update expression. Uses record from source query as parameter. Expression supports only target table record new expression with field initializers.</param>
-		/// <param name="outputTable">Output table.</param>
-		/// <returns>Number of affected records.</returns>
+		/// <param name="target">
+		/// Target selection expression.
+		/// Provider translates it to a target table reference (or a table expression) for the UPDATE statement.
+		/// </param>
+		/// <param name="setter">
+		/// Update setter expression.
+		/// The parameter is a <typeparamref name="TSource"/> record.
+		/// The expression must be a <typeparamref name="TTarget"/> record constructor (or object initializer) with member initializers.
+		/// </param>
+		/// <param name="outputTable">Table that receives output rows.</param>
+		/// <returns>The number of affected target records.</returns>
 		/// <remarks>
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// </list>
+		/// Execution is immediate and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static int UpdateWithOutputInto<TSource,TTarget>(
 			                this IQueryable<TSource>          source,
 			                Expression<Func<TSource,TTarget>> target,
@@ -716,22 +796,33 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Executes update-from-source operation against target table.
+		/// Executes an UPDATE statement that targets the row selected by <paramref name="target"/> and uses <paramref name="source"/> as the driving query.
+		/// Writes output rows into <paramref name="outputTable"/>.
 		/// </summary>
 		/// <typeparam name="TSource">Source query record type.</typeparam>
-		/// <typeparam name="TTarget">Target table mapping class.</typeparam>
+		/// <typeparam name="TTarget">Target table mapping type.</typeparam>
 		/// <param name="source">Source data query.</param>
-		/// <param name="target">Target table.</param>
-		/// <param name="setter">Update expression. Uses record from source query as parameter. Expression supports only target table record new expression with field initializers.</param>
-		/// <param name="outputTable">Output table.</param>
+		/// <param name="target">
+		/// Target selection expression.
+		/// Provider translates it to a target table reference (or a table expression) for the UPDATE statement.
+		/// </param>
+		/// <param name="setter">
+		/// Update setter expression.
+		/// The parameter is a <typeparamref name="TSource"/> record.
+		/// The expression must be a <typeparamref name="TTarget"/> record constructor (or object initializer) with member initializers.
+		/// </param>
+		/// <param name="outputTable">Table that receives output rows.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
-		/// <returns>Number of affected records.</returns>
+		/// <returns>A task that completes with the number of affected target records.</returns>
 		/// <remarks>
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// </list>
+		/// Execution is immediate and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static Task<int> UpdateWithOutputIntoAsync<TSource,TTarget>(
 			                this IQueryable<TSource>          source,
 			                Expression<Func<TSource,TTarget>> target,
@@ -759,25 +850,38 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Executes update-from-source operation against target table.
+		/// Executes an UPDATE statement that targets the row selected by <paramref name="target"/> and uses <paramref name="source"/> as the driving query.
+		/// Projects provider output into <typeparamref name="TOutput"/> and writes it into <paramref name="outputTable"/>.
 		/// </summary>
 		/// <typeparam name="TSource">Source query record type.</typeparam>
-		/// <typeparam name="TTarget">Target table mapping class.</typeparam>
+		/// <typeparam name="TTarget">Target table mapping type.</typeparam>
 		/// <typeparam name="TOutput">Output table record type.</typeparam>
 		/// <param name="source">Source data query.</param>
-		/// <param name="target">Target table.</param>
-		/// <param name="setter">Update expression. Uses record from source query as parameter. Expression supports only target table record new expression with field initializers.</param>
-		/// <param name="outputTable">Output table.</param>
-		/// <param name="outputExpression">Output record constructor expression.
-		/// Parameters passed are as follows: (<typeparamref name="TSource"/> source, <typeparamref name="TTarget"/> deleted, <typeparamref name="TTarget"/> inserted).
-		/// Expression supports only record new expression with field initializers.</param>
-		/// <returns>Output values from the update statement.</returns>
+		/// <param name="target">
+		/// Target selection expression.
+		/// Provider translates it to a target table reference (or a table expression) for the UPDATE statement.
+		/// </param>
+		/// <param name="setter">
+		/// Update setter expression.
+		/// The parameter is a <typeparamref name="TSource"/> record.
+		/// The expression must be a <typeparamref name="TTarget"/> record constructor (or object initializer) with member initializers.
+		/// </param>
+		/// <param name="outputTable">Table that receives output rows.</param>
+		/// <param name="outputExpression">
+		/// Output projection expression.
+		/// Parameters: (<typeparamref name="TSource"/> source, <typeparamref name="TTarget"/> deleted, <typeparamref name="TTarget"/> inserted).
+		/// The expression must be a record constructor (or object initializer) with member initializers.
+		/// </param>
+		/// <returns>The number of affected target records.</returns>
 		/// <remarks>
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// </list>
+		/// Execution is immediate and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static int UpdateWithOutputInto<TSource,TTarget,TOutput>(
 			                this IQueryable<TSource>                          source,
 			                Expression<Func<TSource,TTarget>>                 target,
@@ -807,26 +911,39 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Executes update-from-source operation against target table.
+		/// Executes an UPDATE statement that targets the row selected by <paramref name="target"/> and uses <paramref name="source"/> as the driving query.
+		/// Projects provider output into <typeparamref name="TOutput"/> and writes it into <paramref name="outputTable"/>.
 		/// </summary>
 		/// <typeparam name="TSource">Source query record type.</typeparam>
-		/// <typeparam name="TTarget">Target table mapping class.</typeparam>
+		/// <typeparam name="TTarget">Target table mapping type.</typeparam>
 		/// <typeparam name="TOutput">Output table record type.</typeparam>
 		/// <param name="source">Source data query.</param>
-		/// <param name="target">Target table.</param>
-		/// <param name="setter">Update expression. Uses record from source query as parameter. Expression supports only target table record new expression with field initializers.</param>
-		/// <param name="outputTable">Output table.</param>
-		/// <param name="outputExpression">Output record constructor expression.
-		/// Parameters passed are as follows: (<typeparamref name="TSource"/> source, <typeparamref name="TTarget"/> deleted, <typeparamref name="TTarget"/> inserted).
-		/// Expression supports only record new expression with field initializers.</param>
+		/// <param name="target">
+		/// Target selection expression.
+		/// Provider translates it to a target table reference (or a table expression) for the UPDATE statement.
+		/// </param>
+		/// <param name="setter">
+		/// Update setter expression.
+		/// The parameter is a <typeparamref name="TSource"/> record.
+		/// The expression must be a <typeparamref name="TTarget"/> record constructor (or object initializer) with member initializers.
+		/// </param>
+		/// <param name="outputTable">Table that receives output rows.</param>
+		/// <param name="outputExpression">
+		/// Output projection expression.
+		/// Parameters: (<typeparamref name="TSource"/> source, <typeparamref name="TTarget"/> deleted, <typeparamref name="TTarget"/> inserted).
+		/// The expression must be a record constructor (or object initializer) with member initializers.
+		/// </param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
-		/// <returns>Output values from the update statement.</returns>
+		/// <returns>A task that completes with the number of affected target records.</returns>
 		/// <remarks>
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// </list>
+		/// Execution is immediate and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static Task<int> UpdateWithOutputIntoAsync<TSource,TTarget,TOutput>(
 			                this IQueryable<TSource>                          source,
 			                Expression<Func<TSource,TTarget>>                 target,
@@ -861,19 +978,27 @@ namespace LinqToDB
 		#region Update from source
 
 		/// <summary>
-		/// Executes update operation using source query as record filter.
+		/// Builds an UPDATE statement for records produced by <paramref name="source"/>.
+		/// Returns per-row output with old/new images when supported by the provider.
 		/// </summary>
-		/// <typeparam name="T">Updated table record type.</typeparam>
-		/// <param name="source">Source data query.</param>
-		/// <param name="setter">Update expression. Uses updated record as parameter. Expression supports only target table record new expression with field initializers.</param>
-		/// <returns>Deleted and inserted values for every record updated.</returns>
+		/// <typeparam name="T">Updated record type.</typeparam>
+		/// <param name="source">A query that identifies records to update.</param>
+		/// <param name="setter">
+		/// Update setter expression.
+		/// The parameter is the updated record.
+		/// The expression must be a record constructor (or object initializer) with member initializers.
+		/// </param>
+		/// <returns>A query that yields <see cref="UpdateOutput{T}"/> rows for affected records.</returns>
 		/// <remarks>
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
-		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
+		/// <item>Firebird 2.5+ (prior to version 5 returns only one record; database limitation)</item>
 		/// </list>
+		/// Execution is deferred until enumeration and the method is terminal.
+		/// Output availability and exact semantics are provider-defined.
 		/// </remarks>
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Deferred, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static IEnumerable<UpdateOutput<T>> UpdateWithOutput<T>(
 			           this IQueryable<T>         source,
 			[InstantHandle] Expression<Func<T,T>> setter)
@@ -892,19 +1017,27 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Executes update operation using source query as record filter.
+		/// Builds an UPDATE statement for records produced by <paramref name="source"/>.
+		/// Returns per-row output with old/new images when supported by the provider.
 		/// </summary>
-		/// <typeparam name="T">Updated table record type.</typeparam>
-		/// <param name="source">Source data query.</param>
-		/// <param name="setter">Update expression. Uses updated record as parameter. Expression supports only target table record new expression with field initializers.</param>
-		/// <returns>Deleted and inserted values for every record updated.</returns>
+		/// <typeparam name="T">Updated record type.</typeparam>
+		/// <param name="source">A query that identifies records to update.</param>
+		/// <param name="setter">
+		/// Update setter expression.
+		/// The parameter is the updated record.
+		/// The expression must be a record constructor (or object initializer) with member initializers.
+		/// </param>
+		/// <returns>An async sequence that yields <see cref="UpdateOutput{T}"/> rows for affected records.</returns>
 		/// <remarks>
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
-		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
+		/// <item>Firebird 2.5+ (prior to version 5 returns only one record; database limitation)</item>
 		/// </list>
+		/// Execution is deferred until enumeration and the method is terminal.
+		/// Output availability and exact semantics are provider-defined.
 		/// </remarks>
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Deferred, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static IAsyncEnumerable<UpdateOutput<T>> UpdateWithOutputAsync<T>(
 					   this IQueryable<T> source,
 			[InstantHandle] Expression<Func<T, T>> setter)
@@ -924,19 +1057,10 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Executes update operation using source query as record filter.
+		/// Obsolete: materializes <see cref="UpdateWithOutputAsync{T}(IQueryable{T},Expression{Func{T,T}})"/> into an array.
 		/// </summary>
-		/// <typeparam name="T">Updated table record type.</typeparam>
-		/// <param name="source">Source data query.</param>
-		/// <param name="setter">Update expression. Uses updated record as parameter. Expression supports only target table record new expression with field initializers.</param>
-		/// <param name="token">Optional asynchronous operation cancellation token.</param>
-		/// <returns>Deleted and inserted values for every record updated.</returns>
 		/// <remarks>
-		/// Database support:
-		/// <list type="bullet">
-		/// <item>SQL Server 2005+</item>
-		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
-		/// </list>
+		/// This overload will be removed in version 7.
 		/// </remarks>
 		// TODO: Remove in v7
 		[Obsolete("Use overload with IAsyncEnumerable return type. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
@@ -949,25 +1073,35 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Executes update operation using source query as record filter.
+		/// Builds an UPDATE statement for records produced by <paramref name="source"/>.
+		/// Projects provider output into <typeparamref name="TOutput"/>.
 		/// </summary>
-		/// <typeparam name="T">Updated table record type.</typeparam>
-		/// <typeparam name="TOutput">Output table record type.</typeparam>
-		/// <param name="source">Source data query.</param>
-		/// <param name="setter">Update expression. Uses updated record as parameter. Expression supports only target table record new expression with field initializers.</param>
-		/// <param name="outputExpression">Output record constructor expression.
-		/// Parameters passed are as follows: (<typeparamref name="T"/> deleted, <typeparamref name="T"/> inserted).
-		/// Expression supports only record new expression with field initializers.</param>
-		/// <returns>Output values from the update statement.</returns>
+		/// <typeparam name="T">Updated record type.</typeparam>
+		/// <typeparam name="TOutput">Output record type.</typeparam>
+		/// <param name="source">A query that identifies records to update.</param>
+		/// <param name="setter">
+		/// Update setter expression.
+		/// The parameter is the updated record.
+		/// The expression must be a record constructor (or object initializer) with member initializers.
+		/// </param>
+		/// <param name="outputExpression">
+		/// Output projection expression.
+		/// Parameters: (<typeparamref name="T"/> deleted, <typeparamref name="T"/> inserted).
+		/// The expression must be a record constructor (or object initializer) with member initializers.
+		/// </param>
+		/// <returns>A query that yields projected output rows.</returns>
 		/// <remarks>
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
-		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
+		/// <item>Firebird 2.5+ (prior to version 5 returns only one record; database limitation)</item>
 		/// <item>PostgreSQL (v18+ required to access data from <c>deleted</c> table)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
 		/// </list>
+		/// Execution is deferred until enumeration and the method is terminal.
+		/// Output availability and exact semantics are provider-defined.
 		/// </remarks>
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Deferred, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static IEnumerable<TOutput> UpdateWithOutput<T,TOutput>(
 			           this IQueryable<T>                 source,
 			[InstantHandle] Expression<Func<T,T>>         setter,
@@ -990,25 +1124,35 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Executes update operation using source query as record filter.
+		/// Builds an UPDATE statement for records produced by <paramref name="source"/>.
+		/// Projects provider output into <typeparamref name="TOutput"/>.
 		/// </summary>
-		/// <typeparam name="T">Updated table record type.</typeparam>
-		/// <typeparam name="TOutput">Output table record type.</typeparam>
-		/// <param name="source">Source data query.</param>
-		/// <param name="setter">Update expression. Uses updated record as parameter. Expression supports only target table record new expression with field initializers.</param>
-		/// <param name="outputExpression">Output record constructor expression.
-		/// Parameters passed are as follows: (<typeparamref name="T"/> deleted, <typeparamref name="T"/> inserted).
-		/// Expression supports only record new expression with field initializers.</param>
-		/// <returns>Async sequence of records returned by output.</returns>
+		/// <typeparam name="T">Updated record type.</typeparam>
+		/// <typeparam name="TOutput">Output record type.</typeparam>
+		/// <param name="source">A query that identifies records to update.</param>
+		/// <param name="setter">
+		/// Update setter expression.
+		/// The parameter is the updated record.
+		/// The expression must be a record constructor (or object initializer) with member initializers.
+		/// </param>
+		/// <param name="outputExpression">
+		/// Output projection expression.
+		/// Parameters: (<typeparamref name="T"/> deleted, <typeparamref name="T"/> inserted).
+		/// The expression must be a record constructor (or object initializer) with member initializers.
+		/// </param>
+		/// <returns>Async sequence of projected output rows.</returns>
 		/// <remarks>
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
-		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
+		/// <item>Firebird 2.5+ (prior to version 5 returns only one record; database limitation)</item>
 		/// <item>PostgreSQL (v18+ required to access data from <c>deleted</c> table)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
 		/// </list>
+		/// Execution is deferred until enumeration and the method is terminal.
+		/// Output availability and exact semantics are provider-defined.
 		/// </remarks>
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Deferred, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static IAsyncEnumerable<TOutput> UpdateWithOutputAsync<T, TOutput>(
 					   this IQueryable<T> source,
 			[InstantHandle] Expression<Func<T, T>> setter,
@@ -1031,25 +1175,10 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Executes update operation using source query as record filter.
+		/// Obsolete: materializes <see cref="UpdateWithOutputAsync{T,TOutput}(IQueryable{T},Expression{Func{T,T}},Expression{Func{T,T,TOutput}})"/> into an array.
 		/// </summary>
-		/// <typeparam name="T">Updated table record type.</typeparam>
-		/// <typeparam name="TOutput">Output table record type.</typeparam>
-		/// <param name="source">Source data query.</param>
-		/// <param name="setter">Update expression. Uses updated record as parameter. Expression supports only target table record new expression with field initializers.</param>
-		/// <param name="outputExpression">Output record constructor expression.
-		/// Parameters passed are as follows: (<typeparamref name="T"/> deleted, <typeparamref name="T"/> inserted).
-		/// Expression supports only record new expression with field initializers.</param>
-		/// <param name="token">Optional asynchronous operation cancellation token.</param>
-		/// <returns>Sequence of records returned by output.</returns>
 		/// <remarks>
-		/// Database support:
-		/// <list type="bullet">
-		/// <item>SQL Server 2005+</item>
-		/// <item>Firebird 2.5+ (doesn't support more than one record; database limitation)</item>
-		/// <item>PostgreSQL (v18+ required to access data from <c>deleted</c> table)</item>
-		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
-		/// </list>
+		/// This overload will be removed in version 7.
 		/// </remarks>
 		// TODO: Remove in v7
 		[Obsolete("Use overload with IAsyncEnumerable return type. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
@@ -1063,19 +1192,26 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Executes update operation using source query as record filter.
+		/// Executes an UPDATE statement for records produced by <paramref name="source"/> and writes output rows into <paramref name="outputTable"/>.
 		/// </summary>
-		/// <typeparam name="T">Updated table record type.</typeparam>
-		/// <param name="source">Source data query.</param>
-		/// <param name="setter">Update expression. Uses updated record as parameter. Expression supports only target table record new expression with field initializers.</param>
-		/// <param name="outputTable">Output table.</param>
-		/// <returns>Number of updated records.</returns>
+		/// <typeparam name="T">Updated record type.</typeparam>
+		/// <param name="source">A query that identifies records to update.</param>
+		/// <param name="setter">
+		/// Update setter expression.
+		/// The parameter is the updated record.
+		/// The expression must be a record constructor (or object initializer) with member initializers.
+		/// </param>
+		/// <param name="outputTable">Table that receives output rows.</param>
+		/// <returns>The number of affected records.</returns>
 		/// <remarks>
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// </list>
+		/// Execution is immediate and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static int UpdateWithOutputInto<T>(
 			           this IQueryable<T>         source,
 			[InstantHandle] Expression<Func<T,T>> setter,
@@ -1099,20 +1235,27 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Executes update operation using source query as record filter.
+		/// Executes an UPDATE statement for records produced by <paramref name="source"/> and writes output rows into <paramref name="outputTable"/>.
 		/// </summary>
-		/// <typeparam name="T">Updated table record type.</typeparam>
-		/// <param name="source">Source data query.</param>
-		/// <param name="setter">Update expression. Uses updated record as parameter. Expression supports only target table record new expression with field initializers.</param>
-		/// <param name="outputTable">Output table.</param>
+		/// <typeparam name="T">Updated record type.</typeparam>
+		/// <param name="source">A query that identifies records to update.</param>
+		/// <param name="setter">
+		/// Update setter expression.
+		/// The parameter is the updated record.
+		/// The expression must be a record constructor (or object initializer) with member initializers.
+		/// </param>
+		/// <param name="outputTable">Table that receives output rows.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
-		/// <returns>Number of updated records.</returns>
+		/// <returns>A task that completes with the number of affected records.</returns>
 		/// <remarks>
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// </list>
+		/// Execution is immediate and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static Task<int> UpdateWithOutputIntoAsync<T>(
 			           this IQueryable<T>         source,
 			[InstantHandle] Expression<Func<T,T>> setter,
@@ -1137,23 +1280,33 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Executes update operation using source query as record filter.
+		/// Executes an UPDATE statement for records produced by <paramref name="source"/>,
+		/// projects provider output into <typeparamref name="TOutput"/>, and writes it into <paramref name="outputTable"/>.
 		/// </summary>
-		/// <typeparam name="T">Updated table record type.</typeparam>
+		/// <typeparam name="T">Updated record type.</typeparam>
 		/// <typeparam name="TOutput">Output table record type.</typeparam>
-		/// <param name="source">Source data query.</param>
-		/// <param name="setter">Update expression. Uses updated record as parameter. Expression supports only target table record new expression with field initializers.</param>
-		/// <param name="outputExpression">Output record constructor expression.
-		/// Parameters passed are as follows: (<typeparamref name="T"/> deleted, <typeparamref name="T"/> inserted).
-		/// Expression supports only record new expression with field initializers.</param>
-		/// <param name="outputTable">Output table.</param>
-		/// <returns>Number of updated records.</returns>
+		/// <param name="source">A query that identifies records to update.</param>
+		/// <param name="setter">
+		/// Update setter expression.
+		/// The parameter is the updated record.
+		/// The expression must be a record constructor (or object initializer) with member initializers.
+		/// </param>
+		/// <param name="outputExpression">
+		/// Output projection expression.
+		/// Parameters: (<typeparamref name="T"/> deleted, <typeparamref name="T"/> inserted).
+		/// The expression must be a record constructor (or object initializer) with member initializers.
+		/// </param>
+		/// <param name="outputTable">Table that receives output rows.</param>
+		/// <returns>The number of affected records.</returns>
 		/// <remarks>
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// </list>
+		/// Execution is immediate and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static int UpdateWithOutputInto<T,TOutput>(
 			           this IQueryable<T>                 source,
 			[InstantHandle] Expression<Func<T,T>>         setter,
@@ -1180,24 +1333,34 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Executes update operation using source query as record filter.
+		/// Executes an UPDATE statement for records produced by <paramref name="source"/>,
+		/// projects provider output into <typeparamref name="TOutput"/>, and writes it into <paramref name="outputTable"/>.
 		/// </summary>
-		/// <typeparam name="T">Updated table record type.</typeparam>
+		/// <typeparam name="T">Updated record type.</typeparam>
 		/// <typeparam name="TOutput">Output table record type.</typeparam>
-		/// <param name="source">Source data query.</param>
-		/// <param name="setter">Update expression. Uses updated record as parameter. Expression supports only target table record new expression with field initializers.</param>
-		/// <param name="outputExpression">Output record constructor expression.
-		/// Parameters passed are as follows: (<typeparamref name="T"/> deleted, <typeparamref name="T"/> inserted).
-		/// Expression supports only record new expression with field initializers.</param>
-		/// <param name="outputTable">Output table.</param>
+		/// <param name="source">A query that identifies records to update.</param>
+		/// <param name="setter">
+		/// Update setter expression.
+		/// The parameter is the updated record.
+		/// The expression must be a record constructor (or object initializer) with member initializers.
+		/// </param>
+		/// <param name="outputExpression">
+		/// Output projection expression.
+		/// Parameters: (<typeparamref name="T"/> deleted, <typeparamref name="T"/> inserted).
+		/// The expression must be a record constructor (or object initializer) with member initializers.
+		/// </param>
+		/// <param name="outputTable">Table that receives output rows.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
-		/// <returns>Number of updated records.</returns>
+		/// <returns>A task that completes with the number of affected records.</returns>
 		/// <remarks>
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// </list>
+		/// Execution is immediate and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static Task<int> UpdateWithOutputIntoAsync<T,TOutput>(
 			           this IQueryable<T>                 source,
 			[InstantHandle] Expression<Func<T,T>>         setter,
@@ -1229,18 +1392,22 @@ namespace LinqToDB
 		#region IUpdatable
 
 		/// <summary>
-		/// Executes update operation using source query as record filter.
+		/// Builds an UPDATE statement for an already configured <see cref="IUpdatable{T}"/> query.
+		/// Returns per-row output with old/new images when supported by the provider.
 		/// </summary>
-		/// <typeparam name="T">Updated table record type.</typeparam>
-		/// <param name="source">Source data query.</param>
-		/// <returns>Deleted and inserted values for every record updated.</returns>
+		/// <typeparam name="T">Updated record type.</typeparam>
+		/// <param name="source">A configured updatable query.</param>
+		/// <returns>A query that yields <see cref="UpdateOutput{T}"/> rows for affected records.</returns>
 		/// <remarks>
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
-		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
+		/// <item>Firebird 2.5+ (prior to version 5 returns only one record; database limitation)</item>
 		/// </list>
+		/// Execution is deferred until enumeration and the method is terminal.
+		/// Output availability and exact semantics are provider-defined.
 		/// </remarks>
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Deferred, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure]
 		public static IEnumerable<UpdateOutput<T>> UpdateWithOutput<T>(this IUpdatable<T> source)
 		{
@@ -1258,18 +1425,22 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Executes update operation using source query as record filter.
+		/// Builds an UPDATE statement for an already configured <see cref="IUpdatable{T}"/> query.
+		/// Returns per-row output with old/new images when supported by the provider.
 		/// </summary>
-		/// <typeparam name="T">Updated table record type.</typeparam>
-		/// <param name="source">Source data query.</param>
-		/// <returns>Deleted and inserted values for every record updated.</returns>
+		/// <typeparam name="T">Updated record type.</typeparam>
+		/// <param name="source">A configured updatable query.</param>
+		/// <returns>An async sequence that yields <see cref="UpdateOutput{T}"/> rows for affected records.</returns>
 		/// <remarks>
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
-		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
+		/// <item>Firebird 2.5+ (prior to version 5 returns only one record; database limitation)</item>
 		/// </list>
+		/// Execution is deferred until enumeration and the method is terminal.
+		/// Output availability and exact semantics are provider-defined.
 		/// </remarks>
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Deferred, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static IAsyncEnumerable<UpdateOutput<T>> UpdateWithOutputAsync<T>(
 					   this IUpdatable<T> source)
 		{
@@ -1287,18 +1458,10 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Executes update operation using source query as record filter.
+		/// Obsolete: materializes <see cref="UpdateWithOutputAsync{T}(IUpdatable{T})"/> into an array.
 		/// </summary>
-		/// <typeparam name="T">Updated table record type.</typeparam>
-		/// <param name="source">Source data query.</param>
-		/// <param name="token">Optional asynchronous operation cancellation token.</param>
-		/// <returns>Deleted and inserted values for every record updated.</returns>
 		/// <remarks>
-		/// Database support:
-		/// <list type="bullet">
-		/// <item>SQL Server 2005+</item>
-		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
-		/// </list>
+		/// This overload will be removed in version 7.
 		/// </remarks>
 		// TODO: Remove in v7
 		[Obsolete("Use overload with IAsyncEnumerable return type. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
@@ -1310,24 +1473,30 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Executes update operation using source query as record filter.
+		/// Builds an UPDATE statement for an already configured <see cref="IUpdatable{T}"/> query.
+		/// Projects provider output into <typeparamref name="TOutput"/>.
 		/// </summary>
-		/// <typeparam name="T">Updated table record type.</typeparam>
-		/// <typeparam name="TOutput">Output table record type.</typeparam>
-		/// <param name="source">Source data query.</param>
-		/// <param name="outputExpression">Output record constructor expression.
-		/// Parameters passed are as follows: (<typeparamref name="T"/> deleted, <typeparamref name="T"/> inserted).
-		/// Expression supports only record new expression with field initializer.</param>
-		/// <returns>Output values from the update statement.</returns>
+		/// <typeparam name="T">Updated record type.</typeparam>
+		/// <typeparam name="TOutput">Output record type.</typeparam>
+		/// <param name="source">A configured updatable query.</param>
+		/// <param name="outputExpression">
+		/// Output projection expression.
+		/// Parameters: (<typeparamref name="T"/> deleted, <typeparamref name="T"/> inserted).
+		/// The expression must be a record constructor (or object initializer) with member initializers.
+		/// </param>
+		/// <returns>A query that yields projected output rows.</returns>
 		/// <remarks>
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
-		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
+		/// <item>Firebird 2.5+ (prior to version 5 returns only one record; database limitation)</item>
 		/// <item>PostgreSQL (v18+ required to access data from <c>deleted</c> table)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
 		/// </list>
+		/// Execution is deferred until enumeration and the method is terminal.
+		/// Output availability and exact semantics are provider-defined.
 		/// </remarks>
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Deferred, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static IEnumerable<TOutput> UpdateWithOutput<T,TOutput>(
 			this IUpdatable<T>            source,
 			Expression<Func<T,T,TOutput>> outputExpression)
@@ -1348,24 +1517,30 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Executes update operation using source query as record filter.
+		/// Builds an UPDATE statement for an already configured <see cref="IUpdatable{T}"/> query.
+		/// Projects provider output into <typeparamref name="TOutput"/>.
 		/// </summary>
-		/// <typeparam name="T">Updated table record type.</typeparam>
-		/// <typeparam name="TOutput">Output table record type.</typeparam>
-		/// <param name="source">Source data query.</param>
-		/// <param name="outputExpression">Output record constructor expression.
-		/// Parameters passed are as follows: (<typeparamref name="T"/> deleted, <typeparamref name="T"/> inserted).
-		/// Expression supports only record new expression with field initializers.</param>
-		/// <returns>Async sequence of records returned by output.</returns>
+		/// <typeparam name="T">Updated record type.</typeparam>
+		/// <typeparam name="TOutput">Output record type.</typeparam>
+		/// <param name="source">A configured updatable query.</param>
+		/// <param name="outputExpression">
+		/// Output projection expression.
+		/// Parameters: (<typeparamref name="T"/> deleted, <typeparamref name="T"/> inserted).
+		/// The expression must be a record constructor (or object initializer) with member initializers.
+		/// </param>
+		/// <returns>An async sequence that yields projected output rows.</returns>
 		/// <remarks>
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
-		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
+		/// <item>Firebird 2.5+ (prior to version 5 returns only one record; database limitation)</item>
 		/// <item>PostgreSQL (v18+ required to access data from <c>deleted</c> table)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
 		/// </list>
+		/// Execution is deferred until enumeration and the method is terminal.
+		/// Output availability and exact semantics are provider-defined.
 		/// </remarks>
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Deferred, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static IAsyncEnumerable<TOutput> UpdateWithOutputAsync<T, TOutput>(
 					   this IUpdatable<T> source,
 							Expression<Func<T, T, TOutput>> outputExpression)
@@ -1386,24 +1561,10 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Executes update operation using source query as record filter.
+		/// Obsolete: materializes <see cref="UpdateWithOutputAsync{T,TOutput}(IUpdatable{T},Expression{Func{T,T,TOutput}})"/> into an array.
 		/// </summary>
-		/// <typeparam name="T">Updated table record type.</typeparam>
-		/// <typeparam name="TOutput">Output table record type.</typeparam>
-		/// <param name="source">Source data query.</param>
-		/// <param name="outputExpression">Output record constructor expression.
-		/// Parameters passed are as follows: (<typeparamref name="T"/> deleted, <typeparamref name="T"/> inserted).
-		/// Expression supports only record new expression with field initializers.</param>
-		/// <param name="token">Optional asynchronous operation cancellation token.</param>
-		/// <returns>Output values from the update statement.</returns>
 		/// <remarks>
-		/// Database support:
-		/// <list type="bullet">
-		/// <item>SQL Server 2005+</item>
-		/// <item>Firebird 2.5+ (doesn't support more than one record; database limitation)</item>
-		/// <item>PostgreSQL (v18+ required to access data from <c>deleted</c> table)</item>
-		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
-		/// </list>
+		/// This overload will be removed in version 7.
 		/// </remarks>
 		// TODO: Remove in v7
 		[Obsolete("Use overload with IAsyncEnumerable return type. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
@@ -1416,18 +1577,21 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Executes update operation using source query as record filter.
+		/// Executes an UPDATE statement for an already configured <see cref="IUpdatable{T}"/> query and writes output rows into <paramref name="outputTable"/>.
 		/// </summary>
-		/// <typeparam name="T">Updated table record type.</typeparam>
-		/// <param name="source">Source data query.</param>
-		/// <param name="outputTable">Output table.</param>
-		/// <returns>Number of updated records.</returns>
+		/// <typeparam name="T">Updated record type.</typeparam>
+		/// <param name="source">A configured updatable query.</param>
+		/// <param name="outputTable">Table that receives output rows.</param>
+		/// <returns>The number of affected records.</returns>
 		/// <remarks>
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// </list>
+		/// Execution is immediate and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static int UpdateWithOutputInto<T>(
 			           this IUpdatable<T>         source,
 			                ITable<T>             outputTable)
@@ -1449,19 +1613,22 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Executes update operation using source query as record filter.
+		/// Executes an UPDATE statement for an already configured <see cref="IUpdatable{T}"/> query and writes output rows into <paramref name="outputTable"/>.
 		/// </summary>
-		/// <typeparam name="T">Updated table record type.</typeparam>
-		/// <param name="source">Source data query.</param>
-		/// <param name="outputTable">Output table.</param>
+		/// <typeparam name="T">Updated record type.</typeparam>
+		/// <param name="source">A configured updatable query.</param>
+		/// <param name="outputTable">Table that receives output rows.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
-		/// <returns>Number of updated records.</returns>
+		/// <returns>A task that completes with the number of affected records.</returns>
 		/// <remarks>
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// </list>
+		/// Execution is immediate and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static Task<int> UpdateWithOutputIntoAsync<T>(
 			           this IUpdatable<T>         source,
 			                ITable<T>             outputTable,
@@ -1484,22 +1651,28 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Executes update operation using source query as record filter.
+		/// Executes an UPDATE statement for an already configured <see cref="IUpdatable{T}"/> query,
+		/// projects provider output into <typeparamref name="TOutput"/>, and writes it into <paramref name="outputTable"/>.
 		/// </summary>
-		/// <typeparam name="T">Updated table record type.</typeparam>
+		/// <typeparam name="T">Updated record type.</typeparam>
 		/// <typeparam name="TOutput">Output table record type.</typeparam>
-		/// <param name="source">Source data query.</param>
-		/// <param name="outputExpression">Output record constructor expression.
-		/// Parameters passed are as follows: (<typeparamref name="T"/> deleted, <typeparamref name="T"/> inserted).
-		/// Expression supports only record new expression with field initializers.</param>
-		/// <param name="outputTable">Output table.</param>
-		/// <returns>Number of updated records.</returns>
+		/// <param name="source">A configured updatable query.</param>
+		/// <param name="outputExpression">
+		/// Output projection expression.
+		/// Parameters: (<typeparamref name="T"/> deleted, <typeparamref name="T"/> inserted).
+		/// The expression must be a record constructor (or object initializer) with member initializers.
+		/// </param>
+		/// <param name="outputTable">Table that receives output rows.</param>
+		/// <returns>The number of affected records.</returns>
 		/// <remarks>
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// </list>
+		/// Execution is immediate and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static int UpdateWithOutputInto<T,TOutput>(
 			           this IUpdatable<T>                 source,
 			                ITable<TOutput>               outputTable,
@@ -1524,23 +1697,29 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Executes update operation using source query as record filter.
+		/// Executes an UPDATE statement for an already configured <see cref="IUpdatable{T}"/> query,
+		/// projects provider output into <typeparamref name="TOutput"/>, and writes it into <paramref name="outputTable"/>.
 		/// </summary>
-		/// <typeparam name="T">Updated table record type.</typeparam>
+		/// <typeparam name="T">Updated record type.</typeparam>
 		/// <typeparam name="TOutput">Output table record type.</typeparam>
-		/// <param name="source">Source data query.</param>
-		/// <param name="outputExpression">Output record constructor expression.
-		/// Parameters passed are as follows: (<typeparamref name="T"/> deleted, <typeparamref name="T"/> inserted).
-		/// Expression supports only record new expression with field initializers.</param>
-		/// <param name="outputTable">Output table.</param>
+		/// <param name="source">A configured updatable query.</param>
+		/// <param name="outputExpression">
+		/// Output projection expression.
+		/// Parameters: (<typeparamref name="T"/> deleted, <typeparamref name="T"/> inserted).
+		/// The expression must be a record constructor (or object initializer) with member initializers.
+		/// </param>
+		/// <param name="outputTable">Table that receives output rows.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
-		/// <returns>Number of updated records.</returns>
+		/// <returns>A task that completes with the number of affected records.</returns>
 		/// <remarks>
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// </list>
+		/// Execution is immediate and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static Task<int> UpdateWithOutputIntoAsync<T,TOutput>(
 			           this IUpdatable<T>                 source,
 			                ITable<TOutput>               outputTable,
@@ -1570,14 +1749,12 @@ namespace LinqToDB
 		#region Update
 
 		/// <summary>
-		/// Executes update-from-source operation against target table.
+		/// Obsolete: executes an update-from-source statement that targets <paramref name="target"/>.
+		/// Use the overload that takes a target selection lambda.
 		/// </summary>
-		/// <typeparam name="TSource">Source query record type.</typeparam>
-		/// <typeparam name="TTarget">Target table mapping class.</typeparam>
-		/// <param name="source">Source data query.</param>
-		/// <param name="target">Target table.</param>
-		/// <param name="setter">Update expression. Uses record from source query as parameter. Expression supports only target table record new expression with field initializers.</param>
-		/// <returns>Number of updated records.</returns>
+		/// <remarks>
+		/// This overload will be removed in version 7.
+		/// </remarks>
 		// TODO: Remove in v7
 		[Obsolete("Use overload with lambda argument for target parameter. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public static int Update<TSource, TTarget>(
@@ -1601,15 +1778,12 @@ namespace LinqToDB
 	}
 
 		/// <summary>
-		/// Executes update-from-source operation asynchronously against target table.
+		/// Obsolete: executes an update-from-source statement that targets <paramref name="target"/>.
+		/// Use the overload that takes a target selection lambda.
 		/// </summary>
-		/// <typeparam name="TSource">Source query record type.</typeparam>
-		/// <typeparam name="TTarget">Target table mapping class.</typeparam>
-		/// <param name="source">Source data query.</param>
-		/// <param name="target">Target table.</param>
-		/// <param name="setter">Update expression. Uses record from source query as parameter. Expression supports only target table record new expression with field initializers.</param>
-		/// <param name="token">Optional asynchronous operation cancellation token.</param>
-		/// <returns>Number of updated records.</returns>
+		/// <remarks>
+		/// This overload will be removed in version 7.
+		/// </remarks>
 		// TODO: Remove in v7
 		[Obsolete("Use overload with lambda argument for target parameter. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public static Task<int> UpdateAsync<TSource, TTarget>(
@@ -1640,6 +1814,11 @@ namespace LinqToDB
 		/// <param name="source">Source data query.</param>
 		/// <param name="setter">Update expression. Uses updated record as parameter. Expression supports only target table record new expression with field initializers.</param>
 		/// <returns>Number of updated records.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
+		/// </remarks>
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static int Update<T>(this IQueryable<T> source, [InstantHandle] Expression<Func<T, T>> setter)
 		{
 			ArgumentNullException.ThrowIfNull(source);
@@ -1783,8 +1962,8 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Executes update-from-source operation against target table.
-		/// Also see <seealso cref="Update{TSource, TTarget}(IQueryable{TSource}, ITable{TTarget}, Expression{Func{TSource, TTarget}})"/> method.
+		/// Executes an update-from-source statement using <paramref name="source"/> as the driving query,
+		/// <paramref name="target"/> to select the target row, and <paramref name="setter"/> to produce new values.
 		/// </summary>
 		/// <typeparam name="TSource">Source query record type.</typeparam>
 		/// <typeparam name="TTarget">Target table mapping class.</typeparam>
@@ -1812,8 +1991,8 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Executes update-from-source operation asynchronously against target table.
-		/// Also see <seealso cref="UpdateAsync{TSource, TTarget}(IQueryable{TSource}, ITable{TTarget}, Expression{Func{TSource, TTarget}}, CancellationToken)"/> method.
+		/// Executes an update-from-source statement asynchronously using <paramref name="source"/> as the driving query,
+		/// <paramref name="target"/> to select the target row, and <paramref name="setter"/> to produce new values.
 		/// </summary>
 		/// <typeparam name="TSource">Source query record type.</typeparam>
 		/// <typeparam name="TTarget">Target table mapping class.</typeparam>
@@ -1853,11 +2032,17 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Casts <see cref="IQueryable{T}"/> query to <see cref="IUpdatable{T}"/> query.
+		/// Converts an <see cref="IQueryable{T}"/> into an <see cref="IUpdatable{T}"/> pipeline that can be configured with <see cref="Set{T,TV}(IQueryable{T},Expression{Func{T,TV}},Expression{Func{T,TV}})"/>
+		/// and executed by <see cref="Update{T}(IUpdatable{T})"/>.
 		/// </summary>
 		/// <typeparam name="T">Query record type.</typeparam>
-		/// <param name="source">Source <see cref="IQueryable{T}"/> query.</param>
-		/// <returns><see cref="IUpdatable{T}"/> query.</returns>
+		/// <param name="source">Source query.</param>
+		/// <returns>An updatable query.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// The update definition is represented in the SQL AST and emitted into SQL text according to provider rules.
+		/// </remarks>
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel]
 		[Pure]
 		public static IUpdatable<T> AsUpdatable<T>(this IQueryable<T> source)
@@ -1876,14 +2061,19 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Adds update field expression to query.
+		/// Adds a column assignment to an updatable query.
 		/// </summary>
 		/// <typeparam name="T">Updated record type.</typeparam>
-		/// <typeparam name="TV">Updated field type.</typeparam>
-		/// <param name="source">Source query with records to update.</param>
-		/// <param name="extract">Updated field selector expression.</param>
-		/// <param name="update">Updated field setter expression. Uses updated record as parameter.</param>
-		/// <returns><see cref="IUpdatable{T}"/> query.</returns>
+		/// <typeparam name="TV">Column type.</typeparam>
+		/// <param name="source">Source query.</param>
+		/// <param name="extract">Column selector.</param>
+		/// <param name="update">Value expression that produces the new column value. The parameter is the updated record.</param>
+		/// <returns>An <see cref="IUpdatable{T}"/> query.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// The update definition is represented in the SQL AST and emitted into SQL text according to provider rules.
+		/// </remarks>
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel]
 		[Pure]
 		public static IUpdatable<T> Set<T, TV>(
@@ -1907,14 +2097,19 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Adds update field expression to query.
+		/// Adds a column assignment to an updatable query.
 		/// </summary>
 		/// <typeparam name="T">Updated record type.</typeparam>
-		/// <typeparam name="TV">Updated field type.</typeparam>
-		/// <param name="source">Source query with records to update.</param>
-		/// <param name="extract">Updated field selector expression.</param>
-		/// <param name="update">Updated field setter expression. Uses updated record as parameter.</param>
-		/// <returns><see cref="IUpdatable{T}"/> query.</returns>
+		/// <typeparam name="TV">Column type.</typeparam>
+		/// <param name="source">Source query.</param>
+		/// <param name="extract">Column selector.</param>
+		/// <param name="update">Value expression that produces the new column value. The parameter is the updated record.</param>
+		/// <returns>An <see cref="IUpdatable{T}"/> query.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// The update definition is represented in the SQL AST and emitted into SQL text according to provider rules.
+		/// </remarks>
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel]
 		[Pure]
 		public static IUpdatable<T> Set<T, TV>(
@@ -1938,14 +2133,19 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Adds update field expression to query.
+		/// Adds a column assignment to an updatable query.
 		/// </summary>
 		/// <typeparam name="T">Updated record type.</typeparam>
-		/// <typeparam name="TV">Updated field type.</typeparam>
-		/// <param name="source">Source query with records to update.</param>
-		/// <param name="extract">Updated field selector expression.</param>
-		/// <param name="update">Updated field setter expression.</param>
-		/// <returns><see cref="IUpdatable{T}"/> query.</returns>
+		/// <typeparam name="TV">Column type.</typeparam>
+		/// <param name="source">Source query.</param>
+		/// <param name="extract">Column selector.</param>
+		/// <param name="update">Value expression that produces the new column value without referencing the updated record.</param>
+		/// <returns>An <see cref="IUpdatable{T}"/> query.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// The update definition is represented in the SQL AST and emitted into SQL text according to provider rules.
+		/// </remarks>
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel]
 		[Pure]
 		public static IUpdatable<T> Set<T, TV>(
@@ -1967,14 +2167,19 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Adds update field expression to query.
+		/// Adds a column assignment to an updatable query.
 		/// </summary>
 		/// <typeparam name="T">Updated record type.</typeparam>
-		/// <typeparam name="TV">Updated field type.</typeparam>
-		/// <param name="source">Source query with records to update.</param>
-		/// <param name="extract">Updated field selector expression.</param>
-		/// <param name="update">Updated field setter expression.</param>
-		/// <returns><see cref="IUpdatable{T}"/> query.</returns>
+		/// <typeparam name="TV">Column type.</typeparam>
+		/// <param name="source">Source query.</param>
+		/// <param name="extract">Column selector.</param>
+		/// <param name="update">Value expression that produces the new column value without referencing the updated record.</param>
+		/// <returns>An <see cref="IUpdatable{T}"/> query.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// The update definition is represented in the SQL AST and emitted into SQL text according to provider rules.
+		/// </remarks>
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel]
 		[Pure]
 		public static IUpdatable<T> Set<T, TV>(
@@ -1998,14 +2203,19 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Adds update field expression to query.
+		/// Adds a column assignment to an updatable query, assigning a constant <paramref name="value"/>.
 		/// </summary>
 		/// <typeparam name="T">Updated record type.</typeparam>
-		/// <typeparam name="TV">Updated field type.</typeparam>
-		/// <param name="source">Source query with records to update.</param>
-		/// <param name="extract">Updated field selector expression.</param>
-		/// <param name="value">Value, assigned to updated field.</param>
-		/// <returns><see cref="IUpdatable{T}"/> query.</returns>
+		/// <typeparam name="TV">Column type.</typeparam>
+		/// <param name="source">Source query.</param>
+		/// <param name="extract">Column selector.</param>
+		/// <param name="value">Value assigned to the selected column.</param>
+		/// <returns>An <see cref="IUpdatable{T}"/> query.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// The update definition is represented in the SQL AST and emitted into SQL text according to provider rules.
+		/// </remarks>
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel]
 		[Pure]
 		public static IUpdatable<T> Set<T, TV>(
@@ -2029,14 +2239,19 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Adds update field expression to query.
+		/// Adds a column assignment to an updatable query, assigning a constant <paramref name="value"/>.
 		/// </summary>
 		/// <typeparam name="T">Updated record type.</typeparam>
-		/// <typeparam name="TV">Updated field type.</typeparam>
-		/// <param name="source">Source query with records to update.</param>
-		/// <param name="extract">Updated field selector expression.</param>
-		/// <param name="value">Value, assigned to updated field.</param>
-		/// <returns><see cref="IUpdatable{T}"/> query.</returns>
+		/// <typeparam name="TV">Column type.</typeparam>
+		/// <param name="source">Source query.</param>
+		/// <param name="extract">Column selector.</param>
+		/// <param name="value">Value assigned to the selected column.</param>
+		/// <returns>An <see cref="IUpdatable{T}"/> query.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// The update definition is represented in the SQL AST and emitted into SQL text according to provider rules.
+		/// </remarks>
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel]
 		[Pure]
 		public static IUpdatable<T> Set<T, TV>(
@@ -2059,14 +2274,18 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Adds update field expression to query. It can be any expression with string interpolation.
+		/// Adds a provider-translated custom SET expression (string interpolation) to an updatable query.
 		/// </summary>
 		/// <typeparam name="T">Updated record type.</typeparam>
-		/// <param name="source">Source query with records to update.</param>
-		/// <param name="setExpression">Custom update expression.</param>
-		/// <returns><see cref="IUpdatable{T}"/> query.</returns>
+		/// <param name="source">Source query.</param>
+		/// <param name="setExpression">Custom SET expression.</param>
+		/// <returns>An <see cref="IUpdatable{T}"/> query.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// The supported interpolation patterns are provider-defined.
+		/// </remarks>
 		/// <example>
-		/// The following example shows how to append string value to appropriate field.
+		/// The following example is illustrative.
 		/// <code>
 		///		db.Users.Where(u => u.UserId == id)
 		///			.Set(u => $"{u.Name}" += {str}")
@@ -2094,14 +2313,18 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Adds update field expression to query. It can be any expression with string interpolation.
+		/// Adds a provider-translated custom SET expression (string interpolation) to an updatable query.
 		/// </summary>
 		/// <typeparam name="T">Updated record type.</typeparam>
-		/// <param name="source">Source query with records to update.</param>
-		/// <param name="setExpression">Custom update expression.</param>
-		/// <returns><see cref="IUpdatable{T}"/> query.</returns>
+		/// <param name="source">Source query.</param>
+		/// <param name="setExpression">Custom SET expression.</param>
+		/// <returns>An <see cref="IUpdatable{T}"/> query.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// The supported interpolation patterns are provider-defined.
+		/// </remarks>
 		/// <example>
-		/// The following example shows how to append string value to appropriate field.
+		/// The following example is illustrative.
 		/// <code>
 		///		db.Users.Where(u => u.UserId == id)
 		///			.AsUpdatable()

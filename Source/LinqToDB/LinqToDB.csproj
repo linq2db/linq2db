@@ -1,18 +1,30 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<AssemblyName>linq2db</AssemblyName>
+		<GenerateAiDocsOnBuild Condition="'$(GenerateAiDocsOnBuild)'==''">false</GenerateAiDocsOnBuild>
 	</PropertyGroup>
 
 	<PropertyGroup Label="Nuget">
 		<Title>LINQ to DB</Title>
-		<Description>LINQ to DB is a data access technology that provides a run-time infrastructure for managing relational data as objects.</Description>
+		<Description>
+			LINQ to DB is a data access technology that provides a run-time infrastructure for managing relational data as objects.
+			AI/LLM agents: read skills/linq2db/SKILL.md before using public APIs from this package.
+		</Description>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<Product>$(Title)</Product>
 	</PropertyGroup>
-	
+
 	<ItemGroup Label="Nuget">
-		<None Include="readme.md" Pack="true" PackagePath="readme.md" />
+		<None Include="README.md" Pack="true" PackagePath="README.md" />
+		<None Include="..\Skills\linq2db\**\*.md" Pack="true" PackagePath="skills/linq2db/%(RecursiveDir)%(Filename)%(Extension)" />
 	</ItemGroup>
+
+	<!-- Opt-in target: pass /p:GenerateAiDocsOnBuild=true to refresh the checked-in skill API extract. -->
+	<Target Name="GenerateAiDocs" AfterTargets="Build" Condition="'$(GenerateAiDocsOnBuild)'=='true' And '$(GenerateDocumentationFile)'=='true' And '$(TargetFramework)'=='net10.0' And Exists('$(TargetDir)$(AssemblyName).xml')">
+		<Message Importance="High" Text="Generating AI-friendly API extract: ..\Skills\linq2db\docs\api.md from $(TargetFramework) XML documentation." />
+		<Exec Command="pwsh -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)../../Build/GenerateApiDocs.ps1&quot; -XmlDocPath &quot;$(TargetDir)$(AssemblyName).xml&quot; -ApiDocPath &quot;$(MSBuildThisFileDirectory)../Skills/linq2db/docs/api.md&quot; -AssemblyPath &quot;$(TargetDir)$(AssemblyName).dll&quot;" />
+	</Target>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Debug' OR '$(Configuration)'=='Testing' OR '$(Configuration)'=='Azure'">
 		<!--bugchecks to run in debug and during CI tests to discover potential issues-->
@@ -31,38 +43,32 @@
 			<LastGenOutput>ClickHouseHints.generated.cs</LastGenOutput>
 			<Generator>TextTemplatingFileGenerator</Generator>
 		</None>
-
-		<None Update="DataProvider\MySql\MySqlHints.tt">
-			<LastGenOutput>MySqlHints.generated.cs</LastGenOutput>
-			<Generator>TextTemplatingFileGenerator</Generator>
-		</None>
-
-		<Compile Update="Async\AsyncExtensions.generated.cs">
-		  <DesignTime>True</DesignTime>
-		  <AutoGen>True</AutoGen>
-		  <DependentUpon>AsyncExtensions.tt</DependentUpon>
-		</Compile>
-
 		<Compile Update="DataProvider\ClickHouse\ClickHouseHints.generated.cs">
 			<DependentUpon>ClickHouseHints.tt</DependentUpon>
 			<DesignTime>True</DesignTime>
 			<AutoGen>True</AutoGen>
 		</Compile>
+
+		<None Update="DataProvider\MySql\MySqlHints.tt">
+			<LastGenOutput>MySqlHints.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
+		</None>
 		<Compile Update="DataProvider\MySql\MySqlHints.generated.cs">
 			<DependentUpon>MySqlHints.tt</DependentUpon>
 			<DesignTime>True</DesignTime>
 			<AutoGen>True</AutoGen>
 		</Compile>
-		<Compile Update="Sql\Sql.Row.generated.cs">
-		  <DesignTime>True</DesignTime>
-		  <AutoGen>True</AutoGen>
-		  <DependentUpon>Sql.Row.tt</DependentUpon>
-		</Compile>
 
 		<None Update="Sql\Sql.Row.tt">
-		  <LastGenOutput>Sql.Row.generated.cs</LastGenOutput>
-		  <Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>Sql.Row.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
 		</None>
+
+		<Compile Update="Sql\Sql.Row.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Sql.Row.tt</DependentUpon>
+		</Compile>
 
 		<None Update="DataProvider\PostgreSQL\PostgreSQLHints.tt">
 			<LastGenOutput>PostgreSQLHints.generated.cs</LastGenOutput>
@@ -103,25 +109,25 @@
 			<AutoGen>True</AutoGen>
 			<DependentUpon>SqlServerHints.tt</DependentUpon>
 		</Compile>
-		<None Update="DataProvider\Ydb\YdbHints.tt">
-		  <LastGenOutput>YdbHints.generated.cs</LastGenOutput>
-		  <Generator>TextTemplatingFileGenerator</Generator>
-		</None>
 
+		<None Update="DataProvider\Ydb\YdbHints.tt">
+			<LastGenOutput>YdbHints.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
+		</None>
 		<Compile Update="DataProvider\Ydb\YdbHints.generated.cs">
-		  <DependentUpon>YdbHints.tt</DependentUpon>
-		  <DesignTime>True</DesignTime>
-		  <AutoGen>True</AutoGen>
+			<DependentUpon>YdbHints.tt</DependentUpon>
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
 		</Compile>
 
 		<None Update="Async\AsyncExtensions.tt">
 			<Generator>TextTemplatingFileGenerator</Generator>
 			<LastGenOutput>AsyncExtensions.generated.cs</LastGenOutput>
 		</None>
-		<Compile Update="DataProvider\Ydb\YdbHints.generated.cs">
-		  <AutoGen>True</AutoGen>
-		  <DesignTime>True</DesignTime>
-		  <DependentUpon>YdbHints.tt</DependentUpon>
+		<Compile Update="Async\AsyncExtensions.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>AsyncExtensions.tt</DependentUpon>
 		</Compile>
 	</ItemGroup>
 

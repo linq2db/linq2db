@@ -222,9 +222,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		}
 
 		/// <summary>
-		/// Builds a <see cref="SqlConcatExpression"/> with the specified <paramref name="preserveNull"/>
-		/// semantic — <see langword="true"/> for strict any-null-→-null (e.g. <c>Sql.Concat</c>);
-		/// <see langword="false"/> for null-as-empty (each operand wrapped in <c>Coalesce(.., '')</c>
+		/// Builds a <c>SqlConcatExpression</c> with the specified <c>preserveNull</c>
+		/// semantic — preserveNull enabled for strict any-null-→-null (e.g. <c>Sql.Concat</c>);
+		/// preserveNull disabled for null-as-empty (each operand wrapped in <c>Coalesce(.., '')</c>
 		/// at the lowering layer; <c>string.Concat</c>).
 		/// </summary>
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]

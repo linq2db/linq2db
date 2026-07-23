@@ -31,6 +31,7 @@ using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Interceptors;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.Linq.Builder;
+using LinqToDB.Internal.Metadata;
 using LinqToDB.Mapping;
 using LinqToDB.Metrics;
 using LinqToDB.Reflection;
@@ -38,8 +39,53 @@ using LinqToDB.Reflection;
 namespace LinqToDB.Data
 {
 	/// <summary>
-	/// Provides database connection command abstraction.
+	/// Fluent builder for a raw SQL command; the terminal execution step in the
+	/// <see cref="DataContextExtensions.SetCommand(IDataContext, string)"/> chain.
 	/// </summary>
+	/// <remarks>
+	/// <para>
+	/// Obtain an instance by calling <see cref="DataContextExtensions.SetCommand(IDataContext, string)"/>
+	/// (or its overloads accepting parameters).
+	/// Configure <see cref="CommandText"/>, <see cref="Parameters"/>, <see cref="CommandType"/>,
+	/// and <see cref="CommandBehavior"/> on the returned instance,
+	/// then call one of the terminal execution methods:
+	/// </para>
+	/// <list type="bullet">
+	///   <item>
+	///     <description>
+	///       <b>Read rows</b> — <c>Query&lt;T&gt;()</c> / <c>QueryAsync&lt;T&gt;()</c>:
+	///       execute the command and return results as a lazily-materialized sequence.
+	///     </description>
+	///   </item>
+	///   <item>
+	///     <description>
+	///       <b>Non-query / DML</b> — <c>Execute()</c> / <c>ExecuteAsync()</c>:
+	///       execute the command immediately and return the number of rows affected.
+	///     </description>
+	///   </item>
+	///   <item>
+	///     <description>
+	///       <b>Scalar</b> — <c>Execute&lt;T&gt;()</c> / <c>ExecuteAsync&lt;T&gt;()</c>:
+	///       execute immediately and return a single value.
+	///     </description>
+	///   </item>
+	///   <item>
+	///     <description>
+	///       <b>Raw reader</b> — <c>ExecuteReader()</c> / <c>ExecuteReaderAsync()</c>:
+	///       execute immediately and return a <see cref="DataReaderAsync"/> for manual row access.
+	///     </description>
+	///   </item>
+	/// </list>
+	/// <para>
+	/// Stored-procedure variants (<c>QueryProc</c>, <c>ExecuteProc</c>, etc.) set
+	/// <see cref="CommandType"/> to <see cref="CommandType.StoredProcedure"/> before executing.
+	/// </para>
+	/// <para>
+	/// No LINQ translation occurs; the caller provides SQL text and parameters directly.
+	/// </para>
+	/// </remarks>
+	[AiTags(Groups = AiGroup.RawSQL, Provider = AiProvider.ProviderDefined)]
+	[AiTagsDefaults(Groups = AiGroup.RawSQL, Pipeline = AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 	[PublicAPI]
 	public class CommandInfo
 	{
@@ -348,6 +394,11 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <typeparam name="T">Result record type.</typeparam>
 		/// <returns>Returns collection of query result records.</returns>
+		/// <remarks>
+		/// Executes the SQL command immediately (opens the data reader), then materializes rows
+		/// lazily as the returned sequence is enumerated.
+		/// </remarks>
+		[AiTags(Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.QueryResult)]
 		public IEnumerable<T> Query<T>()
 		{
 			var dataConnection = GetDataConnection();
@@ -1048,6 +1099,7 @@ namespace LinqToDB.Data
 		/// Executes command and returns number of affected records.
 		/// </summary>
 		/// <returns>Number of records, affected by command execution.</returns>
+		[AiTags(Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.Data)]
 		public int Execute()
 		{
 			using var m = ActivityService.Start(ActivityID.CommandInfoExecute);
@@ -1200,6 +1252,7 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <typeparam name="T">Resulting value type.</typeparam>
 		/// <returns>Resulting value.</returns>
+		[AiTags(Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.QueryResult)]
 		public T Execute<T>()
 		{
 			using var m = ActivityService.Start(ActivityID.CommandInfoExecuteT);
@@ -1375,6 +1428,11 @@ namespace LinqToDB.Data
 		/// Executes command and returns data reader instance.
 		/// </summary>
 		/// <returns>Data reader object.</returns>
+		/// <remarks>
+		/// The command executes immediately; use the returned <see cref="DataReaderAsync"/> to
+		/// iterate rows manually. Dispose the reader when done.
+		/// </remarks>
+		[AiTags(Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.QueryResult)]
 		public DataReaderAsync ExecuteReader()
 		{
 			var dataConnection = GetDataConnection();

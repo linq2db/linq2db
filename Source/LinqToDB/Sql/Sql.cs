@@ -23,6 +23,9 @@ using PN = LinqToDB.ProviderName;
 
 namespace LinqToDB
 {
+	/// <summary>
+	/// SQL helper methods and attributes used by LinqToDB query translation.
+	/// </summary>
 	[PublicAPI]
 	public static partial class Sql
 	{
@@ -795,7 +798,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Concatenates the given arguments. In-memory delegates to <see cref="string.Concat(object?[])"/>
+		/// Concatenates the given arguments. In-memory delegates to <c>string.Concat(object?[])</c>
 		/// (null operands treated as empty). SQL translation emits the provider's native
 		/// concatenation operator with each non-string operand cast to a string type; per-operand
 		/// null handling follows the provider's native rules and is not unified across providers.
@@ -803,7 +806,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Public API since v1.0 (December 2014).
 		/// <para>
-		/// <b>In-memory (C#)</b>: defers to <see cref="string.Concat(object?[])"/>. A null
+		/// <b>In-memory (C#)</b>: defers to <c>string.Concat(object?[])</c>. A null
 		/// operand is treated as empty, so <c>Sql.Concat("A", null, "B")</c> returns <c>"AB"</c>.
 		/// </para>
 		/// <para>
@@ -820,9 +823,9 @@ namespace LinqToDB
 		/// </list>
 		/// <para>
 		/// Because in-memory (null-as-empty) and SQL behaviour can diverge for null inputs, prefer
-		/// <see cref="ConcatStringsNullable(string, IEnumerable{string?})"/> with an empty
+		/// <c>ConcatStringsNullable(string, IEnumerable&lt;string?&gt;)</c> with an empty
 		/// separator when explicit all-null-→-null semantics are required, or
-		/// <see cref="string.Concat(object?[])"/> directly for explicit null-as-empty.
+		/// <c>string.Concat(object?[])</c> directly for explicit null-as-empty.
 		/// </para>
 		/// </remarks>
 		/// <param name="args">Values to concatenate. Null operands are treated as empty in-memory; SQL behaviour follows the provider's native concat null rules.</param>
@@ -833,7 +836,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Concatenates the given strings. In-memory delegates to <see cref="string.Concat(string?[])"/>
+		/// Concatenates the given strings. In-memory delegates to <c>string.Concat(string?[])</c>
 		/// (null operands treated as empty). SQL translation emits the provider's native
 		/// concatenation operator; per-operand null handling follows the provider's native rules
 		/// and is not unified across providers.
@@ -841,7 +844,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Public API since v1.0 (December 2014).
 		/// <para>
-		/// <b>In-memory (C#)</b>: defers to <see cref="string.Concat(string?[])"/>. A null
+		/// <b>In-memory (C#)</b>: defers to <c>string.Concat(string?[])</c>. A null
 		/// operand is treated as empty, so <c>Sql.Concat("A", null, "B")</c> returns <c>"AB"</c>.
 		/// </para>
 		/// <para>
@@ -854,9 +857,9 @@ namespace LinqToDB
 		/// </list>
 		/// <para>
 		/// Because in-memory (null-as-empty) and SQL behaviour can diverge for null inputs, prefer
-		/// <see cref="ConcatStringsNullable(string, IEnumerable{string?})"/> with an empty
+		/// <c>ConcatStringsNullable(string, IEnumerable&lt;string?&gt;)</c> with an empty
 		/// separator when explicit all-null-→-null semantics are required, or
-		/// <see cref="string.Concat(string?[])"/> directly for explicit null-as-empty.
+		/// <c>string.Concat(string?[])</c> directly for explicit null-as-empty.
 		/// </para>
 		/// </remarks>
 		/// <param name="args">Strings to concatenate. Null operands are treated as empty in-memory; SQL behaviour follows the provider's native concat null rules.</param>

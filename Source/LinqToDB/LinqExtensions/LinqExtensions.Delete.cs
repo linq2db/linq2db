@@ -11,6 +11,7 @@ using JetBrains.Annotations;
 using LinqToDB.Async;
 using LinqToDB.Internal.Async;
 using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.Metadata;
 using LinqToDB.Internal.Reflection;
 
 namespace LinqToDB
@@ -34,7 +35,11 @@ namespace LinqToDB
 		/// <item>SQLite 3.35+</item>
 		/// <item>MariaDB 10.0+ (doesn't support multi-table statements; database limitation)</item>
 		/// </list>
+		/// Execution is deferred until enumeration and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
+		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// </remarks>
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Deferred, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static IEnumerable<TSource> DeleteWithOutput<TSource>(this IQueryable<TSource> source)
 		{
 			ArgumentNullException.ThrowIfNull(source);
@@ -124,7 +129,11 @@ namespace LinqToDB
 		/// <item>SQLite 3.35+</item>
 		/// <item>MariaDB 10.0+ (doesn't support multi-table statements; database limitation)</item>
 		/// </list>
+		/// Execution is deferred until enumeration and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
+		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// </remarks>
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Deferred, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[Pure]
 		public static IEnumerable<TOutput> DeleteWithOutput<TSource,TOutput>(
 			this IQueryable<TSource>           source,
@@ -224,7 +233,11 @@ namespace LinqToDB
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// </list>
+		/// Execution is immediate and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
+		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// </remarks>
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static int DeleteWithOutputInto<TSource,TOutput>(
 			this IQueryable<TSource> source,
 			ITable<TOutput>          outputTable)
@@ -294,7 +307,11 @@ namespace LinqToDB
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// </list>
+		/// Execution is immediate and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
+		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// </remarks>
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static int DeleteWithOutputInto<TSource,TOutput>(
 			this IQueryable<TSource>          source,
 			ITable<TOutput>                   outputTable,
@@ -367,6 +384,11 @@ namespace LinqToDB
 		/// <typeparam name="T">Mapping class for delete operation target table.</typeparam>
 		/// <param name="source">Query that returns records to delete.</param>
 		/// <returns>Number of deleted records.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
+		/// </remarks>
+		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static int Delete<T>(this IQueryable<T> source)
 		{
 			ArgumentNullException.ThrowIfNull(source);
@@ -379,7 +401,7 @@ namespace LinqToDB
 				currentSource.Expression);
 
 			return currentSource.Execute<int>(expr);
-	}
+		}
 
 		/// <summary>
 		/// Executes delete operation asynchronously, using source query as filter for records, that should be deleted.
@@ -388,6 +410,7 @@ namespace LinqToDB
 		/// <param name="source">Query that returns records to delete.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of deleted records.</returns>
+		/// <remarks>See <see cref="Delete{T}(IQueryable{T})"/> for SQL semantics and provider contract.</remarks>
 		public static Task<int> DeleteAsync<T>(this IQueryable<T> source, CancellationToken token = default)
 		{
 			ArgumentNullException.ThrowIfNull(source);
@@ -400,7 +423,7 @@ namespace LinqToDB
 				currentSource.Expression);
 
 			return currentSource.ExecuteAsync<int>(expr, token);
-}
+		}
 
 		/// <summary>
 		/// Executes delete operation, using source query as initial filter for records, that should be deleted, and predicate expression as additional filter.
@@ -409,6 +432,7 @@ namespace LinqToDB
 		/// <param name="source">Query that returns records to delete.</param>
 		/// <param name="predicate">Filter expression, to specify what records from source should be deleted.</param>
 		/// <returns>Number of deleted records.</returns>
+		/// <remarks>See <see cref="Delete{T}(IQueryable{T})"/> for SQL semantics and provider contract.</remarks>
 		public static int Delete<T>(
 							this IQueryable<T> source,
 			[InstantHandle] Expression<Func<T, bool>> predicate)
@@ -434,6 +458,7 @@ namespace LinqToDB
 		/// <param name="predicate">Filter expression, to specify what records from source should be deleted.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of deleted records.</returns>
+		/// <remarks>See <see cref="Delete{T}(IQueryable{T})"/> for SQL semantics and provider contract.</remarks>
 		public static Task<int> DeleteAsync<T>(
 					   this IQueryable<T> source,
 			[InstantHandle] Expression<Func<T, bool>> predicate,

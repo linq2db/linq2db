@@ -5,12 +5,24 @@ using System.Diagnostics.CodeAnalysis;
 using LinqToDB.DataProvider;
 using LinqToDB.Interceptors;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Metadata;
 using LinqToDB.Internal.Options;
 using LinqToDB.Mapping;
 using LinqToDB.Remote;
 
 namespace LinqToDB.Data
 {
+	/// <summary>
+	/// Defines provider, connection, transaction, mapping schema, and connection-lifetime settings
+	/// used to create or configure a data context.
+	/// </summary>
+	/// <remarks>
+	/// Compose connection settings through <see cref="DataOptions"/> and reuse the resulting options
+	/// for short-lived <see cref="DataConnection"/> or <see cref="DataContext"/> instances. When
+	/// options are changed on an existing context through <see cref="IDataContext.UseOptions"/>, only
+	/// context-reapplicable connection settings can be changed; connection string, provider, and
+	/// similar creation-time settings are not reconfigured on an already-created context.
+	/// </remarks>
 	/// <param name="ConfigurationString">
 	/// Gets configuration string name to use with <see cref="DataConnection"/> instance.
 	/// </param>
@@ -51,6 +63,7 @@ namespace LinqToDB.Data
 	/// Allows descriptor modification.
 	/// When not specified, application-wide callback <see cref="MappingSchema.EntityDescriptorCreatedCallback"/> called.
 	/// </param>
+	[AiTags(Groups = AiGroup.Configuration, Affects = AiAffects.ConnectionConfiguration, Pipeline = AiPipeline.Connection | AiPipeline.Execution, Provider = AiProvider.ProviderDefined)]
 	public sealed record ConnectionOptions
 	(
 		string?                                         ConfigurationString       = default,

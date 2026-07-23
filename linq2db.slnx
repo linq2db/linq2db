@@ -9,6 +9,11 @@
     <File Path="AGENTS.md" />
     <File Path="CLAUDE.md" />
     <File Path=".agents/settings.local.json" />
+    <File Path=".agents/linq2db-skill-roadmap.md" />
+    <File Path=".agents/black-box-test-scenarios.md" />
+    <File Path=".agents/black-box-docs-test-prompt.md" />
+    <File Path=".agents/Build-LinqToDBExpert.ps1" />
+    <File Path=".agents/knowledge-pack-maintenance.md" />
   </Folder>
   <Folder Name="/.agents/agents/">
     <File Path=".agents/agents/baselines-reviewer.md" />
@@ -617,6 +622,33 @@
       <Build Solution="Testing|*" Project="false" />
     </Project>
   </Folder>
+  <Folder Name="/Source/Knowledge/">
+    <File Path="Source/Knowledge/README.md" />
+  </Folder>
+  <Folder Name="/Source/Knowledge/linq2db-expert/">
+    <File Path="Source/Knowledge/linq2db-expert/01-skill.md" />
+    <File Path="Source/Knowledge/linq2db-expert/02-coverage.md" />
+    <File Path="Source/Knowledge/linq2db-expert/03-overview-readme.md" />
+    <File Path="Source/Knowledge/linq2db-expert/04-api-discovery-and-extract.md" />
+    <File Path="Source/Knowledge/linq2db-expert/05-architecture.md" />
+    <File Path="Source/Knowledge/linq2db-expert/06-agent-antipatterns-and-ai-tags.md" />
+    <File Path="Source/Knowledge/linq2db-expert/07-provider-configuration.md" />
+    <File Path="Source/Knowledge/linq2db-expert/08-mapping.md" />
+    <File Path="Source/Knowledge/linq2db-expert/09-crud-and-merge.md" />
+    <File Path="Source/Knowledge/linq2db-expert/10-query-composition.md" />
+    <File Path="Source/Knowledge/linq2db-expert/11-hints.md" />
+    <File Path="Source/Knowledge/linq2db-expert/12-hints-api-map.md" />
+    <File Path="Source/Knowledge/linq2db-expert/13-extensions.md" />
+    <File Path="Source/Knowledge/linq2db-expert/14-translatable-methods.md" />
+    <File Path="Source/Knowledge/linq2db-expert/15-interceptors.md" />
+    <File Path="Source/Knowledge/linq2db-expert/16-xml-doc.md" />
+    <File Path="Source/Knowledge/linq2db-expert/17-associations.md" />
+    <File Path="Source/Knowledge/linq2db-expert/bundle-manifest.json" />
+    <File Path="Source/Knowledge/linq2db-expert/custom-gpt-instructions.md" />
+    <File Path="Source/Knowledge/linq2db-expert/MAINTENANCE.md" />
+    <File Path="Source/Knowledge/linq2db-expert/manifest.json" />
+    <File Path="Source/Knowledge/linq2db-expert/README.md" />
+  </Folder>
   <Folder Name="/Source/">
     <File Path="Source/BannedSymbols.txt" />
     <File Path="Source/CodeMetricsConfig.txt" />
@@ -680,6 +712,48 @@
   <Folder Name="/Source/Shared/">
     <File Path="Source/Shared/JetBrains.Annotations.cs" />
     <File Path="Source/Shared/SharedAssemblyInfo.cs" />
+  </Folder>
+  <Folder Name="/Source/Skills/">
+    <File Path="Source/Skills/README.md" />
+  </Folder>
+  <Folder Name="/Source/Skills/linq2db/">
+    <File Path="Source/Skills/linq2db/SKILL.md" />
+  </Folder>
+  <Folder Name="/Source/Skills/linq2db/docs/">
+    <File Path="Source/Skills/linq2db/docs/agent-antipatterns.md" />
+    <File Path="Source/Skills/linq2db/docs/ai-tags.md" />
+    <File Path="Source/Skills/linq2db/docs/api.md" />
+    <File Path="Source/Skills/linq2db/docs/architecture.md" />
+    <File Path="Source/Skills/linq2db/docs/associations.md" />
+    <File Path="Source/Skills/linq2db/docs/concurrency.md" />
+    <File Path="Source/Skills/linq2db/docs/configuration.md" />
+    <File Path="Source/Skills/linq2db/docs/coverage.md" />
+    <File Path="Source/Skills/linq2db/docs/extensions.md" />
+    <File Path="Source/Skills/linq2db/docs/hints-api-map.md" />
+    <File Path="Source/Skills/linq2db/docs/hints.md" />
+    <File Path="Source/Skills/linq2db/docs/interceptors.md" />
+    <File Path="Source/Skills/linq2db/docs/mapping.md" />
+    <File Path="Source/Skills/linq2db/docs/null-semantics.md" />
+    <File Path="Source/Skills/linq2db/docs/parameters.md" />
+    <File Path="Source/Skills/linq2db/docs/provider-capabilities.md" />
+    <File Path="Source/Skills/linq2db/docs/provider-setup.md" />
+    <File Path="Source/Skills/linq2db/docs/query-cte.md" />
+    <File Path="Source/Skills/linq2db/docs/query-joins.md" />
+    <File Path="Source/Skills/linq2db/docs/query-temp-tables.md" />
+    <File Path="Source/Skills/linq2db/docs/raw-sql.md" />
+    <File Path="Source/Skills/linq2db/docs/translatable-methods.md" />
+  </Folder>
+  <Folder Name="/Source/Skills/linq2db/docs/crud/">
+    <File Path="Source/Skills/linq2db/docs/crud/crud-bulkcopy.md" />
+    <File Path="Source/Skills/linq2db/docs/crud/crud-delete.md" />
+    <File Path="Source/Skills/linq2db/docs/crud/crud-insert-select.md" />
+    <File Path="Source/Skills/linq2db/docs/crud/crud-insert-values.md" />
+    <File Path="Source/Skills/linq2db/docs/crud/crud-insert.md" />
+    <File Path="Source/Skills/linq2db/docs/crud/crud-merge.md" />
+    <File Path="Source/Skills/linq2db/docs/crud/crud-select.md" />
+    <File Path="Source/Skills/linq2db/docs/crud/crud-update.md" />
+    <File Path="Source/Skills/linq2db/docs/crud/crud-upsert.md" />
+    <File Path="Source/Skills/linq2db/docs/crud/crud.md" />
   </Folder>
   <Folder Name="/Tests/">
     <File Path="DataProviders.json" />

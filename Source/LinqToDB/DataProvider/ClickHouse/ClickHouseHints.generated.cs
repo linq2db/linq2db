@@ -4,6 +4,7 @@
 using System;
 using System.Linq.Expressions;
 
+using LinqToDB.Internal.Metadata;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.DataProvider.ClickHouse
@@ -13,6 +14,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>OUTER</c> join hint.
 		/// </summary>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Join, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(JoinOuterHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinOuterHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -29,6 +31,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>OUTER</c> join hint.
 		/// </summary>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Join, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(JoinOuterTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinOuterHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
@@ -45,6 +48,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>SEMI</c> join hint.
 		/// </summary>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Join, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(JoinSemiHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinSemiHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -61,6 +65,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>SEMI</c> join hint.
 		/// </summary>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Join, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(JoinSemiTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinSemiHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
@@ -77,6 +82,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>ANTI</c> join hint.
 		/// </summary>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Join, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(JoinAntiHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinAntiHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -93,6 +99,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>ANTI</c> join hint.
 		/// </summary>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Join, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(JoinAntiTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinAntiHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
@@ -109,6 +116,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>ANY</c> join hint.
 		/// </summary>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Join, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(JoinAnyHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinAnyHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -125,6 +133,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>ANY</c> join hint.
 		/// </summary>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Join, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(JoinAnyTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinAnyHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
@@ -141,6 +150,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>ALL</c> join hint.
 		/// </summary>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Join, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(JoinAllHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinAllHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -157,6 +167,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>ALL</c> join hint.
 		/// </summary>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Join, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(JoinAllTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinAllHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
@@ -173,6 +184,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>ASOF</c> join hint.
 		/// </summary>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Join, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(JoinAsOfHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinAsOfHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -189,6 +201,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>ASOF</c> join hint.
 		/// </summary>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Join, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(JoinAsOfTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinAsOfHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
@@ -205,6 +218,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>GLOBAL</c> join hint.
 		/// </summary>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Join, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(JoinGlobalHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinGlobalHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -221,6 +235,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>GLOBAL</c> join hint.
 		/// </summary>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Join, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(JoinGlobalTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinGlobalHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
@@ -237,6 +252,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>GLOBAL OUTER</c> join hint.
 		/// </summary>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Join, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(JoinGlobalOuterHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinGlobalOuterHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -253,6 +269,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>GLOBAL OUTER</c> join hint.
 		/// </summary>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Join, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(JoinGlobalOuterTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinGlobalOuterHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
@@ -269,6 +286,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>GLOBAL SEMI</c> join hint.
 		/// </summary>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Join, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(JoinGlobalSemiHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinGlobalSemiHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -285,6 +303,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>GLOBAL SEMI</c> join hint.
 		/// </summary>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Join, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(JoinGlobalSemiTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinGlobalSemiHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
@@ -301,6 +320,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>GLOBAL ANTI</c> join hint.
 		/// </summary>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Join, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(JoinGlobalAntiHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinGlobalAntiHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -317,6 +337,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>GLOBAL ANTI</c> join hint.
 		/// </summary>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Join, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(JoinGlobalAntiTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinGlobalAntiHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
@@ -333,6 +354,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>GLOBAL ANY</c> join hint.
 		/// </summary>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Join, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(JoinGlobalAnyHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinGlobalAnyHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -349,6 +371,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>GLOBAL ANY</c> join hint.
 		/// </summary>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Join, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(JoinGlobalAnyTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinGlobalAnyHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
@@ -365,6 +388,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>GLOBAL ALL</c> join hint.
 		/// </summary>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Join, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(JoinGlobalAllHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinGlobalAllHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -381,6 +405,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>GLOBAL ALL</c> join hint.
 		/// </summary>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Join, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(JoinGlobalAllTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinGlobalAllHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
@@ -397,6 +422,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>GLOBAL ASOF</c> join hint.
 		/// </summary>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Join, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(JoinGlobalAsOfHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinGlobalAsOfHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -413,6 +439,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds a ClickHouse <c>GLOBAL ASOF</c> join hint.
 		/// </summary>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Join, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(JoinGlobalAsOfTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinGlobalAsOfHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
@@ -429,6 +456,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds the same ClickHouse join hint as <c>JoinOuterHint</c>. This method is deprecated.
 		/// </summary>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Join, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[Obsolete("TODO: remove in v7. This API is based on an incorrect ClickHouse join hint model and works incorrectly. Use JoinOuterHint instead.")]
 		[ExpressionMethod(nameof(JoinAllOuterHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinAllOuterHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
@@ -446,6 +474,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds the same ClickHouse join hint as <c>JoinOuterHint</c>. This method is deprecated.
 		/// </summary>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Join, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[Obsolete("TODO: remove in v7. This API is based on an incorrect ClickHouse join hint model and works incorrectly. Use JoinOuterHint instead.")]
 		[ExpressionMethod(nameof(JoinAllOuterTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinAllOuterHint<TSource>(this IClickHouseSpecificTable<TSource> table)
@@ -463,6 +492,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds the same ClickHouse join hint as <c>JoinSemiHint</c>. This method is deprecated.
 		/// </summary>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Join, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[Obsolete("TODO: remove in v7. This API is based on an incorrect ClickHouse join hint model and works incorrectly. Use JoinSemiHint instead.")]
 		[ExpressionMethod(nameof(JoinAllSemiHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinAllSemiHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
@@ -480,6 +510,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds the same ClickHouse join hint as <c>JoinSemiHint</c>. This method is deprecated.
 		/// </summary>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Join, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[Obsolete("TODO: remove in v7. This API is based on an incorrect ClickHouse join hint model and works incorrectly. Use JoinSemiHint instead.")]
 		[ExpressionMethod(nameof(JoinAllSemiTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinAllSemiHint<TSource>(this IClickHouseSpecificTable<TSource> table)
@@ -497,6 +528,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds the same ClickHouse join hint as <c>JoinAntiHint</c>. This method is deprecated.
 		/// </summary>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Join, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[Obsolete("TODO: remove in v7. This API is based on an incorrect ClickHouse join hint model and works incorrectly. Use JoinAntiHint instead.")]
 		[ExpressionMethod(nameof(JoinAllAntiHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinAllAntiHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
@@ -514,6 +546,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds the same ClickHouse join hint as <c>JoinAntiHint</c>. This method is deprecated.
 		/// </summary>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Join, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[Obsolete("TODO: remove in v7. This API is based on an incorrect ClickHouse join hint model and works incorrectly. Use JoinAntiHint instead.")]
 		[ExpressionMethod(nameof(JoinAllAntiTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinAllAntiHint<TSource>(this IClickHouseSpecificTable<TSource> table)
@@ -531,6 +564,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds the same ClickHouse join hint as <c>JoinAnyHint</c>. This method is deprecated.
 		/// </summary>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Join, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[Obsolete("TODO: remove in v7. This API is based on an incorrect ClickHouse join hint model and works incorrectly. Use JoinAnyHint instead.")]
 		[ExpressionMethod(nameof(JoinAllAnyHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinAllAnyHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
@@ -548,6 +582,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds the same ClickHouse join hint as <c>JoinAnyHint</c>. This method is deprecated.
 		/// </summary>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Join, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[Obsolete("TODO: remove in v7. This API is based on an incorrect ClickHouse join hint model and works incorrectly. Use JoinAnyHint instead.")]
 		[ExpressionMethod(nameof(JoinAllAnyTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinAllAnyHint<TSource>(this IClickHouseSpecificTable<TSource> table)
@@ -565,6 +600,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds the same ClickHouse join hint as <c>JoinAsOfHint</c>. This method is deprecated.
 		/// </summary>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Join, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[Obsolete("TODO: remove in v7. This API is based on an incorrect ClickHouse join hint model and works incorrectly. Use JoinAsOfHint instead.")]
 		[ExpressionMethod(nameof(JoinAllAsOfHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinAllAsOfHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
@@ -582,6 +618,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds the same ClickHouse join hint as <c>JoinAsOfHint</c>. This method is deprecated.
 		/// </summary>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Join, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[Obsolete("TODO: remove in v7. This API is based on an incorrect ClickHouse join hint model and works incorrectly. Use JoinAsOfHint instead.")]
 		[ExpressionMethod(nameof(JoinAllAsOfTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinAllAsOfHint<TSource>(this IClickHouseSpecificTable<TSource> table)

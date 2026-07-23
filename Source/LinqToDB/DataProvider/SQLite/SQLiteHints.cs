@@ -5,6 +5,7 @@ using JetBrains.Annotations;
 
 using LinqToDB.Internal.DataProvider.SQLite;
 using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.Metadata;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
@@ -24,6 +25,10 @@ namespace LinqToDB.DataProvider.SQLite
 			}
 		}
 
+		/// <summary>
+		/// Adds a SQLite index hint.
+		/// </summary>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Index, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(IndexedByImpl))]
 		public static ISQLiteSpecificTable<TSource> IndexedByHint<TSource>(this ISQLiteSpecificTable<TSource> table, string indexName)
 			where TSource : notnull
@@ -37,6 +42,10 @@ namespace LinqToDB.DataProvider.SQLite
 			return (table, indexName) => table.TableHint(Hint.IndexedBy(indexName));
 		}
 
+		/// <summary>
+		/// Adds a SQLite table hint.
+		/// </summary>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Table, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(NotIndexedImpl))]
 		public static ISQLiteSpecificTable<TSource> NotIndexedHint<TSource>(this ISQLiteSpecificTable<TSource> table)
 			where TSource : notnull
@@ -50,6 +59,10 @@ namespace LinqToDB.DataProvider.SQLite
 			return table => table.TableHint(Hint.NotIndexed);
 		}
 
+		/// <summary>
+		/// Adds a SQLite table hint.
+		/// </summary>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Table, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SQLite, Sql.QueryExtensionScope.TableHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
