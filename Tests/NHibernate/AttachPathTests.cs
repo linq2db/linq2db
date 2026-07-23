@@ -1,93 +1,61 @@
-using System;
-using System.IO;
-using System.Linq;
-
-using FluentNHibernate.Cfg;
-using FluentNHibernate.Cfg.Db;
+﻿using System.Linq;
 
 using LinqToDB;
 using LinqToDB.NHibernate.Tests.Models.Northwind;
 
 using NHibernate;
-using NHibernate.Tool.hbm2ddl;
 
 using NUnit.Framework;
 
 using Shouldly;
 
+using Tests;
+
 namespace LinqToDB.NHibernate.Tests
 {
 	/// <summary>
-	/// Exercises the core attach path: linq2db querying over an open NHibernate <see cref="ISession"/>'s
-	/// ADO connection, using mapping metadata synthesized from NHibernate by <c>NHMetadataReader</c>.
-	/// Uses a file-based SQLite database (System.Data.SQLite / NHibernate SQLite20Driver).
+	/// Exercises the core attach path — linq2db querying over an open NHibernate <see cref="ISession"/>'s ADO
+	/// connection, using mapping metadata synthesized from NHibernate by <c>NHMetadataReader</c> — across every
+	/// enabled provider (SQLite via System.Data.SQLite; SQL Server via Microsoft.Data.SqlClient). Each provider
+	/// runs against its own isolated database built by <see cref="NHTestBase"/>.
 	/// </summary>
 	[TestFixture]
-	public class AttachPathTests
+	public class AttachPathTests : NHTestBase
 	{
-		string          _dbFile = null!;
-		ISessionFactory _sf     = null!;
-
-		[OneTimeSetUp]
-		public void Setup()
-		{
-			_dbFile = Path.Combine(Path.GetTempPath(), "nh_l2db_" + Guid.NewGuid().ToString("N") + ".db");
-
-			// A real SQLite file backs this fixture, so NHibernate can connect at BuildSessionFactory
-			// time and import the dialect's reserved words; that enables auto-quoting of identifiers
-			// like "Order" in the generated DDL (SchemaExport). Do NOT set hbm2ddl.keywords=none here.
-			var cfg = Fluently.Configure()
-				.Database(SQLiteConfiguration.Standard.UsingFile(_dbFile))
-				.Mappings(m => m.FluentMappings.AddFromAssembly(typeof(AttachPathTests).Assembly))
-				.BuildConfiguration();
-
-			_sf = cfg.BuildSessionFactory();
-			new SchemaExport(cfg).Create(false, true);
-		}
-
 		[OneTimeTearDown]
-		public void TearDown()
-		{
-			_sf?.Dispose();
-			if (_dbFile != null && File.Exists(_dbFile))
-				File.Delete(_dbFile);
-		}
+		public void TearDown() => DisposeFactories();
 
 		[Test]
-		public void GetTable_RunsSqlThroughSessionConnection()
+		public void GetTable_RunsSqlThroughSessionConnection(
+			[IncludeDataSources(ProviderName.SQLiteClassic, TestProvName.AllSqlServer)] string provider)
 		{
-			using var session = _sf.OpenSession();
+			var sf = GetSessionFactory(provider);
+
+			using var session = sf.OpenSession();
 			using var db      = session.CreateLinqToDbConnection();
 
-			// Empty table, but this builds and executes real SQL over the session's ADO connection.
+			// Builds and executes real SQL over the session's ADO connection.
 			var customers = db.GetTable<Customer>().ToList();
 
 			customers.ShouldNotBeNull();
 		}
 
 		[Test]
-		public void GetTable_ReturnsRowInsertedViaNHibernate()
+		public void GetTable_ReturnsSeededRow(
+			[IncludeDataSources(ProviderName.SQLiteClassic, TestProvName.AllSqlServer)] string provider)
 		{
-			const string id = "ALFKI";
+			var sf = GetSessionFactory(provider);
 
-			using (var session = _sf.OpenSession())
-			using (var tx      = session.BeginTransaction())
-			{
-				session.Save(new Customer { CustomerId = id, CompanyName = "Alfreds Futterkiste" });
-				tx.Commit();
-			}
+			using var session = sf.OpenSession();
+			using var db      = session.CreateLinqToDbConnection();
 
-			using (var session = _sf.OpenSession())
-			using (var db      = session.CreateLinqToDbConnection())
-			{
-				var names = db.GetTable<Customer>()
-					.Where (c => c.CustomerId == id)
-					.Select(c => c.CompanyName)
-					.ToList();
+			var names = db.GetTable<Customer>()
+				.Where (c => c.CustomerId == "ALFKI")
+				.Select(c => c.CompanyName)
+				.ToList();
 
-				names.ShouldHaveSingleItem();
-				names[0].ShouldBe("Alfreds Futterkiste");
-			}
+			names.ShouldHaveSingleItem();
+			names[0].ShouldBe("Alfreds Futterkiste");
 		}
 	}
 }
