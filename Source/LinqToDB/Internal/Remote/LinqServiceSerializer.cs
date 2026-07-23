@@ -1782,6 +1782,13 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						break;
 					}
 
+					case QueryElementType.SqlParameterCast:
+					{
+						var elem = (SqlParameterCastExpression)e;
+						Append(elem.Parameter);
+						break;
+					}
+
 					case QueryElementType.SqlCondition:
 					{
 						var elem = (SqlConditionExpression)e;
@@ -3027,6 +3034,13 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						var mandatory  = ReadBool();
 
 						obj = new SqlCastExpression(expression!, dataType!, fromType, mandatory);
+
+						break;
+					}
+
+					case QueryElementType.SqlParameterCast:
+					{
+						obj = new SqlParameterCastExpression(Read<SqlParameter>()!);
 
 						break;
 					}

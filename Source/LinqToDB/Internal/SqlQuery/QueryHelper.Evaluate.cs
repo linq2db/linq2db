@@ -285,6 +285,13 @@ namespace LinqToDB.Internal.SqlQuery
 					return false;
 				}
 
+				case QueryElementType.SqlParameterCast:
+				{
+					// Transparent: it exists only so the parameter carries a type in the generated SQL, and
+					// states no target type of its own to convert the value to.
+					return ((SqlParameterCastExpression)expr).Parameter.TryEvaluateExpression(forServer, context, out result);
+				}
+
 				case QueryElementType.SqlCast:
 				{
 					var cast = (SqlCastExpression)expr;
@@ -333,12 +340,11 @@ namespace LinqToDB.Internal.SqlQuery
 								{
 									result = Convert.ChangeType(result, cast.SystemType, CultureInfo.InvariantCulture);
 								}
-								// Any failure to convert just means the cast is not constant-foldable. The reason
-								// varies with the value and the target type - Convert.ChangeType reports an
-								// unsupported conversion, a value it cannot parse (such as the 'Y' Informix
-								// stores for a boolean) and an out-of-range value as three different exceptions -
-								// and none of them says anything beyond "not a constant".
-								catch
+								// A value the target type cannot represent just means the cast is not
+								// constant-foldable. Convert.ChangeType reports that as an unsupported
+								// conversion, an unparsable value or an out-of-range value; anything else is a
+								// real failure and should not be silently turned into "not a constant".
+								catch (Exception ex) when (ex is InvalidCastException or FormatException or OverflowException)
 								{
 									return false;
 								}

@@ -130,7 +130,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 				// The cast marks this operand only - the parameter instance is shared by every reference to it,
 				// so it must not carry the cast itself.
 				return expression is SqlParameter { IsQueryParameter: true } parameter
-					? QueryHelper.EnsureMandatoryCast(parameter, parameter.Type, canModify: false)
+					? QueryHelper.EnsureParameterCast(parameter)
 					: expression;
 			}
 		}

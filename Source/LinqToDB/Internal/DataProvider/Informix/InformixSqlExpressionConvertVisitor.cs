@@ -298,7 +298,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 				// The cast marks this usage only - the parameter instance is shared by every reference to it,
 				// and on a Transform pass belongs to the cached statement. `p` is reached by navigating into
 				// the predicate, so the predicate's own visit mode says nothing about who owns it.
-				return new SqlPredicate.Expr(QueryHelper.EnsureMandatoryCast(p, p.Type, GetVisitMode(p) == VisitMode.Modify));
+				return new SqlPredicate.Expr(QueryHelper.EnsureParameterCast(p));
 			}
 
 			return newElement;

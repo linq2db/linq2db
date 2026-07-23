@@ -408,7 +408,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 		// Known/handled cases:
 		// - INTERVAL
 		// - DECIMAL
-		protected override DbDataType? GetParameterCastType(SqlParameter parameter, DbDataType requestedType)
+		protected override DbDataType? GetParameterCastType(SqlParameter parameter)
 		{
 			return parameter.Type.DataType is DataType.Interval or DataType.Decimal ? parameter.Type : null;
 		}

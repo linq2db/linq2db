@@ -474,7 +474,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 		protected override bool ParameterCastResolvesUndefinedType => false;
 		protected override int? ParameterCastMaxLength             => 32672;
 
-		protected override DbDataType? GetParameterCastType(SqlParameter parameter, DbDataType requestedType)
+		protected override DbDataType? GetParameterCastType(SqlParameter parameter)
 		{
 			return GetValueBasedParameterCastType(parameter);
 		}

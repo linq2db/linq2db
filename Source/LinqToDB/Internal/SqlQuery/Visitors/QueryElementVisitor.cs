@@ -487,6 +487,36 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return (ISqlExpression?)Visit(skipValue);
 		}
 
+		protected internal virtual IQueryElement VisitSqlParameterCastExpression(SqlParameterCastExpression element)
+		{
+			switch (GetVisitMode(element))
+			{
+				case VisitMode.ReadOnly:
+				{
+					Visit(element.Parameter);
+					break;
+				}
+				case VisitMode.Modify:
+				{
+					element.Modify((SqlParameter)Visit(element.Parameter));
+					break;
+				}
+				case VisitMode.Transform:
+				{
+					var parameter = (SqlParameter)Visit(element.Parameter);
+
+					if (ShouldReplace(element) || !ReferenceEquals(element.Parameter, parameter))
+						return NotifyReplaced(new SqlParameterCastExpression(parameter), element);
+
+					break;
+				}
+				default:
+					return ThrowInvalidVisitModeException();
+			}
+
+			return element;
+		}
+
 		protected internal virtual IQueryElement VisitSqlInlinedSqlExpression(SqlInlinedSqlExpression element)
 		{
 			switch (GetVisitMode(element))
@@ -2467,6 +2497,16 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return predicate;
 		}
 
+		/// <summary>
+		/// Visit of the value list of an IN predicate. The values are a different position from the tested
+		/// expression - a visitor that must treat them differently overrides this rather than the whole
+		/// predicate.
+		/// </summary>
+		protected virtual List<ISqlExpression>? VisitInListValues(SqlPredicate.InList predicate, List<ISqlExpression> values, VisitMode mode)
+		{
+			return VisitElements(values, mode);
+		}
+
 		protected internal virtual IQueryElement VisitInListPredicate(SqlPredicate.InList predicate)
 		{
 			switch (GetVisitMode(predicate))
@@ -2474,13 +2514,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				case VisitMode.ReadOnly:
 				{
 					Visit(predicate.Expr1);
-					VisitElements(predicate.Values, VisitMode.ReadOnly);
+					VisitInListValues(predicate, predicate.Values, VisitMode.ReadOnly);
 					break;
 				}
 				case VisitMode.Modify:
 				{
 					var expr1  = (ISqlExpression)Visit(predicate.Expr1);
-					VisitElements(predicate.Values, VisitMode.Modify);
+					VisitInListValues(predicate, predicate.Values, VisitMode.Modify);
 
 					predicate.Modify(expr1);
 
@@ -2489,7 +2529,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				case VisitMode.Transform:
 				{
 					var expr1  = (ISqlExpression)Visit(predicate.Expr1);
-					var values = VisitElements(predicate.Values, VisitMode.Transform);
+					var values = VisitInListValues(predicate, predicate.Values, VisitMode.Transform);
 
 					if (ShouldReplace(predicate)                 ||
 					    !ReferenceEquals(predicate.Expr1, expr1) ||
@@ -3409,7 +3449,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 					if (ShouldReplace(element) || !ReferenceEquals(element.Expression, expression) || !ReferenceEquals(element.FromType, fromType))
 					{
-						return NotifyReplaced(new SqlCastExpression(expression, element.ToType, fromType), element);
+						return NotifyReplaced(new SqlCastExpression(expression, element.ToType, fromType, element.IsMandatory), element);
 					}
 
 					break;

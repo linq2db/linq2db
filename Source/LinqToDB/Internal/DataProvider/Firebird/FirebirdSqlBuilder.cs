@@ -265,7 +265,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 				StringBuilder.Append("NOT NULL");
 		}
 
-		protected override DbDataType? GetParameterCastType(SqlParameter parameter, DbDataType requestedType)
+		protected override DbDataType? GetParameterCastType(SqlParameter parameter)
 		{
 			return GetValueBasedParameterCastType(parameter);
 		}

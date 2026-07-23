@@ -259,26 +259,20 @@ namespace LinqToDB.Internal.DataProvider.Access
 
 		// Access has no CAST: a parameter that needs an explicit type is wrapped in a conversion function
 		// instead, so the type hook does not apply and the rendering itself is overridden.
-		protected override void BuildSqlCastExpression(SqlCastExpression castExpression)
+		protected override void BuildSqlParameterCastExpression(SqlParameterCastExpression parameterCast)
 		{
-			if (castExpression.IsMandatory && castExpression.Expression is SqlParameter parameter)
-			{
-				var paramValue = parameter.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
+			var parameter  = parameterCast.Parameter;
+			var paramValue = parameter.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
 
-				// 1. Single parameter loose precision when used with CVar
-				// 2. Only CVar accepts NULL
-				if (paramValue.ProviderValue != null && parameter.Type.DataType is DataType.Single)
-					StringBuilder.Append("CSng(");
-				else
-					StringBuilder.Append("CVar(");
+			// 1. Single parameter loose precision when used with CVar
+			// 2. Only CVar accepts NULL
+			if (paramValue.ProviderValue != null && parameter.Type.DataType is DataType.Single)
+				StringBuilder.Append("CSng(");
+			else
+				StringBuilder.Append("CVar(");
 
-				BuildParameter(parameter);
-				StringBuilder.Append(')');
-
-				return;
-			}
-
-			base.BuildSqlCastExpression(castExpression);
+			BuildParameter(parameter);
+			StringBuilder.Append(')');
 		}
 
 		protected override bool TryConvertParameterToSql(SqlParameterValue paramValue)

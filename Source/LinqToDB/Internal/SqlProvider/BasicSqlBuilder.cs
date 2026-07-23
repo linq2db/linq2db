@@ -3567,6 +3567,10 @@ namespace LinqToDB.Internal.SqlProvider
 					BuildSqlCastExpression((SqlCastExpression)expr);
 					break;
 
+				case QueryElementType.SqlParameterCast:
+					BuildSqlParameterCastExpression((SqlParameterCastExpression)expr);
+					break;
+
 				case QueryElementType.SqlCase:
 					BuildSqlCaseExpression((SqlCaseExpression)expr);
 					break;
@@ -3588,34 +3592,41 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected virtual void BuildSqlCastExpression(SqlCastExpression castExpression)
 		{
-			// A mandatory cast over a parameter is how a single usage is marked as needing an explicit type,
-			// so the type it renders with is the provider's to decide - several of them derive it from the
-			// value bound for this execution rather than from the node.
-			if (castExpression.IsMandatory && castExpression.Expression is SqlParameter parameter)
-			{
-				var castType = GetParameterCastType(parameter, castExpression.ToType);
-
-				if (castType == null)
-				{
-					BuildExpression(parameter);
-					return;
-				}
-
-				BuildTypedExpression(castType.Value, parameter);
-				return;
-			}
-
 			BuildTypedExpression(castExpression.ToType, castExpression.Expression);
 		}
 
 		/// <summary>
-		/// Type used to render a mandatory cast over <paramref name="parameter"/>, or <see langword="null"/> to
-		/// render the parameter bare. Defaults to <paramref name="requestedType"/>; providers that must state
-		/// exact facets override it, typically via <see cref="GetValueBasedParameterCastType"/>.
+		/// Renders a parameter usage that was marked as needing an explicit type. The node states no type of its
+		/// own, so the type comes from <see cref="GetParameterCastType"/>; a <see langword="null"/> from there
+		/// means this provider wants no cast at this position after all.
 		/// </summary>
-		protected virtual DbDataType? GetParameterCastType(SqlParameter parameter, DbDataType requestedType)
+		protected virtual void BuildSqlParameterCastExpression(SqlParameterCastExpression parameterCast)
 		{
-			return requestedType;
+			// A parameter that is no longer a query parameter renders as its literal value, and a literal states
+			// its own type - Informix writes booleans as `'t'::BOOLEAN`, so casting it would say BOOLEAN twice.
+			// The marker is placed before conversion runs, and a conversion may inline a parameter afterwards
+			// (Informix's Nvl does, via supportsParameters: false), so this can only be decided here.
+			var castType = parameterCast.Parameter.IsQueryParameter
+				? GetParameterCastType(parameterCast.Parameter)
+				: null;
+
+			if (castType == null)
+			{
+				BuildExpression(parameterCast.Parameter);
+				return;
+			}
+
+			BuildTypedExpression(castType.Value, parameterCast.Parameter);
+		}
+
+		/// <summary>
+		/// Type used to render a <see cref="SqlParameterCastExpression"/> over <paramref name="parameter"/>, or
+		/// <see langword="null"/> to render the parameter bare. Defaults to the parameter's own type; providers
+		/// that must state exact facets override it, typically via <see cref="GetValueBasedParameterCastType"/>.
+		/// </summary>
+		protected virtual DbDataType? GetParameterCastType(SqlParameter parameter)
+		{
+			return parameter.Type;
 		}
 
 		/// <summary>

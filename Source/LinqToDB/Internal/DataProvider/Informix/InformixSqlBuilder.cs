@@ -367,7 +367,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 		// Known cases of Informix having parameter typing issues:
 		// - CTE query column
-		protected override DbDataType? GetParameterCastType(SqlParameter parameter, DbDataType requestedType)
+		protected override DbDataType? GetParameterCastType(SqlParameter parameter)
 		{
 			return GetValueBasedParameterCastType(parameter);
 		}
