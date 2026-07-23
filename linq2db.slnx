@@ -642,6 +642,7 @@
     </Project>
     <Project Path="Source/LinqToDB.Extensions/LinqToDB.Extensions.csproj" />
     <Project Path="Source/LinqToDB.FSharp/LinqToDB.FSharp.fsproj" />
+    <Project Path="Source/LinqToDB.Identity/LinqToDB.Identity.csproj" />
     <Project Path="Source/LinqToDB.LINQPad/LinqToDB.LINQPad.csproj">
       <Build Solution="Testing|*" Project="false" />
     </Project>
