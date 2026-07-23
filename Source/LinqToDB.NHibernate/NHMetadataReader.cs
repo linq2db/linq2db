@@ -9,6 +9,7 @@ using System.Reflection;
 using LinqToDB.Common;
 using LinqToDB.Extensions;
 using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Reflection;
 using LinqToDB.Mapping;
 using LinqToDB.Metadata;
 using NHibernate;
@@ -191,7 +192,7 @@ namespace LinqToDB.NHibernate
 				{
 					var prop = propMap!.FindPropByMemberInfo(memberInfo);
 
-					if (prop?.PropType != null && !prop.PropType.IsAssociationType)
+					if (prop != null && prop.PropType?.IsAssociationType != true) // null PropType = composite-key member; still a real column
 					{
 						if (prop.ColumnNames.Length == 1)
 						{
@@ -261,6 +262,10 @@ namespace LinqToDB.NHibernate
 												CanBeNull = canBeNull,
 											};
 										}
+										else if (collectionMetadata is AbstractCollectionPersister m2m && m2m.IsManyToMany)
+										{
+											association = BuildManyToManyAssociation(type, thisEntityMap!, m2m);
+										}
 									}
 								}
 							}
@@ -294,6 +299,148 @@ namespace LinqToDB.NHibernate
 			}
 
 			return Array.Empty<T>();
+		}
+
+		// Builds an association for a many-to-many collection. NHibernate exposes the junction only by its
+		// table name; linq2db needs a queryable entity for it, so we locate the entity mapped to that table
+		// and synthesize a query expression that hops through it (this -> junction -> other).
+		AssociationAttribute? BuildManyToManyAssociation(Type thisType, PropertyMap thisEntityMap, AbstractCollectionPersister m2m)
+		{
+			var otherType = m2m.ElementType.ReturnedClass;
+			if (!GetPropertyMap(otherType, out var otherEntityMap))
+				return null;
+
+			var joinPersister = FindEntityPersisterByTable(m2m.TableName);
+			if (joinPersister == null)
+				return null;
+
+			var joinType = joinPersister.EntityMetamodel.EntityType.ReturnedClass;
+			if (!GetPropertyMap(joinType, out var joinEntityMap))
+				return null;
+
+			var queryExpression = BuildManyToManyQueryExpression(
+				thisType, thisEntityMap, otherType, otherEntityMap!, joinType, joinEntityMap!, m2m);
+
+			if (queryExpression == null)
+				return null;
+
+			return new AssociationAttribute
+			{
+				QueryExpression = queryExpression,
+				CanBeNull       = true,
+			};
+		}
+
+		// Finds the entity persister mapped to <paramref name="tableName"/> (the many-to-many junction table),
+		// comparing on an unqualified, unquoted, case-insensitive table name.
+		AbstractEntityPersister? FindEntityPersisterByTable(string tableName)
+		{
+			if (_sessionFactory == null)
+				return null;
+
+			var target = NormalizeTable(tableName);
+			foreach (var meta in _sessionFactory.GetAllClassMetadata().Values)
+			{
+				if (meta is AbstractEntityPersister ep && string.Equals(NormalizeTable(ep.RootTableName), target, StringComparison.Ordinal))
+					return ep;
+			}
+
+			return null;
+		}
+
+		static string NormalizeTable(string name)
+		{
+			var idx = name.LastIndexOf('.');
+			if (idx >= 0)
+				name = name.Substring(idx + 1);
+
+			name = name
+				.Replace("[",  "", StringComparison.Ordinal)
+				.Replace("]",  "", StringComparison.Ordinal)
+				.Replace("\"", "", StringComparison.Ordinal)
+				.Replace("`",  "", StringComparison.Ordinal)
+				.Replace("'",  "", StringComparison.Ordinal)
+				.Trim();
+
+			return name.ToUpperInvariant();
+		}
+
+		// (this, db) => db.GetTable&lt;junction&gt;().Where(j => j links this).SelectMany(j => db.GetTable&lt;other&gt;().Where(o => o linked by j))
+		LambdaExpression? BuildManyToManyQueryExpression(
+			Type thisType,  PropertyMap thisEntityMap,
+			Type otherType, PropertyMap otherEntityMap,
+			Type joinType,  PropertyMap joinEntityMap,
+			AbstractCollectionPersister m2m)
+		{
+			var thisPk  = thisEntityMap .Properties.Where(p => p.IsPrimaryKey).OrderBy(p => p.PkOrder).ToList();
+			var otherPk = otherEntityMap.Properties.Where(p => p.IsPrimaryKey).OrderBy(p => p.PkOrder).ToList();
+
+			var keyCols     = m2m.KeyColumnNames;     // junction -> this entity
+			var elementCols = m2m.ElementColumnNames; // junction -> other entity
+
+			if (thisPk.Count == 0 || otherPk.Count == 0 || thisPk.Count != keyCols.Length || otherPk.Count != elementCols.Length)
+				return null;
+
+			var thisParam  = Expression.Parameter(thisType,             "t");
+			var dcParam    = Expression.Parameter(typeof(IDataContext), "db");
+			var joinParam  = Expression.Parameter(joinType,             "j");
+			var otherParam = Expression.Parameter(otherType,            "o");
+
+			var joinTable  = Expression.Call(Methods.LinqToDB.GetTable.MakeGenericMethod(joinType),  dcParam);
+			var otherTable = Expression.Call(Methods.LinqToDB.GetTable.MakeGenericMethod(otherType), dcParam);
+
+			// j => junction row links this record: junction.<key column> == this.<primary key>
+			Expression? joinPredicate = null;
+			for (var i = 0; i < keyCols.Length; i++)
+			{
+				var joinMember = FindPropertyNameByColumnName(joinEntityMap, keyCols[i]).MemberInfo;
+				var left       = Expression.MakeMemberAccess(joinParam, joinMember);
+				var right      = Expression.MakeMemberAccess(thisParam, thisPk[i].MemberInfo);
+				joinPredicate  = AndAlso(joinPredicate, EqualWithConvert(left, right));
+			}
+
+			var filteredJoin = Expression.Call(
+				Methods.Queryable.Where.MakeGenericMethod(joinType),
+				joinTable,
+				Expression.Quote(Expression.Lambda(joinPredicate!, joinParam)));
+
+			// o => target record linked by the junction row: other.<primary key> == junction.<element column>
+			Expression? otherPredicate = null;
+			for (var i = 0; i < elementCols.Length; i++)
+			{
+				var joinMember = FindPropertyNameByColumnName(joinEntityMap, elementCols[i]).MemberInfo;
+				var left       = Expression.MakeMemberAccess(otherParam, otherPk[i].MemberInfo);
+				var right      = Expression.MakeMemberAccess(joinParam, joinMember);
+				otherPredicate = AndAlso(otherPredicate, EqualWithConvert(left, right));
+			}
+
+			var linkedOther = Expression.Call(
+				Methods.Queryable.Where.MakeGenericMethod(otherType),
+				otherTable,
+				Expression.Quote(Expression.Lambda(otherPredicate!, otherParam)));
+
+			var collectionSelectorType = typeof(Func<,>).MakeGenericType(joinType, typeof(IEnumerable<>).MakeGenericType(otherType));
+			var collectionSelector     = Expression.Lambda(collectionSelectorType, linkedOther, joinParam);
+
+			var selectMany = Expression.Call(
+				Methods.Queryable.SelectManySimple.MakeGenericMethod(joinType, otherType),
+				filteredJoin,
+				Expression.Quote(collectionSelector));
+
+			return Expression.Lambda(selectMany, thisParam, dcParam);
+		}
+
+		static Expression AndAlso(Expression? accumulated, Expression next)
+		{
+			return accumulated == null ? next : Expression.AndAlso(accumulated, next);
+		}
+
+		static Expression EqualWithConvert(Expression left, Expression right)
+		{
+			if (left.Type != right.Type)
+				right = Expression.Convert(right, left.Type);
+
+			return Expression.Equal(left, right);
 		}
 
 		static DataType DbTypeToDataType(DbType dbType)
