@@ -976,6 +976,35 @@ namespace Tests.Linq
 				from p in db.Parent where ids.Contains(p.ParentID) select p);
 		}
 
+		[Test]
+		public void ContainsParameterAsTestedExpression([DataSources] string context)
+		{
+			var id = 2;
+
+			// Puts the parameter on the left of IN, with the values being columns: @id IN (ParentID, ChildID).
+			// The value list is exempt from parameter casting - a collection parameter there is expanded into
+			// the values when the command is built, and a cast would hide it from that - but the tested
+			// expression is an ordinary value position and keeps the normal rules.
+			using var db = GetDataContext(context);
+			AreEqual(
+				from c in    Child where new[] { c.ParentID, c.ChildID }.Contains(id) select c,
+				from c in db.Child where new[] { c.ParentID, c.ChildID }.Contains(id) select c);
+		}
+
+		[Test]
+		public void ContainsBooleanParameterAsTestedExpression([DataSources] string context)
+		{
+			var flag = true;
+
+			// Same shape with a boolean, which is the case that actually distinguishes the two: providers that
+			// wrap boolean parameters (Informix) cast this one regardless of position, so suppressing casts for
+			// the whole IN predicate rather than just its values would drop the cast here.
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in    Types where new[] { t.BoolValue }.Contains(flag) select t.ID,
+				from t in db.Types where new[] { t.BoolValue }.Contains(flag) select t.ID);
+		}
+
 		static IEnumerable<int> GetIds()
 		{
 			yield return 1;

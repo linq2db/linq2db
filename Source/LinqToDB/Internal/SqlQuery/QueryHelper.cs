@@ -543,6 +543,9 @@ namespace LinqToDB.Internal.SqlQuery
 				SqlCastExpression   { Type: var t } => t,
 				SqlBinaryExpression { Type: var t } => t,
 
+				// carries no type of its own - the provider picks one when rendering
+				SqlParameterCastExpression { Parameter: var p } => GetDbDataTypeImpl(p, visited),
+
 				SqlParameterizedExpressionBase { Type: var t } => t,
 
 				SqlCteField cteField                  => GetCteFieldType(cteField, ref visited),
@@ -550,7 +553,7 @@ namespace LinqToDB.Internal.SqlQuery
 				SqlCteTableField                      => DbDataType.Undefined,
 
 				SqlColumn column                                        => GetColumnType(column, ref visited),
-				SqlNullabilityExpression { SqlExpression: var e }        => GetDbDataTypeImpl(e, visited),
+				SqlNullabilityExpression { SqlExpression: var e }       => GetDbDataTypeImpl(e, visited),
 
 				SelectQuery { Select.Columns: [{ Expression: var e }] } => GetDbDataTypeImpl(e, visited),
 				SelectQuery                                             => DbDataType.Undefined,
@@ -743,6 +746,15 @@ namespace LinqToDB.Internal.SqlQuery
 				SqlNullabilityExpression { ElementType: QueryElementType.SqlNullabilityExpression, SqlExpression: { } expression } =>
 					IsConstantFast(expression),
 
+				// A cast is as constant as what it wraps - matching IsConstant. Without this, a parameter that
+				// carries a cast stops looking constant, and callers such as the builder's constant ORDER BY
+				// removal start emitting the item instead of dropping it.
+				SqlCastExpression { ElementType: QueryElementType.SqlCast } cast =>
+					IsConstantFast(cast.Expression),
+
+				SqlParameterCastExpression { ElementType: QueryElementType.SqlParameterCast } =>
+					true,
+
 				_ => false,
 			};
 		}
@@ -758,6 +770,7 @@ namespace LinqToDB.Internal.SqlQuery
 			{
 				case QueryElementType.SqlValue:
 				case QueryElementType.SqlParameter:
+				case QueryElementType.SqlParameterCast:
 					return true;
 
 				case QueryElementType.SqlCast:
@@ -1732,7 +1745,6 @@ namespace LinqToDB.Internal.SqlQuery
 				var newParam = new SqlParameter(dbDataType, foundParam.Name, value)
 				{
 					IsQueryParameter = foundParam.IsQueryParameter,
-					NeedsCast = foundParam.NeedsCast,
 				};
 
 				return newParam;
@@ -1747,6 +1759,31 @@ namespace LinqToDB.Internal.SqlQuery
 				expr = nullability.SqlExpression;
 
 			return expr;
+		}
+
+		/// <summary>
+		/// Marks a single usage of <paramref name="expression"/> as needing an explicit cast in the generated SQL,
+		/// without touching the expression itself - so a parameter shared by several usages keeps one instance,
+		/// and one DECLARE, while only the positions that need it are cast.
+		/// </summary>
+		/// <remarks>
+		/// A cast that is already there is promoted rather than wrapped: it states a type someone chose
+		/// deliberately, and a second cast would render as <c>CAST(CAST(x))</c>, which the optimizer does not
+		/// collapse (it only folds casts that are not mandatory). Mandatory is what keeps such a cast alive -
+		/// through <c>SqlExpressionOptimizerVisitor.VisitSqlCastExpression</c>, and through
+		/// <c>DB2SqlExpressionConvertVisitor</c>, which drops a non-mandatory cast over a same-type parameter.
+		/// A bare parameter instead gets a <see cref="SqlParameterCastExpression"/>, which has no type of its
+		/// own - see that type for why.
+		/// </remarks>
+		public static ISqlExpression EnsureParameterCast(ISqlExpression expression)
+		{
+			if (expression is SqlParameterCastExpression)
+				return expression;
+
+			if (expression is SqlCastExpression cast)
+				return cast.MakeMandatory();
+
+			return expression is SqlParameter parameter ? new SqlParameterCastExpression(parameter) : expression;
 		}
 
 		public static bool CanBeNullableOrUnknown(this ISqlExpression expr, NullabilityContext nullabilityContext, bool withoutUnknownErased)

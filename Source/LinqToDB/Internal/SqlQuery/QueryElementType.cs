@@ -126,5 +126,9 @@
 		// TODO: appended here for v6.x LinqService wire-compat (enum ordinals are serialized as int).
 		// In v7 move next to SqlCast / SqlCoalesce where it belongs logically.
 		SqlKeepClause,
+
+		// TODO: appended here for v6.x LinqService wire-compat (enum ordinals are serialized as int).
+		// In v7 move next to SqlCast where it belongs logically.
+		SqlParameterCast,
 	}
 }

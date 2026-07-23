@@ -32,11 +32,7 @@ namespace LinqToDB.Internal.SqlQuery
 		public   bool       IsQueryParameter { get; set; }
 		public   int?       AccessorId       { get; internal set; }
 
-		public object? Value     { get; }
-		/// <summary>
-		/// Enable parameter wrapping with type-cast. Ignored when <see cref="IsQueryParameter"/> is <see langword="false"/>.
-		/// </summary>
-		public bool    NeedsCast { get; set; }
+		public object? Value { get; }
 
 		public object? CorrectParameterValue(object? rawValue)
 		{
@@ -55,7 +51,6 @@ namespace LinqToDB.Internal.SqlQuery
 			{
 				IsQueryParameter = isQueryParameter,
 				AccessorId       = AccessorId,
-				NeedsCast        = NeedsCast,
 				_valueConverter  = _valueConverter,
 			};
 		}
@@ -123,9 +118,6 @@ namespace LinqToDB.Internal.SqlQuery
 		{
 			writer.DebugAppendUniqueId(this);
 
-			if (NeedsCast)
-				writer.Append("$Cast$(");
-
 			if (Name?.StartsWith('@') == false)
 				writer.Append('@');
 
@@ -142,9 +134,6 @@ namespace LinqToDB.Internal.SqlQuery
 					.Append('[')
 					.Append(Value)
 					.Append(']');
-
-			if (NeedsCast)
-				writer.Append(")");
 
 			return writer;
 		}

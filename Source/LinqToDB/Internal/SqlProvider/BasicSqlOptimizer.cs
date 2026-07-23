@@ -2132,13 +2132,18 @@ namespace LinqToDB.Internal.SqlProvider
 					var param = (SqlParameter)element;
 					if (!param.IsQueryParameter)
 						return true;
-					if (param.NeedsCast)
-						return true;
 
 					if (param.Type.SystemType.IsNullableOrReferenceType)
 						return true;
 
 					return false;
+				}
+				case QueryElementType.SqlParameterCast:
+				{
+					// Providers derive the rendered type from the value bound for the execution (length of the
+					// actual string, decimal facets), so the statement has to be rendered per execution rather
+					// than have its command cached.
+					return true;
 				}
 				case QueryElementType.SqlQuery:
 				{
