@@ -586,7 +586,7 @@ namespace Tests.Linq
 				select new
 				{
 					g.Key!.Id1,
-					Details = g.Key.Details.Select(x => x.DetailId).OrderBy(x => x).ToList()
+					Details = g.Key!.Details.Select(x => x.DetailId).OrderBy(x => x).ToList()
 				};
 
 			AssertQuery(query);
