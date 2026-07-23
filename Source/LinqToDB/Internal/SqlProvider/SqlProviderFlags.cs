@@ -701,6 +701,27 @@ namespace LinqToDB.Internal.SqlProvider
 		[DataMember(Order = 75)]
 		public bool IsDistinctOnSupported { get; set; }
 
+		/// <summary>
+		/// Provider supports single-row <c>UPDATE … OUTPUT</c> / <c>RETURNING</c> of the new (post-update) values.
+		/// Used by <see cref="LinqToDB.Concurrency.ConcurrencyExtensions"/>'s <c>UpdateOptimisticWithRefresh</c> overloads
+		/// to read the regenerated optimistic-lock value back in the same statement; when <see langword="false"/> the
+		/// value is read with a follow-up <c>SELECT</c> instead.
+		/// Default: <see langword="false"/>.
+		/// </summary>
+		[DataMember(Order = 77), DefaultValue(false)]
+		public bool IsUpdateOutputSupported { get; set; }
+
+		/// <summary>
+		/// Provider reports the number of affected rows from <c>UPDATE</c> / <c>DELETE</c> execution.
+		/// Used by <see cref="LinqToDB.Concurrency.ConcurrencyExtensions"/>'s <c>UpdateOptimisticWithRefresh</c>
+		/// overloads: when <see langword="false"/> the affected-row count is unreliable, so — unless the provider
+		/// also supports UPDATE <c>OUTPUT</c> / <c>RETURNING</c> — the optimistic-concurrency result cannot be
+		/// reported and the operation throws.
+		/// Default: <see langword="true"/>.
+		/// </summary>
+		[DataMember(Order = 78), DefaultValue(true)]
+		public bool IsAffectedRowsCountSupported { get; set; } = true;
+
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
 			return AcceptsTakeAsParameter || (AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null);
@@ -800,6 +821,8 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsNullsOrderingSupported                             .GetHashCode()
 				^ DefaultNullsOrdering                                 .GetHashCode()
 				^ IsDistinctOnSupported                                .GetHashCode()
+				^ IsUpdateOutputSupported                              .GetHashCode()
+				^ IsAffectedRowsCountSupported                         .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => StringComparer.Ordinal.GetHashCode(flag) ^ hash);
 	}
 
@@ -881,6 +904,8 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsNullsOrderingSupported                              == other.IsNullsOrderingSupported
 				&& DefaultNullsOrdering                                  == other.DefaultNullsOrdering
 				&& IsDistinctOnSupported                                 == other.IsDistinctOnSupported
+				&& IsUpdateOutputSupported                               == other.IsUpdateOutputSupported
+				&& IsAffectedRowsCountSupported                          == other.IsAffectedRowsCountSupported
 				&& CustomFlags.SetEquals(other.CustomFlags);
 		}
 		#endregion

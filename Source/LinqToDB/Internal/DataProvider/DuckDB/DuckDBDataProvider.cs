@@ -39,6 +39,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			SqlProviderFlags.IsDistinctFromSupported           = true;
 			SqlProviderFlags.IsDistinctOnSupported             = true;
 			SqlProviderFlags.SupportsPredicatesComparison      = true;
+			SqlProviderFlags.IsUpdateOutputSupported           = true; // RETURNING
 
 			SqlProviderFlags.DefaultMultiQueryIsolationLevel = System.Data.IsolationLevel.Snapshot;
 
