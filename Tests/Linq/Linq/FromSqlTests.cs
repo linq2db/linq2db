@@ -227,7 +227,8 @@ namespace Tests.Linq
 			Assert.That(projection, Is.EqualTo(expected));
 		}
 
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void TestParameters([DataSources(ProviderName.DB2, TestProvName.AllSapHana)] string context, [Values(1, 2)] int iteration, [Values(14, 15)] int endId)
 		{
 			using var db = GetDataContext(context);
@@ -490,7 +491,8 @@ namespace Tests.Linq
 			public string Value { get; set; } = default!;
 		}
 
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void TestSplitStringParametrized(
 			[IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)]
 			string context, [Values(1, 2)] int iteration)
@@ -518,7 +520,8 @@ namespace Tests.Linq
 			query.GetSelectQuery().HasQueryParameter().ShouldBeTrue();
 		}
 
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void TestSplitStringParametrizedExplicitParameter(
 			[IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)]
 			string context, [Values(1, 2)] int iteration)
@@ -785,7 +788,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact Query<T>.CacheMissCount); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void TestQueryCaching_ByParameter_Formatted2([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			// important: comment added to avoid use of cached query from other test

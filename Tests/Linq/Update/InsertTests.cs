@@ -2457,7 +2457,8 @@ namespace Tests.xUpdate
 			TestProvName.AllOracleDevart,
 			TestProvName.AllSqlServer2012Plus,
 			TestProvName.AllClickHouse,
-			TestProvName.AllPostgreSQL)] string context)
+			// PostgreSQL < 10 fails with "unknown to text" conversion on the coalesced untyped literal
+			TestProvName.AllPostgreSQL10Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<Thing>();

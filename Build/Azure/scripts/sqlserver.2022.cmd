@@ -1,7 +1,7 @@
 set tries=0
 :retry
 
-docker run -d -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=Password12!" -p 1433:1433 -h mssql --name=mssql linq2db/linq2db:win-mssql-2022
+docker run -d -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=Password12!" -p 1422:1433 -h mssql --name=mssql linq2db/linq2db:win-mssql-2022
 docker ps -a
 
 echo "Waiting for SQL Server to accept connections"
@@ -32,6 +32,9 @@ docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "SELECT @@Version"
 
 docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestData;"
 docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestDataMS;"
+REM test-DB perf: SIMPLE recovery + delayed durability cut transaction-log-flush cost on the write-heavy suite
+docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "ALTER DATABASE TestData SET RECOVERY SIMPLE; ALTER DATABASE TestData SET DELAYED_DURABILITY = FORCED;"
+docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "ALTER DATABASE TestDataMS SET RECOVERY SIMPLE; ALTER DATABASE TestDataMS SET DELAYED_DURABILITY = FORCED;"
 
 REM FTS required
 goto:eof

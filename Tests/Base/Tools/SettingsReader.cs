@@ -16,6 +16,9 @@ namespace Tests.Tools
 		public bool?                               DisableRemoteContext { get; set; }
 		public string?                             BasedOn              { get; set; }
 		public string?                             BaselinesPath        { get; set; }
+		// Max number of provider lanes (databases) the parallel test dispatcher runs concurrently.
+		// When unset, TestsInitialization defaults it to 2 x Environment.ProcessorCount.
+		public int?                                MaxParallelLanes     { get; set; }
 		public bool?                               StoreMetrics         { get; set; }
 		public string[]?                           Providers            { get; set; }
 		public string[]?                           Skip                 { get; set; }
@@ -50,6 +53,7 @@ namespace Tests.Tools
 				settings1.NoLinqService        ??= settings2.NoLinqService;
 				settings1.BaselinesPath        ??= settings2.BaselinesPath;
 				settings1.StoreMetrics         ??= settings2.StoreMetrics;
+				settings1.MaxParallelLanes     ??= settings2.MaxParallelLanes;
 			}
 
 			var defaultSettings = JsonSerializer.Deserialize<Dictionary<string,TestSettings>>(defaultJson, _jsonOptions)!;

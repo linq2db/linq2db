@@ -1199,7 +1199,10 @@ namespace Tests.DataProvider
 			public string Value = null!;
 		}
 
-		[Test]
+		// NonParallelizable: does committed (non-transactional) writes to the shared SequenceTest1
+		// table and the database-global sequencetestseq, and asserts exact sequence values 1..40; a
+		// concurrent test touching the same table/sequence would break it.
+		[Test, NonParallelizable]
 		public void BulkCopyRetrieveSequences(
 			[IncludeDataSources(TestProvName.AllPostgreSQL)] string context,
 			[Values] BulkCopyType bulkCopyType,

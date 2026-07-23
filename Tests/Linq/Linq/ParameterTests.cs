@@ -530,7 +530,8 @@ namespace Tests.Linq
 			return db.Person.Where(p => p.ID == personId!.Value);
 		}
 
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void TestParametersByEquality([DataSources(TestProvName.AllSQLite)] string context, [Values(1, 2)] int iteration)
 		{
 			using var db = GetDataContext(context);
@@ -602,7 +603,8 @@ namespace Tests.Linq
 			};
 		}
 
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void ParameterDeduplication_Insert([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = (DataConnection)GetDataContext(context);
@@ -696,7 +698,8 @@ namespace Tests.Linq
 			res[1].String3.ShouldBe("str3");
 		}
 
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void ParameterDeduplication_InsertObject([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = (DataConnection)GetDataContext(context);
@@ -772,7 +775,8 @@ namespace Tests.Linq
 			res[1].String3.ShouldBe("str3");
 		}
 
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void ParameterDeduplication_ValueValue([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = (DataConnection)GetDataContext(context);
@@ -846,7 +850,8 @@ namespace Tests.Linq
 			res[1].String3.ShouldBe("str3");
 		}
 
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void ParameterDeduplication_ValueExpr([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = (DataConnection)GetDataContext(context);
@@ -939,7 +944,8 @@ namespace Tests.Linq
 			res[1].String3.ShouldBe("str3");
 		}
 
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void ParameterDeduplication_Update([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = (DataConnection)GetDataContext(context);
@@ -1033,7 +1039,8 @@ namespace Tests.Linq
 			res[1].String3.ShouldBe("str3");
 		}
 
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void ParameterDeduplication_UpdateObject([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = (DataConnection)GetDataContext(context);
@@ -1109,7 +1116,8 @@ namespace Tests.Linq
 			res[1].String3.ShouldBe("str3");
 		}
 
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void ParameterDeduplication_SetValue([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = (DataConnection)GetDataContext(context);
@@ -1183,7 +1191,8 @@ namespace Tests.Linq
 			res[1].String3.ShouldBe("str3");
 		}
 
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void ParameterDeduplication_SetExpr([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = (DataConnection)GetDataContext(context);
@@ -1280,7 +1289,8 @@ namespace Tests.Linq
 		private int _cnt3;
 		private int _param;
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/3450")]
+		// NonParallelizable: counts query compilations (expects 1) and clears the global query cache; concurrent cache activity inflates the count. Cache-counter category.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3450"), NonParallelizable]
 		public void TestIQueryableParameterEvaluation([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			// cached queries affect cnt values due to extra comparisons in cache
@@ -1426,7 +1436,8 @@ namespace Tests.Linq
 			return db.Person.Where(p => paramCopy + 1 != p.ID);
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/3450")]
+		// NonParallelizable: uses shared _cnt/_param instance fields and depends on query-cache state; concurrent cases corrupt results. Cache-counter category.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3450"), NonParallelizable]
 		public void TestIQueryableParameterEvaluationCaching([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1487,36 +1498,37 @@ namespace Tests.Linq
 			return db.Person.Where(p => p.ID == paramCopy);
 		}
 
-		private int[] _params = new int[30];
-
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3450")]
 		public void TestIQueryableParameterEvaluationMultiThreaded([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
 			using var _ = new DisableBaseline("multi-threading");
 
-			var tasks = new Task[30];
+			// per-invocation state: a shared instance field is clobbered when parallel execution runs
+			// this test concurrently for several SqlServer contexts (thread index collides across them).
+			var paramValues = new int[30];
+			var tasks       = new Task[30];
 
 			for (var i = 0; i < tasks.Length; i++)
 			{
 				var thread = i;
-				tasks[i] = Task.Run(() => TestRunner(context, thread));
+				tasks[i] = Task.Run(() => TestRunner(context, paramValues, thread));
 			}
 
 			Task.WaitAll(tasks);
 		}
 
-		private void TestRunner(string context, int thread)
+		private void TestRunner(string context, int[] paramValues, int thread)
 		{
 			// don't use Assert.Multiple in multi-threading tests
 #pragma warning disable NUnit2045 // Use Assert.Multiple
 			using var db = GetDataContext(context);
-			_params[thread] = 1;
+			paramValues[thread] = 1;
 			var persons = Query(db, thread);
 
 			Assert.That(persons, Has.Count.EqualTo(1));
 			Assert.That(persons[0].ID, Is.EqualTo(1));
 
-			_params[thread] = 2;
+			paramValues[thread] = 2;
 			persons = Query(db, thread);
 
 			Assert.That(persons, Has.Count.EqualTo(3));
@@ -1524,27 +1536,27 @@ namespace Tests.Linq
 			Assert.That(persons.Count(_ => _.ID == 2), Is.EqualTo(1));
 			Assert.That(persons.Count(_ => _.ID == 4), Is.EqualTo(1));
 
-			_params[thread] = 3;
+			paramValues[thread] = 3;
 			persons = Query(db, thread);
 
 			Assert.That(persons, Has.Count.EqualTo(2));
 			Assert.That(persons.Count(_ => _.ID == 2), Is.EqualTo(1));
 			Assert.That(persons.Count(_ => _.ID == 3), Is.EqualTo(1));
 
-			_params[thread] = 1;
+			paramValues[thread] = 1;
 			persons = Query(db, thread);
 
 			Assert.That(persons, Has.Count.EqualTo(1));
 			Assert.That(persons[0].ID, Is.EqualTo(1));
 
-			_params[thread] = 3;
+			paramValues[thread] = 3;
 			persons = Query(db, thread);
 
 			Assert.That(persons, Has.Count.EqualTo(2));
 			Assert.That(persons.Count(_ => _.ID == 2), Is.EqualTo(1));
 			Assert.That(persons.Count(_ => _.ID == 3), Is.EqualTo(1));
 
-			_params[thread] = 2;
+			paramValues[thread] = 2;
 			persons = Query(db, thread);
 
 			Assert.That(persons, Has.Count.EqualTo(3));
@@ -1556,45 +1568,43 @@ namespace Tests.Linq
 			{
 				return db.Person
 					.Where(_ =>
-					 GetQueryT1(db, thread).Select(p => p.ID).Contains(_.ID) &&
-					(GetQueryT2(db, thread).Select(p => p.ID).Contains(_.ID) ||
-					 GetQueryT3(db, thread).Select(p => p.ID).Contains(_.ID)))
+					 GetQueryT1(db, paramValues, thread).Select(p => p.ID).Contains(_.ID) &&
+					(GetQueryT2(db, paramValues, thread).Select(p => p.ID).Contains(_.ID) ||
+					 GetQueryT3(db, paramValues, thread).Select(p => p.ID).Contains(_.ID)))
 					.ToList();
 			}
 #pragma warning restore NUnit2045 // Use Assert.Multiple
 		}
 
-		private IQueryable<Person> GetQueryT1(ITestDataContext db, int thread)
+		private IQueryable<Person> GetQueryT1(ITestDataContext db, int[] paramValues, int thread)
 		{
-			_cnt1++;
-			var paramCopy = _params[thread];
+			var paramCopy = paramValues[thread];
 			if (paramCopy == 1)
 				return db.Person.Where(p => p.ID == paramCopy);
 
 			return db.Person.Where(p => paramCopy + 1 != p.ID);
 		}
 
-		private IQueryable<Person> GetQueryT2(ITestDataContext db, int thread)
+		private IQueryable<Person> GetQueryT2(ITestDataContext db, int[] paramValues, int thread)
 		{
-			_cnt2++;
-			var paramCopy = _params[thread];
+			var paramCopy = paramValues[thread];
 			if (paramCopy == 2)
 				return db.Person.Where(p => paramCopy == p.ID);
 
 			return db.Person.Where(p => p.ID == paramCopy - 1);
 		}
 
-		private IQueryable<Person> GetQueryT3(ITestDataContext db, int thread)
+		private IQueryable<Person> GetQueryT3(ITestDataContext db, int[] paramValues, int thread)
 		{
-			_cnt3++;
-			var paramCopy = _params[thread];
+			var paramCopy = paramValues[thread];
 			if (paramCopy == 3)
 				return db.Person.Where(p => p.ID == paramCopy);
 
 			return db.Person.Where(p => paramCopy + 1 != p.ID);
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/3450")]
+		// NonParallelizable: counts query compilations (expects 1); concurrent cache activity inflates the count. Cache-counter category.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3450"), NonParallelizable]
 		public void TestSimpleParameterEvaluation([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1659,7 +1669,8 @@ namespace Tests.Linq
 		/// Tests that we do not have cache hit for similar parameters
 		/// </summary>
 		/// <param name="context"></param>
-		[Test]
+		// NonParallelizable: asserts the exact parameter count of a query rebuilt from process-global query-cache state; a concurrent test's compilation would perturb the plan reused here. Cache-counter category.
+		[Test, NonParallelizable]
 		public void Caching([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1876,7 +1887,8 @@ namespace Tests.Linq
 			public bool? Value5 { get; set; }
 		}
 
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void DedupOfParameters([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values(1, 2)] int iteration)
 		{
 			using var db = GetDataContext(context);

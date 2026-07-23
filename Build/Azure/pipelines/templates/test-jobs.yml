@@ -75,6 +75,7 @@ jobs:
             net100: ${{ test_config.enable_fw_net100 }}
             x86: ${{ test_config.x86 }}
             retry: ${{ test_config.retry }}
+            win_efcore_only: ${{ test_config.win_efcore_only }}
 
   steps:
   - template: test-workflow-windows.yml

@@ -1,4 +1,4 @@
-﻿{
+{
 	"NETFX.Azure": {
 		"Providers": [
 			"SqlServer.2016",

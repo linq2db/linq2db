@@ -1088,7 +1088,8 @@ namespace Tests.Linq
 			public Child? Child    { get; set; }
 		}
 
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void TestConditionalProjectionOptimization(
 			[IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context,
 			[Values] bool includeChild,
@@ -1594,7 +1595,8 @@ namespace Tests.Linq
 		[Test]
 		public void OuterApplyTest(
 			[IncludeDataSources(
-				TestProvName.AllPostgreSQL95Plus,
+				// PostgreSQL 9.5 fails with "unknown to text" conversion on this projection
+				TestProvName.AllPostgreSQL10Plus,
 				TestProvName.AllSqlServer2008Plus,
 				TestProvName.AllOracle12Plus,
 				TestProvName.AllMySqlWithApply,
@@ -1837,7 +1839,7 @@ namespace Tests.Linq
 
 		#region Caching Tests
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/2116")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2116"), NonParallelizable]
 		public void CachedObjectRefence([DataSources] string context)
 		{
 			using var db = GetDataContext(context);

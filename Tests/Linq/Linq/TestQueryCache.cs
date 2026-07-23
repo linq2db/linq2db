@@ -164,7 +164,8 @@ namespace Tests.Linq
 			return ms;
 		}
 
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void TestSqlQueryDepended([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);

@@ -1492,7 +1492,8 @@ namespace Tests.Linq
 		record MappingTypingByConstant<T>(int Id, T Value);
 
 		[ActiveIssue("CAST to BIGINT doesn't work in MariaDB and MySQL 5.7", Configurations = [TestProvName.AllMariaDB, TestProvName.AllMySql57], SkipForLinqService = true)]
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955")]
+		// NonParallelizable: clears the global query cache (Query.ClearCaches) mid-run, which would perturb concurrent cache-counter tests.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955"), NonParallelizable]
 		public void MappingTypingByConstant_FromEnumerable_Int64([DataSources(TestProvName.AllAccess)] string context, [Values(null, 1L)] long? first)
 		{
 			using var db = GetDataContext(context);
@@ -1537,7 +1538,8 @@ namespace Tests.Linq
 			Assert.That(res[0].Value, Is.EqualTo(value));
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955")]
+		// NonParallelizable: clears the global query cache (Query.ClearCaches) mid-run, which would perturb concurrent cache-counter tests.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955"), NonParallelizable]
 		public void MappingTypingByConstant_FromEnumerable_UInt64([DataSources(TestProvName.AllAccess)] string context, [Values(null, 1ul)] ulong? first)
 		{
 			using var db = GetDataContext(context);
@@ -1581,7 +1583,8 @@ namespace Tests.Linq
 			Assert.That(res[0].Value, Is.EqualTo(value));
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955")]
+		// NonParallelizable: clears the global query cache (Query.ClearCaches) mid-run, which would perturb concurrent cache-counter tests.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955"), NonParallelizable]
 		public void MappingTypingByConstant_FromEnumerable_UInt32([DataSources(TestProvName.AllAccess)] string context, [Values(null, 1u)] uint? first)
 		{
 			using var db = GetDataContext(context);

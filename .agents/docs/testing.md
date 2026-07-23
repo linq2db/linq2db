@@ -112,24 +112,20 @@ dotnet test --project Tests/Linq/Tests.csproj -f net10.0 --settings .runsettings
 
 `--provider` replaces the active main-test provider set (`TestConfiguration.UserProviders`) with exactly the names given, so **any provider with a connection string defined in `DataProviders.json` / `UserDataProviders.json` runs without editing the enabled-providers list** — it need not be enabled. (EF Core test runs instead intersect their curated `EFProviders` list, so `--provider` can only narrow EF runs to supported providers, never add an unsupported one.) Connection strings still come from those files; a `--provider` name with no connection logs a warning and fails to connect. An absent option leaves behavior unchanged (the providers enabled in `UserDataProviders.json` run).
 
-### Running providers in parallel
+### Testing several providers in one run
 
-Each provider config maps to a distinct database, so runs scoped to **distinct** providers don't collide and can run concurrently. Two cautions, both from the standing single-session rule:
-
-- **One distinct provider (= one database) per parallel run.** The same provider on two concurrent runs — including the *same* provider across two TFMs — hits the same database and corrupts state. The parallel unit is the database, not the process.
-- **Build once, and don't let the runs build concurrently.** Two `dotnet test` invocations on the same project race to write and lock the shared `linq2db.Tests.dll` (fails with `MSB3027`). Build once, then launch each run as the **test executable directly** — it never builds, and each process writes its own per-PID heartbeat:
+The test harness parallelizes across providers **in-process**: a single `dotnet test` (or test-exe) run given multiple providers executes their tests concurrently, each provider on its own database, within one process. To exercise several providers, pass them all to **one** run and let the harness parallelize internally:
 
 ```bash
-dotnet build Tests/Linq/Tests.csproj -c Debug -f net10.0
-```
-```bash
-.build/bin/Tests/Debug/net10.0/linq2db.Tests.exe --provider PostgreSQL.18 --test-progress --filter "FullyQualifiedName~CreateData.CreateDatabase|FullyQualifiedName~MyTest"
-```
-```bash
-.build/bin/Tests/Debug/net10.0/linq2db.Tests.exe --provider MySql.8.0 --test-progress --filter "FullyQualifiedName~CreateData.CreateDatabase|FullyQualifiedName~MyTest"
+dotnet test --project Tests/Linq/Tests.csproj -f net10.0 --settings .runsettings --filter "FullyQualifiedName~CreateData.CreateDatabase|FullyQualifiedName~MyTest" --provider PostgreSQL.18,MySql.8.0
 ```
 
-Each process writes its own `.build/.agents/test-progress.<tfm>.<pid>.json`; poll them with `/test-progress` or `test-status.ps1`. The runner's native filter flag is `--filter` (the same `FullyQualifiedName~` syntax), confirmed via `--help`.
+**Do not launch multiple test processes to cover several providers.** Two concurrent `dotnet test` / test-exe invocations:
+
+- race to build and lock the shared `linq2db.Tests.dll` (`MSB3027`); and
+- corrupt each other's state the moment they touch the **same** database — e.g. the *same* provider run concurrently across two TFMs. The parallel unit is the database, and the in-process runner already schedules distinct-database work concurrently, so a second process adds conflict risk, not coverage.
+
+Poll a run's progress with `/test-progress` (heartbeat at `.build/.agents/test-progress.<tfm>.<pid>.json`). The runner's native filter flag is `--filter` (the same `FullyQualifiedName~` syntax), confirmed via `--help`.
 
 ## Database initialization
 

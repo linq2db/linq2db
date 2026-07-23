@@ -19,6 +19,8 @@ namespace Tests
 	{
 		public   static string?         BaselinesPath        { get; }
 		public   static bool?           StoreMetrics         { get; }
+		// Configured cap on concurrent provider lanes for the parallel dispatcher; null => use the default.
+		public   static int?            MaxParallelLanes     { get; }
 		public   static bool            DisableRemoteContext { get; }
 		public   static HashSet<string> UserProviders        { get; }
 		internal static string?         DefaultProvider      { get; }
@@ -157,6 +159,9 @@ namespace Tests
 					TxtSettings.Instance.DefaultConfiguration = DefaultProvider;
 #endif
 				}
+
+				// parallel lane cap (null => dispatcher uses its default)
+				MaxParallelLanes = testSettings.MaxParallelLanes;
 
 				// baselines
 				if (!string.IsNullOrWhiteSpace(testSettings.BaselinesPath))

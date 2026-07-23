@@ -28,7 +28,8 @@ namespace Tests.UserTests
 		/// <summary>
 		/// Reproduces the issue: query using ValueIsEqualToAny with array causes cache miss on every execution.
 		/// </summary>
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void ValueIsEqualToAnyCacheTest([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values(1, 2)] int iteration)
 		{
 			var testData = new[]

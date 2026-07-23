@@ -2068,6 +2068,12 @@ namespace LinqToDB.Internal.SqlProvider
 					if (appendParentheses)
 						AppendIndent().Append(')');
 
+					// TEMP DIAG (Issue1742, uncommitted-intent): table carries the scalar 'value' field but IsScalar is
+					// false here -> the t1(value) alias-list below is skipped, producing the broken `SELECT t1.value
+					// FROM (...) t1` that fails with 42703. Confirms the copy-ctor IsScalar loss.
+					if (!rawSqlTable.IsScalar && rawSqlTable.Fields.Exists(f => string.Equals(f.Name, "value", StringComparison.Ordinal)))
+						System.Console.Error.WriteLine($"RAWSQLDIAG render-lost-IsScalar sql={rawSqlTable.SQL}");
+
 					if (rawSqlTable.IsScalar && alias != null && SupportsColumnAliasesInScalarSource && buildAlias != false)
 					{
 						StringBuilder.Append(' ');

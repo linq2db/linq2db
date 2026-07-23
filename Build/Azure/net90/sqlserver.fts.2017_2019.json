@@ -1,0 +1,16 @@
+{
+	"NET90.Azure": {
+		"Providers": [
+			"SqlServer.2017",
+			"SqlServer.2017.MS",
+			"SqlServer.2019",
+			"SqlServer.2019.MS",
+			"SqlServer.SA",
+			"SqlServer.SA.MS",
+			"SqlServer.Contained",
+			"SqlServer.Contained.MS",
+			"SqlServer.Northwind",
+			"SqlServer.Northwind.MS"
+		]
+	}
+}

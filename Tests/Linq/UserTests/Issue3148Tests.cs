@@ -18,7 +18,8 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue3148Tests : TestBase
 	{
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void TestDefaultExpression([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using var db = GetDataContext(context);
@@ -45,7 +46,8 @@ namespace Tests.UserTests
 			Assert.That(db.Person.GetCacheMissCount(), Is.EqualTo(cacheMiss));
 		}
 
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void TestDefaultExpression_01([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using var db = GetDataContext(context);
@@ -66,7 +68,8 @@ namespace Tests.UserTests
 			Assert.That(db.Person.GetCacheMissCount(), Is.EqualTo(cacheMiss));
 		}
 
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void TestDefaultExpression_02([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using var db = GetDataContext(context);
@@ -87,7 +90,8 @@ namespace Tests.UserTests
 			Assert.That(db.Person.GetCacheMissCount(), Is.EqualTo(cacheMiss));
 		}
 
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void TestDefaultExpression_05([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using var db = GetDataContext(context);
@@ -118,7 +122,8 @@ namespace Tests.UserTests
 			Assert.That(db.Parent.GetCacheMissCount(), Is.EqualTo(cacheMiss));
 		}
 
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void TestDefaultExpression_06([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using var db = GetDataContext(context);
@@ -149,7 +154,8 @@ namespace Tests.UserTests
 			Assert.That(db.Parent.GetCacheMissCount(), Is.EqualTo(cacheMiss));
 		}
 
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void TestDefaultExpression_07([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool withDefault)
 		{
 			using var db = GetDataContext(context);
@@ -181,7 +187,8 @@ namespace Tests.UserTests
 		}
 
 		// Test requires OUTER/LATERAL APPLY support from Provider
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void TestDefaultExpression_08([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context, [Values] bool withDefault)
 		{
 			using var db = GetDataContext(context);
@@ -223,7 +230,8 @@ namespace Tests.UserTests
 		}
 
 		// Test requires OUTER/LATERAL APPLY support from Provider
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void TestDefaultExpression_09([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context, [Values] bool withDefault)
 		{
 			using var db = GetDataContext(context);
@@ -263,7 +271,8 @@ namespace Tests.UserTests
 		}
 
 		// Test requires OUTER/LATERAL APPLY or ROW_NUMBER Window function support from Provider
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void TestDefaultExpression_10([IncludeDataSources(true, ProviderName.SQLiteClassic, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -336,7 +345,8 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void TestDefaultExpression_12([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using var db = new TestDataConnection(context);
@@ -363,7 +373,8 @@ namespace Tests.UserTests
 			Assert.That(db.GetTable<TestTable>().GetCacheMissCount(), Is.EqualTo(cacheMiss));
 		}
 
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void TestDefaultExpression_13([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using var db = GetDataContext(context);
@@ -384,7 +395,8 @@ namespace Tests.UserTests
 			Assert.That(db.Person.GetCacheMissCount(), Is.EqualTo(cacheMiss));
 		}
 
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void TestDefaultExpression_14([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using var db = GetDataContext(context);
@@ -405,7 +417,8 @@ namespace Tests.UserTests
 			Assert.That(db.Person.GetCacheMissCount(), Is.EqualTo(cacheMiss));
 		}
 
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void TestDefaultExpression_15([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using var db = GetDataContext(context);
@@ -426,7 +439,8 @@ namespace Tests.UserTests
 			Assert.That(db.Person.GetCacheMissCount(), Is.EqualTo(cacheMiss));
 		}
 
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void TestDefaultExpression_16([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using var db = GetDataContext(context);
@@ -461,7 +475,8 @@ namespace Tests.UserTests
 			Assert.That(db.Person.GetCacheMissCount(), Is.EqualTo(cacheMiss));
 		}
 
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void TestDefaultExpression_17([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using var db = GetDataContext(context);
@@ -480,7 +495,8 @@ namespace Tests.UserTests
 			Assert.That(query2.GetCacheMissCount(), Is.EqualTo(cacheMiss));
 		}
 
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void TestDefaultExpression_18([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using var db = GetDataContext(context);
@@ -499,7 +515,8 @@ namespace Tests.UserTests
 			Assert.That(query2.GetCacheMissCount(), Is.EqualTo(cacheMiss));
 		}
 
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void TestDefaultExpression_19([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using var db = GetDataContext(context);
@@ -519,7 +536,8 @@ namespace Tests.UserTests
 			Assert.That(query2.GetCacheMissCount(), Is.EqualTo(cacheMiss));
 		}
 
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void TestDefaultExpression_20([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using var db = GetDataContext(context);
@@ -540,7 +558,8 @@ namespace Tests.UserTests
 			Assert.That(db.Person.GetCacheMissCount(), Is.EqualTo(cacheMiss));
 		}
 
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void TestDefaultExpression_21([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using var db = new TestDataConnection(context);
@@ -567,7 +586,8 @@ namespace Tests.UserTests
 			Assert.That(db.GetTable<TestTable>().GetCacheMissCount(), Is.EqualTo(cacheMiss));
 		}
 
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void TestDefaultExpression_22([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using var db = GetDataContext(context);

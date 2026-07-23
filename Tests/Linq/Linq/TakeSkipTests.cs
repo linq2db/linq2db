@@ -44,7 +44,8 @@ namespace Tests.Linq
 			CheckTakeSkipParams(dc, false, additional);
 		}
 
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void Take1([DataSources] string context, [Values] bool withParameters)
 		{
 			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(withParameters));
@@ -65,7 +66,8 @@ namespace Tests.Linq
 			Assert.That(db.Child.GetCacheMissCount(), Is.EqualTo(currentCacheMissCount));
 		}
 
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public async Task Take1Async([DataSources] string context, [Values] bool withParameters)
 		{
 			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(withParameters));
@@ -220,7 +222,8 @@ namespace Tests.Linq
 			CheckTakeGlobalParams(db);
 		}
 
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void Skip1([DataSources] string context, [Values] bool withParameters)
 		{
 			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(withParameters));
@@ -646,10 +649,15 @@ namespace Tests.Linq
 			CheckTakeSkipParameterized(db);
 		}
 
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void ElementAtDefault5([DataSources] string context, [Values(2,3)] int idx, [Values] bool withParameters)
 		{
 			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(withParameters));
+			db.Person.ClearCache();
+			// warm the compiled query so the re-run below is a guaranteed cache hit regardless of other
+			// parallel providers' cache activity in the same process.
+			db.Person.OrderBy(p => p.LastName).ElementAtOrDefault(idx);
 			var missCount = db.Person.GetCacheMissCount();
 			Assert.That(
 				db.Person.OrderBy(p => p.LastName).ElementAtOrDefault(idx), Is.EqualTo(Person.OrderBy(p => p.LastName).ElementAtOrDefault(idx)));
@@ -1113,7 +1121,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void MultipleSkip2([DataSources] string context, [Values] bool withParameters)
 		{
 			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(withParameters));
@@ -1346,10 +1355,17 @@ namespace Tests.Linq
 			CheckTakeGlobalParams(db);
 		}
 
-		[Test]
+		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
+		[Test, NonParallelizable]
 		public void SkipTakeCaching([DataSources] string context, [Values(1, 2)] int skip, [Values(1, 2)] int take)
 		{
 			using var db = GetDataContext(context);
+			db.Parent.ClearCache();
+
+			// warm with a baseline combo so the parametrised (skip, take) below reuses the same compiled
+			// query (verifying skip/take are parametrised, not baked into SQL) independent of other
+			// parallel providers' cache activity in the same process.
+			db.Parent.OrderBy(t => t.Value1).Skip(1).Take(1).ToArray();
 
 			var cacheMissCount = db.Parent.GetCacheMissCount();
 

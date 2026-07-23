@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Threading;
 
 using NUnit.Framework.Internal;
 
@@ -23,17 +24,20 @@ namespace Tests
 
 		static string? _context;
 
+		// guards _baselines, _context and the baseline file writes against concurrent
+		// access when tests run in parallel across providers
+		static readonly Lock _sync = new();
+
 		internal static void Write(string baselinesPath, string baseline, bool isRemote, string? providerSuffix)
 		{
 			var test = TestExecutionContext.CurrentContext.CurrentTest;
 
-			_context = GetTestContextName(test)?.StripRemote();
+			var context = GetTestContextName(test)?.StripRemote();
 
-			if (_context == null)
+			if (context == null)
 				return;
 
-			var fixturePath = Path.Combine(baselinesPath, _context + providerSuffix, test.ClassName!.Replace('.', Path.DirectorySeparatorChar));
-			Directory.CreateDirectory(fixturePath);
+			var fixturePath = Path.Combine(baselinesPath, context + providerSuffix, test.ClassName!.Replace('.', Path.DirectorySeparatorChar));
 
 			var fileName = $"{NormalizeFileName(test.FullName)}.sql";
 			if (isRemote)
@@ -63,27 +67,38 @@ namespace Tests
 				.Replace("DisposeTransactionAsync\n", string.Empty)
 				;
 
-			if (_baselines.TryGetValue(fullPath, out var type))
+			// Serialize access to the shared overwrite-detection map, _context and the
+			// per-baseline files: under parallel runs this is hit from multiple provider
+			// threads (direct + remote of one provider stay on a single lane, so the two
+			// writes to the same baseline path remain ordered).
+			lock (_sync)
 			{
-				if ((type & newType) != 0)
+				_context = context;
+
+				Directory.CreateDirectory(fixturePath);
+
+				if (_baselines.TryGetValue(fullPath, out var type))
 				{
-					throw new InvalidOperationException($"Baseline already in use: {fullPath} ({newType})");
+					if ((type & newType) != 0)
+					{
+						throw new InvalidOperationException($"Baseline already in use: {fullPath} ({newType})");
+					}
+
+					_baselines[fullPath] = type | newType;
+
+					var expected = File.ReadAllText(fullPath);
+
+					if (expected != baseline)
+					{
+						File.WriteAllText(fullPath + ".other", baseline, Encoding.UTF8);
+						throw new InvalidOperationException($"Baselines for remote context doesn't match direct access baselines. Test: {test.FullName}");
+					}
 				}
-
-				_baselines[fullPath] = type | newType;
-
-				var expected = File.ReadAllText(fullPath);
-
-				if (expected != baseline)
+				else
 				{
-					File.WriteAllText(fullPath + ".other", baseline, Encoding.UTF8);
-					throw new InvalidOperationException($"Baselines for remote context doesn't match direct access baselines. Test: {test.FullName}");
+					_baselines.Add(fullPath, newType);
+					File.WriteAllText(fullPath, baseline, Encoding.UTF8);
 				}
-			}
-			else
-			{
-				_baselines.Add(fullPath, newType);
-				File.WriteAllText(fullPath, baseline, Encoding.UTF8);
 			}
 		}
 

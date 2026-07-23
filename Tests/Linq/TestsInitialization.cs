@@ -10,10 +10,19 @@ using LinqToDB.Metrics;
 using LinqToDB.Tools.Activity;
 
 using NUnit.Framework;
+using NUnit.Framework.Internal;
+using NUnit.Framework.Internal.Execution;
+using NUnit.ParallelByResource;
 
 using Oracle.ManagedDataAccess.Client;
 
 using Tests;
+
+// Mark every fixture/test parallelizable so NUnit assigns the Parallel execution strategy
+// and dispatches each case. The actual concurrency is governed by ResourceLaneDispatcher
+// (installed in OneTimeSetUp): cases are routed to per-provider lanes so same-database tests
+// never overlap. Tests that mutate global state are excluded via [NonParallelizable].
+[assembly: Parallelizable(ParallelScope.All)]
 
 /// <summary>
 /// 1. Don't add namespace to this class! It's intentional
@@ -123,6 +132,23 @@ public class TestsInitialization
 		// required for tests expectations
 		ClickHouseOptions.Default = ClickHouseOptions.Default with { UseStandardCompatibleAggregates = true };
 
+		// Cap the process-wide query cache to bound test-process memory. The CI NETFX legs run two
+		// SQL Server versions' full suites in a single process and were hitting OutOfMemoryException;
+		// the default cap is 10000 entries but a full run only produces ~1700 distinct queries.
+		{
+			// net10 legs keep the default cap (10000): a small cap trims freshly-added, low-hit entries
+			// mid-test, breaking the exact-miss-count cache tests on the merged multi-provider legs (e.g.
+			// the 3-provider ClickHouse leg). NETFX stays capped to bound memory. Overridable per leg.
+			int? qcMax = Environment.GetEnvironmentVariable("L2DB_TEST_QUERYCACHE") is { } qcMaxStr && int.TryParse(qcMaxStr, out var n) ? n
+#if NETFRAMEWORK
+				: 100;
+#else
+				: null;
+#endif
+			if (qcMax != null)
+				LinqToDB.Internal.Linq.QueryCache.Default.MaxEntriesOverride = qcMax;
+		}
+
 		// uncomment it to run tests with SeqentialAccess command behavior
 		//LinqToDB.Common.Configuration.OptimizeForSequentialAccess = true;
 		//DbCommandProcessorExtensions.Instance = new SequentialAccessCommandProcessor();
@@ -167,6 +193,24 @@ public class TestsInitialization
 
 		//custom initialization logic
 		CustomizationSupport.Init();
+
+		// Parallelize tests across database providers: route each provider's tests to a
+		// dedicated lane so the same database is never hit concurrently. Only swap when
+		// NUnit is actually running in parallel; a serial run keeps the original dispatcher.
+		var configuredLanes = TestConfiguration.MaxParallelLanes;
+		var maxLanes        = configuredLanes ?? (2 * Environment.ProcessorCount);
+		if (maxLanes < 1)
+			maxLanes = 1;
+
+		if (ResourceLaneDispatcherInstaller.TryInstall(new DatabaseLaneStrategy(), new DelegateParallelDiagnostics(ParallelDiag.Log), maxLanes, out var workers))
+		{
+			TestBase.ParallelExecutionEnabled = true;
+			TestContext.Progress.WriteLine($"[parallel] installed ResourceLaneDispatcher (maxLanes={maxLanes} [{(configuredLanes.HasValue ? "from config" : "default 2xCPU")}], cpus={Environment.ProcessorCount}, nunitWorkers={workers})");
+		}
+		else
+		{
+			TestContext.Progress.WriteLine($"[parallel] not installed; dispatcher is {TestExecutionContext.CurrentContext.Dispatcher?.GetType().Name ?? "null"}");
+		}
 
 		// Set up in-memory databases (SQLite/DuckDB) for any provider configured with an in-memory
 		// connection string (CI), before a_CreateData seeds them. No-op for the normal file-based setup.
@@ -326,6 +370,8 @@ public class TestsInitialization
 	public void TestAssemblyTeardown()
 	{
 		TestInMemoryDatabases.DisposeAll();
+
+		ParallelDiag.Dump();
 
 		if (_doMetrics)
 		{
