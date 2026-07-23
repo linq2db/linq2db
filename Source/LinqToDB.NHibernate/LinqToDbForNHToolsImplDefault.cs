@@ -120,6 +120,14 @@ namespace LinqToDB.NHibernate
 		{
 			var provInfo = new LinqToDBProviderInfo();
 
+			// Primary, most robust signal: the runtime type of the live ADO connection.
+			// This covers both the SQLite and SQL Server test paths without driver-name guessing.
+			if (providerInfo.Connection is DbConnection dbConnection)
+			{
+				provInfo.Merge(GetLinqToDbProviderInfo(dbConnection));
+			}
+
+			// Secondary: NHibernate driver detected from the session factory.
 			if (providerInfo.Options != null)
 			{
 				provInfo.Merge(GetLinqToDbProviderInfo(providerInfo.Options));
@@ -168,6 +176,10 @@ namespace LinqToDB.NHibernate
 					case ProviderName.PostgreSQL:
 						return CreatePostgreSqlProvider(PostgreSqlDefaultVersion, connectionInfo.ConnectionString, connectionInfo.Connection as DbConnection, null);
 					case ProviderName.SQLite:
+						return SQLiteTools.GetDataProvider(SQLiteProvider.AutoDetect, connectionInfo.ConnectionString, connectionInfo.Connection as DbConnection, null);
+					case ProviderName.SQLiteClassic:
+						return SQLiteTools.GetDataProvider(SQLiteProvider.System, connectionInfo.ConnectionString, connectionInfo.Connection as DbConnection, null);
+					case ProviderName.SQLiteMS:
 						return SQLiteTools.GetDataProvider(SQLiteProvider.Microsoft, connectionInfo.ConnectionString, connectionInfo.Connection as DbConnection, null);
 					case ProviderName.Firebird:
 						return FirebirdTools.GetDataProvider(FirebirdVersion.AutoDetect, connectionInfo.ConnectionString, connectionInfo.Connection as DbConnection, null);
@@ -198,7 +210,10 @@ namespace LinqToDB.NHibernate
 				switch (driverName)
 				{
 					case "SqlClientDriver":
+					case "MicrosoftDataSqlClientDriver":
 						return new LinqToDBProviderInfo { ProviderName = ProviderName.SqlServer };
+					case "SQLite20Driver":
+						return new LinqToDBProviderInfo { ProviderName = ProviderName.SQLiteClassic };
 				}
 			}
 
@@ -285,9 +300,12 @@ namespace LinqToDB.NHibernate
 						return new LinqToDBProviderInfo { ProviderName = ProviderName.DB2LUW };
 					case "OracleConnection":
 						return new LinqToDBProviderInfo { ProviderName = ProviderName.Oracle };
-					case "SqliteConnection":
 					case "SQLiteConnection":
-						return new LinqToDBProviderInfo { ProviderName = ProviderName.SQLite };
+						// System.Data.SQLite (NHibernate SQLite20Driver).
+						return new LinqToDBProviderInfo { ProviderName = ProviderName.SQLiteClassic };
+					case "SqliteConnection":
+						// Microsoft.Data.Sqlite.
+						return new LinqToDBProviderInfo { ProviderName = ProviderName.SQLiteMS };
 					case "JetConnection":
 						return new LinqToDBProviderInfo { ProviderName = ProviderName.Access };
 			}

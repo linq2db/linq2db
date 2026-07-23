@@ -14,6 +14,7 @@
 		<PackageReference Include="FluentNHibernate" />
 		<PackageReference Include="Microsoft.Data.Sqlite" />
 		<PackageReference Include="SourceGear.sqlite3" />
+		<PackageReference Include="System.Data.SQLite.Core" />
 		<PackageReference Include="Microsoft.Data.SqlClient" />
 	</ItemGroup>
 </Project>

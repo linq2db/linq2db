@@ -7,7 +7,9 @@ namespace LinqToDB.NHibernate.Tests.Models.ClassMaps
 	{
 		public OrderdetailsMap()
 		{
-			Table("Order Details");
+			// Backticks force NHibernate to quote this identifier in the dialect's style; the name
+			// contains a space and starts with the reserved word "Order", so it must be quoted in DDL.
+			Table("`Order Details`");
 			CompositeId().KeyProperty(x => x.OrderId, "OrderID")
 				.KeyProperty(x => x.ProductId, "ProductID");
 			References(x => x.Order).Column("OrderID").Not.Insert().Not.Update();
