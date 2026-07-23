@@ -7,6 +7,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using LinqToDB.Common;
 using LinqToDB.Extensions;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Mapping;
 using LinqToDB.Metadata;
 using NHibernate;
@@ -282,9 +283,7 @@ namespace LinqToDB.NHibernate
 											{
 												ThisKey = thisKey,
 												OtherKey = otherKey,
-												CanBeNull = canBeNull,
-												Relationship = Relationship.OneToMany,
-												IsBackReference = false
+												CanBeNull = canBeNull
 											};
 										}
 									}
@@ -301,9 +300,7 @@ namespace LinqToDB.NHibernate
 									{
 										ThisKey = thisKey,
 										OtherKey = otherKey,
-										CanBeNull = canBeNull,
-										Relationship = Relationship.ManyToOne,
-										IsBackReference = true
+										CanBeNull = canBeNull
 									};
 								}
 							}

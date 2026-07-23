@@ -18,9 +18,12 @@ using LinqToDB.DataProvider.SQLite;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Mapping;
 using LinqToDB.Metadata;
 using JetBrains.Annotations;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Reflection;
 using LinqToDB.Reflection;
 using LinqToDB.SqlQuery;
 using NHibernate;
@@ -158,26 +161,25 @@ namespace LinqToDB.NHibernate
 			switch (provInfo.ProviderName)
 			{
 					case ProviderName.SqlServer:
-						return CreateSqlServerProvider(SqlServerDefaultVersion, connectionInfo.ConnectionString);
+						return CreateSqlServerProvider(SqlServerDefaultVersion, connectionInfo.ConnectionString, connectionInfo.Connection as DbConnection, null);
 					case ProviderName.MySql:
-					case ProviderName.MySqlConnector:
-						return new MySqlDataProvider(provInfo.ProviderName);
+						return MySqlTools.GetDataProvider(MySqlVersion.AutoDetect, MySqlProvider.AutoDetect, connectionInfo.ConnectionString, connectionInfo.Connection as DbConnection, null);
 					case ProviderName.PostgreSQL:
-						return CreatePostgreSqlProvider(PostgreSqlDefaultVersion, connectionInfo.ConnectionString);
+						return CreatePostgreSqlProvider(PostgreSqlDefaultVersion, connectionInfo.ConnectionString, connectionInfo.Connection as DbConnection, null);
 					case ProviderName.SQLite:
-						return new SQLiteDataProvider(provInfo.ProviderName);
+						return SQLiteTools.GetDataProvider(SQLiteProvider.Microsoft, connectionInfo.ConnectionString, connectionInfo.Connection as DbConnection, null);
 					case ProviderName.Firebird:
-						return new FirebirdDataProvider();
+						return FirebirdTools.GetDataProvider(FirebirdVersion.AutoDetect, connectionInfo.ConnectionString, connectionInfo.Connection as DbConnection, null);
 					case ProviderName.DB2:
-						return new DB2DataProvider(ProviderName.DB2, DB2Version.LUW);
+						return DB2Tools.GetDataProvider(DB2Version.LUW, connectionInfo.ConnectionString, connectionInfo.Connection as DbConnection, null);
 					case ProviderName.DB2LUW:
-						return new DB2DataProvider(ProviderName.DB2, DB2Version.LUW);
+						return DB2Tools.GetDataProvider(DB2Version.LUW, connectionInfo.ConnectionString, connectionInfo.Connection as DbConnection, null);
 					case ProviderName.DB2zOS:
-						return new DB2DataProvider(ProviderName.DB2, DB2Version.zOS);
+						return DB2Tools.GetDataProvider(DB2Version.zOS, connectionInfo.ConnectionString, connectionInfo.Connection as DbConnection, null);
 					case ProviderName.Oracle:
-						return new OracleDataProvider(provInfo.ProviderName, OracleVersion.v11);
+						return OracleTools.GetDataProvider(OracleVersion.AutoDetect, OracleProvider.AutoDetect, connectionInfo.ConnectionString, connectionInfo.Connection as DbConnection, null);
 					case ProviderName.SqlCe:
-						return new SqlCeDataProvider();
+						return SqlCeTools.GetDataProvider();
 					//case ProviderName.Access:
 					//	return new AccessDataProvider();
 
@@ -336,36 +338,9 @@ namespace LinqToDB.NHibernate
 		/// <param name="version">SQL Server dialect.</param>
 		/// <param name="connectionString">Connection string.</param>
 		/// <returns>linq2db SQL Server provider instance.</returns>
-		protected virtual IDataProvider CreateSqlServerProvider(SqlServerVersion version, string? connectionString)
+		protected virtual IDataProvider CreateSqlServerProvider(SqlServerVersion version, string? connectionString, DbConnection? connection, DbTransaction? transaction)
 		{
-			string providerName;
-
-			if (!string.IsNullOrEmpty(connectionString))
-			{
-				providerName = "System.Data.SqlClient";
-
-				return DataConnection.GetDataProvider(providerName, connectionString)!;
-			}
-
-			switch (version)
-			{
-				case SqlServerVersion.v2000:
-					providerName = ProviderName.SqlServer2000;
-					break;
-				case SqlServerVersion.v2005:
-					providerName = ProviderName.SqlServer2005;
-					break;
-				case SqlServerVersion.v2008:
-					providerName = ProviderName.SqlServer2008;
-					break;
-				case SqlServerVersion.v2012:
-					providerName = ProviderName.SqlServer2012;
-					break;
-				default:
-					throw new ArgumentOutOfRangeException();
-			}
-
-			return new SqlServerDataProvider(providerName, version);
+			return SqlServerTools.GetDataProvider(version, SqlServerProvider.MicrosoftDataSqlClient, connectionString, connection, transaction);
 		}
 
 		/// <summary>
@@ -374,28 +349,9 @@ namespace LinqToDB.NHibernate
 		/// <param name="version">PostgreSQL dialect.</param>
 		/// <param name="connectionString">Connection string.</param>
 		/// <returns>linq2db PostgreSQL provider instance.</returns>
-		protected virtual IDataProvider CreatePostgreSqlProvider(PostgreSQLVersion version, string? connectionString)
+		protected virtual IDataProvider CreatePostgreSqlProvider(PostgreSQLVersion version, string? connectionString, DbConnection? connection, DbTransaction? transaction)
 		{
-			if (!string.IsNullOrEmpty(connectionString))
-				return DataConnection.GetDataProvider(ProviderName.PostgreSQL, connectionString)!;
-
-			string providerName;
-			switch (version)
-			{
-				case PostgreSQLVersion.v92:
-					providerName = ProviderName.PostgreSQL92;
-					break;
-				case PostgreSQLVersion.v93:
-					providerName = ProviderName.PostgreSQL93;
-					break;
-				case PostgreSQLVersion.v95:
-					providerName = ProviderName.PostgreSQL95;
-					break;
-				default:
-					throw new ArgumentOutOfRangeException(nameof(version), version, null);
-			}
-
-			return new PostgreSQLDataProvider(providerName, version);
+			return PostgreSQLTools.GetDataProvider(version, connectionString, connection, transaction);
 		}
 
 		/// <summary>
@@ -517,12 +473,12 @@ namespace LinqToDB.NHibernate
 			L2DBProperty = typeof(Sql).GetMethod(nameof(Sql.Property)).GetGenericMethodDefinition();
 
 		static readonly MethodInfo L2DBFromSqlMethodInfo = 
-			MemberHelper.MethodOfGeneric<IDataContext>(dc => dc.FromSql<object>(new Common.RawSqlString()));
+			MemberHelper.MethodOfGeneric<IDataContext>(dc => dc.FromSql<object>(new RawSqlString()));
 
 		static readonly MethodInfo L2DBRemoveOrderByMethodInfo = 
 			MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.RemoveOrderBy());
 
-		static readonly ConstructorInfo RawSqlStringConstructor = MemberHelper.ConstructorOf(() => new Common.RawSqlString(""));
+		static readonly ConstructorInfo RawSqlStringConstructor = MemberHelper.ConstructorOf(() => new RawSqlString(""));
 
 		static readonly ConstructorInfo DataParameterConstructor = MemberHelper.ConstructorOf(() => new DataParameter("", "", DataType.Undefined, ""));
 
@@ -589,10 +545,10 @@ namespace LinqToDB.NHibernate
 					{
 						var member = (MemberExpression) expr;
 
-						if (member.Member.IsFieldEx())
+						if (member.Member is FieldInfo)
 							return ((FieldInfo)member.Member).GetValue(EvaluateExpression(member.Expression));
 
-						if (member.Member.IsPropertyEx())
+						if (member.Member is PropertyInfo)
 							return ((PropertyInfo)member.Member).GetValue(EvaluateExpression(member.Expression), null);
 
 						break;
