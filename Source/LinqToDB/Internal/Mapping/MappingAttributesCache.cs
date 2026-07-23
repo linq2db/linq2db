@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading;
 
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Mapping;
@@ -21,6 +22,13 @@ namespace LinqToDB.Internal.Mapping
 
 		readonly Func<Type?, ICustomAttributeProvider, MappingAttribute[]> _attributesGetter;
 
+		// Defensive bound against unbounded growth: an approximate cap on the number of cached entries in this
+		// (per-schema) cache. When exceeded, all three dictionaries are cleared and repopulated on demand. The bound is
+		// read live from LinqToDB.Common.Configuration.MappingAttributesCacheMaxEntriesPerSchema (see MaybeTrim), so a
+		// change applies to already-built schemas (e.g. MappingSchema.Default) too; a value <= 0 disables it.
+		int _entries;
+		int _clearing;
+
 		/// <param name="attributesGetter">Raw attribute getter delegate for cache misses.</param>
 		public MappingAttributesCache(Func<Type?, ICustomAttributeProvider, MappingAttribute[]> attributesGetter)
 		{
@@ -31,6 +39,10 @@ namespace LinqToDB.Internal.Mapping
 
 		MappingAttribute[]? GetMappingAttributesInternal(CacheKey key)
 		{
+			// Runs once per _cache miss (the largest of the three dictionaries); approximate accounting for the
+			// defensive bound enforced by MaybeTrim after the GetOrAdd returns.
+			Interlocked.Increment(ref _entries);
+
 			List<MappingAttribute>? results = null;
 
 			foreach (var attr in _orderedInheritMappingAttributes.GetOrAdd(key.SourceKey, _getMappingAttributesTreeInternal))
@@ -122,6 +134,39 @@ namespace LinqToDB.Internal.Mapping
 		}
 
 		/// <summary>
+		/// Enforces the approximate per-schema entry bound: once the number of cached entries exceeds
+		/// <see cref="LinqToDB.Common.Configuration.MappingAttributesCacheMaxEntriesPerSchema"/>, clears the caches so they are
+		/// repopulated on demand. A bound of <c>0</c> or less disables the check.
+		/// </summary>
+		void MaybeTrim()
+		{
+			var maxEntries = LinqToDB.Common.Configuration.MappingAttributesCacheMaxEntriesPerSchema;
+
+			if (maxEntries > 0 && Volatile.Read(ref _entries) > maxEntries)
+				ClearCaches();
+		}
+
+		void ClearCaches()
+		{
+			// Single-flight: only the thread that flips _clearing performs the clear; concurrent callers skip it
+			// (a benign race — the bound is approximate and the next miss re-triggers the check when needed).
+			if (Interlocked.CompareExchange(ref _clearing, 1, 0) != 0)
+				return;
+
+			try
+			{
+				_cache                          .Clear();
+				_orderedInheritMappingAttributes.Clear();
+				_noInheritMappingAttributes     .Clear();
+				Interlocked.Exchange(ref _entries, 0);
+			}
+			finally
+			{
+				Volatile.Write(ref _clearing, 0);
+			}
+		}
+
+		/// <summary>
 		/// Returns a list of mapping attributes applied to a type or type member.
 		/// If there are multiple attributes found, attributes ordered from current to base type in inheritance hierarchy.
 		/// </summary>
@@ -134,7 +179,11 @@ namespace LinqToDB.Internal.Mapping
 			where T : MappingAttribute
 		{
 			// GetMappingAttributesInternal is not generic to avoid delegate allocation on each call
-			return (T[]?)_cache.GetOrAdd(new(typeof(T), new(source, null)), _getMappingAttributesInternal) ?? [];
+			var attrs = (T[]?)_cache.GetOrAdd(new(typeof(T), new(source, null)), _getMappingAttributesInternal) ?? [];
+
+			MaybeTrim();
+
+			return attrs;
 		}
 
 		/// <summary>
@@ -151,7 +200,11 @@ namespace LinqToDB.Internal.Mapping
 			where T : MappingAttribute
 		{
 			// GetMappingAttributesInternal is not generic to avoid delegate allocation on each call
-			return (T[]?)_cache.GetOrAdd(new(typeof(T), new(source, sourceOwner)), _getMappingAttributesInternal) ?? [];
+			var attrs = (T[]?)_cache.GetOrAdd(new(typeof(T), new(source, sourceOwner)), _getMappingAttributesInternal) ?? [];
+
+			MaybeTrim();
+
+			return attrs;
 		}
 	}
 }

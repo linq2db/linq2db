@@ -2,6 +2,7 @@
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -13,6 +14,8 @@ using LinqToDB.Mapping;
 using LinqToDB.Metadata;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.Mapping
 {
@@ -398,5 +401,58 @@ namespace Tests.Mapping
 
 			Task.WaitAll(tasks);
 		}
+
+		#region Issue 5692 - MappingAttributesCache unbounded growth
+
+		sealed class CacheProbeEntity
+		{
+			[Column, PrimaryKey, Identity] public int     Id   { get; set; }
+			[Column]                       public string? Name { get; set; }
+		}
+
+		// MappingAttributesCache is internal (no InternalsVisibleTo), so inspect its private dictionaries by reflection.
+		static object GetAttributeCache(MappingSchema ms)
+		{
+			var field = typeof(MappingSchema).GetField("_cache", BindingFlags.NonPublic | BindingFlags.Instance)
+				?? throw new InvalidOperationException("MappingSchema._cache field not found");
+
+			return field.GetValue(ms)!;
+		}
+
+		static int GetCachedEntryCount(MappingSchema ms)
+		{
+			var cache = GetAttributeCache(ms);
+			var field = cache.GetType().GetField("_cache", BindingFlags.NonPublic | BindingFlags.Instance)
+				?? throw new InvalidOperationException("MappingAttributesCache._cache field not found");
+
+			return ((System.Collections.ICollection)field.GetValue(cache)!).Count;
+		}
+
+		static void SetEntryCounter(MappingSchema ms, int value)
+		{
+			var cache = GetAttributeCache(ms);
+			cache.GetType().GetField("_entries", BindingFlags.NonPublic | BindingFlags.Instance)!.SetValue(cache, value);
+		}
+
+		[Test]
+		public void MappingAttributesCache_EnforcesEntryBound()
+		{
+			var ms     = new MappingSchema();
+			var idProp = typeof(CacheProbeEntity).GetProperty(nameof(CacheProbeEntity.Id))!;
+
+			// Prime one real entry, then push the approximate counter up to the configured bound
+			// (mutating only this isolated instance's counter, so the test stays parallel-safe).
+			ms.GetAttributes<ColumnAttribute>(typeof(CacheProbeEntity), idProp);
+			GetCachedEntryCount(ms).ShouldBeGreaterThan(0);
+
+			SetEntryCounter(ms, Configuration.MappingAttributesCacheMaxEntriesPerSchema);
+
+			// The next distinct lookup increments the counter past the bound → the cache is cleared.
+			ms.GetAttributes<PrimaryKeyAttribute>(typeof(CacheProbeEntity), idProp);
+
+			GetCachedEntryCount(ms).ShouldBe(0);
+		}
+
+		#endregion
 	}
 }
