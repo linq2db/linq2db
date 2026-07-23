@@ -363,7 +363,6 @@ namespace Tests.Linq
 			FSharp.Issue5598.UpdateNoOpExcludesPrimaryKey(db, false);
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1813")]
 		public void Issue1813Test1([DataSources] string context)
 		{
@@ -385,7 +384,6 @@ namespace Tests.Linq
 			FSharp.Issue1813.Issue1813Test3(db);
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1813")]
 		public void Issue1813Test4([DataSources] string context)
 		{
@@ -393,7 +391,6 @@ namespace Tests.Linq
 			FSharp.Issue1813.Issue1813Test4(db);
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1813")]
 		public void Issue1813Test5([DataSources] string context)
 		{
@@ -401,7 +398,6 @@ namespace Tests.Linq
 			FSharp.Issue1813.Issue1813Test5(db);
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1813")]
 		public void Issue1813Test6([DataSources] string context)
 		{
@@ -409,12 +405,19 @@ namespace Tests.Linq
 			FSharp.Issue1813.Issue1813Test6(db);
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1813")]
 		public void Issue1813Test7([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			FSharp.Issue1813.Issue1813Test7(db);
+		}
+
+		// YDB rejects the constant carried into the join ON clause ("each equality predicate argument must depend on exactly one JOIN input").
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1813")]
+		public void Issue1813Test8([DataSources(TestProvName.AllYdb)] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.Issue1813.Issue1813Test8(db);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5428")]
