@@ -22,6 +22,7 @@ using LinqToDB.Internal.Extensions;
 using LinqToDB.Mapping;
 using LinqToDB.Metadata;
 using JetBrains.Annotations;
+using LinqToDB.Internal.Async;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Reflection;
@@ -691,15 +692,16 @@ namespace LinqToDB.NHibernate
 				{
 					case ExpressionType.Constant:
 					{
-						/*
-						throw new NotImplementedException();
-						if (typeof(EntityQueryable<>).IsSameOrParentOf(e.Type) || typeof(DbSet<>).IsSameOrParentOf(e.Type))
+						// Replace a native NHibernate queryable root (NhQueryable<T>) with a linq2db
+						// GetTable<T> call on the current context. Keeping the whole query on a single
+						// data context means no second implicit context/connection is created for the
+						// source, which is what breaks the connection/transaction lifecycle otherwise.
+						if (e is ConstantExpression { Value: IQueryable queryable } && queryable.Provider is not IQueryProviderAsync)
 						{
-							var entityType = e.Type.GenericTypeArguments[0];
-							var newExpr = Expression.Call(null, Methods.LinqToDB.GetTable.MakeGenericMethod(entityType), Expression.Constant(dc));
+							var entityType = queryable.ElementType;
+							var newExpr    = Expression.Call(null, Methods.LinqToDB.GetTable.MakeGenericMethod(entityType), SqlQueryRootExpression.Create(dc));
 							return new TransformInfo(newExpr);
 						}
-						*/
 
 							break;
 					}
@@ -927,28 +929,17 @@ namespace LinqToDB.NHibernate
 		/// <returns>Current <see cref="DbContext"/> instance.</returns>
 		public virtual ISession? GetCurrentContext(IQueryable query)
 		{
-			throw new NotImplementedException();
-			/*
-			var compilerField = typeof (EntityQueryProvider).GetField("_queryCompiler", BindingFlags.NonPublic | BindingFlags.Instance);
-			var compiler = (QueryCompiler) compilerField.GetValue(query.Provider);
+			var provider = query.Provider;
 
-			var queryContextFactoryField = compiler.GetType().GetField("_queryContextFactory", BindingFlags.NonPublic | BindingFlags.Instance);
+			// A native NHibernate query (NhQueryable<T>) carries its session on the query provider
+			// (DefaultQueryProvider.Session — an ISessionImplementor that the concrete session also
+			// implements as ISession). This member is not part of NHibernate's public integration
+			// surface, so it is read by reflection and may need revisiting across NHibernate versions.
+			var sessionProperty = provider.GetType().GetProperty(
+				"Session",
+				BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
 
-			if (queryContextFactoryField == null)
-				throw new LinqToDBForNHibernateToolsException($"Can not find private field '{compiler.GetType()}._queryContextFactory' in current EFCore Version.");
-
-			if (!(queryContextFactoryField.GetValue(compiler) is RelationalQueryContextFactory queryContextFactory))
-				throw new LinqToDBForNHibernateToolsException("LinqToDB Tools for EFCore support only Relational Databases.");
-
-			var dependenciesProperty = typeof(RelationalQueryContextFactory).GetField("_dependencies", BindingFlags.NonPublic | BindingFlags.Instance);
-
-			if (dependenciesProperty == null)
-				throw new LinqToDBForNHibernateToolsException($"Can not find private property '{nameof(RelationalQueryContextFactory)}._dependencies' in current EFCore Version.");
-
-			var dependencies = (QueryContextDependencies) dependenciesProperty.GetValue(queryContextFactory);
-
-			return dependencies.CurrentContext?.Session;
-		*/
+			return sessionProperty?.GetValue(provider) as ISession;
 		}
 
 		/// <summary>

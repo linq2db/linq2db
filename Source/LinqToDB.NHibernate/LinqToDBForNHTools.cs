@@ -58,6 +58,9 @@ namespace LinqToDB.NHibernate
 					throw new LinqToDBForNHibernateToolsException("Can not evaluate current session from query");
 
 				var dc = CreateLinqToDbContext(session);
+				// #5364: this implicit context is never disposed — release the connection per command
+				// (NHibernate owns the session connection) instead of holding it open until dispose.
+				dc.CloseAfterUse = true;
 				var newExpression = queryable.Expression;
 
 				var result = (IQueryable)instantiator.MakeGenericMethod(queryable.ElementType)
@@ -495,7 +498,11 @@ namespace LinqToDB.NHibernate
 			if (session == null)
 				throw new LinqToDBForNHibernateToolsException("Can not evaluate current session from query");
 
-			return new LinqToDBForNHibernateQueryProvider<T>(dc, query.Expression);
+			// Rewrite the NHibernate expression to a linq2db one up front (NhQueryable roots -> GetTable)
+			// so the whole query runs on the provided context — no second implicit context is spun up.
+			var expression = TransformExpression(query.Expression, dc, session, session.SessionFactory);
+
+			return new LinqToDBForNHibernateQueryProvider<T>(dc, expression);
 		}
 
 		/// <summary>
@@ -516,8 +523,14 @@ namespace LinqToDB.NHibernate
 				throw new LinqToDBForNHibernateToolsException("Can not evaluate current session from query");
 
 			var dc = CreateLinqToDbContext(session);
+			// #5364: this implicit context is never disposed — release the connection per command.
+			dc.CloseAfterUse = true;
 
-			return new LinqToDBForNHibernateQueryProvider<T>(dc, query.Expression);
+			// Rewrite the NHibernate expression to a linq2db one up front (NhQueryable roots -> GetTable)
+			// so the whole query runs on this single context — no second implicit context is spun up.
+			var expression = TransformExpression(query.Expression, dc, session, session.SessionFactory);
+
+			return new LinqToDBForNHibernateQueryProvider<T>(dc, expression);
 		}
 
 		/// <summary>

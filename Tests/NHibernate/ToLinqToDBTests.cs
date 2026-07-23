@@ -1,0 +1,46 @@
+﻿using System.Linq;
+
+using LinqToDB;
+using LinqToDB.NHibernate.Tests.Models.Northwind;
+
+using NHibernate;
+using NHibernate.Linq;
+
+using NUnit.Framework;
+
+using Shouldly;
+
+using Tests;
+
+namespace LinqToDB.NHibernate.Tests
+{
+	/// <summary>
+	/// Exercises query interception — a native NHibernate <see cref="ISession"/> query (<c>session.Query&lt;T&gt;()</c>)
+	/// routed through linq2db via <c>ToLinqToDB()</c>, which recovers the session from the NHibernate query provider
+	/// (<c>GetCurrentContext</c>) and rebuilds the expression on the linq2db pipeline. Runs once per enabled provider.
+	/// </summary>
+	[TestFixture]
+	public class ToLinqToDBTests : NHTestBase
+	{
+		[OneTimeTearDown]
+		public void TearDown() => DisposeFactories();
+
+		[Test]
+		public void NativeQuery_RoutesThroughLinqToDB(
+			[IncludeDataSources(ProviderName.SQLiteClassic, TestProvName.AllSqlServer)] string provider)
+		{
+			var sf = GetSessionFactory(provider);
+
+			using var session = sf.OpenSession();
+
+			var names = session.Query<Customer>()
+				.Where(c => c.CustomerId == "ALFKI")
+				.ToLinqToDB()
+				.Select(c => c.CompanyName)
+				.ToList();
+
+			names.ShouldHaveSingleItem();
+			names[0].ShouldBe("Alfreds Futterkiste");
+		}
+	}
+}
