@@ -29,11 +29,7 @@ namespace LinqToDB.NHibernate
 		/// <summary>
 		/// Creates metadata provider for specified EF.Core data model.
 		/// </summary>
-		/// <param name="model">EF.Core data model.</param>
-		/// <param name="dependencies"></param>
-		/// <param name="mappingSource"></param>
-		/// <param name="logger"></param>
-		/// <returns>LINQ To DB metadata provider for specified EF.Core model. Can return <c>null</c>.</returns>
+		/// <returns>LINQ To DB metadata provider for specified EF.Core model. Can return <see langword="null"/>.</returns>
 		IMetadataReader? CreateMetadataReader(ISessionFactory? sessionFactory);
 
 		/// <summary>
@@ -48,18 +44,15 @@ namespace LinqToDB.NHibernate
 		/// <summary>
 		/// Returns mapping schema using provided EF.Core data model and metadata provider.
 		/// </summary>
-		/// <param name="model">EF.Core data model.</param>
 		/// <param name="metadataReader">Additional optional LINQ To DB database metadata provider.</param>
-		/// <param name="convertorSelector">EF Core registry for type conversion.</param>
 		/// <returns>Mapping schema for provided EF.Core model.</returns>
 		MappingSchema GetMappingSchema(ISessionFactory? sessionFactory, IMetadataReader? metadataReader);
 
 		/// <summary>
-		/// Returns EF.Core <see cref="IDbContextOptions"/> for specific <see cref="DbContext"/> instance.
+		/// Returns EF.Core <see cref="ISessionFactory"/> for specific <see cref="ISession"/> instance.
 		/// </summary>
 		/// <param name="session"></param>
-		/// <param name="context">EF.Core <see cref="DbContext"/> instance.</param>
-		/// <returns><see cref="IDbContextOptions"/> instance.</returns>
+		/// <returns><see cref="ISessionFactory"/> instance.</returns>
 		ISessionFactory? GetSessionOptions(ISession? session);
 
 		/// <summary>
@@ -67,23 +60,20 @@ namespace LinqToDB.NHibernate
 		/// </summary>
 		/// <param name="expression">EF.Core expression tree.</param>
 		/// <param name="dc">LINQ To DB <see cref="IDataContext"/> instance.</param>
-		/// <param name="ctx">Optional DbContext instance.</param>
-		/// <param name="model">EF.Core data model instance.</param>
 		/// <returns>Transformed expression.</returns>
 		Expression TransformExpression(Expression expression, IDataContext dc, ISession? session, ISessionFactory? sessionFactory);
 
 		/// <summary>
-		/// Extracts <see cref="DbContext"/> instance from <see cref="IQueryable"/> object.
+		/// Extracts <see cref="ISession"/> instance from <see cref="IQueryable"/> object.
 		/// </summary>
 		/// <param name="query">EF.Core query.</param>
-		/// <returns>Current <see cref="DbContext"/> instance.</returns>
+		/// <returns>Current <see cref="ISession"/> instance.</returns>
 		ISession? GetCurrentContext(IQueryable query);
 
 		/// <summary>
-		/// Extracts EF.Core connection information object from <see cref="IDbContextOptions"/>.
+		/// Extracts EF.Core connection information object from <see cref="ISessionFactory"/>.
 		/// </summary>
 		/// <param name="sessionFactory"></param>
-		/// <param name="options"><see cref="IDbContextOptions"/> instance.</param>
 		/// <returns>EF.Core connection data.</returns>
 		NHConnectionInfo ExtractConnectionInfo(ISessionFactory? sessionFactory);
 

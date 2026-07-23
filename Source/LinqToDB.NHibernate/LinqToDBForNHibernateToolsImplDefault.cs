@@ -6,6 +6,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Microsoft.Extensions.Caching.Memory;
+using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.DB2;
@@ -40,51 +41,15 @@ namespace LinqToDB.NHibernate
 	[PublicAPI]
 	public class LinqToDBForNHibernateToolsImplDefault : ILinqToDBForNHibernateTools
 	{
-		class ProviderKey
-		{
-			public ProviderKey(string? providerName, string? connectionString)
-			{
-				ProviderName = providerName;
-				ConnectionString = connectionString;
-			}
-
-			string? ProviderName { get; }
-			string? ConnectionString { get; }
-
-			#region Equality members
-
-			protected bool Equals(ProviderKey other)
-			{
-				return string.Equals(ProviderName, other.ProviderName) && string.Equals(ConnectionString, other.ConnectionString);
-			}
-
-			public override bool Equals(object? obj)
-			{
-				if (obj is null) return false;
-				if (ReferenceEquals(this, obj)) return true;
-				if (obj.GetType() != GetType()) return false;
-				return Equals((ProviderKey) obj);
-			}
-
-			public override int GetHashCode()
-			{
-				unchecked
-				{
-					return ((ProviderName != null ? ProviderName.GetHashCode() : 0) * 397) ^ (ConnectionString != null ? ConnectionString.GetHashCode() : 0);
-				}
-			}
-			
-			#endregion
-		}
+		sealed record ProviderKey(string? ProviderName, string? ConnectionString);
 
 		readonly ConcurrentDictionary<ProviderKey, IDataProvider> _knownProviders = new ConcurrentDictionary<ProviderKey, IDataProvider>();
 
 		private readonly MemoryCache _schemaCache = new MemoryCache(
 			new MemoryCacheOptions
 			{
-				ExpirationScanFrequency = TimeSpan.FromHours(1.0)
+				ExpirationScanFrequency = TimeSpan.FromHours(1.0),
 			});
-
 
 		/// <summary>
 		/// Force clear of internal caches.
@@ -168,38 +133,23 @@ namespace LinqToDB.NHibernate
 				throw new LinqToDBForNHibernateToolsException("Can not detect data provider.");
 			}
 
-			switch (provInfo.ProviderName)
+			return provInfo.ProviderName switch
 			{
-					case ProviderName.SqlServer:
-						return CreateSqlServerProvider(SqlServerDefaultVersion, connectionInfo.ConnectionString, connectionInfo.Connection as DbConnection, null);
-					case ProviderName.MySql:
-						return MySqlTools.GetDataProvider(MySqlVersion.AutoDetect, MySqlProvider.AutoDetect, connectionInfo.ConnectionString, connectionInfo.Connection as DbConnection, null);
-					case ProviderName.PostgreSQL:
-						return CreatePostgreSqlProvider(PostgreSqlDefaultVersion, connectionInfo.ConnectionString, connectionInfo.Connection as DbConnection, null);
-					case ProviderName.SQLite:
-						return SQLiteTools.GetDataProvider(SQLiteProvider.AutoDetect, connectionInfo.ConnectionString, connectionInfo.Connection as DbConnection, null);
-					case ProviderName.SQLiteClassic:
-						return SQLiteTools.GetDataProvider(SQLiteProvider.System, connectionInfo.ConnectionString, connectionInfo.Connection as DbConnection, null);
-					case ProviderName.SQLiteMS:
-						return SQLiteTools.GetDataProvider(SQLiteProvider.Microsoft, connectionInfo.ConnectionString, connectionInfo.Connection as DbConnection, null);
-					case ProviderName.Firebird:
-						return FirebirdTools.GetDataProvider(FirebirdVersion.AutoDetect, connectionInfo.ConnectionString, connectionInfo.Connection as DbConnection, null);
-					case ProviderName.DB2:
-						return DB2Tools.GetDataProvider(DB2Version.LUW, connectionInfo.ConnectionString, connectionInfo.Connection as DbConnection, null);
-					case ProviderName.DB2LUW:
-						return DB2Tools.GetDataProvider(DB2Version.LUW, connectionInfo.ConnectionString, connectionInfo.Connection as DbConnection, null);
-					case ProviderName.DB2zOS:
-						return DB2Tools.GetDataProvider(DB2Version.zOS, connectionInfo.ConnectionString, connectionInfo.Connection as DbConnection, null);
-					case ProviderName.Oracle:
-						return OracleTools.GetDataProvider(OracleVersion.AutoDetect, OracleProvider.AutoDetect, connectionInfo.ConnectionString, connectionInfo.Connection as DbConnection, null);
-					case ProviderName.SqlCe:
-						return SqlCeTools.GetDataProvider();
-					//case ProviderName.Access:
-					//	return new AccessDataProvider();
-
-			default:
-				throw new LinqToDBForNHibernateToolsException($"Can not instantiate data provider '{provInfo.ProviderName}'.");
-			}
+				ProviderName.SqlServer     => CreateSqlServerProvider(SqlServerDefaultVersion, connectionInfo.ConnectionString, connectionInfo.Connection as DbConnection, null),
+				ProviderName.MySql         => MySqlTools.GetDataProvider(MySqlVersion.AutoDetect, MySqlProvider.AutoDetect, connectionInfo.ConnectionString, connectionInfo.Connection as DbConnection, null),
+				ProviderName.PostgreSQL    => CreatePostgreSqlProvider(PostgreSqlDefaultVersion, connectionInfo.ConnectionString, connectionInfo.Connection as DbConnection, null),
+				ProviderName.SQLite        => SQLiteTools.GetDataProvider(SQLiteProvider.AutoDetect, connectionInfo.ConnectionString, connectionInfo.Connection as DbConnection, null),
+				ProviderName.SQLiteClassic => SQLiteTools.GetDataProvider(SQLiteProvider.System, connectionInfo.ConnectionString, connectionInfo.Connection as DbConnection, null),
+				ProviderName.SQLiteMS      => SQLiteTools.GetDataProvider(SQLiteProvider.Microsoft, connectionInfo.ConnectionString, connectionInfo.Connection as DbConnection, null),
+				ProviderName.Firebird      => FirebirdTools.GetDataProvider(FirebirdVersion.AutoDetect, connectionInfo.ConnectionString, connectionInfo.Connection as DbConnection, null),
+				ProviderName.DB2           => DB2Tools.GetDataProvider(DB2Version.LUW, connectionInfo.ConnectionString, connectionInfo.Connection as DbConnection, null),
+				ProviderName.DB2LUW        => DB2Tools.GetDataProvider(DB2Version.LUW, connectionInfo.ConnectionString, connectionInfo.Connection as DbConnection, null),
+				ProviderName.DB2zOS        => DB2Tools.GetDataProvider(DB2Version.zOS, connectionInfo.ConnectionString, connectionInfo.Connection as DbConnection, null),
+				ProviderName.Oracle        => OracleTools.GetDataProvider(OracleVersion.AutoDetect, OracleProvider.AutoDetect, connectionInfo.ConnectionString, connectionInfo.Connection as DbConnection, null),
+				ProviderName.SqlCe         => SqlCeTools.GetDataProvider(),
+				//ProviderName.Access      => new AccessDataProvider(),
+				_                          => throw new LinqToDBForNHibernateToolsException($"Can not instantiate data provider '{provInfo.ProviderName}'."),
+			};
 		}
 
 		protected virtual LinqToDBProviderInfo? GetLinqToDbProviderInfo(ISessionFactory sessionFactory) 
@@ -286,32 +236,21 @@ namespace LinqToDB.NHibernate
 		/// <returns>linq2db provider settings.</returns>
 		protected virtual LinqToDBProviderInfo? GetLinqToDbProviderInfo(DbConnection connection)
 		{
-			switch (connection.GetType().Name)
+			return connection.GetType().Name switch
 			{
-					case "SqlConnection":
-						return new LinqToDBProviderInfo { ProviderName = ProviderName.SqlServer };
-					case "MySqlConnection":
-						return new LinqToDBProviderInfo { ProviderName = ProviderName.MySql };
-					case "NpgsqlConnection":
-					case "PgSqlConnection":
-						return new LinqToDBProviderInfo { ProviderName = ProviderName.PostgreSQL };
-					case "FbConnection":
-						return new LinqToDBProviderInfo { ProviderName = ProviderName.Firebird };
-					case "DB2Connection":
-						return new LinqToDBProviderInfo { ProviderName = ProviderName.DB2LUW };
-					case "OracleConnection":
-						return new LinqToDBProviderInfo { ProviderName = ProviderName.Oracle };
-					case "SQLiteConnection":
-						// System.Data.SQLite (NHibernate SQLite20Driver).
-						return new LinqToDBProviderInfo { ProviderName = ProviderName.SQLiteClassic };
-					case "SqliteConnection":
-						// Microsoft.Data.Sqlite.
-						return new LinqToDBProviderInfo { ProviderName = ProviderName.SQLiteMS };
-					case "JetConnection":
-						return new LinqToDBProviderInfo { ProviderName = ProviderName.Access };
-			}
-
-			return null;
+				"SqlConnection"                         => new LinqToDBProviderInfo { ProviderName = ProviderName.SqlServer },
+				"MySqlConnection"                       => new LinqToDBProviderInfo { ProviderName = ProviderName.MySql },
+				"NpgsqlConnection" or "PgSqlConnection" => new LinqToDBProviderInfo { ProviderName = ProviderName.PostgreSQL },
+				"FbConnection"                          => new LinqToDBProviderInfo { ProviderName = ProviderName.Firebird },
+				"DB2Connection"                         => new LinqToDBProviderInfo { ProviderName = ProviderName.DB2LUW },
+				"OracleConnection"                      => new LinqToDBProviderInfo { ProviderName = ProviderName.Oracle },
+				// System.Data.SQLite (NHibernate SQLite20Driver).
+				"SQLiteConnection"                      => new LinqToDBProviderInfo { ProviderName = ProviderName.SQLiteClassic },
+				// Microsoft.Data.Sqlite.
+				"SqliteConnection"                      => new LinqToDBProviderInfo { ProviderName = ProviderName.SQLiteMS },
+				"JetConnection"                         => new LinqToDBProviderInfo { ProviderName = ProviderName.Access },
+				_                                       => null,
+			};
 		}
 
 		/*
@@ -378,10 +317,6 @@ namespace LinqToDB.NHibernate
 		/// Creates metadata provider for specified EF.Core data model. Default implementation uses
 		/// <see cref="NHMetadataReader"/> metadata provider.
 		/// </summary>
-		/// <param name="model">EF.Core data model.</param>
-		/// <param name="dependencies">EF.Core service dependencies.</param>
-		/// <param name="mappingSource">EF.Core mappings source.</param>
-		/// <param name="logger">EF.Core diagnostics logger.</param>
 		/// <returns>LINQ To DB metadata provider for specified EF.Core model.</returns>
 		public virtual IMetadataReader CreateMetadataReader(ISessionFactory? sessionFactory)
 		{
@@ -391,9 +326,7 @@ namespace LinqToDB.NHibernate
 		/// <summary>
 		/// Creates mapping schema using provided EF.Core data model and metadata provider.
 		/// </summary>
-		/// <param name="model">EF.Core data model.</param>
 		/// <param name="metadataReader">Additional optional LINQ To DB database metadata provider.</param>
-		/// <param name="convertorSelector"></param>
 		/// <returns>Mapping schema for provided EF.Core model.</returns>
 		public virtual MappingSchema CreateMappingSchema(
 			ISessionFactory? sessionFactory,
@@ -407,31 +340,10 @@ namespace LinqToDB.NHibernate
 			return schema;
 		}
 
-		private static LambdaExpression WithToDataParameter(Expression valueExpression, SqlDataType dataType, ParameterExpression fromParam) 
-			=> Expression.Lambda
-			(
-				Expression.New
-				(
-					DataParameterConstructor,
-					Expression.Constant("Conv", typeof(string)),
-					valueExpression,
-					Expression.Constant(dataType.Type.DataType, typeof(DataType)),
-					Expression.Constant(dataType.Type.DbType, typeof(string))
-				), 
-				fromParam
-			);
-
-		private static Expression WithConvertToObject(Expression valueExpression) 
-			=> valueExpression.Type != typeof(object) 
-				? Expression.Convert(valueExpression, typeof(object)) 
-				: valueExpression;
-		
 		/// <summary>
 		/// Returns mapping schema using provided EF.Core data model and metadata provider.
 		/// </summary>
-		/// <param name="model">EF.Core data model.</param>
 		/// <param name="metadataReader">Additional optional LINQ To DB database metadata provider.</param>
-		/// <param name="convertorSelector"></param>
 		/// <returns>Mapping schema for provided EF.Core model.</returns>
 		public virtual MappingSchema GetMappingSchema(
 			ISessionFactory? sessionFactory,
@@ -479,30 +391,14 @@ namespace LinqToDB.NHibernate
 		}
 
 		/// <summary>
-		/// Returns EF.Core <see cref="IDbContextOptions"/> for specific <see cref="DbContext"/> instance.
+		/// Returns the NHibernate <see cref="ISessionFactory"/> for a specific <see cref="ISession"/> instance.
 		/// </summary>
 		/// <param name="session"></param>
-		/// <param name="context">EF.Core <see cref="DbContext"/> instance.</param>
-		/// <returns><see cref="IDbContextOptions"/> instance.</returns>
+		/// <returns><see cref="ISessionFactory"/> instance.</returns>
 		public virtual ISessionFactory? GetSessionOptions(ISession? session)
 		{
 			return session?.SessionFactory;
 		}
-
-		static readonly MethodInfo
-			L2DBProperty = typeof(Sql).GetMethod(nameof(Sql.Property))!.GetGenericMethodDefinition();
-
-		static readonly MethodInfo L2DBFromSqlMethodInfo = 
-			MemberHelper.MethodOfGeneric<IDataContext>(dc => dc.FromSql<object>(new RawSqlString()));
-
-		static readonly MethodInfo L2DBRemoveOrderByMethodInfo = 
-			MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.RemoveOrderBy());
-
-		static readonly ConstructorInfo RawSqlStringConstructor = MemberHelper.ConstructorOf(() => new RawSqlString(""));
-
-		static readonly ConstructorInfo DataParameterConstructor = MemberHelper.ConstructorOf(() => new DataParameter("", "", DataType.Undefined, ""));
-
-		static readonly MethodInfo ToSql = MemberHelper.MethodOfGeneric(() => Sql.ToSql(1));
 
 		/// <summary>
 		/// Removes conversions from expression.
@@ -537,7 +433,7 @@ namespace LinqToDB.NHibernate
 		/// </summary>
 		/// <param name="method">Method to test.</param>
 		/// <param name="enumerable">Allow <see cref="IEnumerable{T}"/> extensions.</param>
-		/// <returns><c>true</c> if method is <see cref="IQueryable{T}"/> extension.</returns>
+		/// <returns><see langword="true"/> if method is <see cref="IQueryable{T}"/> extension.</returns>
 		public static bool IsQueryable(MethodCallExpression method, bool enumerable = true)
 		{
 			var type = method.Method.DeclaringType;
@@ -575,7 +471,7 @@ namespace LinqToDB.NHibernate
 					}
 			}
 
-			var value = Expression.Lambda(expr).Compile().DynamicInvoke();
+			var value = Expression.Lambda(expr).CompileExpression().DynamicInvokeExt();
 			return value;
 		}
 
@@ -670,13 +566,11 @@ namespace LinqToDB.NHibernate
 
 		/// <summary>
 		/// Transforms EF.Core expression tree to LINQ To DB expression.
-		/// Method replaces EF.Core <see cref="EntityQueryable{TResult}"/> instances with LINQ To DB
+		/// Method replaces native NHibernate <c>NhQueryable&lt;T&gt;</c> instances with LINQ To DB
 		/// <see cref="DataExtensions.GetTable{T}(IDataContext)"/> calls.
 		/// </summary>
 		/// <param name="expression">EF.Core expression tree.</param>
 		/// <param name="dc">LINQ To DB <see cref="IDataContext"/> instance.</param>
-		/// <param name="ctx">Optional DbContext instance.</param>
-		/// <param name="model">EF.Core data model instance.</param>
 		/// <returns>Transformed expression.</returns>
 		public virtual Expression TransformExpression(Expression expression, IDataContext dc, ISession? session, ISessionFactory? sessionFactory)
 		{
@@ -866,7 +760,7 @@ namespace LinqToDB.NHibernate
 				return new TransformInfo(e);
 			}
 
-			var newExpression = expression.Transform(e => LocalTransform(e));
+			var newExpression = expression.Transform(LocalTransform);
 
 			if (ignoreQueryFilters)
 			{
@@ -884,49 +778,12 @@ namespace LinqToDB.NHibernate
 			return newExpression;
 		}
 
-		static Expression EnsureEnumerable(Expression expression, MappingSchema mappingSchema)
-		{
-			var enumerable = typeof(IEnumerable<>).MakeGenericType(GetEnumerableElementType(expression.Type, mappingSchema));
-			if (expression.Type != enumerable)
-				expression = Expression.Convert(expression, enumerable);
-			return expression;
-		}
-
-		static Expression EnsureEnumerable(LambdaExpression lambda, MappingSchema mappingSchema)
-		{
-			var newBody = EnsureEnumerable(lambda.Body, mappingSchema);
-			if (newBody != lambda.Body)
-				lambda = Expression.Lambda(newBody, lambda.Parameters);
-			return lambda;
-		}
-
-
-		static Type GetEnumerableElementType(Type type, MappingSchema mappingSchema)
-		{
-			if (!IsEnumerableType(type, mappingSchema))
-				return type;
-			if (type.IsArray)
-				return type.GetElementType()!;
-			if (typeof(IGrouping<,>).IsSameOrParentOf(type))
-				return type.GetGenericArguments()[1];
-			return type.GetGenericArguments()[0];
-		}
-
-		static bool IsEnumerableType(Type type, MappingSchema mappingSchema)
-		{
-			if (mappingSchema.IsScalarType(type))
-				return false;
-			if (!typeof(IEnumerable<>).IsSameOrParentOf(type))
-				return false;
-			return true;
-		}
-
 		/// <summary>
-		/// Extracts <see cref="DbContext"/> instance from <see cref="IQueryable"/> object.
-		/// Due to unavailability of integration API in EF.Core this method use reflection and could became broken after EF.Core update.
+		/// Extracts the <see cref="ISession"/> from a native NHibernate query.
+		/// Due to unavailability of a public integration API this method uses reflection and could break across NHibernate versions.
 		/// </summary>
-		/// <param name="query">EF.Core query.</param>
-		/// <returns>Current <see cref="DbContext"/> instance.</returns>
+		/// <param name="query">NHibernate query.</param>
+		/// <returns>Current <see cref="ISession"/> instance.</returns>
 		public virtual ISession? GetCurrentContext(IQueryable query)
 		{
 			var provider = query.Provider;
@@ -943,11 +800,10 @@ namespace LinqToDB.NHibernate
 		}
 
 		/// <summary>
-		/// Extracts EF.Core connection information object from <see cref="IDbContextOptions"/>.
+		/// Extracts connection information from the NHibernate <see cref="ISessionFactory"/>.
 		/// </summary>
 		/// <param name="sessionFactory"></param>
-		/// <param name="options"><see cref="IDbContextOptions"/> instance.</param>
-		/// <returns>EF.Core connection data.</returns>
+		/// <returns>Connection data.</returns>
 		public virtual NHConnectionInfo ExtractConnectionInfo(ISessionFactory? sessionFactory)
 		{
 			throw new NotImplementedException();
@@ -1062,7 +918,6 @@ namespace LinqToDB.NHibernate
 		/// Entities will be attached only if AsNoTracking() is not used in query and DbContext is configured to track entities. 
 		/// </summary>
 		public virtual bool EnableChangeTracker { get; set; } = true;
-
 
 		#region MappingSchemaSupport
 

@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Data;
 using System.Data.Common;
-using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -23,7 +22,7 @@ using NHibernate;
 namespace LinqToDB.NHibernate
 {
 	/// <summary>
-	/// EF.Core <see cref="DbContext"/> extensions to call LINQ To DB functionality.
+	/// EF.Core <see cref="ISession"/> extensions to call LINQ To DB functionality.
 	/// </summary>
 	[PublicAPI]
 	public static partial class LinqToDBForNHibernateTools
@@ -63,8 +62,8 @@ namespace LinqToDB.NHibernate
 				dc.CloseAfterUse = true;
 				var newExpression = queryable.Expression;
 
-				var result = (IQueryable)instantiator.MakeGenericMethod(queryable.ElementType)
-					.Invoke(null, new object[] { dc, newExpression })!;
+				var result = instantiator.MakeGenericMethod(queryable.ElementType)
+					.InvokeExt<IQueryable>(null, new object[] { dc, newExpression });
 
 				if (prev != null)
 					result = prev(result);
@@ -118,10 +117,6 @@ namespace LinqToDB.NHibernate
 		/// Creates or return existing metadata provider for provided EF.Core data model. If model is null, empty metadata
 		/// provider will be returned.
 		/// </summary>
-		/// <param name="model">EF.Core data model instance. Could be <c>null</c>.</param>
-		/// <param name="dependencies"></param>
-		/// <param name="mappingSource"></param>
-		/// <param name="logger"></param>
 		/// <returns>LINQ To DB metadata provider.</returns>
 		public static IMetadataReader? GetMetadataReader(
 			ISessionFactory? sessionFactory)
@@ -129,24 +124,24 @@ namespace LinqToDB.NHibernate
 			if (sessionFactory == null)
 				return _defaultMetadataReader.Value;
 
-			return _metadataReaders.GetOrAdd(sessionFactory, m => Implementation.CreateMetadataReader(sessionFactory));
+			return _metadataReaders.GetOrAdd(sessionFactory, m => Implementation.CreateMetadataReader(m));
 		}
 
 		
 		/// <summary>
-		/// Returns EF.Core <see cref="DbContextOptions"/> for specific <see cref="DbContext"/> instance.
+		/// Returns EF.Core <see cref="ISessionFactory"/> for specific <see cref="ISession"/> instance.
 		/// </summary>
-		/// <param name="session">EF.Core <see cref="DbContext"/> instance.</param>
-		/// <returns><see cref="DbContextOptions"/> instance.</returns>
+		/// <param name="session">EF.Core <see cref="ISession"/> instance.</param>
+		/// <returns><see cref="ISessionFactory"/> instance.</returns>
 		public static ISessionFactory? GetSessionOptions(ISession session)
 		{
 			return Implementation.GetSessionOptions(session);
 		}
 
 		/// <summary>
-		/// Returns EF.Core database provider information for specific <see cref="DbContext"/> instance.
+		/// Returns EF.Core database provider information for specific <see cref="ISession"/> instance.
 		/// </summary>
-		/// <param name="session">EF.Core <see cref="DbContext"/> instance.</param>
+		/// <param name="session">EF.Core <see cref="ISession"/> instance.</param>
 		/// <returns>EF.Core provider information.</returns>
 		public static NHProviderInfo GetNHProviderInfo(ISession session)
 		{
@@ -154,7 +149,7 @@ namespace LinqToDB.NHibernate
 			{
 				Connection = session.Connection,
 				Session = session,
-				Options = GetSessionOptions(session)
+				Options = GetSessionOptions(session),
 			};
 
 			return info;
@@ -171,7 +166,7 @@ namespace LinqToDB.NHibernate
 			{
 				Connection = connection,
 				Session = null,
-				Options = null
+				Options = null,
 			};
 
 			return info;
@@ -213,11 +208,6 @@ namespace LinqToDB.NHibernate
 		/// <summary>
 		/// Creates mapping schema using provided EF.Core data model.
 		/// </summary>
-		/// <param name="model">EF.Core data model.</param>
-		/// <param name="convertorSelector">EF Core registry for type conversion.</param>
-		/// <param name="dependencies"></param>
-		/// <param name="mappingSource"></param>
-		/// <param name="logger"></param>
 		/// <returns>Mapping schema for provided EF.Core model.</returns>
 		public static MappingSchema GetMappingSchema(
 			ISessionFactory? sessionFactory)
@@ -230,8 +220,6 @@ namespace LinqToDB.NHibernate
 		/// </summary>
 		/// <param name="expression">EF.Core expression tree.</param>
 		/// <param name="dc">LINQ To DB <see cref="IDataContext"/> instance.</param>
-		/// <param name="ctx">Optional DbContext instance.</param>
-		/// <param name="model">EF.Core data model instance.</param>
 		/// <returns>Transformed expression.</returns>
 		public static Expression TransformExpression(Expression expression, IDataContext dc, ISession? session, ISessionFactory? sessionFactory)
 		{
@@ -240,16 +228,16 @@ namespace LinqToDB.NHibernate
 
 		/// <summary>
 		/// Creates LINQ To DB <see cref="DataConnection"/> instance, attached to provided
-		/// EF.Core <see cref="DbContext"/> instance connection and transaction.
+		/// EF.Core <see cref="ISession"/> instance connection and transaction.
 		/// </summary>
-		/// <param name="session">EF.Core <see cref="DbContext"/> instance.</param>
+		/// <param name="session">EF.Core <see cref="ISession"/> instance.</param>
 		/// <param name="transaction">Optional transaction instance, to which created connection should be attached.
-		/// If not specified, will use current <see cref="DbContext"/> transaction if it available.</param>
+		/// If not specified, will use current <see cref="ISession"/> transaction if it available.</param>
 		/// <returns>LINQ To DB <see cref="DataConnection"/> instance.</returns>
 		public static DataConnection CreateLinqToDbConnection(this ISession session,
 			ITransaction? transaction = null)
 		{
-			if (session == null) throw new ArgumentNullException(nameof(session));
+			ArgumentNullException.ThrowIfNull(session);
 
 			var info = GetNHProviderInfo(session);
 
@@ -303,9 +291,6 @@ namespace LinqToDB.NHibernate
 			return dc;
 		}
 
-		private static TraceSwitch _defaultTraceSwitch =
-			new TraceSwitch("DataConnection", "DataConnection trace switch", TraceLevel.Info.ToString());
-
 		/*
 		static void EnableTracing(DataConnection dc, ILogger logger)
 		{
@@ -333,7 +318,7 @@ namespace LinqToDB.NHibernate
 		public static IDataContext CreateLinqToDbContext(this ISession session,
 			ITransaction? transaction = null)
 		{
-			if (session == null) throw new ArgumentNullException(nameof(session));
+			ArgumentNullException.ThrowIfNull(session);
 
 			var info = GetNHProviderInfo(session);
 
@@ -391,13 +376,13 @@ namespace LinqToDB.NHibernate
 
 		/// <summary>
 		/// Creates LINQ To DB <see cref="DataConnection"/> instance that creates new database connection using connection
-		/// information from EF.Core <see cref="DbContext"/> instance.
+		/// information from EF.Core <see cref="ISession"/> instance.
 		/// </summary>
-		/// <param name="session">EF.Core <see cref="DbContext"/> instance.</param>
+		/// <param name="session">EF.Core <see cref="ISession"/> instance.</param>
 		/// <returns>LINQ To DB <see cref="DataConnection"/> instance.</returns>
 		public static DataConnection CreateLinq2DbConnectionDetached(this ISession session)
 		{
-			if (session == null) throw new ArgumentNullException(nameof(session));
+			ArgumentNullException.ThrowIfNull(session);
 
 			var info           = GetNHProviderInfo(session);
 			var connectionInfo = GetConnectionInfo(info);
@@ -428,7 +413,7 @@ namespace LinqToDB.NHibernate
 		public static NHConnectionInfo GetConnectionInfo(NHProviderInfo info)
 		{
 			var connection = info.Connection;
-			string? connectionString = info.Connection?.ConnectionString;
+			string? connectionString = (info.Connection as DbConnection)?.ConnectionString;
 			
 
 			if (connection != null && connectionString != null)
@@ -439,7 +424,7 @@ namespace LinqToDB.NHibernate
 			return new NHConnectionInfo
 			{
 				Connection = connection ?? extracted?.Connection,
-				ConnectionString = extracted?.ConnectionString
+				ConnectionString = extracted?.ConnectionString,
 			};
 		}
 
@@ -538,10 +523,10 @@ namespace LinqToDB.NHibernate
 		}
 
 		/// <summary>
-		/// Extracts <see cref="DbContext"/> instance from <see cref="IQueryable"/> object.
+		/// Extracts <see cref="ISession"/> instance from <see cref="IQueryable"/> object.
 		/// </summary>
 		/// <param name="query">EF.Core query.</param>
-		/// <returns>Current <see cref="DbContext"/> instance.</returns>
+		/// <returns>Current <see cref="ISession"/> instance.</returns>
 		public static ISession? GetCurrentContext(IQueryable query)
 		{
 			return Implementation.GetCurrentContext(query);

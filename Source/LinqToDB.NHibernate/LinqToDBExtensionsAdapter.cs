@@ -14,7 +14,7 @@ namespace LinqToDB.NHibernate
 {
 	/// <summary>
 	/// LINQ To DB async extensions adapter that routes async operations over a native NHibernate query to
-	/// NHibernate's own async API (<see cref="NHibernate.Linq.LinqExtensionMethods"/>). Methods NHibernate
+	/// NHibernate's own async API (<c>NHibernate.Linq.LinqExtensionMethods</c>). Methods NHibernate
 	/// does not provide (<c>ToArray</c>/<c>ToDictionary</c>/<c>Contains</c>/<c>ForEach</c>/<c>AsAsyncEnumerable</c>)
 	/// fall back to an async <c>ToListAsync</c> followed by a client-side projection.
 	/// </summary>

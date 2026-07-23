@@ -15,7 +15,7 @@ using LinqToDB.Internal.Linq;
 namespace LinqToDB.NHibernate.Internal
 {
 	/// <summary>
-	///     Adapter for <see cref="IAsyncQueryProvider" />
+	///     Adapter for <see cref="IQueryProviderAsync" />
 	///		This is internal API and is not intended for use by Linq To DB applications.
 	///		It may change or be removed without further notice.
 	/// </summary>
@@ -29,7 +29,7 @@ namespace LinqToDB.NHibernate.Internal
 		/// <param name="expression">Query expression.</param>
 		public LinqToDBForNHibernateQueryProvider(IDataContext dataContext, Expression expression)
 		{
-			if (expression == null) throw new ArgumentNullException(nameof(expression));
+			ArgumentNullException.ThrowIfNull(expression);
 			var dataContext1 = dataContext ?? throw new ArgumentNullException(nameof(dataContext));
 			QueryProvider = (IQueryProviderAsync) Internals.CreateExpressionQueryInstance<T>(dataContext1, expression);
 			QueryProviderAsQueryable = (IQueryable<T>) QueryProvider;
@@ -80,19 +80,16 @@ namespace LinqToDB.NHibernate.Internal
 			return QueryProvider.Execute<TResult>(expression);
 		}
 
-		private static MethodInfo _executeAsyncMethodInfo =
-			MemberHelper.MethodOf((IQueryProviderAsync p) => p.ExecuteAsync<int>(null!, default)).GetGenericMethodDefinition();
-
 		/// <summary>
 		/// Executes query expression and returns result as <see cref="IAsyncEnumerable{T}"/> value.
 		/// </summary>
 		/// <typeparam name="TResult">Type of result element.</typeparam>
 		/// <param name="expression">Query expression.</param>
-		/// <param name="token">Cancellation token.</param>
+		/// <param name="cancellationToken">Cancellation token.</param>
 		/// <returns>Query result as <see cref="IAsyncEnumerable{T}"/>.</returns>
-		public Task<IAsyncEnumerable<TResult>> ExecuteAsyncEnumerable<TResult>(Expression expression, CancellationToken token)
+		public Task<IAsyncEnumerable<TResult>> ExecuteAsyncEnumerable<TResult>(Expression expression, CancellationToken cancellationToken)
 		{
-			return QueryProvider.ExecuteAsyncEnumerable<TResult>(expression, token);
+			return QueryProvider.ExecuteAsyncEnumerable<TResult>(expression, cancellationToken);
 		}
 
 		/*

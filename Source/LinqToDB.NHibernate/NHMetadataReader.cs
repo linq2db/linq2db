@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -16,13 +17,16 @@ using NHibernate.Persister.Entity;
 using NHibernate.SqlTypes;
 using NHibernate.Type;
 
+// The char-separator string.Join overload is unavailable on netstandard2.0, so MA0089's suggested
+// fix cannot be applied to the string.Join(",", ...) calls in this file.
+#pragma warning disable MA0089
+
 namespace LinqToDB.NHibernate
 {
-
 	/// <summary>
-	/// LINQ To DB metadata reader for EF.Core sessionFactory.
+	/// LINQ To DB metadata reader for an NHibernate <see cref="ISessionFactory"/>.
 	/// </summary>
-	internal class NHMetadataReader : IMetadataReader
+	internal sealed class NHMetadataReader : IMetadataReader
 	{
 		readonly ISessionFactory? _sessionFactory;
 		private readonly ConcurrentDictionary<AbstractEntityPersister, PropertyMap> _propMapCache = new();
@@ -33,7 +37,7 @@ namespace LinqToDB.NHibernate
 			_sessionFactory = sessionFactory;
 		}
 
-		class PropInfo
+		sealed class PropInfo
 		{
 			public PropInfo(bool isPrimaryKey, int pkOrder, bool isIdentity, MemberInfo memberInfo, IType? propType, string[] columnNames, bool canBeNull)
 			{
@@ -59,7 +63,7 @@ namespace LinqToDB.NHibernate
 			public string MemberName => MemberInfo.Name;
 		}
 
-		class PropertyMap
+		sealed class PropertyMap
 		{
 			private Dictionary<string, PropInfo> _strict;
 			private Dictionary<string, PropInfo> _noCase;
@@ -76,7 +80,7 @@ namespace LinqToDB.NHibernate
 				{
 					plainProps = plainProps.Concat(new[]
 					{
-						new PropInfo(true, 0, metadata.IsIdentifierAssignedByInsert, entityType.GetProperty(metadata.IdentifierPropertyName)!, metadata.IdentifierType, metadata.IdentifierColumnNames, false)
+						new PropInfo(true, 0, metadata.IsIdentifierAssignedByInsert, entityType.GetProperty(metadata.IdentifierPropertyName)!, metadata.IdentifierType, metadata.IdentifierColumnNames, false),
 					});
 				}
 				else
@@ -86,9 +90,9 @@ namespace LinqToDB.NHibernate
 					for (int i = 0; i < metadata.KeyColumnNames.Length; i++)
 					{
 						var columnName = metadata.KeyColumnNames[i];
-						var foundProp = properties.FirstOrDefault(p => p.Name == columnName)
-							?? properties.FirstOrDefault(p => p.Name.Equals(columnName, StringComparison.InvariantCultureIgnoreCase))
-							?? properties.FirstOrDefault(p => StripCharacters(p.Name).Equals(StripCharacters(columnName), StringComparison.InvariantCultureIgnoreCase));
+						var foundProp = properties.FirstOrDefault(p => string.Equals(p.Name, columnName, StringComparison.Ordinal))
+							?? properties.FirstOrDefault(p => p.Name.Equals(columnName, StringComparison.OrdinalIgnoreCase))
+							?? properties.FirstOrDefault(p => StripCharacters(p.Name).Equals(StripCharacters(columnName), StringComparison.OrdinalIgnoreCase));
 						if (foundProp != null)
 						{
 							pk.Add(new PropInfo(true, i, false, foundProp, null, new[] { columnName }, false));
@@ -142,8 +146,7 @@ namespace LinqToDB.NHibernate
 			propMap = null;
 			if (type == null)
 				return false;
-			var metadata = _sessionFactory?.GetClassMetadata(type) as AbstractEntityPersister;
-			if (metadata == null)
+			if (_sessionFactory?.GetClassMetadata(type) is not AbstractEntityPersister metadata)
 				return false;
 
 			propMap = GetPropertyMap(metadata);
@@ -152,9 +155,7 @@ namespace LinqToDB.NHibernate
 
 		public T[] GetAttributes<T>(Type type, bool inherit = true) where T : Attribute
 		{
-			var et = _sessionFactory?.GetClassMetadata(type) as AbstractEntityPersister;
-
-			if (et != null)
+			if (_sessionFactory?.GetClassMetadata(type) is AbstractEntityPersister et)
 			{
 				if (typeof(T) == typeof(TableAttribute))
 				{
@@ -165,34 +166,9 @@ namespace LinqToDB.NHibernate
 			return Array.Empty<T>();
 		}
 
-		static bool CompareProperty(MemberInfo? property, MemberInfo memberInfo)
-		{
-			if (property == memberInfo)
-				return true;
-
-			if (property == null)
-				return false;
-			
-			if (memberInfo.DeclaringType?.IsAssignableFrom(property.DeclaringType) == true
-			    && memberInfo.Name == property.Name 
-			    && memberInfo.MemberType == property.MemberType 
-			    && memberInfo.GetMemberType() == property.GetMemberType())
-			{
-				return true;
-			}
-
-			return false;
-		}
-
-		static bool CompareProperty(string property, MemberInfo memberInfo)
-		{
-			return CompareProperty(memberInfo.DeclaringType?.GetProperty(property), memberInfo);
-		}
-
-
 		static string StripCharacters(string name)
 		{
-			name = name.Replace("_", "");
+			name = name.Replace("_", "", StringComparison.Ordinal);
 			return name;
 		}
 
@@ -206,7 +182,7 @@ namespace LinqToDB.NHibernate
 
 		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool inherit = true) where T : Attribute
 		{
-			if (typeof(Expression).IsSameOrParentOf(type)) 
+			if (typeof(Expression).IsSameOrParentOf(type))
 				return Array.Empty<T>();
 
 			if (typeof(T) == typeof(ColumnAttribute))
@@ -232,7 +208,7 @@ namespace LinqToDB.NHibernate
 								DataType = sqlType != null ? DbTypeToDataType(sqlType.DbType) : DataType.Undefined,
 								IsPrimaryKey = prop.IsPrimaryKey,
 								PrimaryKeyOrder = prop.PkOrder,
-								IsIdentity = prop.IsIdentity
+								IsIdentity = prop.IsIdentity,
 							};
 
 							if (sqlType != null)
@@ -265,8 +241,7 @@ namespace LinqToDB.NHibernate
 								var roleProp = prop.PropType.GetType().GetProperty("Role");
 								if (roleProp != null)
 								{
-									var role = roleProp.GetValue(prop.PropType) as string;
-									if (role != null)
+									if (roleProp.GetValue(prop.PropType) is string role)
 									{
 										var collectionMetadata = _sessionFactory!.GetCollectionMetadata(role);
 
@@ -283,7 +258,7 @@ namespace LinqToDB.NHibernate
 											{
 												ThisKey = thisKey,
 												OtherKey = otherKey,
-												CanBeNull = canBeNull
+												CanBeNull = canBeNull,
 											};
 										}
 									}
@@ -300,7 +275,7 @@ namespace LinqToDB.NHibernate
 									{
 										ThisKey = thisKey,
 										OtherKey = otherKey,
-										CanBeNull = canBeNull
+										CanBeNull = canBeNull,
 									};
 								}
 							}
@@ -309,7 +284,7 @@ namespace LinqToDB.NHibernate
 							{
 								return new T[]
 								{
-									(T) (Attribute) association
+									(T) (Attribute) association,
 								};
 							}
 
@@ -350,13 +325,13 @@ namespace LinqToDB.NHibernate
 				DbType.DateTimeOffset        => DataType.DateTimeOffset,
 				DbType.Object                => DataType.Variant,
 				DbType.VarNumeric            => DataType.VarNumeric,
-				_                            => DataType.NVarChar
+				_                            => DataType.NVarChar,
 			};
 
 			return dataType;
 		}
 
-		class ValueConverter : IValueConverter
+		sealed class ValueConverter : IValueConverter
 		{
 			public ValueConverter(
 				LambdaExpression convertToProviderExpression,
@@ -370,7 +345,7 @@ namespace LinqToDB.NHibernate
 			public bool             HandlesNulls           { get; }
 			public LambdaExpression FromProviderExpression { get; }
 			public LambdaExpression ToProviderExpression   { get; }
-		
+
 		}
 
 		MappingAttribute[] IMetadataReader.GetAttributes(Type type)
@@ -388,7 +363,7 @@ namespace LinqToDB.NHibernate
 
 		string IMetadataReader.GetObjectID()
 		{
-			return $".{nameof(NHMetadataReader)}.{(_sessionFactory == null ? 0 : System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(_sessionFactory))}.";
+			return $".{nameof(NHMetadataReader)}.{(_sessionFactory == null ? 0 : System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(_sessionFactory)).ToString(CultureInfo.InvariantCulture)}.";
 		}
 
 		public MemberInfo[] GetDynamicColumns(Type type)

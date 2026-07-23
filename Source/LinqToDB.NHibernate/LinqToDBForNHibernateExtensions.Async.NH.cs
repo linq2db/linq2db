@@ -12,7 +12,7 @@ namespace LinqToDB.NHibernate
 	// ReSharper disable InvokeAsExtensionMethod
 	/// <summary>
 	/// Provides conflict-less mappings to NHibernate's own async LINQ extensions
-	/// (<see cref="NHibernate.Linq.LinqExtensionMethods"/>). These run the query through NHibernate (not linq2db);
+	/// (<c>NHibernate.Linq.LinqExtensionMethods</c>). These run the query through NHibernate (not linq2db);
 	/// the <c>*NH</c> suffix avoids the ambiguity between NHibernate's and linq2db's <c>.ToListAsync()</c> etc.
 	/// Operations NHibernate does not provide fall back to an async <c>ToListAsync</c> plus a client-side projection.
 	/// </summary>
