@@ -81,5 +81,23 @@ namespace LinqToDB.NHibernate.Tests
 			names.ShouldHaveSingleItem();
 			names[0].ShouldBe("Alfreds Futterkiste");
 		}
+
+		[Test]
+		public async Task NativeQuery_ToListAsyncNH_RunsViaNHibernate(
+			[IncludeDataSources(ProviderName.SQLiteClassic, TestProvName.AllSqlServer)] string provider)
+		{
+			var sf = GetSessionFactory(provider);
+
+			using var session = sf.OpenSession();
+
+			// ToListAsyncNH is the unambiguous wrapper over NHibernate's own async LINQ extension.
+			var names = await session.Query<Customer>()
+				.Where (c => c.CustomerId == "ALFKI")
+				.Select(c => c.CompanyName)
+				.ToListAsyncNH();
+
+			names.ShouldHaveSingleItem();
+			names[0].ShouldBe("Alfreds Futterkiste");
+		}
 	}
 }

@@ -25,8 +25,6 @@
 		<!-- Not yet ported to the 6.x APIs (DataOptions / SqlQuery); re-included in later modernization phases. -->
 		<Compile Remove="LinqToDBForNHToolsDataContext.cs" />
 		<Compile Remove="Internal\EFCoreExpressionAttribute.cs" />
-		<!-- Native-provider async routing: the *AsyncEF family still needs its NHibernate delegation. -->
-		<Compile Remove="LinqToDBForNHExtensions.Async.EF.cs" />
 	</ItemGroup>
 
 </Project>
