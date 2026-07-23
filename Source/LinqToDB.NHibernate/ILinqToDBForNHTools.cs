@@ -52,7 +52,7 @@ namespace LinqToDB.NHibernate
 		/// <param name="metadataReader">Additional optional LINQ To DB database metadata provider.</param>
 		/// <param name="convertorSelector">EF Core registry for type conversion.</param>
 		/// <returns>Mapping schema for provided EF.Core model.</returns>
-		MappingSchema GetMappingSchema(ISessionFactory sessionFactory, IMetadataReader? metadataReader);
+		MappingSchema GetMappingSchema(ISessionFactory? sessionFactory, IMetadataReader? metadataReader);
 
 		/// <summary>
 		/// Returns EF.Core <see cref="IDbContextOptions"/> for specific <see cref="DbContext"/> instance.

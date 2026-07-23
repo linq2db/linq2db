@@ -70,13 +70,13 @@ namespace LinqToDB.NHibernate
 				Metadata = metadata;
 				var entityType = metadata.EntityMetamodel.EntityType.ReturnedClass;
 				var plainProps = metadata.PropertyNames
-					.Select((pn, idx) => new PropInfo(false, 0, false, entityType.GetProperty(pn), metadata.GetPropertyType(pn), metadata.GetSubclassPropertyColumnNames(pn), metadata.PropertyNullability[idx]));
+					.Select((pn, idx) => new PropInfo(false, 0, false, entityType.GetProperty(pn)!, metadata.GetPropertyType(pn), metadata.GetSubclassPropertyColumnNames(pn), metadata.PropertyNullability[idx]));
 
 				if (metadata.HasIdentifierProperty)
 				{
 					plainProps = plainProps.Concat(new[]
 					{
-						new PropInfo(true, 0, metadata.IsIdentifierAssignedByInsert, entityType.GetProperty(metadata.IdentifierPropertyName), metadata.IdentifierType, metadata.IdentifierColumnNames, false)
+						new PropInfo(true, 0, metadata.IsIdentifierAssignedByInsert, entityType.GetProperty(metadata.IdentifierPropertyName)!, metadata.IdentifierType, metadata.IdentifierColumnNames, false)
 					});
 				}
 				else
@@ -100,7 +100,7 @@ namespace LinqToDB.NHibernate
 
 				Properties = plainProps.ToArray();
 
-				var singleColumnName = Properties.Where(m => m.ColumnNames.Length == 1 && !m.PropType.IsAssociationType).ToList();
+				var singleColumnName = Properties.Where(m => m.ColumnNames.Length == 1 && m.PropType?.IsAssociationType != true).ToList();
 
 				_strict   = singleColumnName.ToDictionary(m => m.ColumnNames[0]);
 				_noCase   = singleColumnName.ToDictionary(m => m.ColumnNames[0], StringComparer.InvariantCultureIgnoreCase);
@@ -113,7 +113,7 @@ namespace LinqToDB.NHibernate
 
 			public PropInfo? FindPropByColumnName(string columnName)
 			{
-				PropInfo info;
+				PropInfo? info;
 				if (_strict.TryGetValue(columnName, out info))
 					return info;
 				if (_noCase.TryGetValue(columnName, out info))
@@ -219,7 +219,7 @@ namespace LinqToDB.NHibernate
 					{
 						if (prop.ColumnNames.Length == 1)
 						{
-							SqlType sqlType = null;
+							SqlType? sqlType = null;
 							if (prop.PropType is NullableType nullableType)
 							{
 								sqlType = nullableType.SqlType;
@@ -259,7 +259,7 @@ namespace LinqToDB.NHibernate
 					{
 						if (prop.PropType?.IsAssociationType == true)
 						{
-							AssociationAttribute association = null;
+							AssociationAttribute? association = null;
 							if (prop.PropType.IsCollectionType)
 							{
 								var roleProp = prop.PropType.GetType().GetProperty("Role");
@@ -277,7 +277,7 @@ namespace LinqToDB.NHibernate
 													FindPropertyNameByColumnName(thisEntityMap, cn).MemberName));
 											var otherKey = string.Join(",",
 												o2m.KeyColumnNames.Select(cn =>
-													FindPropertyNameByColumnName(elementMap, cn).MemberName));
+													FindPropertyNameByColumnName(elementMap!, cn).MemberName));
 											var canBeNull = true;
 											association = new AssociationAttribute
 											{

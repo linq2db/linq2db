@@ -236,7 +236,7 @@ namespace LinqToDB.NHibernate
 		/// <returns>Insertable source query.</returns>
 		[LinqTunnel]
 		[Pure]
-		public static IValueInsertable<T> Into<T>(this ISession session, ITable<T> target)
+		public static IValueInsertable<T> Into<T>(this ISession session, ITable<T> target) where T : notnull
 		{
 			if (session == null) throw new ArgumentNullException(nameof(session));
 			if (target == null)  throw new ArgumentNullException(nameof(target));

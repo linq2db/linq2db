@@ -61,7 +61,7 @@ namespace LinqToDB.NHibernate
 				var newExpression = queryable.Expression;
 
 				var result = (IQueryable)instantiator.MakeGenericMethod(queryable.ElementType)
-					.Invoke(null, new object[] { dc, newExpression });
+					.Invoke(null, new object[] { dc, newExpression })!;
 
 				if (prev != null)
 					result = prev(result);
@@ -69,7 +69,8 @@ namespace LinqToDB.NHibernate
 				return result;
 			};
 
-			LinqExtensions.ExtensionsAdapter = new LinqToDBExtensionsAdapter();
+			// Phase 5: async ExtensionsAdapter deferred until the async surfaces are re-enabled.
+			// LinqExtensions.ExtensionsAdapter = new LinqToDBExtensionsAdapter();
 
 			return true;
 		}
@@ -251,7 +252,7 @@ namespace LinqToDB.NHibernate
 
 			DataConnection? dc = null;
 
-			transaction ??= session.Transaction;
+			transaction ??= session.GetCurrentTransaction();
 
 			var connectionInfo = GetConnectionInfo(info);
 			var provider = GetDataProvider(info, connectionInfo);
@@ -259,7 +260,7 @@ namespace LinqToDB.NHibernate
 			if (transaction != null && transaction.IsActive)
 			{
 				throw new NotImplementedException();
-				var dbTrasaction = transaction;
+				// (transaction-attach path not yet implemented)
 				// TODO: we need API for testing current connection
 				/*
 				//if (provider.IsCompatibleConnection(dbTrasaction.Connection))

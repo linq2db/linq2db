@@ -419,7 +419,7 @@ namespace LinqToDB.NHibernate
 		{
 			var schemaId = string.Empty;
 			MappingSchema[]? schemas = null;
-			Tuple<string, MappingSchema[]> value;
+			Tuple<string, MappingSchema[]>? value;
 			if (_mappingSchemas.TryGetValue(Tuple.Create<ISessionFactory?>(null), out value))
 			{
 				schemaId = value.Item1;
@@ -455,7 +455,7 @@ namespace LinqToDB.NHibernate
 					return CreateMappingSchema(sessionFactory, schemas, metadataReader);
 				});
 
-			return result;
+			return result!;
 		}
 
 		/// <summary>
@@ -470,7 +470,7 @@ namespace LinqToDB.NHibernate
 		}
 
 		static readonly MethodInfo
-			L2DBProperty = typeof(Sql).GetMethod(nameof(Sql.Property)).GetGenericMethodDefinition();
+			L2DBProperty = typeof(Sql).GetMethod(nameof(Sql.Property))!.GetGenericMethodDefinition();
 
 		static readonly MethodInfo L2DBFromSqlMethodInfo = 
 			MemberHelper.MethodOfGeneric<IDataContext>(dc => dc.FromSql<object>(new RawSqlString()));
@@ -885,7 +885,7 @@ namespace LinqToDB.NHibernate
 			if (!IsEnumerableType(type, mappingSchema))
 				return type;
 			if (type.IsArray)
-				return type.GetElementType();
+				return type.GetElementType()!;
 			if (typeof(IGrouping<,>).IsSameOrParentOf(type))
 				return type.GetGenericArguments()[1];
 			return type.GetGenericArguments()[0];
@@ -1064,7 +1064,7 @@ namespace LinqToDB.NHibernate
 		{
 			var param = Expression.Parameter(typeof(MappingSchema), "ms");
 			var getter = Expression.MakeMemberAccess(param,
-				typeof(MappingSchema).GetProperty("ConfigurationID", BindingFlags.Instance | BindingFlags.NonPublic));
+				typeof(MappingSchema).GetProperty("ConfigurationID", BindingFlags.Instance | BindingFlags.NonPublic)!);
 			var lambda = Expression.Lambda<Func<MappingSchema, string>>(getter, param);
 
 			_configurationIdGetter = lambda.Compile();

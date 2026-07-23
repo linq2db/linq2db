@@ -64,7 +64,7 @@ namespace LinqToDB.NHibernate.Internal
 		/// </summary>
 		/// <param name="expression">Query expression.</param>
 		/// <returns>Query result.</returns>
-		public object Execute(Expression expression)
+		public object? Execute(Expression expression)
 		{
 			return QueryProvider.Execute(expression);
 		}
