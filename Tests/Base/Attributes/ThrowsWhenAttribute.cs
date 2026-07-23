@@ -116,6 +116,10 @@ namespace Tests
 				// Check if the parameter value matches the expected value
 				if (expectsException)
 				{
+					// The TestProgressReporter heartbeat action runs *inside* this IWrapSetUpTearDown wrapper, so it
+					// already sampled this (pre-rewrite) status. Remember it, then reconcile the tally after we rewrite.
+					var countedStatus = testResult.ResultState.Status;
+
 					if (testResult.Message == null)
 					{
 						testResult.SetResult(ResultState.Failure, $"Expected a <{_attribute.ExpectedException}> to be thrown, but no exception was thrown");
@@ -137,6 +141,9 @@ namespace Tests
 						else
 							testResult.SetResult(ResultState.Success, "Required exception was thrown:\n\n" + testResult.Message);
 					}
+
+					// Move the heartbeat's tally from the status it sampled to the verdict we just finalized (no-op if unchanged).
+					TestProgressTracker.Reclassify(countedStatus, testResult.ResultState.Status, context.CurrentTest.FullName, testResult.Message);
 				}
 
 				return testResult;
