@@ -10,6 +10,7 @@ type Methods() =
     static let optionMappingSchema =
         let ms = MappingSchema()
         ms.AddMetadataReader(FSharpOptionMetadataReader())
+        ms.AddMetadataReader(FSharpSingleCaseUnionMetadataReader())
         ms
 
     /// <summary>Enables support for F#-specific features.</summary>
@@ -26,6 +27,7 @@ type Methods() =
             options
                 .UseInterceptor(FSharpEntityBindingInterceptor.Instance)
                 .UseInterceptor(FSharpQueryExpressionInterceptor.Instance)
+                .UseMemberTranslator(FSharpMemberTranslator.Instance)
         // Combine the option schema as a *lower-priority* fallback so it never shadows the user's
         // explicit mappings: auto 'T option support only fills in members the user hasn't mapped.
         // (UseAdditionalMappingSchema would add it at higher priority, letting its embedded default

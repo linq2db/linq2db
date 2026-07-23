@@ -2,8 +2,11 @@
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.FSharp;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.Linq
 {
@@ -427,6 +430,89 @@ namespace Tests.Linq
 		public void ExpressionFunctionInCteTranslationTest2([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
 			FSharp.Issue5428.TestWindow(GetConnectionString(context));
+		}
+
+		[Test(Description = "F# option .IsSome in a query predicate translates to IS NOT NULL")]
+		public void OptionQuery_IsSome([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.OptionQueryTests.IsSome(db).ShouldBe(2);
+		}
+
+		[Test(Description = "F# option .IsNone in a query predicate translates to IS NULL")]
+		public void OptionQuery_IsNone([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.OptionQueryTests.IsNone(db).ShouldBe(1);
+		}
+
+		[Test(Description = "F# option .Value in a query predicate translates to the underlying value")]
+		public void OptionQuery_Value([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.OptionQueryTests.Value(db).ShouldBe(1);
+		}
+
+		[Test(Description = "F# option .Value in a projection translates to the underlying column")]
+		public void OptionQuery_ValueProjection([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.OptionQueryTests.ValueProjection(db).ShouldBe(2);
+		}
+
+		[Test(Description = "F# voption .IsSome in a query predicate translates to IS NOT NULL")]
+		public void OptionQuery_VOptionIsSome([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.OptionQueryTests.VOptionIsSome(db).ShouldBe(1);
+		}
+
+		[Test(Description = "F# voption .IsNone in a query predicate translates to IS NULL")]
+		public void OptionQuery_VOptionIsNone([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.OptionQueryTests.VOptionIsNone(db).ShouldBe(1);
+		}
+
+		[Test(Description = "F# voption .Value in a query predicate translates to the underlying value")]
+		public void OptionQuery_VOptionValue([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.OptionQueryTests.VOptionValue(db).ShouldBe(1);
+		}
+
+		[Test(Description = "F# single-case DU column round-trips and equality translates to SQL")]
+		public void DuQuery_EqualsLiteral([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.DuQueryTests.EqualsLiteral(db).ShouldBe(1);
+		}
+
+		[Test(Description = "F# single-case DU column reads back as the reconstructed union (from-provider converter)")]
+		public void DuQuery_ReadBack([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.DuQueryTests.ReadBack(db).ShouldBe(1);
+		}
+
+		[ActiveIssue("Blocked by #1813 (F# captured-lambda predicate translation, PR #5701): the correlated LEFT JOIN predicate fails to build. Once #5701 lands this exposes a single-case-DU null read materializing UserId 0 instead of null (FSharpSingleCaseUnionSupport converter created with handlesNulls=true but no null branch); fix by passing handlesNulls=false.")]
+		[Test(Description = "F# single-case DU column read as NULL (LEFT JOIN unmatched row) must materialize as null, not a fabricated default")]
+		public void DuQuery_NullReadKey([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.DuQueryTests.NullReadKey(db).ShouldBe(1);
+		}
+
+		[Test(Description = "UseFSharp must yield a stable ConfigurationID - the harness applies it to every context, so an unstable id defeats the query cache for all providers (#5704)")]
+		public void UseFSharp_StableConfigurationID()
+		{
+			// Member translators are keyed by instance identity in DataContextOptions' ConfigurationID
+			// (the query-cache key). UseFSharp must reuse one translator instance; a fresh instance per
+			// call gives every context a distinct id, so the query cache never hits.
+			var a = new DataOptions().UseFSharp();
+			var b = new DataOptions().UseFSharp();
+
+			a.ShouldBe(b);
 		}
 	}
 }
