@@ -25,9 +25,10 @@
 		<!-- Not yet ported to the 6.x APIs (DataOptions / SqlQuery); re-included in later modernization phases. -->
 		<Compile Remove="LinqToDBForNHToolsDataContext.cs" />
 		<Compile Remove="Internal\EFCoreExpressionAttribute.cs" />
-		<!-- Async surfaces (Phase 5): re-included once nullability is reconciled with IExtensionsAdapter. -->
+		<!-- Native-provider async routing (delegates to the source provider's own async). Deferred:
+		     LinqToDBExtensionsAdapter implements IExtensionsAdapter, the *AsyncEF family routes to the
+		     native provider; both still need their NHibernate async delegation implemented. -->
 		<Compile Remove="LinqToDBExtensionsAdapter.cs" />
-		<Compile Remove="LinqToDBForNHExtensions.Async.cs" />
 		<Compile Remove="LinqToDBForNHExtensions.Async.EF.cs" />
 	</ItemGroup>
 

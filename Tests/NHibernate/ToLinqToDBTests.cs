@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.NHibernate.Tests.Models.Northwind;
@@ -38,6 +39,25 @@ namespace LinqToDB.NHibernate.Tests
 				.ToLinqToDB()
 				.Select(c => c.CompanyName)
 				.ToList();
+
+			names.ShouldHaveSingleItem();
+			names[0].ShouldBe("Alfreds Futterkiste");
+		}
+
+		[Test]
+		public async Task NativeQuery_RoutesThroughLinqToDB_Async(
+			[IncludeDataSources(ProviderName.SQLiteClassic, TestProvName.AllSqlServer)] string provider)
+		{
+			var sf = GetSessionFactory(provider);
+
+			using var session = sf.OpenSession();
+
+			// ToListAsyncLinqToDB routes the native NHibernate query through linq2db and executes it
+			// truly async via linq2db's AsyncExtensions (an unambiguous name vs NHibernate's own *Async).
+			var names = await session.Query<Customer>()
+				.Where (c => c.CustomerId == "ALFKI")
+				.Select(c => c.CompanyName)
+				.ToListAsyncLinqToDB();
 
 			names.ShouldHaveSingleItem();
 			names[0].ShouldBe("Alfreds Futterkiste");

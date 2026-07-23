@@ -77,13 +77,13 @@ namespace LinqToDB.NHibernate
 			=> AsyncExtensions.FirstAsync(source.ToLinqToDB(), predicate, token);
 
 		/// <inheritdoc cref="AsyncExtensions.FirstOrDefaultAsync{TSource}(IQueryable{TSource}, CancellationToken)"/>
-		public static Task<TSource> FirstOrDefaultAsyncLinqToDB<TSource>(
+		public static Task<TSource?> FirstOrDefaultAsyncLinqToDB<TSource>(
 			this IQueryable<TSource> source,
 			CancellationToken        token = default)
 			=> AsyncExtensions.FirstOrDefaultAsync(source.ToLinqToDB(), token);
 
 		/// <inheritdoc cref="AsyncExtensions.FirstOrDefaultAsync{TSource}(IQueryable{TSource}, Expression{Func{TSource, bool}}, CancellationToken)"/>
-		public static Task<TSource> FirstOrDefaultAsyncLinqToDB<TSource>(
+		public static Task<TSource?> FirstOrDefaultAsyncLinqToDB<TSource>(
 			this IQueryable<TSource>       source,
 			Expression<Func<TSource,bool>> predicate,
 			CancellationToken              token = default)
@@ -103,13 +103,13 @@ namespace LinqToDB.NHibernate
 			=> AsyncExtensions.SingleAsync(source.ToLinqToDB(), predicate, token);
 
 		/// <inheritdoc cref="AsyncExtensions.SingleOrDefaultAsync{TSource}(IQueryable{TSource}, CancellationToken)"/>
-		public static Task<TSource> SingleOrDefaultAsyncLinqToDB<TSource>(
+		public static Task<TSource?> SingleOrDefaultAsyncLinqToDB<TSource>(
 			this IQueryable<TSource> source,
 			CancellationToken        token = default)
 			=> AsyncExtensions.SingleOrDefaultAsync(source.ToLinqToDB(), token);
 
 		/// <inheritdoc cref="AsyncExtensions.SingleOrDefaultAsync{TSource}(IQueryable{TSource}, Expression{Func{TSource, bool}}, CancellationToken)"/>
-		public static Task<TSource> SingleOrDefaultAsyncLinqToDB<TSource>(
+		public static Task<TSource?> SingleOrDefaultAsyncLinqToDB<TSource>(
 			this IQueryable<TSource>       source,
 			Expression<Func<TSource,bool>> predicate,
 			CancellationToken              token = default)
@@ -169,26 +169,26 @@ namespace LinqToDB.NHibernate
 			=> AsyncExtensions.LongCountAsync(source.ToLinqToDB(), predicate, token);
 
 		/// <inheritdoc cref="AsyncExtensions.MinAsync{TSource}(IQueryable{TSource}, CancellationToken)"/>
-		public static Task<TSource> MinAsyncLinqToDB<TSource>(
+		public static Task<TSource?> MinAsyncLinqToDB<TSource>(
 			this IQueryable<TSource> source,
 			CancellationToken        token = default)
 			=> AsyncExtensions.MinAsync(source.ToLinqToDB(), token);
 
 		/// <inheritdoc cref="AsyncExtensions.MinAsync{TSource, TResult}(IQueryable{TSource}, Expression{Func{TSource, TResult}}, CancellationToken)"/>
-		public static Task<TResult> MinAsyncLinqToDB<TSource,TResult>(
+		public static Task<TResult?> MinAsyncLinqToDB<TSource,TResult>(
 			this IQueryable<TSource>         source,
 			Expression<Func<TSource,TResult>> selector,
 			CancellationToken                 token = default)
 			=> AsyncExtensions.MinAsync(source.ToLinqToDB(), selector, token);
 
 		/// <inheritdoc cref="AsyncExtensions.MaxAsync{TSource}(IQueryable{TSource}, CancellationToken)"/>
-		public static Task<TSource> MaxAsyncLinqToDB<TSource>(
+		public static Task<TSource?> MaxAsyncLinqToDB<TSource>(
 			this IQueryable<TSource> source,
 			CancellationToken        token = default)
 			=> AsyncExtensions.MaxAsync(source.ToLinqToDB(), token);
 
 		/// <inheritdoc cref="AsyncExtensions.MaxAsync{TSource, TResult}(IQueryable{TSource}, Expression{Func{TSource, TResult}}, CancellationToken)"/>
-		public static Task<TResult> MaxAsyncLinqToDB<TSource,TResult>(
+		public static Task<TResult?> MaxAsyncLinqToDB<TSource,TResult>(
 			this IQueryable<TSource>          source,
 			Expression<Func<TSource,TResult>> selector,
 			CancellationToken                 token = default)
