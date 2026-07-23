@@ -894,6 +894,30 @@ namespace LinqToDB.Internal.SqlProvider
 			return element;
 		}
 
+		protected internal override IQueryElement VisitSqlFunctionArgument(SqlFunctionArgument element)
+		{
+			var newElement = (SqlFunctionArgument)base.VisitSqlFunctionArgument(element);
+
+			// Arguments are value positions, so a predicate passed as one (COUNT(x.Id == 2), LAG(x.Id == 2), ...)
+			// has to be folded into a value, like ORDER BY / PARTITION BY items are.
+			//
+			var wrapped = WrapBooleanExpression(newElement.Expression, includeFields : false, forceConvert : !SqlProviderFlags.SupportsPredicateInWindowValuePosition);
+
+			if (!ReferenceEquals(wrapped, newElement.Expression))
+			{
+				if (GetVisitMode(newElement) == VisitMode.Modify)
+				{
+					newElement.Modify(wrapped, newElement.Suffix);
+				}
+				else
+				{
+					newElement = new SqlFunctionArgument(wrapped, newElement.Modifier, newElement.Suffix);
+				}
+			}
+
+			return newElement;
+		}
+
 		protected internal override IQueryElement VisitSqlJoinedTable(SqlJoinedTable element)
 		{
 			var saveNullabilityContext = NullabilityContext;
@@ -1087,6 +1111,27 @@ namespace LinqToDB.Internal.SqlProvider
 			return newElement;
 		}
 
+		protected internal override IQueryElement VisitSqlWindowOrderItem(SqlWindowOrderItem element)
+		{
+			var newElement = (SqlWindowOrderItem)base.VisitSqlWindowOrderItem(element);
+
+			var wrapped = WrapBooleanExpression(newElement.Expression, includeFields : false);
+
+			if (!ReferenceEquals(wrapped, newElement.Expression))
+			{
+				if (GetVisitMode(newElement) == VisitMode.Modify)
+				{
+					newElement.Modify(wrapped);
+				}
+				else
+				{
+					newElement = new SqlWindowOrderItem(wrapped, newElement.IsDescending, newElement.NullsPosition);
+				}
+			}
+
+			return newElement;
+		}
+
 		protected internal override IQueryElement VisitSqlSetExpression(SqlSetExpression element)
 		{
 			var newElement = (SqlSetExpression)base.VisitSqlSetExpression(element);
@@ -1131,6 +1176,13 @@ namespace LinqToDB.Internal.SqlProvider
 			var newItem = base.VisitSqlGroupByItem(element);
 
 			return WrapBooleanExpression(newItem, includeFields: false);
+		}
+
+		protected override ISqlExpression VisitSqlExtendedFunctionPartition(SqlExtendedFunction function, ISqlExpression partition)
+		{
+			var newItem = base.VisitSqlExtendedFunctionPartition(function, partition);
+
+			return WrapBooleanExpression(newItem, includeFields: false, forceConvert: !SqlProviderFlags.SupportsPredicateInWindowValuePosition);
 		}
 
 		protected internal override IQueryElement VisitSqlCastExpression(SqlCastExpression element)
@@ -1420,37 +1472,9 @@ namespace LinqToDB.Internal.SqlProvider
 			};
 		}
 
-		public virtual ISqlExpression ConvertSqlExpression(SqlExpression element)
-		{
-			return element;
-		}
+		public virtual ISqlExpression ConvertSqlExpression(SqlExpression element) => element;
 
-		public virtual ISqlExpression ConvertSqlExtendedFunction(SqlExtendedFunction func)
-		{
-			switch (func.FunctionName)
-			{
-				case "MAX":
-				case "MIN":
-				{
-					if (func.SystemType == typeof(bool) || func.SystemType == typeof(bool?))
-					{
-						if (func.Arguments[0].Expression is not ISqlPredicate predicate)
-						{
-							predicate = new SqlPredicate.Expr(func.Arguments[0].Expression);
-						}
-
-						var argument = func.Arguments[0].WithExpression(new SqlConditionExpression(predicate, new SqlValue(1), new SqlValue(0)));
-						var newFunc  = func.WithArguments(new[] { argument }, func.ArgumentsNullability);
-						newFunc = newFunc.WithType(MappingSchema.GetDbDataType(typeof(int)));
-						return newFunc;
-					}
-
-					break;
-				}
-			}
-
-			return func;
-		}
+		public virtual ISqlExpression ConvertSqlExtendedFunction(SqlExtendedFunction func) => func;
 
 		public virtual ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{

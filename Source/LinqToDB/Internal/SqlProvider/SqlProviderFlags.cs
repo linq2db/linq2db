@@ -461,6 +461,18 @@ namespace LinqToDB.Internal.SqlProvider
 		public bool SupportsBooleanType { get; set; } = true;
 
 		/// <summary>
+		/// Indicates that provider accepts a predicate as a value in the window clauses
+		/// <c>OVER (PARTITION BY ...)</c> and in window function arguments.
+		/// This is narrower than <see cref="SupportsBooleanType"/>: a provider may have a usable boolean type,
+		/// and accept a predicate as a value in the select list, <c>GROUP BY</c> and <c>ORDER BY</c>, yet still
+		/// reject it in those two positions (Informix). When <see langword="false"/>, a predicate used there is
+		/// folded into a <c>CASE</c> expression.
+		/// Default value: <see langword="true"/>.
+		/// </summary>
+		[DataMember(Order = 77), DefaultValue(true)]
+		public bool SupportsPredicateInWindowValuePosition { get; set; } = true;
+
+		/// <summary>
 		/// Provider supports nested joins
 		/// <code>
 		/// A JOIN (B JOIN C ON ?) ON ?
@@ -775,6 +787,7 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsAccessBuggyLeftJoinConstantNullability             .GetHashCode()
 				^ SupportsPredicatesComparison                         .GetHashCode()
 				^ SupportsBooleanType                                  .GetHashCode()
+				^ SupportsPredicateInWindowValuePosition               .GetHashCode()
 				^ IsDerivedTableOrderBySupported                       .GetHashCode()
 				^ IsUpdateTakeSupported                                .GetHashCode()
 				^ IsUpdateSkipTakeSupported                            .GetHashCode()
@@ -856,6 +869,7 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsAccessBuggyLeftJoinConstantNullability              == other.IsAccessBuggyLeftJoinConstantNullability
 				&& SupportsPredicatesComparison                          == other.SupportsPredicatesComparison
 				&& SupportsBooleanType                                   == other.SupportsBooleanType
+				&& SupportsPredicateInWindowValuePosition                == other.SupportsPredicateInWindowValuePosition
 				&& IsDerivedTableOrderBySupported                        == other.IsDerivedTableOrderBySupported
 				&& IsUpdateTakeSupported                                 == other.IsUpdateTakeSupported
 				&& IsUpdateSkipTakeSupported                             == other.IsUpdateSkipTakeSupported

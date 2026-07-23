@@ -42,6 +42,10 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			SqlProviderFlags.RowConstructorSupport             = RowFeature.Equality | RowFeature.In;
 			SqlProviderFlags.IsExistsPreferableForContains     = true;
 			SqlProviderFlags.IsCorrelatedSubQueryTakeSupported = false;
+			// Informix has a usable BOOLEAN type and accepts a predicate as a value in the select list,
+			// GROUP BY and ORDER BY, but rejects one in OVER (PARTITION BY ...) and in window function
+			// arguments (COUNT(x = 1) OVER (...)) with a bare syntax error.
+			SqlProviderFlags.SupportsPredicateInWindowValuePosition = false;
 			SqlProviderFlags.IsOrderBySubQuerySupported        = false;
 
 			SetCharField("CHAR",  (r,i) => r.GetString(i).TrimEnd(' '));

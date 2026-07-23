@@ -466,6 +466,9 @@ namespace LinqToDB.Internal.DataProvider.DB2.Translation
 			protected override bool IsFrameExclusionSupported       => false;
 			protected override bool IsLeadLagNullTreatmentSupported => true;
 			protected override bool IsValueNullTreatmentSupported   => true;
+			// DB2 rejects a boolean sort key for PERCENTILE_CONT: "SQL0214N ... An expression in the ORDER BY
+			// clause ... in the SYSIBM.PERCENTILE_CONT ORDER BY clause is not valid. Reason code = 9".
+			protected override bool IsPercentileContBooleanOrderBySupported => false;
 			protected override bool IsNthValueFromSupported         => true;
 			// DB2 supports the full statistical/regression window-function set. Bare STDDEV/VARIANCE are the
 			// *population* forms (DB2 docs), so map the sample-API Sql.Window.StdDev/Variance to the documented

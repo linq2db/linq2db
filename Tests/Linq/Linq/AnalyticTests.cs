@@ -1702,7 +1702,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllSqlServer, TestProvName.AllOracle21Minus, TestProvName.AllSapHana])]
 		[Test]
 		public void Issue2842Test1([DataSources(
 			TestProvName.AllAccess,

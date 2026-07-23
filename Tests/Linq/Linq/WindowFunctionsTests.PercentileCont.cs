@@ -13,6 +13,36 @@ namespace Tests.Linq
 {
 	partial class WindowFunctionsTests
 	{
+		// WITHIN GROUP (ORDER BY ...) items are SqlWindowOrderItem, same as OVER (ORDER BY): a boolean sort key
+		// is a value position and has to be folded.
+		//
+		// PostgreSQL, DuckDB and DB2 have a native boolean type, so nothing is folded there, and PERCENTILE_CONT
+		// interpolates and needs a numeric sort key — percentile_cont(numeric, boolean), quantile_cont(BOOLEAN,
+		// ...) and DB2's SQL0214N all reject it. They report that at translation time rather than surfacing the
+		// driver error, so the expectation here is a descriptive exception, not a skip.
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllPostgreSQL93Minus, TestProvName.AllSqlServer2008Minus, TestProvName.AllClickHouse, TestProvName.AllSqlServer2012Plus, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllSQLite, TestProvName.AllFirebird3Plus, TestProvName.AllSapHana, TestProvName.AllInformix, ProviderName.Ydb, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentileCont)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllPostgreSQL95Plus, TestProvName.AllDuckDB, TestProvName.AllDB2, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentileContBooleanOrderBy)]
+		public void PercentileContWithBooleanOrderBy([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var query =
+				from t in table
+				group t by t.CategoryId into g
+				select new
+				{
+					CategoryId = g.Key,
+					Boolean    = g.PercentileCont(0.5, (e, f) => f.OrderBy(e.IntValue == 20)),
+					NullCheck  = g.PercentileCont(0.5, (e, f) => f.OrderBy(e.NullableIntValue != null)),
+				};
+
+			_ = query.ToList();
+		}
+
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllPostgreSQL93Minus, TestProvName.AllSqlServer2008Minus, TestProvName.AllClickHouse, TestProvName.AllSqlServer2012Plus, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllSQLite, TestProvName.AllFirebird3Plus, TestProvName.AllSapHana, TestProvName.AllInformix, ProviderName.Ydb, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentileCont)]
 		public void PercentileContGrouping([SupportsAnalyticFunctionsContext] string context)

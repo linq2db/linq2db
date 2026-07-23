@@ -470,6 +470,10 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 		// aggregates; v95 is the lowest dialect entry >= 9.4.
 		protected class PostgreSQL95WindowFunctionsMemberTranslator : PostgreSQLWindowFunctionsMemberTranslator
 		{
+			// percentile_cont interpolates and is declared only for numeric/interval, so a boolean WITHIN GROUP
+			// key has no matching overload: "function percentile_cont(numeric, boolean) does not exist".
+			protected override bool IsPercentileContBooleanOrderBySupported => false;
+
 			protected override bool IsWindowFilterSupported     => true;
 			protected override bool IsOrderedSetFilterSupported => true;
 			protected override bool IsPercentileContSupported   => true;
