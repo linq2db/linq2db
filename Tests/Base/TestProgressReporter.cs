@@ -147,6 +147,55 @@ namespace Tests
 			}
 		}
 
+		/// <summary>
+		/// Corrects the running tally when a result the heartbeat already sampled is subsequently rewritten by an
+		/// outer command. The <see cref="TestProgressReporterAttribute"/> action runs <em>inside</em> the
+		/// <c>IWrapSetUpTearDown</c> layer, so for an expected-throw case (<see cref="ThrowsWhenAttribute"/>) it
+		/// counts the pre-rewrite (Failed) status; <c>ThrowsWhenCommand</c> then rewrites the result to Success and
+		/// calls this to move the unit between buckets (and prune the now-stale <c>recentFailures</c> entry). Handles
+		/// the symmetric case too — an expected throw that never fired is counted Passed here, then reclassified Failed.
+		/// A no-op when the status is unchanged or the heartbeat is disabled.
+		/// </summary>
+		internal static void Reclassify(TestStatus before, TestStatus after, string? test, string? message)
+		{
+			if (before == after)
+				return;
+
+			lock (_sync)
+			{
+				if (!_enabled)
+					return;
+
+				switch (before)
+				{
+					case TestStatus.Passed : if (_passed  > 0) _passed--;  break;
+					case TestStatus.Skipped: if (_skipped > 0) _skipped--; break;
+					case TestStatus.Failed :
+						if (_failed > 0)
+							_failed--;
+						if (test != null)
+							_failures.RemoveAll(f => f.Test == test);
+						break;
+					// Inconclusive / Warning were never counted into a pass/fail bucket — nothing to undo.
+					default: break;
+				}
+
+				switch (after)
+				{
+					case TestStatus.Passed : _passed++;  break;
+					case TestStatus.Skipped: _skipped++; break;
+					case TestStatus.Failed :
+						_failed++;
+						if (test != null && _failures.Count < MaxRecentFailures)
+							_failures.Add((test, Trim(message)));
+						break;
+					default: break;
+				}
+
+				Write(force: true);
+			}
+		}
+
 		static bool EnsureInit()
 		{
 			if (_initialized)
