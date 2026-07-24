@@ -123,8 +123,9 @@ jobs:
         if %errorlevel% neq 0 exit
 
         REM publish nhibernate tests (net462 + net10.0, x64)
-        REM -a x64: net462 is AnyCPU and runs as x64; pin the RID so the x64 native SQLite lib is published (see EF3 above).
-        dotnet publish Tests/NHibernate/Tests.NHibernate.NH5.csproj -f net462 -c $(test_configuration) -a x64 -o .build/publish/NHTests/$(test_configuration)/net462_x64
+        REM net462 is AnyCPU (runs as x64); System.Data.SQLite's SQLite.Interop.dll is copied into publish by the
+        REM project's _CopySQLiteInteropToPublish target, so no RID is needed here.
+        dotnet publish Tests/NHibernate/Tests.NHibernate.NH5.csproj -f net462 -c $(test_configuration) -o .build/publish/NHTests/$(test_configuration)/net462_x64
         if %errorlevel% neq 0 exit
         dotnet publish Tests/NHibernate/Tests.NHibernate.NH5.csproj -f net10.0 -c $(test_configuration) -o .build/publish/NHTests/$(test_configuration)/net10.0_x64
         if %errorlevel% neq 0 exit
