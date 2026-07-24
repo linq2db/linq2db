@@ -27,7 +27,7 @@ namespace LinqToDB.NHibernate
 	/// <summary>
 	/// LINQ To DB metadata reader for an NHibernate <see cref="ISessionFactory"/>.
 	/// </summary>
-	internal sealed class NHMetadataReader : IMetadataReader
+	internal sealed partial class NHMetadataReader : IMetadataReader
 	{
 		readonly ISessionFactory? _sessionFactory;
 		private readonly ConcurrentDictionary<AbstractEntityPersister, PropertyMap> _propMapCache = new();
@@ -497,7 +497,17 @@ namespace LinqToDB.NHibernate
 
 		MappingAttribute[] IMetadataReader.GetAttributes(Type type)
 		{
-			return GetAttributes<TableAttribute>(type).Cast<MappingAttribute>().ToArray();
+			var tableAttrs = GetAttributes<TableAttribute>(type);
+
+			var queryFilter = BuildQueryFilterAttribute(type);
+			if (queryFilter == null)
+				return tableAttrs.Cast<MappingAttribute>().ToArray();
+
+			var result = new MappingAttribute[tableAttrs.Length + 1];
+			for (var i = 0; i < tableAttrs.Length; i++)
+				result[i] = tableAttrs[i];
+			result[tableAttrs.Length] = queryFilter;
+			return result;
 		}
 
 		MappingAttribute[] IMetadataReader.GetAttributes(Type type, MemberInfo memberInfo)

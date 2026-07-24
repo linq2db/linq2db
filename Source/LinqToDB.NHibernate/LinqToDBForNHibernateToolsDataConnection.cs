@@ -38,6 +38,12 @@ namespace LinqToDB.NHibernate
 		public bool Tracking { get; set; }
 
 		/// <summary>
+		/// The NHibernate session this connection is attached to, if any. Used by the query-filter bridge to
+		/// read the session's currently enabled NHibernate filters at query-build time.
+		/// </summary>
+		internal ISession? Session => _session;
+
+		/// <summary>
 		/// Creates new instance of data connection.
 		/// </summary>
 		/// <param name="session">NHibernate session.</param>
