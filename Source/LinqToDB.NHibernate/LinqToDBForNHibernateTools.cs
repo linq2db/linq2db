@@ -14,7 +14,6 @@ using LinqToDB.Expressions;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.Metadata;
-using LinqToDB.NHibernate.Internal;
 using JetBrains.Annotations;
 using LinqToDB.Internal.Async;
 using LinqToDB.Internal.Common;
@@ -42,8 +41,6 @@ namespace LinqToDB.NHibernate
 		static bool InitializeInternal()
 		{
 			var prev = LinqExtensions.ProcessSourceQueryable;
-
-			InitializeMapping();
 
 			var instantiator = MemberHelper.MethodOf(() => Internals.CreateExpressionQueryInstance<int>(null!, null!))
 				.GetGenericMethodDefinition();

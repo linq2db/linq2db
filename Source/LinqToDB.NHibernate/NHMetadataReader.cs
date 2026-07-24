@@ -486,23 +486,6 @@ namespace LinqToDB.NHibernate
 			return dataType;
 		}
 
-		sealed class ValueConverter : IValueConverter
-		{
-			public ValueConverter(
-				LambdaExpression convertToProviderExpression,
-				LambdaExpression convertFromProviderExpression, bool handlesNulls)
-			{
-				FromProviderExpression = convertFromProviderExpression;
-				ToProviderExpression   = convertToProviderExpression;
-				HandlesNulls           = handlesNulls;
-			}
-
-			public bool             HandlesNulls           { get; }
-			public LambdaExpression FromProviderExpression { get; }
-			public LambdaExpression ToProviderExpression   { get; }
-
-		}
-
 		MappingAttribute[] IMetadataReader.GetAttributes(Type type)
 		{
 			var tableAttrs = GetAttributes<TableAttribute>(type);
