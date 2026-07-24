@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 
+using LinqToDB.Expressions;
 using LinqToDB.Internal.Reflection;
 using LinqToDB.Mapping;
 
@@ -28,16 +29,9 @@ namespace LinqToDB.NHibernate
 		const string FilterColumnMarker = "l2dbqfilterorigin";
 
 		static readonly MethodInfo _applyFiltersMethod =
-			typeof(NHMetadataReader).GetMethod(nameof(ApplyFilters), BindingFlags.Instance | BindingFlags.NonPublic)!;
+			MemberHelper.MethodOfGeneric<NHMetadataReader>(r => r.ApplyFilters<object>(default!, default!));
 
-		static readonly MethodInfo _sqlExprMethod = typeof(Sql).GetMethods()
-			.Single(m => string.Equals(m.Name, nameof(Sql.Expr), StringComparison.Ordinal)
-				&& m.IsGenericMethodDefinition
-				&& m.GetParameters() is { Length: 2 } ps
-				&& ps[0].ParameterType == typeof(RawSqlString)
-				&& ps[1].ParameterType == typeof(object[]));
-
-		static readonly MethodInfo _sqlExprBoolMethod       = _sqlExprMethod.MakeGenericMethod(typeof(bool));
+		static readonly MethodInfo _sqlExprBoolMethod       = MemberHelper.MethodOf(() => Sql.Expr<bool>(default(RawSqlString), Array.Empty<object>()));
 		static readonly MethodInfo _sqlPropertyObjectMethod = Methods.LinqToDB.SqlExt.Property.MakeGenericMethod(typeof(object));
 
 		static readonly MethodInfo _rawSqlStringOp =
