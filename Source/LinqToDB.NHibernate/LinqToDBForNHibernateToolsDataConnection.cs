@@ -77,7 +77,7 @@ namespace LinqToDB.NHibernate
 
 		/// <summary>
 		/// When change tracking is enabled, attaches an entity materialised by linq2db to the NHibernate
-		/// session so it becomes a managed (persistent) instance — mirroring EF Core's change-tracker attach.
+		/// session so it becomes a managed (persistent) instance.
 		/// </summary>
 		/// <param name="eventData">Entity creation event data.</param>
 		/// <param name="entity">Materialised entity.</param>

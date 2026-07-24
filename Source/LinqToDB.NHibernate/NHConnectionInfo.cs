@@ -3,7 +3,7 @@
 namespace LinqToDB.NHibernate
 {
 	/// <summary>
-	/// Contains database connectivity information, extracted from EF.Core.
+	/// Contains database connectivity information, extracted from NHibernate.
 	/// </summary>
 	public class NHConnectionInfo
 	{

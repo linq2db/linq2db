@@ -21,10 +21,4 @@
 		<None Include="readme.md" Pack="true" PackagePath="readme.md" />
 	</ItemGroup>
 
-	<ItemGroup>
-		<!-- Not yet ported to the 6.x APIs (DataOptions / SqlQuery); re-included in later modernization phases. -->
-		<Compile Remove="LinqToDBForNHToolsDataContext.cs" />
-		<Compile Remove="Internal\EFCoreExpressionAttribute.cs" />
-	</ItemGroup>
-
 </Project>

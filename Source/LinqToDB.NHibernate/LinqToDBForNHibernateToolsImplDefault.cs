@@ -36,7 +36,7 @@ namespace LinqToDB.NHibernate
 {
 	// ReSharper disable once ClassWithVirtualMembersNeverInherited.Global
 	/// <summary>
-	/// Default EF.Core - LINQ To DB integration bridge implementation.
+	/// Default NHibernate to LINQ To DB integration bridge implementation.
 	/// </summary>
 	[PublicAPI]
 	public class LinqToDBForNHibernateToolsImplDefault : ILinqToDBForNHibernateTools
@@ -61,10 +61,10 @@ namespace LinqToDB.NHibernate
 		}
 
 		/// <summary>
-		/// Returns LINQ To DB provider, based on provider data from EF.Core.
+		/// Returns LINQ To DB provider, based on provider data from NHibernate.
 		/// Could be overriden if you have issues with default detection mechanisms.
 		/// </summary>
-		/// <param name="providerInfo">Provider information, extracted from EF.Core.</param>
+		/// <param name="providerInfo">Provider information, extracted from NHibernate.</param>
 		/// <param name="connectionInfo"></param>
 		/// <returns>LINQ TO DB provider instance.</returns>
 		public virtual IDataProvider GetDataProvider(NHProviderInfo providerInfo, NHConnectionInfo connectionInfo)
@@ -78,9 +78,9 @@ namespace LinqToDB.NHibernate
 		}
 
 		/// <summary>
-		/// Converts EF.Core provider settings to linq2db provider settings.
+		/// Converts NHibernate provider settings to linq2db provider settings.
 		/// </summary>
-		/// <param name="providerInfo">EF.Core provider settings.</param>
+		/// <param name="providerInfo">NHibernate provider settings.</param>
 		/// <returns>linq2db provider settings.</returns>
 		protected virtual LinqToDBProviderInfo GetLinqToDbProviderInfo(NHProviderInfo providerInfo)
 		{
@@ -99,31 +99,15 @@ namespace LinqToDB.NHibernate
 				provInfo.Merge(GetLinqToDbProviderInfo(providerInfo.Options));
 			}
 
-			/*var relational = providerInfo.Session ;
-			if (relational != null)
-			{
-				provInfo.Merge(GetLinqToDbProviderInfo(relational));
-			}
-
-			if (providerInfo.Connection != null)
-			{
-				provInfo.Merge(GetLinqToDbProviderInfo(providerInfo.Connection));
-			}
-
-			if (providerInfo.Session != null)
-			{
-				provInfo.Merge(GetLinqToDbProviderInfo(providerInfo.Session.Database));
-			}*/
-
 			return provInfo;
 		}
 
 		/// <summary>
 		/// Creates instance of linq2db database provider.
 		/// </summary>
-		/// <param name="providerInfo">EF.Core provider settings.</param>
+		/// <param name="providerInfo">NHibernate provider settings.</param>
 		/// <param name="provInfo">linq2db provider settings.</param>
-		/// <param name="connectionInfo">EF.Core connection settings.</param>
+		/// <param name="connectionInfo">NHibernate connection settings.</param>
 		/// <returns>linq2db database provider.</returns>
 		protected virtual IDataProvider CreateLinqToDbDataProvider(NHProviderInfo providerInfo, LinqToDBProviderInfo provInfo,
 			NHConnectionInfo connectionInfo)
@@ -171,64 +155,6 @@ namespace LinqToDB.NHibernate
 			return null;
 		}
 
-		/*
-		/// <summary>
-		/// Creates linq2db provider settings object from <see cref="DatabaseFacade"/> instance.
-		/// </summary>
-		/// <param name="database">EF.Core database information object.</param>
-		/// <returns>linq2db provider settings.</returns>
-		protected virtual LinqToDBProviderInfo? GetLinqToDbProviderInfo(DatabaseFacade database)
-		{
-			switch (database.ProviderName)
-			{
-				case "Microsoft.EntityFrameworkCore.SqlServer":
-					return new LinqToDBProviderInfo { ProviderName = ProviderName.SqlServer };
-
-				case "Pomelo.EntityFrameworkCore.MySql":
-				case "Devart.Data.MySql.EFCore":
-				{
-					return new LinqToDBProviderInfo { ProviderName = ProviderName.MySqlConnector };
-				}
-
-				case "MySql.Data.EntityFrameworkCore":
-				{
-					return new LinqToDBProviderInfo { ProviderName = ProviderName.MySql };
-				}
-
-				case "Npgsql.EntityFrameworkCore.PostgreSQL":
-				case "Devart.Data.PostgreSql.EFCore":
-				{
-					return new LinqToDBProviderInfo { ProviderName = ProviderName.PostgreSQL };
-				}
-
-				case "Microsoft.EntityFrameworkCore.Sqlite":
-				case "Devart.Data.SQLite.EFCore":
-				{
-					return new LinqToDBProviderInfo { ProviderName = ProviderName.SQLite };
-				}
-
-				case "FirebirdSql.EntityFrameworkCore.Firebird":
-				case "EntityFrameworkCore.FirebirdSql":
-					return new LinqToDBProviderInfo { ProviderName = ProviderName.Firebird };
-
-				case "IBM.EntityFrameworkCore":
-				case "IBM.EntityFrameworkCore-lnx":
-				case "IBM.EntityFrameworkCore-osx":
-					return new LinqToDBProviderInfo { ProviderName = ProviderName.DB2LUW };
-				case "Devart.Data.Oracle.EFCore":
-					return new LinqToDBProviderInfo { ProviderName = ProviderName.Oracle };
-				case "EntityFrameworkCore.Jet":
-					return new LinqToDBProviderInfo { ProviderName = ProviderName.Access };
-
-				case "EntityFrameworkCore.SqlServerCompact40":
-				case "EntityFrameworkCore.SqlServerCompact35":
-					return new LinqToDBProviderInfo { ProviderName = ProviderName.SqlCe };
-			}
-
-			return null;
-		}
-		*/
-
 		/// <summary>
 		/// Creates linq2db provider settings object from <see cref="DbConnection"/> instance.
 		/// </summary>
@@ -253,44 +179,6 @@ namespace LinqToDB.NHibernate
 			};
 		}
 
-		/*
-		/// <summary>
-		/// Creates linq2db provider settings object from <see cref="RelationalOptionsExtension"/> instance.
-		/// </summary>
-		/// <param name="extensions">EF.Core provider options.</param>
-		/// <returns>linq2db provider settings.</returns>
-		protected virtual LinqToDBProviderInfo? GetLinqToDbProviderInfo(RelationalOptionsExtension extensions)
-		{
-			switch (extensions.GetType().Name)
-			{
-				case "MySqlOptionsExtension":
-					return new LinqToDBProviderInfo { ProviderName = ProviderName.MySqlConnector };
-				case "MySQLOptionsExtension":
-					return new LinqToDBProviderInfo { ProviderName = ProviderName.MySql };
-				case "NpgsqlOptionsExtension":
-				case "PgSqlOptionsExtension":
-					return new LinqToDBProviderInfo { ProviderName = ProviderName.PostgreSQL };
-				case "SqlServerOptionsExtension":
-					return new LinqToDBProviderInfo { ProviderName = ProviderName.SqlServer };
-				case "SqliteOptionsExtension":
-				case "SQLiteOptionsExtension":
-					return new LinqToDBProviderInfo { ProviderName = ProviderName.SQLite };
-				case "SqlCeOptionsExtension":
-					return new LinqToDBProviderInfo { ProviderName = ProviderName.SqlCe };
-				case "FbOptionsExtension":
-					return new LinqToDBProviderInfo { ProviderName = ProviderName.Firebird };
-				case "Db2OptionsExtension":
-					return new LinqToDBProviderInfo { ProviderName = ProviderName.DB2LUW };
-				case "OracleOptionsExtension":
-					return new LinqToDBProviderInfo { ProviderName = ProviderName.Oracle };
-				case "JetOptionsExtension":
-					return new LinqToDBProviderInfo { ProviderName = ProviderName.Access };
-			}
-
-			return null;
-		}
-		*/
-
 		/// <summary>
 		/// Creates linq2db SQL Server database provider instance.
 		/// </summary>
@@ -314,20 +202,20 @@ namespace LinqToDB.NHibernate
 		}
 
 		/// <summary>
-		/// Creates metadata provider for specified EF.Core data model. Default implementation uses
+		/// Creates metadata provider for specified NHibernate data model. Default implementation uses
 		/// <see cref="NHMetadataReader"/> metadata provider.
 		/// </summary>
-		/// <returns>LINQ To DB metadata provider for specified EF.Core model.</returns>
+		/// <returns>LINQ To DB metadata provider for specified NHibernate model.</returns>
 		public virtual IMetadataReader CreateMetadataReader(ISessionFactory? sessionFactory)
 		{
 			return new NHMetadataReader(sessionFactory);
 		}
 
 		/// <summary>
-		/// Creates mapping schema using provided EF.Core data model and metadata provider.
+		/// Creates mapping schema using provided NHibernate data model and metadata provider.
 		/// </summary>
 		/// <param name="metadataReader">Additional optional LINQ To DB database metadata provider.</param>
-		/// <returns>Mapping schema for provided EF.Core model.</returns>
+		/// <returns>Mapping schema for provided NHibernate model.</returns>
 		public virtual MappingSchema CreateMappingSchema(
 			ISessionFactory? sessionFactory,
 			MappingSchema[]? mappingSchemas,
@@ -341,10 +229,10 @@ namespace LinqToDB.NHibernate
 		}
 
 		/// <summary>
-		/// Returns mapping schema using provided EF.Core data model and metadata provider.
+		/// Returns mapping schema using provided NHibernate data model and metadata provider.
 		/// </summary>
 		/// <param name="metadataReader">Additional optional LINQ To DB database metadata provider.</param>
-		/// <returns>Mapping schema for provided EF.Core model.</returns>
+		/// <returns>Mapping schema for provided NHibernate model.</returns>
 		public virtual MappingSchema GetMappingSchema(
 			ISessionFactory? sessionFactory,
 			IMetadataReader? metadataReader)
@@ -565,19 +453,15 @@ namespace LinqToDB.NHibernate
 		}
 
 		/// <summary>
-		/// Transforms EF.Core expression tree to LINQ To DB expression.
+		/// Transforms NHibernate expression tree to LINQ To DB expression.
 		/// Method replaces native NHibernate <c>NhQueryable&lt;T&gt;</c> instances with LINQ To DB
 		/// <see cref="DataExtensions.GetTable{T}(IDataContext)"/> calls.
 		/// </summary>
-		/// <param name="expression">EF.Core expression tree.</param>
+		/// <param name="expression">NHibernate expression tree.</param>
 		/// <param name="dc">LINQ To DB <see cref="IDataContext"/> instance.</param>
 		/// <returns>Transformed expression.</returns>
 		public virtual Expression TransformExpression(Expression expression, IDataContext dc, ISession? session, ISessionFactory? sessionFactory)
 		{
-			var ignoreQueryFilters = false;
-			var tracking           = true;
-			var ignoreTracking     = false;
-
 			TransformInfo LocalTransform(Expression e)
 			{
 				e = CompactExpression(e);
@@ -613,148 +497,6 @@ namespace LinqToDB.NHibernate
 						break;
 					}
 
-					case ExpressionType.Call:
-					{
-						var methodCall = (MethodCallExpression) e;
-
-						var generic = methodCall.Method.IsGenericMethod ? methodCall.Method.GetGenericMethodDefinition() : methodCall.Method;
-
-						if (IsQueryable(methodCall))
-						{
-							if (methodCall.Method.IsGenericMethod)
-							{
-								var isTunnel = false;
-
-								/*
-								if (generic == IgnoreQueryFiltersMethodInfo)
-								{
-									ignoreQueryFilters = true;
-									isTunnel = true;
-								}
-								else if (generic == AsNoTrackingMethodInfo)
-								{
-									isTunnel = true;
-									tracking = false;
-								}
-								else if (generic == IncludeMethodInfo)
-								{
-									var method =
-										Methods.LinqToDB.LoadWith.MakeGenericMethod(methodCall.Method
-											.GetGenericArguments());
-
-									return new TransformInfo(Expression.Call(method, methodCall.Arguments), false, true);
-								}
-								else if (generic == IncludeMethodInfoString)
-								{
-									var arguments = new List<Expression>(2)
-									{
-										methodCall.Arguments[0]
-									};
-
-									var propName = (string)EvaluateExpression(methodCall.Arguments[1])!;
-									var param    = Expression.Parameter(methodCall.Method.GetGenericArguments()[0], "e");
-									var propPath = propName.Split(new[] {'.'}, StringSplitOptions.RemoveEmptyEntries);
-									var prop     = (Expression)param;
-									for (int i = 0; i < propPath.Length; i++)
-									{
-										prop = Expression.PropertyOrField(prop, propPath[i]);
-									}
-									
-									arguments.Add(Expression.Lambda(prop, param));
-
-									var method =
-										Methods.LinqToDB.LoadWith.MakeGenericMethod(param.Type, prop.Type);
-
-									return new TransformInfo(Expression.Call(method, arguments.ToArray()), false, true);
-								}
-								else if (generic == ThenIncludeMethodInfo)
-								{
-									var method =
-										Methods.LinqToDB.ThenLoadFromSingle.MakeGenericMethod(methodCall.Method
-											.GetGenericArguments());
-
-									return new TransformInfo(Expression.Call(method, methodCall.Arguments.Select(a => a.Transform(l => LocalTransform(l)))
-										.ToArray()), false, true);
-								}
-								else if (generic == ThenIncludeEnumerableMethodInfo)
-								{
-									var method =
-										Methods.LinqToDB.ThenLoadFromMany.MakeGenericMethod(methodCall.Method
-											.GetGenericArguments());
-
-									return new TransformInfo(Expression.Call(method, methodCall.Arguments.Select(a => a.Transform(l => LocalTransform(l)))
-										.ToArray()), false, true);
-								}
-								else if (generic == L2DBRemoveOrderByMethodInfo)
-								{
-									// This is workaround. EagerLoading runs query again with RemoveOrderBy method.
-									// it is only one possible way now how to detect nested query. 
-									ignoreTracking = true;
-								}
-								*/
-
-								if (isTunnel)
-									return new TransformInfo(methodCall.Arguments[0], false, true);
-							}
-
-							break;
-						}
-
-						/*if (typeof(IQueryable<>).IsSameOrParentOf(methodCall.Type))
-						{
-							// Invoking function to evaluate EF's Subquery located in function
-
-							var obj = EvaluateExpression(methodCall.Object);
-							var arguments = methodCall.Arguments.Select(EvaluateExpression).ToArray();
-							if (methodCall.Method.Invoke(obj, arguments) is IQueryable result)
-							{
-								if (true /*!ExpressionEqualityComparer.Instance.Equals(methodCall, result.Expression)#1#)
-									return new TransformInfo(result.Expression, false, true);
-							}
-						}*/
-
-						List<Expression>? newArguments = null;
-						var parameters = generic.GetParameters();
-						for (var i = 0; i < parameters.Length; i++)
-						{
-							var arg = methodCall.Arguments[i];
-							var canWrap = true;
-
-							if (arg.NodeType == ExpressionType.Call)
-							{
-								var mc = (MethodCallExpression) arg;
-								if (mc.Method.DeclaringType == typeof(Sql))
-									canWrap = false;
-							}
-
-							if (canWrap)
-							{
-								/*
-								var parameterInfo = parameters[i];
-								var notParametrized = parameterInfo.GetCustomAttributes<NotParameterizedAttribute>()
-									.FirstOrDefault();
-								if (notParametrized != null)
-								{
-									if (newArguments == null)
-									{
-										newArguments = new List<Expression>(methodCall.Arguments.Take(i));
-									}
-
-									newArguments.Add(Expression.Call(ToSql.MakeGenericMethod(arg.Type), arg));
-									continue;
-								}
-							*/
-							}							 
-								
-							newArguments?.Add(methodCall.Arguments[i]);
-						}
-
-						if (newArguments != null)
-							return new TransformInfo(methodCall.Update(methodCall.Object, newArguments), false, true);
-
-						break;
-					}
-
 				}
 
 				return new TransformInfo(e);
@@ -762,18 +504,8 @@ namespace LinqToDB.NHibernate
 
 			var newExpression = expression.Transform(LocalTransform);
 
-			if (ignoreQueryFilters)
-			{
-				var elementType = newExpression.Type.GetGenericArguments()[0];
-				newExpression = Expression.Call(Methods.LinqToDB.IgnoreFilters.MakeGenericMethod(elementType),
-					newExpression, Expression.NewArrayInit(typeof(Type)));
-			}
-
-			if (!ignoreTracking && dc is LinqToDBForNHibernateToolsDataConnection dataConnection)
-			{
-				// ReSharper disable once ConditionIsAlwaysTrueOrFalse
-				dataConnection.Tracking = tracking;
-			}
+			if (dc is LinqToDBForNHibernateToolsDataConnection dataConnection)
+				dataConnection.Tracking = true;
 
 			return newExpression;
 		}
@@ -800,110 +532,6 @@ namespace LinqToDB.NHibernate
 		}
 
 		/// <summary>
-		/// Extracts connection information from the NHibernate <see cref="ISessionFactory"/>.
-		/// </summary>
-		/// <param name="sessionFactory"></param>
-		/// <returns>Connection data.</returns>
-		public virtual NHConnectionInfo ExtractConnectionInfo(ISessionFactory? sessionFactory)
-		{
-			throw new NotImplementedException();
-			/*
-			var relational = options?.Extensions.OfType<RelationalOptionsExtension>().FirstOrDefault();
-			return new  NHConnectionInfo
-			{
-				ConnectionString = relational?.ConnectionString,
-				Connection = relational?.Connection
-			};
-		*/
-		}
-
-		/*/// <summary>
-		/// Extracts EF.Core data model instance from <see cref="IDbContextOptions"/>.
-		/// </summary>
-		/// <param name="options"><see cref="IDbContextOptions"/> instance.</param>
-		/// <returns>EF.Core data model instance.</returns>
-		public virtual IModel? ExtractModel(IDbContextOptions? options)
-		{
-			var coreOptions = options?.Extensions.OfType<CoreOptionsExtension>().FirstOrDefault();
-			return coreOptions?.Model;
-		}*/
-
-		/*
-		/// <summary>
-		/// Logs lin2db trace event to logger.
-		/// </summary>
-		/// <param name="info">lin2db trace event.</param>
-		/// <param name="logger">Logger instance.</param>
-		public virtual void LogConnectionTrace(TraceInfo info, ILogger logger)
-		{
-			var logLevel = info.TraceLevel switch
-			{
-				TraceLevel.Off => LogLevel.None,
-				TraceLevel.Error => LogLevel.Error,
-				TraceLevel.Warning => LogLevel.Warning,
-				TraceLevel.Info => LogLevel.Information,
-				TraceLevel.Verbose => LogLevel.Debug,
-				_ => LogLevel.Trace,
-			};
-
-			using var _ = logger.BeginScope("TraceInfoStep: {TraceInfoStep}, IsAsync: {IsAsync}", info.TraceInfoStep, info.IsAsync);
-
-			switch (info.TraceInfoStep)
-			{
-				case TraceInfoStep.BeforeExecute:
-					logger.Log(logLevel, "{SqlText}", info.SqlText);
-					break;
-
-				case TraceInfoStep.AfterExecute:
-					if (info.RecordsAffected is null)
-					{
-						logger.Log(logLevel, "Query Execution Time: {ExecutionTime}.", info.ExecutionTime);
-					}
-					else
-					{
-						logger.Log(logLevel, "Query Execution Time: {ExecutionTime}. Records Affected: {RecordsAffected}.", info.ExecutionTime, info.RecordsAffected);
-					}
-					break;
-
-				case TraceInfoStep.Error:
-				{
-					logger.Log(logLevel, info.Exception, "Failed executing command.");
-					break;
-				}
-
-				case TraceInfoStep.Completed:
-				{
-					if (info.RecordsAffected is null)
-					{
-						logger.Log(logLevel, "Total Execution Time: {TotalExecutionTime}.", info.ExecutionTime);
-					}
-					else
-					{
-						logger.Log(logLevel, "Total Execution Time: {TotalExecutionTime}. Rows Count: {RecordsAffected}.", info.ExecutionTime, info.RecordsAffected);
-					}
-					break;
-				}
-			}
-		}
-		*/
-
-		/*
-		/// <summary>
-		/// Creates logger instance.
-		/// </summary>
-		/// <param name="options"><see cref="DbContext"/> options.</param>
-		/// <returns>Logger instance.</returns>
-		public virtual ILogger? CreateLogger(IDbContextOptions? options)
-		{
-			var coreOptions = options?.FindExtension<CoreOptionsExtension>();
-
-			var logger = coreOptions?.LoggerFactory?.CreateLogger("LinqToDB");
-
-			return logger;
-		}
-		*/
-
-		/// <summary>
 		/// Gets or sets default provider version for SQL Server. Set to <see cref="SqlServerVersion.v2008"/> dialect.
 		/// </summary>
 		public static SqlServerVersion SqlServerDefaultVersion { get; set; } = SqlServerVersion.v2008;
@@ -914,8 +542,8 @@ namespace LinqToDB.NHibernate
 		public static PostgreSQLVersion PostgreSqlDefaultVersion { get; set; } = PostgreSQLVersion.v93;
 
 		/// <summary>
-		/// Enables attaching entities to change tracker.
-		/// Entities will be attached only if AsNoTracking() is not used in query and DbContext is configured to track entities. 
+		/// Enables attaching entities materialised by a linq2db query to the NHibernate session's change tracker,
+		/// so that subsequent modifications are persisted when the session is flushed.
 		/// </summary>
 		public virtual bool EnableChangeTracker { get; set; } = true;
 

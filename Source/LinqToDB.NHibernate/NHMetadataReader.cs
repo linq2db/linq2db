@@ -59,7 +59,6 @@ namespace LinqToDB.NHibernate
 			public string[] ColumnNames  { get; }
 
 			public bool CanBeNull        { get; }
-			// public DataType DataType  { get; }
 
 			public string MemberName => MemberInfo.Name;
 		}
@@ -138,7 +137,6 @@ namespace LinqToDB.NHibernate
 
 		PropertyMap GetPropertyMap(AbstractEntityPersister metadata)
 		{
-			//return new PropertyMap(metadata);
 			return _propMapCache.GetOrAdd(metadata, m => new PropertyMap(m));
 		}
 
@@ -160,7 +158,7 @@ namespace LinqToDB.NHibernate
 			{
 				if (typeof(T) == typeof(TableAttribute))
 				{
-					return new[] { (T)(Attribute)new TableAttribute(et.RootTableName) { /*Schema = et*/ } };
+					return new[] { (T)(Attribute)new TableAttribute(et.RootTableName) };
 				}
 			}
 

@@ -20,7 +20,7 @@ namespace LinqToDB.NHibernate.Internal
 	///		It may change or be removed without further notice.
 	/// </summary>
 	/// <typeparam name="T">Type of query element.</typeparam>
-	public class LinqToDBForNHibernateQueryProvider<T> : /*IAsyncQueryProvider, */IQueryProviderAsync, IQueryable<T>/*, System.Collections.Generic.IAsyncEnumerable<T>*/
+	public class LinqToDBForNHibernateQueryProvider<T> : IQueryProviderAsync, IQueryable<T>
 	{
 		/// <summary>
 		/// Creates instance of adapter.
@@ -92,22 +92,6 @@ namespace LinqToDB.NHibernate.Internal
 			return QueryProvider.ExecuteAsyncEnumerable<TResult>(expression, cancellationToken);
 		}
 
-		/*
-		/// <summary>
-		/// Executes query expression and returns typed result.
-		/// </summary>
-		/// <typeparam name="TResult">Type of result.</typeparam>
-		/// <param name="expression">Query expression.</param>
-		/// <param name="cancellationToken">Cancellation token.</param>
-		/// <returns>Query result.</returns>
-		TResult IAsyncQueryProvider.ExecuteAsync<TResult>(Expression expression, CancellationToken cancellationToken)
-		{
-			var item = typeof(TResult).GetGenericArguments()[0];
-			var method = _executeAsyncMethodInfo.MakeGenericMethod(item);
-			return (TResult) method.Invoke(QueryProvider, new object[] { expression, cancellationToken });
-		}
-
-		*/
 		/// <summary>
 		/// Executes query expression and returns typed result.
 		/// </summary>

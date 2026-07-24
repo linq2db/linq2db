@@ -2,6 +2,8 @@
 using System.Collections.Concurrent;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -22,7 +24,7 @@ using NHibernate;
 namespace LinqToDB.NHibernate
 {
 	/// <summary>
-	/// EF.Core <see cref="ISession"/> extensions to call LINQ To DB functionality.
+	/// NHibernate <see cref="ISession"/> extensions to call LINQ To DB functionality.
 	/// </summary>
 	[PublicAPI]
 	public static partial class LinqToDBForNHibernateTools
@@ -30,7 +32,7 @@ namespace LinqToDB.NHibernate
 		static Lazy<bool> _intialized = new Lazy<bool>(InitializeInternal);
 
 		/// <summary>
-		/// Initializes integration of LINQ To DB with EF.Core.
+		/// Initializes integration of LINQ To DB with NHibernate.
 		/// </summary>
 		public static void Initialize()
 		{
@@ -80,7 +82,7 @@ namespace LinqToDB.NHibernate
 		static ILinqToDBForNHibernateTools _implementation = null!;
 
 		/// <summary>
-		/// Gets or sets EF.Core to LINQ To DB integration bridge implementation.
+		/// Gets or sets NHibernate to LINQ To DB integration bridge implementation.
 		/// </summary>
 		public static ILinqToDBForNHibernateTools Implementation
 		{
@@ -114,7 +116,7 @@ namespace LinqToDB.NHibernate
 		}
 
 		/// <summary>
-		/// Creates or return existing metadata provider for provided EF.Core data model. If model is null, empty metadata
+		/// Creates or return existing metadata provider for provided NHibernate data model. If model is null, empty metadata
 		/// provider will be returned.
 		/// </summary>
 		/// <returns>LINQ To DB metadata provider.</returns>
@@ -129,9 +131,9 @@ namespace LinqToDB.NHibernate
 
 		
 		/// <summary>
-		/// Returns EF.Core <see cref="ISessionFactory"/> for specific <see cref="ISession"/> instance.
+		/// Returns NHibernate <see cref="ISessionFactory"/> for specific <see cref="ISession"/> instance.
 		/// </summary>
-		/// <param name="session">EF.Core <see cref="ISession"/> instance.</param>
+		/// <param name="session">NHibernate <see cref="ISession"/> instance.</param>
 		/// <returns><see cref="ISessionFactory"/> instance.</returns>
 		public static ISessionFactory? GetSessionOptions(ISession session)
 		{
@@ -139,10 +141,10 @@ namespace LinqToDB.NHibernate
 		}
 
 		/// <summary>
-		/// Returns EF.Core database provider information for specific <see cref="ISession"/> instance.
+		/// Returns NHibernate database provider information for specific <see cref="ISession"/> instance.
 		/// </summary>
-		/// <param name="session">EF.Core <see cref="ISession"/> instance.</param>
-		/// <returns>EF.Core provider information.</returns>
+		/// <param name="session">NHibernate <see cref="ISession"/> instance.</param>
+		/// <returns>NHibernate provider information.</returns>
 		public static NHProviderInfo GetNHProviderInfo(ISession session)
 		{
 			var info = new NHProviderInfo
@@ -156,10 +158,10 @@ namespace LinqToDB.NHibernate
 		}
 
 		/// <summary>
-		/// Returns EF.Core database provider information for specific <see cref="DbConnection"/> instance.
+		/// Returns NHibernate database provider information for specific <see cref="DbConnection"/> instance.
 		/// </summary>
-		/// <param name="connection">EF.Core <see cref="DbConnection"/> instance.</param>
-		/// <returns>EF.Core provider information.</returns>
+		/// <param name="connection">NHibernate <see cref="DbConnection"/> instance.</param>
+		/// <returns>NHibernate provider information.</returns>
 		public static NHProviderInfo GetNHProviderInfo(DbConnection connection)
 		{
 			var info = new NHProviderInfo
@@ -172,27 +174,10 @@ namespace LinqToDB.NHibernate
 			return info;
 		}
 
-		/*/// <summary>
-		/// Returns EF.Core database provider information for specific <see cref="DbContextOptions"/> instance.
-		/// </summary>
-		/// <param name="options">EF.Core <see cref="DbContextOptions"/> instance.</param>
-		/// <returns>EF.Core provider information.</returns>
-		public static NHProviderInfo GetNHProviderInfo(DbContextOptions options)
-		{
-			var info = new NHProviderInfo
-			{
-				Connection = null,
-				Session = null,
-				Options = options
-			};
-
-			return info;
-		}*/
-
 		/// <summary>
-		/// Returns LINQ To DB provider, based on provider data from EF.Core.
+		/// Returns LINQ To DB provider, based on provider data from NHibernate.
 		/// </summary>
-		/// <param name="info">EF.Core provider information.</param>
+		/// <param name="info">NHibernate provider information.</param>
 		/// <param name="connectionInfo">Database connection information.</param>
 		/// <returns>LINQ TO DB provider instance.</returns>
 		public static IDataProvider GetDataProvider(NHProviderInfo info, NHConnectionInfo connectionInfo)
@@ -200,15 +185,15 @@ namespace LinqToDB.NHibernate
 			var provider = Implementation.GetDataProvider(info, connectionInfo);
 
 			if (provider == null)
-				throw new LinqToDBForNHibernateToolsException("Can not detect provider from Entity Framework or provider not supported");
+				throw new LinqToDBForNHibernateToolsException("Can not detect data provider or provider not supported");
 
 			return provider;
 		}
 
 		/// <summary>
-		/// Creates mapping schema using provided EF.Core data model.
+		/// Creates mapping schema using provided NHibernate data model.
 		/// </summary>
-		/// <returns>Mapping schema for provided EF.Core model.</returns>
+		/// <returns>Mapping schema for provided NHibernate model.</returns>
 		public static MappingSchema GetMappingSchema(
 			ISessionFactory? sessionFactory)
 		{
@@ -216,9 +201,9 @@ namespace LinqToDB.NHibernate
 		}
 
 		/// <summary>
-		/// Transforms EF.Core expression tree to LINQ To DB expression.
+		/// Transforms NHibernate expression tree to LINQ To DB expression.
 		/// </summary>
-		/// <param name="expression">EF.Core expression tree.</param>
+		/// <param name="expression">NHibernate expression tree.</param>
 		/// <param name="dc">LINQ To DB <see cref="IDataContext"/> instance.</param>
 		/// <returns>Transformed expression.</returns>
 		public static Expression TransformExpression(Expression expression, IDataContext dc, ISession? session, ISessionFactory? sessionFactory)
@@ -234,9 +219,11 @@ namespace LinqToDB.NHibernate
 		{
 			var transaction = GetActiveDbTransaction(session);
 
-			return transaction != null
+			var options = transaction != null
 				? new DataOptions().UseTransaction(provider, transaction)
 				: new DataOptions().UseConnection(provider, session.Connection);
+
+			return WithTracing(options);
 		}
 
 		// NHibernate does not expose its ADO transaction directly, so recover it by enlisting a throwaway command:
@@ -254,9 +241,9 @@ namespace LinqToDB.NHibernate
 
 		/// <summary>
 		/// Creates LINQ To DB <see cref="DataConnection"/> instance, attached to provided
-		/// EF.Core <see cref="ISession"/> instance connection and transaction.
+		/// NHibernate <see cref="ISession"/> instance connection and transaction.
 		/// </summary>
-		/// <param name="session">EF.Core <see cref="ISession"/> instance.</param>
+		/// <param name="session">NHibernate <see cref="ISession"/> instance.</param>
 		/// <param name="transaction">Optional transaction instance, to which created connection should be attached.
 		/// If not specified, will use current <see cref="ISession"/> transaction if it available.</param>
 		/// <returns>LINQ To DB <see cref="DataConnection"/> instance.</returns>
@@ -272,19 +259,6 @@ namespace LinqToDB.NHibernate
 
 			var dc = new LinqToDBForNHibernateToolsDataConnection(session, CreateAttachOptions(session, provider), TransformExpression);
 
-			/*
-			var logger = CreateLogger(info.Options);
-			if (logger != null)
-			{
-				EnableTracing(dc, logger);
-			}
-
-			var dependencies  = session.GetService<RelationalSqlTranslatingExpressionVisitorDependencies>();
-			var mappingSource = session.GetService<IRelationalTypeMappingSource>();
-			var converters    = session.GetService<IValueConverterSelector>();
-			var dLogger       = session.GetService<IDiagnosticsLogger<DbLoggerCategory.Query>>();
-			*/
-
 			var mappingSchema = GetMappingSchema(session.SessionFactory);
 			if (mappingSchema != null)
 				dc.AddMappingSchema(mappingSchema);
@@ -292,28 +266,66 @@ namespace LinqToDB.NHibernate
 			return dc;
 		}
 
-		/*
-		static void EnableTracing(DataConnection dc, ILogger logger)
-		{
-			dc.OnTraceConnection = t => Implementation.LogConnectionTrace(t, logger);
-			dc.TraceSwitchConnection = _defaultTraceSwitch;
-		}
-		*/
-
-		/*/// <summary>
-		/// Creates logger intance.
-		/// </summary>
-		/// <param name="options"><see cref="DbContext" /> options.</param>
-		/// <returns>Logger instance.</returns>
-		public static ILogger? CreateLogger(IDbContextOptions? options)
-		{
-			return Implementation.CreateLogger(options);
-		}*/
+		static readonly INHibernateLogger _traceLogger = NHibernateLogger.For("LinqToDB.NHibernate");
 
 		/// <summary>
-		/// Creates linq2db data session for EF.Core database session.
+		/// Adds tracing that routes linq2db's connection trace to NHibernate's logger (category
+		/// <c>LinqToDB.NHibernate</c>), at the level NHibernate is configured to log, so linq2db SQL appears
+		/// alongside NHibernate's own log output. A no-op when that category is not enabled.
 		/// </summary>
-		/// <param name="session">EF.Core database session.</param>
+		static DataOptions WithTracing(DataOptions options)
+		{
+			var level =
+				_traceLogger.IsEnabled(NHibernateLogLevel.Debug) ? TraceLevel.Verbose :
+				_traceLogger.IsEnabled(NHibernateLogLevel.Info)  ? TraceLevel.Info    :
+				_traceLogger.IsEnabled(NHibernateLogLevel.Warn)  ? TraceLevel.Warning :
+				_traceLogger.IsEnabled(NHibernateLogLevel.Error) ? TraceLevel.Error   :
+				TraceLevel.Off;
+
+			return level == TraceLevel.Off ? options : options.UseTracing(level, LogConnectionTrace);
+		}
+
+		static void LogConnectionTrace(TraceInfo info)
+		{
+			var level = info.TraceLevel switch
+			{
+				TraceLevel.Error   => NHibernateLogLevel.Error,
+				TraceLevel.Warning => NHibernateLogLevel.Warn,
+				TraceLevel.Info    => NHibernateLogLevel.Info,
+				_                  => NHibernateLogLevel.Debug,
+			};
+
+			if (!_traceLogger.IsEnabled(level))
+				return;
+
+			switch (info.TraceInfoStep)
+			{
+				case TraceInfoStep.BeforeExecute:
+					_traceLogger.Log(level, new NHibernateLogValues("{0}", new object[] { info.SqlText ?? string.Empty }), null);
+					break;
+
+				case TraceInfoStep.AfterExecute:
+					_traceLogger.Log(level, new NHibernateLogValues("Execution time: {0}, records affected: {1}.",
+						new object[] { Format(info.ExecutionTime), Format(info.RecordsAffected) }), null);
+					break;
+
+				case TraceInfoStep.Error:
+					_traceLogger.Log(level, new NHibernateLogValues("Failed executing command.", Array.Empty<object>()), info.Exception);
+					break;
+
+				case TraceInfoStep.Completed:
+					_traceLogger.Log(level, new NHibernateLogValues("Total execution time: {0}.",
+						new object[] { Format(info.ExecutionTime) }), null);
+					break;
+			}
+
+			static string Format(IFormattable? value) => value?.ToString(null, CultureInfo.InvariantCulture) ?? string.Empty;
+		}
+
+		/// <summary>
+		/// Creates linq2db data session for NHibernate database session.
+		/// </summary>
+		/// <param name="session">NHibernate database session.</param>
 		/// <param name="transaction">Transaction instance.</param>
 		/// <returns>linq2db data session.</returns>
 		public static IDataContext CreateLinqToDbContext(this ISession session,
@@ -332,20 +344,14 @@ namespace LinqToDB.NHibernate
 			if (mappingSchema != null)
 				dc.AddMappingSchema(mappingSchema);
 
-			/*
-			if (logger != null)
-			{
-				EnableTracing(dc, logger);
-			}*/
-
 			return dc;
 		}
 
 		/// <summary>
 		/// Creates LINQ To DB <see cref="DataConnection"/> instance that creates new database connection using connection
-		/// information from EF.Core <see cref="ISession"/> instance.
+		/// information from NHibernate <see cref="ISession"/> instance.
 		/// </summary>
-		/// <param name="session">EF.Core <see cref="ISession"/> instance.</param>
+		/// <param name="session">NHibernate <see cref="ISession"/> instance.</param>
 		/// <returns>LINQ To DB <see cref="DataConnection"/> instance.</returns>
 		public static DataConnection CreateLinq2DbConnectionDetached(this ISession session)
 		{
@@ -355,15 +361,7 @@ namespace LinqToDB.NHibernate
 			var connectionInfo = GetConnectionInfo(info);
 			var dataProvider   = GetDataProvider(info, connectionInfo);
 
-			var dc = new LinqToDBForNHibernateToolsDataConnection(session, new DataOptions().UseConnectionString(dataProvider, connectionInfo.ConnectionString!), TransformExpression);
-			/*
-			var logger = CreateLogger(info.Options);
-
-			if (logger != null)
-			{
-				EnableTracing(dc, logger);
-			}
-			*/
+			var dc = new LinqToDBForNHibernateToolsDataConnection(session, WithTracing(new DataOptions().UseConnectionString(dataProvider, connectionInfo.ConnectionString!)), TransformExpression);
 
 			var mappingSchema = GetMappingSchema(session.SessionFactory);
 			if (mappingSchema != null)
@@ -373,75 +371,24 @@ namespace LinqToDB.NHibernate
 		}
 
 		/// <summary>
-		/// Extracts database connection information from EF.Core provider data.
+		/// Extracts database connection information from NHibernate provider data.
 		/// </summary>
-		/// <param name="info">EF.Core database provider data.</param>
+		/// <param name="info">NHibernate database provider data.</param>
 		/// <returns>Database connection information.</returns>
 		public static NHConnectionInfo GetConnectionInfo(NHProviderInfo info)
 		{
-			var connection = info.Connection;
-			string? connectionString = (info.Connection as DbConnection)?.ConnectionString;
-			
-
-			if (connection != null && connectionString != null)
-				return new NHConnectionInfo { Connection = connection, ConnectionString = connectionString };
-
-			var extracted = Implementation.ExtractConnectionInfo(info.Options);
-
 			return new NHConnectionInfo
 			{
-				Connection = connection ?? extracted?.Connection,
-				ConnectionString = extracted?.ConnectionString,
+				Connection       = info.Connection,
+				ConnectionString = (info.Connection as DbConnection)?.ConnectionString,
 			};
 		}
 
-		/*
 		/// <summary>
-		/// Creates new LINQ To DB <see cref="DataConnection"/> instance using connectivity information from
-		/// EF.Core <see cref="DbContextOptions"/> instance.
-		/// </summary>
-		/// <param name="options">EF.Core <see cref="DbContextOptions"/> instance.</param>
-		/// <returns>New LINQ To DB <see cref="DataConnection"/> instance.</returns>
-		public static DataConnection CreateLinqToDbConnection(this DbContextOptions options)
-		{
-			var info = GetNHProviderInfo(options);
-
-			DataConnection? dc = null;
-
-			var connectionInfo = GetConnectionInfo(info);
-			var dataProvider   = GetDataProvider(info, connectionInfo);
-			var model          = GetModel(options);
-
-			if (connectionInfo.Connection != null)
-				dc = new LinqToDBForNHibernateToolsDataConnection(null, dataProvider, connectionInfo.Connection, model, TransformExpression);
-			else if (connectionInfo.ConnectionString != null)
-				dc = new LinqToDBForNHibernateToolsDataConnection(null, dataProvider, connectionInfo.ConnectionString, model, TransformExpression);
-
-			if (dc == null)
-				throw new LinqToDBForNHibernateToolsException($"Can not extract connection information from {nameof(DbContextOptions)}");
-
-			var logger = CreateLogger(info.Options);
-			if (logger != null)
-			{
-				EnableTracing(dc, logger);
-			}
-
-			if (model != null)
-			{
-				var mappingSchema = GetMappingSchema(model, null, null, null, null);
-				if (mappingSchema != null)
-					dc.AddMappingSchema(mappingSchema);
-			}
-
-			return dc;
-		}
-		*/
-
-		/// <summary>
-		/// Converts EF.Core's query to LINQ To DB query and attach it to provided LINQ To DB <see cref="IDataContext"/>.
+		/// Converts NHibernate's query to LINQ To DB query and attach it to provided LINQ To DB <see cref="IDataContext"/>.
 		/// </summary>
 		/// <typeparam name="T">Entity type.</typeparam>
-		/// <param name="query">EF.Core query.</param>
+		/// <param name="query">NHibernate query.</param>
 		/// <param name="dc">LINQ To DB <see cref="IDataContext"/> to use with provided query.</param>
 		/// <returns>LINQ To DB query, attached to provided <see cref="IDataContext"/>.</returns>
 		public static IQueryable<T> ToLinqToDB<T>(this IQueryable<T> query, IDataContext dc)
@@ -460,11 +407,11 @@ namespace LinqToDB.NHibernate
 		}
 
 		/// <summary>
-		/// Converts EF.Core's query to LINQ To DB query and attach it to current EF.Core connection.
+		/// Converts NHibernate's query to LINQ To DB query and attach it to current NHibernate connection.
 		/// </summary>
 		/// <typeparam name="T">Entity type.</typeparam>
-		/// <param name="query">EF.Core query.</param>
-		/// <returns>LINQ To DB query, attached to current EF.Core connection.</returns>
+		/// <param name="query">NHibernate query.</param>
+		/// <returns>LINQ To DB query, attached to current NHibernate connection.</returns>
 		public static IQueryable<T> ToLinqToDB<T>(this IQueryable<T> query)
 		{
 			if (query.Provider is IQueryProviderAsync)
@@ -492,7 +439,7 @@ namespace LinqToDB.NHibernate
 		/// <summary>
 		/// Extracts <see cref="ISession"/> instance from <see cref="IQueryable"/> object.
 		/// </summary>
-		/// <param name="query">EF.Core query.</param>
+		/// <param name="query">NHibernate query.</param>
 		/// <returns>Current <see cref="ISession"/> instance.</returns>
 		public static ISession? GetCurrentContext(IQueryable query)
 		{
@@ -500,8 +447,8 @@ namespace LinqToDB.NHibernate
 		}
 
 		/// <summary>
-		/// Enables attaching entities to change tracker.
-		/// Entities will be attached only if AsNoTracking() is not used in query and DbContext is configured to track entities. 
+		/// Enables attaching entities materialised by a linq2db query to the NHibernate session's change tracker,
+		/// so that subsequent modifications are persisted when the session is flushed.
 		/// </summary>
 		public static bool EnableChangeTracker 
 		{ 

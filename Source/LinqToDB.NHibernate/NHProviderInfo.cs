@@ -5,7 +5,7 @@ using NHibernate;
 namespace LinqToDB.NHibernate
 {
 	/// <summary>
-	/// Required integration information about underlying database provider, extracted from EF.Core.
+	/// Required integration information about the underlying database provider, extracted from NHibernate.
 	/// </summary>
 	public class NHProviderInfo
 	{
@@ -15,12 +15,12 @@ namespace LinqToDB.NHibernate
 		public IDbConnection? Connection { get; set; }
 
 		/// <summary>
-		/// Gets or sets EF.Core context instance.
+		/// Gets or sets the NHibernate session.
 		/// </summary>
 		public ISession? Session { get; set; }
 
 		/// <summary>
-		/// Gets or sets EF.Core context options instance.
+		/// Gets or sets the NHibernate session factory.
 		/// </summary>
 		public ISessionFactory? Options { get; set; }
 	}

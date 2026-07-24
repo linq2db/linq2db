@@ -132,7 +132,6 @@ namespace LinqToDB.NHibernate
 			return await dc.BulkCopyAsync(source, cancellationToken).ConfigureAwait(false);
 		}
 
-		/*
 		/// <summary>Asynchronously performs bulk insert operation.</summary>
 		/// <typeparam name="T">Mapping type of inserted record.</typeparam>
 		/// <param name="session">NHibernate session.</param>
@@ -141,30 +140,23 @@ namespace LinqToDB.NHibernate
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Task with bulk insert operation status.</returns>
 		public static async Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
-			ISession session,
+			this ISession session,
 			BulkCopyOptions options,
 			IAsyncEnumerable<T> source,
 			CancellationToken cancellationToken = default)
 			where T : class
 		{
-			if (session == null) throw new ArgumentNullException(nameof(session));
-			if (source  == null) throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(session);
+			ArgumentNullException.ThrowIfNull(source);
 
-			using (var dc = session.CreateLinqToDbConnection())
-			{
-				return await dc.BulkCopyAsync(options, source, cancellationToken);
-			}
+			using var dc = session.CreateLinqToDbConnection();
+			return await dc.BulkCopyAsync(options, source, cancellationToken).ConfigureAwait(false);
 		}
-		*/
 
-		/*
 		/// <summary>Asynchronously performs bulk insert operation.</summary>
 		/// <typeparam name="T">Mapping type of inserted record.</typeparam>
 		/// <param name="session">NHibernate session.</param>
-		/// <param name="maxBatchSize">
-		///     Number of rows in each batch. At the end of each batch, the rows in the batch are sent to
-		///     the server.
-		/// </param>
+		/// <param name="maxBatchSize">Number of rows in each batch. At the end of each batch, the rows in the batch are sent to the server.</param>
 		/// <param name="source">Records to insert.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Task with bulk insert operation status.</returns>
@@ -175,38 +167,31 @@ namespace LinqToDB.NHibernate
 			CancellationToken cancellationToken = default)
 			where T : class
 		{
-			if (session == null) throw new ArgumentNullException(nameof(session));
-			if (source  == null) throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(session);
+			ArgumentNullException.ThrowIfNull(source);
 
-			using (var dc = session.CreateLinqToDbConnection())
-			{
-				return await dc.BulkCopyAsync(maxBatchSize, source, cancellationToken);
-			}
+			using var dc = session.CreateLinqToDbConnection();
+			return await dc.BulkCopyAsync(maxBatchSize, source, cancellationToken).ConfigureAwait(false);
 		}
-		*/
 
-		/*
 		/// <summary>Asynchronously performs bulk insert operation.</summary>
 		/// <typeparam name="T">Mapping type of inserted record.</typeparam>
 		/// <param name="session">NHibernate session.</param>
 		/// <param name="source">Records to insert.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Task with bulk insert operation status.</returns>
-		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
+		public static async Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
 			this ISession session,
 			IAsyncEnumerable<T> source,
 			CancellationToken cancellationToken = default)
 			where T : class
 		{
-			if (session == null) throw new ArgumentNullException(nameof(session));
-			if (source  == null) throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(session);
+			ArgumentNullException.ThrowIfNull(source);
 
-			using (var dc = session.CreateLinqToDbConnection())
-			{
-				return dc.BulkCopyAsync(source, cancellationToken);
-			}
+			using var dc = session.CreateLinqToDbConnection();
+			return await dc.BulkCopyAsync(source, cancellationToken).ConfigureAwait(false);
 		}
-		*/
 
 		#endregion
 
