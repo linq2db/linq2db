@@ -306,6 +306,12 @@ namespace LinqToDB.NHibernate
 		// and synthesize a query expression that hops through it (this -> junction -> other).
 		AssociationAttribute? BuildManyToManyAssociation(Type thisType, PropertyMap thisEntityMap, AbstractCollectionPersister m2m)
 		{
+			// A property-ref many-to-many (the element references a non-PK unique column) would need a join on the
+			// referenced columns; the builder only joins through the primary key, so decline it rather than emit a
+			// wrong join.
+			if (m2m.ElementType is EntityType elementEntityType && !elementEntityType.IsReferenceToPrimaryKey)
+				return null;
+
 			var otherType = m2m.ElementType.ReturnedClass;
 			if (!GetPropertyMap(otherType, out var otherEntityMap))
 				return null;
@@ -393,7 +399,9 @@ namespace LinqToDB.NHibernate
 			Expression? joinPredicate = null;
 			for (var i = 0; i < keyCols.Length; i++)
 			{
-				var joinMember = FindPropertyNameByColumnName(joinEntityMap, keyCols[i]).MemberInfo;
+				var joinMember = joinEntityMap.FindPropByColumnName(keyCols[i])?.MemberInfo;
+				if (joinMember == null)
+					return null; // junction FK column not exposed as a scalar member (e.g. mapped as many-to-one): no association
 				var left       = Expression.MakeMemberAccess(joinParam, joinMember);
 				var right      = Expression.MakeMemberAccess(thisParam, thisPk[i].MemberInfo);
 				joinPredicate  = AndAlso(joinPredicate, EqualWithConvert(left, right));
@@ -408,7 +416,9 @@ namespace LinqToDB.NHibernate
 			Expression? otherPredicate = null;
 			for (var i = 0; i < elementCols.Length; i++)
 			{
-				var joinMember = FindPropertyNameByColumnName(joinEntityMap, elementCols[i]).MemberInfo;
+				var joinMember = joinEntityMap.FindPropByColumnName(elementCols[i])?.MemberInfo;
+				if (joinMember == null)
+					return null; // junction FK column not exposed as a scalar member (e.g. mapped as many-to-one): no association
 				var left       = Expression.MakeMemberAccess(otherParam, otherPk[i].MemberInfo);
 				var right      = Expression.MakeMemberAccess(joinParam, joinMember);
 				otherPredicate = AndAlso(otherPredicate, EqualWithConvert(left, right));

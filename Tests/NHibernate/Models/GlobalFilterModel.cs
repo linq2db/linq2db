@@ -33,6 +33,25 @@ namespace LinqToDB.NHibernate.Tests.Models.GlobalFilter
 		}
 	}
 
+	// Filter with NO default condition; the condition is supplied per-entity via ApplyFilter&lt;T&gt;("...").
+	public class ArchivedFilter : FilterDefinition
+	{
+		public ArchivedFilter()
+		{
+			WithName("archived");
+		}
+	}
+
+	// Condition whose string literal contains '{'/'}' braces — these must be escaped so Sql.Expr treats them as
+	// literal text, not argument placeholders (otherwise query build throws a FormatException).
+	public class LiteralGuardFilter : FilterDefinition
+	{
+		public LiteralGuardFilter()
+		{
+			WithName("literalGuard").WithCondition("Title <> 'x{y}z'");
+		}
+	}
+
 	public class DocumentMap : ClassMap<Document>
 	{
 		public DocumentMap()
@@ -45,6 +64,8 @@ namespace LinqToDB.NHibernate.Tests.Models.GlobalFilter
 
 			ApplyFilter<SoftDeleteFilter>();
 			ApplyFilter<TenantFilter>();
+			ApplyFilter<ArchivedFilter>("is_deleted = 0");
+			ApplyFilter<LiteralGuardFilter>();
 		}
 	}
 }

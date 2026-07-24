@@ -21,9 +21,6 @@ namespace LinqToDB.NHibernate.Tests
 	[TestFixture]
 	public class GlobalFilterTests : NHTestBase
 	{
-		[OneTimeTearDown]
-		public void TearDown() => DisposeFactories();
-
 		// tenant 1: "A" (active), "B" (deleted); tenant 2: "C" (active).
 		static void SeedGraph(ISessionFactory sf)
 		{
@@ -112,6 +109,42 @@ namespace LinqToDB.NHibernate.Tests
 			session.EnableFilter("softDelete");
 
 			Titles(session).ShouldBe(new[] { "A", "C" });
+		}
+
+		[Test]
+		public void PerEntityCondition_WithEmptyDefault_IsApplied(
+			[IncludeDataSources(ProviderName.SQLiteClassic, TestProvName.AllSqlServer)] string provider)
+		{
+			var sf = GetSessionFactory(provider);
+			SeedGraph(sf);
+
+			using var session = sf.OpenSession();
+			// ArchivedFilter has no default condition; DocumentMap supplies "is_deleted = 0" per-entity.
+			session.EnableFilter("archived");
+
+			Titles(session).ShouldBe(new[] { "A", "C" }); // deleted "B" excluded via the per-entity condition
+		}
+
+		[Test]
+		public void FilterCondition_WithBracesInLiteral_BuildsCorrectSql(
+			[IncludeDataSources(ProviderName.SQLiteClassic, TestProvName.AllSqlServer)] string provider)
+		{
+			var sf = GetSessionFactory(provider);
+			SeedGraph(sf);
+
+			using (var seed = sf.OpenSession())
+			using (var tx = seed.BeginTransaction())
+			{
+				seed.Save(new Document { Title = "x{y}z", IsDeleted = false, TenantId = 1 });
+				tx.Commit();
+			}
+
+			using var session = sf.OpenSession();
+			// Condition "Title <> 'x{y}z'": the braces must be escaped so Sql.Expr treats them as literal text,
+			// otherwise query build throws a FormatException.
+			session.EnableFilter("literalGuard");
+
+			Titles(session).ShouldBe(new[] { "A", "B", "C" }); // only the 'x{y}z' row is excluded
 		}
 
 		[Test]

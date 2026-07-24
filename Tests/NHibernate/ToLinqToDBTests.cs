@@ -23,9 +23,6 @@ namespace LinqToDB.NHibernate.Tests
 	[TestFixture]
 	public class ToLinqToDBTests : NHTestBase
 	{
-		[OneTimeTearDown]
-		public void TearDown() => DisposeFactories();
-
 		[Test]
 		public void NativeQuery_RoutesThroughLinqToDB(
 			[IncludeDataSources(ProviderName.SQLiteClassic, TestProvName.AllSqlServer)] string provider)

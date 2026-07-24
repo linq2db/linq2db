@@ -22,9 +22,6 @@ namespace LinqToDB.NHibernate.Tests
 	[TestFixture]
 	public class AttachPathTests : NHTestBase
 	{
-		[OneTimeTearDown]
-		public void TearDown() => DisposeFactories();
-
 		[Test]
 		public void GetTable_RunsSqlThroughSessionConnection(
 			[IncludeDataSources(ProviderName.SQLiteClassic, TestProvName.AllSqlServer)] string provider)

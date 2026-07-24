@@ -21,9 +21,6 @@ namespace LinqToDB.NHibernate.Tests
 	[TestFixture]
 	public class ChangeTrackerTests : NHTestBase
 	{
-		[OneTimeTearDown]
-		public void TearDown() => DisposeFactories();
-
 		[Test]
 		public void QueriedEntity_IsAttachedToSession(
 			[IncludeDataSources(ProviderName.SQLiteClassic, TestProvName.AllSqlServer)] string provider)

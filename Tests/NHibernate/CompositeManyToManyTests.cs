@@ -22,9 +22,6 @@ namespace LinqToDB.NHibernate.Tests
 	[TestFixture]
 	public class CompositeManyToManyTests : NHTestBase
 	{
-		[OneTimeTearDown]
-		public void TearDown() => DisposeFactories();
-
 		static void SeedGraph(ISessionFactory sf)
 		{
 			using var session = sf.OpenSession();

@@ -12,18 +12,18 @@ using LinqToDB.Mapping;
 using NHibernate;
 using NHibernate.Engine;
 using NHibernate.Persister.Entity;
-using NHibernate.SqlCommand;
 
 namespace LinqToDB.NHibernate
 {
 	// Bridges NHibernate's session-enabled filters (raw SQL-fragment conditions) to linq2db query filters.
 	// Each filtered entity gets a QueryFilterAttribute whose function, at query-build time, reads the session's
-	// enabled filters and appends every applicable condition. Column references in a condition are alias-qualified
-	// by NHibernate's own tokenizer (Template) and re-expressed as member accesses, so linq2db qualifies them with
-	// its own alias — keeping filters correct inside joins.
+	// enabled filters. For each applicable filter it takes NHibernate's own per-entity filter fragment (the applied
+	// condition, honouring per-entity overrides, already alias-qualified by NHibernate's tokenizer with a
+	// collision-proof marker alias), then re-expresses each marked column as a member access — so linq2db qualifies
+	// it with its own alias, keeping filters correct inside joins — and each :parameter as a Sql.Parameter.
 	partial class NHMetadataReader
 	{
-		// A collision-proof alias handed to NHibernate's Template so it prefixes every column reference in a
+		// A collision-proof alias handed to NHibernate's FilterFragment so it prefixes every column reference in a
 		// condition; the prefix is stripped again while building the predicate, so it never reaches the SQL.
 		const string FilterColumnMarker = "l2dbqfilterorigin";
 
@@ -37,13 +37,11 @@ namespace LinqToDB.NHibernate
 				&& ps[0].ParameterType == typeof(RawSqlString)
 				&& ps[1].ParameterType == typeof(object[]));
 
+		static readonly MethodInfo _sqlExprBoolMethod       = _sqlExprMethod.MakeGenericMethod(typeof(bool));
+		static readonly MethodInfo _sqlPropertyObjectMethod = Methods.LinqToDB.SqlExt.Property.MakeGenericMethod(typeof(object));
+
 		static readonly MethodInfo _rawSqlStringOp =
 			typeof(RawSqlString).GetMethod("op_Implicit", new[] { typeof(string) })!;
-
-		static readonly MethodInfo _sqlParameterMethod = typeof(Sql).GetMethods()
-			.Single(m => string.Equals(m.Name, nameof(Sql.Parameter), StringComparison.Ordinal)
-				&& m.IsGenericMethodDefinition
-				&& m.GetParameters().Length == 1);
 
 		/// <summary>
 		/// Emits a <see cref="QueryFilterAttribute"/> whose function applies the entity's enabled NHibernate
@@ -68,11 +66,9 @@ namespace LinqToDB.NHibernate
 
 		IQueryable<T> ApplyFilters<T>(IQueryable<T> query, IDataContext dataContext)
 		{
-			if (_sessionFactory is not ISessionFactoryImplementor sfi)
-				return query;
 			if ((dataContext as LinqToDBForNHibernateToolsDataConnection)?.Session is not { IsOpen: true } session)
 				return query;
-			if (_sessionFactory.GetClassMetadata(typeof(T)) is not AbstractEntityPersister persister)
+			if (_sessionFactory?.GetClassMetadata(typeof(T)) is not AbstractEntityPersister persister)
 				return query;
 
 			var impl = session.GetSessionImplementation();
@@ -84,18 +80,13 @@ namespace LinqToDB.NHibernate
 
 			foreach (var entry in impl.EnabledFilters)
 			{
-				var filter = entry.Value;
-
-				// NHibernate produces a non-empty fragment only when this entity actually declares the filter.
-				var single = new Dictionary<string, IFilter> { [entry.Key] = filter };
-				if (string.IsNullOrWhiteSpace(persister.FilterFragment(FilterColumnMarker, single)))
+				// NHibernate's own per-entity fragment: the applied condition (honouring a per-entity <filter>
+				// override), alias-qualified with our marker; empty when this entity doesn't declare the filter.
+				var fragment = persister.FilterFragment(FilterColumnMarker, new Dictionary<string, IFilter> { [entry.Key] = entry.Value });
+				if (string.IsNullOrWhiteSpace(fragment))
 					continue;
 
-				var condition = filter.FilterDefinition.DefaultFilterCondition;
-				if (string.IsNullOrWhiteSpace(condition))
-					continue;
-
-				var predicate = BuildFilterPredicate<T>(condition, entry.Key, filter.FilterDefinition, map, impl, sfi);
+				var predicate = BuildFilterPredicate<T>(StripFragmentPrefix(fragment), map, impl);
 				if (predicate != null)
 					query = query.Where(predicate);
 			}
@@ -103,18 +94,21 @@ namespace LinqToDB.NHibernate
 			return query;
 		}
 
-		static Expression<Func<T, bool>>? BuildFilterPredicate<T>(
-			string               condition,
-			string               filterName,
-			FilterDefinition     definition,
-			PropertyMap          map,
-			ISessionImplementor  impl,
-			ISessionFactoryImplementor sfi)
+		// NHibernate prefixes each rendered filter fragment with " and "; strip it to get the bare condition.
+		static string StripFragmentPrefix(string fragment)
 		{
-			// NHibernate's tokenizer prefixes each column with our marker (functions/keywords/string literals and
-			// :parameters are left untouched); we then lift each marked column out as a member access.
-			var qualified = Template.RenderWhereStringTemplate(condition, FilterColumnMarker, sfi.Dialect, sfi.SQLFunctionRegistry);
+			var s = fragment.Trim();
+			if (s.StartsWith("and ", StringComparison.OrdinalIgnoreCase))
+				s = s.Substring(4);
+			return s;
+		}
 
+		static Expression<Func<T, bool>> BuildFilterPredicate<T>(string qualified, PropertyMap map, ISessionImplementor impl)
+		{
+			// `qualified` is NHibernate's rendered filter condition: columns prefixed with FilterColumnMarker,
+			// parameters as :filterName.paramName, with string literals / functions / operators as raw SQL. We lift
+			// each marked column out as a member access and each parameter as a Sql.Parameter, copying everything
+			// else verbatim into a Sql.Expr format string (with '{'/'}' escaped, and string literals left intact).
 			var entity = Expression.Parameter(typeof(T), "e");
 			var args   = new List<Expression>();
 			var sql    = new StringBuilder();
@@ -122,34 +116,69 @@ namespace LinqToDB.NHibernate
 			var i = 0;
 			while (i < qualified.Length)
 			{
-				if (TryReadMarkerColumn(qualified, i, out var column, out var columnLength))
-				{
-					var arg = BuildColumnArgument(entity, map, column);
-					if (arg == null)
-						return null; // a column we cannot resolve: skip the whole filter rather than emit wrong SQL
+				var c = qualified[i];
 
+				if (c == '\'')
+				{
+					// SQL string literal: copy verbatim (brace-escaped) without scanning for tokens inside it.
+					var end = ScanStringLiteral(qualified, i);
+					AppendEscaped(sql, qualified, i, end);
+					i = end;
+				}
+				else if (TryReadMarkerColumn(qualified, i, out var column, out var columnLength))
+				{
 					AppendPlaceholder(sql, args.Count);
-					args.Add(arg);
+					args.Add(BuildColumnArgument(entity, map, column));
 					i += columnLength;
 				}
-				else if (qualified[i] == ':' && TryReadParameter(qualified, i, out var parameter, out var parameterLength))
+				else if (c == ':' && i + 1 < qualified.Length && qualified[i + 1] == ':')
+				{
+					// '::' cast operator (e.g. PostgreSQL) — not a parameter.
+					sql.Append("::");
+					i += 2;
+				}
+				else if (c == ':' && TryReadParameter(qualified, i, out var parameter, out var parameterLength))
 				{
 					AppendPlaceholder(sql, args.Count);
-					args.Add(BuildParameterArgument(impl, filterName, parameter));
+					args.Add(BuildParameterArgument(impl, parameter));
 					i += parameterLength;
 				}
 				else
 				{
-					sql.Append(qualified[i]);
+					AppendEscapedChar(sql, c);
 					i++;
 				}
 			}
 
 			var rawSql    = Expression.Convert(Expression.Constant(sql.ToString()), typeof(RawSqlString), _rawSqlStringOp);
 			var argsArray = Expression.NewArrayInit(typeof(object), args);
-			var body      = Expression.Call(_sqlExprMethod.MakeGenericMethod(typeof(bool)), rawSql, argsArray);
+			var body      = Expression.Call(_sqlExprBoolMethod, rawSql, argsArray);
 
 			return Expression.Lambda<Func<T, bool>>(body, entity);
+		}
+
+		// Returns the index just past the closing quote of the SQL string literal starting at <paramref name="pos"/>
+		// ('...'), treating a doubled '' as an escaped quote.
+		static int ScanStringLiteral(string s, int pos)
+		{
+			var i = pos + 1;
+			while (i < s.Length)
+			{
+				if (s[i] == '\'')
+				{
+					if (i + 1 < s.Length && s[i + 1] == '\'')
+					{
+						i += 2;
+						continue;
+					}
+
+					return i + 1;
+				}
+
+				i++;
+			}
+
+			return i; // unterminated literal: copy the rest as-is
 		}
 
 		static void AppendPlaceholder(StringBuilder sql, int index)
@@ -157,27 +186,48 @@ namespace LinqToDB.NHibernate
 			sql.Append('{').Append(index.ToString(CultureInfo.InvariantCulture)).Append('}');
 		}
 
-		static Expression? BuildColumnArgument(ParameterExpression entity, PropertyMap map, string column)
+		// Copies s[start, end) into the Sql.Expr format string, escaping '{' and '}' so they are treated as literal
+		// text rather than argument placeholders.
+		static void AppendEscaped(StringBuilder sql, string s, int start, int end)
+		{
+			for (var i = start; i < end; i++)
+				AppendEscapedChar(sql, s[i]);
+		}
+
+		static void AppendEscapedChar(StringBuilder sql, char c)
+		{
+			if (c == '{')
+				sql.Append("{{");
+			else if (c == '}')
+				sql.Append("}}");
+			else
+				sql.Append(c);
+		}
+
+		static Expression BuildColumnArgument(ParameterExpression entity, PropertyMap map, string column)
 		{
 			var member = map.FindPropByColumnName(column)?.MemberInfo;
 
+			// A mapped scalar member resolves to a real column; an unmapped column (formula/shadow) falls back to
+			// Sql.Property, which linq2db still alias-qualifies via the entity.
 			Expression access = member != null
 				? Expression.MakeMemberAccess(entity, member)
-				: Expression.Call(Methods.LinqToDB.SqlExt.Property.MakeGenericMethod(typeof(object)), entity, Expression.Constant(column));
+				: Expression.Call(_sqlPropertyObjectMethod, entity, Expression.Constant(column));
 
 			return Expression.Convert(access, typeof(object));
 		}
 
-		static Expression BuildParameterArgument(ISessionImplementor impl, string filterName, string parameter)
+		static Expression BuildParameterArgument(ISessionImplementor impl, string qualifiedParameterName)
 		{
-			var value = impl.GetFilterParameterValue($"{filterName}.{parameter}");
+			// The fragment already gives the fully-qualified "filterName.parameterName" NHibernate expects.
+			var value = impl.GetFilterParameterValue(qualifiedParameterName);
 			if (value == null)
 				return Expression.Constant(null, typeof(object));
 
-			// Wrap the enabled-filter value in Sql.Parameter so linq2db emits it as a query parameter of the
-			// correct SQL type (cache-friendly), rather than inlining it as a literal.
-			var type     = value.GetType();
-			var paramExpr = Expression.Call(_sqlParameterMethod.MakeGenericMethod(type), Expression.Constant(value, type));
+			// Wrap the value in Sql.Parameter so linq2db emits it as a query parameter of the correct SQL type
+			// (cache-friendly) rather than inlining it as a literal.
+			var type      = value.GetType();
+			var paramExpr = Expression.Call(Methods.LinqToDB.SqlParameter.MakeGenericMethod(type), Expression.Constant(value, type));
 
 			return Expression.Convert(paramExpr, typeof(object));
 		}
@@ -211,7 +261,9 @@ namespace LinqToDB.NHibernate
 
 			var start = pos + 1; // skip ':'
 			var end   = start;
-			while (end < s.Length && (char.IsLetterOrDigit(s[end]) || s[end] == '_'))
+
+			// NHibernate renders a filter parameter as :filterName.parameterName, so '.' is part of the name.
+			while (end < s.Length && (char.IsLetterOrDigit(s[end]) || s[end] == '_' || s[end] == '.'))
 				end++;
 
 			if (end == start)

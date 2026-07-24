@@ -22,9 +22,6 @@ namespace LinqToDB.NHibernate.Tests
 	[TestFixture]
 	public class ManyToManyTests : NHTestBase
 	{
-		[OneTimeTearDown]
-		public void TearDown() => DisposeFactories();
-
 		// Seeds two authors and three books linked through the AuthorBook junction. Delete-first so re-runs
 		// against a persisted (SQL Server) database stay deterministic.
 		static void SeedGraph(ISessionFactory sf)

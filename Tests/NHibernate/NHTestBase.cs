@@ -47,9 +47,10 @@ namespace LinqToDB.NHibernate.Tests
 		}
 
 		/// <summary>
-		/// Disposes every cached <see cref="ISessionFactory"/>. Call from the fixture's one-time teardown.
+		/// Disposes every cached <see cref="ISessionFactory"/>. Invoked once from the assembly-level
+		/// <c>NHTestAssemblyTeardown</c> so the shared cache is never disposed while another fixture is using it.
 		/// </summary>
-		protected static void DisposeFactories()
+		internal static void DisposeFactories()
 		{
 			foreach (var sf in _factories.Values)
 				sf.Dispose();
