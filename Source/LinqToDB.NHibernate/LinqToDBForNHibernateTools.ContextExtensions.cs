@@ -219,11 +219,26 @@ namespace LinqToDB.NHibernate
 		#region GetTable
 
 		/// <summary>
-		/// Returns queryable source for specified mapping class for current DBContext, mapped to database table or view.
+		/// Returns a queryable linq2db source for the mapping class <typeparamref name="T"/> over the NHibernate
+		/// session, mapped to its database table or view.
 		/// </summary>
 		/// <typeparam name="T">Mapping class type.</typeparam>
 		/// <returns>Queryable source.</returns>
 		public static ITable<T> GetTable<T>(this ISession session)
+			where T : class
+		{
+			ArgumentNullException.ThrowIfNull(session);
+
+			return session.CreateLinqToDbContext().GetTable<T>();
+		}
+
+		/// <summary>
+		/// Returns a queryable linq2db source for the mapping class <typeparamref name="T"/> over the NHibernate
+		/// stateless session (materialised entities are not tracked), mapped to its database table or view.
+		/// </summary>
+		/// <typeparam name="T">Mapping class type.</typeparam>
+		/// <returns>Queryable source.</returns>
+		public static ITable<T> GetTable<T>(this IStatelessSession session)
 			where T : class
 		{
 			ArgumentNullException.ThrowIfNull(session);

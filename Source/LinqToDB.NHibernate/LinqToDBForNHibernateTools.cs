@@ -211,30 +211,40 @@ namespace LinqToDB.NHibernate
 			return Implementation.TransformExpression(expression, dc, session, sessionFactory);
 		}
 
-		// Builds the linq2db options that attach to the session's ADO resources. When the session has an active
-		// transaction, that transaction is wired in via UseTransaction so linq2db commands share it (required by
-		// providers such as SQL Server that reject a command with no transaction while one is pending); otherwise
-		// the bare connection is attached.
-		static DataOptions CreateAttachOptions(ISession session, IDataProvider provider)
+		// Builds a linq2db connection attached to the given NHibernate ADO resources. trackingSession is the
+		// ISession whose change-tracker should receive materialised entities, or null for a stateless session or
+		// an AsReadOnly() context (entities left detached). When a transaction is active it is wired in via
+		// UseTransaction so linq2db commands share it (required by providers such as SQL Server that reject a
+		// command with no transaction while one is pending); otherwise the bare connection is attached.
+		static LinqToDBForNHibernateToolsDataConnection CreateAttachedConnection(
+			DbConnection connection, DbTransaction? transaction, ISessionFactory? sessionFactory, ISession? trackingSession)
 		{
-			var transaction = GetActiveDbTransaction(session);
+			var info           = new NHProviderInfo { Connection = connection, Session = trackingSession, Options = sessionFactory };
+			var connectionInfo = GetConnectionInfo(info);
+			var provider       = GetDataProvider(info, connectionInfo);
 
 			var options = transaction != null
 				? new DataOptions().UseTransaction(provider, transaction)
-				: new DataOptions().UseConnection(provider, session.Connection);
+				: new DataOptions().UseConnection(provider, connection);
 
-			return WithTracing(options);
+			var dc = new LinqToDBForNHibernateToolsDataConnection(trackingSession, WithTracing(options), TransformExpression);
+
+			var mappingSchema = GetMappingSchema(sessionFactory);
+			if (mappingSchema != null)
+				dc.AddMappingSchema(mappingSchema);
+
+			return dc;
 		}
 
 		// NHibernate does not expose its ADO transaction directly, so recover it by enlisting a throwaway command:
-		// Enlist sets the command's Transaction to the session's active DbTransaction.
-		static DbTransaction? GetActiveDbTransaction(ISession session)
+		// Enlist sets the command's Transaction to the active DbTransaction.
+		static DbTransaction? GetActiveDbTransaction(DbConnection connection, ITransaction? currentTransaction)
 		{
-			if (session.GetCurrentTransaction() is not { IsActive: true } transaction)
+			if (currentTransaction is not { IsActive: true })
 				return null;
 
-			using var command = session.Connection.CreateCommand();
-			transaction.Enlist(command);
+			using var command = connection.CreateCommand();
+			currentTransaction.Enlist(command);
 
 			return command.Transaction;
 		}
@@ -252,18 +262,23 @@ namespace LinqToDB.NHibernate
 		{
 			ArgumentNullException.ThrowIfNull(session);
 
-			var info = GetNHProviderInfo(session);
+			var connection = session.Connection;
+			return CreateAttachedConnection(connection, GetActiveDbTransaction(connection, session.GetCurrentTransaction()), session.SessionFactory, session);
+		}
 
-			var connectionInfo = GetConnectionInfo(info);
-			var provider       = GetDataProvider(info, connectionInfo);
+		/// <summary>
+		/// Creates a LINQ To DB <see cref="DataConnection"/> attached to an NHibernate <see cref="IStatelessSession"/>.
+		/// A stateless session has no first-level cache and no change tracking, so entities materialised by linq2db
+		/// are left detached (untracked).
+		/// </summary>
+		/// <param name="session">NHibernate <see cref="IStatelessSession"/> instance.</param>
+		/// <returns>LINQ To DB <see cref="DataConnection"/> instance.</returns>
+		public static DataConnection CreateLinqToDbConnection(this IStatelessSession session)
+		{
+			ArgumentNullException.ThrowIfNull(session);
 
-			var dc = new LinqToDBForNHibernateToolsDataConnection(session, CreateAttachOptions(session, provider), TransformExpression);
-
-			var mappingSchema = GetMappingSchema(session.SessionFactory);
-			if (mappingSchema != null)
-				dc.AddMappingSchema(mappingSchema);
-
-			return dc;
+			var connection = session.Connection;
+			return CreateAttachedConnection(connection, GetActiveDbTransaction(connection, session.GetCurrentTransaction()), session.GetSessionImplementation().Factory, trackingSession: null);
 		}
 
 		static readonly INHibernateLogger _traceLogger = NHibernateLogger.For("LinqToDB.NHibernate");
@@ -333,18 +348,38 @@ namespace LinqToDB.NHibernate
 		{
 			ArgumentNullException.ThrowIfNull(session);
 
-			var info = GetNHProviderInfo(session);
+			var connection = session.Connection;
+			return CreateAttachedConnection(connection, GetActiveDbTransaction(connection, session.GetCurrentTransaction()), session.SessionFactory, session);
+		}
 
-			var connectionInfo = GetConnectionInfo(info);
-			var provider       = GetDataProvider(info, connectionInfo);
-			var mappingSchema  = GetMappingSchema(session.SessionFactory);
+		/// <summary>
+		/// Creates a linq2db data context for an NHibernate <see cref="IStatelessSession"/>. A stateless session
+		/// has no first-level cache and no change tracking, so entities materialised by linq2db are left detached.
+		/// </summary>
+		/// <param name="session">NHibernate stateless database session.</param>
+		/// <returns>linq2db data context.</returns>
+		public static IDataContext CreateLinqToDbContext(this IStatelessSession session)
+		{
+			ArgumentNullException.ThrowIfNull(session);
 
-			var dc = new LinqToDBForNHibernateToolsDataConnection(session, CreateAttachOptions(session, provider), TransformExpression);
+			var connection = session.Connection;
+			return CreateAttachedConnection(connection, GetActiveDbTransaction(connection, session.GetCurrentTransaction()), session.GetSessionImplementation().Factory, trackingSession: null);
+		}
 
-			if (mappingSchema != null)
-				dc.AddMappingSchema(mappingSchema);
+		/// <summary>
+		/// Creates a linq2db <see cref="IDataContext"/> over the NHibernate session's connection whose materialised
+		/// entities are NOT attached to the session's change tracker — they are left detached. This is the NHibernate
+		/// analogue of a read-only / no-tracking query. Commands issued through the returned context still run on the
+		/// session's connection and current transaction.
+		/// </summary>
+		/// <param name="session">NHibernate <see cref="ISession"/> instance.</param>
+		/// <returns>A non-tracking linq2db data context.</returns>
+		public static IDataContext AsReadOnly(this ISession session)
+		{
+			ArgumentNullException.ThrowIfNull(session);
 
-			return dc;
+			var connection = session.Connection;
+			return CreateAttachedConnection(connection, GetActiveDbTransaction(connection, session.GetCurrentTransaction()), session.SessionFactory, trackingSession: null);
 		}
 
 		/// <summary>

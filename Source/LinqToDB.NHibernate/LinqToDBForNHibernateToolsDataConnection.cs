@@ -58,7 +58,10 @@ namespace LinqToDB.NHibernate
 			_transformFunc = transformFunc;
 			AddInterceptor(new ExpressionInterceptor(this));
 
-			if (LinqToDBForNHibernateTools.EnableChangeTracker)
+			// Attach the change-tracker only when there is a session to attach materialised entities to. A null
+			// session means either a stateless session (no first-level cache) or an AsReadOnly() context — both
+			// leave the entities detached (untracked).
+			if (session != null && LinqToDBForNHibernateTools.EnableChangeTracker)
 				AddInterceptor(this);
 		}
 
