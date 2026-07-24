@@ -32,23 +32,23 @@ namespace LinqToDB.NHibernate.Tests
 			session.GetTable<Student>().Delete();
 			session.GetTable<Course>().Delete();
 
-			session.Save(new Course  { DeptId = 10, Number = 101, Title = "Algorithms" });
-			session.Save(new Course  { DeptId = 20, Number = 201, Title = "Databases"  });
+			session.Save(new Course  { DeptId = 10, CourseNo = 101, Title = "Algorithms" });
+			session.Save(new Course  { DeptId = 20, CourseNo = 201, Title = "Databases"  });
 			session.Save(new Student { CampusId = 1, Roll = 5, Name = "Ann" });
 			session.Save(new Student { CampusId = 2, Roll = 6, Name = "Bob" });
 			session.Save(new Student { CampusId = 3, Roll = 7, Name = "Cy"  });
 
 			// Course (10,101) -> students (1,5) and (2,6); course (20,201) -> student (3,7).
-			session.Save(new CourseStudent { DeptId = 10, Number = 101, CampusId = 1, Roll = 5 });
-			session.Save(new CourseStudent { DeptId = 10, Number = 101, CampusId = 2, Roll = 6 });
-			session.Save(new CourseStudent { DeptId = 20, Number = 201, CampusId = 3, Roll = 7 });
+			session.Save(new CourseStudent { DeptId = 10, CourseNo = 101, CampusId = 1, Roll = 5 });
+			session.Save(new CourseStudent { DeptId = 10, CourseNo = 101, CampusId = 2, Roll = 6 });
+			session.Save(new CourseStudent { DeptId = 20, CourseNo = 201, CampusId = 3, Roll = 7 });
 
 			tx.Commit();
 		}
 
 		[Test]
 		public void CompositeKey_NavigatesThroughJunction(
-			[IncludeDataSources(ProviderName.SQLiteClassic, TestProvName.AllSqlServer)] string provider)
+			[NHIncludeDataSources] string provider)
 		{
 			var sf = GetSessionFactory(provider);
 			SeedGraph(sf);
@@ -56,7 +56,7 @@ namespace LinqToDB.NHibernate.Tests
 			using var session = sf.OpenSession();
 
 			var names = session.GetTable<Course>()
-				.Where(c => c.DeptId == 10 && c.Number == 101)
+				.Where(c => c.DeptId == 10 && c.CourseNo == 101)
 				.SelectMany(c => c.Students)
 				.Select(s => s.Name)
 				.OrderBy(n => n)
@@ -67,7 +67,7 @@ namespace LinqToDB.NHibernate.Tests
 
 		[Test]
 		public void CompositeKey_OtherCourseGetsOnlyItsOwnStudents(
-			[IncludeDataSources(ProviderName.SQLiteClassic, TestProvName.AllSqlServer)] string provider)
+			[NHIncludeDataSources] string provider)
 		{
 			var sf = GetSessionFactory(provider);
 			SeedGraph(sf);
@@ -75,7 +75,7 @@ namespace LinqToDB.NHibernate.Tests
 			using var session = sf.OpenSession();
 
 			var names = session.GetTable<Course>()
-				.Where(c => c.DeptId == 20 && c.Number == 201)
+				.Where(c => c.DeptId == 20 && c.CourseNo == 201)
 				.SelectMany(c => c.Students)
 				.Select(s => s.Name)
 				.ToList();

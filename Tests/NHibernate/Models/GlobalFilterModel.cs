@@ -11,7 +11,7 @@ namespace LinqToDB.NHibernate.Tests.Models.GlobalFilter
 	{
 		public virtual int    Id        { get; set; }
 		public virtual string Title     { get; set; } = null!;
-		public virtual bool   IsDeleted { get; set; }
+		public virtual int    IsDeleted { get; set; }
 		public virtual int    TenantId  { get; set; }
 	}
 
@@ -57,7 +57,7 @@ namespace LinqToDB.NHibernate.Tests.Models.GlobalFilter
 		public DocumentMap()
 		{
 			Table("Documents");
-			Id(x => x.Id).GeneratedBy.Identity().Column("Id");
+			Id(x => x.Id).GeneratedBy.Native().Column("Id");
 			Map(x => x.Title).Column("Title").Not.Nullable();
 			Map(x => x.IsDeleted).Column("is_deleted").Not.Nullable();
 			Map(x => x.TenantId).Column("tenant_id").Not.Nullable();

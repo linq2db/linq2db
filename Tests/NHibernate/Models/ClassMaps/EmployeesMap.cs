@@ -8,7 +8,7 @@ namespace LinqToDB.NHibernate.Tests.Models.ClassMaps
 		public EmployeesMap()
 		{
 			Table("Employees");
-			Id(x => x.EmployeeId).GeneratedBy.Identity().Column("EmployeeID");
+			Id(x => x.EmployeeId).GeneratedBy.Native().Column("EmployeeID");
 			References(x => x.ReportsToNavigation).Column("ReportsTo");
 			Map(x => x.LastName).Column("LastName").Not.Nullable();
 			Map(x => x.FirstName).Column("FirstName").Not.Nullable();

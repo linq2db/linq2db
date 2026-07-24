@@ -23,7 +23,7 @@ namespace LinqToDB.NHibernate.Tests
 	{
 		[Test]
 		public void QueriedEntity_IsAttachedToSession(
-			[IncludeDataSources(ProviderName.SQLiteClassic, TestProvName.AllSqlServer)] string provider)
+			[NHIncludeDataSources] string provider)
 		{
 			var sf = GetSessionFactory(provider);
 
@@ -38,7 +38,7 @@ namespace LinqToDB.NHibernate.Tests
 
 		[Test]
 		public void QueriedEntity_IsNotAttached_WhenChangeTrackerDisabled(
-			[IncludeDataSources(ProviderName.SQLiteClassic, TestProvName.AllSqlServer)] string provider)
+			[NHIncludeDataSources] string provider)
 		{
 			var previous = LinqToDBForNHibernateTools.EnableChangeTracker;
 			LinqToDBForNHibernateTools.EnableChangeTracker = false;
@@ -60,7 +60,7 @@ namespace LinqToDB.NHibernate.Tests
 
 		[Test]
 		public void QueriedEntity_ModificationIsPersisted_WhenTrackerEnabled(
-			[IncludeDataSources(ProviderName.SQLiteClassic, TestProvName.AllSqlServer)] string provider)
+			[NHIncludeDataSources] string provider)
 		{
 			var sf = GetSessionFactory(provider);
 			SeedCustomer(sf, "CTPOS", "Original Co");
@@ -81,7 +81,7 @@ namespace LinqToDB.NHibernate.Tests
 
 		[Test]
 		public void QueriedEntity_ModificationIsNotPersisted_WhenTrackerDisabled(
-			[IncludeDataSources(ProviderName.SQLiteClassic, TestProvName.AllSqlServer)] string provider)
+			[NHIncludeDataSources] string provider)
 		{
 			var sf = GetSessionFactory(provider);
 			SeedCustomer(sf, "CTNEG", "Original Co");

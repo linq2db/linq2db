@@ -25,7 +25,7 @@ namespace LinqToDB.NHibernate.Tests
 	{
 		[Test]
 		public void NativeQuery_RoutesThroughLinqToDB(
-			[IncludeDataSources(ProviderName.SQLiteClassic, TestProvName.AllSqlServer)] string provider)
+			[NHIncludeDataSources] string provider)
 		{
 			var sf = GetSessionFactory(provider);
 
@@ -43,7 +43,7 @@ namespace LinqToDB.NHibernate.Tests
 
 		[Test]
 		public async Task NativeQuery_RoutesThroughLinqToDB_Async(
-			[IncludeDataSources(ProviderName.SQLiteClassic, TestProvName.AllSqlServer)] string provider)
+			[NHIncludeDataSources] string provider)
 		{
 			var sf = GetSessionFactory(provider);
 
@@ -62,7 +62,7 @@ namespace LinqToDB.NHibernate.Tests
 
 		[Test]
 		public async Task NativeQuery_CoreAsyncRoutesThroughAdapter(
-			[IncludeDataSources(ProviderName.SQLiteClassic, TestProvName.AllSqlServer)] string provider)
+			[NHIncludeDataSources] string provider)
 		{
 			var sf = GetSessionFactory(provider);
 
@@ -81,7 +81,7 @@ namespace LinqToDB.NHibernate.Tests
 
 		[Test]
 		public async Task NativeQuery_ToListAsyncNH_RunsViaNHibernate(
-			[IncludeDataSources(ProviderName.SQLiteClassic, TestProvName.AllSqlServer)] string provider)
+			[NHIncludeDataSources] string provider)
 		{
 			var sf = GetSessionFactory(provider);
 

@@ -258,5 +258,17 @@ namespace Tests
 			//TestProvName.AllSapHana,
 			//TestProvName.AllClickHouse
 		}.SplitAll())).ToList();
+
+		// Provider families the LinqToDB.NHibernate integration tests support. Like EFProviders it is the
+		// intersection of this curated list with --provider (via ApplyEFProviderOverride).
+		public static readonly IReadOnlyList<string> NHProviders = ApplyEFProviderOverride(CustomizationSupport.Interceptor.GetSupportedProviders(new List<string>
+		{
+			ProviderName.SQLiteClassic,
+			TestProvName.AllSqlServer,
+			TestProvName.AllPostgreSQL,
+			TestProvName.AllMySql,
+			TestProvName.AllOracleManaged,
+			TestProvName.AllFirebird,
+		}.SplitAll())).ToList();
 	}
 }

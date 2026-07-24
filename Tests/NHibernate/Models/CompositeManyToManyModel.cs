@@ -15,15 +15,15 @@ namespace LinqToDB.NHibernate.Tests.Models.CompositeManyToMany
 		}
 
 		public virtual int                  DeptId   { get; set; }
-		public virtual int                  Number   { get; set; }
+		public virtual int                  CourseNo { get; set; }
 		public virtual string               Title    { get; set; } = null!;
 		public virtual ICollection<Student> Students { get; set; }
 
 		public override bool Equals(object? obj)
-			=> obj is Course other && other.DeptId == DeptId && other.Number == Number;
+			=> obj is Course other && other.DeptId == DeptId && other.CourseNo == CourseNo;
 
 		public override int GetHashCode()
-			=> (DeptId, Number).GetHashCode();
+			=> (DeptId, CourseNo).GetHashCode();
 	}
 
 	public class Student
@@ -43,17 +43,17 @@ namespace LinqToDB.NHibernate.Tests.Models.CompositeManyToMany
 	public class CourseStudent
 	{
 		public virtual int DeptId   { get; set; }
-		public virtual int Number   { get; set; }
+		public virtual int CourseNo { get; set; }
 		public virtual int CampusId { get; set; }
 		public virtual int Roll     { get; set; }
 
 		public override bool Equals(object? obj)
 			=> obj is CourseStudent other
-				&& other.DeptId == DeptId && other.Number == Number
+				&& other.DeptId == DeptId && other.CourseNo == CourseNo
 				&& other.CampusId == CampusId && other.Roll == Roll;
 
 		public override int GetHashCode()
-			=> (DeptId, Number, CampusId, Roll).GetHashCode();
+			=> (DeptId, CourseNo, CampusId, Roll).GetHashCode();
 	}
 
 	public class CourseMap : ClassMap<Course>
@@ -63,11 +63,11 @@ namespace LinqToDB.NHibernate.Tests.Models.CompositeManyToMany
 			Table("Courses");
 			CompositeId()
 				.KeyProperty(x => x.DeptId, "DeptId")
-				.KeyProperty(x => x.Number, "Number");
+				.KeyProperty(x => x.CourseNo, "CourseNo");
 			Map(x => x.Title).Column("Title").Not.Nullable();
 			var students = HasManyToMany(x => x.Students).Table("CourseStudent");
-			students.ParentKeyColumns.Add("DeptId", "Number");  // junction -> course (composite)
-			students.ChildKeyColumns.Add("CampusId", "Roll");   // junction -> student (composite)
+			students.ParentKeyColumns.Add("DeptId", "CourseNo");  // junction -> course (composite)
+			students.ChildKeyColumns.Add("CampusId", "Roll");     // junction -> student (composite)
 		}
 	}
 
@@ -90,7 +90,7 @@ namespace LinqToDB.NHibernate.Tests.Models.CompositeManyToMany
 			Table("CourseStudent");
 			CompositeId()
 				.KeyProperty(x => x.DeptId,   "DeptId")
-				.KeyProperty(x => x.Number,   "Number")
+				.KeyProperty(x => x.CourseNo, "CourseNo")
 				.KeyProperty(x => x.CampusId, "CampusId")
 				.KeyProperty(x => x.Roll,     "Roll");
 		}

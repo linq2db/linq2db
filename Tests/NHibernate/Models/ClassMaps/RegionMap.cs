@@ -8,7 +8,7 @@ namespace LinqToDB.NHibernate.Tests.Models.ClassMaps
 		public RegionMap()
 		{
 			Table("Region");
-			Id(x => x.RegionId).GeneratedBy.Identity().Column("RegionID");
+			Id(x => x.RegionId).GeneratedBy.Native().Column("RegionID");
 			Map(x => x.RegionDescription).Column("RegionDescription").Not.Nullable();
 			Map(x => x.IsDeleted).Column("IsDeleted").Not.Nullable();
 		}

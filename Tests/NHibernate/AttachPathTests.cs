@@ -24,7 +24,7 @@ namespace LinqToDB.NHibernate.Tests
 	{
 		[Test]
 		public void GetTable_RunsSqlThroughSessionConnection(
-			[IncludeDataSources(ProviderName.SQLiteClassic, TestProvName.AllSqlServer)] string provider)
+			[NHIncludeDataSources] string provider)
 		{
 			var sf = GetSessionFactory(provider);
 
@@ -39,7 +39,7 @@ namespace LinqToDB.NHibernate.Tests
 
 		[Test]
 		public void GetTable_ReturnsSeededRow(
-			[IncludeDataSources(ProviderName.SQLiteClassic, TestProvName.AllSqlServer)] string provider)
+			[NHIncludeDataSources] string provider)
 		{
 			var sf = GetSessionFactory(provider);
 

@@ -41,7 +41,7 @@ namespace LinqToDB.NHibernate.Tests.Models.ManyToMany
 		public AuthorMap()
 		{
 			Table("Authors");
-			Id(x => x.Id).GeneratedBy.Identity().Column("Id");
+			Id(x => x.Id).GeneratedBy.Native().Column("Id");
 			Map(x => x.Name).Column("Name").Not.Nullable();
 			HasManyToMany(x => x.Books).Table("AuthorBook").ParentKeyColumn("AuthorId").ChildKeyColumn("BookId");
 		}
@@ -52,7 +52,7 @@ namespace LinqToDB.NHibernate.Tests.Models.ManyToMany
 		public BookMap()
 		{
 			Table("Books");
-			Id(x => x.Id).GeneratedBy.Identity().Column("Id");
+			Id(x => x.Id).GeneratedBy.Native().Column("Id");
 			Map(x => x.Title).Column("Title").Not.Nullable();
 		}
 	}

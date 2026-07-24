@@ -30,9 +30,9 @@ namespace LinqToDB.NHibernate.Tests
 			// linq2db command runs inside the NHibernate transaction (enlisted by the connection's interceptor).
 			session.GetTable<Document>().Delete();
 
-			session.Save(new Document { Title = "A", IsDeleted = false, TenantId = 1 });
-			session.Save(new Document { Title = "B", IsDeleted = true,  TenantId = 1 });
-			session.Save(new Document { Title = "C", IsDeleted = false, TenantId = 2 });
+			session.Save(new Document { Title = "A", IsDeleted = 0, TenantId = 1 });
+			session.Save(new Document { Title = "B", IsDeleted = 1, TenantId = 1 });
+			session.Save(new Document { Title = "C", IsDeleted = 0, TenantId = 2 });
 
 			tx.Commit();
 		}
@@ -42,7 +42,7 @@ namespace LinqToDB.NHibernate.Tests
 
 		[Test]
 		public void NoFilters_ReturnsAll(
-			[IncludeDataSources(ProviderName.SQLiteClassic, TestProvName.AllSqlServer)] string provider)
+			[NHIncludeDataSources] string provider)
 		{
 			var sf = GetSessionFactory(provider);
 			SeedGraph(sf);
@@ -54,7 +54,7 @@ namespace LinqToDB.NHibernate.Tests
 
 		[Test]
 		public void SoftDelete_FiltersDeletedRows(
-			[IncludeDataSources(ProviderName.SQLiteClassic, TestProvName.AllSqlServer)] string provider)
+			[NHIncludeDataSources] string provider)
 		{
 			var sf = GetSessionFactory(provider);
 			SeedGraph(sf);
@@ -67,7 +67,7 @@ namespace LinqToDB.NHibernate.Tests
 
 		[Test]
 		public void Tenant_FiltersByParameter(
-			[IncludeDataSources(ProviderName.SQLiteClassic, TestProvName.AllSqlServer)] string provider)
+			[NHIncludeDataSources] string provider)
 		{
 			var sf = GetSessionFactory(provider);
 			SeedGraph(sf);
@@ -81,7 +81,7 @@ namespace LinqToDB.NHibernate.Tests
 
 		[Test]
 		public void BothFilters_Combine(
-			[IncludeDataSources(ProviderName.SQLiteClassic, TestProvName.AllSqlServer)] string provider)
+			[NHIncludeDataSources] string provider)
 		{
 			var sf = GetSessionFactory(provider);
 			SeedGraph(sf);
@@ -96,7 +96,7 @@ namespace LinqToDB.NHibernate.Tests
 
 		[Test]
 		public void FilterAppliesAfterUnfilteredQuery_NotServedFromCache(
-			[IncludeDataSources(ProviderName.SQLiteClassic, TestProvName.AllSqlServer)] string provider)
+			[NHIncludeDataSources] string provider)
 		{
 			var sf = GetSessionFactory(provider);
 			SeedGraph(sf);
@@ -114,7 +114,7 @@ namespace LinqToDB.NHibernate.Tests
 
 		[Test]
 		public void PerEntityCondition_WithEmptyDefault_IsApplied(
-			[IncludeDataSources(ProviderName.SQLiteClassic, TestProvName.AllSqlServer)] string provider)
+			[NHIncludeDataSources] string provider)
 		{
 			var sf = GetSessionFactory(provider);
 			SeedGraph(sf);
@@ -128,7 +128,7 @@ namespace LinqToDB.NHibernate.Tests
 
 		[Test]
 		public void FilterCondition_WithBracesInLiteral_BuildsCorrectSql(
-			[IncludeDataSources(ProviderName.SQLiteClassic, TestProvName.AllSqlServer)] string provider)
+			[NHIncludeDataSources] string provider)
 		{
 			var sf = GetSessionFactory(provider);
 			SeedGraph(sf);
@@ -136,7 +136,7 @@ namespace LinqToDB.NHibernate.Tests
 			using (var seed = sf.OpenSession())
 			using (var tx = seed.BeginTransaction())
 			{
-				seed.Save(new Document { Title = "x{y}z", IsDeleted = false, TenantId = 1 });
+				seed.Save(new Document { Title = "x{y}z", IsDeleted = 0, TenantId = 1 });
 				tx.Commit();
 			}
 
@@ -150,7 +150,7 @@ namespace LinqToDB.NHibernate.Tests
 
 		[Test]
 		public void IgnoreFilters_Bypasses(
-			[IncludeDataSources(ProviderName.SQLiteClassic, TestProvName.AllSqlServer)] string provider)
+			[NHIncludeDataSources] string provider)
 		{
 			var sf = GetSessionFactory(provider);
 			SeedGraph(sf);

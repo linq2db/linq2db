@@ -8,7 +8,7 @@ namespace LinqToDB.NHibernate.Tests.Models.ClassMaps
 		public OrdersMap()
 		{
 			Table("Orders");
-			Id(x => x.OrderId).GeneratedBy.Identity().Column("OrderID");
+			Id(x => x.OrderId).GeneratedBy.Native().Column("OrderID");
 			Map(x => x.CustomerId).Column("CustomerID");
 			Map(x => x.EmployeeId).Column("EmployeeID");
 			Map(x => x.ShipVia).Column("ShipVia");

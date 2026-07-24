@@ -34,7 +34,7 @@ namespace LinqToDB.NHibernate.Tests
 
 		[Test]
 		public void LinqToDbWrite_RolledBackWithTransaction(
-			[IncludeDataSources(ProviderName.SQLiteClassic, TestProvName.AllSqlServer)] string provider)
+			[NHIncludeDataSources] string provider)
 		{
 			var sf = GetSessionFactory(provider);
 			SeedCustomer(sf, "TXROLL", "Original Co");
@@ -54,7 +54,7 @@ namespace LinqToDB.NHibernate.Tests
 
 		[Test]
 		public void LinqToDbWrite_CommittedWithTransaction(
-			[IncludeDataSources(ProviderName.SQLiteClassic, TestProvName.AllSqlServer)] string provider)
+			[NHIncludeDataSources] string provider)
 		{
 			var sf = GetSessionFactory(provider);
 			SeedCustomer(sf, "TXCOMMIT", "Original Co");

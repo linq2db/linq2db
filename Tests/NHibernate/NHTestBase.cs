@@ -1,15 +1,19 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 
 using FluentNHibernate.Cfg;
-using FluentNHibernate.Cfg.Db;
 
 using LinqToDB.Data;
+using LinqToDB.DataProvider.Firebird;
+using LinqToDB.DataProvider.Oracle;
 using LinqToDB.NHibernate.Tests.Models.Northwind;
 
 using NHibernate;
+using NHibernate.Dialect;
 using NHibernate.Driver;
+using NHibernate.Mapping;
 using NHibernate.Tool.hbm2ddl;
 
 using Tests;
@@ -19,31 +23,43 @@ namespace LinqToDB.NHibernate.Tests
 	/// <summary>
 	/// Base for NHibernate integration tests. Mirrors the <c>LinqToDB.EntityFrameworkCore</c> test harness:
 	/// connection strings are resolved from <c>UserDataProviders.json</c> through linq2db's test configuration,
-	/// each test runs once per enabled provider (via <c>[IncludeDataSources]</c> on the test parameter), and
-	/// every provider gets an isolated database — a <c>.NH</c>-suffixed SQL Server catalog or a separate SQLite
-	/// file — whose schema is (re)created by NHibernate <see cref="SchemaExport"/> and seeded once. The shared
-	/// linq2db test database is never touched.
+	/// and each test runs once per enabled provider (via <c>[NHIncludeDataSources]</c> on the test parameter).
+	/// Every mapped table is given a distinct name prefix (<see cref="TablePrefix"/>) so the NHibernate test
+	/// schema never collides with linq2db's own test tables in the shared per-provider database — the schema is
+	/// (re)created by <see cref="SchemaExport"/> and seeded once, touching only the prefixed tables.
 	/// </summary>
 	public abstract class NHTestBase
 	{
-		const string DbSuffix = "NH";
+		// Prefix applied to every mapped table so the NHibernate test schema is isolated from linq2db's own
+		// test tables inside the same database. Kept short to stay under Oracle/Firebird identifier limits.
+		const string TablePrefix = "l2dbnh_";
 
 		static NHTestBase()
 		{
 			// Trigger linq2db's test-settings preload so the UserDataProviders.json connection strings are
 			// registered with DataConnection before GetConnectionString is used (same trick as the EF Core base).
 			_ = TestConfiguration.StoreMetrics;
+
+			// Oracle and Firebird fold unquoted identifiers to UPPER-CASE, but by default linq2db quotes lower-case
+			// identifiers (preserving their case) — which would never match the upper-cased tables NHibernate creates
+			// from our lower-cased mappings. Tell linq2db to fold lower-case identifiers to upper-case unquoted, the
+			// same way NHibernate's DDL does, so both sides agree. (PostgreSQL keeps lower-case and needs no change.)
+			OracleOptions.Default   = OracleOptions.Default   with { DontEscapeLowercaseIdentifiers = true };
+			FirebirdOptions.Default = FirebirdOptions.Default with { IdentifierQuoteMode = FirebirdIdentifierQuoteMode.None };
 		}
 
-		static readonly ConcurrentDictionary<string, ISessionFactory> _factories = new();
+		static readonly ConcurrentDictionary<string, Lazy<ISessionFactory>> _factories = new();
 
 		/// <summary>
-		/// Returns a cached <see cref="ISessionFactory"/> for <paramref name="provider"/>, building its isolated
-		/// database, schema and seed data on first use.
+		/// Returns a cached <see cref="ISessionFactory"/> for <paramref name="provider"/>, building its schema
+		/// and seed data on first use.
 		/// </summary>
 		protected static ISessionFactory GetSessionFactory(string provider)
 		{
-			return _factories.GetOrAdd(provider, BuildFactory);
+			// Lazy guarantees BuildFactory (schema drop+create + seed) runs exactly once per provider even when
+			// several fixtures request the same provider concurrently: ConcurrentDictionary.GetOrAdd alone may run
+			// its value factory more than once under contention, which would race two SchemaExports.
+			return _factories.GetOrAdd(provider, p => new Lazy<ISessionFactory>(() => BuildFactory(p))).Value;
 		}
 
 		/// <summary>
@@ -53,7 +69,8 @@ namespace LinqToDB.NHibernate.Tests
 		internal static void DisposeFactories()
 		{
 			foreach (var sf in _factories.Values)
-				sf.Dispose();
+				if (sf.IsValueCreated)
+					sf.Value.Dispose();
 
 			_factories.Clear();
 		}
@@ -64,7 +81,7 @@ namespace LinqToDB.NHibernate.Tests
 
 			var sf = cfg.BuildSessionFactory();
 
-			// Recreate the schema on every run (drop + create), mirroring EF Core EnsureDeleted/EnsureCreated.
+			// Recreate the (prefixed) schema on every run — drop + create — mirroring EF Core EnsureDeleted/EnsureCreated.
 			new SchemaExport(cfg).Create(false, true);
 
 			Seed(sf);
@@ -74,78 +91,97 @@ namespace LinqToDB.NHibernate.Tests
 
 		static global::NHibernate.Cfg.Configuration BuildConfiguration(string provider)
 		{
-			FluentConfiguration fluent;
+			Type dialect;
+			Type driver;
 
-			if (provider.IsAnyOf(TestProvName.AllSqlServer))
+			if      (provider.IsAnyOf(TestProvName.AllSqlServer))     { dialect = typeof(MsSql2012Dialect);    driver = typeof(MicrosoftDataSqlClientDriver); }
+			else if (provider.IsAnyOf(TestProvName.AllSQLite))        { dialect = typeof(SQLiteDialect);       driver = typeof(SQLite20Driver); }
+			else if (provider.IsAnyOf(TestProvName.AllPostgreSQL))    { dialect = typeof(PostgreSQL83Dialect); driver = typeof(NpgsqlDriver); }
+			else if (provider.IsAnyOf(TestProvName.AllMySql))         { dialect = typeof(MySQL57Dialect);      driver = typeof(MySqlDataDriver); }
+			else if (provider.IsAnyOf(TestProvName.AllOracleManaged)) { dialect = typeof(Oracle12cDialect);    driver = typeof(OracleManagedDataClientDriver); }
+			else if (provider.IsAnyOf(TestProvName.AllFirebird))      { dialect = typeof(FirebirdDialect);     driver = typeof(FirebirdClientDriver); }
+			else throw new InvalidOperationException($"NHibernate tests are not configured for provider '{provider}'.");
+
+			// SQLite has no shared server database: use an isolated throwaway file (recreated per run). Every
+			// server provider reuses linq2db's per-provider test database, kept collision-free by the table prefix.
+			string connectionString;
+			if (provider.IsAnyOf(TestProvName.AllSQLite))
 			{
-				// Microsoft.Data.SqlClient is referenced by the test project and connects to any SQL Server
-				// version; the attach path detects the linq2db provider from the live connection regardless.
-				var config = MsSqlConfiguration.MsSql2012
-					.ConnectionString(GetIsolatedSqlServerConnectionString(provider))
-					.Driver<MicrosoftDataSqlClientDriver>();
-
-				fluent = Fluently.Configure().Database(config);
-			}
-			else if (provider.IsAnyOf(TestProvName.AllSQLite))
-			{
-				// NHibernate's SQLite20Driver uses System.Data.SQLite (linq2db SQLiteClassic). A fresh file per
-				// provider gives an isolated, throwaway database.
-				var dbFile = Path.Combine(Path.GetTempPath(), $"nh_l2db.{provider}.{DbSuffix}.db");
-
+				var dbFile = Path.Combine(Path.GetTempPath(), $"nh_l2db.{provider}.db");
 				if (File.Exists(dbFile))
 					File.Delete(dbFile);
-
-				fluent = Fluently.Configure().Database(SQLiteConfiguration.Standard.UsingFile(dbFile));
+				connectionString = $"Data Source={dbFile}";
 			}
 			else
 			{
-				throw new InvalidOperationException($"NHibernate tests are not configured for provider '{provider}'.");
+				connectionString = DataConnection.GetConnectionString(provider);
 			}
 
-			return fluent
+			var cfg = new global::NHibernate.Cfg.Configuration();
+
+			// Fold every mapped identifier to lower-case so linq2db's default (Auto) identifier quoting never
+			// quotes them: unquoted lower-case names then case-fold identically on both sides (PostgreSQL keeps
+			// lower-case, Oracle/Firebird go upper-case), so linq2db's queries hit the tables NHibernate created.
+			cfg.SetNamingStrategy(LowerCaseNamingStrategy.Instance);
+
+			cfg.SetProperty("dialect",                      dialect.AssemblyQualifiedName);
+			cfg.SetProperty("connection.driver_class",      driver.AssemblyQualifiedName);
+			cfg.SetProperty("connection.connection_string", connectionString);
+			// Neither linq2db nor NHibernate quotes identifiers here, so reserved-word columns (e.g. "Number")
+			// fold the same way on both sides and stay resolvable through the linq2db attach path.
+			cfg.SetProperty("hbm2ddl.keywords",             "none");
+
+			return Fluently.Configure(cfg)
 				.Mappings(m => m.FluentMappings.AddFromAssembly(typeof(NHTestBase).Assembly))
+				.ExposeConfiguration(c => PostConfigure(c, provider))
 				.BuildConfiguration();
 		}
 
-		static string GetIsolatedSqlServerConnectionString(string provider)
+		// Prefix every mapped table (entity + collection) so the NHibernate test schema never collides with
+		// linq2db's own tables. A one-to-many collection table shares the child entity's Table instance, so the
+		// distinct-set guard prevents a double prefix; the quoted flag is preserved for names like "Order Details".
+		static void PostConfigure(global::NHibernate.Cfg.Configuration cfg, string provider)
 		{
-			var baseConnectionString = DataConnection.GetConnectionString(provider);
+			var seen = new HashSet<Table>();
 
-			// Mirror EF Core: run against a separate database so SchemaExport never touches the shared Northwind.
-			var builder = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(baseConnectionString);
-			builder.InitialCatalog += $".{DbSuffix}";
+			// Firebird rejects a composite index whose key exceeds its size limit — two default VARCHAR(255)
+			// columns under a multi-byte charset already do. The test data is short, so cap string lengths there.
+			var maxStringLength = provider.IsAnyOf(TestProvName.AllFirebird) ? 100 : int.MaxValue;
 
-			EnsureSqlServerDatabase(baseConnectionString, builder.InitialCatalog);
+			foreach (var pc in cfg.ClassMappings)
+				PrefixTable(pc.Table, seen, maxStringLength);
 
-			return builder.ConnectionString;
+			foreach (var col in cfg.CollectionMappings)
+				PrefixTable(col.CollectionTable, seen, maxStringLength);
 		}
 
-		static void EnsureSqlServerDatabase(string baseConnectionString, string database)
+		static void PrefixTable(Table? table, HashSet<Table> seen, int maxStringLength)
 		{
-			var master = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(baseConnectionString)
-			{
-				InitialCatalog = "master"
-			};
+			if (table == null || !seen.Add(table))
+				return;
 
-			using var cn = new Microsoft.Data.SqlClient.SqlConnection(master.ConnectionString);
-			cn.Open();
+			// The Table.Name setter treats a leading backtick as "quoted"; re-wrap so quoted names stay quoted.
+			table.Name = table.IsQuoted ? $"`{TablePrefix}{table.Name}`" : $"{TablePrefix}{table.Name}";
 
-			using var cmd = cn.CreateCommand();
-			// QUOTENAME bracket-quotes the (dotted) database name; the statement is built into a variable
-			// because EXEC() only concatenates string literals/variables, not function calls.
-			cmd.CommandText =
-				"IF DB_ID(@name) IS NULL " +
-				"BEGIN " +
-					"DECLARE @sql nvarchar(300) = N'CREATE DATABASE ' + QUOTENAME(@name); " +
-					"EXEC(@sql); " +
-				"END";
+			if (maxStringLength != int.MaxValue)
+				foreach (var column in table.ColumnIterator)
+					if (column.Length > maxStringLength)
+						column.Length = maxStringLength;
+		}
 
-			var p = cmd.CreateParameter();
-			p.ParameterName = "@name";
-			p.Value         = database;
-			cmd.Parameters.Add(p);
+		// Lower-cases every mapped table and column name at binding time (so foreign keys pick it up too). This
+		// keeps NHibernate's DDL and linq2db's queries in agreement on the case-folding providers — see the note
+		// on the SetNamingStrategy call in BuildConfiguration.
+		sealed class LowerCaseNamingStrategy : global::NHibernate.Cfg.INamingStrategy
+		{
+			public static readonly LowerCaseNamingStrategy Instance = new();
 
-			cmd.ExecuteNonQuery();
+			public string ClassToTableName(string className)                         => className.ToLowerInvariant();
+			public string PropertyToColumnName(string propertyName)                  => propertyName.ToLowerInvariant();
+			public string TableName(string tableName)                                => tableName.ToLowerInvariant();
+			public string ColumnName(string columnName)                              => columnName.ToLowerInvariant();
+			public string PropertyToTableName(string className, string propertyName) => propertyName.ToLowerInvariant();
+			public string LogicalColumnName(string columnName, string propertyName)  => string.IsNullOrEmpty(columnName) ? propertyName.ToLowerInvariant() : columnName.ToLowerInvariant();
 		}
 
 		static void Seed(ISessionFactory sf)

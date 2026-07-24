@@ -55,7 +55,7 @@ namespace LinqToDB.NHibernate.Tests
 
 		[Test]
 		public void ManyToMany_NavigatesThroughJunction(
-			[IncludeDataSources(ProviderName.SQLiteClassic, TestProvName.AllSqlServer)] string provider)
+			[NHIncludeDataSources] string provider)
 		{
 			var sf = GetSessionFactory(provider);
 			SeedGraph(sf);
@@ -77,7 +77,7 @@ namespace LinqToDB.NHibernate.Tests
 
 		[Test]
 		public void ManyToMany_FiltersOtherSide(
-			[IncludeDataSources(ProviderName.SQLiteClassic, TestProvName.AllSqlServer)] string provider)
+			[NHIncludeDataSources] string provider)
 		{
 			var sf = GetSessionFactory(provider);
 			SeedGraph(sf);
