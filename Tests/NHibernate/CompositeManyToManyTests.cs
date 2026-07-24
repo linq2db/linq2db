@@ -27,7 +27,7 @@ namespace LinqToDB.NHibernate.Tests
 			using var session = sf.OpenSession();
 			using var tx      = session.BeginTransaction();
 
-			// linq2db commands run inside the NHibernate transaction (enlisted by the connection's interceptor).
+			// linq2db commands run inside the NHibernate transaction (the attached connection shares it via UseTransaction).
 			session.GetTable<CourseStudent>().Delete();
 			session.GetTable<Student>().Delete();
 			session.GetTable<Course>().Delete();
