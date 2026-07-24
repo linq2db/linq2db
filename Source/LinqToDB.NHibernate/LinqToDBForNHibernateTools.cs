@@ -221,6 +221,7 @@ namespace LinqToDB.NHibernate
 		{
 			var info           = new NHProviderInfo { Connection = connection, Session = trackingSession, Options = sessionFactory };
 			var connectionInfo = GetConnectionInfo(info);
+			connectionInfo.Transaction = transaction; // so provider auto-detection probes within the active transaction
 			var provider       = GetDataProvider(info, connectionInfo);
 
 			var options = transaction != null
