@@ -201,6 +201,10 @@ steps:
   displayName: 'EF.Core Tests (NETFX x64): $(title)'
   condition: and(eq(variables.netfx, 'true'), ne(variables.x86, 'true'), variables.title, succeeded())
 
+- script: $(netfx_tfm)\nhibernate\x64\linq2db.NHibernate.Tests.exe --filter "TestCategory != SkipCI" --settings $(netfx_tfm)\nhibernate\x64\.runsettings --report-trx --report-trx-filename netfx-nhibernate-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
+  displayName: 'NHibernate Tests (NETFX x64): $(title)'
+  condition: and(eq(variables.netfx, 'true'), ne(variables.x86, 'true'), variables.title, succeeded())
+
 - task: CmdLine@2
   inputs:
     script: '$(System.DefaultWorkingDirectory)/scripts/$(post_test_win_local)'
@@ -449,6 +453,10 @@ steps:
 
 - script: net10.0\efcore\x64\linq2db.EntityFrameworkCore.Tests.exe --filter "TestCategory != SkipCI" --settings net10.0\efcore\x64\.runsettings --report-trx --report-trx-filename net10.0-efcore-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
   displayName: 'EF.Core Tests (.NET 10 x64): $(title)'
+  condition: and(eq(variables.net100, 'true'), ne(variables.x86, 'true'), variables.title, succeeded())
+
+- script: net10.0\nhibernate\x64\linq2db.NHibernate.Tests.exe --filter "TestCategory != SkipCI" --settings net10.0\nhibernate\x64\.runsettings --report-trx --report-trx-filename net10.0-nhibernate-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
+  displayName: 'NHibernate Tests (.NET 10 x64): $(title)'
   condition: and(eq(variables.net100, 'true'), ne(variables.x86, 'true'), variables.title, succeeded())
 
 - script: net10.0\efcore\x86\linq2db.EntityFrameworkCore.Tests.exe --filter "TestCategory != SkipCI" --settings net10.0\efcore\x86\.runsettings --report-trx --report-trx-filename net10.0-efcore-x86.trx --results-directory TestResults --hangdump --hangdump-timeout 5m

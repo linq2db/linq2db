@@ -648,6 +648,7 @@
     <Project Path="Source/LinqToDB.LINQPad/LinqToDB.LINQPad.Pack.csproj">
       <Build Solution="Testing|*" Project="false" />
     </Project>
+    <Project Path="Source/LinqToDB.NHibernate/LinqToDB.NHibernate.NH5.csproj" />
     <Project Path="Source/LinqToDB.Remote.Grpc/LinqToDB.Remote.Grpc.csproj" />
     <Project Path="Source/LinqToDB.Remote.HttpClient.Client/LinqToDB.Remote.HttpClient.Client.csproj" />
     <Project Path="Source/LinqToDB.Remote.HttpClient.Server/LinqToDB.Remote.HttpClient.Server.csproj" />
@@ -707,6 +708,7 @@
     <Project Path="Tests/FSharp/Tests.FSharp.fsproj" />
     <Project Path="Tests/Linq/Tests.csproj" />
     <Project Path="Tests/Model/Tests.Model.csproj" />
+    <Project Path="Tests/NHibernate/Tests.NHibernate.NH5.csproj" />
     <Project Path="Tests/Tests.Analyzers/Tests.Analyzers.csproj" />
     <Project Path="Tests/Tests.Benchmarks/linq2db.Benchmarks.csproj">
       <Build Solution="Testing|*" Project="false" />

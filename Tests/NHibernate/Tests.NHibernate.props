@@ -1,0 +1,26 @@
+<Project>
+	<Import Project="..\linq2db.BasicTestProjects.props" />
+
+	<PropertyGroup>
+		<AssemblyName>linq2db.NHibernate.Tests</AssemblyName>
+		<RootNamespace>LinqToDB.NHibernate.Tests</RootNamespace>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Base\Tests.Base.csproj" />
+
+		<PackageReference Include="NHibernate" />
+		<PackageReference Include="FluentNHibernate" />
+		<PackageReference Include="Microsoft.Data.Sqlite" />
+		<PackageReference Include="SourceGear.sqlite3" />
+		<PackageReference Include="System.Data.SQLite.Core" />
+		<PackageReference Include="Microsoft.Data.SqlClient" />
+		<PackageReference Include="Npgsql" />
+		<PackageReference Include="MySql.Data" />
+		<!-- Oracle.ManagedDataAccess.Core is netstandard2.1 and cannot load on .NET Framework; use the netfx-native
+		     Oracle.ManagedDataAccess there instead. -->
+		<PackageReference Include="Oracle.ManagedDataAccess.Core" Condition="'$(TargetFramework)' != 'net462'" />
+		<PackageReference Include="Oracle.ManagedDataAccess"      Condition="'$(TargetFramework)' == 'net462'" />
+		<PackageReference Include="FirebirdSql.Data.FirebirdClient" />
+	</ItemGroup>
+</Project>

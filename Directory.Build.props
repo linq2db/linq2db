@@ -6,7 +6,8 @@
 		<EF8Version>8.7.0</EF8Version>
 		<EF9Version>9.6.0</EF9Version>
 		<EF10Version>10.5.0</EF10Version>
-		
+		<NH5Version>5.0.0</NH5Version>
+
 		<!-- Baselines update on next major release -->
 		<BaselineVersion>6.0.0</BaselineVersion>
 		<EF3BaselineVersion>3.28.0</EF3BaselineVersion>
