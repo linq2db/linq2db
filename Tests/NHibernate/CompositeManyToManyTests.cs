@@ -27,9 +27,10 @@ namespace LinqToDB.NHibernate.Tests
 			using var session = sf.OpenSession();
 			using var tx      = session.BeginTransaction();
 
-			session.CreateQuery("delete from CourseStudent").ExecuteUpdate();
-			session.CreateQuery("delete from Student").ExecuteUpdate();
-			session.CreateQuery("delete from Course").ExecuteUpdate();
+			// linq2db commands run inside the NHibernate transaction (enlisted by the connection's interceptor).
+			session.GetTable<CourseStudent>().Delete();
+			session.GetTable<Student>().Delete();
+			session.GetTable<Course>().Delete();
 
 			session.Save(new Course  { DeptId = 10, Number = 101, Title = "Algorithms" });
 			session.Save(new Course  { DeptId = 20, Number = 201, Title = "Databases"  });

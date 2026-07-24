@@ -29,9 +29,10 @@ namespace LinqToDB.NHibernate.Tests
 			using var session = sf.OpenSession();
 			using var tx      = session.BeginTransaction();
 
-			session.CreateQuery("delete from AuthorBook").ExecuteUpdate();
-			session.CreateQuery("delete from Book").ExecuteUpdate();
-			session.CreateQuery("delete from Author").ExecuteUpdate();
+			// linq2db commands run inside the NHibernate transaction (enlisted by the connection's interceptor).
+			session.GetTable<AuthorBook>().Delete();
+			session.GetTable<Book>().Delete();
+			session.GetTable<Author>().Delete();
 
 			var asimov = new Author { Name = "Asimov" };
 			var clarke = new Author { Name = "Clarke" };

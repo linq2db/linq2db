@@ -27,7 +27,8 @@ namespace LinqToDB.NHibernate.Tests
 			using var session = sf.OpenSession();
 			using var tx      = session.BeginTransaction();
 
-			session.CreateQuery("delete from Document").ExecuteUpdate();
+			// linq2db command runs inside the NHibernate transaction (enlisted by the connection's interceptor).
+			session.GetTable<Document>().Delete();
 
 			session.Save(new Document { Title = "A", IsDeleted = false, TenantId = 1 });
 			session.Save(new Document { Title = "B", IsDeleted = true,  TenantId = 1 });

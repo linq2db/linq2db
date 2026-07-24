@@ -226,6 +226,32 @@ namespace LinqToDB.NHibernate
 			return Implementation.TransformExpression(expression, dc, session, sessionFactory);
 		}
 
+		// Builds the linq2db options that attach to the session's ADO resources. When the session has an active
+		// transaction, that transaction is wired in via UseTransaction so linq2db commands share it (required by
+		// providers such as SQL Server that reject a command with no transaction while one is pending); otherwise
+		// the bare connection is attached.
+		static DataOptions CreateAttachOptions(ISession session, IDataProvider provider)
+		{
+			var transaction = GetActiveDbTransaction(session);
+
+			return transaction != null
+				? new DataOptions().UseTransaction(provider, transaction)
+				: new DataOptions().UseConnection(provider, session.Connection);
+		}
+
+		// NHibernate does not expose its ADO transaction directly, so recover it by enlisting a throwaway command:
+		// Enlist sets the command's Transaction to the session's active DbTransaction.
+		static DbTransaction? GetActiveDbTransaction(ISession session)
+		{
+			if (session.GetCurrentTransaction() is not { IsActive: true } transaction)
+				return null;
+
+			using var command = session.Connection.CreateCommand();
+			transaction.Enlist(command);
+
+			return command.Transaction;
+		}
+
 		/// <summary>
 		/// Creates LINQ To DB <see cref="DataConnection"/> instance, attached to provided
 		/// EF.Core <see cref="ISession"/> instance connection and transaction.
@@ -241,35 +267,10 @@ namespace LinqToDB.NHibernate
 
 			var info = GetNHProviderInfo(session);
 
-			DataConnection? dc = null;
-
-			transaction ??= session.GetCurrentTransaction();
-
 			var connectionInfo = GetConnectionInfo(info);
-			var provider = GetDataProvider(info, connectionInfo);
+			var provider       = GetDataProvider(info, connectionInfo);
 
-			if (transaction != null && transaction.IsActive)
-			{
-				throw new NotImplementedException();
-				// (transaction-attach path not yet implemented)
-				// TODO: we need API for testing current connection
-				/*
-				//if (provider.IsCompatibleConnection(dbTrasaction.Connection))
-					dc = new LinqToDBForNHibernateToolsDataConnection(session, provider, dbTrasaction, TransformExpression);
-			*/
-			}
-
-			if (dc == null)
-			{
-				var dbConnection = session.Connection;
-				// TODO: we need API for testing current connection
-				if (true /*provider.IsCompatibleConnection(dbConnection)*/)
-					dc = new LinqToDBForNHibernateToolsDataConnection(session, new DataOptions().UseConnection(provider, dbConnection), TransformExpression);
-				else
-				{
-					//dc = new LinqToDBForNHibernateToolsDataConnection(session, provider, connectionInfo.ConnectionString, session.Model, TransformExpression);
-				}
-			}
+			var dc = new LinqToDBForNHibernateToolsDataConnection(session, CreateAttachOptions(session, provider), TransformExpression);
 
 			/*
 			var logger = CreateLogger(info.Options);
@@ -322,45 +323,11 @@ namespace LinqToDB.NHibernate
 
 			var info = GetNHProviderInfo(session);
 
-			DataConnection? dc = null;
-
-			//transaction = transaction ?? session.Database.CurrentTransaction;
-
 			var connectionInfo = GetConnectionInfo(info);
 			var provider       = GetDataProvider(info, connectionInfo);
 			var mappingSchema  = GetMappingSchema(session.SessionFactory);
-			//var logger         = CreateLogger(info.Options);
 
-			if (transaction != null)
-			{
-				throw new NotImplementedException();
-				//var dbTransaction = transaction.GetDbTransaction();
-
-				//dc = new LinqToDBForNHibernateToolsDataConnection(session, provider, dbTransaction, session.Model, TransformExpression);
-			}
-
-			if (dc == null)
-			{
-				var dbConnection = session.Connection;
-				// TODO: we need API for testing current connection
-				if (true /*provider.IsCompatibleConnection(dbConnection)*/)
-					dc = new LinqToDBForNHibernateToolsDataConnection(session, new DataOptions().UseConnection(provider, dbConnection), TransformExpression);
-				else
-				{
-					/*
-					// special case when we have to create data connection by itself
-					var dataContext = new LinqToDBForNHibernateToolsDataContext(session, provider, connectionInfo.ConnectionString, session.Model, TransformExpression);
-
-					if (mappingSchema != null)
-						dataContext.MappingSchema = mappingSchema;
-					
-					if (logger != null)
-						dataContext.OnTraceConnection = t => Implementation.LogConnectionTrace(t, logger);
-						
-					return dataContext;
-					*/
-				}
-			}
+			var dc = new LinqToDBForNHibernateToolsDataConnection(session, CreateAttachOptions(session, provider), TransformExpression);
 
 			if (mappingSchema != null)
 				dc.AddMappingSchema(mappingSchema);
