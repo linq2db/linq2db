@@ -495,6 +495,12 @@ namespace LinqToDB.NHibernate
 			set => Implementation.EnableChangeTracker = value;
 		}
 
+		/// <summary>
+		/// Registers an additional linq2db <see cref="MappingSchema"/> that is combined with the schema derived from
+		/// NHibernate metadata for connections created against <paramref name="sessionFactory"/>.
+		/// </summary>
+		/// <param name="sessionFactory">Session factory the mapping schema applies to.</param>
+		/// <param name="mappingSchema">Mapping schema to add.</param>
 		public static void AddMappingSchema(ISessionFactory sessionFactory, MappingSchema mappingSchema)
 			=> Implementation.AddMappingSchema(sessionFactory, mappingSchema);
 

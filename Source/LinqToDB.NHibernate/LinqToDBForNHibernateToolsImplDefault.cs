@@ -136,7 +136,13 @@ namespace LinqToDB.NHibernate
 			};
 		}
 
-		protected virtual LinqToDBProviderInfo? GetLinqToDbProviderInfo(ISessionFactory sessionFactory) 
+		/// <summary>
+		/// Detects the linq2db provider from an NHibernate <see cref="ISessionFactory"/> by inspecting its configured
+		/// connection driver.
+		/// </summary>
+		/// <param name="sessionFactory">NHibernate session factory.</param>
+		/// <returns>linq2db provider settings, or <see langword="null"/> when the driver is not recognised.</returns>
+		protected virtual LinqToDBProviderInfo? GetLinqToDbProviderInfo(ISessionFactory sessionFactory)
 		{
 			if (sessionFactory is ISessionFactoryImplementor implementor)
 			{
@@ -286,48 +292,6 @@ namespace LinqToDB.NHibernate
 		public virtual ISessionFactory? GetSessionOptions(ISession? session)
 		{
 			return session?.SessionFactory;
-		}
-
-		/// <summary>
-		/// Removes conversions from expression.
-		/// </summary>
-		/// <param name="ex">Expression.</param>
-		/// <returns>Unwrapped expression.</returns>
-		public static Expression? Unwrap(Expression? ex)
-		{
-			if (ex == null)
-				return null;
-
-			switch (ex.NodeType)
-			{
-				case ExpressionType.Quote          : return Unwrap(((UnaryExpression)ex).Operand);
-				case ExpressionType.ConvertChecked :
-				case ExpressionType.Convert        :
-					{
-						var ue = (UnaryExpression)ex;
-
-						if (!ue.Operand.Type.IsEnum)
-							return Unwrap(ue.Operand);
-
-						break;
-					}
-			}
-
-			return ex;
-		}
-
-		/// <summary>
-		/// Tests that method is <see cref="IQueryable{T}"/> extension.
-		/// </summary>
-		/// <param name="method">Method to test.</param>
-		/// <param name="enumerable">Allow <see cref="IEnumerable{T}"/> extensions.</param>
-		/// <returns><see langword="true"/> if method is <see cref="IQueryable{T}"/> extension.</returns>
-		public static bool IsQueryable(MethodCallExpression method, bool enumerable = true)
-		{
-			var type = method.Method.DeclaringType;
-
-			return type == typeof(Queryable) || (enumerable && type == typeof(Enumerable)) || type == typeof(LinqExtensions)/* ||
-				   type == typeof()*/;
 		}
 
 		/// <summary>
@@ -574,6 +538,12 @@ namespace LinqToDB.NHibernate
 		static readonly Func<MappingSchema, string> _configurationIdGetter =
 			ms => ((IConfigurationID)ms).ConfigurationID.ToString(System.Globalization.CultureInfo.InvariantCulture);
 
+		/// <summary>
+		/// Registers an additional linq2db <see cref="MappingSchema"/> that is combined with the schema derived from
+		/// NHibernate metadata for connections created against <paramref name="sessionFactory"/>.
+		/// </summary>
+		/// <param name="sessionFactory">Session factory the mapping schema applies to (<see langword="null"/> for the default).</param>
+		/// <param name="mappingSchema">Mapping schema to add.</param>
 		public void AddMappingSchema(ISessionFactory? sessionFactory, MappingSchema mappingSchema)
 		{
 			_mappingSchemas.AddOrUpdate(Tuple.Create(sessionFactory), sf =>
