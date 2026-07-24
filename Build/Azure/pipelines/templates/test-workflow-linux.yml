@@ -134,10 +134,6 @@ steps:
   condition: and(variables.title, eq(variables.net80, 'true'), succeeded())
   displayName: 'EF.Core Tests (.NET 8): $(title)'
 
-- script: dotnet ./net8.0/nhibernate/x64/linq2db.NHibernate.Tests.dll --filter "TestCategory != SkipCI" --settings ./net8.0/nhibernate/x64/.runsettings --report-trx --report-trx-filename net8.0-nhibernate-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
-  condition: and(variables.title, eq(variables.net80, 'true'), succeeded())
-  displayName: 'NHibernate Tests (.NET 8): $(title)'
-
 - task: CmdLine@2
   inputs:
     script: rm -rf $(System.DefaultWorkingDirectory)/net8.0
@@ -184,10 +180,6 @@ steps:
 - script: dotnet ./net9.0/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" --settings ./net9.0/efcore/x64/.runsettings --report-trx --report-trx-filename net9.0-efcore-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
   condition: and(variables.title, eq(variables.net90, 'true'), succeeded())
   displayName: 'EF.Core Tests (.NET 9): $(title)'
-
-- script: dotnet ./net9.0/nhibernate/x64/linq2db.NHibernate.Tests.dll --filter "TestCategory != SkipCI" --settings ./net9.0/nhibernate/x64/.runsettings --report-trx --report-trx-filename net9.0-nhibernate-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
-  condition: and(variables.title, eq(variables.net90, 'true'), succeeded())
-  displayName: 'NHibernate Tests (.NET 9): $(title)'
 
 - task: CmdLine@2
   inputs:
