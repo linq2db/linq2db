@@ -101,16 +101,28 @@ namespace LinqToDB.NHibernate.Tests
 			{
 				using var db = session.AsReadOnly();
 
-				// Recursive CTE walking the tree from its roots — NHibernate LINQ cannot express this.
-				var tree = db.GetCte<OrgUnit>(self =>
-					db.GetTable<OrgUnit>().Where(o => o.ParentId == null)
+				// Recursive CTE walking the tree from its roots, accumulating each node's depth as it
+				// descends. The Level accumulator is what makes this genuinely recursive — a flat query
+				// (and NHibernate's own LINQ provider) cannot compute it.
+				var tree = db.GetCte<OrgLevel>(self =>
+					db.GetTable<OrgUnit>()
+						.Where(o => o.ParentId == null)
+						.Select(o => new OrgLevel { Id = o.Id, Name = o.Name, Level = 1 })
 						.Concat(
 							from o   in db.GetTable<OrgUnit>()
 							from par in self.InnerJoin(par => par.Id == o.ParentId)
-							select o));
+							select new OrgLevel { Id = o.Id, Name = o.Name, Level = par.Level + 1 }));
 
-				var ids = tree.Select(o => o.Id).OrderBy(id => id).ToArray();
-				ids.ShouldBe(new[] { 1, 2, 3, 4 });
+				var rows = tree.OrderBy(x => x.Id).ToList();
+
+				// Depth proves the recursion actually ran: CEO=1, its VPs=2, the VP-A's lead=3.
+				rows.Select(x => (x.Name, x.Level)).ShouldBe(new[]
+				{
+					("CEO",  1),
+					("VP-A", 2),
+					("VP-B", 2),
+					("Lead", 3),
+				});
 
 				session.GetTable<OrgUnit>().Delete();
 				tx.Commit();

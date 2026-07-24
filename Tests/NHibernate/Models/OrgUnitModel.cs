@@ -23,4 +23,16 @@ namespace LinqToDB.NHibernate.Tests.Models.Org
 			Map(x => x.Name).Column("Name").Not.Nullable();
 		}
 	}
+
+	/// <summary>
+	/// Projection shape for the recursive-CTE demo — <b>not</b> an NHibernate-mapped entity (no
+	/// <see cref="ClassMap{T}"/>, so SchemaExport ignores it). linq2db materialises the CTE rows into it,
+	/// carrying the <see cref="Level"/> depth accumulated as the CTE descends the <see cref="OrgUnit"/> tree.
+	/// </summary>
+	public class OrgLevel
+	{
+		public virtual int    Id    { get; set; }
+		public virtual string Name  { get; set; } = null!;
+		public virtual int    Level { get; set; }
+	}
 }
