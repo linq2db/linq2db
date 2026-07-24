@@ -8,7 +8,6 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\Base\Tests.Base.csproj" />
-		<ProjectReference Include="..\..\Source\LinqToDB.NHibernate\LinqToDB.NHibernate.csproj" />
 
 		<PackageReference Include="NHibernate" />
 		<PackageReference Include="FluentNHibernate" />

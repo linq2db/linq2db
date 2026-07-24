@@ -6,4 +6,8 @@
 		<TargetFrameworks>net10.0</TargetFrameworks>
 	</PropertyGroup>
 
+	<ItemGroup>
+		<ProjectReference Include="..\..\Source\LinqToDB.NHibernate\LinqToDB.NHibernate.NH5.csproj" />
+	</ItemGroup>
+
 </Project>
