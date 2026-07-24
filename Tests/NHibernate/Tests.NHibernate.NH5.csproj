@@ -3,7 +3,8 @@
 	<Import Project="Tests.NHibernate.props" />
 
 	<PropertyGroup>
-		<TargetFrameworks>net10.0</TargetFrameworks>
+		<!-- NHibernate 5.x runs on modern .NET; net461 coverage is the future NH3 build's job. -->
+		<TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
 	</PropertyGroup>
 
 	<ItemGroup>

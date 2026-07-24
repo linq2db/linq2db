@@ -122,6 +122,12 @@ jobs:
         dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF10.csproj -f net10.0 -c $(test_configuration) -o .build/publish/EFTests/$(test_configuration)/net10.0_x64
         if %errorlevel% neq 0 exit
 
+        REM publish nhibernate tests (net8/9/10, x64)
+        FOR %%f IN (net8.0 net9.0 net10.0) DO (
+            dotnet publish Tests/NHibernate/Tests.NHibernate.NH5.csproj -f %%f -c $(test_configuration) -o .build/publish/NHTests/$(test_configuration)/%%f_x64
+            if %errorlevel% neq 0 exit
+            )
+
         REM publish main and ef.core tests for all TFMs for win-x86
         dotnet publish Tests/Linq/Tests.csproj -f net462 -c $(test_configuration) -a x86 -o .build/publish/Tests/$(test_configuration)/net462_x86
         if %errorlevel% neq 0 exit
@@ -163,6 +169,16 @@ jobs:
                 copy .runsettings testing\%%f\efcore\%%a
                 if %errorlevel% neq 0 exit
             )
+        )
+
+        REM lay out nhibernate tests (net8/9/10, x64); rides along in the per-TFM artifacts
+        FOR %%f IN (net8.0 net9.0 net10.0) DO (
+            xcopy /i /s .build\publish\NHTests\$(test_configuration)\%%f_x64 testing\%%f\nhibernate\x64
+            if %errorlevel% neq 0 exit
+            copy DataProviders.json testing\%%f\nhibernate\x64
+            if %errorlevel% neq 0 exit
+            copy .runsettings testing\%%f\nhibernate\x64
+            if %errorlevel% neq 0 exit
         )
 
         FOR %%c IN (netfx net80 net90 net100) DO (
