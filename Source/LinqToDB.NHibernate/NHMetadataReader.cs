@@ -171,14 +171,6 @@ namespace LinqToDB.NHibernate
 			return name;
 		}
 
-		static PropInfo FindPropertyNameByColumnName(PropertyMap map, string columnName)
-		{
-			var info = map.FindPropByColumnName(columnName);
-			if (info == null)
-				throw new InvalidOperationException($"Could not find mapping for column '{columnName}'");
-			return info;
-		}
-
 		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool inherit = true) where T : Attribute
 		{
 			if (typeof(Expression).IsSameOrParentOf(type))
@@ -246,19 +238,26 @@ namespace LinqToDB.NHibernate
 
 										if (collectionMetadata is OneToManyPersister o2m && GetPropertyMap(o2m.ElementType.ReturnedClass, out var elementMap))
 										{
-											var thisKey = string.Join(",",
-												thisEntityMap.Properties.Where(p => p.IsPrimaryKey).OrderBy(p => p.PkOrder).Select(p =>
-													p.MemberName));
-											var otherKey = string.Join(",",
-												o2m.KeyColumnNames.Select(cn =>
-													FindPropertyNameByColumnName(elementMap!, cn).MemberName));
-											var canBeNull = true;
-											association = new AssociationAttribute
+											// OtherKey: the child members mapped to the collection's foreign-key columns. A child that does
+											// not expose the foreign key as a scalar member (e.g. a unidirectional one-to-many) cannot be
+											// expressed via ThisKey/OtherKey, so decline the association rather than throw while reading the
+											// parent's metadata.
+											var otherKeyMembers = o2m.KeyColumnNames
+												.Select(cn => elementMap!.FindPropByColumnName(cn)?.MemberName)
+												.ToList();
+
+											if (otherKeyMembers.TrueForAll(m => m != null))
 											{
-												ThisKey = thisKey,
-												OtherKey = otherKey,
-												CanBeNull = canBeNull,
-											};
+												var thisKey = string.Join(",",
+													thisEntityMap.Properties.Where(p => p.IsPrimaryKey).OrderBy(p => p.PkOrder).Select(p =>
+														p.MemberName));
+												association = new AssociationAttribute
+												{
+													ThisKey   = thisKey,
+													OtherKey  = string.Join(",", otherKeyMembers),
+													CanBeNull = true,
+												};
+											}
 										}
 										else if (collectionMetadata is AbstractCollectionPersister m2m && m2m.IsManyToMany)
 										{
@@ -271,15 +270,27 @@ namespace LinqToDB.NHibernate
 							{
 								if (manyToOne.IsReferenceToPrimaryKey)
 								{
-									var thisKey = string.Join(",", otherPropMap!.Properties.Where(p => p.IsPrimaryKey).Select(p => p.MemberName));
-									var otherKey = thisKey;
-									var canBeNull = true;
-									association = new AssociationAttribute
+									// OtherKey: the target entity's primary-key members (ordered).
+									var otherKeyMembers = otherPropMap!.Properties
+										.Where(p => p.IsPrimaryKey).OrderBy(p => p.PkOrder).Select(p => p.MemberName).ToList();
+
+									// ThisKey: the source members mapped to this many-to-one's foreign-key columns, in the same
+									// order. The foreign-key member on the source may be named differently from the target's PK
+									// member, so resolve it from the column; if the source exposes the foreign key only as the
+									// navigation (no scalar member), decline rather than emit a wrong key.
+									var thisKeyMembers = prop.ColumnNames
+										.Select(cn => thisEntityMap.FindPropByColumnName(cn)?.MemberName)
+										.ToList();
+
+									if (thisKeyMembers.Count == otherKeyMembers.Count && thisKeyMembers.TrueForAll(m => m != null))
 									{
-										ThisKey = thisKey,
-										OtherKey = otherKey,
-										CanBeNull = canBeNull,
-									};
+										association = new AssociationAttribute
+										{
+											ThisKey   = string.Join(",", thisKeyMembers),
+											OtherKey  = string.Join(",", otherKeyMembers),
+											CanBeNull = true,
+										};
+									}
 								}
 							}
 

@@ -177,6 +177,14 @@ supported by both linq2db and your NHibernate dialect should work.
 - NHibernate value conversions (`IUserType`) are not translated to linq2db value converters.
 - Session filter conditions resolve unqualified columns against a single table, so they may not carry
   correctly into join queries; per-entity `<filter>` overrides fall back to the filter's default condition.
+- Associations are exposed to linq2db only when the foreign key is mapped as a scalar property on the
+  referencing side:
+  - **many-to-one** — the source entity must map the foreign-key column as a property (it may be named
+    differently from the target's key property); a reference mapped only as the navigation is not navigable
+    from a linq2db query;
+  - **one-to-many** — the child entity must map the foreign-key column as a property; a unidirectional
+    collection whose child exposes no such property is not navigable from a linq2db query;
+  - **many-to-many** — the junction table must be mapped as its own entity so linq2db can query through it.
 
 ## Help! It doesn't work!
 
