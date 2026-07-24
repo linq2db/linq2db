@@ -4,6 +4,7 @@ using LinqToDB;
 using LinqToDB.NHibernate.Tests.Models.GlobalFilter;
 
 using NHibernate;
+using NHibernate.Linq;
 
 using NUnit.Framework;
 
@@ -37,8 +38,19 @@ namespace LinqToDB.NHibernate.Tests
 			tx.Commit();
 		}
 
-		static string[] Titles(ISession session) =>
-			session.GetTable<Document>().Select(d => d.Title).OrderBy(t => t).ToArray();
+		// Runs the same projection through linq2db (over the attached session) AND NHibernate's own LINQ
+		// provider, and asserts they return identical rows before returning the shared result — so every
+		// caller cross-checks the linq2db filter bridge against NHibernate's native filtering (both honour
+		// the same session-enabled filters). Both queries execute, so both SQL statements are traced.
+		static string[] Titles(ISession session)
+		{
+			var l2db = session.GetTable<Document>().Select(d => d.Title).OrderBy(t => t).ToArray();
+			var nh   = session.Query   <Document>().Select(d => d.Title).OrderBy(t => t).ToArray();
+
+			l2db.ShouldBe(nh);
+
+			return l2db;
+		}
 
 		[Test]
 		public void NoFilters_ReturnsAll(

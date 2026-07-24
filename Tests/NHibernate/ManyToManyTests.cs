@@ -4,6 +4,7 @@ using LinqToDB;
 using LinqToDB.NHibernate.Tests.Models.ManyToMany;
 
 using NHibernate;
+using NHibernate.Linq;
 
 using NUnit.Framework;
 
@@ -73,6 +74,16 @@ namespace LinqToDB.NHibernate.Tests
 				.ToList();
 
 			titles.ShouldBe(new[] { "Foundation", "I, Robot" });
+
+			// The same navigation through NHibernate's own LINQ provider must return the same titles.
+			var nhTitles = session.Query<Author>()
+				.Where(a => a.Id == asimovId)
+				.SelectMany(a => a.Books)
+				.Select(b => b.Title)
+				.OrderBy(t => t)
+				.ToList();
+
+			nhTitles.ShouldBe(titles);
 		}
 
 		[Test]
@@ -88,9 +99,19 @@ namespace LinqToDB.NHibernate.Tests
 			var authors = session.GetTable<Author>()
 				.Where(a => a.Books.Any(b => b.Title.StartsWith("F")))
 				.Select(a => a.Name)
+				.OrderBy(n => n)
 				.ToList();
 
 			authors.ShouldBe(new[] { "Asimov" });
+
+			// NHibernate's own LINQ provider expresses the same correlated Any() and must agree.
+			var nhAuthors = session.Query<Author>()
+				.Where(a => a.Books.Any(b => b.Title.StartsWith("F")))
+				.Select(a => a.Name)
+				.OrderBy(n => n)
+				.ToList();
+
+			nhAuthors.ShouldBe(authors);
 		}
 	}
 }

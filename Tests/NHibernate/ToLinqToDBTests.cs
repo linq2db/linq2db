@@ -39,6 +39,14 @@ namespace LinqToDB.NHibernate.Tests
 
 			names.ShouldHaveSingleItem();
 			names[0].ShouldBe("Alfreds Futterkiste");
+
+			// The same native query WITHOUT ToLinqToDB (executed by NHibernate) must return the same result.
+			var nhNames = session.Query<Customer>()
+				.Where(c => c.CustomerId == "ALFKI")
+				.Select(c => c.CompanyName)
+				.ToList();
+
+			nhNames.ShouldBe(names);
 		}
 
 		[Test]

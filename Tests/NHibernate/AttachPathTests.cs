@@ -4,6 +4,7 @@ using LinqToDB;
 using LinqToDB.NHibernate.Tests.Models.Northwind;
 
 using NHibernate;
+using NHibernate.Linq;
 
 using NUnit.Framework;
 
@@ -35,6 +36,10 @@ namespace LinqToDB.NHibernate.Tests
 			var customers = db.GetTable<Customer>().ToList();
 
 			customers.ShouldNotBeNull();
+
+			// The same query through NHibernate's own LINQ provider returns the same customers (by key).
+			var nhIds = session.Query<Customer>().Select(c => c.CustomerId).OrderBy(id => id).ToList();
+			customers.Select(c => c.CustomerId).OrderBy(id => id).ShouldBe(nhIds);
 		}
 
 		[Test]
@@ -53,6 +58,14 @@ namespace LinqToDB.NHibernate.Tests
 
 			names.ShouldHaveSingleItem();
 			names[0].ShouldBe("Alfreds Futterkiste");
+
+			// The same query through NHibernate's own LINQ provider must return the same result.
+			var nhNames = session.Query<Customer>()
+				.Where (c => c.CustomerId == "ALFKI")
+				.Select(c => c.CompanyName)
+				.ToList();
+
+			nhNames.ShouldBe(names);
 		}
 	}
 }
