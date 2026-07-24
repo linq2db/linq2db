@@ -16,6 +16,8 @@ using NHibernate.Driver;
 using NHibernate.Mapping;
 using NHibernate.Tool.hbm2ddl;
 
+using NUnit.Framework;
+
 using Tests;
 
 namespace LinqToDB.NHibernate.Tests
@@ -48,6 +50,17 @@ namespace LinqToDB.NHibernate.Tests
 			FirebirdOptions.Default = FirebirdOptions.Default with { IdentifierQuoteMode = FirebirdIdentifierQuoteMode.None };
 		}
 
+		/// <summary>
+		/// After each test, dump the SQL captured by the LinqToDB.NHibernate logger to that test's baseline (a no-op
+		/// when no baselines path is configured or the test failed) and release the per-test context.
+		/// </summary>
+		[TearDown]
+		public virtual void OnAfterTest()
+		{
+			BaselinesManager.Dump(false, ".NH");
+			CustomTestContext.Release();
+		}
+
 		static readonly ConcurrentDictionary<string, Lazy<ISessionFactory>> _factories = new();
 
 		/// <summary>
@@ -66,6 +79,7 @@ namespace LinqToDB.NHibernate.Tests
 		/// Disposes every cached <see cref="ISessionFactory"/>. Invoked once from the assembly-level
 		/// <c>NHTestAssemblyTeardown</c> so the shared cache is never disposed while another fixture is using it.
 		/// </summary>
+#pragma warning disable NUnit1028 // Internal helper invoked by the assembly-level fixture, not a test method.
 		internal static void DisposeFactories()
 		{
 			foreach (var sf in _factories.Values)
@@ -74,6 +88,7 @@ namespace LinqToDB.NHibernate.Tests
 
 			_factories.Clear();
 		}
+#pragma warning restore NUnit1028 // Internal helper invoked by the assembly-level fixture, not a test method.
 
 		static ISessionFactory BuildFactory(string provider)
 		{
