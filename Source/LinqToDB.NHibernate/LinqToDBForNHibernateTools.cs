@@ -212,10 +212,11 @@ namespace LinqToDB.NHibernate
 		}
 
 		// Builds a linq2db connection attached to the given NHibernate ADO resources. trackingSession is the
-		// ISession whose change-tracker should receive materialised entities, or null for a stateless session or
-		// an AsReadOnly() context (entities left detached). When a transaction is active it is wired in via
-		// UseTransaction so linq2db commands share it (required by providers such as SQL Server that reject a
-		// command with no transaction while one is pending); otherwise the bare connection is attached.
+		// ISession whose change-tracker should receive materialised entities, or null for a stateless session
+		// (which has no first-level cache). With a session, the per-query AsReadOnly() marker opts individual
+		// queries out of tracking. When a transaction is active it is wired in via UseTransaction so linq2db
+		// commands share it (required by providers such as SQL Server that reject a command with no transaction
+		// while one is pending); otherwise the bare connection is attached.
 		static LinqToDBForNHibernateToolsDataConnection CreateAttachedConnection(
 			DbConnection connection, DbTransaction? transaction, ISessionFactory? sessionFactory, ISession? trackingSession)
 		{
@@ -367,20 +368,25 @@ namespace LinqToDB.NHibernate
 			return CreateAttachedConnection(connection, GetActiveDbTransaction(connection, session.GetCurrentTransaction()), session.GetSessionImplementation().Factory, trackingSession: null);
 		}
 
-		/// <summary>
-		/// Creates a linq2db <see cref="IDataContext"/> over the NHibernate session's connection whose materialised
-		/// entities are NOT attached to the session's change tracker — they are left detached. This is the NHibernate
-		/// analogue of a read-only / no-tracking query. Commands issued through the returned context still run on the
-		/// session's connection and current transaction.
-		/// </summary>
-		/// <param name="session">NHibernate <see cref="ISession"/> instance.</param>
-		/// <returns>A non-tracking linq2db data context.</returns>
-		public static IDataContext AsReadOnly(this ISession session)
-		{
-			ArgumentNullException.ThrowIfNull(session);
+		internal static readonly MethodInfo AsReadOnlyMethodInfo =
+			MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.AsReadOnly());
 
-			var connection = session.Connection;
-			return CreateAttachedConnection(connection, GetActiveDbTransaction(connection, session.GetCurrentTransaction()), session.SessionFactory, trackingSession: null);
+		/// <summary>
+		/// Marks a query as read-only — the NHibernate analogue of Entity Framework Core's <c>AsNoTracking()</c>.
+		/// Entities the marked query materialises are left detached instead of being attached to the session's
+		/// change tracker. The marker is detected and removed when the query is translated to linq2db, so apply it
+		/// to a query from <see cref="GetTable{T}(ISession)"/> (or another linq2db context), or before
+		/// <c>ToLinqToDB()</c> on a native NHibernate query. It has no effect on a query executed by NHibernate itself.
+		/// </summary>
+		/// <typeparam name="T">Query element type.</typeparam>
+		/// <param name="source">Query to mark as read-only.</param>
+		/// <returns>The query, carrying the read-only marker.</returns>
+		public static IQueryable<T> AsReadOnly<T>(this IQueryable<T> source)
+		{
+			ArgumentNullException.ThrowIfNull(source);
+
+			return source.Provider.CreateQuery<T>(
+				Expression.Call(null, AsReadOnlyMethodInfo.MakeGenericMethod(typeof(T)), source.Expression));
 		}
 
 		/// <summary>

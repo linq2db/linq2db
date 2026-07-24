@@ -70,7 +70,7 @@ namespace LinqToDB.NHibernate.Tests
 			using var session = sf.OpenSession();
 
 			// ROW_NUMBER() OVER (ORDER BY CustomerId) — NHibernate LINQ cannot emit window functions at all.
-			var ranked = session.AsReadOnly().GetTable<Customer>()
+			var ranked = session.GetTable<Customer>().AsReadOnly()
 				.Select(c => new { c.CustomerId, Rn = Sql.Window.RowNumber(f => f.OrderBy(c.CustomerId)) })
 				.OrderBy(x => x.Rn)
 				.ToList();
@@ -99,7 +99,7 @@ namespace LinqToDB.NHibernate.Tests
 
 			using (var tx = session.BeginTransaction())
 			{
-				using var db = session.AsReadOnly();
+				using var db = session.CreateLinqToDbContext();
 
 				// Recursive CTE walking the tree from its roots, accumulating each node's depth as it
 				// descends. The Level accumulator is what makes this genuinely recursive — a flat query
@@ -137,26 +137,25 @@ namespace LinqToDB.NHibernate.Tests
 
 			using var session = sf.OpenSession();
 
-			using (var tx = session.BeginTransaction())
-			{
-				var table = session.GetTable<OrgUnit>();
-				table.Where(o => o.Id == 900).Delete();
+			using var tx = session.BeginTransaction();
 
-				// First upsert inserts (no matching key).
-				table.InsertOrUpdate(
-					() => new OrgUnit { Id = 900, ParentId = null, Name = "First" },
-					o  => new OrgUnit { Name = "Updated" });
-				table.Single(o => o.Id == 900).Name.ShouldBe("First");
+			var table = session.GetTable<OrgUnit>();
+			table.Where(o => o.Id == 900).Delete();
 
-				// Second upsert updates (key now matches) — NHibernate has no equivalent.
-				table.InsertOrUpdate(
-					() => new OrgUnit { Id = 900, ParentId = null, Name = "Second" },
-					o  => new OrgUnit { Name = "Updated" });
-				table.Single(o => o.Id == 900).Name.ShouldBe("Updated");
+			// First upsert inserts (no matching key).
+			table.InsertOrUpdate(
+				() => new OrgUnit { Id = 900, ParentId = null, Name = "First" },
+				o  => new OrgUnit { Name = "Updated" });
+			table.Single(o => o.Id == 900).Name.ShouldBe("First");
 
-				table.Where(o => o.Id == 900).Delete();
-				tx.Commit();
-			}
+			// Second upsert updates (key now matches) — NHibernate has no equivalent.
+			table.InsertOrUpdate(
+				() => new OrgUnit { Id = 900, ParentId = null, Name = "Second" },
+				o  => new OrgUnit { Name = "Updated" });
+			table.Single(o => o.Id == 900).Name.ShouldBe("Updated");
+
+			table.Where(o => o.Id == 900).Delete();
+			tx.Commit();
 		}
 
 		[Test]
@@ -218,7 +217,7 @@ namespace LinqToDB.NHibernate.Tests
 
 			using (var tx = session.BeginTransaction())
 			{
-				using var db = session.AsReadOnly();
+				using var db = session.CreateLinqToDbContext();
 
 				// Join two entities that have NO mapped association, on a non-key column — awkward or impossible
 				// in NHibernate LINQ; trivial in linq2db.

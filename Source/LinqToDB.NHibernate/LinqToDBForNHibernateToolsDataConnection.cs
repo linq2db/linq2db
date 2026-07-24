@@ -59,8 +59,9 @@ namespace LinqToDB.NHibernate
 			AddInterceptor(new ExpressionInterceptor(this));
 
 			// Attach the change-tracker only when there is a session to attach materialised entities to. A null
-			// session means either a stateless session (no first-level cache) or an AsReadOnly() context — both
-			// leave the entities detached (untracked).
+			// session means a stateless session (no first-level cache), which never tracks. With a session, the
+			// per-query AsReadOnly() marker (detected during transform, sets Tracking=false) suppresses the
+			// attach for that query.
 			if (session != null && LinqToDBForNHibernateTools.EnableChangeTracker)
 				AddInterceptor(this);
 		}
@@ -75,7 +76,18 @@ namespace LinqToDB.NHibernate
 		{
 			if (_transformFunc == null)
 				return expression;
-			return _transformFunc(expression, this, _session, _session?.SessionFactory);
+
+			// Only the main query expression decides tracking. linq2db also runs this interceptor for the
+			// exposed-query and query-filter sub-passes, which no longer carry the AsReadOnly() marker (the
+			// Query pass already stripped it) — so preserve the Query pass's decision instead of letting a
+			// later pass reset it.
+			var tracking = Tracking;
+			var result   = _transformFunc(expression, this, _session, _session?.SessionFactory);
+
+			if (args.Kind != QueryExpressionArgs.ExpressionKind.Query)
+				Tracking = tracking;
+
+			return result;
 		}
 
 		/// <summary>

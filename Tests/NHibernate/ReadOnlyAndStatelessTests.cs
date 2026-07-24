@@ -14,13 +14,30 @@ using Tests;
 namespace LinqToDB.NHibernate.Tests
 {
 	/// <summary>
-	/// Verifies the no-tracking entry points: <c>ISession.AsReadOnly()</c> queries over the session but leaves the
-	/// materialised entities detached (never added to the first-level cache), and <c>IStatelessSession</c> — which
-	/// has no first-level cache at all — can be queried through linq2db.
+	/// Verifies tracking behaviour: a query tracks its materialised entities by default (they join the session's
+	/// first-level cache); the per-query <c>AsReadOnly()</c> marker (the analogue of EF Core's <c>AsNoTracking()</c>)
+	/// leaves them detached; and <c>IStatelessSession</c> — which has no first-level cache at all — can be queried
+	/// through linq2db.
 	/// </summary>
 	[TestFixture]
 	public class ReadOnlyAndStatelessTests : NHTestBase
 	{
+		[Test]
+		public void Query_TracksByDefault(
+			[NHIncludeDataSources] string provider)
+		{
+			var sf = GetSessionFactory(provider);
+
+			using var session = sf.OpenSession();
+
+			var customer = session.GetTable<Customer>().First(c => c.CustomerId == "ALFKI");
+
+			customer.ShouldNotBeNull();
+			customer.CustomerId.ShouldBe("ALFKI");
+			// Without a marker the query tracks: the materialised entity joins the session's first-level cache.
+			session.Contains(customer).ShouldBeTrue();
+		}
+
 		[Test]
 		public void AsReadOnly_LeavesEntitiesDetached(
 			[NHIncludeDataSources] string provider)
@@ -29,7 +46,7 @@ namespace LinqToDB.NHibernate.Tests
 
 			using var session = sf.OpenSession();
 
-			var customer = session.AsReadOnly().GetTable<Customer>().First(c => c.CustomerId == "ALFKI");
+			var customer = session.GetTable<Customer>().AsReadOnly().First(c => c.CustomerId == "ALFKI");
 
 			customer.ShouldNotBeNull();
 			customer.CustomerId.ShouldBe("ALFKI");

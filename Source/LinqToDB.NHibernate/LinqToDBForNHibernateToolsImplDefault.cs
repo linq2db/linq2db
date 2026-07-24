@@ -462,6 +462,10 @@ namespace LinqToDB.NHibernate
 		/// <returns>Transformed expression.</returns>
 		public virtual Expression TransformExpression(Expression expression, IDataContext dc, ISession? session, ISessionFactory? sessionFactory)
 		{
+			// Tracking is on by default; an AsReadOnly() marker anywhere in the query turns it off, mirroring
+			// how the EF Core integration treats AsNoTracking().
+			var tracking = true;
+
 			TransformInfo LocalTransform(Expression e)
 			{
 				e = CompactExpression(e);
@@ -482,6 +486,20 @@ namespace LinqToDB.NHibernate
 						}
 
 							break;
+					}
+
+					case ExpressionType.Call:
+					{
+						// Detect the AsReadOnly() marker (the NHibernate analogue of EF Core's AsNoTracking()):
+						// strip it from the query and leave the entities it materialises detached (untracked).
+						if (e is MethodCallExpression { Method.IsGenericMethod: true } call
+							&& call.Method.GetGenericMethodDefinition() == LinqToDBForNHibernateTools.AsReadOnlyMethodInfo)
+						{
+							tracking = false;
+							return new TransformInfo(call.Arguments[0], false, true);
+						}
+
+						break;
 					}
 
 					case ExpressionType.MemberAccess:
@@ -505,7 +523,7 @@ namespace LinqToDB.NHibernate
 			var newExpression = expression.Transform(LocalTransform);
 
 			if (dc is LinqToDBForNHibernateToolsDataConnection dataConnection)
-				dataConnection.Tracking = true;
+				dataConnection.Tracking = tracking;
 
 			return newExpression;
 		}
