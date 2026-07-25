@@ -17,9 +17,9 @@ Reference for the persistent knowledge base under `.agents/knowledge-base/`. Aut
     query-pipeline.md
     sql-ast.md
     expression-translator.md
-    providers.md
+    sql-provider.md
+    interceptors.md
     public-api.md
-    ...
   conventions/                           # cross-area code-style + patterns
     naming.md
     column-alignment.md
@@ -92,7 +92,7 @@ Tier definitions and gate thresholds live in [`kb-coverage-tiers.md`](kb-coverag
 
 ## Index files (JSON)
 
-Three index files are queryable artifacts:
+Four index files are queryable artifacts:
 
 - `github/issues-index.json` — array of `{id, title, state, labels[], area, linked_files[], summary, updated_at}`. One entry per issue.
 - `github/prs-index.json` — same shape, plus `merged: bool`, `mergedAt`, `headRef`, `baseRef`.

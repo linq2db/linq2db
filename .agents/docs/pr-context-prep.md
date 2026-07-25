@@ -53,7 +53,7 @@ This summary is the briefing fed to both subagents so the baselines-reviewer can
 
 The baselines clone is expected at **`../linq2db.baselines`** (sibling of this repo).
 
-Run `git -C ../linq2db.baselines fetch origin` directly as a single Bash call — do **not** pre-probe with `ls ../linq2db.baselines`. The `ls` is documented as a violation in `.agents/docs/agent-rules.md` → **Permission-friendly Bash patterns** (it's not allowlisted and prompts every time), and the `git fetch` is self-diagnosing:
+Run `git -C ../linq2db.baselines fetch origin` directly as a single Bash call — do **not** pre-probe with `ls ../linq2db.baselines`. The `ls` is documented as a violation in `.agents/docs/windows-gotchas.md` → **Permission-friendly Bash patterns** (it's not allowlisted and prompts every time), and the `git fetch` is self-diagnosing:
 
 1. If the clone **exists**: the fetch succeeds (usually silent; possibly a few `origin/baselines/pr_*` updates printed).
 2. If the clone **does not exist**: the fetch errors out with `fatal: not a git repository ...`. On that error, stop and ask the user:
