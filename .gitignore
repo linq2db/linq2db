@@ -15,6 +15,7 @@ _ReSharper*/
 TestResults/
 linq2db.sln.docstates
 **/UserDataProviders.json
+/Tests/LinqToDB.CLI/linq2db-cli.json
 /BuiltNuGet
 linq2db.sln.ide/
 !Redist/**

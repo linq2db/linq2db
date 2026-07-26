@@ -32,6 +32,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			"SET",
 			"TRUNCATE",
 			"UPDATE",
+			"UPSERT",
 			"USE",
 			"VACUUM",
 		};

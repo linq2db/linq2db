@@ -31,7 +31,6 @@ namespace LinqToDB.CommandLine
 			AddCommand(QueryCommand.Instance);
 			AddCommand(SchemaCommand.Instance);
 			AddCommand(SkillCommand.Skill);
-			AddCommand(SkillCommand.Skills);
 			AddCommand(ScaffoldCommand.Instance);
 			AddCommand(TemplateCommand.Instance);
 		}

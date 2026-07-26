@@ -43,13 +43,12 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 			new("Oracle Managed", ["Oracle.Managed", "Oracle"],        "Oracle SQL",                   true,  null),
 			new("Firebird",       ["Firebird"],                        "Firebird SQL",                 true,  null),
 			new("Sybase ASE",     ["Sybase", "Sybase.Managed", "ASE"], "Sybase ASE T-SQL",             true,  null),
-			new("ODBC",           ["ODBC", "Odbc"],                    "ODBC provider-specific SQL",   true,  "Requires the matching ODBC driver to be installed on the host."),
-			new("OLE DB",         ["OLEDB", "OleDb"],                  "OLE DB provider-specific SQL", true, "Requires the matching OLE DB provider to be installed on the host."),
+			new("Microsoft Access", ["Access", "Access.Odbc", "Access.Jet.OleDb", "Access.Jet.Odbc", "Access.Ace.OleDb", "Access.Ace.Odbc"], "Microsoft Access SQL", true, "Requires the matching ODBC driver or OLE DB provider to be installed on the host."),
 			new("ClickHouse",     ["ClickHouse.Driver", "ClickHouse.Octonica", "ClickHouse.MySql"], "ClickHouse SQL", true, null),
 			new("DuckDB",         ["DuckDB"],                          "DuckDB SQL",                   true,  null),
 			new("YDB",            ["YDB"],                             "YDB SQL",                      true,  null),
 			new("IBM DB2",        ["DB2", "DB2.LUW", "DB2.z/OS"],      "IBM DB2 SQL",                  false, "Requires providerLocation pointing to IBM.Data.Db2.dll from the Net.IBM.Data.Db2 package."),
-			new("IBM Informix",   ["Informix", "Informix.DB2"],        "Informix SQL",                 false, "Requires providerLocation pointing to IBM.Data.Db2.dll from the Net.IBM.Data.Db2 package."),
+			new("IBM Informix",   ["Informix.DB2"],                    "Informix SQL",                 false, "Requires providerLocation pointing to IBM.Data.Db2.dll from the Net.IBM.Data.Db2 package."),
 		];
 
 		readonly McpQueryStartupOptions _startupOptions = startupOptions;

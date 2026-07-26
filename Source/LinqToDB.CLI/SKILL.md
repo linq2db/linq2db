@@ -676,7 +676,7 @@ Use `dotnet linq2db help` for general help and `dotnet linq2db help <command>` f
 
 ## Skill Command
 
-Use `dotnet linq2db skill` or `dotnet linq2db skills` to print this agent-oriented Markdown document to stdout.
+Use `dotnet linq2db skill` to print this agent-oriented Markdown document to stdout.
 
 The command has no options and doesn't accept arguments.
 

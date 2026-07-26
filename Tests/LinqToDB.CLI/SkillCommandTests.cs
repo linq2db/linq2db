@@ -30,18 +30,6 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
-		public async Task SkillsAliasPrintsAgentMarkdown()
-		{
-			var result = await RunCli("skills");
-
-			{
-				(result.ExitCode).ShouldBe(0);
-				(result.Error).ShouldBeEmpty();
-				(result.Output).ShouldStartWith("# linq2db CLI Agent Skill");
-			}
-		}
-
-		[Test]
 		public async Task SkillRejectsArguments()
 		{
 			var result = await RunCli("skill", "query");

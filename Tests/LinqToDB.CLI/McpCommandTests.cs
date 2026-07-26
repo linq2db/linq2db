@@ -276,11 +276,13 @@ namespace Tests.LinqToDB.CLI
 				(info["supportedOutputFormats"]?.AsArray().ToJsonString())!.ShouldNotContain("csv");
 				(info["queryCommandOutputFormats"]?.AsArray().ToJsonString())!.ShouldContain("csv");
 				(info["supportedProviders"]?.AsArray().ToJsonString())!.ShouldContain("SQL Server");
+				(info["supportedProviders"]?.AsArray().ToJsonString())!.ShouldContain("Microsoft Access");
 				(info["supportedProviders"]?.AsArray().ToJsonString())!.ShouldContain("IBM DB2");
 				(info["supportedProviders"]?.AsArray().ToJsonString())!.ShouldContain("IBM Informix");
 				(info["supportedProviders"]?.AsArray().ToJsonString())!.ShouldContain("IBM.Data.Db2.dll");
 				((bool?)FindSupportedProvider(info, "IBM DB2")["bundled"]).ShouldBe(false);
 				(FindSupportedProvider(info, "IBM DB2")["providerNames"]?.AsArray().ToJsonString())!.ShouldContain("DB2");
+				(FindSupportedProvider(info, "IBM Informix")["providerNames"]?.AsArray().ToJsonString()).ShouldBe("[\"Informix.DB2\"]");
 				((bool?)info["rules"]?["singleStatementOnly"]).ShouldBe(true);
 				((bool?)info["rules"]?["sqlGuardIsSecurityBoundary"]).ShouldBe(false);
 				((string?)info["rules"]?["sqlGuardWarning"])!.ShouldContain("not a security boundary");

@@ -273,21 +273,18 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 						Provider = value;
 						break;
 					case "providerLocation":
-					case "provider-location":
 						if (!TryGetString(fileName, profileName, property, out value, out error))
 							return false;
 
 						ProviderLocation = value;
 						break;
 					case "connectionString":
-					case "connection-string":
 						if (!TryGetString(fileName, profileName, property, out value, out error))
 							return false;
 
 						ConnectionString = value;
 						break;
 					case "connectionStringEnv":
-					case "connection-string-env":
 						if (!TryGetString(fileName, profileName, property, out value, out error))
 							return false;
 
@@ -300,7 +297,6 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 						User = value;
 						break;
 					case "userEnv":
-					case "user-env":
 						if (!TryGetString(fileName, profileName, property, out value, out error))
 							return false;
 
@@ -313,14 +309,12 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 						Password = value;
 						break;
 					case "passwordEnv":
-					case "password-env":
 						if (!TryGetString(fileName, profileName, property, out value, out error))
 							return false;
 
 						PasswordEnv = value;
 						break;
 					case "windowsCredentials":
-					case "windows-credentials":
 						if (!TryGetString(fileName, profileName, property, out value, out error))
 							return false;
 
@@ -333,7 +327,6 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 						Impersonate = booleanValue;
 						break;
 					case "impersonateMode":
-					case "impersonate-mode":
 						if (property.Value.ValueKind == JsonValueKind.Number)
 						{
 							if (!property.Value.TryGetInt32(out var numericValue))
@@ -358,28 +351,24 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 						ImpersonateMode = value!.ToLowerInvariant();
 						break;
 					case "commandTimeout":
-					case "command-timeout":
 						if (!TryParseTimeout(fileName, profileName, property, out var timeout, out error))
 							return false;
 
 						CommandTimeout = timeout;
 						break;
 					case "lockTimeout":
-					case "lock-timeout":
 						if (!TryParseTimeout(fileName, profileName, property, out timeout, out error))
 							return false;
 
 						LockTimeout = timeout;
 						break;
 					case "maxRows":
-					case "max-rows":
 						if (!TryParseRowCount(fileName, profileName, property, out var maxRows, out error))
 							return false;
 
 						MaxRows = maxRows;
 						break;
 					case "enableExecute":
-					case "enable-execute":
 						if (!TryParseBoolean(fileName, profileName, property, out var enableExecute, out error))
 							return false;
 
@@ -400,7 +389,6 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 						Output = value!.ToLowerInvariant();
 						break;
 					case "outputFile":
-					case "output-file":
 						if (!TryGetString(fileName, profileName, property, out value, out error))
 							return false;
 

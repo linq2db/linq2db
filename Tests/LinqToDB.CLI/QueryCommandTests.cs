@@ -392,6 +392,7 @@ namespace Tests.LinqToDB.CLI
 		[TestCase("with cte as (select 1) update Person set Name = 'x'")]
 		[TestCase("with cte as (select 1) delete from Person")]
 		[TestCase("with cte as (select 1) insert into Person(Id) select * from cte")]
+		[TestCase("with cte as (select 1) upsert into Person(Id) select * from cte")]
 		public void QueryGuardRejectsWriteStatementAfterCte(string sql)
 		{
 			var provider = DataConnection.GetDataProvider("SQLite", "Data Source=:memory:")!;
@@ -1718,6 +1719,28 @@ namespace Tests.LinqToDB.CLI
 			{
 				(result.ExitCode).ShouldBe(-1);
 				(result.Error).ShouldContain($"Configuration file '{config}' profile 'default' contains unknown property 'unsafeSql'.");
+			}
+		}
+
+		[Test]
+		public async Task QueryRejectsKebabCaseConfigProperty()
+		{
+			var environment = new TestCliEnvironment();
+			var config      = AddConfigFile(environment, """
+				{
+					"default": {
+						"provider": "SQLite",
+						"connectionString": "Data Source=:memory:",
+						"max-rows": 10
+					}
+				}
+				""");
+
+			var result = await RunCli(environment, "query", "--config", config, "--sql", "select 1");
+
+			{
+				(result.ExitCode).ShouldBe(-1);
+				(result.Error).ShouldContain($"Configuration file '{config}' profile 'default' contains unknown property 'max-rows'.");
 			}
 		}
 
