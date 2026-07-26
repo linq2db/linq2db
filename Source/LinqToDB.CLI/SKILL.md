@@ -483,6 +483,7 @@ Guardrails:
 Agent responsibility:
 
 - The agent is responsible for keeping user-provided SQL to one statement and choosing explicit aliases when column names could be duplicated.
+- In generated SQL string literals, escape an apostrophe using the standard doubled form (`''`), not backslash escaping (`\'`). Provider SQL modes differ, so the conservative query guard can reject ambiguous backslash-escaped text.
 - The agent is responsible for choosing an output format appropriate to the task. Use `json-table` when duplicate column names or column metadata matter.
 - The agent is responsible for setting provider-specific connection timeout keywords in the connection string when connection establishment must be bounded.
 - The agent must treat guardrails as mistake-prevention aids, not as a security boundary.
