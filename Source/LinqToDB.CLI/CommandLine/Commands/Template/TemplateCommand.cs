@@ -63,7 +63,7 @@ namespace LinqToDB.CommandLine.Commands.Template
 
 			if (File.Exists(fullPath))
 			{
-				await Console.Error.WriteLineAsync($"Template file aleady exists at location {fullPath}").ConfigureAwait(false);
+				await Console.Error.WriteLineAsync($"Template file aleady exists at location {fullPath}");
 				return StatusCodes.EXPECTED_ERROR;
 			}
 
@@ -72,7 +72,7 @@ namespace LinqToDB.CommandLine.Commands.Template
 			using var template = GetType().Assembly.GetManifestResourceStream("LinqToDB.CLI.Template.tt")!;
 			using var file     = File.Create(fullPath);
 
-			await template.CopyToAsync(file, cancellationToken).ConfigureAwait(false);
+			await template.CopyToAsync(file, cancellationToken);
 
 			return StatusCodes.SUCCESS;
 		}

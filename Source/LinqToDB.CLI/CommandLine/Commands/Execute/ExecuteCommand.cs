@@ -73,37 +73,37 @@ namespace LinqToDB.CommandLine.Commands.Execute
 			if (options.Count > 0)
 			{
 				foreach (var kvp in options)
-					await environment.Error.WriteLineAsync($"{Name} command missing '{kvp.Key.Name}' option handler").ConfigureAwait(false);
+					await environment.Error.WriteLineAsync($"{Name} command missing '{kvp.Key.Name}' option handler");
 
 				throw new InvalidOperationException($"Not all options handled by {Name} command");
 			}
 
 			if (settings is { OutputFile: not null, Overwrite: false } && environment.FileExists(settings.OutputFile))
 			{
-				await environment.Error.WriteLineAsync($"Output file '{settings.OutputFile}' already exists. Use '--overwrite' to replace it.").ConfigureAwait(false);
+				await environment.Error.WriteLineAsync($"Output file '{settings.OutputFile}' already exists. Use '--overwrite' to replace it.");
 				return StatusCodes.EXPECTED_ERROR;
 			}
 
 			var output = CommandOutput.Create(environment, settings.OutputFile);
-			await using var _ = output.ConfigureAwait(false);
+			await using var _ = output;
 
-			var result = await new QueryExecutionExecutor(settings).Execute(output.Writer, cancellationToken).ConfigureAwait(false);
+			var result = await new QueryExecutionExecutor(settings).Execute(output.Writer, cancellationToken);
 
 			if (result.Error != null)
 			{
-				await environment.Error.WriteLineAsync(result.Error).ConfigureAwait(false);
+				await environment.Error.WriteLineAsync(result.Error);
 				return result.StatusCode;
 			}
 
-			if (!await output.Commit(settings.Overwrite).ConfigureAwait(false))
+			if (!await output.Commit(settings.Overwrite))
 			{
-				await environment.Error.WriteLineAsync($"Output file '{settings.OutputFile}' already exists. Use '--overwrite' to replace it.").ConfigureAwait(false);
+				await environment.Error.WriteLineAsync($"Output file '{settings.OutputFile}' already exists. Use '--overwrite' to replace it.");
 				return StatusCodes.EXPECTED_ERROR;
 			}
 
 			if (result.Truncated && !string.Equals(settings.Output, "json-table", StringComparison.OrdinalIgnoreCase))
 			{
-				await environment.Error.WriteLineAsync($"Execution result truncated to {settings.MaxRows.ToString(CultureInfo.InvariantCulture)} row(s). Use '--max-rows' to change the limit.").ConfigureAwait(false);
+				await environment.Error.WriteLineAsync($"Execution result truncated to {settings.MaxRows.ToString(CultureInfo.InvariantCulture)} row(s). Use '--max-rows' to change the limit.");
 			}
 
 			return result.StatusCode;

@@ -13,8 +13,9 @@ namespace LinqToDB.CommandLine.Commands.Connection
 	/// </summary>
 	internal sealed class ConnectionSettingsResolver(ICliEnvironment environment)
 	{
-		const string DefaultProfileName         = "default";
-		const string MissingEnvironmentVariable = "\u0000";
+		const string DefaultProfileName = "default";
+
+		internal const string MissingEnvironmentVariable = "\u0000";
 
 		readonly ICliEnvironment _environment = environment;
 

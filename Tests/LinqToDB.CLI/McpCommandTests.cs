@@ -13,9 +13,6 @@ using NUnit.Framework;
 
 using Shouldly;
 
-#nullable enable annotations
-#nullable disable warnings
-
 namespace Tests.LinqToDB.CLI
 {
 	[TestFixture]
@@ -42,13 +39,13 @@ namespace Tests.LinqToDB.CLI
 				var queryProperties  = queryTool["inputSchema"]!["properties"]!.AsObject();
 				var schemaProperties = schemaTool["inputSchema"]!["properties"]!.AsObject();
 
-				((string?)queryTool["description"]).ShouldContain("Call linq2db_info first");
-				((string?)queryTool["description"]).ShouldContain("Call linq2db_skill");
+				((string?)queryTool["description"])!.ShouldContain("Call linq2db_info first");
+				((string?)queryTool["description"])!.ShouldContain("Call linq2db_skill");
 				((bool?)queryTool["annotations"]?["openWorldHint"]).ShouldBe(true);
 				((bool?)queryTool["annotations"]?["readOnlyHint"]).ShouldBe(true);
 				((bool?)queryTool["annotations"]?["idempotentHint"]).ShouldBe(false);
 				((bool?)queryTool["annotations"]?["destructiveHint"]).ShouldBe(false);
-				(queryTool["inputSchema"]?["required"]?.AsArray().ToJsonString()).ShouldContain("sql");
+				(queryTool["inputSchema"]?["required"]?.AsArray().ToJsonString())!.ShouldContain("sql");
 				(queryInputSchema).ShouldNotContain("allowUnsafeSql");
 				(queryInputSchema).ShouldNotContain("allowExecute");
 				(queryProperties.ContainsKey("provider")).ShouldBe(false);
@@ -57,9 +54,9 @@ namespace Tests.LinqToDB.CLI
 				(queryProperties.ContainsKey("windowsCredentials")).ShouldBe(false);
 				(queryProperties.ContainsKey("providerLocation")).ShouldBe(false);
 
-				((string?)infoTool["description"]).ShouldContain("Returns non-secret linq2db MCP query configuration information");
-				((string?)infoTool["description"]).ShouldContain("Use linq2db_schema");
-				((string?)infoTool["description"]).ShouldContain("Use linq2db_skill");
+				((string?)infoTool["description"])!.ShouldContain("Returns non-secret linq2db MCP query configuration information");
+				((string?)infoTool["description"])!.ShouldContain("Use linq2db_schema");
+				((string?)infoTool["description"])!.ShouldContain("Use linq2db_skill");
 				((bool?)  infoTool["annotations"]?["readOnlyHint"]).ShouldBe(true);
 				((bool?)  infoTool["annotations"]?["idempotentHint"]).ShouldBe(true);
 				((bool?)  infoTool["annotations"]?["openWorldHint"]).ShouldBe(false);
@@ -67,8 +64,8 @@ namespace Tests.LinqToDB.CLI
 				(infoTool["inputSchema"]?["properties"]?.AsObject().Count).ShouldBe(0);
 				(infoTool["inputSchema"]?["required"]).ShouldBeNull();
 
-				((string?)schemaTool["description"]).ShouldContain("Returns provider-independent database schema metadata");
-				((string?)schemaTool["description"]).ShouldContain("Procedures and functions are not supported");
+				((string?)schemaTool["description"])!.ShouldContain("Returns provider-independent database schema metadata");
+				((string?)schemaTool["description"])!.ShouldContain("Procedures and functions are not supported");
 				((bool?)schemaTool["annotations"]?["readOnlyHint"]).ShouldBe(true);
 				((bool?)schemaTool["annotations"]?["idempotentHint"]).ShouldBe(true);
 				((bool?)schemaTool["annotations"]?["openWorldHint"]).ShouldBe(true);
@@ -86,7 +83,7 @@ namespace Tests.LinqToDB.CLI
 				schemaProperties.ContainsKey("getProcedures").ShouldBe(false);
 				schemaProperties.ContainsKey("useSchemaOnly").ShouldBe(false);
 
-				((string?)skillTool["description"]).ShouldContain("Returns the full embedded linq2db CLI agent skill as Markdown");
+				((string?)skillTool["description"])!.ShouldContain("Returns the full embedded linq2db CLI agent skill as Markdown");
 				((bool?)skillTool["annotations"]?["readOnlyHint"]).ShouldBe(true);
 				((bool?)skillTool["annotations"]?["idempotentHint"]).ShouldBe(true);
 				((bool?)skillTool["annotations"]?["openWorldHint"]).ShouldBe(false);
@@ -108,10 +105,10 @@ namespace Tests.LinqToDB.CLI
 				(response["error"]).ShouldBeNull();
 				((string?)response["result"]?["serverInfo"]?["name"]).ShouldBe("linq2db.cli");
 				((string?)response["result"]?["serverInfo"]?["title"]).ShouldBe("linq2db Database Tools");
-				((string?)response["result"]?["serverInfo"]?["description"]).ShouldContain("database schema inspection");
-				((string?)response["result"]?["instructions"]).ShouldContain("Call linq2db_info first");
-				((string?)response["result"]?["instructions"]).ShouldContain("Call linq2db_skill for the full linq2db CLI/MCP usage guide");
-				((string?)response["result"]?["instructions"]).ShouldContain("Use linq2db_execute only when it is available");
+				((string?)response["result"]?["serverInfo"]?["description"])!.ShouldContain("database schema inspection");
+				((string?)response["result"]?["instructions"])!.ShouldContain("Call linq2db_info first");
+				((string?)response["result"]?["instructions"])!.ShouldContain("Call linq2db_skill for the full linq2db CLI/MCP usage guide");
+				((string?)response["result"]?["instructions"])!.ShouldContain("Use linq2db_execute only when it is available");
 			}
 		}
 
@@ -129,7 +126,7 @@ namespace Tests.LinqToDB.CLI
 
 				var executeTool = FindTool(response, "linq2db_execute");
 
-				((string?)executeTool["description"]).ShouldContain("explicit user approval");
+				((string?)executeTool["description"])!.ShouldContain("explicit user approval");
 				((bool?)executeTool["annotations"]?["readOnlyHint"]).ShouldBe(false);
 				((bool?)executeTool["annotations"]?["idempotentHint"]).ShouldBe(false);
 				((bool?)executeTool["annotations"]?["openWorldHint"]).ShouldBe(true);
@@ -163,7 +160,7 @@ namespace Tests.LinqToDB.CLI
 
 			{
 				(response["error"]).ShouldBeNull();
-				((string?)response["result"]?["content"]?[0]?["text"]).ShouldNotContain("linq2db/project-a/production");
+				((string?)response["result"]?["content"]?[0]?["text"])!.ShouldNotContain("linq2db/project-a/production");
 			}
 		}
 
@@ -203,7 +200,7 @@ namespace Tests.LinqToDB.CLI
 				((string?)initializeResponse["result"]?["serverInfo"]?["name"]).ShouldBe("linq2db.cli");
 				((string?)initializeResponse["result"]?["serverInfo"]?["title"]).ShouldBe(title);
 				((string?)initializeResponse["result"]?["serverInfo"]?["description"]).ShouldBe(description);
-				((string?)initializeResponse["result"]?["instructions"]).ShouldContain("Call linq2db_skill for the full linq2db CLI/MCP usage guide");
+				((string?)initializeResponse["result"]?["instructions"])!.ShouldContain("Call linq2db_skill for the full linq2db CLI/MCP usage guide");
 				((string?)initializeResponse["result"]?["instructions"]).ShouldEndWith(instructions);
 				(info["profiles"]?.AsArray().Count).ShouldBe(1);
 				((string?)info["profiles"]?[0]?["name"]).ShouldBe("default");
@@ -243,7 +240,7 @@ namespace Tests.LinqToDB.CLI
 			{
 				(response["error"]).ShouldBeNull();
 				(response["result"]?["isError"]).ShouldBeNull();
-				((string?)response["result"]?["content"]?[0]?["text"]).ShouldContain("Use `dotnet linq2db mcp`");
+				((string?)response["result"]?["content"]?[0]?["text"])!.ShouldContain("Use `dotnet linq2db mcp`");
 			}
 
 			server.ExpectNoStandardError();
@@ -264,6 +261,7 @@ namespace Tests.LinqToDB.CLI
 				((string?)info["server"]?["name"]).ShouldBe("linq2db.cli");
 				((string?)info["server"]?["command"]).ShouldBe("mcp");
 				((bool?)info["server"]?["executeToolEnabled"]).ShouldBe(false);
+				((int?)info["server"]?["maxResponseBytes"]).ShouldBe(8388608);
 				((string?)info["defaultProfile"]).ShouldBe("startup");
 				((bool?)info["defaultProfileUsable"]).ShouldBe(true);
 				((string?)info["profiles"]?[0]?["name"]).ShouldBe("startup");
@@ -274,22 +272,22 @@ namespace Tests.LinqToDB.CLI
 				((int?)info["profiles"]?[0]?["maxRows"]).ShouldBe(1000);
 				((bool?)info["profiles"]?[0]?["enableExecute"]).ShouldBe(false);
 				((bool?)info["profiles"]?[0]?["impersonationEnabled"]).ShouldBe(false);
-				(info["supportedOutputFormats"]?.AsArray().ToJsonString()).ShouldContain("json-table");
-				(info["supportedOutputFormats"]?.AsArray().ToJsonString()).ShouldNotContain("csv");
-				(info["queryCommandOutputFormats"]?.AsArray().ToJsonString()).ShouldContain("csv");
-				(info["supportedProviders"]?.AsArray().ToJsonString()).ShouldContain("SQL Server");
-				(info["supportedProviders"]?.AsArray().ToJsonString()).ShouldContain("IBM DB2");
-				(info["supportedProviders"]?.AsArray().ToJsonString()).ShouldContain("IBM Informix");
-				(info["supportedProviders"]?.AsArray().ToJsonString()).ShouldContain("IBM.Data.Db2.dll");
+				(info["supportedOutputFormats"]?.AsArray().ToJsonString())!.ShouldContain("json-table");
+				(info["supportedOutputFormats"]?.AsArray().ToJsonString())!.ShouldNotContain("csv");
+				(info["queryCommandOutputFormats"]?.AsArray().ToJsonString())!.ShouldContain("csv");
+				(info["supportedProviders"]?.AsArray().ToJsonString())!.ShouldContain("SQL Server");
+				(info["supportedProviders"]?.AsArray().ToJsonString())!.ShouldContain("IBM DB2");
+				(info["supportedProviders"]?.AsArray().ToJsonString())!.ShouldContain("IBM Informix");
+				(info["supportedProviders"]?.AsArray().ToJsonString())!.ShouldContain("IBM.Data.Db2.dll");
 				((bool?)FindSupportedProvider(info, "IBM DB2")["bundled"]).ShouldBe(false);
-				(FindSupportedProvider(info, "IBM DB2")["providerNames"]?.AsArray().ToJsonString()).ShouldContain("DB2");
+				(FindSupportedProvider(info, "IBM DB2")["providerNames"]?.AsArray().ToJsonString())!.ShouldContain("DB2");
 				((bool?)info["rules"]?["singleStatementOnly"]).ShouldBe(true);
 				((bool?)info["rules"]?["sqlGuardIsSecurityBoundary"]).ShouldBe(false);
-				((string?)info["rules"]?["sqlGuardWarning"]).ShouldContain("not a security boundary");
-				((string?)info["rules"]?["sqlGuardWarning"]).ShouldContain("restricted database accounts");
+				((string?)info["rules"]?["sqlGuardWarning"])!.ShouldContain("not a security boundary");
+				((string?)info["rules"]?["sqlGuardWarning"])!.ShouldContain("restricted database accounts");
 				((bool?)info["rules"]?["connectionStringPlaceholdersEscaped"]).ShouldBe(false);
-				((string?)info["rules"]?["connectionStringPlaceholderWarning"]).ShouldContain("raw user/password values");
-				((string?)info["rules"]?["connectionStringPlaceholderWarning"]).ShouldContain("trusted startup/config sources");
+				((string?)info["rules"]?["connectionStringPlaceholderWarning"])!.ShouldContain("raw user/password values");
+				((string?)info["rules"]?["connectionStringPlaceholderWarning"])!.ShouldContain("trusted startup/config sources");
 				((bool?)info["rules"]?["providerInputAllowedInToolCall"]).ShouldBe(false);
 				((bool?)info["rules"]?["connectionStringInputAllowedInToolCall"]).ShouldBe(false);
 				((bool?)info["rules"]?["credentialsInputAllowedInToolCall"]).ShouldBe(false);
@@ -346,7 +344,7 @@ namespace Tests.LinqToDB.CLI
 
 				(ContainsProfile(info, "default")).ShouldBe(false);
 
-				((string?)sqlServer["description"]).ShouldContain("T-SQL");
+				((string?)sqlServer["description"])!.ShouldContain("T-SQL");
 				((string?)sqlServer["provider"]).ShouldBe("SqlServer");
 				((string?)sqlServer["dialect"]).ShouldBe("SQL Server T-SQL");
 				((bool?)sqlServer["defaultOutputSupportedByMcp"]).ShouldBe(true);
@@ -454,7 +452,7 @@ namespace Tests.LinqToDB.CLI
 			{
 				(response["error"]).ShouldBeNull();
 				((bool?)response["result"]?["isError"]).ShouldBe(true);
-				((string?)response["result"]?["content"]?[0]?["text"]).ShouldContain("no configured profiles with provider");
+				((string?)response["result"]?["content"]?[0]?["text"])!.ShouldContain("no configured profiles with provider");
 			}
 
 			server.ExpectStandardError("Configuration profile 'default' doesn't configure provider");
@@ -485,8 +483,8 @@ namespace Tests.LinqToDB.CLI
 				(response["result"]?["isError"]).ShouldBeNull();
 				((string?)info["profiles"]?[0]?["defaultOutput"]).ShouldBe("csv");
 				((bool?)info["profiles"]?[0]?["defaultOutputSupportedByMcp"]).ShouldBe(false);
-				(info["supportedOutputFormats"]?.AsArray().ToJsonString()).ShouldNotContain("csv");
-				(info["queryCommandOutputFormats"]?.AsArray().ToJsonString()).ShouldContain("csv");
+				(info["supportedOutputFormats"]?.AsArray().ToJsonString())!.ShouldNotContain("csv");
+				(info["queryCommandOutputFormats"]?.AsArray().ToJsonString())!.ShouldContain("csv");
 				(info.ToJsonString()).ShouldNotContain("Data Source=:memory:");
 			}
 		}
@@ -517,6 +515,44 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task McpCommandLineResponseLimitOverridesConfig()
+		{
+			var config = Path.Combine(TestContext.CurrentContext.WorkDirectory, $"mcp-response-limit-{Guid.NewGuid():N}.json");
+			await File.WriteAllTextAsync(config, """
+				{
+					"mcp": {
+						"maxResponseBytes": 2048
+					},
+					"default": {
+						"provider": "SQLite",
+						"connectionString": "Data Source=:memory:"
+					}
+				}
+				""").ConfigureAwait(false);
+
+			await using (var server = await McpServerProcess.Start("--config", config))
+			{
+				await server.Initialize();
+				var response = await server.CallTool("linq2db_info", new JsonObject());
+				var info     = ReadToolJson(response);
+
+				(response["error"]).ShouldBeNull();
+				((int?)info["server"]?["maxResponseBytes"]).ShouldBe(2048);
+			}
+
+			await using var overrideServer = await McpServerProcess.Start("--config", config, "--max-response-bytes", "100000000");
+
+			await overrideServer.Initialize();
+			var overrideResponse = await overrideServer.CallTool("linq2db_info", new JsonObject());
+			var overrideInfo     = ReadToolJson(overrideResponse);
+
+			{
+				(overrideResponse["error"]).ShouldBeNull();
+				((int?)overrideInfo["server"]?["maxResponseBytes"]).ShouldBe(100000000);
+			}
+		}
+
+		[Test]
 		public async Task McpExecutesSqlWithJsonTableDefault()
 		{
 			await using var server = await McpServerProcess.Start("--provider", "SQLite", "--connection-string", "Data Source=:memory:");
@@ -532,13 +568,65 @@ namespace Tests.LinqToDB.CLI
 			{
 				(response["error"]).ShouldBeNull();
 				(response["result"]?["isError"]).ShouldBeNull();
-				(contentText).ShouldContain("\"columns\"");
-				(contentText).ShouldContain("\"rows\":[[\"1\"]]");
-				(contentText).ShouldContain("\"rowCount\":1");
-				(contentText).ShouldContain("\"truncated\":false");
+				contentText!.ShouldContain("\"columns\"");
+				contentText!.ShouldContain("\"rows\":[[\"1\"]]");
+				contentText!.ShouldContain("\"rowCount\":1");
+				contentText!.ShouldContain("\"truncated\":false");
 			}
 
 			server.ExpectNoStandardError();
+		}
+
+		[TestCase("json")]
+		[TestCase("json-table")]
+		public async Task McpTruncatesResponseAtWholeRowBoundary(string output)
+		{
+			await using var server = await McpServerProcess.Start(
+				"--provider",
+				"SQLite",
+				"--connection-string",
+				"Data Source=:memory:",
+				"--max-response-bytes",
+				"2048");
+
+			await server.Initialize();
+			var response = await server.CallTool("linq2db_query", new JsonObject
+			{
+				["output"] = output,
+				["sql"]    = """
+					with recursive numbers(Value) as
+					(
+						select 1
+						union all
+						select Value + 1 from numbers where Value < 100
+					)
+					select printf('%0500d', Value) as Value from numbers
+					""",
+			});
+
+			var content       = response["result"]?["content"]?.AsArray();
+			var result        = JsonNode.Parse((string)content?[0]?["text"]!);
+			var returnedRows  = output == "json-table" ? result!["rows"]!.AsArray().Count : result!.AsArray().Count;
+			var warning       = (string?)content?[1]?["text"];
+
+			{
+				(response["error"]).ShouldBeNull();
+				(response["result"]?["isError"]).ShouldBeNull();
+				returnedRows.ShouldBeGreaterThan(0);
+				returnedRows.ShouldBeLessThan(100);
+				(content?.Count).ShouldBe(2);
+				warning!.ShouldContain($"{returnedRows} row(s)");
+				warning!.ShouldContain("pagination");
+				warning!.ShouldContain("2048 bytes");
+			}
+
+			if (output == "json-table")
+			{
+				((int?)result!["rowCount"]).ShouldBe(returnedRows);
+				((bool?)result["truncated"]).ShouldBe(true);
+				((string?)result["truncationReason"]).ShouldBe("maxOutputBytes");
+				((int?)result["maxOutputBytes"]).ShouldBe(2048);
+			}
 		}
 
 		[Test]
@@ -555,7 +643,7 @@ namespace Tests.LinqToDB.CLI
 			{
 				(response["error"]).ShouldBeNull();
 				((bool?)response["result"]?["isError"]).ShouldBe(true);
-				((string?)response["result"]?["content"]?[0]?["text"]).ShouldContain("Query is not read-only");
+				((string?)response["result"]?["content"]?[0]?["text"])!.ShouldContain("Query is not read-only");
 			}
 		}
 
@@ -600,7 +688,7 @@ namespace Tests.LinqToDB.CLI
 			{
 				(response["error"]).ShouldBeNull();
 				((bool?)response["result"]?["isError"]).ShouldBe(true);
-				((string?)response["result"]?["content"]?[0]?["text"]).ShouldContain("Profile 'default' doesn't enable execute mode.");
+				((string?)response["result"]?["content"]?[0]?["text"])!.ShouldContain("Profile 'default' doesn't enable execute mode.");
 			}
 		}
 
@@ -630,7 +718,7 @@ namespace Tests.LinqToDB.CLI
 			{
 				(response["error"]).ShouldBeNull();
 				(response["result"]?["isError"]).ShouldBeNull();
-				((string?)response["result"]?["content"]?[0]?["text"]).ShouldContain("\"recordsAffected\":1");
+				((string?)response["result"]?["content"]?[0]?["text"])!.ShouldContain("\"recordsAffected\":1");
 			}
 
 			server.ExpectStandardError("Executing write-capable SQL because profile 'default' has enableExecute=true. Provider: SQLite.");
@@ -650,7 +738,7 @@ namespace Tests.LinqToDB.CLI
 			{
 				(response["error"]).ShouldBeNull();
 				((bool?)response["result"]?["isError"]).ShouldBe(true);
-				((string?)response["result"]?["content"]?[0]?["text"]).ShouldContain("Only single SQL statement is allowed.");
+				((string?)response["result"]?["content"]?[0]?["text"])!.ShouldContain("Only single SQL statement is allowed.");
 			}
 		}
 
@@ -668,9 +756,9 @@ namespace Tests.LinqToDB.CLI
 			{
 				(response["error"]).ShouldBeNull();
 				((bool?)response["result"]?["isError"]).ShouldBe(true);
-				((string?)response["result"]?["content"]?[0]?["text"]).ShouldContain("Cannot create database provider 'Oracle.19.Managed'.");
-				((string?)response["result"]?["content"]?[0]?["text"]).ShouldContain("looks like a test data source alias");
-				((string?)response["result"]?["content"]?[0]?["text"]).ShouldContain("Oracle.Managed");
+				((string?)response["result"]?["content"]?[0]?["text"])!.ShouldContain("Cannot create database provider 'Oracle.19.Managed'.");
+				((string?)response["result"]?["content"]?[0]?["text"])!.ShouldContain("looks like a test data source alias");
+				((string?)response["result"]?["content"]?[0]?["text"])!.ShouldContain("Oracle.Managed");
 			}
 		}
 
@@ -690,9 +778,9 @@ namespace Tests.LinqToDB.CLI
 
 			{
 				(response["error"]).ShouldBeNull();
-				(contentText).ShouldContain("\"rowCount\":2");
-				(contentText).ShouldContain("\"truncated\":false");
-				(contentText).ShouldContain("\"2\"");
+				contentText!.ShouldContain("\"rowCount\":2");
+				contentText!.ShouldContain("\"truncated\":false");
+				contentText!.ShouldContain("\"2\"");
 			}
 		}
 
@@ -711,8 +799,8 @@ namespace Tests.LinqToDB.CLI
 
 			{
 				(response["error"]).ShouldBeNull();
-				(contentText).ShouldContain("\"name\":\"Value\"");
-				(contentText).ShouldContain("\"rows\":[[\"1\",\"2\"]]");
+				contentText!.ShouldContain("\"name\":\"Value\"");
+				contentText!.ShouldContain("\"rows\":[[\"1\",\"2\"]]");
 			}
 		}
 
@@ -774,7 +862,7 @@ namespace Tests.LinqToDB.CLI
 				{
 					(response["error"]).ShouldBeNull();
 					((bool?)response["result"]?["isError"]).ShouldBe(true);
-					((string?)response["result"]?["content"]?[0]?["text"]).ShouldContain("Table filter regex '^(a+)+$' timed out");
+					((string?)response["result"]?["content"]?[0]?["text"])!.ShouldContain("Table filter regex '^(a+)+$' timed out");
 				}
 
 				server.ExpectNoStandardError();
@@ -800,9 +888,9 @@ namespace Tests.LinqToDB.CLI
 			{
 				(response["error"]).ShouldBeNull();
 				((bool?)response["result"]?["isError"]).ShouldBe(true);
-				((string?)response["result"]?["content"]?[0]?["text"]).ShouldContain("MCP query execution supports only 'json' and 'json-table' output.");
-				((string?)response["result"]?["content"]?[0]?["text"]).ShouldContain("output='csv'");
-				((string?)response["result"]?["content"]?[0]?["text"]).ShouldContain("Pass output='json-table' or output='json'");
+				((string?)response["result"]?["content"]?[0]?["text"])!.ShouldContain("MCP query execution supports only 'json' and 'json-table' output.");
+				((string?)response["result"]?["content"]?[0]?["text"])!.ShouldContain("output='csv'");
+				((string?)response["result"]?["content"]?[0]?["text"])!.ShouldContain("Pass output='json-table' or output='json'");
 			}
 		}
 
@@ -831,9 +919,9 @@ namespace Tests.LinqToDB.CLI
 			{
 				(response["error"]).ShouldBeNull();
 				((bool?)response["result"]?["isError"]).ShouldBe(true);
-				((string?)response["result"]?["content"]?[0]?["text"]).ShouldContain("MCP query execution supports only 'json' and 'json-table' output.");
-				((string?)response["result"]?["content"]?[0]?["text"]).ShouldContain("output='csv'");
-				((string?)response["result"]?["content"]?[0]?["text"]).ShouldContain("Pass output='json-table' or output='json'");
+				((string?)response["result"]?["content"]?[0]?["text"])!.ShouldContain("MCP query execution supports only 'json' and 'json-table' output.");
+				((string?)response["result"]?["content"]?[0]?["text"])!.ShouldContain("output='csv'");
+				((string?)response["result"]?["content"]?[0]?["text"])!.ShouldContain("Pass output='json-table' or output='json'");
 			}
 		}
 
@@ -881,8 +969,8 @@ namespace Tests.LinqToDB.CLI
 
 			{
 				(response["error"]).ShouldBeNull();
-				((string?)response["result"]?["content"]?[0]?["text"]).ShouldContain("\"rowCount\":2");
-				((string?)response["result"]?["content"]?[0]?["text"]).ShouldContain("\"2\"");
+				((string?)response["result"]?["content"]?[0]?["text"])!.ShouldContain("\"rowCount\":2");
+				((string?)response["result"]?["content"]?[0]?["text"])!.ShouldContain("\"2\"");
 			}
 		}
 
@@ -900,10 +988,23 @@ namespace Tests.LinqToDB.CLI
 				(result.Output).ShouldContain("--config");
 				(result.Output).ShouldContain("--provider");
 				(result.Output).ShouldContain("--max-rows");
+				(result.Output).ShouldContain("--max-response-bytes");
 				(result.Output).ShouldNotContain("CSV output");
 				(result.Output).ShouldNotContain("--sql");
 				(result.Output).ShouldNotContain("--output-file");
 				(result.Output).ShouldNotContain("--allow-unsafe-sql");
+			}
+		}
+
+		[Test]
+		public async Task McpRejectsInvalidResponseLimit()
+		{
+			var result = await RunCliProcess("mcp", "--max-response-bytes", "0");
+
+			{
+				(result.ExitCode).ShouldBe(-1);
+				(result.Output).ShouldBeEmpty();
+				(result.Error).ShouldContain("Option '--max-response-bytes' must be a positive 32-bit integer.");
 			}
 		}
 
@@ -979,7 +1080,7 @@ namespace Tests.LinqToDB.CLI
 		{
 			var fileName = Path.Combine(TestContext.CurrentContext.WorkDirectory, $"mcp-schema-{Guid.NewGuid():N}.db");
 
-			var dataProvider = DataConnection.GetDataProvider("SQLite", $"Data Source={fileName};Pooling=False");
+			var dataProvider = DataConnection.GetDataProvider("SQLite", $"Data Source={fileName};Pooling=False")!;
 			using var db     = new DataConnection(new DataOptions().UseConnectionString(dataProvider, $"Data Source={fileName};Pooling=False"));
 
 			db.Execute("""

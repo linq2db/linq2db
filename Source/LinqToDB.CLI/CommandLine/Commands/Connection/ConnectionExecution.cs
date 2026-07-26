@@ -38,8 +38,8 @@ namespace LinqToDB.CommandLine.Commands.Connection
 					settings.User!,
 					settings.Password!,
 					settings.ImpersonateMode,
-					() => action(dataOptions, dataProvider, cancellationToken)).ConfigureAwait(false)
-				: await action(dataOptions, dataProvider, cancellationToken).ConfigureAwait(false);
+					() => action(dataOptions, dataProvider, cancellationToken))
+				: await action(dataOptions, dataProvider, cancellationToken);
 
 			return new ConnectionExecutionResult<T>(StatusCodes.SUCCESS, null, result);
 		}

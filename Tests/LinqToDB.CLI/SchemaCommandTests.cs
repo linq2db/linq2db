@@ -11,9 +11,6 @@ using NUnit.Framework;
 
 using Shouldly;
 
-#nullable enable annotations
-#nullable disable warnings
-
 namespace Tests.LinqToDB.CLI
 {
 	[TestFixture]
@@ -24,16 +21,14 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCliProcess("help", "schema");
 
-			{
-				(result.ExitCode).ShouldBe(0);
-				(result.Output).ShouldContain("dotnet linq2db schema <options>");
-				(result.Output).ShouldContain("--get-foreign-keys");
-				(result.Output).ShouldContain("--filter-schema");
-				(result.Output).ShouldContain("--filter-table");
-				(result.Output).ShouldNotContain("--exclude-table");
-				(result.Output).ShouldNotContain("--get-procedures");
-				(result.Output).ShouldNotContain("--use-schema-only");
-			}
+			(result.ExitCode).ShouldBe(0);
+			(result.Output).ShouldContain("dotnet linq2db schema <options>");
+			(result.Output).ShouldContain("--get-foreign-keys");
+			(result.Output).ShouldContain("--filter-schema");
+			(result.Output).ShouldContain("--filter-table");
+			(result.Output).ShouldNotContain("--exclude-table");
+			(result.Output).ShouldNotContain("--get-procedures");
+			(result.Output).ShouldNotContain("--use-schema-only");
 		}
 
 		[Test]
@@ -41,10 +36,8 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCliProcess("schema", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql", "select 1");
 
-			{
-				(result.ExitCode).ShouldBe(-1);
-				(result.Error).ShouldContain("Unrecognized option: --sql");
-			}
+			(result.ExitCode).ShouldBe(-1);
+			(result.Error).ShouldContain("Unrecognized option: --sql");
 		}
 
 		[Test]
@@ -52,10 +45,8 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCliProcess("schema", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--output", "csv");
 
-			{
-				(result.ExitCode).ShouldBe(-1);
-				(result.Error).ShouldContain("Cannot parse option value (--output csv)");
-			}
+			(result.ExitCode).ShouldBe(-1);
+			(result.Error).ShouldContain("Cannot parse option value (--output csv)");
 		}
 
 		[Test]
@@ -76,19 +67,17 @@ namespace Tests.LinqToDB.CLI
 
 				var schema = JsonNode.Parse(result.Output)!.AsObject();
 
-				{
-					((string?)schema["provider"]).ShouldBe("SQLite");
-					((string?)schema["dialect"]).ShouldBe("SQLite");
-					((bool?)schema["options"]?["getProcedures"]).ShouldBe(false);
+				((string?)schema["provider"]).ShouldBe("SQLite");
+				((string?)schema["dialect"]).ShouldBe("SQLite");
+				((bool?)schema["options"]?["getProcedures"]).ShouldBe(false);
 
-					var orders = FindTable(schema, "Orders");
+				var orders = FindTable(schema, "Orders");
 
-					orders["columns"]!.AsArray().Count.ShouldBe(3);
-					((string?)orders["primaryKey"]?["columns"]?[0]?["name"]).ShouldBe("Id");
-					((string?)orders["foreignKeys"]?[0]?["referencedTable"]?["name"]).ShouldBe("Customers");
-					((string?)orders["foreignKeys"]?[0]?["columns"]?[0]).ShouldBe("CustomerId");
-					result.Output.ShouldNotContain("secret");
-				}
+				orders["columns"]!.AsArray().Count.ShouldBe(3);
+				((string?)orders["primaryKey"]?["columns"]?[0]?["name"]).ShouldBe("Id");
+				((string?)orders["foreignKeys"]?[0]?["referencedTable"]?["name"]).ShouldBe("Customers");
+				((string?)orders["foreignKeys"]?[0]?["columns"]?[0]).ShouldBe("CustomerId");
+				result.Output.ShouldNotContain("secret");
 			}
 			finally
 			{
@@ -114,14 +103,12 @@ namespace Tests.LinqToDB.CLI
 
 				var schema = JsonNode.Parse(result.Output)!.AsObject();
 
-				{
-					((string?)schema["options"]?["filterTables"]?[0]).ShouldBe("main.Orders");
-					((string?)schema["options"]?["filterTables"]?[1]).ShouldBe("rx:^Child");
-					schema["tables"]!.AsArray().Count.ShouldBe(2);
-					ContainsTable(schema, "Orders").ShouldBe(true);
-					ContainsTable(schema, "ChildOrders").ShouldBe(true);
-					ContainsTable(schema, "Customers").ShouldBe(false);
-				}
+				((string?)schema["options"]?["filterTables"]?[0]).ShouldBe("main.Orders");
+				((string?)schema["options"]?["filterTables"]?[1]).ShouldBe("rx:^Child");
+				schema["tables"]!.AsArray().Count.ShouldBe(2);
+				ContainsTable(schema, "Orders").ShouldBe(true);
+				ContainsTable(schema, "ChildOrders").ShouldBe(true);
+				ContainsTable(schema, "Customers").ShouldBe(false);
 			}
 			finally
 			{
@@ -148,10 +135,8 @@ namespace Tests.LinqToDB.CLI
 				var schema = JsonNode.Parse(result.Output)!.AsObject();
 				var orders = FindTable(schema, "Orders");
 
-				{
-					((bool?)schema["options"]?["getForeignKeys"]).ShouldBe(false);
-					orders["foreignKeys"]!.AsArray().Count.ShouldBe(0);
-				}
+				((bool?)schema["options"]?["getForeignKeys"]).ShouldBe(false);
+				orders["foreignKeys"]!.AsArray().Count.ShouldBe(0);
 			}
 			finally
 			{
@@ -172,10 +157,8 @@ namespace Tests.LinqToDB.CLI
 					"--connection-string", $"Data Source={database};Pooling=False",
 					"--filter-table", "rx:^(a+)+$");
 
-				{
-					(result.ExitCode).ShouldBe(-3);
-					(result.Error).ShouldContain("Table filter regex '^(a+)+$' timed out");
-				}
+				(result.ExitCode).ShouldBe(-3);
+				(result.Error).ShouldContain("Table filter regex '^(a+)+$' timed out");
 			}
 			finally
 			{
@@ -209,7 +192,7 @@ namespace Tests.LinqToDB.CLI
 		{
 			var fileName = Path.Combine(TestContext.CurrentContext.WorkDirectory, $"schema-{Guid.NewGuid():N}.db");
 
-			var dataProvider = DataConnection.GetDataProvider("SQLite", $"Data Source={fileName};Pooling=False");
+			var dataProvider = DataConnection.GetDataProvider("SQLite", $"Data Source={fileName};Pooling=False")!;
 			using var db     = new DataConnection(new DataOptions().UseConnectionString(dataProvider, $"Data Source={fileName};Pooling=False"));
 
 			db.Execute("""

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -24,6 +25,13 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 	sealed class McpCommand : CliCommand
 	{
 		static readonly OptionCategory _toolOptions = new(4, "Tools", "Tool registration options", "tools");
+
+		static readonly CliOption _maxResponseBytes = new StringCliOption(
+			"max-response-bytes",
+			null,
+			false,
+			false,
+			$"maximum UTF-8 size of primary query and execute MCP output content in bytes; defaults to {McpServerConfiguration.DefaultMaxResponseBytes}");
 
 		static readonly CliOption _enableExecuteTool = new BooleanCliOption(
 			"enable-execute-tool",
@@ -71,6 +79,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.LockTimeout);
 			AddOption(QueryExecutionCliOptions.OutputOptions,        QueryExecutionCliOptions.McpOutput);
 			AddOption(QueryExecutionCliOptions.OutputOptions,        QueryExecutionCliOptions.MaxRows);
+			AddOption(QueryExecutionCliOptions.OutputOptions,       _maxResponseBytes);
 			AddOption(_toolOptions,                                 _enableExecuteTool);
 		}
 
@@ -82,12 +91,15 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 			IReadOnlyCollection<string>    unknownArgs,
 			CancellationToken              cancellationToken)
 		{
-			var startupOptions = ProcessOptions(options);
+			var startupOptions = ProcessOptions(options, environment, out var maxResponseBytesSpecified);
+
+			if (startupOptions == null)
+				return StatusCodes.INVALID_ARGUMENTS;
 
 			if (options.Count > 0)
 			{
 				foreach (var kvp in options)
-					await environment.Error.WriteLineAsync($"{Name} command missing '{kvp.Key.Name}' option handler").ConfigureAwait(false);
+					await environment.Error.WriteLineAsync($"{Name} command missing '{kvp.Key.Name}' option handler");
 
 				throw new InvalidOperationException($"Not all options handled by {Name} command");
 			}
@@ -98,17 +110,20 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 			{
 				// A missing %NAME%/${NAME} expansion already reported its own diagnostic and
 				// returned a sentinel value that can't be a real path; don't print it verbatim.
-				if (configFileName != null && !configFileName.Contains('\0', StringComparison.Ordinal))
-					await environment.Error.WriteLineAsync($"Configuration file '{configFileName}' not found.").ConfigureAwait(false);
+				if (configFileName != null && !string.Equals(configFileName, ConnectionSettingsResolver.MissingEnvironmentVariable, StringComparison.Ordinal))
+					await environment.Error.WriteLineAsync($"Configuration file '{configFileName}' not found.");
 
 				return StatusCodes.INVALID_ARGUMENTS;
 			}
 
 			if (!McpServerConfiguration.TryLoad(environment, configFileName, out var serverConfiguration, out var error))
 			{
-				await environment.Error.WriteLineAsync(error).ConfigureAwait(false);
+				await environment.Error.WriteLineAsync(error);
 				return StatusCodes.INVALID_ARGUMENTS;
 			}
+
+			if (!maxResponseBytesSpecified)
+				startupOptions = startupOptions with { MaxResponseBytes = serverConfiguration.MaxResponseBytes };
 
 			var builder = Host.CreateApplicationBuilder([]);
 
@@ -136,11 +151,14 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 			if (startupOptions.EnableExecuteTool)
 				mcpServerBuilder.WithTools(new McpExecuteTool(startupOptions));
 
-			await builder.Build().RunAsync(cancellationToken).ConfigureAwait(false);
+			await builder.Build().RunAsync(cancellationToken);
 			return StatusCodes.SUCCESS;
 		}
 
-		static McpQueryStartupOptions ProcessOptions(Dictionary<CliOption, object?> options)
+		static McpQueryStartupOptions? ProcessOptions(
+			Dictionary<CliOption, object?> options,
+			ICliEnvironment                environment,
+			out bool                       maxResponseBytesSpecified)
 		{
 			options.Remove(QueryExecutionCliOptions.Config,              out var config);
 			options.Remove(QueryExecutionCliOptions.Profile,             out var profile);
@@ -159,7 +177,20 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 			options.Remove(QueryExecutionCliOptions.LockTimeout,         out var lockTimeout);
 			options.Remove(QueryExecutionCliOptions.McpOutput,           out var output);
 			options.Remove(QueryExecutionCliOptions.MaxRows,             out var maxRows);
+			options.Remove(_maxResponseBytes,                            out var maxResponseBytes);
 			options.Remove(_enableExecuteTool,                           out var enableExecuteTool);
+
+			maxResponseBytesSpecified = maxResponseBytes != null;
+			var parsedMaxResponseBytes = McpServerConfiguration.DefaultMaxResponseBytes;
+
+			if (maxResponseBytes != null
+				&& (!int.TryParse((string)maxResponseBytes, NumberStyles.None, CultureInfo.InvariantCulture, out parsedMaxResponseBytes)
+					|| !McpServerConfiguration.IsValidMaxResponseBytes(parsedMaxResponseBytes)))
+			{
+				environment.Error.WriteLine(
+					$"Option '--{_maxResponseBytes.Name}' must be a positive 32-bit integer.");
+				return null;
+			}
 
 			return new McpQueryStartupOptions(
 				(string?)config,
@@ -179,6 +210,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 				(string?)lockTimeout,
 				(string?)maxRows,
 				(string?)output,
+				parsedMaxResponseBytes,
 				(bool?)enableExecuteTool ?? false);
 		}
 	}

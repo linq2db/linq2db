@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -9,9 +8,6 @@ using LinqToDB.CommandLine;
 using NUnit.Framework;
 
 using Shouldly;
-
-#nullable enable annotations
-#nullable disable warnings
 
 #pragma warning disable JSON002 // Allow JSON in test code for config file content.
 
@@ -294,6 +290,44 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task ConfigInitPreservesExistingFileWhenAtomicWriteFails()
+		{
+			var environment = new TestCliEnvironment
+			{
+				WriteAllTextException = new IOException("disk full"),
+			};
+			var original = """
+				{
+					"default": {
+						"provider": "SQLite",
+						"connectionString": "Data Source=original.db"
+					}
+				}
+				""";
+			environment.Files["query.json"] = original;
+
+			var result = await RunCli(
+				environment,
+				"config-init",
+				"--config",
+				"query.json",
+				"--provider",
+				"PostgreSQL",
+				"--connection-string",
+				"Host=localhost",
+				"--if-exists",
+				"replace");
+
+			{
+				(result.ExitCode).ShouldBe(-3);
+				(result.Output).ShouldBeEmpty();
+				(result.Error).ShouldContain("Cannot write configuration file 'query.json': disk full");
+				environment.Files["query.json"].ShouldBe(original);
+				environment.Files.Keys.ShouldNotContain(path => path.EndsWith(".tmp", StringComparison.Ordinal));
+			}
+		}
+
+		[Test]
 		public async Task ConfigInitRejectsInvalidOutput()
 		{
 			var result = await RunCli(new TestCliEnvironment(), "config-init", "--provider", "SQLite", "--connection-string", "Data Source=data.db", "--output", "xml");
@@ -314,67 +348,5 @@ namespace Tests.LinqToDB.CLI
 
 		sealed record CliResult(int ExitCode, string Output, string Error);
 
-		sealed class TestCliEnvironment : ICliEnvironment
-		{
-			readonly StringWriter _output = new();
-			readonly StringWriter _error  = new();
-
-			public Dictionary<string, string> Files { get; } = new(StringComparer.Ordinal);
-			public HashSet<string> Directories { get; } = new(StringComparer.Ordinal);
-			public Dictionary<string, string> EnvironmentVariables { get; } = new(StringComparer.Ordinal);
-
-			public TextWriter Out   => _output;
-			public TextWriter Error => _error;
-
-			public int BufferWidth => 120;
-
-			public string Output      => _output.ToString();
-			public string ErrorOutput => _error .ToString();
-
-			public bool FileExists(string path)
-			{
-				return Files.ContainsKey(path);
-			}
-
-			public string ReadAllText(string path)
-			{
-				return Files[path];
-			}
-
-			public void WriteAllText(string path, string contents)
-			{
-				Files[path] = contents;
-			}
-
-			public TextWriter CreateTextWriter(string path)
-			{
-				return new StringWriter();
-			}
-
-			public void MoveFile(string sourcePath, string destinationPath, bool overwrite)
-			{
-				throw new NotSupportedException();
-			}
-
-			public void DeleteFile(string path)
-			{
-				throw new NotSupportedException();
-			}
-
-			public void CreateDirectory(string path)
-			{
-				Directories.Add(path);
-			}
-
-			public string? GetEnvironmentVariable(string name)
-			{
-				return EnvironmentVariables.GetValueOrDefault(name);
-			}
-
-			public bool TryGetWindowsCredentials(string target, out string? user, out string? password, out string? error)
-			{
-				throw new NotSupportedException();
-			}
-		}
 	}
 }

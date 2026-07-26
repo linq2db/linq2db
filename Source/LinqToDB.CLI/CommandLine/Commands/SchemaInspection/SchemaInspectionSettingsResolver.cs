@@ -48,7 +48,7 @@ namespace LinqToDB.CommandLine.Commands.SchemaInspection
 				? new ConnectionSettingsResolver(_environment).ResolvePath(SchemaInspectionCliOptions.OutputFile, values.OutputFile)
 				: null;
 
-			if (string.Equals(outputFile, "\u0000", StringComparison.Ordinal))
+			if (string.Equals(outputFile, ConnectionSettingsResolver.MissingEnvironmentVariable, StringComparison.Ordinal))
 				return null;
 
 			return new SchemaInspectionSettings(connection, options, DefaultOutput, outputFile, values.Overwrite);

@@ -22,25 +22,25 @@ namespace LinqToDB.Tools
 
 			try
 			{
-				return await new LinqToDBCliController().Execute(args, SystemCliEnvironment.Instance, cancellation.Token).ConfigureAwait(false);
+				return await new LinqToDBCliController().Execute(args, SystemCliEnvironment.Instance, cancellation.Token);
 			}
 			catch (OperationCanceledException)
 			{
-				await Console.Error.WriteLineAsync("Command cancelled.").ConfigureAwait(false);
+				await Console.Error.WriteLineAsync("Command cancelled.");
 				return StatusCodes.EXPECTED_ERROR;
 			}
 			catch (Exception ex)
 			{
-				await Console.Error.WriteLineAsync($"Unhandled exception: {ex.Message}").ConfigureAwait(false);
+				await Console.Error.WriteLineAsync($"Unhandled exception: {ex.Message}");
 
 				var iex = ex.InnerException;
 				while (iex != null)
 				{
-					await Console.Error.WriteLineAsync($"\t{iex.Message}").ConfigureAwait(false);
+					await Console.Error.WriteLineAsync($"\t{iex.Message}");
 					iex = iex.InnerException;
 				}
 
-				await Console.Error.WriteLineAsync($"{ex.StackTrace}").ConfigureAwait(false);
+				await Console.Error.WriteLineAsync($"{ex.StackTrace}");
 
 				return StatusCodes.INTERNAL_ERROR;
 			}

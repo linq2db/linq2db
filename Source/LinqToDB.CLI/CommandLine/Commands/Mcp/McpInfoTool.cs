@@ -122,6 +122,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 								name               = "linq2db.cli",
 								command            = "mcp",
 								executeToolEnabled = _startupOptions.EnableExecuteTool,
+								maxResponseBytes   = _startupOptions.MaxResponseBytes,
 							},
 							defaultProfile,
 							defaultProfileUsable,
@@ -231,5 +232,6 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 			string   Dialect,
 			bool     Bundled,
 			string?  Notes);
+
 	}
 }

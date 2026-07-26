@@ -32,13 +32,13 @@ namespace LinqToDB.CommandLine.Commands.Skill
 		{
 			if (rawArgs.Length != 1)
 			{
-				await environment.Error.WriteLineAsync($"Command '{Name}' doesn't accept arguments.").ConfigureAwait(false);
+				await environment.Error.WriteLineAsync($"Command '{Name}' doesn't accept arguments.");
 				return StatusCodes.INVALID_ARGUMENTS;
 			}
 
 			var markdown = SkillResource.ReadMarkdown();
 
-			await environment.Out.WriteAsync(markdown.AsMemory(), cancellationToken).ConfigureAwait(false);
+			await environment.Out.WriteAsync(markdown.AsMemory(), cancellationToken);
 			return StatusCodes.SUCCESS;
 		}
 	}

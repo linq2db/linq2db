@@ -137,7 +137,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 
 			using var resultWriter = new StringWriter(CultureInfo.InvariantCulture);
 
-			var result = await new SchemaInspectionExecutor(settings).Execute(resultWriter, cancellationToken).ConfigureAwait(false);
+			var result = await new SchemaInspectionExecutor(settings).Execute(resultWriter, cancellationToken);
 
 			if (result.Error != null)
 				return CreateErrorResult(result.Error);
@@ -210,22 +210,23 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 			if (settings == null)
 				return CreateErrorResult(errorWriter.ToString());
 
-			settings = settings with { DiagnosticWriter = Console.Error };
+			settings = settings with
+			{
+				DiagnosticWriter = Console.Error,
+				MaxOutputBytes   = _startupOptions.MaxResponseBytes,
+			};
 
 			if (!IsMcpOutputFormat(settings.Output))
 				return CreateErrorResult($"MCP query execution supports only 'json' and 'json-table' output. The selected profile resolves output='{settings.Output}'. Pass output='json-table' or output='json' in the tool call, or update the profile for MCP usage.");
 
 			using var resultWriter = new StringWriter(CultureInfo.InvariantCulture);
 
-			var result = await new QueryExecutionExecutor(settings).Execute(resultWriter, cancellationToken).ConfigureAwait(false);
+			var result = await new QueryExecutionExecutor(settings).Execute(resultWriter, cancellationToken);
 
 			if (result.Error != null)
 				return CreateErrorResult(result.Error);
 
-			return new CallToolResult
-			{
-				Content = [new TextContentBlock { Text = resultWriter.ToString() }],
-			};
+			return McpQueryExecutionResult.Create(resultWriter.ToString(), result, _startupOptions.MaxResponseBytes);
 		}
 
 		QueryExecutionOptionValues CreateOptionValues(string sql, string? profile, int? maxRows, string? output)

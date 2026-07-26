@@ -23,5 +23,6 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 		string? LockTimeout,
 		string? MaxRows,
 		string? Output,
+		int     MaxResponseBytes,
 		bool    EnableExecuteTool);
 }

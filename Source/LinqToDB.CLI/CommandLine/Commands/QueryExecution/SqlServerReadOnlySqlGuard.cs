@@ -47,7 +47,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 
 		private static SqlGuardResult ParseScript(string sql, out TSqlScript? script)
 		{
-			var parser   = new TSql180Parser(false);
+			var parser   = new TSql180Parser(true);
 			var fragment = parser.Parse(new StringReader(sql), out var errors);
 
 			if (errors.Count > 0)

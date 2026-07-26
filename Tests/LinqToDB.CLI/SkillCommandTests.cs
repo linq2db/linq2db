@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Threading.Tasks;
 
 using LinqToDB.CommandLine;
@@ -8,9 +6,6 @@ using LinqToDB.CommandLine;
 using NUnit.Framework;
 
 using Shouldly;
-
-#nullable enable annotations
-#nullable disable warnings
 
 namespace Tests.LinqToDB.CLI
 {
@@ -67,63 +62,5 @@ namespace Tests.LinqToDB.CLI
 
 		private sealed record CliResult(int ExitCode, string Output, string Error);
 
-		private sealed class TestCliEnvironment : ICliEnvironment
-		{
-			private readonly StringWriter _output = new();
-			private readonly StringWriter _error  = new();
-
-			public TextWriter Out   => _output;
-			public TextWriter Error => _error;
-
-			public int BufferWidth => 120;
-
-			public string Output      => _output.ToString();
-			public string ErrorOutput => _error .ToString();
-
-			public bool FileExists(string path)
-			{
-				return false;
-			}
-
-			public string ReadAllText(string path)
-			{
-				throw new KeyNotFoundException(path);
-			}
-
-			public void WriteAllText(string path, string contents)
-			{
-				throw new NotSupportedException();
-			}
-
-			public TextWriter CreateTextWriter(string path)
-			{
-				throw new NotSupportedException();
-			}
-
-			public void MoveFile(string sourcePath, string destinationPath, bool overwrite)
-			{
-				throw new NotSupportedException();
-			}
-
-			public void DeleteFile(string path)
-			{
-				throw new NotSupportedException();
-			}
-
-			public void CreateDirectory(string path)
-			{
-				throw new NotSupportedException();
-			}
-
-			public string? GetEnvironmentVariable(string name)
-			{
-				throw new NotSupportedException();
-			}
-
-			public bool TryGetWindowsCredentials(string target, out string? user, out string? password, out string? error)
-			{
-				throw new NotSupportedException();
-			}
-		}
 	}
 }

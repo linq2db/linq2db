@@ -8,9 +8,6 @@ using NUnit.Framework;
 
 using Shouldly;
 
-#nullable enable annotations
-#nullable disable warnings
-
 namespace Tests.LinqToDB.CLI
 {
 	[TestFixture]

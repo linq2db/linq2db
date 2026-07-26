@@ -12,8 +12,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 	/// </summary>
 	internal sealed class QueryExecutionSettingsResolver(ICliEnvironment environment)
 	{
-		const int    DefaultMaxRows             = 1000;
-		const string MissingEnvironmentVariable = "\u0000";
+		const int DefaultMaxRows = 1000;
 
 		readonly ICliEnvironment _environment = environment;
 
@@ -67,8 +66,8 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				return null;
 			}
 
-			if (string.Equals(outputFileName, MissingEnvironmentVariable, StringComparison.Ordinal) ||
-				string.Equals(querySqlFile,   MissingEnvironmentVariable, StringComparison.Ordinal))
+			if (string.Equals(outputFileName, ConnectionSettingsResolver.MissingEnvironmentVariable, StringComparison.Ordinal) ||
+				string.Equals(querySqlFile,   ConnectionSettingsResolver.MissingEnvironmentVariable, StringComparison.Ordinal))
 			{
 				return null;
 			}
@@ -107,6 +106,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				connectionSettings.CommandTimeout,
 				connectionSettings.LockTimeout,
 				maxRowsValue,
+				null,
 				outputFormat,
 				outputFileName,
 				values.Overwrite,

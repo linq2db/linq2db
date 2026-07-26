@@ -358,6 +358,7 @@ Parameter surface:
 | `commandTimeout` | `--command-timeout` | yes | yes | yes | no | yes | no | non-negative integer seconds; `0` disables the option |
 | `lockTimeout` | `--lock-timeout` | yes | yes | yes | no | yes | no | non-negative integer seconds; `0` disables the option |
 | `maxRows` | `--max-rows` | yes | yes | yes | yes | yes | yes | non-negative integer row count; `0` disables the limit |
+| `maxResponseBytes` | `--max-response-bytes` | no | no | no | no | yes | no | positive 32-bit integer limit for primary MCP query/execute output content; also available in the top-level `mcp` section; CLI overrides config; default `8388608` |
 | `output` | `--output` | yes | yes | yes | yes | yes | yes | `query`, `execute`, and `config-init`: `json`, `json-table`, or `csv`; `mcp`: `json` or `json-table`; `query` default is `json`, MCP/config-init/execute default is `json-table` |
 | `outputFile` | `--output-file` | yes | yes | yes | no | no | no | path; supports `%NAME%` and `${NAME}` |
 | `overwrite` | `--overwrite` | yes | yes | no | no | no | no | boolean CLI flag |
@@ -374,7 +375,8 @@ Example configuration:
   "mcp": {
     "title": "linq2db Development Databases",
     "description": "Databases used for linq2db development and provider testing.",
-    "instructions": "Use this server only for linq2db development, diagnostics, and provider compatibility testing."
+    "instructions": "Use this server only for linq2db development, diagnostics, and provider compatibility testing.",
+    "maxResponseBytes": 8388608
   },
   "default": {
     "description"     : "Use SQL Server T-SQL syntax. Prefer dbo schema qualification.",
@@ -403,6 +405,7 @@ The optional top-level `mcp` section describes this configured MCP server instan
 - `title` is its human-readable display name.
 - `description` identifies the databases or application domain served by this instance.
 - `instructions` supplies additional instance-specific guidance that MCP hosts can add to the model context. It is appended to the built-in server instructions rather than replacing them.
+- `maxResponseBytes` limits UTF-8 query and execute output content buffered for one MCP response. Protocol framing and the short truncation warning are not counted. It defaults to `8388608` (8 MiB); `--max-response-bytes` overrides the configured value for a server registration.
 - `mcp` is a reserved section name, is not a profile, and is not returned in the `linq2db_info` profile list.
 - `config-init` preserves an existing `mcp` section but does not create or modify it.
 
@@ -585,6 +588,7 @@ Startup/config boundary:
 - `--config <file>` and `--profile <name>` select the configuration profile used by default.
 - `--provider`, `--provider-location`, `--connection-string`, `--connection-string-env`, `--user`, `--user-env`, `--password`, `--password-env`, `--windows-credentials`, `--impersonate`, `--impersonate-mode`, `--command-timeout`, and `--lock-timeout` are startup/config settings.
 - `--max-rows` and `--output` can set startup defaults for tool calls.
+- `--max-response-bytes` sets the trusted server-wide query/execute response limit. It overrides top-level `mcp.maxResponseBytes` and is not available as a tool-call argument.
 - `--enable-execute-tool` registers the write-capable `linq2db_execute` tool. It is off by default.
 - `--sql`, `--sql-file`, `--output-file`, and `--overwrite` are not startup options for `mcp`.
 - `outputFile` from a configuration profile is ignored by MCP tool calls so results are returned through the MCP response content instead of written to files.
@@ -597,7 +601,9 @@ Tool-call boundary:
 - `output` optionally overrides the startup/config output format. MCP supports only `json` and `json-table`.
 - Provider, connection string, credentials, impersonation, provider assembly location, and timeout setup are not accepted through MCP tool input.
 
-The MCP default output format is `json-table`, which preserves duplicate column names and carries `rowCount`, `truncated`, and `recordsAffected` in-band when available. The existing `query` command keeps `json` as its default.
+The MCP default output format is `json-table`, which preserves duplicate column names and carries `rowCount`, `truncated`, `truncationReason`, `maxOutputBytes`, and `recordsAffected` in-band when applicable. The existing `query` command keeps `json` as its default.
+
+MCP query and execute results are limited to 8 MiB by default. Rows are added atomically, so a size-limited JSON result remains valid and never contains a partial row. When the limit is reached, the tool returns the rows that fit plus a second text content block recommending provider-appropriate pagination. For `json-table`, the first content block also reports `truncated: true`, `truncationReason: "maxOutputBytes"`, and the effective `maxOutputBytes`. Use keyset pagination when practical, or provider-appropriate `LIMIT`/`OFFSET` syntax. Direct `query` and `execute` CLI output is not subject to this MCP response limit.
 
 MCP host configuration schemas vary. The following example uses the `servers`/`type` form; hosts that use `mcpServers` express the same `command`, `args`, and `env` values under that key.
 

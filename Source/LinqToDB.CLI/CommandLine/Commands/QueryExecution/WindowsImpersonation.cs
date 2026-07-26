@@ -15,7 +15,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 	/// <summary>
 	/// Executes operations under a Windows user identity.
 	/// </summary>
-	public static class WindowsImpersonation
+	public static partial class WindowsImpersonation
 	{
 		const int Logon32LogonInteractive      = 2;
 		const int Logon32LogonNetwork          = 3;
@@ -69,7 +69,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				throw new Win32Exception(Marshal.GetLastWin32Error(), "Windows impersonation logon failed.");
 
 			using (token)
-				return await WindowsIdentity.RunImpersonatedAsync(token, action).ConfigureAwait(false);
+				return await WindowsIdentity.RunImpersonatedAsync(token, action);
 		}
 
 		/// <summary>
@@ -100,9 +100,9 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		}
 
 		[DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
-		[DllImport("advapi32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+		[LibraryImport("advapi32.dll", EntryPoint = "LogonUserW", SetLastError = true, StringMarshalling = StringMarshalling.Utf16)]
 		[return: MarshalAs(UnmanagedType.Bool)]
-		static extern bool LogonUser(
+		private static partial bool LogonUser(
 			string userName,
 			string? domain,
 			string password,

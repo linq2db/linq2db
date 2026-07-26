@@ -22,6 +22,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 	/// <param name="CommandTimeout">Optional query command timeout in seconds. Value <c>0</c> disables the option.</param>
 	/// <param name="LockTimeout">Optional provider-specific lock wait timeout in seconds. Value <c>0</c> disables the option.</param>
 	/// <param name="MaxRows">Maximum number of result rows to read. Value <c>0</c> disables the limit.</param>
+	/// <param name="MaxOutputBytes">Optional maximum UTF-8 output size. Used by bounded adapters such as MCP; <see langword="null"/> disables the limit.</param>
 	/// <param name="Output">Query output format.</param>
 	/// <param name="OutputFile">Optional output file path. When not specified, output is written to stdout.</param>
 	/// <param name="Overwrite">Allow replacing existing output file.</param>
@@ -41,6 +42,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		int?                     CommandTimeout,
 		int?                     LockTimeout,
 		int                      MaxRows,
+		int?                     MaxOutputBytes,
 		string                   Output,
 		string?                  OutputFile,
 		bool                     Overwrite,

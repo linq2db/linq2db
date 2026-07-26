@@ -34,13 +34,13 @@ namespace LinqToDB.CommandLine.Commands.SchemaInspection
 				var result = await ConnectionExecution.RunAsync(
 					_settings.Connection,
 					ExecuteSchemaRead,
-					cancellationToken).ConfigureAwait(false);
+					cancellationToken);
 
 				if (result.Error != null)
 					return new SchemaInspectionResult(result.StatusCode, $"Schema inspection failed: {result.Error}");
 
-				await outputWriter.WriteAsync(JsonSerializer.Serialize(result.Value, _jsonOptions).AsMemory(), cancellationToken).ConfigureAwait(false);
-				await outputWriter.FlushAsync(cancellationToken).ConfigureAwait(false);
+				await outputWriter.WriteAsync(JsonSerializer.Serialize(result.Value, _jsonOptions).AsMemory(), cancellationToken);
+				await outputWriter.FlushAsync(cancellationToken);
 
 				return new SchemaInspectionResult(StatusCodes.SUCCESS, null);
 			}

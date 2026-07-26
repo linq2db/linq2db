@@ -121,7 +121,7 @@ namespace LinqToDB.CommandLine.Commands.ConfigInit
 			if (options.Count > 0)
 			{
 				foreach (var kvp in options)
-					await environment.Error.WriteLineAsync($"{Name} command missing '{kvp.Key.Name}' option handler").ConfigureAwait(false);
+					await environment.Error.WriteLineAsync($"{Name} command missing '{kvp.Key.Name}' option handler");
 
 				throw new InvalidOperationException($"Not all options handled by {Name} command");
 			}
@@ -130,7 +130,7 @@ namespace LinqToDB.CommandLine.Commands.ConfigInit
 
 			// A missing %NAME%/${NAME} expansion already reported its own diagnostic and
 			// returned a sentinel value that can't be used as a real path.
-			if (configPath.Contains('\0', StringComparison.Ordinal))
+			if (string.Equals(configPath, ConnectionSettingsResolver.MissingEnvironmentVariable, StringComparison.Ordinal))
 				return StatusCodes.INVALID_ARGUMENTS;
 
 			var values = new ConfigInitValues(
@@ -167,13 +167,13 @@ namespace LinqToDB.CommandLine.Commands.ConfigInit
 			{
 				if (string.Equals(values.IfExists, "skip", StringComparison.Ordinal))
 				{
-					await environment.Out.WriteLineAsync($"Configuration profile '{values.Profile}' already exists in '{values.ConfigPath}'. Skipped.").ConfigureAwait(false);
+					await environment.Out.WriteLineAsync($"Configuration profile '{values.Profile}' already exists in '{values.ConfigPath}'. Skipped.");
 					return StatusCodes.SUCCESS;
 				}
 
 				if (string.Equals(values.IfExists, "error", StringComparison.Ordinal))
 				{
-					await environment.Error.WriteLineAsync($"Configuration profile '{values.Profile}' already exists in '{values.ConfigPath}'. Use '--if-exists replace' to overwrite it or '--if-exists skip' to leave it unchanged.").ConfigureAwait(false);
+					await environment.Error.WriteLineAsync($"Configuration profile '{values.Profile}' already exists in '{values.ConfigPath}'. Use '--if-exists replace' to overwrite it or '--if-exists skip' to leave it unchanged.");
 					return StatusCodes.EXPECTED_ERROR;
 				}
 			}
@@ -182,7 +182,7 @@ namespace LinqToDB.CommandLine.Commands.ConfigInit
 				root[DefaultProfileName] = CreateDefaultProfile();
 			else if (!string.Equals(values.Profile, DefaultProfileName, StringComparison.Ordinal) && root[DefaultProfileName] is not JsonObject)
 			{
-				await environment.Error.WriteLineAsync($"Configuration file '{values.ConfigPath}' profile '{DefaultProfileName}' must be object.").ConfigureAwait(false);
+				await environment.Error.WriteLineAsync($"Configuration file '{values.ConfigPath}' profile '{DefaultProfileName}' must be object.");
 				return StatusCodes.EXPECTED_ERROR;
 			}
 
@@ -192,14 +192,54 @@ namespace LinqToDB.CommandLine.Commands.ConfigInit
 			if (!string.IsNullOrEmpty(directory))
 				environment.CreateDirectory(directory);
 
-			environment.WriteAllText(values.ConfigPath, root.ToJsonString(_jsonOptions) + Environment.NewLine);
+			if (!await TryWriteConfiguration(environment, values.ConfigPath, root.ToJsonString(_jsonOptions) + Environment.NewLine))
+				return StatusCodes.EXPECTED_ERROR;
 
 			var action = profileExists && string.Equals(values.IfExists, "replace", StringComparison.Ordinal)
 				? "Updated"
 				: "Created";
 
-			await environment.Out.WriteLineAsync($"{action} configuration profile '{values.Profile}' in '{values.ConfigPath}'.").ConfigureAwait(false);
+			await environment.Out.WriteLineAsync($"{action} configuration profile '{values.Profile}' in '{values.ConfigPath}'.");
 			return StatusCodes.SUCCESS;
+		}
+
+		static async ValueTask<bool> TryWriteConfiguration(ICliEnvironment environment, string configPath, string contents)
+		{
+			var directory = Path.GetDirectoryName(configPath);
+			var fileName  = Path.GetFileName(configPath);
+			string temporaryFile;
+
+			do
+			{
+				temporaryFile = Path.Combine(directory ?? string.Empty, $".{fileName}.{Guid.NewGuid():N}.tmp");
+			}
+			while (environment.FileExists(temporaryFile));
+
+			try
+			{
+				environment.WriteAllText(temporaryFile, contents);
+				environment.MoveFile(temporaryFile, configPath, true);
+				return true;
+			}
+			catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+			{
+				await environment.Error.WriteLineAsync($"Cannot write configuration file '{configPath}': {ex.Message}");
+				return false;
+			}
+			finally
+			{
+				if (environment.FileExists(temporaryFile))
+				{
+					try
+					{
+						environment.DeleteFile(temporaryFile);
+					}
+					catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+					{
+						await environment.Error.WriteLineAsync($"Cannot delete temporary configuration file '{temporaryFile}': {ex.Message}");
+					}
+				}
+			}
 		}
 
 		static bool Validate(ICliEnvironment environment, ConfigInitValues values, out int maxRows)

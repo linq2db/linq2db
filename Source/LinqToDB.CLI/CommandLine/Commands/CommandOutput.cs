@@ -47,7 +47,7 @@ namespace LinqToDB.CommandLine.Commands
 			if (_temporaryFile == null || _outputFile == null)
 				return true;
 
-			await DisposeWriter().ConfigureAwait(false);
+			await DisposeWriter();
 
 			try
 			{
@@ -63,7 +63,7 @@ namespace LinqToDB.CommandLine.Commands
 
 		public async ValueTask DisposeAsync()
 		{
-			await DisposeWriter().ConfigureAwait(false);
+			await DisposeWriter();
 
 			if (!_committed && _temporaryFile != null)
 			{
@@ -73,7 +73,7 @@ namespace LinqToDB.CommandLine.Commands
 				}
 				catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
 				{
-					await _environment.Error.WriteLineAsync($"Cannot delete temporary output file '{_temporaryFile}': {ex.Message}").ConfigureAwait(false);
+					await _environment.Error.WriteLineAsync($"Cannot delete temporary output file '{_temporaryFile}': {ex.Message}");
 				}
 			}
 		}
@@ -84,7 +84,7 @@ namespace LinqToDB.CommandLine.Commands
 				return;
 
 			_writerDisposed = true;
-			await Writer.DisposeAsync().ConfigureAwait(false);
+			await Writer.DisposeAsync();
 		}
 	}
 }

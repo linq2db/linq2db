@@ -5,7 +5,7 @@ using System.Runtime.InteropServices.ComTypes;
 
 namespace LinqToDB.CommandLine.Commands.Connection
 {
-	static class WindowsCredentialManager
+	static partial class WindowsCredentialManager
 	{
 		const int CredentialTypeGeneric = 1;
 		const int ErrorNotFound          = 1168;
@@ -85,12 +85,12 @@ namespace LinqToDB.CommandLine.Commands.Connection
 		}
 
 		[DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
-		[DllImport("advapi32.dll", EntryPoint = "CredReadW", CharSet = CharSet.Unicode, SetLastError = true)]
+		[LibraryImport("advapi32.dll", EntryPoint = "CredReadW", SetLastError = true, StringMarshalling = StringMarshalling.Utf16)]
 		[return: MarshalAs(UnmanagedType.Bool)]
-		static extern bool CredRead(string target, int type, int flags, out IntPtr credential);
+		private static partial bool CredRead(string target, int type, int flags, out IntPtr credential);
 
 		[DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
-		[DllImport("advapi32.dll")]
-		static extern void CredFree(IntPtr buffer);
+		[LibraryImport("advapi32.dll")]
+		private static partial void CredFree(IntPtr buffer);
 	}
 }

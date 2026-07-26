@@ -111,7 +111,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				var result = await ConnectionExecution.RunAsync(
 					CreateConnectionSettings(),
 					(dataOptions, dataProvider, token) => ExecuteValidatedDatabaseLoop(dataOptions, dataProvider, sql, outputWriter, token),
-					cancellationToken).ConfigureAwait(false);
+					cancellationToken);
 
 				if (result.Error != null)
 					return new QueryExecutionResult(result.StatusCode, result.Error, false);
@@ -164,10 +164,10 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				await _settings.DiagnosticWriter.WriteLineAsync(
 					string.Create(
 						CultureInfo.InvariantCulture,
-						$"Executing write-capable SQL because profile '{_settings.Profile}' has enableExecute=true. Provider: {_settings.Provider}.")).ConfigureAwait(false);
+						$"Executing write-capable SQL because profile '{_settings.Profile}' has enableExecute=true. Provider: {_settings.Provider}."));
 			}
 
-			return await ExecuteDatabaseLoop(dataOptions, dataProvider, sql, outputWriter, cancellationToken).ConfigureAwait(false);
+			return await ExecuteDatabaseLoop(dataOptions, dataProvider, sql, outputWriter, cancellationToken);
 		}
 
 		async Task<QueryExecutionResult> ExecuteDatabaseLoop(DataOptions dataOptions, IDataProvider dataProvider, string sql, TextWriter outputWriter, CancellationToken cancellationToken)
@@ -182,11 +182,11 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				var lockTimeoutCommand = GetLockTimeoutCommand(dataProvider, _settings.LockTimeout);
 
 				if (lockTimeoutCommand != null)
-					await dataConnection.ExecuteAsync(lockTimeoutCommand, cancellationToken).ConfigureAwait(false);
+					await dataConnection.ExecuteAsync(lockTimeoutCommand, cancellationToken);
 
 				// Execute user-provided SQL and get a data reader for the result set.
 				//
-				dataReader = await dataConnection.ExecuteReaderAsync(sql, cancellationToken).ConfigureAwait(false);
+				dataReader = await dataConnection.ExecuteReaderAsync(sql, cancellationToken);
 
 				var reader = dataReader.Reader;
 
@@ -209,49 +209,106 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 
 				var rowCount  = 0;
 				var truncated = false;
+				QueryTruncationReason? truncationReason = null;
+
+				var outputBytes       = 0;
+				var footerReserveBytes = 0;
+
+				async Task<bool> WriteOutputSegment(Func<TextWriter, Task> write, int reservedBytes)
+				{
+					if (_settings.MaxOutputBytes == null)
+					{
+						await write(outputWriter);
+						return true;
+					}
+
+					using var segmentWriter = new StringWriter(CultureInfo.InvariantCulture);
+
+					await write(segmentWriter);
+
+					var segment      = segmentWriter.ToString();
+					var segmentBytes = Encoding.UTF8.GetByteCount(segment);
+
+					if ((long)outputBytes + segmentBytes + reservedBytes > _settings.MaxOutputBytes.Value)
+						return false;
+
+					await outputWriter.WriteAsync(segment.AsMemory(), cancellationToken);
+					outputBytes += segmentBytes;
+
+					return true;
+				}
+
+				if (_settings.MaxOutputBytes != null)
+				{
+					using var footerWriter = new StringWriter(CultureInfo.InvariantCulture);
+
+					await (_settings.Output switch
+					{
+						"json-table" => WriteJsonTableEnd(
+							footerWriter,
+							int.MaxValue,
+							true,
+							QueryTruncationReason.MaxOutputBytes,
+							_settings.MaxOutputBytes,
+							int.MinValue,
+							cancellationToken),
+						"csv"        => Task.CompletedTask,
+						_            => footerWriter.WriteAsync("]".AsMemory(), cancellationToken),
+					});
+
+					footerReserveBytes = Encoding.UTF8.GetByteCount(footerWriter.ToString());
+				}
 
 				// Write the output header based on the specified output format.
 				//
-				switch (_settings.Output)
+				var headerWritten = await (_settings.Output switch
 				{
-					case "csv":
-						// CSV output starts with a header row.
-						//
-						await WriteCsvHeader(outputWriter, columns, cancellationToken).ConfigureAwait(false);
-						break;
-					case "json-table":
-						// JSON table output starts with column metadata and then streams rows.
-						//
-						await WriteJsonTableStart(outputWriter, columns, cancellationToken).ConfigureAwait(false);
-						break;
-					default:
-						// Regular JSON output is an array of row objects.
-						//
-						await outputWriter.WriteAsync("[".AsMemory(), cancellationToken).ConfigureAwait(false);
-						break;
-				}
+					"csv"        => WriteOutputSegment(
+						writer => WriteCsvHeader(writer, columns, cancellationToken),
+						footerReserveBytes),
+					"json-table" => WriteOutputSegment(
+						writer => WriteJsonTableStart(writer, columns, cancellationToken),
+						footerReserveBytes),
+					_            => WriteOutputSegment(
+						writer => writer.WriteAsync("[".AsMemory(), cancellationToken),
+						footerReserveBytes),
+				});
 
-				while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+				if (!headerWritten)
+					return new QueryExecutionResult(
+						StatusCodes.EXPECTED_ERROR,
+						string.Create(CultureInfo.InvariantCulture, $"Query output metadata exceeds the configured maximum output size of {_settings.MaxOutputBytes} bytes."),
+						false);
+
+				while (await reader.ReadAsync(cancellationToken))
 				{
 					// Stop reading after the configured row limit and report truncation.
 					//
 					if (_settings.MaxRows > 0 && rowCount >= _settings.MaxRows)
 					{
-						truncated = true;
+						truncated        = true;
+						truncationReason = QueryTruncationReason.MaxRows;
 						break;
 					}
 
 					// Read one result row as normalized string values.
 					//
-					var row = await ReadRow(reader, columns, cancellationToken).ConfigureAwait(false);
+					var row = await ReadRow(reader, columns, cancellationToken);
 
 					// Write the row using the selected output format.
 					//
-					switch (_settings.Output)
+					var rowWritten = _settings.Output switch
 					{
-						case "csv"       : await WriteCsvRow      (outputWriter, row,                    cancellationToken).ConfigureAwait(false); break;
-						case "json-table": await WriteJsonTableRow(outputWriter, row,          rowCount, cancellationToken).ConfigureAwait(false); break;
-						default          : await WriteJsonRow     (outputWriter, columns, row, rowCount, cancellationToken).ConfigureAwait(false); break;
+						"csv"        => await WriteOutputSegment(writer => WriteCsvRow      (writer, row,                    cancellationToken), footerReserveBytes),
+						"json-table" => await WriteOutputSegment(writer => WriteJsonTableRow(writer, row,          rowCount, cancellationToken), footerReserveBytes),
+						_            => await WriteOutputSegment(writer => WriteJsonRow     (writer, columns, row, rowCount, cancellationToken), footerReserveBytes),
+					};
+
+					if (!rowWritten)
+					{
+						truncated        = true;
+						truncationReason = QueryTruncationReason.MaxOutputBytes;
+						break;
 					}
 
 					rowCount++;
@@ -261,23 +318,33 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 
 				// Close the selected output format.
 				//
-				switch (_settings.Output)
+				var footerWritten = await (_settings.Output switch
 				{
-					case "json-table": await WriteJsonTableEnd(outputWriter, rowCount, truncated, recordsAffected, cancellationToken).ConfigureAwait(false); break;
-					case "csv"       : break;
-					default          : await outputWriter.WriteAsync("]".AsMemory(), cancellationToken).ConfigureAwait(false); break;
-				}
+					"json-table" => WriteOutputSegment(
+						writer => WriteJsonTableEnd(writer, rowCount, truncated, truncationReason, _settings.MaxOutputBytes, recordsAffected, cancellationToken),
+						0),
+					"csv"        => Task.FromResult(true),
+					_            => WriteOutputSegment(
+						writer => writer.WriteAsync("]".AsMemory(), cancellationToken),
+						0),
+				});
 
-				await outputWriter.FlushAsync(cancellationToken).ConfigureAwait(false);
+				if (!footerWritten)
+					return new QueryExecutionResult(
+						StatusCodes.EXPECTED_ERROR,
+						string.Create(CultureInfo.InvariantCulture, $"Query output footer exceeds the configured maximum output size of {_settings.MaxOutputBytes} bytes."),
+						false);
 
-				return new QueryExecutionResult(StatusCodes.SUCCESS, null, truncated);
+				await outputWriter.FlushAsync(cancellationToken);
+
+				return new QueryExecutionResult(StatusCodes.SUCCESS, null, truncated, rowCount, truncationReason);
 			}
 			finally
 			{
 				if (dataReader != null)
-					await dataReader.DisposeAsync().AsTask().ConfigureAwait(false);
+					await dataReader.DisposeAsync().AsTask();
 
-				await dataConnection.DisposeAsync().AsTask().ConfigureAwait(false);
+				await dataConnection.DisposeAsync().AsTask();
 			}
 		}
 
@@ -329,7 +396,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 						continue;
 				}
 
-				if (await reader.IsDBNullAsync(i, cancellationToken).ConfigureAwait(false))
+				if (await reader.IsDBNullAsync(i, cancellationToken))
 					continue;
 
 				row[i] = ReadFieldAsString(reader, columns[i].ActualFieldType, i);
@@ -383,79 +450,101 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		static async Task WriteJsonRow(TextWriter output, QueryOutputColumn[] columns, string?[] row, int rowIndex, CancellationToken cancellationToken)
 		{
 			if (rowIndex > 0)
-				await output.WriteAsync(",".AsMemory(), cancellationToken).ConfigureAwait(false);
+				await output.WriteAsync(",".AsMemory(), cancellationToken);
 
-			await output.WriteAsync("{".AsMemory(), cancellationToken).ConfigureAwait(false);
+			await output.WriteAsync("{".AsMemory(), cancellationToken);
 
 			for (var i = 0; i < columns.Length; i++)
 			{
 				if (i > 0)
-					await output.WriteAsync(",".AsMemory(), cancellationToken).ConfigureAwait(false);
+					await output.WriteAsync(",".AsMemory(), cancellationToken);
 
-				await WriteJsonString(output, columns[i].Name, cancellationToken).ConfigureAwait(false);
-				await output.WriteAsync(":".AsMemory(), cancellationToken).ConfigureAwait(false);
-				await WriteJsonValue(output, row[i], cancellationToken).ConfigureAwait(false);
+				await WriteJsonString(output, columns[i].Name, cancellationToken);
+				await output.WriteAsync(":".AsMemory(), cancellationToken);
+				await WriteJsonValue(output, row[i], cancellationToken);
 			}
 
-			await output.WriteAsync("}".AsMemory(), cancellationToken).ConfigureAwait(false);
+			await output.WriteAsync("}".AsMemory(), cancellationToken);
 		}
 
 		static async Task WriteJsonTableStart(TextWriter output, QueryOutputColumn[] columns, CancellationToken cancellationToken)
 		{
-			await output.WriteAsync("{\"columns\":[".AsMemory(), cancellationToken).ConfigureAwait(false);
+			await output.WriteAsync("{\"columns\":[".AsMemory(), cancellationToken);
 
 			for (var i = 0; i < columns.Length; i++)
 			{
 				if (i > 0)
-					await output.WriteAsync(",".AsMemory(), cancellationToken).ConfigureAwait(false);
+					await output.WriteAsync(",".AsMemory(), cancellationToken);
 
-				await output.WriteAsync("{\"ordinal\":".AsMemory(),   cancellationToken).ConfigureAwait(false);
-				await output.WriteAsync(columns[i].Ordinal.ToString(CultureInfo.InvariantCulture).AsMemory(), cancellationToken).ConfigureAwait(false);
-				await output.WriteAsync(",\"name\":".AsMemory(),      cancellationToken).ConfigureAwait(false);
-				await WriteJsonString  (output, columns[i].Name,      cancellationToken).ConfigureAwait(false);
-				await output.WriteAsync(",\"fieldType\":".AsMemory(), cancellationToken).ConfigureAwait(false);
-				await WriteJsonString  (output, columns[i].FieldType, cancellationToken).ConfigureAwait(false);
-				await output.WriteAsync(",\"providerSpecificFieldType\":".AsMemory(), cancellationToken).ConfigureAwait(false);
-				await WriteJsonString  (output, columns[i].ProviderSpecificFieldType, cancellationToken).ConfigureAwait(false);
-				await output.WriteAsync(",\"dataTypeName\":".AsMemory(), cancellationToken).ConfigureAwait(false);
-				await WriteJsonString  (output, columns[i].DataTypeName, cancellationToken).ConfigureAwait(false);
-				await output.WriteAsync("}".AsMemory(), cancellationToken).ConfigureAwait(false);
+				await output.WriteAsync("{\"ordinal\":".AsMemory(),   cancellationToken);
+				await output.WriteAsync(columns[i].Ordinal.ToString(CultureInfo.InvariantCulture).AsMemory(), cancellationToken);
+				await output.WriteAsync(",\"name\":".AsMemory(),      cancellationToken);
+				await WriteJsonString  (output, columns[i].Name,      cancellationToken);
+				await output.WriteAsync(",\"fieldType\":".AsMemory(), cancellationToken);
+				await WriteJsonString  (output, columns[i].FieldType, cancellationToken);
+				await output.WriteAsync(",\"providerSpecificFieldType\":".AsMemory(), cancellationToken);
+				await WriteJsonString  (output, columns[i].ProviderSpecificFieldType, cancellationToken);
+				await output.WriteAsync(",\"dataTypeName\":".AsMemory(), cancellationToken);
+				await WriteJsonString  (output, columns[i].DataTypeName, cancellationToken);
+				await output.WriteAsync("}".AsMemory(), cancellationToken);
 			}
 
-			await output.WriteAsync("],\"rows\":[".AsMemory(), cancellationToken).ConfigureAwait(false);
+			await output.WriteAsync("],\"rows\":[".AsMemory(), cancellationToken);
 		}
 
 		static async Task WriteJsonTableRow(TextWriter output, string?[] row, int rowIndex, CancellationToken cancellationToken)
 		{
 			if (rowIndex > 0)
-				await output.WriteAsync(",".AsMemory(), cancellationToken).ConfigureAwait(false);
+				await output.WriteAsync(",".AsMemory(), cancellationToken);
 
-			await output.WriteAsync("[".AsMemory(), cancellationToken).ConfigureAwait(false);
+			await output.WriteAsync("[".AsMemory(), cancellationToken);
 
 			for (var i = 0; i < row.Length; i++)
 			{
 				if (i > 0)
-					await output.WriteAsync(",".AsMemory(), cancellationToken).ConfigureAwait(false);
+					await output.WriteAsync(",".AsMemory(), cancellationToken);
 
-				await WriteJsonValue(output, row[i], cancellationToken).ConfigureAwait(false);
+				await WriteJsonValue(output, row[i], cancellationToken);
 			}
 
-			await output.WriteAsync("]".AsMemory(), cancellationToken).ConfigureAwait(false);
+			await output.WriteAsync("]".AsMemory(), cancellationToken);
 		}
 
-		static async Task WriteJsonTableEnd(TextWriter output, int rowCount, bool truncated, int? recordsAffected, CancellationToken cancellationToken)
+		static async Task WriteJsonTableEnd(
+			TextWriter              output,
+			int                     rowCount,
+			bool                    truncated,
+			QueryTruncationReason?  truncationReason,
+			int?                    maxOutputBytes,
+			int?                    recordsAffected,
+			CancellationToken       cancellationToken)
 		{
-			await output.WriteAsync("],\"rowCount\":".AsMemory(), cancellationToken).ConfigureAwait(false);
-			await output.WriteAsync(rowCount.ToString(CultureInfo.InvariantCulture).AsMemory(), cancellationToken).ConfigureAwait(false);
-			await output.WriteAsync(",\"truncated\":".AsMemory(), cancellationToken).ConfigureAwait(false);
-			await output.WriteAsync((truncated ? "true" : "false").AsMemory(), cancellationToken).ConfigureAwait(false);
-			if (recordsAffected != null)
+			await output.WriteAsync("],\"rowCount\":".AsMemory(), cancellationToken);
+			await output.WriteAsync(rowCount.ToString(CultureInfo.InvariantCulture).AsMemory(), cancellationToken);
+			await output.WriteAsync(",\"truncated\":".AsMemory(), cancellationToken);
+			await output.WriteAsync((truncated ? "true" : "false").AsMemory(), cancellationToken);
+			if (truncationReason != null)
 			{
-				await output.WriteAsync(",\"recordsAffected\":".AsMemory(), cancellationToken).ConfigureAwait(false);
-				await output.WriteAsync(recordsAffected.Value.ToString(CultureInfo.InvariantCulture).AsMemory(), cancellationToken).ConfigureAwait(false);
+				await output.WriteAsync(",\"truncationReason\":".AsMemory(), cancellationToken);
+				await WriteJsonString(
+					output,
+					truncationReason == QueryTruncationReason.MaxRows ? "maxRows" : "maxOutputBytes",
+					cancellationToken);
 			}
 
-			await output.WriteAsync("}".AsMemory(), cancellationToken).ConfigureAwait(false);
+			if (truncationReason == QueryTruncationReason.MaxOutputBytes && maxOutputBytes != null)
+			{
+				await output.WriteAsync(",\"maxOutputBytes\":".AsMemory(), cancellationToken);
+				await output.WriteAsync(maxOutputBytes.Value.ToString(CultureInfo.InvariantCulture).AsMemory(), cancellationToken);
+			}
+
+			if (recordsAffected != null)
+			{
+				await output.WriteAsync(",\"recordsAffected\":".AsMemory(), cancellationToken);
+				await output.WriteAsync(recordsAffected.Value.ToString(CultureInfo.InvariantCulture).AsMemory(), cancellationToken);
+			}
+
+			await output.WriteAsync("}".AsMemory(), cancellationToken);
 		}
 
 		static async Task WriteCsvHeader(TextWriter output, QueryOutputColumn[] columns, CancellationToken cancellationToken)
@@ -463,12 +552,12 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			for (var i = 0; i < columns.Length; i++)
 			{
 				if (i > 0)
-					await output.WriteAsync(",".AsMemory(), cancellationToken).ConfigureAwait(false);
+					await output.WriteAsync(",".AsMemory(), cancellationToken);
 
-				await WriteCsvValue(output, columns[i].Name, cancellationToken).ConfigureAwait(false);
+				await WriteCsvValue(output, columns[i].Name, cancellationToken);
 			}
 
-			await output.WriteAsync(Environment.NewLine.AsMemory(), cancellationToken).ConfigureAwait(false);
+			await output.WriteAsync(Environment.NewLine.AsMemory(), cancellationToken);
 		}
 
 		static async Task WriteCsvRow(TextWriter output, string?[] row, CancellationToken cancellationToken)
@@ -476,13 +565,13 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			for (var i = 0; i < row.Length; i++)
 			{
 				if (i > 0)
-					await output.WriteAsync(",".AsMemory(), cancellationToken).ConfigureAwait(false);
+					await output.WriteAsync(",".AsMemory(), cancellationToken);
 
 				if (row[i] != null)
-					await WriteCsvValue(output, row[i]!, cancellationToken).ConfigureAwait(false);
+					await WriteCsvValue(output, row[i]!, cancellationToken);
 			}
 
-			await output.WriteAsync(Environment.NewLine.AsMemory(), cancellationToken).ConfigureAwait(false);
+			await output.WriteAsync(Environment.NewLine.AsMemory(), cancellationToken);
 		}
 
 		static QueryOutputColumn CreateOutputColumn(DbDataReader reader, int ordinal, Type providerSpecificType)
@@ -998,13 +1087,13 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		{
 			if (value.Length > 0 && value.IndexOfAny([',', '"', '\r', '\n']) < 0)
 			{
-				await output.WriteAsync(value.AsMemory(), cancellationToken).ConfigureAwait(false);
+				await output.WriteAsync(value.AsMemory(), cancellationToken);
 				return;
 			}
 
-			await output.WriteAsync("\"".AsMemory(), cancellationToken).ConfigureAwait(false);
-			await output.WriteAsync(value.Replace("\"", "\"\"", StringComparison.Ordinal).AsMemory(), cancellationToken).ConfigureAwait(false);
-			await output.WriteAsync("\"".AsMemory(), cancellationToken).ConfigureAwait(false);
+			await output.WriteAsync("\"".AsMemory(), cancellationToken);
+			await output.WriteAsync(value.Replace("\"", "\"\"", StringComparison.Ordinal).AsMemory(), cancellationToken);
+			await output.WriteAsync("\"".AsMemory(), cancellationToken);
 		}
 	}
 }

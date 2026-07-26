@@ -11,14 +11,17 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 	internal sealed record McpServerConfiguration(
 		string Title,
 		string Description,
-		string Instructions)
+		string Instructions,
+		int    MaxResponseBytes)
 	{
 		const string SectionName         = "mcp";
 		const string DefaultTitle        = "linq2db Database Tools";
 		const string DefaultDescription  = "Provider-aware database schema inspection and SQL access through linq2db CLI.";
 		const string DefaultInstructions = "Call linq2db_info first to discover available database profiles and provider dialects. Call linq2db_schema before generating SQL when database objects are unknown. Use linq2db_query for read-only SQL. Call linq2db_skill for the full linq2db CLI/MCP usage guide, supported providers, configuration rules, and safety guidance. Use linq2db_execute only when it is available and the user explicitly approved the exact write-capable operation.";
 
-		public static McpServerConfiguration Default { get; } = new(DefaultTitle, DefaultDescription, DefaultInstructions);
+		public const int DefaultMaxResponseBytes = 8 * 1024 * 1024;
+
+		public static McpServerConfiguration Default { get; } = new(DefaultTitle, DefaultDescription, DefaultInstructions, DefaultMaxResponseBytes);
 
 		public static bool TryLoad(ICliEnvironment environment, string? fileName, out McpServerConfiguration configuration, out string? error)
 		{
@@ -71,9 +74,23 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 				var     title            = DefaultTitle;
 				var     description      = DefaultDescription;
 				string? userInstructions = null;
+				var     maxResponseBytes = DefaultMaxResponseBytes;
 
 				foreach (var property in section.EnumerateObject())
 				{
+					if (string.Equals(property.Name, "maxResponseBytes", StringComparison.Ordinal))
+					{
+						if (property.Value.ValueKind != JsonValueKind.Number
+							|| !property.Value.TryGetInt32(out maxResponseBytes)
+							|| !IsValidMaxResponseBytes(maxResponseBytes))
+						{
+							error = $"Configuration file '{fileName}' section '{SectionName}' property '{property.Name}' must be a positive 32-bit integer.";
+							return false;
+						}
+
+						continue;
+					}
+
 					if (property.Name is not ("title" or "description" or "instructions"))
 					{
 						error = $"Configuration file '{fileName}' section '{SectionName}' contains unknown property '{property.Name}'.";
@@ -98,11 +115,16 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 					? DefaultInstructions
 					: string.Concat(DefaultInstructions, "\n\n", userInstructions);
 
-				configuration = new McpServerConfiguration(title, description, instructions);
+				configuration = new McpServerConfiguration(title, description, instructions, maxResponseBytes);
 				error         = null;
 
 				return true;
 			}
+		}
+
+		public static bool IsValidMaxResponseBytes(int value)
+		{
+			return value > 0;
 		}
 	}
 }

@@ -14,9 +14,6 @@ using NUnit.Framework;
 
 using Shouldly;
 
-#nullable enable annotations
-#nullable disable warnings
-
 #pragma warning disable JSON002 // Allow JSON in test code for config file content.
 
 namespace Tests.LinqToDB.CLI
@@ -370,6 +367,16 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public void QueryGuardAllowsSqlServerQuotedIdentifier()
+		{
+			var provider = DataConnection.GetDataProvider("SqlServer", "Server=.;Database=test;Trusted_Connection=True")!;
+
+			var result = ReadOnlySqlGuard.Validate(provider, "select * from \"My Table\"");
+
+			(result.IsAllowed).ShouldBe(true);
+		}
+
+		[Test]
 		public void QueryGuardRejectsSqlServerDml()
 		{
 			var provider = DataConnection.GetDataProvider("SqlServer", "Server=.;Database=test;Trusted_Connection=True")!;
@@ -378,7 +385,7 @@ namespace Tests.LinqToDB.CLI
 
 			{
 				(result.IsAllowed).ShouldBe(false);
-				(result.Error).ShouldContain("UpdateStatement");
+				result.Error!.ShouldContain("UpdateStatement");
 			}
 		}
 
@@ -391,7 +398,7 @@ namespace Tests.LinqToDB.CLI
 
 			{
 				(result.IsAllowed).ShouldBe(false);
-				(result.Error).ShouldContain("EXECUTE is not allowed");
+				result.Error!.ShouldContain("EXECUTE is not allowed");
 			}
 		}
 
@@ -404,7 +411,7 @@ namespace Tests.LinqToDB.CLI
 
 			{
 				(result.IsAllowed).ShouldBe(false);
-				(result.Error).ShouldContain("SELECT INTO is not allowed");
+				result.Error!.ShouldContain("SELECT INTO is not allowed");
 			}
 		}
 
@@ -428,7 +435,7 @@ namespace Tests.LinqToDB.CLI
 
 			{
 				(result.IsAllowed).ShouldBe(false);
-				(result.Error).ShouldContain("token 'INTO' is not allowed");
+				result.Error!.ShouldContain("token 'INTO' is not allowed");
 			}
 		}
 
@@ -452,7 +459,7 @@ namespace Tests.LinqToDB.CLI
 
 			{
 				(result.IsAllowed).ShouldBe(false);
-				(result.Error).ShouldContain("Only single SQL statement is allowed.");
+				result.Error!.ShouldContain("Only single SQL statement is allowed.");
 			}
 		}
 
@@ -1872,7 +1879,7 @@ namespace Tests.LinqToDB.CLI
 		private static string CreateSqliteDatabase()
 		{
 			var fileName     = Path.Combine(TestContext.CurrentContext.WorkDirectory, $"query-{Guid.NewGuid():N}.db");
-			var dataProvider = DataConnection.GetDataProvider("SQLite", $"Data Source={fileName};Pooling=False");
+			var dataProvider = DataConnection.GetDataProvider("SQLite", $"Data Source={fileName};Pooling=False")!;
 			using var db     = new DataConnection(new DataOptions().UseConnectionString(dataProvider, $"Data Source={fileName};Pooling=False"));
 
 			db.Execute("""
@@ -1911,109 +1918,5 @@ namespace Tests.LinqToDB.CLI
 
 		private sealed record CliResult(int ExitCode, string Output, string Error);
 
-		private sealed class TestCliEnvironment : ICliEnvironment
-		{
-			private readonly StringWriter _output = new();
-			private readonly StringWriter _error  = new();
-
-			public Dictionary<string, string> Files { get; } = new(StringComparer.Ordinal);
-			public Dictionary<string, string> EnvironmentVariables { get; } = new(StringComparer.Ordinal);
-			public Dictionary<string, (string User, string Password)> WindowsCredentials { get; } = new(StringComparer.Ordinal);
-
-			public TextWriter Out   => _output;
-			public TextWriter Error => _error;
-
-			public int BufferWidth => 120;
-
-			public string Output      => _output.ToString();
-			public string ErrorOutput => _error .ToString();
-
-			public bool FileExists(string path)
-			{
-				return Files.ContainsKey(path) || File.Exists(path);
-			}
-
-			public string ReadAllText(string path)
-			{
-				return Files[path];
-			}
-
-			public void WriteAllText(string path, string contents)
-			{
-				Files[path] = contents;
-			}
-
-			public TextWriter CreateTextWriter(string path)
-			{
-				return new TestFileWriter(contents => Files[path] = contents);
-			}
-
-			public void MoveFile(string sourcePath, string destinationPath, bool overwrite)
-			{
-				if (!overwrite && Files.ContainsKey(destinationPath))
-					throw new IOException($"File '{destinationPath}' already exists.");
-
-				Files[destinationPath] = Files[sourcePath];
-				Files.Remove(sourcePath);
-			}
-
-			public void DeleteFile(string path)
-			{
-				Files.Remove(path);
-			}
-
-			public void CreateDirectory(string path)
-			{
-			}
-
-			public string? GetEnvironmentVariable(string name)
-			{
-				return EnvironmentVariables.GetValueOrDefault(name);
-			}
-
-			public bool TryGetWindowsCredentials(string target, out string? user, out string? password, out string? error)
-			{
-				if (WindowsCredentials.TryGetValue(target, out var credentials))
-				{
-					user     = credentials.User;
-					password = credentials.Password;
-					error    = null;
-					return true;
-				}
-
-				user     = null;
-				password = null;
-				error    = $"Windows Credential Manager target '{target}' was not found for the current Windows account.";
-				return false;
-			}
-
-			sealed class TestFileWriter(Action<string> save) : StringWriter
-			{
-				bool _saved;
-
-				public override ValueTask DisposeAsync()
-				{
-					Save();
-					return base.DisposeAsync();
-				}
-
-				protected override void Dispose(bool disposing)
-				{
-					if (disposing)
-						Save();
-
-					base.Dispose(disposing);
-				}
-
-				void Save()
-				{
-					if (_saved)
-						return;
-
-					save(ToString());
-					_saved = true;
-				}
-			}
-		}
 	}
 }
