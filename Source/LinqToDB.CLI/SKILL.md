@@ -83,7 +83,7 @@ With `/pass` and no value, `cmdkey` prompts for the password interactively. Refe
 
 `dotnet linq2db query` and `dotnet linq2db mcp` execute SQL through linq2db database providers.
 
-The CLI can use provider/runtime dependencies bundled with the CLI package and selected externally loaded providers. Use linq2db provider names, not test data source aliases from linq2db tests.
+The CLI can use provider/runtime dependencies bundled with the CLI package and selected externally loaded providers.
 
 `linq2db_info` returns a compact `supportedProviders` list with provider names, dialects, whether the provider runtime is bundled, and external-provider notes.
 
@@ -96,8 +96,7 @@ The CLI can use provider/runtime dependencies bundled with the CLI package and s
 - Oracle Managed
 - Firebird
 - Sybase ASE
-- ODBC
-- OLE DB
+- Microsoft Access through its ODBC or OLE DB provider variants
 - ClickHouse
 - DuckDB
 - YDB
@@ -115,13 +114,12 @@ The CLI package includes provider/runtime dependencies for these provider famili
 - Oracle Managed
 - Firebird
 - Sybase ASE
-- ODBC
-- OLE DB
+- Microsoft Access ODBC/OLE DB bridge assemblies
 - ClickHouse
 - DuckDB
 - YDB
 
-Provider-specific behavior still depends on installed native/runtime dependencies where applicable. Some providers, such as ODBC and OLE DB, are bridge providers and their SQL syntax and runtime requirements depend on the selected driver.
+Provider-specific behavior still depends on installed native/runtime dependencies where applicable. Bundled ODBC/OLE DB bridge assemblies support provider-specific variants such as Microsoft Access; they do not provide arbitrary ODBC or OLE DB database support.
 
 ### External provider loading
 
@@ -180,9 +178,11 @@ External provider dependencies must be available next to the specified provider 
 
 ### Provider Names
 
-Use linq2db provider names.
+MCP agents should call `linq2db_info` and use one of the returned `supportedProviders[].providerNames`.
 
-Do not use test data source aliases from linq2db tests.
+For direct CLI configuration and development reference, the constants in `LinqToDB.ProviderName` are the source of truth.
+
+Do not use test data source aliases from the linq2db test suite.
 
 Examples:
 
@@ -273,8 +273,7 @@ Typical dialect families:
 | ClickHouse | ClickHouse SQL |
 | DuckDB | DuckDB SQL |
 | Sybase ASE | Sybase ASE T-SQL |
-| ODBC | Provider-specific SQL |
-| OLE DB | Provider-specific SQL |
+| Microsoft Access | Microsoft Access SQL |
 | YDB | YDB SQL |
 
 Do not assume one dialect's row limiting, identifier quoting, date/time functions, or metadata syntax works for another provider.

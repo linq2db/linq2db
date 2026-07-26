@@ -33,6 +33,8 @@ using MySqlDataDecimal = MySqlData::MySql.Data.Types.MySqlDecimal;
 
 namespace Tests.DataProvider
 {
+	// QueryExecutionExecutor reads provider-specific values directly from DbDataReader.
+	// Keep the provider matrix here aligned with its invariant output formatting contract.
 	[TestFixture]
 	public class ProviderSpecificReaderValueTests : DataProviderTestBase
 	{

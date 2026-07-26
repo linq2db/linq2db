@@ -389,6 +389,18 @@ namespace Tests.LinqToDB.CLI
 			}
 		}
 
+		[TestCase("with cte as (select 1) update Person set Name = 'x'")]
+		[TestCase("with cte as (select 1) delete from Person")]
+		[TestCase("with cte as (select 1) insert into Person(Id) select * from cte")]
+		public void QueryGuardRejectsWriteStatementAfterCte(string sql)
+		{
+			var provider = DataConnection.GetDataProvider("SQLite", "Data Source=:memory:")!;
+
+			var result = ReadOnlySqlGuard.Validate(provider, sql);
+
+			(result.IsAllowed).ShouldBe(false);
+		}
+
 		[Test]
 		public void QueryGuardRejectsSqlServerExecute()
 		{
