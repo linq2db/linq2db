@@ -115,7 +115,7 @@ See [`AGENTS.md`](../../AGENTS.md) → *Before summarizing a PR*: read the actua
 
 ### Consult the knowledge base before investigating, designing, or orienting
 
-See [`AGENTS.md`](../../AGENTS.md) → *Consult the knowledge base first*. Default to reading `areas/<AREA>/{INDEX,issues,decisions,patterns,tech-debt}.md` / `architecture/*.md` directly (or `kb-search.ps1` for a keyword sweep); reserve `/kb-ask` for cross-area synthesis. Orientation only — confirm against source, code wins. Skip silently when the KB isn't built. The task-flow rules below (*Before coding a fix or feature*, *Investigating & fixing bugs*, *Capability self-assessment*) point back here.
+See [`AGENTS.md`](../../AGENTS.md) → *Consult the knowledge base first*. Default to reading `areas/<AREA>/{INDEX,issues,decisions,patterns,tech-debt}.md` / `architecture/*.md` directly (or `kb-search.ps1` for a keyword sweep — it takes a manifest JSON on stdin or `-ManifestFile <path>`, and has **no** `-Query` / `-Top` parameters); reserve `/kb-ask` for cross-area synthesis. Orientation only — confirm against source, code wins. Skip silently when the KB isn't built. The task-flow rules below (*Before coding a fix or feature*, *Investigating & fixing bugs*, *Capability self-assessment*) point back here.
 
 ### Before coding a fix or feature
 
