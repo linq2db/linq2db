@@ -18,7 +18,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 	/// </summary>
 	public static class ExternalProviderLoader
 	{
-		static readonly Lock                         _loadLock        = new();
+		static readonly Lock                         _loadLock         = new();
 		static readonly Dictionary<string, Assembly> _loadedAssemblies = new(StringComparer.OrdinalIgnoreCase);
 
 		/// <summary>
@@ -38,8 +38,8 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 						You need to install it manually and specify provider path using '--provider-location <path_to_assembly>' option.
 						Provider could be downloaded from:
 						- for Windows: https://www.nuget.org/packages/Net.IBM.Data.Db2
-						- for Linux: https://www.nuget.org/packages/Net.IBM.Data.Db2-lnx
-						- for macOS: https://www.nuget.org/packages/Net.IBM.Data.Db2-osx
+						- for Linux:   https://www.nuget.org/packages/Net.IBM.Data.Db2-lnx
+						- for macOS:   https://www.nuget.org/packages/Net.IBM.Data.Db2-osx
 						""";
 					return false;
 				}
@@ -104,9 +104,9 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 
 		static bool IsDB2FamilyProvider(string provider)
 		{
-			return string.Equals(provider, ProviderName.DB2,     StringComparison.OrdinalIgnoreCase)
-				|| string.Equals(provider, ProviderName.DB2LUW,  StringComparison.OrdinalIgnoreCase)
-				|| string.Equals(provider, ProviderName.DB2zOS,  StringComparison.OrdinalIgnoreCase)
+			return string.Equals(provider, ProviderName.DB2,         StringComparison.OrdinalIgnoreCase)
+				|| string.Equals(provider, ProviderName.DB2LUW,      StringComparison.OrdinalIgnoreCase)
+				|| string.Equals(provider, ProviderName.DB2zOS,      StringComparison.OrdinalIgnoreCase)
 				|| string.Equals(provider, ProviderName.InformixDB2, StringComparison.OrdinalIgnoreCase);
 		}
 
