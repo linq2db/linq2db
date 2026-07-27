@@ -131,8 +131,8 @@ Print a single plan preview that includes:
 
 Then run the **mode-choice gate** defined in [`review-orchestration.md`](../../docs/review-orchestration.md) → **Mode-choice gate**. Verify-mode specifics:
 
+- On `interactive` (default): walk every reviewable item (partial-fix follow-ups, new findings, out-of-scope observations, baselines anomalies, audited threads) per the orchestration doc's order, with per-item `fix | reject | accept-for-post`. Items accepted for post accumulate into the final draft review; in-place edits run after the walk completes.
 - On `submit-all`: post the new draft review via `post-pr-review.ps1`, run the step-2b thread-disposition bundle through `post-pr-thread-replies.ps1`, and run `apply-verify-writes.ps1` for prior-review in-place edits (step 9 below). One preview, one approval, all writes go.
-- On `interactive`: walk every reviewable item (partial-fix follow-ups, new findings, out-of-scope observations, baselines anomalies, audited threads) per the orchestration doc's order, with per-item `fix | reject | accept-for-post`. Items accepted for post accumulate into the final draft review; in-place edits run after the walk completes.
 - On `cancel`: exit without writes.
 
 ### 9. Apply in-place edits

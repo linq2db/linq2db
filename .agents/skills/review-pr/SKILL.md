@@ -320,8 +320,8 @@ Then show the user:
 
 Then run the **mode-choice gate** defined in [`review-orchestration.md`](../../docs/review-orchestration.md) → **Mode-choice gate**.
 
-- On `submit-all` (default): post the pending review via `post-pr-review.ps1` and run the step-2b thread-disposition bundle through `post-pr-thread-replies.ps1` (the same call that handles Fixed/Inaccurate replies also carries any `{ unresolve: true }` entries for Still-actual threads closed by others).
-- On `interactive`: walk every reviewable item (body / line / file findings, out-of-scope observations, baselines anomalies, audited threads) per the orchestration doc's order, with per-item `fix | reject | accept-for-post`. When the item count exceeds 20, propose groupings first (per the orchestration doc). At the end of the walk, post the accumulated `accept-for-post` set as one draft review and run the same thread-disposition bundle.
+- On `interactive` (default): walk every reviewable item (body / line / file findings, out-of-scope observations, baselines anomalies, audited threads) per the orchestration doc's order, with per-item `fix | reject | accept-for-post`. When the item count exceeds 20, propose groupings first (per the orchestration doc). At the end of the walk, post the accumulated `accept-for-post` set as one draft review and run the same thread-disposition bundle.
+- On `submit-all`: post the pending review via `post-pr-review.ps1` and run the step-2b thread-disposition bundle through `post-pr-thread-replies.ps1` (the same call that handles Fixed/Inaccurate replies also carries any `{ unresolve: true }` entries for Still-actual threads closed by others).
 - On `cancel`: exit without writes.
 
 **Posting mechanics — manifest-script format, invocation, manifest-to-finding mapping, verify semantics, heredoc caveats, and the stdout reporting shape — are defined in [`.agents/docs/review-posting.md`](../../docs/review-posting.md)**. The skill's job here is to supply the per-review content that fills the manifest template.
