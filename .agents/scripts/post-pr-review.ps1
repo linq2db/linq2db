@@ -164,6 +164,69 @@ for ($i = 0; $i -lt $lineComments.Count; $i++) {
     $comments += [pscustomobject]$c
 }
 
+# --- Anchor pre-validation -------------------------------------------------
+# The REST review-create is ATOMIC: one lineComments[] entry whose line falls
+# outside a GitHub-visible diff hunk rejects the WHOLE review with HTTP 422
+# "Line could not be resolved", losing every other comment in the batch. Local
+# `git diff` is not a safe proxy — GitHub's rename-aware PR diff exposes fewer
+# lines than a local full-add rendering of a renamed file. So resolve the real
+# hunk ranges from the API and fail fast, naming the offenders, before any write.
+if ($comments.Count -gt 0) {
+    $prFiles = @()
+    $page = 1
+    while ($true) {
+        $fr = Invoke-GhJson -ArgumentList @('api', "repos/$owner/$repo/pulls/$pr/files?per_page=100&page=$page")
+        if (-not $fr.ok) { Exit-WithError "failed to fetch PR files for anchor validation: $($fr.error)" }
+        $batch = @($fr.data)
+        $prFiles += $batch
+        if ($batch.Count -lt 100) { break }
+        $page++
+        if ($page -gt 30) { break }
+    }
+
+    $rangesByPath = @{}
+    foreach ($f in $prFiles) {
+        $ranges = @()
+        if ($f.patch) {
+            foreach ($mm in [regex]::Matches([string]$f.patch, '@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@')) {
+                $from = [int]$mm.Groups[1].Value
+                $len  = if ($mm.Groups[2].Success) { [int]$mm.Groups[2].Value } else { 1 }
+                # Parenthesise the end expression: PowerShell's comma binds tighter than `+`,
+                # so `@($from, $from + $len - 1)` would parse as `($from, $from) + $len - 1`.
+                if ($len -gt 0) { $ranges += ,@($from, ($from + $len - 1)) }
+            }
+        }
+        $rangesByPath[[string]$f.filename] = $ranges
+    }
+
+    $anchorErrors = @()
+    for ($i = 0; $i -lt $comments.Count; $i++) {
+        $c = $comments[$i]
+        if (-not $rangesByPath.ContainsKey($c.path)) {
+            $anchorErrors += "lineComments[$i] ($($c.path):$($c.line)): path is not in the PR diff — route this finding to fileComments[] or the review body"
+            continue
+        }
+        $ranges = $rangesByPath[$c.path]
+        foreach ($probe in @(
+            @{ label = 'line';       value = $c.line },
+            @{ label = 'start_line'; value = $(if ($c.PSObject.Properties['start_line']) { $c.start_line } else { $null }) }
+        )) {
+            if ($null -eq $probe.value) { continue }
+            $hit = $false
+            foreach ($r in $ranges) { if ($probe.value -ge $r[0] -and $probe.value -le $r[1]) { $hit = $true; break } }
+            if (-not $hit) {
+                $shown = ($ranges | ForEach-Object { "$($_[0])-$($_[1])" }) -join ', '
+                if (-not $shown) { $shown = '(no hunks)' }
+                $anchorErrors += "lineComments[$i] ($($c.path)): $($probe.label) $($probe.value) is outside the PR's diff hunks [$shown]"
+            }
+        }
+    }
+
+    if ($anchorErrors.Count -gt 0) {
+        Exit-WithError ("anchor validation failed — nothing was posted:`n  " + ($anchorErrors -join "`n  "))
+    }
+}
+
 $payload = [pscustomobject]@{
     commit_id = $commitId
     body = $body
