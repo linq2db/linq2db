@@ -17,6 +17,14 @@ Posted as a plain comment on the PR (not a review comment):
 
 The canonical `test-<name>` pipeline names are also enumerated in [`Build/Azure/pipelines/testing.yml`](../../Build/Azure/pipelines/testing.yml) — its `Build.DefinitionName` switch maps each to a `db_filter` (`test-access`, `test-db2`, `test-firebird`, `test-informix`, `test-mysql`, `test-oracle`, `test-postgresql`, `test-saphana`, `test-sqlce`, `test-sqlite`, `test-sqlserver`, `test-sqlserver-2019`, `test-sqlserver-2022`, `test-sybase`, `test-clickhouse`, `test-duckdb`, `test-ydb`, `test-metrics`). Read it to resolve a provider's pipeline name without spending a `/azp list` round-trip.
 
+**`testing.yml` lists *intended* pipeline names; it does not prove a pipeline is *registered*.** A `Build.DefinitionName` arm in that file only says "if a definition with this name runs me, do X" — the Azure DevOps definition itself is created out-of-repo. To check which definitions actually exist, read the **public** REST API (no write access, no `/azp list` PR comment, no round-trip through a maintainer):
+
+```
+Invoke-RestMethod -Uri "https://dev.azure.com/linq2db/linq2db/_apis/build/definitions?api-version=7.0"
+```
+
+`.value[].name` / `.value[].id` is the registered set. **Never conclude "pipeline `<name>` isn't registered" from repo contents alone** — that claim is one cheap read away from being settled, and getting it wrong produces a confidently-wrong review finding. (Surfaced on PR #5678: a review pass asserted the newly-documented `/azp run test-cli` had no matching definition and would not resolve; the API showed `test-cli` registered as id 29, so the observation was dropped as false.)
+
 Posting the comment requires write access to the repo; for contributors without write access, a maintainer posts on their behalf.
 
 ## When to propose a CI run
