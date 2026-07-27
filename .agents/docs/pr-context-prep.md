@@ -20,6 +20,8 @@ Optional named parameters:
 
 Stdin JSON is still accepted for callers that prefer the heredoc form (`pwsh ... pr-context.ps1 <<'EOF' { "pr": <n> } EOF`); see the script header for the JSON schema.
 
+**Reading the returned JSON.** Redirect stdout to `.build/.agents/pr<n>-context.json` and read fields from there with the **PowerShell tool** or `Grep`. Never `Bash(pwsh -NoProfile -Command "$j = Get-Content … | ConvertFrom-Json; …")` — bash expands `$j` as its own (undefined) variable before pwsh sees the string, so pwsh receives `= Get-Content …` and dies with `The term '=' is not recognized`. This is the general rule in [`agent-rules.md`](agent-rules.md) → *PowerShell Core scripts for complex operations*, restated here because the context load is the place it keeps getting hit.
+
 Output is a single JSON object — see the script's header comment for the exact schema. The fields the review skills consume:
 
 | Field | Used for |
@@ -63,6 +65,8 @@ Run `git -C ../linq2db.baselines fetch origin` directly as a single Bash call �
    - On `N`: skip baseline review, proceed with code review only, note the skip in the final review body.
 
 Branch presence is checked by the baselines subagent via `baselines-diff.ps1`, so the skill doesn't need a separate `rev-parse` step — and equally must not pre-probe with `git -C ../linq2db.baselines branch -a --list 'origin/baselines/pr_<n>'` or any other `branch --list` / `rev-parse` / `ls-remote` shape. The script returns `status: "branch_missing"` when the PR produced no baseline changes, which the subagent converts into its `no_baselines` output; the same script is also the one that errors clearly when the *clone* is missing. Pre-probing adds nothing the script doesn't already do and costs a permission prompt per run.
+
+**One sanctioned exception.** `/review-pr` step 4's second question asks the user whether to run the baselines review *at all*, and a sensible recommendation needs branch presence **before** the subagent is spawned. For that question only, a single `git -C ../linq2db.baselines rev-parse --verify --quiet origin/baselines/pr_<n>` is permitted (run after the `fetch` above; a non-zero exit means the branch is absent). Nothing else — no `gh pr list` against `linq2db.baselines`, no `git log` on the clone, no `ls-remote`: the `rev-parse` alone settles it, and a **CLOSED** tracking baselines PR is only corroboration, never a substitute. Once the user opts in, the subagent's `baselines-diff.ps1` remains authoritative — don't feed it your probe's answer. (Surfaced on PR #5726: three probe calls were spent here, the ban above reads as forbidding all of them, and the user opted into the baselines review anyway.)
 
 Layout and branch-naming conventions for the baselines repo are in `.agents/docs/baselines-repo-layout.md`.
 
