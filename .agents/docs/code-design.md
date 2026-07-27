@@ -117,6 +117,12 @@ A handful of legacy AST classes still live under the public `LinqToDB.SqlQuery` 
 
 This rule refines the `/review-pr` classification in [`api-surface-classification.md`](api-surface-classification.md): a `modified` or `removed` entry whose symbol is in `LinqToDB.SqlQuery` and targets a SQL AST type should be reviewed as a namespace-placement finding (fix: move to `Internal.SqlQuery`), not as a milestone-gated public-API-break BLK.
 
+### LinqService has no cross-version wire contract
+
+A mixed-version LinqService deployment — client and server on different builds of the same major — is **not** a supported configuration. Client and server are expected to be the same build, so the serialized layout in `Internal/Remote/LinqServiceSerializer.cs` carries no compatibility obligation across 6.x releases: changing, adding, or removing a field's token in the stream is not a breaking change, and no legacy placeholder is warranted to preserve an older payload's shape.
+
+**This contradicts comments in the codebase, which is why it needs stating here.** Several `QueryElementType` members carry a `// TODO: appended here for v6.x LinqService wire-compat (enum ordinals are serialized as int)` marker. That rationale is inaccurate. The real reason those members are tail-appended is the **public-enum ABI**: `QueryElementType` is public API, so inserting mid-enum renumbers every later member and trips ApiCompat `CP0011`. The constraint is real; the stated reason for it is not. Treat a wire-compat argument sourced from those comments as unfounded — on PR #5723 it produced a bot finding, and an agent review rated it a blocker, before the maintainer corrected the premise.
+
 ### Column-aligned formatting is intentional
 
 Large blocks of the codebase use column-aligned formatting — property declarations line their `{ get; }` up at the same column, constructor parameters line their defaults up at the same column, constant declarations line their `=` up at the same column. This is deliberate house style, not accidental. Preserve it when editing; match the existing alignment of surrounding code rather than reformatting it to a narrower width.
