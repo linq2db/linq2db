@@ -328,7 +328,49 @@ namespace Tests.LinqToDB.CLI
 
 			{
 				(result.ExitCode).ShouldBe(-3);
-				(result.Error).ShouldContain("MySQL executable comments are not allowed");
+				(result.Error).ShouldContain("Executable comments are interpreted as SQL by MySQL or MariaDB.");
+			}
+		}
+
+		[TestCase("SELECT 1--1;DELETE FROM guard_probe WHERE 1=1", 9, "--1")]
+		[TestCase("""SELECT '\'';DELETE FROM guard_probe WHERE 1=1;SELECT 'x'""", 9, "\\")]
+		[TestCase("""SELECT E'\'';DELETE FROM guard_probe WHERE 1=1;SELECT 'x'""", 10, "\\")]
+		[TestCase("SELECT \"\\\"\";DELETE FROM guard_probe WHERE 1=1;SELECT \"x\"", 9, "\\")]
+		[TestCase("SELECT 1 /*!00000 + 1 */", 10, "/*!")]
+		[TestCase("SELECT 1 /*M! + 1 */", 10, "/*M!")]
+		[TestCase("SELECT 1 /*m! + 1 */", 10, "/*m!")]
+		[TestCase("SELECT 1 AS $x$; DELETE FROM guard_probe; SELECT 1 AS $x$", 13, "$x$")]
+		[TestCase("SELECT $$drop table Person;$$ AS Value", 8, "$$")]
+		public void GenericGuardRejectsAmbiguousSql(string sql, int column, string syntax)
+		{
+			var provider = DataConnection.GetDataProvider("SQLite", "Data Source=:memory:")!;
+
+			var queryResult   = ReadOnlySqlGuard.Validate               (provider, sql);
+			var executeResult = ReadOnlySqlGuard.ValidateSingleStatement(provider, sql);
+
+			{
+				(queryResult.IsAllowed).ShouldBe(false);
+				queryResult.Error!.ShouldContain("ambiguous SQL syntax");
+				queryResult.Error!.ShouldContain($"Line 1, column {column}: '{syntax}'");
+				queryResult.Error!.ShouldContain("Rewrite:");
+				queryResult.Error!.ShouldContain("SQL fragment:");
+				(executeResult.IsAllowed).ShouldBe(false);
+				executeResult.Error.ShouldBe(queryResult.Error);
+			}
+		}
+
+		[Test]
+		public void GenericGuardReportsMultilineAmbiguityLocation()
+		{
+			var provider = DataConnection.GetDataProvider("SQLite", "Data Source=:memory:")!;
+			var sql      = "select 1\r\nwhere Value = '\\path'";
+
+			var result = ReadOnlySqlGuard.Validate(provider, sql);
+
+			{
+				(result.IsAllowed).ShouldBe(false);
+				result.Error!.ShouldContain("Line 2, column 16: '\\'");
+				result.Error!.ShouldContain("SQL fragment: where Value = '\\path'");
 			}
 		}
 
@@ -449,30 +491,6 @@ namespace Tests.LinqToDB.CLI
 			{
 				(result.IsAllowed).ShouldBe(false);
 				result.Error!.ShouldContain("token 'INTO' is not allowed");
-			}
-		}
-
-		[Test]
-		public void QueryGuardIgnoresPostgreSqlDollarQuotedStrings()
-		{
-			var provider = DataConnection.GetDataProvider("PostgreSQL", "Host=localhost;Database=test")!;
-
-			{
-				(ReadOnlySqlGuard.Validate(provider, "select $$drop table Person;$$ as Value").IsAllowed).ShouldBe(true);
-				(ReadOnlySqlGuard.Validate(provider, "select $tag$update Person set Name = 'x';$tag$ as Value;").IsAllowed).ShouldBe(true);
-			}
-		}
-
-		[Test]
-		public void QueryGuardRejectsStatementAfterPostgreSqlDollarQuotedString()
-		{
-			var provider = DataConnection.GetDataProvider("PostgreSQL", "Host=localhost;Database=test")!;
-
-			var result = ReadOnlySqlGuard.Validate(provider, "select $tag$drop table Person;$tag$; drop table Person");
-
-			{
-				(result.IsAllowed).ShouldBe(false);
-				result.Error!.ShouldContain("Only single SQL statement is allowed.");
 			}
 		}
 
