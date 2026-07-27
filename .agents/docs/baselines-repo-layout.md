@@ -41,6 +41,19 @@ A special `a_CreateData/a_CreateData.CreateDatabase(<Provider>).sql` per provide
 
 PR baselines live on `baselines/pr_<pr_number>`. Absence of the branch means the PR produced no baseline changes.
 
+**Confirm that absence with `ls-remote`, not with a `fetch` that reports a deletion.** A short-refspec fetch of one of these branches can print a *spurious* `[deleted]` line even though the branch is alive on the remote:
+
+```
+$ git -C ../linq2db.baselines fetch origin baselines/pr_5678:refs/remotes/origin/baselines/pr_5678 --force
+ - [deleted]         (none)     -> origin/baselines/pr_5678          # ← wrong
+$ git -C ../linq2db.baselines ls-remote origin refs/heads/baselines/pr_5678
+8fa8049893b1289d6198d860046d2c57cba6a7ae  refs/heads/baselines/pr_5678   # ← branch exists
+$ git -C ../linq2db.baselines fetch origin refs/heads/baselines/pr_5678:refs/remotes/origin/baselines/pr_5678 --force
+ * [new branch]      baselines/pr_5678 -> origin/baselines/pr_5678    # ← full ref form works
+```
+
+Use the **fully-qualified source ref** (`refs/heads/baselines/pr_<n>:refs/remotes/...`) for these fetches, and treat a `[deleted]` report as unproven until `ls-remote` agrees. This matters because the review flow reads a missing branch as "no baseline changes" and skips the whole baselines pass — so a spurious deletion silently routes a review past real baselines. (Surfaced on PR #5678, where the short-refspec fetch reported the branch deleted while it in fact carried 83 added baselines.)
+
 ### Merging a baselines PR
 
 `linq2db.baselines` **disallows merge commits** — `gh pr merge --merge` fails with *"Merge commits are not allowed on this repository. (mergePullRequest)"*. Use `gh pr merge <n> --squash` (mark the CI-created draft ready first with `gh pr ready <n>`; `--admin` bypasses any pending check). This comes up when cleaning up a lingering baselines PR whose source linq2db PR has already merged (the baselines PR doesn't auto-close).
