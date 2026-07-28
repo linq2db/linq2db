@@ -503,6 +503,8 @@ namespace LinqToDB.NHibernate
 
 		MappingAttribute[] IMetadataReader.GetAttributes(Type type)
 		{
+			EnsureInheritanceIsQueryable(type);
+
 			var attrs = new List<MappingAttribute>();
 
 			attrs.AddRange(GetAttributes<TableAttribute>(type));

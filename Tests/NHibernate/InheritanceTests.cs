@@ -1,6 +1,8 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.NHibernate.Tests.Models.Inheritance;
 
 using NHibernate;
@@ -31,6 +33,46 @@ namespace LinqToDB.NHibernate.Tests
 			session.Save(new Receipt { Id = 2, Title = "Receipt 2", ReceiptNo = "R-2" });
 
 			tx.Commit();
+		}
+
+		[Test]
+		public void TablePerSubclass_IsRefusedWithExplanation(
+			[NHIncludeDataSources] string provider)
+		{
+			var sf = GetSessionFactory(provider);
+
+			using var session = sf.OpenSession();
+
+			// A <joined-subclass>'s own columns live in its own table, so reading it from one table would ask the
+			// base table for columns it does not have — the database's complaint about that explains nothing.
+			var ex = Should.Throw<LinqToDBForNHibernateToolsException>(() => session.GetTable<Car>().ToList());
+
+			ex.Message.ShouldContain(nameof(Car));
+			ex.Message.ShouldContain("table-per-subclass");
+		}
+
+		[Test]
+		public void TablePerConcreteClass_SubclassIsQueryable(
+			[NHIncludeDataSources] string provider)
+		{
+			var sf = GetSessionFactory(provider);
+
+			using (var seed = sf.OpenSession())
+			using (var tx   = seed.BeginTransaction())
+			{
+				seed.GetTable<Square>().Delete();
+				seed.Save(new Square { Id = 1, Name = "S1", Side = 4 });
+				tx.Commit();
+			}
+
+			using var session = sf.OpenSession();
+
+			// A concrete subclass carries every column in its own table, so it reads like any other entity.
+			var squares = session.GetTable<Square>().OrderBy(s => s.Id).ToList();
+
+			squares.Count.ShouldBe(1);
+			squares[0].Name.ShouldBe("S1");
+			squares[0].Side.ShouldBe(4);
 		}
 
 		[Test]

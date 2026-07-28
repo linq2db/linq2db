@@ -35,6 +35,29 @@ namespace LinqToDB.NHibernate
 		readonly ConcurrentDictionary<Type, LambdaExpression?> _discriminatorCache = new();
 
 		/// <summary>
+		/// Refuses the inheritance shapes that cannot be read from a single table, so they fail with an
+		/// explanation rather than with whatever the database says about the SQL that would be built.
+		/// </summary>
+		void EnsureInheritanceIsQueryable(Type type)
+		{
+			if (_sessionFactory?.GetClassMetadata(type) is not AbstractEntityPersister persister)
+				return;
+
+			// Table-per-subclass keeps a subclass's own columns in its own table, joined to the base table by key.
+			// linq2db reads the entity from one table, so it would look for those columns in the base table.
+			if (persister is JoinedSubclassEntityPersister && persister.IsInherited)
+			{
+				throw new LinqToDBForNHibernateToolsException(
+					$"'{type.Name}' is mapped table-per-subclass (<joined-subclass>), which spreads its columns over several tables and cannot be read as one. Query its base class, or map the hierarchy table-per-hierarchy (a discriminator) or table-per-concrete-class (<union-subclass>).");
+			}
+
+			// The root of a table-per-concrete-class hierarchy (<union-subclass>) has no table of its own either —
+			// NHibernate reads it as a union over the subclass tables. It is not refused here: a subclass's own
+			// metadata is built by walking up to its base, so refusing the root would refuse the subclasses too,
+			// and those read from their own tables perfectly well.
+		}
+
+		/// <summary>
 		/// Emits a <see cref="QueryFilterAttribute"/> restricting a table-per-hierarchy subclass to its own
 		/// discriminator values, or <see langword="null"/> when the type needs no restriction.
 		/// </summary>

@@ -7,10 +7,10 @@ entity lifecycle) and reach for linq2db when you need set-based SQL that NHibern
 express.
 
 - [Features](#features)
+- [What is not supported](#what-is-not-supported)
 - [How to use](#how-to-use)
 - [Why use it?](#why-use-it)
 - [Supported databases](#supported-databases)
-- [Known limitations](#known-limitations)
 - [Help! It doesn't work](#help-it-doesnt-work)
 
 ## Features
@@ -35,9 +35,64 @@ Over your existing NHibernate-mapped entities, linq2db adds:
 - **Stateless sessions** — query through `IStatelessSession` too
 - **Custom types** — single-column `IUserType` conversions are applied to linq2db queries as well
 - **Inheritance** — a table-per-hierarchy subclass is restricted to its own discriminator values, so a linq2db
-  query for it never returns its siblings' rows
+  query for it never returns its siblings' rows; table-per-concrete-class subclasses read from their own table
 - **Components** — a `<component>`'s properties are mapped as columns of the owning entity, so they can be
   selected and filtered on like any other
+
+## What is not supported
+
+Read this first — it is the shortest way to know whether your mappings fit.
+
+linq2db reads each entity from **one table**, taking the column and association metadata from NHibernate. A
+mapping that cannot be expressed that way is handled in one of two ways:
+
+- **Rejected with an explanation** — when going ahead would quietly lose data (a column that would simply be
+  missing from the query and read as `null`). The exception names the type, the member and the reason.
+- **Left unmapped** — when the member is not data of its own (an association). The rest of the entity keeps
+  working, and using that member fails with linq2db's own *"The LINQ expression … could not be converted to
+  SQL"*.
+
+### Inheritance
+
+| Mapping | |
+|---|---|
+| Table-per-hierarchy (discriminator) | Supported. A subclass is restricted to its own discriminator values, so it never returns a sibling's rows |
+| Table-per-concrete-class (`<union-subclass>`) — concrete subclasses | Supported. Each reads from its own table |
+| Table-per-concrete-class — the **root** | Not queryable: NHibernate reads it as a union over the subclass tables and it has no table of its own. Query a concrete subclass |
+| Table-per-subclass (`<joined-subclass>`) | **Rejected.** Its columns are split across the base and subclass tables. Query its base class instead |
+
+### Custom types (`IUserType`)
+
+Applied when the user type maps to a **single column**. Otherwise:
+
+- a **multi-column** user type (including any `ICompositeUserType`) is **rejected** — it has no single value to
+  convert. Register a linq2db converter for it yourself with
+  `LinqToDBForNHibernateTools.AddMappingSchema(sessionFactory, mappingSchema)`;
+- a user type that inspects the session, or casts the reader/command to a provider-specific type, is not
+  supported.
+
+### Components
+
+A `<component>`'s properties are mapped as columns of the owning entity. A sub-property that is an association,
+or that spans several columns (a nested component), is **rejected**.
+
+### Associations
+
+Navigable when the foreign key is mapped as a scalar property on the referencing side:
+
+- **many-to-one** — the source must map the foreign-key column as a property (it may be named differently from
+  the target's key property). A reference mapped only as the navigation is not navigable;
+- **one-to-many** — the child must map the foreign-key column as a property. A unidirectional collection whose
+  child exposes no such property is not navigable;
+- **many-to-many** — supported whether or not the junction table is mapped as an entity of its own.
+
+### Everything else
+
+- `ToLinqToDB()` on a native query from an `IStatelessSession` — use `statelessSession.GetTable<T>()` instead.
+- Session filter conditions resolve unqualified columns against a single table, so they may not carry correctly
+  into join queries; per-entity `<filter>` overrides fall back to the filter's default condition.
+- One integration per process: this package and `linq2db.EntityFrameworkCore` both install process-wide query
+  hooks, so they cannot be used in the same process.
 
 ## How to use
 
@@ -185,26 +240,6 @@ var b = await session.Query<Customer>().Where(c => c.Country == "UK").ToListAsyn
 
 Verified against SQL Server, PostgreSQL, MySQL / MariaDB, Oracle, Firebird, and SQLite. Any database
 supported by both linq2db and your NHibernate dialect should work.
-
-## Known limitations
-
-- `ToLinqToDB()` on a native query from an `IStatelessSession` is not supported — use
-  `statelessSession.GetTable<T>()` instead.
-- NHibernate value conversions (`IUserType`) are translated to linq2db value converters only when the user type
-  maps to a **single column**. A multi-column user type (including any `ICompositeUserType`) has no single value to
-  convert, so the member is left unconverted — register a linq2db converter for it yourself with
-  `LinqToDBForNHibernateTools.AddMappingSchema(sessionFactory, mappingSchema)`. A user type that inspects the
-  session, or casts the reader/command to a provider-specific type, is also unsupported.
-- Session filter conditions resolve unqualified columns against a single table, so they may not carry
-  correctly into join queries; per-entity `<filter>` overrides fall back to the filter's default condition.
-- Associations are exposed to linq2db only when the foreign key is mapped as a scalar property on the
-  referencing side:
-  - **many-to-one** — the source entity must map the foreign-key column as a property (it may be named
-    differently from the target's key property); a reference mapped only as the navigation is not navigable
-    from a linq2db query;
-  - **one-to-many** — the child entity must map the foreign-key column as a property; a unidirectional
-    collection whose child exposes no such property is not navigable from a linq2db query;
-  - **many-to-many** — supported whether or not the junction table is mapped as an entity of its own.
 
 ## Help! It doesn't work!
 
