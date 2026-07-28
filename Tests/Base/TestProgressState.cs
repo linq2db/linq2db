@@ -17,7 +17,7 @@ namespace Tests
 	/// outcome. Such a wrapper calls <see cref="BeginDeferred"/> before running the inner command, which makes
 	/// <see cref="CompleteTest"/> hold the sampled outcome back instead of booking it; <see cref="CommitDeferred"/>
 	/// then books the unit exactly once, with the final verdict. No provisional outcome is ever counted, added to the
-	/// recent-failure list, or published — so there is a single write per unit and the bounded list only ever holds
+	/// recent-failure list, or published — so each unit is booked exactly once and the bounded list only ever holds
 	/// real failures.
 	/// </para>
 	/// <para>
