@@ -377,12 +377,14 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				if (!ExpressionEqualityComparer.Instance.Equals(result, path) && (flags.IsSql() || flags.IsExpression() || flags.IsExtractProjection() || flags.IsExpand()))
 				{
-					// Preserve Expand for a non-scalar key (entity or composite/anonymous): an entity key needs
-					// its associations built so g.Key.<association> can be navigated, and constructed keys
-					// resolve their members under Expand. A scalar key must stay Sql — under Expand a bare
-					// scalar comes back as an unresolved column reference, breaking its eager-load correlation
+					// Use Expand only for a member-root navigation off a non-scalar key (g.Key.<association>),
+					// so the key's associations are built and the navigation resolves. Whole-entity key
+					// materialization must stay Sql: under Expand a ForKeys build loses the Keys flag in
+					// GetProjectFlags, so the key would select every column instead of reducing to its PK
+					// (the Value1 over-fetch). A scalar key stays Sql too — under Expand a bare scalar comes
+					// back as an unresolved column reference, breaking eager-load correlation
 					// (detail.Where(d => d.X == g.Key)).
-					var keyPurpose = flags.IsExpand() && !Builder.MappingSchema.IsScalarType(Body.Type)
+					var keyPurpose = flags.IsExpand() && flags.IsMemberRoot() && !Builder.MappingSchema.IsScalarType(Body.Type)
 						? BuildPurpose.Expand
 						: BuildPurpose.Sql;
 
