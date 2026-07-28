@@ -12,5 +12,6 @@ namespace LinqToDB.CommandLine.Commands.SchemaInspection
 		SchemaInspectionEffectiveOptions Options,
 		string                           Output,
 		string?                          OutputFile,
-		bool                             Overwrite);
+		bool                             Overwrite,
+		int?                             MaxOutputBytes = null);
 }

@@ -31,7 +31,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 			null,
 			false,
 			false,
-			$"maximum UTF-8 size of primary query and execute MCP output content in bytes; defaults to {McpServerConfiguration.DefaultMaxResponseBytes}");
+			$"maximum UTF-8 size of primary schema, query, and execute MCP output content in bytes; defaults to {McpServerConfiguration.DefaultMaxResponseBytes}");
 
 		static readonly CliOption _enableExecuteTool = new BooleanCliOption(
 			"enable-execute-tool",

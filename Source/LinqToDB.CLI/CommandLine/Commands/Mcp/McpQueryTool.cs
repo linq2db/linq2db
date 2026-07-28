@@ -96,6 +96,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 				If omitted, the MCP server startup profile or default profile is used.
 				Requires MCP server startup with --config.
 				""")]                                                                             string?   profile                     = null,
+			[Description("Schema detail level. Allowed values: full, names. Use names for compact object discovery, then request full metadata with filters.")] string? detailLevel = null,
 			[Description("Prefer provider-specific .NET types in schema metadata.")]              bool?     preferProviderSpecificTypes = null,
 			[Description("Read table and view metadata.")]                                        bool?     getTables                   = null,
 			[Description("Read foreign key metadata.")]                                           bool?     getForeignKeys              = null,
@@ -119,6 +120,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 				connection,
 				new SchemaInspectionOptionValues(
 					profile,
+					detailLevel,
 					preferProviderSpecificTypes,
 					getTables,
 					getForeignKeys,
@@ -134,6 +136,8 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 
 			if (settings == null)
 				return CreateErrorResult(errorWriter.ToString());
+
+			settings = settings with { MaxOutputBytes = _startupOptions.MaxResponseBytes };
 
 			using var resultWriter = new StringWriter(CultureInfo.InvariantCulture);
 

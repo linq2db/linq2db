@@ -71,6 +71,7 @@ namespace Tests.LinqToDB.CLI
 				schemaTool.InputSchema.Properties.Credentials.     ShouldBeNull();
 				schemaTool.InputSchema.Properties.Sql.             ShouldBeNull();
 				schemaTool.InputSchema.Properties.OutputFile.      ShouldBeNull();
+				schemaTool.InputSchema.Properties.DetailLevel.     ShouldNotBeNull();
 				schemaTool.InputSchema.Properties.FilterTables.    ShouldNotBeNull();
 				schemaTool.InputSchema.Properties.ExcludeTables.   ShouldBeNull();
 				schemaTool.InputSchema.Properties.IncludeTables.   ShouldBeNull();

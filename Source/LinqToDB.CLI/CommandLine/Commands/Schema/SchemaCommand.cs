@@ -47,6 +47,7 @@ namespace LinqToDB.CommandLine.Commands.Schema
 			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.Impersonate);
 			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.ImpersonateMode);
 			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.CommandTimeout);
+			AddOption(SchemaInspectionCliOptions.SchemaOptions,      SchemaInspectionCliOptions.DetailLevel);
 			AddOption(SchemaInspectionCliOptions.SchemaOptions,      SchemaInspectionCliOptions.PreferProviderSpecificTypes);
 			AddOption(SchemaInspectionCliOptions.SchemaOptions,      SchemaInspectionCliOptions.GetTables);
 			AddOption(SchemaInspectionCliOptions.SchemaOptions,      SchemaInspectionCliOptions.GetForeignKeys);
@@ -124,6 +125,7 @@ namespace LinqToDB.CommandLine.Commands.Schema
 			options.Remove(QueryExecutionCliOptions.  Impersonate,                 out var impersonate);
 			options.Remove(QueryExecutionCliOptions.  ImpersonateMode,             out var impersonateMode);
 			options.Remove(QueryExecutionCliOptions.  CommandTimeout,              out var commandTimeout);
+			options.Remove(SchemaInspectionCliOptions.DetailLevel,                 out var detailLevel);
 			options.Remove(SchemaInspectionCliOptions.PreferProviderSpecificTypes, out var preferProviderSpecificTypes);
 			options.Remove(SchemaInspectionCliOptions.GetTables,                   out var getTables);
 			options.Remove(SchemaInspectionCliOptions.GetForeignKeys,              out var getForeignKeys);
@@ -166,6 +168,7 @@ namespace LinqToDB.CommandLine.Commands.Schema
 				connection,
 				new SchemaInspectionOptionValues(
 					(string?)  profile,
+					(string?)  detailLevel,
 					(bool?)    preferProviderSpecificTypes,
 					(bool?)    getTables,
 					(bool?)    getForeignKeys,

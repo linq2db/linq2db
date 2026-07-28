@@ -6,6 +6,7 @@ namespace LinqToDB.CommandLine.Commands.SchemaInspection
 	/// Effective declarative schema provider options returned in command/tool output.
 	/// </summary>
 	internal sealed record SchemaInspectionEffectiveOptions(
+		string   DetailLevel,
 		bool     PreferProviderSpecificTypes,
 		bool     GetTables,
 		bool     GetForeignKeys,

@@ -24,11 +24,46 @@ namespace Tests.LinqToDB.CLI
 			result.ExitCode.ShouldBe(0);
 			result.Output.  ShouldContain("dotnet linq2db schema <options>");
 			result.Output.  ShouldContain("--get-foreign-keys");
+			result.Output.  ShouldContain("--detail-level");
 			result.Output.  ShouldContain("--filter-schema");
 			result.Output.  ShouldContain("--filter-table");
 			result.Output.  ShouldNotContain("--exclude-table");
 			result.Output.  ShouldNotContain("--get-procedures");
 			result.Output.  ShouldNotContain("--use-schema-only");
+		}
+
+		[Test]
+		public async Task SchemaReturnsCompactObjectNames()
+		{
+			var database = CreateSqliteDatabase();
+
+			try
+			{
+				var result = await RunCliProcess(
+					"schema",
+					"--provider", "SQLite",
+					"--connection-string", $"Data Source={database};Pooling=False",
+					"--detail-level", "names",
+					"--filter-table", "main.Orders");
+
+				result.ExitCode.ShouldBe(0);
+				result.Error.   ShouldBeEmpty();
+
+				var schema  = JsonNode.Parse(result.Output)!.AsObject();
+				var objects = schema["objects"]!.AsArray();
+
+				((string?)schema["options"]?["detailLevel"]). ShouldBe("names");
+				((bool?)schema["options"]?["getForeignKeys"]).ShouldBe(false);
+				objects.Count.                                ShouldBe(1);
+				((string?)objects[0]?["name"]).                ShouldBe("Orders");
+				((string?)objects[0]?["kind"]).                ShouldBe("table");
+				schema["tables"].                              ShouldBeNull();
+				result.Output.                                ShouldNotContain("\"columns\"");
+			}
+			finally
+			{
+				File.Delete(database);
+			}
 		}
 
 		[Test]

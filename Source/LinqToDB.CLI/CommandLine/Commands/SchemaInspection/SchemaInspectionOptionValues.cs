@@ -7,6 +7,7 @@ namespace LinqToDB.CommandLine.Commands.SchemaInspection
 	/// </summary>
 	internal sealed record SchemaInspectionOptionValues(
 		string?   Profile,
+		string?   DetailLevel,
 		bool?     PreferProviderSpecificTypes,
 		bool?     GetTables,
 		bool?     GetForeignKeys,

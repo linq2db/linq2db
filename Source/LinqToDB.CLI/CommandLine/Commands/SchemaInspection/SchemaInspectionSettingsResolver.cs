@@ -11,6 +11,9 @@ namespace LinqToDB.CommandLine.Commands.SchemaInspection
 	/// </summary>
 	internal sealed class SchemaInspectionSettingsResolver(ICliEnvironment environment)
 	{
+		public const string FullDetailLevel  = "full";
+		public const string NamesDetailLevel = "names";
+
 		const string DefaultOutput = "json";
 
 		readonly ICliEnvironment _environment = environment;
@@ -32,10 +35,22 @@ namespace LinqToDB.CommandLine.Commands.SchemaInspection
 			if (!ValidateRegexFilters(values.FilterTables))
 				return null;
 
+			var detailLevel = values.DetailLevel ?? FullDetailLevel;
+
+			if (!string.Equals(detailLevel, FullDetailLevel, StringComparison.OrdinalIgnoreCase)
+				&& !string.Equals(detailLevel, NamesDetailLevel, StringComparison.OrdinalIgnoreCase))
+			{
+				_environment.Error.WriteLine($"Option '--{SchemaInspectionCliOptions.DetailLevel.Name}' has unknown value '{detailLevel}'. Allowed values: '{FullDetailLevel}', '{NamesDetailLevel}'.");
+				return null;
+			}
+
+			detailLevel = detailLevel.ToLowerInvariant();
+
 			var options = new SchemaInspectionEffectiveOptions(
+				detailLevel,
 				values.PreferProviderSpecificTypes ?? false,
 				values.GetTables                   ?? true,
-				values.GetForeignKeys              ?? true,
+				string.Equals(detailLevel, NamesDetailLevel, StringComparison.Ordinal) ? false : values.GetForeignKeys ?? true,
 				false,
 				values.GenerateChar1AsString       ?? false,
 				values.IgnoreSystemHistoryTables   ?? false,

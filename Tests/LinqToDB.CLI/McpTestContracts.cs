@@ -153,9 +153,26 @@ namespace Tests.LinqToDB.CLI
 
 		protected sealed record McpTestSchemaOptions
 		{
+			public required string       DetailLevel    { get; init; }
 			public required bool         GetProcedures  { get; init; }
 			public required bool         GetForeignKeys { get; init; }
 			public required List<string> FilterTables   { get; init; }
+		}
+
+		protected sealed record McpTestSchemaNamesResult
+		{
+			public required string                        Provider { get; init; }
+			public required string                        Dialect  { get; init; }
+			public required McpTestSchemaOptions          Options  { get; init; }
+			public required List<McpTestSchemaObjectName> Objects  { get; init; }
+		}
+
+		protected sealed record McpTestSchemaObjectName
+		{
+			public          string? Catalog { get; init; }
+			public          string? Schema  { get; init; }
+			public required string  Name    { get; init; }
+			public required string  Kind    { get; init; }
 		}
 
 		protected sealed record McpTestSchemaTable
@@ -233,6 +250,7 @@ namespace Tests.LinqToDB.CLI
 			public JsonElement? Password           { get; init; }
 			public JsonElement? Credentials { get; init; }
 			public JsonElement? ProviderLocation   { get; init; }
+			public JsonElement? DetailLevel        { get; init; }
 			public JsonElement? FilterTables       { get; init; }
 			public JsonElement? ExcludeTables      { get; init; }
 			public JsonElement? IncludeTables      { get; init; }

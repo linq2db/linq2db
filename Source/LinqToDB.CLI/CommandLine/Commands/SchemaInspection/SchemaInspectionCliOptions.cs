@@ -12,6 +12,18 @@ namespace LinqToDB.CommandLine.Commands.SchemaInspection
 		public static readonly OptionCategory SchemaOptions = new(5, "Schema", "Schema metadata options", "schema");
 		public static readonly OptionCategory OutputOptions = new(6, "Output", "Output options", "output");
 
+		public static readonly CliOption DetailLevel                = new StringEnumCliOption(
+			"detail-level",
+			null,
+			false,
+			false,
+			"schema detail level",
+			null,
+			null,
+			null,
+			false,
+			new StringEnumOption(true,  true,  SchemaInspectionSettingsResolver.FullDetailLevel,  "return tables and views with columns, keys, and relationships"),
+			new StringEnumOption(false, false, SchemaInspectionSettingsResolver.NamesDetailLevel, "return only catalog, schema, name, and object kind"));
 		public static readonly CliOption PreferProviderSpecificTypes = new BooleanCliOption("prefer-provider-specific-types", null, false, "prefer provider-specific .NET types in schema metadata", null, null, null, false, false);
 		public static readonly CliOption GetTables                   = new BooleanCliOption("get-tables",                     null, false, "read table and view metadata", null, null, null, true, true);
 		public static readonly CliOption GetForeignKeys              = new BooleanCliOption("get-foreign-keys",               null, false, "read foreign key metadata", null, null, null, true, true);

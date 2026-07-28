@@ -232,6 +232,7 @@ Connection and profile settings use the same trusted startup/config boundary as 
 
 Schema options:
 
+- `--detail-level full|names`; `full` is the default; `names` returns only catalog, schema, object name, and kind
 - `--prefer-provider-specific-types true|false`
 - `--get-tables true|false`
 - `--get-foreign-keys true|false`
@@ -249,6 +250,7 @@ MCP `linq2db_schema` uses arrays: `filterSchemas`, `filterCatalogs`, and `filter
 Values inside one filter dimension are combined with OR; different filter dimensions narrow the result together.
 Table filters are exact, case-insensitive matches unless the value starts with `regex:` or `rx:`.
 Regex table filters use a bounded match timeout and return an expected error if a pattern times out.
+For large databases, call schema with `detailLevel: "names"` first, select the relevant objects, then call it with `detailLevel: "full"` and `filterTables`.
 
 Output:
 
@@ -271,6 +273,7 @@ Examples:
 
 ```bash
 dotnet linq2db schema --provider SQLite --connection-string "Data Source=data.db"
+dotnet linq2db schema --config query.json --profile dev --detail-level names
 dotnet linq2db schema --config query.json --profile dev --filter-schema dbo
 dotnet linq2db schema --config query.json --profile dev --filter-table dbo.Customer,dbo.Order
 dotnet linq2db schema --config query.json --profile dev --filter-table dbo.Customer --filter-table dbo.Order
@@ -387,7 +390,7 @@ Parameter surface:
 | `commandTimeout` | `--command-timeout` | yes | yes | yes | no | yes | no | non-negative integer seconds; `0` disables the option |
 | `lockTimeout` | `--lock-timeout` | yes | yes | yes | no | yes | no | non-negative integer seconds; supported for SQL Server, PostgreSQL, MySQL/MariaDB, and SQLite; unsupported providers report a diagnostic; `0` disables the option |
 | `maxRows` | `--max-rows` | yes | yes | yes | yes | yes | yes | non-negative integer row count; `0` disables the limit |
-| `maxResponseBytes` | `--max-response-bytes` | no | no | no | no | yes | no | positive 32-bit integer limit for primary MCP query/execute output content; also available in the top-level `mcp` section; CLI overrides config; default `8388608` |
+| `maxResponseBytes` | `--max-response-bytes` | no | no | no | no | yes | no | positive 32-bit integer limit for primary MCP schema/query/execute output content; also available in the top-level `mcp` section; CLI overrides config; default `8388608` |
 | `output` | `--output` | yes | yes | yes | yes | yes | yes | `query`, `execute`, and `config-init`: `json`, `json-table`, or `csv`; `mcp`: `json` or `json-table`; `query` default is `json`, MCP/config-init/execute default is `json-table` |
 | `outputFile` | `--output-file` | yes | yes | yes | no | no | no | path; supports `%NAME%` and `${NAME}` |
 | `overwrite` | `--overwrite` | yes | yes | no | no | no | no | boolean CLI flag |
@@ -434,7 +437,7 @@ The optional top-level `mcp` section describes this configured MCP server instan
 - `title` is its human-readable display name.
 - `description` identifies the databases or application domain served by this instance.
 - `instructions` supplies additional instance-specific guidance that MCP hosts can add to the model context. It is appended to the built-in server instructions rather than replacing them.
-- `maxResponseBytes` limits UTF-8 query and execute output content buffered for one MCP response. Protocol framing and the short truncation warning are not counted. It defaults to `8388608` (8 MiB); `--max-response-bytes` overrides the configured value for a server registration.
+- `maxResponseBytes` limits UTF-8 schema, query, and execute output content buffered for one MCP response. Protocol framing and the short truncation warning are not counted. It defaults to `8388608` (8 MiB); `--max-response-bytes` overrides the configured value for a server registration.
 - `mcp` is a reserved section name, is not a profile, and is not returned in the `linq2db_info` profile list.
 - `config-init` preserves an existing `mcp` section but does not create or modify it.
 
@@ -619,7 +622,7 @@ Startup/config boundary:
 - `--config <file>` and `--profile <name>` select the configuration profile used by default.
 - `--provider`, `--provider-location`, `--connection-string`, `--connection-string-env`, `--user`, `--user-env`, `--password`, `--password-env`, `--credentials`, `--impersonate`, `--impersonate-mode`, `--command-timeout`, and `--lock-timeout` are startup/config settings.
 - `--max-rows` and `--output` can set startup defaults for tool calls.
-- `--max-response-bytes` sets the trusted server-wide query/execute response limit. It overrides top-level `mcp.maxResponseBytes` and is not available as a tool-call argument.
+- `--max-response-bytes` sets the trusted server-wide schema/query/execute response limit. It overrides top-level `mcp.maxResponseBytes` and is not available as a tool-call argument.
 - `--enable-execute-tool` registers the write-capable `linq2db_execute` tool. It is off by default.
 - `--sql`, `--sql-file`, `--output-file`, and `--overwrite` are not startup options for `mcp`.
 - `outputFile` from a configuration profile is ignored by MCP tool calls so results are returned through the MCP response content instead of written to files.
@@ -635,6 +638,8 @@ Tool-call boundary:
 The MCP default output format is `json-table`, which preserves duplicate column names and carries `rowCount`, `truncated`, `truncationReason`, `maxOutputBytes`, and `recordsAffected` in-band when applicable. The existing `query` command keeps `json` as its default.
 
 MCP query and execute results are limited to 8 MiB by default. Rows are added atomically, so a size-limited JSON result remains valid and never contains a partial row. When the limit is reached, the tool returns the rows that fit plus a second text content block recommending provider-appropriate pagination. For `json-table`, the first content block also reports `truncated: true`, `truncationReason: "maxOutputBytes"`, and the effective `maxOutputBytes`. Use keyset pagination when practical, or provider-appropriate `LIMIT`/`OFFSET` syntax. Direct `query` and `execute` CLI output is not subject to this MCP response limit.
+
+MCP schema output uses the same response limit. An oversized schema is rejected without returning partial JSON; use `filterSchemas`, `filterCatalogs`, or `filterTables` to request a smaller schema. Direct `schema` CLI output is not subject to this MCP response limit.
 
 MCP host configuration schemas vary. The following example uses the `servers`/`type` form; hosts that use `mcpServers` express the same `command`, `args`, and `env` values under that key.
 
