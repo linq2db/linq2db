@@ -121,7 +121,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 				}
 
 				return e;
-			}, withStack: true);
+			});
 
 			return statement;
 

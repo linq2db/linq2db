@@ -147,6 +147,11 @@ namespace LinqToDB.Internal.SqlProvider
 			{
 				var after = newElement.ToDebugString();
 
+				// ToDebugString swallows any render failure and returns a "FAIL ToDebugString(...)" marker; both
+				// sides would then be equal and this check would pass without having compared anything.
+				if (before.StartsWith("FAIL ToDebugString(", StringComparison.Ordinal) || after.StartsWith("FAIL ToDebugString(", StringComparison.Ordinal))
+					throw new InvalidOperationException($"Transform-mode mutation check could not render the element.{Environment.NewLine}BEFORE:{Environment.NewLine}{before}{Environment.NewLine}AFTER:{Environment.NewLine}{after}");
+
 				if (after != before)
 					throw new InvalidOperationException($"Transform-mode convert mutated the element it was given.{Environment.NewLine}BEFORE:{Environment.NewLine}{before}{Environment.NewLine}AFTER:{Environment.NewLine}{after}");
 			}

@@ -65,6 +65,29 @@ namespace LinqToDB.Internal.DataProvider
 			return new NeedCastScope(this, needCast);
 		}
 
+		readonly struct NoCastScope : IDisposable
+		{
+			readonly WrapParametersVisitor _visitor;
+			readonly bool                  _saveValue;
+
+			public NoCastScope(WrapParametersVisitor visitor, bool noCast)
+			{
+				_visitor = visitor;
+				_saveValue = visitor._noCast;
+				visitor._noCast = noCast;
+			}
+
+			public void Dispose()
+			{
+				_visitor._noCast = _saveValue;
+			}
+		}
+
+		NoCastScope NoCast(bool noCast = true)
+		{
+			return new NoCastScope(this, noCast);
+		}
+
 		// TAKE/SKIP are modifiers, not value positions: no cast belongs there, and the suppression has to
 		// cover the whole subtree (VisitSqlBinaryExpression and friends read _inModifier). Hooking the two
 		// modifiers keeps the clause traversal, and with it the visit-mode handling, in the base - this
@@ -106,28 +129,21 @@ namespace LinqToDB.Internal.DataProvider
 
 		// A collection parameter in the value list is expanded into the values when the command is built, and a
 		// cast around it hides the parameter from that expansion - the whole collection then binds as a single
-		// value, which the ADO provider fails to convert. Only the values are exempt: Expr1 is an ordinary
-		// value position and keeps the normal cast rules.
+		// value, which the ADO provider fails to convert. That is the shape BuildInListPredicate special-cases,
+		// so only it is exempt: a multi-element list renders each element through BuildExpression and tolerates
+		// a wrapper, and Expr1 is an ordinary value position that keeps the normal cast rules either way.
 		protected override List<ISqlExpression>? VisitInListValues(SqlPredicate.InList predicate, List<ISqlExpression> values, VisitMode mode)
 		{
-			var save = _noCast;
-			_noCast = true;
-			var result = base.VisitInListValues(predicate, values, mode);
-			_noCast = save;
-
-			return result;
+			using var scope = NoCast(values is [SqlParameter]);
+			return base.VisitInListValues(predicate, values, mode);
 		}
 
 		// This position is already marked as needing a cast, so the parameter inside must not be wrapped a
 		// second time - and the node keeps it in a SqlParameter-typed field, so a wrapper would not even fit.
 		protected internal override IQueryElement VisitSqlParameterCastExpression(SqlParameterCastExpression element)
 		{
-			var save = _noCast;
-			_noCast = true;
-			var result = base.VisitSqlParameterCastExpression(element);
-			_noCast = save;
-
-			return result;
+			using var scope = NoCast();
+			return base.VisitSqlParameterCastExpression(element);
 		}
 
 		// The inlined-expression nodes keep their parameter in a SqlParameter-typed field, and the base visitor
@@ -135,22 +151,14 @@ namespace LinqToDB.Internal.DataProvider
 		// position. The parameter is rendered inline there in any case, which is not a place a cast applies.
 		protected internal override IQueryElement VisitSqlInlinedSqlExpression(SqlInlinedSqlExpression element)
 		{
-			var save = _noCast;
-			_noCast = true;
-			var result = base.VisitSqlInlinedSqlExpression(element);
-			_noCast = save;
-
-			return result;
+			using var scope = NoCast();
+			return base.VisitSqlInlinedSqlExpression(element);
 		}
 
 		protected internal override IQueryElement VisitSqlInlinedToSqlExpression(SqlInlinedToSqlExpression element)
 		{
-			var save = _noCast;
-			_noCast = true;
-			var result = base.VisitSqlInlinedToSqlExpression(element);
-			_noCast = save;
-
-			return result;
+			using var scope = NoCast();
+			return base.VisitSqlInlinedToSqlExpression(element);
 		}
 
 		protected internal override IQueryElement VisitSqlCastExpression(SqlCastExpression element)
@@ -162,12 +170,22 @@ namespace LinqToDB.Internal.DataProvider
 
 			var newElement = base.VisitSqlCastExpression(element);
 
-			// When this position is one the visitor would have cast, the cast that is already here has to be
-			// mandatory: a non-mandatory one is exactly what the optimizer - or a provider's convert visitor -
-			// may fold away, which would leave the parameter bare in SQL that requires the cast. The operand is
-			// read from the visited node, since visiting is what decides what the cast finally wraps.
-			if (needCast && newElement is SqlCastExpression cast && cast.Expression.ElementType == QueryElementType.SqlParameter)
-				return QueryHelper.EnsureParameterCast(cast);
+			if (newElement is SqlCastExpression cast)
+			{
+				// CastBoolean does not read _needCast, so a boolean parameter directly under this cast can
+				// still have been marked. The cast already states its operand's type, so drop the marker.
+				if (cast.Expression is SqlParameterCastExpression parameterCast)
+					cast = cast.WithExpression(parameterCast.Parameter);
+
+				// When this position is one the visitor would have cast, the cast that is already here has to be
+				// mandatory: a non-mandatory one is exactly what the optimizer - or a provider's convert visitor -
+				// may fold away, which would leave the parameter bare in SQL that requires the cast. The operand is
+				// read from the visited node, since visiting is what decides what the cast finally wraps.
+				if (needCast && cast.Expression.ElementType == QueryElementType.SqlParameter)
+					return QueryHelper.EnsureParameterCast(cast);
+
+				return cast;
+			}
 
 			return newElement;
 		}

@@ -1141,7 +1141,6 @@ override LinqToDB.Internal.DataProvider.WrapParametersVisitor.VisitTake(LinqToDB
 override LinqToDB.Internal.DataProvider.WrapParametersVisitor.VisitSkip(LinqToDB.Internal.SqlQuery.SqlSelectClause! selectClause, LinqToDB.Internal.SqlQuery.ISqlExpression? skipValue) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 *REMOVED*override LinqToDB.Internal.DataProvider.WrapParametersVisitor.VisitSqlSelectClause(LinqToDB.Internal.SqlQuery.SqlSelectClause! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 LinqToDB.Internal.SqlProvider.BasicSqlBuilder.GetValueBasedParameterCastType(LinqToDB.Internal.SqlQuery.SqlParameter! parameter) -> LinqToDB.DbDataType?
-override LinqToDB.Internal.DataProvider.Access.AccessSqlBuilderBase.BuildSqlCastExpression(LinqToDB.Internal.SqlQuery.SqlCastExpression! castExpression) -> void
 override LinqToDB.Internal.DataProvider.DB2.DB2SqlBuilderBase.ParameterCastMaxLength.get -> int?
 override LinqToDB.Internal.DataProvider.DB2.DB2SqlBuilderBase.ParameterCastResolvesUndefinedType.get -> bool
 override LinqToDB.Internal.DataProvider.Informix.InformixSqlBuilder.ParameterCastDecimalNullsOnly.get -> bool
@@ -1167,6 +1166,8 @@ override LinqToDB.Internal.DataProvider.Firebird.FirebirdSqlBuilder.GetParameter
 override LinqToDB.Internal.DataProvider.Informix.InformixSqlBuilder.GetParameterCastType(LinqToDB.Internal.SqlQuery.SqlParameter! parameter) -> LinqToDB.DbDataType?
 override LinqToDB.Internal.DataProvider.WrapParametersVisitor.VisitInListValues(LinqToDB.Internal.SqlQuery.SqlPredicate.InList! predicate, System.Collections.Generic.List<LinqToDB.Internal.SqlQuery.ISqlExpression!>! values, LinqToDB.Internal.SqlQuery.Visitors.VisitMode mode) -> System.Collections.Generic.List<LinqToDB.Internal.SqlQuery.ISqlExpression!>?
 override LinqToDB.Internal.DataProvider.WrapParametersVisitor.VisitSqlParameterCastExpression(LinqToDB.Internal.SqlQuery.SqlParameterCastExpression! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
+override LinqToDB.Internal.DataProvider.WrapParametersVisitor.VisitSqlInlinedSqlExpression(LinqToDB.Internal.SqlQuery.SqlInlinedSqlExpression! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
+override LinqToDB.Internal.DataProvider.WrapParametersVisitor.VisitSqlInlinedToSqlExpression(LinqToDB.Internal.SqlQuery.SqlInlinedToSqlExpression! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 override LinqToDB.Internal.SqlQuery.SqlParameterCastExpression.Accept(LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor! visitor) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 override LinqToDB.Internal.SqlQuery.SqlParameterCastExpression.CanBeNullable(LinqToDB.Internal.SqlQuery.NullabilityContext! nullability) -> bool
 override LinqToDB.Internal.SqlQuery.SqlParameterCastExpression.ElementType.get -> LinqToDB.Internal.SqlQuery.QueryElementType

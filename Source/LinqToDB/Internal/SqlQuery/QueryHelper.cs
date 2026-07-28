@@ -746,11 +746,11 @@ namespace LinqToDB.Internal.SqlQuery
 				SqlNullabilityExpression { ElementType: QueryElementType.SqlNullabilityExpression, SqlExpression: { } expression } =>
 					IsConstantFast(expression),
 
-				// A cast is as constant as what it wraps - matching IsConstant. Without this, a parameter that
-				// carries a cast stops looking constant, and callers such as the builder's constant ORDER BY
-				// removal start emitting the item instead of dropping it.
-				SqlCastExpression { ElementType: QueryElementType.SqlCast } cast =>
-					IsConstantFast(cast.Expression),
+				// A cast is as constant as what it wraps. Narrowed to the operands EnsureParameterCast produces:
+				// without this, a parameter that carries a cast stops looking constant, and callers such as the
+				// builder's constant ORDER BY removal start emitting the item instead of dropping it.
+				SqlCastExpression { ElementType: QueryElementType.SqlCast, Expression: SqlParameter or SqlValue } =>
+					true,
 
 				SqlParameterCastExpression { ElementType: QueryElementType.SqlParameterCast } =>
 					true,
@@ -1725,18 +1725,26 @@ namespace LinqToDB.Internal.SqlQuery
 		public static ISqlExpression CreateSqlValue(object? value, DbDataType dbDataType, params ISqlExpression[] basedOn)
 		{
 			SqlParameter? foundParam = null;
+			var           foundCast  = false;
 
 			foreach (var element in basedOn)
 			{
-				if (element.ElementType == QueryElementType.SqlParameter)
+				var isCast    = element is SqlParameterCastExpression;
+				var unwrapped = element is SqlParameterCastExpression parameterCast ? parameterCast.Parameter : element;
+
+				if (unwrapped.ElementType == QueryElementType.SqlParameter)
 				{
-					var param = (SqlParameter)element;
+					var param = (SqlParameter)unwrapped;
 					if (param.IsQueryParameter)
 					{
 						foundParam = param;
+						foundCast  = isCast;
 					}
-					else
-						foundParam ??= param;
+					else if (foundParam == null)
+					{
+						foundParam = param;
+						foundCast  = isCast;
+					}
 				}
 			}
 
@@ -1746,6 +1754,12 @@ namespace LinqToDB.Internal.SqlQuery
 				{
 					IsQueryParameter = foundParam.IsQueryParameter,
 				};
+
+				// A cast-wrapped source usage folds to a cast-wrapped result: the folded parameter still needs its
+				// explicit type at this position - a bare parameter here is rejected at prepare time by Firebird and
+				// Informix. This mirrors the pre-fold usage's cast (what master carried via SqlParameter.NeedsCast).
+				if (foundCast)
+					return new SqlParameterCastExpression(newParam);
 
 				return newParam;
 			}

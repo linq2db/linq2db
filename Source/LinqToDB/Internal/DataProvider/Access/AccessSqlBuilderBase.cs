@@ -261,7 +261,16 @@ namespace LinqToDB.Internal.DataProvider.Access
 		// instead, so the type hook does not apply and the rendering itself is overridden.
 		protected override void BuildSqlParameterCastExpression(SqlParameterCastExpression parameterCast)
 		{
-			var parameter  = parameterCast.Parameter;
+			var parameter = parameterCast.Parameter;
+
+			// A parameter that a later conversion turned into a non-query parameter renders as its literal
+			// value - re-parameterising it inside CVar diverges from the base implementation.
+			if (!parameter.IsQueryParameter)
+			{
+				BuildExpression(parameter);
+				return;
+			}
+
 			var paramValue = parameter.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
 
 			// 1. Single parameter loose precision when used with CVar

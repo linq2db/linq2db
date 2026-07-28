@@ -4523,8 +4523,10 @@ END convert_bool;");
 
 		// OracleSqlExpressionConvertVisitor.ConvertCoalesce unifies the charset of a COALESCE mixing
 		// VARCHAR2 and NVARCHAR2 operands (To_NChar around the VARCHAR2 side). That rule runs on a
-		// Transform pass over the query's cached statement, and a write reaching that statement only
-		// shows up on a later render - which is what the second execution below covers.
+		// Transform pass over the query's cached statement. The second execution below re-renders that
+		// cached statement; a write reaching it changes neither the results nor the SQL, and is caught
+		// instead by the Transform-mutation guard in OptimizationContext.OptimizeAndConvertAll, which is
+		// compiled in for the Debug/Testing/Azure configurations the test legs are built with.
 		[Test]
 		public void CoalesceWithInconsistentCharset([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
@@ -4541,7 +4543,8 @@ END convert_bool;");
 			if (db is DataConnection dc)
 				dc.LastQuery!.ShouldContain("To_NChar");
 
-			// Second render of the same cached statement - where a mutating convert surfaces.
+			// Second render of the same cached statement - this is what the Transform-mutation guard in
+			// OptimizeAndConvertAll checks, so keep it.
 			Execute().ShouldBe(new string?[] { "varchar", "nvarchar" });
 		}
 
