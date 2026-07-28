@@ -9,6 +9,7 @@ namespace Tests.LinqToDB.CLI
 	internal sealed class TestCredentialStore : ICredentialStore
 	{
 		public Dictionary<string, (string User, string Password)> Credentials { get; } = new(StringComparer.Ordinal);
+		public HashSet<string> UnreadableTargets { get; } = new(StringComparer.Ordinal);
 
 		public bool TryRead(string target, out string? user, out string? password, out string? error)
 		{
@@ -33,13 +34,25 @@ namespace Tests.LinqToDB.CLI
 			return true;
 		}
 
-		public bool TryList(out IReadOnlyList<CredentialProfile> profiles, out string? error)
+		public bool TryList(out IReadOnlyList<CredentialProfile> profiles, out IReadOnlyList<string> diagnostics, out string? error)
 		{
 			profiles = Credentials
 				.Where(static credential => credential.Key.StartsWith("linq2db/", StringComparison.Ordinal))
+				.Where(credential => !UnreadableTargets.Contains(credential.Key))
 				.Select(static credential => new CredentialProfile(credential.Key.Substring("linq2db/".Length), credential.Value.User))
 				.OrderBy(static credential => credential.Name, StringComparer.Ordinal)
 				.ToArray();
+			diagnostics = UnreadableTargets
+				.Where(static target => target.StartsWith("linq2db/", StringComparison.Ordinal))
+				.Select(static target => $"Credential target '{target}' cannot be decoded.")
+				.ToArray();
+			error = null;
+			return true;
+		}
+
+		public bool TryGetCount(out int count, out string? error)
+		{
+			count = Credentials.Keys.Count(static target => target.StartsWith("linq2db/", StringComparison.Ordinal));
 			error = null;
 			return true;
 		}
@@ -56,7 +69,10 @@ namespace Tests.LinqToDB.CLI
 			var targets = Credentials.Keys.Where(static target => target.StartsWith("linq2db/", StringComparison.Ordinal)).ToArray();
 
 			foreach (var target in targets)
+			{
 				Credentials.Remove(target);
+				UnreadableTargets.Remove(target);
+			}
 
 			removedCount = targets.Length;
 			error        = null;

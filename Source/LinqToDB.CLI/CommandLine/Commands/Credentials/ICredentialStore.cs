@@ -13,7 +13,9 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 		/// <summary>Stores an linq2db credential profile.</summary>
 		bool TryStore(string profile, string user, string password, out string? error);
 		/// <summary>Lists linq2db credential profiles.</summary>
-		bool TryList(out IReadOnlyList<CredentialProfile> profiles, out string? error);
+		bool TryList(out IReadOnlyList<CredentialProfile> profiles, out IReadOnlyList<string> diagnostics, out string? error);
+		/// <summary>Gets the number of linq2db credential profiles without reading their values.</summary>
+		bool TryGetCount(out int count, out string? error);
 		/// <summary>Removes an linq2db credential profile.</summary>
 		bool TryRemove(string profile, out bool removed, out string? error);
 		/// <summary>Removes all linq2db credential profiles.</summary>

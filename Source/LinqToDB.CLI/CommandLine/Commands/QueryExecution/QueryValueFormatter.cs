@@ -26,6 +26,45 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 	/// </summary>
 	public static class QueryValueFormatter
 	{
+		sealed class BoundedValueWriter(int maxUtf8Bytes)
+		{
+			readonly StringBuilder _output = new();
+
+			int _remainingBytes = maxUtf8Bytes;
+
+			public bool TryAppend(char value)
+			{
+				var bytes = value <= 0x7F ? 1 : Encoding.UTF8.GetByteCount([value]);
+
+				if (bytes > _remainingBytes)
+					return false;
+
+				_output.Append(value);
+				_remainingBytes -= bytes;
+				return true;
+			}
+
+			public bool TryAppend(string? value)
+			{
+				if (value == null)
+					return true;
+
+				var bytes = Encoding.UTF8.GetByteCount(value);
+
+				if (bytes > _remainingBytes)
+					return false;
+
+				_output.Append(value);
+				_remainingBytes -= bytes;
+				return true;
+			}
+
+			public override string ToString()
+			{
+				return _output.ToString();
+			}
+		}
+
 		/// <summary>
 		/// Provider-specific field value conversion mode.
 		/// </summary>
@@ -76,6 +115,36 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		}
 
 		internal const string OracleBFilePlaceholder = "<BFILE>";
+
+		/// <summary>
+		/// Formats a provider-specific value without producing a string larger than the specified UTF-8 byte limit.
+		/// </summary>
+		/// <param name="value">Value to format.</param>
+		/// <param name="dataTypeName">Provider data type name.</param>
+		/// <param name="actualFieldType">Provider-specific field value conversion mode.</param>
+		/// <param name="maxUtf8Bytes">Maximum formatted UTF-8 byte count.</param>
+		/// <param name="formattedValue">Formatted value, or <see langword="null"/> for a database null.</param>
+		/// <returns><see langword="true"/> when the complete value fits within the limit; otherwise, <see langword="false"/>.</returns>
+		public static bool TryFormat(
+			object?              value,
+			string               dataTypeName,
+			QueryActualFieldType actualFieldType,
+			int                  maxUtf8Bytes,
+			out string?          formattedValue)
+		{
+			ArgumentOutOfRangeException.ThrowIfNegative(maxUtf8Bytes);
+
+			var output = new BoundedValueWriter(maxUtf8Bytes);
+
+			if (!TryAppendValue(output, value, dataTypeName, actualFieldType))
+			{
+				formattedValue = null;
+				return false;
+			}
+
+			formattedValue = value is null or DBNull ? null : output.ToString();
+			return true;
+		}
 
 		internal static string? Format(object? value, string dataTypeName, QueryActualFieldType actualFieldType = QueryActualFieldType.None)
 		{
@@ -400,13 +469,6 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				};
 			}
 
-			static bool IsKeyValuePair(object? value)
-			{
-				return value != null
-					&& value.GetType().IsGenericType
-					&& value.GetType().GetGenericTypeDefinition() == typeof(KeyValuePair<,>);
-			}
-
 			static void AppendKeyValuePair(StringBuilder output, object? value)
 			{
 				if (value == null)
@@ -440,6 +502,179 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				output.Append(']');
 				return output.ToString();
 			}
+		}
+
+		static bool TryAppendValue(
+			BoundedValueWriter   output,
+			object?              value,
+			string               dataTypeName,
+			QueryActualFieldType actualFieldType)
+		{
+			if (value is null or DBNull)
+				return true;
+
+			if (value is byte[] bytes)
+			{
+				return actualFieldType == QueryActualFieldType.ByteArray
+					|| actualFieldType == QueryActualFieldType.None && dataTypeName.StartsWith("Array(", StringComparison.OrdinalIgnoreCase)
+					? TryAppendByteArray(output, bytes)
+					: TryAppendBytes(output, bytes);
+			}
+
+			if (value is SqlVector<float> floatVector)
+				return TryAppendVector(output, floatVector.Memory.Span);
+
+			if (value is SqlVector<Half> halfVector)
+				return TryAppendVector(output, halfVector.Memory.Span);
+
+			if (value is ITuple tuple)
+				return TryAppendTuple(output, tuple);
+
+			if (value is IEnumerable and not string)
+			{
+				var sequence = (IEnumerable)value;
+
+				return TryAppendSequence(output, sequence);
+			}
+
+			return output.TryAppend(Format(value, dataTypeName, actualFieldType));
+		}
+
+		static bool TryAppendNestedValue(BoundedValueWriter output, object? value)
+		{
+			return value switch
+			{
+				null               => true,
+				string stringValue => output.TryAppend(stringValue),
+				byte[] bytes       => TryAppendBytes(output, bytes),
+				ITuple tuple       => TryAppendTuple(output, tuple),
+				IEnumerable items  => TryAppendSequence(output, items),
+				_                  => output.TryAppend(Convert.ToString(value, CultureInfo.InvariantCulture)),
+			};
+		}
+
+		static bool TryAppendTuple(BoundedValueWriter output, ITuple tuple)
+		{
+			if (!output.TryAppend('('))
+				return false;
+
+			for (var i = 0; i < tuple.Length; i++)
+			{
+				if (i > 0 && !output.TryAppend(','))
+					return false;
+
+				if (!TryAppendNestedValue(output, tuple[i]))
+					return false;
+			}
+
+			return output.TryAppend(')');
+		}
+
+		static bool TryAppendSequence(BoundedValueWriter output, IEnumerable sequence)
+		{
+			var itemIndex    = 0;
+			var map          = false;
+			var closeBracket = ']';
+
+			foreach (var item in sequence)
+			{
+				if (itemIndex == 0)
+				{
+					map          = IsKeyValuePair(item);
+					closeBracket = map ? '}' : ']';
+
+					if (!output.TryAppend(map ? '{' : '['))
+						return false;
+
+				}
+
+				if (itemIndex > 0 && !output.TryAppend(','))
+					return false;
+
+				if (map)
+				{
+					if (!TryAppendKeyValuePair(output, item))
+						return false;
+				}
+				else if (!TryAppendNestedValue(output, item))
+					return false;
+
+				itemIndex++;
+			}
+
+			if (itemIndex == 0 && !output.TryAppend('['))
+				return false;
+
+			return output.TryAppend(closeBracket);
+		}
+
+		static bool TryAppendKeyValuePair(BoundedValueWriter output, object? value)
+		{
+			if (value == null)
+				return output.TryAppend(':');
+
+			var type = value.GetType();
+			var key  = type.GetProperty("Key")!.GetValue(value);
+			var item = type.GetProperty("Value")!.GetValue(value);
+
+			return TryAppendNestedValue(output, key)
+				&& output.TryAppend(':')
+				&& TryAppendNestedValue(output, item);
+		}
+
+		static bool IsKeyValuePair(object? value)
+		{
+			return value != null
+				&& value.GetType().IsGenericType
+				&& value.GetType().GetGenericTypeDefinition() == typeof(KeyValuePair<,>);
+		}
+
+		static bool TryAppendVector<T>(BoundedValueWriter output, ReadOnlySpan<T> vector)
+		{
+			if (!output.TryAppend('['))
+				return false;
+
+			for (var i = 0; i < vector.Length; i++)
+			{
+				if (i > 0 && !output.TryAppend(','))
+					return false;
+
+				if (!output.TryAppend(Convert.ToString(vector[i], CultureInfo.InvariantCulture)))
+					return false;
+			}
+
+			return output.TryAppend(']');
+		}
+
+		static bool TryAppendBytes(BoundedValueWriter output, ReadOnlySpan<byte> bytes)
+		{
+			if (!output.TryAppend("0x"))
+				return false;
+
+			foreach (var value in bytes)
+			{
+				if (!output.TryAppend(value.ToString("X2", CultureInfo.InvariantCulture)))
+					return false;
+			}
+
+			return true;
+		}
+
+		static bool TryAppendByteArray(BoundedValueWriter output, ReadOnlySpan<byte> bytes)
+		{
+			if (!output.TryAppend('['))
+				return false;
+
+			for (var i = 0; i < bytes.Length; i++)
+			{
+				if (i > 0 && !output.TryAppend(','))
+					return false;
+
+				if (!output.TryAppend(bytes[i].ToString(CultureInfo.InvariantCulture)))
+					return false;
+			}
+
+			return output.TryAppend(']');
 		}
 	}
 }

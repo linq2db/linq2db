@@ -437,7 +437,7 @@ The optional top-level `mcp` section describes this configured MCP server instan
 - `title` is its human-readable display name.
 - `description` identifies the databases or application domain served by this instance.
 - `instructions` supplies additional instance-specific guidance that MCP hosts can add to the model context. It is appended to the built-in server instructions rather than replacing them.
-- `maxResponseBytes` limits UTF-8 schema, query, and execute output content buffered for one MCP response. Protocol framing and the short truncation warning are not counted. It defaults to `8388608` (8 MiB); `--max-response-bytes` overrides the configured value for a server registration.
+- `maxResponseBytes` limits UTF-8 schema, query, and execute output content buffered for one MCP response. Protocol framing and the short truncation warning are not counted. For schema inspection, it limits the serialized response, not the provider's in-memory schema acquisition; use filters and `detailLevel: "names"` for large databases. It defaults to `8388608` (8 MiB); `--max-response-bytes` overrides the configured value for a server registration.
 - `mcp` is a reserved section name, is not a profile, and is not returned in the `linq2db_info` profile list.
 - `config-init` preserves an existing `mcp` section but does not create or modify it.
 

@@ -142,15 +142,20 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 						return StatusCodes.INVALID_ARGUMENTS;
 					}
 
-					if (!environment.CredentialStore.TryList(out var profiles, out var listError))
+					if (!environment.CredentialStore.TryList(out var profiles, out var diagnostics, out var listError))
 					{
 						await environment.Error.WriteLineAsync(listError);
 						return StatusCodes.EXPECTED_ERROR;
 					}
 
+					foreach (var diagnostic in diagnostics)
+						await environment.Error.WriteLineAsync(diagnostic);
+
 					if (profiles.Count == 0)
 					{
-						await environment.Out.WriteLineAsync("No linq2db credential profiles found.");
+						await environment.Out.WriteLineAsync(diagnostics.Count == 0
+							? "No linq2db credential profiles found."
+							: "No readable linq2db credential profiles found.");
 						return StatusCodes.SUCCESS;
 					}
 
@@ -195,13 +200,13 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 						return StatusCodes.INVALID_ARGUMENTS;
 					}
 
-					if (!environment.CredentialStore.TryList(out profiles, out listError))
+					if (!environment.CredentialStore.TryGetCount(out var profileCount, out var countError))
 					{
-						await environment.Error.WriteLineAsync(listError);
+						await environment.Error.WriteLineAsync(countError);
 						return StatusCodes.EXPECTED_ERROR;
 					}
 
-					if (profiles.Count == 0)
+					if (profileCount == 0)
 					{
 						await environment.Out.WriteLineAsync("No linq2db credential profiles found.");
 						return StatusCodes.SUCCESS;
@@ -209,7 +214,7 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 
 					if (!force)
 					{
-						await environment.Error.WriteAsync($"Remove all {profiles.Count} linq2db credential profiles? [y/N] ");
+						await environment.Error.WriteAsync($"Remove all {profileCount.ToString(CultureInfo.InvariantCulture)} linq2db credential profiles? [y/N] ");
 
 						var answer = environment.ReadLine();
 

@@ -25,6 +25,26 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task CredentialsListContinuesAfterUnreadableProfile()
+		{
+			var environment = new TestCliEnvironment();
+			environment.Credentials.Add("linq2db/project-a/read",   ("Reader", "secret"));
+			environment.Credentials.Add("linq2db/project-b/broken", ("Writer", "secret"));
+			environment.UnreadableCredentialTargets.Add("linq2db/project-b/broken");
+
+			var (exitCode, output, error) = await RunCli(environment, "credentials", "list");
+
+			using (Assert.EnterMultipleScope())
+			{
+				exitCode.ShouldBe(0);
+				output.  ShouldContain("project-a/read");
+				output.  ShouldContain("Reader");
+				output.  ShouldNotContain("project-b/broken");
+				error.   ShouldContain("linq2db/project-b/broken");
+			}
+		}
+
+		[Test]
 		public async Task CredentialsSetRejectsPasswordMismatch()
 		{
 			var environment = new TestCliEnvironment();
@@ -97,6 +117,25 @@ namespace Tests.LinqToDB.CLI
 			output.  ShouldContain("Removed 1 linq2db credential profile(s).");
 			environment.Credentials.ShouldNotContainKey("linq2db/project-a/read");
 			environment.Credentials.ShouldContainKey("unrelated-target");
+		}
+
+		[Test]
+		public async Task CredentialsClearDeletesUnreadableProfiles()
+		{
+			var environment = new TestCliEnvironment();
+			environment.Credentials.Add("linq2db/project-a/read",   ("Reader", "secret"));
+			environment.Credentials.Add("linq2db/project-b/broken", ("Writer", "secret"));
+			environment.UnreadableCredentialTargets.Add("linq2db/project-b/broken");
+
+			var (exitCode, output, _) = await RunCli(environment, "credentials", "clear", "--force");
+
+			using (Assert.EnterMultipleScope())
+			{
+				exitCode.ShouldBe(0);
+				output.  ShouldContain("Removed 2 linq2db credential profile(s).");
+				environment.Credentials.ShouldNotContainKey("linq2db/project-a/read");
+				environment.Credentials.ShouldNotContainKey("linq2db/project-b/broken");
+			}
 		}
 
 		static async Task<(int ExitCode, string Output, string Error)> RunCli(TestCliEnvironment environment, params string[] args)

@@ -28,6 +28,7 @@ namespace Tests.LinqToDB.CLI
 		public int BufferWidth => 120;
 		public ICredentialStore CredentialStore { get; } = new TestCredentialStore();
 		public Dictionary<string, (string User, string Password)> Credentials => ((TestCredentialStore)CredentialStore).Credentials;
+		public HashSet<string> UnreadableCredentialTargets => ((TestCredentialStore)CredentialStore).UnreadableTargets;
 
 		public string Output      => _output.ToString();
 		public string ErrorOutput => _error .ToString();

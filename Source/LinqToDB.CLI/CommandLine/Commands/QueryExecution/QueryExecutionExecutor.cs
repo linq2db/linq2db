@@ -127,7 +127,13 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 									return default;
 							}
 							else
-								row[i] = ReadFieldAsString(reader, column.ActualFieldType, i);
+							{
+								var value = ReadFieldValue(reader, i);
+
+								if (!QueryValueFormatter.TryFormat(value, column.DataTypeName, column.ActualFieldType, remainingBytes, out row[i]))
+									return default;
+							}
+
 							break;
 					}
 
@@ -884,13 +890,20 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		/// <returns>Formatted field value, or <see langword="null"/> for a database null.</returns>
 		public static string? ReadFieldAsString(DbDataReader reader, QueryActualFieldType actualFieldType, int ordinal)
 		{
-			object value;
-
 			switch (actualFieldType)
 			{
 				case QueryActualFieldType.OracleBFile : return QueryValueFormatter.OracleBFilePlaceholder;
 				case QueryActualFieldType.MySqlDecimal: return ReadMySqlDecimalAsString(reader, ordinal);
 			}
+
+			var value = ReadFieldValue(reader, ordinal);
+
+			return QueryValueFormatter.Format(value, reader.GetDataTypeName(ordinal), actualFieldType);
+		}
+
+		static object ReadFieldValue(DbDataReader reader, int ordinal)
+		{
+			object value;
 
 			try
 			{
@@ -909,7 +922,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				}
 			}
 
-			return QueryValueFormatter.Format(value, reader.GetDataTypeName(ordinal), actualFieldType);
+			return value;
 		}
 
 		static bool IsDateDataType(string dataTypeName)

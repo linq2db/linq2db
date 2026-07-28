@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Data;
 
 using LinqToDB.CommandLine;
@@ -56,6 +57,52 @@ namespace Tests.LinqToDB.CLI
 				ReadFieldAsString(reader, "None",      10).ShouldBe("03:04:05.1230000");
 
 				reader.IsDBNull(11).ShouldBe(true);
+			}
+		}
+
+		[Test]
+		public void BoundedFormatterStopsSequenceEnumerationAtUtf8Limit()
+		{
+			var enumerated = 0;
+
+			var formatted = QueryValueFormatter.TryFormat(
+				GetValues(),
+				"Array(String)",
+				QueryValueFormatter.QueryActualFieldType.None,
+				10,
+				out var value);
+
+			using (Assert.EnterMultipleScope())
+			{
+				formatted. ShouldBe(false);
+				value.     ShouldBeNull();
+				enumerated.ShouldBeLessThan(1000);
+			}
+
+			IEnumerable<object> GetValues()
+			{
+				for (var i = 0; i < 1000; i++)
+				{
+					enumerated++;
+					yield return "abcd";
+				}
+			}
+		}
+
+		[Test]
+		public void BoundedFormatterFormatsNestedValuesWithinUtf8Limit()
+		{
+			var formatted = QueryValueFormatter.TryFormat(
+				new object[] { new[] { 1, 2 }, (3, 4), "é" },
+				"Array",
+				QueryValueFormatter.QueryActualFieldType.None,
+				64,
+				out var value);
+
+			using (Assert.EnterMultipleScope())
+			{
+				formatted.ShouldBe(true);
+				value.    ShouldBe("[[1,2],(3,4),é]");
 			}
 		}
 

@@ -48,7 +48,7 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 
 			try
 			{
-				return TryDecodeCredential(target, Marshal.PtrToStructure<NativeCredential>(credentialPointer), out user, out password, out error);
+				return TryDecodeCredential(target, Marshal.PtrToStructure<NativeCredential>(credentialPointer), true, out user, out password, out error);
 			}
 			finally
 			{
@@ -133,54 +133,57 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 			}
 		}
 
-		public bool TryList(out IReadOnlyList<CredentialProfile> profiles, out string? error)
+		public bool TryList(out IReadOnlyList<CredentialProfile> profiles, out IReadOnlyList<string> diagnostics, out string? error)
 		{
-			profiles = [];
+			profiles    = [];
+			diagnostics = [];
 
-			if (!CheckPlatform(out error))
+			if (!TryEnumerateTargets(out var targets, out error))
 				return false;
 
-			if (!CredEnumerate(TargetPrefix + "*", 0, out var count, out var credentialsPointer))
-			{
-				var nativeError = Marshal.GetLastWin32Error();
+			var result = new List<CredentialProfile>(targets.Count);
+			var errors = new List<string>();
 
-				if (nativeError == ErrorNotFound)
+			foreach (var target in targets)
+			{
+				if (!CredRead(target, CredentialTypeGeneric, 0, out var credentialPointer))
 				{
-					error = null;
-					return true;
+					errors.Add($"Cannot read credential target '{target}': {new Win32Exception(Marshal.GetLastWin32Error()).Message}");
+					continue;
 				}
 
-				error = $"Cannot enumerate linq2db credential profiles: {new Win32Exception(nativeError).Message}";
-				return false;
-			}
-
-			try
-			{
-				var result = new List<CredentialProfile>(count);
-
-				for (var i = 0; i < count; i++)
+				try
 				{
-					var credentialPointer = Marshal.ReadIntPtr(credentialsPointer, i * IntPtr.Size);
-					var credential        = Marshal.PtrToStructure<NativeCredential>(credentialPointer);
-					var target            = Marshal.PtrToStringUni(credential.TargetName);
-
-					if (target == null || !target.StartsWith(TargetPrefix, StringComparison.OrdinalIgnoreCase))
+					if (!TryDecodeCredential(target, Marshal.PtrToStructure<NativeCredential>(credentialPointer), false, out var user, out _, out var decodeError))
+					{
+						errors.Add(decodeError!);
 						continue;
-
-					if (!TryDecodeCredential(target, credential, out var user, out _, out error))
-						return false;
+					}
 
 					result.Add(new CredentialProfile(target.Substring(TargetPrefix.Length), user!));
 				}
+				finally
+				{
+					CredFree(credentialPointer);
+				}
+			}
 
-				profiles = result.OrderBy(static profile => profile.Name, StringComparer.OrdinalIgnoreCase).ToArray();
-				error    = null;
-				return true;
-			}
-			finally
+			profiles    = result.OrderBy(static profile => profile.Name, StringComparer.OrdinalIgnoreCase).ToArray();
+			diagnostics = errors;
+			error       = null;
+			return true;
+		}
+
+		public bool TryGetCount(out int count, out string? error)
+		{
+			if (!TryEnumerateTargets(out var targets, out error))
 			{
-				CredFree(credentialsPointer);
+				count = 0;
+				return false;
 			}
+
+			count = targets.Count;
+			return true;
 		}
 
 		public bool TryRemove(string profile, out bool removed, out string? error)
@@ -213,23 +216,76 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 		{
 			removedCount = 0;
 
-			if (!TryList(out var profiles, out error))
+			if (!TryEnumerateTargets(out var targets, out error))
 				return false;
 
-			foreach (var profile in profiles)
+			foreach (var target in targets)
 			{
-				if (!TryRemove(profile.Name, out var removed, out error))
-					return false;
-
-				if (removed)
+				if (CredDelete(target, CredentialTypeGeneric, 0))
+				{
 					removedCount++;
+					continue;
+				}
+
+				var nativeError = Marshal.GetLastWin32Error();
+
+				if (nativeError == ErrorNotFound)
+					continue;
+
+				error = $"Cannot remove credential target '{target}': {new Win32Exception(nativeError).Message}";
+				return false;
 			}
 
 			error = null;
 			return true;
 		}
 
-		static bool TryDecodeCredential(string target, NativeCredential credential, out string? user, out string? password, out string? error)
+		static bool TryEnumerateTargets(out IReadOnlyList<string> targets, out string? error)
+		{
+			targets = [];
+
+			if (!CheckPlatform(out error))
+				return false;
+
+			if (!CredEnumerate(TargetPrefix + "*", 0, out var count, out var credentialsPointer))
+			{
+				var nativeError = Marshal.GetLastWin32Error();
+
+				if (nativeError == ErrorNotFound)
+				{
+					error = null;
+					return true;
+				}
+
+				error = $"Cannot enumerate linq2db credential profiles: {new Win32Exception(nativeError).Message}";
+				return false;
+			}
+
+			try
+			{
+				var result = new List<string>(count);
+
+				for (var i = 0; i < count; i++)
+				{
+					var credentialPointer = Marshal.ReadIntPtr(credentialsPointer, i * IntPtr.Size);
+					var credential        = Marshal.PtrToStructure<NativeCredential>(credentialPointer);
+					var target            = Marshal.PtrToStringUni(credential.TargetName);
+
+					if (target != null && target.StartsWith(TargetPrefix, StringComparison.OrdinalIgnoreCase))
+						result.Add(target);
+				}
+
+				targets = result;
+				error   = null;
+				return true;
+			}
+			finally
+			{
+				CredFree(credentialsPointer);
+			}
+		}
+
+		static bool TryDecodeCredential(string target, NativeCredential credential, bool readPassword, out string? user, out string? password, out string? error)
 		{
 			user     = Marshal.PtrToStringUni(credential.UserName);
 			password = null;
@@ -271,8 +327,22 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 							return false;
 						}
 
-						user     = reader.ReadString();
-						password = reader.ReadString();
+						user = reader.ReadString();
+
+						if (readPassword)
+							password = reader.ReadString();
+						else
+						{
+							var passwordByteCount = reader.Read7BitEncodedInt();
+
+							if (passwordByteCount < 0 || passwordByteCount > stream.Length - stream.Position)
+							{
+								error = $"Credential target '{target}' contains an unsupported linq2db credential format.";
+								return false;
+							}
+
+							stream.Position += passwordByteCount;
+						}
 
 						if (stream.Position != stream.Length || string.IsNullOrEmpty(user))
 						{
@@ -283,7 +353,7 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 						error = null;
 						return true;
 					}
-					catch (Exception ex) when (ex is EndOfStreamException or IOException)
+					catch (Exception ex) when (ex is EndOfStreamException or FormatException or IOException)
 					{
 						error = $"Credential target '{target}' contains an unsupported linq2db credential format.";
 						return false;
@@ -303,6 +373,12 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 			{
 				error = $"Credential target '{target}' contains an unsupported credential value.";
 				return false;
+			}
+
+			if (!readPassword)
+			{
+				error = null;
+				return true;
 			}
 
 			password = credential.CredentialBlobSize == 0
