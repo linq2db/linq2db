@@ -66,6 +66,8 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				return null;
 			}
 
+			outputFormat = outputFormat.ToLowerInvariant();
+
 			if (string.Equals(outputFileName, ConnectionSettingsResolver.MissingEnvironmentVariable, StringComparison.Ordinal) ||
 				string.Equals(querySqlFile,   ConnectionSettingsResolver.MissingEnvironmentVariable, StringComparison.Ordinal))
 			{

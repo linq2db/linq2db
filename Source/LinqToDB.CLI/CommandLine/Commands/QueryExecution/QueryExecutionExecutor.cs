@@ -341,10 +341,15 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			}
 			finally
 			{
-				if (dataReader != null)
-					await dataReader.DisposeAsync().AsTask();
-
-				await dataConnection.DisposeAsync().AsTask();
+				try
+				{
+					if (dataReader != null)
+						await dataReader.DisposeAsync();
+				}
+				finally
+				{
+					await dataConnection.DisposeAsync();
+				}
 			}
 		}
 
@@ -826,6 +831,8 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			}
 			catch (Exception exception) when (exception is not OperationCanceledException)
 			{
+				// Wide MySQL DECIMAL values can overflow during the regular null check.
+				// GetMySqlDecimal below performs its own best-effort null handling.
 			}
 
 			return FormatMySqlDecimal(GetProviderSpecificReaderMethodValue(reader, ordinal, "GetMySqlDecimal"));

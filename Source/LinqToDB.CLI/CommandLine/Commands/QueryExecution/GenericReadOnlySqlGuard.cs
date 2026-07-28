@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 
 using LinqToDB.CommandLine;
 using LinqToDB.CommandLine.Options;
@@ -340,10 +341,9 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 					(fragmentStart + maxFragmentLength < lineEnd - lineStart ? "..." : string.Empty).AsSpan());
 			}
 
-			return SqlGuardResult.Rejected(
-				$"Query was rejected because ambiguous SQL syntax cannot be validated safely. " +
-				$"Line {line}, column {position - lineStart + 1}: '{syntax}'. "                 +
-				$"Reason: {reason} Rewrite: {rewrite} SQL fragment: {fragment}");
+			return SqlGuardResult.Rejected(string.Create(
+				CultureInfo.InvariantCulture,
+				$"Query was rejected because ambiguous SQL syntax cannot be validated safely. Line {line}, column {position - lineStart + 1}: '{syntax}'. Reason: {reason} Rewrite: {rewrite} SQL fragment: {fragment}"));
 		}
 	}
 }

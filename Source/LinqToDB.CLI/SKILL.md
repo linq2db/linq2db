@@ -477,6 +477,7 @@ Guardrails:
 - `linq2db_execute` is not registered by default. Start MCP with `--enable-execute-tool` to publish it, and still use a profile with `enableExecute: true`.
 - When write-capable SQL is executed, the command writes a diagnostic notice to stderr without including SQL text or credentials.
 - The read-only SQL guard is a guardrail, not a security boundary. Use restricted database accounts as the primary protection.
+- The read-only SQL guard classifies statement shape. It cannot detect side effects performed by functions or expressions inside an accepted `SELECT`, including provider built-ins or user-defined functions that modify state.
 - The strongest protection against agent mistakes is to execute SQL using a database account with limited permissions appropriate for the task. For read-only agent queries, prefer a read-only account. For development workflows that need DDL/DML, prefer a dedicated disposable database or a restricted development account.
 
 Agent responsibility:

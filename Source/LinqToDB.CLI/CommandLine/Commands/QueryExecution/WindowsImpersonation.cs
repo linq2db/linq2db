@@ -25,17 +25,6 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		const int Logon32ProviderWinnt50       = 3;
 
 		/// <summary>
-		/// Executes an operation under the specified Windows user identity.
-		/// </summary>
-		public static T Run<T>(string user, string password, WindowsImpersonationMode mode, Func<T> action)
-		{
-			if (!OperatingSystem.IsWindows())
-				throw new PlatformNotSupportedException("Windows impersonation is supported only on Windows.");
-
-			return RunWindows(user, password, mode, action);
-		}
-
-		/// <summary>
 		/// Executes an asynchronous operation under the specified Windows user identity.
 		/// </summary>
 		public static Task<T> RunAsync<T>(string user, string password, WindowsImpersonationMode mode, Func<Task<T>> action)
@@ -44,19 +33,6 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				throw new PlatformNotSupportedException("Windows impersonation is supported only on Windows.");
 
 			return RunWindowsAsync(user, password, mode, action);
-		}
-
-		[SupportedOSPlatform("windows")]
-		static T RunWindows<T>(string user, string password, WindowsImpersonationMode mode, Func<T> action)
-		{
-			var (domain, userName)           = SplitUserName  (user);
-			var (logonType, logonProvider)   = GetLogonOptions(mode);
-
-			if (!LogonUser(userName, domain, password, logonType, logonProvider, out var token))
-				throw new Win32Exception(Marshal.GetLastWin32Error(), "Windows impersonation logon failed.");
-
-			using (token)
-				return WindowsIdentity.RunImpersonated(token, action);
 		}
 
 		[SupportedOSPlatform("windows")]

@@ -127,6 +127,18 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task QueryRejectsMissingProviderLocationForInformixProvider()
+		{
+			var result = await RunCli("query", "--provider", "Informix", "--connection-string", "Server=localhost:9189;Database=testdatadb2;userid=informix;password=in4mix", "--sql", "select 1 as Value from systables where tabid = 1");
+
+			{
+				(result.ExitCode).ShouldBe(-3);
+				(result.Error).ShouldContain("Cannot locate IBM.Data.Db2.dll provider assembly.");
+				(result.Error).ShouldContain("--provider-location <path_to_assembly>");
+			}
+		}
+
+		[Test]
 		public async Task QueryRejectsMissingExplicitProviderLocationFile()
 		{
 			var result = await RunCli("query", "--provider", "SQLite", "--provider-location", "missing\\provider.dll", "--connection-string", "Data Source=:memory:", "--sql", "select 1 as Value");
@@ -266,24 +278,32 @@ namespace Tests.LinqToDB.CLI
 		{
 			var environment = new TestCliEnvironment();
 			var database    = CreateSqliteDatabase();
-			var config      = AddConfigFile(environment, """
-				{
-					"default": {
-						"provider": "SQLite",
-						"connectionString": "Data Source=%DATABASE%;Pooling=False",
-						"enableExecute": true
-					}
-				}
-				""".Replace("%DATABASE%", database.Replace("\\", "\\\\", StringComparison.Ordinal), StringComparison.Ordinal));
 
-			var result = await RunCli(environment, "execute", "--config", config, "--output", "json-table", "--sql", "update Person set Name = 'updated' where Id = 1");
-
+			try
 			{
-				(result.ExitCode).ShouldBe(0);
-				(result.Output).ShouldContain("\"columns\":[]");
-				(result.Output).ShouldContain("\"rows\":[]");
-				(result.Output).ShouldContain("\"recordsAffected\":1");
-				(result.Error).ShouldContain("Executing write-capable SQL because profile 'default' has enableExecute=true. Provider: SQLite.");
+				var config = AddConfigFile(environment, """
+					{
+						"default": {
+							"provider": "SQLite",
+							"connectionString": "Data Source=%DATABASE%;Pooling=False",
+							"enableExecute": true
+						}
+					}
+					""".Replace("%DATABASE%", database.Replace("\\", "\\\\", StringComparison.Ordinal), StringComparison.Ordinal));
+
+				var result = await RunCli(environment, "execute", "--config", config, "--output", "json-table", "--sql", "update Person set Name = 'updated' where Id = 1");
+
+				{
+					(result.ExitCode).ShouldBe(0);
+					(result.Output).ShouldContain("\"columns\":[]");
+					(result.Output).ShouldContain("\"rows\":[]");
+					(result.Output).ShouldContain("\"recordsAffected\":1");
+					(result.Error).ShouldContain("Executing write-capable SQL because profile 'default' has enableExecute=true. Provider: SQLite.");
+				}
+			}
+			finally
+			{
+				File.Delete(database);
 			}
 		}
 
@@ -495,13 +515,13 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
-		public void QueryHonorsCancellationToken()
+		public async Task QueryHonorsCancellationToken()
 		{
 			using var cancellation = new CancellationTokenSource();
 
 			cancellation.Cancel();
 
-			Assert.ThrowsAsync<OperationCanceledException>(async () =>
+			await Should.ThrowAsync<OperationCanceledException>(async () =>
 				await new LinqToDBCliController()
 					.Execute(
 						["query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql", "select 1"],
@@ -1059,8 +1079,12 @@ namespace Tests.LinqToDB.CLI
 		[Test]
 		public void ExternalProviderAssemblyIsLoadedOncePerPath()
 		{
-			var providerPath     = typeof(QueryCommandTests).Assembly.Location;
+			var providerPath     = Path.Combine(TestContext.CurrentContext.WorkDirectory, $"provider-{Guid.NewGuid():N}.dll");
 			var currentDirectory = Environment.CurrentDirectory;
+
+			File.Copy(typeof(QueryCommandTests).Assembly.Location, providerPath);
+
+			AppDomain.CurrentDomain.GetAssemblies().Count(assembly => assembly.Location == providerPath).ShouldBe(0);
 
 			ExternalProviderLoader.LoadExternalProvider("SQLite", providerPath, out var firstError).ShouldBe(true);
 			var afterFirstLoad = AppDomain.CurrentDomain.GetAssemblies().Count(assembly => assembly.Location == providerPath);
@@ -1071,6 +1095,7 @@ namespace Tests.LinqToDB.CLI
 				firstError.ShouldBeNull();
 				secondError.ShouldBeNull();
 				Environment.CurrentDirectory.ShouldBe(currentDirectory);
+				afterFirstLoad.ShouldBe(1);
 				AppDomain.CurrentDomain.GetAssemblies().Count(assembly => assembly.Location == providerPath).ShouldBe(afterFirstLoad);
 			}
 		}

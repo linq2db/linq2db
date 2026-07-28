@@ -13,6 +13,8 @@ using NUnit.Framework;
 
 using Shouldly;
 
+#pragma warning disable JSON002
+
 namespace Tests.LinqToDB.CLI
 {
 	[TestFixture]
@@ -24,16 +26,17 @@ namespace Tests.LinqToDB.CLI
 			await using var server = await McpServerProcess.Start();
 
 			await server.Initialize();
+
 			var response = await server.SendRequest("tools/list", new JsonObject());
 
 			{
 				(response["error"]).ShouldBeNull();
 				(response["result"]?["tools"]?.AsArray().Count).ShouldBe(4);
 
-				var queryTool = FindTool(response, "linq2db_query");
-				var infoTool  = FindTool(response, "linq2db_info");
+				var queryTool  = FindTool(response, "linq2db_query");
+				var infoTool   = FindTool(response, "linq2db_info");
 				var schemaTool = FindTool(response, "linq2db_schema");
-				var skillTool = FindTool(response, "linq2db_skill");
+				var skillTool  = FindTool(response, "linq2db_skill");
 
 				var queryInputSchema = queryTool["inputSchema"]!.ToJsonString();
 				var queryProperties  = queryTool["inputSchema"]!["properties"]!.AsObject();
@@ -41,11 +44,11 @@ namespace Tests.LinqToDB.CLI
 
 				((string?)queryTool["description"])!.ShouldContain("Call linq2db_info first");
 				((string?)queryTool["description"])!.ShouldContain("Call linq2db_skill");
-				((bool?)queryTool["annotations"]?["openWorldHint"]).ShouldBe(true);
-				((bool?)queryTool["annotations"]?["readOnlyHint"]).ShouldBe(true);
-				((bool?)queryTool["annotations"]?["idempotentHint"]).ShouldBe(false);
-				((bool?)queryTool["annotations"]?["destructiveHint"]).ShouldBe(false);
-				(queryTool["inputSchema"]?["required"]?.AsArray().ToJsonString())!.ShouldContain("sql");
+				((bool?)  queryTool["annotations"]?["openWorldHint"]).  ShouldBe(true);
+				((bool?)  queryTool["annotations"]?["readOnlyHint"]).   ShouldBe(true);
+				((bool?)  queryTool["annotations"]?["idempotentHint"]). ShouldBe(false);
+				((bool?)  queryTool["annotations"]?["destructiveHint"]).ShouldBe(false);
+				(         queryTool["inputSchema"]?["required"]?.AsArray().ToJsonString())!.ShouldContain("sql");
 				(queryInputSchema).ShouldNotContain("allowUnsafeSql");
 				(queryInputSchema).ShouldNotContain("allowExecute");
 				(queryProperties.ContainsKey("provider")).ShouldBe(false);
@@ -61,15 +64,16 @@ namespace Tests.LinqToDB.CLI
 				((bool?)  infoTool["annotations"]?["idempotentHint"]).ShouldBe(true);
 				((bool?)  infoTool["annotations"]?["openWorldHint"]).ShouldBe(false);
 				((bool?)  infoTool["annotations"]?["destructiveHint"]).ShouldBe(false);
-				(infoTool["inputSchema"]?["properties"]?.AsObject().Count).ShouldBe(0);
-				(infoTool["inputSchema"]?["required"]).ShouldBeNull();
+				(         infoTool["inputSchema"]?["properties"]?.AsObject().Count).ShouldBe(0);
+				(         infoTool["inputSchema"]?["required"]).ShouldBeNull();
 
 				((string?)schemaTool["description"])!.ShouldContain("Returns provider-independent database schema metadata");
 				((string?)schemaTool["description"])!.ShouldContain("Procedures and functions are not supported");
-				((bool?)schemaTool["annotations"]?["readOnlyHint"]).ShouldBe(true);
-				((bool?)schemaTool["annotations"]?["idempotentHint"]).ShouldBe(true);
-				((bool?)schemaTool["annotations"]?["openWorldHint"]).ShouldBe(true);
-				((bool?)schemaTool["annotations"]?["destructiveHint"]).ShouldBe(false);
+				((bool?)  schemaTool["annotations"]?["readOnlyHint"]).ShouldBe(true);
+				((bool?)  schemaTool["annotations"]?["idempotentHint"]).ShouldBe(true);
+				((bool?)  schemaTool["annotations"]?["openWorldHint"]).ShouldBe(true);
+				((bool?)  schemaTool["annotations"]?["destructiveHint"]).ShouldBe(false);
+
 				schemaProperties.ContainsKey("provider").ShouldBe(false);
 				schemaProperties.ContainsKey("connectionString").ShouldBe(false);
 				schemaProperties.ContainsKey("password").ShouldBe(false);
@@ -84,12 +88,12 @@ namespace Tests.LinqToDB.CLI
 				schemaProperties.ContainsKey("useSchemaOnly").ShouldBe(false);
 
 				((string?)skillTool["description"])!.ShouldContain("Returns the full embedded linq2db CLI agent skill as Markdown");
-				((bool?)skillTool["annotations"]?["readOnlyHint"]).ShouldBe(true);
-				((bool?)skillTool["annotations"]?["idempotentHint"]).ShouldBe(true);
-				((bool?)skillTool["annotations"]?["openWorldHint"]).ShouldBe(false);
-				((bool?)skillTool["annotations"]?["destructiveHint"]).ShouldBe(false);
-				(skillTool["inputSchema"]?["properties"]?.AsObject().Count).ShouldBe(0);
-				(skillTool["inputSchema"]?["required"]).ShouldBeNull();
+				((bool?)  skillTool["annotations"]?["readOnlyHint"]).ShouldBe(true);
+				((bool?)  skillTool["annotations"]?["idempotentHint"]).ShouldBe(true);
+				((bool?)  skillTool["annotations"]?["openWorldHint"]).ShouldBe(false);
+				((bool?)  skillTool["annotations"]?["destructiveHint"]).ShouldBe(false);
+				(         skillTool["inputSchema"]?["properties"]?.AsObject().Count).ShouldBe(0);
+				(         skillTool["inputSchema"]?["required"]).ShouldBeNull();
 				ContainsTool(response, "linq2db_execute").ShouldBe(false);
 			}
 		}
@@ -127,12 +131,13 @@ namespace Tests.LinqToDB.CLI
 				var executeTool = FindTool(response, "linq2db_execute");
 
 				((string?)executeTool["description"])!.ShouldContain("explicit user approval");
-				((bool?)executeTool["annotations"]?["readOnlyHint"]).ShouldBe(false);
-				((bool?)executeTool["annotations"]?["idempotentHint"]).ShouldBe(false);
-				((bool?)executeTool["annotations"]?["openWorldHint"]).ShouldBe(true);
-				((bool?)executeTool["annotations"]?["destructiveHint"]).ShouldBe(true);
+				((bool?)  executeTool["annotations"]?["readOnlyHint"]).ShouldBe(false);
+				((bool?)  executeTool["annotations"]?["idempotentHint"]).ShouldBe(false);
+				((bool?)  executeTool["annotations"]?["openWorldHint"]).ShouldBe(true);
+				((bool?)  executeTool["annotations"]?["destructiveHint"]).ShouldBe(true);
 
 				var executeInputSchema = executeTool["inputSchema"]!.ToJsonString();
+
 				executeInputSchema.ShouldNotContain("allowUnsafeSql");
 				executeInputSchema.ShouldNotContain("allowExecute");
 				executeInputSchema.ShouldNotContain("windowsCredentials");
@@ -143,7 +148,8 @@ namespace Tests.LinqToDB.CLI
 		public async Task McpInfoDoesNotExposeWindowsCredentialManagerTarget()
 		{
 			var config = Path.Combine(TestContext.CurrentContext.WorkDirectory, $"mcp-credential-{Guid.NewGuid():N}.json");
-			await File.WriteAllTextAsync(config, """
+			await File.WriteAllTextAsync(config,
+				"""
 				{
 					"default": {
 						"provider": "SQLite",
@@ -151,7 +157,8 @@ namespace Tests.LinqToDB.CLI
 						"windowsCredentials": "linq2db/project-a/production"
 					}
 				}
-				""").ConfigureAwait(false);
+				""")
+				.ConfigureAwait(false);
 
 			await using var server = await McpServerProcess.Start("--config", config);
 
@@ -260,18 +267,18 @@ namespace Tests.LinqToDB.CLI
 				(response["result"]?["isError"]).ShouldBeNull();
 				((string?)info["server"]?["name"]).ShouldBe("linq2db.cli");
 				((string?)info["server"]?["command"]).ShouldBe("mcp");
-				((bool?)info["server"]?["executeToolEnabled"]).ShouldBe(false);
-				((int?)info["server"]?["maxResponseBytes"]).ShouldBe(8388608);
+				((bool?)  info["server"]?["executeToolEnabled"]).ShouldBe(false);
+				((int?)   info["server"]?["maxResponseBytes"]).ShouldBe(8388608);
 				((string?)info["defaultProfile"]).ShouldBe("startup");
-				((bool?)info["defaultProfileUsable"]).ShouldBe(true);
+				((bool?)  info["defaultProfileUsable"]).ShouldBe(true);
 				((string?)info["profiles"]?[0]?["name"]).ShouldBe("startup");
 				((string?)info["profiles"]?[0]?["provider"]).ShouldBe("SQLite.MS");
 				((string?)info["profiles"]?[0]?["dialect"]).ShouldBe("SQLite");
 				((string?)info["profiles"]?[0]?["defaultOutput"]).ShouldBe("json-table");
-				((bool?)info["profiles"]?[0]?["defaultOutputSupportedByMcp"]).ShouldBe(true);
-				((int?)info["profiles"]?[0]?["maxRows"]).ShouldBe(1000);
-				((bool?)info["profiles"]?[0]?["enableExecute"]).ShouldBe(false);
-				((bool?)info["profiles"]?[0]?["impersonationEnabled"]).ShouldBe(false);
+				((bool?)  info["profiles"]?[0]?["defaultOutputSupportedByMcp"]).ShouldBe(true);
+				((int?)   info["profiles"]?[0]?["maxRows"]).ShouldBe(1000);
+				((bool?)  info["profiles"]?[0]?["enableExecute"]).ShouldBe(false);
+				((bool?)  info["profiles"]?[0]?["impersonationEnabled"]).ShouldBe(false);
 				(info["supportedOutputFormats"]?.AsArray().ToJsonString())!.ShouldContain("json-table");
 				(info["supportedOutputFormats"]?.AsArray().ToJsonString())!.ShouldNotContain("csv");
 				(info["queryCommandOutputFormats"]?.AsArray().ToJsonString())!.ShouldContain("csv");
@@ -516,6 +523,62 @@ namespace Tests.LinqToDB.CLI
 			}
 		}
 
+		[TestCase("SapHana", "SAP HANA SQL")]
+		[TestCase("SqlCe",   "SQL Server Compact SQL")]
+		public async Task McpInfoReportsStartupProviderDialect(string provider, string dialect)
+		{
+			await using var server = await McpServerProcess.Start("--provider", provider, "--connection-string", "unused");
+
+			await server.Initialize();
+			var response = await server.CallTool("linq2db_info", new JsonObject());
+			var info     = ReadToolJson(response);
+
+			{
+				(response["error"]).ShouldBeNull();
+				(response["result"]?["isError"]).ShouldBeNull();
+				((string?)info["profiles"]?[0]?["provider"]).ShouldBe(provider);
+				((string?)info["profiles"]?[0]?["dialect"]).ShouldBe(dialect);
+			}
+		}
+
+		[Test]
+		public async Task McpInfoUsesResolvedEnvironmentVariableConfigPath()
+		{
+			var variableName = $"MCP_CONFIG_DIR_{Guid.NewGuid():N}";
+			var config       = Path.Combine(TestContext.CurrentContext.WorkDirectory, $"mcp-query-{Guid.NewGuid():N}.json");
+
+			await File.WriteAllTextAsync(config, """
+				{
+					"default": {
+						"provider": "SQLite",
+						"connectionString": "Data Source=:memory:"
+					}
+				}
+				""").ConfigureAwait(false);
+
+			Environment.SetEnvironmentVariable(variableName, Path.GetDirectoryName(config));
+
+			try
+			{
+				await using var server = await McpServerProcess.Start("--config", $"${{{variableName}}}/{Path.GetFileName(config)}");
+
+				await server.Initialize();
+				var response = await server.CallTool("linq2db_info", new JsonObject());
+				var info     = ReadToolJson(response);
+
+				{
+					(response["error"]).ShouldBeNull();
+					(response["result"]?["isError"]).ShouldBeNull();
+					((string?)info["profiles"]?[0]?["provider"]).ShouldBe("SQLite");
+				}
+			}
+			finally
+			{
+				Environment.SetEnvironmentVariable(variableName, null);
+				File.Delete(config);
+			}
+		}
+
 		[Test]
 		public async Task McpCommandLineResponseLimitOverridesConfig()
 		{
@@ -699,31 +762,40 @@ namespace Tests.LinqToDB.CLI
 		{
 			var database = CreateSqliteDatabase();
 			var config   = Path.Combine(TestContext.CurrentContext.WorkDirectory, $"mcp-query-{Guid.NewGuid():N}.json");
-			await File.WriteAllTextAsync(config, $$"""
-				{
-					"default": {
-						"provider": "SQLite",
-						"connectionString": "Data Source={{database.Replace("\\", "\\\\", StringComparison.Ordinal)}};Pooling=False",
-						"enableExecute": true
+
+			try
+			{
+				await File.WriteAllTextAsync(config, $$"""
+					{
+						"default": {
+							"provider": "SQLite",
+							"connectionString": "Data Source={{database.Replace("\\", "\\\\", StringComparison.Ordinal)}};Pooling=False",
+							"enableExecute": true
+						}
 					}
+					""").ConfigureAwait(false);
+
+				await using var server = await McpServerProcess.Start("--config", config, "--enable-execute-tool");
+
+				await server.Initialize();
+				var response = await server.CallTool("linq2db_execute", new JsonObject
+				{
+					["sql"] = "update Customers set Name = 'updated' where Id = 1",
+				});
+
+				{
+					(response["error"]).ShouldBeNull();
+					(response["result"]?["isError"]).ShouldBeNull();
+					((string?)response["result"]?["content"]?[0]?["text"])!.ShouldContain("\"recordsAffected\":1");
 				}
-				""").ConfigureAwait(false);
 
-			await using var server = await McpServerProcess.Start("--config", config, "--enable-execute-tool");
-
-			await server.Initialize();
-			var response = await server.CallTool("linq2db_execute", new JsonObject
-			{
-				["sql"] = "update Customers set Name = 'updated' where Id = 1",
-			});
-
-			{
-				(response["error"]).ShouldBeNull();
-				(response["result"]?["isError"]).ShouldBeNull();
-				((string?)response["result"]?["content"]?[0]?["text"])!.ShouldContain("\"recordsAffected\":1");
+				server.ExpectStandardError("Executing write-capable SQL because profile 'default' has enableExecute=true. Provider: SQLite.");
 			}
-
-			server.ExpectStandardError("Executing write-capable SQL because profile 'default' has enableExecute=true. Provider: SQLite.");
+			finally
+			{
+				File.Delete(database);
+				File.Delete(config);
+			}
 		}
 
 		[Test]
@@ -893,6 +965,28 @@ namespace Tests.LinqToDB.CLI
 				((string?)response["result"]?["content"]?[0]?["text"])!.ShouldContain("MCP query execution supports only 'json' and 'json-table' output.");
 				((string?)response["result"]?["content"]?[0]?["text"])!.ShouldContain("output='csv'");
 				((string?)response["result"]?["content"]?[0]?["text"])!.ShouldContain("Pass output='json-table' or output='json'");
+			}
+		}
+
+		[Test]
+		public async Task McpNormalizesToolOutputFormat()
+		{
+			await using var server = await McpServerProcess.Start("--provider", "SQLite", "--connection-string", "Data Source=:memory:");
+
+			await server.Initialize();
+			var response = await server.CallTool("linq2db_query", new JsonObject
+			{
+				["output"] = "JSON-TABLE",
+				["sql"]    = "select 1 as Value",
+			});
+			var result = ReadToolJson(response);
+
+			{
+				(response["error"]).ShouldBeNull();
+				(response["result"]?["isError"]).ShouldBeNull();
+				((string?)result["columns"]?[0]?["name"]).ShouldBe("Value");
+				((int?)result["rowCount"]).ShouldBe(1);
+				((string?)result["rows"]?[0]?[0]).ShouldBe("1");
 			}
 		}
 
@@ -1175,7 +1269,15 @@ namespace Tests.LinqToDB.CLI
 			var outputTask = process.StandardOutput.ReadToEndAsync();
 			var errorTask  = process.StandardError.ReadToEndAsync();
 
-			await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(20)).ConfigureAwait(false);
+			try
+			{
+				await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(20)).ConfigureAwait(false);
+			}
+			catch (TimeoutException)
+			{
+				process.Kill(entireProcessTree: true);
+				throw;
+			}
 
 			return new CliProcessResult(NormalizeExitCode(process.ExitCode), await outputTask.ConfigureAwait(false), await errorTask.ConfigureAwait(false));
 		}

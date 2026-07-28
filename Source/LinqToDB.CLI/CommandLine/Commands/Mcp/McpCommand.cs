@@ -116,6 +116,9 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 				return StatusCodes.INVALID_ARGUMENTS;
 			}
 
+			if (configFileName != null)
+				startupOptions = startupOptions with { Config = configFileName };
+
 			if (!McpServerConfiguration.TryLoad(environment, configFileName, out var serverConfiguration, out var error))
 			{
 				await environment.Error.WriteLineAsync(error);
@@ -125,7 +128,10 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 			if (!maxResponseBytesSpecified)
 				startupOptions = startupOptions with { MaxResponseBytes = serverConfiguration.MaxResponseBytes };
 
-			var builder = Host.CreateApplicationBuilder([]);
+			var builder = Host.CreateEmptyApplicationBuilder(new HostApplicationBuilderSettings
+			{
+				Args = [],
+			});
 
 			builder.Logging.SetMinimumLevel(LogLevel.Warning);
 			builder.Logging.AddConsole(consoleOptions =>

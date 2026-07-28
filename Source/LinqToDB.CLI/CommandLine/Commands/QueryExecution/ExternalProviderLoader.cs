@@ -107,6 +107,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			return string.Equals(provider, ProviderName.DB2,         StringComparison.OrdinalIgnoreCase)
 				|| string.Equals(provider, ProviderName.DB2LUW,      StringComparison.OrdinalIgnoreCase)
 				|| string.Equals(provider, ProviderName.DB2zOS,      StringComparison.OrdinalIgnoreCase)
+				|| string.Equals(provider, ProviderName.Informix,    StringComparison.OrdinalIgnoreCase)
 				|| string.Equals(provider, ProviderName.InformixDB2, StringComparison.OrdinalIgnoreCase);
 		}
 

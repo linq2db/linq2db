@@ -10,6 +10,7 @@ namespace LinqToDB.CommandLine.Commands.Connection
 		public static string GetDialect(string providerName)
 		{
 			if (IsProvider(providerName, "SqlServer"))  return "SQL Server T-SQL";
+			if (IsProvider(providerName, "SqlCe"))      return "SQL Server Compact SQL";
 			if (IsProvider(providerName, "SQLite"))     return "SQLite";
 			if (IsProvider(providerName, "PostgreSQL")) return "PostgreSQL";
 			if (IsProvider(providerName, "MySql") || IsProvider(providerName, "MySqlConnector")) return "MySQL";
@@ -20,7 +21,8 @@ namespace LinqToDB.CommandLine.Commands.Connection
 			if (IsProvider(providerName, "Informix"))   return "Informix SQL";
 			if (IsProvider(providerName, "ClickHouse")) return "ClickHouse SQL";
 			if (IsProvider(providerName, "DuckDB"))     return "DuckDB SQL";
-			if (IsProvider(providerName, "Sybase") || IsProvider(providerName, "ASE")) return "Sybase ASE T-SQL";
+			if (IsProvider(providerName, "SapHana"))    return "SAP HANA SQL";
+			if (IsProvider(providerName, "Sybase"))     return "Sybase ASE T-SQL";
 			if (IsProvider(providerName, "Access"))     return "Microsoft Access SQL";
 			if (IsProvider(providerName, "YDB"))        return "YDB SQL";
 
