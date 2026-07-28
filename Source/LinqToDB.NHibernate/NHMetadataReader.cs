@@ -186,7 +186,17 @@ namespace LinqToDB.NHibernate
 					{
 						// A component spans one column per sub-property, each mapped as a member of the component.
 						if (prop.PropType is ComponentType componentType)
-							return BuildComponentColumns<T>(componentType, prop);
+							return BuildComponentColumns<T>(componentType, prop, type);
+
+						// A user type over several columns has no single value to convert. Leaving the member out
+						// would read as null and write nothing, so refuse it instead of losing the data quietly.
+						if (prop.PropType is CustomType customType && customType.UserType.SqlTypes.Length > 1)
+						{
+							var columnCount = customType.UserType.SqlTypes.Length.ToString(CultureInfo.InvariantCulture);
+
+							throw new LinqToDBForNHibernateToolsException(
+								$"NHibernate user type '{customType.UserType.GetType()}' maps '{type.Name}.{memberInfo.Name}' to {columnCount} columns, which cannot be expressed as a single value conversion. Register a converter for it with {nameof(LinqToDBForNHibernateTools)}.{nameof(LinqToDBForNHibernateTools.AddMappingSchema)}.");
+						}
 
 						if (prop.ColumnNames.Length == 1)
 						{

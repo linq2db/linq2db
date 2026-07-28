@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data.Common;
 using System.Globalization;
+using System.Runtime.InteropServices;
 
 using FluentNHibernate.Mapping;
 
@@ -83,6 +84,69 @@ namespace LinqToDB.NHibernate.Tests.Models.UserTypes
 		public object? Replace(object? original, object? target, object? owner) => original;
 		public object? Assemble(object? cached, object? owner)                  => cached;
 		public object? Disassemble(object? value)                               => value;
+	}
+
+	// A user type spanning TWO columns — the shape the bridge cannot express as a single value conversion.
+	[StructLayout(LayoutKind.Auto)]
+	public readonly struct DayRange
+	{
+		public DayRange(int from, int to)
+		{
+			From = from;
+			To   = to;
+		}
+
+		public int From { get; }
+		public int To   { get; }
+	}
+
+	public class DayRangeUserType : IUserType
+	{
+		public SqlType[] SqlTypes     => new[] { NHibernateUtil.Int32.SqlType, NHibernateUtil.Int32.SqlType };
+		public Type      ReturnedType => typeof(DayRange);
+		public bool      IsMutable    => false;
+
+		public object? NullSafeGet(DbDataReader rs, string[] names, ISessionImplementor session, object owner)
+		{
+			var from = NHibernateUtil.Int32.NullSafeGet(rs, names[0], session);
+			var to   = NHibernateUtil.Int32.NullSafeGet(rs, names[1], session);
+
+			return from == null || to == null ? null : new DayRange((int)from, (int)to);
+		}
+
+		public void NullSafeSet(DbCommand cmd, object? value, int index, ISessionImplementor session)
+		{
+			var range = value == null ? default : (DayRange)value;
+
+			NHibernateUtil.Int32.NullSafeSet(cmd, value == null ? null : range.From, index,     session);
+			NHibernateUtil.Int32.NullSafeSet(cmd, value == null ? null : range.To,   index + 1, session);
+		}
+
+		public new bool Equals(object? x, object? y) => ReferenceEquals(x, y) || (x != null && x.Equals(y));
+		public int GetHashCode(object x)             => x.GetHashCode();
+		public object? DeepCopy(object? value)       => value;
+		public object? Replace(object? original, object? target, object? owner) => original;
+		public object? Assemble(object? cached, object? owner)                  => cached;
+		public object? Disassemble(object? value)                               => value;
+	}
+
+	public class Reservation
+	{
+		public virtual int      Id     { get; set; }
+		public virtual DayRange Period { get; set; }
+	}
+
+	public class ReservationMap : ClassMap<Reservation>
+	{
+		public ReservationMap()
+		{
+			Table("Reservation");
+			Id(x => x.Id).GeneratedBy.Assigned().Column("ReservationId");
+
+			var period = Map(x => x.Period).CustomType<DayRangeUserType>();
+			period.Columns.Clear();
+			period.Columns.Add("FromDay", "ToDay");
+		}
 	}
 
 	public class Payment

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 
 using LinqToDB.Mapping;
 
@@ -17,10 +18,10 @@ namespace LinqToDB.NHibernate
 	{
 		/// <summary>
 		/// Builds one <see cref="ColumnAttribute"/> per single-column sub-property of a component. A sub-property
-		/// that is itself an association or spans several columns (a nested component) has no single column to map
-		/// and is skipped.
+		/// that is itself an association or spans several columns (a nested component) has no single column to map,
+		/// and is refused rather than dropped — leaving it out would read as null and write nothing.
 		/// </summary>
-		T[] BuildComponentColumns<T>(ComponentType componentType, PropInfo prop) where T : Attribute
+		T[] BuildComponentColumns<T>(ComponentType componentType, PropInfo prop, Type owner) where T : Attribute
 		{
 			// GetColumnSpan needs the mapping, which the session factory itself provides.
 			if (_sessionFactory is not ISessionFactoryImplementor mapping)
@@ -38,12 +39,17 @@ namespace LinqToDB.NHibernate
 				var subtype = subtypes[i];
 				var span    = subtype.GetColumnSpan(mapping);
 
-				if (span == 1 && !subtype.IsAssociationType)
+				if (span != 1 || subtype.IsAssociationType)
 				{
-					var column = BuildColumnAttribute(columns[offset], subtype, componentType.PropertyNullability[i], false, 0, false, names[i]);
+					var what = subtype.IsAssociationType ? "an association" : $"{span.ToString(CultureInfo.InvariantCulture)} columns";
 
-					result.Add((T)(Attribute)column);
+					throw new LinqToDBForNHibernateToolsException(
+						$"Component '{owner.Name}.{prop.MemberName}' maps '{names[i]}' to {what}, which has no single column to map to.");
 				}
+
+				var column = BuildColumnAttribute(columns[offset], subtype, componentType.PropertyNullability[i], false, 0, false, names[i]);
+
+				result.Add((T)(Attribute)column);
 
 				// Advance by the sub-property's own width so the remaining ones stay aligned with their columns.
 				offset += span;

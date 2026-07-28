@@ -135,6 +135,23 @@ namespace LinqToDB.NHibernate.Tests
 		}
 
 		[Test]
+		public void MultiColumnUserType_IsRefusedRatherThanDropped(
+			[NHIncludeDataSources] string provider)
+		{
+			var sf = GetSessionFactory(provider);
+
+			using var session = sf.OpenSession();
+
+			// A user type over several columns has no single value to convert. Dropping the member would leave it
+			// reading as null, so the metadata has to say so instead.
+			var ex = Should.Throw<LinqToDBForNHibernateToolsException>(
+				() => session.GetTable<Reservation>().ToList());
+
+			ex.Message.ShouldContain(nameof(DayRangeUserType));
+			ex.Message.ShouldContain(nameof(Reservation.Period));
+		}
+
+		[Test]
 		public void UserType_EmitsValueConverterMetadata(
 			[NHIncludeDataSources] string provider)
 		{
