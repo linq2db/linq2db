@@ -123,7 +123,7 @@ If a requested provider ID isn't present in the current bucket's `Providers` arr
 
 For every container that the **target** enabled-provider set references (post-edit), compute one of:
 
-- `running` — container exists and `inspect` returned `running`. No action.
+- `running` — container exists and its `docker ps -a` Status column reads `Up …`. No action. (Derive state from `docker ps -a` only — `docker container inspect` is out of scope per the Don'ts.)
 - `will-start` — container exists and status is `exited` / `created`. Action: `docker start <name>`.
 - `will-create` — container does not exist. Action: run `Data/Setup Scripts/<script>.cmd` (which creates and starts it; pulls the image if not cached).
 - `image-pull-needed` — same as `will-create` but the image isn't cached locally either; setup script will pull. Surface the cost note when it's a heavy provider (DB2 / Informix / SAP HANA / SAP ASE — see **Heavy providers (ask first)** in `test-databases.md`).

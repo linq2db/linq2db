@@ -9,7 +9,7 @@ External repository: <https://github.com/linq2db/linq2db.baselines>. Expected lo
 ```
 Access.Ace.Odbc/      Access.Ace.OleDb/       Access.Jet.Odbc/    Access.Jet.OleDb/
 ClickHouse.Driver/    ClickHouse.MySql/       ClickHouse.Octonica/
-DB2/                  Informix.DB2/
+DB2/                  Informix.DB2/           DuckDB/
 Firebird.2.5/         Firebird.3/             Firebird.4/         Firebird.5/
 MariaDB.11/           MariaDB.11.EF8/         MariaDB.11.EF9/
 MySql.5.7/            MySql.8.0/              MySqlConnector.5.7[.EF8|.EF9]/     MySqlConnector.8.0[.EF8|.EF9]/

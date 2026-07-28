@@ -33,7 +33,7 @@ description: Pre-release milestone audit. Confirms there are no open issues or P
 ### 1. Run the audit
 
 ```
-pwsh -NoProfile -File .agents/scripts/release-milestone-audit.ps1 -Milestone <ver> [-PrepPR <n>]
+pwsh -NoProfile -File .agents/scripts/release-milestone-audit.ps1 -Action audit -Milestone <ver> [-PrepPR <n>]
 ```
 
 The script:

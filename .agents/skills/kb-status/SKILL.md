@@ -33,7 +33,7 @@ In parallel `Bash` calls (or `Glob` + `Read`):
 - `conventions/`: count.
 - `history/by-year/`: list filenames; the count = year span.
 - `history/decisions/`: count.
-- `areas/`: list directories; per area, check whether all four sub-files exist (`INDEX.md`, `issues.md`, `decisions.md`, `tech-debt.md`, `patterns.md`).
+- `areas/`: list directories; per area, check whether all five sub-files exist (`INDEX.md`, `issues.md`, `decisions.md`, `tech-debt.md`, `patterns.md`).
 - `github/issues-index.json`, `prs-index.json`, `discussions-index.json`: read; report length.
 - `github/milestones.json`: read; report `{open: N, closed: N}`.
 - `github/wiki/`: count `.md` files.

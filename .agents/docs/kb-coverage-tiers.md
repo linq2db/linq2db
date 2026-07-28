@@ -9,10 +9,10 @@ Mandatory. A step is `partial` (not `done`) if any Tier-1 file in its scope was 
 - Public API surface: every file under `Source/LinqToDB/` whose top-level types are `public` and not nested in `LinqToDB.Internal.*`.
 - Abstract base types: `ISqlBuilder`, `IDataProvider`, `BasicSqlBuilder`, `BasicSqlOptimizer`, `ExpressionBuilder`, every `*Visitor` base class.
 - Build / framework anchors: `Directory.Build.props`, `Source/LinqToDB/LinqToDB.csproj`, `linq2db.slnx`, `global.json`.
-- Per-provider entry points: `Source/LinqToDB/DataProvider/<provider>/<Provider>DataProvider.cs`, `<Provider>SqlBuilder.cs`, `<Provider>SqlOptimizer.cs`.
-- Translator roots: every `Source/LinqToDB/Linq/Builder/*Builder.cs` whose name does not end in `Helpers.cs` or `Methods.cs`.
+- Per-provider entry points: `Source/LinqToDB/Internal/DataProvider/<provider>/<Provider>DataProvider.cs`, `<Provider>SqlBuilder.cs`, `<Provider>SqlOptimizer.cs`. (The public `Source/LinqToDB/DataProvider/<provider>/` folders hold the user-facing options/tools types; the builder/optimizer implementations live under `Internal/`.)
+- Translator roots: every `Source/LinqToDB/Internal/Linq/Builder/*Builder.cs` whose name does not end in `Helpers.cs` or `Methods.cs`.
 - Test infrastructure: `Tests/Base/**/*.cs`, `Tests/Linq/Tests.csproj`, `Tests/Tests.Playground/Tests.Playground.csproj`.
-- Documentation anchors: `CLAUDE.md`, `README.md`, `RELEASE.md`.
+- Documentation anchors: `CLAUDE.md`, `AGENTS.md`, `README.md`.
 
 Per-area Tier-1 file lists are pinned in [`kb-areas.md`](kb-areas.md). Indexers cross-check the on-disk file list against the pinned list and report any drift (file removed / renamed) as a gate failure.
 
@@ -24,7 +24,7 @@ Patterns:
 
 - `Source/LinqToDB/**/*.cs` not classified as Tier 1 or Tier 3.
 - `Tests/Linq/Linq/**/*.cs`, `Tests/Linq/UserTests/**/*.cs`, `Tests/Linq/Update/**/*.cs`, etc. — fixture bodies.
-- `Source/LinqToDB.AspNet/**`, `Source/LinqToDB.Tools/**`, `Source/LinqToDB.EntityFrameworkCore/**` — companion product surfaces (areas defined in `kb-areas.md`).
+- `Source/LinqToDB.Extensions/**`, `Source/LinqToDB.Tools/**`, `Source/LinqToDB.EntityFrameworkCore/**` — companion product surfaces (areas defined in `kb-areas.md`).
 
 Acceptable skip reasons (recorded in coverage block):
 
@@ -41,7 +41,7 @@ Counted but never visited. The coverage block records the count only.
 
 - Generated code: `*.g.cs`, `*.Designer.cs`, `*.Generated.cs`, anything under a folder ending `/obj/` or `/bin/`.
 - Build outputs and caches: `bin/`, `obj/`, `.vs/`, `.idea/`, `TestResults/`, `node_modules/`.
-- Test data files: `Tests/Linq/UserDataProviders.json`, `Tests/Linq/CreateData/**` SQL scripts, baseline `.sql` / `.txt` files under `Tests/**/Baselines/**`.
+- Test data files: `UserDataProviders.json` / `DataProviders.json` (repo root), `Data/Create Scripts/**` + `Data/Setup Scripts/**`, baseline `.sql` / `.txt` files in the `linq2db.baselines` sibling clone.
 - Repo plumbing: `.git/`, `.github/` workflows (covered separately as Tier 2 only when an area's scope includes CI), `.build/`.
 
 ## Tier classification rules
