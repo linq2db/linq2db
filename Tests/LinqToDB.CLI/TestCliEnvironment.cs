@@ -14,6 +14,7 @@ namespace Tests.LinqToDB.CLI
 
 		public Dictionary<string, string> Files { get; } = new(StringComparer.Ordinal);
 		public HashSet<string> Directories { get; } = new(StringComparer.Ordinal);
+		public HashSet<string> OwnerOnlyFiles { get; } = new(StringComparer.Ordinal);
 		public Dictionary<string, string> EnvironmentVariables { get; } = new(StringComparer.Ordinal);
 		public Dictionary<string, (string User, string Password)> WindowsCredentials { get; } = new(StringComparer.Ordinal);
 
@@ -45,6 +46,11 @@ namespace Tests.LinqToDB.CLI
 				throw WriteAllTextException;
 		}
 
+		public void SetOwnerOnlyFilePermissions(string path)
+		{
+			OwnerOnlyFiles.Add(path);
+		}
+
 		public TextWriter CreateTextWriter(string path)
 		{
 			return new TestFileWriter(contents => Files[path] = contents);
@@ -60,6 +66,9 @@ namespace Tests.LinqToDB.CLI
 
 			Files[destinationPath] = contents;
 			Files.Remove(sourcePath);
+
+			if (OwnerOnlyFiles.Remove(sourcePath))
+				OwnerOnlyFiles.Add(destinationPath);
 		}
 
 		public void DeleteFile(string path)

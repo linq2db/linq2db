@@ -195,6 +195,9 @@ namespace LinqToDB.CommandLine.Commands.ConfigInit
 			if (!await TryWriteConfiguration(environment, values.ConfigPath, root.ToJsonString(_jsonOptions) + Environment.NewLine))
 				return StatusCodes.EXPECTED_ERROR;
 
+			if (values.ConnectionString != null)
+				await environment.Error.WriteLineAsync($"Warning: configuration file '{values.ConfigPath}' contains a literal connection string and may contain credentials. Prefer '--{QueryExecutionCliOptions.ConnectionStringEnv.Name}' and ensure the file is not committed.");
+
 			var action = profileExists && string.Equals(values.IfExists, "replace", StringComparison.Ordinal)
 				? "Updated"
 				: "Created";
@@ -218,6 +221,7 @@ namespace LinqToDB.CommandLine.Commands.ConfigInit
 			try
 			{
 				environment.WriteAllText(temporaryFile, contents);
+				environment.SetOwnerOnlyFilePermissions(temporaryFile);
 				environment.MoveFile(temporaryFile, configPath, true);
 				return true;
 			}

@@ -22,6 +22,8 @@ namespace LinqToDB.CommandLine
 		string ReadAllText(string path);
 		/// <summary>Writes all text to a file.</summary>
 		void WriteAllText(string path, string contents);
+		/// <summary>Restricts file access to the current user on platforms that support Unix file modes.</summary>
+		void SetOwnerOnlyFilePermissions(string path);
 		/// <summary>Creates a text writer for a file.</summary>
 		TextWriter CreateTextWriter(string path);
 		/// <summary>Moves a file to a destination path.</summary>

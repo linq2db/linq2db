@@ -25,9 +25,10 @@ namespace Tests.LinqToDB.CLI
 
 			{
 				(result.ExitCode).ShouldBe(0);
-				(result.Error).ShouldBeEmpty();
+				(result.Error).ShouldContain("contains a literal connection string and may contain credentials");
 				(result.Output).ShouldContain("Created configuration profile 'default' in '.agents/linq2db-query.json'.");
 				environment.Directories.ShouldContain(".agents");
+				environment.OwnerOnlyFiles.ShouldContain(".agents/linq2db-query.json");
 
 				using var json = JsonDocument.Parse(environment.Files[".agents/linq2db-query.json"]);
 				var profile = json.RootElement.GetProperty("default");
@@ -109,7 +110,7 @@ namespace Tests.LinqToDB.CLI
 
 			{
 				(result.ExitCode).ShouldBe(0);
-				(result.Error).ShouldBeEmpty();
+				(result.Error).ShouldContain("contains a literal connection string and may contain credentials");
 
 				using var json = JsonDocument.Parse(environment.Files["query.json"]);
 				json.RootElement.GetProperty("mcp").GetProperty("title").GetString().ShouldBe("Existing MCP server");
@@ -129,7 +130,7 @@ namespace Tests.LinqToDB.CLI
 
 			{
 				(result.ExitCode).ShouldBe(0);
-				(result.Error).ShouldBeEmpty();
+				(result.Error).ShouldContain("contains a literal connection string and may contain credentials");
 				(result.Output).ShouldContain("Created configuration profile 'default' in 'config\\query.json'.");
 				environment.Files.ShouldContainKey("config\\query.json");
 			}

@@ -95,6 +95,8 @@ The MCP server exposes `linq2db_info` for non-secret runtime discovery of availa
 
 When `config-init` writes an existing configuration file, it rewrites it as normalized JSON and does not preserve comments or custom formatting.
 
+Prefer `--connection-string-env` when the connection string contains credentials. A literal `--connection-string` is stored in the generated JSON and produces a warning on `stderr`; ensure that configuration files containing credentials, including the default `.agents/linq2db-query.json`, are excluded from version control. Generated files use owner-only permissions on Linux and macOS. On Windows, prefer environment variables or Windows Credential Manager because Unix file permissions do not provide Windows ACL protection.
+
 Configuration profiles are shared by `query`, `schema`, and `mcp`. The `query` command supports `json`, `json-table`, and `csv`. The `schema` command outputs JSON only. The MCP `linq2db_query` tool supports only `json` and `json-table`; if a selected profile has `output: "csv"`, MCP calls must pass `output: "json-table"` or `output: "json"` explicitly, or the profile should be adjusted for MCP usage.
 
 On Windows, `--windows-credentials <target>` or profile `windowsCredentials` can load both user and password from a generic Windows Credential Manager entry. The target is resolved at trusted CLI/MCP startup or profile resolution and is never exposed as an MCP tool argument. Credential Manager entries are scoped to the Windows account that created them, so an MCP process running under another account cannot read them.

@@ -32,6 +32,11 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 			throw new NotSupportedException("MCP query execution does not support file output.");
 		}
 
+		public void SetOwnerOnlyFilePermissions(string path)
+		{
+			throw new NotSupportedException("MCP query execution does not support file output.");
+		}
+
 		public TextWriter CreateTextWriter(string path)
 		{
 			throw new NotSupportedException("MCP query execution does not support file output.");

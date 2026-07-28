@@ -46,6 +46,12 @@ namespace LinqToDB.CommandLine
 			File.WriteAllText(path, contents);
 		}
 
+		public void SetOwnerOnlyFilePermissions(string path)
+		{
+			if (!OperatingSystem.IsWindows())
+				File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+		}
+
 		public TextWriter CreateTextWriter(string path)
 		{
 			return File.CreateText(path);

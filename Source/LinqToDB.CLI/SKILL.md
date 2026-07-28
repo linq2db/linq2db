@@ -298,6 +298,7 @@ Defaults:
 - Default config path is `.agents/linq2db-query.json`.
 - Default profile is `default`.
 - `config-init` creates the `.agents` directory when the default path is used.
+- Generated configuration files are restricted to the current user on Linux and macOS.
 - Initialized profiles include editable default values for `maxRows`, `output`, and `enableExecute`.
 - The default initialized output is `json-table`, which is suitable for MCP and duplicate-safe query output.
 - `config-init` writes common editable settings (`maxRows`, `output`, and `enableExecute`) into every created profile intentionally. This makes generated profiles self-explanatory and easier to edit manually.
@@ -322,6 +323,8 @@ Supported initialization options:
 - `--if-exists error|replace|skip`.
 
 Advanced profile fields such as `user`, `password`, `impersonate`, `commandTimeout`, `lockTimeout`, and `outputFile` are intentionally not exposed by `config-init`; edit the JSON manually when those fields are needed.
+
+Prefer `--connection-string-env` when the connection string contains credentials. When `--connection-string` is used, the literal value is stored in the generated JSON and `config-init` writes a warning to `stderr`. Ensure configuration files containing credentials, including the default `.agents/linq2db-query.json`, are excluded from version control. On Windows, use environment variables or Windows Credential Manager for secrets; Unix owner-only file permissions do not provide equivalent Windows ACL protection.
 
 Configuration profiles are shared by `query` and `mcp`.
 The `query` command supports `json`, `json-table`, and `csv`.
