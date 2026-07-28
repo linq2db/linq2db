@@ -461,16 +461,17 @@ namespace LinqToDB.Internal.SqlProvider
 		public bool SupportsBooleanType { get; set; } = true;
 
 		/// <summary>
-		/// Indicates that provider accepts a predicate as a value in the window clauses
-		/// <c>OVER (PARTITION BY ...)</c> and in window function arguments.
+		/// Indicates that provider accepts a predicate directly as a value operand of an aggregate or window
+		/// function — as a function argument (<c>COUNT(x = 1)</c>) or as an <c>OVER (PARTITION BY ...)</c> key.
 		/// This is narrower than <see cref="SupportsBooleanType"/>: a provider may have a usable boolean type,
 		/// and accept a predicate as a value in the select list, <c>GROUP BY</c> and <c>ORDER BY</c>, yet still
-		/// reject it in those two positions (Informix). When <see langword="false"/>, a predicate used there is
-		/// folded into a <c>CASE</c> expression.
+		/// reject it in these positions (Informix). When <see langword="false"/>, such a predicate is folded into
+		/// a <c>CASE</c> expression. It does not affect window <c>ORDER BY</c> / <c>WITHIN GROUP</c> / <c>KEEP</c>
+		/// keys, which follow <see cref="SupportsBooleanType"/> only.
 		/// Default value: <see langword="true"/>.
 		/// </summary>
 		[DataMember(Order = 77), DefaultValue(true)]
-		public bool SupportsPredicateInWindowValuePosition { get; set; } = true;
+		public bool SupportsPredicateInFunctionValuePosition { get; set; } = true;
 
 		/// <summary>
 		/// Provider supports nested joins
@@ -787,7 +788,7 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsAccessBuggyLeftJoinConstantNullability             .GetHashCode()
 				^ SupportsPredicatesComparison                         .GetHashCode()
 				^ SupportsBooleanType                                  .GetHashCode()
-				^ SupportsPredicateInWindowValuePosition               .GetHashCode()
+				^ SupportsPredicateInFunctionValuePosition             .GetHashCode()
 				^ IsDerivedTableOrderBySupported                       .GetHashCode()
 				^ IsUpdateTakeSupported                                .GetHashCode()
 				^ IsUpdateSkipTakeSupported                            .GetHashCode()
@@ -869,7 +870,7 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsAccessBuggyLeftJoinConstantNullability              == other.IsAccessBuggyLeftJoinConstantNullability
 				&& SupportsPredicatesComparison                          == other.SupportsPredicatesComparison
 				&& SupportsBooleanType                                   == other.SupportsBooleanType
-				&& SupportsPredicateInWindowValuePosition                == other.SupportsPredicateInWindowValuePosition
+				&& SupportsPredicateInFunctionValuePosition              == other.SupportsPredicateInFunctionValuePosition
 				&& IsDerivedTableOrderBySupported                        == other.IsDerivedTableOrderBySupported
 				&& IsUpdateTakeSupported                                 == other.IsUpdateTakeSupported
 				&& IsUpdateSkipTakeSupported                             == other.IsUpdateSkipTakeSupported
