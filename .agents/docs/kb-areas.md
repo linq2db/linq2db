@@ -6,6 +6,8 @@ This file is **bootstrapped** by `/kb-build` step 1 (the skill proposes an initi
 
 ## Conventions
 
+- **This file is ~37 k tokens — `Grep` it, don't `Read` it.** The area table's rows are individually enormous. To map a changed path or topic to its area code, `Grep` for the area code, a path fragment (`Tests/Base`, `DataProvider/Oracle`), or a Tier-1 file name and read just the matching row; a whole-file `Read` blows the tool's output cap and returns a truncated table anyway.
+
 - Area code is uppercase, alphanumeric, with optional `-` separator. Keep it short (≤ 12 chars).
 - Path patterns use forward slashes. Glob support is the same as `Glob` tool patterns.
 - Tier-1 files are the canonical anchors for the area. Tier-2 globs catch implementation files. Tier-3 is the global Tier-3 pattern set in [`kb-coverage-tiers.md`](kb-coverage-tiers.md) — not duplicated here.
