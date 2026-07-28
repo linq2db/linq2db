@@ -61,7 +61,7 @@ namespace Tests.LinqToDB.CLI
 
 		static string? ReadFieldAsString(DataTableReader reader, string actualFieldTypeName, int ordinal)
 		{
-			var actualFieldType = Enum.Parse<QueryExecutionExecutor.QueryActualFieldType>(actualFieldTypeName);
+			var actualFieldType = Enum.Parse<QueryValueFormatter.QueryActualFieldType>(actualFieldTypeName);
 
 			return QueryExecutionExecutor.ReadFieldAsString(reader, actualFieldType, ordinal);
 		}

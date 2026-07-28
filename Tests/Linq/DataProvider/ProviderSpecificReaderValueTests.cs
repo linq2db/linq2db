@@ -4,18 +4,16 @@ extern alias MySqlConnector;
 extern alias MySqlData;
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Data.SqlTypes;
-using System.Globalization;
 using System.IO;
-using System.Runtime.CompilerServices;
 
 using ClickHouse.Driver.Numerics;
 using DuckDB.NET.Native;
 using FirebirdSql.Data.Types;
 using IBM.Data.DB2Types;
 using LinqToDB;
+using LinqToDB.CommandLine.Commands.QueryExecution;
 using LinqToDB.Data;
 
 using Microsoft.Data.SqlTypes;
@@ -33,8 +31,8 @@ using MySqlDataDecimal = MySqlData::MySql.Data.Types.MySqlDecimal;
 
 namespace Tests.DataProvider
 {
-	// QueryExecutionExecutor reads provider-specific values directly from DbDataReader.
-	// Keep the provider matrix here aligned with its invariant output formatting contract.
+	// QueryExecutionExecutor and this provider matrix compile the same QueryValueFormatter
+	// source, keeping real-provider coverage aligned with CLI output formatting.
 	[TestFixture]
 	public class ProviderSpecificReaderValueTests : DataProviderTestBase
 	{
@@ -524,7 +522,7 @@ namespace Tests.DataProvider
 				var dataTypeName = reader.GetDataTypeName(0);
 				var value        = providerSpecific ? reader.GetProviderSpecificValue(0) : reader.GetValue(0);
 
-				return new ReadResult(value.GetType(), value.GetType().FullName, ConvertValueToString(value, dataTypeName), null);
+				return new ReadResult(value.GetType(), value.GetType().FullName, QueryValueFormatter.Format(value, dataTypeName), null);
 			}
 			catch (Exception exception)
 			{
@@ -546,312 +544,12 @@ namespace Tests.DataProvider
 					?? throw new InvalidOperationException($"Reader method '{methodName}' is not available.");
 				var value        = method.Invoke(reader, [0]) ?? throw new InvalidOperationException($"Reader method '{methodName}' returned null.");
 
-				return new ReadResult(value.GetType(), value.GetType().FullName, ConvertValueToString(value, dataTypeName), null);
+				return new ReadResult(value.GetType(), value.GetType().FullName, QueryValueFormatter.Format(value, dataTypeName), null);
 			}
 			catch (Exception exception)
 			{
 				return new ReadResult(null, null, null, exception.GetType().FullName);
 			}
-		}
-
-		static string? ConvertValueToString(object value, string dataTypeName)
-		{
-			return value switch
-			{
-				SqlBoolean sqlBoolean         => sqlBoolean.Value ? "true" : "false",
-				bool boolValue                => boolValue ? "true" : "false",
-				SqlSingle sqlSingle           => sqlSingle.Value.ToString("R", CultureInfo.InvariantCulture),
-				float singleValue             => singleValue.ToString("R", CultureInfo.InvariantCulture),
-				SqlDouble sqlDouble           => sqlDouble.Value.ToString("R", CultureInfo.InvariantCulture),
-				double doubleValue            => doubleValue.ToString("R", CultureInfo.InvariantCulture),
-				string stringValue            => stringValue,
-#if !DB2STUBS
-				DB2Binary db2Binary           => ConvertBytesToString(db2Binary.Value),
-				DB2Blob db2Blob               => ConvertBytesToString(db2Blob.Value),
-				DB2Clob db2Clob               => db2Clob.Value,
-				DB2Date db2Date               => FormatDate(db2Date.Value),
-				DB2Time db2Time               => db2Time.Value.ToString("c", CultureInfo.InvariantCulture),
-				DB2TimeStamp db2TimeStamp     => db2TimeStamp.Value.ToString("O", CultureInfo.InvariantCulture),
-				DB2Xml db2Xml                 => db2Xml.GetString(),
-#endif
-				FbDecFloat fbDecFloat         => FormatFirebirdDecFloat(fbDecFloat),
-				FbZonedDateTime zonedDateTime => FormatFirebirdZonedDateTime(zonedDateTime),
-				FbZonedTime zonedTime         => FormatFirebirdZonedTime(zonedTime),
-				OracleDate oracleDate         => FormatDate(oracleDate.Value),
-				OracleTimeStamp timestamp     => FormatOracleTimeStamp(timestamp.Year, timestamp.Month, timestamp.Day, timestamp.Hour, timestamp.Minute, timestamp.Second, timestamp.Nanosecond),
-				OracleTimeStampTZ timestamp   => FormatOracleTimeStamp(timestamp.Year, timestamp.Month, timestamp.Day, timestamp.Hour, timestamp.Minute, timestamp.Second, timestamp.Nanosecond) + timestamp.TimeZone,
-				OracleTimeStampLTZ timestamp  => FormatOracleTimeStamp(timestamp.Year, timestamp.Month, timestamp.Day, timestamp.Hour, timestamp.Minute, timestamp.Second, timestamp.Nanosecond),
-				SqlDateTime sqlDateTime       => sqlDateTime.Value.ToString("O", CultureInfo.InvariantCulture),
-				DateOnly dateOnly             => dateOnly.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-				TimeOnly timeOnly             => timeOnly.ToString("HH:mm:ss.fffffff", CultureInfo.InvariantCulture),
-				DateTime dateTime             => IsDateDataType(dataTypeName) ? FormatDate(dateTime) : dateTime.ToString("O", CultureInfo.InvariantCulture),
-				DateTimeOffset dateTimeOffset => dateTimeOffset.ToString("O", CultureInfo.InvariantCulture),
-				TimeSpan timeSpan             => timeSpan.ToString("c", CultureInfo.InvariantCulture),
-				SqlGuid sqlGuid               => sqlGuid.Value.ToString("D"),
-				Guid guid                     => guid.ToString("D"),
-				SqlBinary sqlBinary           => ConvertBytesToString(sqlBinary.Value),
-				DuckDBDateOnly date           => FormatDuckDBDateOnly(date),
-				DuckDBTimeOnly time           => FormatDuckDBTimeOnly(time),
-				DuckDBTimestamp timestamp     => FormatDuckDBTimestamp(timestamp),
-				OracleBinary oracleBinary     => ConvertBytesToString(oracleBinary.Value),
-				OracleBlob oracleBlob         => ConvertBytesToString(oracleBlob.Value),
-				OracleClob oracleClob         => oracleClob.Value,
-				OracleXmlType oracleXmlType   => oracleXmlType.Value,
-				OracleBFile                   => "<BFILE>",
-				Stream stream                 => ConvertStreamToString(stream),
-				byte[] bytes                  => dataTypeName.StartsWith("Array(", StringComparison.OrdinalIgnoreCase) ? ConvertByteArrayToString(bytes) : ConvertBytesToString(bytes),
-				SqlXml sqlXml                 => sqlXml.Value,
-				SqlVector<float> vector       => ConvertVectorToString(vector.Memory.ToArray()),
-				SqlVector<Half> vector        => ConvertVectorToString(vector.Memory.ToArray()),
-				NpgsqlRange<int> range        => FormatNpgsqlRange(range),
-				NpgsqlRange<decimal> range    => FormatNpgsqlRange(range),
-				NpgsqlRange<DateOnly> range   => FormatNpgsqlRange(range),
-				ITuple tuple                  => ConvertTupleToString(tuple),
-				IEnumerable sequence          => ConvertSequenceToString(sequence),
-				_                             => Convert.ToString(value, CultureInfo.InvariantCulture),
-			};
-		}
-
-		static bool IsDateDataType(string dataTypeName)
-		{
-			return string.Equals(dataTypeName, "Date", StringComparison.OrdinalIgnoreCase)
-				|| string.Equals(dataTypeName, "Date32", StringComparison.OrdinalIgnoreCase)
-				|| string.Equals(dataTypeName, "Nullable(Date)", StringComparison.OrdinalIgnoreCase)
-				|| string.Equals(dataTypeName, "Nullable(Date32)", StringComparison.OrdinalIgnoreCase);
-		}
-
-		static string FormatDate(DateTime value)
-		{
-			return value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-		}
-
-		static string FormatOracleTimeStamp(int year, int month, int day, int hour, int minute, int second, int nanosecond)
-		{
-			return string.Create(CultureInfo.InvariantCulture, $"{year:D4}-{month:D2}-{day:D2}T{hour:D2}:{minute:D2}:{second:D2}.{nanosecond:D9}");
-		}
-
-		static string FormatFirebirdDecFloat(FbDecFloat value)
-		{
-			return string.Create(CultureInfo.InvariantCulture, $"{value.Coefficient}E{value.Exponent}");
-		}
-
-		static string FormatFirebirdZonedDateTime(FbZonedDateTime value)
-		{
-			return value.DateTime.ToString("yyyy-MM-ddTHH:mm:ss.fffffff", CultureInfo.InvariantCulture) + " " + FormatFirebirdTimeZone(value.TimeZone, value.Offset);
-		}
-
-		static string FormatFirebirdZonedTime(FbZonedTime value)
-		{
-			return value.Time.ToString("c", CultureInfo.InvariantCulture) + " " + FormatFirebirdTimeZone(value.TimeZone, value.Offset);
-		}
-
-		static string FormatFirebirdTimeZone(string timeZone, TimeSpan? offset)
-		{
-			return offset?.ToString("c", CultureInfo.InvariantCulture) ?? timeZone;
-		}
-
-		static string FormatDuckDBDateOnly(DuckDBDateOnly value)
-		{
-			if (value.IsPositiveInfinity)
-				return "infinity";
-			if (value.IsNegativeInfinity)
-				return "-infinity";
-
-			return string.Create(CultureInfo.InvariantCulture, $"{value.Year:D4}-{value.Month:D2}-{value.Day:D2}");
-		}
-
-		static string FormatDuckDBTimeOnly(DuckDBTimeOnly value)
-		{
-			return string.Create(CultureInfo.InvariantCulture, $"{value.Hour:D2}:{value.Min:D2}:{value.Sec:D2}.{value.Microsecond:D6}0");
-		}
-
-		static string FormatDuckDBTimestamp(DuckDBTimestamp value)
-		{
-			if (value.IsPositiveInfinity)
-				return "infinity";
-			if (value.IsNegativeInfinity)
-				return "-infinity";
-
-			return FormatDuckDBDateOnly(value.Date) + "T" + FormatDuckDBTimeOnly(value.Time);
-		}
-
-		static string FormatNpgsqlRange<T>(NpgsqlRange<T> value)
-		{
-			if (value.IsEmpty)
-				return "empty";
-
-			var output = new System.Text.StringBuilder();
-
-			output.Append(value.LowerBoundIsInclusive ? '[' : '(');
-
-			if (!value.LowerBoundInfinite)
-				output.Append(ConvertRangeBoundToString(value.LowerBound));
-
-			output.Append(',');
-
-			if (!value.UpperBoundInfinite)
-				output.Append(ConvertRangeBoundToString(value.UpperBound));
-
-			output.Append(value.UpperBoundIsInclusive ? ']' : ')');
-			return output.ToString();
-		}
-
-		static string? ConvertRangeBoundToString(object? value)
-		{
-			return value switch
-			{
-				null                    => null,
-				DateOnly date           => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-				DateTime dateTime       => dateTime.ToString("O", CultureInfo.InvariantCulture),
-				DateTimeOffset dateTime => dateTime.ToString("O", CultureInfo.InvariantCulture),
-				TimeOnly time           => time.ToString("HH:mm:ss.fffffff", CultureInfo.InvariantCulture),
-				TimeSpan time           => time.ToString("c", CultureInfo.InvariantCulture),
-				_                       => Convert.ToString(value, CultureInfo.InvariantCulture),
-			};
-		}
-
-		static string ConvertBytesToString(byte[] bytes)
-		{
-			return "0x" + Convert.ToHexString(bytes);
-		}
-
-		static string ConvertStreamToString(Stream stream)
-		{
-			if (stream.CanSeek)
-				stream.Position = 0;
-
-			using var memory = new MemoryStream();
-
-			stream.CopyTo(memory);
-			return ConvertBytesToString(memory.ToArray());
-		}
-
-		static string ConvertByteArrayToString(byte[] bytes)
-		{
-			var builder = new System.Text.StringBuilder();
-
-			builder.Append('[');
-			for (var i = 0; i < bytes.Length; i++)
-			{
-				if (i > 0)
-					builder.Append(',');
-
-				builder.Append(bytes[i].ToString(CultureInfo.InvariantCulture));
-			}
-
-			builder.Append(']');
-			return builder.ToString();
-		}
-
-		static string ConvertTupleToString(ITuple tuple)
-		{
-			var builder = new System.Text.StringBuilder();
-
-			builder.Append('(');
-			for (var i = 0; i < tuple.Length; i++)
-			{
-				if (i > 0)
-					builder.Append(',');
-
-				builder.Append(ConvertNestedValueToString(tuple[i]));
-			}
-
-			builder.Append(')');
-			return builder.ToString();
-		}
-
-		static string ConvertSequenceToString(IEnumerable sequence)
-		{
-			var builder      = new System.Text.StringBuilder();
-			var first        = true;
-			var map          = false;
-			var openBracket  = '[';
-			var closeBracket = ']';
-
-			foreach (var item in sequence)
-			{
-				if (first)
-				{
-					map = IsKeyValuePair(item);
-
-					if (map)
-					{
-						openBracket  = '{';
-						closeBracket = '}';
-					}
-
-					builder.Append(openBracket);
-					first = false;
-				}
-
-				if (builder.Length > 1)
-					builder.Append(',');
-
-				if (map)
-					AppendKeyValuePair(builder, item);
-				else
-					builder.Append(ConvertNestedValueToString(item));
-			}
-
-			if (first)
-				builder.Append(openBracket);
-
-			builder.Append(closeBracket);
-			return builder.ToString();
-		}
-
-		static string? ConvertNestedValueToString(object? value)
-		{
-			return value switch
-			{
-				null               => null,
-				string stringValue => stringValue,
-				byte[] bytes       => ConvertBytesToString(bytes),
-				ITuple tuple       => ConvertTupleToString(tuple),
-				IEnumerable items  => ConvertSequenceToString(items),
-				_                  => Convert.ToString(value, CultureInfo.InvariantCulture),
-			};
-		}
-
-		static bool IsKeyValuePair(object? value)
-		{
-			return value != null
-				&& value.GetType().IsGenericType
-				&& value.GetType().GetGenericTypeDefinition() == typeof(KeyValuePair<,>);
-		}
-
-		static void AppendKeyValuePair(System.Text.StringBuilder builder, object? value)
-		{
-			if (value == null)
-			{
-				builder.Append(':');
-				return;
-			}
-
-			var type = value.GetType();
-			var key  = type.GetProperty("Key")!.GetValue(value);
-			var item = type.GetProperty("Value")!.GetValue(value);
-
-			builder.Append(ConvertNestedValueToString(key));
-			builder.Append(':');
-			builder.Append(ConvertNestedValueToString(item));
-		}
-
-		static string ConvertVectorToString<T>(T[] vector)
-		{
-			var builder = new System.Text.StringBuilder();
-
-			builder.Append('[');
-			for (var i = 0; i < vector.Length; i++)
-			{
-				if (i > 0)
-					builder.Append(',');
-
-				builder.Append(Convert.ToString(vector[i], CultureInfo.InvariantCulture));
-			}
-
-			builder.Append(']');
-			return builder.ToString();
 		}
 
 		sealed record ReadResult(Type? Type, string? TypeName, string? StringValue, string? ExceptionTypeName);
