@@ -198,7 +198,7 @@ namespace LinqToDB.CommandLine.Commands.SchemaInspection
 				table.Description,
 				columns,
 				primaryKey.Length == 0 ? null : new SchemaPrimaryKeyDto(primaryKey),
-				table.ForeignKeys.Select(MapForeignKey).ToArray());
+				table.ForeignKeys.Where(foreignKey => foreignKey.BackReference != null).Select(MapForeignKey).ToArray());
 
 			static string GetTableKind(TableSchema table)
 			{

@@ -71,13 +71,16 @@ namespace Tests.LinqToDB.CLI
 				((string?)schema["dialect"]).ShouldBe("SQLite");
 				((bool?)schema["options"]?["getProcedures"]).ShouldBe(false);
 
-				var orders = FindTable(schema, "Orders");
+				var orders    = FindTable(schema, "Orders");
+				var customers = FindTable(schema, "Customers");
 
-				orders["columns"]!.AsArray().Count.ShouldBe(3);
-				((string?)orders["primaryKey"]?["columns"]?[0]?["name"]).ShouldBe("Id");
+				orders["columns"]!.AsArray().Count.                               ShouldBe(3);
+				((string?)orders["primaryKey"]?["columns"]?[0]?["name"]).         ShouldBe("Id");
+				((string?)orders["foreignKeys"]?[0]?["name"]).                    ShouldBe("FK_Orders_0");
 				((string?)orders["foreignKeys"]?[0]?["referencedTable"]?["name"]).ShouldBe("Customers");
-				((string?)orders["foreignKeys"]?[0]?["columns"]?[0]).ShouldBe("CustomerId");
-				result.Output.ShouldNotContain("secret");
+				((string?)orders["foreignKeys"]?[0]?["columns"]?[0]).             ShouldBe("CustomerId");
+				customers["foreignKeys"]!.AsArray().                              ShouldBeEmpty();
+				result.Output.                                                    ShouldNotContain("secret");
 			}
 			finally
 			{
