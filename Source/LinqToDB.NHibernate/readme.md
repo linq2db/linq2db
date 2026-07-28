@@ -204,7 +204,7 @@ supported by both linq2db and your NHibernate dialect should work.
     from a linq2db query;
   - **one-to-many** — the child entity must map the foreign-key column as a property; a unidirectional
     collection whose child exposes no such property is not navigable from a linq2db query;
-  - **many-to-many** — the junction table must be mapped as its own entity so linq2db can query through it.
+  - **many-to-many** — supported whether or not the junction table is mapped as an entity of its own.
 
 ## Help! It doesn't work!
 

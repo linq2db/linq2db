@@ -9,6 +9,7 @@ using System.Globalization;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Expressions;
 using LinqToDB.Mapping;
 
 using NHibernate;
@@ -33,8 +34,8 @@ namespace LinqToDB.NHibernate
 
 		readonly ConcurrentDictionary<MemberInfo, ValueConverterAttribute?> _valueConverterCache = new();
 
-		static readonly MethodInfo _toProviderMethod   = typeof(UserTypeConverterContext).GetMethod(nameof(UserTypeConverterContext.ToProvider))!;
-		static readonly MethodInfo _fromProviderMethod = typeof(UserTypeConverterContext).GetMethod(nameof(UserTypeConverterContext.FromProvider))!;
+		static readonly MethodInfo _toProviderMethod   = MemberHelper.MethodOf<UserTypeConverterContext>(c => c.ToProvider(null));
+		static readonly MethodInfo _fromProviderMethod = MemberHelper.MethodOf<UserTypeConverterContext>(c => c.FromProvider(null));
 
 		/// <summary>
 		/// Returns a <see cref="ValueConverterAttribute"/> for a member mapped through a single-column

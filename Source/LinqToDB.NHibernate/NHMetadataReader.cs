@@ -314,16 +314,21 @@ namespace LinqToDB.NHibernate
 			if (!GetPropertyMap(otherType, out var otherEntityMap))
 				return null;
 
+			// Join through the junction when it is mapped as an entity of its own.
+			LambdaExpression? queryExpression = null;
+
 			var joinPersister = FindEntityPersisterByTable(m2m.TableName);
-			if (joinPersister == null)
-				return null;
+			var joinType      = joinPersister?.EntityMetamodel.EntityType.ReturnedClass;
 
-			var joinType = joinPersister.EntityMetamodel.EntityType.ReturnedClass;
-			if (!GetPropertyMap(joinType, out var joinEntityMap))
-				return null;
+			if (joinType != null && GetPropertyMap(joinType, out var joinEntityMap))
+			{
+				queryExpression = BuildManyToManyQueryExpression(
+					thisType, thisEntityMap, otherType, otherEntityMap!, joinType, joinEntityMap!, m2m);
+			}
 
-			var queryExpression = BuildManyToManyQueryExpression(
-				thisType, thisEntityMap, otherType, otherEntityMap!, joinType, joinEntityMap!, m2m);
+			// Otherwise the junction is only a table name (the ordinary HasManyToMany), or its keys are not exposed
+			// as scalar members: reach it by name instead of through an entity.
+			queryExpression ??= BuildUnmappedJunctionQueryExpression(thisType, thisEntityMap, otherType, otherEntityMap!, m2m);
 
 			if (queryExpression == null)
 				return null;
