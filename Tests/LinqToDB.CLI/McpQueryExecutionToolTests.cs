@@ -91,6 +91,37 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task McpTruncatesOversizedBlobWithoutMaterializingIt()
+		{
+			await using var server = await McpServerProcess.Start(
+				"--provider",
+				"SQLite",
+				"--connection-string",
+				"Data Source=:memory:",
+				"--max-response-bytes",
+				"2048");
+
+			await server.Initialize();
+
+			var response = await server.CallTool("linq2db_query", new JsonObject
+			{
+				["sql"] = "select zeroblob(100000000) as Value",
+			});
+			var content = ReadResponseResult<McpTestCallToolResult>(response).Content;
+			var result  = ReadToolResult<McpTestJsonTableResult>(response);
+
+			{
+				result.RowCount.        ShouldBe(0);
+				result.Rows.            ShouldBeEmpty();
+				result.Truncated.       ShouldBe(true);
+				result.TruncationReason.ShouldBe("maxOutputBytes");
+				result.MaxOutputBytes.  ShouldBe(2048);
+				content.Count.          ShouldBe(2);
+				content[1].Text.        ShouldContain("pagination");
+			}
+		}
+
+		[Test]
 		public async Task McpQueryReturnsToolErrorForWriteSql()
 		{
 			await using var server = await McpServerProcess.Start("--provider", "SQLite", "--connection-string", "Data Source=:memory:");
