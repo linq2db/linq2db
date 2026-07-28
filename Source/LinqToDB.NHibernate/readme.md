@@ -116,7 +116,10 @@ Or take a linq2db data context explicitly:
 
 ```cs
 using var db = session.CreateLinqToDbConnection();
-var names = db.GetTable<Customer>().Select(c => c.CompanyName).ToList();
+
+var names = db.GetTable<Customer>()
+    .Select(c => c.CompanyName)
+    .ToList();
 ```
 
 ### Route a native NHibernate query through linq2db
@@ -141,12 +144,22 @@ session.GetTable<Customer>()
     .Update();
 
 // bulk DELETE
-session.GetTable<Customer>().Where(c => c.IsObsolete).Delete();
+session.GetTable<Customer>()
+    .Where(c => c.IsObsolete)
+    .Delete();
 
-// upsert
-session.GetTable<Customer>().InsertOrUpdate(
-    () => new Customer { CustomerId = "ACME", CompanyName = "Acme" },
-    c  => new Customer { CompanyName = "Acme (updated)" });
+// upsert — inserts the row, or updates the existing one; matched on the primary key
+session.GetTable<Customer>()
+    .Upsert(new Customer { CustomerId = "ACME", CompanyName = "Acme" });
+
+// ...or say how each branch behaves
+session.GetTable<Customer>()
+    .Upsert(
+        customer,
+        u => u
+            .Match((t, s) => t.CustomerId == s.CustomerId)
+            .Insert(i => i.Set(x => x.Country, () => "UK"))  // only when the row is new
+            .Update(v => v.Ignore(x => x.Country)));         // never overwritten on an existing row
 
 // INSERT … SELECT — a server-side copy, no rows pulled to the client
 session.GetTable<Customer>()
@@ -170,11 +183,13 @@ var ranked = session.GetTable<Customer>()
 
 // recursive CTE walking a self-referencing tree
 using var db = session.CreateLinqToDbContext();
+
 var tree = db.GetCte<OrgUnit>(self =>
-    db.GetTable<OrgUnit>().Where(o => o.ParentId == null)
+    db.GetTable<OrgUnit>()
+        .Where(o => o.ParentId == null)
         .Concat(
-            from o   in db.GetTable<OrgUnit>()
-            from par in self.InnerJoin(par => par.Id == o.ParentId)
+            from o      in db.GetTable<OrgUnit>()
+            from parent in self.Where(parent => parent.Id == o.ParentId)
             select o));
 ```
 
@@ -185,10 +200,13 @@ its entities detached:
 
 ```cs
 // tracked — the entity joins the session
-var tracked = session.GetTable<Customer>().First(c => c.CustomerId == "ACME");
+var tracked = session.GetTable<Customer>()
+    .First(c => c.CustomerId == "ACME");
 
 // not tracked
-var readOnly = session.GetTable<Customer>().AsReadOnly().First(c => c.CustomerId == "ACME");
+var readOnly = session.GetTable<Customer>()
+    .AsReadOnly()
+    .First(c => c.CustomerId == "ACME");
 ```
 
 Tracking can also be turned off globally with `LinqToDBForNHibernateTools.EnableChangeTracker = false;`.
@@ -208,7 +226,10 @@ LinqToDBForNHibernateTools.AddOptions(sessionFactory, o => o
 
 ```cs
 using var stateless = sessionFactory.OpenStatelessSession();
-var customers = stateless.GetTable<Customer>().Where(c => c.Country == "UK").ToList();
+
+var customers = stateless.GetTable<Customer>()
+    .Where(c => c.Country == "UK")
+    .ToList();
 ```
 
 ### NHibernate filters
@@ -217,7 +238,10 @@ Filters enabled on the session are honored by linq2db queries:
 
 ```cs
 session.EnableFilter("softDelete");
-var visible = session.GetTable<Document>().ToList();   // soft-deleted rows excluded
+
+// soft-deleted rows excluded
+var visible = session.GetTable<Document>()
+    .ToList();
 ```
 
 ### Async
@@ -226,8 +250,13 @@ linq2db's async methods carry a `LinqToDB` suffix to avoid colliding with NHiber
 extensions; the `…NH` variants run through NHibernate:
 
 ```cs
-var a = await session.Query<Customer>().Where(c => c.Country == "UK").ToListAsyncLinqToDB();
-var b = await session.Query<Customer>().Where(c => c.Country == "UK").ToListAsyncNH();
+var a = await session.Query<Customer>()
+    .Where(c => c.Country == "UK")
+    .ToListAsyncLinqToDB();
+
+var b = await session.Query<Customer>()
+    .Where(c => c.Country == "UK")
+    .ToListAsyncNH();
 ```
 
 ## Why use it?

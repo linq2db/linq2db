@@ -109,9 +109,9 @@ namespace LinqToDB.NHibernate.Tests
 						.Where(o => o.ParentId == null)
 						.Select(o => new OrgLevel { Id = o.Id, Name = o.Name, Level = 1 })
 						.Concat(
-							from o   in db.GetTable<OrgUnit>()
-							from par in self.InnerJoin(par => par.Id == o.ParentId)
-							select new OrgLevel { Id = o.Id, Name = o.Name, Level = par.Level + 1 }));
+							from o      in db.GetTable<OrgUnit>()
+							from parent in self.Where(parent => parent.Id == o.ParentId)
+							select new OrgLevel { Id = o.Id, Name = o.Name, Level = parent.Level + 1 }));
 
 				var rows = tree.OrderBy(x => x.Id).ToList();
 
@@ -130,7 +130,7 @@ namespace LinqToDB.NHibernate.Tests
 		}
 
 		[Test]
-		public void Upsert_InsertOrUpdate(
+		public void Upsert_InsertsThenUpdates(
 			[NHIncludeDataSources] string provider)
 		{
 			var sf = GetSessionFactory(provider);
@@ -142,17 +142,23 @@ namespace LinqToDB.NHibernate.Tests
 			var table = session.GetTable<OrgUnit>();
 			table.Where(o => o.Id == 900).Delete();
 
-			// First upsert inserts (no matching key).
-			table.InsertOrUpdate(
-				() => new OrgUnit { Id = 900, ParentId = null, Name = "First" },
-				o  => new OrgUnit { Name = "Updated" });
+			// First upsert inserts: nothing matches the key yet.
+			table.Upsert(new OrgUnit { Id = 900, ParentId = null, Name = "First" });
 			table.Single(o => o.Id == 900).Name.ShouldBe("First");
 
-			// Second upsert updates (key now matches) — NHibernate has no equivalent.
-			table.InsertOrUpdate(
-				() => new OrgUnit { Id = 900, ParentId = null, Name = "Second" },
-				o  => new OrgUnit { Name = "Updated" });
-			table.Single(o => o.Id == 900).Name.ShouldBe("Updated");
+			// Second upsert updates the matched row — NHibernate has no equivalent.
+			table.Upsert(new OrgUnit { Id = 900, ParentId = null, Name = "Second" });
+			table.Single(o => o.Id == 900).Name.ShouldBe("Second");
+
+			// Each branch can be configured on its own: the row exists, so the insert branch does not run and
+			// the update branch leaves Name alone.
+			table.Upsert(
+				new OrgUnit { Id = 900, ParentId = null, Name = "Third" },
+				u => u
+					.Match((t, s) => t.Id == s.Id)
+					.Insert(i => i.Set(x => x.Name, () => "Inserted"))
+					.Update(v => v.Ignore(x => x.Name)));
+			table.Single(o => o.Id == 900).Name.ShouldBe("Second");
 
 			table.Where(o => o.Id == 900).Delete();
 			tx.Commit();
