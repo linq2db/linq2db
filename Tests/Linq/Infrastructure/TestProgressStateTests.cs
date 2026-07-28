@@ -231,6 +231,26 @@ namespace Tests.Infrastructure
 		}
 
 		[Test]
+		public void RepeatIterationsBookOneUnitWithTheLatestVerdict()
+		{
+			var rec = Recorder.Create();
+
+			// [Repeat] / [Retry] wrappers sit *outside* the reporter action, so it runs once per iteration for a
+			// single test case while the run total counts that case once. The unit must be booked once, with the
+			// last verdict, and a withdrawn failure must not leave its recentFailures entry behind.
+			rec.State.StartTest   (Unit);
+			rec.State.CompleteTest(Unit, TestStatus.Failed, "first attempt");
+			rec.State.StartTest   (Unit);
+			rec.State.CompleteTest(Unit, TestStatus.Passed, null);
+
+			rec.State.Started  .ShouldBe(1);
+			rec.State.Completed.ShouldBe(1);
+			rec.State.Passed   .ShouldBe(1);
+			rec.State.Failed   .ShouldBe(0);
+			rec.State.RecentFailures.ShouldBeEmpty();
+		}
+
+		[Test]
 		public void LongFailureMessagesAreTruncated()
 		{
 			var state = new TestProgressState();

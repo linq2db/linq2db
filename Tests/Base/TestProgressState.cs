@@ -38,6 +38,9 @@ namespace Tests
 		// Keyed by test full name — unique per case by project convention (the baseline files are keyed by the same
 		// fully-qualified name), so a duplicate is a test-authoring bug to fix, not a case this protocol handles.
 		readonly Dictionary<string, DeferredUnit>    _deferred = new(StringComparer.Ordinal);
+		// Verdict already booked per test case, so a repeat/retry wrapper - which sits *outside* the reporter action
+		// and re-enters it once per iteration - books one unit rather than one per iteration. See Book.
+		readonly Dictionary<string, TestStatus>      _booked   = new(StringComparer.Ordinal);
 		readonly Action<bool>?                       _publish;
 
 		long    _total;
@@ -99,7 +102,10 @@ namespace Tests
 		{
 			lock (_sync)
 			{
-				_started++;
+				// A repeat/retry iteration re-enters this for an already-booked case; it is not a new unit.
+				if (!_booked.ContainsKey(fullName))
+					_started++;
+
 				_current = fullName;
 
 				Publish(force: false);
@@ -196,7 +202,16 @@ namespace Tests
 
 		void Book(string fullName, TestStatus status, string? message)
 		{
-			_completed++;
+			// [Repeat] / [Retry] wrappers sit outside the reporter action, so it runs once per iteration for the same
+			// test case while the run total counts the case once. Book the unit on first sight and afterwards only
+			// move it between buckets, keeping the latest verdict - which is what the platform summary reports.
+			if (_booked.TryGetValue(fullName, out var booked))
+				Unbook(fullName, booked);
+			else
+				_completed++;
+
+			_booked[fullName] = status;
+
 			// Deliberately do NOT clear _current here: with throttled writes, nulling between every test
 			// makes the on-disk snapshot almost always catch the gap (showing no current test). Keep the
 			// most-recently-started test as "current" until the run completes — during a run that is the
@@ -228,6 +243,27 @@ namespace Tests
 			}
 
 			Publish(force);
+		}
+
+		// Withdraws a previously booked verdict, so a re-booked case does not double-count.
+		void Unbook(string fullName, TestStatus booked)
+		{
+			switch (booked)
+			{
+				case TestStatus.Passed : _passed--;  break;
+				case TestStatus.Skipped: _skipped--; break;
+				case TestStatus.Failed :
+					_failed--;
+
+					// Only the entry this case added, not every entry sharing its name.
+					var idx = _failures.FindLastIndex(f => f.Test == fullName);
+
+					if (idx >= 0)
+						_failures.RemoveAt(idx);
+
+					break;
+				default: break;
+			}
 		}
 
 		void Publish(bool force)
