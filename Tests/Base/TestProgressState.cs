@@ -35,6 +35,8 @@ namespace Tests
 
 		readonly Lock                                _sync     = new();
 		readonly List<(string Test, string Message)> _failures = new();
+		// Keyed by test full name — unique per case by project convention (the baseline files are keyed by the same
+		// fully-qualified name), so a duplicate is a test-authoring bug to fix, not a case this protocol handles.
 		readonly Dictionary<string, DeferredUnit>    _deferred = new(StringComparer.Ordinal);
 		readonly Action<bool>?                       _publish;
 
