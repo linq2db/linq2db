@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading.Tasks;
 
 using LinqToDB.CommandLine;
+using LinqToDB.CommandLine.Commands.Credentials;
 
 namespace Tests.LinqToDB.CLI
 {
@@ -16,7 +17,8 @@ namespace Tests.LinqToDB.CLI
 		public HashSet<string> Directories { get; } = new(StringComparer.Ordinal);
 		public HashSet<string> OwnerOnlyFiles { get; } = new(StringComparer.Ordinal);
 		public Dictionary<string, string> EnvironmentVariables { get; } = new(StringComparer.Ordinal);
-		public Dictionary<string, (string User, string Password)> WindowsCredentials { get; } = new(StringComparer.Ordinal);
+		public Queue<string> Secrets { get; } = new();
+		public Queue<string> InputLines { get; } = new();
 
 		public Exception? WriteAllTextException { get; init; }
 
@@ -24,6 +26,8 @@ namespace Tests.LinqToDB.CLI
 		public TextWriter Error => _error;
 
 		public int BufferWidth => 120;
+		public ICredentialStore CredentialStore { get; } = new TestCredentialStore();
+		public Dictionary<string, (string User, string Password)> Credentials => ((TestCredentialStore)CredentialStore).Credentials;
 
 		public string Output      => _output.ToString();
 		public string ErrorOutput => _error .ToString();
@@ -86,20 +90,23 @@ namespace Tests.LinqToDB.CLI
 			return EnvironmentVariables.GetValueOrDefault(name);
 		}
 
-		public bool TryGetWindowsCredentials(string target, out string? user, out string? password, out string? error)
+		public bool TryReadSecret(string prompt, out string? secret, out string? error)
 		{
-			if (WindowsCredentials.TryGetValue(target, out var credentials))
+			_error.Write(prompt);
+
+			if (Secrets.TryDequeue(out secret))
 			{
-				user     = credentials.User;
-				password = credentials.Password;
-				error    = null;
+				error = null;
 				return true;
 			}
 
-			user     = null;
-			password = null;
-			error    = $"Windows Credential Manager target '{target}' was not found for the current Windows account.";
+			error = "Interactive secret input is not available.";
 			return false;
+		}
+
+		public string? ReadLine()
+		{
+			return InputLines.TryDequeue(out var line) ? line : null;
 		}
 
 		private sealed class TestFileWriter(Action<string> save) : StringWriter

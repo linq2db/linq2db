@@ -66,9 +66,9 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		public string? PasswordEnv      { get; private set; }
 
 		/// <summary>
-		/// Windows Credential Manager generic credential target containing both database user name and password.
+		/// System or external credential store target containing both database user name and password.
 		/// </summary>
-		public string? WindowsCredentials { get; private set; }
+		public string? Credentials { get; private set; }
 
 		/// <summary>
 		/// Run database access operations under resolved Windows <see cref="User"/>/<see cref="Password"/> credentials.
@@ -314,11 +314,11 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 
 						PasswordEnv = value;
 						break;
-					case "windowsCredentials":
+					case "credentials":
 						if (!TryGetString(fileName, profileName, property, out value, out error))
 							return false;
 
-						WindowsCredentials = value;
+						Credentials = value;
 						break;
 					case "impersonate":
 						if (!TryParseBoolean(fileName, profileName, property, out var booleanValue, out error))

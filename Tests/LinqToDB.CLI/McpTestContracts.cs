@@ -231,7 +231,7 @@ namespace Tests.LinqToDB.CLI
 			public JsonElement? Provider           { get; init; }
 			public JsonElement? ConnectionString   { get; init; }
 			public JsonElement? Password           { get; init; }
-			public JsonElement? WindowsCredentials { get; init; }
+			public JsonElement? Credentials { get; init; }
 			public JsonElement? ProviderLocation   { get; init; }
 			public JsonElement? FilterTables       { get; init; }
 			public JsonElement? ExcludeTables      { get; init; }

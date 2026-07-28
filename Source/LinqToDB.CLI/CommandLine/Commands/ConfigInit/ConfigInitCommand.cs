@@ -94,6 +94,7 @@ namespace LinqToDB.CommandLine.Commands.ConfigInit
 			AddOption(QueryExecutionCliOptions.ConnectionOptions, QueryExecutionCliOptions.ProviderLocation);
 			AddOption(QueryExecutionCliOptions.ConnectionOptions, QueryExecutionCliOptions.ConnectionString);
 			AddOption(QueryExecutionCliOptions.ConnectionOptions, QueryExecutionCliOptions.ConnectionStringEnv);
+			AddOption(QueryExecutionCliOptions.ConnectionOptions, QueryExecutionCliOptions.Credentials);
 			AddOption(QueryExecutionCliOptions.OutputOptions,     _output);
 			AddOption(QueryExecutionCliOptions.OutputOptions,     QueryExecutionCliOptions.MaxRows);
 			AddOption(_existsOptions,                            _ifExists);
@@ -114,6 +115,7 @@ namespace LinqToDB.CommandLine.Commands.ConfigInit
 			options.Remove(QueryExecutionCliOptions.ProviderLocation,    out var providerLocation);
 			options.Remove(QueryExecutionCliOptions.ConnectionString,    out var connectionString);
 			options.Remove(QueryExecutionCliOptions.ConnectionStringEnv, out var connectionStringEnv);
+			options.Remove(QueryExecutionCliOptions.Credentials,         out var credentials);
 			options.Remove(_output,                                      out var output);
 			options.Remove(QueryExecutionCliOptions.MaxRows,             out var maxRows);
 			options.Remove(_ifExists,                                   out var ifExists);
@@ -141,6 +143,7 @@ namespace LinqToDB.CommandLine.Commands.ConfigInit
 				(string?)providerLocation,
 				(string?)connectionString,
 				(string?)connectionStringEnv,
+				(string?)credentials,
 				(string?)output ?? DefaultOutput,
 				(string?)maxRows,
 				(string?)ifExists ?? "error");
@@ -343,6 +346,9 @@ namespace LinqToDB.CommandLine.Commands.ConfigInit
 			else
 				profile["connectionStringEnv"] = values.ConnectionStringEnv;
 
+			if (values.Credentials != null)
+				profile["credentials"] = values.Credentials;
+
 			profile["maxRows"]       = maxRows;
 			profile["output"]        = values.Output;
 			profile["enableExecute"] = false;
@@ -358,6 +364,7 @@ namespace LinqToDB.CommandLine.Commands.ConfigInit
 			string? ProviderLocation,
 			string? ConnectionString,
 			string? ConnectionStringEnv,
+			string? Credentials,
 			string  Output,
 			string? MaxRows,
 			string  IfExists);

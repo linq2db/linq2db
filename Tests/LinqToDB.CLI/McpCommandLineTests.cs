@@ -20,7 +20,7 @@ namespace Tests.LinqToDB.CLI
 				(result.Output).  ShouldContain   ("dotnet linq2db mcp <options>");
 				(result.Output).  ShouldContain   ("run STDIO MCP server");
 				(result.Output).  ShouldContain   ("default: json-table");
-				(result.Output).  ShouldContain   ("--windows-credentials");
+				(result.Output).  ShouldContain   ("--credentials");
 				(result.Output).  ShouldContain   ("--config");
 				(result.Output).  ShouldContain   ("--provider");
 				(result.Output).  ShouldContain   ("--max-rows");

@@ -44,7 +44,7 @@ namespace LinqToDB.CommandLine.Commands.Execute
 			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.UserEnv);
 			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.Password);
 			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.PasswordEnv);
-			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.WindowsCredentials);
+			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.Credentials);
 			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.Impersonate);
 			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.ImpersonateMode);
 			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.CommandTimeout);
@@ -121,7 +121,7 @@ namespace LinqToDB.CommandLine.Commands.Execute
 			options.Remove(QueryExecutionCliOptions.UserEnv,             out var userEnv);
 			options.Remove(QueryExecutionCliOptions.Password,            out var password);
 			options.Remove(QueryExecutionCliOptions.PasswordEnv,         out var passwordEnv);
-			options.Remove(QueryExecutionCliOptions.WindowsCredentials,  out var windowsCredentials);
+			options.Remove(QueryExecutionCliOptions.Credentials,  out var credentials);
 			options.Remove(QueryExecutionCliOptions.Impersonate,         out var impersonate);
 			options.Remove(QueryExecutionCliOptions.ImpersonateMode,     out var impersonateMode);
 			options.Remove(QueryExecutionCliOptions.CommandTimeout,      out var commandTimeout);
@@ -144,7 +144,7 @@ namespace LinqToDB.CommandLine.Commands.Execute
 				(string?)userEnv,
 				(string?)password,
 				(string?)passwordEnv,
-				(string?)windowsCredentials,
+				(string?)credentials,
 				(bool?)impersonate,
 				(string?)impersonateMode,
 				(string?)commandTimeout,

@@ -45,7 +45,7 @@ namespace Tests.LinqToDB.CLI
 				queryTool.InputSchema.Properties.Provider.          ShouldBeNull();
 				queryTool.InputSchema.Properties.ConnectionString.  ShouldBeNull();
 				queryTool.InputSchema.Properties.Password.          ShouldBeNull();
-				queryTool.InputSchema.Properties.WindowsCredentials.ShouldBeNull();
+				queryTool.InputSchema.Properties.Credentials.ShouldBeNull();
 				queryTool.InputSchema.Properties.ProviderLocation.  ShouldBeNull();
 
 				infoTool.Description.                ShouldContain("Returns non-secret linq2db MCP query configuration information");
@@ -68,7 +68,7 @@ namespace Tests.LinqToDB.CLI
 				schemaTool.InputSchema.Properties.ConnectionString.  ShouldBeNull();
 				schemaTool.InputSchema.Properties.Password.          ShouldBeNull();
 				schemaTool.InputSchema.Properties.ProviderLocation.  ShouldBeNull();
-				schemaTool.InputSchema.Properties.WindowsCredentials.ShouldBeNull();
+				schemaTool.InputSchema.Properties.Credentials.ShouldBeNull();
 				schemaTool.InputSchema.Properties.Sql.               ShouldBeNull();
 				schemaTool.InputSchema.Properties.OutputFile.        ShouldBeNull();
 				schemaTool.InputSchema.Properties.FilterTables.      ShouldNotBeNull();
@@ -127,12 +127,12 @@ namespace Tests.LinqToDB.CLI
 				executeTool.Annotations.DestructiveHint.              ShouldBe(true);
 				executeTool.InputSchema.Properties.AllowUnsafeSql.    ShouldBeNull();
 				executeTool.InputSchema.Properties.AllowExecute.      ShouldBeNull();
-				executeTool.InputSchema.Properties.WindowsCredentials.ShouldBeNull();
+				executeTool.InputSchema.Properties.Credentials.ShouldBeNull();
 			}
 		}
 
 		[Test]
-		public async Task McpInfoDoesNotExposeWindowsCredentialManagerTarget()
+		public async Task McpInfoDoesNotExposeCredentialTarget()
 		{
 			var config = Path.Combine(TestContext.CurrentContext.WorkDirectory, $"mcp-credential-{Guid.NewGuid():N}.json");
 			await File.WriteAllTextAsync(config,
@@ -141,7 +141,7 @@ namespace Tests.LinqToDB.CLI
 					"default": {
 						"provider": "SQLite",
 						"connectionString": "Data Source={0}",
-						"windowsCredentials": "linq2db/project-a/production"
+						"credentials": "linq2db/project-a/production"
 					}
 				}
 				""")

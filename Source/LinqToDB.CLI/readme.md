@@ -82,6 +82,7 @@ Available commands:
 - `dotnet linq2db execute <options>`: executes a single write-capable SQL statement when the selected trusted profile has `enableExecute` set to `true`
 - `dotnet linq2db schema <options>`: reads provider-aware database object metadata and writes JSON output
 - `dotnet linq2db config-init <options>`: creates or updates a query/MCP JSON configuration profile
+- `dotnet linq2db credentials <set|list|remove|clear> <options>`: manages encrypted credential profiles for connection configuration
 - `dotnet linq2db mcp <options>`: runs a STDIO Model Context Protocol server exposing `linq2db_info`, `linq2db_schema`, `linq2db_query`, `linq2db_execute`, and `linq2db_skill`
 - `dotnet linq2db skill`: prints agent-oriented CLI usage instructions
 
@@ -99,9 +100,17 @@ Prefer `--connection-string-env` when the connection string contains credentials
 
 Configuration profiles are shared by `query`, `schema`, and `mcp`. The `query` command supports `json`, `json-table`, and `csv`. The `schema` command outputs JSON only. The MCP `linq2db_query` tool supports only `json` and `json-table`; if a selected profile has `output: "csv"`, MCP calls must pass `output: "json-table"` or `output: "json"` explicitly, or the profile should be adjusted for MCP usage.
 
-On Windows, `--windows-credentials <target>` or profile `windowsCredentials` can load both user and password from a generic Windows Credential Manager entry. The target is resolved at trusted CLI/MCP startup or profile resolution and is never exposed as an MCP tool argument. Credential Manager entries are scoped to the Windows account that created them, so an MCP process running under another account cannot read them.
+On Windows, `dotnet linq2db credentials` manages credential profiles under the `linq2db/` target namespace. `credentials set` prompts for the password without echo and stores the real user/password payload behind a version marker with additional current-user DPAPI protection. `credentials list` returns profile names and users but never passwords. `credentials remove` removes one profile, and `credentials clear` removes all `linq2db/` profiles after confirmation; use `--force` only for intentional non-interactive cleanup.
 
-Create a generic credential without placing the password in command-line arguments:
+```powershell
+dotnet linq2db credentials set --profile project-a/production --user "DOMAIN\ServiceAccount"
+dotnet linq2db credentials list
+dotnet linq2db credentials remove --profile project-a/production
+```
+
+Reference the generated target using `"credentials": "linq2db/project-a/production"` or `--credentials linq2db/project-a/production`. Credential entries are scoped to the Windows account that created them, so an MCP process running under another account cannot read them.
+
+Ordinary generic Credential Manager entries remain supported. Create one without placing the password in command-line arguments:
 
 ```powershell
 cmdkey /generic:"linq2db/project-a/production" `
@@ -109,7 +118,7 @@ cmdkey /generic:"linq2db/project-a/production" `
        /pass
 ```
 
-With `/pass` and no value, `cmdkey` prompts for the password interactively. Use the stored pair in a profile with `"windowsCredentials": "linq2db/project-a/production"`. Do not combine it with `user`, `userEnv`, `password`, or `passwordEnv` in the same effective profile.
+With `/pass` and no value, `cmdkey` prompts for the password interactively. `--credentials` accepts the exact target name and detects both linq2db-managed and ordinary username/password entries. Do not combine `credentials` with `user`, `userEnv`, `password`, or `passwordEnv` in the same effective profile.
 
 CSV output preserves database values without spreadsheet-specific escaping and is intended for machine processing. Do not open CSV containing untrusted values directly in spreadsheet applications, which can interpret values beginning with characters such as `=`, `+`, `-`, or `@` as formulas. Use `json` or `json-table` instead when the data is untrusted or intended for interactive inspection.
 

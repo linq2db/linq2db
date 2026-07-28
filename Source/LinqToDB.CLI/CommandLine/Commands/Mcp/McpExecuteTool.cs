@@ -105,7 +105,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 				_startupOptions.UserEnv,
 				_startupOptions.Password,
 				_startupOptions.PasswordEnv,
-				_startupOptions.WindowsCredentials,
+				_startupOptions.Credentials,
 				_startupOptions.Impersonate,
 				_startupOptions.ImpersonateMode,
 				_startupOptions.CommandTimeout,

@@ -2,6 +2,7 @@ using System;
 using System.IO;
 
 using LinqToDB.CommandLine;
+using LinqToDB.CommandLine.Commands.Credentials;
 
 namespace LinqToDB.CommandLine.Commands.Mcp
 {
@@ -16,6 +17,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 		public TextWriter Error { get; } = error;
 
 		public int BufferWidth => _inner.BufferWidth;
+		public ICredentialStore CredentialStore => _inner.CredentialStore;
 
 		public bool FileExists(string path)
 		{
@@ -62,9 +64,14 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 			return _inner.GetEnvironmentVariable(name);
 		}
 
-		public bool TryGetWindowsCredentials(string target, out string? user, out string? password, out string? error)
+		public bool TryReadSecret(string prompt, out string? secret, out string? error)
 		{
-			return _inner.TryGetWindowsCredentials(target, out user, out password, out error);
+			throw new NotSupportedException("MCP query execution does not support interactive input.");
+		}
+
+		public string? ReadLine()
+		{
+			throw new NotSupportedException("MCP query execution does not support interactive input.");
 		}
 	}
 }

@@ -1318,13 +1318,13 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
-		public async Task QueryReadsCredentialsFromWindowsCredentialManager()
+		public async Task QueryReadsCredentialsFromCredentialStore()
 		{
 			var environment = new TestCliEnvironment();
 
-			environment.WindowsCredentials.Add("linq2db/test", (":memory:", "ignored"));
+			environment.Credentials.Add("linq2db/test", (":memory:", "ignored"));
 
-			var result = await RunCli(environment, "query", "--provider", "SQLite", "--connection-string", "Data Source={0}", "--windows-credentials", "linq2db/test", "--sql", "select 1 as Value");
+			var result = await RunCli(environment, "query", "--provider", "SQLite", "--connection-string", "Data Source={0}", "--credentials", "linq2db/test", "--sql", "select 1 as Value");
 
 			{
 				(result.ExitCode).ShouldBe(0);
@@ -1334,7 +1334,7 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
-		public async Task QueryReadsCredentialsFromConfigWindowsCredentialManagerTarget()
+		public async Task QueryReadsCredentialsFromConfigCredentialTarget()
 		{
 			var environment = new TestCliEnvironment();
 			var config      = AddConfigFile(environment, """
@@ -1342,13 +1342,13 @@ namespace Tests.LinqToDB.CLI
 					"default": {
 						"provider": "SQLite",
 						"connectionString": "Data Source={0}",
-						"windowsCredentials": "%CREDENTIAL_PREFIX%/test"
+						"credentials": "%CREDENTIAL_PREFIX%/test"
 					}
 				}
 				""");
 
 			environment.EnvironmentVariables.Add("CREDENTIAL_PREFIX", "linq2db");
-			environment.WindowsCredentials.Add("linq2db/test", (":memory:", "ignored"));
+			environment.Credentials.Add("linq2db/test", (":memory:", "ignored"));
 
 			var result = await RunCli(environment, "query", "--config", config, "--sql", "select 1 as Value");
 
@@ -1360,29 +1360,29 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
-		public async Task QueryReportsMissingWindowsCredentialManagerTarget()
+		public async Task QueryReportsMissingCredentialTarget()
 		{
-			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source={0}", "--windows-credentials", "linq2db/missing", "--sql", "select 1 as Value");
+			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source={0}", "--credentials", "linq2db/missing", "--sql", "select 1 as Value");
 
 			{
 				(result.ExitCode).ShouldBe(-1);
-				(result.Error).ShouldContain("Windows Credential Manager target 'linq2db/missing' was not found for the current Windows account.");
+				(result.Error).ShouldContain("Credential target 'linq2db/missing' was not found for the current Windows account.");
 			}
 		}
 
 		[Test]
-		public async Task QueryRejectsWindowsCredentialManagerWithCommandCredentials()
+		public async Task QueryRejectsCredentialStoreWithCommandCredentials()
 		{
-			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source={0}", "--windows-credentials", "linq2db/test", "--user", ":memory:", "--sql", "select 1 as Value");
+			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source={0}", "--credentials", "linq2db/test", "--user", ":memory:", "--sql", "select 1 as Value");
 
 			{
 				(result.ExitCode).ShouldBe(-1);
-				(result.Error).ShouldContain("Option '--windows-credentials' cannot be combined with '--user', '--user-env', '--password', or '--password-env'.");
+				(result.Error).ShouldContain("Option '--credentials' cannot be combined with '--user', '--user-env', '--password', or '--password-env'.");
 			}
 		}
 
 		[Test]
-		public async Task QueryRejectsConfigWindowsCredentialManagerWithConfigCredentials()
+		public async Task QueryRejectsConfigCredentialStoreWithConfigCredentials()
 		{
 			var environment = new TestCliEnvironment();
 			var config      = AddConfigFile(environment, """
@@ -1390,7 +1390,7 @@ namespace Tests.LinqToDB.CLI
 					"default": {
 						"provider": "SQLite",
 						"connectionString": "Data Source={0}",
-						"windowsCredentials": "linq2db/test",
+						"credentials": "linq2db/test",
 						"user": ":memory:"
 					}
 				}
@@ -1400,12 +1400,12 @@ namespace Tests.LinqToDB.CLI
 
 			{
 				(result.ExitCode).ShouldBe(-1);
-				(result.Error).ShouldContain("Configuration property 'windowsCredentials' cannot be combined with 'user', 'userEnv', 'password', or 'passwordEnv'.");
+				(result.Error).ShouldContain("Configuration property 'credentials' cannot be combined with 'user', 'userEnv', 'password', or 'passwordEnv'.");
 			}
 		}
 
 		[Test]
-		public async Task QueryRejectsNonStringWindowsCredentialManagerTarget()
+		public async Task QueryRejectsNonStringCredentialTarget()
 		{
 			var environment = new TestCliEnvironment();
 			var config      = AddConfigFile(environment, """
@@ -1413,7 +1413,7 @@ namespace Tests.LinqToDB.CLI
 					"default": {
 						"provider": "SQLite",
 						"connectionString": "Data Source=:memory:",
-						"windowsCredentials": true
+						"credentials": true
 					}
 				}
 				""");
@@ -1422,12 +1422,12 @@ namespace Tests.LinqToDB.CLI
 
 			{
 				(result.ExitCode).ShouldBe(-1);
-				(result.Error).ShouldContain($"Configuration file '{config}' profile 'default' property 'windowsCredentials' must be string.");
+				(result.Error).ShouldContain($"Configuration file '{config}' profile 'default' property 'credentials' must be string.");
 			}
 		}
 
 		[Test]
-		public async Task QueryCommandWindowsCredentialManagerOverridesConfigCredentials()
+		public async Task QueryCommandCredentialTargetOverridesConfigCredentials()
 		{
 			var environment = new TestCliEnvironment();
 			var config      = AddConfigFile(environment, """
@@ -1441,9 +1441,9 @@ namespace Tests.LinqToDB.CLI
 				}
 				""");
 
-			environment.WindowsCredentials.Add("linq2db/test", (":memory:", "ignored"));
+			environment.Credentials.Add("linq2db/test", (":memory:", "ignored"));
 
-			var result = await RunCli(environment, "query", "--config", config, "--windows-credentials", "linq2db/test", "--sql", "select 1 as Value");
+			var result = await RunCli(environment, "query", "--config", config, "--credentials", "linq2db/test", "--sql", "select 1 as Value");
 
 			{
 				(result.ExitCode).ShouldBe(0);
@@ -1905,7 +1905,7 @@ namespace Tests.LinqToDB.CLI
 				(result.Output).ShouldContain("--user-env");
 				(result.Output).ShouldContain("--password");
 				(result.Output).ShouldContain("--password-env");
-				(result.Output).ShouldContain("--windows-credentials");
+				(result.Output).ShouldContain("--credentials");
 				(result.Output).ShouldContain("--impersonate");
 				(result.Output).ShouldContain("run database access under resolved user/password credentials");
 				(result.Output).ShouldContain("--impersonate-mode");

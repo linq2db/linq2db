@@ -52,9 +52,9 @@ Connection settings:
 - `--user <user>` and configuration `user` support `%NAME%` and `${NAME}` environment variable expansion. Password literals do not use environment variable expansion; use `--password-env` or `passwordEnv` for secrets.
 - `--connection-string-env <name>`, `--user-env <name>`, and `--password-env <name>` read those values from environment variables.
 - Configuration profiles can use `connectionStringEnv`, `userEnv`, and `passwordEnv` for the same purpose.
-- `--windows-credentials <target>` and configuration `windowsCredentials` read both user and password from a Windows Credential Manager generic credential. The target name supports `%NAME%` and `${NAME}` environment variable expansion.
-- In an effective configuration profile, `windowsCredentials` cannot be combined with `user`, `userEnv`, `password`, or `passwordEnv`. On the command line, `--windows-credentials` cannot be combined with command-line user/password sources and replaces those settings inherited from the selected profile.
-- Credentials are visible only to the Windows account that created them. An MCP server launched under another account cannot read the current user's Credential Manager entries.
+- `--credentials <target>` and configuration `credentials` read both user and password from a credential store target. The built-in store supports linq2db-managed profiles and ordinary Windows Credential Manager generic credentials. The target name supports `%NAME%` and `${NAME}` environment variable expansion.
+- In an effective configuration profile, `credentials` cannot be combined with `user`, `userEnv`, `password`, or `passwordEnv`. On the command line, `--credentials` cannot be combined with command-line user/password sources and replaces those settings inherited from the selected profile.
+- Built-in credential profiles are visible only to the Windows account that created them. An MCP server launched under another account cannot read the current user's Credential Manager entries.
 - Value precedence is: command-line literal, command-line environment variable option, selected profile literal, selected profile environment variable option, inherited default profile literal or environment variable option.
 - If an environment variable option is specified, the variable must exist.
 - The final connection string is always produced with `string.Format(connectionString, user, password)`.
@@ -69,7 +69,15 @@ Connection settings:
 - `--impersonate` requires resolved `user` and `password` values. Use `--user-env` and `--password-env` or configuration `userEnv` and `passwordEnv` when credentials must not be written as literals.
 - Windows impersonation uses network credentials intended for database access. It is not supported on Linux or macOS.
 
-Create a generic credential without placing the password in command-line arguments:
+Create an encrypted linq2db credential profile without placing the password in command-line arguments:
+
+```powershell
+dotnet linq2db credentials set --profile project-a/production --user "DOMAIN\ServiceAccount"
+```
+
+The command creates target `linq2db/project-a/production`. Reference it with `--credentials linq2db/project-a/production` or `"credentials": "linq2db/project-a/production"`. The real user and password are stored in a versioned payload with additional current-user DPAPI protection.
+
+The built-in store also accepts ordinary generic credentials created outside linq2db:
 
 ```powershell
 cmdkey /generic:"linq2db/project-a/production" `
@@ -77,7 +85,25 @@ cmdkey /generic:"linq2db/project-a/production" `
        /pass
 ```
 
-With `/pass` and no value, `cmdkey` prompts for the password interactively. Reference the target with `--windows-credentials linq2db/project-a/production` or `"windowsCredentials": "linq2db/project-a/production"` in a trusted profile.
+With `/pass` and no value, `cmdkey` prompts for the password interactively.
+
+## Credentials Command
+
+`dotnet linq2db credentials` manages only targets in the `linq2db/` namespace:
+
+```powershell
+dotnet linq2db credentials set --profile project-a/production-read --user ProjectReader
+dotnet linq2db credentials list
+dotnet linq2db credentials remove --profile project-a/production-read
+dotnet linq2db credentials clear
+```
+
+- `set` prompts for and confirms the password without echo. It creates or replaces `linq2db/<profile>`.
+- `list` returns profile names and users; it never returns passwords.
+- `remove` removes one named profile.
+- `clear` removes all linq2db profiles after interactive confirmation. `--force` skips confirmation.
+- The built-in implementation currently requires Windows. Credential access is isolated behind `ICredentialStore` so other platform or external stores can be added without changing query execution.
+- The command is a direct CLI facility and is not exposed through MCP.
 
 ## Supported Database Providers
 
@@ -318,6 +344,7 @@ Supported initialization options:
 - `--provider-location <path>`.
 - `--connection-string <connection-string>`.
 - `--connection-string-env <name>`.
+- `--credentials <target>`.
 - `--max-rows <count>`.
 - `--output json|json-table|csv`.
 - `--if-exists error|replace|skip`.
@@ -354,7 +381,7 @@ Parameter surface:
 | `userEnv` | `--user-env` | yes | yes | yes | no | yes | no | environment variable name |
 | `password` | `--password` | yes | yes | yes | no | yes | no | string |
 | `passwordEnv` | `--password-env` | yes | yes | yes | no | yes | no | environment variable name |
-| `windowsCredentials` | `--windows-credentials` | yes | yes | yes | no | yes | no | Windows Credential Manager generic credential target containing user and password; Windows only; supports `%NAME%` and `${NAME}` |
+| `credentials` | `--credentials` | yes | yes | yes | yes | yes | no | credential store target containing user and password; built-in management is Windows-only; supports `%NAME%` and `${NAME}` |
 | `impersonate` | `--impersonate` | yes | yes | yes | no | yes | no | boolean; JSON `true` or `false` in config |
 | `impersonateMode` | `--impersonate-mode` | yes | yes | yes | no | yes | no | `network-cleartext`, `interactive`, `network`, `new-credentials`, or system codes `8`, `2`, `3`, `9` |
 | `commandTimeout` | `--command-timeout` | yes | yes | yes | no | yes | no | non-negative integer seconds; `0` disables the option |
@@ -590,7 +617,7 @@ When the configuration contains a top-level `mcp` section, its `title`, `descrip
 Startup/config boundary:
 
 - `--config <file>` and `--profile <name>` select the configuration profile used by default.
-- `--provider`, `--provider-location`, `--connection-string`, `--connection-string-env`, `--user`, `--user-env`, `--password`, `--password-env`, `--windows-credentials`, `--impersonate`, `--impersonate-mode`, `--command-timeout`, and `--lock-timeout` are startup/config settings.
+- `--provider`, `--provider-location`, `--connection-string`, `--connection-string-env`, `--user`, `--user-env`, `--password`, `--password-env`, `--credentials`, `--impersonate`, `--impersonate-mode`, `--command-timeout`, and `--lock-timeout` are startup/config settings.
 - `--max-rows` and `--output` can set startup defaults for tool calls.
 - `--max-response-bytes` sets the trusted server-wide query/execute response limit. It overrides top-level `mcp.maxResponseBytes` and is not available as a tool-call argument.
 - `--enable-execute-tool` registers the write-capable `linq2db_execute` tool. It is off by default.

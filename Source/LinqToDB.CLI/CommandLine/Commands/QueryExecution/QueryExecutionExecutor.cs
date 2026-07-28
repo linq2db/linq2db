@@ -794,18 +794,19 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		}
 
 		static async Task WriteJsonTableEnd(
-			TextWriter              output,
-			int                     rowCount,
-			bool                    truncated,
-			QueryTruncationReason?  truncationReason,
-			int?                    maxOutputBytes,
-			int?                    recordsAffected,
-			CancellationToken       cancellationToken)
+			TextWriter             output,
+			int                    rowCount,
+			bool                   truncated,
+			QueryTruncationReason? truncationReason,
+			int?                   maxOutputBytes,
+			int?                   recordsAffected,
+			CancellationToken      cancellationToken)
 		{
 			await output.WriteAsync("],\"rowCount\":".AsMemory(), cancellationToken);
 			await output.WriteAsync(rowCount.ToString(CultureInfo.InvariantCulture).AsMemory(), cancellationToken);
 			await output.WriteAsync(",\"truncated\":".AsMemory(), cancellationToken);
 			await output.WriteAsync((truncated ? "true" : "false").AsMemory(), cancellationToken);
+
 			if (truncationReason != null)
 			{
 				await output.WriteAsync(",\"truncationReason\":".AsMemory(), cancellationToken);

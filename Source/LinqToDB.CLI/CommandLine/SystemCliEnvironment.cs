@@ -1,7 +1,8 @@
 using System;
 using System.IO;
+using System.Text;
 
-using LinqToDB.CommandLine.Commands.Connection;
+using LinqToDB.CommandLine.Commands.Credentials;
 
 namespace LinqToDB.CommandLine
 {
@@ -77,9 +78,50 @@ namespace LinqToDB.CommandLine
 			return Environment.GetEnvironmentVariable(name);
 		}
 
-		public bool TryGetWindowsCredentials(string target, out string? user, out string? password, out string? error)
+		public bool TryReadSecret(string prompt, out string? secret, out string? error)
 		{
-			return WindowsCredentialManager.TryRead(target, out user, out password, out error);
+			secret = null;
+
+			if (Console.IsInputRedirected)
+			{
+				error = "Interactive secret input requires a console.";
+				return false;
+			}
+
+			Error.Write(prompt);
+
+			var value = new StringBuilder();
+
+			while (true)
+			{
+				var key = Console.ReadKey(true);
+
+				if (key.Key == ConsoleKey.Enter)
+				{
+					Error.WriteLine();
+					secret = value.ToString();
+					error  = null;
+					return true;
+				}
+
+				if (key.Key == ConsoleKey.Backspace)
+				{
+					if (value.Length > 0)
+						value.Length--;
+
+					continue;
+				}
+
+				if (!char.IsControl(key.KeyChar))
+					value.Append(key.KeyChar);
+			}
+		}
+
+		public ICredentialStore CredentialStore { get; } = WindowsCredentialStore.Instance;
+
+		public string? ReadLine()
+		{
+			return Console.ReadLine();
 		}
 	}
 }

@@ -52,38 +52,38 @@ namespace LinqToDB.CommandLine.Commands.Connection
 				? ResolvePath(QueryExecutionCliOptions.ProviderLocation, values.ProviderLocation)
 				: ResolvePath(QueryExecutionCliOptions.ProviderLocation, configuration?.ProviderLocation, configDirectory);
 			var connectionString    = GetConfiguredValue(QueryExecutionCliOptions.ConnectionString, values.ConnectionString, values.ConnectionStringEnv, configuration?.ConnectionString, configuration?.ConnectionStringEnv);
-			var windowsCredentials  = values.WindowsCredentials != null
-				? ResolveEnvironmentVariables(QueryExecutionCliOptions.WindowsCredentials, values.WindowsCredentials)
-				: ResolveEnvironmentVariables(QueryExecutionCliOptions.WindowsCredentials, configuration?.WindowsCredentials);
+			var credentials  = values.Credentials != null
+				? ResolveEnvironmentVariables(QueryExecutionCliOptions.Credentials, values.Credentials)
+				: ResolveEnvironmentVariables(QueryExecutionCliOptions.Credentials, configuration?.Credentials);
 			string? user;
 			string? password;
 
-			if (values.WindowsCredentials != null)
+			if (values.Credentials != null)
 			{
 				if (HasCommandCredentials(values))
 				{
-					_environment.Error.WriteLine($"Option '--{QueryExecutionCliOptions.WindowsCredentials.Name}' cannot be combined with '--{QueryExecutionCliOptions.User.Name}', '--{QueryExecutionCliOptions.UserEnv.Name}', '--{QueryExecutionCliOptions.Password.Name}', or '--{QueryExecutionCliOptions.PasswordEnv.Name}'.");
+					_environment.Error.WriteLine($"Option '--{QueryExecutionCliOptions.Credentials.Name}' cannot be combined with '--{QueryExecutionCliOptions.User.Name}', '--{QueryExecutionCliOptions.UserEnv.Name}', '--{QueryExecutionCliOptions.Password.Name}', or '--{QueryExecutionCliOptions.PasswordEnv.Name}'.");
 					return null;
 				}
 			}
-			else if (configuration?.WindowsCredentials != null)
+			else if (configuration?.Credentials != null)
 			{
 				if (HasCommandCredentials(values))
 				{
-					_environment.Error.WriteLine("Configuration property 'windowsCredentials' cannot be combined with command-line user or password options.");
+					_environment.Error.WriteLine("Configuration property 'credentials' cannot be combined with command-line user or password options.");
 					return null;
 				}
 
 				if (configuration.User != null || configuration.UserEnv != null || configuration.Password != null || configuration.PasswordEnv != null)
 				{
-					_environment.Error.WriteLine("Configuration property 'windowsCredentials' cannot be combined with 'user', 'userEnv', 'password', or 'passwordEnv'.");
+					_environment.Error.WriteLine("Configuration property 'credentials' cannot be combined with 'user', 'userEnv', 'password', or 'passwordEnv'.");
 					return null;
 				}
 			}
 
-			if (windowsCredentials != null && !string.Equals(windowsCredentials, MissingEnvironmentVariable, StringComparison.Ordinal))
+			if (credentials != null && !string.Equals(credentials, MissingEnvironmentVariable, StringComparison.Ordinal))
 			{
-				if (!_environment.TryGetWindowsCredentials(windowsCredentials, out user, out password, out var credentialError))
+				if (!_environment.CredentialStore.TryRead(credentials, out user, out password, out var credentialError))
 				{
 					_environment.Error.WriteLine(credentialError);
 					return null;
@@ -113,7 +113,7 @@ namespace LinqToDB.CommandLine.Commands.Connection
 			    string.Equals(user,             MissingEnvironmentVariable, StringComparison.Ordinal) ||
 			    string.Equals(password,         MissingEnvironmentVariable, StringComparison.Ordinal) ||
 			    string.Equals(providerLocation,   MissingEnvironmentVariable, StringComparison.Ordinal) ||
-			    string.Equals(windowsCredentials, MissingEnvironmentVariable, StringComparison.Ordinal))
+			    string.Equals(credentials, MissingEnvironmentVariable, StringComparison.Ordinal))
 				return null;
 
 			if (providerName == null)

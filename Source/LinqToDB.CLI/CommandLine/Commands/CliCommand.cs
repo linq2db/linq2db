@@ -30,14 +30,15 @@ namespace LinqToDB.CommandLine.Commands
 		/// <param name="template">Command template.</param>
 		/// <param name="help">Command help text.</param>
 		/// <param name="examples">Command examples.</param>
-		protected CliCommand(string name, bool hasOptions, bool supportsJson, string template, string help, IReadOnlyCollection<CommandExample> examples)
+		protected CliCommand(string name, bool hasOptions, bool supportsJson, string template, string help, IReadOnlyCollection<CommandExample> examples, bool acceptsArguments = false)
 		{
-			Name         = name;
-			HasOptions   = hasOptions;
-			SupportsJSON = supportsJson;
-			Template     = template;
-			Help         = help;
-			Examples     = examples;
+			Name             = name;
+			HasOptions       = hasOptions;
+			SupportsJSON     = supportsJson;
+			Template         = template;
+			Help             = help;
+			Examples         = examples;
+			AcceptsArguments = acceptsArguments;
 		}
 
 		/// <summary>
@@ -66,6 +67,11 @@ namespace LinqToDB.CommandLine.Commands
 		/// Gets flag, indicating wether command supports options import from JSON.
 		/// </summary>
 		public bool                                SupportsJSON { get; }
+
+		/// <summary>
+		/// Gets flag indicating whether positional arguments are passed to the command.
+		/// </summary>
+		public bool                                AcceptsArguments { get; }
 
 		/// <summary>
 		/// Gets command option categories in rendering (in help) order.

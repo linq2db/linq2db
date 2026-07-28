@@ -87,6 +87,27 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task ConfigInitWritesCredentialTargetReference()
+		{
+			var environment = new TestCliEnvironment();
+
+			var result = await RunCli(
+				environment,
+				"config-init",
+				"--provider",
+				"SqlServer",
+				"--connection-string",
+				"Server=server;User ID={0};Password={1}",
+				"--credentials",
+				"linq2db/project-a/production-read");
+
+			result.ExitCode.ShouldBe(0);
+
+			using var json = JsonDocument.Parse(environment.Files[".agents/linq2db-query.json"]);
+			json.RootElement.GetProperty("default").GetProperty("credentials").GetString().ShouldBe("linq2db/project-a/production-read");
+		}
+
+		[Test]
 		public async Task ConfigInitAddsProfileToExistingConfig()
 		{
 			var environment = new TestCliEnvironment();
