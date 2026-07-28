@@ -191,6 +191,11 @@ namespace LinqToDB.NHibernate
 							{
 								sqlType = nullableType.SqlType;
 							}
+							else if (prop.PropType is CustomType customType && customType.UserType.SqlTypes.Length == 1)
+							{
+								// A user type is not a NullableType, but a single-column one still describes its column.
+								sqlType = customType.UserType.SqlTypes[0];
+							}
 
 							var column = new ColumnAttribute
 							{
@@ -215,6 +220,15 @@ namespace LinqToDB.NHibernate
 							return new T[] {(T) (Attribute) column};
 						}
 					}
+				}
+			}
+			else if (typeof(T) == typeof(ValueConverterAttribute))
+			{
+				if (GetPropertyMap(type, out var propMap))
+				{
+					var prop = propMap!.FindPropByMemberInfo(memberInfo);
+					if (prop != null && BuildValueConverterAttribute(prop) is T converter)
+						return new[] { converter };
 				}
 			}
 			else if (typeof(T) == typeof(AssociationAttribute))
@@ -516,6 +530,7 @@ namespace LinqToDB.NHibernate
 		{
 			var attrs = new List<MappingAttribute>();
 			attrs.AddRange(GetAttributes<ColumnAttribute>(type, memberInfo));
+			attrs.AddRange(GetAttributes<ValueConverterAttribute>(type, memberInfo));
 			attrs.AddRange(GetAttributes<AssociationAttribute>(type, memberInfo));
 			return attrs.ToArray();
 		}

@@ -33,6 +33,7 @@ Over your existing NHibernate-mapped entities, linq2db adds:
 - **Session filters** — NHibernate `<filter>`s enabled on the session are applied to linq2db queries
 - **Transactions** — linq2db commands run inside the session's active NHibernate transaction
 - **Stateless sessions** — query through `IStatelessSession` too
+- **Custom types** — single-column `IUserType` conversions are applied to linq2db queries as well
 
 ## How to use
 
@@ -174,7 +175,11 @@ supported by both linq2db and your NHibernate dialect should work.
 
 - `ToLinqToDB()` on a native query from an `IStatelessSession` is not supported — use
   `statelessSession.GetTable<T>()` instead.
-- NHibernate value conversions (`IUserType`) are not translated to linq2db value converters.
+- NHibernate value conversions (`IUserType`) are translated to linq2db value converters only when the user type
+  maps to a **single column**. A multi-column user type (including any `ICompositeUserType`) has no single value to
+  convert, so the member is left unconverted — register a linq2db converter for it yourself with
+  `LinqToDBForNHibernateTools.AddMappingSchema(sessionFactory, mappingSchema)`. A user type that inspects the
+  session, or casts the reader/command to a provider-specific type, is also unsupported.
 - Session filter conditions resolve unqualified columns against a single table, so they may not carry
   correctly into join queries; per-entity `<filter>` overrides fall back to the filter's default condition.
 - Associations are exposed to linq2db only when the foreign key is mapped as a scalar property on the
