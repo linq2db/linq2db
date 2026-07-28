@@ -269,6 +269,10 @@ dotnet build Source/LinqToDB/LinqToDB.csproj -c Release -f netstandard2.0
 
 CI's `build` check builds every TFM and otherwise fails with `CS1061 … are you missing a using directive` on the `net462`/`netstandard2.0` leg (`Build Examples (verify)`), costing a full red CI cycle.
 
+**Reading what a polyfill actually compiles to, without a build.** `Meziantou.Polyfill` is a source generator and the repo sets neither `EmitCompilerGeneratedFiles` nor `CompilerGeneratedFilesOutputPath`, so the emitted `.cs` is nowhere on disk. The templates are not manifest resources either — they are static `string` properties on a generated `…__PolyfillContents` type inside `~/.nuget/packages/meziantou.polyfill/<ver>/analyzers/dotnet/cs/Meziantou.Polyfill.dll`, so reflection over that assembly (`Assembly.LoadFrom` → find the type → read `Source_T_System_Threading_Lock` etc.) returns the verbatim source. Use this when a semantic question about a polyfilled type must be settled rather than assumed.
+
+One settled answer worth not re-deriving: **the `T:System.Threading.Lock` polyfill is `Monitor`-backed and therefore re-entrant**, like the real .NET 9+ type — `private readonly object _lockObject = new();` with `Enter() => Monitor.Enter(_lockObject)`. So recursive acquisition on `net462`/`netstandard2.0` is safe. Caveat: `lock (x)` and `x.EnterScope()` take *different* monitors in the polyfill (the instance vs the inner field), so they are not mutually exclusive — don't mix the two forms on one `Lock` instance.
+
 When the API is genuinely missing on an older TFM, **prefer enabling the matching `Meziantou.Polyfill` entry** in the `<Polyfill>` opt-in list in `Directory.Build.props` over reworking the call — keep the idiomatic BCL form. The polyfill is TFM-conditional (newer TFMs use the real method), and the supported-polyfill ID list is linked in the props header. Reworking the call (`new HashSet<T>(seq, cmp)` instead of `seq.ToHashSet(cmp)`, etc.) is the fallback when no polyfill exists.
 
 ## Analyzers are Release-only — build Release before push when a change can trip one
