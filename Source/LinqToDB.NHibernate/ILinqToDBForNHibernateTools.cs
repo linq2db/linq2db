@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB.DataProvider;
@@ -87,5 +88,22 @@ namespace LinqToDB.NHibernate
 		/// <param name="sessionFactory">NHibernate session factory.</param>
 		/// <param name="mappingSchema">Mapping schema to add.</param>
 		void AddMappingSchema(ISessionFactory sessionFactory, MappingSchema mappingSchema);
+
+		/// <summary>
+		/// Registers a configuration step applied to the <see cref="DataOptions"/> of every linq2db context created
+		/// for <paramref name="sessionFactory"/>. Steps run in registration order.
+		/// </summary>
+		/// <param name="sessionFactory">NHibernate session factory.</param>
+		/// <param name="configure">Configuration step.</param>
+		void AddOptions(ISessionFactory sessionFactory, Func<DataOptions, DataOptions> configure);
+
+		/// <summary>
+		/// Applies the configuration steps registered for <paramref name="sessionFactory"/> to
+		/// <paramref name="options"/>.
+		/// </summary>
+		/// <param name="sessionFactory">NHibernate session factory, or <see langword="null"/> when unknown.</param>
+		/// <param name="options">Options to configure.</param>
+		/// <returns>Configured options.</returns>
+		DataOptions ApplyOptions(ISessionFactory? sessionFactory, DataOptions options);
 	}
 }

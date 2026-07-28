@@ -559,5 +559,40 @@ namespace LinqToDB.NHibernate
 
 		#endregion
 
+		#region OptionsSupport
+
+		readonly ConcurrentDictionary<ISessionFactory, Func<DataOptions, DataOptions>> _optionsConfigurators = new();
+
+		/// <summary>
+		/// Registers a configuration step applied to the <see cref="DataOptions"/> of every linq2db context created
+		/// for <paramref name="sessionFactory"/>. Steps run in registration order.
+		/// </summary>
+		/// <param name="sessionFactory">Session factory the configuration applies to.</param>
+		/// <param name="configure">Configuration step.</param>
+		public void AddOptions(ISessionFactory sessionFactory, Func<DataOptions, DataOptions> configure)
+		{
+			ArgumentNullException.ThrowIfNull(sessionFactory);
+			ArgumentNullException.ThrowIfNull(configure);
+
+			// Compose rather than replace, so several registrations all take effect, in the order they were made.
+			_optionsConfigurators.AddOrUpdate(sessionFactory, configure, (_, existing) => options => configure(existing(options)));
+		}
+
+		/// <summary>
+		/// Applies the configuration steps registered for <paramref name="sessionFactory"/> to
+		/// <paramref name="options"/>.
+		/// </summary>
+		/// <param name="sessionFactory">Session factory, or <see langword="null"/> when unknown.</param>
+		/// <param name="options">Options to configure.</param>
+		/// <returns>Configured options.</returns>
+		public DataOptions ApplyOptions(ISessionFactory? sessionFactory, DataOptions options)
+		{
+			return sessionFactory != null && _optionsConfigurators.TryGetValue(sessionFactory, out var configure)
+				? configure(options)
+				: options;
+		}
+
+		#endregion
+
 	}
 }

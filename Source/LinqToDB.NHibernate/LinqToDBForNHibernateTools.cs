@@ -226,7 +226,7 @@ namespace LinqToDB.NHibernate
 				? new DataOptions().UseTransaction(provider, transaction)
 				: new DataOptions().UseConnection(provider, connection);
 
-			var dc = new LinqToDBForNHibernateToolsDataConnection(trackingSession, WithTracing(options), TransformExpression);
+			var dc = new LinqToDBForNHibernateToolsDataConnection(trackingSession, Implementation.ApplyOptions(sessionFactory, WithTracing(options)), TransformExpression);
 
 			var mappingSchema = GetMappingSchema(sessionFactory);
 			if (mappingSchema != null)
@@ -400,7 +400,7 @@ namespace LinqToDB.NHibernate
 			var connectionInfo = GetConnectionInfo(info);
 			var dataProvider   = GetDataProvider(info, connectionInfo);
 
-			var dc = new LinqToDBForNHibernateToolsDataConnection(session, WithTracing(new DataOptions().UseConnectionString(dataProvider, connectionInfo.ConnectionString!)), TransformExpression);
+			var dc = new LinqToDBForNHibernateToolsDataConnection(session, Implementation.ApplyOptions(session.SessionFactory, WithTracing(new DataOptions().UseConnectionString(dataProvider, connectionInfo.ConnectionString!))), TransformExpression);
 
 			var mappingSchema = GetMappingSchema(session.SessionFactory);
 			if (mappingSchema != null)
@@ -503,6 +503,23 @@ namespace LinqToDB.NHibernate
 		/// <param name="mappingSchema">Mapping schema to add.</param>
 		public static void AddMappingSchema(ISessionFactory sessionFactory, MappingSchema mappingSchema)
 			=> Implementation.AddMappingSchema(sessionFactory, mappingSchema);
+
+		/// <summary>
+		/// Registers a configuration step applied to the <see cref="DataOptions"/> of every linq2db context created
+		/// for <paramref name="sessionFactory"/> — use it to add interceptors, mapping schemas or any other linq2db
+		/// option. Steps run in the order they were registered.
+		/// </summary>
+		/// <example>
+		/// <code>
+		/// LinqToDBForNHibernateTools.AddOptions(sessionFactory, o => o
+		///     .UseInterceptor(new MyCommandInterceptor())
+		///     .UseMappingSchema(myMappings));
+		/// </code>
+		/// </example>
+		/// <param name="sessionFactory">NHibernate session factory the configuration applies to.</param>
+		/// <param name="configure">Configuration step.</param>
+		public static void AddOptions(ISessionFactory sessionFactory, Func<DataOptions, DataOptions> configure)
+			=> Implementation.AddOptions(sessionFactory, configure);
 
 	}
 }

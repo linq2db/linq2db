@@ -34,6 +34,10 @@ Over your existing NHibernate-mapped entities, linq2db adds:
 - **Transactions** — linq2db commands run inside the session's active NHibernate transaction
 - **Stateless sessions** — query through `IStatelessSession` too
 - **Custom types** — single-column `IUserType` conversions are applied to linq2db queries as well
+- **Inheritance** — a table-per-hierarchy subclass is restricted to its own discriminator values, so a linq2db
+  query for it never returns its siblings' rows
+- **Components** — a `<component>`'s properties are mapped as columns of the owning entity, so they can be
+  selected and filtered on like any other
 
 ## How to use
 
@@ -133,6 +137,17 @@ var readOnly = session.GetTable<Customer>().AsReadOnly().First(c => c.CustomerId
 ```
 
 Tracking can also be turned off globally with `LinqToDBForNHibernateTools.EnableChangeTracker = false;`.
+
+### Configuring linq2db
+
+Register options once against the session factory and they apply to every linq2db context created for its
+sessions — interceptors, extra mapping schemas, or any other linq2db option:
+
+```cs
+LinqToDBForNHibernateTools.AddOptions(sessionFactory, o => o
+    .UseInterceptor(new MyCommandInterceptor())
+    .UseMappingSchema(myMappings));
+```
 
 ### Stateless sessions
 

@@ -184,38 +184,13 @@ namespace LinqToDB.NHibernate
 
 					if (prop != null && prop.PropType?.IsAssociationType != true) // null PropType = composite-key member; still a real column
 					{
+						// A component spans one column per sub-property, each mapped as a member of the component.
+						if (prop.PropType is ComponentType componentType)
+							return BuildComponentColumns<T>(componentType, prop);
+
 						if (prop.ColumnNames.Length == 1)
 						{
-							SqlType? sqlType = null;
-							if (prop.PropType is NullableType nullableType)
-							{
-								sqlType = nullableType.SqlType;
-							}
-							else if (prop.PropType is CustomType customType && customType.UserType.SqlTypes.Length == 1)
-							{
-								// A user type is not a NullableType, but a single-column one still describes its column.
-								sqlType = customType.UserType.SqlTypes[0];
-							}
-
-							var column = new ColumnAttribute
-							{
-								Name = prop.ColumnNames[0],
-								CanBeNull = prop.CanBeNull,
-								DataType = sqlType != null ? DbTypeToDataType(sqlType.DbType) : DataType.Undefined,
-								IsPrimaryKey = prop.IsPrimaryKey,
-								PrimaryKeyOrder = prop.PkOrder,
-								IsIdentity = prop.IsIdentity,
-							};
-
-							if (sqlType != null)
-							{
-								if (sqlType.Length > 0)
-									column.Length = sqlType.Length;
-								if (sqlType.Precision > 0)
-									column.Precision = sqlType.Precision;
-								if (sqlType.Scale > 0)
-									column.Scale = sqlType.Scale;
-							}
+							var column = BuildColumnAttribute(prop.ColumnNames[0], prop.PropType, prop.CanBeNull, prop.IsPrimaryKey, prop.PkOrder, prop.IsIdentity);
 
 							return new T[] {(T) (Attribute) column};
 						}
@@ -513,17 +488,18 @@ namespace LinqToDB.NHibernate
 
 		MappingAttribute[] IMetadataReader.GetAttributes(Type type)
 		{
-			var tableAttrs = GetAttributes<TableAttribute>(type);
+			var attrs = new List<MappingAttribute>();
 
-			var queryFilter = BuildQueryFilterAttribute(type);
-			if (queryFilter == null)
-				return tableAttrs.Cast<MappingAttribute>().ToArray();
+			attrs.AddRange(GetAttributes<TableAttribute>(type));
 
-			var result = new MappingAttribute[tableAttrs.Length + 1];
-			for (var i = 0; i < tableAttrs.Length; i++)
-				result[i] = tableAttrs[i];
-			result[tableAttrs.Length] = queryFilter;
-			return result;
+			// A table-per-hierarchy subclass must never see its siblings' rows, independently of any session filter.
+			if (BuildDiscriminatorFilterAttribute(type) is { } discriminatorFilter)
+				attrs.Add(discriminatorFilter);
+
+			if (BuildQueryFilterAttribute(type) is { } queryFilter)
+				attrs.Add(queryFilter);
+
+			return attrs.ToArray();
 		}
 
 		MappingAttribute[] IMetadataReader.GetAttributes(Type type, MemberInfo memberInfo)
