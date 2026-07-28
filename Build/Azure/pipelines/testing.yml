@@ -18,7 +18,7 @@ stages:
     parameters:
       with_nugets: false
       with_examples: false
-      with_tests: true
+      with_tests: ${{ ne(variables['Build.DefinitionName'], 'test-cli') }}
       with_analyzers: false
 
 #############
