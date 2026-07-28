@@ -21,8 +21,6 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 	sealed class McpInfoTool(McpQueryStartupOptions startupOptions, TextWriter diagnostics)
 	{
 		const string StartupProfileName = "startup";
-		const string DefaultProfileName = "default";
-		const int    DefaultMaxRows     = 1000;
 		const string DefaultOutput      = "json-table";
 
 		static readonly JsonSerializerOptions _jsonSerializerOptions = new()
@@ -83,7 +81,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 				if (!QueryExecutionConfiguration.TryLoadProfileNames(environment, _startupOptions.Config, out var profileNames, out var error))
 					return CreateErrorResult($"Cannot load linq2db query configuration: {error}");
 
-				defaultProfile = _startupOptions.Profile ?? DefaultProfileName;
+				defaultProfile = _startupOptions.Profile ?? QueryExecutionDefaults.DefaultProfileName;
 
 				if (!profileNames.Any(item => string.Equals(item, defaultProfile, StringComparison.Ordinal)))
 					return CreateErrorResult($"Cannot load linq2db query configuration: profile '{defaultProfile}' not found.");
@@ -161,14 +159,14 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 			var output        = _startupOptions.Output       ?? configuration?.Output ?? DefaultOutput;
 			var enableExecute = configuration?.EnableExecute ?? false;
 			var impersonate   = _startupOptions.Impersonate  ?? configuration?.Impersonate ?? false;
-			var maxRows       = _startupOptions.MaxRows != null ? ParseRowCount(_startupOptions.MaxRows, out error) : configuration?.MaxRows ?? DefaultMaxRows;
+			var maxRows       = _startupOptions.MaxRows != null ? ParseRowCount(_startupOptions.MaxRows, out error) : configuration?.MaxRows ?? QueryExecutionDefaults.DefaultMaxRows;
 
 			if (error != null)
 				return null!;
 
 			if (provider == null)
 			{
-				if (!string.Equals(name, DefaultProfileName, StringComparison.Ordinal) || profileCount == 1)
+				if (!string.Equals(name, QueryExecutionDefaults.DefaultProfileName, StringComparison.Ordinal) || profileCount == 1)
 					_diagnostics.WriteLine($"Configuration profile '{name}' doesn't configure provider and will not be returned by linq2db_info.");
 
 				return null;

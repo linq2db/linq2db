@@ -20,11 +20,12 @@ namespace Tests.LinqToDB.CLI
 			var response  = await server.CallTool("linq2db_skill", new JsonObject());
 			var skillText = ReadToolText(response);
 
+			using (Assert.EnterMultipleScope())
 			{
 				skillText.Length.ShouldBeGreaterThan(1000);
-				(skillText).     ShouldStartWith("# linq2db CLI Agent Skill");
-				(skillText).     ShouldNotContain("secret-skill.db");
-				(skillText).     ShouldNotContain("hidden");
+				skillText.       ShouldStartWith("# linq2db CLI Agent Skill");
+				skillText.       ShouldNotContain("secret-skill.db");
+				skillText.       ShouldNotContain("hidden");
 			}
 
 			server.ExpectNoStandardError();
@@ -38,6 +39,7 @@ namespace Tests.LinqToDB.CLI
 			await server.Initialize();
 			var response = await server.CallTool("linq2db_skill", new JsonObject());
 
+			using (Assert.EnterMultipleScope())
 			{
 				ReadToolText(response).ShouldContain("Use `dotnet linq2db mcp`");
 			}

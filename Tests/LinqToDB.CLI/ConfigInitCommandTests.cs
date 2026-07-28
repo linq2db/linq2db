@@ -23,27 +23,29 @@ namespace Tests.LinqToDB.CLI
 
 			var result = await RunCli(environment, "config-init", "--provider", "SQLite", "--connection-string", "Data Source=data.db");
 
+			using (Assert.EnterMultipleScope())
 			{
-				(result.ExitCode).ShouldBe(0);
-				(result.Error).ShouldContain("contains a literal connection string and may contain credentials");
-				(result.Output).ShouldContain("Created configuration profile 'default' in '.agents/linq2db-query.json'.");
-				environment.Directories.ShouldContain(".agents");
+				result.ExitCode.           ShouldBe(0);
+				result.Error.              ShouldContain("contains a literal connection string and may contain credentials");
+				result.Output.             ShouldContain("Created configuration profile 'default' in '.agents/linq2db-query.json'.");
+				environment.Directories.   ShouldContain(".agents");
 				environment.OwnerOnlyFiles.ShouldContain(".agents/linq2db-query.json");
 
 				using var json = JsonDocument.Parse(environment.Files[".agents/linq2db-query.json"]);
 				var profile = json.RootElement.GetProperty("default");
-				profile.GetProperty("provider").GetString().ShouldBe("SQLite");
+				profile.GetProperty("provider").GetString().        ShouldBe("SQLite");
 				profile.GetProperty("connectionString").GetString().ShouldBe("Data Source=data.db");
-				profile.GetProperty("maxRows").GetInt32().ShouldBe(1000);
-				profile.GetProperty("output").GetString().ShouldBe("json-table");
-				profile.GetProperty("enableExecute").GetBoolean().ShouldBe(false);
+				profile.GetProperty("maxRows").GetInt32().          ShouldBe(1000);
+				profile.GetProperty("output").GetString().          ShouldBe("json-table");
+				profile.GetProperty("enableExecute").GetBoolean().  ShouldBe(false);
 			}
 		}
 
 		[Test]
 		public async Task ConfigInitCreatesNamedProfileWithDefaultProfile()
 		{
-			var environment = new TestCliEnvironment();
+			var environment      = new TestCliEnvironment();
+			var providerLocation = Path.Combine("providers", "custom.dll");
 
 			var result = await RunCli(
 				environment,
@@ -57,7 +59,7 @@ namespace Tests.LinqToDB.CLI
 				"--provider",
 				"SqlServer",
 				"--provider-location",
-				"providers\\custom.dll",
+				providerLocation,
 				"--connection-string-env",
 				"LINQ2DB_DEV_CONNECTION",
 				"--max-rows",
@@ -65,24 +67,25 @@ namespace Tests.LinqToDB.CLI
 				"--output",
 				"csv");
 
+			using (Assert.EnterMultipleScope())
 			{
-				(result.ExitCode).ShouldBe(0);
-				(result.Error).ShouldBeEmpty();
+				result.ExitCode.ShouldBe(0);
+				result.Error.   ShouldBeEmpty();
 
 				using var json = JsonDocument.Parse(environment.Files["query.json"]);
 				var defaultProfile = json.RootElement.GetProperty("default");
-				defaultProfile.GetProperty("maxRows").GetInt32().ShouldBe(1000);
-				defaultProfile.GetProperty("output").GetString().ShouldBe("json-table");
+				defaultProfile.GetProperty("maxRows").GetInt32().        ShouldBe(1000);
+				defaultProfile.GetProperty("output").GetString().        ShouldBe("json-table");
 				defaultProfile.GetProperty("enableExecute").GetBoolean().ShouldBe(false);
 
 				var profile = json.RootElement.GetProperty("dev");
-				profile.GetProperty("description").GetString().ShouldBe("Development database");
-				profile.GetProperty("provider").GetString().ShouldBe("SqlServer");
-				profile.GetProperty("providerLocation").GetString().ShouldBe("providers\\custom.dll");
+				profile.GetProperty("description").GetString().        ShouldBe("Development database");
+				profile.GetProperty("provider").GetString().           ShouldBe("SqlServer");
+				profile.GetProperty("providerLocation").GetString().   ShouldBe(providerLocation);
 				profile.GetProperty("connectionStringEnv").GetString().ShouldBe("LINQ2DB_DEV_CONNECTION");
-				profile.GetProperty("maxRows").GetInt32().ShouldBe(42);
-				profile.GetProperty("output").GetString().ShouldBe("csv");
-				profile.GetProperty("enableExecute").GetBoolean().ShouldBe(false);
+				profile.GetProperty("maxRows").GetInt32().             ShouldBe(42);
+				profile.GetProperty("output").GetString().             ShouldBe("csv");
+				profile.GetProperty("enableExecute").GetBoolean().     ShouldBe(false);
 			}
 		}
 
@@ -129,12 +132,13 @@ namespace Tests.LinqToDB.CLI
 
 			var result = await RunCli(environment, "config-init", "--config", "query.json", "--profile", "dev", "--provider", "SQLite", "--connection-string", "Data Source=dev.db");
 
+			using (Assert.EnterMultipleScope())
 			{
-				(result.ExitCode).ShouldBe(0);
-				(result.Error).ShouldContain("contains a literal connection string and may contain credentials");
+				result.ExitCode.ShouldBe(0);
+				result.Error.   ShouldContain("contains a literal connection string and may contain credentials");
 
 				using var json = JsonDocument.Parse(environment.Files["query.json"]);
-				json.RootElement.GetProperty("mcp").GetProperty("title").GetString().ShouldBe("Existing MCP server");
+				json.RootElement.GetProperty("mcp").GetProperty("title").GetString().           ShouldBe("Existing MCP server");
 				json.RootElement.GetProperty("old").GetProperty("connectionString").GetString().ShouldBe("Data Source=old.db");
 				json.RootElement.GetProperty("dev").GetProperty("connectionString").GetString().ShouldBe("Data Source=dev.db");
 			}
@@ -147,25 +151,28 @@ namespace Tests.LinqToDB.CLI
 
 			environment.EnvironmentVariables.Add("CONFIG_DIR", "config");
 
-			var result = await RunCli(environment, "config-init", "--config", "${CONFIG_DIR}\\query.json", "--provider", "SQLite", "--connection-string", "Data Source=data.db");
+			var configPath = Path.Combine("config", "query.json");
+			var result     = await RunCli(environment, "config-init", "--config", $"${{CONFIG_DIR}}{Path.DirectorySeparatorChar}query.json", "--provider", "SQLite", "--connection-string", "Data Source=data.db");
 
+			using (Assert.EnterMultipleScope())
 			{
-				(result.ExitCode).ShouldBe(0);
-				(result.Error).ShouldContain("contains a literal connection string and may contain credentials");
-				(result.Output).ShouldContain("Created configuration profile 'default' in 'config\\query.json'.");
-				environment.Files.ShouldContainKey("config\\query.json");
+				result.ExitCode.  ShouldBe(0);
+				result.Error.     ShouldContain("contains a literal connection string and may contain credentials");
+				result.Output.    ShouldContain($"Created configuration profile 'default' in '{configPath}'.");
+				environment.Files.ShouldContainKey(configPath);
 			}
 		}
 
 		[Test]
 		public async Task ConfigInitRejectsMissingEnvironmentVariableInConfigPath()
 		{
-			var result = await RunCli(new TestCliEnvironment(), "config-init", "--config", "%MISSING_CONFIG_INIT_DIR%\\query.json", "--provider", "SQLite", "--connection-string", "Data Source=data.db");
+			var result = await RunCli(new TestCliEnvironment(), "config-init", "--config", $"%MISSING_CONFIG_INIT_DIR%{Path.DirectorySeparatorChar}query.json", "--provider", "SQLite", "--connection-string", "Data Source=data.db");
 
+			using (Assert.EnterMultipleScope())
 			{
-				(result.ExitCode).ShouldBe(-1);
-				(result.Output).ShouldBeEmpty();
-				(result.Error).ShouldContain("Environment variable 'MISSING_CONFIG_INIT_DIR' referenced by option '--config' is not set.");
+				result.ExitCode.ShouldBe(-1);
+				result.Output.  ShouldBeEmpty();
+				result.Error.   ShouldContain("Environment variable 'MISSING_CONFIG_INIT_DIR' referenced by option '--config' is not set.");
 			}
 		}
 
@@ -174,10 +181,11 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCli(new TestCliEnvironment(), "config-init", "--profile", "mcp", "--provider", "SQLite", "--connection-string", "Data Source=data.db");
 
+			using (Assert.EnterMultipleScope())
 			{
-				(result.ExitCode).ShouldBe(-1);
-				(result.Output).ShouldBeEmpty();
-				(result.Error).ShouldContain("Configuration profile name 'mcp' is reserved for MCP server configuration.");
+				result.ExitCode.ShouldBe(-1);
+				result.Output.  ShouldBeEmpty();
+				result.Error.   ShouldContain("Configuration profile name 'mcp' is reserved for MCP server configuration.");
 			}
 		}
 
@@ -197,10 +205,11 @@ namespace Tests.LinqToDB.CLI
 
 			var result = await RunCli(environment, "config-init", "--config", "query.json", "--provider", "SQLite", "--connection-string", "Data Source=new.db");
 
+			using (Assert.EnterMultipleScope())
 			{
-				(result.ExitCode).ShouldBe(-3);
-				(result.Output).ShouldBeEmpty();
-				(result.Error).ShouldContain("Configuration profile 'default' already exists in 'query.json'.");
+				result.ExitCode.                ShouldBe(-3);
+				result.Output.                  ShouldBeEmpty();
+				result.Error.                   ShouldContain("Configuration profile 'default' already exists in 'query.json'.");
 				environment.Files["query.json"].ShouldBe(original);
 			}
 		}
@@ -221,10 +230,11 @@ namespace Tests.LinqToDB.CLI
 
 			var result = await RunCli(environment, "config-init", "--config", "query.json", "--profile", "dev", "--provider", "SQLite", "--connection-string", "Data Source=new.db", "--if-exists", "skip");
 
+			using (Assert.EnterMultipleScope())
 			{
-				(result.ExitCode).ShouldBe(0);
-				(result.Error).ShouldBeEmpty();
-				(result.Output).ShouldContain("Configuration profile 'dev' already exists in 'query.json'. Skipped.");
+				result.ExitCode.                ShouldBe(0);
+				result.Error.                   ShouldBeEmpty();
+				result.Output.                  ShouldContain("Configuration profile 'dev' already exists in 'query.json'. Skipped.");
 				environment.Files["query.json"].ShouldBe(original);
 			}
 		}
@@ -244,16 +254,17 @@ namespace Tests.LinqToDB.CLI
 
 			var result = await RunCli(environment, "config-init", "--config", "query.json", "--provider", "PostgreSQL", "--connection-string-env", "LINQ2DB_CONNECTION", "--if-exists", "replace");
 
+			using (Assert.EnterMultipleScope())
 			{
-				(result.ExitCode).ShouldBe(0);
-				(result.Error).ShouldBeEmpty();
-				(result.Output).ShouldContain("Updated configuration profile 'default' in 'query.json'.");
+				result.ExitCode.ShouldBe(0);
+				result.Error.   ShouldBeEmpty();
+				result.Output.  ShouldContain("Updated configuration profile 'default' in 'query.json'.");
 
 				using var json = JsonDocument.Parse(environment.Files["query.json"]);
 				var profile = json.RootElement.GetProperty("default");
-				profile.GetProperty("provider").GetString().ShouldBe("PostgreSQL");
+				profile.GetProperty("provider").GetString().           ShouldBe("PostgreSQL");
 				profile.GetProperty("connectionStringEnv").GetString().ShouldBe("LINQ2DB_CONNECTION");
-				profile.TryGetProperty("connectionString", out _).ShouldBeFalse();
+				profile.TryGetProperty("connectionString", out _).     ShouldBeFalse();
 			}
 		}
 
@@ -262,10 +273,11 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCli(new TestCliEnvironment(), "config-init", "--connection-string", "Data Source=data.db");
 
+			using (Assert.EnterMultipleScope())
 			{
-				(result.ExitCode).ShouldBe(-1);
-				(result.Output).ShouldBeEmpty();
-				(result.Error).ShouldContain("Option '--provider' must be specified.");
+				result.ExitCode.ShouldBe(-1);
+				result.Output.  ShouldBeEmpty();
+				result.Error.   ShouldContain("Option '--provider' must be specified.");
 			}
 		}
 
@@ -275,11 +287,12 @@ namespace Tests.LinqToDB.CLI
 			var noConnection = await RunCli(new TestCliEnvironment(), "config-init", "--provider", "SQLite");
 			var twoConnections = await RunCli(new TestCliEnvironment(), "config-init", "--provider", "SQLite", "--connection-string", "Data Source=data.db", "--connection-string-env", "LINQ2DB_CONNECTION");
 
+			using (Assert.EnterMultipleScope())
 			{
-				(noConnection.ExitCode).ShouldBe(-1);
-				(noConnection.Error).ShouldContain("Exactly one of '--connection-string' or '--connection-string-env' must be specified.");
-				(twoConnections.ExitCode).ShouldBe(-1);
-				(twoConnections.Error).ShouldContain("Exactly one of '--connection-string' or '--connection-string-env' must be specified.");
+				noConnection.ExitCode.  ShouldBe(-1);
+				noConnection.Error.     ShouldContain("Exactly one of '--connection-string' or '--connection-string-env' must be specified.");
+				twoConnections.ExitCode.ShouldBe(-1);
+				twoConnections.Error.   ShouldContain("Exactly one of '--connection-string' or '--connection-string-env' must be specified.");
 			}
 		}
 
@@ -288,10 +301,11 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCli(new TestCliEnvironment(), "config-init", "--provider", "SQLite", "--connection-string", "Data Source=data.db", "--max-rows", "-1");
 
+			using (Assert.EnterMultipleScope())
 			{
-				(result.ExitCode).ShouldBe(-1);
-				(result.Output).ShouldBeEmpty();
-				(result.Error).ShouldContain("Option '--max-rows' must be a non-negative integer row count.");
+				result.ExitCode.ShouldBe(-1);
+				result.Output.  ShouldBeEmpty();
+				result.Error.   ShouldContain("Option '--max-rows' must be a non-negative integer row count.");
 			}
 		}
 
@@ -303,10 +317,11 @@ namespace Tests.LinqToDB.CLI
 
 			var result = await RunCli(environment, "config-init", "--config", "query.json", "--provider", "SQLite", "--connection-string", "Data Source=data.db");
 
+			using (Assert.EnterMultipleScope())
 			{
-				(result.ExitCode).ShouldBe(-3);
-				(result.Output).ShouldBeEmpty();
-				(result.Error).ShouldContain("Configuration file 'query.json' is not valid JSON:");
+				result.ExitCode.                ShouldBe(-3);
+				result.Output.                  ShouldBeEmpty();
+				result.Error.                   ShouldContain("Configuration file 'query.json' is not valid JSON:");
 				environment.Files["query.json"].ShouldBe("{");
 			}
 		}
@@ -340,12 +355,13 @@ namespace Tests.LinqToDB.CLI
 				"--if-exists",
 				"replace");
 
+			using (Assert.EnterMultipleScope())
 			{
-				(result.ExitCode).ShouldBe(-3);
-				(result.Output).ShouldBeEmpty();
-				(result.Error).ShouldContain("Cannot write configuration file 'query.json': disk full");
+				result.ExitCode.                ShouldBe(-3);
+				result.Output.                  ShouldBeEmpty();
+				result.Error.                   ShouldContain("Cannot write configuration file 'query.json': disk full");
 				environment.Files["query.json"].ShouldBe(original);
-				environment.Files.Keys.ShouldNotContain(path => path.EndsWith(".tmp", StringComparison.Ordinal));
+				environment.Files.Keys.         ShouldNotContain(path => path.EndsWith(".tmp", StringComparison.Ordinal));
 			}
 		}
 
@@ -354,10 +370,11 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCli(new TestCliEnvironment(), "config-init", "--provider", "SQLite", "--connection-string", "Data Source=data.db", "--output", "xml");
 
+			using (Assert.EnterMultipleScope())
 			{
-				(result.ExitCode).ShouldBe(-1);
-				(result.Output).ShouldBeEmpty();
-				(result.Error).ShouldContain("Cannot parse option value (--output xml): unknown value 'xml'");
+				result.ExitCode.ShouldBe(-1);
+				result.Output.  ShouldBeEmpty();
+				result.Error.   ShouldContain("Cannot parse option value (--output xml): unknown value 'xml'");
 			}
 		}
 

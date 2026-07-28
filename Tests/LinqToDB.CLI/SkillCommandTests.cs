@@ -17,15 +17,16 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCli("skill");
 
+			using (Assert.EnterMultipleScope())
 			{
-				(result.ExitCode).ShouldBe(0);
-				(result.Error).ShouldBeEmpty();
-				(result.Output.Length).ShouldBeGreaterThan(1000);
-				(result.Output).ShouldStartWith("# linq2db CLI Agent Skill");
-				(result.Output).ShouldContain("## Query Command");
-				(result.Output).ShouldContain("## Supported Database Providers");
-				(result.Output).ShouldContain("## MCP STDIO Command");
-				(result.Output).ShouldContain("## Skill Command");
+				result.ExitCode.     ShouldBe(0);
+				result.Error.        ShouldBeEmpty();
+				result.Output.Length.ShouldBeGreaterThan(1000);
+				result.Output.       ShouldStartWith("# linq2db CLI Agent Skill");
+				result.Output.       ShouldContain("## Query Command");
+				result.Output.       ShouldContain("## Supported Database Providers");
+				result.Output.       ShouldContain("## MCP STDIO Command");
+				result.Output.       ShouldContain("## Skill Command");
 			}
 		}
 
@@ -34,9 +35,10 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCli("skill", "query");
 
+			using (Assert.EnterMultipleScope())
 			{
-				(result.ExitCode).ShouldBe(-1);
-				(result.Error).ShouldContain("Command 'skill' doesn't accept arguments.");
+				result.ExitCode.ShouldBe(-1);
+				result.Error.   ShouldContain("Command 'skill' doesn't accept arguments.");
 			}
 		}
 

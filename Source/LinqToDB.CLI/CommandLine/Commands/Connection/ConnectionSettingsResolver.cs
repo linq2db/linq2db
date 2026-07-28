@@ -13,8 +13,6 @@ namespace LinqToDB.CommandLine.Commands.Connection
 	/// </summary>
 	internal sealed class ConnectionSettingsResolver(ICliEnvironment environment)
 	{
-		const string DefaultProfileName = "default";
-
 		internal const string MissingEnvironmentVariable = "\u0000";
 
 		readonly ICliEnvironment _environment = environment;
@@ -25,7 +23,7 @@ namespace LinqToDB.CommandLine.Commands.Connection
 		{
 			ErrorStatusCode = StatusCodes.INVALID_ARGUMENTS;
 
-			var profileName = values.Profile ?? DefaultProfileName;
+			var profileName = values.Profile ?? QueryExecutionDefaults.DefaultProfileName;
 
 			QueryExecutionConfiguration? configuration = null;
 

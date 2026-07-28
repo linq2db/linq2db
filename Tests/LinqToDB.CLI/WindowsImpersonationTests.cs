@@ -20,8 +20,9 @@ namespace Tests.LinqToDB.CLI
 		{
 			var (domain, userName) = WindowsImpersonation.SplitUserName(user);
 
+			using (Assert.EnterMultipleScope())
 			{
-				domain.ShouldBe(expectedDomain);
+				domain.  ShouldBe(expectedDomain);
 				userName.ShouldBe(expectedUserName);
 			}
 		}
@@ -35,8 +36,9 @@ namespace Tests.LinqToDB.CLI
 		{
 			var (logonType, logonProvider) = WindowsImpersonation.GetLogonOptions(mode);
 
+			using (Assert.EnterMultipleScope())
 			{
-				logonType.ShouldBe(expectedLogonType);
+				logonType.    ShouldBe(expectedLogonType);
 				logonProvider.ShouldBe(expectedLogonProvider);
 			}
 		}

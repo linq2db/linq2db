@@ -6,9 +6,17 @@ jobs:
 # Tests: cli #
 ##############
 - job: test_cli_job
+  strategy:
+    matrix:
+      Windows:
+        imageName: windows-2025
+        executableExtension: .exe
+      Linux:
+        imageName: ubuntu-24.04
+        executableExtension: ''
   pool:
-    vmImage: 'windows-2025'
-  displayName: 'Tests: cli'
+    vmImage: $(imageName)
+  displayName: 'Tests: cli ($(imageName))'
   dependsOn: build_job
   timeoutInMinutes: 30
   condition: ${{ parameters.enabled }}
@@ -41,16 +49,20 @@ jobs:
       arguments: '--configuration $(test_configuration)'
     displayName: Build cli tests
 
-  - task: CmdLine@2
+  - task: PowerShell@2
     inputs:
+      targetType: inline
+      pwsh: true
       script: |
-        ECHO ON
-        .build\bin\Tests.LinqToDB.CLI\$(test_configuration)\net8.0\linq2db.CLI.Tests.exe --filter "TestCategory != SkipCI" --settings .runsettings --report-trx --report-trx-filename cli-net8.0.trx --results-directory CliTestResults --hangdump --hangdump-timeout 5m $(test_retry_args)
-        if errorlevel 1 exit /b 1
-        .build\bin\Tests.LinqToDB.CLI\$(test_configuration)\net9.0\linq2db.CLI.Tests.exe --filter "TestCategory != SkipCI" --settings .runsettings --report-trx --report-trx-filename cli-net9.0.trx --results-directory CliTestResults --hangdump --hangdump-timeout 5m $(test_retry_args)
-        if errorlevel 1 exit /b 1
-        .build\bin\Tests.LinqToDB.CLI\$(test_configuration)\net10.0\linq2db.CLI.Tests.exe --filter "TestCategory != SkipCI" --settings .runsettings --report-trx --report-trx-filename cli-net10.0.trx --results-directory CliTestResults --hangdump --hangdump-timeout 5m $(test_retry_args)
-        if errorlevel 1 exit /b 1
+        foreach ($tfm in @('net8.0', 'net9.0', 'net10.0')) {
+          $testExecutable = Join-Path ".build/bin/Tests.LinqToDB.CLI/$(test_configuration)/$tfm" "linq2db.CLI.Tests$(executableExtension)"
+
+          & $testExecutable --filter "TestCategory != SkipCI" --settings .runsettings --report-trx --report-trx-filename "cli-$tfm.trx" --results-directory CliTestResults --hangdump --hangdump-timeout 5m $(test_retry_args)
+
+          if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+          }
+        }
     displayName: Run cli tests
 
   - task: PublishTestResults@2

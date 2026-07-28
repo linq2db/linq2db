@@ -21,14 +21,14 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCliProcess("help", "schema");
 
-			(result.ExitCode).ShouldBe(0);
-			(result.Output).ShouldContain("dotnet linq2db schema <options>");
-			(result.Output).ShouldContain("--get-foreign-keys");
-			(result.Output).ShouldContain("--filter-schema");
-			(result.Output).ShouldContain("--filter-table");
-			(result.Output).ShouldNotContain("--exclude-table");
-			(result.Output).ShouldNotContain("--get-procedures");
-			(result.Output).ShouldNotContain("--use-schema-only");
+			result.ExitCode.ShouldBe(0);
+			result.Output.  ShouldContain("dotnet linq2db schema <options>");
+			result.Output.  ShouldContain("--get-foreign-keys");
+			result.Output.  ShouldContain("--filter-schema");
+			result.Output.  ShouldContain("--filter-table");
+			result.Output.  ShouldNotContain("--exclude-table");
+			result.Output.  ShouldNotContain("--get-procedures");
+			result.Output.  ShouldNotContain("--use-schema-only");
 		}
 
 		[Test]
@@ -36,8 +36,8 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCliProcess("schema", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql", "select 1");
 
-			(result.ExitCode).ShouldBe(-1);
-			(result.Error).ShouldContain("Unrecognized option: --sql");
+			result.ExitCode.ShouldBe(-1);
+			result.Error.   ShouldContain("Unrecognized option: --sql");
 		}
 
 		[Test]
@@ -45,8 +45,8 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCliProcess("schema", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--output", "csv");
 
-			(result.ExitCode).ShouldBe(-1);
-			(result.Error).ShouldContain("Cannot parse option value (--output csv)");
+			result.ExitCode.ShouldBe(-1);
+			result.Error.   ShouldContain("Cannot parse option value (--output csv)");
 		}
 
 		[Test]
@@ -62,13 +62,13 @@ namespace Tests.LinqToDB.CLI
 					"--connection-string", $"Data Source={database};Pooling=False",
 					"--get-foreign-keys", "true");
 
-				(result.ExitCode).ShouldBe(0);
-				(result.Error).ShouldBeEmpty();
+				result.ExitCode.ShouldBe(0);
+				result.Error.   ShouldBeEmpty();
 
 				var schema = JsonNode.Parse(result.Output)!.AsObject();
 
-				((string?)schema["provider"]).ShouldBe("SQLite");
-				((string?)schema["dialect"]).ShouldBe("SQLite");
+				((string?)schema["provider"]).               ShouldBe("SQLite");
+				((string?)schema["dialect"]).                ShouldBe("SQLite");
 				((bool?)schema["options"]?["getProcedures"]).ShouldBe(false);
 
 				var orders    = FindTable(schema, "Orders");
@@ -101,17 +101,17 @@ namespace Tests.LinqToDB.CLI
 					"--connection-string", $"Data Source={database};Pooling=False",
 					"--filter-table", "main.Orders,rx:^Child");
 
-				(result.ExitCode).ShouldBe(0);
-				(result.Error).ShouldBeEmpty();
+				result.ExitCode.ShouldBe(0);
+				result.Error.   ShouldBeEmpty();
 
 				var schema = JsonNode.Parse(result.Output)!.AsObject();
 
 				((string?)schema["options"]?["filterTables"]?[0]).ShouldBe("main.Orders");
 				((string?)schema["options"]?["filterTables"]?[1]).ShouldBe("rx:^Child");
-				schema["tables"]!.AsArray().Count.ShouldBe(2);
-				ContainsTable(schema, "Orders").ShouldBe(true);
-				ContainsTable(schema, "ChildOrders").ShouldBe(true);
-				ContainsTable(schema, "Customers").ShouldBe(false);
+				schema["tables"]!.AsArray().Count.                ShouldBe(2);
+				ContainsTable(schema, "Orders").                  ShouldBe(true);
+				ContainsTable(schema, "ChildOrders").             ShouldBe(true);
+				ContainsTable(schema, "Customers").               ShouldBe(false);
 			}
 			finally
 			{
@@ -132,14 +132,14 @@ namespace Tests.LinqToDB.CLI
 					"--connection-string", $"Data Source={database};Pooling=False",
 					"--get-foreign-keys", "false");
 
-				(result.ExitCode).ShouldBe(0);
-				(result.Error).ShouldBeEmpty();
+				result.ExitCode.ShouldBe(0);
+				result.Error.   ShouldBeEmpty();
 
 				var schema = JsonNode.Parse(result.Output)!.AsObject();
 				var orders = FindTable(schema, "Orders");
 
 				((bool?)schema["options"]?["getForeignKeys"]).ShouldBe(false);
-				orders["foreignKeys"]!.AsArray().Count.ShouldBe(0);
+				orders["foreignKeys"]!.AsArray().Count.       ShouldBe(0);
 			}
 			finally
 			{
@@ -160,8 +160,8 @@ namespace Tests.LinqToDB.CLI
 					"--connection-string", $"Data Source={database};Pooling=False",
 					"--filter-table", "rx:^(a+)+$");
 
-				(result.ExitCode).ShouldBe(-3);
-				(result.Error).ShouldContain("Table filter regex '^(a+)+$' timed out");
+				result.ExitCode.ShouldBe(-3);
+				result.Error.   ShouldContain("Table filter regex '^(a+)+$' timed out");
 			}
 			finally
 			{

@@ -12,8 +12,6 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 	/// </summary>
 	internal sealed class QueryExecutionSettingsResolver(ICliEnvironment environment)
 	{
-		const int DefaultMaxRows = 1000;
-
 		readonly ICliEnvironment _environment = environment;
 
 		public int ErrorStatusCode { get; private set; } = StatusCodes.INVALID_ARGUMENTS;
@@ -46,7 +44,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				return null;
 
 			var configuration  = connectionSettings.Configuration;
-			var maxRowsValue   = values.MaxRows != null ? ParseRowCount(QueryExecutionCliOptions.MaxRows, values.MaxRows) : configuration?.MaxRows ?? DefaultMaxRows;
+			var maxRowsValue   = values.MaxRows != null ? ParseRowCount(QueryExecutionCliOptions.MaxRows, values.MaxRows) : configuration?.MaxRows ?? QueryExecutionDefaults.DefaultMaxRows;
 			var outputFormat   = values.Output ?? configuration?.Output ?? values.DefaultOutput;
 			var outputFileName = values.OutputFile != null
 				? connectionResolver.ResolvePath(QueryExecutionCliOptions.OutputFile, values.OutputFile)

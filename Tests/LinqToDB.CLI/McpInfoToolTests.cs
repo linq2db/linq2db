@@ -268,23 +268,25 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCliProcess("mcp", "--config", "missing-query-config.json");
 
+			using (Assert.EnterMultipleScope())
 			{
-				(result.ExitCode).ShouldBe(-1);
-				(result.Output).  ShouldBeEmpty();
-				(result.Error).   ShouldContain("Configuration file 'missing-query-config.json' not found.");
+				result.ExitCode.ShouldBe(-1);
+				result.Output.  ShouldBeEmpty();
+				result.Error.   ShouldContain("Configuration file 'missing-query-config.json' not found.");
 			}
 		}
 
 		[Test]
 		public async Task McpRejectsMissingEnvironmentVariableInConfigPathAtStartup()
 		{
-			var result = await RunCliProcess("mcp", "--config", "%MISSING_MCP_CONFIG_DIR%\\query.json");
+			var result = await RunCliProcess("mcp", "--config", $"%MISSING_MCP_CONFIG_DIR%{Path.DirectorySeparatorChar}query.json");
 
+			using (Assert.EnterMultipleScope())
 			{
-				(result.ExitCode).ShouldBe(-1);
-				(result.Output).  ShouldBeEmpty();
-				(result.Error).   ShouldContain("Environment variable 'MISSING_MCP_CONFIG_DIR' referenced by option '--config' is not set.");
-				(result.Error).   ShouldNotContain("Configuration file");
+				result.ExitCode.ShouldBe(-1);
+				result.Output.  ShouldBeEmpty();
+				result.Error.   ShouldContain("Environment variable 'MISSING_MCP_CONFIG_DIR' referenced by option '--config' is not set.");
+				result.Error.   ShouldNotContain("Configuration file");
 			}
 		}
 
@@ -299,6 +301,7 @@ namespace Tests.LinqToDB.CLI
 			var response = await server.CallTool("linq2db_info", new JsonObject());
 			var info     = ReadToolResult<McpTestInfoResult>(response);
 
+			using (Assert.EnterMultipleScope())
 			{
 				info.Profiles[0].Provider.ShouldBe(provider);
 				info.Profiles[0].Dialect. ShouldBe(dialect);
@@ -331,6 +334,7 @@ namespace Tests.LinqToDB.CLI
 				var response = await server.CallTool("linq2db_info", new JsonObject());
 				var info     = ReadToolResult<McpTestInfoResult>(response);
 
+				using (Assert.EnterMultipleScope())
 				{
 					info.Profiles[0].Provider.ShouldBe("SQLite");
 				}
@@ -376,6 +380,7 @@ namespace Tests.LinqToDB.CLI
 			var overrideResponse = await overrideServer.CallTool("linq2db_info", new JsonObject());
 			var overrideInfo     = ReadToolResult<McpTestInfoResult>(overrideResponse);
 
+			using (Assert.EnterMultipleScope())
 			{
 				overrideInfo.Server.MaxResponseBytes.ShouldBe(100000000);
 			}

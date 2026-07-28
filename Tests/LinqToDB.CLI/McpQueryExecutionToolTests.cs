@@ -28,6 +28,7 @@ namespace Tests.LinqToDB.CLI
 			});
 			var result = ReadToolResult<McpTestJsonTableResult>(response);
 
+			using (Assert.EnterMultipleScope())
 			{
 				result.Columns[0].Name.ShouldBe("Value");
 				result.Rows.           ShouldBe([["1"]]);
@@ -133,6 +134,7 @@ namespace Tests.LinqToDB.CLI
 				["sql"] = "drop table Person",
 			});
 
+			using (Assert.EnterMultipleScope())
 			{
 				ReadToolErrorText(response).ShouldContain("Query is not read-only");
 			}
@@ -150,9 +152,10 @@ namespace Tests.LinqToDB.CLI
 				["sql"] = "drop table Person",
 			});
 
+			using (Assert.EnterMultipleScope())
 			{
-				(response["result"]).ShouldBeNull();
-				(response["error"]). ShouldNotBeNull();
+				response["result"]. ShouldBeNull();
+				(response["error"]).ShouldNotBeNull();
 			}
 		}
 
@@ -179,6 +182,7 @@ namespace Tests.LinqToDB.CLI
 				["sql"] = "drop table Person",
 			});
 
+			using (Assert.EnterMultipleScope())
 			{
 				ReadToolErrorText(response).ShouldContain("Profile 'default' doesn't enable execute mode.");
 			}
@@ -213,6 +217,7 @@ namespace Tests.LinqToDB.CLI
 				});
 				var result = ReadToolResult<McpTestJsonTableResult>(response);
 
+				using (Assert.EnterMultipleScope())
 				{
 					result.RecordsAffected.ShouldBe(1);
 				}
@@ -238,6 +243,7 @@ namespace Tests.LinqToDB.CLI
 				["sql"] = "select 1; select 2",
 			});
 
+			using (Assert.EnterMultipleScope())
 			{
 				ReadToolErrorText(response).ShouldContain("Only single SQL statement is allowed.");
 			}
@@ -298,6 +304,7 @@ namespace Tests.LinqToDB.CLI
 			});
 			var result = ReadToolResult<McpTestJsonTableResult>(response);
 
+			using (Assert.EnterMultipleScope())
 			{
 				result.Columns.ConvertAll(column => column.Name).ShouldBe(["Value", "Value"]);
 				result.Rows.                                     ShouldBe([["1", "2"]]);
@@ -340,6 +347,7 @@ namespace Tests.LinqToDB.CLI
 			});
 			var result = ReadToolResult<McpTestJsonTableResult>(response);
 
+			using (Assert.EnterMultipleScope())
 			{
 				result.Columns[0].Name.ShouldBe("Value");
 				result.RowCount.       ShouldBe(1);
@@ -386,9 +394,10 @@ namespace Tests.LinqToDB.CLI
 			await server.Initialize();
 			var response = await server.CallTool("unknown_tool", new JsonObject());
 
+			using (Assert.EnterMultipleScope())
 			{
-				(response["result"]).ShouldBeNull();
-				(response["error"]). ShouldNotBeNull();
+				response["result"]. ShouldBeNull();
+				(response["error"]).ShouldNotBeNull();
 			}
 		}
 

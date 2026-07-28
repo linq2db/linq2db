@@ -39,22 +39,23 @@ namespace Tests.LinqToDB.CLI
 
 			(reader.Read()).ShouldBe(true);
 
+			using (Assert.EnterMultipleScope())
 			{
-				(ReadFieldAsString(reader, "None",      0)).ShouldBe("text");
-				(ReadFieldAsString(reader, "Boolean",   1)).ShouldBe("true");
-				(ReadFieldAsString(reader, "None",      2)).ShouldBe("42");
-				(ReadFieldAsString(reader, "None",      3)).ShouldBe("42000000000");
-				(ReadFieldAsString(reader, "None",      4)).ShouldBe("123.45");
-				(ReadFieldAsString(reader, "Double",    5)).ShouldBe("1.25");
-				(ReadFieldAsString(reader, "Date",      6)).ShouldBe("2026-07-05");
-				(ReadFieldAsString(reader, "DateTime",  6)).ShouldBe("2026-07-05T12:34:56.0000000");
-				(ReadFieldAsString(reader, "TimeSpan",  7)).ShouldBe("12:34:56");
-				(ReadFieldAsString(reader, "None",      8)).ShouldBe("01234567-89ab-cdef-0123-456789abcdef");
-				(ReadFieldAsString(reader, "Bytes",     9)).ShouldBe("0x010203");
-				(ReadFieldAsString(reader, "ByteArray", 9)).ShouldBe("[1,2,3]");
-				(ReadFieldAsString(reader, "None",      10)).ShouldBe("03:04:05.1230000");
+				ReadFieldAsString(reader, "None",      0). ShouldBe("text");
+				ReadFieldAsString(reader, "Boolean",   1). ShouldBe("true");
+				ReadFieldAsString(reader, "None",      2). ShouldBe("42");
+				ReadFieldAsString(reader, "None",      3). ShouldBe("42000000000");
+				ReadFieldAsString(reader, "None",      4). ShouldBe("123.45");
+				ReadFieldAsString(reader, "Double",    5). ShouldBe("1.25");
+				ReadFieldAsString(reader, "Date",      6). ShouldBe("2026-07-05");
+				ReadFieldAsString(reader, "DateTime",  6). ShouldBe("2026-07-05T12:34:56.0000000");
+				ReadFieldAsString(reader, "TimeSpan",  7). ShouldBe("12:34:56");
+				ReadFieldAsString(reader, "None",      8). ShouldBe("01234567-89ab-cdef-0123-456789abcdef");
+				ReadFieldAsString(reader, "Bytes",     9). ShouldBe("0x010203");
+				ReadFieldAsString(reader, "ByteArray", 9). ShouldBe("[1,2,3]");
+				ReadFieldAsString(reader, "None",      10).ShouldBe("03:04:05.1230000");
 
-				(reader.IsDBNull(11)).ShouldBe(true);
+				reader.IsDBNull(11).ShouldBe(true);
 			}
 		}
 

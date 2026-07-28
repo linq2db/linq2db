@@ -33,20 +33,20 @@ namespace Tests.LinqToDB.CLI
 
 				tools.Tools.Count.ShouldBe(4);
 
-				queryTool.Description.                              ShouldContain("Call linq2db_info first");
-				queryTool.Description.                              ShouldContain("Call linq2db_skill");
-				queryTool.Annotations.OpenWorldHint.                ShouldBe(true);
-				queryTool.Annotations.ReadOnlyHint.                 ShouldBe(true);
-				queryTool.Annotations.IdempotentHint.               ShouldBe(false);
-				queryTool.Annotations.DestructiveHint.              ShouldBe(false);
-				queryTool.InputSchema.Required!.                    ShouldContain("sql");
-				queryTool.InputSchema.Properties.AllowUnsafeSql.    ShouldBeNull();
-				queryTool.InputSchema.Properties.AllowExecute.      ShouldBeNull();
-				queryTool.InputSchema.Properties.Provider.          ShouldBeNull();
-				queryTool.InputSchema.Properties.ConnectionString.  ShouldBeNull();
-				queryTool.InputSchema.Properties.Password.          ShouldBeNull();
-				queryTool.InputSchema.Properties.Credentials.ShouldBeNull();
-				queryTool.InputSchema.Properties.ProviderLocation.  ShouldBeNull();
+				queryTool.Description.                            ShouldContain("Call linq2db_info first");
+				queryTool.Description.                            ShouldContain("Call linq2db_skill");
+				queryTool.Annotations.OpenWorldHint.              ShouldBe(true);
+				queryTool.Annotations.ReadOnlyHint.               ShouldBe(true);
+				queryTool.Annotations.IdempotentHint.             ShouldBe(false);
+				queryTool.Annotations.DestructiveHint.            ShouldBe(false);
+				queryTool.InputSchema.Required!.                  ShouldContain("sql");
+				queryTool.InputSchema.Properties.AllowUnsafeSql.  ShouldBeNull();
+				queryTool.InputSchema.Properties.AllowExecute.    ShouldBeNull();
+				queryTool.InputSchema.Properties.Provider.        ShouldBeNull();
+				queryTool.InputSchema.Properties.ConnectionString.ShouldBeNull();
+				queryTool.InputSchema.Properties.Password.        ShouldBeNull();
+				queryTool.InputSchema.Properties.Credentials.     ShouldBeNull();
+				queryTool.InputSchema.Properties.ProviderLocation.ShouldBeNull();
 
 				infoTool.Description.                ShouldContain("Returns non-secret linq2db MCP query configuration information");
 				infoTool.Description.                ShouldContain("Use linq2db_schema");
@@ -58,24 +58,24 @@ namespace Tests.LinqToDB.CLI
 				infoTool.InputSchema.Properties.     ShouldBe(new McpTestInputProperties());
 				infoTool.InputSchema.Required.       ShouldBeNull();
 
-				schemaTool.Description.                              ShouldContain("Returns provider-independent database schema metadata");
-				schemaTool.Description.                              ShouldContain("Procedures and functions are not supported");
-				schemaTool.Annotations.ReadOnlyHint.                 ShouldBe(true);
-				schemaTool.Annotations.IdempotentHint.               ShouldBe(true);
-				schemaTool.Annotations.OpenWorldHint.                ShouldBe(true);
-				schemaTool.Annotations.DestructiveHint.              ShouldBe(false);
-				schemaTool.InputSchema.Properties.Provider.          ShouldBeNull();
-				schemaTool.InputSchema.Properties.ConnectionString.  ShouldBeNull();
-				schemaTool.InputSchema.Properties.Password.          ShouldBeNull();
-				schemaTool.InputSchema.Properties.ProviderLocation.  ShouldBeNull();
-				schemaTool.InputSchema.Properties.Credentials.ShouldBeNull();
-				schemaTool.InputSchema.Properties.Sql.               ShouldBeNull();
-				schemaTool.InputSchema.Properties.OutputFile.        ShouldBeNull();
-				schemaTool.InputSchema.Properties.FilterTables.      ShouldNotBeNull();
-				schemaTool.InputSchema.Properties.ExcludeTables.     ShouldBeNull();
-				schemaTool.InputSchema.Properties.IncludeTables.     ShouldBeNull();
-				schemaTool.InputSchema.Properties.GetProcedures.     ShouldBeNull();
-				schemaTool.InputSchema.Properties.UseSchemaOnly.     ShouldBeNull();
+				schemaTool.Description.                            ShouldContain("Returns provider-independent database schema metadata");
+				schemaTool.Description.                            ShouldContain("Procedures and functions are not supported");
+				schemaTool.Annotations.ReadOnlyHint.               ShouldBe(true);
+				schemaTool.Annotations.IdempotentHint.             ShouldBe(true);
+				schemaTool.Annotations.OpenWorldHint.              ShouldBe(true);
+				schemaTool.Annotations.DestructiveHint.            ShouldBe(false);
+				schemaTool.InputSchema.Properties.Provider.        ShouldBeNull();
+				schemaTool.InputSchema.Properties.ConnectionString.ShouldBeNull();
+				schemaTool.InputSchema.Properties.Password.        ShouldBeNull();
+				schemaTool.InputSchema.Properties.ProviderLocation.ShouldBeNull();
+				schemaTool.InputSchema.Properties.Credentials.     ShouldBeNull();
+				schemaTool.InputSchema.Properties.Sql.             ShouldBeNull();
+				schemaTool.InputSchema.Properties.OutputFile.      ShouldBeNull();
+				schemaTool.InputSchema.Properties.FilterTables.    ShouldNotBeNull();
+				schemaTool.InputSchema.Properties.ExcludeTables.   ShouldBeNull();
+				schemaTool.InputSchema.Properties.IncludeTables.   ShouldBeNull();
+				schemaTool.InputSchema.Properties.GetProcedures.   ShouldBeNull();
+				schemaTool.InputSchema.Properties.UseSchemaOnly.   ShouldBeNull();
 
 				skillTool.Description.                                     ShouldContain("Returns the full embedded linq2db CLI agent skill as Markdown");
 				skillTool.Annotations.ReadOnlyHint.                        ShouldBe(true);
@@ -119,15 +119,15 @@ namespace Tests.LinqToDB.CLI
 				var tools       = ReadResponseResult<McpTestToolsResult>(response);
 				var executeTool = FindTool(tools, "linq2db_execute");
 
-				tools.Tools.Count.                                    ShouldBe(5);
-				executeTool.Description.                              ShouldContain("explicit user approval");
-				executeTool.Annotations.ReadOnlyHint.                 ShouldBe(false);
-				executeTool.Annotations.IdempotentHint.               ShouldBe(false);
-				executeTool.Annotations.OpenWorldHint.                ShouldBe(true);
-				executeTool.Annotations.DestructiveHint.              ShouldBe(true);
-				executeTool.InputSchema.Properties.AllowUnsafeSql.    ShouldBeNull();
-				executeTool.InputSchema.Properties.AllowExecute.      ShouldBeNull();
-				executeTool.InputSchema.Properties.Credentials.ShouldBeNull();
+				tools.Tools.Count.                                ShouldBe(5);
+				executeTool.Description.                          ShouldContain("explicit user approval");
+				executeTool.Annotations.ReadOnlyHint.             ShouldBe(false);
+				executeTool.Annotations.IdempotentHint.           ShouldBe(false);
+				executeTool.Annotations.OpenWorldHint.            ShouldBe(true);
+				executeTool.Annotations.DestructiveHint.          ShouldBe(true);
+				executeTool.InputSchema.Properties.AllowUnsafeSql.ShouldBeNull();
+				executeTool.InputSchema.Properties.AllowExecute.  ShouldBeNull();
+				executeTool.InputSchema.Properties.Credentials.   ShouldBeNull();
 			}
 		}
 
@@ -152,6 +152,7 @@ namespace Tests.LinqToDB.CLI
 			await server.Initialize();
 			var response = await server.CallTool("linq2db_info", new JsonObject());
 
+			using (Assert.EnterMultipleScope())
 			{
 				ReadToolText(response).ShouldNotContain("linq2db/project-a/production");
 			}

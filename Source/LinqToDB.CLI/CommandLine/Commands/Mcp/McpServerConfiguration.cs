@@ -2,6 +2,7 @@ using System;
 using System.Text.Json;
 
 using LinqToDB.CommandLine;
+using LinqToDB.CommandLine.Commands.QueryExecution;
 
 namespace LinqToDB.CommandLine.Commands.Mcp
 {
@@ -14,7 +15,6 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 		string Instructions,
 		int    MaxResponseBytes)
 	{
-		const string SectionName         = "mcp";
 		const string DefaultTitle        = "linq2db Database Tools";
 		const string DefaultDescription  = "Provider-aware database schema inspection and SQL access through linq2db CLI.";
 		const string DefaultInstructions = "Call linq2db_info first to discover available database profiles and provider dialects. Call linq2db_schema before generating SQL when database objects are unknown. Use linq2db_query for read-only SQL. Call linq2db_skill for the full linq2db CLI/MCP usage guide, supported providers, configuration rules, and safety guidance. Use linq2db_execute only when it is available and the user explicitly approved the exact write-capable operation.";
@@ -59,7 +59,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 					return false;
 				}
 
-				if (!json.RootElement.TryGetProperty(SectionName, out var section))
+				if (!json.RootElement.TryGetProperty(QueryExecutionDefaults.McpSectionName, out var section))
 				{
 					error = null;
 					return true;
@@ -67,7 +67,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 
 				if (section.ValueKind != JsonValueKind.Object)
 				{
-					error = $"Configuration file '{fileName}' section '{SectionName}' must be object.";
+					error = $"Configuration file '{fileName}' section '{QueryExecutionDefaults.McpSectionName}' must be object.";
 					return false;
 				}
 
@@ -84,7 +84,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 							|| !property.Value.TryGetInt32(out maxResponseBytes)
 							|| !IsValidMaxResponseBytes(maxResponseBytes))
 						{
-							error = $"Configuration file '{fileName}' section '{SectionName}' property '{property.Name}' must be a positive 32-bit integer.";
+							error = $"Configuration file '{fileName}' section '{QueryExecutionDefaults.McpSectionName}' property '{property.Name}' must be a positive 32-bit integer.";
 							return false;
 						}
 
@@ -93,13 +93,13 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 
 					if (property.Name is not ("title" or "description" or "instructions"))
 					{
-						error = $"Configuration file '{fileName}' section '{SectionName}' contains unknown property '{property.Name}'.";
+						error = $"Configuration file '{fileName}' section '{QueryExecutionDefaults.McpSectionName}' contains unknown property '{property.Name}'.";
 						return false;
 					}
 
 					if (property.Value.ValueKind != JsonValueKind.String)
 					{
-						error = $"Configuration file '{fileName}' section '{SectionName}' property '{property.Name}' must be string.";
+						error = $"Configuration file '{fileName}' section '{QueryExecutionDefaults.McpSectionName}' property '{property.Name}' must be string.";
 						return false;
 					}
 

@@ -15,20 +15,21 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCliProcess("help", "mcp");
 
+			using (Assert.EnterMultipleScope())
 			{
-				(result.ExitCode).ShouldBe(0);
-				(result.Output).  ShouldContain   ("dotnet linq2db mcp <options>");
-				(result.Output).  ShouldContain   ("run STDIO MCP server");
-				(result.Output).  ShouldContain   ("default: json-table");
-				(result.Output).  ShouldContain   ("--credentials");
-				(result.Output).  ShouldContain   ("--config");
-				(result.Output).  ShouldContain   ("--provider");
-				(result.Output).  ShouldContain   ("--max-rows");
-				(result.Output).  ShouldContain   ("--max-response-bytes");
-				(result.Output).  ShouldNotContain("CSV output");
-				(result.Output).  ShouldNotContain("--sql");
-				(result.Output).  ShouldNotContain("--output-file");
-				(result.Output).  ShouldNotContain("--allow-unsafe-sql");
+				result.ExitCode.ShouldBe(0);
+				result.Output.  ShouldContain("dotnet linq2db mcp <options>");
+				result.Output.  ShouldContain("run STDIO MCP server");
+				result.Output.  ShouldContain("default: json-table");
+				result.Output.  ShouldContain("--credentials");
+				result.Output.  ShouldContain("--config");
+				result.Output.  ShouldContain("--provider");
+				result.Output.  ShouldContain("--max-rows");
+				result.Output.  ShouldContain("--max-response-bytes");
+				result.Output.  ShouldNotContain("CSV output");
+				result.Output.  ShouldNotContain("--sql");
+				result.Output.  ShouldNotContain("--output-file");
+				result.Output.  ShouldNotContain("--allow-unsafe-sql");
 			}
 		}
 
@@ -37,10 +38,11 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCliProcess("mcp", "--max-response-bytes", "0");
 
+			using (Assert.EnterMultipleScope())
 			{
-				(result.ExitCode).ShouldBe(-1);
-				(result.Output).  ShouldBeEmpty();
-				(result.Error).   ShouldContain("Option '--max-response-bytes' must be a positive 32-bit integer.");
+				result.ExitCode.ShouldBe(-1);
+				result.Output.  ShouldBeEmpty();
+				result.Error.   ShouldContain("Option '--max-response-bytes' must be a positive 32-bit integer.");
 			}
 		}
 
@@ -49,10 +51,11 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCliProcess("mcp", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql", "select 1");
 
+			using (Assert.EnterMultipleScope())
 			{
-				(result.ExitCode).ShouldBe(-1);
-				(result.Output).  ShouldBeEmpty();
-				(result.Error).   ShouldContain("Unrecognized option: --sql");
+				result.ExitCode.ShouldBe(-1);
+				result.Output.  ShouldBeEmpty();
+				result.Error.   ShouldContain("Unrecognized option: --sql");
 			}
 		}
 
@@ -61,10 +64,11 @@ namespace Tests.LinqToDB.CLI
 		{
 			var result = await RunCliProcess("mcp", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--output", "csv");
 
+			using (Assert.EnterMultipleScope())
 			{
-				(result.ExitCode).ShouldBe(-1);
-				(result.Output).  ShouldBeEmpty();
-				(result.Error).   ShouldContain("Cannot parse option value (--output csv): unknown value 'csv'");
+				result.ExitCode.ShouldBe(-1);
+				result.Output.  ShouldBeEmpty();
+				result.Error.   ShouldContain("Cannot parse option value (--output csv): unknown value 'csv'");
 			}
 		}
 	}

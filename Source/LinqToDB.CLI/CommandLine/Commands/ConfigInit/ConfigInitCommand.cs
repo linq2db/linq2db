@@ -19,9 +19,7 @@ namespace LinqToDB.CommandLine.Commands.ConfigInit
 	/// </summary>
 	sealed class ConfigInitCommand : CliCommand
 	{
-		const string DefaultProfileName = "default";
 		const string DefaultConfigPath   = ".agents/linq2db-query.json";
-		const int    DefaultMaxRows      = 1000;
 		const string DefaultOutput       = "json-table";
 
 		static readonly OptionCategory _profileOptions = new(2, "Profile", "Profile settings", "profile");
@@ -137,7 +135,7 @@ namespace LinqToDB.CommandLine.Commands.ConfigInit
 
 			var values = new ConfigInitValues(
 				configPath,
-				(string?)profile ?? DefaultProfileName,
+				(string?)profile ?? QueryExecutionDefaults.DefaultProfileName,
 				(string?)description,
 				(string?)provider,
 				(string?)providerLocation,
@@ -181,11 +179,11 @@ namespace LinqToDB.CommandLine.Commands.ConfigInit
 				}
 			}
 
-			if (!root.ContainsKey(DefaultProfileName))
-				root[DefaultProfileName] = CreateDefaultProfile();
-			else if (!string.Equals(values.Profile, DefaultProfileName, StringComparison.Ordinal) && root[DefaultProfileName] is not JsonObject)
+			if (!root.ContainsKey(QueryExecutionDefaults.DefaultProfileName))
+				root[QueryExecutionDefaults.DefaultProfileName] = CreateDefaultProfile();
+			else if (!string.Equals(values.Profile, QueryExecutionDefaults.DefaultProfileName, StringComparison.Ordinal) && root[QueryExecutionDefaults.DefaultProfileName] is not JsonObject)
 			{
-				await environment.Error.WriteLineAsync($"Configuration file '{values.ConfigPath}' profile '{DefaultProfileName}' must be object.");
+				await environment.Error.WriteLineAsync($"Configuration file '{values.ConfigPath}' profile '{QueryExecutionDefaults.DefaultProfileName}' must be object.");
 				return StatusCodes.EXPECTED_ERROR;
 			}
 
@@ -251,7 +249,7 @@ namespace LinqToDB.CommandLine.Commands.ConfigInit
 
 		static bool Validate(ICliEnvironment environment, ConfigInitValues values, out int maxRows)
 		{
-			maxRows = DefaultMaxRows;
+			maxRows = QueryExecutionDefaults.DefaultMaxRows;
 
 			if (string.IsNullOrWhiteSpace(values.Profile))
 			{
@@ -323,7 +321,7 @@ namespace LinqToDB.CommandLine.Commands.ConfigInit
 		{
 			return new JsonObject
 			{
-				["maxRows"]       = DefaultMaxRows,
+				["maxRows"]       = QueryExecutionDefaults.DefaultMaxRows,
 				["output"]        = DefaultOutput,
 				["enableExecute"] = false,
 			};

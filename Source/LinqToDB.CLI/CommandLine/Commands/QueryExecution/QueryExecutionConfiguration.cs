@@ -16,9 +16,6 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 	/// </summary>
 	internal sealed class QueryExecutionConfiguration
 	{
-		private const string DefaultProfileName = "default";
-		private const string McpSectionName      = "mcp";
-
 		/// <summary>
 		/// Optional non-secret profile description for agents and humans.
 		/// </summary>
@@ -114,9 +111,9 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		{
 			configuration = null;
 
-			if (string.Equals(profileName, McpSectionName, StringComparison.Ordinal))
+			if (string.Equals(profileName, QueryExecutionDefaults.McpSectionName, StringComparison.Ordinal))
 			{
-				error = $"Configuration profile name '{McpSectionName}' is reserved for MCP server configuration.";
+				error = $"Configuration profile name '{QueryExecutionDefaults.McpSectionName}' is reserved for MCP server configuration.";
 				return false;
 			}
 
@@ -152,18 +149,18 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 					return false;
 				}
 
-				if (!json.RootElement.TryGetProperty(DefaultProfileName, out var defaultProfile))
+				if (!json.RootElement.TryGetProperty(QueryExecutionDefaults.DefaultProfileName, out var defaultProfile))
 				{
-					error = $"Configuration file '{fileName}' doesn't contain '{DefaultProfileName}' profile.";
+					error = $"Configuration file '{fileName}' doesn't contain '{QueryExecutionDefaults.DefaultProfileName}' profile.";
 					return false;
 				}
 
 				var result = new QueryExecutionConfiguration();
 
-				if (!result.ApplyProfile(fileName, DefaultProfileName, defaultProfile, out error))
+				if (!result.ApplyProfile(fileName, QueryExecutionDefaults.DefaultProfileName, defaultProfile, out error))
 					return false;
 
-				if (!string.Equals(profileName, DefaultProfileName, StringComparison.Ordinal))
+				if (!string.Equals(profileName, QueryExecutionDefaults.DefaultProfileName, StringComparison.Ordinal))
 				{
 					if (!json.RootElement.TryGetProperty(profileName, out var profile))
 					{
@@ -191,9 +188,9 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 
 			using (json)
 			{
-				if (!json.RootElement.TryGetProperty(DefaultProfileName, out _))
+				if (!json.RootElement.TryGetProperty(QueryExecutionDefaults.DefaultProfileName, out _))
 				{
-					error = $"Configuration file '{fileName}' doesn't contain '{DefaultProfileName}' profile.";
+					error = $"Configuration file '{fileName}' doesn't contain '{QueryExecutionDefaults.DefaultProfileName}' profile.";
 					return false;
 				}
 
@@ -201,7 +198,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 
 				foreach (var profile in json.RootElement.EnumerateObject())
 				{
-					if (!string.Equals(profile.Name, McpSectionName, StringComparison.Ordinal))
+					if (!string.Equals(profile.Name, QueryExecutionDefaults.McpSectionName, StringComparison.Ordinal))
 						names.Add(profile.Name);
 				}
 
