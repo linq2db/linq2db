@@ -26,7 +26,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		public static readonly CliOption PasswordEnv         = new StringCliOption("password-env",          null, false, false, "environment variable with database password");
 		public static readonly CliOption Credentials         = new StringCliOption("credentials",           null, false, false, "system or external credential store target containing database user and password; supports %NAME% and ${NAME} environment variable expansion");
 		public static readonly CliOption CommandTimeout      = new StringCliOption("command-timeout",       null, false, false, "SQL command timeout in seconds; 0 disables the option");
-		public static readonly CliOption LockTimeout         = new StringCliOption("lock-timeout",          null, false, false, "provider-specific lock wait timeout in seconds; 0 disables the option");
+		public static readonly CliOption LockTimeout         = new StringCliOption("lock-timeout",          null, false, false, "lock wait timeout in seconds for SQL Server, PostgreSQL, MySQL/MariaDB, and SQLite; unsupported providers report a diagnostic; 0 disables the option");
 		public static readonly CliOption MaxRows             = new StringCliOption("max-rows",              null, false, false, "maximum number of result rows to read; 0 disables the limit");
 		public static readonly CliOption OutputFile          = new StringCliOption("output-file",           null, false, false, "path to file for command output; supports %NAME% and ${NAME} environment variable expansion");
 		public static readonly CliOption Sql                 = new StringCliOption("sql",                   null, false, false, "single user-provided SQL query text to execute");

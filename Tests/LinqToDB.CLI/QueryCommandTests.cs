@@ -522,6 +522,22 @@ namespace Tests.LinqToDB.CLI
 			}
 		}
 
+		[TestCase("select * from openquery(RemoteServer, 'delete from dbo.Person')")]
+		[TestCase("select * from openrowset('SQLNCLI', 'Server=.;Trusted_Connection=yes;', 'delete from dbo.Person')")]
+		[TestCase("select * from opendatasource('SQLNCLI', 'Data Source=Server;User ID=user;Password=password').TestData.dbo.Person")]
+		public void QueryGuardRejectsSqlServerPassThroughTableReferences(string sql)
+		{
+			var provider = DataConnection.GetDataProvider("SqlServer", "Server=.;Database=test;Trusted_Connection=True")!;
+
+			var result = ReadOnlySqlGuard.Validate(provider, sql);
+
+			using (Assert.EnterMultipleScope())
+			{
+				result.IsAllowed.ShouldBe(false);
+				result.Error!.   ShouldContain("OPENQUERY, OPENROWSET, and OPENDATASOURCE are not allowed");
+			}
+		}
+
 		[Test]
 		public void QueryGuardAllowsGenericFromTableNamedInto()
 		{
@@ -971,6 +987,19 @@ namespace Tests.LinqToDB.CLI
 				result.ExitCode.ShouldBe(0);
 				result.Output.  ShouldContain("\"Value\":\"1\"");
 				result.Error.   ShouldBeEmpty();
+			}
+		}
+
+		[Test]
+		public async Task QueryReportsUnsupportedLockTimeout()
+		{
+			var result = await RunCli("query", "--provider", "DuckDB", "--connection-string", "Data Source=:memory:", "--lock-timeout", "5", "--sql", "select 1 as Value");
+
+			using (Assert.EnterMultipleScope())
+			{
+				result.ExitCode.ShouldBe(0);
+				result.Output.  ShouldContain("\"Value\":\"1\"");
+				result.Error.   ShouldContain("Lock timeout is not supported for provider 'DuckDB' and was not applied.");
 			}
 		}
 
@@ -2035,7 +2064,8 @@ namespace Tests.LinqToDB.CLI
 				result.Output.  ShouldContain("single user-provided SQL query text");
 				result.Output.  ShouldContain("configure provider-specific connection timeout here");
 				result.Output.  ShouldContain("SQL command timeout in seconds; 0 disables the option");
-				result.Output.  ShouldContain("provider-specific lock wait timeout in seconds; 0 disables the option");
+				result.Output.  ShouldContain("SQL Server, PostgreSQL, MySQL/MariaDB, and SQLite");
+				result.Output.  ShouldContain("unsupported providers report a diagnostic");
 				result.Output.  ShouldContain("maximum number of result rows to read; 0 disables the limit");
 				result.Output.  ShouldContain("Examples:");
 				result.Output.  ShouldContain("dotnet linq2db query --provider SQLite --connection-string \"Data Source=data.db\" --sql \"select * from Person\"");

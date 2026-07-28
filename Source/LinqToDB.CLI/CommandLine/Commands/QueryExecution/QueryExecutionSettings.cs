@@ -20,7 +20,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 	/// Final database connection string after command line/profile merge and user/password formatting.
 	/// </param>
 	/// <param name="CommandTimeout">Optional query command timeout in seconds. Value <c>0</c> disables the option.</param>
-	/// <param name="LockTimeout">Optional provider-specific lock wait timeout in seconds. Value <c>0</c> disables the option.</param>
+	/// <param name="LockTimeout">Optional lock wait timeout in seconds for SQL Server, PostgreSQL, MySQL/MariaDB, and SQLite. Unsupported providers report a diagnostic. Value <c>0</c> disables the option.</param>
 	/// <param name="MaxRows">Maximum number of result rows to read. Value <c>0</c> disables the limit.</param>
 	/// <param name="MaxOutputBytes">Optional maximum UTF-8 output size. Used by bounded adapters such as MCP; <see langword="null"/> disables the limit.</param>
 	/// <param name="Output">Query output format.</param>

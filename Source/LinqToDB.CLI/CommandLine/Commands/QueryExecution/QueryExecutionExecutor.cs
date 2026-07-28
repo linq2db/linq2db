@@ -443,6 +443,11 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 
 				if (lockTimeoutCommand != null)
 					await dataConnection.ExecuteAsync(lockTimeoutCommand, cancellationToken);
+				else if (_settings.LockTimeout > 0)
+					await _settings.DiagnosticWriter.WriteLineAsync(
+						string.Create(
+							CultureInfo.InvariantCulture,
+							$"Lock timeout is not supported for provider '{_settings.Provider}' and was not applied."));
 
 				// Execute user-provided SQL and get a data reader for the result set.
 				//

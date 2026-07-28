@@ -385,7 +385,7 @@ Parameter surface:
 | `impersonate` | `--impersonate` | yes | yes | yes | no | yes | no | boolean; JSON `true` or `false` in config |
 | `impersonateMode` | `--impersonate-mode` | yes | yes | yes | no | yes | no | `network-cleartext`, `interactive`, `network`, `new-credentials`, or system codes `8`, `2`, `3`, `9` |
 | `commandTimeout` | `--command-timeout` | yes | yes | yes | no | yes | no | non-negative integer seconds; `0` disables the option |
-| `lockTimeout` | `--lock-timeout` | yes | yes | yes | no | yes | no | non-negative integer seconds; `0` disables the option |
+| `lockTimeout` | `--lock-timeout` | yes | yes | yes | no | yes | no | non-negative integer seconds; supported for SQL Server, PostgreSQL, MySQL/MariaDB, and SQLite; unsupported providers report a diagnostic; `0` disables the option |
 | `maxRows` | `--max-rows` | yes | yes | yes | yes | yes | yes | non-negative integer row count; `0` disables the limit |
 | `maxResponseBytes` | `--max-response-bytes` | no | no | no | no | yes | no | positive 32-bit integer limit for primary MCP query/execute output content; also available in the top-level `mcp` section; CLI overrides config; default `8388608` |
 | `output` | `--output` | yes | yes | yes | yes | yes | yes | `query`, `execute`, and `config-init`: `json`, `json-table`, or `csv`; `mcp`: `json` or `json-table`; `query` default is `json`, MCP/config-init/execute default is `json-table` |
@@ -453,7 +453,7 @@ Timeouts:
 - `--lock-timeout <seconds>` applies a provider-specific lock wait timeout before the query when supported by the selected provider.
 - Timeout values are non-negative integer seconds.
 - Timeout value `0` disables the corresponding timeout option.
-- `lockTimeout` is best-effort and currently has provider-specific behavior; unsupported providers ignore it.
+- `lockTimeout` is best-effort and currently has provider-specific behavior; unsupported providers report a diagnostic and continue without applying it.
 - Connection timeout is intentionally left to the provider connection string. The query command exposes command timeout and provider-specific lock timeout only.
 
 Supported `lockTimeout` providers:

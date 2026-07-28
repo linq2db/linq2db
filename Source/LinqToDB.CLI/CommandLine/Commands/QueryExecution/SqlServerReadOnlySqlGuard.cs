@@ -11,6 +11,26 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 {
 	internal static class SqlServerReadOnlySqlGuard
 	{
+		sealed class PassThroughTableReferenceVisitor : TSqlFragmentVisitor
+		{
+			public bool Found { get; private set; }
+
+			public override void ExplicitVisit(OpenQueryTableReference node)
+			{
+				Found = true;
+			}
+
+			public override void ExplicitVisit(OpenRowsetTableReference node)
+			{
+				Found = true;
+			}
+
+			public override void ExplicitVisit(AdHocTableReference node)
+			{
+				Found = true;
+			}
+		}
+
 		public static SqlGuardResult Validate(string sql)
 		{
 			var scriptResult = ParseScript(sql, out var script);
@@ -31,6 +51,13 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 
 			if (HasSelectInto(selectStatement))
 				return SqlGuardResult.Rejected("Query is not read-only: SELECT INTO is not allowed.");
+
+			var passThroughVisitor = new PassThroughTableReferenceVisitor();
+
+			selectStatement.Accept(passThroughVisitor);
+
+			if (passThroughVisitor.Found)
+				return SqlGuardResult.Rejected("Query is not read-only: OPENQUERY, OPENROWSET, and OPENDATASOURCE are not allowed.");
 
 			return SqlGuardResult.Allowed;
 		}
