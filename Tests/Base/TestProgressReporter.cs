@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -47,26 +46,17 @@ namespace Tests
 		const string Tfm = "unknown";
 #endif
 
-		const int MaxRecentFailures = 20;
-		const int WriteThrottleMs   = 1000;  // at most ~1 file write/sec for the common (passing) case
+		const int WriteThrottleMs = 1000;  // at most ~1 file write/sec for the common (passing) case
 
-		static readonly Lock                                _sync     = new();
-		static readonly Stopwatch                           _clock    = new();
-		static readonly List<(string Test, string Message)> _failures = new();
+		static readonly Lock              _sync  = new();
+		static readonly Stopwatch         _clock = new();
+		static readonly TestProgressState _state = new(Write);
 
 		static bool    _initialized;
 		static bool    _enabled;
 		static string? _file;
 		static int     _pid;
 
-		static long     _total;
-		static long     _started;
-		static long     _completed;
-		static long     _passed;
-		static long     _failed;
-		static long     _skipped;
-		static string?  _current;
-		static bool     _done;
 		static DateTime _startedUtc;
 		static long     _lastWriteMs = -WriteThrottleMs;
 
@@ -81,14 +71,11 @@ namespace Tests
 				{
 					// The assembly (root) suite has the largest case count → that is the run total.
 					// Note: under a --filter this is the discovered (pre-filter) count, so it over-counts.
-					if (test.TestCaseCount > _total)
-						_total = test.TestCaseCount;
+					_state.SetTotal(test.TestCaseCount);
 					return;
 				}
 
-				_started++;
-				_current = test.FullName;
-				Write(force: false);
+				_state.StartTest(test.FullName);
 			}
 		}
 
@@ -102,48 +89,48 @@ namespace Tests
 				if (test.IsSuite)
 				{
 					// Suite teardown fires bottom-up; the root suite (no parent) finishing means the run is done.
-					if (!_done && test.Parent == null)
-					{
-						_done    = true;
-						_current = null;
-						Write(force: true);
-					}
+					if (test.Parent == null)
+						_state.MarkDone();
 
 					return;
 				}
 
-				_completed++;
-				// Deliberately do NOT clear _current here: with throttled writes, nulling between every test
-				// makes the on-disk snapshot almost always catch the gap (showing no current test). Keep the
-				// most-recently-started test as "current" until the run completes — during a run that is the
-				// in-flight (or just-finished) test, which is what a watcher wants to see.
+				var result = TestContext.CurrentContext.Result;
 
-				var force = false;
+				_state.CompleteTest(test.FullName, result.Outcome.Status, result.Message);
+			}
+		}
 
-				switch (TestContext.CurrentContext.Result.Outcome.Status)
-				{
-					case TestStatus.Passed : _passed++;  break;
-					case TestStatus.Skipped: _skipped++; break;
-					case TestStatus.Failed :
-						_failed++;
-						force = true;
-						if (_failures.Count < MaxRecentFailures)
-							_failures.Add((test.FullName, Trim(TestContext.CurrentContext.Result.Message)));
-						break;
-					// Inconclusive / Warning — count as completed but neither pass nor fail bucket.
-					default: break;
-				}
+		/// <summary>
+		/// Opens a deferral for a test whose result an outer <c>IWrapSetUpTearDown</c> wrapper is going to rewrite
+		/// (<see cref="ThrowsWhenAttribute"/>). NUnit nests this reporter's action <em>inside</em> such a wrapper, so
+		/// the outcome it samples is the pre-rewrite one; deferring holds the unit back until
+		/// <see cref="CommitDeferred"/> supplies the final verdict, so no provisional outcome is ever counted, added
+		/// to <c>recentFailures</c>, or published. Protocol details: <see cref="TestProgressState"/>.
+		/// </summary>
+		public static void BeginDeferred(string fullName)
+		{
+			lock (_sync)
+			{
+				if (!EnsureInit())
+					return;
 
-				// For unfiltered runs total is exact, so completed reaching it marks the run done even if the
-				// root-suite teardown ordering surprises us.
-				if (!_done && _total > 0 && _completed >= _total)
-				{
-					_done    = true;
-					_current = null;
-					force    = true;
-				}
+				_state.BeginDeferred(fullName);
+			}
+		}
 
-				Write(force);
+		/// <summary>
+		/// Closes a deferral opened by <see cref="BeginDeferred"/>, booking the unit with the wrapper's final verdict.
+		/// <paramref name="result"/> is <see langword="null"/> when the wrapper failed before producing one.
+		/// </summary>
+		public static void CommitDeferred(string fullName, ITestResult? result)
+		{
+			lock (_sync)
+			{
+				if (!EnsureInit())
+					return;
+
+				_state.CommitDeferred(fullName, result?.ResultState.Status ?? TestStatus.Failed, result?.Message);
 			}
 		}
 
@@ -257,9 +244,14 @@ namespace Tests
 
 			_lastWriteMs = nowMs;
 
+			// Read under the state's lock (Write is invoked from inside it), so the snapshot is coherent.
+			var total      = _state.Total;
+			var completed  = _state.Completed;
+			var failures   = _state.RecentFailures;
+
 			var elapsedSec = _clock.Elapsed.TotalSeconds;
-			var rate       = elapsedSec > 0 ? _completed / elapsedSec : 0d;
-			var eta        = rate > 0 && _total > _completed ? (_total - _completed) / rate : (double?)null;
+			var rate       = elapsedSec > 0 ? completed / elapsedSec : 0d;
+			var eta        = rate > 0 && total > completed ? (total - completed) / rate : (double?)null;
 
 			var sb = new StringBuilder(512);
 
@@ -268,26 +260,26 @@ namespace Tests
 			sb.Append("\"pid\":")        .Append(Int(_pid))                             .Append(',');
 			sb.Append("\"startedUtc\":") .Append(JsonString(Iso(_startedUtc)))          .Append(',');
 			sb.Append("\"updatedUtc\":") .Append(JsonString(Iso(DateTime.UtcNow)))      .Append(',');
-			sb.Append("\"done\":")       .Append(_done ? "true" : "false")              .Append(',');
-			sb.Append("\"total\":")      .Append(Long(_total))                          .Append(',');
-			sb.Append("\"completed\":")  .Append(Long(_completed))                      .Append(',');
-			sb.Append("\"started\":")    .Append(Long(_started))                        .Append(',');
-			sb.Append("\"passed\":")     .Append(Long(_passed))                         .Append(',');
-			sb.Append("\"failed\":")     .Append(Long(_failed))                         .Append(',');
-			sb.Append("\"skipped\":")    .Append(Long(_skipped))                        .Append(',');
-			sb.Append("\"currentTest\":").Append(JsonString(_current))                  .Append(',');
+			sb.Append("\"done\":")       .Append(_state.Done ? "true" : "false")        .Append(',');
+			sb.Append("\"total\":")      .Append(Long(total))                           .Append(',');
+			sb.Append("\"completed\":")  .Append(Long(completed))                       .Append(',');
+			sb.Append("\"started\":")    .Append(Long(_state.Started))                  .Append(',');
+			sb.Append("\"passed\":")     .Append(Long(_state.Passed))                   .Append(',');
+			sb.Append("\"failed\":")     .Append(Long(_state.Failed))                   .Append(',');
+			sb.Append("\"skipped\":")    .Append(Long(_state.Skipped))                  .Append(',');
+			sb.Append("\"currentTest\":").Append(JsonString(_state.Current))            .Append(',');
 			sb.Append("\"elapsedSec\":") .Append(Num(elapsedSec))                       .Append(',');
 			sb.Append("\"testsPerSec\":").Append(Num(rate))                             .Append(',');
 			sb.Append("\"etaSec\":")     .Append(eta.HasValue ? Num(eta.Value) : "null").Append(',');
 			sb.Append("\"recentFailures\":[");
 
-			for (var i = 0; i < _failures.Count; i++)
+			for (var i = 0; i < failures.Count; i++)
 			{
 				if (i > 0)
 					sb.Append(',');
 
-				sb.Append("{\"test\":").Append(JsonString(_failures[i].Test))
-				  .Append(",\"message\":").Append(JsonString(_failures[i].Message)).Append('}');
+				sb.Append("{\"test\":").Append(JsonString(failures[i].Test))
+				  .Append(",\"message\":").Append(JsonString(failures[i].Message)).Append('}');
 			}
 
 			sb.Append("]}");
@@ -321,14 +313,6 @@ namespace Tests
 		static string Int(int     value)  => value.ToString(CultureInfo.InvariantCulture);
 		static string Long(long   value)  => value.ToString(CultureInfo.InvariantCulture);
 		static string Num(double  value)  => value.ToString("0.###", CultureInfo.InvariantCulture);
-
-		static string Trim(string? message)
-		{
-			if (string.IsNullOrEmpty(message))
-				return "";
-
-			return message!.Length > 500 ? message.Substring(0, 500) : message;
-		}
 
 		static string JsonString(string? value)
 		{
