@@ -88,6 +88,30 @@ namespace Tests
 
 			public override TestResult Execute(TestExecutionContext context)
 			{
+				// The TestProgressReporter heartbeat action runs *inside* this IWrapSetUpTearDown wrapper, so the
+				// outcome it samples is the pre-rewrite one. Hold the unit back for the duration of this wrapper and
+				// hand the tracker our final verdict instead, so no provisional result is ever counted or published.
+				// Deferrals nest: with several ThrowsWhen attributes on one test only the outermost wrapper — the one
+				// that sees the final result — books the unit.
+				var fullName = context.CurrentTest.FullName;
+
+				TestProgressTracker.BeginDeferred(fullName);
+
+				TestResult? testResult = null;
+
+				try
+				{
+					testResult = ExecuteInner(context);
+					return testResult;
+				}
+				finally
+				{
+					TestProgressTracker.CommitDeferred(fullName, testResult);
+				}
+			}
+
+			TestResult ExecuteInner(TestExecutionContext context)
+			{
 				var expectsException = false;
 				var expectsFirst     = true;
 
@@ -116,10 +140,6 @@ namespace Tests
 				// Check if the parameter value matches the expected value
 				if (expectsException)
 				{
-					// The TestProgressReporter heartbeat action runs *inside* this IWrapSetUpTearDown wrapper, so it
-					// already sampled this (pre-rewrite) status. Remember it, then reconcile the tally after we rewrite.
-					var countedStatus = testResult.ResultState.Status;
-
 					if (testResult.Message == null)
 					{
 						testResult.SetResult(ResultState.Failure, $"Expected a <{_attribute.ExpectedException}> to be thrown, but no exception was thrown");
@@ -141,9 +161,6 @@ namespace Tests
 						else
 							testResult.SetResult(ResultState.Success, "Required exception was thrown:\n\n" + testResult.Message);
 					}
-
-					// Move the heartbeat's tally from the status it sampled to the verdict we just finalized (no-op if unchanged).
-					TestProgressTracker.Reclassify(countedStatus, testResult.ResultState.Status, context.CurrentTest.FullName, testResult.Message);
 				}
 
 				return testResult;
