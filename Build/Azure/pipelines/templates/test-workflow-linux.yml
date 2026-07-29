@@ -228,6 +228,10 @@ steps:
   condition: and(variables.title, eq(variables.net100, 'true'), succeeded())
   displayName: 'EF.Core Tests (.NET 10): $(title)'
 
+- script: dotnet ./net10.0/nhibernate/x64/linq2db.NHibernate.Tests.dll --filter "TestCategory != SkipCI" --settings ./net10.0/nhibernate/x64/.runsettings --report-trx --report-trx-filename net10.0-nhibernate-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
+  condition: and(variables.title, eq(variables.net100, 'true'), succeeded())
+  displayName: 'NHibernate Tests (.NET 10): $(title)'
+
 - task: CmdLine@2
   inputs:
     script: 'rm -rf $(System.DefaultWorkingDirectory)/net10.0'

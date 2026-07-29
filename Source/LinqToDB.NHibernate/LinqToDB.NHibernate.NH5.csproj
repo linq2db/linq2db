@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<Import Project="LinqToDB.NHibernate.props" />
+
+	<PropertyGroup>
+		<TargetFrameworks>net462;netstandard2.0;net8.0;net9.0;net10.0</TargetFrameworks>
+		<TargetFrameworks Condition="'$(Configuration)' == 'Testing'">net10.0</TargetFrameworks>
+		<Version>$(NH5Version)</Version>
+		<!--don't remove it! WPF doesn't work with non-4-component versions-->
+		<AssemblyVersion>$(NH5Version).0</AssemblyVersion>
+		<DefineConstants>NH5;$(DefineConstants)</DefineConstants>
+		<!-- Package not yet published: no baseline available for package validation. -->
+		<EnablePackageValidation>false</EnablePackageValidation>
+	</PropertyGroup>
+
+	<PropertyGroup Label="Nuget">
+		<PackageId>linq2db.NHibernate</PackageId>
+		<Title>Linq to DB extensions for NHibernate 5.x</Title>
+		<Description>Allows to execute Linq to DB (linq2db) queries in NHibernate context.</Description>
+		<Product>$(Title)</Product>
+		<PackageTags>$(PackageTags);nhibernate;NHibernate;ORM</PackageTags>
+	</PropertyGroup>
+
+	<ItemGroup Label="Nuget">
+		<None Include="readme.md" Pack="true" PackagePath="readme.md" />
+	</ItemGroup>
+
+</Project>
