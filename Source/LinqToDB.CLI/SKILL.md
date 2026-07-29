@@ -228,7 +228,7 @@ The command is intended for safe SQL generation and database inspection by agent
 `schema` returns tables, views when available, columns, primary keys, and foreign keys when requested and returned by the provider.
 It does not accept SQL text, does not read table data, does not modify the database, and does not return procedures or functions.
 
-Connection and profile settings use the same trusted startup/config boundary as `query`: `--config`, `--profile`, `--provider`, `--provider-location`, `--connection-string`, `--connection-string-env`, `--user`, `--user-env`, `--password`, `--password-env`, `--impersonate`, `--impersonate-mode`, and `--command-timeout`.
+Connection and profile settings use the same trusted startup/config boundary as `query`: `--config`, `--profile`, `--provider`, `--provider-location`, `--connection-string`, `--connection-string-env`, `--user`, `--user-env`, `--password`, `--password-env`, `--credentials`, `--impersonate`, `--impersonate-mode`, and `--command-timeout`.
 
 Schema options:
 
