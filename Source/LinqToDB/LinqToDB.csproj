@@ -164,7 +164,10 @@
 	     analyzer-version warning, so a consumer's TreatWarningsAsErrors can't break on them). The assemblies are
 	     built via the ProjectReferences above; GetTargetPath resolves each output location regardless of OutputPath.
 	     RemoveProperties="TargetFramework": both are single-TFM netstandard2.0 set in a PropertyGroup, which an
-	     inherited global TargetFramework would override, resolving an output path that was never built. -->
+	     inherited global TargetFramework would override, resolving an output path that was never built.
+	     Build/Azure/scripts/verify-analyzer-packaging.ps1 asserts this exact set of assemblies at this exact
+	     PackagePath in the produced nupkg — add an assembly here and add it to that script's -ExpectedAssemblies
+	     default too, or the gate keeps passing while covering only the old set. -->
 	<Target Name="_BundleAnalyzersIntoPackage" BeforeTargets="_GetPackageFiles">
 		<MSBuild Projects="..\LinqToDB.Analyzers\LinqToDB.Analyzers.csproj" Targets="GetTargetPath" RemoveProperties="TargetFramework">
 			<Output TaskParameter="TargetOutputs" ItemName="_BundledAnalyzerAssembly" />
