@@ -50,7 +50,7 @@ namespace LinqToDB.CommandLine.Commands.Connection
 				? ResolvePath(QueryExecutionCliOptions.ProviderLocation, values.ProviderLocation)
 				: ResolvePath(QueryExecutionCliOptions.ProviderLocation, configuration?.ProviderLocation, configDirectory);
 			var connectionString    = GetConfiguredValue(QueryExecutionCliOptions.ConnectionString, values.ConnectionString, values.ConnectionStringEnv, configuration?.ConnectionString, configuration?.ConnectionStringEnv);
-			var credentials  = values.Credentials != null
+			var credentials         = values.Credentials != null
 				? ResolveEnvironmentVariables(QueryExecutionCliOptions.Credentials, values.Credentials)
 				: ResolveEnvironmentVariables(QueryExecutionCliOptions.Credentials, configuration?.Credentials);
 			string? user;
@@ -74,7 +74,7 @@ namespace LinqToDB.CommandLine.Commands.Connection
 
 				if (configuration.User != null || configuration.UserEnv != null || configuration.Password != null || configuration.PasswordEnv != null)
 				{
-					_environment.Error.WriteLine("Configuration property 'credentials' cannot be combined with 'user', 'userEnv', 'password', or 'passwordEnv'.");
+					_environment.Error.WriteLine("Configuration property 'credentials' cannot be combined with 'user', 'userEnv', 'password', or 'passwordEnv'. Values inherited from the 'default' profile count as set.");
 					return null;
 				}
 			}
@@ -110,8 +110,8 @@ namespace LinqToDB.CommandLine.Commands.Connection
 			if (string.Equals(connectionString, MissingEnvironmentVariable, StringComparison.Ordinal) ||
 			    string.Equals(user,             MissingEnvironmentVariable, StringComparison.Ordinal) ||
 			    string.Equals(password,         MissingEnvironmentVariable, StringComparison.Ordinal) ||
-			    string.Equals(providerLocation,   MissingEnvironmentVariable, StringComparison.Ordinal) ||
-			    string.Equals(credentials, MissingEnvironmentVariable, StringComparison.Ordinal))
+			    string.Equals(providerLocation, MissingEnvironmentVariable, StringComparison.Ordinal) ||
+			    string.Equals(credentials,      MissingEnvironmentVariable, StringComparison.Ordinal))
 				return null;
 
 			if (providerName == null)

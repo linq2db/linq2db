@@ -176,7 +176,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 			options.Remove(QueryExecutionCliOptions.UserEnv,             out var userEnv);
 			options.Remove(QueryExecutionCliOptions.Password,            out var password);
 			options.Remove(QueryExecutionCliOptions.PasswordEnv,         out var passwordEnv);
-			options.Remove(QueryExecutionCliOptions.Credentials,  out var credentials);
+			options.Remove(QueryExecutionCliOptions.Credentials,         out var credentials);
 			options.Remove(QueryExecutionCliOptions.Impersonate,         out var impersonate);
 			options.Remove(QueryExecutionCliOptions.ImpersonateMode,     out var impersonateMode);
 			options.Remove(QueryExecutionCliOptions.CommandTimeout,      out var commandTimeout);
