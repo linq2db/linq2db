@@ -131,9 +131,15 @@ $jobs = @{}
 #
 # Both refspecs go through a single `git fetch` invocation so we don't contend
 # on `.git/*.lock` with a second concurrent fetch against the same repo.
+#
+# The PR-head refspec is force-prefixed (`+`). A force-pushed PR head - rebase,
+# amend, squash - is not a fast-forward of a cached `origin/pr/<n>`, so without
+# the `+` git rejects that refspec and the whole fetch fails, taking the script
+# down with it (exit 1, empty output). Nothing needs this ref append-only: it is
+# a review cache that should always track the PR's current head.
 $baseBranch = if ($baseRef -match '^origin/(.+)$') { $Matches[1] } else { $null }
 $fetchArgs = @('fetch', 'origin')
-if ($fetchHead)                 { $fetchArgs += "refs/pull/$pr/head:refs/remotes/origin/pr/$pr" }
+if ($fetchHead)                 { $fetchArgs += "+refs/pull/$pr/head:refs/remotes/origin/pr/$pr" }
 if ($fetchHead -and $baseBranch) { $fetchArgs += $baseBranch }
 $jobs.fetch = if ($fetchArgs.Count -gt 2) {
     Start-ThreadJob -ScriptBlock {
