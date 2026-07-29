@@ -100,6 +100,8 @@ git fetch origin refs/pull/<n>/head:refs/remotes/origin/pr/<n>
 
 Then diff/log against `origin/pr/<n>` — works for any PR (upstream branch, fork, closed, whatever), never collides with local branch names, and the `pr/<n>` namespace is self-documenting.
 
+**The short source form isn't just useless — it can be destructive.** Fetching a **named branch** as `git fetch origin <branch>:refs/remotes/origin/<branch>` (source side without the `refs/heads/` prefix) can resolve the source to nothing and report `- [deleted] (none) -> origin/<branch>`, *deleting* the destination tracking ref, while `git ls-remote origin "refs/heads/<branch>"` shows the branch alive at the expected SHA. Always fully qualify both sides: `git fetch origin refs/heads/<branch>:refs/remotes/origin/<branch>`. (Surfaced on #5720 fetching `feature/bundle-analyzers-into-core`, whose head SHA `gh pr view` had just reported.)
+
 ## Finding whether an open PR adds a token (`gh search code` indexes only `master`)
 
 `gh search code "<token>" --repo <o>/<r>` searches the **default branch only**, so a token that exists only on an unmerged PR branch (a new convention, a renamed symbol) returns zero matches even though the PR adds it. Two consequences:
