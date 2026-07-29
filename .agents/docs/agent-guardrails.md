@@ -14,7 +14,7 @@ When reusing or delegating to existing shared code introduces a regression — a
 
 ## Build configurations: `== 'Release'` is not `!= 'Debug'`
 
-The repo defines four configurations (`Testing;Debug;Release;Azure`). When proposing MSBuild edits that should fire only in production-style builds, gate with `Condition="'$(Configuration)' == 'Release'"` — the existing `RunAnalyzersDuringBuild` line at `Directory.Build.props:110` is the canonical pattern. The looser `!= 'Debug'` form leaves the property enabled for `Testing` and `Azure`, which is rarely the intent (Testing in particular is the fast-iteration single-TFM CI build that should match Debug behavior).
+The repo defines four configurations (`Testing;Debug;Release;Azure`). When proposing MSBuild edits that should fire only in production-style builds, gate with `Condition="'$(Configuration)' == 'Release'"` — the existing `RunAnalyzersDuringBuild` line at `Directory.Build.props:118` (default-false at :116) is the canonical pattern. The looser `!= 'Debug'` form leaves the property enabled for `Testing` and `Azure`, which is rarely the intent (Testing in particular is the fast-iteration single-TFM CI build that should match Debug behavior).
 
 ## Document arbitrary values explicitly
 

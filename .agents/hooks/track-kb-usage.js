@@ -54,10 +54,16 @@ process.stdin.on('end', () => {
             detail = ti.subagent_type;
         } else if (tool === 'Read' && isKbPath(ti.file_path)) {
             kind = 'read'; detail = ti.file_path; area = areaOf(ti.file_path);
-        } else if ((tool === 'Grep' || tool === 'Glob') && (isKbPath(ti.path) || isKbPath(ti.pattern))) {
-            kind = 'search';
-            const hit = isKbPath(ti.path) ? ti.path : ti.pattern;
-            detail = hit; area = areaOf(hit);
+        } else if (tool === 'Grep' || tool === 'Glob') {
+            // Glob's `pattern` is a path glob, so it identifies a KB consultation.
+            // Grep's `pattern` is a *content* regex — testing it against isKbPath
+            // logs a false "search" for any content search over the literal string
+            // "knowledge-base" in non-KB files. For Grep, only path-ish inputs count.
+            const candidates = tool === 'Glob'
+                ? [ti.path, ti.pattern]
+                : [ti.path, ti.glob];
+            const hit = candidates.find(isKbPath);
+            if (hit) { kind = 'search'; detail = hit; area = areaOf(hit); }
         }
 
         if (!kind) { process.exit(0); }

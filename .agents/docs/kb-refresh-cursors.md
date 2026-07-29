@@ -24,20 +24,22 @@ Cursors advance only after the artifact write completes successfully. An interru
 
 ## Delta-fetch rules
 
+**Deltas read against `origin/master`, never the local `HEAD`.** The KB indexes merged work, and the local `HEAD` may sit on a feature branch (or a worktree) whose commits aren't in master — indexing those would poison the KB with unmerged state. `/kb-build` and `/kb-refresh` both mandate this and expect the user to have run `git fetch origin master` first.
+
 ### `code`
 
 ```
-git diff --name-status <cursor.code.sha>..HEAD
+git diff --name-status <cursor.code.sha>..origin/master
 ```
 
 Affected files → resolve to areas via path-pattern match against `kb-areas.md` → spawn `kb-architect` (and `kb-issue-detector` for the same areas) scoped to those areas.
 
-If `cursor.code.sha == HEAD`: skip.
+If `cursor.code.sha == origin/master`: skip.
 
 ### `commits`
 
 ```
-git log <cursor.commits.sha>..HEAD --pretty=format:'%H|%aI|%an|%s' --name-only
+git log <cursor.commits.sha>..origin/master --pretty=format:'%H|%aI|%an|%s' --name-only
 ```
 
 Append entries to the current year's `history/by-year/<year>.md`. Apply decision heuristics; new decisions → `history/decisions/<slug>.md`. Update `cursor.commits.year_done_through` if the year boundary moved.

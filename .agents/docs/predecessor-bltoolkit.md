@@ -54,7 +54,7 @@ Consult `git log` on the early linq2db commits (`beb417cb` 2017-10-08, `47c3636a
 - Concept lineage — why an API exists, what problem it solved when it was added.
 
 **Not findable in BLToolkit (by design):**
-- Current per-provider translation behavior — that's in linq2db's `Source/LinqToDB/Internal/DataProvider/<Provider>/Translation/`. Always verify behavior claims against the translator code, never the historical attribute set (see `agent-rules.md` → **Provider behavior claims must be verified against translator code**).
+- Current per-provider translation behavior — that's in linq2db's `Source/LinqToDB/Internal/DataProvider/<Provider>/Translation/`. Always verify behavior claims against the translator code, never the historical attribute set (see [`agent-guardrails.md`](agent-guardrails.md) → **Provider behavior claims must be verified against translator code**).
 - Bug fixes, public-API surface changes, perf work post-2011 — those are in the linq2db git history.
 - Anything about EF Core, DuckDB, ClickHouse, YDB, or providers added after the fork.
 

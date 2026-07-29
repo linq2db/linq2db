@@ -11,7 +11,7 @@ description: Manual test-matrix walkthrough for release prep — LINQPad 5 (.lpx
 
 **Isn't:**
 
-- Not a substitute for CI test-all. That runs in parallel via `/release-deps` step 7 and any subsequent push. Don't skip it.
+- Not a substitute for CI test-all. That's triggered from `/release-verify` step 6 (and by any subsequent push to the prep branch); `/release-deps` explicitly does not trigger CI. Don't skip it.
 - Not for normal-development testing. Routine test runs go through `/test` against `Tests/Linq` or `Tests/Tests.Playground`.
 - Not where `UserDataProviders.json` is edited. Release-testing artifacts (T4, CLI, LINQPad) read connection strings from settings directly and do **not** require providers to be enabled in `UserDataProviders.json`.
 
@@ -28,7 +28,7 @@ description: Manual test-matrix walkthrough for release prep — LINQPad 5 (.lpx
 
 ## Procedure overview
 
-Eight tracks under task 4. The orchestrator's checklist enumerates them as `4.0`–`4.8`. Each is independently skippable (`[-]`), but the skill warns when a track has prior issues recorded in `linqpad-test-checklist.md` for this kind of change.
+Nine tracks under task 4. The orchestrator's checklist enumerates them as `4.0`–`4.8`. Each is independently skippable (`[-]`), but the skill warns when a track has prior issues recorded in `linqpad-test-checklist.md` for this kind of change.
 
 **Order matters for 4.0 → 4.5 → 4.6 → 4.7** (T4 binaries are a prerequisite for T4 / NuGet-T4 / CLI). 4.1 (DB init) gates all tracks except 4.0. The LINQPad tracks (4.3 / 4.4 / 4.8) can run in parallel with T4 tracks.
 

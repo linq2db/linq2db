@@ -267,48 +267,9 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 				StringBuilder.Append("NOT NULL");
 		}
 
-		protected override void BuildParameter(SqlParameter parameter)
+		protected override DbDataType? GetParameterCastType(SqlParameter parameter)
 		{
-			if (parameter.NeedsCast && BuildStep != Step.TypedExpression)
-			{
-				var paramValue = parameter.GetParameterValue(RenderContext.EvaluationContext.ParameterValues);
-
-				var dbDataType = paramValue.DbDataType;
-
-				if (dbDataType.DataType == DataType.Undefined)
-				{
-					// TODO: We should avoid such tricks, proper TypeMapping required
-					dbDataType = MappingSchema.GetDataType(dbDataType.SystemType).Type;
-				}
-
-				// Same code in DB2 provider
-				if (paramValue.ProviderValue is byte[] bytes)
-				{
-					dbDataType = dbDataType.WithLength(bytes.Length);
-				}
-				else if (paramValue.ProviderValue is string str)
-				{
-					dbDataType = dbDataType.WithLength(str.Length);
-				}
-				else if (paramValue.ProviderValue is decimal d)
-					dbDataType = CorrectDecimalFacets(dbDataType, d);
-
-				// TODO: temporary guard against cast to unknown type (Variant)
-				if (dbDataType.DataType == DataType.Undefined)
-				{
-					base.BuildParameter(parameter);
-					return;
-				}
-
-				var saveStep = BuildStep;
-				BuildStep = Step.TypedExpression;
-				BuildTypedExpression(dbDataType, parameter);
-				BuildStep = saveStep;
-
-				return;
-			}
-
-			base.BuildParameter(parameter);
+			return GetValueBasedParameterCastType(parameter);
 		}
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)

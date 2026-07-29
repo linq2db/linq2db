@@ -27,7 +27,7 @@ description: Post-release-merge tasks. Verifies every expected linq2db nuget pub
 
 ## Phase state
 
-Five ordered steps, recorded in `state.postpublish.steps.<key>`:
+Five ordered steps, recorded in `state.postpublish.steps.<key>` by **direct edit of `.build/.agents/release-<ver>.json`** (no `release-state.ps1` action writes these keys — see `/release` step 6):
 
 | Step | Key | Status flow |
 |------|-----|-------------|

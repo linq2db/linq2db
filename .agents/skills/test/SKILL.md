@@ -120,7 +120,7 @@ Relay the agent's per-target summary:
 
 For a long run you already enabled the trace and monitored it via the heartbeat (3.1a); the final report still comes from the agent's structured summary, with the heartbeat's failure list as a cross-check.
 
-If any failure looks like an env problem (connection refused, "Provider X not enabled" block, missing schema), point at `/test-providers` for the fix — do not investigate or auto-repair from here. Otherwise just relay the agent's output verbatim.
+If any failure looks like an env problem (connection refused, a "no connection string defined" block, missing schema), point at `/test-providers` for the fix — do not investigate or auto-repair from here. Otherwise just relay the agent's output verbatim.
 
 Finally, if the branch is on an open PR and the local run uncovered no regressions, mention the `/azp run` option (see `.agents/docs/ci-tests.md`). Do not auto-post — just surface it; the user decides. If containers were started for this run via `/test-providers`, remind the user once: "Run `/test-providers stop` when you're done with the containers."
 

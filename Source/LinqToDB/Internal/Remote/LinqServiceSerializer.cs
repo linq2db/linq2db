@@ -977,7 +977,6 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 
 							Append(elem.Name);
 							Append(elem.IsQueryParameter);
-							Append(elem.NeedsCast);
 							Append(paramValue.DbDataType);
 
 							var value = paramValue.ProviderValue;
@@ -1783,6 +1782,13 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						break;
 					}
 
+					case QueryElementType.SqlParameterCast:
+					{
+						var elem = (SqlParameterCastExpression)e;
+						Append(elem.Parameter);
+						break;
+					}
+
 					case QueryElementType.SqlCondition:
 					{
 						var elem = (SqlConditionExpression)e;
@@ -2141,7 +2147,6 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						{
 							var name             = ReadString();
 							var isQueryParameter = ReadBool();
-							var needCast         = ReadBool();
 							var dbDataType       = ReadDbDataType();
 
 							var value            = ReadValue(ReadType()!);
@@ -2149,7 +2154,6 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 							obj = new SqlParameter(dbDataType, name, value)
 							{
 								IsQueryParameter = isQueryParameter,
-								NeedsCast = needCast,
 							};
 
 							break;
@@ -3036,6 +3040,13 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						var mandatory  = ReadBool();
 
 						obj = new SqlCastExpression(expression!, dataType!, fromType, mandatory);
+
+						break;
+					}
+
+					case QueryElementType.SqlParameterCast:
+					{
+						obj = new SqlParameterCastExpression(Read<SqlParameter>()!);
 
 						break;
 					}

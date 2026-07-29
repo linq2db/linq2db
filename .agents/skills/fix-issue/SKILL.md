@@ -43,7 +43,7 @@ Only invoke this skill for `linq2db/linq2db` issues. For issues in other repos, 
    - Repro steps / code blocks (often LINQ expressions + expected vs. actual SQL)
    - Provider(s) the reporter pinned (`firebird 4`, `postgres 15`, etc.)
    - linq2db version(s) mentioned — useful when the repro needs a particular dialect path
-   - Any attached linked PRs from earlier fix attempts (via the `closingIssues` edges in `closingIssuesReferences`, if present)
+   - Any linked PRs from earlier fix attempts. `gh issue view --json` has no `closingIssuesReferences` field (that's a PR-side field — don't request it here); linked PRs surface as cross-reference events in the issue's timeline, so read them out of the `comments` payload from step 1, or query `gh api graphql` for the issue's `closedByPullRequestsReferences`.
 
 ### 1b. Consult the KB for the affected area
 
@@ -74,8 +74,9 @@ Only after the user confirms the summary + slug. Follow `.agents/docs/agent-rule
 
 1. Check for a dirty working tree. If dirty, stop and ask whether to stash.
 2. `git fetch origin master` — keep the base fresh.
-3. `git checkout -b issue/<n>-<slug> origin/master`.
-4. Confirm the new branch is checked out (`git rev-parse --abbrev-ref HEAD`).
+3. Create the branch **in a worktree**, not by switching the primary clone (agent-rules → *Creating a new branch*: "Worktrees are the default for branch-based task work"): `git worktree add -b issue/<n>-<slug> ../<clone-dir>.<slug> origin/master`, where `<clone-dir>` is this clone's folder name.
+4. Confirm the branch is checked out in the worktree (`git -C ../<clone-dir>.<slug> rev-parse --abbrev-ref HEAD`), and do all subsequent work against that path.
+5. Provision the worktree per [`worktree.md`](../../docs/worktree.md) — `UserDataProviders.json` placement and the `.agents/` curation carry-over both apply. Test runs from here go through `/test` with `worktree <abs-worktree-path>` (agent-rules → *Running tests*), never a hand-run `dotnet test`.
 
 Do **not** commit yet — the branch starts empty relative to master.
 
@@ -121,7 +122,7 @@ If the user already ran `/test-providers` for the same set earlier in the sessio
 
 1. **3.1 Determine project + TFM.** For main tests, default to `Tests/Tests.Playground/Tests.Playground.csproj` at `net10.0` (the test file is already linked via step 4). For EFCore tests, use the appropriate `Tests.EntityFrameworkCore.EFx.csproj`.
 2. **3.2 Resolve target providers.** Use the set confirmed in step 2 of this skill — pass it through to `test-runner` verbatim. `/test` does not re-prompt and does not edit any env state.
-3. **3.3 Invoke test-runner.** Filter `FullyQualifiedName~<test-name>`, the confirmed targets, default config / verbosity. If `test-runner` aborts with a "Provider X not enabled" block, that means step 5a didn't actually enable the right set — fix it via `/test-providers` and resume here, don't fix the env from inside `/fix-issue`.
+3. **3.3 Invoke test-runner.** Filter `FullyQualifiedName~<test-name>`, the confirmed targets, default config / verbosity. If `test-runner` aborts with a "Provider `<ID>` has no connection string defined" block, that provider has no connection in `DataProviders.json` / `UserDataProviders.json` (providers need a connection string, not an enabled flag — the run passes `--provider`) — fix it via `/test-providers` and resume here, don't fix the env from inside `/fix-issue`.
 
 ### 6. Report the result
 

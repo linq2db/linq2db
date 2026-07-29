@@ -40,7 +40,7 @@ Note: a single issue may have **multiple** disabled tests across different fixtu
 Invoke `/test` with:
 
 - `testPattern` — `FullyQualifiedName~<TestClass>.<TestMethod>` (per gated test).
-- `targets` — the project owning the test and currently-enabled providers in its TFM bucket. `/test` reads `UserDataProviders.json` and will surface "Provider X not enabled" if the matrix is empty; defer env changes to the user (don't auto-enable).
+- `targets` — the project owning the test and the providers to run in its TFM bucket. The run passes `--provider`, so a provider needs a connection string in `DataProviders.json` / `UserDataProviders.json`, not an enabled flag; `/test` surfaces a "no connection string defined" block if one is missing. Defer env changes to the user (don't auto-enable).
 
 Three outcomes:
 
@@ -53,7 +53,7 @@ Three outcomes:
 Per the agent-rules guardrail, don't trust the close-comment attribution. Bisect to find the commit that flipped the test from fail → pass.
 
 1. **Bound the range.** Earliest fail point ≈ the commit that introduced the test (find via `git log --diff-filter=A --follow -- <test-file>` or `git log -S "<TestMethod>" -- <test-file>`). Latest pass point = current `origin/master`.
-2. **Set up a worktree.** Ask the user before creating one (worktrees need explicit OK per agent-rules). Suggested path: `../<repo>.bisect-<issue>`. Detach to the earliest fail-point candidate as starting HEAD.
+2. **Set up a worktree.** Suggested path: `../<repo>.bisect-<issue>`. Detach to the earliest fail-point candidate as starting HEAD. (Worktrees are the default for branch-based work per agent-rules → *Creating a new branch* — no separate OK gate; the bisect cost gate at the end of this step is the one that needs the user's call.)
 3. **Provision the worktree's `UserDataProviders.json`.** Copy from the main repo's root per `worktree.md` → *`UserDataProviders.json` in a worktree*. Adjust the providers list to a small subset (typically SQLite.MS + one provider matching the test's domain). Containers required by that subset must already be running in the main session — the skill doesn't touch docker.
 4. **Loop.** For each candidate commit:
    - `git -C <worktree> switch --detach <sha>`
@@ -68,8 +68,8 @@ If the bisect cost looks large up front (> 200 commits in the range), surface it
 
 ### 4. Branch + remove `[ActiveIssue]`
 
-1. Switch to the main/primary clone; confirm working tree is clean (the worktree edits don't propagate — they're independent).
-2. Create branch from fresh `origin/master`: `git fetch origin master` → `git switch -c issue/<n>-<kebab-slug> origin/master`. Slug per agent-rules; verb-led (`enable-enum-mapping-test`, `enable-cte-alias-test`).
+1. Confirm the working tree is clean (the bisect worktree's detached edits don't propagate — they're independent).
+2. Create the branch from fresh `origin/master` **in its own worktree**, not by switching the primary clone (agent-rules → *Creating a new branch*): `git fetch origin master` → `git worktree add -b issue/<n>-<kebab-slug> ../<clone-dir>.<kebab-slug> origin/master`. Slug per agent-rules; verb-led (`enable-enum-mapping-test`, `enable-cte-alias-test`). Do the remaining steps against that worktree path.
 3. If carrying `.agents/` from `infra/agents-curation` (per agent-rules → *Carrying `.agents/` curation across branch switches*), do it now: `git checkout origin/infra/agents-curation -- .agents/`. These changes must NOT be committed on this branch.
 4. Edit each gated test to remove `[ActiveIssue]`. One-line change per test (the attribute on its own line).
 5. Stage **only** the test file(s): `git add <test-file>`. If `.agents/` was carried, `git restore --staged .agents/` immediately after to drop the auto-stage.
@@ -131,9 +131,9 @@ End with:
 
 ## Don'ts
 
-- Don't trust the close-comment attribution. The reporter cites symptoms; the bisect cites the cause. Per agent-rules → *Enabling an `[ActiveIssue]` test after the issue closes*.
+- Don't trust the close-comment attribution. The reporter cites symptoms; the bisect cites the cause. Per [`bug-investigation.md`](../../docs/bug-investigation.md) → *Enabling an `[ActiveIssue]` test after the issue closes*.
 - Don't edit `UserDataProviders.json` or `docker start <name>` from this skill. Env state is the user's; if the bisect's provider matrix is empty, ask the user to enable providers via `/test-providers` and resume.
-- Don't auto-create a worktree without explicit user OK (agent-rules → *Worktrees*).
+- Don't switch the primary clone to the working branch — branch work goes in a worktree (agent-rules → *Creating a new branch*).
 - Don't commit `.agents/` carryover on the working branch. Stage only the test file(s).
 - Don't push without an explicit user ask, even when the commit is ready (agent-rules → *Push to remote rules*).
 - Don't backfill the issue milestone silently. Propose the value, get user OK, then PATCH.
