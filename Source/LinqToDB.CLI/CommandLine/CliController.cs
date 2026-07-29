@@ -249,8 +249,8 @@ namespace LinqToDB.CommandLine
 			// validate required options set
 			foreach (var option in command.AllOptions)
 			{
-				// this is the reason why we require option to add null value on parse error:
-				// to not trigger additional "required" error
+				// an option that failed to parse is not added above, so it also reaches this check;
+				// the duplicate message is suppressed because a parse error already set hasErrors
 				if (option.Required && !options.ContainsKey(option))
 				{
 					if (!hasErrors || !reportFirstErrorOnly)
