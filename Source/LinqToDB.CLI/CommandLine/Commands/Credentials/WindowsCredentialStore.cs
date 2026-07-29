@@ -429,6 +429,11 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 				}
 				finally
 				{
+					// The decrypt output holds the plaintext credential payload. ZeroAndFree cannot be reused
+					// here because this block is LocalAlloc-owned rather than HGlobal-owned.
+					if (outputBlob.Size > 0)
+						Marshal.Copy(new byte[outputBlob.Size], 0, outputBlob.Data, outputBlob.Size);
+
 					LocalFree(outputBlob.Data);
 				}
 
