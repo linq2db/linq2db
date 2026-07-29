@@ -3592,7 +3592,16 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected virtual void BuildSqlCastExpression(SqlCastExpression castExpression)
 		{
-			BuildTypedExpression(castExpression.ToType, castExpression.Expression);
+			// This cast already states the operand's type, so a per-usage cast marker under it is redundant - and
+			// the provider overrides of BuildTypedExpression match on SqlValue / SqlParameter, so a marker takes
+			// their unknown-expression path instead: Firebird drops this cast entirely for a string target and
+			// skips CorrectDecimalFacets for a numeric one. Unwrap for the same reason the two callers in
+			// BasicSqlBuilder.Merge.cs do.
+			var expression = castExpression.Expression is SqlParameterCastExpression parameterCast
+				? parameterCast.Parameter
+				: castExpression.Expression;
+
+			BuildTypedExpression(castExpression.ToType, expression);
 		}
 
 		/// <summary>
