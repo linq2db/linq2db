@@ -163,7 +163,7 @@
 		<PackageVersion Include="NUnit"                                                 Version="4.6.0"                        />
 		<PackageVersion Include="NUnit.Analyzers"                                       Version="4.13.0"                       />
 		<PackageVersion Include="NUnit3TestAdapter"                                     Version="6.2.0"                        />
-		<!--Roslyn analyzer/code-fix unit-test harness for the linq2db.Analyzers test project.-->
+		<!--Roslyn analyzer/code-fix unit-test harness for Tests/Tests.Analyzers.-->
 		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing"        Version="1.1.2"                        />
 		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing"         Version="1.1.2"                        />
 
