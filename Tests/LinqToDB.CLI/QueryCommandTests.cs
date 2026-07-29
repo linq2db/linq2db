@@ -353,6 +353,18 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task ExecuteRejectsDirectConnectionWithoutConfigProfile()
+		{
+			var result = await RunCli("execute", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql", "drop table Person");
+
+			using (Assert.EnterMultipleScope())
+			{
+				result.ExitCode.ShouldBe(-1);
+				result.Error.   ShouldContain("Profile 'default' doesn't enable execute mode.");
+			}
+		}
+
+		[Test]
 		public async Task QueryIgnoresForbiddenTokensInStringsAndComments()
 		{
 			var result = await RunCli("query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--sql", "select 'drop table' as Value -- update table");
