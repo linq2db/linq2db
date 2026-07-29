@@ -126,6 +126,8 @@ The CLI can use provider/runtime dependencies bundled with the CLI package and s
 - ClickHouse
 - DuckDB
 - YDB
+- SAP HANA, ODBC driver on the host or external native provider assembly required
+- SQL Server Compact, provider assembly must be resolvable on the host
 - IBM DB2, external provider assembly required
 - IBM Informix, external provider assembly required
 

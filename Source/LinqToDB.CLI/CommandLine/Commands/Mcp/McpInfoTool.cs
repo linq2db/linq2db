@@ -45,6 +45,8 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 			new("ClickHouse",     ["ClickHouse.Driver", "ClickHouse.Octonica", "ClickHouse.MySql"], "ClickHouse SQL", true, null),
 			new("DuckDB",         ["DuckDB"],                          "DuckDB SQL",                   true,  null),
 			new("YDB",            ["YDB"],                             "YDB SQL",                      true,  null),
+			new("SAP HANA",       ["SapHana", "SapHana.Odbc", "SapHana.Native"], "SAP HANA SQL",        false, "Requires the SAP HANA ODBC driver installed on the host for SapHana.Odbc, or providerLocation pointing to Sap.Data.Hana.Net.v8.0.dll for SapHana.Native."),
+			new("SQL Server Compact", ["SqlCe"],                       "SQL Server Compact SQL",       false, "Requires the System.Data.SqlServerCe assembly to be resolvable on the host, or providerLocation pointing to it."),
 			new("IBM DB2",        ["DB2", "DB2.LUW", "DB2.z/OS"],      "IBM DB2 SQL",                  false, "Requires providerLocation pointing to IBM.Data.Db2.dll from the Net.IBM.Data.Db2 package."),
 			new("IBM Informix",   ["Informix.DB2"],                    "Informix SQL",                 false, "Requires providerLocation pointing to IBM.Data.Db2.dll from the Net.IBM.Data.Db2 package."),
 		];
