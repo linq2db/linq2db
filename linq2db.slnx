@@ -133,6 +133,7 @@
     <File Path=".agents/scripts/test-status.ps1" />
     <File Path=".agents/scripts/verify-lines.ps1" />
     <File Path=".agents/scripts/wait-for-review.ps1" />
+    <File Path=".agents/scripts/wiki-commit.ps1" />
   </Folder>
   <Folder Name="/.agents/skills/api-baselines/">
     <File Path=".agents/skills/api-baselines/SKILL.md" />

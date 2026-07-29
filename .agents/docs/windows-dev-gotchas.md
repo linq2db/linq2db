@@ -42,7 +42,18 @@ After this, `git status` is clean and only the sparse page(s) are materialized; 
 
   then edit / `git add <page>.md` / commit / push normally; the colon blob stays `skip-worktree` and is never staged.
 
-- **Recovery — bad commit already made but not yet pushed.** Rebuild the commit via plumbing so the working tree's missing colon page is never consulted (run as separate calls — the Bash tool doesn't persist shell vars, so capture each printed SHA and substitute it into the next call):
+  **`sparse-checkout add` silently no-ops when the page isn't in the *local* `master` commit.** The clone is long-lived and routinely behind `origin/master`, so a page added upstream since the last fetch doesn't exist in the commit the sparse checkout materializes from — `add` exits 0, writes nothing, and the next `Read` fails with *"path does not exist"*, reading as a broken recipe. Fetch first, then materialize from the remote ref and base the commit on it, not on the stale local branch:
+
+  ```
+  git -C ../linq2db.wiki fetch origin
+  git -C ../linq2db.wiki checkout origin/master -- <page>.md
+  ```
+
+  (Surfaced 2026-07-29 on `L2DB1001.md`, which existed only in `origin/master` with local `master` two commits behind.)
+
+- **Committing an edited page — use [`wiki-commit.ps1`](../scripts/wiki-commit.ps1), not the hand-run plumbing below.** `pwsh -NoProfile -File .agents/scripts/wiki-commit.ps1 -Page <page>.md -MessageFile <path> [-DryRun]` does the whole `read-tree` → `hash-object` → `update-index` → `write-tree` → `commit-tree` → `update-ref` sequence in one call, always bases the commit on `origin/master`, refuses an empty (tree-identical) commit, and **aborts before moving any ref** if the resulting diff touches anything but the named page(s) — which is the check that catches the colon-page deletion. Push stays a separate step (`git -C ../linq2db.wiki push origin master`) and needs its own go-ahead.
+
+- **Recovery / reference — the raw plumbing the script wraps.** Rebuild the commit so the working tree's missing colon page is never consulted (run as separate calls — the Bash tool doesn't persist shell vars, so capture each printed SHA and substitute it into the next call):
 
   ```
   git -C ../linq2db.wiki -c core.protectNTFS=false read-tree origin/master   # index := remote; working tree untouched
