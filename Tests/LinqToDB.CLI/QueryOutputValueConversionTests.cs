@@ -76,7 +76,7 @@ namespace Tests.LinqToDB.CLI
 			{
 				formatted. ShouldBe(false);
 				value.     ShouldBeNull();
-				enumerated.ShouldBeLessThan(1000);
+				enumerated.ShouldBeLessThan(5);
 			}
 
 			IEnumerable<object> GetValues()
