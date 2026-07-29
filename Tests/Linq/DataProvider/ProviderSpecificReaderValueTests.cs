@@ -379,7 +379,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void MySqlConnectorProviderSpecificReadMatrix([IncludeDataSources(TestProvName.MySql80Connector)] string context)
+		public void MySqlConnectorProviderSpecificReadMatrix([IncludeDataSources(TestProvName.MySql80Connector, TestProvName.AllMariaDB)] string context)
 		{
 			using var conn = GetDataConnection(context);
 
