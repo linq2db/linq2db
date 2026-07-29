@@ -89,13 +89,21 @@ Reserve `/kb-ask` for cross-area synthesis. Orientation only — the diff + curr
 
 ### 3d. Review the rule's documentation page (analyzer / rule PRs)
 
-When the PR adds or changes an analyzer diagnostic rule, review the documentation page the rule points at — the `DiagnosticDescriptor.helpLinkUri` target (typically a `linq2db/linq2db` wiki page such as `wiki/L2DB1001`). The wiki lives in a **separate repo** (not part of the PR diff), so a rule change can ship with a stale or missing doc page unless explicitly checked. Fetch the page (`WebFetch` the raw wiki markdown, e.g. `https://raw.githubusercontent.com/wiki/linq2db/linq2db/<Page>.md`) and confirm:
+Two triggers, both requiring the check:
+
+1. the PR **adds or changes an analyzer diagnostic rule**; or
+2. the PR changes **how an existing rule ships** — its package id, its packability, the Roslyn / TFM folder it's delivered under, or the readme / docs describing it — even when the rule's own code is untouched.
+
+Trigger 2 is easy to miss and matters just as much, because the doc page names the package a reader is told to install. (Surfaced on #5720, a pure packaging PR that added no rule: it folded the standalone `linq2db.Analyzers` package into `linq2db`, and the wiki page's `Package` row still linked `nuget.org/packages/linq2db.Analyzers` — a URL that 404s once the PR merges. Read literally, trigger 1 alone would have skipped the check.)
+
+Review the documentation page the rule points at — the `DiagnosticDescriptor.helpLinkUri` target (typically a `linq2db/linq2db` wiki page such as `wiki/L2DB1001`). The wiki lives in a **separate repo** (not part of the PR diff), so a rule change can ship with a stale or missing doc page unless explicitly checked. Fetch the page (`WebFetch` the raw wiki markdown, e.g. `https://raw.githubusercontent.com/wiki/linq2db/linq2db/<Page>.md`) and confirm:
 
 - the page **exists and resolves** — a shipped `helpLinkUri` that 404s is a finding;
 - its documented behavior **matches the code at PR HEAD** — coverage families, non-fixable shapes, severity, and any `.editorconfig` option keys;
-- the rule id / category / severity are **consistent** across the descriptor, `AnalyzerReleases.*.md`, the packed `readme.md`, and the wiki page.
+- the rule id / category / severity are **consistent** across the descriptor, `AnalyzerReleases.*.md`, the packed `readme.md`, and the wiki page;
+- the **delivery package** it names still exists and is still the one that ships the rule.
 
-Surface any mismatch as a finding (a wrong/missing doc page for a user-facing rule is user-facing). Skip this step for non-analyzer PRs.
+Surface any mismatch as a finding (a wrong/missing doc page for a user-facing rule is user-facing). A wiki fix is a commit in the wiki repo, not on the PR branch — see [`windows-dev-gotchas.md`](../../docs/windows-dev-gotchas.md) → *Cloning the `linq2db.wiki` repo* for the sparse-checkout + [`wiki-commit.ps1`](../../scripts/wiki-commit.ps1) route. Skip this step for non-analyzer PRs.
 
 ### 4. Pre-review confirmation
 
