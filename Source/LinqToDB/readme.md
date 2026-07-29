@@ -699,7 +699,7 @@ The package ships Roslyn analyzers and code fixes that flag legacy API usage and
 |----|----------|-------------|
 | [L2DB1001](https://github.com/linq2db/linq2db/wiki/L2DB1001) | Info | Legacy `Sql.Ext` analytic / window-function API is superseded by `Sql.Window`. A code fix migrates convertible chains. |
 
-Adjust a rule's severity in `.editorconfig`:
+Adjust a rule's severity in `.editorconfig` (`none` disables the rule):
 
 ```ini
 dotnet_diagnostic.L2DB1001.severity = warning
