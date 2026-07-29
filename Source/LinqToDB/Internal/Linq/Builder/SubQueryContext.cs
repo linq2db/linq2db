@@ -79,11 +79,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
-			// A self-referencing path is answered with the path itself: descending here would hand back a
-			// reference to the inner context, and a caller resolving a bare ContextRefExpression (e.g.
-			// ExpressionBuilder.ExpandToRoot) repeats that until the reference names the innermost table
-			// context — silently discarding whatever the peeled wrappers carried, a preceding Where above all.
-			if ((flags.IsRoot() || flags.IsSubquery()) && SequenceHelper.IsSameContext(path, this))
+			if (flags.IsRoot() && SequenceHelper.IsSameContext(path, this))
 				return path;
 
 			var corrected = SequenceHelper.CorrectExpression(path, this, SubQuery);

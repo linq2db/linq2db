@@ -871,10 +871,8 @@ namespace Tests.Linq
 			using var table = db.CreateLocalTable(AggregationData.Data);
 
 			// Two `let`s put the grouping behind nested transparent identifiers, so an aggregate written against
-			// `g` itself arrives at the aggregation builder as `Ref(anon).<ti1>.<ti0>.g.Count()` — `g`'s context is
-			// reachable only through the projection, never as a literal sub-expression. The builder's
-			// `functionExpression.Replace(current, root)` is then a no-op, and re-entering with the unchanged
-			// expression recurses until StackGuard reports "Too many stack hops".
+			// `g` itself reaches the aggregation builder as `Ref(anon).<ti1>.<ti0>.g.Count()` — `g`'s context is
+			// reachable only through the projection, never as a literal sub-expression. Coverage for that shape.
 			//
 			// COUNT(DISTINCT x) ignores NULLs while LINQ-to-Objects counts null as a distinct value, so the nulls
 			// are filtered out up front — this test is about the recursion guard, not that divergence.
@@ -1848,9 +1846,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		// Access / Firebird 2.5 / MySQL 5.7 used to throw here: the per-group First() lowered to a ROW_NUMBER
-		// partition join those providers can't execute. It now lowers to a correlated subquery, which they can.
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void InnerQuery([DataSources(ProviderName.SqlCe, TestProvName.AllSapHana, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -2101,8 +2097,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		// Access now executes this shape via the correlated-subquery lowering; Firebird 2.5 / MySQL 5.7 still can't.
-		[ThrowsForProvider(typeof(LinqToDBException), ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void FirstGroupBy([DataSources] string context)
 		{
 			using var db = GetDataContext(context, o => o.UseGuardGrouping(false));
@@ -2400,9 +2395,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		// Access now executes this shape via the correlated-subquery lowering; Firebird 2.5 / MySQL 5.7 still can't.
 		// Sybase is not listed: DataSources excludes it below, so it never runs this test.
-		[ThrowsForProvider(typeof(LinqToDBException), ProviderName.Firebird25, TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void Issue672Test([DataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false)))
@@ -4040,8 +4034,7 @@ namespace Tests.Linq
 			}
 		}
 
-		// See InnerQuery: the correlated-subquery lowering works on Access / MySQL 5.7 / Firebird 2.5.
-		[ThrowsRequiredOuterJoins(TestProvName.AllSybase)]
+		[ThrowsRequiredOuterJoins(TestProvName.AllAccess, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3, TestProvName.AllSybase)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5317")]
 		public void Issue5317Test([DataSources] string context)
 		{
