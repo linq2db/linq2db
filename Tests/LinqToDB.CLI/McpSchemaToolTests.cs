@@ -30,6 +30,7 @@ namespace Tests.LinqToDB.CLI
 				var schema = ReadToolResult<McpTestSchemaResult>(response);
 				var orders = FindSchemaTable(schema, "Orders");
 
+				using (Assert.EnterMultipleScope())
 				{
 					schema.Provider.              ShouldBe("SQLite");
 					schema.Dialect.               ShouldBe("SQLite");
@@ -66,6 +67,7 @@ namespace Tests.LinqToDB.CLI
 					["filterTables"] = new JsonArray("rx:^(a+)+$"),
 				});
 
+				using (Assert.EnterMultipleScope())
 				{
 					var result = ReadResponseResult<McpTestCallToolResult>(response);
 
@@ -98,6 +100,7 @@ namespace Tests.LinqToDB.CLI
 				});
 				var schema = ReadToolResult<McpTestSchemaNamesResult>(response);
 
+				using (Assert.EnterMultipleScope())
 				{
 					schema.Provider.              ShouldBe("SQLite");
 					schema.Options.DetailLevel.   ShouldBe("names");
@@ -138,6 +141,7 @@ namespace Tests.LinqToDB.CLI
 				var response = await server.CallTool("linq2db_schema", new JsonObject());
 				var result   = ReadResponseResult<McpTestCallToolResult>(response);
 
+				using (Assert.EnterMultipleScope())
 				{
 					result.IsError.        ShouldBe(true);
 					result.Content[0].Text.ShouldContain("maximum response size of 512 bytes");

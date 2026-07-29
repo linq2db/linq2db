@@ -25,6 +25,7 @@ namespace Tests.LinqToDB.CLI
 			var info     = ReadToolResult<McpTestInfoResult>(response);
 			var infoText = ReadToolText(response);
 
+			using (Assert.EnterMultipleScope())
 			{
 				info.Server.Name.                                             ShouldBe("linq2db.cli");
 				info.Server.Command.                                          ShouldBe("mcp");
@@ -106,6 +107,7 @@ namespace Tests.LinqToDB.CLI
 			var info     = ReadToolResult<McpTestInfoResult>(response);
 			var infoText = ReadToolText(response);
 
+			using (Assert.EnterMultipleScope())
 			{
 				info.DefaultProfile.      ShouldBe("sqlserver");
 				info.DefaultProfileUsable.ShouldBe(true);
@@ -160,6 +162,7 @@ namespace Tests.LinqToDB.CLI
 			var response = await server.CallTool("linq2db_info", new JsonObject());
 			var info     = ReadToolResult<McpTestInfoResult>(response);
 
+			using (Assert.EnterMultipleScope())
 			{
 				info.DefaultProfile.                                       ShouldBe("default");
 				info.DefaultProfileUsable.                                 ShouldBe(false);
@@ -194,6 +197,7 @@ namespace Tests.LinqToDB.CLI
 			var response = await server.CallTool("linq2db_info", new JsonObject());
 			var info     = ReadToolResult<McpTestInfoResult>(response);
 
+			using (Assert.EnterMultipleScope())
 			{
 				info.Profiles.Exists(profile => profile.Name == "default").   ShouldBe(false);
 				info.Profiles.Exists(profile => profile.Name == "sqlite").    ShouldBe(true);
@@ -221,6 +225,7 @@ namespace Tests.LinqToDB.CLI
 			await server.Initialize();
 			var response = await server.CallTool("linq2db_info", new JsonObject());
 
+			using (Assert.EnterMultipleScope())
 			{
 				var result = ReadResponseResult<McpTestCallToolResult>(response);
 
@@ -254,6 +259,7 @@ namespace Tests.LinqToDB.CLI
 			var info     = ReadToolResult<McpTestInfoResult>(response);
 			var infoText = ReadToolText(response);
 
+			using (Assert.EnterMultipleScope())
 			{
 				info.Profiles[0].DefaultOutput.              ShouldBe("csv");
 				info.Profiles[0].DefaultOutputSupportedByMcp.ShouldBe(false);

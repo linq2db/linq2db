@@ -24,6 +24,7 @@ namespace Tests.LinqToDB.CLI
 
 			var response = await server.SendRequest("tools/list", new JsonObject());
 
+			using (Assert.EnterMultipleScope())
 			{
 				var tools      = ReadResponseResult<McpTestToolsResult>(response);
 				var queryTool  = FindTool(tools, "linq2db_query");
@@ -96,6 +97,7 @@ namespace Tests.LinqToDB.CLI
 
 			var response = await server.Initialize();
 
+			using (Assert.EnterMultipleScope())
 			{
 				var result = ReadResponseResult<McpTestInitializeResult>(response);
 
@@ -116,6 +118,7 @@ namespace Tests.LinqToDB.CLI
 			await server.Initialize();
 			var response = await server.SendRequest("tools/list", new JsonObject());
 
+			using (Assert.EnterMultipleScope())
 			{
 				var tools       = ReadResponseResult<McpTestToolsResult>(response);
 				var executeTool = FindTool(tools, "linq2db_execute");
@@ -190,6 +193,7 @@ namespace Tests.LinqToDB.CLI
 			var infoResponse       = await server.CallTool("linq2db_info", new JsonObject());
 			var info               = ReadToolResult<McpTestInfoResult>(infoResponse);
 
+			using (Assert.EnterMultipleScope())
 			{
 				var initialize = ReadResponseResult<McpTestInitializeResult>(initializeResponse);
 

@@ -73,6 +73,7 @@ namespace Tests.LinqToDB.CLI
 			var returnedRows = tableResult?.Rows.Count ?? objectResult!.Count;
 			var warning      = content[1].Text;
 
+			using (Assert.EnterMultipleScope())
 			{
 				returnedRows. ShouldBeGreaterThan(0);
 				returnedRows. ShouldBeLessThan(100);
@@ -111,6 +112,7 @@ namespace Tests.LinqToDB.CLI
 			var content = ReadResponseResult<McpTestCallToolResult>(response).Content;
 			var result  = ReadToolResult<McpTestJsonTableResult>(response);
 
+			using (Assert.EnterMultipleScope())
 			{
 				result.RowCount.        ShouldBe(0);
 				result.Rows.            ShouldBeEmpty();
@@ -261,6 +263,7 @@ namespace Tests.LinqToDB.CLI
 				["sql"] = "select 1 from dual",
 			});
 
+			using (Assert.EnterMultipleScope())
 			{
 				var error = ReadToolErrorText(response);
 
@@ -284,6 +287,7 @@ namespace Tests.LinqToDB.CLI
 			});
 			var result = ReadToolResult<McpTestJsonTableResult>(response);
 
+			using (Assert.EnterMultipleScope())
 			{
 				result.RowCount.  ShouldBe(2);
 				result.Truncated. ShouldBe(false);
@@ -324,6 +328,7 @@ namespace Tests.LinqToDB.CLI
 				["sql"]    = "select 1 as Value",
 			});
 
+			using (Assert.EnterMultipleScope())
 			{
 				var error = ReadToolErrorText(response);
 
@@ -377,6 +382,7 @@ namespace Tests.LinqToDB.CLI
 				["sql"] = "select 1 as Value",
 			});
 
+			using (Assert.EnterMultipleScope())
 			{
 				var error = ReadToolErrorText(response);
 
@@ -430,6 +436,7 @@ namespace Tests.LinqToDB.CLI
 			});
 			var result = ReadToolResult<McpTestJsonTableResult>(response);
 
+			using (Assert.EnterMultipleScope())
 			{
 				result.RowCount.  ShouldBe(2);
 				result.Rows[1][0].ShouldBe("2");
