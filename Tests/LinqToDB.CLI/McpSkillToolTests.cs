@@ -14,7 +14,7 @@ namespace Tests.LinqToDB.CLI
 		[Test]
 		public async Task McpSkillReturnsEmbeddedSkillMarkdown()
 		{
-			await using var server = await McpServerProcess.Start("--provider", "SQLite", "--connection-string", "Data Source=secret-skill.db;Password=hidden");
+			await using var server = await McpServerProcess.Start("--provider", "SQLite", "--connection-string", "Data Source=secret-skill.db;Password=l2db-leak-canary-9f3a");
 
 			await server.Initialize();
 			var response  = await server.CallTool("linq2db_skill", new JsonObject());
@@ -25,7 +25,7 @@ namespace Tests.LinqToDB.CLI
 				skillText.Length.ShouldBeGreaterThan(1000);
 				skillText.       ShouldStartWith("# linq2db CLI Agent Skill");
 				skillText.       ShouldNotContain("secret-skill.db");
-				skillText.       ShouldNotContain("hidden");
+				skillText.       ShouldNotContain("l2db-leak-canary-9f3a");
 			}
 
 			server.ExpectNoStandardError();
