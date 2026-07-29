@@ -117,6 +117,42 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public void NestedScalarsUseTheSameFormatAsTopLevelValues()
+		{
+			var sequence = new object?[]
+			{
+				true,
+				new DateOnly(2024, 1, 2),
+				new TimeOnly(3, 4, 5, 123),
+				new DateTime(2024, 1, 2, 3, 4, 5, DateTimeKind.Unspecified),
+			};
+
+			const string expected = "[true,2024-01-02,03:04:05.1230000,2024-01-02T03:04:05.0000000]";
+
+			var table = new DataTable();
+
+			table.Columns.Add("SequenceValue", typeof(object));
+
+			var row = table.NewRow();
+			row[0] = sequence;
+			table.Rows.Add(row);
+
+			using var reader = table.CreateDataReader();
+
+			(reader.Read()).ShouldBe(true);
+
+			var unbounded = ReadFieldAsString(reader, "None", 0);
+			var bounded   = QueryValueFormatter.TryFormat(sequence, "Array", QueryValueFormatter.QueryActualFieldType.None, 128, out var boundedValue);
+
+			using (Assert.EnterMultipleScope())
+			{
+				unbounded.   ShouldBe(expected);
+				bounded.     ShouldBe(true);
+				boundedValue.ShouldBe(expected);
+			}
+		}
+
+		[Test]
 		public void BoundedFormatterFormatsNestedValuesWithinUtf8Limit()
 		{
 			var formatted = QueryValueFormatter.TryFormat(

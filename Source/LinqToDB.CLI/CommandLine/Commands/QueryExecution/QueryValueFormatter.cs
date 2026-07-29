@@ -463,7 +463,12 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 					byte[] bytes       => ConvertBytesToString(bytes),
 					ITuple tuple       => ConvertTupleToString(tuple),
 					IEnumerable items  => ConvertSequenceToString(items),
-					_                  => Convert.ToString(value, CultureInfo.InvariantCulture),
+					// Scalars must go through the main formatter. Convert.ToString uses each type's general
+					// format, which renders a time[] element as "03:04" instead of "03:04:05.1234560", a
+					// timestamp[] element as "01/02/2024 03:04:05", a date[] element as "01/02/2024", and a
+					// bool as "True" - so the same value formatted nested disagreed with the top-level column.
+					// Sequences and tuples are matched above, so this cannot recurse.
+					_                  => Format(value, string.Empty),
 				};
 			}
 
@@ -547,7 +552,9 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				byte[] bytes       => TryAppendBytes(output, bytes),
 				ITuple tuple       => TryAppendTuple(output, tuple),
 				IEnumerable items  => TryAppendSequence(output, items),
-				_                  => output.TryAppend(Convert.ToString(value, CultureInfo.InvariantCulture)),
+				// Mirrors ConvertNestedValueToString: the bounded and unbounded writers must agree with each
+				// other and with the top-level column formatting.
+				_                  => output.TryAppend(Format(value, string.Empty)),
 			};
 		}
 
