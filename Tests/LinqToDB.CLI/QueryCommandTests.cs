@@ -2042,6 +2042,19 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task ExecuteHelpShowsJsonTableOutputDefault()
+		{
+			var result = await RunCli("help", "execute");
+
+			using (Assert.EnterMultipleScope())
+			{
+				result.ExitCode.ShouldBe(0);
+				result.Output.  ShouldContain("--output");
+				result.Output.  ShouldContain("default: json-table");
+			}
+		}
+
+		[Test]
 		public async Task QueryHelpShowsSqlInputOptions()
 		{
 			var result = await RunCli("help", "query");

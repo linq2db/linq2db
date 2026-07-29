@@ -49,7 +49,7 @@ namespace LinqToDB.CommandLine.Commands.Execute
 			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.ImpersonateMode);
 			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.CommandTimeout);
 			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.LockTimeout);
-			AddOption(QueryExecutionCliOptions.OutputOptions,        QueryExecutionCliOptions.Output);
+			AddOption(QueryExecutionCliOptions.OutputOptions,        QueryExecutionCliOptions.ExecuteOutput);
 			AddOption(QueryExecutionCliOptions.OutputOptions,        QueryExecutionCliOptions.OutputFile);
 			AddOption(QueryExecutionCliOptions.OutputOptions,        QueryExecutionCliOptions.Overwrite);
 			AddOption(QueryExecutionCliOptions.OutputOptions,        QueryExecutionCliOptions.MaxRows);
@@ -126,7 +126,7 @@ namespace LinqToDB.CommandLine.Commands.Execute
 			options.Remove(QueryExecutionCliOptions.ImpersonateMode,     out var impersonateMode);
 			options.Remove(QueryExecutionCliOptions.CommandTimeout,      out var commandTimeout);
 			options.Remove(QueryExecutionCliOptions.LockTimeout,         out var lockTimeout);
-			options.Remove(QueryExecutionCliOptions.Output,              out var output);
+			options.Remove(QueryExecutionCliOptions.ExecuteOutput,       out var output);
 			options.Remove(QueryExecutionCliOptions.OutputFile,          out var outputFile);
 			options.Remove(QueryExecutionCliOptions.Overwrite,           out var overwrite);
 			options.Remove(QueryExecutionCliOptions.MaxRows,             out var maxRows);
