@@ -32,6 +32,8 @@ Do not regenerate anything until the branch decision is made.
 
 Equivalent to `DEL /S Source\CompatibilitySuppressions.xml` from `UpdateBaselines.cmd`. Find every `CompatibilitySuppressions.xml` under `Source/` (use Glob: `Source/**/CompatibilitySuppressions.xml`) and delete each one.
 
+**This deletion is only permitted with the skill actually loaded.** Deleting these files from outside the skill — an ad-hoc `Remove-Item`, or running `UpdateBaselines.cmd` (whose first line is the same `DEL /S`) — reads as a hand-edit of a generated baseline and is denied, citing `agent-rules.md` → *Never hand-edit API baseline files* back at you. Invoke `Skill(api-baselines)` first, then delete; don't try to route around the denial with a different deletion tool. (Both shapes were denied on #5723 before the skill was invoked.)
+
 ### 3. Regenerate baselines
 
 Run from the repo root (use `-p:` not `/p:` — on Git Bash / MSYS, `/p:...` is path-mangled into a Windows path and MSBuild rejects it with `MSB1009: Project file does not exist`):
