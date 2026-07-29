@@ -40,7 +40,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 			new("MariaDB",        ["MariaDB"],                         "MariaDB",                      true,  null),
 			new("Oracle Managed", ["Oracle.Managed", "Oracle"],        "Oracle SQL",                   true,  null),
 			new("Firebird",       ["Firebird"],                        "Firebird SQL",                 true,  null),
-			new("Sybase ASE",     ["Sybase", "Sybase.Managed", "ASE"], "Sybase ASE T-SQL",             true,  null),
+			new("Sybase ASE",     ["Sybase", "Sybase.Managed", "Sybase.Native"], "Sybase ASE T-SQL",    true,  null),
 			new("Microsoft Access", ["Access", "Access.Odbc", "Access.Jet.OleDb", "Access.Jet.Odbc", "Access.Ace.OleDb", "Access.Ace.Odbc"], "Microsoft Access SQL", true, "Requires the matching ODBC driver or OLE DB provider to be installed on the host."),
 			new("ClickHouse",     ["ClickHouse.Driver", "ClickHouse.Octonica", "ClickHouse.MySql"], "ClickHouse SQL", true, null),
 			new("DuckDB",         ["DuckDB"],                          "DuckDB SQL",                   true,  null),
