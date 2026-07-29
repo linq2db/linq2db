@@ -2401,7 +2401,8 @@ namespace Tests.Linq
 
 		[Test]
 		// Access now executes this shape via the correlated-subquery lowering; Firebird 2.5 / MySQL 5.7 still can't.
-		[ThrowsForProvider(typeof(LinqToDBException), ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		// Sybase is not listed: DataSources excludes it below, so it never runs this test.
+		[ThrowsForProvider(typeof(LinqToDBException), ProviderName.Firebird25, TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void Issue672Test([DataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false)))

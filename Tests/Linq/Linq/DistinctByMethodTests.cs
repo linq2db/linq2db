@@ -116,6 +116,8 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(NullableKeyData.Seed());
 
+			// Breadth, not a regression pin: with no preceding operator there is no wrapper for the ROW_NUMBER
+			// re-entry to peel, so this shape passed before the fix too.
 			var query = table
 				.OrderBy(c => c.CustomerId)
 				.DistinctBy(c => c.Country);
@@ -145,7 +147,9 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(NullableKeyData.Seed());
 
-			// Same wrappers as DistinctByNullableKeyAfterWhere, stacked in the other order.
+			// Same wrappers as DistinctByNullableKeyAfterWhere, stacked in the other order. Breadth, not a
+			// regression pin: the Where lands on the wrapper the OrderBy already created, so nothing is lost
+			// when that wrapper is peeled and this shape passed before the fix too.
 			var query = table
 				.OrderBy(c => c.CustomerId)
 				.Where  (c => c.CustomerId.StartsWith("DST"))
@@ -182,6 +186,10 @@ namespace Tests.Linq
 		// Each test below stacks a different wrapper shape between the source and DistinctBy. The ROW_NUMBER
 		// rewrite re-enters the builder with a reference to the already-built sequence, so every wrapper in
 		// that stack has to survive the re-entry — dropping one silently loses whatever it carried.
+		//
+		// Most of these reproduce the "Table not found" failure on pre-fix source. DistinctByAfterProjection and
+		// DistinctByAfterJoin do not — those shapes leave no wrapper for the re-entry to peel — so treat them as
+		// breadth rather than regression pins when bisecting this area.
 
 		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		[Test]
