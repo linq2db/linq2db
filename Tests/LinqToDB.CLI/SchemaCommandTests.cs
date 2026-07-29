@@ -14,7 +14,7 @@ using Shouldly;
 namespace Tests.LinqToDB.CLI
 {
 	[TestFixture]
-	public sealed class SchemaCommandTests
+	public sealed class SchemaCommandTests : CliProcessTestBase
 	{
 		[Test]
 		public async Task SchemaHelpShowsSchemaCommand()
@@ -228,87 +228,7 @@ namespace Tests.LinqToDB.CLI
 
 		static string CreateSqliteDatabase()
 		{
-			var fileName = Path.Combine(TestContext.CurrentContext.WorkDirectory, $"schema-{Guid.NewGuid():N}.db");
-
-			var dataProvider = DataConnection.GetDataProvider("SQLite", $"Data Source={fileName};Pooling=False")!;
-			using var db     = new DataConnection(new DataOptions().UseConnectionString(dataProvider, $"Data Source={fileName};Pooling=False"));
-
-			db.Execute("""
-				create table Customers
-				(
-					Id   integer not null primary key,
-					Name text    not null
-				)
-				""");
-
-			db.Execute("""
-				create table Orders
-				(
-					Id         integer not null primary key,
-					CustomerId integer not null references Customers(Id),
-					Amount     decimal(10, 2) null
-				)
-				""");
-
-			db.Execute("""
-				create table ChildOrders
-				(
-					Id      integer not null primary key,
-					OrderId integer not null references Orders(Id)
-				)
-				""");
-
-			var longName = new string('a', 512) + "b";
-			db.Execute($"create table \"{longName}\" (Id integer not null primary key)");
-
-			return fileName;
+			return CreateCliSqliteDatabase("schema", seedCustomers: false);
 		}
-
-		static async Task<CliProcessResult> RunCliProcess(params string[] arguments)
-		{
-			var cliAssembly = Path.Combine(AppContext.BaseDirectory, "dotnet-linq2db.dll");
-
-			if (!File.Exists(cliAssembly))
-				throw new FileNotFoundException("Cannot find CLI assembly for schema command tests.", cliAssembly);
-
-			var startInfo = new ProcessStartInfo("dotnet")
-			{
-				RedirectStandardOutput = true,
-				RedirectStandardError  = true,
-				UseShellExecute        = false,
-			};
-
-			startInfo.ArgumentList.Add(cliAssembly);
-
-			foreach (var argument in arguments)
-				startInfo.ArgumentList.Add(argument);
-
-			using var process = Process.Start(startInfo) ?? throw new InvalidOperationException("Cannot start CLI process.");
-
-			var outputTask = process.StandardOutput.ReadToEndAsync();
-			var errorTask  = process.StandardError.ReadToEndAsync();
-
-			try
-			{
-				await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(20)).ConfigureAwait(false);
-			}
-			catch (TimeoutException)
-			{
-				process.Kill(entireProcessTree: true);
-				throw;
-			}
-
-			return new CliProcessResult(NormalizeExitCode(process.ExitCode), await outputTask.ConfigureAwait(false), await errorTask.ConfigureAwait(false));
-		}
-
-		static int NormalizeExitCode(int exitCode)
-		{
-			// On non-Windows OSes, a negative process exit code wraps to its unsigned byte
-			// representation (e.g. -1 -> 255); sign-extend the low byte so negative CLI
-			// status codes compare consistently across platforms.
-			return unchecked((sbyte)exitCode);
-		}
-
-		sealed record CliProcessResult(int ExitCode, string Output, string Error);
 	}
 }
