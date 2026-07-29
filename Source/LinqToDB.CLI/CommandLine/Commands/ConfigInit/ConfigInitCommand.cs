@@ -257,9 +257,9 @@ namespace LinqToDB.CommandLine.Commands.ConfigInit
 				return false;
 			}
 
-			if (string.Equals(values.Profile, "mcp", StringComparison.Ordinal))
+			if (string.Equals(values.Profile, QueryExecutionDefaults.McpSectionName, StringComparison.Ordinal))
 			{
-				environment.Error.WriteLine("Configuration profile name 'mcp' is reserved for MCP server configuration.");
+				environment.Error.WriteLine($"Configuration profile name '{QueryExecutionDefaults.McpSectionName}' is reserved for MCP server configuration.");
 				return false;
 			}
 
