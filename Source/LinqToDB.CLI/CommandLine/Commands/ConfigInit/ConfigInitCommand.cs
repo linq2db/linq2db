@@ -315,6 +315,11 @@ namespace LinqToDB.CommandLine.Commands.ConfigInit
 				environment.Error.WriteLine($"Configuration file '{configPath}' is not valid JSON: {ex.Message}");
 				return false;
 			}
+			catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+			{
+				environment.Error.WriteLine($"Cannot read configuration file '{configPath}': {ex.Message}");
+				return false;
+			}
 		}
 
 		static JsonObject CreateDefaultProfile()

@@ -140,6 +140,11 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				error = $"Configuration file '{fileName}' is not valid JSON: {ex.Message}";
 				return false;
 			}
+			catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+			{
+				error = $"Cannot read configuration file '{fileName}': {ex.Message}";
+				return false;
+			}
 
 			using (json)
 			{
@@ -231,6 +236,11 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			catch (JsonException ex)
 			{
 				error = $"Configuration file '{fileName}' is not valid JSON: {ex.Message}";
+				return false;
+			}
+			catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+			{
+				error = $"Cannot read configuration file '{fileName}': {ex.Message}";
 				return false;
 			}
 

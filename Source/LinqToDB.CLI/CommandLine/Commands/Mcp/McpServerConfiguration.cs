@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Text.Json;
 
 using LinqToDB.CommandLine;
@@ -48,6 +49,11 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 			catch (JsonException ex)
 			{
 				error = $"Configuration file '{fileName}' is not valid JSON: {ex.Message}";
+				return false;
+			}
+			catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+			{
+				error = $"Cannot read configuration file '{fileName}': {ex.Message}";
 				return false;
 			}
 
