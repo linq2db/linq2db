@@ -398,6 +398,9 @@ namespace Tests.LinqToDB.CLI
 		[TestCase("SELECT 1 /*m! + 1 */", 10, "/*m!")]
 		[TestCase("SELECT 1 AS $x$; DELETE FROM guard_probe; SELECT 1 AS $x$", 13, "$x$")]
 		[TestCase("SELECT $$drop table Person;$$ AS Value", 8, "$$")]
+		[TestCase("SELECT ['x]'] ; DELETE FROM guard_probe WHERE 1=1", 9, "'")]
+		[TestCase("SELECT ARRAY['x]'] ; DELETE FROM guard_probe WHERE 1=1", 14, "'")]
+		[TestCase("SELECT ['x]'] ; DELETE FROM guard_probe WHERE 1=1 -- '", 9, "'")]
 		public void GenericGuardRejectsAmbiguousSql(string sql, int column, string syntax)
 		{
 			var provider = DataConnection.GetDataProvider("SQLite", "Data Source=:memory:")!;

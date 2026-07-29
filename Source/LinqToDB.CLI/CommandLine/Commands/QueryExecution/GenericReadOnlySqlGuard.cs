@@ -251,13 +251,29 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 								return false;
 							}
 
+							if (current == '[' && sql[i] == '\'')
+							{
+								// A string literal inside brackets means the brackets are an array/list subscript
+								// (PostgreSQL, DuckDB, ClickHouse) whose closing ']' can only be found by parsing the
+								// expression: scanning to the first ']' closes inside the literal, and the following
+								// quote then swallows the rest of the input - including the ';' and any write tokens.
+								error = CreateAmbiguousSyntaxError(
+									sql,
+									i,
+									"'",
+									"A string literal inside brackets is an array subscript for some providers and part of a quoted identifier for others.",
+									"Rewrite the bracketed expression without a string literal, or use double-quoted identifiers.");
+
+								return false;
+							}
+
 							if (sql[i] == close)
 							{
 								i++;
 
 								// Doubling escapes a quoted identifier only for "" and ``. Providers routed to this guard
-								// use [ ] for array/list subscripts, so reading "]]" as an escaped ] would consume the rest
-								// of the statement - including the ';' and any write tokens after it.
+								// may use [ ] for array/list subscripts, so reading "]]" as an escaped ] would consume the
+								// rest of the statement - including the ';' and any write tokens after it.
 								if (current != '[' && i < sql.Length && sql[i] == close)
 								{
 									i++;
