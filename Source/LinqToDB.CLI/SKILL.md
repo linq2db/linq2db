@@ -508,6 +508,9 @@ Guardrails:
 - Multi-statement workflows that rely on session state, such as temporary tables, are not supported yet.
 - `query` is intended for read-oriented SQL. DML, DDL, `EXEC`, procedure calls, transaction control, permission changes, and administrative commands are rejected before execution.
 - If the SQL guard cannot confidently classify SQL as read-only, `query` rejects it.
+- `query` accepts only a statement whose first keyword is `SELECT` or `WITH`. Other genuinely read-only forms are refused by design, including `VALUES`, `TABLE`, `EXPLAIN`, `SHOW`, `DESCRIBE`, and read-only `PRAGMA` statements. Rewrite the request as a `SELECT` where the provider allows it rather than retrying the rejected form.
+- Locking reads such as `SELECT ... FOR UPDATE` are refused on every provider, because they acquire locks rather than performing a pure read.
+- An unquoted identifier that matches a rejected keyword, for example a table named `merge` or a column named `call`, is refused as well. Quote such identifiers using the provider's identifier quoting so they are not read as keywords.
 - `execute` requires the selected configuration profile to set `enableExecute` to `true`.
 - `linq2db_execute` is not registered by default. Start MCP with `--enable-execute-tool` to publish it, and still use a profile with `enableExecute: true`.
 - When write-capable SQL is executed, the command writes a diagnostic notice to stderr without including SQL text or credentials.
