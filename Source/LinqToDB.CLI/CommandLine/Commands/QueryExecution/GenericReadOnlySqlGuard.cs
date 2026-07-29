@@ -9,6 +9,12 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 {
 	internal static class GenericReadOnlySqlGuard
 	{
+		// Emitted in place of a delimited identifier so that adjacency rules see the intervening construct.
+		// Without it "FROM `t` INTO OUTFILE" tokenizes as "FROM INTO" and the INTO check below mistakes the
+		// write clause for a table named "into". Cannot collide with a real token: those are either ";" or
+		// uppercased identifiers, which never contain angle brackets.
+		private const string DelimitedIdentifierToken = "<delimited>";
+
 		private static readonly HashSet<string> _forbiddenTokens = new(StringComparer.OrdinalIgnoreCase)
 		{
 			"ALTER",
@@ -57,6 +63,8 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 					// A bare "into" table reference right after FROM/JOIN is a read-only identifier
 					// (e.g. "FROM into"); everywhere else INTO marks a write (SELECT ... INTO table,
 					// MySQL's SELECT ... INTO OUTFILE, INSERT INTO which is already forbidden above).
+					// This relies on delimited identifiers emitting DelimitedIdentifierToken: without it
+					// "FROM `t` INTO OUTFILE" would read as "FROM INTO" and be treated as a table named "into".
 					var precedingToken = index > 0 ? tokens[index - 1] : null;
 
 					if (precedingToken is "FROM" or "JOIN")
@@ -146,6 +154,21 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 							syntax,
 							"Executable comments are interpreted as SQL by MySQL or MariaDB.",
 							"Remove the executable comment and express the read-only operation as regular SQL.");
+
+						return false;
+					}
+					case ['#', ..]:
+					{
+						// '#' starts a line comment for MySQL and MariaDB only, so a dialect-blind scan cannot
+						// tell whether the rest of the line executes. Skipping it lets an apostrophe inside a
+						// MySQL comment open a string literal that runs past the newline and hides everything
+						// after it, for example "SELECT 1 #'" + newline + "; DELETE FROM t -- '".
+						error = CreateAmbiguousSyntaxError(
+							sql,
+							i,
+							"#",
+							"'#' starts a line comment for MySQL and MariaDB but is an ordinary character for other providers.",
+							"Use '-- ' for comments, and quote identifiers containing '#' using the provider's identifier quoting.");
 
 						return false;
 					}
@@ -285,6 +308,8 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 
 							i++;
 						}
+
+						tokens.Add(DelimitedIdentifierToken);
 
 						break;
 					}

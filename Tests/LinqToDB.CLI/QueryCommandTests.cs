@@ -401,6 +401,9 @@ namespace Tests.LinqToDB.CLI
 		[TestCase("SELECT ['x]'] ; DELETE FROM guard_probe WHERE 1=1", 9, "'")]
 		[TestCase("SELECT ARRAY['x]'] ; DELETE FROM guard_probe WHERE 1=1", 14, "'")]
 		[TestCase("SELECT ['x]'] ; DELETE FROM guard_probe WHERE 1=1 -- '", 9, "'")]
+		[TestCase("SELECT 1 #'\r\n; DELETE FROM guard_probe WHERE 1=1 -- '", 10, "#")]
+		[TestCase("SELECT * FROM guard_probe #'\r\nFOR UPDATE -- '", 27, "#")]
+		[TestCase("SELECT * FROM guard_probe #'\r\nINTO OUTFILE '/tmp/x' -- '", 27, "#")]
 		public void GenericGuardRejectsAmbiguousSql(string sql, int column, string syntax)
 		{
 			var provider = DataConnection.GetDataProvider("SQLite", "Data Source=:memory:")!;
@@ -435,6 +438,22 @@ namespace Tests.LinqToDB.CLI
 				queryResult.Error!.     ShouldContain("Only single SQL statement is allowed.");
 				executeResult.IsAllowed.ShouldBe(false);
 				executeResult.Error.    ShouldBe(queryResult.Error);
+			}
+		}
+
+		[TestCase("SELECT * FROM `t` INTO OUTFILE '/tmp/x'")]
+		[TestCase("SELECT * FROM \"t\" INTO TEMP guard_probe")]
+		[TestCase("SELECT * FROM [t] INTO OUTFILE '/tmp/x'")]
+		public void GenericGuardRejectsIntoAfterDelimitedIdentifier(string sql)
+		{
+			var provider = DataConnection.GetDataProvider("SQLite", "Data Source=:memory:")!;
+
+			var queryResult = ReadOnlySqlGuard.Validate(provider, sql);
+
+			using (Assert.EnterMultipleScope())
+			{
+				queryResult.IsAllowed.ShouldBe(false);
+				queryResult.Error!.   ShouldContain("token 'INTO' is not allowed");
 			}
 		}
 
