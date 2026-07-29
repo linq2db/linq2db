@@ -115,7 +115,7 @@ namespace Tests.LinqToDB.CLI
 				((string?)orders["foreignKeys"]?[0]?["referencedTable"]?["name"]).ShouldBe("Customers");
 				((string?)orders["foreignKeys"]?[0]?["columns"]?[0]).             ShouldBe("CustomerId");
 				customers["foreignKeys"]!.AsArray().                              ShouldBeEmpty();
-				result.Output.                                                    ShouldNotContain("secret");
+				result.Output.                                                    ShouldNotContain("Data Source=");
 			}
 			finally
 			{
