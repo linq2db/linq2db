@@ -693,7 +693,7 @@ public class DbNorthwind : LinqToDB.Data.DataConnection
 
 ## Analyzers
 
-The package ships Roslyn analyzers and code fixes that flag legacy API usage and offer automatic migrations to the current API. They are bundled with the library, so no extra package reference is needed; they run only in IDEs / SDKs with Roslyn 4.8 or later and are silently skipped on older toolchains.
+The package ships Roslyn analyzers and code fixes that flag legacy API usage and offer automatic migrations to the current API. They are bundled with the library, so no extra package reference is needed; they run only in IDEs / SDKs with Roslyn 4.8 or later and are silently skipped on older toolchains. NuGet does not flow analyzers through transitive dependencies, so a project that references only a satellite package (`linq2db.EntityFrameworkCore`, the Tools or Remote packages) needs a direct `linq2db` reference to get them.
 
 | Id | Severity | Description |
 |----|----------|-------------|
