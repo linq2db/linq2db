@@ -875,7 +875,7 @@ namespace Tests.Linq
 			// reachable only through the projection, never as a literal sub-expression. Coverage for that shape.
 			//
 			// COUNT(DISTINCT x) ignores NULLs while LINQ-to-Objects counts null as a distinct value, so the nulls
-			// are filtered out up front — this test is about the recursion guard, not that divergence.
+			// are filtered out up front — this test is about the projection shape, not that divergence.
 			var query =
 				from t in table
 				where t.DataValue != null
