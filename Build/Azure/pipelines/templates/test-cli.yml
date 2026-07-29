@@ -16,7 +16,7 @@ jobs:
         executableExtension: ''
   pool:
     vmImage: $(imageName)
-  displayName: 'Tests: cli ($(imageName))'
+  displayName: 'Tests: CLI'
   dependsOn: build_job
   timeoutInMinutes: 30
   condition: ${{ parameters.enabled }}
