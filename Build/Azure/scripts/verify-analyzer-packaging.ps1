@@ -3,10 +3,11 @@ verify-analyzer-packaging.ps1 — assert the bundled Roslyn analyzers are actual
 
 The user-facing analyzer + code-fix assemblies are packed into the linq2db package by the
 `_BundleAnalyzersIntoPackage` target in Source/LinqToDB/LinqToDB.csproj. That target hooks
-`_GetPackageFiles` (an SDK-private target) and resolves each assembly through the `GetTargetPath`
-target, which computes a path without asserting the file exists. So every failure mode there is
-silent: pack succeeds, the package ships without analyzers, and Tests/Tests.Analyzers stays green
-because it references the analyzer projects directly rather than the produced package.
+`_GetPackageFiles`, an SDK-private target: if a future SDK renames or drops it the hook stops firing,
+no pack items are contributed, and pack still succeeds with an analyzer-free package. A wrong
+`PackagePath` is silent the same way. (A resolved path whose file is *missing* is not silent — pack
+fails with NU5019.) Tests/Tests.Analyzers catches neither, because it references the analyzer
+projects directly rather than the produced package.
 
 This is the gate for that: fail the build before publish when the expected analyzer assemblies are
 missing from the expected Roslyn-version-specific path.

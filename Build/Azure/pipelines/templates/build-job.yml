@@ -247,10 +247,10 @@ jobs:
     displayName: Pack Solution for Nuget
     condition: and(succeeded(), ${{ parameters.with_nugets }})
 
-  # The analyzers are packed into the linq2db package by an MSBuild target that resolves paths without asserting
-  # they exist, and no test consumes the produced package — so a silent drop has no other detector. Checked here,
-  # right after pack, because this job is the one that runs on every PR; the nuget job re-checks the downloaded
-  # artifact immediately before publish.
+  # The analyzers are packed into the linq2db package by a target hooking the SDK-private _GetPackageFiles: if that
+  # hook stops firing, or its PackagePath is wrong, pack still succeeds with an analyzer-free package, and no test
+  # consumes the produced package — so a silent drop has no other detector. Checked here, right after pack, because
+  # this job is the one that runs on every PR; the nuget job re-checks the downloaded artifact before publish.
   - task: PowerShell@2
     inputs:
       pwsh: true
