@@ -32,7 +32,7 @@ namespace LinqToDB.CommandLine
 			AddCommand(McpCommand.Instance);
 			AddCommand(QueryCommand.Instance);
 			AddCommand(SchemaCommand.Instance);
-			AddCommand(SkillCommand.Skill);
+			AddCommand(SkillCommand.Instance);
 			AddCommand(ScaffoldCommand.Instance);
 			AddCommand(TemplateCommand.Instance);
 		}

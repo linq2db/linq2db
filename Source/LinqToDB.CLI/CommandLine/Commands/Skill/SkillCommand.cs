@@ -14,10 +14,10 @@ namespace LinqToDB.CommandLine.Commands.Skill
 	/// </summary>
 	internal sealed class SkillCommand : CliCommand
 	{
-		public static CliCommand Skill { get; } = new SkillCommand("skill");
+		public static CliCommand Instance { get; } = new SkillCommand();
 
-		private SkillCommand(string name)
-			: base(name, false, false, string.Empty, "print agent instructions in Markdown format", Array.Empty<CommandExample>())
+		private SkillCommand()
+			: base("skill", false, false, string.Empty, "print agent instructions in Markdown format", Array.Empty<CommandExample>())
 		{
 		}
 
