@@ -419,38 +419,36 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			static string ConvertSequenceToString(IEnumerable sequence)
 			{
 				var output       = new StringBuilder();
-				var first        = true;
+				var itemIndex    = 0;
 				var map          = false;
-				var openBracket  = '[';
 				var closeBracket = ']';
 
 				foreach (var item in sequence)
 				{
-					if (first)
+					if (itemIndex == 0)
 					{
-						map = IsKeyValuePair(item);
+						map          = IsKeyValuePair(item);
+						closeBracket = map ? '}' : ']';
 
-						if (map)
-						{
-							openBracket  = '{';
-							closeBracket = '}';
-						}
-
-						output.Append(openBracket);
-						first = false;
+						output.Append(map ? '{' : '[');
 					}
-
-					if (output.Length > 1)
+					else
+					{
+						// Separator is emitted per element, not per appended character: a null or empty element
+						// formats to nothing, and keying off the buffer length would drop its separator too.
 						output.Append(',');
+					}
 
 					if (map)
 						AppendKeyValuePair(output, item);
 					else
 						output.Append(ConvertNestedValueToString(item));
+
+					itemIndex++;
 				}
 
-				if (first)
-					output.Append(openBracket);
+				if (itemIndex == 0)
+					output.Append('[');
 
 				output.Append(closeBracket);
 				return output.ToString();

@@ -89,6 +89,33 @@ namespace Tests.LinqToDB.CLI
 			}
 		}
 
+		[TestCase(new object?[] { null, 5    }, "[,5]")]
+		[TestCase(new object?[] { "",   "a" }, "[,a]")]
+		public void SequenceKeepsSeparatorForElementsFormattingToNothing(object?[] sequence, string expected)
+		{
+			var table = new DataTable();
+
+			table.Columns.Add("SequenceValue", typeof(object));
+
+			var row = table.NewRow();
+			row[0] = sequence;
+			table.Rows.Add(row);
+
+			using var reader = table.CreateDataReader();
+
+			(reader.Read()).ShouldBe(true);
+
+			var unbounded = ReadFieldAsString(reader, "None", 0);
+			var bounded   = QueryValueFormatter.TryFormat(sequence, "Array", QueryValueFormatter.QueryActualFieldType.None, 64, out var boundedValue);
+
+			using (Assert.EnterMultipleScope())
+			{
+				unbounded.   ShouldBe(expected);
+				bounded.     ShouldBe(true);
+				boundedValue.ShouldBe(expected);
+			}
+		}
+
 		[Test]
 		public void BoundedFormatterFormatsNestedValuesWithinUtf8Limit()
 		{
