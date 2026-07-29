@@ -27,6 +27,22 @@ Invoke-RestMethod -Uri "https://dev.azure.com/linq2db/linq2db/_apis/build/defini
 
 Posting the comment requires write access to the repo; for contributors without write access, a maintainer posts on their behalf.
 
+## Which pipeline runs when
+
+`Build/Azure/pipelines/*.yml` are the pipeline definitions; `templates/*.yml` are the job bodies they include. The trigger topology matters whenever you reason about "does CI actually cover this?":
+
+| Pipeline | Trigger | Jobs it includes | Packs nugets? |
+|---|---|---|---|
+| `build.yml` | `pr:` every branch (`'*'`) — auto-runs on **every PR**; `trigger: none`, so no branch pushes | `build-job.yml` only | Yes (`with_nugets: true`) |
+| `default.yml` | pushes to `master` / `release`, plus PRs targeting `release` | `build-job.yml` + `nuget-job.yml` + `test-matrix.yml` | Yes |
+| `testing.yml` | `/azp run test-<name>` comment only | `build-job.yml` + the provider matrix | No |
+
+Consequences worth remembering:
+
+- **A `master`-targeting PR runs `build.yml` and nothing else** until an `/azp run …` comment adds a run. `gh pr checks` on such a PR reports `default` as *skipping* — that's the configured behaviour, not a misconfiguration to investigate.
+- **`nuget-job.yml` never runs on a `master`-targeting PR.** Any gate placed there (nupkg size limits, package-content verification) is pre-publish only. To cover PRs too, the step has to also live in `build-job.yml` — which is exactly where a pre-merge regression gate belongs. The review-side rule for this is `code-reviewer.md` rubric rule 16 (*CI-check reachability*).
+- **Pack output is `.build/package/release`.** `build-job.yml` packs there and publishes it as the `$(artifact_nugets)` pipeline artifact; `nuget-job.yml` downloads that artifact into `.build/nugets` and works from the copy. A script that scans for produced packages needs whichever of the two paths matches the job it runs in.
+
 ## When to propose a CI run
 
 - **After `gh pr create` (new PR)** — propose once, default to `/azp run test-all`. Skip if the PR is draft and the user has said they want more local iteration before inviting CI attention.
