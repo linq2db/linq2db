@@ -530,8 +530,16 @@ namespace LinqToDB.Internal.Linq.Builder
 					{
 						if (checkRef.BuildContext is not AggregateRootContext)
 						{
+							// `current` is not necessarily a literal sub-expression of `functionExpression` — it can be
+							// reachable only through the projection (e.g. `Ref(anon).<transparent>.g.Count()`, where `g`
+							// resolves to the grouping context). Replace is then a no-op, and re-entering with the
+							// unchanged expression cannot terminate: it re-derives the same `current`/`root` forever
+							// until StackGuard trips with "Too many stack hops". Only re-enter on actual progress;
+							// otherwise fall through to walking `current` down to `root`, which converges.
 							var newMethod = functionExpression.Replace(current, root);
-							return BuildSqlExpression(_buildVisitor.BuildContext, newMethod);
+
+							if (!ExpressionEqualityComparer.Instance.Equals(newMethod, functionExpression))
+								return BuildSqlExpression(_buildVisitor.BuildContext, newMethod);
 						}
 					}
 

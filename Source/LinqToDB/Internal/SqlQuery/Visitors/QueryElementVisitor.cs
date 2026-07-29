@@ -3392,7 +3392,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 					if (ShouldReplace(element) || !ReferenceEquals(element.Expression, expression) || !ReferenceEquals(element.FromType, fromType))
 					{
-						return NotifyReplaced(new SqlCastExpression(expression, element.ToType, fromType), element);
+						return NotifyReplaced(new SqlCastExpression(expression, element.ToType, fromType, element.IsMandatory), element);
 					}
 
 					break;

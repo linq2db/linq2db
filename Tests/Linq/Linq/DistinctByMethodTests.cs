@@ -47,6 +47,294 @@ namespace Tests.Linq
 			}
 		}
 
+		public class NullableKeyData
+		{
+			[PrimaryKey]
+			public int     Id         { get; set; }
+			public string  CustomerId { get; set; } = null!;
+			[Nullable]
+			public string? Country    { get; set; }
+			public string  Region     { get; set; } = null!;
+
+			public static List<NullableKeyData> Seed()
+			{
+				return
+				[
+					new NullableKeyData { Id = 1, CustomerId = "DST01", Country = "UK",     Region = "North" },
+					new NullableKeyData { Id = 2, CustomerId = "DST02", Country = "USA",    Region = "South" },
+					new NullableKeyData { Id = 3, CustomerId = "DST03", Country = "UK",     Region = "North" },
+					new NullableKeyData { Id = 4, CustomerId = "DST04", Country = null,     Region = "South" },
+					new NullableKeyData { Id = 5, CustomerId = "DST05", Country = "France", Region = "North" },
+					new NullableKeyData { Id = 6, CustomerId = "OTH01", Country = "USA",    Region = "South" },
+					new NullableKeyData { Id = 7, CustomerId = "DST06", Country = null,     Region = "North" }
+				];
+			}
+		}
+
+		public class RelatedData
+		{
+			[PrimaryKey]
+			public int    Id      { get; set; }
+			public int    OwnerId { get; set; }
+			public string Tag     { get; set; } = null!;
+
+			public static List<RelatedData> Seed()
+			{
+				return
+				[
+					new RelatedData { Id = 1, OwnerId = 1, Tag = "a" },
+					new RelatedData { Id = 2, OwnerId = 1, Tag = "b" },
+					new RelatedData { Id = 3, OwnerId = 2, Tag = "c" },
+					new RelatedData { Id = 4, OwnerId = 3, Tag = "d" },
+					new RelatedData { Id = 5, OwnerId = 5, Tag = "e" },
+					new RelatedData { Id = 6, OwnerId = 7, Tag = "f" }
+				];
+			}
+		}
+
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[Test]
+		public void DistinctByNullableKeyAfterWhere([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(NullableKeyData.Seed());
+
+			// A nullable key column combined with a preceding Where: the ROW_NUMBER rewrite must not leave a
+			// dangling column reference behind ("Table not found for '...'" at SQL-build time).
+			var query = table
+				.Where  (c => c.CustomerId.StartsWith("DST"))
+				.OrderBy(c => c.CustomerId)
+				.DistinctBy(c => c.Country);
+
+			AssertQuery(query);
+		}
+
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[Test]
+		public void DistinctByNullableKeyNoFilter([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(NullableKeyData.Seed());
+
+			var query = table
+				.OrderBy(c => c.CustomerId)
+				.DistinctBy(c => c.Country);
+
+			AssertQuery(query);
+		}
+
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[Test]
+		public void DistinctByNonNullableKeyAfterWhere([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(NullableKeyData.Seed());
+
+			var query = table
+				.Where  (c => c.CustomerId.StartsWith("DST"))
+				.OrderBy(c => c.Id)
+				.DistinctBy(c => c.CustomerId);
+
+			AssertQuery(query);
+		}
+
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[Test]
+		public void DistinctByFilterAfterOrderBy([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(NullableKeyData.Seed());
+
+			// Same wrappers as DistinctByNullableKeyAfterWhere, stacked in the other order.
+			var query = table
+				.OrderBy(c => c.CustomerId)
+				.Where  (c => c.CustomerId.StartsWith("DST"))
+				.DistinctBy(c => c.Country);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void DistinctByAfterWhereKeepsFilterAndSingleTable([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(NullableKeyData.Seed());
+
+			var query = table
+				.Where  (c => c.CustomerId.StartsWith("DST"))
+				.OrderBy(c => c.Id)
+				.DistinctBy(c => c.Country);
+
+			AssertQuery(query);
+
+			// The ROW_NUMBER rewrite re-enters the builder with a reference to the already-built source. Resolving
+			// that reference used to peel every SubQueryContext wrapper off it, dropping the wrapper that carried the
+			// preceding Where and leaving the OVER clause pointing at a query no longer in the tree. Pin both halves:
+			// the filter still reaches the SQL, and the source is built once (a second build would leak an extra
+			// table reference into the ROW_NUMBER subquery).
+			var sql = query.ToSqlQuery().Sql;
+
+			Assert.That(sql, Does.Contain("ROW_NUMBER"));
+			Assert.That(sql, Does.Contain("LIKE"));
+			Assert.That(sql.Split("NullableKeyData").Length - 1, Is.EqualTo(1));
+		}
+
+		// Each test below stacks a different wrapper shape between the source and DistinctBy. The ROW_NUMBER
+		// rewrite re-enters the builder with a reference to the already-built sequence, so every wrapper in
+		// that stack has to survive the re-entry — dropping one silently loses whatever it carried.
+
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[Test]
+		public void DistinctByAfterTwoFilters([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(NullableKeyData.Seed());
+
+			var query = table
+				.Where  (c => c.CustomerId.StartsWith("DST"))
+				.Where  (c => c.Id > 1)
+				.OrderBy(c => c.Id)
+				.DistinctBy(c => c.Country);
+
+			AssertQuery(query);
+		}
+
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[Test]
+		public void DistinctByAfterProjection([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(NullableKeyData.Seed());
+
+			// SelectContext + an IsSelectWrapper SubQueryContext between the filter and DistinctBy.
+			var query = table
+				.Where  (c => c.CustomerId.StartsWith("DST"))
+				.Select (c => new { c.Id, c.Country, c.Region })
+				.OrderBy(x => x.Id)
+				.DistinctBy(x => x.Country);
+
+			AssertQuery(query);
+		}
+
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[Test]
+		public void DistinctByAfterAsSubQuery([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(NullableKeyData.Seed());
+
+			var query = table
+				.Where  (c => c.CustomerId.StartsWith("DST"))
+				.AsSubQuery()
+				.OrderBy(c => c.Id)
+				.DistinctBy(c => c.Country);
+
+			AssertQuery(query);
+		}
+
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[Test]
+		public void DistinctByAfterDistinct([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(NullableKeyData.Seed());
+
+			var query = table
+				.Where  (c => c.CustomerId.StartsWith("DST"))
+				.Select (c => new { c.Country, c.Region })
+				.Distinct()
+				.OrderBy(x => x.Region)
+				.DistinctBy(x => x.Country);
+
+			AssertQuery(query);
+		}
+
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[Test]
+		public void DistinctByCompositeKeyAfterWhere([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(NullableKeyData.Seed());
+
+			var query = table
+				.Where  (c => c.CustomerId.StartsWith("DST"))
+				.OrderBy(c => c.Id)
+				.DistinctBy(c => new { c.Country, c.Region });
+
+			AssertQuery(query);
+		}
+
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[Test]
+		public void DistinctByAfterJoin([DataSources] string context)
+		{
+			using var db      = GetDataContext(context);
+			using var table   = db.CreateLocalTable(NullableKeyData.Seed());
+			using var related = db.CreateLocalTable(RelatedData.Seed());
+
+			var query =
+				(from c in table
+				 join r in related on c.Id equals r.OwnerId
+				 where c.CustomerId.StartsWith("DST")
+				 orderby c.Id, r.Id
+				 select new { c.Id, c.Country, r.Tag })
+				.DistinctBy(x => x.Country);
+
+			AssertQuery(query);
+		}
+
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[Test]
+		public void DistinctByFilteredOnBothSides([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(NullableKeyData.Seed());
+
+			// A filter before the rewrite (inside the ROW_NUMBER subquery) and one after it (outside).
+			var query = table
+				.Where  (c => c.CustomerId.StartsWith("DST"))
+				.OrderBy(c => c.Id)
+				.DistinctBy(c => c.Country)
+				.Where  (c => c.Id > 1);
+
+			AssertQuery(query);
+		}
+
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[Test]
+		public void NestedDistinctByWithFilters([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(NullableKeyData.Seed());
+
+			var query = table
+				.Where  (c => c.CustomerId.StartsWith("DST"))
+				.OrderBy(c => c.Id)
+				.DistinctBy(c => c.Country)
+				.Where  (c => c.Id < 100)
+				.OrderBy(c => c.CustomerId)
+				.DistinctBy(c => c.Region);
+
+			AssertQuery(query);
+		}
+
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[Test]
+		public void DistinctByAfterWhereThenTake([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(NullableKeyData.Seed());
+
+			var query = table
+				.Where  (c => c.CustomerId.StartsWith("DST"))
+				.OrderBy(c => c.Id)
+				.DistinctBy(c => c.Country)
+				.OrderBy(c => c.Id)
+				.Take(2);
+
+			AssertQuery(query);
+		}
+
 		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		[Test]
 		public void DistinctBy([DataSources] string context)
