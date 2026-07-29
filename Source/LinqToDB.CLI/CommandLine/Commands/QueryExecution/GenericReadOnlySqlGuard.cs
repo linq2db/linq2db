@@ -255,7 +255,10 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 							{
 								i++;
 
-								if (i < sql.Length && sql[i] == close)
+								// Doubling escapes a quoted identifier only for "" and ``. Providers routed to this guard
+								// use [ ] for array/list subscripts, so reading "]]" as an escaped ] would consume the rest
+								// of the statement - including the ';' and any write tokens after it.
+								if (current != '[' && i < sql.Length && sql[i] == close)
 								{
 									i++;
 									continue;

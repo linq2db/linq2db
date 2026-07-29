@@ -405,6 +405,24 @@ namespace Tests.LinqToDB.CLI
 			}
 		}
 
+		[TestCase("SELECT ARRAY[ARRAY[1,2]]; DELETE FROM guard_probe WHERE 1=1")]
+		[TestCase("SELECT [[1,2]]; DELETE FROM guard_probe WHERE 1=1")]
+		public void GenericGuardRejectsStatementsHiddenByBracketSubscript(string sql)
+		{
+			var provider = DataConnection.GetDataProvider("SQLite", "Data Source=:memory:")!;
+
+			var queryResult   = ReadOnlySqlGuard.Validate               (provider, sql);
+			var executeResult = ReadOnlySqlGuard.ValidateSingleStatement(provider, sql);
+
+			using (Assert.EnterMultipleScope())
+			{
+				queryResult.IsAllowed.  ShouldBe(false);
+				queryResult.Error!.     ShouldContain("Only single SQL statement is allowed.");
+				executeResult.IsAllowed.ShouldBe(false);
+				executeResult.Error.    ShouldBe(queryResult.Error);
+			}
+		}
+
 		[Test]
 		public void GenericGuardReportsMultilineAmbiguityLocation()
 		{
