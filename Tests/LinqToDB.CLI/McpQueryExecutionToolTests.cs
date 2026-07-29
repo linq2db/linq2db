@@ -39,6 +39,43 @@ namespace Tests.LinqToDB.CLI
 			server.ExpectNoStandardError();
 		}
 
+		[Test]
+		public async Task McpIgnoresOutputFileConfiguredInProfile()
+		{
+			var outputName = $"mcp-should-ignore-{Guid.NewGuid():N}.json";
+			var config     = Path.Combine(TestContext.CurrentContext.WorkDirectory, $"mcp-query-{Guid.NewGuid():N}.json");
+			var outputFile = Path.Combine(TestContext.CurrentContext.WorkDirectory, outputName);
+
+			await File.WriteAllTextAsync(config, $$"""
+				{
+					"default": {
+						"provider": "SQLite",
+						"connectionString": "Data Source=:memory:",
+						"outputFile": "{{outputName}}"
+					}
+				}
+				""").ConfigureAwait(false);
+
+			await using var server = await McpServerProcess.Start("--config", config);
+
+			await server.Initialize();
+
+			var response = await server.CallTool("linq2db_query", new JsonObject
+			{
+				["sql"] = "select 1 as Value",
+			});
+			var result = ReadToolResult<McpTestJsonTableResult>(response);
+
+			using (Assert.EnterMultipleScope())
+			{
+				result.Rows.            ShouldBe([["1"]]);
+				result.RowCount.        ShouldBe(1);
+				File.Exists(outputFile).ShouldBe(false);
+			}
+
+			server.ExpectNoStandardError();
+		}
+
 		[TestCase("json")]
 		[TestCase("json-table")]
 		public async Task McpTruncatesResponseAtWholeRowBoundary(string output)
