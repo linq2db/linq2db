@@ -60,6 +60,11 @@ namespace Tests.Linq
 			{
 				return
 				[
+					// Excluded by the DST filter, and ordered first by Id, by CustomerId and by Region while sharing
+					// UK with DST01/DST03 — so if a preceding Where is ever dropped without throwing, this row wins
+					// the UK partition and the result set changes. Without it a dropped filter is invisible to most
+					// of the tests below, because OTH01 never wins its partition.
+					new NullableKeyData { Id = 0, CustomerId = "AAA01", Country = "UK",     Region = "East"  },
 					new NullableKeyData { Id = 1, CustomerId = "DST01", Country = "UK",     Region = "North" },
 					new NullableKeyData { Id = 2, CustomerId = "DST02", Country = "USA",    Region = "South" },
 					new NullableKeyData { Id = 3, CustomerId = "DST03", Country = "UK",     Region = "North" },
