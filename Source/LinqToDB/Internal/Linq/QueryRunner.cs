@@ -751,8 +751,6 @@ namespace LinqToDB.Internal.Linq
 			// index (the main query is the last step); combinable + main are the combined groups, self-executing are singletons.
 			readonly int[]             _combinableIndexes;
 			readonly int[]             _nonCombinableIndexes;
-			// Cache for GetExecutionSteps below.
-			ExecutionStep[]?           _executionSteps;
 
 			public EagerResultEnumerable(
 				IDataContext      dataContext,
@@ -782,15 +780,6 @@ namespace LinqToDB.Internal.Linq
 				_nonCombinableIndexes = nonCombinable.ToArray();
 			}
 
-			// The statement-free step facts the interpreter needs, projected once and reused across enumerations of this
-			// enumerable. Goes through the shared ProjectExecutionSteps rather than hand-rolling the facts from the
-			// combinable / non-combinable partition, so eager and DML derive ExecutionStep from SqlCommandStep in exactly ONE
-			// place - a field added to ExecutionStep cannot silently default here. Caching is safe because every enumeration
-			// rebuilds an equivalent scenario: the partition fixes each step's kind and its index, and no eager step carries
-			// a gate or an OUT parameter.
-			ExecutionStep[] GetExecutionSteps(SqlCommandScenario scenario)
-				=> _executionSteps ??= ScenarioCommandRenderer.ProjectExecutionSteps(scenario);
-
 			static bool IsCombinable(Harvester harvester)
 				=> harvester is IStepMaterializer { CanCombine: true } materializer && materializer.GetCombinableStatement() != null;
 
@@ -805,56 +794,65 @@ namespace LinqToDB.Internal.Linq
 				return false;
 			}
 
+			// Merges every combinable child's and the main query's parameter values into one SqlParameterValues (keyed by
+			// SqlParameter node). Genuinely per-run - the values are this execution's - so it is the only part of the old
+			// PrepareScenario a warm execution still has to do.
+			SqlParameterValues CollectParameterValues()
+			{
+				var values = new SqlParameterValues();
+
+				foreach (var i in _combinableIndexes)
+					((IStepMaterializer)_harvesters[i]).AddCombinableParameterValues(values, _expressions, _dataContext, _parameters);
+
+				SetParameters(_query, _expressions, _dataContext, _parameters, values);
+
+				return values;
+			}
+
 			// Models ALL harvesters + main as one scenario, step index == harvester build index (main last): a combinable child
 			// is a Reader step carrying its rendered statement; a non-combinable (detached / keyed / CteUnion) harvester is a
-			// SelfExecuting step with no statement (it runs its own query through a harvester). Merges every combinable child's
-			// and the main's parameter values into one SqlParameterValues (keyed by SqlParameter node). The unified index lets
-			// the interpreter write and the projection read the same context slot with no translation.
-			(SqlCommandScenario Scenario, SqlParameterValues Values) PrepareScenario()
+			// SelfExecuting step with no statement (it runs its own query through a harvester). The unified index lets the
+			// interpreter write and the projection read the same context slot with no translation.
+			//
+			// Parameter-independent, and needed only on the COLD path: the volatility check and the render read each step's
+			// statement from here, and ProjectExecutionSteps derives the cached ExecutionStep[] from it. A warm execution
+			// reuses those cached results and never builds a scenario (GetStepStatement covers the one thing it still needs).
+			SqlCommandScenario BuildScenario()
 			{
 				var mainStepIndex = _harvesters.Length;
 				var steps         = new SqlCommandStep[mainStepIndex + 1];
-				var values        = new SqlParameterValues();
 
 				foreach (var i in _combinableIndexes)
-				{
-					var materializer = (IStepMaterializer)_harvesters[i];
-
-					steps[i] = new SqlCommandStep { Statement = materializer.GetCombinableStatement()!, Kind = SqlStepKind.Reader };
-					materializer.AddCombinableParameterValues(values, _expressions, _dataContext, _parameters);
-				}
+					steps[i] = new SqlCommandStep { Statement = GetStepStatement(i), Kind = SqlStepKind.Reader };
 
 				foreach (var i in _nonCombinableIndexes)
 					steps[i] = new SqlCommandStep { Statement = null, Kind = SqlStepKind.SelfExecuting };
 
-				steps[mainStepIndex] = new SqlCommandStep { Statement = _query.QueryInfo.Statement, Kind = SqlStepKind.Reader };
-				SetParameters(_query, _expressions, _dataContext, _parameters, values);
+				steps[mainStepIndex] = new SqlCommandStep { Statement = GetStepStatement(mainStepIndex), Kind = SqlStepKind.Reader };
 
-				return (new SqlCommandScenario { Steps = steps, OutcomeSteps = [] }, values);
+				return new SqlCommandScenario { Steps = steps, OutcomeSteps = [] };
 			}
 
-			// Renders the combinable children + main into size-bounded combined commands: the steps are chunked by statement
-			// count (below), then each chunk's statements render into one or more commands bounded by SQL length. Each returned
-			// command carries the scenario step indices it covers, so the executor knows which child result sets to buffer and
-			// where the main result set lands (always the last step of the last command). Self-executing steps are not rendered.
-			List<CombinedCommand> BuildCommands(SqlCommandScenario scenario, SqlParameterValues values)
+			// The statement rendered for a combined step, fetched straight from its owner: the main query for the last step,
+			// otherwise the combinable child's own query. Lets a warm execution re-render a volatile batch slot without
+			// materializing a SqlCommandScenario just to read one statement out of it. Not valid for a self-executing step,
+			// which has no rendered SQL and is never part of a combined command.
+			SqlStatement GetStepStatement(int stepIndex)
+				=> stepIndex == _harvesters.Length
+					? _query.QueryInfo.Statement
+					: ((IStepMaterializer)_harvesters[stepIndex]).GetCombinableStatement()!;
+
+			// COLD-path render: the combinable children + main are chunked by statement count, then each chunk's statements
+			// render into one or more commands bounded by SQL length. Each command carries the scenario step indices it covers,
+			// so the executor knows which child result sets to buffer and where the main result set lands (always the last step
+			// of the last command). Self-executing steps are not rendered.
+			//
+			// Returns the commands bound for THIS run plus the parameter-independent templates to cache, or a null template
+			// array when the render is not cacheable: the concat backend shares one stateful parameter normalizer across a
+			// command, so a command containing a volatile step cannot be half-cached.
+			(List<CombinedCommand> Commands, PreparedCommand[]? Templates) RenderCommands(
+				DataConnection dataConnection, SqlCommandScenario scenario, SqlParameterValues values, bool useBatch)
 			{
-				var dataConnection = (DataConnection)_dataContext;
-				var useBatch       = dataConnection.CanUseDbBatch;   // false on frameworks without the DbBatch API
-
-				// Fast path: reuse the per-command cache built for THIS backend and bind this run's DbParameters, re-rendering
-				// only the parameter-dependent (null) batch slots. Skipped when the cache was built for the other backend
-				// (batch and concat shapes are not interchangeable) or is absent (concat with a volatile step).
-				if (_query.QueryInfo.EagerCommandCache is { } cache && cache.WasBatch == useBatch)
-				{
-					var bound = new List<CombinedCommand>(cache.Commands.Length);
-
-					foreach (var command in cache.Commands)
-						bound.Add(BindCommand(dataConnection, command, useBatch, scenario, values));
-
-					return bound;
-				}
-
 				// Per-step parameter-dependence, computed once for this render pass: a volatile step's SQL varies with
 				// parameter values, so its template can't be cached (a stable main is cached while a Contains/LIKE child re-renders).
 				var volatility  = ComputeStepVolatility(dataConnection, scenario);
@@ -907,7 +905,7 @@ namespace LinqToDB.Internal.Linq
 						var rendered = ScenarioCommandRenderer.RenderStatementTemplates(dataConnection, groupStatements, values);
 
 						// Run this execution off the freshly-rendered statements (bind all, no re-render).
-						commands.Add(BindCommand(dataConnection, new PreparedCommand(stepIndexes, null, rendered), useBatch, scenario, values));
+						commands.Add(BindCommand(dataConnection, new PreparedCommand(stepIndexes, null, rendered), useBatch, values));
 
 						// Cache with the parameter-dependent slots nulled so a later run re-renders only those.
 						var slots = new CommandWithParameters?[rendered.Length];
@@ -938,26 +936,23 @@ namespace LinqToDB.Internal.Linq
 						var command = new PreparedCommand(indexes, new CommandWithParameters(sql, sqlParameters), null);
 
 						prepared.Add(command);
-						commands.Add(BindCommand(dataConnection, command, useBatch, scenario, values));
+						commands.Add(BindCommand(dataConnection, command, useBatch, values));
 
 						offset += statementCount;
 					}
 				}
 
-				// Cache the per-command templates for this backend so re-enumeration binds DbParameters instead of
-				// re-rendering. Batch caches per-statement (null slots for parameter-dependent steps, re-rendered per run);
-				// concat is all-or-nothing (skipped when any step is volatile — its slices share a parameter scope and can't
-				// be half-cached), matching today's behavior on that fallback path.
-				if (useBatch || !anyVolatile)
-					_query.QueryInfo.EagerCommandCache = new PreparedScenario(prepared.ToArray(), useBatch);
-
-				return commands;
+				// Batch caches per-statement (null slots for parameter-dependent steps, re-rendered per run); concat is
+				// all-or-nothing, so it is not cacheable at all when any step is volatile - its length-split slices share one
+				// stateful parameter normalizer. That fallback re-renders on every execution, as it did before.
+				return (commands, useBatch || !anyVolatile ? prepared.ToArray() : null);
 			}
 
 			// Binds a cached PreparedCommand to this execution's DbParameter values, producing the command the executor runs.
-			// Shared by the fast (cached) path and the first render. On the batch backend, a null slot is a parameter-dependent
-			// statement re-rendered here in its own isolated scope; concat carries a single, always-present merged command.
-			static CombinedCommand BindCommand(DataConnection dataConnection, PreparedCommand command, bool useBatch, SqlCommandScenario scenario, SqlParameterValues values)
+			// Shared by the warm (cached) path and the cold render. On the batch backend, a null slot is a parameter-dependent
+			// statement re-rendered here in its own isolated scope - its statement comes from GetStepStatement, so binding needs
+			// no SqlCommandScenario; concat carries a single, always-present merged command.
+			CombinedCommand BindCommand(DataConnection dataConnection, PreparedCommand command, bool useBatch, SqlParameterValues values)
 			{
 				var stepIndexes = command.StepIndexes;
 
@@ -974,7 +969,7 @@ namespace LinqToDB.Internal.Linq
 						{
 #if SUPPORTS_DBBATCH
 							slot = ScenarioCommandRenderer.RenderStatementTemplates(
-								dataConnection, [scenario.Steps[stepIndexes[i]].Statement!], values)[0];
+								dataConnection, [GetStepStatement(stepIndexes[i])], values)[0];
 #else
 							throw new InvalidOperationException("Eager batch cache slot is null on a non-DbBatch build.");
 #endif
@@ -1023,39 +1018,70 @@ namespace LinqToDB.Internal.Linq
 				return result;
 			}
 
-			// Builds the unified execution plan for one enumeration: PrepareScenario + BuildCommands render the combinable
-			// children + main into combined commands, then the RunGroups group list is assembled — a singleton group per
-			// self-executing harvester (index order; they may depend on each other and feed the combinable materializers + main
-			// mapper), followed by one combined group per rendered command (the main-carrying command last). commandByGroup
-			// aligns with the groups: null for a self-executing group, the rendered command for a combined group.
-			(SqlCommandScenario Scenario, SqlCommandGroup[] Groups, CombinedCommand?[] CommandByGroup) BuildPlan()
+			// The physical grouping the interpreter walks.
+			//
+			// ORDERING INVARIANT (relied on by every eager strategy): non-combinable steps run FIRST, as singleton groups in
+			// ascending index order, THEN the combined groups (combinable children + main). So a non-combinable harvester
+			// executes before every combinable sibling and must only read result slots that have already run - its own
+			// lower-indexed dependencies. Nested eager loads build first, so they get lower indices and materialize earlier; a
+			// parent harvester always reads its child slots after they are populated. A non-combinable harvester that read a
+			// *combinable* sibling's (higher-lifecycle) slot would find it unpopulated and silently produce an empty collection
+			// - no exception. Any new strategy MUST preserve this direction (covered by
+			// MixedCombinableAndNonCombinable_NestedKeyedUnderCombinable).
+			//
+			// Parameter-independent (the partition is fixed and each command's step indices come from the cached template), so
+			// it is built on the cold path and cached with the templates.
+			SqlCommandGroup[] BuildGroups(IReadOnlyList<CombinedCommand> commands)
 			{
-				var (scenario, values) = PrepareScenario();
-				var commands           = BuildCommands(scenario, values);
+				var groups = new SqlCommandGroup[_nonCombinableIndexes.Length + commands.Count];
+				var g      = 0;
 
-				var groups         = new SqlCommandGroup[_nonCombinableIndexes.Length + commands.Count];
-				var commandByGroup = new CombinedCommand?[groups.Length];
-				var g              = 0;
-
-				// ORDERING INVARIANT (relied on by every eager strategy): non-combinable steps run FIRST, as singleton
-				// groups in ascending index order, THEN the combined groups (combinable children + main). So a non-combinable
-				// harvester executes before every combinable sibling and must only read result slots that have already run -
-				// its own lower-indexed dependencies. Nested eager loads build first, so they get lower indices and
-				// materialize earlier; a parent harvester always reads its child slots after they are populated. A
-				// non-combinable harvester that read a *combinable* sibling's (higher-lifecycle) slot would find it
-				// unpopulated and silently produce an empty collection - no exception. Any new strategy MUST preserve this
-				// direction (covered by MixedCombinableAndNonCombinable_NestedKeyedUnderCombinable).
 				foreach (var i in _nonCombinableIndexes)
 					groups[g++] = new SqlCommandGroup { StepIndexes = [i] };
 
 				foreach (var command in commands)
+					groups[g++] = new SqlCommandGroup { StepIndexes = command.StepIndexes };
+
+				return groups;
+			}
+
+			// Builds the unified execution plan for one enumeration.
+			//
+			// Everything structural - the statement-free step facts, the group list and the rendered command templates - is
+			// parameter-independent and cached on QueryInfo, so a WARM execution allocates only this run's parameter values,
+			// its DbParameters and the per-group command array. A COLD execution builds the scenario once, renders, and stores
+			// all three. commandByGroup aligns with the groups: null for a self-executing singleton group, the bound command
+			// for a combined group.
+			(ExecutionStep[] Steps, SqlCommandGroup[] Groups, CombinedCommand?[] CommandByGroup) BuildPlan()
+			{
+				var dataConnection = (DataConnection)_dataContext;
+				var useBatch       = dataConnection.CanUseDbBatch;   // false on frameworks without the DbBatch API
+				var values         = CollectParameterValues();
+
+				// A cache built for the OTHER backend is unusable (batch and concat shapes are not interchangeable).
+				if (_query.QueryInfo.EagerCommandCache is { } cache && cache.WasBatch == useBatch)
 				{
-					groups[g]         = new SqlCommandGroup { StepIndexes = command.StepIndexes };
-					commandByGroup[g] = command;
-					g++;
+					var bound = new CombinedCommand?[cache.Groups.Length];
+
+					for (var i = 0; i < cache.Commands.Length; i++)
+						bound[_nonCombinableIndexes.Length + i] = BindCommand(dataConnection, cache.Commands[i], useBatch, values);
+
+					return (cache.Steps, cache.Groups, bound);
 				}
 
-				return (scenario, groups, commandByGroup);
+				var scenario              = BuildScenario();
+				var (commands, templates) = RenderCommands(dataConnection, scenario, values, useBatch);
+				var steps                 = ScenarioCommandRenderer.ProjectExecutionSteps(scenario);
+				var groups                = BuildGroups(commands);
+				var commandByGroup        = new CombinedCommand?[groups.Length];
+
+				for (var i = 0; i < commands.Count; i++)
+					commandByGroup[_nonCombinableIndexes.Length + i] = commands[i];
+
+				if (templates != null)
+					_query.QueryInfo.EagerCommandCache = new PreparedScenario(steps, groups, templates, useBatch);
+
+				return (steps, groups, commandByGroup);
 			}
 
 			public IEnumerator<T> GetEnumerator()
@@ -1064,7 +1090,7 @@ namespace LinqToDB.Internal.Linq
 
 				var context        = new SqlCommandExecutionContext(_harvesters.Length, _parameters);
 				var dataConnection = (DataConnection)_dataContext;
-				var (scenario, groups, commandByGroup) = BuildPlan();
+				var (steps, groups, commandByGroup) = BuildPlan();
 
 				// The combined command's single reader is walked across multiple harvest steps, and each step (plus the main
 				// stream below) materializes through a nested query runner. When CloseAfterUse is set - e.g. the EF Core bridge
@@ -1081,9 +1107,9 @@ namespace LinqToDB.Internal.Linq
 					// One shared group-plan walk: self-executing harvester singletons run their own query; each combined group
 					// runs as one command; the main-carrying group hands back its open reader, which the caller streams below.
 					mainReader = DataConnection.QueryRunner.RunGroups(
-						dataConnection, GetExecutionSteps(scenario), groups,
+						dataConnection, steps, groups,
 						(group, groupIndex) => commandByGroup[groupIndex]!,
-						group => scenario.Steps[group.StepIndexes[0]].Kind == SqlStepKind.SelfExecuting,
+						group => steps[group.StepIndexes[0]].Kind == SqlStepKind.SelfExecuting,
 						(stepIndex, groupIndex) => context.SetResult(stepIndex, _harvesters[stepIndex].Harvest(_dataContext, _expressions, context, reader: null)),
 						(i, dr) => context.SetResult(i, _harvesters[i].Harvest(_dataContext, _expressions, context, dr)),
 						terminalStepIndex: _harvesters.Length);
@@ -1110,7 +1136,7 @@ namespace LinqToDB.Internal.Linq
 				{
 					var context        = new SqlCommandExecutionContext(_harvesters.Length, _parameters);
 					var dataConnection = (DataConnection)_dataContext;
-					var (scenario, groups, commandByGroup) = BuildPlan();
+					var (steps, groups, commandByGroup) = BuildPlan();
 
 					// See the sync GetEnumerator: suppress CloseAfterUse while the shared combined reader is walked (each
 					// harvest / the main stream materializes through a nested runner whose dispose would otherwise Close() the
@@ -1123,9 +1149,9 @@ namespace LinqToDB.Internal.Linq
 					try
 					{
 						mainReader = await DataConnection.QueryRunner.RunGroupsAsync(
-							dataConnection, GetExecutionSteps(scenario), groups,
+							dataConnection, steps, groups,
 							(group, groupIndex) => commandByGroup[groupIndex]!,
-							group => scenario.Steps[group.StepIndexes[0]].Kind == SqlStepKind.SelfExecuting,
+							group => steps[group.StepIndexes[0]].Kind == SqlStepKind.SelfExecuting,
 							async (stepIndex, groupIndex) => context.SetResult(stepIndex, await _harvesters[stepIndex].HarvestAsync(_dataContext, _expressions, context, null, cancellationToken).ConfigureAwait(false)),
 							async (i, dr) => context.SetResult(i, await _harvesters[i].HarvestAsync(_dataContext, _expressions, context, dr, cancellationToken).ConfigureAwait(false)),
 							terminalStepIndex: _harvesters.Length,

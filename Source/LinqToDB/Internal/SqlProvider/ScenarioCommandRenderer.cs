@@ -42,14 +42,15 @@ namespace LinqToDB.Internal.SqlProvider
 	sealed record PreparedCommand(IReadOnlyList<int> StepIndexes, CommandWithParameters? Concat, CommandWithParameters?[]? Batch);
 
 	/// <summary>
-	/// The render cache for a compiled query's command scenario: the per-command rendered templates, one
-	/// <see cref="PreparedCommand"/> per physical command (each carrying the scenario step indices it covers). Used
-	/// (stored on <c>QueryInfo.EagerCommandCache</c>) by the combined eager-loading executor (the main-query path uses the statement-free <see cref="PreparedQuery"/> instead), binding DbParameters to
-	/// cached SQL instead of re-rendering. <see cref="WasBatch"/> records which backend the templates were rendered for so a
-	/// run whose <c>CanUseDbBatch</c> differs re-renders instead of binding a wrong-shaped cache (eager); DML fills both
-	/// forms and ignores it.
+	/// The render cache for a compiled query's command scenario, stored on <c>QueryInfo.EagerCommandCache</c> and used by the
+	/// combined eager-loading executor (the main-query path uses <see cref="PreparedQuery"/> instead). Holds everything that
+	/// is parameter-INDEPENDENT, so a warm execution allocates only this run's parameter values and DbParameters:
+	/// <see cref="Steps"/> are the statement-free step facts, <see cref="Groups"/> the physical grouping the interpreter
+	/// walks (self-executing singletons first, then one group per rendered command), and <see cref="Commands"/> the
+	/// per-command rendered templates. <see cref="WasBatch"/> records which backend the templates were rendered for so a run
+	/// whose <c>CanUseDbBatch</c> differs re-renders instead of binding a wrong-shaped cache.
 	/// </summary>
-	sealed record PreparedScenario(PreparedCommand[] Commands, bool WasBatch);
+	sealed record PreparedScenario(ExecutionStep[] Steps, SqlCommandGroup[] Groups, PreparedCommand[] Commands, bool WasBatch);
 
 	/// <summary>
 	/// Statement-free per-step facts the scenario interpreter needs at execution (kind, gate, OUT-parameter metadata) — the
@@ -62,9 +63,10 @@ namespace LinqToDB.Internal.SqlProvider
 	/// The Phase-R render cache: everything the scenario interpreter needs to execute a compiled query, with NO
 	/// <see cref="SqlStatement"/> retained. <see cref="Steps"/> are the statement-free step facts; <see cref="Commands"/>
 	/// are the rendered physical commands (each covering a contiguous run of steps, replacing the separate
-	/// <c>SqlCommandGroupPlan</c>); <see cref="OutcomeSteps"/> are the candidate outcome step indices. Replaces
-	/// <see cref="PreparedScenario"/> on the main-query path (<c>QueryInfo.Prepared</c>). The eager path still uses
-	/// <see cref="PreparedScenario"/> until it migrates (a later stage).
+	/// <c>SqlCommandGroupPlan</c>); <see cref="OutcomeSteps"/> are the candidate outcome step indices. Used on the
+	/// main-query path (<c>QueryInfo.Prepared</c>); the eager path keeps its own <see cref="PreparedScenario"/>, which now
+	/// caches the same structural content (steps + groups + command templates) but needs no <see cref="OutcomeSteps"/> and
+	/// records the backend its templates were rendered for.
 	/// </summary>
 	abstract record PreparedQuery(ExecutionStep[] Steps, IReadOnlyList<int> OutcomeSteps, PreparedCommand[] Commands, bool WasBatch)
 	{

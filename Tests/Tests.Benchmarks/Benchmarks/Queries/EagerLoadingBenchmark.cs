@@ -232,9 +232,9 @@ namespace LinqToDB.Benchmarks.Queries
 				Console.WriteLine();
 
 				// Retained-memory footprint: the heap held once DistinctCount structurally-distinct eager queries are
-				// executed and cached. Each caches an EagerCommandCache (PreparedScenario) that still retains its
-				// statement graph, so this is the memory signal for the (not-yet-migrated) eager path. Measured as a
-				// delta over the empty-cache baseline (the seeded in-memory data is a fixed baseline that cancels out).
+				// executed and cached. Each caches an EagerCommandCache (PreparedScenario) holding the rendered command
+				// templates plus the step facts and group list, so this is the memory signal for the eager path. Measured
+				// as a delta over the empty-cache baseline (the seeded in-memory data is a fixed baseline that cancels out).
 				Query.ClearCaches();
 				GC.Collect();
 				GC.WaitForPendingFinalizers();
