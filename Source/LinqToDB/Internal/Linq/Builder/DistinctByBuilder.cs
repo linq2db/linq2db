@@ -143,6 +143,15 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (builder.DataContext.SqlProviderFlags.IsWindowFunctionsSupported)
 			{
+				// The captured ordering is consumed twice below — as the OVER clause's partition order, and re-applied
+				// to the outer result — so the sequence's own OrderBy clause is redundant from here on. Left in place,
+				// SqlQueryOrderByOptimizer redistributes it onto the outer query: an emulated NULLS position is not a
+				// plain column there, so it gets materialized as an extra projected column and appended as a trailing
+				// sort key that merely repeats the leading one. A limited sequence keeps its ordering — there it
+				// decides which rows survive, and the optimizer leaves such a sequence alone anyway.
+				if (!sequence.SelectQuery.IsLimited)
+					sequence.SelectQuery.OrderBy.Items.Clear();
+
 				var partitionBody = SequenceHelper.PrepareBody(selector, sequence);
 
 				var partitionPart = ExpressionHelpers.CollectMembers(partitionBody).ToArray();

@@ -382,6 +382,36 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		[Test]
+		public void DistinctByEmulatedNullsOrderingHasNoRedundantOrderByKey([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(TestData.Seed());
+
+			// NULLS LAST on an ascending key is not SQL Server's natural order, so the position has to be emulated.
+			var query = table
+				.OrderBy(t => t.Priority, Sql.NullsPosition.Last)
+				.ThenBy (t => t.Id)
+				.DistinctBy(x => x.Group);
+
+			AssertQuery(query);
+
+			var sql = query.ToSqlQuery().Sql;
+
+			Assert.That(sql, Does.Contain("ROW_NUMBER"), sql);
+
+			// Guard against a vacuous pass: the assertion below is only meaningful while the position is emulated.
+			Assert.That(sql, Does.Contain("IIF("), sql);
+
+			// On a provider that emulates NULLS ordering the position is lowered into a synthetic CASE/IIF key, which
+			// the outer ORDER BY already carries inlined as its leading term. That key must not additionally be
+			// projected out of the ROW_NUMBER subquery and re-appended as a trailing outer key: a trailing key equal
+			// to a preceding one can never affect the ordering, so it is dead payload in the emitted SQL.
+			var outerOrderBy = sql.Substring(sql.LastIndexOf("ORDER BY", StringComparison.Ordinal));
+
+			Assert.That(outerOrderBy, Does.Not.Match(@"\[c\d+\]"), sql);
+		}
+
 		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		[Test]
 		public void DistinctByDefaultNullsPosition([DataSources] string context)
