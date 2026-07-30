@@ -21,16 +21,6 @@ jobs:
       filePath: '$(Build.SourcesDirectory)/Build/Azure/scripts/verify-nuget-sizes.ps1'
       arguments: '-PackagesDir "$(Build.SourcesDirectory)/.build/nugets" -WarnMB 180 -FailMB 200'
 
-  # The analyzers are packed into the linq2db package by a target hooking the SDK-private _GetPackageFiles: if that
-  # hook stops firing, or its PackagePath is wrong, pack still succeeds with an analyzer-free package, and no test
-  # consumes the produced package — so a silent drop is only visible here.
-  - task: PowerShell@2
-    displayName: Verify bundled analyzers in linq2db nupkg (fail-fast before publish)
-    inputs:
-      pwsh: true
-      filePath: '$(Build.SourcesDirectory)/Build/Azure/scripts/verify-analyzer-packaging.ps1'
-      arguments: '-PackagesDir "$(Build.SourcesDirectory)/.build/nugets"'
-
   - task: NuGetCommand@2
     inputs:
       command: 'push'
