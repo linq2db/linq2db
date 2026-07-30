@@ -245,7 +245,7 @@ namespace LinqToDB.Data
 					// structure would make a re-run reuse them).
 					var prepareOnce = !continuousRun && !statement.IsParameterDependent;
 
-					// ── Phase S — structural prepare (parameter-independent), memoized on QueryInfo.Structure ─────
+					// ── Phase S — structural prepare (parameter-independent) ──────────────────────────────────────
 					// The whole-query optimize+convert runs before aliasing (a conversion that restructures the AST,
 					// e.g. IN->EXISTS, creates nodes the alias context must see; deferring it is the alias-corruption
 					// bug). It does NOT apply parameter-value refinements (e.g. narrowing an InsertOrUpdate SET cast, or
@@ -253,40 +253,32 @@ namespace LinqToDB.Data
 					// values into a memoized structure. Parameter-dependent queries instead apply those refinements on the
 					// per-run whole-query convert (the else branch below). See ScenarioCommandRenderer.PrepareStructure.
 					//
-					// Non-parameter-dependent queries prepare the structure ONCE with a null EvaluationContext in Modify
-					// mode, memoize it on QueryInfo.Structure, and render on a SEPARATE null-context (no build-time
-					// re-convert). Parameter-dependent / continuous-run queries prepare with parameter values in Transform
-					// (non-mutating) mode on ONE context shared with the render, and are NOT memoized - they rebuild per
-					// execution (Stage 4 introduces their per-execution BuildSql-only reuse).
+					// Non-parameter-dependent queries prepare the structure ONCE with a null EvaluationContext in Modify mode
+					// and render on a SEPARATE null-context (no build-time re-convert); what is then cached is the rendered,
+					// statement-free BakedQuery, so neither the structure nor the statement graph outlives this call.
+					// Parameter-dependent / continuous-run queries prepare with parameter values in Transform (non-mutating)
+					// mode on ONE context shared with the render, and are NOT cached - they rebuild per execution.
 					QueryStructure      structure;
 					OptimizationContext renderContext;
 
 					if (prepareOnce)
 					{
-						if (query is QueryInfo { Structure: { } cachedStructure })
-						{
-							structure = cachedStructure;
-						}
-						else
-						{
-							// Phase-S structural context: null EvaluationContext (parameter-independent), Modify mode (this
-							// statement is the query's own, prepared once under Monitor.Enter). Discarded after Phase S.
-							var structureContext = new OptimizationContext(
-								new EvaluationContext(null),
-								options,
-								flags,
-								dataConnection.MappingSchema,
-								sqlOptimizer.CreateOptimizerVisitor(true),
-								sqlOptimizer.CreateConvertVisitor(true),
-								factory,
-								flags.IsParameterOrderDependent,
-								parametersNormalizerFactory    : dataConnection.DataProvider.GetQueryParameterNormalizer);
+						// Phase-S structural context: null EvaluationContext (parameter-independent), Modify mode (this
+						// statement is the query's own, prepared once under Monitor.Enter). Discarded after Phase S: the
+						// structure feeds the render below and never outlives this call — what gets cached is the
+						// statement-free BakedQuery assembled at the end.
+						var structureContext = new OptimizationContext(
+							new EvaluationContext(null),
+							options,
+							flags,
+							dataConnection.MappingSchema,
+							sqlOptimizer.CreateOptimizerVisitor(true),
+							sqlOptimizer.CreateConvertVisitor(true),
+							factory,
+							flags.IsParameterOrderDependent,
+							parametersNormalizerFactory : dataConnection.DataProvider.GetQueryParameterNormalizer);
 
-							structure = ScenarioCommandRenderer.PrepareStructure(dataConnection, options, statement, structureContext);
-
-							if (query is QueryInfo queryInfoStructure)
-								queryInfoStructure.Structure = structure;
-						}
+						structure = ScenarioCommandRenderer.PrepareStructure(dataConnection, options, statement, structureContext);
 
 						// Phase-R render context: null EvaluationContext, no build-time re-convert (structure is already
 						// fully converted). Its own parameter normalizer collects this command's parameters during BuildSql.
@@ -310,7 +302,7 @@ namespace LinqToDB.Data
 							sqlOptimizer.CreateConvertVisitor(false),
 							factory,
 							flags.IsParameterOrderDependent,
-							parametersNormalizerFactory    : dataConnection.DataProvider.GetQueryParameterNormalizer);
+							parametersNormalizerFactory : dataConnection.DataProvider.GetQueryParameterNormalizer);
 
 						structure     = ScenarioCommandRenderer.PrepareStructure(dataConnection, options, statement, singleContext);
 						renderContext = singleContext;
@@ -338,10 +330,7 @@ namespace LinqToDB.Data
 					var preparedCommands = new PreparedCommand[structure.Plan.Groups.Count];
 
 					for (var g = 0; g < structure.Plan.Groups.Count; g++)
-						preparedCommands[g] = new PreparedCommand(structure.Plan.Groups[g].StepIndexes, commands[g], batchCommands?[g])
-						{
-							ForwardedSlots = ResolveForwardedSlots(structure.Scenario, structure.Plan.Groups[g], commands[g]),
-						};
+						preparedCommands[g] = new PreparedCommand(structure.Plan.Groups[g].StepIndexes, commands[g], batchCommands?[g]);
 
 					// Project the statement-free ExecutionStep facts and assemble the BakedQuery: every command slot is
 					// materialized, so the scenario statement graph is now unreachable from the cache and collectible (the
@@ -354,17 +343,10 @@ namespace LinqToDB.Data
 
 					// Cache the statement-free BakedQuery for a non-parameter-dependent query; a parameter-dependent one is
 					// rebuilt each run (its render is parameter-value specific), so it is not cached and is collected after use.
-					if (prepareOnce)
-					{
-						if (query is QueryInfo queryInfo)
-						{
-							queryInfo.Prepared  = prepared;
-							// The BakedQuery is statement-free; drop the memoized structure so the SqlStatement/Aliases graph
-							// it holds becomes collectible - the intended memory win. Structure's only reader is shadowed by
-							// the Prepared early-return at method entry, so it is dead weight once the query is cached.
-							queryInfo.Structure = null;
-						}
-					}
+					// Because the cached artifact carries no statement, the SqlStatement / Aliases graph held by the local
+					// structure becomes collectible when this call returns - the intended memory win.
+					if (prepareOnce && query is QueryInfo queryInfo)
+						queryInfo.Prepared = prepared;
 
 					query.IsContinuousRun = true;
 
@@ -390,62 +372,6 @@ namespace LinqToDB.Data
 				dataConnection.CurrentCommand!.Parameters.Add(p);
 
 				return p;
-			}
-
-			// Resolves each step's forwarded parameter bindings to positions in the command's parameter list, once at
-			// assembly time, so ApplyForwardedParameters consults no SqlParameter AST node at execution (letting a
-			// non-parameter-dependent cache drop its statement). Empty unless a step forwards an earlier step's result.
-			static IReadOnlyList<ForwardedSlot> ResolveForwardedSlots(SqlCommandScenario scenario, SqlCommandGroup group, CommandWithParameters? concat)
-			{
-				if (concat == null)
-					return [];
-
-				List<ForwardedSlot>? slots = null;
-
-				var sqlParameters = concat.SqlParameters;
-
-				foreach (var stepIndex in group.StepIndexes)
-				{
-					var bindings = scenario.Steps[stepIndex].ParameterBindings;
-
-					for (var b = 0; b < bindings.Count; b++)
-					{
-						var binding = bindings[b];
-
-						for (var k = 0; k < sqlParameters.Count; k++)
-						{
-							if (ReferenceEquals(sqlParameters[k], binding.Target))
-							{
-								(slots ??= new()).Add(new ForwardedSlot(binding.SourceStepIndex, k));
-								break;
-							}
-						}
-					}
-				}
-
-				return slots ?? (IReadOnlyList<ForwardedSlot>)[];
-			}
-
-			// Forwarding: bind each of the command's forwarded parameters (its value comes from an earlier step's result,
-			// not the client) on the already-initialized command. Positions were resolved at assembly by
-			// ResolveForwardedSlots, so no SqlParameter AST node is consulted here.
-			static void ApplyForwardedParameters(ExecutionPreparedQuery executionQuery, int commandIndex, SqlCommandExecutionContext context)
-			{
-				var slots = executionQuery.PreparedQuery.Prepared.Commands[commandIndex].ForwardedSlots;
-
-				if (slots.Count == 0)
-					return;
-
-				var dbParameters = executionQuery.CommandsParameters[commandIndex];
-
-				if (dbParameters == null)
-					return;
-
-				foreach (var slot in slots)
-				{
-					if (slot.TargetPosition < dbParameters.Length)
-						dbParameters[slot.TargetPosition].Value = context.GetResult(slot.SourceStepIndex) ?? DBNull.Value;
-				}
 			}
 
 			static DbParameter[]?[] GetParameters(DataConnection dataConnection, RenderedQuery pq, IReadOnlyParameterValues? parameterValues)
@@ -562,7 +488,7 @@ namespace LinqToDB.Data
 				{
 					var statement = statements[0];
 
-					InitCommand(dataConnection, new CommandWithParameters(statement.Sql, []), statement.Parameters, command.QueryHints);
+					InitCommand(dataConnection, statement.Sql, statement.Parameters, command.QueryHints);
 
 					return dataConnection.ExecuteDataReader(commandBehavior);
 				}
@@ -604,7 +530,7 @@ namespace LinqToDB.Data
 				{
 					var statement = statements[0];
 
-					InitCommand(dataConnection, new CommandWithParameters(statement.Sql, []), statement.Parameters, command.QueryHints);
+					InitCommand(dataConnection, statement.Sql, statement.Parameters, command.QueryHints);
 
 					return await dataConnection.ExecuteDataReaderAsync(commandBehavior, cancellationToken).ConfigureAwait(false);
 				}
@@ -649,7 +575,6 @@ namespace LinqToDB.Data
 					SqlStepConditionKind.ResultIsNull    => value is null,
 					SqlStepConditionKind.ResultIsNotNull => value is not null,
 					SqlStepConditionKind.ResultIsZero    => IsZeroNumeric(value),
-					SqlStepConditionKind.ResultIsNonZero => value is not null && !IsZeroNumeric(value),
 					_                                    => throw new InvalidOperationException($"Unexpected {nameof(SqlStepConditionKind)}: {condition.Kind}"),
 				};
 			}
@@ -692,22 +617,6 @@ namespace LinqToDB.Data
 
 				InitCommand(dataConnection, executionQuery, commandIndex);
 
-				ApplyForwardedParameters(executionQuery, commandIndex, context);
-
-				if (step.OnError == SqlStepOnError.Ignore)
-				{
-					try
-					{
-						dataConnection.ExecuteNonQuery();
-					}
-					catch
-					{
-						// ignore
-					}
-
-					return;
-				}
-
 				switch (step.Kind)
 				{
 					case SqlStepKind.NonQuery:
@@ -720,17 +629,26 @@ namespace LinqToDB.Data
 					case SqlStepKind.Scalar:
 						context.SetResult(stepIndex, dataConnection.ExecuteScalar());
 						break;
+					// Reader / SelfExecuting are eager-loading kinds the eager executor dispatches itself (a self-executing
+					// harvester through its own runSingleton, a Reader step only as part of a combined command). Reaching
+					// them here means a scenario was built with a kind this interpreter cannot run - fail loudly rather than
+					// initialize a command and silently execute nothing.
+					default:
+						throw new InvalidOperationException($"Step kind '{step.Kind}' cannot be executed as a single DML command.");
 				}
 			}
 
-			// Shared combined-command harvest walk (sync): over one open reader, invokes the per-step harvest callback for
-			// each step in order, then advances to the next result set for every result-producing step (a pure non-query
-			// step yields no result set, so no advance). DML harvests scalar / rows-affected into the execution context;
-			// eager loading plugs its own materializer into the same walk.
-			internal static void WalkCombinedResultSets(DbDataReader dr, IReadOnlyList<int> stepIndexes, IReadOnlyList<ExecutionStep> steps, Action<int, DbDataReader> harvest)
+			// Shared combined-command harvest walk (sync): over one open reader, invokes the per-step harvest callback for the
+			// FIRST harvestCount entries of stepIndexes in order, then advances to the next result set for every
+			// result-producing step (a pure non-query step yields no result set, so no advance). A caller that streams the
+			// group's last step itself (the eager main) passes a count one short of the group instead of slicing the list.
+			// DML harvests scalar / rows-affected into the execution context; eager loading plugs its own materializer in.
+			internal static void WalkCombinedResultSets(DbDataReader dr, IReadOnlyList<int> stepIndexes, int harvestCount, IReadOnlyList<ExecutionStep> steps, Action<int, DbDataReader> harvest)
 			{
-				foreach (var i in stepIndexes)
+				for (var k = 0; k < harvestCount; k++)
 				{
+					var i = stepIndexes[k];
+
 					harvest(i, dr);
 
 					if (steps[i].Kind != SqlStepKind.NonQuery)
@@ -743,15 +661,13 @@ namespace LinqToDB.Data
 			// result set (RecordsAffected only).
 #if SUPPORTS_DBBATCH
 			// The static part of batch-eligibility (independent of the connection / hints): a group can run as a DbBatch (isolated
-			// per-statement scopes) only when no step needs cross-statement binding the batch can't do - an OUT parameter
-			// (Oracle/Firebird identity) or a forwarded ParameterBinding must stay in the single concatenated command.
+			// per-statement scopes) only when no step needs cross-statement binding the batch can't do - a step producing its
+			// value through an OUT parameter (Oracle/Firebird identity) must stay in the single concatenated command.
 			static bool IsGroupStructurallyBatchEligible(IReadOnlyList<SqlCommandStep> steps, SqlCommandGroup group)
 			{
 				foreach (var i in group.StepIndexes)
 				{
-					var step = steps[i];
-
-					if (step.OutParameterName != null || step.ParameterBindings.Count > 0)
+					if (steps[i].OutParameterName != null)
 						return false;
 				}
 
@@ -828,13 +744,13 @@ namespace LinqToDB.Data
 			// it immediately (DML, eager child-only commands); the eager main-carrying group streams its trailing main result
 			// set from it first. Disposes the reader itself only if harvesting throws. The reader-lifecycle seam shared by the
 			// DML interpreter and the eager enumerator.
-			internal static DataReaderWrapper ExecuteCombinedHarvest(DataConnection dataConnection, CombinedCommand command, IReadOnlyList<ExecutionStep> steps, IReadOnlyList<int> harvestStepIndexes, Action<int, DbDataReader> harvest)
+			internal static DataReaderWrapper ExecuteCombinedHarvest(DataConnection dataConnection, CombinedCommand command, IReadOnlyList<ExecutionStep> steps, IReadOnlyList<int> stepIndexes, int harvestCount, Action<int, DbDataReader> harvest)
 			{
 				var rd = ExecuteCombined(dataConnection, command, CommandBehavior.Default);
 
 				try
 				{
-					WalkCombinedResultSets(rd.DataReader!, harvestStepIndexes, steps, harvest);
+					WalkCombinedResultSets(rd.DataReader!, stepIndexes, harvestCount, steps, harvest);
 				}
 				catch
 				{
@@ -875,9 +791,11 @@ namespace LinqToDB.Data
 
 					var stepIndexes     = group.StepIndexes;
 					var carriesTerminal = terminalStepIndex >= 0 && stepIndexes[stepIndexes.Count - 1] == terminalStepIndex;
-					var harvestIndexes  = carriesTerminal ? stepIndexes.Take(stepIndexes.Count - 1).ToList() : stepIndexes;
+					// The terminal step (the eager main) is streamed by the caller, not harvested here, so stop one short of
+					// the group - expressed as a count so no sub-list is materialized per execution.
+					var harvestCount    = carriesTerminal ? stepIndexes.Count - 1 : stepIndexes.Count;
 
-					var rd = ExecuteCombinedHarvest(dataConnection, getCommand(group, g), steps, harvestIndexes, harvestCombined);
+					var rd = ExecuteCombinedHarvest(dataConnection, getCommand(group, g), steps, stepIndexes, harvestCount, harvestCombined);
 
 					if (carriesTerminal)
 						return rd;
@@ -896,7 +814,7 @@ namespace LinqToDB.Data
 				var prepared = executionQuery.PreparedQuery.Prepared;
 				var steps    = prepared.Steps;
 				var context  = new SqlCommandExecutionContext(steps.Length);
-				var groups   = BuildGroups(prepared.Commands);
+				var groups   = prepared.Groups;
 
 				var terminalReader = RunGroups(
 					dataConnection, steps, groups,
@@ -930,18 +848,6 @@ namespace LinqToDB.Data
 				return new ScenarioOutcome(resolved is int rowsAffected ? rowsAffected : 0, resolved);
 			}
 
-			// Projects the render list's per-command step-index groups into the SqlCommandGroup list the shared RunGroups
-			// walks (the physical grouping folded into PreparedCommand replaces the separate SqlCommandGroupPlan).
-			static SqlCommandGroup[] BuildGroups(PreparedCommand[] commands)
-			{
-				var groups = new SqlCommandGroup[commands.Length];
-
-				for (var i = 0; i < commands.Length; i++)
-					groups[i] = new SqlCommandGroup { StepIndexes = commands[i].StepIndexes };
-
-				return groups;
-			}
-
 			// In case of change the logic of this method, DO NOT FORGET to change the sibling method.
 			static async Task ExecuteSingleStepAsync(DataConnection dataConnection, ExecutionPreparedQuery executionQuery, IReadOnlyList<ExecutionStep> steps, int stepIndex, int commandIndex, SqlCommandExecutionContext context, CancellationToken cancellationToken)
 			{
@@ -951,22 +857,6 @@ namespace LinqToDB.Data
 					return;
 
 				InitCommand(dataConnection, executionQuery, commandIndex);
-
-				ApplyForwardedParameters(executionQuery, commandIndex, context);
-
-				if (step.OnError == SqlStepOnError.Ignore)
-				{
-					try
-					{
-						await dataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(false);
-					}
-					catch
-					{
-						// ignore
-					}
-
-					return;
-				}
 
 				switch (step.Kind)
 				{
@@ -980,15 +870,20 @@ namespace LinqToDB.Data
 					case SqlStepKind.Scalar:
 						context.SetResult(stepIndex, await dataConnection.ExecuteScalarDataAsync(cancellationToken).ConfigureAwait(false));
 						break;
+					// See the sync sibling: Reader / SelfExecuting are eager-loading kinds this interpreter cannot run.
+					default:
+						throw new InvalidOperationException($"Step kind '{step.Kind}' cannot be executed as a single DML command.");
 				}
 			}
 
 			// Shared combined-command harvest walk (async sibling). In case of change the logic of this method, DO NOT
 			// FORGET to change the sibling method.
-			internal static async Task WalkCombinedResultSetsAsync(DbDataReader dr, IReadOnlyList<int> stepIndexes, IReadOnlyList<ExecutionStep> steps, Func<int, DbDataReader, Task> harvest, CancellationToken cancellationToken)
+			internal static async Task WalkCombinedResultSetsAsync(DbDataReader dr, IReadOnlyList<int> stepIndexes, int harvestCount, IReadOnlyList<ExecutionStep> steps, Func<int, DbDataReader, Task> harvest, CancellationToken cancellationToken)
 			{
-				foreach (var i in stepIndexes)
+				for (var k = 0; k < harvestCount; k++)
 				{
+					var i = stepIndexes[k];
+
 					await harvest(i, dr).ConfigureAwait(false);
 
 					if (steps[i].Kind != SqlStepKind.NonQuery)
@@ -997,13 +892,13 @@ namespace LinqToDB.Data
 			}
 
 			// In case of change the logic of this method, DO NOT FORGET to change the sibling method.
-			internal static async Task<DataReaderWrapper> ExecuteCombinedHarvestAsync(DataConnection dataConnection, CombinedCommand command, IReadOnlyList<ExecutionStep> steps, IReadOnlyList<int> harvestStepIndexes, Func<int, DbDataReader, Task> harvest, CancellationToken cancellationToken)
+			internal static async Task<DataReaderWrapper> ExecuteCombinedHarvestAsync(DataConnection dataConnection, CombinedCommand command, IReadOnlyList<ExecutionStep> steps, IReadOnlyList<int> stepIndexes, int harvestCount, Func<int, DbDataReader, Task> harvest, CancellationToken cancellationToken)
 			{
 				var rd = await ExecuteCombinedAsync(dataConnection, command, CommandBehavior.Default, cancellationToken).ConfigureAwait(false);
 
 				try
 				{
-					await WalkCombinedResultSetsAsync(rd.DataReader!, harvestStepIndexes, steps, harvest, cancellationToken).ConfigureAwait(false);
+					await WalkCombinedResultSetsAsync(rd.DataReader!, stepIndexes, harvestCount, steps, harvest, cancellationToken).ConfigureAwait(false);
 				}
 				catch
 				{
@@ -1038,9 +933,10 @@ namespace LinqToDB.Data
 
 					var stepIndexes     = group.StepIndexes;
 					var carriesTerminal = terminalStepIndex >= 0 && stepIndexes[stepIndexes.Count - 1] == terminalStepIndex;
-					var harvestIndexes  = carriesTerminal ? stepIndexes.Take(stepIndexes.Count - 1).ToList() : stepIndexes;
+					// See the sync sibling: a count, not a sliced list, so the walk allocates nothing per execution.
+					var harvestCount    = carriesTerminal ? stepIndexes.Count - 1 : stepIndexes.Count;
 
-					var rd = await ExecuteCombinedHarvestAsync(dataConnection, getCommand(group, g), steps, harvestIndexes, harvestCombined, cancellationToken).ConfigureAwait(false);
+					var rd = await ExecuteCombinedHarvestAsync(dataConnection, getCommand(group, g), steps, stepIndexes, harvestCount, harvestCombined, cancellationToken).ConfigureAwait(false);
 
 					if (carriesTerminal)
 						return rd;
@@ -1057,7 +953,7 @@ namespace LinqToDB.Data
 				var prepared = executionQuery.PreparedQuery.Prepared;
 				var steps    = prepared.Steps;
 				var context  = new SqlCommandExecutionContext(steps.Length);
-				var groups   = BuildGroups(prepared.Commands);
+				var groups   = prepared.Groups;
 
 				var terminalReader = await RunGroupsAsync(
 					dataConnection, steps, groups,
@@ -1252,17 +1148,19 @@ namespace LinqToDB.Data
 			static void InitCommand(DataConnection dataConnection, ExecutionPreparedQuery executionQuery, int index)
 			{
 				InitCommand(dataConnection,
-					executionQuery.PreparedQuery.Prepared.Commands[index].Concat!,
+					executionQuery.PreparedQuery.Prepared.Commands[index].Concat!.Command,
 					executionQuery.CommandsParameters[index],
 					index == 0 ? executionQuery.PreparedQuery.QueryHints : null);
 			}
 
+			// Takes the command TEXT rather than a CommandWithParameters: the DbParameters are already materialized and passed
+			// separately, so a caller that only has the rendered SQL (a combined command's statement) needs no wrapper object.
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			static void InitCommand(DataConnection dataConnection, CommandWithParameters queryCommand, DbParameter[]? dbParameters, IReadOnlyCollection<string>? queryHints)
+			static void InitCommand(DataConnection dataConnection, string commandText, DbParameter[]? dbParameters, IReadOnlyCollection<string>? queryHints)
 			{
 				var hasParameters = dbParameters?.Length > 0;
 
-				dataConnection.InitCommand(CommandType.Text, queryCommand.Command, null, queryHints, hasParameters);
+				dataConnection.InitCommand(CommandType.Text, commandText, null, queryHints, hasParameters);
 
 				if (hasParameters)
 				{

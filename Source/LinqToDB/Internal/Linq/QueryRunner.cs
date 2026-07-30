@@ -751,6 +751,8 @@ namespace LinqToDB.Internal.Linq
 			// index (the main query is the last step); combinable + main are the combined groups, self-executing are singletons.
 			readonly int[]             _combinableIndexes;
 			readonly int[]             _nonCombinableIndexes;
+			// Cache for GetExecutionSteps below.
+			ExecutionStep[]?           _executionSteps;
 
 			public EagerResultEnumerable(
 				IDataContext      dataContext,
@@ -779,6 +781,15 @@ namespace LinqToDB.Internal.Linq
 				_combinableIndexes    = combinable.ToArray();
 				_nonCombinableIndexes = nonCombinable.ToArray();
 			}
+
+			// The statement-free step facts the interpreter needs, projected once and reused across enumerations of this
+			// enumerable. Goes through the shared ProjectExecutionSteps rather than hand-rolling the facts from the
+			// combinable / non-combinable partition, so eager and DML derive ExecutionStep from SqlCommandStep in exactly ONE
+			// place - a field added to ExecutionStep cannot silently default here. Caching is safe because every enumeration
+			// rebuilds an equivalent scenario: the partition fixes each step's kind and its index, and no eager step carries
+			// a gate or an OUT parameter.
+			ExecutionStep[] GetExecutionSteps(SqlCommandScenario scenario)
+				=> _executionSteps ??= ScenarioCommandRenderer.ProjectExecutionSteps(scenario);
 
 			static bool IsCombinable(Harvester harvester)
 				=> harvester is IStepMaterializer { CanCombine: true } materializer && materializer.GetCombinableStatement() != null;
@@ -938,7 +949,7 @@ namespace LinqToDB.Internal.Linq
 				// concat is all-or-nothing (skipped when any step is volatile — its slices share a parameter scope and can't
 				// be half-cached), matching today's behavior on that fallback path.
 				if (useBatch || !anyVolatile)
-					_query.QueryInfo.EagerCommandCache = new PreparedScenario(scenario, plan, prepared.ToArray(), useBatch);
+					_query.QueryInfo.EagerCommandCache = new PreparedScenario(prepared.ToArray(), useBatch);
 
 				return commands;
 			}
@@ -1070,7 +1081,7 @@ namespace LinqToDB.Internal.Linq
 					// One shared group-plan walk: self-executing harvester singletons run their own query; each combined group
 					// runs as one command; the main-carrying group hands back its open reader, which the caller streams below.
 					mainReader = DataConnection.QueryRunner.RunGroups(
-						dataConnection, ScenarioCommandRenderer.ProjectExecutionSteps(scenario), groups,
+						dataConnection, GetExecutionSteps(scenario), groups,
 						(group, groupIndex) => commandByGroup[groupIndex]!,
 						group => scenario.Steps[group.StepIndexes[0]].Kind == SqlStepKind.SelfExecuting,
 						(stepIndex, groupIndex) => context.SetResult(stepIndex, _harvesters[stepIndex].Harvest(_dataContext, _expressions, context, reader: null)),
@@ -1112,7 +1123,7 @@ namespace LinqToDB.Internal.Linq
 					try
 					{
 						mainReader = await DataConnection.QueryRunner.RunGroupsAsync(
-							dataConnection, ScenarioCommandRenderer.ProjectExecutionSteps(scenario), groups,
+							dataConnection, GetExecutionSteps(scenario), groups,
 							(group, groupIndex) => commandByGroup[groupIndex]!,
 							group => scenario.Steps[group.StepIndexes[0]].Kind == SqlStepKind.SelfExecuting,
 							async (stepIndex, groupIndex) => context.SetResult(stepIndex, await _harvesters[stepIndex].HarvestAsync(_dataContext, _expressions, context, null, cancellationToken).ConfigureAwait(false)),

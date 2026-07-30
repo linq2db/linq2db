@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
-using System.Runtime.InteropServices;
 using System.Text;
 
 using LinqToDB.Data;
@@ -40,40 +39,24 @@ namespace LinqToDB.Internal.SqlProvider
 	/// A null <see cref="Concat"/> or a null <see cref="Batch"/> element means "render fresh this run" (parameter-dependent);
 	/// a null <see cref="Batch"/> array means the command is not batch-eligible.
 	/// </summary>
-	sealed record PreparedCommand(IReadOnlyList<int> StepIndexes, CommandWithParameters? Concat, CommandWithParameters?[]? Batch)
-	{
-		/// <summary>
-		/// Forwarded-parameter slots for this command, resolved once at assembly time. Empty unless a step forwards an
-		/// earlier step's result into one of its parameters. Because the position is precomputed, execution needs no
-		/// <see cref="SqlParameter"/> AST node — so a non-parameter-dependent cache can drop its statement.
-		/// </summary>
-		public IReadOnlyList<ForwardedSlot> ForwardedSlots { get; init; } = [];
-	}
+	sealed record PreparedCommand(IReadOnlyList<int> StepIndexes, CommandWithParameters? Concat, CommandWithParameters?[]? Batch);
 
 	/// <summary>
-	/// Forwarding resolved to a position: bind the physical command's parameter at <see cref="TargetPosition"/> from the
-	/// unified result of scenario step <see cref="SourceStepIndex"/>. Resolved from <c>SqlStepParameterBinding.Target</c>'s
-	/// index in the command's parameter list, replacing the execution-time node-identity match.
-	/// </summary>
-	[StructLayout(LayoutKind.Auto)]
-	readonly record struct ForwardedSlot(int SourceStepIndex, int TargetPosition);
-
-	/// <summary>
-	/// The render cache for a compiled query's command scenario: the logical <see cref="SqlCommandScenario"/> + its
-	/// physical-command <see cref="SqlCommandGroupPlan"/> + the per-command rendered templates. Used
+	/// The render cache for a compiled query's command scenario: the per-command rendered templates, one
+	/// <see cref="PreparedCommand"/> per physical command (each carrying the scenario step indices it covers). Used
 	/// (stored on <c>QueryInfo.EagerCommandCache</c>) by the combined eager-loading executor (the main-query path uses the statement-free <see cref="PreparedQuery"/> instead), binding DbParameters to
 	/// cached SQL instead of re-rendering. <see cref="WasBatch"/> records which backend the templates were rendered for so a
 	/// run whose <c>CanUseDbBatch</c> differs re-renders instead of binding a wrong-shaped cache (eager); DML fills both
 	/// forms and ignores it.
 	/// </summary>
-	sealed record PreparedScenario(SqlCommandScenario Scenario, SqlCommandGroupPlan Plan, PreparedCommand[] Commands, bool WasBatch);
+	sealed record PreparedScenario(PreparedCommand[] Commands, bool WasBatch);
 
 	/// <summary>
-	/// Statement-free per-step facts the scenario interpreter needs at execution (kind, error policy, gate, OUT-parameter
-	/// metadata) — the projection of <see cref="SqlCommandStep"/> that carries NO <see cref="SqlStatement"/>. Lets a
+	/// Statement-free per-step facts the scenario interpreter needs at execution (kind, gate, OUT-parameter metadata) — the
+	/// projection of <see cref="SqlCommandStep"/> that carries NO <see cref="SqlStatement"/>. Lets a
 	/// <see cref="PreparedQuery"/> drive execution after the statement graph has been dropped.
 	/// </summary>
-	sealed record ExecutionStep(SqlStepKind Kind, SqlStepOnError OnError, SqlStepCondition? RunIf, string? OutParameterName, DbType OutParameterDbType);
+	sealed record ExecutionStep(SqlStepKind Kind, SqlStepCondition? RunIf, string? OutParameterName, DbType OutParameterDbType);
 
 	/// <summary>
 	/// The Phase-R render cache: everything the scenario interpreter needs to execute a compiled query, with NO
@@ -83,7 +66,26 @@ namespace LinqToDB.Internal.SqlProvider
 	/// <see cref="PreparedScenario"/> on the main-query path (<c>QueryInfo.Prepared</c>). The eager path still uses
 	/// <see cref="PreparedScenario"/> until it migrates (a later stage).
 	/// </summary>
-	abstract record PreparedQuery(ExecutionStep[] Steps, IReadOnlyList<int> OutcomeSteps, PreparedCommand[] Commands, bool WasBatch);
+	abstract record PreparedQuery(ExecutionStep[] Steps, IReadOnlyList<int> OutcomeSteps, PreparedCommand[] Commands, bool WasBatch)
+	{
+		/// <summary>
+		/// The physical grouping the scenario interpreter walks, projected from <see cref="Commands"/> at construction (each
+		/// command covers one contiguous run of steps — the grouping folded into <see cref="PreparedCommand"/> replaces the
+		/// separate <see cref="SqlCommandGroupPlan"/>). Built with the prepared query rather than per execution, so a cached
+		/// (non-parameter-dependent) query reuses it on every run.
+		/// </summary>
+		public SqlCommandGroup[] Groups { get; } = BuildGroups(Commands);
+
+		static SqlCommandGroup[] BuildGroups(PreparedCommand[] commands)
+		{
+			var groups = new SqlCommandGroup[commands.Length];
+
+			for (var i = 0; i < commands.Length; i++)
+				groups[i] = new SqlCommandGroup { StepIndexes = commands[i].StepIndexes };
+
+			return groups;
+		}
+	}
 
 	/// <summary>
 	/// A fully-rendered <see cref="PreparedQuery"/>: every <see cref="PreparedCommand"/> slot is materialized (concat
@@ -99,7 +101,8 @@ namespace LinqToDB.Internal.SqlProvider
 	/// The memoized <b>structural</b> (parameter-independent) artifact for a compiled query, produced once by Phase S
 	/// (<see cref="ScenarioCommandRenderer.PrepareStructure"/>): the whole-query optimize+convert (with a null
 	/// <see cref="EvaluationContext"/>), aliasing, command-scenario build, synthetic-step finalization and physical
-	/// grouping. Immutable and safe to memoize on <c>QueryInfo.Structure</c> and share across executions; the
+	/// grouping. Immutable, and consumed by the Phase-R render in the same <c>GetCommand</c> call that produced it (what
+	/// outlives the call is the rendered, statement-free <see cref="BakedQuery"/>); the
 	/// parameter-value-level build-time convert is deferred to the per-execution render (Phase R). This is distinct from
 	/// <see cref="PreparedScenario"/>, which is the <em>rendered</em> (Phase R) physical commands.
 	/// <see cref="MainStatement"/> is the optimized+converted main statement (the one <see cref="Aliases"/> is keyed to),
@@ -193,15 +196,15 @@ namespace LinqToDB.Internal.SqlProvider
 			for (var i = 0; i < steps.Count; i++)
 			{
 				var s = steps[i];
-				result[i] = new ExecutionStep(s.Kind, s.OnError, s.RunIf, s.OutParameterName, s.OutParameterDbType);
+				result[i] = new ExecutionStep(s.Kind, s.RunIf, s.OutParameterName, s.OutParameterDbType);
 			}
 
 			return result;
 		}
 
 		/// <summary>
-		/// Phase S — the parameter-independent structural prepare, run once per query and memoized on
-		/// <c>QueryInfo.Structure</c>. Runs the whole-query optimize+convert through <paramref name="optimizationContext"/>
+		/// Phase S — the parameter-independent structural prepare, run once per query preparation.
+		/// Runs the whole-query optimize+convert through <paramref name="optimizationContext"/>
 		/// (the caller supplies a null-<see cref="EvaluationContext"/> structural context for a cacheable query, or the
 		/// shared render context for a parameter-dependent one), then aliases the corrected statement, builds the command
 		/// scenario, finalizes synthetic steps and plans the physical groups. The whole-query convert must run <b>before</b>
@@ -283,7 +286,7 @@ namespace LinqToDB.Internal.SqlProvider
 				sqlOptimizer.CreateConvertVisitor(false),
 				factory,
 				dataConnection.DataProvider.SqlProviderFlags.IsParameterOrderDependent,
-				parametersNormalizerFactory    : dataConnection.DataProvider.GetQueryParameterNormalizer);
+				parametersNormalizerFactory : dataConnection.DataProvider.GetQueryParameterNormalizer);
 
 		/// <summary>
 		/// Binds a rendered scope's <paramref name="sqlParameters"/> into <see cref="DbParameter"/>s (<see langword="null"/>

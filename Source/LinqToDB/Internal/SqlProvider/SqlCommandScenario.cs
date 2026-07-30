@@ -28,17 +28,6 @@ namespace LinqToDB.Internal.SqlProvider
 	}
 
 	/// <summary>
-	/// Error policy for a <see cref="SqlCommandStep"/>.
-	/// </summary>
-	public enum SqlStepOnError
-	{
-		/// <summary>Propagate any error (default).</summary>
-		Throw,
-		/// <summary>Swallow errors from this step and continue with the next step.</summary>
-		Ignore,
-	}
-
-	/// <summary>
 	/// Predicate applied to an earlier step's unified result value to gate a <see cref="SqlCommandStep"/>.
 	/// </summary>
 	public enum SqlStepConditionKind
@@ -49,8 +38,6 @@ namespace LinqToDB.Internal.SqlProvider
 		ResultIsNotNull,
 		/// <summary>Run when the referenced step's result equals zero.</summary>
 		ResultIsZero,
-		/// <summary>Run when the referenced step's result is a non-zero number.</summary>
-		ResultIsNonZero,
 	}
 
 	/// <summary>
@@ -66,18 +53,6 @@ namespace LinqToDB.Internal.SqlProvider
 	}
 
 	/// <summary>
-	/// Forwarding: a value produced by an earlier step becomes a parameter of the owning step (explicit reference).
-	/// </summary>
-	public sealed record SqlStepParameterBinding
-	{
-		/// <summary>Index (into <see cref="SqlCommandScenario.Steps"/>) of the step whose result supplies the value.</summary>
-		public required int SourceStepIndex { get; init; }
-
-		/// <summary>The parameter in the owning step's statement that receives the forwarded value (used read-only, by identity).</summary>
-		public required SqlParameter Target { get; init; }
-	}
-
-	/// <summary>
 	/// A single executable step within a <see cref="SqlCommandScenario"/>. Pure execution data — the step declares only
 	/// how it runs; its output lands in the <see cref="SqlCommandExecutionContext"/>. Behavior lives in the interpreter.
 	/// </summary>
@@ -90,9 +65,6 @@ namespace LinqToDB.Internal.SqlProvider
 		/// <summary>How the step is executed.</summary>
 		public required SqlStepKind Kind { get; init; }
 
-		/// <summary>Error policy for the step.</summary>
-		public SqlStepOnError OnError { get; init; } = SqlStepOnError.Throw;
-
 		/// <summary>Optional gate; when set, the step runs only if the condition holds against an earlier step's result.</summary>
 		public SqlStepCondition? RunIf { get; init; }
 
@@ -101,9 +73,6 @@ namespace LinqToDB.Internal.SqlProvider
 
 		/// <summary>Database type of the output parameter, when <see cref="OutParameterName"/> is set.</summary>
 		public DbType OutParameterDbType { get; init; } = DbType.Decimal;
-
-		/// <summary>Parameters of this step whose values are forwarded from earlier steps' results.</summary>
-		public IReadOnlyList<SqlStepParameterBinding> ParameterBindings { get; init; } = [];
 	}
 
 	/// <summary>
@@ -157,9 +126,20 @@ namespace LinqToDB.Internal.SqlProvider
 		/// <param name="parameters">The compiled-query argument array, or <see langword="null"/> for a regular query.</param>
 		public SqlCommandExecutionContext(int stepCount, object?[]? parameters = null)
 		{
-			_results    = new object?[stepCount];
-			_executed   = new bool[stepCount];
 			_parameters = parameters;
+
+			if (stepCount == 0)
+			{
+				// A context created only to carry compiled-query arguments has no step slots. Shared empty arrays keep that
+				// (per-execution) case allocation-free — `new T[0]` is not interned.
+				_results  = [];
+				_executed = [];
+			}
+			else
+			{
+				_results  = new object?[stepCount];
+				_executed = new bool[stepCount];
+			}
 		}
 
 		/// <summary>

@@ -704,14 +704,6 @@ namespace LinqToDB.Internal.SqlProvider
 		public bool IsMultiStatementBatchSupported { get; set; }
 
 		/// <summary>
-		/// Indicates that the provider supports declaring, assigning and referencing a server-side variable within a
-		/// single command batch, enabling combined scenario forwarding (a value produced by one step referenced by a
-		/// later step) in one round-trip. Enabled conservatively per provider. Default: <see langword="false"/>.
-		/// </summary>
-		[DataMember(Order = 78)]
-		public bool IsServerSideVariablesSupported { get; set; }
-
-		/// <summary>
 		/// Indicates that the provider can return multiple result sets from a single command (walked via
 		/// <c>NextResult</c>), so several result-producing scenario steps can be harvested from one combined command.
 		/// Without it a combined group may hold at most one result-producing step (identity's INSERT + identity SELECT
@@ -847,7 +839,6 @@ namespace LinqToDB.Internal.SqlProvider
 				^ DefaultNullsOrdering                                 .GetHashCode()
 				^ IsDistinctOnSupported                                .GetHashCode()
 				^ IsMultiStatementBatchSupported                       .GetHashCode()
-				^ IsServerSideVariablesSupported                       .GetHashCode()
 				^ IsMultipleResultSetsSupported                        .GetHashCode()
 				^ MaxCombinedCommandLength                             .GetHashCode()
 				^ MaxStatementsPerCombinedGroup                        .GetHashCode()
@@ -932,7 +923,6 @@ namespace LinqToDB.Internal.SqlProvider
 				&& DefaultNullsOrdering                                  == other.DefaultNullsOrdering
 				&& IsDistinctOnSupported                                 == other.IsDistinctOnSupported
 				&& IsMultiStatementBatchSupported                        == other.IsMultiStatementBatchSupported
-				&& IsServerSideVariablesSupported                        == other.IsServerSideVariablesSupported
 				&& IsMultipleResultSetsSupported                         == other.IsMultipleResultSetsSupported
 				&& MaxCombinedCommandLength                              == other.MaxCombinedCommandLength
 				&& MaxStatementsPerCombinedGroup                         == other.MaxStatementsPerCombinedGroup

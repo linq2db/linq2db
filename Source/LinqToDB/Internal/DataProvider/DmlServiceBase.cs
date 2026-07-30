@@ -346,9 +346,17 @@ namespace LinqToDB.Internal.DataProvider
 
 				if (current is AggregateException agg)
 				{
+					// Flatten() collapses nested AggregateExceptions, so every inner is a plain exception whose own chain
+					// still needs walking - hence the recursion. Return instead of continuing the outer loop: an
+					// AggregateException's InnerException IS InnerExceptions[0], so falling through would walk that whole
+					// chain a second time (and once per nesting level, i.e. exponentially).
 					foreach (var inner in agg.Flatten().InnerExceptions)
+					{
 						if (IsTableNotFoundException(inner))
 							return true;
+					}
+
+					return false;
 				}
 			}
 

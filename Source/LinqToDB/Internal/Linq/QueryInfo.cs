@@ -35,10 +35,5 @@ namespace LinqToDB.Internal.Linq
 		// eager executor for its data and GetCommand for ToString/GetSqlText — so they must not share one slot.
 		internal PreparedQuery?    Prepared          { get; set; }
 		internal PreparedScenario? EagerCommandCache { get; set; }
-
-		// Phase S structural artifact (parameter-independent): the memoized optimize+convert+alias+scenario+plan for the
-		// MAIN statement, built once under Monitor.Enter and reused across executions (and, from a later stage, by the
-		// eager path). Distinct from Prepared, which holds the rendered (Phase R) commands.
-		internal QueryStructure? Structure { get; set; }
 	}
 }
