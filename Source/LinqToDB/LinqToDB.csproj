@@ -25,12 +25,26 @@
 
 		<ProjectReference Include="../CodeGenerators/CodeGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 
-		<!-- Bundle the user-facing Roslyn analyzers + code fixes into the linq2db package (packed below into
-		     analyzers/dotnet/roslyn4.8/cs). ReferenceOutputAssembly="false" so their Roslyn-4.8 closure never
-		     leaks into linq2db's own compile / lib / dependencies; deliberately NO OutputItemType="Analyzer"
-		     (unlike CodeGenerators) so the user-facing rules don't run against linq2db's own source. -->
-		<ProjectReference Include="../LinqToDB.Analyzers/LinqToDB.Analyzers.csproj"                     ReferenceOutputAssembly="false" PrivateAssets="all" />
-		<ProjectReference Include="../LinqToDB.Analyzers.CodeFixes/LinqToDB.Analyzers.CodeFixes.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" />
+		<!-- Depend on the user-facing analyzer package so its rules reach every consumer of linq2db, including one
+		     that references only a satellite package (Tools / Remote / EntityFrameworkCore). `analyzers` is the
+		     one asset deliberately LEFT OUT of PrivateAssets - it is the thing being flowed on; the default
+		     (contentfiles;analyzers;build) asks NuGet not to flow it, which is what makes master's layout deliver
+		     the rules to nobody.
+		     NOT ReferenceOutputAssembly="false": that drops the dependency from linq2db.nuspec entirely, leaving
+		     the analyzers with no delivery path at all. And NOT a narrower PrivateAssets that also hides `compile`
+		     / `runtime`: excluding those from a ProjectReference breaks the build ordering, so a clean build fails
+		     with CS0006 on the code-fix ref assembly. The cost of the supported shape is that the Roslyn-4.8-built
+		     code-fix assembly enters consuming projects' reference closure, which is where the MSB3277
+		     System.Collections.Immutable conflict on LinqToDB.EntityFrameworkCore.EF3's net462 / netstandard2.0
+		     legs comes from - a warning about an assembly EF3 never loads.
+		     Deliberately NO OutputItemType="Analyzer" (unlike CodeGenerators) so the user-facing rules don't run
+		     against linq2db's own source.
+		     Every satellite package (Tools, Remote.*, Extensions, Compat, Scaffold, EntityFrameworkCore) keeps
+		     `analyzers` out of PrivateAssets on its own linq2db / Tools reference for the same reason: an
+		     intermediate hop that excludes them suppresses the linq2db.Analyzers subtree for that package's
+		     consumers. EF Core keeps the same chain unbroken - EFCore.SqlServer -> EFCore.Relational -> EFCore ->
+		     EFCore.Analyzers are all exclude="Build" in the published nuspecs. -->
+		<ProjectReference Include="../LinqToDB.Analyzers.CodeFixes/LinqToDB.Analyzers.CodeFixes.csproj" PrivateAssets="contentfiles;build" />
 
 		<EmbeddedResource Include="Resources\*.txt" />
 
@@ -158,25 +172,4 @@
 		<AdditionalFiles Include="PublicAPI/PublicAPI.*.txt" />
 		<AdditionalFiles Include="PublicAPI/$(TargetFramework)/PublicAPI.*.txt" />
 	</ItemGroup>
-
-	<!-- Pack the bundled analyzer + code-fix assemblies under the Roslyn-version-specific analyzer path so NuGet
-	     delivers them only to hosts running Roslyn >= 4.8 and silently skips them on older IDEs/SDKs (no CS9057
-	     analyzer-version warning, so a consumer's TreatWarningsAsErrors can't break on them). The assemblies are
-	     built via the ProjectReferences above; GetTargetPath resolves each output location regardless of OutputPath.
-	     RemoveProperties="TargetFramework": both are single-TFM netstandard2.0 set in a PropertyGroup, which an
-	     inherited global TargetFramework would override, resolving an output path that was never built.
-	     Build/Azure/scripts/verify-analyzer-packaging.ps1 asserts this exact set of assemblies at this exact
-	     PackagePath in the produced nupkg — add an assembly here and add it to that script's -ExpectedAssemblies
-	     default too, or the gate keeps passing while covering only the old set. -->
-	<Target Name="_BundleAnalyzersIntoPackage" BeforeTargets="_GetPackageFiles">
-		<MSBuild Projects="..\LinqToDB.Analyzers\LinqToDB.Analyzers.csproj" Targets="GetTargetPath" RemoveProperties="TargetFramework">
-			<Output TaskParameter="TargetOutputs" ItemName="_BundledAnalyzerAssembly" />
-		</MSBuild>
-		<MSBuild Projects="..\LinqToDB.Analyzers.CodeFixes\LinqToDB.Analyzers.CodeFixes.csproj" Targets="GetTargetPath" RemoveProperties="TargetFramework">
-			<Output TaskParameter="TargetOutputs" ItemName="_BundledAnalyzerAssembly" />
-		</MSBuild>
-		<ItemGroup>
-			<None Include="@(_BundledAnalyzerAssembly)" Pack="true" PackagePath="analyzers/dotnet/roslyn4.8/cs" Visible="false" />
-		</ItemGroup>
-	</Target>
 </Project>

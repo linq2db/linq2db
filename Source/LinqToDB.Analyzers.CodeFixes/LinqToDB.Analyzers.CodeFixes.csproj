@@ -1,10 +1,24 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<!-- Code-fix assembly for the user-facing analyzers. Not packed on its own: it is bundled into the
-		     linq2db package by Source/LinqToDB/LinqToDB.csproj (under analyzers/dotnet/roslyn4.8/cs).
+		<!-- This is the packable project for the linq2db.Analyzers package (analyzer + code-fix assemblies).
+		     Consumers don't have to reference it: Source/LinqToDB/LinqToDB.csproj depends on it and flows its
+		     analyzer assets on, so the rules arrive with the linq2db package - directly or through a satellite
+		     package. A direct reference is only needed to run the rules against an older linq2db (see readme.md).
 		     Shared Roslyn-component settings + polyfills live in ..\Analyzers.Common.props. -->
-		<IsPackable>false</IsPackable>
+		<IsPackable>true</IsPackable>
+		<PackageId>linq2db.Analyzers</PackageId>
+		<Title>LINQ to DB Analyzers</Title>
+		<Description>Roslyn analyzers and code fixes for linq2db users: detect legacy API usage and offer automatic migrations to the current API.</Description>
+
+		<!-- Analyzer assemblies ship under analyzers/dotnet/roslyn4.8/cs (see the item group below), not lib/. -->
+		<IncludeBuildOutput>false</IncludeBuildOutput>
+		<SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+		<DevelopmentDependency>true</DevelopmentDependency>
+		<NoWarn>$(NoWarn);NU5128</NoWarn>
+
+		<!-- New package: no shipped baseline to validate against. Its public surface is diagnostics, not a tracked API. -->
+		<EnablePackageValidation>false</EnablePackageValidation>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -17,8 +31,17 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<!-- Build the analyzer assembly alongside this code-fix assembly; no dependency leaks (PrivateAssets). -->
+		<!-- Build-and-pack the analyzer assembly alongside this code-fix assembly; no dependency leaks (PrivateAssets). -->
 		<ProjectReference Include="..\LinqToDB.Analyzers\LinqToDB.Analyzers.csproj" PrivateAssets="all" />
+	</ItemGroup>
+
+	<!-- The Roslyn-version-specific analyzer path makes NuGet deliver these only to hosts running Roslyn >= 4.8
+	     (the version they are compiled against) and silently skip them on older IDEs / SDKs, instead of emitting
+	     the CS9057 analyzer-version warning that a consumer's TreatWarningsAsErrors would turn into an error. -->
+	<ItemGroup Label="Analyzer package layout">
+		<None Include="readme.md"                                  Pack="true" PackagePath="\" />
+		<None Include="$(OutputPath)LinqToDB.Analyzers.dll"        Pack="true" PackagePath="analyzers/dotnet/roslyn4.8/cs" Visible="false" />
+		<None Include="$(OutputPath)$(AssemblyName).dll"           Pack="true" PackagePath="analyzers/dotnet/roslyn4.8/cs" Visible="false" />
 	</ItemGroup>
 
 </Project>
