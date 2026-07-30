@@ -865,7 +865,8 @@ namespace Tests.Linq
 
 		[ThrowsCannotBeConverted([TestProvName.AllAccess])]
 		[Test]
-		public void AggregateOnGroupReachedThroughLet([DataSources] string context)
+		// PostgreSQL 9.4+ (FILTER clause)
+		public void AggregateOnGroupReachedThroughLet([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(AggregationData.Data);
