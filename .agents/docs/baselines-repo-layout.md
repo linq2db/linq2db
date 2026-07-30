@@ -64,6 +64,14 @@ Baselines commits on `baselines/pr_<n>` are scoped **per CI run per provider** �
 
 Practical implication: the baselines repo can answer "when did this baseline change against master?" but cannot answer "which linq2db PR commit introduced the change?". For per-commit attribution, you need a runtime bisect against the linq2db source tree (`git worktree` + `git checkout <sha>` per candidate, run `dotnet test` on the affected fixture, capture emitted SQL).
 
+Second implication: **the branch's tip has no relationship to the PR's tip.** Because commits land only when a CI run completes, the branch reflects whatever source the last *finished* run built — so a push after that run leaves the branch describing SQL the current code no longer emits, with no marker on the branch saying so. Before reading a baselines diff as the PR's output, date it:
+
+```
+git -C ../linq2db.baselines log -1 --format="%cI" origin/baselines/pr_<n>     # branch tip
+```
+
+and compare against the PR's HEAD commit date. If HEAD is newer and any intervening commit touches SQL generation, the diff is **superseded** — findings drawn from it can be ones those commits already fixed. Defer the pass until the in-flight run finishes rather than reviewing it. Combined with the append-only property above (files are never pruned across runs, so an early run's captures persist forever), this is why a baselines diff needs two independent staleness checks: *is the branch older than HEAD* (this one) and *were these particular files written by a superseded run* (the per-file `log -1` dating in `/review-pr` step 8 rule 4).
+
 ### Expected cross-provider variation (ignore these when flagging "unusual distinctions")
 
 Minor differences that are routine and should not be called out:

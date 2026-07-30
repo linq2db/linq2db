@@ -327,6 +327,10 @@ Return a **single fenced JSON block** — nothing else in your response before o
       "description": "Pre-existing on `master`: InsertWithIdentity with default GenerateScopeIdentity=true returns 0 when the column is backed by NEXT VALUE FOR — SCOPE_IDENTITY() only tracks IDENTITY columns. Not a finding on this PR (which only changes BulkCopy column selection), but worth surfacing so the detection's broader implications are visible. Workaround for users: GenerateScopeIdentity=false, which uses OUTPUT INSERTED and captures sequence defaults."
     }
   ],
+  "leadStatus": [
+    { "lead": 1, "verdict": "checked-clean", "evidence": "!IsLimited is TakeValue/SkipValue only — exactly the shapes where sequence ordering selects rows; DISTINCT and set ops don't depend on it." },
+    { "lead": 2, "verdict": "observation", "evidence": "Routed to out_of_scope_observations[] — the Root-flag question is a judgement call, not a defect." }
+  ],
   "callLog": [
     { "command": "pwsh -NoProfile -File .agents/scripts/diff-reader.ps1", "reason": "initial batch read of all changed files with writeDir + styleScan" },
     { "command": "pwsh -NoProfile -File .agents/scripts/verify-lines.ps1", "reason": "batch verify of candidate line-level findings" },
@@ -337,7 +341,14 @@ Return a **single fenced JSON block** — nothing else in your response before o
 
 Rules:
 
-- Always emit all five arrays (`prior_finding_status`, `findings`, `api_changes`, `out_of_scope_observations`, `callLog`). Use `[]` when empty.
+- Always emit all six arrays (`prior_finding_status`, `findings`, `api_changes`, `out_of_scope_observations`, `leadStatus`, `callLog`). Use `[]` when empty.
+- **`leadStatus` is required whenever the briefing enumerates numbered leads** (an "areas of particular interest" / "investigate these" list). One entry per briefed lead, `{lead, verdict, evidence}`, with `verdict` one of:
+  - `"finding"` — became a `findings[]` entry; `evidence` names its id.
+  - `"observation"` — became an `out_of_scope_observations[]` entry; `evidence` names its title.
+  - `"checked-clean"` — investigated, nothing wrong. `evidence` is the one-sentence reason (the mechanism you verified), not "looks fine".
+  - `"could-not-verify"` — ran out of budget or the question needs a runtime probe you can't do. `evidence` says what would settle it.
+
+  Emit `[]` only when the briefing enumerated no leads. **Silence on a briefed lead is the failure mode this closes:** a caller who asks six specific questions and gets findings on two of them cannot tell whether the other four were checked and clean or never looked at, so it re-does all four. `checked-clean` costs one sentence and is frequently the most valuable line in the output — it is a *result*, not a non-answer. Note this is stronger than the caller merely *inviting* a "couldn't confirm" reply: the array makes the accounting mandatory, because an invitation alone has proved insufficient. (Surfaced on PR #5732: a briefing listed six leads and explicitly said reporting "couldn't confirm X" was preferred over a guess; the pass addressed leads 2 and 3 and said nothing whatsoever about 1, 4, 5 and 6 — including lead 1, named in the briefing as the riskiest change in the diff. The caller re-verified all four itself, at real cost, and all four were clean.)
 - `prior_finding_status` is only non-empty when `mode == "verify"`. In `initial` mode it must be `[]`.
 - `out_of_scope_observations[]` uses `{title, description}`. Each entry describes either (a) behavior that would exist on `master` without this PR — the "exposes, not causes" class from **Scope discipline** above, or (b) an architectural decision the agent is deferring to the human — the "flag-and-defer" class from **Architectural decisions** above. Never carries `severity`, `line`, or `snippet`; these are not findings.
 - `line_end` is optional — set it only when the finding covers a range; omit otherwise.
@@ -350,7 +361,7 @@ Rules:
   - **Multi-option fixes.** When the prose `fix` offers two or more alternatives (e.g. "either add arms X or add a comment Y describing the intentional fall-through"), pick whichever option is expressible as a textual replacement of the commented range, include it in `suggestion`, and note in the prose `fix` that this is the auto-applicable option while the others are listed as alternatives. Do not punt on "there are multiple fixes" — the goal is to make one of them one-click-applicable.
   - **Suggestions are not compile-checked.** A `suggestion` is emitted from static reasoning — it is not built or type-checked. Suggestions touching C# tuple projection (element-name inference after `.Select`), nullable-reference annotations under `TreatWarningsAsErrors`, or generic-inference-sensitive expressions are especially error-prone. Whoever *applies* a suggestion (the `fix` action in an interactive walk) must build-verify it before relying on / pushing it — do not treat a reviewer suggestion as known-good source. (Surfaced on PR #5680: a test-strengthening suggestion had two compile errors — `.me.Id` on an already-projected tuple, and a `(string?)` cast that failed under warnings-as-errors — both caught only at build.)
 
-**Self-audit before returning.** Enumerate every line-level finding. For each whose `suggestion` field is absent, explicitly decide whether the fix is (a) structural — OK to omit — or (b) textual replacement, which MUST carry a `suggestion`. If (b) and the replacement isn't generated, either generate it from the cached file content (`.build/.agents/pr<n>/<path>` when `writeDir` is set) or demote the finding to file-level. The parent skill re-audits this and will push back if the classification looks wrong, so do the work here.
+**Self-audit before returning.** When the briefing enumerated leads, confirm every one appears exactly once in `leadStatus[]` — a missing lead is a contract violation, not an implicit "clean". Then enumerate every line-level finding. For each whose `suggestion` field is absent, explicitly decide whether the fix is (a) structural — OK to omit — or (b) textual replacement, which MUST carry a `suggestion`. If (b) and the replacement isn't generated, either generate it from the cached file content (`.build/.agents/pr<n>/<path>` when `writeDir` is set) or demote the finding to file-level. The parent skill re-audits this and will push back if the classification looks wrong, so do the work here.
 - Do not include fields with empty-string values — omit them.
 - `callLog` is always present. One entry per Bash/pwsh/git/gh call you issued during the run, in order. Entries are `{command, reason}` — `command` is the canonical shell form (no need to include stdin heredoc bodies); `reason` is one short sentence. `Read` / `Grep` / `Glob` tool calls against on-disk files (including the `.build/.agents/pr<n>/...` files written by `diff-reader.ps1`) do not count — record only shell invocations. Empty array is only valid for runs that returned before issuing any shell call (rare).
 
