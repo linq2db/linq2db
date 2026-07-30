@@ -693,7 +693,7 @@ public class DbNorthwind : LinqToDB.Data.DataConnection
 
 ## Analyzers
 
-The package ships Roslyn analyzers and code fixes that flag legacy API usage and offer automatic migrations to the current API. They are bundled with the library, so no extra package reference is needed; they run only in IDEs / SDKs with Roslyn 4.8 or later (.NET SDK 8.0+, Visual Studio 2022 17.8+) and are silently skipped on older toolchains. NuGet does not flow analyzers through transitive dependencies, so a project that references only a satellite package (`linq2db.EntityFrameworkCore`, the Tools or Remote packages) needs a direct `linq2db` reference to get them.
+Roslyn analyzers and code fixes that flag legacy API usage and offer automatic migrations to the current API ship in the [`linq2db.Analyzers`](https://www.nuget.org/packages/linq2db.Analyzers) package, which `linq2db` depends on. No extra package reference is needed — the rules also reach a project that references only a satellite package (`linq2db.EntityFrameworkCore`, the Tools or Remote packages). They run only in IDEs / SDKs with Roslyn 4.8 or later (.NET SDK 8.0+, Visual Studio 2022 17.8+) and are silently skipped on older toolchains.
 
 | Id | Severity | Description |
 |----|----------|-------------|
@@ -710,6 +710,8 @@ Apply the L2DB1001 code fix even when the `Sql.Window` return type diverges from
 ```ini
 linq2db.L2DB1001.apply_fix_on_return_type_mismatch = true
 ```
+
+To run the rules against an older linq2db — sizing and applying a migration before upgrading — reference `linq2db.Analyzers` directly; it carries no `linq2db` dependency, so it composes with any version. See its [readme](https://www.nuget.org/packages/linq2db.Analyzers).
 
 ## MiniProfiler
 
