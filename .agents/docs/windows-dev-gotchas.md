@@ -64,6 +64,8 @@ After this, `git status` is clean and only the sparse page(s) are materialized; 
   git -C ../linq2db.wiki update-ref refs/heads/master <commit>
   ```
 
+  Both `-c core.protectNTFS=false` flags are load-bearing: without it on `read-tree`, git rejects the colon path (`error: invalid path '[Internal]-Azure-Pipelines:-Open-Tasks.md'`) and leaves the index **empty** rather than failing the command, so `write-tree` returns the empty tree and `commit-tree` builds a commit that deletes every page. The `update-index` line then also fails (`cannot add to the index - missing --add option?`), which is the tell. This is precisely what `wiki-commit.ps1` exists to prevent — reach for the plumbing only when recovering.
+
   Verify `git -C ../linq2db.wiki -c core.protectNTFS=false diff --stat origin/master master` shows **only** your page (no colon-page deletion) before `git -C ../linq2db.wiki push origin master`.
 
 **Before creating a wiki page for a task** (e.g. an analyzer descriptor's `helpLinkUri` target), fetch and check whether it already exists — `git -C ../linq2db.wiki fetch origin` then `git -C ../linq2db.wiki ls-tree origin/master <page>.md`. Pages are often authored out-of-band; drafting one that already exists wastes effort and risks overwriting a maintainer's page. **A PR body's "post-merge follow-up: create wiki page X" bullet is *not* evidence the page is absent** — such follow-up lists are aspirational and frequently lag the already-authored page. Run the `ls-tree` check before telling the user a page doesn't exist; don't infer its status from PR-body prose (an instance of *fetched content is a claim, verify it*). Corrected on PR #5703, where the `LINQ2DB1001` page existed despite the PR body listing it as a to-do.
@@ -158,6 +160,24 @@ Test-Path -LiteralPath '[Internal]-Foo.md'     # accurate
 ```
 
 `[System.IO.File]::*` methods take literal paths natively — no `-LiteralPath` analogue needed.
+
+### Scripted bulk edits of tracked sources strip the UTF-8 BOM
+
+`[System.IO.File]::WriteAllText($path, $text)` **without** an encoding argument writes UTF-8 *without* BOM. Most sources in this repo carry a BOM, so a scripted one-attribute edit across N files silently rewrites line 1 of every one of them — the diff shows `2 +--` per file where you expected `1 +-`, and the phantom hunk reaches review. `Set-Content` has the mirror problem for line endings (CRLF on Windows, so an LF-only file — every wiki page — is rewritten wholesale).
+
+Round-trip the bytes instead, and preserve whatever the file already had:
+
+```powershell
+$bytes  = [System.IO.File]::ReadAllBytes($f)
+$hasBom = $bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF
+$text   = [System.Text.Encoding]::UTF8.GetString($bytes)
+if ($hasBom) { $text = $text.Substring(1) }
+$text   = $text.Replace($old, $new)                       # no newline literals -> line endings survive
+$enc    = New-Object System.Text.UTF8Encoding($hasBom)
+[System.IO.File]::WriteAllBytes($f, $enc.GetPreamble() + $enc.GetBytes($text))
+```
+
+**Verify with `git diff --stat`, not by eye**: every file should show exactly the line count your transformation changes. A uniform off-by-one across all touched files is the BOM signature. (Surfaced 2026-07-30 adding one `PrivateAssets` attribute to 10 `.csproj` files on #5720 — all ten came back `2 +--`; reverted and redone byte-level.)
 
 ### `-UseBasicParsing` is deprecated, not removed
 
