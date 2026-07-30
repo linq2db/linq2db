@@ -39,7 +39,12 @@
 		     with CS0006 on the code-fix ref assembly. The cost of the supported shape is that the Roslyn-4.8-built
 		     code-fix assembly enters consuming projects' reference closure, which is where the MSB3277
 		     System.Collections.Immutable conflict on LinqToDB.EntityFrameworkCore.EF3's net462 / netstandard2.0
-		     legs comes from - a warning about an assembly EF3 never loads.
+		     legs comes from - a warning about an assembly EF3 never loads. `runtime` staying public also makes the
+		     code-fix assembly copy-local downstream, so it lands in each linq2db.cli.<rid> sub-package's
+		     tools/<tfm>/<rid> payload (measured: 6 files per RID across net8.0/9.0/10.0, a few hundred KB against
+		     packages that are already 64-164 MB, and nothing there ever loads Roslyn). No lib/ of any library
+		     package is affected, and linq2db.LINQPad is not either - its packaging target packs an explicit file
+		     list rather than the build output.
 		     Deliberately NO OutputItemType="Analyzer" (unlike CodeGenerators) so the user-facing rules don't run
 		     against linq2db's own source.
 		     Every satellite package (Tools, Remote.*, Extensions, Compat, Scaffold, EntityFrameworkCore) keeps
