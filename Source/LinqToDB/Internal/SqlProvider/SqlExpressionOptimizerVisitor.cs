@@ -1343,8 +1343,10 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 						}
 
 						EnsureFolded(i);
-						// Two constants collapsing into one is a real fold; a single constant is not.
-						if (pending != null)
+						// Two constants collapsing into one is a real fold. So is turning a non-SqlValue operand
+						// (an evaluable parameter / computed expression) into a literal: only an operand that is
+						// ALREADY the equal SqlValue re-mints an identical node and must not count as a change.
+						if (pending != null || operand is not SqlValue)
 							changed = true;
 						pending = pending == null ? s : pending + s;
 						continue;
