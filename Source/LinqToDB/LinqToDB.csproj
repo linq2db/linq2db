@@ -26,10 +26,13 @@
 		<ProjectReference Include="../CodeGenerators/CodeGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 
 		<!-- Depend on the user-facing analyzer package so its rules reach every consumer of linq2db, including one
-		     that references only a satellite package (Tools / Remote / EntityFrameworkCore). `analyzers` is the
-		     one asset deliberately LEFT OUT of PrivateAssets - it is the thing being flowed on; the default
-		     (contentfiles;analyzers;build) asks NuGet not to flow it, which is what makes master's layout deliver
-		     the rules to nobody.
+		     that references only a satellite package (Tools / Remote / EntityFrameworkCore). master has no
+		     reference to the analyzer project at all, which is why its layout delivers the rules to nobody.
+		     `analyzers` is the one asset deliberately LEFT OUT of PrivateAssets - it is the thing being flowed
+		     on, and the default (contentfiles;analyzers;build) makes pack write exclude="Build,Analyzers", which
+		     per NuGet's documented semantics suppresses the analyzer subtree. Measured on SDK 10.0.302 the rules
+		     reach csc either way, so this metadata is contract conformance (and the shape EF Core ships), not a
+		     fix for an observed delivery failure - do not read a behaviour difference into it.
 		     NOT ReferenceOutputAssembly="false": that drops the dependency from linq2db.nuspec entirely, leaving
 		     the analyzers with no delivery path at all. And NOT a narrower PrivateAssets that also hides `compile`
 		     / `runtime`: excluding those from a ProjectReference breaks the build ordering, so a clean build fails
@@ -41,9 +44,9 @@
 		     against linq2db's own source.
 		     Every satellite package (Tools, Remote.*, Extensions, Compat, Scaffold, EntityFrameworkCore) keeps
 		     `analyzers` out of PrivateAssets on its own linq2db / Tools reference for the same reason: an
-		     intermediate hop that excludes them suppresses the linq2db.Analyzers subtree for that package's
-		     consumers. EF Core keeps the same chain unbroken - EFCore.SqlServer -> EFCore.Relational -> EFCore ->
-		     EFCore.Analyzers are all exclude="Build" in the published nuspecs. -->
+		     intermediate hop that excludes them is documented to suppress the linq2db.Analyzers subtree for that
+		     package's consumers. EF Core keeps the same chain unbroken - EFCore.SqlServer -> EFCore.Relational ->
+		     EFCore -> EFCore.Analyzers are all exclude="Build" in the published nuspecs. -->
 		<ProjectReference Include="../LinqToDB.Analyzers.CodeFixes/LinqToDB.Analyzers.CodeFixes.csproj" PrivateAssets="contentfiles;build" />
 
 		<EmbeddedResource Include="Resources\*.txt" />
