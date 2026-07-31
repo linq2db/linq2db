@@ -51,7 +51,7 @@ namespace Tests.LinqToDB.CLI
 				FindSupportedProvider(info, "IBM DB2").Notes!.                ShouldContain("IBM.Data.Db2.dll");
 				FindSupportedProvider(info, "IBM DB2").Bundled.               ShouldBe(false);
 				FindSupportedProvider(info, "IBM DB2").ProviderNames.         ShouldContain("DB2");
-				FindSupportedProvider(info, "IBM Informix").ProviderNames.    ShouldBe(["Informix.DB2"]);
+				FindSupportedProvider(info, "IBM Informix").ProviderNames.    ShouldBe(["Informix"]);
 				info.Rules.SingleStatementOnly.                               ShouldBe(true);
 				info.Rules.SqlGuardIsSecurityBoundary.                        ShouldBe(false);
 				info.Rules.SqlGuardWarning.                                   ShouldContain("not a security boundary");

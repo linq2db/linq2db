@@ -41,7 +41,6 @@ Required command-line input:
 Connection settings:
 
 - `--provider <provider>` is the linq2db provider name.
-- Provider names must be names registered by linq2db itself, not test data source aliases from linq2db test configuration. For example, use `Oracle.Managed` in CLI configuration instead of a test alias like `Oracle.19.Managed`.
 - `--provider-location <path>` loads an external ADO.NET provider assembly before the query provider is resolved. Use it when the provider is not bundled with `linq2db.cli` or when a specific provider assembly version must be supplied by the user.
 - Loading an external assembly only makes it available to the process; compatibility with the selected linq2db provider and any provider dependencies remains the user's responsibility.
 - External provider dependencies must be available next to the specified provider assembly or through normal application probing. The command does not scan the user's NuGet package cache to find missing dependencies.
@@ -208,19 +207,7 @@ External provider dependencies must be available next to the specified provider 
 
 MCP agents should call `linq2db_info` and use one of the returned `supportedProviders[].providerNames`.
 
-For direct CLI configuration and development reference, the constants in `LinqToDB.ProviderName` are the source of truth.
-
-Do not use test data source aliases from the linq2db test suite.
-
-Examples:
-
-| Use | Do not use |
-| --- | --- |
-| `Oracle.Managed` | `Oracle.19.Managed` |
-| `SqlServer` | test-specific SQL Server source aliases |
-| `PostgreSQL` | test-specific PostgreSQL source aliases |
-
-If provider resolution fails and the name looks like a test data source alias, use the corresponding linq2db provider name instead.
+For direct CLI configuration, use one of the provider names returned by `linq2db_info`.
 
 ## Schema Command
 

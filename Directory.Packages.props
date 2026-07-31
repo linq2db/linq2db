@@ -75,7 +75,7 @@
 		<PackageVersion Include="Microsoft.Extensions.Hosting"                          Version="$(Net8LatestForNuget)"         Condition="'$(TargetFramework)'=='net8.0'"  />
 		<PackageVersion Include="Microsoft.Extensions.Hosting"                          Version="$(Net9LatestForNuget)"         Condition="'$(TargetFramework)'=='net9.0'"  />
 		<PackageVersion Include="Microsoft.Extensions.Hosting"                          Version="$(Net10LatestForNuget)"        Condition="'$(TargetFramework)'=='net10.0'" />
-		<PackageVersion Include="ModelContextProtocol"                                  Version="1.4.0"                        />
+		<PackageVersion Include="ModelContextProtocol"                                  Version="2.0.0-rc.2"                   />
 		<PackageVersion Include="Mono.TextTemplating"                                   Version="3.0.0"                        />
 		<PackageVersion Include="protobuf-net.Grpc"                                     Version="1.2.2"                        />
 		<PackageVersion Include="protobuf-net"                                          Version="3.2.56"                       />
