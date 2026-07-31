@@ -199,8 +199,23 @@ namespace LinqToDB.Internal.Linq
 					// as the by-name-and-value lookup below already does.
 					if (evaluator != null && !ReferenceEquals(param, paramExpr))
 					{
-						EnsureEvaluated(entry,      param);
-						EnsureEvaluated(paramEntry, paramExpr);
+						try
+						{
+							EnsureEvaluated(entry,      param);
+							EnsureEvaluated(paramEntry, paramExpr);
+						}
+						catch
+						{
+							// The probe runs the raw user expression, and this loop now reaches shapes the
+							// by-name-and-value lookup never did (any structurally duplicated scalar, not just
+							// a member path). A throw from the user's own code - an element read over an empty
+							// sequence, a missing dictionary key - would escape into
+							// ParametersContext.BuildParameter's catch and be reported as "the LINQ expression
+							// could not be converted to SQL", hiding the real error. Treat an unevaluatable
+							// occurrence as not proven equal so it keeps its own parameter and the original
+							// exception still surfaces from the accessor.
+							continue;
+						}
 
 						if (!Equals(entry.EvaluatedValue, paramEntry.EvaluatedValue))
 							continue;
