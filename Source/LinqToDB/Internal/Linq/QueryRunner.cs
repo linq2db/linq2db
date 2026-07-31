@@ -842,178 +842,18 @@ namespace LinqToDB.Internal.Linq
 					? _query.QueryInfo.Statement
 					: ((IStepMaterializer)_harvesters[stepIndex]).GetCombinableStatement()!;
 
-			// COLD-path render: the combinable children + main are chunked by statement count, then each chunk's statements
-			// render into one or more commands bounded by SQL length. Each command carries the scenario step indices it covers,
-			// so the executor knows which child result sets to buffer and where the main result set lands (always the last step
-			// of the last command). Self-executing steps are not rendered.
-			//
-			// Returns the commands bound for THIS run plus the parameter-independent templates to cache, or a null template
-			// array when the render is not cacheable: the concat backend shares one stateful parameter normalizer across a
-			// command, so a command containing a volatile step cannot be half-cached.
-			(List<CombinedCommand> Commands, PreparedCommand[]? Templates) RenderCommands(
-				DataConnection dataConnection, SqlCommandScenario scenario, SqlParameterValues values, bool useBatch)
+			// The batch's participants: the combinable children (in build order) followed by the main query, each paired with
+			// the context slot its result lands in. Self-executing harvesters are NOT here — they run as their own commands
+			// before the batch — so the slots are deliberately sparse, which is why CombinedReaderStep carries the slot rather
+			// than relying on position.
+			CombinedReaderStep[] BuildBatchSteps()
 			{
-				// Per-step parameter-dependence, computed once for this render pass: a volatile step's SQL varies with
-				// parameter values, so its template can't be cached (a stable main is cached while a Contains/LIKE child re-renders).
-				var volatility  = ComputeStepVolatility(dataConnection, scenario);
-				var anyVolatile = false;
+				var result = new CombinedReaderStep[_combinableIndexes.Length + 1];
 
-				foreach (var v in volatility)
-					if (v)
-					{
-						anyVolatile = true;
-						break;
-					}
+				for (var i = 0; i < _combinableIndexes.Length; i++)
+					result[i] = new CombinedReaderStep(_combinableIndexes[i], GetStepStatement(_combinableIndexes[i]));
 
-				// Combined groups: the combinable children + main, chunked by the provider's per-command statement cap (the
-				// count-split PlanScenario applied to the old combinable-only scenario). Self-executing harvesters are separate
-				// singleton groups (added by BuildPlan), never part of a combined command, so they are excluded here.
-				var maxPerGroup   = Math.Max(1, dataConnection.DataProvider.SqlProviderFlags.MaxStatementsPerCombinedGroup);
-				var combinedSteps = new int[_combinableIndexes.Length + 1];
-
-				Array.Copy(_combinableIndexes, combinedSteps, _combinableIndexes.Length);
-				combinedSteps[_combinableIndexes.Length] = _harvesters.Length;
-
-				var combinedGroups = new List<SqlCommandGroup>();
-
-				for (var start = 0; start < combinedSteps.Length; start += maxPerGroup)
-				{
-					var slice = new int[Math.Min(maxPerGroup, combinedSteps.Length - start)];
-
-					Array.Copy(combinedSteps, start, slice, 0, slice.Length);
-					combinedGroups.Add(new SqlCommandGroup { StepIndexes = slice });
-				}
-
-				var plan = new SqlCommandGroupPlan { Groups = combinedGroups };
-
-				var commands = new List<CombinedCommand>();
-				var prepared = new List<PreparedCommand>();
-
-				foreach (var group in plan.Groups)
-				{
-					var stepIndexes     = group.StepIndexes;
-					var groupStatements = new SqlStatement[stepIndexes.Count];
-
-					for (var k = 0; k < stepIndexes.Count; k++)
-						groupStatements[k] = scenario.Steps[stepIndexes[k]].Statement!;
-
-#if SUPPORTS_DBBATCH
-					// DbBatch: the whole group is one command carrying one isolated-scope statement per step (each its own
-					// DbBatchCommand + parameter scope); no SQL-length split, so it covers every step of the group in order.
-					if (useBatch)
-					{
-						var rendered = ScenarioCommandRenderer.RenderStatementTemplates(dataConnection, groupStatements, values);
-
-						// Run this execution off the freshly-rendered statements (bind all, no re-render).
-						commands.Add(BindCommand(dataConnection, new PreparedCommand(stepIndexes, null, rendered), useBatch, values));
-
-						// Cache with the parameter-dependent slots nulled so a later run re-renders only those.
-						var slots = new CommandWithParameters?[rendered.Length];
-
-						for (var k = 0; k < rendered.Length; k++)
-							slots[k] = volatility[stepIndexes[k]] ? null : rendered[k];
-
-						prepared.Add(new PreparedCommand(stepIndexes, null, slots));
-
-						continue;
-					}
-#endif
-
-					// Concat path: each length-split batch is one pre-merged (semicolon-concatenated) command. Its shared,
-					// stateful parameter normalizer means a slice can't be half-cached, so the concat cache is all-or-nothing
-					// (stored only when the whole scenario is stable, see the store below); otherwise it re-renders each run.
-					var batches = DataConnection.QueryRunner.RenderCombinedBatchTemplates(dataConnection, groupStatements, values);
-
-					var offset = 0;
-
-					foreach (var (sql, sqlParameters, statementCount) in batches)
-					{
-						var indexes = new int[statementCount];
-
-						for (var k = 0; k < statementCount; k++)
-							indexes[k] = stepIndexes[offset + k];
-
-						var command = new PreparedCommand(indexes, new CommandWithParameters(sql, sqlParameters), null);
-
-						prepared.Add(command);
-						commands.Add(BindCommand(dataConnection, command, useBatch, values));
-
-						offset += statementCount;
-					}
-				}
-
-				// Batch caches per-statement (null slots for parameter-dependent steps, re-rendered per run); concat is
-				// all-or-nothing, so it is not cacheable at all when any step is volatile - its length-split slices share one
-				// stateful parameter normalizer. That fallback re-renders on every execution, as it did before.
-				return (commands, useBatch || !anyVolatile ? prepared.ToArray() : null);
-			}
-
-			// Binds a cached PreparedCommand to this execution's DbParameter values, producing the command the executor runs.
-			// Shared by the warm (cached) path and the cold render. On the batch backend, a null slot is a parameter-dependent
-			// statement re-rendered here in its own isolated scope - its statement comes from GetStepStatement, so binding needs
-			// no SqlCommandScenario; concat carries a single, always-present merged command.
-			CombinedCommand BindCommand(DataConnection dataConnection, PreparedCommand command, bool useBatch, SqlParameterValues values)
-			{
-				var stepIndexes = command.StepIndexes;
-
-				if (useBatch)
-				{
-					var statements = command.Batch!;
-					var rendered   = new RenderedStatement[statements.Length];
-
-					for (var i = 0; i < statements.Length; i++)
-					{
-						var slot = statements[i];
-
-						if (slot is null)
-						{
-#if SUPPORTS_DBBATCH
-							slot = ScenarioCommandRenderer.RenderStatementTemplates(
-								dataConnection, [GetStepStatement(stepIndexes[i])], values)[0];
-#else
-							throw new InvalidOperationException("Eager batch cache slot is null on a non-DbBatch build.");
-#endif
-						}
-
-						rendered[i] = new RenderedStatement(
-							slot.Command,
-							ScenarioCommandRenderer.MaterializeDbParameters(dataConnection, slot.SqlParameters, values));
-					}
-
-					return new CombinedCommand(rendered, stepIndexes, null);
-				}
-
-				// Concat: one pre-merged command, always present (concat is cached only when fully stable).
-				var concat = command.Concat!;
-
-				return new CombinedCommand(
-					[new RenderedStatement(concat.Command, ScenarioCommandRenderer.MaterializeDbParameters(dataConnection, concat.SqlParameters, values))],
-					stepIndexes, null);
-			}
-
-			// Per-step parameter-dependence: a step is volatile when its statement's SQL varies with parameter values, so its
-			// rendered template can't be cached and must be re-rendered each run. Finer than an all-or-nothing scenario check —
-			// a stable main can be cached while a Contains-filtered (LIKE) child re-renders. Each step has a distinct SqlStatement
-			// instance, so per-step evaluation is well-defined. Eager loading bypasses GetCommand's check, so it is done here.
-			static bool[] ComputeStepVolatility(DataConnection dataConnection, SqlCommandScenario scenario)
-			{
-				var options      = dataConnection.Options;
-				var sqlOptimizer = dataConnection.DataProvider.GetSqlOptimizer(options);
-				var steps        = scenario.Steps;
-				var result       = new bool[steps.Count];
-
-				for (var i = 0; i < steps.Count; i++)
-				{
-					// A self-executing step has no rendered SQL, so it is never a cacheable render slot (not volatile here).
-					if (steps[i].Statement is not { } statement)
-					{
-						result[i] = false;
-						continue;
-					}
-
-					result[i] = statement.IsParameterDependent
-						|| sqlOptimizer.IsParameterDependent(NullabilityContext.NonQuery, dataConnection.MappingSchema, statement, options);
-				}
+				result[_combinableIndexes.Length] = new CombinedReaderStep(_harvesters.Length, GetStepStatement(_harvesters.Length));
 
 				return result;
 			}
@@ -1059,21 +899,19 @@ namespace LinqToDB.Internal.Linq
 				var values         = CollectParameterValues();
 
 				// A cache built for the OTHER backend is unusable (batch and concat shapes are not interchangeable).
-				if (_query.QueryInfo.EagerCommandCache is { } cache && cache.WasBatch == useBatch)
-				{
-					var bound = new CombinedCommand?[cache.Groups.Length];
+				var cache = _query.QueryInfo.EagerCommandCache is { } c && c.WasBatch == useBatch ? c : null;
 
-					for (var i = 0; i < cache.Commands.Length; i++)
-						bound[_nonCombinableIndexes.Length + i] = BindCommand(dataConnection, cache.Commands[i], useBatch, values);
+				// The render / split / bind machinery is CombinedReaderBatch's; what stays here is eager-specific — the
+				// self-executing preambles, the group ordering they impose, and the terminal main query.
+				var commands = new CombinedReaderBatch(dataConnection, BuildBatchSteps())
+					.Bind(values, useBatch, cache?.Commands, out var templates);
 
-					return (cache.Steps, cache.Groups, bound);
-				}
+				// Warm: the step facts and the group list are parameter-independent and were cached with the templates, so
+				// neither the scenario nor the grouping is rebuilt (the ?? short-circuits before BuildScenario runs).
+				var steps  = cache?.Steps  ?? ScenarioCommandRenderer.ProjectExecutionSteps(BuildScenario());
+				var groups = cache?.Groups ?? BuildGroups(commands);
 
-				var scenario              = BuildScenario();
-				var (commands, templates) = RenderCommands(dataConnection, scenario, values, useBatch);
-				var steps                 = ScenarioCommandRenderer.ProjectExecutionSteps(scenario);
-				var groups                = BuildGroups(commands);
-				var commandByGroup        = new CombinedCommand?[groups.Length];
+				var commandByGroup = new CombinedCommand?[groups.Length];
 
 				for (var i = 0; i < commands.Count; i++)
 					commandByGroup[_nonCombinableIndexes.Length + i] = commands[i];
