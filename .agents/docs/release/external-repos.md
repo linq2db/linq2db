@@ -13,9 +13,11 @@ Paths and references used by the release skills. Pre-seeded with known defaults;
 
 If a recorded path doesn't exist on disk, the skill asks the user once and updates this table. `/release-notes apply-wiki` stops and asks the user to clone `linq2db.wiki` once if the path is absent — it never auto-clones.
 
-### Windows: cloning `linq2db.wiki` (colon-in-filename gotcha)
+### Windows: cloning `linq2db.wiki` (colon-in-filename gotcha — fixed, fallback below)
 
-The wiki repo contains a page named `[Internal]-Azure-Pipelines:-Open-Tasks.md`. The `:` is illegal in NTFS filenames, so a plain `git clone` **fails at checkout** ("invalid path … : …") and leaves an empty/inconsistent working tree — do **not** `git add`/commit from that state (every other page shows as a staged deletion). Clone with no checkout, restrict to the release-notes page via sparse-checkout, then check out with NTFS protection disabled (the bad file is `skip-worktree`, so it's never written to disk):
+**A plain `git clone` works as of 2026-07-31**: the one page whose filename held a colon was renamed (`linq2db.wiki` `f338e68`), so clone / edit / commit / push all behave normally and no sparse-checkout is needed. Skip to the next section unless a checkout fails with "invalid path … : …", which would mean a *new* colon-titled page appeared — in that case prefer renaming it, and see [`windows-dev-gotchas.md`](../windows-dev-gotchas.md) → *Cloning the `linq2db.wiki` repo* for the full fallback.
+
+Historical recipe, for that fallback only: the `:` is illegal in NTFS filenames, so a plain `git clone` **fails at checkout** and leaves an empty/inconsistent working tree — do **not** `git add`/commit from that state (every other page shows as a staged deletion). Clone with no checkout, restrict to the release-notes page via sparse-checkout, then check out with NTFS protection disabled (the bad file is `skip-worktree`, so it's never written to disk):
 
 ```
 git clone --no-checkout https://github.com/linq2db/linq2db.wiki.git ../linq2db.wiki

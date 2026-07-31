@@ -4,10 +4,19 @@ wiki-commit.ps1 - commit edited page(s) to the linq2db wiki clone via git plumbi
 
 Why this isn't a plain `git add` + `git commit`
 -----------------------------------------------
-The `linq2db.wiki` repo contains a page whose filename holds a colon
+NOTE (2026-07-31): the colon-named page this script was written for has been
+renamed (`linq2db.wiki` f338e68), the clone is a normal full checkout again, and a
+plain `git add` + `git commit` now works. This script is no longer mandatory - it
+is kept because a GitHub wiki page title may still contain a colon, which would
+reintroduce the problem, and because it stays the safest way to script a page
+edit: it always bases the commit on `origin/master` and aborts if the diff touches
+anything but the named pages. See `.agents/docs/windows-dev-gotchas.md` ->
+*Cloning the `linq2db.wiki` repo*.
+
+The original problem: the repo contained a page whose filename held a colon
 (`[Internal]-Azure-Pipelines:-Open-Tasks.md`), which NTFS cannot materialise. The
-clone is therefore a sparse checkout, and every page outside the sparse set reads
-as **deleted** in the working tree. A normal `git commit` stages all of those
+clone was therefore a sparse checkout, and every page outside the sparse set read
+as **deleted** in the working tree. A normal `git commit` staged all of those
 deletions alongside your edit - even after a fully successful sparse checkout.
 
 So the commit is built from the **index and object store only**, never from a

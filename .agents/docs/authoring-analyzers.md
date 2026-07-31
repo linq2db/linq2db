@@ -25,7 +25,19 @@ Pin the shipped analyzer's Roslyn (`Microsoft.CodeAnalysis.CSharp.Workspaces`, a
 
 ## Diagnostic IDs
 
-User-facing analyzer-package rules use the short **`L2DB1xxx`** id space; the first is **`L2DB1001`**. The internal `CodeGenerators` build-time analyzer keeps its own separate **`LINQ2DB0xxx`** space (e.g. `LINQ2DB0001`) — don't continue that prefix for user-facing rules. Record every rule in `AnalyzerReleases.Unshipped.md` (moved to `Shipped.md` at release — see [`/release-publicapi`](../skills/release-publicapi/SKILL.md) step 8) — the release-tracking analyzer (RS2000/RS2001) enforces this. Default severity for "prefer the new API" rules is **Info** while the old API is still supported (not `[Obsolete]`).
+User-facing analyzer-package rules use the short **`L2DB1xxx`** id space; the first is **`L2DB1001`**. The internal `CodeGenerators` build-time analyzer keeps its own separate **`LINQ2DB0xxx`** space (e.g. `LINQ2DB0001`) — don't continue that prefix for user-facing rules. Record every rule in `AnalyzerReleases.Unshipped.md` (moved to `Shipped.md` at release — see [`/release-publicapi`](../skills/release-publicapi/SKILL.md) step 8) — the release-tracking analyzer (RS2000/RS2001) enforces this, comparing the `Category` and `Severity` cells against the descriptor, so a Release build of the analyzer project is what verifies the entry. Default severity for "prefer the new API" rules is **Info** while the old API is still supported (not `[Obsolete]`).
+
+## Diagnostic category — always `LinqToDB`
+
+Every rule the package ships declares `category: "LinqToDB"`. This is not a per-rule choice. Roslyn's only bulk-configuration knob is per category —
+
+```ini
+dotnet_analyzer_diagnostic.category-LinqToDB.severity = warning
+```
+
+— so a rule filed under a generic category shared with Microsoft's analyzers (`Usage`, `Design`, `Performance`, …) cannot be configured as part of the linq2db set without also re-severitying every CA rule in that category. `L2DB1001` shipped-to-be as `Usage` and was moved to `LinqToDB` in `c76ee6110` before the package's first release; **after** a category ships, renaming it silently breaks any consumer `.editorconfig` keyed on the old name, so get it right the first time. Don't subdivide by concern (`LinqToDB.Usage`, `LinqToDB.Performance`) either — editorconfig category matching has no wildcard, so each category would need its own line and the single-line knob is lost.
+
+Category severity is orthogonal to the all-or-nothing `EnableLinqToDBAnalyzers` MSBuild property (see *Registration* below): the property turns the package's analyzers off entirely, the category sets the severity of what remains.
 
 ## Roslyn 4.8 gotchas
 
@@ -87,3 +99,12 @@ Mechanics that are non-obvious (each cost a debugging cycle on #5703 — the ski
 ## Registration
 
 Both projects under `/Source/` and the test project under `/Tests/` in `linq2db.slnx` (via `/update-slnx`). New central package versions in `Directory.Packages.props`. Post-merge follow-ups: add the package to `/release-postpublish`'s expected-nuget list, and add a docs/wiki page for the rule (the descriptor's `helpLinkUri`).
+
+## How the rules reach a consumer, and how a consumer turns them off
+
+`linq2db` depends on the packable `linq2db.Analyzers` package, so the rules arrive with the library — including for a project that references only a satellite package. No consumer reference is needed. Two facts that are easy to get wrong:
+
+- **The delivery contract is not what the SDK actually does.** Measured on SDK 10.0.302: analyzers reach `csc` even across a dependency edge that excludes them, so neither a nuspec `exclude="Analyzers"` nor a consumer's `ExcludeAssets="analyzers"` suppresses them. The `PrivateAssets="contentfiles;build"` metadata on the dozen project references is *contract conformance* (and the shape EF Core ships), not a measured behaviour difference — don't reason about delivery from it.
+- **The opt-out is an MSBuild property, and it is the only one that works.** `<EnableLinqToDBAnalyzers>false</EnableLinqToDBAnalyzers>` is implemented by `build/` + `buildTransitive/linq2db.Analyzers.targets` in the package, removing `@(Analyzer->WithMetadataValue('NuGetPackageId','linq2db.Analyzers'))`. It **must** hook `AfterTargets="ResolveLockFileAnalyzers"` — that target is what fills `@(Analyzer)` from the resolved package assets; `ResolvePackageAssets` runs *before* it, so hooking there removes nothing and fails silently. `buildTransitive` is a distinct asset group from `build`, so the `exclude="Build"` on the `linq2db` → analyzer edge does not block it — verified reaching a consumer two hops out.
+
+Verify both with [`verify-analyzer-consumption.ps1`](../scripts/verify-analyzer-consumption.ps1) after any packaging change; `Build/Azure/scripts/verify-analyzer-delivery.ps1` is the CI-side check on the packed nuspecs.

@@ -132,6 +132,7 @@
     <File Path=".agents/scripts/remove-worktree-locked.ps1" />
     <File Path=".agents/scripts/snap-baselines.ps1" />
     <File Path=".agents/scripts/test-status.ps1" />
+    <File Path=".agents/scripts/verify-analyzer-consumption.ps1" />
     <File Path=".agents/scripts/verify-lines.ps1" />
     <File Path=".agents/scripts/wait-for-review.ps1" />
     <File Path=".agents/scripts/wiki-commit.ps1" />
