@@ -151,7 +151,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 
 			Multiple statements and SQL that cannot be classified as read-only are rejected.
 
-			Do not use it for write-capable SQL. Use linq2db_execute only when available and after explicit user approval for the exact operation.
+			Do not use it for write-capable SQL.
 			""")]
 		public async Task<CallToolResult> Query(
 			[Description("""
