@@ -863,6 +863,38 @@ namespace Tests.Linq
 			};
 		}
 
+		[ThrowsCannotBeConverted([TestProvName.AllAccess])]
+		[Test]
+		// PostgreSQL 9.4+ (FILTER clause)
+		public void AggregateOnGroupReachedThroughLet([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(AggregationData.Data);
+
+			// Two `let`s put the grouping behind nested transparent identifiers, so an aggregate written against
+			// `g` itself reaches the aggregation builder as `Ref(anon).<ti1>.<ti0>.g.Count()` — `g`'s context is
+			// reachable only through the projection, never as a literal sub-expression. Coverage for that shape.
+			//
+			// COUNT(DISTINCT x) ignores NULLs while LINQ-to-Objects counts null as a distinct value, so the nulls
+			// are filtered out up front — this test is about the projection shape, not that divergence.
+			var query =
+				from t in table
+				where t.DataValue != null
+				group t by t.GroupId
+				into g
+				let evens    = g.Where(x => x.DataValue % 2 == 0)
+				let distinct = g.Select(x => x.DataValue).Distinct()
+				select new
+				{
+					GroupId    = g.Key,
+					Direct     = g.Count(),
+					FromEvens  = evens.Count(),
+					FromValues = distinct.Count(),
+				};
+
+			AssertQuery(query);
+		}
+
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		// PostgreSQL 9.4+ (FILTER clause)
@@ -2364,7 +2396,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		// Sybase is not listed: DataSources excludes it below, so it never runs this test.
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void Issue672Test([DataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false)))
