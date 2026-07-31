@@ -17,6 +17,8 @@ Checks:
   1. linq2db.nuspec declares a linq2db.Analyzers dependency in every dependency group.
   2. No package excludes 'Analyzers' on its linq2db / linq2db.Tools / linq2db.Analyzers dependency.
   3. The linq2db.Analyzers package carries both analyzer assemblies under analyzers/**/cs.
+  4. The linq2db.Analyzers package carries the EnableLinqToDBAnalyzers opt-out targets in build/ and
+     buildTransitive/ — the readme documents the property, and only the packed file implements it.
 
 Check 2 skips the ids in $NoFlowRequired — packages nobody compiles against, so analyzer flow is
 meaningless for them: linq2db.cli (a dotnet tool) and linq2db.LINQPad (a LINQPad driver). Their
@@ -173,6 +175,16 @@ foreach ($assembly in @('LinqToDB.Analyzers.dll', 'LinqToDB.Analyzers.CodeFixes.
     $pattern = '^analyzers/.*/cs/' + [regex]::Escape($assembly) + '$'
     if (-not ($analyzerPkg.entries | Where-Object { $_ -match $pattern })) {
         $violations += ('{0}: no analyzers/**/cs/{1} entry — the package ships without that assembly, so its rules never load' -f $analyzerPackageId, $assembly)
+    }
+}
+
+# 4. The opt-out documented in both readmes is implemented solely by the packed targets file: build/ for
+#    a direct reference to this package, buildTransitive/ for the normal path through linq2db. Losing
+#    either folder turns EnableLinqToDBAnalyzers into a property that silently does nothing.
+foreach ($folder in @('build', 'buildTransitive')) {
+    $entry = '{0}/linq2db.Analyzers.targets' -f $folder
+    if ($analyzerPkg.entries -notcontains $entry) {
+        $violations += ('{0}: no {1} entry — the documented EnableLinqToDBAnalyzers opt-out is not in the package' -f $analyzerPackageId, $entry)
     }
 }
 
